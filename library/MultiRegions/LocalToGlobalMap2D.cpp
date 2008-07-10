@@ -275,13 +275,17 @@ namespace Nektar
         LocalToGlobalMap2D::LocalToGlobalMap2D(const int loclen, 
                                                const StdRegions::StdExpansionVector &locExpVector, 
                                                const Array<OneD, const MultiRegions::ExpList1DSharedPtr> &bndCondExp,
-                                               const Array<OneD, const SpatialDomains::BoundaryConditionType> &bndCondTypes)
+                                               const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
+                                               const map<int,int>& periodicVerticesId,
+                                               const map<int,int>& periodicEdgesId)
         {
             int i,j,k;
             int cnt = 0;
             int bndEdgeCnt;
             int meshVertId;
+            int meshVertId2;
             int meshEdgeId;
+            int meshEdgeId2;
             int globalId;
             int nEdgeCoeffs;
             int nEdgeInteriorCoeffs;
@@ -315,13 +319,15 @@ namespace Nektar
             // can later be retrieved by the unique mesh vertex or edge id's which serve as the key of the map.  
             map<int, int> vertReorderedGraphVertId;
             map<int, int> edgeReorderedGraphVertId; 
+            map<int,int>::iterator mapIt;
+            map<int,int>::const_iterator mapConstIt;
            
             // STEP 1: Order the Dirichlet vertices and edges first
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); j++)
                 {                               
-                    if(bndCondTypes[i]==SpatialDomains::eDirichlet)
+                    if(bndConditions[i]->GetBoundaryConditionType()==SpatialDomains::eDirichlet)
                     {          
                         bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j));
                         meshEdgeId = (bndSegExp->GetGeom())->GetEid();  
@@ -354,13 +360,59 @@ namespace Nektar
                 map<int, int>          edgeTempGraphVertId;
                 map<int, set<int> >    graphAdjncySet;  
                 set<int>::iterator     setIt;
-                map<int,int>::iterator mapIt;
                 Array<OneD, int>       localVerts;
                 Array<OneD, int>       localEdges;               
 
                 m_totLocBndDofs = 0;
                 // First we are going to set up a temporary ordering of the mesh vertices and edges
                 // in the graph. We will then later use METIS to optimise this ordering
+
+                // List the periodic vertices and edges next.
+                // This allows to give corresponding DOF's the same
+                // global ID
+                // a) periodic vertices
+                for(mapConstIt = periodicVerticesId.begin(); mapConstIt != periodicVerticesId.end(); mapConstIt++)
+                {
+                    meshVertId  = mapConstIt->first;
+                    meshVertId2 = mapConstIt->second;
+
+                    if(vertReorderedGraphVertId.count(meshVertId) == 0)        
+                    {
+                        if(vertReorderedGraphVertId.count(meshVertId2) == 0)        
+                        {
+                            vertTempGraphVertId[meshVertId]  = tempGraphVertId;
+                            vertTempGraphVertId[meshVertId2] = tempGraphVertId++;
+                        }
+                        else
+                        {
+                            vertReorderedGraphVertId[meshVertId] = vertReorderedGraphVertId[meshVertId2];
+                        }
+                    }
+                    else
+                    {
+                        if(vertReorderedGraphVertId.count(meshVertId2) == 0)        
+                        {
+                            vertReorderedGraphVertId[meshVertId2] = vertReorderedGraphVertId[meshVertId];
+                        }
+                    }
+                }
+
+                // b) periodic edges
+                for(mapConstIt = periodicEdgesId.begin(); mapConstIt != periodicEdgesId.end(); mapConstIt++)
+                {
+                    meshEdgeId  = mapConstIt->first;
+                    meshEdgeId2 = mapConstIt->second;
+
+                    ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId) == 0,
+                             "This periodic boundary edge has been specified before");
+                    ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId2) == 0,
+                             "This periodic boundary edge has been specified before");
+                    
+                    edgeTempGraphVertId[meshEdgeId]  = tempGraphVertId;
+                    edgeTempGraphVertId[meshEdgeId2] = tempGraphVertId++;
+                }
+
+                // List all other vertices and edges
                 for(i = 0; i < locExpVector.size(); ++i)
                 { 
                     if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[i]))
@@ -526,7 +578,6 @@ namespace Nektar
                 int edgeCnt;
                 map<int, int>          vertTempGraphVertId;
                 map<int, int>          edgeTempGraphVertId;
-                map<int,int>::iterator mapIt;
                 Array<OneD, int>       localVerts;
                 Array<OneD, int>       localEdges; 
  
@@ -537,6 +588,53 @@ namespace Nektar
                 //
                 // List the (non-dirichlet) vertices and edges of the mesh as the vertices of the temporary graph.
                 // Also define the adjancency between the different vertices of the graph.
+
+                // List the periodic vertices and edges next.
+                // This allows to give corresponding DOF's the same
+                // global ID
+                // a) periodic vertices
+                for(mapConstIt = periodicVerticesId.begin(); mapConstIt != periodicVerticesId.end(); mapConstIt++)
+                {
+                    meshVertId  = mapConstIt->first;
+                    meshVertId2 = mapConstIt->second;
+
+                    if(vertReorderedGraphVertId.count(meshVertId) == 0)        
+                    {
+                        if(vertReorderedGraphVertId.count(meshVertId2) == 0)        
+                        {
+                            vertTempGraphVertId[meshVertId]  = tempGraphVertId;
+                            vertTempGraphVertId[meshVertId2] = tempGraphVertId++;
+                        }
+                        else
+                        {
+                            vertReorderedGraphVertId[meshVertId] = vertReorderedGraphVertId[meshVertId2];
+                        }
+                    }
+                    else
+                    {
+                        if(vertReorderedGraphVertId.count(meshVertId2) == 0)        
+                        {
+                            vertReorderedGraphVertId[meshVertId2] = vertReorderedGraphVertId[meshVertId];
+                        }
+                    }
+                }
+
+                // b) periodic edges
+                for(mapConstIt = periodicEdgesId.begin(); mapConstIt != periodicEdgesId.end(); mapConstIt++)
+                {
+                    meshEdgeId  = mapConstIt->first;
+                    meshEdgeId2 = mapConstIt->second;
+
+                    ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId) == 0,
+                             "This periodic boundary edge has been specified before");
+                    ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId2) == 0,
+                             "This periodic boundary edge has been specified before");
+                    
+                    edgeTempGraphVertId[meshEdgeId]  = tempGraphVertId;
+                    edgeTempGraphVertId[meshEdgeId2] = tempGraphVertId++;
+                }
+
+                // List all other vertices and edges
                 for(i = 0; i < locExpVector.size(); ++i)
                 { 
                     if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[i]))
@@ -663,6 +761,53 @@ namespace Nektar
             // order they appear when looping over all the elements in the domain
             {
                 m_totLocBndDofs = 0;
+
+                // List the periodic vertices and edges next.
+                // This allows to give corresponding DOF's the same
+                // global ID
+                // a) periodic vertices
+                for(mapConstIt = periodicVerticesId.begin(); mapConstIt != periodicVerticesId.end(); mapConstIt++)
+                {
+                    meshVertId  = mapConstIt->first;
+                    meshVertId2 = mapConstIt->second;
+
+                    if(vertReorderedGraphVertId.count(meshVertId) == 0)        
+                    {
+                        if(vertReorderedGraphVertId.count(meshVertId2) == 0)        
+                        {
+                            vertReorderedGraphVertId[meshVertId]  = graphVertId;
+                            vertReorderedGraphVertId[meshVertId2] = graphVertId++;
+                        }
+                        else
+                        {
+                            vertReorderedGraphVertId[meshVertId] = vertReorderedGraphVertId[meshVertId2];
+                        }
+                    }
+                    else
+                    {
+                        if(vertReorderedGraphVertId.count(meshVertId2) == 0)        
+                        {
+                            vertReorderedGraphVertId[meshVertId2] = vertReorderedGraphVertId[meshVertId];
+                        }
+                    }
+                }
+
+                // b) periodic edges
+                for(mapConstIt = periodicEdgesId.begin(); mapConstIt != periodicEdgesId.end(); mapConstIt++)
+                {
+                    meshEdgeId  = mapConstIt->first;
+                    meshEdgeId2 = mapConstIt->second;
+
+                    ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId) == 0,
+                             "This periodic boundary edge has been specified before");
+                    ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId2) == 0,
+                             "This periodic boundary edge has been specified before");
+                    
+                    edgeReorderedGraphVertId[meshEdgeId]  = graphVertId;
+                    edgeReorderedGraphVertId[meshEdgeId2] = graphVertId++;
+                }
+
+                // List all other vertices and edges
                 for(i = 0; i < locExpVector.size(); ++i)
                 { 
                     if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[i]))
@@ -883,6 +1028,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalMap2D.cpp,v $
+* Revision 1.14  2008/06/05 15:06:58  pvos
+* Added documentation
+*
 * Revision 1.13  2008/05/07 16:05:55  pvos
 * Mapping + Manager updates
 *

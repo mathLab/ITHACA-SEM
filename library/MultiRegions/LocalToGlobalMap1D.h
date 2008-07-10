@@ -45,19 +45,19 @@ namespace Nektar
 {
     namespace MultiRegions
     {        
+        const static Array<OneD, LocalRegions::PointExpSharedPtr> NullPointExpSharedPtrArray;
+
     class LocalToGlobalMap1D: 
         public LocalToGlobalMap
         {
         public:
             LocalToGlobalMap1D();
+
             LocalToGlobalMap1D(const int loclen, 
                                const StdRegions::StdExpansionVector &locexp, 
-                               const SpatialDomains::MeshGraph1D &graph1D);
-            LocalToGlobalMap1D(const int loclen, 
-                               const StdRegions::StdExpansionVector &locexp, 
-                               const SpatialDomains::MeshGraph1D &graph1D,
-                               const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp,
-                               const Array<OneD, const SpatialDomains::BoundaryConditionType> &bndCondTypes);
+                               const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp = NullPointExpSharedPtrArray,
+                               const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions = NullBoundaryConditionShPtrArray,
+                               const map<int,int>& periodicVerticesId = NullIntIntMap);
             
             virtual ~LocalToGlobalMap1D();
             
@@ -153,6 +153,9 @@ namespace Nektar
 
 /**
  $Log: LocalToGlobalMap1D.h,v $
+ Revision 1.22  2008/04/06 20:22:46  bnelson
+ Fixed gcc compiler warnings.
+
  Revision 1.21  2008/04/06 20:21:02  bnelson
  Fixed gcc compiler warnings.
 

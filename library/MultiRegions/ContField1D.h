@@ -57,11 +57,11 @@ namespace Nektar
          * As opposed to the class #ContExpList1D, the class #ContField1D is able to 
          * incorporate the boundary conditions imposed to the problem to be solved. 
          * Therefore, the class is equipped with three additional data members:
-         * - #m_bndConstraint
+         * - #m_bndCondExpansions
          * - #m_bndTypes
          * - #m_bndCondEquations
          *
-         * The first data structure, #m_bndConstraint, 
+         * The first data structure, #m_bndCondExpansions, 
          * contains the point Expansion on the boundary,  #m_bndTypes
          * stores information about the type of boundary condition on the different parts
          * of the boundary while #m_bndCondEquations holds the equation of the imposed
@@ -187,7 +187,7 @@ namespace Nektar
              * \f[\frac{d^2u}{dx^2}-\lambda u(x) = 
              * f(x),\f]
              * supplemented with appropriate boundary conditions (which are contained
-             * in the data member #m_bndConstraint). Applying a \f$C^0\f$ continuous 
+             * in the data member #m_bndCondExpansions). Applying a \f$C^0\f$ continuous 
              * Galerkin discretisation, this equation leads to the following linear 
              * system:
              * \f[\left( \boldsymbol{M}+\lambda\boldsymbol{L}\right)
@@ -229,7 +229,7 @@ namespace Nektar
             inline const Array<OneD,const LocalRegions::PointExpSharedPtr>& 
                 GetBndCondExp()
             {
-                return m_bndConstraint;
+                return m_bndCondExpansions;
             }
 
         protected:
@@ -241,21 +241,13 @@ namespace Nektar
              * It is an array of size equal to the number of boundary regions and 
              * consists of entries of the type LocalRegions#PointExp. 
              */ 
-            Array<OneD,LocalRegions::PointExpSharedPtr>         m_bndConstraint;
+            Array<OneD,LocalRegions::PointExpSharedPtr>         m_bndCondExpansions;
           
             /**
-             * \brief An array which contains the boundary condition type of the 
-             * different boundary regions.
+             * \brief An array which contains the information about the boundary condition  
+             * on the different boundary regions.
              */ 
-            Array<OneD,SpatialDomains::BoundaryConditionType>   m_bndTypes;
-          
-            /**
-             * \brief An array which contains the equation of the imposed boundary 
-             * conditions on the different boundary regions
-             */ 
-            Array<OneD,SpatialDomains::Equation>               m_bndCondEquations;
-
-
+            Array<OneD,SpatialDomains::BoundaryConditionShPtr>  m_bndConditions;
           
             /**
              * \brief This function returns the linear system specified by the key 
@@ -277,7 +269,7 @@ namespace Nektar
              * Given a linear system specified by the key \a key,
              * \f[\boldsymbol{M}\boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}},\f]
              * this function solves this linear system taking into account the 
-             * boundary conditions specified in the data member #m_bndConstraint. 
+             * boundary conditions specified in the data member #m_bndCondExpansions. 
              * Therefore, it adds an array \f$\boldsymbol{\hat{g}}\f$ which 
              * represents the non-zero surface integral resulting from the weak 
              * boundary conditions (e.g. Neumann boundary conditions) to the right 
@@ -328,7 +320,7 @@ namespace Nektar
              * a list of point expansions.    
              *
              * The point expansions of the Dirichlet boundary regions are listed 
-             * first in the array #m_bndConstraint.
+             * first in the array #m_bndCondExpansions.
              *
              * \param graph1D A mesh, containing information about the domain and 
              * the spectral/hp element expansion.
@@ -340,6 +332,11 @@ namespace Nektar
             void GenerateBoundaryConditionExpansion(const SpatialDomains::MeshGraph1D &graph1D,
                                                     SpatialDomains::BoundaryConditions &bcs, 
                                                     const std::string variable);
+
+            void GetPeriodicVertices(const SpatialDomains::MeshGraph1D &graph1D,
+                                     SpatialDomains::BoundaryConditions &bcs, 
+                                     const std::string variable,
+                                     map<int,int>& periodicVertices);
         };
         typedef boost::shared_ptr<ContField1D>      ContField1DSharedPtr;
 

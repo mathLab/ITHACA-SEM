@@ -47,6 +47,8 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        const static Array<OneD, SpatialDomains::BoundaryConditionShPtr> NullBoundaryConditionShPtrArray;
+        const static map<int,int> NullIntIntMap;
         
     class LocalToGlobalMap:
         public LocalToGlobalBndryMap
@@ -137,6 +139,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap.h,v $
+/** Revision 1.18  2008/04/06 22:31:17  bnelson
+/** Fixed gcc compiler warnings.
+/**
  Revision 1.17  2008/04/06 06:00:07  bnelson
  Changed ConstArray to Array<const>
 

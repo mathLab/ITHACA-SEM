@@ -42,17 +42,15 @@ namespace Nektar
 
         ContField1D::ContField1D(void):
             ContExpList1D(),
-            m_bndConstraint(),
-            m_bndTypes(),
-            m_bndCondEquations()
+            m_bndCondExpansions(),
+            m_bndConditions()
         {
         }
 
         ContField1D::ContField1D(const ContField1D &In):
             ContExpList1D(In),
-            m_bndConstraint(In.m_bndConstraint),
-            m_bndTypes(In.m_bndTypes),
-            m_bndCondEquations(In.m_bndCondEquations)
+            m_bndCondExpansions(In.m_bndCondExpansions),
+            m_bndConditions(In.m_bndConditions)
         {
         }
 
@@ -60,15 +58,19 @@ namespace Nektar
                                  SpatialDomains::BoundaryConditions &bcs, 
                                  const int bc_loc):
             ContExpList1D(graph1D,false),
-            m_bndConstraint(),
-            m_bndTypes(),
-            m_bndCondEquations()
+            m_bndCondExpansions(),
+            m_bndConditions()
         {
             GenerateBoundaryConditionExpansion(graph1D,bcs,bcs.GetVariable(bc_loc));
             EvaluateBoundaryConditions();
+
+            map<int,int> periodicVertices;
+            GetPeriodicVertices(graph1D,bcs,bcs.GetVariable(bc_loc),periodicVertices);
+
             m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
-                                                                                 graph1D,m_bndConstraint,
-                                                                                 m_bndTypes);
+                                                                                 m_bndCondExpansions,
+                                                                                 m_bndConditions,
+                                                                                 periodicVertices);
 	    
 	    m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
 	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
@@ -78,15 +80,19 @@ namespace Nektar
             SpatialDomains::BoundaryConditions &bcs, 
             const std::string variable):
             ContExpList1D(graph1D,false),
-            m_bndConstraint(),
-            m_bndTypes(),
-            m_bndCondEquations()
+            m_bndCondExpansions(),
+            m_bndConditions()
         {
             GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
             EvaluateBoundaryConditions();
+
+            map<int,int> periodicVertices;
+            GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
+
             m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
-                                                                                 graph1D,m_bndConstraint,
-                                                                                 m_bndTypes);
+                                                                                 m_bndCondExpansions,
+                                                                                 m_bndConditions,
+                                                                                 periodicVertices);
 	    
 	    m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
 	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
@@ -97,15 +103,19 @@ namespace Nektar
                                  SpatialDomains::BoundaryConditions &bcs, 
                                  const int bc_loc):
             ContExpList1D(Ba,graph1D,false),
-            m_bndConstraint(),
-            m_bndTypes(),
-            m_bndCondEquations()
+            m_bndCondExpansions(),
+            m_bndConditions()
         {
             GenerateBoundaryConditionExpansion(graph1D,bcs,bcs.GetVariable(bc_loc));
             EvaluateBoundaryConditions();
+
+            map<int,int> periodicVertices;
+            GetPeriodicVertices(graph1D,bcs,bcs.GetVariable(bc_loc),periodicVertices);
+
             m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
-                                                                                 graph1D,m_bndConstraint,
-                                                                                 m_bndTypes);
+                                                                                 m_bndCondExpansions,
+                                                                                 m_bndConditions,
+                                                                                 periodicVertices);
 	    
 	    m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
 	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
@@ -116,16 +126,19 @@ namespace Nektar
                                  SpatialDomains::BoundaryConditions &bcs, 
                                  const std::string variable):
             ContExpList1D(Ba,graph1D,false),
-            m_bndConstraint(),
-            m_bndTypes(),
-            m_bndCondEquations()
-            
+            m_bndCondExpansions(), 
+            m_bndConditions()         
         {
             GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
             EvaluateBoundaryConditions();
+
+            map<int,int> periodicVertices;
+            GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
+
             m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
-                                                                                 graph1D,m_bndConstraint,
-                                                                                 m_bndTypes);
+                                                                                 m_bndCondExpansions,
+                                                                                 m_bndConditions,
+                                                                                 periodicVertices);
 	    
 	    m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
 	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
@@ -150,19 +163,22 @@ namespace Nektar
             SpatialDomains::VertexComponentSharedPtr vert;
 
             int nbnd = bregions.size(); 
-            int nPointExp = 0;
+            // count the number of non-periodic boundary points
             for(i = 0; i < nbnd; ++i)
             {   
-                for(j = 0; j < bregions[i]->size(); j++)
+                if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType() != SpatialDomains::ePeriodic )
                 {
-                    nPointExp += (*bregions[i])[j]->size();
-                } 
+                    for(j = 0; j < bregions[i]->size(); j++)
+                    {
+                        cnt += (*bregions[i])[j]->size();
+                    } 
+                }
             }
                        
-            m_bndConstraint    = Array<OneD,LocalRegions::PointExpSharedPtr>(nPointExp);
-            m_bndTypes         = Array<OneD,SpatialDomains::BoundaryConditionType>(nPointExp);
-            m_bndCondEquations = Array<OneD,SpatialDomains::Equation>(nPointExp);
+            m_bndCondExpansions = Array<OneD,LocalRegions::PointExpSharedPtr>(cnt);
+            m_bndConditions     = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
             
+            cnt=0;
             // list Dirichlet boundaries first
             for(i = 0; i < nbnd; ++i)
             {  
@@ -176,10 +192,8 @@ namespace Nektar
                             if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[j])[k]))
                             {
                                 locPointExp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
-                                m_bndConstraint[cnt]      = locPointExp;
-                                m_bndTypes[cnt]           = SpatialDomains::eDirichlet;
-                                m_bndCondEquations[cnt++] = boost::static_pointer_cast<SpatialDomains::DirichletBoundaryCondition>(locBCond)->
-                                    m_DirichletCondition;
+                                m_bndCondExpansions[cnt]  = locPointExp;
+                                m_bndConditions[cnt++]    = locBCond;
                             }
                             else
                             {
@@ -190,7 +204,7 @@ namespace Nektar
                 } // end if Dirichlet
             }
 
-            // list other boundaries
+            // then, list the other (non-periodic) boundaries
             for(i = 0; i < nbnd; ++i)
             {        
                 locBCond = (*(bconditions[i]))[variable];  
@@ -203,10 +217,8 @@ namespace Nektar
                             if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[j])[k]))
                             {
                                 locPointExp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
-                                m_bndConstraint[cnt]      = locPointExp;
-                                m_bndTypes[cnt]           = SpatialDomains::eNeumann;
-                                m_bndCondEquations[cnt++] = boost::static_pointer_cast<SpatialDomains::NeumannBoundaryCondition>(locBCond)->
-                                    m_NeumannCondition;
+                                m_bndCondExpansions[cnt]  = locPointExp;
+                                m_bndConditions[cnt++]    = locBCond;
                             }
                             else
                             {
@@ -215,9 +227,82 @@ namespace Nektar
                         }
                     }
                 }    
-                else if(locBCond->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
+                else if((locBCond->GetBoundaryConditionType() != SpatialDomains::eDirichlet) && 
+                        (locBCond->GetBoundaryConditionType() != SpatialDomains::ePeriodic))
                 {
                     ASSERTL0(false,"This type of BC not implemented yet");
+                }                  
+            }
+        }
+
+        void ContField1D::GetPeriodicVertices(const SpatialDomains::MeshGraph1D &graph1D,
+                                              SpatialDomains::BoundaryConditions &bcs, 
+                                              const std::string variable,
+                                              map<int,int>& periodicVertices)
+        {
+
+            int i,j,k;
+            
+            SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
+            SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
+
+            int region1ID;
+            int region2ID;
+
+            SpatialDomains::Composite comp1;
+            SpatialDomains::Composite comp2;
+
+            SpatialDomains::VertexComponentSharedPtr vert1;
+            SpatialDomains::VertexComponentSharedPtr vert2;
+            
+            SpatialDomains::BoundaryConditionShPtr locBCond; 
+
+            // This std::map is a check so that the periodic pairs
+            // are not treated twice
+            map<int, int> doneBndRegions;
+
+            int nbnd = bregions.size();
+          
+            for(i = 0; i < nbnd; ++i)
+            {        
+                locBCond = (*(bconditions[i]))[variable];  
+                if(locBCond->GetBoundaryConditionType() == SpatialDomains::ePeriodic)
+                {    
+                    region1ID = i;
+                    region2ID = (boost::static_pointer_cast<SpatialDomains::PeriodicBoundaryCondition>(locBCond))->m_ConnectedBoundaryRegion;
+
+                    if(doneBndRegions.count(region1ID)==0)
+                    {                    
+                        ASSERTL0(bregions[region1ID]->size() == bregions[region2ID]->size(),
+                                 "Size of the 2 periodic boundary regions should be equal");
+                    
+                        for(j = 0; j < bregions[region1ID]->size(); j++)
+                        {
+                            comp1 = (*(bregions[region1ID]))[j];
+                            comp2 = (*(bregions[region2ID]))[j];
+                            
+                            ASSERTL0(comp1->size() == comp2->size(),
+                                     "Size of the 2 periodic composites should be equal");
+                            
+                            for(k = 0; k < comp1->size(); k++)
+                            {                                      
+                                if(!(vert1 = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*comp1)[k]))||
+                                   !(vert2 = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*comp2)[k])))
+                                {
+                                    ASSERTL0(false,"dynamic cast to a VertexComponent failed");
+                                } 
+
+                                // Extract the periodic vertices
+                                periodicVertices[vert1->GetVid()] = vert2->GetVid();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ASSERTL0(doneBndRegions[region1ID]==region2ID,
+                                 "Boundary regions are not mutually periodic");
+                    }
+                    doneBndRegions[region2ID] = region1ID;
                 }                  
             }
         }
@@ -230,10 +315,24 @@ namespace Nektar
             NekDouble x1;
             NekDouble x2;
             
-            for(i = 0; i < m_bndConstraint.num_elements(); ++i)
+            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                m_bndConstraint[i]->GetCoords(x0,x1,x2);
-                m_bndConstraint[i]->SetValue((m_bndCondEquations[i]).Evaluate(x0,x1,x2,time));
+                m_bndCondExpansions[i]->GetCoords(x0,x1,x2);
+
+                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                { 
+                    m_bndCondExpansions[i]->SetValue((boost::static_pointer_cast<SpatialDomains::DirichletBoundaryCondition>(m_bndConditions[i])->
+                                                      m_DirichletCondition).Evaluate(x0,x1,x2,time));
+                }
+                else if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eNeumann)
+                { 
+                    m_bndCondExpansions[i]->SetValue((boost::static_pointer_cast<SpatialDomains::NeumannBoundaryCondition>(m_bndConditions[i])->
+                                                      m_NeumannCondition).Evaluate(x0,x1,x2,time));
+                }
+                else
+                {
+                    ASSERTL0(false,"This type of BC not implemented yet");
+                }
             }                
         }
 
@@ -273,7 +372,7 @@ namespace Nektar
             Blas::Dcopy(m_contNcoeffs, m_contCoeffs, 1, init, 1);
             for(i = 0; i < NumDirBcs; ++i)
             {
-                init[i] = m_bndConstraint[i]->GetValue();
+                init[i] = m_bndCondExpansions[i]->GetValue();
             }
 
             GeneralMatrixOp(key, init, Dir_fce);
@@ -289,10 +388,10 @@ namespace Nektar
                 Dir_fce, 1, m_contCoeffs, 1);
 
             // Forcing function with weak boundary conditions 
-            for(i = 0; i < m_bndConstraint.num_elements()-NumDirBcs; ++i)
+            for(i = 0; i < m_bndCondExpansions.num_elements()-NumDirBcs; ++i)
             {
                 m_contCoeffs[m_locToGloMap->GetBndCondMap(i+NumDirBcs)] +=  
-                    m_bndConstraint[i+NumDirBcs]->GetValue();
+                    m_bndCondExpansions[i+NumDirBcs]->GetValue();
             }
 
             if(m_contNcoeffs - NumDirBcs > 0)

@@ -78,7 +78,7 @@ namespace Nektar
 	    // setup mapping array 
             if(constructMap)
             {
-                m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph1D);
+                m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp);
                 m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
                 m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
             }
@@ -104,7 +104,7 @@ namespace Nektar
 	    // setup mapping array 
             if(constructMap)
             {
-                m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph1D);
+                m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp);
                 m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
                 m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
             }
@@ -172,6 +172,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.31  2008/04/06 06:00:06  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.30  2008/03/12 15:25:45  pvos
 * Clean up of the code
 *

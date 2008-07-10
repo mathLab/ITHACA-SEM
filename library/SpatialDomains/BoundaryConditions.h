@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/BoundaryConditions.h,v $
+//  File:  BoundaryConditions.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -58,7 +58,8 @@ namespace Nektar
         {
             eDirichlet,
             eNeumann,
-            eRobin
+            eRobin,
+            ePeriodic
         };
 
         struct BoundaryConditionBase
@@ -112,6 +113,17 @@ namespace Nektar
             // u = a(x,y,z) + b(x,y,z)*\frac{\partial{u}}{\partial{n}}
             Equation m_a;
             Equation m_b;
+        };
+
+        struct PeriodicBoundaryCondition : public BoundaryConditionBase
+        {
+            PeriodicBoundaryCondition(const unsigned int n):
+                BoundaryConditionBase(ePeriodic),
+                m_ConnectedBoundaryRegion(n)
+            {
+            }
+             
+            unsigned int m_ConnectedBoundaryRegion;
         };
 
         typedef std::map<std::string, NekDouble> ParamMap;

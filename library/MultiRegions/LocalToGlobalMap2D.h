@@ -54,9 +54,7 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-
         const static Array<OneD, MultiRegions::ExpList1DSharedPtr> NullExpList1DSharedPtrArray;
-        const static Array<OneD, SpatialDomains::BoundaryConditionType> NullBoundaryConditionTypeArray;
         
     class LocalToGlobalMap2D: 
         public LocalToGlobalMap
@@ -67,7 +65,9 @@ namespace Nektar
             LocalToGlobalMap2D(const int loclen, 
                                const StdRegions::StdExpansionVector &locexp, 
                                const Array<OneD, const MultiRegions::ExpList1DSharedPtr> &bndCondExp = NullExpList1DSharedPtrArray,
-                               const Array<OneD, const SpatialDomains::BoundaryConditionType> &bndCondTypes = NullBoundaryConditionTypeArray);
+                               const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions = NullBoundaryConditionShPtrArray,
+                               const map<int,int>& periodicVerticesId = NullIntIntMap,
+                               const map<int,int>& periodicEdgesId = NullIntIntMap);
             
             virtual ~LocalToGlobalMap2D();
             
@@ -229,6 +229,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap2D.h,v $
+/** Revision 1.13  2008/05/07 16:05:55  pvos
+/** Mapping + Manager updates
+/**
 /** Revision 1.12  2008/04/06 22:31:17  bnelson
 /** Fixed gcc compiler warnings.
 /**

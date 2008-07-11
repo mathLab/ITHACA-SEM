@@ -509,6 +509,38 @@ namespace Nektar
                 m_physState = true;
                 return m_phys;
             }
+
+            /**
+             * \brief This function discretely evaluates the derivative of a function 
+             * \f$f(\boldsymbol{x})\f$  on the domain consisting of all elements of 
+             * the expansion.
+             *
+             * Given a function \f$f(\boldsymbol{x})\f$ evaluated at the quadrature points, 
+             * this function calculates the derivatives 
+             * \f$\frac{d}{dx_1}\f$, \f$\frac{d}{dx_2}\f$ and \f$\frac{d}{dx_3}\f$ of the 
+             * function \f$f(\boldsymbol{x})\f$ at the same quadrature points. The local 
+             * distribution of the quadrature points allows an elemental evaluation of the 
+             * derivative. This is done by a call to the function  
+             * StdRegions#StdExpansion#PhysDeriv.
+             *
+             * \param inarray An array of size \f$Q_{\mathrm{tot}}\f$ containing the values 
+             * of the function \f$f(\boldsymbol{x})\f$ at the quadrature points 
+             * \f$\boldsymbol{x}_i\f$.
+             * \param out_d0 The discrete evaluation of the derivative\f$\frac{d}{dx_1}\f$ 
+             * will be stored in this array of size \f$Q_{\mathrm{tot}}\f$.
+             * \param out_d1 The discrete evaluation of the derivative\f$\frac{d}{dx_2}\f$ 
+             * will be stored in this array of size \f$Q_{\mathrm{tot}}\f$. Note that if no 
+             * memory is allocated for \a out_d1, the derivative \f$\frac{d}{dx_2}\f$ will 
+             * not be calculated.
+             * \param out_d2 The discrete evaluation of the derivative\f$\frac{d}{dx_3}\f$ 
+             * will be stored in this array of size \f$Q_{\mathrm{tot}}\f$. Note that if no 
+             * memory is allocated for \a out_d2, the derivative \f$\frac{d}{dx_3}\f$ will 
+             * not be calculated.
+             */
+            void   PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+                             Array<OneD, NekDouble> &out_d0, 
+                             Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+                             Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
             
         protected:
             /**
@@ -631,38 +663,6 @@ namespace Nektar
              */
             void   IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
                                    Array<OneD, NekDouble> &outarray);
-            
-            /**
-             * \brief This function discretely evaluates the derivative of a function 
-             * \f$f(\boldsymbol{x})\f$  on the domain consisting of all elements of 
-             * the expansion.
-             *
-             * Given a function \f$f(\boldsymbol{x})\f$ evaluated at the quadrature points, 
-             * this function calculates the derivatives 
-             * \f$\frac{d}{dx_1}\f$, \f$\frac{d}{dx_2}\f$ and \f$\frac{d}{dx_3}\f$ of the 
-             * function \f$f(\boldsymbol{x})\f$ at the same quadrature points. The local 
-             * distribution of the quadrature points allows an elemental evaluation of the 
-             * derivative. This is done by a call to the function  
-             * StdRegions#StdExpansion#PhysDeriv.
-             *
-             * \param inarray An array of size \f$Q_{\mathrm{tot}}\f$ containing the values 
-             * of the function \f$f(\boldsymbol{x})\f$ at the quadrature points 
-             * \f$\boldsymbol{x}_i\f$.
-             * \param out_d0 The discrete evaluation of the derivative\f$\frac{d}{dx_1}\f$ 
-             * will be stored in this array of size \f$Q_{\mathrm{tot}}\f$.
-             * \param out_d1 The discrete evaluation of the derivative\f$\frac{d}{dx_2}\f$ 
-             * will be stored in this array of size \f$Q_{\mathrm{tot}}\f$. Note that if no 
-             * memory is allocated for \a out_d1, the derivative \f$\frac{d}{dx_2}\f$ will 
-             * not be calculated.
-             * \param out_d2 The discrete evaluation of the derivative\f$\frac{d}{dx_3}\f$ 
-             * will be stored in this array of size \f$Q_{\mathrm{tot}}\f$. Note that if no 
-             * memory is allocated for \a out_d2, the derivative \f$\frac{d}{dx_3}\f$ will 
-             * not be calculated.
-             */
-            void   PhysDeriv(const Array<OneD, const NekDouble> &inarray,
-                             Array<OneD, NekDouble> &out_d0, 
-                             Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
-                             Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
             
             /**
              * \brief  This function elementally evaluates the forward transformation of a 
@@ -903,6 +903,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.36  2008/06/06 23:27:20  ehan
+* Added doxygen documentation
+*
 * Revision 1.35  2008/06/05 15:06:58  pvos
 * Added documentation
 *

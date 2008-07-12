@@ -240,7 +240,20 @@ namespace Nektar
                 {
                     return  GetBasisNumModes(1); 
                 }
+            }
 
+            const int GetEdgeNumPoints(const int i) const
+            {
+                ASSERTL2((i > 0)&&(i < 3),"edge id is out of range");
+
+                if((i == 0)||(i == 2))
+                {
+                    return  GetNumPoints(0);
+                }
+                else
+                {
+                    return  GetNumPoints(1); 
+                }
             }
 
             const LibUtilities::BasisType GetEdgeBasisType(const int i) const
@@ -286,6 +299,11 @@ namespace Nektar
             virtual int v_GetEdgeNcoeffs(const int i) const
             {
                 return GetEdgeNcoeffs(i);
+            }
+
+            virtual int v_GetEdgeNumPoints(const int i) const
+            {
+                return GetEdgeNumPoints(i);
             }
 
             virtual int v_NumBndryCoeffs() const
@@ -488,6 +506,9 @@ namespace Nektar
 
 /**
  * $Log: StdQuadExp.h,v $
+ * Revision 1.33  2008/07/04 10:18:40  pvos
+ * Some updates
+ *
  * Revision 1.32  2008/07/02 14:08:56  pvos
  * Implementation of HelmholtzMatOp and LapMatOp on shape level
  *

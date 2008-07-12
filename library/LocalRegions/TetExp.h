@@ -71,7 +71,7 @@ namespace Nektar
 
             /// Destructor
             ~TetExp();
-
+ 
             void GetCoords(Array<OneD,NekDouble> &coords_0,
                            Array<OneD,NekDouble> &coords_1,
                            Array<OneD,NekDouble> &coords_2);
@@ -172,14 +172,14 @@ namespace Nektar
             DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 
-	    SpatialDomains::TetGeomSharedPtr m_geom;
+
+        private:
+	    SpatialDomains::TetGeomSharedPtr m_geom; 
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
 
 	    LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
-
-        private:
             TetExp();
 	
             virtual StdRegions::ExpansionType v_DetExpansionType() const
@@ -307,6 +307,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.h,v $
+ *    Revision 1.17  2008/07/04 10:19:05  pvos
+ *    Some updates
+ *
  *    Revision 1.16  2008/06/06 23:25:43  ehan
  *    Added doxygen documentation
  *

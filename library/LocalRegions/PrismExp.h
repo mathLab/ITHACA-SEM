@@ -72,6 +72,7 @@ namespace Nektar
             /// Destructor
             ~PrismExp();
 
+
             void GetCoords(Array<OneD,NekDouble> &coords_0,
                            Array<OneD,NekDouble> &coords_1,
                            Array<OneD,NekDouble> &coords_2);
@@ -170,14 +171,15 @@ namespace Nektar
             DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 
+    
+        private:
             SpatialDomains::PrismGeomSharedPtr m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
 
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
-    
-        private:
+
             PrismExp();
 
             virtual StdRegions::ExpansionType v_DetExpansionType() const 
@@ -306,6 +308,9 @@ namespace Nektar
 
 /** 
  *    $Log: PrismExp.h,v $
+ *    Revision 1.15  2008/07/04 10:19:05  pvos
+ *    Some updates
+ *
  *    Revision 1.14  2008/05/30 00:33:48  delisi
  *    Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
  *

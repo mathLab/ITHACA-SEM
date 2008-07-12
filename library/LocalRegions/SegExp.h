@@ -209,12 +209,6 @@ namespace Nektar
             DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 
-            SpatialDomains::Geometry1DSharedPtr m_geom;
-            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
-
-            LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
-            LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
-
 
 
             /**
@@ -250,8 +244,15 @@ namespace Nektar
                                  int coll_check);
 
         private:
+            SpatialDomains::Geometry1DSharedPtr m_geom;
+            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
 
+            LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
+            LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
+
+            
             SegExp();
+
 
             virtual StdRegions::ExpansionType v_DetExpansionType() const
             {
@@ -514,6 +515,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.37  2008/07/04 10:19:05  pvos
+// Some updates
+//
 // Revision 1.36  2008/07/02 14:09:18  pvos
 // Implementation of HelmholtzMatOp and LapMatOp on shape level
 //

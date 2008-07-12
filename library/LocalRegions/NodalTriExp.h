@@ -132,12 +132,6 @@ namespace Nektar
             DNekScalMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
             
-            SpatialDomains::Geometry2DSharedPtr m_geom;
-            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
-
-            LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
-            LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
-            
             /** \brief  Inner product of \a inarray over region with respect to
                 the expansion basis \a base and return in \a outarray */
             void IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
@@ -146,7 +140,13 @@ namespace Nektar
                                  Array<OneD, NekDouble> &outarray);
             
         private:           
-        
+            SpatialDomains::Geometry2DSharedPtr m_geom;
+            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
+
+            LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
+            LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
+            
+
             virtual StdRegions::ExpansionType v_DetExpansionType() const
             {
                 return DetExpansionType();
@@ -326,6 +326,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.h,v $
+ *    Revision 1.19  2008/07/04 10:19:04  pvos
+ *    Some updates
+ *
  *    Revision 1.18  2008/05/30 00:33:48  delisi
  *    Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
  *

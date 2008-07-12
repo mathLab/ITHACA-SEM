@@ -169,14 +169,13 @@ namespace Nektar
             DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 
+        private:
             SpatialDomains::PyrGeomSharedPtr m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
 
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
-
-        private:
             PyrExp();
 
             virtual StdRegions::ExpansionType v_DetExpansionType() const
@@ -306,6 +305,9 @@ namespace Nektar
 
 /**
  *    $Log: PyrExp.h,v $
+ *    Revision 1.16  2008/07/04 10:19:05  pvos
+ *    Some updates
+ *
  *    Revision 1.15  2008/05/30 00:33:48  delisi
  *    Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
  *

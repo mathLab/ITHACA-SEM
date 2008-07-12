@@ -92,6 +92,7 @@ namespace Nektar
                 IProductWRTBase(m_base[0]->GetBdata(), m_base[1]->GetBdata(), m_base[2]->GetBdata(), inarray,outarray,1);
             }
  
+
             void GetCoords(Array<OneD,NekDouble> &coords_1,
                            Array<OneD,NekDouble> &coords_2, 
                            Array<OneD,NekDouble> &coords_3);
@@ -125,11 +126,6 @@ namespace Nektar
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
             DNekBlkMatSharedPtr CreateStdStaticCondMatrix(const StdRegions::StdMatrixKey &mkey);
 
-            SpatialDomains::HexGeomSharedPtr m_geom;
-            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
-
-            LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
-            LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
             /** 
                 \brief Calculate the inner product of inarray with respect to
@@ -162,9 +158,16 @@ namespace Nektar
                                  int coll_check);
 
         private:
-            /// Return Shape of region, using  ShapeType enum list. i.e. Hexahedron
+            SpatialDomains::HexGeomSharedPtr m_geom;
+            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
+
+            LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
+            LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
+
             HexExp();
 
+
+            /// Return Shape of region, using  ShapeType enum list. i.e. Hexahedron
             virtual StdRegions::ExpansionType v_DetExpansionType() const
             {
                 return DetExpansionType();
@@ -279,6 +282,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.19  2008/07/04 10:19:04  pvos
+ *    Some updates
+ *
  *    Revision 1.18  2008/06/07 00:23:04  ehan
  *    Fixed warnings.
  *

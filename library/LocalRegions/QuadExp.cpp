@@ -1295,7 +1295,7 @@ namespace Nektar
                           GetCartesianEorient(e),vmap);
                     for(i = 0; i < order_e; ++i)
                     {
-                        EdgeExp[e]->SetCoeff(i,inarray[vmap[i]]);
+                        EdgeExp[e]->SetCoeff(i,vmap.GetSign(i)*inarray[vmap[i]]);
                     }
                 }
 
@@ -1333,10 +1333,8 @@ namespace Nektar
         }
 
 
-#if 0 
-        void QuadExp::AddBoundaryInt(const int dir,
-                                     Array<OneD, const NekDouble> &inarray,
-                                     Array<OneD,NekDouble> &outarray,
+        void QuadExp::AddBoundaryInt(Array<OneD, const NekDouble> &inarray,
+                                     Array<OneD, NekDouble> &outarray,
                                      bool InArrayIsTrace) 
         {
 
@@ -1376,7 +1374,7 @@ namespace Nektar
                           GetCartesianEorient(e),vmap);
                     for(i = 0; i < order_e; ++i)
                     {
-                        EdgeExp[e]->SetCoeff(i,inarray[vmap[i]]);
+                        EdgeExp[e]->SetCoeff(i,vmap.GetSign(i)*inarray[vmap[i]]);
                     }
                 }
 
@@ -1387,7 +1385,6 @@ namespace Nektar
             }
 
         }
-#endif
 
         void QuadExp:: AddEdgeBoundaryInt(const int edge, 
                                           SegExpSharedPtr &EdgeExp,
@@ -1406,7 +1403,7 @@ namespace Nektar
             // add data to out array
             for(i = 0; i < order_e; ++i)
             {
-                outarray[vmap[i]] += EdgeExp->GetCoeff(i);
+                outarray[vmap[i]] += vmap.GetSign(i)*EdgeExp->GetCoeff(i);
             }
         }
 
@@ -2420,6 +2417,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.42  2008/07/09 11:45:48  sherwin
+ *    Modification to make workinvg UDG solver, added BndSysForce matrix, replaced GetScaleFactor with GetConstant(0)
+ *
  *    Revision 1.41  2008/07/04 10:19:05  pvos
  *    Some updates
  *

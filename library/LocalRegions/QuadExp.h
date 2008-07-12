@@ -173,6 +173,10 @@ namespace Nektar
                                     Array<OneD,NekDouble> &outarray,
                                     bool InArrayIsTrace = false);
 
+            void AddBoundaryInt(Array<OneD, const NekDouble> &inarray,
+                                Array<OneD,NekDouble> &outarray,
+                                bool InArrayIsTrace = true);
+
             void AddUDGHelmholtzBoundaryTerms(const NekDouble tau,
                                               const Array<OneD,const NekDouble> &inarray,
                                               Array<OneD,NekDouble> &outarray);
@@ -213,11 +217,6 @@ namespace Nektar
             DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 
-            SpatialDomains::Geometry2DSharedPtr m_geom;
-            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
-
-            LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
-            LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
         
             /** 
                 \brief Calculate the inner product of inarray with respect to
@@ -248,6 +247,12 @@ namespace Nektar
                                  int coll_check);
 
         private:
+            SpatialDomains::Geometry2DSharedPtr m_geom;
+            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
+
+            LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
+            LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
+
             QuadExp();
 
             virtual StdRegions::ExpansionType v_DetExpansionType() const
@@ -282,6 +287,7 @@ namespace Nektar
             {
                 return m_geom->GetCoordim();
             }
+            
 
             virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
             {
@@ -412,6 +418,13 @@ namespace Nektar
                 AddNormBoundaryInt(dir,inarray,outarray,false);
             }
         
+
+            virtual void v_AddBoundaryInt(Array<OneD, const NekDouble> &inarray,
+                                          Array<OneD,NekDouble> &outarray)
+            {
+                AddBoundaryInt(inarray,outarray);
+            }
+        
             virtual void v_AddUDGHelmholtzBoundaryTerms(const NekDouble tau,
                                                         const Array<OneD, const NekDouble> &inarray,
                                                         Array<OneD,NekDouble> &outarray)
@@ -432,6 +445,11 @@ namespace Nektar
                                                      Array <OneD,NekDouble > &outarray)
             {
                 AddUDGHelmholtzTraceTerms(tau,inarray,EdgeExp,outarray);
+            }
+            
+            virtual void v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            {
+                GetEdgePhysVals(edge,inarray,outarray);
             }
 
             virtual void v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
@@ -462,6 +480,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.32  2008/07/04 10:19:05  pvos
+ *    Some updates
+ *
  *    Revision 1.31  2008/07/02 14:09:18  pvos
  *    Implementation of HelmholtzMatOp and LapMatOp on shape level
  *

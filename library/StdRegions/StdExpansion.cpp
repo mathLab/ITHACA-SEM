@@ -52,6 +52,7 @@ namespace Nektar
         const int g_shapenfaces[SIZE_ExpansionType] = {0,0,0,0,4,5,5,6};
 
         StdExpansion::StdExpansion(void): 
+            m_elmt_id(0),
             m_numbases(0),
             m_ncoeffs(0)           
         {
@@ -61,6 +62,7 @@ namespace Nektar
             const LibUtilities::BasisKey &Ba, 
             const LibUtilities::BasisKey &Bb, 
             const LibUtilities::BasisKey &Bc):
+            m_elmt_id(0),
             m_numbases(numbases),
             m_base(m_numbases),
             m_ncoeffs(numcoeffs),
@@ -105,6 +107,7 @@ namespace Nektar
 
 
         StdExpansion::StdExpansion(const StdExpansion &T):
+            m_elmt_id(T.m_elmt_id),
             m_numbases(T.m_numbases),
             m_base(T.m_base),
             m_ncoeffs(T.m_ncoeffs),
@@ -724,6 +727,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.71  2008/07/02 14:08:56  pvos
+* Implementation of HelmholtzMatOp and LapMatOp on shape level
+*
 * Revision 1.70  2008/05/30 00:33:49  delisi
 * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
 *

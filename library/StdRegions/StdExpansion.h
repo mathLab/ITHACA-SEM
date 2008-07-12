@@ -409,6 +409,22 @@ namespace Nektar
                 return v_GetEdgeNcoeffs(i);
             }
 
+
+            /** \brief This function returns the number of quadrature points
+             *  belonging to the \a i-th edge  
+             *  
+             *  This function is a wrapper around the virtual function 
+             *  \a v_GetEdgeNumPoints() 
+             * 
+             *  \param i specifies which edge
+             *  \return returns the number of expansion coefficients belonging to
+             *  the \a i-th edge
+             */
+            int GetEdgeNumPoints(const int i) const
+            {
+                return v_GetEdgeNumPoints(i);
+            }
+
             /** \brief This function returns the number of expansion coefficients
              *  belonging to the \a i-th face  
              *  
@@ -645,6 +661,21 @@ namespace Nektar
                 v_IProductWRTDerivBase(dir,inarray, outarray);
             }
 
+            /// \brief Get the element id of this expansion when used
+            /// in a list by returning value of #m_elmt_id
+            inline int GetElmtId() 
+            {
+                return m_elmt_id;
+            }
+
+
+            /// \brief Set the element id of this expansion when used
+            /// in a list by returning value of #m_elmt_id
+            inline void SetElmtId(const int id) 
+            {
+                m_elmt_id = id;
+            }
+
             /** \brief this function returns the physical coordinates of the
              *  quadrature points of the expansion
              *
@@ -677,6 +708,7 @@ namespace Nektar
             {
                 v_GetCoord(Lcoord, coord);
             }
+
 
             /** \brief this function writes the solution to the file \a outfile
              *
@@ -762,11 +794,19 @@ namespace Nektar
                 v_AddUDGHelmholtzTraceTerms(tau,inarray,EdgeExp, outarray);
             }
 
+            // virtual functions related to LocalRegions
             virtual void AddNormBoundaryInt(const int dir,
                                             Array<OneD, const NekDouble> &inarray,
                                             Array<OneD,NekDouble> &outarray)
             {
                 v_AddNormBoundaryInt(dir,inarray,outarray);
+            }
+
+
+            virtual void AddBoundaryInt(Array<OneD, const NekDouble> &inarray,
+                                        Array<OneD,NekDouble> &outarray)
+            {
+                v_AddBoundaryInt(inarray,outarray);
             }
 
 
@@ -776,7 +816,7 @@ namespace Nektar
             {
                 v_AddNormTraceInt(dir,inarray,outarray);
             }
-            // virtual functions related to LocalRegions
+
 
             int GetCoordim()
             {
@@ -818,6 +858,11 @@ namespace Nektar
                 v_GetFaceToElementMap(fid,faceOrient,maparray,signarray);
             }
             
+            void GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            {
+                v_GetEdgePhysVals(edge,inarray,outarray);
+            }
+
             // element boundary ordering 
             // Segment mapping: Vertex to Seg
             void MapTo(EdgeOrientation dir, StdExpMap &Map)
@@ -1025,6 +1070,12 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
 
+            virtual void v_AddBoundaryInt(Array<OneD, const NekDouble> &inarray,
+                                          Array<OneD,NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+            }
+
             virtual void v_AddNormTraceInt(const int dir,
                                            Array<OneD, const NekDouble> &inarray,
                                            Array<OneD,NekDouble> &outarray)
@@ -1189,6 +1240,8 @@ namespace Nektar
 
         protected:
 
+
+            int   m_elmt_id;  ///< id of element when used in a list. 
             int   m_numbases;                                 /**< Number of 1D basis defined in expansion */
             Array<OneD, LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */            
             int  m_ncoeffs;                                   /**< Total number of coefficients used in the expansion */
@@ -1246,6 +1299,12 @@ namespace Nektar
             }
             
             virtual int v_GetEdgeNcoeffs(const int i) const
+            {
+                ASSERTL0(false, "This function is not valid or not defined");
+                return 0;
+            }
+
+            virtual int v_GetEdgeNumPoints(const int i) const
             {
                 ASSERTL0(false, "This function is not valid or not defined");
                 return 0;
@@ -1421,6 +1480,12 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
+            virtual void v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
+            }
+
+
             // element boundary ordering 
             virtual void v_MapTo(EdgeOrientation dir, StdExpMap &Map)
             {
@@ -1523,6 +1588,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.87  2008/07/04 10:18:40  pvos
+ * Some updates
+ *
  * Revision 1.86  2008/07/02 14:08:56  pvos
  * Implementation of HelmholtzMatOp and LapMatOp on shape level
  *

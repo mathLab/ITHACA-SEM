@@ -425,6 +425,14 @@ namespace Nektar
                 AddBoundaryInt(inarray,outarray);
             }
         
+
+            virtual void v_AddEdgeBoundaryInt(const int edge, 
+                                              SegExpSharedPtr &EdgeExp,
+                                              Array <OneD,NekDouble > &outarray)
+            {
+                AddEdgeBoundaryInt(edge,EdgeExp,outarray);
+            }
+
             virtual void v_AddUDGHelmholtzBoundaryTerms(const NekDouble tau,
                                                         const Array<OneD, const NekDouble> &inarray,
                                                         Array<OneD,NekDouble> &outarray)
@@ -480,6 +488,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.33  2008/07/12 17:27:07  sherwin
+ *    Update for AddBoundaryInt and moved various members to be private rather than protected
+ *
  *    Revision 1.32  2008/07/04 10:19:05  pvos
  *    Some updates
  *

@@ -117,6 +117,19 @@ namespace Nektar
                              &m_coeffs[cnt],1);
         }
         
+        void ExpList::PutPhysInToElmtExp(Array<OneD,NekDouble> &in)
+        {
+            int i, npoints_e;
+            int cnt = 0;
+            
+            for(i = 0; i < (*m_exp).size(); ++i)
+            {
+                npoints_e = (*m_exp)[i]->GetTotPoints();
+                Vmath::Vcopy(npoints_e, &in[cnt],1, &((*m_exp)[i]->GetPhys())[0],1);
+                cnt += npoints_e;
+            }
+        }
+
         void ExpList::PutElmtExpInToPhys(Array<OneD,NekDouble> &in)
         {
             int i, npoints_e;
@@ -147,56 +160,56 @@ namespace Nektar
     
         NekDouble ExpList::PhysIntegral(void)
         {
-            ASSERTL2(m_physState == true,
+            ASSERTL1(m_physState == true,
                      "local physical space is not true ");
 
             return PhysIntegral(m_phys);
         }
         
-    NekDouble ExpList::PhysIntegral(const Array<OneD, const NekDouble> &inarray)
-    {
-        int       i;
-        int       cnt = 0;
-        NekDouble sum = 0.0;
-        
-        for(i = 0; i < GetExpSize(); ++i)
+        NekDouble ExpList::PhysIntegral(const Array<OneD, const NekDouble> &inarray)
         {
-            sum += (*m_exp)[i]->Integral(inarray + cnt);
-            cnt += (*m_exp)[i]->GetTotPoints();
-        }
+            int       i;
+            int       cnt = 0;
+            NekDouble sum = 0.0;
             
-        return sum; 
-    }
+            for(i = 0; i < GetExpSize(); ++i)
+            {
+                sum += (*m_exp)[i]->Integral(inarray + cnt);
+                cnt += (*m_exp)[i]->GetTotPoints();
+            }
+            
+            return sum; 
+        }
         
-    void ExpList::IProductWRTBase(const ExpList &Sin)
-    {
+        void ExpList::IProductWRTBase(const ExpList &Sin)
+        {
             ASSERTL2(Sin.GetPhysState() == true,
                      "Physical space is not set to true ");
-
+            
             IProductWRTBase(Sin.GetPhys(),m_coeffs);
             m_physState = false;
-    }
-
-    void ExpList::IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
-                      Array<OneD, NekDouble> &outarray)
-    {
-        int    i;
-        int    cnt  = 0;
-        int    cnt1 = 0;
-
-        Array<OneD,NekDouble> e_outarray;
+        }
         
-        for(i = 0; i < GetExpSize(); ++i)
+        void ExpList::IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
+                                      Array<OneD, NekDouble> &outarray)
         {
+            int    i;
+            int    cnt  = 0;
+            int    cnt1 = 0;
+            
+            Array<OneD,NekDouble> e_outarray;
+            
+            for(i = 0; i < GetExpSize(); ++i)
+            {
                 (*m_exp)[i]->IProductWRTBase(inarray+cnt,
                                              e_outarray = outarray+cnt1);
                 cnt  += (*m_exp)[i]->GetTotPoints();
                 cnt1 += (*m_exp)[i]->GetNcoeffs();
+            }
+            m_transState = eLocal;
         }
-        m_transState = eLocal;
-    }
-    
-
+        
+        
         void ExpList::PhysDeriv(ExpList &out_d0, 
                                 ExpList &out_d1, 
                                 ExpList &out_d2)

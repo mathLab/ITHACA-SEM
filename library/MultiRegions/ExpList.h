@@ -90,6 +90,13 @@ namespace Nektar
             void PutCoeffsInToElmtExp(int eid);
             void PutElmtExpInToCoeffs(int eid);
             
+            void PutPhysInToElmtExp(void)
+            {
+                PutPhysInToElmtExp(m_phys);
+            }
+
+            void PutPhysInToElmtExp(Array<OneD, NekDouble> &in);
+
             void PutElmtExpInToPhys(Array<OneD,NekDouble> &in);
             void PutElmtExpInToPhys(int eid, Array<OneD,NekDouble> &in);
             
@@ -931,6 +938,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.38  2008/07/12 17:31:39  sherwin
+* Added m_phys_offset and rename m_exp_offset to m_coeff_offset
+*
 * Revision 1.37  2008/07/11 15:48:32  pvos
 * Added Advection classes
 *

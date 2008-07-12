@@ -1332,7 +1332,6 @@ namespace Nektar
 
         }
 
-
         void QuadExp::AddBoundaryInt(Array<OneD, const NekDouble> &inarray,
                                      Array<OneD, NekDouble> &outarray,
                                      bool InArrayIsTrace) 
@@ -1383,13 +1382,11 @@ namespace Nektar
 
                 AddEdgeBoundaryInt(e,EdgeExp[e],outarray);
             }
-
         }
 
         void QuadExp:: AddEdgeBoundaryInt(const int edge, 
                                           SegExpSharedPtr &EdgeExp,
                                           Array <OneD,NekDouble > &outarray)
-            
         {
             
             int i;
@@ -2417,6 +2414,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.43  2008/07/12 17:27:07  sherwin
+ *    Update for AddBoundaryInt and moved various members to be private rather than protected
+ *
  *    Revision 1.42  2008/07/09 11:45:48  sherwin
  *    Modification to make workinvg UDG solver, added BndSysForce matrix, replaced GetScaleFactor with GetConstant(0)
  *

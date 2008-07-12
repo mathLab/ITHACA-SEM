@@ -87,7 +87,7 @@ namespace Nektar
         }
 
 
-        
+
         void DisContField2D::GenerateFieldBnd2D(SpatialDomains::MeshGraph2D &graph2D,
                                                 SpatialDomains::BoundaryConditions &bcs, 
                                                 const std::string variable)
@@ -586,8 +586,7 @@ namespace Nektar
 #endif
             
         }
-
-
+        
         DisContField2D::~DisContField2D()
         {
         }
@@ -968,5 +967,53 @@ namespace Nektar
             }
             
         }
+        
+        void DisContField2D::ExtractTracePhys(Array<OneD,NekDouble> &outarray)
+        {
+            // Loop over elemente and collect forward expansion
+            int nexp = GetExpSize();
+            int nquad_e,cnt,n,e,npts,offset;
+            Array<OneD,NekDouble> e_tmp;
+
+            ASSERTL1(m_physState == true,
+                     "local physical space is not true ");
+
+            ASSERTL1(outarray.num_elements() >= m_trace->GetNpoints(),
+                     "input array is of insufficient length");
+
+            // use m_trace tmp space in element to fill values
+            for(n  = 0; n < nexp; ++n)
+            {
+                for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
+                {
+                    nquad_e = (*m_exp)[n]->GetEdgeNumPoints(e);
+                    offset = m_trace->GetPhys_Offset(m_elmtToTrace[n][e]->GetElmtId());
+                    (*m_exp)[n]->GetEdgePhysVals(e,(*m_exp)[n]->GetPhys(),
+                                                 e_tmp = outarray + offset);
+                }
+            }
+        }
+            
+
+        /// Note this routine changes m_trace->m_coeffs space; 
+        void DisContField2D::AddBoundaryIntFromTracePhys(ExpList2D &Sin)
+        {
+            int e,n,offset;
+            Array<OneD, NekDouble> e_inarray;
+            Array<OneD, NekDouble> inarray = Sin.UpdatePhys();
+
+            m_trace->PutPhysInToElmtExp();
+            
+            for(n = 0; n < GetExpSize(); ++n)
+            {
+                offset = GetPhys_Offset(n);
+                for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
+                {
+                    (*m_exp)[n]->AddEdgeBoundaryInt(e,m_elmtToTrace[n][e],
+                                                    e_inarray = inarray+offset);
+                }    
+            }
+        }
+
     } // end of namespace
 } //end of namespace

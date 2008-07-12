@@ -810,6 +810,14 @@ namespace Nektar
             }
 
 
+            virtual void AddEdgeBoundaryInt(const int edge, 
+                                            boost::shared_ptr< LocalRegions::SegExp > &EdgeExp,
+                                            Array< OneD, NekDouble > &outarray)
+            {
+                v_AddEdgeBoundaryInt(edge,EdgeExp,outarray);
+            }
+
+
             virtual void AddNormTraceInt(const int dir,
                                          Array<OneD, const NekDouble> &inarray,
                                          Array<OneD,NekDouble> &outarray)
@@ -1072,6 +1080,13 @@ namespace Nektar
 
             virtual void v_AddBoundaryInt(Array<OneD, const NekDouble> &inarray,
                                           Array<OneD,NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+            }
+
+            virtual void v_AddEdgeBoundaryInt(const int edge, 
+                                              boost::shared_ptr<LocalRegions::SegExp > &EdgeExp,
+                                             Array< OneD, NekDouble > &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
@@ -1588,6 +1603,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.88  2008/07/12 16:30:07  sherwin
+ * Added an new member m_elmt_id so that there is an element number for use later in lists
+ *
  * Revision 1.87  2008/07/04 10:18:40  pvos
  * Some updates
  *

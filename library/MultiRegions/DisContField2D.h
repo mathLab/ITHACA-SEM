@@ -84,6 +84,7 @@ namespace Nektar
                 return m_traceInnerNormals; 
             }
 
+            
             void HelmSolve(DisContField2D &Fce, NekDouble lambda);
 
             GlobalLinSysSharedPtr GenGlobalBndLinSys(const GlobalLinSysKey &mkey);
@@ -91,6 +92,16 @@ namespace Nektar
         
             void GetInnerOuterTracePhys(Array<OneD,NekDouble> &Inner, 
                                         Array<OneD,NekDouble> &Outer);
+
+            void ExtractTracePhys()
+            {
+                ExtractTracePhys(m_trace->UpdatePhys());
+            }
+
+            void ExtractTracePhys(Array<OneD,NekDouble> &outarray);
+
+            void AddBoundaryIntFromTracePhys(ExpList2D &inarray);
+
         protected:
 
         private:

@@ -204,6 +204,11 @@ namespace Nektar
                 return m_Variables[indx];
             }
 
+            inline int GetNumVariables() const 
+            {
+                return m_Variables.size();
+            }
+
             static const ParamMap &GetParameters(void)
             {
                 return m_Parameters;

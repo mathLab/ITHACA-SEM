@@ -59,7 +59,8 @@ namespace Nektar
             m_transState(eNotSet),
             m_physState(false),
             m_exp(in.m_exp),
-            m_exp_offset(in.m_exp_offset)
+            m_coeff_offset(in.m_coeff_offset), // Need to check if we need these
+            m_phys_offset(in.m_phys_offset)    // or at least use shared pointer
         {
         }
 
@@ -83,7 +84,7 @@ namespace Nektar
             int cnt = 0;
 
             order_e = (*m_exp)[eid]->GetNcoeffs();
-            cnt = m_exp_offset[eid];
+            cnt = m_coeff_offset[eid];
             Vmath::Vcopy(order_e,&m_coeffs[cnt], 1, 
                          &((*m_exp)[eid]->UpdateCoeffs())[0],1);
         }
@@ -110,12 +111,36 @@ namespace Nektar
             int cnt = 0;
 
             order_e = (*m_exp)[eid]->GetNcoeffs();
-            cnt = m_exp_offset[eid];
+            cnt = m_coeff_offset[eid];
             
             Vmath::Vcopy(order_e, &((*m_exp)[eid]->UpdateCoeffs())[0],1,
                              &m_coeffs[cnt],1);
         }
         
+        void ExpList::PutElmtExpInToPhys(Array<OneD,NekDouble> &in)
+        {
+            int i, npoints_e;
+            int cnt = 0;
+
+            for(i = 0; i < (*m_exp).size(); ++i)
+            {
+                npoints_e = (*m_exp)[i]->GetTotPoints();
+                Vmath::Vcopy(npoints_e, &((*m_exp)[i]->GetPhys())[0],1,
+                             &in[cnt],1);
+                cnt += npoints_e;
+            }
+        }
+
+        void ExpList::PutElmtExpInToPhys(int eid, Array<OneD,NekDouble> &in)
+        {
+            int npoints_e;
+            int cnt = m_phys_offset[eid];
+
+            npoints_e = (*m_exp)[eid]->GetTotPoints();
+            Vmath::Vcopy(npoints_e, &((*m_exp)[eid]->GetPhys())[0],1,
+                         &in[cnt],1);            
+        }
+
         ExpList::~ExpList()
         {
         }

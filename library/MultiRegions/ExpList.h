@@ -90,6 +90,9 @@ namespace Nektar
             void PutCoeffsInToElmtExp(int eid);
             void PutElmtExpInToCoeffs(int eid);
             
+            void PutElmtExpInToPhys(Array<OneD,NekDouble> &in);
+            void PutElmtExpInToPhys(int eid, Array<OneD,NekDouble> &in);
+            
             /**
              * \brief This function returns the total number of local degrees of freedom 
              * \f$N_{\mathrm{eof}}=\sum_{e=1}^{{N_{\mathrm{el}}}}N^{e}_m\f$.
@@ -104,6 +107,15 @@ namespace Nektar
              * \f$=Q_{\mathrm{tot}}\f$.
              */
             inline int GetPointsTot(void) const
+            {
+                return m_npoints;
+            }
+
+            /**
+             * \brief This function returns the total number of quadrature points #m_npoints
+             * \f$=Q_{\mathrm{tot}}\f$.
+             */
+            inline int GetNpoints(void) const
             {
                 return m_npoints;
             }
@@ -471,11 +483,22 @@ namespace Nektar
             }
 
             /**
-             * \brief 
+             * \brief Get the start offset position for a global list
+             * of #m_coeffs correspoinding to  element  n
              */
-            inline int GetExp_Offset(int n)
+            inline int GetCoeff_Offset(int n)
             {
-                return m_exp_offset[n];
+                return m_coeff_offset[n];
+            }
+
+
+            /**
+             * \brief Get the start offset position for a global list
+             * of m_phys correspoinding to  element  n
+             */
+            inline int GetPhys_Offset(int n)
+            {
+                return m_phys_offset[n];
             }
             
             /**
@@ -624,7 +647,12 @@ namespace Nektar
             /**
              * \brief Offset of elemental data into the array #m_coeffs
              */
-            Array<OneD, int>  m_exp_offset;
+            Array<OneD, int>  m_coeff_offset;
+
+            /**
+             * \brief Offset of elemental data into the array #m_phys
+             */
+            Array<OneD, int>  m_phys_offset;
 
 
             /**
@@ -903,6 +931,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.37  2008/07/11 15:48:32  pvos
+* Added Advection classes
+*
 * Revision 1.36  2008/06/06 23:27:20  ehan
 * Added doxygen documentation
 *

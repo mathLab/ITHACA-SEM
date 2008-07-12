@@ -58,18 +58,20 @@ namespace Nektar
                              const SpatialDomains::MeshGraph1D &graph1D):
             ExpList()
         {
-            int i,j;
+            int i,j, id=0;
             LocalRegions::SegExpSharedPtr seg;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
 
             const SpatialDomains::ExpansionVector &expansions = graph1D.GetExpansions();
-            m_exp_offset =  Array<OneD, int> (expansions.size());
+            m_coeff_offset =  Array<OneD, int> (expansions.size());
+            m_phys_offset  =  Array<OneD, int> (expansions.size());
             
             for(i = 0; i < expansions.size(); ++i)
             {                
                 if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>(expansions[i]->m_GeomShPtr))
                 {
                     seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(Ba,SegmentGeom);
+                    seg->SetElmtId(id++);
                     (*m_exp).push_back(seg);
                 }
                 else
@@ -77,7 +79,8 @@ namespace Nektar
                     ASSERTL0(false,"dynamic cast to a SegGeom failed");
                 }  
             
-                m_exp_offset[i] = m_ncoeffs;
+                m_coeff_offset[i] = m_ncoeffs;
+                m_phys_offset[i]  = m_npoints;
                 m_ncoeffs += Ba.GetNumModes();
                 m_npoints += Ba.GetNumPoints();
             } 
@@ -89,12 +92,13 @@ namespace Nektar
         ExpList1D::ExpList1D(SpatialDomains::MeshGraph1D &graph1D):
             ExpList()
         {
-            int i;
+            int i,id=0;
             LocalRegions::SegExpSharedPtr seg;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
 
             const SpatialDomains::ExpansionVector &expansions = graph1D.GetExpansions();
-            m_exp_offset = Array<OneD,int>(expansions.size());
+            m_coeff_offset = Array<OneD,int>(expansions.size());
+            m_phys_offset  = Array<OneD,int>(expansions.size());
             
             for(i = 0; i < expansions.size(); ++i)
             {
@@ -103,6 +107,7 @@ namespace Nektar
                 if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>(expansions[i]->m_GeomShPtr))
                 {
                     seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegmentGeom);
+                    seg->SetElmtId(id++);
                     (*m_exp).push_back(seg);
                 }
                 else
@@ -110,7 +115,8 @@ namespace Nektar
                     ASSERTL0(false,"dynamic cast to a SegGeom failed");
                 }  
 
-                m_exp_offset[i] =  m_ncoeffs;
+                m_coeff_offset[i] =  m_ncoeffs;
+                m_phys_offset[i] =  m_npoints;
                 m_ncoeffs += bkey.GetNumModes();
                 m_npoints += bkey.GetNumPoints();
             }
@@ -124,7 +130,7 @@ namespace Nektar
         ExpList1D::ExpList1D(const SpatialDomains::CompositeVector &domain, SpatialDomains::MeshGraph2D &graph2D):
             ExpList()
         {
-            int i,j, nel,cnt;
+            int i,j, nel,cnt,id=0;
             SpatialDomains::Composite comp;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
             LocalRegions::SegExpSharedPtr seg;
@@ -135,7 +141,8 @@ namespace Nektar
                 nel += (domain[i])->size();
             }
 
-            m_exp_offset = Array<OneD,int>(nel,0);
+            m_coeff_offset = Array<OneD,int>(nel,0);
+            m_phys_offset  = Array<OneD,int>(nel,0);
 
             cnt = 0;
             for(i = 0; i < domain.size(); ++i)
@@ -149,9 +156,11 @@ namespace Nektar
                         LibUtilities::BasisKey bkey = graph2D.GetEdgeBasisKey(SegmentGeom);
                         seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegmentGeom);
 
+                        seg->SetElmtId(id++);
                         (*m_exp).push_back(seg);  
 
-                        m_exp_offset[cnt] =  m_ncoeffs; cnt++;
+                        m_coeff_offset[cnt] = m_ncoeffs; 
+                        m_phys_offset[cnt]  = m_npoints; cnt++;
                         m_ncoeffs += bkey.GetNumModes();
                         m_npoints += bkey.GetNumPoints();
                     }
@@ -170,7 +179,7 @@ namespace Nektar
 
         ExpList1D::ExpList1D(const Array<OneD,const MultiRegions::ExpList1DSharedPtr>      &bndConstraint,  const Array<OneD, const SpatialDomains::BoundaryConditionType>  &bndTypes, const StdRegions::StdExpansionVector &locexp, SpatialDomains::MeshGraph2D &graph2D)
         {
-            int i,j,cnt,id;
+            int i,j,cnt,id, elmtid=0;
 
             Array<OneD, int> EdgeDone(graph2D.GetNseggeoms(),0);
             LocalRegions::SegExpSharedPtr  locSegExp, Seg;
@@ -184,7 +193,8 @@ namespace Nektar
                 cnt += locexp[i]->GetNedges();
             }
 
-            m_exp_offset = Array<OneD,int>(cnt);
+            m_coeff_offset = Array<OneD,int>(cnt);
+            m_phys_offset = Array<OneD,int>(cnt);
                 
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
@@ -204,9 +214,11 @@ namespace Nektar
                             Seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegGeom);
                             EdgeDone[SegGeom->GetEid()] = 1;
                             
+                            Seg->SetElmtId(elmtid++);
                             (*m_exp).push_back(Seg);   
                             
-                            m_exp_offset[cnt] = m_ncoeffs; cnt++;
+                            m_coeff_offset[cnt] = m_ncoeffs; 
+                            m_phys_offset[cnt] = m_npoints; cnt++;
                             m_ncoeffs += bkey.GetNumModes();
                             m_npoints += bkey.GetNumPoints();
                         }
@@ -236,9 +248,11 @@ namespace Nektar
                             
                             Seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegGeom);
                             
+                            Seg->SetElmtId(elmtid++);
                             (*m_exp).push_back(Seg);
 
-                            m_exp_offset[cnt] = m_ncoeffs; cnt++;
+                            m_coeff_offset[cnt] = m_ncoeffs;
+                            m_phys_offset[cnt] = m_npoints; cnt++;
                             m_ncoeffs += bkey.GetNumModes();
                             m_npoints += bkey.GetNumPoints();
 
@@ -261,9 +275,11 @@ namespace Nektar
                             
                             Seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegGeom);
                             
+                            Seg->SetElmtId(elmtid++);
                             (*m_exp).push_back(Seg);
 
-                            m_exp_offset[cnt] = m_ncoeffs; cnt++;
+                            m_coeff_offset[cnt] = m_ncoeffs;
+                            m_phys_offset[cnt] = m_npoints; cnt++;
                             m_ncoeffs += bkey.GetNumModes();
                             m_npoints += bkey.GetNumPoints();
                             
@@ -287,6 +303,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.28  2008/06/23 14:21:01  pvos
+* updates for 1D ExpLists
+*
 * Revision 1.27  2008/05/14 18:06:50  sherwin
 * mods to fix Seggeom to Geometry1D casting
 *

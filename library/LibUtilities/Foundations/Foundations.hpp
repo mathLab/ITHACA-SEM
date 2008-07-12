@@ -127,6 +127,23 @@ namespace Nektar
             "NodalTetEvenlySpaced",
             "NodalTetElec",
         };
+
+        enum TimeIntegrationType
+        {
+            eNoTimeIntegrationType,
+            eAdamsBashforth,                  //!< Adams-Bashforth Forward multi-step scheme
+            eAdamsMoulton,                    //!< Adams-Moulton Forward multi-step scheme
+            eRungeKutta,                      //!< Rungi-Kutta multi-stage scheme
+            SIZE_TimeIntegrationType          //!< Length of enum list
+        };
+
+        const char* const TimeIntegrationTypeMap[] = 
+        {
+            "NoTimeIntegrationType",
+            "Adams-Bashforth",
+            "Adams-Moulton",
+            "Runge-Kutta"
+        };
     } // end of namespace
 } // end of namespace
 

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Points1D.cpp
+// File TimeIntegrationScheme.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,63 +29,51 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 // 
-// Description: C functions to provide access to managers. 
+// Description: implementation of time integration key class 
 //
 ///////////////////////////////////////////////////////////////////////////////
-
-#ifndef NEKTAR_LIB_UTILIITIES_FOUNDATIONS_MANAGER_ACCESS_H
-#define NEKTAR_LIB_UTILIITIES_FOUNDATIONS_MANAGER_ACCESS_H
-
-#include <LibUtilities/BasicUtils/NekManager.hpp>
-#include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/Foundations/Basis.h>
+#include <LibUtilities/LibUtilities.h>
+#include <iostream>
 #include <LibUtilities/Foundations/TimeIntegrationScheme.h>
+#include <LibUtilities/Foundations/Foundations.hpp>
 
 namespace Nektar
 {
     namespace LibUtilities 
     {
-        typedef NekManager<PointsKey, Points<NekDouble>, PointsKey::opLess> PointsManagerT;
-        PointsManagerT &PointsManager(void);
+        bool operator==(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs)
+        {
+            return (lhs.m_order == rhs.m_order &&
+                lhs.m_integrationtype == rhs.m_integrationtype);
+        }
 
-        typedef NekManager<BasisKey, Basis, BasisKey::opLess> BasisManagerT;
-        BasisManagerT &BasisManager(void);
+        bool operator<(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs)
+        {
+            if (lhs.m_order < rhs.m_order)
+            {
+                return true;
+            }
+            
+            if (lhs.m_order > rhs.m_order)
+            {
+                return false;
+            }
+            
+            return (lhs.m_integrationtype < rhs.m_integrationtype);
+        }
+        
+        bool TimeIntegrationSchemeKey::opLess::operator()(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs) const
+        {
+            return (lhs.m_integrationtype < rhs.m_integrationtype);
+        }
 
-        typedef NekManager<TimeIntegrationSchemeKey, TimeIntegrationScheme, TimeIntegrationSchemeKey::opLess> TimeIntegrationSchemeManagerT;
-        TimeIntegrationSchemeManagerT &TimeIntegrationSchemeManager(void);
+        std::ostream& operator<<(std::ostream& os, const TimeIntegrationSchemeKey& rhs)
+        {
+            os << "Integration Scheme: " << TimeIntegrationTypeMap[rhs.GetIntegrationSchemeType()];
+            os << ", Order: " << rhs.GetOrder() << std::endl;
 
-    } // end of namespace LibUtilities
-} // end of namespace Nektar
-#endif //NEKTAR_LIB_UTILIITIES_FOUNDATIONS_MANAGER_ACCESS_H
-
-/**
-$Log: ManagerAccess.h,v $
-Revision 1.9  2007/04/29 03:09:47  jfrazier
-More conversion to multi_arrays.
-
-Revision 1.8  2007/02/06 17:12:31  jfrazier
-Fixed a problem with global initialization in libraries.
-
-Revision 1.7  2007/02/01 23:28:42  jfrazier
-Basis is working, but not fully tested.
-
-Revision 1.6  2007/01/25 21:31:46  jfrazier
-Format change.
-
-Revision 1.5  2007/01/20 21:52:34  sherwin
-Remove Basis template class definitino
-
-Revision 1.4  2007/01/20 21:45:59  kirby
-*** empty log message ***
-
-Revision 1.3  2007/01/20 21:33:58  sherwin
-Added method
-
-Revision 1.2  2007/01/19 21:59:27  sherwin
-Some SJS mods - still does not compile yet
-
-Revision 1.1  2007/01/19 18:02:26  jfrazier
-Initial checkin.
-
-**/
+            return os;
+        }
+    }
+}
 

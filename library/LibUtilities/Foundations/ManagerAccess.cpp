@@ -41,12 +41,14 @@
 #include <LibUtilities/Foundations/NodalTriElec.h>
 #include <LibUtilities/Foundations/NodalTetElec.h>
 #include <LibUtilities/Foundations/NodalTriFekete.h>
+#include <LibUtilities/Foundations/NodalTriEvenlySpaced.h>
+#include <LibUtilities/Foundations/NodalTetEvenlySpaced.h>
 #include <LibUtilities/Foundations/Basis.h>
+#include <LibUtilities/Foundations/ForwardMultiStepIntegrationScheme.h>
+#include <LibUtilities/Foundations/RungeKuttaScheme.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
-#include <LibUtilities/Foundations/NodalTriEvenlySpaced.h>
-#include <LibUtilities/Foundations/NodalTetEvenlySpaced.h>
 
 namespace Nektar
 {
@@ -87,6 +89,10 @@ namespace Nektar
             const bool Legendre_Inited = BasisManager().RegisterCreator(BasisKey(eLegendre, 0, NullPointsKey), Basis::Create);
             const bool Chebyshev_Inited = BasisManager().RegisterCreator(BasisKey(eChebyshev, 0, NullPointsKey), Basis::Create);
             const bool Monomial_Inited = BasisManager().RegisterCreator(BasisKey(eMonomial, 0, NullPointsKey), Basis::Create);
+
+            const bool AdamsBashforth_Inited = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eAdamsBashforth, 0), ForwardMultiStepIntegrationScheme::Create);
+            const bool AdamsMoulton_Inited   = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eAdamsMoulton, 0), ForwardMultiStepIntegrationScheme::Create);
+            const bool RungeKutta_Inited     = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eRungeKutta, 0), RungeKuttaScheme::Create);
         };
 
         PointsManagerT &PointsManager(void)
@@ -99,12 +105,20 @@ namespace Nektar
             return Loki::SingletonHolder<BasisManagerT>::Instance();
         }
 
+        TimeIntegrationSchemeManagerT &TimeIntegrationSchemeManager(void)
+        {
+            return Loki::SingletonHolder<TimeIntegrationSchemeManagerT>::Instance();
+        }
+
     } // end of namespace LibUtilities
 } // end of namespace Nektar
 
 
 /**
 $Log: ManagerAccess.cpp,v $
+Revision 1.18  2008/05/27 20:05:50  ehan
+Added NodalTetEvenlySpaced points.
+
 Revision 1.17  2008/05/23 20:02:13  ehan
 Added NodalTriEvenlySpaced points.
 

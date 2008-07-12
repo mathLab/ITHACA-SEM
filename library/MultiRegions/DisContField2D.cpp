@@ -1,4 +1,3 @@
-
 //////////////////////////////////////////////////////////////////////////////
 //
 // File DisContField2D.cpp
@@ -51,7 +50,13 @@ namespace Nektar
             ExpList2D(In),
             m_bndConstraint(In.m_bndConstraint),
             m_bndTypes(In.m_bndTypes),
-            m_globalBndMat(In.m_globalBndMat)
+            m_globalBndMat(In.m_globalBndMat),
+            m_trace(In.m_trace),  
+            m_elmtToTrace(In.m_elmtToTrace),
+            m_bndEidToTraceEid(In.m_bndEidToTraceEid),
+            m_elmtTraceMap(In.m_elmtTraceMap),
+            m_elmtTraceSign(In.m_elmtTraceSign),
+            m_traceInnerNormals(In.m_traceInnerNormals)
         {
         }
 
@@ -65,6 +70,7 @@ namespace Nektar
             // Set up Trace space
             m_trace = MemoryManager<ExpList1D>::AllocateSharedPtr(m_bndConstraint, m_bndTypes,*m_exp,graph2D);
             SetUpTraceMappings(graph2D);
+            SetUpTraceInnerNormals();
         }
 
         DisContField2D::DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
@@ -77,6 +83,7 @@ namespace Nektar
             // Set up Trace space
             m_trace = MemoryManager<ExpList1D>::AllocateSharedPtr(m_bndConstraint,m_bndTypes,*m_exp,graph2D);
             SetUpTraceMappings(graph2D);
+            SetUpTraceInnerNormals();
         }
 
 
@@ -89,6 +96,7 @@ namespace Nektar
             int i,j,m;
             int cnt = 0;
             int coeffcnt = 0;
+            int physcnt = 0;
             int nbnd;
             int nummodes;
             int npoints;
@@ -124,11 +132,13 @@ namespace Nektar
                     locExpList = MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(*locBregion,graph2D);
 
                     coeffcnt=0;
+                    physcnt=0;
                     for(j = 0; j < locExpList->GetExpSize(); j++)
                     {          
                         locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(locExpList->GetExp(j));
 
                         nummodes = locSegExp->GetNcoeffs();
+                        npoints  = locSegExp->GetTotPoints();
                                 
                         // Create a new BasisKey for projecting the
                         // dirichlet boundary conditions onto the
@@ -173,60 +183,13 @@ namespace Nektar
                         // coefficients will be identical and hence,
                         // can directly be stored at the right place
                         Array<OneD,NekDouble> outarray;
+                        Array<OneD,NekDouble> inarray;
                         collStdSeg->FwdTrans(collSeg->GetPhys(),outarray = (locExpList->UpdateCoeffs()) + coeffcnt);   
-
-#if 0   // This whole section is probably not needed. Will delete
-        // later just in case 6/5/08
-                        // Reverse ordering if edge orientation is
-                        // backwards with respect to the element
-                        // definition it is attached to
-
-                        SpatialDomains::ElementEdgeVectorSharedPtr ElmtEdge = graph2D.GetElementsFromEdge(locSegExp->GetGeom());
-                        
-                        ASSERTL1(ElmtEdge->size() == 1,"Boundary edge is associated with more than one element");
-
-                        geom2D = boost::dynamic_pointer_cast<SpatialDomains::Geometry2D>((*ElmtEdge)[0]->m_Element);
-                        
-
-                        if(geom2D->GetCartesianEorient((*ElmtEdge)[0]->m_EdgeIndx) == StdRegions::eBackwards)
-                        {
-                            Array<OneD,NekDouble> tmp(nummodes);
-                            
-                            switch(locSegExp->GetBasisType(0))
-                            {
-                            case LibUtilities::eModified_A:
-                                
-                                //Swap vertices
-                                tmp[0] = locExpList->GetCoeff(1+coeffcnt);
-                                tmp[1] = locExpList->GetCoeff(coeffcnt);
-                                
-                                // Put back in list 
-                                locExpList->SetCoeff(coeffcnt,tmp[0]);
-                                locExpList->SetCoeff(coeffcnt+1,tmp[1]);
-                                
-                                // negate odd modes
-                                for(m = 3; m < nummodes; m+=2)
-                                {
-                                    locExpList->SetCoeff(coeffcnt+m,
-                                         -1*locExpList->GetCoeff(coeffcnt+m));
-                                }
-                                break;
-                            case LibUtilities::eGLL_Lagrange:
-                                for(m = 0; m < nummodes; ++m)
-                                {
-                                    tmp[nummodes-1-m] = locExpList->GetCoeff(m+coeffcnt);
-                                }
-
-                                Vmath::Vcopy(nummodes,tmp,1,
-                                          outarray = locExpList->UpdateCoeffs()
-                                             + coeffcnt,1);
-                                break;
-                            default:
-                                break;
-                            }
-                        }
-#endif
+                        // also update physical points 
+                        locSegExp->BwdTrans( inarray = (locExpList->GetCoeffs()) + coeffcnt, outarray = locExpList->UpdatePhys() + physcnt);
+                    
                         coeffcnt += nummodes;
+                        physcnt += npoints;
                     }
                                 
                     m_bndConstraint[cnt] = locExpList;
@@ -375,6 +338,7 @@ namespace Nektar
                                                                         
             cnt = 0;
             m_numTraceDirichletBCs = 0;
+            m_numTraceDirichletPhysBCs = 0;
             for(i = 0; i < m_bndConstraint.num_elements(); ++i)
             {
 
@@ -399,7 +363,8 @@ namespace Nektar
                         ASSERTL0(false,"dynamic cast to a local Segment expansion failed");
                     }
 
-                    m_numTraceDirichletBCs += locSegExp->GetNcoeffs();
+                    m_numTraceDirichletBCs     += locSegExp->GetNcoeffs();
+                    m_numTraceDirichletPhysBCs += locSegExp->GetTotPoints();
                 }
                 cnt += j;
             }
@@ -437,7 +402,7 @@ namespace Nektar
                     SegGeom = locSegExp->GetGeom();
                     
                     id  = SegGeom->GetEid();
-                    gid = m_trace->GetExp_Offset(MeshEdgeNo[id]);
+                    gid = m_trace->GetCoeff_Offset(MeshEdgeNo[id]);
                     
                     order_e = locSegExp->GetNcoeffs();
                     
@@ -487,6 +452,142 @@ namespace Nektar
 
         }
         
+        void DisContField2D::SetUpTraceInnerNormals(void)
+        {
+            int i,n,e,offset;
+            int coordim = GetCoordim(0); // assume all element have the same coordim.
+            int trace_npts = m_trace->GetNpoints();
+            int npoints_e,nexp,cnt;
+            Array<TwoD, const NekDouble> normals; 
+            SpatialDomains::GeomType Gtype;
+            Array<OneD, bool> normal_set;
+            
+            // Declare storage
+            m_traceInnerNormals = MemoryManager<Array<OneD,Array<OneD,NekDouble> > >::AllocateSharedPtr(coordim);
+            
+            nexp = GetExpSize();
+
+            // count mesh edge
+            cnt = 0;
+            for(n = 0; n < nexp; ++n)
+            {
+                cnt += (*m_exp)[n]->GetNedges();
+            }
+            normal_set = Array<OneD,bool> (cnt,false);
+            
+            for(i = 0; i < coordim; ++i)
+            {
+                (*m_traceInnerNormals)[i] = Array<OneD,NekDouble>(trace_npts);
+                
+            }
+
+            //Fill normals
+            cnt = 0;
+            for(n = 0; n < GetExpSize(); ++n)
+            {
+                Gtype   = (*m_exp)[n]->GetMetricInfo()->GetGtype();
+                normals = (*m_exp)[n]->GetMetricInfo()->GetNormals();
+
+                if(Gtype == SpatialDomains::eDeformed)
+                {
+                    for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e, ++cnt)
+                    {
+                        npoints_e = (*m_exp)[n]->GetEdgeNumPoints(e);
+                        
+                        if((*m_exp)[n]->GetEorient(e) == StdRegions::eForwards)
+                        {
+                            normal_set[cnt] = true;
+                            offset = m_trace->GetPhys_Offset(m_elmtToTrace[n][e]->GetElmtId());
+                            for(i = 0 ; i < coordim; ++i)
+                            {
+                                Vmath::Vcopy(npoints_e,&normals[e][i],1,
+                                            &((*m_traceInnerNormals)[i])[offset],1);
+                            }
+
+                        }
+                            
+                    }
+                    
+                }
+                else
+                {
+                    for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e, ++cnt)
+                    {
+                        npoints_e = (*m_exp)[n]->GetEdgeNumPoints(e);
+                        
+                        if((*m_exp)[n]->GetEorient(e) == StdRegions::eForwards)
+                        { 
+                            normal_set[cnt] = true;
+                            offset = m_trace->GetPhys_Offset(m_elmtToTrace[n][e]->GetElmtId());
+                           for(i = 0 ; i < coordim; ++i)
+                            {
+                                Vmath::Fill(npoints_e,normals[e][i],
+                                            &((*m_traceInnerNormals)[i])[offset],1);
+                            }
+                        }                            
+                    }
+                }
+            }
+
+            // finally loop through and set any unset boundaries that
+            // are on boundary but orientated backwards
+            cnt = 0;
+            for(n = 0; n < GetExpSize(); ++n)
+            {
+                Gtype   = (*m_exp)[n]->GetMetricInfo()->GetGtype();
+                normals = (*m_exp)[n]->GetMetricInfo()->GetNormals();
+
+                if(Gtype == SpatialDomains::eDeformed)
+                {
+                    for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e, ++cnt)
+                    {
+                        npoints_e = (*m_exp)[n]->GetEdgeNumPoints(e);
+                        
+                        if(((*m_exp)[n]->GetEorient(e) == StdRegions::eBackwards) && (normal_set[cnt] == false))
+                        {
+                            normal_set[cnt] = true;
+                            offset = m_trace->GetPhys_Offset(m_elmtToTrace[n][e]->GetElmtId());
+                            for(i = 0 ; i < coordim; ++i)
+                            {
+                                Vmath::Vcopy(npoints_e,&normals[e][i],1,
+                                            &((*m_traceInnerNormals)[i])[offset],1);
+                            }
+
+                        }
+                            
+                    }
+                }
+                else
+                {
+                    for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e, ++cnt)
+                    {
+                        npoints_e = (*m_exp)[n]->GetEdgeNumPoints(e);
+                        
+                        if(((*m_exp)[n]->GetEorient(e) == StdRegions::eBackwards)&&(normal_set[cnt] == false))
+                        { 
+                            normal_set[cnt] = true;
+                            offset = m_trace->GetPhys_Offset(m_elmtToTrace[n][e]->GetElmtId());
+                           for(i = 0 ; i < coordim; ++i)
+                            {
+                                Vmath::Fill(npoints_e,normals[e][i],
+                                            &((*m_traceInnerNormals)[i])[offset],1);
+                            }
+                        }                            
+                    }
+                }
+            }
+            
+#if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
+            // make sure all normals are set
+            for(i = 0; i < normal_set.num_elements(); ++i)
+            {
+                ASSERTL1(normal_set[i] == true,"Normal not set");
+            }
+#endif
+            
+        }
+
+
         DisContField2D::~DisContField2D()
         {
         }
@@ -679,7 +780,7 @@ namespace Nektar
                     for(e = 0; e < m_bndConstraint[i]->GetExpSize(); ++e)
                     {
                         id     = m_bndEidToTraceEid[i][e];
-                        offset = m_trace->GetExp_Offset(id);
+                        offset = m_trace->GetCoeff_Offset(id);
                         m_bndConstraint[i]->PutCoeffsInToElmtExp();
                         BndExp = m_bndConstraint[i]->GetExp(e);
                         for(j = 0; j < BndExp->GetNcoeffs(); ++j)
@@ -802,6 +903,70 @@ namespace Nektar
             DNekVec out(m_ncoeffs,m_coeffs,eWrapper);            
             out = (*InvUDGHelm)*in;            
         }
-        
+
+        // Construct the two trace vectors of the inner and outer
+        // trace solution from the field contained in m_phys, where
+        // the Weak dirichlet boundary conditions are listed in the
+        // outer part of the vecotr
+
+        void DisContField2D::GetInnerOuterTracePhys(Array<OneD,NekDouble> &Inner, 
+                                                    Array<OneD,NekDouble> &Outer)
+        {
+            // Loop over elemente and collect forward expansion
+            int nexp = GetExpSize();
+            StdRegions::EdgeOrientation edgedir;
+            int nquad_e,cnt,n,e,npts,offset;
+            Array<OneD,NekDouble> e_tmp;
+
+            // zero vectors; 
+            Vmath::Zero(Inner.num_elements(),Inner,1);
+            Vmath::Zero(Outer.num_elements(),Outer,1);
+
+            // use m_trace tmp space in element to fill values
+            for(n  = 0; n < nexp; ++n)
+            {
+                for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
+                {
+                    nquad_e = (*m_exp)[n]->GetEdgeNumPoints(e);
+                    edgedir = (*m_exp)[n]->GetEorient(e);
+                    if(edgedir == StdRegions::eForwards)
+                    {
+                        offset = m_trace->GetPhys_Offset(m_elmtToTrace[n][e]->GetElmtId());
+                        (*m_exp)[n]->GetEdgePhysVals(e,(*m_exp)[n]->GetPhys(),
+                                                     e_tmp = Inner + offset);
+                    }
+                }
+            }
+            
+            // use m_trace tmp space in element to fill values
+            for(n  = 0; n < nexp; ++n)
+            {
+                for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
+                {
+                    nquad_e = (*m_exp)[n]->GetEdgeNumPoints(e);
+                    edgedir = (*m_exp)[n]->GetEorient(e);
+                    if(edgedir == StdRegions::eBackwards)
+                    {
+                        offset = m_trace->GetPhys_Offset(m_elmtToTrace[n][e]->GetElmtId());
+                        (*m_exp)[n]->GetEdgePhysVals(e,(*m_exp)[n]->GetPhys(),
+                                                     e_tmp = Outer+offset);
+                    }
+                }
+            }
+            
+            // Since the Dirichlet boundaries are order first in the
+            // trace space add these two vectors together and then
+            // fill in Boundary conditions into the Outer array.
+            Vmath::Vadd(m_numTraceDirichletPhysBCs,Inner,1,Outer,1,Inner,1);
+
+            for(cnt = n = 0; n < m_bndConstraint.num_elements(); ++n)
+            {
+                npts = m_bndConstraint[n]->GetNpoints();
+                Vmath::Vcopy(npts, m_bndConstraint[n]->GetPhys(),1,
+                             e_tmp = Outer + cnt,1);
+                cnt += npts;
+            }
+            
+        }
     } // end of namespace
 } //end of namespace

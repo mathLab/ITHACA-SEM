@@ -29,8 +29,8 @@ int main(int argc, char *argv[]){
     // If we all have the same relative structure, these should work for everyone.
 #if 1
 
-    string in("../../../../library/Demos/SpatialDomains/meshdef2D.xml");
-    string bcfile("../../../../library/Demos/SpatialDomains/BC1.xml");
+    string in("../../library/Demos/SpatialDomains/meshdef2D.xml");
+    string bcfile("../../library/Demos/SpatialDomains/BC1.xml");
 
 #else
     string in("C:/Data/PhD/Research/dev/Nektar++/library/Demos/SpatialDomains/meshdef2D.xml");
@@ -41,7 +41,7 @@ int main(int argc, char *argv[]){
 
     MeshGraph2D graph2D;
     BoundaryConditions bcs(&graph2D);
-
+ 
     graph2D.ReadGeometry(in);
     graph2D.ReadCurves(in);
     graph2D.ReadExpansions(in);
@@ -51,10 +51,10 @@ int main(int argc, char *argv[]){
     {
         ConstForcingFunctionShPtr ffunc  = bcs.GetForcingFunction("u");
         NekDouble val = ffunc->Evaluate(8.0);
-        
+
         ConstForcingFunctionShPtr ffunc2  = bcs.GetForcingFunction("v");
         val = ffunc->Evaluate(1.5);
-        
+
         ConstInitialConditionShPtr ic = bcs.GetInitialCondition("v");
         val = ic->Evaluate(1.5);
 

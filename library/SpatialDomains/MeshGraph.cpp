@@ -536,6 +536,13 @@ namespace Nektar
                 s << numptsStr;
                 s >> numPts;
 
+                cout << "numPts = " << numPts << endl;
+                ASSERTL0(numPts >= 3, "NUMPOINTS for face must be greater than 2");
+
+                if(numPts == 3){
+                    ASSERTL0(ptsStr != endStr, "Invalid points type.");
+                }
+
                 // Read points (x, y, z)
                 double xval, yval, zval;
                 std::istringstream elementDataStrm(elementStr.c_str());
@@ -1130,6 +1137,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.22  2008/07/09 23:41:20  ehan
+// Added edge component and face component to the curve reader.
+//
 // Revision 1.21  2008/07/08 18:58:07  ehan
 // Added curve reader.
 //

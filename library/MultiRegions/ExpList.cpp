@@ -117,7 +117,7 @@ namespace Nektar
                              &m_coeffs[cnt],1);
         }
         
-        void ExpList::PutPhysInToElmtExp(Array<OneD,NekDouble> &in)
+        void ExpList::PutPhysInToElmtExp(Array<OneD,const NekDouble> &in)
         {
             int i, npoints_e;
             int cnt = 0;
@@ -125,12 +125,12 @@ namespace Nektar
             for(i = 0; i < (*m_exp).size(); ++i)
             {
                 npoints_e = (*m_exp)[i]->GetTotPoints();
-                Vmath::Vcopy(npoints_e, &in[cnt],1, &((*m_exp)[i]->GetPhys())[0],1);
+                Vmath::Vcopy(npoints_e, &in[cnt],1, &((*m_exp)[i]->UpdatePhys())[0],1);
                 cnt += npoints_e;
             }
         }
 
-        void ExpList::PutElmtExpInToPhys(Array<OneD,NekDouble> &in)
+        void ExpList::PutElmtExpInToPhys(Array<OneD,NekDouble> &out)
         {
             int i, npoints_e;
             int cnt = 0;
@@ -139,19 +139,19 @@ namespace Nektar
             {
                 npoints_e = (*m_exp)[i]->GetTotPoints();
                 Vmath::Vcopy(npoints_e, &((*m_exp)[i]->GetPhys())[0],1,
-                             &in[cnt],1);
+                             &out[cnt],1);
                 cnt += npoints_e;
             }
         }
 
-        void ExpList::PutElmtExpInToPhys(int eid, Array<OneD,NekDouble> &in)
+        void ExpList::PutElmtExpInToPhys(int eid, Array<OneD,NekDouble> &out)
         {
             int npoints_e;
             int cnt = m_phys_offset[eid];
 
             npoints_e = (*m_exp)[eid]->GetTotPoints();
             Vmath::Vcopy(npoints_e, &((*m_exp)[eid]->GetPhys())[0],1,
-                         &in[cnt],1);            
+                         &out[cnt],1);            
         }
 
         ExpList::~ExpList()
@@ -209,6 +209,36 @@ namespace Nektar
             m_transState = eLocal;
         }
         
+
+        void ExpList::IProductWRTDerivBase(const int dir, const ExpList &Sin)
+        {
+            ASSERTL2(Sin.GetPhysState() == true,
+                     "Physical space is not set to true ");
+            
+            IProductWRTDerivBase(dir,Sin.GetPhys(),m_coeffs);
+            m_physState = false;
+        }
+        
+        void ExpList::IProductWRTDerivBase(const int dir, 
+                                           const Array<OneD, const NekDouble> &inarray, 
+                                           Array<OneD, NekDouble> &outarray)
+        {
+            int    i;
+            int    cnt  = 0;
+            int    cnt1 = 0;
+            
+            Array<OneD,NekDouble> e_outarray;
+            
+            for(i = 0; i < GetExpSize(); ++i)
+            {
+                (*m_exp)[i]->IProductWRTDerivBase(dir,inarray+cnt,
+                                             e_outarray = outarray+cnt1);
+                cnt  += (*m_exp)[i]->GetTotPoints();
+                cnt1 += (*m_exp)[i]->GetNcoeffs();
+            }
+            m_transState = eLocal;
+        }
+        
         
         void ExpList::PhysDeriv(ExpList &out_d0, 
                                 ExpList &out_d1, 
@@ -252,6 +282,16 @@ namespace Nektar
             }
         }
 
+        void ExpList::MultiplyByElmtInvMass(const ExpList &Sin)
+        {
+            ASSERTL2(Sin.GetTransState() == eLocal ||
+                     Sin.GetTransState() == eLocalCont, 
+                     "Error input state is not in transformed space");
+            
+            MultiplyByElmtInvMass(Sin.GetPhys(),m_coeffs);
+            m_transState = eLocal;
+        }
+
         void ExpList::FwdTrans(const ExpList &Sin)
         {
             ASSERTL2(Sin.GetPhysState() == true,
@@ -263,46 +303,38 @@ namespace Nektar
 
         void ExpList::FwdTrans_BndConstrained(const ExpList &Sin)
         {
-            ASSERTL2(Sin.GetPhysState() == true,
+            ASSERTL1(Sin.GetPhysState() == true,
                      "Sin physical space is not true ");
             
             FwdTrans_BndConstrained(Sin.GetPhys(),m_coeffs);
             m_transState = eLocal;
         }
         
-        void ExpList::FwdTrans(const Array<OneD, const NekDouble> &inarray, 
-                               Array<OneD, NekDouble> &outarray)
-        {
-#if 0  // elemental matrix inverse
-            int cnt  = 0;
-            int cnt1 = 0;
-            int i;
 
-            Array<OneD,NekDouble> e_outarray;
-            
-            for(i= 0; i < GetExpSize(); ++i)
-            {
-                (*m_exp)[i]->FwdTrans(inarray+cnt, 
-                                      e_outarray = outarray+cnt1);
-                cnt  += (*m_exp)[i]->GetTotPoints();
-                cnt1 += (*m_exp)[i]->GetNcoeffs();
-            }
-#else  // block matrix inverse 
+        void ExpList::MultiplyByElmtInvMass(const Array<OneD, const NekDouble> &inarray, 
+                                            Array<OneD, NekDouble> &outarray)
+        {
             static DNekScalBlkMatSharedPtr InvMass;
-            Array<OneD,NekDouble> f(m_ncoeffs);
             if(!InvMass.get())
             {
                 InvMass = SetupBlockMatrix(StdRegions::eInvMass);
             }
             
-            // Inner product
-            IProductWRTBase(inarray,f);
-
             // Inverse mass matrix
-            NekVector<const NekDouble> in(m_ncoeffs,f,eWrapper);
+            NekVector<const NekDouble> in(m_ncoeffs,inarray,eWrapper);
             NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);            
             out = (*InvMass)*in;
-#endif
+
+        }
+
+        void ExpList::FwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                               Array<OneD, NekDouble> &outarray)
+        {
+            Array<OneD,NekDouble> f(m_ncoeffs);
+
+            IProductWRTBase(inarray,f);
+            MultiplyByElmtInvMass(f,outarray);
+
         }
 
         void ExpList::FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 

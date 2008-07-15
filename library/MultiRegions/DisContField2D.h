@@ -100,7 +100,8 @@ namespace Nektar
 
             void ExtractTracePhys(Array<OneD,NekDouble> &outarray);
 
-            void AddBoundaryIntFromTracePhys(ExpList2D &inarray);
+            void AddTraceIntegral(Array<OneD, const NekDouble> &inarray, 
+                                  Array<OneD, NekDouble> &outarray);
 
         protected:
 

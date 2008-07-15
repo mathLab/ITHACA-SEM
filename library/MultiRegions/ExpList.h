@@ -95,10 +95,10 @@ namespace Nektar
                 PutPhysInToElmtExp(m_phys);
             }
 
-            void PutPhysInToElmtExp(Array<OneD, NekDouble> &in);
+            void PutPhysInToElmtExp(Array<OneD, const NekDouble> &in);
 
-            void PutElmtExpInToPhys(Array<OneD,NekDouble> &in);
-            void PutElmtExpInToPhys(int eid, Array<OneD,NekDouble> &in);
+            void PutElmtExpInToPhys(Array<OneD,NekDouble> &out);
+            void PutElmtExpInToPhys(int eid, Array<OneD,NekDouble> &out);
             
             /**
              * \brief This function returns the total number of local degrees of freedom 
@@ -205,6 +205,26 @@ namespace Nektar
             NekDouble PhysIntegral (void);
 
             /**
+             * \brief This function integrates a function \f$f(\boldsymbol{x})\f$ over the 
+             * domain consisting of all the elements of the expansion.
+             *
+             * The integration is evaluated locally, that is
+             * \f[
+             * \int f(\boldsymbol{x})d\boldsymbol{x}=\sum_{e=1}^{{N_{\mathrm{el}}}}
+             * \left\{\int_{\Omega_e}f(\boldsymbol{x})d\boldsymbol{x}\right\},\f]
+             * where the integration over the separate elements is done by the function 
+             * StdRegions#StdExpansion#Integral, which discretely evaluates the integral 
+             * using Gaussian quadrature.
+             * 
+             * \param inarray An array of size \f$Q_{\mathrm{tot}}\f$ containing the values 
+             * of the function \f$f(\boldsymbol{x})\f$ at the quadrature points 
+             * \f$\boldsymbol{x}_i\f$.
+             * \return the value of the discretely evaluated integral 
+             * \f$\int f(\boldsymbol{x})d\boldsymbol{x}\f$.
+             */
+            NekDouble PhysIntegral(const Array<OneD, const NekDouble> &inarray);
+
+            /**
              * \brief This function calculates the inner product of a function 
              * \f$f(\boldsymbol{x})\f$ with respect to all \a local expansion modes 
              * \f$\phi_n^e(\boldsymbol{x})\f$.
@@ -221,6 +241,71 @@ namespace Nektar
              * #m_phys.
              */
             void   IProductWRTBase (const ExpList &Sin);
+
+
+            /**
+             * \brief This function calculates the inner product of a function 
+             * \f$f(\boldsymbol{x})\f$ with respect to all \emph{local} expansion modes 
+             * \f$\phi_n^e(\boldsymbol{x})\f$.
+             *
+             * The operation is evaluated locally for every element by the function 
+             * StdRegions#StdExpansion#IProductWRTBase.
+             *
+             * \param inarray An array of size \f$Q_{\mathrm{tot}}\f$ containing the values 
+             * of the function \f$f(\boldsymbol{x})\f$ at the quadrature points 
+             * \f$\boldsymbol{x}_i\f$.
+             * \param outarray An array of size \f$N_{\mathrm{eof}}\f$ used to store the 
+             * result.
+             */
+            void   IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
+                                   Array<OneD, NekDouble> &outarray);
+            
+
+            /**
+             * \brief This function calculates the inner product of a
+             * function \f$f(\boldsymbol{x})\f$ with respect to the
+             * derivative (in direction \param dir) of all
+             * \emph{local} expansion modes
+             * \f$\phi_n^e(\boldsymbol{x})\f$.
+             *
+             * The operation is evaluated locally for every element by the function 
+             * StdRegions#StdExpansion#IProductWRTDerivBase.
+             * The values of the function \f$f(\boldsymbol{x})\f$ evaluated at the
+             * quadrature points \f$\boldsymbol{x}_i \f$ should be contained in the
+             * variable #m_phys of the #ExpList object \a Sin.
+             * The result is stored in the array #m_coeffs.
+             *
+             * \param dir=0,1 is the direction in which the derivative
+             * of the basis should be taken. \param Sin An ExpList,
+             * containing the discrete evaluation of
+             * \f$f(\boldsymbol{x})\f$ at the quadrature points in its
+             * array #m_phys.
+             */
+            void   IProductWRTDerivBase (const int dir, const ExpList &Sin);
+
+
+            /**
+             * \brief This function calculates the inner product of a
+             * function \f$f(\boldsymbol{x})\f$ with respect to the
+             * derivative (in direction \param dir) of all
+             * \emph{local} expansion modes
+             * \f$\phi_n^e(\boldsymbol{x})\f$.
+             *
+             * The operation is evaluated locally for every element by the function 
+             * StdRegions#StdExpansion#IProductWRTDerivBase.
+             *
+             * \param dir=0,1 is the direction in which the derivative
+             * of the basis should be taken 
+             * \param inarray An array of size \f$Q_{\mathrm{tot}}\f$
+             * containing the values of the function
+             * \f$f(\boldsymbol{x})\f$ at the quadrature points
+             * \f$\boldsymbol{x}_i\f$.  
+             * \param outarray An array of
+             * size \f$N_{\mathrm{eof}}\f$ used to store the result.
+             */
+            void   IProductWRTDerivBase(const int dir, 
+                                        const Array<OneD, const NekDouble> &inarray, 
+                                        Array<OneD, NekDouble> &outarray);
 
             /**
              * \brief  This function elementally evaluates the forward transformation of a 
@@ -242,10 +327,72 @@ namespace Nektar
              */
             void   FwdTrans        (const ExpList &Sin);
 
+
+            /**
+             * \brief This function elementally evaluates the forward
+             * transformation of a function \f$u(\boldsymbol{x})\f$
+             * onto the global spectral/hp expansion.
+             *
+             * Given a function \f$u(\boldsymbol{x})\f$ defined at the
+             * quadrature points, this function determines the
+             * transformed elemental coefficients \f$\hat{u}_n^e\f$
+             * employing a discrete elemental Galerkin projection from
+             * physical space to coefficient space. For each element,
+             * the operation is evaluated locally by the function
+             * StdRegions#StdExpansion#IproductWRTBase followed by a
+             * call to #MultiRegions#MultiplyByElmtInvMass.
+             *
+             * \param inarray An array of size \f$Q_{\mathrm{tot}}\f$
+             * containing the values of the function
+             * \f$f(\boldsymbol{x})\f$ at the quadrature points
+             * \f$\boldsymbol{x}_i\f$.  \param outarray The resulting
+             * coefficients \f$\hat{u}_n^e\f$ will be stored in this
+             * array of size \f$N_{\mathrm{eof}}\f$.
+             */
+            void   FwdTrans (const Array<OneD, const NekDouble> &inarray,
+                             Array<OneD, NekDouble> &outarray);
+
+
+            /**
+             * \brief This function elementally mulplies the
+             * coefficient space of Sin my the elemental inverse of
+             * the mass matrix
+             *
+             * The coefficients of the function to be acted upon
+             * should be contained in the variable #m_coeffs of the
+             * ExpList object \a Sin. The resulting coefficients are
+             * stored in the array #m_coeffs.
+             *
+             * \param Sin An ExpList, containing the inner product or
+             * right hand side in #m_coeffs
+             */
+            void  MultiplyByElmtInvMass(const ExpList &Sin);
+
+            /**
+             * \brief This function elementally mulplies the
+             * coefficient space of Sin my the elemental inverse of
+             * the mass matrix
+             *
+             * The coefficients of the function to be acted upon
+             * should be contained in the \param inarray. The
+             * resulting coefficients are stored in \param outarray
+             *
+             * \param inarray An array of size \f$N_{\mathrm{eof}}\f$
+             * containing the inner product. 
+             */
+            void  MultiplyByElmtInvMass (const Array<OneD, const NekDouble> &inarray,
+                                       Array<OneD, NekDouble> &outarray);
+
             /**
              * \brief 
              */
             void   FwdTrans_BndConstrained(const ExpList &Sin);
+
+            /**
+             * \brief 
+             */
+            void   FwdTrans_BndConstrained (const Array<OneD, const NekDouble> &inarray,
+               Array<OneD, NekDouble> &outarray);
 
             /**
              * \brief This function elementally evaluates the backward transformation of 
@@ -265,6 +412,26 @@ namespace Nektar
              * \f$\hat{u}_n^e\f$ in its array #m_coeffs.
              */
             void   BwdTrans        (const ExpList &Sin); 
+
+
+            /**
+             * \brief This function elementally evaluates the backward transformation of 
+             * the global spectral/hp element expansion.
+             *
+             * Given the elemental coefficients \f$\hat{u}_n^e\f$ of an expansion, this 
+             * function evaluates the spectral/hp expansion 
+             * \f$u^{\delta}(\boldsymbol{x})\f$ at the quadrature points 
+             * \f$\boldsymbol{x}_i\f$. The operation is evaluated locally by the elemental 
+             * function  StdRegions#StdExpansion#BwdTrans.
+             *
+             * \param inarray An array of size \f$N_{\mathrm{eof}}\f$ containing the local 
+             * coefficients \f$\hat{u}_n^e\f$.
+             * \param outarray The resulting physical values at the quadrature points 
+             * \f$u^{\delta}(\boldsymbol{x}_i)\f$ will be stored in this array of size 
+             * \f$Q_{\mathrm{tot}}\f$.
+             */
+            void   BwdTrans (const Array<OneD, const NekDouble> &inarray, 
+                             Array<OneD, NekDouble> &outarray); 
 
             /**
              * \brief This function discretely evaluates the derivative of a function 
@@ -662,87 +829,9 @@ namespace Nektar
             Array<OneD, int>  m_phys_offset;
 
 
-            /**
-             * \brief This function integrates a function \f$f(\boldsymbol{x})\f$ over the 
-             * domain consisting of all the elements of the expansion.
-             *
-             * The integration is evaluated locally, that is
-             * \f[
-             * \int f(\boldsymbol{x})d\boldsymbol{x}=\sum_{e=1}^{{N_{\mathrm{el}}}}
-             * \left\{\int_{\Omega_e}f(\boldsymbol{x})d\boldsymbol{x}\right\},\f]
-             * where the integration over the separate elements is done by the function 
-             * StdRegions#StdExpansion#Integral, which discretely evaluates the integral 
-             * using Gaussian quadrature.
-             * 
-             * \param inarray An array of size \f$Q_{\mathrm{tot}}\f$ containing the values 
-             * of the function \f$f(\boldsymbol{x})\f$ at the quadrature points 
-             * \f$\boldsymbol{x}_i\f$.
-             * \return the value of the discretely evaluated integral 
-             * \f$\int f(\boldsymbol{x})d\boldsymbol{x}\f$.
-             */
-            NekDouble PhysIntegral(const Array<OneD, const NekDouble> &inarray);
-
-            /**
-             * \brief This function calculates the inner product of a function 
-             * \f$f(\boldsymbol{x})\f$ with respect to all \emph{local} expansion modes 
-             * \f$\phi_n^e(\boldsymbol{x})\f$.
-             *
-             * The operation is evaluated locally for every element by the function 
-             * StdRegions#StdExpansion#IProductWRTBase.
-             *
-             * \param inarray An array of size \f$Q_{\mathrm{tot}}\f$ containing the values 
-             * of the function \f$f(\boldsymbol{x})\f$ at the quadrature points 
-             * \f$\boldsymbol{x}_i\f$.
-             * \param outarray An array of size \f$N_{\mathrm{eof}}\f$ used to store the 
-             * result.
-             */
-            void   IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
-                                   Array<OneD, NekDouble> &outarray);
             
-            /**
-             * \brief  This function elementally evaluates the forward transformation of a 
-             * function \f$u(\boldsymbol{x})\f$ onto the global spectral/hp expansion.
-             *
-             * Given a function \f$u(\boldsymbol{x})\f$ defined at the quadrature points,
-             * this function determines the transformed elemental coefficients 
-             * \f$\hat{u}_n^e\f$ employing a discrete elemental Galerkin projection 
-             * from physical space to coefficient space. For each element, the operation
-             * is evaluated locally by the function StdRegions#StdExpansion#FwdTrans.
-             *
-             * \param inarray An array of size \f$Q_{\mathrm{tot}}\f$ containing the values 
-             * of the function \f$f(\boldsymbol{x})\f$ at the quadrature points 
-             * \f$\boldsymbol{x}_i\f$.
-             * \param outarray The resulting coefficients \f$\hat{u}_n^e\f$ will be stored 
-             * in this array of size \f$N_{\mathrm{eof}}\f$.
-             */
 
-            void   FwdTrans (const Array<OneD, const NekDouble> &inarray,
-                             Array<OneD, NekDouble> &outarray);
 
-            /**
-             * \brief 
-             */
-            void   FwdTrans_BndConstrained (const Array<OneD, const NekDouble> &inarray,
-               Array<OneD, NekDouble> &outarray);
-
-            /**
-             * \brief This function elementally evaluates the backward transformation of 
-             * the global spectral/hp element expansion.
-             *
-             * Given the elemental coefficients \f$\hat{u}_n^e\f$ of an expansion, this 
-             * function evaluates the spectral/hp expansion 
-             * \f$u^{\delta}(\boldsymbol{x})\f$ at the quadrature points 
-             * \f$\boldsymbol{x}_i\f$. The operation is evaluated locally by the elemental 
-             * function  StdRegions#StdExpansion#BwdTrans.
-             *
-             * \param inarray An array of size \f$N_{\mathrm{eof}}\f$ containing the local 
-             * coefficients \f$\hat{u}_n^e\f$.
-             * \param outarray The resulting physical values at the quadrature points 
-             * \f$u^{\delta}(\boldsymbol{x}_i)\f$ will be stored in this array of size 
-             * \f$Q_{\mathrm{tot}}\f$.
-             */
-            void   BwdTrans (const Array<OneD, const NekDouble> &inarray, 
-                             Array<OneD, NekDouble> &outarray); 
             
             // Routines for continous matrix solution 
             /**
@@ -938,6 +1027,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.39  2008/07/12 19:08:29  sherwin
+* Modifications for DG advection routines
+*
 * Revision 1.38  2008/07/12 17:31:39  sherwin
 * Added m_phys_offset and rename m_exp_offset to m_coeff_offset
 *

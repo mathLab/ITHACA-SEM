@@ -618,6 +618,9 @@ namespace Nektar
                 LocalRegions::MatrixKey Umatkey(linsystype, (*m_exp)[n]->DetExpansionType(),*((*m_exp)[n]), factor1,factor2);
                 DNekScalMat &BndSys = *((*m_exp)[n]->GetLocMatrix(Umatkey)); 
                 
+                cout << "BndSys" << endl;
+                cout << BndSys << endl;
+                
                 loc_lda = BndSys.GetColumns();
                 
                 for(i = 0; i < loc_lda; ++i)
@@ -996,13 +999,13 @@ namespace Nektar
             
 
         /// Note this routine changes m_trace->m_coeffs space; 
-        void DisContField2D::AddBoundaryIntFromTracePhys(ExpList2D &Sin)
+        void DisContField2D::AddTraceIntegral(Array<OneD, const NekDouble> &inarray, 
+                                              Array<OneD, NekDouble> &outarray)
         {
             int e,n,offset;
-            Array<OneD, NekDouble> e_inarray;
-            Array<OneD, NekDouble> inarray = Sin.UpdatePhys();
+            Array<OneD, NekDouble> e_outarray;
 
-            m_trace->PutPhysInToElmtExp();
+            m_trace->PutPhysInToElmtExp(inarray);
             
             for(n = 0; n < GetExpSize(); ++n)
             {
@@ -1010,7 +1013,7 @@ namespace Nektar
                 for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
                 {
                     (*m_exp)[n]->AddEdgeBoundaryInt(e,m_elmtToTrace[n][e],
-                                                    e_inarray = inarray+offset);
+                                                    e_outarray = outarray+offset);
                 }    
             }
         }

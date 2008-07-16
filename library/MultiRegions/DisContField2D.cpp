@@ -457,7 +457,7 @@ namespace Nektar
             int i,n,e,offset;
             int coordim = GetCoordim(0); // assume all element have the same coordim.
             int trace_npts = m_trace->GetNpoints();
-            int npoints_e,nexp,cnt;
+            int npoints_e,nexp,id;
             Array<TwoD, const NekDouble> normals; 
             SpatialDomains::GeomType Gtype;
             Array<OneD, bool> normal_set;
@@ -468,12 +468,7 @@ namespace Nektar
             nexp = GetExpSize();
 
             // count mesh edge
-            cnt = 0;
-            for(n = 0; n < nexp; ++n)
-            {
-                cnt += (*m_exp)[n]->GetNedges();
-            }
-            normal_set = Array<OneD,bool> (cnt,false);
+            normal_set = Array<OneD,bool> (m_trace->GetExpSize(),false);
             
             for(i = 0; i < coordim; ++i)
             {
@@ -482,7 +477,6 @@ namespace Nektar
             }
 
             //Fill normals
-            cnt = 0;
             for(n = 0; n < GetExpSize(); ++n)
             {
                 Gtype   = (*m_exp)[n]->GetMetricInfo()->GetGtype();
@@ -490,14 +484,15 @@ namespace Nektar
 
                 if(Gtype == SpatialDomains::eDeformed)
                 {
-                    for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e, ++cnt)
+                    for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
                     {
                         npoints_e = (*m_exp)[n]->GetEdgeNumPoints(e);
                         
                         if((*m_exp)[n]->GetEorient(e) == StdRegions::eForwards)
                         {
-                            normal_set[cnt] = true;
-                            offset = m_trace->GetPhys_Offset(m_elmtToTrace[n][e]->GetElmtId());
+                            id = m_elmtToTrace[n][e]->GetElmtId();
+                            normal_set[id] = true;
+                            offset = m_trace->GetPhys_Offset(id);
                             for(i = 0 ; i < coordim; ++i)
                             {
                                 Vmath::Vcopy(npoints_e,&normals[e][i],1,
@@ -511,15 +506,17 @@ namespace Nektar
                 }
                 else
                 {
-                    for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e, ++cnt)
+                    for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
                     {
                         npoints_e = (*m_exp)[n]->GetEdgeNumPoints(e);
                         
                         if((*m_exp)[n]->GetEorient(e) == StdRegions::eForwards)
                         { 
-                            normal_set[cnt] = true;
-                            offset = m_trace->GetPhys_Offset(m_elmtToTrace[n][e]->GetElmtId());
-                           for(i = 0 ; i < coordim; ++i)
+                            id = m_elmtToTrace[n][e]->GetElmtId();
+                            normal_set[id] = true;
+                            offset = m_trace->GetPhys_Offset(id);
+
+                            for(i = 0 ; i < coordim; ++i)
                             {
                                 Vmath::Fill(npoints_e,normals[e][i],
                                             &((*m_traceInnerNormals)[i])[offset],1);
@@ -531,7 +528,6 @@ namespace Nektar
 
             // finally loop through and set any unset boundaries that
             // are on boundary but orientated backwards
-            cnt = 0;
             for(n = 0; n < GetExpSize(); ++n)
             {
                 Gtype   = (*m_exp)[n]->GetMetricInfo()->GetGtype();
@@ -539,13 +535,15 @@ namespace Nektar
 
                 if(Gtype == SpatialDomains::eDeformed)
                 {
-                    for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e, ++cnt)
+                    for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
                     {
-                        npoints_e = (*m_exp)[n]->GetEdgeNumPoints(e);
-                        
-                        if(((*m_exp)[n]->GetEorient(e) == StdRegions::eBackwards) && (normal_set[cnt] == false))
+                        id = m_elmtToTrace[n][e]->GetElmtId();
+
+                        if(((*m_exp)[n]->GetEorient(e) == StdRegions::eBackwards) && (normal_set[id] == false))
                         {
-                            normal_set[cnt] = true;
+                            npoints_e = (*m_exp)[n]->GetEdgeNumPoints(e);
+                        
+                            normal_set[id] = true;
                             offset = m_trace->GetPhys_Offset(m_elmtToTrace[n][e]->GetElmtId());
                             for(i = 0 ; i < coordim; ++i)
                             {
@@ -559,13 +557,15 @@ namespace Nektar
                 }
                 else
                 {
-                    for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e, ++cnt)
+                    for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
                     {
-                        npoints_e = (*m_exp)[n]->GetEdgeNumPoints(e);
+                        id = m_elmtToTrace[n][e]->GetElmtId();
                         
-                        if(((*m_exp)[n]->GetEorient(e) == StdRegions::eBackwards)&&(normal_set[cnt] == false))
+                        if(((*m_exp)[n]->GetEorient(e) == StdRegions::eBackwards)&&(normal_set[id] == false))
                         { 
-                            normal_set[cnt] = true;
+                            normal_set[id] = true;
+
+                            npoints_e = (*m_exp)[n]->GetEdgeNumPoints(e);
                             offset = m_trace->GetPhys_Offset(m_elmtToTrace[n][e]->GetElmtId());
                            for(i = 0 ; i < coordim; ++i)
                             {
@@ -598,11 +598,11 @@ namespace Nektar
             DNekLinSysSharedPtr   linsys;
             GlobalLinSysSharedPtr returnlinsys;
 
-            int totDofs    = m_trace->GetNcoeffs();
+            int totDofs       = m_trace->GetNcoeffs();
             int NumDirBCs     = m_numTraceDirichletBCs;
             unsigned int rows = totDofs - NumDirBCs;
             unsigned int cols = totDofs - NumDirBCs;
-            NekDouble zero = 0.0,sign1,sign2; 
+            NekDouble zero    = 0.0,sign1,sign2; 
             NekDouble factor1 = mkey.GetFactor1();
             NekDouble factor2 = mkey.GetFactor2();
             StdRegions::MatrixType linsystype = mkey.GetLinSysType();
@@ -917,8 +917,8 @@ namespace Nektar
             // Loop over elemente and collect forward expansion
             int nexp = GetExpSize();
             StdRegions::EdgeOrientation edgedir;
-            int nquad_e,cnt,n,e,npts,offset;
-            Array<OneD,NekDouble> e_tmp;
+            int nquad_e,cnt,n,e,npts,offset, phys_offset;
+            Array<OneD,NekDouble> e_tmp, e_tmp1;
 
             // zero vectors; 
             Vmath::Zero(Inner.num_elements(),Inner,1);
@@ -927,6 +927,8 @@ namespace Nektar
             // use m_trace tmp space in element to fill values
             for(n  = 0; n < nexp; ++n)
             {
+                phys_offset = GetPhys_Offset(n);
+
                 for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
                 {
                     nquad_e = (*m_exp)[n]->GetEdgeNumPoints(e);
@@ -934,8 +936,8 @@ namespace Nektar
                     if(edgedir == StdRegions::eForwards)
                     {
                         offset = m_trace->GetPhys_Offset(m_elmtToTrace[n][e]->GetElmtId());
-                        (*m_exp)[n]->GetEdgePhysVals(e,(*m_exp)[n]->GetPhys(),
-                                                     e_tmp = Inner + offset);
+                        (*m_exp)[n]->GetEdgePhysVals(e, e_tmp = m_phys + phys_offset, 
+                                                     e_tmp1 = Inner + offset);
                     }
                 }
             }
@@ -943,6 +945,8 @@ namespace Nektar
             // use m_trace tmp space in element to fill values
             for(n  = 0; n < nexp; ++n)
             {
+                phys_offset = GetPhys_Offset(n);
+
                 for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
                 {
                     nquad_e = (*m_exp)[n]->GetEdgeNumPoints(e);
@@ -950,8 +954,8 @@ namespace Nektar
                     if(edgedir == StdRegions::eBackwards)
                     {
                         offset = m_trace->GetPhys_Offset(m_elmtToTrace[n][e]->GetElmtId());
-                        (*m_exp)[n]->GetEdgePhysVals(e,(*m_exp)[n]->GetPhys(),
-                                                     e_tmp = Outer+offset);
+                        (*m_exp)[n]->GetEdgePhysVals(e,e_tmp = m_phys + phys_offset, 
+                                                     e_tmp1 = Outer+offset);
                     }
                 }
             }
@@ -975,8 +979,8 @@ namespace Nektar
         {
             // Loop over elemente and collect forward expansion
             int nexp = GetExpSize();
-            int nquad_e,cnt,n,e,npts,offset;
-            Array<OneD,NekDouble> e_tmp;
+            int nquad_e,cnt,n,e,npts,offset,phys_offset;
+            Array<OneD,NekDouble> e_tmp,e_tmp1;
 
             ASSERTL1(m_physState == true,
                      "local physical space is not true ");
@@ -987,33 +991,38 @@ namespace Nektar
             // use m_trace tmp space in element to fill values
             for(n  = 0; n < nexp; ++n)
             {
+                phys_offset = GetPhys_Offset(n);
+
                 for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
                 {
                     nquad_e = (*m_exp)[n]->GetEdgeNumPoints(e);
                     offset = m_trace->GetPhys_Offset(m_elmtToTrace[n][e]->GetElmtId());
-                    (*m_exp)[n]->GetEdgePhysVals(e,(*m_exp)[n]->GetPhys(),
-                                                 e_tmp = outarray + offset);
+                    (*m_exp)[n]->GetEdgePhysVals(e, e_tmp = m_phys + phys_offset,
+                                                 e_tmp1 = outarray + offset);
                 }
             }
         }
             
 
         /// Note this routine changes m_trace->m_coeffs space; 
-        void DisContField2D::AddTraceIntegral(Array<OneD, const NekDouble> &inarray, 
+        void DisContField2D::AddTraceIntegral(Array<OneD, const NekDouble> &Fx, 
+                                              Array<OneD, const NekDouble> &Fy, 
                                               Array<OneD, NekDouble> &outarray)
         {
-            int e,n,offset;
-            Array<OneD, NekDouble> e_outarray;
+            int e,n,offset, t_offset;
+            Array<OneD, NekDouble> e_outarray,e_Fx,e_Fy;
 
-            m_trace->PutPhysInToElmtExp(inarray);
-            
             for(n = 0; n < GetExpSize(); ++n)
             {
-                offset = GetPhys_Offset(n);
+                offset = GetCoeff_Offset(n);
                 for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
                 {
-                    (*m_exp)[n]->AddEdgeBoundaryInt(e,m_elmtToTrace[n][e],
-                                                    e_outarray = outarray+offset);
+                    t_offset = GetTrace()->GetPhys_Offset(m_elmtToTrace[n][e]->GetElmtId());
+
+                    (*m_exp)[n]->AddEdgeNormBoundaryInt(e,m_elmtToTrace[n][e],
+                                                        e_Fx = Fx + t_offset,
+                                                        e_Fy = Fy + t_offset,
+                                                        e_outarray = outarray+offset);
                 }    
             }
         }

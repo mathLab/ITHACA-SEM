@@ -68,4 +68,7 @@ SET_LAPACK_LINK_LIBRARIES(UDGHelmholtz2D)
 #    SET_LAPACK_LINK_LIBRARIES(ProjectCont2D) 
 
 
-
+SET(AdvectionSource  Advection.cpp)
+ADD_NEKTAR_EXECUTABLE(Advection AdvectionSource)
+TARGET_LINK_LIBRARIES(Advection ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(Advection)

@@ -802,6 +802,15 @@ namespace Nektar
                 v_AddNormBoundaryInt(dir,inarray,outarray);
             }
 
+            virtual void AddEdgeNormBoundaryInt(const int edge, 
+                                                boost::shared_ptr<LocalRegions::SegExp>  &EdgeExp,
+                                                Array<OneD, NekDouble> &Fx,  
+                                                Array<OneD, NekDouble> &Fy,  
+                                                Array<OneD, NekDouble> &outarray)
+            {
+                v_AddEdgeNormBoundaryInt(edge,EdgeExp,Fx,Fy,outarray);
+            }
+
 
             virtual void AddBoundaryInt(Array<OneD, const NekDouble> &inarray,
                                         Array<OneD,NekDouble> &outarray)
@@ -1074,6 +1083,16 @@ namespace Nektar
             virtual void v_AddNormBoundaryInt(const int dir,
                                               Array<OneD, const NekDouble> &inarray,
                                               Array<OneD,NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+            }
+
+
+            virtual void v_AddEdgeNormBoundaryInt(const int edge,
+                                                  boost::shared_ptr<LocalRegions::SegExp> &EdgeExp,
+                                                  Array<OneD, NekDouble> &Fx,  
+                                                  Array<OneD, NekDouble> &Fy,  
+                                                  Array<OneD, NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
@@ -1603,6 +1622,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.89  2008/07/12 19:08:29  sherwin
+ * Modifications for DG advection routines
+ *
  * Revision 1.88  2008/07/12 16:30:07  sherwin
  * Added an new member m_elmt_id so that there is an element number for use later in lists
  *

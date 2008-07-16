@@ -1161,6 +1161,9 @@ namespace Nektar
                                                   mkey.GetConstant(1));
                     DNekMatSharedPtr mat = GenMatrix(hkey);
 
+                    cout << "DGHelmholtz" << endl;
+                    cout << (*mat) << endl;
+
                     mat->Invert();
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
@@ -1396,6 +1399,68 @@ namespace Nektar
             MapTo(order_e,EdgeExp->GetBasisType(0),edge, 
                   GetCartesianEorient(edge),vmap);
             
+            EdgeExp->IProductWRTBase(EdgeExp->GetPhys(),EdgeExp->UpdateCoeffs());
+            // add data to out array
+            for(i = 0; i < order_e; ++i)
+            {
+                outarray[vmap[i]] += vmap.GetSign(i)*EdgeExp->GetCoeff(i);
+            }
+        }
+
+        
+        //
+
+        void QuadExp:: AddEdgeNormBoundaryInt(const int edge, 
+                                              SegExpSharedPtr &EdgeExp,
+                                              Array<OneD, NekDouble> &Fx,  
+                                              Array<OneD, NekDouble> &Fy,  
+                                              Array<OneD, NekDouble> &outarray)
+        {
+            int i;
+            int order_e = EdgeExp->GetNcoeffs();                    
+            int nquad_e = EdgeExp->GetNumPoints(0);
+            Array<TwoD, const NekDouble> normals = m_metricinfo->GetNormals();
+            SpatialDomains::GeomType     Gtype = m_metricinfo->GetGtype();
+            StdRegions::StdExpMap        vmap;
+            StdRegions::EdgeOrientation  edgedir = GetCartesianEorient(edge);
+            
+            MapTo(order_e,EdgeExp->GetBasisType(0),edge,edgedir,vmap);
+            
+            ASSERTL1(m_geom->GetCoordim() == 2,"Routine only set up for two-dimensions");
+            
+            if(Gtype == SpatialDomains::eDeformed)
+            {
+                if(edgedir == StdRegions::eForwards)
+                {
+                    Vmath::Vmul(nquad_e,&(normals[edge][0]),1,
+                                &Fx[0],1,&(EdgeExp->UpdatePhys())[0],1);
+                    Vmath::Vvtvp(nquad_e,&(normals[edge][nquad_e]),1,
+                                 &Fy[0],1,&(EdgeExp->GetPhys())[0],1,
+                                 &(EdgeExp->UpdatePhys())[0],1);
+                }
+                else
+                {
+                    //use reverse ordering of normals to be
+                    //consistent with edge orientation
+                    Vmath::Vmul(nquad_e,&(normals[edge][0])+nquad_e-1,-1,
+                                &Fx[0],1,&(EdgeExp->UpdatePhys())[0],1);
+                    Vmath::Vvtvp(nquad_e,&(normals[edge][nquad_e])+nquad_e-1,-1,
+                                 &Fy[0],1,&(EdgeExp->GetPhys())[0],1,
+                                 &(EdgeExp->UpdatePhys())[0],1);
+
+                }
+            }
+            else
+            {
+                Vmath::Smul (nquad_e,normals[edge][0],
+                             Fx,1,EdgeExp->UpdatePhys(),1);
+                Vmath::Svtvp(nquad_e,normals[edge][1],
+                             Fy,1,EdgeExp->UpdatePhys(),1,
+                             EdgeExp->UpdatePhys(),1);
+                
+            }
+
+
             EdgeExp->IProductWRTBase(EdgeExp->GetPhys(),EdgeExp->UpdateCoeffs());
             // add data to out array
             for(i = 0; i < order_e; ++i)
@@ -2002,14 +2067,22 @@ namespace Nektar
                     LocalRegions::MatrixKey Umatkey(StdRegions::eUnifiedDGLamToU,DetExpansionType(),*this, lambdaval,tau);
                     DNekScalMat &LamToU = *GetLocMatrix(Umatkey); 
                 
+                    cout << "LamToU" << endl;
+                    cout << LamToU << endl;
+
                     // Matrix to map Lambda to Q0
                     LocalRegions::MatrixKey Q0matkey(StdRegions::eUnifiedDGLamToQ0, DetExpansionType(),*this, lambdaval,tau);
                     DNekScalMat &LamToQ0 = *GetLocMatrix(Q0matkey); 
                     
+                    cout << "LamToQ0" << endl;
+                    cout << LamToQ0 << endl;
+
                     // Matrix to map Lambda to Q1
                     LocalRegions::MatrixKey Q1matkey(StdRegions::eUnifiedDGLamToQ1, DetExpansionType(),*this, lambdaval,tau);
                     DNekScalMat &LamToQ1 = *GetLocMatrix(Q1matkey); 
 
+                    cout << "LamToQ1" << endl;
+                    cout << LamToQ1 << endl;
 
                     // Set up matrix derived from <mu, Q_lam.n - \tau (
                     // U_lam - Lam) > Not we do not need the lambda term in
@@ -2414,6 +2487,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.44  2008/07/12 19:08:29  sherwin
+ *    Modifications for DG advection routines
+ *
  *    Revision 1.43  2008/07/12 17:27:07  sherwin
  *    Update for AddBoundaryInt and moved various members to be private rather than protected
  *

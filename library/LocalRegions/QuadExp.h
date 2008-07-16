@@ -184,6 +184,11 @@ namespace Nektar
             void AddEdgeBoundaryInt(const int edge, SegExpSharedPtr &EdgeExp,
                                     Array <OneD,NekDouble > &outarray);          
 
+            void AddEdgeNormBoundaryInt(const int edge, 
+                                        SegExpSharedPtr &EdgeExp,
+                                        Array<OneD, NekDouble> &Fx,  
+                                        Array<OneD, NekDouble> &Fy,  
+                                        Array<OneD, NekDouble> &outarray);
 
             void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
                                            const Array<OneD, const NekDouble> &inarray,
@@ -417,7 +422,18 @@ namespace Nektar
             {
                 AddNormBoundaryInt(dir,inarray,outarray,false);
             }
-        
+            
+
+            virtual void v_AddEdgeNormBoundaryInt(const int edge, 
+                                                  SegExpSharedPtr &EdgeExp,
+                                                  Array<OneD, NekDouble> &Fx,  
+                                                  Array<OneD, NekDouble> &Fy,  
+                                                  Array<OneD, NekDouble> &outarray)
+            {
+                AddEdgeNormBoundaryInt(edge,EdgeExp,Fx,Fy,outarray);
+                
+            }
+
 
             virtual void v_AddBoundaryInt(Array<OneD, const NekDouble> &inarray,
                                           Array<OneD,NekDouble> &outarray)
@@ -488,6 +504,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.34  2008/07/12 19:08:29  sherwin
+ *    Modifications for DG advection routines
+ *
  *    Revision 1.33  2008/07/12 17:27:07  sherwin
  *    Update for AddBoundaryInt and moved various members to be private rather than protected
  *

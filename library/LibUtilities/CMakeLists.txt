@@ -58,8 +58,6 @@ SET(FoundationHeaders
     ./Foundations/NodalTriEvenlySpaced.h
     ./Foundations/NodalTetEvenlySpaced.h
     ./Foundations/TimeIntegrationScheme.h
-    ./Foundations/ForwardMultiStepIntegrationScheme.h
-    ./Foundations/RungeKuttaScheme.h
 )
 
 SET(InterpreterHeaders
@@ -144,8 +142,6 @@ SET(FoundationSources
         ./Foundations/NodalTriEvenlySpaced.cpp
         ./Foundations/NodalTetEvenlySpaced.cpp
         ./Foundations/TimeIntegrationScheme.cpp
-        ./Foundations/ForwardMultiStepIntegrationScheme.cpp
-        ./Foundations/RungeKuttaScheme.cpp
 )
 
 SET(InterpreterSources

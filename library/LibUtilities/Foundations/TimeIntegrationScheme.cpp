@@ -43,22 +43,11 @@ namespace Nektar
     {
         bool operator==(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs)
         {
-            return (lhs.m_order == rhs.m_order &&
-                lhs.m_integrationtype == rhs.m_integrationtype);
+            return (lhs.m_integrationtype == rhs.m_integrationtype);
         }
 
         bool operator<(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs)
-        {
-            if (lhs.m_order < rhs.m_order)
-            {
-                return true;
-            }
-            
-            if (lhs.m_order > rhs.m_order)
-            {
-                return false;
-            }
-            
+        {            
             return (lhs.m_integrationtype < rhs.m_integrationtype);
         }
         
@@ -69,11 +58,151 @@ namespace Nektar
 
         std::ostream& operator<<(std::ostream& os, const TimeIntegrationSchemeKey& rhs)
         {
-            os << "Integration Scheme: " << TimeIntegrationTypeMap[rhs.GetIntegrationSchemeType()];
-            os << ", Order: " << rhs.GetOrder() << std::endl;
+            os << "Time Integration Scheme: " << TimeIntegrationTypeMap[rhs.GetIntegrationSchemeType()] << endl;
 
             return os;
         }
+
+        TimeIntegrationSchemeSharedPtr TimeIntegrationScheme::Create(const TimeIntegrationSchemeKey &key)
+        {
+            TimeIntegrationSchemeSharedPtr returnval(new TimeIntegrationScheme(key));
+            return returnval;
+        }
+
+        TimeIntegrationScheme::TimeIntegrationScheme(const TimeIntegrationSchemeKey &key):
+            m_schemeKey(key)
+        {
+            switch(key.GetIntegrationSchemeType())
+            {
+            case eForwardEuler:
+            case eAdamsBashforthOrder1:
+                {
+                    m_numsteps = 1;
+                    m_numstages = 1;
+                    m_A = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B = Array<TwoD,NekDouble>(m_numsteps,m_numstages,1.0);
+                    m_U = Array<TwoD,NekDouble>(m_numstages,m_numsteps,1.0);
+                    m_V = Array<TwoD,NekDouble>(m_numsteps,m_numsteps,1.0);
+                }
+                break;
+            case eAdamsBashforthOrder2:
+                {
+                    m_numsteps = 2;
+                    m_numstages = 1;
+                    m_A = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B = Array<TwoD,NekDouble>(m_numsteps,m_numstages);
+                    m_U = Array<TwoD,NekDouble>(m_numstages,m_numsteps,0.0);
+                    m_V = Array<TwoD,NekDouble>(m_numsteps,m_numsteps,0.0);
+
+                    m_B[0][0] = 3.0/2.0;
+                    m_B[1][0] = 1.0;
+
+                    m_U[0][0] = 1.0;
+
+                    m_V[0][0] = 1.0;
+                    m_V[0][1] = -0.5;
+                }
+                break;
+            case eBackwardEuler:
+            case eAdamsMoultonOrder1:
+                {
+                    m_numsteps = 1;
+                    m_numstages = 1;
+                    m_A = Array<TwoD,NekDouble>(m_numstages,m_numstages,1.0);
+                    m_B = Array<TwoD,NekDouble>(m_numsteps,m_numstages,1.0);
+                    m_U = Array<TwoD,NekDouble>(m_numstages,m_numsteps,1.0);
+                    m_V = Array<TwoD,NekDouble>(m_numsteps,m_numsteps,1.0);
+                }
+                break;
+            case eAdamsMoultonOrder2:
+                {
+                    m_numsteps = 1;
+                    m_numstages = 1;
+                    m_A = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.5);
+                    m_B = Array<TwoD,NekDouble>(m_numsteps,m_numstages,1.0);
+                    m_U = Array<TwoD,NekDouble>(m_numstages,m_numsteps,1.0);
+                    m_V = Array<TwoD,NekDouble>(m_numsteps,m_numsteps,1.0);
+                }
+                break;
+            case eClassiscalRungeKutta4:
+                {
+                    m_numsteps = 1;
+                    m_numstages = 4;
+                    m_A = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B = Array<TwoD,NekDouble>(m_numsteps,m_numstages,0.0);
+                    m_U = Array<TwoD,NekDouble>(m_numstages,m_numsteps,1.0);
+                    m_V = Array<TwoD,NekDouble>(m_numsteps,m_numsteps,1.0);
+
+                    m_A[1][0] = 0.5;
+                    m_A[2][1] = 0.5;
+                    m_A[3][2] = 1.0;
+
+                    m_B[0][0] = 1.0/6.0;
+                    m_B[0][1] = 1.0/3.0;
+                    m_B[0][2] = 1.0/3.0;
+                    m_B[0][3] = 1.0/6.0;
+                }
+                break;
+            default:
+                {
+                    NEKERROR(ErrorUtil::efatal,"Invalid Time Integration Scheme Type");
+                }
+            }
+        }
+
+        std::ostream& operator<<(std::ostream& os, const TimeIntegrationScheme& rhs)
+        {
+            int i,j;
+            int r = rhs.GetNsteps();
+            int s = rhs.GetNstages();
+
+            int oswidth = 8;
+
+            os << "Time Integration Scheme: " << TimeIntegrationTypeMap[rhs.GetIntegrationSchemeType()] << endl;
+            os << "- number of steps:  " << r << endl;
+            os << "- number of stages: " << s << endl;
+            os << "General linear method tableau: " << endl;
+
+            for(i = 0; i < s; i++)
+            {
+                for(j = 0; j < s; j++)
+                {
+                    os.width(oswidth);
+                    os << right << (rhs.GetA())[i][j] << " ";
+                }
+                os << " |"; 
+
+                for(j = 0; j < r; j++)
+                {
+                    os.width(oswidth);
+                    os << right << (rhs.GetU())[i][j] << " ";
+                }
+                os << endl;
+            }
+            for(int i = 0; i < (r+s)*oswidth+2; i++)
+            {
+                os << "-";
+            }
+            os << endl;
+            for(i = 0; i < r; i++)
+            {
+                for(j = 0; j < s; j++)
+                {
+                    os.width(oswidth);
+                    os << right << (rhs.GetB())[i][j] << " ";
+                }
+                os << " |"; 
+
+                for(j = 0; j < r; j++)
+                {
+                    os.width(oswidth);
+                    os << right << (rhs.GetV())[i][j] << " ";
+                }
+                os << endl;
+            }
+            return os;
+        }
+
     }
 }
 

@@ -56,9 +56,8 @@ namespace Nektar
                 bool operator()(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs) const;
             };
             
-            TimeIntegrationSchemeKey(const TimeIntegrationType &integrationtype, const int &order): 
-                m_order(order), 
-                m_integrationtype(integrationtype)
+        TimeIntegrationSchemeKey(const TimeIntegrationType &integrationtype): 
+            m_integrationtype(integrationtype)
             {
             }
             
@@ -72,17 +71,11 @@ namespace Nektar
             }
 
             TimeIntegrationSchemeKey& operator=(const TimeIntegrationSchemeKey &key)
-            {
-                m_order = key.m_order;
-                m_integrationtype  = key.m_integrationtype;
+        {
+            m_integrationtype  = key.m_integrationtype;
 
-                return *this;
-            }
-
-            inline unsigned int GetOrder() const
-            {
-                return m_order;
-            }
+            return *this;
+        }
 
             inline TimeIntegrationType GetIntegrationSchemeType() const
             {
@@ -91,8 +84,7 @@ namespace Nektar
 
             inline bool operator==(const TimeIntegrationSchemeKey &key)
             {
-                return (m_order == key.m_order &&
-                    m_integrationtype == key.m_integrationtype);
+                return (m_integrationtype == key.m_integrationtype);
             }
 
             inline bool operator== (const TimeIntegrationSchemeKey *y)
@@ -115,7 +107,6 @@ namespace Nektar
             friend bool opLess::operator()(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs) const;
 
         protected:
-            unsigned int m_order;                   //!< order of the integration scheme
             TimeIntegrationType m_integrationtype;  //!< Type of the integration scheme
 
         private:
@@ -126,7 +117,7 @@ namespace Nektar
             }
         };
 
-        static const TimeIntegrationSchemeKey NullTimeIntegrationSchemeKey(eNoTimeIntegrationType, 0);
+        static const TimeIntegrationSchemeKey NullTimeIntegrationSchemeKey(eNoTimeIntegrationType);
 
         bool operator==(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
         bool operator<(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
@@ -136,13 +127,10 @@ namespace Nektar
         {
         public:
 
+            static boost::shared_ptr<TimeIntegrationScheme> Create(const TimeIntegrationSchemeKey &key);
+
             virtual ~TimeIntegrationScheme()
             {
-            }
-
-            inline unsigned int GetOrder() const
-            {
-                return m_schemeKey.GetOrder();
             }
 
             inline TimeIntegrationType GetIntegrationSchemeType() const
@@ -150,48 +138,67 @@ namespace Nektar
                 return m_schemeKey.GetIntegrationSchemeType();
             }
 
-            virtual const Array<OneD, const NekDouble>& GetBetaCoefficients(void) const
+            inline const Array<TwoD, const NekDouble>& GetA(void) const
             {
-                NEKERROR(ErrorUtil::efatal,"This function is not defined for this type of time integration.");
+                return m_A;
             }  
 
-            virtual const Array<TwoD, const NekDouble>& GetAcoefficients(void) const
+            inline const Array<TwoD, const NekDouble>& GetB(void) const
             {
-                NEKERROR(ErrorUtil::efatal,"This function is not defined for this type of time integration.");
+                return m_B;
             }       
 
-            virtual const Array<OneD, const NekDouble>& GetBcoefficients(void) const
+            inline const Array<TwoD, const NekDouble>& GetU(void) const
             {
-                NEKERROR(ErrorUtil::efatal,"This function is not defined for this type of time integration.");
+                return m_U;
             }       
 
-            virtual const Array<OneD, const NekDouble>& GetCcoefficients(void) const
+            inline const Array<TwoD, const NekDouble>& GetV(void) const
             {
-                NEKERROR(ErrorUtil::efatal,"This function is not defined for this type of time integration.");
+                return m_V;
+            }
+
+            inline unsigned int GetNsteps(void) const
+            {
+                return m_numsteps;
+            }
+
+            inline unsigned int GetNstages(void) const
+            {
+                return m_numstages;
             }
 
         protected:
             TimeIntegrationSchemeKey m_schemeKey;
+            unsigned int             m_numsteps;
+            unsigned int             m_numstages;
 
-            TimeIntegrationScheme(const TimeIntegrationSchemeKey &key):m_schemeKey(key)
-            {
-            }
+            Array<TwoD,NekDouble>    m_A;
+            Array<TwoD,NekDouble>    m_B;
+            Array<TwoD,NekDouble>    m_U;
+            Array<TwoD,NekDouble>    m_V;
 
+        private: 
+            
+            TimeIntegrationScheme(const TimeIntegrationSchemeKey &key);
+            
             // These should never be called
-            TimeIntegrationScheme(const TimeIntegrationScheme &in):m_schemeKey(in.m_schemeKey)
-            {
-                NEKERROR(ErrorUtil::efatal,"Copy Constructor for the TimeIntegrationScheme class should not be called");
-            }
-
             TimeIntegrationScheme():m_schemeKey(NullTimeIntegrationSchemeKey)
             {
                 NEKERROR(ErrorUtil::efatal,"Default Constructor for the TimeIntegrationScheme class should not be called");
             }
-
-        private:
+            
+            TimeIntegrationScheme(const TimeIntegrationScheme &in):m_schemeKey(NullTimeIntegrationSchemeKey)
+            {
+                NEKERROR(ErrorUtil::efatal,"Copy Constructor for the TimeIntegrationScheme class should not be called");
+            }
         };
 
+        std::ostream& operator<<(std::ostream& os, const TimeIntegrationScheme& rhs);
+
         typedef boost::shared_ptr<TimeIntegrationScheme> TimeIntegrationSchemeSharedPtr;
+        typedef std::vector< TimeIntegrationSchemeSharedPtr > TimeIntegrationSchemeVector; 
+        typedef std::vector< TimeIntegrationSchemeSharedPtr >::iterator TimeIntegrationSchemeVectorIter; 
 
     }; // end of namespace
 } // end of namespace 

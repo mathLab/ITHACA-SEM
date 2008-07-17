@@ -131,18 +131,26 @@ namespace Nektar
         enum TimeIntegrationType
         {
             eNoTimeIntegrationType,
-            eAdamsBashforth,                  //!< Adams-Bashforth Forward multi-step scheme
-            eAdamsMoulton,                    //!< Adams-Moulton Forward multi-step scheme
-            eRungeKutta,                      //!< Rungi-Kutta multi-stage scheme
+            eAdamsBashforthOrder1,            //!< Adams-Bashforth Forward multi-step scheme of order 1
+            eAdamsBashforthOrder2,            //!< Adams-Bashforth Forward multi-step scheme of order 2
+            eAdamsMoultonOrder1,              //!< Adams-Moulton Forward multi-step scheme of order 1
+            eAdamsMoultonOrder2,              //!< Adams-Moulton Forward multi-step scheme of order 2
+            eClassiscalRungeKutta4,           //!< Runge-Kutta multi-stage scheme
+            eForwardEuler,                    //!< Forward euler scheme
+            eBackwardEuler,                   //!< Backward euler scheme
             SIZE_TimeIntegrationType          //!< Length of enum list
         };
 
         const char* const TimeIntegrationTypeMap[] = 
         {
             "NoTimeIntegrationType",
-            "Adams-Bashforth",
-            "Adams-Moulton",
-            "Runge-Kutta"
+            "1st order Adams-Bashforth",
+            "2nd order Adams-Bashforth",
+            "1st order Adams-Moulton",
+            "2nd order Adams-Moulton",
+            "Classical Runge-Kutta 4",
+            "Forward Euler",
+            "Backward Euler"
         };
     } // end of namespace
 } // end of namespace

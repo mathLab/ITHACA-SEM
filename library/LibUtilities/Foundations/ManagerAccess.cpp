@@ -44,8 +44,7 @@
 #include <LibUtilities/Foundations/NodalTriEvenlySpaced.h>
 #include <LibUtilities/Foundations/NodalTetEvenlySpaced.h>
 #include <LibUtilities/Foundations/Basis.h>
-#include <LibUtilities/Foundations/ForwardMultiStepIntegrationScheme.h>
-#include <LibUtilities/Foundations/RungeKuttaScheme.h>
+#include <LibUtilities/Foundations/TimeIntegrationScheme.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
@@ -90,9 +89,13 @@ namespace Nektar
             const bool Chebyshev_Inited = BasisManager().RegisterCreator(BasisKey(eChebyshev, 0, NullPointsKey), Basis::Create);
             const bool Monomial_Inited = BasisManager().RegisterCreator(BasisKey(eMonomial, 0, NullPointsKey), Basis::Create);
 
-            const bool AdamsBashforth_Inited = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eAdamsBashforth, 0), ForwardMultiStepIntegrationScheme::Create);
-            const bool AdamsMoulton_Inited   = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eAdamsMoulton, 0), ForwardMultiStepIntegrationScheme::Create);
-            const bool RungeKutta_Inited     = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eRungeKutta, 0), RungeKuttaScheme::Create);
+            const bool AdamsBashforthOrder1_Inited = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eAdamsBashforthOrder1), TimeIntegrationScheme::Create);
+            const bool AdamsBashforthOrder2_Inited   = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eAdamsBashforthOrder2), TimeIntegrationScheme::Create);
+            const bool AdamsMoultonOrder1_Inited     = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eAdamsMoultonOrder1), TimeIntegrationScheme::Create);
+            const bool AdamsMoultonOrder2_Inited     = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eAdamsMoultonOrder2), TimeIntegrationScheme::Create);
+            const bool ClassiscalRungeKutta4_Inited     = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eClassiscalRungeKutta4), TimeIntegrationScheme::Create);
+            const bool ForwardEuler_Inited     = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eForwardEuler), TimeIntegrationScheme::Create);
+            const bool BackwardEuler_Inited     = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eBackwardEuler), TimeIntegrationScheme::Create);
         };
 
         PointsManagerT &PointsManager(void)
@@ -116,6 +119,9 @@ namespace Nektar
 
 /**
 $Log: ManagerAccess.cpp,v $
+Revision 1.19  2008/07/12 11:37:53  pvos
+Added time integration scheme manager
+
 Revision 1.18  2008/05/27 20:05:50  ehan
 Added NodalTetEvenlySpaced points.
 

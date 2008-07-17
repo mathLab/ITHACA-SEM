@@ -89,10 +89,16 @@ namespace Nektar
                 return m_gtype;
             }
 
+//             inline const Array<TwoD, const NekDouble> &GetGmat() const
+//             {
+//                 return m_gmat;
+//             }
+
             inline const Array<TwoD, const NekDouble> &GetGmat() const
             {
                 return m_gmat;
             }
+
 
             inline const Array<OneD, const NekDouble> &GetJac() const 
             {
@@ -129,8 +135,8 @@ namespace Nektar
             }
 
         protected:
-            Array<TwoD,NekDouble> m_gmat;
             Array<OneD,NekDouble> m_jac;
+            Array<TwoD,NekDouble> m_gmat;
             Array<TwoD,NekDouble> m_normals;
 
             GeomType m_gtype;
@@ -144,6 +150,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.17  2008/06/09 21:34:28  jfrazier
+// Added some code for 3d.
+//
 // Revision 1.16  2008/04/06 06:00:37  bnelson
 // Changed ConstArray to Array<const>
 //

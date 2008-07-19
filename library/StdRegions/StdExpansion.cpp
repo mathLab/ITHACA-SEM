@@ -275,7 +275,7 @@ namespace Nektar
                         Vmath::Zero(m_ncoeffs,&inarray[0],1);
                         Vmath::Zero(m_ncoeffs,&outarray[0],1);
                         inarray[j] = 1.0;
-                        
+
                         v_AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray);
 
                         for(i = 0; i < m_ncoeffs; ++i)
@@ -317,6 +317,8 @@ namespace Nektar
                         Vmath::Zero(m_ncoeffs,&f[0],1);
                         lambda[j] = 1.0;
                         
+                        v_SetTraceToGeomOrientation(lambda);
+
                         v_AddUDGHelmholtzTraceTerms(tau,lambda,f);
                         
                         Ulam = invHmat*F; // generate Ulam from lambda
@@ -354,6 +356,9 @@ namespace Nektar
                     // Helmholtz matrix
                     DNekScalMat &invHmat = *GetLocMatrix(eInvUnifiedDGHelmholtz, lambdaval,tau);
 
+                    // Lambda to U matrix
+                    DNekScalMat &lamToU = *GetLocMatrix(eUnifiedDGLamToU, lambdaval, tau);
+
                     // Inverse mass matrix 
                     DNekScalMat &invMass = *GetLocMatrix(eInvMass);
                     
@@ -381,25 +386,28 @@ namespace Nektar
                     for(j = 0; j < nbndry; ++j)
                     {
                         Vmath::Zero(nbndry,&lambda[0],1);
-                        Vmath::Zero(m_ncoeffs,&f[0],1);
                         lambda[j] = 1.0;
                         
-                        v_AddUDGHelmholtzTraceTerms(tau,lambda,f);
-                        
-                        Ulam = invHmat*F; // generate Ulam from lambda
+                        // for lambda[j] = 1 this is the solution to ulam
+                        for(k = 0; k < m_ncoeffs; ++k)
+                        {
+                            Ulam[k] = lamToU(k,j);
+                        }
 
-                        F = (*Dmat)*Ulam; 
-                        
-                        v_AddNormTraceInt(dir,lambda,f); // add \tilde{G}\lambda
-
+                        // -D^T ulam
                         Vmath::Neg(m_ncoeffs,&ulam[0],1);
-                        v_AddNormBoundaryInt(dir,ulam,f); // subtrace G Ulam
+                        F = Transpose(*Dmat)*Ulam; 
+                        
+                        v_SetTraceToGeomOrientation(lambda);
 
-                        Ulam = invMass*F; // multiply by inverse mass matrix
+                        // + \tilde{G} \lambda
+                        v_AddNormTraceInt(dir,lambda,f); 
+
+                        // multiply by inverse mass matrix
+                        Ulam = invMass*F; 
                         
                         // fill column of matrix (Qmat is in column major format)
                         Vmath::Vcopy(m_ncoeffs,&ulam[0],1,&(Qmat.GetPtr())[0]+j*m_ncoeffs,1);
-
                     }
                 }
                 break;            
@@ -727,6 +735,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.72  2008/07/12 16:30:07  sherwin
+* Added an new member m_elmt_id so that there is an element number for use later in lists
+*
 * Revision 1.71  2008/07/02 14:08:56  pvos
 * Implementation of HelmholtzMatOp and LapMatOp on shape level
 *

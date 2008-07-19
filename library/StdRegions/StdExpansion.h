@@ -880,35 +880,6 @@ namespace Nektar
                 v_GetEdgePhysVals(edge,inarray,outarray);
             }
 
-            // element boundary ordering 
-            // Segment mapping: Vertex to Seg
-            void MapTo(EdgeOrientation dir, StdExpMap &Map)
-            {
-                v_MapTo(dir,Map);
-                NEKERROR(ErrorUtil::ewarning, "MapTo (1D) is deprecated... Try to avoid using it (alternatively: use GetEdgeToElementMap() )");
-            }
-
-            // EdgeTo2D mapping 
-            void  MapTo(const int edge_ncoeff, 
-                        const LibUtilities::BasisType Btype, 
-                        const int eid, const EdgeOrientation eorient, 
-                        StdExpMap &Map)
-            {
-                NEKERROR(ErrorUtil::ewarning, "MapTo is deprecated... Try to avoid using it (alternatively: use GetEdgeToElementMap() )");
-                v_MapTo(edge_ncoeff,Btype,eid,eorient,Map);
-            }
-
-            // EdgeTo2D mapping 
-            void  MapTo_ModalFormat(const int edge_ncoeff, 
-                                    const LibUtilities::BasisType Btype, 
-                                    const int eid, 
-                                    const EdgeOrientation eorient, 
-                                    StdExpMap &Map)
-            {
-                NEKERROR(ErrorUtil::ewarning, "MapTo is deprecated... Try to avoid using it (alternatively: use GetEdgeToElementMap() )");
-                v_MapTo_ModalFormat(edge_ncoeff,Btype,eid,eorient,Map);
-            }
-
             // Matrix Routines
 
             /** \brief this function generates the mass matrix 
@@ -1020,14 +991,12 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
                 return NullDNekScalMatSharedPtr;
-                //return boost::shared_ptr<DNekScalMat>();
             }
 
             virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
                 return NullDNekScalMatSharedPtr;
-                //return boost::shared_ptr<DNekScalMat>();
             }
 
 
@@ -1035,10 +1004,17 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
                 return NullDNekScalBlkMatSharedPtr;
-                //return boost::shared_ptr<DNekScalBlkMat>();
             }
 
+            virtual void v_SetTraceToGeomOrientation(Array<OneD, NekDouble> &inout)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only defined for LocalReigons");
+                
+            }
+
+
             virtual StdRegions::FaceOrientation v_GetFaceorient(int face)
+
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");  
                 return eDir1FwdDir1_Dir2FwdDir2;              
@@ -1389,6 +1365,7 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "This method has not been defined");                
             }
 
+
             virtual NekDouble v_Integral(const Array<OneD, const NekDouble>& inarray )
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for "
@@ -1519,30 +1496,6 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
-
-            // element boundary ordering 
-            virtual void v_MapTo(EdgeOrientation dir, StdExpMap &Map)
-            {
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );        
-            }
-
-            virtual void  v_MapTo(const int edge_ncoeffs, 
-                                  const LibUtilities::BasisType Btype,
-                                  const int eid, const EdgeOrientation eorient, 
-                                  StdExpMap &Map)
-            {
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );        
-            }
-
-            virtual void  v_MapTo_ModalFormat(const int edge_ncoeffs, 
-                                              const LibUtilities::BasisType Btype,
-                                              const int eid, 
-                                              const EdgeOrientation eorient, 
-                                              StdExpMap &Map)
-            {
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );        
-            }
-
             virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
             {
                 NEKERROR(ErrorUtil::efatal, "WriteToFile: Write method");
@@ -1610,7 +1563,9 @@ namespace Nektar
                 Blas::Daxpy(m_ncoeffs, lambda, tmp, 1, outarray, 1);
             }
 
+
         };
+
 
         typedef boost::shared_ptr<StdExpansion> StdExpansionSharedPtr;
         typedef std::vector< StdExpansionSharedPtr > StdExpansionVector;
@@ -1622,6 +1577,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.90  2008/07/16 22:20:27  sherwin
+ * Added AddEdgeNormBoundaryInt
+ *
  * Revision 1.89  2008/07/12 19:08:29  sherwin
  * Modifications for DG advection routines
  *

@@ -190,16 +190,6 @@ namespace Nektar
                                      Array<OneD, unsigned int> &maparray,
                                      Array<OneD, int> &signarray);
 
-            void MapTo(const int edge_ncoeffs,
-                       const LibUtilities::BasisType Btype, const int eid,
-                       const EdgeOrientation eorient, StdExpMap &Map);
-
-            void MapTo_ModalFormat(const int edge_ncoeffs,
-                                   const LibUtilities::BasisType Btype,
-                                   const int eid,
-                                   const EdgeOrientation eorient,
-                                   StdExpMap &Map);
-
             void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
             void WriteCoeffsToFile(std::ofstream &outfile);
 
@@ -463,24 +453,6 @@ namespace Nektar
                 GetEdgeToElementMap(eid,edgeOrient,maparray,signarray);
             }
             
-            virtual void v_MapTo(const int edge_ncoeffs,
-                                 const LibUtilities::BasisType Btype, 
-                                 const int eid, 
-                                 const EdgeOrientation eorient,
-                                 StdExpMap &Map)
-            {
-                MapTo(edge_ncoeffs, Btype, eid, eorient, Map);
-            }
-
-            virtual void v_MapTo_ModalFormat(const int edge_ncoeffs,
-                                             const LibUtilities::BasisType Btype,
-                                             const int eid,
-                                             const EdgeOrientation eorient, 
-                                             StdExpMap &Map)
-            {
-                MapTo_ModalFormat(edge_ncoeffs, Btype, eid, eorient, Map);
-            }
-
             virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
             {
                 WriteToFile(outfile,format,dumpVar);
@@ -512,6 +484,9 @@ namespace Nektar
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.31  2008/07/04 10:18:41  pvos
+ * Some updates
+ *
  * Revision 1.30  2008/07/02 14:08:56  pvos
  * Implementation of HelmholtzMatOp and LapMatOp on shape level
  *

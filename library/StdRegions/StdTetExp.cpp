@@ -777,101 +777,14 @@ namespace Nektar
 
         }
 
-
-        void  StdTetExp::MapTo(const int edge_ncoeffs,
-                               const LibUtilities::BasisType Btype,
-                               const int eid,
-                               const EdgeOrientation eorient,
-                               StdExpMap &Map)
-        {
-
-            int i;
-            int order0 = m_base[0]->GetNumModes();
-            int order1 = m_base[1]->GetNumModes();
-            int order2 = m_base[2]->GetNumModes();
-            
-            Array<OneD, int> wsp(edge_ncoeffs); 
-
-            ASSERTL2(eid>=0&&eid<=5,"eid must be between 0 and 5");
-            ASSERTL2(Btype == LibUtilities::eModified_A,"Mapping only set up "
-                     "for Modified_A edges");
-            ASSERTL2(Btype == m_base[0]->GetBasisType(),
-                     "Expansion type of edge and StdQuadExp are different");
-
-
-            // Currently same as triangle MapTo()
-            // make sure haved correct memory storage
-            if(edge_ncoeffs != Map.GetLen())
-            {
-                Map.SetMapMemory(edge_ncoeffs);
-            }
-
-            if(eorient == eForwards)
-            {
-                for(i = 0; i < edge_ncoeffs; ++i)
-                {
-                    wsp[i] = i;
-                }
-            }
-            else
-            {
-                wsp[1] = 0; 
-                wsp[0] = 1;
-
-                for(i = 2; i < edge_ncoeffs; ++i)
-                {
-                    wsp[i] = i;
-                }
-            }
-
-            // Set up Mapping details
-            switch (eid)
-            {
-            case 0:
-                {
-                    int cnt = 0;
-
-                    for(i = 0; i < edge_ncoeffs; cnt+=order1-i, ++i)
-                    {
-                        Map[wsp[i]] = cnt; 
-                    }
-                }
-                break;
-            case 1:
-                Map[wsp[0]] = order1;
-                Map[wsp[1]] = 1;
-
-                for(i = 2; i < edge_ncoeffs; ++i)
-                {
-                    Map[wsp[i]] = order1+i-1; 
-                }
-                break;
-            case 2:
-                for(i = 0; i < edge_ncoeffs; ++i)
-                {
-                    Map[wsp[i]] = i; 
-                }
-                break;
-            }
-        }
-
-        // currently same as MapTo 
-
-        void StdTetExp::MapTo_ModalFormat(const int edge_ncoeffs,
-                                          const LibUtilities::BasisType Btype,
-                                          const int eid,
-                                          const EdgeOrientation eorient,
-                                          StdExpMap &Map)
-        {        
-            MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
-        }
-        
-
     }//end namespace
 }//end namespace
 
 /** 
  * $Log: StdTetExp.cpp,v $
+ * Revision 1.17  2008/07/04 10:18:40  pvos
+ * Some updates
+ *
  * Revision 1.16  2008/06/16 22:46:43  ehan
  * Populated the function GetFaceToElementMap(..)
  *

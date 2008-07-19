@@ -819,91 +819,6 @@ namespace Nektar
                 break;
             }  
         }
-        
-        void  StdTriExp::MapTo(const int edge_ncoeffs, 
-                               const LibUtilities::BasisType Btype,
-                               const int eid, 
-                               const EdgeOrientation eorient, 
-                               StdExpMap &Map)
-        {
-
-            int i;
-            int order0 = m_base[0]->GetNumModes();
-            int order1 = m_base[1]->GetNumModes();
-            Array<OneD, int> wsp(edge_ncoeffs); 
-
-            ASSERTL2(eid>=0&&eid<=2,"eid must be between 0 and 2");
-            ASSERTL2(Btype == LibUtilities::eModified_A,"Mapping only set up "
-                     "for Modified_A edges");
-            ASSERTL2(Btype == m_base[0]->GetBasisType(),
-                     "Expansion type of edge and StdQuadExp are different");
-
-            // make sure haved correct memory storage
-            if(edge_ncoeffs != Map.GetLen())
-            {
-                Map.SetMapMemory(edge_ncoeffs);
-            }
-
-            if(eorient == eForwards)
-            {
-                for(i = 0; i < edge_ncoeffs; ++i)
-                {
-                    wsp[i] = i;
-                }
-            }
-            else
-            {
-                wsp[1] = 0; 
-                wsp[0] = 1;
-
-                for(i = 2; i < edge_ncoeffs; ++i)
-                {
-                    wsp[i] = i;
-                }
-            }
-
-            // Set up Mapping details
-            switch (eid)
-            {
-            case 0:
-                {
-                    int cnt = 0;
-
-                    for(i = 0; i < edge_ncoeffs; cnt+=order1-i, ++i)
-                    {
-                        Map[wsp[i]] = cnt; 
-                    }
-                }
-                break;
-            case 1:
-                Map[wsp[0]] = order1;
-                Map[wsp[1]] = 1;
-
-                for(i = 2; i < edge_ncoeffs; ++i)
-                {
-                    Map[wsp[i]] = order1+i-1; 
-                }
-                break;
-            case 2:
-                for(i = 0; i < edge_ncoeffs; ++i)
-                {
-                    Map[wsp[i]] = i; 
-                }
-                break;
-            }
-        }
-
-        // currently same as MapTo 
-
-        void StdTriExp::MapTo_ModalFormat(const int edge_ncoeffs, 
-                                          const LibUtilities::BasisType Btype, 
-                                          const int eid, 
-                                          const EdgeOrientation eorient,
-                                          StdExpMap &Map)
-        {        
-            MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
-        }
-
 
         void StdTriExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
         {
@@ -1151,6 +1066,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTriExp.cpp,v $
+ * Revision 1.39  2008/07/04 10:18:41  pvos
+ * Some updates
+ *
  * Revision 1.38  2008/07/02 14:08:56  pvos
  * Implementation of HelmholtzMatOp and LapMatOp on shape level
  *

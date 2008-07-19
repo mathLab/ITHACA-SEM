@@ -357,48 +357,6 @@ namespace Nektar
             return localDOF;
         }
 
-        void StdSegExp::MapTo(EdgeOrientation dir, StdExpMap& Map)
-        {
-            
-            if(Map.GetLen() < 2)
-            {
-                Map.SetMapMemory(2);
-            }
-            
-            switch(m_base[0]->GetBasisType())
-            {
-            case LibUtilities::eGLL_Lagrange:
-                {
-                    int order = m_base[0]->GetNumModes();
-                    if(dir == eForwards)
-                    {
-                        Map[0] = 0;
-                        Map[1] = order-1;
-                    }
-                    else
-                    {
-                        Map[0] = order-1;
-                        Map[1] = 0;
-                    }
-                }
-                break;
-            case LibUtilities::eModified_A:
-                
-                if(dir == eForwards)
-                {
-                    Map[0] = 0;
-                    Map[1] = 1;
-                }
-                else
-                {
-                    Map[0] = 1;
-                    Map[1] = 0;
-                }
-                break;
-            default:
-                ASSERTL0(0,"Mapping not defined for this expansion");
-            }
-        }    
         
         void StdSegExp::GetCoords(Array<OneD, NekDouble> &coords)
         {
@@ -459,6 +417,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.54  2008/07/04 10:18:40  pvos
+* Some updates
+*
 * Revision 1.53  2008/07/02 14:08:56  pvos
 * Implementation of HelmholtzMatOp and LapMatOp on shape level
 *

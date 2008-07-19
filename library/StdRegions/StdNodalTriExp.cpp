@@ -367,95 +367,6 @@ namespace Nektar
             }
         }
 
-        void  StdNodalTriExp::MapTo(const int edge_ncoeffs, 
-            const LibUtilities::BasisType Btype,
-            const int eid, 
-            const EdgeOrientation eorient, 
-            StdExpMap &Map)
-        {
-
-            int i;
-            int *dir, order0,order1;
-            Array<OneD, int> wsp; 
-
-            ASSERTL2(eid>=0&&eid<=2,"eid must be between 0 and 2");
-
-            ASSERTL2(Btype == m_base[0]->GetBasisType(),
-                "Expansion type of edge and StdQuadExp are different");
-
-            // make sure have correct memory storage
-            if(edge_ncoeffs != Map.GetLen())
-            {
-                Map.SetMapMemory(edge_ncoeffs);
-            }
-
-            order0 = m_base[0]->GetNumModes();
-            order1 = m_base[1]->GetNumModes();
-
-            wsp = Array<OneD, int>(edge_ncoeffs);
-            dir = wsp.get(); 
-
-            if(eorient == eForwards)
-            {
-                for(i = 0; i < edge_ncoeffs; ++i)
-                {
-                    dir[i] = i;
-                }
-            }
-            else
-            {
-                dir[1] = 0; 
-                dir[0] = 1;
-
-                for(i = 2; i < edge_ncoeffs; ++i)
-                {
-                    dir[i] = edge_ncoeffs-i+1;
-                }
-            }
-
-            // Set up Mapping details
-            switch (eid)
-            {
-            case 0:
-                Map[dir[0]] = 0;
-                Map[dir[1]] = 1;
-
-
-                for(i = 2; i < edge_ncoeffs;  ++i)
-                {
-                    Map[dir[i]] = i+1; 
-                }
-                break;
-            case 1:
-                Map[dir[0]] = 1;
-                Map[dir[1]] = 2;
-
-                for(i = 2; i < edge_ncoeffs; ++i)
-                {
-                    Map[dir[i]] = i+edge_ncoeffs-1; 
-                }
-                break;
-            case 2:
-                Map[dir[0]] = 0;
-                Map[dir[1]] = 2;
-
-                for(i = 2; i < edge_ncoeffs; ++i)
-                {
-                    Map[dir[i]] = i+2*edge_ncoeffs-3; 
-                }
-                break;
-            }
-        }
-        
-        void StdNodalTriExp::MapTo_ModalFormat(const int edge_ncoeffs, 
-            const LibUtilities::BasisType Btype, 
-            const int eid, 
-            const EdgeOrientation eorient,
-            StdExpMap &Map)
-        {        
-            MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
-        }
-
         void StdNodalTriExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
         { 
             if(format==eTecplot)
@@ -639,6 +550,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.27  2008/07/04 10:18:40  pvos
+* Some updates
+*
 * Revision 1.26  2008/06/05 15:06:06  pvos
 * Added documentation
 *

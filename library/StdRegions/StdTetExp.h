@@ -159,15 +159,6 @@ namespace Nektar
             void GetCoords(Array<OneD, NekDouble> &coords_0, 
                            Array<OneD, NekDouble> &coords_1, Array<OneD, NekDouble> &coords_2);
                          
-            void MapTo(const int edge_ncoeffs,
-                       const LibUtilities::BasisType Btype, const int eid,
-                       const EdgeOrientation eorient, StdExpMap &Map);
-            void MapTo_ModalFormat(const int edge_ncoeffs,
-                                   const LibUtilities::BasisType Btype,
-                                   const int eid,
-                                   const EdgeOrientation eorient,
-                                   StdExpMap &Map);
-
             //TODO implement                       
             void GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                      Array<OneD, unsigned int> &maparray,
@@ -372,23 +363,6 @@ namespace Nektar
                 return PhysEvaluate(coords);
             }
 
-            virtual void v_MapTo(const int edge_ncoeffs,
-                                 const LibUtilities::BasisType Btype,
-                                 const int eid,
-                                 const EdgeOrientation eorient,
-                                 StdExpMap &Map)
-            {
-                MapTo(edge_ncoeffs, Btype, eid, eorient, Map);
-            }
-
-            virtual void v_MapTo_ModalFormat(const int edge_ncoeffs,
-                                             const LibUtilities::BasisType Btype,
-                                             const int eid,
-                                             const EdgeOrientation eorient,
-                                             StdExpMap &Map)
-            {
-                MapTo_ModalFormat(edge_ncoeffs, Btype, eid, eorient, Map);
-            }
 
             virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
             {                
@@ -411,6 +385,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.21  2008/07/04 10:18:41  pvos
+ * Some updates
+ *
  * Revision 1.20  2008/06/16 22:46:51  ehan
  * Populated the function GetFaceToElementMap(..)
  *

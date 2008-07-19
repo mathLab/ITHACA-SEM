@@ -215,8 +215,6 @@ namespace Nektar
 
             int GetVertexMap(const int localVertexId);
 
-            void MapTo(EdgeOrientation dir, StdExpMap& Map);
-
             void GetCoords(Array<OneD, NekDouble> &coords_1);
 
             void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
@@ -420,10 +418,6 @@ namespace Nektar
                 return GetVertexMap(localVertexId);
             }
 
-            virtual void v_MapTo(EdgeOrientation dir, StdExpMap &Map)
-            {
-                MapTo(dir,Map);
-            }
 
             virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
             {
@@ -453,6 +447,9 @@ namespace Nektar
 
 /**
  * $Log: StdSegExp.h,v $
+ * Revision 1.40  2008/07/04 10:18:40  pvos
+ * Some updates
+ *
  * Revision 1.39  2008/07/02 14:08:56  pvos
  * Implementation of HelmholtzMatOp and LapMatOp on shape level
  *

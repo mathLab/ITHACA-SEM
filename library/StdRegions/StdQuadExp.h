@@ -213,18 +213,6 @@ namespace Nektar
                                      Array<OneD, unsigned int> &maparray,
                                      Array<OneD, int> &signarray);
 
-            void MapTo(const int edge_ncoeffs, 
-                       const LibUtilities::BasisType Btype, 
-                       const int eid, 
-                       const EdgeOrientation eorient, 
-                       StdExpMap &Map);
-
-            void MapTo_ModalFormat(const int edge_ncoeffs, 
-                                   const LibUtilities::BasisType Btype, 
-                                   const int eid, 
-                                   const EdgeOrientation eorient, 
-                                   StdExpMap &Map);
-
             void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
             void WriteCoeffsToFile(std::ofstream &outfile);
 
@@ -456,24 +444,6 @@ namespace Nektar
                 GetEdgeToElementMap(eid,edgeOrient,maparray,signarray);
             }
 
-            virtual void v_MapTo(const int edge_ncoeffs, 
-                                 const LibUtilities::BasisType Btype, 
-                                 const int eid, 
-                                 const EdgeOrientation eorient,
-                                 StdExpMap &Map)
-            {
-                MapTo(edge_ncoeffs,Btype,eid,eorient,Map);
-            }
-
-            virtual void v_MapTo_ModalFormat(const int edge_ncoeffs, 
-                                             const LibUtilities::BasisType Btype, 
-                                             const int eid, 
-                                             const EdgeOrientation eorient,
-                                             StdExpMap &Map)
-            {
-                MapTo_ModalFormat(edge_ncoeffs,Btype,eid,eorient,Map);
-            }
-
             virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
             {
                 WriteToFile(outfile,format,dumpVar);
@@ -506,6 +476,9 @@ namespace Nektar
 
 /**
  * $Log: StdQuadExp.h,v $
+ * Revision 1.34  2008/07/12 16:42:28  sherwin
+ * Added GetEdgeNumPoints Routiner
+ *
  * Revision 1.33  2008/07/04 10:18:40  pvos
  * Some updates
  *

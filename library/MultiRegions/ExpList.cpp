@@ -595,7 +595,7 @@ namespace Nektar
             StdRegions::MatrixType linsystype = mkey.GetLinSysType();
             
             DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero);            
-            ASSERTL0(linsystype == StdRegions::eUnifiedDGHelmBndSys,
+            ASSERTL0(linsystype == StdRegions::eUnifiedDGHelmBndLam,
                      "Routine currently only tested for UnifiedDGHelmholtz");
             
             // fill global matrix 

@@ -52,9 +52,9 @@ namespace Nektar
             int nbnd = bndCondExp.num_elements();
             
             // set up Local to Continuous mapping 
-            StdRegions::StdExpMap vmap;
+            Array<OneD,unsigned int> vmap;
             LocalRegions::SegExpSharedPtr locSegExp;
-              
+            
             m_totLocBndDofs   = 2*locexp.size();
             m_locToContBndMap = Array<OneD, int>(m_totLocBndDofs,-1);
             m_locToContBndCondMap = Array<OneD, int>(nbnd);   
@@ -87,7 +87,7 @@ namespace Nektar
             {
                 if(locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(locexp[i]))
                 {
-                    locSegExp->MapTo(StdRegions::eForwards,vmap);
+                    locSegExp->GetBoundaryMap(vmap);
                     for(j = 0; j < locSegExp->GetNverts(); ++j)
                     {   
                         vid = (locSegExp->GetGeom())->GetVid(j);
@@ -120,6 +120,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalBndryMap1D.cpp,v $
+* Revision 1.4  2008/05/10 18:27:33  sherwin
+* Modifications necessary for QuadExp Unified DG Solver
+*
 * Revision 1.3  2008/04/06 06:00:07  bnelson
 * Changed ConstArray to Array<const>
 *

@@ -185,7 +185,7 @@ namespace Nektar
             int i,j,n,cnt,cnt1,nbndry;
             int nexp = GetExpSize();
             static DNekScalBlkMatSharedPtr InvUDGHelm;
-            StdRegions::StdExpMap vmap;
+            Array<OneD, unsigned int> vmap;
             Array<OneD,NekDouble> f(m_ncoeffs);
             Array<OneD,NekDouble> e_f, e_bndsol;
             NekDouble tau = 10;
@@ -231,14 +231,19 @@ namespace Nektar
                 {
                     loc = m_lambdaMap->GetBndMap(i+cnt1);
 
+                    BndSol[loc] += Floc[i];
+
                     // Dirichlet Conditions
                     if(loc < NumDirBCs)
                     {
-                        (*m_exp)[n]->MapTo(StdRegions::eForwards,vmap);
+                        
+                        (*m_exp)[n]->GetBoundaryMap(vmap);
                         LocalRegions::MatrixKey Qmatkey(StdRegions::eUnifiedDGLamToQ0, (*m_exp)[n]->DetExpansionType(),*((*m_exp)[n]), lambda, tau);
                         DNekScalMat &LamToQ = *((*m_exp)[n]->GetLocMatrix(Qmatkey)); 
 
                         bval =  m_bndConstraint[i]->GetValue();
+
+
                         
                         // first element constribution
                         if(i == 0)
@@ -250,10 +255,6 @@ namespace Nektar
                         {
                             BndSol[m_lambdaMap->GetBndMap(cnt1)]   += bval*(-LamToQ(vmap[1],0)  + LamToU(vmap[1],0)*tau);
                         }
-                    }
-                    else
-                    {
-                        BndSol[loc] += Floc[i];
                     }
                 }
 
@@ -272,7 +273,7 @@ namespace Nektar
 
             if(GloBndDofs - NumDirBCs > 0)
             {
-                GlobalLinSysKey key(StdRegions::eUnifiedDGHelmBndSys,
+                GlobalLinSysKey key(StdRegions::eUnifiedDGHelmBndLam,
                                     lambda,tau,eDirectFullMatrix);
                 GlobalLinSysSharedPtr LinSys = GetGlobalBndLinSys(key);
                 
@@ -289,7 +290,7 @@ namespace Nektar
                 e_bndsol = m_coeffs + cnt;
                 e_f      = f + cnt;
 
-                (*m_exp)[i]->MapTo(StdRegions::eForwards,vmap);
+                (*m_exp)[i]->GetBoundaryMap(vmap);
                 // put boundary solutions into local space; 
                 for(j = 0; j < nbndry; ++j)
                 {

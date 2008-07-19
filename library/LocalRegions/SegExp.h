@@ -154,6 +154,10 @@ namespace Nektar
 
             void SetCoeffsToOrientation(StdRegions::EdgeOrientation dir);
 
+            void SetCoeffsToOrientation(StdRegions::EdgeOrientation dir,
+                                        Array<OneD, const NekDouble> &inarray,
+                                        Array<OneD, NekDouble> &outarray);
+
             void ReverseCoeffsAndSign(const Array<OneD,NekDouble> &inarray,
                                       Array<OneD,NekDouble> &outarray);
         
@@ -296,6 +300,14 @@ namespace Nektar
             {
                 return m_metricinfo->GetGtype();
             }
+
+            void v_SetCoeffsToOrientation(StdRegions::EdgeOrientation dir,
+                                          Array<OneD, const NekDouble> &inarray,
+                                          Array<OneD, NekDouble> &outarray)
+            {
+                SetCoeffsToOrientation(dir,inarray,outarray);
+            }
+
 
             /// \brief Virtual call to integrate the physical point list \a inarray
             /// over region (see SegExp::Integral) 
@@ -515,6 +527,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.38  2008/07/12 17:27:07  sherwin
+// Update for AddBoundaryInt and moved various members to be private rather than protected
+//
 // Revision 1.37  2008/07/04 10:19:05  pvos
 // Some updates
 //

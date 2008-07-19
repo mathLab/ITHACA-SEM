@@ -569,12 +569,25 @@ namespace Nektar
 
         void SegExp::SetCoeffsToOrientation(StdRegions::EdgeOrientation dir)
         {
+            SetCoeffsToOrientation(dir,m_coeffs,m_coeffs);
+        }
+
+        void SegExp::SetCoeffsToOrientation(StdRegions::EdgeOrientation dir, 
+                                            Array<OneD, const NekDouble> &inarray,
+                                            Array<OneD, NekDouble> &outarray)
+        {
 
             if(dir == StdRegions::eBackwards)
             {
-                Array<OneD,NekDouble> outarray(m_ncoeffs);
-                ReverseCoeffsAndSign(m_coeffs,outarray);
-                Vmath::Vcopy(m_ncoeffs,outarray,1,m_coeffs,1);
+                if(&inarray[0] != &outarray[0])
+                {
+                    Array<OneD,NekDouble> intmp (inarray);
+                    ReverseCoeffsAndSign(intmp,outarray);
+                }
+                else
+                {
+                    ReverseCoeffsAndSign(inarray,outarray);
+                }
             }
         }
 
@@ -1018,7 +1031,7 @@ namespace Nektar
             case StdRegions::eUnifiedDGHelmholtz:
             case StdRegions::eUnifiedDGLamToU:
             case StdRegions::eUnifiedDGLamToQ0:
-            case StdRegions::eUnifiedDGHelmBndSys:
+            case StdRegions::eUnifiedDGHelmBndLam:
                 {
                     NekDouble one    = 1.0;
                     
@@ -1067,7 +1080,7 @@ namespace Nektar
 
             switch(mkey.GetMatrixType())
             {
-            case StdRegions::eUnifiedDGHelmBndSys:
+            case StdRegions::eUnifiedDGHelmBndLam:
                 {
                     int nbndry = NumBndryCoeffs();
                     int nquad  = GetNumPoints(0);
@@ -1190,10 +1203,10 @@ namespace Nektar
             int nbndry = NumBndryCoeffs();
             int nquad  = GetNumPoints(0);
             const Array<OneD, const NekDouble> &Basis  = m_base[0]->GetBdata();
-            StdRegions::StdExpMap vmap;
-
-            MapTo(StdRegions::eForwards,vmap);
-
+            Array<OneD, unsigned int> vmap;
+         
+            GetBoundaryMap(vmap);
+            
             // add G (\lambda - ulam) = G x F term (can
             // assume G is diagonal since one of the basis
             // is zero at boundary otherwise)
@@ -1212,7 +1225,7 @@ namespace Nektar
             int nbndry = NumBndryCoeffs();
             int nquad  = GetNumPoints(0);
             NekDouble  val, val1;
-            StdRegions::StdExpMap vmap;
+            Array<OneD, unsigned int> vmap;
             
             ASSERTL0(&inarray[0] != &outarray[0],"Input and output arrays use the same memory");
 
@@ -1233,8 +1246,7 @@ namespace Nektar
                 rx0 = rx1 = gmat[0][0];
             }
 
-            MapTo(StdRegions::eForwards,vmap);
-
+            GetBoundaryMap(vmap);
 
             if(MatrixTerms == true) //term which arise in matrix formulations but not rhs boundary terms. 
             {
@@ -1408,6 +1420,9 @@ namespace Nektar
 }//end of namespace
 
 // $Log: SegExp.cpp,v $
+// Revision 1.50  2008/07/09 11:44:49  sherwin
+// Replaced GetScaleFactor call with GetConstant(0)
+//
 // Revision 1.49  2008/07/04 10:19:05  pvos
 // Some updates
 //

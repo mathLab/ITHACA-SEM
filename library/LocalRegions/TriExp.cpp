@@ -169,7 +169,7 @@ namespace Nektar
                     // interpolate normals
                     Array<TwoD,NekDouble> newnorm = Array<TwoD,NekDouble>(4,coordim*max(nq0,nq1));    
                     Array<TwoD, const NekDouble> normals = Xgfac->GetNormals();
-                    
+                    Array<OneD, NekDouble> tmpnorm(nq1); 
                     for(i = 0; i < coordim; ++i)
                     {
                         Interp1D(CBasis0->GetBasisKey(),&(normals[0])[i*Cnq0],
@@ -178,8 +178,15 @@ namespace Nektar
                         Interp1D(CBasis1->GetBasisKey(),&(normals[1])[i*Cnq1],
                                  m_base[1]->GetBasisKey(),&(newnorm[1])[i*nq1]);
                         
-                        Interp1D(CBasis1->GetBasisKey(),&(normals[2])[i*Cnq1],
+                        // reverse ordering to make interpolation
+                        // direction correction 
+                        
+                        Vmath::Reverse(Cnq1,&(normals[2])[i*Cnq1],1,&tmpnorm[0],1);
+                        Interp1D(CBasis1->GetBasisKey(),&(tmpnorm)[0],
                                  m_base[1]->GetBasisKey(),&(newnorm[2])[i*nq1]);
+                        Vmath::Reverse(nq1,&(newnorm[2])[i*nq1],1,&(newnorm[2])[i*nq1],1);
+
+                        
                     }
                     
                     m_metricinfo->ResetNormals(newnorm);
@@ -1304,6 +1311,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.38  2008/07/09 11:44:49  sherwin
+ *    Replaced GetScaleFactor call with GetConstant(0)
+ *
  *    Revision 1.37  2008/07/04 10:19:05  pvos
  *    Some updates
  *

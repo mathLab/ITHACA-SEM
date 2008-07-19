@@ -774,7 +774,7 @@ namespace Nektar
             case StdRegions::eUnifiedDGLamToU:
             case StdRegions::eUnifiedDGLamToQ0:
             case StdRegions::eUnifiedDGLamToQ1:
-            case StdRegions::eUnifiedDGHelmBndSys:
+            case StdRegions::eUnifiedDGHelmBndLam:
                 {
                     NekDouble one    = 1.0;
                     
@@ -928,6 +928,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.cpp,v $
+ *    Revision 1.16  2008/07/09 11:44:49  sherwin
+ *    Replaced GetScaleFactor call with GetConstant(0)
+ *
  *    Revision 1.15  2008/07/04 10:19:04  pvos
  *    Some updates
  *

@@ -173,7 +173,8 @@ namespace Nektar
                     // interpolate normals
                     Array<TwoD,NekDouble> newnorm(4,coordim*max(nq0,nq1));    
                     Array<TwoD, const NekDouble> normals = Xgfac->GetNormals();
-                    
+                    Array<OneD, NekDouble> tmpnorm(max(nq0,nq1));
+
                     for(i = 0; i < coordim; ++i)
                     {
                         Interp1D(CBasis0->GetBasisKey(),&(normals[0])[i*Cnq0],
@@ -181,12 +182,21 @@ namespace Nektar
                         
                         Interp1D(CBasis1->GetBasisKey(),&(normals[1])[i*Cnq1],
                                  m_base[1]->GetBasisKey(),&(newnorm[1])[i*nq1]);
-                        
-                        Interp1D(CBasis0->GetBasisKey(),&(normals[2])[i*Cnq0],
+
+                        // reverse ordering to make interpolation
+                        // direction correct (only really required
+                        // if quadrature is not symmetric)
+                        Vmath::Reverse(Cnq0,&(normals[2])[i*Cnq0],1,&tmpnorm[0],1);
+                        Interp1D(CBasis0->GetBasisKey(),&(tmpnorm)[0],
                                  m_base[0]->GetBasisKey(),&(newnorm[2])[i*nq0]);
-                        
-                        Interp1D(CBasis1->GetBasisKey(),&(normals[3])[i*Cnq1],
+                        Vmath::Reverse(nq0,&(newnorm[2])[i*nq0],1,&(newnorm[2])[i*nq0],1);
+
+
+                        Vmath::Reverse(Cnq1,&(normals[3])[i*Cnq1],1,&tmpnorm[0],1);
+                        Interp1D(CBasis1->GetBasisKey(),&(tmpnorm)[0],
                                  m_base[1]->GetBasisKey(),&(newnorm[3])[i*nq1]);
+                        Vmath::Reverse(nq1,&(newnorm[3])[i*nq1],1,&(newnorm[3])[i*nq1],1);
+                        
                     }
                     
                     m_metricinfo->ResetNormals(newnorm);
@@ -1142,8 +1152,8 @@ namespace Nektar
             case StdRegions::eUnifiedDGLamToU:
             case StdRegions::eUnifiedDGLamToQ0:
             case StdRegions::eUnifiedDGLamToQ1:
-            case StdRegions::eUnifiedDGHelmBndSys:
-            case StdRegions::eUnifiedDGHelmBndSysForce:
+            case StdRegions::eUnifiedDGHelmBndLam:
+            case StdRegions::eUnifiedDGHelmBndFce:
                 {
                     NekDouble one    = 1.0;
                     
@@ -1160,9 +1170,6 @@ namespace Nektar
                                                   mkey.GetConstant(0),
                                                   mkey.GetConstant(1));
                     DNekMatSharedPtr mat = GenMatrix(hkey);
-
-                    cout << "DGHelmholtz" << endl;
-                    cout << (*mat) << endl;
 
                     mat->Invert();
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
@@ -1190,6 +1197,8 @@ namespace Nektar
         }
 
 
+        // Get edge values in following counter clockwise edge
+        // convention for definition of edgedir
         void QuadExp::GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
         {
             int nquad0 = m_base[0]->GetNumPoints();
@@ -1197,7 +1206,7 @@ namespace Nektar
 
             Array<OneD,const NekDouble> e_tmp;
 
-            StdRegions::EdgeOrientation edgedir = GetCartesianEorient(edge);
+            StdRegions::EdgeOrientation edgedir = GetEorient(edge);
             switch(edge)
             {
             case 0:
@@ -1226,33 +1235,65 @@ namespace Nektar
             case 2:
                 if(edgedir == StdRegions::eForwards)
                 {
-                    Vmath::Vcopy(nquad0,e_tmp = inarray+nquad0*(nquad1-1),1,
+                    Vmath::Vcopy(nquad0,e_tmp = inarray+(nquad0*nquad1-1),-1,
                                  outarray,1);
                 }
                 else
                 {
-                    Vmath::Vcopy(nquad0,e_tmp = inarray+(nquad0*nquad1-1),-1,
+                    Vmath::Vcopy(nquad0,e_tmp = inarray+nquad0*(nquad1-1),1,
                                  outarray,1);
-
                 }
                 break; 
             case 3:
                 if(edgedir == StdRegions::eForwards)
                 {
-                    Vmath::Vcopy(nquad1,inarray,nquad0,outarray,1);
+                    Vmath::Vcopy(nquad1,e_tmp = inarray + nquad0*(nquad1-1),
+                                 -nquad0,outarray,1);
                 }
                 else
                 {
-                    Vmath::Vcopy(nquad1,e_tmp = inarray + nquad0*(nquad1-1),
-                                 -nquad0,outarray,1);
+                    Vmath::Vcopy(nquad1,inarray,nquad0,outarray,1);
                 }
                 break; 
             default:
                 ASSERTL0(false,"edge value (< 3) is out of range");
                 break;
             }
-
         }
+
+        // Given an array of trace expansion coefficients assuming all
+        // edges are orientated in the eForwards direction re-order
+        // entries to satisfy local edge orientation set by the
+        // Geometry definition
+        void QuadExp::SetTraceToGeomOrientation(Array<OneD, NekDouble> &inout)
+        {
+            int i;
+            Array<OneD,SegExpSharedPtr>  EdgeExp(4);
+                    
+            // Set up edge segment expansions from local geom info
+            for(i = 0; i < 4; ++i)
+            {
+                EdgeExp[i] = GetEdgeExp(i);
+            }
+
+            SetTraceToGeomOrientation(EdgeExp,inout);
+        }
+
+        void QuadExp::SetTraceToGeomOrientation(Array<OneD,SegExpSharedPtr> &EdgeExp, 
+                                                Array<OneD, NekDouble> &inout)
+        {
+            int i,cnt = 0;
+            Array<OneD, NekDouble> e_tmp;
+                    
+            for(i = 0; i < 4; ++i)
+            {
+                EdgeExp[i]->SetCoeffsToOrientation(GetEorient(i),
+                                                   e_tmp = inout + cnt, 
+                                                   e_tmp = inout + cnt);
+                cnt += GetEdgeNcoeffs(i);
+            }
+        }
+
 
         void QuadExp::AddNormBoundaryInt(const int dir,
                                          Array<OneD, const NekDouble> &inarray,
@@ -1265,8 +1306,8 @@ namespace Nektar
             SpatialDomains::GeomType Gtype = m_metricinfo->GetGtype();
             Array<TwoD, const NekDouble> normals = m_metricinfo->GetNormals();
             
-            StdRegions::StdExpMap vmap;
-
+            Array<OneD,unsigned int> map;
+            Array<OneD,int > sign;
             Array<OneD,SegExpSharedPtr>   EdgeExp(4);
             
             // Set up edge segment expansions
@@ -1275,7 +1316,6 @@ namespace Nektar
                 EdgeExp[i] = GetEdgeExp(i);
             }
 
-            
             cnt = 0;
             for(e = 0; e < 4; ++e)
             {
@@ -1294,11 +1334,11 @@ namespace Nektar
                 }
                 else
                 {
-                    MapTo(order_e,EdgeExp[e]->GetBasisType(0),e,
-                          GetCartesianEorient(e),vmap);
+                    GetEdgeToElementMap(e,GetEorient(e),map,sign);
+                    
                     for(i = 0; i < order_e; ++i)
                     {
-                        EdgeExp[e]->SetCoeff(i,vmap.GetSign(i)*inarray[vmap[i]]);
+                        EdgeExp[e]->SetCoeff(i,sign[i]*inarray[map[i]]);
                     }
                 }
 
@@ -1307,7 +1347,7 @@ namespace Nektar
 
                 if(Gtype == SpatialDomains::eDeformed)
                 {
-                    if(GetCartesianEorient(e) == StdRegions::eForwards)
+                    if(GetEorient(e) == StdRegions::eForwards)
                     {
                         Vmath::Vmul(nquad_e,&(normals[e][dir*nquad_e]),1,
                                     &(EdgeExp[e]->GetPhys())[0],1,
@@ -1343,7 +1383,8 @@ namespace Nektar
             int i,e,cnt;
             int order_e,nquad_e;
             
-            StdRegions::StdExpMap vmap;
+            Array<OneD, unsigned int > map;
+            Array<OneD, int > sign;
 
             Array<OneD,SegExpSharedPtr>   EdgeExp(4);
             
@@ -1352,8 +1393,7 @@ namespace Nektar
             {
                 EdgeExp[i] = GetEdgeExp(i);
             }
-
-            
+     
             cnt = 0;
             for(e = 0; e < 4; ++e)
             {
@@ -1372,11 +1412,10 @@ namespace Nektar
                 }
                 else
                 {
-                    MapTo(order_e,EdgeExp[e]->GetBasisType(0),e,
-                          GetCartesianEorient(e),vmap);
+                    GetEdgeToElementMap(e,GetEorient(e),map,sign);
                     for(i = 0; i < order_e; ++i)
                     {
-                        EdgeExp[e]->SetCoeff(i,vmap.GetSign(i)*inarray[vmap[i]]);
+                        EdgeExp[e]->SetCoeff(i,sign[i]*inarray[map[i]]);
                     }
                 }
 
@@ -1387,6 +1426,7 @@ namespace Nektar
             }
         }
 
+
         void QuadExp:: AddEdgeBoundaryInt(const int edge, 
                                           SegExpSharedPtr &EdgeExp,
                                           Array <OneD,NekDouble > &outarray)
@@ -1394,16 +1434,16 @@ namespace Nektar
             
             int i;
             int order_e = EdgeExp->GetNcoeffs();                    
-            StdRegions::StdExpMap vmap;
+            Array<OneD,unsigned int> map;
+            Array<OneD,int> sign;
 
-            MapTo(order_e,EdgeExp->GetBasisType(0),edge, 
-                  GetCartesianEorient(edge),vmap);
-            
+            GetEdgeToElementMap(edge,GetEorient(edge),map,sign);
+
             EdgeExp->IProductWRTBase(EdgeExp->GetPhys(),EdgeExp->UpdateCoeffs());
             // add data to out array
             for(i = 0; i < order_e; ++i)
             {
-                outarray[vmap[i]] += vmap.GetSign(i)*EdgeExp->GetCoeff(i);
+                outarray[map[i]] += sign[i]*EdgeExp->GetCoeff(i);
             }
         }
 
@@ -1421,11 +1461,12 @@ namespace Nektar
             int nquad_e = EdgeExp->GetNumPoints(0);
             Array<TwoD, const NekDouble> normals = m_metricinfo->GetNormals();
             SpatialDomains::GeomType     Gtype = m_metricinfo->GetGtype();
-            StdRegions::StdExpMap        vmap;
-            StdRegions::EdgeOrientation  edgedir = GetCartesianEorient(edge);
-            
-            MapTo(order_e,EdgeExp->GetBasisType(0),edge,edgedir,vmap);
-            
+            StdRegions::EdgeOrientation  edgedir = GetEorient(edge);
+            Array<OneD,unsigned int> map;
+            Array<OneD,int> sign;
+
+            GetEdgeToElementMap(edge,edgedir,map,sign);
+
             ASSERTL1(m_geom->GetCoordim() == 2,"Routine only set up for two-dimensions");
             
             if(Gtype == SpatialDomains::eDeformed)
@@ -1465,7 +1506,7 @@ namespace Nektar
             // add data to out array
             for(i = 0; i < order_e; ++i)
             {
-                outarray[vmap[i]] += vmap.GetSign(i)*EdgeExp->GetCoeff(i);
+                outarray[map[i]] += sign[i]*EdgeExp->GetCoeff(i);
             }
         }
 
@@ -1487,7 +1528,8 @@ namespace Nektar
             SpatialDomains::GeomType Gtype = m_metricinfo->GetGtype();
             Array<TwoD,const NekDouble> normals = m_metricinfo->GetNormals();
 
-            StdRegions::StdExpMap emap;
+            Array<OneD, unsigned int> emap;
+            Array<OneD, int> sign;
             StdRegions::EdgeOrientation edgedir;
 
             Array<OneD,NekDouble> in_phys(nquad0*nquad1);
@@ -1528,17 +1570,14 @@ namespace Nektar
                 GetEdgePhysVals(e,in_phys,EdgeExp[e]->UpdatePhys());
                 AddUDGHelmholtzEdgeTerms(tau,e,EdgeExp[e],outarray);
 
-#if 1
                 //=============================================================
                 // Add -D^T M^{-1}G operation =-<n phi_i, n.d(in_phys)/dx]>
                 //term which arise in matrix formulations but not rhs
                 int nquad_e = EdgeExp[e]->GetNumPoints(0);                    
                 int order_e = EdgeExp[e]->GetNcoeffs();                    
 
-                edgedir = GetCartesianEorient(e);
-                MapTo(order_e,EdgeExp[e]->GetBasisType(0),e, 
-                      edgedir,emap);
-            
+                edgedir = GetEorient(e);
+                GetEdgeToElementMap(e,edgedir,emap,sign);
                 
                 Vmath::Zero(nquad_e,&(EdgeExp[e]->UpdatePhys())[0],1);
                 
@@ -1581,9 +1620,8 @@ namespace Nektar
                 // Put data in out array
                 for(i = 0; i < order_e; ++i)
                 {
-                    outarray[emap[i]] -= emap.GetSign(i)*EdgeExp[e]->GetCoeff(i);
+                    outarray[emap[i]] -= sign[i]*EdgeExp[e]->GetCoeff(i);
                 }                    
-#endif
             }
             //================================================================
         }
@@ -1593,12 +1631,10 @@ namespace Nektar
         // operations from the trace space
         void QuadExp::AddUDGHelmholtzTraceTerms(const NekDouble tau, 
                                                 const Array<OneD,const NekDouble> &inarray,
-                                                Array<OneD,NekDouble> &outarray,
-                                                bool InputDataIsCartesianOrient)
+                                                Array<OneD,NekDouble> &outarray)
         {
             int i;
             Array<OneD,SegExpSharedPtr>  EdgeExp(4);
-            Array<OneD,NekDouble> tmp(inarray);
            
             // Set up edge segment expansions
             for(i = 0; i < 4; ++i)
@@ -1606,28 +1642,13 @@ namespace Nektar
                 EdgeExp[i] = GetEdgeExp(i);
             }
 
-            if(InputDataIsCartesianOrient == true)
-            {
-                int nedge, cnt = 0;
-                for(i = 0; i < 4; ++i)
-                {
-                    nedge = EdgeExp[i]->GetNcoeffs(); 
-                    Vmath::Vcopy(nedge, &inarray[0]+cnt, 1,
-                                 &(EdgeExp[i]->UpdateCoeffs())[0],1);
-                    EdgeExp[i]->SetCoeffsToOrientation(GetCartesianEorient(i));
-                    Vmath::Vcopy(nedge, &(EdgeExp[i]->UpdateCoeffs())[0], 1,
-                                 &tmp[0]+cnt,1);
-                    cnt += nedge;
-                }
-
-            }
-            AddUDGHelmholtzTraceTerms(tau,tmp,EdgeExp,outarray);
+            AddUDGHelmholtzTraceTerms(tau,inarray,EdgeExp,outarray);
 
         }
                                                 
 
-        // This method assumes that data in EdgeExp is ordered
-        // according to elemental cartesian direction.
+        // This method assumes that data in EdgeExp is orientated 
+        // according to elemental counter clockwise format
         void QuadExp::AddUDGHelmholtzTraceTerms(const NekDouble tau, 
                                                 const Array<OneD, const NekDouble> &inarray,
                                                 Array<OneD,SegExpSharedPtr> &EdgeExp,
@@ -1690,12 +1711,12 @@ namespace Nektar
             MatrixKey    imasskey(StdRegions::eInvMass, DetExpansionType(),*this);
             DNekScalMat  &invMass = *m_matrixManager[imasskey];
             
-            StdRegions::StdExpMap emap;
-            StdRegions::EdgeOrientation edgedir = GetCartesianEorient(edge);
+            Array<OneD,unsigned int> emap;
+            Array<OneD,int> sign;
+            StdRegions::EdgeOrientation edgedir = GetEorient(edge);
 
-            MapTo(order_e,EdgeExp->GetBasisType(0),edge, edgedir,emap);
+            GetEdgeToElementMap(edge,edgedir,emap,sign);
 
-#if 1
             //================================================================
             // Add F = \tau <phi_i,in_phys>
             // Fill edge and take inner product
@@ -1704,12 +1725,10 @@ namespace Nektar
             // add data to out array
             for(i = 0; i < order_e; ++i)
             {
-                outarray[emap[i]] += emap.GetSign(i)*tau*EdgeExp->GetCoeff(i);
+                outarray[emap[i]] += sign[i]*tau*EdgeExp->GetCoeff(i);
             }
             //================================================================
-#endif
-            
-#if 1 
+
             //================================================================
             //Add -E^T M^{-1}D_i^e = -< d\phi_i/dx.n, in_phys[j]> 
             //
@@ -1724,19 +1743,20 @@ namespace Nektar
             
             if(edge == 0|| edge == 2) // edges aligned with r
             {
-                int st = (edge == 0)? 0: nquad0*(nquad1-1);
-                
+                int st = (edge == 0)? 0: nquad0*nquad1-1;
+                int skip = (edge == 0)? 1: -1;
+
                 // assemble jac*(rx.nx + ry.ny + rz.nz)*in_phys
                 if(Gtype == SpatialDomains::eDeformed)
                 {
-                    Vmath::Vmul(nquad0,&gmat[0][st],1,
+                    Vmath::Vmul(nquad0,&gmat[0][st],skip,
                                 &normals[edge][0],1,&inval[0],1);
-                    Vmath::Vvtvp(nquad0,&gmat[2][st],1,
+                    Vmath::Vvtvp(nquad0,&gmat[2][st],skip,
                                  &normals[edge][nquad0],1,
                                  &inval[0],1,&inval[0],1);
                     if(coordim == 3)
                     {
-                        Vmath::Vvtvp(nquad0,&gmat[4][st],1,
+                        Vmath::Vvtvp(nquad0,&gmat[4][st],skip,
                                      &normals[edge][2*nquad0],1,
                                      &inval[0],1,&inval[0],1);
                         
@@ -1772,22 +1792,22 @@ namespace Nektar
                 // add data to out array
                 for(i = 0; i < order_e; ++i)
                 {
-                    outarray[emap[i]] -= emap.GetSign(i)*EdgeExp->GetCoeff(i);
+                    outarray[emap[i]] -= sign[i]*EdgeExp->GetCoeff(i);
                 }
                     
                 // assemble (sx.nx + sy.ny + sz.nz)*in_phys
                 if(Gtype == SpatialDomains::eDeformed)
                 {
-                    Vmath::Vmul(nquad0,&gmat[1][st],1,
+                    Vmath::Vmul(nquad0,&gmat[1][st],skip,
                                 &normals[edge][0],1,&inval[0],1);
 
-                    Vmath::Vvtvp(nquad0,&gmat[3][st],1,
+                    Vmath::Vvtvp(nquad0,&gmat[3][st],skip,
                                  &normals[edge][0]+nquad0,1,
                                  &inval[0],1,&inval[0],1);
 
                     if(coordim == 3)
                     {
-                        Vmath::Vvtvp(nquad0,&gmat[5][st],1,
+                        Vmath::Vvtvp(nquad0,&gmat[5][st],skip,
                                      &normals[edge][0]+2*nquad0,1,
                                      &inval[0],1,&inval[0],1);
                         
@@ -1823,7 +1843,8 @@ namespace Nektar
                 st = (edge == 0)? 0: nquad0-1;
                 
                 // unpack edge coefficients 
-                if(edgedir == StdRegions::eBackwards)
+                // Need to use cartesian orientation to add to outarray
+                if(GetCartesianEorient(edge) == StdRegions::eBackwards)
                 {
                     EdgeExp->ReverseCoeffsAndSign(EdgeExp->GetCoeffs(),outcoeff);
                 }
@@ -1842,21 +1863,22 @@ namespace Nektar
             }
             else // edges aligned with s
             {
-                int st = (edge == 1)? nquad0-1: 0 ;
-                    
+                int st   = (edge == 1)? nquad0-1: nquad0*(nquad1-1) ;
+                int skip = (edge == 1)? nquad0:-nquad0;
+
                 // assemble jac*(sx.nx + sy.ny + sz.nz)*in_phys
                 if(Gtype == SpatialDomains::eDeformed)
                 {
-                    Vmath::Vmul(nquad1,&gmat[1][st],nquad0,
+                    Vmath::Vmul(nquad1,&gmat[1][st],skip,
                                 &normals[edge][0],1,&inval[0],1);
                     
-                    Vmath::Vvtvp(nquad1,&gmat[3][st],nquad0,
+                    Vmath::Vvtvp(nquad1,&gmat[3][st],skip,
                                  &normals[edge][nquad1],1,
                                  &inval[0],1,&inval[0],1);
 
                     if(coordim == 3)
                     {
-                        Vmath::Vvtvp(nquad1,&gmat[5][st],nquad0,
+                        Vmath::Vvtvp(nquad1,&gmat[5][st],skip,
                                      &normals[edge][2*nquad1],1,
                                      &inval[0],1,&inval[0],1);
                         
@@ -1892,20 +1914,20 @@ namespace Nektar
                 // add data to out array
                 for(i = 0; i < EdgeExp->GetNcoeffs(); ++i)
                 {
-                    outarray[emap[i]] -= emap.GetSign(i)*EdgeExp->GetCoeff(i);
+                    outarray[emap[i]] -= sign[i]*EdgeExp->GetCoeff(i);
                 }
                 
                 // assemble (rx.nx + ry.ny + rz.nz)*in_phys
                 if(Gtype == SpatialDomains::eDeformed)
                 {
-                    Vmath::Vmul(nquad1,&gmat[0][st],nquad0,
+                    Vmath::Vmul(nquad1,&gmat[0][st],skip,
                                 &normals[edge][0],1,&inval[0],1);
-                    Vmath::Vvtvp(nquad1,&gmat[2][st],nquad0,
+                    Vmath::Vvtvp(nquad1,&gmat[2][st],skip,
                                  &normals[edge][nquad1],1,
                                  &inval[0],1,&inval[0],1);
                     if(coordim == 3)
                     {
-                        Vmath::Vvtvp(nquad1,&gmat[5][st],nquad0,
+                        Vmath::Vvtvp(nquad1,&gmat[5][st],skip,
                                      &normals[edge][2*nquad1],1,
                                      &inval[0],1,&inval[0],1);
                         
@@ -1931,7 +1953,7 @@ namespace Nektar
                 
 
                 // unpack edge coefficients 
-                if(edgedir == StdRegions::eBackwards)
+                if(GetCartesianEorient(edge) == StdRegions::eBackwards)
                 {
                     EdgeExp->ReverseCoeffsAndSign(EdgeExp->GetCoeffs(),outcoeff);
                 }
@@ -1950,9 +1972,7 @@ namespace Nektar
                 }
             }
             //================================================================
-#endif            
-            
-#if 1
+
             //===============================================================
             // Add E M^{-1} G term 
             for(n = 0; n < coordim; ++n)
@@ -1986,7 +2006,7 @@ namespace Nektar
                     outcoeff[i] = 0;
                     for(j = 0; j < order_e; ++j)
                     {
-                        outcoeff[i] += emap.GetSign(i)*invMass(emap[i],emap[j])*emap.GetSign(j)*EdgeExp->GetCoeff(j);
+                        outcoeff[i] += sign[i]*invMass(emap[i],emap[j])*sign[j]*EdgeExp->GetCoeff(j);
                     }
                 }
                 
@@ -2016,11 +2036,10 @@ namespace Nektar
                 // Put data in out array
                 for(i = 0; i < order_e; ++i)
                 {
-                    outarray[emap[i]] += emap.GetSign(i)*EdgeExp->GetCoeff(i);
+                    outarray[emap[i]] += sign[i]*EdgeExp->GetCoeff(i);
                 }        
             }            
             //===============================================================
-#endif            
         }
         
 
@@ -2031,7 +2050,7 @@ namespace Nektar
 
             switch(mkey.GetMatrixType())
             {
-            case StdRegions::eUnifiedDGHelmBndSys:
+            case StdRegions::eUnifiedDGHelmBndLam:
                 {
                     int order_e, nquad_e;
                     int i,j,e,cnt;
@@ -2046,9 +2065,10 @@ namespace Nektar
 
                     NekDouble lambdaval = mkey.GetConstant(0);
                     NekDouble tau       = mkey.GetConstant(1);
-                    NekDouble lam; 
-
-                    StdRegions::StdExpMap emap;
+                    Array<OneD, NekDouble> lam(nbndry); 
+                    
+                    Array<OneD,unsigned int> emap;
+                    Array<OneD, int> sign;
                     StdRegions::EdgeOrientation edgedir;
                     
                     ASSERTL0(coordim < 3,"Needs to be  set up for expansion in 3 space");
@@ -2067,22 +2087,13 @@ namespace Nektar
                     LocalRegions::MatrixKey Umatkey(StdRegions::eUnifiedDGLamToU,DetExpansionType(),*this, lambdaval,tau);
                     DNekScalMat &LamToU = *GetLocMatrix(Umatkey); 
                 
-                    cout << "LamToU" << endl;
-                    cout << LamToU << endl;
-
                     // Matrix to map Lambda to Q0
                     LocalRegions::MatrixKey Q0matkey(StdRegions::eUnifiedDGLamToQ0, DetExpansionType(),*this, lambdaval,tau);
                     DNekScalMat &LamToQ0 = *GetLocMatrix(Q0matkey); 
-                    
-                    cout << "LamToQ0" << endl;
-                    cout << LamToQ0 << endl;
 
                     // Matrix to map Lambda to Q1
                     LocalRegions::MatrixKey Q1matkey(StdRegions::eUnifiedDGLamToQ1, DetExpansionType(),*this, lambdaval,tau);
                     DNekScalMat &LamToQ1 = *GetLocMatrix(Q1matkey); 
-
-                    cout << "LamToQ1" << endl;
-                    cout << LamToQ1 << endl;
 
                     // Set up matrix derived from <mu, Q_lam.n - \tau (
                     // U_lam - Lam) > Not we do not need the lambda term in
@@ -2092,24 +2103,28 @@ namespace Nektar
                     {
                         cnt = 0;
                         
+                        Vmath::Zero(nbndry,lam,1);
+                        lam[i] = 1.0;
+                        SetTraceToGeomOrientation(EdgeExp,lam);
+
                         for(e = 0; e < 4; ++e)
                         {
                             order_e = EdgeExp[e]->GetNcoeffs();  
                             nquad_e = EdgeExp[e]->GetNumPoints(0);    
 
-                            edgedir = GetCartesianEorient(e);
+                            edgedir = GetEorient(e);
                             
-                            MapTo(order_e,EdgeExp[e]->GetBasisType(0),e,
-                                  edgedir,emap);
-
+                            GetEdgeToElementMap(e,edgedir,emap,sign);
+#if 1                             
                             // Q0 * n0
                             for(j = 0; j < order_e; ++j)
                             {
-                                EdgeExp[e]->SetCoeff(j,emap.GetSign(j)*LamToQ0(emap[j],i));
+                                EdgeExp[e]->SetCoeff(j,sign[j]*LamToQ0(emap[j],i));
                             }
                             
                             EdgeExp[e]->BwdTrans(EdgeExp[e]->GetCoeffs(),
                                                  EdgeExp[e]->UpdatePhys());
+          
                             if(Gtype == SpatialDomains::eDeformed)
                             {
                                 if(edgedir == StdRegions::eForwards)
@@ -2134,7 +2149,7 @@ namespace Nektar
                             // Q1 * n1
                             for(j = 0; j < order_e; ++j)
                             {
-                                EdgeExp[e]->SetCoeff(j,emap.GetSign(j)*LamToQ1(emap[j],i));
+                                EdgeExp[e]->SetCoeff(j,sign[j]*LamToQ1(emap[j],i));
                             }
                             
                             EdgeExp[e]->BwdTrans(EdgeExp[e]->GetCoeffs(),
@@ -2163,11 +2178,14 @@ namespace Nektar
                                              work,1,work,1);
                             }
 
+#else
+                            Vmath::Zero(nquad_e,work,1);
+#endif
+#if 1
                             // - tau (ulam - lam)
                             for(j = 0; j < order_e; ++j)
                             {
-                                lam = ((i >= cnt) &&( i < cnt + order_e) &&(j == i - cnt))? 1:0;
-                                EdgeExp[e]->SetCoeff(j,emap.GetSign(j)*LamToU(emap[j],i) - lam);
+                                EdgeExp[e]->SetCoeff(j,sign[j]*LamToU(emap[j],i) - lam[cnt+j]);
                             }
                             
                             EdgeExp[e]->BwdTrans(EdgeExp[e]->GetCoeffs(),
@@ -2176,7 +2194,7 @@ namespace Nektar
                             Vmath::Svtvp(nquad_e,-tau,EdgeExp[e]->GetPhys(),1,
                                          work,1,work,1);
                       
-
+#endif
                             EdgeExp[e]->IProductWRTBase(work,EdgeExp[e]->UpdateCoeffs());
                             
                             EdgeExp[e]->SetCoeffsToOrientation(edgedir);
@@ -2192,7 +2210,7 @@ namespace Nektar
                     }
                 }
                 break;
-            case StdRegions::eUnifiedDGHelmBndSysForce:
+            case StdRegions::eUnifiedDGHelmBndFce:
                 {
                     int order_e, nquad_e;
                     int i,j,e,cnt;
@@ -2208,7 +2226,8 @@ namespace Nektar
                     NekDouble lambdaval = mkey.GetConstant(0);
                     NekDouble tau       = mkey.GetConstant(1);
 
-                    StdRegions::StdExpMap emap;
+                    Array<OneD,unsigned int> emap;
+                    Array<OneD, int> sign;
                     StdRegions::EdgeOrientation edgedir;
                     
                     ASSERTL0(coordim < 3,"Needs to be  set up for expansion in 3 space");
@@ -2267,15 +2286,14 @@ namespace Nektar
                             order_e = EdgeExp[e]->GetNcoeffs();  
                             nquad_e = EdgeExp[e]->GetNumPoints(0);    
 
-                            edgedir = GetCartesianEorient(e);
+                            edgedir = GetEorient(e);
 
-                            MapTo(order_e,EdgeExp[e]->GetBasisType(0),
-                                  e,edgedir,emap);
+                            GetEdgeToElementMap(e,edgedir,emap,sign);
 
                             // Q0 * n0
                             for(j = 0; j < order_e; ++j)
                             {
-                                EdgeExp[e]->SetCoeff(j,emap.GetSign(j)*Q0[emap[j]]);
+                                EdgeExp[e]->SetCoeff(j,sign[j]*Q0[emap[j]]);
                             }
                             
                             EdgeExp[e]->BwdTrans(EdgeExp[e]->GetCoeffs(),
@@ -2304,7 +2322,7 @@ namespace Nektar
                             // Q1 * n1
                             for(j = 0; j < order_e; ++j)
                             {
-                                EdgeExp[e]->SetCoeff(j,emap.GetSign(j)*Q1[emap[j]]);
+                                EdgeExp[e]->SetCoeff(j,sign[j]*Q1[emap[j]]);
                             }
                             
                             EdgeExp[e]->BwdTrans(EdgeExp[e]->GetCoeffs(),
@@ -2335,7 +2353,7 @@ namespace Nektar
                             // -tau ulam (for force case) 
                             for(j = 0; j < order_e; ++j)
                             {
-                                EdgeExp[e]->SetCoeff(j,emap.GetSign(j)*U[emap[j]]);
+                                EdgeExp[e]->SetCoeff(j,sign[j]*U[emap[j]]);
                             }
                             
                             EdgeExp[e]->BwdTrans(EdgeExp[e]->GetCoeffs(),
@@ -2487,6 +2505,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.45  2008/07/16 22:20:54  sherwin
+ *    Added AddEdgeNormBoundaryInt
+ *
  *    Revision 1.44  2008/07/12 19:08:29  sherwin
  *    Modifications for DG advection routines
  *

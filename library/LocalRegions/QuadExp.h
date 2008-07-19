@@ -97,6 +97,11 @@ namespace Nektar
 
             void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
 
+            void SetTraceToGeomOrientation(Array<OneD, NekDouble> &inout);
+
+            void SetTraceToGeomOrientation(Array<OneD, SegExpSharedPtr> &EdgeExp,
+                                           Array<OneD, NekDouble> &inout);
+            
             //----------------------------
             // Integration Methods
             //----------------------------
@@ -192,8 +197,8 @@ namespace Nektar
 
             void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
                                            const Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,NekDouble> &outarray,
-                                           bool InputDataIsCartesianOrient = true);
+                                           Array<OneD,NekDouble> &outarray);
+                                          
 
             void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
                                            const Array<OneD, const NekDouble> &inarray,
@@ -489,6 +494,11 @@ namespace Nektar
                 HelmholtzMatrixOp(inarray,outarray,lambda);
             }   
         
+            virtual void v_SetTraceToGeomOrientation(Array<OneD, NekDouble> &inout)
+            {
+                SetTraceToGeomOrientation(inout);
+            }
+
         };
 
         // type defines for use of QuadExp in a boost vector
@@ -504,6 +514,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.35  2008/07/16 22:20:54  sherwin
+ *    Added AddEdgeNormBoundaryInt
+ *
  *    Revision 1.34  2008/07/12 19:08:29  sherwin
  *    Modifications for DG advection routines
  *

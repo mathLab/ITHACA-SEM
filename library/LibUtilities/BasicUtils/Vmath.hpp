@@ -424,14 +424,14 @@ namespace Vmath
     // \brief copy one double vector to another - This is just a wrapper
     // around Blas
     static inline void Vcopy(int n, const double *x, int incx, double *y,
-              int const incy)
+                             const int incy)
     {
         Blas::Dcopy(n,x,incx,y,incy);
     }
 #else
     // \brief copy one int vector to another
     static inline void Vcopy(int n, const int *x, const int incx, int *y,
-              int const incy)
+                             const int incy)
     {
         if( incx ==1 && incy == 1)
         {
@@ -450,7 +450,7 @@ namespace Vmath
 
     // \brief copy one double vector to another
     static inline void Vcopy(int n, const double *x, const int incx, double *y,
-              int const incy)
+                             const int incy)
     {
         if( incx ==1 && incy == 1)
         {
@@ -466,6 +466,21 @@ namespace Vmath
             }
         }
     }
+
+    // \brief reverse the ordering of  vector to another
+    template<class T>  void  Reverse( int n, const T *x, const int incx, T *y, const int incy)
+    {
+        int i;
+        T store;
+
+        for(i = 0; i < n/2; ++i)
+        {
+            store = x[n-1-i];
+            y[n-1-i] = x[i];
+            y[i] = store; 
+        }
+    }
+
 #endif
 
     
@@ -474,6 +489,9 @@ namespace Vmath
 
 /***
 $Log: Vmath.hpp,v $
+Revision 1.14  2008/05/10 18:27:32  sherwin
+Modifications necessary for QuadExp Unified DG Solver
+
 Revision 1.13  2008/04/06 05:47:03  bnelson
 Fixed gcc compiler warnings.
 

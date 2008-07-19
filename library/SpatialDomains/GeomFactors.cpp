@@ -343,7 +343,7 @@ namespace Nektar
                     break;
                 }
 
-            }  
+            }
             else
             {
                 m_jac  = Array<OneD, NekDouble>(nqtot,0.0);
@@ -437,9 +437,9 @@ namespace Nektar
                             
                             for(j = 0; j < nquad1; ++j)
                             {
-                                m_normals[1][i*nquad1+j] = -m_gmat[2*i][nquad0*j + nquad0-1] +
-                                    m_gmat[2*i+1][nquad0*j + nquad0-1];
-                                m_normals[3][i*nquad1+j] = -m_gmat[2*i][nquad0*j];
+                                m_normals[1][i*nquad1+j] = -m_gmat[2*i][nquad0*j + nquad0-1] +  m_gmat[2*i+1][nquad0*j + nquad0-1];
+                                // reverse ordering for anticlockwise convention
+                                m_normals[3][(i+1)*nquad1-1-j] = -m_gmat[2*i][nquad0*j];
                             }
                         }
 
@@ -488,13 +488,13 @@ namespace Nektar
                             for(j = 0; j < nquad0; ++j)
                             {
                                 m_normals[0][i*nquad0+j] = -m_gmat[2*i+1][j];
-                                m_normals[2][i*nquad0+j] =  m_gmat[2*i+1][nquad0*(nquad1-1)+j];
+                                m_normals[2][(i+1)*nquad0-1+j] =  m_gmat[2*i+1][nquad0*(nquad1-1)+j];
                             }
                             
                             for(j = 0; j < nquad1; ++j)
                             {
-                                m_normals[1][i*nquad1+j] =  m_gmat[2*i][nquad0*j + nquad0-1];
-                                m_normals[3][i*nquad1+j] = -m_gmat[2*i][nquad0*j];
+                                m_normals[1][i*nquad1+j]       =  m_gmat[2*i][nquad0*j + nquad0-1];
+                                m_normals[3][(i+1)*nquad1-1+j] = -m_gmat[2*i][nquad0*j];
                             }
                         }
                         
@@ -761,6 +761,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.23  2008/07/17 19:25:55  ehan
+// Added 3D GeomFactors(..) .
+//
 // Revision 1.22  2008/07/09 11:40:25  sherwin
 // Fixed the initialisation of m_expdim
 //

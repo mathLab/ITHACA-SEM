@@ -82,35 +82,39 @@ namespace Nektar
 
         struct DirichletBoundaryCondition : public BoundaryConditionBase
         {
-            DirichletBoundaryCondition(const std::string &eqn):
-                BoundaryConditionBase(eDirichlet),
-                m_DirichletCondition(eqn)
+
+            DirichletBoundaryCondition(const std::string &userdefined, const std::string &eqn):
+            BoundaryConditionBase(eDirichlet),
+            m_UserDefined(userdefined), m_DirichletCondition(eqn)
             {
             };
 
+            Equation m_UserDefined;
             Equation m_DirichletCondition;
         };
 
         struct NeumannBoundaryCondition : public BoundaryConditionBase
         {
-            NeumannBoundaryCondition(const std::string &eqn):
+            NeumannBoundaryCondition(const std::string &userdefined, const std::string &eqn):
                 BoundaryConditionBase(eNeumann),
-                m_NeumannCondition(eqn)
+                m_Userdefined(userdefined), m_NeumannCondition(eqn)
             {
             };
 
+            Equation m_Userdefined;
             Equation m_NeumannCondition;
         };
 
         struct RobinBoundaryCondition : public BoundaryConditionBase
         {
-            RobinBoundaryCondition(const std::string &a, const std::string &b):
+            RobinBoundaryCondition(const std::string &userdefined, const std::string &a, const std::string &b):
                 BoundaryConditionBase(eRobin),
-                m_a(a), m_b(b)
+                m_Userdefined(userdefined), m_a(a), m_b(b)
             {
             }
 
             // u = a(x,y,z) + b(x,y,z)*\frac{\partial{u}}{\partial{n}}
+            Equation m_Userdefined;
             Equation m_a;
             Equation m_b;
         };

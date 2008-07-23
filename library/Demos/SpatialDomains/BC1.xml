@@ -52,14 +52,21 @@
         BoundaryRegion definition above.-->
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
-                <D VAR="u" VALUE="6.789" />
-                <D VAR="v" VALUE="F1" />
+                <D VAR="u" USERDEFINEDTYPE="x*y^2" VALUE="6.789" />
+                <D VAR="v" USERDEFINEDTYPE="x^2 + x*y" VALUE="F1" />
+                <N VAR="u" USERDEFINEDTYPE="x + y" VALUE="F2"/>
+                <D VAR="u" USERDEFINEDTYPE="x^2 + y" VALUE="sin(PI*x)*sin(PI*y)" />
+                <R VAR="v" USERDEFINEDTYPE="sin(PI*x)" A="a(x,y)" B="b(x,y)" />
+               
             </REGION>
 
             <!-- Notice that the variable order has been reversed. -->
             <REGION REF="1">
-                <R VAR="v" A="a(x,y)" B="b(x,y)" />
-                <D VAR="u" /> <!-- u = 0 -->
+                <R VAR="v" USERDEFINEDTYPE="x*y" A="a(x,y)" B="b(x,y)" />
+                <D VAR="u" />
+                <P VAR="u" VALUE="B[1]"/>
+                <N VAR="u" USERDEFINEDTYPE="sin(PI*x)*sin(PI*y)" VALUE="F2" />
+                
             </REGION>
 
             <!--<REGION ID="2">

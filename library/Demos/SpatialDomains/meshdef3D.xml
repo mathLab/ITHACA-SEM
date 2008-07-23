@@ -45,14 +45,7 @@
         </EDGE>
 
         <!-- Can include Q - quads, T - triangles -->
-        <FACE></FACE>
-
-        <!-- Q - quads, T - triangles, S - segments, A - tet, P - pyramid, R - prism, H - hex -->
-        <!-- Only certain element types are appropriate for the given dimension (dim on mesh) -->
-        <!-- Can also use faces to define 3-D elements.  Specify with F[1] for face 1, for example. -->
-        <!-- Element need to be entered in consistent "anti-clockwise" manner -->
-        <ELEMENT>
-            <!-- List the edges for each element -->
+        <FACE>
             <T ID="0"> 3 7 2 </T>
             <T ID="1"> 0 4 3 </T>
             <T ID="2"> 1 5 4 </T>
@@ -61,6 +54,18 @@
             <T ID="5"> 11 14 10 </T>
             <T ID="6"> 11 12 15 </T>
             <T ID="7"> 8 13 12 </T>
+
+        </FACE>
+
+        <!-- Q - quads, T - triangles, S - segments, A - tet, P - pyramid, R - prism, H - hex -->
+        <!-- Only certain element types are appropriate for the given dimension (dim on mesh) -->
+        <!-- Can also use faces to define 3-D elements.  Specify with F[1] for face 1, for example. -->
+        <!-- Element need to be entered in consistent "anti-clockwise" manner -->
+        <ELEMENT>
+
+            <A ID="0"> 3 7 2 5 </A>
+            <A ID="1"> 0 4 3 5 </A>
+
         </ELEMENT>
 
         <!-- V - vertex, E - edge, F - face, T - Triangle, Q - Quad -->
@@ -73,4 +78,9 @@
         <DOMAIN> C[0] </DOMAIN>
 
     </GEOMETRY>
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="5" TYPE="ORTHOGONAL" />
+    </EXPANSIONS>
+    
 </NEKTAR>

@@ -290,7 +290,7 @@ namespace Nektar
             }
         }
 
-        void BoundaryConditions::ReadBoundaryConditions(TiXmlElement *conditions)
+ void BoundaryConditions::ReadBoundaryConditions(TiXmlElement *conditions)
         {
             // Read REGION tags
             TiXmlElement *boundaryConditionsElement = conditions->FirstChildElement("BOUNDARYCONDITIONS");
@@ -356,7 +356,7 @@ namespace Nektar
                             for (Variable::iterator varIter = m_Variables.begin();
                                 varIter != m_Variables.end(); ++varIter)
                             {
-                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr("00.0", "00.0"));
+                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr("00.0"));
                                 (*boundaryConditions)[*varIter]  = neumannCondition;
                             }
                         }
@@ -368,51 +368,39 @@ namespace Nektar
 
                             if (attr)
                             {
+                                attrName = attr->Name();
 
-                                std::string attrName1, attrName2;
-                                std::string attrData1, attrData2;
+                                if (attrName=="USERDEFINEDTYPE") {
+                                
+                                 // Do stuff for the user defined attribute
+                                attrData = attr->Value();
+                                ASSERTL0(!attrData.empty(), "USERDEFINEDTYPE attribute must have associated value.");
 
-                                attrName1 = attr->Name();
+                                SubstituteFunction(attrData);
 
-                               if(attrName1 == "USERDEFINEDTYPE" ){
-                                    ASSERTL0(attrName1 == "USERDEFINEDTYPE", (std::string("Unknown attribute: ") + attrName1).c_str());
-                            
-                                    attrData1 = attr->Value();
-                                    ASSERTL0(!attrData1.empty(), "USERDEFINEDTYPE attributes must have associated values.");
-
-                                    SubstituteFunction(attrData1);
-                                    
+                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(attrData));
+                                (*boundaryConditions)[*iter]  = neumannCondition;
+                                
+                                    // Read the VALUE attribute.  It is the next and only other attribute.
                                     attr = attr->Next();
-                                    ASSERTL0(attr, "Unable to read VALUE attribute.");
+                                    attrName = attr->Name();
 
-                                    attrName2 = attr->Name();
+                                }
 
-                                    ASSERTL0(attrName2 == "VALUE", (std::string("Unknown attribute: ") + attrName2).c_str());
+                                ASSERTL0(attrName == "VALUE", (std::string("Unknown attribute: ") + attrName).c_str());
 
-                                    attrData2 = attr->Value();
-                                    ASSERTL0(!attrData2.empty(), "VALUE attribute must have associated value.");
+                                attrData = attr->Value();
+                                ASSERTL0(!attrData.empty(), "VALUE attribute must be specified.");
 
-                                    SubstituteFunction(attrData2);
-                                
-                                } else if(attrName1 == "VALUE"){
-                                
-                                    attrName1 = attr->Name();
+                                SubstituteFunction(attrData);
 
-                                    ASSERTL0(attrName1 == "VALUE", (std::string("Unknown attribute: ") + attrName1).c_str());
-
-                                    attrData1 = attr->Value();
-                                    ASSERTL0(!attrData1.empty(), "VALUE attribute must have associated value.");
-
-                                    SubstituteFunction(attrData1);
-                              }
-
-                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(attrData1, attrData2));
+                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(attrData));
                                 (*boundaryConditions)[*iter]  = neumannCondition;
                             }
                             else
                             {
                                 // This variable's condition is zero.
-                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr("0", "0"));
+                                BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr("0"));
                                 (*boundaryConditions)[*iter]  = neumannCondition;
                             }
                         }
@@ -425,63 +413,50 @@ namespace Nektar
                             for (Variable::iterator varIter = m_Variables.begin();
                                 varIter != m_Variables.end(); ++varIter)
                             {
-                                BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr("0", "0"));
+                                BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr("0"));
                                 (*boundaryConditions)[*varIter] = dirichletCondition;
                             }
                         }
                         else
                         {
                             // Use the iterator from above, which must point to the variable.
-                            // Read the VALUE attribute.  It is the next and only other attribute.
                             attr = attr->Next();
 
                             if (attr)
                             {
+                                attrName = attr->Name();
 
-                                std::string attrName1, attrName2;
-                                std::string attrData1, attrData2;
-
-                                attrName1 = attr->Name();
+                                if (attrName=="USERDEFINEDTYPE") {
                                 
-                               if(attrName1 == "USERDEFINEDTYPE" ){
-                                    ASSERTL0(attrName1 == "USERDEFINEDTYPE", (std::string("Unknown attribute: ") + attrName1).c_str());
-                            
-                                    attrData1 = attr->Value();
-                                    ASSERTL0(!attrData1.empty(), "USERDEFINEDTYPE attributes must have associated values.");
+                                 // Do stuff for the user defined attribute
+                                attrData = attr->Value();
+                                ASSERTL0(!attrData.empty(), "USERDEFINEDTYPE attribute must have associated value.");
 
-                                    SubstituteFunction(attrData1);
-                                    
+                                SubstituteFunction(attrData);
+
+                                BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(attrData));
+                                (*boundaryConditions)[*iter]  = dirichletCondition;
+                                
+                                    // Read the VALUE attribute.  It is the next and only other attribute.
                                     attr = attr->Next();
-                                    ASSERTL0(attr, "Unable to read VALUE attribute.");
+                                    attrName = attr->Name();
 
-                                    attrName2 = attr->Name();
-
-                                    ASSERTL0(attrName2 == "VALUE", (std::string("Unknown attribute: ") + attrName2).c_str());
-
-                                    attrData2 = attr->Value();
-                                    ASSERTL0(!attrData2.empty(), "VALUE attribute must have associated value.");
-
-                                    SubstituteFunction(attrData2);
+                                }
                                 
-                                } else if(attrName1 == "VALUE"){
-                                
-                                    attrName1 = attr->Name();
+                                ASSERTL0(attrName == "VALUE", (std::string("Unknown attribute: ") + attrName).c_str());
 
-                                    ASSERTL0(attrName1 == "VALUE", (std::string("Unknown attribute: ") + attrName1).c_str());
+                                attrData = attr->Value();
+                                ASSERTL0(!attrData.empty(), "VALUE attribute must have associated value.");
 
-                                    attrData1 = attr->Value();
-                                    ASSERTL0(!attrData1.empty(), "VALUE attribute must have associated value.");
+                                SubstituteFunction(attrData);
 
-                                    SubstituteFunction(attrData1);
-                              }
-
-                                BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(attrData1, attrData2));
+                                BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(attrData));
                                 (*boundaryConditions)[*iter]  = dirichletCondition;
                             }
                             else
                             {
                                 // This variable's condition is zero.
-                                BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr("0", "0"));
+                                BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr("0"));
                                 (*boundaryConditions)[*iter]  = dirichletCondition;
                             }
                         }
@@ -494,7 +469,7 @@ namespace Nektar
                             for (Variable::iterator varIter = m_Variables.begin();
                                 varIter != m_Variables.end(); ++varIter)
                             {
-                                BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr("0", "0", "0"));
+                                BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr("0", "0"));
                                 (*boundaryConditions)[*varIter] = robinCondition;
                             }
                         }
@@ -506,24 +481,28 @@ namespace Nektar
 
                             if (attr)
                             {
-                                std::string attrName0, attrData0;
                                 std::string attrName1, attrName2;
                                 std::string attrData1, attrData2;
 
-                                attrName0 = attr->Name();
-
-                              if(attrName0 == "USERDEFINEDTYPE") {
-                                ASSERTL0(attrName0 == "USERDEFINEDTYPE", (std::string("Unknown attribute: ") + attrName0).c_str());
-
-                                attrData0 = attr->Value();
-                                ASSERTL0(!attrData0.empty(), "USERDEFINEDTYPE attributes must have associated values.");
-
-                                SubstituteFunction(attrData0);
-
-                                attr = attr->Next();
-                                ASSERTL0(attr, "Unable to read A attribute.")
-
                                 attrName1 = attr->Name();
+
+                                if (attrName1=="USERDEFINEDTYPE") {
+                                
+                                 // Do stuff for the user defined attribute
+                                attrData1 = attr->Value();
+                                ASSERTL0(!attrData1.empty(), "USERDEFINEDTYPE attribute must have associated value.");
+
+                                SubstituteFunction(attrData1);
+
+                                 BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(attrData1, attrData2));
+                                (*boundaryConditions)[*iter]  = robinCondition;
+                                
+                                    // Read the VALUE attribute.  It is the next and only other attribute.
+                                    attr = attr->Next();
+                                    attrName1 = attr->Name();
+
+                                }
+                                
                                 ASSERTL0(attrName1 == "A", (std::string("Unknown attribute: ") + attrName1).c_str());
 
                                 attrData1 = attr->Value();
@@ -541,36 +520,14 @@ namespace Nektar
                                 ASSERTL0(!attrData2.empty(), "B attributes must have associated values.");
 
                                 SubstituteFunction(attrData2);
-                                
-                              } else if(attrName0 == "A"){
-                              
-                                attrName0 = attr->Name();
-                                ASSERTL0(attrName0 == "A", (std::string("Unknown attribute: ") + attrName0).c_str());
 
-                                attrData0 = attr->Value();
-                                ASSERTL0(!attrData0.empty(), "A attributes must have associated values.");
-
-                                SubstituteFunction(attrData0);
-
-                                attr = attr->Next();
-                                ASSERTL0(attr, "Unable to read B attribute.");
-
-                                attrName1 = attr->Name();
-                                ASSERTL0(attrName1 == "B", (std::string("Unknown attribute: ") + attrName1).c_str());
-
-                                attrData1 = attr->Value();
-                                ASSERTL0(!attrData2.empty(), "B attributes must have associated values.");
-
-                                SubstituteFunction(attrData1);
-                              }
-                                
-                                BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(attrData0, attrData1, attrData2));
+                                BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(attrData1, attrData2));
                                 (*boundaryConditions)[*iter]  = robinCondition;
                             }
                             else
                             {
                                 // This variable's condition is zero.
-                                BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr("0", "0", "0"));
+                                BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr("0", "0"));
                                 (*boundaryConditions)[*iter]  = robinCondition;
                             }
                         }
@@ -593,12 +550,14 @@ namespace Nektar
                                 int beg = attrData.find_first_of("[");
                                 int end = attrData.find_first_of("]");
                                 std::string periodicBndRegionIndexStr = attrData.substr(beg+1,end-beg-1);
-                                ASSERTL0(beg < end, (std::string("Error reading periodic boundary region definition for boundary region: ") + boundaryRegionIDStrm.str()).c_str());
+                                ASSERTL0(beg < end, (std::string("Error reading periodic boundary region definition for boundary region: ") 
+                                                      + boundaryRegionIDStrm.str()).c_str());
 
                                 vector<unsigned int> periodicBndRegionIndex;
                                 bool parseGood = ParseUtils::GenerateSeqVector(periodicBndRegionIndexStr.c_str(), periodicBndRegionIndex);
 
-                                ASSERTL0(parseGood && (periodicBndRegionIndex.size()==1), (std::string("Unable to read periodic boundary condition for boundary region: ") + boundaryRegionIDStrm.str()).c_str());
+                                ASSERTL0(parseGood && (periodicBndRegionIndex.size()==1), (std::string("Unable to read periodic boundary condition for boundary region: ") 
+                                                                              + boundaryRegionIDStrm.str()).c_str());
 
                                 BoundaryConditionShPtr periodicCondition(MemoryManager<PeriodicBoundaryCondition>::AllocateSharedPtr(periodicBndRegionIndex[0]));
 
@@ -637,7 +596,8 @@ namespace Nektar
                                 vector<unsigned int> periodicBndRegionIndex;
                                 bool parseGood = ParseUtils::GenerateSeqVector(periodicBndRegionIndexStr.c_str(), periodicBndRegionIndex);
 
-                                ASSERTL0(parseGood && (periodicBndRegionIndex.size()==1), (std::string("Unable to read periodic boundary condition for boundary region: ") + boundaryRegionIDStrm.str()).c_str());
+                                ASSERTL0(parseGood && (periodicBndRegionIndex.size()==1), (std::string("Unable to read periodic boundary condition for boundary region: ") 
+                                                                                           + boundaryRegionIDStrm.str()).c_str());
 
                                 BoundaryConditionShPtr periodicCondition(MemoryManager<PeriodicBoundaryCondition>::AllocateSharedPtr(periodicBndRegionIndex[0]));
                                 (*boundaryConditions)[*iter]  = periodicCondition;
@@ -661,6 +621,7 @@ namespace Nektar
             }
        }
 
+      
         void BoundaryConditions::ReadForcingFunctions(TiXmlElement *conditions)
         {
             TiXmlElement *forcingFunctionsElement = conditions->FirstChildElement("FORCING");

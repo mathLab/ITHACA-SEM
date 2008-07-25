@@ -373,24 +373,38 @@ namespace Nektar
                                 std::string attrData1, attrData2;
 
                                 attrName1 = attr->Name();
-                                ASSERTL0(attrName1 == "USERDEFINEDTYPE", (std::string("Unknown attribute: ") + attrName1).c_str());
-                              
-                                attrData1 = attr->Value();
-                                ASSERTL0(!attrData1.empty(), "USERDEFINEDTYPE attributes must have associated values. ");
 
-                                SubstituteFunction(attrData1);               
+                               if(attrName1 == "USERDEFINEDTYPE" ){
+                                    ASSERTL0(attrName1 == "USERDEFINEDTYPE", (std::string("Unknown attribute: ") + attrName1).c_str());
+                            
+                                    attrData1 = attr->Value();
+                                    ASSERTL0(!attrData1.empty(), "USERDEFINEDTYPE attributes must have associated values.");
 
-                                attr = attr->Next();
-                                ASSERTL0(attr, "Unable to read VALUE attribute.");
+                                    SubstituteFunction(attrData1);
+                                    
+                                    attr = attr->Next();
+                                    ASSERTL0(attr, "Unable to read VALUE attribute.");
+
+                                    attrName2 = attr->Name();
+
+                                    ASSERTL0(attrName2 == "VALUE", (std::string("Unknown attribute: ") + attrName2).c_str());
+
+                                    attrData2 = attr->Value();
+                                    ASSERTL0(!attrData2.empty(), "VALUE attribute must have associated value.");
+
+                                    SubstituteFunction(attrData2);
                                 
-                                attrName2 = attr->Name();
+                                } else if(attrName1 == "VALUE"){
+                                
+                                    attrName1 = attr->Name();
 
-                                ASSERTL0(attrName2 == "VALUE", (std::string("Unknown attribute: ") + attrName2).c_str());
+                                    ASSERTL0(attrName1 == "VALUE", (std::string("Unknown attribute: ") + attrName1).c_str());
 
-                                attrData2 = attr->Value();
-                                ASSERTL0(!attrData2.empty(), "VALUE attribute must be specified.");
+                                    attrData1 = attr->Value();
+                                    ASSERTL0(!attrData1.empty(), "VALUE attribute must have associated value.");
 
-                                SubstituteFunction(attrData2);
+                                    SubstituteFunction(attrData1);
+                              }
 
                                 BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(attrData1, attrData2));
                                 (*boundaryConditions)[*iter]  = neumannCondition;
@@ -423,29 +437,43 @@ namespace Nektar
 
                             if (attr)
                             {
+
                                 std::string attrName1, attrName2;
                                 std::string attrData1, attrData2;
 
                                 attrName1 = attr->Name();
-                                ASSERTL0(attrName1 == "USERDEFINEDTYPE", (std::string("Unknown attribute: ") + attrName1).c_str());
-                        
-                                attrData1 = attr->Value();
-                                ASSERTL0(!attrData1.empty(), "USERDEFINEDTYPE attributes must have associated values.");
-
-                                SubstituteFunction(attrData1);
                                 
+                               if(attrName1 == "USERDEFINEDTYPE" ){
+                                    ASSERTL0(attrName1 == "USERDEFINEDTYPE", (std::string("Unknown attribute: ") + attrName1).c_str());
+                            
+                                    attrData1 = attr->Value();
+                                    ASSERTL0(!attrData1.empty(), "USERDEFINEDTYPE attributes must have associated values.");
 
-                                attr = attr->Next();
-                                ASSERTL0(attr, "Unable to read VALUE attribute.");
+                                    SubstituteFunction(attrData1);
+                                    
+                                    attr = attr->Next();
+                                    ASSERTL0(attr, "Unable to read VALUE attribute.");
+
+                                    attrName2 = attr->Name();
+
+                                    ASSERTL0(attrName2 == "VALUE", (std::string("Unknown attribute: ") + attrName2).c_str());
+
+                                    attrData2 = attr->Value();
+                                    ASSERTL0(!attrData2.empty(), "VALUE attribute must have associated value.");
+
+                                    SubstituteFunction(attrData2);
                                 
-                                attrName2 = attr->Name();
+                                } else if(attrName1 == "VALUE"){
+                                
+                                    attrName1 = attr->Name();
 
-                                ASSERTL0(attrName2 == "VALUE", (std::string("Unknown attribute: ") + attrName).c_str());
+                                    ASSERTL0(attrName1 == "VALUE", (std::string("Unknown attribute: ") + attrName1).c_str());
 
-                                attrData2 = attr->Value();
-                                ASSERTL0(!attrData2.empty(), "VALUE attribute must have associated value.");
+                                    attrData1 = attr->Value();
+                                    ASSERTL0(!attrData1.empty(), "VALUE attribute must have associated value.");
 
-                                SubstituteFunction(attrData2);
+                                    SubstituteFunction(attrData1);
+                              }
 
                                 BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(attrData1, attrData2));
                                 (*boundaryConditions)[*iter]  = dirichletCondition;
@@ -483,6 +511,8 @@ namespace Nektar
                                 std::string attrData1, attrData2;
 
                                 attrName0 = attr->Name();
+
+                              if(attrName0 == "USERDEFINEDTYPE") {
                                 ASSERTL0(attrName0 == "USERDEFINEDTYPE", (std::string("Unknown attribute: ") + attrName0).c_str());
 
                                 attrData0 = attr->Value();
@@ -511,7 +541,29 @@ namespace Nektar
                                 ASSERTL0(!attrData2.empty(), "B attributes must have associated values.");
 
                                 SubstituteFunction(attrData2);
+                                
+                              } else if(attrName0 == "A"){
+                              
+                                attrName0 = attr->Name();
+                                ASSERTL0(attrName0 == "A", (std::string("Unknown attribute: ") + attrName0).c_str());
 
+                                attrData0 = attr->Value();
+                                ASSERTL0(!attrData0.empty(), "A attributes must have associated values.");
+
+                                SubstituteFunction(attrData0);
+
+                                attr = attr->Next();
+                                ASSERTL0(attr, "Unable to read B attribute.");
+
+                                attrName1 = attr->Name();
+                                ASSERTL0(attrName1 == "B", (std::string("Unknown attribute: ") + attrName1).c_str());
+
+                                attrData1 = attr->Value();
+                                ASSERTL0(!attrData2.empty(), "B attributes must have associated values.");
+
+                                SubstituteFunction(attrData1);
+                              }
+                                
                                 BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(attrData0, attrData1, attrData2));
                                 (*boundaryConditions)[*iter]  = robinCondition;
                             }

@@ -50,14 +50,13 @@
 
 namespace Nektar
 {
-
     namespace LocalRegions
     {
         
-    class QuadExp: public StdRegions::StdQuadExp
+        class QuadExp: public StdRegions::StdQuadExp
         {
         public:
-
+            
             /** \brief Constructor using BasisKey class for quadrature
                 points and order definition */
             QuadExp(const LibUtilities::BasisKey &Ba,
@@ -90,7 +89,7 @@ namespace Nektar
             void GetCoord(const Array<OneD, const NekDouble>& Lcoords, 
                           Array<OneD,NekDouble> &coords);
 
-            const SpatialDomains::Geometry2DSharedPtr& GetGeom()
+            const SpatialDomains::Geometry2DSharedPtr& GetGeom2D() const
             {
                 return m_geom;
             }
@@ -165,6 +164,9 @@ namespace Nektar
         
             SegExpSharedPtr GetEdgeExp(int edge);
             void GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+
+            void GetEdgePhysVals(const int edge, const SegExpSharedPtr &EdgeExp, 
+                                 const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
     
             void AddNormTraceInt(const int dir,
                                  Array<OneD, const NekDouble> &inarray,
@@ -207,7 +209,7 @@ namespace Nektar
 
             void AddUDGHelmholtzEdgeTerms(const NekDouble tau, 
                                           const int edge,
-                                          SegExpSharedPtr &EdgeExp, 
+                                          Array <OneD,SegExpSharedPtr> &EdgeExp, 
                                           Array <OneD,NekDouble > &outarray);
 
             DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
@@ -270,14 +272,14 @@ namespace Nektar
                 return DetExpansionType();
             }
 
-            virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
+            virtual const SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const
             {
                 return m_metricinfo;
             }
 
-            virtual const SpatialDomains::Geometry2DSharedPtr& v_GetGeom()
+            virtual const SpatialDomains::Geometry2DSharedPtr& v_GetGeom2D() const
             {
-                return GetGeom();
+                return GetGeom2D();
             }
 
             virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
@@ -480,6 +482,14 @@ namespace Nektar
             {
                 GetEdgePhysVals(edge,inarray,outarray);
             }
+            
+            virtual void v_GetEdgePhysVals(const int edge, 
+                                           const SegExpSharedPtr &EdgeExp, 
+                                           const Array<OneD, const NekDouble> &inarray, 
+                                           Array<OneD,NekDouble> &outarray)
+            {
+                GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
+            }
 
             virtual void v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray)
@@ -514,6 +524,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.36  2008/07/19 21:15:38  sherwin
+ *    Removed MapTo function, made orientation anticlockwise, changed enum from BndSys to BndLam
+ *
  *    Revision 1.35  2008/07/16 22:20:54  sherwin
  *    Added AddEdgeNormBoundaryInt
  *

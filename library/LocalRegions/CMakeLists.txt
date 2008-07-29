@@ -1,4 +1,5 @@
 SET(LOCAL_REGIONS_SOURCES
+GenSegExp.cpp
 HexExp.cpp
 MatrixKey.cpp
 #MetricRelatedInfo.cpp
@@ -14,6 +15,7 @@ TriExp.cpp
 )
 
 SET(LOCAL_REGIONS_HEADERS
+GenSegExp.h
 HexExp.h
 LinSys.hpp
 LocalRegions.h

@@ -52,11 +52,10 @@ namespace Nektar
         {         
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,  StdRegions::eNoExpansionType,*this),   
-                                                boost::bind(&SegExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i, StdRegions::eNoExpansionType,*this),   
-                                                          boost::bind(&SegExp::CreateStaticCondMatrix, this, _1));
+                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,  StdRegions::eNoExpansionType,*this),boost::bind(&SegExp::CreateMatrix, this, _1));
+                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i, StdRegions::eNoExpansionType,*this), boost::bind(&SegExp::CreateStaticCondMatrix, this, _1));
             }
+
             GenMetricInfo();
         }
 
@@ -1420,6 +1419,9 @@ namespace Nektar
 }//end of namespace
 
 // $Log: SegExp.cpp,v $
+// Revision 1.51  2008/07/19 21:15:38  sherwin
+// Removed MapTo function, made orientation anticlockwise, changed enum from BndSys to BndLam
+//
 // Revision 1.50  2008/07/09 11:44:49  sherwin
 // Replaced GetScaleFactor call with GetConstant(0)
 //

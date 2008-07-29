@@ -129,7 +129,7 @@ namespace Nektar
                 return StdRegions::eTetrahedron;
             }
 
-            SpatialDomains::TetGeomSharedPtr GetGeom()
+            const SpatialDomains::Geometry3DSharedPtr& GetGeom3D() const
             {
                 return m_geom;
             }
@@ -174,7 +174,7 @@ namespace Nektar
 
 
         private:
-	    SpatialDomains::TetGeomSharedPtr m_geom; 
+	    SpatialDomains::Geometry3DSharedPtr m_geom; 
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
 
 	    LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
@@ -187,9 +187,14 @@ namespace Nektar
                 return DetExpansionType();
             }
 
-            virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
+            virtual const SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const
             {
                 return m_metricinfo;
+            }
+
+            virtual const SpatialDomains::Geometry3DSharedPtr& v_GetGeom3D() const
+            {
+                return GetGeom3D();
             }
 
             virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
@@ -307,6 +312,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.h,v $
+ *    Revision 1.18  2008/07/12 17:27:07  sherwin
+ *    Update for AddBoundaryInt and moved various members to be private rather than protected
+ *
  *    Revision 1.17  2008/07/04 10:19:05  pvos
  *    Some updates
  *

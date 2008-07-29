@@ -61,7 +61,7 @@ namespace Nektar
             /// points and order definition 
             SegExp(const LibUtilities::BasisKey &Ba, 
                    const SpatialDomains::Geometry1DSharedPtr &geom);
-
+            
 
             /// \brief Constructor using BasisKey class for quadrature
             /// points and order definition where it has standard geometric factors 
@@ -86,12 +86,12 @@ namespace Nektar
                           Array<OneD,NekDouble> &coords);
 
 
-            const  SpatialDomains::GeomFactorsSharedPtr GetMetricInfo() const
+            const SpatialDomains::GeomFactorsSharedPtr& GetMetricInfo() const
             {
                 return m_metricinfo;
             }
 
-            const SpatialDomains::Geometry1DSharedPtr& GetGeom() const
+            const SpatialDomains::Geometry1DSharedPtr& GetGeom1D() const
             {
                 return m_geom;
             }
@@ -247,7 +247,6 @@ namespace Nektar
                                  Array<OneD, NekDouble> &outarray, 
                                  int coll_check);
 
-        private:
             SpatialDomains::Geometry1DSharedPtr m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
 
@@ -255,22 +254,26 @@ namespace Nektar
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
             
-            SegExp();
-
 
             virtual StdRegions::ExpansionType v_DetExpansionType() const
             {
                 return DetExpansionType();
             }
 
-            virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
+            virtual const Array<OneD, const NekDouble>& v_GetPhysNormals(void)
+            {
+                NEKERROR(ErrorUtil::efatal, "Got to SegExp");
+                return NullNekDouble1DArray; 
+            }
+
+            virtual const SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const
             {
                 return GetMetricInfo();
             }
 
-            virtual const  SpatialDomains::Geometry1DSharedPtr& v_GetGeom()
+            virtual const SpatialDomains::Geometry1DSharedPtr& v_GetGeom1D() const
             {
-                return GetGeom();
+                return GetGeom1D();
             }
 
             virtual void v_GetCoords(Array<OneD,NekDouble> &coords_0,
@@ -514,6 +517,9 @@ namespace Nektar
             {
                 HelmholtzMatrixOp(inarray,outarray,lambda);
             }            
+        private:
+            SegExp();
+
         };
 
         // type defines for use of SegExp in a boost vector
@@ -527,6 +533,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.39  2008/07/19 21:15:38  sherwin
+// Removed MapTo function, made orientation anticlockwise, changed enum from BndSys to BndLam
+//
 // Revision 1.38  2008/07/12 17:27:07  sherwin
 // Update for AddBoundaryInt and moved various members to be private rather than protected
 //

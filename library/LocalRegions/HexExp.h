@@ -79,6 +79,11 @@ namespace Nektar
                 return StdRegions::eHexahedron; 
             }
 
+            const SpatialDomains::Geometry3DSharedPtr& GetGeom() const
+            {
+                return m_geom;
+            }
+
             //------------------------------
             //    Integration Method
             //------------------------------
@@ -158,7 +163,7 @@ namespace Nektar
                                  int coll_check);
 
         private:
-            SpatialDomains::HexGeomSharedPtr m_geom;
+            SpatialDomains::Geometry3DSharedPtr m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
 
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
@@ -173,9 +178,15 @@ namespace Nektar
                 return DetExpansionType();
             }
     
-            virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
+            virtual const SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const
             {
                 return m_metricinfo;
+            }
+
+
+            virtual const SpatialDomains::Geometry3DSharedPtr& v_GetGeom3D() const
+            {
+                return GetGeom3D();
             }
 
             virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
@@ -282,6 +293,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.20  2008/07/12 17:27:07  sherwin
+ *    Update for AddBoundaryInt and moved various members to be private rather than protected
+ *
  *    Revision 1.19  2008/07/04 10:19:04  pvos
  *    Some updates
  *

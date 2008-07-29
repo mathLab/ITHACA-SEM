@@ -77,7 +77,7 @@ namespace Nektar
             void GetCoord(const Array<OneD, const NekDouble>& Lcoords, 
                           Array<OneD,NekDouble> &coords);
 
-            const SpatialDomains::Geometry2DSharedPtr& GetGeom()
+            const SpatialDomains::Geometry2DSharedPtr& GetGeom2D() const
             {
                 return m_geom;
             }
@@ -207,14 +207,14 @@ namespace Nektar
                 return DetExpansionType();
             }
 
-            virtual SpatialDomains::GeomFactorsSharedPtr v_GetMetricInfo() const
+            virtual const SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const
             {
                 return m_metricinfo;
             }
 
-            virtual const SpatialDomains::Geometry2DSharedPtr& v_GetGeom()
+            virtual const SpatialDomains::Geometry2DSharedPtr& v_GetGeom2D() const
             {
-                return GetGeom();
+                return GetGeom2D();
             }
 
             virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
@@ -359,6 +359,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.30  2008/07/12 17:27:07  sherwin
+ *    Update for AddBoundaryInt and moved various members to be private rather than protected
+ *
  *    Revision 1.29  2008/07/04 10:19:05  pvos
  *    Some updates
  *

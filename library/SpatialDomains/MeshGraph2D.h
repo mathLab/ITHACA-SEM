@@ -206,6 +206,7 @@ namespace Nektar
 
             /// \brief Return the elements (shared ptrs) that have this edge.
             ElementEdgeVectorSharedPtr GetElementsFromEdge(SegGeomSharedPtr edge);
+            ElementEdgeVectorSharedPtr GetElementsFromEdge(Geometry1DSharedPtr edge);
 
             /// \brief Return the BasisKey corresponding to an edge of an element
             LibUtilities::BasisKey GetEdgeBasisKey(SegGeomSharedPtr edge);
@@ -230,6 +231,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.23  2008/06/30 19:34:17  ehan
+// Fixed infinity recursive-loop error.
+//
 // Revision 1.22  2008/06/09 21:33:04  jfrazier
 // Moved segment vector to base MeshGraph class since it is used by all derived types.
 //

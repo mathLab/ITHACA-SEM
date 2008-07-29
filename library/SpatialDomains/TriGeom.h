@@ -59,35 +59,48 @@ namespace Nektar
                 TriGeom(int id, const int coordim);
                 TriGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
                 TriGeom(const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
-				TriGeom(const TriGeom &in);
+                TriGeom(const TriGeom &in);
                 ~TriGeom();
 
-				void AddElmtConnected(int gvo_id, int locid);
-				int  NumElmtConnected() const;
-				bool IsElmtConnected(int gvo_id, int locid) const;
-
-				inline int GetFid() const 
-				{
-					return m_fid;
-				}
-
-				inline int GetCoordDim() const 
-				{
+                void AddElmtConnected(int gvo_id, int locid);
+                int  NumElmtConnected() const;
+                bool IsElmtConnected(int gvo_id, int locid) const;
+                
+                inline int GetFid() const 
+                {
+                    return m_fid;
+                }
+                
+                inline int GetCoordDim() const 
+                {
 					return m_coordim;
-				}
+                }
+                
+                inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j)
+                {
+                    return m_xmap[i]->GetBasis(j);
+                }
 
-				inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j)
-				{
-					return m_xmap[i]->GetBasis(j);
-				}
-
-				inline Array<OneD,NekDouble> &UpdatePhys(const int i)
-				{
-					return m_xmap[i]->UpdatePhys();
-				}
-
-				NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
-
+                inline const LibUtilities::BasisSharedPtr GetEdgeBasis(const int i, const int j)
+                {
+                    ASSERTL1(j <=2,"edge is out of range");
+                    if(j == 0)
+                    {
+                        return m_xmap[i]->GetBasis(0);
+                    }
+                    else
+                    {
+                        return m_xmap[i]->GetBasis(1);
+                    }
+                }
+                
+                inline Array<OneD,NekDouble> &UpdatePhys(const int i)
+                {
+                    return m_xmap[i]->UpdatePhys();
+                }
+                
+                NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
+                
                 inline void SetOwnData()
                 {
                     m_owndata = true; 
@@ -109,7 +122,7 @@ namespace Nektar
                     return m_verts[i]->GetVid();
                 }
 
-                inline const SegGeomSharedPtr GetEdge(const int i) const
+                inline const Geometry1DSharedPtr GetEdge(const int i) const
                 {
                     ASSERTL2((i >=0) && (i <= 2),"Edge id must be between 0 and 3");
                     return m_edges[i];
@@ -162,46 +175,51 @@ namespace Nektar
             private:
                 bool m_owndata;
 
-				virtual void v_AddElmtConnected(int gvo_id, int locid)
-				{
-					AddElmtConnected(gvo_id,locid);
-				}
-
-				virtual int  v_NumElmtConnected() const
-				{
+                virtual void v_AddElmtConnected(int gvo_id, int locid)
+                {
+                    AddElmtConnected(gvo_id,locid);
+                }
+                
+                virtual int  v_NumElmtConnected() const
+                {
 					return NumElmtConnected();
-				}
+                }
+                
+                virtual bool v_IsElmtConnected(int gvo_id, int locid) const
+                {
+                    return IsElmtConnected(gvo_id,locid);
+                }
+	        
+                virtual int v_GetFid() const 
+                {
+                    return GetFid();
+                }
+                
+                virtual int v_GetCoordDim() const 
+                {
+                    return GetCoordDim();
+                }
+                
+                virtual const LibUtilities::BasisSharedPtr v_GetBasis(const int i, const int j)
+                {
+                    return GetBasis(i,j);
+                }
 
-				virtual bool v_IsElmtConnected(int gvo_id, int locid) const
-				{
-					return IsElmtConnected(gvo_id,locid);
+                virtual const LibUtilities::BasisSharedPtr v_GetEdgeBasis(const int i, const int j)
+                {
+                    return GetEdgeBasis(i,j);
+                }
+                
+                virtual Array<OneD,NekDouble> &v_UpdatePhys(const int i)
+                {
+                    return UpdatePhys(i);
 				}
-	            
-				virtual int v_GetFid() const 
-				{
-					return GetFid();
-				}
-
-				virtual int v_GetCoordDim() const 
-				{
-					return GetCoordDim();
-				}
-
-				virtual const LibUtilities::BasisSharedPtr v_GetBasis(const int i, const int j)
-				{
-					return GetBasis(i,j);
-				}
-
-				virtual Array<OneD,NekDouble> &v_UpdatePhys(const int i)
-				{
-					return UpdatePhys(i);
-				}
-
-				virtual NekDouble v_GetCoord(const int i, const Array<OneD,const NekDouble> &Lcoord)
-				{
-					return GetCoord(i,Lcoord);
-				}
-
+                
+                virtual NekDouble v_GetCoord(const int i, const Array<OneD,const NekDouble> &Lcoord)
+                {
+                    return GetCoord(i,Lcoord);
+                }
+                
                 virtual void v_GenGeomFactors(void)
                 {
                     GenGeomFactors();
@@ -232,7 +250,7 @@ namespace Nektar
                     return GetVid(i);
                 }
                 
-                virtual const SegGeomSharedPtr v_GetEdge(int i) const
+                virtual const Geometry1DSharedPtr v_GetEdge(int i) const
                 {
                     return GetEdge(i);
                 }
@@ -254,6 +272,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.22  2008/06/14 01:25:11  ehan
+// Added a new constructor TriGeom(id, coordim).
+//
 // Revision 1.21  2008/06/11 21:34:42  delisi
 // Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
 //

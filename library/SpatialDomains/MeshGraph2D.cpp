@@ -537,6 +537,18 @@ namespace Nektar
             return;
         }
 
+        ElementEdgeVectorSharedPtr MeshGraph2D::GetElementsFromEdge(Geometry1DSharedPtr edge)
+        {
+            SegGeomSharedPtr Sedge;
+
+            if(!(Sedge = boost::dynamic_pointer_cast<SegGeom>(edge)))
+            {
+                ASSERTL0(false,"Dynamics cast failed");
+
+            }
+            return GetElementsFromEdge(Sedge);
+            
+        }
         ElementEdgeVectorSharedPtr MeshGraph2D::GetElementsFromEdge(SegGeomSharedPtr edge)
         {
             // Search tris and quads
@@ -658,6 +670,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.29  2008/05/29 19:07:39  delisi
+// Removed the Write(..) methods, so it is only in the base MeshGraph class. Also, added a line to set the global ID of the geometry object for every element read in.
+//
 // Revision 1.28  2008/05/28 21:42:18  jfrazier
 // Minor comment spelling change.
 //

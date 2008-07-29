@@ -65,7 +65,18 @@ namespace Nektar
             {
                 return v_IsElmtConnected(gvo_id,locid);
             }
-            
+
+            void FillGeom()
+            {
+                v_FillGeom();
+            }            
+                         
+            void GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+            {
+                v_GetLocCoords(coords,Lcoords);
+            }
+
+
             inline int GetEid() const
             {
                 return v_GetEid();
@@ -114,6 +125,19 @@ namespace Nektar
                 return false;
             }
             
+            virtual void v_FillGeom()
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+            }            
+
+            virtual void v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+            }
+
+
             virtual int v_GetEid() const 
             {
                 NEKERROR(ErrorUtil::efatal,
@@ -163,6 +187,9 @@ namespace Nektar
 
 //
 // $Log: Geometry3D.h,v $
+// Revision 1.4  2008/04/06 06:00:37  bnelson
+// Changed ConstArray to Array<const>
+//
 // Revision 1.3  2008/04/02 22:19:03  pvos
 // Update for 2D local to global mapping
 //

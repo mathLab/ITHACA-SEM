@@ -81,6 +81,19 @@ namespace Nektar
 			{
 				return m_xmap[i]->GetBasis(j);
 			}
+                        
+                        inline const LibUtilities::BasisSharedPtr GetEdgeBasis(const int i, const int j)
+                        {
+                            ASSERTL1(j <= 3,"edge is out of range");
+                            if((j == 0)||(j == 2))
+                            {
+                                return m_xmap[i]->GetBasis(0);
+                            }
+                            else
+                            {
+                                return m_xmap[i]->GetBasis(1);
+                            }
+                        }
 
 			inline Array<OneD,NekDouble> &UpdatePhys(const int i)
 			{
@@ -110,7 +123,7 @@ namespace Nektar
                 return m_verts[i]->GetVid();
             }
             
-            inline const SegGeomSharedPtr GetEdge(const int i) const
+            inline const Geometry1DSharedPtr GetEdge(const int i) const
             {
                 ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
                 return m_edges[i];
@@ -215,6 +228,11 @@ namespace Nektar
 				return GetBasis(i,j);
 			}
 
+			virtual const LibUtilities::BasisSharedPtr v_GetEdgeBasis(const int i, const int j)
+			{
+				return GetEdgeBasis(i,j);
+			}
+
 			virtual Array<OneD,NekDouble> &v_UpdatePhys(const int i)
 			{
 				return UpdatePhys(i);
@@ -255,7 +273,7 @@ namespace Nektar
                 return GetVid(i);
             }
             
-            virtual const SegGeomSharedPtr v_GetEdge(int i) const
+            virtual const Geometry1DSharedPtr v_GetEdge(int i) const
             {
                 return GetEdge(i);
             }
@@ -283,6 +301,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.22  2008/06/30 19:35:36  ehan
+// Fixed infinity recursive-loop error.
+//
 // Revision 1.21  2008/06/14 01:23:17  ehan
 // Implemented constructor and FillGeom().
 //

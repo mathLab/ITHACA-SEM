@@ -48,6 +48,9 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+
+        class Geometry1D;
+
         // Types of geometry types.
         enum GeomShapeType
         {
@@ -89,6 +92,7 @@ namespace Nektar
 
                 virtual ~Geometry();
 
+                
                 inline GeomType GetGtype()
                 {
                     return m_geomfactors->GetGtype();
@@ -119,20 +123,20 @@ namespace Nektar
                     return ValidateRegGeomFactor(m_geomfactors);
                 }
 
-				inline GeomShapeType GetGeomShapeType(void)
-				{
-					return m_GeomShapeType;
-				}
-
-				inline int GetGlobalID(void)
-				{
-					return m_GlobalID;
-				}
-
-				void SetGlobalID(int globalid)
-				{
-					m_GlobalID = globalid;
-				}
+                inline GeomShapeType GetGeomShapeType(void)
+                {
+                    return m_GeomShapeType;
+                }
+                
+                inline int GetGlobalID(void)
+                {
+                    return m_GlobalID;
+                }
+                
+                void SetGlobalID(int globalid)
+                {
+                    m_GlobalID = globalid;
+                }
 
                 // Wrappers around virtual Functions
                 void GenGeomFactors(void)
@@ -150,11 +154,11 @@ namespace Nektar
                 static GeomFactorsVector m_RegGeomFactorsManager;
 
                 GeomShapeType m_GeomShapeType;
-				int           m_GlobalID;
+                int           m_GlobalID;
 
-            private:
+        private:
                 GeomType m_GeomType;
-
+                
                 virtual void v_GenGeomFactors(void)
                 {
                     NEKERROR(ErrorUtil::efatal,
@@ -169,6 +173,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.24  2008/06/09 21:33:43  jfrazier
+// Changed name to exactly match corresponding enumeration element name.
+//
 // Revision 1.23  2008/05/30 00:33:48  delisi
 // Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
 //

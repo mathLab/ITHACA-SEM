@@ -66,6 +66,12 @@ namespace Nektar
                 return m_xmap[i];
             }
 
+            Geometry1DSharedPtr GetEdge(const int j)
+            {
+                return v_GetEdge(j);
+            }
+
+
             // Wrappers around virtual Functions (for the FaceComponent classes)
             void AddElmtConnected(int gvo_id, int locid)
             {
@@ -95,6 +101,11 @@ namespace Nektar
             inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j)
             {
                 return v_GetBasis(i,j);
+            }
+
+            inline const LibUtilities::BasisSharedPtr GetEdgeBasis(const int i, const int j)
+            {
+                return v_GetEdgeBasis(i,j);
             }
 
             inline Array<OneD,NekDouble> &UpdatePhys(const int i)
@@ -143,7 +154,7 @@ namespace Nektar
                 return v_GetFaceorient(i);
             }
                 
-            inline const SegGeomSharedPtr GetEdge(int i) const
+            inline const Geometry1DSharedPtr GetEdge(int i) const
             {
                 return v_GetEdge(i);
             }
@@ -216,6 +227,15 @@ namespace Nektar
                 return returnval;    
             }
 
+
+            virtual const LibUtilities::BasisSharedPtr v_GetEdgeBasis(const int i, const int j)
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                LibUtilities::BasisSharedPtr returnval;        
+                return returnval;    
+            }
+
             virtual Array<OneD,NekDouble> &v_UpdatePhys(const int i)
             {
                 NEKERROR(ErrorUtil::efatal,
@@ -262,7 +282,7 @@ namespace Nektar
                 return 0;
             }
                 
-            virtual const SegGeomSharedPtr v_GetEdge(int i) const
+            virtual const Geometry1DSharedPtr v_GetEdge(int i) const
             {
                 NEKERROR(ErrorUtil::efatal,
                          "This function is only valid for shape type geometries");
@@ -322,6 +342,9 @@ namespace Nektar
 
 //
 // $Log: Geometry2D.h,v $
+// Revision 1.6  2008/06/16 22:37:32  ehan
+// Added inline function GetFace(..) and GetFaceorient(..).
+//
 // Revision 1.5  2008/05/10 18:27:33  sherwin
 // Modifications necessary for QuadExp Unified DG Solver
 //

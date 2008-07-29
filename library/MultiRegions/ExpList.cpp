@@ -64,6 +64,32 @@ namespace Nektar
         {
         }
 
+
+        
+        void ExpList::SetCoeffPhys(void)
+        {
+            int i;
+            
+            // Set up offset information and array sizes
+            m_coeff_offset = Array<OneD,int>(m_exp->size());
+            m_phys_offset  = Array<OneD,int>(m_exp->size());
+            
+            m_ncoeffs = m_npoints = 0;
+            
+            for(i = 0; i < m_exp->size(); ++i)
+            {
+                m_coeff_offset[i] = m_ncoeffs;
+                m_phys_offset [i] = m_npoints; 
+                m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
+                m_npoints += (*m_exp)[i]->GetNumPoints(0);
+            }
+            
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+            m_phys   = Array<OneD, NekDouble>(m_npoints);
+        }
+
+
+
         void ExpList::PutCoeffsInToElmtExp(void)
         {
             int i, order_e;

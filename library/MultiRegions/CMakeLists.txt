@@ -11,6 +11,7 @@ ExpList1D.cpp
 ExpList2D.cpp
 ExpList3D.cpp
 ExpList.cpp
+GenExpList1D.cpp
 GlobalLinSys.cpp
 GlobalLinSysKey.cpp
 LocalToGlobalBndryMap.cpp
@@ -35,6 +36,7 @@ ExpList1D.h
 ExpList2D.h
 ExpList3D.h
 ExpList.h
+GenExpList1D.h
 GlobalLinSys.h
 GlobalLinSysKey.h
 LocalToGlobalBndryMap.h

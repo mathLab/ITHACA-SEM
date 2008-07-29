@@ -124,7 +124,7 @@ namespace Nektar
                 {
                     for(j = 0; j < locSegExp->GetNverts(); ++j) 
                     {
-                        meshVertId = (locSegExp->GetGeom())->GetVid(j);
+                        meshVertId = (locSegExp->GetGeom1D())->GetVid(j);
                         if(vertReorderedGraphVertId.count(meshVertId) == 0)        
                         {
                             vertReorderedGraphVertId[meshVertId] = graphVertId++;
@@ -175,6 +175,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalMap1D.cpp,v $
+* Revision 1.25  2008/07/10 13:02:34  pvos
+* Added periodic boundary conditions functionality
+*
 * Revision 1.24  2008/05/10 18:27:33  sherwin
 * Modifications necessary for QuadExp Unified DG Solver
 *

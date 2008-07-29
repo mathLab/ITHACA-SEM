@@ -39,7 +39,7 @@
 
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList2D.h>
-#include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/GenExpList1D.h>
 #include <LocalRegions/SegExp.h>
 #include <SpatialDomains/MeshGraph2D.h>
 #include <SpatialDomains/BoundaryConditions.h>
@@ -72,16 +72,10 @@ namespace Nektar
                                     const std::string variable);
 
             void SetUpTraceMappings(SpatialDomains::MeshGraph2D &graph2D);
-            void SetUpTraceInnerNormals(void);
 
-            inline ExpList1DSharedPtr &GetTrace(void)
+            inline GenExpList1DSharedPtr &GetTrace(void)
             {
                 return m_trace;
-            }
-
-            inline const boost::shared_ptr<Array<OneD, Array< OneD, NekDouble> > >GetTraceInnerNormals(void) const
-            {
-                return m_traceInnerNormals; 
             }
 
             
@@ -90,8 +84,8 @@ namespace Nektar
             GlobalLinSysSharedPtr GenGlobalBndLinSys(const GlobalLinSysKey &mkey);
             GlobalLinSysSharedPtr GetGlobalBndLinSys(const GlobalLinSysKey &mkey);
         
-            void GetInnerOuterTracePhys(Array<OneD,NekDouble> &Inner, 
-                                        Array<OneD,NekDouble> &Outer);
+            void GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd, 
+                                    Array<OneD,NekDouble> &Bwd);
 
             void ExtractTracePhys()
             {
@@ -112,20 +106,15 @@ namespace Nektar
             Array<OneD,MultiRegions::ExpList1DSharedPtr>       m_bndConstraint;
             Array<OneD,SpatialDomains::BoundaryConditionType>  m_bndTypes;
             GlobalLinSysMapShPtr                               m_globalBndMat;
-            
-            ExpList1DSharedPtr                                 m_trace;
+            GenExpList1DSharedPtr                              m_trace;
 
             Array<OneD,Array<OneD,LocalRegions::SegExpSharedPtr> > m_elmtToTrace;
             // NOTE This should all go into a class structure
-            Array<OneD,Array<OneD, int> > m_bndEidToTraceEid;  ///< Boundary list Expansin ID to Trace list Expansion ID
-            Array<OneD,Array<OneD, int> > m_elmtTraceMap;
-            Array<OneD,Array<OneD, int> > m_elmtTraceSign;
+            Array<OneD,Array<OneD, int> > m_bndEidToTraceEid;  ///< Boundary list Expansion ID to Trace list Expansion ID
+            Array<OneD,Array<OneD, AdjacentEdgeOrientation> > m_bndExpAdjacentOrient;  ///< Boundary Expansion adjacent edge orientation 
+            Array<OneD, int > m_elmtTraceMap;
+            Array<OneD, int > m_elmtTraceSign;
 
-
-            /// \brief Array at every physical point of the #m_trace
-            /// which contains the normal to the inner edge of the
-            /// element field.
-            boost::shared_ptr<Array<OneD, Array< OneD, NekDouble> > > m_traceInnerNormals;
         };
 
         typedef boost::shared_ptr<DisContField2D>   DisContField2DSharedPtr;

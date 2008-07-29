@@ -740,6 +740,11 @@ namespace Nektar
                              Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
             
         protected:
+            
+
+            void SetCoeffPhys(void);
+                
+
             /**
              * \brief The total number of local degrees of freedom. 
              * 
@@ -1027,6 +1032,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.40  2008/07/15 13:00:04  sherwin
+* Updates for DG advection solver - not yet debugged
+*
 * Revision 1.39  2008/07/12 19:08:29  sherwin
 * Modifications for DG advection routines
 *

@@ -178,6 +178,15 @@ namespace Nektar
             eDirectStaticCond,
         };
 
+        // Orientation of adjacent edge for use with boundary
+        // constraints
+        enum AdjacentEdgeOrientation
+        {
+            eAdjacentEdgeIsForwards,
+            eAdjacentEdgeIsBackwards
+        };
+        
+
         const char* const GlobalSysSolnTypeMap[] = 
         {
             "No Solution Type",

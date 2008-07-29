@@ -330,11 +330,11 @@ namespace Nektar
                     if(bndConditions[i]->GetBoundaryConditionType()==SpatialDomains::eDirichlet)
                     {          
                         bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j));
-                        meshEdgeId = (bndSegExp->GetGeom())->GetEid();  
+                        meshEdgeId = (bndSegExp->GetGeom1D())->GetEid();  
                         edgeReorderedGraphVertId[meshEdgeId] = graphVertId++;  
                         for(k = 0; k < 2; k++)
                         {
-                            meshVertId = (bndSegExp->GetGeom())->GetVid(k);
+                            meshVertId = (bndSegExp->GetGeom1D())->GetVid(k);
                             if(vertReorderedGraphVertId.count(meshVertId) == 0)        
                             {
                                 vertReorderedGraphVertId[meshVertId] = graphVertId++;
@@ -434,7 +434,7 @@ namespace Nektar
                         // all adjacent graph-vertices for all the separate graph-vertices
                         for(j = 0; j < nVerts; ++j) 
                         {   
-                            meshVertId = (locExpansion->GetGeom())->GetVid(j);
+                            meshVertId = (locExpansion->GetGeom2D())->GetVid(j);
                             if(vertReorderedGraphVertId.count(meshVertId) == 0)        
                             {                                
                                 if(vertTempGraphVertId.count(meshVertId) == 0)
@@ -444,7 +444,7 @@ namespace Nektar
                                 localVerts[vertCnt++] = vertTempGraphVertId[meshVertId];
                             }                             
                             
-                            meshEdgeId = (locExpansion->GetGeom())->GetEid(j);
+                            meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
                             if(edgeReorderedGraphVertId.count(meshEdgeId) == 0)        
                             {                            
                                 if(edgeTempGraphVertId.count(meshEdgeId) == 0)
@@ -651,7 +651,7 @@ namespace Nektar
                         
                         for(j = 0; j < nVerts; ++j) 
                         {   
-                            meshVertId = (locExpansion->GetGeom())->GetVid(j);
+                            meshVertId = (locExpansion->GetGeom2D())->GetVid(j);
                             if(vertReorderedGraphVertId.count(meshVertId) == 0)        
                             {                                
                                 if(vertTempGraphVertId.count(meshVertId) == 0)
@@ -661,7 +661,7 @@ namespace Nektar
                                 localVerts[vertCnt++] = vertTempGraphVertId[meshVertId];
                             }                             
                             
-                            meshEdgeId = (locExpansion->GetGeom())->GetEid(j);
+                            meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
                             if(edgeReorderedGraphVertId.count(meshEdgeId) == 0)        
                             {                            
                                 if(edgeTempGraphVertId.count(meshEdgeId) == 0)
@@ -814,13 +814,13 @@ namespace Nektar
                     {
                         for(j = 0; j < locExpansion->GetNverts(); ++j) // number verts = number edges for 2D geom
                         {   
-                            meshVertId = (locExpansion->GetGeom())->GetVid(j);
+                            meshVertId = (locExpansion->GetGeom2D())->GetVid(j);
                             if(vertReorderedGraphVertId.count(meshVertId) == 0)        
                             {
                                 vertReorderedGraphVertId[meshVertId] = graphVertId++;
                             }
                             
-                            meshEdgeId = (locExpansion->GetGeom())->GetEid(j);
+                            meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
                             if(edgeReorderedGraphVertId.count(meshEdgeId) == 0)        
                             {
                                 edgeReorderedGraphVertId[meshEdgeId] = graphVertId++;
@@ -851,8 +851,8 @@ namespace Nektar
                 for(j = 0; j < locExpansion->GetNedges(); ++j)
                 {  
                     nEdgeCoeffs = locExpansion->GetEdgeNcoeffs(j);
-                    meshEdgeId = (locExpansion->GetGeom())->GetEid(j);
-                    meshVertId = (locExpansion->GetGeom())->GetVid(j);
+                    meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
+                    meshVertId = (locExpansion->GetGeom2D())->GetVid(j);
                     graphVertOffset[edgeReorderedGraphVertId[meshEdgeId]+1] = nEdgeCoeffs-2;
                     graphVertOffset[vertReorderedGraphVertId[meshVertId]+1] = 1;
                     
@@ -895,9 +895,9 @@ namespace Nektar
                 for(j = 0; j < locExpansion->GetNedges(); ++j)
                 {
                     nEdgeInteriorCoeffs = locExpansion->GetEdgeNcoeffs(j)-2;
-                    edgeOrient          = (locExpansion->GetGeom())->GetEorient(j);                        
-                    meshEdgeId          = (locExpansion->GetGeom())->GetEid(j);
-                    meshVertId          = (locExpansion->GetGeom())->GetVid(j);
+                    edgeOrient          = (locExpansion->GetGeom2D())->GetEorient(j);                        
+                    meshEdgeId          = (locExpansion->GetGeom2D())->GetEid(j);
+                    meshVertId          = (locExpansion->GetGeom2D())->GetVid(j);
                     
                     locExpansion->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap);
 
@@ -939,12 +939,12 @@ namespace Nektar
                 
                     for(k = 0; k < 2; k++)
                     {
-                        meshVertId = (bndSegExp->GetGeom())->GetVid(k);
+                        meshVertId = (bndSegExp->GetGeom1D())->GetVid(k);
                         m_locToContBndCondMap[cnt+bndSegExp->GetVertexMap(k)] = 
                             graphVertOffset[vertReorderedGraphVertId[meshVertId]];
                     }
 
-                    meshEdgeId = (bndSegExp->GetGeom())->GetEid(); 
+                    meshEdgeId = (bndSegExp->GetGeom1D())->GetEid(); 
                     bndEdgeCnt = 0;
                     for(k = 0; k < bndSegExp->GetNcoeffs(); k++)
                     {
@@ -1028,6 +1028,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalMap2D.cpp,v $
+* Revision 1.15  2008/07/10 13:02:34  pvos
+* Added periodic boundary conditions functionality
+*
 * Revision 1.14  2008/06/05 15:06:58  pvos
 * Added documentation
 *

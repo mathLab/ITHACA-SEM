@@ -115,8 +115,8 @@ namespace Nektar
                     ASSERTL0(false,"dynamic cast to a SegGeom failed");
                 }  
 
-                m_coeff_offset[i] =  m_ncoeffs;
-                m_phys_offset[i] =  m_npoints;
+                m_coeff_offset[i] = m_ncoeffs;
+                m_phys_offset[i]  = m_npoints;
                 m_ncoeffs += bkey.GetNumModes();
                 m_npoints += bkey.GetNumPoints();
             }
@@ -177,25 +177,13 @@ namespace Nektar
         }
 
 
-        ExpList1D::ExpList1D(const Array<OneD,const MultiRegions::ExpList1DSharedPtr>      &bndConstraint,  const Array<OneD, const SpatialDomains::BoundaryConditionType>  &bndTypes, const StdRegions::StdExpansionVector &locexp, SpatialDomains::MeshGraph2D &graph2D)
+        ExpList1D::ExpList1D(const Array<OneD,const ExpList1DSharedPtr>  &bndConstraint, 
+                             const Array<OneD, const SpatialDomains::BoundaryConditionType>  &bndTypes, 
+                             const StdRegions::StdExpansionVector &locexp, SpatialDomains::MeshGraph2D &graph2D)
         {
-            int i,j,cnt,id, elmtid=0;
-
+            int i,j,k,cnt,id, elmtid=0;
             Array<OneD, int> EdgeDone(graph2D.GetNseggeoms(),0);
-            LocalRegions::SegExpSharedPtr  locSegExp, Seg;
-            LocalRegions::QuadExpSharedPtr locQuadExp;
-            LocalRegions::TriExpSharedPtr  locTriExp;
             
-            // count up global number of edges
-            cnt = 0;
-            for(i = 0; i < locexp.size(); ++i)
-            {
-                cnt += locexp[i]->GetNedges();
-            }
-
-            m_coeff_offset = Array<OneD,int>(cnt);
-            m_phys_offset = Array<OneD,int>(cnt);
-                
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
             cnt = 0;
@@ -205,27 +193,15 @@ namespace Nektar
                 {
                     for(j = 0; j < bndConstraint[i]->GetExpSize(); ++j)
                     {
-                        if(locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>((bndConstraint[i]->GetExp(j))))
-                        {
+                        LibUtilities::BasisKey bkey = bndConstraint[i]->GetExp(j)->GetBasis(0)->GetBasisKey();
+                        const SpatialDomains::Geometry1DSharedPtr& SegGeom = bndConstraint[i]->GetExp(j)->GetGeom1D();
+                            
+                        LocalRegions::SegExpSharedPtr Seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegGeom);
+                            
+                        Seg->SetElmtId(elmtid++);
+                        (*m_exp).push_back(Seg);   
 
-                            LibUtilities::BasisKey bkey  = locSegExp->GetBasis(0)->GetBasisKey();
-                            const SpatialDomains::Geometry1DSharedPtr& SegGeom = 
-                                locSegExp->GetGeom();
-                            Seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegGeom);
-                            EdgeDone[SegGeom->GetEid()] = 1;
-                            
-                            Seg->SetElmtId(elmtid++);
-                            (*m_exp).push_back(Seg);   
-                            
-                            m_coeff_offset[cnt] = m_ncoeffs; 
-                            m_phys_offset[cnt] = m_npoints; cnt++;
-                            m_ncoeffs += bkey.GetNumModes();
-                            m_npoints += bkey.GetNumPoints();
-                        }
-                        else
-                        {
-                            ASSERTL0(false,"dynamic cast to a SegExp failed");
-                        }  
+                        EdgeDone[SegGeom->GetEid()] = 1;
                     }
                 }
             }
@@ -233,76 +209,39 @@ namespace Nektar
             // loop over all other edges and fill out other connectivities
             for(i = 0; i < locexp.size(); ++i)
             {
-                if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(locexp[i]))
-                {
-                    for(j = 0; j < locQuadExp->GetNedges(); ++j)
-                    {   
-                        const SpatialDomains::SegGeomSharedPtr& SegGeom = (locQuadExp->GetGeom())->GetEdge(j);
-
-                        id = SegGeom->GetEid();
+                for(j = 0; j < locexp[i]->GetNedges(); ++j)
+                {   
+                    const SpatialDomains::Geometry1DSharedPtr& SegGeom = (locexp[i]->GetGeom2D())->GetEdge(j);
+                    
+                    id = SegGeom->GetEid();
                         
-                        if(!EdgeDone[id])
-                        {
-                            
-                            LibUtilities::BasisKey bkey    = (locQuadExp->GetBasis(j%2))->GetBasisKey();
-                            
-                            Seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegGeom);
-                            
-                            Seg->SetElmtId(elmtid++);
-                            (*m_exp).push_back(Seg);
-
-                            m_coeff_offset[cnt] = m_ncoeffs;
-                            m_phys_offset[cnt] = m_npoints; cnt++;
-                            m_ncoeffs += bkey.GetNumModes();
-                            m_npoints += bkey.GetNumPoints();
-
-                            EdgeDone[id] = 1;
-                        }
-                    }
-                }
-                else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(locexp[i]))
-                {
-                    for(j = 0; j < locTriExp->GetNedges(); ++j)
-                    {    
-                        const SpatialDomains::SegGeomSharedPtr&  SegGeom = (locTriExp->GetGeom())->GetEdge(j);
-
-                        id = SegGeom->GetEid();
+                    if(!EdgeDone[id])
+                    {
+                        LibUtilities::BasisKey EdgeBkey = (locexp[i]->GetEdgeBasis(j))->GetBasisKey();
                         
-                        if(!EdgeDone[id])
-                        {
-                            
-                            LibUtilities::BasisKey   bkey    = (locTriExp->GetBasis(j?1:0))->GetBasisKey();
-                            
-                            Seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegGeom);
-                            
-                            Seg->SetElmtId(elmtid++);
-                            (*m_exp).push_back(Seg);
-
-                            m_coeff_offset[cnt] = m_ncoeffs;
-                            m_phys_offset[cnt] = m_npoints; cnt++;
-                            m_ncoeffs += bkey.GetNumModes();
-                            m_npoints += bkey.GetNumPoints();
-                            
-                            EdgeDone[id] = 1;
-                        }                        
+                        LocalRegions::SegExpSharedPtr Seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(EdgeBkey, SegGeom);
+                        Seg->SetElmtId(elmtid++);
+                        (*m_exp).push_back(Seg);
+                        
+                        EdgeDone[id] = 1;
                     }
-                }
-                else
-                {
-                    ASSERTL0(false,"dynamic cast to a local 2D expansion failed");
                 }
             }
-            
-            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-            m_phys   = Array<OneD, NekDouble>(m_npoints);
+
+            // Set up offset information and array sizes
+            ExpList::SetCoeffPhys();
             
         }
+
 
     } //end of namespace
 } //end of namespace
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.29  2008/07/12 17:31:39  sherwin
+* Added m_phys_offset and rename m_exp_offset to m_coeff_offset
+*
 * Revision 1.28  2008/06/23 14:21:01  pvos
 * updates for 1D ExpLists
 *

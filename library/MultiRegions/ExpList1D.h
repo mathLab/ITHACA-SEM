@@ -42,6 +42,7 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList.h>
 #include <LocalRegions/SegExp.h>
+#include <LocalRegions/GenSegExp.h>
 #include <LocalRegions/TriExp.h>
 #include <LocalRegions/QuadExp.h>
 #include <SpatialDomains/MeshGraph1D.h>
@@ -64,7 +65,9 @@ namespace Nektar
          * This class inherits all its variables and member functions from the base class 
          * #ExpList.
          */ 
-    class ExpList1D: 
+
+
+        class ExpList1D: 
         public ExpList
         {
         public:
@@ -128,7 +131,7 @@ namespace Nektar
             }
             
         protected:
-
+            
         private:
 
         };
@@ -137,6 +140,7 @@ namespace Nektar
         typedef std::vector<ExpList1DSharedPtr>   ExpList1DVector;
         typedef std::vector<ExpList1DSharedPtr>::iterator ExpList1DVectorIter;
 
+
     } //end of namespace
 } //end of namespace
 
@@ -144,6 +148,9 @@ namespace Nektar
 
 /**
  * $Log: ExpList1D.h,v $
+ * Revision 1.20  2008/06/23 14:21:01  pvos
+ * updates for 1D ExpLists
+ *
  * Revision 1.19  2008/05/10 18:27:33  sherwin
  * Modifications necessary for QuadExp Unified DG Solver
  *

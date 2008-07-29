@@ -90,7 +90,7 @@ namespace Nektar
                     locSegExp->GetBoundaryMap(vmap);
                     for(j = 0; j < locSegExp->GetNverts(); ++j)
                     {   
-                        vid = (locSegExp->GetGeom())->GetVid(j);
+                        vid = (locSegExp->GetGeom1D())->GetVid(j);
                         if(renumbVerts[vid]==-1)
                         {
                             renumbVerts[vid] = gid++;
@@ -120,6 +120,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalBndryMap1D.cpp,v $
+* Revision 1.5  2008/07/19 21:19:13  sherwin
+* Remove MapTo function and made orientation anticlockwise, changed enum BndSys to BndFce
+*
 * Revision 1.4  2008/05/10 18:27:33  sherwin
 * Modifications necessary for QuadExp Unified DG Solver
 *

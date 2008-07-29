@@ -208,16 +208,14 @@ void rhsFunction(MultiRegions::DisContField2DSharedPtr hpExp,
    //---------------------------------------
    // get the trace values
 
-   Array<OneD,NekDouble> Inner(nTotTracePoints,0.0);
-   Array<OneD,NekDouble> Outer(nTotTracePoints,0.0);
+   Array<OneD,NekDouble> Fwd(nTotTracePoints,0.0);
+   Array<OneD,NekDouble> Bwd(nTotTracePoints,0.0);
    Array<OneD,NekDouble> upwind1(nTotTracePoints,0.0);
    Array<OneD,NekDouble> upwind2(nTotTracePoints,0.0);
 
    Array<OneD, Array<OneD, NekDouble> > normals;
 
-   hpExp->GetInnerOuterTracePhys(Inner,Outer); 
-
-   normals = *hpExp->GetTraceInnerNormals(); 
+   hpExp->GetFwdBwdTracePhys(Fwd,Bwd); 
    //---------------------------------------
 
 
@@ -256,25 +254,35 @@ void rhsFunction(MultiRegions::DisContField2DSharedPtr hpExp,
    // note: upwind1 contains  a_1 * upwind
    //       upwind2 contains  a_2 * upwind
 
+#if 1
+   Array<OneD, Array<OneD, const NekDouble> > Vel(2);
+   Vel[0] = v1Trace;
+   Vel[1] = v2Trace;
+
+   hpExp->GetTrace()->Upwind(Vel,Fwd,Bwd,upwind1);
+
+   Vmath::Vmul(nTotTracePoints,upwind1,1,v2Trace,1,upwind2,1);
+   Vmath::Vmul(nTotTracePoints,upwind1,1,v1Trace,1,upwind1,1);
+#else
    for (int i = 0; i < nTotTracePoints; ++i)
      {
        if (v1Trace[i]*normals[0][i]+v2Trace[i]*normals[1][i] > 0.0)
 	  {
-	    upwind1[i] = v1Trace[i]*Inner[i];
-	    upwind2[i] = v2Trace[i]*Inner[i];
+	    upwind1[i] = v1Trace[i]*Fwd[i];
+	    upwind2[i] = v2Trace[i]*Fwd[i];
 	  }
        else
 	  {
-	    upwind1[i] = v1Trace[i]*Outer[i];
-	    upwind2[i] = v2Trace[i]*Outer[i];
+	    upwind1[i] = v1Trace[i]*Bwd[i];
+	    upwind2[i] = v2Trace[i]*Bwd[i];
 	  }
      }
-
+#endif
 
    Vmath::Neg(nTotTracePoints,upwind1,1);
    Vmath::Neg(nTotTracePoints,upwind2,1);
 
-   // this should then be changed ???    
+   // this should then be changed 
    hpExp->AddTraceIntegral(upwind1, upwind2, iprod_rhs);
 
    hpExp->MultiplyByElmtInvMass(iprod_rhs,hpExp->UpdateCoeffs());

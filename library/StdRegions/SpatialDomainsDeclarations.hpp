@@ -46,6 +46,7 @@ namespace Nektar
         class SegGeom;
         class Geometry1D;
         class Geometry2D;
+        class Geometry3D;
         class GeomFactors;
         
     } // end of namespace
@@ -55,6 +56,9 @@ namespace Nektar
 
 /**
  * $Log: SpatialDomainsDeclarations.hpp,v $
+ * Revision 1.6  2008/04/02 22:18:10  pvos
+ * Update for 2D local to global mapping
+ *
  * Revision 1.5  2007/07/13 09:02:25  sherwin
  * Mods for Helmholtz solver
  *

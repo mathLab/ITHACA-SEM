@@ -223,6 +223,22 @@ namespace Nektar
 
             }
 
+            const LibUtilities::BasisSharedPtr& GetEdgeBasis(const int i) const
+            {
+                ASSERTL2((i >= 0)&&(i <= 2),"edge id is out of range");
+
+                if(i == 0)
+                {
+                    return  GetBasis(0);
+                }
+                else
+                {
+                    return  GetBasis(1);
+                }
+
+            }
+
+
             void GetCoords(Array<OneD, NekDouble> &coords_0, 
                            Array<OneD, NekDouble> &coords_1);
 
@@ -340,6 +356,13 @@ namespace Nektar
             {
                 return GetEdgeBasisType(i);
             }
+
+
+            virtual const LibUtilities::BasisSharedPtr& v_GetEdgeBasis(const int i) const
+            {
+                return GetEdgeBasis(i);
+            }
+
 
             virtual ExpansionType v_DetExpansionType() const
             {
@@ -484,6 +507,9 @@ namespace Nektar
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.32  2008/07/19 21:12:54  sherwin
+ * Removed MapTo function and made orientation convention anticlockwise in UDG routines
+ *
  * Revision 1.31  2008/07/04 10:18:41  pvos
  * Some updates
  *

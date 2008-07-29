@@ -425,6 +425,22 @@ namespace Nektar
                 return v_GetEdgeNumPoints(i);
             }
 
+
+            /** \brief This function returns the Basis Shared Pointer
+             *  belonging to the \a i-th edge
+             *  
+             *  This function is a wrapper around the virtual function 
+             *  \a v_GetEdgeBasis() 
+             * 
+             *  \param i specifies which edge \return returns the
+             *  shared pointer of the basis expansion belonging to the
+             *  \a i-th edge
+             */
+            const LibUtilities::BasisSharedPtr& GetEdgeBasis(const int i) const
+            {
+                return v_GetEdgeBasis(i);
+            }
+
             /** \brief This function returns the number of expansion coefficients
              *  belonging to the \a i-th face  
              *  
@@ -749,6 +765,17 @@ namespace Nektar
             }
 
 
+            const Array<OneD, const NekDouble>& GetPhysNormals(void)
+            {
+                return v_GetPhysNormals();
+            }
+
+
+            void SetPhysNormals(Array<OneD, const NekDouble> &normal)
+            {
+                v_SetPhysNormals(normal);
+            }
+
             DNekScalBlkMatSharedPtr& GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
             {
                 return v_GetLocStaticCondMatrix(mkey);
@@ -880,6 +907,11 @@ namespace Nektar
                 v_GetEdgePhysVals(edge,inarray,outarray);
             }
 
+            void GetEdgePhysVals(const int edge, const boost::shared_ptr<LocalRegions::SegExp> &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            {
+                v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
+            }
+
             // Matrix Routines
 
             /** \brief this function generates the mass matrix 
@@ -982,9 +1014,24 @@ namespace Nektar
                 return v_PhysEvaluate(coords);
             }
             
-            boost::shared_ptr<SpatialDomains::GeomFactors> GetMetricInfo(void) const
+            const boost::shared_ptr<SpatialDomains::GeomFactors>& GetMetricInfo(void) const
             {
                 return v_GetMetricInfo();
+            }
+
+            const boost::shared_ptr<SpatialDomains::Geometry1D>& GetGeom1D(void) const
+            {
+                return v_GetGeom1D();
+            }
+
+            const boost::shared_ptr<SpatialDomains::Geometry2D>& GetGeom2D(void) const
+            {
+                return v_GetGeom2D();
+            }
+
+            const boost::shared_ptr<SpatialDomains::Geometry3D>& GetGeom3D(void) const
+            {
+                return v_GetGeom3D();
             }
 
             virtual DNekScalMatSharedPtr& v_GetLocMatrix(const LocalRegions::MatrixKey &mkey)
@@ -999,6 +1046,18 @@ namespace Nektar
                 return NullDNekScalMatSharedPtr;
             }
 
+            
+            virtual const Array<OneD, const NekDouble>& v_GetPhysNormals(void)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+                return NullNekDouble1DArray; 
+            }
+
+
+            virtual void v_SetPhysNormals(Array<OneD, const NekDouble> &normal)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+            }
 
             virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
             {
@@ -1320,6 +1379,12 @@ namespace Nektar
                 return 0;
             }
 
+            virtual const LibUtilities::BasisSharedPtr& v_GetEdgeBasis(const int i) const
+            {
+                ASSERTL0(false, "This function is not valid or not defined");
+            }
+
+
             virtual int v_GetFaceNcoeffs(const int i) const
             {
                 ASSERTL0(false, "This function is not valid or not defined");
@@ -1329,7 +1394,7 @@ namespace Nektar
             virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const
             {
                 ASSERTL0(false, "This function is not valid or not defined");
-                return LibUtilities::eNoBasisType;
+                //return LibUtilities::eNoBasisType;
             }
 
             virtual ExpansionType v_DetExpansionType() const
@@ -1349,10 +1414,10 @@ namespace Nektar
                                          Array<OneD, NekDouble> &outarray) = 0;
             virtual void   v_FwdTrans   (const Array<OneD, const NekDouble>& inarray, 
                                          Array<OneD, NekDouble> &outarray) = 0;
-            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
+            virtual void  v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
                                            Array<OneD, NekDouble> &outarray) = 0;      
 
-            virtual void   v_IProductWRTDerivBase (const int dir, 
+            virtual void  v_IProductWRTDerivBase (const int dir, 
                                                    const Array<OneD, const NekDouble>& inarray, 
                                                    Array<OneD, NekDouble> &outarray)
             {
@@ -1496,15 +1561,38 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
+
+            virtual void v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<LocalRegions::SegExp>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
+            }
+
             virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
             {
                 NEKERROR(ErrorUtil::efatal, "WriteToFile: Write method");
             }
 
-            virtual boost::shared_ptr<SpatialDomains::GeomFactors> v_GetMetricInfo() const 
+            virtual const  boost::shared_ptr<SpatialDomains::GeomFactors>& v_GetMetricInfo() const 
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                return  boost::shared_ptr<SpatialDomains::GeomFactors>();
+
+            }
+            
+            virtual const boost::shared_ptr<SpatialDomains::Geometry1D>& v_GetGeom1D() const 
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+
+            }
+        
+            virtual const boost::shared_ptr<SpatialDomains::Geometry2D>& v_GetGeom2D() const 
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+
+            }
+        
+            virtual const boost::shared_ptr<SpatialDomains::Geometry3D>& v_GetGeom3D() const 
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
 
             }
         
@@ -1577,6 +1665,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.91  2008/07/19 21:12:54  sherwin
+ * Removed MapTo function and made orientation convention anticlockwise in UDG routines
+ *
  * Revision 1.90  2008/07/16 22:20:27  sherwin
  * Added AddEdgeNormBoundaryInt
  *

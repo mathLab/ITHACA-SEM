@@ -694,15 +694,22 @@ namespace Nektar
             const LibUtilities::BasisKey &tbasis0, 
             Array<OneD, NekDouble> &to)
         {
-            DNekMatSharedPtr I0;
-
-            I0 = LibUtilities::PointsManager()[fbasis0.GetPointsKey()]
-            ->GetI(tbasis0.GetPointsKey());
-
-            NekVector<const NekDouble> in(fbasis0.GetNumPoints(),from,eWrapper);
-            NekVector<NekDouble> out(tbasis0.GetNumPoints(),to,eWrapper);
-
-            out  = (*I0)*in;
+            if(fbasis0.GetPointsKey() == tbasis0.GetPointsKey()) //check to see if the same
+            {
+                Vmath::Vcopy(fbasis0.GetNumPoints(),from,1,to,1);
+            }
+            else // interpolate
+            {
+                DNekMatSharedPtr I0;
+                
+                I0 = LibUtilities::PointsManager()[fbasis0.GetPointsKey()]
+                    ->GetI(tbasis0.GetPointsKey());
+                
+                NekVector<const NekDouble> in(fbasis0.GetNumPoints(),from,eWrapper);
+                NekVector<NekDouble> out(tbasis0.GetNumPoints(),to,eWrapper);
+                
+                out  = (*I0)*in;
+            }
         }
 
         void StdExpansion::Interp1D(const LibUtilities::BasisKey &fbasis0, 
@@ -710,14 +717,22 @@ namespace Nektar
             const LibUtilities::BasisKey &tbasis0, 
             NekDouble *to)
         {
-            DNekMatSharedPtr I0;
-
-            I0 = LibUtilities::PointsManager()[fbasis0.GetPointsKey()]
-            ->GetI(tbasis0.GetPointsKey());
-
-            Blas::Dgemv('N', tbasis0.GetNumPoints(), fbasis0.GetNumPoints(), 
-               1.0, I0->GetPtr().get(), tbasis0.GetNumPoints(), 
-               from, 1, 0.0, to, 1);
+            if(fbasis0.GetPointsKey() == tbasis0.GetPointsKey()) //check to see if the same
+            {
+                Vmath::Vcopy(fbasis0.GetNumPoints(),from,1,to,1);
+            }
+            else // interpolate
+            {
+                
+                DNekMatSharedPtr I0;
+                
+                I0 = LibUtilities::PointsManager()[fbasis0.GetPointsKey()]
+                    ->GetI(tbasis0.GetPointsKey());
+                
+                Blas::Dgemv('N', tbasis0.GetNumPoints(), fbasis0.GetNumPoints(), 
+                            1.0, I0->GetPtr().get(), tbasis0.GetNumPoints(), 
+                            from, 1, 0.0, to, 1);
+            }
         }
 
         //   I/O routine
@@ -735,6 +750,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.73  2008/07/19 21:12:54  sherwin
+* Removed MapTo function and made orientation convention anticlockwise in UDG routines
+*
 * Revision 1.72  2008/07/12 16:30:07  sherwin
 * Added an new member m_elmt_id so that there is an element number for use later in lists
 *

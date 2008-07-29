@@ -76,10 +76,6 @@ namespace Nektar
             */
             NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords);
 
-            const boost::shared_ptr<SpatialDomains::Geometry1D>& GetGeom()
-            {
-                return v_GetGeom();
-            }
         protected:
 
         private:
@@ -107,14 +103,6 @@ namespace Nektar
                 return PhysEvaluate(coords);
             }
 
-            virtual const boost::shared_ptr<SpatialDomains::Geometry1D>& v_GetGeom()
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for "
-                         "local expansions");
-                const static boost::shared_ptr<SpatialDomains::Geometry1D> returnval;
-                return returnval;
-            }
-
         };
 
         typedef boost::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;
@@ -126,6 +114,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.29  2008/07/04 10:18:40  pvos
+* Some updates
+*
 * Revision 1.28  2008/05/30 00:33:49  delisi
 * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
 *

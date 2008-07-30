@@ -35,7 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/DisContField2D.h>
-#include <LocalRegions/SegExp.h>
+#include <LocalRegions/GenSegExp.h>
 
 namespace Nektar
 {
@@ -251,8 +251,6 @@ namespace Nektar
             LocalRegions::SegExpSharedPtr  locSegExp;
             LocalRegions::QuadExpSharedPtr locQuadExp;
             LocalRegions::TriExpSharedPtr  locTriExp;
-            //SpatialDomains::SegGeomSharedPtr SegGeom;
-
             SpatialDomains::Geometry1DSharedPtr SegGeom;
             
             Array<OneD,int> MeshEdgeNo(graph2D.GetNseggeoms(),-1);
@@ -278,8 +276,8 @@ namespace Nektar
             }
             
 
-            Array<OneD, LocalRegions::SegExpSharedPtr> edgemap(cnt);
-            m_elmtToTrace = Array<OneD, Array<OneD,LocalRegions::SegExpSharedPtr> >(nel);
+            Array<OneD, LocalRegions::GenSegExpSharedPtr> edgemap(cnt);
+            m_elmtToTrace = Array<OneD, Array<OneD,LocalRegions::GenSegExpSharedPtr> >(nel);
 
             cnt = 0;
             for(i = 0; i < nel; ++i)
@@ -296,7 +294,7 @@ namespace Nektar
 
                         if(MeshEdgeNo[id] != -1)
                         {
-                            m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::SegExp> ((*m_trace).GetExp(MeshEdgeNo[id]));
+                            m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::GenSegExp> ((*m_trace).GetExp(MeshEdgeNo[id]));
                         }
                     }
                 }
@@ -310,7 +308,7 @@ namespace Nektar
                         
                         if(MeshEdgeNo[id] != -1)
                         {
-                            m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::SegExp> ((*m_trace).GetExp(MeshEdgeNo[id]));
+                            m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::GenSegExp> ((*m_trace).GetExp(MeshEdgeNo[id]));
                         }
                     }
                 
@@ -555,8 +553,8 @@ namespace Nektar
         {
             int e,i,j,n,cnt,cnt1,nbndry, order_e;
             int nexp = GetExpSize();
-            static DNekScalBlkMatSharedPtr InvUDGHelm;
-            LocalRegions::SegExpSharedPtr SegExp;
+            static DNekScalBlkMatSharedPtr    InvUDGHelm;
+            LocalRegions::GenSegExpSharedPtr  SegExp;
             StdRegions::StdExpansionSharedPtr BndExp;
 
             Array<OneD,NekDouble> f(m_ncoeffs);
@@ -578,7 +576,8 @@ namespace Nektar
             int e_ncoeffs, loc,id,offset;
             NekDouble sign;
 
-            Array<OneD,NekDouble> BndSol = m_trace->UpdateCoeffs(); // linked data
+            // linked data
+            Array<OneD,NekDouble> BndSol = m_trace->UpdateCoeffs(); 
             DNekVec Floc;
 
             // Zero trace space
@@ -847,16 +846,14 @@ namespace Nektar
                     {
                         id1 = m_bndConstraint[n]->GetPhys_Offset(e) ;
                         id2 = m_trace->GetPhys_Offset(m_bndEidToTraceEid[n][e]);
-                        Vmath::Vcopy(npts,&(m_bndConstraint[n]->GetPhys())[id1],1,
-                                     &Fwd[id2],1);
-                            
+                        Vmath::Vcopy(npts,&(m_bndConstraint[n]->GetPhys())[id1],1,&Bwd[id2],1);
+                        
                     }
                     else
                     {
                         id1 = m_bndConstraint[n]->GetPhys_Offset(e) ;
                         id2 = m_trace->GetPhys_Offset(m_bndEidToTraceEid[n][e]);
-                        Vmath::Vcopy(npts,&(m_bndConstraint[n]->GetPhys())[id1],1,
-                                     &Bwd[id2],1);
+                        Vmath::Vcopy(npts,&(m_bndConstraint[n]->GetPhys())[id1],1,&Fwd[id2],1);
                     }
                 }
             }

@@ -108,7 +108,7 @@ namespace Nektar
             GlobalLinSysMapShPtr                               m_globalBndMat;
             GenExpList1DSharedPtr                              m_trace;
 
-            Array<OneD,Array<OneD,LocalRegions::SegExpSharedPtr> > m_elmtToTrace;
+            Array<OneD,Array<OneD,LocalRegions::GenSegExpSharedPtr> > m_elmtToTrace;
             // NOTE This should all go into a class structure
             Array<OneD,Array<OneD, int> > m_bndEidToTraceEid;  ///< Boundary list Expansion ID to Trace list Expansion ID
             Array<OneD,Array<OneD, AdjacentEdgeOrientation> > m_bndExpAdjacentOrient;  ///< Boundary Expansion adjacent edge orientation 

@@ -291,7 +291,7 @@ namespace Nektar
                         SegGeom = (locQuadExp->GetGeom2D())->GetEdge(j);
                         
                         id = SegGeom->GetEid();
-
+                        
                         if(MeshEdgeNo[id] != -1)
                         {
                             m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::GenSegExp> ((*m_trace).GetExp(MeshEdgeNo[id]));
@@ -360,13 +360,8 @@ namespace Nektar
                         // orientated with respect to connecting
                         // element counter-clockwise convention.
 
-                        SpatialDomains::SegGeomSharedPtr Sgeom;
-                        if(!(Sgeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>(SegGeom)))
-                        {
-                            ASSERTL0(false,"dynamic cast to a SegGeom failed"); 
-                        }
                         SpatialDomains::ElementEdgeVectorSharedPtr con_elmt
-                            = graph2D.GetElementsFromEdge(Sgeom);
+                            = graph2D.GetElementsFromEdge(SegGeom);
                         
                         if((boost::dynamic_pointer_cast<SpatialDomains::Geometry2D>((*con_elmt)[0]->m_Element))->GetEorient((*con_elmt)[0]->m_EdgeIndx) == StdRegions::eForwards)
                         {

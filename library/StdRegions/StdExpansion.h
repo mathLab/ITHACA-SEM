@@ -426,19 +426,9 @@ namespace Nektar
             }
 
 
-            /** \brief This function returns the Basis Shared Pointer
-             *  belonging to the \a i-th edge
-             *  
-             *  This function is a wrapper around the virtual function 
-             *  \a v_GetEdgeBasis() 
-             * 
-             *  \param i specifies which edge \return returns the
-             *  shared pointer of the basis expansion belonging to the
-             *  \a i-th edge
-             */
-            const LibUtilities::BasisSharedPtr& GetEdgeBasis(const int i) const
+            const LibUtilities::BasisKey DetEdgeBasisKey(const int i) const
             {
-                return v_GetEdgeBasis(i);
+                return v_DetEdgeBasisKey(i);
             }
 
             /** \brief This function returns the number of expansion coefficients
@@ -821,6 +811,15 @@ namespace Nektar
                 v_AddUDGHelmholtzTraceTerms(tau,inarray,EdgeExp, outarray);
             }
 
+
+            void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+                                           const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD,boost::shared_ptr<LocalRegions::GenSegExp> > &EdgeExp,
+                                           Array<OneD,NekDouble> &outarray)                
+            {
+                v_AddUDGHelmholtzTraceTerms(tau,inarray,EdgeExp, outarray);
+            }
+
             // virtual functions related to LocalRegions
             virtual void AddNormBoundaryInt(const int dir,
                                             Array<OneD, const NekDouble> &inarray,
@@ -830,7 +829,7 @@ namespace Nektar
             }
 
             virtual void AddEdgeNormBoundaryInt(const int edge, 
-                                                boost::shared_ptr<LocalRegions::SegExp>  &EdgeExp,
+                                                boost::shared_ptr<LocalRegions::GenSegExp>  &EdgeExp,
                                                 Array<OneD, NekDouble> &Fx,  
                                                 Array<OneD, NekDouble> &Fy,  
                                                 Array<OneD, NekDouble> &outarray)
@@ -1114,6 +1113,14 @@ namespace Nektar
             { 
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
+
+            virtual void v_AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+                                                     const Array<OneD, const NekDouble> &inarray,
+                                                     Array<OneD, boost::shared_ptr<LocalRegions::GenSegExp> > &edgeExp, 
+                                                     Array<OneD,NekDouble> &outarray)
+            { 
+                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+            }
             
             virtual void v_AddNormBoundaryInt(const int dir,
                                               Array<OneD, const NekDouble> &inarray,
@@ -1124,7 +1131,7 @@ namespace Nektar
 
 
             virtual void v_AddEdgeNormBoundaryInt(const int edge,
-                                                  boost::shared_ptr<LocalRegions::SegExp> &EdgeExp,
+                                                  boost::shared_ptr<LocalRegions::GenSegExp> &EdgeExp,
                                                   Array<OneD, NekDouble> &Fx,  
                                                   Array<OneD, NekDouble> &Fy,  
                                                   Array<OneD, NekDouble> &outarray)
@@ -1378,10 +1385,11 @@ namespace Nektar
                 ASSERTL0(false, "This function is not valid or not defined");
                 return 0;
             }
-
-            virtual const LibUtilities::BasisSharedPtr& v_GetEdgeBasis(const int i) const
+            
+            virtual const LibUtilities::BasisKey v_DetEdgeBasisKey(const int i) const
             {
                 ASSERTL0(false, "This function is not valid or not defined");
+                return LibUtilities::NullBasisKey;
             }
 
 
@@ -1665,6 +1673,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.92  2008/07/29 22:21:15  sherwin
+ * A bunch of mods for DG advection and separaring the GetGeom calls into GetGeom1D ...
+ *
  * Revision 1.91  2008/07/19 21:12:54  sherwin
  * Removed MapTo function and made orientation convention anticlockwise in UDG routines
  *

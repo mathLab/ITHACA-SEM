@@ -1040,6 +1040,44 @@ namespace Nektar
             }
             outfile << "]" ; 
         }
+        
+        const LibUtilities::BasisKey StdTriExp::DetEdgeBasisKey(const int i) const
+        {
+            ASSERTL2((i >= 0)&&(i <= 2),"edge id is out of range");
+            
+            if(i == 0)
+            {
+                return  GetBasis(0)->GetBasisKey();
+            }
+            else
+            {
+                switch(m_base[1]->GetBasisType())
+                {
+                case LibUtilities::eModified_A:
+                    {
+                        switch(m_base[1]->GetPointsType())
+                        {
+                        case LibUtilities::eGaussRadauMLegendre:
+                            {                            
+                                LibUtilities::PointsKey pkey(m_base[1]->GetBasisKey().GetPointsKey().GetNumPoints()+1,LibUtilities::eGaussLobattoLegendre);
+                                
+                                return LibUtilities::BasisKey(LibUtilities::eModified_A,m_base[1]->GetNumModes(),pkey);
+                            }
+                            break;
+                            
+                        default:
+                            ASSERTL0(false,"unexpected points distribution");
+                            break;
+                        }
+                    }
+                default:
+                    ASSERTL0(false,"Information not available to set edge key");
+                    break;
+                }
+                
+            }
+        }
+
 
         void StdTriExp::GetCoords(Array<OneD, NekDouble> &coords_0, 
                                   Array<OneD, NekDouble> &coords_1)
@@ -1066,6 +1104,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTriExp.cpp,v $
+ * Revision 1.40  2008/07/19 21:12:54  sherwin
+ * Removed MapTo function and made orientation convention anticlockwise in UDG routines
+ *
  * Revision 1.39  2008/07/04 10:18:41  pvos
  * Some updates
  *

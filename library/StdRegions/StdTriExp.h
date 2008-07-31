@@ -237,7 +237,8 @@ namespace Nektar
                 }
 
             }
-
+            
+            const LibUtilities::BasisKey DetEdgeBasisKey(const int i) const;
 
             void GetCoords(Array<OneD, NekDouble> &coords_0, 
                            Array<OneD, NekDouble> &coords_1);
@@ -358,9 +359,9 @@ namespace Nektar
             }
 
 
-            virtual const LibUtilities::BasisSharedPtr& v_GetEdgeBasis(const int i) const
+            virtual const LibUtilities::BasisKey v_DetEdgeBasisKey(const int i) const
             {
-                return GetEdgeBasis(i);
+                return DetEdgeBasisKey(i);
             }
 
 
@@ -507,6 +508,9 @@ namespace Nektar
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.33  2008/07/29 22:21:15  sherwin
+ * A bunch of mods for DG advection and separaring the GetGeom calls into GetGeom1D ...
+ *
  * Revision 1.32  2008/07/19 21:12:54  sherwin
  * Removed MapTo function and made orientation convention anticlockwise in UDG routines
  *

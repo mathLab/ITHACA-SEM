@@ -42,6 +42,7 @@ namespace Nektar
     {
         class MatrixKey;
         
+        class GenSegExp; 
         class SegExp; 
         
     } // end of namespace
@@ -51,6 +52,9 @@ namespace Nektar
 
 /**
  * $Log: LocalRegionsDeclarations.hpp,v $
+ * Revision 1.4  2008/02/29 19:15:19  sherwin
+ * Update for UDG stuff
+ *
  * Revision 1.3  2007/07/13 09:02:25  sherwin
  * Mods for Helmholtz solver
  *

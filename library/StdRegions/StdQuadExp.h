@@ -260,17 +260,17 @@ namespace Nektar
             }
 
 
-            const LibUtilities::BasisSharedPtr& GetEdgeBasis(const int i) const
+            const LibUtilities::BasisKey DetEdgeBasisKey(const int i) const
             {
                 ASSERTL2((i >= 0)&&(i <= 3),"edge id is out of range");
 
                 if((i == 0)||(i == 2))
                 {
-                    return  GetBasis(0);
+                    return  GetBasis(0)->GetBasisKey();
                 }
                 else
                 {
-                    return  GetBasis(1);
+                    return  GetBasis(1)->GetBasisKey();
                 }
 
             }
@@ -340,9 +340,10 @@ namespace Nektar
                 return GetEdgeBasisType(i);
             }
 
-            virtual const LibUtilities::BasisSharedPtr& v_GetEdgeBasis(const int i) const
+            
+            virtual const LibUtilities::BasisKey v_DetEdgeBasisKey(const int i) const
             {
-                return GetEdgeBasis(i);
+                return DetEdgeBasisKey(i);
             }
 
             virtual ExpansionType v_DetExpansionType() const
@@ -498,6 +499,9 @@ namespace Nektar
 
 /**
  * $Log: StdQuadExp.h,v $
+ * Revision 1.36  2008/07/29 22:21:15  sherwin
+ * A bunch of mods for DG advection and separaring the GetGeom calls into GetGeom1D ...
+ *
  * Revision 1.35  2008/07/19 21:12:54  sherwin
  * Removed MapTo function and made orientation convention anticlockwise in UDG routines
  *

@@ -216,7 +216,7 @@ namespace Nektar
             void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
             void WriteCoeffsToFile(std::ofstream &outfile);
 
-            const int GetEdgeNcoeffs(const int i) const
+            int GetEdgeNcoeffs(const int i) const
             {
                 ASSERTL2((i > 0)&&(i < 3),"edge id is out of range");
 
@@ -230,7 +230,7 @@ namespace Nektar
                 }
             }
 
-            const int GetEdgeNumPoints(const int i) const
+            int GetEdgeNumPoints(const int i) const
             {
                 ASSERTL2((i > 0)&&(i < 3),"edge id is out of range");
 
@@ -499,6 +499,9 @@ namespace Nektar
 
 /**
  * $Log: StdQuadExp.h,v $
+ * Revision 1.37  2008/07/31 11:10:15  sherwin
+ * Updates for handling EdgeBasisKey for use with DG advection. Depracated GetEdgeBasis and added DetEdgeBasisKey
+ *
  * Revision 1.36  2008/07/29 22:21:15  sherwin
  * A bunch of mods for DG advection and separaring the GetGeom calls into GetGeom1D ...
  *

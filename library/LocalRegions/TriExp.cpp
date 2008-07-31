@@ -1307,6 +1307,58 @@ namespace Nektar
         }
 
 
+        // Get edge values  following counter clockwise edge
+        // convention for definition of edgedir at points defined by EdgeExp.
+        void TriExp::GetEdgePhysVals(const int edge, const SegExpSharedPtr &EdgeExp, 
+                                     const Array<OneD, const NekDouble> &inarray, 
+                                     Array<OneD,NekDouble> &outarray)
+        {
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+            
+            int nquade = EdgeExp->GetTotPoints();
+
+            Array<OneD,const NekDouble> e_tmp;
+            Array<OneD,NekDouble>       outtmp(max(nquad0,nquad1));
+
+            StdRegions::EdgeOrientation edgedir = GetCartesianEorient(edge);
+
+            // get points in Cartesian orientation 
+            switch(edge)
+            {
+            case 0:
+                Vmath::Vcopy(nquad0,inarray,1,outtmp,1);
+                break;
+            case 1:
+                Vmath::Vcopy(nquad1,e_tmp = inarray+(nquad0-1),nquad0,outtmp,1);
+                break; 
+            case 2:
+                Vmath::Vcopy(nquad1,inarray,nquad0,outtmp,1);
+                break; 
+            default:
+                ASSERTL0(false,"edge value (< 3) is out of range");
+                break;
+            }
+
+            // Interpolate if required 
+            if(m_base[edge?1:0]->GetPointsKey() != EdgeExp->GetBasis(0)->GetPointsKey())
+            {
+                Interp1D(m_base[edge?1:0]->GetBasisKey(),outtmp,
+                         EdgeExp->GetBasis(0)->GetBasisKey(),outarray);
+            }
+            else
+            {
+                Vmath::Vcopy(nquad0,outtmp,1,outarray,1);
+            }
+
+            //Reverse data if necessary
+            if(edgedir == StdRegions::eBackwards)
+            {
+                Vmath::Reverse(nquade,&outarray[0],1,&outarray[0],1);
+            }            
+        }
+
+
         void TriExp:: AddEdgeNormBoundaryInt(const int edge, 
                                              GenSegExpSharedPtr &EdgeExp,
                                              Array<OneD, NekDouble> &Fx,  
@@ -1360,6 +1412,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.40  2008/07/31 11:13:22  sherwin
+ *    Depracated GetEdgeBasis and replaced with DetEdgeBasisKey
+ *
  *    Revision 1.39  2008/07/19 21:15:38  sherwin
  *    Removed MapTo function, made orientation anticlockwise, changed enum from BndSys to BndLam
  *

@@ -151,6 +151,9 @@ namespace Nektar
                                    Array<OneD,NekDouble> &outarray,
                                    const double lambda);
         
+            void GetEdgePhysVals(const int edge, const SegExpSharedPtr &EdgeExp, 
+                                 const Array<OneD, const NekDouble> &inarray, 
+                                 Array<OneD,NekDouble> &outarray);
         protected:
 
             void GenMetricInfo();
@@ -357,7 +360,19 @@ namespace Nektar
                 return m_geom->GetEorient(edge);
             }
 
+            virtual StdRegions::EdgeOrientation v_GetCartesianEorient(int edge)
+            {
+                return m_geom->GetCartesianEorient(edge);
+            }
 
+            virtual void v_GetEdgePhysVals(const int edge, const SegExpSharedPtr &EdgeExp, 
+                                           const Array<OneD, const NekDouble> &inarray, 
+                                           Array<OneD,NekDouble> &outarray)
+            {
+                GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
+            }
+
+            
             virtual void v_AddEdgeNormBoundaryInt(const int edge, 
                                                   GenSegExpSharedPtr &EdgeExp,
                                                   Array<OneD, NekDouble> &Fx,  
@@ -383,6 +398,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.32  2008/07/31 11:13:22  sherwin
+ *    Depracated GetEdgeBasis and replaced with DetEdgeBasisKey
+ *
  *    Revision 1.31  2008/07/29 22:25:35  sherwin
  *    general update for DG Advection including separation of GetGeom() into GetGeom1D,2D,3D()
  *

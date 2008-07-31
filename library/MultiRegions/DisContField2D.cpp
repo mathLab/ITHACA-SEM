@@ -778,7 +778,7 @@ namespace Nektar
         // outer part of the vecotr
 
         void DisContField2D::GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd, 
-                                                    Array<OneD,NekDouble> &Bwd)
+                                                Array<OneD,NekDouble> &Bwd)
         {
             // Loop over elemente and collect forward expansion
             int nexp = GetExpSize();
@@ -802,7 +802,8 @@ namespace Nektar
                     if(edgedir == StdRegions::eForwards)
                     {
                         offset = m_trace->GetPhys_Offset(m_elmtToTrace[n][e]->GetElmtId());
-                        (*m_exp)[n]->GetEdgePhysVals(e, e_tmp = m_phys + phys_offset, 
+                        (*m_exp)[n]->GetEdgePhysVals(e, m_elmtToTrace[n][e], 
+                                                     e_tmp = m_phys + phys_offset, 
                                                      e_tmp1 = Fwd + offset);
                     }
                 }
@@ -820,7 +821,8 @@ namespace Nektar
                     if(edgedir == StdRegions::eBackwards)
                     {
                         offset = m_trace->GetPhys_Offset(m_elmtToTrace[n][e]->GetElmtId());
-                        (*m_exp)[n]->GetEdgePhysVals(e,e_tmp = m_phys + phys_offset, 
+                        (*m_exp)[n]->GetEdgePhysVals(e, m_elmtToTrace[n][e],
+                                                     e_tmp = m_phys + phys_offset, 
                                                      e_tmp1 = Bwd+offset);
                     }
                 }

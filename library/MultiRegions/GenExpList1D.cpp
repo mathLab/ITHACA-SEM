@@ -119,7 +119,7 @@ namespace Nektar
                     
                     if(!EdgeDone[id])
                     {
-                        LibUtilities::BasisKey EdgeBkey = (locexp[i]->GetEdgeBasis(j))->GetBasisKey();
+                        LibUtilities::BasisKey EdgeBkey = locexp[i]->DetEdgeBasisKey(j);
                         
                         Seg = MemoryManager<LocalRegions::GenSegExp>::AllocateSharedPtr(EdgeBkey, SegGeom);
                         
@@ -199,4 +199,7 @@ namespace Nektar
 
 /**
 * $Log: GenExpList1D.cpp,v $
+* Revision 1.1  2008/07/29 22:26:35  sherwin
+* Generalised 1D Segment list which includes a normal direction at physical points
+*
 **/

@@ -217,7 +217,7 @@ namespace Nektar
                         
                     if(!EdgeDone[id])
                     {
-                        LibUtilities::BasisKey EdgeBkey = (locexp[i]->GetEdgeBasis(j))->GetBasisKey();
+                        LibUtilities::BasisKey EdgeBkey = locexp[i]->DetEdgeBasisKey(j);
                         
                         LocalRegions::SegExpSharedPtr Seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(EdgeBkey, SegGeom);
                         Seg->SetElmtId(elmtid++);
@@ -239,6 +239,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.30  2008/07/29 22:27:33  sherwin
+* Updates for DG solvers, including using GenSegExp, fixed forcing function on UDG HelmSolve and started to tidy up the mapping arrays to be 1D rather than 2D
+*
 * Revision 1.29  2008/07/12 17:31:39  sherwin
 * Added m_phys_offset and rename m_exp_offset to m_coeff_offset
 *

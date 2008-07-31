@@ -44,6 +44,7 @@
 #include <SpatialDomains/GeomFactors.h>
 
 #include <LocalRegions/MatrixKey.h>
+#include <LocalRegions/GenSegExp.h>
 
 namespace Nektar
 {
@@ -191,7 +192,12 @@ namespace Nektar
                                  const Array<OneD, const NekDouble>& inarray, 
                                  Array<OneD, NekDouble> &outarray);
 
-
+            void AddEdgeNormBoundaryInt(const int edge, 
+                                        GenSegExpSharedPtr &EdgeExp,
+                                        Array<OneD, NekDouble> &Fx,  
+                                        Array<OneD, NekDouble> &Fy,  
+                                        Array<OneD, NekDouble> &outarray);
+                
         private:
             SpatialDomains::Geometry2DSharedPtr m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
@@ -345,6 +351,24 @@ namespace Nektar
             {
                 HelmholtzMatrixOp(inarray,outarray,lambda);
             }        
+
+            virtual StdRegions::EdgeOrientation v_GetEorient(int edge)
+            {
+                return m_geom->GetEorient(edge);
+            }
+
+
+            virtual void v_AddEdgeNormBoundaryInt(const int edge, 
+                                                  GenSegExpSharedPtr &EdgeExp,
+                                                  Array<OneD, NekDouble> &Fx,  
+                                                  Array<OneD, NekDouble> &Fy,  
+                                                  Array<OneD, NekDouble> &outarray)
+            {
+                AddEdgeNormBoundaryInt(edge,EdgeExp,Fx,Fy,outarray);
+                
+            }
+
+
         };
         
         // type defines for use of TriExp in a boost vector
@@ -359,6 +383,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.31  2008/07/29 22:25:35  sherwin
+ *    general update for DG Advection including separation of GetGeom() into GetGeom1D,2D,3D()
+ *
  *    Revision 1.30  2008/07/12 17:27:07  sherwin
  *    Update for AddBoundaryInt and moved various members to be private rather than protected
  *

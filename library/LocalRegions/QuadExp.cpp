@@ -1510,10 +1510,9 @@ namespace Nektar
         }
 
         
-        //
 
         void QuadExp:: AddEdgeNormBoundaryInt(const int edge, 
-                                              SegExpSharedPtr &EdgeExp,
+                                              GenSegExpSharedPtr &EdgeExp,
                                               Array<OneD, NekDouble> &Fx,  
                                               Array<OneD, NekDouble> &Fy,  
                                               Array<OneD, NekDouble> &outarray)
@@ -1521,7 +1520,7 @@ namespace Nektar
             int i;
             int order_e = EdgeExp->GetNcoeffs();                    
             int nquad_e = EdgeExp->GetNumPoints(0);
-            Array<TwoD, const NekDouble> normals = m_metricinfo->GetNormals();
+            Array<OneD, const NekDouble> normals = EdgeExp->GetPhysNormals();
             SpatialDomains::GeomType     Gtype = m_metricinfo->GetGtype();
             StdRegions::EdgeOrientation  edgedir = GetEorient(edge);
             Array<OneD,unsigned int> map;
@@ -1531,44 +1530,31 @@ namespace Nektar
 
             ASSERTL1(m_geom->GetCoordim() == 2,"Routine only set up for two-dimensions");
             
-            if(Gtype == SpatialDomains::eDeformed)
-            {
-                if(edgedir == StdRegions::eForwards)
-                {
-                    Vmath::Vmul(nquad_e,&(normals[edge][0]),1,
-                                &Fx[0],1,&(EdgeExp->UpdatePhys())[0],1);
-                    Vmath::Vvtvp(nquad_e,&(normals[edge][nquad_e]),1,
-                                 &Fy[0],1,&(EdgeExp->GetPhys())[0],1,
-                                 &(EdgeExp->UpdatePhys())[0],1);
-                }
-                else
-                {
-                    //use reverse ordering of normals to be
-                    //consistent with edge orientation
-                    Vmath::Vmul(nquad_e,&(normals[edge][0])+nquad_e-1,-1,
-                                &Fx[0],1,&(EdgeExp->UpdatePhys())[0],1);
-                    Vmath::Vvtvp(nquad_e,&(normals[edge][nquad_e])+nquad_e-1,-1,
-                                 &Fy[0],1,&(EdgeExp->GetPhys())[0],1,
-                                 &(EdgeExp->UpdatePhys())[0],1);
+            Vmath::Vmul(nquad_e,&(normals[0]),1,&Fx[0],1,
+                        &(EdgeExp->UpdatePhys())[0],1);
+            Vmath::Vvtvp(nquad_e,&(normals[nquad_e]),1,
+                         &Fy[0],1,&(EdgeExp->GetPhys())[0],1,
+                         &(EdgeExp->UpdatePhys())[0],1);
+            
 
+            EdgeExp->IProductWRTBase(EdgeExp->GetPhys(),EdgeExp->UpdateCoeffs());
+
+            if(edgedir == StdRegions::eForwards)
+            {
+                // add data to outarray if forward edge normal is outwards
+                for(i = 0; i < order_e; ++i)
+                {
+                    outarray[map[i]] += sign[i]*EdgeExp->GetCoeff(i);
                 }
             }
             else
             {
-                Vmath::Smul (nquad_e,normals[edge][0],
-                             Fx,1,EdgeExp->UpdatePhys(),1);
-                Vmath::Svtvp(nquad_e,normals[edge][1],
-                             Fy,1,EdgeExp->UpdatePhys(),1,
-                             EdgeExp->UpdatePhys(),1);
-                
-            }
-
-
-            EdgeExp->IProductWRTBase(EdgeExp->GetPhys(),EdgeExp->UpdateCoeffs());
-            // add data to out array
-            for(i = 0; i < order_e; ++i)
-            {
-                outarray[map[i]] += sign[i]*EdgeExp->GetCoeff(i);
+                // subtract data to outarray since backward edge
+                // normal is inwards
+                for(i = 0; i < order_e; ++i)
+                {
+                    outarray[map[i]] -= sign[i]*EdgeExp->GetCoeff(i);
+                }
             }
         }
 
@@ -1735,6 +1721,45 @@ namespace Nektar
                 EdgeExp[e]->BwdTrans(EdgeExp[e]->GetCoeffs(),EdgeExp[e]->UpdatePhys());
 
                 AddUDGHelmholtzEdgeTerms(tau,e,EdgeExp,outarray);
+
+                cnt += order_e;
+            }
+        }
+                                              
+
+
+        // This method assumes that data in EdgeExp is orientated 
+        // according to elemental counter clockwise format
+        void QuadExp::AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+                                                const Array<OneD, const NekDouble> &inarray,   Array<OneD,GenSegExpSharedPtr> &EdgeExp,
+                                                Array<OneD,NekDouble> &outarray)
+        {
+
+            ASSERTL0(&inarray[0] != &outarray[0],"Input and output arrays use the same memory");
+
+
+            int e,cnt;
+            int order_e;
+            Array<OneD, const NekDouble> tmp;
+            Array<OneD, SegExpSharedPtr> edgetmp(4);
+
+            // cast GenSegExp back to a SegExp so that we can call
+            // AddUDGHelmHoltzEdgeTerms
+            for(e = 0; e < 4; ++e)
+            {
+                edgetmp[e] = EdgeExp[e];
+            }
+
+            cnt = 0;
+            for(e = 0; e < 4; ++e)
+            {                
+                order_e = EdgeExp[e]->GetNcoeffs();                    
+
+                Vmath::Vcopy(order_e,tmp =inarray+cnt,1,EdgeExp[e]->UpdateCoeffs(),1);
+
+                EdgeExp[e]->BwdTrans(EdgeExp[e]->GetCoeffs(),EdgeExp[e]->UpdatePhys());
+
+                AddUDGHelmholtzEdgeTerms(tau,e,edgetmp,outarray);
 
                 cnt += order_e;
             }
@@ -2616,6 +2641,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.47  2008/07/29 22:25:34  sherwin
+ *    general update for DG Advection including separation of GetGeom() into GetGeom1D,2D,3D()
+ *
  *    Revision 1.46  2008/07/19 21:15:38  sherwin
  *    Removed MapTo function, made orientation anticlockwise, changed enum from BndSys to BndLam
  *

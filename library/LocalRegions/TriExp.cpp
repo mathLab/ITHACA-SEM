@@ -1306,11 +1306,63 @@ namespace Nektar
             return returnval;
         }
 
+
+        void TriExp:: AddEdgeNormBoundaryInt(const int edge, 
+                                             GenSegExpSharedPtr &EdgeExp,
+                                             Array<OneD, NekDouble> &Fx,  
+                                             Array<OneD, NekDouble> &Fy,  
+                                             Array<OneD, NekDouble> &outarray)
+        {
+            int i;
+            int order_e = EdgeExp->GetNcoeffs();                    
+            int nquad_e = EdgeExp->GetNumPoints(0);
+            Array<OneD, const NekDouble> normals = EdgeExp->GetPhysNormals();
+            SpatialDomains::GeomType     Gtype   = m_metricinfo->GetGtype();
+            StdRegions::EdgeOrientation  edgedir = GetEorient(edge);
+            Array<OneD,unsigned int> map;
+            Array<OneD,int> sign;
+
+            GetEdgeToElementMap(edge,edgedir,map,sign);
+
+            ASSERTL1(m_geom->GetCoordim() == 2,"Routine only set up for two-dimensions");
+            
+            Vmath::Vmul(nquad_e,&(normals[0]),1,&Fx[0],1,
+                        &(EdgeExp->UpdatePhys())[0],1);
+            Vmath::Vvtvp(nquad_e,&(normals[nquad_e]),1,
+                         &Fy[0],1,&(EdgeExp->GetPhys())[0],1,
+                         &(EdgeExp->UpdatePhys())[0],1);
+            
+
+            EdgeExp->IProductWRTBase(EdgeExp->GetPhys(),EdgeExp->UpdateCoeffs());
+
+            if(edgedir == StdRegions::eForwards)
+            {
+                // add data to outarray if forward edge normal is outwards
+                for(i = 0; i < order_e; ++i)
+                {
+                    outarray[map[i]] += sign[i]*EdgeExp->GetCoeff(i);
+                }
+            }
+            else
+            {
+                // subtract data to outarray since backward edge
+                // normal is inwards
+                for(i = 0; i < order_e; ++i)
+                {
+                    outarray[map[i]] -= sign[i]*EdgeExp->GetCoeff(i);
+                }
+            }
+        }
+
+
     }//end of namespace
 }//end of namespace
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.39  2008/07/19 21:15:38  sherwin
+ *    Removed MapTo function, made orientation anticlockwise, changed enum from BndSys to BndLam
+ *
  *    Revision 1.38  2008/07/09 11:44:49  sherwin
  *    Replaced GetScaleFactor call with GetConstant(0)
  *

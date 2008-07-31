@@ -41,7 +41,7 @@
 #include <StdRegions/StdQuadExp.h>
 #include <SpatialDomains/QuadGeom.h>
 #include <SpatialDomains/SegGeom.h>
-#include <LocalRegions/SegExp.h>
+#include <LocalRegions/GenSegExp.h>
 
 #include <SpatialDomains/GeomFactors.h>
 #include <LocalRegions/MatrixKey.h>
@@ -192,7 +192,7 @@ namespace Nektar
                                     Array <OneD,NekDouble > &outarray);          
 
             void AddEdgeNormBoundaryInt(const int edge, 
-                                        SegExpSharedPtr &EdgeExp,
+                                        GenSegExpSharedPtr &EdgeExp,
                                         Array<OneD, NekDouble> &Fx,  
                                         Array<OneD, NekDouble> &Fy,  
                                         Array<OneD, NekDouble> &outarray);
@@ -205,6 +205,12 @@ namespace Nektar
             void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
                                            const Array<OneD, const NekDouble> &inarray,
                                            Array<OneD,SegExpSharedPtr> &EdgeExp,
+                                           Array<OneD,NekDouble> &outarray);
+
+
+            void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+                                           const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD,GenSegExpSharedPtr> &EdgeExp,
                                            Array<OneD,NekDouble> &outarray);
 
             void AddUDGHelmholtzEdgeTerms(const NekDouble tau, 
@@ -432,7 +438,7 @@ namespace Nektar
             
 
             virtual void v_AddEdgeNormBoundaryInt(const int edge, 
-                                                  SegExpSharedPtr &EdgeExp,
+                                                  GenSegExpSharedPtr &EdgeExp,
                                                   Array<OneD, NekDouble> &Fx,  
                                                   Array<OneD, NekDouble> &Fy,  
                                                   Array<OneD, NekDouble> &outarray)
@@ -478,6 +484,16 @@ namespace Nektar
                 AddUDGHelmholtzTraceTerms(tau,inarray,EdgeExp,outarray);
             }
             
+
+            virtual void v_AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+                                                     const Array<OneD, const NekDouble> &inarray,
+                                                     Array<OneD,GenSegExpSharedPtr> &EdgeExp, 
+                                                     Array <OneD,NekDouble > &outarray)
+            {
+                AddUDGHelmholtzTraceTerms(tau,inarray,EdgeExp,outarray);
+            }
+            
+
             virtual void v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 GetEdgePhysVals(edge,inarray,outarray);
@@ -524,6 +540,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.37  2008/07/29 22:25:34  sherwin
+ *    general update for DG Advection including separation of GetGeom() into GetGeom1D,2D,3D()
+ *
  *    Revision 1.36  2008/07/19 21:15:38  sherwin
  *    Removed MapTo function, made orientation anticlockwise, changed enum from BndSys to BndLam
  *

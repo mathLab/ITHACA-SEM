@@ -1053,11 +1053,11 @@ namespace Nektar
             {
                 switch(m_base[1]->GetBasisType())
                 {
-                case LibUtilities::eModified_A:
+                case LibUtilities::eModified_B:
                     {
                         switch(m_base[1]->GetPointsType())
                         {
-                        case LibUtilities::eGaussRadauMLegendre:
+                        case LibUtilities::eGaussRadauMAlpha1Beta0:
                             {                            
                                 LibUtilities::PointsKey pkey(m_base[1]->GetBasisKey().GetPointsKey().GetNumPoints()+1,LibUtilities::eGaussLobattoLegendre);
                                 
@@ -1104,6 +1104,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTriExp.cpp,v $
+ * Revision 1.41  2008/07/31 11:10:15  sherwin
+ * Updates for handling EdgeBasisKey for use with DG advection. Depracated GetEdgeBasis and added DetEdgeBasisKey
+ *
  * Revision 1.40  2008/07/19 21:12:54  sherwin
  * Removed MapTo function and made orientation convention anticlockwise in UDG routines
  *

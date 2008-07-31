@@ -208,6 +208,20 @@ namespace Nektar
 
             }
 
+            int GetEdgeNumPoints(const int i) const
+            {
+                ASSERTL2((i > 0)&&(i < 2),"edge id is out of range");
+
+                if(i == 0)
+                {
+                    return  GetNumPoints(0);
+                }
+                else
+                {
+                    return  GetNumPoints(1); 
+                }
+            }
+
             LibUtilities::BasisType GetEdgeBasisType(const int i) const
             {
                 ASSERTL2((i >= 0) && (i <= 2), "edge id is out of range");
@@ -342,6 +356,10 @@ namespace Nektar
                 return GetEdgeNcoeffs(i);
             }
 
+            virtual int v_GetEdgeNumPoints(const int i) const
+            {
+                return GetEdgeNumPoints(i);
+            }
 
             virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey) 
             {
@@ -508,6 +526,9 @@ namespace Nektar
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.34  2008/07/31 11:10:15  sherwin
+ * Updates for handling EdgeBasisKey for use with DG advection. Depracated GetEdgeBasis and added DetEdgeBasisKey
+ *
  * Revision 1.33  2008/07/29 22:21:15  sherwin
  * A bunch of mods for DG advection and separaring the GetGeom calls into GetGeom1D ...
  *

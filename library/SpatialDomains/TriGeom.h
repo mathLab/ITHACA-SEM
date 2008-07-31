@@ -134,6 +134,27 @@ namespace Nektar
                     return m_eorient[i];
                 }
 
+                inline StdRegions::EdgeOrientation GetCartesianEorient(const int i) const
+                {
+                    ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
+                    if(i < 2)
+                    {
+                        return m_eorient[i];
+                    }
+                    else
+                    {
+                        if(m_eorient[i] == StdRegions::eForwards)
+                        {
+                            return StdRegions::eBackwards;
+                        }
+                        else
+                        {
+                            return StdRegions::eForwards; 
+                        }
+                    }
+                }
+                
+
                 /// \brief Get the orientation of face1.
                 ///
                 static StdRegions::FaceOrientation GetFaceOrientation(const TriGeom &face1,
@@ -260,6 +281,12 @@ namespace Nektar
                     return GetEorient(i);
                 }
                 
+                virtual StdRegions::EdgeOrientation v_GetCartesianEorient(const int i) const
+                {
+                    return GetCartesianEorient(i);
+                }
+            
+
                 virtual int v_WhichEdge(SegGeomSharedPtr edge)
                 {
                     return WhichEdge(edge);
@@ -272,6 +299,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.23  2008/07/29 22:23:36  sherwin
+// various mods for DG advection solver in Multiregions. Added virtual calls to Geometry, Geometry1D, 2D and 3D
+//
 // Revision 1.22  2008/06/14 01:25:11  ehan
 // Added a new constructor TriGeom(id, coordim).
 //

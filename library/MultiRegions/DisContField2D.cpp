@@ -549,7 +549,7 @@ namespace Nektar
             int e,i,j,n,cnt,cnt1,nbndry, order_e;
             int nexp = GetExpSize();
             static DNekScalBlkMatSharedPtr    InvUDGHelm;
-            LocalRegions::GenSegExpSharedPtr  SegExp;
+            LocalRegions::SegExpSharedPtr  SegExp;
             StdRegions::StdExpansionSharedPtr BndExp;
 
             Array<OneD,NekDouble> f(m_ncoeffs);

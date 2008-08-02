@@ -1559,7 +1559,6 @@ namespace Nektar
         }
 
 
-
         // Boundary terms associated with elemental Helmholtz matrix operations
         void QuadExp::AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
                                                    const Array<OneD,
@@ -1674,7 +1673,6 @@ namespace Nektar
             //================================================================
         }
 
-
         // Boundary terms associated with elemental Helmholtz matrix
         // operations from the trace space
         void QuadExp::AddUDGHelmholtzTraceTerms(const NekDouble tau, 
@@ -1766,14 +1764,12 @@ namespace Nektar
         }
                                               
 
-
         // Calculate edge contribution assuming edgeExp values are 
         // defined according to the local orientation of the input file. 
 
         void QuadExp::AddUDGHelmholtzEdgeTerms(const NekDouble tau, 
                                                const int edge,
-                                               Array <OneD,SegExpSharedPtr> &EdgeExp, 
-                                               Array <OneD,NekDouble > &outarray)
+                                               Array <OneD,SegExpSharedPtr> &EdgeExp,   Array <OneD,NekDouble > &outarray)
         {            
             int i,j,k,n,edge1;
             int nquad_e = EdgeExp[edge]->GetNumPoints(0),nquad_e1; 
@@ -1816,7 +1812,7 @@ namespace Nektar
             }
             //================================================================
 
-#if 1
+#if 0
             //================================================================
             //Add -(D_i^e)^T M^{-1} G = -< d\phi_i/dx.n, in_phys[j]> 
             //
@@ -2049,8 +2045,8 @@ namespace Nektar
                 {
                     Vmath::Vcopy(order1,EdgeExp[edge]->GetCoeffs(),1,outcoeff,1);
                 }
-
-
+                
+                
                 for(i = 0; i < order0; ++i)
                 {
                     for(j = 0; j < order1; ++j)
@@ -2136,11 +2132,17 @@ namespace Nektar
                     }        
                 }
             }        
-#else
             //NOTE the last two operations can simply be replaced by
-            //(D_0 + D_1)*M^{-1} G
+            //\sum_i D_i*M^{-1} G_i
+
+#else
             //===============================================================
-            // Add -D0 M^{-1} G_0 -D1 M^{-1} G_1  term 
+            // Add \sum_i D_i M^{-1} G_i  term 
+            
+            DNekVec                Coeffs  (m_ncoeffs,outarray,eWrapper);
+            Array<OneD, NekDouble> tmpcoeff(m_ncoeffs);
+            DNekVec                Tmpcoeff(m_ncoeffs,tmpcoeff,eWrapper);
+            
             for(n = 0; n < coordim; ++n)
             {
                 //G;
@@ -2153,8 +2155,7 @@ namespace Nektar
                     }
                     else
                     {
-                        Vmath::Vmul(nquad_e,&normals[edge][n*nquad_e]+nquad_e-1,-1,
-                                    &(EdgeExp[edge]->GetPhys())[0],1, &inval[0],1);
+                        Vmath::Vmul(nquad_e,&normals[edge][n*nquad_e]+nquad_e-1,-1, &(EdgeExp[edge]->GetPhys())[0],1, &inval[0],1);
                     }
                 }
                 else
@@ -2167,18 +2168,37 @@ namespace Nektar
 
             
                     // M^{-1} G
-                tmpcoeff[i] = 0;
                 for(i = 0; i < m_ncoeffs; ++i)
                 {
+                    tmpcoeff[i] = 0;
                     for(j = 0; j < order_e; ++j)
                     {
-                        tmpcoeff[i] += invMass(i,emap[j])*emap.GetSign(j)*outcoeff1[j];
+                        tmpcoeff[i] += invMass(i,emap[j])*sign[j]*outcoeff1[j];
                     }
                 }
-
-                coeff = Dmat*tmpcoeff; 
-            }
                 
+                switch(n)
+                {
+                case 0:
+                    {
+                        DNekScalMat &Dmat = *GetLocMatrix(StdRegions::eWeakDeriv0);
+                        Coeffs = Coeffs  + Dmat*Tmpcoeff; 
+                    }
+                    break;
+                case 1:
+                    {
+                        DNekScalMat &Dmat = *GetLocMatrix(StdRegions::eWeakDeriv1);
+                        Coeffs = Coeffs  + Dmat*Tmpcoeff; 
+                    }
+                    break;
+                case 2:
+                    {
+                        DNekScalMat &Dmat = *GetLocMatrix(StdRegions::eWeakDeriv2);
+                        Coeffs = Coeffs  + Dmat*Tmpcoeff; 
+                    }
+                    break;
+                }
+            }
             //===============================================================
 #endif
         }
@@ -2641,6 +2661,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.48  2008/07/31 11:13:22  sherwin
+ *    Depracated GetEdgeBasis and replaced with DetEdgeBasisKey
+ *
  *    Revision 1.47  2008/07/29 22:25:34  sherwin
  *    general update for DG Advection including separation of GetGeom() into GetGeom1D,2D,3D()
  *

@@ -1402,7 +1402,8 @@ namespace Nektar
             virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const
             {
                 ASSERTL0(false, "This function is not valid or not defined");
-                //return LibUtilities::eNoBasisType;
+
+                return LibUtilities::eNoBasisType;
             }
 
             virtual ExpansionType v_DetExpansionType() const
@@ -1583,6 +1584,7 @@ namespace Nektar
             virtual const  boost::shared_ptr<SpatialDomains::GeomFactors>& v_GetMetricInfo() const 
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+                return SpatialDomains::NullGeomFactorsSharedPtr;
 
             }
             
@@ -1590,18 +1592,21 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
 
+                return SpatialDomains::NullGeometry1DSharedPtr;
             }
         
             virtual const boost::shared_ptr<SpatialDomains::Geometry2D>& v_GetGeom2D() const 
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
 
+                return SpatialDomains::NullGeometry2DSharedPtr;
             }
         
             virtual const boost::shared_ptr<SpatialDomains::Geometry3D>& v_GetGeom3D() const 
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
 
+                return SpatialDomains::NullGeometry3DSharedPtr;
             }
         
             virtual void v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
@@ -1673,6 +1678,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.93  2008/07/31 11:10:15  sherwin
+ * Updates for handling EdgeBasisKey for use with DG advection. Depracated GetEdgeBasis and added DetEdgeBasisKey
+ *
  * Revision 1.92  2008/07/29 22:21:15  sherwin
  * A bunch of mods for DG advection and separaring the GetGeom calls into GetGeom1D ...
  *

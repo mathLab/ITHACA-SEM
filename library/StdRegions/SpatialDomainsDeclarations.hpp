@@ -49,6 +49,10 @@ namespace Nektar
         class Geometry3D;
         class GeomFactors;
         
+        static boost::shared_ptr<GeomFactors> NullGeomFactorsSharedPtr; 
+        static boost::shared_ptr<Geometry1D>  NullGeometry1DSharedPtr;
+        static boost::shared_ptr<Geometry2D>  NullGeometry2DSharedPtr;
+        static boost::shared_ptr<Geometry3D>  NullGeometry3DSharedPtr;
     } // end of namespace
 } // end of namespace
 
@@ -56,6 +60,9 @@ namespace Nektar
 
 /**
  * $Log: SpatialDomainsDeclarations.hpp,v $
+ * Revision 1.7  2008/07/29 22:21:15  sherwin
+ * A bunch of mods for DG advection and separaring the GetGeom calls into GetGeom1D ...
+ *
  * Revision 1.6  2008/04/02 22:18:10  pvos
  * Update for 2D local to global mapping
  *

@@ -228,7 +228,7 @@ namespace Vmath
     }
     
     /// \brief vvtvm (vector times vector plus vector): z = w*x - y
-    template<class T> void Vvtvm(int n, const T *w, const int incw, T *x,
+    template<class T> void Vvtvm(int n, const T *w, const int incw, const T *x,
                  const int incx, const T *y, const int incy,
                  T *z, const int incz)
     {
@@ -472,8 +472,12 @@ namespace Vmath
     {
         int i;
         T store;
+        int nloop = n/2;
 
-        for(i = 0; i < n/2; ++i)
+        // copy value in case of n is odd number
+        y[nloop] = x[nloop];
+
+        for(i = 0; i < nloop; ++i)
         {
             store = x[n-1-i];
             y[n-1-i] = x[i];
@@ -489,6 +493,9 @@ namespace Vmath
 
 /***
 $Log: Vmath.hpp,v $
+Revision 1.15  2008/07/19 21:09:21  sherwin
+Added Reverse function
+
 Revision 1.14  2008/05/10 18:27:32  sherwin
 Modifications necessary for QuadExp Unified DG Solver
 

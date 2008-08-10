@@ -67,47 +67,61 @@ namespace Nektar
             BoundaryConditionBase(BoundaryConditionType type):
                 m_BoundaryConditionType(type)
             {
-            };
+            }
+
+            BoundaryConditionBase(BoundaryConditionType type, Equation userDefined):
+                m_BoundaryConditionType(type), m_userDefined(userDefined)
+            {
+            }
 
             virtual ~BoundaryConditionBase(){};
 
-            BoundaryConditionType GetBoundaryConditionType()
+            BoundaryConditionType GetBoundaryConditionType() const
             {
                 return m_BoundaryConditionType;
-            };
+            }
+
+            void SetUserDefined(Equation equation){
+                m_userDefined = equation;
+            }
+            
+            Equation GetUserDefined() const{
+                return m_userDefined;
+            }
 
         protected:
             BoundaryConditionType m_BoundaryConditionType;
+            Equation m_userDefined;
         };
 
 
         struct DirichletBoundaryCondition : public BoundaryConditionBase
         {
 
-            DirichletBoundaryCondition(const std::string &eqn):
-            BoundaryConditionBase(eDirichlet),
-            m_DirichletCondition(eqn)
+            DirichletBoundaryCondition(const std::string &eqn, const std::string &userDefined = std::string("0")):
+                BoundaryConditionBase(eDirichlet, userDefined),
+                m_DirichletCondition(eqn)
             {
-            };
+            }
             
             Equation m_DirichletCondition;
         };
 
         struct NeumannBoundaryCondition : public BoundaryConditionBase
         {
-            NeumannBoundaryCondition(const std::string &eqn):
-                BoundaryConditionBase(eNeumann),
+            NeumannBoundaryCondition(const std::string &eqn, const std::string &userDefined = std::string("0")):
+                BoundaryConditionBase(eNeumann, userDefined),
                 m_NeumannCondition(eqn)
             {
-            };
+            }
 
             Equation m_NeumannCondition;
         };
 
         struct RobinBoundaryCondition : public BoundaryConditionBase
         {
-            RobinBoundaryCondition( const std::string &a, const std::string &b):
-                BoundaryConditionBase(eRobin),
+            RobinBoundaryCondition( const std::string &a, const std::string &b, const std::string &userDefined = std::string("0")):
+                BoundaryConditionBase(eRobin, userDefined),
                 m_a(a), m_b(b)
             {
             }

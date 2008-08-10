@@ -4,9 +4,31 @@ SET(LinkLibraries
     optimized tinyxml debug tinyxml
 )
 
-SET(GmshSources Gmsh.cpp)
-ADD_UTILITIES_EXECUTABLE(Gmsh ${GmshSources})
-TARGET_LINK_LIBRARIES(Gmsh ${LinkLibraries})
+
+SET(PreProcessingHeaders
+     )
+
+SET(PreProcessingSources
+     Gmsh.cpp
+     TetGen.cpp
+     )
+ ADD_UTILITIES_LIBRARY(preprocessing STATIC ${PreProcessingSources} ${PreProcessingHeaders})
+ TARGET_LINK_LIBRARIES(preprocessing ${LinkLibraries})
+
+
+# SET(GmshSources Gmsh.cpp)
+# ADD_UTILITIES_EXECUTABLE(Gmsh ${GmshSources})
+# TARGET_LINK_LIBRARIES(Gmsh ${LinkLibraries})
+#
+# SET(TetGenSources TetGen.cpp)
+# ADD_UTILITIES_EXECUTABLE(TetGen ${TetGenSources})
+# TARGET_LINK_LIBRARIES(TetGen ${LinkLibraries})
+
+
+SET(MeshConvertSources MeshConvert.cpp)
+ADD_UTILITIES_EXECUTABLE(MeshConvert ${MeshConvertSources})
+TARGET_LINK_LIBRARIES(MeshConvert ${LinkLibraries})
+
 
 SET(TINYXML_SOURCES
 ${TINYXML_SRC_DIR}/tinyxml.cpp

@@ -176,16 +176,26 @@ namespace Utilities
         
         for(int i=0; i<facets.size(); ++i){
             stringstream st;
+            
+            cout << "facet["<<i<<"] = ";
             for(int j=0; j<facets[i].corners.size(); ++j){
                 st << setw(5) << facets[i].corners[j] << " ";
+                cout << setw(5) << facets[i].corners[j] << " ";
             }
+            cout << endl;
+            cout << "corners.size() = " << facets[i].corners.size() << endl;
 
-            TiXmlElement *facet_tag;// = new TiXmlElement("T");
+            TiXmlElement *facet_tag = 0;// = new TiXmlElement("T");
             switch(facets[i].corners.size()) {
-            case 1: facet_tag = new TiXmlElement("P"); break; // points
-            case 2: facet_tag = new TiXmlElement("S"); break; // segments
-            case 3: facet_tag = new TiXmlElement("T"); break; // triangle
-            case 4: facet_tag = new TiXmlElement("A"); break; // Tetrahedron
+                case 1: facet_tag = new TiXmlElement("P"); break; // points
+                case 2: facet_tag = new TiXmlElement("S"); break; // segments
+                case 3: facet_tag = new TiXmlElement("T"); break; // triangle
+                case 4: facet_tag = new TiXmlElement("A"); break; // Tetrahedron                
+                case 5: facet_tag = new TiXmlElement("Y"); break; // Pyramid
+                case 6: facet_tag = new TiXmlElement("R"); break; // Prism
+                case 8: facet_tag = new TiXmlElement("H"); break; // Hexahedron
+                
+                default: cerr << "Facet's number of corners are not supported: " << facets[i].corners.size() << endl; break;
             }
 
             facet_tag->SetAttribute("ID", i);
@@ -295,211 +305,216 @@ namespace Utilities
                     line = removeComment(originalLine);
                     vector<string> tokens = tokenize(line);
 
-                    if(parsedLineNumber ==0){
-                        stringstream st(originalLine);
-                        
-                    if(tokens.size() == 2){
-                        st << tokens[0] << " " << tokens[1] << endl;
-                        st >> num_nodes >> dim ;
+                    if(!tokens.empty()) {
+                        for( int i=0; i < tokens.size(); ++i ) {
+                            cout << "tokens["<<i<<"] = " << tokens[i] << endl;
                         }
-                        if(tokens.size() == 4){
-                        st << tokens[0] << " " << tokens[1] << " " << tokens[2] << " " << tokens[3] << endl;
-                        st >> num_nodes >> dim >> attr >> mark;
-                        } else if(!tokens.empty()){
-                            cerr << "Unrecognized file format on line " << lineNumber << ": " << originalLine << endl;
-                            cerr << "Expected: num_nodes, dim, attr, mark" << endl;
-                                        
-                        } 
-                    } else if((0 < parsedLineNumber) && (parsedLineNumber<= num_nodes) ){ // parse nodes
                     
-                        cout << "parsedLineNumber= " << parsedLineNumber << endl;
+                        if(parsedLineNumber ==0){
+                            cout << "/***************** parsing node header ******************/" << endl;
+                            cout << "parsedLineNumber= " << parsedLineNumber << endl;
 
-                        int id=0, nattr=0, nmark=0;
-                        double x=0, y=0, z=0;
-                        // vector<Node> nodes;
-                        stringstream st(originalLine);
+                            stringstream st(originalLine);
+                            if(tokens.size() == 2){
+                                st << tokens[0] << " " << tokens[1] << endl;
+                                st >> num_nodes >> dim ;
+                            } else if(tokens.size() == 4){
+                                st << tokens[0] << " " << tokens[1] << " " << tokens[2] << " " << tokens[3] << endl;
+                                st >> num_nodes >> dim >> attr >> mark;
+                            } else if(!tokens.empty()){
+                                cerr << "Unrecognized file format on line " << lineNumber << ": " << originalLine << endl;
+                                cerr << "Expected: num_nodes, dim, attr, mark" << endl;
+                            }
+                            cout << "num_nodes = " << num_nodes << ", dim = " << dim << ", attr = " << attr << ", mark = " << mark << endl;
+                            cout << "/***************** done parsing node header ******************/" << endl;
+                            
+                        } else if((0 < parsedLineNumber) && (parsedLineNumber <= num_nodes) ){ // parse nodes
+                            cout << "/***************** parsing node ******************/" << endl;
+                            cout << "parsedLineNumber= " << parsedLineNumber << endl;
+
+                            int id=0, nattr=0, nmark=0;
+                            double x=0, y=0, z=0;
+                            stringstream st(originalLine);
 
                             if(!tokens.empty()){
                                 if(tokens.size() == 4){
-                                st << tokens[0] << " " << tokens[1] << " " << tokens[2] << " " << tokens[3] << endl;
-                                st >> id >> x >> y >> z ;
+                                    st << tokens[0] << " " << tokens[1] << " " << tokens[2] << " " << tokens[3] << endl;
+                                    st >> id >> x >> y >> z ;
                                 }
-                                if(tokens.size() == 5){
-                                st << tokens[0] << " " << tokens[1] << " " << tokens[2] << " " << tokens[3] <<" "<< tokens[4] << endl;
-                                st >> id >> x >> y >> z >> nattr;
+                                else if(tokens.size() == 5){
+                                    st << tokens[0] << " " << tokens[1] << " " << tokens[2] << " " << tokens[3] <<" "<< tokens[4] << endl;
+                                    st >> id >> x >> y >> z >> nattr;
                                 }
-                                else if(tokens.size() == 6)
-                                {
-                                st << tokens[0] << " " << tokens[1] << " " << tokens[2] << " " << tokens[3] <<
-                                " " << tokens[4] << " " << tokens[5] << endl;
-                                st >> id >> x >> y >> z >> nattr >> nmark;
+                                else if(tokens.size() == 6) {
+                                    st << tokens[0] << " " << tokens[1] << " " << tokens[2] << " " << tokens[3] <<
+                                    " " << tokens[4] << " " << tokens[5] << endl;
+                                    st >> id >> x >> y >> z >> nattr >> nmark;
                                 }
-                                else if( !tokens.empty() )
-                                {
-                                cerr << "Wrong number of coordinates provided on line " << lineNumber << ": "
-                                << originalLine << endl;
+                                else if( !tokens.empty() ) {
+                                    cerr << "Wrong number of coordinates provided on line " << lineNumber << ": "
+                                    << originalLine << endl;
                                 }
-                                
                             }
-                        nodes.push_back( Node(id, x, y, z, nattr, nmark) );
+                            nodes.push_back( Node(id, x, y, z, nattr, nmark) );
 
-                        cout << "id = " << id << "  x = " << x <<  "  y = " << y <<   "  z = " << z
-                            << "attr = " << nattr << "  mark = " << nmark << endl;
-                        cout << "/-------------------------- Done parsing nodes ------------------ " << endl;
-                        
-                    } else if(parsedLineNumber == num_nodes+1){ // parse facet info
+                            cout << "id = " << id << ",  x = " << x <<  ",  y = " << y <<   ",  z = " << z
+                                 << ", attr = " << nattr << ",  mark = " << nmark << endl;
+                            cout << "/-------------------------- Done parsing node ------------------ " << endl;
 
-                    cout << "parsedLineNumber = " << parsedLineNumber << endl; 
-                        stringstream st(originalLine);
-                        
-                        if(tokens.size() == 2) {
-                            st << tokens[0] << " " << tokens[1] << endl;
-                            st >> num_facets >> mark;
-                        } else if(!tokens.empty()){
-                            cerr << "Unrecognized file format on line " << lineNumber << ": " << originalLine << endl;
-                            cerr << "Expected: num_nodes, dim, attr, mark" << endl;                                  
-                        }
 
-                        cout << "num_facets= " << num_facets << "  mark = " << mark << endl;
-                        
-                    }   // parse facet
-                    else if ((parsedLineNumber > num_nodes+1) && (parsedLineNumber <= num_facets+num_nodes+1)) 
-                    {
-                        cout << "/***************** parsing facet ------------------ " << endl;
-                        cout << "parsedLineNumber = " << parsedLineNumber << endl; 
-
-                        int id=0, nmark=0;
-                        int num_corners;
-                        // vector<Facet> facets;
-                        vector<int> corners;
-                        stringstream st(originalLine);
-
-                        if(!tokens.empty()){
-
-                            st << tokens[0] << " ";
-                            st >> num_corners;
-
-                            int tokenSize = size_t(num_corners+2);
+                            // parse facet header
+                        } else if(parsedLineNumber == num_nodes+1){ 
+                            cout << "/***************** parsing facet header ******************/" << endl;
+                            cout << "parsedLineNumber = " << parsedLineNumber << endl;
+                            stringstream st(originalLine);
                             
-                            if((tokens.size() == tokenSize)||(tokens.size() == tokenSize-1) ){
-                                                    
-                                for(int i=0; i<num_corners; ++i){
-                                
-                                    int corner = 0;
-                                    st << tokens[i+1] << " ";
-                                    st >> corner;
-                                    corners.push_back(corner);
-                                    cout << "corners[" << i << "] = " << corners[i] << endl;
-                                }
-
-                            } else {
+                            if(tokens.size() == 2) {
+                                st << tokens[0] << " " << tokens[1] << endl;
+                                st >> num_facets >> mark;
+                            } else if(!tokens.empty()){
                                 cerr << "Unrecognized file format on line " << lineNumber << ": " << originalLine << endl;
-                                cerr << "--Expected: tokens = <list of " << num_corners+2 << "numbers>" << endl;
+                                cerr << "Expected: num_nodes, dim, attr, mark" << endl;                                  
                             }
 
-                        }
-                        st >> nmark;
+                            cout << "num_facets= " << num_facets << "  mark = " << mark << endl;
+                            cout << "/***************** done parsing facet header ******************/" << endl;
+                            
 
-                        facets.push_back( Facet(num_corners, corners, nmark) );
+                            // parse facets
+                        } else if ((parsedLineNumber > num_nodes+1) && (parsedLineNumber <= num_facets+num_nodes+1)) { 
+                            cout << "/***************** parsing facet ------------------ " << endl;
+                            cout << "parsedLineNumber = " << parsedLineNumber << endl; 
 
-                        cout  << "id = " << id << "  num_corners = " << num_corners <<"  mark = " << nmark << endl;                               
-                    }
-                    else if(parsedLineNumber == num_nodes+num_facets+2)
-                    {
-                        cout << "*********parsing holes***************" << endl;
-                        cout << "parsedLineNumber = " << parsedLineNumber << endl;
-                        cout << "line number = " << lineNumber << endl;
-                        stringstream st(originalLine);
-                        
-                        if(tokens.size() == 1) {
-                            st << tokens[0] << " ";
-                            st >> num_holes;
-                        } else if(!tokens.empty()){
-                            cerr << "Unrecognized file format on line " << lineNumber << ": " << originalLine << endl;
-                            cerr << "Expected: num_holes" << endl;                                  
-                        }
-
-                        cout << "num_holes= " << num_holes << endl;
-                        
-                    }
-                    else if((parsedLineNumber > num_nodes+num_facets+2) && (parsedLineNumber <= num_nodes+num_facets+num_holes+2)) {
-                                
-                        cout << "parsedLineNumber= " << parsedLineNumber << endl;
-
-                        int id=0;
-                        double x=0, y=0, z=0;
-                        //vector<Hole> holes;
-                        stringstream st(originalLine);
+                            int id=0, nmark=0;
+                            int num_corners;
+                            vector<int> corners;
+                            stringstream st(originalLine);
 
                             if(!tokens.empty()){
-                                if(tokens.size()==4){
-                                st << tokens[0] << " " << tokens[1] << " " << tokens[2] << " " << tokens[3] << endl;
-                                st >> id >> x >> y >> z ;
-                                }
-                                else if( !tokens.empty() )
-                                {
-                                cerr << "Wrong number of coordinates provided on line " << lineNumber << ": "
-                                << originalLine << endl;
-                                }
-                                
-                            }
-                        holes.push_back( Hole(id, x, y, z));
+                                st << tokens[0] << " ";
+                                st >> num_corners;
 
-                        cout << "id = " << id << "  x = " << x <<  "  y = " << y <<   "  z = " << z << endl;
-                        cout << "/-------------------------- Done parsing holes ------------------ " << endl;
-                        
-                    }
-                    else if(parsedLineNumber == num_nodes+num_facets+num_holes+3)
-                    {
-                        cout << "*********parsing region***************" << endl;
-                        cout << "parsedLineNumber = " << parsedLineNumber << endl;               
-                        stringstream st(originalLine);
-                        
-                        if(tokens.size() == 1) {
-                            st << tokens[0] << " ";
-                            st >> num_regions;
-                        } else if(!tokens.empty()){
-                            cerr << "Unrecognized file format on line " << lineNumber << ": " << originalLine << endl;
-                            cerr << "Expected: num_holes" << endl;                                  
+                                int maxTokenSize = size_t(num_corners+2);
+                                
+                                if((tokens.size() == maxTokenSize)||(tokens.size() == maxTokenSize-1) ){
+                                                        
+                                    for(int i=0; i<num_corners; ++i){
+                                        int corner = 0;
+                                        st << tokens[i+1] << " ";
+                                        st >> corner;
+                                        corners.push_back(corner);
+                                        cout << "corners[" << i << "] = " << corners[i] << endl;
+                                    }
+
+                                } else {
+                                    cerr << "Unrecognized file format on line " << lineNumber << ": " << originalLine << endl;
+                                    cerr << "--Expected: tokens = <list of " << num_corners+2 << "numbers>" << endl;
+                                }
+
+                            }
+                            st >> nmark;
+
+                            facets.push_back( Facet(num_corners, corners, nmark) );
+
+                            cout  << "id = " << id << "  num_corners = " << num_corners <<"  mark = " << nmark << endl;      
+
                         }
-
-                        cout << "num_regions= " << num_regions << endl;
-                        
-                    }
-                    else if((parsedLineNumber > num_nodes+num_facets+num_holes+3) &&
-                            (parsedLineNumber <= num_nodes+num_facets+num_holes+num_regions+3)) {
-                                
-                        cout << "parsedLineNumber= " << parsedLineNumber << endl;
-
-                        int id=0, region_num=0;
-                        double rattr=0;
-                        double x=0, y=0, z=0;
-                        //vector<Region> regions;
-                        stringstream st(originalLine);
-
-                            if(!tokens.empty()){
-                                if(tokens.size()==6){
-                                st << tokens[0] << " " << tokens[1] << " " << tokens[2] << " " << tokens[3]
-                                << " " << tokens[4] << " " << tokens[5] << endl;
-                                st >> id >> x >> y >> z >> region_num >> rattr ;
-                                }
-                                else if( !tokens.empty() )
-                                {
-                                cerr << "Wrong number of coordinates provided on line " << lineNumber << ": "
-                                << originalLine << endl;
-                                }
-                                
+                        else if(parsedLineNumber == num_nodes+num_facets+2) {
+                            cout << "*********parsing holes***************" << endl;
+                            cout << "parsedLineNumber = " << parsedLineNumber << endl;
+                            cout << "line number = " << lineNumber << endl;
+                            stringstream st(originalLine);
+                            
+                            if(tokens.size() == 1) {
+                                st << tokens[0] << " ";
+                                st >> num_holes;
+                            } else if(!tokens.empty()){
+                                cerr << "Unrecognized file format on line " << lineNumber << ": " << originalLine << endl;
+                                cerr << "Expected: num_holes" << endl;                                  
                             }
-                        regions.push_back( Region(id, x, y, z, region_num, rattr));
-                    
-                        cout << "id = " << id << "  x = " << x <<  "  y = " << y <<   "  z = " << z
-                            << "  region_num = " << region_num << "  reg-attr = " << rattr << endl;
-                        cout << "/-------------------------- Done parsing Regions ------------------ " << endl;
+
+                            cout << "num_holes= " << num_holes << endl;
+
+                        }
+                        else if((parsedLineNumber > num_nodes+num_facets+2) && (parsedLineNumber <= num_nodes+num_facets+num_holes+2)) {
+                                    
+                            cout << "parsedLineNumber= " << parsedLineNumber << endl;
+
+                            int id=0;
+                            double x=0, y=0, z=0;
+                            vector<Hole> holes;
+                            stringstream st(originalLine);
+
+                                if(!tokens.empty()){
+                                    if(tokens.size()==4){
+                                    st << tokens[0] << " " << tokens[1] << " " << tokens[2] << " " << tokens[3] << endl;
+                                    st >> id >> x >> y >> z ;
+                                    }
+                                    else if( !tokens.empty() )
+                                    {
+                                    cerr << "Wrong number of coordinates provided on line " << lineNumber << ": "
+                                    << originalLine << endl;
+                                    }
+                                    
+                                }
+                            holes.push_back( Hole(id, x, y, z));
+
+                            cout << "id = " << id << "  x = " << x <<  "  y = " << y <<   "  z = " << z << endl;
+                            cout << "/-------------------------- Done parsing holes ------------------ " << endl;
+                            
+                        }
+                        else if(parsedLineNumber == num_nodes+num_facets+num_holes+3)
+                        {
+                            cout << "*********parsing region***************" << endl;
+                            cout << "parsedLineNumber = " << parsedLineNumber << endl;               
+                            stringstream st(originalLine);
+                            
+                            if(tokens.size() == 1) {
+                                st << tokens[0] << " ";
+                                st >> num_regions;
+                            } else if(!tokens.empty()){
+                                cerr << "Unrecognized file format on line " << lineNumber << ": " << originalLine << endl;
+                                cerr << "Expected: num_holes" << endl;                                  
+                            }
+
+                            cout << "num_regions= " << num_regions << endl;
+                            
+                        }
+                        else if((parsedLineNumber > num_nodes+num_facets+num_holes+3) &&
+                                (parsedLineNumber <= num_nodes+num_facets+num_holes+num_regions+3)) {
+                                    
+                            cout << "parsedLineNumber= " << parsedLineNumber << endl;
+
+                            int id=0, region_num=0;
+                            double rattr=0;
+                            double x=0, y=0, z=0;
+                            stringstream st(originalLine);
+
+                                if(!tokens.empty()){
+                                    if(tokens.size()==6){
+                                    st << tokens[0] << " " << tokens[1] << " " << tokens[2] << " " << tokens[3]
+                                    << " " << tokens[4] << " " << tokens[5] << endl;
+                                    st >> id >> x >> y >> z >> region_num >> rattr ;
+                                    }
+                                    else if( !tokens.empty() )
+                                    {
+                                    cerr << "Wrong number of coordinates provided on line " << lineNumber << ": "
+                                    << originalLine << endl;
+                                    }
+                                    
+                                }
+                            regions.push_back( Region(id, x, y, z, region_num, rattr));
                         
+                            cout << "id = " << id << "  x = " << x <<  "  y = " << y <<   "  z = " << z
+                                << "  region_num = " << region_num << "  reg-attr = " << rattr << endl;
+                            cout << "/-------------------------- Done parsing Regions ------------------ " << endl;
+                            
+                        }
                     }
                     
                     if(!tokens.empty()){            
                         ++parsedLineNumber;
+//                         cout << "Parsed line number: " << parsedLineNumber << endl;
                     }
                     ++lineNumber;
                 }
@@ -514,8 +529,22 @@ namespace Utilities
             }
 
         mshFile.close();
+
+
+        cout << "************************************************" << endl;
+        cout << "Facet list: " << endl;
+        for(int i=0; i<facets.size(); ++i) {
+            cout << "\tfacets["<<i<<"].num_corner = " << facets[i].num_corner << endl;
+            cout << "\tfacets["<<i<<"].corners    = ";
+            for(int j=0; j<facets[i].corners.size(); ++j) {
+                cout << facets[i].corners[j] << " ";
+            }
+            cout << endl;
+            cout << "\tfacets["<<i<<"].mark       = " << mark << endl;
+        }
+        cout << "************************************************" << endl;
         
-     WriteTetGenToXMLFile(outfile, nodes, facets);    
+        WriteTetGenToXMLFile(outfile, nodes, facets);
     } // end of ParseTetGen function
 
    } // end of namespace TetGen

@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     
     if(argc != 5)
     {
-        fprintf(stderr,"Usage: ./MeshConvert -g/-t -o input(mesh)file output(xml)file\n");
+        fprintf(stderr,"Usage: ./MeshConvert -g/-t input(mesh)file  -o output(xml)file\n");
         exit(1);
     }
 
@@ -22,8 +22,8 @@ int main(int argc, char *argv[])
     write the xml output file from input file */
     
     char* in(argv[1]);
-    char* out(argv[2]);
-    char* meshfile(argv[3]);
+    char* meshfile(argv[2]);
+    char* out(argv[3]);
     char* outfile(argv[4]);
 
     string dashg = ("-g");
@@ -40,8 +40,8 @@ int main(int argc, char *argv[])
     found = inputFile.find_last_of(".");
     string result = inputFile.substr(found+1);
 
-    
-     if(inputArg.compare(dashg) ==0 && outputArg.compare(dasho) == 0)
+
+     if(inputArg.compare(dashg) ==0)
       {
       
             cout << "************* Gmsh ************************" << endl;
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
             {
                 Gmsh::ParseGmshFile(meshfile, outfile);
 
-                cout << " Success parsing and writing for Gmsh ........" << outfile <<  endl;
+                cout << " Success parsing and writing gmesh to ........" << outfile <<  endl;
                 
             }
             else
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
             }
        
       }
-      else if(inputArg.compare(dasht) ==0 && outputArg.compare(dasho) == 0)
+      else if(inputArg.compare(dasht) ==0)
       {
       
             cout << "************* TetGen ************************" << endl;
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
             {
                 TetGen::ParseTetGen(meshfile, outfile);
 
-                cout << " Success parsing and writing for TetGen........" << outfile <<  endl;
+                cout << " Success parsing and writing TetGen to ........" << outfile <<  endl;
                 
             }
             else
@@ -88,8 +88,6 @@ int main(int argc, char *argv[])
                 cerr << "Input argument for TetGen must " << dasht << ", but we got " << inputArg <<  endl;
 
       }
-
-
 
 
     return 0;

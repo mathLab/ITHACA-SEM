@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <stdexcept>
 
 using namespace std;
 
@@ -281,7 +282,8 @@ namespace Utilities
         vector<Facet> facets;
         vector<Hole> holes;
         vector<Region> regions;
-        stringstream ss;
+        stringstream error;
+//         stringstream ss;
 
         int num_nodes = 0, dim = 0, attr = 0, mark =0;
         int num_facets = 0, num_holes=0, num_regions=0;
@@ -319,8 +321,9 @@ namespace Utilities
                                 st << tokens[0] << " " << tokens[1] << " " << tokens[2] << " " << tokens[3] << endl;
                                 st >> num_nodes >> dim >> attr >> mark;
                             } else if(!tokens.empty()){
-                                cerr << "Unrecognized file format on line " << lineNumber << ": " << originalLine << endl;
-                                cerr << "Expected: num_nodes, dim, attr, mark" << endl;
+                                error << "Unrecognized file format on line " << lineNumber << ": " << originalLine << endl;
+                                error << "Expected: num_nodes, dim, attr, mark" << endl;
+                                throw runtime_error(error.str());
                             }
                             cout << "num_nodes = " << num_nodes << ", dim = " << dim << ", attr = " << attr << ", mark = " << mark << endl;
                             cout << "/***************** done parsing node header ******************/" << endl;
@@ -348,8 +351,9 @@ namespace Utilities
                                     st >> id >> x >> y >> z >> nattr >> nmark;
                                 }
                                 else if( !tokens.empty() ) {
-                                    cerr << "Wrong number of coordinates provided on line " << lineNumber << ": "
+                                    error << "Wrong number of coordinates provided on line " << lineNumber << ": "
                                     << originalLine << endl;
+                                    throw runtime_error(error.str());
                                 }
                             }
                             nodes.push_back( Node(id, x, y, z, nattr, nmark) );
@@ -369,8 +373,9 @@ namespace Utilities
                                 st << tokens[0] << " " << tokens[1] << endl;
                                 st >> num_facets >> mark;
                             } else if(!tokens.empty()){
-                                cerr << "Unrecognized file format on line " << lineNumber << ": " << originalLine << endl;
-                                cerr << "Expected: num_nodes, dim, attr, mark" << endl;                                  
+                                error << "Unrecognized file format on line " << lineNumber << ": " << originalLine << endl;
+                                error << "Expected: num_nodes, dim, attr, mark" << endl;
+                                throw runtime_error(error.str());
                             }
 
                             cout << "num_facets= " << num_facets << "  mark = " << mark << endl;
@@ -404,8 +409,9 @@ namespace Utilities
                                     }
 
                                 } else {
-                                    cerr << "Unrecognized file format on line " << lineNumber << ": " << originalLine << endl;
-                                    cerr << "--Expected: tokens = <list of " << num_corners+2 << "numbers>" << endl;
+                                    error << "Unrecognized file format on line " << lineNumber << ": " << originalLine << endl;
+                                    error << "--Expected: tokens = <list of " << num_corners+2 << "numbers>" << endl;
+                                    throw runtime_error(error.str());
                                 }
 
                             }
@@ -426,8 +432,9 @@ namespace Utilities
                                 st << tokens[0] << " ";
                                 st >> num_holes;
                             } else if(!tokens.empty()){
-                                cerr << "Unrecognized file format on line " << lineNumber << ": " << originalLine << endl;
-                                cerr << "Expected: num_holes" << endl;                                  
+                                error << "Unrecognized file format on line " << lineNumber << ": " << originalLine << endl;
+                                error << "Expected: num_holes" << endl;
+                                throw runtime_error(error.str());                             
                             }
 
                             cout << "num_holes= " << num_holes << endl;
@@ -449,8 +456,9 @@ namespace Utilities
                                     }
                                     else if( !tokens.empty() )
                                     {
-                                    cerr << "Wrong number of coordinates provided on line " << lineNumber << ": "
+                                    error << "Wrong number of coordinates provided on line " << lineNumber << ": "
                                     << originalLine << endl;
+                                    throw runtime_error(error.str());
                                     }
                                     
                                 }
@@ -470,8 +478,9 @@ namespace Utilities
                                 st << tokens[0] << " ";
                                 st >> num_regions;
                             } else if(!tokens.empty()){
-                                cerr << "Unrecognized file format on line " << lineNumber << ": " << originalLine << endl;
-                                cerr << "Expected: num_holes" << endl;                                  
+                                error << "Unrecognized file format on line " << lineNumber << ": " << originalLine << endl;
+                                error << "Expected: num_holes" << endl;
+                                throw runtime_error(error.str());
                             }
 
                             cout << "num_regions= " << num_regions << endl;
@@ -495,8 +504,9 @@ namespace Utilities
                                     }
                                     else if( !tokens.empty() )
                                     {
-                                    cerr << "Wrong number of coordinates provided on line " << lineNumber << ": "
+                                    error << "Wrong number of coordinates provided on line " << lineNumber << ": "
                                     << originalLine << endl;
+                                    throw runtime_error(error.str());
                                     }
                                     
                                 }
@@ -518,11 +528,13 @@ namespace Utilities
                     
             } else {
             
-                cerr << "Unable to open file " << endl;        
+                error << "Unable to open file " << endl;
+                throw runtime_error(error.str());
             }
             }
-            catch (fstream::failure e){
-                cerr << "Exception opening/reading file: \n" << e.what() << endl;
+            catch (fstream::failure e){            
+                error << "Exception opening/reading file: \n" << e.what() << endl;
+                throw runtime_error(error.str());
             }
 
         mshFile.close();

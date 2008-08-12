@@ -1,6 +1,6 @@
 #include "Gmsh.cpp"
 #include "TetGen.cpp"
-
+#include <stdexcept>
 
 using namespace std;
 
@@ -17,6 +17,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    
     /*----------------------------------------------
     Read in gmesh from input file
     write the xml output file from input file */
@@ -56,8 +57,10 @@ int main(int argc, char *argv[])
             }
             else
             {
-                cerr << "Parsing fails : " << endl;
-                cerr << "Input file " <<inputFile << " is not a correct MSH file type !  Please use *.msh file type "<< endl;
+                stringstream error;
+                error << "Parsing fails : " << endl;
+                error << "Input file " <<inputFile << " is not a correct MSH file type !  Please use *.msh file type "<< endl;
+                throw runtime_error(error.str());
             }
        
       }
@@ -76,16 +79,21 @@ int main(int argc, char *argv[])
             }
             else
             {
-                cerr << "Parsing fails : " << endl;
-                cerr << "Input file " <<inputFile << " is not a correct SMESH file type !  Please use *.smesh file type "<< endl;
+                stringstream error;
+                error << "Parsing fails : " << endl;
+                error << "Input file " <<inputFile << " is not a correct SMESH file type !  Please use *.smesh file type "<< endl;
+                throw runtime_error(error.str());
             }
        
       }
        else {
 
-                cerr << "Input argument for Gmsh must " <<  dashg << ", but we got " <<inputArg << endl;
+                stringstream error;
+                
+                error << "Input argument for Gmsh must " <<  dashg << ", but we got " <<inputArg << endl;
+                error << "Input argument for TetGen must " << dasht << ", but we got " << inputArg <<  endl;
 
-                cerr << "Input argument for TetGen must " << dasht << ", but we got " << inputArg <<  endl;
+                throw runtime_error(error.str());
 
       }
 

@@ -190,10 +190,7 @@ namespace Utilities
                 case 1: facet_tag = new TiXmlElement("P"); break; // points
                 case 2: facet_tag = new TiXmlElement("S"); break; // segments
                 case 3: facet_tag = new TiXmlElement("T"); break; // triangle
-                case 4: facet_tag = new TiXmlElement("A"); break; // Tetrahedron                
-                case 5: facet_tag = new TiXmlElement("Y"); break; // Pyramid
-                case 6: facet_tag = new TiXmlElement("R"); break; // Prism
-                case 8: facet_tag = new TiXmlElement("H"); break; // Hexahedron
+                case 4: facet_tag = new TiXmlElement("Q"); break; // Quads.
                 
                 default: cerr << "Facet's number of corners are not supported: " << facets[i].corners.size() << endl; break;
             }

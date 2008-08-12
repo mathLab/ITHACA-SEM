@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
             {
                 Gmsh::ParseGmshFile(meshfile, outfile);
 
-                cout << " Success parsing and writing gmesh to ........" << outfile <<  endl;
+                cout << " Success parsing and writing " << meshfile << " to " << outfile <<  endl;
                 
             }
             else
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
             {
                 TetGen::ParseTetGen(meshfile, outfile);
 
-                cout << " Success parsing and writing TetGen to ........" << outfile <<  endl;
+                cout << " Success parsing and writing " << meshfile << " to " << outfile <<  endl;
                 
             }
             else

@@ -275,8 +275,9 @@ namespace Nektar
                             SegGeom::GetEdgeOrientation(*edges[3], *edges[0])
                         };
 
-                        QuadGeomSharedPtr quadgeom(new QuadGeom(edges, edgeorient));
-						quadgeom->SetGlobalID(indx);
+                        //QuadGeomSharedPtr quadgeom(new QuadGeom(edges, edgeorient));
+                        QuadGeomSharedPtr quadgeom  = MemoryManager<QuadGeom>::AllocateSharedPtr (edges, edgeorient);
+                        quadgeom->SetGlobalID(indx);
 
                         m_quadgeoms.push_back(quadgeom);
 
@@ -536,7 +537,7 @@ namespace Nektar
 
             return;
         }
-
+        
         ElementEdgeVectorSharedPtr MeshGraph2D::GetElementsFromEdge(Geometry1DSharedPtr edge)
         {
             SegGeomSharedPtr Sedge;
@@ -670,6 +671,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.30  2008/07/29 22:23:36  sherwin
+// various mods for DG advection solver in Multiregions. Added virtual calls to Geometry, Geometry1D, 2D and 3D
+//
 // Revision 1.29  2008/05/29 19:07:39  delisi
 // Removed the Write(..) methods, so it is only in the base MeshGraph class. Also, added a line to set the global ID of the geometry object for every element read in.
 //

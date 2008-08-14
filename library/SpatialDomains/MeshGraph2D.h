@@ -205,7 +205,10 @@ namespace Nektar
             }
 
             /// \brief Return the elements (shared ptrs) that have this edge.
+
+            //ElementEdgeVectorSharedPtr GetElementsFromEdge(SegGeomSharedPtr edge);
             ElementEdgeVectorSharedPtr GetElementsFromEdge(SegGeomSharedPtr edge);
+
             ElementEdgeVectorSharedPtr GetElementsFromEdge(Geometry1DSharedPtr edge);
 
             /// \brief Return the BasisKey corresponding to an edge of an element
@@ -231,6 +234,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.24  2008/07/29 22:23:36  sherwin
+// various mods for DG advection solver in Multiregions. Added virtual calls to Geometry, Geometry1D, 2D and 3D
+//
 // Revision 1.23  2008/06/30 19:34:17  ehan
 // Fixed infinity recursive-loop error.
 //

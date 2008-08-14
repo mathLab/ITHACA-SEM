@@ -188,6 +188,8 @@ namespace Nektar
                 }
             }
 
+            Gtype == eDeformed;
+
             m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap);
 
         }
@@ -344,6 +346,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.cpp,v $
+// Revision 1.17  2008/06/14 01:25:02  ehan
+// Added a new constructor TriGeom(id, coordim).
+//
 // Revision 1.16  2008/06/11 21:34:42  delisi
 // Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
 //

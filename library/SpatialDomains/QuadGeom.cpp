@@ -248,6 +248,7 @@ namespace Nektar
                 }
             }
 
+
             m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap);
 
         }
@@ -367,6 +368,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.cpp,v $
+// Revision 1.19  2008/06/30 19:35:22  ehan
+// Fixed infinity recursive-loop error.
+//
 // Revision 1.18  2008/06/14 01:23:07  ehan
 // Implemented constructor and FillGeom().
 //

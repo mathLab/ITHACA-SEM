@@ -56,9 +56,10 @@ namespace Nektar
 
 
         GenExpList1D::GenExpList1D(const Array<OneD,const MultiRegions::ExpList1DSharedPtr> &bndConstraint,  
-                                   const Array<OneD, const SpatialDomains::BoundaryConditionType>  &bndTypes, 
+                                   const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>  &bndCond, 
                                    const StdRegions::StdExpansionVector &locexp, 
-                                   SpatialDomains::MeshGraph2D &graph2D)
+                                   SpatialDomains::MeshGraph2D &graph2D,
+                                   const map<int,int> &periodicEdges)
         {
             int i,j,id, elmtid=0, edgeid;
             Array<OneD, int> EdgeDone(graph2D.GetNseggeoms(),0);
@@ -71,9 +72,9 @@ namespace Nektar
 
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
-            for(i = 0; i < bndTypes.num_elements(); ++i)
+            for(i = 0; i < bndCond.num_elements(); ++i)
             {
-                if(bndTypes[i] == SpatialDomains::eDirichlet)
+                if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
                     for(j = 0; j < bndConstraint[i]->GetExpSize(); ++j)
                     {
@@ -106,8 +107,6 @@ namespace Nektar
                 }
             }
             
-            
-            
             // loop over all other edges and fill out other connectivities
             for(i = 0; i < locexp.size(); ++i)
             {
@@ -119,6 +118,7 @@ namespace Nektar
                     
                     if(!EdgeDone[id])
                     {
+                        
                         LibUtilities::BasisKey EdgeBkey = locexp[i]->DetEdgeBasisKey(j);
                         
                         Seg = MemoryManager<LocalRegions::GenSegExp>::AllocateSharedPtr(EdgeBkey, SegGeom);
@@ -136,6 +136,12 @@ namespace Nektar
                         Seg->SetElmtId(elmtid++);
                         (*m_exp).push_back(Seg);
                         EdgeDone[id] = 1;
+
+                        // set periodic edge 
+                        if(periodicEdges.count(id) > 0)
+                        {
+                            EdgeDone[periodicEdges.find(id)->second] = 1;
+                        }
                     }
                 }
             }
@@ -199,6 +205,9 @@ namespace Nektar
 
 /**
 * $Log: GenExpList1D.cpp,v $
+* Revision 1.2  2008/07/31 11:17:13  sherwin
+* Changed GetEdgeBasis with DetEdgeBasisKey
+*
 * Revision 1.1  2008/07/29 22:26:35  sherwin
 * Generalised 1D Segment list which includes a normal direction at physical points
 *

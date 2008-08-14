@@ -42,13 +42,14 @@
 #include <LocalRegions/PointExp.h>
 #include <SpatialDomains/MeshGraph1D.h>
 #include <SpatialDomains/BoundaryConditions.h>
-#include <MultiRegions/LocalToGlobalBndryMap1D.h>
 #include <MultiRegions/GlobalLinSys.h>
+#include <MultiRegions/LocalToGlobalDGMap.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
+  
         class DisContField1D: public ExpList1D
         {
         public:
@@ -67,22 +68,43 @@ namespace Nektar
 
             void HelmSolve(DisContField1D &Fce, NekDouble lambda);
 
+            /**
+             * \brief This function evaluates the boundary conditions at a certain 
+             * time-level.
+             *
+             * Based on the expression \f$g(x,t)\f$ for the boundary conditions, this
+             * function evaluates the boundary conditions for all boundaries at 
+             * time-level \a t.
+             *
+             * \param time The time at which the boundary conditions should be 
+             * evaluated
+             */ 
+            void EvaluateBoundaryConditions(const NekDouble time = 0.0)
+            {
+                ExpList1D::EvaluateBoundaryConditions(time,m_bndCondExpansions,m_bndConditions);
+            };
+
             GlobalLinSysSharedPtr GetGlobalBndLinSys(const GlobalLinSysKey &mkey);
 
         protected:
 
         private:
-            Array<OneD,LocalRegions::PointExpSharedPtr>        m_bndConstraint;
-            Array<OneD,SpatialDomains::BoundaryConditionType>  m_bndTypes;
-	    LocalToGlobalBndryMapSharedPtr                     m_lambdaMap;
+            Array<OneD,LocalRegions::PointExpSharedPtr>        m_bndCondExpansions;
+            Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
             GlobalLinSysMapShPtr                               m_globalBndMat;
+            Array<OneD,NekDouble>                              m_trace;
+            LocalToGlobalDGMapSharedPtr                        m_traceMap;
             
-            void GenerateField1D(SpatialDomains::BoundaryConditions &bcs,  
-                                 const std::string variable);
+            void GenerateBoundaryConditionExpansion(const SpatialDomains::MeshGraph1D &graph1D,
+                                                    SpatialDomains::BoundaryConditions &bcs, 
+                                                    const std::string variable);
+            
+            void GenerateFieldBnd1D(SpatialDomains::BoundaryConditions &bcs,  
+                                    const std::string variable);
         };
 
         typedef boost::shared_ptr<DisContField1D>   DisContField1DSharedPtr;
-
+        
     } //end of namespace
 } //end of namespace
 

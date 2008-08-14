@@ -38,11 +38,12 @@
 
 #include <vector>
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/ExpList.h>
+#include <MultiRegions/ExpList1D.h>
 #include <LocalRegions/TriExp.h>
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/NodalTriExp.h>
 #include <SpatialDomains/MeshGraph2D.h>
+#include <SpatialDomains/BoundaryConditions.h>
 
 namespace Nektar
 {
@@ -118,7 +119,21 @@ namespace Nektar
             }
             
         protected:
+            void SetBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D,
+                                               SpatialDomains::BoundaryConditions &bcs, 
+                                               const std::string variable,
+                                               Array<OneD, ExpList1DSharedPtr> &bndCondExpansions,
+                                               Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndConditions);
+
+            void EvaluateBoundaryConditions(const NekDouble time,
+                                            Array<OneD, ExpList1DSharedPtr> &bndCondExpansions,
+                                            Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndConditions);
             
+            void GetPeriodicEdges(SpatialDomains::MeshGraph2D &graph2D,
+                                  SpatialDomains::BoundaryConditions &bcs, 
+                                  const std::string variable,
+                                  map<int,int>& periodicVertices,
+                                  map<int,int>& periodicEdges);
         private:
             
         };
@@ -133,6 +148,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.h,v $
+* Revision 1.13  2008/06/05 15:06:58  pvos
+* Added documentation
+*
 * Revision 1.12  2007/12/06 22:52:30  pvos
 * 2D Helmholtz solver updates
 *

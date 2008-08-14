@@ -56,9 +56,10 @@ namespace Nektar
             
             // constructor for trace space in connection with DisContField2D.cpp
             GenExpList1D(const Array<OneD,const MultiRegions::ExpList1DSharedPtr> &bndConstraint,  
-                         const Array<OneD, const SpatialDomains::BoundaryConditionType>  &bndTypes, 
+                         const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>  &bndCond, 
                          const StdRegions::StdExpansionVector &locexp, 
-                         SpatialDomains::MeshGraph2D &graph2D);
+                         SpatialDomains::MeshGraph2D &graph2D,
+                         const map<int,int> &periodicEdges);
             
             /**
              * \brief The copy constructor.
@@ -93,4 +94,7 @@ namespace Nektar
 
 /**
  * $Log: GenExpList1D.h,v $
+ * Revision 1.1  2008/07/29 22:26:35  sherwin
+ * Generalised 1D Segment list which includes a normal direction at physical points
+ *
  **/

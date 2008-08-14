@@ -45,6 +45,7 @@
 #include <LocalRegions/GenSegExp.h>
 #include <LocalRegions/TriExp.h>
 #include <LocalRegions/QuadExp.h>
+#include <LocalRegions/PointExp.h>
 #include <SpatialDomains/MeshGraph1D.h>
 #include <SpatialDomains/MeshGraph2D.h>
 
@@ -129,6 +130,21 @@ namespace Nektar
             {
                 ExpList::PhysDeriv(S0,S1,S2);
             }
+
+            void SetBoundaryConditionExpansion(const SpatialDomains::MeshGraph1D &graph1D,
+                                               SpatialDomains::BoundaryConditions &bcs, 
+                                               const std::string variable,
+                                               Array<OneD, LocalRegions::PointExpSharedPtr> &bndCondExpansions,
+                                               Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndConditions);
+            
+            void GetPeriodicVertices(const SpatialDomains::MeshGraph1D &graph1D,
+                                     SpatialDomains::BoundaryConditions &bcs, 
+                                     const std::string variable,
+                                     map<int,int>& periodicVertices);
+            
+            void EvaluateBoundaryConditions(const NekDouble time,
+                                            Array<OneD, LocalRegions::PointExpSharedPtr> &bndCondExpansions,
+                                            Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndConditions);
             
         protected:
             
@@ -148,6 +164,9 @@ namespace Nektar
 
 /**
  * $Log: ExpList1D.h,v $
+ * Revision 1.21  2008/07/29 22:27:33  sherwin
+ * Updates for DG solvers, including using GenSegExp, fixed forcing function on UDG HelmSolve and started to tidy up the mapping arrays to be 1D rather than 2D
+ *
  * Revision 1.20  2008/06/23 14:21:01  pvos
  * updates for 1D ExpLists
  *

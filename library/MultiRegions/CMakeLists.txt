@@ -14,9 +14,10 @@ ExpList.cpp
 GenExpList1D.cpp
 GlobalLinSys.cpp
 GlobalLinSysKey.cpp
-LocalToGlobalBndryMap.cpp
-LocalToGlobalBndryMap1D.cpp
 LocalToGlobalMap.cpp
+LocalToGlobalDGMap.cpp
+LocalToGlobalBaseMap.cpp
+LocalToGlobalBndryMap.cpp
 LocalToGlobalMap1D.cpp
 LocalToGlobalMap2D.cpp
 #LocalToGlobalMap3D.cpp
@@ -39,8 +40,9 @@ ExpList.h
 GenExpList1D.h
 GlobalLinSys.h
 GlobalLinSysKey.h
+LocalToGlobalBaseMap.h
 LocalToGlobalBndryMap.h
-LocalToGlobalBndryMap1D.h
+LocalToGlobalDGMap.h
 LocalToGlobalMap1D.h
 LocalToGlobalMap2D.h
 LocalToGlobalMap3D.h

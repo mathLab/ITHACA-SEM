@@ -250,7 +250,10 @@ namespace Nektar
              * \param time The time at which the boundary conditions should be 
              * evaluated
              */ 
-            void EvaluateBoundaryConditions(const NekDouble time = 0.0);
+            void EvaluateBoundaryConditions(const NekDouble time = 0.0)
+            {
+                ExpList2D::EvaluateBoundaryConditions(time,m_bndCondExpansions,m_bndConditions);
+            }
           
             /**
              * \brief This function return the boundary conditions expansion.
@@ -276,8 +279,9 @@ namespace Nektar
             Array<OneD,MultiRegions::ExpList1DSharedPtr>       m_bndCondExpansions;
           
             /**
-             * \brief An array which contains the information about the boundary condition  
-             * on the different boundary regions.
+             * \brief An array which contains the information about
+             * the boundary condition on the different boundary
+             * regions.
              */ 
             Array<OneD,SpatialDomains::BoundaryConditionShPtr>  m_bndConditions;
           
@@ -369,12 +373,6 @@ namespace Nektar
                                                     SpatialDomains::BoundaryConditions &bcs, 
                                                     const std::string variable);
 
-
-            void GetPeriodicEdges(SpatialDomains::MeshGraph2D &graph2D,
-                                  SpatialDomains::BoundaryConditions &bcs, 
-                                  const std::string variable,
-                                  map<int,int>& periodicVertices,
-                                  map<int,int>& periodicEdges);
         };
         typedef boost::shared_ptr<ContField2D>      ContField2DSharedPtr;
 

@@ -39,6 +39,7 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ContExpList1D.h>
 #include <MultiRegions/GlobalLinSys.h>
+#include <MultiRegions/ExpList1D.h>
 
 #include <LocalRegions/PointExp.h>
 #include <SpatialDomains/MeshGraph1D.h>
@@ -221,7 +222,10 @@ namespace Nektar
              * \param time The time at which the boundary conditions should be 
              * evaluated
              */ 
-            void EvaluateBoundaryConditions(const NekDouble time = 0.0);
+            void EvaluateBoundaryConditions(const NekDouble time = 0.0)
+            {
+                ExpList1D::EvaluateBoundaryConditions(time,m_bndCondExpansions,m_bndConditions);
+            };
           
             /**
              * \brief This function return the boundary conditions expansion.
@@ -332,11 +336,7 @@ namespace Nektar
             void GenerateBoundaryConditionExpansion(const SpatialDomains::MeshGraph1D &graph1D,
                                                     SpatialDomains::BoundaryConditions &bcs, 
                                                     const std::string variable);
-
-            void GetPeriodicVertices(const SpatialDomains::MeshGraph1D &graph1D,
-                                     SpatialDomains::BoundaryConditions &bcs, 
-                                     const std::string variable,
-                                     map<int,int>& periodicVertices);
+            
         };
         typedef boost::shared_ptr<ContField1D>      ContField1DSharedPtr;
 

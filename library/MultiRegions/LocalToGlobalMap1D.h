@@ -144,7 +144,7 @@ namespace Nektar
             {
                 return 1.0;
             }
-    };
+        };
     
     } // end of namespace
 } // end of namespace
@@ -153,6 +153,9 @@ namespace Nektar
 
 /**
  $Log: LocalToGlobalMap1D.h,v $
+ Revision 1.23  2008/07/10 13:02:34  pvos
+ Added periodic boundary conditions functionality
+
  Revision 1.22  2008/04/06 20:22:46  bnelson
  Fixed gcc compiler warnings.
 

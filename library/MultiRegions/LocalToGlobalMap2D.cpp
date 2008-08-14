@@ -298,27 +298,35 @@ namespace Nektar
             StdRegions::EdgeOrientation         edgeOrient;
             Array<OneD, unsigned int>           edgeInteriorMap;  
 
-            // The only unique identifiers of the vertices and edges of the mesh are the
-            // vertex id and the mesh id (stored in their corresponding Geometry object).
-            // However, setting up a global numbering based on these id's will not lead to 
-            // a suitable or optimal numbering. Mainly because:
-            // - we want the Dirichlet DOF's to be listed first
-            // - we want an optimal global numbering of the remaining DOF's (strategy still
-            //   need to be defined but can for example be: minimum bandwith or minimum fill-in
-            //   of the resulting global system matrix)
+            // The only unique identifiers of the vertices and edges
+            // of the mesh are the vertex id and the mesh id (stored
+            // in their corresponding Geometry object).  However,
+            // setting up a global numbering based on these id's will
+            // not lead to a suitable or optimal numbering. Mainly
+            // because: - we want the Dirichlet DOF's to be listed
+            // first - we want an optimal global numbering of the
+            // remaining DOF's (strategy still need to be defined but
+            // can for example be: minimum bandwith or minimum fill-in
+            // of the resulting global system matrix)
             //
-            // That's why the vertices annd egdes will be rearranged. Currently, this is done 
-            // in the following way: The vertices and edges of the mesh are considered as vertices 
-            // of a graph (in a computer science way)(equivalently, they can also be considered as 
-            // boundary degrees of freedom, whereby all boundary modes of a single edge are considered
-            // as a single DOF). We then will use algorithms to reorder these 
+            // That's why the vertices annd egdes will be
+            // rearranged. Currently, this is done in the following
+            // way: The vertices and edges of the mesh are considered
+            // as vertices of a graph (in a computer science
+            // way)(equivalently, they can also be considered as
+            // boundary degrees of freedom, whereby all boundary modes
+            // of a single edge are considered as a single DOF). We
+            // then will use algorithms to reorder these
             // graph-vertices (or boundary DOF's).
             //
-            // Two different containers are used to store the graph vertex id's of the different
-            // mesh vertices and edges. They are implemented as a STL map such that the graph vertex id
-            // can later be retrieved by the unique mesh vertex or edge id's which serve as the key of the map.  
-            map<int, int> vertReorderedGraphVertId;
-            map<int, int> edgeReorderedGraphVertId; 
+            // Two different containers are used to store the graph
+            // vertex id's of the different mesh vertices and
+            // edges. They are implemented as a STL map such that the
+            // graph vertex id can later be retrieved by the unique
+            // mesh vertex or edge id's which serve as the key of the
+            // map.
+            map<int,int> vertReorderedGraphVertId;
+            map<int,int> edgeReorderedGraphVertId; 
             map<int,int>::iterator mapIt;
             map<int,int>::const_iterator mapConstIt;
            
@@ -364,8 +372,9 @@ namespace Nektar
                 Array<OneD, int>       localEdges;               
 
                 m_totLocBndDofs = 0;
-                // First we are going to set up a temporary ordering of the mesh vertices and edges
-                // in the graph. We will then later use METIS to optimise this ordering
+                // First we are going to set up a temporary ordering
+                // of the mesh vertices and edges in the graph. We
+                // will then later use METIS to optimise this ordering
 
                 // List the periodic vertices and edges next.
                 // This allows to give corresponding DOF's the same
@@ -402,14 +411,17 @@ namespace Nektar
                 {
                     meshEdgeId  = mapConstIt->first;
                     meshEdgeId2 = mapConstIt->second;
-
-                    ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId) == 0,
-                             "This periodic boundary edge has been specified before");
-                    ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId2) == 0,
-                             "This periodic boundary edge has been specified before");
                     
-                    edgeTempGraphVertId[meshEdgeId]  = tempGraphVertId;
-                    edgeTempGraphVertId[meshEdgeId2] = tempGraphVertId++;
+                    if(meshEdgeId < meshEdgeId2)
+                    {
+                        ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId) == 0,
+                                 "This periodic boundary edge has been specified before");
+                        ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId2) == 0,
+                                 "This periodic boundary edge has been specified before");
+                        
+                        edgeTempGraphVertId[meshEdgeId]  = tempGraphVertId;
+                        edgeTempGraphVertId[meshEdgeId2] = tempGraphVertId++;
+                    }
                 }
 
                 // List all other vertices and edges
@@ -625,13 +637,16 @@ namespace Nektar
                     meshEdgeId  = mapConstIt->first;
                     meshEdgeId2 = mapConstIt->second;
 
-                    ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId) == 0,
-                             "This periodic boundary edge has been specified before");
-                    ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId2) == 0,
-                             "This periodic boundary edge has been specified before");
+                    if(meshEdgeId < meshEdgeId2)
+                    {
+                        ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId) == 0,
+                                 "This periodic boundary edge has been specified before");
+                         ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId2) == 0,
+                                  "This periodic boundary edge has been specified before");
                     
-                    edgeTempGraphVertId[meshEdgeId]  = tempGraphVertId;
-                    edgeTempGraphVertId[meshEdgeId2] = tempGraphVertId++;
+                        edgeTempGraphVertId[meshEdgeId]  = tempGraphVertId;
+                        edgeTempGraphVertId[meshEdgeId2] = tempGraphVertId++;
+                    }
                 }
 
                 // List all other vertices and edges
@@ -798,13 +813,16 @@ namespace Nektar
                     meshEdgeId  = mapConstIt->first;
                     meshEdgeId2 = mapConstIt->second;
 
-                    ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId) == 0,
-                             "This periodic boundary edge has been specified before");
-                    ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId2) == 0,
-                             "This periodic boundary edge has been specified before");
+                    if(meshEdgeId < meshEdgeId2)
+                    {
+                        ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId) == 0,
+                                 "This periodic boundary edge has been specified before");
+                        ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId2) == 0,
+                                 "This periodic boundary edge has been specified before");
                     
-                    edgeReorderedGraphVertId[meshEdgeId]  = graphVertId;
-                    edgeReorderedGraphVertId[meshEdgeId2] = graphVertId++;
+                        edgeReorderedGraphVertId[meshEdgeId]  = graphVertId;
+                        edgeReorderedGraphVertId[meshEdgeId2] = graphVertId++;
+                    }
                 }
 
                 // List all other vertices and edges
@@ -1028,6 +1046,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalMap2D.cpp,v $
+* Revision 1.16  2008/07/29 22:27:33  sherwin
+* Updates for DG solvers, including using GenSegExp, fixed forcing function on UDG HelmSolve and started to tidy up the mapping arrays to be 1D rather than 2D
+*
 * Revision 1.15  2008/07/10 13:02:34  pvos
 * Added periodic boundary conditions functionality
 *

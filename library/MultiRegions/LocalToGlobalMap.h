@@ -48,9 +48,10 @@ namespace Nektar
     namespace MultiRegions
     {
         const static Array<OneD, SpatialDomains::BoundaryConditionShPtr> NullBoundaryConditionShPtrArray;
+
         const static map<int,int> NullIntIntMap;
         
-    class LocalToGlobalMap:
+        class LocalToGlobalMap:
         public LocalToGlobalBndryMap
         {
         public:
@@ -139,6 +140,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalMap.h,v $
+/** Revision 1.19  2008/07/10 13:02:34  pvos
+/** Added periodic boundary conditions functionality
+/**
 /** Revision 1.18  2008/04/06 22:31:17  bnelson
 /** Fixed gcc compiler warnings.
 /**

@@ -180,21 +180,21 @@ namespace Nektar
 
         // Orientation of adjacent edge for use with boundary
         // constraints
-        enum AdjacentEdgeOrientation
+        enum AdjacentTraceOrientation
         {
             eAdjacentEdgeIsForwards,
             eAdjacentEdgeIsBackwards
         };
         
-
+        
         const char* const GlobalSysSolnTypeMap[] = 
-        {
+            {
             "No Solution Type",
             "Direct Solve: Full Matrix",
             "Direct Solve: Static Condensation"
         };
 
-
+        
         typedef std::vector<SpatialDomains::BoundaryConditionType>  BndTypesVector;
         typedef std::vector<SpatialDomains::BoundaryConditionType>::iterator BndTypesVectorIter;
 

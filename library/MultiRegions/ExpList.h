@@ -39,6 +39,7 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <StdRegions/StdExpansion.h>
 #include <MultiRegions/LocalToGlobalMap.h>
+#include <MultiRegions/LocalToGlobalBaseMap.h>
 #include <MultiRegions/GlobalLinSys.h>
 
 #include <LocalRegions/MatrixKey.h>
@@ -50,6 +51,7 @@ namespace Nektar
     {
         class GlobalLinSys; 
         class LocalToGlobalMap;
+        class LocalToGlobalBaseMap;
         
         /**
          * \brief This is the base class for all multi-elemental spectral/hp 
@@ -1012,11 +1014,12 @@ namespace Nektar
                                                              const boost::shared_ptr<LocalToGlobalMap> &locToGloMap);
             
             /**
-             * \brief 
+             * \brief Generate a GlobalLinSys from information
+             * provided by the key "mkey" and the mapping provided in
+             * LocToGloBaseMap
              */      
-            boost::shared_ptr<GlobalLinSys>  GenGlobalBndLinSys(const GlobalLinSysKey &mkey,
-                                                                const boost::shared_ptr<LocalToGlobalBndryMap> &locToGloMap);
-            
+            boost::shared_ptr<GlobalLinSys> GenGlobalBndLinSys(const GlobalLinSysKey     &mkey, const LocalToGlobalBaseMap &LocToGloBaseMap);
+
         private:
 
     };
@@ -1032,6 +1035,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.41  2008/07/29 22:27:33  sherwin
+* Updates for DG solvers, including using GenSegExp, fixed forcing function on UDG HelmSolve and started to tidy up the mapping arrays to be 1D rather than 2D
+*
 * Revision 1.40  2008/07/15 13:00:04  sherwin
 * Updates for DG advection solver - not yet debugged
 *

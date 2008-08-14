@@ -40,11 +40,12 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/GenExpList1D.h>
+#include <MultiRegions/GlobalLinSys.h>
+#include <MultiRegions/LocalToGlobalDGMap.h>
 #include <LocalRegions/SegExp.h>
 #include <SpatialDomains/MeshGraph2D.h>
 #include <SpatialDomains/BoundaryConditions.h>
 #include <SpatialDomains/SegGeom.h>
-#include <MultiRegions/GlobalLinSys.h>
 
 namespace Nektar
 {
@@ -67,12 +68,6 @@ namespace Nektar
 
             ~DisContField2D();
             
-            void GenerateFieldBnd2D(SpatialDomains::MeshGraph2D &graph2D,
-                                    SpatialDomains::BoundaryConditions &bcs, 
-                                    const std::string variable);
-
-            void SetUpTraceMappings(SpatialDomains::MeshGraph2D &graph2D);
-
             inline GenExpList1DSharedPtr &GetTrace(void)
             {
                 return m_trace;
@@ -80,8 +75,41 @@ namespace Nektar
 
             
             void HelmSolve(DisContField2D &Fce, NekDouble lambda);
+            /**
+             * \brief This function evaluates the boundary conditions at a certain 
+             * time-level.
+             *
+             * Based on the boundary condition \f$g(\boldsymbol{x},t)\f$ evaluated
+             * at a given time-level \a t, this function transforms the boundary 
+             * conditions onto the coefficients of the (one-dimensional) boundary 
+             * expansion. Depending on the type of boundary conditions, these
+             * expansion coefficients are calculated in different ways:
+             * - <b>Dirichlet boundary conditions</b><BR>
+             *   In order to ensure global \f$C^0\f$ continuity of the spectral/hp 
+             *   approximation, the Dirichlet boundary conditions are projected onto 
+             *   the boundary expansion by means of a modified \f$C^0\f$ continuous  
+             *   Galerkin projection. This projection can be viewed as a collocation
+             *   projection at the vertices, followed by an \f$L^2\f$ projection on 
+             *   the interior modes of the edges. The resulting coefficients 
+             *   \f$\boldsymbol{\hat{u}}^{\mathcal{D}}\f$ will be stored for the 
+             *   boundary expansion.
+             * - <b>Neumann boundary conditions</b>
+             *   In the discrete Galerkin formulation of the problem to be solved, 
+             *   the Neumann boundary conditions appear as the set of surface 
+             *   integrals: \f[\boldsymbol{\hat{g}}=\int_{\Gamma}
+             *   \phi^e_n(\boldsymbol{x})g(\boldsymbol{x})d(\boldsymbol{x})\quad
+             *   \forall n \f]
+             *   As a result, it are the coefficients \f$\boldsymbol{\hat{g}}\f$ 
+             *   that will be stored in the boundary expansion
+             *
+             * \param time The time at which the boundary conditions should be 
+             * evaluated
+             */ 
+            void EvaluateBoundaryConditions(const NekDouble time = 0.0)
+            {
+                ExpList2D::EvaluateBoundaryConditions(time,m_bndCondExpansions,m_bndConditions);
+            }
 
-            GlobalLinSysSharedPtr GenGlobalBndLinSys(const GlobalLinSysKey &mkey);
             GlobalLinSysSharedPtr GetGlobalBndLinSys(const GlobalLinSysKey &mkey);
         
             void GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd, 
@@ -101,20 +129,33 @@ namespace Nektar
         protected:
 
         private:
-            int m_numTraceDirichletBCs;       ///< Number of Coeff space BCs
-            int m_numTraceDirichletPhysBCs;   ///< Number of physical space BCs
-            Array<OneD,MultiRegions::ExpList1DSharedPtr>       m_bndConstraint;
-            Array<OneD,SpatialDomains::BoundaryConditionType>  m_bndTypes;
+            Array<OneD,MultiRegions::ExpList1DSharedPtr>       m_bndCondExpansions;
+            Array<OneD,SpatialDomains::BoundaryConditionShPtr>  m_bndConditions;
             GlobalLinSysMapShPtr                               m_globalBndMat;
             GenExpList1DSharedPtr                              m_trace;
+            LocalToGlobalDGMapSharedPtr                        m_traceMap;
 
-            Array<OneD,Array<OneD,LocalRegions::GenSegExpSharedPtr> > m_elmtToTrace;
-            // NOTE This should all go into a class structure
-            Array<OneD,Array<OneD, int> > m_bndEidToTraceEid;  ///< Boundary list Expansion ID to Trace list Expansion ID
-            Array<OneD,Array<OneD, AdjacentEdgeOrientation> > m_bndExpAdjacentOrient;  ///< Boundary Expansion adjacent edge orientation 
-            Array<OneD, int > m_elmtTraceMap;
-            Array<OneD, int > m_elmtTraceSign;
 
+            /**
+             * \brief This function discretises the boundary conditions by setting up
+             * a list of one-dimensional boundary expansions.    
+             *
+             * According to their boundary region, the separate segmental boundary 
+             * expansions are bundled together in an object of the class 
+             * MultiRegions#ExpList1D. 
+             * The list of expansions of the Dirichlet boundary regions are listed 
+             * first in the array #m_bndCondExpansions.
+             *
+             * \param graph2D A mesh, containing information about the domain and 
+             * the spectral/hp element expansion.
+             * \param bcs An entity containing information about the boundaries and 
+             * boundary conditions.
+             * \param variable An optional parameter to indicate for which variable 
+             * the boundary conditions should be discretised.
+             */ 
+            void GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D,
+                                                    SpatialDomains::BoundaryConditions &bcs, 
+                                                    const std::string variable);
         };
 
         typedef boost::shared_ptr<DisContField2D>   DisContField2DSharedPtr;

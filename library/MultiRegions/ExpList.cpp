@@ -46,7 +46,6 @@ namespace Nektar
             m_phys(),
             m_transState(eNotSet),
             m_physState(false)
-            //            m_exp(MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr())
         {            
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
         }
@@ -434,7 +433,6 @@ namespace Nektar
             int i,j,n,gid1,gid2,loc_lda,cnt;
             NekDouble sign1,sign2;
             DNekScalMatSharedPtr loc_mat;
-            StdRegions::StdExpansionVectorIter def;
             DNekLinSysSharedPtr   linsys;
             GlobalLinSysSharedPtr returnlinsys;
 
@@ -602,27 +600,24 @@ namespace Nektar
             return returnlinsys;
         }
 
-
-
-        GlobalLinSysSharedPtr ExpList::GenGlobalBndLinSys(const GlobalLinSysKey &mkey, const LocalToGlobalBndryMapSharedPtr &LocToGloMap)
+        GlobalLinSysSharedPtr ExpList::GenGlobalBndLinSys(const GlobalLinSysKey     &mkey, const LocalToGlobalBaseMap &LocToGloBaseMap)
 	{
             int i,j,n,gid1,gid2,loc_lda,cnt;
-            StdRegions::StdExpansionVectorIter def;
             DNekLinSysSharedPtr   linsys;
             GlobalLinSysSharedPtr returnlinsys;
-
-            int totDofs       = (*m_exp).size()+1;
-            int NumDirBCs     = LocToGloMap->GetNumDirichletDofs();
+            
+            int totDofs       = LocToGloBaseMap.GetNumGlobalBndCoeffs();
+            int NumDirBCs     = LocToGloBaseMap.GetNumDirichletBndCoeffs();
             unsigned int rows = totDofs - NumDirBCs;
             unsigned int cols = totDofs - NumDirBCs;
-            NekDouble zero = 0.0; 
+            NekDouble zero    = 0.0,sign1,sign2; 
             NekDouble factor1 = mkey.GetFactor1();
             NekDouble factor2 = mkey.GetFactor2();
             StdRegions::MatrixType linsystype = mkey.GetLinSysType();
             
-            DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero);            
-            ASSERTL0(linsystype == StdRegions::eUnifiedDGHelmBndLam,
-                     "Routine currently only tested for UnifiedDGHelmholtz");
+            DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero); 
+            ASSERTL0(linsystype == StdRegions::eHybridDGHelmBndLam,
+                     "Routine currently only tested for HybridDGHelmholtz");
             
             // fill global matrix 
             for(n = cnt = 0; n < (*m_exp).size(); ++n)
@@ -635,21 +630,24 @@ namespace Nektar
                 
                 for(i = 0; i < loc_lda; ++i)
                 {
-                    gid1 = LocToGloMap->GetBndMap(cnt + i);
+                    gid1  = LocToGloBaseMap.GetLocalToGlobalBndMap(cnt + i);
+                    sign1 = LocToGloBaseMap.GetLocalToGlobalBndSign(cnt + i); 
+
                     if(gid1 >= NumDirBCs)
                     {
                         for(j = 0; j < loc_lda; ++j)
                         {
-                            gid2 = LocToGloMap->GetBndMap(cnt + j);
+                            gid2 = LocToGloBaseMap.GetLocalToGlobalBndMap(cnt + j);
+                            sign2 = LocToGloBaseMap.GetLocalToGlobalBndSign(cnt + j); 
                             if(gid2 >= NumDirBCs)
                             {
                                 (*Gmat)(gid1-NumDirBCs,gid2-NumDirBCs) 
-                                    += (BndSys)(i,j);
+                                    += sign1*sign2*(BndSys)(i,j);
                             }
                         }		
                     }
                 }
-                cnt += (*m_exp)[n]->NumDGBndryCoeffs(); 		    
+                cnt += loc_lda;
             }
             
             // Believe that we need a call of the type:
@@ -742,8 +740,7 @@ namespace Nektar
             if(format==eTecplot)
             {
                 int i,cnt = 0;
-                std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
-                StdRegions::StdExpansionVectorIter def;
+
                 Array<OneD, const NekDouble> phys = m_phys;
                 
                 if(m_physState == false)
@@ -899,8 +896,6 @@ namespace Nektar
             ASSERTL2(Sol.GetPhysState() == true,
                      "local physical space is not true ");
             
-            std::vector<StdRegions::StdExpansionVector>::iterator  sdef;
-            StdRegions::StdExpansionVectorIter def;
             NekDouble err = 0.0;
             int       i,cnt = 0;
             Array<OneD, const NekDouble> soln = Sol.GetPhys();

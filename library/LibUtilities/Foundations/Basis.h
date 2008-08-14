@@ -332,6 +332,8 @@ namespace Nektar
         typedef boost::shared_ptr<Basis> BasisSharedPtr;
         typedef std::vector< BasisSharedPtr > BasisVector; 
         typedef std::vector< BasisSharedPtr >::iterator BasisVectorIter; 
+        
+        static BasisSharedPtr NullBasisSharedPtr;
 
     } // end of namespace
 } // end of namespace

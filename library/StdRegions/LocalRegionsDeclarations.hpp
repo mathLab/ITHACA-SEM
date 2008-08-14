@@ -36,14 +36,12 @@
 #ifndef LOCALREGDEF_H
 #define LOCALREGDEF_H
 
+
 namespace Nektar
 {
     namespace LocalRegions
     {
         class MatrixKey;
-        
-        class GenSegExp; 
-        class SegExp; 
         
     } // end of namespace
 } // end of namespace
@@ -52,6 +50,9 @@ namespace Nektar
 
 /**
  * $Log: LocalRegionsDeclarations.hpp,v $
+ * Revision 1.5  2008/07/31 11:10:15  sherwin
+ * Updates for handling EdgeBasisKey for use with DG advection. Depracated GetEdgeBasis and added DetEdgeBasisKey
+ *
  * Revision 1.4  2008/02/29 19:15:19  sherwin
  * Update for UDG stuff
  *

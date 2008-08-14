@@ -40,7 +40,6 @@
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion2D.h>
 #include <StdRegions/StdSegExp.h>
-#include <StdRegions/StdExpMap.h>
 
 namespace Nektar
 {
@@ -74,7 +73,7 @@ namespace Nektar
             };
 
 
-            virtual bool v_IsBoundaryInteriorExpansion()
+            bool IsBoundaryInteriorExpansion()
             {
                 bool returnval = false;
                 
@@ -351,6 +350,11 @@ namespace Nektar
                 return DetExpansionType();
             }
 
+            virtual bool v_IsBoundaryInteriorExpansion()
+            {
+                return IsBoundaryInteriorExpansion();
+            }
+
             virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
                                      Array<OneD, NekDouble> &coords_1,
                                      Array<OneD, NekDouble> &coords_2)
@@ -489,7 +493,12 @@ namespace Nektar
             {
                 HelmholtzMatrixOp(inarray,outarray,lambda);
             }  
-        };
+
+            virtual void v_GetEdgePhysVals(const int edge,  StdExpansion1DSharedPtr &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
+            }        };
+
         typedef boost::shared_ptr<StdQuadExp> StdQuadExpSharedPtr;
 
     } //end of namespace
@@ -499,6 +508,9 @@ namespace Nektar
 
 /**
  * $Log: StdQuadExp.h,v $
+ * Revision 1.38  2008/07/31 21:19:56  sherwin
+ * Small mods on returning consts
+ *
  * Revision 1.37  2008/07/31 11:10:15  sherwin
  * Updates for handling EdgeBasisKey for use with DG advection. Depracated GetEdgeBasis and added DetEdgeBasisKey
  *

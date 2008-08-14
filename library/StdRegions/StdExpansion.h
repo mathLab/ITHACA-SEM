@@ -42,7 +42,6 @@
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/SpatialDomainsDeclarations.hpp>
 #include <StdRegions/LocalRegionsDeclarations.hpp>
-#include <StdRegions/StdExpMap.h>
 #include <StdRegions/StdMatrixKey.h>
 #include <StdRegions/StdLinSysKey.hpp>
 
@@ -51,7 +50,7 @@ namespace Nektar
     namespace StdRegions
     {
 
-        class StdSegExp;
+        class StdExpansion1D;
 
         /** \brief The base class for all shapes
          *   
@@ -72,13 +71,15 @@ namespace Nektar
                          const LibUtilities::BasisKey &Bb = LibUtilities::NullBasisKey,
                          const LibUtilities::BasisKey &Bc = LibUtilities::NullBasisKey);
 
+#if 1
+
             /** \brief Copy Constructor */
             StdExpansion(const StdExpansion &T);
 
             /** \brief Destructor */
             virtual ~StdExpansion();
 
-
+        
             /** \brief This function returns a pointer to the coefficient array
              *  \f$ \mathbf{\hat{u}}\f$ 
              *
@@ -243,7 +244,7 @@ namespace Nektar
             {
                 m_coeffs[i] = coeff;
             }
-
+        
             /** \brief This function returns the total number of quadrature
              *  points used in the element 
              *  
@@ -350,7 +351,7 @@ namespace Nektar
             {
                 return m_base[dir]->GetZ();
             }
-
+        
 
             NekDouble operator[] (const int i) const
             {
@@ -446,7 +447,7 @@ namespace Nektar
                 return v_GetFaceNcoeffs(i);
             }
 
-
+        
             int NumBndryCoeffs(void)  const
             {
                 return v_NumBndryCoeffs();
@@ -487,7 +488,7 @@ namespace Nektar
             {
                 return v_GetNfaces();
             }
-
+        
             /** \brief This function returns the shape of the expansion domain 
              *  
              *  This function is a wrapper around the virtual function 
@@ -546,7 +547,7 @@ namespace Nektar
             {
                 v_BwdTrans (inarray, outarray);
             }
-
+        
             /** \brief This function performs the Forward transformation from 
              *  physical space to coefficient space
              *
@@ -638,7 +639,7 @@ namespace Nektar
             {
                 v_FillMode(mode, outarray);
             }
-
+        
             /** \brief this function calculates the inner product of a given 
              *  function \a f with the different modes of the expansion
              *  
@@ -666,7 +667,7 @@ namespace Nektar
             {
                 v_IProductWRTDerivBase(dir,inarray, outarray);
             }
-
+        
             /// \brief Get the element id of this expansion when used
             /// in a list by returning value of #m_elmt_id
             inline int GetElmtId() 
@@ -697,7 +698,7 @@ namespace Nektar
             {
                 v_GetCoords(coords_1,coords_2,coords_3);
             }
-
+            
             /** \brief given the coordinates of a point of the element in the 
              *  local collapsed coordinate system, this function calculates the 
              *  physical coordinates of the point
@@ -714,8 +715,8 @@ namespace Nektar
             {
                 v_GetCoord(Lcoord, coord);
             }
-
-
+            
+        
             /** \brief this function writes the solution to the file \a outfile
              *
              *  This function is a wrapper around the virtual function 
@@ -732,23 +733,23 @@ namespace Nektar
             {
                 v_WriteToFile(outfile,format,dumpVar);
             }
-
+                
             inline DNekMatSharedPtr& GetStdMatrix(const StdMatrixKey &mkey) 
             {
                 return m_stdMatrixManager[mkey];
             }
-
+        
             inline DNekBlkMatSharedPtr& GetStdStaticCondMatrix(const StdMatrixKey &mkey) 
             {
                 return m_stdStaticCondMatrixManager[mkey];
             }
-            
+        
             DNekScalMatSharedPtr& GetLocMatrix(const MatrixType mtype, NekDouble lambdaval = NekUnsetDouble, NekDouble tau = NekUnsetDouble)
             {
                 return v_GetLocMatrix(mtype,lambdaval,tau);
             }
             
-
+        
             DNekScalMatSharedPtr& GetLocMatrix(const LocalRegions::MatrixKey &mkey)
             {
                 return v_GetLocMatrix(mkey);
@@ -787,71 +788,32 @@ namespace Nektar
                 return v_GetCartesianEorient(edge);
             }
 
-            void AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
-                                              const Array<OneD, const NekDouble> &inarray,
-                                              Array<OneD,NekDouble> &outarray)
-            {
-                v_AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray);
-            }
-            
 
-            void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+            void AddHDGHelmholtzTraceTerms(const NekDouble tau, 
                                            const Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,NekDouble> &outarray)
-                
-            {
-                v_AddUDGHelmholtzTraceTerms(tau,inarray,outarray);
-            }
-
-            void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
-                                           const Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,boost::shared_ptr<LocalRegions::SegExp> > &EdgeExp,
                                            Array<OneD,NekDouble> &outarray)                
             {
-                v_AddUDGHelmholtzTraceTerms(tau,inarray,EdgeExp, outarray);
+                v_AddHDGHelmholtzTraceTerms(tau,inarray, outarray);
             }
 
-
-            void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+            void AddHDGHelmholtzTraceTerms(const NekDouble tau, 
                                            const Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,boost::shared_ptr<LocalRegions::GenSegExp> > &EdgeExp,
+                                           Array<OneD,boost::shared_ptr<StdExpansion1D> > &EdgeExp,
                                            Array<OneD,NekDouble> &outarray)                
             {
-                v_AddUDGHelmholtzTraceTerms(tau,inarray,EdgeExp, outarray);
+                v_AddHDGHelmholtzTraceTerms(tau,inarray,EdgeExp, outarray);
             }
 
             // virtual functions related to LocalRegions
-            virtual void AddNormBoundaryInt(const int dir,
-                                            Array<OneD, const NekDouble> &inarray,
-                                            Array<OneD,NekDouble> &outarray)
-            {
-                v_AddNormBoundaryInt(dir,inarray,outarray);
-            }
 
             virtual void AddEdgeNormBoundaryInt(const int edge, 
-                                                boost::shared_ptr<LocalRegions::GenSegExp>  &EdgeExp,
+                                                boost::shared_ptr<StdExpansion1D>  &EdgeExp,
                                                 Array<OneD, NekDouble> &Fx,  
                                                 Array<OneD, NekDouble> &Fy,  
                                                 Array<OneD, NekDouble> &outarray)
             {
                 v_AddEdgeNormBoundaryInt(edge,EdgeExp,Fx,Fy,outarray);
             }
-
-
-            virtual void AddBoundaryInt(Array<OneD, const NekDouble> &inarray,
-                                        Array<OneD,NekDouble> &outarray)
-            {
-                v_AddBoundaryInt(inarray,outarray);
-            }
-
-
-            virtual void AddEdgeBoundaryInt(const int edge, 
-                                            boost::shared_ptr< LocalRegions::SegExp > &EdgeExp,
-                                            Array< OneD, NekDouble > &outarray)
-            {
-                v_AddEdgeBoundaryInt(edge,EdgeExp,outarray);
-            }
-
 
             virtual void AddNormTraceInt(const int dir,
                                          Array<OneD, const NekDouble> &inarray,
@@ -906,7 +868,7 @@ namespace Nektar
                 v_GetEdgePhysVals(edge,inarray,outarray);
             }
 
-            void GetEdgePhysVals(const int edge, const boost::shared_ptr<LocalRegions::SegExp> &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            void GetEdgePhysVals(const int edge, const boost::shared_ptr<StdExpansion1D>   &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
             }
@@ -964,7 +926,7 @@ namespace Nektar
                 v_PhysDeriv (inarray, out_d0, out_d1, out_d2);
             }
 
-            virtual void PhysDeriv(const int dir, 
+            void PhysDeriv(const int dir, 
                                    const Array<OneD, const NekDouble>& inarray,
                                    Array<OneD, NekDouble> &outarray)
             {
@@ -1064,12 +1026,6 @@ namespace Nektar
                 return NullDNekScalBlkMatSharedPtr;
             }
 
-            virtual void v_SetTraceToGeomOrientation(Array<OneD, NekDouble> &inout)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only defined for LocalReigons");
-                
-            }
-
 
             virtual StdRegions::FaceOrientation v_GetFaceorient(int face)
 
@@ -1092,62 +1048,28 @@ namespace Nektar
             }
 
 
-            virtual void v_AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
-                                                        const Array<OneD, const NekDouble> &inarray,
-                                                        Array<OneD,NekDouble> &outarray)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
-            }
-
-            virtual void v_AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+            virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
                                                      const Array<OneD, const NekDouble> &inarray,
                                                      Array<OneD,NekDouble> &outarray)
             { 
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
 
-            virtual void v_AddUDGHelmholtzTraceTerms(const NekDouble tau, 
+
+            virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
                                                      const Array<OneD, const NekDouble> &inarray,
-                                                     Array<OneD, boost::shared_ptr<LocalRegions::SegExp> > &edgeExp, 
+                                                     Array<OneD, boost::shared_ptr< StdExpansion1D > > &edgeExp, 
                                                      Array<OneD,NekDouble> &outarray)
             { 
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
 
-            virtual void v_AddUDGHelmholtzTraceTerms(const NekDouble tau, 
-                                                     const Array<OneD, const NekDouble> &inarray,
-                                                     Array<OneD, boost::shared_ptr<LocalRegions::GenSegExp> > &edgeExp, 
-                                                     Array<OneD,NekDouble> &outarray)
-            { 
-                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
-            }
             
-            virtual void v_AddNormBoundaryInt(const int dir,
-                                              Array<OneD, const NekDouble> &inarray,
-                                              Array<OneD,NekDouble> &outarray)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
-            }
-
-
             virtual void v_AddEdgeNormBoundaryInt(const int edge,
-                                                  boost::shared_ptr<LocalRegions::GenSegExp> &EdgeExp,
+                                                  boost::shared_ptr<StdExpansion1D> &EdgeExp,
                                                   Array<OneD, NekDouble> &Fx,  
                                                   Array<OneD, NekDouble> &Fy,  
                                                   Array<OneD, NekDouble> &outarray)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
-            }
-
-            virtual void v_AddBoundaryInt(Array<OneD, const NekDouble> &inarray,
-                                          Array<OneD,NekDouble> &outarray)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
-            }
-
-            virtual void v_AddEdgeBoundaryInt(const int edge, 
-                                              boost::shared_ptr<LocalRegions::SegExp > &EdgeExp,
-                                             Array< OneD, NekDouble > &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
@@ -1359,8 +1281,18 @@ namespace Nektar
         private:
             // Virtual functions
             virtual int v_GetNverts() const = 0;
-            virtual int v_GetNedges() const = 0;
-            virtual int v_GetNfaces() const = 0;
+            virtual int v_GetNedges() const
+            {
+                ASSERTL0(false, "This function is needs defining for this shape");
+                return 0;
+            }
+
+            virtual int v_GetNfaces() const
+            {
+                ASSERTL0(false, "This function is needs defining for this shape");
+                return 0;
+            }
+
 
             virtual int v_NumBndryCoeffs() const 
             {
@@ -1405,7 +1337,7 @@ namespace Nektar
 
                 return LibUtilities::eNoBasisType;
             }
-
+        
             virtual ExpansionType v_DetExpansionType() const
             {
                 ASSERTL0(false, "This expansion does not have a shape type defined");
@@ -1417,7 +1349,6 @@ namespace Nektar
                 ASSERTL0(false,"This function has not been defined for this expansion");
                 return false;
             }
-
 
             virtual void   v_BwdTrans   (const Array<OneD, const NekDouble>& inarray, 
                                          Array<OneD, NekDouble> &outarray) = 0;
@@ -1565,16 +1496,18 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
+
             virtual void v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
+        
 
-
-            virtual void v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<LocalRegions::SegExp>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            virtual void v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion1D>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
+
 
             virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
             {
@@ -1608,7 +1541,7 @@ namespace Nektar
 
                 return SpatialDomains::NullGeometry3DSharedPtr;
             }
-        
+                
             virtual void v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray)
             {
@@ -1663,11 +1596,11 @@ namespace Nektar
                 
                 Blas::Daxpy(m_ncoeffs, lambda, tmp, 1, outarray, 1);
             }
-
-
+#endif
+            
         };
 
-
+    
         typedef boost::shared_ptr<StdExpansion> StdExpansionSharedPtr;
         typedef std::vector< StdExpansionSharedPtr > StdExpansionVector;
         typedef std::vector< StdExpansionSharedPtr >::iterator StdExpansionVectorIter;
@@ -1678,6 +1611,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.94  2008/08/03 20:13:03  sherwin
+ * Put return values in virtual functions
+ *
  * Revision 1.93  2008/07/31 11:10:15  sherwin
  * Updates for handling EdgeBasisKey for use with DG advection. Depracated GetEdgeBasis and added DetEdgeBasisKey
  *
@@ -1992,7 +1928,4 @@ namespace Nektar
  * Coding standard revisions so that libraries compile
  *
  **/
-
-
-
 

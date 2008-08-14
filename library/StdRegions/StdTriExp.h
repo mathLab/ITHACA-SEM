@@ -77,7 +77,7 @@ namespace Nektar
                 return eTriangle;
             }
 
-            virtual bool v_IsBoundaryInteriorExpansion()
+            bool IsBoundaryInteriorExpansion()
             {
                 bool returnval = false;
                 
@@ -315,7 +315,7 @@ namespace Nektar
 
             DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey)
             {
-                return StdExpansion::CreateGeneralMatrix(mkey);
+                return CreateGeneralMatrix(mkey);
             }
 
         private:
@@ -375,7 +375,12 @@ namespace Nektar
             {
                 return GetEdgeBasisType(i);
             }
-
+            
+            virtual bool v_IsBoundaryInteriorExpansion()
+            {
+                
+                return IsBoundaryInteriorExpansion();
+            }
 
             virtual const LibUtilities::BasisKey v_DetEdgeBasisKey(const int i) const
             {
@@ -526,6 +531,9 @@ namespace Nektar
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.35  2008/07/31 21:20:56  sherwin
+ * Updates to make DG advection run with tris
+ *
  * Revision 1.34  2008/07/31 11:10:15  sherwin
  * Updates for handling EdgeBasisKey for use with DG advection. Depracated GetEdgeBasis and added DetEdgeBasisKey
  *

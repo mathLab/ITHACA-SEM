@@ -38,7 +38,6 @@
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion1D.h>
-#include <StdRegions/StdExpMap.h>
 
 namespace Nektar
 {
@@ -72,6 +71,24 @@ namespace Nektar
             {
                 return eSegment;
             };
+
+            bool IsBoundaryInteriorExpansion()
+            {
+                bool returnval = false;
+                
+                if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+                {
+                    returnval = true;
+                }
+                
+                if(m_base[0]->GetBasisType() == LibUtilities::eGLL_Lagrange)
+                {
+                    returnval = true;
+                }
+                
+                return returnval;
+            }
+
 
             //----------------------------
             // Integration Methods
@@ -277,20 +294,9 @@ namespace Nektar
 
             virtual bool v_IsBoundaryInteriorExpansion()
             {
-                bool returnval = false;
-                
-                if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
-                {
-                    returnval = true;
-                }
-                
-                if(m_base[0]->GetBasisType() == LibUtilities::eGLL_Lagrange)
-                {
-                    returnval = true;
-                }
-                
-                return returnval;
+                return IsBoundaryInteriorExpansion();
             }
+
 
             /** \brief Virtual call to integrate the physical point list \a inarray 
              *  over region (see StdSegExp::Integral)
@@ -447,6 +453,9 @@ namespace Nektar
 
 /**
  * $Log: StdSegExp.h,v $
+ * Revision 1.41  2008/07/19 21:12:54  sherwin
+ * Removed MapTo function and made orientation convention anticlockwise in UDG routines
+ *
  * Revision 1.40  2008/07/04 10:18:40  pvos
  * Some updates
  *

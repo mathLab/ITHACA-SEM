@@ -48,7 +48,7 @@ namespace Nektar
 
         class StdExpansion1D: public StdExpansion
         {
-
+            
         public:
 
             StdExpansion1D();
@@ -76,22 +76,23 @@ namespace Nektar
             */
             NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords);
 
+            void SetCoeffsToOrientation(StdRegions::EdgeOrientation dir)
+            {
+                v_SetCoeffsToOrientation(dir);
+            }
+
+            void SetCoeffsToOrientation(StdRegions::EdgeOrientation dir,
+                                        Array<OneD, const NekDouble> &inarray,
+                                        Array<OneD, NekDouble> &outarray)
+            {
+                v_SetCoeffsToOrientation(dir,inarray,outarray);
+            }
+
         protected:
 
         private:
 
             // Virtual Functions ----------------------------------------
-            virtual int v_GetNedges() const
-            {
-                ASSERTL0(false,"This function is only valid for 2 and 3D expansions");
-                return 0;
-            }
-
-            virtual int v_GetNfaces() const
-            {
-                ASSERTL0(false,"This function is only valid for 2 and 3D expansions");
-                return 0;
-            }
 
             virtual int v_GetCoordim(void)
             {
@@ -103,6 +104,17 @@ namespace Nektar
                 return PhysEvaluate(coords);
             }
 
+            virtual void v_SetCoeffsToOrientation(StdRegions::EdgeOrientation dir,
+                                                  Array<OneD, const NekDouble> &inarray,
+                                                  Array<OneD, NekDouble> &outarray)
+            {
+                ASSERTL0(false,"method only valid in local regions 1D classes");
+            }
+            
+            virtual void v_SetCoeffsToOrientation(StdRegions::EdgeOrientation dir)
+            {
+                ASSERTL0(false,"method only valid in local regions 1D classes");
+            }
         };
 
         typedef boost::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;
@@ -114,6 +126,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.30  2008/07/29 22:21:15  sherwin
+* A bunch of mods for DG advection and separaring the GetGeom calls into GetGeom1D ...
+*
 * Revision 1.29  2008/07/04 10:18:40  pvos
 * Some updates
 *

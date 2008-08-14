@@ -195,7 +195,7 @@ namespace Nektar
             int      order1    = GetBasisNumModes(1);
             MatrixType mtype   = mkey.GetMatrixType();
             
-            DNekMatSharedPtr Mat = StdExpansion::CreateGeneralMatrix(mkey);
+            DNekMatSharedPtr   Mat = StdExpansion::CreateGeneralMatrix(mkey);
 
             switch(mtype)
             {
@@ -1087,6 +1087,9 @@ namespace Nektar
 
 /** 
  * $Log: StdQuadExp.cpp,v $
+ * Revision 1.41  2008/07/19 21:12:54  sherwin
+ * Removed MapTo function and made orientation convention anticlockwise in UDG routines
+ *
  * Revision 1.40  2008/07/04 10:18:40  pvos
  * Some updates
  *

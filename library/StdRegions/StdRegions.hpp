@@ -170,14 +170,13 @@ namespace Nektar
             eInvNBasisTrans,
             eBwdTrans,
             eHelmholtz,
-            eUnifiedDGHelmholtz,
-            eInvUnifiedDGHelmholtz,
-            eUnifiedDGHelmBndLam,
-            eUnifiedDGHelmBndFce,
-            eUnifiedDGLamToQ0,
-            eUnifiedDGLamToQ1,
-            eUnifiedDGLamToQ2,
-            eUnifiedDGLamToU,
+            eHybridDGHelmholtz,
+            eInvHybridDGHelmholtz,
+            eHybridDGHelmBndLam,
+            eHybridDGLamToQ0,
+            eHybridDGLamToQ1,
+            eHybridDGLamToQ2,
+            eHybridDGLamToU,
             SIZE_MatrixType
         };
 
@@ -199,9 +198,9 @@ namespace Nektar
             "InvNBasisTrans", 
             "BwdTrans",
             "Helmholtz",
-            "UnifiedDGHelmholz",
-            "UnifiedDGQIprodWRTQ",
-            "UnifiedDGLamToQ"
+            "HybridDGHelmholz",
+            "HybridDGQIprodWRTQ",
+            "HybridDGLamToQ"
         };
 
         /** enum list of StdExpansion regions */
@@ -303,6 +302,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.27  2008/07/19 21:12:54  sherwin
+* Removed MapTo function and made orientation convention anticlockwise in UDG routines
+*
 * Revision 1.26  2008/07/10 13:03:49  pvos
 * Added eUnifiedDGHelmBndSysForce to the enum list
 *

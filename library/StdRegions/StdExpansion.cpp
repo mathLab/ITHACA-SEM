@@ -251,170 +251,9 @@ namespace Nektar
 
             switch(mkey.GetMatrixType())
             {
-            case StdRegions::eUnifiedDGHelmholtz:
-                {
-
-                    ASSERTL1(IsBoundaryInteriorExpansion(),
-                             "UnifiedDGHelmholtz matrix not set up "
-                             "for non boundary-interior expansions");
-
-                    int j;
-                    NekDouble tau = mkey.GetConstant(1);
-
-                    // Get basic Galerkin Helmholtz matrix 
-                    StdRegions::StdMatrixKey hkey(eHelmholtz,DetExpansionType(),
-                                                  *this,mkey.GetConstant(0));
-                    returnval  = GenMatrix(hkey);
-                    DNekMat &Mat = *returnval;
-
-                    Array<OneD,NekDouble> inarray(m_ncoeffs);
-                    Array<OneD,NekDouble> outarray(m_ncoeffs);
-
-                    for(j = 0; j < m_ncoeffs; ++j)
-                    {
-                        Vmath::Zero(m_ncoeffs,&inarray[0],1);
-                        Vmath::Zero(m_ncoeffs,&outarray[0],1);
-                        inarray[j] = 1.0;
-
-                        v_AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray);
-
-                        for(i = 0; i < m_ncoeffs; ++i)
-                        {
-                            Mat(i,j) += outarray[i];
-                        }
-                    }
-                }
-                break;
-            case StdRegions::eUnifiedDGLamToU:
-                {
-                    int i,j,k;
-                    int nbndry = NumDGBndryCoeffs();
-                    NekDouble lambdaval = mkey.GetConstant(0);
-                    NekDouble tau       = mkey.GetConstant(1);
-
-                    Array<OneD,NekDouble> lambda(nbndry);
-                    DNekVec Lambda(nbndry,lambda,eWrapper);                    
-                    Array<OneD,NekDouble> ulam(m_ncoeffs);
-                    DNekVec Ulam(m_ncoeffs,ulam,eWrapper);
-                    Array<OneD,NekDouble> f(m_ncoeffs);
-                    DNekVec F(m_ncoeffs,f,eWrapper);
-
-
-                    // declare matrix space
-                    returnval  = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,nbndry); 
-                    DNekMat &Umat = *returnval;
-
-                    // Helmholtz matrix
-                    DNekScalMat  &invHmat = *GetLocMatrix(eInvUnifiedDGHelmholtz,
-                                                          lambdaval, tau);
-
-                    // for each degree of freedom of the lambda space
-                    // calculate Umat entry 
-                    // Generate Lambda to U_lambda matrix 
-                    for(j = 0; j < nbndry; ++j)
-                    {
-                        Vmath::Zero(nbndry,&lambda[0],1);
-                        Vmath::Zero(m_ncoeffs,&f[0],1);
-                        lambda[j] = 1.0;
-                        
-                        v_SetTraceToGeomOrientation(lambda);
-
-                        v_AddUDGHelmholtzTraceTerms(tau,lambda,f);
-                        
-                        Ulam = invHmat*F; // generate Ulam from lambda
-
-                        // fill column of matrix
-                        for(k = 0; k < m_ncoeffs; ++k)
-                        {
-                            Umat(k,j) = Ulam[k]; 
-                        }
-                    }
-                }
-                break;
-            case StdRegions::eUnifiedDGLamToQ0:
-            case StdRegions::eUnifiedDGLamToQ1:
-            case StdRegions::eUnifiedDGLamToQ2:
-                {
-                    int i,j,k,dir;
-                    int nbndry = NumDGBndryCoeffs();
-                    int nquad  = GetNumPoints(0);
-                    const Array<OneD, const NekDouble> &Basis  = m_base[0]->GetBdata();
-                    Array<OneD,NekDouble> lambda(nbndry);
-                    DNekVec Lambda(nbndry,lambda,eWrapper);                    
-
-                    Array<OneD,NekDouble> ulam(m_ncoeffs);
-                    DNekVec Ulam(m_ncoeffs,ulam,eWrapper);
-                    Array<OneD,NekDouble> f(m_ncoeffs);
-                    DNekVec F(m_ncoeffs,f,eWrapper);
-                    NekDouble lambdaval = mkey.GetConstant(0);
-                    NekDouble tau       = mkey.GetConstant(1);
-
-                    // declare matrix space
-                    returnval  = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,nbndry); 
-                    DNekMat &Qmat = *returnval;
-                    
-                    // Helmholtz matrix
-                    DNekScalMat &invHmat = *GetLocMatrix(eInvUnifiedDGHelmholtz, lambdaval,tau);
-
-                    // Lambda to U matrix
-                    DNekScalMat &lamToU = *GetLocMatrix(eUnifiedDGLamToU, lambdaval, tau);
-
-                    // Inverse mass matrix 
-                    DNekScalMat &invMass = *GetLocMatrix(eInvMass);
-                    
-                    //Weak Derivative matrix 
-                    DNekScalMatSharedPtr Dmat;
-                    switch(mkey.GetMatrixType())
-                    {
-                    case eUnifiedDGLamToQ0:
-                        dir = 0;
-                        Dmat = GetLocMatrix(eWeakDeriv0); 
-                        break;
-                    case eUnifiedDGLamToQ1:
-                        dir = 1;
-                        Dmat = GetLocMatrix(eWeakDeriv1); 
-                        break;
-                    case eUnifiedDGLamToQ2:
-                        dir = 2;
-                        Dmat = GetLocMatrix(eWeakDeriv2); 
-                        break;
-                    }
-
-                    // for each degree of freedom of the lambda space
-                    // calculate Qmat entry 
-                    // Generate Lambda to Q_lambda matrix 
-                    for(j = 0; j < nbndry; ++j)
-                    {
-                        Vmath::Zero(nbndry,&lambda[0],1);
-                        lambda[j] = 1.0;
-                        
-                        // for lambda[j] = 1 this is the solution to ulam
-                        for(k = 0; k < m_ncoeffs; ++k)
-                        {
-                            Ulam[k] = lamToU(k,j);
-                        }
-
-                        // -D^T ulam
-                        Vmath::Neg(m_ncoeffs,&ulam[0],1);
-                        F = Transpose(*Dmat)*Ulam; 
-                        
-                        v_SetTraceToGeomOrientation(lambda);
-
-                        // + \tilde{G} \lambda
-                        v_AddNormTraceInt(dir,lambda,f); 
-
-                        // multiply by inverse mass matrix
-                        Ulam = invMass*F; 
-                        
-                        // fill column of matrix (Qmat is in column major format)
-                        Vmath::Vcopy(m_ncoeffs,&ulam[0],1,&(Qmat.GetPtr())[0]+j*m_ncoeffs,1);
-                    }
-                }
-                break;            
             case eInvMass:
                 {
-                    StdMatrixKey masskey(eMass,mkey.GetExpansionType(),mkey.GetBase(),
-                                         mkey.GetNcoeffs(),mkey.GetNodalPointsType());
+                    StdMatrixKey masskey(eMass,mkey.GetExpansionType(),mkey.GetBase(),  mkey.GetNcoeffs(),mkey.GetNodalPointsType());
                     DNekMatSharedPtr& mmat = GetStdMatrix(masskey);
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(*mmat); //Populate standard mass matrix.
                     returnval->Invert();
@@ -468,7 +307,8 @@ namespace Nektar
                         
                         GeneralMatrixOp(mkey,tmp,tmp);
                         
-                        Vmath::Vcopy(m_ncoeffs,&tmp[0],1,&(Mat.GetPtr())[0]+i*m_ncoeffs,1);
+                        Vmath::Vcopy(m_ncoeffs,&tmp[0],1,
+                                     &(Mat.GetPtr())[0]+i*m_ncoeffs,1);
                     }
                 }
                 break;
@@ -750,6 +590,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.74  2008/07/29 22:21:15  sherwin
+* A bunch of mods for DG advection and separaring the GetGeom calls into GetGeom1D ...
+*
 * Revision 1.73  2008/07/19 21:12:54  sherwin
 * Removed MapTo function and made orientation convention anticlockwise in UDG routines
 *

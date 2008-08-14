@@ -213,12 +213,16 @@ namespace Nektar
             return Int;
         }
 
+
     } //end namespace
 } //end namespace
 
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.27  2008/07/05 16:15:44  sherwin
+* Corrected issue when not using Nektar_using_Blac for physderiv if intput and output are the same
+*
 * Revision 1.26  2008/07/04 10:18:40  pvos
 * Some updates
 *

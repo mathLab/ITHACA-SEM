@@ -39,6 +39,7 @@
 #define STDEXP2D_H
 
 #include <StdRegions/StdExpansion.h>
+#include <StdRegions/StdSegExp.h>
 
 namespace Nektar
 {
@@ -119,7 +120,8 @@ namespace Nektar
             NekDouble Integral(const Array<OneD, const NekDouble>& inarray, 
                                const Array<OneD, const NekDouble>& w0, 
                                const Array<OneD, const NekDouble>& w1);
-            
+
+
         protected:
 
         private:
@@ -141,7 +143,7 @@ namespace Nektar
             {
                 return PhysEvaluate(coords);
             }
-         
+
         };
 
         typedef boost::shared_ptr<StdExpansion2D> StdExpansion2DSharedPtr;
@@ -153,6 +155,9 @@ namespace Nektar
 
 /**
  * $Log: StdExpansion2D.h,v $
+ * Revision 1.23  2008/07/29 22:21:15  sherwin
+ * A bunch of mods for DG advection and separaring the GetGeom calls into GetGeom1D ...
+ *
  * Revision 1.22  2008/07/04 10:18:40  pvos
  * Some updates
  *

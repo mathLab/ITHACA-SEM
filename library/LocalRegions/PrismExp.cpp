@@ -574,6 +574,27 @@ namespace Nektar
         }
 
 
+        DNekMatSharedPtr PrismExp::GenMatrix(const StdRegions::StdMatrixKey &mkey)
+        {
+            DNekMatSharedPtr returnval;
+
+            switch(mkey.GetMatrixType())
+            {
+            case StdRegions::eHybridDGHelmholtz:
+            case StdRegions::eHybridDGLamToU:
+            case StdRegions::eHybridDGLamToQ0:
+            case StdRegions::eHybridDGLamToQ1:
+            case StdRegions::eHybridDGLamToQ2:
+            case StdRegions::eHybridDGHelmBndLam:
+                returnval = Expansion3D::GenMatrix(mkey);
+                break;
+            default:
+                returnval = StdPrismExp::GenMatrix(mkey);
+            }
+            
+            return returnval;            
+        }
+
         DNekScalMatSharedPtr PrismExp::CreateMatrix(const MatrixKey &mkey)
         {
             DNekScalMatSharedPtr returnval;
@@ -804,6 +825,9 @@ namespace Nektar
 
 /** 
  *    $Log: PrismExp.cpp,v $
+ *    Revision 1.14  2008/07/09 11:44:49  sherwin
+ *    Replaced GetScaleFactor call with GetConstant(0)
+ *
  *    Revision 1.13  2008/07/04 10:19:04  pvos
  *    Some updates
  *

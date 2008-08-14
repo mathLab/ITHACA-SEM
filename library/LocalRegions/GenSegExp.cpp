@@ -68,8 +68,8 @@ namespace Nektar
 
             // assume all coordinates have same basis
             LibUtilities::BasisSharedPtr CBasis = Geom->GetEdgeBasis(0,edge); 
-            int nq_orig      = CBasis->GetNumPoints();
-            int nq     = GetNumPoints(0);
+            int nq_orig  = CBasis->GetNumPoints();
+            int nq       = m_base[0]->GetNumPoints();
             
             m_physNormal = Array<OneD, NekDouble> (coordim*nq);
             
@@ -119,3 +119,6 @@ namespace Nektar
 }//end of namespace
 
 // $Log: GenSegExp.cpp,v $
+// Revision 1.1  2008/07/29 22:24:49  sherwin
+// Generalised Segment expansion which include a normal and binormal at the physical quadrature points
+//

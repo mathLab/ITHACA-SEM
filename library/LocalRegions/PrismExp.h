@@ -44,13 +44,14 @@
 #include <SpatialDomains/GeomFactors.h>
 #include <LocalRegions/MatrixKey.h>
 
+#include <LocalRegions/Expansion3D.h>
 
 namespace Nektar
 {
     namespace LocalRegions 
     {
 
-    class PrismExp: public StdRegions::StdPrismExp
+        class PrismExp: public StdRegions::StdPrismExp, public Expansion3D
         {
         public:
     
@@ -135,6 +136,8 @@ namespace Nektar
 
 
         protected:
+            DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
+
             //SpatialDomains::PrismGeom *m_geom;
             void GenMetricInfo();
 
@@ -314,6 +317,9 @@ namespace Nektar
 
 /** 
  *    $Log: PrismExp.h,v $
+ *    Revision 1.17  2008/07/29 22:25:34  sherwin
+ *    general update for DG Advection including separation of GetGeom() into GetGeom1D,2D,3D()
+ *
  *    Revision 1.16  2008/07/12 17:27:07  sherwin
  *    Update for AddBoundaryInt and moved various members to be private rather than protected
  *

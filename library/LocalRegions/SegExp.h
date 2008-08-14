@@ -45,6 +45,8 @@
 
 #include <LocalRegions/MatrixKey.h>
 
+#include <LocalRegions/Expansion1D.h>
+
 #include <fstream>
 
 namespace Nektar
@@ -52,7 +54,7 @@ namespace Nektar
     namespace LocalRegions 
     {
     
-    class SegExp: public StdRegions::StdSegExp
+        class SegExp: public StdRegions::StdSegExp, public Expansion1D
         {
 
         public:
@@ -172,30 +174,6 @@ namespace Nektar
 
             NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coord);
             
-            void AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
-                                              const Array<OneD, const NekDouble> &inarray,
-                                              Array<OneD,NekDouble> &outarray,
-                                              bool MatrixTerms = true);
-
-            void AddUDGHelmholtzTraceTerms(const NekDouble tau, 
-                                           const Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,NekDouble> &outarray)
-            {
-                AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray,false);
-            }
-
-            
-            void AddNormBoundaryInt(const int dir,
-                                    Array<OneD, const NekDouble> &inarray,
-                                    Array<OneD,NekDouble> &outarray);
-            
-            void AddNormTraceInt(const int dir,
-                                 Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD,NekDouble> &outarray)
-            {
-                AddNormBoundaryInt(dir,inarray,outarray);
-            }
-
             void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray);
 
@@ -205,14 +183,12 @@ namespace Nektar
             
         protected:
 
-
             void GenMetricInfo();    
             
             DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
-            DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
+            DNekScalMatSharedPtr     CreateMatrix(const MatrixKey &mkey);
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
-
 
 
             /**
@@ -304,11 +280,16 @@ namespace Nektar
                 return m_metricinfo->GetGtype();
             }
 
-            void v_SetCoeffsToOrientation(StdRegions::EdgeOrientation dir,
-                                          Array<OneD, const NekDouble> &inarray,
-                                          Array<OneD, NekDouble> &outarray)
+            virtual void v_SetCoeffsToOrientation(StdRegions::EdgeOrientation dir,
+                                                  Array<OneD, const NekDouble> &inarray,
+                                                  Array<OneD, NekDouble> &outarray)
             {
                 SetCoeffsToOrientation(dir,inarray,outarray);
+            }
+            
+            virtual void v_SetCoeffsToOrientation(StdRegions::EdgeOrientation dir)
+            {
+                SetCoeffsToOrientation(dir);
             }
 
 
@@ -477,34 +458,6 @@ namespace Nektar
                 return m_staticCondMatrixManager[mkey];
             }
 
-            virtual void v_AddNormTraceInt(const int dir,
-                                           Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,NekDouble> &outarray)
-            {
-                AddNormBoundaryInt(dir,inarray,outarray);
-            }
-
-            virtual void v_AddNormBoundaryInt(const int dir,
-                                              Array<OneD, const NekDouble> &inarray,
-                                              Array<OneD,NekDouble> &outarray)
-            {
-                AddNormBoundaryInt(dir,inarray,outarray);
-            }
-
-            virtual void v_AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
-                                                        const Array<OneD, const NekDouble> &inarray,
-                                                        Array<OneD,NekDouble> &outarray)
-            {
-                AddUDGHelmholtzBoundaryTerms(tau,inarray,outarray,true);
-            }
-
-            virtual void v_AddUDGHelmholtzTraceTerms(const NekDouble tau, 
-                                                     const Array<OneD, const NekDouble> &inarray,
-                                                     Array<OneD,NekDouble> &outarray)
-            {
-                AddUDGHelmholtzTraceTerms(tau,inarray,outarray);
-            }
-
             virtual void v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray)
             {
@@ -517,8 +470,71 @@ namespace Nektar
             {
                 HelmholtzMatrixOp(inarray,outarray,lambda);
             }            
+
+
         private:
             SegExp();
+
+
+            virtual int v_GetNumPoints(const int dir) const 
+            {
+                return GetNumPoints(dir); 
+            }
+
+
+            virtual int v_GetNcoeffs(void) const 
+            {
+                return m_ncoeffs;
+            }
+
+            virtual const LibUtilities::BasisSharedPtr& v_GetBasis(int dir) const
+            {
+                return GetBasis(dir);
+            }
+
+            virtual bool v_IsBoundaryInteriorExpansion()
+            {
+                return StdSegExp::IsBoundaryInteriorExpansion();
+            }
+
+
+            virtual int v_NumBndryCoeffs() const 
+            {
+                return 2;
+            }
+
+
+            virtual int v_NumDGBndryCoeffs() const 
+            {
+                return 2;
+            }
+
+            /// Virtual call to TriExp::BwdTrans
+            virtual void v_BwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                    Array<OneD, NekDouble> &outarray)
+            {
+                BwdTrans(inarray,outarray);
+            }
+            
+            virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
+                                                     const Array<OneD, const NekDouble> &inarray,
+                                                     Array<OneD,NekDouble> &outarray)
+            {
+                Expansion1D::AddHDGHelmholtzTraceTerms(tau,inarray,outarray);
+            }
+
+
+            virtual void v_GetBoundaryMap(Array<OneD, unsigned int> &maparray)
+            {
+                StdSegExp::GetBoundaryMap(maparray);
+            }
+            
+
+            virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
+            {
+                return GenMatrix(mkey);
+            }
+
 
         };
 
@@ -533,6 +549,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.40  2008/07/29 22:25:35  sherwin
+// general update for DG Advection including separation of GetGeom() into GetGeom1D,2D,3D()
+//
 // Revision 1.39  2008/07/19 21:15:38  sherwin
 // Removed MapTo function, made orientation anticlockwise, changed enum from BndSys to BndLam
 //

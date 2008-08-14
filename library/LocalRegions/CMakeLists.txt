@@ -1,5 +1,10 @@
 SET(LOCAL_REGIONS_SOURCES
+Expansion.cpp
+Expansion1D.cpp
+Expansion2D.cpp
+Expansion3D.cpp
 GenSegExp.cpp
+QuadExp.cpp
 HexExp.cpp
 MatrixKey.cpp
 #MetricRelatedInfo.cpp
@@ -8,13 +13,16 @@ NodalTriExp.cpp
 PointExp.cpp
 PrismExp.cpp
 PyrExp.cpp
-QuadExp.cpp
 SegExp.cpp
 TetExp.cpp
 TriExp.cpp
 )
 
 SET(LOCAL_REGIONS_HEADERS
+Expansion.h
+Expansion1D.h
+Expansion2D.h
+Expansion3D.h
 GenSegExp.h
 HexExp.h
 LinSys.hpp

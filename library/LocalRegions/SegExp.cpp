@@ -1027,10 +1027,10 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,helm);            
                 }
                 break;
-            case StdRegions::eUnifiedDGHelmholtz:
-            case StdRegions::eUnifiedDGLamToU:
-            case StdRegions::eUnifiedDGLamToQ0:
-            case StdRegions::eUnifiedDGHelmBndLam:
+            case StdRegions::eHybridDGHelmholtz:
+            case StdRegions::eHybridDGLamToU:
+            case StdRegions::eHybridDGLamToQ0:
+            case StdRegions::eHybridDGHelmBndLam:
                 {
                     NekDouble one    = 1.0;
                     
@@ -1038,11 +1038,11 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
                 break;
-            case StdRegions::eInvUnifiedDGHelmholtz:
+            case StdRegions::eInvHybridDGHelmholtz:
                 {
                     NekDouble one = 1.0;
 
-                    StdRegions::StdMatrixKey hkey(StdRegions::eUnifiedDGHelmholtz,
+                    StdRegions::StdMatrixKey hkey(StdRegions::eHybridDGHelmholtz,
                                                   DetExpansionType(),*this,
                                                   mkey.GetConstant(0),
                                                   mkey.GetConstant(1));
@@ -1079,227 +1079,23 @@ namespace Nektar
 
             switch(mkey.GetMatrixType())
             {
-            case StdRegions::eUnifiedDGHelmBndLam:
-                {
-                    int nbndry = NumBndryCoeffs();
-                    int nquad  = GetNumPoints(0);
-                    int i,j,k;
-                    Array<OneD,NekDouble> b(nbndry);
-                    const Array<OneD, const NekDouble> &Basis = m_base[0]->GetBdata();
-                    NekDouble lambdaval = mkey.GetConstant(0);
-                    NekDouble tau       = mkey.GetConstant(1);
-
-                    Array<OneD,unsigned int> bmap(NumBndryCoeffs());
-                    GetBoundaryMap(bmap);
-                    
-                    // declare matrix space
-                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nbndry,
-                                                                          nbndry);
-                    DNekMat &BndMat = *returnval;
-                    
-                    // Matrix to map Lambda to U
-                    LocalRegions::MatrixKey Umatkey(StdRegions::eUnifiedDGLamToU, DetExpansionType(),*this, lambdaval,tau);
-                    DNekScalMat &LamToU = *GetLocMatrix(Umatkey); 
-                
-                    // Matrix to map Lambda to Q
-                    LocalRegions::MatrixKey Qmatkey(StdRegions::eUnifiedDGLamToQ0,
-                                                    DetExpansionType(),*this, lambdaval,tau);
-                    DNekScalMat &LamToQ = *GetLocMatrix(Qmatkey); 
-                    
-
-#if 0  // Equivalent symmetric form over all elements
-                    // Mass matrix 
-                    LocalRegions::MatrixKey masskey(StdRegions::eMass,
-                                                    DetShapeType(),*this);
-                    DNekScalMat &Mass = *GetLocMatrix(masskey); 
-
-#if 0 // What I would like to call
-                    BndMat = Transpose(LamToQ)*Mass*LamToQ + lambdaval*Transpose(LamToU)*Mass*LamToU;
-#else
-                    DNekMat QTransMat = *LamToQ.GetOwnedMatrix();
-                    QTransMat.Transpose();
-
-                    DNekMat UTransMat = *LamToU.GetOwnedMatrix();
-                    UTransMat.Transpose();
-
-                    BndMat = LamToQ.Scale()*QTransMat*Mass*LamToQ + 
-                        lambdaval*LamToU.Scale()*UTransMat*Mass*LamToU; 
-#endif
-                    
-                    // Add boundary terms
-                    // upper terms
-                    
-                    for(i = 0; i < nbndry; ++i)
-                    {
-                        b[i] = 0.0;
-                        for(k = 0; k < nbndry; ++k)
-                        {
-                            b[i] += LamToU(bmap[k],i)*Basis[(bmap[k]+1)*nquad-1];
-                        }
-                    }
-                    
-                    for(i = 0; i < nbndry; ++i)
-                    {
-                        for(j = 0; j < nbndry; ++j)
-                        {
-                            BndMat(i,j) += tau*(b[i]*b[j] - 
-                                                b[i]*Basis[(j+1)*nquad-1] - 
-                                                Basis[(i+1)*nquad-1]*b[j] +
-                                                Basis[(i+1)*nquad-1]*
-                                                Basis[(j+1)*nquad-1]);
-                        }
-                    }
-                    
-                    // lower terms
-                    for(i = 0; i < nbndry; ++i)
-                    {
-                        b[i] = 0.0;
-                        for(k = 0; k < nbndry; ++k)
-                        {
-                            b[i] += LamToU(bmap[k],i)*Basis[bmap[k]*nquad];
-                        }
-                    }
-                    
-                    for(i = 0; i < nbndry; ++i)
-                    {
-                        for(j = 0; j < nbndry; ++j)
-                        {
-                            BndMat(i,j) -= tau*(b[i]*b[j] - 
-                                                b[i]*Basis[j*nquad] - 
-                                                Basis[i*nquad]*b[j] +
-                                                Basis[i*nquad]*Basis[j*nquad]);
-                        }
-                    }
-#else // use flux form directly 
-                    for(j = 0; j < nbndry; ++j)
-                    {
-                        BndMat(0,j) = -LamToQ(bmap[0],j) + tau*LamToU(bmap[0],j);
-                    }
-
-                    for(j = 0; j < nbndry; ++j)
-                    {
-                        BndMat(1,j) =  LamToQ(bmap[1],j) - tau*LamToU(bmap[1],j);
-                    }
-
-#endif
-                    //  cout << BndMat << endl;
-                }
+            case StdRegions::eHybridDGHelmholtz:
+            case StdRegions::eHybridDGLamToU:
+            case StdRegions::eHybridDGLamToQ0:
+            case StdRegions::eHybridDGLamToQ1:
+            case StdRegions::eHybridDGLamToQ2:
+            case StdRegions::eHybridDGHelmBndLam:
+                returnval = Expansion1D::GenMatrix(mkey);
                 break;
             default:
                 returnval = StdSegExp::GenMatrix(mkey);
                 break;
             }
-
+            
             return returnval;
         }
 
-        void SegExp::AddNormBoundaryInt(const int dir, 
-                                        Array<OneD, const NekDouble> &inarray,
-                                        Array<OneD,NekDouble> &outarray) 
-        {
 
-            int k;
-            int nbndry = NumBndryCoeffs();
-            int nquad  = GetNumPoints(0);
-            const Array<OneD, const NekDouble> &Basis  = m_base[0]->GetBdata();
-            Array<OneD, unsigned int> vmap;
-         
-            GetBoundaryMap(vmap);
-            
-            // add G (\lambda - ulam) = G x F term (can
-            // assume G is diagonal since one of the basis
-            // is zero at boundary otherwise)
-            for(k = 0; k < nbndry; ++k)
-            {
-                outarray[vmap[k]] += (Basis[(vmap[k]+1)*nquad-1]*Basis[(vmap[k]+1)*nquad-1] - Basis[vmap[k]*nquad]*Basis[vmap[k]*nquad])*inarray[vmap[k]];
-            }
-        }
-
-        void SegExp::AddUDGHelmholtzBoundaryTerms(const NekDouble tau, 
-                                                  const Array<OneD, const NekDouble> &inarray,
-                                                  Array<OneD,NekDouble> &outarray,
-                                                  bool MatrixTerms)
-        {
-            int i,j,k,n;
-            int nbndry = NumBndryCoeffs();
-            int nquad  = GetNumPoints(0);
-            NekDouble  val, val1;
-            Array<OneD, unsigned int> vmap;
-            
-            ASSERTL0(&inarray[0] != &outarray[0],"Input and output arrays use the same memory");
-
-            const Array<OneD, const NekDouble> &Dbasis = m_base[0]->GetDbdata();
-            const Array<OneD, const NekDouble> &Basis  = m_base[0]->GetBdata();
-            
-            MatrixKey    masskey(StdRegions::eInvMass, DetExpansionType(),*this);
-            DNekScalMat  &invMass = *m_matrixManager[masskey];
-            Array<TwoD, const NekDouble>  gmat = m_metricinfo->GetGmat();
-            NekDouble rx0,rx1;
-            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-            {
-                rx0 = gmat[0][0];
-                rx1 = gmat[0][nquad-1];
-            }
-            else
-            {
-                rx0 = rx1 = gmat[0][0];
-            }
-
-            GetBoundaryMap(vmap);
-
-            if(MatrixTerms == true) //term which arise in matrix formulations but not rhs boundary terms. 
-            {
-                // Add -D^T M^{-1}G operation =-<n phi_i, d\phi_j/dx>
-                for(i = 0; i < nbndry; ++i)
-                {
-                    for(j = 0; j < m_ncoeffs; ++j)
-                    {
-                        outarray[vmap[i]] -= Basis[(vmap[i]+1)*nquad-1]*Dbasis[(j+1)*nquad-1]*rx1*inarray[j];
-                        outarray[vmap[i]] += Basis[vmap[i]*nquad]*Dbasis[j*nquad]*rx0*inarray[j];
-                    }
-                }
-            }
-            
-            //Add -E^T M^{-1}D_i^e = -< d\phi_i/dx, n  phi_j>
-            for(i = 0; i < m_ncoeffs; ++i)
-            {
-                for(j = 0; j < nbndry; ++j)
-                {
-                    outarray[i] -= Dbasis[(i+1)*nquad-1]*rx1*Basis[(vmap[j]+1)*nquad-1]*inarray[vmap[j]];
-                    outarray[i] += Dbasis[i*nquad]*rx0*Basis[vmap[j]*nquad]*inarray[vmap[j]];
-                }
-            }
-            
-            // Add F = \tau <phi_i,phi_j> (note phi_i is zero if phi_j is non-zero)
-            for(i = 0; i < nbndry; ++i)
-            {
-                outarray[vmap[i]] += tau*Basis[(vmap[i]+1)*nquad-1]*Basis[(vmap[i]+1)*nquad-1]*inarray[vmap[i]];
-                outarray[vmap[i]] += tau*Basis[vmap[i]*nquad]*Basis[vmap[i]*nquad]*inarray[vmap[i]];
-            }
-
-            // Add E M^{-1} G term 
-            for(i = 0; i < nbndry; ++i)
-            {
-                for(n = 0; n < nbndry; ++n)
-                {
-                    // evaluate M^{-1} G
-                    val1 = 0.0;
-                    for(k = 0; k < nbndry; ++k)
-                    {
-                        val = 0.0;
-                        for(j = 0; j < nbndry; ++j)
-                        {
-                            val += (Basis[(vmap[k]+1)*nquad-1]*Basis[(vmap[j]+1)*nquad-1] - Basis[vmap[k]*nquad]*Basis[vmap[j]*nquad])*inarray[vmap[j]];
-                        }
-                        
-                        val1 += invMass(vmap[n],vmap[k])*val; 
-                    }
-
-                    outarray[vmap[i]] += (Basis[(vmap[i]+1)*nquad-1]*Basis[(vmap[n]+1)*nquad-1] - Basis[vmap[i]*nquad]*Basis[vmap[n]*nquad])*val1; 
-                }
-            }
-        }
-        
         DNekScalBlkMatSharedPtr SegExp::CreateStaticCondMatrix(const MatrixKey &mkey)
         {
             DNekScalBlkMatSharedPtr returnval;
@@ -1419,6 +1215,9 @@ namespace Nektar
 }//end of namespace
 
 // $Log: SegExp.cpp,v $
+// Revision 1.52  2008/07/29 22:25:35  sherwin
+// general update for DG Advection including separation of GetGeom() into GetGeom1D,2D,3D()
+//
 // Revision 1.51  2008/07/19 21:15:38  sherwin
 // Removed MapTo function, made orientation anticlockwise, changed enum from BndSys to BndLam
 //

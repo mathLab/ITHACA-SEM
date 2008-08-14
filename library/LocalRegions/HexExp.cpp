@@ -618,6 +618,28 @@ namespace Nektar
         }
 
 	//TODO: implement
+
+        DNekMatSharedPtr HexExp::GenMatrix(const StdRegions::StdMatrixKey &mkey)
+        {
+            DNekMatSharedPtr returnval;
+
+            switch(mkey.GetMatrixType())
+            {
+            case StdRegions::eHybridDGHelmholtz:
+            case StdRegions::eHybridDGLamToU:
+            case StdRegions::eHybridDGLamToQ0:
+            case StdRegions::eHybridDGLamToQ1:
+            case StdRegions::eHybridDGLamToQ2:
+            case StdRegions::eHybridDGHelmBndLam:
+                returnval = Expansion3D::GenMatrix(mkey);
+                break;
+            default:
+                returnval = StdHexExp::GenMatrix(mkey);
+            }
+            
+            return returnval;            
+        }
+        
         DNekScalMatSharedPtr HexExp::CreateMatrix(const MatrixKey &mkey)
         {
             DNekScalMatSharedPtr returnval;
@@ -770,11 +792,11 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,helm);            
                 }
                 break;
-            case StdRegions::eUnifiedDGHelmholtz:
-            case StdRegions::eUnifiedDGLamToU:
-            case StdRegions::eUnifiedDGLamToQ0:
-            case StdRegions::eUnifiedDGLamToQ1:
-            case StdRegions::eUnifiedDGHelmBndLam:
+            case StdRegions::eHybridDGHelmholtz:
+            case StdRegions::eHybridDGLamToU:
+            case StdRegions::eHybridDGLamToQ0:
+            case StdRegions::eHybridDGLamToQ1:
+            case StdRegions::eHybridDGHelmBndLam:
                 {
                     NekDouble one    = 1.0;
                     
@@ -782,11 +804,11 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
                 break;
-            case StdRegions::eInvUnifiedDGHelmholtz:
+            case StdRegions::eInvHybridDGHelmholtz:
                 {
                     NekDouble one = 1.0;
 
-                    StdRegions::StdMatrixKey hkey(StdRegions::eUnifiedDGHelmholtz,
+                    StdRegions::StdMatrixKey hkey(StdRegions::eHybridDGHelmholtz,
                                                   DetExpansionType(),*this,
                                                   mkey.GetConstant(0),
                                                   mkey.GetConstant(1));
@@ -928,6 +950,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.cpp,v $
+ *    Revision 1.17  2008/07/19 21:15:38  sherwin
+ *    Removed MapTo function, made orientation anticlockwise, changed enum from BndSys to BndLam
+ *
  *    Revision 1.16  2008/07/09 11:44:49  sherwin
  *    Replaced GetScaleFactor call with GetConstant(0)
  *

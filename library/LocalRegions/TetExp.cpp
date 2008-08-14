@@ -561,6 +561,7 @@ namespace Nektar
             return StdTetExp::PhysEvaluate(Lcoord);
         }
 
+
         DNekMatSharedPtr TetExp::CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
@@ -571,6 +572,27 @@ namespace Nektar
             return tmp->GetStdMatrix(mkey);
         }
 
+
+        DNekMatSharedPtr TetExp::GenMatrix(const StdRegions::StdMatrixKey &mkey)
+        {
+            DNekMatSharedPtr returnval;
+
+            switch(mkey.GetMatrixType())
+            {
+            case StdRegions::eHybridDGHelmholtz:
+            case StdRegions::eHybridDGLamToU:
+            case StdRegions::eHybridDGLamToQ0:
+            case StdRegions::eHybridDGLamToQ1:
+            case StdRegions::eHybridDGLamToQ2:
+            case StdRegions::eHybridDGHelmBndLam:
+                returnval = Expansion3D::GenMatrix(mkey);
+                break;
+            default:
+                returnval = StdTetExp::GenMatrix(mkey);
+            }
+            
+            return returnval;            
+        }
 
         DNekScalMatSharedPtr TetExp::CreateMatrix(const MatrixKey &mkey)
         {
@@ -802,6 +824,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.cpp,v $
+ *    Revision 1.15  2008/07/09 11:44:49  sherwin
+ *    Replaced GetScaleFactor call with GetConstant(0)
+ *
  *    Revision 1.14  2008/07/04 10:19:05  pvos
  *    Some updates
  *

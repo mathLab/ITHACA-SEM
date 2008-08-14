@@ -52,23 +52,16 @@ namespace Nektar
         {         
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                          StdRegions::eNoExpansionType,*this),
-                                                boost::bind(&TriExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                                    StdRegions::eNoExpansionType,*this),
-                                                          boost::bind(&TriExp::CreateStaticCondMatrix, this, _1));
+                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,StdRegions::eNoExpansionType,*this), boost::bind(&TriExp::CreateMatrix, this, _1));
+                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i, StdRegions::eNoExpansionType,*this), boost::bind(&TriExp::CreateStaticCondMatrix, this, _1));
             }            
             GenMetricInfo();
         }
         
         TriExp::TriExp(const LibUtilities::BasisKey &Ba,
                        const LibUtilities::BasisKey &Bb):
-            StdRegions::StdTriExp(Ba,Bb),
-            m_geom(),
-            m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()),
-            m_matrixManager(std::string("TriExpMatrix")),
-            m_staticCondMatrixManager(std::string("TriExpStaticCondMatrix"))
+            StdRegions::StdTriExp(Ba,Bb), m_geom(),
+            m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()), m_matrixManager(std::string("TriExpMatrix")), m_staticCondMatrixManager(std::string("TriExpStaticCondMatrix"))
         {
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
@@ -1062,6 +1055,27 @@ namespace Nektar
                 ASSERTL0(false, "Output routine not implemented for requested type of output");
             }
         }
+        
+        DNekMatSharedPtr TriExp::GenMatrix(const StdRegions::StdMatrixKey &mkey)
+        {
+            DNekMatSharedPtr returnval;
+
+            switch(mkey.GetMatrixType())
+            {
+            case StdRegions::eHybridDGHelmholtz:
+            case StdRegions::eHybridDGLamToU:
+            case StdRegions::eHybridDGLamToQ0:
+            case StdRegions::eHybridDGLamToQ1:
+            case StdRegions::eHybridDGLamToQ2:
+            case StdRegions::eHybridDGHelmBndLam:
+                returnval = Expansion2D::GenMatrix(mkey);
+                break;
+            default:
+                returnval = StdTriExp::GenMatrix(mkey);
+                break;
+            }
+            return returnval;
+        }
 
         DNekMatSharedPtr TriExp::CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
         {
@@ -1126,6 +1140,54 @@ namespace Nektar
                     }
                 }
                 break;
+            case StdRegions::eWeakDeriv0:
+            case StdRegions::eWeakDeriv1:
+            case StdRegions::eWeakDeriv2:
+                {
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        NekDouble one = 1.0;
+                        DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
+                        
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+                    }
+                    else
+                    {
+                        NekDouble jac = (m_metricinfo->GetJac())[0];
+                        Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
+                        int dir;
+
+                        switch(mkey.GetMatrixType())
+                        {
+                        case StdRegions::eWeakDeriv0:
+                            dir = 0;
+                            break;
+                        case StdRegions::eWeakDeriv1:
+                            dir = 1;
+                            break;
+                        case StdRegions::eWeakDeriv2:
+                            dir = 2;
+                            break;
+                        }                            
+
+                        MatrixKey deriv0key(StdRegions::eWeakDeriv0,
+                                            mkey.GetExpansionType(), *this);  
+                        MatrixKey deriv1key(StdRegions::eWeakDeriv1,
+                                            mkey.GetExpansionType(), *this);
+
+                        DNekMat &deriv0 = *GetStdMatrix(*deriv0key.GetStdMatKey());
+                        DNekMat &deriv1 = *GetStdMatrix(*deriv1key.GetStdMatKey());
+                        
+                        int rows = deriv0.GetRows();
+                        int cols = deriv1.GetColumns();
+
+                        DNekMatSharedPtr WeakDeriv = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
+                        (*WeakDeriv) = gmat[2*dir][0]*deriv0 + gmat[2*dir+1][0]*deriv1;
+                        
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,WeakDeriv);
+                    }
+                }
+                break;
             case StdRegions::eLaplacian:
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
@@ -1184,6 +1246,32 @@ namespace Nektar
                     (*helm) = LapMat + factor*MassMat;
                     
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,helm);            
+                }
+                break;
+            case StdRegions::eHybridDGHelmholtz:
+            case StdRegions::eHybridDGLamToU:
+            case StdRegions::eHybridDGLamToQ0:
+            case StdRegions::eHybridDGLamToQ1:
+            case StdRegions::eHybridDGHelmBndLam:
+                {
+                    NekDouble one    = 1.0;
+                    
+                    DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+                }
+                break;
+            case StdRegions::eInvHybridDGHelmholtz:
+                {
+                    NekDouble one = 1.0;
+
+                    StdRegions::StdMatrixKey hkey(StdRegions::eHybridDGHelmholtz,
+                                                  DetExpansionType(),*this,
+                                                  mkey.GetConstant(0),
+                                                  mkey.GetConstant(1));
+                    DNekMatSharedPtr mat = GenMatrix(hkey);
+
+                    mat->Invert();
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
                 break;
             default:
@@ -1307,9 +1395,69 @@ namespace Nektar
         }
 
 
+        StdRegions::StdExpansion1DSharedPtr TriExp::GetEdgeExp(int edge, bool SetUpNormals)
+        {
+            GenSegExpSharedPtr returnval; 
+            int dir = edge? 1:0;
+            SpatialDomains::Geometry1DSharedPtr edg = m_geom->GetEdge(edge);
+            
+            returnval = MemoryManager<GenSegExp>::AllocateSharedPtr(DetEdgeBasisKey(edge),edg);
+            
+            if(SetUpNormals)
+            {
+                Array<TwoD, const NekDouble> normals = m_metricinfo->GetNormals();
+                int i;
+                int coordim = GetCoordim();
+                int npoints = returnval->GetNumPoints(0);
+                StdRegions::EdgeOrientation edgedir = GetEorient(edge);
+
+                Array<OneD, NekDouble> phys_normals(npoints*coordim);
+
+                if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                {
+
+                    int nquad_e = TriExp::GetNumPoints(dir);
+                    
+                    for(i = 0; i < coordim; ++i)
+                    {
+                        Interp1D(m_base[dir]->GetBasisKey(),
+                                 &normals[edge][i*nquad_e], 
+                                 returnval->GetBasis(0)->GetBasisKey(),
+                                 &phys_normals[i*npoints]);
+                    }
+                    
+                    if(edgedir == StdRegions::eBackwards)
+                    {
+                        for(i = 0; i < coordim; ++i)
+                        {
+                            Vmath::Reverse(npoints,&phys_normals[i*npoints],1,
+                                           &phys_normals[i*npoints],1);
+                        }
+                    }
+                }
+                else
+                {
+                    for(i = 0; i < coordim; ++i)
+                    {
+                        Vmath::Fill(npoints,normals[edge][i],
+                                    &phys_normals[npoints*i],1);
+                    }
+                }
+
+                if(edgedir == StdRegions::eBackwards)
+                {
+                    Vmath::Neg(coordim*npoints,phys_normals,1);
+                }
+                
+                returnval->SetPhysNormals(phys_normals);
+            }
+
+            return returnval; 
+        }
+
         // Get edge values  following counter clockwise edge
         // convention for definition of edgedir at points defined by EdgeExp.
-        void TriExp::GetEdgePhysVals(const int edge, const SegExpSharedPtr &EdgeExp, 
+        void TriExp::GetEdgePhysVals(const int edge, const StdRegions::StdExpansion1DSharedPtr &EdgeExp, 
                                      const Array<OneD, const NekDouble> &inarray, 
                                      Array<OneD,NekDouble> &outarray)
         {
@@ -1358,60 +1506,14 @@ namespace Nektar
             }            
         }
 
-
-        void TriExp:: AddEdgeNormBoundaryInt(const int edge, 
-                                             GenSegExpSharedPtr &EdgeExp,
-                                             Array<OneD, NekDouble> &Fx,  
-                                             Array<OneD, NekDouble> &Fy,  
-                                             Array<OneD, NekDouble> &outarray)
-        {
-            int i;
-            int order_e = EdgeExp->GetNcoeffs();                    
-            int nquad_e = EdgeExp->GetNumPoints(0);
-            Array<OneD, const NekDouble> normals = EdgeExp->GetPhysNormals();
-            SpatialDomains::GeomType     Gtype   = m_metricinfo->GetGtype();
-            StdRegions::EdgeOrientation  edgedir = GetEorient(edge);
-            Array<OneD,unsigned int> map;
-            Array<OneD,int> sign;
-
-            GetEdgeToElementMap(edge,edgedir,map,sign);
-
-            ASSERTL1(m_geom->GetCoordim() == 2,"Routine only set up for two-dimensions");
-            
-            Vmath::Vmul(nquad_e,&(normals[0]),1,&Fx[0],1,
-                        &(EdgeExp->UpdatePhys())[0],1);
-            Vmath::Vvtvp(nquad_e,&(normals[nquad_e]),1,
-                         &Fy[0],1,&(EdgeExp->GetPhys())[0],1,
-                         &(EdgeExp->UpdatePhys())[0],1);
-            
-
-            EdgeExp->IProductWRTBase(EdgeExp->GetPhys(),EdgeExp->UpdateCoeffs());
-
-            if(edgedir == StdRegions::eForwards)
-            {
-                // add data to outarray if forward edge normal is outwards
-                for(i = 0; i < order_e; ++i)
-                {
-                    outarray[map[i]] += sign[i]*EdgeExp->GetCoeff(i);
-                }
-            }
-            else
-            {
-                // subtract data to outarray since backward edge
-                // normal is inwards
-                for(i = 0; i < order_e; ++i)
-                {
-                    outarray[map[i]] -= sign[i]*EdgeExp->GetCoeff(i);
-                }
-            }
-        }
-
-
     }//end of namespace
 }//end of namespace
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.41  2008/07/31 21:25:13  sherwin
+ *    Mods for DG Advection
+ *
  *    Revision 1.40  2008/07/31 11:13:22  sherwin
  *    Depracated GetEdgeBasis and replaced with DetEdgeBasisKey
  *

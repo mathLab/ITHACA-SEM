@@ -74,7 +74,7 @@ INCLUDE (FindLoki)
 INCLUDE (FindTinyXml)
 
 
-FIND_PACKAGE( Boost 1.35.0 REQUIRED COMPONENTS thread iostreams zlib )
+FIND_PACKAGE( Boost 1.35.0 REQUIRED COMPONENTS thread iostreams zlib date_time)
 
 
 IF( NEKTAR_USE_METIS )

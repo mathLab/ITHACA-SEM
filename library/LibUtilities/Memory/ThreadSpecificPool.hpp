@@ -40,6 +40,8 @@
 
 #include <boost/thread/tss.hpp>
 #include <boost/pool/pool.hpp>
+#include <boost/thread/mutex.hpp>
+
 #include <loki/Singleton.h>
 #include <map>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -78,11 +80,12 @@ namespace Nektar
             public:
                 ThreadSpecificPool(unsigned int ByteSize) :
                     m_pool(),
-                    m_blockSize(ByteSize)
+                    m_blockSize(ByteSize),
+                    m_mutex()
                 {
                     // We can do the new in the constructor list because the thread specific 
                     // pointer doesn't have a supporting constructor.
-                    m_pool.reset(new boost::pool<>(ByteSize));
+                    m_pool = new boost::pool<>(ByteSize);
                 }
 
                 ~ThreadSpecificPool()
@@ -96,6 +99,7 @@ namespace Nektar
                 /// \throw std::bad_alloc if memory is exhausted.
                 void* Allocate()
                 {
+                    boost::mutex::scoped_lock l(m_mutex);
                     void* result = m_pool->malloc();
 
 #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
@@ -111,6 +115,7 @@ namespace Nektar
                 /// from this pool.  Doing this will result in undefined behavior.
                 void Deallocate(const void* p)
                 {
+                    boost::mutex::scoped_lock l(m_mutex);
 #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
                     // The idea here is to fill the returned memory with some known
                     // pattern, then detect that pattern on the allocate.  If the 
@@ -126,8 +131,10 @@ namespace Nektar
 
 
             private:
-                boost::thread_specific_ptr<boost::pool<> > m_pool;
+                //boost::thread_specific_ptr<boost::pool<> > m_pool;
+                boost::pool<>* m_pool;
                 unsigned int m_blockSize;
+                boost::mutex m_mutex;
         };
     }
 
@@ -233,6 +240,9 @@ namespace Nektar
 
 /**
     $Log: ThreadSpecificPool.hpp,v $
+    Revision 1.8  2008/06/27 23:17:43  ehan
+    Included <cstring> in order to compile for GCC 4.3.1.
+
     Revision 1.7  2008/06/10 06:00:37  bnelson
     Updated documentation.
 

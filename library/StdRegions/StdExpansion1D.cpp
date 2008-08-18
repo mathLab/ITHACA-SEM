@@ -87,9 +87,18 @@ namespace Nektar
 
 #else //NEKTAR_USING_DIRECT_BLAS_CALLS
 
-        NekVector<const NekDouble> in(nquad,inarray,eWrapper);  
         NekVector<NekDouble> out(nquad,outarray,eWrapper);
-        out = (*D)*in;
+        
+        if(inarray == outarray) // copy intput array
+        {
+            NekVector<const NekDouble> in(nquad,inarray,eCopy);  
+            out = (*D)*in;
+        }
+        else
+        {
+            NekVector<const NekDouble> in (nquad,inarray,eWrapper); 
+            out = (*D)*in;
+        }
         
 #endif //NEKTAR_USING_DIRECT_BLAS_CALLS    
     }
@@ -113,6 +122,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.26  2008/07/04 10:18:40  pvos
+ * Some updates
+ *
  * Revision 1.25  2008/05/07 16:04:57  pvos
  * Mapping + Manager updates
  *

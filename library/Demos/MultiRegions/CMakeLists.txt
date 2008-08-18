@@ -34,16 +34,16 @@ TARGET_LINK_LIBRARIES(Helmholtz2D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(Helmholtz2D)
 
 
-SET(UDGHelmholtz1DSource  UDGHelmholtz1D.cpp)
-ADD_NEKTAR_EXECUTABLE(UDGHelmholtz1D UDGHelmholtz1DSource)
-TARGET_LINK_LIBRARIES(UDGHelmholtz1D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(UDGHelmholtz1D)
+SET(HDGHelmholtz1DSource  HDGHelmholtz1D.cpp)
+ADD_NEKTAR_EXECUTABLE(HDGHelmholtz1D HDGHelmholtz1DSource)
+TARGET_LINK_LIBRARIES(HDGHelmholtz1D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(HDGHelmholtz1D)
 
 
-SET(UDGHelmholtz2DSource  UDGHelmholtz2D.cpp)
-ADD_NEKTAR_EXECUTABLE(UDGHelmholtz2D UDGHelmholtz2DSource)
-TARGET_LINK_LIBRARIES(UDGHelmholtz2D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(UDGHelmholtz2D)
+SET(HDGHelmholtz2DSource  HDGHelmholtz2D.cpp)
+ADD_NEKTAR_EXECUTABLE(HDGHelmholtz2D HDGHelmholtz2DSource)
+TARGET_LINK_LIBRARIES(HDGHelmholtz2D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(HDGHelmholtz2D)
 
 #SET(ProjectLoc2DSource  ProjectLoc2D.cpp)
 #ADD_NEKTAR_EXECUTABLE(ProjectLoc2D ProjectLoc2DSource)

@@ -471,9 +471,7 @@ namespace Nektar
                     }
 
                     // Set up matrix derived from <mu, Q_lam.n - \tau (
-                    // U_lam - Lam) > Not we do not need the lambda term in
-                    // continuous flux since this is equal and
-                    // opposite on assembly
+                    // U_lam - Lam) > 
                     for(i = 0; i < nbndry; ++i)
                     {
                         cnt = 0;
@@ -574,5 +572,8 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.cpp,v $
+ *    Revision 1.1  2008/08/14 22:12:56  sherwin
+ *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
+ *
  *
  **/

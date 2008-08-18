@@ -56,6 +56,7 @@ namespace Nektar
                     NekDouble tau       = mkey.GetConstant(1);
 
                     Array<OneD,unsigned int> bmap;
+                    Array<OneD, NekDouble>   lam(2);
                     v_GetBoundaryMap(bmap);
                     
                     // declare matrix space
@@ -67,15 +68,17 @@ namespace Nektar
                 
                     // Matrix to map Lambda to Q
                     DNekScalMat &LamToQ = *v_GetLocMatrix(StdRegions::eHybridDGLamToQ0, lambdaval,tau);
-                    
+
+                    lam[0] = 1.0; lam[1] = 0.0;
                     for(j = 0; j < nbndry; ++j)
                     {
-                        BndMat(0,j) = -LamToQ(bmap[0],j) + tau*LamToU(bmap[0],j);
+                        BndMat(0,j) = -LamToQ(bmap[0],j) - tau*(LamToU(bmap[0],j) - lam[j]);
                     }
 
+                    lam[0] = 0.0; lam[1] = 1.0;
                     for(j = 0; j < nbndry; ++j)
                     {
-                        BndMat(1,j) =  LamToQ(bmap[1],j) - tau*LamToU(bmap[1],j);
+                        BndMat(1,j) =  LamToQ(bmap[1],j) - tau*(LamToU(bmap[1],j) - lam[j]);
                     }
                 }
                 break;
@@ -100,9 +103,8 @@ namespace Nektar
             
             v_GetBoundaryMap(vmap);
             
-            // add G (\lambda - ulam) = G x F term (can
-            // assume G is diagonal since one of the basis
-            // is zero at boundary otherwise)
+            // add G \lambda term (can assume G is diagonal since one
+            // of the basis is zero at boundary otherwise)
             for(k = 0; k < nbndry; ++k)
             {
                 outarray[vmap[k]] += (Basis[(vmap[k]+1)*nquad-1]*Basis[(vmap[k]+1)*nquad-1] - Basis[vmap[k]*nquad]*Basis[vmap[k]*nquad])*inarray[vmap[k]];
@@ -169,10 +171,23 @@ namespace Nektar
             
             ASSERTL0(&inarray[0] != &outarray[0],"Input and output arrays use the same memory");
 
-            const Array<OneD, const NekDouble> &Dbasis = v_GetBasis(0)->GetDbdata();
+
             const Array<OneD, const NekDouble> &Basis  = v_GetBasis(0)->GetBdata();
-            
             DNekScalMat  &invMass = *v_GetLocMatrix(StdRegions::eInvMass); 
+
+            v_GetBoundaryMap(vmap);
+
+            // Add F = \tau <phi_i,phi_j> (note phi_i is zero if phi_j is non-zero)
+            for(i = 0; i < nbndry; ++i)
+            {
+                outarray[vmap[i]] += tau*Basis[(vmap[i]+1)*nquad-1]*Basis[(vmap[i]+1)*nquad-1]*inarray[vmap[i]];
+                outarray[vmap[i]] += tau*Basis[vmap[i]*nquad]*Basis[vmap[i]*nquad]*inarray[vmap[i]];
+            }
+            
+
+            
+#if 0
+            const Array<OneD, const NekDouble> &Dbasis = v_GetBasis(0)->GetDbdata();
 
             SpatialDomains::GeomFactorsSharedPtr metricinfo = v_GetMetricInfo();
             Array<TwoD, const NekDouble>  gmat = metricinfo->GetGmat();
@@ -188,7 +203,6 @@ namespace Nektar
                 rx0 = rx1 = gmat[0][0];
             }
 
-            v_GetBoundaryMap(vmap);
 
             //Add -E^T M^{-1}D_i^e = -< d\phi_i/dx, n  phi_j>
             for(i = 0; i < ncoeffs; ++i)
@@ -200,12 +214,6 @@ namespace Nektar
                 }
             }
             
-            // Add F = \tau <phi_i,phi_j> (note phi_i is zero if phi_j is non-zero)
-            for(i = 0; i < nbndry; ++i)
-            {
-                outarray[vmap[i]] += tau*Basis[(vmap[i]+1)*nquad-1]*Basis[(vmap[i]+1)*nquad-1]*inarray[vmap[i]];
-                outarray[vmap[i]] += tau*Basis[vmap[i]*nquad]*Basis[vmap[i]*nquad]*inarray[vmap[i]];
-            }
 
             // Add E M^{-1} G term 
             for(i = 0; i < nbndry; ++i)
@@ -228,6 +236,33 @@ namespace Nektar
                     outarray[vmap[i]] += (Basis[(vmap[i]+1)*nquad-1]*Basis[(vmap[n]+1)*nquad-1] - Basis[vmap[i]*nquad]*Basis[vmap[n]*nquad])*val1; 
                 }
             }
+
+#else
+            //===============================================================
+            // Add -\sum_i D_i^T M^{-1} G_i + E_i M^{-1} G_i = 
+            //                         \sum_i D_i M^{-1} G_i term
+
+            Array<OneD, NekDouble> tmpcoeff(ncoeffs,0.0);
+
+            // evaluate M^{-1} G
+            for(i = 0; i < ncoeffs; ++i)
+            {
+            
+                // lower boundary (negative normal) 
+                tmpcoeff[i] -= invMass(i,vmap[0])*Basis[vmap[0]*nquad]*Basis[vmap[0]*nquad]*inarray[vmap[0]];
+
+                // upper boundary (positive normal) 
+                tmpcoeff[i] += invMass(i,vmap[1])*Basis[(vmap[1]+1)*nquad-1]*Basis[(vmap[1]+1)*nquad-1]*inarray[vmap[1]];
+
+            }
+
+            DNekVec                Coeffs  (ncoeffs,outarray,eWrapper);
+            DNekVec                Tmpcoeff(ncoeffs,tmpcoeff,eWrapper);
+
+            DNekScalMat &Dmat = *v_GetLocMatrix(StdRegions::eWeakDeriv0);
+            Coeffs = Coeffs  + Dmat*Tmpcoeff; 
+#endif
+
         }
 
     } //end of namespace
@@ -235,5 +270,8 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion1D.cpp,v $
+ *    Revision 1.1  2008/08/14 22:12:56  sherwin
+ *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
+ *
  *
  **/

@@ -193,6 +193,9 @@ namespace Nektar
                         dir = 2;
                         Dmat = v_GetLocMatrix(StdRegions::eWeakDeriv2); 
                         break;
+                    default:
+                        ASSERTL0(false,"Direction not known");
+                        break;
                     }
                 
                     // for each degree of freedom of the lambda space
@@ -209,6 +212,7 @@ namespace Nektar
                             Ulam[k] = lamToU(k,j);
                         }
                         
+
                         // -D^T ulam
                         Vmath::Neg(ncoeffs,&ulam[0],1);
                         F = Transpose(*Dmat)*Ulam; 
@@ -237,5 +241,8 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion.cpp,v $
+ *    Revision 1.1  2008/08/14 22:12:56  sherwin
+ *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
+ *
  *
  **/

@@ -376,7 +376,7 @@ namespace Nektar
         int err;
 
         /// Look for elements in CURVE block.
-        field = mesh->FirstChildElement("CURVE");
+        field = mesh->FirstChildElement("CURVED");
 
         ASSERTL0(field, "Unable to find CURVE tag in file.");
 
@@ -1137,6 +1137,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.23  2008/07/14 21:04:26  ehan
+// Added ASSERTL0 to check valid points type and number of points.
+//
 // Revision 1.22  2008/07/09 23:41:20  ehan
 // Added edge component and face component to the curve reader.
 //

@@ -39,7 +39,6 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
-       
 
         void Expansion2D::AddEdgeNormBoundaryInt(const int edge, 
                                                  StdRegions::StdExpansion1DSharedPtr &EdgeExp,
@@ -65,7 +64,6 @@ namespace Nektar
             Vmath::Vvtvp(nquad_e,&(normals[nquad_e]),1,
                          &Fy[0],1,&(EdgeExp->GetPhys())[0],1,
                          &(EdgeExp->UpdatePhys())[0],1);
-            
 
             EdgeExp->IProductWRTBase(EdgeExp->GetPhys(),EdgeExp->UpdateCoeffs());
             // negate backward edge values due to inwards normal definition
@@ -82,25 +80,6 @@ namespace Nektar
             }
         }
 
-        // Given an array of trace expansion coefficients assuming all
-        // edges are orientated in the eForwards direction re-order
-        // entries to satisfy local edge orientation set by the
-        // Geometry definition
-        void Expansion2D::SetTraceToGeomOrientation(Array<OneD, NekDouble> &inout)
-        {
-            int i;
-            int nedges  = v_GetNedges();
-            Array<OneD,StdRegions::StdExpansion1DSharedPtr>  EdgeExp(nedges);
-                    
-            // Set up edge segment expansions from local geom info
-            for(i = 0; i < nedges; ++i)
-            {
-                EdgeExp[i] = v_GetEdgeExp(i,false);
-            }
-
-            SetTraceToGeomOrientation(EdgeExp,inout);
-        }
-        
         void Expansion2D::SetTraceToGeomOrientation(Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,  Array<OneD, NekDouble> &inout)
         {
             int i,cnt = 0;
@@ -116,9 +95,9 @@ namespace Nektar
             }
         }
 
-
         void Expansion2D::AddNormTraceInt(const int dir,
                                           Array<OneD, const NekDouble> &inarray,
+                                          Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                                           Array<OneD,NekDouble> &outarray) 
         {
             int i,e,cnt;
@@ -126,13 +105,6 @@ namespace Nektar
             int nedges = v_GetNedges();
 
             Array<OneD,NekDouble> normals;
-            Array<OneD,StdRegions::StdExpansion1DSharedPtr> EdgeExp(nedges);
-            
-            // Set up edge segment expansions
-            for(i = 0; i < nedges; ++i)
-            {
-                EdgeExp[i] = v_GetEdgeExp(i);
-            }
 
             cnt = 0;
             for(e = 0; e < nedges; ++e)
@@ -189,6 +161,7 @@ namespace Nektar
         void Expansion2D::AddHDGHelmholtzMatrixBoundaryTerms(const NekDouble tau, 
                                                              const Array<OneD,
                                                              const NekDouble> &inarray,
+                                                             Array<OneD,StdRegions::StdExpansion1DSharedPtr > &EdgeExp,
                                                              Array<OneD,NekDouble> &outarray)
         {
             int i,e;
@@ -203,16 +176,9 @@ namespace Nektar
             StdRegions::EdgeOrientation edgedir;
 
             Array<OneD,NekDouble>       in_phys(nquad0*nquad1);
-            Array<OneD,StdRegions::StdExpansion1DSharedPtr >  EdgeExp(nedges);
             Array<OneD,Array<OneD,NekDouble> > deriv(3);
             
             ASSERTL0(&inarray[0] != &outarray[0],"Input and output arrays use the same memory");
-
-            // Set up edge segment expansions
-            for(i = 0; i < nedges; ++i)
-            {
-                EdgeExp[i] = v_GetEdgeExp(i);
-            }
 
             //  Get physical solution. 
             v_BwdTrans(inarray,in_phys);
@@ -278,26 +244,6 @@ namespace Nektar
             //================================================================
         }
 
-        //===============================================================
-        // Boundary terms associated with elemental Helmholtz matrix
-        // operations from the trace space
-        void Expansion2D::AddHDGHelmholtzTraceTerms(const NekDouble tau, 
-                                                    const Array<OneD,const NekDouble> &inarray,
-                                                    Array<OneD,NekDouble> &outarray)
-        {
-            int i;
-            int nedges = v_GetNedges();
-            Array<OneD, StdRegions::StdExpansion1DSharedPtr >  EdgeExp(nedges);
-            
-            // Set up edge segment expansions
-            for(i = 0; i < nedges; ++i)
-            {
-                EdgeExp[i] = v_GetEdgeExp(i);
-            }
-            
-            AddHDGHelmholtzTraceTerms(tau,inarray,EdgeExp,outarray);
-        }
-        
         
         // This method assumes that data in EdgeExp is orientated 
         // according to elemental counter clockwise format
@@ -428,6 +374,199 @@ namespace Nektar
             
             switch(mkey.GetMatrixType())
             {
+            case StdRegions::eHybridDGHelmholtz:
+                {
+                    
+                    ASSERTL1(v_IsBoundaryInteriorExpansion(),
+                             "HybridDGHelmholtz matrix not set up "
+                             "for non boundary-interior expansions");
+                    
+                    int i,j;
+                    NekDouble lambdaval = mkey.GetConstant(0);
+                    NekDouble tau       = mkey.GetConstant(1);
+                    int       ncoeffs   = v_GetNcoeffs();
+                    int       nedges    = v_GetNedges();
+                    Array<OneD,StdRegions::StdExpansion1DSharedPtr>  EdgeExp(nedges);
+                    
+                    // Get basic Galerkin Helmholtz matrix 
+                    DNekScalMat &Hmat = *v_GetLocMatrix(StdRegions::eHelmholtz,lambdaval);
+                    int rows = Hmat.GetRows();
+                    int cols = Hmat.GetColumns();
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
+                    DNekMat &Mat = *returnval;
+
+                    // Copy Hmat into Mat
+                    Vmath::Vcopy(rows*cols,Hmat.GetOwnedMatrix()->GetPtr(),1,Mat.GetPtr(),1);
+                    Vmath::Smul(rows*cols,Hmat.Scale(),Mat.GetPtr(),1,Mat.GetPtr(),1);
+
+                    Array<OneD,NekDouble> inarray(ncoeffs);
+                    Array<OneD,NekDouble> outarray(ncoeffs);
+                    
+                    // Set up edge segment expansions from local geom info
+                    for(i = 0; i < nedges; ++i)
+                    {
+                        EdgeExp[i] = v_GetEdgeExp(i);
+                    }
+
+                    for(j = 0; j < ncoeffs; ++j)
+                    {
+                        Vmath::Zero(ncoeffs,&inarray[0],1);
+                        Vmath::Zero(ncoeffs,&outarray[0],1);
+                        inarray[j] = 1.0;
+                        
+                        AddHDGHelmholtzMatrixBoundaryTerms(tau,inarray,EdgeExp,outarray);
+                        
+                        for(i = 0; i < ncoeffs; ++i)
+                        {
+                            Mat(i,j) += outarray[i];
+                        }
+                    }
+                }
+                break;
+            case StdRegions::eHybridDGLamToU:
+                {
+                    int i,j,k;
+                    int nbndry = v_NumDGBndryCoeffs();
+                    int ncoeffs = v_GetNcoeffs();
+                    int nedges  = v_GetNedges();
+                    NekDouble lambdaval = mkey.GetConstant(0);
+                    NekDouble tau       = mkey.GetConstant(1);
+                    
+                    Array<OneD,NekDouble> lambda(nbndry);
+                    DNekVec Lambda(nbndry,lambda,eWrapper);                    
+                    Array<OneD,NekDouble> ulam(ncoeffs);
+                    DNekVec Ulam(ncoeffs,ulam,eWrapper);
+                    Array<OneD,NekDouble> f(ncoeffs);
+                    DNekVec F(ncoeffs,f,eWrapper);
+                    
+                    Array<OneD,StdRegions::StdExpansion1DSharedPtr>  EdgeExp(nedges);
+                    // declare matrix space
+                    returnval  = MemoryManager<DNekMat>::AllocateSharedPtr(ncoeffs,nbndry); 
+                    DNekMat &Umat = *returnval;
+                    
+                    // Helmholtz matrix
+                    DNekScalMat  &invHmat = *v_GetLocMatrix(StdRegions::eInvHybridDGHelmholtz, lambdaval, tau);
+                    
+                    for(i = 0; i < nedges; ++i)
+                    {
+                        EdgeExp[i] = v_GetEdgeExp(i);
+                    }
+
+                    // for each degree of freedom of the lambda space
+                    // calculate Umat entry 
+                    // Generate Lambda to U_lambda matrix 
+                    for(j = 0; j < nbndry; ++j)
+                    {
+                        Vmath::Zero(nbndry,&lambda[0],1);
+                        Vmath::Zero(ncoeffs,&f[0],1);
+                        lambda[j] = 1.0;
+                        
+                        SetTraceToGeomOrientation(EdgeExp,lambda);
+                        
+                        AddHDGHelmholtzTraceTerms(tau,lambda,EdgeExp,f);
+                        
+                        Ulam = invHmat*F; // generate Ulam from lambda
+                        
+                        // fill column of matrix
+                        for(k = 0; k < ncoeffs; ++k)
+                        {
+                            Umat(k,j) = Ulam[k]; 
+                        }
+                    }
+                }
+                break;
+            case StdRegions::eHybridDGLamToQ0:
+            case StdRegions::eHybridDGLamToQ1:
+            case StdRegions::eHybridDGLamToQ2:
+                {
+                    int i,j,k,dir;
+                    int nbndry = v_NumDGBndryCoeffs();
+                    int nquad  = v_GetNumPoints(0);
+                    int ncoeffs = v_GetNcoeffs();
+                    int nedges  = v_GetNedges();
+
+                    Array<OneD,NekDouble> lambda(nbndry);
+                    DNekVec Lambda(nbndry,lambda,eWrapper);                    
+                    Array<OneD,StdRegions::StdExpansion1DSharedPtr>  EdgeExp(nedges);
+                    
+                    Array<OneD,NekDouble> ulam(ncoeffs);
+                    DNekVec Ulam(ncoeffs,ulam,eWrapper);
+                    Array<OneD,NekDouble> f(ncoeffs);
+                    DNekVec F(ncoeffs,f,eWrapper);
+                    NekDouble lambdaval = mkey.GetConstant(0);
+                    NekDouble tau       = mkey.GetConstant(1);
+                    
+
+                    // declare matrix space
+                    returnval  = MemoryManager<DNekMat>::AllocateSharedPtr(ncoeffs,nbndry); 
+                    DNekMat &Qmat = *returnval;
+                    
+                    // Helmholtz matrix
+                    DNekScalMat &invHmat = *v_GetLocMatrix(StdRegions::eInvHybridDGHelmholtz, lambdaval,tau);
+                    
+                    // Lambda to U matrix
+                    DNekScalMat &lamToU = *v_GetLocMatrix(StdRegions::eHybridDGLamToU, lambdaval, tau);
+                    
+                    // Inverse mass matrix 
+                    DNekScalMat &invMass = *v_GetLocMatrix(StdRegions::eInvMass);
+                    
+                    for(i = 0; i < nedges; ++i)
+                    {
+                        EdgeExp[i] = v_GetEdgeExp(i);
+                    }
+
+                    //Weak Derivative matrix 
+                    DNekScalMatSharedPtr Dmat;
+                    switch(mkey.GetMatrixType())
+                    {
+                    case StdRegions::eHybridDGLamToQ0:
+                        dir = 0;
+                        Dmat = v_GetLocMatrix(StdRegions::eWeakDeriv0); 
+                        break;
+                    case StdRegions::eHybridDGLamToQ1:
+                        dir = 1;
+                        Dmat = v_GetLocMatrix(StdRegions::eWeakDeriv1); 
+                        break;
+                    case StdRegions::eHybridDGLamToQ2:
+                        dir = 2;
+                        Dmat = v_GetLocMatrix(StdRegions::eWeakDeriv2); 
+                        break;
+                    default:
+                        ASSERTL0(false,"Direction not known");
+                        break;
+                    }
+                
+                    // for each degree of freedom of the lambda space
+                    // calculate Qmat entry 
+                    // Generate Lambda to Q_lambda matrix 
+                    for(j = 0; j < nbndry; ++j)
+                    {
+                        Vmath::Zero(nbndry,&lambda[0],1);
+                        lambda[j] = 1.0;
+                        
+                        // for lambda[j] = 1 this is the solution to ulam
+                        for(k = 0; k < ncoeffs; ++k)
+                        {
+                            Ulam[k] = lamToU(k,j);
+                        }
+                        
+                        // -D^T ulam
+                        Vmath::Neg(ncoeffs,&ulam[0],1);
+                        F = Transpose(*Dmat)*Ulam; 
+                        
+                        SetTraceToGeomOrientation(EdgeExp,lambda);
+                        
+                        // + \tilde{G} \lambda
+                        AddNormTraceInt(dir,lambda,EdgeExp,f); 
+                        
+                        // multiply by inverse mass matrix
+                        Ulam = invMass*F; 
+                        
+                        // fill column of matrix (Qmat is in column major format)
+                        Vmath::Vcopy(ncoeffs,&ulam[0],1,&(Qmat.GetPtr())[0]+j*ncoeffs,1);
+                    }
+                }
+                break;            
             case StdRegions::eHybridDGHelmBndLam:
                 {
                     int order_e, nquad_e;
@@ -470,8 +609,7 @@ namespace Nektar
                         EdgeExp[i] = v_GetEdgeExp(i);
                     }
 
-                    // Set up matrix derived from <mu, Q_lam.n - \tau (
-                    // U_lam - Lam) > 
+                    // Set up matrix derived from <mu, Q_lam.n - \tau (U_lam - Lam) > 
                     for(i = 0; i < nbndry; ++i)
                     {
                         cnt = 0;
@@ -501,10 +639,9 @@ namespace Nektar
                                                  EdgeExp[e]->UpdatePhys());
           
 
-                            Vmath::Vmul(nquad_e,normals,1,
-                                        EdgeExp[e]->GetPhys(),1,
-                                        work,1);
-
+                            Vmath::Vmul(nquad_e,normals,1,EdgeExp[e]->GetPhys(),
+                                        1,work,1);
+                            
                             if(edgedir == StdRegions::eBackwards)
                             {
                                 Vmath::Neg(nquad_e,work,1);
@@ -532,8 +669,7 @@ namespace Nektar
                                              &work[0],1,&work[0],1);
                                 Vmath::Neg(nquad_e,work,1);
                             }
-
-
+                            
                             // - tau (ulam - lam)
                             for(j = 0; j < order_e; ++j)
                             {
@@ -554,13 +690,14 @@ namespace Nektar
                             {
                                 BndMat(cnt+j,i) = EdgeExp[e]->GetCoeff(j);
                             }
+                            
                             cnt += order_e;
                         }
                     }
                 }
                 break;
             default:
-                returnval = Expansion::GenMatrix(mkey);
+                ASSERTL0(false,"This matrix type cannot be generated from this class");
                 break;
             }
             
@@ -572,6 +709,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.cpp,v $
+ *    Revision 1.2  2008/08/18 08:30:36  sherwin
+ *    Updates for HDG 1D work
+ *
  *    Revision 1.1  2008/08/14 22:12:56  sherwin
  *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
  *

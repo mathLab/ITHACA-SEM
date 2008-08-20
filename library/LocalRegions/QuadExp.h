@@ -434,20 +434,6 @@ namespace Nektar
                 return m_geom->GetCartesianEorient(edge);
             }
 
-            
-            virtual void v_SetTraceToGeomOrientation(Array<OneD, NekDouble> &inout)
-            {
-                Expansion2D::SetTraceToGeomOrientation(inout);
-            }
-
-            
-            virtual void v_AddNormTraceInt(const int dir,
-                                 Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD,NekDouble> &outarray)
-            {
-                Expansion2D::AddNormTraceInt(dir,inarray,outarray);
-            }
-
             virtual void v_AddEdgeNormBoundaryInt(const int edge, 
                                                   StdRegions::StdExpansion1DSharedPtr &EdgeExp,
                                                   Array<OneD, NekDouble> &Fx,  
@@ -458,12 +444,6 @@ namespace Nektar
                 
             }
 
-            virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
-                                                     const Array<OneD, const NekDouble> &inarray,
-                                                     Array<OneD,NekDouble> &outarray)
-            {
-                Expansion2D::AddHDGHelmholtzTraceTerms(tau,inarray,outarray);
-            }
 
             virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
                                                      const Array<OneD, const NekDouble> &inarray,
@@ -521,6 +501,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.39  2008/08/14 22:12:56  sherwin
+ *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
+ *
  *    Revision 1.38  2008/07/31 11:13:22  sherwin
  *    Depracated GetEdgeBasis and replaced with DetEdgeBasisKey
  *

@@ -40,10 +40,28 @@ namespace Nektar
     namespace LocalRegions 
     {
         
+        DNekMatSharedPtr Expansion3D::GenMatrix(const StdRegions::StdMatrixKey &mkey)
+        {
+
+            DNekMatSharedPtr returnval;
+            
+            switch(mkey.GetMatrixType())
+            {
+            default:
+                ASSERTL0(false,"This matrix type cannot is not set up");
+                break;
+            }
+            
+            return returnval;
+        }
+
     } //end of namespace
 } //end of namespace
 
 /** 
  *    $Log: Expansion3D.cpp,v $
+ *    Revision 1.1  2008/08/14 22:12:56  sherwin
+ *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
+ *
  *
  **/

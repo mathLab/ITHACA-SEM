@@ -46,6 +46,7 @@ namespace Nektar
         {
         public:
             
+            DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
             
             protected:
             
@@ -67,5 +68,8 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion3D.h,v $
+ *    Revision 1.1  2008/08/14 22:12:56  sherwin
+ *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
+ *
  *
  **/

@@ -434,18 +434,6 @@ namespace Nektar
                 return m_geom->GetCartesianEorient(edge);
             }
 
-            virtual void v_SetTraceToGeomOrientation(Array<OneD, NekDouble> &inout)
-            {
-                Expansion2D::SetTraceToGeomOrientation(inout);
-            }
-
-
-            virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
-                                                     const Array<OneD, const NekDouble> &inarray,
-                                                     Array<OneD,NekDouble> &outarray)
-            {
-                Expansion2D::AddHDGHelmholtzTraceTerms(tau,inarray,outarray);
-            }
 
             virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
                                                      const Array<OneD, const NekDouble> &inarray,
@@ -469,13 +457,6 @@ namespace Nektar
             }
 
             
-            virtual void v_AddNormTraceInt(const int dir,
-                                 Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD,NekDouble> &outarray)
-            {
-                Expansion2D::AddNormTraceInt(dir,inarray,outarray);
-            }
-
             virtual void v_AddEdgeNormBoundaryInt(const int edge, 
                                                   StdRegions::StdExpansion1DSharedPtr &EdgeExp,
                                                   Array<OneD, NekDouble> &Fx,  
@@ -501,6 +482,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.34  2008/08/14 22:12:57  sherwin
+ *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
+ *
  *    Revision 1.33  2008/07/31 21:25:13  sherwin
  *    Mods for DG Advection
  *

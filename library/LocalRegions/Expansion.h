@@ -52,37 +52,6 @@ namespace Nektar
 
 
             protected:
-            
-            DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
-                        
-            virtual void v_AddHDGHelmholtzMatrixBoundaryTerms(const NekDouble tau, 
-                                                        const Array<OneD,
-                                                        const NekDouble> &inarray,
-                                                        Array<OneD,NekDouble> &outarray)
-            {
-                NEKERROR(ErrorUtil::efatal, "This method is not valid in this class");
-            }
-
-            virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
-                                                     const Array<OneD,const NekDouble> &inarray,  Array<OneD,NekDouble> &outarray)
-            {
-                NEKERROR(ErrorUtil::efatal, "This method is not valid in this class");
-            }
-
-
-            virtual void v_AddNormTraceInt(const int dir,
-                                 Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD,NekDouble> &outarray)
-            {
-                NEKERROR(ErrorUtil::efatal, "This method is not valid in this class");
-            }
-
-
-            virtual void v_SetTraceToGeomOrientation(Array<OneD, NekDouble> &inout)
-            {
-                NEKERROR(ErrorUtil::efatal, "This method is not valid in this class");
-            }
-
 
             virtual const LibUtilities::BasisSharedPtr& v_GetBasis(int dir) const
             {
@@ -172,5 +141,8 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion.h,v $
+ *    Revision 1.1  2008/08/14 22:12:56  sherwin
+ *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
+ *
  *
  **/

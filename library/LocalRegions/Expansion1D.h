@@ -65,28 +65,6 @@ namespace Nektar
             // Do not add members here since it may lead to conflicts.
             // Only use this class for member functions
             
-            virtual void v_AddHDGHelmholtzMatrixBoundaryTerms(const NekDouble tau, 
-                                                              const Array<OneD,
-                                                              const NekDouble> &inarray,
-                                                              Array<OneD,NekDouble> &outarray)
-            {
-                AddHDGHelmholtzMatrixBoundaryTerms(tau,inarray,outarray);
-            }
-
-            virtual void v_SetTraceToGeomOrientation(Array<OneD, NekDouble> &inout)
-            {
-                // Do not need to fill fucnction it is just for
-                // compatibility wiht higher dimension functions
-            }
-
-
-            virtual void v_AddNormTraceInt(const int dir,
-                                 Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD,NekDouble> &outarray)
-            {
-                AddNormTraceInt(dir,inarray,outarray);
-            }
-
             
             virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
                                                      const Array<OneD,const NekDouble> &inarray,  Array<OneD,NekDouble> &outarray)
@@ -125,5 +103,8 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion1D.h,v $
+ *    Revision 1.1  2008/08/14 22:12:56  sherwin
+ *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
+ *
  *
  **/

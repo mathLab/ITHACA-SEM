@@ -55,24 +55,21 @@ namespace Nektar
                                         Array<OneD, NekDouble> &Fy,  
                                         Array<OneD, NekDouble> &outarray);
 
-            void SetTraceToGeomOrientation(Array<OneD, NekDouble> &inout);
 
             void SetTraceToGeomOrientation(Array<OneD, StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                                            Array<OneD, NekDouble> &inout);
 
             void AddNormTraceInt(const int dir,
                                  Array<OneD, const NekDouble> &inarray,
+                                 Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                                  Array<OneD,NekDouble> &outarray);
-
-
-            void AddHDGHelmholtzMatrixBoundaryTerms(const NekDouble tau, 
-                                              const Array<OneD,
-                                              const NekDouble> &inarray,
-                                              Array<OneD,NekDouble> &outarray);
                 
-            void AddHDGHelmholtzTraceTerms(const NekDouble tau, 
-                                           const Array<OneD,const NekDouble> &inarray,  Array<OneD,NekDouble> &outarray);
-            
+            void AddHDGHelmholtzMatrixBoundaryTerms(const NekDouble tau, 
+                                                    const Array<OneD,
+                                                    const NekDouble> &inarray,
+                                                    Array<OneD, StdRegions::StdExpansion1DSharedPtr > &EdgeExp,
+                                                    Array<OneD,NekDouble> &outarray);
+                
 
             void AddHDGHelmholtzTraceTerms(const NekDouble tau, 
                                            const Array<OneD, const NekDouble> &inarray, Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp, Array<OneD,NekDouble> &outarray);
@@ -100,19 +97,6 @@ namespace Nektar
                 return StdRegions::eForwards;              
             }
 
-            virtual void v_AddHDGHelmholtzMatrixBoundaryTerms(const NekDouble tau, 
-                                                        const Array<OneD,
-                                                        const NekDouble> &inarray,
-                                                        Array<OneD,NekDouble> &outarray)
-            {
-                AddHDGHelmholtzMatrixBoundaryTerms(tau,inarray,outarray);
-            }
-
-            virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
-                                                     const Array<OneD,const NekDouble> &inarray,  Array<OneD,NekDouble> &outarray)
-            {
-                AddHDGHelmholtzTraceTerms(tau,inarray,outarray);
-            }
 
             virtual void v_GetEdgeToElementMap(const int eid, const StdRegions::EdgeOrientation edgeOrient, Array<OneD, unsigned int> &maparray, Array<OneD, int> &signarray)
             {
@@ -138,19 +122,6 @@ namespace Nektar
                 return 0;
             }
 
-            virtual void v_SetTraceToGeomOrientation(Array<OneD, NekDouble> &inout)
-            {
-                SetTraceToGeomOrientation(inout);
-            }
-
-            virtual void v_AddNormTraceInt(const int dir,
-                                 Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD,NekDouble> &outarray)
-            {
-                AddNormTraceInt(dir,inarray,outarray);
-            }
-
-
 
             virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
             {
@@ -174,8 +145,8 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
-
-        };
+            
+         };
         
         // type defines for use of PrismExp in a boost vector
         typedef boost::shared_ptr<Expansion2D> Expansion2DSharedPtr;
@@ -190,5 +161,8 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.h,v $
+ *    Revision 1.1  2008/08/14 22:12:56  sherwin
+ *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
+ *
  *
  **/

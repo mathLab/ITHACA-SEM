@@ -81,7 +81,7 @@ namespace Nektar
             if (outarray_d0.num_elements() > 0) // calculate du/dx_0
             {
                 DNekMatSharedPtr D0 = m_base[0]->GetD();
-                if(inarray.get() == outarray_d0.get())
+                if(inarray.data() == outarray_d0.data())
                 {
                     Array<OneD, NekDouble> wsp(nquad0 * nquad1);
                     CopyArray(inarray,wsp);
@@ -100,7 +100,7 @@ namespace Nektar
             if (outarray_d1.num_elements() > 0) // calculate du/dx_1
             {
                 DNekMatSharedPtr D1 = m_base[1]->GetD();
-                if(inarray.get() == outarray_d1.get())
+                if(inarray.data() == outarray_d1.data())
                 {
                     Array<OneD, NekDouble> wsp(nquad0 * nquad1);
                     CopyArray(inarray,wsp);
@@ -120,7 +120,7 @@ namespace Nektar
             {
                 DNekMatSharedPtr D0 = m_base[0]->GetD();
                 DNekMat out(nquad0,nquad1,outarray_d0,eWrapper);
-                if(inarray.get() == outarray_d0.get())
+                if(inarray.data() == outarray_d0.data())
                 {
                     DNekMat in (nquad0,nquad1,inarray);  // copy input array 
                     out = (*D0) * in;
@@ -137,7 +137,7 @@ namespace Nektar
                 DNekMatSharedPtr D1 = m_base[1]->GetD();
                 DNekMat out(nquad0,nquad1,outarray_d1,eWrapper);
 
-                if(inarray.get() == outarray_d1.get()) // copy input array 
+                if(inarray.data() == outarray_d1.data()) // copy input array 
                 {
                     DNekMat in (nquad0,nquad1,inarray);  
                     out = in * Transpose(*D1);
@@ -220,6 +220,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.28  2008/08/14 22:09:50  sherwin
+* Modifications to remove HDG routines from StdRegions and removed StdExpMap
+*
 * Revision 1.27  2008/07/05 16:15:44  sherwin
 * Corrected issue when not using Nektar_using_Blac for physderiv if intput and output are the same
 *

@@ -72,7 +72,7 @@ namespace Nektar
 
 #ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
         
-        if( inarray == outarray)
+        if( inarray.data() == outarray.data())
         { 
             Array<OneD, NekDouble> wsp(nquad);
             CopyArray(inarray, wsp);
@@ -89,7 +89,7 @@ namespace Nektar
 
         NekVector<NekDouble> out(nquad,outarray,eWrapper);
         
-        if(inarray == outarray) // copy intput array
+        if(inarray.data() == outarray.data()) // copy intput array
         {
             NekVector<const NekDouble> in(nquad,inarray,eCopy);  
             out = (*D)*in;
@@ -122,6 +122,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.27  2008/08/18 08:31:26  sherwin
+ * Update to fix PhysTensorDeriv  when inarray == outarray
+ *
  * Revision 1.26  2008/07/04 10:18:40  pvos
  * Some updates
  *

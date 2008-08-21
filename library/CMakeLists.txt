@@ -41,7 +41,7 @@ SET(Boost_ADDITIONAL_VERSIONS "1.35.0")
 
 SET(NEKTAR_USE_ACML OFF CACHE BOOL "Use the AMD Core Math Library (ACML) for BLAS and Lapack support." )
 SET(NEKTAR_USE_ATLAS OFF CACHE BOOL "Use ATLAS for BLAS and Lapack support." )
-SET(NEKTAR_USE_MEMORY_POOLS OFF CACHE BOOL "Use memory pools to accelerate memory allocation.")
+SET(NEKTAR_USE_MEMORY_POOLS ON CACHE BOOL "Use memory pools to accelerate memory allocation.")
 SET(NEKTAR_USE_BLAS_LAPACK ON CACHE BOOL "Use Blas and lapack routines.")
 MARK_AS_ADVANCED(NEKTAR_USE_BLAS_LAPACK)
 SET(NEKTAR_USE_MKL OFF CACHE BOOL "Use the Intel Math Kernel Library (MKL) for BLAS and Lapack support." )

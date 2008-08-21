@@ -40,6 +40,7 @@
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
+#include <LibUtilities/LinearAlgebra/NekLinSysFwd.hpp>
 #include <LibUtilities/BasicUtils/NekPtr.hpp>
 
 #include <boost/multi_array.hpp>
@@ -121,7 +122,8 @@ namespace Nektar
     {
         public:
             //typedef boost::shared_ptr<DataType> ArrayType;
-            typedef NekPtr<DataType> ArrayType;
+            //typedef NekPtr<DataType> ArrayType;
+            typedef DataType* ArrayType;
             typedef const DataType& const_reference;
             typedef DataType& reference;
             
@@ -138,9 +140,11 @@ namespace Nektar
             Array() :
                 m_size(0),
                 //m_data(CreateStorage(m_size)),
-                m_data(),
+                m_data(0),
+                m_count(0),
                 m_offset(0)
             {
+                CreateStorage(m_size);
             }
             
             /// \brief Creates an array of size dim1Size.
@@ -150,10 +154,12 @@ namespace Nektar
             /// constructor.
             explicit Array(unsigned int dim1Size) :
                 m_size(dim1Size),
-                m_data(CreateStorage(dim1Size)),
+                m_data(0),
+                m_count(0),
                 m_offset(0)
             {
-                ArrayInitializationPolicy<DataType>::Initialize(m_data.get(), m_size);
+                CreateStorage(dim1Size);
+                ArrayInitializationPolicy<DataType>::Initialize(m_data + 1, m_size);
             }
             
             /// \brief Creates a 1D array with each element initialized to an initial value.
@@ -165,10 +171,12 @@ namespace Nektar
             /// is used to initialize each element.
             Array(unsigned int dim1Size, const DataType& initValue) :
                 m_size(dim1Size),
-                m_data(CreateStorage(dim1Size)),
+                m_data(0),
+                m_count(0),
                 m_offset(0)
             {
-                ArrayInitializationPolicy<DataType>::Initialize(m_data.get(), m_size, initValue);
+                CreateStorage(dim1Size);
+                ArrayInitializationPolicy<DataType>::Initialize(m_data + 1, m_size, initValue);
             }
             
             /// \brief Creates a 1D array a copies data into it.
@@ -180,10 +188,12 @@ namespace Nektar
             /// is used to copy each element.
             Array(unsigned int dim1Size, const DataType* data) :
                 m_size(dim1Size),
-                m_data(CreateStorage(dim1Size)),
+                m_data(0),
+                m_count(0),
                 m_offset(0)
             {
-                ArrayInitializationPolicy<DataType>::Initialize(m_data.get(), m_size, data);
+                CreateStorage(dim1Size);
+                ArrayInitializationPolicy<DataType>::Initialize(m_data + 1, m_size, data);
             }
             
             /// \brief Creates a 1D array that references rhs.
@@ -196,8 +206,10 @@ namespace Nektar
             Array(unsigned int dim1Size, const Array<OneD, const DataType>& rhs) :
                 m_size(dim1Size),
                 m_data(rhs.m_data),
+                m_count(rhs.m_count),
                 m_offset(rhs.m_offset)
             {
+                *m_count += 1;
                 ASSERTL0(m_size <= rhs.num_elements(), "Requested size is larger than input array size.");
             }
 
@@ -205,35 +217,54 @@ namespace Nektar
             Array(const Array<OneD, const DataType>& rhs) :
                 m_size(rhs.m_size),
                 m_data(rhs.m_data),
+                m_count(rhs.m_count),
                 m_offset(rhs.m_offset)
             {
+                *m_count += 1;
+            }
+            
+            ~Array()
+            {
+                if( m_count == 0 )
+                {
+                    return;
+                }
+                
+                *m_count -= 1;
+                if( *m_count == 0 )
+                {
+                    ArrayDestructionPolicy<DataType>::Destroy(m_data+1, m_size);
+                    MemoryManager<DataType>::RawDeallocate(m_data, m_size+1);
+                }
             }
             
             /// \brief Creates a reference to rhs.
             Array<OneD, const DataType>& operator=(const Array<OneD, const DataType>& rhs)
             {
                 m_data = rhs.m_data;
+                m_count = rhs.m_count;
+                *m_count += 1;
                 m_offset = rhs.m_offset;
                 m_size = rhs.m_size;
                 return *this;
             }
             
-            const_iterator begin() const { return m_data.get() + m_offset; }
-            const_iterator end() const { return m_data.get() + m_offset + m_size; }
+            const_iterator begin() const { return m_data + m_offset + 1; }
+            const_iterator end() const { return m_data + m_offset + m_size + 1; }
             
             const_reference operator[](unsigned int i) const 
             {
                 ASSERTL1(static_cast<size_type>(i) < m_size, (std::string("Element ") +
                     boost::lexical_cast<std::string>(i) + std::string(" requested in an array of size ") +
                     boost::lexical_cast<std::string>(m_size)));
-                return *(m_data.get() + i + m_offset);
+                return *(m_data + i + m_offset + 1);
             }
             
             /// \brief Returns a c-style pointer to the underlying array.
-            const element* get() const { return m_data.get()+m_offset; }
+            const element* get() const { return m_data+m_offset+1; }
 
             /// \brief Returns a c-style pointer to the underlying array.
-            const element* data() const { return m_data.get()+m_offset; }
+            const element* data() const { return m_data+m_offset+1; }
             
             /// \brief Returns 1.
             size_type num_dimensions() const { return 1; }
@@ -277,30 +308,36 @@ namespace Nektar
         protected:
             unsigned int m_size;
             //boost::shared_ptr<DataType> m_data;
-            NekPtr<DataType> m_data;
+            //NekPtr<DataType> m_data;
+            DataType* m_data;
+            unsigned int* m_count;
             unsigned int m_offset;
             
 
         private:
-            struct DestroyArray
-            {
-                DestroyArray(unsigned int elements) :
-                    m_elements(elements) {}
-                    
-                void operator()(DataType* p)
-                {
-                    ArrayDestructionPolicy<DataType>::Destroy(p, m_elements);
-                    MemoryManager<DataType>::RawDeallocate(p, m_elements);
-                }
-                unsigned int m_elements;
-            };
-            
+//            struct DestroyArray
+//            {
+//                DestroyArray(unsigned int elements) :
+//                    m_elements(elements) {}
+//                    
+//                void operator()(DataType* p)
+//                {
+//                    ArrayDestructionPolicy<DataType>::Destroy(p, m_elements);
+//                    MemoryManager<DataType>::RawDeallocate(p, m_elements);
+//                }
+//                unsigned int m_elements;
+//            };
+//            
             //boost::shared_ptr<DataType> 
-            NekPtr<DataType>
+            //NekPtr<DataType>
+            void
             CreateStorage(unsigned int size)
             {
-                DataType* storage = MemoryManager<DataType>::RawAllocate(size);
-                return NekPtr<DataType>(storage, size);
+                DataType* storage = MemoryManager<DataType>::RawAllocate(size+1);
+                m_data = storage;
+                m_count = (unsigned int*)storage;
+                *m_count = 1;
+                //return NekPtr<DataType>(storage, size);
                 //return boost::shared_ptr<DataType>(storage,
                         //boost::bind(DeleteStorage<DataType>, storage, size) );
                 //        DestroyArray(size), MemoryManager<DataType>() );
@@ -541,10 +578,10 @@ namespace Nektar
             }
             
             using BaseType::begin;
-            iterator begin() { return this->m_data.get()+this->m_offset; }
+            iterator begin() { return this->m_data + 1 +this->m_offset; }
             
             using BaseType::end;
-            iterator end() { return this->m_data.get() + this->m_offset + this->m_size; }
+            iterator end() { return this->m_data + 1 + this->m_offset + this->m_size; }
             
             using BaseType::operator[];
             reference operator[](unsigned int i)
@@ -557,10 +594,10 @@ namespace Nektar
                 
             
             using BaseType::get;
-            element* get() { return this->m_data.get()+this->m_offset; }
+            element* get() { return this->m_data + 1 +this->m_offset; }
             
             using BaseType::data;
-            element* data() { return this->m_data.get()+this->m_offset; }
+            element* data() { return this->m_data + 1 +this->m_offset; }
             
             template<typename T1, typename dim, typename space>
             friend class NekVector;
@@ -568,6 +605,9 @@ namespace Nektar
             template<typename T1, typename T2, typename T3>
             friend class NekMatrix;
             
+            template<typename T>
+            friend class LinearSystem;
+    
         protected:
             Array(const Array<OneD, const DataType>& rhs, AllowWrappingOfConstArrays a) :
                 BaseType(rhs)
@@ -704,6 +744,11 @@ namespace Nektar
         if( lhs.num_elements() != rhs.num_elements() )
         {
             return false;
+        }
+        
+        if( lhs.data() == rhs.data() )
+        {
+            return true;
         }
         
         for(unsigned int i = 0; i < lhs.num_elements(); ++i)

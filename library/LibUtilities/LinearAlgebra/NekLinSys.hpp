@@ -44,6 +44,7 @@
 #include <LibUtilities/LinearAlgebra/MatrixType.h>
 #include <LibUtilities/BasicUtils/ConsistentObjectAccess.hpp>
 #include <LibUtilities/BasicUtils/RawType.hpp>
+#include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
 #include <iostream>
 
 #include <boost/shared_ptr.hpp> 
@@ -263,9 +264,6 @@ namespace Nektar
         }
     };
 
-    template<typename MatrixType>
-    class LinearSystem;
-
     template<typename StorageType, typename Type>
     class LinearSystem<NekMatrix<double, StorageType, Type> >
     {
@@ -275,27 +273,43 @@ namespace Nektar
             typedef typename MatrixType::PolicySpecificDataHolderType PolicySpecificDataType;
             
         public:
-            explicit LinearSystem(const boost::shared_ptr<MatrixType> &theA) :
+            explicit LinearSystem(const boost::shared_ptr<MatrixType> &theA, PointerWrapper wrapperType = eCopy) :
                 n(theA->GetRows()),
-                A(),
+                A(theA->GetPtr(), eVECTOR_WRAPPER),
                 m_ipivot(),
                 m_policySpecificData(theA->GetPolicySpecificDataHolderType())
             {
                 // At some point we should fix this.  We should upate the copy of 
                 // A to be transposd for this to work.
                 ASSERTL0(theA->GetTransposeFlag() == 'N', "LinearSystem requires a non-transposed matrix.");
+                ASSERTL0( (wrapperType == eWrapper && !boost::is_same<StorageType, BandedMatrixTag>::value) || wrapperType == eCopy , "Banded matrices can't be wrapped");
+                
+                if( wrapperType == eCopy )
+                {
+                    A = Array<OneD, double>(theA->GetPtr().num_elements());
+                    CopyArray(theA->GetPtr(), A);
+                }
+                
                 FactorMatrix(*theA);
             }
             
-            explicit LinearSystem(const MatrixType& theA) :
+            explicit LinearSystem(const MatrixType& theA, PointerWrapper wrapperType = eCopy) :
                 n(theA.GetRows()),
-                A(),
+                A(theA.GetPtr(), eVECTOR_WRAPPER),
                 m_ipivot(),
                 m_policySpecificData(theA.GetPolicySpecificDataHolderType())
             {
                 // At some point we should fix this.  We should upate the copy of 
                 // A to be transposd for this to work.
                 ASSERTL0(theA.GetTransposeFlag() == 'N', "LinearSystem requires a non-transposed matrix.");
+                ASSERTL0( (wrapperType == eWrapper && !boost::is_same<StorageType, BandedMatrixTag>::value) || wrapperType == eCopy, "Banded matrices can't be wrapped" );
+                
+                if( wrapperType == eCopy )
+                {
+                    A = Array<OneD, double>(theA.GetPtr().num_elements());
+                    CopyArray(theA.GetPtr(), A);
+                }
+
                 FactorMatrix(theA);
             }
 
@@ -359,7 +373,6 @@ namespace Nektar
         private:
             void FactorMatrix(const NekMatrix<double, DiagonalMatrixTag, StandardMatrixTag> &theA)
             {
-                A = Array<OneD, double>(n);
                 for(unsigned int i = 0; i < theA.GetColumns(); ++i)
                 {
                     A[i] = 1.0/theA(i,i);
@@ -378,17 +391,12 @@ namespace Nektar
                                     >
                                 >::type* p = 0)
             {
-                A = Array<OneD, double>(theA.GetPtr().num_elements());
-                CopyArray(theA.GetPtr(), A);
             }
 
             void FactorMatrix(const NekMatrix<double,FullMatrixTag,StandardMatrixTag> &theA)
             {
                 int m = theA.GetRows();
                 int n = theA.GetColumns();
-                
-                A = Array<OneD, double>(m*n);
-                CopyArray(theA.GetPtr(), A);
                 
                 int pivotSize = std::max(1, std::min(m, n));
                 int info = 0;
@@ -410,9 +418,6 @@ namespace Nektar
 
             void FactorMatrix(const NekMatrix<double, SymmetricMatrixTag, StandardMatrixTag>& theA)
             {
-                A = Array<OneD, double>(theA.GetPtr().num_elements());
-                CopyArray(theA.GetPtr(), A);
-                
                 int info = 0;
                 int pivotSize = theA.GetRows();
                 m_ipivot = Array<OneD, int>(pivotSize);
@@ -455,9 +460,6 @@ namespace Nektar
                         A.get() + (i+1)*KL + i*rawRows);
                 }
                        
-                // Put the extra elements at the end.
-                //std::copy(theA.GetRawPtr(), theA.GetRawPtr() + theA.GetPtr().num_elements(), A.get());
-
                 int info = 0;
                 int pivotSize = theA.GetRows();
                 m_ipivot = Array<OneD, int>(pivotSize);

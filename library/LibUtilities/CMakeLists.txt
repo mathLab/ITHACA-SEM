@@ -20,6 +20,7 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/MatrixType.h
     ./LinearAlgebra/NekLinAlgAlgorithms.hpp
     ./LinearAlgebra/NekLinSys.hpp
+    ./LinearAlgebra/NekLinSysFwd.hpp
     ./LinearAlgebra/NekMatrix.hpp
     ./LinearAlgebra/NekMatrixFwd.hpp
     ./LinearAlgebra/NekMatrixMetadata.hpp

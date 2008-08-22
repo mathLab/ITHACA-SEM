@@ -196,8 +196,36 @@ namespace Nektar
                         Upwind[offset + j] = Bwd[offset + j];
                     }
                 }
-            }
+            }            
+        }
+
+        void GenExpList1D::GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals) 
+        {
             
+            int i,j,k,e_npoints,offset;
+            Array<OneD,NekDouble> locnormals; 
+            
+            // Assume whole array is of same coordinate dimension
+            int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
+            
+            ASSERTL1(normals.num_elements() >= coordim,
+                     "Output vector does not have sufficient dimensions to match coordim");
+            
+            for(i = 0; i < m_exp->size(); ++i)
+            {
+                e_npoints = (*m_exp)[i]->GetNumPoints(0);
+                locnormals   = (*m_exp)[i]->GetPhysNormals();
+                
+                offset = m_phys_offset[i];
+                
+                for(j = 0; j < e_npoints; ++j)
+                {
+                    for(k = 0; k < coordim; ++k)
+                    {
+                        normals[k][offset+j] = locnormals[k*e_npoints + j];
+                    }
+                }
+            }
         }
         
     } //end of namespace
@@ -205,6 +233,9 @@ namespace Nektar
 
 /**
 * $Log: GenExpList1D.cpp,v $
+* Revision 1.3  2008/08/14 22:15:51  sherwin
+* Added LocalToglobalMap and DGMap and depracted LocalToGlobalBndryMap1D,2D. Made DisContField classes compatible with updated ContField formats
+*
 * Revision 1.2  2008/07/31 11:17:13  sherwin
 * Changed GetEdgeBasis with DetEdgeBasisKey
 *

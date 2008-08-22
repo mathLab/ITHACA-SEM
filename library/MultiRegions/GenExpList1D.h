@@ -77,6 +77,8 @@ namespace Nektar
                         Array<OneD, const NekDouble> &Bwd, 
                         Array<OneD, NekDouble> &Upwind);
 
+	    void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals); 
+
         protected:
 
         private:
@@ -94,6 +96,9 @@ namespace Nektar
 
 /**
  * $Log: GenExpList1D.h,v $
+ * Revision 1.2  2008/08/14 22:15:51  sherwin
+ * Added LocalToglobalMap and DGMap and depracted LocalToGlobalBndryMap1D,2D. Made DisContField classes compatible with updated ContField formats
+ *
  * Revision 1.1  2008/07/29 22:26:35  sherwin
  * Generalised 1D Segment list which includes a normal direction at physical points
  *

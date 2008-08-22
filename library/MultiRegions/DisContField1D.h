@@ -86,6 +86,16 @@ namespace Nektar
 
             GlobalLinSysSharedPtr GetGlobalBndLinSys(const GlobalLinSysKey &mkey);
 
+            inline const Array<OneD,const LocalRegions::PointExpSharedPtr>& GetBndCondExpansions()
+            {
+                return m_bndCondExpansions;
+            }
+            
+            inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& GetBndConditions()
+            {
+                return m_bndConditions;
+            }
+
         protected:
 
         private:

@@ -383,9 +383,6 @@ namespace Nektar
                                         SubstituteFunction(attrData);
 
                                         userDefined = attrData;
-
-                                        cout << "userdefined Neumann data = " << userDefined << endl;
-
                                      }
                                      else if(attrName=="VALUE")
                                      {
@@ -396,19 +393,13 @@ namespace Nektar
 
                                         SubstituteFunction(attrData);
                                         
-                                        equation = attrData;
-
-                                        cout << "equation in the Neumann VALUE = " << equation << endl;
-                                        
+                                        equation = attrData;                                        
                                       }
                                       attr = attr->Next();
                                     }
                                                                         
                                     BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(equation, userDefined));
                                     (*boundaryConditions)[*iter]  = neumannCondition;
-
-                                    cout << "equation in the Neumann SharedPtr = " << equation << endl;
-                                    cout << "user defined Neumann = " << userDefined << endl;
                             }
                             else
                             {
@@ -452,9 +443,6 @@ namespace Nektar
                                         SubstituteFunction(attrData);
                                         
                                         userDefined = attrData;
-                            
-                                        cout << "userdefined Dirichlet data = " << userDefined << endl;
-
                                     }
                                     else if(attrName=="VALUE")
                                     {                                        
@@ -466,16 +454,12 @@ namespace Nektar
                                         SubstituteFunction(attrData);
 
                                         equation = attrData;
-
-                                        cout << "equation Dirichlet in the VALUE = " << equation << endl;
                                     }
                                    attr = attr->Next();
                                 }
 
                                 BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr(equation, userDefined));
                                 (*boundaryConditions)[*iter]  = dirichletCondition;
-                                cout << "equation in the Dirichlet SharedPtr = " << equation << endl;
-                                cout << "user defined Dirichlet = " << userDefined << endl;
                             }
                             else
                             {
@@ -523,8 +507,6 @@ namespace Nektar
 
                                     userDefined = attrData1;
 
-                                    cout << "user defined Robin data = " << userDefined << endl;
-
                                  } else if(attrName1 == "A"){
 
                                     ASSERTL0(attrName1 == "A", (std::string("Unknown attribute: ") + attrName1).c_str());
@@ -535,8 +517,6 @@ namespace Nektar
                                     SubstituteFunction(attrData1);
 
                                     equation1 = attrData1;
-
-                                    cout << "equation in the A = " << equation1 << endl;
 
                                     attr = attr->Next();
                                     ASSERTL0(attr, "Unable to read B attribute.");
@@ -550,8 +530,6 @@ namespace Nektar
                                     SubstituteFunction(attrData1);
 
                                     equation2 = attrData1;
-
-                                    cout << "equation in the B = " << equation2 << endl;
 
                                  }
                                  attr = attr->Next();

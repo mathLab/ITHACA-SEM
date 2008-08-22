@@ -72,7 +72,12 @@ namespace Nektar
             {
                 return m_trace;
             }
-
+	    
+	    inline LocalToGlobalDGMapSharedPtr &GetTraceMap(void)
+            {
+                return m_traceMap;
+            }
+            
             
             void HelmSolve(DisContField2D &Fce, NekDouble lambda);
             /**
@@ -126,11 +131,21 @@ namespace Nektar
                                   Array<OneD, const NekDouble> &Fy, 
                                   Array<OneD, NekDouble> &outarray);
 
+            inline const Array<OneD,const MultiRegions::ExpList1DSharedPtr>& GetBndCondExpansions()
+            {
+                return m_bndCondExpansions;
+            }
+            
+            inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& GetBndConditions()
+            {
+                return m_bndConditions;
+            }
+
         protected:
 
         private:
             Array<OneD,MultiRegions::ExpList1DSharedPtr>       m_bndCondExpansions;
-            Array<OneD,SpatialDomains::BoundaryConditionShPtr>  m_bndConditions;
+            Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
             GlobalLinSysMapShPtr                               m_globalBndMat;
             GenExpList1DSharedPtr                              m_trace;
             LocalToGlobalDGMapSharedPtr                        m_traceMap;

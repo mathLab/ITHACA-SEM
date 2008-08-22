@@ -230,10 +230,14 @@ namespace Nektar
             /**
              * \brief This function return the boundary conditions expansion.
              */ 
-            inline const Array<OneD,const LocalRegions::PointExpSharedPtr>& 
-                GetBndCondExp()
+            inline const Array<OneD,const LocalRegions::PointExpSharedPtr>& GetBndCondExpansions()
             {
                 return m_bndCondExpansions;
+            }
+            
+            inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& GetBndConditions()
+            {
+                return m_bndConditions;
             }
 
         protected:

@@ -113,6 +113,12 @@ namespace Nektar
             int m_EdgeIndx;
         };
 
+        struct ElementFace
+        {
+            GeometrySharedPtr m_Face;
+            int m_FaceIndx;
+        };
+
         // curve reader structure
         struct Curve
         {
@@ -133,6 +139,10 @@ namespace Nektar
         typedef boost::shared_ptr<Curve> CurveSharedPtr;
         typedef std::vector<CurveSharedPtr> CurveVector;
         typedef boost::shared_ptr<CurveVector> CurveVectorSharedPtr;
+
+        typedef boost::shared_ptr<ElementFace> ElementFaceSharedPtr;
+        typedef std::vector<ElementFaceSharedPtr> ElementFaceVector;
+        typedef boost::shared_ptr<ElementFaceVector> ElementFaceVectorSharedPtr;
 
         struct Expansion
         {
@@ -278,6 +288,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.27  2008/07/09 23:41:36  ehan
+// Added edge component and face component to the curve reader.
+//
 // Revision 1.26  2008/07/08 18:58:34  ehan
 // Added curve reader.
 //

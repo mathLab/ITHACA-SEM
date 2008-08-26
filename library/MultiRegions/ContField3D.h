@@ -53,12 +53,13 @@ namespace Nektar
         {
         public:
             ContField3D();
+
             ContField3D(SpatialDomains::MeshGraph3D &graph3D,
                         SpatialDomains::BoundaryConditions &bcs, 
                         const int bc_loc = 0);
-                        
+
             ContField3D(SpatialDomains::MeshGraph3D &graph3D,
-                        SpatialDomains::BoundaryConditions &bcs,
+                        SpatialDomains::BoundaryConditions &bcs, 
                         const std::string variable);
 
             ContField3D(const LibUtilities::BasisKey &Ba,
@@ -68,7 +69,7 @@ namespace Nektar
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0,
                         const LibUtilities::PointsType 
-                        TriNb = LibUtilities::SIZE_PointsType);
+                        TetNb = LibUtilities::SIZE_PointsType);
 
             ContField3D(const LibUtilities::BasisKey &Ba,
                         const LibUtilities::BasisKey &Bb,
@@ -77,7 +78,9 @@ namespace Nektar
                         SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable,
                         const LibUtilities::PointsType 
-                        TriNb = LibUtilities::SIZE_PointsType);
+                        TetNb = LibUtilities::SIZE_PointsType);
+
+
 
             ContField3D(const ContField3D &In);
 
@@ -85,20 +88,33 @@ namespace Nektar
 
             void FwdTrans (const ExpList &In);
             void HelmSolve(const ExpList &In, NekDouble lambda);
+            void EvaluateBoundaryConditions(const NekDouble time = 0.0)
+            {
+                ExpList3D::EvaluateBoundaryConditions(time,m_bndCondExpansions,m_bndConditions);
+            }
+            /**
+             * \brief This function return the boundary conditions expansion.
+             */ 
+            inline const Array<OneD,const MultiRegions::ExpList2DSharedPtr>&GetBndCondExp()
+            {
+                return m_bndCondExpansions;
+            }
+            
+            
 
         protected:
 
         private:
-            Array<OneD,MultiRegions::ExpList2DSharedPtr>           m_bndConstraint;
-            Array<OneD,SpatialDomains::BoundaryConditionType>      m_bndTypes;
-            
+            Array<OneD,MultiRegions::ExpList2DSharedPtr>           m_bndCondExpansions;
+            Array<OneD,SpatialDomains::BoundaryConditionShPtr>     m_bndConditions;
+
             GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
 
             void GlobalSolve(const GlobalLinSysKey &key, const ExpList &Rhs, NekDouble ScaleForcing=1.0);
 
-            void GenerateField3D(SpatialDomains::MeshGraph3D &graph3D,
-                                 SpatialDomains::BoundaryConditions &bcs, 
-                                 const std::string variable);
+            void GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph3D &graph3D,
+                                                    SpatialDomains::BoundaryConditions &bcs,
+                                                    const std::string variable);
 
         };
         typedef boost::shared_ptr<ContField3D>      ContField3DSharedPtr;

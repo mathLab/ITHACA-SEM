@@ -38,13 +38,14 @@
 
 #include <vector>
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/ExpList.h>
+#include <MultiRegions/ExpList2D.h>
 
 #include <LocalRegions/HexExp.h>
 #include <LocalRegions/PrismExp.h>
 #include <LocalRegions/PyrExp.h>
 #include <LocalRegions/TetExp.h>
 #include <SpatialDomains/MeshGraph3D.h>
+#include <SpatialDomains/BoundaryConditions.h>
 
 namespace Nektar
 {
@@ -77,6 +78,23 @@ namespace Nektar
         }
         
     protected:
+
+        void SetBoundaryConditionExpansion(SpatialDomains::MeshGraph3D &graph3D,
+                                        SpatialDomains::BoundaryConditions &bcs,
+                                        const std::string variable,
+                                        Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
+                                        Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndConditions);
+
+        void EvaluateBoundaryConditions(const NekDouble time,
+                                        Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
+                                        Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndConditions);
+
+        void ExpList3D::GetPeriodicFaces(SpatialDomains::MeshGraph3D &graph3D,
+                                SpatialDomains::BoundaryConditions &bcs,
+                                const std::string variable,
+                                map<int,int>& periodicVertices,
+                                map<int,int>& periodicEdges,
+                                map<int,int>& periodicFaces);
         
     private:
         LocalRegions::HexExpVector    m_hex;

@@ -37,8 +37,7 @@
 #include "pchSpatialDomains.h"
 
 #include <SpatialDomains/Geometry3D.h>
-#include <StdRegions/StdTetExp.h>
-#include <StdRegions/StdHexExp.h>
+
 
 namespace Nektar
 {
@@ -62,6 +61,9 @@ namespace Nektar
 
 
 // $Log: Geometry3D.cpp,v $
+// Revision 1.2  2008/01/31 11:02:25  ehan
+// Added constructor and destructor.
+//
 // Revision 1.1  2006/05/04 18:59:00  kirby
 // *** empty log message ***
 //

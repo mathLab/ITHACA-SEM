@@ -120,7 +120,7 @@ namespace Nektar
 
             /// \brief Return the face number of the given face, or -1, if
             /// not an face of this element.
-            int WhichFace(TriGeomSharedPtr face)
+            int WhichFace(Geometry2DSharedPtr face)
             {
                 int returnval = -1;
 
@@ -245,7 +245,7 @@ namespace Nektar
                return GetFid(i);
             }
 
-            virtual const TriGeomSharedPtr v_GetFace(int i) const
+            virtual const Geometry2DSharedPtr v_GetFace(int i) const
             {
                return GetFace(i);
             }
@@ -255,7 +255,7 @@ namespace Nektar
                 return GetEid(i);
             }
 
-            virtual const SegGeomSharedPtr v_GetEdge(int i) const
+            virtual const Geometry1DSharedPtr v_GetEdge(int i) const
             {
                 return GetEdge(i);
             }
@@ -300,7 +300,7 @@ namespace Nektar
                 return WhichEdge(edge);
             }
 
-            virtual int v_WhichFace(TriGeomSharedPtr face)
+            virtual int v_WhichFace(Geometry2DSharedPtr face)
             {
                 return WhichFace(face);
             }
@@ -314,6 +314,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.h,v $
+// Revision 1.14  2008/06/30 19:35:52  ehan
+// Fixed infinity recursive-loop error.
+//
 // Revision 1.13  2008/06/16 22:44:23  ehan
 // Added virtual function GetFaceorientation(..)
 //

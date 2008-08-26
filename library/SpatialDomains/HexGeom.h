@@ -80,33 +80,12 @@ namespace Nektar
                 return m_forient[i];
             }
 
-            /// \brief Return the face number of the given face, or -1, if
-            /// not an face of this element.
-            int WhichFace(QuadGeomSharedPtr face)
-            {
-                int returnval = -1;
-
-                QuadGeomVector::iterator faceIter;
-                int i;
-
-                for (i=0,faceIter = m_qfaces.begin(); faceIter != m_qfaces.end(); ++faceIter,++i)
-                {
-                    if (*faceIter == face)
-                    {
-                        returnval = i;
-                        break;
-                    }
-                }
-
-                return returnval;
-            }
-
             inline void SetOwnData()
             {
                m_owndata = true;
             }
 
-            inline const QuadGeomSharedPtr GetFace(int i) const
+            inline const Geometry2DSharedPtr GetFace(int i) const
             {
                 ASSERTL2((i >=0) && (i <= 11),"Edge id must be between 0 and 11");
                 return m_qfaces[i];
@@ -152,7 +131,27 @@ namespace Nektar
 
             NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
 
-            
+            /// \brief Return the face number of the given face, or -1, if
+            /// not an face of this element.
+            int WhichFace(Geometry2DSharedPtr face)
+            {
+                int returnval = -1;
+
+                QuadGeomVector::iterator faceIter;
+                int i;
+
+                for (i=0,faceIter = m_qfaces.begin(); faceIter != m_qfaces.end(); ++faceIter,++i)
+                {
+                    if (*faceIter == face)
+                    {
+                        returnval = i;
+                        break;
+                    }
+                }
+
+                return returnval;
+            }
+
             /// \brief Return the edge number of the given edge, or -1, if
             /// not an edge of this element.
             int WhichEdge(SegGeomSharedPtr edge)
@@ -205,14 +204,24 @@ namespace Nektar
                return GetFid(i);
             }
 
-            virtual const QuadGeomSharedPtr v_GetFace(int i) const
+            virtual const Geometry2DSharedPtr v_GetFace(int i) const
             {
                return GetFace(i);
             }
+            
+            virtual const Geometry1DSharedPtr v_GetEdge(int i) const
+            {
+                return GetEdge(i);
+            }
 
-            virtual int v_WhichFace(QuadGeomSharedPtr face)
+            virtual int v_WhichFace(Geometry2DSharedPtr face)
             {
                 return WhichFace(face);
+            }
+
+            virtual int v_WhichEdge(SegGeomSharedPtr edge)
+            {
+                return WhichEdge(edge);
             }
 
             virtual void v_GenGeomFactors(void)
@@ -260,11 +269,6 @@ namespace Nektar
                 return GetVid(i);
             }
 
-            virtual const SegGeomSharedPtr v_GetEdge(int i) const
-            {
-                return GetEdge(i);
-            }
-
             virtual StdRegions::EdgeOrientation v_GetEorient(const int i) const
             {
                return GetEorient(i);
@@ -290,10 +294,7 @@ namespace Nektar
                 return GetCoord(i,Lcoord);
             }
 
-            virtual int v_WhichEdge(SegGeomSharedPtr edge)
-            {
-                return WhichEdge(edge);
-            }
+
 
         };
 
@@ -304,6 +305,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.15  2008/06/30 19:34:04  ehan
+// Fixed infinity recursive-loop error.
+//
 // Revision 1.14  2008/06/16 22:38:48  ehan
 // Added inline function GetFace(..), whichFace(..), and GetFaceorient(..).
 //

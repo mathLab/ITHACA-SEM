@@ -135,17 +135,17 @@ namespace Nektar
             m_transState = eLocalCont;
         }
 
-	void ContExpList2D::GeneralMatrixOp(const GlobalLinSysKey &gkey,
-                                            const Array<OneD, const NekDouble> &inarray,
-                                            Array<OneD, NekDouble> &outarray)
-            
-	{
+        void ContExpList2D::GeneralMatrixOp(const GlobalLinSysKey &gkey,
+                                                const Array<OneD, const NekDouble> &inarray,
+                                                Array<OneD, NekDouble> &outarray)
+                
+        {
             Array<OneD,NekDouble> tmp(m_ncoeffs);
             ContToLocal(inarray,tmp);
-	    ExpList2D::GeneralMatrixOp(gkey,tmp,tmp);
-	    Assemble(tmp,outarray);
-	}
-        
+            ExpList2D::GeneralMatrixOp(gkey,tmp,tmp);
+            Assemble(tmp,outarray);
+        }
+            
         void ContExpList2D::FwdTrans(const ExpList &In)
         {
             IProductWRTBase(In);
@@ -183,6 +183,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.cpp,v $
+* Revision 1.14  2008/05/07 16:05:55  pvos
+* Mapping + Manager updates
+*
 * Revision 1.13  2008/04/06 06:00:06  bnelson
 * Changed ConstArray to Array<const>
 *

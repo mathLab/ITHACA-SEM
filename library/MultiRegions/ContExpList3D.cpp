@@ -136,8 +136,8 @@ namespace Nektar
             // setup mapping array 
             if(constructMap)
             {
-                
-                //m_locToGloMap = MemoryManager<LocalToGlobalMap3D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph3D); TODO implement "LocalToGlobalMap3D"
+                //TODO implement "LocalToGlobalMap3D"
+                //m_locToGloMap = MemoryManager<LocalToGlobalMap3D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph3D); 
                 m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
                 m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
             }
@@ -153,10 +153,22 @@ namespace Nektar
             // setup mapping array 
             if(constructMap)
             {
-//                 m_locToGloMap = MemoryManager<LocalToGlobalMap3D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph3D); TODO implement "LocalToGlobalMap3D"
+               //TODO implement "LocalToGlobalMap3D"
+               // m_locToGloMap = MemoryManager<LocalToGlobalMap3D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph3D);
                 m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
                 m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
             }
+        }
+
+        void ContExpList3D::IProductWRTBase(const ExpList &In)
+        {
+            if(m_transState == eContinuous)
+            {
+                ContToLocal();
+            }
+            ExpList3D::IProductWRTBase(In);
+            Assemble();
+            m_transState = eLocalCont;
         }
 
         void ContExpList3D::GeneralMatrixOp(const GlobalLinSysKey &gkey,

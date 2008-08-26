@@ -200,8 +200,8 @@ namespace Nektar
                 return returnval;
             }
 
-            /// \brief Return the elements (shared ptrs) that have this edge.
-            ElementEdgeVectorSharedPtr GetElementsFromEdge(SegGeomSharedPtr edge);
+            /// \brief Return the elements (shared ptrs) that have this face.
+            ElementFaceVectorSharedPtr GetElementsFromFace(Geometry2DSharedPtr face);
 
         protected:
             void ReadEdges    (TiXmlDocument &doc);
@@ -220,6 +220,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph3D.h,v $
+// Revision 1.10  2008/06/30 19:34:37  ehan
+// Fixed infinity recursive-loop error.
+//
 // Revision 1.9  2008/06/11 21:34:42  delisi
 // Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
 //

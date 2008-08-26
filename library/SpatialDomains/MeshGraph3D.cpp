@@ -948,50 +948,95 @@ namespace Nektar
             return;
         }
 
-        ElementEdgeVectorSharedPtr MeshGraph3D::GetElementsFromEdge(SegGeomSharedPtr edge)
+
+        ElementFaceVectorSharedPtr MeshGraph3D::GetElementsFromFace(Geometry2DSharedPtr face)
         {
-            // Search Tets, Pyramids, Prisms, and Hexes
+            // Search tets, prisms, pyramids, and hexahedrons
             // Need to iterate through vectors because there may be multiple
             // occurrences.
-            //ElementEdgeSharedPtr elementEdge;
-            //TriGeomVector::iterator triIter;
+            ElementFaceSharedPtr elementFace;
 
-            ElementEdgeVectorSharedPtr returnval = MemoryManager<ElementEdgeVector>::AllocateSharedPtr();
+            ElementFaceVectorSharedPtr returnval = MemoryManager<ElementFaceVector>::AllocateSharedPtr();
 
-            //for(triIter = m_trigeoms.begin(); triIter != m_trigeoms.end(); ++triIter)
-            //{
-            //    int edgeNum;
-            //    if ((edgeNum = (*triIter)->WhichEdge(edge)) > -1)
-            //    {
-            //        elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
-            //        elementEdge->m_Element = *triIter;
-            //        elementEdge->m_EdgeIndx = edgeNum;
-            //        returnval->push_back(elementEdge);
-            //    }
-            //}
+            CompositeVectorIter compIter;
 
-            //QuadGeomVector::iterator quadIter;
+            TetGeomSharedPtr tetGeomShPtr;
+            HexGeomSharedPtr hexGeomShPtr;
+            PrismGeomSharedPtr prismGeomShPtr;
+            PyrGeomSharedPtr pyrGeomShPtr;
 
-            //for(quadIter = m_quadgeoms.begin(); quadIter != m_quadgeoms.end(); ++quadIter)
-            //{
-            //    int edgeNum;
-            //    if ((edgeNum = (*quadIter)->WhichEdge(edge)) > -1)
-            //    {
-            //        elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
-            //        elementEdge->m_Element = *quadIter;
-            //        elementEdge->m_EdgeIndx = edgeNum;
-            //        returnval->push_back(elementEdge);
-            //    }
-            //}
+            GeometryVectorIter geomIter;
 
+            for (compIter = m_Domain.begin(); compIter != m_Domain.end(); ++compIter)
+            {
+                for (geomIter = (*compIter)->begin(); geomIter != (*compIter)->end(); ++geomIter)
+                {
+                    tetGeomShPtr = boost::dynamic_pointer_cast<TetGeom>(*geomIter);
+                    hexGeomShPtr = boost::dynamic_pointer_cast<HexGeom>(*geomIter);
+                    prismGeomShPtr = boost::dynamic_pointer_cast<PrismGeom>(*geomIter);
+                    pyrGeomShPtr = boost::dynamic_pointer_cast<PyrGeom>(*geomIter);
+
+                    if (tetGeomShPtr || hexGeomShPtr || prismGeomShPtr || pyrGeomShPtr)
+                    {
+                        int faceNum;                        
+                        if (tetGeomShPtr)
+                        {
+                            if ((faceNum = tetGeomShPtr->WhichFace(face)) > -1)
+                            {
+                                elementFace = MemoryManager<ElementFace>::AllocateSharedPtr();
+                                elementFace->m_Face = tetGeomShPtr;
+                                elementFace->m_FaceIndx = faceNum;
+                                returnval->push_back(elementFace);
+                            }
+                        }
+                        else if (hexGeomShPtr)
+                        {
+                            if ((faceNum = hexGeomShPtr->WhichFace(face)) > -1)
+                            {
+                                elementFace = MemoryManager<ElementFace>::AllocateSharedPtr();
+                                elementFace->m_Face = hexGeomShPtr;
+                                elementFace->m_FaceIndx = faceNum;
+                                returnval->push_back(elementFace);
+                            }
+                        }
+                        else if (prismGeomShPtr)
+                        {
+                            if ((faceNum = prismGeomShPtr->WhichFace(face)) > -1)
+                            {
+                                elementFace = MemoryManager<ElementFace>::AllocateSharedPtr();
+                                elementFace->m_Face = prismGeomShPtr;
+                                elementFace->m_FaceIndx = faceNum;
+                                returnval->push_back(elementFace);
+                            }
+                        }
+                        else if (pyrGeomShPtr)
+                        {
+                            if ((faceNum = pyrGeomShPtr->WhichFace(face)) > -1)
+                            {
+                                elementFace = MemoryManager<ElementFace>::AllocateSharedPtr();
+                                elementFace->m_Face = pyrGeomShPtr;
+                                elementFace->m_FaceIndx = faceNum;
+                                returnval->push_back(elementFace);
+                            }
+                        }
+                    }
+                }         
+            }
+
+ 
             return returnval;
         }
+
+
 
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: MeshGraph3D.cpp,v $
+// Revision 1.8  2008/06/30 19:34:26  ehan
+// Fixed infinity recursive-loop error.
+//
 // Revision 1.7  2008/06/12 19:56:05  delisi
 // Changed some error handling for reading 3D geometries.
 //

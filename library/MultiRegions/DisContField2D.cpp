@@ -491,12 +491,12 @@ namespace Nektar
             
 
         /// Note this routine changes m_trace->m_coeffs space; 
-        void DisContField2D::AddTraceIntegral(Array<OneD, const NekDouble> &Fx, 
-                                              Array<OneD, const NekDouble> &Fy, 
+        void DisContField2D::AddTraceIntegral(const Array<OneD, const NekDouble> &Fx, 
+                                              const Array<OneD, const NekDouble> &Fy, 
                                               Array<OneD, NekDouble> &outarray)
         {
             int e,n,offset, t_offset;
-            Array<OneD, NekDouble> e_outarray,e_Fx,e_Fy;
+            Array<OneD, NekDouble> e_outarray;
             Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr> >
                 elmtToTrace = m_traceMap->GetElmtToTrace();
 
@@ -508,8 +508,8 @@ namespace Nektar
                     t_offset = GetTrace()->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
 
                     (*m_exp)[n]->AddEdgeNormBoundaryInt(e,elmtToTrace[n][e],
-                                                        e_Fx = Fx + t_offset,
-                                                        e_Fy = Fy + t_offset,
+                                                        Fx + t_offset,
+                                                        Fy + t_offset,
                                                         e_outarray = outarray+offset);
                 }    
             }

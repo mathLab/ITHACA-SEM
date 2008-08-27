@@ -808,8 +808,8 @@ namespace Nektar
 
             virtual void AddEdgeNormBoundaryInt(const int edge, 
                                                 boost::shared_ptr<StdExpansion1D>  &EdgeExp,
-                                                Array<OneD, NekDouble> &Fx,  
-                                                Array<OneD, NekDouble> &Fy,  
+                                                const Array<OneD, const NekDouble> &Fx,  
+                                                const Array<OneD, const NekDouble> &Fy,  
                                                 Array<OneD, NekDouble> &outarray)
             {
                 v_AddEdgeNormBoundaryInt(edge,EdgeExp,Fx,Fy,outarray);
@@ -1067,8 +1067,8 @@ namespace Nektar
             
             virtual void v_AddEdgeNormBoundaryInt(const int edge,
                                                   boost::shared_ptr<StdExpansion1D> &EdgeExp,
-                                                  Array<OneD, NekDouble> &Fx,  
-                                                  Array<OneD, NekDouble> &Fy,  
+                                                  const Array<OneD, const NekDouble> &Fx,  
+                                                  const Array<OneD, const NekDouble> &Fy,  
                                                   Array<OneD, NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
@@ -1611,6 +1611,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.95  2008/08/14 22:09:50  sherwin
+ * Modifications to remove HDG routines from StdRegions and removed StdExpMap
+ *
  * Revision 1.94  2008/08/03 20:13:03  sherwin
  * Put return values in virtual functions
  *

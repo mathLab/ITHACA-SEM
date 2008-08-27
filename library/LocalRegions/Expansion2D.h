@@ -51,8 +51,8 @@ namespace Nektar
             // Hybridized DG routines 
             void AddEdgeNormBoundaryInt(const int edge, 
                                         StdRegions::StdExpansion1DSharedPtr &EdgeExp,
-                                        Array<OneD, NekDouble> &Fx,  
-                                        Array<OneD, NekDouble> &Fy,  
+                                        const Array<OneD, const NekDouble> &Fx,  
+                                        const Array<OneD, const NekDouble> &Fy,  
                                         Array<OneD, NekDouble> &outarray);
 
 
@@ -161,6 +161,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.h,v $
+ *    Revision 1.2  2008/08/20 09:16:39  sherwin
+ *    Modified generation of HDG matrices so that they use Expansion1D, Expansion2D GenMatrix method rather than Expansion method. Have also removed methods which were generating edge expansions locally as this was too expensive
+ *
  *    Revision 1.1  2008/08/14 22:12:56  sherwin
  *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
  *

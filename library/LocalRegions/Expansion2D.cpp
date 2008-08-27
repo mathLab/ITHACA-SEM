@@ -42,8 +42,8 @@ namespace Nektar
 
         void Expansion2D::AddEdgeNormBoundaryInt(const int edge, 
                                                  StdRegions::StdExpansion1DSharedPtr &EdgeExp,
-                                                 Array<OneD, NekDouble> &Fx,  
-                                                 Array<OneD, NekDouble> &Fy,  
+                                                 const Array<OneD, const NekDouble> &Fx,  
+                                                 const Array<OneD, const NekDouble> &Fy,  
                                                  Array<OneD, NekDouble> &outarray)
         {
             int i;
@@ -709,6 +709,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.cpp,v $
+ *    Revision 1.3  2008/08/20 09:16:39  sherwin
+ *    Modified generation of HDG matrices so that they use Expansion1D, Expansion2D GenMatrix method rather than Expansion method. Have also removed methods which were generating edge expansions locally as this was too expensive
+ *
  *    Revision 1.2  2008/08/18 08:30:36  sherwin
  *    Updates for HDG 1D work
  *

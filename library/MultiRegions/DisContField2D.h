@@ -127,8 +127,8 @@ namespace Nektar
 
             void ExtractTracePhys(Array<OneD,NekDouble> &outarray);
 
-            void AddTraceIntegral(Array<OneD, const NekDouble> &Fx, 
-                                  Array<OneD, const NekDouble> &Fy, 
+            void AddTraceIntegral(const Array<OneD, const NekDouble> &Fx, 
+                                  const Array<OneD, const NekDouble> &Fy, 
                                   Array<OneD, NekDouble> &outarray);
 
             inline const Array<OneD,const MultiRegions::ExpList1DSharedPtr>& GetBndCondExpansions()

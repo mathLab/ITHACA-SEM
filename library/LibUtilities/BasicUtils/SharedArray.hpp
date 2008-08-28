@@ -240,7 +240,14 @@ namespace Nektar
             
             /// \brief Creates a reference to rhs.
             Array<OneD, const DataType>& operator=(const Array<OneD, const DataType>& rhs)
-            {
+            {                
+                *m_count -= 1;
+                if( *m_count == 0 )
+                {
+                    ArrayDestructionPolicy<DataType>::Destroy(m_data+1, m_size);
+                    MemoryManager<DataType>::RawDeallocate(m_data, m_size+1);
+                }
+
                 m_data = rhs.m_data;
                 m_count = rhs.m_count;
                 *m_count += 1;

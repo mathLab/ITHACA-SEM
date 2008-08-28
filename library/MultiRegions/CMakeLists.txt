@@ -21,7 +21,6 @@ LocalToGlobalBndryMap.cpp
 LocalToGlobalMap1D.cpp
 LocalToGlobalMap2D.cpp
 #LocalToGlobalMap3D.cpp
-AdvectionContField2D.cpp
 )
 
 SET(MULTI_REGIONS_HEADERS
@@ -47,7 +46,6 @@ LocalToGlobalMap1D.h
 LocalToGlobalMap2D.h
 LocalToGlobalMap3D.h
 LocalToGlobalMap.h
-AdvectionContField2D.h
 MultiRegions.hpp
 )
 

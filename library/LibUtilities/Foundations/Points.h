@@ -259,7 +259,7 @@ namespace Nektar
                 z = m_points[2];
             }
 
-            inline const MatrixSharedPtrType GetD(Direction dir = xDir) const
+            inline const MatrixSharedPtrType& GetD(Direction dir = xDir) const
             {
                 return m_derivmatrix[(int)dir];
             }

@@ -108,16 +108,13 @@ namespace Nektar
             Array<OneD, NekDouble> tmp(nquad0*nquad1);
             Array<OneD, NekDouble> tmp1(order0*nquad1);
             
-            Array<OneD, const NekDouble> w0 = m_base[0]->GetW();
-            Array<OneD, const NekDouble> w1 = m_base[1]->GetW();
-            Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
+            const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
+            const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
+            const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
 
             ASSERTL2((m_base[1]->GetBasisType() == LibUtilities::eOrtho_B)||
                      (m_base[1]->GetBasisType() == LibUtilities::eModified_B), 
                      "Basis[1] is not of general tensor type");
-
-            // Note cannot use outarray as tmp space since dimensions are not always
-            // guarenteed to be sufficient 
 
             // multiply by integration constants 
             for(i = 0; i < nquad1; ++i)
@@ -272,7 +269,6 @@ namespace Nektar
         void StdTriExp::LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                           Array<OneD,NekDouble> &outarray)
         {
-            cout<<"StdTriExp::LaplacianMatrixOp"<<endl;
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -387,8 +383,8 @@ namespace Nektar
             int    nquad1 = m_base[1]->GetNumPoints();
             Array<OneD, NekDouble> wsp(nquad0*nquad1);
 
-            Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
-            Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
+            const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
+            const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
 
             // set up geometric factor: 2/(1-z1)
             for(i = 0; i < nquad1; ++i)
@@ -1104,6 +1100,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTriExp.cpp,v $
+ * Revision 1.42  2008/07/31 21:20:56  sherwin
+ * Updates to make DG advection run with tris
+ *
  * Revision 1.41  2008/07/31 11:10:15  sherwin
  * Updates for handling EdgeBasisKey for use with DG advection. Depracated GetEdgeBasis and added DetEdgeBasisKey
  *

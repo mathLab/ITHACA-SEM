@@ -487,7 +487,7 @@ namespace Nektar
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
+            const Array<OneD, const NekDouble>& jac = m_metricinfo->GetJac();
             Array<OneD,NekDouble> tmp(nquad0*nquad1);
             
             // multiply inarray with Jacobian
@@ -621,7 +621,7 @@ namespace Nektar
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-            Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
+            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
             Array<OneD,NekDouble> diff0(nquad0*nquad1);
             Array<OneD,NekDouble> diff1(nquad0*nquad1);
             
@@ -1511,6 +1511,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.42  2008/08/14 22:12:57  sherwin
+ *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
+ *
  *    Revision 1.41  2008/07/31 21:25:13  sherwin
  *    Mods for DG Advection
  *

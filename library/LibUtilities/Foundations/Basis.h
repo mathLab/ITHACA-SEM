@@ -259,7 +259,7 @@ namespace Nektar
                 m_points->GetZW(z,w); 
             }
 
-            inline const  boost::shared_ptr<NekMatrix<NekDouble> > GetD(Direction dir = xDir) const
+            inline const  boost::shared_ptr<NekMatrix<NekDouble> >& GetD(Direction dir = xDir) const
             {
                 return m_points->GetD(dir);
             }

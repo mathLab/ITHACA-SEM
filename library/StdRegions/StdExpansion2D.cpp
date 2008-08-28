@@ -75,8 +75,6 @@ namespace Nektar
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
-
-#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
             
             if (outarray_d0.num_elements() > 0) // calculate du/dx_0
             {
@@ -84,7 +82,7 @@ namespace Nektar
                 if(inarray.data() == outarray_d0.data())
                 {
                     Array<OneD, NekDouble> wsp(nquad0 * nquad1);
-                    CopyArray(inarray,wsp);
+                    Vmath::Vcopy(nquad0 * nquad1,inarray.get(),1,wsp.get(),1);
                     Blas::Dgemm('N', 'N', nquad0, nquad1, nquad0, 1.0,
                                 &(D0->GetPtr())[0], nquad0, &wsp[0], nquad0, 0.0,
                                 &outarray_d0[0], nquad0);
@@ -103,7 +101,7 @@ namespace Nektar
                 if(inarray.data() == outarray_d1.data())
                 {
                     Array<OneD, NekDouble> wsp(nquad0 * nquad1);
-                    CopyArray(inarray,wsp);
+                    Vmath::Vcopy(nquad0 * nquad1,inarray.get(),1,wsp.get(),1);
                     Blas:: Dgemm('N', 'T', nquad0, nquad1, nquad1, 1.0, &wsp[0], nquad0,                    
                                  &(D1->GetPtr())[0], nquad1, 0.0, &outarray_d1[0], nquad0);
                 }
@@ -113,44 +111,6 @@ namespace Nektar
                                  &(D1->GetPtr())[0], nquad1, 0.0, &outarray_d1[0], nquad0);
                 }
             }
-
-#else // NEKTAR_USING_DIRECT_BLAS_CALLS off
-
-            if (outarray_d0.num_elements() > 0) // calculate du/dx_0
-            {
-                DNekMatSharedPtr D0 = m_base[0]->GetD();
-                DNekMat out(nquad0,nquad1,outarray_d0,eWrapper);
-                if(inarray.data() == outarray_d0.data())
-                {
-                    DNekMat in (nquad0,nquad1,inarray);  // copy input array 
-                    out = (*D0) * in;
-                }
-                else
-                {
-                    NekMatrix<const double> in(nquad0, nquad1, inarray, eWrapper);
-                    out = (*D0) * in;
-                }
-            }
-
-            if (outarray_d1.num_elements() > 0) // calculate du/dx_1
-            {
-                DNekMatSharedPtr D1 = m_base[1]->GetD();
-                DNekMat out(nquad0,nquad1,outarray_d1,eWrapper);
-
-                if(inarray.data() == outarray_d1.data()) // copy input array 
-                {
-                    DNekMat in (nquad0,nquad1,inarray);  
-                    out = in * Transpose(*D1);
-                }
-                else 
-                {
-                    NekMatrix<const double> in(nquad0, nquad1, inarray, eWrapper);
-                    out = in * Transpose(*D1);
-                }
-            }
-
-#endif //NEKTAR_USING_DIRECT_BLAS_CALLS 
-
         }
 
         NekDouble StdExpansion2D::PhysEvaluate(const Array<OneD, const NekDouble>& coords)
@@ -220,6 +180,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion2D.cpp,v $
+* Revision 1.29  2008/08/20 09:14:57  sherwin
+* In TensorDeriv replaced comparison of arrays with comparison of stored pointer
+*
 * Revision 1.28  2008/08/14 22:09:50  sherwin
 * Modifications to remove HDG routines from StdRegions and removed StdExpMap
 *

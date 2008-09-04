@@ -62,8 +62,7 @@ int main(int argc, char *argv[])
         eorient[2] = SpatialDomains::SegGeom::GetEdgeOrientation(*edges[2], *edges[0]); 
     
         // step 5: set up the geometry object
-        int indx = 0;
-        SpatialDomains::TriGeomSharedPtr triGeom = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(indx,edges,eorient);
+        SpatialDomains::TriGeomSharedPtr triGeom = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(edges,eorient);
         triGeom->SetOwnData();
 
         LibUtilities::PointsType nodalPointsType = LibUtilities::eNodalTriElec;

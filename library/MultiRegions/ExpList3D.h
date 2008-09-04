@@ -89,7 +89,7 @@ namespace Nektar
                                         Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
                                         Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndConditions);
 
-        void ExpList3D::GetPeriodicFaces(SpatialDomains::MeshGraph3D &graph3D,
+        void GetPeriodicFaces(SpatialDomains::MeshGraph3D &graph3D,
                                 SpatialDomains::BoundaryConditions &bcs,
                                 const std::string variable,
                                 map<int,int>& periodicVertices,

@@ -5,7 +5,7 @@
 
 using namespace Nektar;
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     cout << "-------------------" <<endl;
     cout << "-- EXERCISE 3(a) --" <<endl;
@@ -16,9 +16,7 @@ void main(int argc, char *argv[])
     {
 	
 		MultiRegions::ContField1DSharedPtr Exp,Fce;
-		int     i, nq,  coordim;
-		Array<OneD,NekDouble>  fce; 
-		Array<OneD,NekDouble>  xc0,xc1,xc2; 
+		int     i, nq;
 		 
 		// The mesh is contained in the input file hemlholtz1D.xml
         // The first step is to read in this file
@@ -83,14 +81,14 @@ void main(int argc, char *argv[])
 			Vmath::Zero(nq,&xc2[0],1);
 			break;
 		case 3:
-			multiElementExpp->GetCoords(xc0,xc1,xc2);
+			multiElementExp->GetCoords(xc0,xc1,xc2);
 			break;
 		}
 		
 		// Define forcing function for first variable defined in file 
-		Array<OneD,NekDouble>  fce(nQuadPoints); 
+		Array<OneD,NekDouble>  fce(nTotQuadPoints); 
 		SpatialDomains::ConstForcingFunctionShPtr ffunc 
-			= bcs.GetForcingFunction(bcs.GetVariable(0));
+			= boundaryConds.GetForcingFunction(boundaryConds.GetVariable(0));
 		for(i = 0; i < nq; ++i)
 		{
 			fce[i] = ffunc->Evaluate(xc0[i],xc1[i],xc2[i]);
@@ -123,7 +121,7 @@ void main(int argc, char *argv[])
 		// See if there is an exact solution, if so 
 		// evaluate and plot errors
 		SpatialDomains::ConstExactSolutionShPtr ex_sol =
-			bcs.GetExactSolution(bcs.GetVariable(0));
+			boundaryConds.GetExactSolution(boundaryConds.GetVariable(0));
 
 		if(ex_sol)
 		{
@@ -144,6 +142,8 @@ void main(int argc, char *argv[])
 		}
 		//----------------------------------------------
 	}
+
+    return 0;
 
 }
 

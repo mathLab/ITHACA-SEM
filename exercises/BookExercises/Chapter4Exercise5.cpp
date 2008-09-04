@@ -180,12 +180,12 @@ int main(int argc, char *argv[])
             Array<OneD,NekDouble> dirForcing(multiElementExp->GetContNcoeffs(),0.0);
 
             cnt = 0;
-            for(i = 0; i < (multiElementExp->GetBndCondExp()).num_elements(); ++i)
+            for(i = 0; i < (multiElementExp->GetBndCondExpansions()).num_elements(); ++i)
             {
-                for(j = 0; j < ((multiElementExp->GetBndCondExp())[i])->GetNcoeffs(); j++)
+                for(j = 0; j < ((multiElementExp->GetBndCondExpansions())[i])->GetNcoeffs(); j++)
                 {
                     dirDofsValues[(multiElementExp->GetLocalToGlobalMap())->GetBndCondMap(cnt++)] = 
-                        (((multiElementExp->GetBndCondExp())[i])->GetCoeffs())[j];
+                        (((multiElementExp->GetBndCondExpansions())[i])->GetCoeffs())[j];
                 }
             }
 

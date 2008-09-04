@@ -1,14 +1,12 @@
 #include <cstdio>
 #include <cstdlib>
-#include <sys/utime.h>
 
 #include <StdRegions/StdSegExp.h>
 #include <LibUtilities/Polylib/Polylib.h>
 
 using namespace Nektar;
-#define M_PI 2.0*acos(0.0)
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	cout << "=====================================================" <<endl;
     cout << "================ EXERCISES CHAPTER 2 ================" <<endl;
@@ -602,5 +600,7 @@ void main(int argc, char *argv[])
 			cout << "Result for Q = " << nQuadPoints << ": " << result << endl;
 		}
 	}
+
+        return 0;
 
 }

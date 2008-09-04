@@ -1,6 +1,5 @@
 #include <cstdio>
 #include <cstdlib>
-#include <sys/utime.h>
 
 #include <StdRegions/StdTriExp.h>
 #include <LocalRegions/TriExp.h>
@@ -11,7 +10,7 @@
 
 using namespace Nektar;
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	cout << "-------------------" <<endl;
     cout << "-- EXERCISE 3(a) --" <<endl;
@@ -1429,5 +1428,7 @@ void main(int argc, char *argv[])
         } 
 
 	}
+
+        return 0;
 }
 

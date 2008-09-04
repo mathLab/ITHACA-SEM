@@ -5,7 +5,7 @@
 
 using namespace Nektar;
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	cout << "=====================================================" <<endl;
     cout << "================ EXERCISES CHAPTER 2 ================" <<endl;
@@ -161,4 +161,6 @@ void main(int argc, char *argv[])
         }
 	
 	}
+
+        return 0;
 }

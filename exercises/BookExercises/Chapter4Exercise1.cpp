@@ -535,7 +535,8 @@ int main(int argc, char *argv[])
         eorient[3] = SpatialDomains::SegGeom::GetEdgeOrientation(*edges[3], *edges[0]);
     
         // step 5: set up the geometry object
-        SpatialDomains::QuadGeomSharedPtr quadGeom = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(edges,eorient);
+        int indx;
+        SpatialDomains::QuadGeomSharedPtr quadGeom = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(indx,edges,eorient);
         quadGeom->SetOwnData();
 
         for(int Q = 4; Q < 7; Q++)
@@ -792,7 +793,8 @@ int main(int argc, char *argv[])
         eorient[2] = SpatialDomains::SegGeom::GetEdgeOrientation(*edges[2], *edges[0]); 
     
         // step 5: set up the geometry object
-        SpatialDomains::TriGeomSharedPtr triGeom = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(edges,eorient);
+        int indx=0;
+        SpatialDomains::TriGeomSharedPtr triGeom = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(indx,edges,eorient);
         triGeom->SetOwnData();
 
         for(int Q = 4; Q < 7; Q++)
@@ -1237,7 +1239,8 @@ int main(int argc, char *argv[])
             eorient[3] = SpatialDomains::SegGeom::GetEdgeOrientation(*edges[3], *edges[0]);
     
             // step 5: set up the geometry object
-            SpatialDomains::QuadGeomSharedPtr quadGeom = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(edges,eorient);
+            int indx=0;
+            SpatialDomains::QuadGeomSharedPtr quadGeom = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(indx,edges,eorient);
             quadGeom->SetOwnData();
 
             // Calculate the exact solution
@@ -1331,7 +1334,8 @@ int main(int argc, char *argv[])
             eorient[2] = SpatialDomains::SegGeom::GetEdgeOrientation(*edges[2], *edges[0]); 
     
             // step 5: set up the geometry object
-            SpatialDomains::TriGeomSharedPtr triGeom = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(edges,eorient);
+            int indx = 0;
+            SpatialDomains::TriGeomSharedPtr triGeom = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(indx,edges,eorient);
             triGeom->SetOwnData();
 
             // Calculate the exact solution

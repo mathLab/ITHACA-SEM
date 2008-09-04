@@ -115,7 +115,7 @@
         <p><a href="license.html" id="menu_License">License</a></p>
         <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
         <p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
-        <p style="font-size:9px;">Last Revision:<br/>$Date: 2008/06/05 21:31:53 $</p>
+        <p style="font-size:9px;">Last Revision:<br/>$Date: 2008/06/06 16:22:04 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
@@ -184,7 +184,7 @@
       <li>The next step is to extract and compile the correct libraries for <em>Boost</em>.
         <ol>
             <li>In <em>ThirdParty/</em>, extract the boost_1_35_0.tar.bz2 archive with &quot;tar -xjvf boost_1_35_0.tar.bz2&quot; (no quotes). This will create <em>boost_1_35_0/</em>.</li>
-          <li>Change to the <em>boost_1_35_0/</em> directory, and type &quot;../boost-jam-3.1.16/bin.linuxx86/bjam --prefix=../boost --build-type=complete --with-thread --with-iostreams --with-test --toolset=gcc install&quot; (without the quotes). This will place the compiled libraries and include files in the correct path.
+          <li>Change to the <em>boost_1_35_0/</em> directory, and type &quot;../boost-jam-3.1.16/bin.linuxx86/bjam --prefix=../boost --build-type=complete --with-thread --with-iostreams --with-test --with-date_time --toolset=gcc install&quot; (without the quotes). This will place the compiled libraries and include files in the correct path.
             <ol>
                   <li>The &quot;--with-libraries&quot; compiles Boost with only the libraries required by Nektar++. This is just meant to save time. You can leave the flag off and it will compile all the libraries, if you wish.</li>
             </ol>

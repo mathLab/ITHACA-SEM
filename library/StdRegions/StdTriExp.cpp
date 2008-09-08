@@ -485,8 +485,6 @@ namespace Nektar
                      (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
                      "Basis[1] is not of general tensor type");
 
-#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
-
             for(i = mode = 0; i < order0; ++i)
             {
                 Blas::Dgemv('N', nquad1,order1-i,1.0,base1.get()+mode*nquad1,
@@ -503,34 +501,6 @@ namespace Nektar
 
             Blas::Dgemm('N','T', nquad0,nquad1,order0,1.0, base0.get(),nquad0,
                         &tmp[0], nquad1,0.0, &outarray[0], nquad0);
-
-#else //NEKTAR_USING_DIRECT_BLAS_CALLS
-
-            for(i = mode = 0; i < order0; ++i)
-            {
-                NekVector<const NekDouble> in(order1-i,inarray+mode,eWrapper);
-                NekVector<NekDouble> out(nquad1,tmp+i*nquad1,eWrapper);
-                NekMatrix<const double> B1(nquad1,order1-i,base1 + mode*nquad1,eWrapper);
-
-                out = B1*in;
-                mode += order1-i;
-            }
-
-            // fix for modified basis by splitting top vertex mode
-            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
-            {
-                Blas::Daxpy(nquad1,inarray[1],base1.get()+nquad1,1,
-                            &tmp[0]+nquad1,1);
-            }
-
-            NekMatrix<const double> in(nquad1,order0,tmp,eWrapper);
-            DNekMat out(nquad0,nquad1,outarray,eWrapper);
-            NekMatrix<const double> B1(nquad0,order0,base0,eWrapper);
-
-            out = B1*Transpose(in);
-
-#endif //NEKTAR_USING_DIRECT_BLAS_CALLS   
-
         }
 
         void StdTriExp::FwdTrans(const Array<OneD, const NekDouble>& inarray, 
@@ -1100,6 +1070,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTriExp.cpp,v $
+ * Revision 1.43  2008/08/28 15:03:54  pvos
+ * small efficiency updates
+ *
  * Revision 1.42  2008/07/31 21:20:56  sherwin
  * Updates to make DG advection run with tris
  *

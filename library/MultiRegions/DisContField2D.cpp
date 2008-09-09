@@ -360,8 +360,7 @@ namespace Nektar
             // Inverse block diagonal interior solve
             if(!InvHDGHelm.get())
             {
-                InvHDGHelm = SetupBlockMatrix(StdRegions::eInvHybridDGHelmholtz, 
-                                              lambda, tau);
+                InvHDGHelm = SetupBlockMatrix(StdRegions::eInvHybridDGHelmholtz, lambda, tau);
             }
             
             DNekVec in (m_ncoeffs,f,eWrapper);

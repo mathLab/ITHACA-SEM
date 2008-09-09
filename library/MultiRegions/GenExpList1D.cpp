@@ -62,7 +62,9 @@ namespace Nektar
                                    const map<int,int> &periodicEdges)
         {
             int i,j,id, elmtid=0, edgeid;
-            Array<OneD, int> EdgeDone(graph2D.GetNseggeoms(),0);
+            // Could replace these with maps
+            map<int, int> EdgeDone;
+            map<int, int> NormalSet;
             
             StdRegions::EdgeOrientation      orient;
             LocalRegions::GenSegExpSharedPtr Seg;
@@ -83,26 +85,11 @@ namespace Nektar
                         Seg = MemoryManager<LocalRegions::GenSegExp>::AllocateSharedPtr(bkey, SegGeom);
                         con_elmt = graph2D.GetElementsFromEdge(SegGeom);
                         
-                        AdjGeom = (boost::dynamic_pointer_cast<SpatialDomains::Geometry2D>((*con_elmt)[0]->m_Element));
-                        edgeid = (*con_elmt)[0]->m_EdgeIndx;
-                        
-                        orient = AdjGeom->GetEorient(edgeid);
-
-                        // Negate normal sign for this case
-                        if(orient == StdRegions::eBackwards)
-                        {
-                            Seg->SetUpPhysNormals(AdjGeom,edgeid,true);
-                        }
-                        else
-                        {
-                            Seg->SetUpPhysNormals(AdjGeom,edgeid,false);
-                        }
-
+                        EdgeDone[SegGeom->GetEid()] = elmtid;
                         
                         Seg->SetElmtId(elmtid++);
                         (*m_exp).push_back(Seg);   
                         
-                        EdgeDone[SegGeom->GetEid()] = 1;
                     }
                 }
             }
@@ -116,32 +103,34 @@ namespace Nektar
                     
                     id = SegGeom->GetEid();
                     
-                    if(!EdgeDone[id])
+                    if(EdgeDone.count(id) == 0)
                     {
                         
                         LibUtilities::BasisKey EdgeBkey = locexp[i]->DetEdgeBasisKey(j);
                         
                         Seg = MemoryManager<LocalRegions::GenSegExp>::AllocateSharedPtr(EdgeBkey, SegGeom);
                         
-                        // Set up normals at all Segment Quadrature points
-                        if(locexp[i]->GetGeom2D()->GetEorient(j) == StdRegions::eForwards)
-                        {
-                            Seg->SetUpPhysNormals(locexp[i]->GetGeom2D(),j,false);
-                        }
-                        else
-                        {
-                            Seg->SetUpPhysNormals(locexp[i]->GetGeom2D(),j,true);
-                        }
-                        
-                        Seg->SetElmtId(elmtid++);
-                        (*m_exp).push_back(Seg);
-                        EdgeDone[id] = 1;
+                        EdgeDone[id] = elmtid;
 
                         // set periodic edge 
                         if(periodicEdges.count(id) > 0)
                         {
-                            EdgeDone[periodicEdges.find(id)->second] = 1;
+                            EdgeDone[periodicEdges.find(id)->second] = elmtid;
                         }
+
+                        Seg->SetElmtId(elmtid++);
+                        
+                        (*m_exp).push_back(Seg);
+                    }
+
+                    if(NormalSet.count(id) == 0)
+                    {
+                        Seg = boost::dynamic_pointer_cast<LocalRegions::GenSegExp>((*m_exp)[EdgeDone.find(id)->second]);
+                        
+                        // Set up normals at all Segment Quadrature points
+                        Seg->SetUpPhysNormals(locexp[i],j);
+                        
+                        NormalSet[id] = 1;
                     }
                 }
             }
@@ -233,6 +222,9 @@ namespace Nektar
 
 /**
 * $Log: GenExpList1D.cpp,v $
+* Revision 1.4  2008/08/22 09:42:32  pvos
+* Updates for Claes' Shallow Water and Euler solver
+*
 * Revision 1.3  2008/08/14 22:15:51  sherwin
 * Added LocalToglobalMap and DGMap and depracted LocalToGlobalBndryMap1D,2D. Made DisContField classes compatible with updated ContField formats
 *

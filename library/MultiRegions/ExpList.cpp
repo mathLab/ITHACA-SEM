@@ -486,7 +486,6 @@ namespace Nektar
 //                     -= mkey.GetScaleFactor() * b;
 //             }
 
-            // Believe that we need a call of the type:
             //linsys = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat,eWrapper);
             linsys = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat);
             

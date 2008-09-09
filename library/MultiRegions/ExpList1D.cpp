@@ -155,7 +155,7 @@ namespace Nektar
                     {
                         LibUtilities::BasisKey bkey = graph2D.GetEdgeBasisKey(SegmentGeom);
                         seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegmentGeom);
-
+                        
                         seg->SetElmtId(id++);
                         (*m_exp).push_back(seg);  
 
@@ -418,6 +418,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.32  2008/08/14 22:15:51  sherwin
+* Added LocalToglobalMap and DGMap and depracted LocalToGlobalBndryMap1D,2D. Made DisContField classes compatible with updated ContField formats
+*
 * Revision 1.31  2008/07/31 11:17:13  sherwin
 * Changed GetEdgeBasis with DetEdgeBasisKey
 *

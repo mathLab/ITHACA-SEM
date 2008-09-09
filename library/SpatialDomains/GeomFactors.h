@@ -36,8 +36,9 @@
 #ifndef NEKTAR_SPATIALDOMAINS_GEOMFACTORS_H
 #define NEKTAR_SPATIALDOMAINS_GEOMFACTORS_H
 
-#include <SpatialDomains/SpatialDomains.hpp>
+#include <LibUtilities/Foundations/Points.h>
 
+#include <SpatialDomains/SpatialDomains.hpp>
 #include <StdRegions/StdExpansion1D.h>
 #include <StdRegions/StdExpansion2D.h>
 #include <StdRegions/StdExpansion3D.h>
@@ -47,12 +48,14 @@ namespace Nektar
     namespace SpatialDomains
     {
         class GeomFactors;
+        class Geometry2D;
+
         bool operator==(const GeomFactors &lhs, const GeomFactors &rhs);
 
         typedef boost::shared_ptr<GeomFactors>      GeomFactorsSharedPtr;
         typedef std::vector< GeomFactorsSharedPtr > GeomFactorsVector;
         typedef GeomFactorsVector::iterator GeomFactorsVectorIter;
-
+        
         class GeomFactors
         {
         public:
@@ -75,6 +78,10 @@ namespace Nektar
             GeomFactors(const GeomType gtype, const int coordim,
                         const Array<OneD, const StdRegions::StdExpansion2DSharedPtr> &Coords);
 
+            GeomFactors(enum StdRegions::ExpansionType shape,
+                        const GeomFactors &Xgfac,
+                        const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
+            
             /**  \brief Three dimensional geometric factors based on two
             or three dimensional coordinate description
             **/
@@ -105,17 +112,9 @@ namespace Nektar
                 return m_jac;
             }
 
-            inline const Array<TwoD, const NekDouble> &GetNormals() const
-            {
-                return m_normals;
-            }
-
+            Array<OneD, NekDouble> GeomFactors::GenNormals2D(enum StdRegions::ExpansionType shape, const int edge,  const LibUtilities::PointsKey &to_key);
             
-            inline void  ResetNormals(const Array<TwoD, const NekDouble> &newnorm)
-            {
-                m_normals = Array<TwoD,NekDouble>(newnorm.GetRows(),newnorm.GetColumns(),newnorm.data());
-            }
-
+            
             inline void ResetGmat(const Array<OneD, const NekDouble> &ndata, 
                                   const int nq, const int expdim, 
                                   const int coordim)
@@ -135,13 +134,26 @@ namespace Nektar
             }
 
         protected:
+
+        private:
             Array<OneD,NekDouble> m_jac;
             Array<TwoD,NekDouble> m_gmat;
-            Array<TwoD,NekDouble> m_normals;
 
             GeomType m_gtype;
             int m_expdim;
             int m_coordim;
+
+            Array<OneD,LibUtilities::PointsKey> m_pointsKey;
+            
+
+            void SetUpJacGmat(const int nquad,
+                              const Array<OneD,NekDouble> der[3]);
+            void SetUpJacGmat(enum StdRegions::ExpansionType shape,
+                              const int nquad0,
+                              const int nquad1,
+                              const Array<OneD, NekDouble> d1[3],
+                              const Array<OneD, NekDouble> d2[3]);
+            
         };
     } //end of namespace
 } //end of namespace
@@ -150,6 +162,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.18  2008/07/17 19:27:22  ehan
+// Added 3D GeomFactors(..).
+//
 // Revision 1.17  2008/06/09 21:34:28  jfrazier
 // Added some code for 3d.
 //

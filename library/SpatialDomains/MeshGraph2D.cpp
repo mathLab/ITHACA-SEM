@@ -44,7 +44,6 @@ namespace Nektar
     namespace SpatialDomains
     {
         MeshGraph2D::MeshGraph2D()
-            //m_geofac_defined(false)
         {
         }
 
@@ -78,6 +77,7 @@ namespace Nektar
 
             ASSERTL0(mesh, "Unable to find GEOMETRY tag in file.");
 
+            ReadCurves(doc);
             ReadEdges(doc);
             ReadElements(doc);
             ReadComposites(doc);
@@ -101,15 +101,23 @@ namespace Nektar
             /// Read the ID field first.
             TiXmlElement *edge = field->FirstChildElement("E");
 
-            /// Since all edge data is one big text block, we need to accumulate
-            /// all TEXT data and then parse it.  This approach effectively skips
-            /// all comments or other node types since we only care about the
-            /// edge list.  We cannot handle missing edge numbers as we could
-            /// with missing element numbers due to the text block format.
+            /// Since all edge data is one big text block, we need to
+            /// accumulate all TEXT data and then parse it.  This
+            /// approach effectively skips all comments or other node
+            /// types since we only care about the edge list.  We
+            /// cannot handle missing edge numbers as we could with
+            /// missing element numbers due to the text block format.
             std::string edgeStr;
-            int indx;
+            int i,indx;
             int err = 0;
             int nextEdgeNumber = -1;
+
+            // Curved Edges
+            map<int, int> edge_curved;
+            for(i = 0; i < m_curvededges.size(); ++i)
+            {
+                edge_curved[m_curvededges[i]->m_curveID] = i;
+            }
 
             while(edge)
             {
@@ -136,14 +144,25 @@ namespace Nektar
                     {
                         edgeDataStrm >> vertex1 >> vertex2;
 
-                        // Must check after the read because we may be at the end and not know it.
-                        // If we are at the end we will add a duplicate of the last entry if we
-                        // don't check here.
+                        // Must check after the read because we may be
+                        // at the end and not know it.  If we are at
+                        // the end we will add a duplicate of the last
+                        // entry if we don't check here.
                         if (!edgeDataStrm.fail())
                         {
                             VertexComponentSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
-                            SegGeomSharedPtr edge(MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_MeshDimension, vertices));
+                            
+                            SegGeomSharedPtr edge; 
 
+                            if(edge_curved.count(indx) == 0)
+                            {
+                                edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_MeshDimension, vertices);
+                            }
+                            else
+                            {
+                                edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_MeshDimension, vertices, m_curvededges[edge_curved.find(indx)->second]);
+                            }
+                            
                             m_seggeoms.push_back(edge);
                         }
                     }
@@ -155,6 +174,7 @@ namespace Nektar
 
                 edge = edge->NextSiblingElement("E");
             }
+
         }
 
         void MeshGraph2D::ReadElements(TiXmlDocument &doc)
@@ -393,28 +413,6 @@ namespace Nektar
             return returnval;
         };
 
-#ifdef OLD
-        // generate geometric factors based on MeshGraph information. 
-        void MeshGraph2D::GenXGeoFac()
-        {
-            TriGeomVector::const_iterator defT; 
-
-            for(defT = m_trigeoms.begin(); defT != m_trigeoms.end(); ++defT)
-            {
-                (*defT)->SetXGeoFac((*defT)->GenXGeoFac());
-            }
-
-
-            QuadGeomVector::const_iterator defQ; 
-            for(defQ = m_quadgeoms.begin(); defQ != m_quadgeoms.end(); ++defQ)
-            {
-                (*defQ)->SetXGeoFac((*defQ)->GenXGeoFac());
-            }
-
-
-            m_geofac_defined = true;
-        }
-#endif
 
         // Take the string that is the composite reference and find the
         // pointer to the Geometry object corresponding to it.
@@ -671,6 +669,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.31  2008/08/14 22:11:03  sherwin
+// Mods for HDG update
+//
 // Revision 1.30  2008/07/29 22:23:36  sherwin
 // various mods for DG advection solver in Multiregions. Added virtual calls to Geometry, Geometry1D, 2D and 3D
 //

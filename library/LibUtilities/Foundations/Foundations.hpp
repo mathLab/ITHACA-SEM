@@ -36,6 +36,8 @@
 #ifndef FOUNDATIONS_H
 #define FOUNDATIONS_H
 
+#include <string>
+
 namespace Nektar
 {    
     /** \brief The namespace associated with the the LibUtilities library 
@@ -104,7 +106,7 @@ namespace Nektar
             SIZE_PointsType          //!< Length of enum list
         };
 
-        const char* const PointsTypeMap[] = 
+        const std::string kPointsTypeStr[] = 
         {
             "NoPointsType",
             "GaussGaussLegendre",
@@ -152,6 +154,7 @@ namespace Nektar
             "Forward Euler",
             "Backward Euler"
         };
+
     } // end of namespace
 } // end of namespace
 

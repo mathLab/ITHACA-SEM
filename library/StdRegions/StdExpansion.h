@@ -427,6 +427,11 @@ namespace Nektar
             }
 
 
+            int DetCartesianDirOfEdge(const int edge) 
+            {
+                v_DetCartesianDirOfEdge(edge);
+            }
+
             const LibUtilities::BasisKey DetEdgeBasisKey(const int i) const
             {
                 return v_DetEdgeBasisKey(i);
@@ -446,7 +451,6 @@ namespace Nektar
             {
                 return v_GetFaceNcoeffs(i);
             }
-
         
             int NumBndryCoeffs(void)  const
             {
@@ -475,6 +479,7 @@ namespace Nektar
             {
                 return v_GetEdgeBasisType(i);
             }
+
 
             /** \brief This function returns the number of faces of the 
              *  expansion domain
@@ -1081,110 +1086,6 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
 
-            /** \brief this function interpolates a 1D function \f$f\f$ evaluated
-             *  at the quadrature points of the basis \a fbasis0 to the 
-             *  function values at the quadrature points of the basis \a tbasis0
-             *
-             *  Given a function \f$ f\f$ evaluated at the \a Q quadrature points
-             *  of the basis \a fbasis0, this routine calculates, using 
-             *  \a (Q-1)th order polynomial interpolation, the function values
-             *  at the \a Q2 quadrature points of the basis \a tbasis0.
-             *
-             *  \param fbasis0 the basis at which's quadrature points the 
-             *  function is given
-             *  \param from the array containg the function \f$ f\f$  evaluated
-             *   at the quadrature points of \a fbasis0
-             *  \param tbasis0 the basis to which's quadrature points the 
-             *  function should be interpolated
-             *  \param to the array containg the function \f$ f\f$  evaluated
-             *   at the quadrature points of \a tbasis0 (output of the function)
-             */
-            void Interp1D(const LibUtilities::BasisKey &fbasis0,
-                          const Array<OneD, const NekDouble>& from,
-                          const LibUtilities::BasisKey &tbasis0,
-                          Array<OneD, NekDouble> &to);
-
-            void Interp1D(const LibUtilities::BasisKey &fbasis0,
-                          const NekDouble *from,
-                          const LibUtilities::BasisKey &tbasis0,
-                          NekDouble *to);
-
-
-            /** \brief this function interpolates a 2D function \f$f\f$ evaluated
-             *  at the quadrature points of the 2D basis, constructed by 
-             *  \a fbasis0 and \a fbasis1, to the function values at the 
-             *  quadrature points of the 2D basis, constructed by \a tbasis0 and 
-             *  \a tbasis1
-             *
-             *  Given a function \f$ f\f$ evaluated at the \a Q quadrature points
-             *  of the first expansion basis, this routine calculates, using 
-             *  \a (Q-1)th order polynomial interpolation, the function values
-             *  at the \a Q2 quadrature points of the second basis.
-             *
-             *  \param fbasis0 the basis at which's quadrature points the 
-             *  function is given
-             *  \param from the array containg the function \f$ f\f$  evaluated
-             *   at the quadrature points of \a fbasis0
-             *  \param tbasis0 the basis to which's quadrature points the 
-             *  function should be interpolated
-             *  \param to the array containg the function \f$ f\f$  evaluated
-             *   at the quadrature points of \a tbasis0 (output of the function)
-             */
-            void Interp2D(const LibUtilities::BasisKey &fbasis0, 
-                          const LibUtilities::BasisKey &fbasis1,
-                          const Array<OneD, const NekDouble>& from,
-                          const LibUtilities::BasisKey &tbasis0,
-                          const LibUtilities::BasisKey &tbasis1, 
-                          Array<OneD, NekDouble> &to);
-
-            void Interp2D(const LibUtilities::BasisKey &fbasis0, 
-                          const LibUtilities::BasisKey &fbasis1,
-                          const NekDouble *from,   
-                          const LibUtilities::BasisKey &tbasis0,
-                          const LibUtilities::BasisKey &tbasis1, 
-                          NekDouble *to);
-
-
-            /** \brief this function interpolates a 3D function \f$f\f$ evaluated
-             *  at the quadrature points of the 3D basis, constructed by 
-             *  \a fbasis0, \a fbasis1, and \a fbasis2 to the function values at the 
-             *  quadrature points of the 3D basis, constructed by \a tbasis0, 
-             *  \a tbasis1, and \a tbasis2.
-             *
-             *  Given a function \f$ f\f$ evaluated at the \a Q quadrature points
-             *  of the first expansion basis, this routine calculates, using 
-             *  \a (Q-1)th order polynomial interpolation, the function values
-             *  at the \a Q2 quadrature points of the second basis, and the function
-             *  values at the \a Q3 quadrature points of the third basis.
-             *
-             *  \param fbasis0 the basis at which's quadrature points the 
-             *  function is given
-             *  \param from the array containg the function \f$ f\f$  evaluated
-             *   at the quadrature points of \a fbasis0
-             *  \param tbasis0 the basis to which's quadrature points the 
-             *  function should be interpolated
-             *  \param to the array containg the function \f$ f\f$  evaluated
-             *   at the quadrature points of \a tbasis0 (output of the function)
-             */
-            void Interp3D(const LibUtilities::BasisKey &fbasis0,
-                          const LibUtilities::BasisKey &fbasis1,
-                          const LibUtilities::BasisKey &fbasis2,
-                          const Array<OneD, const NekDouble>& from,
-                          const LibUtilities::BasisKey &tbasis0,
-                          const LibUtilities::BasisKey &tbasis1,
-                          const LibUtilities::BasisKey &tbasis2,
-                          Array<OneD, NekDouble> &to);
-
-            void Interp3D(const LibUtilities::BasisKey &fbasis0,
-                          const LibUtilities::BasisKey &fbasis1,
-                          const LibUtilities::BasisKey &fbasis2,
-                          const NekDouble *from,
-                          const LibUtilities::BasisKey &tbasis0,
-                          const LibUtilities::BasisKey &tbasis1,
-                          const LibUtilities::BasisKey &tbasis2,
-                          NekDouble *to );
-
-
             /** \brief Function to evaluate the discrete \f$ L_\infty\f$
              *  error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
              *    u_{exact}\f$ is given by the array \a sol. 
@@ -1317,7 +1218,13 @@ namespace Nektar
                 ASSERTL0(false, "This function is not valid or not defined");
                 return 0;
             }
-            
+                        
+            virtual int v_DetCartesianDirOfEdge(const int edge)
+            {
+                ASSERTL0(false, "This function is not valid or not defined");
+                return 0;
+            }
+
             virtual const LibUtilities::BasisKey v_DetEdgeBasisKey(const int i) const
             {
                 ASSERTL0(false, "This function is not valid or not defined");
@@ -1611,6 +1518,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.96  2008/08/27 16:34:53  pvos
+ * Small efficiency update
+ *
  * Revision 1.95  2008/08/14 22:09:50  sherwin
  * Modifications to remove HDG routines from StdRegions and removed StdExpMap
  *

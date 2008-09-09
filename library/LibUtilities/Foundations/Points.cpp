@@ -72,7 +72,7 @@ namespace Nektar
 
         std::ostream& operator<<(std::ostream& os, const PointsKey& rhs)
         {
-            os << "NumPoints: " << rhs.GetNumPoints() << " PointsType: " << PointsTypeMap[rhs.GetPointsType()] << std::endl;
+            os << "NumPoints: " << rhs.GetNumPoints() << " PointsType: " << kPointsTypeStr[rhs.GetPointsType()] << std::endl;
 
             return os;
         }

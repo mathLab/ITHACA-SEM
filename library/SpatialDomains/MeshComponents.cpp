@@ -127,8 +127,8 @@ namespace Nektar
         void VertexComponent::UpdatePosition(double x, double y, double z)
         {
             (*this)(0) = x;
-            (*this)(1) = x;
-            (*this)(2) = x;
+            (*this)(1) = y;
+            (*this)(2) = z;
         }  
 
         // _this = a + b
@@ -159,7 +159,13 @@ namespace Nektar
         }
 
         // _output = this.a 
-        double VertexComponent::dot(VertexComponent& a)
+        NekDouble VertexComponent::dist(VertexComponent& a)
+        {
+            return sqrt((x()-a.x())*(x()-a.x()) + (y()-a.y())*(y()-a.y()) + (z()-a.z())*(z()-a.z()));
+        }
+
+        // _output = this.a 
+        NekDouble VertexComponent::dot(VertexComponent& a)
         {
             return (x()*a.x() + y()*a.y() + z()*a.z());
         }
@@ -210,6 +216,9 @@ namespace Nektar
 
 //
 // $Log: MeshComponents.cpp,v $
+// Revision 1.6  2008/03/06 05:12:20  ehan
+// Changed NekVector<NekDouble, 3> to NekVector<NekDouble, ThreeD> to match the changes of enum to struct typename dim.
+//
 // Revision 1.5  2007/08/02 12:03:27  sherwin
 // Fixed order of coordinate assignment in VertexComponent::GetCoords
 //

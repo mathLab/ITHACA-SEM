@@ -42,6 +42,8 @@
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Graph.h>
 
+#include <LibUtilities/Foundations/Interp.h>
+
 namespace Nektar
 {    
     /** \brief The namespace associated with the the SpatialDomains library 
@@ -83,6 +85,9 @@ namespace Nektar
 
 //
 // $Log: SpatialDomains.hpp,v $
+// Revision 1.5  2008/06/05 15:06:31  pvos
+// Added documentation
+//
 // Revision 1.4  2007/03/14 21:24:08  sherwin
 // Update for working version of MultiRegions up to ExpList1D
 //

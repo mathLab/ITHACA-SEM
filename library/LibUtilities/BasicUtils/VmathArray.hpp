@@ -95,7 +95,7 @@ using namespace Nektar;
         }
         
         /// \brief Scalar multiply  y = alpha/y
-        template<class T>  void Sdiv( int n, const T alpha, Array<OneD,T> &x, const int incx,  Array<OneD,T> &y, const int incy)
+        template<class T>  void Sdiv( int n, const T alpha, const Array<OneD,const T> &x, const int incx,  Array<OneD,T> &y, const int incy)
         {
             ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
             ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
@@ -175,7 +175,7 @@ using namespace Nektar;
         /********** Triad  routines  ***********************/
         
         /// \brief  vvtvp (vector times vector plus vector): z = w*x + y
-        template<class T> void Vvtvp(int n, const Array<OneD,T> &w, const int incw, const Array<OneD,T> &x, const int incx, const Array<OneD,T> &y, const int incy, Array<OneD,T> &z, const int incz)
+        template<class T> void Vvtvp(int n, const Array<OneD, const T> &w, const int incw, const Array<OneD,const T> &x, const int incx, const Array<OneD, const T> &y, const int incy, Array<OneD,T> &z, const int incz)
         {
             ASSERTL1(n*incw <= w.num_elements()+w.GetOffset(),"Array out of bounds");
             ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
@@ -335,6 +335,9 @@ using namespace Nektar;
 
 /***
 $Log: VmathArray.hpp,v $
+Revision 1.3  2008/05/10 18:27:32  sherwin
+Modifications necessary for QuadExp Unified DG Solver
+
 Revision 1.2  2008/04/06 05:47:20  bnelson
 Changed ConstArray to Array<const>
 

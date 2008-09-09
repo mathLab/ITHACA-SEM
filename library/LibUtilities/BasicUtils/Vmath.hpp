@@ -94,8 +94,8 @@ namespace Vmath
     }
     
     /// \brief Scalar multiply  y = alpha/y
-    template<class T>  void Sdiv( int n, const T alpha, T*x, const int incx,
-                  T *y, const int incy)
+    template<class T>  void Sdiv( int n, const T alpha, const T *x, 
+                                  const int incx, T *y, const int incy)
     {
         while( n-- )
         {
@@ -493,6 +493,9 @@ namespace Vmath
 
 /***
 $Log: Vmath.hpp,v $
+Revision 1.16  2008/08/09 19:26:08  sherwin
+Corrected big in Reverse
+
 Revision 1.15  2008/07/19 21:09:21  sherwin
 Added Reverse function
 

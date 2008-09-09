@@ -36,6 +36,7 @@
 #ifndef NEKTAR_SPATIALDOMAINS_SEGGEOM_H
 #define NEKTAR_SPATIALDOMAINS_SEGGEOM_H
 
+
 #include <StdRegions/StdRegions.hpp>
 #include <SpatialDomains/SpatialDomains.hpp>
 
@@ -46,10 +47,13 @@
 #include <StdRegions/StdSegExp.h>
 #include <LibUtilities/Foundations/Basis.h>
 
+#include <SpatialDomains/Curve.hpp>
+
 namespace Nektar
 {
     namespace SpatialDomains
     {
+
         class SegGeom: public Geometry1D
         {
             public:
@@ -58,6 +62,8 @@ namespace Nektar
                 SegGeom(int id, const int coordim);
 
                 SegGeom(int id, const int coordim, const VertexComponentSharedPtr vertex[]);
+
+                SegGeom(int id, const int coordim, const VertexComponentSharedPtr vertex[], const CurveSharedPtr &curve);
 
                 SegGeom(const int id, const VertexComponentSharedPtr vert1, const VertexComponentSharedPtr  vert2);
 
@@ -139,11 +145,6 @@ namespace Nektar
                 void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
 
 
-                inline void SetOwnData()
-                {
-                    m_owndata = true; 
-                }
-
                 void WriteToFile(std::ofstream &outfile, const int dumpVar);
 
             protected:
@@ -157,7 +158,6 @@ namespace Nektar
                 void GenGeomFactors(void);
 
             private:
-                bool m_owndata;   ///< Boolean indicating whether object owns the data
 
                 virtual void v_AddElmtConnected(int gvo_id, int locid)
                 {      
@@ -224,10 +224,6 @@ namespace Nektar
                     GetLocCoords(coords,Lcoords);
                 }            
                 
-                virtual  void v_SetOwnData()
-                {
-                    SetOwnData();
-                }
                 
                 virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
                 {
@@ -247,6 +243,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.19  2008/06/12 23:27:57  delisi
+// Removed MeshGraph.h include from SegGeom.h, to get rid of circular includes. Now can use typedefs from SegGeom.h instead of repeating it in MeshGraph.h.
+//
 // Revision 1.18  2008/06/11 21:34:42  delisi
 // Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
 //

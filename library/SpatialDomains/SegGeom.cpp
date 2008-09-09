@@ -46,64 +46,130 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        SegGeom::SegGeom():
-            m_owndata(false)
+        SegGeom::SegGeom()
         {
             m_GeomShapeType = eSegment;
         }
-
-		SegGeom::SegGeom(int id, const int coordim):
-			Geometry1D(coordim), m_xmap(coordim)
-		{
+        
+        SegGeom::SegGeom(int id, const int coordim):
+            Geometry1D(coordim), m_xmap(coordim)
+        {
             const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
-                LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+                                           LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
             m_eid = id;
-
+            
             for(int i = 0; i < m_coordim; ++i)
             {
                 m_xmap[i] = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
             }
-		}
+        }
+        
+        SegGeom::SegGeom(int id, const int coordim,
+                         const VertexComponentSharedPtr vertex[]): 
+            Geometry1D(coordim)
+        {
+            m_eid   = id;
+            m_state = eNotFilled;
+            
+            if (coordim > 0)
+            {
+                const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
+                                               LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+                
+                m_xmap = Array<OneD, StdRegions::StdExpansion1DSharedPtr>(m_coordim);
+                
+                for(int i = 0; i < m_coordim; ++i)
+                {
+                    m_xmap[i] = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
+                }
+            }
+            
+            m_verts[0] = vertex[0];
+            m_verts[1] = vertex[1];
+        }
 
-		SegGeom::SegGeom(int id, const int coordim,
-						 const VertexComponentSharedPtr vertex[]): 
-			Geometry1D(coordim)
-		{
-			m_eid = id;
+        SegGeom::SegGeom(int id, const int coordim,
+                         const VertexComponentSharedPtr vertex[], 
+                         const CurveSharedPtr &curve): 
+            Geometry1D(coordim)
+        {
+            m_eid = id;
+            m_state = eNotFilled;
 
-			if (coordim > 0)
-			{
-				const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
-					LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+            if (coordim > 0)
+            {
+                int npts = curve->m_points.size();
+                LibUtilities::PointsKey pkey(npts+1,LibUtilities::eGaussLobattoLegendre);
+                const LibUtilities::BasisKey B(LibUtilities::eModified_A, npts, pkey);
+                
+                m_xmap = Array<OneD, StdRegions::StdExpansion1DSharedPtr>(m_coordim);
+                
+                Array<OneD,NekDouble> tmp(npts);
 
-				m_xmap = Array<OneD, StdRegions::StdExpansion1DSharedPtr>(m_coordim);
 
-				for(int i = 0; i < m_coordim; ++i)
-				{
-					m_xmap[i] = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
-				}
-			}
+                if(vertex[0]->dist(*(curve->m_points[0])) > VertexTheSameDouble)
+                {
+                    std::string err = "Vertex 0 is separated from first point by more than ";
+                    std::stringstream strstrm;
+                    strstrm << VertexTheSameDouble; 
+                    err += strstrm.str();
+                    NEKERROR(ErrorUtil::ewarning, err.c_str()); 
+                }
 
-			m_verts[0] = vertex[0];
-			m_verts[1] = vertex[1];
-		}
+                if(vertex[1]->dist(*(curve->m_points[npts-1])) > VertexTheSameDouble)
+                {
+                    std::string err = "Vertex 1 is separated from last point by more than ";
+                    std::stringstream strstrm;
+                    strstrm << VertexTheSameDouble; 
+                    err += strstrm.str();
+                    NEKERROR(ErrorUtil::ewarning, err.c_str()); 
+                }
+
+
+                for(int i = 0; i < m_coordim; ++i)
+                {
+                    m_xmap[i] = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
+
+                    // Load up coordinate values into tmp
+                    for(int j = 0; j < npts; ++j)
+                    {
+                        tmp[j] = (curve->m_points[j]->GetPtr())[i];
+                    }
+
+                    // Interpolate to GLL points
+                    DNekMatSharedPtr I0;
+                    
+                    LibUtilities::PointsKey fkey(npts,curve->m_ptype);
+                    I0 = LibUtilities::PointsManager()[fkey]->GetI(pkey);
+                    
+                    NekVector<const NekDouble> in(npts,tmp,eWrapper);
+                    NekVector<NekDouble>       out(npts+1,m_xmap[i]->UpdatePhys(),eWrapper);
+                    out  = (*I0)*in;
+
+                    m_xmap[i]->FwdTrans(m_xmap[i]->GetPhys(),m_xmap[i]->UpdateCoeffs());
+                }
+            }
+            
+            m_verts[0] = vertex[0];
+            m_verts[1] = vertex[1];
+        }
+        
 
         SegGeom::SegGeom(const int id, const VertexComponentSharedPtr vert1, 
                          const VertexComponentSharedPtr  vert2):
             Geometry1D(vert1->GetCoordim()), m_xmap(vert1->GetCoordim())
         {
             m_GeomShapeType = eSegment;
-
-            m_owndata = false;
+            
             m_verts[0] = vert1; 
             m_verts[1] = vert2;
             
             m_state = eNotFilled;
-
+            
             const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
-                LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+                                           LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
             m_eid = id;
-
+            
             for(int i = 0; i < m_coordim; ++i)
             {
                 m_xmap[i] = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
@@ -125,7 +191,6 @@ namespace Nektar
             m_xmap = in.m_xmap;
             
             // info from SegGeom class
-            m_owndata  = false; 
             m_coordim  = in.m_coordim;
             m_verts[0] = in.m_verts[0]; 
             m_verts[1] = in.m_verts[1];
@@ -332,6 +397,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.22  2008/06/11 21:34:42  delisi
+// Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
+//
 // Revision 1.21  2008/05/28 21:52:27  jfrazier
 // Added GeomShapeType initialization for the different shapes.
 //

@@ -52,26 +52,26 @@
         <!-- The edge IDs are from the EDGE list and the IDs for from the FACE list are
 		from the list of FACEs.  -->
         <CURVE>
-            <E ID="0" TYPE="GLL" NUMPOINTS="2">
+            <E ID="0" EDGEID="0" TYPE="GLL" NUMPOINTS="2">
                 4.3 2.98 4.6
                 7.3 9.2 8.4
             </E>
-            <E ID="1" TYPE="POLYEVEN" NUMPOINTS="2">
+            <E ID="1" EDGEID="2" TYPE="POLYEVEN" NUMPOINTS="2">
                 4.3 2.98 4.6
                 7.3 9.2 8.4
             </E>
-            <F ID="0" TYPE="FEKETE" NUMPOINTS="3">
+            <F ID="0" FACEID="0" TYPE="FEKETE" NUMPOINTS="3">
                 4.3 2.98 4.6
                 7.3 9.2 8.4
                 7.3 9.2 8.4
             </F>
-            <F ID="1" TYPE="GLL, GLL" NUMPOINTS="4">
+            <F ID="1" FACEID="0" TYPE="GLL, GLL" NUMPOINTS="4">
                 4.3 2.98 4.6
                 7.3 9.2 8.4
                 4.3 2.98 4.6
                 7.3 9.2 8.4
             </F>
-            <F ID="2" TYPE="POLYEVEN, POLYEVEN" NUMPOINTS="4">
+            <F ID="2" FACEID="0" TYPE="POLYEVEN, POLYEVEN" NUMPOINTS="4">
                 4.3 2.98 4.6
                 7.3 9.2 8.4
                 4.3 2.98 4.6

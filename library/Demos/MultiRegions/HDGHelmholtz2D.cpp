@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
     NekDouble  lambda;
-    double   st, cps = (double)CLOCKS_PER_SEC;
+    NekDouble   st, cps = (double)CLOCKS_PER_SEC;
 
     if(argc != 3)
     {
@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
     
     //----------------------------------------------
     // Write solution 
-    ofstream outfile("UDGHelmholtzFile2D.dat");
+    ofstream outfile("HDGHelmholtzFile2D.dat");
     Exp->WriteToFile(outfile);
     //----------------------------------------------
     

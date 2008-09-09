@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
         cerr << "Where type is an interger value which dictates the basis as:" << endl;
         for(int i=0; i<SIZE_PointsType; ++i)
         {
-            cerr << setw(30) << PointsTypeMap[i] << " =" << i << endl;
+            cerr << setw(30) << kPointsTypeStr[i] << " =" << i << endl;
         }
 //                   NoPointsType =0
 //             GaussGaussLegendre =1

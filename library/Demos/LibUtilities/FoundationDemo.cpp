@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
 
         cerr << "Where type is an integer value which dictates the basis as:\n";
         for(int i=0; i<SIZE_PointsType; ++i) {
-            cerr << setw(30) << PointsTypeMap[i] << " = " << i << endl;
+            cerr << setw(30) << kPointsTypeStr[i] << " = " << i << endl;
         }
 
         cerr << "Note type = 13, 14, and 15 are for two dimensional bases" << endl;
@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
     if(pointsType == eNoPointsType)
     {
         cerr << "pointsType = " << pointsType << endl;
-        cerr << "PointsTypeMap["<<pointsType<<"] = " << PointsTypeMap[pointsType] << endl;
+        cerr << "kPointsTypeStr["<<pointsType<<"] = " << kPointsTypeStr[pointsType] << endl;
         ErrorUtil::Error(ErrorUtil::efatal,__FILE__, __LINE__,
                   "No Points Type requested",0);
     }
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
     int nPts = atoi(argv[2]);
 
     // Show the set up to the user
-    cout << "Points type:               " << PointsTypeMap[pointsType] << endl;
+    cout << "Points type:               " << kPointsTypeStr[pointsType] << endl;
     cout << "Number of points:          " << nPts << endl;
     
     // Display the example test function to the user
@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
 
     // Display the interpolated data
     cout << "\n\n\n              **** Interpolation ****";
-    cout << "\n\nResults of interpolation with " << PointsTypeMap[pointsType] << ":";
+    cout << "\n\nResults of interpolation with " << kPointsTypeStr[pointsType] << ":";
     cout << "\ninterp = ";
     for(int i = 0; i < nNodes; ++i)
     {
@@ -309,7 +309,7 @@ int main(int argc, char *argv[])
     
     // Display the derivative approximations
     cout << "\n\n\n              **** Differentiation ****" << setprecision(3);
-    cout << "\n\nResults of differentiation with " << PointsTypeMap[pointsType] << ":";
+    cout << "\n\nResults of differentiation with " << kPointsTypeStr[pointsType] << ":";
     cout << "\nderived = ";
     for(int i = 0; i < nPts; ++i)
     {
@@ -380,7 +380,7 @@ int main(int argc, char *argv[])
     
     // Display the integral approximation
     cout << "\n\n\n              **** Integration ****" << setprecision(6);
-    cout << "\n\nResults of integration with " << PointsTypeMap[pointsType] << ":";
+    cout << "\n\nResults of integration with " << kPointsTypeStr[pointsType] << ":";
     cout << "\nnumerical integral  = " << setw(12) << numericalIntegration;
 
     // Determine the exact solutions

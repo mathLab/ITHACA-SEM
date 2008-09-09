@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
         cerr << "Where type is an integer value which dictates the basis as:\n";
         for(int i=0; i<SIZE_PointsType; ++i)
         {
-            cerr << setw(30) << PointsTypeMap[i] << " =" << i << endl;
+            cerr << setw(30) << kPointsTypeStr[i] << " =" << i << endl;
             
         }
 
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
     if(pointsType == eNoPointsType)
     {
         cerr << "pointsType = " << pointsType << endl;
-        cerr << "PointsTypeMap[" <<pointsType<< "]=" << PointsTypeMap[pointsType] << endl;
+        cerr << "kPointsTypeStr[" <<pointsType<< "]=" << kPointsTypeStr[pointsType] << endl;
         ErrorUtil::Error(ErrorUtil::efatal,__FILE__, __LINE__,
                          "No Points Type requested",0);
     }
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     int nPtsPerSide = atoi(argv[2]);
 
      // Show the set up to the user
-    cout << "Points Type:            " << PointsTypeMap[pointsType] << endl;
+    cout << "Points Type:            " << kPointsTypeStr[pointsType] << endl;
     cout << "Number of points per side:       " << nPtsPerSide << endl;
 
     // Display the example test function to the user

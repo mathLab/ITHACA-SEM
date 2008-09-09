@@ -124,7 +124,8 @@ namespace Nektar
                 void   Mult (VertexComponent& a, VertexComponent& b);
                 void   Add  (VertexComponent& a, VertexComponent& b);
                 void   Sub  (VertexComponent& a, VertexComponent& b);
-                double dot  (VertexComponent& a);
+                NekDouble dist  (VertexComponent& a);
+                NekDouble dot   (VertexComponent& a);
 
                 friend bool operator == (const VertexComponent &x, const VertexComponent &y);
                 friend bool operator == (const VertexComponent &x, const VertexComponent *y);
@@ -137,7 +138,7 @@ namespace Nektar
                 int m_vid;
                 int m_coordim;
                 std::list<CompToElmt> m_elmtmap;
-
+                
             private:
         };
 
@@ -179,6 +180,9 @@ namespace Nektar
 
 //
 // $Log: MeshComponents.h,v $
+// Revision 1.12  2008/03/03 02:30:00  bnelson
+// Changed OneD, TwoD, and ThreeD to classes instead of enums to support type parameters in NekVector instead of unsigned int for the dimensions.
+//
 // Revision 1.11  2007/08/11 23:38:48  sherwin
 // Update for full working version of Helmholtz1D
 //

@@ -114,7 +114,7 @@ namespace Nektar
             {
                 for(unsigned int j=0;j<m_pointsKey.GetNumPoints();++j)
                 {
-                    interp[i*m_pointsKey.GetNumPoints()+j] = LagrangePoly(xpoints[i],j,m_pointsKey.GetNumPoints(),m_points[0]);
+                    interp[i + j*npts] = LagrangePoly(xpoints[i],j,m_pointsKey.GetNumPoints(),m_points[0]);
                 }
             }
         }

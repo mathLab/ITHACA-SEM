@@ -67,9 +67,9 @@ namespace Nektar
         }
 
         QuadGeom::QuadGeom(const VertexComponentSharedPtr verts[], 
-						   const SegGeomSharedPtr edges[], 
-						   const StdRegions::EdgeOrientation eorient[]):
-			Geometry2D(verts[0]->GetCoordim())
+                           const SegGeomSharedPtr edges[], 
+                           const StdRegions::EdgeOrientation eorient[]):
+            Geometry2D(verts[0]->GetCoordim())
         {
             m_GeomShapeType = eQuadrilateral;
 
@@ -87,30 +87,41 @@ namespace Nektar
 
             m_coordim = verts[0]->GetCoordim();
             ASSERTL0(m_coordim > 1,
-                "Cannot call function with dim == 1");
+                     "Cannot call function with dim == 1");
 
-            const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
-                  LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+            int order0  = max(edges[0]->GetBasis(0,0)->GetNumModes(),
+                             edges[2]->GetBasis(0,0)->GetNumModes());
+            int points0 = max(edges[0]->GetBasis(0,0)->GetNumPoints(),
+                             edges[2]->GetBasis(0,0)->GetNumPoints());
+            int order1 = max(edges[1]->GetBasis(0,0)->GetNumModes(),
+                             edges[3]->GetBasis(0,0)->GetNumModes());
+            int points1 = max(edges[1]->GetBasis(0,0)->GetNumPoints(),
+                             edges[3]->GetBasis(0,0)->GetNumPoints());
+
+            const LibUtilities::BasisKey B0(LibUtilities::eModified_A, order0,
+                  LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey B1(LibUtilities::eModified_A, order1,
+                  LibUtilities::PointsKey(points1,LibUtilities::eGaussLobattoLegendre));
 
             m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
             {
-                m_xmap[i] = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B,B);  
+                m_xmap[i] = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B0,B1);  
             }
         }
     
         QuadGeom::QuadGeom(const SegGeomSharedPtr edges[], 
                            const StdRegions::EdgeOrientation eorient[]):
-			Geometry2D(edges[0]->GetVertex(0)->GetCoordim())
+            Geometry2D(edges[0]->GetVertex(0)->GetCoordim())
         {
             int j;
             
             m_GeomShapeType = eQuadrilateral;
-
+            
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+QuadGeom::kNedges);
-        
+            
             for(j=0; j <kNedges; ++j)
             {
                 if(eorient[j] == StdRegions::eForwards)
@@ -132,24 +143,35 @@ namespace Nektar
             ASSERTL0(m_coordim > 1,
                 "Cannot call function with dim == 1");
 
-            const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
-                LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+            int order0  = max(edges[0]->GetBasis(0,0)->GetNumModes(),
+                             edges[2]->GetBasis(0,0)->GetNumModes());
+            int points0 = max(edges[0]->GetBasis(0,0)->GetNumPoints(),
+                             edges[2]->GetBasis(0,0)->GetNumPoints());
+            int order1 = max(edges[1]->GetBasis(0,0)->GetNumModes(),
+                             edges[3]->GetBasis(0,0)->GetNumModes());
+            int points1 = max(edges[1]->GetBasis(0,0)->GetNumPoints(),
+                             edges[3]->GetBasis(0,0)->GetNumPoints());
+
+            const LibUtilities::BasisKey B0(LibUtilities::eModified_A, order0,
+                  LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey B1(LibUtilities::eModified_A, order1,
+                  LibUtilities::PointsKey(points1,LibUtilities::eGaussLobattoLegendre));
 
             m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
             {
-                m_xmap[i] = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B,B);  
+                m_xmap[i] = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B0,B1);  
             }
         }
 
-		QuadGeom::QuadGeom(const QuadGeom &in)
-		{
-			// From Geometry
-			m_GeomShapeType = in.m_GeomShapeType;
-
-			// From QuadFaceComponent
-			m_fid = in.m_fid;
+        QuadGeom::QuadGeom(const QuadGeom &in)
+        {
+            // From Geometry
+            m_GeomShapeType = in.m_GeomShapeType;
+            
+            // From QuadFaceComponent
+            m_fid = in.m_fid;
 			m_ownverts = in.m_ownverts;
 			std::list<CompToElmt>::const_iterator def;
             for(def = in.m_elmtmap.begin(); def != in.m_elmtmap.end(); def++)
@@ -161,11 +183,11 @@ namespace Nektar
 			m_verts = in.m_verts;
 			m_edges = in.m_edges;
             for (int i = 0; i < kNedges; i++)
-			{
-				m_eorient[i] = in.m_eorient[i];
-			}
-			m_owndata = in.m_owndata;
-		}
+            {
+                m_eorient[i] = in.m_eorient[i];
+            }
+            m_owndata = in.m_owndata;
+        }
 
         QuadGeom::~QuadGeom()
         {
@@ -198,8 +220,8 @@ namespace Nektar
             return(false);
         }
 
-        double QuadGeom::GetCoord(const int i, 
-                                           const Array<OneD, const NekDouble> &Lcoord)
+        NekDouble QuadGeom::GetCoord(const int i, 
+                                  const Array<OneD, const NekDouble> &Lcoord)
         {
             ASSERTL1(m_state == ePtsFilled,
                 "Goemetry is not in physical space");
@@ -268,24 +290,25 @@ namespace Nektar
             if(m_state != ePtsFilled)
             {
                 int i,j,k;
-                int nEdgeCoeffs = m_xmap[0]->GetEdgeNcoeffs(0);
+                int nEdgeCoeffs;
 
-                Array<OneD, unsigned int> mapArray (nEdgeCoeffs);
-                Array<OneD, int>          signArray(nEdgeCoeffs);
+                Array<OneD, unsigned int> mapArray;
+                Array<OneD, int>          signArray;
 
                 for(i = 0; i < kNedges; i++)
                 {
                     m_edges[i]->FillGeom();
-                    m_xmap[0]->GetEdgeToElementMap(i,m_eorient[i],mapArray,signArray);
+                    m_xmap[0]->GetEdgeToElementMap(i,m_eorient[i],
+                                                   mapArray,signArray);
 
-                    nEdgeCoeffs = m_xmap[0]->GetEdgeNcoeffs(i);
-
+                    nEdgeCoeffs = (*m_edges[i])[0]->GetNcoeffs();
+                    
                     for(j = 0 ; j < m_coordim; j++)
                     {
                         for(k = 0; k < nEdgeCoeffs; k++)
                         {
-                            (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = signArray[k]*
-                                ((*m_edges[i])[j]->GetCoeffs())[k];
+                            (m_xmap[j]->UpdateCoeffs())[mapArray[k]] 
+                                = signArray[k]*((*m_edges[i])[j]->GetCoeffs())[k];
                         }
                     }
                 }
@@ -300,7 +323,8 @@ namespace Nektar
             }
         }
         
-        void QuadGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+        void QuadGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords,
+                                    Array<OneD,NekDouble> &Lcoords)
         {
             int i;
             
@@ -340,8 +364,8 @@ namespace Nektar
             }
             else
             {
-          NEKERROR(ErrorUtil::efatal,
-                    "inverse mapping must be set up to use this call");
+                NEKERROR(ErrorUtil::efatal,
+                         "inverse mapping must be set up to use this call");
             }
         }
 
@@ -368,6 +392,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.cpp,v $
+// Revision 1.20  2008/08/14 22:11:03  sherwin
+// Mods for HDG update
+//
 // Revision 1.19  2008/06/30 19:35:22  ehan
 // Fixed infinity recursive-loop error.
 //

@@ -60,6 +60,12 @@ namespace Nektar
             {
                 bool operator()(const PointsKey &lhs, const PointsKey &rhs) const;
             };
+            
+            PointsKey(void):
+                m_numpoints(0), 
+                m_pointstype(eNoPointsType)
+            {
+            }
 
             PointsKey(const int &numpoints, const PointsType &pointstype): 
                 m_numpoints(numpoints), 
@@ -172,9 +178,6 @@ namespace Nektar
             PointsType m_pointstype;      //!< Type of Points
 
         private:
-
-            // This should never be called
-            PointsKey();
         };
 
         static const PointsKey NullPointsKey(0, eNoPointsType);
@@ -307,7 +310,7 @@ namespace Nektar
             Array<OneD, DataType> m_weights;
             MatrixSharedPtrType m_derivmatrix[3];
             NekManager<PointsKey, NekMatrix<DataType>, PointsKey::opLess> m_InterpManager;
-
+            
             virtual void CalculatePoints()
             {
                 unsigned int pointsDim = GetPointsDim();

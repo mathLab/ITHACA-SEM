@@ -106,102 +106,17 @@ namespace Nektar
             }
             else
             {
-                int nq = GetTotPoints();   
-                int coordim = m_geom->GetCoordim();
-                int expdim = 2;
-                SpatialDomains::GeomType gtype = SpatialDomains::eDeformed;
-
-                LibUtilities::BasisSharedPtr CBasis0;
-                LibUtilities::BasisSharedPtr CBasis1;
-                CBasis0 = m_geom->GetBasis(0,0); // assumes all goembasis are same
-                CBasis1 = m_geom->GetBasis(0,1);
-                int Cnq0 = CBasis0->GetNumPoints();
-                int Cnq1 = CBasis1->GetNumPoints();
-     
-                Array<OneD, const NekDouble> ojac = Xgfac->GetJac();   
-                Array<TwoD, const NekDouble> ogmat = Xgfac->GetGmat();
-                Array<OneD,NekDouble> njac(nq);
-                Array<OneD,NekDouble> ngmat(2*coordim*nq);
-                
-                m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::
-                    AllocateSharedPtr(gtype,expdim,coordim); 
-                
                 //basis are different distributions
-                if(!(m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))||
-                   !(m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey())))
+                if(!(m_base[0]->GetBasisKey().SamePoints(m_geom->GetBasis(0,0)->GetBasisKey()))||!(m_base[1]->GetBasisKey().SamePoints(m_geom->GetBasis(0,1)->GetBasisKey())))
                 {
-                    int i;   
-                    int nq0 = m_base[0]->GetNumPoints();
-                    int nq1 = m_base[1]->GetNumPoints();
+                    StdRegions::ExpansionType shape = StdRegions::eTriangle;
 
-                    // interpolate Jacobian        
-                    Interp2D(CBasis0->GetBasisKey(),
-                             CBasis1->GetBasisKey(),
-                             &ojac[0],
-                             m_base[0]->GetBasisKey(),
-                             m_base[1]->GetBasisKey(), 
-                             &njac[0]);
-
-                    m_metricinfo->ResetJac(nq,njac);
-                    
-                    // interpolate Geometric data
-                    Array<OneD,NekDouble> dxdxi(nq);
-                    for(i = 0; i < 2*coordim; ++i)
-                    {
-                        Vmath::Vmul(nq,&ojac[0],1,&ogmat[i][0],1,&dxdxi[0],1);
-                        Interp2D(CBasis0->GetBasisKey(),
-                                 CBasis1->GetBasisKey(), 
-                                 &dxdxi[0], 
-                                 m_base[0]->GetBasisKey(),
-                                 m_base[1]->GetBasisKey(),
-                                 &ngmat[0] + i*nq);
-                        Vmath::Vdiv(nq,&ngmat[0]+i*nq,1,&njac[0],1,&ngmat[0]+i*nq,1);
-                    }
-                    m_metricinfo->ResetGmat(ngmat,nq,2,coordim); 
-                    
-                    // interpolate normals
-                    Array<TwoD,NekDouble> newnorm = Array<TwoD,NekDouble>(4,coordim*max(nq0,nq1));    
-                    Array<TwoD, const NekDouble> normals = Xgfac->GetNormals();
-                    Array<OneD, NekDouble> tmpnorm(nq1); 
-                    for(i = 0; i < coordim; ++i)
-                    {
-                        Interp1D(CBasis0->GetBasisKey(),&(normals[0])[i*Cnq0],
-                                 m_base[0]->GetBasisKey(),&(newnorm[0])[i*nq0]);
-                        
-                        Interp1D(CBasis1->GetBasisKey(),&(normals[1])[i*Cnq1],
-                                 m_base[1]->GetBasisKey(),&(newnorm[1])[i*nq1]);
-                        
-                        // reverse ordering to make interpolation
-                        // direction correction 
-                        
-                        Vmath::Reverse(Cnq1,&(normals[2])[i*Cnq1],1,&tmpnorm[0],1);
-                        Interp1D(CBasis1->GetBasisKey(),&(tmpnorm)[0],
-                                 m_base[1]->GetBasisKey(),&(newnorm[2])[i*nq1]);
-                        Vmath::Reverse(nq1,&(newnorm[2])[i*nq1],1,&(newnorm[2])[i*nq1],1);
-
-                        
-                    }
-                    
-                    m_metricinfo->ResetNormals(newnorm);
-                    
-                    NEKERROR(ErrorUtil::ewarning,
-                             "Need to check/debug routine for deformed elements");
+                    m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::
+                        AllocateSharedPtr(shape, *Xgfac,m_base); 
                 }
                 else // Same data can be used 
                 {                   
-                    // Copy Jacobian
-                    Blas::Dcopy(nq,&ojac[0],1,&njac[0],1);                    
-                    m_metricinfo->ResetJac(nq,njac);
-
-                    // interpolate Geometric data
-                    ngmat = Array<OneD,NekDouble>(2*nq*coordim); 
-                    Blas::Dcopy(2*coordim*nq,&ogmat[0][0],1,ngmat.data(),1);                    
-                    m_metricinfo->ResetGmat(ngmat,nq,2,coordim);                 
-
-                    m_metricinfo->ResetNormals(Xgfac->GetNormals());
-
-                    NEKERROR(ErrorUtil::ewarning,
-                             "Need to check/debug routine for deformed elements");
+                    m_metricinfo = Xgfac;
                 }
             }
         }      
@@ -767,8 +682,8 @@ namespace Nektar
                 }
                 else // Interpolate to Expansion point distribution
                 {
-                    Interp2D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(),&(m_geom->UpdatePhys(2))[0],
-                             m_base[0]->GetBasisKey(),m_base[1]->GetBasisKey(),&coords_2[0]);
+                    LibUtilities::Interp2D(CBasis0->GetPointsKey(), CBasis1->GetPointsKey(),&(m_geom->UpdatePhys(2))[0],
+                                           m_base[0]->GetPointsKey(),m_base[1]->GetPointsKey(),&coords_2[0]);
                 }    
             case 2:
                 ASSERTL0(coords_1.num_elements(), 
@@ -784,10 +699,10 @@ namespace Nektar
                     Blas::Dcopy(m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints(),
                                 x, 1, coords_1, 1);
                 }
-                else // Interpolate to Expansion point distribution
+                else // LibUtilities::Interpolate to Expansion point distribution
                 {
-                    Interp2D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(), &(m_geom->UpdatePhys(1))[0],
-                             m_base[0]->GetBasisKey(),m_base[1]->GetBasisKey(),&coords_1[0]);
+                    LibUtilities::Interp2D(CBasis0->GetPointsKey(), CBasis1->GetPointsKey(), &(m_geom->UpdatePhys(1))[0],
+                             m_base[0]->GetPointsKey(),m_base[1]->GetPointsKey(),&coords_1[0]);
                 }
             case 1:
                 ASSERTL0(coords_0.num_elements(), 
@@ -805,8 +720,8 @@ namespace Nektar
                 }
                 else // Interpolate to Expansion point distribution
                 {
-                    Interp2D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(), &(m_geom->UpdatePhys(0))[0],
-                             m_base[0]->GetBasisKey(),m_base[1]->GetBasisKey(),&coords_0[0]);
+                    LibUtilities::Interp2D(CBasis0->GetPointsKey(), CBasis1->GetPointsKey(), &(m_geom->UpdatePhys(0))[0],
+                             m_base[0]->GetPointsKey(),m_base[1]->GetPointsKey(),&coords_0[0]);
                 }
                 break;
             default:
@@ -1394,39 +1309,25 @@ namespace Nektar
             return returnval;
         }
 
-
         StdRegions::StdExpansion1DSharedPtr TriExp::GetEdgeExp(int edge, bool SetUpNormals)
         {
             GenSegExpSharedPtr returnval; 
-            int dir = edge? 1:0;
             SpatialDomains::Geometry1DSharedPtr edg = m_geom->GetEdge(edge);
             
             returnval = MemoryManager<GenSegExp>::AllocateSharedPtr(DetEdgeBasisKey(edge),edg);
             
             if(SetUpNormals)
             {
-                Array<TwoD, const NekDouble> normals = m_metricinfo->GetNormals();
                 int i;
                 int coordim = GetCoordim();
                 int npoints = returnval->GetNumPoints(0);
                 StdRegions::EdgeOrientation edgedir = GetEorient(edge);
 
-                Array<OneD, NekDouble> phys_normals(npoints*coordim);
+                Array<OneD,NekDouble> phys_normals = m_metricinfo->GenNormals2D(StdRegions::eTriangle,edge,returnval->GetBasis(0)->GetPointsKey());
 
-                if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                if(edgedir == StdRegions::eBackwards)
                 {
-
-                    int nquad_e = TriExp::GetNumPoints(dir);
-                    
-                    for(i = 0; i < coordim; ++i)
-                    {
-                        Interp1D(m_base[dir]->GetBasisKey(),
-                                 &normals[edge][i*nquad_e], 
-                                 returnval->GetBasis(0)->GetBasisKey(),
-                                 &phys_normals[i*npoints]);
-                    }
-                    
-                    if(edgedir == StdRegions::eBackwards)
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         for(i = 0; i < coordim; ++i)
                         {
@@ -1434,18 +1335,7 @@ namespace Nektar
                                            &phys_normals[i*npoints],1);
                         }
                     }
-                }
-                else
-                {
-                    for(i = 0; i < coordim; ++i)
-                    {
-                        Vmath::Fill(npoints,normals[edge][i],
-                                    &phys_normals[npoints*i],1);
-                    }
-                }
-
-                if(edgedir == StdRegions::eBackwards)
-                {
+                    
                     Vmath::Neg(coordim*npoints,phys_normals,1);
                 }
                 
@@ -1464,12 +1354,8 @@ namespace Nektar
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
             
-            int nquade = EdgeExp->GetTotPoints();
-
             Array<OneD,const NekDouble> e_tmp;
             Array<OneD,NekDouble>       outtmp(max(nquad0,nquad1));
-
-            StdRegions::EdgeOrientation edgedir = GetCartesianEorient(edge);
 
             // get points in Cartesian orientation 
             switch(edge)
@@ -1489,21 +1375,16 @@ namespace Nektar
             }
 
             // Interpolate if required 
-            if(m_base[edge?1:0]->GetPointsKey() != EdgeExp->GetBasis(0)->GetPointsKey())
-            {
-                Interp1D(m_base[edge?1:0]->GetBasisKey(),outtmp,
-                         EdgeExp->GetBasis(0)->GetBasisKey(),outarray);
-            }
-            else
-            {
-                Vmath::Vcopy(nquad0,outtmp,1,outarray,1);
-            }
+            LibUtilities::Interp1D(m_base[edge?1:0]->GetPointsKey(),outtmp,
+                     EdgeExp->GetBasis(0)->GetPointsKey(),outarray);
 
             //Reverse data if necessary
-            if(edgedir == StdRegions::eBackwards)
+            if(GetCartesianEorient(edge) == StdRegions::eBackwards)
             {
-                Vmath::Reverse(nquade,&outarray[0],1,&outarray[0],1);
-            }            
+                Vmath::Reverse(EdgeExp->GetNumPoints(0),&outarray[0],1,
+                               &outarray[0],1);
+            }
+
         }
 
     }//end of namespace
@@ -1511,6 +1392,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.43  2008/08/28 15:03:37  pvos
+ *    small efficiency updates
+ *
  *    Revision 1.42  2008/08/14 22:12:57  sherwin
  *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
  *

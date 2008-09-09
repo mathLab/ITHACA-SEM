@@ -32,7 +32,6 @@
 // Description: General header for localregions containing enum and constants 
 //
 ///////////////////////////////////////////////////////////////////////////////
-
 #ifndef LOCALREGIONS_H
 #define LOCALREGIONS_H
 
@@ -95,6 +94,9 @@ namespace Nektar
 
 /** 
 *    $Log: LocalRegions.hpp,v $
+*    Revision 1.4  2008/06/05 15:06:42  pvos
+*    Added documentation
+*
 *    Revision 1.3  2007/04/08 03:33:30  jfrazier
 *    Minor reformatting and fixing SharedArray usage.
 *

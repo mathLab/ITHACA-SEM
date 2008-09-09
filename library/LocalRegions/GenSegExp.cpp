@@ -59,58 +59,25 @@ namespace Nektar
         // Given a Geometry2D set normals to the same as the values
         // along edge \a edge. If NegateNormals is true then negate the
         // normals
-        void GenSegExp::SetUpPhysNormals(const SpatialDomains::Geometry2DSharedPtr& Geom, const int edge, bool NegateNormals)
+        void GenSegExp::SetUpPhysNormals(const StdRegions::StdExpansionSharedPtr &exp2D, const int edge)
         {            
             int k;
-            int coordim = Geom->GetCoordim();
-            Array<TwoD, const NekDouble> normals = Geom->GetGeomFactors()->GetNormals();
-            SpatialDomains::GeomType Gtype = Geom->GetGtype();
-
-            // assume all coordinates have same basis
-            LibUtilities::BasisSharedPtr CBasis = Geom->GetEdgeBasis(0,edge); 
-            int nq_orig  = CBasis->GetNumPoints();
-            int nq       = m_base[0]->GetNumPoints();
+            int coordim = exp2D->GetCoordim();
+            int nq      = m_base[0]->GetNumPoints();
             
-            m_physNormal = Array<OneD, NekDouble> (coordim*nq);
+            m_physNormal =  exp2D->GetMetricInfo()->GenNormals2D(exp2D->DetExpansionType(),edge,m_base[0]->GetPointsKey());
             
-            if(Gtype == SpatialDomains::eDeformed)
+            if(exp2D->GetEorient(edge) == StdRegions::eBackwards)
             {
-                Array<OneD,NekDouble> tmpnorm(nq_orig);
-                
-                for(k = 0;k < coordim; ++k)
+                if(exp2D->GetMetricInfo()->GetGtype() == SpatialDomains::eDeformed)
                 {
-                    if(edge >= 2)
-                    {
-                        Vmath::Reverse(nq_orig,&(normals[edge])[k*nq_orig],
-                                       1, &tmpnorm[0],1);
-                    }
-                    else
-                    {
-                        Vmath::Vcopy(nq_orig,&(normals[edge])[k*nq_orig],
-                                     1,&tmpnorm[0],1);
-                    }
-                    
-                    Interp1D(CBasis->GetBasisKey(), &tmpnorm[0],
-                             GetBasis(0)->GetBasisKey(),
-                             &m_physNormal[k*nq]);
-
-                    if(edge >= 2)
+                    for(k = 0; k < coordim; ++k)
                     {
                         Vmath::Reverse(nq,&m_physNormal[k*nq],1,
                                        &m_physNormal[k*nq],1);
                     }
                 }
-            }
-            else
-            {                                        
-                for(k = 0;k < coordim; ++k)
-                {
-                    Vmath::Fill(nq,normals[edge][k],&m_physNormal[k*nq],1);
-                }
-            }
-            
-            if(NegateNormals)
-            {
+
                 Vmath::Neg(nq*coordim,m_physNormal,1);
             }
         }
@@ -119,6 +86,9 @@ namespace Nektar
 }//end of namespace
 
 // $Log: GenSegExp.cpp,v $
+// Revision 1.2  2008/08/14 22:12:56  sherwin
+// Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
+//
 // Revision 1.1  2008/07/29 22:24:49  sherwin
 // Generalised Segment expansion which include a normal and binormal at the physical quadrature points
 //

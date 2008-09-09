@@ -115,38 +115,53 @@ namespace Nektar
             else
             {                
                 int coordim = m_geom->GetCoordim();
+                int expdim  = 1;
                 int  nq = m_base[0]->GetNumPoints();
+                SpatialDomains::GeomType gtype = SpatialDomains::eDeformed;
                 Array<OneD,NekDouble> ndata(coordim*nq); 
-                Array<OneD, const NekDouble> odata = Xgfac->GetJac();
+                Array<OneD, const NekDouble> ojac  = Xgfac->GetJac();
                 Array<TwoD, const NekDouble> gmat  = Xgfac->GetGmat();;
 
                 // assume all directiosn of geombasis are same
                 LibUtilities::BasisSharedPtr CBasis0 = m_geom->GetBasis(0,0); 
 
+                m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::
+                    AllocateSharedPtr(gtype,expdim,coordim); 
+
                 // check to see if basis are different distributions
                 if(!(m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey())))
                 {
+                    int i,j;
+                    int cnq = CBasis0->GetNumPoints();
+                    Array<OneD, NekDouble> ctmp(cnq);
+                    Array<OneD, NekDouble> tmp(nq);
+                    Array<OneD, NekDouble> jac(nq,0.0);
+
                     // interpolate Geometric data   
-                    for(int i = 0; i < 2*coordim; ++i)
+                    for(i = 0; i < coordim; ++i)
                     {
-                        Interp1D(CBasis0->GetBasisKey(), &gmat[i][0], 
-                                 m_base[0]->GetBasisKey(), 
-                                 &ndata[0] + i*nq);
+                        // Calculate  lcoal derivatives for interpolation
+                        // Need check in case points are aligned to x,y axis
+                        for(j = 0; j < cnq; ++j)
+                        {
+                            ctmp[j] = (fabs(gmat[i][j]) > NekZeroTol)? 1.0/gmat[i][j]: 0.0;
+                        }
+
+                        LibUtilities::Interp1D(CBasis0->GetBasisKey(),  ctmp, 
+                                 m_base[0]->GetBasisKey(), tmp);
+     
+                        for(j = 0; j < nq; ++j)
+                        {
+                            ndata[i*nq+j] = (fabs(tmp[j]) > NekZeroTol)? 1.0/tmp[j]: 0.0;
+                        }
+
+                        Vmath::Vvtvp(nq,tmp,1,tmp,1,jac,1,jac,1);
+
                     }
+                    Vmath::Vsqrt(nq,jac,1,jac,1);
 
                     m_metricinfo->ResetGmat(ndata,nq,1,coordim);
-
-                    // interpolate Jacobian
-                    ndata = Array<OneD,NekDouble>(nq);   
-                     
-                    Interp1D(CBasis0->GetBasisKey(),odata,
-                             m_base[0]->GetBasisKey(), ndata);
-
-                    m_metricinfo->ResetJac(nq,ndata);                    
-                    m_metricinfo->ResetNormals(Xgfac->GetNormals());
-
-                    NEKERROR(ErrorUtil::ewarning,
-                             "Need to check/debug routine for deformed elements");
+                    m_metricinfo->ResetJac(nq,jac);                    
                 }
                 else  // Same data can be used 
                 {
@@ -157,10 +172,9 @@ namespace Nektar
 
                     // Copy Jacobian
                     ndata = Array<OneD,NekDouble>(nq);    
-                    Blas::Dcopy(nq,&odata[0],1,&ndata[0],1);
+                    Blas::Dcopy(nq,ojac,1,ndata,1);
 
-                    m_metricinfo->ResetJac(1,ndata);                    
-                    m_metricinfo->ResetNormals(Xgfac->GetNormals());
+                    m_metricinfo->ResetJac(nq,ndata);                    
                 }   
             }
         }
@@ -213,7 +227,7 @@ namespace Nektar
                                      Array<OneD, NekDouble> &outarray, 
                                      int coll_check)
         {
-            int        nquad0 = m_base[0]->GetNumPoints();
+            int   nquad0 = m_base[0]->GetNumPoints();
             Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             Array<OneD,NekDouble> tmp(nquad0);
 
@@ -754,7 +768,7 @@ namespace Nektar
                 }
                 else // Interpolate to Expansion point distribution
                 {
-                    Interp1D(CBasis->GetBasisKey(),&(m_geom->UpdatePhys(2))[0],
+                    LibUtilities::Interp1D(CBasis->GetBasisKey(),&(m_geom->UpdatePhys(2))[0],
                              m_base[0]->GetBasisKey(),&coords_2[0]);
                 }
             case 2:
@@ -767,9 +781,9 @@ namespace Nektar
                     x = m_geom->UpdatePhys(1);
                     Blas::Dcopy(m_base[0]->GetNumPoints(), x, 1, coords_1, 1);
                 }
-                else // Interpolate to Expansion point distribution
+                else // LibUtilities::Interpolate to Expansion point distribution
                 {
-                    Interp1D(CBasis->GetBasisKey(),&(m_geom->UpdatePhys(1))[0],
+                    LibUtilities::Interp1D(CBasis->GetBasisKey(),&(m_geom->UpdatePhys(1))[0],
                              m_base[0]->GetBasisKey(),&coords_1[0]);
                 }
             case 1:
@@ -784,7 +798,7 @@ namespace Nektar
                 }
                 else // Interpolate to Expansion point distribution
                 {
-                    Interp1D(CBasis->GetBasisKey(),&(m_geom->UpdatePhys(0))[0],
+                    LibUtilities::Interp1D(CBasis->GetBasisKey(),&(m_geom->UpdatePhys(0))[0],
                              m_base[0]->GetBasisKey(),&coords_0[0]);
                 }
                 break;
@@ -1215,6 +1229,9 @@ namespace Nektar
 }//end of namespace
 
 // $Log: SegExp.cpp,v $
+// Revision 1.53  2008/08/14 22:12:56  sherwin
+// Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
+//
 // Revision 1.52  2008/07/29 22:25:35  sherwin
 // general update for DG Advection including separation of GetGeom() into GetGeom1D,2D,3D()
 //

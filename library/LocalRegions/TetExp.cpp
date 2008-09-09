@@ -153,13 +153,13 @@ namespace Nektar
                     int nq2 = m_base[2]->GetNumPoints();
 
                     // interpolate Jacobian        
-                    Interp3D(CBasis0->GetBasisKey(),
-                             CBasis1->GetBasisKey(),
-		             CBasis2->GetBasisKey(),
+                    LibUtilities::Interp3D(CBasis0->GetPointsKey(),
+                             CBasis1->GetPointsKey(),
+		             CBasis2->GetPointsKey(),
                              &ojac[0],
-                             m_base[0]->GetBasisKey(),
-                             m_base[1]->GetBasisKey(),
-                             m_base[2]->GetBasisKey(),
+                             m_base[0]->GetPointsKey(),
+                             m_base[1]->GetPointsKey(),
+                             m_base[2]->GetPointsKey(),
                              &njac[0]);
 
                     m_metricinfo->ResetJac(nq,njac);
@@ -169,31 +169,15 @@ namespace Nektar
                     for(i = 0; i < 2*coordim; ++i) //TODO : find out why  2*coordim
                     {
                         Vmath::Vmul(nq,&ojac[0],1,&ogmat[i][0],1,&dxdxi[0],1);
-                        Interp2D(CBasis0->GetBasisKey(),
-                                 CBasis1->GetBasisKey(), 
+                        LibUtilities::Interp2D(CBasis0->GetPointsKey(),
+                                 CBasis1->GetPointsKey(), 
                                  &dxdxi[0], 
-                                 m_base[0]->GetBasisKey(),
-                                 m_base[1]->GetBasisKey(),
+                                 m_base[0]->GetPointsKey(),
+                                 m_base[1]->GetPointsKey(),
                                  &ndata[0] + i*nq);
                         Vmath::Vdiv(nq,&ndata[0]+i*nq,1,&njac[0],1,&ndata[0]+i*nq,1);
                     }
                     m_metricinfo->ResetGmat(ndata,nq,3,coordim); 
-
-                    // interpolate normals
-                    Array<TwoD,NekDouble> newnorm = Array<TwoD,NekDouble>(4,coordim*max(nq0,nq1));//TODO: check this computation
-                    Array<TwoD, const NekDouble> normals = Xgfac->GetNormals();
-
-                    for(i = 0; i < coordim; ++i)
-                    {
-                        //TODO : check this computation
-                        Interp1D(CBasis0->GetBasisKey(),&(normals[0])[i*Cnq0], m_base[0]->GetBasisKey(),&(newnorm[0])[i*nq0]);
-
-                        Interp1D(CBasis1->GetBasisKey(),&(normals[1])[i*Cnq1], m_base[1]->GetBasisKey(),&(newnorm[1])[i*nq1]);
-
-                        Interp1D(CBasis1->GetBasisKey(),&(normals[2])[i*Cnq1], m_base[1]->GetBasisKey(),&(newnorm[2])[i*nq1]);
-                    }
-
-                    m_metricinfo->ResetNormals(newnorm);
 
                     NEKERROR(ErrorUtil::ewarning,
                              "Need to check/debug routine for deformed elements");
@@ -209,8 +193,6 @@ namespace Nektar
                     Blas::Dcopy(3*coordim*nq, &ogmat[0][0], 1, ndata.data(), 1); //TODO: check this function
 
                     m_metricinfo->ResetGmat(ndata,nq,3,coordim);
-
-                    m_metricinfo->ResetNormals(Xgfac->GetNormals());
 
                     NEKERROR(ErrorUtil::ewarning,
                              "Need to check/debug routine for deformed elements");
@@ -425,8 +407,8 @@ namespace Nektar
                 }
                 else // Interpolate to Expansion point distribution
                 {
-                    Interp3D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(), CBasis2->GetBasisKey(), &(m_geom->UpdatePhys(2))[0],
-                             m_base[0]->GetBasisKey(), m_base[1]->GetBasisKey(), m_base[2]->GetBasisKey(), &coords_2[0]);
+                    LibUtilities::Interp3D(CBasis0->GetPointsKey(), CBasis1->GetPointsKey(), CBasis2->GetPointsKey(), &(m_geom->UpdatePhys(2))[0],
+                             m_base[0]->GetPointsKey(), m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), &coords_2[0]);
                 }    
             case 2:
                 ASSERTL0(coords_1.num_elements(), "output coords_1 is not defined");
@@ -445,8 +427,8 @@ namespace Nektar
                 }
                 else // Interpolate to Expansion point distribution
                 {
-                    Interp3D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(), CBasis2->GetBasisKey(), &(m_geom->UpdatePhys(1))[0],
-                             m_base[0]->GetBasisKey(), m_base[1]->GetBasisKey(), m_base[2]->GetBasisKey(), &coords_1[0]);
+                    LibUtilities::Interp3D(CBasis0->GetPointsKey(), CBasis1->GetPointsKey(), CBasis2->GetPointsKey(), &(m_geom->UpdatePhys(1))[0],
+                             m_base[0]->GetPointsKey(), m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), &coords_1[0]);
                 }
             case 1:
                 ASSERTL0(coords_0.num_elements(), "output coords_0 is not defined");
@@ -465,8 +447,8 @@ namespace Nektar
                 }
                 else // Interpolate to Expansion point distribution
                 {
-                    Interp3D(CBasis0->GetBasisKey(), CBasis1->GetBasisKey(), CBasis2->GetBasisKey(), &(m_geom->UpdatePhys(0))[0],
-                             m_base[0]->GetBasisKey(),m_base[1]->GetBasisKey(),m_base[2]->GetBasisKey(),&coords_0[0]);
+                    LibUtilities::Interp3D(CBasis0->GetPointsKey(), CBasis1->GetPointsKey(), CBasis2->GetPointsKey(), &(m_geom->UpdatePhys(0))[0],
+                             m_base[0]->GetPointsKey(),m_base[1]->GetPointsKey(),m_base[2]->GetPointsKey(),&coords_0[0]);
                 }
                 break;
             default:
@@ -824,6 +806,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.cpp,v $
+ *    Revision 1.16  2008/08/14 22:12:57  sherwin
+ *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
+ *
  *    Revision 1.15  2008/07/09 11:44:49  sherwin
  *    Replaced GetScaleFactor call with GetConstant(0)
  *

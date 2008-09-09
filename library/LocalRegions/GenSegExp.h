@@ -60,7 +60,7 @@ namespace Nektar
             ~GenSegExp();
 
             
-            void SetUpPhysNormals(const SpatialDomains::Geometry2DSharedPtr& Geom, const int edge, bool NegateNormals = false);
+            void SetUpPhysNormals(const StdRegions::StdExpansionSharedPtr &exp2d, const int edge);
 
             void SetPhysNormals(Array<OneD, const NekDouble> &normal)
             {
@@ -113,3 +113,6 @@ namespace Nektar
 
 //
 // $Log: GenSegExp.h,v $
+// Revision 1.1  2008/07/29 22:24:49  sherwin
+// Generalised Segment expansion which include a normal and binormal at the physical quadrature points
+//

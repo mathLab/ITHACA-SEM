@@ -1,4 +1,4 @@
-
+////////////////////////////////////////////////////////////////////////////////
 //
 //  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/MeshGraph.h,v $
 //
@@ -49,6 +49,8 @@
 #include <SpatialDomains/PrismGeom.h>
 #include <SpatialDomains/HexGeom.h>
 
+#include <SpatialDomains/Curve.hpp>
+
 
 class TiXmlDocument;
 
@@ -75,30 +77,6 @@ namespace Nektar
             "NODAL"
         };
 
-        enum PointsType
-        {
-            eNoPointsType,
-            eGaussLobattoLegendre,
-            eGaussGaussChebyshev,
-            ePolyEvenlySpaced,
-            eNodalTriFekete,
-            eNodalTriElec,
-            eNodalTriEvenlySpaced,
-            ePointsTypeSize
-        };
-
-        // Keep this consistent with the enums in PointsType.        
-        const std::string kPointsTypeStr[] =
-        {
-            "NOTYPE",         // 0
-            "GLL",            // 1
-            "CHEBYSHEV",      // 2
-            "POLYEVEN",       // 3
-            "FEKETE",         // 4
-            "ELECTROSTATIC",  // 5
-            "TRIEVEN"         // 6
-        };
-
         typedef boost::shared_ptr<InterfaceComponent> SharedInterfaceCompPtr;
         typedef std::vector< VertexComponentSharedPtr >  VertexVector;
         typedef std::list< SharedInterfaceCompPtr > InterfaceCompList;
@@ -119,26 +97,10 @@ namespace Nektar
             int m_FaceIndx;
         };
 
-        // curve reader structure
-        struct Curve
-        {
-            Curve(int curveID, PointsType type, VertexVector verts):
-                  curveID(curveID),
-                  type(type),
-                  m_verts(verts)
-                {};
-            int curveID; // id for edges or faces
-            PointsType type;
-            VertexVector m_verts;
-        };
-
         typedef boost::shared_ptr<ElementEdge> ElementEdgeSharedPtr;
         typedef std::vector<ElementEdgeSharedPtr> ElementEdgeVector;
         typedef boost::shared_ptr<ElementEdgeVector> ElementEdgeVectorSharedPtr;
 
-        typedef boost::shared_ptr<Curve> CurveSharedPtr;
-        typedef std::vector<CurveSharedPtr> CurveVector;
-        typedef boost::shared_ptr<CurveVector> CurveVectorSharedPtr;
 
         typedef boost::shared_ptr<ElementFace> ElementFaceSharedPtr;
         typedef std::vector<ElementFaceSharedPtr> ElementFaceVector;
@@ -259,10 +221,11 @@ namespace Nektar
             }
 
        protected:
-            VertexVector  m_vertset;
-            InterfaceCompList m_icomps;
+            VertexVector            m_vertset;
+            InterfaceCompList       m_icomps;
 
-            CurveVector             m_curvegeoms;
+            CurveVector             m_curvededges;
+            CurveVector             m_curvedfaces;
 
             SegGeomVector           m_seggeoms;
 
@@ -288,6 +251,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.28  2008/08/26 02:19:39  ehan
+// Added struct element face and related shared pointers.
+//
 // Revision 1.27  2008/07/09 23:41:36  ehan
 // Added edge component and face component to the curve reader.
 //

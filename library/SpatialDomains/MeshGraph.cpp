@@ -378,31 +378,36 @@ namespace Nektar
         /// Look for elements in CURVE block.
         field = mesh->FirstChildElement("CURVED");
 
-        ASSERTL0(field, "Unable to find CURVE tag in file.");
+        if(!field) //return if no curved entities
+        {
+            return; 
+        }
 
-        /// All curves are of the form: "<? ID="#" TYPE="GLL OR other points type" NUMPOINTS="#"> ... </?>", with
-        /// ? being an element type (either E or F).
+        /// All curves are of the form: "<? ID="#" TYPE="GLL OR other
+        /// points type" NUMPOINTS="#"> ... </?>", with ? being an
+        /// element type (either E or F).
 
         TiXmlElement *edgelement = field->FirstChildElement("E");
 
-        int edgeindx;
+        int edgeindx, edgeid;
         int nextEdgeNumber = -1;
-        Curve curve(-1, eNoPointsType, VertexVector());
 
         while(edgelement)
         {
-           cout << "edge element = " << *edgelement << endl;
-           
             /// These should be ordered.
             nextEdgeNumber++;
 
             std::string edge(edgelement->ValueStr());
-            ASSERTL0(edge == "E", (std::string("Unknown 3D curve type: ") + edge).c_str());
+            ASSERTL0(edge == "E", (std::string("Unknown 3D curve type:") + edge).c_str());
 
             /// Read id attribute.
             err = edgelement->QueryIntAttribute("ID", &edgeindx);
             ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute ID.");
             ASSERTL0(edgeindx == nextEdgeNumber, "Curve IDs must begin with zero and be sequential.");
+
+            /// Read edge id attribute.
+            err = edgelement->QueryIntAttribute("EDGEID", &edgeid);
+            ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute EDGEID.");
 
             /// Read text edgelement description.
             std::string elementStr;
@@ -424,24 +429,24 @@ namespace Nektar
             /// Parse out the element components corresponding to type of element.
            if (edge == "E")
             {
+                int numPts=0;
+                // Determine the points type
                 std::string typeStr = edgelement->Attribute("TYPE");
                 ASSERTL0(!typeStr.empty(), "TYPE must be specified in " "points definition");
 
                 LibUtilities::PointsType type;
-                const std::string* begStr = kPointsTypeStr;
-                const std::string* endStr = kPointsTypeStr + LibUtilities::SIZE_PointsType;
+                const std::string* begStr = LibUtilities::kPointsTypeStr;
+                const std::string* endStr = LibUtilities::kPointsTypeStr + LibUtilities::SIZE_PointsType;
                 const std::string* ptsStr = std::find(begStr, endStr, typeStr);
 
                 ASSERTL0(ptsStr != endStr, "Invalid points type.");
                 type = (LibUtilities::PointsType)(ptsStr - begStr);
 
-                std::string numptsStr = edgelement->Attribute("NUMPOINTS");
-                ASSERTL0(!numptsStr.empty(), "NUMPOINTS must be specified in points definition");
-                int numPts=0;
-                std::strstream s;
-                s << numptsStr;
-                s >> numPts;
-
+                //Determine the number of points
+                err = edgelement->QueryIntAttribute("NUMPOINTS", &numPts);
+                ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute NUMPOINTS.");
+                CurveSharedPtr curve(MemoryManager<Curve>::AllocateSharedPtr(edgeid, type));
+                
                 // Read points (x, y, z)
                 double xval, yval, zval;
                 std::istringstream elementDataStrm(elementStr.c_str());
@@ -451,16 +456,16 @@ namespace Nektar
                     {
                         elementDataStrm >> xval >> yval >> zval;
 
-                        // Need to check it here because we may not be good after the read
-                        // indicating that there was nothing to read.
+                        // Need to check it here because we may not be
+                        // good after the read indicating that there
+                        // was nothing to read.
                         if (!elementDataStrm.fail())
                         {
                             VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_MeshDimension, edgeindx, xval, yval, zval));
-                            curve.m_verts.push_back(vert);
+
+                            curve->m_points.push_back(vert);
                         }
 
-                     cout << "xval = " << xval << "  yval = " << yval <<"  zval = " << zval << endl;
-                     cout << endl;
                     }
                 }
                 catch(...)
@@ -470,6 +475,10 @@ namespace Nektar
 
                 }
 
+                ASSERTL0(curve->m_points.size() == numPts,"Number of points specificed by attribute NUMPOINTS is different from number of points in list");
+
+                m_curvededges.push_back(curve);
+
                 edgelement = edgelement->NextSiblingElement("E");
 
             } // end if-loop
@@ -478,7 +487,7 @@ namespace Nektar
 
 
         TiXmlElement *facelement = field->FirstChildElement("F");
-        int faceindx;
+        int faceindx, faceid;
         int nextFaceNumber = -1;
         
         while(facelement)
@@ -497,6 +506,11 @@ namespace Nektar
             ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute ID.");
             ASSERTL0(faceindx == nextFaceNumber, "Face IDs must begin with zero and be sequential.");
 
+
+            /// Read edge id attribute.
+            err = edgelement->QueryIntAttribute("FACEID", &faceid);
+            ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute FACEID.");
+
             /// Read text face element description.
             std::string elementStr;
             TiXmlNode* elementChild = facelement->FirstChild();
@@ -513,36 +527,40 @@ namespace Nektar
             }
 
             ASSERTL0(!elementStr.empty(), "Unable to read curve description body.");
-
             
-               /// Parse out the element components corresponding to type of element.
-
-               if(face == "F") {
+            
+            /// Parse out the element components corresponding to type of element.
+            
+            if(face == "F") 
+            {
                 std::string typeStr = facelement->Attribute("TYPE");
                 ASSERTL0(!typeStr.empty(), "TYPE must be specified in " "points definition");
-
-                PointsType type;
-                const std::string* begStr = kPointsTypeStr;
-                const std::string* endStr = kPointsTypeStr + ePointsTypeSize;
+                LibUtilities::PointsType type;
+                const std::string* begStr = LibUtilities::kPointsTypeStr;
+                const std::string* endStr = LibUtilities::kPointsTypeStr + LibUtilities::SIZE_PointsType;
                 const std::string* ptsStr = std::find(begStr, endStr, typeStr);
-
-                // ASSERTL0(ptsStr != endStr, "Invalid points type.");
-                type = (PointsType)(ptsStr - begStr);
-
+                
+                ASSERTL0(ptsStr != endStr, "Invalid points type.");
+                type = (LibUtilities::PointsType)(ptsStr - begStr);
+                
                 std::string numptsStr = facelement->Attribute("NUMPOINTS");
                 ASSERTL0(!numptsStr.empty(), "NUMPOINTS must be specified in points definition");
                 int numPts=0;
                 std::strstream s;
                 s << numptsStr;
                 s >> numPts;
-
+                
+                
+                CurveSharedPtr curve(MemoryManager<Curve>::AllocateSharedPtr(faceid, type));
+                
                 cout << "numPts = " << numPts << endl;
                 ASSERTL0(numPts >= 3, "NUMPOINTS for face must be greater than 2");
-
-                if(numPts == 3){
+                
+                if(numPts == 3)
+                {
                     ASSERTL0(ptsStr != endStr, "Invalid points type.");
                 }
-
+                
                 // Read points (x, y, z)
                 double xval, yval, zval;
                 std::istringstream elementDataStrm(elementStr.c_str());
@@ -551,36 +569,37 @@ namespace Nektar
                     while(!elementDataStrm.fail())
                     {
                         elementDataStrm >> xval >> yval >> zval;
-
+                        
                         // Need to check it here because we may not be good after the read
                         // indicating that there was nothing to read.
                         if (!elementDataStrm.fail())
                         {
                             VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_MeshDimension, faceindx, xval, yval, zval));
-                            curve.m_verts.push_back(vert);
+                            curve->m_points.push_back(vert);
+                            
                         }
-
-                     cout << "xval = " << xval << "  yval = " << yval <<"  zval = " << zval << endl;
-                     cout << endl;
+                        
+                        cout << "xval = " << xval << "  yval = " << yval <<"  zval = " << zval << endl;
+                        cout << endl;
                         
                     }
                 }
                 catch(...)
                 {
                     NEKERROR(ErrorUtil::efatal,
-                    (std::string("Unable to read curve data for FACE: ") + elementStr).c_str());
-
+                             (std::string("Unable to read curve data for FACE: ") + elementStr).c_str());
+                    
                 }
-
+                m_curvedfaces.push_back(curve);
+                
                 facelement = facelement->NextSiblingElement("F");
                 
-              } // end if-loop
-
+            } // end if-loop            
         } // end while-loop
         
     } // end of ReadCurves()
 
-
+        
     void MeshGraph::ReadCurves(std::string &infilename)
     {
         TiXmlDocument doc(infilename);
@@ -1137,6 +1156,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.24  2008/08/18 20:54:02  ehan
+// Changed name CURVE to CURVED.
+//
 // Revision 1.23  2008/07/14 21:04:26  ehan
 // Added ASSERTL0 to check valid points type and number of points.
 //

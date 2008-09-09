@@ -237,19 +237,18 @@ namespace Nektar
 
             }
 
-            const LibUtilities::BasisSharedPtr& GetEdgeBasis(const int i) const
+            inline int DetCartesianDirOfEdge(const int edge) 
             {
-                ASSERTL2((i >= 0)&&(i <= 2),"edge id is out of range");
+                ASSERTL2((edge >= 0)&&(edge <= 2),"edge id is out of range");
 
-                if(i == 0)
+                if(edge == 0)
                 {
-                    return  GetBasis(0);
+                    return  0;
                 }
                 else
                 {
-                    return  GetBasis(1);
+                    return  1;
                 }
-
             }
             
             const LibUtilities::BasisKey DetEdgeBasisKey(const int i) const;
@@ -381,12 +380,16 @@ namespace Nektar
                 
                 return IsBoundaryInteriorExpansion();
             }
+            
+            virtual int v_DetCartesianDirOfEdge(const int edge)
+            {
+                return DetCartesianDirOfEdge(edge);
+            }
 
             virtual const LibUtilities::BasisKey v_DetEdgeBasisKey(const int i) const
             {
                 return DetEdgeBasisKey(i);
             }
-
 
             virtual ExpansionType v_DetExpansionType() const
             {
@@ -531,6 +534,9 @@ namespace Nektar
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.36  2008/08/14 22:09:51  sherwin
+ * Modifications to remove HDG routines from StdRegions and removed StdExpMap
+ *
  * Revision 1.35  2008/07/31 21:20:56  sherwin
  * Updates to make DG advection run with tris
  *

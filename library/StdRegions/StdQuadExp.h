@@ -255,9 +255,21 @@ namespace Nektar
                 {
                     return  GetBasisType(1);
                 }
-
             }
+            
+            inline int DetCartesianDirOfEdge(const int edge) 
+            {
+                ASSERTL2((edge >= 0)&&(edge <= 3),"edge id is out of range");
 
+                if((edge == 0)||(edge == 2))
+                {
+                    return  0;
+                }
+                else
+                {
+                    return  1;
+                }
+            }
 
             const LibUtilities::BasisKey DetEdgeBasisKey(const int i) const
             {
@@ -340,6 +352,12 @@ namespace Nektar
             }
 
             
+            virtual int v_DetCartesianDirOfEdge(const int edge)
+            {
+                return DetCartesianDirOfEdge(edge);
+            }
+
+
             virtual const LibUtilities::BasisKey v_DetEdgeBasisKey(const int i) const
             {
                 return DetEdgeBasisKey(i);
@@ -508,6 +526,9 @@ namespace Nektar
 
 /**
  * $Log: StdQuadExp.h,v $
+ * Revision 1.39  2008/08/14 22:09:51  sherwin
+ * Modifications to remove HDG routines from StdRegions and removed StdExpMap
+ *
  * Revision 1.38  2008/07/31 21:19:56  sherwin
  * Small mods on returning consts
  *

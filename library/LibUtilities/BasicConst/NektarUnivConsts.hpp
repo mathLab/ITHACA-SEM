@@ -42,6 +42,8 @@ namespace Nektar
 {
 
 #define NekUnsetDouble  -9999
+#define VertexTheSameDouble  1e-8
+#define NekZeroTol  1e-12
 
 } //end of namespace 
 
@@ -49,6 +51,9 @@ namespace Nektar
 
 /***
 $Log: NektarUnivConsts.hpp,v $
+Revision 1.7  2007/11/29 17:00:13  sherwin
+Update to do with MultiRegions stuff
+
 Revision 1.6  2007/05/14 23:25:15  bnelson
 Removed unneeded code.
 

@@ -112,7 +112,7 @@ namespace Nektar
                 return m_jac;
             }
 
-            Array<OneD, NekDouble> GeomFactors::GenNormals2D(enum StdRegions::ExpansionType shape, const int edge,  const LibUtilities::PointsKey &to_key);
+            Array<OneD, NekDouble> GenNormals2D(enum StdRegions::ExpansionType shape, const int edge,  const LibUtilities::PointsKey &to_key);
             
             
             inline void ResetGmat(const Array<OneD, const NekDouble> &ndata, 
@@ -162,6 +162,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.19  2008/09/09 14:18:02  sherwin
+// Removed m_normals from GeomFactor. Added GenNormals2D and additional copy type constructor
+//
 // Revision 1.18  2008/07/17 19:27:22  ehan
 // Added 3D GeomFactors(..).
 //

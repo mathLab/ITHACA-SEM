@@ -230,8 +230,7 @@ int main(int argc, char *argv[])
           forient[4] = faceDir;
           forient[5] = faceDir;
 
-         SpatialDomains::HexGeomSharedPtr geom = MemoryManager<SpatialDomains::HexGeom>::AllocateSharedPtr(verts,edges,faces,
-                                                                                                           eorient, forient);
+         SpatialDomains::HexGeomSharedPtr geom = MemoryManager<SpatialDomains::HexGeom>::AllocateSharedPtr(faces);
          geom->SetOwnData();
          const LibUtilities::PointsKey   pointsKey_x( Qx, Qtype_x );
          const LibUtilities::PointsKey   pointsKey_y( Qy, Qtype_y );

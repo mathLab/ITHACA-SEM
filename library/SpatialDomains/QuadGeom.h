@@ -58,8 +58,8 @@ namespace Nektar
         public:
             QuadGeom();
             QuadGeom(int id, const int coordim);
-            QuadGeom(const VertexComponentSharedPtr verts[],  const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
-            QuadGeom(const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+            QuadGeom(const int id, const VertexComponentSharedPtr verts[],  const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+            QuadGeom(const int id, const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
             QuadGeom(const QuadGeom &in);
 			~QuadGeom();
 
@@ -123,6 +123,12 @@ namespace Nektar
                 return m_verts[i]->GetVid();
             }
             
+            inline const VertexComponentSharedPtr GetVertex(const int i) const
+            {
+                ASSERTL2((i >=0) && (i <= 3),"Vertex id must be between 0 and 3");
+                return m_verts[i];
+            }
+            
             inline const Geometry1DSharedPtr GetEdge(const int i) const
             {
                 ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
@@ -182,6 +188,18 @@ namespace Nektar
                 return returnval;
             }
 
+            StdRegions::StdExpansion2DSharedPtr operator[](const int i) const
+            {
+                if((i>=0)&& (i<m_coordim))
+                {
+                    return m_xmap[i];
+                }
+                
+                NEKERROR(ErrorUtil::efatal,
+                         "Invalid Index used in [] operator");
+                return m_xmap[0]; //should never be reached
+            }
+            
             static const int kNverts = 4;
             static const int kNedges = 4;
 
@@ -273,6 +291,11 @@ namespace Nektar
                 return GetVid(i);
             }
             
+            virtual const VertexComponentSharedPtr v_GetVertex(int i) const
+            {
+                return GetVertex(i);
+            }
+            
             virtual const Geometry1DSharedPtr v_GetEdge(int i) const
             {
                 return GetEdge(i);
@@ -301,6 +324,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.23  2008/07/29 22:23:36  sherwin
+// various mods for DG advection solver in Multiregions. Added virtual calls to Geometry, Geometry1D, 2D and 3D
+//
 // Revision 1.22  2008/06/30 19:35:36  ehan
 // Fixed infinity recursive-loop error.
 //

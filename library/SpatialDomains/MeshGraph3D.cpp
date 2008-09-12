@@ -235,8 +235,8 @@ namespace Nektar
                             SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
                         };
 
-                        TriGeomSharedPtr trigeom(MemoryManager<TriGeom>::AllocateSharedPtr(edges, edgeorient));
-						trigeom->SetGlobalID(indx);
+                        TriGeomSharedPtr trigeom(MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient));
+                        trigeom->SetGlobalID(indx);
 
                         m_trigeoms.push_back(trigeom);
                     }
@@ -274,8 +274,8 @@ namespace Nektar
                             SegGeom::GetEdgeOrientation(*edges[3], *edges[0])
                         };
 
-                        QuadGeomSharedPtr quadgeom(new QuadGeom(edges, edgeorient));
-						quadgeom->SetGlobalID(indx);
+                        QuadGeomSharedPtr quadgeom(MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient));
+                        quadgeom->SetGlobalID(indx);
 
                         m_quadgeoms.push_back(quadgeom);
 
@@ -596,8 +596,8 @@ namespace Nektar
                         };
 
                         //HexGeomSharedPtr hexgeom(MemoryManager<HexGeom>::AllocateSharedPtr(tfaces, qfaces, faceorient));
-						HexGeomSharedPtr hexgeom(MemoryManager<HexGeom>::AllocateSharedPtr(qfaces, faceorient));
-						hexgeom->SetGlobalID(indx);
+                        HexGeomSharedPtr hexgeom(MemoryManager<HexGeom>::AllocateSharedPtr(qfaces));
+                        hexgeom->SetGlobalID(indx);
 
                         m_hexgeoms.push_back(hexgeom);
                     }
@@ -1034,6 +1034,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph3D.cpp,v $
+// Revision 1.9  2008/08/26 02:24:38  ehan
+// Added GetElementFromFace()
+//
 // Revision 1.8  2008/06/30 19:34:26  ehan
 // Fixed infinity recursive-loop error.
 //

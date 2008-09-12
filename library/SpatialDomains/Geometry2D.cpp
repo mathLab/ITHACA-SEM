@@ -43,23 +43,29 @@ namespace Nektar
 {
   namespace SpatialDomains
   {
-        Geometry2D::Geometry2D()
-    {
-        }
+      Geometry2D::Geometry2D()
+      {
+      }
+      
+      Geometry2D::Geometry2D(const int coordim):
+          Geometry(coordim)
+      {
+          ASSERTL0(m_coordim > 1,
+                   "Coordinate dimension should be at least 2 for a 2D geometry");
+      }
 
-        Geometry2D::Geometry2D(const int coordim):
-        Geometry(coordim)
-    {
-        }
+      Geometry2D::~Geometry2D()
+      {
+      }
 
-        Geometry2D::~Geometry2D()
-    {
-        }
-    }; //end of namespace
+  }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: Geometry2D.cpp,v $
+// Revision 1.3  2007/07/20 02:15:08  bnelson
+// Replaced boost::shared_ptr with Nektar::ptr
+//
 // Revision 1.2  2007/06/06 15:15:21  pvos
 // Some minor updates for 2D routines
 //

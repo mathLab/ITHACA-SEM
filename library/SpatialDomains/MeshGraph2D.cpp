@@ -256,8 +256,8 @@ namespace Nektar
                             SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
                         };
 
-                        TriGeomSharedPtr trigeom(MemoryManager<TriGeom>::AllocateSharedPtr(edges, edgeorient));
-						trigeom->SetGlobalID(indx);
+                        TriGeomSharedPtr trigeom(MemoryManager<TriGeom>::AllocateSharedPtr(indx,edges,edgeorient));
+                        trigeom->SetGlobalID(indx);
 
                         m_trigeoms.push_back(trigeom);
                     }
@@ -296,9 +296,9 @@ namespace Nektar
                         };
 
                         //QuadGeomSharedPtr quadgeom(new QuadGeom(edges, edgeorient));
-                        QuadGeomSharedPtr quadgeom  = MemoryManager<QuadGeom>::AllocateSharedPtr (edges, edgeorient);
+                        QuadGeomSharedPtr quadgeom  = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient);
                         quadgeom->SetGlobalID(indx);
-
+                        
                         m_quadgeoms.push_back(quadgeom);
 
                     }
@@ -669,6 +669,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.32  2008/09/09 14:21:44  sherwin
+// Updates for first working version of curved edges
+//
 // Revision 1.31  2008/08/14 22:11:03  sherwin
 // Mods for HDG update
 //

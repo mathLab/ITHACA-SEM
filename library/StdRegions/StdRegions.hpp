@@ -252,6 +252,12 @@ namespace Nektar
             eBackwards
         };
 
+        const char* const EdgeOrientationMap[] = 
+        {
+            "Forwards",
+            "Backwards"
+        };
+
         enum FaceOrientation
         {
             eDir1FwdDir1_Dir2FwdDir2,
@@ -262,6 +268,18 @@ namespace Nektar
             eDir1FwdDir2_Dir2BwdDir1,
             eDir1BwdDir2_Dir2FwdDir1,
             eDir1BwdDir2_Dir2BwdDir1
+        };
+
+        const char* const FaceOrientationMap[] = 
+        {
+            "Dir1FwdDir1_Dir2FwdDir2",
+            "Dir1FwdDir1_Dir2BwdDir2",
+            "Dir1BwdDir1_Dir2FwdDir2",
+            "Dir1BwdDir1_Dir2BwdDir2",
+            "Dir1FwdDir2_Dir2FwdDir1",
+            "Dir1FwdDir2_Dir2BwdDir1",
+            "Dir1BwdDir2_Dir2FwdDir1",
+            "Dir1BwdDir2_Dir2BwdDir1"          
         };
 
         // Defines a "fast find"
@@ -302,6 +320,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.28  2008/08/14 22:09:51  sherwin
+* Modifications to remove HDG routines from StdRegions and removed StdExpMap
+*
 * Revision 1.27  2008/07/19 21:12:54  sherwin
 * Removed MapTo function and made orientation convention anticlockwise in UDG routines
 *

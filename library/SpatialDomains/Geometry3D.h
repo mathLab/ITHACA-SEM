@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/Geometry3D.h,v $
+//  File:  Geometry3D.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -40,14 +40,20 @@
 #include <SpatialDomains/SpatialDomains.hpp>
 
 #include <SpatialDomains/Geometry.h>
-#include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/Geometry2D.h>
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
-        class Geometry3D: public Geometry
+        class Geometry3D;
+        
+        // shorthand for boost pointer
+        typedef boost::shared_ptr<Geometry3D> Geometry3DSharedPtr;
+        typedef std::vector< Geometry3DSharedPtr > Geometry3DVector;
+        typedef std::vector< Geometry3DSharedPtr >::iterator Geometry3DVectorIter;
+
+    class Geometry3D: public Geometry
         {
         public:
             Geometry3D();
@@ -321,10 +327,6 @@ namespace Nektar
             }
             
         };
-        // shorthand for boost pointer
-        typedef boost::shared_ptr<Geometry3D> Geometry3DSharedPtr;
-        typedef std::vector< Geometry3DSharedPtr > Geometry3DVector;
-        typedef std::vector< Geometry3DSharedPtr >::iterator Geometry3DVectorIter;
 
     }; //end of namespace
 }; //end of namespace
@@ -334,6 +336,9 @@ namespace Nektar
 
 //
 // $Log: Geometry3D.h,v $
+// Revision 1.6  2008/08/26 02:27:19  ehan
+// Added various virtual functions.
+//
 // Revision 1.5  2008/07/29 22:23:36  sherwin
 // various mods for DG advection solver in Multiregions. Added virtual calls to Geometry, Geometry1D, 2D and 3D
 //

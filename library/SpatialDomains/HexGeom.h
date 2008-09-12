@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/HexGeom.h,v $
+//  File:  HexGeom.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -37,29 +37,31 @@
 #define NEKTAR_SPATIALDOMAINS_HEXGEOM_H
 
 #include <StdRegions/StdRegions.hpp>
-#include <StdRegions/StdExpansion3D.h>
 #include <StdRegions/StdHexExp.h>
 
+#include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/Geometry3D.h>
 #include <SpatialDomains/QuadGeom.h>
+#include <SpatialDomains/TriGeom.h>
+#include <SpatialDomains/MeshComponents.h>
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
-	    class HexGeom;
-
+        class HexGeom;
         typedef boost::shared_ptr<HexGeom> HexGeomSharedPtr;
         typedef std::vector< HexGeomSharedPtr > HexGeomVector;
         typedef std::vector< HexGeomSharedPtr >::iterator HexGeomVectorIter;
 
-        class HexGeom: public LibUtilities::GraphVertexObject, public Geometry3D
+    class HexGeom: public Geometry3D
         {
         public:
             HexGeom();
-            HexGeom(const QuadGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[]);
-            HexGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const QuadGeomSharedPtr faces[],
-                    const StdRegions::EdgeOrientation eorient[], const StdRegions::FaceOrientation forient[]);
+            HexGeom(const QuadGeomSharedPtr faces[]);
+/*             HexGeom(const QuadGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[]); */
+/*             HexGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const QuadGeomSharedPtr faces[], */
+/*                     const StdRegions::EdgeOrientation eorient[], const StdRegions::FaceOrientation forient[]); */
             ~HexGeom();
 
             void AddElmtConnected(int gvo_id, int locid);
@@ -71,7 +73,7 @@ namespace Nektar
             inline int GetFid(int i) const
             {
                 ASSERTL2((i >=0) && (i <= 11),"Edge id must be between 0 and 11");
-                return m_qfaces[i]->GetFid();
+                return m_faces[i]->GetFid();
             }
 
             inline StdRegions::FaceOrientation GetFaceorient(const int i) const
@@ -88,7 +90,7 @@ namespace Nektar
             inline const Geometry2DSharedPtr GetFace(int i) const
             {
                 ASSERTL2((i >=0) && (i <= 11),"Edge id must be between 0 and 11");
-                return m_qfaces[i];
+                return m_faces[i];
             }
 
             inline int GetEid() const 
@@ -140,7 +142,7 @@ namespace Nektar
                 QuadGeomVector::iterator faceIter;
                 int i;
 
-                for (i=0,faceIter = m_qfaces.begin(); faceIter != m_qfaces.end(); ++faceIter,++i)
+                for (i=0,faceIter = m_faces.begin(); faceIter != m_faces.end(); ++faceIter,++i)
                 {
                     if (*faceIter == face)
                     {
@@ -184,7 +186,7 @@ namespace Nektar
 
             VertexComponentVector           m_verts;
             SegGeomVector                   m_edges;
-            QuadGeomVector                  m_qfaces;
+            QuadGeomVector                  m_faces;
             StdRegions::EdgeOrientation     m_eorient[kNedges];
             StdRegions::FaceOrientation     m_forient[kNfaces];
 
@@ -192,12 +194,17 @@ namespace Nektar
             bool m_ownverts;
             std::list<CompToElmt> m_elmtmap;
 
-            Array<OneD, StdRegions::StdExpansion3DSharedPtr> m_xmap;
-			void GenGeomFactors(void);
+            void GenGeomFactors(void);
         
         private:
 
             bool m_owndata;
+
+            void SetUpLocalEdges();
+            void SetUpLocalVertices();
+            void SetUpEdgeOrientation();
+            void SetUpFaceOrientation();
+
 
             virtual int v_GetFid(int i) const
             {
@@ -294,8 +301,6 @@ namespace Nektar
                 return GetCoord(i,Lcoord);
             }
 
-
-
         };
 
     }; //end of namespace
@@ -305,6 +310,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.16  2008/08/26 02:25:30  ehan
+// Changed shared pointer (QuadGeomSharedPtr to the Geometry2DSharedPtr) in the face function.
+//
 // Revision 1.15  2008/06/30 19:34:04  ehan
 // Fixed infinity recursive-loop error.
 //

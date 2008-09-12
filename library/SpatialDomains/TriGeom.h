@@ -57,8 +57,8 @@ namespace Nektar
             public:
                 TriGeom();
                 TriGeom(int id, const int coordim);
-                TriGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
-                TriGeom(const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+                TriGeom(const int id, const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+                TriGeom(const int id, const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
                 TriGeom(const TriGeom &in);
                 ~TriGeom();
 
@@ -120,6 +120,12 @@ namespace Nektar
                 {
                     ASSERTL2((i >=0) && (i <= 2),"Vertex id must be between 0 and 2");
                     return m_verts[i]->GetVid();
+                }
+            
+                inline const VertexComponentSharedPtr GetVertex(const int i) const
+                {
+                    ASSERTL2((i >=0) && (i <= 2),"Vertex id must be between 0 and 2");
+                    return m_verts[i];
                 }
 
                 inline const Geometry1DSharedPtr GetEdge(const int i) const
@@ -270,6 +276,11 @@ namespace Nektar
                 {
                     return GetVid(i);
                 }
+            
+                virtual const VertexComponentSharedPtr v_GetVertex(int i) const
+                {
+                    return GetVertex(i);
+                }
                 
                 virtual const Geometry1DSharedPtr v_GetEdge(int i) const
                 {
@@ -299,6 +310,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.24  2008/07/31 21:27:08  sherwin
+// Updates for Tri's DG advection
+//
 // Revision 1.23  2008/07/29 22:23:36  sherwin
 // various mods for DG advection solver in Multiregions. Added virtual calls to Geometry, Geometry1D, 2D and 3D
 //

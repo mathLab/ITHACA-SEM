@@ -66,10 +66,12 @@ namespace Nektar
 
         }
 
-        QuadGeom::QuadGeom(const VertexComponentSharedPtr verts[], 
+        QuadGeom::QuadGeom(const int id, 
+                           const VertexComponentSharedPtr verts[], 
                            const SegGeomSharedPtr edges[], 
                            const StdRegions::EdgeOrientation eorient[]):
-            Geometry2D(verts[0]->GetCoordim())
+            Geometry2D(verts[0]->GetCoordim()),
+            m_fid(id)
         {
             m_GeomShapeType = eQuadrilateral;
 
@@ -111,9 +113,11 @@ namespace Nektar
             }
         }
     
-        QuadGeom::QuadGeom(const SegGeomSharedPtr edges[], 
+        QuadGeom::QuadGeom(const int id, 
+                           const SegGeomSharedPtr edges[], 
                            const StdRegions::EdgeOrientation eorient[]):
-            Geometry2D(edges[0]->GetVertex(0)->GetCoordim())
+            Geometry2D(edges[0]->GetVertex(0)->GetCoordim()),
+            m_fid(id)
         {
             int j;
             
@@ -270,7 +274,6 @@ namespace Nektar
                 }
             }
 
-
             m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap);
 
         }
@@ -392,6 +395,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.cpp,v $
+// Revision 1.21  2008/09/09 14:26:22  sherwin
+// Updates for deformed curved quads
+//
 // Revision 1.20  2008/08/14 22:11:03  sherwin
 // Mods for HDG update
 //

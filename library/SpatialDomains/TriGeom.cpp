@@ -65,13 +65,15 @@ namespace Nektar
 
         }
 
-        TriGeom::TriGeom(const VertexComponentSharedPtr verts[], 
+        TriGeom::TriGeom(const int id, 
+                         const VertexComponentSharedPtr verts[], 
                          const SegGeomSharedPtr edges[], 
                          const StdRegions::EdgeOrientation eorient[]):
-            Geometry2D(verts[0]->GetCoordim())
+            Geometry2D(verts[0]->GetCoordim()),
+            m_fid(id)
         {
             m_GeomShapeType = eTriangle;
-
+            
             /// Copy the vert shared pointers.
             m_verts.insert(m_verts.begin(), verts, verts+TriGeom::kNverts);
 
@@ -109,12 +111,13 @@ namespace Nektar
             }
         }
 
-        TriGeom::TriGeom(const SegGeomSharedPtr edges[], 
-						 const StdRegions::EdgeOrientation eorient[]):
-			Geometry2D(edges[0]->GetVertex(0)->GetCoordim())
+        TriGeom::TriGeom(const int id, const SegGeomSharedPtr edges[], 
+                         const StdRegions::EdgeOrientation eorient[]):
+            Geometry2D(edges[0]->GetVertex(0)->GetCoordim()),
+            m_fid(id)
         {
             m_GeomShapeType = eTriangle;
-
+            
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+TriGeom::kNedges);
 
@@ -368,6 +371,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.cpp,v $
+// Revision 1.19  2008/09/09 14:24:02  sherwin
+// Changes for curved triangles
+//
 // Revision 1.18  2008/08/14 22:11:03  sherwin
 // Mods for HDG update
 //

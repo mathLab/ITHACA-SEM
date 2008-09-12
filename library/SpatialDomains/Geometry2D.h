@@ -66,12 +66,6 @@ namespace Nektar
                 return m_xmap[i];
             }
 
-            Geometry1DSharedPtr GetEdge(const int j)
-            {
-                return v_GetEdge(j);
-            }
-
-
             // Wrappers around virtual Functions (for the FaceComponent classes)
             void AddElmtConnected(int gvo_id, int locid)
             {
@@ -157,6 +151,11 @@ namespace Nektar
             inline const Geometry1DSharedPtr GetEdge(int i) const
             {
                 return v_GetEdge(i);
+            }
+                
+            inline const VertexComponentSharedPtr GetVertex(int i) const
+            {
+                return v_GetVertex(i);
             }
 
             inline StdRegions::EdgeOrientation GetEorient(const int i) const
@@ -289,6 +288,14 @@ namespace Nektar
                 SegGeomSharedPtr returnval;
                 return returnval;
             }
+                
+            virtual const VertexComponentSharedPtr v_GetVertex(int i) const
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         "This function is only valid for shape type geometries");
+                VertexComponentSharedPtr returnval;
+                return returnval;
+            }
 
             virtual StdRegions::EdgeOrientation v_GetEorient(const int i) const
             {
@@ -342,6 +349,9 @@ namespace Nektar
 
 //
 // $Log: Geometry2D.h,v $
+// Revision 1.7  2008/07/29 22:23:36  sherwin
+// various mods for DG advection solver in Multiregions. Added virtual calls to Geometry, Geometry1D, 2D and 3D
+//
 // Revision 1.6  2008/06/16 22:37:32  ehan
 // Added inline function GetFace(..) and GetFaceorient(..).
 //

@@ -80,16 +80,25 @@ namespace Nektar
                 return eHexahedron;
             }
 
-            //TODO implement
             void GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                      Array<OneD, unsigned int> &maparray,
                                      Array<OneD, int> &signarray);
 
             int GetFaceNcoeffs(const int i) const
             {
-                ASSERTL2((i >= 0) && (i <= 3), "face id is out of range");
-                //TODO implement
-                return 0;
+                ASSERTL2((i >= 0) && (i <= 5), "face id is out of range");
+                if((i == 0) || (i == 5))
+                {
+                    return GetBasisNumModes(0)*GetBasisNumModes(1);
+                }
+                else if((i == 1) || (i == 3))
+                {
+                    return GetBasisNumModes(0)*GetBasisNumModes(2);
+                }
+                else
+                {
+                    return GetBasisNumModes(1)*GetBasisNumModes(2);
+                }
             }
 
             const int GetEdgeNcoeffs(const int i) const
@@ -392,6 +401,9 @@ namespace Nektar
 
 /**
  * $Log: StdHexExp.h,v $
+ * Revision 1.24  2008/07/04 10:18:40  pvos
+ * Some updates
+ *
  * Revision 1.23  2008/06/16 22:45:51  ehan
  * Populated the function GetFaceToElementMap(..)
  *

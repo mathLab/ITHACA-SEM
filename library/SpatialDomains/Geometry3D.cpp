@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/Geometry3D.cpp,v $
+//  File:  Geometry3D.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -43,24 +43,30 @@ namespace Nektar
 {
   namespace SpatialDomains
   {
-        Geometry3D::Geometry3D()
-    {
-        }
+      Geometry3D::Geometry3D()
+      {
+      }
+      
+      Geometry3D::Geometry3D(const int coordim):
+          Geometry(coordim)
+      {
+          ASSERTL0(m_coordim > 2,
+                   "Coordinate dimension should be at least 3 for a 3D geometry");
+      }
+      
+      Geometry3D::~Geometry3D()
+      {
+      }
 
-        Geometry3D::Geometry3D(const int coordim):
-        Geometry(coordim)
-    {
-        }
-
-        Geometry3D::~Geometry3D()
-    {
-        }
-    }; //end of namespace
+  }; //end of namespace
 }; //end of namespace
 
 
 
 // $Log: Geometry3D.cpp,v $
+// Revision 1.3  2008/08/26 02:28:07  ehan
+// Added various virtual functions.
+//
 // Revision 1.2  2008/01/31 11:02:25  ehan
 // Added constructor and destructor.
 //

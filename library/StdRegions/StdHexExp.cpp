@@ -223,6 +223,59 @@ namespace Nektar
                                         Array<OneD, NekDouble> & outarray, 
                                         int coll_check)
         {
+
+#if 1            
+
+            int i;
+            int           nquad0 = m_base[0]->GetNumPoints();
+            int           nquad1 = m_base[1]->GetNumPoints();
+            int           nquad2 = m_base[2]->GetNumPoints();
+
+            int           nummodes0 = m_base[0]->GetNumModes();
+            int           nummodes1 = m_base[1]->GetNumModes();
+            int           nummodes2 = m_base[2]->GetNumModes();
+
+            Array<OneD, NekDouble> tmp(nquad0*nquad1*nquad2);
+            Array<OneD, NekDouble> tmp0(nquad0*nquad1*nummodes0);
+            Array<OneD, NekDouble> tmp1(nummodes0*nummodes1*nquad2);
+
+            const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
+            const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
+            const Array<OneD, const NekDouble>& w2 = m_base[2]->GetW();
+        
+            // multiply by integration constants 
+            for(i = 0; i < nquad1*nquad2; ++i)
+            {
+                Vmath::Vmul(nquad0, inarray.get()+i*nquad0, 1,
+                            w0.get(), 1, tmp.get()+i*nquad0,1);
+            }
+            
+            for(i = 0; i < nquad1*nquad2; ++i)
+            {
+                Vmath::Smul(nquad0, w1[i%nquad2], tmp.get()+i*nquad0, 1,
+                            tmp.get()+i*nquad0, 1);
+            }   
+
+            for(i = 0; i < nquad2; ++i)
+            {
+                Vmath::Smul(nquad0*nquad1, w2[i], tmp.get()+i*nquad0*nquad1, 1,
+                            tmp.get()+i*nquad0*nquad1, 1);
+            }
+
+            Blas::Dgemm('T', 'N', nummodes0, nquad1*nquad2, nquad0, 1.0, bx.get(),
+                        nquad0, tmp.get(), nquad0, 0.0, tmp0.get(), nummodes0);
+
+            for(i = 0; i < nquad2; i++)
+            {
+                Blas::Dgemm('N', 'N', nummodes0, nummodes1, nquad1, 1.0, tmp0.get() + i*nummodes0*nquad1,
+                            nummodes0, by.get(), nquad1, 0.0, tmp1.get() + i*nummodes0*nummodes1, nummodes0);
+            }
+
+            Blas::Dgemm('N', 'N', nummodes0*nummodes1, nummodes2, nquad2, 1.0, tmp1.get(),
+                        nummodes0*nummodes1, bz.get(), nquad2, 0.0, outarray.get(), nummodes0*nummodes1);
+          
+
+#else
             int     Qx = m_base[0]->GetNumPoints();
             int     Qy = m_base[1]->GetNumPoints();
             int     Qz = m_base[2]->GetNumPoints();
@@ -278,6 +331,7 @@ namespace Nektar
                     }
                 }
             }
+#endif
         }
         
         ///////////////////////////////
@@ -334,6 +388,34 @@ namespace Nektar
                       (m_base[2]->GetBasisType() != LibUtilities::eModified_C),
                       "Basis[2] is not a general tensor type");
 
+#if 1
+            int i;
+            int           nquad0 = m_base[0]->GetNumPoints();
+            int           nquad1 = m_base[1]->GetNumPoints();
+            int           nquad2 = m_base[2]->GetNumPoints();
+
+            int           nummodes0 = m_base[0]->GetNumModes();
+            int           nummodes1 = m_base[1]->GetNumModes();
+            int           nummodes2 = m_base[2]->GetNumModes();
+
+
+            Array<OneD, NekDouble> tmp0(nquad0*nummodes1*nummodes2);
+            Array<OneD, NekDouble> tmp1(nquad0*nquad1*nummodes2);
+
+            Blas::Dgemm('N', 'N', nquad0, nummodes1*nummodes2, nummodes0, 1.0, (m_base[0]->GetBdata()).get(),
+                        nquad0, inarray.get(), nummodes0, 0.0, tmp0.get(), nquad0);
+
+            for(i = 0; i < nummodes2; i++)
+            {
+                Blas::Dgemm('N', 'T', nquad0, nquad1, nummodes1, 1.0, tmp0.get() + i*nquad0*nummodes1,
+                            nquad0, (m_base[1]->GetBdata()).get(), nquad1, 0.0, tmp1.get() + i*nquad0*nquad1, nquad0);
+            }
+
+            Blas::Dgemm('N', 'T', nquad0*nquad1, nquad2, nummodes2, 1.0, tmp1.get(),
+                        nquad0*nquad1, (m_base[2]->GetBdata()).get(), nquad2, 0.0, outarray.get(), nquad0*nquad1);
+            
+
+#else
             int     Qx = m_base[0]->GetNumPoints();
             int     Qy = m_base[1]->GetNumPoints();
             int     Qz = m_base[2]->GetNumPoints();
@@ -404,6 +486,8 @@ namespace Nektar
                     }
                 }
             }
+
+#endif
         }
 
 
@@ -519,8 +603,192 @@ namespace Nektar
                                             Array<OneD, unsigned int> &maparray,
                                             Array<OneD, int> &signarray)
         {
-            //TODO implement 
+            int i,j;
+            const int nummodes0 = m_base[0]->GetNumModes();
+            const int nummodes1 = m_base[1]->GetNumModes();
+            const int nummodes2 = m_base[2]->GetNumModes();
+            int nummodesA;
+            int nummodesB;
 
+            const LibUtilities::BasisType bType0 = GetEdgeBasisType(0);
+            const LibUtilities::BasisType bType1 = GetEdgeBasisType(1);
+            const LibUtilities::BasisType bType2 = GetEdgeBasisType(2);
+            
+            ASSERTL0( (bType0==bType1) && (bType0==bType2),
+                      "Method only implemented if BasisType is indentical in all directions");
+
+            if((fid == 0) || (fid == 5))
+            {
+                nummodesA = nummodes0;
+                nummodesB = nummodes1;
+            }
+            else if((fid == 1) || (fid == 3))
+            {
+                nummodesA = nummodes0;
+                nummodesB = nummodes2;
+            }
+            else
+            {
+                nummodesA = nummodes1;
+                nummodesB = nummodes2;
+            }
+
+            int nFaceCoeffs = nummodesA*nummodesB;
+            
+            if(maparray.num_elements() != nFaceCoeffs)
+            {
+                maparray = Array<OneD, unsigned int>(nFaceCoeffs);
+            }
+            
+            if(signarray.num_elements() != nFaceCoeffs)
+            {
+                signarray = Array<OneD, int>(nFaceCoeffs,1);
+            }
+            else
+            {
+                fill( signarray.get() , signarray.get()+nFaceCoeffs, 1 );
+            }
+
+            Array<OneD, int> arrayindx(nFaceCoeffs);
+
+            for(i = 0; i < nummodesB; i++)
+            {
+                for(j = 0; j < nummodesA; j++)
+                {              
+                    if( faceOrient < 4 )
+                    {
+                        arrayindx[i*nummodesA+j] = i*nummodesA+j;
+                    }
+                    else
+                    {
+                        arrayindx[i*nummodesA+j] = j*nummodesB+i;
+                    }
+                }
+            }
+
+            int offset = 0;
+            int jump1 = 1;
+            int jump2 = 1;
+
+            if(bType0 == LibUtilities::eModified_A)
+            {
+                switch(fid)
+                {
+                case 5:
+                    {
+                        offset = nummodes0*nummodes1;
+                    }
+                case 0:
+                    {
+                        jump1 = nummodes0;
+                    }
+                    break;
+                case 3:
+                    {
+                        offset = nummodes0;
+                    }
+                case 1:
+                    {
+                        jump1 = nummodes0*nummodes1;
+                    }
+                    break;   
+                case 2:
+                    {
+                        offset = 1;
+                    }
+                case 4:
+                    {
+                        jump1 = nummodes0*nummodes1;
+                        jump2 = nummodes0;
+                    }
+                    break;                 
+                default:
+                    ASSERTL0(false,"fid must be between 0 and 5");
+                }
+                        
+                for(i = 0; i < nummodesB; i++)
+                {
+                    for(j = 0; j < nummodesA; j++)
+                    {
+                        maparray[ arrayindx[i*nummodesA+j] ] = i*jump1 + j*jump2 + offset;
+                    }
+                }
+
+                if( (faceOrient==1) || (faceOrient==3) ||
+                    (faceOrient==6) || (faceOrient==7) )
+                {    
+
+                    if(faceOrient<4)
+                    {
+                        for(i = 3; i < nummodesB; i+=2)
+                        {
+                            for(j = 0; j < nummodesA; j++)
+                            {
+                                signarray[ arrayindx[i*nummodesA+j] ] *= -1;
+                            }
+                        }
+                        
+                        for(i = 0; i < nummodesA; i++)
+                        {
+                            swap( maparray[i] , maparray[i+nummodesA] );
+                            swap( signarray[i] , signarray[i+nummodesA] );
+                        }
+                    }
+                    else
+                    {  
+                        for(i = 0; i < nummodesB; i++)
+                        {
+                            for(j = 3; j < nummodesA; j+=2)
+                            {
+                                signarray[ arrayindx[i*nummodesA+j] ] *= -1;
+                            }
+                        } 
+                        
+                        for(i = 0; i < nummodesB; i++)
+                        {
+                            swap( maparray[i] , maparray[i+nummodesB] );
+                            swap( signarray[i] , signarray[i+nummodesB] );
+                        }
+                    }
+                }
+                
+                if( (faceOrient==2) || (faceOrient==3) ||
+                    (faceOrient==5) || (faceOrient==7) )
+                {     
+                    if(faceOrient<4)
+                    {                                   
+                        for(i = 0; i < nummodesB; i++)
+                        {
+                            for(j = 3; j < nummodesA; j+=2)
+                            {
+                                signarray[ arrayindx[i*nummodesA+j] ] *= -1;
+                            }
+                        }                 
+                        
+                        for(i = 0; i < nummodesB; i++)
+                        {
+                            swap( maparray[i*nummodesA] , maparray[i*nummodesA+1] );
+                            swap( signarray[i*nummodesA] , signarray[i*nummodesA+1] );
+                        }
+                    }
+                    else
+                    { 
+                        for(i = 3; i < nummodesB; i+=2)
+                        {
+                            for(j = 0; j < nummodesA; j++)
+                            {
+                                signarray[ arrayindx[i*nummodesA+j] ] *= -1;
+                            }
+                        }                
+                        
+                        for(i = 0; i < nummodesA; i++)
+                        {
+                            swap( maparray[i*nummodesB] , maparray[i*nummodesB+1] );
+                            swap( signarray[i*nummodesB] , signarray[i*nummodesB+1] );
+                        }
+                    }
+                }
+            }            
         }
 
 
@@ -539,9 +807,9 @@ namespace Nektar
                 
                 if(dumpVar)
                 {
-                    outfile << "Variables = z1,  z2,  z3,  Coeffs \n" << std::endl;   
+                    outfile << "Variables = z1,  z2,  z3,  Coeffs \n" << endl;   
                 }   
-                outfile << "Zone, I=" << Qx <<", J=" << Qy <<", K=" << Qz <<", F=Point" << std::endl;
+                outfile << "Zone, I=" << Qx <<", J=" << Qy <<", K=" << Qz <<", F=Point" << endl;
                 
                 for(int k = 0; k < Qz; ++k) 
                 {
@@ -549,8 +817,7 @@ namespace Nektar
                     {
                         for(int i = 0; i < Qx; ++i)
                         {
-                            //outfile << 0.5*(1+z0[i])*(1.0-z1[j])-1 <<  " " << z1[j] << " " << m_phys[j*nquad0+i] << std::endl;
-                            outfile <<  (eta_x[i] + 1.0) * (1.0 - eta_y[j]) * (1.0 - eta_z[k]) / 4  -  1.0 <<  " " << eta_z[k] << " " << m_phys[i + Qx*(j + Qy*k)] << std::endl;
+                            outfile <<  eta_x[i] <<  " " << eta_y[j] << " " << eta_z[k] << " " << m_phys[i + Qx*(j + Qy*k)] << endl;
                         }
                     }
                 }
@@ -668,6 +935,9 @@ namespace Nektar
 
 /** 
  * $Log: StdHexExp.cpp,v $
+ * Revision 1.22  2008/07/04 10:18:40  pvos
+ * Some updates
+ *
  * Revision 1.21  2008/06/16 22:45:34  ehan
  * Populated the function GetFaceToElementMap(..)
  *

@@ -368,7 +368,7 @@ namespace Nektar
                 typedef typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType RhsResultType;
                 
                 rhs.Evaluate(accum);
-                OpType<LhsResultType, RhsResultType>::ApplyLeftEqual(accum, lhs);
+                OpType<LhsResultType, RhsResultType>::ApplyLeftEqual(accum, *lhs);
             }
             
             #ifdef NEKTAR_UNIT_TESTS
@@ -693,7 +693,7 @@ namespace Nektar
                 typedef typename BinaryExpressionPolicy<LhsLhsPolicyType, LhsOpType, LhsRhsPolicyType>::ResultType LhsResultType;
                 
                 LhsResultType lhsTemp = lhs.Evaluate();
-                OpType<LhsResultType, RhsResultType>::Apply(accum, lhsTemp, rhs);
+                OpType<LhsResultType, RhsResultType>::Apply(accum, lhsTemp, *rhs);
             }
             
             #ifdef NEKTAR_UNIT_TESTS

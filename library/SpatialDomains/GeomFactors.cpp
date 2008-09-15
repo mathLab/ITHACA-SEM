@@ -764,12 +764,21 @@ namespace Nektar
         m_gtype(gtype), m_coordim(coordim), m_expdim(3)
         {
 
-            LibUtilities::PointsType  ptype0, ptype1, ptype2;
+          //  LibUtilities::PointsType  ptype0, ptype1, ptype2;
 
             ASSERTL1((coordim<=3), "Only understand up to three coordinate");
 
             int nquad0, nquad1, nquad2, nqtot;
-            nqtot = nquad0*nquad1*nquad2;
+            m_pointsKey = Array<OneD, LibUtilities::PointsKey> (m_expdim);
+            m_pointsKey[0] = Coords[0]->GetBasis(0)->GetPointsKey();
+            m_pointsKey[1] = Coords[0]->GetBasis(1)->GetPointsKey();
+            m_pointsKey[2] = Coords[0]->GetBasis(2)->GetPointsKey();
+             nquad0 = m_pointsKey[0].GetNumPoints();
+             nquad1 = m_pointsKey[1].GetNumPoints();
+             nquad2 = m_pointsKey[2].GetNumPoints();
+             nqtot = nquad0*nquad1*nquad2;
+
+            cout << "nqtot = " << nqtot << endl;
 
             // setup temp storage
             Array<OneD, NekDouble> d1[3] = {Array<OneD, NekDouble>(nqtot),
@@ -939,6 +948,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.26  2008/09/09 14:18:02  sherwin
+// Removed m_normals from GeomFactor. Added GenNormals2D and additional copy type constructor
+//
 // Revision 1.25  2008/07/28 22:25:43  ehan
 // Fixed error for deformed quads.
 //

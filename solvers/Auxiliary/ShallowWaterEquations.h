@@ -58,7 +58,9 @@ class ShallowWaterEquations: public AdvectionDiffusionReaction
          * \brief 
          */ 
         ShallowWaterEquations();
-      
+        
+	ShallowWaterEquations(ShallowWaterEquations &In);
+
         /**
          * Constructor.
          *
@@ -66,17 +68,24 @@ class ShallowWaterEquations: public AdvectionDiffusionReaction
          * /param 
          */
         ShallowWaterEquations(SpatialDomains::MeshGraph2D &graph2D,
-                              SpatialDomains::BoundaryConditions &bcs);
+                              SpatialDomains::BoundaryConditions &bcs,
+			      int &nVariables);
 
-      
+        void ConservativeToPrimitive(void);
+	void PrimitiveToConservative(void);
+
         /**
          * Computes 
          *
          */
         void GetFluxVector(Array<OneD, Array<OneD, NekDouble> >&FX,
                            Array<OneD, Array<OneD, NekDouble> >&FY);
-
-
+	
+	void GetFluxVectorPrimitive(Array<OneD, Array<OneD, NekDouble> >&FX,
+				    Array<OneD, Array<OneD, NekDouble> >&FY);
+	
+	void GetFluxVectorPrimitiveLinear(Array<OneD, Array<OneD, NekDouble> >&FX,
+					  Array<OneD, Array<OneD, NekDouble> >&FY);
         /**
          * This function evaluates the numerical flux term \f$ \hat{\bf F} \cdot {\bf n} \f$
          * subject to boundary conditions.
@@ -86,7 +95,10 @@ class ShallowWaterEquations: public AdvectionDiffusionReaction
          */
         void NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &upX, 
                            Array<OneD, Array<OneD, NekDouble> > &upY);
-      
+	void NumericalFluxPrimitiveLinear(Array<OneD, Array<OneD, NekDouble> > &upX, 
+			   Array<OneD, Array<OneD, NekDouble> > &upY);
+	
+
         /**
          * Solves the Riemann problem by the HLLC approximated solver, see Toro (2002)
          */
@@ -120,7 +132,19 @@ class ShallowWaterEquations: public AdvectionDiffusionReaction
             m_g = g;
         }
 
-      
+        inline NekDouble GetConstantDepth(void)
+        {
+	  return m_d;
+        }
+
+        /**
+         * Sets the value of \f$ g \f$
+         */
+        inline void SetConstantDepth(NekDouble d)
+        {
+            m_d = d;
+        }
+
         void SetCoriolis(SpatialDomains::BoundaryConditions &bcs);
       
         inline Array<OneD, NekDouble> &GetCoriolis(void)
@@ -130,6 +154,8 @@ class ShallowWaterEquations: public AdvectionDiffusionReaction
 
     protected:
         NekDouble m_g;  ///< acceleration of gravity
+
+	NekDouble m_d; ///< constant water depth
       
         Array<OneD, NekDouble> m_coriolis;
       
@@ -148,5 +174,8 @@ class ShallowWaterEquations: public AdvectionDiffusionReaction
 #endif // NEKTAR_SOLVERS_AUXILIARY_SHALLOWWATEREQUATIONS_H
 
 /**
-* $Log: $
+* $Log: ShallowWaterEquations.h,v $
+* Revision 1.1  2008/08/22 09:48:23  pvos
+* Added Claes' AdvectionDiffusionReaction, ShallowWater and Euler solver
+*
 **/

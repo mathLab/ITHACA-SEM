@@ -76,10 +76,12 @@ namespace Nektar
 
         void DiffusionOperation(const Array<OneD,const NekDouble>& a, const Array<OneD,const NekDouble>& b);
       
-        void FwdTrans(const AdvectionDiffusionReaction &In);
+        void FwdTrans(void);
       
         void BwdTrans(void);
      
+	void BwdTrans(int field_no);
+	
         void BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, int field_no);
 
         void BwdTrans(Array<OneD, Array<OneD, NekDouble> > &outarray);
@@ -154,7 +156,6 @@ namespace Nektar
 
         void GetPhys(Array<OneD, Array<OneD, NekDouble> >&outarray);
 
-
         //-----------------------------
         /**
          *
@@ -163,6 +164,11 @@ namespace Nektar
         //-----------------------------
       
         void SetPhys(Array<OneD, NekDouble> &inarray, int field_no = -1);
+
+	inline Array<OneD, NekDouble> &UpdatePhys(int field_no = -1)
+	  {
+	    return m_fields[field_no]->UpdatePhys();
+	  }
       
         void WriteToFile(std::ofstream &out, OutputFormat format, int field_no);
       
@@ -171,7 +177,7 @@ namespace Nektar
         void ExtractTracePhys(Array<OneD, NekDouble> &out, int field_no);
 
         void GetFwdBwdTracePhys(Array<OneD, NekDouble> &Fwd, Array<OneD,NekDouble> &Bwd, int field_no);
-      
+     
         void GetTraceNormals(Array<OneD, Array<OneD, NekDouble> > &Normals);
 
         void UpwindTrace(Array<OneD, Array<OneD, const NekDouble> > &Vec, 
@@ -203,30 +209,9 @@ namespace Nektar
 	   
         const Array<OneD, const NekDouble> &GetCoeffs(int field_no);
 
+	void SetCoeffs(const Array<OneD, const NekDouble > &coeffs, int field_no);
 
-      
-        /*       Array<OneD, SpatialDomains::BoundaryConditionType>  &GetBndTypes(int field_no) */
-        /*     { */
-        /* 	return m_fields[field_no]->GetBndTypes(); */
-        /*       } */
-      
-      
-        /*       inline Array<OneD, SpatialDomains::Equation>  &GetBndUserTypes(int field_no) */
-        /* 	{ */
-        /* 	  return m_fields[field_no]->GetBndUserTypes(); */
-        /* 	} */
-      
-        /*       inline Array<OneD, SpatialDomains::Equation>  &GetBndEquations(int field_no) */
-        /* 	{ */
-        /* 	  return m_fields[field_no]->GetBndEquations(); */
-        /* 	} */
-      
-        /*       Array<OneD, MultiRegions::ExpList1DSharedPtr> &GetBndConstraint(int field_no) */
-        /* 	{ */
-        /* 	  return m_fields[field_no]->GetBndConstraint(); */
-        /* 	} */
-      
-        enum UpwindType
+	enum UpwindType
         {           ///< flux not defined
             eNotSet,  ///< averaged (or centred) flux
             eAverage, ///< simple upwind flux
@@ -256,5 +241,8 @@ namespace Nektar
 #endif //NEKTAR_SOLVERS_AUXILIARY_ADVECTIONDIFFUSIONREACTION_H
 
 /**
-* $Log: $
+* $Log: AdvectionDiffusionReaction.h,v $
+* Revision 1.1  2008/08/22 09:48:23  pvos
+* Added Claes' AdvectionDiffusionReaction, ShallowWater and Euler solver
+*
 **/

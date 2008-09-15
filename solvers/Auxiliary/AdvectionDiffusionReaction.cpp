@@ -58,7 +58,7 @@ namespace Nektar
     AdvectionDiffusionReaction::AdvectionDiffusionReaction(SpatialDomains::MeshGraph2D &graph2D,
                                                            SpatialDomains::BoundaryConditions &bcs,
                                                            int variables):
-        m_fields(variables)
+      m_fields(variables)
     {
         m_nvariables = variables;
            
@@ -148,7 +148,7 @@ namespace Nektar
       
     }
     
-    void AdvectionDiffusionReaction::FwdTrans(const AdvectionDiffusionReaction &In)
+    void AdvectionDiffusionReaction::FwdTrans(void)
     {  
         int i;
       
@@ -161,15 +161,21 @@ namespace Nektar
     
     void AdvectionDiffusionReaction::BwdTrans(void)
     {  
-        int i;
+      int i;
       
-        for(i = 0 ; i < m_fields.num_elements(); i++)
+      for(i = 0 ; i < m_fields.num_elements(); i++)
 	{
             m_fields[i]->BwdTrans(*m_fields[i]);
 	}
       
     }
     
+    
+    void AdvectionDiffusionReaction::BwdTrans(int field_no)
+    {  
+      m_fields[field_no]->BwdTrans(*m_fields[field_no]);
+    }
+
     void AdvectionDiffusionReaction::BwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                               Array<OneD, NekDouble> &outarray, int field_no)
     {
@@ -205,52 +211,51 @@ namespace Nektar
       
       
         // check that field_no no larger than m_fields.num_elements()
-      
-	  
+	
+	
         if (field_no != -1)
-	{
-            m_fields[field_no]->SetPhys(inarray[0]);
-	}
+	  {
+            m_fields[field_no]->SetPhys(inarray[field_no]);
+	  }
         else
-	{
+	  {
             for (i = 0; i < m_fields.num_elements(); ++i)
-	    {
+	      {
                 m_fields[i]->SetPhys(inarray[i]);
-	    }
-	}
-      
+	      }
+	  }
     }
-
+  
     void AdvectionDiffusionReaction::SetPhys(Array<OneD, NekDouble> &inarray, int field_no)
     {
-        int i;
-      
-        // check that field_no no larger than m_fields.num_elements()
-	
+      int i;
 	  
-        if (field_no != -1)
+      // check that field_no no larger than m_fields.num_elements()
+      
+      
+      if (field_no != -1)
 	{
-            m_fields[field_no]->SetPhys(inarray);
+	  m_fields[field_no]->SetPhys(inarray);
 	}
     }
-    
+  
     const Array<OneD, const NekDouble> &AdvectionDiffusionReaction::GetPhys(int field_no)
     {
         return m_fields[field_no]->GetPhys();
     }
-
+  
   
     void AdvectionDiffusionReaction::GetPhys(Array<OneD, Array<OneD, NekDouble> >&outarray)
     {
-        // check size
+      // check size
       
-        for (int i = 0; i < m_fields.num_elements(); ++i)
+      for (int i = 0; i < m_fields.num_elements(); ++i)
 	{
-            outarray[i] = m_fields[i]->GetPhys();
+	  Vmath::Vcopy(GetPointsTot(),m_fields[i]->GetPhys(),1,outarray[i],1);
+	  //outarray[i] = m_fields[i]->GetPhys();
 	}
-
     }
-    
+  
     void AdvectionDiffusionReaction::WriteToFile(std::ofstream &out, OutputFormat format, int field_no)
     {
         m_fields[field_no]->WriteToFile(out,format);
@@ -333,8 +338,20 @@ namespace Nektar
         return m_fields[field_no]->GetCoeffs();
     }
 
+    void AdvectionDiffusionReaction::SetCoeffs(const Array<OneD, const NekDouble > &coeffs, int field_no)
+    {
+      for(int j = 0; j < m_fields[field_no]->GetNcoeffs(); j++)
+	{
+	  (m_fields[field_no]->UpdateCoeffs())[j] = coeffs[j];
+	}
+    }
+  
+
 } //end of namespace
 
 /**
-* $Log: $
+* $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.1  2008/08/22 09:48:23  pvos
+* Added Claes' AdvectionDiffusionReaction, ShallowWater and Euler solver
+*
 **/

@@ -87,13 +87,9 @@ namespace Nektar
         class VertexComponent: public Geometry, public NekPoint <double, ThreeD>
         {
             public:
-                //Temp debug constructor
-                VertexComponent()
-                {
-                }
-
                 VertexComponent(const int coordim, const int vid,
                     double x, double y, double z);
+                VertexComponent(){}
                 ~VertexComponent();
                 VertexComponent(const VertexComponent &T);
 
@@ -180,6 +176,9 @@ namespace Nektar
 
 //
 // $Log: MeshComponents.h,v $
+// Revision 1.13  2008/09/09 14:19:28  sherwin
+// Added dist methods
+//
 // Revision 1.12  2008/03/03 02:30:00  bnelson
 // Changed OneD, TwoD, and ThreeD to classes instead of enums to support type parameters in NekVector instead of unsigned int for the dimensions.
 //

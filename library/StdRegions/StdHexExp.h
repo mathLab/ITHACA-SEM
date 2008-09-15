@@ -80,9 +80,42 @@ namespace Nektar
                 return eHexahedron;
             }
 
+            void GetBoundaryMap(Array<OneD, unsigned int>& outarray);
+            
+            void GetInteriorMap(Array<OneD, unsigned int>& outarray);
+            
+            int GetVertexMap(const int localVertexId);
+ 
+            void GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+                                    Array<OneD, unsigned int> &maparray);
+
+            void GetFaceInteriorMap(const int fid, const FaceOrientation faceOrient,
+                                    Array<OneD, unsigned int> &maparray,
+                                    Array<OneD, int> &signarray);
+            
             void GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                      Array<OneD, unsigned int> &maparray,
                                      Array<OneD, int> &signarray);
+
+            int NumBndryCoeffs() const
+            {
+                ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                         GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                         "BasisType is not a boundary interior form");
+                ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
+                         GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                         "BasisType is not a boundary interior form");
+                ASSERTL1(GetBasisType(2) == LibUtilities::eModified_A ||
+                         GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                         "BasisType is not a boundary interior form");
+
+                int nmodes0 = m_base[0]->GetNumModes();
+                int nmodes1 = m_base[1]->GetNumModes();
+                int nmodes2 = m_base[2]->GetNumModes();
+
+                return ( 2*( nmodes0*nmodes1 + nmodes0*nmodes2 + nmodes1*nmodes2) -
+                         4*( nmodes0 + nmodes1 + nmodes2 ) + 8 );
+            }
 
             int GetFaceNcoeffs(const int i) const
             {
@@ -98,6 +131,23 @@ namespace Nektar
                 else
                 {
                     return GetBasisNumModes(1)*GetBasisNumModes(2);
+                }
+            }
+
+            int GetFaceIntNcoeffs(const int i) const
+            {
+                ASSERTL2((i >= 0) && (i <= 5), "face id is out of range");
+                if((i == 0) || (i == 5))
+                {
+                    return (GetBasisNumModes(0)-2)*(GetBasisNumModes(1)-2);
+                }
+                else if((i == 1) || (i == 3))
+                {
+                    return (GetBasisNumModes(0)-2)*(GetBasisNumModes(2)-2);
+                }
+                else
+                {
+                    return (GetBasisNumModes(1)-2)*(GetBasisNumModes(2)-2);
                 }
             }
 
@@ -293,10 +343,49 @@ namespace Nektar
                 return DetExpansionType();
             };
 
+            virtual int v_NumBndryCoeffs() const
+            {
+                return NumBndryCoeffs();
+            } 
+
             virtual int v_GetFaceNcoeffs(const int i) const
             {
                 return GetFaceNcoeffs(i);
+            } 
+
+            virtual int v_GetFaceIntNcoeffs(const int i) const
+            {
+                return GetFaceIntNcoeffs(i);
             }
+
+            virtual void v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
+            {
+                GetBoundaryMap(outarray);
+            }
+
+            virtual void v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
+            {
+                GetInteriorMap(outarray);
+            }
+
+            virtual int v_GetVertexMap(const int localVertexId)
+            {
+                return GetVertexMap(localVertexId);
+            }
+ 
+            virtual void v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+                                              Array<OneD, unsigned int> &maparray)
+            {
+                GetEdgeInteriorMap(eid,edgeOrient,maparray);
+            }    
+
+            virtual void v_GetFaceInteriorMap(const int fid, const FaceOrientation faceOrient,
+                                              Array<OneD, unsigned int> &maparray,
+                                              Array<OneD, int> &signarray)
+            {
+                GetFaceInteriorMap(fid,faceOrient,maparray,signarray);
+            }
+
             virtual void v_GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                                Array<OneD, unsigned int> &maparray,
                                                Array<OneD, int> &signarray)
@@ -401,6 +490,9 @@ namespace Nektar
 
 /**
  * $Log: StdHexExp.h,v $
+ * Revision 1.25  2008/09/12 11:26:39  pvos
+ * Updates for mappings in 3D
+ *
  * Revision 1.24  2008/07/04 10:18:40  pvos
  * Some updates
  *

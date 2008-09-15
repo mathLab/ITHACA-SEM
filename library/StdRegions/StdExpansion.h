@@ -451,6 +451,11 @@ namespace Nektar
             {
                 return v_GetFaceNcoeffs(i);
             }
+
+            int GetFaceIntNcoeffs(const int i) const
+            {
+                return v_GetFaceIntNcoeffs(i);
+            }
         
             int NumBndryCoeffs(void)  const
             {
@@ -852,6 +857,13 @@ namespace Nektar
                                     Array<OneD, unsigned int> &maparray)
             {
                 v_GetEdgeInteriorMap(eid,edgeOrient,maparray);
+            }   
+
+            void GetFaceInteriorMap(const int fid, const FaceOrientation faceOrient,
+                                    Array<OneD, unsigned int> &maparray,
+                                    Array<OneD, int> &signarray)
+            {
+                v_GetFaceInteriorMap(fid,faceOrient,maparray,signarray);
             }
 
             void GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
@@ -1236,6 +1248,12 @@ namespace Nektar
             {
                 ASSERTL0(false, "This function is not valid or not defined");
                 return 0;
+            }    
+
+            virtual int v_GetFaceIntNcoeffs(const int i) const
+            {
+                ASSERTL0(false, "This function is not valid or not defined");
+                return 0;
             }
 
             virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const
@@ -1387,6 +1405,13 @@ namespace Nektar
                                               Array<OneD, unsigned int> &maparray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            }   
+
+            virtual void v_GetFaceInteriorMap(const int fid, const FaceOrientation faceOrient,
+                                              Array<OneD, unsigned int> &maparray,
+                                              Array<OneD, int> &signarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
             virtual void v_GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
@@ -1518,6 +1543,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.97  2008/09/09 14:14:27  sherwin
+ * Remove Interp1D/2D/3D and added DetCartesianDirOfEdge
+ *
  * Revision 1.96  2008/08/27 16:34:53  pvos
  * Small efficiency update
  *

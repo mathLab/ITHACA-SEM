@@ -5,6 +5,8 @@
 #include "LibUtilities/Foundations/Foundations.hpp"
 #include "LibUtilities/Foundations/Basis.h"
 
+#include "SpatialDomains/MeshComponents.h"
+
 
 #include <algorithm>
 #include <iostream>
@@ -17,8 +19,7 @@
 
 
 using namespace std;
-
-
+using namespace boost;
 using namespace Nektar;
 
 
@@ -29,42 +30,26 @@ NekDouble Hex_sol(NekDouble x, NekDouble y, NekDouble z, int order1, int order2,
 using namespace Nektar::LibUtilities;
 using namespace Nektar::LocalRegions;
 using namespace Nektar::StdRegions;
-
+using namespace Nektar::SpatialDomains;
 
 int main(int argc, char *argv[])
  {
-    if( argc != 19 ) {  // arg[0]  arg[1]  arg[2]  arg[3]   arg[4]     arg[5]     arg[6]  arg[7] arg[8] arg[9] arg[10] arg[11] arg[12]
-        cerr << "Usage: LocHexDemo Type_x  Type_y  Type_z numModes_x numModes_y numModes_z    Qx    Qy     Qz     x1     y1    z1"
-                       //arg[13] arg[14] arg[15] arg[16] arg[17] arg[18] arg[19] arg[20] arg[21] arg[22] arg[23] arg[24] ...arg[27]
-                      "x2     y2      z2     x3      y3     z3      x4     y4      z4    x5   y5   z5  x6  y6  z6  x7  y7  z7 x8 y8 z8" << endl;
-        
+
+        if( argc != 10 ) {
+        cerr << "Usage: HexDemo Type_x Type_y Type_z numModes_x numModes_y numModes_z Qx Qy Qz" << endl;
         cerr << "Where type is an interger value which dictates the basis as:" << endl;
-        for(int i=0; i<SIZE_PointsType; ++i)
-        {
-            cerr << setw(30) << kPointsTypeStr[i] << " =" << i << endl;
-        }
-//                   NoPointsType =0
-//             GaussGaussLegendre =1
-//            GaussRadauMLegendre =2
-//            GaussRadauPLegendre =3
-//           GaussLobattoLegendre =4
-//            GaussGaussChebyshev =5
-//           GaussRadauMChebyshev =6
-//           GaussRadauPChebyshev =7
-//          GaussLobattoChebyshev =8
-//         GaussRadauMAlpha0Beta1 =9
-//         GaussRadauMAlpha0Beta2 =10
-//         GaussRadauMAlpha1Beta0 =11
-//         GaussRadauMAlpha2Beta0 =12
-//               PolyEvenlySpaced =13
-//            FourierEvenlySpaced =14
-//                   NodalTriElec =15
-//                 NodalTriFekete =16
-//           NodalTriEvenlySpaced =17
-//           NodalTetEvenlySpaced =18
-//                   NodalTetElec =19
-        cerr << "\t Nodal Tet (Electro) = 19    (3D Nodal Electrostatic Points on a Tetrahedron)\n";
-//         cerr << "\n\n" << "Example: " << argv[0] << " 1 1 3 2 2 2 5 5 5 0.2 0.7 0.5 0.1 0.3 0.6 0.2 0.7 0.9 0.3 0.5 0.1 0.2 0.5 0.7" << endl;
+        cerr << "\t Ortho_A    = 1\n";
+        cerr << "\t Ortho_B    = 2\n";
+        cerr << "\t Ortho_C    = 3\n";
+        cerr << "\t Modified_A = 4\n";
+        cerr << "\t Modified_B = 5\n";
+        cerr << "\t Modified_C = 6\n";
+        cerr << "\t Fourier    = 7\n";
+        cerr << "\t Lagrange   = 8\n";
+        cerr << "\t Legendre   = 9\n";
+        cerr << "\t Chebyshev  = 10\n";
+        cerr << "\t Nodal Tet (Electro) = 13    (3D Nodal Electrostatic Points on a Tetrahedron)\n";
+        cerr << "\n\n" << "Example: " << argv[0] << " 4 4 4 3 3 3 5 5 5" << endl;
         cerr << endl;
 
         exit(1);
@@ -80,7 +65,7 @@ int main(int argc, char *argv[])
     LibUtilities::BasisType   bType_z = static_cast<LibUtilities::BasisType>( bType_z_val );
     LibUtilities::PointsType  NodalType = LibUtilities::eNoPointsType;
     
-    if( (bType_x_val == 19) || (bType_y_val == 19) || (bType_z_val == 19) )
+    if( (bType_x_val == 13) || (bType_y_val == 13) || (bType_z_val == 13) )
     {
         bType_x =   LibUtilities::eOrtho_A;
         bType_y =   LibUtilities::eOrtho_B;
@@ -110,6 +95,7 @@ int main(int argc, char *argv[])
     int Qy = atoi(argv[8]);
     int Qz = atoi(argv[9]);
     int P = xModes - 1, Q = yModes - 1, R = zModes - 1;
+    const int three = 3;
     
     Array<OneD, NekDouble> solution( Qx * Qy * Qz );
 
@@ -120,118 +106,75 @@ int main(int argc, char *argv[])
     //-----------------------------------------------
     // Define a 3D expansion based on basis definition
     
-    StdRegions::StdExpansion3D *lpe;
+    StdRegions::StdExpansion3D *lhe = 0;
     
     if( regionShape == StdRegions::eHexahedron ) 
     {
-          Array<OneD, NekDouble> coords(12);
-          coords[0]    =   atof(argv[10]);
-          coords[1]    =   atof(argv[11]);
-          coords[2]    =   atof(argv[12]);
-          coords[3]    =   atof(argv[13]);
-          coords[4]    =   atof(argv[14]);
-          coords[5]    =   atof(argv[15]);
-          coords[6]    =   atof(argv[16]);
-          coords[7]    =   atof(argv[17]);
-          coords[8]    =   atof(argv[18]);
-          coords[9]    =   atof(argv[19]);
-          coords[10]   =   atof(argv[20]);
-          coords[11]   =   atof(argv[21]);
-          coords[12]   =   atof(argv[22]);
-          coords[13]   =   atof(argv[23]);
-          coords[14]   =   atof(argv[24]);
-          coords[15]   =   atof(argv[25]);
-          coords[16]   =   atof(argv[26]);
-          coords[17]   =   atof(argv[27]);
-          coords[18]   =   atof(argv[28]);
-          coords[19]   =   atof(argv[29]);
-          coords[20]   =   atof(argv[30]);
-          coords[21]   =   atof(argv[31]);
-          coords[22]   =   atof(argv[32]);
-          coords[23]   =   atof(argv[33]);
-
+          // /////////////////////////////////////////////////////////////////////  
           // Set up Hexahedron vertex coordinates
-          const int zero  = 0;
-          const int one   = 1;
-          const int two   = 2;
-          const int three = 3;
-          const int four  = 4;
-          const int five  = 5;
-          const int six   = 6;
-          const int seven = 7;
-          const int eight = 8;
-          const int nine  = 9;
-          const int ten   = 10;
-          const int eleven= 11;
-          const int twelve= 12;
+          // VertexComponent (const int coordim, const int vid, double x, double y, double z)
           
-          SpatialDomains::VertexComponentSharedPtr verts[8];
-          //    VertexComponent (const int coordim, const int vid, double x, double y, double z)
-          verts[0] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(three,zero, coords[0],coords[1], coords[2]);
-          verts[1] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(three,one,  coords[3],coords[4], coords[5]);
-          verts[2] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(three,two,  coords[6],coords[7], coords[8]);
-          verts[3] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(three,three,coords[9],coords[10],coords[11]);
-          verts[4] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(three,four,coords[12],coords[13],coords[14]);
-          verts[5] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(three,four,coords[15],coords[16],coords[17]);
-          verts[6] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(three,four,coords[18],coords[19],coords[20]);
-          verts[7] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(three,four,coords[21],coords[22],coords[23]);
+          const int nVerts = 8;
+          const double point[][3] = {
+            {0,0,0}, {1,0,0}, {1,1,0}, {0,1,0},
+            {0,0,1}, {1,0,1}, {1,1,1}, {0,1,1}
+          };
 
+          // Populate the list of verts
+          VertexComponentSharedPtr verts[8];
+          for( int i = 0; i < nVerts; ++i ) {
+            verts[i] = MemoryManager<VertexComponent>::
+                AllocateSharedPtr( three, i, point[i][0], point[i][1], point[i][2] );
+          }
+
+          
+
+          // /////////////////////////////////////////////////////////////////////
           // Set up Hexahedron Edges
-          //SegGeom (int id, const int coordim), EdgeComponent(id, coordim)
-          SpatialDomains::SegGeomSharedPtr edges[12];
-          edges[0] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero, three);
-          edges[1] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(one, three);
-          edges[2] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(two, three);
-          edges[3] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(three, three);
-          edges[4] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(four, three);
-          edges[5] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(five, three);
-          edges[6] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(six, three);
-          edges[7] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(seven, three);
-          edges[8] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(eight, three);
-          edges[9] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(nine, three);
-          edges[10] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(ten, three);
-          edges[11] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(eleven, three);
-          edges[12] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(twelve, three);
-      
+          // SegGeom (int id, const int coordim), EdgeComponent(id, coordim)
 
-          StdRegions::EdgeOrientation edgeDir = StdRegions::eForwards;
-          StdRegions::EdgeOrientation eorient[12];
-          eorient[0] = edgeDir; 
-          eorient[1] = edgeDir; 
-          eorient[2] = edgeDir;
-          eorient[3] = edgeDir;
-          eorient[4] = edgeDir;
-          eorient[5] = edgeDir;
-          eorient[6] = edgeDir;
-          eorient[7] = edgeDir;
-          eorient[8] = edgeDir;
-          eorient[9] = edgeDir;
-          eorient[10] = edgeDir;
-          eorient[11] = edgeDir;
-          eorient[12] = edgeDir;
+          const int nEdges = 12;
+          const int vertexConnectivity[][2] = {
+            {0,1}, {1,2}, {2,3}, {0,3}, {0,4}, {1,5},
+            {2,6}, {3,7}, {4,5}, {5,6}, {6,7}, {4,7}
+          };
+
+          // Populate the list of edges
+          SegGeomSharedPtr edges[nEdges];
+          for( int i = 0; i < nEdges; ++i ) {
+            VertexComponentSharedPtr vertsArray[2];
+            for( int j = 0; j < 2; ++j ) {
+                vertsArray[j] = verts[vertexConnectivity[i][j]];
+            }
+            edges[i] = MemoryManager<SegGeom>::
+                AllocateSharedPtr( i, three, vertsArray);
+          }
+
           
+
+          // /////////////////////////////////////////////////////////////////////////
           // Set up Hexahedron faces
-          SpatialDomains::QuadGeomSharedPtr faces[6];
-          faces[0] = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(zero, three);
-          faces[1] = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(one, three);
-          faces[2] = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(two, three);
-          faces[3] = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(three, three);
-          faces[4] = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(four, three);
-          faces[5] = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(five, three);
-
-
-          //TODO:  must check the face direction
-          StdRegions::FaceOrientation faceDir = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
-          StdRegions::FaceOrientation forient[6];
-          forient[0] = faceDir;
-          forient[1] = faceDir;
-          forient[2] = faceDir;
-          forient[3] = faceDir;
-          forient[4] = faceDir;
-          forient[5] = faceDir;
+          const int nFaces = 6;
+          const int edgeConnectivity[][4] = { {0,1,2,3}, {0,5,8,4}, {1,6,9,5}, {2,7,10,6}, {3,7,11,4}, {8,9,10,11} };
+          const bool   isEdgeFlipped[][4] = { {0,0,0,1}, {0,0,1,1}, {0,0,1,1}, {0,0, 1,1}, {0,0, 1,1}, {0,0, 0, 1} };
+          
+          // Populate the list of faces
+          QuadGeomSharedPtr faces[nFaces];
+          for( int i = 0; i < nFaces; ++i ) {
+            SegGeomSharedPtr edgeArray[4];
+            EdgeOrientation eorientArray[4];
+            for( int j = 0; j < 4; ++j ) {
+                edgeArray[j]    = edges[edgeConnectivity[i][j]];
+                eorientArray[j] = isEdgeFlipped[i][j]  ?  eBackwards  :  eForwards;
+            }
+            faces[i] = MemoryManager<QuadGeom>::
+                AllocateSharedPtr( i, edgeArray, eorientArray);
+          }
+          
 
          SpatialDomains::HexGeomSharedPtr geom = MemoryManager<SpatialDomains::HexGeom>::AllocateSharedPtr(faces);
          geom->SetOwnData();
+         
          const LibUtilities::PointsKey   pointsKey_x( Qx, Qtype_x );
          const LibUtilities::PointsKey   pointsKey_y( Qy, Qtype_y );
          const LibUtilities::PointsKey   pointsKey_z( Qz, Qtype_z );
@@ -240,19 +183,16 @@ int main(int argc, char *argv[])
          const LibUtilities::BasisKey    basisKey_y( bType_y, yModes, pointsKey_y );
          const LibUtilities::BasisKey    basisKey_z( bType_z, zModes, pointsKey_z );
 
-        if( bType_x_val < 15 ) {
-            lpe = new LocalRegions::HexExp( basisKey_x, basisKey_y, basisKey_z, geom );
-        } else {
-            cerr << "Implement the NodalTetExp!!!!!!" << endl;
-            //lpe = new StdRegions::StdNodalTetExp( basisKey_x, basisKey_y, basisKey_z, NodalType );
-            exit(1);
+        if( bType_x_val < 12 ) {
+            lhe = new LocalRegions::HexExp( basisKey_x, basisKey_y, basisKey_z, geom );
+ 
         }
     
         Array<OneD,NekDouble> x = Array<OneD,NekDouble>( Qx * Qy * Qz );
         Array<OneD,NekDouble> y = Array<OneD,NekDouble>( Qx * Qy * Qz );
         Array<OneD,NekDouble> z = Array<OneD,NekDouble>( Qx * Qy * Qz );
         
-        lpe->GetCoords(x,y,z); //TODO: must test HexExp::GetCoords()
+        lhe->GetCoords(x,y,z); //TODO: must test HexExp::GetCoords()
     
         //----------------------------------------------
         // Define solution to be projected
@@ -260,22 +200,22 @@ int main(int argc, char *argv[])
             solution[n]  = Hex_sol( x[n], y[n], z[n], P, Q, R, bType_x, bType_y, bType_z );
         }
         //----------------------------------------------
-    }
+    }  // end of the if loop
            
     //---------------------------------------------
     // Project onto Expansion 
-    lpe->FwdTrans( solution, lpe->UpdateCoeffs() );
+    lhe->FwdTrans( solution, lhe->UpdateCoeffs() );
     //---------------------------------------------
     
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    lpe->BwdTrans( lpe->GetCoeffs(), lpe->UpdatePhys() );
+    lhe->BwdTrans( lhe->GetCoeffs(), lhe->UpdatePhys() );
     //-------------------------------------------  
     
     //--------------------------------------------
     // Calculate L_p error 
-    cout << "L infinity error: " << lpe->Linf(solution) << endl;
-    cout << "L 2 error:        " << lpe->L2  (solution) << endl;
+    cout << "L infinity error: " << lhe->Linf(solution) << endl;
+    cout << "L 2 error:        " << lhe->L2  (solution) << endl;
     //--------------------------------------------
     
     //-------------------------------------------
@@ -289,7 +229,7 @@ int main(int argc, char *argv[])
         solution[0] = Hex_sol( t[0], t[1], t[2], P, Q, R, bType_x, bType_y, bType_z );
     }
  
-    NekDouble numericSolution = lpe->PhysEvaluate(t);
+    NekDouble numericSolution = lhe->PhysEvaluate(t);
     cout << "Interpolation difference from actual solution at x = ( " << 
         t[0] << ", " << t[1] << ", " << t[2] << " ): " << numericSolution - solution[0] << endl;
     //-------------------------------------------

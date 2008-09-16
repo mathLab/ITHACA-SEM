@@ -1,8 +1,12 @@
 SET(LinkLibraries 
-    optimized LocalRegions debug LocalRegions-g    
-    optimized SpatialDomains debug SpatialDomains-g    
-    optimized StdRegions debug StdRegions-g 
+    optimized LocalRegions debug LocalRegions-g  
+    optimized SpatialDomains debug SpatialDomains-g
+    optimized StdRegions debug StdRegions-g
     optimized LibUtilities debug LibUtilities-g
+    optimized ${Boost_THREAD_LIBRARY_RELEASE} debug ${Boost_THREAD_LIBRARY_DEBUG}
+    optimized ${Boost_IOSTREAMS_LIBRARY_RELEASE} debug ${Boost_IOSTREAMS_LIBRARY_DEBUG}
+    optimized ${Boost_ZLIB_LIBRARY_RELEASE} debug ${Boost_ZLIB_LIBRARY_DEBUG}
+    optimized tinyxml debug tinyxml
 )
 
 SET(LocProject1DSource  Project1D.cpp)

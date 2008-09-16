@@ -179,16 +179,16 @@ int main(int argc, char *argv[])
 
           // Set up Edges
           SpatialDomains::SegGeomSharedPtr edges[3];
-          edges[0] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero, two);
-          edges[1] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(one, two);
-          edges[2] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(two, two);
+          edges[0] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero,verts[0],verts[1]);
+          edges[1] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(one,verts[1],verts[2]);
+          edges[2] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(two,verts[2],verts[0]);
 
           StdRegions::EdgeOrientation eorient[3];
           eorient[0] = edgeDir; 
           eorient[1] = edgeDir; 
           eorient[2] = edgeDir; 
 
-          SpatialDomains::TriGeomSharedPtr geom = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(verts,edges,eorient);
+          SpatialDomains::TriGeomSharedPtr geom = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(zero,verts,edges,eorient);
           geom->SetOwnData();
 
           const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
@@ -245,10 +245,10 @@ int main(int argc, char *argv[])
 
           // Set up Edges
           SpatialDomains::SegGeomSharedPtr edges[4];
-          edges[0] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero,two);
-          edges[1] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(one,two);
-          edges[2] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(two,two);
-          edges[3] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(three,two);
+          edges[0] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero,verts[0],verts[1]);
+          edges[1] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(one,verts[1],verts[2]);
+          edges[2] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(two,verts[2],verts[3]);
+          edges[3] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(three,verts[3],verts[0]);
 
           StdRegions::EdgeOrientation eorient[4];      
           eorient[0] = edgeDir; 
@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
           eorient[2] = edgeDir; 
           eorient[3] = edgeDir; 
 
-          SpatialDomains::QuadGeomSharedPtr geom = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(verts,edges,eorient);
+          SpatialDomains::QuadGeomSharedPtr geom = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(zero,verts,edges,eorient);
           geom->SetOwnData();
 
           const LibUtilities::PointsKey Pkey1(nq1,Qtype1);

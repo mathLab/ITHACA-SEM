@@ -55,27 +55,15 @@ SET_LAPACK_LINK_LIBRARIES(HDGHelmholtz2D)
 # TARGET_LINK_LIBRARIES(HDGHelmholtz3D ${LinkLibraries})
 # SET_LAPACK_LINK_LIBRARIES(HDGHelmholtz3D)
 
-#SET(ProjectLoc2DSource  ProjectLoc2D.cpp)
-#ADD_NEKTAR_EXECUTABLE(ProjectLoc2D ProjectLoc2DSource)
-#    TARGET_LINK_LIBRARIES(ProjectLoc2D
-#    optimized MultiRegions debug MultiRegions-g    
-#    optimized LocalRegions debug LocalRegions-g    
-#    optimized SpatialDomains debug SpatialDomains-g    
-#    optimized StdRegions debug StdRegions-g    
-#    optimized tinyxml debug tinyxml
-#    )
-#    SET_LAPACK_LINK_LIBRARIES(ProjectLoc2D)
+SET(ProjectLoc2DSource  ProjectLoc2D.cpp)
+ADD_NEKTAR_EXECUTABLE(ProjectLoc2D ProjectLoc2DSource)
+TARGET_LINK_LIBRARIES(ProjectLoc2D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(ProjectLoc2D)
 
-#SET(ProjectCont2DSource  ProjectCont2D.cpp)
-#ADD_NEKTAR_EXECUTABLE(ProjectCont2D ProjectCont2DSource)
-#    TARGET_LINK_LIBRARIES(ProjectCont2D
-#    optimized MultiRegions debug MultiRegions-g    
-#    optimized LocalRegions debug LocalRegions-g    
-#    optimized SpatialDomains debug SpatialDomains-g    
-#    optimized StdRegions debug StdRegions-g    
-#    optimized tinyxml debug tinyxml
-#    )
-#    SET_LAPACK_LINK_LIBRARIES(ProjectCont2D) 
+SET(ProjectCont2DSource  ProjectCont2D.cpp)
+ADD_NEKTAR_EXECUTABLE(ProjectCont2D ProjectCont2DSource)
+TARGET_LINK_LIBRARIES(ProjectCont2D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(ProjectCont2D) 
 
 
 SET(AdvectionSource  Advection.cpp)

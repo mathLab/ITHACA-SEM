@@ -3,29 +3,15 @@
 
 #include <MultiRegions/ContField2D.h>
 
-#define TIMING
-
-#ifdef TIMING
-#include <time.h>
-#define Timing(s) \
- fprintf(stdout,"%s Took %g seconds\n",s,(clock()-st)/cps); \
- st = clock();
-#else
-#define Timing(s) \
- /* Nothing */
-#endif
-
 using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
     MultiRegions::ContField2DSharedPtr Exp,Fce;
-    MultiRegions::ExpListSharedPtr DerExp1,DerExp2;
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
     NekDouble  lambda;
-    NekDouble   st, cps = (double)CLOCKS_PER_SEC;
 
     if(argc != 3)
     {
@@ -65,7 +51,6 @@ int main(int argc, char *argv[])
     Exp = MemoryManager<MultiRegions::ContField2D>::
         AllocateSharedPtr(graph2D,bcs);
     //----------------------------------------------
-    Timing("Read files and define exp ..");
 
     
     //----------------------------------------------
@@ -107,34 +92,26 @@ int main(int argc, char *argv[])
     Fce = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(*Exp);
     Fce->SetPhys(fce);
     //----------------------------------------------
-    Timing("Define forcing ..");
   
     //----------------------------------------------
     // Helmholtz solution taking physical forcing 
     Exp->HelmSolve(*Fce, lambda);
     //----------------------------------------------
-    Timing("Helmholtz Solve ..");
     
-#if 0
-    for(i = 0; i < 100; ++i)
-    {
-        Exp->HelmSolve(*Fce, lambda);
-    }
-    
-    Timing("100 Helmholtz Solves:... ");
-#endif 
     //----------------------------------------------
     // Backward Transform Solution to get solved values at 
     Exp->BwdTrans(*Exp);
     //----------------------------------------------
-    Timing("Backard Transform ..");
     
     //----------------------------------------------
     // Write solution 
-    //ofstream outfile("HelmholtzFile2D.pos");
-    //    Exp->WriteToFile(outfile,eGmsh);
-    ofstream outfile("HelmholtzFile2D.dat");
-    Exp->WriteToFile(outfile);
+    ofstream outfile("HelmholtzFile2D.pos");
+    Exp->WriteToFile(outfile,eGmsh);
+    outfile.close();
+
+    ofstream outfile2("HelmholtzFile2D.dat");
+    Exp->WriteToFile(outfile2,eTecplot);
+    outfile2.close();
     //----------------------------------------------
     
     //----------------------------------------------
@@ -163,7 +140,6 @@ int main(int argc, char *argv[])
         cout << "L 2 error:        " << Exp->L2  (*Fce) << endl;
         //--------------------------------------------        
     }
-    Timing("Output ..");
     //----------------------------------------------        
         return 0;
 }

@@ -72,7 +72,7 @@ namespace Nektar
 
             m_traceMap = MemoryManager<LocalToGlobalDGMap>::AllocateSharedPtr(graph1D,m_exp,m_bndCondExpansions,m_bndConditions);
 
-            m_trace = Array<OneD, NekDouble>(m_traceMap->GetLocalToGlobalBndMapSize());
+            m_trace = Array<OneD, NekDouble>(m_traceMap->GetNumLocalBndCoeffs());
         }
 
         DisContField1D::DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
@@ -92,7 +92,7 @@ namespace Nektar
             
             m_traceMap = MemoryManager<LocalToGlobalDGMap>::AllocateSharedPtr(graph1D,m_exp,m_bndCondExpansions,m_bndConditions);
 
-            m_trace = Array<OneD, NekDouble>(m_traceMap->GetLocalToGlobalBndMapSize());
+            m_trace = Array<OneD, NekDouble>(m_traceMap->GetNumLocalBndCoeffs());
         }
 
         void DisContField1D::GenerateBoundaryConditionExpansion(const SpatialDomains::MeshGraph1D &graph1D,
@@ -313,13 +313,13 @@ namespace Nektar
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
-                    id          = m_traceMap->GetBndExpToTraceExpMap(i);
+                    id          = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(i);
                     m_trace[id] = m_bndCondExpansions[i]->GetValue();
                 }
                 // Add boundary flux
                 else if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eNeumann)
                 {
-                    id           = m_traceMap->GetBndExpToTraceExpMap(i);
+                    id           = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(i);
                     m_trace[id] += m_bndCondExpansions[i]->GetValue();
                 }
             }

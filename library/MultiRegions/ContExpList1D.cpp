@@ -78,8 +78,8 @@ namespace Nektar
 	    // setup mapping array 
             if(constructMap)
             {
-                m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp);
-                m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
+                m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp);
+                m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
                 m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
             }
 	}
@@ -104,8 +104,8 @@ namespace Nektar
 	    // setup mapping array 
             if(constructMap)
             {
-                m_locToGloMap = MemoryManager<LocalToGlobalMap1D>::AllocateSharedPtr(m_ncoeffs,*m_exp);
-                m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
+                m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp);
+                m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
                 m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
             }
 	}
@@ -114,7 +114,7 @@ namespace Nektar
         {
             if(m_transState == eContinuous)
             {
-                ContToLocal();
+                GlobalToLocal();
             }
             ExpList1D::IProductWRTBase(In);
             Assemble();
@@ -127,7 +127,7 @@ namespace Nektar
 
         {
             Array<OneD,NekDouble> tmp(m_ncoeffs);
-            ContToLocal(inarray,tmp);
+            GlobalToLocal(inarray,tmp);
             ExpList1D::GeneralMatrixOp(gkey,tmp,tmp);
             Assemble(tmp,outarray);
         }
@@ -161,7 +161,7 @@ namespace Nektar
 
             if(m_transState == eContinuous)
             {
-                ContToLocal();
+                GlobalToLocal();
             }
 
             ExpList1D::BwdTrans(In);
@@ -172,6 +172,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.32  2008/07/10 13:02:33  pvos
+* Added periodic boundary conditions functionality
+*
 * Revision 1.31  2008/04/06 06:00:06  bnelson
 * Changed ConstArray to Array<const>
 *

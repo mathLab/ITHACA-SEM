@@ -83,11 +83,6 @@ namespace Nektar
                 return m_elmtToTrace;
             }
             
-            inline int GetBndExpToTraceExpMap(const int i)
-            {
-                return m_bndExpToTraceExpMap[i];
-            }
-            
             AdjacentTraceOrientation GetBndExpAdjacentOrient(const int i)
             {
                 return m_bndExpAdjacentOrient[i];
@@ -99,8 +94,6 @@ namespace Nektar
             int m_numDirichletBndPhys;  // Number of physical dirichlet boundary values in trace
 
             Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr> > m_elmtToTrace;  //< list of edge expansions for a given element 
-
-            Array<OneD, int > m_bndExpToTraceExpMap;  //integer mapping from boundary expansion to the trace expansion
             
             Array<OneD, AdjacentTraceOrientation > m_bndExpAdjacentOrient;
         };
@@ -114,5 +107,8 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalDGMap.h,v $
+/** Revision 1.1  2008/08/18 08:16:23  sherwin
+/** First version of this new class container for mappings
+/**
  */
 

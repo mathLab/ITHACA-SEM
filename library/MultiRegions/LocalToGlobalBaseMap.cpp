@@ -41,6 +41,7 @@ namespace Nektar
     namespace MultiRegions
     {
         LocalToGlobalBaseMap::LocalToGlobalBaseMap(void):
+            m_numLocalBndCoeffs(0),
             m_numGlobalBndCoeffs(0),
             m_numDirichletBndCoeffs(0)
         {

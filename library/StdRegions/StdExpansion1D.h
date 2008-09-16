@@ -99,6 +99,11 @@ namespace Nektar
                 return 1; 
             }
 
+            virtual int v_GetShapeDimension() const
+            {
+                return 1;
+            }
+
             virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
             {
                 return PhysEvaluate(coords);
@@ -126,6 +131,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.31  2008/08/14 22:09:50  sherwin
+* Modifications to remove HDG routines from StdRegions and removed StdExpMap
+*
 * Revision 1.30  2008/07/29 22:21:15  sherwin
 * A bunch of mods for DG advection and separaring the GetGeom calls into GetGeom1D ...
 *

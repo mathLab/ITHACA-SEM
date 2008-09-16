@@ -231,7 +231,7 @@ namespace Nektar
                 {
                     for(e = 0; e < m_bndCondExpansions[i]->GetExpSize(); ++e)
                     {
-                        id     = m_traceMap->GetBndExpToTraceExpMap(cnt + e);
+                        id     = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt + e);
                         offset = m_trace->GetCoeff_Offset(id);
                         BndExp = m_bndCondExpansions[i]->GetExp(e);
                         Vmath::Vcopy(BndExp->GetNcoeffs(),
@@ -244,7 +244,7 @@ namespace Nektar
                 {
                     for(e = 0; e < m_bndCondExpansions[i]->GetExpSize(); ++e)
                     {
-                        id     = m_traceMap->GetBndExpToTraceExpMap(cnt+ e);
+                        id     = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt+ e);
                         offset = m_trace->GetCoeff_Offset(id);
                         BndExp = m_bndCondExpansions[i]->GetExp(e);
                         Vmath::Vadd(BndExp->GetNcoeffs(),
@@ -441,14 +441,14 @@ namespace Nektar
                     if(m_traceMap->GetBndExpAdjacentOrient(cnt+e) == eAdjacentEdgeIsForwards)
                     {
                         id1 = m_bndCondExpansions[n]->GetPhys_Offset(e) ;
-                        id2 = m_trace->GetPhys_Offset(m_traceMap->GetBndExpToTraceExpMap(cnt+e));
+                        id2 = m_trace->GetPhys_Offset(m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
                         Vmath::Vcopy(npts,&(m_bndCondExpansions[n]->GetPhys())[id1],1,&Bwd[id2],1);
                         
                     }
                     else
                     {
                         id1 = m_bndCondExpansions[n]->GetPhys_Offset(e) ;
-                        id2 = m_trace->GetPhys_Offset(m_traceMap->GetBndExpToTraceExpMap(cnt+e));
+                        id2 = m_trace->GetPhys_Offset(m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
                         Vmath::Vcopy(npts,&(m_bndCondExpansions[n]->GetPhys())[id1],1,&Fwd[id2],1);
                     }
                 }

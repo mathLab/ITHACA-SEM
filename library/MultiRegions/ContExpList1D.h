@@ -38,7 +38,7 @@
 
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList1D.h>
-#include <MultiRegions/LocalToGlobalMap1D.h>
+#include <MultiRegions/LocalToGlobalC0ContMap.h>
 #include <MultiRegions/GlobalLinSys.h>
 
 namespace Nektar
@@ -183,9 +183,9 @@ namespace Nektar
              * coefficients \f$\boldsymbol{\hat{u}}_g\f$ and that the resulting local 
              * coefficients \f$\boldsymbol{\hat{u}}_l\f$ will be stored in #m_coeffs.
              */  
-            inline void ContToLocal()
+            inline void GlobalToLocal()
             {
-                m_locToGloMap->ContToLocal(m_contCoeffs,m_coeffs);
+                m_locToGloMap->GlobalToLocal(m_contCoeffs,m_coeffs);
             }
 
             /**
@@ -215,10 +215,10 @@ namespace Nektar
              * \param outarray The resulting local degrees of freedom \f$\boldsymbol{x}_l\f$
              * will be stored in this array of size \f$N_\mathrm{eof}\f$.
              */  
-            inline void ContToLocal(const Array<OneD, const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray)
+            inline void GlobalToLocal(const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,NekDouble> &outarray)
             {
-                m_locToGloMap->ContToLocal(inarray,outarray);
+                m_locToGloMap->GlobalToLocal(inarray,outarray);
             }
 
             /**
@@ -247,9 +247,9 @@ namespace Nektar
              * \f$\boldsymbol{\hat{u}}_l\f$ and that the resulting global coefficients 
              * \f$\boldsymbol{\hat{u}}_g\f$ will be stored in #m_contCoeffs.
             */
-            inline void LocalToCont()
+            inline void LocalToGlobal()
             {
-                m_locToGloMap->LocalToCont(m_coeffs,m_contCoeffs);
+                m_locToGloMap->LocalToGlobal(m_coeffs,m_contCoeffs);
             }       
          
             /**
@@ -322,7 +322,7 @@ namespace Nektar
             /**
              * \brief This function returns the map from local to global level.
              */  
-            inline const LocalToGlobalMapSharedPtr& GetLocalToGlobalMap() const
+            inline const LocalToGlobalC0ContMapSharedPtr& GetLocalToGlobalMap() const
             {
                 return  m_locToGloMap;
             }
@@ -415,7 +415,7 @@ namespace Nektar
              * \brief (A shared pointer to) the object which contains all the required 
              * information for the transformation from local to global degrees of freedom.
              */  
-	    LocalToGlobalMapSharedPtr m_locToGloMap;
+	    LocalToGlobalC0ContMapSharedPtr m_locToGloMap;
  
             /**
              * \brief The total number of global degrees of freedom. 
@@ -451,6 +451,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.32  2008/06/23 14:21:01  pvos
+* updates for 1D ExpLists
+*
 * Revision 1.31  2008/05/29 21:35:03  pvos
 * Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
 *

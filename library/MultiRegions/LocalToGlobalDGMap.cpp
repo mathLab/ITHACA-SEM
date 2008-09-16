@@ -63,9 +63,11 @@ namespace Nektar
             
             m_numGlobalBndCoeffs  = exp1D->size()+1;
 
-            m_localToGlobalBndMap   = Array<OneD, int>(2*exp1D->size(),-1);
-            m_localToGlobalBndSign  = Array<OneD, int>(2*exp1D->size(),1);
+            m_numLocalBndCoeffs = 2*exp1D->size();
+            m_localToGlobalBndMap   = Array<OneD, int>(m_numLocalBndCoeffs,-1);
+            m_localToGlobalBndSign  = Array<OneD, NekDouble>(m_numLocalBndCoeffs,1.0);
 
+            m_signChange = true;
 
             map<int, int> MeshVertToLocalVert;
             
@@ -110,14 +112,14 @@ namespace Nektar
             }  
 
             // Set up boundary mapping
-            m_bndExpToTraceExpMap = Array<OneD, int >(nbnd);
+            m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD, int >(nbnd);
             m_numDirichletBndCoeffs = 0;
             m_numDirichletBndPhys = 0;
 
             for(i = 0; i < nbnd; ++i)
             {
                 vid = ((bndCondExp[i])->GetVertex())->GetVid();
-                m_bndExpToTraceExpMap[i] = MeshVertToLocalVert.find(vid)->second;
+                m_bndCondCoeffsToGlobalCoeffsMap[i] = MeshVertToLocalVert.find(vid)->second;
                 
                 if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
@@ -144,6 +146,8 @@ namespace Nektar
             SpatialDomains::Geometry1DSharedPtr SegGeom;
             
             map<int, int> MeshEdgeId;
+
+            m_signChange = true;
             
             // determine mapping from geometry edges to trace
             for(i = 0; i < ntrace_exp; ++i)
@@ -239,7 +243,7 @@ namespace Nektar
             {
                 cnt += bndCondExp[i]->GetExpSize();
             }
-            m_bndExpToTraceExpMap = Array<OneD,int >(cnt);
+            m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD,int >(cnt);
             m_bndExpAdjacentOrient = Array<OneD, AdjacentTraceOrientation > (cnt);
             
             m_numDirichletBndCoeffs = 0;
@@ -257,7 +261,7 @@ namespace Nektar
                         
                         if(MeshEdgeId.count(id) > 0)
                         {
-                            m_bndExpToTraceExpMap[cnt+j] = MeshEdgeId.find(id)->second;
+                            m_bndCondCoeffsToGlobalCoeffsMap[cnt+j] = MeshEdgeId.find(id)->second;
                         }
                         else
                         {
@@ -304,8 +308,9 @@ namespace Nektar
                 nbndry += (*exp2D)[i]->NumDGBndryCoeffs();
             }
 
+            m_numLocalBndCoeffs = nbndry;
             m_localToGlobalBndMap  = Array<OneD, int > (nbndry);
-            m_localToGlobalBndSign = Array<OneD, int > (nbndry,1);
+            m_localToGlobalBndSign = Array<OneD, NekDouble > (nbndry,1);
 
             nbndry = cnt = 0;
             for(i = 0; i < nel; ++i)
@@ -345,7 +350,7 @@ namespace Nektar
                             // negate odd modes
                             for(k = 3; k < order_e; k+=2)
                             {
-                                m_localToGlobalBndSign[cnt+k] = -1;
+                                m_localToGlobalBndSign[cnt+k] = -1.0;
                             }
                             
                             

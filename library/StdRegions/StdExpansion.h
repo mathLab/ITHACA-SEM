@@ -515,6 +515,10 @@ namespace Nektar
                 return v_DetExpansionType();
             }
 
+            int GetShapeDimension() const
+            {
+                return v_GetShapeDimension();
+            }
 
             bool IsBoundaryInteriorExpansion() 
             {
@@ -1269,6 +1273,12 @@ namespace Nektar
                 return eNoExpansionType;
             }
 
+            virtual int v_GetShapeDimension() const
+            {
+                ASSERTL0(false, "This function is not valid or not defined");
+                return 0;
+            }
+
             virtual bool  v_IsBoundaryInteriorExpansion() 
             {
                 ASSERTL0(false,"This function has not been defined for this expansion");
@@ -1543,6 +1553,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.98  2008/09/15 13:18:08  pvos
+ * Added more hexahedron mapping routines
+ *
  * Revision 1.97  2008/09/09 14:14:27  sherwin
  * Remove Interp1D/2D/3D and added DetCartesianDirOfEdge
  *

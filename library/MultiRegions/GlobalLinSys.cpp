@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSys.h>
+#include <MultiRegions/LocalToGlobalC0ContMap.h>
 
 namespace Nektar
 {
@@ -73,7 +74,7 @@ namespace Nektar
 
         void GlobalLinSys::Solve(const Array<OneD, const NekDouble> &in, 
                                  Array<OneD,NekDouble>  &out,
-                                 LocalToGlobalBndryMap  &locToGloMap)
+                                 LocalToGlobalC0ContMap  &locToGloMap)
         {
             switch(m_linSysKey.GetGlobalSysSolnType())
             {
@@ -86,8 +87,8 @@ namespace Nektar
                 {
                     int i;
 
-                    int nDirDofs = locToGloMap.GetNumDirichletDofs();
-                    int nbndry  = locToGloMap.GetTotGloBndDofs() - nDirDofs;
+                    int nDirDofs = locToGloMap.GetNumDirichletBndCoeffs();
+                    int nbndry  = locToGloMap.GetNumGlobalBndCoeffs() - nDirDofs;
                     int nint    = in.num_elements() -nbndry; 
 
                     Array<OneD,NekDouble>  offset;  
@@ -121,7 +122,7 @@ namespace Nektar
                              DNekScalBlkMat &C     = *m_blkMatrices[1];
 
                              Vmath::Zero(Vloc.GetDimension(),Vloc.GetRawPtr(),1);
-                             locToGloMap.ContToLocalBnd(Vbnd,Vloc,nDirDofs);
+                             locToGloMap.GlobalToLocalBnd(Vbnd,Vloc,nDirDofs);
                              Fint = Fint - C*Vloc;
                          }
                         Vint = invD*Fint;

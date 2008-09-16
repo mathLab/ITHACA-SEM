@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef EXPLIST1D_H
-#define EXPLIST1D_H
+#ifndef NEKTAR_LIB_MULTIREGIONS_EXPLIST1D_H
+#define NEKTAR_LIB_MULTIREGIONS_EXPLIST1D_H
 
 #include <vector>
 #include <fstream>
@@ -156,14 +156,18 @@ namespace Nektar
         typedef std::vector<ExpList1DSharedPtr>   ExpList1DVector;
         typedef std::vector<ExpList1DSharedPtr>::iterator ExpList1DVectorIter;
 
+        const static Array<OneD, ExpList1DSharedPtr> NullExpList1DSharedPtrArray;
 
     } //end of namespace
 } //end of namespace
 
-#endif//EXPLIST1D_H
+#endif//NEKTAR_LIB_MULTIREGIONS_EXPLIST1D_H
 
 /**
  * $Log: ExpList1D.h,v $
+ * Revision 1.22  2008/08/14 22:15:51  sherwin
+ * Added LocalToglobalMap and DGMap and depracted LocalToGlobalBndryMap1D,2D. Made DisContField classes compatible with updated ContField formats
+ *
  * Revision 1.21  2008/07/29 22:27:33  sherwin
  * Updates for DG solvers, including using GenSegExp, fixed forcing function on UDG HelmSolve and started to tidy up the mapping arrays to be 1D rather than 2D
  *

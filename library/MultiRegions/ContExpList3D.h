@@ -38,7 +38,7 @@
 
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList3D.h>
-#include <MultiRegions/LocalToGlobalMap3D.h>
+#include <MultiRegions/LocalToGlobalC0ContMap.h>
 
 namespace Nektar
 {
@@ -76,18 +76,18 @@ namespace Nektar
                 return m_contNcoeffs;
             }
             
-            inline void ContToLocal()
+            inline void GlobalToLocal()
             {
-                m_locToGloMap->ContToLocal(m_contCoeffs, m_coeffs);
+                m_locToGloMap->GlobalToLocal(m_contCoeffs, m_coeffs);
             }
-             inline void ContToLocal(const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            inline void GlobalToLocal(const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
-                m_locToGloMap->ContToLocal(inarray, outarray);
+                m_locToGloMap->GlobalToLocal(inarray, outarray);
             }
             
-            inline void LocalToCont()
+            inline void LocalToGlobal()
             {
-                m_locToGloMap->LocalToCont(m_coeffs, m_contCoeffs);
+                m_locToGloMap->LocalToGlobal(m_coeffs, m_contCoeffs);
             }        
         
             inline void Assemble()
@@ -100,7 +100,7 @@ namespace Nektar
                 m_locToGloMap->Assemble(inarray, outarray);
             }
 
-            inline const LocalToGlobalMapSharedPtr& GetLocalToGlobalMap() const
+            inline const LocalToGlobalC0ContMapSharedPtr& GetLocalToGlobalMap() const
             {
                 return  m_locToGloMap;
             }
@@ -117,10 +117,10 @@ namespace Nektar
             
 
         protected:
-            LocalToGlobalMapSharedPtr m_locToGloMap;
-      	    int                       m_contNcoeffs;
-	        Array<OneD, NekDouble>    m_contCoeffs;
-            GlobalLinSysMapShPtr      m_globalMat;
+            LocalToGlobalC0ContMapSharedPtr m_locToGloMap;
+      	    int                             m_contNcoeffs;
+            Array<OneD, NekDouble>          m_contCoeffs;
+            GlobalLinSysMapShPtr            m_globalMat;
                         
         private:
             

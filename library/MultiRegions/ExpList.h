@@ -38,7 +38,6 @@
 
 #include <MultiRegions/MultiRegions.hpp>
 #include <StdRegions/StdExpansion.h>
-#include <MultiRegions/LocalToGlobalMap.h>
 #include <MultiRegions/LocalToGlobalBaseMap.h>
 #include <MultiRegions/GlobalLinSys.h>
 
@@ -50,7 +49,7 @@ namespace Nektar
     namespace MultiRegions
     {
         class GlobalLinSys; 
-        class LocalToGlobalMap;
+        class LocalToGlobalC0ContMap;
         class LocalToGlobalBaseMap;
         
         /**
@@ -902,7 +901,7 @@ namespace Nektar
              * matrix \f$\boldsymbol{M}\f$.
              */
             boost::shared_ptr<GlobalLinSys>  GenGlobalLinSysFullDirect(const GlobalLinSysKey &mkey, 
-                                                                       const boost::shared_ptr<LocalToGlobalMap> &locToGloMap);
+                                                                       const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
 
             /**
              * \brief This function constructs the necessary global matrices required for 
@@ -993,7 +992,7 @@ namespace Nektar
              * \return (A shared pointer to) the statically condensed global linear system.
              */
             boost::shared_ptr<GlobalLinSys>  GenGlobalLinSysStaticCond(const GlobalLinSysKey &mkey, 
-                                                                       const boost::shared_ptr<LocalToGlobalMap> &locToGloMap);
+                                                                       const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
 
             /**
              * \brief This operation constructs the global linear system of type \a mkey.
@@ -1011,7 +1010,7 @@ namespace Nektar
              * \return (A shared pointer to) the global linear system in required format.
              */
             boost::shared_ptr<GlobalLinSys>  GenGlobalLinSys(const GlobalLinSysKey &mkey, 
-                                                             const boost::shared_ptr<LocalToGlobalMap> &locToGloMap);
+                                                             const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
             
             /**
              * \brief Generate a GlobalLinSys from information
@@ -1035,6 +1034,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.42  2008/08/14 22:15:51  sherwin
+* Added LocalToglobalMap and DGMap and depracted LocalToGlobalBndryMap1D,2D. Made DisContField classes compatible with updated ContField formats
+*
 * Revision 1.41  2008/07/29 22:27:33  sherwin
 * Updates for DG solvers, including using GenSegExp, fixed forcing function on UDG HelmSolve and started to tidy up the mapping arrays to be 1D rather than 2D
 *

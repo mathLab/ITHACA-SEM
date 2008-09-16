@@ -14,12 +14,13 @@ ExpList.cpp
 GenExpList1D.cpp
 GlobalLinSys.cpp
 GlobalLinSysKey.cpp
-LocalToGlobalMap.cpp
-LocalToGlobalDGMap.cpp
+#LocalToGlobalMap.cpp
 LocalToGlobalBaseMap.cpp
-LocalToGlobalBndryMap.cpp
-LocalToGlobalMap1D.cpp
-LocalToGlobalMap2D.cpp
+LocalToGlobalDGMap.cpp
+LocalToGlobalC0ContMap.cpp
+#LocalToGlobalBndryMap.cpp
+#LocalToGlobalMap1D.cpp
+#LocalToGlobalMap2D.cpp
 #LocalToGlobalMap3D.cpp
 )
 
@@ -40,12 +41,13 @@ GenExpList1D.h
 GlobalLinSys.h
 GlobalLinSysKey.h
 LocalToGlobalBaseMap.h
-LocalToGlobalBndryMap.h
 LocalToGlobalDGMap.h
-LocalToGlobalMap1D.h
-LocalToGlobalMap2D.h
-LocalToGlobalMap3D.h
-LocalToGlobalMap.h
+LocalToGlobalC0ContMap.h
+#LocalToGlobalBndryMap.h
+#LocalToGlobalMap1D.h
+#LocalToGlobalMap2D.h
+#LocalToGlobalMap3D.h
+#LocalToGlobalMap.h
 MultiRegions.hpp
 )
 

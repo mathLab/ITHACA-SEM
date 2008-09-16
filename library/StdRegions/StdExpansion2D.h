@@ -127,6 +127,11 @@ namespace Nektar
         private:
 
             // Virtual Functions ----------------------------------------
+            virtual int v_GetShapeDimension() const
+            {
+                return 2;
+            }
+
             virtual int v_GetNfaces() const
             {
                 ASSERTL0(false, "This function is only valid for 3D "
@@ -155,6 +160,9 @@ namespace Nektar
 
 /**
  * $Log: StdExpansion2D.h,v $
+ * Revision 1.24  2008/08/14 22:09:50  sherwin
+ * Modifications to remove HDG routines from StdRegions and removed StdExpMap
+ *
  * Revision 1.23  2008/07/29 22:21:15  sherwin
  * A bunch of mods for DG advection and separaring the GetGeom calls into GetGeom1D ...
  *

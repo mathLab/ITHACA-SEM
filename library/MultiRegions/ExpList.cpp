@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ExpList.h>
+#include <MultiRegions/LocalToGlobalC0ContMap.h>
 
 namespace Nektar
 {
@@ -428,7 +429,7 @@ namespace Nektar
         }
         
 	
-	GlobalLinSysSharedPtr ExpList::GenGlobalLinSysFullDirect(const GlobalLinSysKey &mkey, const LocalToGlobalMapSharedPtr &locToGloMap)
+	GlobalLinSysSharedPtr ExpList::GenGlobalLinSysFullDirect(const GlobalLinSysKey &mkey, const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
 	{
             int i,j,n,gid1,gid2,loc_lda,cnt;
             NekDouble sign1,sign2;
@@ -436,8 +437,8 @@ namespace Nektar
             DNekLinSysSharedPtr   linsys;
             GlobalLinSysSharedPtr returnlinsys;
 
-            int totDofs     = locToGloMap->GetTotGloDofs();
-            int NumDirBCs   = locToGloMap->GetNumDirichletDofs();
+            int totDofs     = locToGloMap->GetNumGlobalCoeffs();
+            int NumDirBCs   = locToGloMap->GetNumDirichletBndCoeffs();
 
             unsigned int rows = totDofs - NumDirBCs;
             unsigned int cols = totDofs - NumDirBCs;
@@ -458,14 +459,14 @@ namespace Nektar
 		    
                 for(i = 0; i < loc_lda; ++i)
                 {
-                    gid1 = locToGloMap->GetMap(cnt + i);
-                    sign1 =  locToGloMap->GetSign(cnt + i);
+                    gid1 = locToGloMap->GetLocalToGlobalMap(cnt + i);
+                    sign1 =  locToGloMap->GetLocalToGlobalSign(cnt + i);
                     if(gid1 >= NumDirBCs)
                     {
                         for(j = 0; j < loc_lda; ++j)
                         {
-                            gid2 = locToGloMap->GetMap(cnt + j);
-                            sign2 = locToGloMap->GetSign(cnt + j);
+                            gid2 = locToGloMap->GetLocalToGlobalMap(cnt + j);
+                            sign2 = locToGloMap->GetLocalToGlobalSign(cnt + j);
                             if(gid2 >= NumDirBCs)
                             {
                                 (*Gmat)(gid1-NumDirBCs,gid2-NumDirBCs) 
@@ -494,7 +495,7 @@ namespace Nektar
         }
 
 
-	GlobalLinSysSharedPtr ExpList::GenGlobalLinSysStaticCond(const GlobalLinSysKey &mkey, const LocalToGlobalMapSharedPtr &locToGloMap)
+	GlobalLinSysSharedPtr ExpList::GenGlobalLinSysStaticCond(const GlobalLinSysKey &mkey, const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
 	{
             int i,j,n,gid1,gid2,loc_lda,cnt;
             NekDouble sign1,sign2;
@@ -502,8 +503,8 @@ namespace Nektar
             DNekLinSysSharedPtr   linsys;
             GlobalLinSysSharedPtr returnlinsys;
             
-            int nBndDofs = locToGloMap->GetTotGloBndDofs();
-            int NumDirBCs = locToGloMap->GetNumDirichletDofs();
+            int nBndDofs = locToGloMap->GetNumGlobalBndCoeffs();
+            int NumDirBCs = locToGloMap->GetNumDirichletBndCoeffs();
 
             unsigned int rows = nBndDofs - NumDirBCs;
             unsigned int cols = nBndDofs - NumDirBCs;
@@ -548,14 +549,14 @@ namespace Nektar
                 // Set up  Matrix; 
                 for(i = 0; i < loc_lda; ++i)
                 {
-                    gid1 = locToGloMap->GetBndMap(cnt + i);
-                    sign1 = locToGloMap->GetBndSign(cnt + i);
+                    gid1 = locToGloMap->GetLocalToGlobalBndMap(cnt + i);
+                    sign1 = locToGloMap->GetLocalToGlobalBndSign(cnt + i);
                     if(gid1 >= NumDirBCs)
                     {
                         for(j = 0; j < loc_lda; ++j)
                         {
-                            gid2 = locToGloMap->GetBndMap(cnt + j);
-                            sign2 = locToGloMap->GetBndSign(cnt + j);
+                            gid2 = locToGloMap->GetLocalToGlobalBndMap(cnt + j);
+                            sign2 = locToGloMap->GetLocalToGlobalBndSign(cnt + j);
                             if(gid2 >= NumDirBCs)
                             {
                                 (*Gmat)(gid1-NumDirBCs,gid2-NumDirBCs) 
@@ -579,7 +580,7 @@ namespace Nektar
         }
 
 
-	GlobalLinSysSharedPtr ExpList::GenGlobalLinSys(const GlobalLinSysKey &mkey, const LocalToGlobalMapSharedPtr &locToGloMap)
+	GlobalLinSysSharedPtr ExpList::GenGlobalLinSys(const GlobalLinSysKey &mkey, const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
 	{
             GlobalLinSysSharedPtr returnlinsys; 
 

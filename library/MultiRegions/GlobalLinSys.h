@@ -42,8 +42,7 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-
-        class LocalToGlobalBndryMap;
+        class LocalToGlobalC0ContMap;
 
 	class GlobalLinSys
         {
@@ -73,7 +72,7 @@ namespace Nektar
 
             void Solve(const Array<OneD, const NekDouble> &in, 
                        Array<OneD,NekDouble> &out,
-                       LocalToGlobalBndryMap &locToGloMap);
+                       LocalToGlobalC0ContMap &locToGloMap);
 
         private:
             GlobalLinSysKey                     m_linSysKey;

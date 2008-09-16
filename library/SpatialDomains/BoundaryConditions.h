@@ -160,6 +160,8 @@ namespace Nektar
         typedef boost::shared_ptr<BoundaryConditionMap> BoundaryConditionMapShPtr;
         typedef std::map<int, BoundaryConditionMapShPtr> BoundaryConditionCollection;
 
+        const static Array<OneD, BoundaryConditionShPtr> NullBoundaryConditionShPtrArray;
+
         typedef Equation ForcingFunction;
         typedef boost::shared_ptr<ForcingFunction> ForcingFunctionShPtr;
         typedef boost::shared_ptr<const ForcingFunction> ConstForcingFunctionShPtr;

@@ -68,12 +68,12 @@ namespace Nektar
             map<int,int> periodicVertices;
             GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),periodicVertices,periodicEdges);
 
-            m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp,                                                            m_bndCondExpansions,
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp,                                                            m_bndCondExpansions,
                                                                                  m_bndConditions,
                                                                                  periodicVertices,
                                                                                  periodicEdges);
 	    
-	    m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
+	    m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
 	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
@@ -91,13 +91,13 @@ namespace Nektar
             map<int,int> periodicVertices;
             GetPeriodicEdges(graph2D,bcs,variable,periodicVertices,periodicEdges);
 
-            m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp,
                                                                                  m_bndCondExpansions,
                                                                                  m_bndConditions,
                                                                                  periodicVertices,
                                                                                  periodicEdges);
 	    
-	    m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
+	    m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
 	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
@@ -120,13 +120,13 @@ namespace Nektar
             map<int,int> periodicVertices;
             GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),periodicVertices,periodicEdges);
 
-            m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp,
                                                                                  m_bndCondExpansions,
                                                                                  m_bndConditions,
                                                                                  periodicVertices,
                                                                                  periodicEdges);
 	    
-	    m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
+	    m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
 	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
@@ -149,13 +149,13 @@ namespace Nektar
             map<int,int> periodicVertices;
             GetPeriodicEdges(graph2D,bcs,variable,periodicVertices,periodicEdges);
 
-            m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp,
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp,
                                                                                  m_bndCondExpansions,
                                                                                  m_bndConditions,
                                                                                  periodicVertices,
                                                                                  periodicEdges);
 	    
-	    m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
+	    m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
 	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
         
@@ -211,7 +211,7 @@ namespace Nektar
         {
             int i,j;
             int bndcnt=0;
-            int NumDirBcs = m_locToGloMap->GetNumDirichletDofs();
+            int NumDirBcs = m_locToGloMap->GetNumDirichletBndCoeffs();
             Array<OneD,NekDouble> sln;
             Array<OneD,NekDouble> init(m_contNcoeffs,0.0);
             Array<OneD,NekDouble> Dir_fce(m_contNcoeffs,0.0);
@@ -227,7 +227,7 @@ namespace Nektar
                 }
                 for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                 {
-                    init[m_locToGloMap->GetBndCondMap(bndcnt++)] = (m_bndCondExpansions[i]->GetCoeffs())[j];
+                    init[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)] = (m_bndCondExpansions[i]->GetCoeffs())[j];
                 }
             }
             GeneralMatrixOp(key, init, Dir_fce);
@@ -247,7 +247,7 @@ namespace Nektar
             {
                 for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                 {
-                    m_contCoeffs[m_locToGloMap->GetBndCondMap(bndcnt++)] +=  
+                    m_contCoeffs[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)] +=  
                         (m_bndCondExpansions[i]->GetCoeffs())[j];
                 }
             }

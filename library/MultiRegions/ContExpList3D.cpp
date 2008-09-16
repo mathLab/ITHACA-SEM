@@ -138,7 +138,7 @@ namespace Nektar
             {
                 //TODO implement "LocalToGlobalMap3D"
                 //m_locToGloMap = MemoryManager<LocalToGlobalMap3D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph3D); 
-                m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
+                m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
                 m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
             }
         }
@@ -155,7 +155,7 @@ namespace Nektar
             {
                //TODO implement "LocalToGlobalMap3D"
                // m_locToGloMap = MemoryManager<LocalToGlobalMap3D>::AllocateSharedPtr(m_ncoeffs,*m_exp,graph3D);
-                m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
+                m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
                 m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
             }
         }
@@ -164,7 +164,7 @@ namespace Nektar
         {
             if(m_transState == eContinuous)
             {
-                ContToLocal();
+                GlobalToLocal();
             }
             ExpList3D::IProductWRTBase(In);
             Assemble();
@@ -177,7 +177,7 @@ namespace Nektar
             
         {
                 Array<OneD,NekDouble> tmp(m_ncoeffs);
-                ContToLocal(inarray,tmp);
+                GlobalToLocal(inarray,tmp);
                 ExpList3D::GeneralMatrixOp(gkey,tmp,tmp);
                 Assemble(tmp,outarray);
         }
@@ -209,7 +209,7 @@ namespace Nektar
         {
             if(m_transState == eContinuous)
             {
-                ContToLocal();
+                GlobalToLocal();
             }         
             ExpList3D::BwdTrans(In);
         }

@@ -101,8 +101,8 @@ namespace Nektar
             // setup mapping array 
             if(constructMap)
             {
-                m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp);
-                m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
+                m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp);
+                m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
                 m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
             }
         }
@@ -118,8 +118,8 @@ namespace Nektar
             // setup mapping array 
             if(constructMap)
             {
-                m_locToGloMap = MemoryManager<LocalToGlobalMap2D>::AllocateSharedPtr(m_ncoeffs,*m_exp);
-                m_contNcoeffs = m_locToGloMap->GetTotGloDofs();
+                m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp);
+                m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
                 m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
             }
         }
@@ -128,7 +128,7 @@ namespace Nektar
         {
             if(m_transState == eContinuous)
             {
-                ContToLocal();
+                GlobalToLocal();
             }
             ExpList2D::IProductWRTBase(In);
             Assemble();
@@ -136,12 +136,12 @@ namespace Nektar
         }
 
         void ContExpList2D::GeneralMatrixOp(const GlobalLinSysKey &gkey,
-                                                const Array<OneD, const NekDouble> &inarray,
-                                                Array<OneD, NekDouble> &outarray)
+                                            const Array<OneD, const NekDouble> &inarray,
+                                            Array<OneD, NekDouble> &outarray)
                 
         {
             Array<OneD,NekDouble> tmp(m_ncoeffs);
-            ContToLocal(inarray,tmp);
+            GlobalToLocal(inarray,tmp);
             ExpList2D::GeneralMatrixOp(gkey,tmp,tmp);
             Assemble(tmp,outarray);
         }
@@ -173,7 +173,7 @@ namespace Nektar
         {
             if(m_transState == eContinuous)
             {
-                ContToLocal();
+                GlobalToLocal();
             }         
             ExpList2D::BwdTrans(In);
         }
@@ -183,6 +183,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.cpp,v $
+* Revision 1.15  2008/08/26 02:42:51  ehan
+* Many modifications in order to be consistent with changes in 2D and 1D.
+*
 * Revision 1.14  2008/05/07 16:05:55  pvos
 * Mapping + Manager updates
 *

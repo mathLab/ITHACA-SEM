@@ -130,6 +130,11 @@ namespace Nektar
 
         private:
 
+            virtual int v_GetShapeDimension() const
+            {
+                return 3;
+            }
+
             virtual int v_GetCoordim(void)
             {
                 return 3; 
@@ -147,6 +152,9 @@ namespace Nektar
 
 /**
  * $Log: StdExpansion3D.h,v $
+ * Revision 1.18  2008/07/04 10:18:40  pvos
+ * Some updates
+ *
  * Revision 1.17  2008/06/06 23:21:13  ehan
  * Added doxygen documentation
  *

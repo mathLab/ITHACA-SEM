@@ -87,6 +87,8 @@ namespace Nektar
     typedef std::vector<PointExpSharedPtr> PointExpVector;
     typedef std::vector<PointExpSharedPtr>::iterator PointExpVectorIter;
 
+    const static Array<OneD, PointExpSharedPtr> NullPointExpSharedPtrArray;
+
     } //end of namespace
 } //end of namespace
 

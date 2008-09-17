@@ -230,7 +230,7 @@ namespace Nektar
             I1 = PointsManager()[fpoints1]->GetI(tpoints1);
             I2 = PointsManager()[fpoints2]->GetI(tpoints2);
             
-            ASSERTL0(false,"method needs sorting");
+           // ASSERTL0(false,"method needs sorting");
 
             // this is not correction since it does not go over all points;
 

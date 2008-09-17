@@ -672,7 +672,7 @@ namespace Nektar
 
         void StdPrismExp::GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                               Array<OneD, unsigned int> &maparray,
-                                              Array<OneD, int> &signarray)
+                                              Array<OneD, int>& signarray)
         {
             //TODO implement 
 
@@ -767,6 +767,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPrismExp.cpp,v $
+ * Revision 1.14  2008/07/04 10:18:40  pvos
+ * Some updates
+ *
  * Revision 1.13  2008/06/16 22:46:12  ehan
  * Populated the function GetFaceToElementMap(..)
  *

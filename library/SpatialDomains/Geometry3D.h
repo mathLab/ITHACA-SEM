@@ -97,14 +97,14 @@ namespace Nektar
                 return v_GetVid(i);
             }
 
-            inline int GetEid() const
+            inline int GetEid(int i) const
             {
-                return v_GetEid();
+                return v_GetEid(i);
             }
             
-            inline int GetFid() const
+            inline int GetFid(int i) const
             {
-                return v_GetFid();
+                return v_GetFid(i);
             }
 
             void FillGeom()
@@ -215,14 +215,14 @@ namespace Nektar
                          "This function is only valid for shape type geometries");
             }
 
-            virtual int v_GetEid() const 
+            virtual int v_GetEid(int i) const 
             {
                 NEKERROR(ErrorUtil::efatal,
                          "This function is only valid for shape type geometries");
                 return 0;
             }
 
-            virtual int v_GetFid() const 
+            virtual int v_GetFid(int i) const 
             {
                 NEKERROR(ErrorUtil::efatal,
                          "This function is only valid for shape type geometries");
@@ -336,6 +336,9 @@ namespace Nektar
 
 //
 // $Log: Geometry3D.h,v $
+// Revision 1.7  2008/09/12 11:26:19  pvos
+// Updates for mappings in 3D
+//
 // Revision 1.6  2008/08/26 02:27:19  ehan
 // Added various virtual functions.
 //

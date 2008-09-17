@@ -649,7 +649,8 @@ namespace Nektar
                 int nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(0); 
 
                 Array<OneD, unsigned int> mapArray (nFaceCoeffs);
-                Array<OneD, int>          signArray(nFaceCoeffs);
+                Array<OneD, int>    signArray(nFaceCoeffs);
+                NekDouble sign;
 
                 for(i = 0; i < kNfaces; i++)
                 {
@@ -662,7 +663,8 @@ namespace Nektar
                     {
                         for(k = 0; k < nFaceCoeffs; k++)
                         {
-                            (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = signArray[k]*
+                            sign = (NekDouble) signArray[k];
+                            (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = sign *
                                 ((*m_faces[i])[j]->GetCoeffs())[k];
                         }
                     }
@@ -730,6 +732,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.cpp,v $
+// Revision 1.11  2008/09/12 11:26:19  pvos
+// Updates for mappings in 3D
+//
 // Revision 1.10  2008/06/18 19:27:18  ehan
 // Added implementation for GetLocCoords(..)
 //

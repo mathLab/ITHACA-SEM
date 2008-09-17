@@ -72,7 +72,7 @@ namespace Nektar
 
             inline int GetFid(int i) const
             {
-                ASSERTL2((i >=0) && (i <= 11),"Edge id must be between 0 and 11");
+                ASSERTL2((i >=0) && (i <= 5),"face id must be between 0 and 5");
                 return m_faces[i]->GetFid();
             }
 
@@ -89,13 +89,14 @@ namespace Nektar
 
             inline const Geometry2DSharedPtr GetFace(int i) const
             {
-                ASSERTL2((i >=0) && (i <= 11),"Edge id must be between 0 and 11");
+                ASSERTL2((i >=0) && (i <= 5),"Face id must be between 0 and 5");
                 return m_faces[i];
             }
 
-            inline int GetEid() const 
+            inline int GetEid(int i) const 
             {
-                return m_eid;
+                ASSERTL2((i >=0) && (i <= 11),"Edge id must be between 0 and 11");
+                return m_edges[i]->GetEid();
             }
 
             inline int GetVid(int i) const
@@ -266,9 +267,9 @@ namespace Nektar
                 return IsElmtConnected(gvo_id,locid);
             }
             
-            virtual int v_GetEid() const 
+            virtual int v_GetEid(int i) const 
             {
-                return GetEid();
+                return GetEid(i);
             }
 
             virtual int v_GetVid(int i) const
@@ -310,6 +311,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.17  2008/09/12 11:26:19  pvos
+// Updates for mappings in 3D
+//
 // Revision 1.16  2008/08/26 02:25:30  ehan
 // Changed shared pointer (QuadGeomSharedPtr to the Geometry2DSharedPtr) in the face function.
 //

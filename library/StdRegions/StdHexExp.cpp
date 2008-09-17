@@ -813,10 +813,9 @@ namespace Nektar
         }
  
         void StdHexExp::GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
-                                           Array<OneD, unsigned int> &maparray)
+                                           Array<OneD, unsigned int> &maparray,
+                                           Array<OneD, int> &signarray)
         {
-            Array<OneD, int> signarray;
-
             ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
                      GetBasisType(0) == LibUtilities::eGLL_Lagrange,
                      "BasisType is not a boundary interior form");
@@ -1036,7 +1035,7 @@ namespace Nektar
 
         void StdHexExp::GetFaceInteriorMap(const int fid, const FaceOrientation faceOrient,
                                            Array<OneD, unsigned int> &maparray,
-                                           Array<OneD, int> &signarray)
+                                           Array<OneD, int>& signarray)
         {
             ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
                      GetBasisType(0) == LibUtilities::eGLL_Lagrange,
@@ -1366,7 +1365,7 @@ namespace Nektar
 
         void StdHexExp::GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                             Array<OneD, unsigned int> &maparray,
-                                            Array<OneD, int> &signarray)
+                                            Array<OneD, int>& signarray)
         {
             int i,j;
             const int nummodes0 = m_base[0]->GetNumModes();
@@ -1700,6 +1699,9 @@ namespace Nektar
 
 /** 
  * $Log: StdHexExp.cpp,v $
+ * Revision 1.24  2008/09/15 13:18:08  pvos
+ * Added more hexahedron mapping routines
+ *
  * Revision 1.23  2008/09/12 11:26:39  pvos
  * Updates for mappings in 3D
  *

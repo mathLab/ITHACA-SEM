@@ -771,7 +771,7 @@ namespace Nektar
 
         void StdTetExp::GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                             Array<OneD, unsigned int> &maparray,
-                                            Array<OneD, int> &signarray)
+                                            Array<OneD, int>& signarray)
         {
             //TODO implement 
 
@@ -782,6 +782,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTetExp.cpp,v $
+ * Revision 1.18  2008/07/19 21:12:54  sherwin
+ * Removed MapTo function and made orientation convention anticlockwise in UDG routines
+ *
  * Revision 1.17  2008/07/04 10:18:40  pvos
  * Some updates
  *

@@ -162,7 +162,7 @@ namespace Nektar
             //TODO implement                       
             void GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                      Array<OneD, unsigned int> &maparray,
-                                     Array<OneD, int> &signarray);
+                                     Array<OneD, int>& signarray);
                                    
             int GetFaceNcoeffs(const int i) const
             {
@@ -284,7 +284,7 @@ namespace Nektar
             }
             virtual void v_GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                                Array<OneD, unsigned int> &maparray,
-                                               Array<OneD, int> &signarray)
+                                               Array<OneD, int>& signarray)
             {
                 GetFaceToElementMap(fid,faceOrient,maparray,signarray);
             }
@@ -385,6 +385,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.22  2008/07/19 21:12:54  sherwin
+ * Removed MapTo function and made orientation convention anticlockwise in UDG routines
+ *
  * Revision 1.21  2008/07/04 10:18:41  pvos
  * Some updates
  *

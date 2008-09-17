@@ -141,6 +141,8 @@ namespace Nektar
         typedef boost::shared_ptr<ExpList2D>      ExpList2DSharedPtr;
         typedef std::vector< ExpList2DSharedPtr > ExpList2DVector;
         typedef std::vector< ExpList2DSharedPtr >::iterator ExpList2DVectorIter;
+
+        const static Array<OneD, ExpList2DSharedPtr> NullExpList2DSharedPtrArray;
     } //end of namespace
 } //end of namespace
 
@@ -148,6 +150,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.h,v $
+* Revision 1.14  2008/08/14 22:15:51  sherwin
+* Added LocalToglobalMap and DGMap and depracted LocalToGlobalBndryMap1D,2D. Made DisContField classes compatible with updated ContField formats
+*
 * Revision 1.13  2008/06/05 15:06:58  pvos
 * Added documentation
 *

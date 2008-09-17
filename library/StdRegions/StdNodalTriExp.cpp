@@ -311,7 +311,8 @@ namespace Nektar
         }
  
         void StdNodalTriExp::GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
-                                           Array<OneD, unsigned int> &maparray)
+                                                Array<OneD, unsigned int> &maparray,
+                                                Array<OneD, int> &signarray)
         {
             ASSERTL0((eid>=0)&&(eid<=2),"Local Edge ID must be between 0 and 2"); 
             const int nEdgeIntCoeffs = GetEdgeNcoeffs(eid)-2;
@@ -319,6 +320,15 @@ namespace Nektar
             if(maparray.num_elements() != nEdgeIntCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
+            }
+
+            if(signarray.num_elements() != nEdgeIntCoeffs)
+            {
+                signarray = Array<OneD, int>(nEdgeIntCoeffs,1);
+            }
+            else
+            {
+                fill( signarray.get() , signarray.get()+nEdgeIntCoeffs, 1 );
             }
             
             for(int i = 0; i < nEdgeIntCoeffs; i++)
@@ -550,6 +560,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.28  2008/07/19 21:12:54  sherwin
+* Removed MapTo function and made orientation convention anticlockwise in UDG routines
+*
 * Revision 1.27  2008/07/04 10:18:40  pvos
 * Some updates
 *

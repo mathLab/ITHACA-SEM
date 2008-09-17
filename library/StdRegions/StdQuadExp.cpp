@@ -597,7 +597,8 @@ namespace Nektar
         }
  
         void StdQuadExp::GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
-                                            Array<OneD, unsigned int> &maparray)
+                                            Array<OneD, unsigned int> &maparray,
+                                            Array<OneD, int> &signarray)
         {
             int i;
             const int nummodes0 = m_base[0]->GetNumModes();
@@ -610,6 +611,15 @@ namespace Nektar
                 maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
             }
 
+            if(signarray.num_elements() != nEdgeIntCoeffs)
+            {
+                signarray = Array<OneD, int>(nEdgeIntCoeffs,1);
+            }
+            else
+            {
+                fill( signarray.get() , signarray.get()+nEdgeIntCoeffs, 1 );
+            }
+
             if(bType == LibUtilities::eModified_A)
             {
                 switch(eid)
@@ -620,7 +630,14 @@ namespace Nektar
                         {
                             maparray[i] = i+2;
                         }
-                        
+
+                        if(edgeOrient==eBackwards)
+                        {                            
+                            for(i = 1; i < nEdgeIntCoeffs; i+=2)
+                            {
+                                signarray[i] = -1;
+                            }
+                        }                           
                     }
                     break;
                 case 1:
@@ -628,7 +645,15 @@ namespace Nektar
                         for(i = 0; i < nEdgeIntCoeffs; i++)
                         {
                             maparray[i] = (i+2)*nummodes0 + 1;
-                        }                        
+                        } 
+
+                        if(edgeOrient==eBackwards)
+                        {                            
+                            for(i = 1; i < nEdgeIntCoeffs; i+=2)
+                            {
+                                signarray[i] = -1;
+                            }
+                        }                         
                     }
                     break;
                 case 2:
@@ -636,7 +661,15 @@ namespace Nektar
                         for(i = 0; i < nEdgeIntCoeffs; i++)
                         {
                             maparray[i] = nummodes0+i+2;
-                        }                        
+                        } 
+
+                        if(edgeOrient==eForwards)
+                        {                            
+                            for(i = 1; i < nEdgeIntCoeffs; i+=2)
+                            {
+                                signarray[i] = -1;
+                            }
+                        }                         
                     }
                     break;
                 case 3:
@@ -644,6 +677,14 @@ namespace Nektar
                         for(i = 0; i < nEdgeIntCoeffs; i++)
                         {
                             maparray[i] = (i+2)*nummodes0;
+                        }  
+
+                        if(edgeOrient==eForwards)
+                        {                            
+                            for(i = 1; i < nEdgeIntCoeffs; i+=2)
+                            {
+                                signarray[i] = -1;
+                            }
                         }                         
                     }
                     break;
@@ -1087,6 +1128,9 @@ namespace Nektar
 
 /** 
  * $Log: StdQuadExp.cpp,v $
+ * Revision 1.42  2008/08/14 22:09:51  sherwin
+ * Modifications to remove HDG routines from StdRegions and removed StdExpMap
+ *
  * Revision 1.41  2008/07/19 21:12:54  sherwin
  * Removed MapTo function and made orientation convention anticlockwise in UDG routines
  *

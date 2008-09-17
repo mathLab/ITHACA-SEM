@@ -206,7 +206,8 @@ namespace Nektar
             int GetVertexMap(const int localVertexId);
  
             void GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
-                                    Array<OneD, unsigned int> &maparray);
+                                    Array<OneD, unsigned int> &maparray,
+                                    Array<OneD, int> &signarray);
 
             void GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
                                      Array<OneD, unsigned int> &maparray,
@@ -477,9 +478,10 @@ namespace Nektar
             }
  
             virtual void v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
-                                              Array<OneD, unsigned int> &maparray)
+                                              Array<OneD, unsigned int> &maparray,
+                                               Array<OneD, int> &signarray)
             {
-                GetEdgeInteriorMap(eid,edgeOrient,maparray);
+                GetEdgeInteriorMap(eid,edgeOrient,maparray,signarray);
             }
 
             virtual void v_GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
@@ -526,6 +528,9 @@ namespace Nektar
 
 /**
  * $Log: StdQuadExp.h,v $
+ * Revision 1.40  2008/09/09 14:15:23  sherwin
+ * Added definitions for DetCartesianDirOfEdge
+ *
  * Revision 1.39  2008/08/14 22:09:51  sherwin
  * Modifications to remove HDG routines from StdRegions and removed StdExpMap
  *

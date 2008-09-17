@@ -39,6 +39,8 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/LocalToGlobalBaseMap.h>
 #include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/ExpList2D.h>
+
 
 #include <LocalRegions/PointExp.h>
 #include <LocalRegions/SegExp.h>
@@ -65,12 +67,22 @@ namespace Nektar
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                    const map<int,int>& periodicVerticesId);
 
+            // Constructor for the 2D expansion mappings
             LocalToGlobalC0ContMap(const int numLocalCoeffs, 
                                    const StdRegions::StdExpansionVector &locExpVector, 
                                    const Array<OneD, const ExpList1DSharedPtr> &bndCondExp,
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                    const map<int,int>& periodicVerticesId,
                                    const map<int,int>& periodicEdgesId);
+
+            // Constructor for the 3D expansion mappings
+            LocalToGlobalC0ContMap(const int numLocalCoeffs, 
+                                   const StdRegions::StdExpansionVector &locExpVector, 
+                                   const Array<OneD, const ExpList2DSharedPtr> &bndCondExp,
+                                   const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
+                                   const map<int,int>& periodicVerticesId,
+                                   const map<int,int>& periodicEdgesId,
+                                   const map<int,int>& periodicFacesId);
             
             ~LocalToGlobalC0ContMap(); 
                 
@@ -173,6 +185,16 @@ namespace Nektar
                                                SpatialDomains::NullBoundaryConditionShPtrArray,
                                            const map<int,int>& periodicVerticesId = NullIntIntMap,
                                            const map<int,int>& periodicEdgesId = NullIntIntMap);
+
+            void SetUp3DExpansionC0ContMap(const int numLocalCoeffs, 
+                                           const StdRegions::StdExpansionVector &locExpVector, 
+                                           const Array<OneD, const ExpList2DSharedPtr> &bndCondExp = 
+                                               NullExpList2DSharedPtrArray,
+                                           const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions = 
+                                               SpatialDomains::NullBoundaryConditionShPtrArray,
+                                           const map<int,int>& periodicVerticesId = NullIntIntMap,
+                                           const map<int,int>& periodicEdgesId = NullIntIntMap,
+                                           const map<int,int>& periodicFacesId = NullIntIntMap);
         };
         typedef boost::shared_ptr<LocalToGlobalC0ContMap>  LocalToGlobalC0ContMapSharedPtr;
         
@@ -182,6 +204,9 @@ namespace Nektar
 #endif //MULTIREGIONS_LOCALTOGLOBALC0CONTMAP_H
 
 /**
-* $Log: LocalToGlobalC0ContMap.h$
+* $Log: LocalToGlobalC0ContMap.h,v $
+* Revision 1.1  2008/09/16 13:36:06  pvos
+* Restructured the LocalToGlobalMap classes
+*
 **/
 

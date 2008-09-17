@@ -640,7 +640,8 @@ namespace Nektar
         }
  
         void StdTriExp::GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
-                                           Array<OneD, unsigned int> &maparray)
+                                           Array<OneD, unsigned int> &maparray,
+                                           Array<OneD, int> &signarray)
         {
             ASSERTL0((GetEdgeBasisType(eid)==LibUtilities::eModified_A)||
                      (GetEdgeBasisType(eid)==LibUtilities::eModified_B),
@@ -654,6 +655,15 @@ namespace Nektar
                 maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
             }
 
+            if(signarray.num_elements() != nEdgeIntCoeffs)
+            {
+                signarray = Array<OneD, int>(nEdgeIntCoeffs,1);
+            }
+            else
+            {
+                fill( signarray.get() , signarray.get()+nEdgeIntCoeffs, 1 );
+            }
+
             switch(eid)
             {
             case 0:
@@ -662,7 +672,15 @@ namespace Nektar
                     for(i = 0; i < nEdgeIntCoeffs; cnt+=nummodes1-2-i, ++i)
                     {
                         maparray[i] = cnt; 
-                    }          
+                    }   
+
+                    if(edgeOrient==eBackwards)
+                    {                            
+                        for(i = 1; i < nEdgeIntCoeffs; i+=2)
+                        {
+                            signarray[i] = -1;
+                        }
+                    }       
                 }
                 break;
             case 1:
@@ -670,7 +688,15 @@ namespace Nektar
                     for(i = 0; i < nEdgeIntCoeffs; i++)
                     {
                         maparray[i] = nummodes1+1+i; 
-                    }                        
+                    }            
+
+                    if(edgeOrient==eBackwards)
+                    {                            
+                        for(i = 1; i < nEdgeIntCoeffs; i+=2)
+                        {
+                            signarray[i] = -1;
+                        }
+                    }            
                 }
                 break;
             case 2:
@@ -678,7 +704,15 @@ namespace Nektar
                     for(i = 0; i < nEdgeIntCoeffs; i++)
                     {
                         maparray[i] = 2+i;
-                    }                        
+                    }  
+
+                    if(edgeOrient==eForwards)
+                    {                            
+                        for(i = 1; i < nEdgeIntCoeffs; i+=2)
+                        {
+                            signarray[i] = -1;
+                        }
+                    }                      
                 }
                 break;
             default:
@@ -725,14 +759,11 @@ namespace Nektar
                     if(edgeOrient==eBackwards)
                     {
                         swap( maparray[0] , maparray[1] );
-                        
-                        if(nEdgeCoeffs >= 4)
+
+                        for(i = 3; i < nEdgeCoeffs; i+=2)
                         {
-                            for(i = 3; i < nEdgeCoeffs; i+=2)
-                            {
-                                signarray[i] = -1;
-                            }
-                        }  
+                            signarray[i] = -1;
+                        } 
                     }        
                 }
                 break;
@@ -748,14 +779,11 @@ namespace Nektar
                     if(edgeOrient==eBackwards)
                     {
                         swap( maparray[0] , maparray[1] );
-                        
-                        if(nEdgeCoeffs >= 4)
+
+                        for(i = 3; i < nEdgeCoeffs; i+=2)
                         {
-                            for(i = 3; i < nEdgeCoeffs; i+=2)
-                            {
-                                signarray[i] = -1;
-                            }
-                        }  
+                            signarray[i] = -1;
+                        }
                     }                         
                 }
                 break;
@@ -770,13 +798,10 @@ namespace Nektar
                     {
                         swap( maparray[0] , maparray[1] );
                         
-                        if(nEdgeCoeffs >= 4)
+                        for(i = 3; i < nEdgeCoeffs; i+=2)
                         {
-                            for(i = 3; i < nEdgeCoeffs; i+=2)
-                            {
-                                signarray[i] = -1;
-                            }
-                        }  
+                            signarray[i] = -1;
+                        }                         
                     }                      
                 }
                 break;
@@ -1070,6 +1095,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTriExp.cpp,v $
+ * Revision 1.44  2008/09/08 08:04:18  pvos
+ * removed NEKTAR_USING_DIRECT_BLAS_CALLS
+ *
  * Revision 1.43  2008/08/28 15:03:54  pvos
  * small efficiency updates
  *

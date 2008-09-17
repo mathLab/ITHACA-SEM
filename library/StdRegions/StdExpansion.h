@@ -858,9 +858,10 @@ namespace Nektar
             }
  
             void GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
-                                    Array<OneD, unsigned int> &maparray)
+                                    Array<OneD, unsigned int> &maparray,
+                                    Array<OneD, int> &signarray)
             {
-                v_GetEdgeInteriorMap(eid,edgeOrient,maparray);
+                v_GetEdgeInteriorMap(eid,edgeOrient,maparray,signarray);
             }   
 
             void GetFaceInteriorMap(const int fid, const FaceOrientation faceOrient,
@@ -1412,7 +1413,8 @@ namespace Nektar
             }
  
             virtual void v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
-                                              Array<OneD, unsigned int> &maparray)
+                                              Array<OneD, unsigned int> &maparray,
+                                              Array<OneD, int> &signarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }   
@@ -1553,6 +1555,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.99  2008/09/16 13:37:03  pvos
+ * Restructured the LocalToGlobalMap classes
+ *
  * Revision 1.98  2008/09/15 13:18:08  pvos
  * Added more hexahedron mapping routines
  *

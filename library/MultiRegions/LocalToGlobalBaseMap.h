@@ -78,6 +78,18 @@ namespace Nektar
             {
                 return m_bndCondCoeffsToGlobalCoeffsMap[i];
             }
+            
+            inline int GetBndCondCoeffsToGlobalCoeffsSign(const int i)
+            {
+                if(m_signChange)
+                {
+                return m_bndCondCoeffsToGlobalCoeffsSign[i];
+                }
+                else
+                {
+                    return 1.0;
+                }
+            }
                         
             inline const Array<OneD,const int>& GetBndCondCoeffsToGlobalCoeffsMap(void)
             {
@@ -178,6 +190,7 @@ namespace Nektar
             Array<OneD,NekDouble> m_localToGlobalBndSign; //< integer sign of local boundary coeffs to global space 
  
             Array<OneD,int> m_bndCondCoeffsToGlobalCoeffsMap;  //< integer map of bnd cond coeffs to global coefficients
+            Array<OneD,NekDouble> m_bndCondCoeffsToGlobalCoeffsSign;  //< integer map of bnd cond coeffs to global coefficients
         private:
         };
         typedef boost::shared_ptr<LocalToGlobalBaseMap>  LocalToGlobalBaseMapSharedPtr;
@@ -189,6 +202,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalBaseMap.h,v $
+/** Revision 1.2  2008/09/16 13:36:06  pvos
+/** Restructured the LocalToGlobalMap classes
+/**
 /** Revision 1.1  2008/08/18 08:16:23  sherwin
 /** First version of this new class container for mappings
 /**

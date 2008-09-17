@@ -81,7 +81,7 @@ namespace Nektar
             //TODO implement
             void GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                      Array<OneD, unsigned int> &maparray,
-                                     Array<OneD, int> &signarray);
+                                     Array<OneD, int>& signarray);
 
             int GetFaceNcoeffs(const int i) const
             {
@@ -258,7 +258,7 @@ namespace Nektar
         
             virtual void v_GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                                Array<OneD, unsigned int> &maparray,
-                                               Array<OneD, int> &signarray)
+                                               Array<OneD, int>& signarray)
             {
                 GetFaceToElementMap(fid,faceOrient,maparray,signarray);
             }
@@ -354,6 +354,9 @@ namespace Nektar
 
 /**
  * $Log: StdPrismExp.h,v $
+ * Revision 1.18  2008/07/04 10:18:40  pvos
+ * Some updates
+ *
  * Revision 1.17  2008/06/16 22:46:19  ehan
  * Populated the function GetFaceToElementMap(..)
  *

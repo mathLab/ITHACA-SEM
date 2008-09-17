@@ -68,10 +68,11 @@ namespace Nektar
             map<int,int> periodicVertices;
             GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),periodicVertices,periodicEdges);
 
-            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp,                                                            m_bndCondExpansions,
-                                                                                 m_bndConditions,
-                                                                                 periodicVertices,
-                                                                                 periodicEdges);
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp,
+                                                                                     m_bndCondExpansions,
+                                                                                     m_bndConditions,
+                                                                                     periodicVertices,
+                                                                                     periodicEdges);
 	    
 	    m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
 	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);

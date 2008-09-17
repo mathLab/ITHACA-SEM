@@ -113,6 +113,7 @@ namespace Nektar
 
             // Set up boundary mapping
             m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD, int >(nbnd);
+            m_bndCondCoeffsToGlobalCoeffsSign = Array<OneD, NekDouble >(nbnd,1.0);
             m_numDirichletBndCoeffs = 0;
             m_numDirichletBndPhys = 0;
 
@@ -244,6 +245,7 @@ namespace Nektar
                 cnt += bndCondExp[i]->GetExpSize();
             }
             m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD,int >(cnt);
+            m_bndCondCoeffsToGlobalCoeffsSign = Array<OneD,NekDouble >(cnt,1.0);
             m_bndExpAdjacentOrient = Array<OneD, AdjacentTraceOrientation > (cnt);
             
             m_numDirichletBndCoeffs = 0;

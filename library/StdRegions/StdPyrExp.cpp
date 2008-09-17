@@ -634,7 +634,7 @@ namespace Nektar
 
         void StdPyrExp::GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                             Array<OneD, unsigned int> &maparray,
-                                            Array<OneD, int> &signarray)
+                                            Array<OneD, int>& signarray)
         {
             //TODO implement 
 
@@ -725,6 +725,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPyrExp.cpp,v $
+ * Revision 1.13  2008/07/04 10:18:40  pvos
+ * Some updates
+ *
  * Revision 1.12  2008/06/16 22:46:26  ehan
  * Populated the function GetFaceToElementMap(..)
  *

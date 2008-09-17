@@ -131,7 +131,8 @@ namespace Nektar
             }
  
             void GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
-                                    Array<OneD, unsigned int> &maparray);
+                                    Array<OneD, unsigned int> &maparray,
+                                    Array<OneD, int> &signarray);
 
             void GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
                                      Array<OneD, unsigned int> &maparray,
@@ -269,9 +270,10 @@ namespace Nektar
             }
  
             virtual void v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
-                                              Array<OneD, unsigned int> &maparray)
+                                              Array<OneD, unsigned int> &maparray,
+                                               Array<OneD, int> &signarray)
             {
-                GetEdgeInteriorMap(eid,edgeOrient,maparray);
+                GetEdgeInteriorMap(eid,edgeOrient,maparray,signarray);
             }
 
             virtual void v_GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
@@ -295,6 +297,9 @@ namespace Nektar
 
 /**
  * $Log: StdNodalTriExp.h,v $
+ * Revision 1.25  2008/07/19 21:12:54  sherwin
+ * Removed MapTo function and made orientation convention anticlockwise in UDG routines
+ *
  * Revision 1.24  2008/07/04 10:18:40  pvos
  * Some updates
  *

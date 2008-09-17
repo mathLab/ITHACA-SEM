@@ -87,7 +87,8 @@ namespace Nektar
             int GetVertexMap(const int localVertexId);
  
             void GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
-                                    Array<OneD, unsigned int> &maparray);
+                                    Array<OneD, unsigned int> &maparray,
+                                    Array<OneD, int> &signarray);
 
             void GetFaceInteriorMap(const int fid, const FaceOrientation faceOrient,
                                     Array<OneD, unsigned int> &maparray,
@@ -374,21 +375,22 @@ namespace Nektar
             }
  
             virtual void v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
-                                              Array<OneD, unsigned int> &maparray)
+                                              Array<OneD, unsigned int> &maparray,
+                                              Array<OneD, int> &signarray)
             {
-                GetEdgeInteriorMap(eid,edgeOrient,maparray);
+                GetEdgeInteriorMap(eid,edgeOrient,maparray,signarray);
             }    
 
             virtual void v_GetFaceInteriorMap(const int fid, const FaceOrientation faceOrient,
                                               Array<OneD, unsigned int> &maparray,
-                                              Array<OneD, int> &signarray)
+                                              Array<OneD, int>& signarray)
             {
                 GetFaceInteriorMap(fid,faceOrient,maparray,signarray);
             }
 
             virtual void v_GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                                Array<OneD, unsigned int> &maparray,
-                                               Array<OneD, int> &signarray)
+                                               Array<OneD, int>& signarray)
             {
                 GetFaceToElementMap(fid,faceOrient,maparray,signarray);
             }
@@ -490,6 +492,9 @@ namespace Nektar
 
 /**
  * $Log: StdHexExp.h,v $
+ * Revision 1.26  2008/09/15 13:18:08  pvos
+ * Added more hexahedron mapping routines
+ *
  * Revision 1.25  2008/09/12 11:26:39  pvos
  * Updates for mappings in 3D
  *

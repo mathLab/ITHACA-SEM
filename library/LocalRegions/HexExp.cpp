@@ -43,7 +43,7 @@ namespace Nektar
     namespace LocalRegions 
     {
 
-	HexExp::HexExp(const LibUtilities::BasisKey &Ba, 
+        HexExp::HexExp(const LibUtilities::BasisKey &Ba,
                        const LibUtilities::BasisKey &Bb,
                        const LibUtilities::BasisKey &Bc,
                        const SpatialDomains::HexGeomSharedPtr &geom):
@@ -55,14 +55,12 @@ namespace Nektar
         {
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                          StdRegions::eNoExpansionType,*this),
+                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i, StdRegions::eNoExpansionType,*this),
                                                 boost::bind(&HexExp::CreateMatrix, this, _1));
                 m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                                    StdRegions::eNoExpansionType,*this),
-                                                          boost::bind(&HexExp::CreateStaticCondMatrix, this, _1));
+                                                                     StdRegions::eNoExpansionType,*this),
+                                                                     boost::bind(&HexExp::CreateStaticCondMatrix, this, _1));
             }
-            
             GenMetricInfo();
         }
 
@@ -82,14 +80,14 @@ namespace Nektar
                                                           StdRegions::eNoExpansionType,*this),
                                                 boost::bind(&HexExp::CreateMatrix, this, _1));
                 m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                                    StdRegions::eNoExpansionType,*this),
+                                                          StdRegions::eNoExpansionType,*this),
                                                           boost::bind(&HexExp::CreateStaticCondMatrix, this, _1));
             }
 
             // Set up unit geometric factors. 
             int coordim = 3;
             Array<OneD,NekDouble> ndata = Array<OneD,NekDouble>(coordim*coordim*coordim,0.0); 
-            ndata[0] = ndata[4] = 1.0; //TODO must check
+            ndata[0] = ndata[26] = 1.0; //TODO must check
             m_metricinfo->ResetGmat(ndata,1,3,coordim); //TODO must check
             m_metricinfo->ResetJac(1,ndata); //TODO must check
 
@@ -109,7 +107,6 @@ namespace Nektar
         {
         }
 
-        //TODO: implement
         void HexExp::GenMetricInfo()
         {
             SpatialDomains::GeomFactorsSharedPtr Xgfac;
@@ -122,90 +119,23 @@ namespace Nektar
             }
             else
             {
-                int nq0 = m_base[0]->GetNumPoints();
-                int nq1 = m_base[1]->GetNumPoints();
-                int nq2 = m_base[2]->GetNumPoints();
-                int nq = nq0*nq1*nq2;
-                int coordim = m_geom->GetCoordim();
-                int expdim = 3;
-                SpatialDomains::GeomType gtype = SpatialDomains::eDeformed;
-
-                LibUtilities::BasisSharedPtr CBasis0;
-                LibUtilities::BasisSharedPtr CBasis1;
-                LibUtilities::BasisSharedPtr CBasis2;
-     
-                Array<OneD, const NekDouble> ojac = Xgfac->GetJac();
-                Array<TwoD, const NekDouble> ogmat = Xgfac->GetGmat();
-                Array<OneD,NekDouble> njac(nq);
-                Array<OneD,NekDouble> ngmat(3*coordim*nq);
-                
-                CBasis0 = m_geom->GetBasis(0,0); // this assumes all goembasis are same
-                CBasis1 = m_geom->GetBasis(0,1);
-                CBasis2 = m_geom->GetBasis(0,2);
-                int Cnq0 = CBasis0->GetNumPoints();
-                int Cnq1 = CBasis1->GetNumPoints();
-                int Cnq2 = CBasis2->GetNumPoints();
-
-                
-                m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::
-                    AllocateSharedPtr(gtype,expdim,coordim); 
-                
                 //basis are different distributions
-                if(!(m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))||
-                   !(m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey()))||
-                   !(m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
+               if(!(m_base[0]->GetBasisKey().SamePoints(m_geom->GetBasis(0,0)->GetBasisKey()))||
+                  !(m_base[1]->GetBasisKey().SamePoints(m_geom->GetBasis(0,1)->GetBasisKey()))||
+                  !(m_base[2]->GetBasisKey().SamePoints(m_geom->GetBasis(0,2)->GetBasisKey())))
                 {
-                    int i;
-
-                    // interpolate Jacobian        
-                    LibUtilities::Interp3D(CBasis0->GetPointsKey(),
-                                           CBasis1->GetPointsKey(),
-                                           CBasis2->GetPointsKey(),
-                                           &ojac[0],
-                                           m_base[0]->GetPointsKey(),
-                                           m_base[1]->GetPointsKey(),
-                                           m_base[2]->GetPointsKey(),
-                                           &njac[0]);
+                    StdRegions::ExpansionType shape = StdRegions::eHexahedron;
                     
-                    m_metricinfo->ResetJac(nq,njac);
-
-                    //TODO check following routine
-                    // interpolate Geometric data
-                    Array<OneD,NekDouble> dxdxi(nq);
-                    for(i = 0; i < 2*coordim; ++i)
-                    {
-                        Vmath::Vmul(nq,&ojac[0],1,&ogmat[i][0],1,&dxdxi[0],1);
-                        LibUtilities::Interp2D(CBasis0->GetPointsKey(),
-                                               CBasis1->GetPointsKey(), 
-                                               &dxdxi[0], 
-                                               m_base[0]->GetPointsKey(),
-                                               m_base[1]->GetPointsKey(),
-                                               &ngmat[0] + i*nq);
-                        Vmath::Vdiv(nq,&ngmat[0]+i*nq,1,&njac[0],1,&ngmat[0]+i*nq,1);
-                    }
-                    
-                    m_metricinfo->ResetGmat(ngmat,nq,3,coordim); 
-
-                    NEKERROR(ErrorUtil::ewarning,
-                       "Need to check/debug routine for deformed elements");
+                    m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::
+                                   AllocateSharedPtr(shape,*Xgfac,m_base); 
                 }
                 else // Same data can be used 
                 {                   
-                    // Copy Jacobian
-                    Blas::Dcopy(nq, &ojac[0], 1, &njac[0], 1); 
-                    m_metricinfo->ResetJac(nq,njac);
-
-                    // interpolate Geometric data
-                    Blas::Dcopy(3*coordim*nq, &ogmat[0][0], 1, ngmat.data(), 1);
-                    m_metricinfo->ResetGmat(ngmat,nq,3,coordim); 
-
-                    NEKERROR(ErrorUtil::ewarning,
-                             "Need to check/debug routine for deformed elements");
+                    m_metricinfo = Xgfac;
                 }
                 
             }
         }
-
 
 
         /** \brief Integrate the physical point list \a inarray over region
@@ -400,7 +330,7 @@ namespace Nektar
             ASSERTL0(m_geom, "m_geom not define");
             
             // get physical points defined in Geom
-            // m_geom->FillGeom();  //TODO: implement
+             m_geom->FillGeom();  
             
             switch(m_geom->GetCoordim())
             {
@@ -477,7 +407,7 @@ namespace Nektar
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(3);
 
             ASSERTL0(m_geom,"m_geom not defined");
-            // m_geom->GetLocCoords(coord,Lcoord);  //TODO implement GetLocCoords() in HexGeom.cpp
+            m_geom->GetLocCoords(coord,Lcoord); 
         
             return StdHexExp::PhysEvaluate(Lcoord);
         }
@@ -493,7 +423,7 @@ namespace Nektar
                      Lcoords[2] <= -1.0 && Lcoords[2] >= 1.0,
                      "Local coordinates are not in region [-1,1]");
 
-            //   m_geom->FillGeom();    //TODO: implement FillGeom 
+              m_geom->FillGeom();  
 
             for(i = 0; i < m_geom->GetCoordDim(); ++i)
             {
@@ -560,43 +490,52 @@ namespace Nektar
       
         DNekMatSharedPtr HexExp::CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
         {
-            // Need to check if matrix exists in stdMatrixManager.
-            // If not then make a local expansion with standard metric info
-            // and generate matrix. Otherwise direct call is OK. 
-            if(!StdMatManagerAlreadyCreated(mkey))
-            {
-                LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
-                LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
-                LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
-                HexExpSharedPtr tmp = MemoryManager<HexExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
-                
-                return tmp->StdHexExp::GetStdMatrix(mkey);
-            }
-            else
-            {
-                return StdHexExp::GetStdMatrix(mkey);
-            }
+            LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
+            LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
+            LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
+            StdRegions::StdHexExpSharedPtr tmp = MemoryManager<StdHexExp>::AllocateSharedPtr(bkey0,bkey1,bkey2);
+            return tmp->GetStdMatrix(mkey); 
         }
-
+      
+//         DNekMatSharedPtr HexExp::CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
+//         {
+//             // Need to check if matrix exists in stdMatrixManager.
+//             // If not then make a local expansion with standard metric info
+//             // and generate matrix. Otherwise direct call is OK.
+//             if(!StdMatManagerAlreadyCreated(mkey))
+//             {
+//                 LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
+//                 LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
+//                 LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
+//                 HexExpSharedPtr tmp = MemoryManager<HexExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
+//
+//                 return tmp->StdHexExp::GetStdMatrix(mkey); //TODO: infinity recursive recursion -- this is not working
+//             }
+//             else
+//             {
+//                 return StdHexExp::GetStdMatrix(mkey);
+//             }
+//         }
+/*
         DNekBlkMatSharedPtr HexExp::CreateStdStaticCondMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             // Need to check if matrix exists in stdMatrixManager.
             // If not then make a local expansion with standard metric info
-            // and generate matrix. Otherwise direct call is OK. 
+            // and generate matrix. Otherwise direct call is OK.
             if(!StdMatManagerAlreadyCreated(mkey))
             {
                 LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
                 LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
                 LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
                 HexExpSharedPtr tmp = MemoryManager<HexExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
-                
-                return tmp->StdHexExp::GetStdStaticCondMatrix(mkey);                
+
+                return tmp->StdHexExp::GetStdStaticCondMatrix(mkey);
             }
             else
             {
                 return StdHexExp::GetStdStaticCondMatrix(mkey);
             }
-        }
+        }*/
 
 	//TODO: implement
 
@@ -931,6 +870,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.cpp,v $
+ *    Revision 1.19  2008/09/09 15:05:09  sherwin
+ *    Updates related to cuved geometries. Normals have been removed from m_metricinfo and replaced with a direct evaluation call. Interp methods have been moved to LibUtilities
+ *
  *    Revision 1.18  2008/08/14 22:12:56  sherwin
  *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
  *

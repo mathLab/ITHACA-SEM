@@ -100,8 +100,9 @@ int main(int argc, char *argv[])
     Array<OneD, NekDouble> solution( Qx * Qy * Qz );
 
     LibUtilities::PointsType    Qtype_x = eGaussLobattoLegendre;
-    LibUtilities::PointsType    Qtype_y = eGaussRadauMAlpha1Beta0;
-    LibUtilities::PointsType    Qtype_z = eGaussRadauMAlpha2Beta0;
+    LibUtilities::PointsType    Qtype_y = eGaussLobattoLegendre;
+    LibUtilities::PointsType    Qtype_z = eGaussLobattoLegendre;
+
         
     //-----------------------------------------------
     // Define a 3D expansion based on basis definition
@@ -150,8 +151,6 @@ int main(int argc, char *argv[])
                 AllocateSharedPtr( i, three, vertsArray);
           }
 
-          
-
           // /////////////////////////////////////////////////////////////////////////
           // Set up Hexahedron faces
           const int nFaces = 6;
@@ -192,7 +191,7 @@ int main(int argc, char *argv[])
         Array<OneD,NekDouble> y = Array<OneD,NekDouble>( Qx * Qy * Qz );
         Array<OneD,NekDouble> z = Array<OneD,NekDouble>( Qx * Qy * Qz );
         
-        lhe->GetCoords(x,y,z); //TODO: must test HexExp::GetCoords()
+        lhe->GetCoords(x,y,z); 
     
         //----------------------------------------------
         // Define solution to be projected

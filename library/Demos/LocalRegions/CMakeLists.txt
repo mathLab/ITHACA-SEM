@@ -45,3 +45,8 @@ SET(LocHexExpDemoSource  LocHexExpDemo.cpp)
 ADD_NEKTAR_EXECUTABLE(LocHexExpDemo LocHexExpDemoSource)
 TARGET_LINK_LIBRARIES(LocHexExpDemo ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(LocHexExpDemo)
+
+SET(LocHexExpDemoSource  LocHexExpDemo_2.cpp)
+ADD_NEKTAR_EXECUTABLE(LocHexExpDemo_2 LocHexExpDemoSource)
+TARGET_LINK_LIBRARIES(LocHexExpDemo_2 ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(LocHexExpDemo_2)

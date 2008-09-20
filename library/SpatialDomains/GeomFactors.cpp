@@ -94,8 +94,7 @@ namespace Nektar
                 ASSERTL2(Coords[i]->GetPointsType(0) == ptype,
                     "Points type are different for each coordinate");
         
-                Coords[i]->BwdTrans(Coords[i]->GetCoeffs(), 
-                    Coords[i]->UpdatePhys());
+                Coords[i]->BwdTrans(Coords[i]->GetCoeffs(), Coords[i]->UpdatePhys());
 
                 Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(), der[i]);
             }
@@ -273,12 +272,13 @@ namespace Nektar
             int Xnq0, Xnq1, Xnqtot;
             LibUtilities::PointsKey fpoints0;
             LibUtilities::PointsKey fpoints1;
+
             
             m_gtype   = Xgfac.m_gtype;
             m_expdim  = Xgfac.m_expdim;
             m_coordim = Xgfac.m_coordim;
 
-            m_pointsKey = Array<OneD,LibUtilities::PointsKey>(m_expdim);
+           m_pointsKey = Array<OneD,LibUtilities::PointsKey>(m_expdim);
 
             ASSERTL0(m_gtype == eDeformed,
                      "This routine assumes element geometry is deformed");
@@ -564,7 +564,7 @@ namespace Nektar
                 int nquad0 = m_pointsKey[0].GetNumPoints();
                 int nquad1 = m_pointsKey[1].GetNumPoints();
                 
-                LibUtilities::PointsKey from_key;
+               LibUtilities::PointsKey from_key;
 
                 Array<OneD,NekDouble> normals(m_coordim*max(nquad0,nquad1),0.0);
                 Array<OneD,NekDouble> jac    (m_coordim*max(nquad0,nquad1),0.0);
@@ -763,22 +763,28 @@ namespace Nektar
                                  const Array<OneD, const StdRegions::StdExpansion3DSharedPtr> &Coords):
         m_gtype(gtype), m_coordim(coordim), m_expdim(3)
         {
-
-          //  LibUtilities::PointsType  ptype0, ptype1, ptype2;
-
             ASSERTL1((coordim<=3), "Only understand up to three coordinate");
 
-            int nquad0, nquad1, nquad2, nqtot;
             m_pointsKey = Array<OneD, LibUtilities::PointsKey> (m_expdim);
-            m_pointsKey[0] = Coords[0]->GetBasis(0)->GetPointsKey();
-            m_pointsKey[1] = Coords[0]->GetBasis(1)->GetPointsKey();
-            m_pointsKey[2] = Coords[0]->GetBasis(2)->GetPointsKey();
-             nquad0 = m_pointsKey[0].GetNumPoints();
-             nquad1 = m_pointsKey[1].GetNumPoints();
-             nquad2 = m_pointsKey[2].GetNumPoints();
-             nqtot = nquad0*nquad1*nquad2;
 
-            cout << "nqtot = " << nqtot << endl;
+            int nquad0, nquad1, nquad2, nqtot; 
+            LibUtilities::PointsType  ptype0, ptype1, ptype2;
+
+            m_pointsKey[0] = Coords[0]->GetBasis(0)->GetPointsKey();
+            
+            nquad0 = m_pointsKey[0].GetNumPoints();
+            ptype0 = m_pointsKey[0].GetPointsType();
+              
+            m_pointsKey[1] = Coords[0]->GetBasis(1)->GetPointsKey();
+            nquad1 = m_pointsKey[1].GetNumPoints();
+            ptype1 = m_pointsKey[1].GetPointsType();
+               
+            m_pointsKey[2] = Coords[0]->GetBasis(2)->GetPointsKey();;
+            nquad2 = m_pointsKey[2].GetNumPoints();
+            ptype2 = m_pointsKey[2].GetPointsType();
+             
+ 
+             nqtot = nquad0*nquad1*nquad2; 
 
             // setup temp storage
             Array<OneD, NekDouble> d1[3] = {Array<OneD, NekDouble>(nqtot),
@@ -801,11 +807,11 @@ namespace Nektar
             ASSERTL2(Coords[i]->GetNumPoints(2) == nquad2,
                     "Points order are different for coordinate 2");
            
-            ASSERTL2(Coords[i]->GetPointsType(0) == nquad0,
+            ASSERTL2(Coords[i]->GetPointsType(0) == ptype0,
                     "Points type are different for coordinate 0");
-            ASSERTL2(Coords[i]->GetPointsType(1) == nquad1,
+            ASSERTL2(Coords[i]->GetPointsType(1) == ptype1,
                     "Points type are different for coordinate 1");
-            ASSERTL2(Coords[i]->GetPointsType(2) == nquad2,
+            ASSERTL2(Coords[i]->GetPointsType(2) == ptype2,
                     "Points type are different for coordinate 2");
 
             Coords[i]->BwdTrans(Coords[i]->GetCoeffs(), Coords[i]->UpdatePhys());
@@ -824,7 +830,10 @@ namespace Nektar
                 m_jac[0] = d1[0][0]*(d2[1][0]*d3[2][0] - d3[1][0]*d2[2][0])
                          - d2[0][0]*(d1[1][0]*d3[2][0] - d3[1][0]*d1[2][0])
                          + d3[0][0]*(d1[1][0]*d2[2][0] - d2[1][0]*d1[2][0]);
+
                          
+                cout << "m_jac[0] = " << m_jac[0] << endl;
+                
                 ASSERTL1(m_jac[0] > 0, "3D Regular Jacobian is not positive");
 
                 // Partial derivatives with respect to x_1, x_2, and x_3
@@ -948,6 +957,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.27  2008/09/15 10:21:32  ehan
+// Fixed some errors.
+//
 // Revision 1.26  2008/09/09 14:18:02  sherwin
 // Removed m_normals from GeomFactor. Added GenNormals2D and additional copy type constructor
 //

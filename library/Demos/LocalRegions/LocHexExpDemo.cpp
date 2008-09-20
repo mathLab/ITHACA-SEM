@@ -16,7 +16,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iosfwd>
-
+ 
 
 using namespace std;
 using namespace boost;
@@ -33,8 +33,8 @@ using namespace Nektar::StdRegions;
 using namespace Nektar::SpatialDomains;
 
 int main(int argc, char *argv[])
- {
-
+ {   
+  
         if( argc != 10 ) {
         cerr << "Usage: HexDemo Type_x Type_y Type_z numModes_x numModes_y numModes_z Qx Qy Qz" << endl;
         cerr << "Where type is an interger value which dictates the basis as:" << endl;
@@ -51,10 +51,10 @@ int main(int argc, char *argv[])
         cerr << "\t Nodal Tet (Electro) = 13    (3D Nodal Electrostatic Points on a Tetrahedron)\n";
         cerr << "\n\n" << "Example: " << argv[0] << " 4 4 4 3 3 3 5 5 5" << endl;
         cerr << endl;
-
+ 
         exit(1);
     }
-
+ 
     StdRegions::ExpansionType regionShape = StdRegions::eHexahedron;
     int bType_x_val = atoi(argv[1]);
     int bType_y_val = atoi(argv[2]);
@@ -99,9 +99,38 @@ int main(int argc, char *argv[])
     
     Array<OneD, NekDouble> solution( Qx * Qy * Qz );
 
-    LibUtilities::PointsType    Qtype_x = eGaussLobattoLegendre;
-    LibUtilities::PointsType    Qtype_y = eGaussLobattoLegendre;
-    LibUtilities::PointsType    Qtype_z = eGaussLobattoLegendre;
+    LibUtilities::PointsType    Qtype_x, Qtype_y, Qtype_z;// = eGaussLobattoLegendre;
+    
+    Array<OneD,NekDouble> x = Array<OneD,NekDouble>( Qx * Qy * Qz );
+    Array<OneD,NekDouble> y = Array<OneD,NekDouble>( Qx * Qy * Qz );
+    Array<OneD,NekDouble> z = Array<OneD,NekDouble>( Qx * Qy * Qz );
+
+        if(bType_x != LibUtilities::eFourier)
+        {
+            Qtype_x = LibUtilities::eGaussLobattoLegendre; 
+        }
+        else 
+        {
+            Qtype_x = LibUtilities::eFourierEvenlySpaced;
+        }
+
+        if(bType_y != LibUtilities::eFourier)
+        {
+            Qtype_y = LibUtilities::eGaussLobattoLegendre; 
+        }
+        else
+        {
+            Qtype_y = LibUtilities::eFourierEvenlySpaced;
+        }
+        
+        if(bType_z != LibUtilities::eFourier)
+        {
+            Qtype_z = LibUtilities::eGaussLobattoLegendre; 
+        }
+        else
+        {
+            Qtype_z = LibUtilities::eFourierEvenlySpaced;
+        }
 
         
     //-----------------------------------------------
@@ -116,7 +145,7 @@ int main(int argc, char *argv[])
           // VertexComponent (const int coordim, const int vid, double x, double y, double z)
           
           const int nVerts = 8;
-          const double point[][3] = {
+          const double point[][3] = { 
             {0,0,0}, {1,0,0}, {1,1,0}, {0,1,0},
             {0,0,1}, {1,0,1}, {1,1,1}, {0,1,1}
           };
@@ -171,33 +200,51 @@ int main(int argc, char *argv[])
           }
           
 
-         SpatialDomains::HexGeomSharedPtr geom = MemoryManager<SpatialDomains::HexGeom>::AllocateSharedPtr(faces);
-         geom->SetOwnData();
          
-         const LibUtilities::PointsKey   pointsKey_x( Qx, Qtype_x );
+         
+         const LibUtilities::PointsKey   pointsKey_x( Qx, Qtype_x ); 
          const LibUtilities::PointsKey   pointsKey_y( Qy, Qtype_y );
          const LibUtilities::PointsKey   pointsKey_z( Qz, Qtype_z );
 
-         const LibUtilities::BasisKey    basisKey_x( bType_x, xModes, pointsKey_x );
-         const LibUtilities::BasisKey    basisKey_y( bType_y, yModes, pointsKey_y );
-         const LibUtilities::BasisKey    basisKey_z( bType_z, zModes, pointsKey_z );
+         cout << "pointsKey_x = " << pointsKey_x << endl;
 
-        if( bType_x_val < 12 ) {
+         const LibUtilities::BasisKey    basisKey_x( bType_x, xModes, pointsKey_x );
+         const LibUtilities::BasisKey    basisKey_y( bType_y, yModes, pointsKey_y ); 
+         const LibUtilities::BasisKey    basisKey_z( bType_z, zModes, pointsKey_z );
+         
+         Array<OneD, StdRegions::StdExpansion3DSharedPtr> xMap(3);
+         for(int i = 0; i < 3; ++i) {
+             xMap[i] = MemoryManager<StdRegions::StdHexExp>::AllocateSharedPtr(basisKey_x,basisKey_y,basisKey_z);
+         }
+         
+         SpatialDomains::HexGeomSharedPtr geom = MemoryManager<SpatialDomains::HexGeom>::AllocateSharedPtr(faces, xMap);
+         geom->SetOwnData();
+
+         
+ 
+
+        if( bType_x_val < 10 ) {
             lhe = new LocalRegions::HexExp( basisKey_x, basisKey_y, basisKey_z, geom );
  
-        }
-    
-        Array<OneD,NekDouble> x = Array<OneD,NekDouble>( Qx * Qy * Qz );
-        Array<OneD,NekDouble> y = Array<OneD,NekDouble>( Qx * Qy * Qz );
-        Array<OneD,NekDouble> z = Array<OneD,NekDouble>( Qx * Qy * Qz );
-        
+        }    
+
+        cout << "pointsKey_x2  = " << pointsKey_x << endl;
+            
         lhe->GetCoords(x,y,z); 
     
         //----------------------------------------------
         // Define solution to be projected
         for(int n = 0; n < Qx * Qy * Qz; ++n) {
             solution[n]  = Hex_sol( x[n], y[n], z[n], P, Q, R, bType_x, bType_y, bType_z );
+
+            cout << "x = " << x[n] << ",    y = " << y[n] << ",    z = " << z[n] <<endl;//"[" << n << "]" << endl;
+
+
+          //  cout << "Solution = " << solution[n] << endl;
+           
         }
+
+        cout << "pointsKey_x3 = " << pointsKey_x << endl;
         //----------------------------------------------
     }  // end of the if loop
            
@@ -226,6 +273,8 @@ int main(int argc, char *argv[])
     
     if( regionShape == StdRegions::eHexahedron ) {
         solution[0] = Hex_sol( t[0], t[1], t[2], P, Q, R, bType_x, bType_y, bType_z );
+
+        cout << "Solution = " << solution[0] << endl;
     }
  
     NekDouble numericSolution = lhe->PhysEvaluate(t);

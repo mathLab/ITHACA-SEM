@@ -143,7 +143,7 @@ namespace Nektar
                       NekDouble *to)
         {
             DNekMatSharedPtr I0,I1;
-            Array<OneD, NekDouble> wsp(tpoints1.GetNumPoints()*fpoints0.GetNumPoints());
+            Array<OneD, NekDouble> wsp(tpoints1.GetNumPoints()*fpoints0.GetNumPoints()); // fnp0*tnp1
 
             int fnp0 = fpoints0.GetNumPoints();
             int fnp1 = fpoints1.GetNumPoints();
@@ -205,7 +205,7 @@ namespace Nektar
                      tpoints0,tpoints1,tpoints2,to.data());
         }
 
-	void Interp3D(const PointsKey &fpoints0, 
+        void Interp3D(const PointsKey &fpoints0, 
                       const PointsKey &fpoints1,
                       const PointsKey &fpoints2,  
                       const NekDouble *from,  
@@ -226,46 +226,105 @@ namespace Nektar
             Array<OneD, NekDouble> wsp1(tnp1*fnp0);
             Array<OneD, NekDouble> wsp2(tnp2*fnp1);
             
-            I0 = PointsManager()[fpoints0]->GetI(tpoints0);
-            I1 = PointsManager()[fpoints1]->GetI(tpoints1);
-            I2 = PointsManager()[fpoints2]->GetI(tpoints2);
-            
-           // ASSERTL0(false,"method needs sorting");
+//             I0 = PointsManager()[fpoints0]->GetI(tpoints0);
+//             I1 = PointsManager()[fpoints1]->GetI(tpoints1);
+//             I2 = PointsManager()[fpoints2]->GetI(tpoints2);
 
-            // this is not correction since it does not go over all points;
+    
+            if(fpoints2 == tpoints2)
+            {
+                Vmath::Vcopy(fnp1*tnp2,from,1,wsp2.get(),1);
+            }
+            else
+            {
+               I2 = PointsManager()[fpoints2]->GetI(tpoints2);
+               Blas::Dgemm('N', 'T', tnp2, fnp1, fnp2, 1.0, I2->GetPtr().get(),tnp2, from, fnp1, 0.0, wsp2.get(), tnp2);
+            }
 
-            //TODO : following matrix storiges (rows, columns)        
-            Blas::Dgemm('N', 'T', tnp2, fnp1, fnp2, 1.0, I2->GetPtr().get(),
-                        tnp1, from, fnp0, 0.0, wsp2.get(), tnp1);
+            if(fpoints1 == tpoints1)
+            {
+                 Vmath::Vcopy(fnp0*tnp1,from,1,wsp1.get(),1);
+            }
+            else
+            {
+                I1 = PointsManager()[fpoints1]->GetI(tpoints1);
+                Blas::Dgemm('N', 'T', tnp1, fnp0, fnp1, 1.0, I1->GetPtr().get(), tnp1, wsp2.get(), fnp0, 0.0, wsp1.get(), tnp1); 
+            }
 
-              //TODO : following matrix storiges (rows, columns)
-            Blas::Dgemm('N', 'T',
-                         tnp1,      //  3
-                         fnp0,      //  4
-                         fnp1,      //  5
-                         1.0,                         //  6
-                         I1->GetPtr().get(),          //  7
-                         tnp1,      //  8
-                         wsp2.get(),                  //  9
-                         fnp0,      // 10 
-                         0.0,                         // 11
-                         wsp1.get(),                  // 12
-                         tnp1);     // 13
+                 // Blas::Dgemm('N', 'T', tnp1, fnp0, fnp1, 1.0, I1->GetPtr().get(),tnp1, from, fnp0, 0.0,  wsp.get(), tnp1);
 
-              //TODO : following matrix storiges (rows, columns)
-            Blas::Dgemm('N', 'T',
-                        tnp0,      //  3
-                        tnp1,      //  4
-                        fnp0,      //  5
-                        1.0,                         //  6
-                        I0->GetPtr().get(),          //  7
-                        tnp0,      //  8 
-                        wsp1.get(),                  //  9
-                        tnp1,      // 10
-                        0.0,                         // 11
-                        to,                          // 12
-                        tnp0);     // 13
+            if(fpoints0 == tpoints0)
+            {
+                Vmath::Vcopy(tnp0*tnp1,wsp1.get(),1,to,1);
+            }
+            else
+            {
+                I0 = PointsManager()[fpoints0]->GetI(tpoints0);
+                Blas::Dgemm('N', 'T', tnp0, tnp1, fnp0, 1.0, I0->GetPtr().get(),tnp0, wsp1.get(), tnp1, 0.0, to, tnp0);
+            } // Blas::Dgemm('N', 'T', tnp0, tnp1, fnp0, 1.0, I0->GetPtr().get(),tnp0, wsp.get(), tnp1, 0.0, to, tnp0);
         }
+
+// 	void Interp3D(const PointsKey &fpoints0, 
+//                       const PointsKey &fpoints1,
+//                       const PointsKey &fpoints2,  
+//                       const NekDouble *from,  
+//                       const PointsKey &tpoints0,
+//                       const PointsKey &tpoints1,
+//                       const PointsKey &tpoints2,
+//                       NekDouble *to)
+//         {
+//             DNekMatSharedPtr I0, I1, I2;
+//             
+//             int fnp0 = fpoints0.GetNumPoints();
+//             int fnp1 = fpoints1.GetNumPoints();
+//             int fnp2 = fpoints2.GetNumPoints();
+//             int tnp0 = tpoints0.GetNumPoints();
+//             int tnp1 = tpoints1.GetNumPoints();
+//             int tnp2 = tpoints2.GetNumPoints();
+//             
+//             Array<OneD, NekDouble> wsp1(tnp1*fnp0);
+//             Array<OneD, NekDouble> wsp2(tnp2*fnp1);
+//             
+//             I0 = PointsManager()[fpoints0]->GetI(tpoints0);
+//             I1 = PointsManager()[fpoints1]->GetI(tpoints1);
+//             I2 = PointsManager()[fpoints2]->GetI(tpoints2);
+//             
+//            // ASSERTL0(false,"method needs sorting");
+// 
+//             // this is not correction since it does not go over all points;
+// 
+//             //TODO : following matrix storiges (rows, columns)        
+//             Blas::Dgemm('N', 'T', tnp2, fnp1, fnp2, 1.0, I2->GetPtr().get(),
+//                         tnp1, from, fnp0, 0.0, wsp2.get(), tnp1);
+// 
+//               //TODO : following matrix storiges (rows, columns)
+//             Blas::Dgemm('N', 'T',
+//                          tnp1,      //  3
+//                          fnp0,      //  4
+//                          fnp1,      //  5
+//                          1.0,                         //  6
+//                          I1->GetPtr().get(),          //  7
+//                          tnp1,      //  8
+//                          wsp2.get(),                  //  9
+//                          fnp0,      // 10 
+//                          0.0,                         // 11
+//                          wsp1.get(),                  // 12
+//                          tnp1);     // 13
+// 
+//               //TODO : following matrix storiges (rows, columns)
+//             Blas::Dgemm('N', 'T',
+//                         tnp0,      //  3
+//                         tnp1,      //  4
+//                         fnp0,      //  5
+//                         1.0,                         //  6
+//                         I0->GetPtr().get(),          //  7
+//                         tnp0,      //  8 
+//                         wsp1.get(),                  //  9
+//                         tnp1,      // 10
+//                         0.0,                         // 11
+//                         to,                          // 12
+//                         tnp0);     // 13
+//         }
 
 
     } // end of namespace

@@ -88,8 +88,10 @@ namespace Nektar
             int coordim = 3;
             Array<OneD,NekDouble> ndata = Array<OneD,NekDouble>(coordim*coordim*coordim,0.0); 
             ndata[0] = ndata[26] = 1.0; //TODO must check
-            m_metricinfo->ResetGmat(ndata,1,3,coordim); //TODO must check
-            m_metricinfo->ResetJac(1,ndata); //TODO must check
+            //ResetGmat (const Array< OneD, const NekDouble > &ndata, const int nq, const int expdim, const int coordim
+            m_metricinfo->ResetGmat(ndata,1,3,coordim); 
+           //ResetJac (int nq, const Array< OneD, const NekDouble > &ndata)
+            m_metricinfo->ResetJac(1,ndata); 
 
         }
         
@@ -112,7 +114,7 @@ namespace Nektar
             SpatialDomains::GeomFactorsSharedPtr Xgfac;
             
             Xgfac = m_geom->GetGeomFactors();
-            
+
             if(Xgfac->GetGtype() != SpatialDomains::eDeformed)
             {
                 m_metricinfo = Xgfac;
@@ -126,13 +128,13 @@ namespace Nektar
                 {
                     StdRegions::ExpansionType shape = StdRegions::eHexahedron;
                     
-                    m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::
-                                   AllocateSharedPtr(shape,*Xgfac,m_base); 
+                    m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>:: AllocateSharedPtr(shape,*Xgfac,m_base);
+
                 }
                 else // Same data can be used 
                 {                   
                     m_metricinfo = Xgfac;
-                }
+                } 
                 
             }
         }
@@ -297,7 +299,7 @@ namespace Nektar
         */   
         void HexExp::FwdTrans(const Array<OneD, const NekDouble> & inarray, Array<OneD,NekDouble> &outarray)
         {
-            if((m_base[0]->Collocation())&&(m_base[1]->Collocation()))
+            if((m_base[0]->Collocation())&&(m_base[1]->Collocation())&&(m_base[2]->Collocation()))
             {
                 Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&m_coeffs[0],1);
             }
@@ -306,8 +308,7 @@ namespace Nektar
                 IProductWRTBase(inarray,outarray);
                 
                 // get Mass matrix inverse
-                MatrixKey             masskey(StdRegions::eInvMass,
-                                              DetExpansionType(),*this);
+                MatrixKey             masskey(StdRegions::eInvMass,DetExpansionType(),*this);
                 DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
                 
                 // copy inarray in case inarray == outarray
@@ -317,6 +318,8 @@ namespace Nektar
                 out = (*matsys)*in;
             }
         }
+
+
 
         void HexExp::GetCoords(Array<OneD,NekDouble> &coords_0,
                                Array<OneD,NekDouble> &coords_1,
@@ -418,9 +421,9 @@ namespace Nektar
         {
             int  i;
 
-            ASSERTL1(Lcoords[0] <= -1.0 && Lcoords[0] >= 1.0 && 
-                     Lcoords[1] <= -1.0 && Lcoords[1] >= 1.0 &&
-                     Lcoords[2] <= -1.0 && Lcoords[2] >= 1.0,
+            ASSERTL1(Lcoords[0] >= -1.0 && Lcoords[0] <= 1.0 &&
+                     Lcoords[1] >= -1.0 && Lcoords[1] <= 1.0 &&
+                     Lcoords[2] >= -1.0 && Lcoords[2] <= 1.0,
                      "Local coordinates are not in region [-1,1]");
 
               m_geom->FillGeom();  
@@ -494,7 +497,7 @@ namespace Nektar
             LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
             LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
             StdRegions::StdHexExpSharedPtr tmp = MemoryManager<StdHexExp>::AllocateSharedPtr(bkey0,bkey1,bkey2);
-            return tmp->GetStdMatrix(mkey); 
+            return tmp->GetStdMatrix(mkey);
         }
       
 //         DNekMatSharedPtr HexExp::CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
@@ -537,7 +540,6 @@ namespace Nektar
             }
         }*/
 
-	//TODO: implement
 
         DNekMatSharedPtr HexExp::GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
@@ -556,13 +558,14 @@ namespace Nektar
             default:
                 returnval = StdHexExp::GenMatrix(mkey);
             }
-            
+               
             return returnval;            
         }
-        
+
         DNekScalMatSharedPtr HexExp::CreateMatrix(const MatrixKey &mkey)
         {
             DNekScalMatSharedPtr returnval;
+
 
             ASSERTL2(m_metricinfo->GetGtype() == SpatialDomains::eNoGeomType,"Geometric information is not set up");
             
@@ -745,9 +748,8 @@ namespace Nektar
                 
             return returnval;
         }
+        
 
-
-	//TODO: implement
         DNekScalBlkMatSharedPtr HexExp::CreateStaticCondMatrix(const MatrixKey &mkey)
         {
             DNekScalBlkMatSharedPtr returnval;
@@ -778,7 +780,7 @@ namespace Nektar
                 }
                 else
                 {
-                    DNekScalMatSharedPtr mat = GetLocMatrix(mkey);
+                    DNekScalMatSharedPtr& mat = GetLocMatrix(mkey);
                     factor = mat->Scale();
                     goto UseStdRegionsMatrix;
                 }
@@ -787,7 +789,7 @@ namespace Nektar
                 {
                     NekDouble            invfactor = 1.0/factor;
                     NekDouble            one = 1.0;
-                    DNekBlkMatSharedPtr  mat = GetStdStaticCondMatrix(*(mkey.GetStdMatKey()));                    
+                    DNekBlkMatSharedPtr& mat = GetStdStaticCondMatrix(*(mkey.GetStdMatKey()));                    
                     DNekScalMatSharedPtr Atmp;
                     DNekMatSharedPtr     Asubmat;
 
@@ -810,13 +812,11 @@ namespace Nektar
                     DNekMatSharedPtr C = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nbdry);
                     DNekMatSharedPtr D = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nint);
 
-                    Array<OneD, unsigned int> bmap;
+                    Array<OneD,unsigned int> bmap(nbdry);
+                    Array<OneD,unsigned int> imap(nint);
                     GetBoundaryMap(bmap);
-                    
-                    Array<OneD,unsigned int> imap;
                     GetInteriorMap(imap);
                     
-
                     for(i = 0; i < nbdry; ++i)
                     {
                         for(j = 0; j < nbdry; ++j)
@@ -862,14 +862,15 @@ namespace Nektar
             }            
             return returnval;
         }
-        
-
 
     }//end of namespace
 }//end of namespace
 
 /** 
  *    $Log: HexExp.cpp,v $
+ *    Revision 1.20  2008/09/17 17:29:58  ehan
+ *    Fixed some errors to test the LocHexDemo.
+ *
  *    Revision 1.19  2008/09/09 15:05:09  sherwin
  *    Updates related to cuved geometries. Normals have been removed from m_metricinfo and replaced with a direct evaluation call. Interp methods have been moved to LibUtilities
  *

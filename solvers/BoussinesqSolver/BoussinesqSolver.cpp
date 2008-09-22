@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
 
      //-----------------------------------------
      // Construct objects from the class BoussDisCont2D.
-     int nVariables = 7;
+     int nVariables = 7; // 4 for peregrine 7 otherwise
 
      // Construct U: for the primary variables
      // U[0]: H  (total water depth)
@@ -303,7 +303,7 @@ int main(int argc, char *argv[])
 	      stringstream outfileName_z;
 	      outfileName_z << "z_Quad_"<< chk <<".dat";
 	      ofstream outfile3((outfileName_z.str()).data());      
-	      U->WriteToFile(outfile3,eTecplot,5);
+	      U->WriteToFile(outfile3,eTecplot,3);
 	      ++chk;
 	    }
 	  //-----------------------------------------------
@@ -379,6 +379,7 @@ void rhsFunction(BoussinesqEquationsSharedPtr U,
     //U->SetBoundaryConditions();
     
     // Compute the flux vector {\bf F} (physical space)
+    //U->GetFluxVectorPrimitiveLinear(fluxVectorX,fluxVectorY);
     U->GetFluxVector(fluxVectorX,fluxVectorY);
     
     // Compute the innerproduct (Grad \phi \cdot {\bf F}) (modal space)
@@ -392,6 +393,7 @@ void rhsFunction(BoussinesqEquationsSharedPtr U,
       }
     
     // Evaluate  upwind numerical flux (physical space)
+    //U->NumericalFluxPrimitiveLinear(upwindX,upwindY);
     U->NumericalFlux(upwindX,upwindY);
     
     // Compute the boundary integral (modal space)
@@ -450,7 +452,10 @@ void rhsFunction(BoussinesqEquationsSharedPtr U,
     // Add the spatial dispersive terms
     
     //U->Madsen92SpatialTerms(iprod_rhs[1],iprod_rhs[2]);
-    U->Lambda20Spatial(*Uf,iprod_rhs[1],iprod_rhs[2],rhs[0]);
+    //U->Lambda20Spatial(*Uf,iprod_rhs[1],iprod_rhs[2],rhs[0]);
+
+    // ok -- this is wrong ... i should give back the physical values
+    U->FullyNonlinearSpatial(*Uf,iprod_rhs[1],iprod_rhs[2],rhs[0]);
     //--------------------------
 
     
@@ -604,11 +609,11 @@ void rhsFunction(BoussinesqEquationsSharedPtr U,
       // (Hu)_t is stored in rhs[2]
       //  H_t is stored in rhs[0]
       
-      for (int j = 0; j < nTotQuadPoints; ++j)
- 	{
- 	  U->UpdatePhys(5)[j] = (rhs[1][j] - rhs[0][j]*u[j]) / (U->GetPhys(0)[j]);
- 	  U->UpdatePhys(6)[j] = (rhs[2][j] - rhs[0][j]*v[j]) / (U->GetPhys(0)[j]);
- 	}
+    //   for (int j = 0; j < nTotQuadPoints; ++j)
+//  	{
+//  	  U->UpdatePhys(5)[j] = (rhs[1][j] - rhs[0][j]*u[j]) / (U->GetPhys(0)[j]);
+//  	  U->UpdatePhys(6)[j] = (rhs[2][j] - rhs[0][j]*v[j]) / (U->GetPhys(0)[j]);
+//  	}
       
 
     }

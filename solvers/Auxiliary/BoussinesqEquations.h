@@ -108,9 +108,17 @@ class BoussinesqEquations: public ShallowWaterEquations
 	void FullyNonlinearSpatial(BoussinesqEquations &Uf, Array<OneD, NekDouble> &outX, 
 				   Array<OneD, NekDouble> &outY, Array<OneD, NekDouble> &Ht);
 
+	
+	void GradientFluxTerms(const Array<OneD, const NekDouble> &in, Array<OneD, Array<OneD, NekDouble> > &out, int field_no);
+
+	void DivergenceFluxTerms(const Array<OneD, const NekDouble> &inX, const Array<OneD, const NekDouble> &inY, Array<OneD, NekDouble> &out,  int field_no_1, int field_no_2);
+
+
 	void NumericalFluxGradient(Array<OneD, NekDouble> &outX, Array<OneD, NekDouble> &outY, int field_no);
 
 	void NumericalFluxDivergence(Array<OneD, NekDouble> &outX, Array<OneD, NekDouble> &outY, int field_no_1, int field_no_2);
+
+	
 
         /**
          * Returns the value of \f$ \alpha_1 \f$

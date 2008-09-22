@@ -1194,80 +1194,684 @@ namespace Nektar
     NekDouble alpha1   = GetAlpha1();
     NekDouble alpha2   = GetAlpha2();
     //--------------------------------------
-
+  
+    Array<OneD, NekDouble> tmpX(GetNcoeffs());
+    Array<OneD, NekDouble> tmpY(GetNcoeffs());
     
-    // compute DivU = \nabla \cdot {\bf u}
-    {
-    Array<OneD, NekDouble> DivU(nTotQuadPoints);
-
+    Array<OneD, NekDouble> upwindX(GetNpoints());
+    Array<OneD, NekDouble> upwindY(GetNpoints());
+    Array<OneD, NekDouble> upwindZero(GetNpoints(),0.0);
     
+    Array<OneD, NekDouble> eta(nTotQuadPoints);
+    Array<OneD, NekDouble> u(nTotQuadPoints);
+    Array<OneD, NekDouble> v(nTotQuadPoints);
+    Array<OneD, NekDouble> physX(nTotQuadPoints);
+    Array<OneD, NekDouble> physY(nTotQuadPoints);
     
-    
-
-    }
-
-    // compute GradDivU = \nabla DivU
-    Array<OneD, Array<OneD, NekDouble> > GradDivU(2);
-    GradDivU[0] = Array<OneD, NekDouble>(nTotQuadPoints);
-    GradDivU[1] = Array<OneD, NekDouble>(nTotQuadPoints);
-
-
-    
-
-
-    // compute DivdU = \nabla \cdot (d {\bf u})
-    Array<OneD, NekDouble> DivdU(nTotQuadPoints);
-
-    
-
-    // compute GradDivdU = \nabla DivdU
-    Array<OneD, Array<OneD, NekDouble> > GradDivdU(2);
-    GradDivdU[0] = Array<OneD, NekDouble>(nTotQuadPoints);
-    GradDivdU[1] = Array<OneD, NekDouble>(nTotQuadPoints);
-
-
-    // compute DivUt = \nabla \cdot {\bf ut}
-
-
-
-    // compute GradDivUt = \nabla DivUt
-
-    
-
-
-    // compute DivdUt = \nabla \cdot (d {\bf ut})
-
-    
-
-    // compute GradDivdUt = \nabla DivdUt
-
-
-    // compute Gamma = (d/6)GradDivU - (1/2)GradDivdU
-
-
+    //--------------------------------------
+    // Get primitive variables
+    for (int j = 0; j < nTotQuadPoints; ++j)
+      {
+	eta[j] = GetPhys(0)[j]-GetPhys(4)[j];
+	u[j]   = GetPhys(1)[j]/GetPhys(0)[j];
+	v[j]   = GetPhys(2)[j]/GetPhys(0)[j];
+      }
+    //--------------------------------------
     
     
-    // compute Gammat = (d/6)GradDivUt - (1/2)GradDivdUt
-
+    //----------------------------------------
+    // compute a_1 = \nabla \cdot {\bf u}
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, NekDouble > a1(nTotQuadPoints);
+    Vmath::Vcopy(nTotQuadPoints,u,1,Uf.UpdatePhys(1),1);
+    Vmath::Vcopy(nTotQuadPoints,v,1,Uf.UpdatePhys(2),1);
+    Uf.DivergenceFluxTerms(Uf.GetPhys(1),Uf.GetPhys(2),a1,1,2);
+    //----------------------------------------
     
 
-    // Add Lambda_20 terms
+    //----------------------------------------
+    // compute a_2 = \nabla \cdot {\bf u}_t
+     
+    // hey hey ... those boundary conditions...
+    Array<OneD, NekDouble > a2(nTotQuadPoints);
+    Vmath::Vcopy(nTotQuadPoints,GetPhys(5),1,Uf.UpdatePhys(1),1);
+    Vmath::Vcopy(nTotQuadPoints,GetPhys(6),1,Uf.UpdatePhys(2),1);
+    Uf.DivergenceFluxTerms(Uf.GetPhys(1),Uf.GetPhys(2),a2,1,2);
+    //----------------------------------------
+
+
+    //----------------------------------------
+    // compute a_3 = \nabla \cdot (h{\bf u})
+     
+    // hey hey ... those boundary conditions...
+    Array<OneD, NekDouble > a3(nTotQuadPoints);
+    Vmath::Vmul(nTotQuadPoints,u,1,GetPhys(4),1,Uf.UpdatePhys(1),1);
+    Vmath::Vmul(nTotQuadPoints,v,1,GetPhys(4),1,Uf.UpdatePhys(2),1);
+    Uf.DivergenceFluxTerms(Uf.GetPhys(1),Uf.GetPhys(2),a3,1,2);
+    //----------------------------------------
+
+    
+    //----------------------------------------
+    // compute a_4 = \nabla \cdot (h {\bf u}_t)
+     
+    // hey hey ... those boundary conditions...
+    Array<OneD, NekDouble > a4(nTotQuadPoints);
+    Vmath::Vmul(nTotQuadPoints,GetPhys(5),1,GetPhys(4),1,Uf.UpdatePhys(1),1);
+    Vmath::Vmul(nTotQuadPoints,GetPhys(6),1,GetPhys(4),1,Uf.UpdatePhys(2),1);
+    Uf.DivergenceFluxTerms(Uf.GetPhys(1),Uf.GetPhys(2),a4,1,2);
+    //----------------------------------------
+
+
+    //----------------------------------------
+    // compute a_5 = \nabla \cdot (H_t {\bf u})
+     
+    // hey hey ... those boundary conditions...
+    Array<OneD, NekDouble > a5(nTotQuadPoints);
+    Vmath::Vmul(nTotQuadPoints,Ht,1,u,1,Uf.UpdatePhys(1),1);
+    Vmath::Vmul(nTotQuadPoints,Ht,1,v,1,Uf.UpdatePhys(2),1);
+    Uf.DivergenceFluxTerms(Uf.GetPhys(1),Uf.GetPhys(2),a5,1,2);
+    //----------------------------------------
+
+
+    //----------------------------------------
+    // compute a_6 = \nabla \cdot (h H_t {\bf u})
+     
+    // hey hey ... those boundary conditions...
+    Array<OneD, NekDouble > a6(nTotQuadPoints);
+
+    Vmath::Vmul(nTotQuadPoints,Ht,1,u,1,Uf.UpdatePhys(1),1);
+    Vmath::Vmul(nTotQuadPoints,Ht,1,v,1,Uf.UpdatePhys(2),1);
+    Vmath::Vmul(nTotQuadPoints,GetPhys(4),1,Uf.GetPhys(1),1,Uf.UpdatePhys(1),1);
+    Vmath::Vmul(nTotQuadPoints,GetPhys(4),1,Uf.GetPhys(2),1,Uf.UpdatePhys(2),1);
+    Uf.DivergenceFluxTerms(Uf.GetPhys(1),Uf.GetPhys(2),a6,1,2);
+    //----------------------------------------
+
+
+    //----------------------------------------
+    // compute a_7 = \nabla \cdot (\eta {\bf u})
+     
+    // hey hey ... those boundary conditions...
+    Array<OneD, NekDouble > a7(nTotQuadPoints);
+
+    Vmath::Vmul(nTotQuadPoints,eta,1,u,1,Uf.UpdatePhys(1),1);
+    Vmath::Vmul(nTotQuadPoints,eta,1,v,1,Uf.UpdatePhys(2),1);
+    Uf.DivergenceFluxTerms(Uf.GetPhys(1),Uf.GetPhys(2),a7,1,2);
+    //----------------------------------------
+
+    
+    //----------------------------------------
+    // compute {\bf b}_1 = \nabla a_1
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > b1(2);
+    b1[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    b1[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    Vmath::Vcopy(nTotQuadPoints,a1,1,Uf.UpdatePhys(1),1);
+    Uf.GradientFluxTerms(Uf.GetPhys(1),b1,1);
+    //----------------------------------------
+    
+    
+    //----------------------------------------
+    // compute {\bf b}_2 = \nabla a_2
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > b2(2);
+    b2[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    b2[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    Vmath::Vcopy(nTotQuadPoints,a2,1,Uf.UpdatePhys(1),1);
+    Uf.GradientFluxTerms(Uf.GetPhys(1),b2,1);
+    //----------------------------------------
+
+    
+    //----------------------------------------
+    // compute {\bf b}_3 = \nabla a_3
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > b3(2);
+    b3[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    b3[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    Vmath::Vcopy(nTotQuadPoints,a3,1,Uf.UpdatePhys(1),1);
+    Uf.GradientFluxTerms(Uf.GetPhys(1),b3,1);
+    //----------------------------------------
+
+
+    //----------------------------------------
+    // compute {\bf b}_4 = \nabla a_4
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > b4(2);
+    b4[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    b4[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    Vmath::Vcopy(nTotQuadPoints,a4,1,Uf.UpdatePhys(1),1);
+    Uf.GradientFluxTerms(Uf.GetPhys(1),b4,1);
+    //----------------------------------------
+
+
+    //----------------------------------------
+    // compute \Gamma   = (1/6)h{\bf b}_1-(1/2){\bf b}_3
+    // compute \Gamma_t = (1/6)h{\bf b}_2-(1/2){\bf b}_4
+    
+    Array<OneD, Array<OneD, NekDouble> > Gamma(2);
+    Gamma[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    Gamma[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+
+    Array<OneD, Array<OneD, NekDouble> > Gammat(2);
+    Gammat[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    Gammat[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    
+    for (int i = 0; i < nTotQuadPoints; ++i)
+      {
+	Gamma[0][i] = (1.0/6.0)*(GetPhys(4))[i]*b1[0][i] -
+	  0.5 *b3[0][i];
+	Gamma[1][i] = (1.0/6.0)*(GetPhys(4))[i]*b1[1][i] -
+	  0.5 *b3[1][i];
+	Gammat[0][i] = (1.0/6.0)*(GetPhys(4))[i]*b2[0][i] -
+	  0.5 *b4[0][i];
+	Gammat[1][i] = (1.0/6.0)*(GetPhys(4))[i]*b2[1][i] -
+	  0.5 *b4[1][i];
+      }
+    //----------------------------------------
+	
+
+    //----------------------------------------
+    // compute {\bf b}_5 = \nabla a_5
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > b5(2);
+    b5[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    b5[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    Vmath::Vcopy(nTotQuadPoints,a5,1,Uf.UpdatePhys(1),1);
+    Uf.GradientFluxTerms(Uf.GetPhys(1),b5,1);
+    //----------------------------------------
+
+
+    //----------------------------------------
+    // compute {\bf b}_6 = \nabla a_6
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > b6(2);
+    b6[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    b6[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    Vmath::Vcopy(nTotQuadPoints,a6,1,Uf.UpdatePhys(1),1);
+    Uf.GradientFluxTerms(Uf.GetPhys(1),b6,1);
+    //----------------------------------------
+
+    
+    //----------------------------------------
+    // compute {\bf b}_7 = \nabla a_7
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > b7(2);
+    b7[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    b7[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    Vmath::Vcopy(nTotQuadPoints,a7,1,Uf.UpdatePhys(1),1);
+    Uf.GradientFluxTerms(Uf.GetPhys(1),b7,1);
+    //----------------------------------------
+
+
+    //----------------------------------------
+    // compute {\bf b}_8 = \nabla (\eta a_4)
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > b8(2);
+    b8[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    b8[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    Vmath::Vmul(nTotQuadPoints,eta,1,a4,1,Uf.UpdatePhys(1),1);
+    Uf.GradientFluxTerms(Uf.GetPhys(1),b8,1);
+    //----------------------------------------
+
+
+    //----------------------------------------
+    // compute {\bf b}_9 = \nabla (a3 a_3)
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > b9(2);
+    b9[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    b9[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    Vmath::Vmul(nTotQuadPoints,a3,1,a3,1,Uf.UpdatePhys(1),1);
+    Uf.GradientFluxTerms(Uf.GetPhys(1),b9,1);
+    //----------------------------------------
+
+    
+    //----------------------------------------
+    // compute {\bf b}_10 = \nabla (\eta \eta a_2)
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > b10(2);
+    b10[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    b10[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    Vmath::Vmul(nTotQuadPoints,eta,1,eta,1,Uf.UpdatePhys(1),1);
+    Vmath::Vmul(nTotQuadPoints,a2,1,Uf.GetPhys(1),1,Uf.UpdatePhys(1),1);
+    Uf.GradientFluxTerms(Uf.GetPhys(1),b10,1);
+    //----------------------------------------
+
+
+    //----------------------------------------
+    // compute {\bf b}_11 = \nabla (\eta a_1 a_3)
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > b11(2);
+    b11[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    b11[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    Vmath::Vmul(nTotQuadPoints,eta,1,a1,1,Uf.UpdatePhys(1),1);
+    Vmath::Vmul(nTotQuadPoints,a3,1,Uf.GetPhys(1),1,Uf.UpdatePhys(1),1);
+    Uf.GradientFluxTerms(Uf.GetPhys(1),b11,1);
+    //----------------------------------------
+
+    
+    //----------------------------------------
+    // compute {\bf b}_12 = \nabla ({\bf u} \cdot (h \Gamma))
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > b12(2);
+    b12[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    b12[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    for (int i = 0; i < nTotQuadPoints; ++i)
+      {
+	Uf.UpdatePhys(1)[i] = GetPhys(4)[i]*(u[i]*Gamma[0][i] + 
+					     v[i]*Gamma[1][i]);
+      }
+    Uf.GradientFluxTerms(Uf.GetPhys(1),b12,1);
+    //----------------------------------------
+
+    
+    //----------------------------------------
+    // compute {\bf b}_13 = \nabla (\eta {\bf u} \cdot \Gamma)
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > b13(2);
+    b13[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    b13[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    for (int i = 0; i < nTotQuadPoints; ++i)
+      {
+	Uf.UpdatePhys(1)[i] = eta[i]*(u[i]*Gamma[0][i] + 
+				      v[i]*Gamma[1][i]);
+      }
+    Uf.GradientFluxTerms(Uf.GetPhys(1),b13,1);
+    //----------------------------------------
+    
+    
+    //----------------------------------------
+    // compute {\bf b}_14 = \nabla (\eta {\bf u} \cdot {\bf b}_3)
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > b14(2);
+    b14[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    b14[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    for (int i = 0; i < nTotQuadPoints; ++i)
+      {
+	Uf.UpdatePhys(1)[i] = eta[i]*(u[i]*b3[0][i] + 
+				      v[i]*b3[1][i]);
+      }
+    Uf.GradientFluxTerms(Uf.GetPhys(1),b14,1);
+    //----------------------------------------
+
+
+    //----------------------------------------
+    // compute {\bf b}_15 = \nabla (\eta \eta {\bf u} \cdot {\bf b}_1)
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > b15(2);
+    b15[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    b15[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    for (int i = 0; i < nTotQuadPoints; ++i)
+      {
+	Uf.UpdatePhys(1)[i] = eta[i]* eta[i] * (u[i]*b1[0][i] + 
+						v[i]*b1[1][i]);
+      }
+    Uf.GradientFluxTerms(Uf.GetPhys(1),b15,1);
+    //----------------------------------------
+
+    
+    //----------------------------------------
+    // compute {\bf b}_16 = \nabla (\eta \eta a_1 a_1)
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > b16(2);
+    b16[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    b16[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    for (int i = 0; i < nTotQuadPoints; ++i)
+      {
+	Uf.UpdatePhys(1)[i] = eta[i]* eta[i] * a1[i] * a1[i];	
+      }
+    Uf.GradientFluxTerms(Uf.GetPhys(1),b16,1);
+    //----------------------------------------
+
+
+    //----------------------------------------
+    // compute {\bf c}_1 = \nabla H
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > c1(2);
+    c1[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    c1[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    Vmath::Vcopy(nTotQuadPoints,GetPhys(0),1,Uf.UpdatePhys(1),1);
+    Uf.GradientFluxTerms(Uf.GetPhys(1),c1,1);
+    //----------------------------------------
+
+    
+    //----------------------------------------
+    // compute {\bf l}_1 = \nabla ({\bf c}_1 \cdot {\bf u}_t)
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > l1(2);
+    l1[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    l1[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    for (int i = 0; i < nTotQuadPoints; ++i)
+      {
+	Uf.UpdatePhys(1)[i] = c1[0][i] * GetPhys(5)[i] +
+	  c1[1][i] * GetPhys(6)[i];
+      }
+    Uf.GradientFluxTerms(Uf.GetPhys(1),l1,1);
+    //----------------------------------------
+    
+    
+    //----------------------------------------
+    // compute {\bf l}_2 = \nabla ({\bf c}_1 \cdot (h{\bf u}_t))
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > l2(2);
+    l2[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    l2[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    for (int i = 0; i < nTotQuadPoints; ++i)
+      {
+	Uf.UpdatePhys(1)[i] = GetPhys(4)[i] * (c1[0][i] * GetPhys(5)[i] +
+					       c1[1][i] * GetPhys(6)[i]);
+      }
+    Uf.GradientFluxTerms(Uf.GetPhys(1),l2,1);
+    //----------------------------------------
+    
+
+    //----------------------------------------
+    // compute {\bf e}_1 = \nabla \eta
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > e1(2);
+    e1[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    e1[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    Vmath::Vcopy(nTotQuadPoints,eta,1,Uf.UpdatePhys(1),1);
+    Uf.GradientFluxTerms(Uf.GetPhys(1),e1,1);
+    //----------------------------------------
+
+
+    //----------------------------------------
+    // compute g_1 = \nabla \cdot {\bf e}_1
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, NekDouble>  g1(nTotQuadPoints); 
+    Vmath::Vcopy(nTotQuadPoints,e1[0],1,Uf.UpdatePhys(1),1);
+    Vmath::Vcopy(nTotQuadPoints,e1[1],1,Uf.UpdatePhys(2),1);
+    Uf.DivergenceFluxTerms(Uf.GetPhys(1),Uf.GetPhys(2),g1,1,2);
+    //----------------------------------------
+    
+    
+    //----------------------------------------
+    // compute g_2 = \nabla \cdot (h{\bf e}_1)
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, NekDouble>  g2(nTotQuadPoints); 
+    Vmath::Vmul(nTotQuadPoints,e1[0],1,GetPhys(4),1,Uf.UpdatePhys(1),1);
+    Vmath::Vmul(nTotQuadPoints,e1[1],1,GetPhys(4),1,Uf.UpdatePhys(2),1);
+    Uf.DivergenceFluxTerms(Uf.GetPhys(1),Uf.GetPhys(2),g2,1,2);
+    //----------------------------------------
+
+
+    //----------------------------------------
+    // compute {\bf k}_1 = \nabla g1
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > k1(2);
+    k1[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    k1[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    Vmath::Vcopy(nTotQuadPoints,g1,1,Uf.UpdatePhys(1),1);
+    Uf.GradientFluxTerms(Uf.GetPhys(1),k1,1);
+    //----------------------------------------
+    
+    
+    //----------------------------------------
+    // compute {\bf k}_2 = \nabla g2
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > k2(2);
+    k2[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    k2[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    Vmath::Vcopy(nTotQuadPoints,g2,1,Uf.UpdatePhys(1),1);
+    Uf.GradientFluxTerms(Uf.GetPhys(1),k2,1);
+    //----------------------------------------
+
+
+    //----------------------------------------
+    // compute {\bf m}_1 = \nabla u
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > m1(2);
+    m1[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    m1[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    Vmath::Vcopy(nTotQuadPoints,u,1,Uf.UpdatePhys(1),1);
+    Uf.GradientFluxTerms(Uf.GetPhys(1),m1,1);
+    //----------------------------------------
+    
+
+    //----------------------------------------
+    // compute {\bf m}_2 = \nabla v
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > m2(2);
+    m2[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    m2[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    Vmath::Vcopy(nTotQuadPoints,v,1,Uf.UpdatePhys(1),1);
+    Uf.GradientFluxTerms(Uf.GetPhys(1),m2,1);
+    //----------------------------------------
+
+
+    //----------------------------------------
+    // compute n_1 = \partial_x ({\bf u} \cdot {\bf m}_1)
+    
+    Array<OneD, NekDouble>  n1(nTotQuadPoints); 
+    for (int i = 0; i < nTotQuadPoints; ++i)
+      {
+	Uf.UpdatePhys(1)[i] = u[i]*m1[0][i] + v[i]*m1[1][i];
+      }
+    
+    IProductWRTDerivBase(0,Uf.GetPhys(1),tmpX,0);
+    Vmath::Neg(nTotCoeffs,tmpX,1);
+    Uf.NumericalFluxGradient(upwindX,upwindY,1);
+    AddTraceIntegral(upwindX,upwindZero,tmpX,0);
+    MultiplyByElmtInvMass(tmpX,n1,0);
+    //----------------------------------------
+
+    
+    //----------------------------------------
+    // compute n_3 = \partial_x (h {\bf u} \cdot {\bf m}_1)
+    
+    Array<OneD, NekDouble>  n3(nTotQuadPoints); 
+    for (int i = 0; i < nTotQuadPoints; ++i)
+      {
+	Uf.UpdatePhys(1)[i] = GetPhys(4)[i]*(u[i]*m1[0][i] + v[i]*m1[1][i]);
+      }
+    
+    IProductWRTDerivBase(0,Uf.GetPhys(1),tmpX,0);
+    Vmath::Neg(nTotCoeffs,tmpX,1);
+    Uf.NumericalFluxGradient(upwindX,upwindY,1);
+    AddTraceIntegral(upwindX,upwindZero,tmpX,0);
+    MultiplyByElmtInvMass(tmpX,n3,0);
+    //----------------------------------------
+   
+    
+    //----------------------------------------
+    // compute n_2 = \partial_y ({\bf u} \cdot {\bf m}_2)
+    
+    Array<OneD, NekDouble>  n2(nTotQuadPoints); 
+    for (int i = 0; i < nTotQuadPoints; ++i)
+      {
+	Uf.UpdatePhys(1)[i] = u[i]*m2[0][i] + v[i]*m2[1][i];
+      }
+    
+    IProductWRTDerivBase(1,Uf.GetPhys(1),tmpY,0);
+    Vmath::Neg(nTotCoeffs,tmpY,1);
+    Uf.NumericalFluxGradient(upwindX,upwindY,1);
+    AddTraceIntegral(upwindZero,upwindY,tmpY,0);
+    MultiplyByElmtInvMass(tmpY,n2,0);
+    //----------------------------------------
+
+    
+    //----------------------------------------
+    // compute n_4 = \partial_y (h{\bf u} \cdot {\bf m}_2)
+    
+    Array<OneD, NekDouble>  n4(nTotQuadPoints); 
+    for (int i = 0; i < nTotQuadPoints; ++i)
+      {
+	Uf.UpdatePhys(1)[i] = GetPhys(4)[i] *(u[i]*m2[0][i] + v[i]*m2[1][i]);
+      }
+    
+    IProductWRTDerivBase(1,Uf.GetPhys(1),tmpY,0);
+    Vmath::Neg(nTotCoeffs,tmpY,1);
+    Uf.NumericalFluxGradient(upwindX,upwindY,1);
+    AddTraceIntegral(upwindZero,upwindY,tmpY,0);
+    MultiplyByElmtInvMass(tmpY,n4,0);
+    //----------------------------------------
+
+
+    //----------------------------------------
+    // compute {\bf p}_1 = \nabla (n_1+n_2)
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > p1(2);
+    p1[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    p1[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    Vmath::Vadd(nTotQuadPoints,n1,1,n2,1,Uf.UpdatePhys(1),1);
+    Uf.GradientFluxTerms(Uf.GetPhys(1),p1,1);
+    //----------------------------------------
+
+    
+    //----------------------------------------
+    // compute {\bf p}_2 = \nabla (n_3+n_4)
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > p2(2);
+    p2[0] = Array<OneD, NekDouble> (nTotQuadPoints); 
+    p2[1] = Array<OneD, NekDouble> (nTotQuadPoints);
+    Vmath::Vadd(nTotQuadPoints,n3,1,n4,1,Uf.UpdatePhys(1),1);
+    Uf.GradientFluxTerms(Uf.GetPhys(1),p2,1);
+    //----------------------------------------
+
+
+    //MISSING SOME CURL TERMS HERE
 
 
 
-    // Add Lambda_21 terms
+
+    for (int i = 0; i < nTotQuadPoints; ++i)
+      {
+	// Lambda 20 terms (spatial terms that is)
+	physX[i] = g*GetPhys(0)[i]*GetPhys(4)[i]*(GetPhys(4)[i]*(alpha2-alpha1)*k1[0][i] - alpha2*k2[0][i])
+	  + GetPhys(4)[i]*GetPhys(4)[i]*((1.0/6.0)+alpha2-alpha1)*(-c1[0][i]*a2[i]-l1[0][i]-b5[0][i])
+	  - GetPhys(4)[i]*(0.5+alpha2)*(-c1[0][i]*a4[i] - l2[0][i] - b6[0][i]);
+	physY[i] = g*GetPhys(0)[i]*GetPhys(4)[i]*(GetPhys(4)[i]*(alpha2-alpha1)*k1[1][i] - alpha2*k2[1][i])
+	  + GetPhys(4)[i]*GetPhys(4)[i]*((1.0/6.0)+alpha2-alpha1)*(-c1[1][i]*a2[i]-l1[1][i]-b5[1][i])
+	  - GetPhys(4)[i]*(0.5+alpha2)*(-c1[1][i]*a4[i] - l2[1][i] - b6[1][i]);
+	
+ 	// Lambda 21 terms 
+ 	physX[i] += GetPhys(0)[i]*(GetPhys(4)[i]*GetPhys(4)[i]*(alpha2-alpha1)*p1[0][i]-GetPhys(4)[i]*alpha2*p2[0][i]
+				  -eta[i]*Gammat[0][i]+a3[i]*Gamma[0][i] + b12[0][i] - b8[0][i] + 0.5*b9[0][i]);
+	physY[i] += GetPhys(0)[i]*(GetPhys(4)[i]*GetPhys(4)[i]*(alpha2-alpha1)*p1[1][i]-GetPhys(4)[i]*alpha2*p2[1][i]
+				  -eta[i]*Gammat[1][i]+a3[i]*Gamma[1][i] + b12[1][i] - b8[1][i] + 0.5*b9[1][i]);
+
+	// Lambda 21 curl terms (missing)
+	
+	// Lambda 22 terms 
+	physX[i] += GetPhys(0)[i]*((1.0/6.0)*eta[i]*eta[i]*b2[0][i]-(1.0/3.0)*eta[i]*a3[i]*b1[0][i]+a7[i]*Gamma[0][i]
+				  -b13[0][i]-0.5*b10[0][i]+b11[0][i]-b14[0][i]);
+	physY[i] += GetPhys(0)[i]*((1.0/6.0)*eta[i]*eta[i]*b2[1][i]-(1.0/3.0)*eta[i]*a3[i]*b1[1][i]+a7[i]*Gamma[1][i]
+				  -b13[1][i]-0.5*b10[1][i]+b11[1][i]-b14[1][i]);
+
+	// Lambda 22 curl terms (missing)
+
+	// Lambda 23 terms 
+	physX[i] += GetPhys(0)[i]*(-(1.0/3.0)*eta[i]*a7[i]*b1[0][i]-(1.0/3.0)*b15[0][i]+0.5*b16[0][i]);
+	physY[i] += GetPhys(0)[i]*(-(1.0/3.0)*eta[i]*a7[i]*b1[1][i]-(1.0/3.0)*b15[1][i]+0.5*b16[1][i]);
+	
+	// Lambda 23 curl terms (missing)
+
+	
+      }
+
+    
+    // Get modal values
+    IProductWRTBase(physX,tmpX,0);
+    IProductWRTBase(physY,tmpY,0);
+    MultiplyByElmtInvMass(tmpX,tmpX,0);
+    MultiplyByElmtInvMass(tmpY,tmpY,0);
 
 
-
-    // Add Lambda_22 terms
-
-
-
-    // Add Lambda_23 terms
-
-
+    // add to rhs
+    Vmath::Vsub(nTotCoeffs,outX,1,tmpX,1,outX,1);
+    Vmath::Vsub(nTotCoeffs,outY,1,tmpY,1,outY,1);
+    
+    
 
   } 
+
+
+  // Term should be in Uf.m_fields[1]
+
+  void BoussinesqEquations::GradientFluxTerms(const Array<OneD, const NekDouble> &in, 
+					      Array<OneD, Array<OneD, NekDouble> > &out, int field_no)
+  {
+     
+    Array<OneD, NekDouble> tmpX(GetNcoeffs());
+    Array<OneD, NekDouble> tmpY(GetNcoeffs());
+    
+    Array<OneD, NekDouble> upwindX(GetNpoints());
+    Array<OneD, NekDouble> upwindY(GetNpoints());
+    Array<OneD, NekDouble> upwindZero(GetNpoints(),0.0);
+
+    IProductWRTDerivBase(0,GetPhys(field_no),tmpX,0);
+    IProductWRTDerivBase(1,GetPhys(field_no),tmpY,0);
+    
+    Vmath::Neg(GetNcoeffs(),tmpX,1);
+    Vmath::Neg(GetNcoeffs(),tmpY,1);
+
+    NumericalFluxGradient(upwindX,upwindY,field_no);
+    
+    AddTraceIntegral(upwindX,upwindZero,tmpX,0);
+    AddTraceIntegral(upwindZero,upwindY,tmpY,0);
+    
+    MultiplyByElmtInvMass(tmpX,tmpX,0);
+    MultiplyByElmtInvMass(tmpY,tmpY,0);
+    
+    BwdTrans(tmpX,out[0],1);
+    BwdTrans(tmpY,out[1],2);
+  }
+  
+  void BoussinesqEquations::DivergenceFluxTerms(const Array<OneD, const NekDouble> &inX, 
+						const Array<OneD, const NekDouble> &inY, 
+						Array<OneD, NekDouble> &out,  int field_no_1, int field_no_2)
+  {
+       
+    Array<OneD, NekDouble> tmpX(GetNcoeffs());
+    Array<OneD, NekDouble> tmpY(GetNcoeffs());
+    
+    Array<OneD, NekDouble> upwindX(GetNpoints());
+    Array<OneD, NekDouble> upwindY(GetNpoints());
+ 
+    IProductWRTDerivBase(0,GetPhys(field_no_1),tmpX,0);
+    IProductWRTDerivBase(1,GetPhys(field_no_2),tmpY,0);
+    
+    Vmath::Vadd(GetNcoeffs(),tmpX,1,tmpY,1,tmpX,1);
+    Vmath::Neg(GetNcoeffs(),tmpX,1);
+    
+    NumericalFluxDivergence(upwindX,upwindY,field_no_1,field_no_2);
+    
+    AddTraceIntegral(upwindX,upwindY,tmpX,0);
+    
+    MultiplyByElmtInvMass(tmpX,tmpX,0);
+
+    BwdTrans(tmpX,out,1);
+    
+  }
+  
   
   /**
    * Computes the \hat{f} term in the  \int_{\partial \Omega^e} \phi \hat{f} {\bf n} dS 

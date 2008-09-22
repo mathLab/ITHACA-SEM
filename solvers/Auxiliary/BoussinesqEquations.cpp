@@ -1678,7 +1678,8 @@ namespace Nektar
     Vmath::Neg(nTotCoeffs,tmpX,1);
     Uf.NumericalFluxGradient(upwindX,upwindY,1);
     AddTraceIntegral(upwindX,upwindZero,tmpX,0);
-    MultiplyByElmtInvMass(tmpX,n1,0);
+    MultiplyByElmtInvMass(tmpX,tmpX,0);
+    BwdTrans(tmpX,n1,1);
     //----------------------------------------
 
     
@@ -1695,7 +1696,8 @@ namespace Nektar
     Vmath::Neg(nTotCoeffs,tmpX,1);
     Uf.NumericalFluxGradient(upwindX,upwindY,1);
     AddTraceIntegral(upwindX,upwindZero,tmpX,0);
-    MultiplyByElmtInvMass(tmpX,n3,0);
+    MultiplyByElmtInvMass(tmpX,tmpX,0);
+    BwdTrans(tmpX,n3,1);
     //----------------------------------------
    
     
@@ -1712,7 +1714,8 @@ namespace Nektar
     Vmath::Neg(nTotCoeffs,tmpY,1);
     Uf.NumericalFluxGradient(upwindX,upwindY,1);
     AddTraceIntegral(upwindZero,upwindY,tmpY,0);
-    MultiplyByElmtInvMass(tmpY,n2,0);
+    MultiplyByElmtInvMass(tmpY,tmpY,0);
+    BwdTrans(tmpY,n2,1);
     //----------------------------------------
 
     
@@ -1729,7 +1732,8 @@ namespace Nektar
     Vmath::Neg(nTotCoeffs,tmpY,1);
     Uf.NumericalFluxGradient(upwindX,upwindY,1);
     AddTraceIntegral(upwindZero,upwindY,tmpY,0);
-    MultiplyByElmtInvMass(tmpY,n4,0);
+    MultiplyByElmtInvMass(tmpY,tmpY,0);
+    BwdTrans(tmpY,n4,1);
     //----------------------------------------
 
 
@@ -1757,10 +1761,114 @@ namespace Nektar
     //----------------------------------------
 
 
-    //MISSING SOME CURL TERMS HERE
+    //----------------------------------------
+    // compute q_1 = \partial_y (h \Gamma^(x))
+    
+    Array<OneD, NekDouble>  q1(nTotQuadPoints); 
+    for (int i = 0; i < nTotQuadPoints; ++i)
+      {
+	Uf.UpdatePhys(1)[i] = GetPhys(4)[i]*Gamma[0][i];
+      }
+    
+    IProductWRTDerivBase(1,Uf.GetPhys(1),tmpY,0);
+    Vmath::Neg(nTotCoeffs,tmpY,1);
+    Uf.NumericalFluxGradient(upwindX,upwindY,1);
+    AddTraceIntegral(upwindZero,upwindY,tmpY,0);
+    MultiplyByElmtInvMass(tmpY,tmpY,0);
+    BwdTrans(tmpY,q1,1);
+    //----------------------------------------
+
+    
+    //----------------------------------------
+    // compute q_2 = \partial_x (h \Gamma^(y))
+    
+    Array<OneD, NekDouble>  q2(nTotQuadPoints); 
+    for (int i = 0; i < nTotQuadPoints; ++i)
+      {
+	Uf.UpdatePhys(1)[i] = GetPhys(4)[i]*Gamma[1][i];
+      }
+    
+    IProductWRTDerivBase(0,Uf.GetPhys(1),tmpX,0);
+    Vmath::Neg(nTotCoeffs,tmpX,1);
+    Uf.NumericalFluxGradient(upwindX,upwindY,1);
+    AddTraceIntegral(upwindX,upwindZero,tmpX,0);
+    MultiplyByElmtInvMass(tmpX,tmpX,0);
+    BwdTrans(tmpX,q2,1);
+    //----------------------------------------
 
 
+    //----------------------------------------
+    // compute q_3 = \partial_y (\eta \Gamma^(x))
+    
+    Array<OneD, NekDouble>  q3(nTotQuadPoints); 
+    for (int i = 0; i < nTotQuadPoints; ++i)
+      {
+	Uf.UpdatePhys(1)[i] = eta[i]*Gamma[0][i];
+      }
+    
+    IProductWRTDerivBase(1,Uf.GetPhys(1),tmpY,0);
+    Vmath::Neg(nTotCoeffs,tmpY,1);
+    Uf.NumericalFluxGradient(upwindX,upwindY,1);
+    AddTraceIntegral(upwindZero,upwindY,tmpY,0);
+    MultiplyByElmtInvMass(tmpY,tmpY,0);
+    BwdTrans(tmpY,q3,1);
+    //----------------------------------------
 
+    
+    //----------------------------------------
+    // compute q_4 = \partial_x (\eta \Gamma^(y))
+    
+    Array<OneD, NekDouble>  q4(nTotQuadPoints); 
+    for (int i = 0; i < nTotQuadPoints; ++i)
+      {
+	Uf.UpdatePhys(1)[i] = eta[i]*Gamma[1][i];
+      }
+    
+    IProductWRTDerivBase(0,Uf.GetPhys(1),tmpX,0);
+    Vmath::Neg(nTotCoeffs,tmpX,1);
+    Uf.NumericalFluxGradient(upwindX,upwindY,1);
+    AddTraceIntegral(upwindX,upwindZero,tmpX,0);
+    MultiplyByElmtInvMass(tmpX,tmpX,0);
+    BwdTrans(tmpX,q4,1);
+    //----------------------------------------
+
+
+   //----------------------------------------
+    // compute q_5 = \partial_y (\eta \eta {\bf b}_1^(x))
+    
+    Array<OneD, NekDouble>  q5(nTotQuadPoints); 
+    for (int i = 0; i < nTotQuadPoints; ++i)
+      {
+	Uf.UpdatePhys(1)[i] = eta[i]*eta[i]*b1[0][i];
+      }
+    
+    IProductWRTDerivBase(1,Uf.GetPhys(1),tmpY,0);
+    Vmath::Neg(nTotCoeffs,tmpY,1);
+    Uf.NumericalFluxGradient(upwindX,upwindY,1);
+    AddTraceIntegral(upwindZero,upwindY,tmpY,0);
+    MultiplyByElmtInvMass(tmpY,tmpY,0);
+    BwdTrans(tmpY,q5,1);
+    //----------------------------------------
+
+    
+    //----------------------------------------
+    // compute q_6 = \partial_x (\eta \eta {\bf b}_1^(y))
+    
+    Array<OneD, NekDouble>  q6(nTotQuadPoints); 
+    for (int i = 0; i < nTotQuadPoints; ++i)
+      {
+	Uf.UpdatePhys(1)[i] = eta[i]*eta[i]*b1[1][i];
+      }
+    
+    IProductWRTDerivBase(0,Uf.GetPhys(1),tmpX,0);
+    Vmath::Neg(nTotCoeffs,tmpX,1);
+    Uf.NumericalFluxGradient(upwindX,upwindY,1);
+    AddTraceIntegral(upwindX,upwindZero,tmpX,0);
+    MultiplyByElmtInvMass(tmpX,tmpX,0);
+    BwdTrans(tmpX,q6,1);
+    //----------------------------------------
+
+    
 
     for (int i = 0; i < nTotQuadPoints; ++i)
       {
@@ -1779,7 +1887,9 @@ namespace Nektar
 				  -eta[i]*Gammat[1][i]+a3[i]*Gamma[1][i] + b12[1][i] - b8[1][i] + 0.5*b9[1][i]);
 
 	// Lambda 21 curl terms (missing)
-	
+	physX[i] += -(-v[i]*q1[i]+v[i]*q2[i]);
+	physX[i] += -( u[i]*q1[i]-u[i]*q2[i]);
+
 	// Lambda 22 terms 
 	physX[i] += GetPhys(0)[i]*((1.0/6.0)*eta[i]*eta[i]*b2[0][i]-(1.0/3.0)*eta[i]*a3[i]*b1[0][i]+a7[i]*Gamma[0][i]
 				  -b13[0][i]-0.5*b10[0][i]+b11[0][i]-b14[0][i]);
@@ -1787,13 +1897,16 @@ namespace Nektar
 				  -b13[1][i]-0.5*b10[1][i]+b11[1][i]-b14[1][i]);
 
 	// Lambda 22 curl terms (missing)
+	physX[i] += (-v[i]*q3[i]+v[i]*q4[i]);
+	physX[i] += ( u[i]*q3[i]-u[i]*q4[i]);
 
 	// Lambda 23 terms 
 	physX[i] += GetPhys(0)[i]*(-(1.0/3.0)*eta[i]*a7[i]*b1[0][i]-(1.0/3.0)*b15[0][i]+0.5*b16[0][i]);
 	physY[i] += GetPhys(0)[i]*(-(1.0/3.0)*eta[i]*a7[i]*b1[1][i]-(1.0/3.0)*b15[1][i]+0.5*b16[1][i]);
 	
 	// Lambda 23 curl terms (missing)
-
+	physX[i] += -(1.0/6.0)*(-v[i]*q5[i]+v[i]*q6[i]);
+	physX[i] += -(1.0/6.0)*( u[i]*q5[i]-u[i]*q6[i]);
 	
       }
 

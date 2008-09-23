@@ -221,7 +221,7 @@ namespace Nektar
 
             int GetEdgeNcoeffs(const int i) const
             {
-                ASSERTL2((i > 0)&&(i < 3),"edge id is out of range");
+                ASSERTL2((i >= 0)&&(i <= 3),"edge id is out of range");
 
                 if((i == 0)||(i == 2))
                 {
@@ -235,7 +235,7 @@ namespace Nektar
 
             int GetEdgeNumPoints(const int i) const
             {
-                ASSERTL2((i > 0)&&(i < 3),"edge id is out of range");
+                ASSERTL2((i >= 0)&&(i <= 3),"edge id is out of range");
 
                 if((i == 0)||(i == 2))
                 {
@@ -537,6 +537,9 @@ namespace Nektar
 
 /**
  * $Log: StdQuadExp.h,v $
+ * Revision 1.42  2008/09/23 18:19:26  pvos
+ * Updates for working ProjectContField3D demo
+ *
  * Revision 1.41  2008/09/17 13:46:06  pvos
  * Added LocalToGlobalC0ContMap for 3D expansions
  *

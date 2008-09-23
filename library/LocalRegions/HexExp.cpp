@@ -348,13 +348,19 @@ namespace Nektar
                    (m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
                 {
                     x = m_geom->UpdatePhys(2);
-                    Blas::Dcopy(m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints()*m_base[2]->GetNumPoints(),
+                    Blas::Dcopy(GetTotPoints(),
                                 x, 1, coords_2, 1);
                 }
                 else // LibUtilities::Interpolate to Expansion point distribution
                 {
-                    LibUtilities::Interp3D(CBasis0->GetPointsKey(), CBasis1->GetPointsKey(), CBasis2->GetPointsKey(), &(m_geom->UpdatePhys(2))[0],
-                             m_base[0]->GetPointsKey(), m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), &coords_2[0]);
+                    LibUtilities::Interp3D(CBasis0->GetPointsKey(), 
+                                           CBasis1->GetPointsKey(), 
+                                           CBasis2->GetPointsKey(), 
+                                           &(m_geom->UpdatePhys(2))[0],
+                                           m_base[0]->GetPointsKey(), 
+                                           m_base[1]->GetPointsKey(), 
+                                           m_base[2]->GetPointsKey(), 
+                                           &coords_2[0]);
                 }    
             case 2:
                 ASSERTL0(coords_1.num_elements(), "output coords_1 is not defined");
@@ -368,13 +374,19 @@ namespace Nektar
                    (m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
                 {
                     x = m_geom->UpdatePhys(1);
-                    Blas::Dcopy(m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints()*m_base[2]->GetNumPoints(),
+                    Blas::Dcopy(GetTotPoints(),
                                 x, 1, coords_1, 1);
                 }
                 else // Interpolate to Expansion point distribution
                 {
-                    LibUtilities::Interp3D(CBasis0->GetPointsKey(), CBasis1->GetPointsKey(), CBasis2->GetPointsKey(), &(m_geom->UpdatePhys(1))[0],
-                             m_base[0]->GetPointsKey(), m_base[1]->GetPointsKey(), m_base[2]->GetPointsKey(), &coords_1[0]);
+                    LibUtilities::Interp3D(CBasis0->GetPointsKey(), 
+                                           CBasis1->GetPointsKey(), 
+                                           CBasis2->GetPointsKey(), 
+                                           &(m_geom->UpdatePhys(1))[0],
+                                           m_base[0]->GetPointsKey(), 
+                                           m_base[1]->GetPointsKey(), 
+                                           m_base[2]->GetPointsKey(), 
+                                           &coords_1[0]);
                 }
             case 1:
                 ASSERTL0(coords_0.num_elements(), "output coords_0 is not defined");
@@ -388,13 +400,19 @@ namespace Nektar
                    (m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
                 {
                     x = m_geom->UpdatePhys(0);
-                    Blas::Dcopy(m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints()*m_base[2]->GetNumPoints(),
+                    Blas::Dcopy(GetTotPoints(),
                                 x, 1, coords_0, 1);
                 }
                 else // Interpolate to Expansion point distribution
                 {
-                    LibUtilities::Interp3D(CBasis0->GetPointsKey(), CBasis1->GetPointsKey(), CBasis2->GetPointsKey(), &(m_geom->UpdatePhys(0))[0],
-                             m_base[0]->GetPointsKey(),m_base[1]->GetPointsKey(),m_base[2]->GetPointsKey(),&coords_0[0]);
+                    LibUtilities::Interp3D(CBasis0->GetPointsKey(), 
+                                           CBasis1->GetPointsKey(), 
+                                           CBasis2->GetPointsKey(), 
+                                           &(m_geom->UpdatePhys(0))[0],
+                                           m_base[0]->GetPointsKey(),
+                                           m_base[1]->GetPointsKey(),
+                                           m_base[2]->GetPointsKey(),
+                                           &coords_0[0]);
                 }
                 break;
             default:
@@ -438,15 +456,13 @@ namespace Nektar
         {
             if(format==eTecplot)
             {
-                int i, j, k;
+                int i, j;
                 int nquad0 = m_base[0]->GetNumPoints();
                 int nquad1 = m_base[1]->GetNumPoints();
                 int nquad2 = m_base[2]->GetNumPoints();
                 Array<OneD,NekDouble> coords[3];
                 
                 ASSERTL0(m_geom,"m_geom not defined");
-                
-                int     coordim  = m_geom->GetCoordim();
                 
                 coords[0] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
                 coords[1] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
@@ -456,30 +472,16 @@ namespace Nektar
                 
                 if(dumpVar)
                 {
-                    outfile << "Variables = x";
-                    
-                    if(coordim == 2)
-                    {
-                        outfile << ", y";
-                    }
-                    else if (coordim == 3)
-                    {
-                        outfile << ", y, z";
-                    }
-                    outfile << ", v\n" << std::endl;
+                    outfile << "Variables = x,  y,  z,  Coeffs \n" << endl;
                 }
                 
                 outfile << "Zone, I=" << nquad0 << ", J=" << nquad1 << ", K=" << nquad2 << ", F=Point" << std::endl;
                 
                 for(i = 0; i < nquad0*nquad1*nquad2; ++i)
                 {
-                    for(j = 0; j < coordim; ++j)
+                    for(j = 0; j < 3; ++j)
                     {
-                        for(k=0; k < coordim; ++k)
-                        {
-                            outfile << coords[k][j] << " ";
-                        }
-                        outfile << m_phys[j] << std::endl;
+                            outfile << coords[j][i] << " ";
                     }
                     outfile << m_phys[i] << std::endl;
                 }
@@ -868,6 +870,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.cpp,v $
+ *    Revision 1.21  2008/09/20 11:34:52  ehan
+ *    Fixed some errors
+ *
  *    Revision 1.20  2008/09/17 17:29:58  ehan
  *    Fixed some errors to test the LocHexDemo.
  *

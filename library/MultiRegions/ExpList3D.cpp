@@ -267,8 +267,7 @@ namespace Nektar
                 locBCond = (*(bconditions[i]))[variable];  
                 if(locBCond->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
-                   //TODO : implement -- just commented out to avoid the error                
-                   // locExpList = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(*(bregions[i]),graph3D);
+                    locExpList = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(*(bregions[i]),graph3D);
                     bndCondExpansions[cnt]  = locExpList;
                     bndConditions[cnt++]    = locBCond;
                 } // end if Dirichlet
@@ -279,8 +278,7 @@ namespace Nektar
                 locBCond = (*(bconditions[i]))[variable];  
                 if(locBCond->GetBoundaryConditionType() == SpatialDomains::eNeumann)
                 {
-                   //TODO: implement below                
-                   // locExpList = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(*(bregions[i]),graph3D);
+                    locExpList = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(*(bregions[i]),graph3D);
                     bndCondExpansions[cnt]  = locExpList;
                     bndConditions[cnt++]    = locBCond;
                 }  
@@ -378,7 +376,8 @@ namespace Nektar
             {        
                 locBCond = (*(bconditions[i]))[variable];  
                 if(locBCond->GetBoundaryConditionType() == SpatialDomains::ePeriodic)
-                {    
+                {  
+                    ASSERTL0(false,"this method needs sorting");  
                    region1ID = i;
                    region2ID = (boost::static_pointer_cast<SpatialDomains::PeriodicBoundaryCondition>(locBCond))->m_ConnectedBoundaryRegion;
 

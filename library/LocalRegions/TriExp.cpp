@@ -651,6 +651,104 @@ namespace Nektar
             
             out = (*matsys)*in;
         }
+
+        void TriExp::FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
+                                             Array<OneD, NekDouble> &outarray)
+        {
+            int i,j;
+            int npoints[2] = {m_base[0]->GetNumPoints(),
+                              m_base[1]->GetNumPoints()};
+            int nmodes[2]  = {m_base[0]->GetNumModes(),
+                              m_base[1]->GetNumModes()};
+
+            fill(outarray.get(), outarray.get()+m_ncoeffs, 0.0 );
+
+            Array<OneD, NekDouble> physEdge[3];
+            Array<OneD, NekDouble> coeffEdge[3];
+            StdRegions::EdgeOrientation orient[3];
+            for(i = 0; i < 3; i++)
+            {
+                physEdge[i]  = Array<OneD, NekDouble>(npoints[i!=0]);
+                coeffEdge[i] = Array<OneD, NekDouble>(nmodes[i!=0]);
+                orient[i]    = GetEorient(i);
+            }
+
+            for(i = 0; i < npoints[0]; i++)
+            {
+                physEdge[0][i] = inarray[i];
+            }
+
+            for(i = 0; i < npoints[1]; i++)
+            {
+                physEdge[1][i] = inarray[npoints[0]-1+i*npoints[0]];
+                physEdge[2][i] = inarray[(npoints[1]-1)*npoints[0]-i*npoints[0]];
+            }
+                
+            for(i = 0; i < 3; i++)
+            {
+                if( orient[i] == StdRegions::eBackwards )
+                {
+                    reverse( (physEdge[i]).get() , (physEdge[i]).get() + npoints[i!=0] );
+                }
+            }
+
+            SegExpSharedPtr segexp[3];
+            for(i = 0; i < 3; i++)
+            {
+                segexp[i] = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(m_base[i!=0]->GetBasisKey(),GetGeom2D()->GetEdge(i));
+            }
+
+            Array<OneD, unsigned int> mapArray;
+            Array<OneD, int>          signArray;
+            NekDouble sign;
+
+            for(i = 0; i < 3; i++)
+            {
+                segexp[i!=0]->FwdTrans_BndConstrained(physEdge[i],coeffEdge[i]);
+
+                GetEdgeToElementMap(i,orient[i],mapArray,signArray);
+                for(j=0; j < nmodes[i!=0]; j++)
+                {
+                    sign = (NekDouble) signArray[j];
+                    outarray[ mapArray[j] ] = sign * coeffEdge[i][j];
+                }
+            }
+
+            Array<OneD, NekDouble> tmp0(m_ncoeffs);
+            Array<OneD, NekDouble> tmp1(m_ncoeffs);
+                
+            MassMatrixOp(outarray,tmp0);
+            IProductWRTBase(inarray,tmp1);
+                
+            Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
+                
+            // get Mass matrix inverse (only of interior DOF)
+            // use block (1,1) of the static condensed system
+            // note: this block alreay contains the inverse matrix
+            MatrixKey             masskey(StdRegions::eMass,DetExpansionType(),*this);
+            DNekScalMatSharedPtr  matsys = (m_staticCondMatrixManager[masskey])->GetBlock(1,1);
+
+            int nBoundaryDofs = NumBndryCoeffs();
+            int nInteriorDofs = m_ncoeffs - nBoundaryDofs; 
+
+            Array<OneD, NekDouble> rhs(nInteriorDofs);
+            Array<OneD, NekDouble> result(nInteriorDofs);
+
+            GetInteriorMap(mapArray);
+
+            for(i = 0; i < nInteriorDofs; i++)
+            {
+                rhs[i] = tmp1[ mapArray[i] ];
+            }
+
+            Blas::Dgemv('N', nInteriorDofs, nInteriorDofs, matsys->Scale(), &((matsys->GetOwnedMatrix())->GetPtr())[0],
+                        nInteriorDofs,rhs.get(),1,0.0,result.get(),1);  
+
+            for(i = 0; i < nInteriorDofs; i++)
+            {
+                outarray[ mapArray[i] ] = result[i];
+            }
+        }
         
         void TriExp::GetCoords(Array<OneD,NekDouble> &coords_0,
                                Array<OneD,NekDouble> &coords_1,
@@ -1392,6 +1490,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.44  2008/09/09 15:05:09  sherwin
+ *    Updates related to cuved geometries. Normals have been removed from m_metricinfo and replaced with a direct evaluation call. Interp methods have been moved to LibUtilities
+ *
  *    Revision 1.43  2008/08/28 15:03:37  pvos
  *    small efficiency updates
  *

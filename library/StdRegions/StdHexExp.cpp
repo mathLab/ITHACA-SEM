@@ -895,13 +895,21 @@ namespace Nektar
                     {
                         IdxRange[2][0] = 1;
                         IdxRange[2][1] = nummodes[2] - 1;
-                        reverseOrdering = true;
+
+                        if(edgeOrient==eBackwards)
+                        {
+                            reverseOrdering = true;
+                        }
                     }
                     else
                     {
                         IdxRange[2][0] = 2;
                         IdxRange[2][1] = nummodes[2];
-                        signChange = true;
+
+                        if(edgeOrient==eBackwards)
+                        {
+                            signChange = true;
+                        }
                     }
                 }
                 break;
@@ -936,21 +944,52 @@ namespace Nektar
                 }
                 break;
             case 1:
-            case 3:
             case 9:
-            case 11:
                 {
                     if( bType[1] == LibUtilities::eGLL_Lagrange)
                     {
-                        reverseOrdering = true;
                         IdxRange[1][0] = 1;
                         IdxRange[1][1] = nummodes[1] - 1;
+
+                        if(edgeOrient==eBackwards)
+                        {
+                            reverseOrdering = true;
+                        }
                     }
                     else
                     {
                         IdxRange[1][0] = 2;
                         IdxRange[1][1] = nummodes[1];
-                        signChange = true;
+
+                        if(edgeOrient==eBackwards)
+                        {
+                            signChange = true;
+                        }
+                    }
+                }
+                break;
+            case 3:
+            case 11:
+                {
+                    if( bType[1] == LibUtilities::eGLL_Lagrange)
+                    {
+                        IdxRange[1][0] = 1;
+                        IdxRange[1][1] = nummodes[1] - 1;
+
+                        if(edgeOrient==eForwards)
+                        {
+                            reverseOrdering = true;
+                        }
+                    }
+                    else
+                    {
+                        IdxRange[1][0] = 2;
+                        IdxRange[1][1] = nummodes[1];
+
+                        if(edgeOrient==eForwards)
+                        {
+                            signChange = true;
+                        }
                     }
                 }
                 break;
@@ -985,21 +1024,52 @@ namespace Nektar
                 }
                 break;
             case 0:
-            case 2:
             case 8:
-            case 10:
                 {
                     if( bType[0] == LibUtilities::eGLL_Lagrange)
                     {
-                        reverseOrdering = true;
                         IdxRange[0][0] = 1;
                         IdxRange[0][1] = nummodes[0] - 1;
+
+                        if(edgeOrient==eBackwards)
+                        {
+                            reverseOrdering = true;
+                        }
                     }
                     else
                     {
                         IdxRange[0][0] = 2;
                         IdxRange[0][1] = nummodes[0];
-                        signChange = true;
+
+                        if(edgeOrient==eBackwards)
+                        {
+                            signChange = true;
+                        }
+                    }
+                }
+                break;
+            case 2:
+            case 10:
+                {
+                    if( bType[0] == LibUtilities::eGLL_Lagrange)
+                    {
+                        IdxRange[0][0] = 1;
+                        IdxRange[0][1] = nummodes[0] - 1;
+
+                        if(edgeOrient==eForwards)
+                        {
+                            reverseOrdering = true;
+                        }
+                    }
+                    else
+                    {
+                        IdxRange[0][0] = 2;
+                        IdxRange[0][1] = nummodes[0];
+
+                        if(edgeOrient==eForwards)
+                        {
+                            signChange = true;
+                        }
                     }
                 }
                 break;
@@ -1019,12 +1089,12 @@ namespace Nektar
                 }
             }
 
-            if( reverseOrdering && (edgeOrient==eBackwards) )
+            if( reverseOrdering )
             {
                 reverse( maparray.get() , maparray.get()+nEdgeIntCoeffs );
             }
 
-            if( signChange && (edgeOrient==eBackwards) )
+            if( signChange )
             {
                 for(p = 1; p < nEdgeIntCoeffs; p+=2)
                 {
@@ -1699,6 +1769,9 @@ namespace Nektar
 
 /** 
  * $Log: StdHexExp.cpp,v $
+ * Revision 1.25  2008/09/17 13:46:06  pvos
+ * Added LocalToGlobalC0ContMap for 3D expansions
+ *
  * Revision 1.24  2008/09/15 13:18:08  pvos
  * Added more hexahedron mapping routines
  *

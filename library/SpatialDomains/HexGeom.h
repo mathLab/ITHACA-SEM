@@ -282,6 +282,11 @@ namespace Nektar
                return GetEorient(i);
             }
 
+            virtual StdRegions::FaceOrientation v_GetFaceorient(const int i) const
+            {
+                return GetFaceorient(i);
+            }
+
             virtual int v_GetCoordDim() const 
             {
                 return GetCoordDim();
@@ -311,6 +316,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.18  2008/09/17 13:46:26  pvos
+// Added LocalToGlobalC0ContMap for 3D expansions
+//
 // Revision 1.17  2008/09/12 11:26:19  pvos
 // Updates for mappings in 3D
 //

@@ -79,7 +79,7 @@ namespace Nektar
                 return m_bndCondCoeffsToGlobalCoeffsMap[i];
             }
             
-            inline int GetBndCondCoeffsToGlobalCoeffsSign(const int i)
+            inline NekDouble GetBndCondCoeffsToGlobalCoeffsSign(const int i)
             {
                 if(m_signChange)
                 {
@@ -202,6 +202,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalBaseMap.h,v $
+/** Revision 1.3  2008/09/17 13:46:40  pvos
+/** Added LocalToGlobalC0ContMap for 3D expansions
+/**
 /** Revision 1.2  2008/09/16 13:36:06  pvos
 /** Restructured the LocalToGlobalMap classes
 /**

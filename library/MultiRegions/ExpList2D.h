@@ -43,6 +43,7 @@
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/NodalTriExp.h>
 #include <SpatialDomains/MeshGraph2D.h>
+#include <SpatialDomains/MeshGraph3D.h>
 #include <SpatialDomains/BoundaryConditions.h>
 
 namespace Nektar
@@ -102,6 +103,9 @@ namespace Nektar
              * spectral/hp element expansion.
              */  
             ExpList2D(SpatialDomains::MeshGraph2D &graph2D);
+
+            ExpList2D(const SpatialDomains::CompositeVector &domain, 
+                      SpatialDomains::MeshGraph3D &graph3D); 
             
             /**
              * \brief The default destructor.
@@ -150,6 +154,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.h,v $
+* Revision 1.15  2008/09/17 13:46:40  pvos
+* Added LocalToGlobalC0ContMap for 3D expansions
+*
 * Revision 1.14  2008/08/14 22:15:51  sherwin
 * Added LocalToglobalMap and DGMap and depracted LocalToGlobalBndryMap1D,2D. Made DisContField classes compatible with updated ContField formats
 *

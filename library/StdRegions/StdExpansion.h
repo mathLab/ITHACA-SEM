@@ -1052,7 +1052,7 @@ namespace Nektar
             virtual StdRegions::FaceOrientation v_GetFaceorient(int face)
 
             {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");  
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for three-dimensional  LocalRegions");  
                 return eDir1FwdDir1_Dir2FwdDir2;              
             }
 
@@ -1555,6 +1555,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.100  2008/09/17 13:46:02  pvos
+ * Added LocalToGlobalC0ContMap for 3D expansions
+ *
  * Revision 1.99  2008/09/16 13:37:03  pvos
  * Restructured the LocalToGlobalMap classes
  *

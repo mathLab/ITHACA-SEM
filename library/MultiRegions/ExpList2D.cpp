@@ -198,6 +198,85 @@ namespace Nektar
             m_phys   = Array<OneD, NekDouble>(m_npoints);
         }
 
+        ExpList2D::ExpList2D(const SpatialDomains::CompositeVector &domain, SpatialDomains::MeshGraph3D &graph3D):
+            ExpList()
+        {
+            int i,j,elmtid=0;
+            int nel=0;
+            int cnt = 0;
+
+            SpatialDomains::Composite comp;
+            SpatialDomains::TriGeomSharedPtr TriangleGeom;
+            SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
+
+            LocalRegions::TriExpSharedPtr tri;
+            LocalRegions::NodalTriExpSharedPtr Ntri;
+            LibUtilities::PointsType TriNb;
+            LocalRegions::QuadExpSharedPtr quad;
+
+            for(i = 0; i < domain.size(); ++i)
+            {
+                nel += (domain[i])->size();
+            }
+
+            m_coeff_offset = Array<OneD,int>(nel,0);
+            m_phys_offset  = Array<OneD,int>(nel,0);
+ 
+            for(i = 0; i < domain.size(); ++i)
+            {
+                comp = domain[i];
+                
+                for(j = 0; j < comp->size(); ++j)
+                {   
+                    if(TriangleGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>((*comp)[j]))
+                    {
+                        LibUtilities::BasisKey TriBa = graph3D.GetFaceBasisKey(TriangleGeom,0);
+                        LibUtilities::BasisKey TriBb = graph3D.GetFaceBasisKey(TriangleGeom,1);
+                        
+                        if((graph3D.GetExpansions())[0]->m_ExpansionType == SpatialDomains::eNodal)
+                        {
+                            TriNb = LibUtilities::eNodalTriElec;
+                            Ntri = MemoryManager<LocalRegions::NodalTriExp>::AllocateSharedPtr(TriBa,TriBb,TriNb,TriangleGeom);
+                            Ntri->SetElmtId(elmtid++);
+                            (*m_exp).push_back(Ntri);
+                        }
+                        else
+                        {
+                            tri = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(TriBa,TriBb,TriangleGeom);
+                            (*m_exp).push_back(tri);
+                        }
+                        
+                        m_coeff_offset[cnt] = m_ncoeffs;
+                        m_phys_offset[cnt++] = m_npoints;
+                        m_ncoeffs += (TriBa.GetNumModes()*(TriBa.GetNumModes()+1))/2 
+                            + TriBa.GetNumModes()*(TriBb.GetNumModes()-TriBa.GetNumModes());
+                        m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
+                    }
+                    else if(QuadrilateralGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>((*comp)[j]))
+                    {
+                        LibUtilities::BasisKey QuadBa = graph3D.GetFaceBasisKey(QuadrilateralGeom,0);
+                        LibUtilities::BasisKey QuadBb = graph3D.GetFaceBasisKey(QuadrilateralGeom,0);
+                        
+                        quad = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(QuadBa,QuadBb,QuadrilateralGeom);
+                        quad->SetElmtId(elmtid++);
+                        (*m_exp).push_back(quad);
+                        
+                        m_coeff_offset[cnt] = m_ncoeffs;
+                        m_phys_offset[cnt++] = m_npoints;
+                        m_ncoeffs += QuadBa.GetNumModes()*QuadBb.GetNumModes();
+                        m_npoints += QuadBa.GetNumPoints()*QuadBb.GetNumPoints();
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"dynamic cast to a proper Geometry2D failed");
+                    }  
+                }
+                
+            }            
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+            m_phys   = Array<OneD, NekDouble>(m_npoints);
+            
+        }
 
         void ExpList2D::SetBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D,
                                                       SpatialDomains::BoundaryConditions &bcs, 
@@ -403,6 +482,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.cpp,v $
+* Revision 1.21  2008/08/14 22:15:51  sherwin
+* Added LocalToglobalMap and DGMap and depracted LocalToGlobalBndryMap1D,2D. Made DisContField classes compatible with updated ContField formats
+*
 * Revision 1.20  2008/07/12 17:31:39  sherwin
 * Added m_phys_offset and rename m_exp_offset to m_coeff_offset
 *

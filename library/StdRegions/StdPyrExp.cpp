@@ -502,7 +502,7 @@ namespace Nektar
                     }
                 }
             }                
-            
+            cout << zBasis.num_elements() / Qz << "  " << m_ncoeffs << endl;
             // Sum-factorize the triple summation starting with the z-dimension
             for( int k = 0; k < Qz; ++k ) {
 
@@ -512,6 +512,7 @@ namespace Nektar
                     for( int q = 0; q <= Q; ++q ) {
                         for( int r = 0; r <= R - p - q; ++r ) {
                             int mode = pqr[r + (R+1)*(q + (Q+1)*p)];
+                            cout << p << "   " << q << "   " << r << endl;
 
                             Ak[q + (Q+1)*p]   +=   inarray[mode]  *  zBasis[k + Qz*mode];                           
                         }
@@ -725,6 +726,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPyrExp.cpp,v $
+ * Revision 1.14  2008/09/17 13:46:06  pvos
+ * Added LocalToGlobalC0ContMap for 3D expansions
+ *
  * Revision 1.13  2008/07/04 10:18:40  pvos
  * Some updates
  *

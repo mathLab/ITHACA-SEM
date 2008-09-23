@@ -489,11 +489,9 @@ namespace Nektar
             u(\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{p=0}^{Q_x} \psi_{p}^a (\xi_{1i}) g_{p} (\xi_{2j}, \xi_{3k}).
             \f$	
         **/
-        void StdPrismExp::BwdTrans(
-                                   const Array<OneD, const NekDouble>& inarray, 
+        void StdPrismExp::BwdTrans(const Array<OneD, const NekDouble>& inarray, 
                                    Array<OneD, NekDouble> &outarray)
         {
-
             ASSERTL1( (m_base[1]->GetBasisType() != LibUtilities::eOrtho_B)  ||
                       (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
                       "Basis[1] is not a general tensor type");
@@ -501,6 +499,53 @@ namespace Nektar
             ASSERTL1( (m_base[2]->GetBasisType() != LibUtilities::eOrtho_C) ||
                       (m_base[2]->GetBasisType() != LibUtilities::eModified_C),
                       "Basis[2] is not a general tensor type");
+
+#if 1
+
+            int i,mode;
+            int           nquad0 = m_base[0]->GetNumPoints();
+            int           nquad1 = m_base[1]->GetNumPoints();
+            int           nquad2 = m_base[2]->GetNumPoints();
+
+            int           nummodes0 = m_base[0]->GetNumModes();
+            int           nummodes1 = m_base[1]->GetNumModes();
+            int           nummodes2 = m_base[2]->GetNumModes();
+
+            const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
+            const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
+            const Array<OneD, const NekDouble>& base2  = m_base[2]->GetBdata();
+
+            bool degenerateVertexfix = (m_base[0]->GetBasisType() == LibUtilities::eModified_A);
+
+            Array<OneD, NekDouble> tmp0(nquad2*nummodes1*nummodes0);
+            Array<OneD, NekDouble> tmp1(nquad1*nquad2*nummodes0);
+
+            for(i = mode = 0; i < nummodes0; ++i)
+            {
+                Blas::Dgemm('N', 'N', nquad2, nummodes1, nummodes2-i, 1.0, base2.get() + mode*nquad2,
+                        nquad2, inarray.get()+mode*nummodes1, nummodes2-i, 0.0, tmp0.get()+i*nquad2*nummodes1, nquad2);
+                mode += nummodes2-i;
+            }
+
+            if(degenerateVertexfix)
+            {
+                for(i = 0; i < nummodes1; i++)
+                {
+                    Blas::Daxpy(nquad2,inarray[1+i*nummodes2],base2.get()+nquad2,1,
+                                tmp0.get()+nquad2*(nummodes1+i),1);
+                }                
+            }
+            
+            for(i = 0; i < nummodes0; i++)
+            {
+                Blas::Dgemm('N', 'T', nquad1, nquad2, nummodes1, 1.0, base1.get(), nquad1,
+                            tmp0.get() + i*nquad2*nummodes1, nquad2, 0.0, tmp1.get() + i*nquad2*nquad1, nquad1);
+            }
+
+            Blas::Dgemm('N', 'T', nquad0, nquad2*nquad1, nummodes0, 1.0, base0.get(),
+                        nquad0, tmp1.get(), nquad2*nquad1, 0.0, outarray.get(), nquad0);     
+
+#else
 
             int     Qx = m_base[0]->GetNumPoints();
             int     Qy = m_base[1]->GetNumPoints();
@@ -573,6 +618,7 @@ namespace Nektar
                     }
                 }
             }
+#endif
         }
 
 	/** \brief Forward transform from physical quadrature space
@@ -767,6 +813,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPrismExp.cpp,v $
+ * Revision 1.15  2008/09/17 13:46:06  pvos
+ * Added LocalToGlobalC0ContMap for 3D expansions
+ *
  * Revision 1.14  2008/07/04 10:18:40  pvos
  * Some updates
  *

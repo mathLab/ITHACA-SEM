@@ -1021,7 +1021,6 @@ namespace Nektar
             int meshFaceId;
             int meshFaceId2;
             int globalId;
-            int nEdgeCoeffs;
             int nEdgeInteriorCoeffs;
             int nFaceInteriorCoeffs;
             int firstNonDirGraphVertId;
@@ -1263,7 +1262,7 @@ namespace Nektar
                     
                     bType = locExpansion->GetEdgeBasisType(j);
                     // need a sign vector for modal expansions if nEdgeCoeffs >=4 
-                    if( (nEdgeCoeffs >= 4)&&
+                    if( (nEdgeInteriorCoeffs+2 >= 4)&&
                         ( (bType == LibUtilities::eModified_A)||
                           (bType == LibUtilities::eModified_B) ) )
                     {
@@ -1340,7 +1339,7 @@ namespace Nektar
 
                 for(j = 0; j < locExpansion->GetNfaces(); ++j)
                 {
-                    nFaceInteriorCoeffs = locExpansion->GetFaceIntNcoeffs(j)-2;
+                    nFaceInteriorCoeffs = locExpansion->GetFaceIntNcoeffs(j);
                     faceOrient          = (locExpansion->GetGeom3D())->GetFaceorient(j);                        
                     meshFaceId          = (locExpansion->GetGeom3D())->GetFid(j);
                     
@@ -1351,8 +1350,6 @@ namespace Nektar
                     {
                         m_localToGlobalMap[cnt+faceInteriorMap[k]] =  
                             graphVertOffset[faceReorderedGraphVertId[meshFaceId]]+k;
-
-                        m_localToGlobalSign[cnt+faceInteriorMap[k]] = (NekDouble) faceInteriorSign[k];
                     } 
            
                     if(m_signChange)
@@ -1399,9 +1396,9 @@ namespace Nektar
                         // Fill the sign vector if required 
                         if(m_signChange)
                         {   
-                            for(k = 0; k < nEdgeInteriorCoeffs; ++k)
+                            for(l = 0; l < nEdgeInteriorCoeffs; ++l)
                             {                 
-                                m_bndCondCoeffsToGlobalCoeffsSign[cnt+edgeInteriorMap[k]] = (NekDouble) edgeInteriorSign[k];
+                                m_bndCondCoeffsToGlobalCoeffsSign[cnt+edgeInteriorMap[l]] = (NekDouble) edgeInteriorSign[l];
                             }
                         }  
                     }
@@ -1449,6 +1446,9 @@ namespace Nektar
 
 /**
  * $Log: LocalToGlobalC0ContMap.cpp,v $
+ * Revision 1.2  2008/09/17 13:46:40  pvos
+ * Added LocalToGlobalC0ContMap for 3D expansions
+ *
  * Revision 1.1  2008/09/16 13:36:06  pvos
  * Restructured the LocalToGlobalMap classes
  *

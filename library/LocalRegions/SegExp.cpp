@@ -710,6 +710,7 @@ namespace Nektar
                     }
                     break;
                 case LibUtilities::eModified_A:
+                case LibUtilities::eModified_B:
                     {
                         offset = 2;
                     }
@@ -1229,6 +1230,9 @@ namespace Nektar
 }//end of namespace
 
 // $Log: SegExp.cpp,v $
+// Revision 1.54  2008/09/09 15:05:09  sherwin
+// Updates related to cuved geometries. Normals have been removed from m_metricinfo and replaced with a direct evaluation call. Interp methods have been moved to LibUtilities
+//
 // Revision 1.53  2008/08/14 22:12:56  sherwin
 // Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
 //

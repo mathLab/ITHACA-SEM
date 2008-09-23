@@ -217,7 +217,7 @@ int main(int argc, char *argv[])
              xMap[i] = MemoryManager<StdRegions::StdHexExp>::AllocateSharedPtr(basisKey_x,basisKey_y,basisKey_z);
          }
          
-         SpatialDomains::HexGeomSharedPtr geom = MemoryManager<SpatialDomains::HexGeom>::AllocateSharedPtr(faces, xMap);
+         SpatialDomains::HexGeomSharedPtr geom = MemoryManager<SpatialDomains::HexGeom>::AllocateSharedPtr(faces);
          geom->SetOwnData();
 
          

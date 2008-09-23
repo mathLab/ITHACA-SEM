@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/MeshGraph3D.cpp,v $
+//  File: MeshGraph3D.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -1027,6 +1027,106 @@ namespace Nektar
             return returnval;
         }
 
+        LibUtilities::BasisKey MeshGraph3D:: GetFaceBasisKey(Geometry2DSharedPtr face, const int flag)
+        {
+            ElementFaceVectorSharedPtr elements = GetElementsFromFace(face);
+            // Perhaps, a check should be done here to ensure that in case 
+            // elements->size!=1, all elements to which the edge belongs have the same type
+            // and order of expansion such that no confusion can arise.
+            ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Face);
+            
+            int nummodes = (int) expansion->m_NumModesEqn.Evaluate();
+            
+            switch(expansion->m_ExpansionType)
+            {
+            case eModified:
+                {
+                    switch (flag)
+                    {
+                    case 0:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                            return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
+                        }
+                        break;
+                    case 1:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
+                            return LibUtilities::BasisKey(LibUtilities::eModified_B,nummodes,pkey);
+                        }
+                        break;
+                    default:
+                        ASSERTL0(false,"invalid value to flag");
+                        break;
+                    }
+                }
+                break;
+            case eNodal:
+                {
+                    TriGeomSharedPtr triangle = boost::dynamic_pointer_cast<TriGeom>(face);
+                    QuadGeomSharedPtr quadrilateral = boost::dynamic_pointer_cast<QuadGeom>(face);
+
+                    if(quadrilateral)
+                    {
+                        const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                        return LibUtilities::BasisKey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
+                    }
+                    else if(triangle)
+                    {
+                        switch (flag)
+                        {
+                        case 0:
+                            {
+                                const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                                return LibUtilities::BasisKey(LibUtilities::eOrtho_A,nummodes,pkey);
+                            }
+                            break;
+                        case 1:
+                            {
+                                const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
+                                return LibUtilities::BasisKey(LibUtilities::eOrtho_B,nummodes,pkey);
+                            }
+                            break;
+                        default:
+                            ASSERTL0(false,"invalid value to flag");
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"dynamic cast to a proper Geometry2D failed");
+                    }  
+                }
+                break;
+            case eOrthogonal:
+                {
+                    switch (flag)
+                    {
+                    case 0:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                            return LibUtilities::BasisKey(LibUtilities::eOrtho_A,nummodes,pkey);
+                        }
+                        break;
+                    case 1:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
+                            return LibUtilities::BasisKey(LibUtilities::eOrtho_B,nummodes,pkey);
+                        }
+                        break;
+                    default:
+                        ASSERTL0(false,"invalid value to flag");
+                        break;
+                        }
+                }
+                break;       
+            default:
+                ASSERTL0(false,"expansion type unknown");
+                return LibUtilities::NullBasisKey; // Keep things happy by returning a value.
+                break;
+            }            
+        }
+
 
 
     }; //end of namespace
@@ -1034,6 +1134,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph3D.cpp,v $
+// Revision 1.10  2008/09/12 11:26:19  pvos
+// Updates for mappings in 3D
+//
 // Revision 1.9  2008/08/26 02:24:38  ehan
 // Added GetElementFromFace()
 //

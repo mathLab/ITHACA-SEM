@@ -255,6 +255,7 @@ namespace Nektar
                     }
                     break;
                 case LibUtilities::eModified_A:
+                case LibUtilities::eModified_B:
                     {
                         offset = 2;
                     }
@@ -305,6 +306,7 @@ namespace Nektar
                 outarray[1]= nummodes-1;
                 break;
             case LibUtilities::eModified_A:
+            case LibUtilities::eModified_B:
                 outarray[1] = 1;
                 break;
             default:
@@ -331,6 +333,7 @@ namespace Nektar
                 }
                 break;
             case LibUtilities::eModified_A:
+            case LibUtilities::eModified_B:
                 for(i = 0 ; i < GetNcoeffs()-2;i++)
                 {
                     outarray[i] = i+2;
@@ -417,6 +420,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.55  2008/07/19 21:12:54  sherwin
+* Removed MapTo function and made orientation convention anticlockwise in UDG routines
+*
 * Revision 1.54  2008/07/04 10:18:40  pvos
 * Some updates
 *

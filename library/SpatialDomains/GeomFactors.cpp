@@ -830,9 +830,6 @@ namespace Nektar
                 m_jac[0] = d1[0][0]*(d2[1][0]*d3[2][0] - d3[1][0]*d2[2][0])
                          - d2[0][0]*(d1[1][0]*d3[2][0] - d3[1][0]*d1[2][0])
                          + d3[0][0]*(d1[1][0]*d2[2][0] - d2[1][0]*d1[2][0]);
-
-                         
-                cout << "m_jac[0] = " << m_jac[0] << endl;
                 
                 ASSERTL1(m_jac[0] > 0, "3D Regular Jacobian is not positive");
 
@@ -957,6 +954,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.28  2008/09/20 11:32:24  ehan
+// Rearranged 3D geomfactors
+//
 // Revision 1.27  2008/09/15 10:21:32  ehan
 // Fixed some errors.
 //

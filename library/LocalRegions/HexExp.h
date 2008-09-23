@@ -80,7 +80,7 @@ namespace Nektar
                 return StdRegions::eHexahedron; 
             }
 
-            const SpatialDomains::Geometry3DSharedPtr& GetGeom() const
+            const SpatialDomains::Geometry3DSharedPtr& GetGeom3D() const
             {
                 return m_geom;
             }
@@ -295,6 +295,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.23  2008/09/17 17:30:28  ehan
+ *    Fixed some errors to test the LocHexDemo.
+ *
  *    Revision 1.22  2008/08/14 22:12:56  sherwin
  *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
  *

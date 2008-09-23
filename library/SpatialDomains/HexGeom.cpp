@@ -378,7 +378,7 @@ namespace Nektar
             // for every face. For every face, they are ordered in such
             // a way that the implementation below allows a unified approach
             // for all faces.
-            const unsigned int faceVerts[kNverts][QuadGeom::kNverts] = 
+            const unsigned int faceVerts[kNfaces][QuadGeom::kNverts] = 
                 { {0,1,2,3} ,
                   {0,1,5,4} , 
                   {1,2,6,5} , 
@@ -628,7 +628,60 @@ namespace Nektar
 
         void HexGeom::GenGeomFactors(void)
         {  
-            // TODO: Insert code here.
+            int i,f;
+            GeomType Gtype = eRegular;
+
+            FillGeom();
+
+            // check to see if expansions are linear
+            for(i = 0; i < m_coordim; ++i)
+            {
+                if((m_xmap[i]->GetBasisNumModes(0) != 2)||
+                   (m_xmap[i]->GetBasisNumModes(1) != 2)||
+                   (m_xmap[i]->GetBasisNumModes(2) != 2) )
+                {
+                    Gtype = eDeformed;
+                }
+            }
+
+            // check to see if all angles are 90 degrees
+            if(Gtype == eRegular)
+            {
+                const unsigned int faceVerts[kNfaces][QuadGeom::kNverts] = 
+                    { {0,1,2,3} ,
+                      {0,1,5,4} , 
+                      {1,2,6,5} , 
+                      {3,2,6,7} ,
+                      {0,3,7,4} ,
+                      {4,5,6,7} }; 
+
+                NekDouble dx1,dx2,dy1,dy2;
+                for(f = 0; f < kNfaces; f++)
+                {
+                    for(i = 0; i < 3; ++i)
+                    {
+                        dx1 = m_verts[ faceVerts[f][i+1] ]->x() - m_verts[ faceVerts[f][i] ]->x();
+                        dy1 = m_verts[ faceVerts[f][i+1] ]->y() - m_verts[ faceVerts[f][i] ]->y();
+                        
+                        dx2 = m_verts[ faceVerts[f][((i+3)%4)] ]->x() - m_verts[ faceVerts[f][i] ]->x();
+                        dy2 = m_verts[ faceVerts[f][((i+3)%4)] ]->y() - m_verts[ faceVerts[f][i] ]->y();
+                        
+                        if(fabs(dx1*dx2 + dy1*dy2) > 
+                           sqrt((dx1*dx1+dy1*dy1)*(dx2*dx2+dy2*dy2))*
+                           kGeomRightAngleTol)
+                        {
+                            Gtype = eDeformed;
+                            break;
+                        }
+                    }
+                    if(Gtype == eDeformed)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap);
         }
 
 
@@ -732,6 +785,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.cpp,v $
+// Revision 1.12  2008/09/17 13:46:26  pvos
+// Added LocalToGlobalC0ContMap for 3D expansions
+//
 // Revision 1.11  2008/09/12 11:26:19  pvos
 // Updates for mappings in 3D
 //

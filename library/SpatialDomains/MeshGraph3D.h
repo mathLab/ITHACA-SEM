@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/MeshGraph3D.h,v $
+//  File:  MeshGraph3D.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -203,6 +203,9 @@ namespace Nektar
             /// \brief Return the elements (shared ptrs) that have this face.
             ElementFaceVectorSharedPtr GetElementsFromFace(Geometry2DSharedPtr face);
 
+            /// \brief Return the BasisKey corresponding to a face of an element
+            LibUtilities::BasisKey GetFaceBasisKey(Geometry2DSharedPtr face, const int flag);
+
         protected:
             void ReadEdges    (TiXmlDocument &doc);
             void ReadFaces    (TiXmlDocument &doc);
@@ -220,6 +223,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph3D.h,v $
+// Revision 1.11  2008/08/26 02:23:09  ehan
+// Added GetElementFromFace()
+//
 // Revision 1.10  2008/06/30 19:34:37  ehan
 // Fixed infinity recursive-loop error.
 //

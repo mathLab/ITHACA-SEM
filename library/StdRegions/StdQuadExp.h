@@ -194,6 +194,9 @@ namespace Nektar
             void FwdTrans(const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
 
+            void FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
+                                         Array<OneD, NekDouble> &outarray);
+
             NekDouble PhysEvaluate(Array<OneD, const NekDouble>& coords)
             {
                 return  StdExpansion2D::PhysEvaluate(coords); 
@@ -457,6 +460,12 @@ namespace Nektar
                 FwdTrans(inarray, outarray);
             }
 
+            virtual void v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
+                                                   Array<OneD, NekDouble> &outarray)
+            {
+                FwdTrans_BndConstrained(inarray, outarray); 
+            }
+
             virtual NekDouble v_PhysEvaluate(Array<OneD, const NekDouble>& Lcoords)
             {
                 return PhysEvaluate(Lcoords);
@@ -528,6 +537,9 @@ namespace Nektar
 
 /**
  * $Log: StdQuadExp.h,v $
+ * Revision 1.41  2008/09/17 13:46:06  pvos
+ * Added LocalToGlobalC0ContMap for 3D expansions
+ *
  * Revision 1.40  2008/09/09 14:15:23  sherwin
  * Added definitions for DetCartesianDirOfEdge
  *

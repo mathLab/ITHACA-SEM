@@ -142,8 +142,10 @@ namespace Nektar
                 stored in \a inarray and evaluate the expansion coefficients and
                 store in \a (this)->_coeffs  */
             void FwdTrans(const Array<OneD, const NekDouble> &inarray, 
-                          Array<OneD, NekDouble> &outarray);
-        
+                          Array<OneD, NekDouble> &outarray);        
+
+            void FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
+                                         Array<OneD, NekDouble> &outarray);
             NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);
 
             void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
@@ -350,6 +352,12 @@ namespace Nektar
                 FwdTrans(inarray,outarray);
             }
 
+            virtual void v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
+                                                   Array<OneD, NekDouble> &outarray)
+            {
+                FwdTrans_BndConstrained(inarray, outarray); 
+            }
+
             /// Virtual call to TriExp::BwdTrans
             virtual void v_BwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                     Array<OneD, NekDouble> &outarray)
@@ -482,6 +490,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.36  2008/08/27 16:35:13  pvos
+ *    Small efficiency update
+ *
  *    Revision 1.35  2008/08/20 09:16:39  sherwin
  *    Modified generation of HDG matrices so that they use Expansion1D, Expansion2D GenMatrix method rather than Expansion method. Have also removed methods which were generating edge expansions locally as this was too expensive
  *

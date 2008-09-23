@@ -83,19 +83,18 @@ int main(int argc, char *argv[])
     cout << "L infinity error: " << E->Linf(sol) << endl;
     cout << "L 2 error:        " << E->L2  (sol) << endl;
     //--------------------------------------------
-    
     return 0;
 }
 
-NekDouble Hex_sol(NekDouble x, NekDouble y, NekDouble z, int order1, int order2, int order3)
+NekDouble Hex_sol(NekDouble x, NekDouble y, NekDouble z, int nummodes1, int nummodes2, int nummodes3)
 {
     NekDouble sol = 0;
  
-    for(int i = 0; i <= order1; ++i) 
+    for(int i = 0; i < nummodes1; ++i) 
     {
-        for(int j = 0; j <= order2; ++j) 
+        for(int j = 0; j < nummodes2; ++j) 
         {
-            for(int k = 0; k <= order3; ++k) 
+            for(int k = 0; k < nummodes3; ++k) 
             {
                 sol += pow(x,i) * pow(y,j) * pow(z,k);
             }

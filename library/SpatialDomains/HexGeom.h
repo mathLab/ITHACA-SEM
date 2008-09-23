@@ -55,15 +55,12 @@ namespace Nektar
         typedef std::vector< HexGeomSharedPtr >::iterator HexGeomVectorIter;
 
     class HexGeom: public Geometry3D
-        {
+        { 
         public:
             HexGeom();
             HexGeom(const QuadGeomSharedPtr faces[]);
             HexGeom::HexGeom(const QuadGeomSharedPtr faces[], const Array<OneD, StdRegions::StdExpansion3DSharedPtr> & xMap);
-            
-/*             HexGeom(const QuadGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[]); */
-/*             HexGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const QuadGeomSharedPtr faces[], */
-/*                     const StdRegions::EdgeOrientation eorient[], const StdRegions::FaceOrientation forient[]); */
+
             ~HexGeom();
 
             void AddElmtConnected(int gvo_id, int locid);
@@ -318,6 +315,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.20  2008/09/23 22:05:48  ehan
+// Added new GeomFactor constructor.
+//
 // Revision 1.19  2008/09/23 18:19:56  pvos
 // Updates for working ProjectContField3D demo
 //

@@ -95,51 +95,7 @@ namespace Nektar
                 m_xmap[i] = xMap[i];  
             }
         }
-        
 
-        //         HexGeom::HexGeom(const QuadGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[])
-        //         {
-        //             m_GeomShapeType = eHexahedron;
-
-        //             /// Copy the face shared pointers
-        //             m_faces.insert(m_faces.begin(), faces, faces+HexGeom::kNfaces);
-
-        //             for (int j=0; j<kNfaces; ++j)
-        //             {
-        //                m_forient[j] = forient[j];
-        //             }
-
-        //             m_coordim = faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim();
-        //             ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
-        //         }
-
-        //         HexGeom::HexGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const QuadGeomSharedPtr faces[],
-        //                          const StdRegions::EdgeOrientation eorient[], const StdRegions::FaceOrientation forient[])
-        //          {
-        //             m_GeomShapeType = eHexahedron;
- 
-        //             /// Copy the vert shared pointers.
-        //             m_verts.insert(m_verts.begin(), verts, verts+HexGeom::kNverts);
-
-        //             /// Copy the edge shared pointers.
-        //             m_edges.insert(m_edges.begin(), edges, edges+HexGeom::kNedges);
-
-        //             /// Copy the face shared pointers
-        //             m_faces.insert(m_faces.begin(), faces, faces+HexGeom::kNfaces);
-
-        //             for (int i=0; i<kNedges; ++i)
-        //             {
-        //                 m_eorient[i] = eorient[i];
-        //             }
-
-        //             for (int j=0; j<kNfaces; ++j)
-        //             {
-        //                m_forient[j] = forient[j];
-        //             }
-
-        //             m_coordim = verts[0]->GetCoordim();
-        //             ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
-        //         }
 
         HexGeom::~HexGeom()
         {
@@ -809,6 +765,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.cpp,v $
+// Revision 1.14  2008/09/23 22:06:26  ehan
+// Added new GeomFactor constructor.
+//
 // Revision 1.13  2008/09/23 18:19:56  pvos
 // Updates for working ProjectContField3D demo
 //

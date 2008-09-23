@@ -199,13 +199,11 @@ int main(int argc, char *argv[])
                 AllocateSharedPtr( i, edgeArray, eorientArray);
           }
           
-
-         
-         
+                 
          const LibUtilities::PointsKey   pointsKey_x( Qx, Qtype_x ); 
          const LibUtilities::PointsKey   pointsKey_y( Qy, Qtype_y );
          const LibUtilities::PointsKey   pointsKey_z( Qz, Qtype_z );
-
+  
          cout << "pointsKey_x = " << pointsKey_x << endl;
 
          const LibUtilities::BasisKey    basisKey_x( bType_x, xModes, pointsKey_x );
@@ -217,12 +215,12 @@ int main(int argc, char *argv[])
              xMap[i] = MemoryManager<StdRegions::StdHexExp>::AllocateSharedPtr(basisKey_x,basisKey_y,basisKey_z);
          }
          
+       //SpatialDomains::HexGeomSharedPtr geom = MemoryManager<SpatialDomains::HexGeom>::AllocateSharedPtr(faces, xMap);
+
          SpatialDomains::HexGeomSharedPtr geom = MemoryManager<SpatialDomains::HexGeom>::AllocateSharedPtr(faces);
          geom->SetOwnData();
 
          
- 
-
         if( bType_x_val < 10 ) {
             lhe = new LocalRegions::HexExp( basisKey_x, basisKey_y, basisKey_z, geom );
  
@@ -239,9 +237,7 @@ int main(int argc, char *argv[])
 
             cout << "x = " << x[n] << ",    y = " << y[n] << ",    z = " << z[n] <<endl;//"[" << n << "]" << endl;
 
-
-          //  cout << "Solution = " << solution[n] << endl;
-           
+          //  cout << "Solution = " << solution[n] << endl;           
         }
 
         cout << "pointsKey_x3 = " << pointsKey_x << endl;

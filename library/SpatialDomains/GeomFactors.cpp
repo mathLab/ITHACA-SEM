@@ -784,7 +784,9 @@ namespace Nektar
             ptype2 = m_pointsKey[2].GetPointsType();
              
  
-             nqtot = nquad0*nquad1*nquad2; 
+             nqtot = nquad0*nquad1*nquad2;
+
+             cout << "nqtot = " << nqtot << endl;
 
             // setup temp storage
             Array<OneD, NekDouble> d1[3] = {Array<OneD, NekDouble>(nqtot),
@@ -823,8 +825,6 @@ namespace Nektar
         {
             m_jac = Array<OneD, NekDouble>(1,0.0);
             m_gmat = Array<TwoD, NekDouble>(3*coordim, 1, 0.0);
-
-            if(coordim == 3) {
             
                 // The three-dimensional Jacobian form (J_3d from the page 158, Spen's book)
                 m_jac[0] = d1[0][0]*(d2[1][0]*d3[2][0] - d3[1][0]*d2[2][0])
@@ -859,7 +859,9 @@ namespace Nektar
                 Array<OneD, NekDouble> g[3] = {Array<OneD, NekDouble>(nqtot),
                                                Array<OneD, NekDouble>(nqtot),
                                                Array<OneD, NekDouble>(nqtot)};
-                                              
+
+                cout << "*********Geom type = " <<m_gtype << endl;                                             
+                                                
                 // set up Jacobian
                 // g[0] = (d x_2/d xi_2)*(d x_3/d xi_3) - (d x_2/d xi_3)*(d x_3/d xi_2)
                 //g[0] = (d x_2/d xi_3)*(d x_3/d xi_2)
@@ -934,9 +936,6 @@ namespace Nektar
 
             }
 
-
-        }
-
      }
         
         GeomFactors::~GeomFactors(){
@@ -954,6 +953,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.29  2008/09/23 18:19:56  pvos
+// Updates for working ProjectContField3D demo
+//
 // Revision 1.28  2008/09/20 11:32:24  ehan
 // Rearranged 3D geomfactors
 //

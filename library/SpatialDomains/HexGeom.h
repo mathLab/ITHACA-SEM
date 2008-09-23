@@ -59,6 +59,8 @@ namespace Nektar
         public:
             HexGeom();
             HexGeom(const QuadGeomSharedPtr faces[]);
+            HexGeom::HexGeom(const QuadGeomSharedPtr faces[], const Array<OneD, StdRegions::StdExpansion3DSharedPtr> & xMap);
+            
 /*             HexGeom(const QuadGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[]); */
 /*             HexGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const QuadGeomSharedPtr faces[], */
 /*                     const StdRegions::EdgeOrientation eorient[], const StdRegions::FaceOrientation forient[]); */
@@ -316,6 +318,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.19  2008/09/23 18:19:56  pvos
+// Updates for working ProjectContField3D demo
+//
 // Revision 1.18  2008/09/17 13:46:26  pvos
 // Added LocalToGlobalC0ContMap for 3D expansions
 //

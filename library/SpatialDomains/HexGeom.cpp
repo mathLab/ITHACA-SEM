@@ -72,6 +72,31 @@ namespace Nektar
             }
         }
 
+        HexGeom::HexGeom(const QuadGeomSharedPtr faces[], const Array<OneD, StdRegions::StdExpansion3DSharedPtr> & xMap) :
+            Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
+        {
+            m_GeomShapeType = eHexahedron;
+            
+            /// Copy the face shared pointers
+            m_faces.insert(m_faces.begin(), faces, faces + HexGeom::kNfaces);
+
+            SetUpLocalEdges();
+            SetUpLocalVertices();
+            SetUpEdgeOrientation();
+            SetUpFaceOrientation();
+
+            
+            ASSERTL2(xMap.num_elements() == 3,"m_xmap needs an array of size matching m_coordim.");
+            
+            m_xmap = Array<OneD, StdRegions::StdExpansion3DSharedPtr>(m_coordim);
+            
+            for(int i = 0; i < xMap.num_elements(); ++i)
+            {
+                m_xmap[i] = xMap[i];  
+            }
+        }
+        
+
         //         HexGeom::HexGeom(const QuadGeomSharedPtr faces[],  const StdRegions::FaceOrientation forient[])
         //         {
         //             m_GeomShapeType = eHexahedron;
@@ -666,9 +691,8 @@ namespace Nektar
                         dx2 = m_verts[ faceVerts[f][((i+3)%4)] ]->x() - m_verts[ faceVerts[f][i] ]->x();
                         dy2 = m_verts[ faceVerts[f][((i+3)%4)] ]->y() - m_verts[ faceVerts[f][i] ]->y();
                         
-                        if(fabs(dx1*dx2 + dy1*dy2) > 
-                           sqrt((dx1*dx1+dy1*dy1)*(dx2*dx2+dy2*dy2))*
-                           kGeomRightAngleTol)
+                        if(fabs(dx1*dx2 + dy1*dy2) > sqrt((dx1*dx1+dy1*dy1)*(dx2*dx2+dy2*dy2))
+                                                         * kGeomRightAngleTol)
                         {
                             Gtype = eDeformed;
                             break;
@@ -716,17 +740,17 @@ namespace Nektar
                     {
                         for(k = 0; k < nFaceCoeffs; k++)
                         {
-                            sign = (NekDouble) signArray[k];
-                            (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = sign *
-                                ((*m_faces[i])[j]->GetCoeffs())[k];
+                            const Array<OneD, const NekDouble> & coeffs = (*m_faces[i])[j]->GetCoeffs();
+                            double v = signArray[k]* coeffs[k];
+                            (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = v;
+
                         }
                     }
                 }
                 
                 for(i = 0; i < m_coordim; ++i)
                 {
-                    m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(),
-                                        m_xmap[i]->UpdatePhys());
+                    m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(), m_xmap[i]->UpdatePhys());
                 }
                 
                 m_state = ePtsFilled;
@@ -785,6 +809,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.cpp,v $
+// Revision 1.13  2008/09/23 18:19:56  pvos
+// Updates for working ProjectContField3D demo
+//
 // Revision 1.12  2008/09/17 13:46:26  pvos
 // Added LocalToGlobalC0ContMap for 3D expansions
 //

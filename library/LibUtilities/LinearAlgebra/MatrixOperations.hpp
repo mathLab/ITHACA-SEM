@@ -978,7 +978,13 @@ namespace Nektar
 
     
     GENERATE_MULTIPLICATION_OPERATOR(NekMatrix, 3, NekMatrix, 3);
-    
+//    template<typename L1, typename L2, typename L3, typename R1, typename R2, typename R3>
+//    typename Nektar::MultiplicationTraits<NekMatrix<L1, L2, L3>, NekMatrix<R1, R2, R3> >::ResultType
+//    operator*(const NekMatrix<L1, L2, L3>& lhs, const NekMatrix<R1, R2, R3>& rhs)
+//    {
+//        return NekMultiply(lhs, rhs);
+//    }
+                    
 //    // TODO - Any update possible for this case?  The constant value must be the same as the matrix 
 //    // number type.  Seems pretty custom to me.
 //    template<typename DataType, typename LhsDataType, typename StorageType, typename MatrixType>

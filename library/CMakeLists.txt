@@ -17,6 +17,12 @@ SET(NEKTAR_USE_TINYXML_STL ON CACHE BOOL "Use STL with TinyXML library.")
 SET(NEKTAR_USE_DIRECT_BLAS_CALLS OFF CACHE BOOL "Use direct BLAS calls rather than NekMatrix calls in the StdRegions and LocalRegions sublibrary")
 SET(NEKTAR_FULL_DEBUG OFF CACHE BOOL "Enable Full Debugging.")
 SET(NEKTAR_USE_PRECOMPILED_HEADERS OFF CACHE BOOL "Enable the use of precompiled headers.")
+
+IF (${CMAKE_COMPILER_IS_GNUCXX}) 
+    SET(NEKTAR_ENABLE_PROFILE OFF CACHE BOOL "Compiles Nektar++ with the -pg compiler flag")
+    MARK_AS_ADVANCED(NEKTAR_ENABLE_PROFILE)
+ENDIF (${CMAKE_COMPILER_IS_GNUCXX}) 
+
 SET(NEKTAR_BUILD_DEMOS ON CACHE BOOL "Build Demo Projects")
 
 IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008" )

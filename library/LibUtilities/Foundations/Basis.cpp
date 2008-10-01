@@ -190,12 +190,12 @@ namespace Nektar
                     for( int p = 0; p <= P; ++p ) {
                         for( int q = 0; q <= Q - p; ++q ) {
                             for( int r = 0; r <= R - p - q; ++r, mode += numPoints ) {
-                                Polylib::jacobfd(numPoints, z.data(), mode, NULL, r, 2*p + 2*q + 1.0, 0.0);
+                               Polylib::jacobfd(numPoints, z.data(), mode, NULL, r, 2*p + 2*q + 2.0, 0.0);
                                 for( int k = 0; k < numPoints; ++k ) {
                                     mode[k] *= 0.5*pow(1.0 - z[k], p+q);
                                 }
                             }
-                        }
+                        } 
                     }
 
 
@@ -479,6 +479,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.32  2008/06/23 17:58:03  pvos
+* Added proper normalising terms to implementation of Ortho_B
+*
 * Revision 1.31  2008/05/13 01:11:22  ehan
 * Added monomial basis
 *

@@ -386,7 +386,8 @@ namespace Nektar
 	{
             npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExp(e)->GetNumPoints(0);
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e) ;
-            id2  = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->GetBndExpToTraceExpMap(cnt+e));
+	    //id2  = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->GetBndExpToTraceExpMap(cnt+e));
+	    id2  = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
 	  
             Array<OneD, NekDouble> tmp_n(npts);
             Array<OneD, NekDouble> tmp_t(npts);
@@ -496,6 +497,9 @@ namespace Nektar
 
 /**
 * $Log: ShallowWaterEquations.cpp,v $
+* Revision 1.2  2008/09/15 14:54:15  claes
+* Small changes associated with the BoussinesqSolver
+*
 * Revision 1.1  2008/08/22 09:48:23  pvos
 * Added Claes' AdvectionDiffusionReaction, ShallowWater and Euler solver
 *

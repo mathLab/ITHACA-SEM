@@ -82,8 +82,9 @@ int main(int argc, char *argv[])
 
         //-----------------------------------------
         // Construct an object from the class ShallowWaterEquations.
+	int nVariables = 3;
         ShallowWaterEquationsSharedPtr U =
-            MemoryManager<ShallowWaterEquations>::AllocateSharedPtr(mesh,boundaryConds);
+	  MemoryManager<ShallowWaterEquations>::AllocateSharedPtr(mesh,boundaryConds,nVariables);
         //-----------------------------------------
      
      
@@ -91,8 +92,8 @@ int main(int argc, char *argv[])
         // Store input parameters
         U->SetTime(boundaryConds.GetParameter("T0"));
         U->SetTimeStep(boundaryConds.GetParameter("Dt"));
-        U->SetSteps(boundaryConds.GetParameter("Steps"));
-        U->SetCheckSteps(boundaryConds.GetParameter("Check"));
+        U->SetSteps((int)boundaryConds.GetParameter("Steps"));
+        U->SetCheckSteps((int)boundaryConds.GetParameter("Check"));
         U->SetGravity(boundaryConds.GetParameter("G"));
         //-----------------------------------------------
      
@@ -353,5 +354,8 @@ void rhsFunction(ShallowWaterEquationsSharedPtr U,
 }
 
 /**
-* $Log: $
+* $Log: ShallowWaterSolver.cpp,v $
+* Revision 1.1  2008/08/22 09:48:23  pvos
+* Added Claes' AdvectionDiffusionReaction, ShallowWater and Euler solver
+*
 **/

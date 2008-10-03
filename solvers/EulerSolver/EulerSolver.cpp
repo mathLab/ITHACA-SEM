@@ -89,8 +89,8 @@ int main(int argc, char *argv[])
         // Store input parameters
         U->SetTime(boundaryConds.GetParameter("T0"));
         U->SetTimeStep(boundaryConds.GetParameter("Dt"));
-        U->SetSteps(boundaryConds.GetParameter("Steps"));
-        U->SetCheckSteps(boundaryConds.GetParameter("Check"));
+        U->SetSteps((int)boundaryConds.GetParameter("Steps"));
+        U->SetCheckSteps((int)boundaryConds.GetParameter("Check"));
         U->SetGamma(boundaryConds.GetParameter("Gamma"));
         //-----------------------------------------------
      
@@ -412,5 +412,8 @@ void GetExactIsenTropicVortex(EulerEquationsSharedPtr U, Array<OneD, NekDouble> 
 }
 
 /**
-* $Log: $
+* $Log: EulerSolver.cpp,v $
+* Revision 1.1  2008/08/22 09:48:23  pvos
+* Added Claes' AdvectionDiffusionReaction, ShallowWater and Euler solver
+*
 **/

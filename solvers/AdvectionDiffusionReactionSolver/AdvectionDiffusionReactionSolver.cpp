@@ -158,8 +158,8 @@ int main(int argc, char *argv[])
         //-----------------------------------------------
         // Time stepping parameters
         NekDouble dt = boundaryConds.GetParameter("Dt");
-        int timeStep = boundaryConds.GetParameter("Steps");
-        int chkStep  = boundaryConds.GetParameter("Check");
+        int timeStep = (int)boundaryConds.GetParameter("Steps");
+        int chkStep  = (int)boundaryConds.GetParameter("Check");
         //-----------------------------------------------
 
 
@@ -338,5 +338,8 @@ void rhsFunction(const AdvectionDiffusionReactionSharedPtr hpExp,
 }
 
 /**
-* $Log: $
+* $Log: AdvectionDiffusionReactionSolver.cpp,v $
+* Revision 1.1  2008/08/22 09:48:23  pvos
+* Added Claes' AdvectionDiffusionReaction, ShallowWater and Euler solver
+*
 **/

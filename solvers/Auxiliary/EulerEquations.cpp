@@ -233,7 +233,7 @@ namespace Nektar
 	{
             npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExp(e)->GetNumPoints(0);
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e) ;
-            id2  = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->GetBndExpToTraceExpMap(cnt+e));
+            id2  = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));//GetBndExpToTraceExpMap(cnt+e));
 	  
             Array<OneD, NekDouble> tmp_n(npts);
             Array<OneD, NekDouble> tmp_t(npts);
@@ -290,7 +290,7 @@ namespace Nektar
 	{
             npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExp(e)->GetNumPoints(0);
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e) ;
-            id2  = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->GetBndExpToTraceExpMap(cnt+e));
+            id2  = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));//GetBndExpToTraceExpMap(cnt+e));
 	  
             // copy the boundary  values into the boundary expansion
             Vmath::Vcopy(npts,&rho[id2], 1,&(m_fields[0]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1],1);
@@ -384,5 +384,8 @@ namespace Nektar
 } //end of namespace
 
 /**
-* $Log: $
+* $Log: EulerEquations.cpp,v $
+* Revision 1.1  2008/08/22 09:48:23  pvos
+* Added Claes' AdvectionDiffusionReaction, ShallowWater and Euler solver
+*
 **/

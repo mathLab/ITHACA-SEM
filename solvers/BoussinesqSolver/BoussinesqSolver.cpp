@@ -108,8 +108,8 @@ int main(int argc, char *argv[])
      // Store input parameters
      U->SetTime(boundaryConds.GetParameter("T0"));
      U->SetTimeStep(boundaryConds.GetParameter("Dt"));
-     U->SetSteps(boundaryConds.GetParameter("Steps"));
-     U->SetCheckSteps(boundaryConds.GetParameter("Check"));
+     U->SetSteps((int)boundaryConds.GetParameter("Steps"));
+     U->SetCheckSteps((int)boundaryConds.GetParameter("Check"));
      U->SetGravity(boundaryConds.GetParameter("G")); 
      U->SetConstantDepth(boundaryConds.GetParameter("D"));
      U->SetAlpha1(boundaryConds.GetParameter("Alpha1"));

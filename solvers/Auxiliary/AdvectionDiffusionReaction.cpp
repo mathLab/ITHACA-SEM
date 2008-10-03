@@ -69,7 +69,7 @@ namespace Nektar
     }
     
     
-    void AdvectionDiffusionReaction::SetInitialConditions(SpatialDomains::BoundaryConditions &bcs, int initialtime)
+    void AdvectionDiffusionReaction::SetInitialConditions(SpatialDomains::BoundaryConditions &bcs, NekDouble initialtime)
     {
         int nq = m_fields[0]->GetPointsTot();
       
@@ -351,6 +351,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.2  2008/09/15 14:54:15  claes
+* Small changes associated with the BoussinesqSolver
+*
 * Revision 1.1  2008/08/22 09:48:23  pvos
 * Added Claes' AdvectionDiffusionReaction, ShallowWater and Euler solver
 *

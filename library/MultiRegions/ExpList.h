@@ -51,7 +51,8 @@ namespace Nektar
         class GlobalLinSys; 
         class LocalToGlobalC0ContMap;
         class LocalToGlobalBaseMap;
-        
+        class GenExpList1D;
+
         /**
          * \brief This is the base class for all multi-elemental spectral/hp 
          * expansions.
@@ -384,6 +385,12 @@ namespace Nektar
             void  MultiplyByElmtInvMass (const Array<OneD, const NekDouble> &inarray,
                                        Array<OneD, NekDouble> &outarray);
 
+            void MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            {
+                v_MultiplyByInvMassMatrix(inarray,outarray);
+                
+            }
+
             /**
              * \brief 
              */
@@ -632,7 +639,9 @@ namespace Nektar
              * solution at the quadrature points in its array #m_phys.
              * \return The \f$L_2\f$ error of the approximation.
              */
-            NekDouble L2   (const ExpList &Sol);
+            NekDouble L2 (const ExpList &Sol);
+
+            NekDouble L2 (const Array<OneD, const NekDouble> &soln);
 
             /**
              * \brief This function returns the number of elements in the expansion.
@@ -709,37 +718,85 @@ namespace Nektar
             }
 
             /**
-             * \brief This function discretely evaluates the derivative of a function 
-             * \f$f(\boldsymbol{x})\f$  on the domain consisting of all elements of 
-             * the expansion.
+             * \brief This function discretely evaluates the
+             * derivative of a function \f$f(\boldsymbol{x})\f$ on the
+             * domain consisting of all elements of the expansion.
              *
-             * Given a function \f$f(\boldsymbol{x})\f$ evaluated at the quadrature points, 
-             * this function calculates the derivatives 
-             * \f$\frac{d}{dx_1}\f$, \f$\frac{d}{dx_2}\f$ and \f$\frac{d}{dx_3}\f$ of the 
-             * function \f$f(\boldsymbol{x})\f$ at the same quadrature points. The local 
-             * distribution of the quadrature points allows an elemental evaluation of the 
-             * derivative. This is done by a call to the function  
+             * Given a function \f$f(\boldsymbol{x})\f$ evaluated at
+             * the quadrature points, this function calculates the
+             * derivatives \f$\frac{d}{dx_1}\f$, \f$\frac{d}{dx_2}\f$
+             * and \f$\frac{d}{dx_3}\f$ of the function
+             * \f$f(\boldsymbol{x})\f$ at the same quadrature
+             * points. The local distribution of the quadrature points
+             * allows an elemental evaluation of the derivative. This
+             * is done by a call to the function
              * StdRegions#StdExpansion#PhysDeriv.
              *
-             * \param inarray An array of size \f$Q_{\mathrm{tot}}\f$ containing the values 
-             * of the function \f$f(\boldsymbol{x})\f$ at the quadrature points 
-             * \f$\boldsymbol{x}_i\f$.
-             * \param out_d0 The discrete evaluation of the derivative\f$\frac{d}{dx_1}\f$ 
-             * will be stored in this array of size \f$Q_{\mathrm{tot}}\f$.
-             * \param out_d1 The discrete evaluation of the derivative\f$\frac{d}{dx_2}\f$ 
-             * will be stored in this array of size \f$Q_{\mathrm{tot}}\f$. Note that if no 
-             * memory is allocated for \a out_d1, the derivative \f$\frac{d}{dx_2}\f$ will 
-             * not be calculated.
-             * \param out_d2 The discrete evaluation of the derivative\f$\frac{d}{dx_3}\f$ 
-             * will be stored in this array of size \f$Q_{\mathrm{tot}}\f$. Note that if no 
-             * memory is allocated for \a out_d2, the derivative \f$\frac{d}{dx_3}\f$ will 
-             * not be calculated.
+             * \param inarray An array of size \f$Q_{\mathrm{tot}}\f$
+             * containing the values of the function
+             * \f$f(\boldsymbol{x})\f$ at the quadrature points
+             * \f$\boldsymbol{x}_i\f$.  \param out_d0 The discrete
+             * evaluation of the derivative\f$\frac{d}{dx_1}\f$ will
+             * be stored in this array of size \f$Q_{\mathrm{tot}}\f$.
+             * \param out_d1 The discrete evaluation of the
+             * derivative\f$\frac{d}{dx_2}\f$ will be stored in this
+             * array of size \f$Q_{\mathrm{tot}}\f$. Note that if no
+             * memory is allocated for \a out_d1, the derivative
+             * \f$\frac{d}{dx_2}\f$ will not be calculated.  \param
+             * out_d2 The discrete evaluation of the
+             * derivative\f$\frac{d}{dx_3}\f$ will be stored in this
+             * array of size \f$Q_{\mathrm{tot}}\f$. Note that if no
+             * memory is allocated for \a out_d2, the derivative
+             * \f$\frac{d}{dx_3}\f$ will not be calculated.
              */
             void   PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                              Array<OneD, NekDouble> &out_d0, 
                              Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
                              Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
             
+            void PhysDeriv(const int dir, 
+                           const Array<OneD, const NekDouble> &inarray,
+                           Array<OneD, NekDouble> &out_d);
+
+
+            // wrapper functions about virtual functions
+
+            // functions associated with DisContField
+            boost::shared_ptr<GenExpList1D> &GetTrace(void)
+            {
+                return v_GetTrace();
+            }
+
+            void AddTraceIntegral(const Array<OneD, const NekDouble> &Fx, 
+                                          const Array<OneD, const NekDouble> &Fy, 
+                                          Array<OneD, NekDouble> &outarray)
+            {
+                v_AddTraceIntegral(Fx,Fy,outarray);
+            }
+
+            void AddTraceIntegral(const Array<OneD, const NekDouble> &Fn,   Array<OneD, NekDouble> &outarray)
+            {
+                v_AddTraceIntegral(Fn,outarray);
+            }
+
+
+            void GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd, 
+                                              Array<OneD,NekDouble> &Bwd)
+            {
+                v_GetFwdBwdTracePhys(Fwd,Bwd);
+            }
+
+            virtual void ExtractTracePhys(Array<OneD,NekDouble> &outarray)
+            {
+                v_ExtractTracePhys(outarray);
+            }
+
+
+            void ExtractTracePhys(const Array<OneD, NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            {
+                v_ExtractTracePhys(inarray,outarray);
+            }
+
         protected:
             
 
@@ -1019,7 +1076,50 @@ namespace Nektar
              */      
             boost::shared_ptr<GlobalLinSys> GenGlobalBndLinSys(const GlobalLinSysKey     &mkey, const LocalToGlobalBaseMap &LocToGloBaseMap);
 
+
+
+            // functions associated with DisContField
+            inline virtual boost::shared_ptr<GenExpList1D> &v_GetTrace(void)
+            {
+                ASSERTL0(false,"This method is not defined or valid for this class type");
+            }
+            
+
+            virtual void v_AddTraceIntegral(const Array<OneD, const NekDouble> &Fx, 
+                                          const Array<OneD, const NekDouble> &Fy, 
+                                          Array<OneD, NekDouble> &outarray)
+            {
+                ASSERTL0(false,"This method is not defined or valid for this class type");                
+            }
+
+            virtual void v_AddTraceIntegral(const Array<OneD, const NekDouble> &Fn,   Array<OneD, NekDouble> &outarray)
+            {
+                ASSERTL0(false,"This method is not defined or valid for this class type");                
+            }
+
+            virtual void v_GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd, 
+                                              Array<OneD,NekDouble> &Bwd)
+            {
+                ASSERTL0(false,"This method is not defined or valid for this class type");                
+            }
+
+            virtual void v_ExtractTracePhys(Array<OneD,NekDouble> &outarray)
+            {
+                ASSERTL0(false,"This method is not defined or valid for this class type");                
+            }
+
+            virtual void v_ExtractTracePhys(const Array<OneD, NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            {
+                ASSERTL0(false,"This method is not defined or valid for this class type");                
+            }
+
+            virtual void v_MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            {
+                ASSERTL0(false,"This method is not defined or valid for this class type");                
+            }
+
         private:
+
 
     };
 
@@ -1034,6 +1134,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.43  2008/09/16 13:36:06  pvos
+* Restructured the LocalToGlobalMap classes
+*
 * Revision 1.42  2008/08/14 22:15:51  sherwin
 * Added LocalToglobalMap and DGMap and depracted LocalToGlobalBndryMap1D,2D. Made DisContField classes compatible with updated ContField formats
 *

@@ -308,6 +308,24 @@ namespace Nektar
             }
         }
 
+
+
+        void ExpList::PhysDeriv(const int dir, 
+                                const Array<OneD, const NekDouble> &inarray,
+                                Array<OneD, NekDouble> &out_d)
+        {
+            int  cnt = 0;
+            int  i;
+            Array<OneD, NekDouble> e_out_d;
+            
+            for(i= 0; i < GetExpSize(); ++i)
+            {
+                e_out_d = out_d + cnt;
+                (*m_exp)[i]->PhysDeriv(dir, inarray+cnt, e_out_d);
+                cnt  += (*m_exp)[i]->GetTotPoints();
+            }
+        }
+
         void ExpList::MultiplyByElmtInvMass(const ExpList &Sin)
         {
             ASSERTL2(Sin.GetTransState() == eLocal ||
@@ -317,6 +335,7 @@ namespace Nektar
             MultiplyByElmtInvMass(Sin.GetPhys(),m_coeffs);
             m_transState = eLocal;
         }
+
 
         void ExpList::FwdTrans(const ExpList &Sin)
         {
@@ -347,9 +366,17 @@ namespace Nektar
             }
             
             // Inverse mass matrix
-            NekVector<const NekDouble> in(m_ncoeffs,inarray,eWrapper);
             NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);            
-            out = (*InvMass)*in;
+            if(inarray.get() == outarray.get())
+            {
+                NekVector<const NekDouble> in(m_ncoeffs,inarray); // copy data
+                out = (*InvMass)*in;
+            }
+            else
+            {
+                NekVector<const NekDouble> in(m_ncoeffs,inarray,eWrapper);
+                out = (*InvMass)*in;
+            }
 
         }
 
@@ -921,16 +948,21 @@ namespace Nektar
         {
             ASSERTL2(Sol.GetPhysState() == true,
                      "local physical space is not true ");
-            
-            NekDouble err = 0.0,errl2;
-            int    i,cnt = 0;
-            Array<OneD, const NekDouble> soln = Sol.GetPhys();
-            Array<OneD, const NekDouble> phys = m_phys;
-            
+
             if(m_physState == false)
             {
                 BwdTrans(*this);
             }
+            
+            return L2(Sol.GetPhys());
+        }
+        
+        NekDouble ExpList::L2(const Array<OneD, const NekDouble> &soln)
+        {
+            
+            NekDouble err = 0.0,errl2;
+            int    i,cnt = 0;
+            Array<OneD, const NekDouble> phys = m_phys;
             
             for(i= 0; i < GetExpSize(); ++i)
             {

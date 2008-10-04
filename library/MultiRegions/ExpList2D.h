@@ -122,6 +122,22 @@ namespace Nektar
                 ExpList::PhysDeriv(S0,S1,S2);
             }
             
+            void  PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+                             Array<OneD, NekDouble> &out_d0, 
+                            Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+                            Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
+            {
+                ExpList::PhysDeriv(inarray,out_d0,out_d1,out_d2);
+            }
+            
+            void PhysDeriv(const int dir, 
+                           const Array<OneD, const NekDouble> &inarray,
+                           Array<OneD, NekDouble> &out_d)
+            {
+                PhysDeriv(dir,inarray,out_d);
+            }
+
+
         protected:
             void SetBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D,
                                                SpatialDomains::BoundaryConditions &bcs, 
@@ -154,6 +170,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.h,v $
+* Revision 1.16  2008/09/23 18:21:00  pvos
+* Updates for working ProjectContField3D demo
+*
 * Revision 1.15  2008/09/17 13:46:40  pvos
 * Added LocalToGlobalC0ContMap for 3D expansions
 *

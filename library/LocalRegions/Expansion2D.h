@@ -56,6 +56,11 @@ namespace Nektar
                                         Array<OneD, NekDouble> &outarray);
 
 
+            void AddEdgeNormBoundaryInt(const int edge, 
+                                   StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+                                   const Array<OneD, const NekDouble> &Fn,  
+                                        Array<OneD, NekDouble> &outarray);
+            
             void SetTraceToGeomOrientation(Array<OneD, StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                                            Array<OneD, NekDouble> &inout);
 
@@ -161,6 +166,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.h,v $
+ *    Revision 1.3  2008/08/27 16:35:13  pvos
+ *    Small efficiency update
+ *
  *    Revision 1.2  2008/08/20 09:16:39  sherwin
  *    Modified generation of HDG matrices so that they use Expansion1D, Expansion2D GenMatrix method rather than Expansion method. Have also removed methods which were generating edge expansions locally as this was too expensive
  *

@@ -46,26 +46,38 @@ namespace Nektar
                                                  const Array<OneD, const NekDouble> &Fy,  
                                                  Array<OneD, NekDouble> &outarray)
         {
-            int i;
-            int order_e = EdgeExp->GetNcoeffs();                    
             int nquad_e = EdgeExp->GetNumPoints(0);
             Array<OneD, const NekDouble> normals = EdgeExp->GetPhysNormals();
-            Array<OneD,unsigned int>     map;
-            Array<OneD,int>              sign;
-
-            StdRegions::EdgeOrientation edgedir = v_GetEorient(edge);
-
-            v_GetEdgeToElementMap(edge,edgedir,map,sign);
 
             ASSERTL1(v_GetCoordim() == 2,"Routine only set up for two-dimensions");
-            
+
             Vmath::Vmul(nquad_e,&(normals[0]),1,&Fx[0],1,
                         &(EdgeExp->UpdatePhys())[0],1);
             Vmath::Vvtvp(nquad_e,&(normals[nquad_e]),1,
                          &Fy[0],1,&(EdgeExp->GetPhys())[0],1,
                          &(EdgeExp->UpdatePhys())[0],1);
 
-            EdgeExp->IProductWRTBase(EdgeExp->GetPhys(),EdgeExp->UpdateCoeffs());
+            AddEdgeNormBoundaryInt(edge, EdgeExp, EdgeExp->GetPhys(), outarray);
+            
+        }
+
+        void Expansion2D::AddEdgeNormBoundaryInt(const int edge, 
+                                 StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+                                 const Array<OneD, const NekDouble> &Fn,  
+                                 Array<OneD, NekDouble> &outarray)
+        {
+            int i;
+            int order_e = EdgeExp->GetNcoeffs();
+            Array<OneD,unsigned int>     map;
+            Array<OneD,int>              sign;
+            StdRegions::EdgeOrientation  edgedir = v_GetEorient(edge);
+            
+            ASSERTL1(v_GetCoordim() == 2,"Routine only set up for two-dimensions");
+
+            v_GetEdgeToElementMap(edge,edgedir,map,sign);
+
+            EdgeExp->IProductWRTBase(Fn,EdgeExp->UpdateCoeffs());
+
             // negate backward edge values due to inwards normal definition
             if(edgedir == StdRegions::eBackwards)
             {
@@ -709,6 +721,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.cpp,v $
+ *    Revision 1.4  2008/08/27 16:35:13  pvos
+ *    Small efficiency update
+ *
  *    Revision 1.3  2008/08/20 09:16:39  sherwin
  *    Modified generation of HDG matrices so that they use Expansion1D, Expansion2D GenMatrix method rather than Expansion method. Have also removed methods which were generating edge expansions locally as this was too expensive
  *

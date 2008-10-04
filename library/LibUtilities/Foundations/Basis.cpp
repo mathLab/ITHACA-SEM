@@ -187,11 +187,15 @@ namespace Nektar
                     int P = numModes - 1, Q = numModes - 1, R = numModes - 1;
                     NekDouble *mode = m_bdata.data();
 
-                    for( int p = 0; p <= P; ++p ) {
-                        for( int q = 0; q <= Q - p; ++q ) {
-                            for( int r = 0; r <= R - p - q; ++r, mode += numPoints ) {
-                               Polylib::jacobfd(numPoints, z.data(), mode, NULL, r, 2*p + 2*q + 2.0, 0.0);
-                                for( int k = 0; k < numPoints; ++k ) {
+                    for( int p = 0; p <= P; ++p ) 
+                    {
+                        for( int q = 0; q <= Q - p; ++q ) 
+                        {
+                            for( int r = 0; r <= R - p - q; ++r, mode += numPoints ) 
+                            {
+                                Polylib::jacobfd(numPoints, z.data(), mode, NULL, r, 2*p + 2*q + 2.0, 0.0);
+                                for( int k = 0; k < numPoints; ++k ) 
+                                {
                                     mode[k] *= 0.5*pow(1.0 - z[k], p+q);
                                 }
                             }
@@ -381,12 +385,14 @@ namespace Nektar
                  int P = numModes - 1;
                  NekDouble *mode = m_bdata.data();
 
-                    for( int p = 0; p <= P; ++p, mode += numPoints ) {
-                        for( int i = 0; i < numPoints; ++i ) {
+                 for( int p = 0; p <= P; ++p, mode += numPoints ) 
+                 {
+                        for( int i = 0; i < numPoints; ++i ) 
+                        {
                             mode[i] = pow(z[i], p);
                         }
-                    }
-
+                 }
+                 
                     // define derivative basis
                     Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,numPoints,
                                 m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);
@@ -479,6 +485,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.33  2008/10/01 23:23:21  ehan
+* Changed the alpha value in order to be consistant with the Spen's book.
+*
 * Revision 1.32  2008/06/23 17:58:03  pvos
 * Added proper normalising terms to implementation of Ortho_B
 *

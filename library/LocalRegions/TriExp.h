@@ -475,6 +475,15 @@ namespace Nektar
                 
             }
 
+            virtual void v_AddEdgeNormBoundaryInt(const int edge, 
+                                                  StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+                                                  const Array<OneD, const NekDouble> &Fn,  
+                                                  Array<OneD, NekDouble> &outarray)
+            {
+                Expansion2D::AddEdgeNormBoundaryInt(edge,EdgeExp,Fn,outarray);
+                
+            }
+
 
         };
         
@@ -490,6 +499,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.37  2008/09/23 18:20:25  pvos
+ *    Updates for working ProjectContField3D demo
+ *
  *    Revision 1.36  2008/08/27 16:35:13  pvos
  *    Small efficiency update
  *

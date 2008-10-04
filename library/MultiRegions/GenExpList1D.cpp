@@ -144,9 +144,9 @@ namespace Nektar
         // Upwind the left and right states given by the Arrays Fwd
         // and Bwd using the vector quantity Vec and ouput the
         // upwinded value in the array upwind
-        void GenExpList1D::Upwind(Array<OneD,Array<OneD, const NekDouble> > &Vec, 
-                                  Array<OneD, const NekDouble> &Fwd, 
-                                  Array<OneD, const NekDouble> &Bwd, 
+        void GenExpList1D::Upwind(const Array<OneD, Array<OneD, NekDouble> > &Vec, 
+                                  const Array<OneD, const NekDouble> &Fwd, 
+                                  const Array<OneD, const NekDouble> &Bwd, 
                                   Array<OneD, NekDouble> &Upwind)
         {
             int i,j,k,e_npoints,offset;
@@ -177,6 +177,37 @@ namespace Nektar
 
                     // Upwind
                     if(Vn > 0.0)
+                    {
+                        Upwind[offset + j] = Fwd[offset + j];
+                    }
+                    else
+                    {
+                        Upwind[offset + j] = Bwd[offset + j];
+                    }
+                }
+            }            
+        }
+
+        void GenExpList1D::Upwind(const Array<OneD, const NekDouble> &Vn, 
+                                  const Array<OneD, const NekDouble> &Fwd, 
+                                  const Array<OneD, const NekDouble> &Bwd, 
+                                  Array<OneD, NekDouble> &Upwind)
+        {
+            int i,j,k,e_npoints,offset;
+            Array<OneD,NekDouble> normals; 
+
+            // Assume whole array is of same coordimate dimention
+            int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
+            
+            for(i = 0; i < m_exp->size(); ++i)
+            {
+                e_npoints = (*m_exp)[i]->GetNumPoints(0);
+                offset = m_phys_offset[i];
+
+                for(j = 0; j < e_npoints; ++j)
+                {
+                    // Upwind
+                    if(Vn[offset + j] > 0.0)
                     {
                         Upwind[offset + j] = Fwd[offset + j];
                     }
@@ -222,6 +253,9 @@ namespace Nektar
 
 /**
 * $Log: GenExpList1D.cpp,v $
+* Revision 1.5  2008/09/09 15:06:03  sherwin
+* Modifications related to curved elements.
+*
 * Revision 1.4  2008/08/22 09:42:32  pvos
 * Updates for Claes' Shallow Water and Euler solver
 *

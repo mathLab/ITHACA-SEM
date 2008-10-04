@@ -72,9 +72,16 @@ namespace Nektar
              */  
             ~GenExpList1D();
             
-            void Upwind(Array<OneD,Array<OneD, const NekDouble> > &Vec, 
-                        Array<OneD, const NekDouble> &Fwd, 
-                        Array<OneD, const NekDouble> &Bwd, 
+            void Upwind(const Array<OneD, Array<OneD, NekDouble> > &Vec, 
+                        const Array<OneD, const NekDouble> &Fwd, 
+                        const Array<OneD, const NekDouble> &Bwd, 
+                        Array<OneD, NekDouble> &Upwind);
+
+
+            
+            void Upwind(const Array<OneD, const NekDouble> &Vn, 
+                        const Array<OneD, const NekDouble> &Fwd, 
+                        const Array<OneD, const NekDouble> &Bwd, 
                         Array<OneD, NekDouble> &Upwind);
 
 	    void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals); 
@@ -96,6 +103,9 @@ namespace Nektar
 
 /**
  * $Log: GenExpList1D.h,v $
+ * Revision 1.3  2008/08/22 09:42:32  pvos
+ * Updates for Claes' Shallow Water and Euler solver
+ *
  * Revision 1.2  2008/08/14 22:15:51  sherwin
  * Added LocalToglobalMap and DGMap and depracted LocalToGlobalBndryMap1D,2D. Made DisContField classes compatible with updated ContField formats
  *

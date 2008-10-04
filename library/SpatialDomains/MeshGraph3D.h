@@ -216,6 +216,9 @@ namespace Nektar
         private:
 
         };
+
+        typedef boost::shared_ptr<MeshGraph3D> MeshGraph3DSharedPtr;
+
     }; // end of namespace
 }; // end of namespace
 
@@ -223,6 +226,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph3D.h,v $
+// Revision 1.12  2008/09/23 18:19:56  pvos
+// Updates for working ProjectContField3D demo
+//
 // Revision 1.11  2008/08/26 02:23:09  ehan
 // Added GetElementFromFace()
 //

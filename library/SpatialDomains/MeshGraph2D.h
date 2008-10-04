@@ -227,6 +227,9 @@ namespace Nektar
         private:
 
         };
+
+        typedef boost::shared_ptr<MeshGraph2D> MeshGraph2DSharedPtr;
+        
     };
 };
 
@@ -234,6 +237,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.25  2008/08/14 22:11:03  sherwin
+// Mods for HDG update
+//
 // Revision 1.24  2008/07/29 22:23:36  sherwin
 // various mods for DG advection solver in Multiregions. Added virtual calls to Geometry, Geometry1D, 2D and 3D
 //

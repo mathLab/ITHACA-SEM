@@ -145,7 +145,7 @@ namespace Nektar
                 return m_MeshDimension;
             }
 
-            /// \brief Dimension of the mesh (can be a 1D curve in 3D space).
+            /// \brief Dimension of the space (can be a 1D curve in 3D space).
             inline int GetSpaceDimension(void) const
             {
                 return m_SpaceDimension;
@@ -155,27 +155,28 @@ namespace Nektar
             {
                 return int(m_vertset.size());
             }
+            
+            struct FieldDefinitions
+            {
 
-			struct FieldDefinitions
-			{
-				FieldDefinitions(GeometryVector &elements,
-								 std::vector<LibUtilities::BasisType> &basis,
-								 std::vector<unsigned int> &numModes,
-								 std::vector<unsigned int> &numFields) : 
-					m_Elements(elements),
-					m_Basis(basis),
-					m_NumModes(numModes),
-					m_Fields(numFields)
-				{};
-				GeometryVector m_Elements;
-				std::vector<LibUtilities::BasisType> m_Basis;
-				std::vector<unsigned int> m_NumModes;
-				std::vector<unsigned int> m_Fields;
-			};
-
-			void Write(std::string &outfilename, FieldDefinitions &fielddefs, std::vector<double> &fielddata);
-			void Import(std::string &infilename, std::vector<FieldDefinitions> &fielddefs, std::vector<std::vector<double> > &fielddata);
-
+            FieldDefinitions(GeometryVector &elements,
+                             std::vector<LibUtilities::BasisType> &basis,
+                             std::vector<unsigned int> &numModes,
+                             std::vector<unsigned int> &numFields) : 
+                    m_Elements(elements),
+                    m_Basis(basis),
+                    m_NumModes(numModes),
+                    m_Fields(numFields)
+                {};
+                GeometryVector m_Elements;
+                std::vector<LibUtilities::BasisType> m_Basis;
+                std::vector<unsigned int> m_NumModes;
+                std::vector<unsigned int> m_Fields;
+            };
+            
+            void Write(std::string &outfilename, FieldDefinitions &fielddefs, std::vector<double> &fielddata);
+            void Import(std::string &infilename, std::vector<FieldDefinitions> &fielddefs, std::vector<std::vector<double> > &fielddata);
+            
             GeometrySharedPtr GetCompositeItem(int whichComposite, int whichItem);
             Composite GetComposite(int whichComposite) const
             {
@@ -184,26 +185,26 @@ namespace Nektar
                 {
                     returnval = m_MeshCompositeVector[whichComposite];
                 }
-
+                
                 return returnval;
             }
-
+            
             const CompositeVector &GetDomain(void) const
             {
                 return m_Domain;
             }
-
+            
             void ReadDomain(TiXmlDocument &doc);
             void ReadCurves(TiXmlDocument &doc);
             void ReadCurves(std::string &infilename);
             void GetCompositeList(const std::string &compositeStr, CompositeVector &compositeVector) const;
             LibUtilities::BasisKey GetBasisKey(ExpansionShPtr in, const int flag = 0);
-
+            
             ExpansionShPtr GetExpansion(GeometrySharedPtr geom)
             {
                 ExpansionVectorIter iter;
                 ExpansionShPtr returnval;
-
+                
                 for (iter = m_ExpansionVector.begin(); iter!=m_ExpansionVector.end(); ++iter)
                 {
                     if ((*iter)->m_GeomShPtr == geom)
@@ -219,7 +220,7 @@ namespace Nektar
             {
                 return m_ExpansionVector;
             }
-
+            
        protected:
             VertexVector            m_vertset;
             InterfaceCompList       m_icomps;
@@ -243,7 +244,12 @@ namespace Nektar
             CompositeVector m_Domain;
             ExpansionVector m_ExpansionVector;
             
-       };
+        };
+
+        
+        typedef boost::shared_ptr<MeshGraph> MeshGraphSharedPtr;
+
+
     }; //end of namespace
 }; //end of namespace
 
@@ -251,6 +257,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.29  2008/09/09 14:20:30  sherwin
+// Updated to handle curved edges (first working version)
+//
 // Revision 1.28  2008/08/26 02:19:39  ehan
 // Added struct element face and related shared pointers.
 //

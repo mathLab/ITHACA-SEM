@@ -80,6 +80,9 @@ namespace Nektar
 
         private:
         };
+        
+        typedef boost::shared_ptr<MeshGraph1D> MeshGraph1DSharedPtr;
+
     }; //end of namespace
 }; //end of namespace
 
@@ -87,6 +90,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph1D.h,v $
+// Revision 1.10  2008/06/09 21:33:04  jfrazier
+// Moved segment vector to base MeshGraph class since it is used by all derived types.
+//
 // Revision 1.9  2008/05/29 19:07:39  delisi
 // Removed the Write(..) methods, so it is only in the base MeshGraph class. Also, added a line to set the global ID of the geometry object for every element read in.
 //

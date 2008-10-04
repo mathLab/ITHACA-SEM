@@ -67,51 +67,51 @@ namespace Nektar
     {
 
         MeshGraph::MeshGraph():
-    m_MeshDimension(3),
-        m_SpaceDimension(3)
-    {
-    }
-
-    boost::shared_ptr<MeshGraph> MeshGraph::Read(std::string &infilename)
-    {
-        boost::shared_ptr<MeshGraph> returnval;
-
-        MeshGraph mesh;
-
-        mesh.ReadGeometry(infilename);
-        int meshDim = mesh.GetMeshDimension();
-
-        switch(meshDim)
+            m_MeshDimension(3),
+            m_SpaceDimension(3)
         {
-        case 1:
-            returnval = MemoryManager<MeshGraph1D>::AllocateSharedPtr();
-            break;
+        }
+
+        boost::shared_ptr<MeshGraph> MeshGraph::Read(std::string &infilename)
+        {
+            boost::shared_ptr<MeshGraph> returnval;
             
-        case 2:
-           returnval = MemoryManager<MeshGraph2D>::AllocateSharedPtr();
-           break;
+            MeshGraph mesh;
+            
+            mesh.ReadGeometry(infilename);
+            int meshDim = mesh.GetMeshDimension();
+            
+            switch(meshDim)
+            {
+            case 1:
+                returnval = MemoryManager<MeshGraph1D>::AllocateSharedPtr();
+                break;
+                
+            case 2:
+                returnval = MemoryManager<MeshGraph2D>::AllocateSharedPtr();
+                break;
+                
+            case 3:
+                returnval = MemoryManager<MeshGraph3D>::AllocateSharedPtr();
+                break;
+                
+            default:
+                std::string err = "Invalid mesh dimension: ";
+                std::stringstream strstrm;
+                strstrm << meshDim;
+                err += strstrm.str();
+                NEKERROR(ErrorUtil::efatal, err.c_str());
+            }
+            
+            if (returnval)
+            {
+                returnval->ReadGeometry(infilename);
+                returnval->ReadExpansions(infilename);
+            }
 
-        case 3:
-           returnval = MemoryManager<MeshGraph3D>::AllocateSharedPtr();
-           break;
-
-        default:
-            std::string err = "Invalid mesh dimension: ";
-            std::stringstream strstrm;
-            strstrm << meshDim;
-            err += strstrm.str();
-            NEKERROR(ErrorUtil::efatal, err.c_str());
+            return returnval;
         }
-
-        if (returnval)
-        {
-            returnval->ReadGeometry(infilename);
-            returnval->ReadExpansions(infilename);
-        }
-
-        return returnval;
-    }
-
+        
 
     // \brief Read will read the meshgraph vertices given a filename.
     void MeshGraph::ReadGeometry(std::string &infilename)
@@ -162,7 +162,7 @@ namespace Nektar
             else if (attrName == "SPACE")
             {
                 err = attr->QueryIntValue(&m_SpaceDimension);
-                ASSERTL1(err==TIXML_SUCCESS, "Unable to read mesh dimension.");
+                ASSERTL1(err==TIXML_SUCCESS, "Unable to read space dimension.");
             }
             else
             {
@@ -1156,6 +1156,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.25  2008/09/09 14:20:30  sherwin
+// Updated to handle curved edges (first working version)
+//
 // Revision 1.24  2008/08/18 20:54:02  ehan
 // Changed name CURVE to CURVED.
 //

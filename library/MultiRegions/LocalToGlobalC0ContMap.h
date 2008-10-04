@@ -148,6 +148,8 @@ namespace Nektar
             inline void Assemble(const Array<OneD, const NekDouble> &loc, 
                                  Array<OneD, NekDouble> &global)
             {
+                ASSERTL1(loc.get() != global.get(),"Local and Global Arrays cannot be the same");
+
                 Vmath::Zero(m_numGlobalCoeffs, global.get(), 1);
                 
                 if(m_signChange)
@@ -205,6 +207,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalC0ContMap.h,v $
+* Revision 1.2  2008/09/17 13:46:40  pvos
+* Added LocalToGlobalC0ContMap for 3D expansions
+*
 * Revision 1.1  2008/09/16 13:36:06  pvos
 * Restructured the LocalToGlobalMap classes
 *

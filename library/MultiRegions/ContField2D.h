@@ -188,7 +188,9 @@ namespace Nektar
              * \f$f(\boldsymbol{x})\f$ at the quadrature points in its array #m_phys.
              */ 
             void FwdTrans (const ExpList &In);
-          
+            
+            void MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+                      
             /**
              * \brief This function solves the two-dimensional Helmholtz equation, 
              * subject to the boundary conditions specified.
@@ -303,7 +305,7 @@ namespace Nektar
           
             /**
              * \brief This function solves the linear system specified by the key 
-             * \a key.
+             * \a key. NEEDS UPDATING (SJS)
              * 
              * Given a linear system specified by the key \a key,
              * \f[\boldsymbol{M}\boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}},\f]
@@ -351,8 +353,7 @@ namespace Nektar
              * \param ScaleForcing An optional parameter with which the forcing 
              * vector \f$\boldsymbol{\hat{f}}\f$ should be multiplied.
              */ 
-            void GlobalSolve(const GlobalLinSysKey &key, const ExpList &Rhs, 
-                             NekDouble ScaleForcing=1.0);
+            void GlobalSolve(const GlobalLinSysKey &key, const Array<OneD, const  NekDouble> &rhs, Array<OneD, NekDouble> &inout);
 
 
           
@@ -376,6 +377,12 @@ namespace Nektar
             void GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D,
                                                     SpatialDomains::BoundaryConditions &bcs, 
                                                     const std::string variable);
+            
+            virtual void v_MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            {
+                MultiplyByInvMassMatrix(inarray,outarray);
+            }
+
 
         };
         typedef boost::shared_ptr<ContField2D>      ContField2DSharedPtr;

@@ -97,6 +97,8 @@ namespace Nektar
             ReadInitialConditions(conditions);
 
             ReadExactSolution(conditions);
+
+            ReadUserDefinedEqn(conditions);
         }
 
         void BoundaryConditions::ReadParameters(TiXmlElement *conditions)
@@ -644,9 +646,11 @@ namespace Nektar
             {
                 TiXmlElement *forcingFunction = forcingFunctionsElement->FirstChildElement("F");
 
-                // All forcing functions are initialized to "0" so they only have to be
-                // partially specified.  That is, not all variables have to have functions
-                // specified.  For those that are missing it is assumed they are "0".
+                // All forcing functions are initialized to "0" so
+                // they only have to be partially specified.  That is,
+                // not all variables have to have functions specified.
+                // For those that are missing it is assumed they are
+                // "0".
                 for (Variable::iterator varIter = m_Variables.begin();
                     varIter != m_Variables.end(); ++varIter)
                 {
@@ -663,9 +667,11 @@ namespace Nektar
                     ASSERTL0(!fcnStr.empty(),
                         (std::string("Forcing function for var: ") + variableStr + std::string(" must be specified.")).c_str());
 
-                    /// Check the RHS against the functions defined in m_Functions.  If the name on the RHS
-                    /// is found in the function map, then use the function contained in the function
-                    /// map in place of the RHS.
+                    /// Check the RHS against the functions defined in
+                    /// m_Functions.  If the name on the RHS is found
+                    /// in the function map, then use the function
+                    /// contained in the function map in place of the
+                    /// RHS.
                     SubstituteFunction(fcnStr);
 
                     ForcingFunctionsMap::iterator forcingFcnsIter = m_ForcingFunctions.find(variableStr);
@@ -706,14 +712,15 @@ namespace Nektar
                 {
                     std::string variableStr = exactSolution->Attribute("VAR");
                     ASSERTL0(!variableStr.empty(), "The variable must be specified for the exact solution.");
-
+                    
                     std::string fcnStr = exactSolution->Attribute("VALUE");
-                    ASSERTL0(!fcnStr.empty(),
-                        (std::string("The exact solution function must be specified for variable: ") + variableStr).c_str());
-
-                    /// Check the RHS against the functions defined in m_Functions.  If the name on the RHS
-                    /// is found in the function map, then use the function contained in the function
-                    /// map in place of the RHS.
+                    ASSERTL0(!fcnStr.empty(), (std::string("The exact solution function must be specified for variable: ") + variableStr).c_str());
+                    
+                    /// Check the RHS against the functions defined in
+                    /// m_Functions.  If the name on the RHS is found
+                    /// in the function map, then use the function
+                    /// contained in the function map in place of the
+                    /// RHS.
                     SubstituteFunction(fcnStr);
 
                     ExactSolutionMap::iterator exactSolutionIter = m_ExactSolution.find(variableStr);
@@ -731,6 +738,44 @@ namespace Nektar
                 }
             }
         }
+
+        void BoundaryConditions::ReadUserDefinedEqn(TiXmlElement *function)
+        {
+            TiXmlElement *userDefinedEqnElement = function->FirstChildElement("USERDEFINEDEQNS");
+
+            if (userDefinedEqnElement)
+            {
+                TiXmlElement *userDefinedEqn = userDefinedEqnElement->FirstChildElement("F");
+                
+                while (userDefinedEqn)
+                {
+                    std::string lhsString = userDefinedEqn->Attribute("LHS");
+                    ASSERTL0(!lhsString.empty(), "Unable to find LHS value.");
+                    
+                    std::string fcnString = userDefinedEqn->Attribute("VALUE");
+                    ASSERTL0(!fcnString.empty(),"Unable to find eqn value");
+
+                    /// Check the RHS against the functions defined in
+                    /// m_Functions.  If the name on the RHS is found
+                    /// in the function map, then use the function
+                    /// contained in the function map in place of the
+                    /// RHS.
+                    SubstituteFunction(fcnString);
+                    
+                    UserDefinedEqnMap::iterator userDefinedEqnIter = m_UserDefinedEqn.find(lhsString);
+
+                    ASSERTL0(userDefinedEqnIter == m_UserDefinedEqn.end(),
+                             (std::string("UserDefinedEqn value: ") + lhsString
+                              + std::string(" already specified.")).c_str());
+                    
+                    // Set Variable
+                    UserDefinedEqnShPtr userDefinedEqnShPtr(MemoryManager<UserDefinedEqn>::AllocateSharedPtr(fcnString));
+                    m_UserDefinedEqn[lhsString] = userDefinedEqnShPtr;
+                    userDefinedEqn = userDefinedEqn->NextSiblingElement("F");
+                }
+            }
+        }
+
 
         void BoundaryConditions::ReadInitialConditions(TiXmlElement *conditions)
         {
@@ -781,7 +826,25 @@ namespace Nektar
                 }
             }
         }
+        
+        bool BoundaryConditions::CheckForParameter(const std::string &parmName)
+        {
+            bool returnval;
 
+            ParamMap::iterator paramMapIter = m_Parameters.find(parmName);
+
+            if(paramMapIter == m_Parameters.end())
+            {
+                returnval = false;
+            }
+            else
+            {
+                returnval = true;
+            }
+
+            return returnval;
+        }
+        
         NekDouble BoundaryConditions::GetParameter(const std::string &parmName)
         {
             ParamMap::iterator paramMapIter = m_Parameters.find(parmName);
@@ -908,6 +971,43 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal,
                     (std::string("Unable to find variable used in obtaining exact solution: ") + var).c_str());
+            }
+
+            return returnval;
+        }
+
+        ConstUserDefinedEqnShPtr BoundaryConditions::GetUserDefinedEqn(int indx) const
+        {
+            ConstUserDefinedEqnShPtr returnval;
+
+            if (indx >= m_Variables.size() || indx < 0)
+            {
+                string errStr;
+                std::ostringstream strStream(errStr);
+                strStream << indx;
+
+                NEKERROR(ErrorUtil::efatal,
+                    (std::string("Unable to find variable corresponding to index: ") + errStr).c_str());
+            }
+
+            return GetUserDefinedEqn(m_Variables[indx]);
+        }
+
+        ConstUserDefinedEqnShPtr BoundaryConditions::GetUserDefinedEqn(const std::string &var) const
+        {
+            ConstUserDefinedEqnShPtr returnval;
+            
+            // Check that var is defined in forcing function list.
+            UserDefinedEqnMap::const_iterator userDefIter = m_UserDefinedEqn.find(var);
+            
+            if(userDefIter != m_UserDefinedEqn.end())
+            {
+                returnval = userDefIter->second;
+            }
+            else
+            {
+                NEKERROR(ErrorUtil::efatal,
+                         (std::string("Unable to find user defined equation LHS variable: ") + var).c_str());
             }
 
             return returnval;

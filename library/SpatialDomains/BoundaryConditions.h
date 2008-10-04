@@ -154,10 +154,10 @@ namespace Nektar
 
         typedef boost::shared_ptr<BoundaryConditionBase> BoundaryConditionShPtr;
         typedef boost::shared_ptr<DirichletBoundaryCondition> DirichletBCShPtr;
-        typedef boost::shared_ptr<NeumannBoundaryCondition> NeumannBCShPtr;
-        typedef boost::shared_ptr<RobinBoundaryCondition> RobinBCShPtr;
-        typedef std::map<std::string,BoundaryConditionShPtr> BoundaryConditionMap;
-        typedef boost::shared_ptr<BoundaryConditionMap> BoundaryConditionMapShPtr;
+        typedef boost::shared_ptr<NeumannBoundaryCondition>   NeumannBCShPtr;
+        typedef boost::shared_ptr<RobinBoundaryCondition>     RobinBCShPtr;
+        typedef std::map<std::string,BoundaryConditionShPtr>  BoundaryConditionMap;
+        typedef boost::shared_ptr<BoundaryConditionMap>  BoundaryConditionMapShPtr;
         typedef std::map<int, BoundaryConditionMapShPtr> BoundaryConditionCollection;
 
         const static Array<OneD, BoundaryConditionShPtr> NullBoundaryConditionShPtrArray;
@@ -172,6 +172,11 @@ namespace Nektar
         typedef boost::shared_ptr<const ExactSolution> ConstExactSolutionShPtr;
         typedef std::map<std::string, ExactSolutionShPtr> ExactSolutionMap;
 
+        typedef Equation UserDefinedEqn;
+        typedef boost::shared_ptr<UserDefinedEqn> UserDefinedEqnShPtr;
+        typedef boost::shared_ptr<const UserDefinedEqn> ConstUserDefinedEqnShPtr;
+        typedef std::map<std::string, UserDefinedEqnShPtr> UserDefinedEqnMap;
+
         typedef Equation InitialCondition;
         typedef boost::shared_ptr<InitialCondition> InitialConditionShPtr;
         typedef boost::shared_ptr<const InitialCondition> ConstInitialConditionShPtr;
@@ -185,7 +190,8 @@ namespace Nektar
 
             void Read(std::string &infilename);
             void Read(TiXmlDocument &doc);
-
+            
+            bool   CheckForParameter(const std::string &paramName);
             static NekDouble GetParameter(const std::string &parmName);
 
             BoundaryRegionCollection &GetBoundaryRegions(void) 
@@ -208,6 +214,9 @@ namespace Nektar
 
             ConstExactSolutionShPtr GetExactSolution(int indx) const;
             ConstExactSolutionShPtr GetExactSolution(const std::string &var) const;
+
+            ConstUserDefinedEqnShPtr GetUserDefinedEqn(int indx) const;
+            ConstUserDefinedEqnShPtr GetUserDefinedEqn(const std::string &var) const;
 
             /// Get initial condition function based on the index of the variable.
             /// The index is the order in which the variable was
@@ -251,16 +260,18 @@ namespace Nektar
             void ReadForcingFunctions(TiXmlElement *functions);
             void ReadInitialConditions(TiXmlElement *conditions);
             void ReadExactSolution(TiXmlElement *solution);
+            void ReadUserDefinedEqn(TiXmlElement *functions);
 
             // Containers to hold conditions and associated data
             static ParamMap m_Parameters;
-            FunctionMap m_Functions;
-            Variable m_Variables;
-            BoundaryRegionCollection m_BoundaryRegions;
+            FunctionMap     m_Functions;
+            Variable        m_Variables;
+            BoundaryRegionCollection    m_BoundaryRegions;
             BoundaryConditionCollection m_BoundaryConditions;
-            ForcingFunctionsMap m_ForcingFunctions;
+            ForcingFunctionsMap  m_ForcingFunctions;
             InitialConditionsMap m_InitialConditions;
-            ExactSolutionMap m_ExactSolution;
+            ExactSolutionMap     m_ExactSolution;
+            UserDefinedEqnMap    m_UserDefinedEqn;
 
             /// The mesh graph to use for referencing geometry info.
             const MeshGraph *m_MeshGraph;
@@ -268,7 +279,9 @@ namespace Nektar
         private:
             BoundaryConditions();
         };
-    };
+        
+        typedef boost::shared_ptr<BoundaryConditions> BoundaryConditionsSharedPtr;
+    }
 }
 
 #endif //NEKTAR_SPATIALDOMAINS_BOUNDARYCONDITIONS_H

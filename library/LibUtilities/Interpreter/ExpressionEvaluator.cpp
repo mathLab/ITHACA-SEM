@@ -59,10 +59,12 @@ namespace Nektar
         //        Definition of the Customized Function Parser for Spirit
         // ---------------------------------------------------------------------
 
-        /** This is a helper function that stores a pointer to the math.h functions. A
-			pointer to a function that returns a double cannot be used because it results
-			in multiple overloaded function definitions matching. Therefore, I explicitly
-			specify the arguments and just a union to store the correct version. **/
+        /** This is a helper function that stores a pointer to the
+            math.h functions. A pointer to a function that returns a
+            double cannot be used because it results in multiple
+            overloaded function definitions matching. Therefore, I
+            explicitly specify the arguments and just a union to store
+            the correct version. **/
 
         typedef double (*PFD)();
         typedef double (*PFD1)(double);
@@ -86,9 +88,9 @@ namespace Nektar
             size_t size;
         };
 
-        /** This struct creates a parser that matches the function definitions from
-			math.h. All of the functions accept one of more doubles as arguments and
-			returns a double. **/
+        /** This struct creates a parser that matches the function
+ 	    definitions from math.h. All of the functions accept one
+ 	    of more doubles as arguments and returns a double. **/
         static struct functions : symbols<func>
         {
             functions()

@@ -457,7 +457,17 @@ namespace Nektar
             
         }
         
+
         void DisContField2D::ExtractTracePhys(Array<OneD,NekDouble> &outarray)
+        {       
+
+            ASSERTL1(m_physState == true,
+                     "local physical space is not true ");
+
+            ExtractTracePhys(m_phys, outarray);
+        }
+
+        void DisContField2D::ExtractTracePhys(const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
         {
             // Loop over elemente and collect forward expansion
             int nexp = GetExpSize();
@@ -465,9 +475,6 @@ namespace Nektar
             Array<OneD,NekDouble> e_tmp,e_tmp1;
             Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr> >
                 elmtToTrace = m_traceMap->GetElmtToTrace();
-
-            ASSERTL1(m_physState == true,
-                     "local physical space is not true ");
 
             ASSERTL1(outarray.num_elements() >= m_trace->GetNpoints(),
                      "input array is of insufficient length");
@@ -482,7 +489,7 @@ namespace Nektar
                     nquad_e = (*m_exp)[n]->GetEdgeNumPoints(e);
                     offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
                     (*m_exp)[n]->GetEdgePhysVals(e,  elmtToTrace[n][e], 
-                                                 e_tmp = m_phys + phys_offset,
+                                                 e_tmp  = inarray + phys_offset,
                                                  e_tmp1 = outarray + offset);
                 }
             }
@@ -509,6 +516,29 @@ namespace Nektar
                     (*m_exp)[n]->AddEdgeNormBoundaryInt(e,elmtToTrace[n][e],
                                                         Fx + t_offset,
                                                         Fy + t_offset,
+                                                        e_outarray = outarray+offset);
+                }    
+            }
+        }
+
+
+        /// Note this routine changes m_trace->m_coeffs space; 
+        void DisContField2D::AddTraceIntegral(const Array<OneD, const NekDouble> &Fn, Array<OneD, NekDouble> &outarray)
+        {
+            int e,n,offset, t_offset;
+            Array<OneD, NekDouble> e_outarray;
+            Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr> >
+                elmtToTrace = m_traceMap->GetElmtToTrace();
+
+            for(n = 0; n < GetExpSize(); ++n)
+            {
+                offset = GetCoeff_Offset(n);
+                for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
+                {
+                    t_offset = GetTrace()->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
+
+                    (*m_exp)[n]->AddEdgeNormBoundaryInt(e,elmtToTrace[n][e],
+                                                        Fn + t_offset,
                                                         e_outarray = outarray+offset);
                 }    
             }

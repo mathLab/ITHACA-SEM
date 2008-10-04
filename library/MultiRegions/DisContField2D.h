@@ -126,9 +126,17 @@ namespace Nektar
             }
 
             void ExtractTracePhys(Array<OneD,NekDouble> &outarray);
+            
+            void ExtractTracePhys(const Array<OneD, const NekDouble> &inarray, 
+                                  Array<OneD, NekDouble> &outarray);
+            
 
             void AddTraceIntegral(const Array<OneD, const NekDouble> &Fx, 
                                   const Array<OneD, const NekDouble> &Fy, 
+                                  Array<OneD, NekDouble> &outarray);
+
+            
+            void AddTraceIntegral(const Array<OneD, const NekDouble> &Fn, 
                                   Array<OneD, NekDouble> &outarray);
 
             inline const Array<OneD,const MultiRegions::ExpList1DSharedPtr>& GetBndCondExpansions()
@@ -171,6 +179,44 @@ namespace Nektar
             void GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D,
                                                     SpatialDomains::BoundaryConditions &bcs, 
                                                     const std::string variable);
+
+            // virtual functions
+            inline virtual GenExpList1DSharedPtr &v_GetTrace(void)
+            {
+                return GetTrace();
+            }
+
+            virtual void v_AddTraceIntegral(const Array<OneD, const NekDouble> &Fx, 
+                                          const Array<OneD, const NekDouble> &Fy, 
+                                          Array<OneD, NekDouble> &outarray)
+            {
+                AddTraceIntegral(Fx,Fy,outarray);
+            }
+
+            virtual void v_AddTraceIntegral(const Array<OneD, const NekDouble> &Fn, 
+                                          Array<OneD, NekDouble> &outarray)
+            {
+                AddTraceIntegral(Fn,outarray);
+            }
+
+
+            virtual void v_GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd, 
+                                              Array<OneD,NekDouble> &Bwd)
+            {
+                GetFwdBwdTracePhys(Fwd,Bwd);
+            }
+
+            virtual void v_ExtractTracePhys(Array<OneD,NekDouble> &outarray)
+            {
+                ExtractTracePhys(outarray);
+            }
+            
+            virtual void v_ExtractTracePhys(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            {
+                ExtractTracePhys(inarray,outarray);
+            }
+
+
         };
 
         typedef boost::shared_ptr<DisContField2D>   DisContField2DSharedPtr;

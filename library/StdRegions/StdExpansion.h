@@ -829,6 +829,14 @@ namespace Nektar
                 v_AddEdgeNormBoundaryInt(edge,EdgeExp,Fx,Fy,outarray);
             }
 
+            virtual void AddEdgeNormBoundaryInt(const int edge, 
+                                                boost::shared_ptr<StdExpansion1D>  &EdgeExp,
+                                                const Array<OneD, const NekDouble> &Fn,  
+                                                Array<OneD, NekDouble> &outarray)
+            {
+                v_AddEdgeNormBoundaryInt(edge,EdgeExp,Fn,outarray);
+            }
+
             virtual void AddNormTraceInt(const int dir,
                                          Array<OneD, const NekDouble> &inarray,
                                          Array<OneD,NekDouble> &outarray)
@@ -1096,7 +1104,16 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
 
-            virtual void v_AddNormTraceInt(const int dir,
+             virtual void v_AddEdgeNormBoundaryInt(const int edge,
+                                                  boost::shared_ptr<StdExpansion1D> &EdgeExp,
+                                                  const Array<OneD, const NekDouble> &Fn,  
+                                                  Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+            }
+
+ 
+           virtual void v_AddNormTraceInt(const int dir,
                                            Array<OneD, const NekDouble> &inarray,
                                            Array<OneD,NekDouble> &outarray)
             {
@@ -1555,6 +1572,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.101  2008/09/23 18:19:26  pvos
+ * Updates for working ProjectContField3D demo
+ *
  * Revision 1.100  2008/09/17 13:46:02  pvos
  * Added LocalToGlobalC0ContMap for 3D expansions
  *

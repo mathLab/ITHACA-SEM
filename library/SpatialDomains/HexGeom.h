@@ -59,7 +59,7 @@ namespace Nektar
         public:
             HexGeom();
             HexGeom(const QuadGeomSharedPtr faces[]);
-            HexGeom::HexGeom(const QuadGeomSharedPtr faces[], const Array<OneD, StdRegions::StdExpansion3DSharedPtr> & xMap);
+            HexGeom(const QuadGeomSharedPtr faces[], const Array<OneD, StdRegions::StdExpansion3DSharedPtr> & xMap);
 
             ~HexGeom();
 
@@ -315,6 +315,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.21  2008/09/23 22:08:52  ehan
+// Added new constructor HexGeom
+//
 // Revision 1.20  2008/09/23 22:05:48  ehan
 // Added new GeomFactor constructor.
 //

@@ -36,12 +36,12 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_OBJECT_HPP
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_OBJECT_HPP
 
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/LinearAlgebra/NekPoint.hpp>
-
-#include <LibUtilities/LinearAlgebra/NekVectorMetadata.hpp>
-#include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
-#include <LibUtilities/LinearAlgebra/NekVectorConstantSized.hpp>
-#include <LibUtilities/LinearAlgebra/NekVectorVariableSized.hpp>
+//#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+//#include <LibUtilities/LinearAlgebra/NekPoint.hpp>
+//
+//#include <LibUtilities/LinearAlgebra/NekVectorMetadata.hpp>
+//#include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
+//#include <LibUtilities/LinearAlgebra/NekVectorConstantSized.hpp>
+//#include <LibUtilities/LinearAlgebra/NekVectorVariableSized.hpp>
 
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_OBJECT_HPP

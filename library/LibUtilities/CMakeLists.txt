@@ -27,7 +27,6 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/NekPoint.hpp
     ./LinearAlgebra/NekTypeDefs.hpp
     ./LinearAlgebra/NekVector.hpp
-    ./LinearAlgebra/NekVectorObject.hpp
     ./LinearAlgebra/NekVectorCommon.hpp
     ./LinearAlgebra/NekVectorConstantSized.hpp
     ./LinearAlgebra/NekVectorFwd.hpp

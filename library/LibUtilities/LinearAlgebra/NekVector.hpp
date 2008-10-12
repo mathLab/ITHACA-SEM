@@ -37,7 +37,13 @@
 #define NEKTAR_LIB_UTILITIES_NEK_VECTOR_HPP
 
 #include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
-#include <LibUtilities/LinearAlgebra/NekVectorObject.hpp>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/LinearAlgebra/NekPoint.hpp>
+
+#include <LibUtilities/LinearAlgebra/NekVectorMetadata.hpp>
+#include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
+#include <LibUtilities/LinearAlgebra/NekVectorConstantSized.hpp>
+#include <LibUtilities/LinearAlgebra/NekVectorVariableSized.hpp>
 
 #include <functional>
 #include <algorithm>
@@ -345,6 +351,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.30  2008/04/06 05:55:12  bnelson
+    Changed ConstArray to Array<const>
+
     Revision 1.29  2008/03/28 01:42:32  bnelson
     Updated constant sized vectors so they inherit from NekVector<const DataType> like the variable sized vectors.
 

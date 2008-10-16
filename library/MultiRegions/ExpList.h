@@ -385,9 +385,9 @@ namespace Nektar
             void  MultiplyByElmtInvMass (const Array<OneD, const NekDouble> &inarray,
                                        Array<OneD, NekDouble> &outarray);
 
-            void MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            void MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays = true)
             {
-                v_MultiplyByInvMassMatrix(inarray,outarray);
+                v_MultiplyByInvMassMatrix(inarray,outarray, GlobalArrays);
                 
             }
 
@@ -792,7 +792,7 @@ namespace Nektar
             }
 
 
-            void ExtractTracePhys(const Array<OneD, NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            void ExtractTracePhys(const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 v_ExtractTracePhys(inarray,outarray);
             }
@@ -1108,12 +1108,12 @@ namespace Nektar
                 ASSERTL0(false,"This method is not defined or valid for this class type");                
             }
 
-            virtual void v_ExtractTracePhys(const Array<OneD, NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            virtual void v_ExtractTracePhys(const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 ASSERTL0(false,"This method is not defined or valid for this class type");                
             }
 
-            virtual void v_MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            virtual void v_MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays)
             {
                 ASSERTL0(false,"This method is not defined or valid for this class type");                
             }
@@ -1134,6 +1134,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.44  2008/10/04 20:04:26  sherwin
+* Modifications for solver access
+*
 * Revision 1.43  2008/09/16 13:36:06  pvos
 * Restructured the LocalToGlobalMap classes
 *

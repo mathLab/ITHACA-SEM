@@ -200,19 +200,42 @@ namespace Nektar
             m_physState = false;
         }
 
-        void ContField2D::MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        void ContField2D::MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays)
         {
             GlobalLinSysKey key(StdRegions::eMass);
-            if(inarray.data() == outarray.data())
+
+            if(GlobalArrays == true)
             {
-                Array<OneD,NekDouble> tmp(inarray.num_elements());
-                
-                Vmath::Vcopy(inarray.num_elements(),inarray,1,tmp,1);
-                GlobalSolve(key,tmp,outarray);                
+                if(inarray.data() == outarray.data())
+                {
+                    Array<OneD,NekDouble> tmp(inarray.num_elements());
+                    
+                    Vmath::Vcopy(inarray.num_elements(),inarray,1,tmp,1);
+                    GlobalSolve(key,tmp,outarray);                
+                }
+                else
+                {
+                    GlobalSolve(key,inarray,outarray);
+                }
             }
             else
             {
-                GlobalSolve(key,inarray,outarray);
+                Array<OneD, NekDouble> globaltmp(m_contNcoeffs);
+
+                if(inarray.data() == outarray.data())
+                {
+                    Array<OneD,NekDouble> tmp(inarray.num_elements());
+                    
+                    Vmath::Vcopy(inarray.num_elements(),inarray,1,tmp,1);
+
+                    Assemble(tmp,outarray);
+                }
+                else
+                {
+                    Assemble(inarray,outarray);
+                }
+                GlobalSolve(key,outarray,globaltmp);
+                GlobalToLocal(globaltmp,outarray);
             }
         }
 

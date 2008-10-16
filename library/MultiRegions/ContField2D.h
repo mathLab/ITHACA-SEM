@@ -189,7 +189,7 @@ namespace Nektar
              */ 
             void FwdTrans (const ExpList &In);
             
-            void MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+            void MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays = true);
                       
             /**
              * \brief This function solves the two-dimensional Helmholtz equation, 
@@ -378,9 +378,9 @@ namespace Nektar
                                                     SpatialDomains::BoundaryConditions &bcs, 
                                                     const std::string variable);
             
-            virtual void v_MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            virtual void v_MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays)
             {
-                MultiplyByInvMassMatrix(inarray,outarray);
+                MultiplyByInvMassMatrix(inarray,outarray,GlobalArrays);
             }
 
 

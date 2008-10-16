@@ -255,7 +255,7 @@ void rhsFunction(MultiRegions::DisContField2DSharedPtr hpExp,
    //       upwind2 contains  a_2 * upwind
 
 #if 1
-   Array<OneD, Array<OneD, const NekDouble> > Vel(2);
+   Array<OneD, Array<OneD, NekDouble> > Vel(2);
    Vel[0] = v1Trace;
    Vel[1] = v2Trace;
 

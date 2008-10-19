@@ -228,10 +228,19 @@ namespace Nektar
         // Get Normals
     }
 
+
+    void AdvectionDiffusionReaction::Summary(std::ostream &out)
+    {
+        out << "Equation Type   : Advection Equation" << endl;
+        ADRBase::Summary(out);
+    }
 } //end of namespace
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.1  2008/10/16 15:25:45  sherwin
+* Working verion of restructured AdvectionDiffusionReactionSolver
+*
 * Revision 1.1  2008/08/22 09:48:23  pvos
 * Added Claes' AdvectionDiffusionReaction, ShallowWater and Euler solver
 *

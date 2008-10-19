@@ -660,8 +660,30 @@ namespace Nektar
         }
     }
 
+    void ADRBase::Summary(std::ostream &out)
+    {
+
+        out << "Session Name    : " << m_sessionName << endl;
+        out << "\tMax Exp. Order  : " << m_fields[0]->EvalBasisNumModesMax() << endl;
+        out << "\tTime Step       : " << m_timestep << endl;
+        out << "\tNo. of Steps    : " << m_steps << endl;
+        out << "\tCheckpoints     : " << m_checksteps <<" steps" <<endl;
+        if(m_projectionType == eGalerkin)
+        {
+            out << "\tProjection Type : Galerkin" <<endl;
+        }
+        else
+        {
+            out << "\tProjection Type : Discontinuous Galerkin" <<endl;
+        }
+    }
+
+
 } //end of namespace
 
 /**
-* $Log:$
+* $Log: ADRBase.cpp,v $
+* Revision 1.1  2008/10/16 15:25:45  sherwin
+* Working verion of restructured AdvectionDiffusionReactionSolver
+*
 **/

@@ -239,6 +239,8 @@ namespace Nektar
             v_NumericalFlux(numflux);
         }
 
+        void Summary(std::ostream &out);
+
         enum UpwindType
         {           ///< flux not defined
             eNotSet,  ///< averaged (or centred) flux
@@ -291,6 +293,9 @@ namespace Nektar
 #endif //NEKTAR_SOLVERS_AUXILIARY_ADVECTIONDIFFUSIONREACTION_H
 
 /**
-* $Log$
+* $Log: ADRBase.h,v $
+* Revision 1.1  2008/10/16 15:25:45  sherwin
+* Working verion of restructured AdvectionDiffusionReactionSolver
+*
 
 **/

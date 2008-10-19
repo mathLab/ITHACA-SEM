@@ -74,6 +74,8 @@ namespace Nektar
 
         void ExplicitlyIntegrateAdvection(int nsteps);
 
+        void Summary(std::ostream &out);
+
 
     protected:
 
@@ -104,6 +106,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.h,v $
+* Revision 1.1  2008/10/16 15:25:45  sherwin
+* Working verion of restructured AdvectionDiffusionReactionSolver
+*
 * Revision 1.1  2008/08/22 09:48:23  pvos
 * Added Claes' AdvectionDiffusionReaction, ShallowWater and Euler solver
 *

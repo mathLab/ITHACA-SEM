@@ -309,6 +309,26 @@ namespace Nektar
                 return(m_base[dir]->GetNumModes());
             }
 
+
+            /** \brief This function returns the maximum number of
+             *  expansion modes over all local directions
+             *  
+             *  \return returns the maximum number of expansion modes
+             *  over all local directions
+             */
+            inline int EvalBasisNumModesMax(void) const
+            {
+                int i;
+                int returnval = 0;
+
+                for(i = 0; i < m_numbases; ++i)
+                {
+                    returnval = max(returnval, m_base[i]->GetNumModes());
+                }
+
+                return returnval;
+            }
+
             /** \brief This function returns the type of quadrature points used 
              *  in the \a dir direction
              *  
@@ -1572,6 +1592,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.102  2008/10/04 19:27:41  sherwin
+ * Added AddEdgeNormBoundaryInt
+ *
  * Revision 1.101  2008/09/23 18:19:26  pvos
  * Updates for working ProjectContField3D demo
  *

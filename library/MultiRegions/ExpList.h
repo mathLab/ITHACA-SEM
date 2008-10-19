@@ -112,6 +112,24 @@ namespace Nektar
             }
       
             /**
+             * \brief This function evaulates the maximum number of
+             * modes in the elemental basis order over all elements
+             */
+            inline int EvalBasisNumModesMax(void) const
+            {
+                int i;
+                int returnval = 0;
+
+                for(i= 0; i < (*m_exp).size(); ++i)
+                {
+                    returnval = max(returnval,(*m_exp)[i]->EvalBasisNumModesMax());
+                }
+
+                return returnval;
+            }
+
+
+            /**
              * \brief This function returns the total number of quadrature points #m_npoints
              * \f$=Q_{\mathrm{tot}}\f$.
              */
@@ -253,11 +271,11 @@ namespace Nektar
              * The operation is evaluated locally for every element by the function 
              * StdRegions#StdExpansion#IProductWRTBase.
              *
-             * \param inarray An array of size \f$Q_{\mathrm{tot}}\f$ containing the values 
-             * of the function \f$f(\boldsymbol{x})\f$ at the quadrature points 
-             * \f$\boldsymbol{x}_i\f$.
-             * \param outarray An array of size \f$N_{\mathrm{eof}}\f$ used to store the 
-             * result.
+             * \param inarray An array of size \f$Q_{\mathrm{tot}}\f$
+             * containing the values of the function
+             * \f$f(\boldsymbol{x})\f$ at the quadrature points
+             * \f$\boldsymbol{x}_i\f$.  \param outarray An array of
+             * size \f$N_{\mathrm{eof}}\f$ used to store the result.
              */
             void   IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
                                    Array<OneD, NekDouble> &outarray);
@@ -1134,6 +1152,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.45  2008/10/16 10:21:42  sherwin
+* Updates to make methods consisten with AdvectionDiffusionReactionsSolver. Modified MultiplyByInvMassMatrix to take local or global arrays
+*
 * Revision 1.44  2008/10/04 20:04:26  sherwin
 * Modifications for solver access
 *

@@ -55,6 +55,8 @@ int main(int argc, char *argv[])
     AdvectionDiffusionReaction dom(fileNameString);
     
     int nsteps = dom.GetSteps();
+    
+    dom.Summary(cout);
         
     // Set up the intial conditions -- Could put in initialisation??
     dom.SetInitialConditions();

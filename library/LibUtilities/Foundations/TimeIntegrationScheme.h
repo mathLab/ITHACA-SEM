@@ -41,7 +41,9 @@
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/NekManager.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+
 
 namespace Nektar
 {
@@ -168,10 +170,42 @@ namespace Nektar
                 return m_numstages;
             }
 
+            // Explicitly integrate for one time step the system 
+            //              du/dt = f(u)
+            // where we pass a class "InClass" which must have the methods
+            //    InClass.Forcing(const Array<OneD, Array<OneD, NekDouble> > u) to evaluate f(0)
+            
+            template<typename FuncType>
+                void ExplicitIntegration(const double timestep,          
+                                         const Array<OneD,Array<OneD, NekDouble> > &inarray, 
+                                         FuncType& InClass, 
+                                         Array<OneD, Array<OneD, NekDouble> > &outarray)
+            {
+                int nvar = inarray.num_elements();
+                int nvec = inarray[0].num_elements();
+                int i;
+                Array<OneD, Array<OneD, NekDouble> > F(nvar);
+
+                ASSERTL1(inarray.num_elements() == outarray.num_elements(),"Input and output arrays are of different size");
+                
+                for(i = 0; i < nvar; ++i)
+                {
+                    F[i] = Array<OneD, NekDouble>(nvec);
+                }
+                
+                InClass.ODEforcing(inarray,F);
+                
+                for(i = 0; i < nvar; ++i) // put full integration routine in here
+                {
+                    Vmath::Svtvp(nvec,timestep,F[i],1,
+                                 inarray[i],1,outarray[i],1);
+                }
+            }
+
         protected:
-            TimeIntegrationSchemeKey m_schemeKey;
-            unsigned int             m_numsteps;
-            unsigned int             m_numstages;
+            TimeIntegrationSchemeKey m_schemeKey; 
+            unsigned int             m_numsteps;  //< Number of steps in multi-step component. 
+            unsigned int             m_numstages; //< Number of stages in multi-stage component. 
 
             Array<TwoD,NekDouble>    m_A;
             Array<TwoD,NekDouble>    m_B;

@@ -101,69 +101,75 @@ namespace Nektar
 	}
     }
     
+
+    void AdvectionDiffusionReaction::ODEforcing(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  Array<OneD, Array<OneD, NekDouble> >&outarray) 
+    {
+        int i;
+        int nvariables = inarray.num_elements();
+        int ncoeffs    = inarray[0].num_elements();
+
+        switch(m_projectionType)
+        {
+        case eDiscontinuousGalerkin:
+            WeakDGAdvection(inarray, outarray);
+            for(i = 0; i < nvariables; ++i)
+            {
+                MultiplyByElmtInvMass(outarray[i],outarray[i]);
+                Vmath::Neg(ncoeffs,outarray[i],1);
+            }
+            break;
+        case eGalerkin:
+            {
+                Array<OneD, NekDouble> physfield(GetPointsTot());
+                
+                for(i = 0; i < nvariables; ++i)
+                {
+                    // Calculate -(\phi, V\cdot Grad(u))
+                    m_fields[i]->BwdTrans(inarray[i],physfield);
+                    
+                    WeakAdvectionNonConservativeForm(m_velocity,
+                                                     physfield, outarray[i]);
+                    Vmath::Neg(ncoeffs,outarray[i],1);
+                    
+                    // Multiply by inverse of mass matrix to get forcing term
+                    m_fields[i]->MultiplyByInvMassMatrix(outarray[i],  
+                                                         outarray[i],
+                                                         false, true);
+                }
+            }
+            break;
+        default:
+            ASSERTL0(false,"Unknown projection scheme");
+            break;
+        }
+    }
+
     void AdvectionDiffusionReaction::ExplicitlyIntegrateAdvection(int nsteps)
     {
         int i,n,nchk = 0;
         int ncoeffs = m_fields[0]->GetNcoeffs();
         int nvariables = m_fields.num_elements();
 
-        // set up temporary forcing
-        Array<OneD, Array<OneD, NekDouble> > Forcing(nvariables);
+        // Get Integration scheme details
+        LibUtilities::TimeIntegrationSchemeKey       IntKey(LibUtilities::eForwardEuler);
+        LibUtilities::TimeIntegrationSchemeSharedPtr IntScheme = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
 
-        for(n = 0; n < nvariables; ++n)
+        // Set up wrapper to fields data storage. 
+        Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
+        
+        for(i = 0; i < nvariables; ++i)
         {
-            Forcing[n] = Array<OneD, NekDouble> (ncoeffs);
+            fields[i] = m_fields[i]->UpdateCoeffs();
         }
+                
 
         for(n = 0; n < nsteps; ++n)
         {
-
             //----------------------------------------------
             // Perform time step integration
             //----------------------------------------------
-            switch(m_projectionType)
-            {
-            case eDiscontinuousGalerkin:
-                
-                WeakDGAdvection(Forcing);
-                for(i = 0; i < nvariables; ++i)
-                {
-                    MultiplyByElmtInvMass(Forcing[i],Forcing[i]);
-                    Vmath::Neg(ncoeffs,Forcing[i],1);
-                    
-                    // Should replace with a stepping proceedure. 
-                    Vmath::Svtvp(ncoeffs,m_timestep,Forcing[i],1,
-                             m_fields[i]->GetCoeffs(),1,
-                                 m_fields[i]->UpdateCoeffs(),1);
-                    m_fields[i]->SetPhysState(false);
-                }
-                break;
-            case eGalerkin:
-                for(i = 0; i < nvariables; ++i)
-                {
-                    // Put variable into physical space
-                    m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
-                    // Calculate (\phi, V\cdot Grad(u))
-                    WeakAdvectionNonConservativeForm(m_velocity,m_fields[i]->GetPhys(), Forcing[i]);
-                    Vmath::Neg(ncoeffs,Forcing[i],1);
-                    
-                    // evaluate (\phi, u_i) 
-                    m_fields[i]->IProductWRTBase(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
-                    
-                    // Should replace with a stepping proceedure. 
-                    Vmath::Svtvp(ncoeffs,m_timestep,Forcing[i],1,
-                                 m_fields[i]->GetCoeffs(),1,
-                                 Forcing[i],1);
-                    
-                    // Evaluate u^{n+1} = M^{-1} forcing
-                    m_fields[i]->MultiplyByInvMassMatrix(Forcing[i],  
-                                m_fields[i]->UpdateCoeffs(), false);
-
-                    m_fields[i]->SetPhysState(false);
-                }
-
-                break;
-            }
+            IntScheme->ExplicitIntegration(m_timestep,fields,*this,fields);
+            
             m_time += m_timestep;
             //----------------------------------------------
 
@@ -179,25 +185,24 @@ namespace Nektar
             {
                 Checkpoint_Output(nchk++);
             }
-
         }
     }
     
 
 
     // Evaulate flux = m_fields*ivel for i th component of Vu 
-    void AdvectionDiffusionReaction::GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &flux)
+    void AdvectionDiffusionReaction::GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux)
     {
         ASSERTL1(flux.num_elements() == m_velocity.num_elements(),"Dimension of flux array and velocity array do not match");
 
         for(int j = 0; j < flux.num_elements(); ++j)
         {
-            Vmath::Vmul(GetPointsTot(),m_fields[i]->GetPhys(),1,
+            Vmath::Vmul(GetPointsTot(),physfield[i],1,
                         m_velocity[j],1,flux[j],1);
         }
     }
 
-    void AdvectionDiffusionReaction::NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &numflux)
+    void AdvectionDiffusionReaction::NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numflux)
     {
         int i;
 
@@ -217,8 +222,7 @@ namespace Nektar
 
         for(i = 0; i < numflux.num_elements(); ++i)
         {
-            m_fields[i]->BwdTrans(*(m_fields[i]));
-            m_fields[i]->GetFwdBwdTracePhys(Fwd,Bwd);
+            m_fields[i]->GetFwdBwdTracePhys(physfield[i],Fwd,Bwd);
             //evaulate upwinded m_fields[i]
             m_fields[i]->GetTrace()->Upwind(Vn,Fwd,Bwd,numflux[i]);
             // calculate m_fields[i]*Vn
@@ -238,6 +242,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.2  2008/10/19 15:59:20  sherwin
+* Added Summary method
+*
 * Revision 1.1  2008/10/16 15:25:45  sherwin
 * Working verion of restructured AdvectionDiffusionReactionSolver
 *

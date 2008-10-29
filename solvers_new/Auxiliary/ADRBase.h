@@ -223,20 +223,21 @@ namespace Nektar
         
         void WeakAdvectionNonConservativeForm(const Array<OneD, Array<OneD, NekDouble> > &V, const Array<OneD, const NekDouble> &u, Array<OneD, NekDouble> &outarray);
         
-        void WeakDGAdvection(Array<OneD, Array<OneD, NekDouble> >& OutField );
+        void WeakDGAdvection(const Array<OneD, Array<OneD, NekDouble> >& InField, Array<OneD, Array<OneD, NekDouble> >& OutField );
 
         void Output     (void);
         void Checkpoint_Output(const int n);
 
         // virtual functions wrappers
-        void GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> >&flux)
+        void GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> >&physfield, Array<OneD, Array<OneD, NekDouble> >&flux)
         {
-            v_GetFluxVector(i,flux);
+            v_GetFluxVector(i,physfield, flux);
         }
         
-        void NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &numflux)
+        void NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
+                           Array<OneD, Array<OneD, NekDouble> > &numflux)
         {
-            v_NumericalFlux(numflux);
+            v_NumericalFlux(physfield, numflux);
         }
 
         void Summary(std::ostream &out);
@@ -274,12 +275,12 @@ namespace Nektar
         
     private: 
         
-        virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> >&flux)
+        virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> >&physfield, Array<OneD, Array<OneD, NekDouble> >&flux)
         {
             ASSERTL0(false,"This function is not valid for the Base class");
         }
         
-        virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &numflux)
+        virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numflux)
         {
             ASSERTL0(false,"This function is not valid for the Base class");
         }
@@ -294,6 +295,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.2  2008/10/19 15:59:20  sherwin
+* Added Summary method
+*
 * Revision 1.1  2008/10/16 15:25:45  sherwin
 * Working verion of restructured AdvectionDiffusionReactionSolver
 *

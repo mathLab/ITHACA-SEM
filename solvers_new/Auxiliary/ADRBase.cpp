@@ -407,17 +407,18 @@ namespace Nektar
     // Calculate weak DG advection in the form 
     //  <\phi, \hat{F}\cdot n> - (\grad \phi \cdot F)
     // -------------------------------------------------------------
-    void ADRBase::WeakDGAdvection(Array<OneD, Array<OneD, NekDouble> >& OutField )
+    void ADRBase::WeakDGAdvection(const Array<OneD, Array<OneD, NekDouble> >& InField, Array<OneD, Array<OneD, NekDouble> >& OutField )
     {
         int i;
-        int nVelDim = m_spacedim;
-        int nPointsTot = GetPointsTot();
-        int ncoeffs    = GetNcoeffs();
+        int nVelDim         = m_spacedim;
+        int nPointsTot      = GetPointsTot();
+        int ncoeffs         = GetNcoeffs();
         int nTracePointsTot = GetTracePointsTot();
-        int nvariables = m_fields.num_elements();
+        int nvariables      = m_fields.num_elements();
 
-        Array<OneD, Array<OneD, NekDouble> > flux    (nVelDim);
-        Array<OneD, Array<OneD, NekDouble> > numflux (nvariables);
+        Array<OneD, Array<OneD, NekDouble> > flux      (nVelDim);
+        Array<OneD, Array<OneD, NekDouble> > numflux   (nvariables);
+        Array<OneD, Array<OneD, NekDouble> > physfield (nvariables);
         
         for(i = 0; i < nVelDim; ++i)
         {
@@ -426,21 +427,28 @@ namespace Nektar
 
         for(i = 0; i < nvariables; ++i)
         {
-            numflux[i] = Array<OneD, NekDouble>(nTracePointsTot);
+            numflux[i]   = Array<OneD, NekDouble>(nTracePointsTot);
+            // Could make this point to m_fields[i]->UpdatePhys();
+            physfield[i] = Array<OneD, NekDouble>(nPointsTot);
         }
         
         for(i = 0; i < nvariables; ++i)
         {
+            m_fields[i]->BwdTrans(InField[i],physfield[i]);
+        }
+
+        for(i = 0; i < nvariables; ++i)
+        {
             // Get the ith component of the  flux vector in (physical space)
-            GetFluxVector(i, flux);
+            GetFluxVector(i, physfield, flux);
             
-            // Calcuate the i^th value of (\grad_i \phi, F)
+            // Calculate the i^th value of (\grad_i \phi, F)
             WeakAdvectionGreensDivergenceForm(flux,OutField[i]);
         }
         
         // Evaluate numerical flux in physical space which may in
         // general couple all component of vectors
-        NumericalFlux(numflux);
+        NumericalFlux(physfield, numflux);
         
         // Evaulate  <\phi, \hat{F}\cdot n> - OutField[i] 
         for(i = 0; i < nvariables; ++i)
@@ -683,6 +691,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.2  2008/10/19 15:59:20  sherwin
+* Added Summary method
+*
 * Revision 1.1  2008/10/16 15:25:45  sherwin
 * Working verion of restructured AdvectionDiffusionReactionSolver
 *

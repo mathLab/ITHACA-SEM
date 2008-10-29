@@ -144,7 +144,7 @@ namespace Nektar
         // Upwind the left and right states given by the Arrays Fwd
         // and Bwd using the vector quantity Vec and ouput the
         // upwinded value in the array upwind
-        void GenExpList1D::Upwind(const Array<OneD, Array<OneD, const NekDouble> > &Vec,
+        void GenExpList1D::Upwind(const Array<OneD, const Array<OneD, NekDouble> > &Vec,
                                   const Array<OneD, const NekDouble> &Fwd, 
                                   const Array<OneD, const NekDouble> &Bwd, 
                                   Array<OneD, NekDouble> &Upwind)
@@ -253,6 +253,9 @@ namespace Nektar
 
 /**
 * $Log: GenExpList1D.cpp,v $
+* Revision 1.7  2008/10/09 21:47:36  ehan
+* Fixed error from the function Upwind().
+*
 * Revision 1.6  2008/10/04 19:54:28  sherwin
 * Added upwind method using only the normal flux
 *

@@ -403,9 +403,9 @@ namespace Nektar
             void  MultiplyByElmtInvMass (const Array<OneD, const NekDouble> &inarray,
                                        Array<OneD, NekDouble> &outarray);
 
-            void MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays = true)
+            void MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays = true, bool ZeroBCs = false)
             {
-                v_MultiplyByInvMassMatrix(inarray,outarray, GlobalArrays);
+                v_MultiplyByInvMassMatrix(inarray,outarray, GlobalArrays, ZeroBCs);
                 
             }
 
@@ -799,9 +799,16 @@ namespace Nektar
 
 
             void GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd, 
-                                              Array<OneD,NekDouble> &Bwd)
+                                    Array<OneD,NekDouble> &Bwd)
             {
                 v_GetFwdBwdTracePhys(Fwd,Bwd);
+            }
+
+            void GetFwdBwdTracePhys(const Array<OneD,const NekDouble>  &field, 
+                                    Array<OneD,NekDouble> &Fwd, 
+                                    Array<OneD,NekDouble> &Bwd)
+            {
+                v_GetFwdBwdTracePhys(field,Fwd,Bwd);
             }
 
             virtual void ExtractTracePhys(Array<OneD,NekDouble> &outarray)
@@ -1121,6 +1128,13 @@ namespace Nektar
                 ASSERTL0(false,"This method is not defined or valid for this class type");                
             }
 
+            virtual void v_GetFwdBwdTracePhys(const Array<OneD,const NekDouble>  &field, 
+                                              Array<OneD,NekDouble> &Fwd, 
+                                              Array<OneD,NekDouble> &Bwd)
+            {
+                ASSERTL0(false,"This method is not defined or valid for this class type");                
+            }
+
             virtual void v_ExtractTracePhys(Array<OneD,NekDouble> &outarray)
             {
                 ASSERTL0(false,"This method is not defined or valid for this class type");                
@@ -1131,7 +1145,7 @@ namespace Nektar
                 ASSERTL0(false,"This method is not defined or valid for this class type");                
             }
 
-            virtual void v_MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays)
+            virtual void v_MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays, bool ZeroBCs)
             {
                 ASSERTL0(false,"This method is not defined or valid for this class type");                
             }
@@ -1152,6 +1166,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.46  2008/10/19 15:57:52  sherwin
+* Added method EvalBasisNumModesMax
+*
 * Revision 1.45  2008/10/16 10:21:42  sherwin
 * Updates to make methods consisten with AdvectionDiffusionReactionsSolver. Modified MultiplyByInvMassMatrix to take local or global arrays
 *

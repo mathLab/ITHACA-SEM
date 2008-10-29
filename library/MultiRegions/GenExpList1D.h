@@ -72,7 +72,7 @@ namespace Nektar
              */  
             ~GenExpList1D();
             
-            void Upwind(const Array<OneD, Array<OneD, const NekDouble> > &Vec,
+            void Upwind(const Array<OneD, const Array<OneD, NekDouble> > &Vec,
                         const Array<OneD, const NekDouble> &Fwd, 
                         const Array<OneD, const NekDouble> &Bwd, 
                         Array<OneD, NekDouble> &Upwind);
@@ -103,6 +103,9 @@ namespace Nektar
 
 /**
  * $Log: GenExpList1D.h,v $
+ * Revision 1.5  2008/10/09 21:47:14  ehan
+ * Fixed error from the function Upwind().
+ *
  * Revision 1.4  2008/10/04 19:54:28  sherwin
  * Added upwind method using only the normal flux
  *

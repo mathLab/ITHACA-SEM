@@ -120,6 +120,11 @@ namespace Nektar
             void GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd, 
                                     Array<OneD,NekDouble> &Bwd);
 
+
+            void GetFwdBwdTracePhys(const Array<OneD,const NekDouble>  &field, 
+                                    Array<OneD,NekDouble> &Fwd, 
+                                    Array<OneD,NekDouble> &Bwd);
+
             void ExtractTracePhys()
             {
                 ExtractTracePhys(m_trace->UpdatePhys());
@@ -204,6 +209,13 @@ namespace Nektar
                                               Array<OneD,NekDouble> &Bwd)
             {
                 GetFwdBwdTracePhys(Fwd,Bwd);
+            }
+
+            virtual void v_GetFwdBwdTracePhys(const Array<OneD,const NekDouble>  &field, 
+                                              Array<OneD,NekDouble> &Fwd, 
+                                              Array<OneD,NekDouble> &Bwd)
+            {
+                GetFwdBwdTracePhys(field, Fwd,Bwd);
             }
 
             virtual void v_ExtractTracePhys(Array<OneD,NekDouble> &outarray)

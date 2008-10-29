@@ -200,7 +200,7 @@ namespace Nektar
             m_physState = false;
         }
 
-        void ContField2D::MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays)
+        void ContField2D::MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays, bool ZeroBCs)
         {
             GlobalLinSysKey key(StdRegions::eMass);
 
@@ -216,6 +216,13 @@ namespace Nektar
                 else
                 {
                     GlobalSolve(key,inarray,outarray);
+                    
+                }
+
+                if(ZeroBCs == true)
+                {
+                    int NumDirBcs = m_locToGloMap->GetNumDirichletBndCoeffs();
+                    Vmath::Zero(NumDirBcs,outarray,1);
                 }
             }
             else
@@ -235,6 +242,13 @@ namespace Nektar
                     Assemble(inarray,outarray);
                 }
                 GlobalSolve(key,outarray,globaltmp);
+
+                if(ZeroBCs == true)
+                {
+                    int NumDirBcs = m_locToGloMap->GetNumDirichletBndCoeffs();
+                    Vmath::Zero(NumDirBcs,globaltmp,1);
+                }
+
                 GlobalToLocal(globaltmp,outarray);
             }
         }

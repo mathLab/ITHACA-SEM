@@ -376,6 +376,13 @@ namespace Nektar
         void DisContField2D::GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd, 
                                                 Array<OneD,NekDouble> &Bwd)
         {
+            GetFwdBwdTracePhys(m_phys,Fwd,Bwd);
+        }
+
+        void DisContField2D::GetFwdBwdTracePhys(const Array<OneD,const NekDouble>  &field, 
+                                                Array<OneD,NekDouble> &Fwd, 
+                                                Array<OneD,NekDouble> &Bwd)
+        {
             // Loop over elemente and collect forward expansion
             int nexp = GetExpSize();
             StdRegions::EdgeOrientation edgedir;
@@ -402,7 +409,7 @@ namespace Nektar
                     {
                         offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
                         (*m_exp)[n]->GetEdgePhysVals(e, elmtToTrace[n][e], 
-                                                     e_tmp = m_phys + phys_offset, 
+                                                     e_tmp = field + phys_offset, 
                                                      e_tmp1 = Fwd + offset);
                     }
                 }
@@ -421,7 +428,7 @@ namespace Nektar
                     {
                         offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
                         (*m_exp)[n]->GetEdgePhysVals(e, elmtToTrace[n][e],
-                                                     e_tmp = m_phys + phys_offset,
+                                                     e_tmp = field + phys_offset,
                                                      e_tmp1 = Bwd+offset);
                     }
                 }

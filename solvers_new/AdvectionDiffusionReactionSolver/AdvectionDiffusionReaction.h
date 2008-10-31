@@ -33,11 +33,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_AUXILIARY_ADVECTIONDIFFUSIONREACTION_H
-#define NEKTAR_SOLVERS_AUXILIARY_ADVECTIONDIFFUSIONREACTION_H
+#ifndef NEKTAR_SOLVERS_ADVECTIONDIFFUSIONREACTION_ADVECTIONDIFFUSIONREACTION_H
+#define NEKTAR_SOLVERS_ADVECTIONDIFFUSIONREACTION_ADVECTIONDIFFUSIONREACTION_H
 
 #include <MultiRegions/DisContField2D.h>
-#include <../solvers_new/Auxiliary/ADRBase.h>
+#include <Auxiliary/ADRBase.h>
 
 namespace Nektar
 {     
@@ -105,10 +105,13 @@ namespace Nektar
     
 } //end of namespace
 
-#endif //NEKTAR_SOLVERS_AUXILIARY_ADVECTIONDIFFUSIONREACTION_H
+#endif //NEKTAR_SOLVERS_ADVECTIONDIFFUSIONREACTION_ADVECTIONDIFFUSIONREACTION_H
 
 /**
 * $Log: AdvectionDiffusionReaction.h,v $
+* Revision 1.3  2008/10/29 22:51:07  sherwin
+* Updates for const correctness and ODEforcing
+*
 * Revision 1.2  2008/10/19 15:59:20  sherwin
 * Added Summary method
 *

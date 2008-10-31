@@ -291,10 +291,13 @@ namespace Nektar
     
 } //end of namespace
 
-#endif //NEKTAR_SOLVERS_AUXILIARY_ADVECTIONDIFFUSIONREACTION_H
+#endif //NEKTAR_SOLVERS_AUXILIARY_ADRBASE_H
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.3  2008/10/29 22:51:07  sherwin
+* Updates for const correctness and ODEforcing
+*
 * Revision 1.2  2008/10/19 15:59:20  sherwin
 * Added Summary method
 *

@@ -37,7 +37,7 @@
 #include <cstdlib>
 #include <cmath> 
 
-#include <../solvers_new/Auxiliary/AdvectionDiffusionReaction.h>
+#include <AdvectionDiffusionReactionSolver/AdvectionDiffusionReaction.h>
 
 
 using namespace Nektar;

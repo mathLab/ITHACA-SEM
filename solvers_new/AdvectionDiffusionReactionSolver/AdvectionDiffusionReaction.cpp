@@ -34,7 +34,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <../solvers_new/Auxiliary/AdvectionDiffusionReaction.h>
+#include <AdvectionDiffusionReactionSolver/AdvectionDiffusionReaction.h>
 #include <cstdio>
 #include <cstdlib>
 
@@ -242,6 +242,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.3  2008/10/29 22:51:07  sherwin
+* Updates for const correctness and ODEforcing
+*
 * Revision 1.2  2008/10/19 15:59:20  sherwin
 * Added Summary method
 *

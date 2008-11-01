@@ -46,10 +46,9 @@
 #include <LibUtilities/LinearAlgebra/SymmetricMatrixStoragePolicy.hpp>
 
 namespace Nektar
-{
-    
-    template<typename DataType, typename StorageType, typename FormType>
-    std::ostream& operator<<(std::ostream& os, const NekMatrix<DataType, StorageType, FormType>& rhs)
+{        
+    template<typename DataType, typename FormType>
+    std::ostream& operator<<(std::ostream& os, const NekMatrix<DataType, FormType>& rhs)
     {
         for(unsigned int i = 0; i < rhs.GetRows(); ++i)
         {
@@ -72,69 +71,69 @@ namespace Nektar
     }
 
     #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-        template<typename DataType, typename StorageType, typename MatrixType>
-        class ConstantExpressionTraits<NekMatrix<DataType, StorageType, MatrixType> >
+        template<typename DataType, typename MatrixType>
+        class ConstantExpressionTraits<NekMatrix<DataType, MatrixType> >
         {
             public:
-                typedef NekMatrix<DataType, StorageType, MatrixType> result_type;
+                typedef NekMatrix<DataType, MatrixType> result_type;
                 typedef NekMatrixConstantMetadata MetadataType;
         };
 
-        template<typename LhsDataType, typename LhsStorageType, typename LhsMatrixType,
-                 typename RhsDataType, typename RhsStorageType, typename RhsMatrixType>
-        class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>,
-                                              NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>,
+        template<typename LhsDataType, typename LhsMatrixType,
+                 typename RhsDataType, typename RhsMatrixType>
+        class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsMatrixType>,
+                                              NekMatrix<RhsDataType, RhsMatrixType>,
                                               AddOp>
         {
             public:
                 typedef NekMatrixAdditionAndSubtractionMetadata MetadataType;
         };
 
-        template<typename LhsDataType, typename LhsStorageType, typename LhsMatrixType,
-                 typename RhsDataType, typename RhsStorageType, typename RhsMatrixType>
-        class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>,
-                                              NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>,
+        template<typename LhsDataType, typename LhsMatrixType,
+                 typename RhsDataType, typename RhsMatrixType>
+        class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsMatrixType>,
+                                              NekMatrix<RhsDataType, RhsMatrixType>,
                                               SubtractOp>
         {
             public:
                 typedef NekMatrixAdditionAndSubtractionMetadata MetadataType;
         };
 
-        template<typename LhsDataType, typename LhsStorageType, typename LhsMatrixType,
-                 typename RhsDataType, typename RhsStorageType, typename RhsMatrixType>
-        class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>,
-                                              NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>,
+        template<typename LhsDataType, typename LhsMatrixType,
+                 typename RhsDataType, typename RhsMatrixType>
+        class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsMatrixType>,
+                                              NekMatrix<RhsDataType, RhsMatrixType>,
                                               MultiplyOp>
         {
             public:
                 typedef NekMatrixMultiplicationMetadata MetadataType;
         };
         
-        template<typename LhsDataType, typename LhsStorageType, typename LhsMatrixType>
-        class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>,
-                                             typename NekMatrix<LhsDataType, LhsStorageType, LhsMatrixType>::NumberType,
+        template<typename LhsDataType, typename LhsMatrixType>
+        class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsMatrixType>,
+                                             typename NekMatrix<LhsDataType, LhsMatrixType>::NumberType,
                                              MultiplyOp>
         {
             public:
                 typedef NekMatrixMultiplicationMetadata MetadataType;
         };
 
-        template<typename RhsDataType, typename RhsStorageType, typename RhsMatrixType>
-        class BinaryExpressionMetadataTraits<typename NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>::NumberType,
-                                             NekMatrix<RhsDataType, RhsStorageType, RhsMatrixType>,
+        template<typename RhsDataType, typename RhsMatrixType>
+        class BinaryExpressionMetadataTraits<typename NekMatrix<RhsDataType, RhsMatrixType>::NumberType,
+                                             NekMatrix<RhsDataType, RhsMatrixType>,
                                              MultiplyOp>
         {
             public:
                 typedef NekMatrixMultiplicationMetadata MetadataType;
         };
 
-        template<typename DataType, typename StorageType>
-        struct CreateFromMetadata<NekMatrix<DataType, StorageType, StandardMatrixTag> >
+        template<typename DataType>
+        struct CreateFromMetadata<NekMatrix<DataType, StandardMatrixTag> >
         {
-            static NekMatrix<DataType, StorageType, StandardMatrixTag> 
+            static NekMatrix<DataType, StandardMatrixTag> 
             Apply(const NekMatrixMetadata& d)
             {
-                return NekMatrix<DataType, StorageType, StandardMatrixTag>(d);
+                return NekMatrix<DataType, StandardMatrixTag>(d);
             }
         };
 
@@ -429,6 +428,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.34  2008/04/01 15:56:38  bnelson
+    Added global transpose for scaled matrices.
+
     Revision 1.33  2008/01/20 20:09:20  bnelson
     *** empty log message ***
 

@@ -63,7 +63,7 @@ namespace Nektar
     ///
     /// Any specialization must include the following methods:
     /// static Array<OneD, DataType> Initialize();
-    template<typename DataType, typename StorageType>
+    template<typename StorageType>
     class MatrixStoragePolicy;
 
 

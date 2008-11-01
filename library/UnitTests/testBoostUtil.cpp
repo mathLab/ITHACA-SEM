@@ -41,6 +41,7 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/progress.hpp>
+#include <LibUtilities/BasicUtils/ConsistentObjectAccess.hpp>
 
 namespace Nektar
 {
@@ -66,8 +67,15 @@ namespace Nektar
         unsigned int TestClass::constructionCount = 0;
         unsigned int TestClass::destructionCount = 0;
 
+        template<typename T>
+        class FakeClass {};
+        
+        
         BOOST_AUTO_TEST_CASE(testMakePtr)
         {
+            boost::shared_ptr<FakeClass<int> > a(new FakeClass<int>());
+            FakeClass<int>& b = ConsistentObjectAccess<boost::shared_ptr<FakeClass<int> > >::reference(a);
+            
             {
                 boost::shared_ptr<TestClass> p = MakePtr(new TestClass());
                 BOOST_CHECK(TestClass::constructionCount == 1);

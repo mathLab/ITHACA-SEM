@@ -47,14 +47,14 @@ namespace Nektar
 {
     namespace UpperTriangularMatrixUnitTests
     {
-        typedef MatrixStoragePolicy<NekDouble, UpperTriangularMatrixTag> Policy;
+        typedef MatrixStoragePolicy<UpperTriangularMatrixTag> Policy;
 
         BOOST_AUTO_TEST_CASE(TestMatrixVectorMultiply)
         {
             {
                 double matrix_buf[] = {1, 2,
                                           3};
-                NekMatrix<double, UpperTriangularMatrixTag> matrix(2,2,matrix_buf);
+                NekMatrix<double> matrix(2,2,matrix_buf,eUPPER_TRIANGULAR);
 
                 double vector_buf[] = {10, 11};
                 NekVector<double> vector(2, vector_buf);
@@ -70,7 +70,7 @@ namespace Nektar
             {
                 unsigned int matrix_buf[] = {1, 2,
                                           3};
-                NekMatrix<unsigned int, UpperTriangularMatrixTag> matrix(2,2,matrix_buf);
+                NekMatrix<unsigned int> matrix(2,2,matrix_buf,eUPPER_TRIANGULAR);
 
                 unsigned int vector_buf[] = {10, 11};
                 NekVector<unsigned int> vector(2, vector_buf);
@@ -93,7 +93,7 @@ namespace Nektar
                 double matrix_buf[] = {1,
                                        2, 4,
                                        3, 5, 6};
-                NekMatrix<double, UpperTriangularMatrixTag> matrix(3,3,matrix_buf);
+                NekMatrix<double> matrix(3,3,matrix_buf,eUPPER_TRIANGULAR);
 
                 double vector_buf[] = {10, 11, 12};
                 NekVector<double> vector(3, vector_buf);
@@ -113,7 +113,7 @@ namespace Nektar
                 unsigned int matrix_buf[] = {1,
                                              2, 4,
                                              3, 5, 6};
-                NekMatrix<unsigned int, UpperTriangularMatrixTag> matrix(3,3,matrix_buf);
+                NekMatrix<unsigned int> matrix(3,3,matrix_buf,eUPPER_TRIANGULAR);
 
                 unsigned int vector_buf[] = {10, 11, 12};
                 NekVector<unsigned int> vector(3, vector_buf);

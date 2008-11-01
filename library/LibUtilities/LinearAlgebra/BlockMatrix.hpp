@@ -48,19 +48,19 @@
 
 namespace Nektar
 {
-    template<typename DataType, typename InnerStorageType, typename InnerMatrixType, typename StorageType>
-    class NekMatrix<NekMatrix<DataType, InnerStorageType, InnerMatrixType>, StorageType, BlockMatrixTag> : public ConstMatrix<typename NekMatrix<DataType, InnerStorageType, InnerMatrixType>::NumberType>
+    template<typename DataType, typename InnerMatrixType>
+    class NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag> : public ConstMatrix<typename NekMatrix<DataType, InnerMatrixType>::NumberType>
     {
         public:
-            typedef NekMatrix<DataType, InnerStorageType, InnerMatrixType> InnerType;
-            typedef NekMatrix<InnerType, StorageType, BlockMatrixTag> ThisType;
+            typedef NekMatrix<DataType, InnerMatrixType> InnerType;
+            typedef NekMatrix<InnerType, BlockMatrixTag> ThisType;
             typedef typename InnerType::NumberType NumberType;
             typedef ConstMatrix<NumberType> BaseType;
 
             // Each inner matrix type can possible return references or value types from GetValue.
             // Query the type here to find out.
-            typedef typename InnerType::GetValueType GetValueType;
-            typedef typename InnerType::ConstGetValueType ConstGetValueType;
+            typedef NumberType& GetValueType;
+            typedef const NumberType& ConstGetValueType;
                 
         public:
             template<typename MatrixType>
@@ -68,13 +68,7 @@ namespace Nektar
             {
                 public:
                     typedef typename MatrixType::InnerType IteratorInnerType;
-
-                    // TODO
-                    // This won't work if we want to specify the data as banded, 
-                    // because the data type for banded requires consturctor paramters.
-                    // It should work for everything else.  We may need to slightly
-                    // rethink the template parameters.
-                    typedef MatrixStoragePolicy<NumberType, StorageType> StoragePolicy;
+                    typedef MatrixStoragePolicy<FullMatrixTag> StoragePolicy;
 
                 public:                   
                     iterator_base(MatrixType& m, unsigned int curRow, unsigned int curCol) :
@@ -103,7 +97,7 @@ namespace Nektar
                         if( m_curRow != std::numeric_limits<unsigned int>::max() )
                         {
                             boost::tie(m_curRow, m_curColumn) = StoragePolicy::Advance(
-                                m_matrix.GetRows(), m_matrix.GetColumns(), m_curRow, m_curColumn, m_data);
+                                m_matrix.GetRows(), m_matrix.GetColumns(), m_curRow, m_curColumn);
                         }
                     }
                     
@@ -129,7 +123,6 @@ namespace Nektar
                     //boost::shared_ptr<IteratorInnerType> m_curBlock;
                     unsigned int m_curRow;
                     unsigned int m_curColumn;
-                    typename StoragePolicy::PolicySpecificDataHolderType m_data;
             };
             
             typedef iterator_base<ThisType> iterator;
@@ -285,11 +278,6 @@ namespace Nektar
             {
                 return m_storageSize;
             }
-             
-            MatrixStorage GetStorageType() const
-            {
-                return static_cast<MatrixStorage>(ConvertToMatrixStorageEnum<StorageType>::Value);
-            }            
             
             unsigned int GetNumberOfBlockRows() const { return m_numberOfBlockRows; }
             unsigned int GetNumberOfBlockColumns() const { return m_numberOfBlockColumns; }
@@ -373,9 +361,9 @@ namespace Nektar
             static NumberType m_zeroElement;
     };
 
-    template<typename DataType, typename InnerStorageType, typename InnerMatrixType, typename StorageType>
-    typename NekMatrix<NekMatrix<DataType, InnerStorageType, InnerMatrixType>, StorageType, BlockMatrixTag>::NumberType
-    NekMatrix<NekMatrix<DataType, InnerStorageType, InnerMatrixType>, StorageType, BlockMatrixTag>::m_zeroElement(0);
+    template<typename DataType, typename InnerMatrixType>
+    typename NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::NumberType
+    NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::m_zeroElement(0);
 }
 
 

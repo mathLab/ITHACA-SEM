@@ -45,8 +45,7 @@
 #include <boost/lexical_cast.hpp>
 
 namespace Nektar
-{
-
+{    
     template<typename DataType>
     class ConstMatrix
     {
@@ -78,10 +77,10 @@ namespace Nektar
             
             unsigned int GetRows() const
             {
-                return GetRowsForTranspose(GetTransposeFlag());
+                return GetTransposedRows(GetTransposeFlag());
             }
 
-            unsigned int GetRowsForTranspose(char transpose) const 
+            unsigned int GetTransposedRows(char transpose) const 
             {
                 if( transpose == 'N' )
                 {
@@ -95,10 +94,10 @@ namespace Nektar
             
             unsigned int GetColumns() const
             {
-                return GetColumnsForTranspose(GetTransposeFlag());
+                return GetTransposedColumns(GetTransposeFlag());
             }
 
-            unsigned int GetColumnsForTranspose(char transpose) const 
+            unsigned int GetTransposedColumns(char transpose) const 
             { 
                 if( transpose == 'N' )
                 {

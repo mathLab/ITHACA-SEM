@@ -58,7 +58,7 @@ namespace Nektar
             NekDouble a_buf[] = {1, 2, 5, 3, 6, 8, 4, 7, 9, 10};
             NekDouble x_buf[] = {10, 20, 30, 40};
 
-            NekMatrix<NekDouble, UpperTriangularMatrixTag, StandardMatrixTag> m(4, 4, a_buf);
+            NekMatrix<NekDouble, StandardMatrixTag> m(4, 4, a_buf, eUPPER_TRIANGULAR);
             NekVector<NekDouble> x(4, x_buf);
 
             NekVector<NekDouble> result = m*x;
@@ -78,7 +78,7 @@ namespace Nektar
             NekDouble a_buf[] = {1, 2, 5, 3, 6, 8, 4, 7, 9, 10};
             NekDouble x_buf[] = {10, 20, 30, 40};
 
-            NekMatrix<NekDouble, LowerTriangularMatrixTag, StandardMatrixTag> m(4, 4, a_buf);
+            NekMatrix<NekDouble, StandardMatrixTag> m(4, 4, a_buf, eLOWER_TRIANGULAR);
             NekVector<NekDouble> x(4, x_buf);
 
             NekVector<NekDouble> result = m*x;
@@ -96,12 +96,12 @@ namespace Nektar
             // [0 0 0 10]
 
             NekDouble a_buf[] = {1, 2, 5, 3, 6, 8, 4, 7, 9, 10};
-            NekMatrix<NekDouble, UpperTriangularMatrixTag, StandardMatrixTag> m(4, 4, a_buf);
+            NekMatrix<NekDouble, StandardMatrixTag> m(4, 4, a_buf, eUPPER_TRIANGULAR);
 
             NekDouble b_buf[] = {300, 560, 600, 400};
             NekVector<NekDouble> b(4, b_buf);
 
-            LinearSystem<NekMatrix<NekDouble, UpperTriangularMatrixTag, StandardMatrixTag> > sys(m);
+            LinearSystem sys(m);
             NekVector<NekDouble> x = sys.Solve(b);
 
             NekDouble expected_result_buf[] = {10, 20, 30, 40};
@@ -118,12 +118,12 @@ namespace Nektar
             // [0 0 0 10]
 
             NekDouble a_buf[] = {1, 2, 5, 3, 6, 8, 4, 7, 9, 10};
-            NekMatrix<NekDouble, UpperTriangularMatrixTag, StandardMatrixTag> m(4, 4, a_buf);
+            NekMatrix<NekDouble, StandardMatrixTag> m(4, 4, a_buf, eUPPER_TRIANGULAR);
 
             NekDouble b_buf[] = {10, 120, 390, 850};
             NekVector<NekDouble> b(4, b_buf);
 
-            LinearSystem<NekMatrix<NekDouble, UpperTriangularMatrixTag, StandardMatrixTag> > sys(m);
+            LinearSystem sys(m);
             NekVector<NekDouble> x = sys.SolveTranspose(b);
 
             NekDouble expected_result_buf[] = {10, 20, 30, 40};
@@ -140,12 +140,12 @@ namespace Nektar
             // [0 0 0 10]
 
             NekDouble a_buf[] = {1, 2, 5, 3, 6, 8, 4, 7, 9, 10};
-            NekMatrix<NekDouble, LowerTriangularMatrixTag, StandardMatrixTag> m(4, 4, a_buf);
+            NekMatrix<NekDouble, StandardMatrixTag> m(4, 4, a_buf, eLOWER_TRIANGULAR);
 
             NekDouble b_buf[] = {10, 140, 420, 780};
             NekVector<NekDouble> b(4, b_buf);
 
-            LinearSystem<NekMatrix<NekDouble, LowerTriangularMatrixTag, StandardMatrixTag> > sys(m);
+            LinearSystem sys(m);
             NekVector<NekDouble> x = sys.Solve(b);
 
             NekDouble expected_result_buf[] = {10, 20, 30, 40};
@@ -162,12 +162,12 @@ namespace Nektar
             // [0 0 0 10]
 
             NekDouble a_buf[] = {1, 2, 5, 3, 6, 8, 4, 7, 9, 10};
-            NekMatrix<NekDouble, LowerTriangularMatrixTag, StandardMatrixTag> m(4, 4, a_buf);
+            NekMatrix<NekDouble, StandardMatrixTag> m(4, 4, a_buf, eLOWER_TRIANGULAR);
 
             NekDouble b_buf[] = {320, 520, 570, 400};
             NekVector<NekDouble> b(4, b_buf);
 
-            LinearSystem<NekMatrix<NekDouble, LowerTriangularMatrixTag, StandardMatrixTag> > sys(m);
+            LinearSystem sys(m);
             NekVector<NekDouble> x = sys.SolveTranspose(b);
 
             NekDouble expected_result_buf[] = {10, 20, 30, 40};

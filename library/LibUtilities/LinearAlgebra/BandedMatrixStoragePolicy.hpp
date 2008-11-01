@@ -52,145 +52,53 @@
 
 namespace Nektar
 {
-    template<typename DataType>
-    class MatrixStoragePolicy<DataType, BandedMatrixTag>
+    template<>
+    class MatrixStoragePolicy<BandedMatrixTag>
     {
-        public:
-            class PolicySpecificDataHolderType
-            {
-                public:
-                    PolicySpecificDataHolderType() :
-                        m_numberOfSubDiagonals(std::numeric_limits<unsigned int>::max()),
-                        m_numberOfSuperDiagonals(std::numeric_limits<unsigned int>::max())
-                    {
-                    }
-
-                    PolicySpecificDataHolderType(unsigned int sub, unsigned int super) :
-                        m_numberOfSubDiagonals(sub),
-                        m_numberOfSuperDiagonals(super)
-                    {
-                    }
-
-                    // Get the specified number of sub diagonals, or calculate the 
-                    // number if this object has not been initialized.
-                    unsigned int GetNumberOfSubDiagonals(unsigned int rows) const
-                    {
-                        if( m_numberOfSubDiagonals != std::numeric_limits<unsigned int>::max() )
-                        {
-                            return m_numberOfSubDiagonals;
-                        }
-                        else if( rows > 0 )
-                        {
-                            return rows-1;
-                        }
-                        else
-                        {
-                            return 0;
-                        }
-                    }
-
-                    unsigned int GetNumberOfSuperDiagonals(unsigned int rows) const
-                    {
-                        if( m_numberOfSuperDiagonals != std::numeric_limits<unsigned int>::max() )
-                        {
-                            return m_numberOfSuperDiagonals;
-                        }
-                        else if( rows > 0 )
-                        {
-                            return rows-1;
-                        }
-                        else
-                        {
-                            return 0;
-                        }
-                    }
-
-                private:
-                    unsigned int m_numberOfSubDiagonals;
-                    unsigned int m_numberOfSuperDiagonals;
-            };
-
-            typedef typename boost::call_traits<DataType>::const_reference GetValueReturnType;
-            static DataType ZeroElement;
-            
-            template<typename T>
-            class reference
-            {
-                public:
-                    typedef typename boost::call_traits<T>::const_reference type;
-            };
-
-            static Array<OneD, DataType> Initialize()
-            {
-                return Array<OneD, DataType>();
-            }
-            
-            static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, const PolicySpecificDataHolderType& data)
-            {
-                ASSERTL0(rows==columns, "Banded matrices must be square.");
-                return Array<OneD, DataType>(GetRequiredStorageSize(rows, columns, data));
-            }
-            
-            static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
-                                                    typename boost::call_traits<DataType>::const_reference d,
-                                                    const PolicySpecificDataHolderType& data)
-            {
-                ASSERTL0(rows==columns, "Banded matrices must be square.");
-                return Array<OneD, DataType>(GetRequiredStorageSize(rows, columns, data), d);
-            }
-            
-            static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
-                                                    const DataType* d, const PolicySpecificDataHolderType& data)
-            {
-                ASSERTL0(rows==columns, "Banded matrices must be square.");
-                return Array<OneD, DataType>(GetRequiredStorageSize(rows, columns, data), d);
-            }
-            
-            static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
-                                                    const Array<OneD, const DataType>& d,
-                                                    const PolicySpecificDataHolderType& data)
-            {
-                ASSERTL0(rows==columns, "Banded matrices must be square.");
-
-                unsigned int storageSize = GetRequiredStorageSize(rows, columns, data);
-                ASSERTL0(storageSize <= d.num_elements(), 
-                    std::string("An attempt has been made to create a banded matrix of size (") +
-                    boost::lexical_cast<std::string>(rows) + 
-                    ", " + boost::lexical_cast<std::string>(columns) + ") " +
-                    std::string(" but the array being used to populate it only has ") + 
-                    boost::lexical_cast<std::string>(d.num_elements()) + 
-                    std::string(" elements."));
-                return Array<OneD, DataType>(storageSize, d.data());
-            }
-            
-            
+        public:                        
             /// \brief Calculates and returns the storage size required.
             ///
             /// This method assumes that the matrix will be used with LU factorizationa and 
             /// allocates additional storage as appropriate.
             static unsigned int GetRequiredStorageSize(unsigned int totalRows, unsigned int totalColumns,
-                                                     const PolicySpecificDataHolderType& data)
+                                                       unsigned int subDiags, unsigned int superDiags)
             {
-                return CalculateNumberOfRows(totalRows, data)*totalColumns;
+                return CalculateNumberOfRows(totalRows, subDiags, superDiags)*totalColumns;
             }
 
-            static unsigned int CalculateNumberOfRows(unsigned int totalRows, const PolicySpecificDataHolderType& data)
+            static unsigned int CalculateNumberOfDiags(unsigned int totalRows, unsigned int diags)
             {
-                return data.GetNumberOfSubDiagonals(totalRows) + data.GetNumberOfSuperDiagonals(totalRows) + 1;
+                if( diags != std::numeric_limits<unsigned int>::max() )
+                {
+                    return diags;
+                }
+                else if( totalRows > 0 )
+                {
+                    return totalRows-1;
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+                
+            static unsigned int CalculateNumberOfRows(unsigned int totalRows, unsigned int subDiags, unsigned int superDiags)
+            {
+                return CalculateNumberOfDiags(totalRows, subDiags) + CalculateNumberOfDiags(totalRows, superDiags) + 1;
             }
 
             static boost::optional<unsigned int> CalculateIndex(unsigned int totalRows, 
                                                                 unsigned int totalColumns,
                                                                 unsigned int row, unsigned int column,
-                                                                const PolicySpecificDataHolderType& data)
+                                                                unsigned int sub, unsigned int super)
             {
-                if( (column <= row && (row - column) <= data.GetNumberOfSubDiagonals(totalRows)) ||
-                    (column > row && (column - row) <= data.GetNumberOfSuperDiagonals(totalRows)) )
+                if( (column <= row && (row - column) <= CalculateNumberOfDiags(totalRows, sub)) ||
+                    (column > row && (column - row) <= CalculateNumberOfDiags(totalRows, super)) )
                 {
-                    unsigned int elementRow = data.GetNumberOfSuperDiagonals(totalRows)+row-column;
+                    unsigned int elementRow = CalculateNumberOfDiags(totalRows, super)+row-column;
                     unsigned int elementColumn = column;
 
-                    return elementRow + elementColumn*CalculateNumberOfRows(totalRows, data);
+                    return elementRow + elementColumn*CalculateNumberOfRows(totalRows, sub, super);
                 }
                 else
                 {
@@ -198,46 +106,10 @@ namespace Nektar
                 }
             }
 
-            static GetValueReturnType GetValue(unsigned int totalRows, unsigned int totalColumns,
-                                                                             unsigned int curRow, unsigned int curColumn,
-                                                                             const Array<OneD, const DataType>& data,
-                                                                             const char transpose,
-                                                                             const PolicySpecificDataHolderType& dataHolder)
-            {
-                ASSERTL0(transpose == 'N', "Banded transpose matrices not yet supported.");
-                boost::optional<unsigned int> index = CalculateIndex(totalRows, totalColumns, curRow, curColumn, dataHolder);
-                if( index )
-                {
-                    return data[*index];
-                }
-                else
-                {
-                    return ZeroElement;
-                }
-            }            
-            
-            static void SetValue(unsigned int totalRows, unsigned int totalColumns,
-                                 unsigned int curRow, unsigned int curColumn,
-                                 Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d,
-                                 const char transpose,
-                                 const PolicySpecificDataHolderType& dataHolder)
-            {
-                ASSERTL0(transpose == 'N', "Banded transpose matrices not yet supported.");
-                boost::optional<unsigned int> index = CalculateIndex(totalRows, totalColumns, curRow, curColumn, dataHolder);
-                if( index )
-                {
-                    data[*index] = d;
-                }
-                else
-                {
-                    NEKERROR(ErrorUtil::efatal, "Can only assign into banded portion of block matrix.");
-                }
-            }
-            
+
             static boost::tuples::tuple<unsigned int, unsigned int> 
             Advance(const unsigned int totalRows, const unsigned int totalColumns,
-                    const unsigned int curRow, const unsigned int curColumn,
-                    const PolicySpecificDataHolderType&)
+                    const unsigned int curRow, const unsigned int curColumn)
             {
                 unsigned int nextRow = curRow;
                 unsigned int nextColumn = curColumn;
@@ -264,21 +136,7 @@ namespace Nektar
                 //}
                 return boost::tuples::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
             }
-
-            //static void Invert(unsigned int rows, unsigned int columns,
-            //                   Array<OneD, DataType>& data,
-            //                   const PolicySpecificDataHolderType&)
-            //{
-            //    ASSERTL0(rows==columns, "Only square matrices can be inverted.");
-            //    for(unsigned int i = 0; i < rows; ++i)
-            //    {
-            //        data[i] = 1.0/data[i];
-            //    }
-            //}
     };
-    
-    template<typename DataType>
-    DataType MatrixStoragePolicy<DataType, BandedMatrixTag>::ZeroElement = DataType(0);
 }
 
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_BANDED_MATRIX_STORAGE_POLICY_HPP

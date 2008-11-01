@@ -128,7 +128,7 @@ namespace Nektar
             // Populate m_points
             unsigned int npts = GetNumPoints();
             NekDouble delta = 2.0/(npts - 1.0);
-            for(int z=0, index=0; z<npts; ++z){
+            for(unsigned int z=0, index=0; z<npts; ++z){
                 for(int y=0; y<npts-z; ++y){
                     for(int x=0; x<npts-z-y; ++x, ++index){
                         NekDouble xi = -1.0 + x*delta;
@@ -230,62 +230,62 @@ namespace Nektar
            
             // Mapping the vertex, edges, faces, interior volume points using the permutation matrix,
             // so the points are ordered anticlockwise.
-            for(int n=0; n<vertex.size(); ++n){
+            for(unsigned int n=0; n<vertex.size(); ++n){
 
                 map.push_back(vertex[n]);
             }
 
-            for(int n=0; n<iEdge_01.size(); ++n){
+            for(unsigned int n=0; n<iEdge_01.size(); ++n){
 
                 map.push_back(iEdge_01[n]);
             }
 
-            for(int n=0; n<iEdge_12.size(); ++n){
+            for(unsigned int n=0; n<iEdge_12.size(); ++n){
 
                 map.push_back(iEdge_12[n]);
             }
 
-            for(int n=0; n<iEdge_20.size(); ++n){
+            for(unsigned int n=0; n<iEdge_20.size(); ++n){
 
                 map.push_back(iEdge_20[n]);
             }
 
-            for(int n=0; n<iEdge_03.size(); ++n){
+            for(unsigned int n=0; n<iEdge_03.size(); ++n){
 
                 map.push_back(iEdge_03[n]);
             }
 
-            for(int n=0; n<iEdge_13.size(); ++n){
+            for(unsigned int n=0; n<iEdge_13.size(); ++n){
 
                 map.push_back(iEdge_13[n]);
             }
 
-            for(int n=0; n<iEdge_23.size(); ++n){
+            for(unsigned int n=0; n<iEdge_23.size(); ++n){
 
                 map.push_back(iEdge_23[n]);
             }
 
-            for(int n=0; n<iFace_012.size(); ++n){
+            for(unsigned int n=0; n<iFace_012.size(); ++n){
 
                 map.push_back(iFace_012[n]);
             }
 
-            for(int n=0; n<iFace_013.size(); ++n){
+            for(unsigned int n=0; n<iFace_013.size(); ++n){
 
                 map.push_back(iFace_013[n]);
             }
 
-            for(int n=0; n<iFace_123.size(); ++n){
+            for(unsigned int n=0; n<iFace_123.size(); ++n){
 
                 map.push_back(iFace_123[n]);
             }
 
-            for(int n=0; n<iFace_203.size(); ++n){
+            for(unsigned int n=0; n<iFace_203.size(); ++n){
 
                 map.push_back(iFace_203[n]);
             }
 
-            for(int n=0; n<interiorVolumePoints.size(); ++n){
+            for(unsigned int n=0; n<interiorVolumePoints.size(); ++n){
 
                 map.push_back(interiorVolumePoints[n]);
             }
@@ -295,7 +295,7 @@ namespace Nektar
             points[0] = Array<OneD, NekDouble>(GetTotNumPoints());
             points[1] = Array<OneD, NekDouble>(GetTotNumPoints());
             points[2] = Array<OneD, NekDouble>(GetTotNumPoints());
-            for(int index=0; index<map.size(); ++index){
+            for(unsigned int index=0; index<map.size(); ++index){
 
                 points[0][index] = m_points[0][index];
                 points[1][index] = m_points[1][index];
@@ -305,7 +305,7 @@ namespace Nektar
 
             cout << endl;
             
-            for(int index=0; index<map.size(); ++index){
+            for(unsigned int index=0; index<map.size(); ++index){
 
                 m_points[0][index] = points[0][map[index]];
                 m_points[1][index] = points[1][map[index]];

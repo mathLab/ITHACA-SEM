@@ -222,7 +222,7 @@ namespace Nektar
              {
                  for(unsigned int j = 0; j < 3; ++j)
                  {
-                     BOOST_CHECK_CLOSE(result(i,j), expectedResult(i,j), epsilon);
+                     BOOST_CHECK_CLOSE(*result(i,j), *expectedResult(i,j), epsilon);
                  }
              }
         }
@@ -247,7 +247,7 @@ namespace Nektar
                  {
                      for(unsigned int j = 0; j < 3; ++j)
                      {
-                         BOOST_CHECK_CLOSE(result(i,j), expectedResult(i,j), epsilon);
+                         BOOST_CHECK_CLOSE(*result(i,j), *expectedResult(i,j), epsilon);
                      }
                  }
                  
@@ -256,7 +256,7 @@ namespace Nektar
                  {
                      for(unsigned int j = 0; j < 3; ++j)
                      {
-                         BOOST_CHECK_CLOSE(result1(i,j), expectedResult(i,j), epsilon);
+                         BOOST_CHECK_CLOSE(*result1(i,j), *expectedResult(i,j), epsilon);
                      }
                  }
              }
@@ -283,7 +283,7 @@ namespace Nektar
                  {
                      for(unsigned int j = 0; j < 3; ++j)
                      {
-                         BOOST_CHECK_CLOSE(result(i,j), expectedResult(i,j), epsilon);
+                         BOOST_CHECK_CLOSE(*result(i,j), *expectedResult(i,j), epsilon);
                      }
                  }
              }

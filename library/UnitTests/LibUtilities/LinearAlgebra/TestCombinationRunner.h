@@ -93,20 +93,18 @@ namespace Nektar
             }
     };
 
-    template<typename LhsScaledInnerStorageType, typename LhsScaledInnerMatrixType,
-             typename LhsBlockInnerStorageType, typename LhsBlockInnerMatrixType,
-             typename LhsStorageType, typename RhsStorageType, 
-             typename RhsScaledInnerStorageType, typename RhsScaledInnerMatrixType,
-             typename RhsBlockInnerStorageType, typename RhsBlockInnerMatrixType,
-             typename ResultStorageType,
+    template<typename LhsScaledInnerMatrixType,
+             typename LhsBlockInnerMatrixType,
+             typename RhsScaledInnerMatrixType,
+             typename RhsBlockInnerMatrixType,
              typename OpType>
-    void RunAllTestCombinations(const NekMatrix<NekDouble, LhsStorageType, StandardMatrixTag>& l1,
-                                const NekMatrix<NekMatrix<NekDouble, LhsScaledInnerStorageType, LhsScaledInnerMatrixType>, LhsStorageType, ScaledMatrixTag>& l2,
-                                const NekMatrix<NekMatrix<NekDouble, LhsBlockInnerStorageType, LhsBlockInnerMatrixType>, LhsStorageType, BlockMatrixTag>& l3,
-                                const NekMatrix<NekDouble, LhsStorageType, StandardMatrixTag>& r1,
-                                const NekMatrix<NekMatrix<NekDouble, RhsScaledInnerStorageType, RhsScaledInnerMatrixType>, LhsStorageType, ScaledMatrixTag>& r2,
-                                const NekMatrix<NekMatrix<NekDouble, RhsBlockInnerStorageType, RhsBlockInnerMatrixType>, RhsStorageType, BlockMatrixTag>& r3,
-                                const NekMatrix<NekDouble, ResultStorageType, StandardMatrixTag>& result,
+    void RunAllTestCombinations(const NekMatrix<NekDouble, StandardMatrixTag>& l1,
+                                const NekMatrix<NekMatrix<NekDouble, LhsScaledInnerMatrixType>, ScaledMatrixTag>& l2,
+                                const NekMatrix<NekMatrix<NekDouble, LhsBlockInnerMatrixType>, BlockMatrixTag>& l3,
+                                const NekMatrix<NekDouble, StandardMatrixTag>& r1,
+                                const NekMatrix<NekMatrix<NekDouble, RhsScaledInnerMatrixType>, ScaledMatrixTag>& r2,
+                                const NekMatrix<NekMatrix<NekDouble, RhsBlockInnerMatrixType>, BlockMatrixTag>& r3,
+                                const NekMatrix<NekDouble, StandardMatrixTag>& result,
                                 const OpType& f)
     {
         BOOST_CHECK_EQUAL(f(l1, r1), result);
@@ -216,22 +214,24 @@ namespace Nektar
     //    m3->SetBlock(1,1, block4);
     //}
 
-    template<typename StorageType, typename NumberType>
-    void GenerateMatrices(const NekMatrix<NumberType, StorageType, StandardMatrixTag>& m1,
+    template<typename NumberType>
+    void GenerateMatrices(const NekMatrix<NumberType, StandardMatrixTag>& m1,
         NumberType scale, unsigned int blockRows, unsigned int blockColumns,
-        boost::shared_ptr<NekMatrix<NekMatrix<NumberType, StorageType, StandardMatrixTag>, StorageType, ScaledMatrixTag> >& m2,
-        boost::shared_ptr<NekMatrix<NekMatrix<NumberType>, StorageType, BlockMatrixTag> >& m3)
+        boost::shared_ptr<NekMatrix<NekMatrix<NumberType, StandardMatrixTag>, ScaledMatrixTag> >& m2,
+        boost::shared_ptr<NekMatrix<NekMatrix<NumberType>, BlockMatrixTag> >& m3)
     {
         NumberType* inner_values = new NumberType[m1.GetStorageSize()];
         std::transform(m1.begin(), m1.end(), inner_values, boost::bind(std::divides<NumberType>(), _1, scale));
-
-        boost::shared_ptr<NekMatrix<NumberType, StorageType, StandardMatrixTag> > inner(
-            new NekMatrix<NumberType, StorageType, StandardMatrixTag>(m1.GetRows(), m1.GetColumns(), inner_values, m1.GetPolicySpecificDataHolderType())); 
-        m2 = MakePtr(new NekMatrix<NekMatrix<NumberType, StorageType, StandardMatrixTag>, StorageType, ScaledMatrixTag>(scale, inner));
+        MatrixStorage s = m1.GetType();
+        
+        boost::shared_ptr<NekMatrix<NumberType, StandardMatrixTag> > inner(
+            new NekMatrix<NumberType, StandardMatrixTag>(m1.GetRows(), m1.GetColumns(), inner_values, s, m1.GetNumberOfSubDiagonals(), 
+            m1.GetNumberOfSuperDiagonals())); 
+        m2 = MakePtr(new NekMatrix<NekMatrix<NumberType, StandardMatrixTag>, ScaledMatrixTag>(scale, inner));
 
         unsigned int numberOfRows = m1.GetRows()/blockRows;
         unsigned int numberOfColumns = m1.GetColumns()/blockColumns;
-        m3 = MakePtr(new NekMatrix<NekMatrix<NumberType>, StorageType, BlockMatrixTag>(blockRows, blockColumns, numberOfRows, numberOfColumns));
+        m3 = MakePtr(new NekMatrix<NekMatrix<NumberType>, BlockMatrixTag>(blockRows, blockColumns, numberOfRows, numberOfColumns));
 
         for(unsigned int blockRow = 0; blockRow < blockRows; ++blockRow)
         {

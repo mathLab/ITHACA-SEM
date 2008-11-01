@@ -131,7 +131,7 @@ namespace Nektar
             }
 
             unsigned int GetValue() const { return value; }
-
+            operator unsigned int() const { return value; }
             unsigned int value;
 
             static unsigned int numberDefaultConstructed;
@@ -184,6 +184,9 @@ namespace Nektar
 
 /**
     $Log: CountedObject.h,v $
+    Revision 1.6  2008/01/20 04:07:46  bnelson
+    *** empty log message ***
+
     Revision 1.5  2007/09/12 03:59:41  bnelson
     *** empty log message ***
 

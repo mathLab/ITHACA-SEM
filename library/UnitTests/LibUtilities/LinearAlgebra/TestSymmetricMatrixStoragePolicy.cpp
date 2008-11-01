@@ -49,164 +49,79 @@ namespace Nektar
 {
     namespace SymmetricMatrixStoragePolicyUnitTests
     {
-        typedef MatrixStoragePolicy<NekDouble, SymmetricMatrixTag> Policy;
+        typedef MatrixStoragePolicy<SymmetricMatrixTag> Policy;
 
-        BOOST_AUTO_TEST_CASE(TestConstGetValue)
-        {
-            UnitTests::RedirectCerrIfNeeded();
-            Policy::PolicySpecificDataHolderType policyData;
-            NekDouble buf[] = {1.0, 2.0, 3.0,
-                                    5.0, 6.0,
-                                         9.0};
-            Array<OneD, NekDouble> array_buf(6, buf);
-            Array<OneD, NekDouble> data = Policy::Initialize(3, 3, array_buf, policyData);
-            Array<OneD, const NekDouble>& cdata = data;
-
-            BOOST_CHECK_EQUAL(data.num_elements(), 6);
-
-            {
-                BOOST_CHECK_EQUAL(1.0, Policy::GetValue(3, 3, 0, 0, data, 'N', policyData));
-                BOOST_CHECK_EQUAL(2.0, Policy::GetValue(3, 3, 0, 1, data, 'N', policyData));
-                BOOST_CHECK_EQUAL(5.0, Policy::GetValue(3, 3, 0, 2, data, 'N', policyData));
-                BOOST_CHECK_EQUAL(2.0, Policy::GetValue(3, 3, 1, 0, data, 'N', policyData));
-                BOOST_CHECK_EQUAL(3.0, Policy::GetValue(3, 3, 1, 1, data, 'N', policyData));
-                BOOST_CHECK_EQUAL(6.0, Policy::GetValue(3, 3, 1, 2, data, 'N', policyData));
-                BOOST_CHECK_EQUAL(5.0, Policy::GetValue(3, 3, 2, 0, data, 'N', policyData));
-                BOOST_CHECK_EQUAL(6.0, Policy::GetValue(3, 3, 2, 1, data, 'N', policyData));
-                BOOST_CHECK_EQUAL(9.0, Policy::GetValue(3, 3, 2, 2, data, 'N', policyData));
-            }
-
-            #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
-            {
-                BOOST_CHECK_THROW(Policy::GetValue(3,4,3,3,data, 'N', policyData), ErrorUtil::NekError);
-                BOOST_CHECK_THROW(Policy::GetValue(3,3,4,3,data, 'N', policyData), ErrorUtil::NekError);
-                BOOST_CHECK_THROW(Policy::GetValue(3,3,3,4,data, 'N', policyData), ErrorUtil::NekError);
-            }
-            #endif
-        }
-
-        BOOST_AUTO_TEST_CASE(TestSetValue)
-        {
-            UnitTests::RedirectCerrIfNeeded();
-            Policy::PolicySpecificDataHolderType policyData;
-            NekDouble buf[] = {1.0, 2.0, 3.0,
-                                    5.0, 6.0,
-                                         9.0};
-            Array<OneD, NekDouble> array_buf(6, buf);
-            Array<OneD, NekDouble> data = Policy::Initialize(3, 3, array_buf, policyData);
-            BOOST_CHECK_EQUAL(data.num_elements(), 6);
-            
-            Policy::SetValue(3,3,0,0,data, 7.2, 'N', policyData);
-            BOOST_CHECK_EQUAL(7.2, Policy::GetValue(3,3,0,0,data, 'N', policyData));
-            BOOST_CHECK_EQUAL(1.0, array_buf[0]);
-            BOOST_CHECK_EQUAL(7.2, data[0]);
-
-            Policy::SetValue(3,3,0,1,data,10.0, 'N', policyData);
-            BOOST_CHECK_EQUAL(10.0, Policy::GetValue(3,3,0,1,data, 'N', policyData));
-            BOOST_CHECK_EQUAL(10.0, Policy::GetValue(3,3,1,0,data, 'N', policyData));
-            Policy::SetValue(3,3,0,2,data,20.0, 'N', policyData);
-            BOOST_CHECK_EQUAL(20.0, Policy::GetValue(3,3,0,2,data, 'N', policyData));
-            BOOST_CHECK_EQUAL(20.0, Policy::GetValue(3,3,2,0,data, 'N', policyData));
-            Policy::SetValue(3,3,1,1,data,30.0, 'N', policyData);
-            BOOST_CHECK_EQUAL(30.0, Policy::GetValue(3,3,1,1,data, 'N', policyData));
-            Policy::SetValue(3,3,1,2,data,40.0, 'N', policyData);
-            BOOST_CHECK_EQUAL(40.0, Policy::GetValue(3,3,1,2,data, 'N', policyData));
-            BOOST_CHECK_EQUAL(40.0, Policy::GetValue(3,3,2,1,data, 'N', policyData));
-            Policy::SetValue(3,3,2,2,data,50.0, 'N', policyData);
-            BOOST_CHECK_EQUAL(50.0, Policy::GetValue(3,3,2,2,data, 'N', policyData));
-
-            #if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
-                BOOST_CHECK_THROW(Policy::SetValue(3,3,4,3,data,8.0, 'N', policyData), ErrorUtil::NekError);
-                BOOST_CHECK_THROW(Policy::SetValue(3,3,3,4,data,8.0, 'N', policyData), ErrorUtil::NekError);
-            #endif
-        }
                     
         BOOST_AUTO_TEST_CASE(TestAdvance)
         {
             UnitTests::RedirectCerrIfNeeded();
-            Policy::PolicySpecificDataHolderType policyData;
             {
-                NekDouble buf[] = {1.0, 2.0, 3.0,
-                                        5.0, 6.0,
-                                             9.0};
-                Array<OneD, NekDouble> array_buf(6, buf);
-                Array<OneD, NekDouble> data = Policy::Initialize(3, 3, array_buf, policyData);
-                BOOST_CHECK_EQUAL(data.num_elements(), 6);
 
                 unsigned int curRow = 0; 
                 unsigned int curColumn = 0;
-                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn, policyData);
+                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
                 BOOST_CHECK_EQUAL(1, curRow);
                 BOOST_CHECK_EQUAL(0, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn, policyData);
+                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
                 BOOST_CHECK_EQUAL(2, curRow);
                 BOOST_CHECK_EQUAL(0, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn, policyData);
+                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
                 BOOST_CHECK_EQUAL(0, curRow);
                 BOOST_CHECK_EQUAL(1, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn, policyData);
+                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
                 BOOST_CHECK_EQUAL(1, curRow);
                 BOOST_CHECK_EQUAL(1, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn, policyData);
+                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
                 BOOST_CHECK_EQUAL(2, curRow);
                 BOOST_CHECK_EQUAL(1, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn, policyData);
+                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
                 BOOST_CHECK_EQUAL(0, curRow);
                 BOOST_CHECK_EQUAL(2, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn, policyData);
+                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
                 BOOST_CHECK_EQUAL(1, curRow);
                 BOOST_CHECK_EQUAL(2, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn, policyData);
+                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
                 BOOST_CHECK_EQUAL(2, curRow);
                 BOOST_CHECK_EQUAL(2, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn, policyData);
+                boost::tie(curRow, curColumn) = Policy::Advance(3, 3, curRow, curColumn);
                 BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curRow);
                 BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curColumn);
             }
 
             {
-                NekDouble buf[] = {1.0};
-                Array<OneD, NekDouble> array_buf(1, buf);
-                Array<OneD, NekDouble> data = Policy::Initialize(1, 1, array_buf, policyData);
-                BOOST_CHECK_EQUAL(data.num_elements(), 1);
 
                 unsigned int curRow = 0; 
                 unsigned int curColumn = 0;
-                boost::tie(curRow, curColumn) = Policy::Advance(1, 1, curRow, curColumn, policyData);
+                boost::tie(curRow, curColumn) = Policy::Advance(1, 1, curRow, curColumn);
                 BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curRow);
                 BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curColumn);
             }
 
             {
-                NekDouble buf[] = {1.0, 2.0,
-                                        5.0};
-                Array<OneD, NekDouble> array_buf(3, buf);
-                Array<OneD, NekDouble> data = Policy::Initialize(2, 2, array_buf, policyData);
-                BOOST_CHECK_EQUAL(data.num_elements(), 3);
 
                 unsigned int curRow = 0; 
                 unsigned int curColumn = 0;
-                boost::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn, policyData);
+                boost::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn);
                 BOOST_CHECK_EQUAL(1, curRow);
                 BOOST_CHECK_EQUAL(0, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn, policyData);
+                boost::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn);
                 BOOST_CHECK_EQUAL(0, curRow);
                 BOOST_CHECK_EQUAL(1, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn, policyData);
+                boost::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn);
                 BOOST_CHECK_EQUAL(1, curRow);
                 BOOST_CHECK_EQUAL(1, curColumn);
 
-                boost::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn, policyData);
+                boost::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn);
                 BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curRow);
                 BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curColumn);
             }

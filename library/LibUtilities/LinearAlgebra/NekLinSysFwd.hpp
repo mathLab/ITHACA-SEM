@@ -38,8 +38,6 @@
 
 namespace Nektar
 {
- 
-    template<typename MatrixType>
     class LinearSystem;
 
 }

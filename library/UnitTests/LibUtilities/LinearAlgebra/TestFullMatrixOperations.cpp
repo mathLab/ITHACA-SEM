@@ -184,7 +184,7 @@ namespace Nektar
             double v_buf[] = {4, 5, 6};
             
             boost::shared_ptr<NekMatrix<double> > inner(new NekMatrix<double>(3, 3, m_buf));
-            NekMatrix<NekMatrix<double>, FullMatrixTag, ScaledMatrixTag> m(7.0, inner);
+            NekMatrix<NekMatrix<double>, ScaledMatrixTag> m(7.0, inner);
             NekVector<double> v(3, v_buf);
             
             double expected_result_buf[] = {462, 567, 672};
@@ -204,7 +204,7 @@ namespace Nektar
             int v_buf[] = {4, 5, 6};
             
             boost::shared_ptr<NekMatrix<int> > inner(new NekMatrix<int>(3, 3, m_buf));
-            NekMatrix<NekMatrix<int>, FullMatrixTag, ScaledMatrixTag> m(7, inner);
+            NekMatrix<NekMatrix<int>, ScaledMatrixTag> m(7, inner);
             NekVector<int> v(3, v_buf);
             
             int expected_result_buf[] = {462, 567, 672};

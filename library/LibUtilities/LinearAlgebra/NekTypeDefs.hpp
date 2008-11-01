@@ -46,24 +46,24 @@ namespace Nektar
 {
     typedef NekVector<NekDouble>                DNekVec;
 
-    typedef NekMatrix<NekDouble,FullMatrixTag>  DNekMat;
+    typedef NekMatrix<NekDouble>                DNekMat;
     typedef boost::shared_ptr<DNekMat>          DNekMatSharedPtr;
 
-    typedef LinearSystem <DNekMat>              DNekLinSys;
+    typedef LinearSystem                        DNekLinSys;
     typedef boost::shared_ptr<DNekLinSys>       DNekLinSysSharedPtr;
 
-    typedef NekMatrix<NekMatrix<NekDouble>,FullMatrixTag,ScaledMatrixTag> DNekScalMat; 
+    typedef NekMatrix<NekMatrix<NekDouble>,ScaledMatrixTag> DNekScalMat; 
     typedef boost::shared_ptr<DNekScalMat>      DNekScalMatSharedPtr;
     static DNekScalMatSharedPtr NullDNekScalMatSharedPtr;
 
-    typedef LinearSystem<DNekScalMat>           DNekScalLinSys; 
+    typedef LinearSystem                        DNekScalLinSys; 
     typedef boost::shared_ptr<DNekScalLinSys>   DNekScalLinSysSharedPtr;
 
-    typedef NekMatrix<DNekMat, FullMatrixTag, BlockMatrixTag> DNekBlkMat;
+    typedef NekMatrix<DNekMat, BlockMatrixTag> DNekBlkMat;
 
     typedef boost::shared_ptr<DNekBlkMat>    DNekBlkMatSharedPtr;
 
-    typedef NekMatrix<DNekScalMat, FullMatrixTag, BlockMatrixTag> DNekScalBlkMat;
+    typedef NekMatrix<DNekScalMat, BlockMatrixTag> DNekScalBlkMat;
 
     typedef boost::shared_ptr<DNekScalBlkMat>    DNekScalBlkMatSharedPtr;
     static DNekScalBlkMatSharedPtr NullDNekScalBlkMatSharedPtr;
@@ -73,6 +73,9 @@ namespace Nektar
 
 /**
     $Log: NekTypeDefs.hpp,v $
+    Revision 1.10  2008/03/12 15:22:45  pvos
+    Clean up of the code
+
     Revision 1.9  2007/10/03 11:37:50  sherwin
     Updates relating to static condensation implementation
 

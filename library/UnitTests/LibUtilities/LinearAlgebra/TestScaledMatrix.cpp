@@ -49,10 +49,10 @@ namespace Nektar
     namespace ScaledMatrixUnitTests
     {
         typedef NekMatrix<double> InnerMatrix;
-        typedef NekMatrix<InnerMatrix, FullMatrixTag, ScaledMatrixTag> SMat;
+        typedef NekMatrix<InnerMatrix, ScaledMatrixTag> SMat;
         
         typedef NekMatrix<unsigned int> IntInnerMatrix;
-        typedef NekMatrix<IntInnerMatrix, FullMatrixTag, ScaledMatrixTag> IntSMat;
+        typedef NekMatrix<IntInnerMatrix, ScaledMatrixTag> IntSMat;
 
         BOOST_AUTO_TEST_CASE(TestDefaultConstructor)
         {

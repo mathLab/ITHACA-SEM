@@ -86,9 +86,9 @@ namespace Nektar
             typedef NekVectorMetadata MetadataType;
     };
     
-    template<typename LhsDataType, typename LhsMatrixType, typename LhsStorageType,
+    template<typename LhsDataType, typename LhsStorageType,
              typename DataType, typename dim, typename space>
-    class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsMatrixType, LhsStorageType>,
+    class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsStorageType>,
                                          NekVector<DataType, dim, space>,
                                          MultiplyOp>
     {
@@ -351,6 +351,9 @@ namespace Nektar
 
 /**
     $Log: NekVector.hpp,v $
+    Revision 1.31  2008/10/12 19:49:28  bnelson
+    *** empty log message ***
+
     Revision 1.30  2008/04/06 05:55:12  bnelson
     Changed ConstArray to Array<const>
 

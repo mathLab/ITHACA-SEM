@@ -52,7 +52,7 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestEqualSizedBlockConstruction)
         {
             {
-                typedef NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag> BlockMatrixType;
+                typedef NekMatrix<NekMatrix<NekDouble>, BlockMatrixTag> BlockMatrixType;
                 BlockMatrixType m1(3, 2, 2, 2);
                 boost::shared_ptr<ConstMatrix<NekDouble> > m2(new BlockMatrixType(2, 3, 2, 2));
                 
@@ -71,7 +71,7 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestElementAccess)
         {
             {
-                typedef NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag> BlockMatrixType;
+                typedef NekMatrix<NekMatrix<NekDouble>, BlockMatrixTag> BlockMatrixType;
                 BlockMatrixType m1(3, 2, 2, 2);
                 boost::shared_ptr<ConstMatrix<NekDouble> > m2(new BlockMatrixType(3, 2, 2, 2));
                 
@@ -159,7 +159,7 @@ namespace Nektar
             
             
             {
-                typedef NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag> BlockMatrixType;
+                typedef NekMatrix<NekMatrix<NekDouble>, BlockMatrixTag> BlockMatrixType;
                 unsigned int rowSizes[] = {2, 2, 2};
                 unsigned int columnSizes[] = {2, 2};
                 BlockMatrixType m1(3, 2, rowSizes, columnSizes);
@@ -249,7 +249,7 @@ namespace Nektar
             }
             
             {
-                typedef NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag> BlockMatrixType;
+                typedef NekMatrix<NekMatrix<NekDouble>, BlockMatrixTag> BlockMatrixType;
                 unsigned int rowSizesBuf[] = {2, 2, 2};
                 unsigned int columnSizesBuf[] = {2, 2};
                 Array<OneD, unsigned int> rowSizes(3, rowSizesBuf);
@@ -344,7 +344,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestEmptyRowElementAccess)
         {
-            typedef NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag> BlockMatrixType;
+            typedef NekMatrix<NekMatrix<NekDouble>, BlockMatrixTag> BlockMatrixType;
             unsigned int rowSizes[] = {2, 0, 2, 0, 0, 2};
             unsigned int columnSizes[] = {2, 2};
             BlockMatrixType m1(6, 2, rowSizes, columnSizes);
@@ -433,7 +433,7 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestEmptyRowElementMultiplication)
         {
-            typedef NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag> BlockMatrixType;
+            typedef NekMatrix<NekMatrix<NekDouble>, BlockMatrixTag> BlockMatrixType;
             unsigned int rowSizes[] = {0, 2, 0, 2, 0, 0, 2};
             unsigned int columnSizes[] = {0, 2, 2};
             BlockMatrixType m1(7, 3, rowSizes, columnSizes);

@@ -609,10 +609,9 @@ namespace Nektar
             template<typename T1, typename dim, typename space>
             friend class NekVector;
             
-            template<typename T1, typename T2, typename T3>
+            template<typename T1, typename T3>
             friend class NekMatrix;
             
-            template<typename T>
             friend class LinearSystem;
     
         protected:

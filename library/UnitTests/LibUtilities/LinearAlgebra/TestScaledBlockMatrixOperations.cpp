@@ -52,7 +52,7 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestMatrixVectorMultiplication)
         {
             typedef NekMatrix<double> InnerType;
-            typedef NekMatrix<InnerType, FullMatrixTag, ScaledMatrixTag> ScaleType;
+            typedef NekMatrix<InnerType, ScaledMatrixTag> ScaleType;
 
             double m1_buf[] = {1.0/2.0, 6.0/2.0,
                                2.0/2.0, 7.0/2.0,
@@ -78,7 +78,7 @@ namespace Nektar
             unsigned int rowCounts[] = {2, 2};
             unsigned int colCounts[] = {3, 2};
             
-            typedef NekMatrix<ScaleType, FullMatrixTag, BlockMatrixTag> BlockType;
+            typedef NekMatrix<ScaleType, BlockMatrixTag> BlockType;
 
             boost::shared_ptr<BlockType> b(new BlockType(2, 2, rowCounts, colCounts));
             b->SetBlock(0, 0, m1);
@@ -100,7 +100,7 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestMultiplication_1)
         {
             typedef NekMatrix<double> InnerType;
-            typedef NekMatrix<InnerType, FullMatrixTag, BlockMatrixTag> BlockType;
+            typedef NekMatrix<InnerType, BlockMatrixTag> BlockType;
 
             double m_00_buf[] = {3, 1, 
                                  5, 5};

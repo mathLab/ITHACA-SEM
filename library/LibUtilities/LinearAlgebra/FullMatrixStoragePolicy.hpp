@@ -43,61 +43,12 @@
 
 namespace Nektar
 {
-    template<typename DataType>
-    class MatrixStoragePolicy<DataType, FullMatrixTag>
+    template<>
+    class MatrixStoragePolicy<FullMatrixTag>
     {
         public:
-            typedef typename boost::call_traits<DataType>::reference GetValueReturnType;
-            typedef DefaultPolicySpecificDataHolder PolicySpecificDataHolderType;
-
-            template<typename T>
-            class reference
-            {
-                public:
-                    typedef typename boost::call_traits<T>::reference type;
-            };
-
-            static Array<OneD, DataType> Initialize()
-            {
-                return Array<OneD, DataType>();
-            }
             
-            static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, const PolicySpecificDataHolderType&)
-            {
-                return Array<OneD, DataType>(rows*columns);
-            }
-            
-            static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
-                                                    typename boost::call_traits<DataType>::const_reference d,
-                                                    const PolicySpecificDataHolderType&)
-            {
-                return Array<OneD, DataType>(rows*columns, d);
-            }
-            
-            static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
-                                                    const DataType* d,
-                                                    const PolicySpecificDataHolderType&)
-            {
-                return Array<OneD, DataType>(rows*columns, d);
-            }
-            
-            static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
-                                                    const Array<OneD, const DataType>& d,
-                                                    const PolicySpecificDataHolderType&)
-            {
-                ASSERTL0(rows*columns <= d.num_elements(), 
-                    std::string("An attempt has been made to create a full matrix of size ") +
-                    boost::lexical_cast<std::string>(rows*columns) + 
-                    std::string(" but the array being used to populate it only has ") + 
-                    boost::lexical_cast<std::string>(d.num_elements()) + 
-                    std::string(" elements."));
-                Array<OneD, DataType> result;
-                CopyArrayN(d, result, rows*columns);
-                return result;
-            }
-            
-            static unsigned int GetRequiredStorageSize(unsigned int rows, unsigned int columns,
-                                                       const PolicySpecificDataHolderType& data)
+            static unsigned int GetRequiredStorageSize(unsigned int rows, unsigned int columns)
             {
                 return rows*columns;
             }
@@ -114,37 +65,10 @@ namespace Nektar
                 }
             }
 
-            static GetValueReturnType GetValue(unsigned int totalRows, unsigned int totalColumns,
-                                               unsigned int curRow, unsigned int curColumn,
-                                               Array<OneD, DataType>& data,
-                                               const char transpose,
-                                               const PolicySpecificDataHolderType&)
-            {
-                return data[CalculateIndex(totalRows, totalColumns, curRow, curColumn, transpose)];
-            }
-            
-            static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
-                                                                             unsigned int curRow, unsigned int curColumn,
-                                                                             const Array<OneD, const DataType>& data,
-                                                                             const char transpose,
-                                                                             const PolicySpecificDataHolderType&)
-            {
-                return data[CalculateIndex(totalRows, totalColumns, curRow, curColumn, transpose)];
-            }
-            
-            static void SetValue(unsigned int totalRows, unsigned int totalColumns,
-                                 unsigned int curRow, unsigned int curColumn,
-                                 Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d,
-                                 const char transpose,
-                                 const PolicySpecificDataHolderType&)
-            {
-                data[CalculateIndex(totalRows, totalColumns, curRow, curColumn, transpose)] = d;
-            }
             
             static boost::tuples::tuple<unsigned int, unsigned int> 
             Advance(const unsigned int totalRows, const unsigned int totalColumns,
-                    const unsigned int curRow, const unsigned int curColumn,
-                    const PolicySpecificDataHolderType&)
+                    const unsigned int curRow, const unsigned int curColumn)
             {
                 unsigned int nextRow = curRow;
                 unsigned int nextColumn = curColumn;
@@ -169,10 +93,10 @@ namespace Nektar
                 return boost::tuples::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
             }
             
+            template<typename DataType>
             static void Invert(unsigned int rows, unsigned int columns,
                                Array<OneD, DataType>& data,
-                               const char transpose,
-                               const PolicySpecificDataHolderType&)
+                               const char transpose)
             {
                 #ifdef NEKTAR_USING_BLAS
                     ASSERTL0(rows==columns, "Only square matrices can be inverted.");

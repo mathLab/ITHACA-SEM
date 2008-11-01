@@ -42,127 +42,14 @@
 
 namespace Nektar
 {
-    template<typename DataType>
-    class MatrixStoragePolicy<DataType, DiagonalMatrixTag>
+    template<>
+    class MatrixStoragePolicy<DiagonalMatrixTag>
     {
         public:
-            typedef typename boost::call_traits<DataType>::value_type GetValueReturnType;
-            typedef DefaultPolicySpecificDataHolder PolicySpecificDataHolderType;
-            static DataType ZeroElement;
-            
-            template<typename T>
-            class reference
-            {
-                public:
-                    typedef typename boost::call_traits<T>::value_type type;
-            };
-
-            static Array<OneD, DataType> Initialize()
-            {
-                return Array<OneD, DataType>();
-            }
-            
-            static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, const PolicySpecificDataHolderType&)
-            {
-                ASSERTL0(rows==columns, "Diagonal matrices must be square.");
-                return Array<OneD, DataType>(rows);
-            }
-            
-            static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
-                                                    typename boost::call_traits<DataType>::const_reference d,
-                                                    const PolicySpecificDataHolderType&)
-            {
-                ASSERTL0(rows==columns, "Diagonal matrices must be square.");
-                return Array<OneD, DataType>(rows, d);
-            }
-            
-            static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
-                                                    const DataType* d, const PolicySpecificDataHolderType&)
-            {
-                ASSERTL0(rows==columns, "Diagonal matrices must be square.");
-                return Array<OneD, DataType>(rows, d);
-            }
-            
-            static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
-                                                    const Array<OneD, const DataType>& d,
-                                                    const PolicySpecificDataHolderType&)
-            {
-                ASSERTL0(rows==columns, "Diagonal matrices must be square.");
-                ASSERTL0(rows <= d.num_elements(), 
-                    std::string("An attempt has been made to create a diagonal matrix of size ") +
-                    boost::lexical_cast<std::string>(rows) + 
-                    std::string(" but the array being used to populate it only has ") + 
-                    boost::lexical_cast<std::string>(d.num_elements()) + 
-                    std::string(" elements."));
-                Array<OneD, DataType> result;
-                CopyArrayN(d, result, rows);
-                return result;
-            }
-            
-            static GetValueReturnType GetValue(unsigned int totalRows, unsigned int totalColumns,
-                                               unsigned int curRow, unsigned int curColumn,
-                                               Array<OneD, DataType>& data,
-                                               const char transpose,
-                                               const PolicySpecificDataHolderType&)
-            {
-                ASSERTL1(curRow < totalRows || curColumn < totalColumns, std::string("Attempting to access element (") +
-                    boost::lexical_cast<std::string>(curRow) + ", " +
-                    boost::lexical_cast<std::string>(curColumn) + std::string(") in a ") + 
-                    boost::lexical_cast<std::string>(totalRows) + ", " + 
-                    boost::lexical_cast<std::string>(totalColumns) + ") matrix.");
-
-                if( curRow == curColumn )
-                {
-                    return data[curRow];
-                }
-                else
-                {
-                    return ZeroElement;
-                }
-            }
-            
-            static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
-                                                                             unsigned int curRow, unsigned int curColumn,
-                                                                             const Array<OneD, const DataType>& data,
-                                                                             const char transpose,
-                                                                             const PolicySpecificDataHolderType&)
-            {
-                ASSERTL1(curRow < totalRows || curColumn < totalColumns, std::string("Attempting to access element (") +
-                    boost::lexical_cast<std::string>(curRow) + ", " +
-                    boost::lexical_cast<std::string>(curColumn) + std::string(") in a ") + 
-                    boost::lexical_cast<std::string>(totalRows) + ", " + 
-                    boost::lexical_cast<std::string>(totalColumns) + ") matrix.");
-
-                if( curRow == curColumn )
-                {
-                    return data[curRow];
-                }
-                else
-                {
-                    return ZeroElement;
-                }
-            }            
-            
-            static void SetValue(unsigned int totalRows, unsigned int totalColumns,
-                                 unsigned int curRow, unsigned int curColumn,
-                                 Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d,
-                                 const char transpose,
-                                 const PolicySpecificDataHolderType&)
-            {
-                ASSERTL1(curRow < totalRows || curColumn < totalColumns, std::string("Attempting to access element (") +
-                    boost::lexical_cast<std::string>(curRow) + ", " +
-                    boost::lexical_cast<std::string>(curColumn) + std::string(") in a ") + 
-                    boost::lexical_cast<std::string>(totalRows) + ", " + 
-                    boost::lexical_cast<std::string>(totalColumns) + ") matrix.");
-
-                ASSERTL0(curRow == curColumn, "Can only assign into the diagonal of a diagonal matrix.");
-                data[curRow] = d;
-            }
             
             static boost::tuples::tuple<unsigned int, unsigned int> 
             Advance(const unsigned int totalRows, const unsigned int totalColumns,
-                    const unsigned int curRow, const unsigned int curColumn,
-                    const PolicySpecificDataHolderType&)
+                    const unsigned int curRow, const unsigned int curColumn)
             {
                 ASSERTL0(curRow == curColumn, "Iteration of a diagonal matrix is only valid along the diagonal.");
 
@@ -184,10 +71,10 @@ namespace Nektar
                 return boost::tuples::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
             }
 
+            template<typename DataType>
             static void Invert(unsigned int rows, unsigned int columns,
                                Array<OneD, DataType>& data,
-                               const char transpose,
-                               const PolicySpecificDataHolderType&)
+                               const char transpose)
             {
                 ASSERTL0(rows==columns, "Only square matrices can be inverted.");
                 for(unsigned int i = 0; i < rows; ++i)
@@ -196,16 +83,12 @@ namespace Nektar
                 }
             }
             
-            static unsigned int GetRequiredStorageSize(unsigned int rows, unsigned int columns,
-                                                       const PolicySpecificDataHolderType& data)
+            static unsigned int GetRequiredStorageSize(unsigned int rows, unsigned int columns)
             {
                 ASSERTL0(rows==columns, "Diagonal matrices must be square.");
                 return rows;
             }
     };
-    
-    template<typename DataType>
-    DataType MatrixStoragePolicy<DataType, DiagonalMatrixTag>::ZeroElement = DataType(0);
 }
 
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_DIAGONAL_MATRIX_STORAGE_POLICY_HPP

@@ -44,13 +44,13 @@
 
 namespace Nektar
 {
-    template<typename DataType, typename InnerStorageType, typename InnerMatrixType, typename StorageType>
-    class NekMatrix<NekMatrix<const DataType, InnerStorageType, InnerMatrixType>, StorageType, ScaledMatrixTag> : public ConstMatrix<DataType>
+    template<typename DataType, typename InnerMatrixType>
+    class NekMatrix<NekMatrix<const DataType, InnerMatrixType>, ScaledMatrixTag> : public ConstMatrix<DataType>
     {
         public:
             typedef ConstMatrix<DataType> BaseType;
-            typedef NekMatrix<const DataType, InnerStorageType, InnerMatrixType> InnerType;
-            typedef NekMatrix<InnerType, StorageType, ScaledMatrixTag> ThisType;
+            typedef NekMatrix<const DataType, InnerMatrixType> InnerType;
+            typedef NekMatrix<InnerType, ScaledMatrixTag> ThisType;
             typedef typename boost::remove_const<typename InnerType::NumberType>::type NumberType;
             
             typedef NumberType GetValueType;
@@ -73,7 +73,7 @@ namespace Nektar
                     const_iterator operator++(int)
                     {
                         const_iterator out = *this;
-                        m_iter++;
+                        ++m_iter;
                         return out;
                     }
                     
@@ -121,7 +121,7 @@ namespace Nektar
             {
             }
             
-            NekMatrix(const NekMatrix<const InnerType, StorageType, ScaledMatrixTag>& rhs) :
+            NekMatrix(const NekMatrix<const InnerType, ScaledMatrixTag>& rhs) :
                 BaseType(rhs),
                 m_matrix(rhs.m_matrix),
                 m_scale(rhs.m_scale)
@@ -138,11 +138,8 @@ namespace Nektar
                 return m_matrix->GetStorageSize();
             }
             
-            MatrixStorage GetStorageType() const
-            {
-                return m_matrix->GetStorageType();
-            }
-                        
+            MatrixStorage GetType() const { return m_matrix->GetStorageType(); }
+                                    
             NumberType Scale() const
             {
                 return m_scale*m_matrix->Scale();
@@ -172,7 +169,7 @@ namespace Nektar
             
             virtual MatrixStorage v_GetStorageType() const
             {
-                return ThisType::GetStorageType();
+                return ThisType::GetType();
             }
             
             virtual char v_GetTransposeFlag() const
@@ -198,13 +195,13 @@ namespace Nektar
             NumberType m_scale;
     };
 
-    template<typename DataType, typename InnerStorageType, typename InnerMatrixType, typename StorageType>
-    class NekMatrix<NekMatrix<DataType, InnerStorageType, InnerMatrixType>, StorageType, ScaledMatrixTag> : public NekMatrix<NekMatrix<const DataType, InnerStorageType, InnerMatrixType>, StorageType, ScaledMatrixTag>
+    template<typename DataType, typename InnerMatrixType>
+    class NekMatrix<NekMatrix<DataType, InnerMatrixType>, ScaledMatrixTag> : public NekMatrix<NekMatrix<const DataType, InnerMatrixType>, ScaledMatrixTag>
     {
         public:
-            typedef NekMatrix<NekMatrix<const DataType, InnerStorageType, InnerMatrixType>, StorageType, ScaledMatrixTag> BaseType;
-            typedef NekMatrix<DataType, InnerStorageType, InnerMatrixType> InnerType;
-            typedef NekMatrix<InnerType, StorageType, ScaledMatrixTag> ThisType;
+            typedef NekMatrix<NekMatrix<const DataType, InnerMatrixType>, ScaledMatrixTag> BaseType;
+            typedef NekMatrix<DataType, InnerMatrixType> InnerType;
+            typedef NekMatrix<InnerType, ScaledMatrixTag> ThisType;
             typedef typename InnerType::NumberType NumberType;
             
             typedef NumberType GetValueType;
@@ -222,17 +219,17 @@ namespace Nektar
             {
             }
             
-            NekMatrix(const NekMatrix<InnerType, StorageType, ScaledMatrixTag>& rhs) :
+            NekMatrix(const NekMatrix<InnerType, ScaledMatrixTag>& rhs) :
                 BaseType(rhs)
             {
             }
     };
     
-    template<typename DataType, typename StorageType>
-    NekMatrix<DataType, StorageType, ScaledMatrixTag>
-    Transpose(NekMatrix<DataType, StorageType, ScaledMatrixTag>& rhs)
+    template<typename DataType>
+    NekMatrix<DataType, ScaledMatrixTag>
+    Transpose(NekMatrix<DataType, ScaledMatrixTag>& rhs)
     {
-        NekMatrix<DataType, StorageType, ScaledMatrixTag> result(rhs);
+        NekMatrix<DataType, ScaledMatrixTag> result(rhs);
         result.Transpose();
         return result;
     }

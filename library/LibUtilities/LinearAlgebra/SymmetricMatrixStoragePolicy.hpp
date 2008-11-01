@@ -45,74 +45,12 @@ namespace Nektar
 {
     /// \internal
     /// Symmetric matrices use upper triangular packed storage.
-    template<typename DataType>
-    class MatrixStoragePolicy<DataType, SymmetricMatrixTag> : private TriangularMatrixStoragePolicy<DataType>
+    template<>
+    class MatrixStoragePolicy<SymmetricMatrixTag> : private TriangularMatrixStoragePolicy
     {
         public:
-            typedef TriangularMatrixStoragePolicy<DataType> BaseType;
-            typedef typename BaseType::GetValueReturnType GetValueReturnType;
-            typedef typename TriangularMatrixStoragePolicy<DataType>::PolicySpecificDataHolderType PolicySpecificDataHolderType;
+            using TriangularMatrixStoragePolicy::GetRequiredStorageSize;
             
-            template<typename T>
-            class reference
-            {
-                public:
-                    typedef typename boost::call_traits<T>::reference type;
-            };
-
-            using BaseType::Initialize;
-            static typename boost::call_traits<DataType>::const_reference GetValue(unsigned int totalRows, unsigned int totalColumns,
-                                                                                   unsigned int curRow, unsigned int curColumn,
-                                                                                   const Array<OneD, const DataType>& data,
-                                                                                   const char tranpose,
-                                                                                   const PolicySpecificDataHolderType&)
-            {
-                ASSERTL1(totalRows == totalColumns, "Symmetric matrices must be square.");
-                ASSERTL1(curRow < totalRows, "Attemping to get a value from row " +
-                    boost::lexical_cast<std::string>(curRow) + " of a (" +
-                    boost::lexical_cast<std::string>(totalRows) + ", " +
-                    boost::lexical_cast<std::string>(totalColumns) + " symmetric matrix.");
-                ASSERTL1(curColumn < totalColumns, "Attemping to get a value from column " +
-                    boost::lexical_cast<std::string>(curColumn) + " of a (" +
-                    boost::lexical_cast<std::string>(totalRows) + ", " +
-                    boost::lexical_cast<std::string>(totalColumns) + " symmetric matrix.");
-
-                if( curRow <= curColumn )
-                {
-                    return data[CalculateIndex(curRow, curColumn)];
-                }
-                else
-                {
-                    return data[CalculateIndex(curColumn, curRow)];
-                }
-            }            
-            
-            static void SetValue(unsigned int totalRows, unsigned int totalColumns,
-                                 unsigned int curRow, unsigned int curColumn,
-                                 Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d,
-                                 const char transpose,
-                                 const PolicySpecificDataHolderType&)
-            {
-                ASSERTL1(totalRows == totalColumns, "Symmetric matrices must be square.");
-                ASSERTL1(curRow < totalRows, "Attemping to set a value from row " +
-                    boost::lexical_cast<std::string>(curRow) + " of a (" +
-                    boost::lexical_cast<std::string>(totalRows) + ", " +
-                    boost::lexical_cast<std::string>(totalColumns) + " symmetric matrix.");
-                ASSERTL1(curColumn < totalColumns, "Attemping to set a value from column " +
-                    boost::lexical_cast<std::string>(curColumn) + " of a (" +
-                    boost::lexical_cast<std::string>(totalRows) + ", " +
-                    boost::lexical_cast<std::string>(totalColumns) + " symmetric matrix.");
-
-                if( curRow <= curColumn )
-                {
-                    data[CalculateIndex(curRow, curColumn)] = d;
-                }
-                else
-                {
-                    data[CalculateIndex(curColumn, curRow)] = d;
-                }   
-            }
-                    
             static unsigned int CalculateIndex(unsigned int curRow, unsigned int curColumn)
             {
                 return curRow + curColumn*(curColumn+1)/2;
@@ -120,8 +58,7 @@ namespace Nektar
 
             static boost::tuples::tuple<unsigned int, unsigned int> 
             Advance(const unsigned int totalRows, const unsigned int totalColumns,
-                    const unsigned int curRow, const unsigned int curColumn,
-                    const PolicySpecificDataHolderType&)
+                    const unsigned int curRow, const unsigned int curColumn)
             {
                 ASSERTL1(totalRows == totalColumns, "Symmetric matrices must be square.");
                 ASSERTL1(curRow < totalRows, "Attemping to iterate through an element on row " +

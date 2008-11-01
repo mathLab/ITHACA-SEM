@@ -56,29 +56,31 @@ namespace Nektar
     template<typename DataType>
     class Matrix;
     
-    template<typename DataType, typename StorageType = FullMatrixTag, typename MatType = StandardMatrixTag>
+    template<typename DataType, typename MatType = StandardMatrixTag>
     class NekMatrix;
 
-    template<typename DataType, typename InnerStorageType, typename InnerMatrixType, typename StorageType>
-    class NekMatrix<NekMatrix<DataType, InnerStorageType, InnerMatrixType>, StorageType, ScaledMatrixTag>;
+    template<typename DataType, typename InnerMatrixType>
+    class NekMatrix<NekMatrix<DataType, InnerMatrixType>, ScaledMatrixTag>;
     
-    template<typename DataType, typename InnerStorageType, typename InnerMatrixType, typename StorageType>
-    class NekMatrix<NekMatrix<DataType, InnerStorageType, InnerMatrixType>, StorageType, BlockMatrixTag>;
+    template<typename DataType, typename InnerMatrixType>
+    class NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>;
     
-    template<typename DataType, typename StorageType>
-    class NekMatrix<DataType, StorageType, StandardMatrixTag>;
+    template<typename DataType>
+    class NekMatrix<DataType, StandardMatrixTag>;
     
     typedef boost::shared_ptr<NekMatrix<NekDouble> > SharedNekMatrixPtr;
-    typedef NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, ScaledMatrixTag> DNekScalMat;
+    typedef NekMatrix<NekMatrix<NekDouble>, ScaledMatrixTag> DNekScalMat;
     typedef boost::shared_ptr<DNekScalMat> DNekScalMatSharedPtr;
     
-    BOOST_TYPEOF_REGISTER_TEMPLATE(NekMatrix, 3);
+    // Type registration must occur for the expression template machinery to 
+    // automatically detect the types of matrix operations.
+    BOOST_TYPEOF_REGISTER_TEMPLATE(NekMatrix, 2);
     
     template<typename T>
     struct IsMatrix : public boost::false_type {};
     
-    template<typename DataType, typename StorageType, typename MatrixType>
-    struct IsMatrix<NekMatrix<DataType, StorageType, MatrixType> > : public boost::true_type {};
+    template<typename DataType, typename MatrixType>
+    struct IsMatrix<NekMatrix<DataType, MatrixType> > : public boost::true_type {};
     
     template<typename DataType>
     struct IsMatrix<ConstMatrix<DataType> > : public boost::true_type {};
@@ -92,6 +94,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrixFwd.hpp,v $
+    Revision 1.15  2008/03/09 22:39:29  bnelson
+    Added IsMatrix.
+
     Revision 1.14  2007/08/16 02:08:12  bnelson
     Removed typeof registration
 

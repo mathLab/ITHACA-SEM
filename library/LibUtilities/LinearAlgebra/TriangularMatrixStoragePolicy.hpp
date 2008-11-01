@@ -42,150 +42,21 @@
 
 namespace Nektar
 {
-    template<typename DataType>
     class TriangularMatrixStoragePolicy
     {
         public:
-            typedef typename boost::call_traits<DataType>::value_type GetValueReturnType;
-            typedef DefaultPolicySpecificDataHolder PolicySpecificDataHolderType;
-            static DataType ZeroElement;
-            template<typename T>
-            class reference
-            {
-                public:
-                    typedef typename boost::call_traits<T>::value_type type;
-            };
-            
-            static Array<OneD, DataType> Initialize()
-            {
-                return Array<OneD, DataType>();
-            }
-            
-            static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, const PolicySpecificDataHolderType&)
-            {
-                ASSERTL0(rows==columns, "Triangular matrices must be square.");
-                return Array<OneD, DataType>(rows*(rows+1)/2);
-            }
-            
-            static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
-                                                    typename boost::call_traits<DataType>::const_reference d,
-                                                    const PolicySpecificDataHolderType& )
-            {
-                ASSERTL0(rows==columns, "Triangular matrices must be square.");
-                return Array<OneD, DataType>(rows*(rows+1)/2, d);
-            }
-            
-            static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
-                                                    const DataType* d, const PolicySpecificDataHolderType&)
-            {
-                ASSERTL0(rows==columns, "Triangular matrices must be square.");
-                return Array<OneD, DataType>(rows*(rows+1)/2, d);
-            }
-            
-            static Array<OneD, DataType> Initialize(unsigned int rows, unsigned int columns, 
-                                                    const Array<OneD, const DataType>& d, const PolicySpecificDataHolderType&)
-            {
-                unsigned int size = rows*(rows+1)/2;
-
-                ASSERTL0(rows==columns, "Triangular matrices must be square.");
-                ASSERTL0(size <= d.num_elements(), 
-                    std::string("An attempt has been made to create a triangular matrix of size ") +
-                    boost::lexical_cast<std::string>(rows*(rows+1)/2) + 
-                    std::string(" but the array being used to populate it only has ") + 
-                    boost::lexical_cast<std::string>(d.num_elements()) + 
-                    std::string(" elements."));
-                
-                Array<OneD, DataType> result(size, d);
-                return result;
-            }
-            
-            static unsigned int GetRequiredStorageSize(unsigned int rows, unsigned int columns,
-                                                       const PolicySpecificDataHolderType& data)
+            static unsigned int GetRequiredStorageSize(unsigned int rows, unsigned int columns)
             {
                 ASSERTL0(rows==columns, "Triangular matrices must be square.");
                 return rows*(rows+1)/2;
             }
     };
     
-    template<typename DataType>
-    DataType TriangularMatrixStoragePolicy<DataType>::ZeroElement = DataType(0);
-
-    template<typename DataType>
-    class MatrixStoragePolicy<DataType, UpperTriangularMatrixTag> : public TriangularMatrixStoragePolicy<DataType>
+    template<>
+    class MatrixStoragePolicy<UpperTriangularMatrixTag> : public TriangularMatrixStoragePolicy
     {
         public:
-            typedef TriangularMatrixStoragePolicy<DataType> BaseType;
-            typedef typename BaseType::GetValueReturnType GetValueReturnType;
-            typedef typename BaseType::PolicySpecificDataHolderType PolicySpecificDataHolderType;
 
-            static typename boost::call_traits<DataType>::const_reference 
-            GetValue(unsigned int totalRows, unsigned int totalColumns,
-                     unsigned int curRow, unsigned int curColumn,
-                     const Array<OneD, const DataType>& data,
-                     const char transpose,
-                     const PolicySpecificDataHolderType& policySpecificData)
-            {
-                ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
-                ASSERTL1(curRow < totalRows, "Attemping to retrieve a value from row " +
-                    boost::lexical_cast<std::string>(curRow) + " of a (" +
-                    boost::lexical_cast<std::string>(totalRows) + ", " +
-                    boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
-                ASSERTL1(curColumn < totalColumns, "Attemping to retrieve a value from column " +
-                    boost::lexical_cast<std::string>(curColumn) + " of a (" +
-                    boost::lexical_cast<std::string>(totalRows) + ", " +
-                    boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
-
-                if( transpose == 'N' )
-                {
-                    if( curRow <= curColumn )
-                    {
-                        return data[CalculateIndex(curRow, curColumn)];
-                    }
-                    else
-                    {
-                        return BaseType::ZeroElement;
-                    }
-                }
-                else
-                {
-                    return MatrixStoragePolicy<DataType, LowerTriangularMatrixTag>::GetValue(
-                        totalColumns, totalRows, curColumn, curRow, 
-                        data, 'N', policySpecificData);
-                }
-            }            
-            
-            static void SetValue(unsigned int totalRows, unsigned int totalColumns,
-                                 unsigned int curRow, unsigned int curColumn,
-                                 Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d,
-                                 const char transpose,
-                                 const PolicySpecificDataHolderType& policySpecificData)
-            {
-                ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
-                ASSERTL1(curRow < totalRows, "Attemping to set a value from row " +
-                    boost::lexical_cast<std::string>(curRow) + " of a (" +
-                    boost::lexical_cast<std::string>(totalRows) + ", " +
-                    boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
-                ASSERTL1(curColumn < totalColumns, "Attemping to set a value from column " +
-                    boost::lexical_cast<std::string>(curColumn) + " of a (" +
-                    boost::lexical_cast<std::string>(totalRows) + ", " +
-                    boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
-                ASSERTL1(curRow <= curColumn, "Attemping to set element (" +
-                    boost::lexical_cast<std::string>(curRow) + ", " +
-                    boost::lexical_cast<std::string>(curColumn) + ") of a (" +
-                    boost::lexical_cast<std::string>(totalRows) + ", " +
-                    boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
-
-                if( transpose == 'N' )
-                {
-                    data[CalculateIndex(curRow, curColumn)] = d;
-                }
-                else
-                {
-                    MatrixStoragePolicy<DataType, LowerTriangularMatrixTag>::SetValue(totalColumns, 
-                        totalRows, curColumn, curRow, data, d, 'N', policySpecificData);
-                }
-            }
-                    
             static unsigned int CalculateIndex(unsigned int curRow, unsigned int curColumn)
             {
                 return curRow + curColumn*(curColumn+1)/2;
@@ -193,8 +64,7 @@ namespace Nektar
 
             static boost::tuples::tuple<unsigned int, unsigned int> 
             Advance(const unsigned int totalRows, const unsigned int totalColumns,
-                    const unsigned int curRow, const unsigned int curColumn, 
-                    const PolicySpecificDataHolderType& data)
+                    const unsigned int curRow, const unsigned int curColumn)
             {
                 ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
                 ASSERTL1(curRow < totalRows, "Attemping to iterate through an element on row " +
@@ -238,81 +108,10 @@ namespace Nektar
     
     
     
-    template<typename DataType>
-    class MatrixStoragePolicy<DataType, LowerTriangularMatrixTag> : public TriangularMatrixStoragePolicy<DataType>
+    template<>
+    class MatrixStoragePolicy<LowerTriangularMatrixTag> : public TriangularMatrixStoragePolicy
     {
         public:
-            typedef TriangularMatrixStoragePolicy<DataType> BaseType;
-            typedef typename BaseType::GetValueReturnType GetValueReturnType;
-            typedef typename BaseType::PolicySpecificDataHolderType PolicySpecificDataHolderType;
-
-            static typename boost::call_traits<DataType>::const_reference 
-            GetValue(unsigned int totalRows, unsigned int totalColumns,
-                     unsigned int curRow, unsigned int curColumn,
-                     const Array<OneD, const DataType>& data,
-                     const char transpose,
-                     const PolicySpecificDataHolderType& policySpecificData)
-            {
-                ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
-                ASSERTL1(curRow < totalRows, "Attemping to retrieve a value from row " +
-                    boost::lexical_cast<std::string>(curRow) + " of a (" +
-                    boost::lexical_cast<std::string>(totalRows) + ", " +
-                    boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
-                ASSERTL1(curColumn < totalColumns, "Attemping to retrieve a value from column " +
-                    boost::lexical_cast<std::string>(curColumn) + " of a (" +
-                    boost::lexical_cast<std::string>(totalRows) + ", " +
-                    boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
-
-                if( transpose == 'N' )
-                {
-                    if( curRow >= curColumn )
-                    {
-                        return data[CalculateIndex(totalColumns, curRow, curColumn)];
-                    }
-                    else
-                    {
-                        return BaseType::ZeroElement;
-                    }
-                }
-                else
-                {
-                    return MatrixStoragePolicy<DataType, UpperTriangularMatrixTag>::GetValue(
-                        totalColumns, totalRows, curColumn, curRow, 
-                        data, 'N', policySpecificData);
-                }
-            }            
-            
-            static void SetValue(unsigned int totalRows, unsigned int totalColumns,
-                                 unsigned int curRow, unsigned int curColumn,
-                                 Array<OneD, DataType>& data, typename boost::call_traits<DataType>::const_reference d,
-                                 const char transpose,
-                                 const PolicySpecificDataHolderType& policySpecificData)
-            {
-                ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
-                ASSERTL1(curRow < totalRows, "Attemping to set a value from row " +
-                    boost::lexical_cast<std::string>(curRow) + " of a (" +
-                    boost::lexical_cast<std::string>(totalRows) + ", " +
-                    boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
-                ASSERTL1(curColumn < totalColumns, "Attemping to set a value from column " +
-                    boost::lexical_cast<std::string>(curColumn) + " of a (" +
-                    boost::lexical_cast<std::string>(totalRows) + ", " +
-                    boost::lexical_cast<std::string>(totalColumns) + " upper triangular matrix.");
-                ASSERTL1(curRow >= curColumn, "Attemping to set element (" +
-                    boost::lexical_cast<std::string>(curRow) + ", " +
-                    boost::lexical_cast<std::string>(curColumn) + ") of a (" +
-                    boost::lexical_cast<std::string>(totalRows) + ", " +
-                    boost::lexical_cast<std::string>(totalColumns) + " lower triangular matrix.");
-
-                if( transpose == 'N' )
-                {
-                    data[CalculateIndex(totalColumns, curRow, curColumn)] = d;
-                }
-                else
-                {
-                    MatrixStoragePolicy<DataType, UpperTriangularMatrixTag>::SetValue(totalColumns,
-                        totalRows, curColumn, curRow, data, d, 'N', policySpecificData);
-                }
-            }
                     
             static unsigned int CalculateIndex(unsigned int totalColumns, unsigned int curRow, unsigned int curColumn)
             {
@@ -322,8 +121,7 @@ namespace Nektar
             static boost::tuples::tuple<unsigned int, unsigned int> 
             Advance(const unsigned int totalRows, const unsigned int totalColumns,
                     const unsigned int curRow, const unsigned int curColumn,
-                    const char transpose,
-                    const PolicySpecificDataHolderType& data)
+                    char transpose = 'N')
             {
                 ASSERTL1(totalRows == totalColumns, "Triangular matrices must be square.");
                 ASSERTL1(curRow < totalRows, "Attemping to iterate through an element on row " +
@@ -342,8 +140,8 @@ namespace Nektar
 
                 if( transpose == 'T' )
                 {
-                    return MatrixStoragePolicy<DataType, UpperTriangularMatrixTag>::Advance(
-                        totalColumns, totalRows, curColumn, curRow, data);
+                    return MatrixStoragePolicy<UpperTriangularMatrixTag>::Advance(
+                        totalColumns, totalRows, curColumn, curRow);
                 }
 
                 unsigned int nextRow = curRow;

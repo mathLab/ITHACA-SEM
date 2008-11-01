@@ -67,222 +67,253 @@ namespace Nektar
     template<typename DataType>
     struct IsSharedPointer<boost::shared_ptr<DataType> > : public boost::true_type {};
 
-    template<typename MatrixType>
-    struct LinearSystemSolver;
-
-    template<typename DataType>
-    struct LinearSystemSolver<NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag> >
+    // The solving of the linear system is located in this class instead of in the LinearSystem 
+    // class because XCode gcc 4.2 didn't compile it correctly when it was moved to the 
+    // LinearSystem class.
+    struct LinearSystemSolver
     {
-        typedef NekMatrix<DataType, DiagonalMatrixTag, StandardMatrixTag> MatrixType;
-        typedef typename MatrixType::PolicySpecificDataHolderType PolicySpecificDataType;
-        
         template<typename BVectorType, typename XVectorType>
-        static void Solve(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
+        static void Solve(const BVectorType& b, XVectorType& x, MatrixStorage m_matrixType,
+                   const Array<OneD, const int>& m_ipivot, unsigned int n,
+                   const Array<OneD, const double>& A,
+                   char m_transposeFlag, unsigned int m_numberOfSubDiagonals,
+                   unsigned int m_numberOfSuperDiagonals)
         {
-            for(unsigned int i = 0; i < A.num_elements(); ++i)
+            switch(m_matrixType)
             {
-                x[i] = b[i]*A[i];
+                case eFULL:
+                    {
+                        x = b;
+                        int info = 0;
+                        Lapack::Dgetrs('N',n,1,A.get(),n,(int *)m_ipivot.get(),x.GetRawPtr(),n,info);
+                        if( info < 0 )
+                        {
+                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetrs";
+                            ASSERTL0(false, message.c_str());
+                        }
+
+                    }
+                    break;
+                case eDIAGONAL:
+                    for(unsigned int i = 0; i < A.num_elements(); ++i)
+                    {
+                        x[i] = b[i]*A[i];
+                    }
+                    break;
+                case eUPPER_TRIANGULAR:
+                    {
+                        x = b;
+                        int info = 0;
+                        Lapack::Dtptrs('U', m_transposeFlag, 'N', n, 1, A.get(), x.GetRawPtr(), n, info);
+
+                        if( info < 0 )
+                        {
+                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dtrtrs";
+                            ASSERTL0(false, message.c_str());
+                        }
+                        else if( info > 0 )
+                        {
+                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th diagonal element of A is 0 for dtrtrs";
+                            ASSERTL0(false, message.c_str());
+                        }
+                    }
+                    break;
+                case eLOWER_TRIANGULAR:
+                    {
+                        x = b;
+                        int info = 0;
+                        Lapack::Dtptrs('L', m_transposeFlag, 'N', n, 1, A.get(), x.GetRawPtr(), n, info);
+
+                        if( info < 0 )
+                        {
+                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dtrtrs";
+                            ASSERTL0(false, message.c_str());
+                        }
+                        else if( info > 0 )
+                        {
+                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th diagonal element of A is 0 for dtrtrs";
+                            ASSERTL0(false, message.c_str());
+                        }
+                    }
+                    break;
+                case eSYMMETRIC:
+                    {
+                        x = b;
+                        int info = 0;
+                        Lapack::Dsptrs('U', n, 1, A.get(), m_ipivot.get(), x.GetRawPtr(), x.GetRows(), info);
+                        if( info < 0 )
+                        {
+                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dsptrs";
+                            ASSERTL0(false, message.c_str());
+                        }
+                    }
+                    break;
+                case eBANDED:
+                    {
+                        x = b;
+                        int KL = m_numberOfSubDiagonals;
+                        int KU = m_numberOfSuperDiagonals;
+                        int info = 0;
+                        
+                        Lapack::Dgbtrs(m_transposeFlag, n, KL, KU, 1, A.get(), 2*KL+KU+1, m_ipivot.get(), x.GetRawPtr(), n, info);
+                        
+                        if( info < 0 )
+                        {
+                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgbtrs";
+                            ASSERTL0(false, message.c_str());
+                        }
+                    }
+                    break;
+                case eSYMMETRIC_BANDED:
+                    NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
+                    break;
+                case eUPPER_TRIANGULAR_BANDED:
+                    NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
+                    break;
+                case eLOWER_TRIANGULAR_BANDED:
+                    NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
+                    break;
+                    
+                default:
+                    NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
             }
+            
         }
 
         template<typename BVectorType, typename XVectorType>
-        static void SolveTranspose(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
+        static void SolveTranspose(const BVectorType& b, XVectorType& x, MatrixStorage m_matrixType,
+                            const Array<OneD, const int>& m_ipivot, unsigned int n,
+                            const Array<OneD, const double>& A,
+                            char m_transposeFlag, unsigned int m_numberOfSubDiagonals,
+                   unsigned int m_numberOfSuperDiagonals)
         {
-            Solve(A,ipivot,b,x,n,policyData);
-        }
-    };
-
-    template<typename DataType>
-    struct LinearSystemSolver<NekMatrix<DataType, FullMatrixTag, StandardMatrixTag> >
-    {
-        typedef NekMatrix<DataType, FullMatrixTag, StandardMatrixTag> MatrixType;
-        typedef typename MatrixType::PolicySpecificDataHolderType PolicySpecificDataType;
-        
-        template<typename BVectorType, typename XVectorType>
-        static void Solve(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
-        {
-            x = b;
-            int info = 0;
-            Lapack::Dgetrs('N',n,1,A.get(),n,(int *)ipivot.get(),x.GetRawPtr(),n,info);
-            if( info < 0 )
+            switch(m_matrixType)
             {
-                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetrs";
-                ASSERTL0(false, message.c_str());
+                case eFULL:
+                    {
+                        x = b;
+                        int info = 0;
+                        Lapack::Dgetrs('T',n,1,A.get(),n,(int *)m_ipivot.get(),x.GetRawPtr(), n,info);
+
+                        if( info < 0 )
+                        {
+                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetrs";
+                            ASSERTL0(false, message.c_str());
+                        }
+                    }
+
+                    break;
+                case eDIAGONAL:
+                    Solve(b, x, m_matrixType, m_ipivot, n, A, m_transposeFlag, m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
+                    break;
+                case eUPPER_TRIANGULAR:
+                    {
+                        char trans = m_transposeFlag;
+                        if( trans == 'N' )
+                        {
+                            trans = 'T';
+                        }
+                        else
+                        {
+                            trans = 'N';
+                        }
+
+                        x = b;
+                        int info = 0;
+                        Lapack::Dtptrs('U', trans, 'N', n, 1, A.get(), x.GetRawPtr(), n, info);
+
+                        if( info < 0 )
+                        {
+                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dtrtrs";
+                            ASSERTL0(false, message.c_str());
+                        }
+                        else if( info > 0 )
+                        {
+                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th diagonal element of A is 0 for dtrtrs";
+                            ASSERTL0(false, message.c_str());
+                        }
+                    }
+
+                    break;
+                case eLOWER_TRIANGULAR:
+                    {
+                        char trans = m_transposeFlag;
+                        if( trans == 'N' )
+                        {
+                            trans = 'T';
+                        }
+                        else
+                        {
+                            trans = 'N';
+                        }
+                        x = b;
+                        int info = 0;
+                        Lapack::Dtptrs('L', trans, 'N', n, 1, A.get(), x.GetRawPtr(), n, info);
+
+                        if( info < 0 )
+                        {
+                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dtrtrs";
+                            ASSERTL0(false, message.c_str());
+                        }
+                        else if( info > 0 )
+                        {
+                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th diagonal element of A is 0 for dtrtrs";
+                            ASSERTL0(false, message.c_str());
+                        }
+                    }
+                    break;
+                case eSYMMETRIC:
+                    Solve(b, x, m_matrixType, m_ipivot, n, A, m_transposeFlag, m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
+                    break;
+                case eBANDED:
+                    {
+                        x = b;
+                        int KL = m_numberOfSubDiagonals;
+                        int KU = m_numberOfSuperDiagonals;
+                        int info = 0;
+                        
+                        Lapack::Dgbtrs(m_transposeFlag, n, KL, KU, 1, A.get(), 2*KL+KU+1, m_ipivot.get(), x.GetRawPtr(), n, info);
+                        
+                        if( info < 0 )
+                        {
+                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgbtrs";
+                            ASSERTL0(false, message.c_str());
+                        }
+                    }
+                    break;
+                case eSYMMETRIC_BANDED:
+                    NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
+                    break;
+                case eUPPER_TRIANGULAR_BANDED:
+                    NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
+                    break;
+                case eLOWER_TRIANGULAR_BANDED:
+                    NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
+                    break;
+                    
+                default:
+                    NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
             }
-        }
-
-        template<typename BVectorType, typename XVectorType>
-        static void SolveTranspose(const Array<OneD, double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
-        {
-            x = b;
-            int info = 0;
-            Lapack::Dgetrs('T',n,1,A.get(),n,(int *)ipivot.get(),x.GetRawPtr(), n,info);
-
-            if( info < 0 )
-            {
-                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetrs";
-                ASSERTL0(false, message.c_str());
-            }
-        }
-    };
-
-    template<typename DataType>
-    struct LinearSystemSolver<NekMatrix<DataType, SymmetricMatrixTag, StandardMatrixTag> >
-    {
-        typedef NekMatrix<DataType, SymmetricMatrixTag, StandardMatrixTag> MatrixType;
-        typedef typename MatrixType::PolicySpecificDataHolderType PolicySpecificDataType;
-        
-        template<typename BVectorType, typename XVectorType>
-        static void Solve(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
-        {
-            x = b;
-            int info = 0;
-            Lapack::Dsptrs('U', n, 1, A.get(), ipivot.get(), x.GetRawPtr(), x.GetRows(), info);
-            if( info < 0 )
-            {
-                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dsptrs";
-                ASSERTL0(false, message.c_str());
-            }
-        }
-
-        template<typename BVectorType, typename XVectorType>
-        static void SolveTranspose(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
-        {
-            return Solve(A, ipivot, b, x, n, policyData);
         }
     };
     
-    template<typename DataType>
-    struct LinearSystemSolver<NekMatrix<DataType, BandedMatrixTag, StandardMatrixTag> >
-    {
-        typedef NekMatrix<DataType, BandedMatrixTag, StandardMatrixTag> MatrixType;
-        typedef typename MatrixType::PolicySpecificDataHolderType PolicySpecificDataType;
-
-        template<typename BVectorType, typename XVectorType>
-        static void Solve(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
-        {
-            PerformSolve(A, ipivot, b, x, 'N', n, policyData);
-        }
-
-        template<typename BVectorType, typename XVectorType>
-        static void SolveTranspose(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
-        {
-            PerformSolve(A, ipivot, b, x, 'T', n, policyData);
-        }
-        
-        template<typename BVectorType, typename XVectorType>
-        static void PerformSolve(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, char trans, unsigned int n, const PolicySpecificDataType& policyData)
-        {
-            x = b;
-            int KL = policyData.GetNumberOfSubDiagonals(n);
-            int KU = policyData.GetNumberOfSuperDiagonals(n);
-            int info = 0;
-            
-            Lapack::Dgbtrs(trans, n, KL, KU, 1, A.get(), 2*KL+KU+1, ipivot.get(), x.GetRawPtr(), n, info);
-            
-            if( info < 0 )
-            {
-                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgbtrs";
-                ASSERTL0(false, message.c_str());
-            }
-        }
-    };
-
-    template<typename DataType>
-    struct LinearSystemSolver<NekMatrix<DataType, LowerTriangularMatrixTag, StandardMatrixTag> >
-    {
-        typedef NekMatrix<DataType, LowerTriangularMatrixTag, StandardMatrixTag> MatrixType;
-        typedef typename MatrixType::PolicySpecificDataHolderType PolicySpecificDataType;
-
-        template<typename BVectorType, typename XVectorType>
-        static void Solve(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
-        {
-            PerformSolve(A, ipivot, b, x, 'N', n, policyData);
-        }
-
-        template<typename BVectorType, typename XVectorType>
-        static void SolveTranspose(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
-        {
-            PerformSolve(A, ipivot, b, x, 'T', n, policyData);
-        }
-
-        template<typename BVectorType, typename XVectorType>
-        static void PerformSolve(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, char trans, unsigned int n, const PolicySpecificDataType& policyData)
-        {
-            x = b;
-            int info = 0;
-            Lapack::Dtptrs('L', trans, 'N', n, 1, A.get(), x.GetRawPtr(), n, info);
-
-            if( info < 0 )
-            {
-                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dtrtrs";
-                ASSERTL0(false, message.c_str());
-            }
-            else if( info > 0 )
-            {
-                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th diagonal element of A is 0 for dtrtrs";
-                ASSERTL0(false, message.c_str());
-            }
-        }
-    };
-
-    template<typename DataType>
-    struct LinearSystemSolver<NekMatrix<DataType, UpperTriangularMatrixTag, StandardMatrixTag> >
-    {
-        typedef NekMatrix<DataType, UpperTriangularMatrixTag, StandardMatrixTag> MatrixType;
-        typedef typename MatrixType::PolicySpecificDataHolderType PolicySpecificDataType;
-
-        template<typename BVectorType, typename XVectorType>
-        static void Solve(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
-        {
-            PerformSolve(A, ipivot, b, x, 'N', n, policyData);
-        }
-
-        template<typename BVectorType, typename XVectorType>
-        static void SolveTranspose(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, unsigned int n, const PolicySpecificDataType& policyData)
-        {
-            PerformSolve(A, ipivot, b, x, 'T', n, policyData);
-        }
-
-        template<typename BVectorType, typename XVectorType>
-        static void PerformSolve(const Array<OneD, const double>& A, const Array<OneD, const int>& ipivot, const BVectorType& b, XVectorType& x, char trans, unsigned int n, const PolicySpecificDataType& policyData)
-        {
-            x = b;
-            int info = 0;
-            Lapack::Dtptrs('U', trans, 'N', n, 1, A.get(), x.GetRawPtr(), n, info);
-
-            if( info < 0 )
-            {
-                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dtrtrs";
-                ASSERTL0(false, message.c_str());
-            }
-            else if( info > 0 )
-            {
-                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th diagonal element of A is 0 for dtrtrs";
-                ASSERTL0(false, message.c_str());
-            }
-        }
-    };
-
-    template<typename StorageType, typename Type>
-    class LinearSystem<NekMatrix<double, StorageType, Type> >
+    class LinearSystem
     {
         public:
-            typedef NekMatrix<double, StorageType, Type> MatrixType;
-            typedef LinearSystem<MatrixType> ThisType;
-            typedef typename MatrixType::PolicySpecificDataHolderType PolicySpecificDataType;
-            
-        public:
+            template<typename MatrixType>
             explicit LinearSystem(const boost::shared_ptr<MatrixType> &theA, PointerWrapper wrapperType = eCopy) :
                 n(theA->GetRows()),
                 A(theA->GetPtr(), eVECTOR_WRAPPER),
                 m_ipivot(),
-                m_policySpecificData(theA->GetPolicySpecificDataHolderType())
+                m_numberOfSubDiagonals(theA->GetNumberOfSubDiagonals()),
+                m_numberOfSuperDiagonals(theA->GetNumberOfSuperDiagonals()),
+                m_matrixType(theA->GetType()),
+                m_transposeFlag(theA->GetTransposeFlag())
             {
                 // At some point we should fix this.  We should upate the copy of 
                 // A to be transposd for this to work.
                 ASSERTL0(theA->GetTransposeFlag() == 'N', "LinearSystem requires a non-transposed matrix.");
-                ASSERTL0( (wrapperType == eWrapper && !boost::is_same<StorageType, BandedMatrixTag>::value) || wrapperType == eCopy , "Banded matrices can't be wrapped");
+                ASSERTL0( (wrapperType == eWrapper && theA->GetType() != eBANDED) || wrapperType == eCopy , "Banded matrices can't be wrapped");
                 
                 if( wrapperType == eCopy )
                 {
@@ -293,16 +324,20 @@ namespace Nektar
                 FactorMatrix(*theA);
             }
             
+            template<typename MatrixType>
             explicit LinearSystem(const MatrixType& theA, PointerWrapper wrapperType = eCopy) :
                 n(theA.GetRows()),
                 A(theA.GetPtr(), eVECTOR_WRAPPER),
                 m_ipivot(),
-                m_policySpecificData(theA.GetPolicySpecificDataHolderType())
+                m_numberOfSubDiagonals(theA.GetNumberOfSubDiagonals()),
+                m_numberOfSuperDiagonals(theA.GetNumberOfSuperDiagonals()),
+                m_matrixType(theA.GetType()),
+                m_transposeFlag(theA.GetTransposeFlag())
             {
                 // At some point we should fix this.  We should upate the copy of 
                 // A to be transposd for this to work.
                 ASSERTL0(theA.GetTransposeFlag() == 'N', "LinearSystem requires a non-transposed matrix.");
-                ASSERTL0( (wrapperType == eWrapper && !boost::is_same<StorageType, BandedMatrixTag>::value) || wrapperType == eCopy, "Banded matrices can't be wrapped" );
+                ASSERTL0( (wrapperType == eWrapper && theA.GetType() != eBANDED) || wrapperType == eCopy, "Banded matrices can't be wrapped" );
                 
                 if( wrapperType == eCopy )
                 {
@@ -313,17 +348,20 @@ namespace Nektar
                 FactorMatrix(theA);
             }
 
-            LinearSystem(const ThisType& rhs) :
+            LinearSystem(const LinearSystem& rhs) :
                 n(rhs.n),
                 A(rhs.A),
                 m_ipivot(rhs.m_ipivot),
-                m_policySpecificData(rhs.m_policySpecificData)
+                m_numberOfSubDiagonals(rhs.m_numberOfSubDiagonals),
+                m_numberOfSuperDiagonals(rhs.m_numberOfSuperDiagonals),
+                m_matrixType(rhs.m_matrixType),
+                m_transposeFlag(rhs.m_transposeFlag)
             {
             }
 
-            ThisType& operator=(const ThisType& rhs)
+            LinearSystem& operator=(const LinearSystem& rhs)
             {
-                ThisType temp(rhs);
+                LinearSystem temp(rhs);
                 swap(temp);
                 return *this;
             }
@@ -336,16 +374,17 @@ namespace Nektar
             typename RemoveVectorConst<typename RawType<VectorType>::type>::type Solve(const VectorType& b)
             {
                 typename RemoveVectorConst<typename RawType<VectorType>::type>::type x(ConsistentObjectAccess<VectorType>::const_reference(b).GetRows());
-                LinearSystemSolver<MatrixType>::Solve(A, m_ipivot, ConsistentObjectAccess<VectorType>::const_reference(b), x, n, m_policySpecificData);
+                LinearSystemSolver::Solve(ConsistentObjectAccess<VectorType>::const_reference(b), x, m_matrixType,
+                    m_ipivot, n, A, m_transposeFlag, m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
                 return x;
             }    
 
             template<typename BType, typename XType>
             void Solve(const BType& b, XType& x) const
             {
-                LinearSystemSolver<MatrixType>::Solve(A, m_ipivot,
-                    ConsistentObjectAccess<BType>::const_reference(b), 
-                    ConsistentObjectAccess<XType>::reference(x), n, m_policySpecificData);
+                LinearSystemSolver::Solve(ConsistentObjectAccess<BType>::const_reference(b), 
+                      ConsistentObjectAccess<XType>::reference(x), m_matrixType,
+                      m_ipivot, n, A, m_transposeFlag, m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
             }
 
             // Transpose variant of solve
@@ -353,144 +392,156 @@ namespace Nektar
             typename RemoveVectorConst<typename RawType<VectorType>::type>::type SolveTranspose(const VectorType& b)
             {
                 typename RemoveVectorConst<typename RawType<VectorType>::type>::type x(ConsistentObjectAccess<VectorType>::const_reference(b).GetRows());
-                LinearSystemSolver<MatrixType>::SolveTranspose(A, m_ipivot, ConsistentObjectAccess<VectorType>::const_reference(b), x, n, m_policySpecificData);
+                LinearSystemSolver::SolveTranspose(ConsistentObjectAccess<VectorType>::const_reference(b), x, m_matrixType,
+                    m_ipivot, n, A, m_transposeFlag, m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
                 return x;
             }    
 
             template<typename BType, typename XType>
             void SolveTranspose(const BType& b, XType& x) const
             {
-                LinearSystemSolver<MatrixType>::SolveTranspose(A, m_ipivot,
-                    ConsistentObjectAccess<BType>::const_reference(b), 
-                    ConsistentObjectAccess<XType>::reference(x), n, m_policySpecificData);
+                LinearSystemSolver::SolveTranspose(ConsistentObjectAccess<BType>::const_reference(b), 
+                               ConsistentObjectAccess<XType>::reference(x), m_matrixType,
+                               m_ipivot, n, A, m_transposeFlag, m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
             }
             
-            
+                
 
             unsigned int GetRows() const { return n; }
             unsigned int GetColumns() const { return n; }
             
         private:
-            void FactorMatrix(const NekMatrix<double, DiagonalMatrixTag, StandardMatrixTag> &theA)
+            template<typename MatrixType>
+            void FactorMatrix(const MatrixType& theA)
             {
-                for(unsigned int i = 0; i < theA.GetColumns(); ++i)
+                switch(m_matrixType)
                 {
-                    A[i] = 1.0/theA(i,i);
+                    case eFULL:
+                        {
+                            int m = theA.GetRows();
+                            int n = theA.GetColumns();
+                            
+                            int pivotSize = std::max(1, std::min(m, n));
+                            int info = 0;
+                            m_ipivot = Array<OneD, int>(pivotSize);
+
+                            Lapack::Dgetrf(m, n, A.get(), m, m_ipivot.get(), info);
+
+                            if( info < 0 )
+                            {
+                                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetrf";
+                                ASSERTL0(false, message.c_str());
+                            }
+                            else if( info > 0 )
+                            {
+                                std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgetrf";
+                                ASSERTL0(false, message.c_str());
+                            } 
+                        }
+                        break;
+                    case eDIAGONAL:
+                        for(unsigned int i = 0; i < theA.GetColumns(); ++i)
+                        {
+                            A[i] = 1.0/theA(i,i);
+                        }
+                        break;
+                    case eUPPER_TRIANGULAR:
+                    case eLOWER_TRIANGULAR:
+                        break;
+                    case eSYMMETRIC:
+                        {
+                            int info = 0;
+                            int pivotSize = theA.GetRows();
+                            m_ipivot = Array<OneD, int>(pivotSize);
+                            
+                            Lapack::Dsptrf('U', theA.GetRows(), A.get(), m_ipivot.get(), info);
+                            
+                            if( info < 0 )
+                            {
+                                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dsptrf";
+                                ASSERTL0(false, message.c_str());
+                            }
+                            else if( info > 0 )
+                            {
+                                std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dsptrf";
+                                ASSERTL0(false, message.c_str());
+                            }
+                        }
+                        break;
+                    case eBANDED:
+                        {
+                            int M = n;
+                            int N = n;
+                            int KL = m_numberOfSubDiagonals;
+                            int KU = m_numberOfSuperDiagonals;
+                            
+                            // The array we pass in to dgbtrf must have enough space for KL
+                            // subdiagonals and KL+KU superdiagonals (see lapack users guide,
+                            // in the section discussing band storage.
+                            unsigned int requiredStorageSize = MatrixStoragePolicy<BandedMatrixTag>::
+                                GetRequiredStorageSize(n, n, KL, KL+KU);
+                            
+                            unsigned int rawRows = KL+KU+1;
+                            A = Array<OneD, double>(requiredStorageSize);
+
+                            // Put the extra elements up front.
+                            for(unsigned int i = 0; i < theA.GetColumns(); ++i)
+                            {
+                                std::copy(theA.GetRawPtr() + i*rawRows, theA.GetRawPtr() + (i+1)*rawRows,
+                                    A.get() + (i+1)*KL + i*rawRows);
+                            }
+                                   
+                            int info = 0;
+                            int pivotSize = theA.GetRows();
+                            m_ipivot = Array<OneD, int>(pivotSize);
+                            
+                            Lapack::Dgbtrf(M, N, KL, KU, A.get(), 2*KL+KU+1, m_ipivot.get(), info);
+                          
+                            if( info < 0 )
+                            {
+                                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgbtrf";
+                                ASSERTL0(false, message.c_str());
+                            }
+                            else if( info > 0 )
+                            {
+                                std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgbtrf";
+                                ASSERTL0(false, message.c_str());
+                            }
+                        }
+                        break;
+                    case eSYMMETRIC_BANDED:
+                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
+                        break;
+                    case eUPPER_TRIANGULAR_BANDED:
+                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
+                        break;
+                    case eLOWER_TRIANGULAR_BANDED:
+                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
+                        break;
+                        
+                    default:
+                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
                 }
-
             }
-
-            template<typename TriangularType>
-            void FactorMatrix(const NekMatrix<double, TriangularType, StandardMatrixTag>& theA,
-                              typename boost::enable_if
-                                <
-                                    boost::mpl::or_
-                                    <
-                                        boost::is_same<TriangularType, UpperTriangularMatrixTag>,
-                                        boost::is_same<TriangularType, LowerTriangularMatrixTag>
-                                    >
-                                >::type* p = 0)
-            {
-            }
-
-            void FactorMatrix(const NekMatrix<double,FullMatrixTag,StandardMatrixTag> &theA)
-            {
-                int m = theA.GetRows();
-                int n = theA.GetColumns();
-                
-                int pivotSize = std::max(1, std::min(m, n));
-                int info = 0;
-                m_ipivot = Array<OneD, int>(pivotSize);
-
-                Lapack::Dgetrf(m, n, A.get(), m, m_ipivot.get(), info);
-
-                if( info < 0 )
-                {
-                    std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetrf";
-                    ASSERTL0(false, message.c_str());
-                }
-                else if( info > 0 )
-                {
-                    std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgetrf";
-                    ASSERTL0(false, message.c_str());
-                }            
-            }
-
-            void FactorMatrix(const NekMatrix<double, SymmetricMatrixTag, StandardMatrixTag>& theA)
-            {
-                int info = 0;
-                int pivotSize = theA.GetRows();
-                m_ipivot = Array<OneD, int>(pivotSize);
-                
-                Lapack::Dsptrf('U', theA.GetRows(), A.get(), m_ipivot.get(), info);
-                
-                if( info < 0 )
-                {
-                    std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dsptrf";
-                    ASSERTL0(false, message.c_str());
-                }
-                else if( info > 0 )
-                {
-                    std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dsptrf";
-                    ASSERTL0(false, message.c_str());
-                }    
-            }
-
-            void FactorMatrix(const NekMatrix<double, BandedMatrixTag, StandardMatrixTag>& theA)
-            {
-                int M = theA.GetRows();
-                int N = theA.GetColumns();
-                int KL = m_policySpecificData.GetNumberOfSubDiagonals(M);
-                int KU = m_policySpecificData.GetNumberOfSuperDiagonals(M);
-                
-                // The array we pass in to dgbtrf must have enough space for KL
-                // subdiagonals and KL+KU superdiagonals (see lapack users guide,
-                // in the section discussing band storage.
-                PolicySpecificDataType t(KL, KL+KU);
-                unsigned int requiredStorageSize = MatrixStoragePolicy<double, BandedMatrixTag>::GetRequiredStorageSize(
-                    M, N, t);
-                
-                unsigned int rawRows = KL+KU+1;
-                A = Array<OneD, double>(requiredStorageSize);
-
-                // Put the extra elements up front.
-                for(unsigned int i = 0; i < theA.GetColumns(); ++i)
-                {
-                    std::copy(theA.GetRawPtr() + i*rawRows, theA.GetRawPtr() + (i+1)*rawRows,
-                        A.get() + (i+1)*KL + i*rawRows);
-                }
-                       
-                int info = 0;
-                int pivotSize = theA.GetRows();
-                m_ipivot = Array<OneD, int>(pivotSize);
-                
-                Lapack::Dgbtrf(M, N, KL, KU, A.get(), 2*KL+KU+1, m_ipivot.get(), info);
-              
-                if( info < 0 )
-                {
-                    std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgbtrf";
-                    ASSERTL0(false, message.c_str());
-                }
-                else if( info > 0 )
-                {
-                    std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgbtrf";
-                    ASSERTL0(false, message.c_str());
-                }    
-            }
-
-            
-            void swap(ThisType& rhs)
+        
+            void swap(LinearSystem& rhs)
             {
                 std::swap(n, rhs.n);
                 std::swap(A, rhs.A);
                 std::swap(m_ipivot,rhs.m_ipivot);
-                std::swap(m_policySpecificData, rhs.m_policySpecificData);
+                std::swap(m_numberOfSubDiagonals, rhs.m_numberOfSubDiagonals);
+                std::swap(m_numberOfSuperDiagonals, rhs.m_numberOfSuperDiagonals);
+                std::swap(m_matrixType, rhs.m_matrixType);
+                std::swap(m_transposeFlag, rhs.m_transposeFlag);
             }
 
             unsigned int n;
             Array<OneD, double> A;
             Array<OneD, int> m_ipivot;  
-            PolicySpecificDataType m_policySpecificData;      
+            unsigned int m_numberOfSubDiagonals;
+            unsigned int m_numberOfSuperDiagonals;
+            MatrixStorage m_matrixType;
+            char m_transposeFlag;
         };
 }
 

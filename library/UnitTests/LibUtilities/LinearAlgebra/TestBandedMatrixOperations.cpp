@@ -137,7 +137,7 @@ namespace Nektar
         {
             
             {
-                typedef NekMatrix<NekDouble, BandedMatrixTag> MatrixType;
+                typedef NekMatrix<NekDouble> MatrixType;
 
                 // This is the matrix
                 // [ 1 2 0 0 ]
@@ -151,7 +151,7 @@ namespace Nektar
                                    8, 10, 0};
                               
     
-                MatrixType m(4, 4, buf, MatrixType::PolicySpecificDataHolderType(1, 1));
+                MatrixType m(4, 4, buf, eBANDED, 1, 1);
 
                 NekDouble vector_buf[] = {1.0, 2.0, 3.0, 4.0};
                 NekVector<NekDouble> v(4, vector_buf);
@@ -164,7 +164,7 @@ namespace Nektar
             }
 
             {
-                typedef NekMatrix<unsigned int, BandedMatrixTag> MatrixType;
+                typedef NekMatrix<unsigned int> MatrixType;
 
                 // This is the matrix
                 // [ 1 2 0 0 ]
@@ -178,7 +178,7 @@ namespace Nektar
                                       8, 10, 0};
                               
     
-                MatrixType m(4, 4, buf, MatrixType::PolicySpecificDataHolderType(1, 1));
+                MatrixType m(4, 4, buf, eBANDED, 1, 1);
 
                 unsigned int vector_buf[] = {1, 2, 3, 4};
                 NekVector<unsigned int> v(4, vector_buf);
@@ -194,7 +194,7 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestUnequalNumbersOfSubAndSuperDiagonalsMatrixVectorMultiply)
         {
             {
-                typedef NekMatrix<NekDouble, BandedMatrixTag> MatrixType;
+                typedef NekMatrix<NekDouble> MatrixType;
 
                 // This is the matrix
                 // [  1  6 10   0  0 ]
@@ -210,7 +210,7 @@ namespace Nektar
                                    12, 9, 5, 0};
                               
     
-                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(1, 2));
+                MatrixType m(5, 5, buf, eBANDED, 1, 2);
 
                 NekDouble vector_buf[] = {1, 2, 3, 4, 5};
                 NekVector<NekDouble> v(5, vector_buf);
@@ -223,7 +223,7 @@ namespace Nektar
             }
 
             {
-                typedef NekMatrix<unsigned int, BandedMatrixTag> MatrixType;
+                typedef NekMatrix<unsigned int> MatrixType;
 
                 // This is the matrix
                 // [  1  6 10   0  0 ]
@@ -239,7 +239,7 @@ namespace Nektar
                                      12, 9, 5, 0};
                               
     
-                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(1, 2));
+                MatrixType m(5, 5, buf, eBANDED, 1, 2);
 
                 unsigned int vector_buf[] = {1, 2, 3, 4, 5};
                 NekVector<unsigned int> v(5, vector_buf);
@@ -255,7 +255,7 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestNoSubdiagonalsTwoSuperDiagonalsMatrixVectorMultiply)
         {
             {
-                typedef NekMatrix<NekDouble, BandedMatrixTag> MatrixType;
+                typedef NekMatrix<NekDouble> MatrixType;
 
                 // This is the matrix
                 // [  1  6 10   0  0 ]
@@ -271,7 +271,7 @@ namespace Nektar
                                     12, 9, 5};
                               
     
-                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(0, 2));
+                MatrixType m(5, 5, buf, eBANDED, 0, 2);
 
                 NekDouble vector_buf[] = {1, 2, 3, 4, 5};
                 NekVector<NekDouble> v(5, vector_buf);
@@ -284,7 +284,7 @@ namespace Nektar
             }
 
             {
-                typedef NekMatrix<unsigned int, BandedMatrixTag> MatrixType;
+                typedef NekMatrix<unsigned int> MatrixType;
 
                 // This is the matrix
                 // [  1  6 10   0  0 ]
@@ -300,7 +300,7 @@ namespace Nektar
                                     12, 9, 5};
                               
     
-                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(0, 2));
+                MatrixType m(5, 5, buf, eBANDED, 0, 2);
 
                 unsigned int vector_buf[] = {1, 2, 3, 4, 5};
                 NekVector<unsigned int> v(5, vector_buf);
@@ -316,7 +316,7 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestNoSubdiagonalsThreeSuperDiagonalsMatrixVectorMultiply)
         {
             {
-                typedef NekMatrix<NekDouble, BandedMatrixTag> MatrixType;
+                typedef NekMatrix<NekDouble> MatrixType;
 
                 // This is the matrix
                 // [  1  6 10   2  0 ]
@@ -332,7 +332,7 @@ namespace Nektar
                                     5, 12, 9, 5};
                               
     
-                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(0, 3));
+                MatrixType m(5, 5, buf, eBANDED, 0, 3);
 
                 NekDouble vector_buf[] = {1, 2, 3, 4, 5};
                 NekVector<NekDouble> v(5, vector_buf);
@@ -345,7 +345,7 @@ namespace Nektar
             }
 
             {
-                typedef NekMatrix<unsigned int, BandedMatrixTag> MatrixType;
+                typedef NekMatrix<unsigned int> MatrixType;
 
                 // This is the matrix
                 // [  1  6 10   0  0 ]
@@ -362,7 +362,7 @@ namespace Nektar
                               
                               
     
-                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(0, 3));
+                MatrixType m(5, 5, buf, eBANDED, 0, 3);
 
                 unsigned int vector_buf[] = {1, 2, 3, 4, 5};
                 NekVector<unsigned int> v(5, vector_buf);
@@ -378,7 +378,7 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestNoSubdiagonalsFourSuperDiagonalsMatrixVectorMultiply)
         {
             {
-                typedef NekMatrix<NekDouble, BandedMatrixTag> MatrixType;
+                typedef NekMatrix<NekDouble> MatrixType;
 
                 // This is the matrix
                 // [  1  6 10   2  8 ]
@@ -394,7 +394,7 @@ namespace Nektar
                                     8, 5, 12, 9, 5};
                               
     
-                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(0, 4));
+                MatrixType m(5, 5, buf, eBANDED, 0, 4);
 
                 NekDouble vector_buf[] = {1, 2, 3, 4, 5};
                 NekVector<NekDouble> v(5, vector_buf);
@@ -407,7 +407,7 @@ namespace Nektar
             }
 
             {
-                typedef NekMatrix<unsigned int, BandedMatrixTag> MatrixType;
+                typedef NekMatrix<unsigned int> MatrixType;
 
                 // This is the matrix
                 // [  1  6 10   0  0 ]
@@ -424,7 +424,7 @@ namespace Nektar
                               
                               
     
-                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(0, 4));
+                MatrixType m(5, 5, buf, eBANDED, 0, 4);
 
                 unsigned int vector_buf[] = {1, 2, 3, 4, 5};
                 NekVector<unsigned int> v(5, vector_buf);
@@ -440,7 +440,7 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(Test2Sub2SuperMatrixVectorMultiply)
         {
             {
-                typedef NekMatrix<NekDouble, BandedMatrixTag> MatrixType;
+                typedef NekMatrix<NekDouble> MatrixType;
 
                 // This is the matrix
                 // [  1  6 10   0  0 ]
@@ -456,7 +456,7 @@ namespace Nektar
                                    12, 9, 5, 0, 0};
                               
     
-                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(2, 2));
+                MatrixType m(5, 5, buf, eBANDED, 2, 2);
 
                 NekDouble vector_buf[] = {1, 2, 3, 4, 5};
                 NekVector<NekDouble> v(5, vector_buf);
@@ -469,7 +469,7 @@ namespace Nektar
             }
 
             {
-                typedef NekMatrix<unsigned int, BandedMatrixTag> MatrixType;
+                typedef NekMatrix<unsigned int> MatrixType;
 
                 // This is the matrix
                 // [  1  6 10   0  0 ]
@@ -485,7 +485,7 @@ namespace Nektar
                                    12, 9, 5, 0, 0};
                               
     
-                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(2, 2));
+                MatrixType m(5, 5, buf, eBANDED, 2, 2);
 
                 unsigned int vector_buf[] = {1, 2, 3, 4, 5};
                 NekVector<unsigned int> v(5, vector_buf);
@@ -502,7 +502,7 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(Test3Sub2SuperMatrixVectorMultiply)
         {
             {
-                typedef NekMatrix<NekDouble, BandedMatrixTag> MatrixType;
+                typedef NekMatrix<NekDouble> MatrixType;
 
                 // This is the matrix
                 // [  1  6 10   0  0 ]
@@ -518,7 +518,7 @@ namespace Nektar
                                    12, 9, 5, 0, 0, 0};
                               
     
-                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(3, 2));
+                MatrixType m(5, 5, buf, eBANDED, 3, 2);
 
                 NekDouble vector_buf[] = {1, 2, 3, 4, 5};
                 NekVector<NekDouble> v(5, vector_buf);
@@ -531,7 +531,7 @@ namespace Nektar
             }
 
             {
-                typedef NekMatrix<unsigned int, BandedMatrixTag> MatrixType;
+                typedef NekMatrix<unsigned int> MatrixType;
 
                 // This is the matrix
                 // [  1  6 10   0  0 ]
@@ -547,7 +547,7 @@ namespace Nektar
                                    12, 9, 5, 0, 0, 0};
                               
     
-                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(3, 2));
+                MatrixType m(5, 5, buf, eBANDED, 3, 2);
 
                 unsigned int vector_buf[] = {1, 2, 3, 4, 5};
                 NekVector<unsigned int> v(5, vector_buf);
@@ -564,7 +564,7 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(Test4Sub2SuperMatrixVectorMultiply)
         {
             {
-                typedef NekMatrix<NekDouble, BandedMatrixTag> MatrixType;
+                typedef NekMatrix<NekDouble> MatrixType;
 
                 // This is the matrix
                 // [  1  6 10   0  0 ]
@@ -580,7 +580,7 @@ namespace Nektar
                                    12, 9, 5, 0, 0, 0, 0};
                               
     
-                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(4, 2));
+                MatrixType m(5, 5, buf, eBANDED, 4, 2);
 
                 NekDouble vector_buf[] = {1, 2, 3, 4, 5};
                 NekVector<NekDouble> v(5, vector_buf);
@@ -593,7 +593,7 @@ namespace Nektar
             }
 
             {
-                typedef NekMatrix<unsigned int, BandedMatrixTag> MatrixType;
+                typedef NekMatrix<unsigned int> MatrixType;
 
                 // This is the matrix
                 // [  1  6 10   0  0 ]
@@ -609,7 +609,7 @@ namespace Nektar
                                    12, 9, 5, 0, 0, 0, 0};
                               
     
-                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(4, 2));
+                MatrixType m(5, 5, buf, eBANDED, 4, 2);
 
                 unsigned int vector_buf[] = {1, 2, 3, 4, 5};
                 NekVector<unsigned int> v(5, vector_buf);
@@ -625,7 +625,7 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestDiagonalOnlyMatrixVectorMultiply)
         {
             {
-                typedef NekMatrix<NekDouble, BandedMatrixTag> MatrixType;
+                typedef NekMatrix<NekDouble> MatrixType;
 
                 // This is the matrix
                 // [  5  0  0   0  0 ]
@@ -637,7 +637,7 @@ namespace Nektar
                 NekDouble buf[] = {5, 1, 9, 4, 2};
                               
     
-                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(0, 0));
+                MatrixType m(5, 5, buf, eBANDED, 0, 0);
 
                 NekDouble vector_buf[] = {1, 2, 3, 4, 5};
                 NekVector<NekDouble> v(5, vector_buf);
@@ -650,7 +650,7 @@ namespace Nektar
             }
 
             {
-                typedef NekMatrix<unsigned int, BandedMatrixTag> MatrixType;
+                typedef NekMatrix<unsigned int> MatrixType;
 
                 // This is the matrix
                 // [  5  0  0   0  0 ]
@@ -662,7 +662,7 @@ namespace Nektar
                 unsigned int buf[] = {5, 1, 9, 4, 2};
                               
     
-                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(0, 0));
+                MatrixType m(5, 5, buf, eBANDED, 0, 0);
 
                 unsigned int vector_buf[] = {1, 2, 3, 4, 5};
                 NekVector<unsigned int> v(5, vector_buf);
@@ -677,7 +677,7 @@ namespace Nektar
         
         BOOST_AUTO_TEST_CASE(TestBandedMatrixLinearSystemSolves)
         {
-            typedef NekMatrix<double, BandedMatrixTag> MatrixType;
+            typedef NekMatrix<double> MatrixType;
 
             {
                 double buf[] = {0, 0, -.23, -6.98,
@@ -686,8 +686,8 @@ namespace Nektar
                                 -2.13, 4.07, -3.82, 0};
                               
     
-                MatrixType m(4,4, buf, MatrixType::PolicySpecificDataHolderType(1, 2));                
-                LinearSystem<MatrixType> l(m);
+                MatrixType m(4,4, buf, eBANDED, 1, 2);                
+                LinearSystem l(m);
 
                 double b_buf[] =  { 4.42, 27.13, -6.14, 10.5 };
                 NekVector<double> b(4, b_buf);
@@ -712,12 +712,12 @@ namespace Nektar
                                    12, 9, 5, 0, 0, 0, 0};
                               
     
-                MatrixType m(5, 5, buf, MatrixType::PolicySpecificDataHolderType(4, 2));
+                MatrixType m(5, 5, buf, eBANDED, 4, 2);
 
                 double b_buf[] =  { 43, 82, 136, 136, 173 };
                 NekVector<double> b(5, b_buf);
                 
-                LinearSystem<MatrixType> l(m);
+                LinearSystem l(m);
                 NekVector<double> result(5, 0.0);
                 result = l.Solve(b);
                 
@@ -744,7 +744,6 @@ namespace Nektar
             // [ 0  24  20  8 ]    [  0  0  0 36 ]
             
             {
-                typedef MatrixStoragePolicy<double, BandedMatrixTag> Policy;
                 double lhs_buf[] = { 0, 2, 16, 22, 
                                      10, 4, 18, 24, 
                                      12, 6, 20, 0,
@@ -754,18 +753,16 @@ namespace Nektar
                                      40, 34,
                                      42, 36 };
 
-                Policy::PolicySpecificDataHolderType lhsPolicyData(2, 1);
-                NekMatrix<double, BandedMatrixTag> lhs1(4, 4, lhs_buf, lhsPolicyData);
-                boost::shared_ptr<NekMatrix<NekMatrix<double, BandedMatrixTag, StandardMatrixTag>, BandedMatrixTag, ScaledMatrixTag> > lhs2;
-                boost::shared_ptr<NekMatrix<NekMatrix<double>, BandedMatrixTag, BlockMatrixTag> > lhs3;
+                NekMatrix<double> lhs1(4, 4, lhs_buf, eBANDED, 2, 1);
+                boost::shared_ptr<NekMatrix<NekMatrix<double, StandardMatrixTag>, ScaledMatrixTag> > lhs2;
+                boost::shared_ptr<NekMatrix<NekMatrix<double>, BlockMatrixTag> > lhs3;
 
-                Policy::PolicySpecificDataHolderType rhsPolicyData(0, 1);
-                NekMatrix<double, BandedMatrixTag> rhs1(4, 4, rhs_buf, rhsPolicyData);
-                boost::shared_ptr<NekMatrix<NekMatrix<double, BandedMatrixTag>, BandedMatrixTag, ScaledMatrixTag> > rhs2;
-                boost::shared_ptr<NekMatrix<NekMatrix<double>, BandedMatrixTag, BlockMatrixTag> > rhs3;
+                NekMatrix<double> rhs1(4, 4, rhs_buf, eBANDED, 0, 1);
+                boost::shared_ptr<NekMatrix<NekMatrix<double>, ScaledMatrixTag> > rhs2;
+                boost::shared_ptr<NekMatrix<NekMatrix<double>, BlockMatrixTag> > rhs3;
 
-                GenerateMatrices<BandedMatrixTag>(lhs1, 2.0, 2, 2, lhs2, lhs3);
-                GenerateMatrices<BandedMatrixTag>(rhs1, 2.0, 2, 2, rhs2, rhs3);
+                GenerateMatrices(lhs1, 2.0, 2, 2, lhs2, lhs3);
+                GenerateMatrices(rhs1, 2.0, 2, 2, rhs2, rhs3);
 
                 double result_buf[] = {60, 480, 660, 0,
                                        396, 736, 1412, 768,

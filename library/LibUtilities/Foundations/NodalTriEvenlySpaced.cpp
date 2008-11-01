@@ -215,27 +215,27 @@ namespace Nektar
 
             // Mapping the vertex, edges, and interior points using the permutation matrix,
             // so the points are ordered anticlockwise.
-            for(int k=0; k<vertex.size(); ++k){
+            for(unsigned int k=0; k<vertex.size(); ++k){
 
                 map.push_back(vertex[k]);
             }
 
-            for(int k=0; k<iEdge_1.size(); ++k){
+            for(unsigned int k=0; k<iEdge_1.size(); ++k){
 
                 map.push_back(iEdge_1[k]);
             }
 
-            for(int k=0; k<iEdge_2.size(); ++k){
+            for(unsigned int k=0; k<iEdge_2.size(); ++k){
 
                 map.push_back(iEdge_2[k]);
             }
 
-            for(int k=0; k<iEdge_3.size(); ++k){
+            for(unsigned int k=0; k<iEdge_3.size(); ++k){
 
                 map.push_back(iEdge_3[k]);
             }
             
-            for(int k=0; k<interiorPoints.size(); ++k){
+            for(unsigned int k=0; k<interiorPoints.size(); ++k){
 
                 map.push_back(interiorPoints[k]);
             }
@@ -244,12 +244,12 @@ namespace Nektar
             Array<OneD,NekDouble> points[2];
             points[0] = Array<OneD,NekDouble>(GetTotNumPoints());
             points[1] = Array<OneD,NekDouble>(GetTotNumPoints());
-            for(int index=0; index<map.size(); ++index){
+            for(unsigned int index=0; index<map.size(); ++index){
                 points[0][index] = m_points[0][index];
                 points[1][index] = m_points[1][index];
             }
             
-            for(int index=0; index<map.size(); ++index){
+            for(unsigned int index=0; index<map.size(); ++index){
                 m_points[0][index] = points[0][map[index]];
                 m_points[1][index] = points[1][map[index]];
             }

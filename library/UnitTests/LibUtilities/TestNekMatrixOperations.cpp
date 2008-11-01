@@ -71,20 +71,18 @@ namespace Nektar
             }
     };
 
-    template<typename LhsScaledInnerStorageType, typename LhsScaledInnerMatrixType,
-             typename LhsBlockInnerStorageType, typename LhsBlockInnerMatrixType,
-             typename LhsStorageType, typename RhsStorageType, 
-             typename RhsScaledInnerStorageType, typename RhsScaledInnerMatrixType,
-             typename RhsBlockInnerStorageType, typename RhsBlockInnerMatrixType,
-             typename ResultStorageType,
+    template<typename LhsScaledInnerMatrixType,
+             typename LhsBlockInnerMatrixType,
+             typename RhsScaledInnerMatrixType,
+             typename RhsBlockInnerMatrixType,
              typename OpType>
-    void RunAllTestCombinations(const NekMatrix<NekDouble, LhsStorageType, StandardMatrixTag>& l1,
-                                const NekMatrix<NekMatrix<NekDouble, LhsScaledInnerStorageType, LhsScaledInnerMatrixType>, LhsStorageType, ScaledMatrixTag>& l2,
-                                const NekMatrix<NekMatrix<NekDouble, LhsBlockInnerStorageType, LhsBlockInnerMatrixType>, LhsStorageType, BlockMatrixTag>& l3,
-                                const NekMatrix<NekDouble, LhsStorageType, StandardMatrixTag>& r1,
-                                const NekMatrix<NekMatrix<NekDouble, RhsScaledInnerStorageType, RhsScaledInnerMatrixType>, LhsStorageType, ScaledMatrixTag>& r2,
-                                const NekMatrix<NekMatrix<NekDouble, RhsBlockInnerStorageType, RhsBlockInnerMatrixType>, RhsStorageType, BlockMatrixTag>& r3,
-                                const NekMatrix<NekDouble, ResultStorageType, StandardMatrixTag>& result,
+    void RunAllTestCombinations(const NekMatrix<NekDouble, StandardMatrixTag>& l1,
+                                const NekMatrix<NekMatrix<NekDouble, LhsScaledInnerMatrixType>, ScaledMatrixTag>& l2,
+                                const NekMatrix<NekMatrix<NekDouble, LhsBlockInnerMatrixType>, BlockMatrixTag>& l3,
+                                const NekMatrix<NekDouble, StandardMatrixTag>& r1,
+                                const NekMatrix<NekMatrix<NekDouble, RhsScaledInnerMatrixType>, ScaledMatrixTag>& r2,
+                                const NekMatrix<NekMatrix<NekDouble, RhsBlockInnerMatrixType>, BlockMatrixTag>& r3,
+                                const NekMatrix<NekDouble, StandardMatrixTag>& result,
                                 const OpType& f)
     {
         BOOST_CHECK_EQUAL(f(l1, r1), result);
@@ -100,18 +98,18 @@ namespace Nektar
 
     
     void GenerateFullMatrices(double values[], double scale,
-        boost::shared_ptr<NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag> >& m1,
-        boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, ScaledMatrixTag> >& m2,
-        boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag> >& m3)
+        boost::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> >& m1,
+        boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, ScaledMatrixTag> >& m2,
+        boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, BlockMatrixTag> >& m3)
     {
-        m1 = MakePtr(new NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag>(4, 4, values));
+        m1 = MakePtr(new NekMatrix<NekDouble, StandardMatrixTag>(4, 4, values));
         
         double inner_values[16];
         std::transform(values, values+16, inner_values, boost::bind(std::divides<NekDouble>(), _1, scale));
 
         boost::shared_ptr<NekMatrix<NekDouble> > inner(
             new NekMatrix<NekDouble>(4, 4, inner_values)); 
-        m2 = MakePtr(new NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, ScaledMatrixTag>(scale, inner));
+        m2 = MakePtr(new NekMatrix<NekMatrix<NekDouble>, ScaledMatrixTag>(scale, inner));
         
         double block_1_values[] = {values[0], values[1], 
                             values[4], values[5]};
@@ -126,7 +124,7 @@ namespace Nektar
         boost::shared_ptr<NekMatrix<NekDouble> > block3(new NekMatrix<NekDouble>(2, 2, block_3_values));
         boost::shared_ptr<NekMatrix<NekDouble> > block4(new NekMatrix<NekDouble>(2, 2, block_4_values));
         
-        m3 = MakePtr(new NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag>(2, 2, 2, 2));
+        m3 = MakePtr(new NekMatrix<NekMatrix<NekDouble>, BlockMatrixTag>(2, 2, 2, 2));
         m3->SetBlock(0,0, block1);
         m3->SetBlock(1,0, block2);
         m3->SetBlock(0,1, block3);
@@ -134,18 +132,18 @@ namespace Nektar
     }
 
     void GenerateUpperTriangularMatrices(NekDouble values[], NekDouble scale,
-        boost::shared_ptr<NekMatrix<NekDouble, UpperTriangularMatrixTag, StandardMatrixTag> >& m1,
-        boost::shared_ptr<NekMatrix<NekMatrix<NekDouble, UpperTriangularMatrixTag>, UpperTriangularMatrixTag, ScaledMatrixTag> >& m2,
-        boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, UpperTriangularMatrixTag, BlockMatrixTag> >& m3)
+        boost::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> >& m1,
+        boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, ScaledMatrixTag> >& m2,
+        boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, BlockMatrixTag> >& m3)
     {
-        m1 = MakePtr(new NekMatrix<NekDouble, UpperTriangularMatrixTag, StandardMatrixTag>(4, 4, values));
+        m1 = MakePtr(new NekMatrix<NekDouble, StandardMatrixTag>(4, 4, values, eUPPER_TRIANGULAR));
         
         double inner_values[10];
         std::transform(values, values+10, inner_values, boost::bind(std::divides<NekDouble>(), _1, scale));
 
-        boost::shared_ptr<NekMatrix<NekDouble, UpperTriangularMatrixTag> > inner(
-            new NekMatrix<NekDouble, UpperTriangularMatrixTag>(4, 4, inner_values)); 
-        m2 = MakePtr(new NekMatrix<NekMatrix<NekDouble, UpperTriangularMatrixTag>, UpperTriangularMatrixTag, ScaledMatrixTag>(scale, inner));
+        boost::shared_ptr<NekMatrix<NekDouble> > inner(
+            new NekMatrix<NekDouble>(4, 4, inner_values, eUPPER_TRIANGULAR)); 
+        m2 = MakePtr(new NekMatrix<NekMatrix<NekDouble>, ScaledMatrixTag>(scale, inner));
         
         double block_1_values[] = {values[0], 0.0,
                                    values[1], values[2]};
@@ -157,7 +155,7 @@ namespace Nektar
         boost::shared_ptr<NekMatrix<NekDouble> > block2(new NekMatrix<NekDouble>(2, 2, block_2_values));
         boost::shared_ptr<NekMatrix<NekDouble> > block4(new NekMatrix<NekDouble>(2, 2, block_4_values));
         
-        m3 = MakePtr(new NekMatrix<NekMatrix<NekDouble>, UpperTriangularMatrixTag, BlockMatrixTag>(2, 2, 2, 2));
+        m3 = MakePtr(new NekMatrix<NekMatrix<NekDouble>, BlockMatrixTag>(2, 2, 2, 2));
         m3->SetBlock(0,0, block1);
         m3->SetBlock(0,1, block2);
         m3->SetBlock(1,1, block4);
@@ -212,9 +210,9 @@ namespace Nektar
                                  6, 14, 22, 30,
                                  8, 16, 24, 32};
                                    
-            boost::shared_ptr<NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag> > lhs1;
-            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, ScaledMatrixTag> > lhs2;
-            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag> > lhs3;
+            boost::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> > lhs1;
+            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, ScaledMatrixTag> > lhs2;
+            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, BlockMatrixTag> > lhs3;
             
             GenerateFullMatrices(lhs_values, 2.0, lhs1, lhs2, lhs3);
             //double rhs_values[] = {4, 8, 12, 16,
@@ -225,9 +223,9 @@ namespace Nektar
                                    8, 24, 40, 56,
                                    12, 28, 44, 60,
                                    16, 32, 48, 64};
-            boost::shared_ptr<NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag> > rhs1;
-            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, ScaledMatrixTag> > rhs2;
-            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag> > rhs3; 
+            boost::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> > rhs1;
+            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, ScaledMatrixTag> > rhs2;
+            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, BlockMatrixTag> > rhs3; 
             GenerateFullMatrices(rhs_values, 2.0, rhs1, rhs2, rhs3);
             
             double result_values[16];
@@ -309,9 +307,9 @@ namespace Nektar
                                    6, 14, 22,
                                    8, 16, 24, 32};
 
-            boost::shared_ptr<NekMatrix<NekDouble, UpperTriangularMatrixTag, StandardMatrixTag> > lhs1;
-            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble, UpperTriangularMatrixTag>, UpperTriangularMatrixTag, ScaledMatrixTag> > lhs2;
-            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, UpperTriangularMatrixTag, BlockMatrixTag> > lhs3;
+            boost::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> > lhs1;
+            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, ScaledMatrixTag> > lhs2;
+            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, BlockMatrixTag> > lhs3;
             GenerateUpperTriangularMatrices(lhs_values, 2.0, lhs1, lhs2, lhs3);
 
             //double rhs_values[] = {4,   8, 12, 16,
@@ -322,14 +320,14 @@ namespace Nektar
                                    8, 24,
                                    12, 28, 44,
                                    16, 32, 48, 64};
-            boost::shared_ptr<NekMatrix<NekDouble, UpperTriangularMatrixTag, StandardMatrixTag> > rhs1;
-            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble, UpperTriangularMatrixTag>, UpperTriangularMatrixTag, ScaledMatrixTag> > rhs2;
-            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, UpperTriangularMatrixTag, BlockMatrixTag> > rhs3; 
+            boost::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> > rhs1;
+            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, ScaledMatrixTag> > rhs2;
+            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, BlockMatrixTag> > rhs3; 
             GenerateUpperTriangularMatrices(rhs_values, 2.0, rhs1, rhs2, rhs3);
             
             double result_values[10];
             std::transform(lhs_values, lhs_values+10, rhs_values, result_values, std::plus<NekDouble>());
-            NekMatrix<NekDouble, UpperTriangularMatrixTag, StandardMatrixTag> result(4, 4, result_values);
+            NekMatrix<NekDouble, StandardMatrixTag> result(4, 4, result_values, eUPPER_TRIANGULAR);
             
             //RunAllTestCombinations(*lhs1, *lhs2, *lhs3, *rhs1, *rhs2, *rhs3, result, DoAddition());
         }
@@ -353,9 +351,9 @@ namespace Nektar
                                    6, 14, 22, 30,
                                    8, 16, 24, 32};
 
-            boost::shared_ptr<NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag> > lhs1;
-            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, ScaledMatrixTag> > lhs2;
-            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag> > lhs3;
+            boost::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> > lhs1;
+            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, ScaledMatrixTag> > lhs2;
+            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, BlockMatrixTag> > lhs3;
             
             GenerateFullMatrices(lhs_values, 2.0, lhs1, lhs2, lhs3);
             //double rhs_values[] = {4, 8, 12, 16,
@@ -366,9 +364,9 @@ namespace Nektar
                                    8, 24, 40, 56,
                                    12, 28, 44, 60,
                                    16, 32, 48, 64};
-            boost::shared_ptr<NekMatrix<NekDouble, FullMatrixTag, StandardMatrixTag> > rhs1;
-            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, ScaledMatrixTag> > rhs2;
-            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, FullMatrixTag, BlockMatrixTag> > rhs3; 
+            boost::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> > rhs1;
+            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, ScaledMatrixTag> > rhs2;
+            boost::shared_ptr<NekMatrix<NekMatrix<NekDouble>, BlockMatrixTag> > rhs3; 
             GenerateFullMatrices(rhs_values, 2.0, rhs1, rhs2, rhs3);
             
             double result_values[16];

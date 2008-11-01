@@ -83,7 +83,7 @@ namespace Nektar
             NekMatrix<NekDouble> matX(rows,columns);
     
             // The linear system solver
-            LinearSystem<NekMatrix<NekDouble> > matL( SharedNekMatrixPtr(new NekMatrix<NekDouble>(matA)) );
+            LinearSystem matL( SharedNekMatrixPtr(new NekMatrix<NekDouble>(matA)) );
     
             // Solve each column for the identity matrix
             for( int j=0; j<columns; ++j )
@@ -569,7 +569,7 @@ namespace Nektar
             SharedNekMatrixPtr matV = MakeVmatrixOfTet(x, y, z);
 
             // Initialize the linear system solver
-            LinearSystem<NekMatrix<NekDouble> > matL(matV);
+            LinearSystem matL(matV);
 
 
             // Deduce the quadrature weights
@@ -588,7 +588,7 @@ namespace Nektar
             SharedNekMatrixPtr   matV =  MakeVmatrixOfDubinerPolynomial( x, y);
 
             // Initialize the linear system solver
-            LinearSystem<NekMatrix<NekDouble> > matL(matV);
+            LinearSystem matL(matV);
 
             // Deduce the quadrature weights
             return matL.SolveTranspose(g);

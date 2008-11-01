@@ -117,12 +117,12 @@ namespace Nektar
                                   39.0, 42.0, 45.0, 48.0};
 
             NekMatrix<double> lhs1(4, 4, lhs_buf);
-            boost::shared_ptr<NekMatrix<NekMatrix<double>, FullMatrixTag, ScaledMatrixTag> > lhs2;
-            boost::shared_ptr<NekMatrix<NekMatrix<double>, FullMatrixTag, BlockMatrixTag> > lhs3;
+            boost::shared_ptr<NekMatrix<NekMatrix<double>, ScaledMatrixTag> > lhs2;
+            boost::shared_ptr<NekMatrix<NekMatrix<double>, BlockMatrixTag> > lhs3;
 
             NekMatrix<double> rhs1(4, 4, rhs_buf);
-            boost::shared_ptr<NekMatrix<NekMatrix<double>, FullMatrixTag, ScaledMatrixTag> > rhs2;
-            boost::shared_ptr<NekMatrix<NekMatrix<double>, FullMatrixTag, BlockMatrixTag> > rhs3;
+            boost::shared_ptr<NekMatrix<NekMatrix<double>, ScaledMatrixTag> > rhs2;
+            boost::shared_ptr<NekMatrix<NekMatrix<double>, BlockMatrixTag> > rhs3;
 
             GenerateMatrices(lhs1, 2.0, 2, 2, lhs2, lhs3);
             GenerateMatrices(rhs1, 3.0, 2, 2, rhs2, rhs3);
@@ -159,12 +159,12 @@ namespace Nektar
                                   39.0, 42.0, 45.0, 48.0};
 
             NekMatrix<double> lhs1(4, 4, lhs_buf);
-            boost::shared_ptr<NekMatrix<NekMatrix<double>, FullMatrixTag, ScaledMatrixTag> > lhs2;
-            boost::shared_ptr<NekMatrix<NekMatrix<double>, FullMatrixTag, BlockMatrixTag> > lhs3;
+            boost::shared_ptr<NekMatrix<NekMatrix<double>, ScaledMatrixTag> > lhs2;
+            boost::shared_ptr<NekMatrix<NekMatrix<double>, BlockMatrixTag> > lhs3;
 
             NekMatrix<double> rhs1(4, 4, rhs_buf);
-            boost::shared_ptr<NekMatrix<NekMatrix<double>, FullMatrixTag, ScaledMatrixTag> > rhs2;
-            boost::shared_ptr<NekMatrix<NekMatrix<double>, FullMatrixTag, BlockMatrixTag> > rhs3;
+            boost::shared_ptr<NekMatrix<NekMatrix<double>, ScaledMatrixTag> > rhs2;
+            boost::shared_ptr<NekMatrix<NekMatrix<double>, BlockMatrixTag> > rhs3;
 
             GenerateMatrices(lhs1, 2.0, 2, 2, lhs2, lhs3);
             GenerateMatrices(rhs1, 3.0, 2, 2, rhs2, rhs3);

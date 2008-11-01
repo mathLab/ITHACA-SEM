@@ -270,6 +270,30 @@ namespace Nektar
                 return *this;
             }
             
+            template<typename Dim>
+            NekVector<const DataType, VariableSizedVector, space>& operator=(const NekVector<const DataType, Dim, space>& rhs)
+            {
+                if( m_wrapperType == eCopy  )
+                {
+                    // If the current vector is a copy, then regardless of the rhs type 
+                    // we just copy over the values, resizing if needed.
+                    if( GetDimension() != rhs.GetDimension() )
+                    {
+                        m_size = rhs.GetDimension();
+                        m_data = Array<OneD, DataType>(m_size);
+                    }
+                }
+                else if( m_wrapperType == eWrapper )
+                {
+                    // If the current vector is wrapped, then just copy over the top,
+                    // but the sizes of the two vectors must be the same.
+                    ASSERTL0(GetDimension() == rhs.GetDimension(), "Wrapped NekVectors must have the same dimension in operator=");
+                }
+
+                std::copy(rhs.begin(), rhs.end(), m_data.get());
+                return *this;
+            }
+            
             /// \brief Returns the number of dimensions for the point.
             inline unsigned int GetDimension() const
             {
@@ -450,7 +474,8 @@ namespace Nektar
             }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
-            NekVector<DataType, VariableSizedVector, space>& operator=(const NekVector<const DataType, VariableSizedVector, space>& rhs)
+            template<typename Dim>
+            NekVector<DataType, VariableSizedVector, space>& operator=(const NekVector<const DataType, Dim, space>& rhs)
             {
                 BaseType::operator=(rhs);
                 return *this;

@@ -49,7 +49,7 @@ namespace Nektar
     {
         
         BOOST_AUTO_TEST_CASE(TestConstructorWithArrayAndUserSpecifiedSize)
-        {
+        {        
             int nint=1, nbndry=1;
             Array<OneD, NekDouble> offset;
 

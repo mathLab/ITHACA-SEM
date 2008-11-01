@@ -127,17 +127,17 @@ namespace Nektar
                  BOOST_CHECK(result.GetColumns() == 3);
  
                  double epsilon = 1e-12;
-                 BOOST_CHECK_CLOSE(result(0,0), 97.0, epsilon);
-                 BOOST_CHECK_CLOSE(result(0,1), 103.0, epsilon);
-                 BOOST_CHECK_CLOSE(result(0,2), 109.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(0,0), 97.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(0,1), 103.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(0,2), 109.0, epsilon);
  
-                 BOOST_CHECK_CLOSE(result(1,0), 229.0, epsilon);
-                 BOOST_CHECK_CLOSE(result(1,1), 244.0, epsilon);
-                 BOOST_CHECK_CLOSE(result(1,2), 259.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(1,0), 229.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(1,1), 244.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(1,2), 259.0, epsilon);
  
-                 BOOST_CHECK_CLOSE(result(2,0), 361.0, epsilon);
-                 BOOST_CHECK_CLOSE(result(2,1), 385.0, epsilon);
-                 BOOST_CHECK_CLOSE(result(2,2), 409.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(2,0), 361.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(2,1), 385.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(2,2), 409.0, epsilon);
              }
         }
 
@@ -233,8 +233,8 @@ namespace Nektar
                     new NekMatrix<unsigned int>(3, 3, buf1));
                 boost::shared_ptr<NekMatrix<unsigned int> > rhsInnerMatrix(
                     new NekMatrix<unsigned int>(3, 4, buf2) );
-                NekMatrix<NekMatrix<unsigned int>, FullMatrixTag, ScaledMatrixTag> lhs(2, lhsInnerMatrix);
-                NekMatrix<NekMatrix<unsigned int>, FullMatrixTag, ScaledMatrixTag> rhs(3, rhsInnerMatrix);
+                NekMatrix<NekMatrix<unsigned int>, ScaledMatrixTag> lhs(2, lhsInnerMatrix);
+                NekMatrix<NekMatrix<unsigned int>, ScaledMatrixTag> rhs(3, rhsInnerMatrix);
                 NekMatrix<unsigned int> result = lhs*rhs;
 
                 BOOST_CHECK_EQUAL(3, result.GetRows());
@@ -275,8 +275,8 @@ namespace Nektar
                 boost::shared_ptr<NekMatrix<double> > rhsInnerMatrix(                              
                     new NekMatrix<double>(3, 3, buf2));
 
-                NekMatrix<NekMatrix<double>, FullMatrixTag, ScaledMatrixTag> lhs(2.0, lhsInnerMatrix);
-                NekMatrix<NekMatrix<double>, FullMatrixTag, ScaledMatrixTag> rhs(3.0, rhsInnerMatrix);
+                NekMatrix<NekMatrix<double>, ScaledMatrixTag> lhs(2.0, lhsInnerMatrix);
+                NekMatrix<NekMatrix<double>, ScaledMatrixTag> rhs(3.0, rhsInnerMatrix);
                 
                 NekMatrix<double> result = lhs*rhs;
 
@@ -284,17 +284,17 @@ namespace Nektar
                 BOOST_CHECK(result.GetColumns() == 3);
 
                 double epsilon = 1e-12;
-                BOOST_CHECK_CLOSE(result(0,0), 582.0, epsilon);
-                BOOST_CHECK_CLOSE(result(0,1), 618.0, epsilon);
-                BOOST_CHECK_CLOSE(result(0,2), 654.0, epsilon);
+                BOOST_CHECK_CLOSE(*result(0,0), 582.0, epsilon);
+                BOOST_CHECK_CLOSE(*result(0,1), 618.0, epsilon);
+                BOOST_CHECK_CLOSE(*result(0,2), 654.0, epsilon);
 
-                BOOST_CHECK_CLOSE(result(1,0), 1374.0, epsilon);
-                BOOST_CHECK_CLOSE(result(1,1), 1464.0, epsilon);
-                BOOST_CHECK_CLOSE(result(1,2), 1554.0, epsilon);
+                BOOST_CHECK_CLOSE(*result(1,0), 1374.0, epsilon);
+                BOOST_CHECK_CLOSE(*result(1,1), 1464.0, epsilon);
+                BOOST_CHECK_CLOSE(*result(1,2), 1554.0, epsilon);
 
-                BOOST_CHECK_CLOSE(result(2,0), 2166.0, epsilon);
-                BOOST_CHECK_CLOSE(result(2,1), 2310.0, epsilon);
-                BOOST_CHECK_CLOSE(result(2,2), 2454.0, epsilon);
+                BOOST_CHECK_CLOSE(*result(2,0), 2166.0, epsilon);
+                BOOST_CHECK_CLOSE(*result(2,1), 2310.0, epsilon);
+                BOOST_CHECK_CLOSE(*result(2,2), 2454.0, epsilon);
             }
         }
 
@@ -311,7 +311,7 @@ namespace Nektar
                            
                  boost::shared_ptr<NekMatrix<unsigned int> > innerMatrix(
                      new NekMatrix<unsigned int>(3, 3, buf1));
-                 NekMatrix<NekMatrix<unsigned int>, FullMatrixTag, ScaledMatrixTag>
+                 NekMatrix<NekMatrix<unsigned int>, ScaledMatrixTag>
                      lhs(2, innerMatrix);
                  NekVector<unsigned int> rhs(3, buf2);
                  NekVector<unsigned int> result = lhs*rhs;
@@ -335,7 +335,7 @@ namespace Nektar
                                   
                  boost::shared_ptr<NekMatrix<double> > innerMatrix(
                      new NekMatrix<double>(3, 3, buf1));
-                 NekMatrix<NekMatrix<double>, FullMatrixTag, ScaledMatrixTag> lhs(2.0, innerMatrix);
+                 NekMatrix<NekMatrix<double>, ScaledMatrixTag> lhs(2.0, innerMatrix);
                  NekVector<double> rhs(3, buf2); 
                  NekVector<double> result = lhs*rhs;
  
@@ -359,7 +359,7 @@ namespace Nektar
  
                  boost::shared_ptr<NekMatrix<double> > innerMatrix(
                      new NekMatrix<double>(4, 3, buf1));
-                 NekMatrix<NekMatrix<double>, FullMatrixTag, ScaledMatrixTag> lhs(3.0, innerMatrix);
+                 NekMatrix<NekMatrix<double>, ScaledMatrixTag> lhs(3.0, innerMatrix);
                  NekVector<double> rhs(3, buf2); 
                  NekVector<double> result = lhs*rhs;
  

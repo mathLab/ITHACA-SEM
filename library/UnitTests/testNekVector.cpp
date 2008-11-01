@@ -385,7 +385,7 @@ namespace Nektar
                 double vector_buf[] = {20.0, 30.0, 40.0};
                 
                 boost::shared_ptr<NekMatrix<double> > m(new NekMatrix<double>(3, 3, matrix_buf));
-                NekMatrix<NekMatrix<double>, FullMatrixTag, ScaledMatrixTag> s(2.0, m);
+                NekMatrix<NekMatrix<double>, ScaledMatrixTag> s(2.0, m);
                 NekVector<double> v(3, vector_buf);
                 NekVector<double> result = s*v;
                 
@@ -408,7 +408,7 @@ namespace Nektar
                 boost::shared_ptr<NekMatrix<double> > m2(new NekMatrix<double>(2, 2, m2_buf));
                 boost::shared_ptr<NekMatrix<double> > m3(new NekMatrix<double>(2, 2, m3_buf));
                 
-                NekMatrix<NekMatrix<double>, FullMatrixTag, BlockMatrixTag> b(3, 1, 2, 2);
+                NekMatrix<NekMatrix<double>, BlockMatrixTag> b(3, 1, 2, 2);
                 b.SetBlock(0,0,m1);
                 b.SetBlock(1,0,m2);
                 b.SetBlock(2,0,m3);
@@ -531,7 +531,7 @@ namespace Nektar
                 unsigned int vector_buf[] = {20, 30, 40};
                 
                 boost::shared_ptr<NekMatrix<unsigned int> > m(new NekMatrix<unsigned int>(3, 3, matrix_buf));
-                NekMatrix<NekMatrix<unsigned int>, FullMatrixTag, ScaledMatrixTag> s(2, m);
+                NekMatrix<NekMatrix<unsigned int>, ScaledMatrixTag> s(2, m);
                 NekVector<unsigned int> v(3, vector_buf);
                 NekVector<unsigned int> result = s*v;
                 
@@ -554,7 +554,7 @@ namespace Nektar
                 boost::shared_ptr<NekMatrix<unsigned int> > m2(new NekMatrix<unsigned int>(2, 2, m2_buf));
                 boost::shared_ptr<NekMatrix<unsigned int> > m3(new NekMatrix<unsigned int>(2, 2, m3_buf));
                 
-                NekMatrix<NekMatrix<unsigned int>, FullMatrixTag, BlockMatrixTag> b(3, 1, 2, 2);
+                NekMatrix<NekMatrix<unsigned int>, BlockMatrixTag> b(3, 1, 2, 2);
                 b.SetBlock(0,0,m1);
                 b.SetBlock(1,0,m2);
                 b.SetBlock(2,0,m3);

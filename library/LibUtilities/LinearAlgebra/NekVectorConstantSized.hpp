@@ -245,6 +245,13 @@ namespace Nektar
                 return *this;
             }
             
+            NekVector<const DataType, dim, space>& operator=(const NekVector<const DataType, VariableSizedVector, space>& rhs)
+            {
+                ASSERTL0(GetDimension() == rhs.GetDimension(), "Assignment to a constant sized vector must have the same number of elements.");
+                std::copy(rhs.GetRawPtr(), rhs.GetRawPtr()+dim::Value, m_impl);
+                return *this;
+            }
+            
         private:
             DataType m_impl[dim::Value];
 
@@ -323,6 +330,11 @@ namespace Nektar
                 return *this;
             }
 
+            NekVector<DataType, dim, space>& operator=(const NekVector<const DataType, VariableSizedVector, space>& rhs)
+            {
+                BaseType::operator=(rhs);
+                return *this;
+            }
             
             DataType* GetRawPtr()
             {

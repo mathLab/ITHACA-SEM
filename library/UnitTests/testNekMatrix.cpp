@@ -54,10 +54,10 @@ namespace Nektar
                 NekMatrix<double> m(2,2,buf);
                 m.Invert();
 
-                BOOST_CHECK_CLOSE(m(0,0), -2.0, .00001);
-                BOOST_CHECK_CLOSE(m(0,1), 1.0, .00001);
-                BOOST_CHECK_CLOSE(m(1,0), 3.0/2.0, .00001);
-                BOOST_CHECK_CLOSE(m(1,1), -1.0/2.0, .00001);
+                BOOST_CHECK_CLOSE(*m(0,0), -2.0, .00001);
+                BOOST_CHECK_CLOSE(*m(0,1), 1.0, .00001);
+                BOOST_CHECK_CLOSE(*m(1,0), 3.0/2.0, .00001);
+                BOOST_CHECK_CLOSE(*m(1,1), -1.0/2.0, .00001);
             }
             
             {
@@ -69,35 +69,35 @@ namespace Nektar
                 NekMatrix<double> m(5,5,buf);
                 m.Invert();
 
-                BOOST_CHECK_CLOSE(m(0,0), 0.0005010995978, .000001);
-                BOOST_CHECK_CLOSE(m(0,1), -0.4704403712, .000001);
-                BOOST_CHECK_CLOSE(m(0,2), 0.2719063614 , .000001);
-                BOOST_CHECK_CLOSE(m(0,3), -0.3941557805 , .000001);
-                BOOST_CHECK_CLOSE(m(0,4), 0.09043166650, .000001);
+                BOOST_CHECK_CLOSE(*m(0,0), 0.0005010995978, .000001);
+                BOOST_CHECK_CLOSE(*m(0,1), -0.4704403712, .000001);
+                BOOST_CHECK_CLOSE(*m(0,2), 0.2719063614 , .000001);
+                BOOST_CHECK_CLOSE(*m(0,3), -0.3941557805 , .000001);
+                BOOST_CHECK_CLOSE(*m(0,4), 0.09043166650, .000001);
 
-                BOOST_CHECK_CLOSE(m(1,0), -0.01087166322 , .000001);
-                BOOST_CHECK_CLOSE(m(1,1), 0.3242048735 , .000001);
-                BOOST_CHECK_CLOSE(m(1,2), -0.1605116333, .000001);
-                BOOST_CHECK_CLOSE(m(1,3), 0.09133673974 , .000001);
-                BOOST_CHECK_CLOSE(m(1,4), 0.01293234281, .000001);
+                BOOST_CHECK_CLOSE(*m(1,0), -0.01087166322 , .000001);
+                BOOST_CHECK_CLOSE(*m(1,1), 0.3242048735 , .000001);
+                BOOST_CHECK_CLOSE(*m(1,2), -0.1605116333, .000001);
+                BOOST_CHECK_CLOSE(*m(1,3), 0.09133673974 , .000001);
+                BOOST_CHECK_CLOSE(*m(1,4), 0.01293234281, .000001);
 
-                BOOST_CHECK_CLOSE(m(2,0), 0.06465598241, .000001);
-                BOOST_CHECK_CLOSE(m(2,1), 0.2593895742 , .000001);
-                BOOST_CHECK_CLOSE(m(2,2), -0.09057233795, .000001);
-                BOOST_CHECK_CLOSE(m(2,3), 0.3106562459, .000001);
-                BOOST_CHECK_CLOSE(m(2,4), -0.1589713628, .000001);
+                BOOST_CHECK_CLOSE(*m(2,0), 0.06465598241, .000001);
+                BOOST_CHECK_CLOSE(*m(2,1), 0.2593895742 , .000001);
+                BOOST_CHECK_CLOSE(*m(2,2), -0.09057233795, .000001);
+                BOOST_CHECK_CLOSE(*m(2,3), 0.3106562459, .000001);
+                BOOST_CHECK_CLOSE(*m(2,4), -0.1589713628, .000001);
 
-                BOOST_CHECK_CLOSE(m(3,0), -0.03464982687, .000001);
-                BOOST_CHECK_CLOSE(m(3,1), 0.2655177914, .000001);
-                BOOST_CHECK_CLOSE(m(3,2), -0.1016866584, .000001);
-                BOOST_CHECK_CLOSE(m(3,3), 0.2125363445, .000001);
-                BOOST_CHECK_CLOSE(m(3,4), -0.1099886183, .000001);
+                BOOST_CHECK_CLOSE(*m(3,0), -0.03464982687, .000001);
+                BOOST_CHECK_CLOSE(*m(3,1), 0.2655177914, .000001);
+                BOOST_CHECK_CLOSE(*m(3,2), -0.1016866584, .000001);
+                BOOST_CHECK_CLOSE(*m(3,3), 0.2125363445, .000001);
+                BOOST_CHECK_CLOSE(*m(3,4), -0.1099886183, .000001);
 
-                BOOST_CHECK_CLOSE(m(4,0), -0.02957895492, .000001);
-                BOOST_CHECK_CLOSE(m(4,1), -0.3518447037, .000001);
-                BOOST_CHECK_CLOSE(m(4,2), 0.2060393188, .000001);
-                BOOST_CHECK_CLOSE(m(4,3), -0.1411012255, .000001);
-                BOOST_CHECK_CLOSE(m(4,4), 0.1670437017, .000001);
+                BOOST_CHECK_CLOSE(*m(4,0), -0.02957895492, .000001);
+                BOOST_CHECK_CLOSE(*m(4,1), -0.3518447037, .000001);
+                BOOST_CHECK_CLOSE(*m(4,2), 0.2060393188, .000001);
+                BOOST_CHECK_CLOSE(*m(4,3), -0.1411012255, .000001);
+                BOOST_CHECK_CLOSE(*m(4,4), 0.1670437017, .000001);
             }
             
             {
@@ -107,7 +107,7 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestDiagonalMatrixInversion)
         {
             double buf[] = {1.0, 2.0, 3.0, 4.0};
-            NekMatrix<double, DiagonalMatrixTag> m(4, 4, buf);
+            NekMatrix<double> m(4, 4, buf, eDIAGONAL);
             m.Invert();
             
             BOOST_CHECK_EQUAL(m(0,0), 1.0/1.0);
@@ -141,8 +141,8 @@ namespace Nektar
             }
             
             {
-                boost::shared_ptr<Nektar::Matrix<double> > a(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3,3));
-                boost::shared_ptr<Nektar::NekMatrix<double, DiagonalMatrixTag > > b(new Nektar::NekMatrix<double, DiagonalMatrixTag>(5,5));
+                boost::shared_ptr<Nektar::Matrix<double> > a(new Nektar::NekMatrix<double>(3,3, eDIAGONAL));
+                boost::shared_ptr<Nektar::NekMatrix<double> > b(new Nektar::NekMatrix<double>(5,5,eDIAGONAL));
                 
                 BOOST_CHECK_EQUAL(a->GetRows(), 3);
                 BOOST_CHECK_EQUAL(a->GetColumns(), 3);
@@ -247,9 +247,9 @@ namespace Nektar
         {
             UnitTests::RedirectCerrIfNeeded();
             double data[] = {8.9, 3.4, 5.7};
-            Nektar::NekMatrix<double, DiagonalMatrixTag> m1(3, 3, data);
-            boost::shared_ptr<Nektar::Matrix<double> > m2(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3, 3, data));
-            boost::shared_ptr<Nektar::NekMatrix<double, DiagonalMatrixTag > > m3(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3, 3, data));
+            Nektar::NekMatrix<double> m1(3, 3, data, eDIAGONAL);
+            boost::shared_ptr<Nektar::Matrix<double> > m2(new Nektar::NekMatrix<double>(3, 3, data, eDIAGONAL));
+            boost::shared_ptr<Nektar::NekMatrix<double > > m3(new Nektar::NekMatrix<double>(3, 3, data, eDIAGONAL));
             
             BOOST_CHECK_EQUAL(m1(0,0), 8.9);
             BOOST_CHECK_EQUAL((*m2)(0,0), 8.9);
@@ -342,9 +342,9 @@ namespace Nektar
         {
             UnitTests::RedirectCerrIfNeeded();
             double data[] = {8.9, 3.4, 5.7};
-            Nektar::NekMatrix<double, DiagonalMatrixTag> m1(3, 3, data);
-            boost::shared_ptr<Nektar::Matrix<double> > m2(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3, 3, data));
-            boost::shared_ptr<Nektar::NekMatrix<double, DiagonalMatrixTag > > m3(new Nektar::NekMatrix<double, DiagonalMatrixTag>(3, 3, data));
+            Nektar::NekMatrix<double> m1(3, 3, data, eDIAGONAL);
+            boost::shared_ptr<Nektar::Matrix<double> > m2(new Nektar::NekMatrix<double>(3, 3, data, eDIAGONAL));
+            boost::shared_ptr<Nektar::NekMatrix<double > > m3(new Nektar::NekMatrix<double>(3, 3, data, eDIAGONAL));
             
             m1.SetValue(0,0,1.0);
             m2->SetValue(1,1,2.0);
@@ -566,17 +566,17 @@ namespace Nektar
                  BOOST_CHECK(result.GetColumns() == 3);
  
                  double epsilon = 1e-12;
-                 BOOST_CHECK_CLOSE(result(0,0), 97.0, epsilon);
-                 BOOST_CHECK_CLOSE(result(0,1), 103.0, epsilon);
-                 BOOST_CHECK_CLOSE(result(0,2), 109.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(0,0), 97.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(0,1), 103.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(0,2), 109.0, epsilon);
  
-                 BOOST_CHECK_CLOSE(result(1,0), 229.0, epsilon);
-                 BOOST_CHECK_CLOSE(result(1,1), 244.0, epsilon);
-                 BOOST_CHECK_CLOSE(result(1,2), 259.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(1,0), 229.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(1,1), 244.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(1,2), 259.0, epsilon);
  
-                 BOOST_CHECK_CLOSE(result(2,0), 361.0, epsilon);
-                 BOOST_CHECK_CLOSE(result(2,1), 385.0, epsilon);
-                 BOOST_CHECK_CLOSE(result(2,2), 409.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(2,0), 361.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(2,1), 385.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(2,2), 409.0, epsilon);
              }
          
              {
@@ -596,20 +596,20 @@ namespace Nektar
                  BOOST_CHECK(result.GetColumns() == 4);
  
                  double epsilon = 1e-12;
-                 BOOST_CHECK_CLOSE(result(0,0), 97.0, epsilon);
-                 BOOST_CHECK_CLOSE(result(0,1), 103.0, epsilon);
-                 BOOST_CHECK_CLOSE(result(0,2), 109.0, epsilon);
-                 BOOST_CHECK_CLOSE(result(0,3), 116.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(0,0), 97.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(0,1), 103.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(0,2), 109.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(0,3), 116.0, epsilon);
  
-                 BOOST_CHECK_CLOSE(result(1,0), 229.0, epsilon);
-                 BOOST_CHECK_CLOSE(result(1,1), 244.0, epsilon);
-                 BOOST_CHECK_CLOSE(result(1,2), 259.0, epsilon);
-                 BOOST_CHECK_CLOSE(result(1,3), 278.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(1,0), 229.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(1,1), 244.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(1,2), 259.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(1,3), 278.0, epsilon);
  
-                 BOOST_CHECK_CLOSE(result(2,0), 361.0, epsilon);
-                 BOOST_CHECK_CLOSE(result(2,1), 385.0, epsilon);
-                 BOOST_CHECK_CLOSE(result(2,2), 409.0, epsilon);
-                 BOOST_CHECK_CLOSE(result(2,3), 440.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(2,0), 361.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(2,1), 385.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(2,2), 409.0, epsilon);
+                 BOOST_CHECK_CLOSE(*result(2,3), 440.0, epsilon);
              }
              
              {
@@ -681,7 +681,7 @@ namespace Nektar
              NekMatrix<unsigned int> full(3, 3, fullValues);
  
              unsigned int diagonalValues[] = {6, 12, 5};
-             NekMatrix<unsigned int, DiagonalMatrixTag> diag(3, 3, diagonalValues);
+             NekMatrix<unsigned int> diag(3, 3, diagonalValues, eDIAGONAL);
  
              NekMatrix<unsigned int> result1 = full+diag;
              NekMatrix<unsigned int> result2 = diag+full;
@@ -756,6 +756,9 @@ namespace Nektar
 
 /**
     $Log: testNekMatrix.cpp,v $
+    Revision 1.33  2008/05/30 23:43:42  bnelson
+    Redirected the ASSERT messages to a file when running unit tests.
+
     Revision 1.32  2008/04/22 05:22:47  bnelson
     Speed enhancements.
 

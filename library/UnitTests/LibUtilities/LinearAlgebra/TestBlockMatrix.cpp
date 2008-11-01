@@ -51,7 +51,7 @@ namespace Nektar
     {
         BOOST_AUTO_TEST_CASE(TestRowsAndColumnsPerBlockAccess)
         {
-            NekMatrix<NekMatrix<double>, FullMatrixTag, BlockMatrixTag> m(2, 3, 7, 10);
+            NekMatrix<NekMatrix<double>, BlockMatrixTag> m(2, 3, 7, 10);
             BOOST_CHECK_EQUAL(7, m.GetNumberOfRowsInBlockRow(0));
             BOOST_CHECK_EQUAL(7, m.GetNumberOfRowsInBlockRow(1));
             BOOST_CHECK_EQUAL(10, m.GetNumberOfColumnsInBlockColumn(0));
@@ -62,7 +62,7 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestMultiplication)
         {
             typedef NekMatrix<double> InnerType;
-            typedef NekMatrix<InnerType, FullMatrixTag, BlockMatrixTag> BlockType;
+            typedef NekMatrix<InnerType, BlockMatrixTag> BlockType;
 
             double m1_buf[] = {1, 6,
                                2, 7,
@@ -103,7 +103,7 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestMultiplication_1)
         {
             typedef NekMatrix<double> InnerType;
-            typedef NekMatrix<InnerType, FullMatrixTag, BlockMatrixTag> BlockType;
+            typedef NekMatrix<InnerType, BlockMatrixTag> BlockType;
 
             double m_00_buf[] = {3, 1, 
                                  5, 5};

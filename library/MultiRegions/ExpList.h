@@ -1107,6 +1107,8 @@ namespace Nektar
             inline virtual boost::shared_ptr<GenExpList1D> &v_GetTrace(void)
             {
                 ASSERTL0(false,"This method is not defined or valid for this class type");
+                static boost::shared_ptr<GenExpList1D> returnVal;
+                return returnVal;
             }
             
 
@@ -1166,6 +1168,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.47  2008/10/29 22:46:35  sherwin
+* Updates for const correctness and a few other bits
+*
 * Revision 1.46  2008/10/19 15:57:52  sherwin
 * Added method EvalBasisNumModesMax
 *

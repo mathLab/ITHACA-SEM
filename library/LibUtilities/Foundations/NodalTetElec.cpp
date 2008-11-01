@@ -200,7 +200,7 @@ namespace Nektar
 
             NodalPointReorder3d();
 
-            ASSERTL1((isum==m_pointsKey.GetTotNumPoints()),"sum not equal to npts");
+            ASSERTL1((static_cast<unsigned int>(isum)==m_pointsKey.GetTotNumPoints()),"sum not equal to npts");
         }
 
         void NodalTetElec::CalculateWeights()
@@ -274,6 +274,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTetElec.cpp,v $
+* Revision 1.13  2008/04/06 05:54:08  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.12  2007/10/03 03:00:13  bnelson
 * Added precompiled headers.
 *

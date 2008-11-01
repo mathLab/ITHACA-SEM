@@ -39,10 +39,7 @@
 #include <LibUtilities/LinearAlgebra/MatrixBase.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
-#include <LibUtilities/LinearAlgebra/FullMatrixStoragePolicy.hpp>
-#include <LibUtilities/LinearAlgebra/DiagonalMatrixStoragePolicy.hpp>
-#include <LibUtilities/LinearAlgebra/TriangularMatrixStoragePolicy.hpp>
-#include <LibUtilities/LinearAlgebra/BandedMatrixStoragePolicy.hpp>
+#include <LibUtilities/LinearAlgebra/MatrixFuncs.h>
 
 #include <boost/shared_ptr.hpp>
 
@@ -68,7 +65,7 @@ namespace Nektar
             {
                 public:
                     typedef typename MatrixType::InnerType IteratorInnerType;
-                    typedef MatrixStoragePolicy<FullMatrixTag> StoragePolicy;
+                    typedef FullMatrixFuncs StoragePolicy;
 
                 public:                   
                     iterator_base(MatrixType& m, unsigned int curRow, unsigned int curCol) :

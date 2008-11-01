@@ -478,7 +478,7 @@ namespace Nektar
                             // The array we pass in to dgbtrf must have enough space for KL
                             // subdiagonals and KL+KU superdiagonals (see lapack users guide,
                             // in the section discussing band storage.
-                            unsigned int requiredStorageSize = MatrixStoragePolicy<BandedMatrixTag>::
+                            unsigned int requiredStorageSize = BandedMatrixFuncs::
                                 GetRequiredStorageSize(n, n, KL, KL+KU);
                             
                             unsigned int rawRows = KL+KU+1;

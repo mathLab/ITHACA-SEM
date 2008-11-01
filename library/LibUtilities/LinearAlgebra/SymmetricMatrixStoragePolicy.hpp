@@ -43,56 +43,6 @@
 
 namespace Nektar
 {
-    /// \internal
-    /// Symmetric matrices use upper triangular packed storage.
-    template<>
-    class MatrixStoragePolicy<SymmetricMatrixTag> : private TriangularMatrixStoragePolicy
-    {
-        public:
-            using TriangularMatrixStoragePolicy::GetRequiredStorageSize;
-            
-            static unsigned int CalculateIndex(unsigned int curRow, unsigned int curColumn)
-            {
-                return curRow + curColumn*(curColumn+1)/2;
-            }
-
-            static boost::tuples::tuple<unsigned int, unsigned int> 
-            Advance(const unsigned int totalRows, const unsigned int totalColumns,
-                    const unsigned int curRow, const unsigned int curColumn)
-            {
-                ASSERTL1(totalRows == totalColumns, "Symmetric matrices must be square.");
-                ASSERTL1(curRow < totalRows, "Attemping to iterate through an element on row " +
-                    boost::lexical_cast<std::string>(curRow) + " of a (" +
-                    boost::lexical_cast<std::string>(totalRows) + ", " +
-                    boost::lexical_cast<std::string>(totalColumns) + " symmetric matrix.");
-                ASSERTL1(curColumn < totalColumns, "Attemping to iterate through an element on row " +
-                    boost::lexical_cast<std::string>(curColumn) + " of a (" +
-                    boost::lexical_cast<std::string>(totalRows) + ", " +
-                    boost::lexical_cast<std::string>(totalColumns) + " symmetric matrix.");
-
-                unsigned int nextRow = curRow;
-                unsigned int nextColumn = curColumn;
-
-                if( nextRow < totalRows )
-                {
-                    ++nextRow;
-                }
-
-                if( nextRow >= totalRows )
-                {
-                    nextRow = 0;
-                    ++nextColumn;
-                }
-
-                if( nextColumn >= totalColumns )
-                {
-                    nextRow = std::numeric_limits<unsigned int>::max();
-                    nextColumn = std::numeric_limits<unsigned int>::max();
-                }
-
-                return boost::tuples::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
-            }
-    };
 }
 
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_SYMMETRIC_MATRIX_STORAGE_POLICY_HPP

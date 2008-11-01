@@ -37,15 +37,11 @@
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_STANDARD_MATRIX_HPP
 
 #include <LibUtilities/LinearAlgebra/MatrixBase.hpp>
-#include <LibUtilities/LinearAlgebra/FullMatrixStoragePolicy.hpp>
-#include <LibUtilities/LinearAlgebra/DiagonalMatrixStoragePolicy.hpp>
-#include <LibUtilities/LinearAlgebra/TriangularMatrixStoragePolicy.hpp>
 #include <LibUtilities/LinearAlgebra/PointerWrapper.h>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrixMetadata.hpp>
-#include <LibUtilities/LinearAlgebra/SymmetricMatrixStoragePolicy.hpp>
-#include <LibUtilities/LinearAlgebra/BandedMatrixStoragePolicy.hpp>
+#include <LibUtilities/LinearAlgebra/MatrixFuncs.h>
 
 namespace Nektar
 {
@@ -389,15 +385,9 @@ namespace Nektar
                 }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
-//            MatrixStorage GetStorageType() const 
-//            {
-//                return static_cast<MatrixStorage>(ConvertToMatrixStorageEnum<StorageType>::Value);
-//            }
             
             MatrixStorage GetType() const { return m_storagePolicy; }
-            
-            // TODO - Copy constructors from other types of matrices.
-            
+           
             ThisType& operator=(const ThisType& rhs)
             {
                 if( this == &rhs )
@@ -767,29 +757,29 @@ namespace Nektar
                 switch(m_storagePolicy)
                 {
                     case eFULL:
-                        return MatrixStoragePolicy<FullMatrixTag>::Advance(
+                        return FullMatrixFuncs::Advance(
                             numRows, numColumns, curRow, curColumn);
                         break;
                     case eDIAGONAL:
-                        return MatrixStoragePolicy<DiagonalMatrixTag>::Advance(
+                        return DiagonalMatrixFuncs::Advance(
                             numRows, numColumns, curRow, curColumn);
                         break;
                     case eUPPER_TRIANGULAR:
-                        return MatrixStoragePolicy<UpperTriangularMatrixTag>::Advance(
+                        return UpperTriangularMatrixFuncs::Advance(
                             numRows, numColumns, curRow, curColumn);
                         break;
                         
                     case eLOWER_TRIANGULAR:
-                        return MatrixStoragePolicy<LowerTriangularMatrixTag>::Advance(
+                        return LowerTriangularMatrixFuncs::Advance(
                             numRows, numColumns, curRow, curColumn);
                         break;
                         
                     case eSYMMETRIC:
-                        return MatrixStoragePolicy<SymmetricMatrixTag>::Advance(
+                        return SymmetricMatrixFuncs::Advance(
                             numRows, numColumns, curRow, curColumn);
                         break;
                     case eBANDED:
-                        return MatrixStoragePolicy<BandedMatrixTag>::Advance(
+                        return BandedMatrixFuncs::Advance(
                             numRows, numColumns, curRow, curColumn);
                         break;
                     case eSYMMETRIC_BANDED:
@@ -838,22 +828,22 @@ namespace Nektar
                 switch(m_storagePolicy)
                 {
                     case eFULL:
-                        return MatrixStoragePolicy<FullMatrixTag>::GetRequiredStorageSize(this->GetRows(), this->GetColumns());
+                        return FullMatrixFuncs::GetRequiredStorageSize(this->GetRows(), this->GetColumns());
                         break;
                     case eDIAGONAL:
-                        return MatrixStoragePolicy<DiagonalMatrixTag>::GetRequiredStorageSize(this->GetRows(), this->GetColumns());
+                        return DiagonalMatrixFuncs::GetRequiredStorageSize(this->GetRows(), this->GetColumns());
                         break;
                     case eUPPER_TRIANGULAR:
-                        return MatrixStoragePolicy<UpperTriangularMatrixTag>::GetRequiredStorageSize(this->GetRows(), this->GetColumns());
+                        return UpperTriangularMatrixFuncs::GetRequiredStorageSize(this->GetRows(), this->GetColumns());
                         break;
                     case eLOWER_TRIANGULAR:
-                        return MatrixStoragePolicy<LowerTriangularMatrixTag>::GetRequiredStorageSize(this->GetRows(), this->GetColumns());
+                        return LowerTriangularMatrixFuncs::GetRequiredStorageSize(this->GetRows(), this->GetColumns());
                         break;
                     case eSYMMETRIC:
-                        return MatrixStoragePolicy<SymmetricMatrixTag>::GetRequiredStorageSize(this->GetRows(), this->GetColumns());
+                        return SymmetricMatrixFuncs::GetRequiredStorageSize(this->GetRows(), this->GetColumns());
                         break;
                     case eBANDED:
-                        return MatrixStoragePolicy<BandedMatrixTag>::GetRequiredStorageSize(this->GetRows(), this->GetColumns(),
+                        return BandedMatrixFuncs::GetRequiredStorageSize(this->GetRows(), this->GetColumns(),
                             m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
                         break;
                     case eSYMMETRIC_BANDED:

@@ -42,53 +42,6 @@
 
 namespace Nektar
 {
-    template<>
-    class MatrixStoragePolicy<DiagonalMatrixTag>
-    {
-        public:
-            
-            static boost::tuples::tuple<unsigned int, unsigned int> 
-            Advance(const unsigned int totalRows, const unsigned int totalColumns,
-                    const unsigned int curRow, const unsigned int curColumn)
-            {
-                ASSERTL0(curRow == curColumn, "Iteration of a diagonal matrix is only valid along the diagonal.");
-
-                unsigned int nextRow = curRow;
-                unsigned int nextColumn = curColumn;
-
-                if( nextRow < totalRows )
-                {
-                    ++nextRow;
-                    ++nextColumn;
-                }
-
-                if( nextRow >= totalRows )
-                {
-                    nextRow = std::numeric_limits<unsigned int>::max();
-                    nextColumn = std::numeric_limits<unsigned int>::max();
-                }
-
-                return boost::tuples::tuple<unsigned int, unsigned int>(nextRow, nextColumn);
-            }
-
-            template<typename DataType>
-            static void Invert(unsigned int rows, unsigned int columns,
-                               Array<OneD, DataType>& data,
-                               const char transpose)
-            {
-                ASSERTL0(rows==columns, "Only square matrices can be inverted.");
-                for(unsigned int i = 0; i < rows; ++i)
-                {
-                    data[i] = 1.0/data[i];
-                }
-            }
-            
-            static unsigned int GetRequiredStorageSize(unsigned int rows, unsigned int columns)
-            {
-                ASSERTL0(rows==columns, "Diagonal matrices must be square.");
-                return rows;
-            }
-    };
 }
 
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_DIAGONAL_MATRIX_STORAGE_POLICY_HPP

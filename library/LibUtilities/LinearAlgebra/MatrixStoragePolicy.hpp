@@ -45,29 +45,6 @@
 namespace Nektar
 {
 
-    class DefaultPolicySpecificDataHolder {};
-
-    // Blas divides storage into the following 3 high level storage schemes:
-    //
-    // 1.  Full.  Each element in the matrix has an associated memory location allocated
-    //     for it. 
-    // 2.  Packed.  Allows storage of symmetric and triangular matrices more efficiently.
-    // 3.  Band.  Allows storage of banded matrices more efficiently.
-
-    // Nektar++ supports the following matrix types.
-    // Full Storage - General 
-    // Packed Storage - Symmetric, Upper Triangular, Lower Triangular
-    // Band Storage - General, Symmetric, Upper Triangular, Lower Triangular.
-
-    /// \brief The class which must be specialized for each unique storage type.
-    ///
-    /// Any specialization must include the following methods:
-    /// static Array<OneD, DataType> Initialize();
-    template<typename StorageType>
-    class MatrixStoragePolicy;
-
-
-
 }
 
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_STORAGE_POLICY_HPP

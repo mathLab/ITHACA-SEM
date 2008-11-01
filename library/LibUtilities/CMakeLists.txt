@@ -13,6 +13,7 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/FullMatrixStoragePolicy.hpp
     ./LinearAlgebra/Lapack.hpp
     ./LinearAlgebra/MatrixBase.hpp
+    ./LinearAlgebra/MatrixFuncs.h
     ./LinearAlgebra/MatrixOperations.cpp
     ./LinearAlgebra/MatrixOperations.hpp
     ./LinearAlgebra/MatrixStoragePolicy.hpp
@@ -156,6 +157,7 @@ SET(PolylibSources
 
 SET(LinearAlgebraSources
 	./LinearAlgebra/blas.cpp
+	./LinearAlgebra/MatrixFuncs.cpp
 #	./LinearAlgebra/lapack.cpp
 )
 

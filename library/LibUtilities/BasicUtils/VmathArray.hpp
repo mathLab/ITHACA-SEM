@@ -77,8 +77,8 @@ using namespace Nektar;
         
         template<class T>  void Smul( int n, const T alpha, const Array<OneD,const T> &x,  const int incx,  Array<OneD,T>  &y, const int incy)
         {
-            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
-            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+            ASSERTL1(static_cast<unsigned int>(n*incx) <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(static_cast<unsigned int>(n*incy) <= y.num_elements()+y.GetOffset(),"Array out of bounds");
             
             Smul(n,alpha, &x[0],incx,&y[0],incy);
         }
@@ -86,9 +86,9 @@ using namespace Nektar;
         /// \brief Multiply vector z = x/y
         template<class T>  void Vdiv( int n, const Array<OneD,const T> &x, const int incx, Array<OneD,T> &y, const int incy,  Array<OneD,T> &z, const int incz)
         {
-            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
-            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
-            ASSERTL1(n*incz <= z.num_elements()+z.GetOffset(),"Array out of bounds");
+            ASSERTL1(static_cast<unsigned int>(n*incx) <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(static_cast<unsigned int>(n*incy) <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+            ASSERTL1(static_cast<unsigned int>(n*incz) <= z.num_elements()+z.GetOffset(),"Array out of bounds");
             
             Vdiv(n,&x[0],incx,&y[0],incy,&z[0],incz);
             
@@ -97,8 +97,8 @@ using namespace Nektar;
         /// \brief Scalar multiply  y = alpha/y
         template<class T>  void Sdiv( int n, const T alpha, const Array<OneD,const T> &x, const int incx,  Array<OneD,T> &y, const int incy)
         {
-            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
-            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+            ASSERTL1(static_cast<unsigned int>(n*incx) <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(static_cast<unsigned int>(n*incy) <= y.num_elements()+y.GetOffset(),"Array out of bounds");
             
             Sdiv(n,alpha,&x[0],incx,&y[0],incy);
         }
@@ -107,9 +107,9 @@ using namespace Nektar;
         template<class T>  void Vadd( int n, const Array<OneD,const T> &x, const int incx, const Array<OneD,const T> &y,  const int incy,  Array<OneD,T> &z, const int incz)
         {
 
-            ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
-            ASSERTL1(n*incy <= y.num_elements()+y.GetOffset(),"Array out of bounds");
-            ASSERTL1(n*incz <= z.num_elements()+z.GetOffset(),"Array out of bounds");
+            ASSERTL1(static_cast<unsigned int>(n*incx) <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(static_cast<unsigned int>(n*incy) <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+            ASSERTL1(static_cast<unsigned int>(n*incz) <= z.num_elements()+z.GetOffset(),"Array out of bounds");
          
             Vadd(n,&x[0],incx,&y[0],incy,&z[0],incz);
         }
@@ -335,6 +335,9 @@ using namespace Nektar;
 
 /***
 $Log: VmathArray.hpp,v $
+Revision 1.5  2008/11/01 19:10:03  bnelson
+Fixed compiler warning
+
 Revision 1.4  2008/09/09 14:00:55  sherwin
 Fixed error in Sdiv definition
 

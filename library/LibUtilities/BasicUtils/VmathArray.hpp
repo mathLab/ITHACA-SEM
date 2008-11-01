@@ -324,8 +324,8 @@ using namespace Nektar;
         
         template<class T> void Vcopy(int n, const Array<OneD, const T> &x, int incx, Array<OneD,T> &y, int const incy)
         {
-            ASSERTL1(std::abs(n*incx) <= x.num_elements()+x.GetOffset(),"Array out of bounds");
-            ASSERTL1(std::abs(n*incy) <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+            ASSERTL1(static_cast<unsigned int>(std::abs(n*incx)) <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(static_cast<unsigned int>(std::abs(n*incy)) <= y.num_elements()+y.GetOffset(),"Array out of bounds");
 
             Vcopy(n,&x[0],incx,&y[0],incy);
         }
@@ -335,6 +335,9 @@ using namespace Nektar;
 
 /***
 $Log: VmathArray.hpp,v $
+Revision 1.4  2008/09/09 14:00:55  sherwin
+Fixed error in Sdiv definition
+
 Revision 1.3  2008/05/10 18:27:32  sherwin
 Modifications necessary for QuadExp Unified DG Solver
 

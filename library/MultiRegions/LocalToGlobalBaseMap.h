@@ -202,14 +202,17 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalBaseMap.h,v $
-/** Revision 1.3  2008/09/17 13:46:40  pvos
-/** Added LocalToGlobalC0ContMap for 3D expansions
-/**
-/** Revision 1.2  2008/09/16 13:36:06  pvos
-/** Restructured the LocalToGlobalMap classes
-/**
-/** Revision 1.1  2008/08/18 08:16:23  sherwin
-/** First version of this new class container for mappings
-/**
+ Revision 1.4  2008/09/23 18:21:00  pvos
+ Updates for working ProjectContField3D demo
+
+ Revision 1.3  2008/09/17 13:46:40  pvos
+ Added LocalToGlobalC0ContMap for 3D expansions
+
+ Revision 1.2  2008/09/16 13:36:06  pvos
+ Restructured the LocalToGlobalMap classes
+
+ Revision 1.1  2008/08/18 08:16:23  sherwin
+ First version of this new class container for mappings
+
  */
 

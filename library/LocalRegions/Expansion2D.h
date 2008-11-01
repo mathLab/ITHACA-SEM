@@ -136,7 +136,7 @@ namespace Nektar
             virtual StdRegions::StdExpansion1DSharedPtr v_GetEdgeExp(const int edge, bool SetUpNormals=true)
             {
                 ASSERTL0(false,"Function only currently valid for 2D Local expansions");
-
+                return StdRegions::StdExpansion1DSharedPtr();
             }
 
             virtual void v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
@@ -166,6 +166,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.h,v $
+ *    Revision 1.4  2008/10/04 19:34:09  sherwin
+ *    Added an upwind method which takes the normal flux rather than than individual components
+ *
  *    Revision 1.3  2008/08/27 16:35:13  pvos
  *    Small efficiency update
  *

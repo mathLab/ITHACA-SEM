@@ -5,23 +5,18 @@ SET(BasicConstHeaders
 )
 
 SET(LinearAlgebraHeaders
-    ./LinearAlgebra/BandedMatrixStoragePolicy.hpp
     ./LinearAlgebra/Blas.hpp
     ./LinearAlgebra/BlasArray.hpp
     ./LinearAlgebra/BlockMatrix.hpp
-    ./LinearAlgebra/DiagonalMatrixStoragePolicy.hpp
-    ./LinearAlgebra/FullMatrixStoragePolicy.hpp
     ./LinearAlgebra/Lapack.hpp
     ./LinearAlgebra/MatrixBase.hpp
     ./LinearAlgebra/MatrixFuncs.h
     ./LinearAlgebra/MatrixOperations.cpp
     ./LinearAlgebra/MatrixOperations.hpp
-    ./LinearAlgebra/MatrixStoragePolicy.hpp
     ./LinearAlgebra/MatrixStorageType.h
     ./LinearAlgebra/MatrixType.h
     ./LinearAlgebra/NekLinAlgAlgorithms.hpp
     ./LinearAlgebra/NekLinSys.hpp
-    ./LinearAlgebra/NekLinSysFwd.hpp
     ./LinearAlgebra/NekMatrix.hpp
     ./LinearAlgebra/NekMatrixFwd.hpp
     ./LinearAlgebra/NekMatrixMetadata.hpp
@@ -38,8 +33,6 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/ScaledMatrix.hpp
     ./LinearAlgebra/Space.h
     ./LinearAlgebra/StandardMatrix.hpp
-    ./LinearAlgebra/SymmetricMatrixStoragePolicy.hpp
-    ./LinearAlgebra/TriangularMatrixStoragePolicy.hpp
     ./LinearAlgebra/TransF77.hpp
 )
 

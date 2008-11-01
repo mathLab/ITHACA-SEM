@@ -201,7 +201,12 @@ namespace Nektar
 #endif //LOC2GLOMAP_H
 
 
-/** $Log: LocalToGlobalBaseMap.h,v $
+/** 
+ $Log: LocalToGlobalBaseMap.h,v $
+
+ Revision 1.5  2008/11/01 22:07:46  bnelson
+ Fixed compiler warning
+
  Revision 1.4  2008/09/23 18:21:00  pvos
  Updates for working ProjectContField3D demo
 

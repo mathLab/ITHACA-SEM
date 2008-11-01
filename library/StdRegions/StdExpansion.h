@@ -449,7 +449,7 @@ namespace Nektar
 
             int DetCartesianDirOfEdge(const int edge) 
             {
-                v_DetCartesianDirOfEdge(edge);
+                return v_DetCartesianDirOfEdge(edge);
             }
 
             const LibUtilities::BasisKey DetEdgeBasisKey(const int i) const
@@ -1592,6 +1592,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.103  2008/10/19 15:55:46  sherwin
+ * Added methods EvalBasisNumModesMax
+ *
  * Revision 1.102  2008/10/04 19:27:41  sherwin
  * Added AddEdgeNormBoundaryInt
  *

@@ -43,7 +43,6 @@
 #include <LibUtilities/LinearAlgebra/ScaledMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/StandardMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixOperations.hpp>
-#include <LibUtilities/LinearAlgebra/SymmetricMatrixStoragePolicy.hpp>
 
 namespace Nektar
 {        
@@ -428,6 +427,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.35  2008/11/01 19:15:28  bnelson
+    Updated matrices so the storage policy is no longer a template parameter.  Removed the template parameter from the LinearSystem class.
+
     Revision 1.34  2008/04/01 15:56:38  bnelson
     Added global transpose for scaled matrices.
 

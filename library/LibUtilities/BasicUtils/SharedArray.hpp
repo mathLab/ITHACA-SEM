@@ -40,7 +40,6 @@
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
-#include <LibUtilities/LinearAlgebra/NekLinSysFwd.hpp>
 #include <LibUtilities/BasicUtils/NekPtr.hpp>
 
 #include <boost/multi_array.hpp>
@@ -48,7 +47,7 @@
 
 namespace Nektar
 {
-    
+    class LinearSystem;
     
     /// \page arrays Nektar++ Arrays
     ///

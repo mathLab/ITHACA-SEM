@@ -138,7 +138,7 @@ namespace Nektar
         //    }
             NodalPointReorder2d();
 
-            ASSERTL1((isum==m_pointsKey.GetTotNumPoints()),"sum not equal to npts");
+            ASSERTL1((static_cast<unsigned int>(isum)==m_pointsKey.GetTotNumPoints()),"sum not equal to npts");
 
            //exit(0);
         }
@@ -299,6 +299,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTriElec.cpp,v $
+* Revision 1.17  2008/04/06 05:54:08  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.16  2008/04/02 21:12:35  pvos
 * Update of the 2D local to global map
 *

@@ -49,7 +49,7 @@ namespace Nektar
 {
     namespace FullMatrixStoragePolicyUnitTests
     {
-        typedef MatrixStoragePolicy<FullMatrixTag> Policy;
+        typedef FullMatrixFuncs Policy;
 
         BOOST_AUTO_TEST_CASE(TestCalculateIndex)
         {
@@ -76,7 +76,7 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestAdvance)
         {
             UnitTests::RedirectCerrIfNeeded();
-            typedef MatrixStoragePolicy<FullMatrixTag> Policy;
+            typedef FullMatrixFuncs Policy;
 
             {
                 unsigned int curRow = 0; 

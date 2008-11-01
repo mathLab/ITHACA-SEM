@@ -49,7 +49,7 @@ namespace Nektar
 {
     namespace BandedMatrixStoragePolicyUnitTests
     {
-        typedef MatrixStoragePolicy<BandedMatrixTag> Policy;
+        typedef BandedMatrixFuncs Policy;
 
         BOOST_AUTO_TEST_CASE(TestCalculateStorageSizeAndCalculateNumberOfRows)
         {

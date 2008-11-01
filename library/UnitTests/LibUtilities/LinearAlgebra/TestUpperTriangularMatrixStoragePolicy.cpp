@@ -50,7 +50,7 @@ namespace Nektar
 {
     namespace UpperTriangularUnitTests
     {
-        typedef MatrixStoragePolicy<UpperTriangularMatrixTag> Policy;
+        typedef UpperTriangularMatrixFuncs Policy;
                     
         BOOST_AUTO_TEST_CASE(TestAdvance)
         {

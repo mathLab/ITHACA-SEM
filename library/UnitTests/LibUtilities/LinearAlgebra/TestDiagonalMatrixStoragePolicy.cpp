@@ -49,13 +49,13 @@ namespace Nektar
 {
     namespace DiagonalMatrixStoragePolicyUnitTests
     {
-        typedef MatrixStoragePolicy<DiagonalMatrixTag> Policy;
+        typedef DiagonalMatrixFuncs Policy;
 
                     
         BOOST_AUTO_TEST_CASE(TestAdvance)
         {
             UnitTests::RedirectCerrIfNeeded();
-            typedef MatrixStoragePolicy<DiagonalMatrixTag> Policy;
+            typedef DiagonalMatrixFuncs Policy;
 
             {
                 unsigned int curRow = 0; 

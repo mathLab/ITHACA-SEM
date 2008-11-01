@@ -49,7 +49,7 @@ namespace Nektar
 {
     namespace SymmetricMatrixStoragePolicyUnitTests
     {
-        typedef MatrixStoragePolicy<SymmetricMatrixTag> Policy;
+        typedef SymmetricMatrixFuncs Policy;
 
                     
         BOOST_AUTO_TEST_CASE(TestAdvance)

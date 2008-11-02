@@ -225,11 +225,11 @@ namespace Nektar
             m_time  = 0.0;
         }
         m_timestep   = m_boundaryConditions->GetParameter("TimeStep");
-        m_steps      = m_boundaryConditions->GetParameter("Steps");
+        m_steps      = m_boundaryConditions->GetParameter("NumSteps");
         
-        if(m_boundaryConditions->CheckForParameter("CheckSteps") == true)
+        if(m_boundaryConditions->CheckForParameter("IO_CheckSteps") == true)
         {
-            m_checksteps = m_boundaryConditions->GetParameter("CheckSteps");
+            m_checksteps = m_boundaryConditions->GetParameter("IO_CheckSteps");
         }
         else
         {
@@ -691,6 +691,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.4  2008/10/31 10:50:10  pvos
+* Restructured directory and CMakeFiles
+*
 * Revision 1.3  2008/10/29 22:51:07  sherwin
 * Updates for const correctness and ODEforcing
 *

@@ -145,10 +145,15 @@ namespace Nektar
                 return m_scale*m_matrix->Scale();
             }
             
+            const NumberType* GetRawPtr() const { return m_matrix->GetRawPtr(); }
+            
             boost::shared_ptr<const InnerType> GetOwnedMatrix() const
             {
                 return m_matrix; 
             }
+            
+            unsigned int GetNumberOfSubDiagonals() const { return m_matrix->GetNumberOfSubDiagonals(); }
+            unsigned int GetNumberOfSuperDiagonals() const { return m_matrix->GetNumberOfSuperDiagonals(); }
             
             const_iterator begin() const { return const_iterator(m_matrix->begin(this->GetTransposeFlag()), m_scale); }
             const_iterator end() const { return const_iterator(m_matrix->end(this->GetTransposeFlag()), m_scale); }

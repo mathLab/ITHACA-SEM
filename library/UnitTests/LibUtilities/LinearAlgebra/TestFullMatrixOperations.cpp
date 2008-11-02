@@ -49,8 +49,24 @@ namespace Nektar
 {
     namespace FullMatrixOperationsUnitTests
     {
+        template<typename DataType, typename MatrixType>
+        int foo(NekMatrix<DataType, MatrixType>& d)
+        {
+           return 1;
+        }
+        
+        template<typename DataType>
+        int foo(NekMatrix<DataType, BlockMatrixTag>& d)
+        {
+            return 2;
+        }
+            
         BOOST_AUTO_TEST_CASE(TestDoubleSquareFullVectorMultiplication)
         {
+            NekMatrix<double> m1;
+            NekMatrix<NekMatrix<double>, BlockMatrixTag> m2(2,2,2,2);
+            foo(m1);
+            foo(m2);
             double m_buf[] = {1, 2, 3,
                               4, 5, 6,
                               7, 8, 9};

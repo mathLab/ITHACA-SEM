@@ -67,6 +67,48 @@ namespace Nektar
             NekVector<NekDouble> expected_result(4, expected_result_buf);
             BOOST_CHECK_EQUAL(expected_result, result);
         }
+        
+        BOOST_AUTO_TEST_CASE(TestIntUpperTriangularMatrixVectorMultiplication)
+        {
+            // [1 2 3 4]
+            // [0 5 6 7]
+            // [0 0 8 9]
+            // [0 0 0 10]
+
+            int a_buf[] = {1, 2, 5, 3, 6, 8, 4, 7, 9, 10};
+            int x_buf[] = {10, 20, 30, 40};
+
+            NekMatrix<int, StandardMatrixTag> m(4, 4, a_buf, eUPPER_TRIANGULAR);
+            NekVector<int> x(4, x_buf);
+
+            NekVector<int> result = m*x;
+
+            int expected_result_buf[] = { 300, 560, 600, 400 };
+            NekVector<int> expected_result(4, expected_result_buf);
+            BOOST_CHECK_EQUAL(expected_result, result);
+        }
+        
+        BOOST_AUTO_TEST_CASE(TestScaledUpperTriangularMatrixVectorMultiplication)
+        {
+            // [1 2 3 4]
+            // [0 5 6 7]
+            // [0 0 8 9]
+            // [0 0 0 10]
+
+            NekDouble a_buf[] = {1, 2, 5, 3, 6, 8, 4, 7, 9, 10};
+            NekDouble x_buf[] = {10, 20, 30, 40};
+
+            boost::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> > m(
+                new NekMatrix<NekDouble>(4, 4, a_buf, eUPPER_TRIANGULAR));
+            NekMatrix<NekMatrix<NekDouble>, ScaledMatrixTag> scaled(2, m);
+            NekVector<NekDouble> x(4, x_buf);
+
+            NekVector<NekDouble> result = scaled*x;
+
+            NekDouble expected_result_buf[] = { 600, 1120, 1200, 800 };
+            NekVector<NekDouble> expected_result(4, expected_result_buf);
+            BOOST_CHECK_EQUAL(expected_result, result);
+        }
 
         BOOST_AUTO_TEST_CASE(TestLowerTriangularMatrixVectorMultiplication)
         {
@@ -87,6 +129,49 @@ namespace Nektar
             NekVector<NekDouble> expected_result(4, expected_result_buf);
             BOOST_CHECK_EQUAL(expected_result, result);
         }
+        
+        BOOST_AUTO_TEST_CASE(TestIntLowerTriangularMatrixVectorMultiplication)
+        {
+            // [1 0 0 0]
+            // [2 6 0 0]
+            // [5 8 7 0]
+            // [3 4 9 10]
+
+            int a_buf[] = {1, 2, 5, 3, 6, 8, 4, 7, 9, 10};
+            int x_buf[] = {10, 20, 30, 40};
+
+            NekMatrix<int, StandardMatrixTag> m(4, 4, a_buf, eLOWER_TRIANGULAR);
+            NekVector<int> x(4, x_buf);
+
+            NekVector<int> result = m*x;
+
+            int expected_result_buf[] = { 10, 140, 420, 780 };
+            NekVector<int> expected_result(4, expected_result_buf);
+            BOOST_CHECK_EQUAL(expected_result, result);
+        }
+
+        BOOST_AUTO_TEST_CASE(TestScaledLowerTriangularMatrixVectorMultiplication)
+        {
+            // [1 0 0 0]
+            // [2 6 0 0]
+            // [5 8 7 0]
+            // [3 4 9 10]
+
+            NekDouble a_buf[] = {1, 2, 5, 3, 6, 8, 4, 7, 9, 10};
+            NekDouble x_buf[] = {10, 20, 30, 40};
+
+            boost::shared_ptr<NekMatrix<NekDouble, StandardMatrixTag> > m(
+                new NekMatrix<NekDouble>(4, 4, a_buf, eLOWER_TRIANGULAR));
+            NekMatrix<NekMatrix<NekDouble>, ScaledMatrixTag > scaled(3.0, m);
+            NekVector<NekDouble> x(4, x_buf);
+
+            NekVector<NekDouble> result = scaled*x;
+
+            NekDouble expected_result_buf[] = { 30, 420, 1260, 2340 };
+            NekVector<NekDouble> expected_result(4, expected_result_buf);
+            BOOST_CHECK_EQUAL(expected_result, result);
+        }
+
 
         BOOST_AUTO_TEST_CASE(TestUpperTriangularSolve)
         {

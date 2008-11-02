@@ -15,6 +15,7 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/MatrixOperations.hpp
     ./LinearAlgebra/MatrixStorageType.h
     ./LinearAlgebra/MatrixType.h
+    ./LinearAlgebra/MatrixVectorMultiplication.hpp
     ./LinearAlgebra/NekLinAlgAlgorithms.hpp
     ./LinearAlgebra/NekLinSys.hpp
     ./LinearAlgebra/NekMatrix.hpp

@@ -67,7 +67,7 @@ namespace Nektar
         return CalculateNumberOfDiags(totalRows, subDiags) + CalculateNumberOfDiags(totalRows, superDiags) + 1;
     }
 
-    boost::optional<unsigned int> BandedMatrixFuncs::CalculateIndex(unsigned int totalRows, 
+    unsigned int BandedMatrixFuncs::CalculateIndex(unsigned int totalRows, 
                                                         unsigned int totalColumns,
                                                         unsigned int row, unsigned int column,
                                                         unsigned int sub, unsigned int super)
@@ -82,7 +82,7 @@ namespace Nektar
         }
         else
         {
-            return boost::optional<unsigned int>();
+            return std::numeric_limits<unsigned int>::max();
         }
     }
 
@@ -123,16 +123,9 @@ namespace Nektar
         return rows*columns;
     }
     
-    unsigned int FullMatrixFuncs::CalculateIndex(unsigned int totalRows, unsigned int totalColumns, unsigned int curRow, unsigned int curColumn, const char transpose)
+    unsigned int FullMatrixFuncs::CalculateIndex(unsigned int totalRows, unsigned int totalColumns, unsigned int curRow, unsigned int curColumn)
     {
-        if( transpose == 'N' )
-        {
-            return curColumn*totalRows + curRow;
-        }
-        else
-        {
-            return curRow*totalColumns + curColumn;
-        }
+        return curColumn*totalRows + curRow;
     }
 
     
@@ -172,7 +165,14 @@ namespace Nektar
     
     unsigned int UpperTriangularMatrixFuncs::CalculateIndex(unsigned int curRow, unsigned int curColumn)
     {
-        return curRow + curColumn*(curColumn+1)/2;
+        if( curRow <= curColumn )
+        {
+            return curRow + curColumn*(curColumn+1)/2;
+        }
+        else
+        {
+            return std::numeric_limits<unsigned int>::max();
+        }
     }
 
     boost::tuples::tuple<unsigned int, unsigned int> 
@@ -220,7 +220,14 @@ namespace Nektar
                  
     unsigned int LowerTriangularMatrixFuncs::CalculateIndex(unsigned int totalColumns, unsigned int curRow, unsigned int curColumn)
     {
-        return curRow + (2*totalColumns - curColumn - 1)*(curColumn)/2;
+        if( curRow >= curColumn )
+        {
+            return curRow + (2*totalColumns - curColumn - 1)*(curColumn)/2;
+        }
+        else
+        {
+            return std::numeric_limits<unsigned int>::max();
+        }
     }
 
     boost::tuples::tuple<unsigned int, unsigned int> 
@@ -275,7 +282,14 @@ namespace Nektar
 
     unsigned int SymmetricMatrixFuncs::CalculateIndex(unsigned int curRow, unsigned int curColumn)
     {
-        return curRow + curColumn*(curColumn+1)/2;
+        if( curRow <= curColumn )
+        {
+            return curRow + curColumn*(curColumn+1)/2;
+        }
+        else
+        {
+            return curColumn + curRow*(curRow + 1)/2;
+        }
     }
 
     boost::tuples::tuple<unsigned int, unsigned int> 
@@ -343,6 +357,18 @@ namespace Nektar
     {
         ASSERTL0(rows==columns, "Diagonal matrices must be square.");
         return rows;
+    }
+    
+    unsigned int DiagonalMatrixFuncs::CalculateIndex(unsigned int row, unsigned int col)
+    {
+        if( row == col )
+        {
+            return row;
+        }
+        else
+        {
+            return std::numeric_limits<unsigned int>::max();
+        }
     }
 
 }

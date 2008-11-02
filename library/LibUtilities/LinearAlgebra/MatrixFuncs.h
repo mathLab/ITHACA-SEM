@@ -40,10 +40,10 @@
 
 #include <boost/call_traits.hpp>
 #include <boost/tuple/tuple.hpp>
-#include <boost/optional/optional.hpp>
 #include <limits>
 #include <LibUtilities/LinearAlgebra/Lapack.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
 namespace Nektar
 {
     struct BandedMatrixFuncs
@@ -59,7 +59,7 @@ namespace Nektar
             
         static unsigned int CalculateNumberOfRows(unsigned int totalRows, unsigned int subDiags, unsigned int superDiags);
 
-        static boost::optional<unsigned int> CalculateIndex(unsigned int totalRows, 
+        static unsigned int CalculateIndex(unsigned int totalRows, 
                                                             unsigned int totalColumns,
                                                             unsigned int row, unsigned int column,
                                                             unsigned int sub, unsigned int super);
@@ -74,7 +74,7 @@ namespace Nektar
     {
             
         static unsigned int GetRequiredStorageSize(unsigned int rows, unsigned int columns);
-        static unsigned int CalculateIndex(unsigned int totalRows, unsigned int totalColumns, unsigned int curRow, unsigned int curColumn, const char transpose);
+        static unsigned int CalculateIndex(unsigned int totalRows, unsigned int totalColumns, unsigned int curRow, unsigned int curColumn);
 
         
         static boost::tuples::tuple<unsigned int, unsigned int> 
@@ -189,6 +189,8 @@ namespace Nektar
         }
         
         static unsigned int GetRequiredStorageSize(unsigned int rows, unsigned int columns);
+        
+        static unsigned int CalculateIndex(unsigned int row, unsigned int col);
     };
 
 }

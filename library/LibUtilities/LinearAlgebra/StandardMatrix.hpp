@@ -464,75 +464,23 @@ namespace Nektar
                 switch(m_storagePolicy)
                 {
                     case eFULL:
-                        return col*numRows + row;
-//                        if( transpose == 'N' )
-//                        {
-//                            return col*this->GetRowsForTranspose(transpose) + row;
-//                        }
-//                        else
-//                        {
-//                            return row*this->GetColumnsForTranspose(transpose) + col;
-//                        }
+                        return FullMatrixFuncs::CalculateIndex(numRows, numColumns, row, col);
                         break;
                     case eDIAGONAL:
-                        if( row == col )
-                        {
-                            return row;
-                        }
+                        return DiagonalMatrixFuncs::CalculateIndex(row, col);
                         break;
                     case eUPPER_TRIANGULAR:
-//                        if( transpose == 'N' )
-//                        {
-                            if( row <= col )
-                            {
-                                return row + col*(col+1)/2;
-                            }
-//                        }
-//                        else
-//                        {
-//                            if( col >= row )
-//                            {
-//                                return col + (2*this->GetRows() - row - 1)*(row)/2;
-//                            }
-//                        }
-                        
+                        return UpperTriangularMatrixFuncs::CalculateIndex(row, col);                        
                         break;
                     case eLOWER_TRIANGULAR:
-//                        if( transpose == 'N' )
-//                        {
-                            if( row >= col )
-                            {
-                                return row + (2*numColumns - col - 1)*(col)/2;
-                            }
-//                        }
-//                        else
-//                        {
-//                            if( col <= row )
-//                            {
-//                                return col + row*(row+1)/2;
-//                            }
-//                        }
+                        return LowerTriangularMatrixFuncs::CalculateIndex(numColumns, row, col);
                         break;
                     case eSYMMETRIC:
-                        if( row <= col )
-                        {
-                             return row + col*(col+1)/2;
-                        }
-                        else
-                        {
-                            return col + row*(row+1)/2;
-                        }
-                        
+                        return SymmetricMatrixFuncs::CalculateIndex(row, col);
                         break;
                     case eBANDED:
-                        if( (col <= row && (row - col) <= GetNumberOfSubDiagonals()) ||
-                            (col > row && (col - row) <= GetNumberOfSuperDiagonals()) )
-                        {
-                            unsigned int elementRow = GetNumberOfSuperDiagonals()+row-col;
-                            unsigned int elementColumn = col;
-
-                            return elementRow + elementColumn*CalculateNumberOfRows();
-                        }
+                        return BandedMatrixFuncs::CalculateIndex(numRows, numColumns,
+                            row, col, m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
                         break;
                     case eSYMMETRIC_BANDED:
                         NEKERROR(ErrorUtil::efatal, "Not yet implemented.");

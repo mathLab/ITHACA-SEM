@@ -54,21 +54,14 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestCalculateIndex)
         {
             UnitTests::RedirectCerrIfNeeded();
-            BOOST_CHECK_EQUAL(0, Policy::CalculateIndex(5, 5, 0, 0, 'N'));
-            BOOST_CHECK_EQUAL(1, Policy::CalculateIndex(5, 5, 1, 0, 'N'));
-            BOOST_CHECK_EQUAL(2, Policy::CalculateIndex(5, 5, 2, 0, 'N'));
-            BOOST_CHECK_EQUAL(3, Policy::CalculateIndex(5, 5, 3, 0, 'N'));
-            BOOST_CHECK_EQUAL(4, Policy::CalculateIndex(5, 5, 4, 0, 'N'));
-            BOOST_CHECK_EQUAL(5, Policy::CalculateIndex(5, 5, 5, 0, 'N'));
-            BOOST_CHECK_EQUAL(6, Policy::CalculateIndex(5, 5, 6, 0, 'N'));
+            BOOST_CHECK_EQUAL(0, Policy::CalculateIndex(5, 5, 0, 0));
+            BOOST_CHECK_EQUAL(1, Policy::CalculateIndex(5, 5, 1, 0));
+            BOOST_CHECK_EQUAL(2, Policy::CalculateIndex(5, 5, 2, 0));
+            BOOST_CHECK_EQUAL(3, Policy::CalculateIndex(5, 5, 3, 0));
+            BOOST_CHECK_EQUAL(4, Policy::CalculateIndex(5, 5, 4, 0));
+            BOOST_CHECK_EQUAL(5, Policy::CalculateIndex(5, 5, 5, 0));
+            BOOST_CHECK_EQUAL(6, Policy::CalculateIndex(5, 5, 6, 0));
 
-            BOOST_CHECK_EQUAL(0, Policy::CalculateIndex(5, 5, 0, 0, 'T'));
-            BOOST_CHECK_EQUAL(5, Policy::CalculateIndex(5, 5, 1, 0, 'T'));
-            BOOST_CHECK_EQUAL(10, Policy::CalculateIndex(5, 5, 2, 0, 'T'));
-            BOOST_CHECK_EQUAL(15, Policy::CalculateIndex(5, 5, 3, 0, 'T'));
-            BOOST_CHECK_EQUAL(20, Policy::CalculateIndex(5, 5, 4, 0, 'T'));
-            BOOST_CHECK_EQUAL(25, Policy::CalculateIndex(5, 5, 5, 0, 'T'));
-            BOOST_CHECK_EQUAL(30, Policy::CalculateIndex(5, 5, 6, 0, 'T'));
         }
 
 

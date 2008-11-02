@@ -63,49 +63,49 @@ namespace Nektar
         {
             UnitTests::RedirectCerrIfNeeded();
 
-            BOOST_CHECK_EQUAL(0, *Policy::CalculateIndex(3, 3, 0, 0, 0, 0));
-            BOOST_CHECK_EQUAL(1, *Policy::CalculateIndex(3, 3, 1, 1, 0, 0));
-            BOOST_CHECK_EQUAL(2, *Policy::CalculateIndex(3, 3, 2, 2, 0, 0));
-            BOOST_CHECK_EQUAL(0, *Policy::CalculateIndex(1, 1, 0, 0, 0, 0));
+            BOOST_CHECK_EQUAL(0, Policy::CalculateIndex(3, 3, 0, 0, 0, 0));
+            BOOST_CHECK_EQUAL(1, Policy::CalculateIndex(3, 3, 1, 1, 0, 0));
+            BOOST_CHECK_EQUAL(2, Policy::CalculateIndex(3, 3, 2, 2, 0, 0));
+            BOOST_CHECK_EQUAL(0, Policy::CalculateIndex(1, 1, 0, 0, 0, 0));
 
-            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 0, 1, 0, 0)); 
-            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 0, 2, 0, 0)); 
-            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 1, 0, 0, 0)); 
-            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 1, 2, 0, 0)); 
-            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 2, 0, 0, 0)); 
-            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 2, 1, 0, 0)); 
+            BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), Policy::CalculateIndex(3, 3, 0, 1, 0, 0)); 
+            BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), Policy::CalculateIndex(3, 3, 0, 2, 0, 0)); 
+            BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), Policy::CalculateIndex(3, 3, 1, 0, 0, 0)); 
+            BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), Policy::CalculateIndex(3, 3, 1, 2, 0, 0)); 
+            BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), Policy::CalculateIndex(3, 3, 2, 0, 0, 0)); 
+            BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), Policy::CalculateIndex(3, 3, 2, 1, 0, 0)); 
         }
 
         BOOST_AUTO_TEST_CASE(TestSubDiagonalsOnlyCalculateIndex)
         {
             UnitTests::RedirectCerrIfNeeded();
 
-            BOOST_CHECK_EQUAL(0, *Policy::CalculateIndex(3, 3, 0, 0, 1, 0));
-            BOOST_CHECK_EQUAL(2, *Policy::CalculateIndex(3, 3, 1, 1, 1, 0));
-            BOOST_CHECK_EQUAL(4, *Policy::CalculateIndex(3, 3, 2, 2, 1, 0));
-            BOOST_CHECK_EQUAL(1, *Policy::CalculateIndex(3, 3, 1, 0, 1, 0));
-            BOOST_CHECK_EQUAL(3, *Policy::CalculateIndex(3, 3, 2, 1, 1, 0));
+            BOOST_CHECK_EQUAL(0, Policy::CalculateIndex(3, 3, 0, 0, 1, 0));
+            BOOST_CHECK_EQUAL(2, Policy::CalculateIndex(3, 3, 1, 1, 1, 0));
+            BOOST_CHECK_EQUAL(4, Policy::CalculateIndex(3, 3, 2, 2, 1, 0));
+            BOOST_CHECK_EQUAL(1, Policy::CalculateIndex(3, 3, 1, 0, 1, 0));
+            BOOST_CHECK_EQUAL(3, Policy::CalculateIndex(3, 3, 2, 1, 1, 0));
 
-            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 0, 1, 1, 0));
-            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 0, 2, 1, 0));
-            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 2, 0, 1, 0));
-            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 1, 2, 1, 0));
+            BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), Policy::CalculateIndex(3, 3, 0, 1, 1, 0));
+            BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), Policy::CalculateIndex(3, 3, 0, 2, 1, 0));
+            BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), Policy::CalculateIndex(3, 3, 2, 0, 1, 0));
+            BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), Policy::CalculateIndex(3, 3, 1, 2, 1, 0));
         }
 
         BOOST_AUTO_TEST_CASE(TestSuperDiagonalsOnlyCalculateIndex)
         {
             UnitTests::RedirectCerrIfNeeded();
 
-            BOOST_CHECK_EQUAL(2, *Policy::CalculateIndex(3, 3, 0, 0, 0, 2));
-            BOOST_CHECK_EQUAL(5, *Policy::CalculateIndex(3, 3, 1, 1, 0, 2));
-            BOOST_CHECK_EQUAL(8, *Policy::CalculateIndex(3, 3, 2, 2, 0, 2));
-            BOOST_CHECK_EQUAL(4, *Policy::CalculateIndex(3, 3, 0, 1, 0, 2));
-            BOOST_CHECK_EQUAL(7, *Policy::CalculateIndex(3, 3, 1, 2, 0, 2));
-            BOOST_CHECK_EQUAL(6, *Policy::CalculateIndex(3, 3, 0, 2, 0, 2));
+            BOOST_CHECK_EQUAL(2, Policy::CalculateIndex(3, 3, 0, 0, 0, 2));
+            BOOST_CHECK_EQUAL(5, Policy::CalculateIndex(3, 3, 1, 1, 0, 2));
+            BOOST_CHECK_EQUAL(8, Policy::CalculateIndex(3, 3, 2, 2, 0, 2));
+            BOOST_CHECK_EQUAL(4, Policy::CalculateIndex(3, 3, 0, 1, 0, 2));
+            BOOST_CHECK_EQUAL(7, Policy::CalculateIndex(3, 3, 1, 2, 0, 2));
+            BOOST_CHECK_EQUAL(6, Policy::CalculateIndex(3, 3, 0, 2, 0, 2));
 
-            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 1, 0, 0, 2));
-            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 2, 0, 0, 2));
-            BOOST_CHECK(!Policy::CalculateIndex(3, 3, 2, 1, 0, 2));
+            BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), Policy::CalculateIndex(3, 3, 1, 0, 0, 2));
+            BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), Policy::CalculateIndex(3, 3, 2, 0, 0, 2));
+            BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), Policy::CalculateIndex(3, 3, 2, 1, 0, 2));
         }
 
         BOOST_AUTO_TEST_CASE(TestSupAndSuperDiagonalsCalculateIndex)
@@ -113,25 +113,25 @@ namespace Nektar
             UnitTests::RedirectCerrIfNeeded();
 
 
-            BOOST_CHECK_EQUAL(2, *Policy::CalculateIndex(4, 4, 0, 0, 1, 2));
-            BOOST_CHECK_EQUAL(5, *Policy::CalculateIndex(4, 4, 0, 1, 1, 2));
-            BOOST_CHECK_EQUAL(8, *Policy::CalculateIndex(4, 4, 0, 2, 1, 2));
-            BOOST_CHECK(!Policy::CalculateIndex(4, 4, 0, 3, 1, 2));
+            BOOST_CHECK_EQUAL(2, Policy::CalculateIndex(4, 4, 0, 0, 1, 2));
+            BOOST_CHECK_EQUAL(5, Policy::CalculateIndex(4, 4, 0, 1, 1, 2));
+            BOOST_CHECK_EQUAL(8, Policy::CalculateIndex(4, 4, 0, 2, 1, 2));
+            BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), Policy::CalculateIndex(4, 4, 0, 3, 1, 2));
 
-            BOOST_CHECK_EQUAL(3, *Policy::CalculateIndex(4, 4, 1, 0, 1, 2));
-            BOOST_CHECK_EQUAL(6, *Policy::CalculateIndex(4, 4, 1, 1, 1, 2));
-            BOOST_CHECK_EQUAL(9, *Policy::CalculateIndex(4, 4, 1, 2, 1, 2));
-            BOOST_CHECK_EQUAL(12, *Policy::CalculateIndex(4, 4, 1, 3, 1, 2));
+            BOOST_CHECK_EQUAL(3, Policy::CalculateIndex(4, 4, 1, 0, 1, 2));
+            BOOST_CHECK_EQUAL(6, Policy::CalculateIndex(4, 4, 1, 1, 1, 2));
+            BOOST_CHECK_EQUAL(9, Policy::CalculateIndex(4, 4, 1, 2, 1, 2));
+            BOOST_CHECK_EQUAL(12, Policy::CalculateIndex(4, 4, 1, 3, 1, 2));
 
-            BOOST_CHECK(!Policy::CalculateIndex(4, 4, 2, 0, 1, 2));
-            BOOST_CHECK_EQUAL(7, *Policy::CalculateIndex(4, 4, 2, 1, 1, 2));
-            BOOST_CHECK_EQUAL(10, *Policy::CalculateIndex(4, 4, 2, 2, 1, 2));
-            BOOST_CHECK_EQUAL(13, *Policy::CalculateIndex(4, 4, 2, 3, 1, 2));
+            BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), Policy::CalculateIndex(4, 4, 2, 0, 1, 2));
+            BOOST_CHECK_EQUAL(7, Policy::CalculateIndex(4, 4, 2, 1, 1, 2));
+            BOOST_CHECK_EQUAL(10, Policy::CalculateIndex(4, 4, 2, 2, 1, 2));
+            BOOST_CHECK_EQUAL(13, Policy::CalculateIndex(4, 4, 2, 3, 1, 2));
 
-            BOOST_CHECK(!Policy::CalculateIndex(4, 4, 3, 0, 1, 2));
-            BOOST_CHECK(!Policy::CalculateIndex(4, 4, 3, 1, 1, 2));
-            BOOST_CHECK_EQUAL(11, *Policy::CalculateIndex(4, 4, 3, 2, 1, 2));
-            BOOST_CHECK_EQUAL(14, *Policy::CalculateIndex(4, 4, 3, 3, 1, 2));
+            BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), Policy::CalculateIndex(4, 4, 3, 0, 1, 2));
+            BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), Policy::CalculateIndex(4, 4, 3, 1, 1, 2));
+            BOOST_CHECK_EQUAL(11, Policy::CalculateIndex(4, 4, 3, 2, 1, 2));
+            BOOST_CHECK_EQUAL(14, Policy::CalculateIndex(4, 4, 3, 3, 1, 2));
         }
 
 

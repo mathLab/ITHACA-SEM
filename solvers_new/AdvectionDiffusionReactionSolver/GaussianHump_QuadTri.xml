@@ -66,11 +66,11 @@
 
     <PARAMETERS>
       <P> TimeStep   = 0.0001 </P>
-      <P> Steps      = 5000  </P>
-      <P> CheckSteps = 1000   </P>
-      <P> FinTime = TimeStep*Steps </P>
-      <P> InfoSteps  = 500 </P>
-      <P> DisContinuous = 0 </P>
+      <P> NumSteps      = 5000  </P>
+      <P> FinTime    = TimeStep*NumSteps </P>
+      <P> IO_CheckSteps = 1000   </P>
+      <P> IO_InfoSteps  = 500 </P>
+      <P> DisContinuous = 1 </P>
     </PARAMETERS>
 
     <VARIABLES>

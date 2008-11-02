@@ -92,7 +92,6 @@ namespace Nektar
 
                 int m = rows;
                 int n = columns;
-                int pivotSize = n;
                 int info = 0;
                 Array<OneD, int> ipivot(n);
                 Array<OneD, DataType> work(n);
@@ -178,8 +177,7 @@ namespace Nektar
 
         template<typename DataType>
         static void Invert(unsigned int rows, unsigned int columns,
-                           Array<OneD, DataType>& data,
-                           const char transpose)
+                           Array<OneD, DataType>& data)
         {
             ASSERTL0(rows==columns, "Only square matrices can be inverted.");
             for(unsigned int i = 0; i < rows; ++i)

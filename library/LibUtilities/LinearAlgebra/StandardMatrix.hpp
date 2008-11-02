@@ -1105,50 +1105,12 @@ namespace Nektar
                 switch(this->GetType())
                 {
                     case eFULL:
-                        {
-                            
-                            int m = this->GetRows();
-                            int n = this->GetColumns();
-                            int pivotSize = n;
-                            int info = 0;
-                            Array<OneD, int> ipivot(n);
-                            Array<OneD, DataType> work(n);
-                            
-                            Lapack::Dgetrf(m, n, GetRawPtr(), m, ipivot.get(), info);
-                
-                            if( info < 0 )
-                            {
-                                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetrf";
-                                ASSERTL0(false, message.c_str());
-                            }
-                            else if( info > 0 )
-                            {
-                                std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgetrf";
-                                ASSERTL0(false, message.c_str());
-                            }   
-                            
-                            Lapack::Dgetri(n, GetRawPtr(), n, ipivot.get(),
-                                           work.get(), n, info);
-                            
-                            if( info < 0 )
-                            {
-                                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgetri";
-                                ASSERTL0(false, message.c_str());
-                            }
-                            else if( info > 0 )
-                            {
-                                std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgetri";
-                                ASSERTL0(false, message.c_str());
-                            }   
-                        }
+                        FullMatrixFuncs::Invert(this->GetRows(), this->GetColumns(),
+                            this->GetData(), this->GetTransposeFlag());
                         break;
                     case eDIAGONAL:
-                        {
-                            for(unsigned int i = 0; i < this->GetRows(); ++i)
-                            {
-                                this->GetData()[i] = 1.0/this->GetData()[i];
-                            }
-                        }
+                        DiagonalMatrixFuncs::Invert(this->GetRows(), this->GetColumns(),
+                            this->GetData());
                         break;
                     case eUPPER_TRIANGULAR:
                     case eLOWER_TRIANGULAR:

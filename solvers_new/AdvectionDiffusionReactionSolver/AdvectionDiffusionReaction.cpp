@@ -68,9 +68,9 @@ namespace Nektar
         
         EvaluateAdvectionVelocity();
         
-        if(m_boundaryConditions->CheckForParameter("InfoSteps") == true)
+        if(m_boundaryConditions->CheckForParameter("IO_InfoSteps") == true)
         {
-            m_infosteps =  m_boundaryConditions->GetParameter("InfoSteps");
+            m_infosteps =  m_boundaryConditions->GetParameter("IO_InfoSteps");
         }
     }
     
@@ -242,6 +242,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.1  2008/10/31 10:50:10  pvos
+* Restructured directory and CMakeFiles
+*
 * Revision 1.3  2008/10/29 22:51:07  sherwin
 * Updates for const correctness and ODEforcing
 *

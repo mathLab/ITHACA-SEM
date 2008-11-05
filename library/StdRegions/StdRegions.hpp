@@ -152,6 +152,51 @@ namespace Nektar
             const int kBufSize = 1000;
         };
 
+        enum ElementType
+        {
+            eStdSegExp,
+            eSegExp,
+            eStdQuadExp,
+            eStdTriExp,
+            eStdNodalTriExp,
+            eQuadExp,
+            eTriExp,
+            eNodalTriExp,
+            eStdHexExp,
+            eStdPrismExp,
+            eStdPyrExp,
+            eStdTetExp,
+            eStdNodalTetExp,
+            eHexExp,
+            ePrismExp,
+            ePyrExp,
+            eTetExp,
+            eNodalTetExp,
+            SIZE_ElementType
+        };
+
+        const char* const ElementTypeMap[] = 
+        { 
+            "StdSegExp",
+            "SegExp",
+            "StdQuadExp",
+            "StdTriExp",
+            "StdNodalTriExp",
+            "QuadExp",
+            "TriExp",
+            "NodalTriExp",
+            "StdHexExp",
+            "StdPrismExp",
+            "StdPyrExp",
+            "StdTetExp",
+            "StdNodalTetExp",
+            "HexExp",
+            "PrismExp",
+            "PyrExp",
+            "TetExp",
+            "NodalTetExp",           
+        };
+
         enum MatrixType
         {
             eMass,
@@ -169,6 +214,10 @@ namespace Nektar
             eNBasisTrans,
             eInvNBasisTrans,
             eBwdTrans,
+            eIProductWRTBase,
+            eIProductWRTDerivBase0,
+            eIProductWRTDerivBase1,
+            eIProductWRTDerivBase2,
             eHelmholtz,
             eHybridDGHelmholtz,
             eInvHybridDGHelmholtz,
@@ -197,6 +246,10 @@ namespace Nektar
             "NBasisTrans",
             "InvNBasisTrans", 
             "BwdTrans",
+            "IProductWRTBase",
+            "IProductWRTDerivBase0",
+            "IProductWRTDerivBase1",
+            "IProductWRTDerivBase2",
             "Helmholtz",
             "HybridDGHelmholz",
             "HybridDGQIprodWRTQ",
@@ -320,6 +373,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.29  2008/09/12 11:26:39  pvos
+* Updates for mappings in 3D
+*
 * Revision 1.28  2008/08/14 22:09:51  sherwin
 * Modifications to remove HDG routines from StdRegions and removed StdExpMap
 *

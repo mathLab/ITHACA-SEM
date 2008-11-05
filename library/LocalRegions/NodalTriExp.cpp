@@ -234,10 +234,10 @@ namespace Nektar
             return ival; 
         }
 
-        void NodalTriExp::IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
-                                          const Array<OneD, const NekDouble>& base1,
-                                          const Array<OneD, const NekDouble>& inarray, 
-                                          Array<OneD, NekDouble> &outarray)
+        void NodalTriExp::IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& base0, 
+                                                 const Array<OneD, const NekDouble>& base1,
+                                                 const Array<OneD, const NekDouble>& inarray, 
+                                                 Array<OneD, NekDouble> &outarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -253,18 +253,30 @@ namespace Nektar
             {
                 Vmath::Smul(nquad0*nquad1, jac[0], inarray, 1, tmp, 1);
             }
-            StdNodalTriExp::IProductWRTBase(base0,base1,tmp,outarray);
+            
+            StdNodalTriExp::IProductWRTBase_SumFac(base0,base1,tmp,outarray);
         }
 
-        void NodalTriExp::IProductWRTDerivBase(const int dir, 
-                                               const Array<OneD, const NekDouble>& inarray, 
-                                               Array<OneD, NekDouble> & outarray)
+        void NodalTriExp::IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray, 
+                                   Array<OneD, NekDouble> &outarray)
+        {
+            int nq = GetTotPoints();
+            MatrixKey      iprodmatkey(StdRegions::eIProductWRTBase,DetExpansionType(),*this);
+            DNekScalMatSharedPtr& iprodmat = m_matrixManager[iprodmatkey];            
+            
+            Blas::Dgemv('N',m_ncoeffs,nq,iprodmat->Scale(),(iprodmat->GetOwnedMatrix())->GetPtr().get(),
+                        m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);
+        }
+
+        void NodalTriExp::IProductWRTDerivBase_SumFac(const int dir, 
+                                                      const Array<OneD, const NekDouble>& inarray, 
+                                                      Array<OneD, NekDouble> & outarray)
         {
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nqtot = nquad0*nquad1; 
-            Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
+            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
             
             Array<OneD, NekDouble> tmp0(nqtot);
             Array<OneD, NekDouble> tmp1(nqtot);
@@ -274,8 +286,8 @@ namespace Nektar
             Array<OneD, NekDouble> gfac0(nqtot);
             Array<OneD, NekDouble> gfac1(nqtot);
             
-            Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
-            Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
+            const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
+            const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
             
             // set up geometric factor: 2/(1-z1)
             for(i = 0; i < nquad1; ++i)
@@ -331,6 +343,23 @@ namespace Nektar
                     }
                 }
                 break;
+            case 2:
+                {
+                    ASSERTL1(m_geom->GetCoordim() == 3,"input dir is out of range");
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vmul(nqtot,&gmat[4][0],1,&tmp0[0],1,&tmp0[0],1);
+                        Vmath::Vmul(nqtot,&gmat[5][0],1,&tmp1[0],1,&tmp1[0],1);
+                        Vmath::Vmul(nqtot,&gmat[5][0],1,&inarray[0],1,&tmp2[0],1);
+                    }
+                    else
+                    {
+                        Vmath::Smul(nqtot, gmat[4][0], tmp0, 1, tmp0, 1);
+                        Vmath::Smul(nqtot, gmat[5][0], tmp1, 1, tmp1, 1);
+                        Vmath::Smul(nqtot, gmat[5][0], inarray, 1, tmp2, 1);
+                    }
+                }
+                break;
             default:
                 {
                     ASSERTL1(dir >= 0 &&dir < 2,"input dir is out of range");
@@ -338,9 +367,48 @@ namespace Nektar
                 break;
             }       
             Vmath::Vadd(nqtot, tmp0, 1, tmp1, 1, tmp1, 1); 
-            IProductWRTBase(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),tmp1,tmp3);
-            IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),tmp2,outarray);
+            IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),tmp1,tmp3);
+            IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),tmp2,outarray);
             Vmath::Vadd(m_ncoeffs, tmp3, 1, outarray, 1, outarray, 1);                 
+        }
+
+        void NodalTriExp::IProductWRTDerivBase_MatOp(const int dir, 
+                                                     const Array<OneD, const NekDouble>& inarray, 
+                                                     Array<OneD, NekDouble> &outarray)
+        { 
+            int nq = GetTotPoints();            
+            StdRegions::MatrixType mtype;
+
+            switch(dir)
+            {
+            case 0:
+                {
+                    mtype = StdRegions::eIProductWRTDerivBase0;
+                }
+                break;
+            case 1:
+                {
+                    mtype = StdRegions::eIProductWRTDerivBase1;
+                }
+                break;
+            case 2:
+                {
+                    mtype = StdRegions::eIProductWRTDerivBase2;
+                }
+                break;
+            default:
+                {
+                    ASSERTL1(false,"input dir is out of range");
+                }
+                break;
+            }  
+
+            MatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
+            DNekScalMatSharedPtr& iprodmat = m_matrixManager[iprodmatkey];            
+            
+            Blas::Dgemv('N',m_ncoeffs,nq,iprodmat->Scale(),(iprodmat->GetOwnedMatrix())->GetPtr().get(),
+                        m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);
+
         }
     
         ///////////////////////////////
@@ -436,6 +504,53 @@ namespace Nektar
             NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
             
             out = (*matsys)*in;
+        }
+        
+        void NodalTriExp::GeneralMatrixOp_MatOp(const Array<OneD, const NekDouble> &inarray,
+                                                Array<OneD,NekDouble> &outarray,
+                                                const StdRegions::StdMatrixKey &mkey)
+        {
+            int nConsts = mkey.GetNconstants();
+            DNekScalMatSharedPtr   mat;
+            
+            switch(nConsts)
+            {
+            case 0:
+                {
+                    mat = GetLocMatrix(mkey.GetMatrixType()); 
+                }
+                break;
+            case 1:
+                {
+                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0)); 
+                }
+                break;
+            case 2:
+                {
+                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0),mkey.GetConstant(1)); 
+                }
+                break;
+                
+            default:
+                {
+                    NEKERROR(ErrorUtil::efatal, "Unknown number of constants");
+                }
+                break;
+            }
+            
+            if(inarray.get() == outarray.get())
+            {
+                Array<OneD,NekDouble> tmp(m_ncoeffs);
+                Vmath::Vcopy(m_ncoeffs,inarray.get(),1,tmp.get(),1);
+                
+                Blas::Dgemv('N',m_ncoeffs,m_ncoeffs,mat->Scale(),(mat->GetOwnedMatrix())->GetPtr().get(),
+                            m_ncoeffs, tmp.get(), 1.0, 0.0, outarray.get(), 1.0);
+            }
+            else
+            {                
+                Blas::Dgemv('N',m_ncoeffs,m_ncoeffs,mat->Scale(),(mat->GetOwnedMatrix())->GetPtr().get(),
+                            m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);
+            }
         }
         
         void NodalTriExp::GetCoords(Array<OneD,NekDouble> &coords_0,
@@ -996,6 +1111,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.27  2008/09/09 15:05:09  sherwin
+ *    Updates related to cuved geometries. Normals have been removed from m_metricinfo and replaced with a direct evaluation call. Interp methods have been moved to LibUtilities
+ *
  *    Revision 1.26  2008/07/09 11:44:49  sherwin
  *    Replaced GetScaleFactor call with GetConstant(0)
  *

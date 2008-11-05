@@ -449,8 +449,9 @@ namespace Nektar
 
                 StdRegions::StdMatrixKey mkey(gkey.GetLinSysType(),(*m_exp)[i]->DetExpansionType(),
                                               *((*m_exp)[i]),gkey.GetFactor1());
-                (*m_exp)[i]->GeneralMatrixOp(mkey,inarray + cnt, 
-                                             e_outarray = outarray+cnt);
+                (*m_exp)[i]->GeneralMatrixOp(inarray + cnt, 
+                                             e_outarray = outarray+cnt,
+                                             mkey);
                 cnt   += (*m_exp)[i]->GetNcoeffs();
             }        
         }

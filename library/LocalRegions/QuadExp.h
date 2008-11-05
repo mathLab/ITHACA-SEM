@@ -106,34 +106,67 @@ namespace Nektar
             /// \brief Integrate the physical point list \a inarray over region
             NekDouble Integral(const Array<OneD, const NekDouble> &inarray);
 
-        
-    
-            /** \brief  Inner product of \a inarray over region with respect to the 
-                expansion basis (this)->_Base[0] and return in \a outarray 
+            /** 
+                \brief Calculate the inner product of inarray with respect to
+                the basis B=base0*base1 and put into outarray:
             
-                Wrapper call to QuadExp::IProduct_WRT_B
-        
-                Input:\n
+                \f$ \begin{array}{rcl} I_{pq} = (\phi_q \phi_q, u) & = &
+                \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \phi_p(\xi_{0,i})
+                \phi_q(\xi_{1,j}) w^0_i w^1_j u(\xi_{0,i} \xi_{1,j})
+                J_{i,j}\\ & = & \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i})
+                \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j}
+                J_{i,j} \end{array} \f$
             
-                - \a inarray: array of function evaluated at the physical
-                collocation points
+                where
             
-                Output:\n
+                \f$  \tilde{u}_{i,j} = w^0_i w^1_j u(\xi_{0,i},\xi_{1,j}) \f$
             
-                - \a outarray: array of inner product with respect to each
-                basis over region
+                which can be implemented as
             
-            */    
+                \f$  f_{qi} = \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j} = 
+                {\bf B_1 U}  \f$
+                \f$  I_{pq} = \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i}) f_{qi} = 
+                {\bf B_0 F}  \f$
+            **/
             void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
                                  Array<OneD, NekDouble> &outarray)
             {
-                IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
-                                inarray,outarray,1);
+                if(m_base[0]->Collocation() || m_base[1]->Collocation())
+                {  
+                    IProductWRTBase_Collocation(inarray,outarray);
+                }
+                else
+                {
+                    bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eQuadExp, NekOptimize::eIProductWRTBase>::
+                        DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
+                    
+                    if(doMatOp)
+                    {
+                        QuadExp::IProductWRTBase_MatOp(inarray,outarray);
+                    }
+                    else
+                    {
+                        QuadExp::IProductWRTBase_SumFac(inarray,outarray);
+                    }  
+                }
             }
 
             void IProductWRTDerivBase(const int dir,
                                       const Array<OneD, const NekDouble>& inarray,
-                                      Array<OneD, NekDouble> & outarray);
+                                      Array<OneD, NekDouble> & outarray)
+            {
+                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eQuadExp, NekOptimize::eIProductWRTDerivBase>::
+                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
+                
+                if(doMatOp)
+                {
+                    QuadExp::IProductWRTDerivBase_MatOp(dir,inarray,outarray);
+                }
+                else
+                {
+                    QuadExp::IProductWRTDerivBase_SumFac(dir,inarray,outarray);
+                }  
+            }
         
             //-----------------------------
             // Differentiation Methods
@@ -169,14 +202,93 @@ namespace Nektar
 
             void GetEdgePhysVals(const int edge, const StdRegions::StdExpansion1DSharedPtr &EdgeExp, 
                                  const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
-    
+               
+            void MassMatrixOp(const Array<OneD, const NekDouble> &inarray, 
+                              Array<OneD,NekDouble> &outarray,
+                              const StdRegions::StdMatrixKey &mkey)
+            {              
+                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eQuadExp, NekOptimize::eMassMatrixOp>::
+                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
+                
+                if(doMatOp)
+                {
+                    QuadExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
+                }
+                else
+                {
+                    StdExpansion::MassMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                }
+            }
 
             void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                   Array<OneD,NekDouble> &outarray);
+                                   Array<OneD,NekDouble> &outarray,
+                                   const StdRegions::StdMatrixKey &mkey)
+            {           
+                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eQuadExp, NekOptimize::eLaplacianMatrixOp>::
+                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
+                
+                if(doMatOp)
+                {
+                    QuadExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
+                }
+                else
+                {
+                    QuadExp::LaplacianMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                }
+            }
 
+            void LaplacianMatrixOp(const int k1, const int k2, 
+                                   const Array<OneD, const NekDouble> &inarray,
+                                   Array<OneD,NekDouble> &outarray,
+                                   const StdRegions::StdMatrixKey &mkey)
+            {           
+                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eQuadExp, NekOptimize::eLaplacianMatrixIJOp>::
+                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
+                
+                if(doMatOp)
+                {
+                    QuadExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
+                }
+                else
+                {
+                    StdExpansion::LaplacianMatrixOp_PartitionedOp(k1,k2,inarray,outarray,mkey);
+                }
+            }
+
+            void WeakDerivMatrixOp(const int i,
+                                   const Array<OneD, const NekDouble> &inarray,
+                                   Array<OneD,NekDouble> &outarray,
+                                   const StdRegions::StdMatrixKey &mkey)
+            {
+                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eQuadExp, NekOptimize::eWeakDerivMatrixOp>::
+                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
+                
+                if(doMatOp)
+                {
+                    QuadExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
+                }
+                else
+                {
+                    StdExpansion::WeakDerivMatrixOp_PartitionedOp(i,inarray,outarray,mkey);
+                }
+            }
+            
             void HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
-                                   const double lambda);
+                                   const StdRegions::StdMatrixKey &mkey)
+            {
+                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eStdQuadExp, NekOptimize::eHelmholtzMatrixOp>::
+                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
+                
+                if(doMatOp)
+                {
+                    QuadExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
+                }
+                else
+                {
+                    QuadExp::HelmholtzMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                }
+            }       
 
         protected:
 
@@ -186,34 +298,39 @@ namespace Nektar
             DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
-        
-            /** 
-                \brief Calculate the inner product of inarray with respect to
-                the basis B=base0*base1 and put into outarray:
+
+            void IProductWRTBase_Collocation(const Array<OneD, const NekDouble>& inarray, 
+                                             Array<OneD, NekDouble> &outarray);            
+            void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
+                                        Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
+                                       inarray,outarray);
+            }            
+            void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& base0, 
+                                        const Array<OneD, const NekDouble>& base1,
+                                        const Array<OneD, const NekDouble>& inarray, 
+                                        Array<OneD, NekDouble> &outarray);            
+            void IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray, 
+                                       Array<OneD, NekDouble> &outarray);
+
+            void IProductWRTDerivBase_SumFac(const int dir, 
+                                             const Array<OneD, const NekDouble>& inarray, 
+                                             Array<OneD, NekDouble> & outarray);            
+            void IProductWRTDerivBase_MatOp(const int dir, 
+                                            const Array<OneD, const NekDouble>& inarray, 
+                                            Array<OneD, NekDouble> & outarray);  
+
+            void GeneralMatrixOp_MatOp(const Array<OneD, const NekDouble> &inarray,
+                                       Array<OneD,NekDouble> &outarray,
+                                       const StdRegions::StdMatrixKey &mkey); 
             
-                \f$ \begin{array}{rcl} I_{pq} = (\phi_q \phi_q, u) & = &
-                \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \phi_p(\xi_{0,i})
-                \phi_q(\xi_{1,j}) w^0_i w^1_j u(\xi_{0,i} \xi_{1,j})
-                J_{i,j}\\ & = & \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i})
-                \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j}
-                J_{i,j} \end{array} \f$
-            
-                where
-            
-                \f$  \tilde{u}_{i,j} = w^0_i w^1_j u(\xi_{0,i},\xi_{1,j}) \f$
-            
-                which can be implemented as
-            
-                \f$  f_{qi} = \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j} = 
-                {\bf B_1 U}  \f$
-                \f$  I_{pq} = \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i}) f_{qi} = 
-                {\bf B_0 F}  \f$
-            **/
-            void IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
-                                 const Array<OneD, const NekDouble>& base1,
-                                 const Array<OneD, const NekDouble>& inarray, 
-                                 Array<OneD, NekDouble> &outarray,
-                                 int coll_check);
+            void LaplacianMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+                                                 Array<OneD,NekDouble> &outarray,
+                                                 const StdRegions::StdMatrixKey &mkey);
+            void HelmholtzMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+                                                 Array<OneD,NekDouble> &outarray,
+                                                 const StdRegions::StdMatrixKey &mkey);   
 
         private:
             SpatialDomains::Geometry2DSharedPtr m_geom;
@@ -491,19 +608,77 @@ namespace Nektar
             {
                 GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
             }
-
-            virtual void v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                             Array<OneD,NekDouble> &outarray)
+            
+            virtual void v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
+                                           Array<OneD, NekDouble> &outarray)
             {
-                LaplacianMatrixOp(inarray,outarray);
+                BwdTrans_SumFac(inarray,outarray);
             }
-        
+            
+            virtual void v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
+                                                  Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTBase_SumFac(inarray,outarray);
+            }            
+            
+            virtual void v_IProductWRTDerivBase_SumFac(const int dir,
+                                                       const Array<OneD, const NekDouble>& inarray, 
+                                                       Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTDerivBase_SumFac(dir,inarray,outarray);
+            }
+
+            virtual void v_MassMatrixOp(const Array<OneD, const NekDouble> &inarray, 
+                                        Array<OneD,NekDouble> &outarray,
+                                        const StdRegions::StdMatrixKey &mkey)
+            {
+                MassMatrixOp(inarray,outarray,mkey);
+            }  
+            
+            virtual void v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray,
+                                             const StdRegions::StdMatrixKey &mkey)
+            {
+                LaplacianMatrixOp(inarray,outarray,mkey);
+            }
+
+            virtual void v_LaplacianMatrixOp(const int k1, const int k2, 
+                                             const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray,
+                                             const StdRegions::StdMatrixKey &mkey)
+            {
+                LaplacianMatrixOp(k1,k2,inarray,outarray,mkey);
+            }
+
+            virtual void v_WeakDerivMatrixOp(const int i,
+                                             const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray,
+                                             const StdRegions::StdMatrixKey &mkey)
+            {
+                WeakDerivMatrixOp(i,inarray,outarray,mkey);
+            }
+            
             virtual void v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray,
-                                             const double lambda)
+                                             const StdRegions::StdMatrixKey &mkey)
             {
-                HelmholtzMatrixOp(inarray,outarray,lambda);
-            }   
+                HelmholtzMatrixOp(inarray,outarray,mkey);
+            }  
+            
+            virtual void v_LaplacianMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+                                                           Array<OneD,NekDouble> &outarray,
+                                                           const StdRegions::StdMatrixKey &mkey)
+            {
+                LaplacianMatrixOp_PartitionedOp(inarray,outarray,mkey);
+            }
+            
+            virtual void v_HelmholtzMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+                                                           Array<OneD,NekDouble> &outarray,
+                                                           const StdRegions::StdMatrixKey &mkey)
+            {
+                HelmholtzMatrixOp_PartitionedOp(inarray,outarray,mkey);
+            }
+            
         
         };
 
@@ -520,6 +695,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.43  2008/10/04 19:35:07  sherwin
+ *    Added Upwind method which takes normal rather than component fluxes
+ *
  *    Revision 1.42  2008/09/23 18:20:25  pvos
  *    Updates for working ProjectContField3D demo
  *

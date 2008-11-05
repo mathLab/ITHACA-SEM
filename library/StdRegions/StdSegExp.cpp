@@ -274,13 +274,13 @@ namespace Nektar
                     Array<OneD, NekDouble> tmp0(m_ncoeffs); //ideally, we would like to have tmp0 to be replaced by outarray (currently MassMatrixOp does not allow aliasing)
                     Array<OneD, NekDouble> tmp1(m_ncoeffs);
                     
-                    MassMatrixOp(outarray,tmp0);
+                    StdMatrixKey      masskey(eMass,DetExpansionType(),*this);
+                    MassMatrixOp(outarray,tmp0,masskey);
                     IProductWRTBase(inarray,tmp1);
                     
                     Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
                     
                     // get Mass matrix inverse (only of interior DOF)
-                    StdMatrixKey      masskey(eMass,DetExpansionType(),*this);
                     DNekMatSharedPtr  matsys = (m_stdStaticCondMatrixManager[masskey])->GetBlock(1,1);
                     
                     Blas::Dgemv('N',nInteriorDofs,nInteriorDofs,1.0, &(matsys->GetPtr())[0],
@@ -420,6 +420,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.56  2008/09/23 18:19:26  pvos
+* Updates for working ProjectContField3D demo
+*
 * Revision 1.55  2008/07/19 21:12:54  sherwin
 * Removed MapTo function and made orientation convention anticlockwise in UDG routines
 *

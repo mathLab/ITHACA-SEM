@@ -92,12 +92,23 @@ namespace Nektar
             }
 
             return StdExpansion2D::Integral(inarray,w0,w1_tmp);
+        }     
+
+        void StdTriExp::IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray, 
+                                              Array<OneD, NekDouble> &outarray)
+        {
+            int nq = GetTotPoints();
+            StdMatrixKey      iprodmatkey(eIProductWRTBase,DetExpansionType(),*this);
+            DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);            
+            
+            Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
+                        m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);
         }
      
-        void StdTriExp::IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
-                                        const Array<OneD, const NekDouble>& base1,
-                                        const Array<OneD, const NekDouble>& inarray, 
-                                        Array<OneD, NekDouble> &outarray)
+        void StdTriExp::IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& base0, 
+                                               const Array<OneD, const NekDouble>& base1,
+                                               const Array<OneD, const NekDouble>& inarray, 
+                                               Array<OneD, NekDouble> &outarray)
         {
             int    i,mode;
             int    nquad0 = m_base[0]->GetNumPoints();
@@ -160,9 +171,9 @@ namespace Nektar
             }
         }
 
-        void StdTriExp::IProductWRTDerivBase(const int dir, 
-                                             const Array<OneD, const NekDouble>& inarray, 
-                                             Array<OneD, NekDouble> & outarray)
+        void StdTriExp::IProductWRTDerivBase_SumFac(const int dir, 
+                                                    const Array<OneD, const NekDouble>& inarray, 
+                                                    Array<OneD, NekDouble> & outarray)
         {
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
@@ -189,8 +200,8 @@ namespace Nektar
             {
             case 0:
                 {                    
-                    IProductWRTBase(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),
-                                    tmp0,outarray);
+                    IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),
+                                           tmp0,outarray);
                 }
                 break;
             case 1:
@@ -208,8 +219,8 @@ namespace Nektar
                         Vmath::Vmul(nquad0,&gfac0[0],1,&tmp0[0]+i*nquad0,1,&tmp0[0]+i*nquad0,1);
                     }       
           
-                    IProductWRTBase(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),tmp0,tmp3); 
-                    IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),inarray,outarray);  
+                    IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),tmp0,tmp3); 
+                    IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),inarray,outarray);  
                     Vmath::Vadd(m_ncoeffs,&tmp3[0],1,&outarray[0],1,&outarray[0],1);      
                 }
                 break;
@@ -219,6 +230,39 @@ namespace Nektar
                 }
                 break;
             }             
+        }
+
+        void StdTriExp::IProductWRTDerivBase_MatOp(const int dir, 
+                                                   const Array<OneD, const NekDouble>& inarray, 
+                                                   Array<OneD, NekDouble> &outarray)
+        {
+            int nq = GetTotPoints();
+            MatrixType mtype;
+
+            switch(dir)
+            {
+            case 0:
+                {
+                    mtype = eIProductWRTDerivBase0;
+                }
+                break;
+            case 1:
+                {
+                    mtype = eIProductWRTDerivBase1;
+                }
+                break;
+            default:
+                {
+                    ASSERTL1(false,"input dir is out of range");
+                }
+                break;
+            }  
+
+            StdMatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
+            DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);            
+ 
+            Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
+                        m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);            
         }
 
         void StdTriExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
@@ -265,9 +309,31 @@ namespace Nektar
                             nquad0,&outarray[0]+i,nquad0);
             }
         }       
+
+        void StdTriExp::GeneralMatrixOp_MatOp(const Array<OneD, const NekDouble> &inarray,
+                                               Array<OneD,NekDouble> &outarray,
+                                               const StdMatrixKey &mkey)
+        {
+            DNekMatSharedPtr& mat = m_stdMatrixManager[mkey];
+            
+            if(inarray.get() == outarray.get())
+            {
+                Array<OneD,NekDouble> tmp(m_ncoeffs);
+                Vmath::Vcopy(m_ncoeffs,inarray.get(),1,tmp.get(),1);
+                
+                Blas::Dgemv('N', m_ncoeffs, m_ncoeffs, 1.0, mat->GetPtr().get(),
+                            m_ncoeffs, tmp.get(), 1.0, 0.0, outarray.get(), 1.0); 
+            }
+            else
+            {
+                Blas::Dgemv('N', m_ncoeffs, m_ncoeffs, 1.0, mat->GetPtr().get(),
+                            m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0); 
+            }
+        }
         
-        void StdTriExp::LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                          Array<OneD,NekDouble> &outarray)
+        void StdTriExp::LaplacianMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+                                                         Array<OneD,NekDouble> &outarray,
+                                                         const StdMatrixKey &mkey)
         {
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
@@ -280,7 +346,7 @@ namespace Nektar
 
             Array<OneD,NekDouble> wsp(m_ncoeffs);
 
-            BwdTrans(inarray,physValues);
+            BwdTrans_SumFac(inarray,physValues);
 
             // Laplacian matrix operation
             // multiply with metric terms of collapsed coordinate system
@@ -309,19 +375,20 @@ namespace Nektar
             }
              
             
-            IProductWRTBase(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray);
-            IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,wsp);  
+            IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray);
+            IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,wsp);  
             Vmath::Vadd(m_ncoeffs,wsp.get(),1,outarray.get(),1,outarray.get(),1);                  
         }       
         
-        void StdTriExp::HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                          Array<OneD,NekDouble> &outarray,
-                                          const double lambda)
+        void StdTriExp::HelmholtzMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+                                                         Array<OneD,NekDouble> &outarray,
+                                                         const StdMatrixKey &mkey)
         {
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nqtot = nquad0*nquad1; 
+            NekDouble lambda = mkey.GetConstant(0);
 
             Array<OneD,NekDouble> physValues(nqtot);
             Array<OneD,NekDouble> dPhysValuesdx(nqtot);
@@ -329,10 +396,10 @@ namespace Nektar
 
             Array<OneD,NekDouble> wsp(m_ncoeffs);
 
-            BwdTrans(inarray,physValues);
+            BwdTrans_SumFac(inarray,physValues);
 
             // mass matrix operation
-            IProductWRTBase((m_base[0]->GetBdata()),(m_base[1]->GetBdata()),
+            IProductWRTBase_SumFac((m_base[0]->GetBdata()),(m_base[1]->GetBdata()),
                             physValues,wsp);
 
             // Laplacian matrix operation
@@ -362,10 +429,10 @@ namespace Nektar
             }
              
             
-            IProductWRTBase(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray);
+            IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray);
             Blas::Daxpy(m_ncoeffs, lambda, wsp.get(), 1, outarray.get(), 1);
 
-            IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,wsp);  
+            IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,wsp);  
             Vmath::Vadd(m_ncoeffs,wsp.get(),1,outarray.get(),1,outarray.get(),1);                  
         }
 
@@ -468,8 +535,8 @@ namespace Nektar
         // Evaluation Methods
         ///////////////////////////////
 
-        void StdTriExp::BwdTrans(const Array<OneD, const NekDouble>& inarray, 
-                                 Array<OneD, NekDouble> &outarray)
+        void StdTriExp::BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray, 
+                                        Array<OneD, NekDouble> &outarray)
         {
             int           i,mode;
             int           nquad0 = m_base[0]->GetNumPoints();
@@ -572,7 +639,8 @@ namespace Nektar
             Array<OneD, NekDouble> tmp0(m_ncoeffs);
             Array<OneD, NekDouble> tmp1(m_ncoeffs);
                 
-            MassMatrixOp(outarray,tmp0);
+            StdMatrixKey      masskey(eMass,DetExpansionType(),*this);
+            MassMatrixOp(outarray,tmp0,masskey);
             IProductWRTBase(inarray,tmp1);
                 
             Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
@@ -580,7 +648,6 @@ namespace Nektar
             // get Mass matrix inverse (only of interior DOF)
             // use block (1,1) of the static condensed system
             // note: this block alreay contains the inverse matrix
-            StdMatrixKey      masskey(eMass,DetExpansionType(),*this);
             DNekMatSharedPtr  matsys = (m_stdStaticCondMatrixManager[masskey])->GetBlock(1,1);
 
             int nBoundaryDofs = NumBndryCoeffs();
@@ -1180,6 +1247,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTriExp.cpp,v $
+ * Revision 1.46  2008/09/23 18:19:26  pvos
+ * Updates for working ProjectContField3D demo
+ *
  * Revision 1.45  2008/09/17 13:46:06  pvos
  * Added LocalToGlobalC0ContMap for 3D expansions
  *

@@ -267,22 +267,107 @@ namespace Nektar
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(*tmpmat); //Populate standard mass matrix.
                     returnval->Invert();
                 }
-                break;
+                break;                    
             case eBwdTrans:
                 {
                     int nq = GetTotPoints();
-                    Array<OneD, NekDouble> tmp(nq);
+                    Array<OneD, NekDouble> tmpin(m_ncoeffs);
+                    Array<OneD, NekDouble> tmpout(nq);
                     
-                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,m_ncoeffs);            
-                    DNekMat &Mat = *returnval;                     
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,m_ncoeffs);     
                     
                     for(int i=0; i<m_ncoeffs; ++i)
-                    {                        
-                        v_FillMode(i,tmp);                        
-                        Vmath::Vcopy(nq,&tmp[0],1,&(Mat.GetPtr())[0]+i*nq,1);
+                    {  
+                        Vmath::Zero(m_ncoeffs, tmpin, 1);
+                        tmpin[i] = 1.0;
+                        
+                        BwdTrans_SumFac(tmpin,tmpout); 
+ 
+                        Vmath::Vcopy(nq,tmpout.get(),1,
+                                     returnval->GetRawPtr()+i*nq,1); 
                     }
                 }
-                break;                            
+                break;      
+            case eIProductWRTBase:
+                {
+                    int nq = GetTotPoints();
+                    Array<OneD, NekDouble> tmpin(nq);
+                    Array<OneD, NekDouble> tmpout(m_ncoeffs);
+                    
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,m_ncoeffs);            
+                    
+                    for(i=0; i < nq; ++i)
+                    {
+                        Vmath::Zero(nq, tmpin, 1);
+                        tmpin[i] = 1.0;
+                        
+                        IProductWRTBase_SumFac(tmpin,tmpout);
+                        
+                        Vmath::Vcopy(m_ncoeffs,tmpout.get(),1,
+                                     returnval->GetRawPtr()+i*m_ncoeffs,1);
+                    }
+                }
+                break;    
+            case eIProductWRTDerivBase0:
+                {
+                    int nq = GetTotPoints();
+                    Array<OneD, NekDouble> tmpin(nq);
+                    Array<OneD, NekDouble> tmpout(m_ncoeffs);
+                    
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,m_ncoeffs);            
+                    
+                    for(i=0; i < nq; ++i)
+                    {
+                        Vmath::Zero(nq, tmpin, 1);
+                        tmpin[i] = 1.0;
+                        
+                        IProductWRTDerivBase_SumFac(0,tmpin,tmpout);
+                        
+                        Vmath::Vcopy(m_ncoeffs,tmpout.get(),1,
+                                     returnval->GetRawPtr()+i*m_ncoeffs,1);
+                    }
+                }
+                break;   
+            case eIProductWRTDerivBase1:
+                {
+                    int nq = GetTotPoints();
+                    Array<OneD, NekDouble> tmpin(nq);
+                    Array<OneD, NekDouble> tmpout(m_ncoeffs);
+                    
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,m_ncoeffs);            
+                    
+                    for(i=0; i < nq; ++i)
+                    {
+                        Vmath::Zero(nq, tmpin, 1);
+                        tmpin[i] = 1.0;
+                        
+                        IProductWRTDerivBase_SumFac(1,tmpin,tmpout);
+                        
+                        Vmath::Vcopy(m_ncoeffs,tmpout.get(),1,
+                                     returnval->GetRawPtr()+i*m_ncoeffs,1);
+                    }
+                }
+                break;  
+            case eIProductWRTDerivBase2:
+                {
+                    int nq = GetTotPoints();
+                    Array<OneD, NekDouble> tmpin(nq);
+                    Array<OneD, NekDouble> tmpout(m_ncoeffs);
+                    
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,m_ncoeffs);            
+                    
+                    for(i=0; i < nq; ++i)
+                    {
+                        Vmath::Zero(nq, tmpin, 1);
+                        tmpin[i] = 1.0;
+                        
+                        IProductWRTDerivBase_SumFac(2,tmpin,tmpout);
+                        
+                        Vmath::Vcopy(m_ncoeffs,tmpout.get(),1,
+                                     returnval->GetRawPtr()+i*m_ncoeffs,1);
+                    }
+                }
+                break;                                   
             case eMass: 
             case eHelmholtz:
             case eLaplacian:
@@ -305,7 +390,7 @@ namespace Nektar
                         Vmath::Zero(m_ncoeffs, tmp, 1);
                         tmp[i] = 1.0;
                         
-                        GeneralMatrixOp(mkey,tmp,tmp);
+                        GeneralMatrixOp_PartitionedOp(tmp,tmp,mkey);
                         
                         Vmath::Vcopy(m_ncoeffs,&tmp[0],1,
                                      &(Mat.GetPtr())[0]+i*m_ncoeffs,1);
@@ -322,44 +407,83 @@ namespace Nektar
             return returnval;
         }
 
-        void StdExpansion::GeneralMatrixOp(const StdMatrixKey &mkey, 
-                                           const Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,NekDouble> &outarray)
+        void StdExpansion::GeneralMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD,NekDouble> &outarray,
+                                           const StdMatrixKey &mkey)
         {
             switch(mkey.GetMatrixType())
             {
             case eMass:
-                MassMatrixOp(inarray,outarray);
+                MassMatrixOp(inarray,outarray,mkey);
                 break;
             case eWeakDeriv0:
-                WeakDerivMatrixOp(0,inarray,outarray);
+                WeakDerivMatrixOp(0,inarray,outarray,mkey);
                 break;
             case eWeakDeriv1:
-                WeakDerivMatrixOp(1,inarray,outarray);
+                WeakDerivMatrixOp(1,inarray,outarray,mkey);
                 break;
             case eWeakDeriv2:
-                WeakDerivMatrixOp(2,inarray,outarray);
+                WeakDerivMatrixOp(2,inarray,outarray,mkey);
                 break;
             case eLaplacian:
-                LaplacianMatrixOp(inarray,outarray);
+                LaplacianMatrixOp(inarray,outarray,mkey);
                 break;
             case eLaplacian00:
-                LaplacianMatrixOp(0,0,inarray,outarray);
+                LaplacianMatrixOp(0,0,inarray,outarray,mkey);
                 break;
             case eLaplacian01:
-                LaplacianMatrixOp(0,1,inarray,outarray);
+                LaplacianMatrixOp(0,1,inarray,outarray,mkey);
                 break;
             case eLaplacian11:
-                LaplacianMatrixOp(1,1,inarray,outarray);
+                LaplacianMatrixOp(1,1,inarray,outarray,mkey);
                 break;
             case eLaplacian22:
-                LaplacianMatrixOp(2,2,inarray,outarray);
-                break;
-            case eBwdTrans:
-                BwdTrans(inarray,outarray);
+                LaplacianMatrixOp(2,2,inarray,outarray,mkey);
                 break;
             case eHelmholtz:
-                HelmholtzMatrixOp(inarray,outarray,mkey.GetConstant(0));
+                HelmholtzMatrixOp(inarray,outarray,mkey);
+                break;
+            default:
+                NEKERROR(ErrorUtil::efatal, "This matrix does not have an operator");
+                break;
+            }
+        }
+
+        void StdExpansion::GeneralMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+                                                         Array<OneD,NekDouble> &outarray,
+                                                         const StdMatrixKey &mkey)
+        {
+            switch(mkey.GetMatrixType())
+            {
+            case eMass:
+                MassMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                break;
+            case eWeakDeriv0:
+                WeakDerivMatrixOp_PartitionedOp(0,inarray,outarray,mkey);
+                break;
+            case eWeakDeriv1:
+                WeakDerivMatrixOp_PartitionedOp(1,inarray,outarray,mkey);
+                break;
+            case eWeakDeriv2:
+                WeakDerivMatrixOp_PartitionedOp(2,inarray,outarray,mkey);
+                break;
+            case eLaplacian:
+                LaplacianMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                break;
+            case eLaplacian00:
+                LaplacianMatrixOp_PartitionedOp(0,0,inarray,outarray,mkey);
+                break;
+            case eLaplacian01:
+                LaplacianMatrixOp_PartitionedOp(0,1,inarray,outarray,mkey);
+                break;
+            case eLaplacian11:
+                LaplacianMatrixOp_PartitionedOp(1,1,inarray,outarray,mkey);
+                break;
+            case eLaplacian22:
+                LaplacianMatrixOp_PartitionedOp(2,2,inarray,outarray,mkey);
+                break;
+            case eHelmholtz:
+                HelmholtzMatrixOp_PartitionedOp(inarray,outarray,mkey);
                 break;
             default:
                 NEKERROR(ErrorUtil::efatal, "This matrix does not have an operator");
@@ -367,22 +491,24 @@ namespace Nektar
             }
         }
             
-        void StdExpansion::MassMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                        Array<OneD,NekDouble> &outarray)
+        void StdExpansion::MassMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+                                                      Array<OneD,NekDouble> &outarray,
+                                                      const StdMatrixKey &mkey)
         {
             Array<OneD, NekDouble> tmp(GetTotPoints());
 
             v_BwdTrans(inarray,tmp);            
             v_IProductWRTBase(tmp, outarray);
         }
-
-        void StdExpansion::LaplacianMatrixOp(const int k1, const int k2, 
-                                             const Array<OneD, const NekDouble> &inarray,
-                                             Array<OneD,NekDouble> &outarray)
+        
+        void StdExpansion::LaplacianMatrixOp_PartitionedOp(const int k1, const int k2, 
+                                                           const Array<OneD, const NekDouble> &inarray,
+                                                           Array<OneD,NekDouble> &outarray,
+                                                           const StdMatrixKey &mkey)
         {                
             ASSERTL1(k1 >= 0 && k1 < ExpansionTypeDimMap[v_DetExpansionType()],"invalid first  argument");
             ASSERTL1(k2 >= 0 && k2 < ExpansionTypeDimMap[v_DetExpansionType()],"invalid second argument");
-                                  
+            
             Array<OneD, NekDouble> tmp(GetTotPoints());
             Array<OneD, NekDouble> dtmp(GetTotPoints());
             
@@ -390,18 +516,90 @@ namespace Nektar
             v_PhysDeriv(k2,tmp,dtmp);
             v_IProductWRTDerivBase(k1, dtmp, outarray);
         }
+                
+        void StdExpansion::v_LaplacianMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+                                                             Array<OneD,NekDouble> &outarray,
+                                                             const StdMatrixKey &mkey)
+        {
+            switch(ExpansionTypeDimMap[v_DetExpansionType()])
+            {
+            case 1:
+                {
+                    StdMatrixKey mkey00(eLaplacian00,DetExpansionType(),*this);
+                    LaplacianMatrixOp(0,0,inarray,outarray,mkey00);
+                }
+                    break;
+            case 2:
+                {
+                    Array<OneD, NekDouble> store(m_ncoeffs);
+                    
+                    StdMatrixKey mkey00(eLaplacian00,DetExpansionType(),*this);
+                    StdMatrixKey mkey11(eLaplacian00,DetExpansionType(),*this);
+                    LaplacianMatrixOp(0,0,inarray,store,mkey00);
+                    LaplacianMatrixOp(1,1,inarray,outarray,mkey11);
+                   
+                    Vmath::Vadd(m_ncoeffs, store , 1, outarray, 1, outarray, 1);
+                }
+                break;
+            case 3:
+                {
+                    Array<OneD, NekDouble> store0(m_ncoeffs);
+                    Array<OneD, NekDouble> store1(m_ncoeffs);
+                    
+                    StdMatrixKey mkey00(eLaplacian00,DetExpansionType(),*this);
+                    StdMatrixKey mkey11(eLaplacian00,DetExpansionType(),*this);
+                    StdMatrixKey mkey22(eLaplacian00,DetExpansionType(),*this);
+                    LaplacianMatrixOp(0,0,inarray,store0,mkey00);
+                    LaplacianMatrixOp(1,1,inarray,store1,mkey11);
+                    LaplacianMatrixOp(2,2,inarray,outarray,mkey22);
+                    
+                    Vmath::Vadd(m_ncoeffs, store0, 1, outarray, 1, outarray, 1);
+                    Vmath::Vadd(m_ncoeffs, store1, 1, outarray, 1, outarray, 1);
+                }
+                break;
+            default:
+                NEKERROR(ErrorUtil::efatal, "Dimension not recognised.");
+                break;
+            }
+        }
 
-
-        void StdExpansion::WeakDerivMatrixOp(const int k1,
-                                             const Array<OneD, const NekDouble> &inarray,
-                                             Array<OneD,NekDouble> &outarray)
+        void StdExpansion::WeakDerivMatrixOp_PartitionedOp(const int k1,
+                                                           const Array<OneD, const NekDouble> &inarray,
+                                                           Array<OneD,NekDouble> &outarray,
+                                                           const StdMatrixKey &mkey)
         {
             ASSERTL1(k1 >= 0 && k1 < ExpansionTypeDimMap[v_DetExpansionType()],"invalid first  argument");
-                                  
+            
             Array<OneD, NekDouble> tmp(GetTotPoints());
             v_BwdTrans(inarray,tmp);
             v_PhysDeriv(k1,tmp,tmp);
             v_IProductWRTBase(tmp, outarray);
+        }
+
+        void StdExpansion::v_HelmholtzMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+                                                             Array<OneD,NekDouble> &outarray,
+                                                             const StdMatrixKey &mkey)
+        {
+            NekDouble lambda = mkey.GetConstant(0);
+            Array<OneD,NekDouble> tmp(m_ncoeffs);
+            StdMatrixKey mkeymass(eMass,DetExpansionType(),*this);
+            StdMatrixKey mkeylap(eLaplacian,DetExpansionType(),*this);
+
+            MassMatrixOp(inarray,tmp,mkeymass);
+            LaplacianMatrixOp(inarray,outarray,mkeylap);
+            
+            Blas::Daxpy(m_ncoeffs, lambda, tmp, 1, outarray, 1);
+        }
+        
+        void StdExpansion::BwdTrans_MatOp(const Array<OneD, const NekDouble>& inarray, 
+                                          Array<OneD, NekDouble> &outarray)
+        {
+            int nq = GetTotPoints();
+            StdMatrixKey      bwdtransmatkey(eBwdTrans,DetExpansionType(),*this);
+            DNekMatSharedPtr& bwdtransmat = GetStdMatrix(bwdtransmatkey);
+           
+            Blas::Dgemv('N',nq,m_ncoeffs,1.0,bwdtransmat->GetPtr().get(),
+                        nq, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);            
         }
 
         //   I/O routine
@@ -419,6 +617,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.76  2008/09/09 14:12:51  sherwin
+* Removed Interp1D/2D/3D and put the into LibUtilities
+*
 * Revision 1.75  2008/08/14 22:09:50  sherwin
 * Modifications to remove HDG routines from StdRegions and removed StdExpMap
 *

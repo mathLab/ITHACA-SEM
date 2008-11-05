@@ -13,6 +13,7 @@ StdQuadExp.cpp
 StdSegExp.cpp
 StdTetExp.cpp
 StdTriExp.cpp
+OptimizationParametersAccess.cpp
 )
 
 SET(STD_REGIONS_HEADERS
@@ -35,6 +36,9 @@ StdTriExp.h
 LocalRegionsDeclarations.hpp
 SpatialDomainsDeclarations.hpp
 StdRegions.hpp
+ElementalOptimizationParameters.hpp
+ElementalOptimizationParametersTraits.hpp
+OptimizationParametersAccess.h
 )
 
 

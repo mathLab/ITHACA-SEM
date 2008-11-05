@@ -729,7 +729,8 @@ namespace Nektar
                     Array<OneD, NekDouble> tmp0(m_ncoeffs); //ideally, we would like to have tmp0 to be replaced by outarray (currently MassMatrixOp does not allow aliasing)
                     Array<OneD, NekDouble> tmp1(m_ncoeffs);
                     
-                    MassMatrixOp(outarray,tmp0);
+                    StdRegions::StdMatrixKey  stdmasskey(StdRegions::eMass,DetExpansionType(),*this);
+                    MassMatrixOp(outarray,tmp0,stdmasskey);
                     IProductWRTBase(inarray,tmp1);
                     
                     Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
@@ -1230,6 +1231,9 @@ namespace Nektar
 }//end of namespace
 
 // $Log: SegExp.cpp,v $
+// Revision 1.55  2008/09/23 18:20:25  pvos
+// Updates for working ProjectContField3D demo
+//
 // Revision 1.54  2008/09/09 15:05:09  sherwin
 // Updates related to cuved geometries. Normals have been removed from m_metricinfo and replaced with a direct evaluation call. Interp methods have been moved to LibUtilities
 //

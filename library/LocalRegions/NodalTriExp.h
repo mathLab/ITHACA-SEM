@@ -95,13 +95,35 @@ namespace Nektar
             void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
                                  Array<OneD, NekDouble> &outarray)
             {
-                IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
-                                inarray,outarray);
-            }  
+                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eNodalTriExp, NekOptimize::eIProductWRTBase>::
+                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
+                
+                if(doMatOp)
+                {
+                    NodalTriExp::IProductWRTBase_MatOp(inarray,outarray);
+                }
+                else
+                {
+                    NodalTriExp::IProductWRTBase_SumFac(inarray,outarray);
+                }  
+            }
 
             void IProductWRTDerivBase(const int dir,
                                       const Array<OneD, const NekDouble>& inarray,
-                                      Array<OneD, NekDouble> & outarray);
+                                      Array<OneD, NekDouble> & outarray)
+            {
+                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eNodalTriExp, NekOptimize::eIProductWRTDerivBase>::
+                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
+                
+                if(doMatOp)
+                {
+                    NodalTriExp::IProductWRTDerivBase_MatOp(dir,inarray,outarray);
+                }
+                else
+                {
+                    NodalTriExp::IProductWRTDerivBase_SumFac(dir,inarray,outarray);
+                }  
+            }
             
             //-----------------------------
             // Differentiation Methods
@@ -123,6 +145,93 @@ namespace Nektar
                           Array<OneD, NekDouble> &outarray);
             
             NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);
+
+            void MassMatrixOp(const Array<OneD, const NekDouble> &inarray, 
+                              Array<OneD,NekDouble> &outarray,
+                              const StdRegions::StdMatrixKey &mkey)
+            {              
+                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eNodalTriExp, NekOptimize::eMassMatrixOp>::
+                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
+                
+                if(doMatOp)
+                {
+                    NodalTriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
+                }
+                else
+                {
+                    StdExpansion::MassMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                }
+            }
+
+            void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                   Array<OneD,NekDouble> &outarray,
+                                   const StdRegions::StdMatrixKey &mkey)
+            {           
+                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eNodalTriExp, NekOptimize::eLaplacianMatrixOp>::
+                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
+                
+                if(doMatOp)
+                {
+                    NodalTriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
+                }
+                else
+                {
+                    StdExpansion::LaplacianMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                }
+            }
+
+            void LaplacianMatrixOp(const int k1, const int k2, 
+                                   const Array<OneD, const NekDouble> &inarray,
+                                   Array<OneD,NekDouble> &outarray,
+                                   const StdRegions::StdMatrixKey &mkey)
+            {           
+                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eNodalTriExp, NekOptimize::eLaplacianMatrixIJOp>::
+                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
+                
+                if(doMatOp)
+                {
+                    NodalTriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
+                }
+                else
+                {
+                    StdExpansion::LaplacianMatrixOp_PartitionedOp(k1,k2,inarray,outarray,mkey);
+                }
+            }
+
+            void WeakDerivMatrixOp(const int i,
+                                   const Array<OneD, const NekDouble> &inarray,
+                                   Array<OneD,NekDouble> &outarray,
+                                   const StdRegions::StdMatrixKey &mkey)
+            {
+                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eNodalTriExp, NekOptimize::eWeakDerivMatrixOp>::
+                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
+                
+                if(doMatOp)
+                {
+                    NodalTriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
+                }
+                else
+                {
+                    StdExpansion::WeakDerivMatrixOp_PartitionedOp(i,inarray,outarray,mkey);
+                }
+            }
+            
+            void HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                   Array<OneD,NekDouble> &outarray,
+                                   const StdRegions::StdMatrixKey &mkey)
+            {
+                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eStdNodalTriExp, NekOptimize::eHelmholtzMatrixOp>::
+                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
+                
+                if(doMatOp)
+                {
+                    NodalTriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
+                }
+                else
+                {
+                    StdExpansion::HelmholtzMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                }
+            }  
             
         protected:
             
@@ -131,13 +240,31 @@ namespace Nektar
             DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekScalMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
-            
-            /** \brief  Inner product of \a inarray over region with respect to
-                the expansion basis \a base and return in \a outarray */
-            void IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
-                                 const Array<OneD, const NekDouble>& base1,
-                                 const Array<OneD, const NekDouble>& inarray, 
-                                 Array<OneD, NekDouble> &outarray);
+
+            void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
+                                        Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
+                                       inarray,outarray);
+            }  
+            void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& base0, 
+                                        const Array<OneD, const NekDouble>& base1,
+                                        const Array<OneD, const NekDouble>& inarray, 
+                                        Array<OneD, NekDouble> &outarray);
+            void IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray, 
+                                       Array<OneD, NekDouble> &outarray);
+
+            void IProductWRTDerivBase_SumFac(const int dir,
+                                             const Array<OneD, const NekDouble>& inarray,
+                                             Array<OneD, NekDouble> & outarray);
+            void IProductWRTDerivBase_MatOp(const int dir,
+                                             const Array<OneD, const NekDouble>& inarray,
+                                             Array<OneD, NekDouble> & outarray);
+
+
+            void GeneralMatrixOp_MatOp(const Array<OneD, const NekDouble> &inarray,
+                                       Array<OneD,NekDouble> &outarray,
+                                       const StdRegions::StdMatrixKey &mkey); 
             
         private:           
             SpatialDomains::Geometry2DSharedPtr m_geom;
@@ -312,6 +439,63 @@ namespace Nektar
             {
                 return m_staticCondMatrixManager[mkey];
             }
+
+            virtual void v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
+                                           Array<OneD, NekDouble> &outarray)
+            {
+                BwdTrans_SumFac(inarray,outarray);
+            }    
+            
+            virtual void v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
+                                                  Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTBase_SumFac(inarray,outarray);
+            }            
+            
+            virtual void v_IProductWRTDerivBase_SumFac(const int dir,
+                                                       const Array<OneD, const NekDouble>& inarray, 
+                                                       Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTDerivBase_SumFac(dir,inarray,outarray);
+            }    
+
+            virtual void v_MassMatrixOp(const Array<OneD, const NekDouble> &inarray, 
+                                        Array<OneD,NekDouble> &outarray,
+                                        const StdRegions::StdMatrixKey &mkey)
+            {
+                MassMatrixOp(inarray,outarray,mkey);
+            }  
+            
+            virtual void v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray,
+                                             const StdRegions::StdMatrixKey &mkey)
+            {
+                LaplacianMatrixOp(inarray,outarray,mkey);
+            }
+
+            virtual void v_LaplacianMatrixOp(const int k1, const int k2, 
+                                             const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray,
+                                             const StdRegions::StdMatrixKey &mkey)
+            {
+                LaplacianMatrixOp(k1,k2,inarray,outarray,mkey);
+            }
+
+            virtual void v_WeakDerivMatrixOp(const int i,
+                                             const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray,
+                                             const StdRegions::StdMatrixKey &mkey)
+            {
+                WeakDerivMatrixOp(i,inarray,outarray,mkey);
+            }
+            
+            virtual void v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray,
+                                             const StdRegions::StdMatrixKey &mkey)
+            {
+                HelmholtzMatrixOp(inarray,outarray,mkey);
+            }  
+            
         };
     
         // type defines for use of TriExp in a boost vector
@@ -326,6 +510,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.h,v $
+ *    Revision 1.21  2008/07/29 22:25:34  sherwin
+ *    general update for DG Advection including separation of GetGeom() into GetGeom1D,2D,3D()
+ *
  *    Revision 1.20  2008/07/12 17:27:07  sherwin
  *    Update for AddBoundaryInt and moved various members to be private rather than protected
  *

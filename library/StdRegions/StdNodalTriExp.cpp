@@ -172,72 +172,6 @@ namespace Nektar
             nodal = (*vdm)*modal;
         }
 
-
-        //////////////////////////////
-        // Integration Methods
-        //////////////////////////////
-
-        void StdNodalTriExp::IProductWRTDerivBase(const int dir, 
-                                                  const Array<OneD, const NekDouble>& inarray, 
-                                                  Array<OneD, NekDouble> & outarray)
-        {
-            int    i;
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int    nqtot = nquad0*nquad1; 
-            
-            Array<OneD, NekDouble> gfac0(nqtot);
-            Array<OneD, NekDouble> tmp0(nqtot);
-            
-            Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
-            
-            // set up geometric factor: 2/(1-z1)
-            for(i = 0; i < nquad1; ++i)
-            {
-                gfac0[i] = 2.0/(1-z1[i]);
-            }
-            
-            for(i = 0; i < nquad1; ++i)  
-            {
-                Vmath::Smul(nquad0,gfac0[i],&inarray[0]+i*nquad0,1,&tmp0[0]+i*nquad0,1);
-            }
-            
-            switch(dir)
-            {
-            case 0:
-                {                    
-                    IProductWRTBase(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),
-                                    tmp0,outarray);
-                }
-                break;
-            case 1:
-                {
-                    Array<OneD, NekDouble> tmp3(m_ncoeffs);    
-                    Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
-                    
-                    for(i = 0; i < nquad0; ++i)
-                    {
-                        gfac0[i] = 0.5*(1+z0[i]);
-                    }        
-                    
-                    for(i = 0; i < nquad1; ++i) 
-                    {
-                        Vmath::Vmul(nquad0,&gfac0[0],1,&tmp0[0]+i*nquad0,1,&tmp0[0]+i*nquad0,1);
-                    }       
-                    
-                    IProductWRTBase(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),tmp0,tmp3); 
-                    IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),inarray,outarray);  
-                    Vmath::Vadd(m_ncoeffs,&tmp3[0],1,&outarray[0],1,&outarray[0],1);      
-                }
-                break;
-            default:
-                {
-                    ASSERTL1(dir >= 0 &&dir < 2,"input dir is out of range");
-                }
-                break;
-            }             
-        }
-
         void StdNodalTriExp::FillMode(const int mode, 
             Array<OneD, NekDouble> &outarray)
         {
@@ -253,17 +187,6 @@ namespace Nektar
         ///////////////////////////////
         /// Evaluation Methods
         ///////////////////////////////
-
-        // Currently convert nodal values into tranformed values and
-        // backward transform
-
-        void StdNodalTriExp::BwdTrans(const Array<OneD, const NekDouble>& inarray,
-            Array<OneD, NekDouble> &outarray)
-        {
-            Array<OneD, NekDouble> tmp(m_ncoeffs);
-            NodalToModal(inarray,tmp);
-            StdTriExp::BwdTrans(tmp,outarray);
-        }
 
         void StdNodalTriExp::FwdTrans(const Array<OneD, const NekDouble>& inarray,
             Array<OneD, NekDouble> &outarray)
@@ -560,6 +483,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.29  2008/09/17 13:46:06  pvos
+* Added LocalToGlobalC0ContMap for 3D expansions
+*
 * Revision 1.28  2008/07/19 21:12:54  sherwin
 * Removed MapTo function and made orientation convention anticlockwise in UDG routines
 *

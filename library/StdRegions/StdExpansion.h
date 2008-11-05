@@ -44,6 +44,7 @@
 #include <StdRegions/LocalRegionsDeclarations.hpp>
 #include <StdRegions/StdMatrixKey.h>
 #include <StdRegions/StdLinSysKey.hpp>
+#include <StdRegions/OptimizationParametersAccess.h>
 
 namespace Nektar
 {
@@ -934,33 +935,45 @@ namespace Nektar
 
             DNekMatSharedPtr CreateGeneralMatrix(const StdMatrixKey &mkey);
 
-            void GeneralMatrixOp(const StdMatrixKey &mkey, 
-                                 const Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD,NekDouble> &outarray);
+            void GeneralMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                 Array<OneD,NekDouble> &outarray,
+                                 const StdMatrixKey &mkey);
 
-            
             void MassMatrixOp(const Array<OneD, const NekDouble> &inarray, 
-                              Array<OneD,NekDouble> &outarray);
+                              Array<OneD,NekDouble> &outarray,
+                              const StdMatrixKey &mkey)
+            {
+                v_MassMatrixOp(inarray,outarray,mkey);
+            }
         
             void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                   Array<OneD,NekDouble> &outarray)
+                                   Array<OneD,NekDouble> &outarray,
+                                   const StdMatrixKey &mkey)
             {
-                v_LaplacianMatrixOp(inarray,outarray);
+                v_LaplacianMatrixOp(inarray,outarray,mkey);
             }
 
             void LaplacianMatrixOp(const int k1, const int k2, 
                                    const Array<OneD, const NekDouble> &inarray,
-                                   Array<OneD,NekDouble> &outarray);
+                                   Array<OneD,NekDouble> &outarray,
+                                   const StdMatrixKey &mkey)
+            {
+                v_LaplacianMatrixOp(k1,k2,inarray,outarray,mkey);
+            }
 
             void WeakDerivMatrixOp(const int i,
                                    const Array<OneD, const NekDouble> &inarray,
-                                   Array<OneD,NekDouble> &outarray);
+                                   Array<OneD,NekDouble> &outarray,
+                                   const StdMatrixKey &mkey)
+            {
+                v_WeakDerivMatrixOp(i,inarray,outarray,mkey);
+            }
 
             void HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
-                                   const double lambda)
+                                   const StdMatrixKey &mkey)
             {
-                v_HelmholtzMatrixOp(inarray,outarray,lambda);
+                v_HelmholtzMatrixOp(inarray,outarray,mkey);
             }
 
             DNekMatSharedPtr GenMatrix (const StdMatrixKey &mkey)
@@ -977,8 +990,8 @@ namespace Nektar
             }
 
             void PhysDeriv(const int dir, 
-                                   const Array<OneD, const NekDouble>& inarray,
-                                   Array<OneD, NekDouble> &outarray)
+                           const Array<OneD, const NekDouble>& inarray,
+                           Array<OneD, NekDouble> &outarray)
             {
                 v_PhysDeriv (dir, inarray, outarray);
             }
@@ -1233,6 +1246,60 @@ namespace Nektar
             **/
             DNekBlkMatSharedPtr CreateStdStaticCondMatrix(const StdMatrixKey &mkey);
 
+            void BwdTrans_MatOp(const Array<OneD, const NekDouble>& inarray,
+                                Array<OneD, NekDouble> &outarray);
+            
+            void BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
+                                 Array<OneD, NekDouble> &outarray)
+            {
+                v_BwdTrans_SumFac(inarray,outarray);
+            }
+            
+            void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
+                                        Array<OneD, NekDouble> &outarray)
+            {
+                v_IProductWRTBase_SumFac(inarray,outarray);
+            }            
+            
+            void IProductWRTDerivBase_SumFac(const int dir,
+                                             const Array<OneD, const NekDouble>& inarray, 
+                                             Array<OneD, NekDouble> &outarray)
+            {
+                v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
+            }    
+            
+            void GeneralMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+                                               Array<OneD,NekDouble> &outarray,
+                                               const StdMatrixKey &mkey);
+
+            void MassMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray, 
+                                            Array<OneD,NekDouble> &outarray,
+                                            const StdMatrixKey &mkey);
+            
+            void LaplacianMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+                                                 Array<OneD,NekDouble> &outarray,
+                                                 const StdMatrixKey &mkey)
+            {
+                v_LaplacianMatrixOp_PartitionedOp(inarray,outarray,mkey);
+            }
+            
+            void LaplacianMatrixOp_PartitionedOp(const int k1, const int k2, 
+                                                 const Array<OneD, const NekDouble> &inarray,
+                                                 Array<OneD,NekDouble> &outarray,
+                                                 const StdMatrixKey &mkey);
+            
+            void WeakDerivMatrixOp_PartitionedOp(const int i,
+                                                 const Array<OneD, const NekDouble> &inarray,
+                                                 Array<OneD,NekDouble> &outarray,
+                                                 const StdMatrixKey &mkey);
+            
+            void HelmholtzMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+                                                 Array<OneD,NekDouble> &outarray,
+                                                 const StdMatrixKey &mkey)
+            {
+                v_HelmholtzMatrixOp_PartitionedOp(inarray,outarray,mkey);
+            }
+
         private:
             // Virtual functions
             virtual int v_GetNverts() const = 0;
@@ -1328,7 +1395,7 @@ namespace Nektar
             virtual void   v_FwdTrans   (const Array<OneD, const NekDouble>& inarray, 
                                          Array<OneD, NekDouble> &outarray) = 0;
             virtual void  v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
-                                           Array<OneD, NekDouble> &outarray) = 0;      
+                                           Array<OneD, NekDouble> &outarray) = 0;   
 
             virtual void  v_IProductWRTDerivBase (const int dir, 
                                                    const Array<OneD, const NekDouble>& inarray, 
@@ -1522,61 +1589,82 @@ namespace Nektar
 
                 return SpatialDomains::NullGeometry3DSharedPtr;
             }
-                
-            virtual void v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                             Array<OneD,NekDouble> &outarray)
+                            
+            virtual void v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
+                                           Array<OneD, NekDouble> &outarray)
             {
-                NEKERROR(ErrorUtil::ewarning, (string("The function LaplacianMatrixOp() can be implemented more efficiently") + 
-                                               string("for a ") + string(ExpansionTypeMap[DetExpansionType()])) );
-
-                switch(ExpansionTypeDimMap[v_DetExpansionType()])
-                {
-                case 1:
-                    LaplacianMatrixOp(0,0,inarray,outarray);
-                    break;
-
-                case 2:
-                    {
-                        Array<OneD, NekDouble> store(m_ncoeffs);
-                    
-                        LaplacianMatrixOp(0,0,inarray,store);
-                        LaplacianMatrixOp(1,1,inarray,outarray);
-                   
-                        Vmath::Vadd(m_ncoeffs, store , 1, outarray, 1, outarray, 1);
-                    }
-                    break;
-                case 3:
-                    {
-                        Array<OneD, NekDouble> store0(m_ncoeffs);
-                        Array<OneD, NekDouble> store1(m_ncoeffs);
-                    
-                        LaplacianMatrixOp(0,0,inarray,store0);
-                        LaplacianMatrixOp(1,1,inarray,store1);
-                        LaplacianMatrixOp(2,2,inarray,outarray);
-                    
-                        Vmath::Vadd(m_ncoeffs, store0, 1, outarray, 1, outarray, 1);
-                        Vmath::Vadd(m_ncoeffs, store1, 1, outarray, 1, outarray, 1);
-                    }
-                    break;
-                default:
-                    NEKERROR(ErrorUtil::efatal, "Dimension not recognised.");
-                    break;
-                }
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            }
+            
+            virtual void v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
+                                                  Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            }            
+            
+            virtual void v_IProductWRTDerivBase_SumFac(const int dir,
+                                                       const Array<OneD, const NekDouble>& inarray, 
+                                                       Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
+            virtual void v_MassMatrixOp(const Array<OneD, const NekDouble> &inarray, 
+                                        Array<OneD,NekDouble> &outarray,
+                                        const StdMatrixKey &mkey)
+            {
+                // If this function is not reimplemented on shape level, the function
+                // below will be called
+                MassMatrixOp_PartitionedOp(inarray,outarray,mkey);
+            }
+
+            virtual void v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray,
+                                             const StdMatrixKey &mkey)
+            {
+                // If this function is not reimplemented on shape level, the function
+                // below will be called
+                LaplacianMatrixOp_PartitionedOp(inarray,outarray,mkey);
+            }
+
+            virtual void v_LaplacianMatrixOp(const int k1, const int k2, 
+                                             const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray,
+                                             const StdMatrixKey &mkey)
+            {
+
+                // If this function is not reimplemented on shape level, the function
+                // below will be called
+                LaplacianMatrixOp_PartitionedOp(k1,k2,inarray,outarray,mkey);
+            }
+
+            virtual void v_WeakDerivMatrixOp(const int i,
+                                             const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray,
+                                             const StdMatrixKey &mkey)
+            {
+                // If this function is not reimplemented on shape level, the function
+                // below will be called
+                WeakDerivMatrixOp_PartitionedOp(i,inarray,outarray,mkey);
+
+            }
+            
             virtual void v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray,
-                                             const double lambda)
+                                             const StdMatrixKey &mkey)
             {
-                NEKERROR(ErrorUtil::ewarning, (string("The function HelmholtzMatrixOp() can be implemented more efficiently") + 
-                                               string("for a ") + string(ExpansionTypeMap[DetExpansionType()])) );
-
-                Array<OneD,NekDouble> tmp(m_ncoeffs);
-                MassMatrixOp(inarray,tmp);
-                LaplacianMatrixOp(inarray,outarray);
-                
-                Blas::Daxpy(m_ncoeffs, lambda, tmp, 1, outarray, 1);
+                // If this function is not reimplemented on shape level, the function
+                // below will be called
+                HelmholtzMatrixOp_PartitionedOp(inarray,outarray,mkey);
             }
+
+            virtual void v_LaplacianMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+                                                           Array<OneD,NekDouble> &outarray,
+                                                           const StdMatrixKey &mkey);
+            
+            virtual void v_HelmholtzMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+                                                           Array<OneD,NekDouble> &outarray,
+                                                           const StdMatrixKey &mkey);
 #endif
             
         };
@@ -1592,6 +1680,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.104  2008/11/01 22:36:06  bnelson
+ * Removed uneeded files.
+ *
  * Revision 1.103  2008/10/19 15:55:46  sherwin
  * Added methods EvalBasisNumModesMax
  *

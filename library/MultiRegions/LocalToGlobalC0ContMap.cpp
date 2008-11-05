@@ -77,6 +77,9 @@ namespace Nektar
                     ASSERTL0(false,"Local To Global map not defined for this dimension");
                 }
             }
+
+            CalculateBndSystemBandWidth(locExpVector);
+            CalculateFullSystemBandWidth(locExpVector);
         }
 
         LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(const int numLocalCoeffs, 
@@ -86,6 +89,8 @@ namespace Nektar
                                                        const map<int,int>& periodicVerticesId)
         {
             SetUp1DExpansionC0ContMap(numLocalCoeffs, locExpVector, bndCondExp, bndConditions, periodicVerticesId);
+            CalculateBndSystemBandWidth(locExpVector);
+            CalculateFullSystemBandWidth(locExpVector);
         }
 
         LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(const int numLocalCoeffs, 
@@ -96,6 +101,8 @@ namespace Nektar
                                                        const map<int,int>& periodicEdgesId)
         {
             SetUp2DExpansionC0ContMap(numLocalCoeffs, locExpVector, bndCondExp, bndConditions, periodicVerticesId, periodicEdgesId);
+            CalculateBndSystemBandWidth(locExpVector);
+            CalculateFullSystemBandWidth(locExpVector);
         }
 
         LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(const int numLocalCoeffs, 
@@ -107,6 +114,8 @@ namespace Nektar
                                                        const map<int,int>& periodicFacesId)
         {
             SetUp3DExpansionC0ContMap(numLocalCoeffs, locExpVector, bndCondExp, bndConditions, periodicVerticesId, periodicEdgesId, periodicFacesId);
+            CalculateBndSystemBandWidth(locExpVector);
+            CalculateFullSystemBandWidth(locExpVector);
         }
         
         LocalToGlobalC0ContMap::~LocalToGlobalC0ContMap(void)
@@ -542,7 +551,7 @@ namespace Nektar
 #else //NEKTAR_USING_METIS
             // Possibility 2: Minimize the bandwith using a reversed Cuthill-McKee algorithm 
             // (as provided by the Boost Graph Library)
-            if(false)
+            if(true)
             {
                 // the first template parameter (=OutEdgeList) is chosen to be of type std::set
                 // as in the set up of the adjacency, a similar edge might be created multiple times.
@@ -963,44 +972,6 @@ namespace Nektar
                 }
             }
             m_numGlobalCoeffs = globalId;  
-
-            //             // ----------------------------------------------------------------------------
-            //             // Calculation of the bandwith ----
-            //             // The bandwidth here calculated corresponds to what is referred to as half-bandwidth.
-            //             // If the elements of the matrix are designated as a_ij, it corresponds to
-            //             // the maximum value of |i-j| for non-zero a_ij.
-            //             int locSize;
-            //             int maxId;
-            //             int minId;
-            //             int bwidth = -1;
-            //             cnt=0;
-            //             for(i = 0; i < locExpVector.size(); ++i)
-            //             {
-            //                 locSize = locExpVector[i]->NumBndryCoeffs();
-            //                 maxId = -1;
-            //                 minId = m_numLocalCoeffs+1;
-            //                 for(j = 0; j < locSize; j++)
-            //                 {
-            //                     if(m_localToGlobalBndMap[cnt+j] >= m_numDirichletBndCoeffs)
-            //                     {
-            //                         if(m_localToGlobalBndMap[cnt+j] > maxId)
-            //                         {
-            //                             maxId = m_localToGlobalBndMap[cnt+j];
-            //                         }
-                        
-            //                         if(m_localToGlobalBndMap[cnt+j] < minId)
-            //                         {
-            //                             minId = m_localToGlobalBndMap[cnt+j];
-            //                         }
-            //                     }
-            //                 }
-            //                 bwidth = (bwidth>(maxId-minId))?bwidth:(maxId-minId);
-
-            //                 cnt+=locSize;
-            //             }
-            //             cout<<"MatrixSize : "<<m_numGlobalBndCoeffs-m_numDirichletBndCoeffs<<endl;
-            //             cout<<"BandWith   : "<<bwidth<<endl;
-            //             // ----------------------------------------------------------------------------
         }
 
         void LocalToGlobalC0ContMap::SetUp3DExpansionC0ContMap(const int numLocalCoeffs, 
@@ -1441,11 +1412,99 @@ namespace Nektar
             m_numGlobalCoeffs = globalId;  
         }
 
+        // ----------------------------------------------------------------------------
+        // Calculation of the bandwith ----
+        // The bandwidth here calculated corresponds to what is referred to as half-bandwidth.
+        // If the elements of the matrix are designated as a_ij, it corresponds to
+        // the maximum value of |i-j| for non-zero a_ij.
+        // As a result, the value also corresponds to the number of sub or superdiagonals.
+        //
+        // The bandwith can be calculated elementally as it corresponds to the maximal 
+        // elemental bandwith (i.e. the maximal difference in global DOF index for every element)
+        //
+        // 2 different bandwiths can be calculated:
+        // - the bandwith of the full global system
+        // - the bandwith of the global boundary system (as used for static condensation)
+        void LocalToGlobalC0ContMap::CalculateBndSystemBandWidth(const StdRegions::StdExpansionVector &locExpVector)
+        {
+            int i,j;
+            int cnt = 0;
+            int locSize;
+            int maxId;
+            int minId;
+            int bwidth = -1;
+            for(i = 0; i < locExpVector.size(); ++i)
+            {
+                locSize = locExpVector[i]->NumBndryCoeffs();
+                maxId = -1;
+                minId = m_numLocalCoeffs+1;
+                for(j = 0; j < locSize; j++)
+                {
+                    if(m_localToGlobalBndMap[cnt+j] >= m_numDirichletBndCoeffs)
+                    {
+                        if(m_localToGlobalBndMap[cnt+j] > maxId)
+                        {
+                            maxId = m_localToGlobalBndMap[cnt+j];
+                        }
+                        
+                        if(m_localToGlobalBndMap[cnt+j] < minId)
+                        {
+                            minId = m_localToGlobalBndMap[cnt+j];
+                        }
+                    }
+                }
+                bwidth = (bwidth>(maxId-minId))?bwidth:(maxId-minId);
+
+                cnt+=locSize;
+            }
+
+            m_bndSystemBandWidth = bwidth;
+        }
+
+        void LocalToGlobalC0ContMap::CalculateFullSystemBandWidth(const StdRegions::StdExpansionVector &locExpVector)
+        {
+            int i,j;
+            int cnt = 0;
+            int locSize;
+            int maxId;
+            int minId;
+            int bwidth = -1;
+            for(i = 0; i < locExpVector.size(); ++i)
+            {
+                locSize = locExpVector[i]->GetNcoeffs();
+                maxId = -1;
+                minId = m_numLocalCoeffs+1;
+                for(j = 0; j < locSize; j++)
+                {
+                    if(m_localToGlobalMap[cnt+j] >= m_numDirichletBndCoeffs)
+                    {
+                        if(m_localToGlobalMap[cnt+j] > maxId)
+                        {
+                            maxId = m_localToGlobalMap[cnt+j];
+                        }
+                        
+                        if(m_localToGlobalMap[cnt+j] < minId)
+                        {
+                            minId = m_localToGlobalMap[cnt+j];
+                        }
+                    }
+                }
+                bwidth = (bwidth>(maxId-minId))?bwidth:(maxId-minId);
+
+                cnt+=locSize;
+            }
+
+            m_fullSystemBandWidth = bwidth;
+        }
+
     }
 }
 
 /**
  * $Log: LocalToGlobalC0ContMap.cpp,v $
+ * Revision 1.3  2008/09/23 18:21:00  pvos
+ * Updates for working ProjectContField3D demo
+ *
  * Revision 1.2  2008/09/17 13:46:40  pvos
  * Added LocalToGlobalC0ContMap for 3D expansions
  *

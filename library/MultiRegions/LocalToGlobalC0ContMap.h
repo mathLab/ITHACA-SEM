@@ -162,13 +162,26 @@ namespace Nektar
                 {
                     Vmath::Assmb(m_numLocalCoeffs, loc.get(), m_localToGlobalMap.get(), global.get());
                 }
-            }           
+            } 
+
+            inline int GetFullSystemBandWidth() const
+            {
+                return m_fullSystemBandWidth;
+            }
+            
+            inline int GetBndSystemBandWidth() const
+            {
+                return m_bndSystemBandWidth;
+            }
 
         protected:
             int m_numLocalCoeffs;      //< number of local coefficients
             int m_numGlobalCoeffs;     // Total number of global coefficients
             Array<OneD,int> m_localToGlobalMap;  //< integer map of local coeffs to global space 
             Array<OneD,NekDouble> m_localToGlobalSign; //< integer sign of local coeffs to global space 
+
+            int m_fullSystemBandWidth;
+            int m_bndSystemBandWidth;
  
         private:
             void SetUp1DExpansionC0ContMap(const int numLocalCoeffs, 
@@ -197,6 +210,9 @@ namespace Nektar
                                            const map<int,int>& periodicVerticesId = NullIntIntMap,
                                            const map<int,int>& periodicEdgesId = NullIntIntMap,
                                            const map<int,int>& periodicFacesId = NullIntIntMap);
+
+            void CalculateBndSystemBandWidth(const StdRegions::StdExpansionVector &locExpVector);
+            void CalculateFullSystemBandWidth(const StdRegions::StdExpansionVector &locExpVector);
         };
         typedef boost::shared_ptr<LocalToGlobalC0ContMap>  LocalToGlobalC0ContMapSharedPtr;
         
@@ -207,6 +223,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalC0ContMap.h,v $
+* Revision 1.3  2008/10/04 19:53:04  sherwin
+* Added check that input and output arrays are different
+*
 * Revision 1.2  2008/09/17 13:46:40  pvos
 * Added LocalToGlobalC0ContMap for 3D expansions
 *

@@ -101,12 +101,14 @@ namespace Nektar
 
                     if(nbndry)
                     {
-                        DNekScalBlkMat &BinvD = *m_blkMatrices[0];
-                    
-                        // construct boundary forcing 
-                        Vloc = BinvD*Fint;
-                        locToGloMap.AssembleBnd(Vloc,Vbnd,nDirDofs);
-                        Fbnd = Fbnd - Vbnd;
+                        if(nint)
+                        {
+                            DNekScalBlkMat &BinvD = *m_blkMatrices[0];
+                            // construct boundary forcing 
+                            Vloc = BinvD*Fint;
+                            locToGloMap.AssembleBnd(Vloc,Vbnd,nDirDofs);
+                            Fbnd = Fbnd - Vbnd;
+                        }
                         
                         // solve boundary system 
                         m_linSys->Solve(Fbnd,Vbnd);

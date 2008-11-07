@@ -534,7 +534,7 @@ namespace Nektar
                     Array<OneD, NekDouble> store(m_ncoeffs);
                     
                     StdMatrixKey mkey00(eLaplacian00,DetExpansionType(),*this);
-                    StdMatrixKey mkey11(eLaplacian00,DetExpansionType(),*this);
+                    StdMatrixKey mkey11(eLaplacian11,DetExpansionType(),*this);
                     LaplacianMatrixOp(0,0,inarray,store,mkey00);
                     LaplacianMatrixOp(1,1,inarray,outarray,mkey11);
                    
@@ -547,8 +547,8 @@ namespace Nektar
                     Array<OneD, NekDouble> store1(m_ncoeffs);
                     
                     StdMatrixKey mkey00(eLaplacian00,DetExpansionType(),*this);
-                    StdMatrixKey mkey11(eLaplacian00,DetExpansionType(),*this);
-                    StdMatrixKey mkey22(eLaplacian00,DetExpansionType(),*this);
+                    StdMatrixKey mkey11(eLaplacian11,DetExpansionType(),*this);
+                    StdMatrixKey mkey22(eLaplacian22,DetExpansionType(),*this);
                     LaplacianMatrixOp(0,0,inarray,store0,mkey00);
                     LaplacianMatrixOp(1,1,inarray,store1,mkey11);
                     LaplacianMatrixOp(2,2,inarray,outarray,mkey22);
@@ -617,6 +617,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.77  2008/11/05 16:08:15  pvos
+* Added elemental optimisation functionality
+*
 * Revision 1.76  2008/09/09 14:12:51  sherwin
 * Removed Interp1D/2D/3D and put the into LibUtilities
 *

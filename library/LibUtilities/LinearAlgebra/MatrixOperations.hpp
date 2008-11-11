@@ -122,6 +122,7 @@ namespace Nektar
                                          const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
     {
         ASSERTL1(lhs.GetType() == eFULL && rhs.GetType() == eFULL, "Only full matrices are supported.");
+
         unsigned int M = lhs.GetRows();
         unsigned int N = rhs.GetColumns();
         unsigned int K = lhs.GetColumns();
@@ -191,6 +192,7 @@ namespace Nektar
             std::string(" and a right side matrix with row count ") + 
             boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
 
+        result.SetSize(lhs.GetRows(), rhs.GetColumns());
         if( lhs.GetType() == eFULL && rhs.GetType() == eFULL)
         {
             NekMultiplyFullMatrixFullMatrix(result, lhs, rhs);

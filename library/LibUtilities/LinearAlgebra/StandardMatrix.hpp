@@ -773,7 +773,6 @@ namespace Nektar
                 ResizeDataArrayIfNeeded(data.RequiredStorageSize);
             }
 
-        private:
             unsigned int GetRequiredStorageSize()
             {
                 switch(m_storagePolicy)
@@ -813,7 +812,9 @@ namespace Nektar
 
                 return 0;
             }
-            
+
+        private:
+                        
             virtual typename boost::call_traits<DataType>::value_type v_GetValue(unsigned int row, unsigned int column) const 
             {
                 return ThisType::operator()(row, column);
@@ -957,6 +958,12 @@ namespace Nektar
                 }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
+            void SetSize(unsigned int rows, unsigned int cols)
+            {
+                this->Resize(rows, cols);
+                ASSERTL0(this->GetRequiredStorageSize() <= this->GetData().num_elements(), "Can't resize matrices if there is not enough capacity.");
+            }
+            
             class Proxy
             {
                 public:

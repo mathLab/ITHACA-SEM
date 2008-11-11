@@ -41,7 +41,6 @@ namespace Nektar
                           const NekMatrix<const double, StandardMatrixTag>& rhs)
     {
         ASSERTL0(result.GetType() == eFULL && rhs.GetType() == eFULL, "Only full matrices supported.");
-        
         unsigned int M = result.GetRows();
         unsigned int N = rhs.GetColumns();
         unsigned int K = result.GetColumns();
@@ -58,10 +57,11 @@ namespace Nektar
             LDB = N;
         }
 
-        Array<OneD, double> buf(result.GetRows()*result.GetColumns());
+        Array<OneD, double> buf(result.GetPtr().num_elements());
         Blas::Dgemm(result.GetTransposeFlag(), rhs.GetTransposeFlag(), M, N, K,
             1.0, result.GetRawPtr(), LDA, rhs.GetRawPtr(), LDB, 0.0,
             buf.data(), result.GetRows());
+        result.SetSize(result.GetRows(), rhs.GetColumns());
         result = NekMatrix<double, StandardMatrixTag>(result.GetRows(), result.GetColumns(), buf, eWrapper);
     }
 }

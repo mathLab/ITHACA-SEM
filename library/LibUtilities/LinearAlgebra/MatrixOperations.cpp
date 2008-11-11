@@ -36,115 +36,7 @@
 #include <LibUtilities/LinearAlgebra/MatrixOperations.hpp>
 
 namespace Nektar
-{    
-#ifdef NEKTAR_USING_BLAS    
-//    void NekMultiplyBlas(NekMatrix<double, StandardMatrixTag>& result,
-//                            const NekMatrix<const double, StandardMatrixTag>& lhs,
-//                            const NekMatrix<const double, StandardMatrixTag>& rhs)
-//    {
-//        ASSERTL0(lhs.GetType() == eFULL && rhs.GetType() == eFULL, "Only full matrices are supported.");
-//        unsigned int M = lhs.GetRows();
-//        unsigned int N = rhs.GetColumns();
-//        unsigned int K = lhs.GetColumns();
-//
-//        unsigned int LDA = M;
-//        if( lhs.GetTransposeFlag() == 'T' )
-//        {
-//            LDA = K;
-//        }
-//
-//        unsigned int LDB = K;
-//        if( rhs.GetTransposeFlag() == 'T' )
-//        {
-//            LDB = N;
-//        }
-//
-//        Blas::Dgemm(lhs.GetTransposeFlag(), rhs.GetTransposeFlag(), M, N, K,
-//            1.0, lhs.GetRawPtr(), LDA, rhs.GetRawPtr(), LDB, 0.0,
-//            result.GetRawPtr(), lhs.GetRows());
-//    }
-//    
-//    void NekMultiplyBlas(NekMatrix<double, StandardMatrixTag>& result,
-//                     const NekMatrix<NekMatrix<const double, StandardMatrixTag>, ScaledMatrixTag>& lhs,
-//                     const NekMatrix<NekMatrix<const double, StandardMatrixTag>, ScaledMatrixTag>& rhs)
-//    {
-//        ASSERTL0(lhs.GetType() == eFULL && rhs.GetType() == eFULL, "Only full matrices are supported.");
-//        unsigned int M = lhs.GetRows();
-//        unsigned int N = rhs.GetColumns();
-//        unsigned int K = lhs.GetColumns();
-//
-//        unsigned int LDA = M;
-//        if( lhs.GetTransposeFlag() == 'T' )
-//        {
-//            LDA = K;
-//        }
-//
-//        unsigned int LDB = K;
-//        if( rhs.GetTransposeFlag() == 'T' )
-//        {
-//            LDB = N;
-//        }
-//
-//        Blas::Dgemm(lhs.GetTransposeFlag(), rhs.GetTransposeFlag(), M, N, K,
-//            lhs.Scale()*rhs.Scale(), lhs.GetOwnedMatrix()->GetRawPtr(), LDA,
-//            rhs.GetOwnedMatrix()->GetRawPtr(), LDB, 0.0,
-//            result.GetRawPtr(), lhs.GetRows());
-//    }
-//    
-//    void NekMultiplyBlas(NekMatrix<double, StandardMatrixTag>& result,
-//                     const NekMatrix<const double, StandardMatrixTag>& lhs,
-//                     const NekMatrix<NekMatrix<const double, StandardMatrixTag>, ScaledMatrixTag>& rhs)
-//    {
-//        ASSERTL0(lhs.GetType() == eFULL && rhs.GetType() == eFULL, "Only full matrices are supported.");
-//        unsigned int M = lhs.GetRows();
-//        unsigned int N = rhs.GetColumns();
-//        unsigned int K = lhs.GetColumns();
-//
-//        unsigned int LDA = M;
-//        if( lhs.GetTransposeFlag() == 'T' )
-//        {
-//            LDA = K;
-//        }
-//
-//        unsigned int LDB = K;
-//        if( rhs.GetTransposeFlag() == 'T' )
-//        {
-//            LDB = N;
-//        }
-//
-//        Blas::Dgemm(lhs.GetTransposeFlag(), rhs.GetTransposeFlag(), M, N, K,
-//            rhs.Scale(), lhs.GetRawPtr(), LDA, 
-//            rhs.GetOwnedMatrix()->GetRawPtr(), LDB, 0.0,
-//            result.GetRawPtr(), lhs.GetRows());
-//    }
-//
-//    void NekMultiplyBlas(NekMatrix<double, StandardMatrixTag>& result,
-//                     const NekMatrix<NekMatrix<const double, StandardMatrixTag>, ScaledMatrixTag>& lhs,
-//                     const NekMatrix<const double, StandardMatrixTag>& rhs)
-//    {
-//        ASSERTL0(lhs.GetType() == eFULL && rhs.GetType() == eFULL, "Only full matrices are supported.");
-//        unsigned int M = lhs.GetRows();
-//        unsigned int N = rhs.GetColumns();
-//        unsigned int K = lhs.GetColumns();
-//
-//        unsigned int LDA = M;
-//        if( lhs.GetTransposeFlag() == 'T' )
-//        {
-//            LDA = K;
-//        }
-//
-//        unsigned int LDB = K;
-//        if( rhs.GetTransposeFlag() == 'T' )
-//        {
-//            LDB = N;
-//        }
-//
-//        Blas::Dgemm(lhs.GetTransposeFlag(), rhs.GetTransposeFlag(), M, N, K,
-//            lhs.Scale(), lhs.GetOwnedMatrix()->GetRawPtr(), LDA, 
-//            rhs.GetRawPtr(), LDB, 0.0,
-//            result.GetRawPtr(), lhs.GetRows());
-//    }
-//    
+{     
     void NekMultiplyEqual(NekMatrix<double, StandardMatrixTag>& result,
                           const NekMatrix<const double, StandardMatrixTag>& rhs)
     {
@@ -172,7 +64,6 @@ namespace Nektar
             buf.data(), result.GetRows());
         result = NekMatrix<double, StandardMatrixTag>(result.GetRows(), result.GetColumns(), buf, eWrapper);
     }
-#endif //NEKTAR_USING_BLAS
 }
 
 

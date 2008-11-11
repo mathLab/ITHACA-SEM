@@ -368,7 +368,7 @@ namespace Nektar
                     m_numberOfSuperDiagonals(std::numeric_limits<unsigned int>::max()),
                     m_numberOfSubDiagonals(std::numeric_limits<unsigned int>::max())
                 {
-                    m_data = Array<OneD, DataType>(GetRequiredStorageSize());
+                    m_data = Array<OneD, DataType>(d.RequiredStorageSize);
                 }
 
                 template<typename ExpressionPolicyType>
@@ -380,7 +380,7 @@ namespace Nektar
                     m_numberOfSubDiagonals(std::numeric_limits<unsigned int>::max())
                 {
                     BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<const DataType, StandardMatrixTag> > ));
-                    m_data = Array<OneD, DataType>(GetRequiredStorageSize());
+                    m_data = Array<OneD, DataType>(rhs.GetMetadata().RequiredStorageSize);
                     rhs.Evaluate(*this);
                 }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
@@ -421,7 +421,7 @@ namespace Nektar
                         this->GetColumns() != rhs.GetMetadata().Columns )
                     {
                         Resize(rhs.GetMetadata().Rows, rhs.GetMetadata().Columns);
-                        ResizeDataArrayIfNeeded();
+                        ResizeDataArrayIfNeeded(rhs.GetMetadata());
                     }
 
                     this->SetTransposeFlag('N');
@@ -636,12 +636,7 @@ namespace Nektar
             /// Two matrices are equivalent if they have the same size and each element
             /// is the same.
             bool operator==(const NekMatrix<DataType, StandardMatrixTag>& rhs) const
-            {
-                if( GetStorageSize() != rhs.GetStorageSize() )
-                {
-                    return false;
-                }
-                
+            {                
                 if( this->GetRows() != rhs.GetRows() ||
                     this->GetColumns() != rhs.GetColumns() )
                 {
@@ -748,11 +743,8 @@ namespace Nektar
          
         protected:
             Array<OneD, DataType>& GetData() { return m_data; }
-            
-            void ResizeDataArrayIfNeeded()
+            void ResizeDataArrayIfNeeded(unsigned int requiredStorageSize)
             {
-                unsigned int requiredStorageSize = GetRequiredStorageSize();
-
                 if( m_wrapperType == eCopy  )
                 {
                     // If the current vector is a matrix, then regardless of the rhs type 
@@ -768,6 +760,17 @@ namespace Nektar
                     // but the sizes of the two matrices must be the same.
                     ASSERTL0(m_data.num_elements() >= requiredStorageSize, "Wrapped NekMatrices must have the same dimension in operator=");
                 }
+            }
+            
+            void ResizeDataArrayIfNeeded()
+            {
+                unsigned int requiredStorageSize = GetRequiredStorageSize();
+                ResizeDataArrayIfNeeded(requiredStorageSize);
+            }
+            
+            void ResizeDataArrayIfNeeded(const NekMatrixMetadata& data)
+            {
+                ResizeDataArrayIfNeeded(data.RequiredStorageSize);
             }
 
         private:
@@ -945,7 +948,7 @@ namespace Nektar
                         this->GetColumns() != rhs.GetMetadata().Columns )
                     {
                         Resize(rhs.GetMetadata().Rows, rhs.GetMetadata().Columns);
-                        this->ResizeDataArrayIfNeeded();
+                        this->ResizeDataArrayIfNeeded(rhs.GetMetadata());
                     }
 
                     this->SetTransposeFlag('N');

@@ -38,6 +38,7 @@
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits.hpp>
 
@@ -48,28 +49,33 @@ namespace Nektar
      class NekMatrixMetadata
      {
          public:
-             NekMatrixMetadata(const NekMatrixMetadata& rhs) :
-                 Rows(rhs.Rows),
-                 Columns(rhs.Columns)
-             {
-             }
+            NekMatrixMetadata(const NekMatrixMetadata& rhs) :
+                Rows(rhs.Rows),
+                Columns(rhs.Columns),
+                RequiredStorageSize(rhs.RequiredStorageSize)
+            {
+            }
+
+            NekMatrixMetadata& operator=(const NekMatrixMetadata& rhs)
+            {
+                Rows = rhs.Rows;
+                Columns = rhs.Columns;
+                RequiredStorageSize = rhs.RequiredStorageSize;
+                return *this;
+            }
  
-             NekMatrixMetadata& operator=(const NekMatrixMetadata& rhs)
-             {
-                 Rows = rhs.Rows;
-                 Columns = rhs.Columns;
-                 return *this;
-             }
- 
-             unsigned int Rows;
-             unsigned int Columns;
- 
+            unsigned int Rows;
+            unsigned int Columns;
+            unsigned int RequiredStorageSize;
+                
          protected:
-             NekMatrixMetadata(unsigned int r, unsigned int c) :
-                 Rows(r),
-                 Columns(c)
-             {
-             }
+             
+             NekMatrixMetadata(unsigned int r, unsigned int c, unsigned int storageSize) :
+                Rows(r),
+                Columns(c),
+                RequiredStorageSize(storageSize)
+            {
+            }
                  
              // To force the use of one of the subclasses without the overhead of 
              // a pure virtual destructor.
@@ -78,7 +84,8 @@ namespace Nektar
          private:
              NekMatrixMetadata() :
                  Rows(0),
-                 Columns(0)
+                 Columns(0),
+                 RequiredStorageSize(0)
              {
              }
      };
@@ -86,22 +93,34 @@ namespace Nektar
     class NekMatrixAdditionAndSubtractionMetadata : public NekMatrixMetadata
     {
         public:
+            template<typename T, typename MatrixType>
+            NekMatrixAdditionAndSubtractionMetadata(const NekMatrix<T, MatrixType>& lhs, const NekMatrixMetadata& rhs) :
+                NekMatrixMetadata(rhs.Rows, rhs.Columns, rhs.RequiredStorageSize)
+            {
+                ASSERTL1(lhs.GetRows() == rhs.Rows && lhs.GetColumns() == rhs.Columns, "Matrix dimensions must agree.");
+            }
+            
+            template<typename T, typename MatrixType>
+            NekMatrixAdditionAndSubtractionMetadata(const NekMatrixMetadata& lhs, const NekMatrix<T, MatrixType>& rhs) :
+                NekMatrixMetadata(lhs.Rows, lhs.Columns, lhs.RequiredStorageSize)
+            {
+                ASSERTL1(lhs.Rows == rhs.GetRows() && lhs.Columns == rhs.GetColumns(), "Matrix dimensions must agree.");
+            }
+            
             template<typename T>
-            NekMatrixAdditionAndSubtractionMetadata(const T& lhs, const NekMatrixMetadata& rhs,
-                                                    typename boost::disable_if<boost::is_base_of<NekMatrixMetadata, T> >::type* = 0) :
-                NekMatrixMetadata(rhs.Rows, rhs.Columns)
+            NekMatrixAdditionAndSubtractionMetadata(const DefaultExpressionMetadata<T>& lhs, const NekMatrixMetadata& rhs) :
+                NekMatrixMetadata(rhs.Rows, rhs.Columns, rhs.RequiredStorageSize)
             {
             }
             
             template<typename T>
-            NekMatrixAdditionAndSubtractionMetadata(const NekMatrixMetadata& lhs, const T& rhs,
-                                                    typename boost::disable_if<boost::is_base_of<NekMatrixMetadata, T> >::type* = 0) :
-                NekMatrixMetadata(lhs.Rows, lhs.Columns)
+            NekMatrixAdditionAndSubtractionMetadata(const NekMatrixMetadata& lhs, const DefaultExpressionMetadata<T>& rhs) :
+                NekMatrixMetadata(lhs.Rows, lhs.Columns, lhs.RequiredStorageSize)
             {
             }
             
             NekMatrixAdditionAndSubtractionMetadata(const NekMatrixMetadata& lhs, const NekMatrixMetadata& rhs) :
-                NekMatrixMetadata(lhs.Rows, lhs.Columns)
+                NekMatrixMetadata(lhs.Rows, lhs.Columns, lhs.RequiredStorageSize)
             {
                 ASSERTL1(lhs.Rows == rhs.Rows && lhs.Columns == rhs.Columns, "Matrix dimensions must agree.");
             }
@@ -112,7 +131,7 @@ namespace Nektar
             }
 
             NekMatrixAdditionAndSubtractionMetadata() :
-                NekMatrixMetadata(0,0)
+                NekMatrixMetadata(0,0,0)
             {
             }
 
@@ -129,22 +148,37 @@ namespace Nektar
      class NekMatrixMultiplicationMetadata : public NekMatrixMetadata
      {
          public:
+            template<typename T, typename MatrixType>
+            NekMatrixMultiplicationMetadata(const NekMatrix<T, MatrixType>& lhs, const NekMatrixMetadata& rhs) :
+                NekMatrixMetadata(lhs.GetRows(), rhs.Columns, 
+                    std::max(lhs.GetRows()*rhs.Columns, rhs.RequiredStorageSize) )
+            {
+                ASSERTL1(lhs.GetColumns() == rhs.Rows, "Matrix dimensions must agree.");
+            }
+            
+            template<typename T, typename MatrixType>
+            NekMatrixMultiplicationMetadata(const NekMatrixMetadata& lhs, const NekMatrix<T, MatrixType>& rhs) :
+                NekMatrixMetadata(lhs.Rows, rhs.GetColumns(), 
+                std::max(lhs.Rows*rhs.GetColumns(), lhs.RequiredStorageSize) )
+            {
+                ASSERTL1(lhs.Columns == rhs.GetRows(), "Matrix dimensions must agree.");
+            }
+            
             template<typename T>
-            NekMatrixMultiplicationMetadata(const T& lhs, const NekMatrixMetadata& rhs,
-                                            typename boost::disable_if<boost::is_base_of<NekMatrixMetadata, T> >::type* = 0) :
-                NekMatrixMetadata(rhs.Rows, rhs.Columns)
+            NekMatrixMultiplicationMetadata(const DefaultExpressionMetadata<T>& lhs, const NekMatrixMetadata& rhs) :
+                NekMatrixMetadata(rhs.Rows, rhs.Columns, rhs.RequiredStorageSize)
             {
             }
             
             template<typename T>
-            NekMatrixMultiplicationMetadata(const NekMatrixMetadata& lhs, const T& rhs,
-                                            typename boost::disable_if<boost::is_base_of<NekMatrixMetadata, T> >::type* = 0) :
-                NekMatrixMetadata(lhs.Rows, lhs.Columns)
+            NekMatrixMultiplicationMetadata(const NekMatrixMetadata& lhs, const DefaultExpressionMetadata<T>& rhs) :
+                NekMatrixMetadata(lhs.Rows, lhs.Columns, lhs.RequiredStorageSize)
             {
             }
             
             NekMatrixMultiplicationMetadata(const NekMatrixMetadata& lhs, const NekMatrixMetadata& rhs) :
-                NekMatrixMetadata(lhs.Rows, rhs.Columns)
+                NekMatrixMetadata(lhs.Rows, rhs.Columns, 
+                    std::max(std::max(lhs.Rows*rhs.Columns, lhs.RequiredStorageSize), rhs.RequiredStorageSize))
             {
                 ASSERTL1(lhs.Columns == rhs.Rows, "Matrix dimensions must agree.");
             }
@@ -155,7 +189,7 @@ namespace Nektar
             }
                  
             NekMatrixMultiplicationMetadata() :
-                NekMatrixMetadata(0,0)
+                NekMatrixMetadata(0,0,0)
             {
             }
 
@@ -174,7 +208,8 @@ namespace Nektar
          public:
              template<typename MatrixType>
              explicit NekMatrixConstantMetadata(const MatrixType& matrix) :
-                 NekMatrixMetadata(matrix.GetRows(), matrix.GetColumns())
+                 NekMatrixMetadata(matrix.GetRows(), matrix.GetColumns(),
+                    matrix.GetRows()*matrix.GetColumns())
              {
              }
              
@@ -184,7 +219,7 @@ namespace Nektar
              }
              
              NekMatrixConstantMetadata() :
-                 NekMatrixMetadata(0, 0)
+                 NekMatrixMetadata(0, 0, 0)
              {
              }
              
@@ -270,6 +305,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrixMetadata.hpp,v $
+    Revision 1.10  2008/01/20 03:59:36  bnelson
+    Expression template updates.
+
     Revision 1.9  2007/10/03 03:00:14  bnelson
     Added precompiled headers.
 

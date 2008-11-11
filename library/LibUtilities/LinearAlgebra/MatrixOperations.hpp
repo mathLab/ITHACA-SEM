@@ -53,7 +53,7 @@
 namespace Nektar
 {
     ////////////////////////////////////////////////////////////////////////////////////
-    // Multiplication
+    // Matrix-Constant Multiplication
     ////////////////////////////////////////////////////////////////////////////////////
     template<typename ResultDataType, typename LhsDataType, typename LhsMatrixType>
     void NekMultiply(NekMatrix<ResultDataType, StandardMatrixTag>& result,
@@ -99,49 +99,6 @@ namespace Nektar
         return NekMultiply(rhs, lhs);
     }
     
-   
-    template<typename LhsDataType, typename RhsDataType, typename DataType,
-             typename LhsMatrixType, typename RhsMatrixType>
-    void NekMultiply(NekMatrix<DataType, StandardMatrixTag>& result,
-                     const NekMatrix<LhsDataType, LhsMatrixType>& lhs,
-                     const NekMatrix<RhsDataType, RhsMatrixType>& rhs
-//                     #ifdef NEKTAR_USING_BLAS
-//                     // This is necessary to force double matrices to use the blas specific versions below.
-//                     // Without this check, NekMatrix<double> would not use the versions below because
-//                     // this is a better match than NekMatrix<const double>
-//                     , typename boost::disable_if
-//                     <
-//                        boost::mpl::and_
-//                        <
-//                            boost::is_same<double, typename RawType<typename NekMatrix<LhsDataType, LhsMatrixType>::NumberType>::type>,
-//                            boost::is_same<double, typename RawType<typename NekMatrix<RhsDataType, RhsMatrixType>::NumberType>::type>
-//                        >
-//                     >::type* p = 0
-//                     #endif //NEKTAR_USING_BLAS
-                     )
-    {
-        ASSERTL1(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
-            boost::lexical_cast<std::string>(lhs.GetColumns()) + 
-            std::string(" and a right side matrix with row count ") + 
-            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
-
-        for(unsigned int i = 0; i < result.GetRows(); ++i)
-        {
-            for(unsigned int j = 0; j < result.GetColumns(); ++j)
-            {
-                DataType t = DataType(0);
-
-                // Set the result(i,j) element.
-                for(unsigned int k = 0; k < lhs.GetColumns(); ++k)
-                {
-                    t += lhs(i,k)*rhs(k,j);
-                }
-                result(i,j) = t;
-            }
-        }
-    }
-        
-        
     template<typename LhsDataType>
     void NekMultiplyEqual(NekMatrix<LhsDataType, StandardMatrixTag>& lhs,
                           typename boost::call_traits<LhsDataType>::const_reference rhs)
@@ -152,33 +109,101 @@ namespace Nektar
             *iter *= rhs;
         }
     }
+    
+    
+    ///////////////////////////////////////////////////////////////////
+    // Matrix-Matrix Multipliation
+    //////////////////////////////////////////////////////////////////
+    
+    template<typename LhsDataType, typename RhsDataType,
+             typename LhsMatrixType, typename RhsMatrixType>
+    void NekMultiplyFullMatrixFullMatrix(NekMatrix<NekDouble, StandardMatrixTag>& result,
+                                         const NekMatrix<LhsDataType, LhsMatrixType>& lhs,
+                                         const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
+    {
+        ASSERTL1(lhs.GetType() == eFULL && rhs.GetType() == eFULL, "Only full matrices are supported.");
+        unsigned int M = lhs.GetRows();
+        unsigned int N = rhs.GetColumns();
+        unsigned int K = lhs.GetColumns();
 
-#ifdef NEKTAR_USING_BLAS    
-//    /// \brief Floating point specialization when blas is in use.
-//    ///
-//    /// The signature of this function should match the unspecialized NekMultiply.
-//    void NekMultiply(NekMatrix<double, FullMatrixTag, StandardMatrixTag>& result,
-//                     const NekMatrix<const double, FullMatrixTag, StandardMatrixTag>& lhs,
-//                     const NekMatrix<const double, FullMatrixTag, StandardMatrixTag>& rhs);
-//
-//    void NekMultiply(NekMatrix<double, FullMatrixTag, StandardMatrixTag>& result,
-//                     const NekMatrix<NekMatrix<const double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
-//                     const NekMatrix<NekMatrix<const double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& rhs);
-//
-//    void NekMultiply(NekMatrix<double, FullMatrixTag, StandardMatrixTag>& result,
-//                     const NekMatrix<const double, FullMatrixTag, StandardMatrixTag>& lhs,
-//                     const NekMatrix<NekMatrix<const double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& rhs);
-//
-//    void NekMultiply(NekMatrix<double, FullMatrixTag, StandardMatrixTag>& result,
-//                     const NekMatrix<NekMatrix<const double, FullMatrixTag, StandardMatrixTag>, FullMatrixTag, ScaledMatrixTag>& lhs,
-//                     const NekMatrix<const double, FullMatrixTag, StandardMatrixTag>& rhs);
-//                     
+        unsigned int LDA = M;
+        if( lhs.GetTransposeFlag() == 'T' )
+        {
+            LDA = K;
+        }
+
+        unsigned int LDB = K;
+        if( rhs.GetTransposeFlag() == 'T' )
+        {
+            LDB = N;
+        }
+
+        Blas::Dgemm(lhs.GetTransposeFlag(), rhs.GetTransposeFlag(), M, N, K,
+            lhs.Scale()*rhs.Scale(), lhs.GetRawPtr(), LDA,
+            rhs.GetRawPtr(), LDB, 0.0,
+            result.GetRawPtr(), lhs.GetRows());
+    }
+    
+    template<typename ResultType, typename LhsDataType, typename RhsDataType,
+             typename LhsMatrixType, typename RhsMatrixType>
+    void NekMultiplyDefaultImpl(NekMatrix<ResultType, StandardMatrixTag>& result,
+                                         const NekMatrix<LhsDataType, LhsMatrixType>& lhs,
+                                         const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
+    {
+        ASSERTL1(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+            boost::lexical_cast<std::string>(lhs.GetColumns()) + 
+            std::string(" and a right side matrix with row count ") + 
+            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
+
+        for(unsigned int i = 0; i < result.GetRows(); ++i)
+        {
+            for(unsigned int j = 0; j < result.GetColumns(); ++j)
+            {
+                ResultType t = ResultType(0);
+
+                // Set the result(i,j) element.
+                for(unsigned int k = 0; k < lhs.GetColumns(); ++k)
+                {
+                    t += lhs(i,k)*rhs(k,j);
+                }
+                result(i,j) = t;
+            }
+        }
+    }
+     
+    template<typename ResultType, typename LhsDataType, typename RhsDataType,
+             typename LhsMatrixType, typename RhsMatrixType>
+    void NekMultiplyFullMatrixFullMatrix(NekMatrix<ResultType, StandardMatrixTag>& result,
+                                         const NekMatrix<LhsDataType, LhsMatrixType>& lhs,
+                                         const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
+    {
+        NekMultiplyDefaultImpl(result, lhs, rhs);
+    }
+    
+    template<typename LhsDataType, typename RhsDataType, typename DataType,
+             typename LhsMatrixType, typename RhsMatrixType>
+    void NekMultiply(NekMatrix<DataType, StandardMatrixTag>& result,
+                     const NekMatrix<LhsDataType, LhsMatrixType>& lhs,
+                     const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
+    {
+        ASSERTL1(lhs.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+            boost::lexical_cast<std::string>(lhs.GetColumns()) + 
+            std::string(" and a right side matrix with row count ") + 
+            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
+
+        if( lhs.GetType() == eFULL && rhs.GetType() == eFULL)
+        {
+            NekMultiplyFullMatrixFullMatrix(result, lhs, rhs);
+        }
+        else
+        {
+            NekMultiplyDefaultImpl(result, lhs, rhs);
+        }
+    }
+        
     void NekMultiplyEqual(NekMatrix<double, StandardMatrixTag>& result,
                           const NekMatrix<const double, StandardMatrixTag>& rhs);
                           
-                          
-                     
-#endif //NEKTAR_USING_BLAS
 
 	template<typename LhsDataType, typename RhsDataType,
              typename LhsMatrixType, typename RhsMatrixType>

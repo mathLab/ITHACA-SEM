@@ -39,7 +39,6 @@
 #include <LibUtilities/BasicUtils/NekManager.hpp>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/Basis.h>
-#include <LibUtilities/Foundations/TimeIntegrationScheme.h>
 
 namespace Nektar
 {
@@ -51,15 +50,15 @@ namespace Nektar
         typedef NekManager<BasisKey, Basis, BasisKey::opLess> BasisManagerT;
         BasisManagerT &BasisManager(void);
 
-        typedef NekManager<TimeIntegrationSchemeKey, TimeIntegrationScheme, TimeIntegrationSchemeKey::opLess> TimeIntegrationSchemeManagerT;
-        TimeIntegrationSchemeManagerT &TimeIntegrationSchemeManager(void);
-
     } // end of namespace LibUtilities
 } // end of namespace Nektar
 #endif //NEKTAR_LIB_UTILIITIES_FOUNDATIONS_MANAGER_ACCESS_H
 
 /**
 $Log: ManagerAccess.h,v $
+Revision 1.10  2008/07/12 11:37:53  pvos
+Added time integration scheme manager
+
 Revision 1.9  2007/04/29 03:09:47  jfrazier
 More conversion to multi_arrays.
 

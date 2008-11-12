@@ -50,6 +50,7 @@
 
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/Basis.h>
+#include <LibUtilities/Foundations/TimeIntegrationScheme.h>
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
@@ -373,6 +374,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.30  2008/11/05 16:08:15  pvos
+* Added elemental optimisation functionality
+*
 * Revision 1.29  2008/09/12 11:26:39  pvos
 * Updates for mappings in 3D
 *

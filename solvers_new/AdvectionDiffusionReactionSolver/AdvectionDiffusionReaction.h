@@ -73,7 +73,7 @@ namespace Nektar
         void NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
                            Array<OneD, Array<OneD, NekDouble> > &numflux);
         
-        void AdvectionDiffusionReaction::ODEforcing(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, Array<OneD, Array<OneD, NekDouble> >&outarray);
+        void ODEforcing(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, Array<OneD, Array<OneD, NekDouble> >&outarray, NekDouble time);
 
         void ExplicitlyIntegrateAdvection(int nsteps);
 
@@ -109,6 +109,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.h,v $
+* Revision 1.1  2008/10/31 10:50:10  pvos
+* Restructured directory and CMakeFiles
+*
 * Revision 1.3  2008/10/29 22:51:07  sherwin
 * Updates for const correctness and ODEforcing
 *

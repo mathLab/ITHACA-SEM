@@ -44,7 +44,6 @@
 #include <LibUtilities/Foundations/NodalTriEvenlySpaced.h>
 #include <LibUtilities/Foundations/NodalTetEvenlySpaced.h>
 #include <LibUtilities/Foundations/Basis.h>
-#include <LibUtilities/Foundations/TimeIntegrationScheme.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
@@ -88,14 +87,6 @@ namespace Nektar
             const bool Legendre_Inited = BasisManager().RegisterCreator(BasisKey(eLegendre, 0, NullPointsKey), Basis::Create);
             const bool Chebyshev_Inited = BasisManager().RegisterCreator(BasisKey(eChebyshev, 0, NullPointsKey), Basis::Create);
             const bool Monomial_Inited = BasisManager().RegisterCreator(BasisKey(eMonomial, 0, NullPointsKey), Basis::Create);
-
-            const bool AdamsBashforthOrder1_Inited = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eAdamsBashforthOrder1), TimeIntegrationScheme::Create);
-            const bool AdamsBashforthOrder2_Inited   = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eAdamsBashforthOrder2), TimeIntegrationScheme::Create);
-            const bool AdamsMoultonOrder1_Inited     = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eAdamsMoultonOrder1), TimeIntegrationScheme::Create);
-            const bool AdamsMoultonOrder2_Inited     = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eAdamsMoultonOrder2), TimeIntegrationScheme::Create);
-            const bool ClassiscalRungeKutta4_Inited     = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eClassiscalRungeKutta4), TimeIntegrationScheme::Create);
-            const bool ForwardEuler_Inited     = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eForwardEuler), TimeIntegrationScheme::Create);
-            const bool BackwardEuler_Inited     = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eBackwardEuler), TimeIntegrationScheme::Create);
         };
 
         PointsManagerT &PointsManager(void)
@@ -108,17 +99,15 @@ namespace Nektar
             return Loki::SingletonHolder<BasisManagerT>::Instance();
         }
 
-        TimeIntegrationSchemeManagerT &TimeIntegrationSchemeManager(void)
-        {
-            return Loki::SingletonHolder<TimeIntegrationSchemeManagerT>::Instance();
-        }
-
     } // end of namespace LibUtilities
 } // end of namespace Nektar
 
 
 /**
 $Log: ManagerAccess.cpp,v $
+Revision 1.20  2008/07/17 16:12:41  pvos
+Updated time integration manager into general linear method format
+
 Revision 1.19  2008/07/12 11:37:53  pvos
 Added time integration scheme manager
 

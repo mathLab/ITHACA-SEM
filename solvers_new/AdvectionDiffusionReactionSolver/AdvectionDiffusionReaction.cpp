@@ -102,7 +102,7 @@ namespace Nektar
     }
     
 
-    void AdvectionDiffusionReaction::ODEforcing(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  Array<OneD, Array<OneD, NekDouble> >&outarray) 
+    void AdvectionDiffusionReaction::ODEforcing(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  Array<OneD, Array<OneD, NekDouble> >&outarray, NekDouble time) 
     {
         int i;
         int nvariables = inarray.num_elements();
@@ -162,14 +162,17 @@ namespace Nektar
             fields[i] = m_fields[i]->UpdateCoeffs();
         }
                 
+        int nInitSteps;
+        LibUtilities::TimeIntegrationSolutionSharedPtr u = IntScheme->InitializeScheme(m_timestep,m_time,nInitSteps,*this,fields);
 
-        for(n = 0; n < nsteps; ++n)
+        for(n = nInitSteps; n < nsteps; ++n)
         {
             //----------------------------------------------
             // Perform time step integration
             //----------------------------------------------
-            IntScheme->ExplicitIntegration(m_timestep,fields,*this,fields);
-            
+
+            fields = IntScheme->ExplicitIntegration(m_timestep,*this,u);
+
             m_time += m_timestep;
             //----------------------------------------------
 
@@ -185,6 +188,11 @@ namespace Nektar
             {
                 Checkpoint_Output(nchk++);
             }
+        }
+        
+        for(i = 0; i < nvariables; ++i)
+        {
+            (m_fields[i]->UpdateCoeffs()) = fields[i];
         }
     }
     
@@ -242,6 +250,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.2  2008/11/02 22:38:51  sherwin
+* Updated parameter naming convention
+*
 * Revision 1.1  2008/10/31 10:50:10  pvos
 * Restructured directory and CMakeFiles
 *

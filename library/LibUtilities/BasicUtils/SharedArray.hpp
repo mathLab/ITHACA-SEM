@@ -120,13 +120,10 @@ namespace Nektar
     class Array<OneD, const DataType>
     {
         public:
-            //typedef boost::shared_ptr<DataType> ArrayType;
-            //typedef NekPtr<DataType> ArrayType;
             typedef DataType* ArrayType;
             typedef const DataType& const_reference;
             typedef DataType& reference;
             
-            //typedef typename ArrayType::index index;
             typedef const DataType* const_iterator;
             typedef DataType* iterator;
             
@@ -138,12 +135,12 @@ namespace Nektar
             /// \brief Creates an empty array.
             Array() :
                 m_size(0),
-                //m_data(CreateStorage(m_size)),
+                m_capacity(0),
                 m_data(0),
                 m_count(0),
                 m_offset(0)
             {
-                CreateStorage(m_size);
+                CreateStorage(m_capacity);
             }
             
             /// \brief Creates an array of size dim1Size.
@@ -153,12 +150,13 @@ namespace Nektar
             /// constructor.
             explicit Array(unsigned int dim1Size) :
                 m_size(dim1Size),
+                m_capacity(dim1Size),
                 m_data(0),
                 m_count(0),
                 m_offset(0)
             {
-                CreateStorage(dim1Size);
-                ArrayInitializationPolicy<DataType>::Initialize(m_data + 1, m_size);
+                CreateStorage(m_capacity);
+                ArrayInitializationPolicy<DataType>::Initialize(m_data + 1, m_capacity);
             }
             
             /// \brief Creates a 1D array with each element initialized to an initial value.
@@ -170,12 +168,13 @@ namespace Nektar
             /// is used to initialize each element.
             Array(unsigned int dim1Size, const DataType& initValue) :
                 m_size(dim1Size),
+                m_capacity(dim1Size),
                 m_data(0),
                 m_count(0),
                 m_offset(0)
             {
-                CreateStorage(dim1Size);
-                ArrayInitializationPolicy<DataType>::Initialize(m_data + 1, m_size, initValue);
+                CreateStorage(m_capacity);
+                ArrayInitializationPolicy<DataType>::Initialize(m_data + 1, m_capacity, initValue);
             }
             
             /// \brief Creates a 1D array a copies data into it.
@@ -187,12 +186,13 @@ namespace Nektar
             /// is used to copy each element.
             Array(unsigned int dim1Size, const DataType* data) :
                 m_size(dim1Size),
+                m_capacity(dim1Size),
                 m_data(0),
                 m_count(0),
                 m_offset(0)
             {
-                CreateStorage(dim1Size);
-                ArrayInitializationPolicy<DataType>::Initialize(m_data + 1, m_size, data);
+                CreateStorage(m_capacity);
+                ArrayInitializationPolicy<DataType>::Initialize(m_data + 1, m_capacity, data);
             }
             
             /// \brief Creates a 1D array that references rhs.
@@ -204,6 +204,7 @@ namespace Nektar
             /// when both rhs and this array have gone out of scope.
             Array(unsigned int dim1Size, const Array<OneD, const DataType>& rhs) :
                 m_size(dim1Size),
+                m_capacity(rhs.m_capacity),
                 m_data(rhs.m_data),
                 m_count(rhs.m_count),
                 m_offset(rhs.m_offset)
@@ -215,6 +216,7 @@ namespace Nektar
             /// \brief Creates a reference to rhs.
             Array(const Array<OneD, const DataType>& rhs) :
                 m_size(rhs.m_size),
+                m_capacity(rhs.m_capacity),
                 m_data(rhs.m_data),
                 m_count(rhs.m_count),
                 m_offset(rhs.m_offset)
@@ -232,8 +234,8 @@ namespace Nektar
                 *m_count -= 1;
                 if( *m_count == 0 )
                 {
-                    ArrayDestructionPolicy<DataType>::Destroy(m_data+1, m_size);
-                    MemoryManager<DataType>::RawDeallocate(m_data, m_size+1);
+                    ArrayDestructionPolicy<DataType>::Destroy(m_data+1, m_capacity);
+                    MemoryManager<DataType>::RawDeallocate(m_data, m_capacity+1);
                 }
             }
             
@@ -243,11 +245,12 @@ namespace Nektar
                 *m_count -= 1;
                 if( *m_count == 0 )
                 {
-                    ArrayDestructionPolicy<DataType>::Destroy(m_data+1, m_size);
-                    MemoryManager<DataType>::RawDeallocate(m_data, m_size+1);
+                    ArrayDestructionPolicy<DataType>::Destroy(m_data+1, m_capacity);
+                    MemoryManager<DataType>::RawDeallocate(m_data, m_capacity+1);
                 }
 
                 m_data = rhs.m_data;
+                m_capacity = rhs.m_capacity;
                 m_count = rhs.m_count;
                 *m_count += 1;
                 m_offset = rhs.m_offset;
@@ -278,6 +281,8 @@ namespace Nektar
             /// \brief Returns the array's size.
             size_type num_elements() const { return m_size; }
 
+            size_type capacity() const { return m_capacity; }
+            
             /// \brief Returns the array's offset.
             unsigned int GetOffset() const { return m_offset; }
             
@@ -313,6 +318,7 @@ namespace Nektar
             
         protected:
             unsigned int m_size;
+            unsigned int m_capacity;
             //boost::shared_ptr<DataType> m_data;
             //NekPtr<DataType> m_data;
             DataType* m_data;
@@ -618,6 +624,13 @@ namespace Nektar
                 BaseType(rhs)
             {
             }
+            
+            void ChangeSize(unsigned int newSize)
+            {
+                ASSERTL1(newSize <= this->m_capacity, "Can't change an array size to something larger than its capacity.");
+                this->m_size = newSize;
+            }
+                
         private:
             
     };

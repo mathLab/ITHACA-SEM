@@ -961,6 +961,13 @@ namespace Nektar
             void SetSize(unsigned int rows, unsigned int cols)
             {
                 this->Resize(rows, cols);
+                
+                // Some places in Nektar++ access the matrix data array and 
+                // use num_elements() to see how big it is.  When using 
+                // expression templates, the data array's capacity is often larger
+                // than the actual number of elements, so this statement is 
+                // required to report the correct number of elements.
+                this->GetData().ChangeSize(this->GetRequiredStorageSize());
                 ASSERTL0(this->GetRequiredStorageSize() <= this->GetData().num_elements(), "Can't resize matrices if there is not enough capacity.");
             }
             

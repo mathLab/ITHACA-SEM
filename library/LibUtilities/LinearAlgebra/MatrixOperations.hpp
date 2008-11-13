@@ -46,6 +46,9 @@
 #include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 #include <LibUtilities/BasicUtils/RawType.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixVectorMultiplication.hpp>
+#include <LibUtilities/ExpressionTemplates/BinaryExpressionEvaluatorFwd.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrixMetadata.hpp>
+
 #include <boost/utility/enable_if.hpp>
 
 #include <string>
@@ -657,31 +660,132 @@ namespace Nektar
 //        return result;
 //    }
 
+    #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+        template<typename DataType, typename MatrixType>
+        class ConstantExpressionTraits<NekMatrix<DataType, MatrixType> >
+        {
+            public:
+                typedef NekMatrix<DataType, MatrixType> result_type;
+                typedef NekMatrixConstantMetadata MetadataType;
+        };
 
+        template<typename LhsDataType, typename LhsMatrixType,
+                 typename RhsDataType, typename RhsMatrixType>
+        class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsMatrixType>,
+                                              NekMatrix<RhsDataType, RhsMatrixType>,
+                                              AddOp>
+        {
+            public:
+                typedef NekMatrixAdditionAndSubtractionMetadata MetadataType;
+        };
+
+        template<typename LhsDataType, typename LhsMatrixType,
+                 typename RhsDataType, typename RhsMatrixType>
+        class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsMatrixType>,
+                                              NekMatrix<RhsDataType, RhsMatrixType>,
+                                              SubtractOp>
+        {
+            public:
+                typedef NekMatrixAdditionAndSubtractionMetadata MetadataType;
+        };
+
+        template<typename LhsDataType, typename LhsMatrixType,
+                 typename RhsDataType, typename RhsMatrixType>
+        class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsMatrixType>,
+                                              NekMatrix<RhsDataType, RhsMatrixType>,
+                                              MultiplyOp>
+        {
+            public:
+                typedef NekMatrixMultiplicationMetadata MetadataType;
+        };
+        
+        template<typename LhsDataType, typename LhsMatrixType>
+        class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsMatrixType>,
+                                             typename NekMatrix<LhsDataType, LhsMatrixType>::NumberType,
+                                             MultiplyOp>
+        {
+            public:
+                typedef NekMatrixMultiplicationMetadata MetadataType;
+        };
+
+        template<typename RhsDataType, typename RhsMatrixType>
+        class BinaryExpressionMetadataTraits<typename NekMatrix<RhsDataType, RhsMatrixType>::NumberType,
+                                             NekMatrix<RhsDataType, RhsMatrixType>,
+                                             MultiplyOp>
+        {
+            public:
+                typedef NekMatrixMultiplicationMetadata MetadataType;
+        };
+
+        template<typename DataType>
+        struct CreateFromMetadata<NekMatrix<DataType, StandardMatrixTag> >
+        {
+            static NekMatrix<DataType, StandardMatrixTag> 
+            Apply(const NekMatrixMetadata& d)
+            {
+                return NekMatrix<DataType, StandardMatrixTag>(d);
+            }
+        };
+
+    #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
+    
+    template<typename DataType, typename MatrixType>
+    void Dgemm(NekMatrix<double, StandardMatrixTag>& result, 
+               double alpha, const NekMatrix<DataType, MatrixType>& A, const NekMatrix<DataType, MatrixType>& B,
+               double beta, const NekMatrix<DataType, MatrixType>& C)
+    {
+        result = C;
+        unsigned int M = A.GetRows();
+        unsigned int N = B.GetColumns();
+        unsigned int K = A.GetColumns();
+
+        unsigned int LDA = M;
+        if( A.GetTransposeFlag() == 'T' )
+        {
+            LDA = K;
+        }
+
+        unsigned int LDB = K;
+        if( B.GetTransposeFlag() == 'T' )
+        {
+            LDB = N;
+        }
+
+        Blas::Dgemm(A.GetTransposeFlag(), B.GetTransposeFlag(), M, N, K,
+            A.Scale()*B.Scale()*alpha, A.GetRawPtr(), LDA,
+            B.GetRawPtr(), LDB, beta,
+            result.GetRawPtr(), M);
+    }
+    
+    template<>
+    struct BinaryExpressionEvaluator<BinaryExpressionPolicy
+                                    <
+                                        ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> >, 
+                                        MultiplyOp, 
+                                        ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> > 
+                                    >,
+                                    ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> >,
+                                    NekMatrix<double, StandardMatrixTag>,
+                                    AddOp, BinaryNullOp, void>
+    {
+        typedef BinaryExpressionPolicy
+                <
+                    ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> >, 
+                    MultiplyOp, 
+                    ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> > 
+                > LhsType;
+        typedef ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> > RhsType;
+        
+        static void Eval(const Expression<LhsType>& lhs, 
+                         const Expression<RhsType>& rhs,
+                         Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
+        {
+            Dgemm(*result, 1.0, *LhsType::Left(*lhs), *LhsType::Right(*lhs), 1.0, *rhs);
+        }
+    };
     
     GENERATE_MULTIPLICATION_OPERATOR(NekMatrix, 2, NekMatrix, 2);
-//    template<typename L1, typename L2, typename L3, typename R1, typename R2, typename R3>
-//    typename Nektar::MultiplicationTraits<NekMatrix<L1, L2, L3>, NekMatrix<R1, R2, R3> >::ResultType
-//    operator*(const NekMatrix<L1, L2, L3>& lhs, const NekMatrix<R1, R2, R3>& rhs)
-//    {
-//        return NekMultiply(lhs, rhs);
-//    }
-                    
-//    // TODO - Any update possible for this case?  The constant value must be the same as the matrix 
-//    // number type.  Seems pretty custom to me.
-//    template<typename DataType, typename LhsDataType, typename StorageType, typename MatrixType>
-//    typename MultiplicationTraits<NekMatrix<LhsDataType, StorageType, MatrixType>, DataType>::ResultType
-//    operator*(const NekMatrix<LhsDataType, StorageType, MatrixType>& lhs, const DataType& rhs)
-//    {
-//        return NekMultiply(lhs, rhs);
-//    }
-//                        
-//    template<typename DataType, typename RhsDataType, typename StorageType, typename MatrixType>
-//    typename MultiplicationTraits<DataType, NekMatrix<RhsDataType, StorageType, MatrixType> >::ResultType
-//    operator*(const DataType& lhs, const NekMatrix<RhsDataType, StorageType, MatrixType>& rhs)
-//    {
-//        return NekMultiply(lhs, rhs);
-//    }
+
     GENERATE_MULTIPLICATION_OPERATOR(NekMatrix, 2, NekDouble, 0);
     GENERATE_MULTIPLICATION_OPERATOR(NekDouble, 0, NekMatrix, 2);
     GENERATE_MULTIPLICATION_OPERATOR(NekMatrix, 2, NekVector, 3);
@@ -689,17 +793,7 @@ namespace Nektar
     GENERATE_DIVISION_OPERATOR(NekMatrix, 2, NekMatrix, 2);
     GENERATE_ADDITION_OPERATOR(NekMatrix, 2, NekMatrix, 2);
     GENERATE_SUBTRACTION_OPERATOR(NekMatrix, 2, NekMatrix, 2);
-    
-    // TODO - Either update the GENERATE macros to allow non-type template parameters,
-    // or put an if/else here for expression templates.
-//    template<typename MatrixDataType, typename StorageType, typename MatrixType, 
-//             typename VectorDataType, typename dim, typename space>
-//    typename MultiplicationTraits<NekMatrix<MatrixDataType, StorageType, MatrixType>, NekVector<VectorDataType, dim, space> >::ResultType
-//    operator*(const NekMatrix<MatrixDataType, StorageType, MatrixType>& lhs,
-//              const NekVector<VectorDataType, dim, space>& rhs)
-//    {
-//        return NekMultiply(lhs, rhs);
-//    }          
+            
 }
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_OPERATIONS_HPP
 

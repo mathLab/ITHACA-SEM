@@ -66,6 +66,9 @@ namespace Nektar
 
         public:
         
+            static const LhsExpressionType& Left(const DataType& d) { return d.first; }
+            static const RhsExpressionType& Right(const DataType& d) { return d.second; }
+            
             static void Evaluate(Accumulator<ResultType>& accum, const DataType& d)
             {
                 Evaluate<BinaryNullOp>(accum, d);

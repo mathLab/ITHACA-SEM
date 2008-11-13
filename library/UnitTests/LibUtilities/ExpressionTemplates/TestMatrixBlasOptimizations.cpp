@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: TestMatrixBufferSize.cpp
+// File: TestMatrixBlasOptimizations.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -47,54 +47,44 @@
 
 namespace Nektar
 {
-
-    BOOST_AUTO_TEST_CASE(TestLargerIntermediateMatrix)
+    BOOST_AUTO_TEST_CASE(DgemmTest)
     {
-        double buf1[] = {1, 4,
-                         2, 5,
-                        3, 6};
-        double buf2[] = {7, 10, 13,
-                        8, 11, 14,
-                        9, 12, 15,
-                        16, 17, 18,
-                        19, 20, 21};
-        double buf3[] = {1, 2, 3, 4, 5};
+        double a_buf[] = {1, 2, 3, 4};
+        double b_buf[] = {4, 5, 6, 7};
+        double c_buf[] = {8, 9, 10, 11};
         
-        NekMatrix<double> m1(2, 3, buf1);
-        NekMatrix<double> m2(3, 5, buf2);
-        NekMatrix<double> tempResult = m1*m2;
+        NekMatrix<double> a(2, 2, a_buf);
+        NekMatrix<double> b(2, 2, b_buf);
+        NekMatrix<double> c(2, 2, c_buf);
         
-        double temp_result_buf[] = {66, 156,
-                                    72, 171,
-                                    78, 186,
-                                    104, 257,
-                                    122, 302};
-        NekMatrix<double> temp_expected_result(2, 5, temp_result_buf);
-        BOOST_CHECK_EQUAL(temp_expected_result, tempResult);
+        NekMatrix<double> result = a*b + c;
         
-        NekMatrix<double> m3(5, 1, buf3);
         
-        NekMatrix<double> result1 = tempResult*m3;
-        NekMatrix<double> result = m1*m2*m3;
+        const Expression<BinaryExpressionPolicy
+                    <
+                        ConstantExpressionPolicy<NekMatrix<double> >, 
+                        MultiplyOp, 
+                        ConstantExpressionPolicy<NekMatrix<double> >
+                    > >& t1 = a*b;
         
-        double result_buf[] = {1470, 3594};
-        NekMatrix<double> expected_result(2, 1, result_buf);
-        
-        BOOST_CHECK_EQUAL(expected_result, result1);
+        const Expression
+            <
+                BinaryExpressionPolicy
+                <
+                    BinaryExpressionPolicy
+                    <
+                        ConstantExpressionPolicy<NekMatrix<double> >,
+                        MultiplyOp,
+                        ConstantExpressionPolicy<NekMatrix<double> >
+                    >,
+                    AddOp,
+                    ConstantExpressionPolicy<NekMatrix<double> >
+                >
+            >& t2 = a*b + c;
+        double expected_result_buf[] = {27, 37, 37, 51};
+        NekMatrix<double> expected_result(2, 2, expected_result_buf);
         BOOST_CHECK_EQUAL(expected_result, result);
     }
     
 }
-
-
-
-
-
-
-
-
-
-
-
-
 

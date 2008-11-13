@@ -69,74 +69,7 @@ namespace Nektar
         return os;
     }
 
-    #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-        template<typename DataType, typename MatrixType>
-        class ConstantExpressionTraits<NekMatrix<DataType, MatrixType> >
-        {
-            public:
-                typedef NekMatrix<DataType, MatrixType> result_type;
-                typedef NekMatrixConstantMetadata MetadataType;
-        };
 
-        template<typename LhsDataType, typename LhsMatrixType,
-                 typename RhsDataType, typename RhsMatrixType>
-        class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsMatrixType>,
-                                              NekMatrix<RhsDataType, RhsMatrixType>,
-                                              AddOp>
-        {
-            public:
-                typedef NekMatrixAdditionAndSubtractionMetadata MetadataType;
-        };
-
-        template<typename LhsDataType, typename LhsMatrixType,
-                 typename RhsDataType, typename RhsMatrixType>
-        class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsMatrixType>,
-                                              NekMatrix<RhsDataType, RhsMatrixType>,
-                                              SubtractOp>
-        {
-            public:
-                typedef NekMatrixAdditionAndSubtractionMetadata MetadataType;
-        };
-
-        template<typename LhsDataType, typename LhsMatrixType,
-                 typename RhsDataType, typename RhsMatrixType>
-        class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsMatrixType>,
-                                              NekMatrix<RhsDataType, RhsMatrixType>,
-                                              MultiplyOp>
-        {
-            public:
-                typedef NekMatrixMultiplicationMetadata MetadataType;
-        };
-        
-        template<typename LhsDataType, typename LhsMatrixType>
-        class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsMatrixType>,
-                                             typename NekMatrix<LhsDataType, LhsMatrixType>::NumberType,
-                                             MultiplyOp>
-        {
-            public:
-                typedef NekMatrixMultiplicationMetadata MetadataType;
-        };
-
-        template<typename RhsDataType, typename RhsMatrixType>
-        class BinaryExpressionMetadataTraits<typename NekMatrix<RhsDataType, RhsMatrixType>::NumberType,
-                                             NekMatrix<RhsDataType, RhsMatrixType>,
-                                             MultiplyOp>
-        {
-            public:
-                typedef NekMatrixMultiplicationMetadata MetadataType;
-        };
-
-        template<typename DataType>
-        struct CreateFromMetadata<NekMatrix<DataType, StandardMatrixTag> >
-        {
-            static NekMatrix<DataType, StandardMatrixTag> 
-            Apply(const NekMatrixMetadata& d)
-            {
-                return NekMatrix<DataType, StandardMatrixTag>(d);
-            }
-        };
-
-    #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
     
 // #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 //     // All of the expression interfaces for NekMatrix should go here.
@@ -427,6 +360,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.36  2008/11/01 22:36:06  bnelson
+    Removed uneeded files.
+
     Revision 1.35  2008/11/01 19:15:28  bnelson
     Updated matrices so the storage policy is no longer a template parameter.  Removed the template parameter from the LinearSystem class.
 

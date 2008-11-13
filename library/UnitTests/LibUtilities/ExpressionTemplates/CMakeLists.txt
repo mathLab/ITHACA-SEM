@@ -27,6 +27,7 @@ SET(Sources
     TestBinaryExpressionEvaluatorWithConstantConstantParameters.cpp
     TestBinaryExpressionEvaluatorWithBinaryConstantParameters.cpp
     TestAliasing.cpp
+    TestMatrixBlasOptimizations.cpp
     TestMatrixBufferSize.cpp 
     ../../util.cpp
 )

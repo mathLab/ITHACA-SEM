@@ -757,32 +757,32 @@ namespace Nektar
             result.GetRawPtr(), M);
     }
     
-    template<>
-    struct BinaryExpressionEvaluator<BinaryExpressionPolicy
-                                    <
-                                        ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> >, 
-                                        MultiplyOp, 
-                                        ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> > 
-                                    >,
-                                    ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> >,
-                                    NekMatrix<double, StandardMatrixTag>,
-                                    AddOp, BinaryNullOp, void>
-    {
-        typedef BinaryExpressionPolicy
-                <
-                    ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> >, 
-                    MultiplyOp, 
-                    ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> > 
-                > LhsType;
-        typedef ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> > RhsType;
-        
-        static void Eval(const Expression<LhsType>& lhs, 
-                         const Expression<RhsType>& rhs,
-                         Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
-        {
-            Dgemm(*result, 1.0, *LhsType::Left(*lhs), *LhsType::Right(*lhs), 1.0, *rhs);
-        }
-    };
+//    template<>
+//    struct BinaryExpressionEvaluator<BinaryExpressionPolicy
+//                                    <
+//                                        ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> >, 
+//                                        MultiplyOp, 
+//                                        ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> > 
+//                                    >,
+//                                    ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> >,
+//                                    NekMatrix<double, StandardMatrixTag>,
+//                                    AddOp, BinaryNullOp, void>
+//    {
+//        typedef BinaryExpressionPolicy
+//                <
+//                    ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> >, 
+//                    MultiplyOp, 
+//                    ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> > 
+//                > LhsType;
+//        typedef ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> > RhsType;
+//        
+//        static void Eval(const Expression<LhsType>& lhs, 
+//                         const Expression<RhsType>& rhs,
+//                         Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
+//        {
+//            Dgemm(*result, 1.0, *LhsType::Left(*lhs), *LhsType::Right(*lhs), 1.0, *rhs);
+//        }
+//    };
     
     GENERATE_MULTIPLICATION_OPERATOR(NekMatrix, 2, NekMatrix, 2);
 

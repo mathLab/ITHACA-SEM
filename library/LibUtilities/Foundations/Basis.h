@@ -88,10 +88,10 @@ namespace Nektar
                 {
                 case eOrtho_B:
                 case eModified_B:
-                case eModified_C:
                     value = m_nummodes*(m_nummodes+1)/2;
                     break;
-
+                    
+                case eModified_C:
                 case eOrtho_C:
                     value = m_nummodes*(m_nummodes+1)*(m_nummodes+2)/6;
                     break;
@@ -319,6 +319,73 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal,"Default Constructor for Basis should not be called");
             }
+
+            /** \brief Method used to generate appropriate basis and
+             * their derivatives which are stored in \a m_bdata and \a
+             * m_dbdata
+             *  
+             * The following expansions are generated depending on the
+             * enum type defined in \a m_basisKey.m_basistype:
+             *
+             * NOTE: This definition does not follow the order in the
+             * Karniadakis \& Sherwin book since this leads to a more
+             * compact hierarchical pattern for implementation
+             * purposes. The order of these modes dictates the
+             * ordering of the expansion coefficients.
+             * 
+             * In the following m_numModes = P
+             * 
+             * \a eModified_A: 
+             *
+             * m_bdata[i + j*m_numpoints] = 
+             * \f$ \phi^a_i(z_j) = \left \{
+             * \begin{array}{ll} \left ( \frac{1-z_j}{2}\right ) & i = 0 \\ 
+             * \\ 
+             * \left ( \frac{1+z_j}{2}\right ) & i = 1 \\
+             * \\
+             * \left ( \frac{1-z_j}{2}\right )\left ( \frac{1+z_j}{2}\right )
+             *  P^{1,1}_{i-2}(z_j) & 2\leq i < P\\ 
+             *  \end{array} \right . \f$ 
+             * 
+             * \a eModified_B: 
+             *
+             * m_bdata[n(i,j) + k*m_numpoints] =
+             * \f$ \phi^b_{ij}(z_k) = \left \{ \begin{array}{lll}
+             * \phi^a_j(z_k) & i = 0, &   0\leq j < P  \\
+             * \\
+             * \left ( \frac{1-z_k}{2}\right )^{i}  & 1 \leq i < P,&   j = 0 \\
+             * \\                                                         
+             * \left ( \frac{1-z_k}{2}\right )^{i} \left ( \frac{1+z_k}{2}\right )
+             * P^{2i-1,1}_{j-1}(z_k) & 1 \leq i < P,\ &  1\leq j < P-i\ \\
+             * \end{array}	\right . , \f$
+             * 
+             * where \f n(i,j) \f is a consecutive ordering of the
+             * triangular indices \f$ 0 \leq i, i+j < P \f$ where \a j
+             * runs fastest. 
+             *
+             *
+             * \a eModified_C: 
+             *
+             * m_bdata[n(i,j,k) + l*m_numpoints] =
+             * \f$ \phi^c_{ij,k}(z_l) = \phi^b_{i+j,k}(z_l) =
+             *  \left \{ \begin{array}{llll}
+             * \phi^b_{j,k}(z_l) & i = 0, &   0\leq j < P  &  0\leq k < P-j\\
+             * \\
+             * \left ( \frac{1-z_l}{2}\right )^{i+j}  & 1\leq i < P,\ 
+             * &  0\leq j <  P-i,\  & k = 0 \\
+             * \\
+             * \left ( \frac{1-z_l}{2}\right )^{i+j} 
+             * \left ( \frac{1+z_l}{2}\right ) 
+             * P^{2i+2j-1,1}_{k-1}(z_k) & 1\leq i < P,&  0\leq j < P-i& 
+             * 1\leq k < P-i-j \\
+             * \\
+             * \end{array}	\right . , \f$
+             * 
+             * where \f n(i,j,k) \f is a consecutive ordering of the
+             * triangular indices \f$ 0 \leq i, i+j, i+j+k < P \f$ where \a k
+             * runs fastest, then \a j and finally \a i.
+             * 
+             */
 
             void GenBasis();
 

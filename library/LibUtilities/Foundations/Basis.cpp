@@ -42,6 +42,7 @@
 #include <LibUtilities/Polylib/Polylib.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
+#include <LibUtilities/BasicUtils/VmathArray.hpp>
 
 
 namespace Nektar
@@ -118,6 +119,7 @@ namespace Nektar
         };
 
         // Method used to generate appropriate basis
+
         void Basis::GenBasis()
         {
             int i,p,q;
@@ -212,6 +214,11 @@ namespace Nektar
 
             case eModified_A:
 
+                // Note the following packing deviates from the
+                // definition in the Book by Karniadakis in that we
+                // put the vertex degrees of freedom at the lower
+                // index range to follow a more hierarchic structure.
+
                 for(i = 0; i < numPoints; ++i)
                 {
                     m_bdata[i] = 0.5*(1-z[i]);
@@ -236,8 +243,22 @@ namespace Nektar
                     numPoints);
                 break;
 
-            case eModified_B: case eModified_C:
+            case eModified_B:
                 {
+
+                    // Note the following packing deviates from the
+                    // definition in the Book by Karniadakis in two
+                    // ways. 1) We put the vertex degrees of freedom
+                    // at the lower index range to follow a more
+                    // hierarchic structure. 2) We do not duplicate
+                    // the singular vertex definition so that only a
+                    // triangular number (i.e. (modes)*(modes+1)/2) of
+                    // modes are required consistent with the
+                    // orthogonal basis.
+
+                    // In the current structure the q index runs
+                    // faster than the p index so that the matrix has
+                    // a more compact structure
 
                     const NekDouble *one_m_z_pow, *one_p_z;
 
@@ -296,7 +317,7 @@ namespace Nektar
 
                         for(q = 1; q < numModes-p; ++q, mode+=numPoints)
                         {
-                            Polylib::jacobfd(numPoints,z.data(),mode,NULL,q-1,2*p+1,1.0);
+                            Polylib::jacobfd(numPoints,z.data(),mode,NULL,q-1,2*p-1,1.0);
 
                             for(i = 0; i <  numPoints; ++i)
                             {
@@ -308,6 +329,63 @@ namespace Nektar
                     Blas::Dgemm('n','n',numPoints,numModes*(numModes+1)/2,
                         numPoints,1.0,D,numPoints,
                         m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);
+                }
+                break;
+
+                
+            case eModified_C:
+                {
+                    // Note the following packing deviates from the
+                    // definition in the Book by Karniadakis in two
+                    // ways. 1) We put the vertex degrees of freedom
+                    // at the lower index range to follow a more
+                    // hierarchic structure. 2) We do not duplicate
+                    // the singular vertex definition (or the
+                    // duplicated face information in the book ) so
+                    // that only a tetrahedral number
+                    // (i.e. (modes)*(modes+1)*(modes+2)/6) of modes
+                    // are required consistent with the orthogonal
+                    // basis.
+
+                    // In the current structure the r index runs
+                    // fastest rollowed by q and than the p index so
+                    // that the matrix has a more compact structure
+
+                    // Note that eModified_C is a re-organisation/
+                    // duplication of eModified_B so will get a
+                    // temporary Modified_B expansion and copy the
+                    // correct components.
+
+                    // Generate Modified_B basis;
+                    BasisKey ModBKey(eModified_B,m_basisKey.GetNumModes(),
+                                    m_basisKey.GetPointsKey());
+                    BasisSharedPtr  ModB = BasisManager()[ModBKey];
+
+                    Array<OneD, const NekDouble> ModB_data = ModB->GetBdata();
+                    
+                    // Copy Modified_B basis into first
+                    // (numModes*(numModes+1)/2)*numPoints entires of
+                    // bdata.  This fills in the complete (r,p) face.
+
+                    // Set up \phi^c_{p,q,r} = \phi^b_{p+q,r}
+
+                    int N;
+                    int B_offset = 0;
+                    int offset = 0;
+                    for(p = 0; p < numModes; ++p)
+                    {
+                        N = numPoints*(numModes-p)*(numModes-p+1)/2;
+                        Vmath::Vcopy(N, &ModB_data[0]+B_offset,1,&m_bdata[0] + offset,1);
+                        B_offset += numPoints*(numModes-p);
+                        offset   += N;
+                    }
+
+                    // set up derivative of basis. 
+                    Blas::Dgemm('n','n',numPoints,
+                                numModes*(numModes+1)*(numModes+2)/6,
+                                numPoints,1.0,D,numPoints,
+                                m_bdata.data(),numPoints,0.0,
+                                m_dbdata.data(),numPoints);
                 }
                 break;
 
@@ -485,6 +563,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.34  2008/10/04 12:24:18  sherwin
+* moved a few brackets to meet coding standard
+*
 * Revision 1.33  2008/10/01 23:23:21  ehan
 * Changed the alpha value in order to be consistant with the Spen's book.
 *

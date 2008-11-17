@@ -306,6 +306,16 @@ namespace Nektar
                 return GetCoord(i,Lcoord);
             }
 
+            virtual int v_GetNumVerts() const
+            {
+                return kNverts;
+            }
+            
+            virtual int v_GetNumEdges() const
+            {
+                return kNedges;
+            }
+
         };
 
     }; //end of namespace
@@ -315,6 +325,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.22  2008/10/09 21:03:44  ehan
+// Fixed error from the extra qualifier.
+//
 // Revision 1.21  2008/09/23 22:08:52  ehan
 // Added new constructor HexGeom
 //

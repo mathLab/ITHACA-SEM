@@ -699,7 +699,7 @@ namespace Nektar
                             const Array<OneD, const NekDouble> & coeffs = (*m_faces[i])[j]->GetCoeffs();
                             double v = signArray[k]* coeffs[k];
                             (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = v;
-
+                            
                         }
                     }
                 }
@@ -765,6 +765,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.cpp,v $
+// Revision 1.15  2008/09/23 22:09:00  ehan
+// Added new constructor HexGeom
+//
 // Revision 1.14  2008/09/23 22:06:26  ehan
 // Added new GeomFactor constructor.
 //

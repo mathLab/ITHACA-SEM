@@ -57,6 +57,7 @@ namespace Nektar
         {
         public:
             PyrGeom ();
+            PyrGeom(const Geometry2DSharedPtr faces[]);
             PyrGeom (const TriGeomSharedPtr tfaces[], const QuadGeomSharedPtr qfaces[], const StdRegions::FaceOrientation forient[]);
             
             PyrGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const TriGeomSharedPtr tfaces[],
@@ -96,42 +97,20 @@ namespace Nektar
             }
 
            
-            /// \brief Return the face number of the given face, or -1, if
-            /// not an face of this element.
+            /// \brief Return the face number of the given face, or N, if not a face of this element.
             int WhichFace(Geometry2DSharedPtr face)
             {
-                int returnval = -1;
+                int i = 0;
 
-                TriGeomVector::iterator tfaceIter;
-                QuadGeomVector::iterator qfaceIter;
-                
-                int i;
-
-                if(face->GetGeomShapeType() == eTriangle){
-                    for (i=0,tfaceIter = m_tfaces.begin(); tfaceIter != m_tfaces.end(); ++tfaceIter,++i)
+                Geometry2DVector::iterator f;
+                for (i = 0, f = m_faces.begin(); f != m_faces.end(); ++f,++i)
+                {
+                    if (*f == face)
                     {
-                        if (*tfaceIter == face)
-                        {
-                            returnval = i;
-                            break;
-                        }
+                        break;
                     }
-
-                   return returnval;
-                
-                } else if (face->GetGeomShapeType() == eQuadrilateral){
-
-                    for(i=0,qfaceIter = m_qfaces.begin(); qfaceIter != m_qfaces.end(); ++qfaceIter,++i)
-                    {
-                        if(*qfaceIter == face)
-                        {
-                            returnval = i;
-                            break;
-                        }
-                    }
-                   return returnval;
                 }
-
+                return i;
             }
             
             inline int GetEid() const 
@@ -162,7 +141,7 @@ namespace Nektar
             NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
 
             static const int kNverts  = 5;
-            static const int kNedges  = 5;
+            static const int kNedges  = 8;
             static const int kNqfaces = 1;
             static const int kNtfaces = 4;
             static const int kNfaces  = kNqfaces + kNtfaces;
@@ -171,11 +150,11 @@ namespace Nektar
 
             VertexComponentVector           m_verts;
             SegGeomVector                   m_edges;
-            TriGeomVector                   m_tfaces;
-            QuadGeomVector                  m_qfaces;
             StdRegions::EdgeOrientation     m_eorient [kNedges];
             StdRegions::FaceOrientation     m_forient[kNfaces];
             Geometry2DVector                m_faces;
+            TriGeomVector                   m_tfaces;
+            QuadGeomVector                  m_qfaces;
 
             int m_eid;
             int m_fid;
@@ -189,6 +168,11 @@ namespace Nektar
 
         private:
             bool m_owndata;
+
+            void SetUpLocalEdges();
+            void SetUpLocalVertices();
+            void SetUpEdgeOrientation();
+            void SetUpFaceOrientation();
             
             virtual void v_GenGeomFactors(void)
             {
@@ -264,6 +248,16 @@ namespace Nektar
             {
                return WhichFace(face);
             }
+
+            virtual int v_GetNumVerts() const
+            {
+                return kNverts;
+            }
+            
+            virtual int v_GetNumEdges() const
+            {
+                return kNedges;
+            }
            
         };
     }; //end of namespace
@@ -273,6 +267,9 @@ namespace Nektar
 
 //
 // $Log: PyrGeom.h,v $
+// Revision 1.12  2008/06/30 19:35:13  ehan
+// Fixed infinity recursive-loop error.
+//
 // Revision 1.11  2008/06/16 22:43:26  ehan
 // Added inline function GetFace(..), whichFace(..), and GetFaceorient(..).
 //

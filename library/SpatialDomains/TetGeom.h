@@ -56,6 +56,8 @@ namespace Nektar
         {
         public:
 			TetGeom ();
+            
+            TetGeom(const TriGeomSharedPtr faces[]);
 			TetGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const TriGeomSharedPtr faces[],
 					const StdRegions::EdgeOrientation eorient[], const StdRegions::FaceOrientation forient[]);
 	                
@@ -73,7 +75,7 @@ namespace Nektar
             inline int GetFid(int i) const
             {
                 ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
-                return m_tfaces[i]->GetFid();
+                return m_faces[i]->GetFid();
             }
 
             inline StdRegions::FaceOrientation GetFaceorient(const int i) const
@@ -85,7 +87,7 @@ namespace Nektar
             inline const TriGeomSharedPtr GetFace(int i) const
             {
                 ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
-                return m_tfaces[i];
+                return m_faces[i];
             }
             
             inline int GetEid() const 
@@ -127,7 +129,7 @@ namespace Nektar
                 TriGeomVector::iterator faceIter;
                 int i;
 
-                for (i=0,faceIter = m_tfaces.begin(); faceIter != m_tfaces.end(); ++faceIter,++i)
+                for (i=0,faceIter = m_faces.begin(); faceIter != m_faces.end(); ++faceIter,++i)
                 {
                     if (*faceIter == face)
                     {
@@ -192,7 +194,7 @@ namespace Nektar
         protected:
             VertexComponentVector           m_verts;
             SegGeomVector                   m_edges;
-            TriGeomVector                   m_tfaces;
+            TriGeomVector                   m_faces;
             StdRegions::EdgeOrientation     m_eorient[kNedges];
             StdRegions::FaceOrientation     m_forient[kNfaces];
 
@@ -205,6 +207,12 @@ namespace Nektar
 
         private:
             bool m_owndata;
+
+            void SetUpLocalEdges();
+            void SetUpLocalVertices();
+            void SetUpEdgeOrientation();
+            void SetUpFaceOrientation();
+            
             virtual void v_GenGeomFactors(void)
             {
                 GenGeomFactors();
@@ -305,6 +313,16 @@ namespace Nektar
                 return WhichFace(face);
             }
 
+            virtual int v_GetNumVerts() const
+            {
+                return kNverts;
+            }
+            
+            virtual int v_GetNumEdges() const
+            {
+                return kNedges;
+            }
+
         };
 
     }; //end of namespace
@@ -314,6 +332,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.h,v $
+// Revision 1.15  2008/08/26 02:18:17  ehan
+// Changed shared pointer (TriGeomSharedPtr to the Geometry2DSharedPtr) in the face function.
+//
 // Revision 1.14  2008/06/30 19:35:52  ehan
 // Fixed infinity recursive-loop error.
 //

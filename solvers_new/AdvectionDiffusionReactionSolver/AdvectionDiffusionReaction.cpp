@@ -72,9 +72,21 @@ namespace Nektar
         {
             m_infosteps =  m_boundaryConditions->GetParameter("IO_InfoSteps");
         }
-    }
-    
 
+	// check that any user defined boundary condition is indeed implemented
+	for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+	  {	
+	    // Time Dependent Boundary Condition (if no use defined then this is empty)
+	    if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "")
+	      {
+		if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "TimeDependent")
+		  {
+		    ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
+		  }
+	      }
+	  }
+	
+    }
 
     void AdvectionDiffusionReaction::EvaluateAdvectionVelocity()
     {
@@ -102,39 +114,45 @@ namespace Nektar
     }
     
 
-    void AdvectionDiffusionReaction::ODEforcing(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  Array<OneD, Array<OneD, NekDouble> >&outarray, NekDouble time) 
+    void AdvectionDiffusionReaction::ODEforcing(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+						Array<OneD, Array<OneD, NekDouble> >&outarray, NekDouble time) 
     {
         int i;
         int nvariables = inarray.num_elements();
         int ncoeffs    = inarray[0].num_elements();
 
+	SetBoundaryConditions(time);
+	
         switch(m_projectionType)
         {
         case eDiscontinuousGalerkin:
-            WeakDGAdvection(inarray, outarray);
-            for(i = 0; i < nvariables; ++i)
+	  
+	  WeakDGAdvection(inarray, outarray);
+	  for(i = 0; i < nvariables; ++i)
             {
-                MultiplyByElmtInvMass(outarray[i],outarray[i]);
-                Vmath::Neg(ncoeffs,outarray[i],1);
+                m_fields[i]->MultiplyByElmtInvMass(outarray[i],outarray[i]);
+		Vmath::Neg(ncoeffs,outarray[i],1);
             }
-            break;
+	  break;
         case eGalerkin:
-            {
+	  {
                 Array<OneD, NekDouble> physfield(GetPointsTot());
-                
+		
                 for(i = 0; i < nvariables; ++i)
-                {
+		  {
                     // Calculate -(\phi, V\cdot Grad(u))
                     m_fields[i]->BwdTrans(inarray[i],physfield);
-                    
-                    WeakAdvectionNonConservativeForm(m_velocity,
-                                                     physfield, outarray[i]);
+		    
+		    WeakAdvectionNonConservativeForm(m_velocity,
+						     physfield, outarray[i]);
+		    
                     Vmath::Neg(ncoeffs,outarray[i],1);
                     
                     // Multiply by inverse of mass matrix to get forcing term
-                    m_fields[i]->MultiplyByInvMassMatrix(outarray[i],  
-                                                         outarray[i],
-                                                         false, true);
+		    // m_fields[i]->MultiplyByInvMassMatrix(outarray[i],  
+                    //                                     outarray[i],
+                    //                                     false, true);
+		   		    
                 }
             }
             break;
@@ -156,10 +174,19 @@ namespace Nektar
 
         // Set up wrapper to fields data storage. 
         Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
+	Array<OneD, Array<OneD, NekDouble> >   in(nvariables);
+	Array<OneD, Array<OneD, NekDouble> >   out(nvariables);
+	Array<OneD, Array<OneD, NekDouble> >   tmp(nvariables);
+	Array<OneD, Array<OneD, NekDouble> >   phys(nvariables);
         
         for(i = 0; i < nvariables; ++i)
         {
-            fields[i] = m_fields[i]->UpdateCoeffs();
+            fields[i]  = m_fields[i]->UpdateCoeffs();
+	    in[i] = Array<OneD, NekDouble >(ncoeffs);
+	    out[i] = Array<OneD, NekDouble >(ncoeffs);
+	    tmp[i] = Array<OneD, NekDouble >(ncoeffs);
+	    phys[i] = Array<OneD, NekDouble>(m_fields[0]->GetPointsTot());
+	    Vmath::Vcopy(ncoeffs,m_fields[i]->GetCoeffs(),1,in[i],1);
         }
                 
         int nInitSteps;
@@ -170,37 +197,91 @@ namespace Nektar
             //----------------------------------------------
             // Perform time step integration
             //----------------------------------------------
-
-            fields = IntScheme->ExplicitIntegration(m_timestep,*this,u);
-
-            m_time += m_timestep;
+ 
+	  switch(m_projectionType)
+	    {
+	    case eDiscontinuousGalerkin:
+	      fields = IntScheme->ExplicitIntegration(m_timestep,*this,u);
+	      break;
+	    case eGalerkin:
+	      {
+		//---------------------------------------------------------
+		// this is just a forward Euler to illustate that CG works
+		 
+		// get -D u^n
+		ODEforcing(in,out,m_time); // note that MultiplyByInvMassMatrix is not performed inside ODEforcing
+	  
+		// compute M u^n
+		for (i = 0; i < nvariables; ++i)
+		  {
+		    m_fields[0]->BwdTrans(in[i],phys[i]);
+		    m_fields[0]->IProductWRTBase(phys[i],tmp[i]);
+		    
+		    // f = M u^n - Dt D u^n
+		    Vmath::Svtvp(ncoeffs,m_timestep,out[i],1,tmp[i],1,tmp[i],1);
+		    
+		    // u^{n+1} = M^{-1} f
+		    m_fields[i]->MultiplyByInvMassMatrix(tmp[i],out[i],false,false);
+		    
+		    // fill results
+		    Vmath::Vcopy(ncoeffs,out[i],1,in[i],1);
+		    Vmath::Vcopy(ncoeffs,out[i],1,fields[i],1);
+		  }
+		//---------------------------------------------------------
+	      }
+	      break;
+	    }
+	  m_time += m_timestep;
             //----------------------------------------------
 
             //----------------------------------------------
             // Dump analyser information
             //----------------------------------------------
-            if(!(n%m_infosteps))
+            if(!((n+1)%m_infosteps))
             {
-                cout << "Steps:" << n << endl;
+	      cout << "Steps: " << n+1 << "\t Time: " << m_time << endl;
             }
             
-            if(n&&(!(n%m_checksteps)))
+            if(n&&(!((n+1)%m_checksteps)))
             {
-                Checkpoint_Output(nchk++);
+	      for(i = 0; i < nvariables; ++i)
+		{
+		  (m_fields[i]->UpdateCoeffs()) = fields[i];
+		}
+	      Checkpoint_Output(nchk++);
             }
         }
         
         for(i = 0; i < nvariables; ++i)
         {
-            (m_fields[i]->UpdateCoeffs()) = fields[i];
+	  (m_fields[i]->UpdateCoeffs()) = fields[i];
         }
     }
     
-
-
-    // Evaulate flux = m_fields*ivel for i th component of Vu 
-    void AdvectionDiffusionReaction::GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux)
-    {
+  //----------------------------------------------------
+  void AdvectionDiffusionReaction::SetBoundaryConditions(NekDouble time)
+  {
+    int nvariables = m_fields.num_elements();
+    
+    // loop over Boundary Regions
+    for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+      {	
+	
+	// Time Dependent Boundary Condition
+	if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "TimeDependent")
+	  {
+	    for (int i = 0; i < nvariables; ++i)
+	      {
+		m_fields[i]->EvaluateBoundaryConditions(time);
+	      }
+	  }
+      }
+  }
+  
+  // Evaulate flux = m_fields*ivel for i th component of Vu 
+  void AdvectionDiffusionReaction::GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, 
+						 Array<OneD, Array<OneD, NekDouble> > &flux)
+  {
         ASSERTL1(flux.num_elements() == m_velocity.num_elements(),"Dimension of flux array and velocity array do not match");
 
         for(int j = 0; j < flux.num_elements(); ++j)
@@ -210,7 +291,8 @@ namespace Nektar
         }
     }
 
-    void AdvectionDiffusionReaction::NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numflux)
+    void AdvectionDiffusionReaction::NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
+						   Array<OneD, Array<OneD, NekDouble> > &numflux)
     {
         int i;
 
@@ -221,35 +303,69 @@ namespace Nektar
         Array<OneD, NekDouble > Bwd(nTraceNumPoints);
         Array<OneD, NekDouble > Vn (nTraceNumPoints,0.0);
 
-        // Get Edge Velocity - Could be stored if time independent
+	// Get Edge Velocity - Could be stored if time independent
         for(i = 0; i < nvel; ++i)
-        {
+	  {
             m_fields[0]->ExtractTracePhys(m_velocity[i], Fwd);
             Vmath::Vvtvp(nTraceNumPoints,m_traceNormals[i],1,Fwd,1,Vn,1,Vn,1);
-        }
+	  }
 
         for(i = 0; i < numflux.num_elements(); ++i)
         {
             m_fields[i]->GetFwdBwdTracePhys(physfield[i],Fwd,Bwd);
             //evaulate upwinded m_fields[i]
-            m_fields[i]->GetTrace()->Upwind(Vn,Fwd,Bwd,numflux[i]);
-            // calculate m_fields[i]*Vn
+	    m_fields[i]->GetTrace()->Upwind(Vn,Fwd,Bwd,numflux[i]);
+	    // calculate m_fields[i]*Vn
             Vmath::Vmul(nTraceNumPoints,numflux[i],1,Vn,1,numflux[i],1);
         }
-
-        // Get Normals
     }
 
+  void AdvectionDiffusionReaction::NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
+						 Array<OneD, Array<OneD, NekDouble> > &numfluxX, 
+						 Array<OneD, Array<OneD, NekDouble> > &numfluxY)
+    {
+        int i;
+
+        int nTraceNumPoints = GetTracePointsTot();
+        int nvel = m_velocity.num_elements();
+
+        Array<OneD, NekDouble > Fwd(nTraceNumPoints);
+        Array<OneD, NekDouble > Bwd(nTraceNumPoints);
+	Array<OneD, NekDouble > tmp(nTraceNumPoints,0.0);
+
+	Array<OneD, Array<OneD, NekDouble > > traceVelocity(2);
+
+	traceVelocity[0] = Array<OneD,NekDouble>(nTraceNumPoints,0.0);
+	traceVelocity[1] = Array<OneD,NekDouble>(nTraceNumPoints,0.0);
+
+	// Get Edge Velocity - Could be stored if time independent
+	m_fields[0]->ExtractTracePhys(m_velocity[0], traceVelocity[0]);
+	m_fields[0]->ExtractTracePhys(m_velocity[1], traceVelocity[1]);
+
+	m_fields[0]->GetFwdBwdTracePhys(physfield[0],Fwd,Bwd);
+	
+	m_fields[0]->GetTrace()->Upwind(traceVelocity,Fwd,Bwd,tmp);
+	
+	Vmath::Vmul(nTraceNumPoints,tmp,1,traceVelocity[0],1,numfluxX[0],1);
+	Vmath::Vmul(nTraceNumPoints,tmp,1,traceVelocity[1],1,numfluxY[0],1);
+  
+    }
 
     void AdvectionDiffusionReaction::Summary(std::ostream &out)
-    {
-        out << "Equation Type   : Advection Equation" << endl;
-        ADRBase::Summary(out);
+    {   
+      cout << "=======================================================================" << endl;
+      cout << "\tEquation Type   : Advection Equation" << endl;
+      ADRBase::Summary(out);
+      cout << "=======================================================================" << endl;
+
     }
 } //end of namespace
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.3  2008/11/12 12:12:26  pvos
+* Time Integration update
+*
 * Revision 1.2  2008/11/02 22:38:51  sherwin
 * Updated parameter naming convention
 *

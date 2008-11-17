@@ -599,8 +599,8 @@ namespace Nektar
            
             } 
             
-            //             cout << "xi_x = " << xi[0] << ", xi_y = " << xi[1] << ", xi_z = " << xi[2] << endl;
-            //             cout << "eta_x = " << eta[0] << ", eta_y = " << eta[1] << ", eta_z = " << eta[2] << endl;
+            // cout << "xi_x = " << xi[0] << ", xi_y = " << xi[1] << ", xi_z = " << xi[2] << endl;
+            // cout << "eta_x = " << eta[0] << ", eta_y = " << eta[1] << ", eta_z = " << eta[2] << endl;
             
             return  StdExpansion3D::PhysEvaluate(eta);  
         }
@@ -726,6 +726,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPyrExp.cpp,v $
+ * Revision 1.15  2008/09/23 18:19:26  pvos
+ * Updates for working ProjectContField3D demo
+ *
  * Revision 1.14  2008/09/17 13:46:06  pvos
  * Added LocalToGlobalC0ContMap for 3D expansions
  *

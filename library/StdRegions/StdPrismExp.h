@@ -78,16 +78,27 @@ namespace Nektar
                 return ePrism;
             }
 
-            //TODO implement
             void GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                      Array<OneD, unsigned int> &maparray,
-                                     Array<OneD, int>& signarray);
+                                     Array<OneD, int> &signarray);
+                                    
 
+            // int GetBasisNumModes   (const int dir)
             int GetFaceNcoeffs(const int i) const
             {
-                ASSERTL2((i >= 0) && (i <= 3), "face id is out of range");
-                //TODO implement
-                return 0;
+                ASSERTL2((i >= 0) && (i <= 4), "face id is out of range");
+                if((i == 0))
+                {
+                    return GetBasisNumModes(0)*GetBasisNumModes(1);
+                }
+                else if((i == 1) || (i == 3))
+                {
+                    return GetBasisNumModes(0)*GetBasisNumModes(2);
+                }
+                else
+                {
+                    return GetBasisNumModes(1)*GetBasisNumModes(2);
+                }
             }
             
             const int GetEdgeNcoeffs(const int i) const
@@ -354,6 +365,9 @@ namespace Nektar
 
 /**
  * $Log: StdPrismExp.h,v $
+ * Revision 1.19  2008/09/17 13:46:06  pvos
+ * Added LocalToGlobalC0ContMap for 3D expansions
+ *
  * Revision 1.18  2008/07/04 10:18:40  pvos
  * Some updates
  *

@@ -381,9 +381,9 @@ namespace Nektar
                             out_dxi2[n] = out_dEta2[n];
                             out_dxi3[n] = (1.0 + eta_x[i]) / (1.0 - eta_z[k])*out_dEta1[n] + out_dEta3[n];
                                         
-                            //                         out_dxi1[n] = out_dEta1[n];
-                            //                         out_dxi2[n] = 2.0/ (1.0 - eta_z[k])*out_dEta2[n];                     
-                            //                         out_dxi3[n] = (1.0 + eta_y[j]) / (1.0 - eta_z[k])*out_dEta2[n] + out_dEta3[n];
+                            //out_dxi1[n] = out_dEta1[n];
+                            //out_dxi2[n] = 2.0/ (1.0 - eta_z[k])*out_dEta2[n];
+                            //out_dxi3[n] = (1.0 + eta_y[j]) / (1.0 - eta_z[k])*out_dEta2[n] + out_dEta3[n];
 
                                               
                             //cout << "eta_x["<<i<<"] = " <<  eta_x[i] << ",  eta_y["<<j<<"] = " << eta_y[j] << ", eta_z["<<k<<"] = " <<eta_z[k] << endl;
@@ -716,13 +716,200 @@ namespace Nektar
             }
         }
 
+        
         void StdPrismExp::GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                               Array<OneD, unsigned int> &maparray,
                                               Array<OneD, int>& signarray)
         {
-            //TODO implement 
+            int i,j;
+            const int nummodes0 = m_base[0]->GetNumModes();
+            const int nummodes1 = m_base[1]->GetNumModes();
+            const int nummodes2 = m_base[2]->GetNumModes();
+            int nummodesA;
+            int nummodesB;
 
+            const LibUtilities::BasisType bType0 = GetEdgeBasisType(0);
+            const LibUtilities::BasisType bType1 = GetEdgeBasisType(1);
+            const LibUtilities::BasisType bType2 = GetEdgeBasisType(2);
+            
+            ASSERTL1( (bType0==bType1),
+                      "Method only implemented if BasisType is indentical in x and y directions");
+            ASSERTL1( (bType0==LibUtilities::eModified_A) && (bType2==LibUtilities::eModified_B),
+                      "Method only implemented for Modified_A BasisType (x and y direction) and Modified_B BasisType (z direction)");
+
+
+            if( fid == 0 ) // Base quad 
+            {
+                nummodesA = nummodes0;
+                nummodesB = nummodes1;
+            }
+            else if((fid == 2) || (fid == 4)) // front and back quad
+            {
+                nummodesA = nummodes1;
+                nummodesB = nummodes2;
+            }
+            else  // left and right triangles
+            {
+                nummodesA = nummodes0;
+                nummodesB = nummodes2;
+            }
+
+            int nFaceCoeffs = nummodesA*nummodesB;
+            
+            if(maparray.num_elements() != nFaceCoeffs)
+            {
+                maparray = Array<OneD, unsigned int>(nFaceCoeffs);
+            }
+            
+            if(signarray.num_elements() != nFaceCoeffs)
+            {
+                signarray = Array<OneD, int>(nFaceCoeffs,1);
+            }
+            else
+            {
+                fill( signarray.get() , signarray.get()+nFaceCoeffs, 1 );
+            }
+
+            Array<OneD, int> arrayindx(nFaceCoeffs);
+
+            for(i = 0; i < nummodesB; i++)
+            {
+                for(j = 0; j < nummodesA; j++)
+                {              
+                    if( faceOrient < 4 ) // Not transposed
+                    {
+                        arrayindx[i*nummodesA+j] = i*nummodesA+j;
+                    }
+                    else // Transposed
+                    {
+                        arrayindx[i*nummodesA+j] = j*nummodesB+i;
+                    }
+                }
+            }
+            // ////////////////////////////////////////////
+            // TODO : Figureout what the below implemenation does
+            int offset = 0;
+            int jump1 = 1;
+            int jump2 = 1;
+
+            switch(fid)
+            {
+//             case 5:
+//                 {
+//                     offset = nummodes0*nummodes1;
+//                 }
+            case 0: // and case 5 falls-trough
+                {
+                    jump1 = nummodes0;// amount increased index i by
+                }
+                break;
+            case 3:
+                {
+                    offset = nummodes0;
+                }
+            case 1: // and case 3 falls-trough
+                {
+                    jump1 = nummodes0*nummodes1;
+                }
+                break;   
+            case 2:
+                {
+                    offset = 1;
+                }
+            case 4: // and case 2 falls-trough
+                {
+                    jump1 = nummodes0*nummodes1;
+                    jump2 = nummodes0; // amount increased index j by
+                }
+                break;                 
+            default:
+                ASSERTL0(false,"fid must be between 0 and 4");
+            }
+                        
+            for(i = 0; i < nummodesB; i++)
+            {
+                for(j = 0; j < nummodesA; j++)
+                {
+                    maparray[ arrayindx[i*nummodesA+j] ] = i*jump1 + j*jump2 + offset;
+                }
+            }
+
+            if( (faceOrient==1) || (faceOrient==3) ||
+                (faceOrient==6) || (faceOrient==7) )
+            {    
+
+                if(faceOrient<4)
+                {
+                    for(i = 3; i < nummodesB; i+=2)
+                    {
+                        for(j = 0; j < nummodesA; j++)
+                        {
+                            signarray[ arrayindx[i*nummodesA+j] ] *= -1;
+                        }
+                    }
+                        
+                    for(i = 0; i < nummodesA; i++)
+                    {
+                        swap( maparray[i] , maparray[i+nummodesA] );
+                        swap( signarray[i] , signarray[i+nummodesA] );
+                    }
+                }
+                else
+                {  
+                    for(i = 0; i < nummodesB; i++)
+                    {
+                        for(j = 3; j < nummodesA; j+=2)
+                        {
+                            signarray[ arrayindx[i*nummodesA+j] ] *= -1;
+                        }
+                    } 
+                        
+                    for(i = 0; i < nummodesB; i++)
+                    {
+                        swap( maparray[i] , maparray[i+nummodesB] );
+                        swap( signarray[i] , signarray[i+nummodesB] );
+                    }
+                }
+            }
+                
+            if( (faceOrient==2) || (faceOrient==3) ||
+                (faceOrient==5) || (faceOrient==7) )
+            {     
+                if(faceOrient<4)
+                {                                   
+                    for(i = 0; i < nummodesB; i++)
+                    {
+                        for(j = 3; j < nummodesA; j+=2)
+                        {
+                            signarray[ arrayindx[i*nummodesA+j] ] *= -1;
+                        }
+                    }                 
+                        
+                    for(i = 0; i < nummodesB; i++)
+                    {
+                        swap( maparray[i*nummodesA] , maparray[i*nummodesA+1] );
+                        swap( signarray[i*nummodesA] , signarray[i*nummodesA+1] );
+                    }
+                }
+                else
+                { 
+                    for(i = 3; i < nummodesB; i+=2)
+                    {
+                        for(j = 0; j < nummodesA; j++)
+                        {
+                          signarray[ arrayindx[i*nummodesA+j] ] *= -1;
+                        }
+                    }                
+                        
+                    for(i = 0; i < nummodesA; i++)
+                    {
+                        swap( maparray[i*nummodesB] , maparray[i*nummodesB+1] );
+                        swap( signarray[i*nummodesB] , signarray[i*nummodesB+1] );
+                    }
+                }
+            }       
         }
+        
 
         void StdPrismExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
         {
@@ -813,6 +1000,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPrismExp.cpp,v $
+ * Revision 1.16  2008/09/23 18:19:26  pvos
+ * Updates for working ProjectContField3D demo
+ *
  * Revision 1.15  2008/09/17 13:46:06  pvos
  * Added LocalToGlobalC0ContMap for 3D expansions
  *

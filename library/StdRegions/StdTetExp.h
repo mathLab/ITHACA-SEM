@@ -164,12 +164,23 @@ namespace Nektar
                                      Array<OneD, unsigned int> &maparray,
                                      Array<OneD, int>& signarray);
                                    
+
+            // int GetBasisNumModes   (const int dir)
             int GetFaceNcoeffs(const int i) const
             {
-
                 ASSERTL2((i >= 0) && (i <= 3), "face id is out of range");
-                //TODO implement
-                return 0;
+                if((i == 0))
+                {
+                    return GetBasisNumModes(0)*GetBasisNumModes(1);
+                }
+                else if((i == 1) || (i == 2))
+                {
+                    return GetBasisNumModes(0)*GetBasisNumModes(2);
+                }
+                else
+                {
+                    return GetBasisNumModes(1)*GetBasisNumModes(2);
+                }
             }
 
 
@@ -385,6 +396,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.23  2008/09/17 13:46:06  pvos
+ * Added LocalToGlobalC0ContMap for 3D expansions
+ *
  * Revision 1.22  2008/07/19 21:12:54  sherwin
  * Removed MapTo function and made orientation convention anticlockwise in UDG routines
  *

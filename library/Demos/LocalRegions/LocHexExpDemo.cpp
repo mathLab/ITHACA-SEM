@@ -195,8 +195,7 @@ int main(int argc, char *argv[])
                 edgeArray[j]    = edges[edgeConnectivity[i][j]];
                 eorientArray[j] = isEdgeFlipped[i][j]  ?  eBackwards  :  eForwards;
             }
-            faces[i] = MemoryManager<QuadGeom>::
-                AllocateSharedPtr( i, edgeArray, eorientArray);
+            faces[i] = MemoryManager<QuadGeom>::AllocateSharedPtr( i, edgeArray, eorientArray);
           }
           
                  

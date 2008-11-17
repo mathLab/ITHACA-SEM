@@ -4,6 +4,7 @@
 
 #include "LibUtilities/Foundations/Foundations.hpp"
 #include "LibUtilities/Foundations/Basis.h"
+#include "SpatialDomains/MeshComponents.h"
 
 
 #include <algorithm>
@@ -28,44 +29,28 @@ NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z, int order1, int order2,
 using namespace Nektar::LibUtilities;
 using namespace Nektar::LocalRegions;
 using namespace Nektar::StdRegions;
+using namespace Nektar::SpatialDomains;
 
 
 int main(int argc, char *argv[])
  {
-    if( argc != 19 ) {  // arg[0]  arg[1]  arg[2]  arg[3]   arg[4]     arg[5]     arg[6]  arg[7] arg[8] arg[9] arg[10] arg[11] arg[12]
-        cerr << "Usage: LocTetDemo Type_x  Type_y  Type_z numModes_x numModes_y numModes_z    Qx    Qy     Qz     x1     y1    z1"
-                       //arg[13] arg[14] arg[15] arg[16] arg[17] arg[18] arg[19] arg[20] arg[21]
-                      "x2     y2      z2     x3      y3     z3      x4     y4      z4" << endl;
-        
-        cerr << "Where type is an interger value which dictates the basis as:" << endl;
-        for(int i=0; i<SIZE_PointsType; ++i)
-        {
-            cerr << setw(30) << kPointsTypeStr[i] << " =" << i << endl;
-        }
-//                   NoPointsType =0
-//             GaussGaussLegendre =1
-//            GaussRadauMLegendre =2
-//            GaussRadauPLegendre =3
-//           GaussLobattoLegendre =4
-//            GaussGaussChebyshev =5
-//           GaussRadauMChebyshev =6
-//           GaussRadauPChebyshev =7
-//          GaussLobattoChebyshev =8
-//         GaussRadauMAlpha0Beta1 =9
-//         GaussRadauMAlpha0Beta2 =10
-//         GaussRadauMAlpha1Beta0 =11
-//         GaussRadauMAlpha2Beta0 =12
-//               PolyEvenlySpaced =13
-//            FourierEvenlySpaced =14
-//                   NodalTriElec =15
-//                 NodalTriFekete =16
-//           NodalTriEvenlySpaced =17
-//           NodalTetEvenlySpaced =18
-//                   NodalTetElec =19
-        cerr << "\t Nodal Tet (Electro) = 19    (3D Nodal Electrostatic Points on a Tetrahedron)\n";
-        cerr << "\n\n" << "Example: " << argv[0] << " 1 2 3 2 2 2 5 5 5 0.2 0.7 0.5 0.1 0.3 0.6 0.2 0.7 0.9 0.3 0.5 0.1" << endl;
+if( argc != 10 ) {
+        cerr << "Usage: TetDemo Type_x Type_y Type_z numModes_x numModes_y numModes_z Qx Qy Qz" << endl;
+        cerr << "Where type is an integer value which dictates the basis as:" << endl;
+        cerr << "\t Ortho_A  = 1\n";
+        cerr << "\t Ortho_B  = 2\n";
+        cerr << "\t Ortho_C  = 3\n";
+        cerr << "\t Modified_A = 4\n";
+        cerr << "\t Modified_B = 5\n";
+        cerr << "\t Modified_C = 6\n";
+        cerr << "\t Fourier    = 7\n";
+        cerr << "\t Lagrange   = 8\n";
+        cerr << "\t Legendre   = 9\n";
+        cerr << "\t Chebyshev  = 10\n";
+        cerr << "\t Nodal Tet (Electro) = 13    (3D Nodal Electrostatic Points on a Tetrahedron)\n";
+        cerr << "\n\n" << "Example: " << argv[0] << " 4 4 4 3 3 3 5 5 5" << endl;
         cerr << endl;
-
+        
         exit(1);
     }
 
@@ -79,7 +64,7 @@ int main(int argc, char *argv[])
     LibUtilities::BasisType   bType_z = static_cast<LibUtilities::BasisType>( bType_z_val );
     LibUtilities::PointsType  NodalType = LibUtilities::eNoPointsType;
     
-    if( (bType_x_val == 19) || (bType_y_val == 19) || (bType_z_val == 19) )
+    if( (bType_x_val == 13) || (bType_y_val == 13) || (bType_z_val == 13) )
     {
         bType_x =   LibUtilities::eOrtho_A;
         bType_y =   LibUtilities::eOrtho_B;
@@ -89,7 +74,7 @@ int main(int argc, char *argv[])
     }
 
     // Check to see that correct Expansions are used
-    if( regionShape == StdRegions::eTetrahedron ) 
+    if( regionShape == StdRegions::eTetrahedron )
     {
         if( (bType_x == LibUtilities::eOrtho_B) || (bType_x == LibUtilities::eModified_B) ) {
             NEKERROR(ErrorUtil::efatal, "Basis 1 cannot be of type Ortho_B or Modified_B");
@@ -109,6 +94,7 @@ int main(int argc, char *argv[])
     int Qy = atoi(argv[8]);
     int Qz = atoi(argv[9]);
     int P = xModes - 1, Q = yModes - 1, R = zModes - 1;
+    const int three = 3;
     
     Array<OneD, NekDouble> solution( Qx * Qy * Qz );
 
@@ -119,75 +105,67 @@ int main(int argc, char *argv[])
     //-----------------------------------------------
     // Define a 3D expansion based on basis definition
     
-    StdRegions::StdExpansion3D *lte;
+    StdRegions::StdExpansion3D *lte = 0;
     
-    if( regionShape == StdRegions::eTetrahedron ) 
+    if( regionShape == StdRegions::eTetrahedron )
     {
-          Array<OneD, NekDouble> coords(12);
-          coords[0]    =   atof(argv[10]);
-          coords[1]    =   atof(argv[11]);
-          coords[2]    =   atof(argv[12]);
-          coords[3]    =   atof(argv[13]);
-          coords[4]    =   atof(argv[14]);
-          coords[5]    =   atof(argv[15]);
-          coords[6]    =   atof(argv[16]);
-          coords[7]    =   atof(argv[17]);
-          coords[8]    =   atof(argv[18]);
-          coords[9]    =   atof(argv[19]);
-          coords[10]   =   atof(argv[20]);
-          coords[11]   =   atof(argv[21]);
+        // //////////////////////////////////////////////////////
+        // Set up Tetrahedron vertex coordinates
 
-          // Set up Tetrahedral vertex coordinates
-          const int zero  = 0;
-          const int one   = 1;
-          const int two   = 2;
-          const int three = 3;
-          const int four  = 4;
-          const int five  = 5;
-          
-          SpatialDomains::VertexComponentSharedPtr verts[4];
-          //    VertexComponent (const int coordim, const int vid, double x, double y, double z)
-          verts[0] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(three,zero, coords[0],coords[1], coords[2]);
-          verts[1] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(three,one,  coords[3],coords[4], coords[5]);
-          verts[2] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(three,two,  coords[6],coords[7], coords[8]);
-          verts[3] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(three,three,coords[9],coords[10],coords[11]);
+        const int nVerts = 4;
+        const double point[][3] = {
+            {0,0,0}, {1,0,0}, {0,1,0}, {0,0,1}
+        };
 
-          // Set up Tetrahedral Edges
-          //SegGeom (int id, const int coordim), EdgeComponent(id, coordim)
-          SpatialDomains::SegGeomSharedPtr edges[6];
-          edges[0] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero, three);
-          edges[1] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(one, three);
-          edges[2] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(two, three);
-          edges[3] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(three, three);
-          edges[4] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(four, three);
-          edges[5] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(five, three);
+       // ////////////////////////////////////////////////////////////////////////////////////
+       // Populate the list of verts
+       // VertexComponent (const int coordim, const int vid, double x, double y, double z)
+       VertexComponentSharedPtr verts[4];
+       for(int i=0; i < nVerts; ++i){
+         verts[i] =  MemoryManager<VertexComponent>::
+         AllocateSharedPtr( three, i, point[i][0], point[i][1], point[i][2] );
+       }
 
-          StdRegions::EdgeOrientation edgeDir = StdRegions::eForwards;
-          StdRegions::EdgeOrientation eorient[6];
-          eorient[0] = edgeDir; 
-          eorient[1] = edgeDir; 
-          eorient[2] = edgeDir;
-          eorient[3] = edgeDir;
-          eorient[4] = edgeDir;
-          eorient[5] = edgeDir;
 
-          // Set up Tetrahedral faces
-          SpatialDomains::TriGeomSharedPtr faces[4];
-          faces[0] = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(zero, three);
-          faces[1] = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(one, three);
-          faces[2] = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(two, three);
-          faces[3] = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(three, three);
+       // /////////////////////////////////////////////////////////////////////
+       // Set up Tetrahedron Edges
+       // SegGeom (int id, const int coordim), EdgeComponent(id, coordim)
 
-          //TODO:  must check the face direction
-          StdRegions::FaceOrientation faceDir = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
-          StdRegions::FaceOrientation forient[4];
-          forient[0] = faceDir;
-          forient[1] = faceDir;
-          forient[2] = faceDir;
-          forient[3] = faceDir;
+        const int nEdges = 6;
+        const int vertexConnectivity[][2] = {
+            {0,1},{1,2},{0,2},{0,3},{1,3},{2,3}
+        };
 
-         SpatialDomains::TetGeomSharedPtr geom = MemoryManager<SpatialDomains::TetGeom>::AllocateSharedPtr(verts,edges,faces, eorient, forient);
-         geom->SetOwnData();
+
+        // Populate the list of edges
+        SegGeomSharedPtr edges[nEdges];
+        for(int i=0; i < nEdges; ++i){
+            VertexComponentSharedPtr vertsArray[2];
+            for(int j=0; j<2; ++j){
+                vertsArray[j] = verts[vertexConnectivity[i][j]];
+            }
+            edges[i] = MemoryManager<SegGeom>::AllocateSharedPtr(i, three, vertsArray);
+        }
+
+        // //////////////////////////////////////////////////////////////
+        // Set up Tetrahedron faces
+        const int nFaces = 4;
+        const int edgeConnectivity[][3] = { {0,1,2}, {0,4,3}, {1,5,4}, {2,5,3} };
+        const bool   isEdgeFlipped[][3] = { {0,0,1}, {0,0,1}, {0,0,1}, {0,0,1} }; 
+
+
+        // Populate the list of faces
+        TriGeomSharedPtr faces[nFaces]; 
+        for(int i=0; i < nFaces; ++i){
+            SegGeomSharedPtr edgeArray[3];
+            EdgeOrientation eorientArray[3];
+            for(int j=0; j < 3; ++j){
+                edgeArray[j] = edges[edgeConnectivity[i][j]];
+                eorientArray[j] = isEdgeFlipped[i][j] ? eBackwards : eForwards;
+            }
+            faces[i] = MemoryManager<TriGeom>::AllocateSharedPtr(i, edgeArray, eorientArray);
+        }
+
          const LibUtilities::PointsKey   pointsKey_x( Qx, Qtype_x );
          const LibUtilities::PointsKey   pointsKey_y( Qy, Qtype_y );
          const LibUtilities::PointsKey   pointsKey_z( Qz, Qtype_z );
@@ -196,7 +174,18 @@ int main(int argc, char *argv[])
          const LibUtilities::BasisKey    basisKey_y( bType_y, yModes, pointsKey_y );
          const LibUtilities::BasisKey    basisKey_z( bType_z, zModes, pointsKey_z );
 
-        if( bType_x_val < 15 ) {
+         Array<OneD, StdRegions::StdExpansion3DSharedPtr> xMap(3);
+         for(int i=0; i < 3; ++i){
+            xMap[i] = MemoryManager<StdRegions::StdTetExp>::AllocateSharedPtr(basisKey_x, basisKey_y, basisKey_z);
+
+         }
+
+//          SpatialDomains::TetGeomSharedPtr geom = MemoryManager<SpatialDomains::TetGeom>::AllocateSharedPtr(faces); //TODO implement this
+         SpatialDomains::TetGeomSharedPtr geom;
+         geom->SetOwnData();
+
+
+        if( bType_x_val < 10 ) {
             lte = new LocalRegions::TetExp( basisKey_x, basisKey_y, basisKey_z, geom );
         } else {
             cerr << "Implement the NodalTetExp!!!!!!" << endl;

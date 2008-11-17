@@ -52,9 +52,6 @@ namespace Nektar
     
     /**
      * Constructor. Creates ... of #DisContField2D fields
-     *
-     * \param 
-     * \param
      */
     ADRBase::ADRBase(string &fileNameString, bool UseInputFileForProjectionType,
                      bool UseContinuousField)
@@ -65,9 +62,7 @@ namespace Nektar
         SpatialDomains::MeshGraphSharedPtr mesh = graph.Read(fileNameString);
 
         // Also read and store the boundary conditions
-        // SpatialDomains::BoundaryConditions boundaryConds(&mesh); 
-        // boundaryConds.Read(fileNameString);        
-        SpatialDomains::MeshGraph *meshptr = mesh.get();
+	SpatialDomains::MeshGraph *meshptr = mesh.get();
         m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>::AllocateSharedPtr(meshptr);
         m_boundaryConditions->Read(fileNameString);
         
@@ -109,134 +104,147 @@ namespace Nektar
         SetADRBase(mesh,m_boundaryConditions->GetNumVariables());
     }
     
-    void ADRBase::SetADRBase(SpatialDomains::MeshGraphSharedPtr &mesh,
-                             int nvariables)
-    {
-        int i;
-
-        m_fields = Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);
-        m_spacedim = mesh->GetSpaceDimension();
-
-        // May want to attach this information in future. 
-        int expdim  = mesh->GetMeshDimension();
-
-        if(m_projectionType == eGalerkin)
-        {
-            switch(expdim)
-            {
-            case 1:
-                {
-                    SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-
-                    if(!(mesh1D = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph1D>(mesh)))
-                    {
-                        ASSERTL0(false,"Dynamics cast failed");
-                    }
-
-                    for(i = 0 ; i < m_fields.num_elements(); i++)
-                    {
-                        m_fields[i] = MemoryManager<MultiRegions::ContField1D>::AllocateSharedPtr(*mesh1D,*m_boundaryConditions);
-                    }
-                }
-                break;
-            case 2:
-                {
-                    SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-                    
-                    if(!(mesh2D = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(mesh)))
-                    {
-                        ASSERTL0(false,"Dynamics cast failed");
-                    }
-
-                    for(i = 0 ; i < m_fields.num_elements(); i++)
-                    {
-                        m_fields[i] = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(*mesh2D,*m_boundaryConditions);
-                    }
-                    break;
-                }
-            case 3:
-                ASSERTL0(false,"3 D not set up");
-            default:
-                ASSERTL0(false,"Expansion dimension not recognised");
-                break;
-            }
-        }
-        else // Discontinuous Field
-        {
-          
-            switch(expdim)
-            {
-            case 1:
-                {
-                    SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-                    
-                    if(!(mesh1D = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph1D>(mesh)))
-                    {
-                        ASSERTL0(false,"Dynamics cast failed");
-                    }
-                    
-                    for(i = 0 ; i < m_fields.num_elements(); i++)
-                    {
-                        m_fields[i] = MemoryManager<MultiRegions::DisContField1D>::AllocateSharedPtr(*mesh1D,*m_boundaryConditions,i);
-                    }
-                }
-                break;
-            case 2:
-                {
-                    SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-                    
-                    if(!(mesh2D = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(mesh)))
-                    {
-                        ASSERTL0(false,"Dynamics cast failed");
-                    }
-                    
-                    for(i = 0 ; i < m_fields.num_elements(); i++)
-                    {
-                        m_fields[i] = MemoryManager<MultiRegions::DisContField2D>::AllocateSharedPtr(*mesh2D,*m_boundaryConditions,i);
-                    }
-                }
-                break;
-            case 3:
-                ASSERTL0(false,"3 D not set up");
-            default:
-                ASSERTL0(false,"Expansion dimension not recognised");
-                break;
-            }
-
-            // Set up Normals. 
-            m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-            
-            for(i = 0; i < m_spacedim; ++i)
-            {
-                m_traceNormals[i] = Array<OneD, NekDouble> (m_fields[0]->GetTrace()->GetNpoints());
-            }
-            
-            m_fields[0]->GetTrace()->GetNormals(m_traceNormals);
-        }
-        
-        // Set Default Parameter
-
-        if(m_boundaryConditions->CheckForParameter("Time") == true)
-        {
-            m_time  = m_boundaryConditions->GetParameter("Time");
-        }
-        else
-        {
-            m_time  = 0.0;
-        }
-        m_timestep   = m_boundaryConditions->GetParameter("TimeStep");
-        m_steps      = m_boundaryConditions->GetParameter("NumSteps");
-        
-        if(m_boundaryConditions->CheckForParameter("IO_CheckSteps") == true)
-        {
-            m_checksteps = m_boundaryConditions->GetParameter("IO_CheckSteps");
-        }
-        else
-        {
-            m_checksteps = m_steps;
-        }
-    }
-
+  void ADRBase::SetADRBase(SpatialDomains::MeshGraphSharedPtr &mesh,
+			   int nvariables)
+  {
+    int i;
+    
+    m_fields   = Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);
+    m_spacedim = mesh->GetSpaceDimension();
+    m_expdim   = mesh->GetMeshDimension();
+    
+    if(m_projectionType == eGalerkin)
+      {
+	switch(m_expdim)
+	  {
+	  case 1:
+	    {
+	      SpatialDomains::MeshGraph1DSharedPtr mesh1D;
+	      
+	      if(!(mesh1D = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph1D>(mesh)))
+		{
+		  ASSERTL0(false,"Dynamics cast failed");
+		}
+	      
+	      for(i = 0 ; i < m_fields.num_elements(); i++)
+		{
+		  m_fields[i] = MemoryManager<MultiRegions::ContField1D>::AllocateSharedPtr(*mesh1D,*m_boundaryConditions);
+		}
+	    }
+	    break;
+	  case 2:
+	    {
+	      SpatialDomains::MeshGraph2DSharedPtr mesh2D;
+              
+	      if(!(mesh2D = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(mesh)))
+		{
+		  ASSERTL0(false,"Dynamics cast failed");
+		}
+	      
+	      for(i = 0 ; i < m_fields.num_elements(); i++)
+		{
+		  m_fields[i] = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(*mesh2D,*m_boundaryConditions);
+		}
+	      break;
+	    }
+	  case 3:
+	    ASSERTL0(false,"3 D not set up");
+	  default:
+	    ASSERTL0(false,"Expansion dimension not recognised");
+	    break;
+	  }
+      }
+    else // Discontinuous Field
+      {
+	
+	switch(m_expdim)
+	  {
+	  case 1:
+	    {
+	      SpatialDomains::MeshGraph1DSharedPtr mesh1D;
+	      
+	      if(!(mesh1D = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph1D>(mesh)))
+		{
+		  ASSERTL0(false,"Dynamics cast failed");
+		}
+	      
+	      for(i = 0 ; i < m_fields.num_elements(); i++)
+		{
+		  m_fields[i] = MemoryManager<MultiRegions::DisContField1D>::AllocateSharedPtr(*mesh1D,*m_boundaryConditions,i);
+		}
+	    }
+	    break;
+	  case 2:
+	    {
+	      SpatialDomains::MeshGraph2DSharedPtr mesh2D;
+              
+	      if(!(mesh2D = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(mesh)))
+		{
+		  ASSERTL0(false,"Dynamics cast failed");
+		}
+	      
+	      for(i = 0 ; i < m_fields.num_elements(); i++)
+		{
+		  m_fields[i] = MemoryManager<MultiRegions::DisContField2D>::AllocateSharedPtr(*mesh2D,*m_boundaryConditions,i);
+		}
+	    }
+	    break;
+	  case 3:
+	    ASSERTL0(false,"3 D not set up");
+	  default:
+	    ASSERTL0(false,"Expansion dimension not recognised");
+	    break;
+	  }
+	    
+	// Set up Normals. 
+	switch(m_expdim)
+	  {
+	  case 1:
+	    // no need??... will always be unity except perhaps at the boundary edges....
+	    break;
+	  case 2:
+	    {
+	      m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+	      
+	      for(i = 0; i < m_spacedim; ++i)
+		{
+		  m_traceNormals[i] = Array<OneD, NekDouble> (m_fields[0]->GetTrace()->GetNpoints());
+		}
+	      
+	      m_fields[0]->GetTrace()->GetNormals(m_traceNormals);
+	    }
+	    break;
+	  case 3:
+	    ASSERTL0(false,"3 D not set up");
+	    break;
+	  default:
+	    ASSERTL0(false,"Expansion dimension not recognised");
+	    break;
+	  }
+      }
+    // Set Default Parameter
+    
+    if(m_boundaryConditions->CheckForParameter("Time") == true)
+      {
+	m_time  = m_boundaryConditions->GetParameter("Time");
+      }
+    else
+      {
+	m_time  = 0.0;
+      }
+    m_timestep   = m_boundaryConditions->GetParameter("TimeStep");
+    m_steps      = m_boundaryConditions->GetParameter("NumSteps");
+    
+    if(m_boundaryConditions->CheckForParameter("IO_CheckSteps") == true)
+      {
+	m_checksteps = m_boundaryConditions->GetParameter("IO_CheckSteps");
+      }
+    else
+      {
+	m_checksteps = m_steps;
+      }
+  }
+  
     void ADRBase::SetInitialConditions(NekDouble initialtime)
     {
         int nq = m_fields[0]->GetPointsTot();
@@ -260,8 +268,16 @@ namespace Nektar
 
             m_fields[i]->FwdTrans(*(m_fields[i]));
 	}
+
+	// dump initial conditions to file
+	for(int i = 0; i < m_fields.num_elements(); ++i)
+	  {
+	    std::string outname = m_sessionName +"_" + m_boundaryConditions->GetVariable(i) + "_initial.chk";
+            ofstream outfile(outname.c_str());
+	    m_fields[i]->WriteToFile(outfile,eTecplot);
+	  }
     }
-    
+  
     void ADRBase::EvaluateExactSolution(int field, Array<OneD, NekDouble> &outfield)
     {
         int nq = m_fields[field]->GetPointsTot();
@@ -320,9 +336,8 @@ namespace Nektar
     // Note: Assuming all fields are of the same expansion and order
     // so that we can use the parameters of m_fields[0].
     // ------------------------------------------------------------
-
-    
-    void ADRBase::WeakAdvectionGreensDivergenceForm(const Array<OneD, Array<OneD, NekDouble> > &F, Array<OneD, NekDouble> &outarray)
+  
+  void ADRBase::WeakAdvectionGreensDivergenceForm(const Array<OneD, Array<OneD, NekDouble> > &F, Array<OneD, NekDouble> &outarray)
     {
         // use dimension of Velocity vector to dictate dimension of operation
         int ndim    = F.num_elements();
@@ -370,7 +385,11 @@ namespace Nektar
     void ADRBase::WeakAdvectionNonConservativeForm(const Array<OneD, Array<OneD, NekDouble> > &V, const Array<OneD, const NekDouble> &u, Array<OneD, NekDouble> &outarray)
     {
         // use dimension of Velocity vector to dictate dimension of operation
-        int ndim       = V.num_elements();
+      int ndim       = V.num_elements();
+      //int ndim = m_expdim;
+      
+      // ToDo: here we should add a check that V has right dimension
+      
         int nPointsTot = m_fields[0]->GetPointsTot();
         Array<OneD, NekDouble> tmp(nPointsTot);
         Array<OneD, NekDouble> grad0(ndim*nPointsTot,0.0),grad1,grad2;
@@ -407,7 +426,9 @@ namespace Nektar
     // Calculate weak DG advection in the form 
     //  <\phi, \hat{F}\cdot n> - (\grad \phi \cdot F)
     // -------------------------------------------------------------
-    void ADRBase::WeakDGAdvection(const Array<OneD, Array<OneD, NekDouble> >& InField, Array<OneD, Array<OneD, NekDouble> >& OutField )
+  void ADRBase::WeakDGAdvection(const Array<OneD, Array<OneD, NekDouble> >& InField, 
+				Array<OneD, Array<OneD, NekDouble> >& OutField,
+				bool NumericalFluxIncludesNormal, bool InFieldIsInPhysSpace)
     {
         int i;
         int nVelDim         = m_spacedim;
@@ -417,26 +438,31 @@ namespace Nektar
         int nvariables      = m_fields.num_elements();
 
         Array<OneD, Array<OneD, NekDouble> > flux      (nVelDim);
-        Array<OneD, Array<OneD, NekDouble> > numflux   (nvariables);
-        Array<OneD, Array<OneD, NekDouble> > physfield (nvariables);
+	Array<OneD, Array<OneD, NekDouble> > physfield (nvariables);
         
         for(i = 0; i < nVelDim; ++i)
         {
             flux[i]    = Array<OneD, NekDouble>(nPointsTot);
         }
 
-        for(i = 0; i < nvariables; ++i)
-        {
-            numflux[i]   = Array<OneD, NekDouble>(nTracePointsTot);
-            // Could make this point to m_fields[i]->UpdatePhys();
-            physfield[i] = Array<OneD, NekDouble>(nPointsTot);
-        }
+	if(InFieldIsInPhysSpace == true)
+	  {
+            for(i = 0; i < nvariables; ++i)
+	      {
+                physfield[i] = InField[i];
+	      }
+	  }
+        else
+	  {
+	    for(i = 0; i < nvariables; ++i)
+	      {
+		// Could make this point to m_fields[i]->UpdatePhys();
+		physfield[i] = Array<OneD, NekDouble>(nPointsTot);
+		m_fields[i]->BwdTrans(InField[i],physfield[i]);
+	      }
+	  }
+	
         
-        for(i = 0; i < nvariables; ++i)
-        {
-            m_fields[i]->BwdTrans(InField[i],physfield[i]);
-        }
-
         for(i = 0; i < nvariables; ++i)
         {
             // Get the ith component of the  flux vector in (physical space)
@@ -446,205 +472,55 @@ namespace Nektar
             WeakAdvectionGreensDivergenceForm(flux,OutField[i]);
         }
         
-        // Evaluate numerical flux in physical space which may in
-        // general couple all component of vectors
-        NumericalFlux(physfield, numflux);
-        
-        // Evaulate  <\phi, \hat{F}\cdot n> - OutField[i] 
-        for(i = 0; i < nvariables; ++i)
-        {
-            Vmath::Neg(ncoeffs,OutField[i],1);
-            m_fields[i]->AddTraceIntegral(numflux[i],OutField[i]);
-        }
-    }
 
-    
-    void ADRBase::FwdTrans(const ADRBase &In)
-    {  
-        int i;
-      
-        for(i = 0 ; i < m_fields.num_elements(); i++)
-	{
-            m_fields[i]->FwdTrans(*m_fields[i]);
-	}
-      
-    }
-    
-    void ADRBase::BwdTrans(void)
-    {  
-        int i;
-      
-        for(i = 0 ; i < m_fields.num_elements(); i++)
-	{
-            m_fields[i]->BwdTrans(*m_fields[i]);
-	}
-      
-    }
-    
-    void ADRBase::BwdTrans(const Array<OneD, const NekDouble> &inarray, 
-                                              Array<OneD, NekDouble> &outarray, int field_no)
-    {
-        //for(int i = 0 ; i < m_fields.num_elements(); i++)
-        {
-            m_fields[0]->BwdTrans(inarray,outarray);
-        }
-    }
-    
-    void ADRBase::BwdTrans(Array<OneD, Array<OneD, NekDouble> > &outarray)
-    {
-        for(int i = 0 ; i < m_fields.num_elements(); i++)
-	{
-            m_fields[0]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
-	}
-    }
-    
-    
-  
-    void ADRBase::GetCoords(Array<OneD, NekDouble>& x0,
-                                               Array<OneD, NekDouble>& x1,
-                                               Array<OneD, NekDouble>& x2)
-    {
-        m_fields[0]->GetCoords(x0,x1,x2);
-    }
+	if (NumericalFluxIncludesNormal == true)
+	  {
+	    
+	    Array<OneD, Array<OneD, NekDouble> > numflux   (nvariables);
 
-     
-    void ADRBase::SetPhys(Array<OneD, Array<OneD, NekDouble> >&inarray, int field_no)
-    {
-        int i;
-      
-        // check that in array large enough
-      
-      
-        // check that field_no no larger than m_fields.num_elements()
-      
-	  
-        if (field_no != -1)
-	{
-            m_fields[field_no]->SetPhys(inarray[0]);
-	}
-        else
-	{
-            for (i = 0; i < m_fields.num_elements(); ++i)
-	    {
-                m_fields[i]->SetPhys(inarray[i]);
-	    }
-	}
-      
-    }
+	    for(i = 0; i < nvariables; ++i)
+	      {
+		numflux[i]   = Array<OneD, NekDouble>(nTracePointsTot);
+	      }
+	    
+	    // Evaluate numerical flux in physical space which may in
+	    // general couple all component of vectors
+	    NumericalFlux(physfield, numflux);
+	    
+	    // Evaulate  <\phi, \hat{F}\cdot n> - OutField[i] 
+	    for(i = 0; i < nvariables; ++i)
+	      {
+		Vmath::Neg(ncoeffs,OutField[i],1);
+		m_fields[i]->AddTraceIntegral(numflux[i],OutField[i]);
+	      }
+	  }
+	else
+	  {
+	    Array<OneD, Array<OneD, NekDouble> > numfluxX   (nvariables);
+	    Array<OneD, Array<OneD, NekDouble> > numfluxY   (nvariables);
 
-    void ADRBase::SetPhys(Array<OneD, NekDouble> &inarray, int field_no)
-    {
-        int i;
-      
-        // check that field_no no larger than m_fields.num_elements()
-	
-	  
-        if (field_no != -1)
-	{
-            m_fields[field_no]->SetPhys(inarray);
-	}
-    }
-    
-    const Array<OneD, const NekDouble> &ADRBase::GetPhys(int field_no)
-    {
-        return m_fields[field_no]->GetPhys();
-    }
-
-  
-    void ADRBase::GetPhys(Array<OneD, Array<OneD, NekDouble> >&outarray)
-    {
-        // check size
-      
-        for (int i = 0; i < m_fields.num_elements(); ++i)
-	{
-            outarray[i] = m_fields[i]->GetPhys();
-	}
-
-    }
-    
-    void ADRBase::WriteToFile(std::ofstream &out, OutputFormat format, int field_no)
-    {
-        m_fields[field_no]->WriteToFile(out,format);
-    }
-
-    NekDouble ADRBase::L2(const MultiRegions::ExpList2D &In, int field_no)
-    {
-        return m_fields[field_no]->L2(In);
-    }
-
-    
-    void ADRBase::ExtractTracePhys(Array<OneD, NekDouble> &out, int field_no)
-    {
-        m_fields[field_no]->ExtractTracePhys(out);
-    }   
+	    for(i = 0; i < nvariables; ++i)
+	      {
+		numfluxX[i]   = Array<OneD, NekDouble>(nTracePointsTot);
+		numfluxY[i]   = Array<OneD, NekDouble>(nTracePointsTot);
+	      }
 
 
-    /**
-     * Fwd 
-     * Bwd
-     * field_no gives the 
-     */
-    void ADRBase::GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd, 
-                                                        Array<OneD,NekDouble> &Bwd,
-                                                        int field_no)
-    {
-        m_fields[field_no]->GetFwdBwdTracePhys(Fwd,Bwd);
-    }
-    
-    void ADRBase::GetTraceNormals(Array<OneD, Array<OneD, NekDouble> > &Normals)
-    {        
-        Array<OneD,NekDouble> normals; 
-      
-        m_fields[0]->GetTrace()->GetNormals(Normals);
-    }
-    
-    void ADRBase::UpwindTrace(const Array<OneD,Array<OneD,NekDouble> > &Vel, 
-                              const Array<OneD, const NekDouble> &Fwd, 
-                              const Array<OneD, const NekDouble> &Bwd, 
-                              Array<OneD, NekDouble> &Upwind)
-    {
-        m_fields[0]->GetTrace()->Upwind(Vel, Fwd, Bwd, Upwind);
-    }
-    
-    void ADRBase::IProductWRTDerivBase(const int dir, const Array< OneD, const NekDouble > &in,
-                                                          Array< OneD, NekDouble > &out, int field_no)
-    {
-        m_fields[field_no]->IProductWRTDerivBase(dir,in,out);
-    }
-    
-    void ADRBase::IProductWRTBase(const Array< OneD, const NekDouble > &in,
-                                                     Array< OneD, NekDouble > &out, int field_no)
-    {
-        m_fields[field_no]->IProductWRTBase(in,out);
+	    // Evaluate numerical flux in physical space which may in
+	    // general couple all component of vectors
+	    NumericalFlux(physfield, numfluxX, numfluxY);
+	    
+	    // Evaulate  <\phi, \hat{F}\cdot n> - OutField[i] 
+	    for(i = 0; i < nvariables; ++i)
+	      {
+		Vmath::Neg(ncoeffs,OutField[i],1);
+		m_fields[i]->AddTraceIntegral(numfluxX[i],numfluxY[i],OutField[i]);
+	      }
+	    
+	  }
     }
 
-    void ADRBase::MultiplyByElmtInvMass(const Array< OneD, const NekDouble > &in,
-                                                           Array< OneD, NekDouble > &out, int field_no)
-    {
-        m_fields[field_no]->MultiplyByElmtInvMass(in,out);
-    }
-    
-    
-    
-    void ADRBase::AddTraceIntegral(Array<OneD, const NekDouble> &Fx, 
-                                   Array<OneD, const NekDouble> &Fy, 
-                                   Array<OneD, NekDouble> &outarray,
-                                   int field_no)
-    {
-        m_fields[field_no]->AddTraceIntegral(Fx,Fy,outarray);
-    }
-    
-    Array<OneD, NekDouble> &ADRBase::UpdateCoeffs(int field_no)
-    {
-        return m_fields[field_no]->UpdateCoeffs();
-    }
-    
-    const Array<OneD, const NekDouble> &ADRBase::GetCoeffs(int field_no)
-    {
-        return m_fields[field_no]->GetCoeffs();
-    }
-
-    void ADRBase::Output(void)
+  void ADRBase::Output(void)
     {
         for(int i = 0; i < m_fields.num_elements(); ++i)
         {
@@ -671,7 +547,8 @@ namespace Nektar
     void ADRBase::Summary(std::ostream &out)
     {
 
-        out << "Session Name    : " << m_sessionName << endl;
+        out << "\tSession Name    : " << m_sessionName << endl;
+	out << "\tExp. Dimension  : " << m_expdim << endl;
         out << "\tMax Exp. Order  : " << m_fields[0]->EvalBasisNumModesMax() << endl;
         out << "\tTime Step       : " << m_timestep << endl;
         out << "\tNo. of Steps    : " << m_steps << endl;
@@ -691,6 +568,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.5  2008/11/02 22:39:27  sherwin
+* Updated naming convention
+*
 * Revision 1.4  2008/10/31 10:50:10  pvos
 * Restructured directory and CMakeFiles
 *

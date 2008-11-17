@@ -144,6 +144,16 @@ namespace Nektar
                     return v_GenGeomFactors();
                 }
 
+                inline int GetNumVerts() const
+                {
+                    return v_GetNumVerts();
+                }
+
+                inline int GetNumEdges() const
+                {
+                    return v_GetNumEdges();
+                }
+
             protected:
 
                 static GeomFactorsSharedPtr ValidateRegGeomFactor(GeomFactorsSharedPtr geomFactor);
@@ -164,7 +174,18 @@ namespace Nektar
                     NEKERROR(ErrorUtil::efatal,
                         "This function is only valid for shape type geometries");
                 }
-                
+
+                virtual int v_GetNumVerts() const 
+                {
+                    NEKERROR(ErrorUtil::efatal,
+                        "This function is only valid for shape type geometries");
+                }
+
+                virtual int v_GetNumEdges() const
+                {
+                    NEKERROR(ErrorUtil::efatal,
+                        "This function is only valid for shape type geometries");
+                }                
         };
     }; //end of namespace
 }; // end of namespace
@@ -173,6 +194,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.25  2008/07/29 22:23:36  sherwin
+// various mods for DG advection solver in Multiregions. Added virtual calls to Geometry, Geometry1D, 2D and 3D
+//
 // Revision 1.24  2008/06/09 21:33:43  jfrazier
 // Changed name to exactly match corresponding enumeration element name.
 //

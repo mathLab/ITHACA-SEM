@@ -153,6 +153,7 @@ namespace Nektar
                 Array<OneD, StdRegions::StdExpansion1DSharedPtr> m_xmap;
 
                 static const int kNverts = 2;
+                static const int kNedges = 1;
                 SpatialDomains::VertexComponentSharedPtr m_verts[kNverts];
 
                 void GenGeomFactors(void);
@@ -229,6 +230,16 @@ namespace Nektar
                 {
                     WriteToFile(outfile, dumpVar);
                 }
+
+                virtual int v_GetNumVerts() const 
+                {
+                    return kNverts;
+                }                
+                
+                virtual int v_GetNumEdges() const
+                {
+                    return kNedges;
+                }                
         };
         
         // shorthand for boost pointer
@@ -243,6 +254,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.20  2008/09/09 14:22:39  sherwin
+// Added curved segment constructor methods
+//
 // Revision 1.19  2008/06/12 23:27:57  delisi
 // Removed MeshGraph.h include from SegGeom.h, to get rid of circular includes. Now can use typedefs from SegGeom.h instead of repeating it in MeshGraph.h.
 //

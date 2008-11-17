@@ -296,11 +296,20 @@ namespace Nektar
                 {
                     return GetCartesianEorient(i);
                 }
-            
 
                 virtual int v_WhichEdge(SegGeomSharedPtr edge)
                 {
                     return WhichEdge(edge);
+                }
+
+                virtual int v_GetNumVerts() const 
+                {
+                    return kNverts;
+                }                
+                
+                virtual int v_GetNumEdges() const
+                {
+                    return kNedges;
                 }
         };
     }; //end of namespace SpatialDomains
@@ -310,6 +319,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.25  2008/09/12 11:26:19  pvos
+// Updates for mappings in 3D
+//
 // Revision 1.24  2008/07/31 21:27:08  sherwin
 // Updates for Tri's DG advection
 //

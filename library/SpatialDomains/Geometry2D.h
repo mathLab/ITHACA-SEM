@@ -178,6 +178,19 @@ namespace Nektar
                 return v_WhichFace(face);
             }
 
+            StdRegions::StdExpansion2DSharedPtr operator[](const int i) const
+            {
+                if((i>=0)&& (i<m_coordim))
+                {
+                    return m_xmap[i];
+                }
+                
+                NEKERROR(ErrorUtil::efatal,
+                         "Invalid Index used in [] operator");
+                return m_xmap[0]; //should never be reached
+            }
+            
+
         protected:
 
             Array<OneD, StdRegions::StdExpansion2DSharedPtr> m_xmap;
@@ -349,6 +362,9 @@ namespace Nektar
 
 //
 // $Log: Geometry2D.h,v $
+// Revision 1.8  2008/09/12 11:26:19  pvos
+// Updates for mappings in 3D
+//
 // Revision 1.7  2008/07/29 22:23:36  sherwin
 // various mods for DG advection solver in Multiregions. Added virtual calls to Geometry, Geometry1D, 2D and 3D
 //

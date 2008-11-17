@@ -188,18 +188,7 @@ namespace Nektar
                 return returnval;
             }
 
-            StdRegions::StdExpansion2DSharedPtr operator[](const int i) const
-            {
-                if((i>=0)&& (i<m_coordim))
-                {
-                    return m_xmap[i];
-                }
-                
-                NEKERROR(ErrorUtil::efatal,
-                         "Invalid Index used in [] operator");
-                return m_xmap[0]; //should never be reached
-            }
-            
+
             static const int kNverts = 4;
             static const int kNedges = 4;
 
@@ -315,6 +304,16 @@ namespace Nektar
             {
                 return WhichEdge(edge);
             }
+
+            virtual int v_GetNumVerts() const
+            {
+                return kNverts;
+            }
+                
+            virtual int v_GetNumEdges() const
+            {
+                return kNedges;
+            }
         };
 
     }; //end of namespace
@@ -324,6 +323,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.24  2008/09/12 11:26:19  pvos
+// Updates for mappings in 3D
+//
 // Revision 1.23  2008/07/29 22:23:36  sherwin
 // various mods for DG advection solver in Multiregions. Added virtual calls to Geometry, Geometry1D, 2D and 3D
 //

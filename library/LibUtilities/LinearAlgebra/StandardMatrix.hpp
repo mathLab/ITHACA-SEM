@@ -408,6 +408,23 @@ namespace Nektar
                 return *this;
             }
             
+            template<typename InnerMatrixType>
+            ThisType& operator=(const NekMatrix<InnerMatrixType, ScaledMatrixTag>& rhs)
+            {
+                BaseType::operator=(rhs);
+                m_storagePolicy = rhs.GetType();
+                m_numberOfSubDiagonals = rhs.GetNumberOfSubDiagonals();
+                m_numberOfSuperDiagonals = rhs.GetNumberOfSuperDiagonals();
+                
+                ResizeDataArrayIfNeeded();
+                
+                unsigned int requiredStorageSize = GetRequiredStorageSize();
+                std::copy(rhs.GetRawPtr(), rhs.GetRawPtr() + requiredStorageSize, m_data.data());
+                
+                return *this;
+
+            }
+            
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
                 template<typename ExpressionPolicyType>
                 ThisType& operator=(const Expression<ExpressionPolicyType>& rhs)
@@ -855,7 +872,8 @@ namespace Nektar
 
         public:
             NekMatrix() :
-                BaseType()
+                BaseType(),
+                m_tempSpace()
             {
             }
             
@@ -863,7 +881,8 @@ namespace Nektar
                       MatrixStorage policy = eFULL,
                       unsigned int subDiagonals = std::numeric_limits<unsigned int>::max(),
                       unsigned int superDiagonals = std::numeric_limits<unsigned int>::max()) :
-                BaseType(rows, columns, policy, subDiagonals, superDiagonals)
+                BaseType(rows, columns, policy, subDiagonals, superDiagonals),
+                m_tempSpace()
             {
             }
 
@@ -871,7 +890,8 @@ namespace Nektar
                       MatrixStorage policy = eFULL,
                       unsigned int subDiagonals = std::numeric_limits<unsigned int>::max(),
                       unsigned int superDiagonals = std::numeric_limits<unsigned int>::max()) :
-                BaseType(rows, columns, initValue, policy, subDiagonals, superDiagonals)
+                BaseType(rows, columns, initValue, policy, subDiagonals, superDiagonals),
+                m_tempSpace()
             {
             }
             
@@ -879,7 +899,8 @@ namespace Nektar
                       MatrixStorage policy = eFULL,
                       unsigned int subDiagonals = std::numeric_limits<unsigned int>::max(),
                       unsigned int superDiagonals = std::numeric_limits<unsigned int>::max()) :
-                BaseType(rows, columns, data, policy, subDiagonals, superDiagonals)
+                BaseType(rows, columns, data, policy, subDiagonals, superDiagonals),
+                m_tempSpace()
             {
             }
             
@@ -887,7 +908,8 @@ namespace Nektar
                       MatrixStorage policy = eFULL,
                       unsigned int subDiagonals = std::numeric_limits<unsigned int>::max(),
                       unsigned int superDiagonals = std::numeric_limits<unsigned int>::max()) :
-                BaseType(rows, columns, d, policy, subDiagonals, superDiagonals)
+                BaseType(rows, columns, d, policy, subDiagonals, superDiagonals),
+                m_tempSpace()
             {
             }
             
@@ -895,25 +917,29 @@ namespace Nektar
                       MatrixStorage policy = eFULL,
                       unsigned int subDiagonals = std::numeric_limits<unsigned int>::max(),
                       unsigned int superDiagonals = std::numeric_limits<unsigned int>::max()) :
-                BaseType(rows, columns, d, wrapperType, policy, subDiagonals, superDiagonals)
+                BaseType(rows, columns, d, wrapperType, policy, subDiagonals, superDiagonals),
+                m_tempSpace()
             {
 
             }
             
             NekMatrix(const ThisType& rhs) :
-                BaseType(rhs)
+                BaseType(rhs),
+                m_tempSpace()
             {
             }
             
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
                 explicit NekMatrix(const NekMatrixMetadata& d) :
-                    BaseType(d)
+                    BaseType(d),
+                    m_tempSpace()
                 {
                 }
 
                 template<typename ExpressionPolicyType>
                 NekMatrix(const Expression<ExpressionPolicyType>& rhs) :
-                    BaseType(rhs.GetMetadata())
+                    BaseType(rhs.GetMetadata()),
+                    m_tempSpace()
                 {
                     BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, StandardMatrixTag> > ));
                     rhs.Evaluate(*this);
@@ -930,6 +956,13 @@ namespace Nektar
                     return *this;
                 }
 
+                BaseType::operator=(rhs);
+                return *this;
+            }
+            
+            template<typename InnerMatrixType>
+            ThisType& operator=(const NekMatrix<InnerMatrixType, ScaledMatrixTag>& rhs)
+            {
                 BaseType::operator=(rhs);
                 return *this;
             }
@@ -1150,6 +1183,19 @@ namespace Nektar
                 } 
             }
                 
+            Array<OneD, DataType>& GetTempSpace()
+            {
+                if( m_tempSpace.capacity() == 0 )
+                {
+                    m_tempSpace = Array<OneD, DataType>(this->GetData().capacity());
+                }
+                return m_tempSpace;
+            }
+            
+            void SwapTempAndDataBuffers()
+            {
+                std::swap(m_tempSpace, this->GetData());
+            }
             
         protected:
             
@@ -1159,6 +1205,8 @@ namespace Nektar
             {
                 return ThisType::SetValue(row, column, d);
             }
+            
+            Array<OneD, DataType> m_tempSpace;
     };
     
     template<typename DataType>

@@ -55,6 +55,26 @@
 
 namespace Nektar
 {
+    template<typename MatrixType>
+    struct CanGetRawPtr : public boost::false_type {};
+    
+    template<>
+    struct CanGetRawPtr<NekMatrix<double, StandardMatrixTag> > : public boost::true_type {};
+    
+    template<>
+    struct CanGetRawPtr<NekMatrix<NekMatrix<double>, ScaledMatrixTag> > : public boost::true_type {};
+    
+    template<typename T, typename M>
+    struct CanGetRawPtr<NekMatrix<T, M> > :
+        boost::mpl::if_
+        <
+            boost::mpl::and_
+            <
+                boost::mpl::not_<boost::is_same<BlockMatrixTag, M> >,
+                CanGetRawPtr<T>
+            >, boost::true_type, boost::false_type
+        >::type {};
+        
     ////////////////////////////////////////////////////////////////////////////////////
     // Matrix-Constant Multiplication
     ////////////////////////////////////////////////////////////////////////////////////
@@ -726,63 +746,99 @@ namespace Nektar
                 return NekMatrix<DataType, StandardMatrixTag>(d);
             }
         };
+    
+        template<typename DataType, typename MatrixType>
+        void Dgemm(NekMatrix<double, StandardMatrixTag>& result, 
+                   double alpha, const NekMatrix<DataType, MatrixType>& A, const NekMatrix<DataType, MatrixType>& B,
+                   double beta, const NekMatrix<DataType, MatrixType>& C)
+        {
+            result = C;
+            unsigned int M = A.GetRows();
+            unsigned int N = B.GetColumns();
+            unsigned int K = A.GetColumns();
+
+            unsigned int LDA = M;
+            if( A.GetTransposeFlag() == 'T' )
+            {
+                LDA = K;
+            }
+
+            unsigned int LDB = K;
+            if( B.GetTransposeFlag() == 'T' )
+            {
+                LDB = N;
+            }
+
+            Blas::Dgemm(A.GetTransposeFlag(), B.GetTransposeFlag(), M, N, K,
+                A.Scale()*B.Scale()*alpha, A.GetRawPtr(), LDA,
+                B.GetRawPtr(), LDB, beta*C.Scale(),
+                result.GetRawPtr(), M);
+        }
+        
+        template<typename T1, typename M1, typename T2, typename M2, typename T3, typename M3>
+        struct BinaryExpressionEvaluator<BinaryExpressionPolicy
+                                        <
+                                            ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
+                                            MultiplyOp, 
+                                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                                        >,
+                                        ConstantExpressionPolicy<NekMatrix<T3, M3> >,
+                                        NekMatrix<double, StandardMatrixTag>,
+                                        AddOp, BinaryNullOp, 
+                                        typename boost::enable_if
+                                        <
+                                            boost::mpl::and_
+                                            <
+                                                CanGetRawPtr<NekMatrix<T1, M1> >,
+                                                CanGetRawPtr<NekMatrix<T2, M2> >,
+                                                CanGetRawPtr<NekMatrix<T3, M3> >
+                                            >
+                                        >::type >
+        {
+            typedef BinaryExpressionPolicy
+                    <
+                        ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
+                        MultiplyOp, 
+                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                    > LhsType;
+            typedef ConstantExpressionPolicy<NekMatrix<T3, M3> > RhsType;
+            
+            static void Eval(const Expression<LhsType>& lhs, 
+                             const Expression<RhsType>& rhs,
+                             Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
+            {
+                const NekMatrix<T1, M1>& a = *LhsType::Left(*lhs);
+                const NekMatrix<T2, M2>& b = *LhsType::Right(*lhs);
+                const NekMatrix<T3, M3>& c = *rhs;
+                
+                if( a.GetType() == eFULL && b.GetType() == eFULL && c.GetType() == eFULL )
+                {
+                    Dgemm(*result, 1.0, a, b, 1.0, c);
+                }
+                else
+                {
+                    typedef typename LhsType::ResultType LhsResultType;
+                    typedef typename RhsType::ResultType RhsResultType;
+                    lhs.Evaluate(result);
+                    AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, *rhs);
+                }
+            }
+        };
+
+        template<typename T1, typename M1, typename T2, typename M2, typename T3, typename M3>
+        struct BinaryExpressionSpecializationExists
+            <
+                BinaryExpressionPolicy
+                <
+                    ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
+                    MultiplyOp, 
+                    ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                >,
+                ConstantExpressionPolicy<NekMatrix<T3, M3> >,
+                AddOp
+            > : public boost::true_type {};
 
     #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
-    
-    template<typename DataType, typename MatrixType>
-    void Dgemm(NekMatrix<double, StandardMatrixTag>& result, 
-               double alpha, const NekMatrix<DataType, MatrixType>& A, const NekMatrix<DataType, MatrixType>& B,
-               double beta, const NekMatrix<DataType, MatrixType>& C)
-    {
-        result = C;
-        unsigned int M = A.GetRows();
-        unsigned int N = B.GetColumns();
-        unsigned int K = A.GetColumns();
-
-        unsigned int LDA = M;
-        if( A.GetTransposeFlag() == 'T' )
-        {
-            LDA = K;
-        }
-
-        unsigned int LDB = K;
-        if( B.GetTransposeFlag() == 'T' )
-        {
-            LDB = N;
-        }
-
-        Blas::Dgemm(A.GetTransposeFlag(), B.GetTransposeFlag(), M, N, K,
-            A.Scale()*B.Scale()*alpha, A.GetRawPtr(), LDA,
-            B.GetRawPtr(), LDB, beta,
-            result.GetRawPtr(), M);
-    }
-    
-//    template<>
-//    struct BinaryExpressionEvaluator<BinaryExpressionPolicy
-//                                    <
-//                                        ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> >, 
-//                                        MultiplyOp, 
-//                                        ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> > 
-//                                    >,
-//                                    ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> >,
-//                                    NekMatrix<double, StandardMatrixTag>,
-//                                    AddOp, BinaryNullOp, void>
-//    {
-//        typedef BinaryExpressionPolicy
-//                <
-//                    ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> >, 
-//                    MultiplyOp, 
-//                    ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> > 
-//                > LhsType;
-//        typedef ConstantExpressionPolicy<NekMatrix<double, StandardMatrixTag> > RhsType;
-//        
-//        static void Eval(const Expression<LhsType>& lhs, 
-//                         const Expression<RhsType>& rhs,
-//                         Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
-//        {
-//            Dgemm(*result, 1.0, *LhsType::Left(*lhs), *LhsType::Right(*lhs), 1.0, *rhs);
-//        }
-//    };
     
     GENERATE_MULTIPLICATION_OPERATOR(NekMatrix, 2, NekMatrix, 2);
 

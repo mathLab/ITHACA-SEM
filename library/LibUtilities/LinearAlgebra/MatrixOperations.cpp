@@ -57,12 +57,12 @@ namespace Nektar
             LDB = N;
         }
 
-        Array<OneD, double> buf(result.GetPtr().num_elements());
+        Array<OneD, double>& buf = result.GetTempSpace();
         Blas::Dgemm(result.GetTransposeFlag(), rhs.GetTransposeFlag(), M, N, K,
             1.0, result.GetRawPtr(), LDA, rhs.GetRawPtr(), LDB, 0.0,
             buf.data(), result.GetRows());
         result.SetSize(result.GetRows(), rhs.GetColumns());
-        result = NekMatrix<double, StandardMatrixTag>(result.GetRows(), result.GetColumns(), buf, eWrapper);
+        result.SwapTempAndDataBuffers();
     }
 }
 

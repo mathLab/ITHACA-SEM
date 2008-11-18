@@ -221,6 +221,12 @@ namespace Nektar
                 return *this;
             }
             
+            ThisType& operator=(const ConstMatrix<DataType>& rhs)
+            {
+                BaseType::operator=(rhs);
+                return *this;
+            }
+            
         private:
             virtual void v_SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d) = 0;
     };

@@ -86,5 +86,82 @@ namespace Nektar
         BOOST_CHECK_EQUAL(expected_result, result);
     }
     
+    BOOST_AUTO_TEST_CASE(DgemmScaledMatrixTest)
+    {
+        double a_buf[] = {1, 2, 3, 4};
+        double b_buf[] = {4, 5, 6, 7};
+        double c_buf[] = {8, 9, 10, 11};
+        
+        boost::shared_ptr<NekMatrix<double> > ia(new NekMatrix<double>(2, 2, a_buf));
+        boost::shared_ptr<NekMatrix<double> > ib(new NekMatrix<double>(2, 2, b_buf));
+        boost::shared_ptr<NekMatrix<double> > ic(new NekMatrix<double>(2, 2, c_buf));
+        
+        NekMatrix<NekMatrix<double>, ScaledMatrixTag> a(2.0, ia);
+        NekMatrix<NekMatrix<double>, ScaledMatrixTag> b(3.0, ib);
+        NekMatrix<NekMatrix<double>, ScaledMatrixTag> c(-6.0, ic);
+        
+        NekMatrix<double> result = a*b + c;
+        
+        double expected_result_buf[] = {66, 114, 102, 174};
+        NekMatrix<double> expected_result(2, 2, expected_result_buf);
+        BOOST_CHECK_EQUAL(expected_result, result);
+    }
+    
+    BOOST_AUTO_TEST_CASE(DgemmDiagonalTest)
+    {
+        double a_buf[] = {1, 2, 3, 4};
+        double b_buf[] = {4, 5, 6, 7};
+        double c_buf[] = {8, 9, 10, 11};
+        
+        NekMatrix<double> a(4, 4, a_buf, eDIAGONAL);
+        NekMatrix<double> b(4, 4, b_buf, eDIAGONAL);
+        NekMatrix<double> c(4, 4, c_buf, eDIAGONAL);
+        
+        NekMatrix<double> result = a*b + c;
+        
+        
+        double expected_result_buf[] = {12, 0, 0, 0,
+                                        0, 19, 0, 0,
+                                        0, 0, 28, 0,
+                                        0, 0, 0, 39};
+        NekMatrix<double> expected_result(4, 4, expected_result_buf);
+        BOOST_CHECK_EQUAL(expected_result, result);
+    }
+    
+    BOOST_AUTO_TEST_CASE(TestMatrixMultiplyEqual01)
+    {
+        double a_buf[] = {1, 2, 3, 4};
+        double b_buf[] = {4, 5, 6, 7};
+        double c_buf[] = {8, 9, 10, 11};
+        
+        NekMatrix<double> a(2, 2, a_buf);
+        NekMatrix<double> b(2, 2, b_buf);
+        NekMatrix<double> c(2, 2, c_buf);
+        
+        NekMatrix<double> result = a*b*c;
+
+        double expected_result_buf[] = {395, 584, 487, 720};
+        NekMatrix<double> expected_result(2, 2, expected_result_buf);
+        BOOST_CHECK_EQUAL(expected_result, result);
+    }
+
+    BOOST_AUTO_TEST_CASE(TestMatrixMultiplyEqual02)
+    {
+        double a_buf[] = {1, 2, 3, 4};
+        double b_buf[] = {4, 5, 6, 7};
+        double c_buf[] = {8, 9, 10, 11};
+        double d_buf[] = {12, 13, 14, 15};
+        
+        NekMatrix<double> a(2, 2, a_buf);
+        NekMatrix<double> b(2, 2, b_buf);
+        NekMatrix<double> c(2, 2, c_buf);
+        NekMatrix<double> d(2, 2, d_buf);
+        
+        NekMatrix<double> result = a*b*c*d;
+
+        double expected_result_buf[] = {11071, 16368, 12835, 18976};
+        NekMatrix<double> expected_result(2, 2, expected_result_buf);
+        BOOST_CHECK_EQUAL(expected_result, result);
+    }
 }
 

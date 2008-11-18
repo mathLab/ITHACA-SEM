@@ -47,6 +47,9 @@ namespace Nektar
                 template <typename, typename> class ParentOpType = BinaryNullOp,
                 typename enabled = void>
     struct BinaryExpressionEvaluator;
+    
+    template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType, template<typename, typename> class OpType>
+    struct BinaryExpressionSpecializationExists : public boost::false_type {};
 }
         
 #endif //NEKTAR_USE_EXPRESSION_TEMPLATES

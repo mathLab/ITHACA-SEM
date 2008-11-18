@@ -650,7 +650,16 @@ namespace Nektar
                                         ResultType, OpType, BinaryNullOp,
                                         typename boost::enable_if
                                         <
-                                            boost::is_same<typename BinaryExpressionPolicy<LhsLhsPolicyType, LhsOpType, LhsRhsPolicyType>::ResultType, ResultType>
+                                            boost::mpl::and_
+                                            <
+                                                boost::is_same<typename BinaryExpressionPolicy<LhsLhsPolicyType, LhsOpType, LhsRhsPolicyType>::ResultType, ResultType>,
+                                                boost::mpl::not_<BinaryExpressionSpecializationExists
+                                                <
+                                                    BinaryExpressionPolicy<LhsLhsPolicyType, LhsOpType, LhsRhsPolicyType>, 
+                                                    ConstantExpressionPolicy<RhsResultType>,
+                                                    OpType
+                                                > >
+                                            >
                                         >::type >
         {
             static void Eval(const Expression<BinaryExpressionPolicy<LhsLhsPolicyType, LhsOpType, LhsRhsPolicyType> >& lhs,

@@ -262,17 +262,27 @@ namespace Nektar
                             tmp.get()+i*nquad0*nquad1, 1);
             }
 
-            Blas::Dgemm('T', 'N', nummodes0, nquad1*nquad2, nquad0, 1.0, bx.get(),
-                        nquad0, tmp.get(), nquad0, 0.0, tmp0.get(), nummodes0);
+            Blas::Dgemm('T', 'N', nquad1*nquad2, nummodes0, nquad0, 1.0, tmp.get(),
+                        nquad0, bx.get(), nquad0, 0.0, tmp0.get(), nquad1*nquad2);
 
-            for(i = 0; i < nquad2; i++)
-            {
-                Blas::Dgemm('N', 'N', nummodes0, nummodes1, nquad1, 1.0, tmp0.get() + i*nummodes0*nquad1,
-                            nummodes0, by.get(), nquad1, 0.0, tmp1.get() + i*nummodes0*nummodes1, nummodes0);
-            }
+            Blas::Dgemm('T', 'N', nquad2*nummodes0, nummodes1, nquad1, 1.0, tmp0.get(),
+                        nquad1, by.get(), nquad1, 0.0, tmp1.get(), nquad2*nummodes0);
 
-            Blas::Dgemm('N', 'N', nummodes0*nummodes1, nummodes2, nquad2, 1.0, tmp1.get(),
-                        nummodes0*nummodes1, bz.get(), nquad2, 0.0, outarray.get(), nummodes0*nummodes1);
+            Blas::Dgemm('T', 'N', nummodes0*nummodes1, nummodes2, nquad2, 1.0, tmp1.get(),
+                        nquad2, bz.get(), nquad2, 0.0, outarray.get(), nummodes0*nummodes1);
+
+
+//             Blas::Dgemm('T', 'N', nummodes0, nquad1*nquad2, nquad0, 1.0, bx.get(),
+//                         nquad0, tmp.get(), nquad0, 0.0, tmp0.get(), nummodes0);
+
+//             for(i = 0; i < nquad2; i++)
+//             {
+//                 Blas::Dgemm('N', 'N', nummodes0, nummodes1, nquad1, 1.0, tmp0.get() + i*nummodes0*nquad1,
+//                             nummodes0, by.get(), nquad1, 0.0, tmp1.get() + i*nummodes0*nummodes1, nummodes0);
+//             }
+
+//             Blas::Dgemm('N', 'N', nummodes0*nummodes1, nummodes2, nquad2, 1.0, tmp1.get(),
+//                         nummodes0*nummodes1, bz.get(), nquad2, 0.0, outarray.get(), nummodes0*nummodes1);
           
 
 #else
@@ -402,17 +412,26 @@ namespace Nektar
             Array<OneD, NekDouble> tmp0(nquad0*nummodes1*nummodes2);
             Array<OneD, NekDouble> tmp1(nquad0*nquad1*nummodes2);
 
-            Blas::Dgemm('N', 'N', nquad0, nummodes1*nummodes2, nummodes0, 1.0, (m_base[0]->GetBdata()).get(),
-                        nquad0, inarray.get(), nummodes0, 0.0, tmp0.get(), nquad0);
+            Blas::Dgemm('T','T', nummodes1*nummodes2, nquad0, nummodes0, 1.0, inarray.get(),
+                         nummodes0, (m_base[0]->GetBdata()).get(), nquad0, 0.0, tmp0.get(), nummodes1*nummodes2);
 
-            for(i = 0; i < nummodes2; i++)
-            {
-                Blas::Dgemm('N', 'T', nquad0, nquad1, nummodes1, 1.0, tmp0.get() + i*nquad0*nummodes1,
-                            nquad0, (m_base[1]->GetBdata()).get(), nquad1, 0.0, tmp1.get() + i*nquad0*nquad1, nquad0);
-            }
+            Blas::Dgemm('T','T', nummodes2*nquad0, nquad1, nummodes1, 1.0, tmp0.get(),
+                        nummodes1, (m_base[1]->GetBdata()).get(), nquad1, 0.0, tmp1.get(),nummodes2*nquad0);
 
-            Blas::Dgemm('N', 'T', nquad0*nquad1, nquad2, nummodes2, 1.0, tmp1.get(),
-                        nquad0*nquad1, (m_base[2]->GetBdata()).get(), nquad2, 0.0, outarray.get(), nquad0*nquad1);
+            Blas::Dgemm('T','T', nquad0*nquad1, nquad2, nummodes2, 1.0, tmp1.get(),
+                        nummodes2, (m_base[2]->GetBdata()).get(), nquad2, 0.0, outarray.get(), nquad0*nquad1);
+
+//             Blas::Dgemm('N', 'N', nquad0, nummodes1*nummodes2, nummodes0, 1.0, (m_base[0]->GetBdata()).get(),
+//                         nquad0, inarray.get(), nummodes0, 0.0, tmp0.get(), nquad0);
+
+//             for(i = 0; i < nummodes2; i++)
+//             {
+//                 Blas::Dgemm('N', 'T', nquad0, nquad1, nummodes1, 1.0, tmp0.get() + i*nquad0*nummodes1,
+//                             nquad0, (m_base[1]->GetBdata()).get(), nquad1, 0.0, tmp1.get() + i*nquad0*nquad1, nquad0);
+//             }
+
+//             Blas::Dgemm('N', 'T', nquad0*nquad1, nquad2, nummodes2, 1.0, tmp1.get(),
+//                         nquad0*nquad1, (m_base[2]->GetBdata()).get(), nquad2, 0.0, outarray.get(), nquad0*nquad1);
             
 
 #else
@@ -1769,6 +1788,9 @@ namespace Nektar
 
 /** 
  * $Log: StdHexExp.cpp,v $
+ * Revision 1.26  2008/09/23 18:19:26  pvos
+ * Updates for working ProjectContField3D demo
+ *
  * Revision 1.25  2008/09/17 13:46:06  pvos
  * Added LocalToGlobalC0ContMap for 3D expansions
  *

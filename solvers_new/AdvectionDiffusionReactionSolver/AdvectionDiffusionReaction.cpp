@@ -148,10 +148,10 @@ namespace Nektar
 		    
                     Vmath::Neg(ncoeffs,outarray[i],1);
                     
-                    // Multiply by inverse of mass matrix to get forcing term
-		    // m_fields[i]->MultiplyByInvMassMatrix(outarray[i],  
-                    //                                     outarray[i],
-                    //                                     false, true);
+                    //Multiply by inverse of mass matrix to get forcing term
+		    m_fields[i]->MultiplyByInvMassMatrix(outarray[i],  
+                                                        outarray[i],
+                                                         false,true);
 		   		    
                 }
             }
@@ -169,24 +169,15 @@ namespace Nektar
         int nvariables = m_fields.num_elements();
 
         // Get Integration scheme details
-        LibUtilities::TimeIntegrationSchemeKey       IntKey(LibUtilities::eForwardEuler);
+        LibUtilities::TimeIntegrationSchemeKey       IntKey(LibUtilities::eClassicalRungeKutta4);
         LibUtilities::TimeIntegrationSchemeSharedPtr IntScheme = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
 
         // Set up wrapper to fields data storage. 
         Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
-	Array<OneD, Array<OneD, NekDouble> >   in(nvariables);
-	Array<OneD, Array<OneD, NekDouble> >   out(nvariables);
-	Array<OneD, Array<OneD, NekDouble> >   tmp(nvariables);
-	Array<OneD, Array<OneD, NekDouble> >   phys(nvariables);
         
         for(i = 0; i < nvariables; ++i)
         {
             fields[i]  = m_fields[i]->UpdateCoeffs();
-	    in[i] = Array<OneD, NekDouble >(ncoeffs);
-	    out[i] = Array<OneD, NekDouble >(ncoeffs);
-	    tmp[i] = Array<OneD, NekDouble >(ncoeffs);
-	    phys[i] = Array<OneD, NekDouble>(m_fields[0]->GetPointsTot());
-	    Vmath::Vcopy(ncoeffs,m_fields[i]->GetCoeffs(),1,in[i],1);
         }
                 
         int nInitSteps;
@@ -197,42 +188,9 @@ namespace Nektar
             //----------------------------------------------
             // Perform time step integration
             //----------------------------------------------
- 
-	  switch(m_projectionType)
-	    {
-	    case eDiscontinuousGalerkin:
-	      fields = IntScheme->ExplicitIntegration(m_timestep,*this,u);
-	      break;
-	    case eGalerkin:
-	      {
-		//---------------------------------------------------------
-		// this is just a forward Euler to illustate that CG works
-		 
-		// get -D u^n
-		ODEforcing(in,out,m_time); // note that MultiplyByInvMassMatrix is not performed inside ODEforcing
-	  
-		// compute M u^n
-		for (i = 0; i < nvariables; ++i)
-		  {
-		    m_fields[0]->BwdTrans(in[i],phys[i]);
-		    m_fields[0]->IProductWRTBase(phys[i],tmp[i]);
-		    
-		    // f = M u^n - Dt D u^n
-		    Vmath::Svtvp(ncoeffs,m_timestep,out[i],1,tmp[i],1,tmp[i],1);
-		    
-		    // u^{n+1} = M^{-1} f
-		    m_fields[i]->MultiplyByInvMassMatrix(tmp[i],out[i],false,false);
-		    
-		    // fill results
-		    Vmath::Vcopy(ncoeffs,out[i],1,in[i],1);
-		    Vmath::Vcopy(ncoeffs,out[i],1,fields[i],1);
-		  }
-		//---------------------------------------------------------
-	      }
-	      break;
-	    }
-	  m_time += m_timestep;
-            //----------------------------------------------
+
+            fields = IntScheme->ExplicitIntegration(m_timestep,*this,u);
+            m_time += m_timestep;
 
             //----------------------------------------------
             // Dump analyser information
@@ -363,6 +321,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.4  2008/11/17 08:20:14  claes
+* Temporary fix for CG schemes. 1D CG working (but not for userdefined BC). 1D DG not working
+*
 * Revision 1.3  2008/11/12 12:12:26  pvos
 * Time Integration update
 *

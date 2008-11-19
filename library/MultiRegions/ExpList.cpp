@@ -439,27 +439,40 @@ namespace Nektar
                                       const Array<OneD, const NekDouble> &inarray,                     
                                       Array<OneD, NekDouble>    &outarray)
         {
-            int  i;
+            int  i,j;
             int  cnt  = 0;
             int  cnt1 = 0;
             Array<OneD,NekDouble>      e_outarray;
+
+            int nvarcoeffs = gkey.GetNvariableCoefficients();
+            Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
             
             for(i= 0; i < GetExpSize(); ++i)
             {
-
+                if(nvarcoeffs>0)
+                {
+                    for(j = 0; j < nvarcoeffs; j++)
+                    {
+                        varcoeffs[j] = gkey.GetVariableCoefficient(j) + cnt1;
+                    }
+                    cnt1  += (*m_exp)[i]->GetTotPoints();
+                }
+                
                 StdRegions::StdMatrixKey mkey(gkey.GetLinSysType(),(*m_exp)[i]->DetExpansionType(),
-                                              *((*m_exp)[i]),gkey.GetFactor1());
+                                              *((*m_exp)[i]),gkey.GetConstants(),varcoeffs);
+               
                 (*m_exp)[i]->GeneralMatrixOp(inarray + cnt, 
                                              e_outarray = outarray+cnt,
                                              mkey);
+                
                 cnt   += (*m_exp)[i]->GetNcoeffs();
-            }        
+            }      
         }
         
 	
 	GlobalLinSysSharedPtr ExpList::GenGlobalLinSysFullDirect(const GlobalLinSysKey &mkey, const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
 	{
-            int i,j,n,gid1,gid2,loc_lda,cnt;
+            int i,j,n,gid1,gid2,loc_lda,cnt,cnt1;
             NekDouble sign1,sign2;
             DNekScalMatSharedPtr loc_mat;
             DNekLinSysSharedPtr   linsys;
@@ -472,15 +485,29 @@ namespace Nektar
             unsigned int cols = totDofs - NumDirBCs;
             NekDouble zero = 0.0;
             DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero);
+
+            int nvarcoeffs = mkey.GetNvariableCoefficients();
+            Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
             
             // fill global matrix 
-            for(n = cnt = 0; n < (*m_exp).size(); ++n)
+            for(n = cnt = cnt1 = 0; n < (*m_exp).size(); ++n)
             {
+                if(nvarcoeffs>0)
+                {
+                    for(j = 0; j < nvarcoeffs; j++)
+                    {
+                        varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
+                    }
+                    cnt1  += (*m_exp)[n]->GetTotPoints();
+                }
+
                 LocalRegions::MatrixKey matkey(mkey.GetLinSysType(),
-                                          (*m_exp)[n]->DetExpansionType(),
-                                          *(*m_exp)[n],mkey.GetFactor1());
+                                               (*m_exp)[n]->DetExpansionType(),
+                                               *(*m_exp)[n],
+                                               mkey.GetConstants(),
+                                               varcoeffs);
                 
-                loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);
+                loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);               
                 loc_lda = loc_mat->GetColumns();
 
                 //cout<<"loc mat "<<endl<<*loc_mat<<endl;
@@ -503,7 +530,7 @@ namespace Nektar
                         }		
                     }
                 }
-                cnt += (*m_exp)[n]->GetNcoeffs();
+                cnt   += (*m_exp)[n]->GetNcoeffs();
             }            
             
 //             for(i = NumDirBCs; i < NumDirBCs+NumRobinBCs; ++i)
@@ -525,7 +552,7 @@ namespace Nektar
 
 	GlobalLinSysSharedPtr ExpList::GenGlobalLinSysStaticCond(const GlobalLinSysKey &mkey, const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
 	{
-            int i,j,n,gid1,gid2,loc_lda,cnt;
+            int i,j,n,gid1,gid2,loc_lda,cnt,cnt1;
             NekDouble sign1,sign2;
             DNekScalBlkMatSharedPtr loc_mat;
             DNekLinSysSharedPtr   linsys;
@@ -560,16 +587,33 @@ namespace Nektar
 
             DNekScalMatSharedPtr tmp_mat; 
 
-            // fill global matrix 
-            for(n = cnt = 0; n < (*m_exp).size(); ++n)
-            {
-                LocalRegions::MatrixKey matkey(mkey.GetLinSysType(),
-                                          (*m_exp)[n]->DetExpansionType(),
-                                          *(*m_exp)[n],mkey.GetFactor1());
+            int nvarcoeffs = mkey.GetNvariableCoefficients();
+            Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
 
-                loc_mat = (*m_exp)[n]->GetLocStaticCondMatrix(matkey);
-                loc_lda = (*m_exp)[n]->NumBndryCoeffs(); 		    
-                
+            // fill global matrix 
+            for(n = cnt = cnt1 = 0; n < (*m_exp).size(); ++n)
+            {
+                if(nvarcoeffs>0)
+                {
+                    for(j = 0; j < nvarcoeffs; j++)
+                    {
+                        varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
+                    }
+                    cnt1  += (*m_exp)[n]->GetTotPoints();
+                }
+
+                LocalRegions::MatrixKey matkey(mkey.GetLinSysType(),
+                                               (*m_exp)[n]->DetExpansionType(),
+                                               *(*m_exp)[n],
+                                               mkey.GetConstants(),
+                                               varcoeffs);
+
+                loc_mat = (*m_exp)[n]->GetLocStaticCondMatrix(matkey);                   
+                loc_lda = (*m_exp)[n]->NumBndryCoeffs(); 
+
+                //cout<<"loc mat "<<endl<<*loc_mat<<endl;
+		    
+
                 BinvD->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,1));
                 invD->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,1));
                 C->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,0));
@@ -639,8 +683,8 @@ namespace Nektar
             unsigned int rows = totDofs - NumDirBCs;
             unsigned int cols = totDofs - NumDirBCs;
             NekDouble zero    = 0.0,sign1,sign2; 
-            NekDouble factor1 = mkey.GetFactor1();
-            NekDouble factor2 = mkey.GetFactor2();
+            NekDouble factor1 = mkey.GetConstant(0);
+            NekDouble factor2 = mkey.GetConstant(1);
             StdRegions::MatrixType linsystype = mkey.GetLinSysType();
             
             DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero); 

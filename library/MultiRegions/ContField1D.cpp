@@ -192,8 +192,6 @@ namespace Nektar
         // contains an intial estimate for solution
         void ContField1D::HelmSolve(const ExpList &In, NekDouble lambda)
         {
-            ASSERTL0(lambda != NekUnsetDouble,"Helmholtz constant is not specified");
-
             GlobalLinSysKey key(StdRegions::eHelmholtz,lambda);
             // Note -1.0 term necessary to invert forcing function to
             // be consistent with matrix definition

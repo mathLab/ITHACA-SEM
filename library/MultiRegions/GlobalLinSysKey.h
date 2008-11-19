@@ -46,14 +46,26 @@ namespace Nektar
         class GlobalLinSysKey
         {
         public:
-            GlobalLinSysKey(const StdRegions::MatrixType matrixType, 
-                            const double factor1 = NekUnsetDouble,
-                            const double factor2 = NekUnsetDouble,
-#if 0
-                            const GlobalSysSolnType solnType = eDirectStaticCond);//eDirectStaticCond
-#else
-            const GlobalSysSolnType solnType = eDirectStaticCond);//eDirectFullMatrix
-#endif
+            GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+                            const GlobalSysSolnType solnType = eDirectStaticCond);
+
+            GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+                            const NekDouble factor,
+                            const GlobalSysSolnType solnType = eDirectStaticCond);
+
+            GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+                            const NekDouble factor1,
+                            const NekDouble factor2,
+                            const GlobalSysSolnType solnType = eDirectStaticCond);
+
+            GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+                            const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                            const GlobalSysSolnType solnType = eDirectStaticCond);
+
+            GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+                            const NekDouble factor,
+                            const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                            const GlobalSysSolnType solnType = eDirectStaticCond);
 
             GlobalLinSysKey(const GlobalLinSysKey &key);
 
@@ -64,33 +76,59 @@ namespace Nektar
             friend bool operator<(const GlobalLinSysKey &lhs, 
                                   const GlobalLinSysKey &rhs);
 
-            const StdRegions::MatrixType GetLinSysType() const
+            inline const StdRegions::MatrixType GetLinSysType() const
             {
                 return m_linSysType; 
             }
 
-            const GlobalSysSolnType  GetGlobalSysSolnType() const
+            inline const GlobalSysSolnType  GetGlobalSysSolnType() const
             {
                 return m_solnType; 
             }
             
-            const NekDouble GetFactor1() const 
+            inline int GetNconstants() const
             {
-                return m_factor1;
+                return m_nconstants;
             }
 
-
-            const NekDouble GetFactor2() const 
+            inline NekDouble GetConstant(int i) const
             {
-                return m_factor2;
+                ASSERTL1(i < m_nconstants,"requesting constant which has not been definied");
+                return m_constant[i];
+            }
+
+            inline const Array<OneD,NekDouble>& GetConstants() const
+            {         
+                return m_constant;
+            }
+
+            inline int GetNvariableCoefficients() const
+            {
+                return m_nvariablecoefficients;
+            }
+
+            inline const Array<OneD,NekDouble>& GetVariableCoefficient(int i) const
+            {
+                ASSERTL1(i < m_nvariablecoefficients,"requesting a coefficient which has not been defined");                
+                return m_variablecoefficient[i];
+            }
+
+            inline const Array<OneD, Array<OneD,NekDouble> >& GetVariableCoefficients() const
+            {       
+                return m_variablecoefficient;
             }
 
         protected:
             GlobalLinSysKey(); 
+
             GlobalSysSolnType      m_solnType;
             StdRegions::MatrixType m_linSysType;
-            NekDouble              m_factor1;
-            NekDouble              m_factor2;
+            
+            int                   m_nconstants;
+            Array<OneD,NekDouble> m_constant;
+
+            int m_nvariablecoefficients;
+            Array<OneD, Array<OneD,NekDouble> >  m_variablecoefficient;
             
         private:
         };
@@ -104,6 +142,9 @@ namespace Nektar
 
 /**
 * $Log: GlobalLinSysKey.h,v $
+* Revision 1.4  2007/12/06 22:52:30  pvos
+* 2D Helmholtz solver updates
+*
 * Revision 1.3  2007/11/20 16:27:16  sherwin
 * Zero Dirichlet version of UDG Helmholtz solver
 *

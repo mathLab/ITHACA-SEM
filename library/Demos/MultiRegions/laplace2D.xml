@@ -254,8 +254,14 @@
         <!-- Removed redundancy since we can specify any level of granularity
          in the ExpansionTypes section below.-->
         <PARAMETERS>
-            <P> Lambda    = 0 </P>
+          <P> UseVariableCoefficients = 1 </P>
         </PARAMETERS>
+
+	<USERDEFINEDEQNS>
+	  <F LHS="LaplacianCoefficient_00" VALUE="1" />
+	  <F LHS="LaplacianCoefficient_01" VALUE="0" />
+	  <F LHS="LaplacianCoefficient_11" VALUE="1" />
+	</USERDEFINEDEQNS>   
 
         <!--One of these for each dimension. These are the vector
         components, say, s = (u,v); comprised of two components in
@@ -344,7 +350,7 @@
         </BOUNDARYCONDITIONS>
         
         <FORCING>
-            <F VAR="u" VALUE="-(Lambda + 2*PI*PI)*sin(PI*x)*sin(PI*y)" />
+            <F VAR="u" VALUE="-2*PI*PI*sin(PI*x)*sin(PI*y)" />
         </FORCING>
 
         <EXACTSOLUTION>

@@ -43,21 +43,77 @@ namespace Nektar
     {
         // Register Mass Matrix creator. 
         GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
-                                         const NekDouble    factor1, 
-                                         const NekDouble    factor2, 
                                          const GlobalSysSolnType solnType):
             m_solnType(solnType),
             m_linSysType(matrixType),
-            m_factor1(factor1),
-            m_factor2(factor2)
+            m_nconstants(0),
+            m_constant(m_nconstants),
+            m_nvariablecoefficients(0),
+            m_variablecoefficient(m_nvariablecoefficients)
         {
         }
+        
+        GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+                                         const NekDouble factor,
+                                         const GlobalSysSolnType solnType):
+            m_solnType(solnType),
+            m_linSysType(matrixType),
+            m_nconstants(1),
+            m_constant(m_nconstants),
+            m_nvariablecoefficients(0),
+            m_variablecoefficient(m_nvariablecoefficients)
+        {
+            m_constant[0] = factor;
+        }
+        
+        GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+                                         const NekDouble factor1,
+                                         const NekDouble factor2,
+                                         const GlobalSysSolnType solnType):
+            m_solnType(solnType),
+            m_linSysType(matrixType),
+            m_nconstants(2),
+            m_constant(m_nconstants),
+            m_nvariablecoefficients(0),
+            m_variablecoefficient(m_nvariablecoefficients)
+        {
+            m_constant[0] = factor1;
+            m_constant[1] = factor2;
+        }
+
+        GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+                                         const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                                         const GlobalSysSolnType solnType = eDirectStaticCond):
+            m_solnType(solnType),
+            m_linSysType(matrixType),
+            m_nconstants(0),
+            m_constant(m_nconstants),
+            m_nvariablecoefficients(varcoeffs.num_elements()),
+            m_variablecoefficient(varcoeffs)
+        {
+        }          
+            
+        GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+                                         const NekDouble factor,
+                                         const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                                         const GlobalSysSolnType solnType = eDirectStaticCond):
+            m_solnType(solnType),
+            m_linSysType(matrixType),
+            m_nconstants(1),
+            m_constant(m_nconstants),
+            m_nvariablecoefficients(varcoeffs.num_elements()),
+            m_variablecoefficient(varcoeffs)
+        {
+            m_constant[0] = factor;
+        }     
 
         GlobalLinSysKey::GlobalLinSysKey(const GlobalLinSysKey &key):
             m_solnType(key.m_solnType),
             m_linSysType(key.m_linSysType),
-            m_factor1(key.m_factor1),
-            m_factor2(key.m_factor2)
+            m_nconstants(key.m_nconstants),
+            m_constant(key.m_constant),
+            m_nvariablecoefficients(key.m_nvariablecoefficients),
+            m_variablecoefficient(key.m_variablecoefficient)
         {
         }
 
@@ -83,25 +139,52 @@ namespace Nektar
                 return false;
             }
 
-            if(lhs.m_factor1 > rhs.m_factor1)
-            {
-                return false;
-            }
-
-            if(lhs.m_factor1 < rhs.m_factor1)
+            if(lhs.m_nconstants < rhs.m_nconstants)
             {
                 return true;
             }
-
-
-            if(lhs.m_factor2 > rhs.m_factor2)
+            else if(lhs.m_nconstants > rhs.m_nconstants)
             {
                 return false;
             }
+            else 
+            {
+                for(unsigned int i = 0; i < lhs.m_nconstants; ++i)
+                {
+                    if(lhs.m_constant[i] < rhs.m_constant[i])
+                    {
+                        return true;
+                    }
+                    
+                    if(lhs.m_constant[i] > rhs.m_constant[i])
+                    {
+                        return false;
+                    }
+                }
+            }
 
-            if(lhs.m_factor2 < rhs.m_factor2)
+            if(lhs.m_nvariablecoefficients < rhs.m_nvariablecoefficients)
             {
                 return true;
+            }
+            else if(lhs.m_nvariablecoefficients > rhs.m_nvariablecoefficients)
+            {
+                return false;
+            }
+            else 
+            {
+                for(unsigned int i = 0; i < lhs.m_nvariablecoefficients; ++i)
+                {
+                    if((lhs.m_variablecoefficient[i]).get() < (rhs.m_variablecoefficient[i]).get())
+                    {
+                        return true;
+                    }
+                    
+                    if((lhs.m_variablecoefficient[i]).get() > (rhs.m_variablecoefficient[i]).get())
+                    {
+                        return false;
+                    }
+                }
             }
 
             return false;
@@ -109,10 +192,15 @@ namespace Nektar
 
         std::ostream& operator<<(std::ostream& os, const GlobalLinSysKey& rhs)
         {
-            os << "MatrixType: " << rhs.GetLinSysType() << ", factor1 (ScaleFactor): "
-               <<rhs.GetFactor1() << ", Solution Type: "
-               << GlobalSysSolnTypeMap[rhs.GetGlobalSysSolnType()]  << 
-                ", factor2 (tau value): " << rhs.GetFactor2()  << std::endl;
+            int i;
+            os << "MatrixType: " << rhs.GetLinSysType() << endl;
+            os << "Solution Type: " << GlobalSysSolnTypeMap[rhs.GetGlobalSysSolnType()] << endl;
+            os << "Number of constants: " << rhs.GetNconstants() << endl;
+            for(i = 0; i < rhs.GetNconstants();i++) 
+            {
+                os << "  Constant " << i << ": " << rhs.GetConstant(i) << endl;
+            }
+            os << "Number of variable coefficients: " << rhs.GetNvariableCoefficients() << endl;
             
             return os;
         }
@@ -121,6 +209,9 @@ namespace Nektar
 
 /**
 * $Log: GlobalLinSysKey.cpp,v $
+* Revision 1.3  2007/11/20 16:27:16  sherwin
+* Zero Dirichlet version of UDG Helmholtz solver
+*
 * Revision 1.2  2007/10/03 11:37:50  sherwin
 * Updates relating to static condensation implementation
 *

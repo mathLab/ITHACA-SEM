@@ -62,6 +62,46 @@ namespace Nektar
             StdMatrixKey( const StdRegions::MatrixType matrixType, 
                           const StdRegions::ExpansionType expansionType, 
                           const StdRegions::StdExpansion &stdExpansion,
+                          const Array<OneD, NekDouble>& varcoeffs,
+                          LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
+
+            StdMatrixKey( const StdRegions::MatrixType matrixType, 
+                          const StdRegions::ExpansionType expansionType, 
+                          const StdRegions::StdExpansion &stdExpansion,
+                          const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                          LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
+
+            StdMatrixKey( const StdRegions::MatrixType matrixType, 
+                          const StdRegions::ExpansionType expansionType, 
+                          const StdRegions::StdExpansion &stdExpansion,
+                          const NekDouble const0,
+                          const Array<OneD, NekDouble>& varcoeffs0,
+                          LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
+
+            StdMatrixKey( const StdRegions::MatrixType matrixType, 
+                          const StdRegions::ExpansionType expansionType, 
+                          const StdRegions::StdExpansion &stdExpansion,
+                          const NekDouble const0,
+                          const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                          LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
+
+            StdMatrixKey( const StdRegions::MatrixType matrixType, 
+                          const StdRegions::ExpansionType expansionType, 
+                          const StdRegions::StdExpansion &stdExpansion,
+                          const Array<OneD,NekDouble>& constants,
+                          const Array<OneD,NekDouble >& varcoeffs,
+                          LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
+
+            StdMatrixKey( const StdRegions::MatrixType matrixType, 
+                          const StdRegions::ExpansionType expansionType, 
+                          const StdRegions::StdExpansion &stdExpansion,
+                          const Array<OneD,NekDouble>& constants,
+                          const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                          LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
+
+            StdMatrixKey( const StdRegions::MatrixType matrixType, 
+                          const StdRegions::ExpansionType expansionType, 
+                          const StdRegions::StdExpansion &stdExpansion,
                           const NekDouble const0,
                           const NekDouble const1,
                           LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
@@ -136,11 +176,40 @@ namespace Nektar
                 return m_constant[i];
             }
 
+            inline const Array<OneD,NekDouble>& GetConstants() const
+            {         
+                return m_constant;
+            }
+
             inline const Array<OneD, const LibUtilities::BasisSharedPtr>& GetBase() const
             {
                 return m_base;
             }
 
+            int GetNvariableLaplacianCoefficients() const
+            {
+                return m_nvariablecoefficients;
+            }
+
+            inline const Array<OneD,NekDouble>& GetVariableLaplacianCoefficient() const
+            {
+                ASSERTL1(m_nvariablecoefficients > 0,"No coeffcients have been defined");                
+                return m_variablecoefficient[0];
+            }
+
+            inline const Array<OneD,NekDouble>& Get2DVariableLaplacianCoefficient(int i, int j) const
+            {
+                int idx = i+j;
+                ASSERTL1(idx < m_nvariablecoefficients,"requesting a coefficient which has not been defined");                
+                return m_variablecoefficient[idx];
+            }
+
+            inline const Array<OneD,NekDouble>& Get3DVariableLaplacianCoefficient(int i, int j) const
+            {
+                int idx = (i*j)+(i+j)-( (int) ((i+j)-(i+j)%3)/3 )*(i*j-1);
+                ASSERTL1(idx < m_nvariablecoefficients,"requesting a coefficient which has not been defined");                
+                return m_variablecoefficient[idx];
+            }
 
             inline const LibUtilities::BasisSharedPtr GetBasis(int dir) const
             {
@@ -158,6 +227,9 @@ namespace Nektar
             int                   m_nconstants;
             Array<OneD,NekDouble> m_constant;
 
+            int m_nvariablecoefficients;
+            Array<OneD, Array<OneD,NekDouble> >  m_variablecoefficient;
+
 
         private:
             StdMatrixKey();
@@ -174,6 +246,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.h,v $
+* Revision 1.20  2008/05/30 00:33:49  delisi
+* Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+*
 * Revision 1.19  2008/04/06 06:04:15  bnelson
 * Changed ConstArray to Array<const>
 *

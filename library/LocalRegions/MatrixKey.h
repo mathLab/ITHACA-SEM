@@ -48,10 +48,10 @@ namespace Nektar
         class MatrixKey
         {
         public:
-            MatrixKey( StdRegions::MatrixType matrixType, 
-                       StdRegions::ExpansionType expansionType, 
-                       StdRegions::StdExpansion &stdExpansion,
-                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
+            MatrixKey(const StdRegions::MatrixType matrixType, 
+                      const StdRegions::ExpansionType expansionType, 
+                      const StdRegions::StdExpansion &stdExpansion,
+                      LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
             MatrixKey( StdRegions::MatrixType matrixType, 
                        StdRegions::ExpansionType expansionType, 
@@ -65,6 +65,13 @@ namespace Nektar
                        double scalefactor,
                        double constant,
                        LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
+            
+            MatrixKey(const StdRegions::MatrixType matrixType, 
+                      const StdRegions::ExpansionType expansionType, 
+                      const StdRegions::StdExpansion &stdExpansion,
+                      const Array<OneD, NekDouble>& constants,
+                      const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                      LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
             virtual ~MatrixKey()
             {
@@ -121,6 +128,26 @@ namespace Nektar
                 return m_stdMatKey->GetConstant(i);
             }
 
+            int GetNvariableLaplacianCoefficients() const
+            {
+                return m_stdMatKey->GetNvariableLaplacianCoefficients();
+            }
+
+            inline const Array<OneD,NekDouble>& GetVariableLaplacianCoefficient() const
+            {             
+                return m_stdMatKey->GetVariableLaplacianCoefficient();
+            }
+
+            inline const Array<OneD,NekDouble>& Get2DVariableLaplacianCoefficient(int i, int j) const
+            {  
+                return m_stdMatKey->Get2DVariableLaplacianCoefficient(i,j);    
+            }
+
+            inline const Array<OneD,NekDouble>& Get3DVariableLaplacianCoefficient(int i, int j) const
+            {
+                return m_stdMatKey->Get3DVariableLaplacianCoefficient(i,j);
+            }
+
         protected:
             MatrixKey();
 
@@ -139,6 +166,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.h,v $
+* Revision 1.17  2008/07/09 11:39:48  sherwin
+* Removed m_scalefactor and made operator< dependent upon StdMatKey
+*
 * Revision 1.16  2008/05/30 00:33:48  delisi
 * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
 *

@@ -204,7 +204,7 @@ namespace Nektar
                 }
                 else
                 {
-                    StdExpansion::LaplacianMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                    StdExpansion::LaplacianMatrixOp_PartitionedOp_GenericImpl(inarray,outarray,mkey);
                 }
             }
 
@@ -257,7 +257,7 @@ namespace Nektar
                 }
                 else
                 {
-                    StdExpansion::HelmholtzMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                    StdExpansion::HelmholtzMatrixOp_PartitionedOp_GenericImpl(inarray,outarray,mkey);
                 }
             }       
             
@@ -491,6 +491,9 @@ namespace Nektar
 
 /**
  * $Log: StdNodalTriExp.h,v $
+ * Revision 1.27  2008/11/05 16:08:15  pvos
+ * Added elemental optimisation functionality
+ *
  * Revision 1.26  2008/09/17 13:46:06  pvos
  * Added LocalToGlobalC0ContMap for 3D expansions
  *

@@ -206,8 +206,11 @@ namespace Nektar
             eLaplacian00,
             eLaplacian01,
             eLaplacian02,
+            eLaplacian10,
             eLaplacian11,
             eLaplacian12,
+            eLaplacian20,
+            eLaplacian21,
             eLaplacian22,
             eWeakDeriv0,
             eWeakDeriv1,
@@ -238,8 +241,11 @@ namespace Nektar
             "Laplacian00",
             "Laplacian01",
             "Laplacian02",
+            "Laplacian10",
             "Laplacian11",
             "Laplacian12",
+            "Laplacian20",
+            "Laplacian21",
             "Laplacian22",
             "WeakDeriv0",
             "WeakDeriv1",
@@ -374,6 +380,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.31  2008/11/12 12:12:10  pvos
+* Time Integration update
+*
 * Revision 1.30  2008/11/05 16:08:15  pvos
 * Added elemental optimisation functionality
 *

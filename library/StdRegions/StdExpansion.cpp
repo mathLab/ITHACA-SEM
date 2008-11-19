@@ -434,8 +434,23 @@ namespace Nektar
             case eLaplacian01:
                 LaplacianMatrixOp(0,1,inarray,outarray,mkey);
                 break;
+            case eLaplacian02:
+                LaplacianMatrixOp(0,2,inarray,outarray,mkey);
+                break;
+            case eLaplacian10:
+                LaplacianMatrixOp(1,0,inarray,outarray,mkey);
+                break;
             case eLaplacian11:
                 LaplacianMatrixOp(1,1,inarray,outarray,mkey);
+                break;
+            case eLaplacian12:
+                LaplacianMatrixOp(1,2,inarray,outarray,mkey);
+                break;
+            case eLaplacian20:
+                LaplacianMatrixOp(2,0,inarray,outarray,mkey);
+                break;
+            case eLaplacian21:
+                LaplacianMatrixOp(2,1,inarray,outarray,mkey);
                 break;
             case eLaplacian22:
                 LaplacianMatrixOp(2,2,inarray,outarray,mkey);
@@ -476,8 +491,23 @@ namespace Nektar
             case eLaplacian01:
                 LaplacianMatrixOp_PartitionedOp(0,1,inarray,outarray,mkey);
                 break;
+            case eLaplacian02:
+                LaplacianMatrixOp_PartitionedOp(0,2,inarray,outarray,mkey);
+                break;
+            case eLaplacian10:
+                LaplacianMatrixOp_PartitionedOp(1,0,inarray,outarray,mkey);
+                break;
             case eLaplacian11:
                 LaplacianMatrixOp_PartitionedOp(1,1,inarray,outarray,mkey);
+                break;
+            case eLaplacian12:
+                LaplacianMatrixOp_PartitionedOp(1,2,inarray,outarray,mkey);
+                break;
+            case eLaplacian20:
+                LaplacianMatrixOp_PartitionedOp(2,0,inarray,outarray,mkey);
+                break;
+            case eLaplacian21:
+                LaplacianMatrixOp_PartitionedOp(2,1,inarray,outarray,mkey);
                 break;
             case eLaplacian22:
                 LaplacianMatrixOp_PartitionedOp(2,2,inarray,outarray,mkey);
@@ -509,52 +539,117 @@ namespace Nektar
             ASSERTL1(k1 >= 0 && k1 < ExpansionTypeDimMap[v_DetExpansionType()],"invalid first  argument");
             ASSERTL1(k2 >= 0 && k2 < ExpansionTypeDimMap[v_DetExpansionType()],"invalid second argument");
             
-            Array<OneD, NekDouble> tmp(GetTotPoints());
-            Array<OneD, NekDouble> dtmp(GetTotPoints());
+            int nq = GetTotPoints();
+            Array<OneD, NekDouble> tmp(nq);
+            Array<OneD, NekDouble> dtmp(nq);
             
             v_BwdTrans(inarray,tmp);
             v_PhysDeriv(k2,tmp,dtmp);
+            if(mkey.GetNvariableLaplacianCoefficients() > 0)
+            {
+                Vmath::Vmul(nq, mkey.GetVariableLaplacianCoefficient(), 1, dtmp, 1, dtmp, 1);
+            }
             v_IProductWRTDerivBase(k1, dtmp, outarray);
         }
                 
-        void StdExpansion::v_LaplacianMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
-                                                             Array<OneD,NekDouble> &outarray,
-                                                             const StdMatrixKey &mkey)
+        void StdExpansion::LaplacianMatrixOp_PartitionedOp_GenericImpl(const Array<OneD, const NekDouble> &inarray,
+                                                                       Array<OneD,NekDouble> &outarray,
+                                                                       const StdMatrixKey &mkey)
         {
+            ExpansionType etype = DetExpansionType();
             switch(ExpansionTypeDimMap[v_DetExpansionType()])
             {
             case 1:
                 {
-                    StdMatrixKey mkey00(eLaplacian00,DetExpansionType(),*this);
+                    StdMatrixKey mkey00(eLaplacian00,etype,*this);
                     LaplacianMatrixOp(0,0,inarray,outarray,mkey00);
                 }
                     break;
             case 2:
                 {
-                    Array<OneD, NekDouble> store(m_ncoeffs);
-                    
-                    StdMatrixKey mkey00(eLaplacian00,DetExpansionType(),*this);
-                    StdMatrixKey mkey11(eLaplacian11,DetExpansionType(),*this);
-                    LaplacianMatrixOp(0,0,inarray,store,mkey00);
-                    LaplacianMatrixOp(1,1,inarray,outarray,mkey11);
-                   
-                    Vmath::Vadd(m_ncoeffs, store , 1, outarray, 1, outarray, 1);
-                }
+                    if(mkey.GetNvariableLaplacianCoefficients() == 0)
+                    {
+                        Array<OneD, NekDouble> store(m_ncoeffs);
+                        
+                        StdMatrixKey mkey00(eLaplacian00,etype,*this);
+                        StdMatrixKey mkey11(eLaplacian11,etype,*this);
+                        LaplacianMatrixOp(0,0,inarray,store,mkey00);
+                        LaplacianMatrixOp(1,1,inarray,outarray,mkey11);
+                        
+                        Vmath::Vadd(m_ncoeffs, store , 1, outarray, 1, outarray, 1);                    
+                    }
+                    else
+                    {
+                        int i,j;
+
+                        Array<OneD,NekDouble> store(m_ncoeffs);
+                        Array<OneD,NekDouble> store2(m_ncoeffs,0.0);
+
+                        const int dim = 2;
+                        MatrixType mtype[dim][dim] = { {eLaplacian00,eLaplacian01} ,
+                                                       {eLaplacian10,eLaplacian11} };
+
+                        StdMatrixKeySharedPtr mkeyij;
+
+                        for(i = 0; i < dim; i++)
+                        {
+                            for(j = 0; j < dim; j++)
+                            {
+                                mkeyij = MemoryManager<StdMatrixKey>::AllocateSharedPtr(mtype[i][j],etype,*this,mkey.GetConstants(),
+                                                                                        mkey.Get2DVariableLaplacianCoefficient(i,j));
+                                
+                                LaplacianMatrixOp(i,j,inarray,store,*mkeyij);       
+                                Vmath::Vadd(m_ncoeffs, store, 1, store2, 1, store2, 1); 
+                            }
+                        }
+                        Vmath::Vcopy(m_ncoeffs,store2.get(),1,outarray.get(),1);
+                    }
+                }                
                 break;
             case 3:
                 {
-                    Array<OneD, NekDouble> store0(m_ncoeffs);
-                    Array<OneD, NekDouble> store1(m_ncoeffs);
-                    
-                    StdMatrixKey mkey00(eLaplacian00,DetExpansionType(),*this);
-                    StdMatrixKey mkey11(eLaplacian11,DetExpansionType(),*this);
-                    StdMatrixKey mkey22(eLaplacian22,DetExpansionType(),*this);
-                    LaplacianMatrixOp(0,0,inarray,store0,mkey00);
-                    LaplacianMatrixOp(1,1,inarray,store1,mkey11);
-                    LaplacianMatrixOp(2,2,inarray,outarray,mkey22);
-                    
-                    Vmath::Vadd(m_ncoeffs, store0, 1, outarray, 1, outarray, 1);
-                    Vmath::Vadd(m_ncoeffs, store1, 1, outarray, 1, outarray, 1);
+                    if(mkey.GetNvariableLaplacianCoefficients() == 0)
+                    {
+                        Array<OneD, NekDouble> store0(m_ncoeffs);
+                        Array<OneD, NekDouble> store1(m_ncoeffs);
+                        
+                        StdMatrixKey mkey00(eLaplacian00,etype,*this);
+                        StdMatrixKey mkey11(eLaplacian11,etype,*this);
+                        StdMatrixKey mkey22(eLaplacian22,etype,*this);
+                        LaplacianMatrixOp(0,0,inarray,store0,mkey00);
+                        LaplacianMatrixOp(1,1,inarray,store1,mkey11);
+                        LaplacianMatrixOp(2,2,inarray,outarray,mkey22);
+                        
+                        Vmath::Vadd(m_ncoeffs, store0, 1, outarray, 1, outarray, 1);
+                        Vmath::Vadd(m_ncoeffs, store1, 1, outarray, 1, outarray, 1);
+                    }
+                    else
+                    {
+                        int i,j;
+                        int cnt = 0;
+
+                        Array<OneD,NekDouble> store(m_ncoeffs);
+                        Array<OneD,NekDouble> store2(m_ncoeffs,0.0);
+
+                        const int dim = 3;
+                        MatrixType mtype[dim][dim] = { {eLaplacian00,eLaplacian01,eLaplacian02} ,
+                                                       {eLaplacian10,eLaplacian11,eLaplacian12} ,
+                                                       {eLaplacian20,eLaplacian21,eLaplacian22} };
+
+                        StdMatrixKeySharedPtr mkeyij;
+
+                        for(i = 0; i < dim; i++)
+                        {
+                            for(j = 0; j < dim; j++)
+                            {
+                                mkeyij = MemoryManager<StdMatrixKey>::AllocateSharedPtr(mtype[i][j],etype,*this,mkey.GetConstants(),
+                                                                                        mkey.Get3DVariableLaplacianCoefficient(i,j));
+                                LaplacianMatrixOp(i,j,inarray,store,*mkeyij);          
+                                Vmath::Vadd(m_ncoeffs, store, 1, store2, 1, store2, 1); 
+                            }
+                        }
+                        Vmath::Vcopy(m_ncoeffs,store2.get(),1,outarray.get(),1);
+                    }
                 }
                 break;
             default:
@@ -562,7 +657,7 @@ namespace Nektar
                 break;
             }
         }
-
+        
         void StdExpansion::WeakDerivMatrixOp_PartitionedOp(const int k1,
                                                            const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
@@ -576,9 +671,9 @@ namespace Nektar
             v_IProductWRTBase(tmp, outarray);
         }
 
-        void StdExpansion::v_HelmholtzMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
-                                                             Array<OneD,NekDouble> &outarray,
-                                                             const StdMatrixKey &mkey)
+        void StdExpansion::HelmholtzMatrixOp_PartitionedOp_GenericImpl(const Array<OneD, const NekDouble> &inarray,
+                                                                       Array<OneD,NekDouble> &outarray,
+                                                                       const StdMatrixKey &mkey)
         {
             NekDouble lambda = mkey.GetConstant(0);
             Array<OneD,NekDouble> tmp(m_ncoeffs);
@@ -617,6 +712,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.78  2008/11/07 11:37:31  pvos
+* Minor correction
+*
 * Revision 1.77  2008/11/05 16:08:15  pvos
 * Added elemental optimisation functionality
 *

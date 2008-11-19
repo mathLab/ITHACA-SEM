@@ -288,6 +288,26 @@ namespace Nektar
             m_physState = false;
         }
 
+        void  ContField2D::LaplaceSolve(const ExpList &In,
+                                        const Array<OneD, Array<OneD,NekDouble> >& variablecoeffs,
+                                        NekDouble time)
+        {
+            GlobalLinSysKey key(StdRegions::eLaplacian,time,variablecoeffs);
+            Array<OneD,NekDouble> rhs(m_contNcoeffs);        
+            
+            // Inner product of forcing 
+            ExpList::IProductWRTBase(In.GetPhys(), m_coeffs);
+            Assemble(m_coeffs,rhs);
+
+            // Note -1.0 term necessary to invert forcing function to
+            // be consistent with matrix definition
+            Vmath::Neg(m_contNcoeffs,  rhs, 1);
+            
+            GlobalSolve(key,rhs,m_contCoeffs);
+
+            m_transState = eContinuous;
+            m_physState = false;
+        }
 
         // Note inout contains initial guess and final output. 
         void ContField2D::GlobalSolve(const GlobalLinSysKey &key, const Array<OneD, const  NekDouble> &rhs, Array<OneD, NekDouble> &inout)

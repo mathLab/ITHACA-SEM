@@ -176,7 +176,7 @@ namespace Nektar
                 }
                 else
                 {
-                    StdExpansion::LaplacianMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                    StdExpansion::LaplacianMatrixOp_PartitionedOp_GenericImpl(inarray,outarray,mkey);
                 }
             }
 
@@ -229,7 +229,7 @@ namespace Nektar
                 }
                 else
                 {
-                    StdExpansion::HelmholtzMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                    StdExpansion::HelmholtzMatrixOp_PartitionedOp_GenericImpl(inarray,outarray,mkey);
                 }
             }  
             
@@ -510,6 +510,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.h,v $
+ *    Revision 1.22  2008/11/05 16:08:15  pvos
+ *    Added elemental optimisation functionality
+ *
  *    Revision 1.21  2008/07/29 22:25:34  sherwin
  *    general update for DG Advection including separation of GetGeom() into GetGeom1D,2D,3D()
  *

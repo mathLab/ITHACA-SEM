@@ -827,6 +827,7 @@ namespace Nektar
     }
     
     static Array<OneD, NekDouble> NullNekDouble1DArray;
+    static Array<OneD, Array<OneD, NekDouble> > NullNekDoubleArrayofArray;
 
     template<typename DataType>
     bool operator==(const Array<TwoD, DataType>& lhs, const Array<TwoD, DataType>& rhs) 

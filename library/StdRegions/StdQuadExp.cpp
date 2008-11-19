@@ -328,25 +328,34 @@ namespace Nektar
                                                          Array<OneD,NekDouble> &outarray,
                                                          const StdMatrixKey &mkey)
         {
-            int    i;
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int    nqtot = nquad0*nquad1; 
-
-            Array<OneD,NekDouble> physValues(nqtot);
-            Array<OneD,NekDouble> dPhysValuesdx(nqtot);
-            Array<OneD,NekDouble> dPhysValuesdy(nqtot);
-
-            Array<OneD,NekDouble> wsp(m_ncoeffs);
-
-            BwdTrans_SumFac(inarray,physValues);
-            
-            // Laplacian matrix operation
-            PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
-            
-            IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray);
-            IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,wsp);  
-            Vmath::Vadd(m_ncoeffs,wsp.get(),1,outarray.get(),1,outarray.get(),1);               
+            if(mkey.GetNvariableLaplacianCoefficients() == 0)
+            {
+                // This implementation is only valid when there is no coefficients
+                // associated to the Laplacian operator
+                int    i;
+                int    nquad0 = m_base[0]->GetNumPoints();
+                int    nquad1 = m_base[1]->GetNumPoints();
+                int    nqtot = nquad0*nquad1; 
+                
+                Array<OneD,NekDouble> physValues(nqtot);
+                Array<OneD,NekDouble> dPhysValuesdx(nqtot);
+                Array<OneD,NekDouble> dPhysValuesdy(nqtot);
+                
+                Array<OneD,NekDouble> wsp(m_ncoeffs);
+                
+                BwdTrans_SumFac(inarray,physValues);
+                
+                // Laplacian matrix operation
+                PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
+                
+                IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray);
+                IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,wsp);  
+                Vmath::Vadd(m_ncoeffs,wsp.get(),1,outarray.get(),1,outarray.get(),1);               
+            }
+            else
+            {
+                StdExpansion::LaplacianMatrixOp_PartitionedOp_GenericImpl(inarray,outarray,mkey);
+            }
         }
 
         void StdQuadExp::HelmholtzMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
@@ -358,28 +367,28 @@ namespace Nektar
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nqtot = nquad0*nquad1; 
             NekDouble lambda = mkey.GetConstant(0);
-
+            
             Array<OneD,NekDouble> physValues(nqtot);
             Array<OneD,NekDouble> dPhysValuesdx(nqtot);
             Array<OneD,NekDouble> dPhysValuesdy(nqtot);
-
+            
             Array<OneD,NekDouble> wsp(m_ncoeffs);
-
+            
             BwdTrans_SumFac(inarray,physValues);
-
+            
             // mass matrix operation
             IProductWRTBase_SumFac((m_base[0]->GetBdata()),(m_base[1]->GetBdata()),physValues,wsp);
-
+            
             // Laplacian matrix operation
             PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
             
             IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray);
             Blas::Daxpy(m_ncoeffs, lambda, wsp.get(), 1, outarray.get(), 1);
-
+            
             IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,wsp);  
-            Vmath::Vadd(m_ncoeffs,wsp.get(),1,outarray.get(),1,outarray.get(),1);               
+            Vmath::Vadd(m_ncoeffs,wsp.get(),1,outarray.get(),1,outarray.get(),1);           
         }
-
+        
         ///////////////////////////////
         /// Differentiation Methods
         ///////////////////////////////
@@ -1282,6 +1291,9 @@ namespace Nektar
 
 /** 
  * $Log: StdQuadExp.cpp,v $
+ * Revision 1.45  2008/11/05 16:08:15  pvos
+ * Added elemental optimisation functionality
+ *
  * Revision 1.44  2008/09/23 18:19:26  pvos
  * Updates for working ProjectContField3D demo
  *

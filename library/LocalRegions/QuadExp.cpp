@@ -383,86 +383,94 @@ namespace Nektar
                                                       Array<OneD,NekDouble> &outarray,
                                                       const StdRegions::StdMatrixKey &mkey)
         {
-            int    i;
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int    nqtot = nquad0*nquad1; 
-            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
-
-            Array<OneD,NekDouble> physValues(nqtot);
-            Array<OneD,NekDouble> dPhysValuesdx(nqtot);
-            Array<OneD,NekDouble> dPhysValuesdy(nqtot);
-
-            Array<OneD,NekDouble> wsp(m_ncoeffs);
-            Array<OneD,NekDouble> tmp(nqtot);
-
-            BwdTrans_SumFac(inarray,physValues);
-
-            // Laplacian matrix operation
-            switch(m_geom->GetCoordim())
+            if(mkey.GetNvariableLaplacianCoefficients() == 0)
             {
-            case 2:
+                // This implementation is only valid when there is no coefficients
+                // associated to the Laplacian operator
+                int    i;
+                int    nquad0 = m_base[0]->GetNumPoints();
+                int    nquad1 = m_base[1]->GetNumPoints();
+                int    nqtot = nquad0*nquad1; 
+                const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+                
+                Array<OneD,NekDouble> physValues(nqtot);
+                Array<OneD,NekDouble> dPhysValuesdx(nqtot);
+                Array<OneD,NekDouble> dPhysValuesdy(nqtot);
+                
+                Array<OneD,NekDouble> wsp(m_ncoeffs);
+                Array<OneD,NekDouble> tmp(nqtot);
+                
+                BwdTrans_SumFac(inarray,physValues);
+                
+                // Laplacian matrix operation
+                switch(m_geom->GetCoordim())
                 {
-                    PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
-
-                    // multiply with the proper geometric factors
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                case 2:
                     {
-                        Vmath::Vmul (nqtot,&gmat[0][0],1,dPhysValuesdx.get(),1,tmp.get(),1);
-                        Vmath::Vvtvp(nqtot,&gmat[2][0],1,dPhysValuesdy.get(),1,tmp.get(),1,tmp.get(),1);
-
-                        Vmath::Vmul (nqtot,&gmat[3][0],1,dPhysValuesdy.get(),1,dPhysValuesdy.get(),1);
-                        Vmath::Vvtvp(nqtot,&gmat[1][0],1,dPhysValuesdx.get(),1,dPhysValuesdy.get(),1,dPhysValuesdy.get(),1);
+                        PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
+                        
+                        // multiply with the proper geometric factors
+                        if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                        {
+                            Vmath::Vmul (nqtot,&gmat[0][0],1,dPhysValuesdx.get(),1,tmp.get(),1);
+                            Vmath::Vvtvp(nqtot,&gmat[2][0],1,dPhysValuesdy.get(),1,tmp.get(),1,tmp.get(),1);
+                            
+                            Vmath::Vmul (nqtot,&gmat[3][0],1,dPhysValuesdy.get(),1,dPhysValuesdy.get(),1);
+                            Vmath::Vvtvp(nqtot,&gmat[1][0],1,dPhysValuesdx.get(),1,dPhysValuesdy.get(),1,dPhysValuesdy.get(),1);
+                        }
+                        else
+                        {
+                            Vmath::Smul(nqtot, gmat[0][0], dPhysValuesdx.get(), 1, tmp.get(), 1);
+                            Blas::Daxpy(nqtot, gmat[2][0], dPhysValuesdy.get(), 1, tmp.get(), 1);
+                            
+                            Blas::Dscal(nqtot, gmat[3][0], dPhysValuesdy.get(), 1);
+                            Blas::Daxpy(nqtot, gmat[1][0], dPhysValuesdx.get(), 1, dPhysValuesdy.get(), 1);
+                        }          
                     }
-                    else
+                    break;
+                case 3:
                     {
-                        Vmath::Smul(nqtot, gmat[0][0], dPhysValuesdx.get(), 1, tmp.get(), 1);
-                        Blas::Daxpy(nqtot, gmat[2][0], dPhysValuesdy.get(), 1, tmp.get(), 1);
-
-                        Blas::Dscal(nqtot, gmat[3][0], dPhysValuesdy.get(), 1);
-                        Blas::Daxpy(nqtot, gmat[1][0], dPhysValuesdx.get(), 1, dPhysValuesdy.get(), 1);
-                    }          
-                }
-                break;
-            case 3:
-                {
-                    Array<OneD,NekDouble> dPhysValuesdz(nqtot);
-
-                    PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy,dPhysValuesdz);
-
-                    // multiply with the proper geometric factors
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        Vmath::Vmul (nqtot,&gmat[0][0],1,dPhysValuesdx.get(),1,tmp.get(),1);
-                        Vmath::Vvtvp(nqtot,&gmat[2][0],1,dPhysValuesdy.get(),1,tmp.get(),1,tmp.get(),1);
-                        Vmath::Vvtvp(nqtot,&gmat[4][0],1,dPhysValuesdz.get(),1,tmp.get(),1,tmp.get(),1);
-
-                        Vmath::Vmul (nqtot,&gmat[3][0],1,dPhysValuesdy.get(),1,dPhysValuesdy.get(),1);
-                        Vmath::Vvtvp(nqtot,&gmat[1][0],1,dPhysValuesdx.get(),1,dPhysValuesdy.get(),1,dPhysValuesdy.get(),1);
-                        Vmath::Vvtvp(nqtot,&gmat[5][0],1,dPhysValuesdz.get(),1,dPhysValuesdy.get(),1,dPhysValuesdy.get(),1);
+                        Array<OneD,NekDouble> dPhysValuesdz(nqtot);
+                        
+                        PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy,dPhysValuesdz);
+                        
+                        // multiply with the proper geometric factors
+                        if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                        {
+                            Vmath::Vmul (nqtot,&gmat[0][0],1,dPhysValuesdx.get(),1,tmp.get(),1);
+                            Vmath::Vvtvp(nqtot,&gmat[2][0],1,dPhysValuesdy.get(),1,tmp.get(),1,tmp.get(),1);
+                            Vmath::Vvtvp(nqtot,&gmat[4][0],1,dPhysValuesdz.get(),1,tmp.get(),1,tmp.get(),1);
+                            
+                            Vmath::Vmul (nqtot,&gmat[3][0],1,dPhysValuesdy.get(),1,dPhysValuesdy.get(),1);
+                            Vmath::Vvtvp(nqtot,&gmat[1][0],1,dPhysValuesdx.get(),1,dPhysValuesdy.get(),1,dPhysValuesdy.get(),1);
+                            Vmath::Vvtvp(nqtot,&gmat[5][0],1,dPhysValuesdz.get(),1,dPhysValuesdy.get(),1,dPhysValuesdy.get(),1);
+                        }
+                        else
+                        {
+                            Vmath::Smul(nqtot, gmat[0][0], dPhysValuesdx.get(), 1, tmp.get(), 1);
+                            Blas::Daxpy(nqtot, gmat[2][0], dPhysValuesdy.get(), 1, tmp.get(), 1);
+                            Blas::Daxpy(nqtot, gmat[4][0], dPhysValuesdz.get(), 1, tmp.get(), 1);
+                            
+                            Blas::Dscal(nqtot, gmat[3][0], dPhysValuesdy.get(), 1);
+                            Blas::Daxpy(nqtot, gmat[1][0], dPhysValuesdx.get(), 1, dPhysValuesdy.get(), 1);
+                            Blas::Daxpy(nqtot, gmat[5][0], dPhysValuesdz.get(), 1, dPhysValuesdy.get(), 1);
+                        }        
+                        
                     }
-                    else
-                    {
-                        Vmath::Smul(nqtot, gmat[0][0], dPhysValuesdx.get(), 1, tmp.get(), 1);
-                        Blas::Daxpy(nqtot, gmat[2][0], dPhysValuesdy.get(), 1, tmp.get(), 1);
-                        Blas::Daxpy(nqtot, gmat[4][0], dPhysValuesdz.get(), 1, tmp.get(), 1);
-
-                        Blas::Dscal(nqtot, gmat[3][0], dPhysValuesdy.get(), 1);
-                        Blas::Daxpy(nqtot, gmat[1][0], dPhysValuesdx.get(), 1, dPhysValuesdy.get(), 1);
-                        Blas::Daxpy(nqtot, gmat[5][0], dPhysValuesdz.get(), 1, dPhysValuesdy.get(), 1);
-                    }        
-
+                break;
+                default:
+                    ASSERTL0(false,"Number of dimensions should be greater than 2");
+                    break;
                 }
-                break;
-            default:
-                ASSERTL0(false,"Number of dimensions should be greater than 2");
-                break;
+                
+                IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),tmp,outarray);
+                IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,wsp);  
+                Vmath::Vadd(m_ncoeffs,wsp.get(),1,outarray.get(),1,outarray.get(),1);      
             }
-            
-            IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),tmp,outarray);
-            IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,wsp);  
-            Vmath::Vadd(m_ncoeffs,wsp.get(),1,outarray.get(),1,outarray.get(),1);      
-            
+            else
+            {
+                StdExpansion::LaplacianMatrixOp_PartitionedOp_GenericImpl(inarray,outarray,mkey);
+            }
         }
 
         void QuadExp::HelmholtzMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
@@ -1245,7 +1253,8 @@ namespace Nektar
                 break;
             case StdRegions::eLaplacian:
                 {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    if( (m_metricinfo->GetGtype() == SpatialDomains::eDeformed) ||
+                        (mkey.GetNvariableLaplacianCoefficients() > 0) )
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
@@ -1573,6 +1582,7 @@ namespace Nektar
 
             switch(mkey.GetMatrixType())
             {
+            case StdRegions::eLaplacian: 
             case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
 
                 // use Deformed case for both regular and deformed geometries 
@@ -1676,6 +1686,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.53  2008/11/05 16:08:15  pvos
+ *    Added elemental optimisation functionality
+ *
  *    Revision 1.52  2008/09/23 18:20:25  pvos
  *    Updates for working ProjectContField3D demo
  *

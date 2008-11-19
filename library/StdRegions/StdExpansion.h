@@ -1282,6 +1282,10 @@ namespace Nektar
             {
                 v_LaplacianMatrixOp_PartitionedOp(inarray,outarray,mkey);
             }
+
+            void LaplacianMatrixOp_PartitionedOp_GenericImpl(const Array<OneD, const NekDouble> &inarray,
+                                                             Array<OneD,NekDouble> &outarray,
+                                                             const StdMatrixKey &mkey);
             
             void LaplacianMatrixOp_PartitionedOp(const int k1, const int k2, 
                                                  const Array<OneD, const NekDouble> &inarray,
@@ -1299,6 +1303,10 @@ namespace Nektar
             {
                 v_HelmholtzMatrixOp_PartitionedOp(inarray,outarray,mkey);
             }
+
+            void HelmholtzMatrixOp_PartitionedOp_GenericImpl(const Array<OneD, const NekDouble> &inarray,
+                                                             Array<OneD,NekDouble> &outarray,
+                                                             const StdMatrixKey &mkey);
 
         private:
             // Virtual functions
@@ -1632,7 +1640,6 @@ namespace Nektar
                                              Array<OneD,NekDouble> &outarray,
                                              const StdMatrixKey &mkey)
             {
-
                 // If this function is not reimplemented on shape level, the function
                 // below will be called
                 LaplacianMatrixOp_PartitionedOp(k1,k2,inarray,outarray,mkey);
@@ -1660,11 +1667,21 @@ namespace Nektar
 
             virtual void v_LaplacianMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
-                                                           const StdMatrixKey &mkey);
+                                                           const StdMatrixKey &mkey)
+            {
+                // If this function is not reimplemented on shape level, the function
+                // below will be called
+                LaplacianMatrixOp_PartitionedOp_GenericImpl(inarray,outarray,mkey);
+            }
             
             virtual void v_HelmholtzMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
-                                                           const StdMatrixKey &mkey);
+                                                           const StdMatrixKey &mkey)
+            {
+                // If this function is not reimplemented on shape level, the function
+                // below will be called
+                HelmholtzMatrixOp_PartitionedOp_GenericImpl(inarray,outarray,mkey);
+            }
 #endif
             
         };
@@ -1680,6 +1697,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.105  2008/11/05 16:08:15  pvos
+ * Added elemental optimisation functionality
+ *
  * Revision 1.104  2008/11/01 22:36:06  bnelson
  * Removed uneeded files.
  *

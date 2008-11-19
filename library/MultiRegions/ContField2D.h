@@ -202,10 +202,10 @@ namespace Nektar
              * in the data member #m_bndCondExpansions). Applying a \f$C^0\f$ continuous 
              * Galerkin discretisation, this equation leads to the following linear 
              * system:
-             * \f[\left( \boldsymbol{M}+\lambda\boldsymbol{L}\right)
+             * \f[\left( \boldsymbol{L}+\lambda\boldsymbol{M}\right)
              * \boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}}\f]
-             * where \f$\boldsymbol{M}\f$ and \f$\boldsymbol{L}\f$ are the mass and 
-             * Laplacian matrix respectively. This function solves the system above 
+             * where \f$\boldsymbol{L}\f$ and \f$\boldsymbol{M}\f$ are the Laplacian and 
+             * mass matrix respectively. This function solves the system above 
              * for the global coefficients \f$\boldsymbol{\hat{u}}\f$ by a call to 
              * the function #GlobalSolve.
              *
@@ -221,6 +221,58 @@ namespace Nektar
              * \param lambda The parameter \f$\lambda\f$ of the Helmholtz equation
              */ 
             void HelmSolve(const ExpList &In, NekDouble lambda);
+
+            /**
+             * \brief This function solves the two-dimensional Laplace equation, 
+             * subject to the boundary conditions specified.
+             * 
+             * Consider the two dimensional Laplace equation, 
+             * \f[\nabla\cdot\left(\boldsymbol{\sigma}\nabla u(\boldsymbol{x})\right) = 
+             * f(\boldsymbol{x}),\f]
+             * supplemented with appropriate boundary conditions (which are contained
+             * in the data member #m_bndCondExpansions). In the equation above
+             *  \f$\boldsymbol{\sigma}\f$ is the (symmetric positive definite) diffusion tensor:
+             * \f[ \sigma = \left[ \begin{array}{cc} 
+             * \sigma_{00}(\boldsymbol{x},t) & \sigma_{01}(\boldsymbol{x},t) \\
+             * \sigma_{01}(\boldsymbol{x},t) & \sigma_{11}(\boldsymbol{x},t) 
+             * \end{array} \right]. \f]
+             * Applying a \f$C^0\f$ continuous 
+             * Galerkin discretisation, this equation leads to the following linear 
+             * system:
+             * \f[\boldsymbol{L}
+             * \boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}}\f]
+             * where \f$\boldsymbol{L}\f$ is the
+             * Laplacian matrix. This function solves the system above 
+             * for the global coefficients \f$\boldsymbol{\hat{u}}\f$ by a call to 
+             * the function #GlobalSolve.
+             *
+             * The values of the function \f$f(\boldsymbol{x})\f$ evaluated at the 
+             * quadrature points \f$\boldsymbol{x}_i\f$ should be contained in the 
+             * variable #m_phys of the ExpList object \a Sin. The resulting global 
+             * coefficients \f$\boldsymbol{\hat{u}}_g\f$ are stored in the array 
+             * #m_contCoeffs.
+             * 
+             * \param Sin An ExpList, containing the discrete evaluation of the 
+             * forcing function \f$f(\boldsymbol{x})\f$ at the quadrature points 
+             * in its array #m_phys.
+             * \param variablecoeffs The (optional) parameter containing the coefficients
+             * evaluated at the quadrature points. It is an Array of (three) arrays which 
+             * stores the laplacian coefficients in the following way
+             * \f[
+             * \mathrm{variablecoeffs} = \left[ \begin{array}{c}
+             * \left[\sigma_{00}(\boldsymbol{x_i},t)\right]_i \\
+             * \left[\sigma_{01}(\boldsymbol{x_i},t)\right]_i \\
+             * \left[\sigma_{11}(\boldsymbol{x_i},t)\right]_i 
+             * \end{array}\right]
+             * \f]
+             * If this argument is not passed to the function, the following equation will 
+             * be solved:
+             * \f[\nabla^2u(\boldsymbol{x}) = f(\boldsymbol{x}),\f]
+             * \param time The time-level at which the coefficients are evaluated
+             */ 
+            void LaplaceSolve(const ExpList &In, 
+                              const Array<OneD, Array<OneD,NekDouble> >& variablecoeffs = NullNekDoubleArrayofArray,
+                              NekDouble time = 0.0);
           
             /**
              * \brief This function evaluates the boundary conditions at a certain 

@@ -383,6 +383,16 @@ namespace Nektar
                 MultiplyByInvMassMatrix(inarray,outarray,GlobalArrays, ZeroBCs);
             }
 
+            virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions()
+            {
+                return GetBndConditions();
+            }
+
+            virtual void v_EvaluateBoundaryConditions(const NekDouble time = 0.0)
+            {
+                EvaluateBoundaryConditions(time);
+            }
+
 
         };
         typedef boost::shared_ptr<ContField2D>      ContField2DSharedPtr;

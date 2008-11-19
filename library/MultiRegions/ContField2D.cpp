@@ -194,7 +194,10 @@ namespace Nektar
             
             // Inner product of forcing 
             ExpList::IProductWRTBase(In.GetPhys(), rhs);
-            MultiplyByInvMassMatrix(rhs,m_contCoeffs);
+
+            // Solve the system
+            GlobalLinSysKey key(StdRegions::eMass);
+            GlobalSolve(key,rhs,m_contCoeffs);
             
             m_transState = eContinuous;
             m_physState = false;
@@ -203,27 +206,35 @@ namespace Nektar
         void ContField2D::MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays, bool ZeroBCs)
         {
             GlobalLinSysKey key(StdRegions::eMass);
-
-            if(GlobalArrays == true)
+            int NumDirBcs = m_locToGloMap->GetNumDirichletBndCoeffs();
+            
+            if(GlobalArrays)
             {
                 if(inarray.data() == outarray.data())
                 {
-                    Array<OneD,NekDouble> tmp(inarray.num_elements());
-                    
+                    Array<OneD,NekDouble> tmp(inarray.num_elements());                    
                     Vmath::Vcopy(inarray.num_elements(),inarray,1,tmp,1);
-                    GlobalSolve(key,tmp,outarray);                
+
+                    Array<OneD,NekDouble> rhs_H = tmp+NumDirBcs;
+                    Array<OneD,NekDouble> sol_H = outarray+NumDirBcs;
+                    GlobalLinSysSharedPtr invMass_HH = GetGlobalLinSys(key);
+                
+                    invMass_HH->Solve(rhs_H,sol_H,*m_locToGloMap);            
                 }
                 else
                 {
-                    GlobalSolve(key,inarray,outarray);
-                    
+                    Array<OneD,NekDouble> rhs_H = inarray+NumDirBcs;
+                    Array<OneD,NekDouble> sol_H = outarray+NumDirBcs;
+                    GlobalLinSysSharedPtr invMass_HH = GetGlobalLinSys(key);
+                
+                    invMass_HH->Solve(rhs_H,sol_H,*m_locToGloMap);                    
                 }
 
-                if(ZeroBCs == true)
+                if(ZeroBCs)
                 {
-                    int NumDirBcs = m_locToGloMap->GetNumDirichletBndCoeffs();
                     Vmath::Zero(NumDirBcs,outarray,1);
                 }
+
             }
             else
             {
@@ -231,21 +242,23 @@ namespace Nektar
 
                 if(inarray.data() == outarray.data())
                 {
-                    Array<OneD,NekDouble> tmp(inarray.num_elements());
-                    
+                    Array<OneD,NekDouble> tmp(inarray.num_elements());                    
                     Vmath::Vcopy(inarray.num_elements(),inarray,1,tmp,1);
-
                     Assemble(tmp,outarray);
                 }
                 else
                 {
                     Assemble(inarray,outarray);
                 }
-                GlobalSolve(key,outarray,globaltmp);
+                    
+                Array<OneD,NekDouble> rhs_H = outarray+NumDirBcs;
+                Array<OneD,NekDouble> sol_H = globaltmp+NumDirBcs;
+                GlobalLinSysSharedPtr invMass_HH = GetGlobalLinSys(key);
+                
+                invMass_HH->Solve(rhs_H,sol_H,*m_locToGloMap);
 
-                if(ZeroBCs == true)
+                if(ZeroBCs)
                 {
-                    int NumDirBcs = m_locToGloMap->GetNumDirichletBndCoeffs();
                     Vmath::Zero(NumDirBcs,globaltmp,1);
                 }
 

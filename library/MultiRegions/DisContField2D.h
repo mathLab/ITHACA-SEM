@@ -228,6 +228,15 @@ namespace Nektar
                 ExtractTracePhys(inarray,outarray);
             }
 
+            virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions()
+            {
+                return GetBndConditions();
+            }
+
+            virtual void v_EvaluateBoundaryConditions(const NekDouble time = 0.0)
+            {
+                EvaluateBoundaryConditions(time);
+            }
 
         };
 

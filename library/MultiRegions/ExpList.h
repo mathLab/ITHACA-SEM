@@ -822,6 +822,16 @@ namespace Nektar
                 v_ExtractTracePhys(inarray,outarray);
             }
 
+            inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& GetBndConditions()
+            {
+                return v_GetBndConditions();       
+            }
+
+            void EvaluateBoundaryConditions(const NekDouble time = 0.0)
+            {
+                v_EvaluateBoundaryConditions(time);
+            }
+
         protected:
             
 
@@ -1154,6 +1164,16 @@ namespace Nektar
 
         private:
 
+            virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions()
+            {
+                ASSERTL0(false,"This method is not defined or valid for this class type");                
+            }
+
+            virtual void v_EvaluateBoundaryConditions(const NekDouble time = 0.0)
+            {
+                ASSERTL0(false,"This method is not defined or valid for this class type");            
+            }
+
 
     };
 
@@ -1168,6 +1188,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.48  2008/11/01 22:06:45  bnelson
+* Fixed Visual Studio compile error.
+*
 * Revision 1.47  2008/10/29 22:46:35  sherwin
 * Updates for const correctness and a few other bits
 *

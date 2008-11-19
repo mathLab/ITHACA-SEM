@@ -89,7 +89,7 @@ namespace Nektar
                              const StdRegions::StdExpansion &stdExpansion,
                              const Array<OneD, NekDouble>& constants,
                              const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                             LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType)
+                             LibUtilities::PointsType nodalType)
         {
             m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,
                                                                                       expansionType,
@@ -138,6 +138,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.cpp,v $
+* Revision 1.19  2008/11/19 16:01:41  pvos
+* Added functionality for variable Laplacian coeffcients
+*
 * Revision 1.18  2008/07/09 11:39:47  sherwin
 * Removed m_scalefactor and made operator< dependent upon StdMatKey
 *

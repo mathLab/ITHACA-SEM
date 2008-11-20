@@ -57,6 +57,7 @@ namespace Nektar
             typedef Matrix<DataType> BaseType;
             typedef NekMatrix<const DataType, StandardMatrixTag> ThisType;
             typedef const DataType NumberType;
+            typedef const DataType& ConstGetValueType;
           
             public:
                             
@@ -448,7 +449,7 @@ namespace Nektar
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
             
             /// \brief Returns the element value at the given row and column.
-            typename boost::call_traits<DataType>::const_reference operator()(unsigned int row, unsigned int column) const
+            ConstGetValueType operator()(unsigned int row, unsigned int column) const
             {
                 ASSERTL2(row < this->GetRows(), std::string("Row ") + boost::lexical_cast<std::string>(row) + 
                     std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(this->GetRows()) +
@@ -465,7 +466,7 @@ namespace Nektar
             /// \brief column The element's column.
             /// \brief transpose If transpose = 'N', then the return value is element [row, column].
             ///                  If transpose = 'T', then the return value is element [column, row].
-            typename boost::call_traits<DataType>::const_reference operator()(unsigned int row, unsigned int column, char transpose) const
+            ConstGetValueType operator()(unsigned int row, unsigned int column, char transpose) const
             {    
                 return this->GetValue(row, column, transpose);
             }
@@ -534,7 +535,7 @@ namespace Nektar
             /// \brief column The element's column.
             /// \brief transpose If transpose = 'N', then the return value is element [row, column].
             ///                  If transpose = 'T', then the return value is element [column, row].
-            typename boost::call_traits<DataType>::const_reference GetValue(unsigned int row, unsigned int column, char transpose) const
+            ConstGetValueType GetValue(unsigned int row, unsigned int column, char transpose) const
             {
                 static DataType defaultReturnValue;
                 unsigned int index = CalculateIndex(row, column, transpose);
@@ -869,6 +870,8 @@ namespace Nektar
             typedef NekMatrix<const DataType, StandardMatrixTag> BaseType;
             typedef NekMatrix<DataType, StandardMatrixTag> ThisType;
             typedef DataType NumberType;
+            typedef DataType GetValueType;
+            typedef const DataType& ConstGetValueType;
 
         public:
             NekMatrix() :

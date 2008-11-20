@@ -128,7 +128,7 @@ namespace Nektar
             {
             }
             
-            typename boost::call_traits<NumberType>::value_type operator()(unsigned int row, unsigned int col) const
+            ConstGetValueType operator()(unsigned int row, unsigned int col) const
             {
                 return m_scale*m_matrix->GetValue(row, col, this->GetTransposeFlag());
             }

@@ -494,6 +494,7 @@ namespace Nektar
                         return LowerTriangularMatrixFuncs::CalculateIndex(numColumns, row, col);
                         break;
                     case eSYMMETRIC:
+                    case ePOSITIVE_DEFINITE_SYMMETRIC:
                         return SymmetricMatrixFuncs::CalculateIndex(row, col);
                         break;
                     case eBANDED:
@@ -501,7 +502,14 @@ namespace Nektar
                             row, col, m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
                         break;
                     case eSYMMETRIC_BANDED:
-                        NEKERROR(ErrorUtil::efatal, "Not yet implemented.");
+                    case ePOSITIVE_DEFINITE_SYMMETRIC_BANDED:
+                        {
+                            ASSERTL1(m_numberOfSuperDiagonals==m_numberOfSuperDiagonals,
+                                     std::string("Number of sub- and superdiagonals should ") + 
+                                     std::string("be equal for a symmetric banded matrix"));
+                            return SymmetricBandedMatrixFuncs::CalculateIndex(row, col, 
+                                m_numberOfSuperDiagonals);
+                        }
                         break;
                     case eUPPER_TRIANGULAR_BANDED:
                         NEKERROR(ErrorUtil::efatal, "Not yet implemented.");
@@ -736,6 +744,7 @@ namespace Nektar
                         break;
                         
                     case eSYMMETRIC:
+                    case ePOSITIVE_DEFINITE_SYMMETRIC:
                         return SymmetricMatrixFuncs::Advance(
                             numRows, numColumns, curRow, curColumn);
                         break;
@@ -744,6 +753,7 @@ namespace Nektar
                             numRows, numColumns, curRow, curColumn);
                         break;
                     case eSYMMETRIC_BANDED:
+                    case ePOSITIVE_DEFINITE_SYMMETRIC_BANDED:
                         NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
                         break;
                     case eUPPER_TRIANGULAR_BANDED:
@@ -808,6 +818,7 @@ namespace Nektar
                         return LowerTriangularMatrixFuncs::GetRequiredStorageSize(this->GetRows(), this->GetColumns());
                         break;
                     case eSYMMETRIC:
+                    case ePOSITIVE_DEFINITE_SYMMETRIC:
                         return SymmetricMatrixFuncs::GetRequiredStorageSize(this->GetRows(), this->GetColumns());
                         break;
                     case eBANDED:
@@ -815,7 +826,14 @@ namespace Nektar
                             m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
                         break;
                     case eSYMMETRIC_BANDED:
-                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
+                    case ePOSITIVE_DEFINITE_SYMMETRIC_BANDED:
+                        {
+                            ASSERTL1(m_numberOfSuperDiagonals==m_numberOfSuperDiagonals,
+                                     std::string("Number of sub- and superdiagonals should ") + 
+                                     std::string("be equal for a symmetric banded matrix"));
+                            return SymmetricBandedMatrixFuncs::GetRequiredStorageSize(this->GetRows(), this->GetColumns(),
+                                m_numberOfSuperDiagonals);
+                        }
                         break;
                     case eUPPER_TRIANGULAR_BANDED:
                         NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");

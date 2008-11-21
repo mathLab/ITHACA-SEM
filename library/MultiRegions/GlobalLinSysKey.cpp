@@ -83,7 +83,7 @@ namespace Nektar
 
         GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                                          const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                                         const GlobalSysSolnType solnType = eDirectStaticCond):
+                                         const GlobalSysSolnType solnType):
             m_solnType(solnType),
             m_linSysType(matrixType),
             m_nconstants(0),
@@ -96,7 +96,7 @@ namespace Nektar
         GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                                          const NekDouble factor,
                                          const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                                         const GlobalSysSolnType solnType = eDirectStaticCond):
+                                         const GlobalSysSolnType solnType):
             m_solnType(solnType),
             m_linSysType(matrixType),
             m_nconstants(1),
@@ -209,6 +209,9 @@ namespace Nektar
 
 /**
 * $Log: GlobalLinSysKey.cpp,v $
+* Revision 1.4  2008/11/19 16:02:33  pvos
+* Added functionality for variable Laplacian coeffcients
+*
 * Revision 1.3  2007/11/20 16:27:16  sherwin
 * Zero Dirichlet version of UDG Helmholtz solver
 *

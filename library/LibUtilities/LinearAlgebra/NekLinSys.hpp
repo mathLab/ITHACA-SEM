@@ -148,6 +148,18 @@ namespace Nektar
                         }
                     }
                     break;
+                case ePOSITIVE_DEFINITE_SYMMETRIC:
+                    {
+                        x = b;
+                        int info = 0;
+                        Lapack::Dpptrs('U', n, 1, A.get(), x.GetRawPtr(), x.GetRows(), info);
+                        if( info < 0 )
+                        {
+                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dpptrs";
+                            ASSERTL0(false, message.c_str());
+                        }
+                    }
+                    break;
                 case eBANDED:
                     {
                         x = b;
@@ -160,6 +172,21 @@ namespace Nektar
                         if( info < 0 )
                         {
                             std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dgbtrs";
+                            ASSERTL0(false, message.c_str());
+                        }
+                    }
+                    break;
+                case ePOSITIVE_DEFINITE_SYMMETRIC_BANDED:
+                    {
+                        x = b;
+                        int KU = m_numberOfSuperDiagonals;
+                        int info = 0;
+
+                        Lapack::Dpbtrs('U', n, KU, 1, A.get(), KU+1, x.GetRawPtr(), n, info);
+
+                        if( info < 0 )
+                        {
+                            std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dpbtrs";
                             ASSERTL0(false, message.c_str());
                         }
                     }
@@ -263,6 +290,8 @@ namespace Nektar
                     }
                     break;
                 case eSYMMETRIC:
+                case ePOSITIVE_DEFINITE_SYMMETRIC:
+                case ePOSITIVE_DEFINITE_SYMMETRIC_BANDED:
                     Solve(b, x, m_matrixType, m_ipivot, n, A, m_transposeFlag, m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
                     break;
                 case eBANDED:
@@ -468,6 +497,23 @@ namespace Nektar
                             }
                         }
                         break;
+                    case ePOSITIVE_DEFINITE_SYMMETRIC:
+                        {
+                            int info = 0;
+                            Lapack::Dpptrf('U', theA.GetRows(), A.get(), info);
+                          
+                            if( info < 0 )
+                            {
+                                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dpptrf";
+                                ASSERTL0(false, message.c_str());
+                            }
+                            else if( info > 0 )
+                            {
+                                std::string message = "ERROR: The leading minor of order " + boost::lexical_cast<std::string>(info) +  " is not positive definite from dpptrf";
+                                ASSERTL0(false, message.c_str());
+                            }
+                        }
+                        break;
                     case eBANDED:
                         {
                             int M = n;
@@ -505,6 +551,28 @@ namespace Nektar
                             else if( info > 0 )
                             {
                                 std::string message = "ERROR: Element u_" + boost::lexical_cast<std::string>(info) +   boost::lexical_cast<std::string>(info) + " is 0 from dgbtrf";
+                                ASSERTL0(false, message.c_str());
+                            }
+                        }
+                        break;
+                    case ePOSITIVE_DEFINITE_SYMMETRIC_BANDED:
+                        {
+                            ASSERTL1(m_numberOfSuperDiagonals==m_numberOfSuperDiagonals,
+                                     std::string("Number of sub- and superdiagonals should ") + 
+                                     std::string("be equal for a symmetric banded matrix"));
+
+                            int KU = m_numberOfSuperDiagonals;
+                            int info = 0;
+                            Lapack::Dpbtrf('U', theA.GetRows(), KU, A.get(), KU+1, info);
+                          
+                            if( info < 0 )
+                            {
+                                std::string message = "ERROR: The " + boost::lexical_cast<std::string>(-info) + "th parameter had an illegal parameter for dpbtrf";
+                                ASSERTL0(false, message.c_str());
+                            }
+                            else if( info > 0 )
+                            {
+                                std::string message = "ERROR: The leading minor of order " + boost::lexical_cast<std::string>(info) +  " is not positive definite from dpbtrf";
                                 ASSERTL0(false, message.c_str());
                             }
                         }

@@ -473,7 +473,7 @@ namespace Nektar
 	GlobalLinSysSharedPtr ExpList::GenGlobalLinSysFullDirect(const GlobalLinSysKey &mkey, const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
 	{
             int i,j,n,gid1,gid2,loc_lda,cnt,cnt1;
-            NekDouble sign1,sign2;
+            NekDouble sign1,sign2,value;;
             DNekScalMatSharedPtr loc_mat;
             DNekLinSysSharedPtr   linsys;
             GlobalLinSysSharedPtr returnlinsys;
@@ -484,7 +484,20 @@ namespace Nektar
             unsigned int rows = totDofs - NumDirBCs;
             unsigned int cols = totDofs - NumDirBCs;
             NekDouble zero = 0.0;
-            DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero);
+
+
+            DNekMatSharedPtr Gmat;
+            int bwidth = locToGloMap->GetFullSystemBandWidth();
+            if( (2*(bwidth+1)) < rows)
+            {
+                MatrixStorage matStorage = ePOSITIVE_DEFINITE_SYMMETRIC_BANDED;
+                Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero,matStorage,bwidth,bwidth);
+            }
+            else
+            {
+                MatrixStorage matStorage = ePOSITIVE_DEFINITE_SYMMETRIC;
+                Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero,matStorage);
+            }  
 
             int nvarcoeffs = mkey.GetNvariableCoefficients();
             Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
@@ -514,18 +527,24 @@ namespace Nektar
 		    
                 for(i = 0; i < loc_lda; ++i)
                 {
-                    gid1 = locToGloMap->GetLocalToGlobalMap(cnt + i);
+                    gid1 = locToGloMap->GetLocalToGlobalMap(cnt + i) - NumDirBCs;
                     sign1 =  locToGloMap->GetLocalToGlobalSign(cnt + i);
-                    if(gid1 >= NumDirBCs)
+                    if(gid1 >= 0)
                     {
                         for(j = 0; j < loc_lda; ++j)
                         {
-                            gid2 = locToGloMap->GetLocalToGlobalMap(cnt + j);
+                            gid2 = locToGloMap->GetLocalToGlobalMap(cnt + j) - NumDirBCs;
                             sign2 = locToGloMap->GetLocalToGlobalSign(cnt + j);
-                            if(gid2 >= NumDirBCs)
+                            if(gid2 >= 0)
                             {
-                                (*Gmat)(gid1-NumDirBCs,gid2-NumDirBCs) 
-                                    += sign1*sign2*(*loc_mat)(i,j);
+                                // As the global matrix should be symmetric, only add the value
+                                // for the upper triangular part in order to avoid
+                                // entries to be entered twice
+                                if(gid2 >= gid1)
+                                {
+                                    value = Gmat->GetValue(gid1,gid2) + sign1*sign2*(*loc_mat)(i,j);
+                                    Gmat->SetValue(gid1,gid2,value);
+                                }
                             }
                         }		
                     }
@@ -541,9 +560,12 @@ namespace Nektar
 //                         (locToGloMap->GetBndCondGlobalID())[i]-NumDirBCs)
 //                     -= mkey.GetScaleFactor() * b;
 //             }
-
-            //linsys = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat,eWrapper);
-            linsys = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat);
+            
+            if(rows)
+            {
+                PointerWrapper w = eWrapper;
+                linsys = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat,w);
+            }
             
             returnlinsys = MemoryManager<GlobalLinSys>::AllocateSharedPtr(mkey,linsys);
             return returnlinsys;
@@ -553,7 +575,7 @@ namespace Nektar
 	GlobalLinSysSharedPtr ExpList::GenGlobalLinSysStaticCond(const GlobalLinSysKey &mkey, const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
 	{
             int i,j,n,gid1,gid2,loc_lda,cnt,cnt1;
-            NekDouble sign1,sign2;
+            NekDouble sign1,sign2,value;
             DNekScalBlkMatSharedPtr loc_mat;
             DNekLinSysSharedPtr   linsys;
             GlobalLinSysSharedPtr returnlinsys;
@@ -564,8 +586,20 @@ namespace Nektar
             unsigned int rows = nBndDofs - NumDirBCs;
             unsigned int cols = nBndDofs - NumDirBCs;
             NekDouble zero = 0.0;
-            DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero);
-            
+
+            DNekMatSharedPtr Gmat;
+            int bwidth = locToGloMap->GetBndSystemBandWidth();
+            if( (2*(bwidth+1)) < rows)
+            {
+                MatrixStorage matStorage = ePOSITIVE_DEFINITE_SYMMETRIC_BANDED;
+                Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero,matStorage,bwidth,bwidth);
+            }
+            else
+            {
+                MatrixStorage matStorage = ePOSITIVE_DEFINITE_SYMMETRIC;
+                Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero,matStorage);
+            }                
+
             // Setup Block Matrix systems
             int n_exp = GetExpSize();
             Array<OneD,unsigned int> nbdry_size(n_exp);
@@ -611,9 +645,6 @@ namespace Nektar
                 loc_mat = (*m_exp)[n]->GetLocStaticCondMatrix(matkey);                   
                 loc_lda = (*m_exp)[n]->NumBndryCoeffs(); 
 
-                //cout<<"loc mat "<<endl<<*loc_mat<<endl;
-		    
-
                 BinvD->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,1));
                 invD->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,1));
                 C->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,0));
@@ -621,18 +652,24 @@ namespace Nektar
                 // Set up  Matrix; 
                 for(i = 0; i < loc_lda; ++i)
                 {
-                    gid1 = locToGloMap->GetLocalToGlobalBndMap(cnt + i);
+                    gid1 = locToGloMap->GetLocalToGlobalBndMap(cnt + i) - NumDirBCs;
                     sign1 = locToGloMap->GetLocalToGlobalBndSign(cnt + i);
-                    if(gid1 >= NumDirBCs)
+                    if(gid1 >= 0)
                     {
                         for(j = 0; j < loc_lda; ++j)
                         {
-                            gid2 = locToGloMap->GetLocalToGlobalBndMap(cnt + j);
+                            gid2 = locToGloMap->GetLocalToGlobalBndMap(cnt + j) - NumDirBCs;
                             sign2 = locToGloMap->GetLocalToGlobalBndSign(cnt + j);
-                            if(gid2 >= NumDirBCs)
+                            if(gid2 >= 0)
                             {
-                                (*Gmat)(gid1-NumDirBCs,gid2-NumDirBCs) 
-                                    += sign1*sign2*(*loc_mat)(i,j);
+                                // As the global matrix should be symmetric, only add the value
+                                // for the upper triangular part in order to avoid
+                                // entries to be entered twice
+                                if(gid2 >= gid1)
+                                {
+                                    value = Gmat->GetValue(gid1,gid2) + sign1*sign2*(*loc_mat)(i,j);
+                                    Gmat->SetValue(gid1,gid2,value);
+                                }
                             }
                         }		
                     }
@@ -640,11 +677,10 @@ namespace Nektar
                 cnt += (*m_exp)[n]->NumBndryCoeffs();
             }
             
-            // Believe that we need a call of the type:
-            //linsys = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat,eWrapper);
             if(rows)
             {
-                linsys = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat);
+                PointerWrapper w = eWrapper;
+                linsys = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat,w);
             }
             
             returnlinsys = MemoryManager<GlobalLinSys>::AllocateSharedPtr(mkey,linsys,BinvD,C,invD);

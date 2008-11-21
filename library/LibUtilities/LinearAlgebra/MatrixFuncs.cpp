@@ -371,5 +371,35 @@ namespace Nektar
         }
     }
 
+    unsigned int TriangularBandedMatrixFuncs::GetRequiredStorageSize(unsigned int rows, unsigned int columns,
+                                                                     unsigned int nSubSuperDiags)
+    {
+        ASSERTL0(rows==columns, "Triangular matrices must be square.");
+        return (nSubSuperDiags+1)*columns;
+    }
+
+    unsigned int SymmetricBandedMatrixFuncs::CalculateIndex(unsigned int curRow, unsigned int curColumn, 
+                                                            unsigned int nSuperDiags)
+    {
+        if( curRow <= curColumn )
+        {
+            if( (curColumn - curRow) <= nSuperDiags )
+            {
+                unsigned int elementRow = nSuperDiags - (curColumn - curRow);
+                unsigned int elementColumn = curColumn;
+                
+                return elementRow + elementColumn*(nSuperDiags+1);
+            }
+            else
+            {
+                return std::numeric_limits<unsigned int>::max();
+            }
+        }
+        else
+        {
+            return CalculateIndex(curColumn,curRow,nSuperDiags);
+        }
+
+    }
 }
 

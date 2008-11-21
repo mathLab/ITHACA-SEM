@@ -191,6 +191,31 @@ namespace Nektar
         static unsigned int CalculateIndex(unsigned int row, unsigned int col);
     };
 
+
+    struct TriangularBandedMatrixFuncs
+    {
+        static unsigned int GetRequiredStorageSize(unsigned int rows, unsigned int columns,
+                                                   unsigned int nSubSuperDiags);
+    };
+    
+    struct UpperTriangularBandedMatrixFuncs : public TriangularBandedMatrixFuncs
+    {
+    };
+        
+    struct LowerTriangularBandedMatrixFuncs : public TriangularBandedMatrixFuncs
+    {                    
+    };
+
+    /// \internal
+    /// Symmetric banded matrices use upper triangular banded packed storage.
+    struct SymmetricBandedMatrixFuncs : private TriangularBandedMatrixFuncs
+    {
+        using TriangularBandedMatrixFuncs::GetRequiredStorageSize;
+        
+        static unsigned int CalculateIndex(unsigned int curRow, unsigned int curColumn, 
+                                           unsigned int nSuperDiags);
+    };
+
 }
 
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_MATRIX_FUNCS_H

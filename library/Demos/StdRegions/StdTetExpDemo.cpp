@@ -37,11 +37,7 @@ int main(int argc, char *argv[])
         cerr << "\t Modified_A = 4\n";
         cerr << "\t Modified_B = 5\n";
         cerr << "\t Modified_C = 6\n";
-        cerr << "\t Fourier    = 7\n";
-        cerr << "\t Lagrange   = 8\n";
-        cerr << "\t Legendre   = 9\n";
-        cerr << "\t Chebyshev  = 10\n";
-        cerr << "\t Nodal Tet (Electro) = 13    (3D Nodal Electrostatic Points on a Tetrahedron)\n";
+        cerr << "\t Nodal Tet (Electro) = 7    (3D Nodal Electrostatic Points on a Tetrahedron)\n";
         cerr << "\n\n" << "Example: " << argv[0] << " 1 2 3 2 2 2 5 5 5" << endl;
         cerr << endl;
 
@@ -58,7 +54,7 @@ int main(int argc, char *argv[])
     LibUtilities::BasisType   bType_z = static_cast<LibUtilities::BasisType>( bType_z_val );
     LibUtilities::PointsType  NodalType = LibUtilities::eNoPointsType;
     
-    if( (bType_x_val == 13) || (bType_y_val == 13) || (bType_z_val == 13) )
+    if( (bType_x_val == 7) || (bType_y_val == 7) || (bType_z_val == 7) )
     {
         bType_x =   LibUtilities::eOrtho_A;
         bType_y =   LibUtilities::eOrtho_B;
@@ -98,32 +94,34 @@ int main(int argc, char *argv[])
     //-----------------------------------------------
     // Define a 3D expansion based on basis definition
     
-    StdRegions::StdExpansion3D *ste;
+    StdRegions::StdExpansion *ste;
     
     if( regionShape == StdRegions::eTetrahedron ) 
     {
         const LibUtilities::PointsKey   pointsKey_x( Qx, Qtype_x );
         const LibUtilities::PointsKey   pointsKey_y( Qy, Qtype_y );
         const LibUtilities::PointsKey   pointsKey_z( Qz, Qtype_z );
-
+        
         const LibUtilities::BasisKey    basisKey_x( bType_x, xModes, pointsKey_x );
         const LibUtilities::BasisKey    basisKey_y( bType_y, yModes, pointsKey_y );
         const LibUtilities::BasisKey    basisKey_z( bType_z, zModes, pointsKey_z );
-
-        if( bType_x_val < 10 ) {
+        
+        if( bType_x_val < 7 ) 
+        {
             ste = new StdTetExp( basisKey_x, basisKey_y, basisKey_z );
-        } else {
+        }
+        else {
             cerr << "Implement the next line!!!!!!" << endl;
             //ste = new StdRegions::StdNodalTetExp( basisKey_x, basisKey_y, basisKey_z, NodalType );
             exit(1);
         }
-    
+        
         Array<OneD,NekDouble> x = Array<OneD,NekDouble>( Qx * Qy * Qz );
         Array<OneD,NekDouble> y = Array<OneD,NekDouble>( Qx * Qy * Qz );
         Array<OneD,NekDouble> z = Array<OneD,NekDouble>( Qx * Qy * Qz );
         
         ste->GetCoords(x,y,z);
-    
+        
         //----------------------------------------------
         // Define solution to be projected
         for(int n = 0; n < Qx * Qy * Qz; ++n) {
@@ -131,7 +129,7 @@ int main(int argc, char *argv[])
         }
         //----------------------------------------------
     }
-           
+    
     //---------------------------------------------
     // Project onto Expansion 
     ste->FwdTrans( solution, ste->UpdateCoeffs() );
@@ -155,12 +153,10 @@ int main(int argc, char *argv[])
     t[1] = -0.75;
     t[2] = -0.85;
     
-    if( regionShape == StdRegions::eTetrahedron ) {
-        solution[0] = Tet_sol( t[0], t[1], t[2], P, Q, R ); 
-    }
+    solution[0] = Tet_sol( t[0], t[1], t[2], P, Q, R ); 
  
     NekDouble numericSolution = ste->PhysEvaluate(t);
-    cout << "Interpolation difference from actual solution at x = ( " << 
+    cout << "Interpolation error at x = (" << 
         t[0] << ", " << t[1] << ", " << t[2] << " ): " << numericSolution - solution[0] << endl;
     //-------------------------------------------
     

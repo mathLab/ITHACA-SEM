@@ -113,7 +113,7 @@ int main(int argc, char *argv[]) {
     //-----------------------------------------------
     // Define a 3D expansion based on basis definition
     
-    StdRegions::StdExpansion3D *sPyrE;
+    StdRegions::StdExpansion *sPyrE;
     
     if( regionShape == StdRegions::ePyramid ) 
     { 

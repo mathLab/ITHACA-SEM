@@ -39,7 +39,6 @@ int main(int argc, char *argv[]) {
         cerr << "\t Lagrange   = 8\n";
         cerr << "\t Legendre   = 9\n";
         cerr << "\t Chebyshev  = 10\n";
-        cerr << "\t Nodal Tet (Electro) = 13    (3D Nodal Electrostatic Points on a Tetrahedron)\n";
         cerr << "\n\n" << "Example: " << argv[0] << " 1 2 3 3 3 3 5 5 5" << endl;
         cerr << endl;
 
@@ -55,17 +54,6 @@ int main(int argc, char *argv[]) {
     LibUtilities::BasisType   bType_x = static_cast<LibUtilities::BasisType>( bType_x_val );
     LibUtilities::BasisType   bType_y = static_cast<LibUtilities::BasisType>( bType_y_val );
     LibUtilities::BasisType   bType_z = static_cast<LibUtilities::BasisType>( bType_z_val );
-    LibUtilities::PointsType  NodalType = LibUtilities::eNoPointsType;
-    
-    if( (bType_x_val == 13) || (bType_y_val == 13) || (bType_z_val == 13) )
-    {
-        bType_x =   LibUtilities::eOrtho_A;
-        bType_y =   LibUtilities::eOrtho_B;
-        bType_z =   LibUtilities::eOrtho_C;
-        
-        NodalType = LibUtilities::eNodalTetElec;
-    }
-
 
     // Check to see that correct Expansions are used
     if( regionShape == StdRegions::eHexahedron ) 
@@ -80,7 +68,7 @@ int main(int argc, char *argv[]) {
             NEKERROR(ErrorUtil::efatal, "Basis 2 cannot be of type Ortho_C or Modified_C");
         }
     }
-      
+    
     int xModes   = atoi(argv[4]);
     int yModes   = atoi(argv[5]);
     int zModes   = atoi(argv[6]);
@@ -97,37 +85,37 @@ int main(int argc, char *argv[]) {
     Array<OneD,NekDouble> y = Array<OneD,NekDouble>( Qx * Qy * Qz );
     Array<OneD,NekDouble> z = Array<OneD,NekDouble>( Qx * Qy * Qz );
     
-  if(bType_x != LibUtilities::eFourier)
-  {
-      Qtype_x = LibUtilities::eGaussLobattoLegendre; 
-  }
-  else 
-  {
-      Qtype_x = LibUtilities::eFourierEvenlySpaced;
-  }
-
-  if(bType_y != LibUtilities::eFourier)
-  {
-      Qtype_y = LibUtilities::eGaussLobattoLegendre; 
-  }
-  else
-  {
-      Qtype_y = LibUtilities::eFourierEvenlySpaced;
-  }
-  
-  if(bType_z != LibUtilities::eFourier)
-  {
-      Qtype_z = LibUtilities::eGaussLobattoLegendre; 
-  }
-  else
-  {
-      Qtype_z = LibUtilities::eFourierEvenlySpaced;
-  }
-        
+    if(bType_x != LibUtilities::eFourier)
+    {
+        Qtype_x = LibUtilities::eGaussLobattoLegendre; 
+    }
+    else 
+    {
+        Qtype_x = LibUtilities::eFourierEvenlySpaced;
+    }
+    
+    if(bType_y != LibUtilities::eFourier)
+    {
+        Qtype_y = LibUtilities::eGaussLobattoLegendre; 
+    }
+    else
+    {
+        Qtype_y = LibUtilities::eFourierEvenlySpaced;
+    }
+    
+    if(bType_z != LibUtilities::eFourier)
+    {
+        Qtype_z = LibUtilities::eGaussLobattoLegendre; 
+    }
+    else
+    {
+        Qtype_z = LibUtilities::eFourierEvenlySpaced;
+    }
+    
     //-----------------------------------------------
     // Define a 3D expansion based on basis definition
     
-    StdRegions::StdExpansion3D *she;
+    StdRegions::StdExpansion *she;
     
     if( regionShape == StdRegions::eHexahedron ) 
     { 
@@ -139,13 +127,7 @@ int main(int argc, char *argv[]) {
         const LibUtilities::BasisKey    basisKey_y( bType_y, yModes, pointsKey_y );
         const LibUtilities::BasisKey    basisKey_z( bType_z, zModes, pointsKey_z );
     
-        if( bType_x_val < 10 ) {
-            she = new StdRegions::StdHexExp( basisKey_x, basisKey_y, basisKey_z );
-        } else {
-            cerr << "Implement the next line!!!!!!" << endl;
-            //she = new StdRegions::StdNodalTetExp( basisKey_x, basisKey_y, basisKey_z, NodalType );
-            exit(1);
-        } 
+        she = new StdRegions::StdHexExp( basisKey_x, basisKey_y, basisKey_z );
             
         she->GetCoords(x,y,z);
     

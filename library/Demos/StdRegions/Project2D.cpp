@@ -28,7 +28,7 @@ int main(int argc, char *argv[]){
   LibUtilities::BasisType     btype1,btype2;
   LibUtilities::PointsType     NodalType;
   StdRegions::ExpansionType    regionshape;
-  StdRegions::StdExpansion2D *E;
+  StdRegions::StdExpansion *E;
   Array<OneD, NekDouble> sol;
   
   if(argc != 8)

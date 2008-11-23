@@ -263,8 +263,6 @@ namespace Nektar
         interpolatingNodes = &I->GetPtr()[0];       
         
         value = Blas::Ddot(Qz, interpolatingNodes, 1, &sumFactorization_r[0], 1);            
-        cout << "Value: = " << value << endl;
-
 
         return value;
     }
@@ -274,6 +272,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion3D.cpp,v $
+ * Revision 1.17  2008/07/04 10:18:40  pvos
+ * Some updates
+ *
  * Revision 1.16  2008/05/07 16:04:57  pvos
  * Mapping + Manager updates
  *

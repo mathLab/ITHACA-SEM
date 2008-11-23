@@ -306,6 +306,152 @@ namespace Nektar
                                         const Array<OneD, const NekDouble>& inarray, 
                                         Array<OneD, NekDouble> & outarray)
         {
+            
+            ASSERTL1( (m_base[1]->GetBasisType() != LibUtilities::eOrtho_B)  ||
+                      (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
+                      "Basis[1] is not a general tensor type");
+
+            ASSERTL1( (m_base[2]->GetBasisType() != LibUtilities::eOrtho_C) ||
+                      (m_base[2]->GetBasisType() != LibUtilities::eModified_C),
+                      "Basis[2] is not a general tensor type");
+#if 1 
+            int  nquad0 = m_base[0]->GetNumPoints();
+            int  nquad1 = m_base[1]->GetNumPoints();
+            int  nquad2 = m_base[2]->GetNumPoints();
+
+            int  order0 = m_base[0]->GetNumModes();
+            int  order1 = m_base[1]->GetNumModes();
+            int  order2 = m_base[2]->GetNumModes();
+
+            Array<OneD, const NekDouble> base0 = m_base[0]->GetBdata();
+            Array<OneD, const NekDouble> base1 = m_base[1]->GetBdata();
+            Array<OneD, const NekDouble> base2 = m_base[2]->GetBdata();
+            
+            Array<OneD, NekDouble > tmp (nquad0*nquad1*nquad2);
+            Array<OneD, NekDouble > tmp1(nquad1*nquad2*order0);
+            Array<OneD, NekDouble > tmp2(nquad2*order0*(order1+1)/2);
+
+            const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
+            const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
+            const Array<OneD, const NekDouble>& w2 = m_base[2]->GetW();
+
+            const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
+            const Array<OneD, const NekDouble>& z2 = m_base[2]->GetZ();
+            
+            int i,j, mode,mode1, cnt; 
+
+            // multiply by integration constants 
+            for(i = 0; i < nquad1*nquad2; ++i)
+            {
+                Vmath::Vmul(nquad0,(NekDouble*)&inarray[0]+i*nquad0,1,
+                            w0.get(),1, &tmp[0]+i*nquad0,1);
+            }
+            switch(m_base[1]->GetPointsType())
+            {
+            case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
+                
+                for(j = 0; j < nquad2; ++j)
+                {
+                    for(i = 0; i < nquad1; ++i)
+                    {
+                        Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], &tmp[0]+i*nquad0 + 
+                                    j*nquad0*nquad1,1);
+                    }
+                }
+                break;
+            case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product 
+                for(j = 0; j < nquad2; ++j)
+                {
+                    for(i = 0; i < nquad1; ++i)
+                    {
+                        Blas::Dscal(nquad0,0.5*w1[i], &tmp[0]+i*nquad0 + 
+                                    j*nquad0*nquad1,1);      
+                    }
+                }
+                break;
+            }
+
+            switch(m_base[2]->GetPointsType())
+            {
+            case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
+                for(i = 0; i < nquad2; ++i)
+                {
+                    Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*(1-z2[i])*w2[i], 
+                                &tmp[0]+i*nquad0*nquad1,1);
+                }
+                break;
+            case LibUtilities::eGaussRadauMAlpha2Beta0: // (2,0) Jacobi Inner product 
+                for(i = 0; i < nquad2; ++i)
+                {
+                    Blas::Dscal(nquad0*nquad1, 0.25*w2[i], 
+                                &tmp[0]+i*nquad0*nquad1, 1);      
+                }
+                break;
+            }
+
+            // Inner product with respect to the '0' direction
+            Blas::Dgemm('T','N', nquad1*nquad2, order0, nquad0, 1.0, 
+                        &tmp[0], nquad0, base0.get(), nquad0, 0.0, 
+                        &tmp1[0], nquad1*nquad2);
+            
+            
+            // Inner product with respect to the '1' direction
+            for(mode=i=0; i < order0; ++i)
+            {
+                Blas::Dgemm('T','N',nquad2,order1-i,nquad1,1.0,
+                            &tmp1[0]+i*nquad1*nquad2, nquad1, 
+                            base1.get()+mode*nquad1, nquad1, 
+                            0.0, &tmp2[0]+mode*nquad2, nquad2);
+                mode  += order1-i;
+            }                
+
+
+            // fix for modified basis for base singular vertex
+            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+            {
+                //base singular vertex and singular edge (1+b)/2
+                //(1+a)/2 components (makes tmp[nquad2] entry into (1+b)/2)
+                Blas::Dgemv('T', nquad1,nquad2, 1.0, &tmp1[0]+nquad1*nquad2,
+                            nquad1, base1.get()+nquad1,1, 1.0, &tmp2[nquad2],1);
+            }
+            
+
+            // Inner product with respect to the '2' direction
+            mode = mode1 = cnt = 0;
+            for(i = 0; i < order0; ++i)
+            {
+                for(j = 0; j < order1-i ; ++j, ++cnt)
+                {
+                    Blas::Dgemv('T', nquad2, order2-i-j,1.0,
+                                base2.get()+mode*nquad2,
+                                nquad2,&tmp2[0]+cnt*nquad2, 1,
+                                0.0, &outarray[0]+mode1,1);
+                    mode  += order2-i-j;
+                    mode1 += order2-i-j;                    
+                }
+
+                //increment mode1 in case order1!=order2
+                for(j = order1-i; j < order2-i; ++j)
+                {
+                    mode += order2-i-j;
+                }
+            }
+
+            // fix for modified basis for top singular vertex component
+            // Already have evaluated (1+c)/2 (1-b)/2 (1-a)/2
+            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+            {
+                // add in (1+c)/2 (1+b)/2   component
+                outarray[1] += Blas::Ddot(nquad2,base2.get()+nquad2,1,
+                                          &tmp2[nquad2],1);
+                
+                // add in (1+c)/2 (1-b)/2 (1+a)/2 component
+                outarray[1] += Blas::Ddot(nquad2,base2.get()+nquad2,1,
+                                          &tmp2[nquad2*order1],1);
+            }
+
+#else
+
             int     Qx = m_base[0]->GetNumPoints();
             int     Qy = m_base[1]->GetNumPoints();
             int     Qz = m_base[2]->GetNumPoints();
@@ -361,10 +507,16 @@ namespace Nektar
                     }
                 }
             }
+#endif
         }
 
         void StdTetExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
         {
+            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+            {
+                ASSERTL0(false,"This function will not work with modified basis since we have not dealt with singular vertces/edges");
+            }
+
             int     Qx = m_base[0]->GetNumPoints();
             int     Qy = m_base[1]->GetNumPoints();
             int     Qz = m_base[2]->GetNumPoints();
@@ -500,25 +652,32 @@ namespace Nektar
         /** 
             \brief Backward transformation is evaluated at the quadrature points
 		
-	    \f$ u^{\delta} (\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{m(pqr)} \hat u_{pqr} \phi_{pqr} (\xi_{1i}, \xi_{2j}, \xi_{3k})\f$
+	    \f$ u^{\delta} (\xi_{1i}, \xi_{2j}, \xi_{3k}) =
+	    \sum_{m(pqr)} \hat u_{pqr} \phi_{pqr} (\xi_{1i}, \xi_{2j},
+	    \xi_{3k})\f$
 	    
             Backward transformation is three dimensional tensorial expansion
 		
-	    \f$ u (\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{p=0}^{Q_x} \psi_p^a (\xi_{1i}) \lbrace { \sum_{q=0}^{Q_y} \psi_{pq}^b (\xi_{2j})
-	    \lbrace { \sum_{r=0}^{Q_z} \hat u_{pqr} \psi_{pqr}^c (\xi_{3k}) \rbrace}
-	    \rbrace}. \f$
+	    \f$ u (\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{p=0}^{Q_x}
+	    \psi_p^a (\xi_{1i}) \lbrace { \sum_{q=0}^{Q_y} \psi_{pq}^b
+	    (\xi_{2j}) \lbrace { \sum_{r=0}^{Q_z} \hat u_{pqr}
+	    \psi_{pqr}^c (\xi_{3k}) \rbrace} \rbrace}. \f$
 
 	    And sumfactorizing step of the form is as:\\
-	    \f$$ f_{pq} (\xi_{3k}) = \sum_{r=0}^{Q_z} \hat u_{pqr} \psi_{pqr}^c (\xi_{3k}),\\ 
-            g_{p} (\xi_{2j}, \xi_{3k}) = \sum_{r=0}^{Q_y} \psi_{pq}^b (\xi_{2j}) f_{pq} (\xi_{3k}),\\
-            u(\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{p=0}^{Q_x} \psi_{p}^a (\xi_{1i}) g_{p} (\xi_{2j}, \xi_{3k}).
-	    \f$
+
+	    \f$$ f_{pq} (\xi_{3k}) = \sum_{r=0}^{Q_z} \hat u_{pqr}
+	    \psi_{pqr}^c (\xi_{3k}),\\
+
+            g_{p} (\xi_{2j}, \xi_{3k}) = \sum_{r=0}^{Q_y} \psi_{pq}^b
+            (\xi_{2j}) f_{pq} (\xi_{3k}),\\
+
+            u(\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{p=0}^{Q_x}
+	    \psi_{p}^a (\xi_{1i}) g_{p} (\xi_{2j}, \xi_{3k}).  \f$
         **/
-        void StdTetExp::BwdTrans(
-                                 const Array<OneD, const NekDouble>& inarray, 
+        void StdTetExp::BwdTrans(const Array<OneD, const NekDouble>& inarray, 
                                  Array<OneD, NekDouble> &outarray)
         {
-
+            
             ASSERTL1( (m_base[1]->GetBasisType() != LibUtilities::eOrtho_B)  ||
                       (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
                       "Basis[1] is not a general tensor type");
@@ -526,7 +685,89 @@ namespace Nektar
             ASSERTL1( (m_base[2]->GetBasisType() != LibUtilities::eOrtho_C) ||
                       (m_base[2]->GetBasisType() != LibUtilities::eModified_C),
                       "Basis[2] is not a general tensor type");
+#if 1
+            int  nquad0 = m_base[0]->GetNumPoints();
+            int  nquad1 = m_base[1]->GetNumPoints();
+            int  nquad2 = m_base[2]->GetNumPoints();
 
+            int  order0 = m_base[0]->GetNumModes();
+            int  order1 = m_base[1]->GetNumModes();
+            int  order2 = m_base[2]->GetNumModes();
+
+            Array<OneD, const NekDouble> base0 = m_base[0]->GetBdata();
+            Array<OneD, const NekDouble> base1 = m_base[1]->GetBdata();
+            Array<OneD, const NekDouble> base2 = m_base[2]->GetBdata();
+            
+            Array<OneD, NekDouble > tmp(nquad2*order0*(order1+1)/2);
+            Array<OneD, NekDouble > tmp1(nquad2*nquad1*order0);
+
+            int i,j, mode,mode1, cnt; 
+            
+            // Perform summation over '2' direction
+            mode = mode1 = cnt = 0;
+            for(i = 0; i < order0; ++i)
+            {
+                for(j = 0; j < order1-i ; ++j, ++cnt)
+                {
+                    Blas::Dgemv('N', nquad2,order2-i-j,1.0,
+                                base2.get()+mode*nquad2,
+                                nquad2,&inarray[0]+mode1,1,0.0,
+                                &tmp[0]+cnt*nquad2,1);
+                    mode  += order2-i-j;
+                    mode1 += order2-i-j;                    
+                }
+                //increment mode1 in case order1!=order2
+                for(j = order1-i; j < order2-i; ++j)
+                {
+                    mode += order2-i-j;
+                }
+            }
+
+            // fix for modified basis by adding split of top singular
+            // vertex mode - currently (1+c)/2 x (1-b)/2 x (1-a)/2
+            // component is evaluated
+            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+            {
+                // top singular vertex - (1+c)/2 x (1+b)/2 x (1-a)/2 component
+                Blas::Daxpy(nquad2,inarray[1],base2.get()+nquad2,1,
+                            &tmp[0]+nquad2,1);
+
+                // top singular vertex - (1+c)/2 x (1-b)/2 x (1+a)/2 component
+                Blas::Daxpy(nquad2,inarray[1],base2.get()+nquad2,1,
+                            &tmp[0]+order1*nquad2,1);
+            }
+
+            // Perform summation over '1' direction
+            mode = 0;
+            for(i = 0; i < order0; ++i)
+            {
+                Blas::Dgemm('N','T',nquad1,nquad2,order1-i,1.0,
+                            base1.get()+mode*nquad1,nquad1, 
+                            &tmp[0]+mode*nquad2,nquad2,0.0,
+                            &tmp1[0]+i*nquad1*nquad2,nquad1);
+                mode  += order1-i;
+            }
+            
+            // fix for modified basis by adding additional split of
+            // top and base singular vertex modes as well as singular
+            // edge
+            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+            {
+                // use tmp to sort out singular vertices and
+                // singular edge components with (1+b)/2 (1+a)/2 form
+                for(i = 0; i < nquad2; ++i)
+                {
+                    Blas::Daxpy(nquad1,tmp[nquad2+i], base1.get()+nquad1,1,
+                                &tmp1[nquad1*nquad2]+i*nquad1,1);
+                }                
+            }
+
+            // Perform summation over '0' direction
+            Blas::Dgemm('N','T', nquad0,nquad1*nquad2,order0,1.0, 
+                        base0.get(),nquad0, &tmp1[0], nquad1*nquad2,
+                        0.0, &outarray[0], nquad0);
+
+#else
             int     Qx = m_base[0]->GetNumPoints();
             int     Qy = m_base[1]->GetNumPoints();
             int     Qz = m_base[2]->GetNumPoints();
@@ -597,6 +838,7 @@ namespace Nektar
                     }
                 }
             }
+#endif
         }
 
 	/** \brief Forward transform from physical quadrature space
@@ -612,14 +854,15 @@ namespace Nektar
             - (this)->_coeffs: updated array of expansion coefficients. 
             
         */    
-        void StdTetExp::FwdTrans( const Array<OneD, const NekDouble>& inarray,  Array<OneD, NekDouble> &outarray)
+        void StdTetExp::FwdTrans(const Array<OneD, const NekDouble>& inarray,  
+                                 Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(inarray,outarray);
 
             // get Mass matrix inverse
             StdMatrixKey      masskey(eInvMass,DetExpansionType(),*this);
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
-
+            
             // copy inarray in case inarray == outarray
             DNekVec in (m_ncoeffs, outarray);
             DNekVec out(m_ncoeffs, outarray, eWrapper);
@@ -642,23 +885,23 @@ namespace Nektar
             }
             else
             {
-                eta[2] = xi[2]; // eta_z = xi_z
-                eta[1] = 2.0*(1.0+xi[1])/(1.0-xi[2]) - 1.0; //eta_y = 2(1 + xi_y)/(1 - xi_z) - 1
+                // eta_z = xi_z
+                eta[2] = xi[2]; 
+                //eta_y = 2(1 + xi_y)/(1 - xi_z) - 1
+                eta[1] = 2.0*(1.0+xi[1])/(1.0-xi[2]) - 1.0; 
                 if( fabs(eta[1]-1.0) < NekConstants::kEvaluateTol ) 
                 {
-                    // Distant diagonal edge shared by all eta_x coordinate planes: the xi_y == -xi_z line
+                    // Distant diagonal edge shared by all eta_x
+                    // coordinate planes: the xi_y == -xi_z line
                     eta[0] = -1.0;
                 } 
                 else 
                 {
-                    //eta[0] = 4.0*(1 + xi[0])/((1 - eta[1])*(1 - eta[2])) - 1;
-                    eta[0] = 2.0*(1.0+xi[0])/(-xi[1]-xi[2]) - 1.0; //eta_x = 2(1 + xi_x)/(-xi_y - xi_z) - 1
+                    //eta_x = 2(1 + xi_x)/(-xi_y - xi_z) - 1
+                    eta[0] = 2.0*(1.0+xi[0])/(-xi[1]-xi[2]) - 1.0; 
                 }
 
             } 
-
-            // cout << "x i = " << xi[0] << ", " << xi[1] << ", " << xi[2]  << endl;
-            // cout << "eta = " << eta[0] << ", " << eta[1] << ", " << eta[2]  << endl;
 
             return  StdExpansion3D::PhysEvaluate(eta);  
         }
@@ -782,6 +1025,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTetExp.cpp,v $
+ * Revision 1.19  2008/09/17 13:46:06  pvos
+ * Added LocalToGlobalC0ContMap for 3D expansions
+ *
  * Revision 1.18  2008/07/19 21:12:54  sherwin
  * Removed MapTo function and made orientation convention anticlockwise in UDG routines
  *

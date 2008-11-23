@@ -188,7 +188,7 @@ namespace Nektar
                 {
                     int P = numModes - 1, Q = numModes - 1, R = numModes - 1;
                     NekDouble *mode = m_bdata.data();
-
+                    
                     for( int p = 0; p <= P; ++p ) 
                     {
                         for( int q = 0; q <= Q - p; ++q ) 
@@ -198,12 +198,15 @@ namespace Nektar
                                 Polylib::jacobfd(numPoints, z.data(), mode, NULL, r, 2*p + 2*q + 2.0, 0.0);
                                 for( int k = 0; k < numPoints; ++k ) 
                                 {
-                                    mode[k] *= 0.5*pow(1.0 - z[k], p+q);
-                                }
-                            }
-                        } 
-                    }
+                                    // Note factor of 0.5 is part of normalisation
+                                    mode[k] *= pow(0.5*(1.0 - z[k]), p+q);
 
+                                    // finish normalisation
+                                    mode[k] *= sqrt(r+p+q+1.5); 
+                                }
+                            } 
+                        }
+                    }
 
                     // Define derivative basis
                     Blas::Dgemm('n','n',numPoints,numModes*(numModes+1)*
@@ -563,6 +566,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.35  2008/11/16 23:45:57  sherwin
+* Updates to include Modified_C for tets
+*
 * Revision 1.34  2008/10/04 12:24:18  sherwin
 * moved a few brackets to meet coding standard
 *

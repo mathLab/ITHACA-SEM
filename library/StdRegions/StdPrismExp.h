@@ -78,12 +78,16 @@ namespace Nektar
                 return ePrism;
             }
 
+            int GetVertexMap(const int localVertexId);
+       
+            void GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+                                                 Array<OneD, unsigned int> &maparray,
+                                                 Array<OneD, int> &signarray);
+                                                
             void GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                      Array<OneD, unsigned int> &maparray,
                                      Array<OneD, int> &signarray);
                                     
-
-            // int GetBasisNumModes   (const int dir)
             int GetFaceNcoeffs(const int i) const
             {
                 ASSERTL2((i >= 0) && (i <= 4), "face id is out of range");
@@ -93,7 +97,8 @@ namespace Nektar
                 }
                 else if((i == 1) || (i == 3))
                 {
-                    return GetBasisNumModes(0)*GetBasisNumModes(2);
+                    int P = GetBasisNumModes(0)-1, Q = GetBasisNumModes(2)-1;
+                    return Q+1 + (P*(1 + 2*Q - P))/2;
                 }
                 else
                 {
@@ -203,8 +208,6 @@ namespace Nektar
         
         protected:
 
-
-
             /** 
                 \brief Calculate the inner product of inarray with respect to
                 the basis B=base0*base1*base2 and put into outarray:
@@ -266,7 +269,36 @@ namespace Nektar
             {
                 return GetFaceNcoeffs(i);
             }
-        
+
+            virtual void v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
+            {
+                GetBoundaryMap(outarray);
+            }
+
+            virtual void v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
+            {
+                GetInteriorMap(outarray);
+            }
+            
+            virtual int v_GetVertexMap(const int localVertexId)
+            {
+                return GetVertexMap(localVertexId);
+            }
+
+            virtual void v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+                                              Array<OneD, unsigned int> &maparray,
+                                              Array<OneD, int> &signarray)
+            {
+                GetEdgeInteriorMap(eid,edgeOrient,maparray,signarray);
+            } 
+            
+            virtual void v_GetFaceInteriorMap(const int fid, const FaceOrientation faceOrient,
+                                              Array<OneD, unsigned int> &maparray,
+                                              Array<OneD, int>& signarray)
+            {
+                GetFaceInteriorMap(fid,faceOrient,maparray,signarray);
+            }
+                    
             virtual void v_GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                                Array<OneD, unsigned int> &maparray,
                                                Array<OneD, int>& signarray)
@@ -365,6 +397,9 @@ namespace Nektar
 
 /**
  * $Log: StdPrismExp.h,v $
+ * Revision 1.20  2008/11/17 09:02:38  ehan
+ * Added necessary mapping routines
+ *
  * Revision 1.19  2008/09/17 13:46:06  pvos
  * Added LocalToGlobalC0ContMap for 3D expansions
  *

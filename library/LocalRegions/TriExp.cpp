@@ -210,7 +210,7 @@ namespace Nektar
             }
         }
 
-        void TriExp::LaplacianMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+        void TriExp::LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                       Array<OneD,NekDouble> &outarray,
                                                       const StdRegions::StdMatrixKey &mkey)
         {
@@ -325,11 +325,11 @@ namespace Nektar
             }
             else
             {
-                StdExpansion::LaplacianMatrixOp_PartitionedOp_GenericImpl(inarray,outarray,mkey);
+                StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
             }
         }
 
-        void TriExp::HelmholtzMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+        void TriExp::HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                       Array<OneD,NekDouble> &outarray,
                                                       const StdRegions::StdMatrixKey &mkey)
         {
@@ -1663,6 +1663,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.47  2008/11/19 16:01:41  pvos
+ *    Added functionality for variable Laplacian coeffcients
+ *
  *    Revision 1.46  2008/11/05 16:08:15  pvos
  *    Added elemental optimisation functionality
  *

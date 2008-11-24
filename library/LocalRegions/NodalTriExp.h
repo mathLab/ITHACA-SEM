@@ -159,7 +159,7 @@ namespace Nektar
                 }
                 else
                 {
-                    StdExpansion::MassMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                    StdExpansion::MassMatrixOp_MatFree(inarray,outarray,mkey);
                 }
             }
 
@@ -176,7 +176,7 @@ namespace Nektar
                 }
                 else
                 {
-                    StdExpansion::LaplacianMatrixOp_PartitionedOp_GenericImpl(inarray,outarray,mkey);
+                    StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
                 }
             }
 
@@ -194,7 +194,7 @@ namespace Nektar
                 }
                 else
                 {
-                    StdExpansion::LaplacianMatrixOp_PartitionedOp(k1,k2,inarray,outarray,mkey);
+                    StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,mkey);
                 }
             }
 
@@ -212,7 +212,7 @@ namespace Nektar
                 }
                 else
                 {
-                    StdExpansion::WeakDerivMatrixOp_PartitionedOp(i,inarray,outarray,mkey);
+                    StdExpansion::WeakDerivMatrixOp_MatFree(i,inarray,outarray,mkey);
                 }
             }
             
@@ -229,7 +229,7 @@ namespace Nektar
                 }
                 else
                 {
-                    StdExpansion::HelmholtzMatrixOp_PartitionedOp_GenericImpl(inarray,outarray,mkey);
+                    StdExpansion::HelmholtzMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
                 }
             }  
             
@@ -510,6 +510,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.h,v $
+ *    Revision 1.23  2008/11/19 16:01:41  pvos
+ *    Added functionality for variable Laplacian coeffcients
+ *
  *    Revision 1.22  2008/11/05 16:08:15  pvos
  *    Added elemental optimisation functionality
  *

@@ -1268,43 +1268,50 @@ namespace Nektar
                 v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
             }    
             
-            void GeneralMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+            // The term _MatFree denotes that the action of the MatrixOperation
+            // is done withouth actually using the matrix (which then needs to be stored/calculated).
+            // Although this does not strictly mean that no matrix operations are involved in the 
+            // evaluation of the operation, we use this term in the same context used as in the following
+            // paper:
+            // R. C. Kirby, M. G. Knepley, A. Logg, and L. R. Scott, 
+            // "Optimizing the evaluation of finite element matrices," SISC 27:741-758 (2005)
+            void GeneralMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                Array<OneD,NekDouble> &outarray,
                                                const StdMatrixKey &mkey);
 
-            void MassMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray, 
+            void MassMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray, 
                                             Array<OneD,NekDouble> &outarray,
                                             const StdMatrixKey &mkey);
             
-            void LaplacianMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+            void LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                  Array<OneD,NekDouble> &outarray,
                                                  const StdMatrixKey &mkey)
             {
-                v_LaplacianMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                v_LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
             }
 
-            void LaplacianMatrixOp_PartitionedOp_GenericImpl(const Array<OneD, const NekDouble> &inarray,
+            void LaplacianMatrixOp_MatFree_GenericImpl(const Array<OneD, const NekDouble> &inarray,
                                                              Array<OneD,NekDouble> &outarray,
                                                              const StdMatrixKey &mkey);
             
-            void LaplacianMatrixOp_PartitionedOp(const int k1, const int k2, 
+            void LaplacianMatrixOp_MatFree(const int k1, const int k2, 
                                                  const Array<OneD, const NekDouble> &inarray,
                                                  Array<OneD,NekDouble> &outarray,
                                                  const StdMatrixKey &mkey);
             
-            void WeakDerivMatrixOp_PartitionedOp(const int i,
+            void WeakDerivMatrixOp_MatFree(const int i,
                                                  const Array<OneD, const NekDouble> &inarray,
                                                  Array<OneD,NekDouble> &outarray,
                                                  const StdMatrixKey &mkey);
             
-            void HelmholtzMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+            void HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                  Array<OneD,NekDouble> &outarray,
                                                  const StdMatrixKey &mkey)
             {
-                v_HelmholtzMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                v_HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
             }
 
-            void HelmholtzMatrixOp_PartitionedOp_GenericImpl(const Array<OneD, const NekDouble> &inarray,
+            void HelmholtzMatrixOp_MatFree_GenericImpl(const Array<OneD, const NekDouble> &inarray,
                                                              Array<OneD,NekDouble> &outarray,
                                                              const StdMatrixKey &mkey);
 
@@ -1623,7 +1630,7 @@ namespace Nektar
             {
                 // If this function is not reimplemented on shape level, the function
                 // below will be called
-                MassMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                MassMatrixOp_MatFree(inarray,outarray,mkey);
             }
 
             virtual void v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
@@ -1632,7 +1639,7 @@ namespace Nektar
             {
                 // If this function is not reimplemented on shape level, the function
                 // below will be called
-                LaplacianMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
             }
 
             virtual void v_LaplacianMatrixOp(const int k1, const int k2, 
@@ -1642,7 +1649,7 @@ namespace Nektar
             {
                 // If this function is not reimplemented on shape level, the function
                 // below will be called
-                LaplacianMatrixOp_PartitionedOp(k1,k2,inarray,outarray,mkey);
+                LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,mkey);
             }
 
             virtual void v_WeakDerivMatrixOp(const int i,
@@ -1652,7 +1659,7 @@ namespace Nektar
             {
                 // If this function is not reimplemented on shape level, the function
                 // below will be called
-                WeakDerivMatrixOp_PartitionedOp(i,inarray,outarray,mkey);
+                WeakDerivMatrixOp_MatFree(i,inarray,outarray,mkey);
 
             }
             
@@ -1662,25 +1669,25 @@ namespace Nektar
             {
                 // If this function is not reimplemented on shape level, the function
                 // below will be called
-                HelmholtzMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
             }
 
-            virtual void v_LaplacianMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+            virtual void v_LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
                                                            const StdMatrixKey &mkey)
             {
                 // If this function is not reimplemented on shape level, the function
                 // below will be called
-                LaplacianMatrixOp_PartitionedOp_GenericImpl(inarray,outarray,mkey);
+                LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
             }
             
-            virtual void v_HelmholtzMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+            virtual void v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
                                                            const StdMatrixKey &mkey)
             {
                 // If this function is not reimplemented on shape level, the function
                 // below will be called
-                HelmholtzMatrixOp_PartitionedOp_GenericImpl(inarray,outarray,mkey);
+                HelmholtzMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
             }
 #endif
             
@@ -1697,6 +1704,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.106  2008/11/19 16:02:47  pvos
+ * Added functionality for variable Laplacian coeffcients
+ *
  * Revision 1.105  2008/11/05 16:08:15  pvos
  * Added elemental optimisation functionality
  *

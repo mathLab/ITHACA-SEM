@@ -352,7 +352,7 @@ namespace Nektar
                 }
                 else
                 {
-                    StdExpansion::MassMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                    StdExpansion::MassMatrixOp_MatFree(inarray,outarray,mkey);
                 }
             }
 
@@ -369,7 +369,7 @@ namespace Nektar
                 }
                 else
                 {
-                    StdQuadExp::LaplacianMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                    StdQuadExp::LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
                 }
             }
 
@@ -387,7 +387,7 @@ namespace Nektar
                 }
                 else
                 {
-                    StdExpansion::LaplacianMatrixOp_PartitionedOp(k1,k2,inarray,outarray,mkey);
+                    StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,mkey);
                 }
             }
 
@@ -405,7 +405,7 @@ namespace Nektar
                 }
                 else
                 {
-                    StdExpansion::WeakDerivMatrixOp_PartitionedOp(i,inarray,outarray,mkey);
+                    StdExpansion::WeakDerivMatrixOp_MatFree(i,inarray,outarray,mkey);
                 }
             }
             
@@ -422,7 +422,7 @@ namespace Nektar
                 }
                 else
                 {
-                    StdQuadExp::HelmholtzMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                    StdQuadExp::HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
                 }
             }       
 
@@ -461,10 +461,10 @@ namespace Nektar
                                        Array<OneD,NekDouble> &outarray,
                                        const StdMatrixKey &mkey);    
         
-            void LaplacianMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+            void LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                  Array<OneD,NekDouble> &outarray,
                                                  const StdMatrixKey &mkey);
-            void HelmholtzMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+            void HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                  Array<OneD,NekDouble> &outarray,
                                                  const StdMatrixKey &mkey);   
             
@@ -737,18 +737,18 @@ namespace Nektar
                 HelmholtzMatrixOp(inarray,outarray,mkey);
             }  
             
-            virtual void v_LaplacianMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+            virtual void v_LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
                                                            const StdMatrixKey &mkey)
             {
-                LaplacianMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
             }
             
-            virtual void v_HelmholtzMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+            virtual void v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
                                                            const StdMatrixKey &mkey)
             {
-                HelmholtzMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
             }
             
         };
@@ -762,6 +762,9 @@ namespace Nektar
 
 /**
  * $Log: StdQuadExp.h,v $
+ * Revision 1.44  2008/11/05 16:08:15  pvos
+ * Added elemental optimisation functionality
+ *
  * Revision 1.43  2008/09/23 22:09:55  ehan
  * Fixed ASSERTL2 violation
  *

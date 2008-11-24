@@ -390,7 +390,7 @@ namespace Nektar
                         Vmath::Zero(m_ncoeffs, tmp, 1);
                         tmp[i] = 1.0;
                         
-                        GeneralMatrixOp_PartitionedOp(tmp,tmp,mkey);
+                        GeneralMatrixOp_MatFree(tmp,tmp,mkey);
                         
                         Vmath::Vcopy(m_ncoeffs,&tmp[0],1,
                                      &(Mat.GetPtr())[0]+i*m_ncoeffs,1);
@@ -464,56 +464,56 @@ namespace Nektar
             }
         }
 
-        void StdExpansion::GeneralMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+        void StdExpansion::GeneralMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                          Array<OneD,NekDouble> &outarray,
                                                          const StdMatrixKey &mkey)
         {
             switch(mkey.GetMatrixType())
             {
             case eMass:
-                MassMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                MassMatrixOp_MatFree(inarray,outarray,mkey);
                 break;
             case eWeakDeriv0:
-                WeakDerivMatrixOp_PartitionedOp(0,inarray,outarray,mkey);
+                WeakDerivMatrixOp_MatFree(0,inarray,outarray,mkey);
                 break;
             case eWeakDeriv1:
-                WeakDerivMatrixOp_PartitionedOp(1,inarray,outarray,mkey);
+                WeakDerivMatrixOp_MatFree(1,inarray,outarray,mkey);
                 break;
             case eWeakDeriv2:
-                WeakDerivMatrixOp_PartitionedOp(2,inarray,outarray,mkey);
+                WeakDerivMatrixOp_MatFree(2,inarray,outarray,mkey);
                 break;
             case eLaplacian:
-                LaplacianMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
                 break;
             case eLaplacian00:
-                LaplacianMatrixOp_PartitionedOp(0,0,inarray,outarray,mkey);
+                LaplacianMatrixOp_MatFree(0,0,inarray,outarray,mkey);
                 break;
             case eLaplacian01:
-                LaplacianMatrixOp_PartitionedOp(0,1,inarray,outarray,mkey);
+                LaplacianMatrixOp_MatFree(0,1,inarray,outarray,mkey);
                 break;
             case eLaplacian02:
-                LaplacianMatrixOp_PartitionedOp(0,2,inarray,outarray,mkey);
+                LaplacianMatrixOp_MatFree(0,2,inarray,outarray,mkey);
                 break;
             case eLaplacian10:
-                LaplacianMatrixOp_PartitionedOp(1,0,inarray,outarray,mkey);
+                LaplacianMatrixOp_MatFree(1,0,inarray,outarray,mkey);
                 break;
             case eLaplacian11:
-                LaplacianMatrixOp_PartitionedOp(1,1,inarray,outarray,mkey);
+                LaplacianMatrixOp_MatFree(1,1,inarray,outarray,mkey);
                 break;
             case eLaplacian12:
-                LaplacianMatrixOp_PartitionedOp(1,2,inarray,outarray,mkey);
+                LaplacianMatrixOp_MatFree(1,2,inarray,outarray,mkey);
                 break;
             case eLaplacian20:
-                LaplacianMatrixOp_PartitionedOp(2,0,inarray,outarray,mkey);
+                LaplacianMatrixOp_MatFree(2,0,inarray,outarray,mkey);
                 break;
             case eLaplacian21:
-                LaplacianMatrixOp_PartitionedOp(2,1,inarray,outarray,mkey);
+                LaplacianMatrixOp_MatFree(2,1,inarray,outarray,mkey);
                 break;
             case eLaplacian22:
-                LaplacianMatrixOp_PartitionedOp(2,2,inarray,outarray,mkey);
+                LaplacianMatrixOp_MatFree(2,2,inarray,outarray,mkey);
                 break;
             case eHelmholtz:
-                HelmholtzMatrixOp_PartitionedOp(inarray,outarray,mkey);
+                HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
                 break;
             default:
                 NEKERROR(ErrorUtil::efatal, "This matrix does not have an operator");
@@ -521,7 +521,7 @@ namespace Nektar
             }
         }
             
-        void StdExpansion::MassMatrixOp_PartitionedOp(const Array<OneD, const NekDouble> &inarray,
+        void StdExpansion::MassMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                       Array<OneD,NekDouble> &outarray,
                                                       const StdMatrixKey &mkey)
         {
@@ -531,7 +531,7 @@ namespace Nektar
             v_IProductWRTBase(tmp, outarray);
         }
         
-        void StdExpansion::LaplacianMatrixOp_PartitionedOp(const int k1, const int k2, 
+        void StdExpansion::LaplacianMatrixOp_MatFree(const int k1, const int k2, 
                                                            const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
                                                            const StdMatrixKey &mkey)
@@ -552,7 +552,7 @@ namespace Nektar
             v_IProductWRTDerivBase(k1, dtmp, outarray);
         }
                 
-        void StdExpansion::LaplacianMatrixOp_PartitionedOp_GenericImpl(const Array<OneD, const NekDouble> &inarray,
+        void StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(const Array<OneD, const NekDouble> &inarray,
                                                                        Array<OneD,NekDouble> &outarray,
                                                                        const StdMatrixKey &mkey)
         {
@@ -658,7 +658,7 @@ namespace Nektar
             }
         }
         
-        void StdExpansion::WeakDerivMatrixOp_PartitionedOp(const int k1,
+        void StdExpansion::WeakDerivMatrixOp_MatFree(const int k1,
                                                            const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
                                                            const StdMatrixKey &mkey)
@@ -671,7 +671,7 @@ namespace Nektar
             v_IProductWRTBase(tmp, outarray);
         }
 
-        void StdExpansion::HelmholtzMatrixOp_PartitionedOp_GenericImpl(const Array<OneD, const NekDouble> &inarray,
+        void StdExpansion::HelmholtzMatrixOp_MatFree_GenericImpl(const Array<OneD, const NekDouble> &inarray,
                                                                        Array<OneD,NekDouble> &outarray,
                                                                        const StdMatrixKey &mkey)
         {
@@ -712,6 +712,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.79  2008/11/19 16:02:47  pvos
+* Added functionality for variable Laplacian coeffcients
+*
 * Revision 1.78  2008/11/07 11:37:31  pvos
 * Minor correction
 *

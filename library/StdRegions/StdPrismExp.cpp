@@ -375,11 +375,12 @@ namespace Nektar
                 for(int j=0; j<Qy; ++j){
                     for(int i=0; i<Qx; ++i, ++n){
                         {
-                    
+                            NekDouble eta_x_bar = (1.0 + eta_x[i]) * (1.0 - eta_z[k]) / 2.0  -  1.0;
                     
                             out_dxi1[n] = 2.0/ (1.0 - eta_z[k])*out_dEta1[n];
                             out_dxi2[n] = out_dEta2[n];
-                            out_dxi3[n] = (1.0 + eta_x[i]) / (1.0 - eta_z[k])*out_dEta1[n] + out_dEta3[n];
+                            out_dxi3[n] = (1.0 + eta_x_bar) / (1.0 - eta_z[k])*out_dEta1[n] + out_dEta3[n];
+                            //out_dxi3[n] = (1.0 + eta_x[i]) / (1.0 - eta_z[k])*out_dEta1[n] + out_dEta3[n];
                                         
                             //out_dxi1[n] = out_dEta1[n];
                             //out_dxi2[n] = 2.0/ (1.0 - eta_z[k])*out_dEta2[n];
@@ -388,7 +389,7 @@ namespace Nektar
                                               
                             //cout << "eta_x["<<i<<"] = " <<  eta_x[i] << ",  eta_y["<<j<<"] = " << eta_y[j] << ", eta_z["<<k<<"] = " <<eta_z[k] << endl;
                             //cout << "out_dEta1["<<n<<"] = " << out_dEta1[n] << ",  out_dEta2["<<n<<"] = " << out_dEta2[n] << ", out_dEta3["<<n<<"] = " <<out_dEta3[n] << endl;
-                            //cout << "out_dxi1["<<n<<"] = " << out_dxi1[n] << ",  out_dxi2["<<n<<"] = " << out_dxi2[n] << ", out_dxi3["<<n<<"] = " << out_dxi3[n] << endl;
+                            cout << "out_dxi1["<<n<<"] = " << out_dxi1[n] << ",  out_dxi2["<<n<<"] = " << out_dxi2[n] << ", out_dxi3["<<n<<"] = " << out_dxi3[n] << endl;
                         
                         }
                     }
@@ -449,7 +450,7 @@ namespace Nektar
             int sigma_p   = Qx*p;
             int sigma_q   = Qy*q;         
             int sigma_qr  = Qz*mode_pr[r + (R+1)*p];
-            int sigma = Qx*Qy*Qz*mode;
+            int sigma     = Qx*Qy*Qz*mode;
 
 
             // Compute tensor product of inarray with the 3 basis functions
@@ -675,8 +676,8 @@ namespace Nektar
                 eta[0] = 2.0*(1.0 + xi[0])/(1.0 - xi[2]) - 1.0;
                 
                 // Third basis function collapsed to "qr" direction instead of "pr" direction
-                //                 eta[1] = 2.0*(1.0 + xi[1])/(1.0 - xi[2]) - 1.0;
-                //                 eta[0] = xi[0]; //eta_x = xi_x
+//                 eta[1] = 2.0*(1.0 + xi[1])/(1.0 - xi[2]) - 1.0; //=eta_bar[1]
+//                 eta[0] = xi[0]; //eta_x = xi_x
                 
 
             } 
@@ -690,9 +691,14 @@ namespace Nektar
             Array<OneD, const NekDouble> eta_x = m_base[0]->GetZ();
             Array<OneD, const NekDouble> eta_y = m_base[1]->GetZ();
             Array<OneD, const NekDouble> eta_z = m_base[2]->GetZ();
+//             Array<OneD, const NekDouble> eta_bar(eta_x.GetNumElem(), 0);
             int Qx = GetNumPoints(0);
             int Qy = GetNumPoints(1);
             int Qz = GetNumPoints(2);
+
+//             for( int j = 0; j < Qy; ++j ) {
+//                 eta_bar[j] = 2.0*(1 + xi_x[j]) / (1 - eta_z[j]) - 1;
+//             }
 
             // Convert collapsed coordinates into cartesian coordinates: eta --> xi
             for( int k = 0; k < Qz; ++k ) {
@@ -700,10 +706,12 @@ namespace Nektar
                     for( int i = 0; i < Qx; ++i ) {
                         int s = i + Qx*(j + Qy*k);
 
-                        //NekDouble eta_x_bar = (1.0 + eta_x[i]) * (1.0 - eta_z[k]) / 2.0  -  1.0;
+                        NekDouble eta_x_bar = (1.0 + eta_x[i]) * (1.0 - eta_z[k]) / 2.0  -  1.0;
+                        
                         xi_z[s] = eta_z[k];                   
                         xi_y[s] = eta_y[j];
-                        xi_x[s] = (1.0 + eta_x[i]) * (1.0 - eta_z[k]) / 2.0  -  1.0;
+                        xi_x[s] = (1.0 + eta_x_bar) * (1.0 - eta_z[k]) / 2.0  -  1.0;
+                        //xi_x[s] = (1.0 + eta_x[i]) * (1.0 - eta_z[k]) / 2.0  -  1.0; // This is wrong
                         
                         // Third basis function collapsed to "qr" direction instead of "pr" direction
                         //                         xi_y[s] = (1.0 + eta_y[j]) * (1.0 - eta_z[k]) / 2.0  -  1.0;                    
@@ -716,7 +724,361 @@ namespace Nektar
             }
         }
 
+
+
+        int StdPrismExp::GetVertexMap(const int localVertexId)
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_B ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+
+            ASSERTL1((localVertexId>=0)&&(localVertexId<8),
+                     "local vertex id must be between 0 and 7");
+
+            int p = 0;
+            int q = 0;
+            int r = 0;
+
+            int nummodes [3] = {m_base[0]->GetNumModes(),
+                                m_base[1]->GetNumModes(),
+                                m_base[2]->GetNumModes()};
+
+            if( (localVertexId % 4) % 3 > 0 )
+            { 
+                if( GetBasisType(0) == LibUtilities::eGLL_Lagrange)
+                {
+                    p = nummodes[0]-1;
+                }
+                else
+                {
+                    p = 1;
+                }
+            }   
+
+            if( localVertexId % 4 > 1 )
+            {
+                if( GetBasisType(1) == LibUtilities::eGLL_Lagrange)
+                {
+                    q = nummodes[1]-1;
+                }
+                else
+                {
+                    q = 1;
+                }
+            } 
+
+            if( localVertexId > 3)
+            {
+                if( GetBasisType(2) == LibUtilities::eGLL_Lagrange)
+                {
+                    r = nummodes[2]-1;
+                }
+                else
+                {
+                    r = 1;
+                }
+            }
+
+            return r*nummodes[0]*nummodes[1] + q*nummodes[0] + p;
+        }
         
+        void StdPrismExp::GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+                                             Array<OneD, unsigned int> &maparray,
+                                             Array<OneD, int> &signarray)
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_B ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange, // TODO : check this modified_B basis whether it is GLL or other
+                     "BasisType is not a boundary interior form");
+
+            ASSERTL1((eid>=0)&&(eid<9),
+                     "local edge id must be between 0 and 8");
+
+            int nEdgeIntCoeffs = GetEdgeNcoeffs(eid)-2;
+
+            if(maparray.num_elements()!=nEdgeIntCoeffs)
+            {
+                maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
+            }
+
+            if(signarray.num_elements() != nEdgeIntCoeffs)
+            {
+                signarray = Array<OneD, int>(nEdgeIntCoeffs,1);
+            }
+            else
+            {
+                fill( signarray.get() , signarray.get()+nEdgeIntCoeffs, 1 );
+            }
+
+            int nummodes [3] = {m_base[0]->GetNumModes(),
+                                m_base[1]->GetNumModes(),
+                                m_base[2]->GetNumModes()};
+
+            const LibUtilities::BasisType bType [3] = {GetBasisType(0),
+                                                       GetBasisType(1),
+                                                       GetBasisType(2)};
+
+            bool reverseOrdering = false;
+            bool signChange = false;
+
+            int IdxRange [3][2]; 
+
+            switch(eid)
+            {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+                {
+                    IdxRange[2][0] = 0;
+                    IdxRange[2][1] = 1;                    
+                }
+                break;
+            case 8:
+            case 9:
+            case 10:
+            case 11:
+                {
+                    if( bType[2] == LibUtilities::eGLL_Lagrange)
+                    {
+                        IdxRange[2][0] = nummodes[2] - 1;
+                        IdxRange[2][1] = nummodes[2];
+                    }
+                    else
+                    {
+                        IdxRange[2][0] = 1;
+                        IdxRange[2][1] = 2;
+                    }
+                }
+                break;
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+                {
+                    if( bType[2] == LibUtilities::eGLL_Lagrange)
+                    {
+                        IdxRange[2][0] = 1;
+                        IdxRange[2][1] = nummodes[2] - 1;
+
+                        if(edgeOrient==eBackwards)
+                        {
+                            reverseOrdering = true;
+                        }
+                    }
+                    else
+                    {
+                        IdxRange[2][0] = 2;
+                        IdxRange[2][1] = nummodes[2];
+
+                        if(edgeOrient==eBackwards)
+                        {
+                            signChange = true;
+                        }
+                    }
+                }
+                break;
+            }
+
+            switch(eid)
+            {
+            case 0:
+            case 4:
+            case 5:
+            case 8:
+                {
+                    IdxRange[1][0] = 0;
+                    IdxRange[1][1] = 1;  
+                }
+                break;
+            case 2:
+            case 6:
+            case 7:
+            case 10:
+                {
+                    if( bType[1] == LibUtilities::eGLL_Lagrange)
+                    {
+                        IdxRange[1][0] = nummodes[1] - 1;
+                        IdxRange[1][1] = nummodes[1];
+                    }
+                    else
+                    {
+                        IdxRange[1][0] = 1;
+                        IdxRange[1][1] = 2;
+                    }
+                }
+                break;
+            case 1:
+            case 9:
+                {
+                    if( bType[1] == LibUtilities::eGLL_Lagrange)
+                    {
+                        IdxRange[1][0] = 1;
+                        IdxRange[1][1] = nummodes[1] - 1;
+
+                        if(edgeOrient==eBackwards)
+                        {
+                            reverseOrdering = true;
+                        }
+                    }
+                    else
+                    {
+                        IdxRange[1][0] = 2;
+                        IdxRange[1][1] = nummodes[1];
+
+                        if(edgeOrient==eBackwards)
+                        {
+                            signChange = true;
+                        }
+                    }
+                }
+                break;
+            case 3:
+            case 11:
+                {
+                    if( bType[1] == LibUtilities::eGLL_Lagrange)
+                    {
+                        IdxRange[1][0] = 1;
+                        IdxRange[1][1] = nummodes[1] - 1;
+
+                        if(edgeOrient==eForwards)
+                        {
+                            reverseOrdering = true;
+                        }
+                    }
+                    else
+                    {
+                        IdxRange[1][0] = 2;
+                        IdxRange[1][1] = nummodes[1];
+
+                        if(edgeOrient==eForwards)
+                        {
+                            signChange = true;
+                        }
+                    }
+                }
+                break;
+            }
+
+            switch(eid)
+            {
+            case 3:
+            case 4:
+            case 7:
+            case 11:
+                {
+                    IdxRange[0][0] = 0;
+                    IdxRange[0][1] = 1;  
+                }
+                break;
+            case 1:
+            case 5:
+            case 6:
+            case 9:
+                {
+                    if( bType[0] == LibUtilities::eGLL_Lagrange)
+                    {
+                        IdxRange[0][0] = nummodes[0] - 1;
+                        IdxRange[0][1] = nummodes[0];
+                    }
+                    else
+                    {
+                        IdxRange[0][0] = 1;
+                        IdxRange[0][1] = 2;
+                    }
+                }
+                break;
+            case 0:
+            case 8:
+                {
+                    if( bType[0] == LibUtilities::eGLL_Lagrange)
+                    {
+                        IdxRange[0][0] = 1;
+                        IdxRange[0][1] = nummodes[0] - 1;
+
+                        if(edgeOrient==eBackwards)
+                        {
+                            reverseOrdering = true;
+                        }
+                    }
+                    else
+                    {
+                        IdxRange[0][0] = 2;
+                        IdxRange[0][1] = nummodes[0];
+
+                        if(edgeOrient==eBackwards)
+                        {
+                            signChange = true;
+                        }
+                    }
+                }
+                break;
+            case 2:
+            case 10:
+                {
+                    if( bType[0] == LibUtilities::eGLL_Lagrange)
+                    {
+                        IdxRange[0][0] = 1;
+                        IdxRange[0][1] = nummodes[0] - 1;
+
+                        if(edgeOrient==eForwards)
+                        {
+                            reverseOrdering = true;
+                        }
+                    }
+                    else
+                    {
+                        IdxRange[0][0] = 2;
+                        IdxRange[0][1] = nummodes[0];
+
+                        if(edgeOrient==eForwards)
+                        {
+                            signChange = true;
+                        }
+                    }
+                }
+                break;
+            }
+
+            int p,q,r;
+            int cnt = 0;
+
+            for(r = IdxRange[2][0]; r < IdxRange[2][1]; r++)
+            {
+                for(q = IdxRange[1][0]; q < IdxRange[1][1]; q++)
+                {
+                    for(p = IdxRange[0][0]; p < IdxRange[0][1]; p++)
+                    {
+                        maparray[cnt++] = r*nummodes[0]*nummodes[1] + q*nummodes[0] + p;
+                    }                    
+                }
+            }
+
+            if( reverseOrdering )
+            {
+                reverse( maparray.get() , maparray.get()+nEdgeIntCoeffs );
+            }
+
+            if( signChange )
+            {
+                for(p = 1; p < nEdgeIntCoeffs; p+=2)
+                {
+                    signarray[p] = -1;
+                }
+            }
+        }
+                
         void StdPrismExp::GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                               Array<OneD, unsigned int> &maparray,
                                               Array<OneD, int>& signarray)
@@ -725,40 +1087,50 @@ namespace Nektar
             const int nummodes0 = m_base[0]->GetNumModes();
             const int nummodes1 = m_base[1]->GetNumModes();
             const int nummodes2 = m_base[2]->GetNumModes();
-            int nummodesA;
-            int nummodesB;
+            int nummodesA, nummodesB, P, Q;
 
             const LibUtilities::BasisType bType0 = GetEdgeBasisType(0);
             const LibUtilities::BasisType bType1 = GetEdgeBasisType(1);
-            const LibUtilities::BasisType bType2 = GetEdgeBasisType(2);
+            const LibUtilities::BasisType bType2 = GetEdgeBasisType(4);
             
             ASSERTL1( (bType0==bType1),
                       "Method only implemented if BasisType is indentical in x and y directions");
             ASSERTL1( (bType0==LibUtilities::eModified_A) && (bType2==LibUtilities::eModified_B),
                       "Method only implemented for Modified_A BasisType (x and y direction) and Modified_B BasisType (z direction)");
 
+            bool isQuad = true;
 
+            int nFaceCoeffs = 0;
             if( fid == 0 ) // Base quad 
             {
                 nummodesA = nummodes0;
                 nummodesB = nummodes1;
+                P = nummodesA-1;
+                Q = nummodesB-1;
+                nFaceCoeffs = nummodesA*nummodesB;
             }
             else if((fid == 2) || (fid == 4)) // front and back quad
             {
                 nummodesA = nummodes1;
                 nummodesB = nummodes2;
+                P = nummodesA-1;
+                Q = nummodesB-1;
+                nFaceCoeffs = nummodesA*nummodesB;
             }
             else  // left and right triangles
             {
                 nummodesA = nummodes0;
                 nummodesB = nummodes2;
+                P = nummodesA-1;
+                Q = nummodesB-1;
+                nFaceCoeffs = Q+1 + (P*(1 + 2*Q - P))/2;
+                isQuad = false;
             }
 
-            int nFaceCoeffs = nummodesA*nummodesB;
-            
+            // Allocate the map array and sign array; set sign array to ones (+)
             if(maparray.num_elements() != nFaceCoeffs)
             {
-                maparray = Array<OneD, unsigned int>(nFaceCoeffs);
+                maparray = Array<OneD, unsigned int>(nFaceCoeffs,-1);
             }
             
             if(signarray.num_elements() != nFaceCoeffs)
@@ -770,68 +1142,87 @@ namespace Nektar
                 fill( signarray.get() , signarray.get()+nFaceCoeffs, 1 );
             }
 
-            Array<OneD, int> arrayindx(nFaceCoeffs);
 
-            for(i = 0; i < nummodesB; i++)
+
+            Array<OneD, int> arrayindex(nFaceCoeffs,-1);
+
+            for(int a = 0; a < nummodesA; ++a)
             {
-                for(j = 0; j < nummodesA; j++)
-                {              
+                for(int b = 0; isQuad ? (b <  nummodesB) : (b < nummodesB - a); ++b)
+                {
                     if( faceOrient < 4 ) // Not transposed
                     {
-                        arrayindx[i*nummodesA+j] = i*nummodesA+j;
+                        arrayindex[b + nummodesB*a] = b + nummodesB*a;
                     }
                     else // Transposed
                     {
-                        arrayindx[i*nummodesA+j] = j*nummodesB+i;
+                        arrayindex[b + nummodesB*a] = a + nummodesA*b;
                     }
                 }
             }
-            // ////////////////////////////////////////////
-            // TODO : Figureout what the below implemenation does
-            int offset = 0;
-            int jump1 = 1;
-            int jump2 = 1;
 
+
+            int baseCoefficient = 0;
+            
             switch(fid)
             {
-//             case 5:
-//                 {
-//                     offset = nummodes0*nummodes1;
-//                 }
-            case 0: // and case 5 falls-trough
-                {
-                    jump1 = nummodes0;// amount increased index i by
+
+            // Base quad
+            case 0: 
+                for(int a = 0; a < nummodesA; ++a) {
+                    for(int b = 0; b < nummodesB; ++b) {
+                        ASSERTL0(arrayindex[b + nummodesB*a] != -1, "arrayindex is not set up properly.");
+                        maparray[ arrayindex[b + nummodesB*a] ] = b + nummodesB*a;
+                    }
                 }
-                break;
+            break;
+            
+            // Rear triangle
             case 3:
-                {
-                    offset = nummodes0;
+                baseCoefficient = (nummodes1 - 1) * nummodes2;
+                for(int a = 0; a < nummodesA; ++a) {
+                    for(int b = 0; b <  nummodesB - a; ++b) {
+                        ASSERTL0(arrayindex[b + nummodesB*a] != -1, "arrayindex is not set up properly.");
+                        maparray[ arrayindex[b + nummodesB*a] ] = baseCoefficient + b;
+                    }
+                    baseCoefficient += nummodes1*(nummodesB-1 - a)  +  1;
                 }
-            case 1: // and case 3 falls-trough
-                {
-                    jump1 = nummodes0*nummodes1;
+            break;
+
+            // Front triangle
+            case 1: 
+                for(int a = 0; a < nummodesA; ++a) {
+                    for(int b = 0; b <  nummodesB - a; ++b) {
+                        ASSERTL0(arrayindex[b + nummodesB*a] != -1, "arrayindex is not set up properly.");
+                        maparray[ arrayindex[b + nummodesB*a] ] = baseCoefficient + b;
+                    }
+                    baseCoefficient += nummodes1 * (nummodes2 - a);
                 }
-                break;   
+            break;
+
+
+            // Vertical quad
+            case 4: 
+                for(int a = 0, n = 0; a < nummodesA; ++a) {
+                    for(int b = 0; b < nummodesB; ++b, ++n) {
+                        ASSERTL0(arrayindex[b + nummodesB*a] != -1, "arrayindex is not set up properly.");
+                        maparray[ arrayindex[b + nummodesB*a] ] = n;    // n is correct
+                    }
+                }
+            break;
+            
+
+            // Slanted quad
             case 2:
-                {
-                    offset = 1;
+                for(int b = nummodesB-1; b >= 0; --b) {
+                    for(int a = 0; a < nummodesA; ++a) {
+                        ASSERTL0(arrayindex[b + nummodesB*a] != -1, "arrayindex is not set up properly.");
+                        maparray[ arrayindex[b + nummodesB*a] ] = baseCoefficient + (a+1)*(b+1) - 1;
+                    }
+                    baseCoefficient += nummodesA*(b+1);
                 }
-            case 4: // and case 2 falls-trough
-                {
-                    jump1 = nummodes0*nummodes1;
-                    jump2 = nummodes0; // amount increased index j by
-                }
-                break;                 
-            default:
-                ASSERTL0(false,"fid must be between 0 and 4");
-            }
-                        
-            for(i = 0; i < nummodesB; i++)
-            {
-                for(j = 0; j < nummodesA; j++)
-                {
-                    maparray[ arrayindx[i*nummodesA+j] ] = i*jump1 + j*jump2 + offset;
-                }
+            break;
+            
             }
 
             if( (faceOrient==1) || (faceOrient==3) ||
@@ -844,7 +1235,8 @@ namespace Nektar
                     {
                         for(j = 0; j < nummodesA; j++)
                         {
-                            signarray[ arrayindx[i*nummodesA+j] ] *= -1;
+                            if( arrayindex[i*nummodesA+j] >= 0 )
+                                signarray[ arrayindex[i*nummodesA+j] ] *= -1;
                         }
                     }
                         
@@ -860,7 +1252,8 @@ namespace Nektar
                     {
                         for(j = 3; j < nummodesA; j+=2)
                         {
-                            signarray[ arrayindx[i*nummodesA+j] ] *= -1;
+                            if( arrayindex[i*nummodesA+j] >= 0 )
+                                signarray[ arrayindex[i*nummodesA+j] ] *= -1;
                         }
                     } 
                         
@@ -874,14 +1267,15 @@ namespace Nektar
                 
             if( (faceOrient==2) || (faceOrient==3) ||
                 (faceOrient==5) || (faceOrient==7) )
-            {     
+            {  
                 if(faceOrient<4)
                 {                                   
                     for(i = 0; i < nummodesB; i++)
                     {
                         for(j = 3; j < nummodesA; j+=2)
                         {
-                            signarray[ arrayindx[i*nummodesA+j] ] *= -1;
+                            if( arrayindex[i*nummodesA+j] >= 0 )
+                                signarray[ arrayindex[i*nummodesA+j] ] *= -1;
                         }
                     }                 
                         
@@ -897,7 +1291,8 @@ namespace Nektar
                     {
                         for(j = 0; j < nummodesA; j++)
                         {
-                          signarray[ arrayindx[i*nummodesA+j] ] *= -1;
+                            if( arrayindex[i*nummodesA+j] >= 0 )
+                                signarray[ arrayindex[i*nummodesA+j] ] *= -1;
                         }
                     }                
                         
@@ -969,7 +1364,7 @@ namespace Nektar
                 {
                     for(int k = 0; k < order2-i-j; ++k, cnt++)
                     {
-                        //                         mat[i+j*order1] = m_coeffs[cnt];
+                        // mat[i+j*order1] = m_coeffs[cnt];
                         mat[i + order1*(j + order2*k)] = m_coeffs[cnt];
                     }
                 }
@@ -1000,6 +1395,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPrismExp.cpp,v $
+ * Revision 1.17  2008/11/17 09:02:53  ehan
+ * Added necessary mapping routines
+ *
  * Revision 1.16  2008/09/23 18:19:26  pvos
  * Updates for working ProjectContField3D demo
  *

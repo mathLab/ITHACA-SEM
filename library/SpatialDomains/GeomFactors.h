@@ -81,13 +81,17 @@ namespace Nektar
             GeomFactors(enum StdRegions::ExpansionType shape,
                         const GeomFactors &Xgfac,
                         const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
+                       
             
             /**  \brief Three dimensional geometric factors based on two
             or three dimensional coordinate description
             **/
 
             GeomFactors(const GeomType gtype, const int coordim,
-                        const Array<OneD, const StdRegions::StdExpansion3DSharedPtr> &Coords);
+            const Array<OneD, const StdRegions::StdExpansion3DSharedPtr> &Coords);
+
+//             GeomFactorsOld(const GeomType gtype, const int coordim,
+//                         const Array<OneD, const StdRegions::StdExpansion3DSharedPtr> &Coords);
 
             ~GeomFactors();
 
@@ -153,6 +157,14 @@ namespace Nektar
                               const int nquad1,
                               const Array<OneD, NekDouble> d1[3],
                               const Array<OneD, NekDouble> d2[3]);
+                              
+            void SetUpJacGmat(enum StdRegions::ExpansionType shape,
+                                const int nquad0,
+                                const int nquad1,
+                                const int nquad2,
+                                const Array<OneD, NekDouble> d1[3],
+                                const Array<OneD, NekDouble> d2[3],
+                                const Array<OneD, NekDouble> d3[3]);
             
         };
     } //end of namespace
@@ -162,6 +174,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.20  2008/09/09 22:46:51  ehan
+// Fixed error; extra qualification ‘Nektar::SpatialDomains::GeomFactors::’ on member ‘GenNormals2D’
+//
 // Revision 1.19  2008/09/09 14:18:02  sherwin
 // Removed m_normals from GeomFactor. Added GenNormals2D and additional copy type constructor
 //

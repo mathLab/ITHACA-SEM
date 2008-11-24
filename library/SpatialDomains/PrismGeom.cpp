@@ -162,19 +162,59 @@ namespace Nektar
             for(f = 1; f < 5 ; f++)
             {
                 check = 0;
-                for(i = 0; i < 4; i++)
-                {
-                    int nEdges = m_faces[f]->GetNumEdges();
-                    for(j = 0; j < nEdges; j++)
+                if(f==1 || f==3){
+                    for(i = 0; i < 4; i++)
                     {
-                        if( m_faces[0]->GetEid(i) == m_faces[f]->GetEid(j) )
+                        cout << "tf = " << f << endl;
+                        int nEdges = m_faces[f]->GetNumEdges();
+
+                        for(j = 0; j < nEdges; j++)
                         {
+                          cout << "outside the if ..." << endl;
+                          cout << "nEdges = " << nEdges << endl;
+
+        cout << "m_tfaces[0]->GetEid(i) = " << m_faces[0]->GetEid(i) << ",  " << "m_tfaces[f]->GetEid(j) = " << m_faces[f]->GetEid(j) << endl;
+
+                            if( m_faces[0]->GetEid(i) == m_faces[f]->GetEid(j) )
+                            {
+                    cout << "inside the if ..." << endl;
+        cout << "m_tfaces[0]->GetEid(i) = " << m_faces[0]->GetEid(i) << ", " << "m_faces[f]->GetEid(j) = " << m_faces[f]->GetEid(j) << endl;
+
                             edge = boost::dynamic_pointer_cast<SegGeom>((m_faces[0])->GetEdge(i));
                             m_edges.push_back(edge);
                             check++;
+                            }
                         }
-                    }
-                }
+                     }                    
+                   }
+                    else
+                   {
+                    for(i = 0; i < 4; i++)
+                    {
+                        cout << "qf = " << f << endl;
+                        int nEdges = m_faces[f]->GetNumEdges();
+
+                        for(j = 0; j < nEdges; j++)
+                        {
+                        cout << "outside the if ..." << endl;
+                        cout << "nEdges = " << nEdges <<endl;
+
+        cout << "m_faces[0]->GetEid(i) = " << m_faces[0]->GetEid(i) << ",  " << "m_faces[f]->GetEid(j) = " << m_faces[f]->GetEid(j) << endl;
+
+                            if( m_faces[0]->GetEid(i) == m_faces[f]->GetEid(j) )
+                            {
+                    cout << "inside the if ..." << endl;
+        cout << "m_faces[0]->GetEid(i) = " << m_faces[0]->GetEid(i) << ", " << "m_faces[f]->GetEid(j) = " << m_faces[f]->GetEid(j) << endl;
+
+                            edge = boost::dynamic_pointer_cast<SegGeom>((m_faces[0])->GetEdge(i));
+                            m_edges.push_back(edge);
+                            check++;
+                            }
+                        }
+                      }
+                   }
+                   
+                   
 
                 if( check < 1 )
                 {
@@ -194,7 +234,7 @@ namespace Nektar
             
             // Then, set up the 4 vertical edges
             check = 0;
-            for(i = 0; i < 4; i++) //Set up the vertical edge :face(1) and face(4)
+            for(i = 0; i < 3; i++) //Set up the vertical edge :face(1) and face(4)
             {
                 for(j = 0; j < 4; j++)
                 {
@@ -224,9 +264,9 @@ namespace Nektar
             for(f = 1; f < 4 ; f++)
             {
                 check = 0;
-                for(i = 0; i < 4; i++)
+                for(i = 0; i < m_faces[f]->GetNumEdges(); i++)
                 {
-                    for(j = 0; j < 4; j++)
+                    for(j = 0; j < m_faces[f+1]->GetNumEdges(); j++)
                     {
                         if( (m_faces[f])->GetEid(i) == (m_faces[f+1])->GetEid(j) )
                         {
@@ -253,15 +293,15 @@ namespace Nektar
                 }                
             }
             
-            // Finally, set up the 1 top edges
+            // Finally, set up the 1 top edge
             check = 0;
             for(i = 0; i < 4; i++)
             {
                 for(j = 0; j < 4; j++)
                 {
-                    if( (m_faces[1])->GetEid(i) == (m_faces[3])->GetEid(j) )
+                    if( (m_faces[2])->GetEid(i) == (m_faces[4])->GetEid(j) )
                     {
-                        edge = boost::dynamic_pointer_cast<SegGeom>((m_faces[1])->GetEdge(i));
+                        edge = boost::dynamic_pointer_cast<SegGeom>((m_faces[2])->GetEdge(i));
                         m_edges.push_back(edge);
                         check++;
                     }
@@ -331,17 +371,17 @@ namespace Nektar
 
             // set up top vertices  
             // First, set up vertices 4,5
-            if( (m_edges[8]->GetVid(0) == m_verts[4]->GetVid()) ||
-                (m_edges[8]->GetVid(0) == m_verts[5]->GetVid())  )
+            if( (m_edges[8]->GetVid(0) == m_edges[4]->GetVid(0)) ||
+                (m_edges[8]->GetVid(0) == m_edges[4]->GetVid(1))  )
             {
                 m_verts.push_back(m_edges[8]->GetVertex(0));
                 m_verts.push_back(m_edges[8]->GetVertex(1));
             }
-            else if( (m_edges[8]->GetVid(1) == m_verts[4]->GetVid()) ||
-                     (m_edges[8]->GetVid(1) == m_verts[5]->GetVid()) )
+            else if( (m_edges[8]->GetVid(1) == m_edges[4]->GetVid(0)) ||
+                     (m_edges[8]->GetVid(1) == m_edges[4]->GetVid(1))  )
             {
-                m_verts.push_back(m_edges[8]->GetVertex(0));
                 m_verts.push_back(m_edges[8]->GetVertex(1));
+                m_verts.push_back(m_edges[8]->GetVertex(0));
             }
             else
             {
@@ -350,6 +390,26 @@ namespace Nektar
                 errstrm << m_edges[8]->GetEid();
                 ASSERTL0(false, errstrm.str());
             }
+                        
+//             if( (m_edges[8]->GetVid(0) == m_verts[4]->GetVid()) ||
+//                 (m_edges[8]->GetVid(0) == m_verts[5]->GetVid())  )
+//             {
+//                 m_verts.push_back(m_edges[8]->GetVertex(0));
+//                 m_verts.push_back(m_edges[8]->GetVertex(1));
+//             }
+//             else if( (m_edges[8]->GetVid(1) == m_verts[4]->GetVid()) ||
+//                      (m_edges[8]->GetVid(1) == m_verts[5]->GetVid()) )
+//             {
+//                 m_verts.push_back(m_edges[8]->GetVertex(0));
+//                 m_verts.push_back(m_edges[8]->GetVertex(1));
+//             }
+//             else
+//             {
+//                 std::ostringstream errstrm;
+//                 errstrm << "Connected edges do not share a vertex. Edges ";
+//                 errstrm << m_edges[8]->GetEid();
+//                 ASSERTL0(false, errstrm.str());
+//             }
 
         };
 
@@ -427,7 +487,7 @@ namespace Nektar
             // for every face. For every face, they are ordered in such
             // a way that the implementation below allows a unified approach
             // for all faces.
-            const unsigned int faceVerts[kNfaces][QuadGeom::kNverts] =  // TODO must fix this
+            const unsigned int faceVerts[kNfaces][QuadGeom::kNverts] = 
                 { {0,1,2,3} ,
                   {0,1,4,-1},  // This is triangle requires only three vertices
                   {1,2,5,4} ,
@@ -509,9 +569,10 @@ namespace Nektar
                 // Now, construct the edge-vectors of the local coordinates of 
                 // the Geometry2D-representation of the face
                 for(i = 0; i < m_coordim; i++)
-                { 
+                {
+                    int v = m_faces[f]->GetNumVerts()-1; 
                     faceAaxis[i] = (*m_faces[f]->GetVertex(1))[i] - (*m_faces[f]->GetVertex(0))[i];
-                    faceBaxis[i] = (*m_faces[f]->GetVertex(3))[i] - (*m_faces[f]->GetVertex(0))[i];
+                    faceBaxis[i] = (*m_faces[f]->GetVertex(v))[i] - (*m_faces[f]->GetVertex(0))[i];
                 
                     elementAaxis_length += pow(elementAaxis[i],2);
                     elementBaxis_length += pow(elementBaxis[i],2);
@@ -549,10 +610,10 @@ namespace Nektar
                         dotproduct2 += elementBaxis[i]*faceBaxis[i];
                     }
 
-                    // check that both these axis are indeed parallel
-                    ASSERTL1(fabs(elementBaxis_length*faceBaxis_length - fabs(dotproduct2)) < 
-                             StdRegions::NekConstants::kEvaluateTol,
-                             "These vectors should be parallel");
+//                     // check that both these axis are indeed parallel
+//                     ASSERTL1(fabs(elementBaxis_length*faceBaxis_length - fabs(dotproduct2)) < 
+//                              StdRegions::NekConstants::kEvaluateTol,
+//                              "These vectors should be parallel");
 
                     // if the inner product is negative, both B-axis point
                     // in reverse direction
@@ -644,7 +705,6 @@ namespace Nektar
         }
 
         // Set up GeoFac for this geometry using Coord quadrature distribution
-
         void PrismGeom::GenGeomFactors(void)
         {         
             GeomType Gtype = eRegular;
@@ -664,36 +724,36 @@ namespace Nektar
             }
 
             // check to see if all necessary angles are 90 degrees
-            if(Gtype == eRegular){
-
-                    const unsigned int faceVerts[kNqfaces][QuadGeom::kNverts] = 
-                        { {0,1,2,3} ,
-                          {0,3,4,5} };
-                    int f;
-                    NekDouble dx1,dx2,dy1,dy2;
-                    for(f = 0; f < kNqfaces; f++)
-                    {
-                        for(int i = 0; i < 3; ++i)
-                        {
-                            dx1 = m_verts[ faceVerts[f][i+1] ]->x() - m_verts[ faceVerts[f][i] ]->x();
-                            dy1 = m_verts[ faceVerts[f][i+1] ]->y() - m_verts[ faceVerts[f][i] ]->y();
-                            
-                            dx2 = m_verts[ faceVerts[f][((i+3)%4)] ]->x() - m_verts[ faceVerts[f][i] ]->x();
-                            dy2 = m_verts[ faceVerts[f][((i+3)%4)] ]->y() - m_verts[ faceVerts[f][i] ]->y();
-                            
-                            if(fabs(dx1*dx2 + dy1*dy2) > sqrt((dx1*dx1+dy1*dy1)*(dx2*dx2+dy2*dy2))
-                                                            * kGeomRightAngleTol)
-                            {
-                                Gtype = eDeformed;
-                                break;
-                            }
-                        }
-                        if(Gtype == eDeformed)
-                        {
-                            break;
-                        }
-                    }
-              }
+//             if(Gtype == eRegular){
+// 
+//                     const unsigned int faceVerts[kNqfaces][QuadGeom::kNverts] = 
+//                         { {0,1,2,3} ,
+//                           {0,3,4,5} };
+//                     int f;
+//                     NekDouble dx1,dx2,dy1,dy2;
+//                     for(f = 0; f < kNqfaces; f++)
+//                     {
+//                         for(int i = 0; i < 3; ++i)
+//                         {
+//                             dx1 = m_verts[ faceVerts[f][i+1] ]->x() - m_verts[ faceVerts[f][i] ]->x();
+//                             dy1 = m_verts[ faceVerts[f][i+1] ]->y() - m_verts[ faceVerts[f][i] ]->y();
+//                             
+//                             dx2 = m_verts[ faceVerts[f][((i+3)%4)] ]->x() - m_verts[ faceVerts[f][i] ]->x();
+//                             dy2 = m_verts[ faceVerts[f][((i+3)%4)] ]->y() - m_verts[ faceVerts[f][i] ]->y();
+//                             
+//                             if(fabs(dx1*dx2 + dy1*dy2) > sqrt((dx1*dx1+dy1*dy1)*(dx2*dx2+dy2*dy2))
+//                                                             * kGeomRightAngleTol)
+//                             {
+//                                 Gtype = eDeformed;
+//                                 break;
+//                             }
+//                         }
+//                         if(Gtype == eDeformed)
+//                         {
+//                             break;
+//                         }
+//                     }
+//               }
 
             m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap);
 			
@@ -715,26 +775,23 @@ namespace Nektar
             // check to see if geometry structure is already filled
             if(m_state != ePtsFilled)
             {
-                int i,j,k;
-                int nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(0); 
-
-                Array<OneD, unsigned int> mapArray (nFaceCoeffs);
-                Array<OneD, int>    signArray(nFaceCoeffs);
-                NekDouble sign;
-
-                for(i = 0; i < kNfaces; i++)
+                for(int i = 0; i < kNfaces; i++)
                 {
+                    // Recurse to the 2D components
                     m_faces[i]->FillGeom();
-                    m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray); 
-                    
-                    nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(i);
 
-                    for(j = 0 ; j < m_coordim; j++)
+                    for(int j = 0 ; j < m_coordim; j++)
                     {
-                        for(k = 0; k < nFaceCoeffs; k++)
+                        int nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(i);
+                        Array<OneD, unsigned int>   mapArray (nFaceCoeffs,-1);
+                        Array<OneD, int>            signArray(nFaceCoeffs,1);
+
+                        m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray);
+                        
+                        for(int k = 0; k < nFaceCoeffs; k++)
                         {
                             (*m_faces[i])[j];
-                            const Array<OneD, const NekDouble> & coeffs = (*m_faces[i])[j]->GetCoeffs(); //TODO fix this
+                            const Array<OneD, const NekDouble> & coeffs = (*m_faces[i])[j]->GetCoeffs(); 
                             double v = signArray[k]* coeffs[k];
                             (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = v;
 
@@ -742,7 +799,7 @@ namespace Nektar
                     }
                 }
                 
-                for(i = 0; i < m_coordim; ++i)
+                for(int i = 0; i < m_coordim; ++i)
                 {
                     m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(), m_xmap[i]->UpdatePhys());
                 }
@@ -751,51 +808,6 @@ namespace Nektar
             }
 
         }
-        
-
-//         void PrismGeom::FillGeom()
-//         {
-//             // check to see if geometry structure is already filled
-//             if(m_state != ePtsFilled)
-//             {
-//                 int i,j,k;
-// 
-//                 int nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(0); //TODO: implement GetFaceNcoeffs()
-//                 Array<OneD, unsigned int> mapArray (nFaceCoeffs);
-//                 Array<OneD, int>          signArray(nFaceCoeffs);
-// 
-//                  for(i = 0; i < kNfaces; i++)
-//                 {
-//                     m_faces[i]->FillGeom();
-//                     
-//                     //TODO: implement GetFaceToElementMap()
-//                      m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray);
-//                     
-//                     nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(i);
-// 
-//                     for(j = 0 ; j < m_coordim; j++)
-//                     {
-//                         for(k = 0; k < nFaceCoeffs; k++)
-//                         {
-//                            //TODO : insert code here
-// //                             (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = signArray[k]*
-// //                                        ((*m_faces[i])[j]->GetCoeffs())[k];
-//                              const Array<OneD, const NekDouble> & coeffs = (*m_faces[i])[j]->GetCoeffs();
-//                              double v = signArray[k]* coeffs[k];
-//                              (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = v;
-//                         }
-//                     }
-//                 }
-//                 
-//                 for(i = 0; i < m_coordim; ++i)
-//                 {
-//                     m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(),
-//                                         m_xmap[i]->UpdatePhys());
-//                 }
-//                 
-//                 m_state = ePtsFilled;
-//             }
-//         }
 
         void PrismGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
         {
@@ -848,6 +860,9 @@ namespace Nektar
 
 //
 // $Log: PrismGeom.cpp,v $
+// Revision 1.10  2008/11/17 08:59:37  ehan
+// Added necessary mapping routines for Tet
+//
 // Revision 1.9  2008/06/18 19:27:42  ehan
 // Added implementation for GetLocCoords(..)
 //

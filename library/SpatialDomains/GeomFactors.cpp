@@ -363,67 +363,55 @@ namespace Nektar
             LibUtilities::PointsKey fpoints0;
             LibUtilities::PointsKey fpoints1;
             LibUtilities::PointsKey fpoints2;
-            
-            m_gtype   = Xgfac.m_gtype;
-            m_expdim  = Xgfac.m_expdim;
-            m_coordim = Xgfac.m_coordim;
 
-            cout << "m_gtype = " << m_gtype << endl;
-            cout << "m_expdim = " << m_expdim << endl;
-            cout << "m_coordim = " << m_coordim << endl;
+                m_gtype   = Xgfac.m_gtype; 
+                m_expdim  = Xgfac.m_expdim;
+                m_coordim = Xgfac.m_coordim;
 
-           m_pointsKey = Array<OneD,LibUtilities::PointsKey>(m_expdim);
+                m_pointsKey = Array<OneD,LibUtilities::PointsKey>(m_expdim);
 
-            ASSERTL0(m_gtype == eDeformed,
-                     "This routine assumes element geometry is deformed");
+                ASSERTL0(m_gtype == eDeformed,
+                        "This routine assumes element geometry is deformed");
 
-            fpoints0 = Xgfac.m_pointsKey[0];
-            fpoints1 = Xgfac.m_pointsKey[1];
-            fpoints2 = Xgfac.m_pointsKey[2];
-
-            
-
-            Xnq0 = fpoints0.GetNumPoints();
-            Xnq1 = fpoints1.GetNumPoints();
-            Xnq2 = fpoints2.GetNumPoints();
-            Xnqtot = Xnq0*Xnq1*Xnq2;
-
-            ASSERTL1((m_coordim >= 2)&&(m_coordim <= 3),
-                     "Only understand up to three Coordinate and must have "
-                     "at least two coordinates for this routine");
-
-            m_pointsKey[0] = tbasis[0]->GetPointsKey();
-            m_pointsKey[1] = tbasis[1]->GetPointsKey();
-            m_pointsKey[2] = tbasis[2]->GetPointsKey();
-
-            nq0 = m_pointsKey[0].GetNumPoints();
-            nq1 = m_pointsKey[1].GetNumPoints();
-            nq2 = m_pointsKey[2].GetNumPoints();
-
-            cout << "nq0 = " << nq0 << endl;
-            cout << "nq1 = " << nq1 << endl;
-            cout << "nq2 = " << nq2 << endl;
-            
-            nqtot = nq0*nq1*nq2;
-            
-            // setup temp storage
-            Array<OneD,NekDouble> d1[3] = {Array<OneD, NekDouble>(nqtot),
-                                           Array<OneD, NekDouble>(nqtot), 
-                                           Array<OneD, NekDouble>(nqtot)};
-            Array<OneD,NekDouble> d2[3] = {Array<OneD, NekDouble>(nqtot),
-                                           Array<OneD, NekDouble>(nqtot), 
-                                           Array<OneD, NekDouble>(nqtot)};
-            Array<OneD,NekDouble> d3[3] = {Array<OneD, NekDouble>(nqtot),
-                                           Array<OneD, NekDouble>(nqtot), 
-                                           Array<OneD, NekDouble>(nqtot)};                                           
-                                           
-            
-            
-            // interpolate Geometric derivatives which are polynomials
-            Array<OneD,NekDouble> dxdxi(Xnqtot);
-            
             if(m_coordim == 2)
             {
+             
+                fpoints0 = Xgfac.m_pointsKey[0];
+                fpoints1 = Xgfac.m_pointsKey[1];
+
+                Xnq0 = fpoints0.GetNumPoints();
+                Xnq1 = fpoints1.GetNumPoints();
+
+                Xnqtot = Xnq0*Xnq1;
+
+                ASSERTL1((m_coordim >= 2)&&(m_coordim <= 3),
+                        "Only understand up to three Coordinate and must have "
+                        "at least two coordinates for this routine");
+
+                m_pointsKey[0] = tbasis[0]->GetPointsKey();
+                m_pointsKey[1] = tbasis[1]->GetPointsKey();
+
+
+                nq0 = m_pointsKey[0].GetNumPoints();
+                nq1 = m_pointsKey[1].GetNumPoints();
+
+                
+                nqtot = nq0*nq1;
+                
+                // setup temp storage
+                Array<OneD,NekDouble> d1[3] = {Array<OneD, NekDouble>(nqtot),
+                                            Array<OneD, NekDouble>(nqtot), 
+                                            Array<OneD, NekDouble>(nqtot)};
+                Array<OneD,NekDouble> d2[3] = {Array<OneD, NekDouble>(nqtot),
+                                            Array<OneD, NekDouble>(nqtot), 
+                                            Array<OneD, NekDouble>(nqtot)};
+
+                                                                         
+                // interpolate Geometric derivatives which are polynomials
+                Array<OneD,NekDouble> dxdxi(Xnqtot);
+            
+//             if(m_coordim == 2)
+//             {
                 // Interpolate d2[1];
                 Vmath::Vmul(Xnqtot,&(Xgfac.m_jac)[0],1,&(Xgfac.m_gmat[0])[0],1,&dxdxi[0],1);
                 LibUtilities::Interp2D(fpoints0, fpoints1, dxdxi, m_pointsKey[0], m_pointsKey[1], d2[1]);
@@ -448,6 +436,52 @@ namespace Nektar
             }
             else if(m_coordim == 3)
             {
+
+                fpoints0 = Xgfac.m_pointsKey[0];
+                fpoints1 = Xgfac.m_pointsKey[1];
+                fpoints2 = Xgfac.m_pointsKey[2];
+
+                
+
+                Xnq0 = fpoints0.GetNumPoints();
+                Xnq1 = fpoints1.GetNumPoints();
+                Xnq2 = fpoints2.GetNumPoints();
+                Xnqtot = Xnq0*Xnq1*Xnq2;
+
+                ASSERTL1((m_coordim >= 2)&&(m_coordim <= 3),
+                        "Only understand up to three Coordinate and must have "
+                        "at least two coordinates for this routine");
+
+                m_pointsKey[0] = tbasis[0]->GetPointsKey();
+                m_pointsKey[1] = tbasis[1]->GetPointsKey();
+                m_pointsKey[2] = tbasis[2]->GetPointsKey();
+
+                nq0 = m_pointsKey[0].GetNumPoints();
+                nq1 = m_pointsKey[1].GetNumPoints();
+                nq2 = m_pointsKey[2].GetNumPoints();
+
+                cout << "nq0 = " << nq0 << endl;
+                cout << "nq1 = " << nq1 << endl;
+                cout << "nq2 = " << nq2 << endl;
+                
+                nqtot = nq0*nq1*nq2;
+                
+                // setup temp storage
+                Array<OneD,NekDouble> d1[3] = {Array<OneD, NekDouble>(nqtot),
+                                            Array<OneD, NekDouble>(nqtot), 
+                                            Array<OneD, NekDouble>(nqtot)};
+                Array<OneD,NekDouble> d2[3] = {Array<OneD, NekDouble>(nqtot),
+                                            Array<OneD, NekDouble>(nqtot), 
+                                            Array<OneD, NekDouble>(nqtot)};
+                Array<OneD,NekDouble> d3[3] = {Array<OneD, NekDouble>(nqtot),
+                                            Array<OneD, NekDouble>(nqtot), 
+                                            Array<OneD, NekDouble>(nqtot)};
+                                            
+                               
+                // interpolate Geometric derivatives which are polynomials
+                Array<OneD,NekDouble> dxdxi(Xnqtot);                   
+
+            
                // Implementation based on Spend's book page 160
 
                 // Compute the RHS of the d xi_1/d x_1 = m_gmat[0] : J3D * m_gmat[0] = dxdi[0], then interpolate d3[2]
@@ -1247,6 +1281,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.31  2008/11/24 18:33:34  ehan
+// Added 3D routines for GeomFactors()
+//
 // Revision 1.30  2008/09/23 22:07:32  ehan
 // Modified 3D GeomFactor constructor
 //

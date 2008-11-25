@@ -8,14 +8,14 @@
 
 
 #include <algorithm>
-#include <iostream>
+#include <iostream> 
 #include <limits>
 #include <cstdio>
-#include <cstdlib>
+#include <cstdlib>   
 #include <cmath>
-#include <iomanip>
+#include <iomanip>     
 #include <iosfwd>
-
+ 
 
 using namespace std;
 
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 
 
         // Populate the list of edges
-        SegGeomSharedPtr edges[nEdges];
+        SegGeomSharedPtr edges[nEdges]; 
         for(int i=0; i < nEdges; ++i){
             VertexComponentSharedPtr vertsArray[2];
             for(int j=0; j<2; ++j){
@@ -149,40 +149,54 @@ int main(int argc, char *argv[])
             }
             edges[i] = MemoryManager<SegGeom>::AllocateSharedPtr(i, three, vertsArray);
         }
-
+ 
         // //////////////////////////////////////////////////////////////
         // Set up Prism faces
         const int nFaces = 5;
-        const int quadEdgeConnectivity[][4] = { {0,1,2,3}, {1,6,8,5}, {3,7,8,4} };
-        const bool   isQuadEdgeFlipped[][4] = { {0,0,1,1}, {0,0,1,1}, {0,0,1,1} }; 
-        const int  triEdgeConnectivity[][3] = { {0,5,4}, {2,7,6} };
-        const bool   isTriEdgeFlipped[][3] = { {0,0,1}, {1, 0,1 } };  
+        //quad-edge connectivity base-face0, vertical-quadface2, vertical-quadface4
+        const int quadEdgeConnectivity[][4] = { {0,1,2,3}, {1,6,8,5}, {3,7,8,4} }; 
+        const bool   isQuadEdgeFlipped[][4] = { {0,0,1,1}, {0,0,1,1}, {0,0,1,1} };
+        const int                  quadId[] = { 0,-1,1,-1,2 };
 
-        // Populate the list of faces
+         //triangle-edge connectivity side-triface-1, side triface-3 
+        const int  triEdgeConnectivity[][3] = { {0,5,4}, {2,7,6} };
+        const bool    isTriEdgeFlipped[][3] = { {0,0,1}, {1, 0,1 } };  
+        const int                   triId[] = { -1,0,-1,1,-1 };
+
+        // Populate the list of faces  
         Geometry2DSharedPtr faces[nFaces]; 
-        for(int i=0; i < nFaces; ++i){
-            if(i == 1  ||  i==3) {
+        for(int f = 0; f < nFaces; ++f){
+            cout << "f = " << f << endl;
+            if(f == 1  ||  f==3) {
+                int i = triId[f];
                 SegGeomSharedPtr edgeArray[3];
                 EdgeOrientation eorientArray[3];
                 for(int j=0; j < 3; ++j){
                     edgeArray[j] = edges[triEdgeConnectivity[i][j]];
                     eorientArray[j] = isTriEdgeFlipped[i][j] ? eBackwards : eForwards;
                 }
-                faces[i] = MemoryManager<TriGeom>::AllocateSharedPtr(i, edgeArray, eorientArray);
+                faces[f] = MemoryManager<TriGeom>::AllocateSharedPtr(f, edgeArray, eorientArray);
+                cout << "tri faces[" << f << "] = " << faces[f] << endl;
             }            
             else {
+                int i = quadId[f];
                 SegGeomSharedPtr edgeArray[4];
-                EdgeOrientation eorientArray[4];
+                EdgeOrientation eorientArray[4]; 
                 for(int j=0; j < 4; ++j){
                     edgeArray[j] = edges[quadEdgeConnectivity[i][j]];
                     eorientArray[j] = isQuadEdgeFlipped[i][j] ? eBackwards : eForwards;
                 }
-                faces[i] = MemoryManager<QuadGeom>::AllocateSharedPtr(i, edgeArray, eorientArray);
+                faces[f] = MemoryManager<QuadGeom>::AllocateSharedPtr(f, edgeArray, eorientArray);
+                cout << "quad faces[" << f << "] = " << faces[f] << endl;
             }
-        }
+            cout << "faces[" << f << "] = " << faces[f] << endl;
+            for(int k = 0; k < faces[f]->GetNumEdges(); ++k) {
+                cout << "faces[" << f << "]->GetEid(" << k << ") = " << faces[f]->GetEid(k) << endl;
+            }
+        } 
 
-         const LibUtilities::PointsKey   pointsKey_x( Qx, Qtype_x );
-         const LibUtilities::PointsKey   pointsKey_y( Qy, Qtype_y );
+         const LibUtilities::PointsKey   pointsKey_x( Qx, Qtype_x );   
+         const LibUtilities::PointsKey   pointsKey_y( Qy, Qtype_y ); 
          const LibUtilities::PointsKey   pointsKey_z( Qz, Qtype_z );
 
          const LibUtilities::BasisKey    basisKey_x( bType_x, xModes, pointsKey_x );
@@ -195,11 +209,11 @@ int main(int argc, char *argv[])
 
          }
 
-         SpatialDomains::PrismGeomSharedPtr geom = MemoryManager<SpatialDomains::PrismGeom>::AllocateSharedPtr(faces); 
+         SpatialDomains::PrismGeomSharedPtr geom = MemoryManager<SpatialDomains::PrismGeom>::AllocateSharedPtr(faces);
          geom->SetOwnData();
 
-
-        if( bType_x_val < 10 ) {
+   
+        if( bType_x_val < 10 ) {  
             lpr = new LocalRegions::PrismExp( basisKey_x, basisKey_y, basisKey_z, geom );
         } else {
             cerr << "Implement the NodalTetExp!!!!!!" << endl;
@@ -215,9 +229,9 @@ int main(int argc, char *argv[])
     
         //----------------------------------------------
         // Define solution to be projected
-        for(int n = 0; n < Qx * Qy * Qz; ++n) {
+        for(int n = 0; n < Qx * Qy * Qz; ++n) { 
             solution[n]  = Prism_sol( x[n], y[n], z[n], P, Q, R, bType_x, bType_y, bType_z );
-        }
+        } 
         //----------------------------------------------
     }
            

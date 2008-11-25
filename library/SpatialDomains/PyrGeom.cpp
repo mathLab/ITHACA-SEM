@@ -592,13 +592,14 @@ namespace Nektar
 
         void PyrGeom::GenGeomFactors(void)
         {
+            int i;
             GeomType Gtype = eRegular;
             GeomShapeType GSType = eQuadrilateral;
 
             FillGeom();
 
             // check to see if expansions are linear
-            for(int i = 0; i < m_coordim; ++i)
+            for(i = 0; i < m_coordim; ++i)
             {
                 if((m_xmap[i]->GetBasisNumModes(0) != 2)||
                    (m_xmap[i]->GetBasisNumModes(1) != 2)||
@@ -752,6 +753,9 @@ namespace Nektar
 
 //
 // $Log: PyrGeom.cpp,v $
+// Revision 1.10  2008/11/17 08:59:20  ehan
+// Added necessary mapping routines for Tet
+//
 // Revision 1.9  2008/06/18 19:27:51  ehan
 // Added implementation for GetLocCoords(..)
 //

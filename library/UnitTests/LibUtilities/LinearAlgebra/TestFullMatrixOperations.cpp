@@ -303,6 +303,10 @@ namespace Nektar
             BOOST_CHECK_EQUAL(array_out_buf[1], 766.0);
             BOOST_CHECK_EQUAL(array_out_buf[2], 625.0);
             BOOST_CHECK_EQUAL(array_out_buf[3], 926.0);
+            BOOST_CHECK_EQUAL(result(0,0), 517.0);
+            BOOST_CHECK_EQUAL(result(1,0), 766.0);
+            BOOST_CHECK_EQUAL(result(0,1), 625.0);
+            BOOST_CHECK_EQUAL(result(1,1), 926.0);
         }
     }
 }

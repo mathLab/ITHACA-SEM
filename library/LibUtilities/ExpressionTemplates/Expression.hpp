@@ -74,166 +74,148 @@ namespace Nektar
         }
     };
 
-        /// \brief An expression is an arbitrary combination of operations acting on arbitrary amountsw of data to 
-        /// produce a result.  The expressions stores the operations and data but does not evaluate it until requested.
-        /// 
-        /// \param PolicyType The type of expression.
-        template<typename PolicyType>
-        class Expression
-        {
-            public:
-                // The type of the data which will be the result of evaluating the expression.
-                typedef typename PolicyType::ResultType ResultType;
+    /// \brief An expression is an arbitrary combination of operations acting on arbitrary amountsw of data to 
+    /// produce a result.  The expressions stores the operations and data but does not evaluate it until requested.
+    /// 
+    /// \param PolicyType The type of expression.
+    template<typename PolicyType>
+    class Expression
+    {
+        public:
+            // The type of the data which will be the result of evaluating the expression.
+            typedef typename PolicyType::ResultType ResultType;
 
-                // The type of the unevaluated subexpressions or data.
-                typedef typename PolicyType::DataType DataType;
+            // The type of the unevaluated subexpressions or data.
+            typedef typename PolicyType::DataType DataType;
 
-                typedef typename PolicyType::MetadataType MetadataType;
-                
-                typedef typename boost::remove_const<typename boost::remove_reference<DataType>::type >::type BaseDataType;
-            public:
-                /// This constructor allows temporaries.  I can't find a way to prevent this 
-                /// from happening without also preventing constant parameters, so this will
-                /// need to be a "don't do that" type warning.
-                template<typename T>
-                explicit Expression(const T& data) :
-                    m_data(data),
-                    m_metadata()
-                {
-                    PolicyType::InitializeMetadata(m_data, m_metadata);
-                }
+            typedef typename PolicyType::MetadataType MetadataType;
+            
+            typedef typename boost::remove_const<typename boost::remove_reference<DataType>::type >::type BaseDataType;
+            
+        public:
+            /// This constructor allows temporaries.  I can't find a way to prevent this 
+            /// from happening without also preventing constant parameters, so this will
+            /// need to be a "don't do that" type warning.
+            template<typename T>
+            explicit Expression(const T& data) :
+                m_data(data),
+                m_metadata()
+            {
+                PolicyType::InitializeMetadata(m_data, m_metadata);
+            }
 
-                explicit Expression(BaseDataType& data) :
-                    m_data(data),
-                    m_metadata()
-                {
-                    //using boost::mpl::and_;
-                    //using boost::is_reference;
-                    //using boost::is_same;
-                    //using boost::is_const;
+            explicit Expression(BaseDataType& data) :
+                m_data(data),
+                m_metadata()
+            {
+                PolicyType::InitializeMetadata(m_data, m_metadata);
+            }
 
-                    //BOOST_MPL_ASSERT( ( is_const<BaseDataType> ) );
+            Expression(const Expression<PolicyType>& rhs) :
+                m_data(rhs.m_data),
+                m_metadata(rhs.m_metadata)
+            {
+            }
 
-                    PolicyType::InitializeMetadata(m_data, m_metadata);
-                }
+            ~Expression() {}
 
-                //template<typename T>
-                //explicit Expression(const T& data) :
-                //    m_data(data),
-                //    m_metadata()
-                //{
-                //    //BOOST_STATIC_ASSERT(0);
-                //    using boost::mpl::and_;
-                //    using boost::is_reference;
-                //    using boost::is_same;
+            ResultType Evaluate() const
+            {
+                // If you get a compile error here, then it is likely
+                // that you have created your own metadata for 
+                // ResultType, but forgot to specialize CreateFromMetadata.
+                ResultType result = CreateFromMetadata<ResultType>::Apply(m_metadata);
+                Evaluate(result);
+                return result;
+            }
 
-                //    BOOST_MPL_ASSERT_NOT( (and_<is_reference<DataType>, is_same<BaseDataType, T> >) );
-                //    PolicyType::InitializeMetadata(m_data, m_metadata);
-                //}
+            void Evaluate(typename boost::call_traits<ResultType>::reference result) const
+            {
+               if( !PolicyType::ContainsReference(result, m_data) )
+               {
+                    Accumulator<ResultType> accum(result);
+                    PolicyType::Evaluate(accum, m_data);
+               }
+               else
+               {
+                   ResultType temp(result);
+                   Accumulator<ResultType> accum(temp);
+                   PolicyType::Evaluate(accum, m_data);
+                   result = temp;
+               }
+                    
+            }
 
-                Expression(const Expression<PolicyType>& rhs) :
-                    m_data(rhs.m_data),
-                    m_metadata(rhs.m_metadata)
-                {
-                }
+            void Evaluate(Accumulator<ResultType>& accum) const
+            {
+                Evaluate<BinaryNullOp>(accum);
+            }
+            
+            template<template <typename, typename> class ParentOpType>
+            void Evaluate(Accumulator<ResultType>& accum) const
+            {
+                PolicyType::template Evaluate<ParentOpType>(accum, m_data);
+            }
+            
+            template<template <typename> class ParentOpType>
+            void Evaluate(Accumulator<ResultType>& accum) const
+            {
+                PolicyType::template Evaluate<ParentOpType>(accum, m_data);
+            }
 
-                ~Expression() {}
+            const MetadataType& GetMetadata() const
+            {
+                return m_metadata;
+            }
 
-                ResultType Evaluate() const
-                {
-                    // If you get a compile error here, then it is likely
-                    // that you have created your own metadata for 
-                    // ResultType, but forgot to specialize CreateFromMetadata.
-                    ResultType result = CreateFromMetadata<ResultType>::Apply(m_metadata);
-                    Evaluate(result);
-                    return result;
-                }
+            void Print(std::ostream& os) const
+            {
+                PolicyType::Print(os, m_data);
+            }
 
-                void Evaluate(typename boost::call_traits<ResultType>::reference result) const
-                {
-                   if( !PolicyType::ContainsReference(result, m_data) )
-                   {
-                        Accumulator<ResultType> accum(result);
-                        PolicyType::Evaluate(accum, m_data);
-                   }
-                   else
-                   {
-                       ResultType temp(result);
-                       Accumulator<ResultType> accum(temp);
-                       PolicyType::Evaluate(accum, m_data);
-                       result = temp;
-                   }
-                        
-                }
+            typename boost::call_traits<DataType>::reference operator*()
+            {
+                return m_data;
+            }
+            
+            typename boost::call_traits<DataType>::const_reference operator*() const
+            {
+                return m_data;
+            }
+            
+            
+            /// Utility Methods
+            unsigned int CountRequiredTemporaries() const
+            {
+                return CountRequiredTemporaries<BinaryNullOp>();
+            }
+            
+            template<template <typename> class ParentOpType>
+            unsigned int CountRequiredTemporaries() const
+            {
+                return PolicyType::template CountRequiredTemporaries<ParentOpType>(m_data);
+            }
+            
+            template<template <typename, typename> class ParentOpType>
+            unsigned int CountRequiredTemporaries() const
+            {
+                return PolicyType::template CountRequiredTemporaries<ParentOpType>(m_data);
+            }
+            
+        private:
+            Expression<PolicyType>& operator=(const Expression<PolicyType>& rhs);
 
-                void Evaluate(Accumulator<ResultType>& accum) const
-                {
-                    Evaluate<BinaryNullOp>(accum);
-                }
-                
-                template<template <typename, typename> class ParentOpType>
-                void Evaluate(Accumulator<ResultType>& accum) const
-                {
-                    PolicyType::template Evaluate<ParentOpType>(accum, m_data);
-                }
-                
-                template<template <typename> class ParentOpType>
-                void Evaluate(Accumulator<ResultType>& accum) const
-                {
-                    PolicyType::template Evaluate<ParentOpType>(accum, m_data);
-                }
-
-                const MetadataType& GetMetadata() const
-                {
-                    return m_metadata;
-                }
-
-                void Print(std::ostream& os) const
-                {
-                    PolicyType::Print(os, m_data);
-                }
-
-                typename boost::call_traits<DataType>::reference operator*()
-                {
-                    return m_data;
-                }
-                
-                typename boost::call_traits<DataType>::const_reference operator*() const
-                {
-                    return m_data;
-                }
-                
-                
-                /// Utility Methods
-                unsigned int CountRequiredTemporaries() const
-                {
-                    return CountRequiredTemporaries<BinaryNullOp>();
-                }
-                
-                template<template <typename> class ParentOpType>
-                unsigned int CountRequiredTemporaries() const
-                {
-                    return PolicyType::template CountRequiredTemporaries<ParentOpType>(m_data);
-                }
-                
-                template<template <typename, typename> class ParentOpType>
-                unsigned int CountRequiredTemporaries() const
-                {
-                    return PolicyType::template CountRequiredTemporaries<ParentOpType>(m_data);
-                }
-                
-            private:
-                Expression<PolicyType>& operator=(const Expression<PolicyType>& rhs);
-
-                DataType m_data;
-                MetadataType m_metadata;
-        };
-        
-        template<typename DataType, typename PolicyType>
-        void Assign(DataType& result, const Expression<PolicyType>& expr)
-        {
-            expr.Evaluate(result);
-        }
+            DataType m_data;
+            MetadataType m_metadata;
+    };
+    
+    /// \brief Allows an object to be assigned from an expression 
+    ///        when you don't have access to a class' source code.
+    template<typename DataType, typename PolicyType>
+    void Assign(DataType& result, const Expression<PolicyType>& expr)
+    {
+        expr.Evaluate(result);
+    }
 
 }
 
@@ -241,6 +223,9 @@ namespace Nektar
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 /**
     $Log: Expression.hpp,v $
+    Revision 1.23  2008/03/12 00:49:33  bnelson
+    Forced a compile error if custom Metadata is supplied but not CreateFromMetadata specialization exists.
+
     Revision 1.22  2008/02/19 03:44:36  bnelson
     Added the beginnings of a method to count the temporaries created by an expression.
 

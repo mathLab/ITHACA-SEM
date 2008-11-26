@@ -207,5 +207,37 @@ namespace Nektar
             BOOST_CHECK_EQUAL(expected_result, result);
             BOOST_CHECK_EQUAL(expected_result, result1);
         }
+        
+        class Test
+        {
+            public:
+                Test(double initValue = 0.0) 
+                {
+                    m_value = initValue;
+                }
+                
+                Test(const Test& rhs)
+                {
+                    m_value = rhs.m_value;
+                }
+                
+                Test& operator=(const Test& rhs)
+                {
+                    m_value = rhs.m_value;
+                    return *this;
+                }
+                
+            private:
+                double m_value;
+        };
+        
+        BOOST_AUTO_TEST_CASE(TestBlockMatrixReturnValue)
+        {
+            NekMatrix<NekMatrix<Test>, BlockMatrixTag> m(2, 2, 2, 2);
+            boost::shared_ptr<NekMatrix<Test> > inner1(new NekMatrix<Test>(2, 2));
+            m.SetBlock(0, 0, inner1);
+            const Test& value = m(0,0);
+            
+        }
     }
 }

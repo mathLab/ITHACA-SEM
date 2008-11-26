@@ -443,7 +443,20 @@ namespace Nektar
                     }
 
                     this->SetTransposeFlag('N');
+                    Array<OneD, DataType> original = GetData();
+                    
                     rhs.Evaluate(*this);
+                    
+                    if( m_wrapperType == eWrapper )
+                    {
+                        if( GetData().data() != original.data() )
+                        {
+                            this->SwapTempAndDataBuffers();
+                            std::copy(this->GetTempSpace().data(), this->GetTempSpace().data() + this->GetRequiredStorageSize(),
+                                this->GetData().data());
+                        }
+                    }
+                    
                     return *this;
                 }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
@@ -1007,7 +1020,19 @@ namespace Nektar
                     }
 
                     this->SetTransposeFlag('N');
+                    Array<OneD, DataType> original = this->GetData();
+                    
                     rhs.Evaluate(*this);
+                    
+                    if( this->GetWrapperType() == eWrapper )
+                    {
+                        if( this->GetData().data() != original.data() )
+                        {
+                            this->SwapTempAndDataBuffers();
+                            std::copy(this->GetTempSpace().data(), this->GetTempSpace().data() + this->GetRequiredStorageSize(),
+                                this->GetData().data());
+                        }
+                    }
                     return *this;
                 }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES

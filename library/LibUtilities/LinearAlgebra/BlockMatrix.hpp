@@ -56,8 +56,9 @@ namespace Nektar
 
             // Each inner matrix type can possible return references or value types from GetValue.
             // Query the type here to find out.
-            typedef NumberType& GetValueType;
-            typedef const NumberType& ConstGetValueType;
+            
+            typedef typename InnerType::GetValueType GetValueType;
+            typedef typename InnerType::ConstGetValueType ConstGetValueType;
                 
         public:
             template<typename MatrixType>

@@ -484,58 +484,20 @@ namespace Nektar
                 return this->GetValue(row, column, transpose);
             }
             
+            unsigned int GetRequiredStorageSize() const
+            {
+                return BaseType::GetRequiredStorageSize(this->GetStorageType(),
+                    this->GetRows(), this->GetColumns(), 
+                    this->GetNumberOfSubDiagonals(), this->GetNumberOfSuperDiagonals());
+            }
+            
             unsigned int CalculateIndex(unsigned int row, unsigned int col, const char transpose) const
             {
                 unsigned int numRows = this->GetSize()[0];
                 unsigned int numColumns = this->GetSize()[1];
-                if(transpose == 'T' )
-                {
-                    std::swap(row, col);
-                }
-                switch(m_storagePolicy)
-                {
-                    case eFULL:
-                        return FullMatrixFuncs::CalculateIndex(numRows, numColumns, row, col);
-                        break;
-                    case eDIAGONAL:
-                        return DiagonalMatrixFuncs::CalculateIndex(row, col);
-                        break;
-                    case eUPPER_TRIANGULAR:
-                        return UpperTriangularMatrixFuncs::CalculateIndex(row, col);                        
-                        break;
-                    case eLOWER_TRIANGULAR:
-                        return LowerTriangularMatrixFuncs::CalculateIndex(numColumns, row, col);
-                        break;
-                    case eSYMMETRIC:
-                    case ePOSITIVE_DEFINITE_SYMMETRIC:
-                        return SymmetricMatrixFuncs::CalculateIndex(row, col);
-                        break;
-                    case eBANDED:
-                        return BandedMatrixFuncs::CalculateIndex(numRows, numColumns,
-                            row, col, m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
-                        break;
-                    case eSYMMETRIC_BANDED:
-                    case ePOSITIVE_DEFINITE_SYMMETRIC_BANDED:
-                        {
-                            ASSERTL1(m_numberOfSuperDiagonals==m_numberOfSuperDiagonals,
-                                     std::string("Number of sub- and superdiagonals should ") + 
-                                     std::string("be equal for a symmetric banded matrix"));
-                            return SymmetricBandedMatrixFuncs::CalculateIndex(row, col, 
-                                m_numberOfSuperDiagonals);
-                        }
-                        break;
-                    case eUPPER_TRIANGULAR_BANDED:
-                        NEKERROR(ErrorUtil::efatal, "Not yet implemented.");
-                        break;
-                    case eLOWER_TRIANGULAR_BANDED:
-                        NEKERROR(ErrorUtil::efatal, "Not yet implemented.");
-                        break;
-                        
-                    default:
-                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
-                }
-                
-                return std::numeric_limits<unsigned int>::max();
+                return BaseType::CalculateIndex(this->GetStorageType(),
+                    row, col, numRows, numColumns, transpose,
+                    m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
             }
             
             /// \brief Returns the element value at the given row and column.
@@ -814,54 +776,7 @@ namespace Nektar
                 ResizeDataArrayIfNeeded(data.RequiredStorageSize);
             }
 
-            unsigned int GetRequiredStorageSize()
-            {
-                switch(m_storagePolicy)
-                {
-                    case eFULL:
-                        return FullMatrixFuncs::GetRequiredStorageSize(this->GetRows(), this->GetColumns());
-                        break;
-                    case eDIAGONAL:
-                        return DiagonalMatrixFuncs::GetRequiredStorageSize(this->GetRows(), this->GetColumns());
-                        break;
-                    case eUPPER_TRIANGULAR:
-                        return UpperTriangularMatrixFuncs::GetRequiredStorageSize(this->GetRows(), this->GetColumns());
-                        break;
-                    case eLOWER_TRIANGULAR:
-                        return LowerTriangularMatrixFuncs::GetRequiredStorageSize(this->GetRows(), this->GetColumns());
-                        break;
-                    case eSYMMETRIC:
-                    case ePOSITIVE_DEFINITE_SYMMETRIC:
-                        return SymmetricMatrixFuncs::GetRequiredStorageSize(this->GetRows(), this->GetColumns());
-                        break;
-                    case eBANDED:
-                        return BandedMatrixFuncs::GetRequiredStorageSize(this->GetRows(), this->GetColumns(),
-                            m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
-                        break;
-                    case eSYMMETRIC_BANDED:
-                    case ePOSITIVE_DEFINITE_SYMMETRIC_BANDED:
-                        {
-                            ASSERTL1(m_numberOfSuperDiagonals==m_numberOfSuperDiagonals,
-                                     std::string("Number of sub- and superdiagonals should ") + 
-                                     std::string("be equal for a symmetric banded matrix"));
-                            return SymmetricBandedMatrixFuncs::GetRequiredStorageSize(this->GetRows(), this->GetColumns(),
-                                m_numberOfSuperDiagonals);
-                        }
-                        break;
-                    case eUPPER_TRIANGULAR_BANDED:
-                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
-                        break;
-                    case eLOWER_TRIANGULAR_BANDED:
-                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
-                        break;
-                        
-                    default:
-                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
-                }
-
-                return 0;
-            }
-
+            
         private:
                         
             virtual typename boost::call_traits<DataType>::value_type v_GetValue(unsigned int row, unsigned int column) const 

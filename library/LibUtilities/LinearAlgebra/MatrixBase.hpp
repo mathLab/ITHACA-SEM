@@ -39,6 +39,7 @@
 #include <LibUtilities/LinearAlgebra/MatrixType.h>
 #include <LibUtilities/LinearAlgebra/MatrixStorageType.h>
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
+#include <LibUtilities/LinearAlgebra/MatrixFuncs.h>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
@@ -128,6 +129,110 @@ namespace Nektar
                 return v_GetTransposeFlag();
             }       
             
+            static unsigned int CalculateIndex(MatrixStorage type, 
+                unsigned int row, unsigned int col, 
+                unsigned int numRows, unsigned int numColumns, const char transpose =  'N',
+                unsigned int numSubDiags = 0, unsigned int numSuperDiags = 0) 
+            {
+                if(transpose == 'T' )
+                {
+                    std::swap(row, col);
+                }
+                switch(type)
+                {
+                    case eFULL:
+                        return FullMatrixFuncs::CalculateIndex(numRows, numColumns, row, col);
+                        break;
+                    case eDIAGONAL:
+                        return DiagonalMatrixFuncs::CalculateIndex(row, col);
+                        break;
+                    case eUPPER_TRIANGULAR:
+                        return UpperTriangularMatrixFuncs::CalculateIndex(row, col);                        
+                        break;
+                    case eLOWER_TRIANGULAR:
+                        return LowerTriangularMatrixFuncs::CalculateIndex(numColumns, row, col);
+                        break;
+                    case eSYMMETRIC:
+                    case ePOSITIVE_DEFINITE_SYMMETRIC:
+                        return SymmetricMatrixFuncs::CalculateIndex(row, col);
+                        break;
+                    case eBANDED:
+                        return BandedMatrixFuncs::CalculateIndex(numRows, numColumns,
+                            row, col, numSubDiags, numSuperDiags);
+                        break;
+                    case eSYMMETRIC_BANDED:
+                    case ePOSITIVE_DEFINITE_SYMMETRIC_BANDED:
+                        {
+                            ASSERTL1(numSubDiags==numSuperDiags,
+                                     std::string("Number of sub- and superdiagonals should ") + 
+                                     std::string("be equal for a symmetric banded matrix"));
+                            return SymmetricBandedMatrixFuncs::CalculateIndex(row, col, 
+                                numSuperDiags);
+                        }
+                        break;
+                    case eUPPER_TRIANGULAR_BANDED:
+                        NEKERROR(ErrorUtil::efatal, "Not yet implemented.");
+                        break;
+                    case eLOWER_TRIANGULAR_BANDED:
+                        NEKERROR(ErrorUtil::efatal, "Not yet implemented.");
+                        break;
+                        
+                    default:
+                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
+                }
+                
+                return std::numeric_limits<unsigned int>::max();
+            }
+            
+            static unsigned int GetRequiredStorageSize(MatrixStorage type, unsigned int rows, 
+                unsigned int columns, unsigned int subDiags = 0, unsigned int superDiags = 0)
+            {
+                switch(type)
+                {
+                    case eFULL:
+                        return FullMatrixFuncs::GetRequiredStorageSize(rows, columns);
+                        break;
+                    case eDIAGONAL:
+                        return DiagonalMatrixFuncs::GetRequiredStorageSize(rows, columns);
+                        break;
+                    case eUPPER_TRIANGULAR:
+                        return UpperTriangularMatrixFuncs::GetRequiredStorageSize(rows, columns);
+                        break;
+                    case eLOWER_TRIANGULAR:
+                        return LowerTriangularMatrixFuncs::GetRequiredStorageSize(rows, columns);
+                        break;
+                    case eSYMMETRIC:
+                    case ePOSITIVE_DEFINITE_SYMMETRIC:
+                        return SymmetricMatrixFuncs::GetRequiredStorageSize(rows, columns);
+                        break;
+                    case eBANDED:
+                        return BandedMatrixFuncs::GetRequiredStorageSize(rows, columns,
+                            subDiags, superDiags);
+                        break;
+                    case eSYMMETRIC_BANDED:
+                    case ePOSITIVE_DEFINITE_SYMMETRIC_BANDED:
+                        {
+                            ASSERTL1(subDiags==superDiags,
+                                     std::string("Number of sub- and superdiagonals should ") + 
+                                     std::string("be equal for a symmetric banded matrix"));
+                            return SymmetricBandedMatrixFuncs::GetRequiredStorageSize(rows, columns,
+                                superDiags);
+                        }
+                        break;
+                    case eUPPER_TRIANGULAR_BANDED:
+                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
+                        break;
+                    case eLOWER_TRIANGULAR_BANDED:
+                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
+                        break;
+                        
+                    default:
+                        NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
+                }
+
+                return 0;
+            }
+
         protected:
             
             // All constructors are private to enforce the abstract nature of ConstMatrix without

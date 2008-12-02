@@ -208,6 +208,40 @@ namespace Nektar
             BOOST_CHECK_EQUAL(expected_result, result1);
         }
         
+        BOOST_AUTO_TEST_CASE(TestDiagonalBlockMatrixMultiplication)
+        {
+            typedef NekMatrix<double> InnerType;
+            typedef NekMatrix<InnerType, BlockMatrixTag> BlockType;
+
+            double m_00_buf[] = {1, 3, 2, 4};
+            double m_11_buf[] = {1, 4, 2, 5, 3, 6};
+            double m_22_buf[] = {1, 3, 5, 2, 4, 6};
+
+
+            boost::shared_ptr<InnerType> m00(new InnerType(2, 2, m_00_buf));
+            boost::shared_ptr<InnerType> m11(new InnerType(2, 3, m_11_buf));
+            boost::shared_ptr<InnerType> m22(new InnerType(3, 2, m_22_buf));
+
+            unsigned int rowCounts[] = {2, 2, 3};
+            unsigned int colCounts[] = {2, 3, 2};
+
+            BlockType b(3, 3, rowCounts, colCounts, eDIAGONAL);
+            b.SetBlock(0, 0, m00);
+            b.SetBlock(1, 1, m11);
+            b.SetBlock(2, 2, m22);
+
+            double rhs_buf[] = {1, 2, 3, 4, 5, 6, 7};
+            NekVector<double> rhs(7, rhs_buf);
+
+            NekVector<double> result = b*rhs;
+
+            double expected_buf[] = {5, 11, 26, 62, 20, 46, 72};
+            NekVector<double> expected_result(7, expected_buf);
+
+            BOOST_CHECK_EQUAL(expected_result, result);
+        }
+
+
         class Test
         {
             public:

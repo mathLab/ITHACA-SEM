@@ -330,15 +330,14 @@ namespace Nektar
         } 
     }
 
-    /// \brief Matrix/Vector multiplicatin for block matrices.
     template<typename DataType, typename LhsInnerMatrixType, typename dim, typename space>
-    void NekMultiply(NekVector<DataType, VariableSizedVector, space>& result,
+    void FullBlockMatrixMultiply(NekVector<DataType, VariableSizedVector, space>& result,
                      const NekMatrix<LhsInnerMatrixType, BlockMatrixTag>& lhs,
                      const NekVector<const DataType, dim, space>& rhs)
     {
         unsigned int numberOfBlockRows = lhs.GetNumberOfBlockRows();
         unsigned int numberOfBlockColumns = lhs.GetNumberOfBlockColumns();
-
+        
         for(unsigned int i = 0; i < result.GetDimension(); ++i)
         {
             result[i] = DataType(0);
@@ -360,7 +359,7 @@ namespace Nektar
             }
 
             NekVector<DataType, VariableSizedVector, space> resultWrapper(rowsInBlock, result.GetPtr() + curResultRow, eWrapper);
-
+            
             unsigned int curWrapperRow = 0;
             for(unsigned int blockColumn = 0; blockColumn < numberOfBlockColumns; ++blockColumn)
             {
@@ -369,7 +368,8 @@ namespace Nektar
                     curWrapperRow += lhs.GetNumberOfColumnsInBlockColumn(blockColumn-1);
                 }
 
-                const boost::shared_ptr<const LhsInnerMatrixType>& block = lhs.GetBlock(blockRow, blockColumn);
+                //const boost::shared_ptr<const LhsInnerMatrixType>& block = lhs.GetBlock(blockRow, blockColumn);
+                const LhsInnerMatrixType* block = lhs.GetBlockPtr(blockRow, blockColumn);
                 if( !block )
                 {
                     continue;
@@ -382,9 +382,75 @@ namespace Nektar
                 }
 
                 NekVector<const DataType, VariableSizedVector, space> rhsWrapper(columnsInBlock, rhs.GetPtr() + curWrapperRow, eWrapper);
-                
                 resultWrapper += (*block)*rhsWrapper;
             }
+        }
+    }
+    
+    template<typename DataType, typename LhsInnerMatrixType, typename dim, typename space>
+    void DiagonalBlockMatrixMultiply(NekVector<DataType, VariableSizedVector, space>& result,
+                     const NekMatrix<LhsInnerMatrixType, BlockMatrixTag>& lhs,
+                     const NekVector<const DataType, dim, space>& rhs)
+    {
+        unsigned int numberOfBlockRows = lhs.GetNumberOfBlockRows();
+        unsigned int numberOfBlockColumns = lhs.GetNumberOfBlockColumns();
+        
+        unsigned int curResultRow = 0;
+        unsigned int curWrapperRow = 0;
+        for(unsigned int blockRow = 0; blockRow < numberOfBlockRows; ++blockRow)
+        {
+            unsigned int rowsInBlock = lhs.GetNumberOfRowsInBlockRow(blockRow);
+
+            if( blockRow != 0 )
+            {
+                curResultRow += lhs.GetNumberOfRowsInBlockRow(blockRow-1);
+            }
+
+            if( rowsInBlock == 0 )
+            {
+                continue;
+            }
+
+            NekVector<DataType, VariableSizedVector, space> resultWrapper(rowsInBlock, result.GetPtr() + curResultRow, eWrapper);
+            
+            unsigned int blockColumn = blockRow;
+
+            if( blockColumn != 0 )
+            {
+                curWrapperRow += lhs.GetNumberOfColumnsInBlockColumn(blockColumn-1);
+            }
+
+            //const boost::shared_ptr<const LhsInnerMatrixType>& block = lhs.GetBlock(blockRow, blockColumn);
+            const LhsInnerMatrixType* block = lhs.GetBlockPtr(blockRow, blockColumn);
+            if( !block )
+            {
+                continue;
+            }
+
+            unsigned int columnsInBlock = lhs.GetNumberOfColumnsInBlockColumn(blockColumn);
+            if( columnsInBlock == 0 )
+            {
+                continue;
+            }
+
+            NekVector<const DataType, VariableSizedVector, space> rhsWrapper(columnsInBlock, rhs.GetPtr() + curWrapperRow, eWrapper);
+            resultWrapper = (*block)*rhsWrapper;
+        }
+    }
+    
+    /// \brief Matrix/Vector multiplicatin for block matrices.
+    template<typename DataType, typename LhsInnerMatrixType, typename dim, typename space>
+    void NekMultiply(NekVector<DataType, VariableSizedVector, space>& result,
+                     const NekMatrix<LhsInnerMatrixType, BlockMatrixTag>& lhs,
+                     const NekVector<const DataType, dim, space>& rhs)
+    {
+        if( lhs.GetStorageType() == eDIAGONAL )
+        {
+            DiagonalBlockMatrixMultiply(result, lhs, rhs);
+        }
+        else
+        {
+            FullBlockMatrixMultiply(result, lhs, rhs);
         }
     }
 

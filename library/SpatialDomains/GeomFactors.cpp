@@ -351,7 +351,7 @@ namespace Nektar
             }
 
             SetUpJacGmat(Coords[0]->DetExpansionType(),nquad0,nquad1,nquad2,d1,d2,d3);
-        }
+        }  
 
         GeomFactors::GeomFactors(enum StdRegions::ExpansionType shape,
                                  const GeomFactors &Xgfac,
@@ -717,10 +717,10 @@ namespace Nektar
                 }
 
             }
-            else
+            else // Deformed case
             {
-//                 m_jac  = Array<OneD, NekDouble>(nqtot,0.0);
-//                 m_gmat = Array<TwoD, NekDouble>(3*m_coordim,nqtot,0.0);
+                m_jac  = Array<OneD, NekDouble>(nqtot,0.0);
+                m_gmat = Array<TwoD, NekDouble>(3*m_coordim,nqtot,0.0);
 
                 if(m_coordim == 3) // assume g = [0,0,1]
                 {
@@ -1281,6 +1281,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.32  2008/11/25 23:02:15  ehan
+// Fixed level 1 assertion violation: GeomFactors(..) only works for 1D and 2D, but not it works for 3D.
+//
 // Revision 1.31  2008/11/24 18:33:34  ehan
 // Added 3D routines for GeomFactors()
 //

@@ -726,21 +726,21 @@ namespace Nektar
             // check to see if all necessary angles are 90 degrees
 //             if(Gtype == eRegular){
 // 
-//                     const unsigned int faceVerts[kNqfaces][QuadGeom::kNverts] = 
+//                     const unsigned int faceVerts[kNqfaces][QuadGeom::kNverts] =
 //                         { {0,1,2,3} ,
 //                           {0,3,4,5} };
 //                     int f;
-//                     NekDouble dx1,dx2,dy1,dy2;
+//                     NekDouble dx1,dx2,dy1,dy2; 
 //                     for(f = 0; f < kNqfaces; f++)
 //                     {
 //                         for(int i = 0; i < 3; ++i)
 //                         {
 //                             dx1 = m_verts[ faceVerts[f][i+1] ]->x() - m_verts[ faceVerts[f][i] ]->x();
 //                             dy1 = m_verts[ faceVerts[f][i+1] ]->y() - m_verts[ faceVerts[f][i] ]->y();
-//                             
+// 
 //                             dx2 = m_verts[ faceVerts[f][((i+3)%4)] ]->x() - m_verts[ faceVerts[f][i] ]->x();
 //                             dy2 = m_verts[ faceVerts[f][((i+3)%4)] ]->y() - m_verts[ faceVerts[f][i] ]->y();
-//                             
+// 
 //                             if(fabs(dx1*dx2 + dy1*dy2) > sqrt((dx1*dx1+dy1*dy1)*(dx2*dx2+dy2*dy2))
 //                                                             * kGeomRightAngleTol)
 //                             {
@@ -860,6 +860,9 @@ namespace Nektar
 
 //
 // $Log: PrismGeom.cpp,v $
+// Revision 1.11  2008/11/24 20:59:55  ehan
+// Fixed bugs and added additional mapping routines for Prism.
+//
 // Revision 1.10  2008/11/17 08:59:37  ehan
 // Added necessary mapping routines for Tet
 //

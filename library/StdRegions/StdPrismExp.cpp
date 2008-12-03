@@ -296,7 +296,7 @@ namespace Nektar
                 }
             }
             
-            // Create an index map from the rectangle to the triangle. 
+            // Create an index map from the rectangle to the triangle.
             Array<OneD, int> pr = Array<OneD, int>( (P+1)*(R+1), -1 );
             for( int p = 0, mode=0; p <= P; ++p ) {
                 for( int r = 0; r <= R - p ; ++r, ++mode ) {
@@ -310,7 +310,7 @@ namespace Nektar
                 for( int q = 0; q <= Q; ++q ) {
                     for( int r = 0; r <= R - p; ++r ) {
 
-                        // Determine the index for specifying which mode to use in the basis                       
+                        // Determine the index for specifying which mode to use in the basis
                         int mode_pqr   = pqr[r + (R+1)*(q + (Q+1)*p)];
                         int mode_pr    = pr[r + (R+1)*p];
 
@@ -329,7 +329,7 @@ namespace Nektar
                         }
 
                         outarray[mode_pqr] = Integral( g_pqr );
-                    }
+                   }
                 }
             }
         }      
@@ -354,15 +354,19 @@ namespace Nektar
                                     Array<OneD, NekDouble> &out_dxi1, 
                                     Array<OneD, NekDouble> &out_dxi2,
                                     Array<OneD, NekDouble> &out_dxi3 )
-        {
+        { 
 
             int    Qx = m_base[0]->GetNumPoints();
             int    Qy = m_base[1]->GetNumPoints();
             int    Qz = m_base[2]->GetNumPoints();
 
             // Compute the physical derivative
-            Array<OneD, NekDouble> out_dEta1(Qx*Qy*Qz,0.0), out_dEta2(Qx*Qy*Qz,0.0), out_dEta3(Qx*Qy*Qz,0.0);
-            PhysTensorDeriv(u_physical, out_dEta1, out_dEta2, out_dEta3);
+            //Array<OneD, NekDouble> out_dEta1(Qx*Qy*Qz,0.0), out_dEta2(Qx*Qy*Qz,0.0), out_dEta3(Qx*Qy*Qz,0.0);
+           // Array<OneD, NekDouble> out_dEta1_bar(Qx*Qy*Qz, 0.0);
+            //PhysTensorDeriv(u_physical, out_dEta1, out_dEta2, out_dEta3);
+
+            Array<OneD, NekDouble> dEta_bar1(Qx*Qy*Qz,0.0), dXi2(Qx*Qy*Qz,0.0), dEta3(Qx*Qy*Qz,0.0);
+            PhysTensorDeriv(u_physical, dEta_bar1, dXi2, dEta3);
 
 
             Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
@@ -370,17 +374,28 @@ namespace Nektar
             eta_y = m_base[1]->GetZ();
             eta_z = m_base[2]->GetZ();
 
-            
-            for(int k=0, n=0; k<Qz; ++k)
+             
+            for(int k=0, n=0; k<Qz; ++k) 
                 for(int j=0; j<Qy; ++j){
                     for(int i=0; i<Qx; ++i, ++n){
                         {
-                            NekDouble eta_x_bar = (1.0 + eta_x[i]) * (1.0 - eta_z[k]) / 2.0  -  1.0;
-                    
-                            out_dxi1[n] = 2.0/ (1.0 - eta_z[k])*out_dEta1[n];
-                            out_dxi2[n] = out_dEta2[n];
-                            out_dxi3[n] = (1.0 + eta_x_bar) / (1.0 - eta_z[k])*out_dEta1[n] + out_dEta3[n];
-                            //out_dxi3[n] = (1.0 + eta_x[i]) / (1.0 - eta_z[k])*out_dEta1[n] + out_dEta3[n];
+                            NekDouble eta_x_bar = (1.0 + eta_x[i]) * (1.0 - eta_y[j]) / 2.0  -  1.0;
+                            //NekDouble out_dEta1_bar = (1.0 + out_dEta1[n])*(1.0 - out_dEta3[n])/2.0 - 1.0;
+                            
+                            out_dxi1[n] = 2.0/ (1.0 - eta_z[k])*dEta_bar1[n];
+                            out_dxi2[n] = dXi2[n];
+                            out_dxi3[n] = (1.0 + eta_x_bar) / (1.0 - eta_z[k])*dEta_bar1[n]  +  dEta3[n];
+
+//                             out_dxi1[n] = 2.0/ (1.0 - eta_z[k])*out_dEta1_bar;
+//                             out_dxi2[n] = out_dEta2[n];
+//                             out_dxi3[n] = (1.0 + eta_x_bar) / (1.0 - eta_z[k])*out_dEta1_bar + out_dEta3[n];
+
+
+//                             NekDouble eta_x_bar = (1.0 + eta_x[i]) * (1.0 - eta_z[k]) / 2.0  -  1.0;
+//                             out_dxi1[n] = 2.0/ (1.0 - eta_z[k])*out_dEta1[n];
+//                             out_dxi2[n] = out_dEta2[n];
+//                             out_dxi3[n] = (1.0 + eta_x_bar) / (1.0 - eta_z[k])*out_dEta1[n] + out_dEta3[n];
+                           // out_dxi3[n] = (1.0 + eta_x[i]) / (1.0 - eta_z[k])*out_dEta1[n] + out_dEta3[n];
                                         
                             //out_dxi1[n] = out_dEta1[n];
                             //out_dxi2[n] = 2.0/ (1.0 - eta_z[k])*out_dEta2[n];
@@ -392,8 +407,10 @@ namespace Nektar
                             cout << "out_dxi1["<<n<<"] = " << out_dxi1[n] << ",  out_dxi2["<<n<<"] = " << out_dxi2[n] << ", out_dxi3["<<n<<"] = " << out_dxi3[n] << endl;
                         
                         }
-                    }
+                    } 
                 }
+                        
+            //PhysTensorDeriv(u_physical, out_dxi1, out_dxi2, out_dxi3);
                         
         }
 
@@ -534,9 +551,9 @@ namespace Nektar
                 {
                     Blas::Daxpy(nquad2,inarray[1+i*nummodes2],base2.get()+nquad2,1,
                                 tmp0.get()+nquad2*(nummodes1+i),1);
-                }                
+                }
             }
-            
+
             for(i = 0; i < nummodes0; i++)
             {
                 Blas::Dgemm('N', 'T', nquad1, nquad2, nummodes1, 1.0, base1.get(), nquad1,
@@ -544,7 +561,7 @@ namespace Nektar
             }
 
             Blas::Dgemm('N', 'T', nquad0, nquad2*nquad1, nummodes0, 1.0, base0.get(),
-                        nquad0, tmp1.get(), nquad2*nquad1, 0.0, outarray.get(), nquad0);     
+                        nquad0, tmp1.get(), nquad2*nquad1, 0.0, outarray.get(), nquad0);
 
 #else
 
@@ -679,18 +696,18 @@ namespace Nektar
 //                 eta[1] = 2.0*(1.0 + xi[1])/(1.0 - xi[2]) - 1.0; //=eta_bar[1]
 //                 eta[0] = xi[0]; //eta_x = xi_x
                 
-
             } 
 
 
             return  StdExpansion3D::PhysEvaluate(eta);  
         }
+
  
         void StdPrismExp::GetCoords( Array<OneD, NekDouble> & xi_x, Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z)
         {
-            Array<OneD, const NekDouble> eta_x = m_base[0]->GetZ();
-            Array<OneD, const NekDouble> eta_y = m_base[1]->GetZ();
-            Array<OneD, const NekDouble> eta_z = m_base[2]->GetZ();
+            Array<OneD, const NekDouble> etaBar_x = m_base[0]->GetZ();
+            Array<OneD, const NekDouble> eta_y    = m_base[1]->GetZ();
+            Array<OneD, const NekDouble> eta_z    = m_base[2]->GetZ();
 //             Array<OneD, const NekDouble> eta_bar(eta_x.GetNumElem(), 0);
             int Qx = GetNumPoints(0);
             int Qy = GetNumPoints(1);
@@ -706,18 +723,19 @@ namespace Nektar
                     for( int i = 0; i < Qx; ++i ) {
                         int s = i + Qx*(j + Qy*k);
 
-                        NekDouble eta_x_bar = (1.0 + eta_x[i]) * (1.0 - eta_z[k]) / 2.0  -  1.0;
-                        
-                        xi_z[s] = eta_z[k];                   
-                        xi_y[s] = eta_y[j];
-                        xi_x[s] = (1.0 + eta_x_bar) * (1.0 - eta_z[k]) / 2.0  -  1.0;
-                        //xi_x[s] = (1.0 + eta_x[i]) * (1.0 - eta_z[k]) / 2.0  -  1.0; // This is wrong
-                        
-                        // Third basis function collapsed to "qr" direction instead of "pr" direction
-                        //                         xi_y[s] = (1.0 + eta_y[j]) * (1.0 - eta_z[k]) / 2.0  -  1.0;                    
-                        //                         xi_x[s] = eta_x[i];
+//                         NekDouble eta_x_bar = (1.0 + eta_x[i]) * (1.0 - eta_y[j]) / 2.0  -  1.0;
+                        //NekDouble eta_x_bar = (1.0 + eta_x[i]) * (1.0 - eta_z[k]) / 2.0  -  1.0;
 
-                        //    xi_x[s] = (1.0 + eta_x_bar) * (1.0 - eta_z[k]) / 2.0  -  1.0;                    
+                        xi_z[s] = eta_z[k];
+                        xi_y[s] = eta_y[j];
+                        xi_x[s] = (1.0 - eta_z[k])*(1.0 + etaBar_x[i]) / 2.0  -  1.0;
+//                         xi_x[s] = (1.0 + eta_x_bar) * (1.0 - eta_z[k]) / 2.0  -  1.0;
+                      //xi_x[s] = (1.0 + eta_x[i]) * (1.0 - eta_z[k]) / 2.0  -  1.0; // This is wrong
+                        
+                      // Third basis function collapsed to "qr" direction instead of "pr" direction
+                      //                         xi_y[s] = (1.0 + eta_y[j]) * (1.0 - eta_z[k]) / 2.0  -  1.0;
+                      //                         xi_x[s] = eta_x[i];
+                      //    xi_x[s] = (1.0 + eta_x_bar) * (1.0 - eta_z[k]) / 2.0  -  1.0;
                        
                     }
                 }
@@ -1395,6 +1413,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPrismExp.cpp,v $
+ * Revision 1.18  2008/11/24 21:07:34  ehan
+ * Added necessary mapping routines and fixed bugs for Prism
+ *
  * Revision 1.17  2008/11/17 09:02:53  ehan
  * Added necessary mapping routines
  *

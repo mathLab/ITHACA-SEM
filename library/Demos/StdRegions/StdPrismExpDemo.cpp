@@ -5,12 +5,12 @@
 #include <StdRegions/StdPrismExp.h>
 
 
-#include <algorithm>
-#include <iostream>
-#include <limits>
+#include <algorithm> 
+#include <iostream>     
+#include <limits> 
 #include <cstdio>
 #include <cstdlib>
-#include <cmath>
+#include <cmath>    
 #include <iomanip>
 using namespace std;
 using namespace Nektar;
@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
     {
         bType_x =   LibUtilities::eOrtho_A;
         bType_y =   LibUtilities::eOrtho_B;
-        bType_z =   LibUtilities::eOrtho_C;
+        bType_z =   LibUtilities::eOrtho_C; 
         
         NodalType = LibUtilities::eNodalTetElec;
     }

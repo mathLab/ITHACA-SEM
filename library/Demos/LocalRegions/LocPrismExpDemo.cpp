@@ -5,7 +5,7 @@
 #include "LibUtilities/Foundations/Foundations.hpp"
 #include "LibUtilities/Foundations/Basis.h"
 #include "SpatialDomains/MeshComponents.h"
-
+  
 
 #include <algorithm>
 #include <iostream> 
@@ -17,19 +17,19 @@
 #include <iosfwd>
  
 
-using namespace std;
+using namespace std;     
 
 
-using namespace Nektar;
+using namespace Nektar;  
 
 
 NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z, int order1, int order2, int order3,
                   LibUtilities::BasisType bType_x, LibUtilities::BasisType bType_y, LibUtilities::BasisType bType_z);
 
 // using namespace boost;
-using namespace Nektar::LibUtilities;
+using namespace Nektar::LibUtilities;  
 using namespace Nektar::LocalRegions;
-using namespace Nektar::StdRegions;
+using namespace Nektar::StdRegions;  
 using namespace Nektar::SpatialDomains;
 
 
@@ -195,12 +195,12 @@ int main(int argc, char *argv[])
             }
         } 
 
-         const LibUtilities::PointsKey   pointsKey_x( Qx, Qtype_x );   
+         const LibUtilities::PointsKey   pointsKey_x( Qx, Qtype_x );    
          const LibUtilities::PointsKey   pointsKey_y( Qy, Qtype_y ); 
          const LibUtilities::PointsKey   pointsKey_z( Qz, Qtype_z );
 
          const LibUtilities::BasisKey    basisKey_x( bType_x, xModes, pointsKey_x );
-         const LibUtilities::BasisKey    basisKey_y( bType_y, yModes, pointsKey_y );
+         const LibUtilities::BasisKey    basisKey_y( bType_y, yModes, pointsKey_y ); 
          const LibUtilities::BasisKey    basisKey_z( bType_z, zModes, pointsKey_z );
 
          Array<OneD, StdRegions::StdExpansion3DSharedPtr> xMap(3);
@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
 
          SpatialDomains::PrismGeomSharedPtr geom = MemoryManager<SpatialDomains::PrismGeom>::AllocateSharedPtr(faces);
          geom->SetOwnData();
-
+ 
    
         if( bType_x_val < 10 ) {  
             lpr = new LocalRegions::PrismExp( basisKey_x, basisKey_y, basisKey_z, geom );
@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
     Array<OneD, NekDouble> t = Array<OneD, NekDouble>(3);
      t[0] = -0.39;
      t[1] = -0.25;
-     t[2] =  0.5;
+     t[2] = -0.50;
     
     if( regionShape == StdRegions::ePrism ) {
         solution[0] = Prism_sol( t[0], t[1], t[2], P, Q, R, bType_x, bType_y, bType_z );

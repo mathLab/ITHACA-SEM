@@ -19,8 +19,8 @@ NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2,
 // This routine projects a polynomial or trigonmetric functions which 
 // has energy in all mdoes of the expansions and reports and error
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) 
+{ 
 
   int           i,j,k,l;
   const         NekDouble *z1,*z2,*w;
@@ -40,6 +40,8 @@ int main(int argc, char *argv[])
                    //       arg[0]    arg[1]   arg[2]  arg[3] arg[4] arg[5] arg[6] arg[7] arg[8] arg[9] arg[10] arg[11] arg[12] arg[13]
     fprintf(stderr,"Usage: Project2D RegionShape Type1 Type2 order1 order2  nq1    nq2     x1,    y1,      x2,     y2,     x3,    y3 \n");
 
+    fprintf(stderr,"Example : ./LocProject2D-g 2 4 5 3 3 4 4 .1 -.5 .6 .1 .3 .2 \n" );
+    
     fprintf(stderr,"Where RegionShape is an integer value which "
         "dictates the region shape:\n");
     fprintf(stderr,"\t Triangle      = 2\n");

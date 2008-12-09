@@ -94,7 +94,7 @@ namespace Nektar
                         
                         // calculate du/dx_0
                         if(outarray_dx.num_elements() > 0 ) {
-                            outarray_dx[ijk] = 0;
+                            outarray_dx[ijk] = 0.0;
                             for( int p = 0; p < Qx; ++p ) {                            
                                 int pjk = p + Qx*(j + Qy*k);
                                 int ip =  i + Qx*p;
@@ -109,6 +109,7 @@ namespace Nektar
                         
                         // calculate du/dx_1
                         if(outarray_dy.num_elements() > 0 ) {
+			  outarray_dy[ijk] = 0.0;
                             for( int q = 0; q < Qy; ++q ) {
                                 int iqk = i + Qx*(q + Qy*k);
                                 int jq  = j + Qy*q;
@@ -123,7 +124,7 @@ namespace Nektar
                         
                         // calculate du/dx_2
                         if(outarray_dz.num_elements() > 0 ) {
-                            outarray_dz[ijk] = 0;
+                            outarray_dz[ijk] = 0.0;
                             for( int r = 0; r < Qz; ++r ) {
                                 int ijr = i + Qx*(j + Qy*r);
                                 int kr  = k + Qz*r;
@@ -272,6 +273,9 @@ namespace Nektar
 
 /** 
  * $Log: StdExpansion3D.cpp,v $
+ * Revision 1.18  2008/11/23 00:32:57  sherwin
+ * Removed dump value from PhysEvaluate
+ *
  * Revision 1.17  2008/07/04 10:18:40  pvos
  * Some updates
  *

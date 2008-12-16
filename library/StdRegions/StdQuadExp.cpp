@@ -137,12 +137,12 @@ namespace Nektar
         {
             int i;
             int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();            
+            int    nquad1 = m_base[1]->GetNumPoints();   
+            int     nqtot = nquad0*nquad1;         
             int    order0 = m_base[0]->GetNumModes();
             int    order1 = m_base[1]->GetNumModes();
             
-            Array<OneD, NekDouble> tmp(nquad0*nquad1);
-            Array<OneD, NekDouble> tmp1(nquad0*order1);
+            Array<OneD, NekDouble> wsp(nqtot+nquad0*order1);
             
             const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
             const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
@@ -150,20 +150,20 @@ namespace Nektar
             // multiply by integration constants 
             for(i = 0; i < nquad1; ++i)
             {
-                Vmath::Vmul(nquad0,(NekDouble*)&inarray[0]+i*nquad0,1,
-                            w0.get(),1,&tmp[0]+i*nquad0,1);
+                Vmath::Vmul(nquad0, inarray.get()+i*nquad0,1,
+                            w0.get(),1,wsp.get()+i*nquad0,1);
             }
             
             for(i = 0; i < nquad0; ++i)
             {
-                Vmath::Vmul(nquad1,&tmp[0]+i,nquad0,w1.get(),1,
-                            &tmp[0]+i,nquad0);
+                Vmath::Vmul(nquad1,wsp.get()+i,nquad0,w1.get(),1,
+                            wsp.get()+i,nquad0);
             }
 
             Blas::Dgemm('T','N',order0,nquad1,nquad0,1.0,base0.get(),               
-                        nquad0,&tmp[0],nquad0,0.0,&tmp1[0],order0);
-            Blas::Dgemm('N', 'N',order0,order1, nquad1,1.0, &tmp1[0],                            
-                        order0, base1.get(), nquad1, 0.0,&outarray[0],order0); 
+                        nquad0,wsp.get(),nquad0,0.0,wsp.get()+nqtot,order0);
+            Blas::Dgemm('N', 'N',order0,order1, nquad1,1.0, wsp.get()+nqtot,                            
+                        order0, base1.get(), nquad1, 0.0,outarray.get(),order0); 
         }   
         
         void StdQuadExp::IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray, 
@@ -337,11 +337,10 @@ namespace Nektar
                 int    nquad1 = m_base[1]->GetNumPoints();
                 int    nqtot = nquad0*nquad1; 
                 
-                Array<OneD,NekDouble> physValues(nqtot);
-                Array<OneD,NekDouble> dPhysValuesdx(nqtot);
-                Array<OneD,NekDouble> dPhysValuesdy(nqtot);
-                
-                Array<OneD,NekDouble> wsp(m_ncoeffs);
+                Array<OneD,NekDouble> physValues(3*nqtot+m_ncoeffs);
+                Array<OneD,NekDouble> dPhysValuesdx(physValues+nqtot);
+                Array<OneD,NekDouble> dPhysValuesdy(physValues+2*nqtot);
+                Array<OneD,NekDouble> tmp(physValues+3*nqtot);
                 
                 BwdTrans_SumFac(inarray,physValues);
                 
@@ -349,8 +348,8 @@ namespace Nektar
                 PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
                 
                 IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray);
-                IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,wsp);  
-                Vmath::Vadd(m_ncoeffs,wsp.get(),1,outarray.get(),1,outarray.get(),1);               
+                IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,tmp);  
+                Vmath::Vadd(m_ncoeffs,tmp.get(),1,outarray.get(),1,outarray.get(),1);               
             }
             else
             {
@@ -367,26 +366,25 @@ namespace Nektar
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nqtot = nquad0*nquad1; 
             NekDouble lambda = mkey.GetConstant(0);
-            
-            Array<OneD,NekDouble> physValues(nqtot);
-            Array<OneD,NekDouble> dPhysValuesdx(nqtot);
-            Array<OneD,NekDouble> dPhysValuesdy(nqtot);
-            
-            Array<OneD,NekDouble> wsp(m_ncoeffs);
-            
+                
+            Array<OneD,NekDouble> physValues(3*nqtot+m_ncoeffs);
+            Array<OneD,NekDouble> dPhysValuesdx(physValues+nqtot);
+            Array<OneD,NekDouble> dPhysValuesdy(physValues+2*nqtot);
+            Array<OneD,NekDouble> tmp(physValues+3*nqtot);
+
             BwdTrans_SumFac(inarray,physValues);
             
             // mass matrix operation
-            IProductWRTBase_SumFac((m_base[0]->GetBdata()),(m_base[1]->GetBdata()),physValues,wsp);
+            IProductWRTBase_SumFac((m_base[0]->GetBdata()),(m_base[1]->GetBdata()),physValues,tmp);
             
             // Laplacian matrix operation
             PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
             
             IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray);
-            Blas::Daxpy(m_ncoeffs, lambda, wsp.get(), 1, outarray.get(), 1);
+            Blas::Daxpy(m_ncoeffs, lambda, tmp.get(), 1, outarray.get(), 1);
             
-            IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,wsp);  
-            Vmath::Vadd(m_ncoeffs,wsp.get(),1,outarray.get(),1,outarray.get(),1);           
+            IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,tmp);  
+            Vmath::Vadd(m_ncoeffs,tmp.get(),1,outarray.get(),1,outarray.get(),1);           
         }
         
         ///////////////////////////////
@@ -1291,6 +1289,9 @@ namespace Nektar
 
 /** 
  * $Log: StdQuadExp.cpp,v $
+ * Revision 1.47  2008/11/24 10:31:14  pvos
+ * Changed name from _PartitionedOp to _MatFree
+ *
  * Revision 1.46  2008/11/19 16:02:47  pvos
  * Added functionality for variable Laplacian coeffcients
  *

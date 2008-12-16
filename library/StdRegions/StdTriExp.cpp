@@ -109,15 +109,15 @@ namespace Nektar
                                                const Array<OneD, const NekDouble>& base1,
                                                const Array<OneD, const NekDouble>& inarray, 
                                                Array<OneD, NekDouble> &outarray)
-        {
+        {           
             int    i,mode;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
+            int     nqtot = nquad0*nquad1;
             int    order0 = m_base[0]->GetNumModes();
             int    order1 = m_base[1]->GetNumModes();
 
-            Array<OneD, NekDouble> tmp(nquad0*nquad1);
-            Array<OneD, NekDouble> tmp1(order0*nquad1);
+            Array<OneD, NekDouble> wsp(nqtot+order0*nquad1);
             
             const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
             const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
@@ -130,8 +130,8 @@ namespace Nektar
             // multiply by integration constants 
             for(i = 0; i < nquad1; ++i)
             {
-                Vmath::Vmul(nquad0,(NekDouble*)&inarray[0]+i*nquad0,1,
-                            w0.get(),1, &tmp[0]+i*nquad0,1);
+                Vmath::Vmul(nquad0,inarray.get()+i*nquad0,1,
+                            w0.get(),1, wsp.get()+i*nquad0,1);
             }
 
             switch(m_base[1]->GetPointsType())
@@ -139,27 +139,27 @@ namespace Nektar
             case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
                 for(i = 0; i < nquad1; ++i)
                 {
-                    Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], &tmp[0]+i*nquad0,1);
+                    Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], wsp.get()+i*nquad0,1);
                 }
                 break;
             case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product 
                 for(i = 0; i < nquad1; ++i)
                 {
-                    Blas::Dscal(nquad0,0.5*w1[i], &tmp[0]+i*nquad0,1);      
+                    Blas::Dscal(nquad0,0.5*w1[i], wsp.get()+i*nquad0,1);      
                 }
                 break;
             }
 
             // Inner product with respect to 'a' direction 
-            Blas::Dgemm('T','N',nquad1,order0,nquad0,1.0,&tmp[0],nquad0,
-                        base0.get(),nquad0,0.0,&tmp1[0],nquad1);
+            Blas::Dgemm('T','N',nquad1,order0,nquad0,1.0,wsp.get(),nquad0,
+                        base0.get(),nquad0,0.0,wsp.get()+nqtot,nquad1);
                 
             // Inner product with respect to 'b' direction 
             for(mode=i=0; i < order0; ++i)
             {
                 Blas::Dgemv('T',nquad1,order1-i,1.0, base1.get()+mode*nquad1,
-                            nquad1,&tmp1[0]+i*nquad1,1, 0.0, 
-                            &outarray[0] + mode,1);
+                            nquad1,wsp.get()+nqtot+i*nquad1,1, 0.0, 
+                            outarray.get() + mode,1);
                 mode += order1-i;
             }
             
@@ -167,7 +167,7 @@ namespace Nektar
             if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
                 outarray[1] += Blas::Ddot(nquad1,base1.get()+nquad1,1,
-                                          &tmp1[0]+nquad1,1);
+                                          wsp.get()+nqtot+nquad1,1);
             }
         }
 
@@ -180,10 +180,10 @@ namespace Nektar
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nqtot = nquad0*nquad1; 
 
-            Array<OneD, NekDouble> gfac0(nqtot);
-            Array<OneD, NekDouble> tmp0(nqtot);
+            Array<OneD, NekDouble> gfac0(nqtot+nqtot);
+            Array<OneD, NekDouble> tmp0(gfac0+nqtot);
 
-            Array<OneD, const NekDouble> z1 = m_base[1]->GetZ();
+            const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
             
             // set up geometric factor: 2/(1-z1)
             for(i = 0; i < nquad1; ++i)
@@ -207,7 +207,7 @@ namespace Nektar
             case 1:
                 {
                     Array<OneD, NekDouble> tmp3(m_ncoeffs);    
-                    Array<OneD, const NekDouble> z0 = m_base[0]->GetZ();
+                    const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
 
                     for(i = 0; i < nquad0; ++i)
                     {
@@ -337,25 +337,25 @@ namespace Nektar
         {
             if(mkey.GetNvariableLaplacianCoefficients() == 0)
             {
-                // This implementation is only valid when there is no coefficients
+                // This implementation is only valid when there are no coefficients
                 // associated to the Laplacian operator
                 int    i;
                 int    nquad0 = m_base[0]->GetNumPoints();
                 int    nquad1 = m_base[1]->GetNumPoints();
+                int    nquadmax = max(nquad0,nquad1);
                 int    nqtot = nquad0*nquad1; 
 
-                Array<OneD,NekDouble> physValues(nqtot);
-                Array<OneD,NekDouble> dPhysValuesdx(nqtot);
-                Array<OneD,NekDouble> dPhysValuesdy(nqtot);
-
-                Array<OneD,NekDouble> wsp(m_ncoeffs);
+                Array<OneD,NekDouble> physValues(3*nqtot+m_ncoeffs+nquadmax);
+                Array<OneD,NekDouble> dPhysValuesdx(physValues+nqtot);
+                Array<OneD,NekDouble> dPhysValuesdy(physValues+2*nqtot);
+                Array<OneD,NekDouble> tmp(physValues+3*nqtot);
+                Array<OneD,NekDouble> gfac0(physValues+3*nqtot+m_ncoeffs);
 
                 BwdTrans_SumFac(inarray,physValues);
 
                 // Laplacian matrix operation
                 PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
                 // multiply with metric terms of collapsed coordinate system
-                Array<OneD,NekDouble> gfac0(max(nquad0,nquad1));
                 const Array<OneD,const NekDouble>& z0 = m_base[0]->GetZ();
                 const Array<OneD,const NekDouble>& z1 = m_base[1]->GetZ();
 
@@ -381,8 +381,8 @@ namespace Nektar
              
             
                 IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray);
-                IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,wsp);  
-                Vmath::Vadd(m_ncoeffs,wsp.get(),1,outarray.get(),1,outarray.get(),1);          
+                IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,tmp);  
+                Vmath::Vadd(m_ncoeffs,tmp.get(),1,outarray.get(),1,outarray.get(),1);          
             }    
             else
             {
@@ -398,24 +398,24 @@ namespace Nektar
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nqtot = nquad0*nquad1; 
+            int    nquadmax = max(nquad0,nquad1);
             NekDouble lambda = mkey.GetConstant(0);
 
-            Array<OneD,NekDouble> physValues(nqtot);
-            Array<OneD,NekDouble> dPhysValuesdx(nqtot);
-            Array<OneD,NekDouble> dPhysValuesdy(nqtot);
-
-            Array<OneD,NekDouble> wsp(m_ncoeffs);
+            Array<OneD,NekDouble> physValues(3*nqtot+m_ncoeffs+nquadmax);
+            Array<OneD,NekDouble> dPhysValuesdx(physValues+nqtot);
+            Array<OneD,NekDouble> dPhysValuesdy(physValues+2*nqtot);
+            Array<OneD,NekDouble> tmp(physValues+3*nqtot);
+            Array<OneD,NekDouble> gfac0(physValues+3*nqtot+m_ncoeffs);
 
             BwdTrans_SumFac(inarray,physValues);
 
             // mass matrix operation
             IProductWRTBase_SumFac((m_base[0]->GetBdata()),(m_base[1]->GetBdata()),
-                            physValues,wsp);
+                            physValues,tmp);
 
             // Laplacian matrix operation
             PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
             // multiply with metric terms of collapsed coordinate system
-            Array<OneD,NekDouble> gfac0(max(nquad0,nquad1));
             const Array<OneD,const NekDouble>& z0 = m_base[0]->GetZ();
             const Array<OneD,const NekDouble>& z1 = m_base[1]->GetZ();
 
@@ -441,10 +441,10 @@ namespace Nektar
              
             
             IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray);
-            Blas::Daxpy(m_ncoeffs, lambda, wsp.get(), 1, outarray.get(), 1);
+            Blas::Daxpy(m_ncoeffs, lambda, tmp.get(), 1, outarray.get(), 1);
 
-            IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,wsp);  
-            Vmath::Vadd(m_ncoeffs,wsp.get(),1,outarray.get(),1,outarray.get(),1);                  
+            IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,tmp);  
+            Vmath::Vadd(m_ncoeffs,tmp.get(),1,outarray.get(),1,outarray.get(),1);                  
         }
 
         //-----------------------------
@@ -1258,6 +1258,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTriExp.cpp,v $
+ * Revision 1.49  2008/11/24 10:31:14  pvos
+ * Changed name from _PartitionedOp to _MatFree
+ *
  * Revision 1.48  2008/11/19 16:02:47  pvos
  * Added functionality for variable Laplacian coeffcients
  *

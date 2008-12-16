@@ -217,22 +217,24 @@ namespace Nektar
             if(mkey.GetNvariableLaplacianCoefficients() == 0)
             {
                 int    i;
+                int    dim = m_geom->GetCoordim();
                 int    nquad0 = m_base[0]->GetNumPoints();
                 int    nquad1 = m_base[1]->GetNumPoints();
+                int    nquadmax = max(nquad0,nquad1);
                 int    nqtot = nquad0*nquad1; 
                 const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
                 
-                Array<OneD,NekDouble> physValues(nqtot);
-                Array<OneD,NekDouble> dPhysValuesdx(nqtot);
-                Array<OneD,NekDouble> dPhysValuesdy(nqtot);
-                
-                Array<OneD,NekDouble> wsp(m_ncoeffs);
-                Array<OneD,NekDouble> tmp(nqtot);
+                Array<OneD,NekDouble> physValues((2+dim)*nqtot+m_ncoeffs+nquadmax);
+                Array<OneD,NekDouble> dPhysValuesdx(physValues+nqtot);
+                Array<OneD,NekDouble> dPhysValuesdy(physValues+2*nqtot);
+                Array<OneD,NekDouble> tmp(physValues+3*nqtot);
+                Array<OneD,NekDouble> tmp0(physValues+4*nqtot);
+                Array<OneD,NekDouble> gfac0(physValues+4*nqtot+m_ncoeffs);
 
                 BwdTrans_SumFac(inarray,physValues);
                 
                 // Laplacian matrix operation
-                switch(m_geom->GetCoordim())
+                switch(dim)
                 {
                 case 2:
                     {
@@ -259,7 +261,7 @@ namespace Nektar
                     break;
                 case 3:
                     {
-                        Array<OneD,NekDouble> dPhysValuesdz(nqtot);
+                        Array<OneD,NekDouble> dPhysValuesdz(physValues+4*nqtot+m_ncoeffs+nquadmax);
                         
                         PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy,dPhysValuesdz);
                         
@@ -293,7 +295,6 @@ namespace Nektar
                 }
                 
                 // multiply with metric terms of collapsed coordinate system
-                Array<OneD,NekDouble> gfac0(max(nquad0,nquad1));
                 const Array<OneD,const NekDouble>& z0 = m_base[0]->GetZ();
                 const Array<OneD,const NekDouble>& z1 = m_base[1]->GetZ();
                 
@@ -320,8 +321,8 @@ namespace Nektar
                 }
                 
                 IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray);
-                IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,wsp);  
-                Vmath::Vadd(m_ncoeffs,wsp.get(),1,outarray.get(),1,outarray.get(),1);                             
+                IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,tmp0);  
+                Vmath::Vadd(m_ncoeffs,tmp0.get(),1,outarray.get(),1,outarray.get(),1);                             
             }
             else
             {
@@ -334,27 +335,29 @@ namespace Nektar
                                                       const StdRegions::StdMatrixKey &mkey)
         {
             int    i;
+            int    dim    = m_geom->GetCoordim();
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
+            int    nquadmax = max(nquad0,nquad1);
             int    nqtot = nquad0*nquad1; 
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
             NekDouble lambda = mkey.GetConstant(0);
 
-            Array<OneD,NekDouble> physValues(nqtot);
-            Array<OneD,NekDouble> dPhysValuesdx(nqtot);
-            Array<OneD,NekDouble> dPhysValuesdy(nqtot);
-
-            Array<OneD,NekDouble> wsp(m_ncoeffs);
-            Array<OneD,NekDouble> tmp(nqtot);
+            Array<OneD,NekDouble> physValues((2+dim)*nqtot+m_ncoeffs+nquadmax);
+            Array<OneD,NekDouble> dPhysValuesdx(physValues+nqtot);
+            Array<OneD,NekDouble> dPhysValuesdy(physValues+2*nqtot);
+            Array<OneD,NekDouble> tmp(physValues+3*nqtot);
+            Array<OneD,NekDouble> tmp0(physValues+4*nqtot);
+            Array<OneD,NekDouble> gfac0(physValues+4*nqtot+m_ncoeffs);
 
             BwdTrans_SumFac(inarray,physValues);
 
             // mass matrix operation
             IProductWRTBase_SumFac((m_base[0]->GetBdata()),(m_base[1]->GetBdata()),
-                            physValues,wsp);
+                            physValues,tmp0);
 
             // Laplacian matrix operation
-            switch(m_geom->GetCoordim())
+            switch(dim)
             {
             case 2:
                 {
@@ -381,7 +384,7 @@ namespace Nektar
                 break;
             case 3:
                 {
-                    Array<OneD,NekDouble> dPhysValuesdz(nqtot);
+                    Array<OneD,NekDouble> dPhysValuesdz(physValues+4*nqtot+m_ncoeffs+nquadmax);
 
                     PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy,dPhysValuesdz);
 
@@ -415,7 +418,6 @@ namespace Nektar
             }
 
             // multiply with metric terms of collapsed coordinate system
-            Array<OneD,NekDouble> gfac0(max(nquad0,nquad1));
             const Array<OneD,const NekDouble>& z0 = m_base[0]->GetZ();
             const Array<OneD,const NekDouble>& z1 = m_base[1]->GetZ();
 
@@ -443,11 +445,10 @@ namespace Nektar
              
             
             IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray);
-            Blas::Daxpy(m_ncoeffs, lambda, wsp.get(), 1, outarray.get(), 1);
+            Blas::Daxpy(m_ncoeffs, lambda, tmp0.get(), 1, outarray.get(), 1);
 
-            IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,wsp);  
-            Vmath::Vadd(m_ncoeffs,wsp.get(),1,outarray.get(),1,outarray.get(),1);      
-            
+            IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,tmp0);  
+            Vmath::Vadd(m_ncoeffs,tmp0.get(),1,outarray.get(),1,outarray.get(),1); 
         }
 
         void TriExp::IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& base0, 
@@ -495,13 +496,12 @@ namespace Nektar
             int    nqtot = nquad0*nquad1; 
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
             
-            Array<OneD, NekDouble> tmp0(nqtot);
-            Array<OneD, NekDouble> tmp1(nqtot);
-            Array<OneD, NekDouble> tmp2(nqtot);
-            Array<OneD, NekDouble> tmp3(m_ncoeffs);
-
-            Array<OneD, NekDouble> gfac0(nqtot);
-            Array<OneD, NekDouble> gfac1(nqtot);
+            Array<OneD, NekDouble> tmp0(5*nqtot+m_ncoeffs);
+            Array<OneD, NekDouble> tmp1(tmp0+nqtot);
+            Array<OneD, NekDouble> tmp2(tmp0+2*nqtot);
+            Array<OneD, NekDouble> gfac0(tmp0+3*nqtot);
+            Array<OneD, NekDouble> gfac1(tmp0+4*nqtot);
+            Array<OneD, NekDouble> tmp3(tmp0+5*nqtot);
 
             const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
             const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
@@ -642,38 +642,34 @@ namespace Nektar
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
+            int     nqtot = nquad0*nquad1;
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
-            Array<OneD,NekDouble> diff0(nquad0*nquad1);
-            Array<OneD,NekDouble> diff1(nquad0*nquad1);
-            
-            //         if(m_geom)
-            //         {
-            //         ASSERTL2(n <= m_geom->GetCoordDim(),
-            //              "value of n is larger than the number of coordinates");
-            //         }
-            
+
+            Array<OneD,NekDouble> diff0(2*nqtot);
+            Array<OneD,NekDouble> diff1(diff0+nqtot);
+
             StdTriExp::PhysDeriv(inarray, diff0, diff1);
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 if(out_d0.num_elements())
                 {
-                    Vmath::Vmul  (nquad0*nquad1,&gmat[0][0],1,&diff0[0],1, &out_d0[0], 1);
-                    Vmath::Vvtvp (nquad0*nquad1,&gmat[1][0],1,&diff1[0],1, &out_d0[0], 1,
+                    Vmath::Vmul  (nqtot,&gmat[0][0],1,&diff0[0],1, &out_d0[0], 1);
+                    Vmath::Vvtvp (nqtot,&gmat[1][0],1,&diff1[0],1, &out_d0[0], 1,
                                   &out_d0[0],1);
                 }
                 
                 if(out_d1.num_elements())
                 {
-                    Vmath::Vmul  (nquad0*nquad1,&gmat[2][0],1,&diff0[0],1, &out_d1[0], 1);
-                    Vmath::Vvtvp (nquad0*nquad1,&gmat[3][0],1,&diff1[0],1, &out_d1[0], 1,
+                    Vmath::Vmul  (nqtot,&gmat[2][0],1,&diff0[0],1, &out_d1[0], 1);
+                    Vmath::Vvtvp (nqtot,&gmat[3][0],1,&diff1[0],1, &out_d1[0], 1,
                                   &out_d1[0],1);
                 }
                 
                 if(out_d2.num_elements())
                 {
-                    Vmath::Vmul  (nquad0*nquad1,&gmat[4][0],1,&diff0[0],1, &out_d2[0], 1);
-                    Vmath::Vvtvp (nquad0*nquad1,&gmat[5][0],1,&diff1[0],1, &out_d2[0], 1,
+                    Vmath::Vmul  (nqtot,&gmat[4][0],1,&diff0[0],1, &out_d2[0], 1);
+                    Vmath::Vvtvp (nqtot,&gmat[5][0],1,&diff1[0],1, &out_d2[0], 1,
                                   &out_d2[0],1);
                 }
             }
@@ -681,20 +677,20 @@ namespace Nektar
             {
                 if(out_d0.num_elements())
                 {
-                    Vmath::Smul (nquad0*nquad1, gmat[0][0], diff0 , 1, out_d0, 1);
-                    Blas::Daxpy (nquad0*nquad1, gmat[1][0], diff1 , 1, out_d0, 1);
+                    Vmath::Smul (nqtot, gmat[0][0], diff0 , 1, out_d0, 1);
+                    Blas::Daxpy (nqtot, gmat[1][0], diff1 , 1, out_d0, 1);
                 }
                 
                 if(out_d1.num_elements())
                 {
-                    Vmath::Smul (nquad0*nquad1, gmat[2][0], diff0, 1, out_d1, 1);
-                    Blas::Daxpy (nquad0*nquad1, gmat[3][0], diff1, 1, out_d1, 1);
+                    Vmath::Smul (nqtot, gmat[2][0], diff0, 1, out_d1, 1);
+                    Blas::Daxpy (nqtot, gmat[3][0], diff1, 1, out_d1, 1);
                 }
                 
                 if(out_d2.num_elements())
                 {
-                    Vmath::Smul (nquad0*nquad1, gmat[4][0], diff0, 1, out_d2, 1);
-                    Blas::Daxpy (nquad0*nquad1, gmat[5][0], diff1, 1, out_d2, 1);
+                    Vmath::Smul (nqtot, gmat[4][0], diff0, 1, out_d2, 1);
+                    Blas::Daxpy (nqtot, gmat[5][0], diff1, 1, out_d2, 1);
                 }
             }
         }
@@ -1663,6 +1659,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.48  2008/11/24 10:31:14  pvos
+ *    Changed name from _PartitionedOp to _MatFree
+ *
  *    Revision 1.47  2008/11/19 16:01:41  pvos
  *    Added functionality for variable Laplacian coeffcients
  *

@@ -1276,11 +1276,106 @@ namespace Nektar
                     lhs.m_expdim == rhs.m_expdim &&
                     lhs.m_coordim == rhs.m_coordim);
         }
+
+        bool operator<(const GeomFactors &lhs, const GeomFactors &rhs)
+        {
+            if( lhs.m_expdim < rhs.m_expdim )
+            {
+                return true;
+            }
+
+            if( lhs.m_expdim > rhs.m_expdim )
+            {
+                return false;
+            }
+
+            if( lhs.m_coordim < rhs.m_coordim )
+            {
+                return true;
+            }
+
+            if( lhs.m_coordim > rhs.m_coordim )
+            {
+                return false;
+            }
+
+            if( lhs.m_gtype < rhs.m_gtype )
+            {
+                return true;
+            }
+            else if( lhs.m_gtype > rhs.m_gtype )
+            {
+                return false;
+            }
+            else
+            {
+                if( (lhs.m_gtype== eRegular) || (lhs.m_gtype== eMovingRegular) )
+                {
+                    NekDouble fpevaltol = 1.0e-12;
+                    if(fabs(lhs.m_jac[0]-rhs.m_jac[0])<fpevaltol)
+                    {
+                        return false;
+                    }
+                    
+                    if(lhs.m_jac[0] < rhs.m_jac[0])
+                    {
+                        return true;
+                    }
+                    if(lhs.m_jac[0] > rhs.m_jac[0])
+                    {
+                        return false;
+                    }
+
+                    for(int i = 0; i < lhs.m_coordim*lhs.m_expdim; i++)
+                    {
+                        if(fabs(lhs.m_gmat[i][0]-rhs.m_gmat[i][0])<fpevaltol)
+                        {
+                            return false;
+                        }
+
+                        if(lhs.m_gmat[i][0] < rhs.m_gmat[i][0])
+                        {
+                            return true;
+                        }
+                        if(lhs.m_gmat[i][0] > rhs.m_gmat[i][0])
+                        {
+                            return false;
+                        }
+                    }
+                }
+                else
+                {
+                    if(lhs.m_jac.get() < rhs.m_jac.get())
+                    {
+                        return true;
+                    }
+                    if(lhs.m_jac.get() > rhs.m_jac.get())
+                    {
+                        return false;
+                    }
+
+                    if(lhs.m_gmat.get() < rhs.m_gmat.get())
+                    {
+                        return true;
+                    }
+                    if(lhs.m_gmat.get() > rhs.m_gmat.get())
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return false;
+        }
+
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.33  2008/12/03 23:42:14  ehan
+// Fixed some error for 3D Geomfactors.
+//
 // Revision 1.32  2008/11/25 23:02:15  ehan
 // Fixed level 1 assertion violation: GeomFactors(..) only works for 1D and 2D, but not it works for 3D.
 //

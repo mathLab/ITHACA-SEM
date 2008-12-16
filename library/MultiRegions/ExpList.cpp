@@ -615,9 +615,10 @@ namespace Nektar
                 nint_size[i]  = (*m_exp)[i]->GetNcoeffs() - (*m_exp)[i]->NumBndryCoeffs();
             }
             
-            BinvD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nbdry_size,nint_size);
-            invD  = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nint_size,nint_size);
-            C     = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nint_size,nbdry_size);
+            MatrixStorage blkmatStorage = eDIAGONAL;
+            BinvD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nbdry_size,nint_size,blkmatStorage);
+            invD  = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nint_size,nint_size, blkmatStorage);
+            C     = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nint_size,nbdry_size,blkmatStorage);
 
             DNekScalMatSharedPtr tmp_mat; 
 

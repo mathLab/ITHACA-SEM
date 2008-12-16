@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/GeomFactors.h,v $
+//  File:  GeomFactors.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -51,6 +51,7 @@ namespace Nektar
         class Geometry2D;
 
         bool operator==(const GeomFactors &lhs, const GeomFactors &rhs);
+        bool operator<(const GeomFactors &lhs, const GeomFactors &rhs);
 
         typedef boost::shared_ptr<GeomFactors>      GeomFactorsSharedPtr;
         typedef std::vector< GeomFactorsSharedPtr > GeomFactorsVector;
@@ -61,6 +62,7 @@ namespace Nektar
         public:
 
             friend bool operator==(const GeomFactors &lhs, const GeomFactors &rhs);
+            friend bool operator<(const GeomFactors &lhs, const GeomFactors &rhs);
 
             GeomFactors(void);
 
@@ -174,6 +176,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.21  2008/11/24 18:33:10  ehan
+// Added 3D routines for GeomFactors()
+//
 // Revision 1.20  2008/09/09 22:46:51  ehan
 // Fixed error; extra qualification ‘Nektar::SpatialDomains::GeomFactors::’ on member ‘GenNormals2D’
 //

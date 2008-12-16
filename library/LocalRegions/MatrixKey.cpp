@@ -110,14 +110,12 @@ namespace Nektar
 
         bool operator<(const MatrixKey &lhs, const MatrixKey &rhs)
         {
-
-            if(lhs.m_metricinfo.get() < rhs.m_metricinfo.get())
+            if( *(lhs.m_metricinfo) < *(rhs.m_metricinfo) )
             {
                 return true;
             }
 
-
-            if(lhs.m_metricinfo.get() > rhs.m_metricinfo.get())
+            if( *(rhs.m_metricinfo) < *(lhs.m_metricinfo) )
             {
                 return false;
             }
@@ -138,6 +136,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.cpp,v $
+* Revision 1.20  2008/11/19 16:46:43  pvos
+* Fixed minor bug
+*
 * Revision 1.19  2008/11/19 16:01:41  pvos
 * Added functionality for variable Laplacian coeffcients
 *

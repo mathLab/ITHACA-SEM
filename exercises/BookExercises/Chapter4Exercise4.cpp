@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
             elementalMassMatrix = (multiElementExp->GetExp(0))->GetLocMatrix(masskey);
 
             // Step 2: allocate space for the global mass matrix
-            int nGlobalDof = (multiElementExp->GetLocalToGlobalMap())->GetTotGloDofs();
+            int nGlobalDof = (multiElementExp->GetLocalToGlobalMap())->GetNumGlobalCoeffs();
 
             NekDouble zero = 0.0;
             DNekMatSharedPtr globalMassMatrix = MemoryManager<DNekMat>::
@@ -75,13 +75,13 @@ int main(int argc, char *argv[])
             {		    
                 for(i = 0; i < elementalMassMatrix->GetColumns(); ++i)
                 {
-                    globalId1 = (multiElementExp->GetLocalToGlobalMap())->GetMap(cnt + i);
-                    sign1     = (multiElementExp->GetLocalToGlobalMap())->GetSign(cnt + i);
+                    globalId1 = (multiElementExp->GetLocalToGlobalMap())->GetLocalToGlobalMap(cnt + i);
+                    sign1     = (multiElementExp->GetLocalToGlobalMap())->GetLocalToGlobalSign(cnt + i);
                 
                     for(j = 0; j < elementalMassMatrix->GetColumns(); ++j)
                     {
-                        globalId2 = (multiElementExp->GetLocalToGlobalMap())->GetMap(cnt + j);
-                        sign2     = (multiElementExp->GetLocalToGlobalMap())->GetSign(cnt + j);
+                        globalId2 = (multiElementExp->GetLocalToGlobalMap())->GetLocalToGlobalMap(cnt + j);
+                        sign2     = (multiElementExp->GetLocalToGlobalMap())->GetLocalToGlobalSign(cnt + j);
 
                         (*globalMassMatrix)(globalId1,globalId2) 
                             += sign1*sign2*(*elementalMassMatrix)(i,j);                  
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 
             // DO A BACKWARD TRANSFORMATION TO CALCULATE THE EXPANSION
             // EVALUATED AT THE QUADRATURE POINTS
-            multiElementExp->ContToLocal();
+            multiElementExp->GlobalToLocal();
 
             cnt_phys  = 0;
             cnt_coeff = 0;

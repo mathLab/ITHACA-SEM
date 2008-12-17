@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
     cout << "=====================================================" <<endl;
 
     cout << "-------------------" <<endl;
-    cout << "--- EXERCISE 4 ----" <<endl;
+    cout << "--- EXERCISE 5 ----" <<endl;
     cout << "-------------------" <<endl;
 
     // We will not solve this exercise without using the Nektar++ library
@@ -75,8 +75,8 @@ int main(int argc, char *argv[])
 
             // First, define some dimensions;
             int nElements         = multiElementExp->GetExpSize();
-            int nDirDofs          = (multiElementExp->GetLocalToGlobalMap())->GetNumDirichletDofs();
-            int nGlobalBndDofs    = (multiElementExp->GetLocalToGlobalMap())->GetTotGloBndDofs();
+            int nDirDofs          = (multiElementExp->GetLocalToGlobalMap())->GetNumDirichletBndCoeffs();
+            int nGlobalBndDofs    = (multiElementExp->GetLocalToGlobalMap())->GetNumGlobalBndCoeffs();
             int nGlobalIntDofs    = multiElementExp->GetContNcoeffs() - nGlobalBndDofs;
             // As all elements are identical, we can calculate the dimensions below just once
             int nElementalBndDofs = (multiElementExp->GetExp(0))->NumBndryCoeffs();
@@ -112,15 +112,15 @@ int main(int argc, char *argv[])
                 
                 for(i = 0; i < nElementalBndDofs; ++i)
                 {
-                    globalId1 = (multiElementExp->GetLocalToGlobalMap())->GetBndMap(cnt + i);
-                    sign1     = (multiElementExp->GetLocalToGlobalMap())->GetBndSign(cnt + i);
+                    globalId1 = (multiElementExp->GetLocalToGlobalMap())->GetLocalToGlobalBndMap(cnt + i);
+                    sign1     = (multiElementExp->GetLocalToGlobalMap())->GetLocalToGlobalBndSign(cnt + i);
                     
                     if(globalId1 >= nDirDofs)
                     {                        
                         for(j = 0; j < nElementalBndDofs; ++j)
                         {
-                            globalId2 = (multiElementExp->GetLocalToGlobalMap())->GetBndMap(cnt + j);
-                            sign2     = (multiElementExp->GetLocalToGlobalMap())->GetBndSign(cnt + j);
+                            globalId2 = (multiElementExp->GetLocalToGlobalMap())->GetLocalToGlobalBndMap(cnt + j);
+                            sign2     = (multiElementExp->GetLocalToGlobalMap())->GetLocalToGlobalBndSign(cnt + j);
                             
                             if(globalId2 >= nDirDofs)
                             {  
@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
             {
                 for(j = 0; j < ((multiElementExp->GetBndCondExpansions())[i])->GetNcoeffs(); j++)
                 {
-                    dirDofsValues[(multiElementExp->GetLocalToGlobalMap())->GetBndCondMap(cnt++)] = 
+                    dirDofsValues[(multiElementExp->GetLocalToGlobalMap())->GetBndCondCoeffsToGlobalCoeffsMap(cnt++)] = 
                         (((multiElementExp->GetBndCondExpansions())[i])->GetCoeffs())[j];
                 }
             }
@@ -226,7 +226,7 @@ int main(int argc, char *argv[])
 
             // Solve interior system 
             Vmath::Zero(tmpVector.GetDimension(),tmpVector.GetRawPtr(),1);
-            (multiElementExp->GetLocalToGlobalMap())->ContToLocalBnd(localBndDofsSolutionVector,tmpVector,nDirDofs);
+            (multiElementExp->GetLocalToGlobalMap())->GlobalToLocalBnd(localBndDofsSolutionVector,tmpVector,nDirDofs);
             rhsIntVector = rhsIntVector - (*C)*tmpVector;
 
             localIntDofsSolutionVector = (*invD)*rhsIntVector;
@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
 
             // DO A BACKWARD TRANSFORMATION TO CALCULATE THE EXPANSION
             // EVALUATED AT THE QUADRATURE POINTS
-            multiElementExp->ContToLocal();
+            multiElementExp->GlobalToLocal();
 
             cnt_phys  = 0;
             cnt_coeff = 0;

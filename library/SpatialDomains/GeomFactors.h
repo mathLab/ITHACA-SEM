@@ -51,7 +51,6 @@ namespace Nektar
         class Geometry2D;
 
         bool operator==(const GeomFactors &lhs, const GeomFactors &rhs);
-        bool operator<(const GeomFactors &lhs, const GeomFactors &rhs);
 
         typedef boost::shared_ptr<GeomFactors>      GeomFactorsSharedPtr;
         typedef std::vector< GeomFactorsSharedPtr > GeomFactorsVector;
@@ -176,6 +175,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.22  2008/12/16 14:09:07  pvos
+// Performance updates
+//
 // Revision 1.21  2008/11/24 18:33:10  ehan
 // Added 3D routines for GeomFactors()
 //

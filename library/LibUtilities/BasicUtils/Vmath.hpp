@@ -255,6 +255,17 @@ namespace Vmath
         }
         return;
     }
+
+    /// \brief Gather vector z[i] = sign[i]*x[y[i]]
+    template<class T>  void Gathr(int n, const T *sign, const T *x, const int *y,
+                  T *z)
+    {
+        while (n--)
+        {
+            *z++ = *(sign++) * (*(x + *y++));
+        }
+        return;
+    }
     
     /// \brief Scatter vector z[y[i]] = x[i]
     template<class T>  void Scatr(int n, const T *x, const int *y,
@@ -265,7 +276,16 @@ namespace Vmath
             *(z + *(y++)) = *(x++);
         }
     }
-    
+
+    /// \brief Scatter vector z[y[i]] = sign[i]*x[i]
+    template<class T>  void Scatr(int n, const T *sign, const T *x, const int *y,
+                  T *z)
+    {
+        while (n--)
+        {
+            *(z + *(y++)) = *(sign++) * (*(x++));
+        }
+    }    
     
     /// \brief Assemble z[y[i]] += x[i]; z should be zero'd first
     template<class T>  void Assmb(int n, const T *x, const int *y,
@@ -276,7 +296,17 @@ namespace Vmath
             *(z + *(y++)) += *(x++);
         }
     }
-    
+
+    /// \brief Assemble z[y[i]] += sign[i]*x[i]; z should be zero'd first
+    template<class T>  void Assmb(int n, const T *sign, const T *x, const int *y,
+                  T *z)
+    {
+        while (n--)
+        {
+            *(z + *(y++)) += *(sign++) * (*(x++));
+        }
+    }
+ 
     
     /************* Reduction routines  *****************/
     
@@ -493,6 +523,9 @@ namespace Vmath
 
 /***
 $Log: Vmath.hpp,v $
+Revision 1.17  2008/09/09 14:00:55  sherwin
+Fixed error in Sdiv definition
+
 Revision 1.16  2008/08/09 19:26:08  sherwin
 Corrected big in Reverse
 

@@ -301,6 +301,7 @@ namespace Nektar
             
             template<typename T1, typename T2>
             friend bool operator==(const Array<OneD, T1>&, const Array<OneD, T2>&);
+            friend bool operator==(const Array<OneD, NekDouble>&, const Array<OneD, NekDouble>&);
             
             /// \brief Creates an array with a specified offset.
             ///
@@ -423,6 +424,7 @@ namespace Nektar
             
             template<typename T>
             friend bool operator==(const Array<TwoD, T>&, const Array<TwoD, T>&);
+            friend bool operator==(const Array<TwoD, NekDouble>&, const Array<TwoD, NekDouble>&);
             
             const_iterator begin() const { return m_data->begin(); }
             const_iterator end() const { return m_data->end(); }
@@ -756,6 +758,8 @@ namespace Nektar
             
     };
     
+    bool operator==(const Array<OneD, NekDouble>& lhs, const Array<OneD, NekDouble>& rhs);
+
     template<typename T1, typename T2>
     bool operator==(const Array<OneD, T1>& lhs, const Array<OneD, T2>& rhs) 
     {
@@ -828,6 +832,8 @@ namespace Nektar
     
     static Array<OneD, NekDouble> NullNekDouble1DArray;
     static Array<OneD, Array<OneD, NekDouble> > NullNekDoubleArrayofArray;
+
+    bool operator==(const Array<TwoD, NekDouble>& lhs, const Array<TwoD, NekDouble>& rhs) ;
 
     template<typename DataType>
     bool operator==(const Array<TwoD, DataType>& lhs, const Array<TwoD, DataType>& rhs) 

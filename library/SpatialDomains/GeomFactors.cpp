@@ -1271,101 +1271,32 @@ namespace Nektar
 
         bool operator==(const GeomFactors &lhs, const GeomFactors &rhs)
         {
-            return (lhs.m_gmat == rhs.m_gmat &&
-                    lhs.m_gtype == rhs.m_gtype &&
-                    lhs.m_expdim == rhs.m_expdim &&
-                    lhs.m_coordim == rhs.m_coordim);
-        }
-
-        bool operator<(const GeomFactors &lhs, const GeomFactors &rhs)
-        {
-            if( lhs.m_expdim < rhs.m_expdim )
-            {
-                return true;
-            }
-
-            if( lhs.m_expdim > rhs.m_expdim )
+            if(!(lhs.m_gtype == rhs.m_gtype))
             {
                 return false;
             }
 
-            if( lhs.m_coordim < rhs.m_coordim )
-            {
-                return true;
-            }
-
-            if( lhs.m_coordim > rhs.m_coordim )
+            if(!(lhs.m_expdim == rhs.m_expdim))
             {
                 return false;
             }
 
-            if( lhs.m_gtype < rhs.m_gtype )
-            {
-                return true;
-            }
-            else if( lhs.m_gtype > rhs.m_gtype )
+            if(!(lhs.m_coordim == rhs.m_coordim))
             {
                 return false;
             }
-            else
+
+            if(!(lhs.m_jac == rhs.m_jac))
             {
-                if( (lhs.m_gtype== eRegular) || (lhs.m_gtype== eMovingRegular) )
-                {
-                    NekDouble fpevaltol = 1.0e-12;
-                    if(fabs(lhs.m_jac[0]-rhs.m_jac[0])<fpevaltol)
-                    {
-                        return false;
-                    }
-                    
-                    if(lhs.m_jac[0] < rhs.m_jac[0])
-                    {
-                        return true;
-                    }
-                    if(lhs.m_jac[0] > rhs.m_jac[0])
-                    {
-                        return false;
-                    }
-
-                    for(int i = 0; i < lhs.m_coordim*lhs.m_expdim; i++)
-                    {
-                        if(fabs(lhs.m_gmat[i][0]-rhs.m_gmat[i][0])<fpevaltol)
-                        {
-                            return false;
-                        }
-
-                        if(lhs.m_gmat[i][0] < rhs.m_gmat[i][0])
-                        {
-                            return true;
-                        }
-                        if(lhs.m_gmat[i][0] > rhs.m_gmat[i][0])
-                        {
-                            return false;
-                        }
-                    }
-                }
-                else
-                {
-                    if(lhs.m_jac.get() < rhs.m_jac.get())
-                    {
-                        return true;
-                    }
-                    if(lhs.m_jac.get() > rhs.m_jac.get())
-                    {
-                        return false;
-                    }
-
-                    if(lhs.m_gmat.get() < rhs.m_gmat.get())
-                    {
-                        return true;
-                    }
-                    if(lhs.m_gmat.get() > rhs.m_gmat.get())
-                    {
-                        return false;
-                    }
-                }
+                return false;
             }
 
-            return false;
+            if(!(lhs.m_gmat == rhs.m_gmat))
+            {
+                return false;
+            }
+
+            return true;
         }
 
     }; //end of namespace
@@ -1373,6 +1304,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.34  2008/12/16 14:09:07  pvos
+// Performance updates
+//
 // Revision 1.33  2008/12/03 23:42:14  ehan
 // Fixed some error for 3D Geomfactors.
 //

@@ -100,6 +100,7 @@ SET(ExpressionTemplates
 
 SET(BasicUtils
     ./BasicUtils/ArrayPolicies.hpp
+    ./BasicUtils/ArrayEqualityComparison.cpp
     ./BasicUtils/BoostUtil.hpp
     ./BasicUtils/Concepts.hpp
     ./BasicUtils/ConsistentObjectAccess.hpp

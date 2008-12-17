@@ -111,8 +111,6 @@ namespace Nektar
                 return m_numGlobalBndCoeffs;
             }
 
-
-
             inline void GlobalToLocalBnd(const NekVector<const NekDouble>& global, NekVector<NekDouble>& loc, int offset)
             {
                 ASSERTL1(loc.GetDimension() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
@@ -121,12 +119,14 @@ namespace Nektar
                 // offset input data by length "offset" for Dirichlet boundary conditions.
                 Array<OneD,NekDouble> tmp(global.GetDimension()+offset,0.0);
                 Vmath::Vcopy(global.GetDimension(), global.GetRawPtr(), 1, tmp.get() + offset, 1);
-                
-                Vmath::Gathr(m_numLocalBndCoeffs, tmp.get(), m_localToGlobalBndMap.get(), loc.GetRawPtr());
 
                 if(m_signChange)
                 {
-                    Vmath::Vmul(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), 1, loc.GetRawPtr(), 1, loc.GetRawPtr(), 1);
+                    Vmath::Gathr(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), tmp.get(), m_localToGlobalBndMap.get(), loc.GetRawPtr());
+                }
+                else
+                {
+                    Vmath::Gathr(m_numLocalBndCoeffs, tmp.get(), m_localToGlobalBndMap.get(), loc.GetRawPtr());
                 }
             }     
 
@@ -134,12 +134,14 @@ namespace Nektar
             {
                 ASSERTL1(loc.GetDimension() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
                 ASSERTL1(global.GetDimension() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
-                
-                Vmath::Gathr(m_numLocalBndCoeffs, global.GetRawPtr(), m_localToGlobalBndMap.get(), loc.GetRawPtr());
 
                 if(m_signChange)
                 {
-                    Vmath::Vmul(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), 1, loc.GetRawPtr(), 1, loc.GetRawPtr(), 1);
+                    Vmath::Gathr(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), global.GetRawPtr(), m_localToGlobalBndMap.get(), loc.GetRawPtr());
+                }
+                else
+                {
+                    Vmath::Gathr(m_numLocalBndCoeffs, global.GetRawPtr(), m_localToGlobalBndMap.get(), loc.GetRawPtr());
                 }
             } 
 
@@ -151,12 +153,14 @@ namespace Nektar
                 // offset input data by length "offset" for Dirichlet boundary conditions.
                 Array<OneD,NekDouble> tmp(m_numGlobalBndCoeffs,0.0);
                 Vmath::Vcopy(m_numGlobalBndCoeffs-offset, global.get(), 1, tmp.get() + offset, 1);
-                
-                Vmath::Gathr(m_numLocalBndCoeffs, tmp.get(), m_localToGlobalBndMap.get(), loc.get());
 
                 if(m_signChange)
                 {
-                    Vmath::Vmul(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), 1, loc.get(), 1, loc.get(), 1);
+                    Vmath::Gathr(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), tmp.get(), m_localToGlobalBndMap.get(), loc.get());
+                }
+                else
+                {
+                    Vmath::Gathr(m_numLocalBndCoeffs, tmp.get(), m_localToGlobalBndMap.get(), loc.get());
                 }
             }     
 
@@ -165,11 +169,13 @@ namespace Nektar
                 ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
                 ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
                 
-                Vmath::Gathr(m_numLocalBndCoeffs, global.get(), m_localToGlobalBndMap.get(), loc.get());
-
                 if(m_signChange)
+                { 
+                    Vmath::Gathr(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), global.get(), m_localToGlobalBndMap.get(), loc.get()); 
+                }
+                else
                 {
-                    Vmath::Vmul(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), 1, loc.get(), 1, loc.get(), 1);
+                    Vmath::Gathr(m_numLocalBndCoeffs, global.get(), m_localToGlobalBndMap.get(), loc.get()); 
                 }
             } 
             
@@ -181,9 +187,7 @@ namespace Nektar
 
                 if(m_signChange)
                 {
-                    Array<OneD, NekDouble> tmp2(m_numLocalBndCoeffs);
-                    Vmath::Vmul(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), 1, loc.GetRawPtr(), 1, tmp2.get(), 1);
-                    Vmath::Assmb(m_numLocalBndCoeffs, tmp2.get(), m_localToGlobalBndMap.get(), tmp.get());
+                    Vmath::Assmb(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), loc.GetRawPtr(), m_localToGlobalBndMap.get(), tmp.get());
                 }
                 else
                 {                
@@ -201,15 +205,13 @@ namespace Nektar
 
                 if(m_signChange)
                 {
-                    Array<OneD, NekDouble> tmp2(m_numLocalBndCoeffs);
-                    Vmath::Vmul(m_numLocalBndCoeffs,  m_localToGlobalBndSign.get(), 1, loc.GetRawPtr(), 1, tmp2.get(), 1);
-                    Vmath::Assmb(m_numLocalBndCoeffs, tmp2.get(), m_localToGlobalBndMap.get(), global.GetRawPtr());
+                    Vmath::Assmb(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), loc.GetRawPtr(), m_localToGlobalBndMap.get(), global.GetRawPtr());
                 }
                 else
                 {                
                     Vmath::Assmb(m_numLocalBndCoeffs,loc.GetRawPtr(), m_localToGlobalBndMap.get(), global.GetRawPtr());
                 }
-            }   
+            }    
 
             inline void AssembleBnd(const Array<OneD,const NekDouble>& loc, Array<OneD, NekDouble>& global, int offset)
             {
@@ -219,9 +221,7 @@ namespace Nektar
 
                 if(m_signChange)
                 {
-                    Array<OneD, NekDouble> tmp2(m_numLocalBndCoeffs);
-                    Vmath::Vmul(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), 1, loc.get(), 1, tmp2.get(), 1);
-                    Vmath::Assmb(m_numLocalBndCoeffs, tmp2.get(), m_localToGlobalBndMap.get(), tmp.get());
+                    Vmath::Assmb(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(),loc.get(), m_localToGlobalBndMap.get(), tmp.get());
                 }
                 else
                 {                
@@ -239,15 +239,13 @@ namespace Nektar
 
                 if(m_signChange)
                 {
-                    Array<OneD, NekDouble> tmp2(m_numLocalBndCoeffs);
-                    Vmath::Vmul(m_numLocalBndCoeffs,  m_localToGlobalBndSign.get(), 1, loc.get(), 1, tmp2.get(), 1);
-                    Vmath::Assmb(m_numLocalBndCoeffs, tmp2.get(), m_localToGlobalBndMap.get(), global.get());
+                    Vmath::Assmb(m_numLocalBndCoeffs,m_localToGlobalBndSign.get(), loc.get(), m_localToGlobalBndMap.get(), global.get());
                 }
                 else
                 {                
                     Vmath::Assmb(m_numLocalBndCoeffs,loc.get(), m_localToGlobalBndMap.get(), global.get());
                 }
-            }    
+            }   
 
         protected:
             int m_numLocalBndCoeffs;      //< number of local Bnd coefficients
@@ -271,6 +269,9 @@ namespace Nektar
 
 /** 
  $Log: LocalToGlobalBaseMap.h,v $
+ Revision 1.7  2008/12/16 14:08:43  pvos
+ Performance updates
+
  Revision 1.6  2008/11/01 22:36:06  bnelson
  Removed uneeded files.
 

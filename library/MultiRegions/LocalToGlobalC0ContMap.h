@@ -123,10 +123,7 @@ namespace Nektar
             {
                 if(m_signChange)
                 {
-                    Array<OneD, NekDouble> tmp(m_numLocalCoeffs);
-
-                    Vmath::Vmul(m_numLocalCoeffs, m_localToGlobalSign.get(), 1, loc.get(), 1, tmp.get(), 1);
-                    Vmath::Scatr(m_numLocalCoeffs, tmp.get(), m_localToGlobalMap.get(), global.get());
+                    Vmath::Scatr(m_numLocalCoeffs, m_localToGlobalSign.get(), loc.get(), m_localToGlobalMap.get(), global.get());
                 }
                 else
                 {                
@@ -137,11 +134,13 @@ namespace Nektar
             inline void GlobalToLocal(const Array<OneD, const NekDouble>& global, 
                                       Array<OneD, NekDouble>& loc)
             {
-                Vmath::Gathr(m_numLocalCoeffs, global.get(), m_localToGlobalMap.get(), loc.get());
-                
                 if(m_signChange)
                 {
-                    Vmath::Vmul(m_numLocalCoeffs, m_localToGlobalSign.get(), 1, loc.get(), 1, loc.get(), 1);
+                    Vmath::Gathr(m_numLocalCoeffs, m_localToGlobalSign.get(), global.get(), m_localToGlobalMap.get(), loc.get());
+                }
+                else
+                {
+                    Vmath::Gathr(m_numLocalCoeffs, global.get(), m_localToGlobalMap.get(), loc.get());
                 }
             }
             
@@ -154,9 +153,7 @@ namespace Nektar
                 
                 if(m_signChange)
                 {
-                    Array<OneD, NekDouble> tmp(m_numLocalCoeffs);
-                    Vmath::Vmul(m_numLocalCoeffs, m_localToGlobalSign.get(), 1, loc.get(), 1, tmp.get(), 1);
-                    Vmath::Assmb(m_numLocalCoeffs, tmp.get(), m_localToGlobalMap.get(), global.get());
+                    Vmath::Assmb(m_numLocalCoeffs, m_localToGlobalSign.get(), loc.get(), m_localToGlobalMap.get(), global.get());
                 }
                 else
                 {
@@ -223,6 +220,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalC0ContMap.h,v $
+* Revision 1.4  2008/11/05 16:15:24  pvos
+* Added bandwith calculation routines
+*
 * Revision 1.3  2008/10/04 19:53:04  sherwin
 * Added check that input and output arrays are different
 *

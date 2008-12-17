@@ -189,11 +189,13 @@ namespace Nektar
         }
         
         void ContField2D::FwdTrans(const ExpList &In)
-        {
-            Array<OneD,NekDouble> rhs(m_contNcoeffs);
+        {            
+            // Inner product of forcing 
+            Array<OneD,NekDouble> rhs(m_contNcoeffs);        
             
             // Inner product of forcing 
-            ExpList::IProductWRTBase(In.GetPhys(), rhs);
+            ExpList::IProductWRTBase(In.GetPhys(), m_coeffs);
+            Assemble(m_coeffs,rhs);
 
             // Solve the system
             GlobalLinSysKey key(StdRegions::eMass);
@@ -271,8 +273,7 @@ namespace Nektar
         void ContField2D::HelmSolve(const ExpList &In, NekDouble lambda)
         {
             GlobalLinSysKey key(StdRegions::eHelmholtz,lambda);
-            Array<OneD,NekDouble> rhs(m_contNcoeffs);
-        
+            Array<OneD,NekDouble> rhs(m_contNcoeffs);        
             
             // Inner product of forcing 
             ExpList::IProductWRTBase(In.GetPhys(), m_coeffs);

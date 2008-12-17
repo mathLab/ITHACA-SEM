@@ -135,6 +135,11 @@ namespace Nektar
                     return m_verts[i]->GetVid();
                 }
 
+                inline void SetOwnData()
+                {
+                    m_owndata = true; 
+                }
+                
                 void    FillGeom ();
 
                 StdRegions::ExpansionType DetExpansionType() const
@@ -159,7 +164,8 @@ namespace Nektar
                 void GenGeomFactors(void);
 
             private:
-
+                bool m_owndata;   ///< Boolean indicating whether object owns the data
+            
                 virtual void v_AddElmtConnected(int gvo_id, int locid)
                 {      
                     AddElmtConnected(gvo_id, locid);
@@ -203,6 +209,11 @@ namespace Nektar
                 virtual void v_GenGeomFactors(void)
                 {
                     GenGeomFactors();
+                }
+
+                virtual void v_SetOwnData()
+                {
+                    SetOwnData();
                 }
 
                 virtual int v_GetVid(int i) const
@@ -254,6 +265,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.21  2008/11/17 08:58:53  ehan
+// Added GetNumVerts and GetNumEdges
+//
 // Revision 1.20  2008/09/09 14:22:39  sherwin
 // Added curved segment constructor methods
 //

@@ -110,12 +110,22 @@ namespace Nektar
 
         bool operator<(const MatrixKey &lhs, const MatrixKey &rhs)
         {
-            if( *(lhs.m_metricinfo) < *(rhs.m_metricinfo) )
+//             if( *(lhs.m_metricinfo) < *(rhs.m_metricinfo) )
+//             {
+//                 return true;
+//             }
+
+//             if( *(rhs.m_metricinfo) < *(lhs.m_metricinfo) )
+//             {
+//                 return false;
+//             }       
+            
+            if(lhs.m_metricinfo.get() < rhs.m_metricinfo.get())
             {
                 return true;
             }
-
-            if( *(rhs.m_metricinfo) < *(lhs.m_metricinfo) )
+            
+            if(lhs.m_metricinfo.get() > rhs.m_metricinfo.get())
             {
                 return false;
             }
@@ -136,6 +146,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.cpp,v $
+* Revision 1.21  2008/12/16 14:09:41  pvos
+* Performance updates
+*
 * Revision 1.20  2008/11/19 16:46:43  pvos
 * Fixed minor bug
 *

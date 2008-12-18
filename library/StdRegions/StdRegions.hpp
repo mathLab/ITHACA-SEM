@@ -133,26 +133,6 @@ namespace Nektar
          *
          */
 
-        /** Number of workspace arrays for expansions and size of arrays;
-        *  first value should be set to the maximum number of threads of
-        *  execution used per process; second should be set to the number
-        *  of workspaecs required for a single thread and the third value
-        *  should be set to hold 3D point set per element
-        *
-        *  This data is used in StdWKSpace.(h/cpp)
-        */
-        namespace NekConstants
-        {
-            /** Tolerance to within which a point is considered to be located */
-            const NekDouble kEvaluateTol  = 1e-12;
-
-            // constants from NodalBasisManager.h & .cpp
-            const int kMaxSym  = 5;
-            const int kMaxBary = 4;
-            const int kMaxDim  = 3;
-            const int kBufSize = 1000;
-        };
-
         enum ElementType
         {
             eStdSegExp,
@@ -380,6 +360,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.32  2008/11/19 16:02:47  pvos
+* Added functionality for variable Laplacian coeffcients
+*
 * Revision 1.31  2008/11/12 12:12:10  pvos
 * Time Integration update
 *

@@ -678,7 +678,7 @@ namespace Nektar
         {
             Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
 
-            if( fabs(xi[2]-1.0) < NekConstants::kEvaluateTol )    // NekConstants::kEvaluateTol = 1e-12
+            if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)    // NekConstants::kEvaluateTol = 1e-12
             {
                 // Very top point of the prism
                 eta[0] = -1.0;
@@ -1413,6 +1413,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPrismExp.cpp,v $
+ * Revision 1.19  2008/12/03 23:39:54  ehan
+ * Modified PhysDeriv and GetCoords in order to be consistent with the book.
+ *
  * Revision 1.18  2008/11/24 21:07:34  ehan
  * Added necessary mapping routines and fixed bugs for Prism
  *

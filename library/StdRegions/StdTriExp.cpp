@@ -688,8 +688,8 @@ namespace Nektar
             Array<OneD, NekDouble> coll(2);
 
             // set up local coordinate system 
-            if((fabs(coords[0]+1.0) < NekConstants::kEvaluateTol)
-               &&(fabs(coords[1]-1.0) < NekConstants::kEvaluateTol))
+            if((fabs(coords[0]+1.0) < NekConstants::kNekZeroTol)
+               &&(fabs(coords[1]-1.0) < NekConstants::kNekZeroTol))
             {
                 coll[0] = 0.0;
                 coll[1] = 1.0;
@@ -1258,6 +1258,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTriExp.cpp,v $
+ * Revision 1.50  2008/12/16 11:31:52  pvos
+ * Performance updates
+ *
  * Revision 1.49  2008/11/24 10:31:14  pvos
  * Changed name from _PartitionedOp to _MatFree
  *

@@ -779,7 +779,9 @@ namespace Nektar
                 return m_stdStaticCondMatrixManager[mkey];
             }
         
-            DNekScalMatSharedPtr& GetLocMatrix(const MatrixType mtype, NekDouble lambdaval = NekUnsetDouble, NekDouble tau = NekUnsetDouble)
+            DNekScalMatSharedPtr& GetLocMatrix(const MatrixType mtype, 
+                                               NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
+                                               NekDouble tau = NekConstants::kNekUnsetDouble)
             {
                 return v_GetLocMatrix(mtype,lambdaval,tau);
             }
@@ -1704,6 +1706,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.107  2008/11/24 10:31:14  pvos
+ * Changed name from _PartitionedOp to _MatFree
+ *
  * Revision 1.106  2008/11/19 16:02:47  pvos
  * Added functionality for variable Laplacian coeffcients
  *

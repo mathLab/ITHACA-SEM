@@ -876,7 +876,7 @@ namespace Nektar
         {
             Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
 
-            if( fabs(xi[2]-1.0) < NekConstants::kEvaluateTol )    // NekConstants::kEvaluateTol = 1e-12
+            if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)
             {
                 // Very top point of the tetrahedron
                 eta[0] = -1.0;
@@ -889,7 +889,7 @@ namespace Nektar
                 eta[2] = xi[2]; 
                 //eta_y = 2(1 + xi_y)/(1 - xi_z) - 1
                 eta[1] = 2.0*(1.0+xi[1])/(1.0-xi[2]) - 1.0; 
-                if( fabs(eta[1]-1.0) < NekConstants::kEvaluateTol ) 
+                if( fabs(eta[1]-1.0) <  NekConstants::kNekZeroTol ) 
                 {
                     // Distant diagonal edge shared by all eta_x
                     // coordinate planes: the xi_y == -xi_z line
@@ -1025,6 +1025,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTetExp.cpp,v $
+ * Revision 1.20  2008/11/23 00:33:46  sherwin
+ * Added blas based IProductWRTBase and BwdTrans routines
+ *
  * Revision 1.19  2008/09/17 13:46:06  pvos
  * Added LocalToGlobalC0ContMap for 3D expansions
  *

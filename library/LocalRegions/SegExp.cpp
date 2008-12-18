@@ -144,7 +144,7 @@ namespace Nektar
                         // Need check in case points are aligned to x,y axis
                         for(j = 0; j < cnq; ++j)
                         {
-                            ctmp[j] = (fabs(gmat[i][j]) > NekZeroTol)? 1.0/gmat[i][j]: 0.0;
+                            ctmp[j] = (fabs(gmat[i][j]) > NekConstants::kNekZeroTol)? 1.0/gmat[i][j]: 0.0;
                         }
 
                         LibUtilities::Interp1D(CBasis0->GetBasisKey(),  ctmp, 
@@ -152,7 +152,7 @@ namespace Nektar
      
                         for(j = 0; j < nq; ++j)
                         {
-                            ndata[i*nq+j] = (fabs(tmp[j]) > NekZeroTol)? 1.0/tmp[j]: 0.0;
+                            ndata[i*nq+j] = (fabs(tmp[j]) > NekConstants::kNekZeroTol)? 1.0/tmp[j]: 0.0;
                         }
 
                         Vmath::Vvtvp(nq,tmp,1,tmp,1,jac,1,jac,1);
@@ -1231,6 +1231,9 @@ namespace Nektar
 }//end of namespace
 
 // $Log: SegExp.cpp,v $
+// Revision 1.56  2008/11/05 16:08:15  pvos
+// Added elemental optimisation functionality
+//
 // Revision 1.55  2008/09/23 18:20:25  pvos
 // Updates for working ProjectContField3D demo
 //

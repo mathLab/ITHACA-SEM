@@ -117,7 +117,7 @@ namespace Nektar
                 fac0 = fac1 = 0.0;
                 for(i = 0; i < m_coordim; ++i)
                 {
-                    m_gmat[i][0] = (fabs(der[i][0]) > NekZeroTol)? 1.0/der[i][0]: 0.0;
+                    m_gmat[i][0] = (fabs(der[i][0]) > NekConstants::kNekZeroTol)? 1.0/der[i][0]: 0.0;
                     m_jac[0]    += der[i][0]*der[i][0];
 
                     fac0 += m_gmat[i][0]*m_gmat[i][0];
@@ -137,7 +137,7 @@ namespace Nektar
                 {
                     for(int j = 0; j < nquad; ++j)
                     {
-                        m_gmat[i][j] = (fabs(der[i][j]) > NekZeroTol)? 1.0/der[i][j]: 0.0;
+                        m_gmat[i][j] = (fabs(der[i][j]) > NekConstants::kNekZeroTol)? 1.0/der[i][j]: 0.0;
                     }
                     Vmath::Vvtvp(nquad,der[i],1,der[i],1,m_jac,1,m_jac,1);
 
@@ -1286,12 +1286,12 @@ namespace Nektar
                 return false;
             }
 
-            if(!(lhs.m_jac == rhs.m_jac))
+            if(!IsEqual(lhs.m_jac,rhs.m_jac,NekConstants::kGeomFactorsTol))
             {
                 return false;
             }
 
-            if(!(lhs.m_gmat == rhs.m_gmat))
+            if(!IsEqual(lhs.m_gmat,rhs.m_gmat,NekConstants::kGeomFactorsTol))
             {
                 return false;
             }
@@ -1304,6 +1304,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.35  2008/12/17 16:57:20  pvos
+// Performance updates
+//
 // Revision 1.34  2008/12/16 14:09:07  pvos
 // Performance updates
 //

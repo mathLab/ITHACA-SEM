@@ -519,7 +519,9 @@ namespace Nektar
                 return m_matrixManager[mkey];
             }
 
-            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval = NekUnsetDouble, NekDouble tau = NekUnsetDouble)
+            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, 
+                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
+                                                         NekDouble tau = NekConstants::kNekUnsetDouble)
             {
                 MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau);
                 return m_matrixManager[mkey];
@@ -666,6 +668,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.40  2008/11/24 10:31:14  pvos
+ *    Changed name from _PartitionedOp to _MatFree
+ *
  *    Revision 1.39  2008/11/05 16:08:15  pvos
  *    Added elemental optimisation functionality
  *

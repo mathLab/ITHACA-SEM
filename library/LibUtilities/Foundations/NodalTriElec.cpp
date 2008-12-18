@@ -39,6 +39,7 @@
 #include <LibUtilities/Foundations/Foundations.hpp>
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 #include <LibUtilities/Polylib/Polylib.h>
 #include <LibUtilities/Foundations/NodalTriElecData.h>
 
@@ -204,8 +205,6 @@ namespace Nektar
             int cnt;
             int istart,iend;
 
-            NekDouble evaluateTol  = 1e-12;
-
             const int nVerts = 3;
             const int nEdgeInteriorPoints = GetNumPoints()-2;
             const int nBoundaryPoints = 3*nEdgeInteriorPoints + 3; 
@@ -219,7 +218,7 @@ namespace Nektar
             istart = nVerts;
             for(i = cnt = istart; i < nBoundaryPoints; i++)
             {
-                if( fabs(m_points[1][i] + 1.0) < evaluateTol)
+                if( fabs(m_points[1][i] + 1.0) < NekConstants::kNekZeroTol)
                 {
                     std::swap(m_points[0][cnt], m_points[0][i]);
                     std::swap(m_points[1][cnt], m_points[1][i]);
@@ -245,7 +244,7 @@ namespace Nektar
             istart = iend;
             for(i = cnt = istart; i < nBoundaryPoints; i++)
             {
-                if( fabs(m_points[1][i]+m_points[0][i]) < evaluateTol)
+                if( fabs(m_points[1][i]+m_points[0][i]) < NekConstants::kNekZeroTol)
                 {
                     std::swap(m_points[0][cnt], m_points[0][i]);
                     std::swap(m_points[1][cnt], m_points[1][i]);
@@ -271,7 +270,7 @@ namespace Nektar
             istart = iend;
             for(i = cnt = istart; i < nBoundaryPoints; i++)
             {
-                if( fabs(m_points[0][i]+1.0) < evaluateTol)
+                if( fabs(m_points[0][i]+1.0) < NekConstants::kNekZeroTol)
                 {
                     std::swap(m_points[0][cnt], m_points[0][i]);
                     std::swap(m_points[1][cnt], m_points[1][i]);
@@ -299,6 +298,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTriElec.cpp,v $
+* Revision 1.18  2008/11/01 22:36:06  bnelson
+* Removed uneeded files.
+*
 * Revision 1.17  2008/04/06 05:54:08  bnelson
 * Changed ConstArray to Array<const>
 *

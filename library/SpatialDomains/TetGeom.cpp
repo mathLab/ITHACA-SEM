@@ -469,7 +469,7 @@ namespace Nektar
                 orientation = 0;
                 // if the innerproduct is equal to the (absolute value of the ) products of the lengths 
                 // of both vectors, then, the coordinate systems will NOT be transposed
-                if( fabs(elementAaxis_length*faceAaxis_length - fabs(dotproduct1)) < StdRegions::NekConstants::kEvaluateTol )
+                if( fabs(elementAaxis_length*faceAaxis_length - fabs(dotproduct1)) < NekConstants::kNekZeroTol )
                 {
                     // if the inner product is negative, both A-axis point
                     // in reverse direction
@@ -486,7 +486,7 @@ namespace Nektar
 
                     // check that both these axis are indeed parallel
                     ASSERTL1(fabs(elementBaxis_length*faceBaxis_length - fabs(dotproduct2)) < 
-                             StdRegions::NekConstants::kEvaluateTol,
+                             NekConstants::kNekZeroTol,
                              "These vectors should be parallel");
 
                     // if the inner product is negative, both B-axis point
@@ -511,7 +511,7 @@ namespace Nektar
                     
                     // check that both these axis are indeed parallel
                     ASSERTL1(fabs(elementAaxis_length*faceBaxis_length - fabs(dotproduct1)) < 
-                             StdRegions::NekConstants::kEvaluateTol,
+                             NekConstants::kNekZeroTol,
                              "These vectors should be parallel");
  
                     // if the result is negative, both axis point in reverse
@@ -530,7 +530,7 @@ namespace Nektar
 
                     // check that both these axis are indeed parallel
                     ASSERTL1(fabs(elementBaxis_length*faceAaxis_length - fabs(dotproduct2)) < 
-                             StdRegions::NekConstants::kEvaluateTol,
+                             NekConstants::kNekZeroTol,
                              "These vectors should be parallel");
 
                     if( dotproduct2 < 0.0 )
@@ -708,6 +708,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.cpp,v $
+// Revision 1.15  2008/11/17 08:58:42  ehan
+// Added necessary mapping routines for Tet
+//
 // Revision 1.14  2008/06/30 19:35:44  ehan
 // Fixed infinity recursive-loop error.
 //

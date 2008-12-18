@@ -107,20 +107,20 @@ namespace Nektar
                 Array<OneD,NekDouble> tmp(npts);
 
 
-                if(vertex[0]->dist(*(curve->m_points[0])) > VertexTheSameDouble)
+                if(vertex[0]->dist(*(curve->m_points[0])) > NekConstants::kVertexTheSameDouble)
                 {
                     std::string err = "Vertex 0 is separated from first point by more than ";
                     std::stringstream strstrm;
-                    strstrm << VertexTheSameDouble; 
+                    strstrm << NekConstants::kVertexTheSameDouble; 
                     err += strstrm.str();
                     NEKERROR(ErrorUtil::ewarning, err.c_str()); 
                 }
 
-                if(vertex[1]->dist(*(curve->m_points[npts-1])) > VertexTheSameDouble)
+                if(vertex[1]->dist(*(curve->m_points[npts-1])) > NekConstants::kVertexTheSameDouble)
                 {
                     std::string err = "Vertex 1 is separated from last point by more than ";
                     std::stringstream strstrm;
-                    strstrm << VertexTheSameDouble; 
+                    strstrm << NekConstants::kVertexTheSameDouble; 
                     err += strstrm.str();
                     NEKERROR(ErrorUtil::ewarning, err.c_str()); 
                 }
@@ -397,6 +397,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.23  2008/09/09 14:22:39  sherwin
+// Added curved segment constructor methods
+//
 // Revision 1.22  2008/06/11 21:34:42  delisi
 // Removed TriFaceComponent, QuadFaceComponent, and EdgeComponent.
 //

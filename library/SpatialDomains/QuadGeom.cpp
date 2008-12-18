@@ -266,7 +266,7 @@ namespace Nektar
 
                     if(fabs(dx1*dx2 + dy1*dy2) > 
                         sqrt((dx1*dx1+dy1*dy1)*(dx2*dx2+dy2*dy2))*
-                        kGeomRightAngleTol)
+                       NekConstants::kGeomRightAngleTol)
                     {
                         Gtype = eDeformed;
                         break;
@@ -395,6 +395,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.cpp,v $
+// Revision 1.22  2008/09/12 11:26:19  pvos
+// Updates for mappings in 3D
+//
 // Revision 1.21  2008/09/09 14:26:22  sherwin
 // Updates for deformed curved quads
 //

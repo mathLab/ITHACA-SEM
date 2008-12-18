@@ -40,17 +40,23 @@
 
 namespace Nektar
 {
-
-#define NekUnsetDouble  -9999
-#define VertexTheSameDouble  1e-8
-#define NekZeroTol  1e-12
-
+    namespace NekConstants
+    {
+        static const NekDouble kNekUnsetDouble = -9999;
+        static const NekDouble kVertexTheSameDouble  = 1.0e-8;
+        static const NekDouble kGeomFactorsTol = 1.0e-8;
+        static const NekDouble kNekZeroTol = 1.0e-12;
+        static const NekDouble kGeomRightAngleTol = 1e-14;
+    }
 } //end of namespace 
 
 #endif
 
 /***
 $Log: NektarUnivConsts.hpp,v $
+Revision 1.8  2008/09/09 13:59:51  sherwin
+Added NekZeroTol
+
 Revision 1.7  2007/11/29 17:00:13  sherwin
 Update to do with MultiRegions stuff
 

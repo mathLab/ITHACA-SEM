@@ -42,6 +42,7 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 
 
 namespace Nektar

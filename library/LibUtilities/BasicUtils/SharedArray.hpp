@@ -41,6 +41,7 @@
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
 #include <LibUtilities/BasicUtils/NekPtr.hpp>
+#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 
 #include <boost/multi_array.hpp>
 #include <boost/shared_ptr.hpp>
@@ -302,6 +303,7 @@ namespace Nektar
             template<typename T1, typename T2>
             friend bool operator==(const Array<OneD, T1>&, const Array<OneD, T2>&);
             friend bool operator==(const Array<OneD, NekDouble>&, const Array<OneD, NekDouble>&);
+            friend bool IsEqual(const Array<OneD, const NekDouble>&,const Array<OneD, const NekDouble>&,NekDouble);
             
             /// \brief Creates an array with a specified offset.
             ///
@@ -425,6 +427,7 @@ namespace Nektar
             template<typename T>
             friend bool operator==(const Array<TwoD, T>&, const Array<TwoD, T>&);
             friend bool operator==(const Array<TwoD, NekDouble>&, const Array<TwoD, NekDouble>&);
+            friend bool IsEqual(const Array<TwoD, const NekDouble>&,const Array<TwoD, const NekDouble>&,NekDouble);
             
             const_iterator begin() const { return m_data->begin(); }
             const_iterator end() const { return m_data->end(); }
@@ -758,6 +761,9 @@ namespace Nektar
             
     };
     
+    bool IsEqual(const Array<OneD, const NekDouble>& lhs,
+                 const Array<OneD, const NekDouble>& rhs,
+                 NekDouble tol = NekConstants::kNekZeroTol);
     bool operator==(const Array<OneD, NekDouble>& lhs, const Array<OneD, NekDouble>& rhs);
 
     template<typename T1, typename T2>
@@ -833,6 +839,9 @@ namespace Nektar
     static Array<OneD, NekDouble> NullNekDouble1DArray;
     static Array<OneD, Array<OneD, NekDouble> > NullNekDoubleArrayofArray;
 
+    bool IsEqual(const Array<TwoD, const NekDouble>& lhs,
+                 const Array<TwoD, const NekDouble>& rhs,
+                 NekDouble tol = NekConstants::kNekZeroTol);
     bool operator==(const Array<TwoD, NekDouble>& lhs, const Array<TwoD, NekDouble>& rhs) ;
 
     template<typename DataType>

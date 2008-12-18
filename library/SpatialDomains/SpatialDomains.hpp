@@ -54,8 +54,6 @@ namespace Nektar
         /** \page pageSpatialDomains The SpatialDomains library
          * 
          */
-        const double kGeomRightAngleTol = 1e-14;
-
         enum GeomType
         {
             eNoGeomType,
@@ -85,6 +83,9 @@ namespace Nektar
 
 //
 // $Log: SpatialDomains.hpp,v $
+// Revision 1.6  2008/09/09 14:35:54  sherwin
+// Added reference interp.h
+//
 // Revision 1.5  2008/06/05 15:06:31  pvos
 // Added documentation
 //

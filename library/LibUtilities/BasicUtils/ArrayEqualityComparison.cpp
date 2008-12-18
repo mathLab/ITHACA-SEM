@@ -37,6 +37,14 @@
 namespace Nektar
 {
     bool operator==(const Array<OneD, NekDouble>& lhs, const Array<OneD, NekDouble>& rhs) 
+    {     
+        return IsEqual(lhs,rhs);
+    }
+
+
+    bool IsEqual(const Array<OneD, const NekDouble>& lhs,
+                 const Array<OneD, const NekDouble>& rhs,
+                 NekDouble tol)
     {
         if( lhs.num_elements() != rhs.num_elements() )
         {
@@ -48,10 +56,9 @@ namespace Nektar
             return true;
         }
         
-        NekDouble fpevaltol = 1.0e-12;
         for(unsigned int i = 0; i < lhs.num_elements(); ++i)
         {
-            if( fabs(lhs[i]-rhs[i]) > fpevaltol )
+            if( fabs(lhs[i]-rhs[i]) > tol )
             {
                 return false;
             }
@@ -60,7 +67,15 @@ namespace Nektar
         return true;
     }
 
+
     bool operator==(const Array<TwoD, NekDouble>& lhs, const Array<TwoD, NekDouble>& rhs) 
+    {
+        return IsEqual(lhs,rhs);
+    }
+
+    bool IsEqual(const Array<TwoD, const NekDouble>& lhs,
+                 const Array<TwoD, const NekDouble>& rhs,
+                 NekDouble tol)
     {
         if( (lhs.GetRows() != rhs.GetRows()) || 
             (lhs.GetColumns() != rhs.GetColumns()) )
@@ -72,14 +87,12 @@ namespace Nektar
         {
             return true;
         }
-        
-        NekDouble fpevaltol = 1.0e-12;
 
         for(unsigned int i = 0; i < lhs.GetRows(); ++i)
         {
             for(unsigned int j = 0; j < lhs.GetColumns(); ++j)
             {
-                if( fabs(lhs[i][j]-rhs[i][j]) > fpevaltol )
+                if( fabs(lhs[i][j]-rhs[i][j]) > tol )
                 {
                     return false;
                 }

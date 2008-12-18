@@ -615,13 +615,12 @@ namespace Nektar
         bool TimeIntegrationScheme::IsExplicitMethod() const
         {
             int i,j;
-            NekDouble tol = 1e-12;
             
             for(i = 0; i < m_numstages; i++)
             {
                 for(j = i; j < m_numstages; j++)
                 {
-                    if( fabs(m_A[i][j]) > tol )
+                    if( fabs(m_A[i][j]) > NekConstants::kNekZeroTol )
                     {
                         return false;
                     }

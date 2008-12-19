@@ -167,14 +167,15 @@ namespace Nektar
             map<int,int>::const_iterator mapConstIt;
 
             // STEP 1: Order the Dirichlet vertices first
-            m_numDirichletBndCoeffs = 0;
+            m_numGlobalDirBndCoeffs = 0;
             for(i = 0; i < nbnd; i++)
             {
                 if(bndConditions[i]->GetBoundaryConditionType()==SpatialDomains::eDirichlet)
                 {
                     meshVertId = ((bndCondExp[i])->GetVertex())->GetVid();
                     vertReorderedGraphVertId[meshVertId] = graphVertId++; 
-                    m_numDirichletBndCoeffs++;
+                    m_numGlobalDirBndCoeffs++;
+                    m_numLocalDirBndCoeffs++;
                 }
             }
 
@@ -266,6 +267,7 @@ namespace Nektar
             int nEdgeInteriorCoeffs;
             int firstNonDirGraphVertId;
             int nLocBndCondDofs = 0;
+            int nLocDirBndCondDofs = 0;
             int graphVertId = 0;
             StdRegions::StdExpansion2DSharedPtr locExpansion;  
             LocalRegions::SegExpSharedPtr       bndSegExp;
@@ -326,10 +328,12 @@ namespace Nektar
                                 vertReorderedGraphVertId[meshVertId] = graphVertId++;
                             }
                         }
+                        nLocDirBndCondDofs += bndSegExp->GetNcoeffs();
                     }
                     nLocBndCondDofs += bndSegExp->GetNcoeffs();
                 }
             }
+            m_numLocalDirBndCoeffs = nLocDirBndCondDofs;
             firstNonDirGraphVertId = graphVertId;
 
             // STEP 2: Now order all other vertices and edges in the graph
@@ -869,7 +873,7 @@ namespace Nektar
 
             // Allocate the proper amount of space for the class-data 
             m_numLocalCoeffs                 = numLocalCoeffs;
-            m_numDirichletBndCoeffs          = graphVertOffset[firstNonDirGraphVertId];
+            m_numGlobalDirBndCoeffs          = graphVertOffset[firstNonDirGraphVertId];
             m_localToGlobalMap               = Array<OneD, int>(m_numLocalCoeffs,-1);
             m_localToGlobalBndMap            = Array<OneD, int>(m_numLocalBndCoeffs,-1);
             m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD,int>(nLocBndCondDofs,-1);
@@ -996,6 +1000,7 @@ namespace Nektar
             int nFaceInteriorCoeffs;
             int firstNonDirGraphVertId;
             int nLocBndCondDofs = 0;
+            int nLocDirBndCondDofs = 0;
             int graphVertId = 0;
             StdRegions::StdExpansion3DSharedPtr locExpansion;  
             StdRegions::StdExpansion2DSharedPtr bndCondFaceExp;
@@ -1047,9 +1052,9 @@ namespace Nektar
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); j++)
                 {                               
+                    bndCondFaceExp = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(bndCondExp[i]->GetExp(j));
                     if(bndConditions[i]->GetBoundaryConditionType()==SpatialDomains::eDirichlet)
                     {          
-                        bndCondFaceExp = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(bndCondExp[i]->GetExp(j));
                         meshFaceId = (bndCondFaceExp->GetGeom2D())->GetFid();  
                         faceReorderedGraphVertId[meshFaceId] = graphVertId++;  
                         for(k = 0; k < bndCondFaceExp->GetNverts(); k++)
@@ -1069,10 +1074,12 @@ namespace Nektar
                                 edgeReorderedGraphVertId[meshEdgeId] = graphVertId++;
                             }
                         }
+                        nLocDirBndCondDofs += bndCondFaceExp->GetNcoeffs();
                     }
                     nLocBndCondDofs += bndCondFaceExp->GetNcoeffs();
                 }
             }
+            m_numLocalDirBndCoeffs = nLocDirBndCondDofs;
             firstNonDirGraphVertId = graphVertId;
 
             // STEP 2: Now order all other vertices and edges in the graph
@@ -1255,7 +1262,7 @@ namespace Nektar
 
             // Allocate the proper amount of space for the class-data 
             m_numLocalCoeffs                 = numLocalCoeffs;
-            m_numDirichletBndCoeffs          = graphVertOffset[firstNonDirGraphVertId];
+            m_numGlobalDirBndCoeffs          = graphVertOffset[firstNonDirGraphVertId];
             m_localToGlobalMap               = Array<OneD, int>(m_numLocalCoeffs,-1);
             m_localToGlobalBndMap            = Array<OneD, int>(m_numLocalBndCoeffs,-1);
             m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD,int>(nLocBndCondDofs,-1);
@@ -1440,7 +1447,7 @@ namespace Nektar
                 minId = m_numLocalCoeffs+1;
                 for(j = 0; j < locSize; j++)
                 {
-                    if(m_localToGlobalBndMap[cnt+j] >= m_numDirichletBndCoeffs)
+                    if(m_localToGlobalBndMap[cnt+j] >= m_numGlobalDirBndCoeffs)
                     {
                         if(m_localToGlobalBndMap[cnt+j] > maxId)
                         {
@@ -1476,7 +1483,7 @@ namespace Nektar
                 minId = m_numLocalCoeffs+1;
                 for(j = 0; j < locSize; j++)
                 {
-                    if(m_localToGlobalMap[cnt+j] >= m_numDirichletBndCoeffs)
+                    if(m_localToGlobalMap[cnt+j] >= m_numGlobalDirBndCoeffs)
                     {
                         if(m_localToGlobalMap[cnt+j] > maxId)
                         {
@@ -1502,6 +1509,9 @@ namespace Nektar
 
 /**
  * $Log: LocalToGlobalC0ContMap.cpp,v $
+ * Revision 1.4  2008/11/05 16:15:24  pvos
+ * Added bandwith calculation routines
+ *
  * Revision 1.3  2008/09/23 18:21:00  pvos
  * Updates for working ProjectContField3D demo
  *

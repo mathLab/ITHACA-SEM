@@ -177,7 +177,7 @@ namespace Nektar
             // Solve continuous flux System
             //----------------------------------
             int GloBndDofs   = m_traceMap->GetNumGlobalBndCoeffs();
-            int NumDirichlet = m_traceMap->GetNumDirichletBndCoeffs();
+            int NumDirichlet = m_traceMap->GetNumLocalDirBndCoeffs();
             int e_ncoeffs, loc,id,offset;
             NekDouble sign;
 

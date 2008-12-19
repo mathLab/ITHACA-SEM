@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 
             // First, define some dimensions;
             int nElements         = multiElementExp->GetExpSize();
-            int nDirDofs          = (multiElementExp->GetLocalToGlobalMap())->GetNumDirichletBndCoeffs();
+            int nDirDofs          = (multiElementExp->GetLocalToGlobalMap())->GetNumGlobalDirBndCoeffs();
             int nGlobalBndDofs    = (multiElementExp->GetLocalToGlobalMap())->GetNumGlobalBndCoeffs();
             int nGlobalIntDofs    = multiElementExp->GetContNcoeffs() - nGlobalBndDofs;
             // As all elements are identical, we can calculate the dimensions below just once

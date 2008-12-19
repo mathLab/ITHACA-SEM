@@ -479,7 +479,7 @@ namespace Nektar
             GlobalLinSysSharedPtr returnlinsys;
 
             int totDofs     = locToGloMap->GetNumGlobalCoeffs();
-            int NumDirBCs   = locToGloMap->GetNumDirichletBndCoeffs();
+            int NumDirBCs   = locToGloMap->GetNumGlobalDirBndCoeffs();
 
             unsigned int rows = totDofs - NumDirBCs;
             unsigned int cols = totDofs - NumDirBCs;
@@ -581,7 +581,7 @@ namespace Nektar
             GlobalLinSysSharedPtr returnlinsys;
             
             int nBndDofs = locToGloMap->GetNumGlobalBndCoeffs();
-            int NumDirBCs = locToGloMap->GetNumDirichletBndCoeffs();
+            int NumDirBCs = locToGloMap->GetNumGlobalDirBndCoeffs();
 
             unsigned int rows = nBndDofs - NumDirBCs;
             unsigned int cols = nBndDofs - NumDirBCs;
@@ -716,7 +716,7 @@ namespace Nektar
             GlobalLinSysSharedPtr returnlinsys;
             
             int totDofs       = LocToGloBaseMap.GetNumGlobalBndCoeffs();
-            int NumDirBCs     = LocToGloBaseMap.GetNumDirichletBndCoeffs();
+            int NumDirBCs     = LocToGloBaseMap.GetNumLocalDirBndCoeffs();
             unsigned int rows = totDofs - NumDirBCs;
             unsigned int cols = totDofs - NumDirBCs;
             NekDouble zero    = 0.0,sign1,sign2; 

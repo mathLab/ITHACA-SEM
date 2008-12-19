@@ -96,9 +96,14 @@ namespace Nektar
                 return m_bndCondCoeffsToGlobalCoeffsMap;
             }
 
-            inline int GetNumDirichletBndCoeffs() const
+            inline int GetNumGlobalDirBndCoeffs() const
             {
-                return m_numDirichletBndCoeffs;
+                return m_numGlobalDirBndCoeffs;
+            }
+
+            inline int GetNumLocalDirBndCoeffs() const
+            {
+                return m_numLocalDirBndCoeffs;
             }
 
             inline int GetNumLocalBndCoeffs() const
@@ -250,7 +255,8 @@ namespace Nektar
         protected:
             int m_numLocalBndCoeffs;      //< number of local Bnd coefficients
             int m_numGlobalBndCoeffs;     // Total number of global boundary coefficients
-            int m_numDirichletBndCoeffs;  // Number of Dirichlet Boundary Coefficient
+            int m_numLocalDirBndCoeffs;  // Number of Dirichlet Boundary Coefficient
+            int m_numGlobalDirBndCoeffs;  // Number of Dirichlet Boundary Coefficient
             bool m_signChange;
             Array<OneD,int> m_localToGlobalBndMap;  //< integer map of local boundary coeffs to global space 
             Array<OneD,NekDouble> m_localToGlobalBndSign; //< integer sign of local boundary coeffs to global space 
@@ -269,6 +275,9 @@ namespace Nektar
 
 /** 
  $Log: LocalToGlobalBaseMap.h,v $
+ Revision 1.8  2008/12/17 17:08:22  pvos
+ Performance updates
+
  Revision 1.7  2008/12/16 14:08:43  pvos
  Performance updates
 

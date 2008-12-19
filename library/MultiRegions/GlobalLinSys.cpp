@@ -87,7 +87,7 @@ namespace Nektar
                 {
 
 #ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
-                    int nDirDofs  = locToGloMap.GetNumDirichletBndCoeffs();
+                    int nDirDofs  = locToGloMap.GetNumGlobalDirBndCoeffs();
                     int nbndry    = locToGloMap.GetNumGlobalBndCoeffs() - nDirDofs;
                     int nlocbndry = locToGloMap.GetNumLocalBndCoeffs();
                     int nint      = in.num_elements() -nbndry; 
@@ -171,7 +171,7 @@ namespace Nektar
                         }                
                     }                
 #else
-                    int nDirDofs = locToGloMap.GetNumDirichletBndCoeffs();
+                    int nDirDofs = locToGloMap.GetNumGlobalDirBndCoeffs();
                     int nbndry  = locToGloMap.GetNumGlobalBndCoeffs() - nDirDofs;
                     int nlocbndry = locToGloMap.GetNumLocalBndCoeffs();
                     int nint    = in.num_elements() -nbndry; 

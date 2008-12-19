@@ -217,7 +217,7 @@ namespace Nektar
         {
             int i,j;
             int bndcnt=0;
-            int NumDirBcs = m_locToGloMap->GetNumDirichletBndCoeffs();
+            int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
             NekDouble sign;
             Array<OneD,NekDouble> sln;
             Array<OneD,NekDouble> init(m_contNcoeffs,0.0);

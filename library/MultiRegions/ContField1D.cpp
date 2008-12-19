@@ -203,7 +203,7 @@ namespace Nektar
                                       NekDouble ScaleForcing)
         {
             int i;
-            int NumDirBcs = m_locToGloMap->GetNumDirichletBndCoeffs();
+            int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
             Array<OneD,NekDouble> sln;
             Array<OneD,NekDouble> init(m_contNcoeffs,0.0);
             Array<OneD,NekDouble> Dir_fce(m_contNcoeffs,0.0);

@@ -168,7 +168,8 @@ namespace Nektar
                                                              SpatialDomains::BoundaryConditions &bcs, 
                                                              const std::string variable)
         {
-            int cnt  = 0;
+            int cnt1  = 0;
+            int cnt2  = 0;
             SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
             SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();   
 
@@ -179,11 +180,16 @@ namespace Nektar
             {
                 if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType() != SpatialDomains::ePeriodic )
                 {
-                    cnt++;
+                    cnt1++;
+                    if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType() == SpatialDomains::eDirichlet )
+                    {
+                        cnt2++;
+                    }
                 }
             }
-            m_bndCondExpansions  = Array<OneD,MultiRegions::ExpList1DSharedPtr>(cnt);
-            m_bndConditions      = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
+            m_numDirBndCondExpansions = cnt2;
+            m_bndCondExpansions  = Array<OneD,MultiRegions::ExpList1DSharedPtr>(cnt1);
+            m_bndConditions      = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt1);
             
             SetBoundaryConditionExpansion(graph2D,bcs,variable,m_bndCondExpansions,m_bndConditions);
         }
@@ -208,7 +214,7 @@ namespace Nektar
         void ContField2D::MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays, bool ZeroBCs)
         {
             GlobalLinSysKey key(StdRegions::eMass);
-            int NumDirBcs = m_locToGloMap->GetNumDirichletBndCoeffs();
+            int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
             
             if(GlobalArrays)
             {
@@ -270,7 +276,9 @@ namespace Nektar
 
         // Solve the helmholtz problem assuming that m_contCoeff vector 
         // contains an intial estimate for solution
-        void ContField2D::HelmSolve(const ExpList &In, NekDouble lambda)
+        void ContField2D::HelmSolve(const ExpList &In, 
+                                    NekDouble lambda,
+                                    Array<OneD, NekDouble>& dirForcing)
         {
             GlobalLinSysKey key(StdRegions::eHelmholtz,lambda);
             Array<OneD,NekDouble> rhs(m_contNcoeffs);        
@@ -283,7 +291,7 @@ namespace Nektar
             // be consistent with matrix definition
             Vmath::Neg(m_contNcoeffs,  rhs, 1);
             
-            GlobalSolve(key,rhs,m_contCoeffs);
+            GlobalSolve(key,rhs,m_contCoeffs,dirForcing);
 
             m_transState = eContinuous;
             m_physState = false;
@@ -291,7 +299,8 @@ namespace Nektar
 
         void  ContField2D::LaplaceSolve(const ExpList &In,
                                         const Array<OneD, Array<OneD,NekDouble> >& variablecoeffs,
-                                        NekDouble time)
+                                        NekDouble time,
+                                        Array<OneD, NekDouble>& dirForcing)
         {
             GlobalLinSysKey key(StdRegions::eLaplacian,time,variablecoeffs);
             Array<OneD,NekDouble> rhs(m_contNcoeffs);        
@@ -310,36 +319,49 @@ namespace Nektar
             m_physState = false;
         }
 
+        void ContField2D::GenerateDirBndCondForcing(const GlobalLinSysKey &key, 
+                                                    Array<OneD, NekDouble> &inout, 
+                                                    Array<OneD, NekDouble> &outarray)
+        {       
+            int bndcnt=0;
+            const Array<OneD,const int>& map = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
+
+            for(int i = 0; i < m_numDirBndCondExpansions; ++i)
+            {
+                const Array<OneD,const NekDouble>& coeffs =  m_bndCondExpansions[i]->GetCoeffs();
+                for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
+                {
+                    inout[map[bndcnt++]] = coeffs[j];
+                }
+            }            
+            GeneralMatrixOp(key, inout, outarray);   
+        }
+
         // Note inout contains initial guess and final output. 
-        void ContField2D::GlobalSolve(const GlobalLinSysKey &key, const Array<OneD, const  NekDouble> &rhs, Array<OneD, NekDouble> &inout)
+        void ContField2D::GlobalSolve(const GlobalLinSysKey &key, 
+                                      const Array<OneD, const  NekDouble> &rhs, 
+                                      Array<OneD, NekDouble> &inout,
+                                      Array<OneD, NekDouble>& dirForcing)
         {
             int i,j;
-            int bndcnt=0;
-            int NumDirBcs = m_locToGloMap->GetNumDirichletBndCoeffs();
-            Array<OneD,NekDouble> sln;
-            Array<OneD,NekDouble> fce(m_contNcoeffs,0.0);
-            
-            //assume m_contCoeffs contains initial solution
-            // Set BCs in inout
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            int bndcnt=m_locToGloMap->GetNumLocalDirBndCoeffs();
+            int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            Array<OneD,NekDouble> fce(m_contNcoeffs);
+                     
+            if(dirForcing.num_elements())
             {
-                if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
-                {
-                    break;
-                }
-                for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
-                {
-                    inout[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)] = (m_bndCondExpansions[i]->GetCoeffs())[j];
-                }
+                // Use the precomputed dirichlet forcing
+                Vmath::Vsub(m_contNcoeffs, rhs, 1, dirForcing, 1, fce, 1);
+            }
+            else
+            {
+                // Compute the dirichlet forcing
+                GenerateDirBndCondForcing(key,inout,fce);
+                Vmath::Vsub(m_contNcoeffs, rhs, 1, fce, 1, fce, 1);
             }
 
-            GeneralMatrixOp(key, inout, fce);            
-
-            // Forcing function with Dirichlet conditions 
-            Vmath::Vsub(m_contNcoeffs, rhs, 1, fce, 1, fce, 1);
-
             // Forcing function with weak boundary conditions 
-            for(i; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = m_numDirBndCondExpansions; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                 {
@@ -350,10 +372,9 @@ namespace Nektar
 
             if(m_contNcoeffs - NumDirBcs > 0)
             {
-
                 GlobalLinSysSharedPtr LinSys = GetGlobalLinSys(key);
-                       
-                sln = fce+NumDirBcs;
+                                       
+                Array<OneD,NekDouble> sln(fce+NumDirBcs);
                 LinSys->Solve(sln,sln,*m_locToGloMap);
             }
 

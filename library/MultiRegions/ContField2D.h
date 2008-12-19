@@ -220,7 +220,9 @@ namespace Nektar
              * in its array #m_phys.
              * \param lambda The parameter \f$\lambda\f$ of the Helmholtz equation
              */ 
-            void HelmSolve(const ExpList &In, NekDouble lambda);
+            void HelmSolve(const ExpList &In, 
+                           NekDouble lambda,
+                           Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray);
 
             /**
              * \brief This function solves the two-dimensional Laplace equation, 
@@ -272,7 +274,8 @@ namespace Nektar
              */ 
             void LaplaceSolve(const ExpList &In, 
                               const Array<OneD, Array<OneD,NekDouble> >& variablecoeffs = NullNekDoubleArrayofArray,
-                              NekDouble time = 0.0);
+                              NekDouble time = 0.0,
+                              Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray);
           
             /**
              * \brief This function evaluates the boundary conditions at a certain 
@@ -322,9 +325,19 @@ namespace Nektar
                 return m_bndConditions;
             }
 
+            void GenerateDirBndCondForcing(const GlobalLinSysKey &key, 
+                                           Array<OneD, NekDouble> &inout, 
+                                           Array<OneD, NekDouble> &outarray);
+                
         protected:
 
-        private:          
+        private:  
+            /**
+             * \brief The number of boundary segments on which
+             * Dirichlet boundary conditions are imposed
+             */ 
+            int m_numDirBndCondExpansions;
+        
             /**
              * \brief An object which contains the discretised boundary conditions. 
              *
@@ -405,7 +418,10 @@ namespace Nektar
              * \param ScaleForcing An optional parameter with which the forcing 
              * vector \f$\boldsymbol{\hat{f}}\f$ should be multiplied.
              */ 
-            void GlobalSolve(const GlobalLinSysKey &key, const Array<OneD, const  NekDouble> &rhs, Array<OneD, NekDouble> &inout);
+            void GlobalSolve(const GlobalLinSysKey &key, 
+                             const Array<OneD, const  NekDouble> &rhs, 
+                             Array<OneD, NekDouble> &inout,
+                             Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray);
 
 
           

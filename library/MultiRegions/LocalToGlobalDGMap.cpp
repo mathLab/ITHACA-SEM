@@ -114,7 +114,7 @@ namespace Nektar
             // Set up boundary mapping
             m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD, int >(nbnd);
             m_bndCondCoeffsToGlobalCoeffsSign = Array<OneD, NekDouble >(nbnd,1.0);
-            m_numDirichletBndCoeffs = 0;
+            m_numLocalDirBndCoeffs = 0;
             m_numDirichletBndPhys = 0;
 
             for(i = 0; i < nbnd; ++i)
@@ -124,7 +124,7 @@ namespace Nektar
                 
                 if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
-                    m_numDirichletBndCoeffs += 1;
+                    m_numLocalDirBndCoeffs += 1;
                     m_numDirichletBndPhys   += 1;
                 }
             }
@@ -248,7 +248,7 @@ namespace Nektar
             m_bndCondCoeffsToGlobalCoeffsSign = Array<OneD,NekDouble >(cnt,1.0);
             m_bndExpAdjacentOrient = Array<OneD, AdjacentTraceOrientation > (cnt);
             
-            m_numDirichletBndCoeffs = 0;
+            m_numLocalDirBndCoeffs = 0;
             m_numDirichletBndPhys   = 0;
             cnt = 0;
             for(i = 0; i < bndCondExp.num_elements(); ++i)
@@ -294,7 +294,7 @@ namespace Nektar
                     
                     if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                     {
-                        m_numDirichletBndCoeffs += locSegExp->GetNcoeffs();
+                        m_numLocalDirBndCoeffs += locSegExp->GetNcoeffs();
                         m_numDirichletBndPhys   += locSegExp->GetTotPoints();
                     }
                 }

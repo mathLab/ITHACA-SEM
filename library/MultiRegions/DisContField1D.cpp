@@ -271,7 +271,7 @@ namespace Nektar
             // Solve continuous Boundary System
             //----------------------------------
             int GloBndDofs = m_traceMap->GetNumGlobalBndCoeffs();
-            int NumDirBCs  = m_traceMap->GetNumDirichletBndCoeffs();
+            int NumDirBCs  = m_traceMap->GetNumLocalDirBndCoeffs();
             int e_ncoeffs, loc, id;
             NekDouble bval;
 

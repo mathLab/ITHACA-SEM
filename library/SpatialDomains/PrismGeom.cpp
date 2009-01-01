@@ -390,26 +390,6 @@ namespace Nektar
                 errstrm << m_edges[8]->GetEid();
                 ASSERTL0(false, errstrm.str());
             }
-                        
-//             if( (m_edges[8]->GetVid(0) == m_verts[4]->GetVid()) ||
-//                 (m_edges[8]->GetVid(0) == m_verts[5]->GetVid())  )
-//             {
-//                 m_verts.push_back(m_edges[8]->GetVertex(0));
-//                 m_verts.push_back(m_edges[8]->GetVertex(1));
-//             }
-//             else if( (m_edges[8]->GetVid(1) == m_verts[4]->GetVid()) ||
-//                      (m_edges[8]->GetVid(1) == m_verts[5]->GetVid()) )
-//             {
-//                 m_verts.push_back(m_edges[8]->GetVertex(0));
-//                 m_verts.push_back(m_edges[8]->GetVertex(1));
-//             }
-//             else
-//             {
-//                 std::ostringstream errstrm;
-//                 errstrm << "Connected edges do not share a vertex. Edges ";
-//                 errstrm << m_edges[8]->GetEid();
-//                 ASSERTL0(false, errstrm.str());
-//             }
 
         };
 
@@ -860,6 +840,9 @@ namespace Nektar
 
 //
 // $Log: PrismGeom.cpp,v $
+// Revision 1.13  2008/12/18 14:08:58  pvos
+// NekConstants update
+//
 // Revision 1.12  2008/12/03 23:41:22  ehan
 // Set GenGeomFactors to the nondeformed case.
 //

@@ -77,12 +77,6 @@ namespace Nektar
             {
                 return ePrism;
             }
-
-            int GetVertexMap(const int localVertexId);
-       
-            void GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
-                                                 Array<OneD, unsigned int> &maparray,
-                                                 Array<OneD, int> &signarray);
                                                 
             void GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                      Array<OneD, unsigned int> &maparray,
@@ -397,6 +391,9 @@ namespace Nektar
 
 /**
  * $Log: StdPrismExp.h,v $
+ * Revision 1.21  2008/11/24 21:06:36  ehan
+ * Added virtual functions for necessary mapping routines (boundary map, vertex map, interior map) of Prism.
+ *
  * Revision 1.20  2008/11/17 09:02:38  ehan
  * Added necessary mapping routines
  *

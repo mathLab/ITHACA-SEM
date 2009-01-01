@@ -251,8 +251,7 @@ namespace Nektar
                 ASSERTL2(Coords[i]->GetPointsType(1) == ptype1,
                     "Points type are different for coordinate 1 ");
 
-                Coords[i]->BwdTrans(Coords[i]->GetCoeffs(),
-                    Coords[i]->UpdatePhys());
+                Coords[i]->BwdTrans(Coords[i]->GetCoeffs(),Coords[i]->UpdatePhys());
 
                 Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(),d1[i],d2[i]);
             }
@@ -260,6 +259,7 @@ namespace Nektar
 
             SetUpJacGmat(Coords[0]->DetExpansionType(),nquad0,nquad1,d1,d2);
         }
+        
 
         GeomFactors::GeomFactors(const GeomType gtype, const int coordim,
                                  const Array<OneD, const StdRegions::StdExpansion3DSharedPtr> &Coords):
@@ -306,7 +306,7 @@ namespace Nektar
                     "Points order are different for coordinate 0 ");
                 ASSERTL2(Coords[i]->GetNumPoints(1)  == nquad1,
                     "Points order are different for coordinate 1 ");
-               ASSERTL2(Coords[i]->GetNumPoints(2)  == nquad2,
+                ASSERTL2(Coords[i]->GetNumPoints(2)  == nquad2,
                     "Points order are different for coordinate 2 ");
                 ASSERTL2(Coords[i]->GetPointsType(0) == ptype0,
                     "Points type are different for coordinate 0 ");
@@ -315,9 +315,15 @@ namespace Nektar
                 ASSERTL2(Coords[i]->GetPointsType(2) == ptype2,
                     "Points type are different for coordinate 2 ");
 
+                                    // inarray,                outarray
                 Coords[i]->BwdTrans(Coords[i]->GetCoeffs(),Coords[i]->UpdatePhys());
 
+//                 for(int n=0; n < Coords[i]->GetCoeffs().num_elements(); ++n){
+//                     cout << "Coeffs[" << n << "] = " << Coords[i]->GetCoeffs()[n] << endl;
+//                 }
+
                 Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(),d1[i],d2[i],d3[i]);
+                
 
 //                 for( int j = 0; j < nqtot; ++j ) {
 //                     cout << "d1[" << i << "]["<< j  << "]= " << d1[i][j] << endl;
@@ -326,29 +332,29 @@ namespace Nektar
 //                 }
             }
 
-            cout << "D_1[1:" << coordim << "][1:" << nqtot << "] = " << endl;
-            for( int i = 0; i < coordim; ++i ) {
-                for( int j = 0; j < nqtot; ++j ) {
-                    cout << d1[i][j] << "\t\t";
-                }
-                cout << endl;
-            }
-
-            cout << "\nD_2[1:" << coordim << "][1:" << nqtot << "] = " << endl;
-            for( int i = 0; i < coordim; ++i ) {
-                for( int j = 0; j < nqtot; ++j ) {
-                    cout << d2[i][j] << "\t\t";
-                }
-                cout << endl;
-            }
-
-            cout << "\nD_3[1:" << coordim << "][1:" << nqtot << "] = " << endl;
-            for( int i = 0; i < coordim; ++i ) {
-                for( int j = 0; j < nqtot; ++j ) {
-                    cout << d3[i][j] << "\t\t";
-                }
-                cout << endl;
-            }
+//             cout << "D_1[1:" << coordim << "][1:" << nqtot << "] = " << endl;
+//             for( int i = 0; i < coordim; ++i ) {
+//                 for( int j = 0; j < nqtot; ++j ) {
+//                     cout << d1[i][j] << "\t\t";
+//                 }
+//                 cout << endl;
+//             }
+// 
+//             cout << "\nD_2[1:" << coordim << "][1:" << nqtot << "] = " << endl;
+//             for( int i = 0; i < coordim; ++i ) {
+//                 for( int j = 0; j < nqtot; ++j ) {
+//                     cout << d2[i][j] << "\t\t";
+//                 }
+//                 cout << endl;
+//             }
+// 
+//             cout << "\nD_3[1:" << coordim << "][1:" << nqtot << "] = " << endl;
+//             for( int i = 0; i < coordim; ++i ) {
+//                 for( int j = 0; j < nqtot; ++j ) {
+//                     cout << d3[i][j] << "\t\t";
+//                 }
+//                 cout << endl;
+//             }
 
             SetUpJacGmat(Coords[0]->DetExpansionType(),nquad0,nquad1,nquad2,d1,d2,d3);
         }  
@@ -460,22 +466,22 @@ namespace Nektar
                 nq1 = m_pointsKey[1].GetNumPoints();
                 nq2 = m_pointsKey[2].GetNumPoints();
 
-                cout << "nq0 = " << nq0 << endl;
-                cout << "nq1 = " << nq1 << endl;
-                cout << "nq2 = " << nq2 << endl;
+//                 cout << "nq0 = " << nq0 << endl;
+//                 cout << "nq1 = " << nq1 << endl;
+//                 cout << "nq2 = " << nq2 << endl;
                 
                 nqtot = nq0*nq1*nq2;
                 
                 // setup temp storage
                 Array<OneD,NekDouble> d1[3] = {Array<OneD, NekDouble>(nqtot),
-                                            Array<OneD, NekDouble>(nqtot), 
-                                            Array<OneD, NekDouble>(nqtot)};
+                                               Array<OneD, NekDouble>(nqtot), 
+                                               Array<OneD, NekDouble>(nqtot)};
                 Array<OneD,NekDouble> d2[3] = {Array<OneD, NekDouble>(nqtot),
-                                            Array<OneD, NekDouble>(nqtot), 
-                                            Array<OneD, NekDouble>(nqtot)};
+                                               Array<OneD, NekDouble>(nqtot), 
+                                               Array<OneD, NekDouble>(nqtot)};
                 Array<OneD,NekDouble> d3[3] = {Array<OneD, NekDouble>(nqtot),
-                                            Array<OneD, NekDouble>(nqtot), 
-                                            Array<OneD, NekDouble>(nqtot)};
+                                               Array<OneD, NekDouble>(nqtot), 
+                                               Array<OneD, NekDouble>(nqtot)};
                                             
                                
                 // interpolate Geometric derivatives which are polynomials
@@ -680,23 +686,23 @@ namespace Nektar
                                -d1[1][0]*(d2[0][0]*d3[2][0] - d2[2][0]*d3[0][0])
                                +d1[2][0]*(d2[0][0]*d3[1][0] - d2[1][0]*d3[0][0]);
                                
-                                cout << "J3D1 = " << m_jac[0] << endl;
-
-                                cout << "d1[0] = " << d1[0][0] << endl;
-                                cout << "d1[1] = " << d1[1][0] << endl;
-                                cout << "d1[2] = " << d1[2][0] << endl;
-                                cout << "d2[0] = " << d2[0][0] << endl;
-                                cout << "d2[1] = " << d2[1][0] << endl;
-                                cout << "d2[2] = " << d2[2][0] << endl;
-                                cout << "d3[0] = " << d3[0][0] << endl;
-                                cout << "d3[1] = " << d3[1][0] << endl;
-                                cout << "d3[2] = " << d3[2][0] << endl;
-
-                                cout << " d1[0][0]*(d2[1][0]*d3[2][0] - d2[2][0]*d3[1][0]) = " <<  d1[0][0]*(d2[1][0]*d3[2][0] - d2[2][0]*d3[1][0]) << endl;
-
-                                cout << " d1[1][0]*(d2[0][0]*d3[2][0] - d2[2][0]*d3[0][0]) = " << d1[1][0]*(d2[0][0]*d3[2][0] - d2[2][0]*d3[0][0]) << endl;
-
-                                cout << " d1[2][0]*(d2[0][0]*d3[1][0] - d2[1][0]*d3[0][0]) = " << d1[2][0]*(d2[0][0]*d3[1][0] - d2[1][0]*d3[0][0]) << endl;
+//                                 cout << "J3D1 = " << m_jac[0] << endl;
+// 
+//                                 cout << "d1[0] = " << d1[0][0] << endl;
+//                                 cout << "d1[1] = " << d1[1][0] << endl;
+//                                 cout << "d1[2] = " << d1[2][0] << endl;
+//                                 cout << "d2[0] = " << d2[0][0] << endl;
+//                                 cout << "d2[1] = " << d2[1][0] << endl;
+//                                 cout << "d2[2] = " << d2[2][0] << endl;
+//                                 cout << "d3[0] = " << d3[0][0] << endl;
+//                                 cout << "d3[1] = " << d3[1][0] << endl;
+//                                 cout << "d3[2] = " << d3[2][0] << endl;
+// 
+//                                 cout << " d1[0][0]*(d2[1][0]*d3[2][0] - d2[2][0]*d3[1][0]) = " <<  d1[0][0]*(d2[1][0]*d3[2][0] - d2[2][0]*d3[1][0]) << endl;
+// 
+//                                 cout << " d1[1][0]*(d2[0][0]*d3[2][0] - d2[2][0]*d3[0][0]) = " << d1[1][0]*(d2[0][0]*d3[2][0] - d2[2][0]*d3[0][0]) << endl;
+// 
+//                                 cout << " d1[2][0]*(d2[0][0]*d3[1][0] - d2[1][0]*d3[0][0]) = " << d1[2][0]*(d2[0][0]*d3[1][0] - d2[1][0]*d3[0][0]) << endl;
 
                     ASSERTL1(m_jac[0] > 0, "3D Regular Jacobian is not positive");
                     // Spen's book page 160
@@ -740,12 +746,11 @@ namespace Nektar
 
                     // J3D
                     Vmath::Vmul (nqtot,&d1[0][0],1,&tmp[0][0],1,&m_jac[0],1);
-                    cout << "J3D1 = " << m_jac[0] << endl;
+                    //cout << "J3D1 = " << m_jac[0] << endl;
                     Vmath::Vvtvp(nqtot,&d1[1][0],1,&tmp[1][0],1,&m_jac[0],1,&m_jac[0],1);
-                    cout << "J3D2 = " << m_jac[0] << endl;
+                    //cout << "J3D2 = " << m_jac[0] << endl;
                     Vmath::Vvtvp(nqtot,&d1[2][0],1,&tmp[2][0],1,&m_jac[0],1,&m_jac[0],1);
-                    cout << "J3D3 = " << m_jac[0] << endl;
-
+                    //cout << "J3D3 = " << m_jac[0] << endl;
 
                    
                     ASSERTL1(Vmath::Vmin(nqtot,&m_jac[0],1) > 0, "3D Deformed Jacobian is not positive");
@@ -807,7 +812,8 @@ namespace Nektar
         // Generate Normal vectors at all quadature points specified
         // to the pointsKey "to_key" according to anticlockwise
         // convention 
-        Array<OneD, NekDouble> GeomFactors::GenNormals2D(enum StdRegions::ExpansionType shape, const int edge,  const LibUtilities::PointsKey &to_key)
+        Array<OneD, NekDouble> GeomFactors::GenNormals2D(enum StdRegions::ExpansionType shape,
+                                       const int edge,  const LibUtilities::PointsKey &to_key)
         {
             int i; 
             int nqe = to_key.GetNumPoints();
@@ -1304,6 +1310,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.36  2008/12/18 14:08:58  pvos
+// NekConstants update
+//
 // Revision 1.35  2008/12/17 16:57:20  pvos
 // Performance updates
 //

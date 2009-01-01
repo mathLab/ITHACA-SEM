@@ -357,9 +357,11 @@ namespace Nektar
             int    Qz = m_base[2]->GetNumPoints();
 
             // Compute the physical derivative
-            Array<OneD, NekDouble> out_dEta1(Qx*Qy*Qz,0.0), out_dEta2(Qx*Qy*Qz,0.0), out_dEta3(Qx*Qy*Qz,0.0);
-            PhysTensorDeriv(u_physical, out_dEta1, out_dEta2, out_dEta3);
+//             Array<OneD, NekDouble> out_dEta1(Qx*Qy*Qz,0.0), out_dEta2(Qx*Qy*Qz,0.0), out_dEta3(Qx*Qy*Qz,0.0);
+//             PhysTensorDeriv(u_physical, out_dEta1, out_dEta2, out_dEta3);
 
+            Array<OneD, NekDouble> dEta_bar1(Qx*Qy*Qz,0.0), dEta2(Qx*Qy*Qz,0.0), dEta3(Qx*Qy*Qz,0.0);
+            PhysTensorDeriv(u_physical, dEta_bar1, dEta2, dEta3);
 
             Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
             eta_x = m_base[0]->GetZ();
@@ -371,10 +373,14 @@ namespace Nektar
                 for(int j=0; j<Qy; ++j){
                     for(int i=0; i<Qx; ++i, ++n){
                         {
-                    
-                            out_dxi1[n] = 2.0/ (1.0 - eta_z[k])*out_dEta1[n];
-                            out_dxi2[n] = 2.0/ (1.0 - eta_z[k])*out_dEta2[n];
-                            out_dxi3[n] = (1.0 + eta_x[i]) / (1.0 - eta_z[k])*out_dEta1[n] + (1.0 + eta_y[j])/(1.0 - eta_z[k])*out_dEta2[n] + out_dEta3[n];
+
+                            NekDouble eta_x_bar = (1.0 + eta_x[i]) * (1.0 - eta_y[j]) /2.0 - 1.0;
+                            
+                            out_dxi1[n] = 2.0/ (1.0 - eta_z[k])*dEta_bar1[n];
+                            out_dxi2[n] = 2.0/ (1.0 - eta_z[k])*dEta2[n];
+                            out_dxi3[n] =   (1.0 + eta_x_bar) / (1.0 - eta_z[k])*dEta_bar1[n]
+                                          + (1.0 + eta_y[j])/(1.0 - eta_z[k])*dEta2[n]
+                                          + dEta3[n];
                                                                   
                             //cout << "eta_x["<<i<<"] = " <<  eta_x[i] << ",  eta_y["<<j<<"] = " << eta_y[j] << ", eta_z["<<k<<"] = " <<eta_z[k] << endl;
                             //cout << "out_dEta1["<<n<<"] = " << out_dEta1[n] << ",  out_dEta2["<<n<<"] = " << out_dEta2[n] << ", out_dEta3["<<n<<"] = " <<out_dEta3[n] << endl;
@@ -514,7 +520,7 @@ namespace Nektar
                             int mode = pqr[r + (R+1)*(q + (Q+1)*p)];
                             cout << p << "   " << q << "   " << r << endl;
 
-                            Ak[q + (Q+1)*p]   +=   inarray[mode]  *  zBasis[k + Qz*mode];                           
+                            Ak[q + (Q+1)*p]   +=   inarray[mode]  *  zBasis[k + Qz*mode];     
                         }
                     }
                 }
@@ -607,7 +613,7 @@ namespace Nektar
         
         void StdPyrExp::GetCoords( Array<OneD, NekDouble> & xi_x, Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z)
         {
-            Array<OneD, const NekDouble> eta_x = m_base[0]->GetZ();
+            Array<OneD, const NekDouble> etaBar_x = m_base[0]->GetZ();
             Array<OneD, const NekDouble> eta_y = m_base[1]->GetZ();
             Array<OneD, const NekDouble> eta_z = m_base[2]->GetZ();
             int Qx = GetNumPoints(0);
@@ -620,14 +626,17 @@ namespace Nektar
                     for( int i = 0; i < Qx; ++i ) {
                         int s = i + Qx*(j + Qy*k);
 
-                        xi_z[s] = eta_z[k];                   
+                        xi_z[s] = eta_z[k];
                         xi_y[s] = (1.0 + eta_y[j]) * (1.0 - eta_z[k]) / 2.0  -  1.0;
-                        xi_x[s] = (1.0 + eta_x[i]) * (1.0 - eta_z[k]) / 2.0  -  1.0;
+                        xi_x[s] = (1.0 + etaBar_x[i]) * (1.0 - eta_z[k]) / 2.0  -  1.0;
+
+//                         xi_z[s] = eta_z[k];                   
+//                         xi_y[s] = (1.0 + eta_y[j]) * (1.0 - eta_z[k]) / 2.0  -  1.0;
+//                         xi_x[s] = (1.0 + eta_x[i]) * (1.0 - eta_z[k]) / 2.0  -  1.0;
 
 
                         //NekDouble eta_x_bar = (1.0 + eta_x[i]) * (1.0 - eta_z[k]) / 2.0  -  1.0;
-                        //    xi_x[s] = (1.0 + eta_x_bar) * (1.0 - eta_z[k]) / 2.0  -  1.0;                    
-                       
+                        //    xi_x[s] = (1.0 + eta_x_bar) * (1.0 - eta_z[k]) / 2.0  -  1.0;
                     }
                 }
             }
@@ -637,7 +646,226 @@ namespace Nektar
                                             Array<OneD, unsigned int> &maparray,
                                             Array<OneD, int>& signarray)
         {
-            //TODO implement 
+           int i,j;
+            const int nummodes0 = m_base[0]->GetNumModes();
+            const int nummodes1 = m_base[1]->GetNumModes();
+            const int nummodes2 = m_base[2]->GetNumModes();
+            int nummodesA, nummodesB, P, Q;
+
+            const LibUtilities::BasisType bType0 = GetEdgeBasisType(0);
+            const LibUtilities::BasisType bType1 = GetEdgeBasisType(1);
+            const LibUtilities::BasisType bType2 = GetEdgeBasisType(4);
+            
+            ASSERTL1( (bType0==bType1),
+                      "Method only implemented if BasisType is indentical in x and y directions");
+            ASSERTL1( (bType0==LibUtilities::eModified_A) && (bType1==LibUtilities::eModified_A) && (bType2==LibUtilities::eModified_C),
+                      "Method only implemented for Modified_A BasisType (x and y direction) and Modified_C BasisType (z direction)");
+
+            bool isQuad = true;
+
+            int nFaceCoeffs = 0;
+            if( fid == 0 ) // Base quad 
+            {
+                nummodesA = nummodes0;
+                nummodesB = nummodes1;
+                P = nummodesA-1;
+                Q = nummodesB-1;
+                nFaceCoeffs = nummodesA*nummodesB;
+            }
+//             else if((fid == 2) || (fid == 4)) // front and back quad
+//             {
+//                 nummodesA = nummodes1;
+//                 nummodesB = nummodes2;
+//                 P = nummodesA-1;
+//                 Q = nummodesB-1;
+//                 nFaceCoeffs = nummodesA*nummodesB;
+//             }
+            else  // left and right triangles
+            {
+                nummodesA = nummodes0;
+                nummodesB = nummodes2;
+                P = nummodesA-1;
+                Q = nummodesB-1;
+                nFaceCoeffs = Q+1 + (P*(1 + 2*Q - P))/2;
+                isQuad = false;
+            }
+
+            // Allocate the map array and sign array; set sign array to ones (+)
+            if(maparray.num_elements() != nFaceCoeffs)
+            {
+                maparray = Array<OneD, unsigned int>(nFaceCoeffs,-1);
+            }
+            
+            if(signarray.num_elements() != nFaceCoeffs)
+            {
+                signarray = Array<OneD, int>(nFaceCoeffs,1);
+            }
+            else
+            {
+                fill( signarray.get() , signarray.get()+nFaceCoeffs, 1 );
+            }
+
+
+
+            Array<OneD, int> arrayindex(nFaceCoeffs,-1);
+
+            for(int a = 0; a < nummodesA; ++a)
+            {
+                for(int b = 0; isQuad ? (b <  nummodesB) : (b < nummodesB - a); ++b)
+                {
+                    if( faceOrient < 4 ) // Not transposed
+                    {
+                        arrayindex[b + nummodesB*a] = b + nummodesB*a;
+                    }
+                    else // Transposed
+                    {
+                        arrayindex[b + nummodesB*a] = a + nummodesA*b;
+                    }
+                }
+            }
+
+
+            int baseCoefficient = 0;
+            
+            switch(fid)
+            {
+
+            // Base quad
+            case 0: 
+                for(int a = 0; a < nummodesA; ++a) {
+                    for(int b = 0; b < nummodesB; ++b) {
+                        ASSERTL0(arrayindex[b + nummodesB*a] != -1, "arrayindex is not set up properly.");
+                        maparray[ arrayindex[b + nummodesB*a] ] = b + nummodesB*a;
+                    }
+                }
+            break;
+            
+            // Rear triangle
+            case 3:
+                baseCoefficient = (nummodes1 - 1) * nummodes2;
+                for(int a = 0; a < nummodesA; ++a) {
+                    for(int b = 0; b <  nummodesB - a; ++b) {
+                        ASSERTL0(arrayindex[b + nummodesB*a] != -1, "arrayindex is not set up properly.");
+                        maparray[ arrayindex[b + nummodesB*a] ] = baseCoefficient + b;
+                    }
+                    baseCoefficient += nummodes1*(nummodesB-1 - a)  +  1;
+                }
+            break;
+
+            // Front triangle
+            case 1: 
+                for(int a = 0; a < nummodesA; ++a) {
+                    for(int b = 0; b <  nummodesB - a; ++b) {
+                        ASSERTL0(arrayindex[b + nummodesB*a] != -1, "arrayindex is not set up properly.");
+                        maparray[ arrayindex[b + nummodesB*a] ] = baseCoefficient + b;
+                    }
+                    baseCoefficient += nummodes1 * (nummodes2 - a);
+                }
+            break;
+
+
+            // Vertical triangle
+            case 4: 
+                for(int a = 0, n = 0; a < nummodesA; ++a) {
+                    for(int b = 0; b < nummodesB - a; ++b, ++n) {
+                        ASSERTL0(arrayindex[b + nummodesB*a] != -1, "arrayindex is not set up properly.");
+                        maparray[ arrayindex[b + nummodesB*a] ] = n;   
+                    }
+                }
+            break;
+            
+
+            // Slanted triangle
+            case 2:
+                for(int b = nummodesB-1; b >= 0; --b) {
+                    for(int a = 0; a < nummodesA - b; ++a) {
+                        ASSERTL0(arrayindex[b + nummodesB*a] != -1, "arrayindex is not set up properly.");
+                        maparray[ arrayindex[b + nummodesB*a] ] = baseCoefficient + (a+1)*(b+1) - 1;
+                    }
+                    baseCoefficient += nummodesA*(b+1);
+                }
+            break;
+            
+            }
+
+            if( (faceOrient==1) || (faceOrient==3) ||
+                (faceOrient==6) || (faceOrient==7) )
+            {    
+
+                if(faceOrient<4)
+                {
+                    for(i = 3; i < nummodesB; i+=2)
+                    {
+                        for(j = 0; j < nummodesA; j++)
+                        {
+                            if( arrayindex[i*nummodesA+j] >= 0 )
+                                signarray[ arrayindex[i*nummodesA+j] ] *= -1;
+                        }
+                    }
+                        
+                    for(i = 0; i < nummodesA; i++)
+                    {
+                        swap( maparray[i] , maparray[i+nummodesA] );
+                        swap( signarray[i] , signarray[i+nummodesA] );
+                    }
+                }
+                else
+                {  
+                    for(i = 0; i < nummodesB; i++)
+                    {
+                        for(j = 3; j < nummodesA; j+=2)
+                        {
+                            if( arrayindex[i*nummodesA+j] >= 0 )
+                                signarray[ arrayindex[i*nummodesA+j] ] *= -1;
+                        }
+                    } 
+                        
+                    for(i = 0; i < nummodesB; i++)
+                    {
+                        swap( maparray[i] , maparray[i+nummodesB] );
+                        swap( signarray[i] , signarray[i+nummodesB] );
+                    }
+                }
+            }
+                
+            if( (faceOrient==2) || (faceOrient==3) ||
+                (faceOrient==5) || (faceOrient==7) )
+            {  
+                if(faceOrient<4)
+                {                                   
+                    for(i = 0; i < nummodesB; i++)
+                    {
+                        for(j = 3; j < nummodesA; j+=2)
+                        {
+                            if( arrayindex[i*nummodesA+j] >= 0 )
+                                signarray[ arrayindex[i*nummodesA+j] ] *= -1;
+                        }
+                    }                 
+                        
+                    for(i = 0; i < nummodesB; i++)
+                    {
+                        swap( maparray[i*nummodesA] , maparray[i*nummodesA+1] );
+                        swap( signarray[i*nummodesA] , signarray[i*nummodesA+1] );
+                    }
+                }
+                else
+                { 
+                    for(i = 3; i < nummodesB; i+=2)
+                    {
+                        for(j = 0; j < nummodesA; j++)
+                        {
+                            if( arrayindex[i*nummodesA+j] >= 0 )
+                                signarray[ arrayindex[i*nummodesA+j] ] *= -1;
+                        }
+                    }                
+                        
+                    for(i = 0; i < nummodesA; i++)
+                    {
+                        swap( maparray[i*nummodesB] , maparray[i*nummodesB+1] );
+                        swap( signarray[i*nummodesB] , signarray[i*nummodesB+1] );
+                    }
+                }
+            }      
 
         }
 
@@ -726,6 +954,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPyrExp.cpp,v $
+ * Revision 1.17  2008/12/18 14:11:35  pvos
+ * NekConstants Update
+ *
  * Revision 1.16  2008/11/17 09:02:30  ehan
  * Added necessary mapping routines
  *

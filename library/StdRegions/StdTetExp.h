@@ -101,7 +101,7 @@ namespace Nektar
 
 
 
-            /** \brief  Inner product of \a inarray over region with respect to the 
+        /** \brief  Inner product of \a inarray over region with respect to the
 		expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata() and return in \a outarray 
 	
 		Wrapper call to StdTetExp::IProductWRTBase
@@ -114,7 +114,7 @@ namespace Nektar
 	
 		- \a outarray: array of inner product with respect to each basis over region
 
-            */
+        */
             void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
                                  Array<OneD, NekDouble> &outarray)
             {
@@ -158,8 +158,7 @@ namespace Nektar
             void WriteCoeffsToFile(std::ofstream &outfile);
             void GetCoords(Array<OneD, NekDouble> &coords_0, 
                            Array<OneD, NekDouble> &coords_1, Array<OneD, NekDouble> &coords_2);
-                         
-            //TODO implement                       
+                                                                                                         
             void GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                      Array<OneD, unsigned int> &maparray,
                                      Array<OneD, int>& signarray);
@@ -293,6 +292,28 @@ namespace Nektar
             {
                 return GetFaceNcoeffs(i);
             }
+            virtual void v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
+            {
+                GetBoundaryMap(outarray);
+            }
+
+            virtual void v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
+            {
+                GetInteriorMap(outarray);
+            }
+            
+            virtual int v_GetVertexMap(const int localVertexId)
+            {
+                return GetVertexMap(localVertexId);
+            }
+
+            virtual void v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+                                              Array<OneD, unsigned int> &maparray,
+                                              Array<OneD, int> &signarray)
+            {
+                GetEdgeInteriorMap(eid,edgeOrient,maparray,signarray);
+            } 
+                      
             virtual void v_GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                                Array<OneD, unsigned int> &maparray,
                                                Array<OneD, int>& signarray)
@@ -396,6 +417,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.24  2008/11/17 09:01:58  ehan
+ * Implemented GetFaceNcoeffs
+ *
  * Revision 1.23  2008/09/17 13:46:06  pvos
  * Added LocalToGlobalC0ContMap for 3D expansions
  *

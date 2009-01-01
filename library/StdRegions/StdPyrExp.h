@@ -77,11 +77,10 @@ namespace Nektar
             {
                 return ePyramid;
             };
-
-            //TODO implement
+                                                                                    
             void GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                      Array<OneD, unsigned int> &maparray,
-                                     Array<OneD, int>& signarray);
+                                     Array<OneD, int>& signarray); 
 
             // int GetBasisNumModes   (const int dir)
             int GetFaceNcoeffs(const int i) const
@@ -260,6 +259,28 @@ namespace Nektar
                 return GetFaceNcoeffs(i);
             }
         
+            virtual void v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
+            {
+                GetBoundaryMap(outarray);
+            }
+
+            virtual void v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
+            {
+                GetInteriorMap(outarray);
+            }
+            
+            virtual int v_GetVertexMap(const int localVertexId)
+            {
+                return GetVertexMap(localVertexId);
+            }
+
+            virtual void v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+                                              Array<OneD, unsigned int> &maparray,
+                                              Array<OneD, int> &signarray)
+            {
+                GetEdgeInteriorMap(eid,edgeOrient,maparray,signarray);
+            } 
+                      
             virtual void v_GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                                Array<OneD, unsigned int> &maparray,
                                                Array<OneD, int>& signarray)
@@ -362,6 +383,9 @@ namespace Nektar
 
 /**
  * $Log: StdPyrExp.h,v $
+ * Revision 1.20  2008/11/17 09:02:19  ehan
+ * Added necessary mapping routines
+ *
  * Revision 1.19  2008/09/17 13:46:06  pvos
  * Added LocalToGlobalC0ContMap for 3D expansions
  *

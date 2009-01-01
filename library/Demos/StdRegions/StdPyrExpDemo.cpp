@@ -14,7 +14,7 @@
 using namespace std;
 using namespace Nektar;
 
-                  
+                    
 NekDouble Pyramid_sol(NekDouble x, NekDouble y, NekDouble z, int P, int Q, int R);                 
                   
 

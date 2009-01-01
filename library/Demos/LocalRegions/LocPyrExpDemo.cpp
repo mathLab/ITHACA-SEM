@@ -150,36 +150,54 @@ int main(int argc, char *argv[])
         }
 
         // //////////////////////////////////////////////////////////////
-        // Set up Pyramid faces
+        // Set up Prism faces
         const int nFaces = 5;
-        const int quadEdgeConnectivity[][4] = { {0,1,2,3} };
-        const bool   isQuadEdgeFlipped[][4] = { {0,0,1,1} }; 
+        //quad-edge connectivity base-face0, vertical-quadface2, vertical-quadface4
+        const int quadEdgeConnectivity[][4] = { {0,1,2,3} }; 
+        const bool   isQuadEdgeFlipped[][4] = { {0,0,1,1} };
+        // QuadId ordered as 0, 1, 2, otherwise return false
+        const int                  quadId[] = { 0,-1,-1,-1,-1 };
+
+         //triangle-edge connectivity side-triface-1, side triface-3 
         const int  triEdgeConnectivity[][3] = { {0,5,4}, {1,6,5}, {2,7,6}, {3,7,4} };
         const bool    isTriEdgeFlipped[][3] = { {0,0,1}, {0,0,1}, {1,0,1}, {0,0,1} };  
+        // TriId ordered as 0, 1, otherwise return false
+        const int                   triId[] = { -1,0,1,2,3 };
 
-        // Populate the list of faces
+        // Populate the list of faces  
         Geometry2DSharedPtr faces[nFaces]; 
-        for(int i=0; i < nFaces; ++i){
-            if(i == 0 ) {
+        for(int f = 0; f < nFaces; ++f){
+            cout << "f = " << f << endl;
+            if(f==0){
+                int i = quadId[f];
                 SegGeomSharedPtr edgeArray[4];
-                EdgeOrientation eorientArray[4];
+                EdgeOrientation eorientArray[4]; 
                 for(int j=0; j < 4; ++j){
                     edgeArray[j] = edges[quadEdgeConnectivity[i][j]];
                     eorientArray[j] = isQuadEdgeFlipped[i][j] ? eBackwards : eForwards;
                 }
-                faces[i] = MemoryManager<QuadGeom>::AllocateSharedPtr(i, edgeArray, eorientArray);
-
-            }            
-            else {           
+                faces[f] = MemoryManager<QuadGeom>::AllocateSharedPtr(f, edgeArray, eorientArray);
+                cout << "quad faces[" << f << "] = " << faces[f] << endl;
+            }
+            else {
+                int i = triId[f];
                 SegGeomSharedPtr edgeArray[3];
                 EdgeOrientation eorientArray[3];
                 for(int j=0; j < 3; ++j){
                     edgeArray[j] = edges[triEdgeConnectivity[i][j]];
                     eorientArray[j] = isTriEdgeFlipped[i][j] ? eBackwards : eForwards;
                 }
-                faces[i] = MemoryManager<TriGeom>::AllocateSharedPtr(i, edgeArray, eorientArray);
+                faces[f] = MemoryManager<TriGeom>::AllocateSharedPtr(f, edgeArray, eorientArray);
+                cout << "tri faces[" << f << "] = " << faces[f] << endl;
+
             }
-        }
+
+            cout << "faces[" << f << "] = " << faces[f] << endl;
+            for(int k = 0; k < faces[f]->GetNumEdges(); ++k) {
+                cout << "faces[" << f << "]->GetEid(" << k << ") = " << faces[f]->GetEid(k) << endl;
+            }
+        } 
+        
 
          const LibUtilities::PointsKey   pointsKey_x( Qx, Qtype_x );
          const LibUtilities::PointsKey   pointsKey_y( Qy, Qtype_y );
@@ -195,8 +213,8 @@ int main(int argc, char *argv[])
 
          }
 
-//          SpatialDomains::PyrGeomSharedPtr geom = MemoryManager<SpatialDomains::PyrGeom>::AllocateSharedPtr(faces); //TODO implement this
-         SpatialDomains::PyrGeomSharedPtr geom;
+         SpatialDomains::PyrGeomSharedPtr geom =
+         MemoryManager<SpatialDomains::PyrGeom>::AllocateSharedPtr(faces);
          geom->SetOwnData();
 
 
@@ -212,7 +230,7 @@ int main(int argc, char *argv[])
         Array<OneD,NekDouble> y = Array<OneD,NekDouble>( Qx * Qy * Qz );
         Array<OneD,NekDouble> z = Array<OneD,NekDouble>( Qx * Qy * Qz );
         
-        lpe->GetCoords(x,y,z); //TODO: must test PyrExp::GetCoords()
+        lpe->GetCoords(x,y,z); 
     
         //----------------------------------------------
         // Define solution to be projected

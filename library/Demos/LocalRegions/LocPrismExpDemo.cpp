@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
         cerr << "\t Legendre   = 9\n";
         cerr << "\t Chebyshev  = 10\n";
         cerr << "\t Nodal Tet (Electro) = 13    (3D Nodal Electrostatic Points on a Tetrahedron)\n";
-        cerr << "\n\n" << "Example: " << argv[0] << " 4 4 4 3 3 3 5 5 5" << endl;
+        cerr << "\n\n" << "Example: " << argv[0] << " 4 4 5 3 3 3 5 5 5" << endl;
         cerr << endl;
         
         exit(1);
@@ -156,12 +156,14 @@ int main(int argc, char *argv[])
         //quad-edge connectivity base-face0, vertical-quadface2, vertical-quadface4
         const int quadEdgeConnectivity[][4] = { {0,1,2,3}, {1,6,8,5}, {3,7,8,4} }; 
         const bool   isQuadEdgeFlipped[][4] = { {0,0,1,1}, {0,0,1,1}, {0,0,1,1} };
-        const int                  quadId[] = { 0,-1,1,-1,2 };
+        // QuadId ordered as 0, 1, 2, otherwise return false
+        const int                  quadId[] = { 0,-1,1,-1,2 }; 
 
          //triangle-edge connectivity side-triface-1, side triface-3 
         const int  triEdgeConnectivity[][3] = { {0,5,4}, {2,7,6} };
-        const bool    isTriEdgeFlipped[][3] = { {0,0,1}, {1, 0,1 } };  
-        const int                   triId[] = { -1,0,-1,1,-1 };
+        const bool    isTriEdgeFlipped[][3] = { {0,0,1}, {1,0,1 } };
+        // TriId ordered as 0, 1, otherwise return false
+        const int                   triId[] = { -1,0,-1,1,-1 }; 
 
         // Populate the list of faces  
         Geometry2DSharedPtr faces[nFaces]; 
@@ -225,7 +227,7 @@ int main(int argc, char *argv[])
         Array<OneD,NekDouble> y = Array<OneD,NekDouble>( Qx * Qy * Qz );
         Array<OneD,NekDouble> z = Array<OneD,NekDouble>( Qx * Qy * Qz );
         
-        lpr->GetCoords(x,y,z); //TODO: must test PrismExp::GetCoords()
+        lpr->GetCoords(x,y,z); 
     
         //----------------------------------------------
         // Define solution to be projected
@@ -270,9 +272,14 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z, int P, int Q, int R, LibUtilities::BasisType bType_x,
-                    LibUtilities::BasisType bType_y, LibUtilities::BasisType bType_z ) {
-                    NekDouble sol = 0;
+
+NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z, int P, int Q, int R,
+                    LibUtilities::BasisType bType_x,
+                    LibUtilities::BasisType bType_y,
+                    LibUtilities::BasisType bType_z )
+{
+
+    NekDouble sol = 0;
  
     // case 1 -- Common case
     if( (bType_x != LibUtilities::eFourier) && (bType_y != LibUtilities::eFourier) && (bType_z != LibUtilities::eFourier)  )
@@ -311,7 +318,7 @@ NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z, int P, int Q, int R, 
         for(int i = 0; i <= P; ++i) {
             for(int j = 0; j <= Q/2; ++j) {
                 for(int k = 0; k <= R - i; ++k) {
-                    sol += pow(x,i)*sin(M_PI*j*y)*pow(z,k) + pow(x,i)*cos(M_PI*j*y)*pow(z,k);                      
+                    sol += pow(x,i)*sin(M_PI*j*y)*pow(z,k) + pow(x,i)*cos(M_PI*j*y)*pow(z,k);          
                 }
             }
         }

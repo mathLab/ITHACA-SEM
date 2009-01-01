@@ -23,7 +23,7 @@ using namespace std;
 using namespace Nektar;
 
 
-NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z, int order1, int order2, int order3);
+NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z, int P, int Q, int R);
 
 // using namespace boost;
 using namespace Nektar::LibUtilities;
@@ -33,7 +33,7 @@ using namespace Nektar::SpatialDomains;
 
 
 int main(int argc, char *argv[])
- {
+{
 if( argc != 10 ) {
         cerr << "Usage: TetDemo Type_x Type_y Type_z numModes_x numModes_y numModes_z Qx Qy Qz" << endl;
         cerr << "Where type is an integer value which dictates the basis as:" << endl;
@@ -176,17 +176,17 @@ if( argc != 10 ) {
 
          Array<OneD, StdRegions::StdExpansion3DSharedPtr> xMap(3);
          for(int i=0; i < 3; ++i){
-            xMap[i] = MemoryManager<StdRegions::StdTetExp>::AllocateSharedPtr(basisKey_x, basisKey_y, basisKey_z);
-
+            xMap[i] = MemoryManager<StdRegions::StdTetExp>::AllocateSharedPtr(basisKey_x, basisKey_y,
+                                                                              basisKey_z);
          }
 
-//          SpatialDomains::TetGeomSharedPtr geom = MemoryManager<SpatialDomains::TetGeom>::AllocateSharedPtr(faces); //TODO implement this
-         SpatialDomains::TetGeomSharedPtr geom;
+         SpatialDomains::TetGeomSharedPtr geom =
+         MemoryManager<SpatialDomains::TetGeom>::AllocateSharedPtr(faces); 
          geom->SetOwnData();
 
 
         if( bType_x_val < 10 ) {
-            lte = new LocalRegions::TetExp( basisKey_x, basisKey_y, basisKey_z, geom );
+            lte = new LocalRegions::TetExp( basisKey_x, basisKey_y, basisKey_z, geom ); 
         } else {
             cerr << "Implement the NodalTetExp!!!!!!" << endl;
             //lte = new StdRegions::StdNodalTetExp( basisKey_x, basisKey_y, basisKey_z, NodalType );
@@ -197,7 +197,7 @@ if( argc != 10 ) {
         Array<OneD,NekDouble> y = Array<OneD,NekDouble>( Qx * Qy * Qz );
         Array<OneD,NekDouble> z = Array<OneD,NekDouble>( Qx * Qy * Qz );
         
-        lte->GetCoords(x,y,z); //TODO: must test TetExp::GetCoords()
+        lte->GetCoords(x,y,z); 
     
         //----------------------------------------------
         // Define solution to be projected

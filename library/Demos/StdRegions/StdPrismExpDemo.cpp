@@ -11,7 +11,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>    
-#include <iomanip>
+#include <iomanip>  
 using namespace std;
 using namespace Nektar;
 
@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
     {
         bType_x =   LibUtilities::eOrtho_A;
         bType_y =   LibUtilities::eOrtho_B;
-        bType_z =   LibUtilities::eOrtho_C; 
+        bType_z =   LibUtilities::eOrtho_C;  
         
         NodalType = LibUtilities::eNodalTetElec;
     }

@@ -225,29 +225,49 @@ namespace Nektar
     // Set Default Parameter
     
     if(m_boundaryConditions->CheckForParameter("Time") == true)
-      {
+    {
 	m_time  = m_boundaryConditions->GetParameter("Time");
-      }
+    }
     else
-      {
+    {
 	m_time  = 0.0;
-      }
-    m_timestep   = m_boundaryConditions->GetParameter("TimeStep");
-    m_steps      = m_boundaryConditions->GetParameter("NumSteps");
+    }
+
+    if(m_boundaryConditions->CheckForParameter("TimeStep") == true)
+    {
+        m_timestep   = m_boundaryConditions->GetParameter("TimeStep");
+    }
+
+    if(m_boundaryConditions->CheckForParameter("NumSteps") == true)
+    {
+        m_steps      = m_boundaryConditions->GetParameter("NumSteps");
+    }
+    else
+    {
+        m_steps  = 0;
+    }
     
     if(m_boundaryConditions->CheckForParameter("IO_CheckSteps") == true)
-      {
+    {
 	m_checksteps = m_boundaryConditions->GetParameter("IO_CheckSteps");
-      }
+    }
     else
-      {
+    {
 	m_checksteps = m_steps;
-      }
+    }
   }
+
+    void ADRBase::ZeroPhysFields(void)
+    {
+        for(int i = 0; i < m_fields.num_elements(); i++)
+	{
+            Vmath::Zero(m_fields[i]->GetNpoints(),m_fields[i]->UpdatePhys(),1);
+        }
+    }
   
     void ADRBase::SetInitialConditions(NekDouble initialtime)
     {
-        int nq = m_fields[0]->GetPointsTot();
+        int nq = m_fields[0]->GetNpoints();
       
         Array<OneD,NekDouble> x0(nq);
         Array<OneD,NekDouble> x1(nq);
@@ -278,9 +298,36 @@ namespace Nektar
 	  }
     }
   
+
+    void ADRBase::SetPhysForcingFunctions(Array<OneD, MultiRegions::ExpListSharedPtr> &force)
+        
+    {
+        int nq = m_fields[0]->GetNpoints();
+      
+        Array<OneD,NekDouble> x0(nq);
+        Array<OneD,NekDouble> x1(nq);
+        Array<OneD,NekDouble> x2(nq);
+      
+        // get the coordinates (assuming all fields have the same
+        // discretisation)
+        force[0]->GetCoords(x0,x1,x2);
+      
+        for(int i = 0 ; i < m_fields.num_elements(); i++)
+	{
+            SpatialDomains::ConstForcingFunctionShPtr ffunc = m_boundaryConditions->GetForcingFunction(i);
+
+            for(int j = 0; j < nq; j++)
+	    {
+                (force[i]->UpdatePhys())[j] = ffunc->Evaluate(x0[j],x1[j],x2[j]);
+             }
+             force[i]->SetPhysState(true);
+        }
+    }
+
+
     void ADRBase::EvaluateExactSolution(int field, Array<OneD, NekDouble> &outfield)
     {
-        int nq = m_fields[field]->GetPointsTot();
+        int nq = m_fields[field]->GetNpoints();
       
         Array<OneD,NekDouble> x0(nq);
         Array<OneD,NekDouble> x1(nq);
@@ -298,7 +345,7 @@ namespace Nektar
     
     void ADRBase::EvaluateUserDefinedEqn(Array<OneD, Array<OneD, NekDouble> > &outfield)
     {
-        int nq = m_fields[0]->GetPointsTot();
+        int nq = m_fields[0]->GetNpoints();
         
         Array<OneD,NekDouble> x0(nq);
         Array<OneD,NekDouble> x1(nq);
@@ -321,7 +368,7 @@ namespace Nektar
 
     NekDouble ADRBase::L2Error(int field)
     {
-        Array<OneD, NekDouble> exactsoln(m_fields[field]->GetPointsTot());
+        Array<OneD, NekDouble> exactsoln(m_fields[field]->GetNpoints());
         
         EvaluateExactSolution(field,exactsoln);
         
@@ -363,7 +410,7 @@ namespace Nektar
     {
         // use dimension of Velocity vector to dictate dimension of operation
         int ndim       = F.num_elements();
-        int nPointsTot = m_fields[0]->GetPointsTot();
+        int nPointsTot = m_fields[0]->GetNpoints();
         Array<OneD, NekDouble> tmp(nPointsTot);
         Array<OneD, NekDouble> div(nPointsTot,0.0);
         
@@ -390,7 +437,7 @@ namespace Nektar
       
       // ToDo: here we should add a check that V has right dimension
       
-        int nPointsTot = m_fields[0]->GetPointsTot();
+        int nPointsTot = m_fields[0]->GetNpoints();
         Array<OneD, NekDouble> tmp(nPointsTot);
         Array<OneD, NekDouble> grad0(ndim*nPointsTot,0.0),grad1,grad2;
 
@@ -432,9 +479,9 @@ namespace Nektar
     {
         int i;
         int nVelDim         = m_spacedim;
-        int nPointsTot      = GetPointsTot();
+        int nPointsTot      = GetNpoints();
         int ncoeffs         = GetNcoeffs();
-        int nTracePointsTot = GetTracePointsTot();
+        int nTracePointsTot = GetTraceNpoints();
         int nvariables      = m_fields.num_elements();
 
         Array<OneD, Array<OneD, NekDouble> > flux      (nVelDim);
@@ -465,6 +512,7 @@ namespace Nektar
         
         for(i = 0; i < nvariables; ++i)
         {
+            
             // Get the ith component of the  flux vector in (physical space)
             GetFluxVector(i, physfield, flux);
             
@@ -544,15 +592,19 @@ namespace Nektar
         }
     }
 
+    
     void ADRBase::Summary(std::ostream &out)
+    {
+        SessionSummary(out);
+        TimeParamSummary(out);
+    }
+    
+    void ADRBase::SessionSummary(std::ostream &out)
     {
 
         out << "\tSession Name    : " << m_sessionName << endl;
 	out << "\tExp. Dimension  : " << m_expdim << endl;
         out << "\tMax Exp. Order  : " << m_fields[0]->EvalBasisNumModesMax() << endl;
-        out << "\tTime Step       : " << m_timestep << endl;
-        out << "\tNo. of Steps    : " << m_steps << endl;
-        out << "\tCheckpoints     : " << m_checksteps <<" steps" <<endl;
         if(m_projectionType == eGalerkin)
         {
             out << "\tProjection Type : Galerkin" <<endl;
@@ -564,10 +616,21 @@ namespace Nektar
     }
 
 
+    void ADRBase::TimeParamSummary(std::ostream &out)
+    {
+        out << "\tTime Step       : " << m_timestep << endl;
+        out << "\tNo. of Steps    : " << m_steps << endl;
+        out << "\tCheckpoints     : " << m_checksteps <<" steps" <<endl;
+    }
+
+
 } //end of namespace
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.6  2008/11/17 08:10:07  claes
+* Removed functions that were no longer used after the solver library was restructured
+*
 * Revision 1.5  2008/11/02 22:39:27  sherwin
 * Updated naming convention
 *

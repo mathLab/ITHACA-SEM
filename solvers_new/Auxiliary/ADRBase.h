@@ -72,7 +72,8 @@ namespace Nektar
                         int nvariables);
                 
         void SetInitialConditions(NekDouble initialtime = 0.0);
-        
+        void SetPhysForcingFunctions(Array<OneD, MultiRegions::ExpListSharedPtr> &force);
+            
 	void EvaluateExactSolution(int field, Array<OneD, NekDouble > &outfield);
 
         void EvaluateUserDefinedEqn(Array<OneD, Array<OneD, NekDouble> > &outfield);
@@ -98,14 +99,36 @@ namespace Nektar
 	
         void Checkpoint_Output(const int n);
 	
-	void Summary(std::ostream &out);
+	void Summary          (std::ostream &out);
+	void SessionSummary   (std::ostream &out);
+	void TimeParamSummary (std::ostream &out);
+        
+        inline Array<OneD, MultiRegions::ExpListSharedPtr> &UpdateFields(void)
+        {
+            return m_fields; 
+        }
 
 	inline int GetNcoeffs(void)
         {
             return m_fields[0]->GetNcoeffs();
         }
+        inline int GetNvariables(void)
+        {
+            return m_fields.num_elements();
+        }
       
-        inline int GetTracePointsTot(void)
+        inline const std::string &GetVariable(unsigned int i)
+        {
+            return m_boundaryConditions->GetVariable(i);
+        }
+
+
+        inline int GetTraceTotPoints(void)
+        {
+            return GetTraceNpoints();
+        }
+            
+        inline int GetTraceNpoints(void)
         {
 	  switch(m_expdim)
 	    {
@@ -122,15 +145,27 @@ namespace Nektar
 	    }
         }
 
-        inline int GetPointsTot(void)
+        inline int GetTotPoints(void)
         {
-            return m_fields[0]->GetPointsTot();
+            return m_fields[0]->GetNpoints();
+        }
+
+        inline int GetNpoints(void)
+        {
+            return m_fields[0]->GetNpoints();
         }
       
 	inline int GetSteps(void)
         {
             return m_steps;
         }
+
+        inline NekDouble GetParameter(const std::string &parmName)
+        {
+            return m_boundaryConditions->GetParameter(parmName);
+        }
+
+        void ZeroPhysFields(void);
 
 	enum ProjectionType
         {
@@ -222,6 +257,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.5  2008/11/17 08:10:07  claes
+* Removed functions that were no longer used after the solver library was restructured
+*
 * Revision 1.4  2008/10/31 10:50:10  pvos
 * Restructured directory and CMakeFiles
 *

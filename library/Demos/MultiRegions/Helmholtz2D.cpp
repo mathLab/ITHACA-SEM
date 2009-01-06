@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Set up coordinates of mesh for Forcing function evaluation
     coordim = Exp->GetCoordim(0);
-    nq      = Exp->GetPointsTot();
+    nq      = Exp->GetTotPoints();
     
     xc0 = Array<OneD,NekDouble>(nq,0.0);
     xc1 = Array<OneD,NekDouble>(nq,0.0);
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
     fce = Array<OneD,NekDouble>(nq);
     SpatialDomains::ConstForcingFunctionShPtr ffunc 
         = bcs.GetForcingFunction(bcs.GetVariable(0));
-    for(i = 0; i < nq; ++i)
+    for(i = 0; i < nq; ++i) 
     {
         fce[i] = ffunc->Evaluate(xc0[i],xc1[i],xc2[i]);
     }
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     
     //----------------------------------------------
-    // Backward Transform Solution to get solved values at 
+    // Backward Transform Solution to get solved values 
     Exp->BwdTrans(*Exp);
     //----------------------------------------------
     

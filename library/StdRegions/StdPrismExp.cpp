@@ -794,7 +794,7 @@ namespace Nektar
             // Allocate the map array and sign array; set sign array to ones (+)
             if(maparray.num_elements() != nFaceCoeffs)
             {
-                maparray = Array<OneD, unsigned int>(nFaceCoeffs,-1);
+                maparray = Array<OneD, unsigned int>(nFaceCoeffs);
             }
             
             if(signarray.num_elements() != nFaceCoeffs)
@@ -1059,6 +1059,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPrismExp.cpp,v $
+ * Revision 1.21  2009/01/01 02:41:26  ehan
+ * cleaned up the code
+ *
  * Revision 1.20  2008/12/18 14:11:35  pvos
  * NekConstants Update
  *

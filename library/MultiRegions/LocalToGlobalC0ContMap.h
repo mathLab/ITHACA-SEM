@@ -118,8 +118,8 @@ namespace Nektar
                 return m_numGlobalCoeffs;
             }
             
-            inline void LocalToGlobal(const Array<OneD, const NekDouble>& loc, 
-                                      Array<OneD, NekDouble>& global)
+            inline const void LocalToGlobal(const Array<OneD, const NekDouble>& loc, 
+                                      Array<OneD, NekDouble>& global) const
             {
                 if(m_signChange)
                 {
@@ -131,8 +131,8 @@ namespace Nektar
                 }
             }
             
-            inline void GlobalToLocal(const Array<OneD, const NekDouble>& global, 
-                                      Array<OneD, NekDouble>& loc)
+            inline const void GlobalToLocal(const Array<OneD, const NekDouble>& global, 
+                                      Array<OneD, NekDouble>& loc) const
             {
                 if(m_signChange)
                 {
@@ -144,8 +144,8 @@ namespace Nektar
                 }
             }
             
-            inline void Assemble(const Array<OneD, const NekDouble> &loc, 
-                                 Array<OneD, NekDouble> &global)
+            inline const void Assemble(const Array<OneD, const NekDouble> &loc, 
+                                 Array<OneD, NekDouble> &global) const
             {
                 ASSERTL1(loc.get() != global.get(),"Local and Global Arrays cannot be the same");
 
@@ -220,6 +220,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalC0ContMap.h,v $
+* Revision 1.5  2008/12/17 17:08:53  pvos
+* Performance updates
+*
 * Revision 1.4  2008/11/05 16:15:24  pvos
 * Added bandwith calculation routines
 *

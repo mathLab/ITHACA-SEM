@@ -214,13 +214,44 @@ namespace Nektar
              * \f$\mathcal{A}\f$ is the \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ 
              * permutation matrix.
              *
+             * \param outarray The resulting local degrees of freedom \f$\boldsymbol{x}_l\f$
+             * will be stored in this array of size \f$N_\mathrm{eof}\f$.
+             */  
+            inline const void GlobalToLocal(Array<OneD,NekDouble> &outarray) const
+            {
+                m_locToGloMap->GlobalToLocal(m_contCoeffs,outarray);
+            }
+
+
+            /**
+             * \brief This function scatters from the global coefficients 
+             * \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients 
+             * \f$\boldsymbol{\hat{u}}_l\f$.
+             * 
+             * This operation is evaluated as:
+             * \f{tabbing}
+             * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
+             *  \>     \> Do \= $i=$  $0,N_m^e-1$ \\
+             *  \>     \>      \> $\boldsymbol{\hat{u}}^{e}[i] = \mbox{sign}[e][i] \cdot 
+             * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \\
+             *  \>     \>      continue \\
+             *  \> continue
+             *\f}
+             * where \a map\f$[e][i]\f$ is the mapping array and \a sign\f$[e][i]\f$ is an 
+             * array of similar dimensions ensuring the correct modal connectivity between 
+             * the different elements (both these arrays are contained in the data member 
+             * #m_locToGloMap). This operation is equivalent to the scatter operation 
+             * \f$\boldsymbol{\hat{u}}_l=\mathcal{A}\boldsymbol{\hat{u}}_g\f$, where 
+             * \f$\mathcal{A}\f$ is the \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ 
+             * permutation matrix.
+             *
              * \param inarray An array of size \f$N_\mathrm{dof}\f$ containing the global 
              * degrees of freedom \f$\boldsymbol{x}_g\f$.
              * \param outarray The resulting local degrees of freedom \f$\boldsymbol{x}_l\f$
              * will be stored in this array of size \f$N_\mathrm{eof}\f$.
              */  
-            inline void GlobalToLocal(const Array<OneD, const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray)
+            inline const void GlobalToLocal(const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray) const 
             {
                 m_locToGloMap->GlobalToLocal(inarray,outarray);
             }
@@ -299,8 +330,8 @@ namespace Nektar
              *  \>     \> Do \= $i=$  $0,N_m^e-1$ \\
              *  \>     \>      \> $\boldsymbol{\hat{u}}_g[\mbox{map}[e][i]] = 
              * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]+\mbox{sign}[e][i] \cdot 
-             * \boldsymbol{\hat{u}}^{e}[i]$\\
-             *  \>     \>      continue\\
+             * \boldsymbol{\hat{u}}^{e}[i]$\\ 
+            *  \>     \>      continue\\
              *  \> continue
              * \f}
              * where \a map\f$[e][i]\f$ is the mapping array and \a sign\f$[e][i]\f$ is an 
@@ -317,8 +348,8 @@ namespace Nektar
              * \f$\boldsymbol{x}_g\f$ will be stored in this array of size 
              * \f$N_\mathrm{dof}\f$.
              */  
-            inline void Assemble(const Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD,NekDouble> &outarray)
+            inline const void Assemble(const Array<OneD, const NekDouble> &inarray,
+                                 Array<OneD,NekDouble> &outarray) const
             {
                 m_locToGloMap->Assemble(inarray,outarray);
             }
@@ -350,6 +381,10 @@ namespace Nektar
              * \f$f(\boldsymbol{x})\f$ at the quadrature points in its array #m_phys.
              */  
             void IProductWRTBase(const ExpList &In);
+
+            void IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
+                                 Array<OneD, NekDouble> &outarray, 
+                                 Array<OneD, NekDouble> &wksp = NullNekDouble1DArray);
          
             /**
              * \brief This function performs the global forward transformation of a 
@@ -373,7 +408,10 @@ namespace Nektar
              * \f$u(\boldsymbol{x})\f$ at the quadrature points in its array #m_phys.
              */  
             void FwdTrans(const ExpList &In);
-         
+
+            void FwdTrans(const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD, NekDouble> &outarray);
+                             
             /**
              * \brief This function performs the backward transformation of the spectral/hp 
              * element expansion.
@@ -393,6 +431,10 @@ namespace Nektar
              */  
             void BwdTrans(const ExpList &In);
  
+
+            void BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+
+
             /**
              * \brief This function calculates the result of the multiplication of a global 
              * matrix of type specified by \a mkey with a vector given by \a inarray.
@@ -441,6 +483,44 @@ namespace Nektar
                         
         private:
             
+            // virtual functions
+            virtual  const Array<OneD, const NekDouble> &v_GetContCoeffs() const 
+            {
+                return m_contCoeffs;;
+            }
+
+            virtual void v_BwdTrans(const ExpList &Sin)
+            {
+                BwdTrans(Sin);
+            }
+
+            virtual void v_BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            {
+                BwdTrans(inarray,outarray);
+            }
+
+            
+            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            {
+                FwdTrans(inarray,outarray);
+            }
+
+            virtual void v_FwdTrans(const ExpList &Sin)
+            {
+                FwdTrans(Sin);
+            }
+
+            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTBase(inarray,outarray);
+            }
+
+            virtual void v_IProductWRTBase(const ExpList &Sin)
+            {
+                IProductWRTBase(Sin);
+            }
+
+
         };
         
         typedef boost::shared_ptr<ContExpList2D>      ContExpList2DSharedPtr;
@@ -454,6 +534,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.h,v $
+* Revision 1.15  2008/09/16 13:36:05  pvos
+* Restructured the LocalToGlobalMap classes
+*
 * Revision 1.14  2008/06/24 11:31:27  pvos
 * changed getContNcoeffs into GetContNcoeffs
 *

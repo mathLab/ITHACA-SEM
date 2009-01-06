@@ -347,6 +347,10 @@ namespace Nektar
              */  
             void IProductWRTBase(const ExpList &In);
        
+            void IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
+                                 Array<OneD, NekDouble> &outarray, 
+                                 Array<OneD, NekDouble> &wksp = NullNekDouble1DArray);
+
             /**
              * \brief This function performs the global forward transformation of a 
              * function \f$f(x)\f$.
@@ -369,6 +373,10 @@ namespace Nektar
              * \f$u(x)\f$ at the quadrature points in its array #m_phys.
              */ 
             void FwdTrans(const ExpList &In);
+
+
+            void FwdTrans(const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD, NekDouble> &outarray);
        
             /**
              * \brief This function performs the backward transformation of the spectral/hp 
@@ -388,6 +396,10 @@ namespace Nektar
              * in its array #m_coeffs.
              */  
             void BwdTrans(const ExpList &In);
+
+            void BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+
+
  
             /**
              * \brief This function calculates the result of the multiplication of a global 
@@ -437,6 +449,45 @@ namespace Nektar
             
         private:
 
+            // virtual functions
+
+            virtual  const Array<OneD, const NekDouble> &v_GetContCoeffs() const 
+            {
+                return m_contCoeffs;;
+            }
+
+
+            virtual void v_BwdTrans(const ExpList &Sin)
+            {
+                BwdTrans(Sin);
+            }
+
+            virtual void v_BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            {
+                BwdTrans(inarray,outarray);
+            }
+
+            
+            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            {
+                FwdTrans(inarray,outarray);
+            }
+
+            virtual void v_FwdTrans(const ExpList &Sin)
+            {
+                FwdTrans(Sin);
+            }
+
+            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTBase(inarray,outarray);
+            }
+
+            virtual void v_IProductWRTBase(const ExpList &Sin)
+            {
+                IProductWRTBase(Sin);
+            }
+
         };
 
 
@@ -451,6 +502,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.33  2008/09/16 13:36:05  pvos
+* Restructured the LocalToGlobalMap classes
+*
 * Revision 1.32  2008/06/23 14:21:01  pvos
 * updates for 1D ExpLists
 *

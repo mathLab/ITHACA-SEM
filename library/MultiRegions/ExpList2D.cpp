@@ -339,7 +339,7 @@ namespace Nektar
             for(i = 0; i < nbnd; ++i)
             {                 
                 locExpList = bndCondExpansions[i];                  
-                npoints = locExpList->GetPointsTot();
+                npoints = locExpList->GetNpoints();
                 
                 Array<OneD,NekDouble> x0(npoints,0.0);
                 Array<OneD,NekDouble> x1(npoints,0.0);
@@ -482,6 +482,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.cpp,v $
+* Revision 1.22  2008/09/23 18:21:00  pvos
+* Updates for working ProjectContField3D demo
+*
 * Revision 1.21  2008/08/14 22:15:51  sherwin
 * Added LocalToglobalMap and DGMap and depracted LocalToGlobalBndryMap1D,2D. Made DisContField classes compatible with updated ContField formats
 *

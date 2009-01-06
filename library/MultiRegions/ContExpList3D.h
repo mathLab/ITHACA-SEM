@@ -106,10 +106,20 @@ namespace Nektar
             }
 
             void IProductWRTBase(const ExpList &In);
+
+            void IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
+                                 Array<OneD, NekDouble> &outarray, 
+                                 Array<OneD, NekDouble> &wksp = NullNekDouble1DArray);
         
             void FwdTrans(const ExpList &In);
         
+            void FwdTrans(const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD, NekDouble> &outarray);
+                             
+
             void BwdTrans(const ExpList &In);
+
+            void BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
 
             void GeneralMatrixOp(const GlobalLinSysKey            &gkey,
                                  const Array<OneD, const NekDouble> &inarray,
@@ -124,6 +134,44 @@ namespace Nektar
                         
         private:
             
+            
+            // virtual functions
+            virtual  const Array<OneD, const NekDouble> &v_GetContCoeffs() const 
+            {
+                return m_contCoeffs;;
+            }
+
+            virtual void v_BwdTrans(const ExpList &Sin)
+            {
+                BwdTrans(Sin);
+            }
+
+            virtual void v_BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            {
+                BwdTrans(inarray,outarray);
+            }
+
+            
+            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            {
+                FwdTrans(inarray,outarray);
+            }
+
+            virtual void v_FwdTrans(const ExpList &Sin)
+            {
+                FwdTrans(Sin);
+            }
+
+            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTBase(inarray,outarray);
+            }
+
+            virtual void v_IProductWRTBase(const ExpList &Sin)
+            {
+                IProductWRTBase(Sin);
+            }
+
         };
         
         typedef boost::shared_ptr<ContExpList3D>      ContExpList3DSharedPtr;

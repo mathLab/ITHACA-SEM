@@ -199,9 +199,8 @@ namespace Nektar
             // Inner product of forcing 
             Array<OneD,NekDouble> rhs(m_contNcoeffs);        
             
-            // Inner product of forcing 
-            ExpList::IProductWRTBase(In.GetPhys(), m_coeffs);
-            Assemble(m_coeffs,rhs);
+            // Inner product of forcing using m_coeffs as workspace
+            IProductWRTBase(In.GetPhys(), rhs, m_coeffs);
 
             // Solve the system
             GlobalLinSysKey key(StdRegions::eMass);
@@ -211,12 +210,12 @@ namespace Nektar
             m_physState = false;
         }
 
-        void ContField2D::MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays, bool ZeroBCs)
+        void ContField2D::MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool ContinuousArrays, bool ZeroBCs)
         {
             GlobalLinSysKey key(StdRegions::eMass);
             int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
             
-            if(GlobalArrays)
+            if(ContinuousArrays)
             {
                 if(inarray.data() == outarray.data())
                 {
@@ -283,9 +282,8 @@ namespace Nektar
             GlobalLinSysKey key(StdRegions::eHelmholtz,lambda);
             Array<OneD,NekDouble> rhs(m_contNcoeffs);        
             
-            // Inner product of forcing 
-            ExpList::IProductWRTBase(In.GetPhys(), m_coeffs);
-            Assemble(m_coeffs,rhs);
+            // Inner product of forcing  using m_coeffs as work space
+            IProductWRTBase(In.GetPhys(), rhs, m_coeffs);
 
             // Note -1.0 term necessary to invert forcing function to
             // be consistent with matrix definition
@@ -305,10 +303,9 @@ namespace Nektar
             GlobalLinSysKey key(StdRegions::eLaplacian,time,variablecoeffs);
             Array<OneD,NekDouble> rhs(m_contNcoeffs);        
             
-            // Inner product of forcing 
-            ExpList::IProductWRTBase(In.GetPhys(), m_coeffs);
-            Assemble(m_coeffs,rhs);
-
+            // Inner product of forcing  using m_coeffs as tmp space
+            IProductWRTBase(In.GetPhys(), rhs, m_coeffs);
+            
             // Note -1.0 term necessary to invert forcing function to
             // be consistent with matrix definition
             Vmath::Neg(m_contNcoeffs,  rhs, 1);

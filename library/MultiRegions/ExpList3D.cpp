@@ -302,7 +302,7 @@ namespace Nektar
             for(i = 0; i < nbnd; ++i)
             {                 
                 locExpList = bndCondExpansions[i];                  
-                npoints = locExpList->GetPointsTot();
+                npoints = locExpList->GetNpoints();
                 
                 Array<OneD,NekDouble> x0(npoints,0.0);
                 Array<OneD,NekDouble> x1(npoints,0.0);

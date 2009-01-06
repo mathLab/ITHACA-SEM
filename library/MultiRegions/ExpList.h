@@ -88,7 +88,6 @@ namespace Nektar
             void PutCoeffsInToElmtExp(void);
             void PutElmtExpInToCoeffs(void);
 
-
             void PutCoeffsInToElmtExp(int eid);
             void PutElmtExpInToCoeffs(int eid);
             
@@ -133,7 +132,7 @@ namespace Nektar
              * \brief This function returns the total number of quadrature points #m_npoints
              * \f$=Q_{\mathrm{tot}}\f$.
              */
-            inline int GetPointsTot(void) const
+            inline int GetTotPoints(void) const
             {
                 return m_npoints;
             }
@@ -260,7 +259,12 @@ namespace Nektar
              * \f$f(\boldsymbol{x})\f$ at the quadrature points in its array 
              * #m_phys.
              */
-            void   IProductWRTBase (const ExpList &Sin);
+            void   IProductWRTBase_IterPerExp (const ExpList &Sin);
+
+            void   IProductWRTBase (const ExpList &Sin)
+            {
+                v_IProductWRTBase(Sin);
+            }
 
 
             /**
@@ -277,8 +281,14 @@ namespace Nektar
              * \f$\boldsymbol{x}_i\f$.  \param outarray An array of
              * size \f$N_{\mathrm{eof}}\f$ used to store the result.
              */
-            void   IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
+            void   IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, 
                                    Array<OneD, NekDouble> &outarray);
+            
+            void   IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
+                                   Array<OneD, NekDouble> &outarray)
+            {
+                v_IProductWRTBase(inarray,outarray);
+            }
             
 
             /**
@@ -345,8 +355,12 @@ namespace Nektar
              * \param Sin An ExpList, containing the discrete evaluation of 
              * \f$u(\boldsymbol{x})\f$ at the quadrature points in its array #m_phys.
              */
-            void   FwdTrans        (const ExpList &Sin);
-
+            void   FwdTrans_IterPerExp   (const ExpList &Sin);
+            
+            void   FwdTrans(const ExpList &Sin)
+            {
+                v_FwdTrans(Sin);
+            }
 
             /**
              * \brief This function elementally evaluates the forward
@@ -369,8 +383,14 @@ namespace Nektar
              * coefficients \f$\hat{u}_n^e\f$ will be stored in this
              * array of size \f$N_{\mathrm{eof}}\f$.
              */
-            void   FwdTrans (const Array<OneD, const NekDouble> &inarray,
+            void   FwdTrans_IterPerExp (const Array<OneD, const NekDouble> &inarray,
                              Array<OneD, NekDouble> &outarray);
+
+            void   FwdTrans(const Array<OneD, const NekDouble> &inarray,
+                             Array<OneD, NekDouble> &outarray)
+            {
+                v_FwdTrans(inarray,outarray);
+            }
 
 
             /**
@@ -409,6 +429,13 @@ namespace Nektar
                 
             }
 
+            void HelmSolve(const ExpList &In, 
+                           NekDouble lambda,
+                           Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray)
+            {
+                v_HelmSolve(In,lambda,dirForcing);
+            }
+
             /**
              * \brief 
              */
@@ -421,85 +448,112 @@ namespace Nektar
                Array<OneD, NekDouble> &outarray);
 
             /**
-             * \brief This function elementally evaluates the backward transformation of 
-             * the global spectral/hp element expansion.
+             * \brief This function elementally evaluates the backward
+             * transformation of the global spectral/hp element
+             * expansion.
              *
-             * Given the elemental coefficients \f$\hat{u}_n^e\f$ of an expansion, this 
-             * function evaluates the spectral/hp expansion 
-             * \f$u^{\delta}(\boldsymbol{x})\f$ at the quadrature points 
-             * \f$\boldsymbol{x}_i\f$. The operation is evaluated locally by the elemental 
-             * function  StdRegions#StdExpansion#BwdTrans.
-             * The coefficients \f$\hat{u}_n^e\f$ should be contained in the variable 
-             * #m_coeffs of the ExpList object \a Sin. The resulting physical values at the 
-             * quadrature points \f$u^{\delta}(\boldsymbol{x}_i)\f$ are stored in the 
-             * array #m_phys.
+             * Given the elemental coefficients \f$\hat{u}_n^e\f$ of
+             * an expansion, this function evaluates the spectral/hp
+             * expansion \f$u^{\delta}(\boldsymbol{x})\f$ at the
+             * quadrature points \f$\boldsymbol{x}_i\f$. The operation
+             * is evaluated locally by the elemental function
+             * StdRegions#StdExpansion#BwdTrans.
+             *
+             * The coefficients \f$\hat{u}_n^e\f$ should be contained
+             * in the variable #m_coeffs of the ExpList object \a
+             * Sin. The resulting physical values at the quadrature
+             * points \f$u^{\delta}(\boldsymbol{x}_i)\f$ are stored in
+             * the array #m_phys.
              *
              * \param Sin An ExpList, containing the local coefficients 
              * \f$\hat{u}_n^e\f$ in its array #m_coeffs.
              */
-            void   BwdTrans        (const ExpList &Sin); 
+            void   BwdTrans_IterPerExp (const ExpList &Sin); 
 
+            void   BwdTrans            (const ExpList &Sin)
+            {
+                v_BwdTrans(Sin);
+                m_physState = true;
+            }
+            
 
             /**
-             * \brief This function elementally evaluates the backward transformation of 
-             * the global spectral/hp element expansion.
+             * \brief This function elementally evaluates the backward
+             * transformation of the global spectral/hp element
+             * expansion.
              *
-             * Given the elemental coefficients \f$\hat{u}_n^e\f$ of an expansion, this 
-             * function evaluates the spectral/hp expansion 
-             * \f$u^{\delta}(\boldsymbol{x})\f$ at the quadrature points 
-             * \f$\boldsymbol{x}_i\f$. The operation is evaluated locally by the elemental 
-             * function  StdRegions#StdExpansion#BwdTrans.
+             * Given the elemental coefficients \f$\hat{u}_n^e\f$ of
+             * an expansion, this function evaluates the spectral/hp
+             * expansion \f$u^{\delta}(\boldsymbol{x})\f$ at the
+             * quadrature points \f$\boldsymbol{x}_i\f$. The operation
+             * is evaluated locally by the elemental function
+             * StdRegions#StdExpansion#BwdTrans.
              *
-             * \param inarray An array of size \f$N_{\mathrm{eof}}\f$ containing the local 
-             * coefficients \f$\hat{u}_n^e\f$.
-             * \param outarray The resulting physical values at the quadrature points 
-             * \f$u^{\delta}(\boldsymbol{x}_i)\f$ will be stored in this array of size 
+             * \param inarray An array of size \f$N_{\mathrm{eof}}\f$
+             * containing the local coefficients \f$\hat{u}_n^e\f$.
+             * \param outarray The resulting physical values at the
+             * quadrature points \f$u^{\delta}(\boldsymbol{x}_i)\f$
+             * will be stored in this array of size
              * \f$Q_{\mathrm{tot}}\f$.
              */
+            void   BwdTrans_IterPerExp (const Array<OneD, const NekDouble> &inarray, 
+                                 Array<OneD, NekDouble> &outarray); 
+
+
             void   BwdTrans (const Array<OneD, const NekDouble> &inarray, 
-                             Array<OneD, NekDouble> &outarray); 
+                             Array<OneD, NekDouble> &outarray)
+            {
+                v_BwdTrans(inarray,outarray);
+            }
 
             /**
-             * \brief This function discretely evaluates the derivative of a function 
-             * \f$f(\boldsymbol{x})\f$ on the domain consisting of all elements of 
-             * the expansion.
+             * \brief This function discretely evaluates the
+             * derivative of a function \f$f(\boldsymbol{x})\f$ on the
+             * domain consisting of all elements of the expansion.
              *
-             * Given a function \f$f(\boldsymbol{x})\f$ evaluated at the quadrature points, 
-             * this function calculates the derivatives \f$\frac{d}{dx_1}\f$, 
-             * \f$\frac{d}{dx_2}\f$ and \f$\frac{d}{dx_3}\f$ of the function 
-             * \f$f(\boldsymbol{x})\f$ at the same quadrature points. The local distribution
-             * of the quadrature points allows an elemental evaluation of the derivative. 
-             * This is done by a call to the function StdRegions#StdExpansion#PhysDeriv.
+             * Given a function \f$f(\boldsymbol{x})\f$ evaluated at
+             * the quadrature points, this function calculates the
+             * derivatives \f$\frac{d}{dx_1}\f$, \f$\frac{d}{dx_2}\f$
+             * and \f$\frac{d}{dx_3}\f$ of the function
+             * \f$f(\boldsymbol{x})\f$ at the same quadrature
+             * points. The local distribution of the quadrature points
+             * allows an elemental evaluation of the derivative.  This
+             * is done by a call to the function
+             * StdRegions#StdExpansion#PhysDeriv.
              *
-             * Note that the array #m_phys should be filled with the values of the function
-             * \f$f(\boldsymbol{x})\f$ at the quadrature points \f$\boldsymbol{x}_i\f$. 
-             * The results will be stored in the ExpLists \a S0, \a S1 and \a S2.
+             * Note that the array #m_phys should be filled with the
+             * values of the function \f$f(\boldsymbol{x})\f$ at the
+             * quadrature points \f$\boldsymbol{x}_i\f$.  The results
+             * will be stored in the ExpLists \a S0, \a S1 and \a S2.
              *
-             * \param S0 The discrete evaluation of the derivative\f$\frac{d}{dx_1}\f$ will 
-             * be stored in the variable #m_phys of this ExpList.
-             * \param S1 The discrete evaluation of the derivative\f$\frac{d}{dx_2}\f$ will 
-             * be stored in the variable #m_phys of this ExpList. Note that if no memory is 
-             * allocated for  \a S1::m_phys, the derivative \f$\frac{d}{dx_2}\f$ will 
-             * not be calculated.
-             * \param S2 The discrete evaluation of the derivative\f$\frac{d}{dx_3}\f$ will 
-             * be stored in the variable #m_phys of this ExpList. Note that if no memory is 
-             * allocated for  \a S2::m_phys, the derivative \f$\frac{d}{dx_3}\f$ will 
-             * not be calculated.
+             * \param S0 The discrete evaluation of the
+             * derivative\f$\frac{d}{dx_1}\f$ will be stored in the
+             * variable #m_phys of this ExpList.  \param S1 The
+             * discrete evaluation of the
+             * derivative\f$\frac{d}{dx_2}\f$ will be stored in the
+             * variable #m_phys of this ExpList. Note that if no
+             * memory is allocated for \a S1::m_phys, the derivative
+             * \f$\frac{d}{dx_2}\f$ will not be calculated.  \param S2
+             * The discrete evaluation of the
+             * derivative\f$\frac{d}{dx_3}\f$ will be stored in the
+             * variable #m_phys of this ExpList. Note that if no
+             * memory is allocated for \a S2::m_phys, the derivative
+             * \f$\frac{d}{dx_3}\f$ will not be calculated.
              */
             void   PhysDeriv       (ExpList &S0, ExpList &S1, ExpList &S2); 
        
             /**
-             * \brief This function calculates the coordinates of all the elemental 
-             * quadrature points \f$\boldsymbol{x}_i\f$.
+             * \brief This function calculates the coordinates of all
+             * the elemental quadrature points \f$\boldsymbol{x}_i\f$.
              *
-             * The operation is evaluated locally by the elemental function 
-             * StdRegions#StdExpansion#GetCoords.
+             * The operation is evaluated locally by the elemental
+             * function StdRegions#StdExpansion#GetCoords.
              *
-             * \param coord_0 After calculation, the \f$x_1\f$ coordinate will be stored in
-             * this array.
-             * \param coord_1 After calculation, the \f$x_2\f$ coordinate will be stored in 
-             * this array.
-             * \param coord_2 After calculation, the \f$x_3\f$ coordinate will be stored in 
+             * \param coord_0 After calculation, the \f$x_1\f$
+             * coordinate will be stored in this array.  \param
+             * coord_1 After calculation, the \f$x_2\f$ coordinate
+             * will be stored in this array.  \param coord_2 After
+             * calculation, the \f$x_3\f$ coordinate will be stored in
              * this array.
              */
             void   GetCoords(Array<OneD, NekDouble> &coord_0,
@@ -507,23 +561,27 @@ namespace Nektar
                              Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
 
             /**
-             * \brief This function writes the spectral/hp element solution to the file 
-             * \a out.
+             * \brief This function writes the spectral/hp element
+             * solution to the file \a out.
              *
-             * The coordinates of the quadrature points, together with the content of the 
-             * array #m_phys, are written to the file \a out.
+             * The coordinates of the quadrature points, together with
+             * the content of the array #m_phys, are written to the
+             * file \a out.
              *
-             * \param out The file to which the solution should be written.
+             * \param out The file to which the solution should be
+             * written.
              */
             void   WriteToFile(std::ofstream &out, OutputFormat format = eTecplot);
     
             /**
-             * \brief This function assembles the block diagonal matrix of local matrices 
-             * of the type \a mtype.
+             * \brief This function assembles the block diagonal
+             * matrix of local matrices of the type \a mtype.
              *
-             * This function assembles the block diagonal matrix 
-             * \f$\underline{\boldsymbol{M}}^e\f$, which is the concatenation of the local 
-             * matrices \f$\boldsymbol{M}^e\f$ of the type \a mtype, that is
+             * This function assembles the block diagonal matrix
+             * \f$\underline{\boldsymbol{M}}^e\f$, which is the
+             * concatenation of the local matrices
+             * \f$\boldsymbol{M}^e\f$ of the type \a mtype, that is
+             *
              * \f[
              * \underline{\boldsymbol{M}}^e = \left[
              * \begin{array}{cccc}
@@ -541,8 +599,8 @@ namespace Nektar
                                                       NekDouble constant = 0.0);
 
             /**
-             * \brief This function returns the dimension of the coordinates of the 
-             * element \a eid.
+             * \brief This function returns the dimension of the
+             * coordinates of the element \a eid.
              *
              * \param eid The index of the element to be checked.
              * \return The dimension of the coordinates of the specific element.
@@ -554,7 +612,11 @@ namespace Nektar
             }
       
             /**
-             * \brief 
+             * \brief Set the \a i th coefficiient in \a m_coeffs to
+             * value \a val
+             *
+             * \param i The index of m_coeffs to be set \param val The
+             * value which m_coeffs[i] is to be set to.
              */
             inline void SetCoeff(int i, NekDouble val) 
             {
@@ -562,7 +624,11 @@ namespace Nektar
             }
 
             /**
-             * \brief 
+             * \brief Set the \a i th coefficiient in  #m_coeffs to
+             * value \a val
+             *
+             * \param i The index of #m_coeffs to be set \param val The
+             * value which #m_coeffs[i] is to be set to.
              */
             inline void SetCoeffs(int i, NekDouble val) 
             {
@@ -570,13 +636,14 @@ namespace Nektar
             }
 
             /**
-             * \brief This function returns (a reference to) the array 
-             * \f$\boldsymbol{\hat{u}}_l\f$ (implemented as #m_coeffs) containing all local 
-             * expansion coefficients.
+             * \brief This function returns (a reference to) the array
+             * \f$\boldsymbol{\hat{u}}_l\f$ (implemented as #m_coeffs)
+             * containing all local expansion coefficients.
              *
-             * As the function returns a constant reference to a <em>const Array</em>, it is not 
-             * possible to modify the underlying data of the array #m_coeffs. In order to 
-             * do so, use the function #UpdateCoeffs instead.
+             * As the function returns a constant reference to a
+             * <em>const Array</em>, it is not possible to modify the
+             * underlying data of the array #m_coeffs. In order to do
+             * so, use the function #UpdateCoeffs instead.
              *
              * \return (A constant reference to) the array #m_coeffs.
              */
@@ -585,8 +652,17 @@ namespace Nektar
                 return m_coeffs;
             }
 
+            
+            inline const Array<OneD, const NekDouble> &GetContCoeffs() const 
+            {
+                return v_GetContCoeffs();
+            }
+
             /**
-             * \brief 
+             * \brief  Get the \a i th value  (coefficient) of #m_coeffs
+             *
+             * \param i The index of #m_coeffs to be returned
+             * \return The NekDouble held in #m_coeffs[i].
              */
             inline NekDouble GetCoeff(int i) 
             {
@@ -594,7 +670,10 @@ namespace Nektar
             }
 
             /**
-             * \brief 
+             * \brief  Get the \a i th value  (coefficient) of #m_coeffs
+             *
+             * \param i The index of #m_coeffs to be returned
+             * \return The NekDouble held in #m_coeffs[i].
              */
             inline NekDouble GetCoeffs(int i) 
             {
@@ -602,12 +681,15 @@ namespace Nektar
             }
 
             /**
-             * \brief This function returns (a reference to) the array 
-             * \f$\boldsymbol{u}_l\f$ (implemented as #m_phys) containing the function 
-             * \f$u^{\delta}(\boldsymbol{x})\f$ evaluated at the quadrature points.
+             * \brief This function returns (a reference to) the array
+             * \f$\boldsymbol{u}_l\f$ (implemented as #m_phys)
+             * containing the function
+             * \f$u^{\delta}(\boldsymbol{x})\f$ evaluated at the
+             * quadrature points.
              *
-             * As the function returns a constant reference to a <em>const Array</em> it is not 
-             * possible to modify the underlying data of the array #m_phys. In order to do 
+             * As the function returns a constant reference to a
+             * <em>const Array</em> it is not possible to modify the
+             * underlying data of the array #m_phys. In order to do
              * so, use the function #UpdatePhys instead.
              *
              * \return (A constant reference to) the array #m_phys.
@@ -618,43 +700,50 @@ namespace Nektar
             }
 
             /**
-             * \brief This function calculates the \f$L_\infty\f$ error of the global 
-             * spectral/hp element approximation.
+             * \brief This function calculates the \f$L_\infty\f$
+             * error of the global spectral/hp element approximation.
              *
-             * Given a spectral/hp approximation \f$u^{\delta}(\boldsymbol{x})\f$ evaluated 
-             * at the quadrature points (which should be contained in #m_phys), this 
-             * function calculates the \f$L_\infty\f$ error of this approximation with 
-             * respect to an exact solution. The local distribution of the quadrature points
-             * allows an elemental evaluation of this operation through the functions 
-             * StdRegions#StdExpansion#Linf. 
+             * Given a spectral/hp approximation
+             * \f$u^{\delta}(\boldsymbol{x})\f$ evaluated at the
+             * quadrature points (which should be contained in
+             * #m_phys), this function calculates the \f$L_\infty\f$
+             * error of this approximation with respect to an exact
+             * solution. The local distribution of the quadrature
+             * points allows an elemental evaluation of this operation
+             * through the functions StdRegions#StdExpansion#Linf.
              *
-             * The exact solution, also evaluated at the 
-             * quadrature points, should be contained in the variable #m_phys of the 
-             * ExpList object \a Sol.
+             * The exact solution, also evaluated at the quadrature
+             * points, should be contained in the variable #m_phys of
+             * the ExpList object \a Sol.
              *
-             * \param Sol An ExpList, containing the discrete evaluation of the exact 
-             * solution at the quadrature points in its array #m_phys.
-             * \return The \f$L_\infty\f$ error of the approximation.
+             * \param Sol An ExpList, containing the discrete
+             * evaluation of the exact solution at the quadrature
+             * points in its array #m_phys.  \return The
+             * \f$L_\infty\f$ error of the approximation.
              */
             NekDouble Linf (const ExpList &Sol);
 
             /**
-             * \brief  This function calculates the \f$L_2\f$ error of the global 
-             * spectral/hp element approximation.
+             * \brief This function calculates the \f$L_2\f$ error of
+             * the global spectral/hp element approximation.
              *
-             * Given a spectral/hp approximation \f$u^{\delta}(\boldsymbol{x})\f$ 
-             * evaluated at the quadrature points (which should be contained in #m_phys), 
-             * this function calculates the \f$L_2\f$ error of this approximation with 
-             * respect to an exact solution. The local distribution of the quadrature points
-             *  allows an elemental evaluation of this operation through the functions 
-             * StdRegions#StdExpansion#L2. 
+             * Given a spectral/hp approximation
+             * \f$u^{\delta}(\boldsymbol{x})\f$ evaluated at the
+             * quadrature points (which should be contained in
+             * #m_phys), this function calculates the \f$L_2\f$ error
+             * of this approximation with respect to an exact
+             * solution. The local distribution of the quadrature
+             * points allows an elemental evaluation of this operation
+             * through the functions StdRegions#StdExpansion#L2.
              *
-             * The exact solution, also evaluated at the 
-             * quadrature points, should be contained in the variable #m_phys of the 
-             * ExpList object \a Sol.
+             * The exact solution, also evaluated at the quadrature
+             * points, should be contained in the variable #m_phys of
+             * the ExpList object \a Sol.
              *
-             * \param Sol An ExpList, containing the discrete evaluation of the exact 
-             * solution at the quadrature points in its array #m_phys.
+             * \param Sol An ExpList, containing the discrete
+             * evaluation of the exact solution at the quadrature
+             * points in its array #m_phys.
+             *
              * \return The \f$L_2\f$ error of the approximation.
              */
             NekDouble L2 (const ExpList &Sol);
@@ -662,9 +751,11 @@ namespace Nektar
             NekDouble L2 (const Array<OneD, const NekDouble> &soln);
 
             /**
-             * \brief This function returns the number of elements in the expansion.
+             * \brief This function returns the number of elements in
+             * the expansion.
              *
-             * \return \f$N_{\mathrm{el}}\f$, the number of elements in the expansion.
+             * \return \f$N_{\mathrm{el}}\f$, the number of elements
+             * in the expansion.
              */
             inline int GetExpSize(void)
             {
@@ -672,12 +763,14 @@ namespace Nektar
             }
       
             /**
-             * \brief This function returns (a shared pointer to) the local elemental 
-             * expansion of the \f$n^{\mathrm{th}}\f$ element.
+             * \brief This function returns (a shared pointer to) the
+             * local elemental expansion of the \f$n^{\mathrm{th}}\f$
+             * element.
              *
              * \param n The index of the element concerned.
-             * \return (A shared pointer to) the local expansion of the 
-             * \f$n^{\mathrm{th}}\f$ element.
+             *
+             * \return (A shared pointer to) the local expansion of
+             * the \f$n^{\mathrm{th}}\f$ element.
              */
             inline StdRegions::StdExpansionSharedPtr& GetExp(int n)
             {
@@ -686,7 +779,7 @@ namespace Nektar
 
             /**
              * \brief Get the start offset position for a global list
-             * of #m_coeffs correspoinding to  element  n
+             * of #m_coeffs correspoinding to element n
              */
             inline int GetCoeff_Offset(int n)
             {
@@ -776,8 +869,6 @@ namespace Nektar
                            const Array<OneD, const NekDouble> &inarray,
                            Array<OneD, NekDouble> &out_d);
 
-
-            // wrapper functions about virtual functions
 
             // functions associated with DisContField
             boost::shared_ptr<GenExpList1D> &GetTrace(void)
@@ -1162,6 +1253,59 @@ namespace Nektar
                 ASSERTL0(false,"This method is not defined or valid for this class type");                
             }
 
+
+            virtual void v_HelmSolve(const ExpList &In, 
+                                     NekDouble lambda,
+                                     Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray)
+                
+            {
+                ASSERTL0(false,"This method is not defined or valid for this class type");                
+            }
+
+
+            // wrapper functions about virtual functions
+            virtual  const Array<OneD, const NekDouble> &v_GetContCoeffs() const 
+            {
+                ASSERTL0(false,"This method is not valid in this class type");
+                return NullNekDouble1DArray;
+            }
+
+
+            virtual void v_BwdTrans(const ExpList &Sin)
+            {
+                BwdTrans_IterPerExp(Sin);
+            }
+
+            virtual void v_BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            {
+                BwdTrans_IterPerExp(inarray,outarray);
+            }
+
+            virtual void v_FwdTrans(const ExpList &Sin)
+            {
+                FwdTrans_IterPerExp(Sin);
+            }
+
+            
+            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            {
+                FwdTrans_IterPerExp(inarray,outarray);
+            }
+
+
+
+            virtual void v_IProductWRTBase(const ExpList &Sin)
+            {
+                IProductWRTBase_IterPerExp(Sin);
+            }
+
+            
+            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTBase_IterPerExp(inarray,outarray);
+            }
+
+
         private:
 
             virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions()
@@ -1188,6 +1332,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.49  2008/11/19 10:52:55  pvos
+* Changed MultiplyByInvMassMatrix + added some virtual functions
+*
 * Revision 1.48  2008/11/01 22:06:45  bnelson
 * Fixed Visual Studio compile error.
 *

@@ -160,13 +160,28 @@ namespace Nektar
 
         void ContExpList3D::IProductWRTBase(const ExpList &In)
         {
-            if(m_transState == eContinuous)
-            {
-                GlobalToLocal();
-            }
-            ExpList3D::IProductWRTBase(In);
-            Assemble();
+            IProductWRTBase(In.GetPhys(),m_contCoeffs, m_coeffs);
             m_transState = eLocalCont;
+        }
+
+
+        // Note inarray is assumed to be of size m_contExpList2D;
+        void ContExpList3D::IProductWRTBase(const Array<OneD, const NekDouble> &inarray,  Array<OneD, NekDouble> &outarray, Array<OneD, NekDouble> &wksp)
+        {
+            Array<OneD, NekDouble> tmp;
+            
+            if(wksp == NullNekDouble1DArray)
+            {
+                tmp =  Array<OneD, NekDouble>(m_ncoeffs);
+            }
+            else
+            {
+                tmp = wksp;
+            }
+
+            IProductWRTBase_IterPerExp(inarray,tmp);
+            
+            Assemble(tmp,outarray);
         }
 
         void ContExpList3D::GeneralMatrixOp(const GlobalLinSysKey &gkey,
@@ -182,7 +197,16 @@ namespace Nektar
 
         void ContExpList3D::FwdTrans(const ExpList &In)
         {
-            IProductWRTBase(In);
+            FwdTrans(In.GetPhys(),m_contCoeffs);
+            
+	    m_transState = eContinuous;
+	    m_physState = false;
+        }
+
+        void ContExpList3D::FwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                             Array<OneD, NekDouble> &outarray)
+        {
+            IProductWRTBase(inarray,outarray);
 
             GlobalLinSysSharedPtr mass_matrix;
             GlobalLinSysKey key(StdRegions::eMass);
@@ -197,21 +221,36 @@ namespace Nektar
             {
                 mass_matrix = matrixIter->second;
             }
-            mass_matrix->Solve(m_contCoeffs,m_contCoeffs,*m_locToGloMap);
+            mass_matrix->Solve(outarray,outarray,*m_locToGloMap);
 
-        m_transState = eContinuous;
-        m_physState = false;
         }
 
         void ContExpList3D::BwdTrans(const ExpList &In)
         {
+            Array<OneD, NekDouble> tmp;
+
             if(m_transState == eContinuous)
             {
-                GlobalToLocal();
+                GlobalToLocal(In.GetContCoeffs(),m_coeffs);
             }         
-            ExpList3D::BwdTrans(In);
+            else
+            {
+                tmp = In.GetCoeffs();
+            }
+
+            BwdTrans_IterPerExp(In.GetCoeffs(),m_phys);
+
+	    m_physState = true;
         }
 
+        void ContExpList3D::BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            Array<OneD, NekDouble> tmp(m_ncoeffs);
+            
+            GlobalToLocal(inarray,tmp);
+
+            BwdTrans_IterPerExp(tmp,outarray);
+        }
         
            
     } //end of namespace

@@ -207,7 +207,7 @@ namespace Nektar
             return sum; 
         }
         
-        void ExpList::IProductWRTBase(const ExpList &Sin)
+        void ExpList::IProductWRTBase_IterPerExp(const ExpList &Sin)
         {
             ASSERTL2(Sin.GetPhysState() == true,
                      "Physical space is not set to true ");
@@ -216,7 +216,7 @@ namespace Nektar
             m_physState = false;
         }
         
-        void ExpList::IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
+        void ExpList::IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, 
                                       Array<OneD, NekDouble> &outarray)
         {
             int    i;
@@ -337,12 +337,12 @@ namespace Nektar
         }
 
 
-        void ExpList::FwdTrans(const ExpList &Sin)
+        void ExpList::FwdTrans_IterPerExp(const ExpList &Sin)
         {
             ASSERTL2(Sin.GetPhysState() == true,
                      "Sin physical space is not true ");
             
-            FwdTrans(Sin.GetPhys(),m_coeffs);
+            FwdTrans_IterPerExp(Sin.GetPhys(),m_coeffs);
             m_transState = eLocal;
         }
 
@@ -380,8 +380,8 @@ namespace Nektar
 
         }
 
-        void ExpList::FwdTrans(const Array<OneD, const NekDouble> &inarray, 
-                               Array<OneD, NekDouble> &outarray)
+        void ExpList::FwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray, 
+                                          Array<OneD, NekDouble> &outarray)
         {
             Array<OneD,NekDouble> f(m_ncoeffs);
 
@@ -767,7 +767,7 @@ namespace Nektar
         }
 
 
-        void ExpList::BwdTrans(const ExpList &Sin)
+        void ExpList::BwdTrans_IterPerExp(const ExpList &Sin)
         {
             ASSERTL2(Sin.GetTransState() == eLocal ||
                      Sin.GetTransState() == eLocalCont, 
@@ -777,8 +777,8 @@ namespace Nektar
             m_physState = true;
         }
         
-        void ExpList::BwdTrans(const Array<OneD, const NekDouble> &inarray,
-                               Array<OneD, NekDouble> &outarray)
+        void ExpList::BwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray,
+                                   Array<OneD, NekDouble> &outarray)
         {
             int  i;
             int  cnt  = 0;

@@ -112,15 +112,31 @@ namespace Nektar
         
         void ContExpList1D::IProductWRTBase(const ExpList &In)
         {
-            if(m_transState == eContinuous)
-            {
-                GlobalToLocal();
-            }
-            ExpList1D::IProductWRTBase(In);
-            Assemble();
+            
+            IProductWRTBase(In.GetPhys(),m_contCoeffs,m_coeffs);
             m_transState = eLocalCont;
         }
         
+        // Note inarray is assumed to be of size m_contExpList2D;
+        void ContExpList1D::IProductWRTBase(const Array<OneD, const NekDouble> &inarray,  Array<OneD, NekDouble> &outarray, Array<OneD, NekDouble> &wksp)
+        {
+            Array<OneD, NekDouble> tmp;
+            
+            if(wksp == NullNekDouble1DArray)
+            {
+                tmp =  Array<OneD, NekDouble>(m_ncoeffs);
+            }
+            else
+            {
+                tmp = wksp;
+            }
+
+            IProductWRTBase_IterPerExp(inarray,tmp);
+            
+            Assemble(tmp,outarray);
+        }
+
+
         void ContExpList1D::GeneralMatrixOp(const GlobalLinSysKey &gkey,
                                             const Array<OneD, const NekDouble> &inarray,
                                             Array<OneD, NekDouble> &outarray)
@@ -132,14 +148,24 @@ namespace Nektar
             Assemble(tmp,outarray);
         }
 
+
         void ContExpList1D::FwdTrans(const ExpList &In)
         {
-            IProductWRTBase(In);
+            FwdTrans(In.GetPhys(),m_contCoeffs);
             
+	    m_transState = eContinuous;
+	    m_physState = false;
+        }
+
+        void ContExpList1D::FwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                             Array<OneD, NekDouble> &outarray)
+        {
+            IProductWRTBase(inarray,outarray);
+
             GlobalLinSysSharedPtr mass_matrix;
             GlobalLinSysKey key(StdRegions::eMass);
             GlobalLinSysMap::iterator matrixIter = m_globalMat->find(key);
-            
+           
             if(matrixIter == m_globalMat->end())
             {
                 mass_matrix = GenGlobalLinSys(key,m_locToGloMap);
@@ -149,29 +175,49 @@ namespace Nektar
             {
                 mass_matrix = matrixIter->second;
             }
-            
-            mass_matrix->Solve(m_contCoeffs,m_contCoeffs,*m_locToGloMap);
-            m_transState = eContinuous;
-            m_physState = false;
+            mass_matrix->Solve(outarray,outarray,*m_locToGloMap);
         }
 
 
+        // Note this routine can overwrite this->m_coeff
         void ContExpList1D::BwdTrans(const ExpList &In)
         {
+            Array<OneD, NekDouble> tmp;
 
             if(m_transState == eContinuous)
             {
-                GlobalToLocal();
+                GlobalToLocal(In.GetContCoeffs(),m_coeffs);
+                tmp = m_coeffs;
+            }
+            else
+            {
+                tmp = In.GetCoeffs();
             }
 
-            ExpList1D::BwdTrans(In);
+            BwdTrans_IterPerExp(tmp,m_phys);
+
+	    m_physState = true;
         }
+
+
+        void ContExpList1D::BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            Array<OneD, NekDouble> tmp(m_ncoeffs);
+            
+            GlobalToLocal(inarray,tmp);
+
+            BwdTrans_IterPerExp(tmp,outarray);
+        }
+
 
     } //end of namespace
 } //end of namespace
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.33  2008/09/16 13:36:05  pvos
+* Restructured the LocalToGlobalMap classes
+*
 * Revision 1.32  2008/07/10 13:02:33  pvos
 * Added periodic boundary conditions functionality
 *

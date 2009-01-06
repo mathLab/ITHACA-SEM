@@ -55,19 +55,42 @@ int main(int argc, char *argv[])
     AdvectionDiffusionReaction dom(fileNameString);
     
     int nsteps = dom.GetSteps();
-    
+    NekDouble lambda = 0.0;
+
     dom.Summary(cout);
+    
+    dom.ZeroPhysFields(); // Zero phys field so that following switch is consistent
+    
+    switch(dom.GetEquationType())
+    {
+    case eHelmholtz: case eSteadyDiffusionReaction:
+        lambda = dom.GetParameter("Lambda");
+    case ePoisson: case eSteadyDiffusion: // lambda is zero 
+        dom.SetPhysForcingFunctions(dom.UpdateFields());        
+    case eLaplace:                        // forcing function is zero
+        // Solve the appropriate Helmholtz problem 
+        dom.SolveHelmholtz(lambda);
+        break;
+    case eAdvection:
+        // Set up the intial conditions 
+        dom.SetInitialConditions();
         
-    // Set up the intial conditions -- Could put in initialisation??
-    dom.SetInitialConditions();
-
-    // Integrate from start time to end time
-    dom.ExplicitlyIntegrateAdvection(nsteps);
-
+        // Integrate from start time to end time
+        dom.ExplicitlyIntegrateAdvection(nsteps);
+        break;
+    case eNoEquationType:
+    default:
+        ASSERTL0(false,"Unknown or undefined equation type");
+    }
      // Dump output
     dom.Output();
 
-    cout << "L2 Error: " << dom.L2Error(0) << endl;
+    // Evaluate L2 Error
+    for(int i = 0; i < dom.GetNvariables(); ++i)
+    {
+        cout << "L2 Error (variable "<< dom.GetVariable(i) <<"): " << dom.L2Error(i) << endl;
+    }
+
 }
 
 /**

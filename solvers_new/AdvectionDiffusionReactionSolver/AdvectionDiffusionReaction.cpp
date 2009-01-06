@@ -37,7 +37,6 @@
 #include <AdvectionDiffusionReactionSolver/AdvectionDiffusionReaction.h>
 #include <cstdio>
 #include <cstdlib>
-
 namespace Nektar
 {
     /**
@@ -49,6 +48,8 @@ namespace Nektar
     {     
     }
     
+    int nocase_cmp(const string & s1, const string& s2);
+
     /**
      * Constructor. Creates ... of #DisContField2D fields
      *
@@ -59,38 +60,78 @@ namespace Nektar
         ADRBase(fileNameString,true),
         m_infosteps(10)
     {
-        m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+
+        // Set up equation type enum using kEquationTypeStr
         
-        for(int i = 0; i < m_spacedim; ++i)
+        const std::string typeStr = m_boundaryConditions->GetEquationTypeStr();
+
+#if 0 
+        const std::string* begStr = kEquationTypeStr;
+        const std::string* endStr = kEquationTypeStr+eEquationTypeSize;
+        const std::string* eqnStr = std::find(begStr, endStr, typeStr);
+        
+        ASSERTL0(eqnStr != endStr, "Invalid expansion type.");
+        m_equationType = (EquationType)(eqnStr-begStr); 
+#else
+        for(int i = 0; i < (int) eEquationTypeSize; ++i)
         {
-            m_velocity[i] = Array<OneD, NekDouble> (GetPointsTot());
-        }
-        
-        EvaluateAdvectionVelocity();
-        
-        if(m_boundaryConditions->CheckForParameter("IO_InfoSteps") == true)
-        {
-            m_infosteps =  m_boundaryConditions->GetParameter("IO_InfoSteps");
+            if(nocase_cmp(kEquationTypeStr[i],typeStr) == 0 )
+            {
+                m_equationType = (EquationType)i; 
+                break;
+            }
         }
 
-	// check that any user defined boundary condition is indeed implemented
-	for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
-	  {	
-	    // Time Dependent Boundary Condition (if no use defined then this is empty)
-	    if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "")
-	      {
-		if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "TimeDependent")
-		  {
-		    ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
-		  }
-	      }
-	  }
-	
+        //ASSERTL0(i != (int) eEquationTypeSize, "Invalid expansion type.");
+#endif
+        
+        
+        // Equation specific Setups 
+        switch(m_equationType)
+        {
+        case eHelmholtz:
+            break;
+        case eAdvection:
+            m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+        
+            for(int i = 0; i < m_spacedim; ++i)
+            {
+                m_velocity[i] = Array<OneD, NekDouble> (GetNpoints());
+            }
+            
+            EvaluateAdvectionVelocity();
+            goto UnsteadySetup;
+            break;
+
+        UnsteadySetup:
+            
+            if(m_boundaryConditions->CheckForParameter("IO_InfoSteps") == true)
+            {
+                m_infosteps =  m_boundaryConditions->GetParameter("IO_InfoSteps");
+            }
+            
+            // check that any user defined boundary condition is indeed implemented
+            for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+            {	
+                // Time Dependent Boundary Condition (if no use defined then this is empty)
+                if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "")
+                {
+                    if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "TimeDependent")
+                    {
+                        ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
+                    }
+                }
+            }
+            break;
+        case eNoEquationType:
+        default:
+            ASSERTL0(false,"Unknown or undefined equation type");
+        }
     }
 
     void AdvectionDiffusionReaction::EvaluateAdvectionVelocity()
     {
-        int nq = m_fields[0]->GetPointsTot();
+        int nq = m_fields[0]->GetNpoints();
         
         std::string velStr[3] = {"Vx","Vy","Vz"};
 
@@ -136,7 +177,7 @@ namespace Nektar
 	  break;
         case eGalerkin:
 	  {
-                Array<OneD, NekDouble> physfield(GetPointsTot());
+                Array<OneD, NekDouble> physfield(GetNpoints());
 		
                 for(i = 0; i < nvariables; ++i)
 		  {
@@ -150,7 +191,7 @@ namespace Nektar
                     
                     //Multiply by inverse of mass matrix to get forcing term
 		    m_fields[i]->MultiplyByInvMassMatrix(outarray[i],  
-                                                        outarray[i],
+                                                         outarray[i],
                                                          false,true);
 		   		    
                 }
@@ -161,6 +202,15 @@ namespace Nektar
             break;
         }
     }
+
+    void AdvectionDiffusionReaction::SolveHelmholtz(NekDouble lambda)
+    {
+        for(int i = 0; i < m_fields.num_elements(); ++i)
+        {
+            m_fields[i]->HelmSolve(*(m_fields[i]),lambda);
+        }
+    }
+
 
     void AdvectionDiffusionReaction::ExplicitlyIntegrateAdvection(int nsteps)
     {
@@ -244,7 +294,7 @@ namespace Nektar
 
         for(int j = 0; j < flux.num_elements(); ++j)
         {
-            Vmath::Vmul(GetPointsTot(),physfield[i],1,
+            Vmath::Vmul(GetNpoints(),physfield[i],1,
                         m_velocity[j],1,flux[j],1);
         }
     }
@@ -254,7 +304,7 @@ namespace Nektar
     {
         int i;
 
-        int nTraceNumPoints = GetTracePointsTot();
+        int nTraceNumPoints = GetTraceNpoints();
         int nvel = m_velocity.num_elements();
 
         Array<OneD, NekDouble > Fwd(nTraceNumPoints);
@@ -284,7 +334,7 @@ namespace Nektar
     {
         int i;
 
-        int nTraceNumPoints = GetTracePointsTot();
+        int nTraceNumPoints = GetTraceNpoints();
         int nvel = m_velocity.num_elements();
 
         Array<OneD, NekDouble > Fwd(nTraceNumPoints);
@@ -312,15 +362,58 @@ namespace Nektar
     void AdvectionDiffusionReaction::Summary(std::ostream &out)
     {   
       cout << "=======================================================================" << endl;
-      cout << "\tEquation Type   : Advection Equation" << endl;
-      ADRBase::Summary(out);
+      cout << "\tEquation Type   : "<< kEquationTypeStr[m_equationType] << endl;
+      ADRBase::SessionSummary(out);
+      switch(m_equationType)
+      {
+      case eSteadyDiffusion: case eSteadyDiffusionReaction:
+      case eHelmholtz: case eLaplace: case ePoisson:
+          out << "\tLambda          : " << m_boundaryConditions->GetParameter("Lambda") << endl;
+          
+          break;
+      case eAdvection:
+          ADRBase::TimeParamSummary(out);
+          break;
+      }
       cout << "=======================================================================" << endl;
 
     }
+
+    // case insensitive string comparison from web
+    int nocase_cmp(const string & s1, const string& s2) 
+    {
+        string::const_iterator it1=s1.begin();
+        string::const_iterator it2=s2.begin();
+        
+        //stop when either string's end has been reached
+        while ( (it1!=s1.end()) && (it2!=s2.end()) ) 
+        { 
+            if(::toupper(*it1) != ::toupper(*it2)) //letters differ?
+            {
+                // return -1 to indicate smaller than, 1 otherwise
+                return (::toupper(*it1)  < ::toupper(*it2)) ? -1 : 1; 
+            }
+            //proceed to the next character in each string
+            ++it1;
+            ++it2;
+        }
+        size_t size1=s1.size(), size2=s2.size();// cache lengths
+
+        //return -1,0 or 1 according to strings' lengths
+        if (size1==size2) 
+        {
+            return 0;
+        }
+        return (size1 < size2) ? -1 : 1;
+    }
+
 } //end of namespace
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.5  2008/11/19 10:53:51  pvos
+* Made 2D CG version working
+*
 * Revision 1.4  2008/11/17 08:20:14  claes
 * Temporary fix for CG schemes. 1D CG working (but not for userdefined BC). 1D DG not working
 *

@@ -41,6 +41,31 @@
 
 namespace Nektar
 {     
+
+    enum EquationType
+    {
+        eNoEquationType,
+        eAdvection,
+        eSteadyDiffusion,
+        eSteadyDiffusionReaction,
+        eLaplace,
+        ePoisson,
+        eHelmholtz,
+        eEquationTypeSize
+    };
+    
+    // Keep this consistent with the enums in EquationType.
+    const std::string kEquationTypeStr[] = 
+    {
+        "NoType",
+        "Advection",
+        "SteadyDiffusion",
+        "SteadyDiffusionReaction",
+        "Laplace",
+        "Poisson",
+        "Helmholtz"
+    };
+
     /**
      * \brief This class is the base class for the development of solvers.
      *
@@ -67,6 +92,11 @@ namespace Nektar
          */
         AdvectionDiffusionReaction(string &fileStringName);
 
+        EquationType GetEquationType(void)
+        {
+            return m_equationType;
+        }
+
 
         void GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> >&physfield, Array<OneD, Array<OneD, NekDouble> >&flux);
 
@@ -81,13 +111,17 @@ namespace Nektar
 
         void ExplicitlyIntegrateAdvection(int nsteps);
 
+        void SolveHelmholtz(NekDouble lambda);
+
         void Summary(std::ostream &out);
 
 
     protected:
 
     private: 
-        int m_infosteps;  ///< dump info to stdout at steps time
+        int m_infosteps;             ///< dump info to stdout at steps time
+        EquationType m_equationType; ///< equation type;
+
         Array<OneD, Array<OneD, NekDouble> >  m_velocity;
 
         void EvaluateAdvectionVelocity();
@@ -119,6 +153,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.h,v $
+* Revision 1.3  2008/11/17 08:20:14  claes
+* Temporary fix for CG schemes. 1D CG working (but not for userdefined BC). 1D DG not working
+*
 * Revision 1.2  2008/11/12 12:12:26  pvos
 * Time Integration update
 *

@@ -89,6 +89,7 @@ namespace Nektar
                 return m_userDefined;
             }
 
+
         protected:
             BoundaryConditionType m_BoundaryConditionType;
             Equation m_userDefined;
@@ -177,6 +178,7 @@ namespace Nektar
         typedef boost::shared_ptr<const UserDefinedEqn> ConstUserDefinedEqnShPtr;
         typedef std::map<std::string, UserDefinedEqnShPtr> UserDefinedEqnMap;
 
+
         typedef Equation InitialCondition;
         typedef boost::shared_ptr<InitialCondition> InitialConditionShPtr;
         typedef boost::shared_ptr<const InitialCondition> ConstInitialConditionShPtr;
@@ -242,6 +244,11 @@ namespace Nektar
                 return m_Parameters;
             }
 
+            const std::string &GetEquationTypeStr(void)
+            {
+                return m_EquationTypeStr;
+            }
+
             const std::string &GetFunction(const std::string &lhs);
             Equation GetFunctionAsEquation(const std::string &lhs);
 
@@ -252,6 +259,7 @@ namespace Nektar
             bool SubstituteFunction(std::string &str);
 
         protected:
+            void ReadSolverInfo(TiXmlElement *functions);
             void ReadParameters(TiXmlElement *parameters);
             void ReadVariables(TiXmlElement *variables);
             void ReadFunctions(TiXmlElement *conditions);
@@ -268,10 +276,12 @@ namespace Nektar
             Variable        m_Variables;
             BoundaryRegionCollection    m_BoundaryRegions;
             BoundaryConditionCollection m_BoundaryConditions;
-            ForcingFunctionsMap  m_ForcingFunctions;
-            InitialConditionsMap m_InitialConditions;
-            ExactSolutionMap     m_ExactSolution;
-            UserDefinedEqnMap    m_UserDefinedEqn;
+            ForcingFunctionsMap         m_ForcingFunctions;
+            InitialConditionsMap        m_InitialConditions;
+            ExactSolutionMap            m_ExactSolution;
+            UserDefinedEqnMap           m_UserDefinedEqn;
+
+            std::string                 m_EquationTypeStr; //< Equation type to be solved 
 
             /// The mesh graph to use for referencing geometry info.
             const MeshGraph *m_MeshGraph;

@@ -49,7 +49,8 @@ namespace Nektar
         ParamMap BoundaryConditions::m_Parameters;
 
         BoundaryConditions::BoundaryConditions(const MeshGraph *meshGraph):
-            m_MeshGraph(meshGraph)
+            m_MeshGraph(meshGraph),
+            m_EquationTypeStr("NOTYPE")
         {
         }
 
@@ -82,6 +83,8 @@ namespace Nektar
             ASSERTL0(conditions, "Unable to find BOUNDARYCONDITIONS tag in file.");
 
             // Now read all the different tagged sections
+            ReadSolverInfo(conditions);
+
             ReadParameters(conditions);
             
             ReadFunctions(conditions);
@@ -99,6 +102,7 @@ namespace Nektar
             ReadExactSolution(conditions);
 
             ReadUserDefinedEqn(conditions);
+
         }
 
         void BoundaryConditions::ReadParameters(TiXmlElement *conditions)
@@ -698,9 +702,11 @@ namespace Nektar
             {
                 TiXmlElement *exactSolution = exactSolutionElement->FirstChildElement("F");
 
-                // All exact solution functions are initialized to "0" so they only have to be
-                // partially specified.  That is, not all variables have to have functions
-                // specified.  For those that are missing it is assumed they are "0".
+                // All exact solution functions are initialized to "0"
+                // so they only have to be partially specified.  That
+                // is, not all variables have to have functions
+                // specified.  For those that are missing it is
+                // assumed they are "0".
                 for (Variable::iterator varIter = m_Variables.begin();
                     varIter != m_Variables.end(); ++varIter)
                 {
@@ -738,6 +744,23 @@ namespace Nektar
                 }
             }
         }
+
+        void BoundaryConditions::ReadSolverInfo(TiXmlElement *function)
+        {
+            TiXmlElement *solverInfoElement = function->FirstChildElement("SOLVERINFO");
+
+            if (solverInfoElement)
+            {
+                TiXmlElement *solverInfo = solverInfoElement->FirstChildElement("I");
+                std::string eqntypeString = solverInfo->Attribute("EQTYPE");
+                ASSERTL0(!eqntypeString.empty(),"Unable to find type value");
+                
+                // Set Variable
+                m_EquationTypeStr = eqntypeString;
+                
+            }
+        }
+
 
         void BoundaryConditions::ReadUserDefinedEqn(TiXmlElement *function)
         {

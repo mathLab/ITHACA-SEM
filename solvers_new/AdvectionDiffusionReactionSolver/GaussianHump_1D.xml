@@ -43,6 +43,10 @@
       <P> IO_InfoSteps   = 100               </P>
       <P> DisContinuous  = 1                 </P>
    </PARAMETERS>
+
+    <SOLVERINFO>
+      <I EQTYPE="Advection" />
+    </SOLVERINFO> 
     
     <VARIABLES>
       <V ID="0"> u </V> 

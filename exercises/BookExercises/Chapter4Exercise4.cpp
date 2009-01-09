@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
         
             // CONSTRUCT THE RIGHT HAND SIDE VECTOR
             // Evaluate the forcing function at the quadrature points
-            int nTotQuadPoints = multiElementExp->GetPointsTot();
+            int nTotQuadPoints = multiElementExp->GetTotPoints();
             Array<OneD,NekDouble> x1(nTotQuadPoints);
             Array<OneD,NekDouble> x2(nTotQuadPoints);
             multiElementExp->GetCoords(x1,x2);
@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
                 MemoryManager<MultiRegions::ContExpList2D>::AllocateSharedPtr(mesh);
 
             // Evaluate the forcing function at the quadrature points
-            int nTotQuadPoints = multiElementExp->GetPointsTot();
+            int nTotQuadPoints = multiElementExp->GetTotPoints();
             Array<OneD,NekDouble> x1(nTotQuadPoints);
             Array<OneD,NekDouble> x2(nTotQuadPoints);
             multiElementExp->GetCoords(x1,x2);

@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
             MemoryManager<MultiRegions::ContExpList1D>::AllocateSharedPtr(mesh);
 
 		// Evaluate the forcing function at the quadrature points
-        int nTotQuadPoints = multiElementExp->GetPointsTot();
+        int nTotQuadPoints = multiElementExp->GetTotPoints();
         Array<OneD,NekDouble> x(nTotQuadPoints);
         multiElementExp->GetCoords(x);
 
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
             MemoryManager<MultiRegions::ContField1D>::AllocateSharedPtr(mesh,boundaryConds);
 
 		// Evaluate the forcing function at the quadrature points
-        int nTotQuadPoints = multiElementExp->GetPointsTot();
+        int nTotQuadPoints = multiElementExp->GetTotPoints();
         Array<OneD,NekDouble> x(nTotQuadPoints);
         multiElementExp->GetCoords(x);
 

@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 
         // Before actually starting to solve the Helmholtz problem, we need to evaluate the 
         // forcing function at the quadrature points of the (discrete) spectral/hp expansion
-        int nTotQuadPoints = spectralHpExp->GetPointsTot();
+        int nTotQuadPoints = spectralHpExp->GetTotPoints();
         // Get the (local) coordinates of all the quadrature points
         Array<OneD,NekDouble> x1(nTotQuadPoints,0.0);
         Array<OneD,NekDouble> x2(nTotQuadPoints,0.0);

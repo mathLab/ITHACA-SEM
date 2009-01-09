@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 		
         // Set up coordinates of mesh for Forcing function evaluation
         int coordim = multiElementExp->GetCoordim(0);
-        int nTotQuadPoints      = multiElementExp->GetPointsTot();
+        int nTotQuadPoints      = multiElementExp->GetTotPoints();
 	    
         Array<OneD,NekDouble>  xc0,xc1,xc2; 
         xc0 = Array<OneD,NekDouble>(nTotQuadPoints);

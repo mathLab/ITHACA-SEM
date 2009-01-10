@@ -122,14 +122,14 @@ namespace Nektar
 	      SpatialDomains::MeshGraph1DSharedPtr mesh1D;
 	      
 	      if(!(mesh1D = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph1D>(mesh)))
-		{
+              {
 		  ASSERTL0(false,"Dynamics cast failed");
-		}
+              }
 	      
 	      for(i = 0 ; i < m_fields.num_elements(); i++)
-		{
-		  m_fields[i] = MemoryManager<MultiRegions::ContField1D>::AllocateSharedPtr(*mesh1D,*m_boundaryConditions);
-		}
+              {
+		  m_fields[i] = MemoryManager<MultiRegions::ContField1D>::AllocateSharedPtr(*mesh1D,*m_boundaryConditions,i);
+              }
 	    }
 	    break;
 	  case 2:
@@ -137,14 +137,14 @@ namespace Nektar
 	      SpatialDomains::MeshGraph2DSharedPtr mesh2D;
               
 	      if(!(mesh2D = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(mesh)))
-		{
+              {
 		  ASSERTL0(false,"Dynamics cast failed");
-		}
+              }
 	      
 	      for(i = 0 ; i < m_fields.num_elements(); i++)
-		{
-		  m_fields[i] = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(*mesh2D,*m_boundaryConditions);
-		}
+              {
+                  m_fields[i] = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(*mesh2D,*m_boundaryConditions,i);
+              }
 	      break;
 	    }
 	  case 3:
@@ -628,6 +628,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.7  2009/01/06 21:11:03  sherwin
+* Updates for Virtual ExpList calls
+*
 * Revision 1.6  2008/11/17 08:10:07  claes
 * Removed functions that were no longer used after the solver library was restructured
 *

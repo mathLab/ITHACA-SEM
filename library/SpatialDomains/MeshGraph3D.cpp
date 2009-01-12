@@ -1061,7 +1061,7 @@ namespace Nektar
                     }
                 }
                 break;
-            case eNodal:
+            case eGLL_Lagrange:
                 {
                     TriGeomSharedPtr triangle = boost::dynamic_pointer_cast<TriGeom>(face);
                     QuadGeomSharedPtr quadrilateral = boost::dynamic_pointer_cast<QuadGeom>(face);
@@ -1119,7 +1119,13 @@ namespace Nektar
                         break;
                         }
                 }
-                break;       
+                break;              
+            case eGLL_Lagrange_SEM:
+                {
+                    const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussLobattoLegendre);
+                    return LibUtilities::BasisKey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
+                }
+                break;     
             default:
                 ASSERTL0(false,"expansion type unknown");
                 return LibUtilities::NullBasisKey; // Keep things happy by returning a value.
@@ -1134,6 +1140,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph3D.cpp,v $
+// Revision 1.11  2008/09/23 18:19:56  pvos
+// Updates for working ProjectContField3D demo
+//
 // Revision 1.10  2008/09/12 11:26:19  pvos
 // Updates for mappings in 3D
 //

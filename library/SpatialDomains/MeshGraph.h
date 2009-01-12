@@ -63,7 +63,8 @@ namespace Nektar
             eNoExpansionType,
             eModified,
             eOrthogonal,
-            eNodal,
+            eGLL_Lagrange,
+            eGLL_Lagrange_SEM,
             eExpansionTypeSize
         };
 
@@ -74,7 +75,8 @@ namespace Nektar
             "NOTYPE",
             "MODIFIED",
             "ORTHOGONAL",
-            "NODAL"
+            "GLL_LAGRANGE",
+            "GLL_LAGRANGE_SEM"
         };
 
         typedef boost::shared_ptr<InterfaceComponent> SharedInterfaceCompPtr;
@@ -257,6 +259,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.30  2008/10/04 19:32:47  sherwin
+// Added SharedPtr Typedef and replaced MeshDimension with SpaceDimension
+//
 // Revision 1.29  2008/09/09 14:20:30  sherwin
 // Updated to handle curved edges (first working version)
 //

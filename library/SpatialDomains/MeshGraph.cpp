@@ -646,7 +646,7 @@ namespace Nektar
                 break;
             }
             break;
-        case eNodal:
+        case eGLL_Lagrange:
             {
                 SegGeomSharedPtr segment = boost::dynamic_pointer_cast<SegGeom>(in->m_GeomShPtr);
                 TriGeomSharedPtr triangle = boost::dynamic_pointer_cast<TriGeom>(in->m_GeomShPtr);
@@ -714,6 +714,12 @@ namespace Nektar
             default:
                 ASSERTL0(false,"invalid value to flag");
                 break;
+            }
+            break;
+        case eGLL_Lagrange_SEM:
+            {   
+                const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussLobattoLegendre);
+                return LibUtilities::BasisKey(LibUtilities::eGLL_Lagrange,order,pkey);
             }
             break;
         default:
@@ -1156,6 +1162,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.26  2008/10/04 19:32:46  sherwin
+// Added SharedPtr Typedef and replaced MeshDimension with SpaceDimension
+//
 // Revision 1.25  2008/09/09 14:20:30  sherwin
 // Updated to handle curved edges (first working version)
 //

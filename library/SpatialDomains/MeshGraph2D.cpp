@@ -645,7 +645,7 @@ namespace Nektar
                     return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
                 }
                 break;
-            case eNodal:
+            case eGLL_Lagrange:
                 {
                     const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
                     return LibUtilities::BasisKey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
@@ -656,7 +656,13 @@ namespace Nektar
                     const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
                     return LibUtilities::BasisKey(LibUtilities::eOrtho_A,nummodes,pkey);
                 }
-                break;       
+            case eGLL_Lagrange_SEM:
+                break;    
+                {
+                    const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussLobattoLegendre);
+                    return LibUtilities::BasisKey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
+                }
+                break;   
             default:
                 ASSERTL0(false,"expansion type unknown");
                 return LibUtilities::NullBasisKey; // Keep things happy by returning a value.
@@ -669,6 +675,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.33  2008/09/12 11:26:19  pvos
+// Updates for mappings in 3D
+//
 // Revision 1.32  2008/09/09 14:21:44  sherwin
 // Updates for first working version of curved edges
 //

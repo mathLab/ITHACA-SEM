@@ -155,7 +155,7 @@ namespace Nektar
                     LibUtilities::BasisKey TriBa = graph2D.GetBasisKey(expansions[i],0);
                     LibUtilities::BasisKey TriBb = graph2D.GetBasisKey(expansions[i],1);
                     
-                    if(expansions[i]->m_ExpansionType == SpatialDomains::eNodal)
+                    if(expansions[i]->m_ExpansionType == SpatialDomains::eGLL_Lagrange)
                     {
                         TriNb = LibUtilities::eNodalTriElec;
                         Ntri = MemoryManager<LocalRegions::NodalTriExp>::AllocateSharedPtr(TriBa,TriBb,TriNb,TriangleGeom);
@@ -233,7 +233,7 @@ namespace Nektar
                         LibUtilities::BasisKey TriBa = graph3D.GetFaceBasisKey(TriangleGeom,0);
                         LibUtilities::BasisKey TriBb = graph3D.GetFaceBasisKey(TriangleGeom,1);
                         
-                        if((graph3D.GetExpansions())[0]->m_ExpansionType == SpatialDomains::eNodal)
+                        if((graph3D.GetExpansions())[0]->m_ExpansionType == SpatialDomains::eGLL_Lagrange)
                         {
                             TriNb = LibUtilities::eNodalTriElec;
                             Ntri = MemoryManager<LocalRegions::NodalTriExp>::AllocateSharedPtr(TriBa,TriBb,TriNb,TriangleGeom);
@@ -482,6 +482,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.cpp,v $
+* Revision 1.23  2009/01/06 21:05:57  sherwin
+* Added virtual function calls for BwdTrans, FwdTrans and IProductWRTBase from the class ExpList. Introduced _IterPerExp versions of these methods in ExpList.cpp§
+*
 * Revision 1.22  2008/09/23 18:21:00  pvos
 * Updates for working ProjectContField3D demo
 *

@@ -184,7 +184,7 @@ namespace Nektar
                     LibUtilities::BasisKey TetBb = graph3D.GetBasisKey(expansions[i],1);
                     LibUtilities::BasisKey TetBc = graph3D.GetBasisKey(expansions[i],2);
                     
-                    if(expansions[i]->m_ExpansionType == SpatialDomains::eNodal)
+                    if(expansions[i]->m_ExpansionType == SpatialDomains::eGLL_Lagrange)
                     {
                       ASSERTL0(false,"LocalRegions::NodalTetExp is not implemented yet");
                     }

@@ -212,7 +212,7 @@ namespace Nektar
             ASSERTL2(Sin.GetPhysState() == true,
                      "Physical space is not set to true ");
             
-            IProductWRTBase(Sin.GetPhys(),m_coeffs);
+            IProductWRTBase_IterPerExp(Sin.GetPhys(),m_coeffs);
             m_physState = false;
         }
         
@@ -385,7 +385,7 @@ namespace Nektar
         {
             Array<OneD,NekDouble> f(m_ncoeffs);
 
-            IProductWRTBase(inarray,f);
+            IProductWRTBase_IterPerExp(inarray,f);
             MultiplyByElmtInvMass(f,outarray);
 
         }
@@ -773,7 +773,7 @@ namespace Nektar
                      Sin.GetTransState() == eLocalCont, 
                      "Error input state is not in transformed space");
             
-            BwdTrans(Sin.GetCoeffs(),m_phys);
+            BwdTrans_IterPerExp(Sin.GetCoeffs(),m_phys);
             m_physState = true;
         }
         

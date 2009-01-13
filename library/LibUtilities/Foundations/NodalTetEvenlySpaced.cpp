@@ -59,6 +59,9 @@ namespace Nektar
     {
         namespace
         {
+           // construct the geometory and set the coordinate of tetrahedron
+           // edges and vertices are ordered as anticlockwise
+           
             bool isVertex(int x, int y, int z, int npts){
                 return (x==0 && y==0 && z==0) || (x==(npts-1) && y==0 && z==0) || (x==0 && y==(npts-1) && z==0) || (x==0 && y==0 && z==(npts-1));
             }
@@ -119,7 +122,7 @@ namespace Nektar
 
         }
 
-        
+        // Calculate evenly spaced number of points
         void NodalTetEvenlySpaced::CalculatePoints()
         {
             // Allocate the storage for points

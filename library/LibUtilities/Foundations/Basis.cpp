@@ -139,6 +139,12 @@ namespace Nektar
 
             switch(GetBasisType())
             {
+            
+            /** \brief Orthogonal basis A
+            
+            \f$\tilde \psi_p^a (\eta_1) = L_p(\eta_1) = P_p^{0,0}(\eta_1)\f$
+            
+           */
             case eOrtho_A:
             case eLegendre:
                 mode = m_bdata.data();
@@ -158,6 +164,16 @@ namespace Nektar
                             m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);
                 break;
 
+            /** \brief Orthogonal basis B
+            
+            \f$\tilde \psi_{pq}^b(\eta_2) = \left ( {1 - \eta_2} \over 2 \right)^p P_q^{2p+1,0}(\eta_2)\f$ \\
+            
+           */
+
+            // This is tilde psi_pq in Spen's book, page 105
+            // The 3-dimensional array is laid out in memory such that
+            // 1) Eta_y values are the changing the fastest, then q and p.
+            // 2) q index increases by the stride of numPoints.
             case eOrtho_B:
                 {                       
                      NekDouble *mode = m_bdata.data();
@@ -178,7 +194,13 @@ namespace Nektar
                      Blas::Dgemm('n','n',numPoints,numModes*(numModes+1)/2,numPoints,1.0,D,numPoints,
                                   m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);
                 }
-                break; 
+                break;
+
+            /** \brief Orthogonal basis C
+            
+            \f$\tilde \psi_{pqr}^c = \left ( {1 - \eta_3} \over 2 \right)^{p+q} P_r^{2p+2q+2, 0}(\eta_3)\f$ \\
+            
+           */                
 
             // This is tilde psi_pqr in Spen's book, page 105
             // The 4-dimensional array is laid out in memory such that 
@@ -566,6 +588,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.36  2008/11/23 00:31:19  sherwin
+* Added modified_C and normalised ortho_c
+*
 * Revision 1.35  2008/11/16 23:45:57  sherwin
 * Updates to include Modified_C for tets
 *

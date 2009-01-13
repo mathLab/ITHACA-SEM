@@ -59,6 +59,8 @@ namespace Nektar
     {
 
 
+        // ////////////////////////////////////////////////////////
+        //  Coordinate the nodal trianlge Fekete points
         void NodalTriFekete::CalculatePoints()
         {
             // Allocate the storage for points
@@ -296,6 +298,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTriFekete.cpp,v $
+* Revision 1.27  2008/12/18 14:07:46  pvos
+* NekConstants update
+*
 * Revision 1.26  2008/11/01 22:04:34  bnelson
 * Removed references to MatrixStoragePolicy<T>
 *

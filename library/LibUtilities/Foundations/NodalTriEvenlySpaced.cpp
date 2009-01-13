@@ -59,6 +59,8 @@ namespace Nektar
     {
         namespace
         {
+           // construct the geometory and set the coordinate of triangle
+           // edges and vertices are ordered as anticlockwise
             bool isVertex(int i, int j, int npts){
                 return (i==0 && j==0) || (i==(npts-1) && j==0) || (i==0 && j==(npts-1));
             }

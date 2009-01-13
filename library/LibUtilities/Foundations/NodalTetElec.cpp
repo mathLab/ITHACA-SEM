@@ -49,6 +49,10 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
+    
+        // ////////////////////////////////////////////////////////
+        //  Coordinate the nodal tetrahedron electrostatic points
+        
         void NodalTetElec::CalculatePoints()
         {
             // Allocate the storage for points
@@ -274,6 +278,9 @@ namespace Nektar
 
 /**
 * $Log: NodalTetElec.cpp,v $
+* Revision 1.14  2008/11/01 22:04:34  bnelson
+* Removed references to MatrixStoragePolicy<T>
+*
 * Revision 1.13  2008/04/06 05:54:08  bnelson
 * Changed ConstArray to Array<const>
 *

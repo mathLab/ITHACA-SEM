@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<NEKTAR>
+
+  <GEOMETRY DIM="1" SPACE="2">
+
+    
+    <VERTEX>
+
+      <!-- Always must have four values per entry. -->
+      
+      <V ID="0">  0.0     0.0    0.0 </V>
+      
+      <V ID="1">  0.0625  0.0    0.0 </V>
+      
+      <V ID="2">  0.125   0.0    0.0 </V>
+      
+      <V ID="3">  0.1875  0.0    0.0 </V>
+      
+      <V ID="4">  0.25    0.0    0.0 </V>
+      
+      <V ID="5">  0.3125  0.0    0.0 </V>
+      
+      <V ID="6">  0.375   0.0    0.0 </V>
+      
+      <V ID="7">  0.4375  0.0    0.0 </V>
+      
+      <V ID="8">  0.5     0.0    0.0 </V>
+      
+      <V ID="9">  0.5625  0.0    0.0 </V>
+      
+      <V ID="10"> 0.625   0.0    0.0 </V>
+      
+      <V ID="11"> 0.6875  0.0    0.0 </V>
+      
+      <V ID="12"> 0.75    0.0    0.0 </V>
+      
+      <V ID="13"> 0.8125  0.0    0.0 </V>
+      
+      <V ID="14"> 0.875   0.0    0.0 </V>
+      
+      <V ID="15"> 0.9375  0.0    0.0 </V>
+      
+      <V ID="16"> 1.0     0.0    0.0 </V>
+    
+    </VERTEX>
+
+
+    
+    <!-- Q - quads, T - triangles, S - segments, E - tet, P - pyramid, R - prism, H - hex -->
+
+    <!-- Only certain element types are appropriate for the given dimension (dim on mesh) -->
+
+    <!-- Can also use faces to define 3-D elements.  Specify with F[1] for face 1, for example. -->
+
+    
+    <ELEMENT>
+      
+      <S ID="0">  0  1  </S>
+      
+      <S ID="1">  1  2  </S>
+      
+      <S ID="2">  2  3  </S>
+      
+      <S ID="3">  3  4  </S>
+      
+      <S ID="4">  4  5  </S>
+      
+      <S ID="5">  5  6  </S>
+      
+      <S ID="6">  6  7  </S>
+      
+      <S ID="7">  7  8  </S>
+      
+      <S ID="8">  8  9  </S>
+      
+      <S ID="9">  9  10 </S>
+
+      <S ID="10"> 10 11 </S>
+
+      <S ID="11"> 11 12 </S>
+
+      <S ID="12"> 12 13 </S>
+
+      <S ID="13"> 13 14 </S>
+
+      <S ID="14"> 14 15 </S>
+
+      <S ID="15"> 15 16 </S>
+
+    </ELEMENT>
+
+    
+   
+    <!-- V - vertex, S - Segment, E - edge, F - face -->
+    
+    <COMPOSITE>
+      
+      <C ID="0">  S[0-15] </C>
+    
+    </COMPOSITE>
+
+    
+    
+    <DOMAIN> C[0] </DOMAIN>
+
+  
+  
+  </GEOMETRY>
+
+
+  
+  <EXPANSIONS>
+    
+    <E COMPOSITE="C[0]" NUMMODES="3" TYPE="ORTHOGONAL" />
+  
+  </EXPANSIONS>
+
+</NEKTAR>

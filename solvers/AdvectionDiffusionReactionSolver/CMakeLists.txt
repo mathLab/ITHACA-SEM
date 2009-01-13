@@ -1,2 +1,0 @@
-SET(AdvectionDiffusionReactionSolverSource AdvectionDiffusionReactionSolver.cpp)
-ADD_SOLVER_EXECUTABLE(AdvectionDiffusionReactionSolver ${AdvectionDiffusionReactionSolverSource})

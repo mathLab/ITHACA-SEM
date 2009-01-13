@@ -1,2 +1,0 @@
-SET(ShallowWaterSolverSource ShallowWaterSolver.cpp)
-ADD_SOLVER_EXECUTABLE(ShallowWaterSolver ${ShallowWaterSolverSource})

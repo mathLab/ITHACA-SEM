@@ -243,7 +243,6 @@ namespace Nektar
             return g;
         }
 
-        //TODO: check
         NekVector<NekDouble> MakeTetQuadratureSystem(int nBasisFunctions)
         {
             NekVector<NekDouble> g(nBasisFunctions, 0.0);

@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ExpList1D.h>
+#include <LibUtilities/Polylib/Polylib.h>
 
 namespace Nektar
 {
@@ -412,12 +413,229 @@ namespace Nektar
             }                
         }
 
+		void ExpList1D::PostProcess(LibUtilities::KernelSharedPtr kernel, 
+									Array<OneD,NekDouble> &inarray,
+									Array<OneD,NekDouble> &outarray, 
+									int elmId,
+									NekDouble h)
+
+		{
+			int i,j,r;
+			
+			// get the local element expansion of the elmId element
+			StdRegions::StdExpansionSharedPtr elmExp = GetExp(elmId);
+
+			// Get the quadrature points and weights required for integration
+			int quad_npoints = elmExp->GetTotPoints();
+			LibUtilities::PointsKey quadPointsKey(quad_npoints, elmExp->GetPointsType(0));
+			Array<OneD,NekDouble> quad_points = LibUtilities::PointsManager()[quadPointsKey]->GetZ();
+			Array<OneD,NekDouble> quad_weights = LibUtilities::PointsManager()[quadPointsKey]->GetW();
+			
+			// Declare variable for the local kernel breaks
+			int kernel_width = kernel->GetKernelWidth();
+			Array<OneD,NekDouble> local_kernel_breaks(kernel_width+1);
+
+			// Declare variable for the transformed quadrature points
+			Array<OneD,NekDouble> mapped_quad_points(quad_npoints);
+			
+			// For each evaluation point
+			for(i = 0; i < inarray.num_elements(); i++)
+			{
+				// Move the center of the kernel to the current point
+				kernel->MoveKernelCenter(inarray[i],local_kernel_breaks);
+							
+				// Find the mesh breaks under the kernel support
+				Array<OneD,NekDouble> mesh_breaks;
+				kernel->FindMeshUnderKernel(local_kernel_breaks,h,mesh_breaks);
+				
+				// Sort the total breaks for integration purposes
+				int total_nbreaks = local_kernel_breaks.num_elements() + 
+									mesh_breaks.num_elements(); // number of the total breaks
+				Array<OneD,NekDouble> total_breaks(total_nbreaks);
+				kernel->Sort(local_kernel_breaks,mesh_breaks,total_breaks);
+				
+				// Integrate the product of kernel and function over the total breaks
+				NekDouble integral_value = 0.0;
+				for(j = 0; j < total_breaks.num_elements()-1; j++)
+				{
+					double a = total_breaks[j];
+					double b = total_breaks[j+1];
+					
+					// Map the quadrature points to the appropriate interval
+					for(r = 0; r < quad_points.num_elements(); r++)
+					{
+						mapped_quad_points[r] = (quad_points[r]+1.0)*0.5*(b-a)+a;
+					}
+
+					// Evaluate the function at the transformed quadrature points
+					Array<OneD,NekDouble> u_value(quad_npoints);
+					Array<OneD,NekDouble> coeffs = GetCoeffs();
+
+					//PeriodicEval(mapped_quad_points,h,u->GetExpSize(),elmExp->GetBasisNumModes(0),coeffs,u_value);
+					PeriodicEval(coeffs,mapped_quad_points,h,elmExp->GetBasisNumModes(0),u_value);
+					
+					// Evaluate the kernel at the transformed quadrature points
+					Array<OneD,NekDouble> k_value(quad_npoints);
+					kernel->EvaluateKernel(mapped_quad_points,h,k_value);
+
+					// Integrate
+					for(r = 0; r < quad_npoints; r++)
+					{
+						integral_value += (b-a)*0.5*k_value[r]*u_value[r]*quad_weights[r];
+					}
+				}
+				outarray[i] = integral_value/h;
+			}
+		}
+
+		void ExpList1D::PostProcess( LibUtilities::KernelSharedPtr kernel,
+									 Array<OneD,NekDouble> &inarray,
+									 Array<OneD,NekDouble> &outarray,
+									 NekDouble h)
+		{
+			int i,j,r;
+		
+			// Get the quadrature points and weights required for integration
+			int quad_npoints = (GetExp(0))->GetTotPoints();
+			LibUtilities::PointsKey quadPointsKey(quad_npoints, GetExp(0)->GetPointsType(0));
+			Array<OneD,NekDouble> quad_points = LibUtilities::PointsManager()[quadPointsKey]->GetZ();
+			Array<OneD,NekDouble> quad_weights = LibUtilities::PointsManager()[quadPointsKey]->GetW();
+
+			// Declare variable for the local kernel breaks
+			int kernel_width = kernel->GetKernelWidth();
+			Array<OneD,NekDouble> local_kernel_breaks(kernel_width+1);
+
+			// Declare variable for the transformed quadrature points
+			Array<OneD,NekDouble> mapped_quad_points(quad_npoints);
+			
+			// For each evaluation point
+			for(i = 0; i < inarray.num_elements(); i++)
+			{
+				// Move the center of the kernel to the current point
+				kernel->MoveKernelCenter(inarray[i],local_kernel_breaks);
+							
+				// Find the mesh breaks under the kernel support
+				Array<OneD,NekDouble> mesh_breaks;
+				kernel->FindMeshUnderKernel(local_kernel_breaks,h,mesh_breaks);
+				
+				// Sort the total breaks for integration purposes
+				int total_nbreaks = local_kernel_breaks.num_elements() + 
+									mesh_breaks.num_elements(); // number of the total breaks
+				Array<OneD,NekDouble> total_breaks(total_nbreaks);
+				kernel->Sort(local_kernel_breaks,mesh_breaks,total_breaks);
+				
+				// Integrate the product of kernel and function over the total breaks
+				NekDouble integral_value = 0.0;
+				for(j = 0; j < total_breaks.num_elements()-1; j++)
+				{
+					double a = total_breaks[j];
+					double b = total_breaks[j+1];
+					
+					// Map the quadrature points to the appropriate interval
+					for(r = 0; r < quad_points.num_elements(); r++)
+					{
+						mapped_quad_points[r] = (quad_points[r]+1.0)*0.5*(b-a)+a;
+					}
+
+					// Evaluate the function at the transformed quadrature points
+					Array<OneD,NekDouble> u_value(quad_npoints);
+					Array<OneD,NekDouble> coeffs = GetCoeffs();
+
+					//PeriodicEval(mapped_quad_points,h,u->GetExpSize(),(u->GetExp(0))->GetBasisNumModes(0),coeffs,u_value);
+					PeriodicEval(coeffs,mapped_quad_points,h,(GetExp(0))->GetBasisNumModes(0),u_value);
+					
+					// Evaluate the kernel at the transformed quadrature points
+					Array<OneD,NekDouble> k_value(quad_npoints);
+					kernel->EvaluateKernel(mapped_quad_points,h,k_value);
+
+					// Integrate
+					for(r = 0; r < quad_npoints; r++)
+					{
+						integral_value += (b-a)*0.5*k_value[r]*u_value[r]*quad_weights[r];
+					}
+					
+				}
+				
+				outarray[i] = integral_value/h;
+			}
+			
+		}
+
+		void ExpList1D::PeriodicEval(Array<OneD,NekDouble> &inarray1, Array<OneD,NekDouble> &inarray2,
+									 NekDouble h, int nmodes,
+									 Array<OneD,NekDouble> &outarray)
+		{
+			int i,j,r;
+
+			// Get the number of elements in the domain
+			int num_elm = GetExpSize();
+
+			// initializing the outarray
+			for(i = 0; i < outarray.num_elements(); i++)
+			{
+				outarray[i] = 0.0;
+			}
+			
+			// Make a copy for further modification
+			int x_size = inarray2.num_elements();
+			Array<OneD,NekDouble> x_values_cp(x_size);
+			
+			// Determining the element to which the x belongs
+			Array<OneD,int> x_elm(x_size);
+			for(i = 0; i < x_size; i++ )
+			{
+				x_elm[i] = floor(inarray2[i]/h);
+			}
+
+			// Clamp indices periodically
+			for(i = 0; i < x_size; i++)
+			{
+				while(x_elm[i] < 0)
+				{
+					x_elm[i] += num_elm;
+				}
+				while(x_elm[i] >= num_elm)
+				{
+					x_elm[i] -= num_elm ;
+				}
+			}
+			
+			// Map the values of x to [-1 1] on its interval
+			for(i = 0; i < x_size; i++)
+			{
+				x_values_cp[i] = (inarray2[i]/h - floor(inarray2[i]/h))*2 - 1.0;
+			}
+
+			//Evaluate the jocobi polynomials
+			// (Evaluating the base at some points other than the quadrature points)
+			// Should it be added to the base class????
+			Array<TwoD,NekDouble> jacobi_poly(nmodes,x_size);
+			for(i = 0; i < nmodes; i++)
+			{	
+				Polylib::jacobfd(x_size,x_values_cp.get(),jacobi_poly.get()+i*x_size,NULL,i,0.0,0.0);
+			}
+
+			// Evaluate the function values
+			for(r = 0; r < nmodes; r++)
+			{
+				for(j = 0; j < x_size; j++)
+				{
+					int index = ((x_elm[j])*nmodes)+r;
+					outarray[j] += inarray1[index]*jacobi_poly[r][j];
+				}
+			}
+
+		}
+
 
     } //end of namespace
 } //end of namespace
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.33  2008/09/09 15:06:03  sherwin
+* Modifications related to curved elements.
+*
 * Revision 1.32  2008/08/14 22:15:51  sherwin
 * Added LocalToglobalMap and DGMap and depracted LocalToGlobalBndryMap1D,2D. Made DisContField classes compatible with updated ContField formats
 *

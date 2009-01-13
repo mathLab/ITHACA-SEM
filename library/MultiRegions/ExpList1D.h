@@ -216,7 +216,6 @@ namespace Nektar
 #endif//NEKTAR_LIB_MULTIREGIONS_EXPLIST1D_H
 
 /**
- * $Log: ExpList1D.h,v $
  * Revision 1.23  2008/09/16 13:36:06  pvos
  * Restructured the LocalToGlobalMap classes
  *

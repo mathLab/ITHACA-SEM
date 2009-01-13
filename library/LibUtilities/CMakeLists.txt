@@ -160,6 +160,14 @@ SET(PrecompiledHeaders
 	LibUtilities.h
 )
 
+SET(KernelHeaders
+	./Kernel/kernel.h
+)
+
+SET(KernelSources
+	./Kernel/kernel.cpp
+)
+
 SOURCE_GROUP("Basic Const" FILES ${BasicConstHeaders})
 SOURCE_GROUP("Basic Utils" FILES ${BasicUtils})
 SOURCE_GROUP("Expression Templates" FILES ${ExpressionTemplates})
@@ -169,6 +177,7 @@ SOURCE_GROUP("Linear Algebra Headers" FILES ${LinearAlgebraHeaders})
 SOURCE_GROUP("Linear Algebra Sources" FILES ${LinearAlgebraSources})
 SOURCE_GROUP("Memory" FILES ${Memory})
 
+
 SOURCE_GROUP("Polylib Headers" FILES ${PolyLibHeaders})
 SOURCE_GROUP("Polylib Sources" FILES ${PolylibSources})
 
@@ -176,6 +185,9 @@ SOURCE_GROUP("Interpreter Headers" FILES ${InterpreterHeaders})
 SOURCE_GROUP("Interpreter Sources" FILES ${InterpreterSources})
 
 SOURCE_GROUP("Precompiled Headers" FILES ${PrecompiledHeaders})
+
+SOURCE_GROUP("Kernel Headers" FILES ${KernelHeaders})
+SOURCE_GROUP("Kernel Sources" FILES ${KernelSources})
 
 SET(LibUtilityHeaders
 	${Memory}
@@ -187,6 +199,7 @@ SET(LibUtilityHeaders
 	${BasicConstHeaders}
 	${InterpreterHeaders}
 	${PrecompiledHeaders}
+	${KernelHeaders}
 )
 
 SET(LibUtilitySources
@@ -194,6 +207,7 @@ SET(LibUtilitySources
 	${PolylibSources}
 	${LinearAlgebraSources}
 	${InterpreterSources}
+	${KernelSources}
 )
 
 ADD_NEKTAR_LIBRARY(LibUtilities STATIC ${LibUtilitySources} ${LibUtilityHeaders})
@@ -210,3 +224,5 @@ INSTALL(FILES ${PolyLibHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/P
 INSTALL(FILES ${ExpressionTemplates} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/ExpressionTemplates)
 INSTALL(FILES ${BasicUtils} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/BasicUtils)
 INSTALL(FILES ${Memory} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Memory)
+INSTALL(FILES ${KernelHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Kernel)
+

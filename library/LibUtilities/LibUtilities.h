@@ -131,6 +131,7 @@
 #include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/Vmath.hpp>
+#include <LibUtilities/Kernel/kernel.h>
 
 
 #endif //NEKTAR_USE_PRECOMPILED_HEADERS

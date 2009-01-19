@@ -322,8 +322,8 @@ namespace Nektar
             
             if(GloBndDofs - NumDirichlet > 0)
             {
-                GlobalLinSysKey       key(StdRegions::eHybridDGHelmBndLam,
-                                          lambda,tau,eDirectFullMatrix);
+                GlobalLinSysKey   key(StdRegions::eHybridDGHelmBndLam,
+                                      m_traceMap, lambda,tau,eDirectFullMatrix);
                 GlobalLinSysSharedPtr LinSys = GetGlobalBndLinSys(key);
                 
                 Array<OneD,NekDouble> sln = BndSol+NumDirichlet;
@@ -383,7 +383,7 @@ namespace Nektar
                                                 Array<OneD,NekDouble> &Fwd, 
                                                 Array<OneD,NekDouble> &Bwd)
         {
-            // Loop over elemente and collect forward expansion
+            // Loop over elements and collect forward expansion
             int nexp = GetExpSize();
             StdRegions::EdgeOrientation edgedir;
             int nquad_e,cnt,n,e,npts,offset, phys_offset;
@@ -396,7 +396,6 @@ namespace Nektar
             Vmath::Zero(Fwd.num_elements(),Fwd,1);
             Vmath::Zero(Bwd.num_elements(),Bwd,1);
 
-            // use m_trace tmp space in element to fill values
             for(n  = 0; n < nexp; ++n)
             {
                 phys_offset = GetPhys_Offset(n);
@@ -415,7 +414,6 @@ namespace Nektar
                 }
             }
             
-            // use m_trace tmp space in element to fill values
             for(n  = 0; n < nexp; ++n)
             {
                 phys_offset = GetPhys_Offset(n);

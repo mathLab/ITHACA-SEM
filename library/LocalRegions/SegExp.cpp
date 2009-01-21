@@ -106,77 +106,78 @@ namespace Nektar
         // interpolate and possibly generate geometric factors. 
         void SegExp::GenMetricInfo()
         {
-            SpatialDomains::GeomFactorsSharedPtr Xgfac = m_geom->GetGeomFactors();
+            m_metricinfo = m_geom->GetGeomFactors(m_base);
+//             SpatialDomains::GeomFactorsSharedPtr Xgfac = m_geom->GetGeomFactors();
 
-            if( Xgfac->GetGtype() != SpatialDomains::eDeformed)
-            {
-                m_metricinfo = Xgfac;
-            }
-            else
-            {                
-                int coordim = m_geom->GetCoordim();
-                int expdim  = 1;
-                int  nq = m_base[0]->GetNumPoints();
-                SpatialDomains::GeomType gtype = SpatialDomains::eDeformed;
-                Array<OneD,NekDouble> ndata(coordim*nq); 
-                Array<OneD, const NekDouble> ojac  = Xgfac->GetJac();
-                Array<TwoD, const NekDouble> gmat  = Xgfac->GetGmat();;
+//             if( Xgfac->GetGtype() != SpatialDomains::eDeformed)
+//             {
+//                 m_metricinfo = Xgfac;
+//             }
+//             else
+//             {                
+//                 int coordim = m_geom->GetCoordim();
+//                 int expdim  = 1;
+//                 int  nq = m_base[0]->GetNumPoints();
+//                 SpatialDomains::GeomType gtype = SpatialDomains::eDeformed;
+//                 Array<OneD,NekDouble> ndata(coordim*nq); 
+//                 Array<OneD, const NekDouble> ojac  = Xgfac->GetJac();
+//                 Array<TwoD, const NekDouble> gmat  = Xgfac->GetGmat();;
 
-                // assume all directiosn of geombasis are same
-                LibUtilities::BasisSharedPtr CBasis0 = m_geom->GetBasis(0,0); 
+//                 // assume all directiosn of geombasis are same
+//                 LibUtilities::BasisSharedPtr CBasis0 = m_geom->GetBasis(0,0); 
 
-                m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::
-                    AllocateSharedPtr(gtype,expdim,coordim); 
+//                 m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::
+//                     AllocateSharedPtr(gtype,expdim,coordim); 
 
-                // check to see if basis are different distributions
-                if(!(m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey())))
-                {
-                    int i,j;
-                    int cnq = CBasis0->GetNumPoints();
-                    Array<OneD, NekDouble> ctmp(cnq);
-                    Array<OneD, NekDouble> tmp(nq);
-                    Array<OneD, NekDouble> jac(nq,0.0);
+//                 // check to see if basis are different distributions
+//                 if(!(m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey())))
+//                 {
+//                     int i,j;
+//                     int cnq = CBasis0->GetNumPoints();
+//                     Array<OneD, NekDouble> ctmp(cnq);
+//                     Array<OneD, NekDouble> tmp(nq);
+//                     Array<OneD, NekDouble> jac(nq,0.0);
 
-                    // interpolate Geometric data   
-                    for(i = 0; i < coordim; ++i)
-                    {
-                        // Calculate  lcoal derivatives for interpolation
-                        // Need check in case points are aligned to x,y axis
-                        for(j = 0; j < cnq; ++j)
-                        {
-                            ctmp[j] = (fabs(gmat[i][j]) > NekConstants::kNekZeroTol)? 1.0/gmat[i][j]: 0.0;
-                        }
+//                     // interpolate Geometric data   
+//                     for(i = 0; i < coordim; ++i)
+//                     {
+//                         // Calculate  lcoal derivatives for interpolation
+//                         // Need check in case points are aligned to x,y axis
+//                         for(j = 0; j < cnq; ++j)
+//                         {
+//                             ctmp[j] = (fabs(gmat[i][j]) > NekConstants::kNekZeroTol)? 1.0/gmat[i][j]: 0.0;
+//                         }
 
-                        LibUtilities::Interp1D(CBasis0->GetBasisKey(),  ctmp, 
-                                 m_base[0]->GetBasisKey(), tmp);
+//                         LibUtilities::Interp1D(CBasis0->GetBasisKey(),  ctmp, 
+//                                  m_base[0]->GetBasisKey(), tmp);
      
-                        for(j = 0; j < nq; ++j)
-                        {
-                            ndata[i*nq+j] = (fabs(tmp[j]) > NekConstants::kNekZeroTol)? 1.0/tmp[j]: 0.0;
-                        }
+//                         for(j = 0; j < nq; ++j)
+//                         {
+//                             ndata[i*nq+j] = (fabs(tmp[j]) > NekConstants::kNekZeroTol)? 1.0/tmp[j]: 0.0;
+//                         }
 
-                        Vmath::Vvtvp(nq,tmp,1,tmp,1,jac,1,jac,1);
+//                         Vmath::Vvtvp(nq,tmp,1,tmp,1,jac,1,jac,1);
 
-                    }
-                    Vmath::Vsqrt(nq,jac,1,jac,1);
+//                     }
+//                     Vmath::Vsqrt(nq,jac,1,jac,1);
 
-                    m_metricinfo->ResetGmat(ndata,nq,1,coordim);
-                    m_metricinfo->ResetJac(nq,jac);                    
-                }
-                else  // Same data can be used 
-                {
-                    // Copy Geometric data
-                    Blas::Dcopy(nq*coordim,&gmat[0][0],1,&ndata[0],1);
+//                     m_metricinfo->ResetGmat(ndata,nq,1,coordim);
+//                     m_metricinfo->ResetJac(nq,jac);                    
+//                 }
+//                 else  // Same data can be used 
+//                 {
+//                     // Copy Geometric data
+//                     Blas::Dcopy(nq*coordim,&gmat[0][0],1,&ndata[0],1);
 
-                    m_metricinfo->ResetGmat(ndata,nq,1,coordim);
+//                     m_metricinfo->ResetGmat(ndata,nq,1,coordim);
 
-                    // Copy Jacobian
-                    ndata = Array<OneD,NekDouble>(nq);    
-                    Blas::Dcopy(nq,ojac,1,ndata,1);
+//                     // Copy Jacobian
+//                     ndata = Array<OneD,NekDouble>(nq);    
+//                     Blas::Dcopy(nq,ojac,1,ndata,1);
 
-                    m_metricinfo->ResetJac(nq,ndata);                    
-                }   
-            }
+//                     m_metricinfo->ResetJac(nq,ndata);                    
+//                 }   
+//             }
         }
 
 
@@ -1231,6 +1232,9 @@ namespace Nektar
 }//end of namespace
 
 // $Log: SegExp.cpp,v $
+// Revision 1.57  2008/12/18 14:08:24  pvos
+// NekConstants update
+//
 // Revision 1.56  2008/11/05 16:08:15  pvos
 // Added elemental optimisation functionality
 //

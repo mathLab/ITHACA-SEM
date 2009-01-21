@@ -131,9 +131,9 @@ namespace Nektar
             void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
                                  Array<OneD, NekDouble> &outarray)
             {
-                if(m_base[0]->Collocation() || m_base[1]->Collocation())
+                if(m_base[0]->Collocation() && m_base[1]->Collocation())
                 {  
-                    IProductWRTBase_Collocation(inarray,outarray);
+                    MultiplyByQuadratureMetric(inarray,outarray);
                 }
                 else
                 {
@@ -299,18 +299,11 @@ namespace Nektar
             DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 
-            void IProductWRTBase_Collocation(const Array<OneD, const NekDouble>& inarray, 
-                                             Array<OneD, NekDouble> &outarray);            
+            void MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
+                                            Array<OneD, NekDouble> &outarray);
+      
             void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
-                                        Array<OneD, NekDouble> &outarray)
-            {
-                IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
-                                       inarray,outarray);
-            }            
-            void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& base0, 
-                                        const Array<OneD, const NekDouble>& base1,
-                                        const Array<OneD, const NekDouble>& inarray, 
-                                        Array<OneD, NekDouble> &outarray);            
+                                        Array<OneD, NekDouble> &outarray);           
             void IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray, 
                                        Array<OneD, NekDouble> &outarray);
 
@@ -697,6 +690,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.46  2008/12/18 14:08:24  pvos
+ *    NekConstants update
+ *
  *    Revision 1.45  2008/11/24 10:31:14  pvos
  *    Changed name from _PartitionedOp to _MatFree
  *

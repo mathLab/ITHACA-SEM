@@ -194,8 +194,7 @@ namespace Nektar
         }
         
         // Set up GeoFac for this geometry using Coord quadrature distribution
-
-        void TriGeom::GenGeomFactors(void)
+        void TriGeom::GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
             GeomType Gtype = eRegular;
             
@@ -211,10 +210,7 @@ namespace Nektar
                 }
             }
 
-            Gtype == eDeformed;
-
-            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap);
-
+            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
         }
 
         void TriGeom::AddElmtConnected(int gvo_id, int locid)
@@ -371,6 +367,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.cpp,v $
+// Revision 1.20  2008/09/12 11:26:19  pvos
+// Updates for mappings in 3D
+//
 // Revision 1.19  2008/09/09 14:24:02  sherwin
 // Changes for curved triangles
 //

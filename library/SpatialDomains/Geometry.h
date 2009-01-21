@@ -113,11 +113,11 @@ namespace Nektar
                     return m_coordim;
                 }
 
-                inline GeomFactorsSharedPtr GetGeomFactors(void)
+                inline GeomFactorsSharedPtr GetGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
                 {
                     if(!m_geomfactors)
                     {
-                        GenGeomFactors();
+                        GenGeomFactors(tbasis);
                     }
 
                     return ValidateRegGeomFactor(m_geomfactors);
@@ -139,11 +139,6 @@ namespace Nektar
                 }
 
                 // Wrappers around virtual Functions
-                void GenGeomFactors(void)
-                {
-                    return v_GenGeomFactors();
-                }
-
                 inline int GetNumVerts() const
                 {
                     return v_GetNumVerts();
@@ -166,10 +161,15 @@ namespace Nektar
                 GeomShapeType m_GeomShapeType;
                 int           m_GlobalID;
 
+                void GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+                {
+                    return v_GenGeomFactors(tbasis);
+                }
+
         private:
                 GeomType m_GeomType;
                 
-                virtual void v_GenGeomFactors(void)
+                virtual void v_GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
                 {
                     NEKERROR(ErrorUtil::efatal,
                         "This function is only valid for shape type geometries");
@@ -194,6 +194,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.26  2008/11/17 09:00:04  ehan
+// Added GetNumVerts and GetNumEdges
+//
 // Revision 1.25  2008/07/29 22:23:36  sherwin
 // various mods for DG advection solver in Multiregions. Added virtual calls to Geometry, Geometry1D, 2D and 3D
 //

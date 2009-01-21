@@ -133,9 +133,9 @@ namespace Nektar
             void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
                                  Array<OneD, NekDouble> &outarray)
             {
-                if(m_base[0]->Collocation() || m_base[1]->Collocation())
+                if(m_base[0]->Collocation() && m_base[1]->Collocation())
                 {  
-                    IProductWRTBase_Collocation(inarray,outarray);
+                    MultiplyByQuadratureMetric(inarray,outarray);
                 }
                 else
                 {
@@ -216,9 +216,10 @@ namespace Nektar
             void BwdTrans(const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray)
             {
-                if(m_base[0]->Collocation() || m_base[1]->Collocation())
+                if(m_base[0]->Collocation() && m_base[1]->Collocation())
                 {  
-                    StdQuadExp::BwdTrans_Collocation(inarray,outarray);
+                    Vmath::Vcopy(m_base[0]->GetNumPoints() * m_base[1]->GetNumPoints(), 
+                                 inarray, 1, outarray, 1);
                 }
                 else
                 {
@@ -428,27 +429,119 @@ namespace Nektar
 
         protected:
 
-            void BwdTrans_Collocation(const Array<OneD, const NekDouble>& inarray,
-                                      Array<OneD, NekDouble> &outarray);            
+            void MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
+                                            Array<OneD, NekDouble> &outarray);
+       
             void BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                  Array<OneD, NekDouble> &outarray);
 
-
-
-            void IProductWRTBase_Collocation(const Array<OneD, const NekDouble>& inarray, 
-                                             Array<OneD, NekDouble> &outarray);            
-            void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
-                                        Array<OneD, NekDouble> &outarray)
+            // the arguments doCheckCollDir0 and doCheckCollDir1 allow you to specify whether
+            // to check if the basis has collocation properties (i.e. for the classical spectral 
+            // element basis, In this case the 1D 'B' matrix is equal to the identity matrix
+            // which can be exploited to speed up the calculations).
+            // However, as this routine also allows to pass the matrix 'DB' (derivative of the basis),
+            // the collocation property cannot always be used. Therefor follow this rule:
+            // if base0 == m_base[0]->GetBdata() --> set doCheckCollDir0 == true;
+            //    base1 == m_base[1]->GetBdata() --> set doCheckCollDir1 == true;
+            //    base0 == m_base[0]->GetDbdata() --> set doCheckCollDir0 == false;
+            //    base1 == m_base[1]->GetDbdata() --> set doCheckCollDir1 == false;
+            inline void BwdTrans_SumFacKernel(const Array<OneD, const NekDouble>& base0, 
+                                              const Array<OneD, const NekDouble>& base1,
+                                              const Array<OneD, const NekDouble>& inarray, 
+                                              Array<OneD, NekDouble> &outarray,
+                                              Array<OneD, NekDouble> &wsp,
+                                              bool doCheckCollDir0,
+                                              bool doCheckCollDir1)
             {
-                IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetBdata(),inarray,
-                                       outarray);
-            }            
-            void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& base0, 
-                                        const Array<OneD, const NekDouble>& base1,
-                                        const Array<OneD, const NekDouble>& inarray, 
-                                        Array<OneD, NekDouble> &outarray);            
+                int  nquad0  = m_base[0]->GetNumPoints();
+                int  nquad1  = m_base[1]->GetNumPoints();
+                int  nmodes0 = m_base[0]->GetNumModes();
+                int  nmodes1 = m_base[1]->GetNumModes();
+
+                bool colldir0 = doCheckCollDir0?(m_base[0]->Collocation()):false;
+                bool colldir1 = doCheckCollDir1?(m_base[1]->Collocation()):false;
+                
+                if(colldir0 && colldir1)
+                {
+                    Vmath::Vcopy(m_ncoeffs,inarray.get(),1,outarray.get(),1);
+                }
+                else if(colldir0)
+                {
+                    Blas::Dgemm('N','T', nquad0, nquad1,nmodes1, 1.0, &inarray[0], nquad0, 
+                                base1.get(), nquad1, 0.0, &outarray[0], nquad0);
+                }
+                else if(colldir1)
+                {
+                    Blas::Dgemm('N','N', nquad0,nmodes1,nmodes0,1.0, base0.get(),
+                                nquad0, &inarray[0], nmodes0,0.0,&outarray[0], nquad0);
+                }
+                else
+                { 
+                    ASSERTL1(wsp.num_elements()>=nquad0*nmodes1,"Workspace size is not sufficient");
+                    
+                    Blas::Dgemm('N','N', nquad0,nmodes1,nmodes0,1.0, base0.get(),
+                                nquad0, &inarray[0], nmodes0,0.0,&wsp[0], nquad0);
+                    Blas::Dgemm('N','T', nquad0, nquad1,nmodes1, 1.0, &wsp[0], nquad0, 
+                                base1.get(), nquad1, 0.0, &outarray[0], nquad0);
+                } 
+            }
+
+            void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
+                                        Array<OneD, NekDouble> &outarray);
             void IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray, 
                                        Array<OneD, NekDouble> &outarray);
+  
+            // the arguments doCheckCollDir0 and doCheckCollDir1 allow you to specify whether
+            // to check if the basis has collocation properties (i.e. for the classical spectral 
+            // element basis, In this case the 1D 'B' matrix is equal to the identity matrix
+            // which can be exploited to speed up the calculations).
+            // However, as this routine also allows to pass the matrix 'DB' (derivative of the basis),
+            // the collocation property cannot always be used. Therefor follow this rule:
+            // if base0 == m_base[0]->GetBdata() --> set doCheckCollDir0 == true;
+            //    base1 == m_base[1]->GetBdata() --> set doCheckCollDir1 == true;
+            //    base0 == m_base[0]->GetDbdata() --> set doCheckCollDir0 == false;
+            //    base1 == m_base[1]->GetDbdata() --> set doCheckCollDir1 == false;
+            inline void IProductWRTBase_SumFacKernel(const Array<OneD, const NekDouble>& base0, 
+                                                     const Array<OneD, const NekDouble>& base1,
+                                                     const Array<OneD, const NekDouble>& inarray, 
+                                                     Array<OneD, NekDouble> &outarray,
+                                                     Array<OneD, NekDouble> &wsp,
+                                                     bool doCheckCollDir0,
+                                                     bool doCheckCollDir1)
+            {
+                int    nquad0 = m_base[0]->GetNumPoints();
+                int    nquad1 = m_base[1]->GetNumPoints();   
+                int    nmodes0 = m_base[0]->GetNumModes();
+                int    nmodes1 = m_base[1]->GetNumModes();
+
+                bool colldir0 = doCheckCollDir0?(m_base[0]->Collocation()):false;
+                bool colldir1 = doCheckCollDir1?(m_base[1]->Collocation()):false;
+                                
+                if(colldir0 && colldir1)
+                {
+                    Vmath::Vcopy(m_ncoeffs,inarray.get(),1,outarray.get(),1);
+                }
+                else if(colldir0)
+                {
+                    Blas::Dgemm('N', 'N',nmodes0,nmodes1, nquad1,1.0, inarray.get(),                            
+                                nmodes0, base1.get(), nquad1, 0.0,outarray.get(),nmodes0); 
+                }
+                else if(colldir1)
+                {
+                    Blas::Dgemm('T','N',nmodes0,nquad1,nquad0,1.0,base0.get(),               
+                                nquad0,inarray.get(),nquad0,0.0,outarray.get(),nmodes0);
+                }
+                else
+                { 
+                    ASSERTL1(wsp.num_elements()>=nquad1*nmodes0,"Workspace size is not sufficient");
+
+                    Blas::Dgemm('T','N',nmodes0,nquad1,nquad0,1.0,base0.get(),               
+                                nquad0,inarray.get(),nquad0,0.0,wsp.get(),nmodes0);
+                    Blas::Dgemm('N', 'N',nmodes0,nmodes1, nquad1,1.0, wsp.get(),                            
+                                nmodes0, base1.get(), nquad1, 0.0,outarray.get(),nmodes0); 
+                }
+            }        
+
 
             void IProductWRTDerivBase_SumFac(const int dir, 
                                              const Array<OneD, const NekDouble>& inarray, 
@@ -762,6 +855,9 @@ namespace Nektar
 
 /**
  * $Log: StdQuadExp.h,v $
+ * Revision 1.45  2008/11/24 10:31:14  pvos
+ * Changed name from _PartitionedOp to _MatFree
+ *
  * Revision 1.44  2008/11/05 16:08:15  pvos
  * Added elemental optimisation functionality
  *

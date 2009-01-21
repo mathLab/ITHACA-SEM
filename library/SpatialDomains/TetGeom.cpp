@@ -584,7 +584,7 @@ namespace Nektar
 
         // Set up GeoFac for this geometry using Coord quadrature distribution
 
-        void TetGeom::GenGeomFactors(void)
+        void TetGeom::GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
             GeomType Gtype = eRegular;
             
@@ -600,7 +600,7 @@ namespace Nektar
                     Gtype = eDeformed;
                 }
             }
-            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap);
+            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
         }
 
           /** \brief put all quadrature information into edge structure 
@@ -708,6 +708,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.cpp,v $
+// Revision 1.16  2008/12/18 14:08:59  pvos
+// NekConstants update
+//
 // Revision 1.15  2008/11/17 08:58:42  ehan
 // Added necessary mapping routines for Tet
 //

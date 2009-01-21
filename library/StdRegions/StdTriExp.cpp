@@ -104,84 +104,36 @@ namespace Nektar
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
                         m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);
         }
-     
-        void StdTriExp::IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& base0, 
-                                               const Array<OneD, const NekDouble>& base1,
-                                               const Array<OneD, const NekDouble>& inarray, 
-                                               Array<OneD, NekDouble> &outarray)
-        {           
-            int    i,mode;
+
+        void StdTriExp::IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
+                                                Array<OneD, NekDouble> &outarray)
+        {
+            int i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-            int     nqtot = nquad0*nquad1;
             int    order0 = m_base[0]->GetNumModes();
-            int    order1 = m_base[1]->GetNumModes();
-
-            Array<OneD, NekDouble> wsp(nqtot+order0*nquad1);
+                            
+            Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad1*order0);
+            Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);         
             
-            const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
-            const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
-            const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
-
-            ASSERTL2((m_base[1]->GetBasisType() == LibUtilities::eOrtho_B)||
-                     (m_base[1]->GetBasisType() == LibUtilities::eModified_B), 
-                     "Basis[1] is not of general tensor type");
-
             // multiply by integration constants 
-            for(i = 0; i < nquad1; ++i)
-            {
-                Vmath::Vmul(nquad0,inarray.get()+i*nquad0,1,
-                            w0.get(),1, wsp.get()+i*nquad0,1);
-            }
-
-            switch(m_base[1]->GetPointsType())
-            {
-            case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
-                for(i = 0; i < nquad1; ++i)
-                {
-                    Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], wsp.get()+i*nquad0,1);
-                }
-                break;
-            case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product 
-                for(i = 0; i < nquad1; ++i)
-                {
-                    Blas::Dscal(nquad0,0.5*w1[i], wsp.get()+i*nquad0,1);      
-                }
-                break;
-            }
-
-            // Inner product with respect to 'a' direction 
-            Blas::Dgemm('T','N',nquad1,order0,nquad0,1.0,wsp.get(),nquad0,
-                        base0.get(),nquad0,0.0,wsp.get()+nqtot,nquad1);
-                
-            // Inner product with respect to 'b' direction 
-            for(mode=i=0; i < order0; ++i)
-            {
-                Blas::Dgemv('T',nquad1,order1-i,1.0, base1.get()+mode*nquad1,
-                            nquad1,wsp.get()+nqtot+i*nquad1,1, 0.0, 
-                            outarray.get() + mode,1);
-                mode += order1-i;
-            }
+            MultiplyByQuadratureMetric(inarray,tmp);
             
-            // fix for modified basis by splitting top vertex mode
-            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
-            {
-                outarray[1] += Blas::Ddot(nquad1,base1.get()+nquad1,1,
-                                          wsp.get()+nqtot+nquad1,1);
-            }
+            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),m_base[1]->GetBdata(),tmp,outarray,wsp);
         }
-
+     
         void StdTriExp::IProductWRTDerivBase_SumFac(const int dir, 
                                                     const Array<OneD, const NekDouble>& inarray, 
                                                     Array<OneD, NekDouble> & outarray)
         {
             int    i;
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int    nqtot = nquad0*nquad1; 
+            int    nquad0  = m_base[0]->GetNumPoints();
+            int    nquad1  = m_base[1]->GetNumPoints();
+            int    nqtot   = nquad0*nquad1; 
+            int    wspsize = max(nqtot,m_ncoeffs);
 
-            Array<OneD, NekDouble> gfac0(nqtot+nqtot);
-            Array<OneD, NekDouble> tmp0(gfac0+nqtot);
+            Array<OneD, NekDouble> gfac0(2*wspsize);
+            Array<OneD, NekDouble> tmp0 (gfac0+wspsize);
 
             const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
             
@@ -196,12 +148,15 @@ namespace Nektar
                 Vmath::Smul(nquad0,gfac0[i],&inarray[0]+i*nquad0,1,&tmp0[0]+i*nquad0,1);
             }
                  
+            MultiplyByQuadratureMetric(tmp0,tmp0);
+
             switch(dir)
             {
             case 0:
                 {                    
-                    IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),
-                                           tmp0,outarray);
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                                 m_base[1]->GetBdata(),
+                                                 tmp0,outarray,gfac0);
                 }
                 break;
             case 1:
@@ -219,8 +174,14 @@ namespace Nektar
                         Vmath::Vmul(nquad0,&gfac0[0],1,&tmp0[0]+i*nquad0,1,&tmp0[0]+i*nquad0,1);
                     }       
           
-                    IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),tmp0,tmp3); 
-                    IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),inarray,outarray);  
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                                 m_base[1]->GetBdata(),
+                                                 tmp0,tmp3,gfac0); 
+
+                    MultiplyByQuadratureMetric(inarray,tmp0);
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                                 m_base[1]->GetDbdata(),
+                                                 tmp0,outarray,gfac0);  
                     Vmath::Vadd(m_ncoeffs,&tmp3[0],1,&outarray[0],1,&outarray[0],1);      
                 }
                 break;
@@ -331,6 +292,41 @@ namespace Nektar
             }
         }
         
+        void StdTriExp::MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
+                                                   Array<OneD, NekDouble> &outarray)
+        {         
+            int    i; 
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+                
+            const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
+            const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
+            const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
+
+            // multiply by integration constants 
+            for(i = 0; i < nquad1; ++i)
+            {
+                Vmath::Vmul(nquad0,inarray.get()+i*nquad0,1,
+                            w0.get(),1, outarray.get()+i*nquad0,1);
+            }
+                
+            switch(m_base[1]->GetPointsType())
+            {
+            case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
+                for(i = 0; i < nquad1; ++i)
+                {
+                    Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], outarray.get()+i*nquad0,1);
+                }
+                break;
+            case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product 
+                for(i = 0; i < nquad1; ++i)
+                {
+                    Blas::Dscal(nquad0,0.5*w1[i], outarray.get()+i*nquad0,1);      
+                }
+                break;
+            }          
+        }
+
         void StdTriExp::LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                          Array<OneD,NekDouble> &outarray,
                                                          const StdMatrixKey &mkey)
@@ -379,9 +375,11 @@ namespace Nektar
                     Blas::Dscal(nquad0,gfac0[i],dPhysValuesdx.get()+i*nquad0,1);
                 }
              
-            
-                IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray);
-                IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,tmp);  
+                MultiplyByQuadratureMetric(dPhysValuesdx,dPhysValuesdx);
+                MultiplyByQuadratureMetric(dPhysValuesdy,dPhysValuesdy);
+                
+                IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray,physValues);
+                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,tmp,physValues);  
                 Vmath::Vadd(m_ncoeffs,tmp.get(),1,outarray.get(),1,outarray.get(),1);          
             }    
             else
@@ -394,6 +392,7 @@ namespace Nektar
                                                          Array<OneD,NekDouble> &outarray,
                                                          const StdMatrixKey &mkey)
         {
+            cout << "hie" << endl;
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -410,8 +409,7 @@ namespace Nektar
             BwdTrans_SumFac(inarray,physValues);
 
             // mass matrix operation
-            IProductWRTBase_SumFac((m_base[0]->GetBdata()),(m_base[1]->GetBdata()),
-                            physValues,tmp);
+            IProductWRTBase_SumFac(physValues,tmp);
 
             // Laplacian matrix operation
             PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
@@ -439,11 +437,13 @@ namespace Nektar
                 Blas::Dscal(nquad0,gfac0[i],dPhysValuesdx.get()+i*nquad0,1);
             }
              
+            MultiplyByQuadratureMetric(dPhysValuesdx,dPhysValuesdx);
+            MultiplyByQuadratureMetric(dPhysValuesdy,dPhysValuesdy);
             
-            IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray);
+            IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray,physValues);
             Blas::Daxpy(m_ncoeffs, lambda, tmp.get(), 1, outarray.get(), 1);
 
-            IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,tmp);  
+            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,tmp,physValues);  
             Vmath::Vadd(m_ncoeffs,tmp.get(),1,outarray.get(),1,outarray.get(),1);                  
         }
 
@@ -549,36 +549,12 @@ namespace Nektar
         void StdTriExp::BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray, 
                                         Array<OneD, NekDouble> &outarray)
         {
-            int           i,mode;
-            int           nquad0 = m_base[0]->GetNumPoints();
-            int           nquad1 = m_base[1]->GetNumPoints();
-            int           order0 = m_base[0]->GetNumModes();
-            int           order1 = m_base[1]->GetNumModes();
-            const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
-            const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
-            Array<OneD, NekDouble> tmp(order0*nquad1);
+            Array<OneD, NekDouble> wsp(m_base[0]->GetNumPoints()* 
+                                       m_base[1]->GetNumModes());
 
-
-            ASSERTL2((m_base[1]->GetBasisType() != LibUtilities::eOrtho_B)||
-                     (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
-                     "Basis[1] is not of general tensor type");
-
-            for(i = mode = 0; i < order0; ++i)
-            {
-                Blas::Dgemv('N', nquad1,order1-i,1.0,base1.get()+mode*nquad1,
-                            nquad1,&inarray[0]+mode,1,0.0,&tmp[0]+i*nquad1,1);
-                mode += order1-i;
-            }
-
-            // fix for modified basis by splitting top vertex mode
-            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
-            {
-                Blas::Daxpy(nquad1,inarray[1],base1.get()+nquad1,1,
-                            &tmp[0]+nquad1,1);
-            }
-
-            Blas::Dgemm('N','T', nquad0,nquad1,order0,1.0, base0.get(),nquad0,
-                        &tmp[0], nquad1,0.0, &outarray[0], nquad0);
+            BwdTrans_SumFacKernel(m_base[0]->GetBdata(),
+                                  m_base[1]->GetBdata(),
+                                  inarray,outarray,wsp);
         }
 
         void StdTriExp::FwdTrans(const Array<OneD, const NekDouble>& inarray, 
@@ -1258,6 +1234,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTriExp.cpp,v $
+ * Revision 1.51  2008/12/18 14:11:35  pvos
+ * NekConstants Update
+ *
  * Revision 1.50  2008/12/16 11:31:52  pvos
  * Performance updates
  *

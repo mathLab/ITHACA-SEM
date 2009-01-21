@@ -161,7 +161,7 @@ namespace Nektar
                 static const int kNedges = 1;
                 SpatialDomains::VertexComponentSharedPtr m_verts[kNverts];
 
-                void GenGeomFactors(void);
+                void GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
 
             private:
                 bool m_owndata;   ///< Boolean indicating whether object owns the data
@@ -206,9 +206,9 @@ namespace Nektar
                     return GetVertex(i);
                 }
 
-                virtual void v_GenGeomFactors(void)
+                virtual void v_GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
                 {
-                    GenGeomFactors();
+                    GenGeomFactors(tbasis);
                 }
 
                 virtual void v_SetOwnData()
@@ -265,6 +265,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.22  2008/12/17 12:29:56  pvos
+// Fixed bug
+//
 // Revision 1.21  2008/11/17 08:58:53  ehan
 // Added GetNumVerts and GetNumEdges
 //

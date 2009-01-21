@@ -159,14 +159,14 @@ namespace Nektar
             std::list<CompToElmt> m_elmtmap;
 
             Array<OneD, StdRegions::StdExpansion3DSharedPtr> m_xmap;
-			void GenGeomFactors(void);
+			void GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
 
         private:
  
 
-            virtual void v_GenGeomFactors(void)
+            virtual void v_GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
             {
-                GenGeomFactors();
+                GenGeomFactors(tbasis);
             }
 
             virtual void v_FillGeom()
@@ -257,6 +257,9 @@ namespace Nektar
 
 //
 // $Log: PrismGeom.h,v $
+// Revision 1.12  2008/11/17 08:59:29  ehan
+// Added necessary mapping routines for Tet
+//
 // Revision 1.11  2008/06/30 19:35:03  ehan
 // Fixed infinity recursive-loop error.
 //

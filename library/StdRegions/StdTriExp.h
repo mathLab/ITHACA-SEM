@@ -422,6 +422,9 @@ namespace Nektar
 
         protected:
 
+            void MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
+                                            Array<OneD, NekDouble> &outarray);
+
             //----------------------------------
             // Generate Matrix Routine
             //----------------------------------
@@ -433,19 +436,82 @@ namespace Nektar
             
             void BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                  Array<OneD, NekDouble> &outarray);
+
+            inline void BwdTrans_SumFacKernel(const Array<OneD, const NekDouble>& base0, 
+                                              const Array<OneD, const NekDouble>& base1,
+                                              const Array<OneD, const NekDouble>& inarray, 
+                                              Array<OneD, NekDouble> &outarray,
+                                              Array<OneD, NekDouble> &wsp)
+            {
+                int  i;
+                int  mode;
+                int  nquad0  = m_base[0]->GetNumPoints();
+                int  nquad1  = m_base[1]->GetNumPoints();
+                int  nmodes0 = m_base[0]->GetNumModes();
+                int  nmodes1 = m_base[1]->GetNumModes();
+                
+                ASSERTL1(wsp.num_elements()>=nquad0*nmodes1,"Workspace size is not sufficient");
+                ASSERTL2((m_base[1]->GetBasisType() != LibUtilities::eOrtho_B)||
+                         (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
+                         "Basis[1] is not of general tensor type");
+
+                for(i = mode = 0; i < nmodes0; ++i)
+                {
+                    Blas::Dgemv('N', nquad1,nmodes1-i,1.0,base1.get()+mode*nquad1,
+                                nquad1,&inarray[0]+mode,1,0.0,&wsp[0]+i*nquad1,1);
+                    mode += nmodes1-i;
+                }
+                
+                // fix for modified basis by splitting top vertex mode
+                if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+                {
+                    Blas::Daxpy(nquad1,inarray[1],base1.get()+nquad1,1,
+                                &wsp[0]+nquad1,1);
+                }
+                
+                Blas::Dgemm('N','T', nquad0,nquad1,nmodes0,1.0, base0.get(),nquad0,
+                            &wsp[0], nquad1,0.0, &outarray[0], nquad0);
+            }
             
             void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
-                                        Array<OneD, NekDouble> &outarray)
-            {
-                IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetBdata(),inarray,
-                                            outarray);
-            }            
-            void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& base0, 
-                                        const Array<OneD, const NekDouble>& base1,
-                                        const Array<OneD, const NekDouble>& inarray, 
                                         Array<OneD, NekDouble> &outarray);            
             void IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray, 
                                        Array<OneD, NekDouble> &outarray);
+
+            inline void IProductWRTBase_SumFacKernel(const Array<OneD, const NekDouble>& base0, 
+                                                     const Array<OneD, const NekDouble>& base1,
+                                                     const Array<OneD, const NekDouble>& inarray, 
+                                                     Array<OneD, NekDouble> &outarray,
+                                                     Array<OneD, NekDouble> &wsp)
+            {
+                int    i;
+                int    mode;
+                int    nquad0 = m_base[0]->GetNumPoints();
+                int    nquad1 = m_base[1]->GetNumPoints();   
+                int    nmodes0 = m_base[0]->GetNumModes();
+                int    nmodes1 = m_base[1]->GetNumModes();
+                
+                ASSERTL1(wsp.num_elements()>=nquad1*nmodes0,"Workspace size is not sufficient");
+                
+                Blas::Dgemm('T','N',nquad1,nmodes0,nquad0,1.0,inarray.get(),nquad0,
+                            base0.get(),nquad0,0.0,wsp.get(),nquad1);
+                
+                // Inner product with respect to 'b' direction 
+                for(mode=i=0; i < nmodes0; ++i)
+                {
+                    Blas::Dgemv('T',nquad1,nmodes1-i,1.0, base1.get()+mode*nquad1,
+                                nquad1,wsp.get()+i*nquad1,1, 0.0, 
+                                outarray.get() + mode,1);
+                    mode += nmodes1 - i;
+                }
+            
+                // fix for modified basis by splitting top vertex mode
+                if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+                {
+                    outarray[1] += Blas::Ddot(nquad1,base1.get()+nquad1,1,
+                                              wsp.get()+nquad1,1);
+                }
+            }   
 
             void IProductWRTDerivBase_SumFac(const int dir,
                                              const Array<OneD, const NekDouble>& inarray,
@@ -746,6 +812,9 @@ namespace Nektar
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.41  2008/11/24 10:31:14  pvos
+ * Changed name from _PartitionedOp to _MatFree
+ *
  * Revision 1.40  2008/11/05 16:08:15  pvos
  * Added elemental optimisation functionality
  *

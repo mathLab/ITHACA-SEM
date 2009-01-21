@@ -108,32 +108,33 @@ namespace Nektar
 
         void PrismExp::GenMetricInfo()
         {
-            SpatialDomains::GeomFactorsSharedPtr Xgfac;
+            m_metricinfo = m_geom->GetGeomFactors(m_base);
+//             SpatialDomains::GeomFactorsSharedPtr Xgfac;
 
-            Xgfac = m_geom->GetGeomFactors();
+//             Xgfac = m_geom->GetGeomFactors();
 
-            if(Xgfac->GetGtype() != SpatialDomains::eDeformed)
-            {
-                m_metricinfo = Xgfac;
-            }
-            else
-            {
-                //basis are different distributions
-               if(!(m_base[0]->GetBasisKey().SamePoints(m_geom->GetBasis(0,0)->GetBasisKey()))||
-                  !(m_base[1]->GetBasisKey().SamePoints(m_geom->GetBasis(0,1)->GetBasisKey()))||
-                  !(m_base[2]->GetBasisKey().SamePoints(m_geom->GetBasis(0,2)->GetBasisKey())))
-                {
-                    StdRegions::ExpansionType shape = StdRegions::ePrism;
+//             if(Xgfac->GetGtype() != SpatialDomains::eDeformed)
+//             {
+//                 m_metricinfo = Xgfac;
+//             }
+//             else
+//             {
+//                 //basis are different distributions
+//                if(!(m_base[0]->GetBasisKey().SamePoints(m_geom->GetBasis(0,0)->GetBasisKey()))||
+//                   !(m_base[1]->GetBasisKey().SamePoints(m_geom->GetBasis(0,1)->GetBasisKey()))||
+//                   !(m_base[2]->GetBasisKey().SamePoints(m_geom->GetBasis(0,2)->GetBasisKey())))
+//                 {
+//                     StdRegions::ExpansionType shape = StdRegions::ePrism;
 
-                    m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>:: AllocateSharedPtr(shape,*Xgfac,m_base);
+//                     m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>:: AllocateSharedPtr(shape,*Xgfac,m_base);
 
-                }
-                else // Same data can be used
-                {
-                    m_metricinfo = Xgfac;
-                }
+//                 }
+//                 else // Same data can be used
+//                 {
+//                     m_metricinfo = Xgfac;
+//                 }
 
-            }
+//             }
         }
 	
 
@@ -841,6 +842,9 @@ namespace Nektar
 
 /** 
  *    $Log: PrismExp.cpp,v $
+ *    Revision 1.17  2008/11/24 21:09:20  ehan
+ *    Fixed bugs and added necessary mapping routines for Prism.
+ *
  *    Revision 1.16  2008/09/09 15:05:09  sherwin
  *    Updates related to cuved geometries. Normals have been removed from m_metricinfo and replaced with a direct evaluation call. Interp methods have been moved to LibUtilities
  *

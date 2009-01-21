@@ -323,7 +323,7 @@ namespace Nektar
             if(GloBndDofs - NumDirichlet > 0)
             {
                 GlobalLinSysKey   key(StdRegions::eHybridDGHelmBndLam,
-                                      m_traceMap, lambda,tau,eDirectFullMatrix);
+                                      lambda,tau,eDirectFullMatrix);
                 GlobalLinSysSharedPtr LinSys = GetGlobalBndLinSys(key);
                 
                 Array<OneD,NekDouble> sln = BndSol+NumDirichlet;

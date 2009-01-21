@@ -199,9 +199,11 @@ namespace Vmath
     /********** Triad  routines  ***********************/
     
     /// \brief  vvtvp (vector times vector plus vector): z = w*x + y
-    template<class T> void Vvtvp(int n, const T *w, const int incw, const T *x,
-                 const int incx, const T *y, const int incy,
-                 T *z, const int incz)
+    template<class T> void Vvtvp(int n, 
+                                 const T *w, const int incw, 
+                                 const T *x, const int incx, 
+                                 const T *y, const int incy,
+                                       T *z, const int incz)
     {
         while( n-- )
         {
@@ -241,7 +243,65 @@ namespace Vmath
             z += incz;
         }
     }
-    
+
+    /// \brief  vvtvvtp (vector times vector plus vector times vector): 
+    // z = v*w + x*y
+    template<class T> void Vvtvvtp (int n,
+                                    const T* v, int incv,
+                                    const T* w, int incw,
+                                    const T* x, int incx,
+                                    const T* y, int incy,
+                                          T* z, int incz)
+    {
+        while( n-- )
+        {
+            *z = (*v) * (*w) + (*x) * (*y);
+            v += incv;
+            w += incw;
+            x += incx;
+            y += incy;
+            z += incz;
+        }
+    }
+
+    /// \brief  vvtvvtm (vector times vector minus vector times vector): 
+    // z = v*w - x*y
+    template<class T> void Vvtvvtm (int n,
+                                    const T* v, int incv,
+                                    const T* w, int incw,
+                                    const T* x, int incx,
+                                    const T* y, int incy,
+                                          T* z, int incz)
+    {
+        while( n-- )
+        {
+            *z = (*v) * (*w) - (*x) * (*y);
+            v += incv;
+            w += incw;
+            x += incx;
+            y += incy;
+            z += incz;
+        }
+    }    
+
+    /// \brief  Vstvpp (scalar times vector plus vector plus vector): 
+    // z = v*w + x*y
+    template<class T> void Vstvpp(int n,
+                                  const T alpha,
+                                  const T* v, int incv,
+                                  const T* w, int incw,
+                                  const T* x, int incx,
+                                  T* z, int incz)
+    {
+        while( n-- )
+        {
+            *z = alpha * (*v) + (*w) + (*x);
+            v += incv;
+            w += incw;
+            x += incx;
+            z += incz;
+        }
+    }
     
     /************ Misc routine from Veclib (and extras)  ************/
     
@@ -523,6 +583,9 @@ namespace Vmath
 
 /***
 $Log: Vmath.hpp,v $
+Revision 1.18  2008/12/17 16:56:46  pvos
+Performance updates
+
 Revision 1.17  2008/09/09 14:00:55  sherwin
 Fixed error in Sdiv definition
 

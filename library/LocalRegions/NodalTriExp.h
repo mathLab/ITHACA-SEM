@@ -241,15 +241,10 @@ namespace Nektar
             DNekScalMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 
+            void MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
+                                            Array<OneD, NekDouble> &outarray);      
+
             void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
-                                        Array<OneD, NekDouble> &outarray)
-            {
-                IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetBdata(),
-                                       inarray,outarray);
-            }  
-            void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& base0, 
-                                        const Array<OneD, const NekDouble>& base1,
-                                        const Array<OneD, const NekDouble>& inarray, 
                                         Array<OneD, NekDouble> &outarray);
             void IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray, 
                                        Array<OneD, NekDouble> &outarray);
@@ -510,6 +505,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.h,v $
+ *    Revision 1.24  2008/11/24 10:31:14  pvos
+ *    Changed name from _PartitionedOp to _MatFree
+ *
  *    Revision 1.23  2008/11/19 16:01:41  pvos
  *    Added functionality for variable Laplacian coeffcients
  *

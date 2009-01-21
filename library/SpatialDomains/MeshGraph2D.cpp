@@ -656,8 +656,8 @@ namespace Nektar
                     const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
                     return LibUtilities::BasisKey(LibUtilities::eOrtho_A,nummodes,pkey);
                 }
-            case eGLL_Lagrange_SEM:
                 break;    
+            case eGLL_Lagrange_SEM:
                 {
                     const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussLobattoLegendre);
                     return LibUtilities::BasisKey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
@@ -675,6 +675,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.34  2009/01/12 10:26:59  pvos
+// Added input tags for nodal expansions
+//
 // Revision 1.33  2008/09/12 11:26:19  pvos
 // Updates for mappings in 3D
 //

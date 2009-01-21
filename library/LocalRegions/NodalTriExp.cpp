@@ -107,87 +107,7 @@ namespace Nektar
         
         void NodalTriExp::GenMetricInfo()
         {
-            SpatialDomains::GeomFactorsSharedPtr Xgfac;
-            
-            Xgfac = m_geom->GetGeomFactors();
-            
-            if(Xgfac->GetGtype() != SpatialDomains::eDeformed)
-            {
-                m_metricinfo = Xgfac;
-            }
-            else
-            {
-                int nq = GetTotPoints();   
-                int coordim = m_geom->GetCoordim();
-                int expdim = 2;
-                SpatialDomains::GeomType gtype = SpatialDomains::eDeformed;
-
-                LibUtilities::BasisSharedPtr CBasis0;
-                LibUtilities::BasisSharedPtr CBasis1;
-                CBasis0 = m_geom->GetBasis(0,0); // assumes all goembasis are same
-                CBasis1 = m_geom->GetBasis(0,1);
-                int Cnq0 = CBasis0->GetNumPoints();
-                int Cnq1 = CBasis1->GetNumPoints();
-     
-                Array<OneD, const NekDouble> ojac = Xgfac->GetJac();   
-                Array<TwoD, const NekDouble> ogmat = Xgfac->GetGmat();
-                Array<OneD,NekDouble> njac(nq);
-                Array<OneD,NekDouble> ngmat(2*coordim*nq);
-                
-                m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::
-                    AllocateSharedPtr(gtype,expdim,coordim); 
-                
-                //basis are different distributions
-                if(!(m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))||
-                   !(m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey())))
-                {
-                    int i;   
-                    int nq0 = m_base[0]->GetNumPoints();
-                    int nq1 = m_base[1]->GetNumPoints();
-
-                    // interpolate Jacobian        
-                    LibUtilities::Interp2D(CBasis0->GetPointsKey(),
-                             CBasis1->GetPointsKey(),
-                             &ojac[0],
-                             m_base[0]->GetPointsKey(),
-                             m_base[1]->GetPointsKey(), 
-                             &njac[0]);
-
-                    m_metricinfo->ResetJac(nq,njac);
-                    
-                    // interpolate Geometric data
-                    Array<OneD,NekDouble> dxdxi(nq);
-                    for(i = 0; i < 2*coordim; ++i)
-                    {
-                        Vmath::Vmul(nq,&ojac[0],1,&ogmat[i][0],1,&dxdxi[0],1);
-                        LibUtilities::Interp2D(CBasis0->GetPointsKey(),
-                                 CBasis1->GetPointsKey(), 
-                                 &dxdxi[0], 
-                                 m_base[0]->GetPointsKey(),
-                                 m_base[1]->GetPointsKey(),
-                                 &ngmat[0] + i*nq);
-                        Vmath::Vdiv(nq,&ngmat[0]+i*nq,1,&njac[0],1,&ngmat[0]+i*nq,1);
-                    }
-                    m_metricinfo->ResetGmat(ngmat,nq,2,coordim); 
-                                        
-                    NEKERROR(ErrorUtil::ewarning,
-                             "Need to check/debug routine for deformed elements");
-                }
-                else // Same data can be used 
-                {                   
-                    // Copy Jacobian
-                    Blas::Dcopy(nq,&ojac[0],1,&njac[0],1);                    
-                    m_metricinfo->ResetJac(nq,njac);
-
-                    // interpolate Geometric data
-                    ngmat = Array<OneD,NekDouble>(2*nq*coordim); 
-                    Blas::Dcopy(2*coordim*nq,&ogmat[0][0],1,ngmat.data(),1);                    
-                    m_metricinfo->ResetGmat(ngmat,nq,2,coordim);                 
-
-                    NEKERROR(ErrorUtil::ewarning,
-                             "Need to check/debug routine for deformed elements");
-                }
-            }
+            m_metricinfo = m_geom->GetGeomFactors(m_base);
         }     
         
         //----------------------------
@@ -234,27 +154,75 @@ namespace Nektar
             return ival; 
         }
 
-        void NodalTriExp::IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& base0, 
-                                                 const Array<OneD, const NekDouble>& base1,
-                                                 const Array<OneD, const NekDouble>& inarray, 
-                                                 Array<OneD, NekDouble> &outarray)
-        {
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
-            Array<OneD,NekDouble> tmp(nquad0*nquad1);
-            
-            // multiply inarray with Jacobian
-            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+        void NodalTriExp::MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
+                                                     Array<OneD, NekDouble> &outarray)
+        {        
+            if(m_metricinfo->UseQuadratureMetrics())
             {
-                Vmath::Vmul(nquad0*nquad1, jac, 1, inarray, 1, tmp, 1);
+                int    nqtot = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();                
+                const Array<OneD, const NekDouble>& metric = m_metricinfo->GetQuadratureMetrics();  
+                    
+                Vmath::Vmul(nqtot, metric, 1, inarray, 1, outarray, 1);
             }
             else
             {
-                Vmath::Smul(nquad0*nquad1, jac[0], inarray, 1, tmp, 1);
+                int    i;
+                int    nquad0 = m_base[0]->GetNumPoints();
+                int    nquad1 = m_base[1]->GetNumPoints();
+                int    nqtot  = nquad0*nquad1;
+
+                const Array<OneD, const NekDouble>& jac = m_metricinfo->GetJac();
+                const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
+                const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
+                const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
+
+                if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                {
+                    Vmath::Vmul(nqtot, jac, 1, inarray, 1, outarray, 1);
+                }
+                else
+                {
+                    Vmath::Smul(nqtot, jac[0], inarray, 1, outarray, 1);
+                }
+                    
+                // multiply by integration constants 
+                for(i = 0; i < nquad1; ++i)
+                {
+                    Vmath::Vmul(nquad0,outarray.get()+i*nquad0,1,
+                                w0.get(),1, outarray.get()+i*nquad0,1);
+                }
+
+                switch(m_base[1]->GetPointsType())
+                {
+                case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
+                    for(i = 0; i < nquad1; ++i)
+                    {
+                        Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], outarray.get()+i*nquad0,1);
+                    }
+                    break;
+                case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product 
+                    for(i = 0; i < nquad1; ++i)
+                    {
+                        Blas::Dscal(nquad0,0.5*w1[i], outarray.get()+i*nquad0,1);      
+                    }
+                    break;
+                }
             }
+        }        
+
+        void NodalTriExp::IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
+                                                 Array<OneD, NekDouble> &outarray)
+        { 
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    order1 = m_base[1]->GetNumModes();
             
-            StdNodalTriExp::IProductWRTBase_SumFac(base0,base1,tmp,outarray);
+            Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad0*order1);
+            Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);
+            
+            MultiplyByQuadratureMetric(inarray,tmp);
+            StdTriExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),m_base[1]->GetBdata(),tmp,outarray,wsp);
+            NodalToModalTranspose(outarray,outarray);  
         }
 
         void NodalTriExp::IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray, 
@@ -271,24 +239,28 @@ namespace Nektar
         void NodalTriExp::IProductWRTDerivBase_SumFac(const int dir, 
                                                       const Array<OneD, const NekDouble>& inarray, 
                                                       Array<OneD, NekDouble> & outarray)
-        {
+        {   
+            ASSERTL1((dir==0)||(dir==1)||(dir==2),"Invalid direction.");
+            ASSERTL1((dir==2)?(m_geom->GetCoordim()==3):true,"Invalid direction.");
+
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-            int    nqtot = nquad0*nquad1; 
+            int    nqtot  = nquad0*nquad1; 
+            int    wspsize = max(nqtot,m_ncoeffs);
+
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
             
-            Array<OneD, NekDouble> tmp0(nqtot);
-            Array<OneD, NekDouble> tmp1(nqtot);
-            Array<OneD, NekDouble> tmp2(nqtot);
-            Array<OneD, NekDouble> tmp3(m_ncoeffs);
-            
-            Array<OneD, NekDouble> gfac0(nqtot);
-            Array<OneD, NekDouble> gfac1(nqtot);
-            
+            Array<OneD, NekDouble> tmp0 (6*wspsize);
+            Array<OneD, NekDouble> tmp1 (tmp1 +   wspsize);
+            Array<OneD, NekDouble> tmp2 (tmp1 + 2*wspsize);
+            Array<OneD, NekDouble> tmp3 (tmp1 + 3*wspsize);
+            Array<OneD, NekDouble> gfac0(tmp1 + 4*wspsize);
+            Array<OneD, NekDouble> gfac1(tmp1 + 5*wspsize);
+
             const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
             const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
-            
+
             // set up geometric factor: 2/(1-z1)
             for(i = 0; i < nquad1; ++i)
             {
@@ -298,7 +270,7 @@ namespace Nektar
             {
                 gfac1[i] = 0.5*(1+z0[i]);
             }
-            
+
             for(i = 0; i < nquad1; ++i)  
             {
                 Vmath::Smul(nquad0,gfac0[i],&inarray[0]+i*nquad0,1,&tmp0[0]+i*nquad0,1);
@@ -308,68 +280,28 @@ namespace Nektar
             {
                 Vmath::Vmul(nquad0,&gfac1[0],1,&tmp0[0]+i*nquad0,1,&tmp1[0]+i*nquad0,1);
             }
-            
-            switch(dir)
+                               
+            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-            case 0:
-                {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        Vmath::Vmul(nqtot,&gmat[0][0],1,&tmp0[0],1,&tmp0[0],1);
-                        Vmath::Vmul(nqtot,&gmat[1][0],1,&tmp1[0],1,&tmp1[0],1);
-                        Vmath::Vmul(nqtot,&gmat[1][0],1,&inarray[0],1,&tmp2[0],1);
-                    }
-                    else
-                    {
-                        Vmath::Smul(nqtot, gmat[0][0], tmp0, 1, tmp0, 1);
-                        Vmath::Smul(nqtot, gmat[1][0], tmp1, 1, tmp1, 1);
-                        Vmath::Smul(nqtot, gmat[1][0], inarray, 1, tmp2, 1);
-                    }
-                }
-                break;
-            case 1:
-                {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        Vmath::Vmul(nqtot,&gmat[2][0],1,&tmp0[0],1,&tmp0[0],1);
-                        Vmath::Vmul(nqtot,&gmat[3][0],1,&tmp1[0],1,&tmp1[0],1);
-                        Vmath::Vmul(nqtot,&gmat[3][0],1,&inarray[0],1,&tmp2[0],1);
-                    }
-                    else
-                    {
-                        Vmath::Smul(nqtot, gmat[2][0], tmp0, 1, tmp0, 1);
-                        Vmath::Smul(nqtot, gmat[3][0], tmp1, 1, tmp1, 1);
-                        Vmath::Smul(nqtot, gmat[3][0], inarray, 1, tmp2, 1);
-                    }
-                }
-                break;
-            case 2:
-                {
-                    ASSERTL1(m_geom->GetCoordim() == 3,"input dir is out of range");
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        Vmath::Vmul(nqtot,&gmat[4][0],1,&tmp0[0],1,&tmp0[0],1);
-                        Vmath::Vmul(nqtot,&gmat[5][0],1,&tmp1[0],1,&tmp1[0],1);
-                        Vmath::Vmul(nqtot,&gmat[5][0],1,&inarray[0],1,&tmp2[0],1);
-                    }
-                    else
-                    {
-                        Vmath::Smul(nqtot, gmat[4][0], tmp0, 1, tmp0, 1);
-                        Vmath::Smul(nqtot, gmat[5][0], tmp1, 1, tmp1, 1);
-                        Vmath::Smul(nqtot, gmat[5][0], inarray, 1, tmp2, 1);
-                    }
-                }
-                break;
-            default:
-                {
-                    ASSERTL1(dir >= 0 &&dir < 2,"input dir is out of range");
-                }
-                break;
-            }       
+                Vmath::Vmul(nqtot,&gmat[2*dir][0],  1,&tmp0[0],   1,&tmp0[0],1);
+                Vmath::Vmul(nqtot,&gmat[2*dir+1][0],1,&tmp1[0],   1,&tmp1[0],1);
+                Vmath::Vmul(nqtot,&gmat[2*dir+1][0],1,&inarray[0],1,&tmp2[0],1);
+            }
+            else
+            {
+                Vmath::Smul(nqtot, gmat[2*dir][0],   tmp0,    1, tmp0, 1);
+                Vmath::Smul(nqtot, gmat[2*dir+1][0], tmp1,    1, tmp1, 1);
+                Vmath::Smul(nqtot, gmat[2*dir+1][0], inarray, 1, tmp2, 1);
+            }
             Vmath::Vadd(nqtot, tmp0, 1, tmp1, 1, tmp1, 1); 
-            IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),tmp1,tmp3);
-            IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),tmp2,outarray);
-            Vmath::Vadd(m_ncoeffs, tmp3, 1, outarray, 1, outarray, 1);                 
+
+            MultiplyByQuadratureMetric(tmp1,tmp1);
+            MultiplyByQuadratureMetric(tmp2,tmp2);
+
+            IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),m_base[1]->GetBdata() ,tmp1,tmp3    ,tmp0);
+            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata() ,m_base[1]->GetDbdata(),tmp2,outarray,tmp0);
+            Vmath::Vadd(m_ncoeffs, tmp3, 1, outarray, 1, outarray, 1);  
+            NodalToModalTranspose(outarray,outarray);              
         }
 
         void NodalTriExp::IProductWRTDerivBase_MatOp(const int dir, 
@@ -1111,6 +1043,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.28  2008/11/05 16:08:15  pvos
+ *    Added elemental optimisation functionality
+ *
  *    Revision 1.27  2008/09/09 15:05:09  sherwin
  *    Updates related to cuved geometries. Normals have been removed from m_metricinfo and replaced with a direct evaluation call. Interp methods have been moved to LibUtilities
  *

@@ -72,99 +72,24 @@ namespace Nektar
             return StdExpansion2D::Integral(inarray,w0,w1);
         }
 
-        void StdQuadExp::IProductWRTBase_Collocation(const Array<OneD, const NekDouble>& inarray, 
-                                                     Array<OneD, NekDouble> &outarray)
-        {         
-            int i;
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            
-            const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
-            const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
-
-            if(m_base[0]->Collocation() && m_base[1]->Collocation())
-            {              
-                // multiply by integration constants 
-                for(i = 0; i < nquad1; ++i)
-                {
-                    Vmath::Vmul(nquad0,inarray.get()+i*nquad0,1,
-                                w0.get(),1,outarray.get()+i*nquad0,1);
-                }
-                
-                for(i = 0; i < nquad0; ++i)
-                {
-                    Vmath::Vmul(nquad1,outarray.get()+i,nquad0,w1.get(),1,
-                                outarray.get()+i,nquad0);
-                }             
-            }
-            else
-            {               
-                Array<OneD, NekDouble> tmp(nquad0*nquad1);
-                // multiply by integration constants 
-                for(i = 0; i < nquad1; ++i)
-                {
-                    Vmath::Vmul(nquad0,inarray.get()+i*nquad0,1,
-                                w0.get(),1,tmp.get()+i*nquad0,1);
-                }
-                
-                for(i = 0; i < nquad0; ++i)
-                {
-                    Vmath::Vmul(nquad1,tmp.get()+i,nquad0,w1.get(),1,
-                                tmp.get()+i,nquad0);
-                }
-                
-                if(m_base[0]->Collocation())
-                {
-                    int order1 = m_base[1]->GetNumModes(); 
-                    const Array<OneD, const NekDouble>& base1 = m_base[1]->GetBdata();
-                    Blas::Dgemm('N', 'N',nquad0, order1, nquad1, 1.0, tmp.get(),                            
-                                nquad0, base1.get(), nquad1, 0.0,outarray.get(),nquad0);
-                }
-                else
-                {
-                    int order0 = m_base[0]->GetNumModes();
-                    const Array<OneD, const NekDouble>& base0 = m_base[0]->GetBdata();
-                    Blas::Dgemm('T','N',order0,nquad1,nquad0,1.0,base0.get(),               
-                                nquad0,tmp.get(),nquad0,0.0,outarray.get(),order0);
-                }
-            }
-        }
-
-        void StdQuadExp::IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& base0, 
-                                                const Array<OneD, const NekDouble>& base1,
-                                                const Array<OneD, const NekDouble>& inarray, 
+        void StdQuadExp::IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
                                                 Array<OneD, NekDouble> &outarray)
         {
             int i;
             int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();   
-            int     nqtot = nquad0*nquad1;         
+            int    nquad1 = m_base[1]->GetNumPoints();
             int    order0 = m_base[0]->GetNumModes();
-            int    order1 = m_base[1]->GetNumModes();
-            
-            Array<OneD, NekDouble> wsp(nqtot+nquad0*order1);
-            
-            const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
-            const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
+                            
+            Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad1*order0);
+            Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);         
             
             // multiply by integration constants 
-            for(i = 0; i < nquad1; ++i)
-            {
-                Vmath::Vmul(nquad0, inarray.get()+i*nquad0,1,
-                            w0.get(),1,wsp.get()+i*nquad0,1);
-            }
+            MultiplyByQuadratureMetric(inarray,tmp);
             
-            for(i = 0; i < nquad0; ++i)
-            {
-                Vmath::Vmul(nquad1,wsp.get()+i,nquad0,w1.get(),1,
-                            wsp.get()+i,nquad0);
-            }
-
-            Blas::Dgemm('T','N',order0,nquad1,nquad0,1.0,base0.get(),               
-                        nquad0,wsp.get(),nquad0,0.0,wsp.get()+nqtot,order0);
-            Blas::Dgemm('N', 'N',order0,order1, nquad1,1.0, wsp.get()+nqtot,                            
-                        order0, base1.get(), nquad1, 0.0,outarray.get(),order0); 
-        }   
+            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                         m_base[1]->GetBdata(),
+                                         tmp,outarray,wsp,true,true);
+        }
         
         void StdQuadExp::IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray, 
                                                Array<OneD, NekDouble> &outarray)
@@ -176,60 +101,56 @@ namespace Nektar
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
                         m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);
         }
-
-
         
         void StdQuadExp::IProductWRTDerivBase_SumFac(const int dir, 
                                                      const Array<OneD, const NekDouble>& inarray, 
                                                      Array<OneD, NekDouble> &outarray)
-        {    
-            switch(dir)
+        {   
+            ASSERTL0((dir==0)||(dir==1),"input dir is out of range");
+ 
+            int i;
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int     nqtot = nquad0*nquad1;
+            int    order0 = m_base[0]->GetNumModes();
+                            
+            Array<OneD,NekDouble> tmp(nqtot+nquad1*order0);
+            Array<OneD,NekDouble> wsp(tmp+nqtot);         
+            
+            // multiply by integration constants 
+            MultiplyByQuadratureMetric(inarray,tmp);
+            
+            if(dir) // dir == 1
             {
-            case 0:
-                {
-                    IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),
-                                           inarray,outarray);
-                }
-                break;
-            case 1:
-                {
-                    IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),
-                                           inarray,outarray);  
-                }
-                break;
-            default:
-                {
-                    ASSERTL1(false,"input dir is out of range");
-                }
-                break;
-            }    
+                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                             m_base[1]->GetDbdata(),
+                                             tmp,outarray,wsp,true,false);
+            }
+            else    // dir == 0
+            {
+                IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                             m_base[1]->GetBdata(),
+                                             tmp,outarray,wsp,false,true);
+            } 
         }  
         
         void StdQuadExp::IProductWRTDerivBase_MatOp(const int dir, 
                                                     const Array<OneD, const NekDouble>& inarray, 
                                                     Array<OneD, NekDouble> &outarray)
         {
+            ASSERTL0((dir==0)||(dir==1),"input dir is out of range");
+
             int nq = GetTotPoints();
             MatrixType mtype;
 
-            switch(dir)
+            if(dir) // dir == 1
             {
-            case 0:
-                {
-                    mtype = eIProductWRTDerivBase0;
-                }
-                break;
-            case 1:
-                {
-                    mtype = eIProductWRTDerivBase1;
-                }
-                break;
-            default:
-                {
-                    ASSERTL1(false,"input dir is out of range");
-                }
-                break;
-            }  
+                mtype = eIProductWRTDerivBase1;
+            }
+            else    // dir == 0
+            {
+                mtype = eIProductWRTDerivBase0;
+            } 
             
             StdMatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
             DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);            
@@ -324,32 +245,80 @@ namespace Nektar
             }
         }
         
+        void StdQuadExp::MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
+                                                    Array<OneD, NekDouble> &outarray)
+        {         
+            int i; 
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+                
+            const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
+            const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
+
+            // multiply by integration constants 
+            for(i = 0; i < nquad1; ++i)
+            {
+                Vmath::Vmul(nquad0, inarray.get()+i*nquad0,1,
+                            w0.get(),1,outarray.get()+i*nquad0,1);
+            }
+                
+            for(i = 0; i < nquad0; ++i)
+            {
+                Vmath::Vmul(nquad1,outarray.get()+i,nquad0,w1.get(),1,
+                            outarray.get()+i,nquad0);
+            }                
+        }
+
         void StdQuadExp::LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                          Array<OneD,NekDouble> &outarray,
                                                          const StdMatrixKey &mkey)
         {
             if(mkey.GetNvariableLaplacianCoefficients() == 0)
             {
-                // This implementation is only valid when there is no coefficients
+                // This implementation is only valid when there are no coefficients
                 // associated to the Laplacian operator
-                int    i;
-                int    nquad0 = m_base[0]->GetNumPoints();
-                int    nquad1 = m_base[1]->GetNumPoints();
-                int    nqtot = nquad0*nquad1; 
+                int       nquad0  = m_base[0]->GetNumPoints();
+                int       nquad1  = m_base[1]->GetNumPoints();
+                int       nqtot   = nquad0*nquad1; 
+                int       wspsize = max(nqtot,m_ncoeffs);
                 
-                Array<OneD,NekDouble> physValues(3*nqtot+m_ncoeffs);
-                Array<OneD,NekDouble> dPhysValuesdx(physValues+nqtot);
-                Array<OneD,NekDouble> dPhysValuesdy(physValues+2*nqtot);
-                Array<OneD,NekDouble> tmp(physValues+3*nqtot);
+                const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
+                const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
+                const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
+                const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
                 
-                BwdTrans_SumFac(inarray,physValues);
+                // Allocate temporary storage
+                Array<OneD,NekDouble> wsp0(3*wspsize);
+                Array<OneD,NekDouble> wsp1(wsp0+wspsize);
+                Array<OneD,NekDouble> wsp2(wsp0+2*wspsize);
                 
-                // Laplacian matrix operation
-                PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
+                if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
+                {  
+                    // LAPLACIAN MATRIX OPERATION
+                    // wsp0 = u       = B   * u_hat 
+                    // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
+                    // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
+                    BwdTrans_SumFacKernel(base0,base1,inarray,wsp0,wsp1,true,true);
+                    StdExpansion2D::PhysTensorDeriv(wsp0,wsp1,wsp2);
+                }
+                else
+                {
+                    StdExpansion2D::PhysTensorDeriv(inarray,wsp1,wsp2);                    
+                }
                 
-                IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray);
-                IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,tmp);  
-                Vmath::Vadd(m_ncoeffs,tmp.get(),1,outarray.get(),1,outarray.get(),1);               
+                // wsp1 = k = wsp1 * w0 * w1
+                // wsp2 = l = wsp2 * w0 * w1
+                MultiplyByQuadratureMetric(wsp1,wsp1);
+                MultiplyByQuadratureMetric(wsp2,wsp2);
+                
+                // outarray = m = (D_xi1 * B)^T * k 
+                // wsp1     = n = (D_xi2 * B)^T * l 
+                IProductWRTBase_SumFacKernel(dbase0,base1,wsp1,outarray,wsp0,false,true);
+                IProductWRTBase_SumFacKernel(base0,dbase1,wsp2,wsp1,    wsp0,true,false);
+                
+                // outarray = outarray + wsp1
+                //          = L * u_hat
+                Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);     
             }
             else
             {
@@ -360,31 +329,60 @@ namespace Nektar
         void StdQuadExp::HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                          Array<OneD,NekDouble> &outarray,
                                                          const StdMatrixKey &mkey)
-        {
-            int    i;
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int    nqtot = nquad0*nquad1; 
-            NekDouble lambda = mkey.GetConstant(0);
-                
-            Array<OneD,NekDouble> physValues(3*nqtot+m_ncoeffs);
-            Array<OneD,NekDouble> dPhysValuesdx(physValues+nqtot);
-            Array<OneD,NekDouble> dPhysValuesdy(physValues+2*nqtot);
-            Array<OneD,NekDouble> tmp(physValues+3*nqtot);
+        { 
+            int       nquad0  = m_base[0]->GetNumPoints();
+            int       nquad1  = m_base[1]->GetNumPoints();
+            int       nqtot   = nquad0*nquad1; 
+            int       wspsize = max(nqtot,m_ncoeffs);
+            NekDouble lambda  = mkey.GetConstant(0);
+                                
+            const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
+            const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
+            const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
+            const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
 
-            BwdTrans_SumFac(inarray,physValues);
+            // Allocate temporary storage
+            Array<OneD,NekDouble> wsp0(4*wspsize);
+            Array<OneD,NekDouble> wsp1(wsp0+wspsize);
+            Array<OneD,NekDouble> wsp2(wsp0+2*wspsize);
+            Array<OneD,NekDouble> wsp3(wsp0+3*wspsize);
+
+            if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
+            {  
+                // MASS MATRIX OPERATION
+                // The following is being calculated:
+                // wsp0     = B   * u_hat = u
+                // wsp1     = W   * wsp0
+                // outarray = B^T * wsp1  = B^T * W * B * u_hat = M * u_hat 
+                BwdTrans_SumFacKernel       (base0,base1,inarray,wsp0,    wsp1,true,true);
+                MultiplyByQuadratureMetric  (wsp0,wsp2);
+                IProductWRTBase_SumFacKernel(base0,base1,wsp2,   outarray,wsp1,true,true);
+                
+                // LAPLACIAN MATRIX OPERATION
+                // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
+                // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
+                StdExpansion2D::PhysTensorDeriv(wsp0,wsp1,wsp2);
+            }
+            else
+            {
+                // specialised implementation for the classical spectral element method
+                StdExpansion2D::PhysTensorDeriv(inarray,wsp1,wsp2);
+                MultiplyByQuadratureMetric(inarray,outarray);
+            }
             
-            // mass matrix operation
-            IProductWRTBase_SumFac((m_base[0]->GetBdata()),(m_base[1]->GetBdata()),physValues,tmp);
+            // wsp1 = k = wsp1 * w0 * w1
+            // wsp2 = l = wsp2 * w0 * w1
+            MultiplyByQuadratureMetric(wsp1,wsp1);
+            MultiplyByQuadratureMetric(wsp2,wsp2);
             
-            // Laplacian matrix operation
-            PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
-            
-            IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),dPhysValuesdx,outarray);
-            Blas::Daxpy(m_ncoeffs, lambda, tmp.get(), 1, outarray.get(), 1);
-            
-            IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,tmp);  
-            Vmath::Vadd(m_ncoeffs,tmp.get(),1,outarray.get(),1,outarray.get(),1);           
+            // wsp1 = m = (D_xi1 * B)^T * k 
+            // wsp0 = n = (D_xi2 * B)^T * l 
+            IProductWRTBase_SumFacKernel(dbase0,base1,wsp1,wsp0,wsp3,false,true);
+            IProductWRTBase_SumFacKernel(base0,dbase1,wsp2,wsp1,wsp3,true,false);
+
+            // outarray = lambda * outarray + (wsp0 + wsp1)
+            //          = (lambda * M + L ) * u_hat
+            Vmath::Vstvpp(m_ncoeffs,lambda,&outarray[0],1,&wsp1[0],1,&wsp0[0],1,&outarray[0],1);
         }
         
         ///////////////////////////////
@@ -426,45 +424,16 @@ namespace Nektar
         //------------------------------
         // Evaluation Methods
         //-----------------------------
-        void StdQuadExp::BwdTrans_Collocation(const Array<OneD, const NekDouble>& inarray,
-                                              Array<OneD, NekDouble> &outarray)
-        {           
-            int           nquad0 = m_base[0]->GetNumPoints();
-            int           nquad1 = m_base[1]->GetNumPoints();
-
-            if(m_base[0]->Collocation() && m_base[1]->Collocation())
-            {  
-                Vmath::Vcopy(nquad0*nquad1, inarray, 1, outarray, 1);
-            }
-            else if(m_base[0]->Collocation())
-            {
-                int order1 = m_base[1]->GetNumModes();
-                Blas::Dgemm('N','T', nquad0, nquad1,order1, 1.0, &inarray[0],
-                            nquad0, (m_base[1]->GetBdata()).get(), nquad1, 0.0, &outarray[0], 
-                            nquad0);
-            }
-            else
-            {
-                int order0 = m_base[0]->GetNumModes();
-                Blas::Dgemm('N','N', nquad0,nquad1,order0,1.0, (m_base[0]->GetBdata()).get(),
-                            nquad0, &inarray[0], order0,0.0,&outarray[0], nquad0);
-            }
-        }
         
         void StdQuadExp::BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                          Array<OneD, NekDouble> &outarray)
         {
-            int           nquad0 = m_base[0]->GetNumPoints();
-            int           nquad1 = m_base[1]->GetNumPoints();
-            int           nmodes0 = m_base[0]->GetNumModes();
-            int           nmodes1 = m_base[1]->GetNumModes();
+            Array<OneD, NekDouble> wsp(m_base[0]->GetNumPoints()* 
+                                       m_base[1]->GetNumModes());
 
-            Array<OneD, NekDouble> tmp(nquad0*nmodes1);
-            Blas::Dgemm('N','N', nquad0,nmodes1,nmodes0,1.0, (m_base[0]->GetBdata()).get(),
-                        nquad0, &inarray[0], nmodes0,0.0,&tmp[0], nquad0);
-            Blas::Dgemm('N','T', nquad0, nquad1,nmodes1, 1.0, &tmp[0],
-                        nquad0, (m_base[1]->GetBdata()).get(), nquad1, 0.0, &outarray[0], 
-                        nquad0); 
+            BwdTrans_SumFacKernel(m_base[0]->GetBdata(),
+                                  m_base[1]->GetBdata(),
+                                  inarray,outarray,wsp,true,true);
         }
 
         void StdQuadExp::FwdTrans(const Array<OneD, const NekDouble>& inarray,
@@ -1289,6 +1258,9 @@ namespace Nektar
 
 /** 
  * $Log: StdQuadExp.cpp,v $
+ * Revision 1.48  2008/12/16 11:31:52  pvos
+ * Performance updates
+ *
  * Revision 1.47  2008/11/24 10:31:14  pvos
  * Changed name from _PartitionedOp to _MatFree
  *

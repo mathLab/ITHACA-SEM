@@ -200,7 +200,7 @@ namespace Nektar
             bool                            m_ownverts;
             std::list<CompToElmt>           m_elmtmap;
 
-            void GenGeomFactors(void);
+            void GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
 
         private:
             bool m_owndata;   ///< Boolean indicating whether object owns the data
@@ -250,9 +250,9 @@ namespace Nektar
 				return GetCoord(i,Lcoord);
 			}
 
-            virtual void v_GenGeomFactors(void)
+            virtual void v_GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
             {
-                GenGeomFactors();
+                GenGeomFactors(tbasis);
             }
 
             virtual void v_SetOwnData()
@@ -323,6 +323,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.25  2008/11/17 08:59:01  ehan
+// Added GetNumVerts and GetNumEdges
+//
 // Revision 1.24  2008/09/12 11:26:19  pvos
 // Updates for mappings in 3D
 //

@@ -164,7 +164,7 @@ namespace Nektar
             std::list<CompToElmt> m_elmtmap;
 
             Array<OneD, StdRegions::StdExpansion3DSharedPtr> m_xmap;
-			void GenGeomFactors(void);
+			void GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
 
         private:
             bool m_owndata;
@@ -174,9 +174,9 @@ namespace Nektar
             void SetUpEdgeOrientation();
             void SetUpFaceOrientation();
             
-            virtual void v_GenGeomFactors(void)
+            virtual void v_GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
             {
-                GenGeomFactors();
+                GenGeomFactors(tbasis);
             }
 
             virtual void v_FillGeom()
@@ -267,6 +267,9 @@ namespace Nektar
 
 //
 // $Log: PyrGeom.h,v $
+// Revision 1.13  2008/11/17 08:59:12  ehan
+// Added necessary mapping routines for Tet
+//
 // Revision 1.12  2008/06/30 19:35:13  ehan
 // Fixed infinity recursive-loop error.
 //

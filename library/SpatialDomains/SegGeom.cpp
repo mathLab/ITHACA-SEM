@@ -280,22 +280,19 @@ namespace Nektar
         }
 
         // Set up GeoFac for this geometry using Coord quadrature distribution
-        void SegGeom::GenGeomFactors(void)
+        void SegGeom::GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
-            GeomFactorsSharedPtr gfac;
-            const SpatialDomains::GeomType kRegularType = eRegular;
+            SpatialDomains::GeomType gType = eRegular;
             const SpatialDomains::GeomType kDeformedType = eDeformed;
             
             FillGeom();
             
-            if(m_xmap[0]->GetBasisNumModes(0)==2)
-            {// assumes all direction have same order
-                m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(kRegularType, m_coordim, m_xmap);
-            }
-            else
+            if(m_xmap[0]->GetBasisNumModes(0)!=2)
             {
-                m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(kDeformedType, m_coordim, m_xmap);
+                gType = eDeformed;
             }
+
+            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(gType, m_coordim, m_xmap, tbasis);
         }
         
         
@@ -397,6 +394,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.24  2008/12/18 14:08:59  pvos
+// NekConstants update
+//
 // Revision 1.23  2008/09/09 14:22:39  sherwin
 // Added curved segment constructor methods
 //

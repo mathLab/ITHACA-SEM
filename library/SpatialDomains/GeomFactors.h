@@ -69,30 +69,39 @@ namespace Nektar
 
             /** \brief One dimensional geometric factors based on one,
             two or three dimensional coordinate description
+            The argument 'tbasis' contains the information about the quadrature points 
+            on which the weighted metric terms should be specified
             **/
-            GeomFactors(const GeomType gtype, const int coordim,
-                const Array<OneD, const StdRegions::StdExpansion1DSharedPtr> &Coords);
+            GeomFactors(const GeomType gtype, 
+                        const int coordim,
+                        const Array<OneD, const StdRegions::StdExpansion1DSharedPtr> &Coords,
+                        const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis,
+                        const bool SetUpQuadratureMetrics = false,
+                        const bool SetUpLaplacianMetrics  = false);
 
             /**  \brief Two dimensional geometric factors based on two
             or three dimensional coordinate description
+            The argument 'tbasis' contains the information about the quadrature points 
+            on which the weighted metric terms should be specified
             **/
-            GeomFactors(const GeomType gtype, const int coordim,
-                        const Array<OneD, const StdRegions::StdExpansion2DSharedPtr> &Coords);
+            GeomFactors(const GeomType gtype, 
+                        const int coordim,
+                        const Array<OneD, const StdRegions::StdExpansion2DSharedPtr> &Coords,
+                        const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis,
+                        const bool SetUpQuadratureMetrics = true,
+                        const bool SetUpLaplacianMetrics  = true);
 
-            GeomFactors(enum StdRegions::ExpansionType shape,
-                        const GeomFactors &Xgfac,
-                        const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
-                       
-            
             /**  \brief Three dimensional geometric factors based on two
             or three dimensional coordinate description
+            The argument 'tbasis' contains the information about the quadrature points 
+            on which the weighted metric terms should be specified
             **/
-
-            GeomFactors(const GeomType gtype, const int coordim,
-            const Array<OneD, const StdRegions::StdExpansion3DSharedPtr> &Coords);
-
-//             GeomFactorsOld(const GeomType gtype, const int coordim,
-//                         const Array<OneD, const StdRegions::StdExpansion3DSharedPtr> &Coords);
+            GeomFactors(const GeomType gtype, 
+                        const int coordim,
+                        const Array<OneD, const StdRegions::StdExpansion3DSharedPtr> &Coords,
+                        const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis,
+                        const bool SetUpQuadratureMetrics = false,
+                        const bool SetUpLaplacianMetrics  = false);
 
             ~GeomFactors();
 
@@ -101,36 +110,46 @@ namespace Nektar
                 return m_gtype;
             }
 
-//             inline const Array<TwoD, const NekDouble> &GetGmat() const
-//             {
-//                 return m_gmat;
-//             }
+            inline const Array<OneD, const NekDouble> &GetJac() const 
+            {
+                return m_jac;
+            }
 
             inline const Array<TwoD, const NekDouble> &GetGmat() const
             {
                 return m_gmat;
             }
 
-
-            inline const Array<OneD, const NekDouble> &GetJac() const 
+            inline bool UseQuadratureMetrics() const
             {
-                return m_jac;
+                return m_quadratureMetricsFlag;
+            }
+
+            inline bool UseLaplacianMetrics() const 
+            {
+                return m_laplacianMetricsFlag;
+            }
+
+            inline const Array<OneD, const NekDouble> &GetQuadratureMetrics() const 
+            {
+                ASSERTL0(m_quadratureMetricsFlag,"This metric has not been set up for this type of expansion");
+                return m_weightedjac;
+            }
+
+            inline const Array<TwoD, const NekDouble> &GetLaplacianMetrics() const
+            {
+                ASSERTL0(m_laplacianMetricsFlag,"This metric has not been set up for this type of expansion");
+                return m_laplacianmetrics;
             }
 
             Array<OneD, NekDouble> GenNormals2D(enum StdRegions::ExpansionType shape, const int edge,  const LibUtilities::PointsKey &to_key);
             
             
-            inline void ResetGmat(const Array<OneD, const NekDouble> &ndata, 
-                                  const int nq, const int expdim, 
+            inline void ResetGmat(const Array<OneD, const NekDouble> &ndata,
+                                  const int nq, const int expdim,
                                   const int coordim)
             {
                 m_gmat = Array<TwoD,NekDouble>(expdim*coordim,nq,ndata.data());
-            }
-
-
-            inline void ResetGmat(const Array<TwoD, const NekDouble> &ndata)
-            {
-                m_gmat = Array<TwoD,NekDouble>(ndata.GetRows(),ndata.GetColumns(),ndata.data());
             }
 
             inline void ResetJac(int nq, const Array<OneD, const NekDouble> &ndata)
@@ -141,31 +160,32 @@ namespace Nektar
         protected:
 
         private:
-            Array<OneD,NekDouble> m_jac;
-            Array<TwoD,NekDouble> m_gmat;
-
             GeomType m_gtype;
             int m_expdim;
             int m_coordim;
 
+            bool m_quadratureMetricsFlag;
+            bool m_laplacianMetricsFlag;
+
+            Array<OneD,NekDouble> m_jac;
+            Array<OneD,NekDouble> m_weightedjac;
+            Array<TwoD,NekDouble> m_gmat;
+            Array<TwoD,NekDouble> m_laplacianmetrics;
+
             Array<OneD,LibUtilities::PointsKey> m_pointsKey;
             
 
-            void SetUpJacGmat(const int nquad,
-                              const Array<OneD,NekDouble> der[3]);
-            void SetUpJacGmat(enum StdRegions::ExpansionType shape,
-                              const int nquad0,
-                              const int nquad1,
-                              const Array<OneD, NekDouble> d1[3],
-                              const Array<OneD, NekDouble> d2[3]);
-                              
-            void SetUpJacGmat(enum StdRegions::ExpansionType shape,
-                                const int nquad0,
-                                const int nquad1,
-                                const int nquad2,
-                                const Array<OneD, NekDouble> d1[3],
-                                const Array<OneD, NekDouble> d2[3],
-                                const Array<OneD, NekDouble> d3[3]);
+            void SetUpJacGmat1D(const Array<OneD, Array<OneD, NekDouble> > d1);            
+            void SetUpJacGmat2D(const Array<OneD, Array<OneD, NekDouble> > d1,
+                                const Array<OneD, Array<OneD, NekDouble> > d2);        
+            void SetUpJacGmat3D(const Array<OneD, Array<OneD, NekDouble> > d1,
+                                const Array<OneD, Array<OneD, NekDouble> > d2,
+                                const Array<OneD, Array<OneD, NekDouble> > d3);
+
+            void SetUpLaplacianMetrics2D(StdRegions::ExpansionType shape,
+                                         const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
+            void SetUpQuadratureMetrics2D(StdRegions::ExpansionType shape,
+                                          const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
             
         };
     } //end of namespace
@@ -175,6 +195,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.23  2008/12/17 16:57:20  pvos
+// Performance updates
+//
 // Revision 1.22  2008/12/16 14:09:07  pvos
 // Performance updates
 //

@@ -685,7 +685,7 @@ namespace Nektar
         }
 
         // Set up GeoFac for this geometry using Coord quadrature distribution
-        void PrismGeom::GenGeomFactors(void)
+        void PrismGeom::GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {         
             GeomType Gtype = eRegular;
             GeomShapeType GSType = eQuadrilateral;
@@ -735,7 +735,7 @@ namespace Nektar
 //                     }
 //               }
 
-            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap);
+            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
 			
 		}
 
@@ -840,6 +840,9 @@ namespace Nektar
 
 //
 // $Log: PrismGeom.cpp,v $
+// Revision 1.14  2009/01/01 02:32:55  ehan
+// cleaned up the code
+//
 // Revision 1.13  2008/12/18 14:08:58  pvos
 // NekConstants update
 //

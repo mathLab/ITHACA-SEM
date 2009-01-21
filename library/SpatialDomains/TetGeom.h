@@ -203,7 +203,7 @@ namespace Nektar
             std::list<CompToElmt> m_elmtmap;
 
             Array<OneD, StdRegions::StdExpansion3DSharedPtr> m_xmap;
-            void GenGeomFactors(void);
+            void GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
 
         private:
             bool m_owndata;
@@ -213,9 +213,9 @@ namespace Nektar
             void SetUpEdgeOrientation();
             void SetUpFaceOrientation();
             
-            virtual void v_GenGeomFactors(void)
+            virtual void v_GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
             {
-                GenGeomFactors();
+                GenGeomFactors(tbasis);
             }
             
             virtual void v_SetOwnData()
@@ -332,6 +332,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.h,v $
+// Revision 1.16  2008/11/17 08:58:32  ehan
+// Added necessary mapping routines for Tet
+//
 // Revision 1.15  2008/08/26 02:18:17  ehan
 // Changed shared pointer (TriGeomSharedPtr to the Geometry2DSharedPtr) in the face function.
 //

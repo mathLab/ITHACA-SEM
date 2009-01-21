@@ -111,32 +111,33 @@ namespace Nektar
 
         void HexExp::GenMetricInfo()
         {
-            SpatialDomains::GeomFactorsSharedPtr Xgfac;
+            m_metricinfo = m_geom->GetGeomFactors(m_base);
+//             SpatialDomains::GeomFactorsSharedPtr Xgfac;
             
-            Xgfac = m_geom->GetGeomFactors();
+//             Xgfac = m_geom->GetGeomFactors();
 
-            if(Xgfac->GetGtype() != SpatialDomains::eDeformed)
-            {
-                m_metricinfo = Xgfac;
-            }
-            else
-            {
-                //basis are different distributions
-               if(!(m_base[0]->GetBasisKey().SamePoints(m_geom->GetBasis(0,0)->GetBasisKey()))||
-                  !(m_base[1]->GetBasisKey().SamePoints(m_geom->GetBasis(0,1)->GetBasisKey()))||
-                  !(m_base[2]->GetBasisKey().SamePoints(m_geom->GetBasis(0,2)->GetBasisKey())))
-                {
-                    StdRegions::ExpansionType shape = StdRegions::eHexahedron;
+//             if(Xgfac->GetGtype() != SpatialDomains::eDeformed)
+//             {
+//                 m_metricinfo = Xgfac;
+//             }
+//             else
+//             {
+//                 //basis are different distributions
+//                if(!(m_base[0]->GetBasisKey().SamePoints(m_geom->GetBasis(0,0)->GetBasisKey()))||
+//                   !(m_base[1]->GetBasisKey().SamePoints(m_geom->GetBasis(0,1)->GetBasisKey()))||
+//                   !(m_base[2]->GetBasisKey().SamePoints(m_geom->GetBasis(0,2)->GetBasisKey())))
+//                 {
+//                     StdRegions::ExpansionType shape = StdRegions::eHexahedron;
                     
-                    m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>:: AllocateSharedPtr(shape,*Xgfac,m_base);
+//                     m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>:: AllocateSharedPtr(shape,*Xgfac,m_base);
 
-                }
-                else // Same data can be used 
-                {                   
-                    m_metricinfo = Xgfac;
-                } 
+//                 }
+//                 else // Same data can be used 
+//                 {                   
+//                     m_metricinfo = Xgfac;
+//                 } 
                 
-            }
+//             }
         }
 
 
@@ -870,6 +871,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.cpp,v $
+ *    Revision 1.22  2008/09/23 18:20:25  pvos
+ *    Updates for working ProjectContField3D demo
+ *
  *    Revision 1.21  2008/09/20 11:34:52  ehan
  *    Fixed some errors
  *

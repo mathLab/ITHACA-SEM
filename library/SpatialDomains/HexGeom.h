@@ -194,7 +194,7 @@ namespace Nektar
             bool m_ownverts;
             std::list<CompToElmt> m_elmtmap;
 
-            void GenGeomFactors(void);
+            void GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
         
         private:
 
@@ -231,9 +231,9 @@ namespace Nektar
                 return WhichEdge(edge);
             }
 
-            virtual void v_GenGeomFactors(void)
+            virtual void v_GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
             {
-                GenGeomFactors( );
+                GenGeomFactors(tbasis);
             }
 
             virtual void v_SetOwnData()
@@ -325,6 +325,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.23  2008/11/17 08:59:46  ehan
+// Added necessary mapping routines for Tet
+//
 // Revision 1.22  2008/10/09 21:03:44  ehan
 // Fixed error from the extra qualifier.
 //

@@ -42,16 +42,25 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        GeomFactors::GeomFactors(void):m_gtype(eRegular),
-                                       m_expdim(0), m_coordim(0)
+        GeomFactors::GeomFactors(void):
+            m_gtype(eRegular),
+            m_expdim(0), 
+            m_coordim(0),
+            m_quadratureMetricsFlag(false),
+            m_laplacianMetricsFlag(false)
         {
         }
 
         GeomFactors::GeomFactors(const GeomType gtype,
-            const int expdim, const int coordim):m_gtype(gtype),
-            m_expdim(expdim), m_coordim(coordim)
+                                 const int expdim, 
+                                 const int coordim):
+            m_gtype(gtype),
+            m_expdim(expdim), 
+            m_coordim(coordim),
+            m_quadratureMetricsFlag(false),
+            m_laplacianMetricsFlag(false),
+            m_pointsKey(expdim)
         {
-            m_pointsKey = Array<OneD, LibUtilities::PointsKey>(m_expdim);
         }
 
         /** \brief One dimensional geometric factors based on one, two or three
@@ -66,94 +75,92 @@ namespace Nektar
 
         **/
 
-        GeomFactors::GeomFactors(const GeomType gtype, const int coordim, 
-            const Array<OneD, const StdRegions::StdExpansion1DSharedPtr>  &Coords):
-            m_gtype(gtype), m_coordim(coordim), m_expdim(1)
+        GeomFactors::GeomFactors(const GeomType gtype, 
+                                 const int coordim, 
+                                 const Array<OneD, const StdRegions::StdExpansion1DSharedPtr>  &Coords,
+                                 const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis,
+                                 const bool SetUpQuadratureMetrics,
+                                 const bool SetUpLaplacianMetrics):
+            m_gtype(gtype), 
+            m_coordim(coordim), 
+            m_expdim(1),
+            m_quadratureMetricsFlag(false),
+            m_laplacianMetricsFlag(false),
+            m_pointsKey(1)
         {
-            int        i,nquad;
-            LibUtilities::PointsType  ptype;
 
-            ASSERTL1(coordim <= 3, "Only understand up to 3 Coordinate for this routine");
+            ASSERTL1((coordim == 1)||(coordim == 2)||(coordim == 3),
+                     "The coordinate dimension should be equal to one, two or three"
+                     "for one-dimensional elements");
+            ASSERTL1(tbasis.num_elements()==1,"tbasis should be an array of size one");
+            ASSERTL1(SetUpLaplacianMetrics?SetUpQuadratureMetrics:true,
+                     "SetUpQuadratureMetrics should be true if SetUpLaplacianMetrics is true");
 
-            nquad = Coords[0]->GetNumPoints(0);
-            ptype = Coords[0]->GetPointsType(0);
+            StdRegions::ExpansionType shape = Coords[0]->DetExpansionType();
 
-            m_pointsKey = Array<OneD, LibUtilities::PointsKey> (1);
+            // The quadrature points of the mapping 
+            // (as specified in Coords)
+            LibUtilities::PointsKey pkey_map(Coords[0]->GetBasis(0)->GetPointsKey());
+            int nquad_map = pkey_map.GetNumPoints();
 
-            m_pointsKey[0] = Coords[0]->GetBasis(0)->GetPointsKey();
+            // The quadrature points at the points at which we
+            // want to know the metrics (as specified in tbasis)
+            LibUtilities::PointsKey pkey_tbasis(tbasis[0]->GetPointsKey());
+            int nquad_tbasis = pkey_tbasis.GetNumPoints();
+
+            // Set the pointskey equal to the pointskey as defined
+            // in 'tbasis'
+            m_pointsKey[0] = pkey_tbasis;
+
+            // setup temp storage
+            Array<OneD, Array<OneD,NekDouble> > der_map   (coordim);
+            Array<OneD, Array<OneD,NekDouble> > der_tbasis(coordim);
             
-            Array<OneD,NekDouble> der[3] = {Array<OneD, NekDouble>(nquad),
-                                            Array<OneD, NekDouble>(nquad), 
-                                            Array<OneD, NekDouble>(nquad)};
-
-            // Calculate local derivatives using physical space storage
-            for(i = 0; i < coordim; ++i)
+            // Calculate local derivatives
+            for(int i = 0; i < coordim; ++i)
             {
-                ASSERTL2(Coords[i]->GetNumPoints(0)  == nquad,
-                    "Points order are different for each coordinate");
-                ASSERTL2(Coords[i]->GetPointsType(0) == ptype,
-                    "Points type are different for each coordinate");
-        
-                Coords[i]->BwdTrans(Coords[i]->GetCoeffs(), Coords[i]->UpdatePhys());
+                der_map[i]    = Array<OneD,NekDouble>(nquad_map);
+                der_tbasis[i] = Array<OneD,NekDouble>(nquad_tbasis);
 
-                Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(), der[i]);
+                // Transform from coefficient space to physical space
+                Coords[i]->BwdTrans(Coords[i]->GetCoeffs(),Coords[i]->UpdatePhys());
+                // Take the derivative (calculated at the points as specified in 'Coords')
+                Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(),der_map[i]);
+
+                // Interpolate the derivatives:
+                // - from the points as defined in the mapping ('Coords')
+                // - to the points we at which we want to know the metrics ('tbasis')
+                if( pkey_map == pkey_tbasis )
+                {
+                    der_tbasis[i] = der_map[i];
+                }
+                else
+                {
+                    LibUtilities::Interp1D(pkey_map, der_map[i], pkey_tbasis, der_tbasis[i]);
+                }
             }
 
-            SetUpJacGmat(nquad,der);
+            // Based upon these derivatives, calculate:
+            // 1. The (determinant of the) jacobian and the differentation metrics
+            SetUpJacGmat1D(der_tbasis);
+
+            /* The routines below need implementation
+
+            // 2. the jacobian muliplied with the quadrature weights
+            if(SetUpQuadratureMetrics)
+            {
+            SetUpQuadratureMetrics1D(shape,tbasis);
+            }
+            // 3. A combination of the metrics above that allows
+            //    for more efficient evaluation of the laplacian
+            if(SetUpLaplacianMetrics)
+            {
+            SetUpLaplacianMetrics1D (shape,tbasis);
+            }
+
+            */
         }
         
-        void GeomFactors::SetUpJacGmat(const int nquad,
-                                       const Array<OneD,NekDouble> der[3])
-        {
-            int i;
-            NekDouble fac0,fac1;
-
-            if(( m_gtype == eRegular)||
-               ( m_gtype == eMovingRegular))
-            {
-                m_jac     = Array<OneD, NekDouble>(1,0.0);
-                m_gmat    = Array<TwoD, NekDouble>(m_coordim,1,0.0);
-                
-                fac0 = fac1 = 0.0;
-                for(i = 0; i < m_coordim; ++i)
-                {
-                    m_gmat[i][0] = (fabs(der[i][0]) > NekConstants::kNekZeroTol)? 1.0/der[i][0]: 0.0;
-                    m_jac[0]    += der[i][0]*der[i][0];
-
-                    fac0 += m_gmat[i][0]*m_gmat[i][0];
-                }
-                m_jac[0] = sqrt(m_jac[0]);
-                
-                fac0 = fac1 = sqrt(fac0);
-            }
-            else
-            {
-                m_jac     = Array<OneD, NekDouble>(nquad,0.0);
-                m_gmat    = Array<TwoD, NekDouble>(m_coordim,nquad);
-
-                // invert local derivative for gmat;
-                fac0 = fac1 = 0.0;
-                for(i = 0; i < m_coordim; ++i)
-                {
-                    for(int j = 0; j < nquad; ++j)
-                    {
-                        m_gmat[i][j] = (fabs(der[i][j]) > NekConstants::kNekZeroTol)? 1.0/der[i][j]: 0.0;
-                    }
-                    Vmath::Vvtvp(nquad,der[i],1,der[i],1,m_jac,1,m_jac,1);
-
-                    fac0 += m_gmat[i][0]*m_gmat[i][0];
-                    fac1 += m_gmat[i][nquad-1]*m_gmat[i][nquad-1];
-                }
-                Vmath::Vsqrt(nquad,m_jac,1,m_jac,1);
-
-                fac0 = sqrt(fac0);
-                fac1 = sqrt(fac1);
-
-            } 
-
-        }
-
-
         /**
         \brief Two dimensional geometric factors based on two or three
         dimensional coordinate description
@@ -208,348 +215,281 @@ namespace Nektar
         \frac{\partial {\bf x}}{\partial \xi_2} \right | = \sqrt{J_{3D}} \f$
 
         **/
-        GeomFactors::GeomFactors(const GeomType gtype, const int coordim,
-                                 const Array<OneD, const StdRegions::StdExpansion2DSharedPtr> &Coords):
-        m_gtype(gtype), m_coordim(coordim), m_expdim(2)
+        GeomFactors::GeomFactors(const GeomType gtype, 
+                                 const int coordim,
+                                 const Array<OneD, const StdRegions::StdExpansion2DSharedPtr> &Coords,
+                                 const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis,
+                                 const bool SetUpQuadratureMetrics,
+                                 const bool SetUpLaplacianMetrics):
+            m_gtype(gtype), 
+            m_coordim(coordim), 
+            m_expdim(2),
+            m_quadratureMetricsFlag(false),
+            m_laplacianMetricsFlag(false),
+            m_pointsKey(2)
         {
-            int nquad0,nquad1,nqtot;
-            LibUtilities::PointsType  ptype0, ptype1;
+            ASSERTL1((coordim == 2)||(coordim == 3),
+                     "The coordinate dimension should be equal to two or three"
+                     "for two-dimensional elements");
+            ASSERTL1(tbasis.num_elements()==2,"tbasis should be an array of size two");
+            ASSERTL1(SetUpLaplacianMetrics?SetUpQuadratureMetrics:true,
+                     "SetUpQuadratureMetrics should be true if SetUpLaplacianMetrics is true");
 
-            ASSERTL1((coordim >= 2)&&(coordim <= 3),
-                "Only understand up to three Coordinate and must have "
-                "at least two coordinates for this routine");
+            StdRegions::ExpansionType shape = Coords[0]->DetExpansionType();
 
-            m_pointsKey = Array<OneD, LibUtilities::PointsKey> (m_expdim);
+            // The quadrature points of the mapping 
+            // (as specified in Coords)
+            LibUtilities::PointsKey pkey0_map(Coords[0]->GetBasis(0)->GetPointsKey());
+            LibUtilities::PointsKey pkey1_map(Coords[0]->GetBasis(1)->GetPointsKey());
+            int nquad0_map = pkey0_map.GetNumPoints();
+            int nquad1_map = pkey1_map.GetNumPoints();
+            int nqtot_map  = nquad0_map*nquad1_map;
 
-            m_pointsKey[0] = Coords[0]->GetBasis(0)->GetPointsKey();
-            nquad0 = m_pointsKey[0].GetNumPoints();
-            ptype0 = m_pointsKey[0].GetPointsType();
+            // The quadrature points at the points at which we
+            // want to know the metrics (as specified in tbasis)
+            LibUtilities::PointsKey pkey0_tbasis(tbasis[0]->GetPointsKey());
+            LibUtilities::PointsKey pkey1_tbasis(tbasis[1]->GetPointsKey());
+            int nquad0_tbasis = pkey0_tbasis.GetNumPoints();
+            int nquad1_tbasis = pkey1_tbasis.GetNumPoints();
+            int nqtot_tbasis  = nquad0_tbasis*nquad1_tbasis;
 
-            m_pointsKey[1] = Coords[0]->GetBasis(1)->GetPointsKey();
-            nquad1 = m_pointsKey[1].GetNumPoints();
-            ptype1 = m_pointsKey[1].GetPointsType();
-
-            nqtot = nquad0*nquad1;
+            // Set the pointskey equal to the pointskey as defined
+            // in 'tbasis'
+            m_pointsKey[0] = pkey0_tbasis;
+            m_pointsKey[1] = pkey1_tbasis;
 
             // setup temp storage
-            Array<OneD,NekDouble> d1[3] = {Array<OneD, NekDouble>(nqtot),
-                                           Array<OneD, NekDouble>(nqtot),
-                                           Array<OneD, NekDouble>(nqtot)};
-            Array<OneD,NekDouble> d2[3] = {Array<OneD, NekDouble>(nqtot),
-                                           Array<OneD, NekDouble>(nqtot),
-                                           Array<OneD, NekDouble>(nqtot)};
-
-            // Calculate local derivatives using physical space storage
+            Array<OneD, Array<OneD,NekDouble> > d1_map   (coordim);
+            Array<OneD, Array<OneD,NekDouble> > d2_map   (coordim);
+            Array<OneD, Array<OneD,NekDouble> > d1_tbasis(coordim);
+            Array<OneD, Array<OneD,NekDouble> > d2_tbasis(coordim);
+            
+            // Calculate local derivatives
             for(int i = 0; i < coordim; ++i)
             {
-                ASSERTL2(Coords[i]->GetNumPoints(0)  == nquad0,
-                    "Points order are different for coordinate 0 ");
-                ASSERTL2(Coords[i]->GetNumPoints(1)  == nquad1,
-                    "Points order are different for coordinate 1 ");
-                ASSERTL2(Coords[i]->GetPointsType(0) == ptype0,
-                    "Points type are different for coordinate 0 ");
-                ASSERTL2(Coords[i]->GetPointsType(1) == ptype1,
-                    "Points type are different for coordinate 1 ");
+                d1_map[i]    = Array<OneD,NekDouble>(nqtot_map);
+                d2_map[i]    = Array<OneD,NekDouble>(nqtot_map);
+                d1_tbasis[i] = Array<OneD,NekDouble>(nqtot_tbasis);
+                d2_tbasis[i] = Array<OneD,NekDouble>(nqtot_tbasis);
 
+                // Transform from coefficient space to physical space
                 Coords[i]->BwdTrans(Coords[i]->GetCoeffs(),Coords[i]->UpdatePhys());
+                // Take the derivative (calculated at the points as specified in 'Coords')
+                Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(),d1_map[i],d2_map[i]);
 
-                Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(),d1[i],d2[i]);
+                // Interpolate the derivatives:
+                // - from the points as defined in the mapping ('Coords')
+                // - to the points we at which we want to know the metrics ('tbasis')
+                if( (pkey0_map == pkey0_tbasis) &&
+                    (pkey1_map == pkey1_tbasis) )
+                {
+                    d1_tbasis[i] = d1_map[i];
+                    d2_tbasis[i] = d2_map[i];
+                }
+                else
+                {
+                    LibUtilities::Interp2D(pkey0_map, pkey1_map, d1_map[i], pkey0_tbasis, pkey1_tbasis, d1_tbasis[i]);
+                    LibUtilities::Interp2D(pkey0_map, pkey1_map, d2_map[i], pkey0_tbasis, pkey1_tbasis, d2_tbasis[i]);
+                }
             }
 
-
-            SetUpJacGmat(Coords[0]->DetExpansionType(),nquad0,nquad1,d1,d2);
+            // Based upon these derivatives, calculate:
+            // 1. The (determinant of the) jacobian and the differentation metrics
+            SetUpJacGmat2D(d1_tbasis,d2_tbasis);
+            // 2. the jacobian muliplied with the quadrature weights
+            if(SetUpQuadratureMetrics)
+            {
+                SetUpQuadratureMetrics2D(shape,tbasis);
+            }
+            // 3. A combination of the metrics above that allows
+            //    for more efficient evaluation of the laplacian
+            if(SetUpLaplacianMetrics)
+            {
+                SetUpLaplacianMetrics2D (shape,tbasis);
+            }
         }
         
 
-        GeomFactors::GeomFactors(const GeomType gtype, const int coordim,
-                                 const Array<OneD, const StdRegions::StdExpansion3DSharedPtr> &Coords):
-        m_gtype(gtype), m_coordim(coordim), m_expdim(3)
+        GeomFactors::GeomFactors(const GeomType gtype, 
+                                 const int coordim,
+                                 const Array<OneD, const StdRegions::StdExpansion3DSharedPtr> &Coords,
+                                 const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis,
+                                 const bool SetUpQuadratureMetrics,
+                                 const bool SetUpLaplacianMetrics):
+            m_gtype(gtype), 
+            m_coordim(coordim), 
+            m_expdim(3),
+            m_quadratureMetricsFlag(false),
+            m_laplacianMetricsFlag(false),
+            m_pointsKey(3)
         {
-            int nquad0,nquad1,nquad2,nqtot;
-            LibUtilities::PointsType  ptype0, ptype1, ptype2;
+            ASSERTL1((coordim == 3),
+                     "The coordinate dimension should be to three"
+                     "for three-dimensional elements");
+            ASSERTL1(tbasis.num_elements()==3,"tbasis should be an array of size three");
+            ASSERTL1(SetUpLaplacianMetrics?SetUpQuadratureMetrics:true,
+                     "SetUpQuadratureMetrics should be true if SetUpLaplacianMetrics is true");
 
-            ASSERTL1((coordim >= 2)&&(coordim <= 3),
-                "Only understand up to three Coordinate and must have "
-                "at least two coordinates for this routine");
+            StdRegions::ExpansionType shape = Coords[0]->DetExpansionType();
 
-            m_pointsKey = Array<OneD, LibUtilities::PointsKey> (m_expdim);
+            // The quadrature points of the mapping 
+            // (as specified in Coords)
+            LibUtilities::PointsKey pkey0_map(Coords[0]->GetBasis(0)->GetPointsKey());
+            LibUtilities::PointsKey pkey1_map(Coords[0]->GetBasis(1)->GetPointsKey());
+            LibUtilities::PointsKey pkey2_map(Coords[0]->GetBasis(2)->GetPointsKey());
+            int nquad0_map = pkey0_map.GetNumPoints();
+            int nquad1_map = pkey1_map.GetNumPoints();
+            int nquad2_map = pkey2_map.GetNumPoints();
+            int nqtot_map  = nquad0_map*nquad1_map*nquad2_map;
 
-            m_pointsKey[0] = Coords[0]->GetBasis(0)->GetPointsKey();
-            nquad0 = m_pointsKey[0].GetNumPoints();
-            ptype0 = m_pointsKey[0].GetPointsType();
+            // The quadrature points at the points at which we
+            // want to know the metrics (as specified in tbasis)
+            LibUtilities::PointsKey pkey0_tbasis(tbasis[0]->GetPointsKey());
+            LibUtilities::PointsKey pkey1_tbasis(tbasis[1]->GetPointsKey());
+            LibUtilities::PointsKey pkey2_tbasis(tbasis[2]->GetPointsKey());
+            int nquad0_tbasis = pkey0_tbasis.GetNumPoints();
+            int nquad1_tbasis = pkey1_tbasis.GetNumPoints();
+            int nquad2_tbasis = pkey2_tbasis.GetNumPoints();
+            int nqtot_tbasis  = nquad0_tbasis*nquad1_tbasis*nquad2_tbasis;
 
-            m_pointsKey[1] = Coords[0]->GetBasis(1)->GetPointsKey();
-            nquad1 = m_pointsKey[1].GetNumPoints();
-            ptype1 = m_pointsKey[1].GetPointsType();
-
-            m_pointsKey[2] = Coords[0]->GetBasis(2)->GetPointsKey();
-            nquad2 = m_pointsKey[2].GetNumPoints();
-            ptype2 = m_pointsKey[2].GetPointsType();
-
-            nqtot = nquad0*nquad1*nquad2;
+            // Set the pointskey equal to the pointskey as defined
+            // in 'tbasis'
+            m_pointsKey[0] = pkey0_tbasis;
+            m_pointsKey[1] = pkey1_tbasis;
+            m_pointsKey[2] = pkey2_tbasis;
 
             // setup temp storage
-            Array<OneD,NekDouble> d1[3] = {Array<OneD, NekDouble>(nqtot),
-                                           Array<OneD, NekDouble>(nqtot),
-                                           Array<OneD, NekDouble>(nqtot)};
-            Array<OneD,NekDouble> d2[3] = {Array<OneD, NekDouble>(nqtot),
-                                           Array<OneD, NekDouble>(nqtot),
-                                           Array<OneD, NekDouble>(nqtot)};
-            Array<OneD,NekDouble> d3[3] = {Array<OneD, NekDouble>(nqtot),
-                                           Array<OneD, NekDouble>(nqtot),
-                                           Array<OneD, NekDouble>(nqtot)};                                           
-
-            // Calculate local derivatives using physical space storage
+            Array<OneD, Array<OneD,NekDouble> > d1_map   (coordim);
+            Array<OneD, Array<OneD,NekDouble> > d2_map   (coordim);
+            Array<OneD, Array<OneD,NekDouble> > d3_map   (coordim);
+            Array<OneD, Array<OneD,NekDouble> > d1_tbasis(coordim);
+            Array<OneD, Array<OneD,NekDouble> > d2_tbasis(coordim);
+            Array<OneD, Array<OneD,NekDouble> > d3_tbasis(coordim);
+            
+            // Calculate local derivatives
             for(int i = 0; i < coordim; ++i)
             {
-                ASSERTL2(Coords[i]->GetNumPoints(0)  == nquad0,
-                    "Points order are different for coordinate 0 ");
-                ASSERTL2(Coords[i]->GetNumPoints(1)  == nquad1,
-                    "Points order are different for coordinate 1 ");
-                ASSERTL2(Coords[i]->GetNumPoints(2)  == nquad2,
-                    "Points order are different for coordinate 2 ");
-                ASSERTL2(Coords[i]->GetPointsType(0) == ptype0,
-                    "Points type are different for coordinate 0 ");
-                ASSERTL2(Coords[i]->GetPointsType(1) == ptype1,
-                    "Points type are different for coordinate 1 ");
-                ASSERTL2(Coords[i]->GetPointsType(2) == ptype2,
-                    "Points type are different for coordinate 2 ");
+                d1_map[i]    = Array<OneD,NekDouble>(nqtot_map);
+                d2_map[i]    = Array<OneD,NekDouble>(nqtot_map);
+                d3_map[i]    = Array<OneD,NekDouble>(nqtot_map);
+                d1_tbasis[i] = Array<OneD,NekDouble>(nqtot_tbasis);
+                d2_tbasis[i] = Array<OneD,NekDouble>(nqtot_tbasis);
+                d3_tbasis[i] = Array<OneD,NekDouble>(nqtot_tbasis);
 
-                                    // inarray,                outarray
+                // Transform from coefficient space to physical space
                 Coords[i]->BwdTrans(Coords[i]->GetCoeffs(),Coords[i]->UpdatePhys());
+                // Take the derivative (calculated at the points as specified in 'Coords')
+                Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(),d1_map[i],d2_map[i],d3_map[i]);
 
-//                 for(int n=0; n < Coords[i]->GetCoeffs().num_elements(); ++n){
-//                     cout << "Coeffs[" << n << "] = " << Coords[i]->GetCoeffs()[n] << endl;
-//                 }
-
-                Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(),d1[i],d2[i],d3[i]);
-                
-
-//                 for( int j = 0; j < nqtot; ++j ) {
-//                     cout << "d1[" << i << "]["<< j  << "]= " << d1[i][j] << endl;
-//                     cout << "d2[" << i << "]["<< j  << "]= " << d2[i][j] << endl;
-//                     cout << "d3[" << i << "]["<< j  << "]= " << d3[i][j] << endl;
-//                 }
+                // Interpolate the derivatives:
+                // - from the points as defined in the mapping ('Coords')
+                // - to the points we at which we want to know the metrics ('tbasis')
+                if( (pkey0_map == pkey0_tbasis) &&
+                    (pkey1_map == pkey1_tbasis) &&
+                    (pkey2_map == pkey2_tbasis) )
+                {
+                    d1_tbasis[i] = d1_map[i];
+                    d2_tbasis[i] = d2_map[i];
+                    d3_tbasis[i] = d3_map[i];
+                }
+                else
+                {
+                    LibUtilities::Interp3D(pkey0_map,    pkey1_map,    pkey2_map,    d1_map[i], 
+                                           pkey0_tbasis, pkey1_tbasis, pkey2_tbasis, d1_tbasis[i]);
+                    LibUtilities::Interp3D(pkey0_map,    pkey1_map,    pkey2_map,    d2_map[i], 
+                                           pkey0_tbasis, pkey1_tbasis, pkey2_tbasis, d2_tbasis[i]);
+                    LibUtilities::Interp3D(pkey0_map,    pkey1_map,    pkey2_map,    d3_map[i], 
+                                           pkey0_tbasis, pkey1_tbasis, pkey2_tbasis, d3_tbasis[i]);
+                }
             }
 
-//             cout << "D_1[1:" << coordim << "][1:" << nqtot << "] = " << endl;
-//             for( int i = 0; i < coordim; ++i ) {
-//                 for( int j = 0; j < nqtot; ++j ) {
-//                     cout << d1[i][j] << "\t\t";
-//                 }
-//                 cout << endl;
-//             }
-// 
-//             cout << "\nD_2[1:" << coordim << "][1:" << nqtot << "] = " << endl;
-//             for( int i = 0; i < coordim; ++i ) {
-//                 for( int j = 0; j < nqtot; ++j ) {
-//                     cout << d2[i][j] << "\t\t";
-//                 }
-//                 cout << endl;
-//             }
-// 
-//             cout << "\nD_3[1:" << coordim << "][1:" << nqtot << "] = " << endl;
-//             for( int i = 0; i < coordim; ++i ) {
-//                 for( int j = 0; j < nqtot; ++j ) {
-//                     cout << d3[i][j] << "\t\t";
-//                 }
-//                 cout << endl;
-//             }
+            // Based upon these derivatives, calculate:
+            // 1. The (determinant of the) jacobian and the differentation metrics
+            SetUpJacGmat3D(d1_tbasis,d2_tbasis,d3_tbasis);
 
-            SetUpJacGmat(Coords[0]->DetExpansionType(),nquad0,nquad1,nquad2,d1,d2,d3);
+            /* The routines below need implementation
+
+            // 2. the jacobian muliplied with the quadrature weights
+            if(SetUpQuadratureMetrics)
+            {
+            SetUpQuadratureMetrics3D(shape,tbasis);
+            }
+            // 3. A combination of the metrics above that allows
+            //    for more efficient evaluation of the laplacian
+            if(SetUpLaplacianMetrics)
+            {
+            SetUpLaplacianMetrics3D (shape,tbasis);
+            }
+
+            */
         }  
-
-        GeomFactors::GeomFactors(enum StdRegions::ExpansionType shape,
-                                 const GeomFactors &Xgfac,
-                                 const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+   
+        void GeomFactors::SetUpJacGmat1D(const Array<OneD, Array<OneD, NekDouble> > der)
         {
+            ASSERTL1(der.num_elements()==m_coordim,"The dimension of array der does not"
+                     "match the coordinate dimension");
+            int i;
+            int nquad = m_pointsKey[0].GetNumPoints();
+            ASSERTL1(der[0].num_elements() == nquad,"Number of quadrature points do not match");
 
-            int nq0,nq1,nq2,nqtot;
-            int Xnq0, Xnq1,Xnq2, Xnqtot;
-            LibUtilities::PointsKey fpoints0;
-            LibUtilities::PointsKey fpoints1;
-            LibUtilities::PointsKey fpoints2;
+            NekDouble fac0,fac1;
 
-                m_gtype   = Xgfac.m_gtype; 
-                m_expdim  = Xgfac.m_expdim;
-                m_coordim = Xgfac.m_coordim;
-
-                m_pointsKey = Array<OneD,LibUtilities::PointsKey>(m_expdim);
-
-                ASSERTL0(m_gtype == eDeformed,
-                        "This routine assumes element geometry is deformed");
-
-            if(m_coordim == 2)
+            if(( m_gtype == eRegular)||
+               ( m_gtype == eMovingRegular))
             {
-             
-                fpoints0 = Xgfac.m_pointsKey[0];
-                fpoints1 = Xgfac.m_pointsKey[1];
-
-                Xnq0 = fpoints0.GetNumPoints();
-                Xnq1 = fpoints1.GetNumPoints();
-
-                Xnqtot = Xnq0*Xnq1;
-
-                ASSERTL1((m_coordim >= 2)&&(m_coordim <= 3),
-                        "Only understand up to three Coordinate and must have "
-                        "at least two coordinates for this routine");
-
-                m_pointsKey[0] = tbasis[0]->GetPointsKey();
-                m_pointsKey[1] = tbasis[1]->GetPointsKey();
-
-
-                nq0 = m_pointsKey[0].GetNumPoints();
-                nq1 = m_pointsKey[1].GetNumPoints();
-
+                m_jac     = Array<OneD, NekDouble>(1,0.0);
+                m_gmat    = Array<TwoD, NekDouble>(m_coordim,1,0.0);
                 
-                nqtot = nq0*nq1;
-                
-                // setup temp storage
-                Array<OneD,NekDouble> d1[3] = {Array<OneD, NekDouble>(nqtot),
-                                            Array<OneD, NekDouble>(nqtot), 
-                                            Array<OneD, NekDouble>(nqtot)};
-                Array<OneD,NekDouble> d2[3] = {Array<OneD, NekDouble>(nqtot),
-                                            Array<OneD, NekDouble>(nqtot), 
-                                            Array<OneD, NekDouble>(nqtot)};
+                fac0 = fac1 = 0.0;
+                for(i = 0; i < m_coordim; ++i)
+                {
+                    m_gmat[i][0] = (fabs(der[i][0]) > NekConstants::kNekZeroTol)? 1.0/der[i][0]: 0.0;
+                    m_jac[0]    += der[i][0]*der[i][0];
 
-                                                                         
-                // interpolate Geometric derivatives which are polynomials
-                Array<OneD,NekDouble> dxdxi(Xnqtot);
-            
-//             if(m_coordim == 2)
-//             {
-                // Interpolate d2[1];
-                Vmath::Vmul(Xnqtot,&(Xgfac.m_jac)[0],1,&(Xgfac.m_gmat[0])[0],1,&dxdxi[0],1);
-                LibUtilities::Interp2D(fpoints0, fpoints1, dxdxi, m_pointsKey[0], m_pointsKey[1], d2[1]);
+                    fac0 += m_gmat[i][0]*m_gmat[i][0];
+                }
+                m_jac[0] = sqrt(m_jac[0]);
                 
-                // Interpolate d1[1];
-                Vmath::Vmul(Xnqtot,&(Xgfac.m_jac)[0],1,&(Xgfac.m_gmat[1])[0],1,&dxdxi[0],1);
-                LibUtilities::Interp2D(fpoints0, fpoints1, dxdxi,m_pointsKey[0], m_pointsKey[1], d1[1]);
-                Vmath::Neg(nqtot,d1[1],1);
-                
-                
-                // Interpolate d2[0];
-                Vmath::Vmul(Xnqtot,&(Xgfac.m_jac)[0],1,&(Xgfac.m_gmat[2])[0],1,&dxdxi[0],1);
-                LibUtilities::Interp2D(fpoints0, fpoints1, dxdxi,m_pointsKey[0], m_pointsKey[1], d2[0]);
-                Vmath::Neg(nqtot,d2[0],1);
-                
-                        // Interpolate d1[0];
-                Vmath::Vmul(Xnqtot,&(Xgfac.m_jac)[0],1,&(Xgfac.m_gmat[3])[0],1,&dxdxi[0],1);
-                LibUtilities::Interp2D(fpoints0, fpoints1, dxdxi, m_pointsKey[0], m_pointsKey[1], d1[0]);
-                
-                SetUpJacGmat(shape, nq0,nq1,d1,d2);
-                
+                fac0 = fac1 = sqrt(fac0);
             }
-            else if(m_coordim == 3)
+            else
             {
+                m_jac     = Array<OneD, NekDouble>(nquad,0.0);
+                m_gmat    = Array<TwoD, NekDouble>(m_coordim,nquad);
 
-                fpoints0 = Xgfac.m_pointsKey[0];
-                fpoints1 = Xgfac.m_pointsKey[1];
-                fpoints2 = Xgfac.m_pointsKey[2];
+                // invert local derivative for gmat;
+                fac0 = fac1 = 0.0;
+                for(i = 0; i < m_coordim; ++i)
+                {
+                    for(int j = 0; j < nquad; ++j)
+                    {
+                        m_gmat[i][j] = (fabs(der[i][j]) > NekConstants::kNekZeroTol)? 1.0/der[i][j]: 0.0;
+                    }
+                    Vmath::Vvtvp(nquad,der[i],1,der[i],1,m_jac,1,m_jac,1);
 
-                
+                    fac0 += m_gmat[i][0]*m_gmat[i][0];
+                    fac1 += m_gmat[i][nquad-1]*m_gmat[i][nquad-1];
+                }
+                Vmath::Vsqrt(nquad,m_jac,1,m_jac,1);
 
-                Xnq0 = fpoints0.GetNumPoints();
-                Xnq1 = fpoints1.GetNumPoints();
-                Xnq2 = fpoints2.GetNumPoints();
-                Xnqtot = Xnq0*Xnq1*Xnq2;
-
-                ASSERTL1((m_coordim >= 2)&&(m_coordim <= 3),
-                        "Only understand up to three Coordinate and must have "
-                        "at least two coordinates for this routine");
-
-                m_pointsKey[0] = tbasis[0]->GetPointsKey();
-                m_pointsKey[1] = tbasis[1]->GetPointsKey();
-                m_pointsKey[2] = tbasis[2]->GetPointsKey();
-
-                nq0 = m_pointsKey[0].GetNumPoints();
-                nq1 = m_pointsKey[1].GetNumPoints();
-                nq2 = m_pointsKey[2].GetNumPoints();
-
-//                 cout << "nq0 = " << nq0 << endl;
-//                 cout << "nq1 = " << nq1 << endl;
-//                 cout << "nq2 = " << nq2 << endl;
-                
-                nqtot = nq0*nq1*nq2;
-                
-                // setup temp storage
-                Array<OneD,NekDouble> d1[3] = {Array<OneD, NekDouble>(nqtot),
-                                               Array<OneD, NekDouble>(nqtot), 
-                                               Array<OneD, NekDouble>(nqtot)};
-                Array<OneD,NekDouble> d2[3] = {Array<OneD, NekDouble>(nqtot),
-                                               Array<OneD, NekDouble>(nqtot), 
-                                               Array<OneD, NekDouble>(nqtot)};
-                Array<OneD,NekDouble> d3[3] = {Array<OneD, NekDouble>(nqtot),
-                                               Array<OneD, NekDouble>(nqtot), 
-                                               Array<OneD, NekDouble>(nqtot)};
-                                            
-                               
-                // interpolate Geometric derivatives which are polynomials
-                Array<OneD,NekDouble> dxdxi(Xnqtot);                   
-
-            
-               // Implementation based on Spend's book page 160
-
-                // Compute the RHS of the d xi_1/d x_1 = m_gmat[0] : J3D * m_gmat[0] = dxdi[0], then interpolate d3[2]
-                Vmath::Vmul(Xnqtot,&(Xgfac.m_jac)[0],1,&(Xgfac.m_gmat[0])[0],1,&dxdxi[0],1);
-                LibUtilities::Interp3D(fpoints0, fpoints1,fpoints1, dxdxi, m_pointsKey[0], m_pointsKey[1],m_pointsKey[2], d3[2]);
-
-                 // Compute the RHS of the d xi_1/d x_2 = m_gmat[1] : J3D * m_gmat[1] = dxdi[0], then interpolate d2[2]
-                Vmath::Vmul(Xnqtot,&(Xgfac.m_jac)[0],1,&(Xgfac.m_gmat[1])[0],1,&dxdxi[0],1);
-                LibUtilities::Interp3D(fpoints0, fpoints1,fpoints2, dxdxi,m_pointsKey[0], m_pointsKey[1],m_pointsKey[2], d2[2]);
-                //Vmath::Neg(nqtot,d2[2],1);
-
-                // Compute the RHS of the d xi_1/d x_3 = m_gmat[2] : J3D * m_gmat[2] = dxdi[0], then interpolate d1[2]
-                Vmath::Vmul(Xnqtot,&(Xgfac.m_jac)[0],1,&(Xgfac.m_gmat[2])[0],1,&dxdxi[0],1);
-                LibUtilities::Interp3D(fpoints0, fpoints1,fpoints2, dxdxi,m_pointsKey[0], m_pointsKey[1],m_pointsKey[2], d1[2]);
-  
-                // Compute the RHS of the d xi_2/d x_1 = m_gmat[3] : J3D * m_gmat[3] = dxdi[0], then interpolate d3[1]
-                Vmath::Vmul(Xnqtot,&(Xgfac.m_jac)[0],1,&(Xgfac.m_gmat[3])[0],1,&dxdxi[0],1);
-                LibUtilities::Interp3D(fpoints0, fpoints1,fpoints2, dxdxi,m_pointsKey[0], m_pointsKey[1],m_pointsKey[2], d3[1]);
-                //Vmath::Neg(nqtot,d3[1],1);
-
-                // Compute the RHS of the d xi_2/d x_2 = m_gmat[4] : J3D * m_gmat[4] = dxdi[0], then interpolate d2[1]
-                Vmath::Vmul(Xnqtot,&(Xgfac.m_jac)[0],1,&(Xgfac.m_gmat[4])[0],1,&dxdxi[0],1);
-                LibUtilities::Interp3D(fpoints0, fpoints1,fpoints2, dxdxi,m_pointsKey[0], m_pointsKey[1],m_pointsKey[2], d2[1]);
-
-               // Compute the RHS of the d xi_2/d x_3 = m_gmat[5] : J3D * m_gmat[5] = dxdi[0], then interpolate d1[1]
-                Vmath::Vmul(Xnqtot,&(Xgfac.m_jac)[0],1,&(Xgfac.m_gmat[5])[0],1,&dxdxi[0],1);
-                LibUtilities::Interp3D(fpoints0, fpoints1,fpoints2, dxdxi,m_pointsKey[0], m_pointsKey[1],m_pointsKey[2], d1[1]);
-               // Vmath::Neg(nqtot,d1[1],1);
-
-                // Compute the RHS of the d xi_3/d x_1 = m_gmat[6] : J3D * m_gmat[6] = dxdi[0], then interpolate d3[0]
-                Vmath::Vmul(Xnqtot,&(Xgfac.m_jac)[0],1,&(Xgfac.m_gmat[6])[0],1,&dxdxi[0],1);
-                LibUtilities::Interp3D(fpoints0, fpoints1,fpoints2, dxdxi,m_pointsKey[0], m_pointsKey[1],m_pointsKey[2], d3[0]);
-
-                // Compute the RHS of the d xi_3/d x_2 = m_gmat[7] : J3D * m_gmat[7] = dxdi[0], then interpolate d2[0]
-                Vmath::Vmul(Xnqtot,&(Xgfac.m_jac)[0],1,&(Xgfac.m_gmat[7])[0],1,&dxdxi[0],1);
-                LibUtilities::Interp3D(fpoints0, fpoints1,fpoints2, dxdxi,m_pointsKey[0], m_pointsKey[1],m_pointsKey[2], d2[0]);
-               // Vmath::Neg(nqtot,d2[0],1);
-
-                 // Compute the RHS of the d xi_3/d x_3 = m_gmat[8] : J3D * m_gmat[8] = dxdi[0], then interpolate d1[0]
-                Vmath::Vmul(Xnqtot,&(Xgfac.m_jac)[0],1,&(Xgfac.m_gmat[8])[0],1,&dxdxi[0],1);
-                LibUtilities::Interp3D(fpoints0, fpoints1,fpoints2, dxdxi,m_pointsKey[0], m_pointsKey[1],m_pointsKey[2], d1[0]);
-              
-                SetUpJacGmat(shape, nq0,nq1,nq2,d1,d2,d3);
-                
-            } else
-            {
-                ASSERTL0(false,"Invalid dimension");
-            }
-            
-            //SetUpJacGmat(shape, nq0,nq1,d1,d2);
-
+                fac0 = sqrt(fac0);
+                fac1 = sqrt(fac1);
+            } 
         }
-        
-        void GeomFactors::SetUpJacGmat(enum StdRegions::ExpansionType shape,
-                                       const int nquad0, 
-                                       const int nquad1, 
-                                       const Array<OneD, NekDouble> d1[3],
-                                       const Array<OneD, NekDouble> d2[3])
+     
+        void GeomFactors::SetUpJacGmat2D(const Array<OneD, Array<OneD, NekDouble> > d1,
+                                         const Array<OneD, Array<OneD, NekDouble> > d2)
         {
-            int i,j,nqtot;
+            ASSERTL1(d1.num_elements()==m_coordim,"The dimension of array d1 does not"
+                     "match the coordinate dimension");
+            ASSERTL1(d2.num_elements()==m_coordim,"The dimension of array d2 does not"
+                     "match the coordinate dimension");
 
-            nqtot = nquad0*nquad1;
+            int nqtot = m_pointsKey[0].GetNumPoints() *
+                        m_pointsKey[1].GetNumPoints();
+
+            ASSERTL1(d1[0].num_elements() == nqtot,"Number of quadrature points do not match");
+            ASSERTL1(d2[0].num_elements() == nqtot,"Number of quadrature points do not match");
 
             if((m_gtype == eRegular)||(m_gtype == eMovingRegular))
             {
@@ -561,10 +501,10 @@ namespace Nektar
                     m_jac[0] = d1[0][0]*d2[1][0] - d2[0][0]*d1[1][0];
 
                     ASSERTL1(m_jac[0] > 0, "2D Regular Jacobian is not positive");
-                    // Spen's book page 160
+                    // Spencer's book page 160
                     m_gmat[0][0] =  d2[1][0]/m_jac[0]; // d xi_1/d x_1
-                    m_gmat[1][0] = -d1[1][0]/m_jac[0]; // d xi_1/d x_2
-                    m_gmat[2][0] = -d2[0][0]/m_jac[0]; // d xi_2/d x_1
+                    m_gmat[1][0] = -d1[1][0]/m_jac[0]; // d xi_2/d x_1
+                    m_gmat[2][0] = -d2[0][0]/m_jac[0]; // d xi_1/d x_2
                     m_gmat[3][0] =  d1[0][0]/m_jac[0]; // d xi_2/d x_2
                 }
                 else
@@ -578,8 +518,8 @@ namespace Nektar
                     ASSERTL1(m_jac[0] > 0, "Regular Jacobian is not positive");
 
                     m_gmat[0][0] =  (d2[1][0]*g[2] - d2[2][0]*g[1])/m_jac[0]; // d xi_1/d x_1
-                    m_gmat[1][0] = -(d1[1][0]*g[2] - d1[2][0]*g[1])/m_jac[0]; // d xi_1/d x_2
-                    m_gmat[2][0] = -(d2[0][0]*g[2] - d2[2][0]*g[0])/m_jac[0]; // d xi_2/d x_1
+                    m_gmat[1][0] = -(d1[1][0]*g[2] - d1[2][0]*g[1])/m_jac[0]; // d xi_2/d x_1
+                    m_gmat[2][0] = -(d2[0][0]*g[2] - d2[2][0]*g[0])/m_jac[0]; // d xi_1/d x_2
                     m_gmat[3][0] =  (d1[0][0]*g[2] - d1[2][0]*g[0])/m_jac[0]; // d xi_2/d x_2
                     m_gmat[4][0] =  (d2[0][0]*g[1] - d2[1][0]*g[0])/m_jac[0]; // d xi_1/d x_3
                     m_gmat[5][0] = -(d1[0][0]*g[1] - d1[1][0]*g[0])/m_jac[0]; // d xi_2/d x_3
@@ -602,9 +542,9 @@ namespace Nektar
                     
                     Vmath::Vdiv(nqtot,&d2[1][0],1,&m_jac[0],1,&m_gmat[0][0],1); // d xi_1/d x_1
                     Vmath::Vdiv(nqtot,&d1[1][0],1,&m_jac[0],1,&m_gmat[1][0],1); 
-                    Vmath::Neg(nqtot,&m_gmat[1][0],1);                          // d xi_1/d x_2
+                    Vmath::Neg(nqtot,&m_gmat[1][0],1);                          // d xi_2/d x_1
                     Vmath::Vdiv(nqtot,&d2[0][0],1,&m_jac[0],1,&m_gmat[2][0],1); 
-                    Vmath::Neg(nqtot,&m_gmat[2][0],1);                          // d xi_2/d x_1
+                    Vmath::Neg(nqtot,&m_gmat[2][0],1);                          // d xi_1/d x_2
                     Vmath::Vdiv(nqtot,&d1[0][0],1,&m_jac[0],1,&m_gmat[3][0],1); // d xi_2/d x_2
                 }
                 else
@@ -662,158 +602,395 @@ namespace Nektar
                 }
             }
         }
-
-        void GeomFactors::SetUpJacGmat(enum StdRegions::ExpansionType shape,
-                                       const int nquad0, 
-                                       const int nquad1,
-                                       const int nquad2,
-                                       const Array<OneD, NekDouble> d1[3],
-                                       const Array<OneD, NekDouble> d2[3],
-                                       const Array<OneD, NekDouble> d3[3])
+ 
+        void GeomFactors::SetUpJacGmat3D(const Array<OneD, Array<OneD, NekDouble> > d1,
+                                         const Array<OneD, Array<OneD, NekDouble> > d2,
+                                         const Array<OneD, Array<OneD, NekDouble> > d3)
         {
+            ASSERTL1(d1.num_elements()==m_coordim,"The dimension of array d1 does not"
+                     "match the coordinate dimension");
+            ASSERTL1(d2.num_elements()==m_coordim,"The dimension of array d3 does not"
+                     "match the coordinate dimension");
+            ASSERTL1(d3.num_elements()==m_coordim,"The dimension of array d3 does not"
+                     "match the coordinate dimension");
             
-            int nqtot = nquad0*nquad1*nquad2;
+            int nqtot = m_pointsKey[0].GetNumPoints() *
+                        m_pointsKey[1].GetNumPoints() *
+                        m_pointsKey[2].GetNumPoints();
+
+            ASSERTL1(d1[0].num_elements() == nqtot,"Number of quadrature points do not match");
+            ASSERTL1(d2[0].num_elements() == nqtot,"Number of quadrature points do not match");
+            ASSERTL1(d3[0].num_elements() == nqtot,"Number of quadrature points do not match");
+
+            ASSERTL0(false,"This routine needs corrections. Please see notes in the code...");
+            // The jacobian seems to be calculated wrongly:
+            // Rather than the formula:
+            //    m_jac[0] =  d1[0][0]*(d2[1][0]*d3[2][0] - d2[2][0]*d3[1][0])
+            //               -d1[1][0]*(d2[0][0]*d3[2][0] - d2[2][0]*d3[0][0])
+            //               +d1[2][0]*(d2[0][0]*d3[1][0] - d2[1][0]*d3[0][0]);
+            // I think this should be (According to Spencer's book page 158):
+            //    m_jac[0] =  d1[0][0]*(d2[1][0]*d3[2][0] - d3[1][0]*d2[2][0])
+            //               -d2[0][0]*(d1[1][0]*d3[2][0] - d3[1][0]*d1[2][0])
+            //               +d3[0][0]*(d1[1][0]*d2[2][0] - d2[1][0]*d1[2][0]);
+            // Please verify and update this, also for the deformed case...
+            //
+            // In addition, m_gmat[2][0] seems to be calculated differently
+            // as in Spencer's book page 160)
+            // Currently, it is:
+            // m_gmat[2][0] =  (d1[1][0]*d2[2][0] - d1[2][0]*d2[1][0])/m_jac[0];
+            // but Spencer's book would suggest:
+            // m_gmat[2][0] =  (d1[1][0]*d2[2][0] - d1[2][0]*d3[1][0])/m_jac[0];
+            // I am not sure which version is right. please verify!
+            // Also check the deformed case.
 
             if((m_gtype == eRegular)||(m_gtype == eMovingRegular))
             {
                 m_jac     = Array<OneD, NekDouble>(1,0.0);
                 m_gmat    = Array<TwoD, NekDouble>(3*m_coordim,1,0.0);
                 
-                if(m_coordim == 3) // assume g = [0,0,1]
-                {
-                    // J3D: Determinent of three-dimensional Jacobian
-                    m_jac[0] =  d1[0][0]*(d2[1][0]*d3[2][0] - d2[2][0]*d3[1][0])
-                               -d1[1][0]*(d2[0][0]*d3[2][0] - d2[2][0]*d3[0][0])
-                               +d1[2][0]*(d2[0][0]*d3[1][0] - d2[1][0]*d3[0][0]);
-                               
-//                                 cout << "J3D1 = " << m_jac[0] << endl;
-// 
-//                                 cout << "d1[0] = " << d1[0][0] << endl;
-//                                 cout << "d1[1] = " << d1[1][0] << endl;
-//                                 cout << "d1[2] = " << d1[2][0] << endl;
-//                                 cout << "d2[0] = " << d2[0][0] << endl;
-//                                 cout << "d2[1] = " << d2[1][0] << endl;
-//                                 cout << "d2[2] = " << d2[2][0] << endl;
-//                                 cout << "d3[0] = " << d3[0][0] << endl;
-//                                 cout << "d3[1] = " << d3[1][0] << endl;
-//                                 cout << "d3[2] = " << d3[2][0] << endl;
-// 
-//                                 cout << " d1[0][0]*(d2[1][0]*d3[2][0] - d2[2][0]*d3[1][0]) = " <<  d1[0][0]*(d2[1][0]*d3[2][0] - d2[2][0]*d3[1][0]) << endl;
-// 
-//                                 cout << " d1[1][0]*(d2[0][0]*d3[2][0] - d2[2][0]*d3[0][0]) = " << d1[1][0]*(d2[0][0]*d3[2][0] - d2[2][0]*d3[0][0]) << endl;
-// 
-//                                 cout << " d1[2][0]*(d2[0][0]*d3[1][0] - d2[1][0]*d3[0][0]) = " << d1[2][0]*(d2[0][0]*d3[1][0] - d2[1][0]*d3[0][0]) << endl;
-
-                    ASSERTL1(m_jac[0] > 0, "3D Regular Jacobian is not positive");
-                    // Spen's book page 160
-                    m_gmat[0][0] =  (d2[1][0]*d3[2][0] - d2[2][0]*d3[1][0])/m_jac[0];  // d xi_1/d x_1
-                    m_gmat[1][0] = -(d1[1][0]*d3[2][0] - d1[2][0]*d3[1][0])/m_jac[0];  // d xi_1/d x_2
-                    m_gmat[2][0] =  (d1[1][0]*d2[2][0] - d1[2][0]*d2[1][0])/m_jac[0];  // d xi_1/d x_3
-                    m_gmat[3][0] = -(d2[0][0]*d3[2][0] - d2[2][0]*d3[0][0])/m_jac[0];  // d xi_2/d x_1
-                    m_gmat[4][0] =  (d1[0][0]*d3[2][0] - d1[2][0]*d3[0][0])/m_jac[0];  // d xi_2/d x_2
-                    m_gmat[5][0] = -(d1[0][0]*d2[2][0] - d1[2][0]*d2[0][0])/m_jac[0];  // d xi_2/d x_3
-                    m_gmat[6][0] =  (d2[0][0]*d3[1][0] - d2[1][0]*d3[0][0])/m_jac[0];  // d xi_3/d x_1
-                    m_gmat[7][0] = -(d1[0][0]*d3[1][0] - d1[1][0]*d3[0][0])/m_jac[0];  // d xi_3/d x_2
-                    m_gmat[8][0] =  (d1[0][0]*d2[1][0] - d1[1][0]*d2[0][0])/m_jac[0];  // d xi_3/d x_3
-
-                }
-                else
-                {
-                    ASSERTL0(false,"Routine not yet implemented");
-                }
-
+                // J3D: Determinent of three-dimensional Jacobian
+                m_jac[0] =  d1[0][0]*(d2[1][0]*d3[2][0] - d2[2][0]*d3[1][0])
+                    -d1[1][0]*(d2[0][0]*d3[2][0] - d2[2][0]*d3[0][0])
+                    +d1[2][0]*(d2[0][0]*d3[1][0] - d2[1][0]*d3[0][0]);
+                
+                ASSERTL1(m_jac[0] > 0, "3D Regular Jacobian is not positive");
+                // Spen's book page 160
+                m_gmat[0][0] =  (d2[1][0]*d3[2][0] - d2[2][0]*d3[1][0])/m_jac[0];  // d xi_1/d x_1
+                m_gmat[1][0] = -(d1[1][0]*d3[2][0] - d1[2][0]*d3[1][0])/m_jac[0];  // d xi_2/d x_1
+                m_gmat[2][0] =  (d1[1][0]*d2[2][0] - d1[2][0]*d2[1][0])/m_jac[0];  // d xi_3/d x_1
+                m_gmat[3][0] = -(d2[0][0]*d3[2][0] - d2[2][0]*d3[0][0])/m_jac[0];  // d xi_1/d x_2
+                m_gmat[4][0] =  (d1[0][0]*d3[2][0] - d1[2][0]*d3[0][0])/m_jac[0];  // d xi_2/d x_2
+                m_gmat[5][0] = -(d1[0][0]*d2[2][0] - d1[2][0]*d2[0][0])/m_jac[0];  // d xi_3/d x_2
+                m_gmat[6][0] =  (d2[0][0]*d3[1][0] - d2[1][0]*d3[0][0])/m_jac[0];  // d xi_1/d x_3
+                m_gmat[7][0] = -(d1[0][0]*d3[1][0] - d1[1][0]*d3[0][0])/m_jac[0];  // d xi_2/d x_3
+                m_gmat[8][0] =  (d1[0][0]*d2[1][0] - d1[1][0]*d2[0][0])/m_jac[0];  // d xi_3/d x_3
             }
             else // Deformed case
             {
                 m_jac  = Array<OneD, NekDouble>(nqtot,0.0);
                 m_gmat = Array<TwoD, NekDouble>(3*m_coordim,nqtot,0.0);
 
-                if(m_coordim == 3) // assume g = [0,0,1]
-                {
-                    // set up Jacobian
-                    Array<OneD,NekDouble> tmp[3] = {Array<OneD, NekDouble>(nqtot),
-                                                    Array<OneD, NekDouble>(nqtot),
-                                                    Array<OneD, NekDouble>(nqtot)};
-                    // g[0]
-                    Vmath::Vmul (nqtot,&d2[2][0],1,&d3[1][0],1,&tmp[0][0],1);
-                    Vmath::Vvtvm(nqtot,&d2[1][0],1,&d3[2][0],1,&tmp[0][0],1,&tmp[0][0],1);
-                    //g[1]
-                    Vmath::Vmul (nqtot,&d2[0][0],1,&d3[2][0],1,&tmp[1][0],1);
-                    Vmath::Vvtvm(nqtot,&d2[2][0],1,&d3[0][0],1,&tmp[1][0],1,&tmp[1][0],1);
-                    //g[2]
-                    Vmath::Vmul (nqtot,&d2[1][0],1,&d3[0][0],1,&tmp[2][0],1);
-                    Vmath::Vvtvm(nqtot,&d2[0][0],1,&d3[1][0],1,&tmp[2][0],1,&tmp[2][0],1);
-
-                    // J3D
-                    Vmath::Vmul (nqtot,&d1[0][0],1,&tmp[0][0],1,&m_jac[0],1);
-                    //cout << "J3D1 = " << m_jac[0] << endl;
-                    Vmath::Vvtvp(nqtot,&d1[1][0],1,&tmp[1][0],1,&m_jac[0],1,&m_jac[0],1);
-                    //cout << "J3D2 = " << m_jac[0] << endl;
-                    Vmath::Vvtvp(nqtot,&d1[2][0],1,&tmp[2][0],1,&m_jac[0],1,&m_jac[0],1);
-                    //cout << "J3D3 = " << m_jac[0] << endl;
-
+                // set up Jacobian
+                Array<OneD,NekDouble> tmp[3] = {Array<OneD, NekDouble>(nqtot),
+                                                Array<OneD, NekDouble>(nqtot),
+                                                Array<OneD, NekDouble>(nqtot)};
+                // g[0]
+                Vmath::Vmul (nqtot,&d2[2][0],1,&d3[1][0],1,&tmp[0][0],1);
+                Vmath::Vvtvm(nqtot,&d2[1][0],1,&d3[2][0],1,&tmp[0][0],1,&tmp[0][0],1);
+                //g[1]
+                Vmath::Vmul (nqtot,&d2[0][0],1,&d3[2][0],1,&tmp[1][0],1);
+                Vmath::Vvtvm(nqtot,&d2[2][0],1,&d3[0][0],1,&tmp[1][0],1,&tmp[1][0],1);
+                //g[2]
+                Vmath::Vmul (nqtot,&d2[1][0],1,&d3[0][0],1,&tmp[2][0],1);
+                Vmath::Vvtvm(nqtot,&d2[0][0],1,&d3[1][0],1,&tmp[2][0],1,&tmp[2][0],1);
+                
+                // J3D
+                Vmath::Vmul (nqtot,&d1[0][0],1,&tmp[0][0],1,&m_jac[0],1);
+                Vmath::Vvtvp(nqtot,&d1[1][0],1,&tmp[1][0],1,&m_jac[0],1,&m_jac[0],1);
+                Vmath::Vvtvp(nqtot,&d1[2][0],1,&tmp[2][0],1,&m_jac[0],1,&m_jac[0],1);
                    
-                    ASSERTL1(Vmath::Vmin(nqtot,&m_jac[0],1) > 0, "3D Deformed Jacobian is not positive");
+                ASSERTL1(Vmath::Vmin(nqtot,&m_jac[0],1) > 0, "3D Deformed Jacobian is not positive");
+                
+                // d xi_1/d x_1
+                Vmath::Vmul (nqtot,&d2[2][0],1,&d3[1][0],1,&m_gmat[0][0],1);
+                Vmath::Vvtvm(nqtot,&d2[1][0],1,&d3[2][0],1,&m_gmat[0][0],1,&m_gmat[0][0],1);
+                Vmath::Vdiv(nqtot,&m_gmat[0][0],1,&m_jac[0],1,&m_gmat[0][0],1);
+                
+                // d xi_1/d x_2
+                Vmath::Vmul (nqtot,&d1[1][0],1,&d3[2][0],1,&m_gmat[1][0],1);
+                Vmath::Vvtvm(nqtot,&d1[2][0],1,&d3[1][0],1,&m_gmat[1][0],1,&m_gmat[1][0],1);
+                Vmath::Vdiv(nqtot,&m_gmat[1][0],1,&m_jac[0],1,&m_gmat[1][0],1);
+                
+                // d xi_1/d x_3
+                Vmath::Vmul (nqtot,&d1[2][0],1,&d2[1][0],1,&m_gmat[2][0],1);
+                Vmath::Vvtvm(nqtot,&d1[1][0],1,&d2[2][0],1,&m_gmat[2][0],1,&m_gmat[2][0],1);
+                Vmath::Vdiv(nqtot,&m_gmat[2][0],1,&m_jac[0],1,&m_gmat[2][0],1);
+                
+                // d xi_2/d x_1
+                Vmath::Vmul (nqtot,&d2[0][0],1,&d3[2][0],1,&m_gmat[3][0],1);
+                Vmath::Vvtvm(nqtot,&d2[2][0],1,&d3[0][0],1,&m_gmat[3][0],1,&m_gmat[3][0],1);
+                Vmath::Vdiv(nqtot,&m_gmat[3][0],1,&m_jac[0],1,&m_gmat[3][0],1);
+                
+                // d xi_2/d x_2
+                Vmath::Vmul (nqtot,&d1[2][0],1,&d3[0][0],1,&m_gmat[4][0],1);
+                Vmath::Vvtvm(nqtot,&d1[0][0],1,&d2[2][0],1,&m_gmat[4][0],1,&m_gmat[4][0],1);
+                Vmath::Vdiv(nqtot,&m_gmat[4][0],1,&m_jac[0],1,&m_gmat[4][0],1);
+                
+                // d xi_2/d x_3
+                Vmath::Vmul (nqtot,&d1[0][0],1,&d2[2][0],1,&m_gmat[5][0],1);
+                Vmath::Vvtvm(nqtot,&d1[2][0],1,&d2[0][0],1,&m_gmat[5][0],1,&m_gmat[5][0],1);
+                Vmath::Vdiv(nqtot,&m_gmat[5][0],1,&m_jac[0],1,&m_gmat[5][0],1);
+                
+                // d xi_3/d x_1
+                Vmath::Vmul (nqtot,&d2[1][0],1,&d3[0][0],1,&m_gmat[6][0],1);
+                Vmath::Vvtvm(nqtot,&d2[0][0],1,&d3[1][0],1,&m_gmat[6][0],1,&m_gmat[6][0],1);
+                Vmath::Vdiv(nqtot,&m_gmat[6][0],1,&m_jac[0],1,&m_gmat[6][0],1);
+                
+                // d xi_3/d x_2
+                Vmath::Vmul (nqtot,&d1[0][0],1,&d3[1][0],1,&m_gmat[7][0],1);
+                Vmath::Vvtvm(nqtot,&d1[1][0],1,&d3[0][0],1,&m_gmat[7][0],1,&m_gmat[7][0],1);
+                Vmath::Vdiv(nqtot,&m_gmat[7][0],1,&m_jac[0],1,&m_gmat[7][0],1);
+                
+                // d xi_3/d x_3
+                Vmath::Vmul (nqtot,&d1[1][0],1,&d2[0][0],1,&m_gmat[8][0],1);
+                Vmath::Vvtvm(nqtot,&d1[0][0],1,&d2[1][0],1,&m_gmat[8][0],1,&m_gmat[8][0],1);
+                Vmath::Vdiv(nqtot,&m_gmat[8][0],1,&m_jac[0],1,&m_gmat[8][0],1);
+            }
+        }
 
-                    // d xi_1/d x_1
-                    Vmath::Vmul (nqtot,&d2[2][0],1,&d3[1][0],1,&m_gmat[0][0],1);
-                    Vmath::Vvtvm(nqtot,&d2[1][0],1,&d3[2][0],1,&m_gmat[0][0],1,&m_gmat[0][0],1);
-                    Vmath::Vdiv(nqtot,&m_gmat[0][0],1,&m_jac[0],1,&m_gmat[0][0],1);
 
-                    // d xi_1/d x_2
-                    Vmath::Vmul (nqtot,&d1[1][0],1,&d3[2][0],1,&m_gmat[1][0],1);
-                    Vmath::Vvtvm(nqtot,&d1[2][0],1,&d3[1][0],1,&m_gmat[1][0],1,&m_gmat[1][0],1);
-                    Vmath::Vdiv(nqtot,&m_gmat[1][0],1,&m_jac[0],1,&m_gmat[1][0],1);
+        void GeomFactors::SetUpLaplacianMetrics2D(StdRegions::ExpansionType shape,
+                                                  const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        {
+            ASSERTL1(tbasis.num_elements() == m_expdim,"Inappropriate dimension of tbasis");
+            ASSERTL1((m_coordim == 2)||(m_coordim <= 3),
+                     "The coordinate dimension should be equal to two or three"
+                     "for two-dimensional elements");
 
-                    // d xi_1/d x_3
-                    Vmath::Vmul (nqtot,&d1[2][0],1,&d2[1][0],1,&m_gmat[2][0],1);
-                    Vmath::Vvtvm(nqtot,&d1[1][0],1,&d2[2][0],1,&m_gmat[2][0],1,&m_gmat[2][0],1);
-                    Vmath::Vdiv(nqtot,&m_gmat[2][0],1,&m_jac[0],1,&m_gmat[2][0],1);
+            int i;
+            int nquad0 = m_pointsKey[0].GetNumPoints();
+            int nquad1 = m_pointsKey[1].GetNumPoints();
+            int nqtot  = nquad0*nquad1;
 
-                     // d xi_2/d x_1
-                    Vmath::Vmul (nqtot,&d2[0][0],1,&d3[2][0],1,&m_gmat[3][0],1);
-                    Vmath::Vvtvm(nqtot,&d2[2][0],1,&d3[0][0],1,&m_gmat[3][0],1,&m_gmat[3][0],1);
-                    Vmath::Vdiv(nqtot,&m_gmat[3][0],1,&m_jac[0],1,&m_gmat[3][0],1);
+            m_laplacianmetrics     = Array<TwoD, NekDouble>(3,nqtot); 
+            m_laplacianMetricsFlag = true;
+ 
+            // Get hold of the quadrature weights
+            const Array<OneD, const NekDouble>& w0 = tbasis[0]->GetW();
+            const Array<OneD, const NekDouble>& w1 = tbasis[1]->GetW();
 
-                   // d xi_2/d x_2
-                    Vmath::Vmul (nqtot,&d1[2][0],1,&d3[0][0],1,&m_gmat[4][0],1);
-                    Vmath::Vvtvm(nqtot,&d1[0][0],1,&d2[2][0],1,&m_gmat[4][0],1,&m_gmat[4][0],1);
-                    Vmath::Vdiv(nqtot,&m_gmat[4][0],1,&m_jac[0],1,&m_gmat[4][0],1);
-       
-                     // d xi_2/d x_3
-                    Vmath::Vmul (nqtot,&d1[0][0],1,&d2[2][0],1,&m_gmat[5][0],1);
-                    Vmath::Vvtvm(nqtot,&d1[2][0],1,&d2[0][0],1,&m_gmat[5][0],1,&m_gmat[5][0],1);
-                    Vmath::Vdiv(nqtot,&m_gmat[5][0],1,&m_jac[0],1,&m_gmat[5][0],1);
+            switch(shape)
+            {
+            case StdRegions::eQuadrilateral:
+                {      
+                    if(( m_gtype == eRegular)||
+                       ( m_gtype == eMovingRegular))
+                    {
+                        NekDouble g0 = m_gmat[0][0]*m_gmat[0][0] + m_gmat[2][0]*m_gmat[2][0];
+                        NekDouble g1 = m_gmat[0][0]*m_gmat[1][0] + m_gmat[2][0]*m_gmat[3][0];
+                        NekDouble g2 = m_gmat[1][0]*m_gmat[1][0] + m_gmat[3][0]*m_gmat[3][0];
 
-                    // d xi_3/d x_1
-                    Vmath::Vmul (nqtot,&d2[1][0],1,&d3[0][0],1,&m_gmat[6][0],1);
-                    Vmath::Vvtvm(nqtot,&d2[0][0],1,&d3[1][0],1,&m_gmat[6][0],1,&m_gmat[6][0],1);
-                    Vmath::Vdiv(nqtot,&m_gmat[6][0],1,&m_jac[0],1,&m_gmat[6][0],1);
+                        if(m_coordim == 3)
+                        {
+                            g0 += m_gmat[4][0]*m_gmat[4][0];
+                            g1 += m_gmat[4][0]*m_gmat[5][0];
+                            g2 += m_gmat[5][0]*m_gmat[5][0];
+                        }
 
-                    // d xi_3/d x_2
-                    Vmath::Vmul (nqtot,&d1[0][0],1,&d3[1][0],1,&m_gmat[7][0],1);
-                    Vmath::Vvtvm(nqtot,&d1[1][0],1,&d3[0][0],1,&m_gmat[7][0],1,&m_gmat[7][0],1);
-                    Vmath::Vdiv(nqtot,&m_gmat[7][0],1,&m_jac[0],1,&m_gmat[7][0],1);
+                        ASSERTL1(fabs(g1) < NekConstants::kGeomFactorsTol, "Regular quads should be undistorted");
 
-                    // d xi_3/d x_3
-                    Vmath::Vmul (nqtot,&d1[1][0],1,&d2[0][0],1,&m_gmat[8][0],1);
-                    Vmath::Vvtvm(nqtot,&d1[0][0],1,&d2[1][0],1,&m_gmat[8][0],1,&m_gmat[8][0],1);
-                    Vmath::Vdiv(nqtot,&m_gmat[8][0],1,&m_jac[0],1,&m_gmat[8][0],1);
+                        Vmath::Fill(nqtot,g0,&m_laplacianmetrics[0][0],1);
+                        Vmath::Fill(nqtot,g1,&m_laplacianmetrics[1][0],1);
+                        Vmath::Fill(nqtot,g2,&m_laplacianmetrics[2][0],1);
+                    }
+                    else
+                    {
+                        Vmath::Vmul (nqtot,&m_gmat[0][0],1,&m_gmat[0][0],1,&m_laplacianmetrics[0][0],1);
+                        Vmath::Vvtvp(nqtot,&m_gmat[2][0],1,&m_gmat[2][0],1,&m_laplacianmetrics[0][0],1,&m_laplacianmetrics[0][0],1);
 
+                        Vmath::Vmul (nqtot,&m_gmat[0][0],1,&m_gmat[1][0],1,&m_laplacianmetrics[1][0],1);
+                        Vmath::Vvtvp(nqtot,&m_gmat[2][0],1,&m_gmat[3][0],1,&m_laplacianmetrics[1][0],1,&m_laplacianmetrics[1][0],1);
+
+                        Vmath::Vmul (nqtot,&m_gmat[1][0],1,&m_gmat[1][0],1,&m_laplacianmetrics[2][0],1);
+                        Vmath::Vvtvp(nqtot,&m_gmat[3][0],1,&m_gmat[3][0],1,&m_laplacianmetrics[2][0],1,&m_laplacianmetrics[2][0],1);
+
+                        if(m_coordim == 3)
+                        {
+                            Vmath::Vvtvp(nqtot,&m_gmat[4][0],1,&m_gmat[4][0],1,&m_laplacianmetrics[0][0],1,&m_laplacianmetrics[0][0],1);
+                            Vmath::Vvtvp(nqtot,&m_gmat[4][0],1,&m_gmat[5][0],1,&m_laplacianmetrics[1][0],1,&m_laplacianmetrics[1][0],1);
+                            Vmath::Vvtvp(nqtot,&m_gmat[5][0],1,&m_gmat[5][0],1,&m_laplacianmetrics[2][0],1,&m_laplacianmetrics[2][0],1);
+                        }
+                    }
+
+                    Vmath::Vmul(nqtot,&m_weightedjac[0],1,&m_laplacianmetrics[0][0],1,&m_laplacianmetrics[0][0],1);
+                    Vmath::Vmul(nqtot,&m_weightedjac[0],1,&m_laplacianmetrics[1][0],1,&m_laplacianmetrics[1][0],1);
+                    Vmath::Vmul(nqtot,&m_weightedjac[0],1,&m_laplacianmetrics[2][0],1,&m_laplacianmetrics[2][0],1);
                 }
-                else
+                break;
+            case StdRegions::eTriangle:
                 {
-                    ASSERTL0(false,"Routine not yet implemented");
+                    Array<OneD, NekDouble> dEta_dXi[2] = {Array<OneD, NekDouble>(nqtot,1.0),
+                                                          Array<OneD, NekDouble>(nqtot,1.0)};
 
+                    const Array<OneD, const NekDouble>& z0 = tbasis[0]->GetZ();
+                    const Array<OneD, const NekDouble>& z1 = tbasis[1]->GetZ();
+
+                    for(i = 0; i < nquad1; i++)
+                    {
+                        Blas::Dscal(nquad0,2.0/(1-z1[i]),&dEta_dXi[0][0]+i*nquad0,1);
+                        Blas::Dscal(nquad0,2.0/(1-z1[i]),&dEta_dXi[1][0]+i*nquad0,1);
+                    }
+                    for(i = 0; i < nquad0; i++)
+                    {
+                        Blas::Dscal(nquad1,0.5*(1+z0[i]),&dEta_dXi[1][0]+i,nquad0);
+                    }
+
+                    Array<OneD, NekDouble> tmp(nqtot);
+  
+                    if(( m_gtype == eRegular)||
+                       ( m_gtype == eMovingRegular))
+                    {
+                        Vmath::Smul (nqtot,m_gmat[0][0],&dEta_dXi[0][0],1,&tmp[0],1);
+                        Vmath::Svtvp(nqtot,m_gmat[1][0],&dEta_dXi[1][0],1,&tmp[0],1,&tmp[0],1);
+                                             
+                        Vmath::Vmul (nqtot,&tmp[0],1,   &tmp[0],1,&m_laplacianmetrics[0][0],1);
+                        Vmath::Smul (nqtot,m_gmat[1][0],&tmp[0],1,&m_laplacianmetrics[1][0],1);
+
+
+                        Vmath::Smul (nqtot,m_gmat[2][0],&dEta_dXi[0][0],1,&tmp[0],1);
+                        Vmath::Svtvp(nqtot,m_gmat[3][0],&dEta_dXi[1][0],1,&tmp[0],1,&tmp[0],1);
+
+                        Vmath::Vvtvp(nqtot,&tmp[0],1,   &tmp[0],1,&m_laplacianmetrics[0][0],1,&m_laplacianmetrics[0][0],1);
+                        Vmath::Svtvp(nqtot,m_gmat[3][0],&tmp[0],1,&m_laplacianmetrics[1][0],1,&m_laplacianmetrics[1][0],1);
+
+                        if(m_coordim == 3)
+                        {
+                            Vmath::Smul (nqtot,m_gmat[4][0],&dEta_dXi[0][0],1,&tmp[0],1);
+                            Vmath::Svtvp(nqtot,m_gmat[5][0],&dEta_dXi[1][0],1,&tmp[0],1,&tmp[0],1);
+
+                            Vmath::Vvtvp(nqtot,&tmp[0],1,   &tmp[0],1,&m_laplacianmetrics[0][0],1,&m_laplacianmetrics[0][0],1);
+                            Vmath::Svtvp(nqtot,m_gmat[5][0],&tmp[0],1,&m_laplacianmetrics[1][0],1,&m_laplacianmetrics[1][0],1);
+                        }
+
+                        NekDouble g2 = m_gmat[1][0]*m_gmat[1][0] + m_gmat[3][0]*m_gmat[3][0];
+                        if(m_coordim == 3)
+                        {
+                            g2 += m_gmat[5][0]*m_gmat[5][0];
+                        }
+                        Vmath::Fill(nqtot,g2,&m_laplacianmetrics[2][0],1);
+
+
+                    }
+                    else
+                    {
+                        Vmath::Vmul (nqtot,&m_gmat[0][0],1,&dEta_dXi[0][0],1,&tmp[0],1);
+                        Vmath::Vvtvp(nqtot,&m_gmat[1][0],1,&dEta_dXi[1][0],1,&tmp[0],1,&tmp[0],1);
+
+                        Vmath::Vmul (nqtot,&tmp[0],      1,&tmp[0],      1,&m_laplacianmetrics[0][0],1);
+                        Vmath::Vmul (nqtot,&m_gmat[1][0],1,&tmp[0],      1,&m_laplacianmetrics[1][0],1);
+                        Vmath::Vmul (nqtot,&m_gmat[1][0],1,&m_gmat[1][0],1,&m_laplacianmetrics[2][0],1);
+
+
+                        Vmath::Vmul (nqtot,&m_gmat[2][0],1,&dEta_dXi[0][0],1,&tmp[0],1);
+                        Vmath::Vvtvp(nqtot,&m_gmat[3][0],1,&dEta_dXi[1][0],1,&tmp[0],1,&tmp[0],1);
+
+                        Vmath::Vvtvp(nqtot,&tmp[0],1,&tmp[0],            1,&m_laplacianmetrics[0][0],1,&m_laplacianmetrics[0][0],1);
+                        Vmath::Vvtvp(nqtot,&m_gmat[3][0],1,&tmp[0],      1,&m_laplacianmetrics[1][0],1,&m_laplacianmetrics[1][0],1);
+                        Vmath::Vvtvp(nqtot,&m_gmat[3][0],1,&m_gmat[3][0],1,&m_laplacianmetrics[2][0],1,&m_laplacianmetrics[2][0],1);
+
+                        if(m_coordim == 3)
+                        {
+                            Vmath::Vmul (nqtot,&m_gmat[4][0],1,&dEta_dXi[0][0],1,&tmp[0],1);
+                            Vmath::Vvtvp(nqtot,&m_gmat[5][0],1,&dEta_dXi[1][0],1,&tmp[0],1,&tmp[0],1);
+
+                            Vmath::Vvtvp(nqtot,&tmp[0],1,&tmp[0],            1,&m_laplacianmetrics[0][0],1,&m_laplacianmetrics[0][0],1);
+                            Vmath::Vvtvp(nqtot,&m_gmat[5][0],1,&tmp[0],      1,&m_laplacianmetrics[1][0],1,&m_laplacianmetrics[1][0],1);
+                            Vmath::Vvtvp(nqtot,&m_gmat[5][0],1,&m_gmat[5][0],1,&m_laplacianmetrics[2][0],1,&m_laplacianmetrics[2][0],1);
+                        }
+                    }
+
+                    Vmath::Vmul(nqtot,&m_weightedjac[0],1,&m_laplacianmetrics[0][0],1,&m_laplacianmetrics[0][0],1);
+                    Vmath::Vmul(nqtot,&m_weightedjac[0],1,&m_laplacianmetrics[1][0],1,&m_laplacianmetrics[1][0],1);
+                    Vmath::Vmul(nqtot,&m_weightedjac[0],1,&m_laplacianmetrics[2][0],1,&m_laplacianmetrics[2][0],1);                    
+                }
+                break;
+            default:
+                {
+                    ASSERTL0(false,"Invalid shape type");
                 }
             }
+        }
+            
+        void GeomFactors::SetUpQuadratureMetrics2D(StdRegions::ExpansionType shape,
+                                                   const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        {
+            ASSERTL1(tbasis.num_elements() == m_expdim,"Inappropriate dimension of tbasis");
+
+            int i;
+            int nquad0 = m_pointsKey[0].GetNumPoints();
+            int nquad1 = m_pointsKey[1].GetNumPoints();
+            int nqtot  = nquad0*nquad1;
+
+            m_weightedjac           = Array<OneD, NekDouble>(nqtot); 
+            m_quadratureMetricsFlag = true;
+
+            // Fill the array m_weighted jac with the values
+            // of the (already computed) jacobian (=m_jac)
+            if((m_gtype == eRegular)||(m_gtype == eMovingRegular))
+            {
+                Vmath::Fill(nqtot,m_jac[0],m_weightedjac.get(),1);
+            }
+            else
+            {
+                Vmath::Vcopy(nqtot,m_jac.get(),1,m_weightedjac.get(),1);
+            }
+
+            // Get hold of the quadrature weights
+            const Array<OneD, const NekDouble>& w0 = tbasis[0]->GetW();
+            const Array<OneD, const NekDouble>& w1 = tbasis[1]->GetW();
+
+            // Multiply the jacobian with the quadrature weights
+            switch(shape)
+            {
+            case StdRegions::eQuadrilateral:
+                {
+                    for(i = 0; i < nquad1; ++i)
+                    {
+                        Vmath::Vmul(nquad0,m_weightedjac.get()+i*nquad0,1,
+                                    w0.get(),1,m_weightedjac.get()+i*nquad0,1);
+                    }
+                    
+                    for(i = 0; i < nquad0; ++i)
+                    {
+                        Vmath::Vmul(nquad1,m_weightedjac.get()+i,nquad0,w1.get(),1,
+                                    m_weightedjac.get()+i,nquad0);
+                    }        
+                }
+                break;
+            case StdRegions::eTriangle:
+                {
+                    for(i = 0; i < nquad1; ++i)
+                    {
+                        Vmath::Vmul(nquad0,m_weightedjac.get()+i*nquad0,1,
+                                    w0.get(),1,m_weightedjac.get()+i*nquad0,1);
+                    }
+            
+                    switch(tbasis[1]->GetPointsType())
+                    {
+                    case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
+                        for(i = 0; i < nquad1; ++i)
+                        {
+                            const Array<OneD, const NekDouble>& z1 = tbasis[1]->GetZ();
+                            Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i],m_weightedjac.get()+i*nquad0,1);
+                        }
+                        break;
+                    case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product 
+                        for(i = 0; i < nquad1; ++i)
+                        {
+                            Blas::Dscal(nquad0,0.5*w1[i],m_weightedjac.get()+i*nquad0,1);      
+                        }
+                        break;
+                    default:
+                        {
+                            ASSERTL0(false,"Currently no implementation for this PointsType");
+                        }
+                    }
+                }
+                break;
+            default:
+                {
+                    ASSERTL0(false,"Invalid shape type");
+                }
+            }
+ 
         }
 
         // Generate Normal vectors at all quadature points specified
         // to the pointsKey "to_key" according to anticlockwise
         // convention 
         Array<OneD, NekDouble> GeomFactors::GenNormals2D(enum StdRegions::ExpansionType shape,
-                                       const int edge,  const LibUtilities::PointsKey &to_key)
+                                                         const int edge,  
+                                                         const LibUtilities::PointsKey &to_key)
         {
             int i; 
             int nqe = to_key.GetNumPoints();
@@ -1054,223 +1231,6 @@ namespace Nektar
             
             return returnval;
         }
-
-
-
-        /**
-        \brief Three dimensional geometric factors and Jacobian
-
-        The geometric factors are related to the local derivatives of the
-        global coordinates by:
-
-        \f$ \begin{array}{lll}
-        \frac{\partial \xi_1}{\partial x_1} = \frac{1}{J_{3D}} \left ( \frac{\partial x_2}{\partial \xi_2} \frac{\partial x_3}{\partial \xi_3} - \frac{\partial x_2}{\partial \xi_3} \frac{\partial x_3}{\partial \xi_2} \right ) & 
-        \frac{\partial \xi_1}{\partial x_2} = -\frac{1}{J_{3D}} \left ( \frac{\partial x_1}{\partial \xi_2} \frac{\partial x_3}{\partial \xi_3}  - \frac{\partial x_3}{\partial \xi_2} \frac{\partial x_1}{\partial \xi_3}  \right )&
-        \frac{\partial \xi_1}{\partial x_3} = \frac{1}{J_{3D}} \left ( \frac{\partial x_1}{\partial \xi_2} \frac{\partial x_2}{\partial \xi_3}  - \frac{\partial x_2}{\partial \xi_2} \frac{\partial x_1}{\partial \xi_3}  \right )\\
-
-        \frac{\partial \xi_2}{\partial x_1} = -\frac{1}{J_{3D}} \left ( \frac{\partial x_2}{\partial \xi_1} \frac{\partial x_3}{\partial \xi_3} - \frac{\partial x_3}{\partial \xi_1} \frac{\partial x_2}{\partial \xi_3}  \right ) &
-        \frac{\partial \xi_2}{\partial x_2} = \frac{1}{J_{3D}} \left ( \frac{\partial x_1}{\partial \xi_1} \frac{\partial x_3}{\partial \xi_3}  - \frac{\partial x_3}{\partial \xi_1} \frac{\partial x_1}{\partial \xi_3} \right ) &
-        \frac{\partial \xi_2}{\partial x_3} = -\frac{1}{J_{3D}} \left ( \frac{\partial x_1}{\partial \xi_1} \frac{\partial x_2}{\partial \xi_3}  - \frac{\partial x_2}{\partial \xi_1} \frac{\partial x_1}{\partial \xi_3}  \right )\\
-
-        \frac{\partial \xi_3}{\partial x_1} = \frac{1}{J_{3D}} \left ( \frac{\partial x_2}{\partial \xi_1} \frac{\partial x_3}{\partial \xi_2} - \frac{\partial x_3}{\partial \xi_1} \frac{\partial x_2}{\partial \xi_3}  \right ) &
-        \frac{\partial \xi_3}{\partial x_2} = -\frac{1}{J_{3D}} \left ( \frac{\partial x_1}{\partial \xi_1} \frac{\partial x_3}{\partial \xi_2}  - \frac{\partial x_3}{\partial \xi_1} \frac{\partial x_1}{\partial \xi_2} \right ) &
-        \frac{\partial \xi_3}{\partial x_3} = \frac{1}{J_{3D}} \left ( \frac{\partial x_1}{\partial \xi_1} \frac{\partial x_2}{\partial \xi_2}  - \frac{\partial x_2}{\partial \xi_1} \frac{\partial x_1}{\partial \xi_2}  \right )
-        \end{array} \f$
-
-        where
-
-        \f$ J_{3D} = 
-        \frac{\partial x_1}{\partial \xi_1} \left ( 
-        \frac{\partial x_2}{\partial \xi_2} \frac{\partial x_3}{\partial \xi_3} - 
-        \frac{\partial x_2}{\partial \xi_3} \frac{\partial x_3}{\partial \xi_2}\right )
-        - \frac{\partial x_1}{\partial \xi_2} \left (  
-        \frac{\partial x_2}{\partial \xi_1} \frac{\partial x_3}{\partial \xi_3}  -
-        \frac{\partial x_2}{\partial \xi_3} \frac{\partial x_3}{\partial \xi_1}\right )
-        + \frac{\partial x_1}{\partial \xi_3} \left ( 
-        \frac{\partial x_2}{\partial \xi_1} \frac{\partial x_3}{\partial \xi_2} -
-        \frac{\partial x_2}{\partial \xi_2} \frac{\partial x_3}{\partial \xi_1} 
-        \right ) \f$
-
-        **/
-        
-//         GeomFactors::GeomFactorsOld(const GeomType gtype, const int coordim,
-//                                  const Array<OneD, const StdRegions::StdExpansion3DSharedPtr> &Coords):
-//         m_gtype(gtype), m_coordim(coordim), m_expdim(3)
-//         {
-//             ASSERTL1((coordim<=3), "Only understand up to three coordinate");
-// 
-//             m_pointsKey = Array<OneD, LibUtilities::PointsKey> (m_expdim);
-// 
-//             int nquad0, nquad1, nquad2, nqtot; 
-//             LibUtilities::PointsType  ptype0, ptype1, ptype2;
-// 
-//             m_pointsKey[0] = Coords[0]->GetBasis(0)->GetPointsKey();
-//             
-//             nquad0 = m_pointsKey[0].GetNumPoints();
-//             ptype0 = m_pointsKey[0].GetPointsType();
-//               
-//             m_pointsKey[1] = Coords[0]->GetBasis(1)->GetPointsKey();
-//             nquad1 = m_pointsKey[1].GetNumPoints();
-//             ptype1 = m_pointsKey[1].GetPointsType();
-//                
-//             m_pointsKey[2] = Coords[0]->GetBasis(2)->GetPointsKey();;
-//             nquad2 = m_pointsKey[2].GetNumPoints();
-//             ptype2 = m_pointsKey[2].GetPointsType();
-//              
-//  
-//              nqtot = nquad0*nquad1*nquad2;
-// 
-//              cout << "nqtot = " << nqtot << endl;
-// 
-//             // setup temp storage
-//             Array<OneD, NekDouble> d1[3] = {Array<OneD, NekDouble>(nqtot),
-//                                             Array<OneD, NekDouble>(nqtot),
-//                                             Array<OneD, NekDouble>(nqtot)};
-//             Array<OneD, NekDouble> d2[3] = {Array<OneD, NekDouble>(nqtot),
-//                                             Array<OneD, NekDouble>(nqtot),
-//                                             Array<OneD, NekDouble>(nqtot)};
-//             Array<OneD, NekDouble> d3[3] = {Array<OneD, NekDouble>(nqtot),
-//                                             Array<OneD, NekDouble>(nqtot),
-//                                             Array<OneD, NekDouble>(nqtot)};
-// 
-//         // Calculate local derivatives using physical space storage
-//         for(int i=0; i<coordim; ++i)
-//         {
-//             ASSERTL2(Coords[i]->GetNumPoints(0) == nquad0,
-//                     "Points order are different for coordinate 0");
-//             ASSERTL2(Coords[i]->GetNumPoints(1) == nquad1,
-//                     "Points order are different for coordinate 1");
-//             ASSERTL2(Coords[i]->GetNumPoints(2) == nquad2,
-//                     "Points order are different for coordinate 2");
-//            
-//             ASSERTL2(Coords[i]->GetPointsType(0) == ptype0,
-//                     "Points type are different for coordinate 0");
-//             ASSERTL2(Coords[i]->GetPointsType(1) == ptype1,
-//                     "Points type are different for coordinate 1");
-//             ASSERTL2(Coords[i]->GetPointsType(2) == ptype2,
-//                     "Points type are different for coordinate 2");
-// 
-//             Coords[i]->BwdTrans(Coords[i]->GetCoeffs(), Coords[i]->UpdatePhys());
-//             Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(), d1[i], d2[i], d3[i]);
-// 
-//         }
-// 
-//         if((m_gtype == eRegular) || (m_gtype == eMovingRegular) )
-//         {
-//             m_jac = Array<OneD, NekDouble>(1,0.0);
-//             m_gmat = Array<TwoD, NekDouble>(3*coordim, 1, 0.0);
-//             
-//                 // The three-dimensional Jacobian form (J_3d from the page 158, Spen's book)
-//                 m_jac[0] = d1[0][0]*(d2[1][0]*d3[2][0] - d3[1][0]*d2[2][0])
-//                          - d2[0][0]*(d1[1][0]*d3[2][0] - d3[1][0]*d1[2][0])
-//                          + d3[0][0]*(d1[1][0]*d2[2][0] - d2[1][0]*d1[2][0]);
-//                 
-//                 ASSERTL1(m_jac[0] > 0, "3D Regular Jacobian is not positive");
-// 
-//                 // Partial derivatives with respect to x_1, x_2, and x_3
-//                 // in terms of derivative with respect to xi_1, xi_2, and x_3.
-//                 // (Spen's book page 160)
-//                 m_gmat[0][0] =  (d2[1][0]*d3[2][0] - d3[1][0]*d2[2][0])/m_jac[0];// d xi_1/d x_1
-//                 m_gmat[1][0] = -(d1[1][0]*d3[2][0] - d3[1][0]*d1[2][0])/m_jac[0];// d xi_2/d x_1
-//                 m_gmat[2][0] =  (d1[1][0]*d2[2][0] - d3[1][0]*d1[2][0])/m_jac[0];// d xi_3/d x_1
-// 
-//                 m_gmat[3][0] =  -(d2[0][0]*d3[2][0] - d3[0][0]*d2[2][0])/m_jac[0];// d xi_1/d x_2
-//                 m_gmat[4][0] =   (d1[0][0]*d3[2][0] - d3[0][0]*d1[2][0])/m_jac[0];// d xi_2/d x_2
-//                 m_gmat[5][0] =  -(d1[0][0]*d2[2][0] - d2[0][0]*d1[2][0])/m_jac[0];// d xi_3/d x_2
-// 
-//                 m_gmat[6][0] =   (d2[0][0]*d3[1][0] - d3[0][0]*d2[1][0])/m_jac[0];// d xi_1/d x_3
-//                 m_gmat[7][0] =  -(d1[0][0]*d3[1][0] - d3[0][0]*d1[1][0])/m_jac[0];// d xi_2/d x_3
-//                 m_gmat[8][0] =   (d1[0][0]*d2[1][0] - d2[0][0]*d1[1][0])/m_jac[0];// d xi_3/d x_3
-// 
-//                 m_jac[0] = sqrt(m_jac[0]);
-//                                               
-//             }
-//             else
-//             {
-//                 m_jac = Array<OneD, NekDouble>(nqtot, 0.0);
-//                 m_gmat = Array<TwoD, NekDouble>(3*coordim, nqtot, 0.0);
-//                 
-//                 Array<OneD, NekDouble> g[3] = {Array<OneD, NekDouble>(nqtot),
-//                                                Array<OneD, NekDouble>(nqtot),
-//                                                Array<OneD, NekDouble>(nqtot)};
-// 
-//                 cout << "*********Geom type = " <<m_gtype << endl;                                             
-//                                                 
-//                 // set up Jacobian
-//                 // g[0] = (d x_2/d xi_2)*(d x_3/d xi_3) - (d x_2/d xi_3)*(d x_3/d xi_2)
-//                 //g[0] = (d x_2/d xi_3)*(d x_3/d xi_2)
-//                 Vmath::Vmul(nqtot,&d3[1][0],1,&d2[2][0],1,&g[0][0],1);
-//                 //g[0] = (d x_2/d xi_2)*(d x_3/d xi_3) - g[0]
-//                 Vmath::Vvtvm(nqtot,&d2[1][0],1,&d3[2][0],1,&g[0][0],1,&g[0][0],1);
-// 
-//                 // g[1] = (d x_2/d xi_1)*(d x_3/d xi_3) - (d x_2/d xi_3)*(d x_3/d xi_1)
-//                 //g[1] = (d x_2/d xi_3)*(d x_3/d xi_1)
-//                 Vmath::Vmul(nqtot,&d3[1][0],1,&d1[2][0],1,&g[1][0],1);
-//                 //g[1] = (d x_2/d xi_1)*(d x_3/d xi_3) - g[1]
-//                 Vmath::Vvtvm(nqtot,&d1[1][0],1,&d3[2][0],1,&g[1][0],1,&g[1][0],1);
-// 
-//                 // g[2] = (d x_2/d xi_1)*(d x_3/d xi_2) - (d x_2/d xi_2)*(d x_3/d xi_1)
-//                 //g[2] = (d x_2/d xi_2)*(d x_3/d xi_1)
-//                 Vmath::Vmul(nqtot,&d2[1][0],1,&d1[2][0],1,&g[2][0],1);
-//                 //g[2] = (d x_2/d xi_1)*(d x_3/d xi_2) - g[2]
-//                 Vmath::Vvtvm(nqtot,&d1[1][0],1,&d2[2][0],1,&g[2][0],1,&g[2][0],1);
-// 
-//                 // J_3D 
-//                 Vmath::Vmul(nqtot,&d2[0][0],1,&g[1][0],1,&m_jac[0],1);
-//                 Vmath::Vvtvm(nqtot,&d1[0][0],1,&g[0][0],1,&m_jac[0],1,&m_jac[0],1);
-//                 Vmath::Vvtvp(nqtot,&d3[0][0],1,&g[2][0],1,&m_jac[0],1,&m_jac[0],1);
-// 
-//                 // d xi_1/d x_1
-//                 Vmath::Vmul(nqtot,&d3[1][0],1,&d2[2][0],1,&m_gmat[0][0],1);
-//                 Vmath::Vvtvm(nqtot,&d2[1][0],1,&d3[2][0],1,&m_gmat[0][0],1,&m_gmat[0][0],1);
-//                 Vmath::Vdiv(nqtot,&m_gmat[0][0],1,&m_jac[0],1,&m_gmat[0][0],1);
-// 
-//                 // d xi_2/d x_1
-//                 Vmath::Vmul(nqtot,&d1[1][0],1,&d3[2][0],1,&m_gmat[1][0],1);
-//                 Vmath::Vvtvm(nqtot,&d3[1][0],1,&d1[2][0],1,&m_gmat[1][0],1,&m_gmat[1][0],1);
-//                 Vmath::Vdiv(nqtot,&m_gmat[1][0],1,&m_jac[0],1,&m_gmat[1][0],1);
-// 
-//                 // d xi_3/d x_1
-//                 Vmath::Vmul(nqtot,&d3[1][0],1,&d1[2][0],1,&m_gmat[2][0],1);
-//                 Vmath::Vvtvm(nqtot,&d1[1][0],1,&d2[2][0],1,&m_gmat[2][0],1,&m_gmat[2][0],1);
-//                 Vmath::Vdiv(nqtot,&m_gmat[2][0],1,&m_jac[0],1,&m_gmat[2][0],1);
-// 
-//                 // d xi_1/d x_2
-//                 Vmath::Vmul(nqtot,&d2[0][0],1,&d3[2][0],1,&m_gmat[3][0],1);
-//                 Vmath::Vvtvm(nqtot,&d3[0][0],1,&d2[2][0],1,&m_gmat[3][0],1,&m_gmat[3][0],1);
-//                 Vmath::Vdiv(nqtot,&m_gmat[3][0],1,&m_jac[0],1,&m_gmat[3][0],1);
-//                 
-//                 // d xi_2/d x_2
-//                 Vmath::Vmul(nqtot,&d3[0][0],1,&d1[2][0],1,&m_gmat[4][0],1);
-//                 Vmath::Vvtvm(nqtot,&d1[0][0],1,&d3[2][0],1,&m_gmat[4][0],1,&m_gmat[4][0],1);
-//                 Vmath::Vdiv(nqtot,&m_gmat[4][0],1,&m_jac[0],1,&m_gmat[4][0],1);
-//                 
-//                 // d xi_3/d x_2
-//                 Vmath::Vmul(nqtot,&d1[0][0],1,&d2[2][0],1,&m_gmat[5][0],1);
-//                 Vmath::Vvtvm(nqtot,&d2[0][0],1,&d1[2][0],1,&m_gmat[5][0],1,&m_gmat[5][0],1);
-//                 Vmath::Vdiv(nqtot,&m_gmat[5][0],1,&m_jac[0],1,&m_gmat[5][0],1);
-// 
-//                 // d xi_1/d x_3
-//                 Vmath::Vmul(nqtot,&d3[0][0],1,&d2[1][0],1,&m_gmat[6][0],1);
-//                 Vmath::Vvtvm(nqtot,&d2[0][0],1,&d3[1][0],1,&m_gmat[6][0],1,&m_gmat[6][0],1);
-//                 Vmath::Vdiv(nqtot,&m_gmat[6][0],1,&m_jac[0],1,&m_gmat[6][0],1);
-//                 
-//                 // d xi_2/d x_3
-//                 Vmath::Vmul(nqtot,&d1[0][0],1,&d3[1][0],1,&m_gmat[7][0],1);
-//                 Vmath::Vvtvm(nqtot,&d3[0][0],1,&d1[1][0],1,&m_gmat[7][0],1,&m_gmat[7][0],1);
-//                 Vmath::Vdiv(nqtot,&m_gmat[7][0],1,&m_jac[0],1,&m_gmat[7][0],1);
-//                 
-//                 // d xi_3/d x_3
-//                 Vmath::Vmul(nqtot,&d2[0][0],1,&d1[1][0],1,&m_gmat[8][0],1);
-//                 Vmath::Vvtvm(nqtot,&d1[0][0],1,&d2[1][0],1,&m_gmat[8][0],1,&m_gmat[8][0],1);
-//                 Vmath::Vdiv(nqtot,&m_gmat[8][0],1,&m_jac[0],1,&m_gmat[8][0],1);
-// 
-//                 // J = sqrt(J_3D)
-//                 Vmath::Vsqrt(nqtot,&m_jac[0],1,&m_jac[0],1);
-// 
-//             }
-// 
-//      }
         
         GeomFactors::~GeomFactors(){
         }
@@ -1292,6 +1252,24 @@ namespace Nektar
                 return false;
             }
 
+            if(!(lhs.m_quadratureMetricsFlag == rhs.m_quadratureMetricsFlag))
+            {
+                return false;
+            }
+
+            if(!(lhs.m_laplacianMetricsFlag == rhs.m_laplacianMetricsFlag))
+            {
+                return false;
+            }
+
+            for(int i = 0; i < lhs.m_expdim; i++)
+            {
+                if(!(lhs.m_pointsKey[i] == rhs.m_pointsKey[i]))
+                {
+                    return false;
+                }
+            }
+            
             if(!IsEqual(lhs.m_jac,rhs.m_jac,NekConstants::kGeomFactorsTol))
             {
                 return false;
@@ -1310,6 +1288,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.37  2009/01/01 02:33:29  ehan
+// cleaned up the code
+//
 // Revision 1.36  2008/12/18 14:08:58  pvos
 // NekConstants update
 //

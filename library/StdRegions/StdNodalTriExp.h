@@ -278,14 +278,14 @@ namespace Nektar
                 StdTriExp::IProductWRTBase_SumFac(inarray,outarray);
                 NodalToModalTranspose(outarray,outarray);    
             }          
-            void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& base0, 
-                                        const Array<OneD, const NekDouble>& base1,
-                                        const Array<OneD, const NekDouble>& inarray, 
-                                        Array<OneD, NekDouble> &outarray)
-            {
-                StdTriExp::IProductWRTBase_SumFac(base0,base1,inarray,outarray);
-                NodalToModalTranspose(outarray,outarray);     
-            } 
+/*             void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& base0,  */
+/*                                         const Array<OneD, const NekDouble>& base1, */
+/*                                         const Array<OneD, const NekDouble>& inarray,  */
+/*                                         Array<OneD, NekDouble> &outarray) */
+/*             { */
+/*                 StdTriExp::IProductWRTBase_SumFac(base0,base1,inarray,outarray); */
+/*                 NodalToModalTranspose(outarray,outarray);      */
+/*             }  */
 
             void IProductWRTDerivBase_SumFac(const int dir, 
                                              const Array<OneD, const NekDouble>& inarray, 
@@ -491,6 +491,9 @@ namespace Nektar
 
 /**
  * $Log: StdNodalTriExp.h,v $
+ * Revision 1.29  2008/11/24 10:31:14  pvos
+ * Changed name from _PartitionedOp to _MatFree
+ *
  * Revision 1.28  2008/11/19 16:02:47  pvos
  * Added functionality for variable Laplacian coeffcients
  *

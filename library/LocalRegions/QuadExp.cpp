@@ -99,30 +99,7 @@ namespace Nektar
     
         void QuadExp::GenMetricInfo()
         {
-            SpatialDomains::GeomFactorsSharedPtr Xgfac;
-            
-            Xgfac = m_geom->GetGeomFactors();
-            
-            if(Xgfac->GetGtype() != SpatialDomains::eDeformed)
-            {
-                m_metricinfo = Xgfac;
-            }
-            else
-            {
-                //basis are different distributions
-                if(!(m_base[0]->GetBasisKey().SamePoints(m_geom->GetBasis(0,0)->GetBasisKey()))||!(m_base[1]->GetBasisKey().SamePoints(m_geom->GetBasis(0,1)->GetBasisKey())))
-                {
-                    StdRegions::ExpansionType shape = StdRegions::eQuadrilateral;
-                    
-                    m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::
-                        AllocateSharedPtr(shape,*Xgfac,m_base); 
-                }
-                else // Same data can be used 
-                {                   
-                    m_metricinfo = Xgfac;
-                }
-                
-            }
+            m_metricinfo = m_geom->GetGeomFactors(m_base);
         }
         
         //----------------------------        
@@ -168,49 +145,20 @@ namespace Nektar
             return  ival;
         }
 
-        void QuadExp::IProductWRTBase_Collocation(const Array<OneD, const NekDouble>& inarray, 
-                                                  Array<OneD, NekDouble> &outarray)
-        { 
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            const Array<OneD, const NekDouble>& jac = m_metricinfo->GetJac();
-            Array<OneD,NekDouble> tmp(nquad0*nquad1);
-            
-            // multiply inarray with Jacobian
-            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-            {
-                Vmath::Vmul(nquad0*nquad1, jac, 1, inarray, 1, tmp, 1);
-            }
-            else
-            {
-                Vmath::Smul(nquad0*nquad1, jac[0], inarray, 1, tmp, 1);
-            }
-            
-            StdQuadExp::IProductWRTBase_Collocation(tmp,outarray);
-
-        }
-
-        void QuadExp::IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& base0, 
-                                             const Array<OneD, const NekDouble>& base1,
-                                             const Array<OneD, const NekDouble>& inarray, 
+        void QuadExp::IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
                                              Array<OneD, NekDouble> &outarray)
         { 
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-            const Array<OneD, const NekDouble>& jac = m_metricinfo->GetJac();
-            Array<OneD,NekDouble> tmp(nquad0*nquad1);
-            
-            // multiply inarray with Jacobian
-            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-            {
-                Vmath::Vmul(nquad0*nquad1, jac, 1, inarray, 1, tmp, 1);
-            }
-            else
-            {
-                Vmath::Smul(nquad0*nquad1, jac[0], inarray, 1, tmp, 1);
-            }
-            
-            StdQuadExp::IProductWRTBase_SumFac(base0,base1,tmp,outarray);
+            int    order1 = m_base[1]->GetNumModes();
+
+            Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad0*order1);
+            Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);
+
+            MultiplyByQuadratureMetric(inarray,tmp);
+            StdQuadExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                                     m_base[1]->GetBdata(),
+                                                     tmp,outarray,wsp,true,true);
         }
 
         void QuadExp::IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray, 
@@ -229,69 +177,38 @@ namespace Nektar
                                                   const Array<OneD, const NekDouble>& inarray, 
                                                   Array<OneD, NekDouble> & outarray)
         {   
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int    nqtot = nquad0*nquad1; 
+            ASSERTL1((dir==0)||(dir==1)||(dir==2),"Invalid direction.");
+            ASSERTL1((dir==2)?(m_geom->GetCoordim()==3):true,"Invalid direction.");
+
+            int    nquad0  = m_base[0]->GetNumPoints();
+            int    nquad1  = m_base[1]->GetNumPoints();
+            int    nqtot   = nquad0*nquad1;
+            int    wspsize = max(nqtot,m_ncoeffs);
+ 
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
 
-            Array<OneD, NekDouble> tmp1(2*nqtot+m_ncoeffs);
-            Array<OneD, NekDouble> tmp2(tmp1+nqtot);
-            Array<OneD, NekDouble> tmp3(tmp1+2*nqtot);
-            
-            switch(dir)
+            Array<OneD, NekDouble> tmp1(4*wspsize);
+            Array<OneD, NekDouble> tmp2(tmp1 +   wspsize);
+            Array<OneD, NekDouble> tmp3(tmp1 + 2*wspsize);
+            Array<OneD, NekDouble> tmp4(tmp1 + 3*wspsize);
+
+            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-            case 0:
-                {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        Vmath::Vmul(nqtot,gmat[0],1,inarray,1,tmp1,1);
-                        Vmath::Vmul(nqtot,gmat[1],1,inarray,1,tmp2,1);
-                    }
-                    else
-                    {
-                        Vmath::Smul(nqtot, gmat[0][0], inarray, 1, tmp1, 1);
-                        Vmath::Smul(nqtot, gmat[1][0], inarray, 1, tmp2, 1);
-                    }                 
-                }
-                break;
-            case 1:
-                {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        Vmath::Vmul(nqtot,gmat[2],1,inarray,1,tmp1,1);
-                        Vmath::Vmul(nqtot,gmat[3],1,inarray,1,tmp2,1);
-                    }
-                    else
-                    {
-                        Vmath::Smul(nqtot, gmat[2][0], inarray, 1, tmp1, 1);
-                        Vmath::Smul(nqtot, gmat[3][0], inarray, 1, tmp2, 1);
-                    }
-                }
-                break;
-            case 2:
-                {
-                    ASSERTL1(m_geom->GetCoordim() == 3,"input dir is out of range");
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        Vmath::Vmul(nqtot,gmat[4],1,inarray,1,tmp1,1);
-                        Vmath::Vmul(nqtot,gmat[5],1,inarray,1,tmp2,1);
-                    }
-                    else
-                    {
-                        Vmath::Smul(nqtot, gmat[4][0], inarray, 1, tmp1, 1);
-                        Vmath::Smul(nqtot, gmat[5][0], inarray, 1, tmp2, 1);
-                    }
-                }
-                break;
-            default:
-                {
-                    ASSERTL1(false,"input dir is out of range");
-                }
-                break;
-            }   
-            IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),tmp1,tmp3);
-            IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),tmp2,outarray);
-            Vmath::Vadd(m_ncoeffs, tmp3, 1, outarray, 1, outarray, 1);             
+                Vmath::Vmul(nqtot,&gmat[2*dir][0],  1,inarray.get(),1,tmp1.get(),1);
+                Vmath::Vmul(nqtot,&gmat[2*dir+1][0],1,inarray.get(),1,tmp2.get(),1);
+            }
+            else
+            {
+                Vmath::Smul(nqtot, gmat[2*dir][0],  inarray.get(),1,tmp1.get(), 1);
+                Vmath::Smul(nqtot, gmat[2*dir+1][0],inarray.get(),1,tmp2.get(), 1);
+            }  
+
+            MultiplyByQuadratureMetric(tmp1,tmp1);
+            MultiplyByQuadratureMetric(tmp2,tmp2);
+
+            IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),m_base[1]->GetBdata(), tmp1,tmp3,    tmp4,false,true);
+            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata() ,m_base[1]->GetDbdata(),tmp2,outarray,tmp4,true,false);
+            Vmath::Vadd(m_ncoeffs, tmp3, 1, outarray, 1, outarray, 1);   
         }
 
         void QuadExp::IProductWRTDerivBase_MatOp(const int dir, 
@@ -378,94 +295,208 @@ namespace Nektar
                             m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);
             }
         }
+
+        void QuadExp::MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
+                                                 Array<OneD, NekDouble> &outarray)
+        {        
+            if(false)
+            {
+                int    nqtot = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();                
+                const Array<OneD, const NekDouble>& metric = m_metricinfo->GetQuadratureMetrics();  
+                    
+                Vmath::Vmul(nqtot, metric, 1, inarray, 1, outarray, 1);
+            }
+            else
+            {
+                int    i;
+                int    nquad0 = m_base[0]->GetNumPoints();
+                int    nquad1 = m_base[1]->GetNumPoints();
+                int    nqtot  = nquad0*nquad1;
+
+                const Array<OneD, const NekDouble>& jac = m_metricinfo->GetJac();
+                const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
+                const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
+
+                if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                {
+                    Vmath::Vmul(nqtot, jac, 1, inarray, 1, outarray, 1);
+                }
+                else
+                {
+                    Vmath::Smul(nqtot, jac[0], inarray, 1, outarray, 1);
+                }
+
+                // multiply by integration constants 
+                for(i = 0; i < nquad1; ++i)
+                {
+                    Vmath::Vmul(nquad0, outarray.get()+i*nquad0,1,
+                                w0.get(),1,outarray.get()+i*nquad0,1);
+                }
+                    
+                for(i = 0; i < nquad0; ++i)
+                {
+                    Vmath::Vmul(nquad1,outarray.get()+i,nquad0,w1.get(),1,
+                                outarray.get()+i,nquad0);
+                }
+            }
+        }
         
         void QuadExp::LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
-                                                      Array<OneD,NekDouble> &outarray,
-                                                      const StdRegions::StdMatrixKey &mkey)
+                                                Array<OneD,NekDouble> &outarray,
+                                                const StdRegions::StdMatrixKey &mkey)
         {
             if(mkey.GetNvariableLaplacianCoefficients() == 0)
             {
-                // This implementation is only valid when there is no coefficients
+                // This implementation is only valid when there are no coefficients
                 // associated to the Laplacian operator
-                int    i;
-                int    dim = m_geom->GetCoordim();
-                int    nquad0 = m_base[0]->GetNumPoints();
-                int    nquad1 = m_base[1]->GetNumPoints();
-                int    nqtot = nquad0*nquad1; 
-                const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
-                                
-                Array<OneD,NekDouble> physValues((2+dim)*nqtot+m_ncoeffs);
-                Array<OneD,NekDouble> dPhysValuesdx(physValues+nqtot);
-                Array<OneD,NekDouble> dPhysValuesdy(physValues+2*nqtot);
-                Array<OneD,NekDouble> tmp(physValues+3*nqtot);
-                Array<OneD,NekDouble> tmp0(physValues+4*nqtot);
-                
-                BwdTrans_SumFac(inarray,physValues);
-                
-                // Laplacian matrix operation
-                switch(dim)
-                {
-                case 2:
-                    {
-                        PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
-                        
-                        // multiply with the proper geometric factors
-                        if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                        {
-                            Vmath::Vmul (nqtot,&gmat[0][0],1,dPhysValuesdx.get(),1,tmp.get(),1);
-                            Vmath::Vvtvp(nqtot,&gmat[2][0],1,dPhysValuesdy.get(),1,tmp.get(),1,tmp.get(),1);
-                            
-                            Vmath::Vmul (nqtot,&gmat[3][0],1,dPhysValuesdy.get(),1,dPhysValuesdy.get(),1);
-                            Vmath::Vvtvp(nqtot,&gmat[1][0],1,dPhysValuesdx.get(),1,dPhysValuesdy.get(),1,dPhysValuesdy.get(),1);
-                        }
-                        else
-                        {
-                            Vmath::Smul(nqtot, gmat[0][0], dPhysValuesdx.get(), 1, tmp.get(), 1);
-                            Blas::Daxpy(nqtot, gmat[2][0], dPhysValuesdy.get(), 1, tmp.get(), 1);
-                            
-                            Blas::Dscal(nqtot, gmat[3][0], dPhysValuesdy.get(), 1);
-                            Blas::Daxpy(nqtot, gmat[1][0], dPhysValuesdx.get(), 1, dPhysValuesdy.get(), 1);
-                        }          
+                if(m_metricinfo->UseLaplacianMetrics())       
+                {  
+                    int       nquad0  = m_base[0]->GetNumPoints();
+                    int       nquad1  = m_base[1]->GetNumPoints();
+                    int       nqtot   = nquad0*nquad1; 
+                    int       wspsize = max(nqtot,m_ncoeffs);
+                    
+                    const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
+                    const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
+                    const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
+                    const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
+                    const Array<TwoD, const NekDouble>& metric = m_metricinfo->GetLaplacianMetrics(); 
+                    
+                    // Allocate temporary storage
+                    Array<OneD,NekDouble> wsp0(3*wspsize);
+                    Array<OneD,NekDouble> wsp1(wsp0+wspsize);
+                    Array<OneD,NekDouble> wsp2(wsp0+2*wspsize);
+                    
+                    if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
+                    {  
+                        // LAPLACIAN MATRIX OPERATION
+                        // wsp0 = u       = B   * u_hat 
+                        // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
+                        // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
+                        BwdTrans_SumFacKernel(base0,base1,inarray,wsp0,wsp1,true,true);
+                        StdExpansion2D::PhysTensorDeriv(wsp0,wsp1,wsp2);
                     }
-                    break;
-                case 3:
+                    else
                     {
-                        Array<OneD,NekDouble> dPhysValuesdz(physValues+4*nqtot+m_ncoeffs);
-                        
-                        PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy,dPhysValuesdz);
-                        
-                        // multiply with the proper geometric factors
-                        if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                        {
-                            Vmath::Vmul (nqtot,&gmat[0][0],1,dPhysValuesdx.get(),1,tmp.get(),1);
-                            Vmath::Vvtvp(nqtot,&gmat[2][0],1,dPhysValuesdy.get(),1,tmp.get(),1,tmp.get(),1);
-                            Vmath::Vvtvp(nqtot,&gmat[4][0],1,dPhysValuesdz.get(),1,tmp.get(),1,tmp.get(),1);
-                            
-                            Vmath::Vmul (nqtot,&gmat[3][0],1,dPhysValuesdy.get(),1,dPhysValuesdy.get(),1);
-                            Vmath::Vvtvp(nqtot,&gmat[1][0],1,dPhysValuesdx.get(),1,dPhysValuesdy.get(),1,dPhysValuesdy.get(),1);
-                            Vmath::Vvtvp(nqtot,&gmat[5][0],1,dPhysValuesdz.get(),1,dPhysValuesdy.get(),1,dPhysValuesdy.get(),1);
-                        }
-                        else
-                        {
-                            Vmath::Smul(nqtot, gmat[0][0], dPhysValuesdx.get(), 1, tmp.get(), 1);
-                            Blas::Daxpy(nqtot, gmat[2][0], dPhysValuesdy.get(), 1, tmp.get(), 1);
-                            Blas::Daxpy(nqtot, gmat[4][0], dPhysValuesdz.get(), 1, tmp.get(), 1);
-                            
-                            Blas::Dscal(nqtot, gmat[3][0], dPhysValuesdy.get(), 1);
-                            Blas::Daxpy(nqtot, gmat[1][0], dPhysValuesdx.get(), 1, dPhysValuesdy.get(), 1);
-                            Blas::Daxpy(nqtot, gmat[5][0], dPhysValuesdz.get(), 1, dPhysValuesdy.get(), 1);
-                        }        
-                        
+                        StdExpansion2D::PhysTensorDeriv(inarray,wsp1,wsp2);                    
                     }
-                break;
-                default:
-                    ASSERTL0(false,"Number of dimensions should be greater than 2");
-                    break;
+                    
+                    // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
+                    // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
+                    // where g0, g1 and g2 are the metric terms set up in the GeomFactors class
+                    // especially for this purpose
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        Vmath::Vvtvvtp(nqtot,&metric[0][0],1,&wsp1[0],1,&metric[1][0],1,&wsp2[0],1,&wsp0[0],1);
+                        Vmath::Vvtvvtp(nqtot,&metric[1][0],1,&wsp1[0],1,&metric[2][0],1,&wsp2[0],1,&wsp2[0],1);
+                    }
+                    else
+                    {
+                        // special implementation in case g1 = 0 (which should hold for regular quads)
+                        // wsp0 = k = g0 * wsp1 = g0 * du_dxi1
+                        // wsp2 = l = g2 * wsp2 = g2 * du_dxi2           
+                        Vmath::Vmul(nqtot,&metric[0][0],1,&wsp1[0],1,&wsp0[0],1);
+                        Vmath::Vmul(nqtot,&metric[2][0],1,&wsp2[0],1,&wsp2[0],1);
+                    }
+                    
+                    // outarray = m = (D_xi1 * B)^T * k 
+                    // wsp1     = n = (D_xi2 * B)^T * l 
+                    IProductWRTBase_SumFacKernel(dbase0,base1,wsp0,outarray,wsp1,false,true);
+                    IProductWRTBase_SumFacKernel(base0,dbase1,wsp2,wsp1,    wsp0,true,false);
+                    
+                    // outarray = outarray + wsp1
+                    //          = L * u_hat
+                    Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);      
                 }
-                
-                IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),tmp,outarray);
-                IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,tmp0);  
-                Vmath::Vadd(m_ncoeffs,tmp0.get(),1,outarray.get(),1,outarray.get(),1);      
+                else
+                {
+                    int       nquad0  = m_base[0]->GetNumPoints();
+                    int       nquad1  = m_base[1]->GetNumPoints();
+                    int       nqtot   = nquad0*nquad1; 
+                    int       wspsize = max(nqtot,m_ncoeffs);
+                    
+                    const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
+                    const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
+                    const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
+                    const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
+                    
+                    // Allocate temporary storage
+                    Array<OneD,NekDouble> wsp0(6*wspsize);
+                    Array<OneD,NekDouble> wsp1(wsp0+wspsize);
+                    Array<OneD,NekDouble> wsp2(wsp0+2*wspsize);
+                    Array<OneD,NekDouble> wsp3(wsp0+3*wspsize);
+                    Array<OneD,NekDouble> wsp4(wsp0+4*wspsize);
+                    Array<OneD,NekDouble> wsp5(wsp0+5*wspsize);
+                    
+                    if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
+                    {  
+                        // LAPLACIAN MATRIX OPERATION
+                        // wsp0 = u       = B   * u_hat 
+                        // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
+                        // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
+                        BwdTrans_SumFacKernel(base0,base1,inarray,wsp0,wsp1,true,true);
+                        StdExpansion2D::PhysTensorDeriv(wsp0,wsp1,wsp2);
+                    }
+                    else
+                    {
+                        StdExpansion2D::PhysTensorDeriv(inarray,wsp1,wsp2);                    
+                    }
+                    
+                    // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
+                    // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
+                    // where g0, g1 and g2 are the metric terms set up in the GeomFactors class
+                    // especially for this purpose
+                    const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+                    int    dim = m_geom->GetCoordim();
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        // wsp3 = g0
+                        Vmath::Vvtvvtp(nqtot,&gmat[0][0],1,&gmat[0][0],1,&gmat[2][0],1,&gmat[2][0],1,&wsp3[0],1);
+                        // wsp4 = g1;
+                        Vmath::Vvtvvtp(nqtot,&gmat[0][0],1,&gmat[1][0],1,&gmat[2][0],1,&gmat[3][0],1,&wsp4[0],1);
+                        // wsp5 = g2;
+                        Vmath::Vvtvvtp(nqtot,&gmat[1][0],1,&gmat[1][0],1,&gmat[3][0],1,&gmat[3][0],1,&wsp5[0],1);
+                        
+                        if(dim == 3)
+                        {
+                            Vmath::Vvtvp(nqtot,&gmat[4][0],1,&gmat[4][0],1,&wsp3[0],1,&wsp3[0],1);
+                            Vmath::Vvtvp(nqtot,&gmat[4][0],1,&gmat[5][0],1,&wsp4[0],1,&wsp4[0],1);
+                            Vmath::Vvtvp(nqtot,&gmat[5][0],1,&gmat[5][0],1,&wsp5[0],1,&wsp5[0],1);
+                        }
+                        
+                        Vmath::Vvtvvtp(nqtot,&wsp3[0],1,&wsp1[0],1,&wsp4[0],1,&wsp2[0],1,&wsp0[0],1);
+                        Vmath::Vvtvvtp(nqtot,&wsp4[0],1,&wsp1[0],1,&wsp5[0],1,&wsp2[0],1,&wsp2[0],1);
+                    }
+                    else
+                    {
+                        // special implementation in case g1 = 0 (which should hold for regular quads)
+                        // wsp0 = k = g0 * wsp1 = g0 * du_dxi1
+                        // wsp2 = l = g2 * wsp2 = g2 * du_dxi2           
+                        NekDouble g0 = gmat[0][0]*gmat[0][0] + gmat[2][0]*gmat[2][0];
+                        NekDouble g2 = gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0];
+                        
+                        if(dim == 3)
+                        {
+                            g0 += gmat[4][0]*gmat[4][0];
+                            g2 += gmat[5][0]*gmat[5][0];
+                        }
+                        
+                        Vmath::Smul(nqtot,g0,&wsp1[0],1,&wsp0[0],1);
+                        Vmath::Smul(nqtot,g2,&wsp2[0],1,&wsp2[0],1);
+                    }
+                    
+                    MultiplyByQuadratureMetric(wsp0,wsp0);
+                    MultiplyByQuadratureMetric(wsp2,wsp2);
+
+                    // outarray = m = (D_xi1 * B)^T * k 
+                    // wsp1     = n = (D_xi2 * B)^T * l 
+                    IProductWRTBase_SumFacKernel(dbase0,base1,wsp0,outarray,wsp1,false,true);
+                    IProductWRTBase_SumFacKernel(base0,dbase1,wsp2,wsp1,    wsp0,true,false);
+                    
+                    // outarray = outarray + wsp1
+                    //          = L * u_hat
+                    Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);     
+                }
             }
             else
             {
@@ -476,94 +507,176 @@ namespace Nektar
         void QuadExp::HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                       Array<OneD,NekDouble> &outarray,
                                                       const StdRegions::StdMatrixKey &mkey)
-        {
-            int    i;
-            int    dim    = m_geom->GetCoordim();
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int    nqtot = nquad0*nquad1; 
-            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
-            NekDouble lambda = mkey.GetConstant(0);
-                                
-            Array<OneD,NekDouble> physValues((2+dim)*nqtot+m_ncoeffs);
-            Array<OneD,NekDouble> dPhysValuesdx(physValues+nqtot);
-            Array<OneD,NekDouble> dPhysValuesdy(physValues+2*nqtot);
-            Array<OneD,NekDouble> tmp(physValues+3*nqtot);
-            Array<OneD,NekDouble> tmp0(physValues+4*nqtot);
-
-            BwdTrans_SumFac(inarray,physValues);
-
-            // mass matrix operation
-            IProductWRTBase_SumFac((m_base[0]->GetBdata()),(m_base[1]->GetBdata()),
-                                   physValues,tmp0);
-
-            // Laplacian matrix operation
-            switch(dim)
-            {
-            case 2:
-                {
-                    PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
-
-                    // multiply with the proper geometric factors
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        Vmath::Vmul (nqtot,&gmat[0][0],1,dPhysValuesdx.get(),1,tmp.get(),1);
-                        Vmath::Vvtvp(nqtot,&gmat[2][0],1,dPhysValuesdy.get(),1,tmp.get(),1,tmp.get(),1);
-
-                        Vmath::Vmul (nqtot,&gmat[3][0],1,dPhysValuesdy.get(),1,dPhysValuesdy.get(),1);
-                        Vmath::Vvtvp(nqtot,&gmat[1][0],1,dPhysValuesdx.get(),1,dPhysValuesdy.get(),1,dPhysValuesdy.get(),1);
-                    }
-                    else
-                    {
-                        Vmath::Smul(nqtot, gmat[0][0], dPhysValuesdx.get(), 1, tmp.get(), 1);
-                        Blas::Daxpy(nqtot, gmat[2][0], dPhysValuesdy.get(), 1, tmp.get(), 1);
-
-                        Blas::Dscal(nqtot, gmat[3][0], dPhysValuesdy.get(), 1);
-                        Blas::Daxpy(nqtot, gmat[1][0], dPhysValuesdx.get(), 1, dPhysValuesdy.get(), 1);
-                    }          
+        {   
+            if(m_metricinfo->UseLaplacianMetrics())       
+            {  
+                int       nquad0  = m_base[0]->GetNumPoints();
+                int       nquad1  = m_base[1]->GetNumPoints();
+                int       nqtot   = nquad0*nquad1; 
+                int       wspsize = max(nqtot,m_ncoeffs);
+                NekDouble lambda  = mkey.GetConstant(0);
+                
+                const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
+                const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
+                const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
+                const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
+                const Array<TwoD, const NekDouble>& metric = m_metricinfo->GetLaplacianMetrics(); 
+                
+                // Allocate temporary storage
+                Array<OneD,NekDouble> wsp0(4*wspsize);
+                Array<OneD,NekDouble> wsp1(wsp0+wspsize);
+                Array<OneD,NekDouble> wsp2(wsp0+2*wspsize);
+                Array<OneD,NekDouble> wsp3(wsp0+3*wspsize);
+                
+                if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
+                {  
+                    // MASS MATRIX OPERATION
+                    // The following is being calculated:
+                    // wsp0     = B   * u_hat = u
+                    // wsp1     = W   * wsp0
+                    // outarray = B^T * wsp1  = B^T * W * B * u_hat = M * u_hat 
+                    BwdTrans_SumFacKernel       (base0,base1,inarray,wsp0,    wsp1,true,true);
+                    MultiplyByQuadratureMetric  (wsp0,wsp2);
+                    IProductWRTBase_SumFacKernel(base0,base1,wsp2,   outarray,wsp1,true,true);
+                    
+                    // LAPLACIAN MATRIX OPERATION
+                    // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
+                    // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
+                    StdExpansion2D::PhysTensorDeriv(wsp0,wsp1,wsp2);
                 }
-                break;
-            case 3:
+                else
                 {
-                    Array<OneD,NekDouble> dPhysValuesdz(physValues+4*nqtot+m_ncoeffs);
-
-                    PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy,dPhysValuesdz);
-
-                    // multiply with the proper geometric factors
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        Vmath::Vmul (nqtot,&gmat[0][0],1,dPhysValuesdx.get(),1,tmp.get(),1);
-                        Vmath::Vvtvp(nqtot,&gmat[2][0],1,dPhysValuesdy.get(),1,tmp.get(),1,tmp.get(),1);
-                        Vmath::Vvtvp(nqtot,&gmat[4][0],1,dPhysValuesdz.get(),1,tmp.get(),1,tmp.get(),1);
-
-                        Vmath::Vmul (nqtot,&gmat[3][0],1,dPhysValuesdy.get(),1,dPhysValuesdy.get(),1);
-                        Vmath::Vvtvp(nqtot,&gmat[1][0],1,dPhysValuesdx.get(),1,dPhysValuesdy.get(),1,dPhysValuesdy.get(),1);
-                        Vmath::Vvtvp(nqtot,&gmat[5][0],1,dPhysValuesdz.get(),1,dPhysValuesdy.get(),1,dPhysValuesdy.get(),1);
-                    }
-                    else
-                    {
-                        Vmath::Smul(nqtot, gmat[0][0], dPhysValuesdx.get(), 1, tmp.get(), 1);
-                        Blas::Daxpy(nqtot, gmat[2][0], dPhysValuesdy.get(), 1, tmp.get(), 1);
-                        Blas::Daxpy(nqtot, gmat[4][0], dPhysValuesdz.get(), 1, tmp.get(), 1);
-
-                        Blas::Dscal(nqtot, gmat[3][0], dPhysValuesdy.get(), 1);
-                        Blas::Daxpy(nqtot, gmat[1][0], dPhysValuesdx.get(), 1, dPhysValuesdy.get(), 1);
-                        Blas::Daxpy(nqtot, gmat[5][0], dPhysValuesdz.get(), 1, dPhysValuesdy.get(), 1);
-                    }        
-
+                    // specialised implementation for the classical spectral element method
+                    StdExpansion2D::PhysTensorDeriv(inarray,wsp1,wsp2);
+                    MultiplyByQuadratureMetric(inarray,outarray);
                 }
-                break;
-            default:
-                ASSERTL0(false,"Number of dimensions should be greater than 2");
-                break;
+                
+                // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
+                // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g1 * du_dxi1 + g2 * du_dxi2
+                // where g0, g1 and g2 are the metric terms set up in the GeomFactors class
+                // especially for this purpose
+                if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                {
+                    Vmath::Vvtvvtp(nqtot,&metric[0][0],1,&wsp1[0],1,&metric[1][0],1,&wsp2[0],1,&wsp0[0],1);
+                    Vmath::Vvtvvtp(nqtot,&metric[1][0],1,&wsp1[0],1,&metric[2][0],1,&wsp2[0],1,&wsp2[0],1);
+                }
+                else
+                {
+                    // special implementation in case g1 = 0 (which should hold for regular quads)
+                    // wsp0 = k = g0 * wsp1 = g0 * du_dxi1
+                    // wsp2 = l = g2 * wsp2 = g2 * du_dxi2           
+                    Vmath::Vmul(nqtot,&metric[0][0],1,&wsp1[0],1,&wsp0[0],1);
+                    Vmath::Vmul(nqtot,&metric[2][0],1,&wsp2[0],1,&wsp2[0],1);
+                }
+                
+                // wsp1 = m = (D_xi1 * B)^T * k 
+                // wsp0 = n = (D_xi2 * B)^T * l 
+                IProductWRTBase_SumFacKernel(dbase0,base1,wsp0,wsp1,wsp3,false,true);
+                IProductWRTBase_SumFacKernel(base0,dbase1,wsp2,wsp0,wsp3,true,false);
+                
+                // outarray = lambda * outarray + (wsp0 + wsp1)
+                //          = (lambda * M + L ) * u_hat
+                Vmath::Vstvpp(m_ncoeffs,lambda,&outarray[0],1,&wsp1[0],1,&wsp0[0],1,&outarray[0],1);
             }
-            
-            IProductWRTBase_SumFac(m_base[0]->GetDbdata(),m_base[1]->GetBdata(),tmp,outarray);
-            Blas::Daxpy(m_ncoeffs, lambda, tmp0.get(), 1, outarray.get(), 1);
+            else
+            {   
+                int       nquad0  = m_base[0]->GetNumPoints();
+                int       nquad1  = m_base[1]->GetNumPoints();
+                int       nqtot   = nquad0*nquad1; 
+                int       wspsize = max(nqtot,m_ncoeffs);
+                NekDouble lambda  = mkey.GetConstant(0);
+                
+                const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
+                const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
+                const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
+                const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
+                
+                // Allocate temporary storage
+                Array<OneD,NekDouble> wsp0(6*wspsize);
+                Array<OneD,NekDouble> wsp1(wsp0+wspsize);
+                Array<OneD,NekDouble> wsp2(wsp0+2*wspsize);
+                Array<OneD,NekDouble> wsp3(wsp0+3*wspsize);
+                Array<OneD,NekDouble> wsp4(wsp0+4*wspsize);
+                Array<OneD,NekDouble> wsp5(wsp0+5*wspsize);
+                
+                if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
+                {  
+                    // MASS MATRIX OPERATION
+                    // The following is being calculated:
+                    // wsp0     = B   * u_hat = u
+                    // wsp1     = W   * wsp0
+                    // outarray = B^T * wsp1  = B^T * W * B * u_hat = M * u_hat 
+                    BwdTrans_SumFacKernel       (base0,base1,inarray,wsp0,    wsp1,true,true);
+                    MultiplyByQuadratureMetric  (wsp0,wsp2);
+                    IProductWRTBase_SumFacKernel(base0,base1,wsp2,   outarray,wsp1,true,true);
+                    
+                    // LAPLACIAN MATRIX OPERATION
+                    // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
+                    // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
+                    StdExpansion2D::PhysTensorDeriv(wsp0,wsp1,wsp2);
+                }
+                else
+                {
+                    // specialised implementation for the classical spectral element method
+                    StdExpansion2D::PhysTensorDeriv(inarray,wsp1,wsp2);
+                    MultiplyByQuadratureMetric(inarray,outarray);
+                }
+                
+                // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
+                // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g1 * du_dxi1 + g2 * du_dxi2
+                // where g0, g1 and g2 are the metric terms set up in the GeomFactors class
+                // especially for this purpose
+                const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+                int    dim = m_geom->GetCoordim();
+                if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                {
+                    // wsp3 = g0
+                    Vmath::Vvtvvtp(nqtot,&gmat[0][0],1,&gmat[0][0],1,&gmat[2][0],1,&gmat[2][0],1,&wsp3[0],1);
+                    // wsp4 = g1;
+                    Vmath::Vvtvvtp(nqtot,&gmat[0][0],1,&gmat[1][0],1,&gmat[2][0],1,&gmat[3][0],1,&wsp4[0],1);
+                    // wsp5 = g2;
+                    Vmath::Vvtvvtp(nqtot,&gmat[1][0],1,&gmat[1][0],1,&gmat[3][0],1,&gmat[3][0],1,&wsp5[0],1);
 
-            IProductWRTBase_SumFac(m_base[0]->GetBdata(),m_base[1]->GetDbdata(),dPhysValuesdy,tmp0);  
-            Vmath::Vadd(m_ncoeffs,tmp0.get(),1,outarray.get(),1,outarray.get(),1);      
-            
+                    if(dim == 3)
+                    {
+                        Vmath::Vvtvp(nqtot,&gmat[4][0],1,&gmat[4][0],1,&wsp3[0],1,&wsp3[0],1);
+                        Vmath::Vvtvp(nqtot,&gmat[4][0],1,&gmat[5][0],1,&wsp4[0],1,&wsp4[0],1);
+                        Vmath::Vvtvp(nqtot,&gmat[5][0],1,&gmat[5][0],1,&wsp5[0],1,&wsp5[0],1);
+                    }
+
+                    Vmath::Vvtvvtp(nqtot,&wsp3[0],1,&wsp1[0],1,&wsp4[0],1,&wsp2[0],1,&wsp0[0],1);
+                    Vmath::Vvtvvtp(nqtot,&wsp4[0],1,&wsp1[0],1,&wsp5[0],1,&wsp2[0],1,&wsp2[0],1);
+                }
+                else
+                {
+                    // special implementation in case g1 = 0 (which should hold for regular quads)
+                    // wsp0 = k = g0 * wsp1 = g0 * du_dxi1
+                    // wsp2 = l = g2 * wsp2 = g2 * du_dxi2
+                    NekDouble g0 = gmat[0][0]*gmat[0][0] + gmat[2][0]*gmat[2][0];
+                    NekDouble g2 = gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0];
+
+                    if(dim == 3)
+                    {
+                            g0 += gmat[4][0]*gmat[4][0];
+                            g2 += gmat[5][0]*gmat[5][0];
+                    }
+
+                    Vmath::Smul(nqtot,g0,&wsp1[0],1,&wsp0[0],1);
+                    Vmath::Smul(nqtot,g2,&wsp2[0],1,&wsp2[0],1);
+                }
+
+                MultiplyByQuadratureMetric(wsp0,wsp0);
+                MultiplyByQuadratureMetric(wsp2,wsp2);
+
+                // wsp1 = m = (D_xi1 * B)^T * k 
+                // wsp0 = n = (D_xi2 * B)^T * l 
+                IProductWRTBase_SumFacKernel(dbase0,base1,wsp0,wsp1,wsp3,false,true);
+                IProductWRTBase_SumFacKernel(base0,dbase1,wsp2,wsp0,wsp3,true,false);
+                
+                // outarray = lambda * outarray + (wsp0 + wsp1)
+                //          = (lambda * M + L ) * u_hat
+                Vmath::Vstvpp(m_ncoeffs,lambda,&outarray[0],1,&wsp1[0],1,&wsp0[0],1,&outarray[0],1);
+            }
         }       
         
         ///////////////////////////////
@@ -1687,6 +1800,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.56  2008/12/16 11:32:33  pvos
+ *    Performance updates
+ *
  *    Revision 1.55  2008/11/24 10:31:14  pvos
  *    Changed name from _PartitionedOp to _MatFree
  *

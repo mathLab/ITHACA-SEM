@@ -590,7 +590,7 @@ namespace Nektar
 
         // Set up GeoFac for this geometry using Coord quadrature distribution
 
-        void PyrGeom::GenGeomFactors(void)
+        void PyrGeom::GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
             int i;
             GeomType Gtype = eRegular;
@@ -645,8 +645,8 @@ namespace Nektar
                  }
               }
 
-            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap);
-		}
+            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
+        }
 
 
         /** \brief put all quadrature information into edge structure
@@ -753,6 +753,9 @@ namespace Nektar
 
 //
 // $Log: PyrGeom.cpp,v $
+// Revision 1.12  2008/12/18 14:08:58  pvos
+// NekConstants update
+//
 // Revision 1.11  2008/11/25 10:54:41  pvos
 // Corrected small bug
 //

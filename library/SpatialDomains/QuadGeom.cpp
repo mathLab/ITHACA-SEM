@@ -234,7 +234,7 @@ namespace Nektar
         }
 
         // Set up GeoFac for this geometry using Coord quadrature distribution
-        void QuadGeom::GenGeomFactors(void)
+        void QuadGeom::GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
             int i;
             GeomType Gtype = eRegular;
@@ -274,8 +274,7 @@ namespace Nektar
                 }
             }
 
-            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap);
-
+            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
         }
 
         /** \brief put all quadrature information into edge structure 
@@ -395,6 +394,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.cpp,v $
+// Revision 1.23  2008/12/18 14:08:58  pvos
+// NekConstants update
+//
 // Revision 1.22  2008/09/12 11:26:19  pvos
 // Updates for mappings in 3D
 //

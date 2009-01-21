@@ -198,7 +198,7 @@ namespace Nektar
 				bool							m_ownverts;
 				std::list<CompToElmt>			m_elmtmap;
 
-                void GenGeomFactors(void);
+                void GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
             private:
                 bool m_owndata;
 
@@ -247,9 +247,9 @@ namespace Nektar
                     return GetCoord(i,Lcoord);
                 }
                 
-                virtual void v_GenGeomFactors(void)
+                virtual void v_GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
                 {
-                    GenGeomFactors();
+                    GenGeomFactors(tbasis);
                 }
 
                 virtual void v_SetOwnData()
@@ -319,6 +319,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.26  2008/11/17 08:58:00  ehan
+// Added GetNumVerts and GetNumEdges
+//
 // Revision 1.25  2008/09/12 11:26:19  pvos
 // Updates for mappings in 3D
 //

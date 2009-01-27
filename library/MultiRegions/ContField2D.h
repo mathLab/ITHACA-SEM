@@ -451,6 +451,11 @@ namespace Nektar
                 MultiplyByInvMassMatrix(inarray,outarray,GlobalArrays, ZeroBCs);
             }
 
+            virtual void v_FwdTrans(const ExpList &Sin)
+            {
+                FwdTrans(Sin);
+            }
+
             virtual void v_HelmSolve(const ExpList &In, 
                                      NekDouble lambda,
                                      Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray)

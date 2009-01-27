@@ -182,7 +182,7 @@ namespace Nektar
                 for(i = 0; i < nvariables; ++i)
 		  {
                     // Calculate -(\phi, V\cdot Grad(u))
-                    m_fields[i]->BwdTrans(inarray[i],physfield);
+                    m_fields[i]->BwdTrans_IterPerExp(inarray[i],physfield);
 		    
 		    WeakAdvectionNonConservativeForm(m_velocity,
 						     physfield, outarray[i]);
@@ -411,6 +411,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.1  2009/01/13 10:59:32  pvos
+* added new solvers file
+*
 * Revision 1.6  2009/01/06 21:10:34  sherwin
 * Updates for virtual calls to IProductWRTBase and introduced reader to handle SOLVERINFO section to specify different solvers
 *

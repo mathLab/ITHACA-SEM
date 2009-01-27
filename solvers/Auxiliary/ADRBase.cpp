@@ -277,6 +277,7 @@ namespace Nektar
         // discretisation)
         m_fields[0]->GetCoords(x0,x1,x2);
       
+
         for(int i = 0 ; i < m_fields.num_elements(); i++)
 	{
             SpatialDomains::ConstInitialConditionShPtr ifunc = m_boundaryConditions->GetInitialCondition(i);
@@ -289,13 +290,14 @@ namespace Nektar
             m_fields[i]->FwdTrans(*(m_fields[i]));
 	}
 
+
 	// dump initial conditions to file
 	for(int i = 0; i < m_fields.num_elements(); ++i)
 	  {
 	    std::string outname = m_sessionName +"_" + m_boundaryConditions->GetVariable(i) + "_initial.chk";
             ofstream outfile(outname.c_str());
 	    m_fields[i]->WriteToFile(outfile,eTecplot);
-	  }
+	  }       
     }
   
 
@@ -466,7 +468,7 @@ namespace Nektar
             ASSERTL0(false,"dimension unknown");
         }
 
-        m_fields[0]->IProductWRTBase(tmp,outarray);
+        m_fields[0]->IProductWRTBase_IterPerExp(tmp,outarray);
     }
                                        
     //-------------------------------------------------------------
@@ -628,6 +630,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.1  2009/01/13 10:59:32  pvos
+* added new solvers file
+*
 * Revision 1.8  2009/01/10 23:50:32  sherwin
 * Update ContField1D/2D to use different variable in constructors
 *

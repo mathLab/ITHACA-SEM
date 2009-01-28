@@ -154,9 +154,57 @@ namespace Nektar
 	}
     }
     
+//     void AdvectionDiffusionReaction::ODEforcing(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+// 						Array<OneD, Array<OneD, NekDouble> >&outarray, NekDouble time) 
+//     {
+//         int i;
+//         int nvariables = inarray.num_elements();
+//         int ncoeffs    = inarray[0].num_elements();
 
-    void AdvectionDiffusionReaction::ODEforcing(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
-						Array<OneD, Array<OneD, NekDouble> >&outarray, NekDouble time) 
+// 	SetBoundaryConditions(time);
+	
+//         switch(m_projectionType)
+//         {
+//         case eDiscontinuousGalerkin:
+	  
+// 	  WeakDGAdvection(inarray, outarray);
+// 	  for(i = 0; i < nvariables; ++i)
+//             {
+// 		Vmath::Neg(ncoeffs,outarray[i],1);
+//                 m_fields[i]->MultiplyByElmtInvMass(outarray[i],outarray[i]);
+//             }
+// 	  break;
+//         case eGalerkin:
+// 	  {
+//                 Array<OneD, NekDouble> physfield(GetNpoints());
+		
+//                 for(i = 0; i < nvariables; ++i)
+// 		  {
+//                     // Calculate -(\phi, V\cdot Grad(u))
+//                     m_fields[i]->BwdTrans_IterPerExp(inarray[i],physfield);
+		    
+// 		    WeakAdvectionNonConservativeForm(m_velocity,
+// 						     physfield, outarray[i]);
+		    
+//                     Vmath::Neg(ncoeffs,outarray[i],1);
+                    
+//                     //Multiply by inverse of mass matrix to get forcing term
+// 		    m_fields[i]->MultiplyByInvMassMatrix(outarray[i],  
+//                                                          outarray[i],
+//                                                          false,true);
+		   		    
+//                 }
+//             }
+//             break;
+//         default:
+//             ASSERTL0(false,"Unknown projection scheme");
+//             break;
+//         }
+//     }
+    
+    void AdvectionDiffusionReaction::ODErhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+                                                  Array<OneD,       Array<OneD, NekDouble> >&outarray, 
+                                            const NekDouble time) 
     {
         int i;
         int nvariables = inarray.num_elements();
@@ -171,7 +219,6 @@ namespace Nektar
 	  WeakDGAdvection(inarray, outarray);
 	  for(i = 0; i < nvariables; ++i)
             {
-                m_fields[i]->MultiplyByElmtInvMass(outarray[i],outarray[i]);
 		Vmath::Neg(ncoeffs,outarray[i],1);
             }
 	  break;
@@ -187,13 +234,7 @@ namespace Nektar
 		    WeakAdvectionNonConservativeForm(m_velocity,
 						     physfield, outarray[i]);
 		    
-                    Vmath::Neg(ncoeffs,outarray[i],1);
-                    
-                    //Multiply by inverse of mass matrix to get forcing term
-		    m_fields[i]->MultiplyByInvMassMatrix(outarray[i],  
-                                                         outarray[i],
-                                                         false,true);
-		   		    
+                    Vmath::Neg(ncoeffs,outarray[i],1);		   		    
                 }
             }
             break;
@@ -201,6 +242,53 @@ namespace Nektar
             ASSERTL0(false,"Unknown projection scheme");
             break;
         }
+    }
+    
+    void AdvectionDiffusionReaction::ODElhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+						  Array<OneD,       Array<OneD, NekDouble> >&outarray, 
+                                            const NekDouble time) 
+    {
+        ASSERTL0(false, "this routine needs implementation");
+    }
+    
+    void AdvectionDiffusionReaction::ODElhsSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+                                                       Array<OneD,       Array<OneD, NekDouble> >&outarray, 
+                                                 const NekDouble time)   
+    {
+        int i;
+        int nvariables = inarray.num_elements();
+	
+        switch(m_projectionType)
+        {
+        case eDiscontinuousGalerkin:
+
+            for(i = 0; i < nvariables; ++i)
+            {
+                m_fields[i]->MultiplyByElmtInvMass(inarray[i],outarray[i]);
+            }
+	  break;
+        case eGalerkin:
+	  {
+              for(i = 0; i < nvariables; ++i)
+              {
+                  m_fields[i]->MultiplyByInvMassMatrix(inarray[i],  
+                                                       outarray[i],
+                                                       false,true);
+              }
+          }
+          break;
+        default:
+            ASSERTL0(false,"Unknown projection scheme");
+            break;
+        }
+    }
+
+    void AdvectionDiffusionReaction::ODEdirkSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+						  Array<OneD,       Array<OneD, NekDouble> >&outarray, 
+                                                  const NekDouble lambda,
+                                                  const NekDouble time) 
+    {
+        ASSERTL0(false, "this routine needs implementation");
     }
 
     void AdvectionDiffusionReaction::SolveHelmholtz(NekDouble lambda)
@@ -219,7 +307,7 @@ namespace Nektar
         int nvariables = m_fields.num_elements();
 
         // Get Integration scheme details
-        LibUtilities::TimeIntegrationSchemeKey       IntKey(LibUtilities::eClassicalRungeKutta4);
+        LibUtilities::TimeIntegrationSchemeKey       IntKey(LibUtilities::eForwardEuler);
         LibUtilities::TimeIntegrationSchemeSharedPtr IntScheme = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
 
         // Set up wrapper to fields data storage. 
@@ -411,6 +499,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.2  2009/01/27 12:07:41  pvos
+* Modifications to make cont. Galerkin Advection solver working
+*
 * Revision 1.1  2009/01/13 10:59:32  pvos
 * added new solvers file
 *

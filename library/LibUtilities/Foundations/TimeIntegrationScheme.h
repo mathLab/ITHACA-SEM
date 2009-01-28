@@ -76,6 +76,7 @@ namespace Nektar
             eForwardEuler,                    //!< Forward euler scheme
             eBackwardEuler,                   //!< Backward euler scheme
             eMidpoint,                        //!< midpoint method
+            eDIRKOrder3,                      //!< Diagonally Implicit Runge Kutta scheme of order 3
             SIZE_TimeIntegrationType          //!< Length of enum list
         };
 
@@ -88,8 +89,9 @@ namespace Nektar
             "2nd order Adams-Moulton",
             "Classical Runge-Kutta 4",
             "Forward Euler",
-            "Backward Euler"
-            "Midpoint method"
+            "Backward Euler",
+            "Midpoint method",
+            "3rd order Diagonally Implicit Runge Kutta (DIRK)"
         };
         // =========================================================================
 
@@ -312,7 +314,8 @@ namespace Nektar
                 return m_numstages;
             }
 
-            bool IsExplicitMethod() const;
+            bool IsExplicitMethod()     const;
+            bool IsDiagonallyImplicit() const;
 
             /**
              * \brief This function initialises the time integration scheme
@@ -343,7 +346,11 @@ namespace Nektar
              *  that can be used to start the actual integration.
              */
             template<typename FuncType>
-                TimeIntegrationSolutionSharedPtr InitializeScheme(NekDouble timestep,NekDouble& time,int& nsteps,FuncType& f,const DoubleArray& y_0)
+                TimeIntegrationSolutionSharedPtr InitializeScheme(NekDouble          timestep,
+                                                                  NekDouble&         time,
+                                                                  int&               nsteps,
+                                                                  FuncType&          f,
+                                                                  const DoubleArray& y_0)
             {
                 TimeIntegrationSolutionSharedPtr y_out;
                 TimeIntegrationType type = m_schemeKey.GetIntegrationSchemeType();
@@ -356,6 +363,7 @@ namespace Nektar
                 case eAdamsMoultonOrder1:
                 case eMidpoint:
                 case eClassicalRungeKutta4:
+                case eDIRKOrder3:
                     {
                         nsteps = 0;
                         y_out = MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(type,y_0,time);
@@ -374,11 +382,14 @@ namespace Nektar
                         int nvar = y_0.num_elements();
                         int npoints = y_0[0].num_elements();
                         DoubleArray f_y_0(nvar);
+                        DoubleArray tmp  (nvar);
                         for(i = 0; i < nvar; i++)
                         {
                             f_y_0[i] = Array<OneD,NekDouble>(npoints);
+                            tmp  [i] = Array<OneD,NekDouble>(npoints);
                         }
-                        f.ODEforcing(y_0,f_y_0,time);
+                        f.ODErhs     (y_0,tmp,  time);
+                        f.ODElhsSolve(tmp,f_y_0,time);
 
                         for(i = 0; i < nvar; i++)
                         {
@@ -435,8 +446,7 @@ namespace Nektar
                                                       FuncType& f,
                                                       TimeIntegrationSolutionSharedPtr& y)
             {
-                ASSERTL1(IsExplicitMethod()==true,"Implicit integration scheme cannot be used for explit integration");
-
+                ASSERTL1(IsExplicitMethod() || IsDiagonallyImplicit(),"Fully Implicit integration scheme cannot be handled by this routine.");
                 TimeIntegrationType type = y->GetIntegrationSchemeType();
                 int nvar    = (y->GetSolutionVector())[0].num_elements();
                 int npoints = (y->GetSolutionVector())[0][0].num_elements();
@@ -444,14 +454,14 @@ namespace Nektar
                 ASSERTL1(type == m_schemeKey.GetIntegrationSchemeType(),
                          "Input and output argument are constructed for a different type of time integration scheme.");
                 
-                TimeIntegrationSolutionSharedPtr y_new = MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(type,m_numsteps,nvar,npoints);  
-                
+                TimeIntegrationSolutionSharedPtr y_new = MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(type,m_numsteps,nvar,npoints); 
+
                 ExplicitIntegration(timestep,f,
                                     y->GetSolutionVector(),
                                     y->GetTimeVector(),
                                     y_new->UpdateSolutionVector(),
                                     y_new->UpdateTimeVector()); 
-
+                
                 y = y_new;
 
                 return y->GetSolution();
@@ -490,31 +500,35 @@ namespace Nektar
                                      TripleArray& y_new,
                                      Array<OneD, NekDouble>& t_new)
             {
-                ASSERTL1(y_old.num_elements()==m_numsteps,"Arguments not appropriate for this method.");                
-                ASSERTL1(IsExplicitMethod()==true,"Implicit integration scheme cannot be used for explit integration");
-
                 unsigned int i,j,k;    
                 unsigned int nvar      = y_old[0].num_elements();
                 unsigned int npoints   = y_old[0][0].num_elements();
+
+                bool dirk = IsDiagonallyImplicit();
+                ASSERTL1(y_old.num_elements()==m_numsteps,"Arguments not appropriate for this method.");                
+                ASSERTL1(IsExplicitMethod() || dirk,"Fully Implicit integration scheme cannot be handled by this routine.");
                 
                 // First, we are going to calculate the various stage values and stage derivatives
                 // (this is the multi-stage part of the method)
                 // - Y corresponds to the stage values
                 // - F corresponds to the stage derivatives
                 // - T corresponds to the time at the different stages
-                TripleArray Y(m_numstages);
-                TripleArray F(m_numstages);
+                TripleArray Y  (m_numstages);
+                TripleArray F  (m_numstages);
+                TripleArray tmp(m_numstages);
                 Array<OneD,NekDouble> T(m_numstages,0.0);
 
                 // Allocate memory for the arrays Y and F   
                 for(i = 0; i < m_numstages; ++i)
                 {    
-                    Y[i] = DoubleArray(nvar);
-                    F[i] = DoubleArray(nvar);
+                    Y[i]   = DoubleArray(nvar);
+                    F[i]   = DoubleArray(nvar);
+                    tmp[i] = DoubleArray(nvar);
                     for(j = 0; j < nvar; j++)
                     {
-                        Y[i][j] = Array<OneD, NekDouble>(npoints,0.0);
-                        F[i][j] = Array<OneD, NekDouble>(npoints);
+                        Y  [i][j] = Array<OneD, NekDouble>(npoints,0.0);
+                        F  [i][j] = Array<OneD, NekDouble>(npoints);
+                        tmp[i][j] = Array<OneD, NekDouble>(npoints);
                     }
                 }
     
@@ -545,9 +559,31 @@ namespace Nektar
                         T[i] += m_U[i][j]*t_old[j];
                     }
 
+                    if(dirk)
+                    {
+                        // If the scheme is diagonally implicit, some extra steps
+                        // need to be taken. What we have caluclated so far for the
+                        // stage values Y is the RHS of the dirk-solve.
+                        // However, this RHS needs first to be 'multiplied' by the 
+                        // ODElhs operator (think of it as the mass matrix in case of the 
+                        // diffusion equation)
+                        f.ODElhs     (Y[i],   tmp[i], T[i]);
+                        // It also need to be premultiplied by a factor lambda
+                        NekDouble lambda = -1.0/(m_A[i][i]*timestep);
+                        for(k = 0; k < nvar; k++)
+                        {
+                            Blas::Dscal(npoints,lambda,(tmp[i][k]).get(),1);
+                        }
+
+                        // Now, the stage values can be solved for using the ODEdirkSolve
+                        // routine of the input object f. (Think of it as a HelmSolve
+                        // in case of the diffusion equation)
+                        f.ODEdirkSolve(tmp[i], Y[i], lambda, T[i]);
+                    }
                     // The stage derivative can now be calculated based
-                    // on the stage value using the forcing function
-                    f.ODEforcing(Y[i],F[i],T[i]);
+                    // on the stage value using the forcing functions
+                    f.ODErhs     (Y[i],   tmp[i], T[i]);
+                    f.ODElhsSolve(tmp[i], F[i],   T[i]);
                 }
 
                 // Next, the solution at the new time level will be calculated.

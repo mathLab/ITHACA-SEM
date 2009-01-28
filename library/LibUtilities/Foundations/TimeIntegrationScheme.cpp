@@ -425,6 +425,30 @@ namespace Nektar
          * \boldsymbol{y}^{n}
          * \end{array}\right]
          * \f]
+         * - 3rd order Diagonally Implicit Runge Kutta (DIRK) 
+         *   - enum value: <code>eDIRKOrder3</code>
+         *   - coefficients and parameters:
+         * \f[
+         * \left[\begin{array}{c|c}
+         * A & U \\
+         * \hline 
+         * B & V
+         * \end{array}\right] = 
+         * \left[\begin{array}{ccc|c}
+         * \lambda & 0 & 0 & 1 \\
+         * \frac{1}{2}\left(1-\lambda\right) & \lambda & 0 & 1 \\
+         * \frac{1}{4}\left(-6\lambda^2+16\lambda-1\right) & \frac{1}{4}\left(6\lambda^2-20\lambda+5\right) & \lambda & 1 \\
+         * \hline
+         * \frac{1}{4}\left(-6\lambda^2+16\lambda-1\right) & \frac{1}{4}\left(6\lambda^2-20\lambda+5\right) & \lambda & 1 
+         * \end{array}\right]\quad \mathrm{with}\quad \lambda=0.4358665215,\qquad
+         * \boldsymbol{y}^{[n]}=
+         * \left[\begin{array}{c}
+         * \boldsymbol{y}^{[n]}_0
+         * \end{array}\right]=
+         * \left[\begin{array}{c}
+         * \boldsymbol{y}^{n}
+         * \end{array}\right]
+         * \f]
          * \subsection sectionGeneralLinearMethodsImplementationAddMethods How to add a method
          * To add a new time integration scheme, follow the steps below:
          * - Choose a name for the method and add it to the ::TimeIntegrationType enum list.
@@ -440,14 +464,33 @@ namespace Nektar
 
         namespace
         {            
-            const bool AdamsBashforthOrder1_Inited = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eAdamsBashforthOrder1), TimeIntegrationScheme::Create);
-            const bool AdamsBashforthOrder2_Inited   = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eAdamsBashforthOrder2), TimeIntegrationScheme::Create);
-            const bool AdamsMoultonOrder1_Inited     = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eAdamsMoultonOrder1), TimeIntegrationScheme::Create);
-            const bool AdamsMoultonOrder2_Inited     = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eAdamsMoultonOrder2), TimeIntegrationScheme::Create);
-            const bool ClassicalRungeKutta4_Inited     = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eClassicalRungeKutta4), TimeIntegrationScheme::Create);
-            const bool ForwardEuler_Inited     = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eForwardEuler), TimeIntegrationScheme::Create);
-            const bool BackwardEuler_Inited     = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eBackwardEuler), TimeIntegrationScheme::Create);
-            const bool Midpoint_Inited     = TimeIntegrationSchemeManager().RegisterCreator(TimeIntegrationSchemeKey(eMidpoint), TimeIntegrationScheme::Create);
+            const bool AdamsBashforthOrder1_Inited  = TimeIntegrationSchemeManager().
+                                                      RegisterCreator(TimeIntegrationSchemeKey(eAdamsBashforthOrder1), 
+                                                                      TimeIntegrationScheme::Create);
+            const bool AdamsBashforthOrder2_Inited  = TimeIntegrationSchemeManager().
+                                                      RegisterCreator(TimeIntegrationSchemeKey(eAdamsBashforthOrder2), 
+                                                                      TimeIntegrationScheme::Create);
+            const bool AdamsMoultonOrder1_Inited    = TimeIntegrationSchemeManager().
+                                                      RegisterCreator(TimeIntegrationSchemeKey(eAdamsMoultonOrder1), 
+                                                                      TimeIntegrationScheme::Create);
+            const bool AdamsMoultonOrder2_Inited    = TimeIntegrationSchemeManager().
+                                                      RegisterCreator(TimeIntegrationSchemeKey(eAdamsMoultonOrder2),
+                                                                      TimeIntegrationScheme::Create);
+            const bool ClassicalRungeKutta4_Inited  = TimeIntegrationSchemeManager().
+                                                      RegisterCreator(TimeIntegrationSchemeKey(eClassicalRungeKutta4), 
+                                                                      TimeIntegrationScheme::Create);
+            const bool ForwardEuler_Inited          = TimeIntegrationSchemeManager().
+                                                      RegisterCreator(TimeIntegrationSchemeKey(eForwardEuler), 
+                                                                      TimeIntegrationScheme::Create);
+            const bool BackwardEuler_Inited         = TimeIntegrationSchemeManager().
+                                                      RegisterCreator(TimeIntegrationSchemeKey(eBackwardEuler), 
+                                                                      TimeIntegrationScheme::Create);
+            const bool Midpoint_Inited              = TimeIntegrationSchemeManager().
+                                                      RegisterCreator(TimeIntegrationSchemeKey(eMidpoint), 
+                                                                      TimeIntegrationScheme::Create);
+            const bool eDIRKOrder3_Inited           = TimeIntegrationSchemeManager().
+                                                      RegisterCreator(TimeIntegrationSchemeKey(eDIRKOrder3), 
+                                                                      TimeIntegrationScheme::Create);
         };
 
         TimeIntegrationSchemeManagerT &TimeIntegrationSchemeManager(void)
@@ -605,6 +648,29 @@ namespace Nektar
                     m_B[0][3] = 1.0/6.0;
                 }
                 break;
+            case eDIRKOrder3:
+                {
+                    m_numsteps = 1;
+                    m_numstages = 3;
+                    m_A = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
+                    m_U = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
+                    m_V = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
+
+                    NekDouble lambda = 0.4358665215;
+
+                    m_A[0][0] = lambda;
+                    m_A[1][0] = 0.5  * (1.0 - lambda);
+                    m_A[2][0] = 0.25 * (-6.0*lambda*lambda + 16.0*lambda - 1.0);
+                    m_A[1][1] = lambda;
+                    m_A[2][1] = 0.25 * ( 6.0*lambda*lambda - 20.0*lambda + 5.0);
+                    m_A[2][2] = lambda;
+
+                    m_B[0][0] = 0.25 * (-6.0*lambda*lambda + 16.0*lambda - 1.0);
+                    m_B[0][1] = 0.25 * ( 6.0*lambda*lambda - 20.0*lambda + 5.0);
+                    m_B[0][2] = lambda;
+                }
+                break;
             default:
                 {
                     NEKERROR(ErrorUtil::efatal,"Invalid Time Integration Scheme Type");
@@ -619,6 +685,32 @@ namespace Nektar
             for(i = 0; i < m_numstages; i++)
             {
                 for(j = i; j < m_numstages; j++)
+                {
+                    if( fabs(m_A[i][j]) > NekConstants::kNekZeroTol )
+                    {
+                        return false;
+                    }
+                }
+            }
+            
+            return true;
+        }      
+
+        bool TimeIntegrationScheme::IsDiagonallyImplicit() const
+        {
+            int i,j;
+
+            // 1) Entries on the diagonal of the coefficient matrix A should be non-zero
+            // 2) Entries in the upper triangular part of A should be zero
+            
+            for(i = 0; i < m_numstages; i++)
+            {
+                if(fabs(m_A[i][i]) < NekConstants::kNekZeroTol)
+                {
+                    return false;
+                }
+
+                for(j = i+1; j < m_numstages; j++)
                 {
                     if( fabs(m_A[i][j]) > NekConstants::kNekZeroTol )
                     {

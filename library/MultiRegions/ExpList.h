@@ -51,7 +51,10 @@ namespace Nektar
         class GlobalLinSys; 
         class LocalToGlobalC0ContMap;
         class LocalToGlobalBaseMap;
+	class LocalToGlobalDGMap;
         class GenExpList1D;
+	class ExpList1D;
+
 
         /**
          * \brief This is the base class for all multi-elemental spectral/hp 
@@ -871,10 +874,23 @@ namespace Nektar
 
 
             // functions associated with DisContField
+	    
+	    const Array<OneD, const  boost::shared_ptr<ExpList1D> > &GetBndCondExpansions(void)
+            {
+	      return v_GetBndCondExpansions();
+            }
+
+
             boost::shared_ptr<GenExpList1D> &GetTrace(void)
             {
                 return v_GetTrace();
             }
+	      
+	    boost::shared_ptr<LocalToGlobalDGMap> &GetTraceMap(void) 
+	    { 
+		return v_GetTraceMap(); 
+	    } 
+	    
 
             void AddTraceIntegral(const Array<OneD, const NekDouble> &Fx, 
                                           const Array<OneD, const NekDouble> &Fy, 
@@ -1205,6 +1221,11 @@ namespace Nektar
 
 
             // functions associated with DisContField
+	    inline virtual const Array<OneD,const boost::shared_ptr<ExpList1D> > &v_GetBndCondExpansions(void)
+            {
+	      ASSERTL0(false,"This method is not defined or valid for this class type");                
+            }
+
             inline virtual boost::shared_ptr<GenExpList1D> &v_GetTrace(void)
             {
                 ASSERTL0(false,"This method is not defined or valid for this class type");
@@ -1212,6 +1233,10 @@ namespace Nektar
                 return returnVal;
             }
             
+	    inline virtual boost::shared_ptr<LocalToGlobalDGMap> &v_GetTraceMap(void) 
+	    { 
+		ASSERTL0(false,"This method is not defined or valid for this class type"); 
+	    } 
 
             virtual void v_AddTraceIntegral(const Array<OneD, const NekDouble> &Fx, 
                                           const Array<OneD, const NekDouble> &Fy, 
@@ -1261,8 +1286,8 @@ namespace Nektar
             {
                 ASSERTL0(false,"This method is not defined or valid for this class type");                
             }
-
-
+	    
+	  
             // wrapper functions about virtual functions
             virtual  const Array<OneD, const NekDouble> &v_GetContCoeffs() const 
             {
@@ -1332,6 +1357,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.50  2009/01/06 21:05:57  sherwin
+* Added virtual function calls for BwdTrans, FwdTrans and IProductWRTBase from the class ExpList. Introduced _IterPerExp versions of these methods in ExpList.cpp§
+*
 * Revision 1.49  2008/11/19 10:52:55  pvos
 * Changed MultiplyByInvMassMatrix + added some virtual functions
 *

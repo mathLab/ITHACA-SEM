@@ -79,7 +79,7 @@ namespace Nektar
             }
             
             
-            void HelmSolve(DisContField2D &Fce, NekDouble lambda);
+            void HelmSolve(const ExpList &Fce, NekDouble lambda, NekDouble tau = 10);
             /**
              * \brief This function evaluates the boundary conditions at a certain 
              * time-level.
@@ -256,6 +256,11 @@ namespace Nektar
                 return GetTrace();
             }
 
+	    inline virtual LocalToGlobalDGMapSharedPtr &v_GetTraceMap(void)
+            {
+                return GetTraceMap();
+            }
+
             virtual void v_AddTraceIntegral(const Array<OneD, const NekDouble> &Fx, 
                                           const Array<OneD, const NekDouble> &Fy, 
                                           Array<OneD, NekDouble> &outarray)
@@ -293,6 +298,11 @@ namespace Nektar
                 ExtractTracePhys(inarray,outarray);
             }
 
+	    inline virtual const Array<OneD,const MultiRegions::ExpList1DSharedPtr> & v_GetBndCondExpansions(void)
+            {
+	      return GetBndCondExpansions();
+            }
+
             virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions()
             {
                 return GetBndConditions();
@@ -302,7 +312,13 @@ namespace Nektar
             {
                 EvaluateBoundaryConditions(time);
             }
-
+	    
+	    virtual void v_HelmSolve(const ExpList &In, 
+                                     NekDouble lambda,
+				     Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray)
+	    {
+	      HelmSolve(In,lambda);
+            }
         };
 
         typedef boost::shared_ptr<DisContField2D>   DisContField2DSharedPtr;

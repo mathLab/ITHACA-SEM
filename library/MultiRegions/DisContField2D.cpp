@@ -154,7 +154,7 @@ namespace Nektar
             return glo_matrix;
         }
 
-        void DisContField2D::HelmSolve(DisContField2D &Fce, NekDouble lambda)
+      void DisContField2D::HelmSolve(const ExpList &Fce, NekDouble lambda, NekDouble tau)
         {
             int e,i,j,n,cnt,cnt1,nbndry, order_e;
             int nexp = GetExpSize();
@@ -165,7 +165,7 @@ namespace Nektar
             Array<OneD,NekDouble> f(m_ncoeffs);
             Array<OneD,NekDouble> e_f, e_bndsol;
             Array<OneD,NekDouble> e_lambda;
-            NekDouble tau = 10;
+            //NekDouble tau = 10;
 
             //----------------------------------
             // Setup RHS Inner product

@@ -48,7 +48,7 @@ namespace Nektar
     {     
     }
     
-    int nocase_cmp(const string & s1, const string& s2);
+  // int nocase_cmp(const string & s1, const string& s2);
 
     /**
      * Constructor. Creates ... of #DisContField2D fields
@@ -467,38 +467,41 @@ namespace Nektar
 
     }
 
-    // case insensitive string comparison from web
-    int nocase_cmp(const string & s1, const string& s2) 
-    {
-        string::const_iterator it1=s1.begin();
-        string::const_iterator it2=s2.begin();
+  //   // case insensitive string comparison from web
+//     int nocase_cmp(const string & s1, const string& s2) 
+//     {
+//         string::const_iterator it1=s1.begin();
+//         string::const_iterator it2=s2.begin();
         
-        //stop when either string's end has been reached
-        while ( (it1!=s1.end()) && (it2!=s2.end()) ) 
-        { 
-            if(::toupper(*it1) != ::toupper(*it2)) //letters differ?
-            {
-                // return -1 to indicate smaller than, 1 otherwise
-                return (::toupper(*it1)  < ::toupper(*it2)) ? -1 : 1; 
-            }
-            //proceed to the next character in each string
-            ++it1;
-            ++it2;
-        }
-        size_t size1=s1.size(), size2=s2.size();// cache lengths
+//         //stop when either string's end has been reached
+//         while ( (it1!=s1.end()) && (it2!=s2.end()) ) 
+//         { 
+//             if(::toupper(*it1) != ::toupper(*it2)) //letters differ?
+//             {
+//                 // return -1 to indicate smaller than, 1 otherwise
+//                 return (::toupper(*it1)  < ::toupper(*it2)) ? -1 : 1; 
+//             }
+//             //proceed to the next character in each string
+//             ++it1;
+//             ++it2;
+//         }
+//         size_t size1=s1.size(), size2=s2.size();// cache lengths
 
-        //return -1,0 or 1 according to strings' lengths
-        if (size1==size2) 
-        {
-            return 0;
-        }
-        return (size1 < size2) ? -1 : 1;
-    }
+//         //return -1,0 or 1 according to strings' lengths
+//         if (size1==size2) 
+//         {
+//             return 0;
+//         }
+//         return (size1 < size2) ? -1 : 1;
+//     }
 
 } //end of namespace
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.3  2009/01/28 13:35:07  pvos
+* Modified Time Integration class to take LHS and RHS operator (+support for DIRK)
+*
 * Revision 1.2  2009/01/27 12:07:41  pvos
 * Modifications to make cont. Galerkin Advection solver working
 *

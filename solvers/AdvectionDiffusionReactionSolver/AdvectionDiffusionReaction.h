@@ -112,7 +112,7 @@ namespace Nektar
 /*                         NekDouble time); */
 
         void ODElhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
-                          Array<OneD,        Array<OneD, NekDouble> >&outarray, 
+		           Array<OneD,       Array<OneD, NekDouble> >&outarray, 
                     const NekDouble time);
 
         void ODElhsSolve(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
@@ -172,6 +172,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.h,v $
+* Revision 1.2  2009/01/28 13:35:07  pvos
+* Modified Time Integration class to take LHS and RHS operator (+support for DIRK)
+*
 * Revision 1.1  2009/01/13 10:59:32  pvos
 * added new solvers file
 *

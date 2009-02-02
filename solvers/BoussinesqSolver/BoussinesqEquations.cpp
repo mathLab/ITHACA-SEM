@@ -56,29 +56,65 @@ namespace Nektar
    */
   BoussinesqEquations::BoussinesqEquations(string &fileNameString):
     ShallowWaterEquations(fileNameString)
-  {
-    if(m_boundaryConditions->CheckForParameter("Alpha0") == true)
-      {
-	m_alpha_0 = m_boundaryConditions->GetParameter("Alpha0");
-      }
-    else
-      {
-	m_alpha_0 = 0.0;
-	//ASSERTL0(false,"Alpha0 not specified");
-      }
+  { 
 
+    
+    // Set up equation type enum using kEquationTypeStr
+    const std::string typeStr = m_boundaryConditions->GetEquationTypeStr();
+    
+#if 0 
+    const std::string* begStr = kEquationTypeStr;
+    const std::string* endStr = kEquationTypeStr+eEquationTypeSize;
+    const std::string* eqnStr = std::find(begStr, endStr, typeStr);
+    
+    ASSERTL0(eqnStr != endStr, "Invalid expansion type.");
+    m_equationType = (EquationType)(eqnStr-begStr); 
+#else
+    for(int i = 0; i < (int) eEquationTypeSize; ++i)
+      {
+	if(nocase_cmp(kEquationTypeStr[i],typeStr) == 0 )
+            {
+	      m_boussinesqType = (EquationType)i; 
+	      break;
+            }
+      }
+    
+    //ASSERTL0(i != (int) eEquationTypeSize, "Invalid expansion type.");
+#endif
+
+    // get equation specific parameters
+    switch(m_boussinesqType)
+      {
+      case eClassical:
+	m_alpha_1 = 0.0;
+	m_alpha_2 = 0.0;
+	break;
+      case eEnhanced:
+      case eFullyNonLinear:
+	m_alpha_1 = 1.0/15.0;
+	m_alpha_2 = 0.0;
+	break;
+      default:
+	ASSERTL0(false,"Illegal BoussinesqType");
+      }
+	
   }
   
-  void BoussinesqEquations::ODEforcing(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
-				       Array<OneD, Array<OneD, NekDouble> >&outarray, NekDouble time) 
+  // inarray: a vector of vectors containing the modal coeffs for all dependent variables + depth
+  // outarry: a vector of vectors containing the updated modal coeffs for all dependent variables + depth
+  // time   : time at the function evaluation
+  void BoussinesqEquations::ODErhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+					 Array<OneD,       Array<OneD, NekDouble> >&outarray, 
+				   const NekDouble time) 
   {
     int i;
+    int nVelDim    = m_spacedim;
     int nvariables = inarray.num_elements();
     int ncoeffs    = inarray[0].num_elements();
-    int nq         = GetPointsTot();
+    int nq         = GetTotPoints();
     
     //-------------------------------------------------------
-    // Go to physical space
+    // go to physical space
     
     Array<OneD, Array<OneD, NekDouble> > physarray(nvariables);
     for (i = 0; i < nvariables; ++i)
@@ -88,321 +124,670 @@ namespace Nektar
       }
     //-------------------------------------------------------
     
+    SetBoundaryConditions(physarray, time);
     
-    //-------------------------------------------------------
-    // Update any  user defined boundary conditions
-    // for the SWE part
-    
-    SetBoundaryConditions(physarray,time);
-    //-------------------------------------------------------
-
-
     switch(m_projectionType)
       {
       case eDiscontinuousGalerkin:
 	{
+	 
+	  //-------------------------------------------------
+	  // get the advection part
+	  // input: physical space
+	  // output: modal space 
+	  WeakDGAdvection(physarray, outarray, false, true);
+
+	  // negate the outarray since moving to the rhs
+	  for(i = 0; i < nvariables; ++i)
+	    {
+	      Vmath::Neg(ncoeffs,outarray[i],1);
+	    }
+	  //-------------------------------------------------------
+	  
 	  
 	  //-------------------------------------------------
-	  // Solve for the SWE part
-	  WeakDGAdvection(physarray, outarray, false, true);
+	  // Add "source terms"
+	  // input: physical space
+	  // output: modal space
 	  
-	  
-	  //coriolis forcing
+	  // coriolis forcing
 	  if (m_coriolis[0])
 	    AddCoriolis(physarray,outarray);
+	  //------------------------------------------------- 
+	  
+	  
+	  //---------------------------------------
+	  // As no more terms is required for the
+	  // continuity equation we evaluate the 
+	  // values for H_t here.
+	  
+	  // Solve the block-diagonal system
+	  m_fields[0]->MultiplyByElmtInvMass(outarray[0],outarray[0]);
+	  //-------------------------------------------------
 
 
+	  //-------------------------------------------------
+	  // compute the physical values for H_t, u_t and v_t
+	  // needed to evaluate the righthand side
+	  
+	  Array<OneD, Array<OneD, NekDouble> > timeDer(3);
+	  for (int j = 0; j < 3; ++j)
+	    {
+	      timeDer[j] = Array<OneD, NekDouble>(nq);
+	    }
+	  
+	  // H_t
+	  m_fields[0]->BwdTrans(outarray[0],timeDer[0]);
+	  
+	  // u_t
+	  m_fields[0]->BwdTrans(inarray[3],timeDer[1]);
+	  
+	  // v_t
+	  m_fields[0]->BwdTrans(inarray[4],timeDer[2]);
+	  //-------------------------------------------------
 
-	  //--------------------------
-	  // store f1 and f2 for later use
+	  
+	  //-------------------------------------------------
+	  // here we add dispersive terms to the rhs
+	  
+	  if (m_variableType == ePrimitive)
+	    {
+	      switch(m_boussinesqType)
+		{
+		case eClassical:
+		  Lambda20Primitive(physarray,timeDer,outarray);
+		  break;
+		case eEnhanced:
+		  // Madsen92SpatialTerms(physarray,outarray);
+		  ASSERTL0(false,"not implemented");
+		  break;
+		case eFullyNonLinear:
+		  ASSERTL0(false,"not implemented");
+		  break;
+		default:
+		  ASSERTL0(false,"Illegal BoussinesqType");
+		}
+	    }
+	  else if (m_variableType == eConservative)
+	    {
+	      switch(m_boussinesqType)
+		{
+		case eClassical:
+		  //Lambda20Conservative(physarray,timeDer,outarray);
+		  ASSERTL0(false,"not implemented");
+		  break;
+		case eEnhanced:
+		  //Madsen92SpatialTerms(physarray,outarray);
+		  ASSERTL0(false,"not implemented");
+		  break;
+		case eFullyNonLinear:
+		  //Lambda20Conservative
+		  //Lambda21to24Primitive;
+		  // higher order terms conservative just a wrapper 
+		  // around primitive multipied with H
+		  ASSERTL0(false,"not implemented");
+		  break;
+		default:
+		  ASSERTL0(false,"Illegal BoussinesqType");
+		}
+	    }
+	  else
+	    {
+	      ASSERTL0(false,"Illegal variableType");
+	    }
+	  //-------------------------------------------------
+	  
+
+	  //-------------------------------------------------
+	  // store f1 and f2 for later use (modal space)
 	  
 	  Array<OneD, NekDouble> f1(ncoeffs);
 	  Array<OneD, NekDouble> f2(ncoeffs);
 	  Vmath::Vcopy(ncoeffs,outarray[1],1,f1,1); // f1
 	  Vmath::Vcopy(ncoeffs,outarray[2],1,f2,1); // f2
-	  //--------------------------
-
+	  //-------------------------------------------------
 
 	  
-	  //--------------------------------------------
-
-	  for(i = 0; i < nvariables; ++i)
+	  //-----------------------------------------------
+	  // Solve the remaining block-diagonal systems
+	  
+	  m_fields[0]->MultiplyByElmtInvMass(outarray[1],outarray[1]);
+	  m_fields[0]->MultiplyByElmtInvMass(outarray[2],outarray[2]);
+	  //---------------------------------------------
+	  
+	  
+	  //-------------------------------------------------
+	  // create tmp fields to be used during
+	  // the dispersive section
+	  
+	  Array<OneD, Array<OneD, NekDouble> > coeffsfield(2);
+	  Array<OneD, Array<OneD, NekDouble> > physfield(2);
+	  
+	  for (i = 0; i < 2; ++i)
 	    {
-	      m_fields[i]->MultiplyByElmtInvMass(outarray[i],outarray[i]);
-	      
-	      Vmath::Neg(ncoeffs,outarray[i],1);
+	      coeffsfield[i] = Array<OneD, NekDouble>(ncoeffs);
+	      physfield[i]   = Array<OneD, NekDouble>(nq);
 	    }
+	  //-------------------------------------------------
 	  
-	  //---------------------------------------
+	  
+	  //---------------------------------------------
 	  // Go from modal to physical space
 	  
-	  m_fields[0]->BwdTrans(outarray[1],physarray[1]);
-	  m_fields[0]->BwdTrans(outarray[2],physarray[2]);
+	  m_fields[0]->BwdTrans(outarray[1],physfield[0]); // corresponding to f1
+	  m_fields[0]->BwdTrans(outarray[2],physfield[1]); // corresponding to f2
 	  //---------------------------------------
 	  
 	  
-// 	  //---------------------------------------
-// 	  // Start for solve of mixed dispersive terms
-// 	  // using the 'scalar method' 
-// 	  // (Eskilsson & Sherwin, JCP 2006)
+  	  //---------------------------------------
+ 	  // Start for solve of mixed dispersive terms
+ 	  // using the 'scalar method' 
+ 	  // (Eskilsson & Sherwin, JCP 2006)
 	  
-// 	  // Set boundary condidtions for z
-// 	  //U->SetBoundaryConditionsWaveCont(); // wall like bc
+	  // warning: HACK!! this is just valid for the constant depth case
+	  	  
+	  int nTraceNumPoints = GetTraceTotPoints();
+	  Array<OneD, Array<OneD, NekDouble> > upwindX(1);
+	  Array<OneD, Array<OneD, NekDouble> > upwindY(1);
+	  upwindX[0] = Array<OneD, NekDouble>(nTraceNumPoints);
+	  upwindY[0] = Array<OneD, NekDouble>(nTraceNumPoints);
+	  //--------------------------------------------
+
+
+	  //--------------------------------------------
+ 	  // Compute the forcing function for the
+ 	  // wave continuity equation
+
+	  // Set boundary condidtions for z
+ 	  //U->SetBoundaryConditionsWaveCont(); // wall like bc
+
+	  // \nabla \phi \cdot f_{2,3}
+ 	  m_fields[0]->IProductWRTDerivBase(0,physfield[0],coeffsfield[0]);
+ 	  m_fields[0]->IProductWRTDerivBase(1,physfield[1],coeffsfield[1]);
+	  Vmath::Vadd(ncoeffs,coeffsfield[0],1,coeffsfield[1],1,coeffsfield[0],1);
 	  
-// 	  // Compute the forcing function for the
-// 	  // wave continuity equation
-
-// 	  Array<OneD, NekDouble> tmp0(ncoeffs);
-// 	  Array<OneD, NekDouble> tmp1(ncoeffs);
+  	  // Evaluate  upwind numerical flux (physical space)
+ 	  NumericalFluxWaveCont(physfield,upwindX[0],upwindY[0]);
+ 	  Vmath::Neg(nTraceNumPoints,upwindX[0],1);
+  	  Vmath::Neg(nTraceNumPoints,upwindY[0],1);
 	  
-// 	  m_fields[0]->IProductWRTDerivBase(0,physarray[1],tmp0);
-// 	  m_fields[0]->IProductWRTDerivBase(1,physarray[2],tmp1);
-// 	  Vmath::Vadd(nTotCoeffs,tmp1,1,tmp0,1,tmp0,1);
-	  
-// 	  // Evaluate  upwind numerical flux (physical space)
-// 	  NumericalFluxWaveCont(upwindX[3],upwindY[3]);
-	  
-// 	  Vmath::Neg(nTotTracePoints,upwindX[3],1);
-// 	  Vmath::Neg(nTotTracePoints,upwindY[3],1);
-	  
-// 	  U->AddTraceIntegral(upwindX[3],upwindY[3],iprod_rhs[3],0);
-	  
-// 	  U->MultiplyByElmtInvMass(iprod_rhs[3],U->UpdateCoeffs(3),0);
-// 	  //m_fields[0]->MultiplyByElmtInvMass(outarray[i],outarray[i]);
-	  
-// 	  U->BwdTrans(3); 
-	  
-// 	  Vmath::Vcopy(nTotQuadPoints,U->GetPhys(3),1,rhs[3],1);
-	  
-// 	  // ok: forcing function for HelmSolve... done!
-// 	  //--------------------------------------
-
-
-//   //--------------------------------------
-//     // Solve the Helmhotz-type equation
-//     // for the wave continuity equation
-//     // (missing slope terms...)
-    
-//     NekDouble gamma = (U->GetConstantDepth() * U->GetConstantDepth())*(U->GetAlpha1()+1.0/3.0);
-//     NekDouble invgamma = 1.0/gamma;
-    
-// //      // U->SetBoundaryConditionsSolve(); // equal zero
-
-//     Vmath::Smul(nTotQuadPoints,invgamma,rhs[3],1,rhs[3],1);
-//     U->WaveContSolve(rhs[3],invgamma);
-    
-//     Vmath::Vcopy(nTotQuadPoints,U->GetPhys(3),1,rhs[3],1);
-    
-//     // ok: Wave Continuity Equation... done! 
-//     //------------------------------------
-    
-
-//     //------------------------------------
-//     // Return to the primary variables
-    
-//     // Set boundary conditions 
-//     //U->SetBoundaryConditionsContVariables(); 
-
-//     U->IProductWRTDerivBase(0,rhs[3],iprod_rhs[1],0);
-//     U->IProductWRTDerivBase(1,rhs[3],iprod_rhs[2],0);
-
-//     Vmath::Neg(nTotCoeffs,iprod_rhs[1],1);
-//     Vmath::Neg(nTotCoeffs,iprod_rhs[2],1);
-    
-//     // Evaluate  upwind numerical flux (physical space)
-//     U->NumericalFluxConsVariables(upwindX[3],upwindY[3]);
-    
-//     {
-//       Array<OneD, NekDouble> uptemp(nTotTracePoints,0.0);
-      
-//       U->AddTraceIntegral(upwindX[3],uptemp,iprod_rhs[1],0);
-//       U->AddTraceIntegral(uptemp,upwindY[3],iprod_rhs[2],0);
-//     }
-    
-//     Vmath::Smul(nTotCoeffs,gamma,iprod_rhs[1],1,iprod_rhs[1],1);
-//     Vmath::Smul(nTotCoeffs,gamma,iprod_rhs[2],1,iprod_rhs[2],1);
-
-//     Vmath::Vadd(nTotCoeffs,f1,1,iprod_rhs[1],1,iprod_rhs[1],1);
-//     Vmath::Vadd(nTotCoeffs,f2,1,iprod_rhs[2],1,iprod_rhs[2],1);
-    
-//     Uf->MultiplyByElmtInvMass(iprod_rhs[1],Uf->UpdateCoeffs(1),0);
-//     Uf->MultiplyByElmtInvMass(iprod_rhs[2],Uf->UpdateCoeffs(2),0);
-    
-//     Uf->BwdTrans(1);
-//     Uf->BwdTrans(2);
-
-//     Vmath::Vcopy(nTotQuadPoints,Uf->GetPhys(1),1,rhs[1],1);
-//     Vmath::Vcopy(nTotQuadPoints,Uf->GetPhys(2),1,rhs[2],1);
-
-//     // ok: returned to conservative variables... done!
-//     //---------------------------------
-  
-
-//     //---------------------------------
-//     // Store u_t and v_t
-    
-//     // Note: these values should be time averaged but	
-//     // as for now we just keep them as is
-//     {
-//       Array<OneD, NekDouble> u(nTotQuadPoints);
-//       Array<OneD, NekDouble> v(nTotQuadPoints);
-      
-      
-//       for (int j = 0; j < nTotQuadPoints; ++j)
-// 	{
-// 	  u[j] = U->GetPhys(1)[j]/U->GetPhys(0)[j];
-// 	  v[j] = U->GetPhys(2)[j]/U->GetPhys(0)[j];
-// 	}
-      
-//       // u_t =  ( (Hu)_t - H_t u ) / H
-//       // v_t =  ( (Hv)_t - H_t v ) / H
-//       // (Hu)_t is stored in rhs[1]
-//       // (Hu)_t is stored in rhs[2]
-//       //  H_t is stored in rhs[0]
-      
-//       for (int j = 0; j < nTotQuadPoints; ++j)
-//  	{
-//  	  U->UpdatePhys(5)[j] = (rhs[1][j] - rhs[0][j]*u[j]) / (U->GetPhys(0)[j]);
-//  	  U->UpdatePhys(6)[j] = (rhs[2][j] - rhs[0][j]*v[j]) / (U->GetPhys(0)[j]);
-//  	}
-      
-
-//     }
-    
-//     // ok: u_t and v_t... done!
-//     //---------------------------------
-// }
-
-
-
+	  m_fields[0]->AddTraceIntegral(upwindX[0],upwindY[0],coeffsfield[0]);
+ 	  m_fields[0]->MultiplyByElmtInvMass(coeffsfield[0],coeffsfield[0]);
+ 	  m_fields[0]->BwdTrans(coeffsfield[0],physfield[0]);
+ 	  
+	  // ok: forcing function for HelmSolve... done!
+ 	  //--------------------------------------
 	  
 	  
+	  //--------------------------------------
+	  // Solve the Helmhotz-type equation
+	  // for the wave continuity equation
+	  // (missing slope terms...)
+    	 
+	  // note: HACK!! this is just valid for the constant depth case:
+
+	  NekDouble gamma    = (m_depth * m_depth)*(m_alpha_1+1.0/3.0);
+	  NekDouble invgamma = 1.0/gamma;
+    
+	  // U->SetBoundaryConditionsSolve(); // equal zero
+
+	  Vmath::Smul(nq,invgamma,physfield[0],1,physfield[0],1);
+	  WaveContSolve(physfield[0],invgamma);
+    
+	  // ok: Wave Continuity Equation... done! 
+	  //------------------------------------
+
+	  
+ 	  //------------------------------------
+ 	  // Return to the primary variables
+    
+ 	  // Set boundary conditions 
+ 	  //U->SetBoundaryConditionsContVariables(); 
+	  
+ 	  m_fields[0]->IProductWRTDerivBase(0,physfield[0],coeffsfield[0]);
+ 	  m_fields[0]->IProductWRTDerivBase(1,physfield[0],coeffsfield[1]);
+	  
+ 	  Vmath::Neg(ncoeffs,coeffsfield[0],1);
+ 	  Vmath::Neg(ncoeffs,coeffsfield[1],1);
+    
+  	  // Evaluate  upwind numerical flux (physical space)
+  	  NumericalFluxConsVariables(physfield[0],upwindX[0],upwindY[0]);
+    	 
+	  {
+	    Array<OneD, NekDouble> uptemp(nTraceNumPoints,0.0);
+	    
+	    m_fields[0]->AddTraceIntegral(upwindX[0],uptemp,coeffsfield[0]);
+	    m_fields[0]->AddTraceIntegral(uptemp,upwindY[0],coeffsfield[1]);
+	  }
+
+  	  Vmath::Smul(ncoeffs,gamma,coeffsfield[0],1,coeffsfield[0],1);
+  	  Vmath::Smul(ncoeffs,gamma,coeffsfield[1],1,coeffsfield[1],1);
+
+ 	  Vmath::Vadd(ncoeffs,f1,1,coeffsfield[0],1,outarray[1],1);
+  	  Vmath::Vadd(ncoeffs,f2,1,coeffsfield[1],1,outarray[2],1);
+    
+	  m_fields[0]->MultiplyByElmtInvMass(outarray[1],outarray[1]);
+	  m_fields[0]->MultiplyByElmtInvMass(outarray[2],outarray[2]);
+    
+	  // ok: returned to conservative variables... done!
+	  //---------------------------------
 	}
+	
 	break;
       case eGalerkin:
-	//            {
-	
-	ASSERTL0(false,"Continouos scheme not implemented for Boussinesq");
-	//   Array<OneD, NekDouble> physfield(GetPointsTot());
-        
-	//                 for(i = 0; i < nvariables; ++i)
-	//                 {
-	//                     // Calculate -(\phi, V\cdot Grad(u))
-	//                     m_fields[i]->BwdTrans(inarray[i],physfield);
-	
-	//                     WeakAdvectionNonConservativeForm(m_velocity,
-	//                                                      physfield, outarray[i]);
-	//                     Vmath::Neg(ncoeffs,outarray[i],1);
-	
-	//                     // Multiply by inverse of mass matrix to get forcing term
-	//                     m_fields[i]->MultiplyByInvMassMatrix(outarray[i],  
-	//                                                          outarray[i],
-	//                                                          false, true);
-	//                 }
-	//           }
+	{
+	  ASSERTL0(false,"Continouos scheme not implemented for SWE");
+	}
 	break;
       default:
-	ASSERTL0(false,"Unknown projection scheme");
+	ASSERTL0(false,"Unknown projection scheme for the SWE");
 	break;
       }
   }
   
-    void BoussinesqEquations::ExplicitlyIntegrateAdvection(int nsteps)
-    {
-        int i,n,nchk = 0;
-        int ncoeffs = m_fields[0]->GetNcoeffs();
-        int nvariables = m_fields.num_elements();
+  // HACK!!!
+  // this is a temporary function only to be used until a "smarter"
+  // way to resolve the timederivatives on the rhs has 
+  //
+  void BoussinesqEquations::ExplicitlyIntegrateAdvection(int nsteps)
+  {
+    int i,n,nchk = 0;
+    int ncoeffs = m_fields[0]->GetNcoeffs();
+    int nvariables = m_fields.num_elements();
 
-        // Get Integration scheme details
-        LibUtilities::TimeIntegrationSchemeKey       IntKey(LibUtilities::eForwardEuler);
-        LibUtilities::TimeIntegrationSchemeSharedPtr IntScheme = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
+    
+    // we have
+    // H  (or eta) in [0]
+    // Hu (or u)   in [1]
+    // Hv (or v)   in [2]
+    // u_t         in [3]
+    // v_t         in [4]
+    // z           in [5]
+    // d           in [6]
+    
 
-        // Set up wrapper to fields data storage. 
-        Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
-        
-        for(i = 0; i < nvariables; ++i)
-        {
-            fields[i] = m_fields[i]->UpdateCoeffs();
-        }
-                
-         int nInitSteps;
-	 LibUtilities::TimeIntegrationSolutionSharedPtr u = IntScheme->InitializeScheme(m_timestep,m_time,nInitSteps,*this,fields);
 
-	 for(n = nInitSteps; n < nsteps; ++n)
+    // Set up wrapper to fields data storage. 
+    Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
+    Array<OneD, Array<OneD, NekDouble> >   in(nvariables);
+    Array<OneD, Array<OneD, NekDouble> >   out(nvariables);
+    Array<OneD, Array<OneD, NekDouble> >   E(2);
+    Array<OneD, Array<OneD, NekDouble> >   F(2);
+    Array<OneD, Array<OneD, NekDouble> >   G(2);
+    Array<OneD, Array<OneD, NekDouble> >   u(3);
+    Array<OneD, Array<OneD, NekDouble> >   v(3);
+    Array<OneD, NekDouble>                 uNew(ncoeffs);
+    Array<OneD, NekDouble>                 vNew(ncoeffs);
+    
+    for(i = 0; i < nvariables; ++i)
+      {
+	fields[i]  = m_fields[i]->UpdateCoeffs();
+	in[i] = Array<OneD, NekDouble >(ncoeffs);
+	out[i] = Array<OneD, NekDouble >(ncoeffs);
+	Vmath::Vcopy(ncoeffs,m_fields[i]->GetCoeffs(),1,in[i],1);
+      }
+    for(i = 0; i < 2; ++i)
+      {
+	E[i] = Array<OneD, NekDouble >(ncoeffs);
+	F[i] = Array<OneD, NekDouble >(ncoeffs);
+	G[i] = Array<OneD, NekDouble >(ncoeffs);
+      }
+
+    for(i = 0; i < 3; ++i)
+      {
+	u[i] = Array<OneD, NekDouble >(ncoeffs);
+	v[i] = Array<OneD, NekDouble >(ncoeffs);
+      }
+    
+    //------------------------------
+    // Initialise the computations
+    // note: u_t and v_t must be given as
+    // initial conditions
+    
+    
+    // Get initial conditions for time -2
+    SetInitialConditions(m_time-2.0*m_timestep);
+    
+    // compute and store u and v
+    switch (m_variableType)
+      {
+      case eConservative:
+	
+
+	break;
+      case ePrimitive:
+	Vmath::Vcopy(ncoeffs,m_fields[1]->GetCoeffs(),1,u[2],1);
+	Vmath::Vcopy(ncoeffs,m_fields[2]->GetCoeffs(),1,v[2],1);
+	break;
+      }
+
+    // 
+    for(i = 0; i < nvariables; ++i)
+      {
+	Vmath::Vcopy(ncoeffs,m_fields[i]->GetCoeffs(),1,in[i],1);
+      }
+    
+    // Compute and store rhs
+    ODErhs(in,out,m_time-2.0*m_timestep); 
+    Vmath::Vcopy(ncoeffs,out[0],1,E[1],1);
+    Vmath::Vcopy(ncoeffs,out[1],1,F[1],1);
+    Vmath::Vcopy(ncoeffs,out[2],1,G[1],1);
+    
+    
+    // Get initial conditions for time -1
+    SetInitialConditions(m_time-1.0*m_timestep);
+    
+    // compute and store u and v1
+    switch (m_variableType)
+      {
+      case eConservative:
+	
+
+	break;
+      case ePrimitive:
+	Vmath::Vcopy(ncoeffs,m_fields[1]->GetCoeffs(),1,u[1],1);
+	Vmath::Vcopy(ncoeffs,m_fields[2]->GetCoeffs(),1,v[1],1);
+	break;
+      }
+
+    // 
+    for(i = 0; i < nvariables; ++i)
+      {
+	Vmath::Vcopy(ncoeffs,m_fields[i]->GetCoeffs(),1,in[i],1);
+      }
+    
+    // Compute and store rhs
+    ODErhs(in,out,m_time-1.0*m_timestep); 
+    Vmath::Vcopy(ncoeffs,out[0],1,E[0],1);
+    Vmath::Vcopy(ncoeffs,out[1],1,F[0],1);
+    Vmath::Vcopy(ncoeffs,out[2],1,G[0],1);
+
+    // Get initial conditions for time 0
+    SetInitialConditions(m_time-0.0*m_timestep);
+    
+    // compute and store u and v1
+    switch (m_variableType)
+      {
+      case eConservative:
+	
+
+	break;
+      case ePrimitive:
+	Vmath::Vcopy(ncoeffs,m_fields[1]->GetCoeffs(),1,u[0],1);
+	Vmath::Vcopy(ncoeffs,m_fields[2]->GetCoeffs(),1,v[0],1);
+	break;
+      }
+
+    // 
+    
+    //-------------------------------
+    
+    for(n = 0; n < nsteps; ++n)
+      {
+	//----------------------------------------------
+	// Perform time step integration
+	//----------------------------------------------
+	
+	switch(m_projectionType)
 	  {
+	  case eDiscontinuousGalerkin:
 	    
-	    //----------------------------------------------
-            // Perform time step integration
-            //----------------------------------------------
+	    //--------------------------------------------------------
+	    // Here we use the third order AB scheme 
+	    
+	    // dH/dt = E , d Hu/dt = F , d Hv/dt = G
 
-            fields = IntScheme->ExplicitIntegration(m_timestep,*this,u);
-	   
-	    m_time += m_timestep;
-            //----------------------------------------------
+	    // f^{n+1} = f^{n}+\frac{\Delta t}{12} (23 E^{n} - 16 E^{n-1} + 5 E^{n-2} )   
 
-            //----------------------------------------------
-            // Dump analyser information
-            //----------------------------------------------
-            if(!((n+1)%m_infosteps))
-            {
-	      cout << "Steps:" << n+1 << "\t Time:" <<m_time<< endl;
-            }
-            
-            if(n&&(!((n+1)%m_checksteps)))
-            {
-	      for(i = 0; i < nvariables; ++i)
-		{
-		  (m_fields[i]->UpdateCoeffs()) = fields[i];
-		}
-	      Checkpoint_Output(nchk++);
-            }
+	    // we can't use the time stepping scheme in LibUtil
+	    // as we need to evaluate {\bf u}_t to use in the RHS
+	    // this should be sorted to allow for timeintegrator to be used
+	    //--------------------------------------------------------
+
+	    // update the inarray
+	    for(i = 0; i < nvariables; ++i)
+	      {
+		Vmath::Vcopy(ncoeffs,m_fields[i]->GetCoeffs(),1,in[i],1);
+	      }
+	    
+	    // get ODE rhs
+	    ODErhs(in,out,m_time); 
+	    
+	    // update the dependent variables using EB 3
+	    for (i = 0; i < ncoeffs; ++i)
+	      {
+		fields[0][i] = m_fields[0]->GetCoeffs()[i] + (m_timestep/12.0)*(23.0*out[0][i]-16.0*E[0][i]+5.0*E[1][i]);
+		fields[1][i] = m_fields[1]->GetCoeffs()[i] + (m_timestep/12.0)*(23.0*out[1][i]-16.0*F[0][i]+5.0*F[1][i]);
+		fields[2][i] = m_fields[2]->GetCoeffs()[i] + (m_timestep/12.0)*(23.0*out[2][i]-16.0*G[0][i]+5.0*G[1][i]);
+	      }
+	    
+	    // compute u and v
+	    switch(m_variableType)
+	      {
+	     case eConservative:
+	       //ConservativeToPrimitive(in,out);
+	       //Vmath::Vcopy(ncoeffs,m_fields[1]->GetCoeffs(),1,uNew,1);
+	       //Vmath::Vcopy(ncoeffs,m_fields[2]->GetCoeffs(),1,vNew,1);
+	       ASSERTL0(false,"not conservative schemes not implemented");
+		break;
+	      case ePrimitive:
+		Vmath::Vcopy(ncoeffs,m_fields[1]->GetCoeffs(),1,uNew,1);
+		Vmath::Vcopy(ncoeffs,m_fields[2]->GetCoeffs(),1,vNew,1);
+		break;
+	      }
+	    
+	    // update the time derivatives
+	    
+	    // du^{n+1}/dt = (1/ 12\Delta t)(11 u^{n+1} - 18 u^{n} + 9 u^{n-1} - 2 u^{n-2} )
+	    
+	    for (i = 0; i < ncoeffs; ++i)
+	      {
+		fields[3][i] = (m_timestep/12.0)*(23.0*uNew[i]-18.0*u[0][i]+9.0*u[1][i]-2.0*u[2][i]);
+		fields[4][i] = (m_timestep/12.0)*(23.0*vNew[i]-18.0*v[0][i]+9.0*v[1][i]-2.0*v[2][i]);
+	      }
+	    
+	    // update arrays holding 
+	    for (i = 0; i < ncoeffs; ++i)
+	      { 
+		u[2][i] = u[1][i];
+		u[1][i] = u[0][i];
+		u[0][i] = uNew[i];
+
+		v[2][i] = v[1][i];
+		v[1][i] = v[0][i];
+		v[0][i] = vNew[i];
+		
+		E[1][i] = E[0][i];
+		E[0][i] = out[0][i];
+
+		F[1][i] = F[0][i];
+		F[0][i] = out[1][i];
+
+		G[1][i] = G[0][i];
+		G[0][i] = out[2][i];
+	      }
+	    
+	    break;
+	  case eGalerkin:
+	    ASSERTL0(false,"CG not implemented for Bounssinesq");
+	    break;
 	  }
-        
-	for(i = 0; i < nvariables; ++i)
+	m_time += m_timestep;
+	//----------------------------------------------
+	
+
+	//----------------------------------------------
+	// Dump analyser information
+	
+	if(!((n+1)%m_infosteps))
 	  {
-	    (m_fields[i]->UpdateCoeffs()) = fields[i];
+	    cout << "Steps: " << n+1 << "\t Time: " << m_time << endl;
 	  }
-    }
-   
- //  void BoussinesqEquations::NumericalFluxWaveCont(Array<OneD, Array<OneD, NekDouble> > &inarray,
-// 						  Array<OneD, NekDouble> &numfluxX, 
-// 						  Array<OneD, NekDouble> &numfluxY)
-//   {
-//     int i;
-//     int nTraceNumPoints = GetTracePointsTot();
-//     int nDim            = m_spacedim;
+	//----------------------------------------------
+	
+	
+	//----------------------------------------------
+	// Dump checkpoints information
+	
+	if(n&&(!((n+1)%m_checksteps)))
+	  {
+	    for(i = 0; i < nvariables; ++i)
+	      {
+		(m_fields[i]->UpdateCoeffs()) = fields[i];
+	      }
+	    Checkpoint_Output(nchk++);
+	  }
+	//----------------------------------------------
+
+      }
     
-//     //-----------------------------------------------------
-//     // get temporary arrays
-//     Array<OneD, Array<OneD, NekDouble> > Fwd(nDim);
-//     Array<OneD, Array<OneD, NekDouble> > Bwd(nDim);
+    for(i = 0; i < nvariables; ++i)
+      {
+	(m_fields[i]->UpdateCoeffs()) = fields[i];
+      }
+  }
+  
+  
+ //  void BoussinesqEquations::ExplicitlyIntegrateAdvection(int nsteps)
+//     {
+//       int i,n,nchk = 0;
+//         int ncoeffs = m_fields[0]->GetNcoeffs();
+//         int nvariables = m_fields.num_elements();
+
+//         // Get Integration scheme details
+//         LibUtilities::TimeIntegrationSchemeKey       IntKey(LibUtilities::eClassicalRungeKutta4);//eForwardEuler);
+//         LibUtilities::TimeIntegrationSchemeSharedPtr IntScheme = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
+
+//         // Set up wrapper to fields data storage. 
+//         Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
+// 	Array<OneD, Array<OneD, NekDouble> >   in(nvariables);
+// 	Array<OneD, Array<OneD, NekDouble> >   out(nvariables);
+// 	Array<OneD, Array<OneD, NekDouble> >   tmp(nvariables);
+// 	Array<OneD, Array<OneD, NekDouble> >   phys(nvariables);
+
+// 	// HERE WE NEED TO SORT OUT SO ONLY THE 3 DEPENDENT VARIABLES ARE TIMESTEPPED
+
+// 	// only time step three variables
+//         for(i = 0; i < nvariables; ++i)
+//         {
+//             fields[i]  = m_fields[i]->UpdateCoeffs();
+// 	    in[i] = Array<OneD, NekDouble >(ncoeffs);
+// 	    out[i] = Array<OneD, NekDouble >(ncoeffs);
+// 	    tmp[i] = Array<OneD, NekDouble >(ncoeffs);
+// 	    phys[i] = Array<OneD, NekDouble>(m_fields[0]->GetTotPoints());
+// 	    Vmath::Vcopy(ncoeffs,m_fields[i]->GetCoeffs(),1,in[i],1);
+//         }
+                
+//         int nInitSteps;
+//         LibUtilities::TimeIntegrationSolutionSharedPtr u = IntScheme->InitializeScheme(m_timestep,m_time,nInitSteps,*this,fields);
+
+//         for(n = nInitSteps; n < nsteps; ++n)
+//         {
+//             //----------------------------------------------
+//             // Perform time step integration
+//             //----------------------------------------------
+ 
+// 	  switch(m_projectionType)
+// 	    {
+// 	    case eDiscontinuousGalerkin:
+// 	      fields = IntScheme->ExplicitIntegration(m_timestep,*this,u);
+// 	      break;
+// 	    case eGalerkin:
+// 	      {
+// 		//---------------------------------------------------------
+// 		// this is just a forward Euler to illustate that CG works
+		 
+// 		// get -D u^n
+// 		ODEforcing(in,out,m_time); // note that MultiplyByInvMassMatrix is not performed inside ODEforcing
+	  
+// 		// compute M u^n
+// 		for (i = 0; i < nvariables; ++i)
+// 		  {
+// 		    m_fields[0]->BwdTrans(in[i],phys[i]);
+// 		    m_fields[0]->IProductWRTBase(phys[i],tmp[i]);
+		    
+// 		    // f = M u^n - Dt D u^n
+// 		    Vmath::Svtvp(ncoeffs,m_timestep,out[i],1,tmp[i],1,tmp[i],1);
+		    
+// 		    // u^{n+1} = M^{-1} f
+// 		    m_fields[i]->MultiplyByInvMassMatrix(tmp[i],out[i],false,false);
+		    
+// 		    // fill results
+// 		    Vmath::Vcopy(ncoeffs,out[i],1,in[i],1);
+// 		    Vmath::Vcopy(ncoeffs,out[i],1,fields[i],1);
+// 		  }
+// 		//---------------------------------------------------------
+// 	      }
+// 	      break;
+// 	    }
+// 	  m_time += m_timestep;
+//             //----------------------------------------------
+
+//             //----------------------------------------------
+//             // Dump analyser information
+//             //----------------------------------------------
+//             if(!((n+1)%m_infosteps))
+//             {
+// 	      cout << "Steps: " << n+1 << "\t Time: " << m_time << endl;
+//             }
+            
+//             if(n&&(!((n+1)%m_checksteps)))
+//             {
+// 	      for(i = 0; i < nvariables; ++i)
+// 		{
+// 		  (m_fields[i]->UpdateCoeffs()) = fields[i];
+// 		}
+// 	      Checkpoint_Output(nchk++);
+//             }
+//         }
+        
+//         for(i = 0; i < nvariables; ++i)
+//         {
+// 	  (m_fields[i]->UpdateCoeffs()) = fields[i];
+//         }
+//     }
     
-//     for (i = 0; i < nvariables; ++i)
-//       {
-// 	Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
-// 	Bwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
-//       }
-//     //-----------------------------------------------------
+
+  
+  void BoussinesqEquations::NumericalFluxWaveCont(Array<OneD, Array<OneD, NekDouble> > &inarray,
+						  Array<OneD, NekDouble> &numfluxX, 
+						  Array<OneD, NekDouble> &numfluxY)
+  {
+    int i;
+    int nTraceNumPoints = GetTraceTotPoints();
+    //int nDim            = m_spacedim;
+    
+    //-----------------------------------------------------
+    // get temporary arrays
+    Array<OneD, Array<OneD, NekDouble> > Fwd(2);
+    Array<OneD, Array<OneD, NekDouble> > Bwd(2);
+    
+    for (i = 0; i < 2; ++i)
+      {
+	Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
+	Bwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
+      }
+    //-----------------------------------------------------
 
 
-//     //-----------------------------------------------------
-//     // get the physical values at the trace
-//     for (i = 0; i < nvariables; ++i)
-//       {
-// 	m_fields[0]->GetFwdBwdTracePhys(inarray[i],Fwd[i],Bwd[i]);
-//       }
-//     //-----------------------------------------------------
+    //-----------------------------------------------------
+    // get the physical values at the trace
+    for (i = 0; i < 2; ++i)
+      {
+	m_fields[0]->GetFwdBwdTracePhys(inarray[i],Fwd[i],Bwd[i]);
+      }
+    //-----------------------------------------------------
 
 
-//     //-----------------------------------------------------
-//     // use centred fluxes for the numerical flux
-//     for (i = 0; i < nTraceNumPoints; ++i)
-//       {
-// 	numfluxX[i]  = 0.5*(Fwd[0][i] + Bwd[0][i]);
-// 	numfluxY[i]  = 0.5*(Fwd[1][i] + Bwd[1][i]);
-//       }
-//     //-----------------------------------------------------
-//   }
+    //-----------------------------------------------------
+    // use centred fluxes for the numerical flux
+    for (i = 0; i < nTraceNumPoints; ++i)
+      {
+	numfluxX[i]  = 0.5*(Fwd[0][i] + Bwd[0][i]);
+	numfluxY[i]  = 0.5*(Fwd[1][i] + Bwd[1][i]);
+      }
+    //-----------------------------------------------------
+  }
   
   
 
@@ -411,7 +796,7 @@ namespace Nektar
     {
       cout << "=======================================================================" << endl;
       cout << "\tEquation Type   : Boussinesq Type Equations" << endl;
-      if (m_alpha_0 == 0.0)
+      if (m_alpha_1 == 0.0)
 	cout << "\t                  Classical Peregrine" << endl;
       else
 	cout << "\t                  Weakly Dispersive" << endl;
@@ -425,7 +810,7 @@ namespace Nektar
   // THIS IS FROM THE OLD SOLVER --- NEEDS TO BE SORTED ///
 
 
-//    void BoussinesqEquations::SetBoundaryConditionsWaveCont(void)
+ //  void BoussinesqEquations::SetBoundaryConditionsWaveCont(void)
 //   {
 //     // loop over Boundary Regions
 //     for(int n = 0; n < m_fields[0]->GetBndCondExpansions().num_elements(); ++n)
@@ -467,12 +852,24 @@ namespace Nektar
 //   { 
     
 //     //std::cout << " WallBoundaryWaveCont" << std::endl;
+      
+//     int nTraceNumPoints = GetTraceTotPoints();
     
 //     // get physical values of h, hu, hv for the forward trace
-//     Array<OneD, NekDouble> f1(GetNpoints());
-//     Array<OneD, NekDouble> f2(GetNpoints());
-//     ExtractTracePhys(f1,1);
+//     Array<OneD, NekDouble> f1(nTraceNumPoints);
+//     Array<OneD, NekDouble> f2(nTraceNumPoints);
+    
+//     m_fields[0]->ExtractTracePhys(f1);
 //     ExtractTracePhys(f2,2);
+
+    
+//     // get physical values of h, hu, hv for the forward trace
+//     Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+//     for (i = 0; i < nvariables; ++i)
+//       {
+// 	Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
+// 	m_fields[i]->ExtractTracePhys(physarray[i],Fwd[i]);
+//       }
     
 //     // get trace normals
 //     Array<OneD, Array<OneD, NekDouble> > normals(2);
@@ -518,29 +915,6 @@ namespace Nektar
 //   }
   
 
-//   void BoussinesqEquations::NumericalFluxWaveCont(Array<OneD, NekDouble> &outX, Array<OneD, NekDouble> &outY)
-//   {
-//     // get temporary arrays
-//     Array<OneD, Array<OneD, NekDouble> > Fwd(2);
-//     Array<OneD, Array<OneD, NekDouble> > Bwd(2);
-    
-//     for (int i = 0; i < 2; ++i)
-//       {
-// 	Fwd[i] = Array<OneD, NekDouble>(GetNpoints());
-// 	Bwd[i] = Array<OneD, NekDouble>(GetNpoints());
-//       }
-    
-//     // get the physical values at the trace
-//     GetFwdBwdTracePhys(Fwd[0],Bwd[0],1);
-//     GetFwdBwdTracePhys(Fwd[1],Bwd[1],2);
-    
-//     for (int i = 0; i < GetNpoints(); ++i)
-//       {
-// 	outX[i]  = 0.5*(Fwd[0][i] + Bwd[0][i]);
-// 	outY[i]  = 0.5*(Fwd[1][i] + Bwd[1][i]);
-//       }
-    
-//   }
   
 //   void BoussinesqEquations::SetBoundaryConditionsSolve(void)
 //   {
@@ -607,20 +981,38 @@ namespace Nektar
 //     cnt +=e;
 //   }
   
-//   void BoussinesqEquations::WaveContSolve(Array<OneD, NekDouble> &fce, NekDouble lambda)
-//   {
+  void BoussinesqEquations::WaveContSolve(Array<OneD, NekDouble> &fce, NekDouble lambda)
+  {
+    int nq         = GetTotPoints();
     
-//     MultiRegions::DisContField2DSharedPtr Fce;
-//     Fce = MemoryManager<MultiRegions::DisContField2D>::AllocateSharedPtr(*m_fields[3]);
-    
-//     Fce->SetPhys(fce);
-    
-//     m_fields[3]->HelmSolve(*Fce, lambda);
-    
-//     m_fields[3]->BwdTrans(*m_fields[3]);
-    
-//   }
+    int variable;
 
+    switch(m_boussinesqType)
+      {
+      case eClassical:
+      case eEnhanced:
+	variable = 5;
+	break;
+      case eFullyNonLinear:
+	variable = 5;
+	break;
+      }
+    
+    
+    for (int j = 0; j < nq; j++)
+      {
+	(m_fields[variable]->UpdatePhys())[j] = fce[j];
+      }
+    
+    m_fields[variable]->SetPhysState(true);
+    
+    m_fields[variable]->HelmSolve(*(m_fields[variable]), lambda);
+    
+    m_fields[variable]->BwdTrans(*m_fields[variable]);
+
+    Vmath::Vcopy(nq,m_fields[variable]->GetPhys(),1,fce,1);
+  }
+  
 
 //   void BoussinesqEquations::SetBoundaryConditionsContVariables(void)
 //   {
@@ -687,166 +1079,367 @@ namespace Nektar
 //     cnt +=e;
 //   }
   
-//   void BoussinesqEquations::NumericalFluxConsVariables(Array<OneD, NekDouble> &outX, Array<OneD, NekDouble> &outY)
-//   {
-//     // get temporary arrays
-//     Array<OneD, Array<OneD, NekDouble> > Fwd(1);
-//     Array<OneD, Array<OneD, NekDouble> > Bwd(1);
+  void BoussinesqEquations::NumericalFluxConsVariables(Array<OneD, NekDouble> &physfield, 
+						       Array<OneD, NekDouble> &outX, 
+						       Array<OneD, NekDouble> &outY)
+  {
+    int i;
+    int nTraceNumPoints = GetTraceTotPoints();
+        
+    //-----------------------------------------------------
+    // get temporary arrays
+    Array<OneD, Array<OneD, NekDouble> > Fwd(1);
+    Array<OneD, Array<OneD, NekDouble> > Bwd(1);
     
-//     Fwd[0] = Array<OneD, NekDouble> (GetNpoints(),0.0); 
-//     Bwd[0] = Array<OneD, NekDouble> (GetNpoints(),0.0);
-    
-//     // get the physical values at the trace
-//     GetFwdBwdTracePhys(Fwd[0],Bwd[0],3);
-    
-//     for (int i = 0; i < GetNpoints(); ++i)
-//       {
-//  	outX[i]  = 0.5*(Fwd[0][i] + Bwd[0][i]);
-// 	outY[i]  = 0.5*(Fwd[0][i] + Bwd[0][i]);
-//       }
-    
-//   }
+    Fwd[0] = Array<OneD, NekDouble>(nTraceNumPoints);
+    Bwd[0] = Array<OneD, NekDouble>(nTraceNumPoints);
+    //-----------------------------------------------------
 
 
+    //-----------------------------------------------------
+    // get the physical values at the trace
+    m_fields[0]->GetFwdBwdTracePhys(physfield,Fwd[0],Bwd[0]);
+    //-----------------------------------------------------
 
 
-//   void BoussinesqEquations::Madsen92SpatialTerms(Array<OneD, NekDouble> &outX, Array<OneD, NekDouble> &outY)
-//   {
+    //-----------------------------------------------------
+    // use centred fluxes for the numerical flux
+    for (i = 0; i < nTraceNumPoints; ++i)
+      {
+	outX[i]  = 0.5*(Fwd[0][i] + Bwd[0][i]);
+	outY[i]  = 0.5*(Fwd[0][i] + Bwd[0][i]);
+      }
+    //-----------------------------------------------------
+  }
+  
+  
 
-//     //--------------------------------------
-//     // local parameters
-//     int nTotQuadPoints = GetPointsTot();
-//     int nTotCoeffs = GetNcoeffs();
-    
-//     NekDouble d = GetConstantDepth();
-//     NekDouble g = GetGravity();
-//     NekDouble B = GetAlpha1();
-//     //--------------------------------------
 
-    
-//     //--------------------------------------
-//     // local arrays
-//     Array<OneD, Array<OneD, NekDouble> > b(2);
-//     b[0] = Array<OneD, NekDouble>(nTotQuadPoints);
-//     b[1] = Array<OneD, NekDouble>(nTotQuadPoints);
-//     Array<OneD, NekDouble > a(nTotQuadPoints);
+  void BoussinesqEquations::Madsen92SpatialTerms(Array<OneD, Array<OneD, NekDouble> > &physarray, 
+						 Array<OneD, Array<OneD, NekDouble> > &outarray)
+  {
 
-//     Array<OneD, NekDouble > store_u(nTotQuadPoints);
-//     Array<OneD, NekDouble > store_v(nTotQuadPoints);
+    //--------------------------------------
+    // local parameters
+    int ncoeffs    = outarray[0].num_elements();
+    int nq         = GetTotPoints();
+    int nTraceNumPoints = GetTraceTotPoints();
 
-//     Array<OneD, NekDouble> tmpX(GetNcoeffs());
-//     Array<OneD, NekDouble> tmpY(GetNcoeffs());
-    
-//     Array<OneD, NekDouble> upwindX(GetNpoints());
-//     Array<OneD, NekDouble> upwindY(GetNpoints());
-//     //--------------------------------------
+    NekDouble d = m_depth;
+    NekDouble g = m_g;
+    NekDouble B = m_alpha_1;
+    //--------------------------------------
 
     
-//     //--------------------------------------
-//     // Store the physical values of u and v
+    //--------------------------------------
+    // local arrays
+    Array<OneD, NekDouble > eta(nq);
     
-//     Vmath::Vcopy(nTotQuadPoints,GetPhys(1),1,store_u,1);
-//     Vmath::Vcopy(nTotQuadPoints,GetPhys(2),1,store_v,1);
-//     //--------------------------------------
+    Array<OneD, Array<OneD, NekDouble> > b(2);
+    b[0] = Array<OneD, NekDouble>(nq);
+    b[1] = Array<OneD, NekDouble>(nq);
+    Array<OneD, NekDouble > a(nq);
 
-//     //--------------------------------------
-//     // solve {\bf b} = d \nabla \eta
-//     // (we store b in u and v)
+    Array<OneD, NekDouble> tmpX(ncoeffs);
+    Array<OneD, NekDouble> tmpY(ncoeffs);
     
-//     IProductWRTDerivBase(0,GetPhys(0),tmpX,0);
-//     IProductWRTDerivBase(1,GetPhys(0),tmpY,0);
-    
-//     Vmath::Neg(nTotCoeffs,tmpX,1);
-//     Vmath::Neg(nTotCoeffs,tmpY,1);
-    
-//     // Evaluate  upwind numerical flux (physical space)
-//     NumericalFluxGradient(upwindX,upwindY,0);
-    
-//     Array<OneD, NekDouble> uptemp(GetNpoints(),0.0);
-    
-//     AddTraceIntegral(upwindX,uptemp,tmpX,0);
-//     AddTraceIntegral(uptemp,upwindY,tmpY,0);
-
-//     Vmath::Smul(nTotCoeffs,d,tmpX,1,tmpX,1);
-//     Vmath::Smul(nTotCoeffs,d,tmpY,1,tmpY,1);
-
-//     MultiplyByElmtInvMass(tmpX,UpdateCoeffs(1),0);
-//     MultiplyByElmtInvMass(tmpY,UpdateCoeffs(2),0);
-    
-//     BwdTrans(1);
-//     BwdTrans(2);
-//     //--------------------------------------
-    
-
-//     //--------------------------------------
-//     // solve a = \nabla \cdot {\bf b}
-//     // (we store a in u)
-    
-//     IProductWRTDerivBase(0,GetPhys(1),tmpX,0);
-//     IProductWRTDerivBase(1,GetPhys(2),tmpY,0);
-    
-//     Vmath::Vadd(nTotCoeffs,tmpX,1,tmpY,1,tmpX,1);
-
-//     Vmath::Neg(nTotCoeffs,tmpX,1);
-    
-//     // Evaluate  upwind numerical flux (physical space)
-//     NumericalFluxDivergence(upwindX,upwindY,1,2);
-    
-//     AddTraceIntegral(upwindX,upwindY,tmpX,0);
-    
-//     MultiplyByElmtInvMass(tmpX,UpdateCoeffs(1),0);
-    
-//     BwdTrans(1);
-//     //--------------------------------------
-    
-
-//     //--------------------------------------
-//     // solve {\bf D^s} = - g B d \nabla a
-//     // (we store D^s in u and v)
-    
-//     IProductWRTDerivBase(0,GetPhys(1),tmpX,0);
-//     IProductWRTDerivBase(1,GetPhys(1),tmpY,0);
-    
-//     Vmath::Neg(nTotCoeffs,tmpX,1);
-//     Vmath::Neg(nTotCoeffs,tmpY,1);
-    
-//     // Evaluate  upwind numerical flux (physical space)
-//     NumericalFluxGradient(upwindX,upwindY,1);
-    
-//     AddTraceIntegral(upwindX,uptemp,tmpX,0);
-//     AddTraceIntegral(uptemp,upwindY,tmpY,0);
-
-//     Vmath::Smul(nTotCoeffs,g*B*d,tmpX,1,tmpX,1);
-//     Vmath::Smul(nTotCoeffs,g*B*d,tmpY,1,tmpY,1);
-
-//     //MultiplyByElmtInvMass(tmpX,UpdateCoeffs(1),0);
-//     //MultiplyByElmtInvMass(tmpY,UpdateCoeffs(2),0);
-    
-//     //BwdTrans(1);
-//     //BwdTrans(2);
-//     //--------------------------------------
-    
-    
-//     //--------------------------------------
-//     // Add D^s to the RHS terms 
-
-//     // for (int i = 0; i < nTotCoeffs; ++i)
-//     //   cout << "tmpX["<<i<<"] = " << tmpX[i]<<endl;
-    
-//     Vmath::Vadd(nTotCoeffs,outX,1,tmpX,1,outX,1);
-//     Vmath::Vadd(nTotCoeffs,outY,1,tmpY,1,outY,1);
-//     //--------------------------------------
+    Array<OneD, NekDouble> upwindX(nTraceNumPoints);
+    Array<OneD, NekDouble> upwindY(nTraceNumPoints);
+    //--------------------------------------
 
     
-//     //--------------------------------------
-//     // fill u and v with the ingoing values
+    //--------------------------------------
+    // Get \eta
     
-//     Vmath::Vcopy(nTotQuadPoints,store_u,1,UpdatePhys(1),1);
-//     Vmath::Vcopy(nTotQuadPoints,store_v,1,UpdatePhys(2),1);
-//     //--------------------------------------
+    switch(m_variableType)
+      {
+      case ePrimitive:
+	// eta already in physarray
+	Vmath::Vcopy(nq,physarray[0],1,eta,1);
+	break;
+      case eConservative:
+	Vmath::Sadd(nq,-d,physarray[0],1,eta,1);
+	break;
+      }
+    //--------------------------------------
+
+    
+    //--------------------------------------
+    // solve {\bf b} = d \nabla \eta
+    
+    m_fields[0]->IProductWRTDerivBase(0,eta,tmpX);
+    m_fields[0]->IProductWRTDerivBase(1,eta,tmpY);
+    
+    Vmath::Neg(ncoeffs,tmpX,1);
+    Vmath::Neg(ncoeffs,tmpY,1);
+    
+    // Evaluate upwind numerical flux (physical space)
+    NumericalFluxGradient(eta,upwindX,upwindY);
+    
+    Array<OneD, NekDouble> uptemp(nTraceNumPoints,0.0);
+    
+    m_fields[0]->AddTraceIntegral(upwindX,uptemp,tmpX);
+    m_fields[0]->AddTraceIntegral(uptemp,upwindY,tmpY);
+
+    Vmath::Smul(ncoeffs,d,tmpX,1,tmpX,1);
+    Vmath::Smul(ncoeffs,d,tmpY,1,tmpY,1);
+
+    m_fields[0]->MultiplyByElmtInvMass(tmpX,tmpX);
+    m_fields[0]->MultiplyByElmtInvMass(tmpY,tmpY);
+    
+    m_fields[0]->BwdTrans(tmpX,b[0]);
+    m_fields[0]->BwdTrans(tmpY,b[1]);
+    //--------------------------------------
     
 
-//   }
+    //--------------------------------------
+    // solve a = \nabla \cdot {\bf b}
+    
+    m_fields[0]->IProductWRTDerivBase(0,b[0],tmpX);
+    m_fields[0]->IProductWRTDerivBase(1,b[1],tmpY);
+    
+    Vmath::Vadd(ncoeffs,tmpX,1,tmpY,1,tmpX,1);
+
+    Vmath::Neg(ncoeffs,tmpX,1);
+    
+    // Evaluate upwind numerical flux (physical space)
+    NumericalFluxDivergence(b,upwindX,upwindY);
+    
+    m_fields[0]->AddTraceIntegral(upwindX,upwindY,tmpX);
+    
+    m_fields[0]->MultiplyByElmtInvMass(tmpX,tmpX);
+    
+    m_fields[0]->BwdTrans(tmpX,a);
+    //--------------------------------------
+    
+
+    //--------------------------------------
+    // solve {\bf D^s} = - g B d \nabla a
+    
+    m_fields[0]->IProductWRTDerivBase(0,a,tmpX);
+    m_fields[0]->IProductWRTDerivBase(1,a,tmpY);
+    
+    Vmath::Neg(ncoeffs,tmpX,1);
+    Vmath::Neg(ncoeffs,tmpY,1);
+    
+    // Evaluate upwind numerical flux (physical space)
+    NumericalFluxGradient(a,upwindX,upwindY);
+    
+    m_fields[0]->AddTraceIntegral(upwindX,uptemp,tmpX);
+    m_fields[0]->AddTraceIntegral(uptemp,upwindY,tmpY);
+
+    Vmath::Smul(ncoeffs,g*B*d,tmpX,1,tmpX,1);
+    Vmath::Smul(ncoeffs,g*B*d,tmpY,1,tmpY,1);
+    //--------------------------------------
+    
+    
+    //--------------------------------------
+    // Add D^s to the RHS terms 
+
+    Vmath::Vadd(ncoeffs,outarray[1],1,tmpX,1,outarray[1],1);
+    Vmath::Vadd(ncoeffs,outarray[2],1,tmpY,1,outarray[2],1);
+    //--------------------------------------
+    
+  }
+
+  
+  void BoussinesqEquations::Lambda20Primitive(Array<OneD, Array<OneD, NekDouble> > &physarray, 
+					      Array<OneD, Array<OneD, NekDouble> > &timeder,
+					      Array<OneD, Array<OneD, NekDouble> > &outarray)
+  {
+
+    //--------------------------------------
+    // local parameters
+    int ncoeffs         = outarray[0].num_elements();
+    int nq              = GetTotPoints();
+    int nTraceNumPoints = GetTraceTotPoints();
+
+    NekDouble g = m_g;
+    //--------------------------------------
+
+    
+    //--------------------------------------
+    // Get \eta
+    
+    Array<OneD, NekDouble > eta(nq);
+
+    switch(m_variableType)
+      {
+      case ePrimitive:
+	// eta already in physarray
+	Vmath::Vcopy(nq,physarray[0],1,eta,1);
+	break;
+      case eConservative:
+	Vmath::Vsub(nq,physarray[0],1,physarray[6],1,eta,1);
+	break;
+      }
+    //--------------------------------------
+
+    
+    //----------------------------------------
+    // compute a_2 = \nabla \cdot {\bf u}_t
+     
+    // hey hey ... those boundary conditions...
+    Array<OneD, NekDouble > a2(nq);
+    {
+      Array<OneD, Array<OneD, NekDouble> >in(2);
+      in[0] = timeder[1];
+      in[1] = timeder[2];
+      DivergenceFluxTerms(in,a2);
+    }
+    //----------------------------------------
+
+    
+    //----------------------------------------
+    // compute {\bf e}_1 = \nabla \eta
+      
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > e1(2);
+    e1[0] = Array<OneD, NekDouble> (nq); 
+    e1[1] = Array<OneD, NekDouble> (nq);
+    GradientFluxTerms(eta,e1);
+    //--------------------------------------
+
+    
+    //----------------------------------------
+    // compute g_1 = \nabla \cdot {\bf e}_1
+     
+    // hey hey ... those boundary conditions...
+    Array<OneD, NekDouble > g1(nq);
+    
+    DivergenceFluxTerms(e1,g1);
+    //----------------------------------------
+
+    
+    //----------------------------------------
+    // compute {\bf k}_1 = \nabla g_1
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > k1(2);
+    k1[0] = Array<OneD, NekDouble> (nq); 
+    k1[1] = Array<OneD, NekDouble> (nq);
+    GradientFluxTerms(g1,k1);
+    //--------------------------------------
+
+    
+    //----------------------------------------
+    // compute g_2 = \nabla \cdot h{\bf e}_1
+     
+    // hey hey ... those boundary conditions...
+    Array<OneD, NekDouble > g2(nq);
+    {
+      Array<OneD, Array<OneD, NekDouble> >in(2);
+      in[0] = e1[0];
+      in[1] = e1[1];
+      Vmath::Vmul(nq,physarray[6],1,in[0],1,in[0],1);
+      Vmath::Vmul(nq,physarray[6],1,in[1],1,in[1],1);
+      
+      DivergenceFluxTerms(in,g2);
+    }
+    //----------------------------------------
+    
+    
+    //----------------------------------------
+    // compute {\bf k}_2 = \nabla g_2
+    
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > k2(2);
+    k2[0] = Array<OneD, NekDouble> (nq); 
+    k2[1] = Array<OneD, NekDouble> (nq);
+    GradientFluxTerms(g2,k2);
+    //--------------------------------------
+    
+    
+    //----------------------------------------
+    // compute {\bf c}_2 = \nabla h
+      
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > c2(2);
+    c2[0] = Array<OneD, NekDouble> (nq); 
+    c2[1] = Array<OneD, NekDouble> (nq);
+    GradientFluxTerms(physarray[6],c2);
+    //--------------------------------------
+
+    
+    //----------------------------------------
+    // compute {\bf d}_2 = \nabla (\nabla h \cdot {\bf u}_t)
+    //                   = \nabla ({\bf c}_2 \cdot {\bf u}_t)
+      
+    // hey hey ... those boundary conditions...
+    Array<OneD, Array<OneD, NekDouble> > d2(2);
+    d2[0] = Array<OneD, NekDouble> (nq); 
+    d2[1] = Array<OneD, NekDouble> (nq);
+    {
+      Array<OneD, Array<OneD, NekDouble> >in(2);
+      in[0] = timeder[1];
+      in[1] = timeder[2];
+      
+      Vmath::Vmul(nq,c2[0],1,timeder[1],1,in[0],1);
+      Vmath::Vmul(nq,c2[1],1,timeder[2],1,in[1],1);
+      Vmath::Vadd(nq,in[0],1,in[1],1,in[0],1);
+      
+      GradientFluxTerms(in[0],d2);
+    }
+    //--------------------------------------
+    
+
+    //-------------------------------------
+    // 
+    
+    // local arrays
+    Array<OneD, NekDouble > physX(nq);
+    Array<OneD, NekDouble > physY(nq);
+    
+    Array<OneD, NekDouble> tmpX(ncoeffs);
+    Array<OneD, NekDouble> tmpY(ncoeffs);
+    
+
+    switch(m_linearType)
+      {
+      case eLinear:
+	for (int i = 0; i < nq; ++i)
+	  {
+	    physX[i] = (0.5+m_alpha_2)*physarray[6][i]*c2[0][i]*a2[i]+
+	      (0.5+m_alpha_2)*d2[0][i];
+	    physY[i] = (0.5+m_alpha_2)*physarray[6][i]*c2[1][i]*a2[i]+
+	      (0.5+m_alpha_2)*d2[1][i];
+	    
+	    if (m_boussinesqType == eEnhanced)
+	      {
+		physX[i] += (m_alpha_2-m_alpha_1)*physarray[6][i]*physarray[6][i]*k1[0][i]+
+		  m_alpha_2*physarray[6][i]*k2[0][i];
+		physY[i] += (m_alpha_2-m_alpha_1)*physarray[6][i]*physarray[6][i]*k1[1][i]+
+		  m_alpha_2*physarray[6][i]*k2[1][i];
+	      }
+	  }
+	break;
+	
+      case eNonLinear:
+	for (int i = 0; i < nq; ++i)
+	  {
+
+	  }
+
+	break;
+      }
+    
+    //--------------------------------------
+    // Get modal values
+    
+    m_fields[0]->IProductWRTBase(physX,tmpX);
+    m_fields[0]->IProductWRTBase(physY,tmpY);
+    //--------------------------------------
+    
+    
+    //--------------------------------------
+    // Add D^s to the RHS terms 
+
+    Vmath::Vadd(ncoeffs,outarray[1],1,tmpX,1,outarray[1],1);
+    Vmath::Vadd(ncoeffs,outarray[2],1,tmpY,1,outarray[2],1);
+    //--------------------------------------
+    
+  }
+
 
 //   /**
 //    * \brief This function evaluates the spatial linear dispersive terms 
@@ -2320,124 +2913,128 @@ namespace Nektar
 //   } 
 
 
-//   // Term should be in Uf.m_fields[1]
-
-//   void BoussinesqEquations::GradientFluxTerms(const Array<OneD, const NekDouble> &in, 
-// 					      Array<OneD, Array<OneD, NekDouble> > &out, int field_no)
-//   {
-     
-//     Array<OneD, NekDouble> tmpX(GetNcoeffs());
-//     Array<OneD, NekDouble> tmpX2(GetNcoeffs());
-
-//     Array<OneD, NekDouble> tmpY(GetNcoeffs());
-//     Array<OneD, NekDouble> tmpY2(GetNcoeffs());
-
-//     Array<OneD, NekDouble> upwindX(GetNpoints());
-//     Array<OneD, NekDouble> upwindY(GetNpoints());
-//     Array<OneD, NekDouble> upwindZero(GetNpoints(),0.0);
-   
-//     IProductWRTDerivBase(0,GetPhys(field_no),tmpX,0);
-//     IProductWRTDerivBase(1,GetPhys(field_no),tmpY,0);
+  // in and out in physical space
+  void BoussinesqEquations::GradientFluxTerms(Array<OneD, NekDouble> &in, 
+					      Array<OneD, Array<OneD, NekDouble> > &out)
+  {
+    int ncoeffs         = GetNcoeffs();
+    int nTraceNumPoints = GetTraceTotPoints();
     
-//     Vmath::Neg(GetNcoeffs(),tmpX,1);
-//     Vmath::Neg(GetNcoeffs(),tmpY,1);
-
-//     NumericalFluxGradient(upwindX,upwindY,field_no);
+    Array<OneD, NekDouble> tmpX(ncoeffs);
+    Array<OneD, NekDouble> tmpY(ncoeffs);
     
-//     AddTraceIntegral(upwindX,upwindZero,tmpX,0);
-//     AddTraceIntegral(upwindZero,upwindY,tmpY,0);
+    Array<OneD, NekDouble> upwindX(nTraceNumPoints);
+    Array<OneD, NekDouble> upwindY(nTraceNumPoints);
+    Array<OneD, NekDouble> upwindZero(nTraceNumPoints,0.0);
     
-//     MultiplyByElmtInvMass(tmpX,tmpX2,0);
-//     MultiplyByElmtInvMass(tmpY,tmpY2,0);
+    m_fields[0]->IProductWRTDerivBase(0,in,tmpX);
+    m_fields[0]->IProductWRTDerivBase(1,in,tmpY);
+    
+    Vmath::Neg(ncoeffs,tmpX,1);
+    Vmath::Neg(ncoeffs,tmpY,1);
 
-//     BwdTrans(tmpX2,out[0],1);
-//     BwdTrans(tmpY2,out[1],2);
-//   }
+    NumericalFluxGradient(in,upwindX,upwindY);
+    
+    m_fields[0]->AddTraceIntegral(upwindX,upwindZero,tmpX);
+    m_fields[0]->AddTraceIntegral(upwindZero,upwindY,tmpY);
+    
+    m_fields[0]->MultiplyByElmtInvMass(tmpX,tmpX);
+    m_fields[0]->MultiplyByElmtInvMass(tmpY,tmpY);
+
+    m_fields[0]->BwdTrans(tmpX,out[0]);
+    m_fields[0]->BwdTrans(tmpY,out[1]);
+  }
   
-//   void BoussinesqEquations::DivergenceFluxTerms(const Array<OneD, const NekDouble> &inX, 
-// 						const Array<OneD, const NekDouble> &inY, 
-// 						Array<OneD, NekDouble> &out,  int field_no_1, int field_no_2)
-//   {
-       
-//     Array<OneD, NekDouble> tmpX(GetNcoeffs());
-//     Array<OneD, NekDouble> tmpX2(GetNcoeffs());
-//     Array<OneD, NekDouble> tmpY(GetNcoeffs());
+
+  // in and out in physical space
+  void BoussinesqEquations::DivergenceFluxTerms(Array<OneD, Array<OneD, NekDouble> >&in, 
+						Array<OneD, NekDouble> &out)
+  {
+    int ncoeffs         = GetNcoeffs();
+    int nTraceNumPoints = GetTraceTotPoints();
     
-//     Array<OneD, NekDouble> upwindX(GetNpoints());
-//     Array<OneD, NekDouble> upwindY(GetNpoints());
+    Array<OneD, NekDouble> tmpX(ncoeffs);
+    Array<OneD, NekDouble> tmpY(ncoeffs);
+    
+    Array<OneD, NekDouble> upwindX(nTraceNumPoints);
+    Array<OneD, NekDouble> upwindY(nTraceNumPoints);
  
-//     IProductWRTDerivBase(0,GetPhys(field_no_1),tmpX,0);
-//     IProductWRTDerivBase(1,GetPhys(field_no_2),tmpY,0);
+    m_fields[0]->IProductWRTDerivBase(0,in[0],tmpX);
+    m_fields[0]->IProductWRTDerivBase(1,in[1],tmpY);
     
-//     Vmath::Vadd(GetNcoeffs(),tmpX,1,tmpY,1,tmpX,1);
-//     Vmath::Neg(GetNcoeffs(),tmpX,1);
+    Vmath::Vadd(ncoeffs,tmpX,1,tmpY,1,tmpX,1);
+    Vmath::Neg(ncoeffs,tmpX,1);
     
-//     NumericalFluxDivergence(upwindX,upwindY,field_no_1,field_no_2);
+    NumericalFluxDivergence(in,upwindX,upwindY);
     
-//     AddTraceIntegral(upwindX,upwindY,tmpX,0);
+    m_fields[0]->AddTraceIntegral(upwindX,upwindY,tmpX);
     
-//     MultiplyByElmtInvMass(tmpX,tmpX2,0);
+    m_fields[0]->MultiplyByElmtInvMass(tmpX,tmpX);
 
-//     BwdTrans(tmpX2,out,1);
+    m_fields[0]->BwdTrans(tmpX,out);
     
-//   }
+  }
   
   
-//   /**
-//    * Computes the \hat{f} term in the  \int_{\partial \Omega^e} \phi \hat{f} {\bf n} dS 
-//    * integral. Using averaged fluxes.
-//    **/
-//   void BoussinesqEquations::NumericalFluxGradient(Array<OneD, NekDouble> &outX, Array<OneD, NekDouble> &outY, int field_no)
-//   {
-    
-//     // get temporary arrays
-//     Array<OneD, Array<OneD, NekDouble> > Fwd(1);
-//     Array<OneD, Array<OneD, NekDouble> > Bwd(1);
-    
-//     Fwd[0] = Array<OneD, NekDouble> (GetNpoints(),0.0); 
-//     Bwd[0] = Array<OneD, NekDouble> (GetNpoints(),0.0);
-    
-//     // get the physical values at the trace
-//     GetFwdBwdTracePhys(Fwd[0],Bwd[0],field_no);
-    
-//     for (int i = 0; i < GetNpoints(); ++i)
-//       {
-//  	outX[i]  = 0.5*(Fwd[0][i] + Bwd[0][i]);
-// 	outY[i]  = 0.5*(Fwd[0][i] + Bwd[0][i]);
-//       }
+  /**
+   * Computes the \hat{f} term in the  \int_{\partial \Omega^e} \phi \hat{f} {\bf n} dS 
+   * integral. Using averaged fluxes.
+   **/
+  void BoussinesqEquations::NumericalFluxGradient(Array <OneD, NekDouble> &physarray,
+						  Array<OneD, NekDouble> &outX,
+						  Array<OneD, NekDouble> &outY)
+  {
+    int nTraceNumPoints = GetTraceTotPoints();
 
-//   }
+    // get temporary arrays
+    Array<OneD, Array<OneD, NekDouble> > Fwd(1);
+    Array<OneD, Array<OneD, NekDouble> > Bwd(1);
+    
+    Fwd[0] = Array<OneD, NekDouble> (nTraceNumPoints,0.0); 
+    Bwd[0] = Array<OneD, NekDouble> (nTraceNumPoints,0.0);
+    
+    // get the physical values at the trace
+    m_fields[0]->GetFwdBwdTracePhys(physarray,Fwd[0],Bwd[0]);
+    
+    for (int i = 0; i < nTraceNumPoints; ++i)
+      {
+ 	outX[i]  = 0.5*(Fwd[0][i] + Bwd[0][i]);
+	outY[i]  = 0.5*(Fwd[0][i] + Bwd[0][i]);
+      }
+
+  }
 
   
-//   /**
-//    * Computes the \hat{\bf f} term in the  \int_{\partial \Omega^e} \phi \hat{\bf f} \cdot {\bf n} dS 
-//    * integral. Using averaged fluxes.
-//    **/
-//   void BoussinesqEquations::NumericalFluxDivergence(Array<OneD, NekDouble> &outX, Array<OneD, NekDouble> &outY,
-// 						    int field_no_1, int field_no_2)
-//   {
-
-//     // get temporary arrays
-//     Array<OneD, Array<OneD, NekDouble> > Fwd(2);
-//     Array<OneD, Array<OneD, NekDouble> > Bwd(2);
+  /**
+   * Computes the \hat{\bf f} term in the  \int_{\partial \Omega^e} \phi \hat{\bf f} \cdot {\bf n} dS 
+   * integral. Using averaged fluxes.
+   **/
+  void BoussinesqEquations::NumericalFluxDivergence(Array <OneD, Array<OneD, NekDouble> > &physarray,
+						    Array <OneD, NekDouble> &outX, Array<OneD, NekDouble> &outY)
+  {
+    int nTraceNumPoints = GetTraceTotPoints();
     
-//     for (int i = 0; i < 2; ++i)
-//       {
-// 	Fwd[i] = Array<OneD, NekDouble>(GetNpoints());
-// 	Bwd[i] = Array<OneD, NekDouble>(GetNpoints());
-//       }
+    // get temporary arrays
+    Array<OneD, Array<OneD, NekDouble> > Fwd(2);
+    Array<OneD, Array<OneD, NekDouble> > Bwd(2);
     
-//     // get the physical values at the trace
-//     GetFwdBwdTracePhys(Fwd[0],Bwd[0],field_no_1);
-//     GetFwdBwdTracePhys(Fwd[1],Bwd[1],field_no_2);
+    for (int i = 0; i < 2; ++i)
+      {
+	Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
+	Bwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
+      }
     
-//     for (int i = 0; i < GetNpoints(); ++i)
-//       {
-// 	outX[i]  = 0.5*(Fwd[0][i] + Bwd[0][i]);
-// 	outY[i]  = 0.5*(Fwd[1][i] + Bwd[1][i]);
-//       }
-//   }
-
+    // get the physical values at the trace
+    m_fields[0]->GetFwdBwdTracePhys(physarray[0],Fwd[0],Bwd[0]);
+    m_fields[0]->GetFwdBwdTracePhys(physarray[1],Fwd[1],Bwd[1]);
+    
+    for (int i = 0; i < nTraceNumPoints; ++i)
+      {
+	outX[i]  = 0.5*(Fwd[0][i] + Bwd[0][i]);
+	outY[i]  = 0.5*(Fwd[1][i] + Bwd[1][i]);
+      }
+  }
+  
 //   //--------------------------------
 //   // Computes the streamfunction wave solution at time t
 //   // the wavelength is assumed to be the range of x

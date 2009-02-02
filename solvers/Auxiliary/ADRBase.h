@@ -91,9 +91,9 @@ namespace Nektar
         void WeakDGAdvection(const Array<OneD, Array<OneD, NekDouble> >& InField, 
 			     Array<OneD, Array<OneD, NekDouble> >& OutField, 
 			     bool NumericalFluxIncludesNormal = true, 
-			     bool InFieldIsInPhysSpace = false); 
+			     bool InFieldIsInPhysSpace = false, int nvariables = 0); 
 
-	NekDouble L2Error(int field);
+	NekDouble L2Error(int field, const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
 	
         void Output     (void);
 	
@@ -217,7 +217,10 @@ namespace Nektar
         enum ProjectionType m_projectionType; ///< Type of projection, i.e. Galerkin or DG 
 
         Array<OneD, Array<OneD, NekDouble> > m_traceNormals; ///< Array holding the forward normals 
-        
+
+	
+	int nocase_cmp(const string & s1, const string& s2); 
+	    
     private: 
         
         virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> >&physfield, 
@@ -257,6 +260,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.1  2009/01/13 10:59:32  pvos
+* added new solvers file
+*
 * Revision 1.6  2009/01/06 21:11:03  sherwin
 * Updates for Virtual ExpList calls
 *

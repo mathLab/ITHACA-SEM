@@ -59,7 +59,65 @@ namespace Nektar
     ADRBase(fileNameString,true),
     m_infosteps(10)
   {
+     
+    //--------------------------------------------
+    // Set conservative or primitive varibles
+    if(m_boundaryConditions->CheckForParameter("Conservative") == true)
+      {
+	if((int) m_boundaryConditions->GetParameter("Conservative") == 0)
+	  {
+	    m_variableType = ePrimitive;
+	  }
+	else if ((int) m_boundaryConditions->GetParameter("Conservative") == 1)
+	  {
+	    m_variableType = eConservative;
+	  }
+	else
+	  {
+	    ASSERTL0(false,"Illegal value for variableType");
+	  }
+      }
+    else
+      {
+	ASSERTL0(false,"variableType undefined");
+      }
+    //--------------------------------------------
+
     
+    //--------------------------------------------
+    // Set linear or nonlinear scheme
+    if(m_boundaryConditions->CheckForParameter("NonLinear") == true)
+      {
+	if((int) m_boundaryConditions->GetParameter("NonLinear") == 0)
+	  {
+	    m_linearType = eLinear;
+
+	    if(m_boundaryConditions->CheckForParameter("Depth") == true)
+	      {
+		m_depth = m_boundaryConditions->GetParameter("Depth");
+	      }
+	    else
+	      {
+		ASSERTL0(false,"Depth not specified");
+	      }
+	  }
+	else if ((int) m_boundaryConditions->GetParameter("NonLinear") == 1)
+	  {
+	    m_linearType = eNonLinear;
+	  }
+	else
+	  {
+	    ASSERTL0(false,"Illegal value for linearType");
+	  }
+      }
+    else
+      {
+	ASSERTL0(false,"linearType undefined");
+      }
+    //--------------------------------------------
+
+    
+    //--------------------------------------------
     // Set Coriolis forcing if specified
     if(m_boundaryConditions->CheckForParameter("Coriolis") == true)
       {
@@ -74,7 +132,9 @@ namespace Nektar
 	    ASSERTL0(false,"Coriolis defined for 1D run");
 	  }
       }
-    
+    //--------------------------------------------
+
+
     
     if(m_boundaryConditions->CheckForParameter("IO_InfoSteps") == true)
       {
@@ -90,6 +150,17 @@ namespace Nektar
       {
 	ASSERTL0(false,"Gravity not specified");
       }
+
+    // check if depth 
+    if(m_boundaryConditions->CheckForParameter("Depth") == true)
+      {
+	m_depth = m_boundaryConditions->GetParameter("Depth");
+      }
+    else
+      {
+	ASSERTL0(false,"Depth not specified");
+      }
+    
 
     // check that any user defined boundary condition is indeed implemented
     for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
@@ -129,8 +200,83 @@ namespace Nektar
   }
   
   
-  void ShallowWaterEquations::ODEforcing(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
-					 Array<OneD, Array<OneD, NekDouble> >&outarray, NekDouble time) 
+  //  void ShallowWaterEquations::ODEforcing(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+  // 					 Array<OneD, Array<OneD, NekDouble> >&outarray, NekDouble time) 
+//   {
+//     int i;
+//     int nVelDim    = m_spacedim;
+//     int nvariables = inarray.num_elements();
+//     int ncoeffs    = inarray[0].num_elements();
+//     int nq         = GetTotPoints();
+    
+//     //-------------------------------------------------------
+//     // go to physical space
+    
+//     Array<OneD, Array<OneD, NekDouble> > physarray(nvariables);
+//     for (i = 0; i < nvariables; ++i)
+//       {
+// 	physarray[i] = Array<OneD, NekDouble>(nq);
+// 	m_fields[i]->BwdTrans(inarray[i],physarray[i]);
+//       }
+//     //-------------------------------------------------------
+    
+//     SetBoundaryConditions(physarray, time);
+    
+//     switch(m_projectionType)
+//       {
+//       case eDiscontinuousGalerkin:
+// 	{
+	 
+// 	  //-------------------------------------------------
+// 	  // get the advection part
+// 	  // input: physical space
+// 	  // output: modal space 
+// 	  WeakDGAdvection(physarray, outarray, false, true);
+
+// 	  // negate the outarray since moving to the rhs
+// 	  for(i = 0; i < nvariables; ++i)
+// 	    {
+// 	      Vmath::Neg(ncoeffs,outarray[i],1);
+// 	    }
+// 	  //-------------------------------------------------------
+	  
+	  
+// 	  //-------------------------------------------------
+// 	  // Add "source terms"
+// 	  // input: physical space
+// 	  // output: modal space
+	  
+// 	  //coriolis forcing
+// 	  if (m_coriolis[0])
+// 	    AddCoriolis(physarray,outarray);
+// 	  //------------------------------------------------- 
+	  
+	  
+// 	  //--------------------------------------------
+// 	  // solve the block-diagonal system
+	  
+// 	  for(i = 0; i < nvariables; ++i)
+// 	    {
+// 	      m_fields[i]->MultiplyByElmtInvMass(outarray[i],outarray[i]);
+// 	    }
+// 	  //--------------------------------------------
+
+// 	}
+// 	break;
+//       case eGalerkin:
+// 	{
+// 	  ASSERTL0(false,"Continouos scheme not implemented for SWE");
+// 	}
+// 	break;
+//       default:
+// 	ASSERTL0(false,"Unknown projection scheme for the SWE");
+// 	break;
+//       }
+//   }
+  
+  void ShallowWaterEquations::ODErhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+				           Array<OneD,       Array<OneD, NekDouble> >&outarray, 
+				     const NekDouble time) 
   {
     int i;
     int nVelDim    = m_spacedim;
@@ -155,65 +301,100 @@ namespace Nektar
       {
       case eDiscontinuousGalerkin:
 	{
-	  
+	 
+	  //-------------------------------------------------
+	  // get the advection part
+	  // input: physical space
+	  // output: modal space 
 	  WeakDGAdvection(physarray, outarray, false, true);
-	  
-	  //--------------------------------------------
-	  // Add source terms here
 
+	  // negate the outarray since moving to the rhs
+	  for(i = 0; i < nvariables; ++i)
+	    {
+	      Vmath::Neg(ncoeffs,outarray[i],1);
+	    }
+	  //-------------------------------------------------------
+	  
+	  
+	  //-------------------------------------------------
+	  // Add "source terms"
+	  // input: physical space
+	  // output: modal space
+	  
 	  //coriolis forcing
 	  if (m_coriolis[0])
 	    AddCoriolis(physarray,outarray);
-	  //--------------------------------------------
+	  //------------------------------------------------- 
 	  
-	  for(i = 0; i < nvariables; ++i)
-	    {
-	      m_fields[i]->MultiplyByElmtInvMass(outarray[i],outarray[i]);
-	      
-	      Vmath::Neg(ncoeffs,outarray[i],1);
-	    }
+	  
+// 	  //--------------------------------------------
+// 	  // solve the block-diagonal system
+	  
+// 	  for(i = 0; i < nvariables; ++i)
+// 	    {
+// 	      m_fields[i]->MultiplyByElmtInvMass(outarray[i],outarray[i]);
+// 	    }
+// 	  //--------------------------------------------
+
 	}
 	break;
       case eGalerkin:
 	{
-	
-	  Array<OneD, Array<OneD, NekDouble> > flux(nVelDim);
-	  
-	  for(i = 0; i < nVelDim; ++i)
-	    {
-	      flux[i] = Array<OneD, NekDouble>(nq);
-	    }
-	  
-	  for(i = 0; i < nvariables; ++i)
-	    {
-	      GetFluxVector(i, physarray, flux);
-	      WeakAdvectionDivergenceForm(flux,outarray[i]);
-	      
-	    }
-	  // --------------------------------------------
-	  // Add source terms here
-	  
-	  //coriolis forcing
-	  if (m_coriolis[0])
-	    AddCoriolis(physarray,outarray);
-	  //--------------------------------------------
-	  
-	  for(i = 0; i < nvariables; ++i)
-	    {
-	      // Multiply by inverse of mass matrix to get forcing term
-	    //   m_fields[i]->MultiplyByInvMassMatrix(outarray[i],  
-// 						   outarray[i],
-// 						   false, true);
-	      Vmath::Neg(ncoeffs,outarray[i],1);
-	      
-	    }
+	  ASSERTL0(false,"Continouos scheme not implemented for SWE");
 	}
 	break;
       default:
-	ASSERTL0(false,"Unknown projection scheme");
+	ASSERTL0(false,"Unknown projection scheme for the SWE");
 	break;
       }
   }
+ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+						  Array<OneD,       Array<OneD, NekDouble> >&outarray, 
+                                            const NekDouble time) 
+    {
+        ASSERTL0(false, "this routine needs implementation");
+    }
+    
+    void ShallowWaterEquations::ODElhsSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+                                                       Array<OneD,       Array<OneD, NekDouble> >&outarray, 
+                                                 const NekDouble time)   
+    {
+        int i;
+        int nvariables = inarray.num_elements();
+	
+        switch(m_projectionType)
+        {
+        case eDiscontinuousGalerkin:
+
+            for(i = 0; i < nvariables; ++i)
+            {
+                m_fields[i]->MultiplyByElmtInvMass(inarray[i],outarray[i]);
+            }
+	  break;
+        case eGalerkin:
+	  {
+              for(i = 0; i < nvariables; ++i)
+              {
+                  m_fields[i]->MultiplyByInvMassMatrix(inarray[i],  
+                                                       outarray[i],
+                                                       false,true);
+              }
+          }
+          break;
+        default:
+            ASSERTL0(false,"Unknown projection scheme");
+            break;
+        }
+    }
+
+    void ShallowWaterEquations::ODEdirkSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+						  Array<OneD,       Array<OneD, NekDouble> >&outarray, 
+                                                  const NekDouble lambda,
+                                                  const NekDouble time) 
+    {
+        ASSERTL0(false, "this routine needs implementation");
+    }
+  
   
     void ShallowWaterEquations::ExplicitlyIntegrateAdvection(int nsteps)
     {
@@ -259,28 +440,28 @@ namespace Nektar
 	    case eGalerkin:
 	      {
 		//---------------------------------------------------------
-		// this is just a forward Euler to illustate that CG works
+	// 	// this is just a forward Euler to illustate that CG works
 		 
-		// get -D u^n
-		ODEforcing(in,out,m_time); // note that MultiplyByInvMassMatrix is not performed inside ODEforcing
+// 		// get -D u^n
+// 		ODEforcing(in,out,m_time); // note that MultiplyByInvMassMatrix is not performed inside ODEforcing
 	  
-		// compute M u^n
-		for (i = 0; i < nvariables; ++i)
-		  {
-		    m_fields[0]->BwdTrans(in[i],phys[i]);
-		    m_fields[0]->IProductWRTBase(phys[i],tmp[i]);
+// 		// compute M u^n
+// 		for (i = 0; i < nvariables; ++i)
+// 		  {
+// 		    m_fields[0]->BwdTrans(in[i],phys[i]);
+// 		    m_fields[0]->IProductWRTBase(phys[i],tmp[i]);
 		    
-		    // f = M u^n - Dt D u^n
-		    Vmath::Svtvp(ncoeffs,m_timestep,out[i],1,tmp[i],1,tmp[i],1);
+// 		    // f = M u^n - Dt D u^n
+// 		    Vmath::Svtvp(ncoeffs,m_timestep,out[i],1,tmp[i],1,tmp[i],1);
 		    
-		    // u^{n+1} = M^{-1} f
-		    m_fields[i]->MultiplyByInvMassMatrix(tmp[i],out[i],false,false);
+// 		    // u^{n+1} = M^{-1} f
+// 		    m_fields[i]->MultiplyByInvMassMatrix(tmp[i],out[i],false,false);
 		    
-		    // fill results
-		    Vmath::Vcopy(ncoeffs,out[i],1,in[i],1);
-		    Vmath::Vcopy(ncoeffs,out[i],1,fields[i],1);
-		  }
-		//---------------------------------------------------------
+// 		    // fill results
+// 		    Vmath::Vcopy(ncoeffs,out[i],1,in[i],1);
+// 		    Vmath::Vcopy(ncoeffs,out[i],1,fields[i],1);
+// 		  }
+// 		//--------------------------------------------------------
 	      }
 	      break;
 	    }
@@ -352,7 +533,7 @@ namespace Nektar
   { 
 
     int i;
-    int nTraceNumPoints = GetTraceNPoints();
+    int nTraceNumPoints = GetTraceTotPoints();
     int nvariables      = m_fields.num_elements();
     
     // get physical values of h, hu, hv for the forward trace
@@ -439,12 +620,12 @@ namespace Nektar
     // add to hu equation
     Vmath::Vmul(nq,m_coriolis,1,physarray[2],1,tmp,1);
     m_fields[0]->IProductWRTBase(tmp,tmp);
-    Vmath::Neg(nq,tmp,1); 
+    // Vmath::Neg(nq,tmp,1); 
     Vmath::Vadd(ncoeffs,tmp,1,outarray[1],1,outarray[1],1);
     
     // add to hv equation
     Vmath::Vmul(nq,m_coriolis,1,physarray[1],1,tmp,1);
-    //Vmath::Neg(nq,tmp1,1);
+    Vmath::Neg(nq,tmp,1);
     m_fields[0]->IProductWRTBase(tmp,tmp);
     Vmath::Vadd(ncoeffs,tmp,1,outarray[2],1,outarray[2],1);
     
@@ -485,43 +666,96 @@ namespace Nektar
 					      Array<OneD, Array<OneD, NekDouble> > &flux)
   {
     
+    // since this function can be called
+    // from Boussinesq with i > 2
+    if (i > 2)
+      {
+	return;
+      }
+  
     NekDouble g = m_g;
-    
-    switch(i){
-      
-      // flux function for the h equation
-    case 0:
-      for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
-	{
-	  flux[0][j]  =  physfield[1][j];
-	  flux[1][j]  =  physfield[2][j];
+
+    switch(m_linearType)
+      {
+      case eLinear:
+	
+	switch(i){
+	  
+	  // flux function for the eta equation
+	case 0:
+	  for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
+	    {
+	      flux[0][j]  =  m_depth * physfield[1][j];
+	      flux[1][j]  =  m_depth * physfield[2][j];
+	    }
+	  break;
+	  
+	  // flux function for the u equation
+	case 1:
+	  for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
+	    {
+	      flux[0][j] = g*physfield[0][j];
+	      flux[1][j] = 0.0;
+	    }
+	  break;
+	  
+	  // flux function for the v equation
+	case 2:
+	  for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
+	    {
+	      flux[0][j] = 0.0;
+	      flux[1][j] = g*physfield[0][j];
+	    }
+	  break;
+	  
+	default:
+	  ASSERTL0(false,"GetFluxVector2D: illegal vector index");
 	}
-      break;
-      
-      // flux function for the hu equation
-      case 1:
-	for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
-	  {
-	    flux[0][j] = physfield[1][j]*physfield[1][j]/physfield[0][j] +
-	      0.5*g*physfield[0][j]*physfield[0][j];
-	    flux[1][j] = physfield[1][j]*physfield[2][j]/physfield[0][j];
-	  }
 	break;
 	
-	// flux function for the hv equation
-    case 2:
-      for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
-	{
-	  flux[0][j] = physfield[1][j]*physfield[2][j]/physfield[0][j];
-	  flux[1][j] = physfield[2][j]*physfield[2][j]/physfield[0][j] +
-	    0.5*g*physfield[0][j]*physfield[0][j];
+      case eNonLinear:
+     	switch(i){
+	  
+	  // flux function for the h equation
+	case 0:
+	  for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
+	    {
+	      flux[0][j]  =  physfield[1][j];
+	      flux[1][j]  =  physfield[2][j];
+	    }
+	  break;
+	  
+	  // flux function for the hu equation
+	case 1:
+	  for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
+	    {
+	      flux[0][j] = physfield[1][j]*physfield[1][j]/physfield[0][j] +
+		0.5*g*physfield[0][j]*physfield[0][j];
+	      flux[1][j] = physfield[1][j]*physfield[2][j]/physfield[0][j];
+	    }
+	  break;
+	  
+	  // flux function for the hv equation
+	case 2:
+	  for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
+	    {
+	      flux[0][j] = physfield[1][j]*physfield[2][j]/physfield[0][j];
+	      flux[1][j] = physfield[2][j]*physfield[2][j]/physfield[0][j] +
+		0.5*g*physfield[0][j]*physfield[0][j];
+	    }
+	  break;
+	  
+	default:
+	  ASSERTL0(false,"GetFluxVector2D: illegal vector index");
 	}
-      break;
-      
-    default:
-      ASSERTL0(false,"GetFluxVector2D: illegal vector index");
-    }
+	break;
+	
+      default:
+	ASSERTL0(false,"GetFluxVector2D: illegal lineartype");
+      }
+    
   }
+  
   
   void ShallowWaterEquations::NumericalFlux1D(Array<OneD, Array<OneD, NekDouble> > &physfield, 
 					      Array<OneD, Array<OneD, NekDouble> > &numfluxX)
@@ -533,21 +767,37 @@ namespace Nektar
 					      Array<OneD, Array<OneD, NekDouble> > &numfluxX, 
 					      Array<OneD, Array<OneD, NekDouble> > &numfluxY)
     {
-        int i;
+     
+      switch(m_linearType)
+	{
+	case eLinear:
+	  LinearNumericalFlux2D(physfield, numfluxX, numfluxY);
+	  break;
+	case eNonLinear:
+	  NonlinearNumericalFlux2D(physfield, numfluxX, numfluxY);
+	  break;
+	}
+    }
 
-        int nTraceNumPoints = GetTracePointsTot();
-	int nvariables      = m_fields.num_elements();
-
-	// get temporary arrays
-        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-        Array<OneD, Array<OneD, NekDouble> > Bwd(nvariables);
-	
-	for (i = 0; i < nvariables; ++i)
-	  {
-            Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
-            Bwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
-	  }
-      
+  void ShallowWaterEquations::NonlinearNumericalFlux2D(Array<OneD, Array<OneD, NekDouble> > &physfield, 
+						       Array<OneD, Array<OneD, NekDouble> > &numfluxX, 
+						       Array<OneD, Array<OneD, NekDouble> > &numfluxY)
+  {
+    int i;
+    
+    int nTraceNumPoints = GetTraceTotPoints();
+    int nvariables      = 3;//m_fields.num_elements();
+    
+    // get temporary arrays
+    Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+    Array<OneD, Array<OneD, NekDouble> > Bwd(nvariables);
+    
+    for (i = 0; i < nvariables; ++i)
+      {
+	Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
+	Bwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
+      }
+    
         // get the physical values at the trace
         for (i = 0; i < nvariables; ++i)
 	  {
@@ -574,7 +824,7 @@ namespace Nektar
 	
         for (i = 0; i < nTraceNumPoints; ++i)
 	  {
-            RiemannSolver(Fwd[0][i],Fwd[1][i],Fwd[2][i],
+	    RiemannSolver(Fwd[0][i],Fwd[1][i],Fwd[2][i],
                           Bwd[0][i],Bwd[1][i],Bwd[2][i],
                           hflux, huflux, hvflux );
 	    
@@ -586,87 +836,135 @@ namespace Nektar
             numfluxX[2][i] = (huflux*m_traceNormals[1][i] + hvflux*m_traceNormals[0][i]) * m_traceNormals[0][i];
             numfluxY[2][i] = (huflux*m_traceNormals[1][i] + hvflux*m_traceNormals[0][i]) * m_traceNormals[1][i];
 	  }
-    }
+  }
   
+  void ShallowWaterEquations::LinearNumericalFlux2D(Array<OneD, Array<OneD, NekDouble> > &physfield, 
+						    Array<OneD, Array<OneD, NekDouble> > &numfluxX, 
+						    Array<OneD, Array<OneD, NekDouble> > &numfluxY)
+  {
+    int i;
+    
+    int nTraceNumPoints = GetTraceTotPoints();
+    int nvariables      = 3;//m_fields.num_elements();
+    
+    // get temporary arrays
+    Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+    Array<OneD, Array<OneD, NekDouble> > Bwd(nvariables);
+    
+	for (i = 0; i < nvariables; ++i)
+	  {
+            Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
+            Bwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
+	  }
+      
+        // get the physical values at the trace
+        for (i = 0; i < nvariables; ++i)
+	  {
+	    m_fields[i]->GetFwdBwdTracePhys(physfield[i],Fwd[i],Bwd[i]);
+	  }
+	
+	
+	NekDouble eta, u, v;
+	NekDouble g = m_g;
+	NekDouble d = m_depth;
+	
+	// averaging
+	for (i = 0; i < nTraceNumPoints; ++i)
+	  {
+	    eta = 0.5*(Fwd[0][i] + Bwd[0][i]);
+	    u   = 0.5*(Fwd[1][i] + Bwd[1][i]);
+	    v   = 0.5*(Fwd[2][i] + Bwd[2][i]);
+	    
+	    numfluxX[0][i]  = d * u;
+	    numfluxY[0][i]  = d * v;
+	    numfluxX[1][i]  = g * eta;
+	    numfluxY[1][i]  = 0.0;
+	    numfluxX[2][i]  = 0.0;
+	    numfluxY[2][i]  = g * eta;
+	  }	
+  }
+  
+
+  /***
+      
+   */
   void ShallowWaterEquations::RiemannSolver(NekDouble hL,NekDouble huL,NekDouble hvL,NekDouble hR,NekDouble huR, 
 					    NekDouble hvR, NekDouble &hflux, NekDouble &huflux,NekDouble &hvflux )
   {
+    NekDouble g = m_g;
     
-        NekDouble hC,huC,hvC,SL,SR,hstar,Sstar;
-      
-        NekDouble g = m_g;
-      
-        NekDouble uL = huL/hL;
-        NekDouble vL = hvL/hL;
-        NekDouble uR = huR/hR;
-        NekDouble vR = hvR/hR;
-        NekDouble cL = sqrt(g * hL);
-        NekDouble cR = sqrt(g * hR);
-      
-        // the two-rarefaction wave assumption
-        hstar = 0.5*(cL + cR) + 0.25*(uL - uR);
-        hstar *= hstar;
-        hstar *= (1.0/g);
-      
-        // Compute SL
-        if (hstar > hL)
-            SL = uL - cL * sqrt(0.5*((hstar*hstar + hstar*hL)/(hL*hL)));
-        else
-            SL = uL - cL;
-      
-        // Compute SR
-        if (hstar > hR)
-            SR = uR + cR * sqrt(0.5*((hstar*hstar + hstar*hR)/(hR*hR)));
-        else
-            SR = uR + cR;
-      
-      
-        if (fabs(hR*(uR-SR)-hL*(uL-SL)) <= 1.0e-15)
-            Sstar = 0.0;
-        else
-            Sstar = (SL*hR*(uR-SR)-SR*hL*(uL-SL))/(hR*(uR-SR)-hL*(uL-SL));
-      
-        if (SL >= 0)
-	{
-            hflux  = hL * uL;
-            huflux  = uL * uL * hL + 0.5 * g * hL * hL;
-            hvflux  = hL * uL * vL;
-	}
-        else if (SR <= 0)
-	{
-            hflux  = hR * uR;
-            huflux  = uR * uR * hR + 0.5 * g * hR * hR;
-            hvflux  = hR * uR *vR;
-	}
-        else
-	{
-            if ((SL < 0) && (Sstar >= 0))
-	    {
-                hC  = hL * ((SL - uL) / (SL - Sstar));
-                huC = hC * Sstar;
-                hvC = hC * vL;
-	      
-                hflux = hL*uL + SL * (hC - hL);
-                huflux = (uL*uL*hL+0.5*g*hL*hL) + SL * (huC - hL*uL);
-                hvflux = (uL*vL*hL) + SL * (hvC - hL*vL);
-	    }
-            else
-	    {
-                hC  = hR * ((SR - uR) / (SR - Sstar));
-                huC = hC * Sstar;
-                hvC = hC * vR;
-	      
-                hflux = hR*uR + SR * (hC - hR);
-                huflux = (uR*uR*hR+0.5*g*hR*hR) + SR * (huC - hR*uR);
-                hvflux = (uR*vR*hR) + SR * (hvC - hR*vR);
-	    }
-	}
-      
-    }
-
-    void ShallowWaterEquations::Summary(std::ostream &out)
-    {
-      cout << "=======================================================================" << endl;
+    NekDouble hC,huC,hvC,SL,SR,hstar,Sstar;
+    
+    NekDouble uL = huL/hL;
+    NekDouble vL = hvL/hL;
+    NekDouble uR = huR/hR;
+    NekDouble vR = hvR/hR;
+    NekDouble cL = sqrt(g * hL);
+    NekDouble cR = sqrt(g * hR);
+    
+    // the two-rarefaction wave assumption
+    hstar = 0.5*(cL + cR) + 0.25*(uL - uR);
+    hstar *= hstar;
+    hstar *= (1.0/g);
+    
+    // Compute SL
+    if (hstar > hL)
+      SL = uL - cL * sqrt(0.5*((hstar*hstar + hstar*hL)/(hL*hL)));
+    else
+      SL = uL - cL;
+    
+    // Compute SR
+    if (hstar > hR)
+      SR = uR + cR * sqrt(0.5*((hstar*hstar + hstar*hR)/(hR*hR)));
+    else
+      SR = uR + cR;
+    
+    if (fabs(hR*(uR-SR)-hL*(uL-SL)) <= 1.0e-15)
+      Sstar = 0.0;
+    else
+      Sstar = (SL*hR*(uR-SR)-SR*hL*(uL-SL))/(hR*(uR-SR)-hL*(uL-SL));
+    
+    if (SL >= 0)
+      {
+	hflux  = hL * uL;
+	huflux  = uL * uL * hL + 0.5 * g * hL * hL;
+	hvflux  = hL * uL * vL;
+      }
+    else if (SR <= 0)
+      {
+	hflux  = hR * uR;
+	huflux  = uR * uR * hR + 0.5 * g * hR * hR;
+	hvflux  = hR * uR *vR;
+      }
+    else
+      {
+	if ((SL < 0) && (Sstar >= 0))
+	  {
+	    hC  = hL * ((SL - uL) / (SL - Sstar));
+	    huC = hC * Sstar;
+	    hvC = hC * vL;
+	    
+	    hflux = hL*uL + SL * (hC - hL);
+	    huflux = (uL*uL*hL+0.5*g*hL*hL) + SL * (huC - hL*uL);
+	    hvflux = (uL*vL*hL) + SL * (hvC - hL*vL);
+	  }
+	else
+	  {
+	    hC  = hR * ((SR - uR) / (SR - Sstar));
+	    huC = hC * Sstar;
+	    hvC = hC * vR;
+	    
+	    hflux = hR*uR + SR * (hC - hR);
+	    huflux = (uR*uR*hR+0.5*g*hR*hR) + SR * (huC - hR*uR);
+	    hvflux = (uR*vR*hR) + SR * (hvC - hR*vR);
+	  }
+      }
+  }
+    
+  
+  void ShallowWaterEquations::Summary(std::ostream &out)
+  {
+    cout << "=======================================================================" << endl;
       cout << "\tEquation Type   : Shallow Water Equations" << endl;
       ADRBase::Summary(out);
       cout << "=======================================================================" << endl;
@@ -679,6 +977,9 @@ namespace Nektar
 
 /**
 * $Log: ShallowWaterEquations.cpp,v $
+* Revision 1.1  2009/01/13 10:59:32  pvos
+* added new solvers file
+*
 * Revision 1.1  2008/11/17 08:37:00  claes
 * Restructured Shallow Water Solver. Only 2D DG is properly working
 *

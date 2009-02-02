@@ -368,13 +368,21 @@ namespace Nektar
         
     }
 
-    NekDouble ADRBase::L2Error(int field)
+  NekDouble ADRBase::L2Error(int field, const Array<OneD, NekDouble> &exactsoln)
     {
-        Array<OneD, NekDouble> exactsoln(m_fields[field]->GetNpoints());
-        
-        EvaluateExactSolution(field,exactsoln);
-        
-        return m_fields[field]->L2(exactsoln);
+      
+      if(exactsoln.num_elements())
+	{
+	  return m_fields[field]->L2(exactsoln);
+	}
+      else
+	{
+	  Array<OneD, NekDouble> exactsoln(m_fields[field]->GetNpoints());
+	  
+	  EvaluateExactSolution(field,exactsoln);
+	  
+	  return m_fields[field]->L2(exactsoln);
+	}
     }
 
 
@@ -477,23 +485,32 @@ namespace Nektar
     // -------------------------------------------------------------
   void ADRBase::WeakDGAdvection(const Array<OneD, Array<OneD, NekDouble> >& InField, 
 				Array<OneD, Array<OneD, NekDouble> >& OutField,
-				bool NumericalFluxIncludesNormal, bool InFieldIsInPhysSpace)
+				bool NumericalFluxIncludesNormal, bool InFieldIsInPhysSpace, int nvariables)
     {
         int i;
         int nVelDim         = m_spacedim;
         int nPointsTot      = GetNpoints();
         int ncoeffs         = GetNcoeffs();
         int nTracePointsTot = GetTraceNpoints();
-        int nvariables      = m_fields.num_elements();
-
-        Array<OneD, Array<OneD, NekDouble> > flux      (nVelDim);
+	
+	if (!nvariables)
+	  {
+	    nvariables      = m_fields.num_elements();
+	  }
+	
+        Array<OneD, Array<OneD, NekDouble> > fluxvector(nVelDim);
 	Array<OneD, Array<OneD, NekDouble> > physfield (nvariables);
         
         for(i = 0; i < nVelDim; ++i)
         {
-            flux[i]    = Array<OneD, NekDouble>(nPointsTot);
+            fluxvector[i]    = Array<OneD, NekDouble>(nPointsTot);
         }
 
+	
+	//--------------------------------------------
+	// Get the variables in physical space
+	
+	// already in physical space
 	if(InFieldIsInPhysSpace == true)
 	  {
             for(i = 0; i < nvariables; ++i)
@@ -501,6 +518,7 @@ namespace Nektar
                 physfield[i] = InField[i];
 	      }
 	  }
+	// otherwise do a backward transformation
         else
 	  {
 	    for(i = 0; i < nvariables; ++i)
@@ -510,19 +528,29 @@ namespace Nektar
 		m_fields[i]->BwdTrans(InField[i],physfield[i]);
 	      }
 	  }
-	
+	//--------------------------------------------
+
         
+	//--------------------------------------------
+	// Get the advection part (without numerical flux) 
+	
         for(i = 0; i < nvariables; ++i)
         {
             
             // Get the ith component of the  flux vector in (physical space)
-            GetFluxVector(i, physfield, flux);
+            GetFluxVector(i, physfield, fluxvector);
             
             // Calculate the i^th value of (\grad_i \phi, F)
-            WeakAdvectionGreensDivergenceForm(flux,OutField[i]);
+            WeakAdvectionGreensDivergenceForm(fluxvector,OutField[i]);
         }
+	//--------------------------------------------
         
 
+	//----------------------------------------------
+	// Get the numerical flux and add to the modal coeffs
+	
+	// if the NumericalFlux function already includes the
+	// normal in the output
 	if (NumericalFluxIncludesNormal == true)
 	  {
 	    
@@ -544,17 +572,18 @@ namespace Nektar
 		m_fields[i]->AddTraceIntegral(numflux[i],OutField[i]);
 	      }
 	  }
+	// if the NumericalFlux function does not include the
+	// normal in the output
 	else
 	  {
 	    Array<OneD, Array<OneD, NekDouble> > numfluxX   (nvariables);
 	    Array<OneD, Array<OneD, NekDouble> > numfluxY   (nvariables);
-
+	    
 	    for(i = 0; i < nvariables; ++i)
 	      {
 		numfluxX[i]   = Array<OneD, NekDouble>(nTracePointsTot);
 		numfluxY[i]   = Array<OneD, NekDouble>(nTracePointsTot);
 	      }
-
 
 	    // Evaluate numerical flux in physical space which may in
 	    // general couple all component of vectors
@@ -569,7 +598,7 @@ namespace Nektar
 	    
 	  }
     }
-
+  
   void ADRBase::Output(void)
     {
         for(int i = 0; i < m_fields.num_elements(); ++i)
@@ -625,11 +654,43 @@ namespace Nektar
         out << "\tCheckpoints     : " << m_checksteps <<" steps" <<endl;
     }
 
+  
+  // case insensitive string comparison from web
+  int ADRBase::nocase_cmp(const string & s1, const string& s2) 
+  {
+    string::const_iterator it1=s1.begin();
+    string::const_iterator it2=s2.begin();
+    
+    //stop when either string's end has been reached
+    while ( (it1!=s1.end()) && (it2!=s2.end()) ) 
+      { 
+	if(::toupper(*it1) != ::toupper(*it2)) //letters differ?
+	  {
+	    // return -1 to indicate smaller than, 1 otherwise
+	    return (::toupper(*it1)  < ::toupper(*it2)) ? -1 : 1; 
+	  }
+	//proceed to the next character in each string
+	++it1;
+	++it2;
+      }
+    size_t size1=s1.size(), size2=s2.size();// cache lengths
+    
+    //return -1,0 or 1 according to strings' lengths
+    if (size1==size2) 
+      {
+	return 0;
+      }
+    return (size1 < size2) ? -1 : 1;
+  }
+  
 
 } //end of namespace
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.2  2009/01/27 12:07:18  pvos
+* Modifications to make cont. Galerkin Advection solver working
+*
 * Revision 1.1  2009/01/13 10:59:32  pvos
 * added new solvers file
 *

@@ -80,7 +80,55 @@ namespace Nektar
   }
   
   
-  void EulerEquations::ODEforcing(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  Array<OneD, Array<OneD, NekDouble> >&outarray, NekDouble time) 
+ //  void EulerEquations::ODEforcing(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  Array<OneD, Array<OneD, NekDouble> >&outarray, NekDouble time) 
+//   {
+//     int i;
+//     int nvariables = inarray.num_elements();
+//     int ncoeffs    = inarray[0].num_elements();
+//     int nq         = GetTotPoints();
+    
+//     //-------------------------------------------------------
+//     // go to physical space
+    
+//     Array<OneD, Array<OneD, NekDouble> > physarray(nvariables);
+//     for (i = 0; i < nvariables; ++i)
+//       {
+// 	physarray[i] = Array<OneD, NekDouble>(nq);
+// 	m_fields[i]->BwdTrans(inarray[i],physarray[i]);
+//       }
+//     //-------------------------------------------------------
+    
+//     SetBoundaryConditions(physarray, time);
+
+//     switch(m_projectionType)
+//       {
+//       case eDiscontinuousGalerkin:
+// 	{
+	  
+// 	  WeakDGAdvection(physarray, outarray, false, true);
+
+// 	  // any source terms should be added here
+
+// 	  for(i = 0; i < nvariables; ++i)
+// 	    {
+// 	      m_fields[i]->MultiplyByElmtInvMass(outarray[i],outarray[i]);
+	      
+// 	      Vmath::Neg(ncoeffs,outarray[i],1);
+// 	    }
+// 	}
+// 	break;
+//       case eGalerkin:
+// 	ASSERTL0(false,"Continouos scheme not implemented for Euler");
+// 	break;
+//       default:
+// 	ASSERTL0(false,"Unknown projection scheme");
+// 	break;
+//       }
+//   } 
+
+  void EulerEquations::ODErhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+			            Array<OneD,       Array<OneD, NekDouble> >&outarray, 
+			      const NekDouble time) 
   {
     int i;
     int nvariables = inarray.num_elements();
@@ -111,7 +159,7 @@ namespace Nektar
 
 	  for(i = 0; i < nvariables; ++i)
 	    {
-	      m_fields[i]->MultiplyByElmtInvMass(outarray[i],outarray[i]);
+	      //     m_fields[i]->MultiplyByElmtInvMass(outarray[i],outarray[i]);
 	      
 	      Vmath::Neg(ncoeffs,outarray[i],1);
 	    }
@@ -125,6 +173,53 @@ namespace Nektar
 	break;
       }
   }
+
+  void EulerEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+			      Array<OneD,       Array<OneD, NekDouble> >&outarray, 
+			      const NekDouble time) 
+    {
+        ASSERTL0(false, "this routine needs implementation");
+    }
+    
+    void EulerEquations::ODElhsSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+                                                       Array<OneD,       Array<OneD, NekDouble> >&outarray, 
+                                                 const NekDouble time)   
+    {
+        int i;
+        int nvariables = inarray.num_elements();
+	
+        switch(m_projectionType)
+        {
+        case eDiscontinuousGalerkin:
+
+            for(i = 0; i < nvariables; ++i)
+            {
+                m_fields[i]->MultiplyByElmtInvMass(inarray[i],outarray[i]);
+            }
+	  break;
+        case eGalerkin:
+	  {
+              for(i = 0; i < nvariables; ++i)
+              {
+                  m_fields[i]->MultiplyByInvMassMatrix(inarray[i],  
+                                                       outarray[i],
+                                                       false,true);
+              }
+          }
+          break;
+        default:
+            ASSERTL0(false,"Unknown projection scheme");
+            break;
+        }
+    }
+
+    void EulerEquations::ODEdirkSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+						  Array<OneD,       Array<OneD, NekDouble> >&outarray, 
+                                                  const NekDouble lambda,
+                                                  const NekDouble time) 
+    {
+        ASSERTL0(false, "this routine needs implementation");
+    }
   
     void EulerEquations::ExplicitlyIntegrateAdvection(int nsteps)
     {
@@ -136,6 +231,11 @@ namespace Nektar
         LibUtilities::TimeIntegrationSchemeKey       IntKey(LibUtilities::eForwardEuler);
         LibUtilities::TimeIntegrationSchemeSharedPtr IntScheme = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
 
+
+	// HACK!!! 
+	//hardcoded initial conditions for Isenntropic vortex
+	 SetIsenTropicVortex();
+
         // Set up wrapper to fields data storage. 
         Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
         
@@ -146,6 +246,7 @@ namespace Nektar
                 
          int nInitSteps;
 	 LibUtilities::TimeIntegrationSolutionSharedPtr u = IntScheme->InitializeScheme(m_timestep,m_time,nInitSteps,*this,fields);
+
 
 	 for(n = nInitSteps; n < nsteps; ++n)
 	  {
@@ -214,10 +315,10 @@ namespace Nektar
   { 
 
      // get physical values of rho, rho u, rho v and E for the forward trace
-    Array<OneD, NekDouble> rho(GetTracePointsTot());
-    Array<OneD, NekDouble> rhou(GetTracePointsTot());
-    Array<OneD, NekDouble> rhov(GetTracePointsTot());
-    Array<OneD, NekDouble> E(GetTracePointsTot());
+    Array<OneD, NekDouble> rho(GetTraceTotPoints());
+    Array<OneD, NekDouble> rhou(GetTraceTotPoints());
+    Array<OneD, NekDouble> rhov(GetTraceTotPoints());
+    Array<OneD, NekDouble> E(GetTraceTotPoints());
     m_fields[0]->ExtractTracePhys(physarray[0],rho);
     m_fields[1]->ExtractTracePhys(physarray[1],rhou);
     m_fields[2]->ExtractTracePhys(physarray[2],rhov);
@@ -339,7 +440,7 @@ namespace Nektar
     {
         int i;
 
-        int nTraceNumPoints = GetTracePointsTot();
+        int nTraceNumPoints = GetTraceTotPoints();
 	int nvariables      = m_fields.num_elements();
 
 	// get temporary arrays
@@ -461,10 +562,111 @@ namespace Nektar
     
     }
 
+
+  void EulerEquations::SetIsenTropicVortex(void)
+  {
+    int nTotQuadPoints  = GetTotPoints();
+    
+    Array<OneD, NekDouble> rho(nTotQuadPoints,100.0);
+    Array<OneD, NekDouble> rhou(nTotQuadPoints);
+    Array<OneD, NekDouble> rhov(nTotQuadPoints);
+    Array<OneD, NekDouble> E(nTotQuadPoints);
+    Array<OneD, NekDouble> x(nTotQuadPoints);
+    Array<OneD, NekDouble> y(nTotQuadPoints);
+    Array<OneD, NekDouble> z(nTotQuadPoints);
+  
+    m_fields[0]->GetCoords(x,y,z);
+
+    //---------------------------------
+    // flow parameters
+    NekDouble x0   = 5.0;
+    NekDouble y0   = 0.0;
+    NekDouble beta  = 5.0;
+    NekDouble u0    = 1.0;
+    NekDouble v0    = 0.0;
+    NekDouble gamma = m_gamma;
+    NekDouble time  = m_time;
+    NekDouble r;
+
+    for (int i = 0; i < nTotQuadPoints; ++i)
+      {
+        r       = sqrt( pow(x[i]-u0*time-x0, 2.0) + pow(y[i]-v0*time-y0, 2.0));
+        rho[i]  = pow( (1.0-((gamma-1.0)/(16.0*gamma*M_PI*M_PI))*beta*beta*exp(2.0*(1.0-r*r))), (1.0/(gamma-1.0)) );
+        rhou[i] = rho[i] * (1.0 - beta*exp(1.0-r*r)*((y[i]-y0)/(2.0*M_PI)));
+        rhov[i] = rho[i] * (beta*exp(1.0-r*r)*((x[i]-x0)/(2.0*M_PI)));
+        E[i]    = (pow(rho[i],gamma)/(gamma-1.0)) + 0.5*rho[i]*(pow(rhou[i]/rho[i],2.0)+pow(rhov[i]/rho[i],2.0));
+    }
+
+    m_fields[0]->SetPhys(rho);
+    m_fields[1]->SetPhys(rhou);
+    m_fields[2]->SetPhys(rhov);
+    m_fields[3]->SetPhys(E);
+
+    // forward trabsform to fill the modal coeffs
+    for(int i = 0; i < m_fields.num_elements(); ++i)
+      {
+	m_fields[i]->FwdTrans(*(m_fields[i]));
+      }
+  }
+  
+  void EulerEquations::GetExactIsenTropicVortex(Array<OneD, NekDouble> &outarray, int field)
+  {
+    int nTotQuadPoints  = GetTotPoints();
+  
+    Array<OneD, NekDouble> rho(nTotQuadPoints,100.0);
+    Array<OneD, NekDouble> rhou(nTotQuadPoints);
+    Array<OneD, NekDouble> rhov(nTotQuadPoints);
+    Array<OneD, NekDouble> E(nTotQuadPoints);
+    Array<OneD, NekDouble> x(nTotQuadPoints);
+    Array<OneD, NekDouble> y(nTotQuadPoints);
+    Array<OneD, NekDouble> z(nTotQuadPoints);
+  
+    m_fields[0]->GetCoords(x,y,z);
+  
+    //---------------------------------
+    // flow parameters
+    NekDouble x0   = 5.0;
+    NekDouble y0   = 0.0;
+    NekDouble beta  = 5.0;
+    NekDouble u0    = 1.0;
+    NekDouble v0    = 0.0;
+    NekDouble gamma = m_gamma;
+    NekDouble time  = m_time;
+    NekDouble r;
+
+    for (int i = 0; i < nTotQuadPoints; ++i)
+    {
+        r       = sqrt( pow(x[i]-u0*time-x0, 2.0) + pow(y[i]-v0*time-y0, 2.0));
+        rho[i]  = pow( (1.0-((gamma-1.0)/(16.0*gamma*M_PI*M_PI))*beta*beta*exp(2.0*(1.0-r*r))), (1.0/(gamma-1.0)) );
+        rhou[i] = rho[i] * (1.0 - beta*exp(1.0-r*r)*((y[i]-y0)/(2.0*M_PI)));
+        rhov[i] = rho[i] * (beta*exp(1.0-r*r)*((x[i]-x0)/(2.0*M_PI)));
+        E[i]    = (pow(rho[i],gamma)/(gamma-1.0)) + 0.5*rho[i]*(pow(rhou[i]/rho[i],2.0)+pow(rhov[i]/rho[i],2.0));
+    }
+
+    switch (field){
+    case 0:
+        outarray = rho;
+        break;
+    case 1:
+        outarray = rhou;
+        break;
+    case 2:
+        outarray = rhov;
+        break;
+    case 3:
+        outarray = E;
+        break;
+    }
+    
+  }
+  
 } //end of namespace
 
 /**
 * $Log: EulerEquations.cpp,v $
+* Revision 1.1  2009/01/13 10:59:32  pvos
+* added new solvers file
+*
 * Revision 1.1  2008/11/17 08:42:06  claes
 * Initial commit of restructured Euler Solver
 *

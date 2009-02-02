@@ -72,9 +72,26 @@ namespace Nektar
                            Array<OneD, Array<OneD, NekDouble> > &numfluxX,
 			   Array<OneD, Array<OneD, NekDouble> > &numfluxY);
         
-        void ODEforcing(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
-			Array<OneD, Array<OneD, NekDouble> >&outarray, NekDouble time);
+	// void ODEforcing(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
+	//Array<OneD, Array<OneD, NekDouble> >&outarray, NekDouble time);
+	 
+	void ODElhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
+		          Array<OneD,        Array<OneD, NekDouble> >&outarray, 
+		    const NekDouble time);
+    
+	void ODElhsSolve(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
+		               Array<OneD,        Array<OneD, NekDouble> >&outarray, 
+			 const NekDouble time);
 	
+	void ODErhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
+		          Array<OneD,        Array<OneD, NekDouble> >&outarray, 
+		    const NekDouble time);
+	
+	void ODEdirkSolve(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
+			        Array<OneD,        Array<OneD, NekDouble> >&outarray, 
+			  const NekDouble lambda,
+			  const NekDouble time);
+    
         void ExplicitlyIntegrateAdvection(int nsteps);
 
         void Summary(std::ostream &out);
@@ -89,6 +106,10 @@ namespace Nektar
 	  eRoe,    
         };
 	
+	void SetIsenTropicVortex(void);
+	
+	void GetExactIsenTropicVortex(Array<OneD, NekDouble> &outarray, int field);
+
     protected:
 
     private: 
@@ -132,6 +153,9 @@ namespace Nektar
 
 /**
 * $Log: EulerEquations.h,v $
+* Revision 1.1  2009/01/13 10:59:32  pvos
+* added new solvers file
+*
 * Revision 1.1  2008/11/17 08:42:06  claes
 * Initial commit of restructured Euler Solver
 *

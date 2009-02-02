@@ -37,65 +37,106 @@
 #define NEKTAR_SOLVERS_BOUSSINESQEQUATIONS_BOUSSINESQEQUATIONS_H
 
 #include <MultiRegions/DisContField2D.h>
-#include <Auxiliary/ADRBase.h>
 #include <ShallowWaterSolver/ShallowWaterEquations.h>
+#include <Auxiliary/ADRBase.h>
 
 namespace Nektar
-{     
-    /**
-     * 
-     * 
-     **/
-    
-  class BoussinesqEquations: public ShallowWaterEquations 
+{   
+  
+    enum EquationType
     {
-    public:           
-
-        /**
-         * Default constructor. 
-	 **/ 
-        BoussinesqEquations();
-
-
-        /**
-         * Constructor.
-	 **/
-        BoussinesqEquations(string &fileStringName);
-	
-        void ODEforcing(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
-			Array<OneD, Array<OneD, NekDouble> >&outarray, NekDouble time);
-	
-        void ExplicitlyIntegrateAdvection(int nsteps);
-	
-        void Summary(std::ostream &out);
-
-	enum DispersiveFluxType
-        {           ///< flux not defined
-	  eNotSet,  ///< averaged (or centred) flux
-	  eAverage, ///< simple upwind flux
-	};
-
-	enum BoussinesqType
-	{
-	  ePeregrine,
-	  eMadsenSorensen,
-	  eFullyNonlinear,
-	};
-	
-    protected:
-
-    private: 
-	NekDouble m_alpha_0; 
-	NekDouble m_alpha_1;
-
-	void NumericalFluxWaveCont(Array<OneD, Array<OneD, NekDouble> > &inarray,
-				   Array<OneD, NekDouble> &numfluxX, 
-				   Array<OneD, NekDouble> &numfluxY);
-	
+      eClassical,
+      eEnhanced,
+      eFullyNonLinear,
+      eEquationTypeSize
     };
     
-    typedef boost::shared_ptr<BoussinesqEquations> BoussinesqEquationsSharedPtr;
+    // Keep this consistent with the enums in EquationType.
+    const std::string kEquationTypeStr[] = 
+      {
+        "Classical",
+        "Enhanced",
+        "FullyNonLinear"
+      };
+
+
+  class BoussinesqEquations: public ShallowWaterEquations 
+  {
+  public:
     
+    
+    /**
+     * Default constructor. 
+     **/ 
+    BoussinesqEquations();
+    
+    
+    /**
+     * Constructor.
+     **/
+    BoussinesqEquations(string &fileStringName);
+    
+    void ODErhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
+		      Array<OneD,        Array<OneD, NekDouble> >&outarray, 
+		const NekDouble time);
+    
+    void ExplicitlyIntegrateAdvection(int nsteps);
+    
+    void Summary(std::ostream &out);
+    
+    enum DispersiveFluxType
+    {           ///< flux not defined
+      eNotSet,  ///< averaged (or centred) flux
+      eAverage, ///< simple upwind flux
+    };
+    
+  protected:
+    
+  private: 
+    EquationType m_boussinesqType; ///< equation type;
+    
+    
+    NekDouble m_alpha_1; 
+    NekDouble m_alpha_2;
+    
+    void SetBoundaryConditionsWaveCont(void);
+    void WallBoundaryWaveCont(int bcRegion);
+    
+    
+    void NumericalFluxWaveCont(Array<OneD, Array<OneD, NekDouble> > &inarray,
+			       Array<OneD, NekDouble> &numfluxX, 
+			       Array<OneD, NekDouble> &numfluxY);
+    
+    void WaveContSolve(Array<OneD, NekDouble> &fce, NekDouble lambda);
+    
+    void NumericalFluxConsVariables(Array<OneD, NekDouble> &physfield, 
+				    Array<OneD, NekDouble> &outX, 
+				    Array<OneD, NekDouble> &outY);
+
+    void Madsen92SpatialTerms(Array<OneD, Array<OneD, NekDouble> > &physarray, 
+			      Array<OneD, Array<OneD, NekDouble> > &outarray);
+    
+    void Lambda20Primitive(Array<OneD, Array<OneD, NekDouble> > &physarray, 
+			   Array<OneD, Array<OneD, NekDouble> > &timeder,
+			   Array<OneD, Array<OneD, NekDouble> > &outarray);
+    
+    void GradientFluxTerms(Array<OneD, NekDouble> &in, 
+			   Array<OneD, Array<OneD, NekDouble> > &out);
+    
+    void NumericalFluxGradient(Array <OneD, NekDouble> &physarray,
+			       Array<OneD, NekDouble> &outX, 
+			       Array<OneD, NekDouble> &outY);
+    
+    void DivergenceFluxTerms(Array<OneD, Array<OneD, NekDouble> >&in, 
+			     Array<OneD, NekDouble> &out);
+    
+    void NumericalFluxDivergence(Array <OneD, Array<OneD, NekDouble> > &physarray,
+				 Array <OneD, NekDouble> &outX, 
+				 Array<OneD, NekDouble> &outY);
+  };
+  
+  typedef boost::shared_ptr<BoussinesqEquations> BoussinesqEquationsSharedPtr;
+  
 } //end of namespace
 
 #endif //NEKTAR_SOLVERS_BOUSSINESQEQUATIONS_BOUSSINESQEQUATIONS_H

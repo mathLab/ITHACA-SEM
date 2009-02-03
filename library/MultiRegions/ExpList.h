@@ -939,6 +939,41 @@ namespace Nektar
                 v_EvaluateBoundaryConditions(time);
             }
 
+            
+            // Routines for continous matrix solution 
+            /**
+             * \brief This function calculates the result of the multiplication of a matrix 
+             * of type specified by \a mkey with a vector given by \a inarray.
+             *
+             * This operation is equivalent to the evaluation of 
+             * \f$\underline{\boldsymbol{M}}^e\boldsymbol{\hat{u}}_l\f$, that is,
+             * \f[ \left[
+             * \begin{array}{cccc}
+             * \boldsymbol{M}^1 & 0 & \hspace{3mm}0 \hspace{3mm}& 0 \\
+             * 0 & \boldsymbol{M}^2 & 0 & 0 \\
+             * 0 &  0 & \ddots &  0 \\
+             * 0 &  0 & 0 & \boldsymbol{M}^{N_{\mathrm{el}}} \end{array} \right]
+             *\left [ \begin{array}{c}
+             * \boldsymbol{\hat{u}}^{1} \\
+             * \boldsymbol{\hat{u}}^{2} \\
+             * \vdots \\
+             * \boldsymbol{\hat{u}}^{{{N_{\mathrm{el}}}}} \end{array} \right ]\f]
+             * where \f$\boldsymbol{M}^e\f$ are the local matrices of type specified by the 
+             * key \a mkey. The decoupling of the local matrices allows for a local 
+             * evaluation of the operation. However, rather than a local matrix-vector 
+             * multiplication, the local operations are evaluated as implemented in the 
+             * function StdRegions#StdExpansion#GeneralMatrixOp.
+             *
+             * \param mkey This key uniquely defines the type matrix required for 
+             * the operation.
+             * \param inarray The vector \f$\boldsymbol{\hat{u}}_l\f$ of size 
+             * \f$N_{\mathrm{eof}}\f$.
+             * \param outarray The resulting vector of size \f$N_{\mathrm{eof}}\f$.
+             */
+            void   GeneralMatrixOp(const GlobalLinSysKey &mkey,
+                                   const Array<OneD, const NekDouble> &inarray,
+                                   Array<OneD, NekDouble>          &outarray);
+
         protected:
             
 
@@ -1036,41 +1071,6 @@ namespace Nektar
 
             
 
-
-            
-            // Routines for continous matrix solution 
-            /**
-             * \brief This function calculates the result of the multiplication of a matrix 
-             * of type specified by \a mkey with a vector given by \a inarray.
-             *
-             * This operation is equivalent to the evaluation of 
-             * \f$\underline{\boldsymbol{M}}^e\boldsymbol{\hat{u}}_l\f$, that is,
-             * \f[ \left[
-             * \begin{array}{cccc}
-             * \boldsymbol{M}^1 & 0 & \hspace{3mm}0 \hspace{3mm}& 0 \\
-             * 0 & \boldsymbol{M}^2 & 0 & 0 \\
-             * 0 &  0 & \ddots &  0 \\
-             * 0 &  0 & 0 & \boldsymbol{M}^{N_{\mathrm{el}}} \end{array} \right]
-             *\left [ \begin{array}{c}
-             * \boldsymbol{\hat{u}}^{1} \\
-             * \boldsymbol{\hat{u}}^{2} \\
-             * \vdots \\
-             * \boldsymbol{\hat{u}}^{{{N_{\mathrm{el}}}}} \end{array} \right ]\f]
-             * where \f$\boldsymbol{M}^e\f$ are the local matrices of type specified by the 
-             * key \a mkey. The decoupling of the local matrices allows for a local 
-             * evaluation of the operation. However, rather than a local matrix-vector 
-             * multiplication, the local operations are evaluated as implemented in the 
-             * function StdRegions#StdExpansion#GeneralMatrixOp.
-             *
-             * \param mkey This key uniquely defines the type matrix required for 
-             * the operation.
-             * \param inarray The vector \f$\boldsymbol{\hat{u}}_l\f$ of size 
-             * \f$N_{\mathrm{eof}}\f$.
-             * \param outarray The resulting vector of size \f$N_{\mathrm{eof}}\f$.
-             */
-            void   GeneralMatrixOp(const GlobalLinSysKey &mkey,
-                                   const Array<OneD, const NekDouble> &inarray,
-                                   Array<OneD, NekDouble>          &outarray);
             
             /**
              * \brief This operation constructs the global linear system of type \a mkey.
@@ -1357,6 +1357,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.51  2009/02/02 16:43:26  claes
+* Added virtual functions for solver access
+*
 * Revision 1.50  2009/01/06 21:05:57  sherwin
 * Added virtual function calls for BwdTrans, FwdTrans and IProductWRTBase from the class ExpList. Introduced _IterPerExp versions of these methods in ExpList.cpp§
 *

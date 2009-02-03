@@ -74,7 +74,7 @@ namespace Nektar
         void SetInitialConditions(NekDouble initialtime = 0.0);
         void SetPhysForcingFunctions(Array<OneD, MultiRegions::ExpListSharedPtr> &force);
             
-	void EvaluateExactSolution(int field, Array<OneD, NekDouble > &outfield);
+	void EvaluateExactSolution(int field, Array<OneD, NekDouble > &outfield, const NekDouble time);
 
         void EvaluateUserDefinedEqn(Array<OneD, Array<OneD, NekDouble> > &outfield);
       
@@ -260,6 +260,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.2  2009/02/02 16:10:16  claes
+* Update to make SWE, Euler and Boussinesq solvers up to date with the time integrator scheme. Linear and classical Boussinsq solver working
+*
 * Revision 1.1  2009/01/13 10:59:32  pvos
 * added new solvers file
 *

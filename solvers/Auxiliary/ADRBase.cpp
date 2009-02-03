@@ -327,7 +327,7 @@ namespace Nektar
     }
 
 
-    void ADRBase::EvaluateExactSolution(int field, Array<OneD, NekDouble> &outfield)
+    void ADRBase::EvaluateExactSolution(int field, Array<OneD, NekDouble> &outfield, const NekDouble time)
     {
         int nq = m_fields[field]->GetNpoints();
       
@@ -341,7 +341,7 @@ namespace Nektar
         SpatialDomains::ConstExactSolutionShPtr ifunc = m_boundaryConditions->GetExactSolution(field);
         for(int j = 0; j < nq; j++)
         {
-            outfield[j] = ifunc->Evaluate(x0[j],x1[j],x2[j]);
+            outfield[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],time);
         }
     }
     
@@ -379,7 +379,7 @@ namespace Nektar
 	{
 	  Array<OneD, NekDouble> exactsoln(m_fields[field]->GetNpoints());
 	  
-	  EvaluateExactSolution(field,exactsoln);
+	  EvaluateExactSolution(field,exactsoln,m_time);
 	  
 	  return m_fields[field]->L2(exactsoln);
 	}
@@ -688,6 +688,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.3  2009/02/02 16:10:16  claes
+* Update to make SWE, Euler and Boussinesq solvers up to date with the time integrator scheme. Linear and classical Boussinsq solver working
+*
 * Revision 1.2  2009/01/27 12:07:18  pvos
 * Modifications to make cont. Galerkin Advection solver working
 *

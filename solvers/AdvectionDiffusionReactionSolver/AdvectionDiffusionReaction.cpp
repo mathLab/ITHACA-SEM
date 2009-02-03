@@ -248,13 +248,19 @@ namespace Nektar
 						  Array<OneD,       Array<OneD, NekDouble> >&outarray, 
                                             const NekDouble time) 
     {
-        ASSERTL0(false, "this routine needs implementation");
+        int nvariables = inarray.num_elements();
+        MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
+        for(int i = 0; i < nvariables; ++i)
+        {
+            m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,inarray[i],outarray[i]);
+        }
     }
     
     void AdvectionDiffusionReaction::ODElhsSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
                                                        Array<OneD,       Array<OneD, NekDouble> >&outarray, 
                                                  const NekDouble time)   
     {
+	SetBoundaryConditions(time);
         int i;
         int nvariables = inarray.num_elements();
 	
@@ -358,20 +364,24 @@ namespace Nektar
   void AdvectionDiffusionReaction::SetBoundaryConditions(NekDouble time)
   {
     int nvariables = m_fields.num_elements();
+    for (int i = 0; i < nvariables; ++i)
+    {
+        m_fields[i]->EvaluateBoundaryConditions(time);
+    }
     
-    // loop over Boundary Regions
-    for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
-      {	
+//     // loop over Boundary Regions
+//     for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+//       {	
 	
-	// Time Dependent Boundary Condition
-	if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "TimeDependent")
-	  {
-	    for (int i = 0; i < nvariables; ++i)
-	      {
-		m_fields[i]->EvaluateBoundaryConditions(time);
-	      }
-	  }
-      }
+// 	// Time Dependent Boundary Condition
+// 	if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "TimeDependent")
+// 	  {
+// 	    for (int i = 0; i < nvariables; ++i)
+// 	      {
+// 		m_fields[i]->EvaluateBoundaryConditions(time);
+// 	      }
+// 	  }
+//       }
   }
   
   // Evaulate flux = m_fields*ivel for i th component of Vu 
@@ -499,6 +509,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.4  2009/02/02 16:12:15  claes
+* Moved nocase_cm to ADRBase
+*
 * Revision 1.3  2009/01/28 13:35:07  pvos
 * Modified Time Integration class to take LHS and RHS operator (+support for DIRK)
 *

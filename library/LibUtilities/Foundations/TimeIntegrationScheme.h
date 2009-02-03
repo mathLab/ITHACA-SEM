@@ -55,19 +55,19 @@ namespace Nektar
         class TimeIntegrationSolution;
 
         // typedefs
-        typedef boost::shared_ptr<TimeIntegrationScheme> TimeIntegrationSchemeSharedPtr;
-        typedef std::vector< TimeIntegrationSchemeSharedPtr > TimeIntegrationSchemeVector; 
-        typedef std::vector< TimeIntegrationSchemeSharedPtr >::iterator TimeIntegrationSchemeVectorIter; 
-        typedef boost::shared_ptr<TimeIntegrationSolution> TimeIntegrationSolutionSharedPtr;
-        typedef std::vector< TimeIntegrationSolutionSharedPtr > TimeIntegrationSolutionVector; 
-        typedef std::vector< TimeIntegrationSolutionSharedPtr >::iterator TimeIntegrationSolutionVectorIter; 
+        typedef boost::shared_ptr<TimeIntegrationScheme>                TimeIntegrationSchemeSharedPtr;
+        typedef std::vector<TimeIntegrationSchemeSharedPtr>             TimeIntegrationSchemeVector; 
+        typedef std::vector<TimeIntegrationSchemeSharedPtr>::iterator   TimeIntegrationSchemeVectorIter; 
+        typedef boost::shared_ptr<TimeIntegrationSolution>              TimeIntegrationSolutionSharedPtr;
+        typedef std::vector<TimeIntegrationSolutionSharedPtr>           TimeIntegrationSolutionVector; 
+        typedef std::vector<TimeIntegrationSolutionSharedPtr>::iterator TimeIntegrationSolutionVectorIter; 
 
         // =========================================================================
         // ==== ENUM LIST OF ALL SUPPORTED INTEGRATION SCHEMES
         // =========================================================================
-        enum TimeIntegrationType
+        enum TimeIntegrationMethod
         {
-            eNoTimeIntegrationType,
+            eNoTimeIntegrationMethod,
             eAdamsBashforthOrder1,            //!< Adams-Bashforth Forward multi-step scheme of order 1
             eAdamsBashforthOrder2,            //!< Adams-Bashforth Forward multi-step scheme of order 2
             eAdamsMoultonOrder1,              //!< Adams-Moulton Forward multi-step scheme of order 1
@@ -76,13 +76,14 @@ namespace Nektar
             eForwardEuler,                    //!< Forward euler scheme
             eBackwardEuler,                   //!< Backward euler scheme
             eMidpoint,                        //!< midpoint method
+            eDIRKOrder2,                      //!< Diagonally Implicit Runge Kutta scheme of order 3
             eDIRKOrder3,                      //!< Diagonally Implicit Runge Kutta scheme of order 3
-            SIZE_TimeIntegrationType          //!< Length of enum list
+            SIZE_TimeIntegrationMethod          //!< Length of enum list
         };
 
-        const char* const TimeIntegrationTypeMap[] = 
+        const char* const TimeIntegrationMethodMap[] = 
         {
-            "NoTimeIntegrationType",
+            "NoTimeIntegrationMethod",
             "1st order Adams-Bashforth",
             "2nd order Adams-Bashforth",
             "1st order Adams-Moulton",
@@ -91,8 +92,26 @@ namespace Nektar
             "Forward Euler",
             "Backward Euler",
             "Midpoint method",
+            "2nd order Diagonally Implicit Runge Kutta (DIRK)"
             "3rd order Diagonally Implicit Runge Kutta (DIRK)"
         };
+
+        enum TimeIntegrationSchemeType
+        {
+            eNoTimeIntegrationSchemeType,
+            eExplicit,              //!< Formally explicit scheme
+            eDiagonallyImplicit,    //!< Diagonally implicit scheme (e.g. the DIRK schemes)
+            eImplicit,              //!< Fully implicit scheme
+        };
+
+        const char* const TimeIntegrationSchemeTypeMap[] = 
+        {
+            "NoTimeIntegrationSchemeType",
+            "Explicit",
+            "DiagonallyImplicit",
+            "Implicit"
+        };
+
         // =========================================================================
 
 
@@ -108,8 +127,8 @@ namespace Nektar
                 bool operator()(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs) const;
             };
             
-            TimeIntegrationSchemeKey(const TimeIntegrationType &integrationtype): 
-            m_integrationtype(integrationtype)
+            TimeIntegrationSchemeKey(const TimeIntegrationMethod &method): 
+            m_method(method)
             {
             }
             
@@ -124,19 +143,19 @@ namespace Nektar
 
             TimeIntegrationSchemeKey& operator=(const TimeIntegrationSchemeKey &key)
             {
-                m_integrationtype  = key.m_integrationtype;
+                m_method  = key.m_method;
                 
                 return *this;
             }
 
-            inline TimeIntegrationType GetIntegrationSchemeType() const
+            inline TimeIntegrationMethod GetIntegrationMethod() const
             {
-                return m_integrationtype;
+                return m_method;
             }
 
             inline bool operator==(const TimeIntegrationSchemeKey &key)
             {
-                return (m_integrationtype == key.m_integrationtype);
+                return (m_method == key.m_method);
             }
 
             inline bool operator== (const TimeIntegrationSchemeKey *y)
@@ -159,7 +178,7 @@ namespace Nektar
             friend bool opLess::operator()(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs) const;
 
         protected:
-            TimeIntegrationType m_integrationtype;  //!< Type of the integration scheme
+            TimeIntegrationMethod m_method;  //!< integration method
 
         private:
             // This should never be called
@@ -169,7 +188,7 @@ namespace Nektar
             }
         };
 
-        static const TimeIntegrationSchemeKey NullTimeIntegrationSchemeKey(eNoTimeIntegrationType);
+        static const TimeIntegrationSchemeKey NullTimeIntegrationSchemeKey(eNoTimeIntegrationMethod);
         bool operator==(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
         bool operator<(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
         std::ostream& operator<<(std::ostream& os, const TimeIntegrationSchemeKey& rhs);
@@ -183,7 +202,9 @@ namespace Nektar
         // This is the interface the user can use to get hold of the different
         // time integration schemes. It returns you the NekManager singleton which
         // manages all the time integration schemes...
-        typedef NekManager<TimeIntegrationSchemeKey, TimeIntegrationScheme, TimeIntegrationSchemeKey::opLess> TimeIntegrationSchemeManagerT;
+        typedef NekManager<TimeIntegrationSchemeKey, 
+                           TimeIntegrationScheme, 
+                           TimeIntegrationSchemeKey::opLess> TimeIntegrationSchemeManagerT;
         TimeIntegrationSchemeManagerT &TimeIntegrationSchemeManager(void);
         // =========================================================================
 
@@ -197,36 +218,43 @@ namespace Nektar
             typedef Array<OneD, Array<OneD, NekDouble> >               DoubleArray;
             
             // Constructor for single step methods
-            TimeIntegrationSolution(TimeIntegrationType schemeType, const DoubleArray& y, NekDouble t);
-            TimeIntegrationSolution(TimeIntegrationType schemeType, const TripleArray& y, const Array<OneD, NekDouble>& t);
-            TimeIntegrationSolution(TimeIntegrationType schemeType, 
+            TimeIntegrationSolution(TimeIntegrationMethod method, 
+                                    const DoubleArray& y, 
+                                    const DoubleArray& My, 
+                                    NekDouble t);
+            // Constructor for multi-step methods
+            TimeIntegrationSolution(TimeIntegrationMethod method, 
+                                    const DoubleArray& y, 
+                                    const TripleArray& My, 
+                                    const Array<OneD, NekDouble>& t);
+            TimeIntegrationSolution(TimeIntegrationMethod method,
                                     unsigned int nsteps,
                                     unsigned int nvar,
                                     unsigned int npoints);
             
-            inline TimeIntegrationType GetIntegrationSchemeType() const
+            inline TimeIntegrationMethod GetIntegrationMethod() const
             {
-                return m_schemeType;
+                return m_method;
             }
 
             inline const TripleArray& GetSolutionVector()
             {
-                return m_y;
+                return m_solVector;
             }
 
             inline TripleArray& UpdateSolutionVector()
             {
-                return m_y;
+                return m_solVector;
             }
 
             inline const DoubleArray& GetSolution()
             {
-                return m_y[0];
+                return m_sol;
             }
 
             inline DoubleArray& UpdateSolution()
             {
-                return m_y[0];
+                return m_sol;
             }
 
             inline const Array<OneD, const NekDouble>& GetTimeVector()
@@ -243,19 +271,11 @@ namespace Nektar
             {
                 return m_t[0];
             }
-    
-            inline void SetSolutionVector(const TripleArray& y_new)
-            {
-                ASSERTL1(m_y.num_elements()==y_new.num_elements(),"Dimensions do not match");
-                ASSERTL1(m_y[0].num_elements()==y_new[0].num_elements(),"Dimensions do not match");
-                ASSERTL1(m_y[0][0].num_elements()==y_new[0][0].num_elements(),"Dimensions do not match");
-
-                m_y = y_new;
-            }
 
         private:
-            TimeIntegrationType m_schemeType;
-            TripleArray m_y;
+            TimeIntegrationMethod m_method;
+            DoubleArray m_sol;
+            TripleArray m_solVector;
             Array<OneD,NekDouble> m_t;
         };
         // =========================================================================
@@ -279,11 +299,16 @@ namespace Nektar
             {
             }
 
-            inline TimeIntegrationType GetIntegrationSchemeType() const
+            inline TimeIntegrationMethod GetIntegrationMethod() const
             {
-                return m_schemeKey.GetIntegrationSchemeType();
+                return m_schemeKey.GetIntegrationMethod();
             }
 
+            inline TimeIntegrationSchemeType GetIntegrationSchemeType() const
+            {
+                return m_schemeType;
+            }
+ 
             inline const Array<TwoD, const NekDouble>& GetA(void) const
             {
                 return m_A;
@@ -313,9 +338,6 @@ namespace Nektar
             {
                 return m_numstages;
             }
-
-            bool IsExplicitMethod()     const;
-            bool IsDiagonallyImplicit() const;
 
             /**
              * \brief This function initialises the time integration scheme
@@ -353,9 +375,9 @@ namespace Nektar
                                                                   const DoubleArray& y_0)
             {
                 TimeIntegrationSolutionSharedPtr y_out;
-                TimeIntegrationType type = m_schemeKey.GetIntegrationSchemeType();
+                TimeIntegrationMethod method = m_schemeKey.GetIntegrationMethod();
                 
-                switch(type)
+                switch(method)
                 {
                 case eForwardEuler:
                 case eBackwardEuler:
@@ -363,10 +385,20 @@ namespace Nektar
                 case eAdamsMoultonOrder1:
                 case eMidpoint:
                 case eClassicalRungeKutta4:
+                case eDIRKOrder2:
                 case eDIRKOrder3:
                     {
                         nsteps = 0;
-                        y_out = MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(type,y_0,time);
+
+                        unsigned int nvar      = y_0.num_elements();
+                        unsigned int npoints   = y_0[0].num_elements();
+                        DoubleArray My_0(nvar);
+                        for(int i = 0; i < nvar; i++)
+                        {
+                            My_0[i] = Array<OneD,NekDouble>(npoints);
+                        }
+                        f.ODElhs(y_0,My_0,time);
+                        y_out = MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(method,y_0,My_0,time);
                     }
                 break;
                 case eAdamsBashforthOrder2:
@@ -379,26 +411,23 @@ namespace Nektar
                         IntScheme->ExplicitIntegration(timestep,f,u);
                         
                         int i;
-                        int nvar = y_0.num_elements();
+                        int nvar    = y_0.num_elements();
                         int npoints = y_0[0].num_elements();
                         DoubleArray f_y_0(nvar);
-                        DoubleArray tmp  (nvar);
                         for(i = 0; i < nvar; i++)
                         {
                             f_y_0[i] = Array<OneD,NekDouble>(npoints);
-                            tmp  [i] = Array<OneD,NekDouble>(npoints);
                         }
-                        f.ODErhs     (y_0,tmp,  time);
-                        f.ODElhsSolve(tmp,f_y_0,time);
+                        f.ODErhs     (y_0,f_y_0,time);
 
                         for(i = 0; i < nvar; i++)
                         {
                             Blas::Dscal(npoints,timestep,f_y_0[i].get(),1);
                         }
 
-                        TripleArray y(2);
-                        y[0] = u->GetSolution();
-                        y[1] = f_y_0;
+                        TripleArray My(2);
+                        My[0] = (u->GetSolutionVector())[0];
+                        My[1] = f_y_0;
 
                         Array<OneD,NekDouble> t(2);
                         t[0] = u->GetTime();
@@ -406,12 +435,12 @@ namespace Nektar
 
                         time = u->GetTime();
                         nsteps = 1;
-                        y_out = MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(type,y,t);
+                        y_out = MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(method,u->GetSolution(),My,t);
                     }
                     break;
                 default:
                     {
-                        NEKERROR(ErrorUtil::efatal,"Methods need implementation for specified integration scheme type.");
+                        NEKERROR(ErrorUtil::efatal,"Methods need implementation for specified integration scheme.");
                     }
                 }
                 
@@ -446,20 +475,26 @@ namespace Nektar
                                                       FuncType& f,
                                                       TimeIntegrationSolutionSharedPtr& y)
             {
-                ASSERTL1(IsExplicitMethod() || IsDiagonallyImplicit(),"Fully Implicit integration scheme cannot be handled by this routine.");
-                TimeIntegrationType type = y->GetIntegrationSchemeType();
+                ASSERTL1((GetIntegrationSchemeType() == eExplicit) || 
+                         (GetIntegrationSchemeType() == eDiagonallyImplicit),
+                         "Fully Implicit integration scheme cannot be handled by this routine.");
+
+                TimeIntegrationMethod method = y->GetIntegrationMethod();
                 int nvar    = (y->GetSolutionVector())[0].num_elements();
                 int npoints = (y->GetSolutionVector())[0][0].num_elements();
                 
-                ASSERTL1(type == m_schemeKey.GetIntegrationSchemeType(),
-                         "Input and output argument are constructed for a different type of time integration scheme.");
+                ASSERTL1(method == m_schemeKey.GetIntegrationMethod(),
+                         "Input and output argument are constructed for a different integration scheme.");
                 
-                TimeIntegrationSolutionSharedPtr y_new = MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(type,m_numsteps,nvar,npoints); 
+                TimeIntegrationSolutionSharedPtr y_new = MemoryManager<TimeIntegrationSolution>::
+                    AllocateSharedPtr(method,m_numsteps,nvar,npoints); 
 
                 ExplicitIntegration(timestep,f,
                                     y->GetSolutionVector(),
+                                    y->GetSolution(),
                                     y->GetTimeVector(),
                                     y_new->UpdateSolutionVector(),
+                                    y_new->UpdateSolution(),
                                     y_new->UpdateTimeVector()); 
                 
                 y = y_new;
@@ -468,9 +503,10 @@ namespace Nektar
             }
 
         protected:
-            TimeIntegrationSchemeKey m_schemeKey; 
-            unsigned int             m_numsteps;  //< Number of steps in multi-step component. 
-            unsigned int             m_numstages; //< Number of stages in multi-stage component. 
+            TimeIntegrationSchemeKey  m_schemeKey; 
+            TimeIntegrationSchemeType m_schemeType;
+            unsigned int              m_numsteps;  //< Number of steps in multi-step component. 
+            unsigned int              m_numstages; //< Number of stages in multi-stage component. 
 
             Array<TwoD,NekDouble>    m_A;
             Array<TwoD,NekDouble>    m_B;
@@ -492,21 +528,29 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Copy Constructor for the TimeIntegrationScheme class should not be called");
             }
 
+            TimeIntegrationSchemeType DetermineIntegrationSchemeType(const Array<TwoD,const NekDouble>& A,
+                                                                     const Array<TwoD,const NekDouble>& B,
+                                                                     const Array<TwoD,const NekDouble>& U,
+                                                                     const Array<TwoD,const NekDouble>& V);
+
             template<typename FuncType>
             void ExplicitIntegration(NekDouble timestep,                       
                                      FuncType& f,
                                      const TripleArray& y_old,
+                                     const DoubleArray& sol_old,
                                      const Array<OneD,const NekDouble>& t_old,
                                      TripleArray& y_new,
+                                     DoubleArray& sol_new,
                                      Array<OneD, NekDouble>& t_new)
             {
                 unsigned int i,j,k;    
                 unsigned int nvar      = y_old[0].num_elements();
                 unsigned int npoints   = y_old[0][0].num_elements();
 
-                bool dirk = IsDiagonallyImplicit();
+                TimeIntegrationSchemeType type = GetIntegrationSchemeType();
+                ASSERTL1((type == eExplicit) || (type == eDiagonallyImplicit),
+                         "Fully Implicit integration scheme cannot be handled by this routine.");
                 ASSERTL1(y_old.num_elements()==m_numsteps,"Arguments not appropriate for this method.");                
-                ASSERTL1(IsExplicitMethod() || dirk,"Fully Implicit integration scheme cannot be handled by this routine.");
                 
                 // First, we are going to calculate the various stage values and stage derivatives
                 // (this is the multi-stage part of the method)
@@ -526,9 +570,9 @@ namespace Nektar
                     tmp[i] = DoubleArray(nvar);
                     for(j = 0; j < nvar; j++)
                     {
-                        Y  [i][j] = Array<OneD, NekDouble>(npoints,0.0);
+                        Y  [i][j] = Array<OneD, NekDouble>(npoints);
                         F  [i][j] = Array<OneD, NekDouble>(npoints);
-                        tmp[i][j] = Array<OneD, NekDouble>(npoints);
+                        tmp[i][j] = Array<OneD, NekDouble>(npoints,0.0);
                     }
                 }
     
@@ -542,7 +586,7 @@ namespace Nektar
                         for(k = 0; k < nvar; k++)
                         {
                             Vmath::Svtvp(npoints,timestep*m_A[i][j],F[j][k],1,
-                                         Y[i][k],1,Y[i][k],1);
+                                         tmp[i][k],1,tmp[i][k],1);
                         }
 
                         T[i] += m_A[i][j]*timestep;
@@ -554,36 +598,23 @@ namespace Nektar
                         for(k = 0; k < nvar; k++)
                         {
                             Vmath::Svtvp(npoints,m_U[i][j],y_old[j][k],1,
-                                         Y[i][k],1,Y[i][k],1);
+                                         tmp[i][k],1,tmp[i][k],1);
                         }
                         T[i] += m_U[i][j]*t_old[j];
                     }
 
-                    if(dirk)
+                    // Now, solve for the stage values
+                    if(type == eDiagonallyImplicit)
                     {
-                        // If the scheme is diagonally implicit, some extra steps
-                        // need to be taken. What we have caluclated so far for the
-                        // stage values Y is the RHS of the dirk-solve.
-                        // However, this RHS needs first to be 'multiplied' by the 
-                        // ODElhs operator (think of it as the mass matrix in case of the 
-                        // diffusion equation)
-                        f.ODElhs     (Y[i],   tmp[i], T[i]);
-                        // It also need to be premultiplied by a factor lambda
-                        NekDouble lambda = -1.0/(m_A[i][i]*timestep);
-                        for(k = 0; k < nvar; k++)
-                        {
-                            Blas::Dscal(npoints,lambda,(tmp[i][k]).get(),1);
-                        }
-
-                        // Now, the stage values can be solved for using the ODEdirkSolve
-                        // routine of the input object f. (Think of it as a HelmSolve
-                        // in case of the diffusion equation)
-                        f.ODEdirkSolve(tmp[i], Y[i], lambda, T[i]);
+                        f.ODEdirkSolve(tmp[i], Y[i], T[i], m_A[i][i]*timestep);
                     }
-                    // The stage derivative can now be calculated based
-                    // on the stage value using the forcing functions
-                    f.ODErhs     (Y[i],   tmp[i], T[i]);
-                    f.ODElhsSolve(tmp[i], F[i],   T[i]);
+                    else
+                    {
+                        f.ODElhsSolve (tmp[i], Y[i], T[i]);
+                    }
+
+                    // Calculate the stage derivative based upond the stage value
+                    f.ODErhs     (Y[i], F[i], T[i]);
                 }
 
                 // Next, the solution at the new time level will be calculated.
@@ -670,6 +701,7 @@ namespace Nektar
                         t_new[i] += m_V[i][j]*t_old[j];
                     }
                 }
+                f.ODElhsSolve(y_new[0],sol_new,t_new[0]);
             }
 
         };

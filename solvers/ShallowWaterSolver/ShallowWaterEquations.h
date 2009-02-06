@@ -66,7 +66,17 @@ namespace Nektar
      **/
     ShallowWaterEquations(string &fileStringName);
     
-    void GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> >&physfield, 
+    
+    void PrimitiveToConservative(const Array<OneD, const Array<OneD, NekDouble> >&physin,
+				       Array<OneD,       Array<OneD, NekDouble> >&physout);
+
+    void ConservativeToPrimitive(const Array<OneD, const Array<OneD, NekDouble> >&physin,
+				       Array<OneD,       Array<OneD, NekDouble> >&physout);
+    
+    void SWEAdvectionNonConservativeForm(const Array<OneD, const Array<OneD, NekDouble> >&physarray,
+					       Array<OneD,       Array<OneD, NekDouble> >&outarray);
+    
+   void GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> >&physfield, 
 		       Array<OneD, Array<OneD, NekDouble> >&flux)
     {
       switch(m_expdim)
@@ -151,6 +161,31 @@ namespace Nektar
       ePrimitive, 
       eConservative
     };
+
+
+    void SetGradientBoundary(Array<OneD, NekDouble> &inarray, NekDouble time, int field_0);
+    void GradientWallBoundary2D(int bcRegion, int cnt, Array<OneD, NekDouble> &physarray, int field_0);
+    void SetDivergenceBoundary(Array<OneD, Array<OneD, NekDouble> > &inarray, NekDouble time, int field_0, int field_1);
+    void DivergenceWallBoundary2D(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray, int field_0, int field_1);
+    
+    void GradientFluxTerms(const Array<OneD, NekDouble> &in, 
+			   Array<OneD, Array<OneD, NekDouble> > &out,
+			   int field_0);
+    
+    void NumericalFluxGradient(const Array <OneD, NekDouble> &physarray,
+			       Array<OneD, NekDouble> &outX, 
+			       Array<OneD, NekDouble> &outY,
+			       int field_0);
+    
+    void DivergenceFluxTerms(const Array<OneD, const Array<OneD, NekDouble> >&in, 
+			     Array<OneD, NekDouble> &out,
+			     int field_0, int field_1);
+    
+    void NumericalFluxDivergence(const Array <OneD, const Array<OneD, NekDouble> > &physarray,
+				 Array <OneD, NekDouble> &outX, 
+				 Array<OneD, NekDouble> &outY,
+				 int field_0, int field_1);
+    
     
   protected:
     int m_infosteps;  ///< dump info to stdout at steps time
@@ -174,7 +209,7 @@ namespace Nektar
     
     
     void WallBoundary1D(int bcRegion, Array<OneD, Array<OneD, NekDouble> > &physarray);
-    void WallBoundary2D(int bcRegion, Array<OneD, Array<OneD, NekDouble> > &physarray);
+    void WallBoundary2D(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray);
     
     
     void RiemannSolver(NekDouble hL,NekDouble huL,NekDouble hvL,NekDouble hR,NekDouble huR, 
@@ -223,6 +258,9 @@ namespace Nektar
 
 /**
 * $Log: ShallowWaterEquations.h,v $
+* Revision 1.2  2009/02/02 16:10:16  claes
+* Update to make SWE, Euler and Boussinesq solvers up to date with the time integrator scheme. Linear and classical Boussinsq solver working
+*
 * Revision 1.1  2009/01/13 10:59:32  pvos
 * added new solvers file
 *

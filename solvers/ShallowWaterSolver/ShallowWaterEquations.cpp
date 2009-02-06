@@ -83,6 +83,7 @@ namespace Nektar
       }
     //--------------------------------------------
 
+    // HACK!!! the m_depth should be removed and replaced by d field[3]
     
     //--------------------------------------------
     // Set linear or nonlinear scheme
@@ -104,6 +105,11 @@ namespace Nektar
 	else if ((int) m_boundaryConditions->GetParameter("NonLinear") == 1)
 	  {
 	    m_linearType = eNonLinear;
+
+	    if(m_boundaryConditions->CheckForParameter("Depth") == true)
+	      {
+		m_depth = m_boundaryConditions->GetParameter("Depth");
+	      }
 	  }
 	else
 	  {
@@ -151,6 +157,7 @@ namespace Nektar
 	ASSERTL0(false,"Gravity not specified");
       }
 
+    // HACK!!! Depth should be removed asap...
     // check if depth 
     if(m_boundaryConditions->CheckForParameter("Depth") == true)
       {
@@ -278,7 +285,7 @@ namespace Nektar
 				           Array<OneD,       Array<OneD, NekDouble> >&outarray, 
 				     const NekDouble time) 
   {
-    int i;
+ int i;
     int nVelDim    = m_spacedim;
     int nvariables = inarray.num_elements();
     int ncoeffs    = inarray[0].num_elements();
@@ -295,20 +302,55 @@ namespace Nektar
       }
     //-------------------------------------------------------
     
-    SetBoundaryConditions(physarray, time);
     
+    //-------------------------------------------------------
+    // set time dependent boundary conditions
+    
+    SetBoundaryConditions(physarray, time);
+    //------------------------------------------------------
+
     switch(m_projectionType)
       {
       case eDiscontinuousGalerkin:
 	{
-	 
+	  
 	  //-------------------------------------------------
 	  // get the advection part
 	  // input: physical space
 	  // output: modal space 
-	  WeakDGAdvection(physarray, outarray, false, true);
+	  
+	  if (m_variableType == eConservative)
+	    {
+	      
+	      // straighforward DG
+	      WeakDGAdvection(physarray, outarray, false, true);
+	    }
+	  else if (m_variableType == ePrimitive)
+	    {
+	      if (m_linearType == eLinear)
+		{
+		  
+		  // for linear scheme we we see it as a consrvation law
+		  // providing the depth is constant
+		  WeakDGAdvection(physarray, outarray, false, true);
+		}
+	      else
+		{
+		  
+		  // general nonconservative case
+		  // can also be used for the linearized form (should be standard choice ??)
+		  SWEAdvectionNonConservativeForm(physarray,outarray); 
+		}
+	    }
+	  else
+	    {
+	      ASSERTL0(false,"Illegal variableType");
+	    }
+	  //-------------------------------------------------
 
-	  // negate the outarray since moving to the rhs
+	  
+	  //-------------------------------------------------------
+	  // negate the outarray since moving terms to the rhs
 	  for(i = 0; i < nvariables; ++i)
 	    {
 	      Vmath::Neg(ncoeffs,outarray[i],1);
@@ -321,21 +363,11 @@ namespace Nektar
 	  // input: physical space
 	  // output: modal space
 	  
-	  //coriolis forcing
+	  // coriolis forcing
 	  if (m_coriolis[0])
 	    AddCoriolis(physarray,outarray);
 	  //------------------------------------------------- 
 	  
-	  
-// 	  //--------------------------------------------
-// 	  // solve the block-diagonal system
-	  
-// 	  for(i = 0; i < nvariables; ++i)
-// 	    {
-// 	      m_fields[i]->MultiplyByElmtInvMass(outarray[i],outarray[i]);
-// 	    }
-// 	  //--------------------------------------------
-
 	}
 	break;
       case eGalerkin:
@@ -348,15 +380,21 @@ namespace Nektar
 	break;
       }
   }
- void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
-						  Array<OneD,       Array<OneD, NekDouble> >&outarray, 
-                                            const NekDouble time) 
-    {
-        ASSERTL0(false, "this routine needs implementation");
-    }
+ 
+void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+				          Array<OneD,       Array<OneD, NekDouble> >&outarray, 
+				    const NekDouble time) 
+ {
+   int nvariables = inarray.num_elements();
+   MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
+   for(int i = 0; i < nvariables; ++i)
+     {
+       m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,inarray[i],outarray[i]);
+     }
+ }
     
-    void ShallowWaterEquations::ODElhsSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
-                                                       Array<OneD,       Array<OneD, NekDouble> >&outarray, 
+  void ShallowWaterEquations::ODElhsSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+					  Array<OneD,       Array<OneD, NekDouble> >&outarray, 
                                                  const NekDouble time)   
     {
         int i;
@@ -403,7 +441,7 @@ namespace Nektar
         int nvariables = m_fields.num_elements();
 
         // Get Integration scheme details
-        LibUtilities::TimeIntegrationSchemeKey       IntKey(LibUtilities::eForwardEuler);
+        LibUtilities::TimeIntegrationSchemeKey       IntKey(LibUtilities::eClassicalRungeKutta4);
         LibUtilities::TimeIntegrationSchemeSharedPtr IntScheme = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
 
         // Set up wrapper to fields data storage. 
@@ -498,7 +536,8 @@ namespace Nektar
   {
     
     int nvariables = m_fields.num_elements();
-    
+    int cnt = 0;
+
     // loop over Boundary Regions
     for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
       {	
@@ -512,7 +551,7 @@ namespace Nektar
 	      }
 	    else if (m_expdim == 2)
 	      {
-		WallBoundary2D(n,inarray);
+		WallBoundary2D(n,cnt,inarray);
 	      }
 	  }
 	
@@ -524,17 +563,18 @@ namespace Nektar
 		m_fields[i]->EvaluateBoundaryConditions(time);
 	      }
 	  }
+	cnt +=m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
       }
   }
   
   //----------------------------------------------------
  
-  void ShallowWaterEquations::WallBoundary2D(int bcRegion, Array<OneD, Array<OneD, NekDouble> > &physarray)
+  void ShallowWaterEquations::WallBoundary2D(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray)
   { 
 
     int i;
     int nTraceNumPoints = GetTraceTotPoints();
-    int nvariables      = m_fields.num_elements();
+    int nvariables      = 3;// this is only for the three dependent variables  //m_fields.num_elements();
     
     // get physical values of h, hu, hv for the forward trace
     Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
@@ -546,7 +586,7 @@ namespace Nektar
     
     // Adjust the physical values of the trace to take 
     // user defined boundaries into account
-    int e, id1, id2, npts, cnt = 0; 
+    int e, id1, id2, npts;// cnt = 0; 
     
     for(e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
       {
@@ -594,16 +634,16 @@ namespace Nektar
 	  }
 
 	// copy boundary adjusted values into the boundary expansion
+	// note that h(eta) in [0], hu(u) in [1] and hv(v) in [2]
 	for (i = 0; i < nvariables; ++i)
 	  {
 	    Vmath::Vcopy(npts,&Fwd[i][id2], 1,&(m_fields[i]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1],1);
 	  }
       }
-    cnt +=e;
   }
   
     void ShallowWaterEquations::WallBoundary1D(int bcRegion, Array<OneD, Array<OneD, NekDouble> > &physarray)
-  { 
+  {     
     ASSERTL0(false,"1D not working with user defined BC");
   }
 
@@ -716,7 +756,7 @@ namespace Nektar
       case eNonLinear:
      	switch(i){
 	  
-	  // flux function for the h equation
+	  // flux function for the eta equation
 	case 0:
 	  for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
 	    {
@@ -960,12 +1000,489 @@ namespace Nektar
 	  }
       }
   }
+      
+  void ShallowWaterEquations::SWEAdvectionNonConservativeForm(const Array<OneD, const Array<OneD, NekDouble> >&physarray,
+							            Array<OneD,       Array<OneD, NekDouble> >&outarray)
+  {
+   
+    //   ASSERTL0(false,"not implemented");
+    //--------------------------------------
+    // local parameters
     
+    int ncoeffs         = outarray[0].num_elements();
+    int nq              = GetTotPoints();
+    int nTraceNumPoints = GetTraceTotPoints();
+    
+    NekDouble g        = m_g;
+    NekDouble d        = m_depth; 
+    //------------------------------------
   
+    Array<OneD, NekDouble> tmp0(ncoeffs);
+    Array<OneD, NekDouble> tmp1(ncoeffs);
+    Array<OneD, NekDouble> tmp2(ncoeffs);
+	
+    Array<OneD, NekDouble> phys0(nq);
+    Array<OneD, NekDouble> phys1(nq);
+    Array<OneD, NekDouble> phys2(nq);
+
+    //----------------------------------------
+    // compute {\bf e}_1 = \nabla \eta
+    
+    Array<OneD, Array<OneD, NekDouble> > e1(2);
+    e1[0] = Array<OneD, NekDouble> (nq); 
+    e1[1] = Array<OneD, NekDouble> (nq);
+    // boundary conditions already up to date
+    //SetGradientBoundary(physarray[0],m_time,0);
+    GradientFluxTerms(physarray[0],e1,0);
+    //----------------------------------------
+  
+
+    //----------------------------------------
+    // compute {\bf m}_1 = \nabla u
+    
+    Array<OneD, Array<OneD, NekDouble> > m1(2);
+    m1[0] = Array<OneD, NekDouble> (nq); 
+    m1[1] = Array<OneD, NekDouble> (nq);
+    // boundary conditions already up to date
+    //SetGradientBoundary(physarray[1],m_time,1);
+    GradientFluxTerms(physarray[1],m1,1);
+    //----------------------------------------
+    
+
+    //----------------------------------------
+    // compute {\bf m}_2 = \nabla v
+    
+    Array<OneD, Array<OneD, NekDouble> > m2(2);
+    m2[0] = Array<OneD, NekDouble> (nq); 
+    m2[1] = Array<OneD, NekDouble> (nq);
+    // boundary conditions already up to date
+    //SetGradientBoundary(physarray[2],m_time,2);
+    GradientFluxTerms(physarray[2],m2,2);
+    //----------------------------------------
+    
+    
+    //----------------------------------------
+    // compute a_3 = \nabla \cdot (h{\bf u})
+   
+
+    // HACK! only correct for constant depth
+    // (d*a3 below)
+    // boundary conditions already up to date
+
+    Array<OneD, NekDouble > a3(nq);
+    {
+      Array<OneD, Array<OneD, NekDouble> >in(2);
+
+      // here we make sure we get deep copies
+      in[0] = Array<OneD, NekDouble>(nq);
+      Vmath::Vcopy(nq,physarray[1],1,in[0],1);
+      in[1] = Array<OneD, NekDouble>(nq);
+      Vmath::Vcopy(nq,physarray[2],1,in[1],1);
+      
+      
+      //Vmath::Vmul(nq,physarray[3],1,in[0],1,in[0],1);
+      //Vmath::Smul(nq,d,in[0],1,in[0],1);
+      //Vmath::Vmul(nq,physarray[3],1,in[1],1,in[1],1);
+      //Vmath::Smul(nq,d,in[1],1,in[1],1);
+      //SetDivergenceBoundary(in,m_time,1,2);
+      
+      DivergenceFluxTerms(in,a3,1,2);
+    } 
+    //----------------------------------------
+    
+    
+    //----------------------------------------
+    // compute a_7 = \nabla \cdot (\eta {\bf u})
+    
+    Array<OneD, NekDouble > a7(nq);
+    {
+      Array<OneD, Array<OneD, NekDouble> >in(2);
+      
+      // here we make sure we get deep copies
+      in[0] = Array<OneD, NekDouble>(nq);
+      Vmath::Vcopy(nq,physarray[1],1,in[0],1);
+      in[1] = Array<OneD, NekDouble>(nq);
+      Vmath::Vcopy(nq,physarray[2],1,in[1],1);
+      
+      Vmath::Vmul(nq,physarray[0],1,in[0],1,in[0],1);
+      Vmath::Vmul(nq,physarray[0],1,in[1],1,in[1],1);
+      
+      // needs to update BC
+      SetDivergenceBoundary(in,m_time,1,2);
+      
+      DivergenceFluxTerms(in,a7,1,2);
+    } 
+    //----------------------------------------
+    
+
+    for (int i = 0; i < nq; ++i)
+      {
+	// linear part
+	phys0[i] = d*a3[i];
+  	phys1[i] = g*e1[0][i];
+ 	phys2[i] = g*e1[1][i];
+	
+	if (m_linearType == eNonLinear)
+	  {
+	    // nonlinear part
+	    phys0[i] += a7[i];
+	    phys1[i] += physarray[1][i]*m1[0][i] + physarray[2][i]*m1[1][i];
+	    phys2[i] += physarray[1][i]*m2[0][i] + physarray[2][i]*m2[1][i];
+	  }
+      }
+    
+    // Get modal values
+    m_fields[0]->IProductWRTBase(phys0,outarray[0]);
+    m_fields[0]->IProductWRTBase(phys1,outarray[1]);
+    m_fields[0]->IProductWRTBase(phys2,outarray[2]);
+
+  }
+  
+  void ShallowWaterEquations::SetGradientBoundary(Array<OneD, NekDouble> &inarray,  
+						  NekDouble time, int field_0)
+ {
+   
+   int cnt = 0;
+   
+   // loop over Boundary Regions
+   for (int n = 0; n < m_fields[field_0]->GetBndConditions().num_elements(); ++n)
+     {	
+       
+       // Wall Boundary Condition
+       if (m_fields[field_0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "Wall")
+	 {
+	   GradientWallBoundary2D(n,cnt,inarray,field_0);
+	 }
+       
+       cnt +=m_fields[field_0]->GetBndCondExpansions()[n]->GetExpSize();
+     }
+ }
+  
+  //----------------------------------------------------
+  
+  void ShallowWaterEquations::GradientWallBoundary2D(int bcRegion, int cnt, Array<OneD, NekDouble> &physarray, int field_0)
+  { 
+
+    int i;
+    int nTraceNumPoints = GetTraceTotPoints();
+        
+    // get physical values of h, hu, hv for the forward trace
+    Array<OneD, NekDouble> Fwd(nTraceNumPoints);
+    m_fields[field_0]->ExtractTracePhys(physarray,Fwd);
+    
+    // Adjust the physical values of the trace to take 
+    // user defined boundaries into account
+    int e, id1, id2, npts;
+    
+    for(e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
+      {
+	npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExp(e)->GetNumPoints(0);
+	id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e) ;
+	id2  = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
+	
+	// copy boundary adjusted values into the boundary expansion
+	Vmath::Vcopy(npts,&Fwd[id2], 1,&(m_fields[field_0]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1],1);
+      }
+  }
+  //----------------------------------------------------
+
+  
+  void ShallowWaterEquations::SetDivergenceBoundary(Array<OneD, Array<OneD, NekDouble> > &inarray, NekDouble time, int field_0, int field_1)
+  {
+    
+    int nvariables = m_fields.num_elements();
+    int cnt = 0;
+
+    // loop over Boundary Regions
+    for(int n = 0; n < m_fields[field_0]->GetBndConditions().num_elements(); ++n)
+      {	
+	
+	// Wall Boundary Condition
+	if (m_fields[field_0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "Wall")
+	  {
+	    DivergenceWallBoundary2D(n,cnt,inarray,field_0,field_1);
+	  }
+	
+	cnt +=m_fields[field_0]->GetBndCondExpansions()[n]->GetExpSize();
+      }
+  }
+  
+  //----------------------------------------------------
+ 
+  void ShallowWaterEquations::DivergenceWallBoundary2D(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray, int field_0, int field_1)
+  { 
+
+    int i;
+    int nTraceNumPoints = GetTraceTotPoints();
+    int nvariables      = 2;
+    
+    // get physical values for the forward trace
+    Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+    for (i = 0; i < nvariables; ++i)
+      {
+	Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
+      }
+    
+    m_fields[field_0]->ExtractTracePhys(physarray[0],Fwd[0]);
+    m_fields[field_1]->ExtractTracePhys(physarray[1],Fwd[1]);
+
+
+    // Adjust the physical values of the trace to take 
+    // user defined boundaries into account
+    int e, id1, id2, npts;// cnt = 0; 
+    
+    for(e = 0; e < m_fields[field_0]->GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
+      {
+	npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExp(e)->GetNumPoints(0);
+	id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e) ;
+	id2  = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
+	
+	
+	Array<OneD, NekDouble> tmp_n(npts);
+	Array<OneD, NekDouble> tmp_t(npts);
+	      
+	Vmath::Vmul(npts,&Fwd[0][id2],1,&m_traceNormals[0][id2],1,&tmp_n[0],1);
+	Vmath::Vvtvp(npts,&Fwd[1][id2],1,&m_traceNormals[1][id2],1,&tmp_n[0],1,&tmp_n[0],1);
+	      
+	Vmath::Vmul(npts,&Fwd[0][id2],1,&m_traceNormals[1][id2],1,&tmp_t[0],1);
+	Vmath::Vvtvm(npts,&Fwd[1][id2],1,&m_traceNormals[0][id2],1,&tmp_t[0],1,&tmp_t[0],1);
+	
+	// negate the normal flux
+	Vmath::Neg(npts,tmp_n,1);		      
+	      
+	// rotate back to Cartesian
+	Vmath::Vmul(npts,&tmp_t[0],1,&m_traceNormals[1][id2],1,&Fwd[0][id2],1);
+	Vmath::Vvtvm(npts,&tmp_n[0],1,&m_traceNormals[0][id2],1,&Fwd[0][id2],1,&Fwd[0][id2],1);
+	
+	Vmath::Vmul(npts,&tmp_t[0],1,&m_traceNormals[0][id2],1,&Fwd[1][id2],1);
+	Vmath::Vvtvp(npts,&tmp_n[0],1,&m_traceNormals[1][id2],1,&Fwd[1][id2],1,&Fwd[1][id2],1);
+      
+	// copy boundary adjusted values into the boundary expansion
+	// note that h(eta) in [0], hu(u) in [1] and hv(v) in [2]
+	Vmath::Vcopy(npts,&Fwd[0][id2], 1,&(m_fields[field_0]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1],1);
+	Vmath::Vcopy(npts,&Fwd[1][id2], 1,&(m_fields[field_1]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1],1);
+
+	
+      }
+  }
+
+  // in and out in physical space
+  void ShallowWaterEquations::GradientFluxTerms(const Array<OneD, NekDouble> &in, 
+						      Array<OneD, Array<OneD, NekDouble> > &out,
+						int field_0)
+  {
+    int ncoeffs         = GetNcoeffs();
+    int nTraceNumPoints = GetTraceTotPoints();
+    
+    Array<OneD, NekDouble> tmpX(ncoeffs);
+    Array<OneD, NekDouble> tmpY(ncoeffs);
+    
+    Array<OneD, NekDouble> upwindX(nTraceNumPoints);
+    Array<OneD, NekDouble> upwindY(nTraceNumPoints);
+    Array<OneD, NekDouble> upwindZero(nTraceNumPoints,0.0);
+    
+    m_fields[0]->IProductWRTDerivBase(0,in,tmpX);
+    m_fields[0]->IProductWRTDerivBase(1,in,tmpY);
+    
+    Vmath::Neg(ncoeffs,tmpX,1);
+    Vmath::Neg(ncoeffs,tmpY,1);
+
+    NumericalFluxGradient(in,upwindX,upwindY,field_0);
+    
+    m_fields[0]->AddTraceIntegral(upwindX,upwindZero,tmpX);
+    m_fields[0]->AddTraceIntegral(upwindZero,upwindY,tmpY);
+    
+    m_fields[0]->MultiplyByElmtInvMass(tmpX,tmpX);
+    m_fields[0]->MultiplyByElmtInvMass(tmpY,tmpY);
+
+    m_fields[0]->BwdTrans(tmpX,out[0]);
+    m_fields[0]->BwdTrans(tmpY,out[1]);
+  }
+  
+
+  // in and out in physical space
+  void ShallowWaterEquations::DivergenceFluxTerms(const Array<OneD, const Array<OneD, NekDouble> >&in, 
+						  Array<OneD, NekDouble> &out,
+						  int field_0, int field_1)
+  {
+    int ncoeffs         = GetNcoeffs();
+    int nTraceNumPoints = GetTraceTotPoints();
+    
+    Array<OneD, NekDouble> tmpX(ncoeffs);
+    Array<OneD, NekDouble> tmpY(ncoeffs);
+    
+    Array<OneD, NekDouble> upwindX(nTraceNumPoints);
+    Array<OneD, NekDouble> upwindY(nTraceNumPoints);
+ 
+    m_fields[0]->IProductWRTDerivBase(0,in[0],tmpX);
+    m_fields[0]->IProductWRTDerivBase(1,in[1],tmpY);
+    
+    Vmath::Vadd(ncoeffs,tmpX,1,tmpY,1,tmpX,1);
+    Vmath::Neg(ncoeffs,tmpX,1);
+    
+    NumericalFluxDivergence(in,upwindX,upwindY,field_0,field_1);
+    
+    m_fields[0]->AddTraceIntegral(upwindX,upwindY,tmpX);
+    
+    m_fields[0]->MultiplyByElmtInvMass(tmpX,tmpX);
+
+    m_fields[0]->BwdTrans(tmpX,out);
+    
+  }
+  
+  
+  /**
+   * Computes the \hat{f} term in the  \int_{\partial \Omega^e} \phi \hat{f} {\bf n} dS 
+   * integral. Using averaged fluxes.
+   **/
+  void ShallowWaterEquations::NumericalFluxGradient(const Array <OneD, NekDouble> &physarray,
+						    Array<OneD, NekDouble> &outX,
+						    Array<OneD, NekDouble> &outY,
+						    int field_0)
+  {
+    int nTraceNumPoints = GetTraceTotPoints();
+
+    // get temporary arrays
+    Array<OneD, Array<OneD, NekDouble> > Fwd(1);
+    Array<OneD, Array<OneD, NekDouble> > Bwd(1);
+    
+    Fwd[0] = Array<OneD, NekDouble> (nTraceNumPoints,0.0); 
+    Bwd[0] = Array<OneD, NekDouble> (nTraceNumPoints,0.0);
+    
+    // get the physical values at the trace
+    m_fields[field_0]->GetFwdBwdTracePhys(physarray,Fwd[0],Bwd[0]);
+    
+    for (int i = 0; i < nTraceNumPoints; ++i)
+      {
+ 	outX[i]  = 0.5*(Fwd[0][i] + Bwd[0][i]);
+	outY[i]  = 0.5*(Fwd[0][i] + Bwd[0][i]);
+      }
+
+  }
+
+  
+  /**
+   * Computes the \hat{\bf f} term in the  \int_{\partial \Omega^e} \phi \hat{\bf f} \cdot {\bf n} dS 
+   * integral. Using averaged fluxes.
+   **/
+  void ShallowWaterEquations::NumericalFluxDivergence(const Array <OneD, const Array<OneD, NekDouble> > &physarray,
+						      Array <OneD, NekDouble> &outX, 
+						      Array<OneD, NekDouble> &outY,
+						      int field_0, int field_1)
+  {
+    int nTraceNumPoints = GetTraceTotPoints();
+    
+    // get temporary arrays
+    Array<OneD, Array<OneD, NekDouble> > Fwd(2);
+    Array<OneD, Array<OneD, NekDouble> > Bwd(2);
+    
+    for (int i = 0; i < 2; ++i)
+      {
+	Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
+	Bwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
+      }
+    
+    // get the physical values at the trace
+    m_fields[field_0]->GetFwdBwdTracePhys(physarray[0],Fwd[0],Bwd[0]);
+    m_fields[field_1]->GetFwdBwdTracePhys(physarray[1],Fwd[1],Bwd[1]);
+    
+    for (int i = 0; i < nTraceNumPoints; ++i)
+      {
+	outX[i]  = 0.5*(Fwd[0][i] + Bwd[0][i]);
+	outY[i]  = 0.5*(Fwd[1][i] + Bwd[1][i]);
+      }
+  }
+  
+
+
+
+  void ShallowWaterEquations::PrimitiveToConservative(const Array<OneD, const Array<OneD, NekDouble> >&physin,
+						            Array<OneD,       Array<OneD, NekDouble> >&physout)
+  {
+    
+    int nq = GetTotPoints();
+    
+    if(physin.get() == physout.get())
+      {
+	// copy indata and work with tmp array
+	Array<OneD, Array<OneD, NekDouble> >tmp(4);
+	for (int i = 0; i < 4; ++i)
+	  {
+	    // deep copy
+	    tmp[i] = Array<OneD, NekDouble>(nq);
+	    Vmath::Vcopy(nq,physin[i],1,tmp[i],1);
+	  }
+	
+	// h = \eta + d
+	Vmath::Vadd(nq,tmp[0],1,tmp[3],1,physout[0],1);
+	
+	// hu = h * u
+	Vmath::Vmul(nq,tmp[0],1,tmp[1],1,physout[1],1);
+	
+	// hv = h * v
+	Vmath::Vmul(nq,tmp[0],1,tmp[2],1,physout[2],1);
+      
+      }
+    else
+      {
+	// h = \eta + d
+	Vmath::Vadd(nq,physin[0],1,physin[3],1,physout[0],1);
+	
+	// hu = h * u
+	Vmath::Vmul(nq,physin[0],1,physin[1],1,physout[1],1);
+	
+	// hv = h * v
+	Vmath::Vmul(nq,physin[0],1,physin[2],1,physout[2],1);
+	
+      }
+  }
+  
+  void ShallowWaterEquations::ConservativeToPrimitive(const Array<OneD, const Array<OneD, NekDouble> >&physin,
+						            Array<OneD,       Array<OneD, NekDouble> >&physout)
+  {
+    int nq = GetTotPoints();
+      
+    if(physin.get() == physout.get())
+      {
+	// copy indata and work with tmp array
+	Array<OneD, Array<OneD, NekDouble> >tmp(4);
+	for (int i = 0; i < 4; ++i)
+	  {
+	    // deep copy
+	    tmp[i] = Array<OneD, NekDouble>(nq);
+	    Vmath::Vcopy(nq,physin[i],1,tmp[i],1);
+	  }
+	
+	// \eta = h - d
+	Vmath::Vsub(nq,tmp[0],1,tmp[3],1,physout[0],1);
+	
+	// u = hu/h
+	Vmath::Vdiv(nq,tmp[1],1,tmp[0],1,physout[1],1);
+	
+	// v = hv/ v
+	Vmath::Vdiv(nq,tmp[2],1,tmp[0],1,physout[2],1);
+      }
+    else
+      {
+	// \eta = h - d
+	Vmath::Vsub(nq,physin[0],1,physin[3],1,physout[0],1);
+	
+	// u = hu/h
+	Vmath::Vdiv(nq,physin[1],1,physin[0],1,physout[1],1);
+	
+	// v = hv/ v
+	Vmath::Vdiv(nq,physin[2],1,physin[0],1,physout[2],1);
+      }
+  }
+    
   void ShallowWaterEquations::Summary(std::ostream &out)
   {
     cout << "=======================================================================" << endl;
       cout << "\tEquation Type   : Shallow Water Equations" << endl;
+      cout << "\t                  h  (or eta) should be in field[0]" <<endl;
+      cout << "\t                  hu (or u)   should be in field[1]" <<endl;
+      cout << "\t                  hv (or v)   should be in field[2]" <<endl;
+      cout << "\t                  d           should be in field[3]" <<endl;
       ADRBase::Summary(out);
       cout << "=======================================================================" << endl;
       cout << endl;
@@ -977,6 +1494,9 @@ namespace Nektar
 
 /**
 * $Log: ShallowWaterEquations.cpp,v $
+* Revision 1.2  2009/02/02 16:10:16  claes
+* Update to make SWE, Euler and Boussinesq solvers up to date with the time integrator scheme. Linear and classical Boussinsq solver working
+*
 * Revision 1.1  2009/01/13 10:59:32  pvos
 * added new solvers file
 *

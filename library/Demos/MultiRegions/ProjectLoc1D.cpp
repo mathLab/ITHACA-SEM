@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define solution to be projected 
     coordim = Exp->GetCoordim(0);
-    nq      = Exp->GetPointsTot();
+    nq      = Exp->GetTotPoints();
     
     // define coordinates and solution
     sol = Array<OneD, NekDouble>(nq);

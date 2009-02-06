@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 
     //-----------------------------------------
     // Read and evaluate the initial conditions
-    int nTotQuadPoints  = u->GetPointsTot();
+    int nTotQuadPoints  = u->GetTotPoints();
 
     Array<OneD,NekDouble> x1(nTotQuadPoints,0.0);
     Array<OneD,NekDouble> x2(nTotQuadPoints,0.0);
@@ -201,7 +201,7 @@ void rhsFunction(MultiRegions::DisContField2DSharedPtr hpExp,
 		 Array<OneD, NekDouble> &rhs, const NekDouble time)
 {
 
-   int nTotQuadPoints  = hpExp->GetPointsTot();
+   int nTotQuadPoints  = hpExp->GetTotPoints();
    int nTotCoeffs      = hpExp->GetNcoeffs();
    int nTotTracePoints = hpExp->GetTrace()->GetNpoints();
 

@@ -19,19 +19,24 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    cout <<" made it to point 0"<< endl;
     //----------------------------------------------
     // Read in mesh from input file
     string meshfile(argv[1]);
     SpatialDomains::MeshGraph2D graph2D; 
+
     graph2D.ReadGeometry(meshfile);
     graph2D.ReadExpansions(meshfile);
     //----------------------------------------------
 
+    cout <<" made it to point 1"<< endl;
     //----------------------------------------------
     // read the problem parameters from input file
     string bcfile(argv[2]);
     SpatialDomains::BoundaryConditions bcs(&graph2D); 
+    cout <<" made it to point 2"<< endl;
     bcs.Read(bcfile);
+    cout <<" made it to point 3"<< endl;
     //----------------------------------------------
 
     //----------------------------------------------

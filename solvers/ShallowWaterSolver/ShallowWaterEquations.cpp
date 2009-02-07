@@ -323,16 +323,18 @@ namespace Nektar
 	    {
 	      
 	      // straighforward DG
-	      WeakDGAdvection(physarray, outarray, false, true);
+	      // (note - that we only use the 3 dependent variables)
+	      WeakDGAdvection(physarray, outarray, false, true,3);
 	    }
 	  else if (m_variableType == ePrimitive)
 	    {
 	      if (m_linearType == eLinear)
 		{
 		  
-		  // for linear scheme we we see it as a consrvation law
+		  // for linear scheme we we see it as a conservation law
 		  // providing the depth is constant
-		  WeakDGAdvection(physarray, outarray, false, true);
+		  // (note - that we only use the 3 dependent variables)
+		  WeakDGAdvection(physarray, outarray, false, true,3);
 		}
 	      else
 		{
@@ -516,12 +518,23 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
             
             if(n&&(!((n+1)%m_checksteps)))
             {
+  
 	      for(i = 0; i < nvariables; ++i)
 		{
 		  (m_fields[i]->UpdateCoeffs()) = fields[i];
 		}
-	      Checkpoint_Output(nchk++);
-            }
+	      
+	      if (m_variableType == eConservative)
+		{
+		  ConservativeToPrimitive();
+		  Checkpoint_Output(nchk++);
+		  PrimitiveToConservative();
+		}
+	      else
+		{
+		  Checkpoint_Output(nchk++);
+		}
+	    }
         }
         
         for(i = 0; i < nvariables; ++i)
@@ -574,7 +587,7 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 
     int i;
     int nTraceNumPoints = GetTraceTotPoints();
-    int nvariables      = 3;// this is only for the three dependent variables  //m_fields.num_elements();
+    int nvariables      = 3; // only the dependent variables 
     
     // get physical values of h, hu, hv for the forward trace
     Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
@@ -826,7 +839,7 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
     int i;
     
     int nTraceNumPoints = GetTraceTotPoints();
-    int nvariables      = 3;//m_fields.num_elements();
+    int nvariables      = 3; // only the dependent variables 
     
     // get temporary arrays
     Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
@@ -1190,7 +1203,6 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
   void ShallowWaterEquations::SetDivergenceBoundary(Array<OneD, Array<OneD, NekDouble> > &inarray, NekDouble time, int field_0, int field_1)
   {
     
-    int nvariables = m_fields.num_elements();
     int cnt = 0;
 
     // loop over Boundary Regions
@@ -1229,7 +1241,7 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 
     // Adjust the physical values of the trace to take 
     // user defined boundaries into account
-    int e, id1, id2, npts;// cnt = 0; 
+    int e, id1, id2, npts;
     
     for(e = 0; e < m_fields[field_0]->GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
       {
@@ -1258,7 +1270,6 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 	Vmath::Vvtvp(npts,&tmp_n[0],1,&m_traceNormals[1][id2],1,&Fwd[1][id2],1,&Fwd[1][id2],1);
       
 	// copy boundary adjusted values into the boundary expansion
-	// note that h(eta) in [0], hu(u) in [1] and hv(v) in [2]
 	Vmath::Vcopy(npts,&Fwd[0][id2], 1,&(m_fields[field_0]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1],1);
 	Vmath::Vcopy(npts,&Fwd[1][id2], 1,&(m_fields[field_1]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1],1);
 
@@ -1394,8 +1405,33 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
   }
   
 
+  void ShallowWaterEquations::PrimitiveToConservative(void)
+  {
+    
+    int nq = GetTotPoints();
+    
+    // physical space
+    for (int i = 0; i < 4; ++i)
+      {
+	m_fields[i]->BwdTrans(*m_fields[i]);
+      }
+    
+    // h = eta + d
+    Vmath::Vadd(nq,m_fields[0]->GetPhys(),1,m_fields[3]->GetPhys(),1,m_fields[0]->UpdatePhys(),1);
 
+    // hu = h * u
+    Vmath::Vmul(nq,m_fields[0]->GetPhys(),1,m_fields[1]->GetPhys(),1,m_fields[1]->UpdatePhys(),1);
 
+    // hv = h * v
+    Vmath::Vmul(nq,m_fields[0]->GetPhys(),1,m_fields[2]->GetPhys(),1,m_fields[2]->UpdatePhys(),1);
+
+    // modal space
+    for (int i = 0; i < 4; ++i)
+      {
+	m_fields[i]->FwdTrans(*m_fields[i]);
+      }
+  }
+  
   void ShallowWaterEquations::PrimitiveToConservative(const Array<OneD, const Array<OneD, NekDouble> >&physin,
 						            Array<OneD,       Array<OneD, NekDouble> >&physout)
   {
@@ -1437,6 +1473,33 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
       }
   }
   
+  void ShallowWaterEquations::ConservativeToPrimitive(void)
+  {
+    
+    int nq = GetTotPoints();
+    
+    // physical space
+    for (int i = 0; i < 4; ++i)
+      {
+	m_fields[i]->BwdTrans(*m_fields[i]);
+      }
+    
+    // u = hu/h
+    Vmath::Vdiv(nq,m_fields[1]->GetPhys(),1,m_fields[0]->GetPhys(),1,m_fields[1]->UpdatePhys(),1);
+
+    // v = hv/h
+    Vmath::Vdiv(nq,m_fields[2]->GetPhys(),1,m_fields[0]->GetPhys(),1,m_fields[2]->UpdatePhys(),1);
+    
+    // eta = h - d
+    Vmath::Vsub(nq,m_fields[0]->GetPhys(),1,m_fields[3]->GetPhys(),1,m_fields[0]->UpdatePhys(),1);
+    
+    // modal space
+    for (int i = 0; i < 4; ++i)
+      {
+	m_fields[i]->FwdTrans(*m_fields[i]);
+      }
+  }
+
   void ShallowWaterEquations::ConservativeToPrimitive(const Array<OneD, const Array<OneD, NekDouble> >&physin,
 						            Array<OneD,       Array<OneD, NekDouble> >&physout)
   {
@@ -1479,10 +1542,10 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
   {
     cout << "=======================================================================" << endl;
       cout << "\tEquation Type   : Shallow Water Equations" << endl;
-      cout << "\t                  h  (or eta) should be in field[0]" <<endl;
-      cout << "\t                  hu (or u)   should be in field[1]" <<endl;
-      cout << "\t                  hv (or v)   should be in field[2]" <<endl;
-      cout << "\t                  d           should be in field[3]" <<endl;
+      cout << "\t                  eta should be in field[0]" <<endl;
+      cout << "\t                  u   should be in field[1]" <<endl;
+      cout << "\t                  v   should be in field[2]" <<endl;
+      cout << "\t                  d   should be in field[3]" <<endl;
       ADRBase::Summary(out);
       cout << "=======================================================================" << endl;
       cout << endl;
@@ -1494,6 +1557,9 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 
 /**
 * $Log: ShallowWaterEquations.cpp,v $
+* Revision 1.3  2009/02/06 16:38:23  claes
+* Added primitive formulation
+*
 * Revision 1.2  2009/02/02 16:10:16  claes
 * Update to make SWE, Euler and Boussinesq solvers up to date with the time integrator scheme. Linear and classical Boussinsq solver working
 *

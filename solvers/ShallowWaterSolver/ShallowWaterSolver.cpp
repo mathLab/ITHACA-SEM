@@ -50,27 +50,61 @@ int main(int argc, char *argv[])
 
     string fileNameString(argv[1]);
     
-    //----------------------------------------------------------------
+    //----------------------------------------
     // Read the mesh and construct container class
-    ShallowWaterEquations dom(fileNameString);
     
-    int nsteps = dom.GetSteps();
+    ShallowWaterEquations dom(fileNameString);
+    //----------------------------------------
+
+    
+    //----------------------------------------
+    // print session info 
     
     dom.Summary(cout);
-        
-    // Set up the intial conditions -- Could put in initialisation??
+    //----------------------------------------
+
+    
+    //----------------------------------------   
+    // Set up the intial conditions
     dom.SetInitialConditions();
 
-    // Integrate from start time to end time
-    dom.ExplicitlyIntegrateAdvection(nsteps);
+    // since I/O in primitive variables
+    if (dom.GetVariableType() == ShallowWaterEquations::eConservative)
+      {
+	dom.PrimitiveToConservative();
+      }
+    //----------------------------------------
 
-     // Dump output
+    
+    //----------------------------------------
+    // Integrate from start time to end time
+    
+    int nsteps = dom.GetSteps();
+
+    dom.ExplicitlyIntegrateAdvection(nsteps);
+    //----------------------------------------
+
+
+    //----------------------------------------
+    // Dump output
+     
+    // since I/O in primitive variables
+    if (dom.GetVariableType() == ShallowWaterEquations::eConservative)
+      {
+	dom.ConservativeToPrimitive();
+      }
+    
     dom.Output();
+    //----------------------------------------
+
+    
+    //----------------------------------------
+    // print error
 
     cout << "L2 Error: " << dom.L2Error(0) << endl;
     cout << "L2 Error: " << dom.L2Error(1) << endl;
     cout << "L2 Error: " << dom.L2Error(2) << endl;
-
+    //---------------------------------------
 }
 
 /**

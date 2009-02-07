@@ -65,7 +65,9 @@ namespace Nektar
      *
      **/
     ShallowWaterEquations(string &fileStringName);
-    
+     
+    void PrimitiveToConservative();
+    void ConservativeToPrimitive();
     
     void PrimitiveToConservative(const Array<OneD, const Array<OneD, NekDouble> >&physin,
 				       Array<OneD,       Array<OneD, NekDouble> >&physout);
@@ -186,10 +188,15 @@ namespace Nektar
 				 Array<OneD, NekDouble> &outY,
 				 int field_0, int field_1);
     
+    inline VariableType &GetVariableType()
+    {
+      return m_variableType;
+    }
+
     
   protected:
-    int m_infosteps;  ///< dump info to stdout at steps time
-    NekDouble m_g;    ///< Acceleration of gravity
+    int m_infosteps;                            ///< dump info to stdout at steps time
+    NekDouble m_g;                              ///< Acceleration of gravity
     Array<OneD, NekDouble>  m_coriolis;
     //	Array<OneD, NekDouble>  m_depth;
     Array<OneD, NekDouble>  m_friction;
@@ -258,6 +265,9 @@ namespace Nektar
 
 /**
 * $Log: ShallowWaterEquations.h,v $
+* Revision 1.3  2009/02/06 16:38:23  claes
+* Added primitive formulation
+*
 * Revision 1.2  2009/02/02 16:10:16  claes
 * Update to make SWE, Euler and Boussinesq solvers up to date with the time integrator scheme. Linear and classical Boussinsq solver working
 *

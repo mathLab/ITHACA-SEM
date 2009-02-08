@@ -3,7 +3,6 @@
 
 #include <MultiRegions/DisContField2D.h>
 
-#define TIMING
 
 #ifdef TIMING
 #include <time.h>

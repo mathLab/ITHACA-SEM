@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Set up coordinates of mesh for Forcing function evaluation
     coordim = Exp->GetCoordim(0);
-    nq      = Exp->GetPointsTot();
+    nq      = Exp->GetTotPoints();
     
     xc0 = Array<OneD,NekDouble>(nq,0.0);
     xc1 = Array<OneD,NekDouble>(nq,0.0);

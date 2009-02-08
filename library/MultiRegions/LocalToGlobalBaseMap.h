@@ -37,7 +37,6 @@
 #define MULTIREGIONS_LOCALTOGLOBALBASEMAP_H
 
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/ExpList.h>
 #include <vector>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
@@ -266,6 +265,9 @@ namespace Nektar
         private:
         };
         typedef boost::shared_ptr<LocalToGlobalBaseMap>  LocalToGlobalBaseMapSharedPtr;
+
+        static LocalToGlobalBaseMapSharedPtr NullLocalToGlobalBaseMapSharedPtr; 
+
         
     } // end of namespace
 } // end of namespace
@@ -275,6 +277,9 @@ namespace Nektar
 
 /** 
  $Log: LocalToGlobalBaseMap.h,v $
+ Revision 1.9  2008/12/19 15:12:50  pvos
+ Updates for precomputed dirichlet forcing functionality
+
  Revision 1.8  2008/12/17 17:08:22  pvos
  Performance updates
 

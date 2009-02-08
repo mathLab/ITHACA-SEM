@@ -763,7 +763,7 @@ namespace Nektar
                     for(int j = 0 ; j < m_coordim; j++)
                     {
                         int nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(i);
-                        Array<OneD, unsigned int>   mapArray (nFaceCoeffs,-1);
+                        Array<OneD, unsigned int>   mapArray (nFaceCoeffs,1);
                         Array<OneD, int>            signArray(nFaceCoeffs,1);
 
                         m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray);
@@ -840,6 +840,9 @@ namespace Nektar
 
 //
 // $Log: PrismGeom.cpp,v $
+// Revision 1.15  2009/01/21 16:59:03  pvos
+// Added additional geometric factors to improve efficiency
+//
 // Revision 1.14  2009/01/01 02:32:55  ehan
 // cleaned up the code
 //

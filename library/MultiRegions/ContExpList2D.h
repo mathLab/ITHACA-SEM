@@ -39,6 +39,7 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/LocalToGlobalC0ContMap.h>
+#include <MultiRegions/GlobalLinSys.h>
 
 namespace Nektar
 {
@@ -470,14 +471,16 @@ namespace Nektar
       	    int                       m_contNcoeffs;
  
             /**
-             * \brief The array of length #m_ncoeffs\f$=N_{\mathrm{dof}}\f$ containing the 
-             * global expansion coefficients. 
+             * \brief The array of length
+             * #m_ncoeffs\f$=N_{\mathrm{dof}}\f$ containing the global
+             * expansion coefficients.
              */  
 	    Array<OneD, NekDouble>    m_contCoeffs;
  
             /**
-             * \brief (A shared pointer to) a list which collects all the global matrices 
-             * being assembled, such that they should be constructed only once.
+             * \brief (A shared pointer to) a list which collects all
+             * the global matrices being assembled, such that they
+             * should be constructed only once.
              */  
             GlobalLinSysMapShPtr      m_globalMat;
                         
@@ -534,6 +537,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.h,v $
+* Revision 1.16  2009/01/06 21:05:56  sherwin
+* Added virtual function calls for BwdTrans, FwdTrans and IProductWRTBase from the class ExpList. Introduced _IterPerExp versions of these methods in ExpList.cpp§
+*
 * Revision 1.15  2008/09/16 13:36:05  pvos
 * Restructured the LocalToGlobalMap classes
 *

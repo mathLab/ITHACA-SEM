@@ -35,8 +35,8 @@
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYS_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYS_H
 
-#include <MultiRegions/GlobalLinSysKey.h>
 #include <MultiRegions/ExpList.h>
+#include <MultiRegions/GlobalLinSysKey.h>
 
 namespace Nektar
 {

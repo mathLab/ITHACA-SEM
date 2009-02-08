@@ -134,7 +134,6 @@ namespace Nektar
             void GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd, 
                                     Array<OneD,NekDouble> &Bwd);
 
-
             /**
              * \brief This method extracts the "forward" and
              * "backward" trace data from the array \a field and puts

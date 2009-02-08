@@ -39,6 +39,7 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList3D.h>
 #include <MultiRegions/LocalToGlobalC0ContMap.h>
+#include <MultiRegions/GlobalLinSys.h>
 
 namespace Nektar
 {

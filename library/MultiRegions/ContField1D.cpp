@@ -181,7 +181,7 @@ namespace Nektar
 
         void ContField1D::FwdTrans(const ExpList &In)
         {
-            GlobalLinSysKey key(StdRegions::eMass);
+            GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
             GlobalSolve(key,In);
 
             m_transState = eContinuous;
@@ -192,7 +192,7 @@ namespace Nektar
         // contains an intial estimate for solution
         void ContField1D::HelmSolve(const ExpList &In, NekDouble lambda)
         {
-            GlobalLinSysKey key(StdRegions::eHelmholtz,lambda);
+            GlobalLinSysKey key(StdRegions::eHelmholtz,m_locToGloMap, lambda);
             // Note -1.0 term necessary to invert forcing function to
             // be consistent with matrix definition
             GlobalSolve(key,In,-1.0);

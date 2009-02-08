@@ -176,7 +176,7 @@ namespace Nektar
             IProductWRTBase(inarray,outarray);
 
             GlobalLinSysSharedPtr mass_matrix;
-            GlobalLinSysKey key(StdRegions::eMass);
+            GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
             GlobalLinSysMap::iterator matrixIter = m_globalMat->find(key);
            
             if(matrixIter == m_globalMat->end())
@@ -209,7 +209,7 @@ namespace Nektar
 
 	    m_physState = true;
         }
-
+        
         void ContExpList2D::BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
         {
             Array<OneD, NekDouble> tmp(m_ncoeffs);
@@ -224,6 +224,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.cpp,v $
+* Revision 1.17  2009/01/06 21:05:56  sherwin
+* Added virtual function calls for BwdTrans, FwdTrans and IProductWRTBase from the class ExpList. Introduced _IterPerExp versions of these methods in ExpList.cpp§
+*
 * Revision 1.16  2008/09/16 13:36:05  pvos
 * Restructured the LocalToGlobalMap classes
 *

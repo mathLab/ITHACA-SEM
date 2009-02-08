@@ -209,7 +209,7 @@ namespace Nektar
             IProductWRTBase(inarray,outarray);
 
             GlobalLinSysSharedPtr mass_matrix;
-            GlobalLinSysKey key(StdRegions::eMass);
+            GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
             GlobalLinSysMap::iterator matrixIter = m_globalMat->find(key);
            
             if(matrixIter == m_globalMat->end())

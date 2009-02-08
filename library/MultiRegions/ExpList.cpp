@@ -458,8 +458,10 @@ namespace Nektar
                     cnt1  += (*m_exp)[i]->GetTotPoints();
                 }
                 
-                StdRegions::StdMatrixKey mkey(gkey.GetLinSysType(),(*m_exp)[i]->DetExpansionType(),
-                                              *((*m_exp)[i]),gkey.GetConstants(),varcoeffs);
+                StdRegions::StdMatrixKey mkey(gkey.GetLinSysType(),
+                                              (*m_exp)[i]->DetExpansionType(),
+                                              *((*m_exp)[i]),
+                                              gkey.GetConstants(),varcoeffs);
                
                 (*m_exp)[i]->GeneralMatrixOp(inarray + cnt, 
                                              e_outarray = outarray+cnt,

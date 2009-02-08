@@ -40,6 +40,7 @@
 #include <StdRegions/StdExpansion.h>
 #include <MultiRegions/LocalToGlobalBaseMap.h>
 #include <MultiRegions/GlobalLinSys.h>
+#include <MultiRegions/GlobalLinSysKey.h>
 
 #include <LocalRegions/MatrixKey.h>
 #include <SpatialDomains/SegGeom.h>
@@ -48,7 +49,7 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        class GlobalLinSys; 
+        class GlobalLinSys;
         class LocalToGlobalC0ContMap;
         class LocalToGlobalBaseMap;
 	class LocalToGlobalDGMap;
@@ -426,9 +427,9 @@ namespace Nektar
             void  MultiplyByElmtInvMass (const Array<OneD, const NekDouble> &inarray,
                                        Array<OneD, NekDouble> &outarray);
 
-            void MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays = true, bool ZeroBCs = false)
+            void MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays = true)
             {
-                v_MultiplyByInvMassMatrix(inarray,outarray, GlobalArrays, ZeroBCs);
+                v_MultiplyByInvMassMatrix(inarray,outarray, GlobalArrays);
                 
             }
 
@@ -942,8 +943,9 @@ namespace Nektar
             
             // Routines for continous matrix solution 
             /**
-             * \brief This function calculates the result of the multiplication of a matrix 
-             * of type specified by \a mkey with a vector given by \a inarray.
+             * \brief This function calculates the result of the
+             * multiplication of a matrix of type specified by \a mkey
+             * with a vector given by \a inarray.
              *
              * This operation is equivalent to the evaluation of 
              * \f$\underline{\boldsymbol{M}}^e\boldsymbol{\hat{u}}_l\f$, that is,
@@ -1273,7 +1275,7 @@ namespace Nektar
                 ASSERTL0(false,"This method is not defined or valid for this class type");                
             }
 
-            virtual void v_MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays, bool ZeroBCs)
+            virtual void v_MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays)
             {
                 ASSERTL0(false,"This method is not defined or valid for this class type");                
             }
@@ -1357,6 +1359,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.52  2009/02/03 14:33:08  pvos
+* Modifications for solvers with time-dependent dirichlet BC's
+*
 * Revision 1.51  2009/02/02 16:43:26  claes
 * Added virtual functions for solver access
 *

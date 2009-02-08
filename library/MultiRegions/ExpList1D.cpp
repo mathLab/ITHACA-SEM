@@ -276,9 +276,9 @@ namespace Nektar
                             }
                         }
                     }
-                } // end if Dirichlet
-            }
-
+                } 
+            } // end if Dirichlet
+            
             // then, list the other (non-periodic) boundaries
             for(i = 0; i < nbnd; ++i)
             {        
@@ -633,6 +633,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.34  2009/01/13 02:50:10  mirzaee
+* Added definitions for the PostProcessing functions and PeriodicEval
+*
 * Revision 1.33  2008/09/09 15:06:03  sherwin
 * Modifications related to curved elements.
 *

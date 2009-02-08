@@ -54,6 +54,7 @@ namespace Nektar
                                    const DNekScalBlkMatSharedPtr C,
                                    const DNekScalBlkMatSharedPtr invD):
             m_linSysKey(mkey),
+            
             m_linSys(linsys)
 	{
             m_blkMatrices = Array<OneD,DNekScalBlkMatSharedPtr>(3);

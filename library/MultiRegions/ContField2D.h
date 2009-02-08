@@ -102,6 +102,14 @@ namespace Nektar
             ContField2D(SpatialDomains::MeshGraph2D &graph2D,
                 SpatialDomains::BoundaryConditions &bcs, 
                 const int bc_loc = 0);
+
+            /**
+             * \brief 
+             */ 
+            ContField2D(const ContField2D &In, 
+                        SpatialDomains::MeshGraph2D &graph2D,
+                        SpatialDomains::BoundaryConditions &bcs, 
+                        const int bc_loc = 0);
           
             /**
              * \brief This constructor sets up global continuous field based on an 
@@ -128,8 +136,8 @@ namespace Nektar
              * the field should be constructed.
              */ 
             ContField2D(SpatialDomains::MeshGraph2D &graph2D,
-                SpatialDomains::BoundaryConditions &bcs, 
-                const std::string variable);
+                        SpatialDomains::BoundaryConditions &bcs, 
+                        const std::string variable);
           
             /**
              * \brief 
@@ -167,6 +175,8 @@ namespace Nektar
              */ 
             ~ContField2D();
           
+
+            bool SameTypeOfBoundaryConditions(const ContField2D &In);
             /**
              * \brief This function performs the global forward transformation of a 
              * function \f$f(\boldsymbol{x})\f$, subject to the boundary conditions 
@@ -189,7 +199,7 @@ namespace Nektar
              */ 
             void FwdTrans (const ExpList &In);
             
-            void MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool ContinuousArrays = true, bool ZeroBCs = false);
+            void MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool ContinuousArrays = true);
                       
             /**
              * \brief This function solves the two-dimensional Helmholtz equation, 
@@ -446,9 +456,9 @@ namespace Nektar
                                                     SpatialDomains::BoundaryConditions &bcs, 
                                                     const std::string variable);
             
-            virtual void v_MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays, bool ZeroBCs)
+            virtual void v_MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays)
             {
-                MultiplyByInvMassMatrix(inarray,outarray,GlobalArrays, ZeroBCs);
+                MultiplyByInvMassMatrix(inarray,outarray,GlobalArrays);
             }
 
             virtual void v_FwdTrans(const ExpList &Sin)

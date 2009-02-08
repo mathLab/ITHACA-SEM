@@ -54,6 +54,34 @@ namespace Nektar
         {
         }
 
+        ContField2D::ContField2D(const ContField2D &In, 
+                                 SpatialDomains::MeshGraph2D &graph2D,
+                                 SpatialDomains::BoundaryConditions &bcs, 
+                                 const int bc_loc):
+            ContExpList2D(In)
+        {
+            // Set up boundary conditions for this variable. 
+            GenerateBoundaryConditionExpansion(graph2D,bcs,bcs.GetVariable(bc_loc));
+            EvaluateBoundaryConditions();
+                        
+            if(!SameTypeOfBoundaryConditions(In))
+            {
+                map<int,int> periodicEdges;
+                map<int,int> periodicVertices;
+                GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),periodicVertices,periodicEdges);
+
+                m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp, m_bndCondExpansions, m_bndConditions, periodicVertices, periodicEdges);
+                
+            }
+            else
+            {
+                m_locToGloMap = In.m_locToGloMap;
+            }
+
+            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+        }
+
         ContField2D::ContField2D(SpatialDomains::MeshGraph2D &graph2D,
                                  SpatialDomains::BoundaryConditions &bcs, 
                                  const int bc_loc):
@@ -68,11 +96,7 @@ namespace Nektar
             map<int,int> periodicVertices;
             GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),periodicVertices,periodicEdges);
 
-            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp,
-                                                                                     m_bndCondExpansions,
-                                                                                     m_bndConditions,
-                                                                                     periodicVertices,
-                                                                                     periodicEdges);
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp, m_bndCondExpansions, m_bndConditions, periodicVertices, periodicEdges);
 	    
 	    m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
 	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
@@ -163,7 +187,32 @@ namespace Nektar
         ContField2D::~ContField2D()
         {
         }
-     
+
+
+        bool ContField2D::SameTypeOfBoundaryConditions(const ContField2D &In)
+        {
+            int i;
+            bool returnval = true;
+            
+            for(i = 0; i < m_bndConditions.num_elements(); ++i)
+            {
+             
+                // check to see if boundary condition type is the same
+                // and there are the same number of boundary
+                // conditions in the boundary definition.
+                if((m_bndConditions[i]->GetBoundaryConditionType()
+                    != In.m_bndConditions[i]->GetBoundaryConditionType())||
+                   (m_bndCondExpansions[i]->GetExpSize() != In.m_bndCondExpansions[i]->GetExpSize()))
+                {
+                    returnval = false;
+                    break;
+                }
+            }
+            
+            return returnval;
+        }
+        
+
         void ContField2D::GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D,
                                                              SpatialDomains::BoundaryConditions &bcs, 
                                                              const std::string variable)
@@ -188,14 +237,17 @@ namespace Nektar
                 }
             }
             m_numDirBndCondExpansions = cnt2;
-            m_bndCondExpansions  = Array<OneD,MultiRegions::ExpList1DSharedPtr>(cnt1);
-            m_bndConditions      = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt1);
+            m_bndCondExpansions = Array<OneD,MultiRegions::ExpList1DSharedPtr>(cnt1);
+            m_bndConditions     = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt1);
             
             SetBoundaryConditionExpansion(graph2D,bcs,variable,m_bndCondExpansions,m_bndConditions);
         }
         
         void ContField2D::FwdTrans(const ExpList &In)
         {            
+            ASSERTL1(In.GetPhysState() == true, 
+                     "Error input state is not in physical  space");
+
             // Inner product of forcing 
             Array<OneD,NekDouble> rhs(m_contNcoeffs);        
             
@@ -203,7 +255,7 @@ namespace Nektar
             IProductWRTBase(In.GetPhys(), rhs, m_coeffs);
 
             // Solve the system
-            GlobalLinSysKey key(StdRegions::eMass);
+            GlobalLinSysKey key(StdRegions::eMass,m_locToGloMap);
             GlobalSolve(key,rhs,m_contCoeffs);
             
             m_transState = eContinuous;
@@ -212,16 +264,16 @@ namespace Nektar
 
         void ContField2D::MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray,
                                                         Array<OneD,       NekDouble> &outarray,
-                                                  bool ContinuousArrays, 
-                                                  bool ZeroBCs)
+                                                  bool ContinuousArrays)
+                                                  
         {
-            GlobalLinSysKey key(StdRegions::eMass);
+            GlobalLinSysKey key(StdRegions::eMass,m_locToGloMap);
             
             if(ContinuousArrays)
             {
                 if(inarray.data() == outarray.data())
                 {
-                    Array<OneD, NekDouble> tmp(m_contNcoeffs,0.0);               
+                    Array<OneD, NekDouble> tmp(m_contNcoeffs,0.0);   
                     Vmath::Vcopy(m_contNcoeffs,inarray,1,tmp,1);
                     GlobalSolve(key,tmp,outarray);
                 }
@@ -236,7 +288,7 @@ namespace Nektar
 
                 if(inarray.data() == outarray.data())
                 {
-                    Array<OneD,NekDouble> tmp(inarray.num_elements());                    
+                    Array<OneD,NekDouble> tmp(inarray.num_elements()); 
                     Vmath::Vcopy(inarray.num_elements(),inarray,1,tmp,1);
                     Assemble(tmp,outarray);
                 }
@@ -256,7 +308,7 @@ namespace Nektar
                                     NekDouble lambda,
                                     Array<OneD, NekDouble>& dirForcing)
         {
-            GlobalLinSysKey key(StdRegions::eHelmholtz,lambda);
+            GlobalLinSysKey key(StdRegions::eHelmholtz,m_locToGloMap,lambda);
             Array<OneD,NekDouble> rhs(m_contNcoeffs);        
             
             // Inner product of forcing  using m_coeffs as work space
@@ -277,7 +329,7 @@ namespace Nektar
                                         NekDouble time,
                                         Array<OneD, NekDouble>& dirForcing)
         {
-            GlobalLinSysKey key(StdRegions::eLaplacian,time,variablecoeffs);
+            GlobalLinSysKey key(StdRegions::eLaplacian,m_locToGloMap,time,variablecoeffs);
             Array<OneD,NekDouble> rhs(m_contNcoeffs);        
             
             // Inner product of forcing  using m_coeffs as tmp space
@@ -302,8 +354,8 @@ namespace Nektar
 
             for(int i = 0; i < m_numDirBndCondExpansions; ++i)
             {
-                const Array<OneD,const NekDouble>& coeffs =  m_bndCondExpansions[i]->GetCoeffs();
-                for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
+                const Array<OneD,const NekDouble>& coeffs = m_bndCondExpansions[i]->GetCoeffs();
+                for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                 {
                     inout[map[bndcnt++]] = coeffs[j];
                 }
@@ -359,8 +411,14 @@ namespace Nektar
 
         GlobalLinSysSharedPtr ContField2D::GetGlobalLinSys(const GlobalLinSysKey &mkey) 
         {
+            ASSERTL1(mkey.LocToGloMapIsDefined(),
+                     "To use method must have a LocalToGlobalBaseMap "
+                     "attached to key");
+
             GlobalLinSysSharedPtr glo_matrix;
             GlobalLinSysMap::iterator matrixIter = m_globalMat->find(mkey);
+
+
 
             if(matrixIter == m_globalMat->end())
             {

@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/GlobalLinSysKey.h>
 
 namespace Nektar
@@ -43,9 +42,11 @@ namespace Nektar
     {
         // Register Mass Matrix creator. 
         GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+                                         const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                                          const GlobalSysSolnType solnType):
             m_solnType(solnType),
             m_linSysType(matrixType),
+            m_locToGloMap(locToGloMap),
             m_nconstants(0),
             m_constant(m_nconstants),
             m_nvariablecoefficients(0),
@@ -54,10 +55,12 @@ namespace Nektar
         }
         
         GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+                                         const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                                          const NekDouble factor,
                                          const GlobalSysSolnType solnType):
             m_solnType(solnType),
             m_linSysType(matrixType),
+            m_locToGloMap(locToGloMap),
             m_nconstants(1),
             m_constant(m_nconstants),
             m_nvariablecoefficients(0),
@@ -67,11 +70,13 @@ namespace Nektar
         }
         
         GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+                                         const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                                          const NekDouble factor1,
                                          const NekDouble factor2,
                                          const GlobalSysSolnType solnType):
             m_solnType(solnType),
             m_linSysType(matrixType),
+            m_locToGloMap(locToGloMap),
             m_nconstants(2),
             m_constant(m_nconstants),
             m_nvariablecoefficients(0),
@@ -82,10 +87,12 @@ namespace Nektar
         }
 
         GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+                                         const LocalToGlobalBaseMapSharedPtr &locToGloMap, 
                                          const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
                                          const GlobalSysSolnType solnType):
             m_solnType(solnType),
             m_linSysType(matrixType),
+            m_locToGloMap(locToGloMap),
             m_nconstants(0),
             m_constant(m_nconstants),
             m_nvariablecoefficients(varcoeffs.num_elements()),
@@ -94,11 +101,13 @@ namespace Nektar
         }          
             
         GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+                                         const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                                          const NekDouble factor,
                                          const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
                                          const GlobalSysSolnType solnType):
             m_solnType(solnType),
             m_linSysType(matrixType),
+            m_locToGloMap(locToGloMap),
             m_nconstants(1),
             m_constant(m_nconstants),
             m_nvariablecoefficients(varcoeffs.num_elements()),
@@ -110,10 +119,12 @@ namespace Nektar
         GlobalLinSysKey::GlobalLinSysKey(const GlobalLinSysKey &key):
             m_solnType(key.m_solnType),
             m_linSysType(key.m_linSysType),
+            m_locToGloMap(key.m_locToGloMap),
             m_nconstants(key.m_nconstants),
             m_constant(key.m_constant),
             m_nvariablecoefficients(key.m_nvariablecoefficients),
             m_variablecoefficient(key.m_variablecoefficient)
+            
         {
         }
 
@@ -187,6 +198,12 @@ namespace Nektar
                 }
             }
 
+
+            if(lhs.m_locToGloMap.get() < rhs.m_locToGloMap.get())
+            {
+                return true;
+            }
+
             return false;
         }
 
@@ -209,6 +226,9 @@ namespace Nektar
 
 /**
 * $Log: GlobalLinSysKey.cpp,v $
+* Revision 1.5  2008/11/21 10:36:17  pvos
+* Added (limited) support for matrix types: ePOSITIVE_DEFINITE_SYMMETRIC and ePOSITIVE_DEFINITE_SYMMETRIC_BANDED
+*
 * Revision 1.4  2008/11/19 16:02:33  pvos
 * Added functionality for variable Laplacian coeffcients
 *

@@ -91,7 +91,7 @@ namespace Nektar
                 return m_solnType; 
             }
 
-            inline bool LocToGloMapIsDefined(void)
+            inline const bool LocToGloMapIsDefined(void)
             {
                 if( m_locToGloMap == NullLocalToGlobalBaseMapSharedPtr)
                 {
@@ -159,6 +159,9 @@ namespace Nektar
 
 /**
 * $Log: GlobalLinSysKey.h,v $
+* Revision 1.6  2009/02/08 09:10:15  sherwin
+* Added member of LocalToGlobalBaseMap so that we can discern matrices of different boundary condition type
+*
 * Revision 1.5  2008/11/19 16:02:33  pvos
 * Added functionality for variable Laplacian coeffcients
 *

@@ -91,7 +91,7 @@ namespace Nektar
                 return m_solnType; 
             }
 
-            inline const bool LocToGloMapIsDefined(void)
+            inline const bool LocToGloMapIsDefined(void) const
             {
                 if( m_locToGloMap == NullLocalToGlobalBaseMapSharedPtr)
                 {
@@ -159,6 +159,9 @@ namespace Nektar
 
 /**
 * $Log: GlobalLinSysKey.h,v $
+* Revision 1.7  2009/02/09 16:11:26  sherwin
+* made LocToGloMapIsDefined return a const value
+*
 * Revision 1.6  2009/02/08 09:10:15  sherwin
 * Added member of LocalToGlobalBaseMap so that we can discern matrices of different boundary condition type
 *

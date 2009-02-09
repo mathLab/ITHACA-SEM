@@ -232,7 +232,8 @@ namespace Nektar
              */ 
             void HelmSolve(const ExpList &In, 
                            NekDouble lambda,
-                           Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray);
+                           Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray, 
+                           bool LeaveInContCoeffs = false);
 
             /**
              * \brief This function solves the two-dimensional Laplace equation, 
@@ -285,7 +286,8 @@ namespace Nektar
             void LaplaceSolve(const ExpList &In, 
                               const Array<OneD, Array<OneD,NekDouble> >& variablecoeffs = NullNekDoubleArrayofArray,
                               NekDouble time = 0.0,
-                              Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray);
+                              Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray,
+                              bool LeaveInContCoeffs = false);
           
             /**
              * \brief This function evaluates the boundary conditions at a certain 

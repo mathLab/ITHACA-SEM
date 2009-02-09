@@ -306,7 +306,8 @@ namespace Nektar
         // contains an intial estimate for solution
         void ContField2D::HelmSolve(const ExpList &In, 
                                     NekDouble lambda,
-                                    Array<OneD, NekDouble>& dirForcing)
+                                    Array<OneD, NekDouble>& dirForcing,
+                                    bool LeaveInContCoeffs)
         {
             GlobalLinSysKey key(StdRegions::eHelmholtz,m_locToGloMap,lambda);
             Array<OneD,NekDouble> rhs(m_contNcoeffs);        
@@ -320,14 +321,23 @@ namespace Nektar
             
             GlobalSolve(key,rhs,m_contCoeffs,dirForcing);
 
-            m_transState = eContinuous;
+            if(LeaveInContCoeffs)
+            {
+                m_transState = eContinuous;
+            }
+            else
+            {
+                GlobalToLocal();
+                m_transState = eLocalCont;
+            }
             m_physState = false;
         }
 
         void  ContField2D::LaplaceSolve(const ExpList &In,
                                         const Array<OneD, Array<OneD,NekDouble> >& variablecoeffs,
                                         NekDouble time,
-                                        Array<OneD, NekDouble>& dirForcing)
+                                        Array<OneD, NekDouble>& dirForcing,
+                                        bool LeaveInContCoeffs)
         {
             GlobalLinSysKey key(StdRegions::eLaplacian,m_locToGloMap,time,variablecoeffs);
             Array<OneD,NekDouble> rhs(m_contNcoeffs);        
@@ -341,7 +351,16 @@ namespace Nektar
             
             GlobalSolve(key,rhs,m_contCoeffs);
 
-            m_transState = eContinuous;
+            if(LeaveInContCoeffs)
+            {
+                m_transState = eContinuous;
+            }
+            else
+            {
+                GlobalToLocal();
+                m_transState = eLocalCont;
+            }
+
             m_physState = false;
         }
 

@@ -61,19 +61,12 @@ namespace Nektar
         m_infosteps(10)
     {
 
-        // Set up equation type enum using kEquationTypeStr
-        
-        const std::string typeStr = m_boundaryConditions->GetEquationTypeStr();
+        int i;
 
-#if 0
-        const std::string* begStr = kEquationTypeStr;
-        const std::string* endStr = kEquationTypeStr+eEquationTypeSize;
-        const std::string* eqnStr = std::find(begStr, endStr, typeStr);
-        
-        ASSERTL0(eqnStr != endStr, "Invalid expansion type.");
-        m_equationType = (EquationType)(eqnStr-begStr); 
-#else
-        for(int i = 0; i < (int) eEquationTypeSize; ++i)
+        // Set up equation type enum using kEquationTypeStr
+        std::string typeStr = m_boundaryConditions->GetSolverInfo("EQTYPE");
+
+        for(i = 0; i < (int) eEquationTypeSize; ++i)
         {
             if(nocase_cmp(kEquationTypeStr[i],typeStr) == 0 )
             {
@@ -82,8 +75,7 @@ namespace Nektar
             }
         }
 
-        //ASSERTL0(i != (int) eEquationTypeSize, "Invalid expansion type.");
-#endif
+        ASSERTL0(i != (int) eEquationTypeSize, "Invalid expansion type.");
         
         
         // Equation specific Setups 
@@ -510,6 +502,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.6  2009/02/08 09:13:08  sherwin
+* Updates to go with Multiple matrix/variable solve
+*
 * Revision 1.6  2009/01/06 21:10:34  sherwin
 * Updates for virtual calls to IProductWRTBase and introduced reader to handle SOLVERINFO section to specify different solvers
 *

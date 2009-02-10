@@ -178,11 +178,12 @@ namespace Nektar
         typedef boost::shared_ptr<const UserDefinedEqn> ConstUserDefinedEqnShPtr;
         typedef std::map<std::string, UserDefinedEqnShPtr> UserDefinedEqnMap;
 
-
         typedef Equation InitialCondition;
         typedef boost::shared_ptr<InitialCondition> InitialConditionShPtr;
         typedef boost::shared_ptr<const InitialCondition> ConstInitialConditionShPtr;
         typedef std::map<std::string, InitialConditionShPtr> InitialConditionsMap;
+
+        typedef std::map<std::string, std::string> SolverInfoMap;
 
         class BoundaryConditions
         {
@@ -244,10 +245,7 @@ namespace Nektar
                 return m_Parameters;
             }
 
-            const std::string &GetEquationTypeStr(void)
-            {
-                return m_EquationTypeStr;
-            }
+            const std::string &GetSolverInfo(const std::string &lhs);
 
             const std::string &GetFunction(const std::string &lhs);
             Equation GetFunctionAsEquation(const std::string &lhs);
@@ -281,7 +279,7 @@ namespace Nektar
             ExactSolutionMap            m_ExactSolution;
             UserDefinedEqnMap           m_UserDefinedEqn;
 
-            std::string                 m_EquationTypeStr; //< Equation type to be solved 
+            SolverInfoMap               m_SolverInfo; //< Solver Information 
 
             /// The mesh graph to use for referencing geometry info.
             const MeshGraph *m_MeshGraph;

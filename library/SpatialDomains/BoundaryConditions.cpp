@@ -49,8 +49,7 @@ namespace Nektar
         ParamMap BoundaryConditions::m_Parameters;
 
         BoundaryConditions::BoundaryConditions(const MeshGraph *meshGraph):
-            m_MeshGraph(meshGraph),
-            m_EquationTypeStr("NOTYPE")
+            m_MeshGraph(meshGraph)
         {
         }
 
@@ -752,12 +751,25 @@ namespace Nektar
             if (solverInfoElement)
             {
                 TiXmlElement *solverInfo = solverInfoElement->FirstChildElement("I");
-                std::string eqntypeString = solverInfo->Attribute("EQTYPE");
-                ASSERTL0(!eqntypeString.empty(),"Unable to find type value");
                 
-                // Set Variable
-                m_EquationTypeStr = eqntypeString;
-                
+                while (solverInfo)
+                {
+                    std::string solverProperty = solverInfo->Attribute("PROPERTY");
+                    ASSERTL0(!solverProperty.empty(), "Unable to find PROPERTY value.");
+                    
+                    std::string solverValue    = solverInfo->Attribute("VALUE");
+                    ASSERTL0(!solverValue.empty(),"Unable to find VALUE string");
+
+                    SolverInfoMap::iterator solverInfoIter = m_SolverInfo.find(solverProperty);
+                    
+                    ASSERTL0(solverInfoIter == m_SolverInfo.end(),
+                             (std::string("SolverInfo value: ") + solverProperty
+                              + std::string(" already specified.")).c_str());
+                    
+                    // Set Variable
+                    m_SolverInfo[solverProperty] = solverValue;
+                    solverInfo = solverInfo->NextSiblingElement("I");
+                }
             }
         }
 
@@ -888,6 +900,17 @@ namespace Nektar
 
             return fcnIter->second;
         }
+
+        const std::string &BoundaryConditions::GetSolverInfo(const std::string &property)
+        {
+            SolverInfoMap::iterator slvIter = m_SolverInfo.find(property);
+
+            ASSERTL1(slvIter != m_SolverInfo.end(),
+                (std::string("Unable to find requested property: ") + property).c_str());
+
+            return slvIter->second;
+        }
+
 
         Equation BoundaryConditions::GetFunctionAsEquation(const std::string &lhs)
         {

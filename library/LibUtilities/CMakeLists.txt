@@ -53,7 +53,6 @@ SET(FoundationHeaders
     ./Foundations/NodalUtil.h
     ./Foundations/NodalTriEvenlySpaced.h
     ./Foundations/NodalTetEvenlySpaced.h
-    ./Foundations/TimeIntegrationScheme.h
 )
 
 SET(InterpreterHeaders
@@ -139,7 +138,6 @@ SET(FoundationSources
 	./Foundations/NodalUtil.cpp
         ./Foundations/NodalTriEvenlySpaced.cpp
         ./Foundations/NodalTetEvenlySpaced.cpp
-        ./Foundations/TimeIntegrationScheme.cpp
 )
 
 SET(InterpreterSources
@@ -168,6 +166,13 @@ SET(KernelSources
 	./Kernel/kernel.cpp
 )
 
+SET(TimeIntegrationHeaders
+        ./TimeIntegration/TimeIntegrationScheme.h
+) 
+
+SET(TimeIntegrationSources
+        ./TimeIntegration/TimeIntegrationScheme.cpp
+) 
 SOURCE_GROUP("Basic Const" FILES ${BasicConstHeaders})
 SOURCE_GROUP("Basic Utils" FILES ${BasicUtils})
 SOURCE_GROUP("Expression Templates" FILES ${ExpressionTemplates})
@@ -189,6 +194,9 @@ SOURCE_GROUP("Precompiled Headers" FILES ${PrecompiledHeaders})
 SOURCE_GROUP("Kernel Headers" FILES ${KernelHeaders})
 SOURCE_GROUP("Kernel Sources" FILES ${KernelSources})
 
+SOURCE_GROUP("TimeIntegration Headers" FILES ${TimeIntegrationHeaders})
+SOURCE_GROUP("TimeIntegration Sources" FILES ${TimeIntegrationSources})
+
 SET(LibUtilityHeaders
 	${Memory}
 	${BasicUtils}
@@ -200,6 +208,7 @@ SET(LibUtilityHeaders
 	${InterpreterHeaders}
 	${PrecompiledHeaders}
 	${KernelHeaders}
+        ${TimeIntegrationHeaders}
 )
 
 SET(LibUtilitySources
@@ -208,6 +217,7 @@ SET(LibUtilitySources
 	${LinearAlgebraSources}
 	${InterpreterSources}
 	${KernelSources}
+        ${TimeIntegrationSources}
 )
 
 ADD_NEKTAR_LIBRARY(LibUtilities STATIC ${LibUtilitySources} ${LibUtilityHeaders})
@@ -225,4 +235,5 @@ INSTALL(FILES ${ExpressionTemplates} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilit
 INSTALL(FILES ${BasicUtils} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/BasicUtils)
 INSTALL(FILES ${Memory} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Memory)
 INSTALL(FILES ${KernelHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Kernel)
+INSTALL(FILES ${TimeIntegrationHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/TimeIntegration)
 

@@ -135,6 +135,15 @@ namespace Nektar
                     return true;
                 }
 
+                /// Register the Global Create Function.
+                /// The return value is just to facilitate calling statically.
+                bool RegisterGlobalCreator(const CreateFuncType& createFunc)
+                {
+                    m_globalCreateFunc = createFunc;
+
+                    return true;
+                }
+
                 bool AlreadyCreated(typename boost::call_traits<KeyType>::const_reference key)
                 {
                     bool value = false;

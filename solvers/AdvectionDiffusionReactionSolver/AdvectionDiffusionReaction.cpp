@@ -146,54 +146,6 @@ namespace Nektar
 	}
     }
     
-//     void AdvectionDiffusionReaction::ODEforcing(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
-// 						Array<OneD, Array<OneD, NekDouble> >&outarray, NekDouble time) 
-//     {
-//         int i;
-//         int nvariables = inarray.num_elements();
-//         int ncoeffs    = inarray[0].num_elements();
-
-// 	SetBoundaryConditions(time);
-	
-//         switch(m_projectionType)
-//         {
-//         case eDiscontinuousGalerkin:
-	  
-// 	  WeakDGAdvection(inarray, outarray);
-// 	  for(i = 0; i < nvariables; ++i)
-//             {
-// 		Vmath::Neg(ncoeffs,outarray[i],1);
-//                 m_fields[i]->MultiplyByElmtInvMass(outarray[i],outarray[i]);
-//             }
-// 	  break;
-//         case eGalerkin:
-// 	  {
-//                 Array<OneD, NekDouble> physfield(GetNpoints());
-		
-//                 for(i = 0; i < nvariables; ++i)
-// 		  {
-//                     // Calculate -(\phi, V\cdot Grad(u))
-//                     m_fields[i]->BwdTrans_IterPerExp(inarray[i],physfield);
-		    
-// 		    WeakAdvectionNonConservativeForm(m_velocity,
-// 						     physfield, outarray[i]);
-		    
-//                     Vmath::Neg(ncoeffs,outarray[i],1);
-                    
-//                     //Multiply by inverse of mass matrix to get forcing term
-// 		    m_fields[i]->MultiplyByInvMassMatrix(outarray[i],  
-//                                                          outarray[i],
-//                                                          false,true);
-		   		    
-//                 }
-//             }
-//             break;
-//         default:
-//             ASSERTL0(false,"Unknown projection scheme");
-//             break;
-//         }
-//     }
-    
     void AdvectionDiffusionReaction::ODErhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
                                                   Array<OneD,       Array<OneD, NekDouble> >&outarray, 
                                             const NekDouble time) 
@@ -282,14 +234,6 @@ namespace Nektar
         }
     }
 
-    void AdvectionDiffusionReaction::ODEdirkSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
-						  Array<OneD,       Array<OneD, NekDouble> >&outarray, 
-                                                  const NekDouble lambda,
-                                                  const NekDouble time) 
-    {
-        ASSERTL0(false, "this routine needs implementation");
-    }
-
     void AdvectionDiffusionReaction::SolveHelmholtz(NekDouble lambda)
     {
         for(int i = 0; i < m_fields.num_elements(); ++i)
@@ -305,8 +249,13 @@ namespace Nektar
         int ncoeffs = m_fields[0]->GetNcoeffs();
         int nvariables = m_fields.num_elements();
 
+        LibUtilities::TimeIntegrationSchemeOperators ode;
+        ode.DefineOdeLhs       (&AdvectionDiffusionReaction::ODElhs,      this);
+        ode.DefineOdeLhsSolve  (&AdvectionDiffusionReaction::ODElhsSolve, this);
+        ode.DefineOdeRhs       (&AdvectionDiffusionReaction::ODErhs,      this);
+
         // Get Integration scheme details
-        LibUtilities::TimeIntegrationSchemeKey       IntKey(LibUtilities::eForwardEuler);
+        LibUtilities::TimeIntegrationSchemeKey       IntKey(LibUtilities::eAdamsBashforthOrder2);
         LibUtilities::TimeIntegrationSchemeSharedPtr IntScheme = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
 
         // Set up wrapper to fields data storage. 
@@ -318,7 +267,7 @@ namespace Nektar
         }
                 
         int nInitSteps;
-        LibUtilities::TimeIntegrationSolutionSharedPtr u = IntScheme->InitializeScheme(m_timestep,m_time,nInitSteps,*this,fields);
+        LibUtilities::TimeIntegrationSolutionSharedPtr u = IntScheme->InitializeScheme(m_timestep,m_time,nInitSteps,fields,ode);
 
         for(n = nInitSteps; n < nsteps; ++n)
         {
@@ -326,7 +275,7 @@ namespace Nektar
             // Perform time step integration
             //----------------------------------------------
 
-            fields = IntScheme->ExplicitIntegration(m_timestep,*this,u);
+            fields = IntScheme->TimeIntegrate(m_timestep,u,ode);
             m_time += m_timestep;
 
             //----------------------------------------------
@@ -502,6 +451,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.7  2009/02/10 16:39:35  sherwin
+* Added new format of SolverInfo reader to identify EQTYPE
+*
 * Revision 1.6  2009/02/08 09:13:08  sherwin
 * Updates to go with Multiple matrix/variable solve
 *

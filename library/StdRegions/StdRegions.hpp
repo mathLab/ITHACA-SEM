@@ -50,7 +50,7 @@
 
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/Basis.h>
-#include <LibUtilities/Foundations/TimeIntegrationScheme.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
@@ -360,6 +360,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.33  2008/12/18 14:11:35  pvos
+* NekConstants Update
+*
 * Revision 1.32  2008/11/19 16:02:47  pvos
 * Added functionality for variable Laplacian coeffcients
 *

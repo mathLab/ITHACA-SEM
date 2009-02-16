@@ -107,10 +107,6 @@ namespace Nektar
                            Array<OneD, Array<OneD, NekDouble> > &numfluxX,
 			   Array<OneD, Array<OneD, NekDouble> > &numfluxY);
         
-/*         void ODEforcing(const Array<OneD, const  Array<OneD, NekDouble> >&inarray,  */
-/*                               Array<OneD,        Array<OneD, NekDouble> >&outarray,  */
-/*                         NekDouble time); */
-
         void ODElhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
 		           Array<OneD,       Array<OneD, NekDouble> >&outarray, 
                     const NekDouble time);
@@ -122,11 +118,6 @@ namespace Nektar
         void ODErhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
                           Array<OneD,        Array<OneD, NekDouble> >&outarray, 
                     const NekDouble time);
-
-        void ODEdirkSolve(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
-                                Array<OneD,        Array<OneD, NekDouble> >&outarray, 
-                          const NekDouble lambda,
-                          const NekDouble time);
 
         void ExplicitlyIntegrateAdvection(int nsteps);
 
@@ -172,6 +163,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.h,v $
+* Revision 1.3  2009/02/02 16:12:15  claes
+* Moved nocase_cm to ADRBase
+*
 * Revision 1.2  2009/01/28 13:35:07  pvos
 * Modified Time Integration class to take LHS and RHS operator (+support for DIRK)
 *

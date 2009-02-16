@@ -53,6 +53,7 @@ namespace Nektar
         class TimeIntegrationSchemeKey;
         class TimeIntegrationScheme;
         class TimeIntegrationSolution;
+        class TimeIntegrationSchemeOperators;
 
         // typedefs
         typedef boost::shared_ptr<TimeIntegrationScheme>                TimeIntegrationSchemeSharedPtr;
@@ -78,22 +79,24 @@ namespace Nektar
             eMidpoint,                        //!< midpoint method
             eDIRKOrder2,                      //!< Diagonally Implicit Runge Kutta scheme of order 3
             eDIRKOrder3,                      //!< Diagonally Implicit Runge Kutta scheme of order 3
-            SIZE_TimeIntegrationMethod          //!< Length of enum list
+            eIMEXdirk_3_4_3,                  //!< L-stable, three stage, third order IMEX DIRK(3,4,3)
+            SIZE_TimeIntegrationMethod        //!< Length of enum list
         };
 
         const char* const TimeIntegrationMethodMap[] = 
         {
             "NoTimeIntegrationMethod",
-            "1st order Adams-Bashforth",
-            "2nd order Adams-Bashforth",
-            "1st order Adams-Moulton",
-            "2nd order Adams-Moulton",
-            "Classical Runge-Kutta 4",
-            "Forward Euler",
-            "Backward Euler",
-            "Midpoint method",
-            "2nd order Diagonally Implicit Runge Kutta (DIRK)"
-            "3rd order Diagonally Implicit Runge Kutta (DIRK)"
+            "AdamsBashforthOrder1",            
+            "AdamsBashforthOrder2",          
+            "AdamsMoultonOrder1",           
+            "AdamsMoultonOrder2",     
+            "ClassicalRungeKutta4",           
+            "ForwardEuler",                    
+            "BackwardEuler",                  
+            "Midpoint",                       
+            "DIRKOrder2",                     
+            "DIRKOrder3",                     
+            "IMEXdirk_3_4_3"                
         };
 
         enum TimeIntegrationSchemeType
@@ -101,6 +104,7 @@ namespace Nektar
             eNoTimeIntegrationSchemeType,
             eExplicit,              //!< Formally explicit scheme
             eDiagonallyImplicit,    //!< Diagonally implicit scheme (e.g. the DIRK schemes)
+            eIMEX,                  //!< Implicit Explicit General Linear Method
             eImplicit,              //!< Fully implicit scheme
         };
 
@@ -109,11 +113,130 @@ namespace Nektar
             "NoTimeIntegrationSchemeType",
             "Explicit",
             "DiagonallyImplicit",
+            "IMEX",
             "Implicit"
         };
 
         // =========================================================================
 
+
+
+        // =========================================================================
+        // ==== DEFINITION OF THE CLASS TimeIntegrationSchemeOperators
+        // =========================================================================
+        class TimeIntegrationSchemeOperators
+        {
+        public:
+            typedef const Array<OneD, const Array<OneD, NekDouble> > InArrayType;
+            typedef       Array<OneD,       Array<OneD, NekDouble> > OutArrayType;
+            
+            typedef boost::function< void (InArrayType&, OutArrayType&, const NekDouble) >                  FunctorType1;
+            typedef boost::function< void (InArrayType&, OutArrayType&, const NekDouble, const NekDouble) > FunctorType2;
+
+            typedef const FunctorType1& ConstFunctorType1Ref;
+            typedef const FunctorType2& ConstFunctorType2Ref;
+
+            typedef Array<OneD, FunctorType1> FunctorType1Array;
+            typedef Array<OneD, FunctorType2> FunctorType2Array;
+            
+            TimeIntegrationSchemeOperators(void):
+            m_functors1(5),
+            m_functors2(1)
+            {
+            }
+
+            template<typename FuncPointerT, typename ObjectPointerT> 
+                void DefineOdeLhs(FuncPointerT func, ObjectPointerT obj)
+            {
+                m_functors1[0] =  boost::bind(func, obj, _1, _2, _3);
+            }
+
+            template<typename FuncPointerT, typename ObjectPointerT> 
+                void DefineOdeLhsSolve(FuncPointerT func, ObjectPointerT obj)
+            {
+                m_functors1[1] =  boost::bind(func, obj, _1, _2, _3);
+            }
+
+            template<typename FuncPointerT, typename ObjectPointerT> 
+                void DefineOdeRhs(FuncPointerT func, ObjectPointerT obj)
+            {
+                m_functors1[2] =  boost::bind(func, obj, _1, _2, _3);
+            }
+
+            template<typename FuncPointerT, typename ObjectPointerT> 
+                void DefineOdeExplicitRhs(FuncPointerT func, ObjectPointerT obj)
+            {
+                m_functors1[3] =  boost::bind(func, obj, _1, _2, _3);
+            }
+
+            template<typename FuncPointerT, typename ObjectPointerT> 
+                void DefineOdeImplicitRhs(FuncPointerT func, ObjectPointerT obj)
+            {
+                m_functors1[4] =  boost::bind(func, obj, _1, _2, _3);
+            }
+
+            template<typename FuncPointerT, typename ObjectPointerT> 
+                void DefineImplicitSolve(FuncPointerT func, ObjectPointerT obj)
+            {
+                m_functors2[0] =  boost::bind(func, obj, _1, _2, _3, _4);
+            }
+
+            inline void DoOdeLhs(InArrayType     &inarray, 
+                                 OutArrayType    &outarray, 
+                                 const NekDouble time) const
+            {
+                ASSERTL1(!(m_functors1[0].empty()),"OdeLhs should be defined for this time integration scheme");
+                m_functors1[0](inarray,outarray,time);
+            }
+
+            inline void DoOdeLhsSolve(InArrayType     &inarray, 
+                                      OutArrayType    &outarray, 
+                                      const NekDouble time) const
+            {
+                ASSERTL1(!(m_functors1[1].empty()),"OdeLhsSolve should be defined for this time integration scheme");
+                m_functors1[1](inarray,outarray,time);
+            }
+            
+            inline void DoOdeRhs(InArrayType     &inarray, 
+                                 OutArrayType    &outarray, 
+                                 const NekDouble time) const
+            {
+                ASSERTL1(!(m_functors1[2].empty()),"OdeRhs should be defined for this time integration scheme");
+                m_functors1[2](inarray,outarray,time);
+            }
+            
+            inline void DoOdeExplicitRhs(InArrayType     &inarray, 
+                                         OutArrayType    &outarray, 
+                                         const NekDouble time) const
+            {
+                ASSERTL1(!(m_functors1[3].empty()),"OdeExplicitRhs should be defined for this time integration scheme");
+                m_functors1[3](inarray,outarray,time);
+            }
+            
+            inline void DoOdeImplicitRhs(InArrayType     &inarray, 
+                                        OutArrayType    &outarray, 
+                                        const NekDouble time) const
+            {
+                ASSERTL1(!(m_functors1[4].empty()),"OdeImplictRhs should be defined for this time integration scheme");
+                m_functors1[4](inarray,outarray,time);
+            }
+            
+            inline void DoImplicitSolve(InArrayType     &inarray, 
+                                        OutArrayType    &outarray, 
+                                        const NekDouble lambda,
+                                        const NekDouble time) const
+            {
+                ASSERTL1(!(m_functors2[0].empty()),"ImplicitSolve should be defined for this time integration scheme");
+                m_functors2[0](inarray,outarray,lambda,time);
+            }
+
+        protected:
+            FunctorType1Array m_functors1;
+            FunctorType2Array m_functors2;
+
+        private:
+
+        };
 
         // =========================================================================
         // ==== DEFINITION OF THE CLASS TimeIntegrationSchemeKey
@@ -272,6 +395,16 @@ namespace Nektar
                 return m_t[0];
             }
 
+            inline int GetFirstDim() const
+            {
+                return m_solVector[0].num_elements();
+            }
+
+            inline int GetSecondDim() const
+            {
+                return m_solVector[0][0].num_elements();
+            }
+
         private:
             TimeIntegrationMethod m_method;
             DoubleArray m_sol;
@@ -288,12 +421,16 @@ namespace Nektar
         {
         public:
 
-                typedef Array<OneD, Array<OneD, Array<OneD, NekDouble> > > TripleArray;
-                typedef Array<OneD, Array<OneD, NekDouble> >               DoubleArray;
+                typedef const Array<OneD, const Array<OneD, Array<OneD, NekDouble> > > ConstTripleArray;
+                typedef       Array<OneD,       Array<OneD, Array<OneD, NekDouble> > > TripleArray;
+                typedef const Array<OneD, const Array<OneD, NekDouble> >               ConstDoubleArray;
+                typedef       Array<OneD,       Array<OneD, NekDouble> >               DoubleArray;
+                typedef const Array<OneD, const NekDouble >                            ConstSingleArray;
+                typedef       Array<OneD,       NekDouble >                            SingleArray;
+                typedef boost::function< void (ConstDoubleArray&, DoubleArray&, const NekDouble) >                  FunctorType1;
+                typedef boost::function< void (ConstDoubleArray&, DoubleArray&, const NekDouble, const NekDouble) > FunctorType2;
 
         public:
-
-            static boost::shared_ptr<TimeIntegrationScheme> Create(const TimeIntegrationSchemeKey &key);
 
             virtual ~TimeIntegrationScheme()
             {
@@ -308,25 +445,35 @@ namespace Nektar
             {
                 return m_schemeType;
             }
- 
-            inline const Array<TwoD, const NekDouble>& GetA(void) const
-            {
-                return m_A;
-            }  
 
-            inline const Array<TwoD, const NekDouble>& GetB(void) const
+            inline NekDouble A(const unsigned int i, const unsigned int j) const
             {
-                return m_B;
-            }       
+                return m_A[0][i][j];
+            }
 
-            inline const Array<TwoD, const NekDouble>& GetU(void) const
+            inline NekDouble B(const unsigned int i, const unsigned int j) const
             {
-                return m_U;
-            }       
+                return m_B[0][i][j];
+            }
 
-            inline const Array<TwoD, const NekDouble>& GetV(void) const
+            inline NekDouble U(const unsigned int i, const unsigned int j) const
             {
-                return m_V;
+                return m_U[i][j];
+            }
+
+            inline NekDouble V(const unsigned int i, const unsigned int j) const
+            {
+                return m_V[i][j];
+            }
+
+            inline NekDouble A_IMEX(const unsigned int i, const unsigned int j) const
+            {
+                return m_A[1][i][j];
+            }
+
+            inline NekDouble B_IMEX(const unsigned int i, const unsigned int j) const
+            {
+                return m_B[1][i][j];
             }
 
             inline unsigned int GetNsteps(void) const
@@ -367,86 +514,11 @@ namespace Nektar
              * \return An object of the class TimeIntegrationSolution which represents the vectors \f$\boldsymbol{y}^{[n]}\f$ and \f$t^{[n]}\f$
              *  that can be used to start the actual integration.
              */
-            template<typename FuncType>
-                TimeIntegrationSolutionSharedPtr InitializeScheme(NekDouble          timestep,
-                                                                  NekDouble&         time,
-                                                                  int&               nsteps,
-                                                                  FuncType&          f,
-                                                                  const DoubleArray& y_0)
-            {
-                TimeIntegrationSolutionSharedPtr y_out;
-                TimeIntegrationMethod method = m_schemeKey.GetIntegrationMethod();
-                
-                switch(method)
-                {
-                case eForwardEuler:
-                case eBackwardEuler:
-                case eAdamsBashforthOrder1:
-                case eAdamsMoultonOrder1:
-                case eMidpoint:
-                case eClassicalRungeKutta4:
-                case eDIRKOrder2:
-                case eDIRKOrder3:
-                    {
-                        nsteps = 0;
-
-                        unsigned int nvar      = y_0.num_elements();
-                        unsigned int npoints   = y_0[0].num_elements();
-                        DoubleArray My_0(nvar);
-                        for(int i = 0; i < nvar; i++)
-                        {
-                            My_0[i] = Array<OneD,NekDouble>(npoints);
-                        }
-                        f.ODElhs(y_0,My_0,time);
-                        y_out = MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(method,y_0,My_0,time);
-                    }
-                break;
-                case eAdamsBashforthOrder2:
-                    {
-                        // To initialise, we do a 1st order Adams Bashforth step (=Forward euler) to calculate the
-                        // solution at the first time level
-                        TimeIntegrationSchemeKey       IntKey(eAdamsBashforthOrder1);
-                        TimeIntegrationSchemeSharedPtr IntScheme = TimeIntegrationSchemeManager()[IntKey];
-                        TimeIntegrationSolutionSharedPtr u = IntScheme->InitializeScheme(timestep,time,nsteps,f,y_0);
-                        IntScheme->ExplicitIntegration(timestep,f,u);
-                        
-                        int i;
-                        int nvar    = y_0.num_elements();
-                        int npoints = y_0[0].num_elements();
-                        DoubleArray f_y_0(nvar);
-                        for(i = 0; i < nvar; i++)
-                        {
-                            f_y_0[i] = Array<OneD,NekDouble>(npoints);
-                        }
-                        f.ODErhs     (y_0,f_y_0,time);
-
-                        for(i = 0; i < nvar; i++)
-                        {
-                            Blas::Dscal(npoints,timestep,f_y_0[i].get(),1);
-                        }
-
-                        TripleArray My(2);
-                        My[0] = (u->GetSolutionVector())[0];
-                        My[1] = f_y_0;
-
-                        Array<OneD,NekDouble> t(2);
-                        t[0] = u->GetTime();
-                        t[1] = timestep;
-
-                        time = u->GetTime();
-                        nsteps = 1;
-                        y_out = MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(method,u->GetSolution(),My,t);
-                    }
-                    break;
-                default:
-                    {
-                        NEKERROR(ErrorUtil::efatal,"Methods need implementation for specified integration scheme.");
-                    }
-                }
-                
-            return y_out;
-            }
-
+            TimeIntegrationSolutionSharedPtr InitializeScheme(const NekDouble                      timestep,
+                                                                    NekDouble                      &time   ,
+                                                                    int                            &nsteps ,
+                                                                    ConstDoubleArray               &y_0    ,
+                                                              const TimeIntegrationSchemeOperators &op     ) const;
 
             /**
              * \brief Explicit integration of an ODE.
@@ -466,55 +538,32 @@ namespace Nektar
              * \return The actual solution \f$\boldsymbol{y}^{n}\f$ at the new time level 
              *    (which in fact is also embedded in the argument y).
              */
-            // Explicitly integrate for one time step the system 
-            //              du/dt = f(u)
-            // where we pass a class "InClass" which must have the methods
-            //    InClass.Forcing(const Array<OneD, Array<OneD, NekDouble> > u) to evaluate f(0)    
-            template<typename FuncType>
-                const DoubleArray& ExplicitIntegration(NekDouble timestep,                                     
-                                                      FuncType& f,
-                                                      TimeIntegrationSolutionSharedPtr& y)
-            {
-                ASSERTL1((GetIntegrationSchemeType() == eExplicit) || 
-                         (GetIntegrationSchemeType() == eDiagonallyImplicit),
-                         "Fully Implicit integration scheme cannot be handled by this routine.");
+            ConstDoubleArray& TimeIntegrate(const NekDouble                        timestep,          
+                                                  TimeIntegrationSolutionSharedPtr &y      ,
+                                            const TimeIntegrationSchemeOperators   &op     ) const;
 
-                TimeIntegrationMethod method = y->GetIntegrationMethod();
-                int nvar    = (y->GetSolutionVector())[0].num_elements();
-                int npoints = (y->GetSolutionVector())[0][0].num_elements();
-                
-                ASSERTL1(method == m_schemeKey.GetIntegrationMethod(),
-                         "Input and output argument are constructed for a different integration scheme.");
-                
-                TimeIntegrationSolutionSharedPtr y_new = MemoryManager<TimeIntegrationSolution>::
-                    AllocateSharedPtr(method,m_numsteps,nvar,npoints); 
-
-                ExplicitIntegration(timestep,f,
-                                    y->GetSolutionVector(),
-                                    y->GetSolution(),
-                                    y->GetTimeVector(),
-                                    y_new->UpdateSolutionVector(),
-                                    y_new->UpdateSolution(),
-                                    y_new->UpdateTimeVector()); 
-                
-                y = y_new;
-
-                return y->GetSolution();
-            }
 
         protected:
             TimeIntegrationSchemeKey  m_schemeKey; 
             TimeIntegrationSchemeType m_schemeType;
-            unsigned int              m_numsteps;  //< Number of steps in multi-step component. 
-            unsigned int              m_numstages; //< Number of stages in multi-stage component. 
+            unsigned int              m_numsteps;   //< Number of steps in multi-step component. 
+            unsigned int              m_numstages;  //< Number of stages in multi-stage component. 
 
-            Array<TwoD,NekDouble>    m_A;
-            Array<TwoD,NekDouble>    m_B;
+            bool m_firstStageEqualsOldSolution;  //< Optimisation-flag 
+            bool m_lastStageEqualsNewSolution;   //< Optimisation-flag
+
+            Array<OneD, Array<TwoD,NekDouble> >   m_A;
+            Array<OneD, Array<TwoD,NekDouble> >   m_B;
             Array<TwoD,NekDouble>    m_U;
             Array<TwoD,NekDouble>    m_V;
 
         private: 
             
+            template <typename> friend class Nektar::MemoryManager;
+            friend TimeIntegrationSchemeManagerT &TimeIntegrationSchemeManager(void);
+
+            static boost::shared_ptr<TimeIntegrationScheme> Create(const TimeIntegrationSchemeKey &key);
+
             TimeIntegrationScheme(const TimeIntegrationSchemeKey &key);
             
             // These should never be called
@@ -528,185 +577,57 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Copy Constructor for the TimeIntegrationScheme class should not be called");
             }
 
-            TimeIntegrationSchemeType DetermineIntegrationSchemeType(const Array<TwoD,const NekDouble>& A,
-                                                                     const Array<TwoD,const NekDouble>& B,
-                                                                     const Array<TwoD,const NekDouble>& U,
-                                                                     const Array<TwoD,const NekDouble>& V);
+            bool VerifyIntegrationSchemeType(TimeIntegrationSchemeType type,
+                                             const Array<OneD, const Array<TwoD, NekDouble> >& A,
+                                             const Array<OneD, const Array<TwoD, NekDouble> >& B,
+                                             const Array<TwoD, const NekDouble>& U,
+                                             const Array<TwoD, const NekDouble>& V) const;
 
-            template<typename FuncType>
-            void ExplicitIntegration(NekDouble timestep,                       
-                                     FuncType& f,
-                                     const TripleArray& y_old,
-                                     const DoubleArray& sol_old,
-                                     const Array<OneD,const NekDouble>& t_old,
-                                     TripleArray& y_new,
-                                     DoubleArray& sol_new,
-                                     Array<OneD, NekDouble>& t_new)
+            void TimeIntegrate(const NekDouble                      timestep,      
+                                     ConstTripleArray               &y_old  ,
+                                     ConstDoubleArray               &sol_old,
+                                     ConstSingleArray               &t_old  ,
+                                     TripleArray                    &y_new  ,
+                                     DoubleArray                    &sol_new,
+                                     SingleArray                    &t_new  ,
+                               const TimeIntegrationSchemeOperators &op     ) const;
+
+
+            inline int GetFirstDim(ConstTripleArray &y) const
             {
-                unsigned int i,j,k;    
-                unsigned int nvar      = y_old[0].num_elements();
-                unsigned int npoints   = y_old[0][0].num_elements();
-
-                TimeIntegrationSchemeType type = GetIntegrationSchemeType();
-                ASSERTL1((type == eExplicit) || (type == eDiagonallyImplicit),
-                         "Fully Implicit integration scheme cannot be handled by this routine.");
-                ASSERTL1(y_old.num_elements()==m_numsteps,"Arguments not appropriate for this method.");                
-                
-                // First, we are going to calculate the various stage values and stage derivatives
-                // (this is the multi-stage part of the method)
-                // - Y corresponds to the stage values
-                // - F corresponds to the stage derivatives
-                // - T corresponds to the time at the different stages
-                TripleArray Y  (m_numstages);
-                TripleArray F  (m_numstages);
-                TripleArray tmp(m_numstages);
-                Array<OneD,NekDouble> T(m_numstages,0.0);
-
-                // Allocate memory for the arrays Y and F   
-                for(i = 0; i < m_numstages; ++i)
-                {    
-                    Y[i]   = DoubleArray(nvar);
-                    F[i]   = DoubleArray(nvar);
-                    tmp[i] = DoubleArray(nvar);
-                    for(j = 0; j < nvar; j++)
-                    {
-                        Y  [i][j] = Array<OneD, NekDouble>(npoints);
-                        F  [i][j] = Array<OneD, NekDouble>(npoints);
-                        tmp[i][j] = Array<OneD, NekDouble>(npoints,0.0);
-                    }
-                }
-    
-                // The loop below calculates the stage values and derivatives
-                for( i = 0; i < m_numstages; i++)
-                {
-                    // The stage values Y are a linear combination of:
-                    // 1: the stage derivatives
-                    for( j = 0; j < i; j++ )
-                    {
-                        for(k = 0; k < nvar; k++)
-                        {
-                            Vmath::Svtvp(npoints,timestep*m_A[i][j],F[j][k],1,
-                                         tmp[i][k],1,tmp[i][k],1);
-                        }
-
-                        T[i] += m_A[i][j]*timestep;
-                    }
-
-                    // 2: the imported multi-step solution of the previous time level
-                    for( j = 0; j < m_numsteps; j++)
-                    {
-                        for(k = 0; k < nvar; k++)
-                        {
-                            Vmath::Svtvp(npoints,m_U[i][j],y_old[j][k],1,
-                                         tmp[i][k],1,tmp[i][k],1);
-                        }
-                        T[i] += m_U[i][j]*t_old[j];
-                    }
-
-                    // Now, solve for the stage values
-                    if(type == eDiagonallyImplicit)
-                    {
-                        f.ODEdirkSolve(tmp[i], Y[i], T[i], m_A[i][i]*timestep);
-                    }
-                    else
-                    {
-                        f.ODElhsSolve (tmp[i], Y[i], T[i]);
-                    }
-
-                    // Calculate the stage derivative based upond the stage value
-                    f.ODErhs     (Y[i], F[i], T[i]);
-                }
-
-                // Next, the solution at the new time level will be calculated.
-                // For multi-step methods, this includes updating the values 
-                // of the auxiliary paremeters
-
-                // Make sure that the y_new is of same dimenension as y_old
-                // and that its values are set to zero  
-                if(y_new.num_elements() != m_numsteps)
-                {
-                    y_new = TripleArray(m_numsteps);
-                    for(i = 0; i < m_numsteps; ++i)
-                    { 
-                        y_new[i] = DoubleArray(nvar);
-                        for(j = 0; j < nvar; j++)
-                        {
-                            y_new[i][j] = Array<OneD,NekDouble>(npoints,0.0);
-                        } 
-                    }
-                }
-                else
-                {
-                    for(i = 0; i < m_numsteps; ++i)
-                    { 
-                        if(y_new[i].num_elements() != nvar)
-                        {
-                            y_new[i] = DoubleArray(nvar);
-                            for(j = 0; j < nvar; j++)
-                            {
-                                y_new[i][j] = Array<OneD,NekDouble>(npoints,0.0);
-                            } 
-                        }
-                        else
-                        {
-                            for(j = 0; j < nvar; j++)
-                            {
-                                if(y_new[i][j].num_elements() != npoints)
-                                {
-                                    y_new[i][j] = Array<OneD,NekDouble>(npoints,0.0);
-                                }
-                                else
-                                {
-                                    Vmath::Zero(npoints,y_new[i][j],1);
-                                }
-                            } 
-                        }
-                    }
-                }
-
-
-                if(t_new.num_elements() != m_numsteps)
-                {
-                    t_new = Array<OneD,NekDouble>(m_numsteps,0.0);
-                }
-                else
-                {
-                    Vmath::Zero(m_numsteps,t_new,1);
-                }
-                
-                // The loop below calculates the solution at the new time level
-                for( i = 0; i < m_numsteps; i++)
-                {
-                    // The solution at the new time level is a linear combination of:
-                    // 1: the stage derivatives
-                    for( j = 0; j < m_numstages; j++ )
-                    {
-                        for(k = 0; k < nvar; k++)
-                        {
-                            Vmath::Svtvp(npoints,timestep*m_B[i][j],F[j][k],1,
-                                         y_new[i][k],1,y_new[i][k],1);
-                        }
-                        t_new[i] += m_B[i][j]*timestep;
-
-                    }
-        
-                    // 2: the imported multi-step solution of the previous time level
-                    for( j = 0; j < m_numsteps; j++ )
-                    {
-                        for(k = 0; k < nvar; k++)
-                        {
-                            Vmath::Svtvp(npoints,m_V[i][j],y_old[j][k],1,
-                                         y_new[i][k],1,y_new[i][k],1);
-                        }
-                        t_new[i] += m_V[i][j]*t_old[j];
-                    }
-                }
-                f.ODElhsSolve(y_new[0],sol_new,t_new[0]);
+                return y[0].num_elements();
             }
+
+            inline int GetSecondDim(ConstTripleArray &y) const
+            {
+                return y[0][0].num_elements();
+            }
+
+            bool CheckTimeIntegrateArguments(const NekDouble                      timestep,      
+                                                   ConstTripleArray               &y_old  ,
+                                                   ConstDoubleArray               &sol_old,
+                                                   ConstSingleArray               &t_old  ,
+                                                   TripleArray                    &y_new  ,
+                                                   DoubleArray                    &sol_new,
+                                                   SingleArray                    &t_new  ,
+                                             const TimeIntegrationSchemeOperators &op) const;
+
+            bool CheckIfFirstStageEqualsOldSolution(const Array<OneD, const Array<TwoD, NekDouble> >& A,
+                                                    const Array<OneD, const Array<TwoD, NekDouble> >& B,
+                                                    const Array<TwoD, const NekDouble>& U,
+                                                    const Array<TwoD, const NekDouble>& V) const;
+            
+            bool CheckIfLastStageEqualsNewSolution(const Array<OneD, const Array<TwoD, NekDouble> >& A,
+                                                   const Array<OneD, const Array<TwoD, NekDouble> >& B,
+                                                   const Array<TwoD, const NekDouble>& U,
+                                                   const Array<TwoD, const NekDouble>& V) const;
+
+
 
         };
 
         std::ostream& operator<<(std::ostream& os, const TimeIntegrationScheme& rhs);
+        std::ostream& operator<<(std::ostream& os, const TimeIntegrationSchemeSharedPtr& rhs);
         
         // =========================================================================
 

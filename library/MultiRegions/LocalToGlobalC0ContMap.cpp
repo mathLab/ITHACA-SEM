@@ -315,9 +315,10 @@ namespace Nektar
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); j++)
                 {                               
+                    bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j));
+
                     if(bndConditions[i]->GetBoundaryConditionType()==SpatialDomains::eDirichlet)
                     {          
-                        bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j));
                         meshEdgeId = (bndSegExp->GetGeom1D())->GetEid();  
                         edgeReorderedGraphVertId[meshEdgeId] = graphVertId++;  
                         for(k = 0; k < 2; k++)
@@ -1509,6 +1510,9 @@ namespace Nektar
 
 /**
  * $Log: LocalToGlobalC0ContMap.cpp,v $
+ * Revision 1.5  2008/12/19 15:12:39  pvos
+ * Updates for precomputed dirichlet forcing functionality
+ *
  * Revision 1.4  2008/11/05 16:15:24  pvos
  * Added bandwith calculation routines
  *

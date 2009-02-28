@@ -72,17 +72,20 @@ namespace Nektar
              */  
             ~GenExpList1D();
             
+			// direction = 1 : Upwind
+			// direction = -1: Downwind
             void Upwind(const Array<OneD, const Array<OneD, NekDouble> > &Vec,
                         const Array<OneD, const NekDouble> &Fwd, 
                         const Array<OneD, const NekDouble> &Bwd, 
-                        Array<OneD, NekDouble> &Upwind);
+                        Array<OneD, NekDouble> &Upwind,
+						int direction=1);
 
 
-            
-            void Upwind(const Array<OneD, const NekDouble> &Vn, 
-                        const Array<OneD, const NekDouble> &Fwd, 
-                        const Array<OneD, const NekDouble> &Bwd, 
-                        Array<OneD, NekDouble> &Upwind);
+			void Upwind(const Array<OneD, const NekDouble> &Vn, 
+									  const Array<OneD, const NekDouble> &Fwd, 
+									  const Array<OneD, const NekDouble> &Bwd, 
+									  Array<OneD, NekDouble> &Upwind,
+									  int direction=1);
 
 	    void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals); 
 
@@ -103,6 +106,9 @@ namespace Nektar
 
 /**
  * $Log: GenExpList1D.h,v $
+ * Revision 1.6  2008/10/29 22:46:35  sherwin
+ * Updates for const correctness and a few other bits
+ *
  * Revision 1.5  2008/10/09 21:47:14  ehan
  * Fixed error from the function Upwind().
  *

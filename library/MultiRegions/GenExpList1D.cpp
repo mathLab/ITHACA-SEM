@@ -147,7 +147,8 @@ namespace Nektar
         void GenExpList1D::Upwind(const Array<OneD, const Array<OneD, NekDouble> > &Vec,
                                   const Array<OneD, const NekDouble> &Fwd, 
                                   const Array<OneD, const NekDouble> &Bwd, 
-                                  Array<OneD, NekDouble> &Upwind)
+                                  Array<OneD, NekDouble> &Upwind,
+								  int direction)
         {
             int i,j,k,e_npoints,offset;
             Array<OneD,NekDouble> normals; 
@@ -176,7 +177,7 @@ namespace Nektar
                     }
 
                     // Upwind
-                    if(Vn > 0.0)
+                    if(direction*Vn > 0.0)
                     {
                         Upwind[offset + j] = Fwd[offset + j];
                     }
@@ -191,7 +192,8 @@ namespace Nektar
         void GenExpList1D::Upwind(const Array<OneD, const NekDouble> &Vn, 
                                   const Array<OneD, const NekDouble> &Fwd, 
                                   const Array<OneD, const NekDouble> &Bwd, 
-                                  Array<OneD, NekDouble> &Upwind)
+                                  Array<OneD, NekDouble> &Upwind,
+								  int direction)
         {
             int i,j,k,e_npoints,offset;
             Array<OneD,NekDouble> normals; 
@@ -207,7 +209,7 @@ namespace Nektar
                 for(j = 0; j < e_npoints; ++j)
                 {
                     // Upwind
-                    if(Vn[offset + j] > 0.0)
+                    if(direction*Vn[offset + j] > 0.0)
                     {
                         Upwind[offset + j] = Fwd[offset + j];
                     }
@@ -218,6 +220,7 @@ namespace Nektar
                 }
             }            
         }
+		
 
         void GenExpList1D::GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals) 
         {
@@ -253,6 +256,9 @@ namespace Nektar
 
 /**
 * $Log: GenExpList1D.cpp,v $
+* Revision 1.8  2008/10/29 22:46:35  sherwin
+* Updates for const correctness and a few other bits
+*
 * Revision 1.7  2008/10/09 21:47:36  ehan
 * Fixed error from the function Upwind().
 *

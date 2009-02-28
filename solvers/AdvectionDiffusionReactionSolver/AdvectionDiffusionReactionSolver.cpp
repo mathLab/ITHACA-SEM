@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
         // Solve the appropriate Helmholtz problem 
         dom.SolveHelmholtz(lambda);
         break;
-    case eAdvection:
+    case eAdvection: case eDiffusion:
         // Set up the intial conditions 
         dom.SetInitialConditions();
         

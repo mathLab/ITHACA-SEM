@@ -46,6 +46,7 @@ namespace Nektar
     {
         eNoEquationType,
         eAdvection,
+		eDiffusion,
         eSteadyDiffusion,
         eSteadyDiffusionReaction,
         eLaplace,
@@ -59,6 +60,7 @@ namespace Nektar
     {
         "NoType",
         "Advection",
+		"ExDiffusion",
         "SteadyDiffusion",
         "SteadyDiffusionReaction",
         "Laplace",
@@ -100,13 +102,34 @@ namespace Nektar
 
         void GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> >&physfield, Array<OneD, Array<OneD, NekDouble> >&flux);
 
+		void GetFluxVector(const int i, const int j, Array<OneD, Array<OneD, NekDouble> > &physfield, 
+						 Array<OneD, Array<OneD, NekDouble> > &flux);
+
         void NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
                            Array<OneD, Array<OneD, NekDouble> > &numflux);
 
-	void NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
+	    void NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
                            Array<OneD, Array<OneD, NekDouble> > &numfluxX,
 			   Array<OneD, Array<OneD, NekDouble> > &numfluxY);
-        
+			   
+		void NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield, 
+						   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
+						   
+	    void NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield,
+	                       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+						   Array<OneD, Array<OneD, NekDouble> >  &qflux);
+						   
+	    void WeakPenaltyBoundary(const Array<OneD, const NekDouble> &Fwd, 
+								Array<OneD, NekDouble> &penaltyflux,
+											NekDouble initialtime=1.0);
+									 
+	   void WeakPenaltyBoundary(const int dir,
+	                            const Array<OneD, const NekDouble> &Fwd,
+								const Array<OneD, const NekDouble> &qFwd,
+								      Array<OneD, NekDouble> &penaltyflux,
+															NekDouble C11,
+															NekDouble initialtime=1.0);	   
+			   
         void ODElhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
 		           Array<OneD,       Array<OneD, NekDouble> >&outarray, 
                     const NekDouble time);
@@ -142,6 +165,11 @@ namespace Nektar
         {
             GetFluxVector(i,physfield,flux);
         }
+		
+	    virtual void v_GetFluxVector(const int i, const int j, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux)
+        {
+            GetFluxVector(i,j,physfield,flux);
+        }
         
         virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numflux)
         {
@@ -152,6 +180,19 @@ namespace Nektar
         {
 	  NumericalFlux(physfield, numfluxX, numfluxY); 
         }
+		
+		virtual void v_NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield, 
+						   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
+		{
+		    NumFluxforDiff(ufield, uflux);
+		}
+						   
+		virtual void v_NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield,
+	                       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+						   Array<OneD, Array<OneD, NekDouble> >  &qflux)
+	    {
+		    NumFluxforDiff(ufield, qfield, qflux);
+		}
       
     };
     
@@ -163,6 +204,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.h,v $
+* Revision 1.4  2009/02/16 16:07:04  pvos
+* Update of TimeIntegration classes
+*
 * Revision 1.3  2009/02/02 16:12:15  claes
 * Moved nocase_cm to ADRBase
 *

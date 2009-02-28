@@ -74,7 +74,7 @@ namespace Nektar
         void SetInitialConditions(NekDouble initialtime = 0.0);
         void SetPhysForcingFunctions(Array<OneD, MultiRegions::ExpListSharedPtr> &force);
             
-	void EvaluateExactSolution(int field, Array<OneD, NekDouble > &outfield, const NekDouble time);
+	    void EvaluateExactSolution(int field, Array<OneD, NekDouble > &outfield, const NekDouble time);
 
         void EvaluateUserDefinedEqn(Array<OneD, Array<OneD, NekDouble> > &outfield);
       
@@ -92,8 +92,13 @@ namespace Nektar
 			     Array<OneD, Array<OneD, NekDouble> >& OutField, 
 			     bool NumericalFluxIncludesNormal = true, 
 			     bool InFieldIsInPhysSpace = false, int nvariables = 0); 
+				 
+		void WeakDGDiffusion(const Array<OneD, Array<OneD, NekDouble> >& InField, 
+				Array<OneD, Array<OneD, NekDouble> >& OutField,
+				bool NumericalFluxIncludesNormal = true, 
+				bool InFieldIsInPhysSpace = false, int nvariables = 0);
 
-	NekDouble L2Error(int field, const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
+	    NekDouble L2Error(int field, const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
 	
         void Output     (void);
 	
@@ -188,6 +193,13 @@ namespace Nektar
         {
 	  v_GetFluxVector(i,physfield, fluxX, fluxY);
         }
+		
+	virtual void GetFluxVector(const int i, const int j, 
+	           Array<OneD, Array<OneD, NekDouble> > &physfield, 
+			   Array<OneD, Array<OneD, NekDouble> > &flux)
+        {
+            v_GetFluxVector(i,j,physfield,flux);
+        }
 
 	void NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
                            Array<OneD, Array<OneD, NekDouble> > &numflux)
@@ -201,6 +213,19 @@ namespace Nektar
         {
 	  v_NumericalFlux(physfield, numfluxX, numfluxY);
         }
+		
+	void NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield, 
+						   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
+		{
+		   v_NumFluxforDiff(ufield, uflux);
+		}
+		
+	void NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield,
+	                       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+						   Array<OneD, Array<OneD, NekDouble> >  &qflux)
+		{
+		   v_NumFluxforDiff(ufield,qfield, qflux);
+		}
 	//--------------------------------------------------------------------------
 
     protected:
@@ -229,6 +254,12 @@ namespace Nektar
 	  ASSERTL0(false,"v_GetFluxVector: This function is not valid for the Base class");
         }
         
+		virtual void v_GetFluxVector(const int i, const int j, Array<OneD, Array<OneD, NekDouble> >&physfield, 
+				     Array<OneD, Array<OneD, NekDouble> >&flux)
+        {
+	  ASSERTL0(false,"v_GetqFluxVector: This function is not valid for the Base class");
+        }
+
 	virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> >&physfield, 
 				     Array<OneD, Array<OneD, NekDouble> >&fluxX, 
 				     Array<OneD, Array<OneD, NekDouble> > &fluxY)
@@ -249,6 +280,19 @@ namespace Nektar
         {
 	  ASSERTL0(false,"v_NumericalFlux: This function is not valid for the Base class");
         }
+		
+	virtual void v_NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield, 
+						   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
+        {
+	  ASSERTL0(false,"v_NumFluxforDiffu: This function is not valid for the Base class");
+        }
+
+	 virtual void v_NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield,
+	                       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+						   Array<OneD, Array<OneD, NekDouble > >  &qflux)
+        {
+	  ASSERTL0(false,"v_NumFluxforDiffq: This function is not valid for the Base class");
+        }
 
     };
     
@@ -260,6 +304,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.3  2009/02/03 14:33:44  pvos
+* Modifications for solvers with time-dependent dirichlet BC's
+*
 * Revision 1.2  2009/02/02 16:10:16  claes
 * Update to make SWE, Euler and Boussinesq solvers up to date with the time integrator scheme. Linear and classical Boussinsq solver working
 *

@@ -208,12 +208,38 @@ namespace Nektar
                 BOOST_STATIC_ASSERT(dim::Value >= 3);
                 return m_impl[2];
             }
-
+            
             typename boost::call_traits<DataType>::const_reference w() const
             {
                 BOOST_STATIC_ASSERT(dim::Value >= 4);
                 return m_impl[3];
             }
+
+            
+//            typename boost::call_traits<DataType>::reference x() 
+//            {
+//                BOOST_STATIC_ASSERT(dim::Value >= 1);
+//                return m_impl[0];
+//            }
+//
+//            typename boost::call_traits<DataType>::reference y() 
+//            {
+//                BOOST_STATIC_ASSERT(dim::Value >= 2);
+//                return m_impl[1];
+//            }
+//
+//            typename boost::call_traits<DataType>::reference z() 
+//            {
+//                BOOST_STATIC_ASSERT(dim::Value >= 3);
+//                return m_impl[2];
+//            }
+//
+//
+//            typename boost::call_traits<DataType>::reference w() 
+//            {
+//                BOOST_STATIC_ASSERT(dim::Value >= 4);
+//                return m_impl[3];
+//            }
 
             // Unitary operators
             NekVector<DataType, dim, space> operator-() const { return Negate(*this); }
@@ -372,24 +398,28 @@ namespace Nektar
             using BaseType::operator();
             using BaseType::operator[];
             
+            using BaseType::x;
             typename boost::call_traits<DataType>::reference x() 
             {
                 BOOST_STATIC_ASSERT(dim::Value >= 1);
                 return this->GetImpl()[0];
             }
 
+            using BaseType::y;
             typename boost::call_traits<DataType>::reference y() 
             {
                 BOOST_STATIC_ASSERT(dim::Value >= 2);
                 return this->GetImpl()[1];
             }
 
+            using BaseType::z;
             typename boost::call_traits<DataType>::reference z() 
             {
                 BOOST_STATIC_ASSERT(dim::Value >= 3);
                 return this->GetImpl()[2];
             }
 
+            using BaseType::w;
             typename boost::call_traits<DataType>::reference w() 
             {
                 BOOST_STATIC_ASSERT(dim::Value >= 4);

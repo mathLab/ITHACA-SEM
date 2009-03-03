@@ -76,11 +76,12 @@ SET(NEKTAR_USE_WIN32_LAPACK ${Win32LapackDefault} CACHE BOOL "Use Win32 Lapack p
 
 INCLUDE(NektarCommon)
 
-INCLUDE (FindBoost)
+
 INCLUDE (FindLoki)
 INCLUDE (FindTinyXml)
 
-
+SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost 
+  ${CMAKE_SOURCE_DIR}/../../ThirdParty/boost)
 FIND_PACKAGE( Boost 1.35.0 REQUIRED COMPONENTS thread iostreams zlib date_time)
 
 

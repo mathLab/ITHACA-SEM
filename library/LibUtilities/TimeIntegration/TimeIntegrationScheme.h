@@ -140,39 +140,27 @@ namespace Nektar
             typedef Array<OneD, FunctorType2> FunctorType2Array;
             
             TimeIntegrationSchemeOperators(void):
-            m_functors1(5),
+            m_functors1(3),
             m_functors2(1)
             {
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
-                void DefineOdeLhs(FuncPointerT func, ObjectPointerT obj)
+                void DefineOdeRhs(FuncPointerT func, ObjectPointerT obj)
             {
                 m_functors1[0] =  boost::bind(func, obj, _1, _2, _3);
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
-                void DefineOdeLhsSolve(FuncPointerT func, ObjectPointerT obj)
+                void DefineOdeExplicitRhs(FuncPointerT func, ObjectPointerT obj)
             {
                 m_functors1[1] =  boost::bind(func, obj, _1, _2, _3);
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
-                void DefineOdeRhs(FuncPointerT func, ObjectPointerT obj)
-            {
-                m_functors1[2] =  boost::bind(func, obj, _1, _2, _3);
-            }
-
-            template<typename FuncPointerT, typename ObjectPointerT> 
-                void DefineOdeExplicitRhs(FuncPointerT func, ObjectPointerT obj)
-            {
-                m_functors1[3] =  boost::bind(func, obj, _1, _2, _3);
-            }
-
-            template<typename FuncPointerT, typename ObjectPointerT> 
                 void DefineOdeImplicitRhs(FuncPointerT func, ObjectPointerT obj)
             {
-                m_functors1[4] =  boost::bind(func, obj, _1, _2, _3);
+                m_functors1[2] =  boost::bind(func, obj, _1, _2, _3);
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
@@ -180,45 +168,29 @@ namespace Nektar
             {
                 m_functors2[0] =  boost::bind(func, obj, _1, _2, _3, _4);
             }
-
-            inline void DoOdeLhs(InArrayType     &inarray, 
-                                 OutArrayType    &outarray, 
-                                 const NekDouble time) const
-            {
-                ASSERTL1(!(m_functors1[0].empty()),"OdeLhs should be defined for this time integration scheme");
-                m_functors1[0](inarray,outarray,time);
-            }
-
-            inline void DoOdeLhsSolve(InArrayType     &inarray, 
-                                      OutArrayType    &outarray, 
-                                      const NekDouble time) const
-            {
-                ASSERTL1(!(m_functors1[1].empty()),"OdeLhsSolve should be defined for this time integration scheme");
-                m_functors1[1](inarray,outarray,time);
-            }
             
             inline void DoOdeRhs(InArrayType     &inarray, 
                                  OutArrayType    &outarray, 
                                  const NekDouble time) const
             {
-                ASSERTL1(!(m_functors1[2].empty()),"OdeRhs should be defined for this time integration scheme");
-                m_functors1[2](inarray,outarray,time);
+                ASSERTL1(!(m_functors1[0].empty()),"OdeRhs should be defined for this time integration scheme");
+                m_functors1[0](inarray,outarray,time);
             }
             
             inline void DoOdeExplicitRhs(InArrayType     &inarray, 
                                          OutArrayType    &outarray, 
                                          const NekDouble time) const
             {
-                ASSERTL1(!(m_functors1[3].empty()),"OdeExplicitRhs should be defined for this time integration scheme");
-                m_functors1[3](inarray,outarray,time);
+                ASSERTL1(!(m_functors1[1].empty()),"OdeExplicitRhs should be defined for this time integration scheme");
+                m_functors1[1](inarray,outarray,time);
             }
             
             inline void DoOdeImplicitRhs(InArrayType     &inarray, 
                                         OutArrayType    &outarray, 
                                         const NekDouble time) const
             {
-                ASSERTL1(!(m_functors1[4].empty()),"OdeImplictRhs should be defined for this time integration scheme");
-                m_functors1[4](inarray,outarray,time);
+                ASSERTL1(!(m_functors1[2].empty()),"OdeImplictRhs should be defined for this time integration scheme");
+                m_functors1[2](inarray,outarray,time);
             }
             
             inline void DoImplicitSolve(InArrayType     &inarray, 
@@ -332,89 +304,6 @@ namespace Nektar
         // =========================================================================
 
         // =========================================================================
-        // ==== DEFINITION OF THE CLASS TimeIntegrationSolution
-        // =========================================================================
-        class TimeIntegrationSolution
-        {
-        public:
-            typedef Array<OneD, Array<OneD, Array<OneD, NekDouble> > > TripleArray;
-            typedef Array<OneD, Array<OneD, NekDouble> >               DoubleArray;
-            
-            // Constructor for single step methods
-            TimeIntegrationSolution(TimeIntegrationMethod method, 
-                                    const DoubleArray& y, 
-                                    const DoubleArray& My, 
-                                    NekDouble t);
-            // Constructor for multi-step methods
-            TimeIntegrationSolution(TimeIntegrationMethod method, 
-                                    const DoubleArray& y, 
-                                    const TripleArray& My, 
-                                    const Array<OneD, NekDouble>& t);
-            TimeIntegrationSolution(TimeIntegrationMethod method,
-                                    unsigned int nsteps,
-                                    unsigned int nvar,
-                                    unsigned int npoints);
-            
-            inline TimeIntegrationMethod GetIntegrationMethod() const
-            {
-                return m_method;
-            }
-
-            inline const TripleArray& GetSolutionVector()
-            {
-                return m_solVector;
-            }
-
-            inline TripleArray& UpdateSolutionVector()
-            {
-                return m_solVector;
-            }
-
-            inline const DoubleArray& GetSolution()
-            {
-                return m_sol;
-            }
-
-            inline DoubleArray& UpdateSolution()
-            {
-                return m_sol;
-            }
-
-            inline const Array<OneD, const NekDouble>& GetTimeVector()
-            {
-                return m_t;
-            }
-
-            inline Array<OneD, NekDouble>& UpdateTimeVector()
-            {
-                return m_t;
-            }
-
-            inline NekDouble GetTime()
-            {
-                return m_t[0];
-            }
-
-            inline int GetFirstDim() const
-            {
-                return m_solVector[0].num_elements();
-            }
-
-            inline int GetSecondDim() const
-            {
-                return m_solVector[0][0].num_elements();
-            }
-
-        private:
-            TimeIntegrationMethod m_method;
-            DoubleArray m_sol;
-            TripleArray m_solVector;
-            Array<OneD,NekDouble> m_t;
-        };
-        // =========================================================================
-
-
-        // =========================================================================
         // ==== DEFINITION OF THE CLASS TimeIntegrationScheme
         // =========================================================================
         class TimeIntegrationScheme
@@ -434,6 +323,11 @@ namespace Nektar
 
             virtual ~TimeIntegrationScheme()
             {
+            }
+
+            inline const TimeIntegrationSchemeKey& GetIntegrationSchemeKey() const
+            {
+                return m_schemeKey;
             }
 
             inline TimeIntegrationMethod GetIntegrationMethod() const
@@ -486,6 +380,16 @@ namespace Nektar
                 return m_numstages;
             }
 
+            inline unsigned int GetNmultiStepValues(void) const
+            {
+                return m_numMultiStepValues;
+            }
+
+            inline unsigned int GetNmultiStepDerivs(void) const
+            {
+                return m_numMultiStepDerivs;
+            }
+
             /**
              * \brief This function initialises the time integration scheme
              *
@@ -515,9 +419,8 @@ namespace Nektar
              *  that can be used to start the actual integration.
              */
             TimeIntegrationSolutionSharedPtr InitializeScheme(const NekDouble                      timestep,
-                                                                    NekDouble                      &time   ,
-                                                                    int                            &nsteps ,
                                                                     ConstDoubleArray               &y_0    ,
+                                                              const NekDouble                      time    ,
                                                               const TimeIntegrationSchemeOperators &op     ) const;
 
             /**
@@ -542,6 +445,11 @@ namespace Nektar
                                                   TimeIntegrationSolutionSharedPtr &y      ,
                                             const TimeIntegrationSchemeOperators   &op     ) const;
 
+            inline const Array<OneD, const unsigned int>& GetTimeLevelOffset()
+            {
+                return m_timeLevelOffset;
+            }
+
 
         protected:
             TimeIntegrationSchemeKey  m_schemeKey; 
@@ -551,6 +459,21 @@ namespace Nektar
 
             bool m_firstStageEqualsOldSolution;  //< Optimisation-flag 
             bool m_lastStageEqualsNewSolution;   //< Optimisation-flag
+
+            unsigned int m_numMultiStepValues; // number of entries in input and output vector that correspond
+                                               // to VALUES at previous time levels
+            unsigned int m_numMultiStepDerivs; // number of entries in input and output vector that correspond
+                                               // to DERIVATIVES at previous time levels
+            Array<OneD,unsigned int> m_timeLevelOffset; // denotes to which time-level the entries in both 
+                                                             // input and output vector correspond, e.g.
+                                                             //     INPUT VECTOR --------> m_inputTimeLevelOffset
+                                                             //    _            _               _ _
+                                                             //   | u^n          |             | 0 | 
+                                                             //   | u^{n-1}      |             | 1 | 
+                                                             //   | u^{n-2}      |  ----->     | 2 | 
+                                                             //   | dt f(u^{n-1})|             | 1 | 
+                                                             //   | dt f(u^{n-2})|             | 2 | 
+                                                             //    -            -               - -
 
             Array<OneD, Array<TwoD,NekDouble> >   m_A;
             Array<OneD, Array<TwoD,NekDouble> >   m_B;
@@ -585,10 +508,8 @@ namespace Nektar
 
             void TimeIntegrate(const NekDouble                      timestep,      
                                      ConstTripleArray               &y_old  ,
-                                     ConstDoubleArray               &sol_old,
                                      ConstSingleArray               &t_old  ,
                                      TripleArray                    &y_new  ,
-                                     DoubleArray                    &sol_new,
                                      SingleArray                    &t_new  ,
                                const TimeIntegrationSchemeOperators &op     ) const;
 
@@ -605,10 +526,8 @@ namespace Nektar
 
             bool CheckTimeIntegrateArguments(const NekDouble                      timestep,      
                                                    ConstTripleArray               &y_old  ,
-                                                   ConstDoubleArray               &sol_old,
                                                    ConstSingleArray               &t_old  ,
                                                    TripleArray                    &y_new  ,
-                                                   DoubleArray                    &sol_new,
                                                    SingleArray                    &t_new  ,
                                              const TimeIntegrationSchemeOperators &op) const;
 
@@ -625,6 +544,240 @@ namespace Nektar
 
 
         };
+
+
+        // =========================================================================
+        // ==== DEFINITION OF THE CLASS TimeIntegrationSolution
+        // =========================================================================
+        class TimeIntegrationSolution
+        {
+        public:
+            typedef Array<OneD, Array<OneD, Array<OneD, NekDouble> > > TripleArray;
+            typedef Array<OneD, Array<OneD, NekDouble> >               DoubleArray;
+            
+            // Constructor for single step methods
+            TimeIntegrationSolution(const TimeIntegrationSchemeKey &key, 
+                                    const DoubleArray& y, 
+                                    const NekDouble time, 
+                                    const NekDouble timestep);
+            // Constructor for multi-step methods
+            TimeIntegrationSolution(const TimeIntegrationSchemeKey &key, 
+                                    const TripleArray& y, 
+                                    const Array<OneD, NekDouble>& t);
+            TimeIntegrationSolution(const TimeIntegrationSchemeKey &key,
+                                    unsigned int nvar,
+                                    unsigned int npoints);
+            TimeIntegrationSolution(const TimeIntegrationSchemeKey &key);
+
+            inline const TimeIntegrationSchemeSharedPtr& GetIntegrationScheme() const
+            {
+                return m_scheme;
+            }
+
+            inline const TimeIntegrationSchemeKey& GetIntegrationSchemeKey() const
+            {
+                return m_scheme->GetIntegrationSchemeKey();
+            }
+            
+            inline TimeIntegrationMethod GetIntegrationMethod() const
+            {
+                return m_scheme->GetIntegrationMethod();
+            }
+
+            inline const TripleArray& GetSolutionVector() const
+            {
+                return m_solVector;
+            }
+
+            inline TripleArray& UpdateSolutionVector()
+            {
+                return m_solVector;
+            }
+
+            inline const DoubleArray& GetSolution() const
+            {
+                return m_solVector[0];
+            }
+
+            inline DoubleArray& UpdateSolution()
+            {
+                return m_solVector[0];
+            }
+
+            inline const Array<OneD, const NekDouble>& GetTimeVector() const
+            {
+                return m_t;
+            }
+
+            inline Array<OneD, NekDouble>& UpdateTimeVector()
+            {
+                return m_t;
+            }
+
+            inline NekDouble GetTime() const
+            {
+                return m_t[0];
+            }
+
+            inline int GetNsteps()
+            {
+                return m_scheme->GetNsteps();
+            }
+
+            inline int GetFirstDim() const
+            {
+                return m_solVector[0].num_elements();
+            }
+
+            inline int GetSecondDim() const
+            {
+                return m_solVector[0][0].num_elements();
+            }
+
+            // Return the number of entries in the solution vector that correspond
+            // to (multi-step) values
+            inline unsigned int GetNvalues(void) const
+            {
+                return m_scheme->GetNmultiStepValues();
+            }
+
+            // Return the number of entries in the solution vector that correspond
+            // to (multi-step) derivatives
+            inline unsigned int GetNderivs(void) const
+            {
+                return m_scheme->GetNmultiStepDerivs();
+            }
+
+            // Returns an array which indicates to which time-level the entries in the
+            // solution vector correspond
+            inline const Array<OneD, const unsigned int>& GetTimeLevelOffset()
+            {
+                return m_scheme->GetTimeLevelOffset();
+            }
+
+            // returns the entry in the solution vector which corresponds to 
+            // the (multi-step) value at the time-level with specified offset
+            inline DoubleArray& GetValue(const unsigned int timeLevelOffset)
+            {
+                int i;
+                int nMultiStepVals = m_scheme->GetNmultiStepValues();
+                const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
+
+                for(int i = 0; i < nMultiStepVals; i++)
+                {
+                    if( timeLevelOffset == offsetvec[i] )
+                    {
+                        return m_solVector[i];
+                    }
+                }
+                ASSERTL1(false,"The solution vector of this scheme does not contain a value at the requested time-level");
+                return m_solVector[0];
+            }
+
+            // returns the entry in the solution vector which corresponds to 
+            // the (multi-step) derivative at the time-level with specified offset
+            inline DoubleArray& GetDerivative(const unsigned int timeLevelOffset)
+            {
+                int i;
+                int nMultiStepVals = m_scheme->GetNmultiStepValues();
+                int size           = m_scheme->GetNsteps();
+                const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
+
+                for(int i = nMultiStepVals; i < size; i++)
+                {
+                    if( timeLevelOffset == offsetvec[i] )
+                    {
+                        return m_solVector[i];
+                    }
+                }
+                ASSERTL1(false,"The solution vector of this scheme does not contain a derivative at the requested time-level");
+                return m_solVector[0];
+            }
+
+            // returns the time associated with the (multi-step) value at the time-level with the 
+            // given offset
+            inline NekDouble GetValueTime(const unsigned int timeLevelOffset)
+            {
+                int i;
+                int nMultiStepVals = m_scheme->GetNmultiStepValues();
+                const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
+
+                for(int i = 0; i < nMultiStepVals; i++)
+                {
+                    if( timeLevelOffset == offsetvec[i] )
+                    {
+                        return m_t[i];
+                    }
+                }
+                ASSERTL1(false,"The solution vector of this scheme does not contain a value at the requested time-level");
+                return m_t[0];
+            }
+
+            // sets the (multi-step) value and time in the solution vector which corresponds to 
+            // the value at the time-level with specified offset
+            inline void SetValue(const unsigned int timeLevelOffset, const DoubleArray& y, const NekDouble t)
+            {
+                int i;
+                int nMultiStepVals = m_scheme->GetNmultiStepValues();
+                const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
+
+                for(int i = 0; i < nMultiStepVals; i++)
+                {
+                    if( timeLevelOffset == offsetvec[i] )
+                    {
+                        m_solVector[i] = y;
+                        m_t[i] = t;
+                        return;
+                    }
+                }
+            }
+
+            // sets the (multi-step) derivative and time in the solution vector which corresponds to 
+            // the derivative at the time-level with specified offset
+            inline void SetDerivative(const unsigned int timeLevelOffset, const DoubleArray& y, const NekDouble timestep)
+            {
+                int i;
+                int nMultiStepVals = m_scheme->GetNmultiStepValues();
+                int size           = m_scheme->GetNsteps();
+                const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
+
+                for(int i = nMultiStepVals; i < size; i++)
+                {
+                    if( timeLevelOffset == offsetvec[i] )
+                    {
+                        m_solVector[i] = y;
+                        m_t[i] = timestep;
+                        return;
+                    }
+                }
+            }
+
+            // Rotate the solution vector 
+            // (i.e. updating without calculating/inserting new values)
+            inline void RotateSolutionVector()
+            {
+                int i;
+                int nMultiStepVals = m_scheme->GetNmultiStepValues();
+                int size           = m_scheme->GetNsteps();
+                for(i = (nMultiStepVals-1); i > 0; i--)
+                {
+                    m_solVector[i] = m_solVector[i-1];
+                }
+
+                for(i = (size-1); i > nMultiStepVals; i--)
+                {
+                    m_solVector[i] = m_solVector[i-1];
+                }
+            }
+
+
+        private:
+            TimeIntegrationSchemeSharedPtr m_scheme;
+            TripleArray m_solVector;
+            Array<OneD,NekDouble> m_t;
+        };
+        // =========================================================================
+
 
         std::ostream& operator<<(std::ostream& os, const TimeIntegrationScheme& rhs);
         std::ostream& operator<<(std::ostream& os, const TimeIntegrationSchemeSharedPtr& rhs);

@@ -158,41 +158,46 @@ namespace Nektar
         switch(m_projectionType)
         {
         case eDiscontinuousGalerkin:
-	  
-	  switch(m_equationType)
-	  {
-	    case eAdvection:
-	    {
-	  	   SetBoundaryConditions(time);
-	       WeakDGAdvection(inarray, outarray);
-	      for(i = 0; i < nvariables; ++i)
-            {
-		      Vmath::Neg(ncoeffs,outarray[i],1);
-            }
-	     }
-	    break;
-	   
-	    case eDiffusion:
-		{
+            {	  
+                switch(m_equationType)
+                {
+                case eAdvection:
+                    {
+                        SetBoundaryConditions(time);
+                        WeakDGAdvection(inarray, outarray);
+                        for(i = 0; i < nvariables; ++i)
+                        {
+                            m_fields[i]->MultiplyByElmtInvMass(outarray[i],outarray[i]);
+                            Vmath::Neg(ncoeffs,outarray[i],1);
+                        }
+                    }
+                    break;
+                    
+                case eDiffusion:
+                    {
 			// BoundaryConditions are imposed weakly at the Diffusion operator
-		     WeakDGDiffusion(inarray,outarray);
-		}
-		break;
-	  }
-	  break;
+                        WeakDGDiffusion(inarray,outarray);
+                    }
+                    break;
+                }
+                break;
+            }
         case eGalerkin:
-	  {
+            {
 	  	SetBoundaryConditions(time);
                 Array<OneD, NekDouble> physfield(GetNpoints());
 		
                 for(i = 0; i < nvariables; ++i)
-		  {
+                {
+                    m_fields[i]->MultiplyByInvMassMatrix(inarray[i],  
+                                                         outarray[i],
+                                                         false);
                     // Calculate -(\phi, V\cdot Grad(u))
-                    m_fields[i]->BwdTrans_IterPerExp(inarray[i],physfield);
-		    
-		    WeakAdvectionNonConservativeForm(m_velocity,
-						     physfield, outarray[i]);
-		    
+                    m_fields[i]->BwdTrans_IterPerExp(outarray[i],physfield);
+                    
+                    WeakAdvectionNonConservativeForm(m_velocity,
+                                                     physfield, outarray[i]);
+                    
                     Vmath::Neg(ncoeffs,outarray[i],1);		   		    
                 }
             }
@@ -237,9 +242,7 @@ namespace Nektar
 	  {
               for(i = 0; i < nvariables; ++i)
               {
-                  m_fields[i]->MultiplyByInvMassMatrix(inarray[i],  
-                                                       outarray[i],
-                                                       false);
+                  m_fields[i]->MultiplyByInvMassMatrix(inarray[i],outarray[i],false);
               }
           }
           break;
@@ -257,6 +260,32 @@ namespace Nektar
         }
     }
 
+    // For Continuous Galerkin projections with time-dependent dirichlet boundary conditions,
+    // the time integration can be done as follows:
+    // The ODE resulting from the PDE can be formulated as:
+    // 
+    // M du/dt = F(u)  or du/dt = M^(-1) F(u)
+    //
+    // Now suppose that M does not depend of time, the ODE can than be written as:
+    //
+    // d(Mu)/dt = F(u)
+    //
+    // Introducing the variable u* = Mu, this yields
+    //
+    // du*/dt = F( M^(-1) u* ) = F*(u*)
+    //
+    // So rather than solving the initial ODE, it is advised to solve this new ODE for u*
+    // as this allows for an easier treatment of the dirichlet boundary conditions.
+    // However, note that at the end of every time step, the actual solution u can
+    // be calculated as:
+    // 
+    // u = M^(-1) u*;
+    //
+    // This can be viewed as projecting the solution u* onto the known boundary conditions.
+    // Note that this step is also done inside the ODE rhs function F*.
+    //
+    // In order for all of this to work appropriately, make sure that the operator M^(-1)
+    // does include the enforcment of the dirichlet boundary conditionst
 
     void AdvectionDiffusionReaction::ExplicitlyIntegrateAdvection(int nsteps)
     {
@@ -264,34 +293,112 @@ namespace Nektar
         int ncoeffs = m_fields[0]->GetNcoeffs();
         int nvariables = m_fields.num_elements();
 
-        LibUtilities::TimeIntegrationSchemeOperators ode;
-        ode.DefineOdeLhs       (&AdvectionDiffusionReaction::ODElhs,      this);
-        ode.DefineOdeLhsSolve  (&AdvectionDiffusionReaction::ODElhsSolve, this);
-        ode.DefineOdeRhs       (&AdvectionDiffusionReaction::ODErhs,      this);
-
-        // Get Integration scheme details
-        LibUtilities::TimeIntegrationSchemeKey       IntKey(LibUtilities::eAdamsBashforthOrder2);
-        LibUtilities::TimeIntegrationSchemeSharedPtr IntScheme = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
-
         // Set up wrapper to fields data storage. 
         Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
+        Array<OneD, Array<OneD, NekDouble> >   tmp(nvariables);
         
         for(i = 0; i < nvariables; ++i)
         {
             fields[i]  = m_fields[i]->UpdateCoeffs();
         }
-                
-        int nInitSteps;
-        LibUtilities::TimeIntegrationSolutionSharedPtr u = IntScheme->InitializeScheme(m_timestep,m_time,nInitSteps,fields,ode);
 
-        for(n = nInitSteps; n < nsteps; ++n)
+        if(m_projectionType==eGalerkin)
+        {
+            // calculate the variable u* = Mu
+            // we are going to TimeIntegrate this new variable u*
+            MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
+            for(int i = 0; i < nvariables; ++i)
+            {
+                tmp[i] = Array<OneD, NekDouble>(ncoeffs);
+                m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,fields[i],fields[i]);
+            }
+        }
+
+        // Define the ODE rhs operator
+        LibUtilities::TimeIntegrationSchemeOperators ode;
+        ode.DefineOdeRhs       (&AdvectionDiffusionReaction::ODErhs,      this);
+
+        LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eClassicalRungeKutta4;
+
+        // Declare an array of TimeIntegrationSchemes
+        // For multi-stage methods, this array will have just one entry containing
+        // the actual multi-stage method...
+        // For multi-steps method, this can have multiple entries
+        //  - the first scheme will used for the first timestep (this is an initialization scheme)
+        //  - the second scheme will used for the first timestep (this is an initialization scheme)
+        //  - ...
+        //  - the last scheme will be used for all other time-steps (this will be the actual scheme)
+        Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> IntScheme;
+        LibUtilities::TimeIntegrationSolutionSharedPtr u;
+        int numMultiSteps;
+
+        switch(IntMethod)
+        {
+        case LibUtilities::eForwardEuler:      
+        case LibUtilities::eClassicalRungeKutta4:
+            {
+                numMultiSteps = 1;
+
+                IntScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr>(numMultiSteps);
+
+                LibUtilities::TimeIntegrationSchemeKey IntKey(IntMethod);
+                IntScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
+
+                u = IntScheme[0]->InitializeScheme(m_timestep,fields,m_time,ode);
+            }
+            break;
+        case LibUtilities::eAdamsBashforthOrder2:
+            {
+                numMultiSteps = 2;
+
+                IntScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr>(numMultiSteps);
+
+                // Used in the first time step to initalize the scheme
+                LibUtilities::TimeIntegrationSchemeKey IntKey0(LibUtilities::eForwardEuler);
+                // Used for all other time steps 
+                LibUtilities::TimeIntegrationSchemeKey IntKey1(IntMethod); 
+                IntScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
+                IntScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
+
+                // Initialise the scheme for the actual time integration scheme
+                u = IntScheme[1]->InitializeScheme(m_timestep,fields,m_time,ode);
+            }
+            break;
+        default:
+            {
+                ASSERTL0(false,"populate switch statement for integration scheme");
+            }
+        }
+                
+        for(n = 0; n < nsteps; ++n)
         {
             //----------------------------------------------
             // Perform time step integration
             //----------------------------------------------
+            if( n < numMultiSteps-1)
+            {
+                // Use initialisation schemes
+                fields = IntScheme[n]->TimeIntegrate(m_timestep,u,ode);
+            }
+            else
+            {
+                fields = IntScheme[numMultiSteps-1]->TimeIntegrate(m_timestep,u,ode);
+            }
 
-            fields = IntScheme->TimeIntegrate(m_timestep,u,ode);
             m_time += m_timestep;
+
+            if(m_projectionType==eGalerkin)
+            {
+                // Project the solution u* onto the boundary conditions to
+                // obtain the actual solution
+                SetBoundaryConditions(m_time);
+                for(i = 0; i < nvariables; ++i)
+                {
+                    m_fields[i]->MultiplyByInvMassMatrix(fields[i],tmp[i],false);
+                    fields[i] = tmp[i];	   		    
+                }
+            }
+
 
             //----------------------------------------------
             // Dump analyser information
@@ -707,6 +814,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.9  2009/02/28 21:59:09  sehunchun
+* Explicit Diffusion solver is added
+*
 * Revision 1.8  2009/02/16 16:07:03  pvos
 * Update of TimeIntegration classes
 *

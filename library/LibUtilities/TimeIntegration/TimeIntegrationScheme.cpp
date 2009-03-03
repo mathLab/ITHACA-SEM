@@ -70,51 +70,72 @@ namespace Nektar
             return os;
         }
 
-        TimeIntegrationSolution::TimeIntegrationSolution(TimeIntegrationMethod method, 
+        TimeIntegrationSolution::TimeIntegrationSolution(const TimeIntegrationSchemeKey &key, 
                                                          const DoubleArray& y, 
-                                                         const DoubleArray& My, 
-                                                         NekDouble t):
-            m_method(method),
-            m_sol(y),
-            m_solVector(1),
-            m_t(1)
-        {        
-            m_solVector[0] = My;
-            m_t[0] = t;    
+                                                         const NekDouble time, 
+                                                         const NekDouble timestep):
+            m_scheme(TimeIntegrationSchemeManager()[key]),
+            m_solVector(m_scheme->GetNsteps()),
+            m_t(m_scheme->GetNsteps())
+        {      
+            m_solVector[0] = y;
+            m_t[0] = time;
+
+            int nsteps         = m_scheme->GetNsteps();
+            int nvar           = y.num_elements();
+            int npoints        = y[0].num_elements();
+            int nMultiStepVals = m_scheme->GetNmultiStepValues();
+            const Array<OneD, const unsigned int>& timeLevels = GetTimeLevelOffset(); 
+            for(int i = 1; i < nsteps; i++)
+            {
+                m_solVector[i] = Array<OneD, Array<OneD, NekDouble> >(nvar);
+                for(int j = 0; j < nvar; j++)
+                {
+                    m_solVector[i][j] = Array<OneD,NekDouble>(npoints,0.0);
+                }
+                if(i < nMultiStepVals)
+                {
+                    m_t[i] = time - i*timestep*timeLevels[i];
+                }
+                else
+                {
+                    m_t[i] = timestep;
+                }
+            }      
         }
 
-        TimeIntegrationSolution::TimeIntegrationSolution(TimeIntegrationMethod method, 
-                                                         const DoubleArray& y, 
-                                                         const TripleArray& My, 
+        TimeIntegrationSolution::TimeIntegrationSolution(const TimeIntegrationSchemeKey &key, 
+                                                         const TripleArray& y, 
                                                          const Array<OneD, NekDouble>& t):
-            m_method(method),
-            m_sol(y),
-            m_solVector(My),
+            m_scheme(TimeIntegrationSchemeManager()[key]),
+            m_solVector(y),
             m_t(t)
-        {        
+        {
+            ASSERTL1(y.num_elements()==m_scheme->GetNsteps(),"Amount of Entries does not match number of (multi-) steps");
         }
 
-        TimeIntegrationSolution::TimeIntegrationSolution(TimeIntegrationMethod method, 
-                                                         unsigned int nsteps,
+        TimeIntegrationSolution::TimeIntegrationSolution(const TimeIntegrationSchemeKey &key, 
                                                          unsigned int nvar,
                                                          unsigned int npoints):
-            m_method(method),
-            m_solVector(nsteps),
-            m_sol(nvar),
-            m_t(nsteps)
+            m_scheme(TimeIntegrationSchemeManager()[key]),
+            m_solVector(m_scheme->GetNsteps()),
+            m_t(m_scheme->GetNsteps())
         {
-            for(int i = 0; i < nsteps; i++)
+            for(int i = 0; i < m_scheme->GetNsteps(); i++)
             {
                 m_solVector[i] = Array<OneD, Array<OneD, NekDouble> >(nvar);
                 for(int j = 0; j < nvar; j++)
                 {
                     m_solVector[i][j] = Array<OneD,NekDouble>(npoints);
                 }
-            }   
-            for(int j = 0; j < nvar; j++)
-            {
-                m_sol[j] = Array<OneD,NekDouble>(npoints);
             }         
+        }
+
+        TimeIntegrationSolution::TimeIntegrationSolution(const TimeIntegrationSchemeKey &key):
+            m_scheme(TimeIntegrationSchemeManager()[key]),
+            m_solVector(m_scheme->GetNsteps()),
+            m_t(m_scheme->GetNsteps())
+        {      
         }
         
         TimeIntegrationSchemeSharedPtr TimeIntegrationScheme::Create(const TimeIntegrationSchemeKey &key)
@@ -143,6 +164,10 @@ namespace Nektar
                     m_V    = Array<TwoD,NekDouble>(m_numsteps ,m_numsteps, 1.0);
 
                     m_schemeType = eExplicit;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 0;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
                 }
                 break;
             case eAdamsBashforthOrder2:
@@ -167,6 +192,11 @@ namespace Nektar
                     m_V[0][1] = -0.5;
 
                     m_schemeType = eExplicit;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 1;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
+                    m_timeLevelOffset[1] = 1;
                 }
                 break;
             case eBackwardEuler:
@@ -184,6 +214,9 @@ namespace Nektar
                     m_V    = Array<TwoD,NekDouble>(m_numsteps ,m_numsteps, 1.0);
 
                     m_schemeType = eDiagonallyImplicit;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 0;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
                 }
                 break;
             case eAdamsMoultonOrder2:
@@ -210,6 +243,11 @@ namespace Nektar
 
 
                     m_schemeType = eDiagonallyImplicit;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 1;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
+                    m_timeLevelOffset[1] = 0;
                 }
                 break;
             case eMidpoint:
@@ -229,6 +267,10 @@ namespace Nektar
                     m_B[0][0][1] = 1.0;
 
                     m_schemeType = eExplicit;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 0;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
                 }
                 break;
             case eClassicalRungeKutta4:
@@ -254,6 +296,10 @@ namespace Nektar
                     m_B[0][0][3] = 1.0/6.0;
 
                     m_schemeType = eExplicit;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 0;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
                 }
                 break;
             case eDIRKOrder2:
@@ -279,6 +325,10 @@ namespace Nektar
                     m_B[0][0][1] = lambda;
 
                     m_schemeType = eDiagonallyImplicit;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 0;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
                 }
                 break;
             case eDIRKOrder3:
@@ -308,6 +358,10 @@ namespace Nektar
                     m_B[0][0][2] = lambda;
 
                     m_schemeType = eDiagonallyImplicit;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 0;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
                 }
                 break;
             case eIMEXdirk_3_4_3:
@@ -350,6 +404,10 @@ namespace Nektar
                     m_B[1][0][3] = lambda;
 
                     m_schemeType = eIMEX;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 0;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
                 }
                 break;
             default:
@@ -424,48 +482,20 @@ namespace Nektar
 
         TimeIntegrationSolutionSharedPtr 
         TimeIntegrationScheme::InitializeScheme(const NekDouble                      timestep,
-                                                      NekDouble                      &time   ,
-                                                      int                            &nsteps ,
                                                       ConstDoubleArray               &y_0    ,
+                                                const NekDouble                      time    ,
                                                 const TimeIntegrationSchemeOperators &op     ) const
         {
-            TimeIntegrationSolutionSharedPtr y_out;
-            TimeIntegrationMethod method = m_schemeKey.GetIntegrationMethod();
-            
-            switch(method)
+            // create a TimeIntegrationSolution object based upond the initial value
+            // initialise all other multi-step values and derivatives to zero
+            TimeIntegrationSolutionSharedPtr y_out = 
+                MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(m_schemeKey,y_0,time,timestep);
+
+            // calculate the initial derivative, if is part of the solution vector of the current scheme
+            if(m_numMultiStepDerivs)
             {
-            case eForwardEuler:
-            case eBackwardEuler:
-            case eAdamsBashforthOrder1:
-            case eAdamsMoultonOrder1:
-            case eMidpoint:
-            case eClassicalRungeKutta4:
-            case eDIRKOrder2:
-            case eDIRKOrder3:
-            case eIMEXdirk_3_4_3:
+                if( m_timeLevelOffset[m_numMultiStepValues] == 0)
                 {
-                    nsteps = 0;
-                    
-                    unsigned int nvar      = y_0.num_elements();
-                    unsigned int npoints   = y_0[0].num_elements();
-                    DoubleArray My_0(nvar);
-                    for(int i = 0; i < nvar; i++)
-                    {
-                        My_0[i] = Array<OneD,NekDouble>(npoints);
-                    }
-                    op.DoOdeLhs(y_0,My_0,time);
-                    y_out = MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(method,y_0,My_0,time);
-                }
-                break;
-            case eAdamsBashforthOrder2:
-                {
-                    // To initialise, we do a 1st order Adams Bashforth step (=Forward euler) to calculate the
-                    // solution at the first time level
-                    TimeIntegrationSchemeKey         IntKey(eAdamsBashforthOrder1);
-                    TimeIntegrationSchemeSharedPtr   IntScheme = TimeIntegrationSchemeManager()[IntKey];
-                    TimeIntegrationSolutionSharedPtr u = IntScheme->InitializeScheme(timestep,time,nsteps,y_0,op);
-                    IntScheme->TimeIntegrate(timestep,u,op);
-                    
                     int i;
                     int nvar    = y_0.num_elements();
                     int npoints = y_0[0].num_elements();
@@ -474,29 +504,15 @@ namespace Nektar
                     {
                         f_y_0[i] = Array<OneD,NekDouble>(npoints);
                     }
+                    // calculate the derivative of the initial value
                     op.DoOdeRhs(y_0,f_y_0,time);
                     
+                    // multiply by the step size
                     for(i = 0; i < nvar; i++)
                     {
                         Blas::Dscal(npoints,timestep,f_y_0[i].get(),1);
                     }
-                    
-                    TripleArray My(2);
-                    My[0] = (u->GetSolutionVector())[0];
-                    My[1] = f_y_0;
-                    
-                    Array<OneD,NekDouble> t(2);
-                    t[0] = u->GetTime();
-                    t[1] = timestep;
-                    
-                    time = u->GetTime();
-                    nsteps = 1;
-                    y_out = MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(method,u->GetSolution(),My,t);
-                }
-                break;
-            default:
-                {
-                    NEKERROR(ErrorUtil::efatal,"Methods need implementation for specified integration scheme.");
+                    y_out->SetDerivative(0,f_y_0,timestep);
                 }
             }
            
@@ -505,46 +521,200 @@ namespace Nektar
         
         TimeIntegrationScheme::ConstDoubleArray& 
         TimeIntegrationScheme::TimeIntegrate(const NekDouble                        timestep,          
-                                                   TimeIntegrationSolutionSharedPtr &y      ,
+                                                   TimeIntegrationSolutionSharedPtr &solvector      ,
                                              const TimeIntegrationSchemeOperators   &op     ) const
         {
             ASSERTL1(!(GetIntegrationSchemeType() == eImplicit),
                      "Fully Implicit integration scheme cannot be handled by this routine.");
             
-            TimeIntegrationMethod method = y->GetIntegrationMethod();
-            int nvar    = y->GetFirstDim ();
-            int npoints = y->GetSecondDim();
-            
-            ASSERTL1(method == m_schemeKey.GetIntegrationMethod(),
-                     "Input and output argument are constructed for a different integration scheme.");
-            
-            TimeIntegrationSolutionSharedPtr y_new = MemoryManager<TimeIntegrationSolution>::
-                AllocateSharedPtr(method,m_numsteps,nvar,npoints); 
+            int nvar    = solvector->GetFirstDim ();
+            int npoints = solvector->GetSecondDim();
 
-            TimeIntegrate(timestep,
-                          y->GetSolutionVector(),
-                          y->GetSolution(),
-                          y->GetTimeVector(),
-                          y_new->UpdateSolutionVector(),
-                          y_new->UpdateSolution(),
-                          y_new->UpdateTimeVector(),
-                          op); 
-            
-                y = y_new;
+            if( (solvector->GetIntegrationScheme()).get() != this )
+            {
+                // This branch will be taken when the solution vector (solvector) is set up
+                // for a different scheme than the object this method is called from.
+                // (typically needed to calculate the first time-levels of a multi-step scheme)
 
-                return y->GetSolution();
+                // Do do this kind of 'non-matching' integration, we perform the following three steps:
+                // 1: copy the required input information from the solution vector of the master scheme to 
+                //    the input solution vector of the current scheme
+                // 2: time-integrate for one step using the current scheme
+                // 3: copy the information contained in the output vector of the current scheme to the
+                //    solution vector of the master scheme
+
+                // STEP 1:  copy the required input information from the solution vector of the master scheme to 
+                //          the input solution vector of the current scheme
+
+                // 1.1 Determine which information is required for the current scheme                
+                int n;
+                unsigned int nCurSchemeVals  = m_numMultiStepValues; // number of required values of the current scheme
+                unsigned int nCurSchemeDers  = m_numMultiStepDerivs; // number of required derivs of the current scheme
+                unsigned int nCurSchemeSteps = m_numsteps;  // number of steps in the current scheme
+                unsigned int nMasterSchemeVals  = solvector->GetNvalues(); // number of values of the master scheme
+                unsigned int nMasterSchemeDers  = solvector->GetNderivs(); // number of derivs of the master scheme
+                unsigned int nMasterSchemeSteps = solvector->GetNsteps();  // number of steps in the master scheme
+                // The arrays below contains information to which time-level the values and derivatives
+                // of the schemes belong
+                const Array<OneD, const unsigned int>& curTimeLevels = m_timeLevelOffset; 
+                const Array<OneD, const unsigned int>& masterTimeLevels = solvector->GetTimeLevelOffset(); 
+
+                // 1.2 Copy the required information from the master solution vector to the input solution
+                //     vector of the current scheme
+                TimeIntegrationSolutionSharedPtr solvector_in = MemoryManager<TimeIntegrationSolution>::
+                    AllocateSharedPtr(GetIntegrationSchemeKey()); // input solution vector of the current scheme
+
+                for(n = 0; n < nCurSchemeVals; n++)
+                {
+                    // Get the required value out of the master solution vector
+                    DoubleArray& y_n = solvector->GetValue    ( curTimeLevels[n] );
+                    NekDouble    t_n = solvector->GetValueTime( curTimeLevels[n] );
+
+                    // Set the required value in the input solution vector of the current scheme
+                    solvector_in->SetValue(curTimeLevels[n],y_n,t_n);
+                }
+                for(n = nCurSchemeVals; n < nCurSchemeSteps; n++)
+                {
+                    // Get the required derivative out of the master solution vector
+                    DoubleArray& dtFy_n = solvector->GetDerivative    ( curTimeLevels[n] );
+
+                    // Set the required derivative in the input solution vector of the current scheme
+                    solvector_in->SetDerivative(curTimeLevels[n],dtFy_n,timestep);
+                }
+
+                // STEP 2: time-integrate for one step using the current scheme             
+                TimeIntegrationSolutionSharedPtr solvector_out = MemoryManager<TimeIntegrationSolution>::
+                    AllocateSharedPtr(GetIntegrationSchemeKey(),nvar,npoints);  // output solution vector of the current scheme
+
+                // integrate
+                TimeIntegrate(timestep, solvector_in->GetSolutionVector(),solvector_in->GetTimeVector(),
+                              solvector_out->UpdateSolutionVector(),solvector_out->UpdateTimeVector(),op);
+
+
+                // STEP 3: copy the information contained in the output vector of the current scheme to the
+                //         solution vector of the master scheme   
+
+                // 3.1 Check whether the current time scheme updates the most recent derivative that should be updated
+                //     in the master scheme.
+                //     If not, calculate the derivative. This can be done based upon the corresponding value and the
+                //     OdeRhs operator.
+                int j;
+                bool CalcNewDeriv = false; // flag inidicating whether the new derivative is availble in the output of
+                                           // of the current scheme or whether it should be calculated
+                if( nMasterSchemeDers > 0 )
+                {
+                    if(nCurSchemeDers == 0)
+                    {
+                        CalcNewDeriv = true;
+                    }
+                    else 
+                    {
+                        if( masterTimeLevels[nMasterSchemeVals] < curTimeLevels[nCurSchemeVals] )
+                        {
+                            CalcNewDeriv = true;
+                        }
+                    }
+                }
+
+                if(CalcNewDeriv)
+                {
+                    int newDerivTimeLevel = masterTimeLevels[nMasterSchemeVals]; // contains the time level at which
+                                                                                 // we want to know the derivative of the
+                                                                                 // master scheme
+                    DoubleArray  y_n;
+                    NekDouble    t_n;
+                    // if the  time level correspond to 0, calculate the derivative based upon the solution value
+                    // at the new time-level
+                    if (newDerivTimeLevel == 0)
+                    {
+                        y_n = solvector_out->GetValue(0);
+                        t_n = solvector_out->GetValueTime(0);
+                    }
+                    // if the  time level correspond to 1, calculate the derivative based upon the solution value
+                    // at the new old-level
+                    else if( newDerivTimeLevel == 1 ) 
+                    {
+                        y_n = solvector->GetValue(0);
+                        t_n = solvector->GetValueTime(0);
+                    }
+                    else
+                    {
+                        ASSERTL1(false,"Problems with initialising scheme");
+                    }
+                    
+                    DoubleArray  f_n(nvar);        
+                    for(j = 0; j < nvar; j++)
+                    {
+                        f_n[j]   = Array<OneD, NekDouble>(npoints);
+                    }
+                    
+                    // calculate the derivative
+                    op.DoOdeRhs(y_n, f_n, t_n);
+                    
+                    // multiply by dt (as required by the General Linear Method framework)
+                    for(j = 0; j < nvar; j++)
+                    {
+                        Vmath::Smul(npoints,timestep,f_n[j],1,
+                                    f_n[j],1);
+                    }
+                    
+                    // Rotate the solution vector 
+                    // (i.e. updating without calculating/inserting new values)
+                    solvector->RotateSolutionVector();
+                    // Set the calculated derivative in the master solution vector
+                    solvector->SetDerivative(newDerivTimeLevel,f_n,timestep);
+                }
+                else
+                {
+                    // Rotate the solution vector 
+                    // (i.e. updating without calculating/inserting new values)
+                    solvector->RotateSolutionVector();
+                }
+
+
+                // 1.2 Copy the information calculated using the current scheme from the output solution vector
+                //     to the master solution vector 
+                for(n = 0; n < nCurSchemeVals; n++)
+                {
+                    // Get the calculated value out of the output solution vector of the current scheme
+                    DoubleArray& y_n = solvector_out->GetValue    ( curTimeLevels[n] );
+                    NekDouble    t_n = solvector_out->GetValueTime( curTimeLevels[n] );
+
+                    // Set the calculated value in the master solution vector
+                    solvector->SetValue(curTimeLevels[n],y_n,t_n);
+                }
+                for(n = nCurSchemeVals; n < nCurSchemeSteps; n++)
+                {
+                    // Get the calculated derivative out of the output solution vector of the current scheme
+                    DoubleArray& dtFy_n = solvector_out->GetDerivative    ( curTimeLevels[n] );
+
+                    // Set the calculated derivative in the master solution vector
+                    solvector->SetDerivative(curTimeLevels[n],dtFy_n,timestep);
+                }
+            }
+            else
+            {
+                const TimeIntegrationSchemeKey& key = solvector->GetIntegrationSchemeKey();
+                
+                TimeIntegrationSolutionSharedPtr solvector_new = MemoryManager<TimeIntegrationSolution>::
+                    AllocateSharedPtr(key,nvar,npoints); 
+                
+                TimeIntegrate(timestep,solvector->GetSolutionVector(),solvector->GetTimeVector(),
+                              solvector_new->UpdateSolutionVector(),solvector_new->UpdateTimeVector(),op); 
+                
+                solvector = solvector_new;
+            }
+            return solvector->GetSolution();
         }
 
         void TimeIntegrationScheme::TimeIntegrate(const NekDouble                      timestep,      
                                                         ConstTripleArray               &y_old  ,
-                                                        ConstDoubleArray               &sol_old,
                                                         ConstSingleArray               &t_old  ,
                                                         TripleArray                    &y_new  ,
-                                                        DoubleArray                    &sol_new,
                                                         SingleArray                    &t_new  ,
                                                   const TimeIntegrationSchemeOperators &op     ) const
         {
-            ASSERTL1(CheckTimeIntegrateArguments(timestep,y_old,sol_old,t_old,y_new,sol_new,t_new,op),
+            ASSERTL1(CheckTimeIntegrateArguments(timestep,y_old,t_old,y_new,t_new,op),
                      "Arguments not well defined");    
 
             unsigned int i,j,k;    
@@ -558,8 +728,9 @@ namespace Nektar
             // - Y   corresponds to the stage values
             // - F   corresponds to the stage derivatives
             // - T   corresponds to the time at the different stages
-            // - tmp corresponds to the right hand side of each stage equation
-            DoubleArray Y  (nvar);        
+            // - tmp corresponds to the explicit right hand side of each stage equation 
+            //        (for explicit schemes, this correspond to Y)
+            DoubleArray Y;        
             DoubleArray tmp(nvar);        
             TripleArray F  (m_numstages);  
             TripleArray F_IMEX;  // Used to store the Explicit stage derivative of IMEX schemes
@@ -570,14 +741,19 @@ namespace Nektar
             // The same storage will be used for every stage -> Y is a DoubleArray
             for(j = 0; j < nvar; j++)
             {
-                Y[j]   = Array<OneD, NekDouble>(npoints);
+                tmp[j]   = Array<OneD, NekDouble>(npoints);
             }
             // The same storage will be used for every stage -> tmp is a DoubleArray
-            if( !m_firstStageEqualsOldSolution || (m_numstages>1) )
+            if(type == eExplicit)
             {
+                Y = tmp;
+            }
+            else
+            {
+                Y = DoubleArray(nvar);
                 for(j = 0; j < nvar; j++)
                 {
-                    tmp[j] = Array<OneD, NekDouble>(npoints);
+                    Y[j] = Array<OneD, NekDouble>(npoints);
                 }
             }
             // Different storage for every stage derivative as the data
@@ -610,8 +786,9 @@ namespace Nektar
                 {
                     for(k = 0; k < nvar; k++)
                     {
-                        Vmath::Vcopy(npoints,sol_old[k],1,Y[k],1);
+                        Vmath::Vcopy(npoints,y_old[0][k],1,Y[k],1);
                     }
+                    T = t_old[0];
                 }
                 else
                 {
@@ -656,31 +833,37 @@ namespace Nektar
                     }
                     
                     // Now, solve for the stage values
-                    if( (type == eDiagonallyImplicit) ||
-                        (type == eIMEX) )
+                    if( type != eExplicit )
                     {
                         if( fabs(A(i,j)) > NekConstants::kNekZeroTol )
                         {
                             op.DoImplicitSolve(tmp, Y, T, A(i,i)*timestep);
                         }
-                        else
-                        {
-                            op.DoOdeLhsSolve(tmp, Y, T);
-                        }
-                    }
-                    else
-                    {
-                        op.DoOdeLhsSolve(tmp, Y, T);
                     }
                 }
                 
-                // Calculate the stage derivative based upond the stage value
-                if(type == eIMEX)
+                // Calculate the stage derivative based upon the stage value
+                if(type == eDiagonallyImplicit)
                 {
-                    op.DoOdeImplicitRhs(Y, F[i]     , T);
+                    for(k = 0; k < nvar; k++)
+                    {
+                        Vmath::Vsub(npoints,Y[k],1,tmp[k],1,F[i][k],1);
+                        Vmath::Smul(npoints,1.0/(A(i,i)*timestep),F[i][k],1,F[i][k],1);
+                    }
+                }
+                else if(type == eIMEX)
+                { 
+                    if( fabs(A(i,j)) > NekConstants::kNekZeroTol )
+                    {
+                        for(k = 0; k < nvar; k++)
+                        {
+                            Vmath::Vsub(npoints,Y[k],1,tmp[k],1,F[i][k],1);
+                            Vmath::Smul(npoints,1.0/(A(i,i)*timestep),F[i][k],1,F[i][k],1);
+                        }
+                    }
                     op.DoOdeExplicitRhs(Y, F_IMEX[i], T);
                 }
-                else
+                else //( type == eExplicit)
                 {
                     op.DoOdeRhs(Y, F[i], T);
                 }
@@ -695,7 +878,25 @@ namespace Nektar
             // If last stage equals new solution, the new solution needs not be 
             // calculated explicitely but can simply be copied. This saves
             // a solve as this normally would require a call to DoOdeLhsSolve
-            int i_start = m_lastStageEqualsNewSolution?1:0; 
+            int i_start = 0;
+            if(m_lastStageEqualsNewSolution)
+            {
+                for(k = 0; k < nvar; k++)
+                {
+                    Vmath::Vcopy(npoints,Y[k],1,y_new[0][k],1);
+                }
+
+                t_new[0] = B(0,0)*timestep;
+                for(j = 1; j < m_numstages; j++)
+                {
+                    t_new[0] += B(0,j)*timestep;
+                }
+                for(j = 0; j < m_numsteps; j++)
+                {
+                    t_new[0] += V(0,j)*t_old[j];
+                }
+                i_start = 1;
+            }
             for( i = i_start; i < m_numsteps; i++)
             {
                 // The solution at the new time level is a linear combination of:
@@ -738,27 +939,6 @@ namespace Nektar
                 }
             }
 
-            if(m_lastStageEqualsNewSolution)
-            {
-                for(k = 0; k < nvar; k++)
-                {
-                    Vmath::Vcopy(npoints,Y[k],1,sol_new[k],1);
-                }
-
-                t_new[0] = B(0,0)*timestep;
-                for(j = 1; j < m_numstages; j++)
-                {
-                    t_new[0] += B(0,j)*timestep;
-                }
-
-                op.DoOdeLhs(sol_new,y_new[0],t_new[0]);
-
-                i_start = 1;
-            }
-            else
-            {
-                op.DoOdeLhsSolve(y_new[0],sol_new,t_new[0]);
-            }
         }        
         
         bool TimeIntegrationScheme::CheckIfFirstStageEqualsOldSolution(const Array<OneD, const Array<TwoD, NekDouble> >& A,
@@ -835,10 +1015,8 @@ namespace Nektar
         
         bool TimeIntegrationScheme::CheckTimeIntegrateArguments(const NekDouble                      timestep,      
                                                                       ConstTripleArray               &y_old  ,
-                                                                      ConstDoubleArray               &sol_old,
                                                                       ConstSingleArray               &t_old  ,
                                                                       TripleArray                    &y_new  ,
-                                                                      DoubleArray                    &sol_new,
                                                                       SingleArray                    &t_new  ,
                                                                 const TimeIntegrationSchemeOperators &op) const
         {
@@ -848,9 +1026,6 @@ namespace Nektar
             
             ASSERTL1(y_old[0].   num_elements()==y_new[0].   num_elements(),"Non-matching number of variables.");  
             ASSERTL1(y_old[0][0].num_elements()==y_new[0][0].num_elements(),"Non-matching number of coefficients."); 
-            
-            ASSERTL1(sol_old.   num_elements()==sol_new.   num_elements(),"Non-matching number of variables.");  
-            ASSERTL1(sol_old[0].num_elements()==sol_new[0].num_elements(),"Non-matching number of coefficients.");  
             
             ASSERTL1(t_old.num_elements()==m_numsteps,"Non-matching number of steps.");    
             ASSERTL1(t_new.num_elements()==m_numsteps,"Non-matching number of steps."); 

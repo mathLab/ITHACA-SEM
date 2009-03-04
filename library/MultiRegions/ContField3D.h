@@ -113,7 +113,7 @@ namespace Nektar
                 return m_bndCondExpansions;
             }
             
-            void ContField3D::GenerateDirBndCondForcing(const GlobalLinSysKey &key, 
+            void GenerateDirBndCondForcing(const GlobalLinSysKey &key, 
                                                         Array<OneD, NekDouble> &inout, 
                                                         Array<OneD, NekDouble> &outarray);
             

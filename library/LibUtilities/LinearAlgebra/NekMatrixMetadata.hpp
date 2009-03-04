@@ -42,6 +42,14 @@
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits.hpp>
 
+#ifdef max
+#undef max
+#endif
+
+#ifdef min
+#undef min
+#endif
+
 namespace Nektar
 {
    
@@ -305,6 +313,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrixMetadata.hpp,v $
+    Revision 1.11  2008/11/11 03:35:07  bnelson
+    Updated NekMatrix metadata to capture the largest matrix size during an expression.
+
     Revision 1.10  2008/01/20 03:59:36  bnelson
     Expression template updates.
 

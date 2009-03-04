@@ -1226,6 +1226,8 @@ namespace Nektar
 	    inline virtual const Array<OneD,const boost::shared_ptr<ExpList1D> > &v_GetBndCondExpansions(void)
             {
 	      ASSERTL0(false,"This method is not defined or valid for this class type");                
+          static Array<OneD,const boost::shared_ptr<ExpList1D> > result;
+          return result;
             }
 
             inline virtual boost::shared_ptr<GenExpList1D> &v_GetTrace(void)
@@ -1238,6 +1240,8 @@ namespace Nektar
 	    inline virtual boost::shared_ptr<LocalToGlobalDGMap> &v_GetTraceMap(void) 
 	    { 
 		ASSERTL0(false,"This method is not defined or valid for this class type"); 
+        static boost::shared_ptr<LocalToGlobalDGMap> result;
+        return result;
 	    } 
 
             virtual void v_AddTraceIntegral(const Array<OneD, const NekDouble> &Fx, 
@@ -1338,6 +1342,8 @@ namespace Nektar
             virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions()
             {
                 ASSERTL0(false,"This method is not defined or valid for this class type");                
+                static Array<OneD,const SpatialDomains::BoundaryConditionShPtr> result;
+                return result;
             }
 
             virtual void v_EvaluateBoundaryConditions(const NekDouble time = 0.0)
@@ -1359,6 +1365,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.53  2009/02/08 09:11:49  sherwin
+* General updates to introduce multiple matrix definitions based on different boundary types
+*
 * Revision 1.52  2009/02/03 14:33:08  pvos
 * Modifications for solvers with time-dependent dirichlet BC's
 *

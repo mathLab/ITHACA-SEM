@@ -201,17 +201,17 @@ main(int argc, char *argv[])
   //---------------------------------------------
   // Evaluate derivative of solution, add together and put in _Phys points 
   E->Deriv(sol,dx,dy);
-  Vmath::Vadd(nq1*nq2,dx,1,dy,1,E->GetPhys(),1);
+  Vmath::Vadd(nq1*nq2,dx,1,dy,1,sol,1);
   //---------------------------------------------
 
   //---------------------------------------------
   // Project onto Expansion 
-  E->FwdTrans(E->GetPhys());
+  E->FwdTrans(sol,E->UpdateCoeffs());
   //---------------------------------------------
 
   //-------------------------------------------
   // Backward Transform Solution to get projected values
-  E->BwdTrans(E->GetPhys());
+  E->BwdTrans(E->GetCoeffs(),E->UpdatePhys());
   //-------------------------------------------  
 
   //----------------------------------------------

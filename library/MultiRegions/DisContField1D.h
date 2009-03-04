@@ -66,7 +66,9 @@ namespace Nektar
 
             ~DisContField1D();
 
-            void HelmSolve(DisContField1D &Fce, NekDouble lambda);
+            void HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                 Array<OneD,       NekDouble> &outarray,
+                           NekDouble lambda);
 
             /**
              * \brief This function evaluates the boundary conditions at a certain 
@@ -111,6 +113,15 @@ namespace Nektar
             
             void GenerateFieldBnd1D(SpatialDomains::BoundaryConditions &bcs,  
                                     const std::string variable);
+	    
+            virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD,       NekDouble> &outarray,
+                                     NekDouble lambda,
+                                     bool      UseContCoeffs,
+                                     Array<OneD, NekDouble>& dirForcing)
+            {
+                HelmSolve(inarray,outarray,lambda);
+            }
         };
 
         typedef boost::shared_ptr<DisContField1D>   DisContField1DSharedPtr;

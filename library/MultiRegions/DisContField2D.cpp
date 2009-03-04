@@ -154,7 +154,11 @@ namespace Nektar
             return glo_matrix;
         }
 
-      void DisContField2D::HelmSolve(const ExpList &Fce, NekDouble lambda, NekDouble tau)
+
+        void DisContField2D::HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,       NekDouble> &outarray,
+                                       NekDouble lambda,
+                                       NekDouble tau)
         {
             int e,i,j,n,cnt,cnt1,nbndry, order_e;
             int nexp = GetExpSize();
@@ -170,7 +174,7 @@ namespace Nektar
             //----------------------------------
             // Setup RHS Inner product
             //----------------------------------
-            IProductWRTBase(Fce.GetPhys(),f);
+            IProductWRTBase(inarray,f);
             Vmath::Neg(m_ncoeffs,f,1);
 
             //----------------------------------
@@ -335,7 +339,7 @@ namespace Nektar
             //----------------------------------
             // Setup forcing for local interior solves
             //----------------------------------
-            Vmath::Zero(m_ncoeffs,m_coeffs,1);
+            Vmath::Zero(m_ncoeffs,outarray,1);
             Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr>  >
                 elmtToTrace = m_traceMap->GetElmtToTrace();
 
@@ -365,7 +369,7 @@ namespace Nektar
             }
             
             DNekVec in (m_ncoeffs,f,eWrapper);
-            DNekVec out(m_ncoeffs,m_coeffs,eWrapper);            
+            DNekVec out(m_ncoeffs,outarray,eWrapper);            
             out = (*InvHDGHelm)*in;            
         }
 

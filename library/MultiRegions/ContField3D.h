@@ -86,8 +86,21 @@ namespace Nektar
 
             ~ContField3D();
 
-            void FwdTrans (const ExpList &In);
-            void HelmSolve(const ExpList &In, NekDouble lambda);
+            void FwdTrans(const Array<OneD, const NekDouble> &inarray,
+                                Array<OneD,      NekDouble> &outarray,
+                          bool  UseContCoeffs = false);
+            
+            void MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, 
+                                               Array<OneD,       NekDouble> &outarray,
+                                         bool  UseContCoeffs = false);
+
+            void HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                 Array<OneD,       NekDouble> &outarray,
+                           NekDouble lambda,
+                           bool      UseContCoeffs = false,
+                           Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray);
+
+
             void EvaluateBoundaryConditions(const NekDouble time = 0.0)
             {
                 ExpList3D::EvaluateBoundaryConditions(time,m_bndCondExpansions,m_bndConditions);
@@ -100,21 +113,56 @@ namespace Nektar
                 return m_bndCondExpansions;
             }
             
+            void ContField3D::GenerateDirBndCondForcing(const GlobalLinSysKey &key, 
+                                                        Array<OneD, NekDouble> &inout, 
+                                                        Array<OneD, NekDouble> &outarray);
             
 
         protected:
 
         private:
+            /**
+             * \brief The number of boundary segments on which
+             * Dirichlet boundary conditions are imposed
+             */ 
+            int m_numDirBndCondExpansions;
+
             Array<OneD,MultiRegions::ExpList2DSharedPtr>           m_bndCondExpansions;
             Array<OneD,SpatialDomains::BoundaryConditionShPtr>     m_bndConditions;
 
             GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
 
-            void GlobalSolve(const GlobalLinSysKey &key, const ExpList &Rhs, NekDouble ScaleForcing=1.0);
+            void GlobalSolve(const GlobalLinSysKey &key, 
+                             const Array<OneD, const  NekDouble> &rhs, 
+                             Array<OneD, NekDouble> &inout,
+                             Array<OneD, NekDouble> &dirForcing = NullNekDouble1DArray);
 
             void GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph3D &graph3D,
                                                     SpatialDomains::BoundaryConditions &bcs,
                                                     const std::string variable);
+          
+            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
+                                          Array<OneD,       NekDouble> &outarray,
+                                    bool  UseContCoeffs)
+            {
+                FwdTrans(inarray,outarray,UseContCoeffs);
+            }
+
+            virtual void v_MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, 
+                                                         Array<OneD,       NekDouble> &outarray,
+                                                   bool  UseContCoeffs)
+            {
+                MultiplyByInvMassMatrix(inarray,outarray,UseContCoeffs);
+            }
+
+            virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD,       NekDouble> &outarray,
+                                     NekDouble lambda,
+                                     bool      UseContCoeffs,
+                                     Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray)
+            {
+                HelmSolve(inarray,outarray,lambda,UseContCoeffs,dirForcing);
+            }
 
         };
         typedef boost::shared_ptr<ContField3D>      ContField3DSharedPtr;

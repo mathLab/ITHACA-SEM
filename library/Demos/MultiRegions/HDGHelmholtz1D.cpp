@@ -103,12 +103,12 @@ int main(int argc, char *argv[])
   
     //----------------------------------------------
     // Helmholtz solution taking physical forcing 
-    Exp->HelmSolve(*Fce, lambda);
+    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), lambda);
     //----------------------------------------------
     
     //----------------------------------------------
     // Backward Transform Solution to get solved values at 
-    Exp->BwdTrans(*Exp);
+    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
     //----------------------------------------------
     
     //----------------------------------------------
@@ -136,8 +136,8 @@ int main(int argc, char *argv[])
         //--------------------------------------------
         // Calculate L_inf error 
         Fce->SetPhys(fce);
-        cout << "L infinity error: " << Exp->Linf(*Fce) << endl;
-        cout << "L 2 error:        " << Exp->L2  (*Fce) << endl;
+        cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
+        cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
         //--------------------------------------------        
     }
     //----------------------------------------------

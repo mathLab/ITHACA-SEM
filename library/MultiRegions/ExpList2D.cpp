@@ -354,7 +354,7 @@ namespace Nektar
                         (locExpList->UpdatePhys())[j] = (boost::static_pointer_cast<SpatialDomains::DirichletBoundaryCondition>(bndConditions[i])->m_DirichletCondition).Evaluate(x0[j],x1[j],x2[j],time);
                     }
                     
-                    locExpList->FwdTrans_BndConstrained(*locExpList);
+                    locExpList->FwdTrans_BndConstrained(locExpList->GetPhys(),locExpList->UpdateCoeffs());
                 }
                 else if(bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eNeumann)
                 {          
@@ -363,7 +363,7 @@ namespace Nektar
                         (locExpList->UpdatePhys())[j] = (boost::static_pointer_cast<SpatialDomains::NeumannBoundaryCondition>(bndConditions[i])->m_NeumannCondition).Evaluate(x0[j],x1[j],x2[j],time);
                     }
 
-                    locExpList->IProductWRTBase(*locExpList); 
+                    locExpList->IProductWRTBase(locExpList->GetPhys(),locExpList->UpdateCoeffs()); 
                 }
                 else
                 {
@@ -482,6 +482,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.cpp,v $
+* Revision 1.24  2009/01/12 10:26:35  pvos
+* Added input tags for nodal expansions
+*
 * Revision 1.23  2009/01/06 21:05:57  sherwin
 * Added virtual function calls for BwdTrans, FwdTrans and IProductWRTBase from the class ExpList. Introduced _IterPerExp versions of these methods in ExpList.cpp§
 *

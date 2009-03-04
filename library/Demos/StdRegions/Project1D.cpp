@@ -102,19 +102,15 @@ int main(int argc, char *argv[])
       }
       }
   }
-  //---------------------------------------------
-  // Set the physical solution into phys space
-  E->SetPhys(sol);
-  //---------------------------------------------
   
   //---------------------------------------------
   // Project onto Expansion 
-  E->FwdTrans(*E);
+  E->FwdTrans(sol,E->UpdateCoeffs());
   //---------------------------------------------
 
   //-------------------------------------------
   // Backward Transform Solution to get projected values
-  E->BwdTrans(*E);
+  E->BwdTrans(E->GetCoeffs(),E->UpdatePhys());
   //-------------------------------------------  
  
   //--------------------------------------------

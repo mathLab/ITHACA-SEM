@@ -110,32 +110,21 @@ namespace Nektar
             }
 	}
         
-        void ContExpList1D::IProductWRTBase(const ExpList &In)
+        void ContExpList1D::IProductWRTBase(const Array<OneD, const NekDouble> &inarray,  
+                                                  Array<OneD,       NekDouble> &outarray,
+                                            bool  UseContCoeffs)
         {
-            
-            IProductWRTBase(In.GetPhys(),m_contCoeffs,m_coeffs);
-            m_transState = eLocalCont;
-        }
-        
-        // Note inarray is assumed to be of size m_contExpList2D;
-        void ContExpList1D::IProductWRTBase(const Array<OneD, const NekDouble> &inarray,  Array<OneD, NekDouble> &outarray, Array<OneD, NekDouble> &wksp)
-        {
-            Array<OneD, NekDouble> tmp;
-            
-            if(wksp == NullNekDouble1DArray)
+            if(UseContCoeffs)
             {
-                tmp =  Array<OneD, NekDouble>(m_ncoeffs);
+                Array<OneD, NekDouble> wsp(m_ncoeffs);
+                IProductWRTBase_IterPerExp(inarray,wsp);
+                Assemble(wsp,outarray);
             }
             else
             {
-                tmp = wksp;
+                IProductWRTBase_IterPerExp(inarray,outarray);
             }
-
-            IProductWRTBase_IterPerExp(inarray,tmp);
-            
-            Assemble(tmp,outarray);
         }
-
 
         void ContExpList1D::GeneralMatrixOp(const GlobalLinSysKey &gkey,
                                             const Array<OneD, const NekDouble> &inarray,
@@ -148,24 +137,14 @@ namespace Nektar
             Assemble(tmp,outarray);
         }
 
-
-        void ContExpList1D::FwdTrans(const ExpList &In)
-        {
-            FwdTrans(In.GetPhys(),m_contCoeffs);
-            
-	    m_transState = eContinuous;
-	    m_physState = false;
-        }
-
         void ContExpList1D::FwdTrans(const Array<OneD, const NekDouble> &inarray, 
-                             Array<OneD, NekDouble> &outarray)
+                                           Array<OneD,       NekDouble> &outarray,
+                                     bool  UseContCoeffs)
         {
-            IProductWRTBase(inarray,outarray);
-
             GlobalLinSysSharedPtr mass_matrix;
             GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
             GlobalLinSysMap::iterator matrixIter = m_globalMat->find(key);
-           
+            
             if(matrixIter == m_globalMat->end())
             {
                 mass_matrix = GenGlobalLinSys(key,m_locToGloMap);
@@ -175,46 +154,46 @@ namespace Nektar
             {
                 mass_matrix = matrixIter->second;
             }
-            mass_matrix->Solve(outarray,outarray,*m_locToGloMap);
-        }
+            
+            IProductWRTBase(inarray,outarray,true);
 
-
-        // Note this routine can overwrite this->m_coeff
-        void ContExpList1D::BwdTrans(const ExpList &In)
-        {
-            Array<OneD, NekDouble> tmp;
-
-            if(m_transState == eContinuous)
-            {
-                GlobalToLocal(In.GetContCoeffs(),m_coeffs);
-                tmp = m_coeffs;
+            if(UseContCoeffs)
+            {                
+                mass_matrix->Solve(outarray,outarray,*m_locToGloMap);
             }
             else
             {
-                tmp = In.GetCoeffs();
+                Array<OneD, NekDouble> wsp(m_contNcoeffs);
+                mass_matrix->Solve(outarray,wsp,*m_locToGloMap);
+                GlobalToLocal(wsp,outarray);
             }
 
-            BwdTrans_IterPerExp(tmp,m_phys);
-
-	    m_physState = true;
         }
-
-
-        void ContExpList1D::BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        
+        void ContExpList1D::BwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                           Array<OneD,       NekDouble> &outarray,
+                                     bool  UseContCoeffs)
         {
-            Array<OneD, NekDouble> tmp(m_ncoeffs);
-            
-            GlobalToLocal(inarray,tmp);
-
-            BwdTrans_IterPerExp(tmp,outarray);
+            if(UseContCoeffs)
+            {
+                Array<OneD, NekDouble> wsp(m_ncoeffs);
+                GlobalToLocal(inarray,wsp);
+                BwdTrans_IterPerExp(wsp,outarray);
+            }
+            else
+            {
+                BwdTrans_IterPerExp(inarray,outarray);
+            }
         }
-
 
     } //end of namespace
 } //end of namespace
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.35  2009/02/08 09:06:19  sherwin
+* Added updated definition of GlobalLinSysKey to include localtoglobalbasemap
+*
 * Revision 1.34  2009/01/06 21:05:56  sherwin
 * Added virtual function calls for BwdTrans, FwdTrans and IProductWRTBase from the class ExpList. Introduced _IterPerExp versions of these methods in ExpList.cpp§
 *

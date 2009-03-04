@@ -122,15 +122,6 @@ namespace Nektar
              */  
             ~ExpList1D();
             
-            /**
-             * \brief 
-             */  
-            void   PhysDeriv  (ExpList &S0,
-                               ExpList &S1 = NullExpList, 
-                               ExpList &S2 = NullExpList)
-            {
-                ExpList::PhysDeriv(S0,S1,S2);
-            }
 
             void SetBoundaryConditionExpansion(const SpatialDomains::MeshGraph1D &graph1D,
                                                SpatialDomains::BoundaryConditions &bcs, 
@@ -148,62 +139,62 @@ namespace Nektar
                                             Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndConditions);
 
 			
-			/**
-			 * \brief This function does the post-processing on a specified element
-			 * \param kernel is the post-processing kernel
-			 * \param inarray is the set of evaluation points
-			 * \param outarray contains the resulting post-processed solution for the element \param elmId
-			 * \param elmId specifies which element to perform the post-processing on
-			 * \param h is the mesh spacing 
-			 */
-			void PostProcess(LibUtilities::KernelSharedPtr kernel, 
-							 Array<OneD,NekDouble> &inarray,
-							 Array<OneD,NekDouble> &outarray, 
-							 int elmId,
-							 NekDouble h);
-
-			/**
-			 * \brief This function does the post-processing on the entire domain
-			 * \param kernel is the post-processing kernel
-			 * \param inarray contains the set of evaluation points
-			 * \param outarray contains the resulting post-procesed solution for the entire domain
-			 * \param h is the mesh spacing 
-			 */
-			void PostProcess( LibUtilities::KernelSharedPtr kernel,
-							  Array<OneD,NekDouble> &inarray,
-							  Array<OneD,NekDouble> &outarray,
-							  NekDouble h);
-
-			
-			/**
-			 * \brief This function evaluates the global spectral/hp expansion
-			 * at some arbitray set of points
-			 
-			 * Given the elemental coefficients \f$\hat{u}_n^e\f$ of an expansion, this 
+            /**
+             * \brief This function does the post-processing on a specified element
+             * \param kernel is the post-processing kernel
+             * \param inarray is the set of evaluation points
+             * \param outarray contains the resulting post-processed solution for the element \param elmId
+             * \param elmId specifies which element to perform the post-processing on
+             * \param h is the mesh spacing 
+             */
+            void PostProcess(LibUtilities::KernelSharedPtr kernel, 
+                             Array<OneD,NekDouble> &inarray,
+                             Array<OneD,NekDouble> &outarray, 
+                             int elmId,
+                             NekDouble h);
+            
+            /**
+             * \brief This function does the post-processing on the entire domain
+             * \param kernel is the post-processing kernel
+             * \param inarray contains the set of evaluation points
+             * \param outarray contains the resulting post-procesed solution for the entire domain
+             * \param h is the mesh spacing 
+             */
+            void PostProcess( LibUtilities::KernelSharedPtr kernel,
+                              Array<OneD,NekDouble> &inarray,
+                              Array<OneD,NekDouble> &outarray,
+                              NekDouble h);
+            
+            
+            /**
+             * \brief This function evaluates the global spectral/hp expansion
+             * at some arbitray set of points
+             
+             * Given the elemental coefficients \f$\hat{u}_n^e\f$ of an expansion, this 
              * function periodically evaluates the spectral/hp expansion 
              * \f$u^{\delta}(\boldsymbol{x})\f$ at arbitrary points
-
-			 * * \param inarray1 An array of size \f$N_{\mathrm{eof}}\f$ containing the local 
+             
+             * * \param inarray1 An array of size \f$N_{\mathrm{eof}}\f$ containing the local 
              * coefficients \f$\hat{u}_n^e\f$.
-			 * \param inarray2 contains the set of evaluation points
-			 * \param h is the mesh spacing
-			 * \param nmodes is the number of polynomial modes for each element
-			 * (we consider that each element has the same number of polynomial modes)
-			 * \param outarray contains the resulting values at the evaluation points
-			  
-			 */
-			void PeriodicEval(Array<OneD,NekDouble> &inarray1, Array<OneD,NekDouble> &inarray2,
-							  NekDouble h, int nmodes,
-							  Array<OneD,NekDouble> &outarray);
-
-
-			            
+             * \param inarray2 contains the set of evaluation points
+             * \param h is the mesh spacing
+             * \param nmodes is the number of polynomial modes for each element
+             * (we consider that each element has the same number of polynomial modes)
+             * \param outarray contains the resulting values at the evaluation points
+             
+             */
+            void PeriodicEval(Array<OneD,NekDouble> &inarray1, Array<OneD,NekDouble> &inarray2,
+                              NekDouble h, int nmodes,
+                              Array<OneD,NekDouble> &outarray);
+            
+            
+            
         protected:
             
         private:
-
+            
         };
-
+        
         typedef boost::shared_ptr<ExpList1D>      ExpList1DSharedPtr;
         typedef std::vector<ExpList1DSharedPtr>   ExpList1DVector;
         typedef std::vector<ExpList1DSharedPtr>::iterator ExpList1DVectorIter;

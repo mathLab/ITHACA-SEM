@@ -207,15 +207,6 @@ namespace Nektar
             return sum; 
         }
         
-        void ExpList::IProductWRTBase_IterPerExp(const ExpList &Sin)
-        {
-            ASSERTL2(Sin.GetPhysState() == true,
-                     "Physical space is not set to true ");
-            
-            IProductWRTBase_IterPerExp(Sin.GetPhys(),m_coeffs);
-            m_physState = false;
-        }
-        
         void ExpList::IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, 
                                       Array<OneD, NekDouble> &outarray)
         {
@@ -234,17 +225,7 @@ namespace Nektar
             }
             m_transState = eLocal;
         }
-        
-
-        void ExpList::IProductWRTDerivBase(const int dir, const ExpList &Sin)
-        {
-            ASSERTL2(Sin.GetPhysState() == true,
-                     "Physical space is not set to true ");
-            
-            IProductWRTDerivBase(dir,Sin.GetPhys(),m_coeffs);
-            m_physState = false;
-        }
-        
+              
         void ExpList::IProductWRTDerivBase(const int dir, 
                                            const Array<OneD, const NekDouble> &inarray, 
                                            Array<OneD, NekDouble> &outarray)
@@ -264,21 +245,7 @@ namespace Nektar
             }
             m_transState = eLocal;
         }
-        
-        
-        void ExpList::PhysDeriv(ExpList &out_d0, 
-                                ExpList &out_d1, 
-                                ExpList &out_d2)
-        {
-            ASSERTL2(m_physState == true,
-                     "local physical space is not true ");
-            PhysDeriv(m_phys,
-                      out_d0.UpdatePhys(), 
-                      out_d1.UpdatePhys(), 
-                      out_d2.UpdatePhys());
-        }
-
-    
+            
         void ExpList::PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                 Array<OneD, NekDouble> &out_d0, 
                                 Array<OneD, NekDouble> &out_d1, 
@@ -324,37 +291,7 @@ namespace Nektar
                 (*m_exp)[i]->PhysDeriv(dir, inarray+cnt, e_out_d);
                 cnt  += (*m_exp)[i]->GetTotPoints();
             }
-        }
-
-        void ExpList::MultiplyByElmtInvMass(const ExpList &Sin)
-        {
-            ASSERTL2(Sin.GetTransState() == eLocal ||
-                     Sin.GetTransState() == eLocalCont, 
-                     "Error input state is not in transformed space");
-            
-            MultiplyByElmtInvMass(Sin.GetPhys(),m_coeffs);
-            m_transState = eLocal;
-        }
-
-
-        void ExpList::FwdTrans_IterPerExp(const ExpList &Sin)
-        {
-            ASSERTL2(Sin.GetPhysState() == true,
-                     "Sin physical space is not true ");
-            
-            FwdTrans_IterPerExp(Sin.GetPhys(),m_coeffs);
-            m_transState = eLocal;
-        }
-
-        void ExpList::FwdTrans_BndConstrained(const ExpList &Sin)
-        {
-            ASSERTL1(Sin.GetPhysState() == true,
-                     "Sin physical space is not true ");
-            
-            FwdTrans_BndConstrained(Sin.GetPhys(),m_coeffs);
-            m_transState = eLocal;
-        }
-        
+        }  
 
         void ExpList::MultiplyByElmtInvMass(const Array<OneD, const NekDouble> &inarray, 
                                             Array<OneD, NekDouble> &outarray)
@@ -768,17 +705,6 @@ namespace Nektar
             return returnlinsys;
         }
 
-
-        void ExpList::BwdTrans_IterPerExp(const ExpList &Sin)
-        {
-            ASSERTL2(Sin.GetTransState() == eLocal ||
-                     Sin.GetTransState() == eLocalCont, 
-                     "Error input state is not in transformed space");
-            
-            BwdTrans_IterPerExp(Sin.GetCoeffs(),m_phys);
-            m_physState = true;
-        }
-        
         void ExpList::BwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD, NekDouble> &outarray)
         {
@@ -856,7 +782,7 @@ namespace Nektar
                 
                 if(m_physState == false)
                 {
-                    BwdTrans(*this);
+                    BwdTrans(m_coeffs,m_phys);
                 }
                 
                 (*m_exp)[0]->SetPhys(phys);
@@ -1002,20 +928,11 @@ namespace Nektar
             }
         }
     
-        NekDouble  ExpList::Linf(const ExpList &Sol)
-        {
-            ASSERTL2(Sol.GetPhysState() == true,
-                     "local physical space is not true ");
-            
+        NekDouble  ExpList::Linf(const Array<OneD, const NekDouble> &soln)
+        {            
             NekDouble err = 0.0;
             int       i,cnt = 0;
-            Array<OneD, const NekDouble> soln = Sol.GetPhys();
             Array<OneD, const NekDouble> phys = m_phys;
-            
-            if(m_physState == false)
-            {
-                BwdTrans(*this);
-            }
 
             for(i= 0; i < GetExpSize(); ++i)
             {
@@ -1026,19 +943,6 @@ namespace Nektar
             }
             
             return err;
-        }
-    
-        NekDouble  ExpList::L2(const ExpList &Sol)
-        {
-            ASSERTL2(Sol.GetPhysState() == true,
-                     "local physical space is not true ");
-
-            if(m_physState == false)
-            {
-                BwdTrans(*this);
-            }
-            
-            return L2(Sol.GetPhys());
         }
         
         NekDouble ExpList::L2(const Array<OneD, const NekDouble> &soln)

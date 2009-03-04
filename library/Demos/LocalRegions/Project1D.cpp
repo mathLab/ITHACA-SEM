@@ -106,18 +106,13 @@ int main(int argc, char *argv[])
     //---------------------------------------------
 
     //---------------------------------------------
-    // Set the physical solution into phys space
-    E->SetPhys(sol);
-    //---------------------------------------------
-
-    //---------------------------------------------
     // Project onto Expansion 
-    E->FwdTrans(*E);
+    E->FwdTrans(sol,E->UpdateCoeffs());
     //---------------------------------------------
-
+    
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    E->BwdTrans(*E);
+    E->BwdTrans(E->GetCoeffs(),E->UpdatePhys());
     //-------------------------------------------  
 
     //--------------------------------------------
@@ -135,21 +130,22 @@ int main(int argc, char *argv[])
 
     //-------------------------------------------
     // Evaulate solution at mid point and print error
+    Array<OneD, NekDouble> xm(1);
+
+    xm[0] = 0.5*(x[1]+x[0]);
+
     if(btype != LibUtilities::eFourier)
     {
-        sol[0] = solutionpoly(0.5*(x[1]+x[0]),order);
+        sol[0] = solutionpoly(xm[0],order);
     }
     else
     {
-        sol[0] = solutionfourier(0.5*(x[1]+x[0]),order,x[0],x[1]);
+        sol[0] = solutionfourier(xm[0],order,x[0],x[1]);
     }
 
-    Array<OneD,NekDouble> lcoord(1);
-
-    lcoord[0] = 0;
-    E->GetCoord(lcoord,xc);
-    double nsol = E->PhysEvaluate(xc);
-    cout << "error at (xi = 0) x = " << xc[0] << " : " << nsol - sol[0] << endl;
+    Array<OneD,NekDouble> lcoord(1,0.0);
+    double nsol = E->PhysEvaluate(lcoord);
+    cout << "error at (xi = 0) x = " << xm[0] << " : " << nsol - sol[0] << endl;
 
     //-------------------------------------------
 
@@ -167,8 +163,7 @@ static double solutionpoly(double x, int order)
         sol += pow(x,j);
     }
 
-    //    return sol;
-    return 1.0;
+    return sol;
 }
 
 static double solutionfourier(double x, int order, double a, double b)

@@ -224,15 +224,15 @@ int main(int argc, char *argv[])
             // Do the projection to obtain the coefficients of the expansion
             // The result is stored in the data member m_contCoeffs of the ContExpList2D 
             // object multiElementExp.
-            multiElementExp->FwdTrans(*forcingExp);
+            multiElementExp->FwdTrans(forcingExp->GetPhys(),multiElementExp->UpdateCoeffs());
 
             // Perform a backward transformation to obtain the solution at the quadrature points
             // The result is stored in the data member m_phys of the ContExpList2D 
             // object multiElementExp.
-            multiElementExp->BwdTrans(*multiElementExp);
+            multiElementExp->BwdTrans(multiElementExp->GetCoeffs(),multiElementExp->UpdatePhys());
 
             // Calculate the error
-            NekDouble error = multiElementExp->L2(*forcingExp);
+            NekDouble error = multiElementExp->L2(forcingExp->GetPhys());
 
             // Display the output              
             cout << "P = " << p << " => Error = " << error << endl;  

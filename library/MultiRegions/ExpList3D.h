@@ -69,13 +69,6 @@ namespace Nektar
          ExpList3D(SpatialDomains::MeshGraph3D &graph3D);
         
         ~ExpList3D();
-
-        void   PhysDeriv  (ExpList &S0,
-                           ExpList &S1,
-                           ExpList &S2)
-        {
-            ExpList::PhysDeriv(S0,S1,S2);
-        }
         
     protected:
 

@@ -197,9 +197,13 @@ namespace Nektar
              * \param Sin An ExpList, containing the discrete evaluation of 
              * \f$f(\boldsymbol{x})\f$ at the quadrature points in its array #m_phys.
              */ 
-            void FwdTrans (const ExpList &In);
+            void FwdTrans(const Array<OneD, const NekDouble> &inarray,
+                                Array<OneD,      NekDouble> &outarray,
+                          bool  UseContCoeffs = false);
             
-            void MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool ContinuousArrays = true);
+            void MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, 
+                                               Array<OneD,       NekDouble> &outarray,
+                                         bool  UseContCoeffs = false);
                       
             /**
              * \brief This function solves the two-dimensional Helmholtz equation, 
@@ -230,10 +234,11 @@ namespace Nektar
              * in its array #m_phys.
              * \param lambda The parameter \f$\lambda\f$ of the Helmholtz equation
              */ 
-            void HelmSolve(const ExpList &In, 
+            void HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                 Array<OneD,       NekDouble> &outarray,
                            NekDouble lambda,
-                           Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray, 
-                           bool LeaveInContCoeffs = false);
+                           bool      UseContCoeffs = false,
+                           Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray);
 
             /**
              * \brief This function solves the two-dimensional Laplace equation, 
@@ -283,11 +288,12 @@ namespace Nektar
              * \f[\nabla^2u(\boldsymbol{x}) = f(\boldsymbol{x}),\f]
              * \param time The time-level at which the coefficients are evaluated
              */ 
-            void LaplaceSolve(const ExpList &In, 
-                              const Array<OneD, Array<OneD,NekDouble> >& variablecoeffs = NullNekDoubleArrayofArray,
+            void LaplaceSolve(const Array<OneD, const NekDouble> &inarray,
+                                    Array<OneD,       NekDouble> &outarray,
+                                    Array<OneD,       NekDouble> &dirForcing = NullNekDouble1DArray,
+                              const Array<OneD,       Array<OneD,NekDouble> >& variablecoeffs = NullNekDoubleArrayofArray,
                               NekDouble time = 0.0,
-                              Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray,
-                              bool LeaveInContCoeffs = false);
+                              bool UseContCoeffs = false);
           
             /**
              * \brief This function evaluates the boundary conditions at a certain 
@@ -433,7 +439,7 @@ namespace Nektar
             void GlobalSolve(const GlobalLinSysKey &key, 
                              const Array<OneD, const  NekDouble> &rhs, 
                              Array<OneD, NekDouble> &inout,
-                             Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray);
+                             Array<OneD, NekDouble> &dirForcing = NullNekDouble1DArray);
 
 
           
@@ -458,21 +464,27 @@ namespace Nektar
                                                     SpatialDomains::BoundaryConditions &bcs, 
                                                     const std::string variable);
             
-            virtual void v_MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays)
+            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
+                                          Array<OneD,       NekDouble> &outarray,
+                                    bool  UseContCoeffs)
             {
-                MultiplyByInvMassMatrix(inarray,outarray,GlobalArrays);
+                FwdTrans(inarray,outarray,UseContCoeffs);
             }
 
-            virtual void v_FwdTrans(const ExpList &Sin)
+            virtual void v_MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, 
+                                                         Array<OneD,       NekDouble> &outarray,
+                                                   bool  UseContCoeffs)
             {
-                FwdTrans(Sin);
+                MultiplyByInvMassMatrix(inarray,outarray,UseContCoeffs);
             }
 
-            virtual void v_HelmSolve(const ExpList &In, 
+            virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD,       NekDouble> &outarray,
                                      NekDouble lambda,
-                                     Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray)
+                                     bool      UseContCoeffs,
+                                     Array<OneD, NekDouble>& dirForcing)
             {
-                HelmSolve(In,lambda,dirForcing);
+                HelmSolve(inarray,outarray,lambda,UseContCoeffs,dirForcing);
             }
 
             virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions()

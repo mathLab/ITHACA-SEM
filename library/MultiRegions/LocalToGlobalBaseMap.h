@@ -82,7 +82,7 @@ namespace Nektar
             {
                 if(m_signChange)
                 {
-                return m_bndCondCoeffsToGlobalCoeffsSign[i];
+                    return m_bndCondCoeffsToGlobalCoeffsSign[i];
                 }
                 else
                 {
@@ -277,6 +277,9 @@ namespace Nektar
 
 /** 
  $Log: LocalToGlobalBaseMap.h,v $
+ Revision 1.10  2009/02/08 09:10:47  sherwin
+ Added NUllLocalToGlobalBaseMapSharedPtr definition
+
  Revision 1.9  2008/12/19 15:12:50  pvos
  Updates for precomputed dirichlet forcing functionality
 

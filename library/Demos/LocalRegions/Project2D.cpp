@@ -309,8 +309,7 @@ int main(int argc, char *argv[])
 
   //-------------------------------------------
   // Evaulate solution at x = y =0  and print error
-
-  Array<OneD, NekDouble> x = Array<OneD, NekDouble>(2);
+  Array<OneD, NekDouble> x(2);
   x[0] = (coords[0] + coords[2])*0.5;
   x[1] = (coords[1] + coords[5])*0.5;
 
@@ -322,7 +321,9 @@ int main(int argc, char *argv[])
   {
       sol[0] = Quad_sol(x[0],x[1],order1,order2,btype1,btype2);
   }
-  NekDouble nsol = E->PhysEvaluate(x);
+
+  Array<OneD,NekDouble> lcoord(2,0.0);
+  NekDouble nsol = E->PhysEvaluate(lcoord);
   cout << "error at x = (" <<x[0] <<","<<x[1] <<"): " << nsol - sol[0] << endl;
 
   return 0;

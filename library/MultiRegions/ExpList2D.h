@@ -111,32 +111,6 @@ namespace Nektar
              * \brief The default destructor.
              */  
             ~ExpList2D();
-            
-            /**
-             * \brief 
-             */  
-            void   PhysDeriv  (ExpList &S0,
-                               ExpList &S1, 
-                               ExpList &S2 = NullExpList)
-            {
-                ExpList::PhysDeriv(S0,S1,S2);
-            }
-            
-            void  PhysDeriv(const Array<OneD, const NekDouble> &inarray,
-                             Array<OneD, NekDouble> &out_d0, 
-                            Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
-                            Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
-            {
-                ExpList::PhysDeriv(inarray,out_d0,out_d1,out_d2);
-            }
-            
-            void PhysDeriv(const int dir, 
-                           const Array<OneD, const NekDouble> &inarray,
-                           Array<OneD, NekDouble> &out_d)
-            {
-                PhysDeriv(dir,inarray,out_d);
-            }
-
 
         protected:
             void SetBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D,
@@ -170,6 +144,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.h,v $
+* Revision 1.17  2008/10/04 20:04:26  sherwin
+* Modifications for solver access
+*
 * Revision 1.16  2008/09/23 18:21:00  pvos
 * Updates for working ProjectContField3D demo
 *

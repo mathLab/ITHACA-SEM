@@ -684,7 +684,7 @@ namespace Nektar
                 DNekScalMatSharedPtr& matsys = m_matrixManager[masskey];
                 
                 // copy inarray in case inarray == outarray
-                NekVector<const NekDouble> in(m_ncoeffs,outarray,eWrapper);
+                NekVector<const NekDouble> in(m_ncoeffs,outarray,eCopy);
                 NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
                 
                 out = (*matsys)*in;
@@ -1232,6 +1232,9 @@ namespace Nektar
 }//end of namespace
 
 // $Log: SegExp.cpp,v $
+// Revision 1.58  2009/01/21 16:59:57  pvos
+// Added additional geometric factors to improve efficiency
+//
 // Revision 1.57  2008/12/18 14:08:24  pvos
 // NekConstants update
 //

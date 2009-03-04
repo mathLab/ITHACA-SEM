@@ -317,7 +317,7 @@ namespace Nektar
                         (locExpList->UpdatePhys())[j] = (boost::static_pointer_cast<SpatialDomains::DirichletBoundaryCondition>(bndConditions[i])->m_DirichletCondition).Evaluate(x0[j],x1[j],x2[j],time);
                     }
                     
-                    locExpList->FwdTrans_BndConstrained(*locExpList);
+                    locExpList->FwdTrans_BndConstrained(locExpList->GetPhys(),locExpList->UpdateCoeffs());
                 }
                 else if(bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eNeumann)
                 {          
@@ -326,7 +326,7 @@ namespace Nektar
                         (locExpList->UpdatePhys())[j] = (boost::static_pointer_cast<SpatialDomains::NeumannBoundaryCondition>(bndConditions[i])->m_NeumannCondition).Evaluate(x0[j],x1[j],x2[j],time);
                     }
 
-                    locExpList->IProductWRTBase(*locExpList); 
+                    locExpList->IProductWRTBase(locExpList->GetPhys(),locExpList->UpdateCoeffs()); 
                 }
                 else
                 {

@@ -15,6 +15,12 @@ TARGET_LINK_LIBRARIES(StdProject_Diff1D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(StdProject_Diff1D)
 
 
+#SET(StdProject_Diff2DSource  Project_Diff2D.cpp)
+#ADD_NEKTAR_EXECUTABLE(StdProject_Diff2D StdProject_Diff2DSource)
+#TARGET_LINK_LIBRARIES(StdProject_Diff2D ${LinkLibraries})
+#SET_LAPACK_LINK_LIBRARIES(StdProject_Diff2D)
+
+
 SET(StdProject2DSource  Project2D.cpp)
 ADD_NEKTAR_EXECUTABLE(StdProject2D StdProject2DSource)
 TARGET_LINK_LIBRARIES(StdProject2D ${LinkLibraries})
@@ -62,9 +68,3 @@ ADD_NEKTAR_EXECUTABLE(StdPyrExp_Diff3D StdPyrExp_Diff3DSource)
 TARGET_LINK_LIBRARIES(StdPyrExp_Diff3D ${LinkLibraries})     
 SET_LAPACK_LINK_LIBRARIES(StdPyrExp_Diff3D)
     
-
-# SET(StdProject_Diff2DSource  Project_Diff2D.cpp)
-# ADD_NEKTAR_EXECUTABLE(StdProject_Diff2D StdProject_Diff2DSource)
-#     TARGET_LINK_LIBRARIES(StdProject_Diff2D
-#     optimized StdRegions debug StdRegions-g    
-#     )

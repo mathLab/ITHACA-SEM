@@ -251,7 +251,9 @@ namespace Nektar
             return glo_matrix;
         }
 
-        void DisContField1D::HelmSolve(DisContField1D &Fce, NekDouble lambda)
+        void DisContField1D::HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,       NekDouble> &outarray,
+                                       NekDouble lambda)
         {
             int i,j,n,cnt,cnt1,nbndry;
             int nexp = GetExpSize();
@@ -264,7 +266,7 @@ namespace Nektar
             //----------------------------------
             // Setup RHS Inner product
             //----------------------------------
-            IProductWRTBase(Fce.GetPhys(),f);
+            IProductWRTBase(inarray,f);
             Vmath::Neg(m_ncoeffs,f,1);
             
             //----------------------------------
@@ -386,10 +388,10 @@ namespace Nektar
             //----------------------------------
             // Setup forcing for local interior solves
             //----------------------------------
-            Vmath::Zero(m_ncoeffs,&m_coeffs[0],1);
+            Vmath::Zero(m_ncoeffs,&outarray[0],1);
             for(cnt = cnt1 = i = 0; i < nexp; ++i)
             {
-                e_bndsol = m_coeffs + cnt;
+                e_bndsol = outarray + cnt;
                 e_f      = f + cnt;
 
                 (*m_exp)[i]->GetBoundaryMap(vmap);
@@ -410,7 +412,7 @@ namespace Nektar
                 InvHDGHelm = SetupBlockMatrix(StdRegions::eInvHybridDGHelmholtz, lambda, tau);
             }
             DNekVec in (m_ncoeffs,f,eWrapper);
-            DNekVec out(m_ncoeffs,m_coeffs,eWrapper);            
+            DNekVec out(m_ncoeffs,outarray,eWrapper);            
             out = (*InvHDGHelm)*in;            
         }
         

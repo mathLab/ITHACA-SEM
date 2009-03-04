@@ -252,7 +252,7 @@ namespace Nektar
              * will be stored in this array of size \f$N_\mathrm{eof}\f$.
              */  
             inline const void GlobalToLocal(const Array<OneD, const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray) const 
+                                                  Array<OneD,       NekDouble> &outarray) const 
             {
                 m_locToGloMap->GlobalToLocal(inarray,outarray);
             }
@@ -381,11 +381,9 @@ namespace Nektar
              * \param In An ExpList, containing the discrete evaluation of 
              * \f$f(\boldsymbol{x})\f$ at the quadrature points in its array #m_phys.
              */  
-            void IProductWRTBase(const ExpList &In);
-
             void IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
-                                 Array<OneD, NekDouble> &outarray, 
-                                 Array<OneD, NekDouble> &wksp = NullNekDouble1DArray);
+                                       Array<OneD, NekDouble> &outarray,
+                                 bool  UseContCoeffs = false);
          
             /**
              * \brief This function performs the global forward transformation of a 
@@ -408,10 +406,9 @@ namespace Nektar
              * \param In An ExpList, containing the discrete evaluation of 
              * \f$u(\boldsymbol{x})\f$ at the quadrature points in its array #m_phys.
              */  
-            void FwdTrans(const ExpList &In);
-
             void FwdTrans(const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD, NekDouble> &outarray);
+                                Array<OneD,      NekDouble> &outarray,
+                          bool  UseContCoeffs = false);
                              
             /**
              * \brief This function performs the backward transformation of the spectral/hp 
@@ -430,10 +427,9 @@ namespace Nektar
              * \param In An ExpList, containing the local coefficients \f$\hat{u}_n^e\f$ 
              * in its array #m_coeffs.
              */  
-            void BwdTrans(const ExpList &In);
- 
-
-            void BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+            void BwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                Array<OneD,       NekDouble> &outarray,
+                          bool  UseContCoeffs = false);
 
 
             /**
@@ -453,9 +449,9 @@ namespace Nektar
              * \f$N_{\mathrm{dof}}\f$.
              * \param outarray The resulting vector of size \f$N_{\mathrm{dof}}\f$.
              */  
-            void GeneralMatrixOp(const GlobalLinSysKey            &gkey,
+            void GeneralMatrixOp(const GlobalLinSysKey              &gkey,
                                  const Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD, NekDouble>          &outarray);
+                                       Array<OneD,       NekDouble> &outarray);
             
         protected: 
             /**
@@ -489,40 +485,29 @@ namespace Nektar
             // virtual functions
             virtual  const Array<OneD, const NekDouble> &v_GetContCoeffs() const 
             {
-                return m_contCoeffs;;
+                return m_contCoeffs;
             }
-
-            virtual void v_BwdTrans(const ExpList &Sin)
-            {
-                BwdTrans(Sin);
-            }
-
-            virtual void v_BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
-            {
-                BwdTrans(inarray,outarray);
-            }
-
             
-            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
+                                          Array<OneD,       NekDouble> &outarray,
+                                    bool  UseContCoeffs)
             {
-                FwdTrans(inarray,outarray);
+                FwdTrans(inarray,outarray,UseContCoeffs);
             }
-
-            virtual void v_FwdTrans(const ExpList &Sin)
+            
+            virtual void v_BwdTrans(const Array<OneD, const NekDouble> &inarray,
+                                          Array<OneD,       NekDouble> &outarray,
+                                    bool  UseContCoeffs)
             {
-                FwdTrans(Sin);
+                BwdTrans(inarray,outarray,UseContCoeffs);
             }
-
-            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            
+            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
+                                                 Array<OneD,       NekDouble> &outarray,
+                                           bool  UseContCoeffs)
             {
-                IProductWRTBase(inarray,outarray);
+                IProductWRTBase(inarray,outarray,UseContCoeffs);
             }
-
-            virtual void v_IProductWRTBase(const ExpList &Sin)
-            {
-                IProductWRTBase(Sin);
-            }
-
 
         };
         
@@ -537,6 +522,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.h,v $
+* Revision 1.17  2009/02/08 09:02:36  sherwin
+* .
+*
 * Revision 1.16  2009/01/06 21:05:56  sherwin
 * Added virtual function calls for BwdTrans, FwdTrans and IProductWRTBase from the class ExpList. Introduced _IterPerExp versions of these methods in ExpList.cpp§
 *

@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
 		MemoryManager<MultiRegions::DisContField2D>::AllocateSharedPtr(*u);
 	      exactSolutionExp->SetPhys(exactSolution);
 	      
-	      NekDouble error = u->L2(*exactSolutionExp);
+	      NekDouble error = u->L2(exactSolutionExp->GetPhys());
 	      
 	      // Display the output              
 	      cout << "Ndof = " << u->GetNcoeffs() << " => Error = " << error << endl;

@@ -243,33 +243,37 @@ namespace Nektar
             SetBoundaryConditionExpansion(graph2D,bcs,variable,m_bndCondExpansions,m_bndConditions);
         }
         
-        void ContField2D::FwdTrans(const ExpList &In)
+        void ContField2D::FwdTrans(const Array<OneD, const NekDouble> &inarray,
+                                         Array<OneD,       NekDouble> &outarray,
+                                   bool  UseContCoeffs)
         {            
-            ASSERTL1(In.GetPhysState() == true, 
-                     "Error input state is not in physical  space");
-
-            // Inner product of forcing 
-            Array<OneD,NekDouble> rhs(m_contNcoeffs);        
+            // Inner product of forcing
+            Array<OneD,NekDouble> wsp(m_contNcoeffs);  
+            IProductWRTBase(inarray,wsp,true);
             
-            // Inner product of forcing using m_coeffs as workspace
-            IProductWRTBase(In.GetPhys(), rhs, m_coeffs);
-
             // Solve the system
             GlobalLinSysKey key(StdRegions::eMass,m_locToGloMap);
-            GlobalSolve(key,rhs,m_contCoeffs);
-            
-            m_transState = eContinuous;
-            m_physState = false;
+
+            if(UseContCoeffs)
+            {
+                GlobalSolve(key,wsp,outarray);
+            }
+            else
+            {
+                Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
+                GlobalSolve(key,wsp,tmp);
+                GlobalToLocal(tmp,outarray);
+            }
         }
 
         void ContField2D::MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray,
                                                         Array<OneD,       NekDouble> &outarray,
-                                                  bool ContinuousArrays)
+                                                  bool  UseContCoeffs)
                                                   
         {
             GlobalLinSysKey key(StdRegions::eMass,m_locToGloMap);
             
-            if(ContinuousArrays)
+            if(UseContCoeffs)
             {
                 if(inarray.data() == outarray.data())
                 {
@@ -304,64 +308,61 @@ namespace Nektar
 
         // Solve the helmholtz problem assuming that m_contCoeff vector 
         // contains an intial estimate for solution
-        void ContField2D::HelmSolve(const ExpList &In, 
+        void ContField2D::HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                          Array<OneD,       NekDouble> &outarray,
                                     NekDouble lambda,
-                                    Array<OneD, NekDouble>& dirForcing,
-                                    bool LeaveInContCoeffs)
+                                    bool      UseContCoeffs,
+                                    Array<OneD, NekDouble>& dirForcing)
         {
-            GlobalLinSysKey key(StdRegions::eHelmholtz,m_locToGloMap,lambda);
-            Array<OneD,NekDouble> rhs(m_contNcoeffs);        
-            
-            // Inner product of forcing  using m_coeffs as work space
-            IProductWRTBase(In.GetPhys(), rhs, m_coeffs);
-
+            // Inner product of forcing
+            Array<OneD,NekDouble> wsp(m_contNcoeffs);  
+            IProductWRTBase(inarray,wsp,true);       
             // Note -1.0 term necessary to invert forcing function to
             // be consistent with matrix definition
-            Vmath::Neg(m_contNcoeffs,  rhs, 1);
-            
-            GlobalSolve(key,rhs,m_contCoeffs,dirForcing);
+            Vmath::Neg(m_contNcoeffs, wsp, 1);
 
-            if(LeaveInContCoeffs)
+            // Solve the system
+            GlobalLinSysKey key(StdRegions::eHelmholtz,m_locToGloMap,lambda);
+
+            if(UseContCoeffs)
             {
-                m_transState = eContinuous;
+                GlobalSolve(key,wsp,outarray,dirForcing);
             }
             else
             {
-                GlobalToLocal();
-                m_transState = eLocalCont;
+                Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
+                GlobalSolve(key,wsp,tmp,dirForcing);
+                GlobalToLocal(tmp,outarray);
             }
-            m_physState = false;
         }
 
-        void  ContField2D::LaplaceSolve(const ExpList &In,
-                                        const Array<OneD, Array<OneD,NekDouble> >& variablecoeffs,
-                                        NekDouble time,
-                                        Array<OneD, NekDouble>& dirForcing,
-                                        bool LeaveInContCoeffs)
+        void ContField2D::LaplaceSolve(const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,       NekDouble> &outarray,
+                                             Array<OneD,       NekDouble> &dirForcing,
+                                       const Array<OneD,       Array<OneD,NekDouble> >& variablecoeffs,
+                                       NekDouble time,
+                                       bool UseContCoeffs)
         {
-            GlobalLinSysKey key(StdRegions::eLaplacian,m_locToGloMap,time,variablecoeffs);
-            Array<OneD,NekDouble> rhs(m_contNcoeffs);        
-            
-            // Inner product of forcing  using m_coeffs as tmp space
-            IProductWRTBase(In.GetPhys(), rhs, m_coeffs);
-            
+            // Inner product of forcing
+            Array<OneD,NekDouble> wsp(m_contNcoeffs);  
+            IProductWRTBase(inarray,wsp,true);       
             // Note -1.0 term necessary to invert forcing function to
             // be consistent with matrix definition
-            Vmath::Neg(m_contNcoeffs,  rhs, 1);
-            
-            GlobalSolve(key,rhs,m_contCoeffs);
+            Vmath::Neg(m_contNcoeffs, wsp, 1);
 
-            if(LeaveInContCoeffs)
+            // Solve the system
+            GlobalLinSysKey key(StdRegions::eLaplacian,m_locToGloMap,time,variablecoeffs);
+
+            if(UseContCoeffs)
             {
-                m_transState = eContinuous;
+                GlobalSolve(key,wsp,outarray,dirForcing);
             }
             else
             {
-                GlobalToLocal();
-                m_transState = eLocalCont;
+                Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
+                GlobalSolve(key,wsp,tmp,dirForcing);
+                GlobalToLocal(tmp,outarray);
             }
-
-            m_physState = false;
         }
 
         void ContField2D::GenerateDirBndCondForcing(const GlobalLinSysKey &key, 

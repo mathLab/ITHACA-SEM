@@ -106,21 +106,17 @@ namespace Nektar
                 return  m_locToGloMap;
             }
 
-            void IProductWRTBase(const ExpList &In);
-
             void IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
-                                 Array<OneD, NekDouble> &outarray, 
-                                 Array<OneD, NekDouble> &wksp = NullNekDouble1DArray);
-        
-            void FwdTrans(const ExpList &In);
-        
+                                       Array<OneD, NekDouble> &outarray,
+                                 bool  UseContCoeffs = false);
+
             void FwdTrans(const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD, NekDouble> &outarray);
-                             
+                                Array<OneD,      NekDouble> &outarray,
+                          bool  UseContCoeffs = false);
 
-            void BwdTrans(const ExpList &In);
-
-            void BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+            void BwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                Array<OneD,       NekDouble> &outarray,
+                          bool  UseContCoeffs = false);
 
             void GeneralMatrixOp(const GlobalLinSysKey            &gkey,
                                  const Array<OneD, const NekDouble> &inarray,
@@ -142,35 +138,25 @@ namespace Nektar
                 return m_contCoeffs;;
             }
 
-            virtual void v_BwdTrans(const ExpList &Sin)
+            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
+                                          Array<OneD,       NekDouble> &outarray,
+                                    bool  UseContCoeffs)
             {
-                BwdTrans(Sin);
+                FwdTrans(inarray,outarray,UseContCoeffs);
             }
-
-            virtual void v_BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
-            {
-                BwdTrans(inarray,outarray);
-            }
-
             
-            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            virtual void v_BwdTrans(const Array<OneD, const NekDouble> &inarray,
+                                          Array<OneD,       NekDouble> &outarray,
+                                    bool  UseContCoeffs)
             {
-                FwdTrans(inarray,outarray);
+                BwdTrans(inarray,outarray,UseContCoeffs);
             }
-
-            virtual void v_FwdTrans(const ExpList &Sin)
+            
+            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
+                                                 Array<OneD,       NekDouble> &outarray,
+                                           bool  UseContCoeffs)
             {
-                FwdTrans(Sin);
-            }
-
-            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
-            {
-                IProductWRTBase(inarray,outarray);
-            }
-
-            virtual void v_IProductWRTBase(const ExpList &Sin)
-            {
-                IProductWRTBase(Sin);
+                IProductWRTBase(inarray,outarray,UseContCoeffs);
             }
 
         };

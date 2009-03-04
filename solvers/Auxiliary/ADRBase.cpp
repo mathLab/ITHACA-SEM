@@ -287,7 +287,7 @@ namespace Nektar
 	    }
             m_fields[i]->SetPhysState(true);
 
-            m_fields[i]->FwdTrans(*(m_fields[i]));
+            m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
 	}
 
 
@@ -720,7 +720,7 @@ namespace Nektar
         {
             std::string outname = m_sessionName +"_" + m_boundaryConditions->GetVariable(i) +  ".dat";
             ofstream outfile(outname.c_str());
-            m_fields[i]->BwdTrans(*(m_fields[i]));
+            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
             m_fields[i]->WriteToFile(outfile,eTecplot);
         }
     }
@@ -733,7 +733,7 @@ namespace Nektar
             sprintf(chkout, "%d", n);
             std::string outname = m_sessionName +"_" + m_boundaryConditions->GetVariable(i) + "_" + chkout + ".chk";
             ofstream outfile(outname.c_str());
-            m_fields[i]->BwdTrans(*(m_fields[i]));
+            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
             m_fields[i]->WriteToFile(outfile,eTecplot);
         }
     }
@@ -803,6 +803,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.5  2009/02/28 22:00:38  sehunchun
+*  Explicit Diffusion solver is added
+*
 * Revision 1.4  2009/02/03 14:33:44  pvos
 * Modifications for solvers with time-dependent dirichlet BC's
 *

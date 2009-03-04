@@ -256,7 +256,7 @@ namespace Nektar
     {
         for(int i = 0; i < m_fields.num_elements(); ++i)
         {
-            m_fields[i]->HelmSolve(*(m_fields[i]),lambda);
+            m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs(),lambda);
         }
     }
 
@@ -814,6 +814,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.10  2009/03/03 16:11:26  pvos
+* New version of TimeIntegrator classes
+*
 * Revision 1.9  2009/02/28 21:59:09  sehunchun
 * Explicit Diffusion solver is added
 *

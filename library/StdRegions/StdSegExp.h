@@ -383,13 +383,6 @@ namespace Nektar
                 BwdTrans(inarray, outarray);
             }
 
-            /** \brief Virtual call to StdSegExp::BwdTrans */
-            virtual void v_BwdTrans(const StdExpansion1D &in)
-            {
-                BwdTrans(((StdSegExp &)in).GetCoeffs(), m_phys);
-            }
-
-
             /** \brief Virtual call to StdSegExp::FwdTrans */
             virtual void v_FwdTrans(const Array<OneD, const NekDouble>& inarray, 
                                     Array<OneD, NekDouble> &outarray)
@@ -401,12 +394,6 @@ namespace Nektar
                                                    Array<OneD, NekDouble> &outarray)
             {
                 FwdTrans_BndConstrained(inarray, outarray); 
-            }
-
-            /** \brief Virtual call to StdSegExp::FwdTrans */
-            virtual void v_FwdTrans(const StdExpansion1D &in)
-            {
-                FwdTrans(((StdSegExp &) in).GetPhys(), m_coeffs);
             }
 
             virtual void v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
@@ -453,6 +440,9 @@ namespace Nektar
 
 /**
  * $Log: StdSegExp.h,v $
+ * Revision 1.42  2008/08/14 22:09:51  sherwin
+ * Modifications to remove HDG routines from StdRegions and removed StdExpMap
+ *
  * Revision 1.41  2008/07/19 21:12:54  sherwin
  * Removed MapTo function and made orientation convention anticlockwise in UDG routines
  *

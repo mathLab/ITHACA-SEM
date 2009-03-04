@@ -625,16 +625,6 @@ namespace Nektar
                 v_FwdTrans_BndConstrained(inarray,outarray);
             }
 
-            void FwdTrans(const StdExpansion &in)
-            {
-                FwdTrans(in.GetPhys(),m_coeffs);
-            }
-
-            void BwdTrans(const StdExpansion &in)
-            {
-                BwdTrans(in.GetCoeffs(),m_phys);
-            }
-
             /** \brief This function integrates the specified function over the 
              *  domain 
              *
@@ -1706,6 +1696,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.108  2008/12/18 14:11:35  pvos
+ * NekConstants Update
+ *
  * Revision 1.107  2008/11/24 10:31:14  pvos
  * Changed name from _PartitionedOp to _MatFree
  *

@@ -125,12 +125,12 @@ int main(int argc, char *argv[])
 
     //---------------------------------------------
     // Project onto Expansion 
-    Exp->FwdTrans(*Sol);
+    Exp->FwdTrans(Sol->GetPhys(), Exp->UpdateCoeffs());
     //---------------------------------------------
     
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    Exp->BwdTrans(*Exp);
+    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
     //-------------------------------------------  
     
     //--------------------------------------------
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
     
     //--------------------------------------------
     // Calculate L_inf error 
-    cout << "L infinity error: " << Exp->Linf(*Sol) << endl;
-    cout << "L 2 error:        " << Exp->L2  (*Sol) << endl;
+    cout << "L infinity error: " << Exp->Linf(Sol->GetPhys()) << endl;
+    cout << "L 2 error:        " << Exp->L2  (Sol->GetPhys()) << endl;
     //--------------------------------------------
 }

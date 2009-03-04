@@ -178,7 +178,13 @@ namespace Nektar
              * \param Sin An ExpList, containing the discrete evaluation of 
              * \f$f(x)\f$ at the quadrature points in its array #m_phys.
              */ 
-            void FwdTrans (const ExpList &In);
+            void FwdTrans(const Array<OneD, const NekDouble> &inarray,
+                                Array<OneD,      NekDouble> &outarray,
+                          bool  UseContCoeffs = false);
+            
+            void MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, 
+                                               Array<OneD,       NekDouble> &outarray,
+                                         bool  UseContCoeffs = false);
           
             /**
              * \brief This function solves the one-dimensional Helmholtz equation, 
@@ -209,8 +215,12 @@ namespace Nektar
              * in its array #m_phys.
              * \param lambda The parameter \f$\lambda\f$ of the Helmholtz equation
              */ 
-            void HelmSolve(const ExpList &In, NekDouble lambda);
-          
+            void HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                 Array<OneD,       NekDouble> &outarray,
+                           NekDouble lambda,
+                           bool UseContCoeffs = false,
+                           Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray);
+
             /**
              * \brief This function evaluates the boundary conditions at a certain 
              * time-level.
@@ -240,6 +250,9 @@ namespace Nektar
                 return m_bndConditions;
             }
 
+            void GenerateDirBndCondForcing(const GlobalLinSysKey &key, 
+                                           Array<OneD, NekDouble> &inout, 
+                                           Array<OneD, NekDouble> &outarray);
         protected:
 
         private:      
@@ -320,8 +333,33 @@ namespace Nektar
              * \param ScaleForcing An optional parameter with which the forcing 
              * vector \f$\boldsymbol{\hat{f}}\f$ should be multiplied.
              */ 
-            void GlobalSolve(const GlobalLinSysKey &key, const ExpList &Rhs, 
-                             NekDouble ScaleForcing=1.0);
+            void GlobalSolve(const GlobalLinSysKey &key, 
+                             const Array<OneD, const  NekDouble> &rhs, 
+                             Array<OneD, NekDouble> &inout,
+                             Array<OneD, NekDouble> &dirForcing = NullNekDouble1DArray);
+
+            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
+                                          Array<OneD,       NekDouble> &outarray,
+                                    bool  UseContCoeffs)
+            {
+                FwdTrans(inarray,outarray,UseContCoeffs);
+            }
+
+            virtual void v_MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, 
+                                                         Array<OneD,       NekDouble> &outarray,
+                                                   bool  UseContCoeffs)
+            {
+                MultiplyByInvMassMatrix(inarray,outarray,UseContCoeffs);
+            }
+
+            virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD,       NekDouble> &outarray,
+                                     NekDouble lambda,
+                                     bool UseContCoeffs,
+                                     Array<OneD, NekDouble>& dirForcing)
+            {
+                HelmSolve(inarray,outarray,lambda,UseContCoeffs,dirForcing);
+            }
           
             /**
              * \brief This function discretises the boundary conditions by setting up
@@ -337,8 +375,8 @@ namespace Nektar
              * \param variable An optional parameter to indicate for which variable 
              * the boundary conditions should be discretised.
              */ 
-            void GenerateBoundaryConditionExpansion(const SpatialDomains::MeshGraph1D &graph1D,
-                                                    SpatialDomains::BoundaryConditions &bcs, 
+            void GenerateBoundaryConditionExpansion(const SpatialDomains::MeshGraph1D        &graph1D,
+                                                          SpatialDomains::BoundaryConditions &bcs, 
                                                     const std::string variable);
             
         };

@@ -341,12 +341,6 @@ namespace Nektar
             {
                 FwdTrans_BndConstrained(inarray, outarray); 
             }
-
-            /** \brief Virtual call to SegExp::FwdTrans */
-            virtual void v_FwdTrans(const StdExpansion1D &in)
-            {
-                FwdTrans(((SegExp &) in).GetPhys(), m_coeffs);
-            }
             
             /// Virtual call to SegExp::Evaluate
             virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
@@ -549,6 +543,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.41  2008/08/14 22:12:57  sherwin
+// Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
+//
 // Revision 1.40  2008/07/29 22:25:35  sherwin
 // general update for DG Advection including separation of GetGeom() into GetGeom1D,2D,3D()
 //

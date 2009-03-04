@@ -249,30 +249,6 @@ namespace Nektar
 
             /**
              * \brief This function calculates the inner product of a function 
-             * \f$f(\boldsymbol{x})\f$ with respect to all \a local expansion modes 
-             * \f$\phi_n^e(\boldsymbol{x})\f$.
-             *
-             * The operation is evaluated locally for every element by the function 
-             * StdRegions#StdExpansion#IProductWRTBase.
-             * The values of the function \f$f(\boldsymbol{x})\f$ evaluated at the
-             * quadrature points \f$\boldsymbol{x}_i \f$ should be contained in the
-             * variable #m_phys of the #ExpList object \a Sin.
-             * The result is stored in the array #m_coeffs.
-             *
-             * \param Sin An ExpList, containing the discrete evaluation of 
-             * \f$f(\boldsymbol{x})\f$ at the quadrature points in its array 
-             * #m_phys.
-             */
-            void   IProductWRTBase_IterPerExp (const ExpList &Sin);
-
-            void   IProductWRTBase (const ExpList &Sin)
-            {
-                v_IProductWRTBase(Sin);
-            }
-
-
-            /**
-             * \brief This function calculates the inner product of a function 
              * \f$f(\boldsymbol{x})\f$ with respect to all \emph{local} expansion modes 
              * \f$\phi_n^e(\boldsymbol{x})\f$.
              *
@@ -286,38 +262,15 @@ namespace Nektar
              * size \f$N_{\mathrm{eof}}\f$ used to store the result.
              */
             void   IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, 
-                                   Array<OneD, NekDouble> &outarray);
+                                                    Array<OneD,       NekDouble> &outarray);
             
             void   IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
-                                   Array<OneD, NekDouble> &outarray)
+                                         Array<OneD,       NekDouble> &outarray,
+                                   bool  UseContCoeffs = false)
             {
-                v_IProductWRTBase(inarray,outarray);
+                v_IProductWRTBase(inarray,outarray,UseContCoeffs);
             }
             
-
-            /**
-             * \brief This function calculates the inner product of a
-             * function \f$f(\boldsymbol{x})\f$ with respect to the
-             * derivative (in direction \param dir) of all
-             * \emph{local} expansion modes
-             * \f$\phi_n^e(\boldsymbol{x})\f$.
-             *
-             * The operation is evaluated locally for every element by the function 
-             * StdRegions#StdExpansion#IProductWRTDerivBase.
-             * The values of the function \f$f(\boldsymbol{x})\f$ evaluated at the
-             * quadrature points \f$\boldsymbol{x}_i \f$ should be contained in the
-             * variable #m_phys of the #ExpList object \a Sin.
-             * The result is stored in the array #m_coeffs.
-             *
-             * \param dir=0,1 is the direction in which the derivative
-             * of the basis should be taken. \param Sin An ExpList,
-             * containing the discrete evaluation of
-             * \f$f(\boldsymbol{x})\f$ at the quadrature points in its
-             * array #m_phys.
-             */
-            void   IProductWRTDerivBase (const int dir, const ExpList &Sin);
-
-
             /**
              * \brief This function calculates the inner product of a
              * function \f$f(\boldsymbol{x})\f$ with respect to the
@@ -339,32 +292,7 @@ namespace Nektar
              */
             void   IProductWRTDerivBase(const int dir, 
                                         const Array<OneD, const NekDouble> &inarray, 
-                                        Array<OneD, NekDouble> &outarray);
-
-            /**
-             * \brief  This function elementally evaluates the forward transformation of a 
-             * function \f$u(\boldsymbol{x})\f$ onto the global spectral/hp expansion.
-             *
-             * Given a function \f$u(\boldsymbol{x})\f$ defined at the quadrature points,
-             * this function determines the transformed elemental coefficients 
-             * \f$\hat{u}_n^e\f$ employing a discrete elemental Galerkin projection 
-             * from physical space to coefficient space. For each element, the operation
-             * is evaluated locally by the function StdRegions#StdExpansion#FwdTrans.
-             * 
-             * The values of the function \f$f(\boldsymbol{x})\f$ evaluated at the 
-             * quadrature points \f$\boldsymbol{x}_i\f$ should be contained in the 
-             * variable #m_phys of the ExpList object \a Sin. The resulting coefficients
-             * \f$\hat{u}_n^e\f$ are stored in the array #m_coeffs.
-             *
-             * \param Sin An ExpList, containing the discrete evaluation of 
-             * \f$u(\boldsymbol{x})\f$ at the quadrature points in its array #m_phys.
-             */
-            void   FwdTrans_IterPerExp   (const ExpList &Sin);
-            
-            void   FwdTrans(const ExpList &Sin)
-            {
-                v_FwdTrans(Sin);
-            }
+                                              Array<OneD,       NekDouble> &outarray);
 
             /**
              * \brief This function elementally evaluates the forward
@@ -388,29 +316,14 @@ namespace Nektar
              * array of size \f$N_{\mathrm{eof}}\f$.
              */
             void   FwdTrans_IterPerExp (const Array<OneD, const NekDouble> &inarray,
-                             Array<OneD, NekDouble> &outarray);
+                                              Array<OneD,       NekDouble> &outarray);
 
             void   FwdTrans(const Array<OneD, const NekDouble> &inarray,
-                             Array<OneD, NekDouble> &outarray)
+                                  Array<OneD,       NekDouble> &outarray,
+                            bool  UseContCoeffs = false)
             {
-                v_FwdTrans(inarray,outarray);
+                v_FwdTrans(inarray,outarray,UseContCoeffs);
             }
-
-
-            /**
-             * \brief This function elementally mulplies the
-             * coefficient space of Sin my the elemental inverse of
-             * the mass matrix
-             *
-             * The coefficients of the function to be acted upon
-             * should be contained in the variable #m_coeffs of the
-             * ExpList object \a Sin. The resulting coefficients are
-             * stored in the array #m_coeffs.
-             *
-             * \param Sin An ExpList, containing the inner product or
-             * right hand side in #m_coeffs
-             */
-            void  MultiplyByElmtInvMass(const ExpList &Sin);
 
             /**
              * \brief This function elementally mulplies the
@@ -425,61 +338,29 @@ namespace Nektar
              * containing the inner product. 
              */
             void  MultiplyByElmtInvMass (const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD, NekDouble> &outarray);
+                                               Array<OneD,       NekDouble> &outarray);
 
-            void MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays = true)
+            void MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, 
+                                               Array<OneD,      NekDouble> &outarray,
+                                         bool  UseContCoeffs = false)
             {
-                v_MultiplyByInvMassMatrix(inarray,outarray, GlobalArrays);
-                
+                v_MultiplyByInvMassMatrix(inarray,outarray,UseContCoeffs);                
             }
 
-            void HelmSolve(const ExpList &In, 
+            void HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                 Array<OneD,       NekDouble> &outarray,
                            NekDouble lambda,
+                           bool      UseContCoeffs = false,
                            Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray)
             {
-                v_HelmSolve(In,lambda,dirForcing);
+                v_HelmSolve(inarray,outarray,lambda,UseContCoeffs,dirForcing);
             }
 
             /**
              * \brief 
              */
-            void   FwdTrans_BndConstrained(const ExpList &Sin);
-
-            /**
-             * \brief 
-             */
-            void   FwdTrans_BndConstrained (const Array<OneD, const NekDouble> &inarray,
-               Array<OneD, NekDouble> &outarray);
-
-            /**
-             * \brief This function elementally evaluates the backward
-             * transformation of the global spectral/hp element
-             * expansion.
-             *
-             * Given the elemental coefficients \f$\hat{u}_n^e\f$ of
-             * an expansion, this function evaluates the spectral/hp
-             * expansion \f$u^{\delta}(\boldsymbol{x})\f$ at the
-             * quadrature points \f$\boldsymbol{x}_i\f$. The operation
-             * is evaluated locally by the elemental function
-             * StdRegions#StdExpansion#BwdTrans.
-             *
-             * The coefficients \f$\hat{u}_n^e\f$ should be contained
-             * in the variable #m_coeffs of the ExpList object \a
-             * Sin. The resulting physical values at the quadrature
-             * points \f$u^{\delta}(\boldsymbol{x}_i)\f$ are stored in
-             * the array #m_phys.
-             *
-             * \param Sin An ExpList, containing the local coefficients 
-             * \f$\hat{u}_n^e\f$ in its array #m_coeffs.
-             */
-            void   BwdTrans_IterPerExp (const ExpList &Sin); 
-
-            void   BwdTrans            (const ExpList &Sin)
-            {
-                v_BwdTrans(Sin);
-                m_physState = true;
-            }
-            
+            void   FwdTrans_BndConstrained(const Array<OneD, const NekDouble> &inarray,
+                                                 Array<OneD,       NekDouble> &outarray);
 
             /**
              * \brief This function elementally evaluates the backward
@@ -501,50 +382,14 @@ namespace Nektar
              * \f$Q_{\mathrm{tot}}\f$.
              */
             void   BwdTrans_IterPerExp (const Array<OneD, const NekDouble> &inarray, 
-                                 Array<OneD, NekDouble> &outarray); 
-
+                                              Array<OneD,       NekDouble> &outarray); 
 
             void   BwdTrans (const Array<OneD, const NekDouble> &inarray, 
-                             Array<OneD, NekDouble> &outarray)
+                                   Array<OneD,       NekDouble> &outarray,
+                             bool  UseContCoeffs = false)
             {
-                v_BwdTrans(inarray,outarray);
+                v_BwdTrans(inarray,outarray,UseContCoeffs);
             }
-
-            /**
-             * \brief This function discretely evaluates the
-             * derivative of a function \f$f(\boldsymbol{x})\f$ on the
-             * domain consisting of all elements of the expansion.
-             *
-             * Given a function \f$f(\boldsymbol{x})\f$ evaluated at
-             * the quadrature points, this function calculates the
-             * derivatives \f$\frac{d}{dx_1}\f$, \f$\frac{d}{dx_2}\f$
-             * and \f$\frac{d}{dx_3}\f$ of the function
-             * \f$f(\boldsymbol{x})\f$ at the same quadrature
-             * points. The local distribution of the quadrature points
-             * allows an elemental evaluation of the derivative.  This
-             * is done by a call to the function
-             * StdRegions#StdExpansion#PhysDeriv.
-             *
-             * Note that the array #m_phys should be filled with the
-             * values of the function \f$f(\boldsymbol{x})\f$ at the
-             * quadrature points \f$\boldsymbol{x}_i\f$.  The results
-             * will be stored in the ExpLists \a S0, \a S1 and \a S2.
-             *
-             * \param S0 The discrete evaluation of the
-             * derivative\f$\frac{d}{dx_1}\f$ will be stored in the
-             * variable #m_phys of this ExpList.  \param S1 The
-             * discrete evaluation of the
-             * derivative\f$\frac{d}{dx_2}\f$ will be stored in the
-             * variable #m_phys of this ExpList. Note that if no
-             * memory is allocated for \a S1::m_phys, the derivative
-             * \f$\frac{d}{dx_2}\f$ will not be calculated.  \param S2
-             * The discrete evaluation of the
-             * derivative\f$\frac{d}{dx_3}\f$ will be stored in the
-             * variable #m_phys of this ExpList. Note that if no
-             * memory is allocated for \a S2::m_phys, the derivative
-             * \f$\frac{d}{dx_3}\f$ will not be calculated.
-             */
-            void   PhysDeriv       (ExpList &S0, ExpList &S1, ExpList &S2); 
        
             /**
              * \brief This function calculates the coordinates of all
@@ -725,7 +570,7 @@ namespace Nektar
              * points in its array #m_phys.  \return The
              * \f$L_\infty\f$ error of the approximation.
              */
-            NekDouble Linf (const ExpList &Sol);
+            NekDouble Linf (const Array<OneD, const NekDouble> &soln);
 
             /**
              * \brief This function calculates the \f$L_2\f$ error of
@@ -750,8 +595,6 @@ namespace Nektar
              *
              * \return The \f$L_2\f$ error of the approximation.
              */
-            NekDouble L2 (const ExpList &Sol);
-
             NekDouble L2 (const Array<OneD, const NekDouble> &soln);
 
             /**
@@ -1279,20 +1122,22 @@ namespace Nektar
                 ASSERTL0(false,"This method is not defined or valid for this class type");                
             }
 
-            virtual void v_MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool GlobalArrays)
+            virtual void v_MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray, 
+                                                         Array<OneD,      NekDouble> &outarray, 
+                                                   bool  UseContCoeffs)
             {
                 ASSERTL0(false,"This method is not defined or valid for this class type");                
             }
 
 
-            virtual void v_HelmSolve(const ExpList &In, 
+            virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD,       NekDouble> &outarray,
                                      NekDouble lambda,
-                                     Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray)
-                
+                                     bool      UseContCoeffs,
+                                     Array<OneD, NekDouble>& dirForcing)
             {
-                ASSERTL0(false,"This method is not defined or valid for this class type");                
+                ASSERTL0(false,"This method is not defined or valid for this class type"); 
             }
-	    
 	  
             // wrapper functions about virtual functions
             virtual  const Array<OneD, const NekDouble> &v_GetContCoeffs() const 
@@ -1301,37 +1146,23 @@ namespace Nektar
                 return NullNekDouble1DArray;
             }
 
-
-            virtual void v_BwdTrans(const ExpList &Sin)
-            {
-                BwdTrans_IterPerExp(Sin);
-            }
-
-            virtual void v_BwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            virtual void v_BwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                          Array<OneD,       NekDouble> &outarray, 
+                                    bool  UseContCoeffs)
             {
                 BwdTrans_IterPerExp(inarray,outarray);
             }
-
-            virtual void v_FwdTrans(const ExpList &Sin)
-            {
-                FwdTrans_IterPerExp(Sin);
-            }
-
             
-            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                          Array<OneD,       NekDouble> &outarray,
+                                    bool  UseContCoeffs)
             {
                 FwdTrans_IterPerExp(inarray,outarray);
             }
-
-
-
-            virtual void v_IProductWRTBase(const ExpList &Sin)
-            {
-                IProductWRTBase_IterPerExp(Sin);
-            }
-
             
-            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
+                                                 Array<OneD,       NekDouble> &outarray,
+                                           bool  UseContCoeffs)
             {
                 IProductWRTBase_IterPerExp(inarray,outarray);
             }
@@ -1365,6 +1196,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.54  2009/03/04 05:58:49  bnelson
+* Fixed visual studio compile errors.
+*
 * Revision 1.53  2009/02/08 09:11:49  sherwin
 * General updates to introduce multiple matrix definitions based on different boundary types
 *

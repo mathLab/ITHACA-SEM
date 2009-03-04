@@ -60,12 +60,12 @@ int main(int argc, char *argv[])
 		// Do the projection to obtain the coefficients of the expansion
         // The result is stored in the data member m_contCoeffs of the ContExpList1D 
         // object multiElementExp.
-        multiElementExp->FwdTrans(*forcingExp);
+        multiElementExp->FwdTrans(forcingExp->GetPhys(),multiElementExp->UpdateCoeffs());
 		
 		// Perform a backward transformation to obtain the solution at the quadrature points
         // The result is stored in the data member m_phys of the ContExpList1D 
         // object multiElementExp.
-        multiElementExp->BwdTrans(*multiElementExp);
+        multiElementExp->BwdTrans(multiElementExp->GetCoeffs(),multiElementExp->UpdatePhys());
 		
 		for(i = 0; i < nTotQuadPoints; i++)
         {               
@@ -134,12 +134,12 @@ int main(int argc, char *argv[])
 		// Do the projection to obtain the coefficients of the expansion
         // The result is stored in the data member m_contCoeffs of the ContExpList1D 
         // object multiElementExp.
-        multiElementExp->FwdTrans(*forcingExp);
+        multiElementExp->FwdTrans(forcingExp->GetPhys(),multiElementExp->UpdateCoeffs());
 		
 		// Perform a backward transformation to obtain the solution at the quadrature points
         // The result is stored in the data member m_phys of the ContField1D 
         // object multiElementExp.
-        multiElementExp->BwdTrans(*multiElementExp);
+        multiElementExp->BwdTrans(multiElementExp->GetCoeffs(),multiElementExp->UpdatePhys());
 		
 		// Getting the exact solution
 		SpatialDomains::ConstExactSolutionShPtr exSol =

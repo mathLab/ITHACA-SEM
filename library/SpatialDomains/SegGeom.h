@@ -230,6 +230,11 @@ namespace Nektar
                 {
                     return DetExpansionType();
                 }
+
+                virtual NekDouble v_GetCoord(const int i, const Array<OneD,const NekDouble> &Lcoord)
+                {
+                    return GetCoord(i,Lcoord);
+                }
                 
                 virtual void v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
                 {
@@ -265,6 +270,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.23  2009/01/21 16:59:03  pvos
+// Added additional geometric factors to improve efficiency
+//
 // Revision 1.22  2008/12/17 12:29:56  pvos
 // Fixed bug
 //

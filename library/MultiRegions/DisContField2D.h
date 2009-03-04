@@ -79,7 +79,10 @@ namespace Nektar
             }
             
             
-            void HelmSolve(const ExpList &Fce, NekDouble lambda, NekDouble tau = 10);
+            void HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                 Array<OneD,       NekDouble> &outarray,
+                           NekDouble lambda,
+                           NekDouble tau = 10);
             /**
              * \brief This function evaluates the boundary conditions at a certain 
              * time-level.
@@ -312,11 +315,13 @@ namespace Nektar
                 EvaluateBoundaryConditions(time);
             }
 	    
-	    virtual void v_HelmSolve(const ExpList &In, 
+            virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD,       NekDouble> &outarray,
                                      NekDouble lambda,
-				     Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray)
-	    {
-	      HelmSolve(In,lambda);
+                                     bool      UseContCoeffs,
+                                     Array<OneD, NekDouble>& dirForcing)
+            {
+                HelmSolve(inarray,outarray,lambda);
             }
         };
 

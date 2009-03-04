@@ -179,12 +179,14 @@ namespace Nektar
                 {
                     NEKERROR(ErrorUtil::efatal,
                         "This function is only valid for shape type geometries");
+                    return 0;
                 }
 
                 virtual int v_GetNumEdges() const
                 {
                     NEKERROR(ErrorUtil::efatal,
                         "This function is only valid for shape type geometries");
+                    return 0;
                 }                
         };
     }; //end of namespace
@@ -194,6 +196,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.27  2009/01/21 16:59:03  pvos
+// Added additional geometric factors to improve efficiency
+//
 // Revision 1.26  2008/11/17 09:00:04  ehan
 // Added GetNumVerts and GetNumEdges
 //

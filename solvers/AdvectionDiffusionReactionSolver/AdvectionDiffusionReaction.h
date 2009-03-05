@@ -47,6 +47,8 @@ namespace Nektar
         eNoEquationType,
         eAdvection,
 		eDiffusion,
+		iDiffusion,
+		iDiffusion_eReaction,
         eSteadyDiffusion,
         eSteadyDiffusionReaction,
         eLaplace,
@@ -61,6 +63,8 @@ namespace Nektar
         "NoType",
         "Advection",
 		"ExDiffusion",
+		"ImDiffusion",
+		"ImDiffusion_ExReaction",
         "SteadyDiffusion",
         "SteadyDiffusionReaction",
         "Laplace",
@@ -142,7 +146,18 @@ namespace Nektar
                           Array<OneD,        Array<OneD, NekDouble> >&outarray, 
                     const NekDouble time);
 
-        void ExplicitlyIntegrateAdvection(int nsteps);
+		void ODEeReaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+												  Array<OneD, Array<OneD, NekDouble> >&outarray, 
+											const NekDouble time);
+					
+		void ODEhelmSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+												  Array<OneD, Array<OneD, NekDouble> >&outarray,
+												  NekDouble time, 
+												  NekDouble lambda);
+
+        void GeneralTimeIntegration(int nsteps, 
+		                            LibUtilities::TimeIntegrationMethod IntMethod,
+									LibUtilities::TimeIntegrationSchemeOperators ode);
 
         void SolveHelmholtz(NekDouble lambda);
 
@@ -204,6 +219,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.h,v $
+* Revision 1.5  2009/02/28 21:59:09  sehunchun
+* Explicit Diffusion solver is added
+*
 * Revision 1.4  2009/02/16 16:07:04  pvos
 * Update of TimeIntegration classes
 *

@@ -83,7 +83,11 @@ namespace Nektar
         {
         case eHelmholtz:
             break;
-        case eAdvection: case eDiffusion:
+			
+		case iDiffusion_eReaction:
+        case eAdvection: 
+		case eDiffusion: 
+		case iDiffusion: 
             m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
         
             for(int i = 0; i < m_spacedim; ++i)
@@ -161,7 +165,7 @@ namespace Nektar
             {	  
                 switch(m_equationType)
                 {
-                case eAdvection:
+                case eAdvection: case iDiffusion_eReaction:
                     {
                         SetBoundaryConditions(time);
                         WeakDGAdvection(inarray, outarray);
@@ -177,6 +181,10 @@ namespace Nektar
                     {
 			// BoundaryConditions are imposed weakly at the Diffusion operator
                         WeakDGDiffusion(inarray,outarray);
+                        for(i = 0; i < nvariables; ++i)
+                        {
+                            m_fields[i]->MultiplyByElmtInvMass(outarray[i],outarray[i]);
+                        }						
                     }
                     break;
                 }
@@ -208,6 +216,23 @@ namespace Nektar
         }
     }
     
+	void AdvectionDiffusionReaction::ODEeReaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+												  Array<OneD, Array<OneD, NekDouble> >&outarray, 
+											const NekDouble time)
+	
+	{
+		int i,k;
+        int nvariables = inarray.num_elements();
+        int ncoeffs    = inarray[0].num_elements();
+		const NekDouble coeff = 3.14159265*3.14159265;
+					
+		for (i = 0; i < nvariables; ++i)
+		{
+			Vmath::Smul(ncoeffs, coeff, inarray[i], 1, outarray[i], 1);
+		}
+	}
+	
+	
     void AdvectionDiffusionReaction::ODElhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
 						  Array<OneD,       Array<OneD, NekDouble> >&outarray, 
                                             const NekDouble time) 
@@ -252,6 +277,48 @@ namespace Nektar
         }
     }
 
+
+	void AdvectionDiffusionReaction::ODEhelmSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+												  Array<OneD, Array<OneD, NekDouble> >&outarray,
+												  NekDouble time, 
+												  NekDouble lambda)
+    {
+        int nvariables = inarray.num_elements();
+        int ncoeffs    = inarray[0].num_elements();
+							
+		// We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
+		// inarray = input: \hat{rhs} -> output: \hat{Y}    
+		// outarray = output: nabla^2 \hat{Y}       
+		// where \hat = modal coeffs
+		
+		MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
+		
+		for (int i = 0; i < nvariables; ++i)
+		{
+		    // Multiply by inverse of mass matrix
+			  m_fields[i]->MultiplyByInvMassMatrix(inarray[i],outarray[i],false);
+				
+			// Multiply rhs[i] with -1.0/gamma/timestep
+			  Vmath::Smul(ncoeffs, -1.0/lambda, inarray[i], 1, outarray[i], 1);
+			
+			// Update coeffs to m_fields
+			 m_fields[i]->UpdateCoeffs() = outarray[i];
+			
+			// Backward Transformation to nodal coefficients
+			  m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
+			  			
+	    	// Solve a system of equations with Helmholtz solver
+			  SolveHelmholtz(1.0/lambda);
+			
+			// The solution is Y[i]
+			  outarray[i] = m_fields[i]->GetCoeffs();	  
+						  
+			// Multiply back by mass matrix
+			  m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,outarray[i],outarray[i]);
+		}
+	}
+	
+
     void AdvectionDiffusionReaction::SolveHelmholtz(NekDouble lambda)
     {
         for(int i = 0; i < m_fields.num_elements(); ++i)
@@ -287,7 +354,9 @@ namespace Nektar
     // In order for all of this to work appropriately, make sure that the operator M^(-1)
     // does include the enforcment of the dirichlet boundary conditionst
 
-    void AdvectionDiffusionReaction::ExplicitlyIntegrateAdvection(int nsteps)
+    void AdvectionDiffusionReaction::GeneralTimeIntegration(int nsteps, 
+	                                                     LibUtilities::TimeIntegrationMethod IntMethod,
+														 LibUtilities::TimeIntegrationSchemeOperators ode)
     {
         int i,n,nchk = 0;
         int ncoeffs = m_fields[0]->GetNcoeffs();
@@ -314,12 +383,6 @@ namespace Nektar
             }
         }
 
-        // Define the ODE rhs operator
-        LibUtilities::TimeIntegrationSchemeOperators ode;
-        ode.DefineOdeRhs       (&AdvectionDiffusionReaction::ODErhs,      this);
-
-        LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eClassicalRungeKutta4;
-
         // Declare an array of TimeIntegrationSchemes
         // For multi-stage methods, this array will have just one entry containing
         // the actual multi-stage method...
@@ -334,6 +397,8 @@ namespace Nektar
 
         switch(IntMethod)
         {
+		case LibUtilities::eIMEXdirk_3_4_3:
+		case LibUtilities::eDIRKOrder3:
         case LibUtilities::eForwardEuler:      
         case LibUtilities::eClassicalRungeKutta4:
             {
@@ -355,6 +420,7 @@ namespace Nektar
 
                 // Used in the first time step to initalize the scheme
                 LibUtilities::TimeIntegrationSchemeKey IntKey0(LibUtilities::eForwardEuler);
+				
                 // Used for all other time steps 
                 LibUtilities::TimeIntegrationSchemeKey IntKey1(IntMethod); 
                 IntScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
@@ -369,7 +435,7 @@ namespace Nektar
                 ASSERTL0(false,"populate switch statement for integration scheme");
             }
         }
-                
+					          
         for(n = 0; n < nsteps; ++n)
         {
             //----------------------------------------------
@@ -399,7 +465,6 @@ namespace Nektar
                 }
             }
 
-
             //----------------------------------------------
             // Dump analyser information
             //----------------------------------------------
@@ -423,6 +488,7 @@ namespace Nektar
 	  (m_fields[i]->UpdateCoeffs()) = fields[i];
         }
     }
+	
     
   //----------------------------------------------------
   void AdvectionDiffusionReaction::SetBoundaryConditions(NekDouble time)
@@ -814,6 +880,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.11  2009/03/04 14:17:38  pvos
+* Removed all methods that take and Expansion as argument
+*
 * Revision 1.10  2009/03/03 16:11:26  pvos
 * New version of TimeIntegrator classes
 *

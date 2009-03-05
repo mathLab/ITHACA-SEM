@@ -254,7 +254,7 @@
         <!-- Removed redundancy since we can specify any level of granularity
          in the ExpansionTypes section below.-->
         <PARAMETERS>
-            <P> Lambda    = 0 </P>
+            <P> Lambda    = 1 </P>
         </PARAMETERS>
 
         <!--One of these for each dimension. These are the vector

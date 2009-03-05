@@ -763,7 +763,7 @@ namespace Nektar
                 F[i]   = DoubleArray(nvar);
                 for(j = 0; j < nvar; j++)
                 {
-                    F[i][j] = Array<OneD, NekDouble>(npoints);
+                    F[i][j] = Array<OneD, NekDouble>(npoints,0.0);
                 }
             }
             if(type == eIMEX)
@@ -774,11 +774,11 @@ namespace Nektar
                     F_IMEX[i]   = DoubleArray(nvar); 
                     for(j = 0; j < nvar; j++)
                     {
-                        F_IMEX[i][j] = Array<OneD, NekDouble>(npoints);
+                        F_IMEX[i][j] = Array<OneD, NekDouble>(npoints,0.0);
                     }      
                 }
-            }
-            
+            }			
+			
             // The loop below calculates the stage values and derivatives
             for(i = 0; i < m_numstages; i++)
             {
@@ -794,16 +794,27 @@ namespace Nektar
                 {
                     // The stage values Y are a linear combination of:
                     // 1: the stage derivatives
-                    for(k = 0; k < nvar; k++)
-                    {
-                        Vmath::Smul(npoints,timestep*A(i,j),F[j][k],1,
+					
+					if( i == 0 )
+					  {
+					    for (k=0; k<nvar; k++)
+						{
+					       tmp[k] = Array<OneD, NekDouble>(npoints,0.0);
+						}
+					  }
+					else
+					{
+                      for(k = 0; k < nvar; k++)
+                      {
+                        Vmath::Smul(npoints,timestep*A(i,0),F[0][k],1,
                                     tmp[k],1);
                         if(type == eIMEX)       
                         {
-                            Vmath::Svtvp(npoints,timestep*A_IMEX(i,j),F_IMEX[j][k],1,
+                            Vmath::Svtvp(npoints,timestep*A_IMEX(i,0),F_IMEX[0][k],1,
                                          tmp[k],1,tmp[k],1);
                         }
-                    }          
+                      }
+					}          
                     T = A(i,0)*timestep;
 
                     for( j = 1; j < i; j++ )
@@ -831,20 +842,14 @@ namespace Nektar
                         }
                         T += U(i,j)*t_old[j];
                     }
-                    
-                    // Now, solve for the stage values
-                    if( type != eExplicit )
-                    {
-                        if( fabs(A(i,j)) > NekConstants::kNekZeroTol )
-                        {
-                            op.DoImplicitSolve(tmp, Y, T, A(i,i)*timestep);
-                        }
-                    }
-                }
-                
+					
+			     }
+                				
                 // Calculate the stage derivative based upon the stage value
                 if(type == eDiagonallyImplicit)
                 {
+					op.DoImplicitSolve(tmp, Y, T, A(i,i)*timestep);
+					
                     for(k = 0; k < nvar; k++)
                     {
                         Vmath::Vsub(npoints,Y[k],1,tmp[k],1,F[i][k],1);
@@ -853,19 +858,25 @@ namespace Nektar
                 }
                 else if(type == eIMEX)
                 { 
-                    if( fabs(A(i,j)) > NekConstants::kNekZeroTol )
-                    {
-                        for(k = 0; k < nvar; k++)
-                        {
-                            Vmath::Vsub(npoints,Y[k],1,tmp[k],1,F[i][k],1);
-                            Vmath::Smul(npoints,1.0/(A(i,i)*timestep),F[i][k],1,F[i][k],1);
-                        }
-                    }
-                    op.DoOdeExplicitRhs(Y, F_IMEX[i], T);
+				
+				   if (i != 0)
+				    {
+				      op.DoImplicitSolve(tmp, Y, T, A(i,i)*timestep);
+				
+					for(k = 0; k < nvar; k++)
+					 {
+						 Vmath::Vsub(npoints,Y[k],1,tmp[k],1,F[i][k],1);
+						 Vmath::Smul(npoints,1.0/(A(i,i)*timestep),F[i][k],1,F[i][k],1);
+					 }
+					}
+
+                    op.DoOdeRhs(Y, F_IMEX[i], T);
+					 
                 }
                 else //( type == eExplicit)
                 {
                     op.DoOdeRhs(Y, F[i], T);
+
                 }
             }
             
@@ -878,8 +889,9 @@ namespace Nektar
             // If last stage equals new solution, the new solution needs not be 
             // calculated explicitely but can simply be copied. This saves
             // a solve as this normally would require a call to DoOdeLhsSolve
+						
             int i_start = 0;
-            if(m_lastStageEqualsNewSolution)
+            if( (m_lastStageEqualsNewSolution) && (type == eExplicit) )
             {
                 for(k = 0; k < nvar; k++)
                 {
@@ -897,8 +909,10 @@ namespace Nektar
                 }
                 i_start = 1;
             }
+			 
             for( i = i_start; i < m_numsteps; i++)
             {
+			
                 // The solution at the new time level is a linear combination of:
                 // 1: the stage derivatives
                 for(k = 0; k < nvar; k++)
@@ -912,10 +926,11 @@ namespace Nektar
                 }
                 t_new[i] = B(i,0)*timestep;   
                 
+				
                 for( j = 1; j < m_numstages; j++ )
                 {
                     for(k = 0; k < nvar; k++)
-                    {
+                    {					
                         Vmath::Svtvp(npoints,timestep*B(i,j),F[j][k],1,
                                      y_new[i][k],1,y_new[i][k],1);
                         if(type == eIMEX)
@@ -926,6 +941,7 @@ namespace Nektar
                     }
                     t_new[i] += B(i,j)*timestep;                    
                 }
+				
                 
                 // 2: the imported multi-step solution of the previous time level
                 for( j = 0; j < m_numsteps; j++ )
@@ -937,6 +953,7 @@ namespace Nektar
                     }
                     t_new[i] += V(i,j)*t_old[j];
                 }
+				
             }
 
         }        

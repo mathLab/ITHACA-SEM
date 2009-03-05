@@ -296,25 +296,27 @@ namespace Nektar
 		for (int i = 0; i < nvariables; ++i)
 		{
 		    // Multiply by inverse of mass matrix
-			  m_fields[i]->MultiplyByInvMassMatrix(inarray[i],outarray[i],false);
+                    m_fields[i]->MultiplyByInvMassMatrix(inarray[i],outarray[i],false);
 				
 			// Multiply rhs[i] with -1.0/gamma/timestep
-			  Vmath::Smul(ncoeffs, -1.0/lambda, inarray[i], 1, outarray[i], 1);
+                    Vmath::Smul(ncoeffs, -1.0/lambda, outarray[i], 1, outarray[i], 1);
 			
 			// Update coeffs to m_fields
 			 m_fields[i]->UpdateCoeffs() = outarray[i];
 			
 			// Backward Transformation to nodal coefficients
 			  m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
+
+                          NekDouble kappa = 1.0/lambda;
 			  			
 	    	// Solve a system of equations with Helmholtz solver
-			  SolveHelmholtz(1.0/lambda);
+                          m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs(),kappa);
 			
 			// The solution is Y[i]
 			  outarray[i] = m_fields[i]->GetCoeffs();	  
 						  
 			// Multiply back by mass matrix
-			  m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,outarray[i],outarray[i]);
+                           m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,outarray[i],outarray[i]);
 		}
 	}
 	
@@ -399,6 +401,7 @@ namespace Nektar
         {
 		case LibUtilities::eIMEXdirk_3_4_3:
 		case LibUtilities::eDIRKOrder3:
+        case LibUtilities::eBackwardEuler:      
         case LibUtilities::eForwardEuler:      
         case LibUtilities::eClassicalRungeKutta4:
             {
@@ -840,7 +843,7 @@ namespace Nektar
           out << "\tLambda          : " << m_boundaryConditions->GetParameter("Lambda") << endl;
           
           break;
-      case eAdvection: case eDiffusion:
+      case eAdvection: case eDiffusion: case iDiffusion:
           ADRBase::TimeParamSummary(out);
           break;
       }
@@ -880,6 +883,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.12  2009/03/05 11:50:32  sehunchun
+* Implicit scheme and IMEX scheme are now implemented
+*
 * Revision 1.11  2009/03/04 14:17:38  pvos
 * Removed all methods that take and Expansion as argument
 *

@@ -46,9 +46,9 @@ namespace Nektar
     {
         eNoEquationType,
         eAdvection,
-		eDiffusion,
-		iDiffusion,
-		iDiffusion_eReaction,
+	eDiffusion,
+	eimDiffusion,
+	eimDiffusion_exReaction,
         eSteadyDiffusion,
         eSteadyDiffusionReaction,
         eLaplace,
@@ -62,9 +62,9 @@ namespace Nektar
     {
         "NoType",
         "Advection",
-		"ExDiffusion",
-		"ImDiffusion",
-		"ImDiffusion_ExReaction",
+	"ExDiffusion",
+	"ImDiffusion",
+	"ImDiffusion_ExReaction",
         "SteadyDiffusion",
         "SteadyDiffusionReaction",
         "Laplace",
@@ -106,33 +106,33 @@ namespace Nektar
 
         void GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> >&physfield, Array<OneD, Array<OneD, NekDouble> >&flux);
 
-		void GetFluxVector(const int i, const int j, Array<OneD, Array<OneD, NekDouble> > &physfield, 
+	void GetFluxVector(const int i, const int j, Array<OneD, Array<OneD, NekDouble> > &physfield, 
 						 Array<OneD, Array<OneD, NekDouble> > &flux);
 
         void NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
                            Array<OneD, Array<OneD, NekDouble> > &numflux);
 
-	    void NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
+	void NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
                            Array<OneD, Array<OneD, NekDouble> > &numfluxX,
 			   Array<OneD, Array<OneD, NekDouble> > &numfluxY);
 			   
-		void NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield, 
+	void NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield, 
 						   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
 						   
-	    void NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield,
+	void NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield,
 	                       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
 						   Array<OneD, Array<OneD, NekDouble> >  &qflux);
 						   
-	    void WeakPenaltyBoundary(const Array<OneD, const NekDouble> &Fwd, 
-								Array<OneD, NekDouble> &penaltyflux,
-											NekDouble initialtime=1.0);
+	void WeakPenaltyBoundary(const Array<OneD, const NekDouble> &Fwd, 
+				 Array<OneD, NekDouble> &penaltyflux,
+				 NekDouble initialtime=1.0);
 									 
-	   void WeakPenaltyBoundary(const int dir,
-	                            const Array<OneD, const NekDouble> &Fwd,
-								const Array<OneD, const NekDouble> &qFwd,
-								      Array<OneD, NekDouble> &penaltyflux,
-															NekDouble C11,
-															NekDouble initialtime=1.0);	   
+        void WeakPenaltyBoundary(const int dir,
+	                         const Array<OneD, const NekDouble> &Fwd,
+				 const Array<OneD, const NekDouble> &qFwd,
+				 Array<OneD, NekDouble> &penaltyflux,
+				 NekDouble C11,
+				 NekDouble initialtime=1.0);	   
 			   
         void ODElhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
 		           Array<OneD,       Array<OneD, NekDouble> >&outarray, 
@@ -146,18 +146,18 @@ namespace Nektar
                           Array<OneD,        Array<OneD, NekDouble> >&outarray, 
                     const NekDouble time);
 
-		void ODEeReaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
-												  Array<OneD, Array<OneD, NekDouble> >&outarray, 
-											const NekDouble time);
+	void ODEeReaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+			  Array<OneD, Array<OneD, NekDouble> >&outarray, 
+			  const NekDouble time);
 					
-		void ODEhelmSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-												  Array<OneD, Array<OneD, NekDouble> >&outarray,
-												  NekDouble time, 
-												  NekDouble lambda);
+	void ODEhelmSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+			  Array<OneD, Array<OneD, NekDouble> >&outarray,
+			  NekDouble time, 
+			  NekDouble lambda);
 
         void GeneralTimeIntegration(int nsteps, 
-		                            LibUtilities::TimeIntegrationMethod IntMethod,
-									LibUtilities::TimeIntegrationSchemeOperators ode);
+		                   LibUtilities::TimeIntegrationMethod IntMethod,
+				   LibUtilities::TimeIntegrationSchemeOperators ode);
 
         void SolveHelmholtz(NekDouble lambda);
 
@@ -191,23 +191,25 @@ namespace Nektar
             NumericalFlux(physfield, numflux); 
         }
         
-	virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numfluxX, Array<OneD, Array<OneD, NekDouble> > &numfluxY )
+	virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
+                                     Array<OneD, Array<OneD, NekDouble> > &numfluxX, 
+                                     Array<OneD, Array<OneD, NekDouble> > &numfluxY )
         {
-	  NumericalFlux(physfield, numfluxX, numfluxY); 
+	    NumericalFlux(physfield, numfluxX, numfluxY); 
         }
 		
-		virtual void v_NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield, 
-						   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
-		{
-		    NumFluxforDiff(ufield, uflux);
-		}
+	virtual void v_NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield, 
+				      Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
+	{
+	    NumFluxforDiff(ufield, uflux);
+	}
 						   
-		virtual void v_NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield,
-	                       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-						   Array<OneD, Array<OneD, NekDouble> >  &qflux)
-	    {
-		    NumFluxforDiff(ufield, qfield, qflux);
-		}
+	virtual void v_NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield,
+	                              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+				      Array<OneD, Array<OneD, NekDouble> >  &qflux)
+	{
+	    NumFluxforDiff(ufield, qfield, qflux);
+	}
       
     };
     
@@ -219,6 +221,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.h,v $
+* Revision 1.6  2009/03/05 11:50:32  sehunchun
+* Implicit scheme and IMEX scheme are now implemented
+*
 * Revision 1.5  2009/02/28 21:59:09  sehunchun
 * Explicit Diffusion solver is added
 *

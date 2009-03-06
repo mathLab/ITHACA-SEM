@@ -61,11 +61,11 @@ int main(int argc, char *argv[])
     
     dom.ZeroPhysFields(); // Zero phys field so that following switch is consistent
     
-	// Set up the intial conditions 
+    // Set up the intial conditions 
     dom.SetInitialConditions();
 	
-	// Create forcing function object
-	LibUtilities::TimeIntegrationSchemeOperators ode;
+    // Create forcing function object
+    LibUtilities::TimeIntegrationSchemeOperators ode;
 	
     switch(dom.GetEquationType())
     {
@@ -84,10 +84,10 @@ int main(int argc, char *argv[])
 		LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eClassicalRungeKutta4;		
 		
 		// Choose the method of deriving forcing functions
-	    ode.DefineOdeRhs       (&AdvectionDiffusionReaction::ODErhs,dom);		
+	        ode.DefineOdeRhs       (&AdvectionDiffusionReaction::ODErhs,dom);		
 		
-	    // General Linear Time Integration
-	    dom.GeneralTimeIntegration(nsteps, IntMethod, ode);
+	       // General Linear Time Integration
+	        dom.GeneralTimeIntegration(nsteps, IntMethod, ode);
 	   }
         break;
 		
@@ -97,37 +97,37 @@ int main(int argc, char *argv[])
 		LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eClassicalRungeKutta4;	
 		
 		// Choose the method of deriving forcing functions
-	    ode.DefineOdeRhs       (&AdvectionDiffusionReaction::ODErhs,dom);	
+	         ode.DefineOdeRhs       (&AdvectionDiffusionReaction::ODErhs,dom);	
 		
-	    // General Linear Time Integration
-	    dom.GeneralTimeIntegration(nsteps, IntMethod, ode);
+	       // General Linear Time Integration
+	         dom.GeneralTimeIntegration(nsteps, IntMethod, ode);
 	   }
         break;
 		
-	case iDiffusion:
+	case eimDiffusion:
 	  {
 		// Choose time integration method
-		LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eDIRKOrder3;		
+		 LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eDIRKOrder3;		
 		
 		// Choose the method of deriving forcing functions
-	    ode.DefineImplicitSolve       (&AdvectionDiffusionReaction::ODEhelmSolve,dom);		
+	         ode.DefineImplicitSolve       (&AdvectionDiffusionReaction::ODEhelmSolve,dom);		
 		
-	   // General Linear Time Integration
-	   dom.GeneralTimeIntegration(nsteps, IntMethod, ode);
+	       // General Linear Time Integration
+	         dom.GeneralTimeIntegration(nsteps, IntMethod, ode);
 	  }
         break;			
 		
-	case iDiffusion_eReaction:
+	case eimDiffusion_exReaction:
 	 {
 		// Choose time integration method
 		 LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eIMEXdirk_3_4_3;	
 		
 		// Choose the method of deriving forcing functions
-	     ode.DefineImplicitSolve       (&AdvectionDiffusionReaction::ODEhelmSolve,dom);	
+	         ode.DefineImplicitSolve       (&AdvectionDiffusionReaction::ODEhelmSolve,dom);	
 		 ode.DefineOdeRhs       (&AdvectionDiffusionReaction::ODEeReaction,dom);	
 				
-	    // General Linear Time Integration
-	    dom.GeneralTimeIntegration(nsteps, IntMethod, ode);
+	       // General Linear Time Integration
+	         dom.GeneralTimeIntegration(nsteps, IntMethod, ode);
 	  }
         break;
 

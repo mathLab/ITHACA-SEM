@@ -66,12 +66,11 @@
 
     <PARAMETERS>
       <P> TimeStep   = 0.0001 </P>
-      <P> NumSteps      = 1  </P>
+      <P> NumSteps      = 5000  </P>
       <P> FinTime    = TimeStep*NumSteps </P>
-      <P> IO_CheckSteps = 1   </P>
-      <P> IO_InfoSteps  = 1 </P>
+      <P> IO_CheckSteps = 1000   </P>
+      <P> IO_InfoSteps  = 1000 </P>
       <P> DisContinuous = 0 </P>
-      <P> epsilon = 1.0 </P>
     </PARAMETERS>
 
     <SOLVERINFO>
@@ -88,7 +87,7 @@
 
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
-        <D VAR="u" VALUE="1.0" />
+        <D VAR="u" VALUE="0.0" />
       </REGION>
     </BOUNDARYCONDITIONS>
 
@@ -98,11 +97,11 @@
     </USERDEFINEDEQNS>   
     
     <EXACTSOLUTION>
-      <F VAR="u" VALUE="1.0" />
+      <F VAR="u" VALUE="exp(-2.0*PI*PI*FinTime)*sin(PI*x)*sin(PI*y)" />
     </EXACTSOLUTION>
     
     <INITIALCONDITIONS>
-      <F VAR="u" VALUE="1.0" />
+      <F VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
     </INITIALCONDITIONS>
     
   </CONDITIONS>

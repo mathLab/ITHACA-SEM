@@ -66,10 +66,10 @@
 
     <PARAMETERS>
       <P> TimeStep   = 0.000001 </P>
-      <P> NumSteps      = 2000  </P>
+      <P> NumSteps      = 5000  </P>
       <P> FinTime    = TimeStep*NumSteps </P>
-      <P> IO_CheckSteps = 500   </P>
-      <P> IO_InfoSteps  = 500 </P>
+      <P> IO_CheckSteps = 1000   </P>
+      <P> IO_InfoSteps  = 1000 </P>
       <P> DisContinuous = 1 </P>
     </PARAMETERS>
 
@@ -87,13 +87,13 @@
 
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
-	     <D VAR="u" VALUE="0.0" />
+	 <D VAR="u" VALUE="0.0" />
       </REGION>
     </BOUNDARYCONDITIONS>
 
     <USERDEFINEDEQNS>
       <F LHS="Vx" VALUE="1.0" />
-      <F LHS="Vy" VALUE="1.0" />
+      <F LHS="Vy" VALUE="0.0" />
     </USERDEFINEDEQNS>   
     
     <EXACTSOLUTION>

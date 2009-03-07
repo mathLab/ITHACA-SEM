@@ -131,44 +131,80 @@ namespace Nektar
 	}
     }
     
-    void FHN::ODEeReaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+    void FHN::ODETest_Reaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
 			   Array<OneD, Array<OneD, NekDouble> >&outarray, 
 			   const NekDouble time)
 	
 	{
-		int i,k;
+                NekDouble epsilon = 1.0/32.0;
+
                 int nvariables = inarray.num_elements();
                 int ncoeffs    = inarray[0].num_elements();
-		const NekDouble coeff = 3.14159265*3.14159265;
+		const NekDouble coeff = 2.0/epsilon;
+
+                Array<OneD, NekDouble> temp1(ncoeffs,0.0);
+                Array<OneD, NekDouble> temp2(ncoeffs,0.0);
 					
-		for (i = 0; i < nvariables; ++i)
-		{
-		     Vmath::Smul(ncoeffs, coeff, inarray[i], 1, outarray[i], 1);
+		for (int i = 0; i < nvariables; ++i)
+		{  
+                    Vmath::Vmul(ncoeffs, inarray[i], 1, inarray[i], 1, temp1, 1);
+                    Vmath::Vmul(ncoeffs, inarray[i], 1, temp1, 1, temp2, 1);
+                    Vmath::Vsub(ncoeffs, temp1, 1, temp2, 1, temp2, 1);
+		    Vmath::Smul(ncoeffs, coeff, temp2, 1, outarray[i], 1);
 		}
 	}
-	   
+
+    void FHN::ODEFHN_Reaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+			   Array<OneD, Array<OneD, NekDouble> >&outarray, 
+			   const NekDouble time)
+	
+	{
+                NekDouble Rlambda = -100.0;
+                NekDouble theta = 0.25;
+                NekDouble alpha = 0.16875;
+                NekDouble beta = 1.0;
+
+                int nvariables = inarray.num_elements();
+                int ncoeffs    = inarray[0].num_elements();
+
+                Array<OneD, NekDouble> temp1(ncoeffs,0.0);
+                Array<OneD, NekDouble> temp2(ncoeffs,0.0);
+					
+                // For v: lambda*(q - v*(1-v)*(v-theta) )
+                Vmath::Sadd(ncoeffs, 1.0, inarray[0], 1, temp1, 1);
+                Vmath::Sadd(ncoeffs, -1.0*theta, inarray[0], 1, temp2, 1);
+                Vmath::Vmul(ncoeffs, temp1, 1, temp2, 1, temp2, 1);
+                Vmath::Vmul(ncoeffs, inarray[0], 1, temp2, 1, temp2, 1);
+                Vmath::Vsub(ncoeffs, inarray[1], 1, temp2, 1, temp2, 2);
+		Vmath::Smul(ncoeffs, Rlambda, temp2, 1, outarray[0], 1);
+
+                // For q: alpha*v - q
+                Vmath::Svtvp(ncoeffs, -1.0*alpha, inarray[0], 1, inarray[1], 1, outarray[1], 1);
+                Vmath::Neg(ncoeffs, outarray[1], 1);
+	}
+
+  
 
     void FHN::ODEhelmSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
 			   Array<OneD, Array<OneD, NekDouble> >&outarray,
-			   NekDouble time, NekDouble lambda)
-    {
-        int nvariables = inarray.num_elements();
-        int ncoeffs    = inarray[0].num_elements();
-							
-		// We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
-		// inarray = input: \hat{rhs} -> output: \hat{Y}    
-		// outarray = output: nabla^2 \hat{Y}       
-		// where \hat = modal coeffs
-		
+			   const NekDouble time, 
+                           const NekDouble lambda)
+       {
+                NekDouble epsilon = 1.0/32.0;
+
+                int nvariables = inarray.num_elements();
+                int ncoeffs    = inarray[0].num_elements();
+
+                NekDouble kappa = 1.0/(lambda*epsilon);
+									
 		MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
-		
 		for (int i = 0; i < nvariables; ++i)
 		{
 		        // Multiply by inverse of mass matrix
                          m_fields[i]->MultiplyByInvMassMatrix(inarray[i],outarray[i],false);
 				
 			// Multiply rhs[i] with -1.0/gamma/timestep
-                         Vmath::Smul(ncoeffs, -1.0/lambda, outarray[i], 1, outarray[i], 1);
+                         Vmath::Smul(ncoeffs, -1.0*kappa, outarray[i], 1, outarray[i], 1);
 			
 			// Update coeffs to m_fields
 			 m_fields[i]->UpdateCoeffs() = outarray[i];
@@ -176,8 +212,6 @@ namespace Nektar
 			// Backward Transformation to nodal coefficients
 			  m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
 
-                          NekDouble kappa = 1.0/lambda;
-			  			
 	    	        // Solve a system of equations with Helmholtz solver
                           m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs(),kappa);
 			
@@ -189,6 +223,47 @@ namespace Nektar
 		}
 	}
 	
+    void FHN::ODEFHN_helmSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+			   Array<OneD, Array<OneD, NekDouble> >&outarray,
+			   const NekDouble time, 
+                           const NekDouble lambda)
+       {
+                NekDouble epsilon = 0.01;
+
+                int nvariables = inarray.num_elements();
+                int ncoeffs    = inarray[0].num_elements();
+
+                NekDouble kappa = 1.0/(lambda*epsilon);
+									
+		MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
+
+                // For v: ==============================
+
+		// Multiply by inverse of mass matrix
+                   m_fields[0]->MultiplyByInvMassMatrix(inarray[0],outarray[0],false);
+				
+		// Multiply rhs[i] with -1.0/gamma/timestep
+                   Vmath::Smul(ncoeffs, -1.0*kappa, outarray[0], 1, outarray[0], 1);
+			
+		// Update coeffs to m_fields
+		   m_fields[0]->UpdateCoeffs() = outarray[0];
+			
+		// Backward Transformation to nodal coefficients
+		   m_fields[0]->BwdTrans(m_fields[0]->GetCoeffs(), m_fields[0]->UpdatePhys());
+
+	    	// Solve a system of equations with Helmholtz solver
+                   m_fields[0]->HelmSolve(m_fields[0]->GetPhys(),m_fields[0]->UpdateCoeffs(),kappa);
+			
+		// The solution is Y[i]
+		   outarray[0] = m_fields[0]->GetCoeffs();	  
+						  
+		// Multiply back by mass matrix
+                   m_fields[0]->MultiRegions::ExpList::GeneralMatrixOp(key,outarray[0],outarray[0]);
+
+                // For q: No helmholtz solver is needed=============================
+                   Vmath::Vcopy(ncoeffs, inarray[1], 1, outarray[1], 1);
+	}
+
 
     void FHN::GeneralTimeIntegration(int nsteps, 
 	                              LibUtilities::TimeIntegrationMethod IntMethod,
@@ -247,24 +322,6 @@ namespace Nektar
                 IntScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
 
                 u = IntScheme[0]->InitializeScheme(m_timestep,fields,m_time,ode);
-            }
-            break;
-        case LibUtilities::eAdamsBashforthOrder2:
-            {
-                numMultiSteps = 2;
-
-                IntScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr>(numMultiSteps);
-
-                // Used in the first time step to initalize the scheme
-                LibUtilities::TimeIntegrationSchemeKey IntKey0(LibUtilities::eForwardEuler);
-				
-                // Used for all other time steps 
-                LibUtilities::TimeIntegrationSchemeKey IntKey1(IntMethod); 
-                IntScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
-                IntScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
-
-                // Initialise the scheme for the actual time integration scheme
-                u = IntScheme[1]->InitializeScheme(m_timestep,fields,m_time,ode);
             }
             break;
         default:
@@ -363,40 +420,13 @@ namespace Nektar
 
     }
     
-    /*
-    // case insensitive string comparison from web
-    int nocase_cmp(const string & s1, const string& s2) 
-    {
-        string::const_iterator it1=s1.begin();
-        string::const_iterator it2=s2.begin();
-        
-        //stop when either string's end has been reached
-        while ( (it1!=s1.end()) && (it2!=s2.end()) ) 
-        { 
-            if(::toupper(*it1) != ::toupper(*it2)) //letters differ?
-            {
-                // return -1 to indicate smaller than, 1 otherwise
-                return (::toupper(*it1)  < ::toupper(*it2)) ? -1 : 1; 
-            }
-            //proceed to the next character in each string
-            ++it1;
-            ++it2;
-        }
-        size_t size1=s1.size(), size2=s2.size();// cache lengths
-        
-        //return -1,0 or 1 according to strings' lengths
-        if (size1==size2) 
-        {
-            return 0;
-        }
-        return (size1 < size2) ? -1 : 1;
-    }
-    */
-    
 } //end of namespace
 
 /**
 * $Log: FHN.cpp,v $
+* Revision 1.1  2009/03/06 16:02:55  sehunchun
+* FitzHugh-Nagumo modeling
+*
 *
 * Revision 1.1  2008/08/22 09:48:23  pvos
 * Added Sehun' FHN solver

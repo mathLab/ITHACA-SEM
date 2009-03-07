@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FHN.cpp
+// File FHNSolver.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -50,22 +50,21 @@ int main(int argc, char *argv[])
     
     //----------------------------------------------------------------
     // Read the mesh and construct container class
-    FHN dom(fileNameString);
+    FHN heart(fileNameString);
     
-    int nsteps = dom.GetSteps();
-    NekDouble lambda = 0.0;
+    int nsteps = heart.GetSteps();
 
-    dom.Summary(cout);
+    heart.Summary(cout);
     
-    dom.ZeroPhysFields(); // Zero phys field so that following switch is consistent
+    heart.ZeroPhysFields(); // Zero phys field so that following switch is consistent
     
     // Set up the intial conditions 
-    dom.SetInitialConditions();
+    heart.SetInitialConditions();
 	
     // Create forcing function object
     LibUtilities::TimeIntegrationSchemeOperators ode;
 	
-    switch(dom.GetEquationType())
+    switch(heart.GetEquationType())
     {			
 	case eTestmodel:
 	 {
@@ -73,11 +72,25 @@ int main(int argc, char *argv[])
 	      LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eIMEXdirk_3_4_3;	
 		
 	     // Choose the method of deriving forcing functions
-	      ode.DefineImplicitSolve       (&FHN::ODEhelmSolve,dom);	
-	      ode.DefineOdeRhs              (&FHN::ODEeReaction,dom);	
+	      ode.DefineImplicitSolve       (&FHN::ODEhelmSolve,heart);	
+	      ode.DefineOdeRhs              (&FHN::ODETest_Reaction,heart);	
 				
 	     // General Linear Time Integration
-	      dom.GeneralTimeIntegration(nsteps, IntMethod, ode);
+	      heart.GeneralTimeIntegration(nsteps, IntMethod, ode);
+	  }
+        break;
+
+	case eFHN1961:
+	 {
+	     // Choose time integration method
+	      LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eIMEXdirk_3_4_3;	
+		
+	     // Choose the method of deriving forcing functions
+	      ode.DefineImplicitSolve       (&FHN::ODEFHN_helmSolve,heart);	
+	      ode.DefineOdeRhs              (&FHN::ODEFHN_Reaction,heart);	
+				
+	     // General Linear Time Integration
+	      heart.GeneralTimeIntegration(nsteps, IntMethod, ode);
 	  }
         break;
 
@@ -85,12 +98,12 @@ int main(int argc, char *argv[])
         ASSERTL0(false,"Unknown or undefined equation type");
     }
      // Dump output
-    dom.Output();
+    heart.Output();
 
     // Evaluate L2 Error
-    for(int i = 0; i < dom.GetNvariables(); ++i)
+    for(int i = 0; i < heart.GetNvariables(); ++i)
     {
-        cout << "L2 Error (variable "<< dom.GetVariable(i) <<"): " << dom.L2Error(i) << endl;
+        cout << "L2 Error (variable "<< heart.GetVariable(i) <<"): " << heart.L2Error(i) << endl;
     }
 
 }

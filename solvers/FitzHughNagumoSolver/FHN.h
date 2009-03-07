@@ -45,13 +45,15 @@ namespace Nektar
 
     enum EquationType
     {
-         eTestmodel
+        eTestmodel,
+         eFHN1961
     };
     
     // Keep this consistent with the enums in EquationType.
     const std::string kEquationTypeStr[] = 
     {
-        "Testmodel"
+        "Testmodel",
+        "FHN1961"
     };
 
     /**
@@ -89,14 +91,23 @@ namespace Nektar
                           Array<OneD,        Array<OneD, NekDouble> >&outarray, 
                     const NekDouble time);
 
-	void ODEeReaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
-			  Array<OneD, Array<OneD, NekDouble> >&outarray, 
-			  const NekDouble time);
+        void ODETest_Reaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+			   Array<OneD, Array<OneD, NekDouble> >&outarray, 
+			   const NekDouble time);
+
+        void ODEFHN_Reaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+			   Array<OneD, Array<OneD, NekDouble> >&outarray, 
+                               const NekDouble time);
 					
-	void ODEhelmSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-			  Array<OneD, Array<OneD, NekDouble> >&outarray,
-			  NekDouble time, 
-			  NekDouble lambda);
+        void ODEhelmSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+			   Array<OneD, Array<OneD, NekDouble> >&outarray,
+			   const NekDouble time, 
+                           const NekDouble lambda);
+
+        void ODEFHN_helmSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+			      Array<OneD, Array<OneD, NekDouble> >&outarray,
+			      const NekDouble time, 
+                              const NekDouble lambda);
 
         void GeneralTimeIntegration(int nsteps, 
 		                   LibUtilities::TimeIntegrationMethod IntMethod,
@@ -104,12 +115,12 @@ namespace Nektar
 
         void Summary(std::ostream &out);
 
-
     protected:
 
     private: 
         int m_infosteps;             ///< dump info to stdout at steps time
         EquationType m_equationType; ///< equation type;
+        NekDouble m_epsilon;    /// constant epsilon
 
         Array<OneD, Array<OneD, NekDouble> >  m_velocity;
 
@@ -124,7 +135,7 @@ namespace Nektar
             GetFluxVector(i,physfield,flux);
         }
 		
-	    virtual void v_GetFluxVector(const int i, 
+	virtual void v_GetFluxVector(const int i, 
                                          const int j, 
                                          Array<OneD, Array<OneD, NekDouble> > &physfield, 
                                          Array<OneD, Array<OneD, NekDouble> > &flux)
@@ -169,6 +180,9 @@ namespace Nektar
 
 /**
 * $Log: FHN.h,v $
+* Revision 1.1  2009/03/06 16:02:55  sehunchun
+* FitzHugh-Nagumo modeling
+*
 
 * Revision 1.1  2008/08/22 09:48:23  pvos
 * Added Sehun' FHN Solver

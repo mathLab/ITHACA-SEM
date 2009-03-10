@@ -65,6 +65,8 @@ int main(int argc, char *argv[])
 
     
     //----------------------------------------   
+    dom.ZeroPhysFields(); 
+       
     // Set up the intial conditions
     dom.SetInitialConditions();
 
@@ -81,7 +83,17 @@ int main(int argc, char *argv[])
     
     int nsteps = dom.GetSteps();
 
-    dom.ExplicitlyIntegrateAdvection(nsteps);
+    // Create forcing function object
+    LibUtilities::TimeIntegrationSchemeOperators ode;
+    
+    // Choose time integration method
+    LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eClassicalRungeKutta4;		
+    
+    // Choose the method of deriving forcing functions
+    ode.DefineOdeRhs       (&ShallowWaterEquations::ODErhs,dom);		
+		
+    // General Linear Time Integration
+    dom.GeneralTimeIntegration(nsteps, IntMethod, ode);
     //----------------------------------------
 
 

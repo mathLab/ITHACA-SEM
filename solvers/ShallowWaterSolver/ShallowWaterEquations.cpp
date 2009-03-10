@@ -38,6 +38,7 @@
 #include <cstdio>
 #include <cstdlib>
 
+
 namespace Nektar
 {
   /**
@@ -83,8 +84,7 @@ namespace Nektar
       }
     //--------------------------------------------
 
-    // HACK!!! the m_depth should be removed and replaced by d field[3]
-    
+      
     //--------------------------------------------
     // Set linear or nonlinear scheme
     if(m_boundaryConditions->CheckForParameter("NonLinear") == true)
@@ -92,24 +92,10 @@ namespace Nektar
 	if((int) m_boundaryConditions->GetParameter("NonLinear") == 0)
 	  {
 	    m_linearType = eLinear;
-
-	    if(m_boundaryConditions->CheckForParameter("Depth") == true)
-	      {
-		m_depth = m_boundaryConditions->GetParameter("Depth");
-	      }
-	    else
-	      {
-		ASSERTL0(false,"Depth not specified");
-	      }
 	  }
 	else if ((int) m_boundaryConditions->GetParameter("NonLinear") == 1)
 	  {
 	    m_linearType = eNonLinear;
-
-	    if(m_boundaryConditions->CheckForParameter("Depth") == true)
-	      {
-		m_depth = m_boundaryConditions->GetParameter("Depth");
-	      }
 	  }
 	else
 	  {
@@ -120,6 +106,12 @@ namespace Nektar
       {
 	ASSERTL0(false,"linearType undefined");
       }
+    //--------------------------------------------
+
+    //--------------------------------------------
+    // Set still water depth
+    EvaluateDepth();
+
     //--------------------------------------------
 
     
@@ -138,9 +130,12 @@ namespace Nektar
 	    ASSERTL0(false,"Coriolis defined for 1D run");
 	  }
       }
+    else
+      {
+	m_coriolis = Array<OneD, NekDouble>();
+      }
     //--------------------------------------------
-
-
+    
     
     if(m_boundaryConditions->CheckForParameter("IO_InfoSteps") == true)
       {
@@ -157,18 +152,7 @@ namespace Nektar
 	ASSERTL0(false,"Gravity not specified");
       }
 
-    // HACK!!! Depth should be removed asap...
-    // check if depth 
-    if(m_boundaryConditions->CheckForParameter("Depth") == true)
-      {
-	m_depth = m_boundaryConditions->GetParameter("Depth");
-      }
-    else
-      {
-	ASSERTL0(false,"Depth not specified");
-      }
-    
-
+  
     // check that any user defined boundary condition is indeed implemented
     for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
       {	
@@ -183,7 +167,39 @@ namespace Nektar
 	  }
       }
   }
-	  
+
+  void ShallowWaterEquations::EvaluateDepth(void)
+  {
+    int nq = m_fields[0]->GetTotPoints();
+    
+    m_depth      = Array<OneD, NekDouble >(nq);
+    m_d_depth    = Array<OneD, Array<OneD, NekDouble> >(2);
+    m_d_depth[0] = Array<OneD, NekDouble>(nq);
+    m_d_depth[1] = Array<OneD, NekDouble>(nq);
+
+    std::string coriolisStr[1] = {"d"};
+    
+    Array<OneD,NekDouble> x0(nq);
+    Array<OneD,NekDouble> x1(nq);
+    Array<OneD,NekDouble> x2(nq);
+    
+    // get the coordinates (assuming all fields have the same
+    // discretisation)
+    m_fields[0]->GetCoords(x0,x1,x2);
+    
+    SpatialDomains::ConstUserDefinedEqnShPtr ifunc = m_boundaryConditions->GetUserDefinedEqn(coriolisStr[0]);
+    
+    for(int j = 0; j < nq; j++)
+      {
+	m_depth[j] = ifunc->Evaluate(x0[j],x1[j],x2[j]);
+      }
+
+    
+    // compute d_x and d_y
+    SetGradientBoundary(m_depth,0.0,1);
+    GradientFluxTerms(m_depth,m_d_depth,1);
+  }
+  
   void ShallowWaterEquations::EvaluateCoriolis(void)
   {
     int nq = m_fields[0]->GetTotPoints();
@@ -207,90 +223,17 @@ namespace Nektar
   }
   
   
-  //  void ShallowWaterEquations::ODEforcing(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
-  // 					 Array<OneD, Array<OneD, NekDouble> >&outarray, NekDouble time) 
-//   {
-//     int i;
-//     int nVelDim    = m_spacedim;
-//     int nvariables = inarray.num_elements();
-//     int ncoeffs    = inarray[0].num_elements();
-//     int nq         = GetTotPoints();
-    
-//     //-------------------------------------------------------
-//     // go to physical space
-    
-//     Array<OneD, Array<OneD, NekDouble> > physarray(nvariables);
-//     for (i = 0; i < nvariables; ++i)
-//       {
-// 	physarray[i] = Array<OneD, NekDouble>(nq);
-// 	m_fields[i]->BwdTrans(inarray[i],physarray[i]);
-//       }
-//     //-------------------------------------------------------
-    
-//     SetBoundaryConditions(physarray, time);
-    
-//     switch(m_projectionType)
-//       {
-//       case eDiscontinuousGalerkin:
-// 	{
-	 
-// 	  //-------------------------------------------------
-// 	  // get the advection part
-// 	  // input: physical space
-// 	  // output: modal space 
-// 	  WeakDGAdvection(physarray, outarray, false, true);
-
-// 	  // negate the outarray since moving to the rhs
-// 	  for(i = 0; i < nvariables; ++i)
-// 	    {
-// 	      Vmath::Neg(ncoeffs,outarray[i],1);
-// 	    }
-// 	  //-------------------------------------------------------
-	  
-	  
-// 	  //-------------------------------------------------
-// 	  // Add "source terms"
-// 	  // input: physical space
-// 	  // output: modal space
-	  
-// 	  //coriolis forcing
-// 	  if (m_coriolis[0])
-// 	    AddCoriolis(physarray,outarray);
-// 	  //------------------------------------------------- 
-	  
-	  
-// 	  //--------------------------------------------
-// 	  // solve the block-diagonal system
-	  
-// 	  for(i = 0; i < nvariables; ++i)
-// 	    {
-// 	      m_fields[i]->MultiplyByElmtInvMass(outarray[i],outarray[i]);
-// 	    }
-// 	  //--------------------------------------------
-
-// 	}
-// 	break;
-//       case eGalerkin:
-// 	{
-// 	  ASSERTL0(false,"Continouos scheme not implemented for SWE");
-// 	}
-// 	break;
-//       default:
-// 	ASSERTL0(false,"Unknown projection scheme for the SWE");
-// 	break;
-//       }
-//   }
-  
   void ShallowWaterEquations::ODErhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
 				           Array<OneD,       Array<OneD, NekDouble> >&outarray, 
 				     const NekDouble time) 
   {
- int i;
+    int i;
     int nVelDim    = m_spacedim;
     int nvariables = inarray.num_elements();
     int ncoeffs    = inarray[0].num_elements();
     int nq         = GetTotPoints();
-    
+
+
     //-------------------------------------------------------
     // go to physical space
     
@@ -301,7 +244,7 @@ namespace Nektar
 	m_fields[i]->BwdTrans(inarray[i],physarray[i]);
       }
     //-------------------------------------------------------
-    
+
     
     //-------------------------------------------------------
     // set time dependent boundary conditions
@@ -323,8 +266,7 @@ namespace Nektar
 	    {
 	      
 	      // straighforward DG
-	      // (note - that we only use the 3 dependent variables)
-	      WeakDGAdvection(physarray, outarray, false, true,3);
+	      WeakDGAdvection(physarray, outarray, false, true);
 	    }
 	  else if (m_variableType == ePrimitive)
 	    {
@@ -333,8 +275,7 @@ namespace Nektar
 		  
 		  // for linear scheme we we see it as a conservation law
 		  // providing the depth is constant
-		  // (note - that we only use the 3 dependent variables)
-		  WeakDGAdvection(physarray, outarray, false, true,3);
+		  WeakDGAdvection(physarray, outarray, false, true);
 		}
 	      else
 		{
@@ -366,10 +307,16 @@ namespace Nektar
 	  // output: modal space
 	  
 	  // coriolis forcing
-	  if (m_coriolis[0])
-	    AddCoriolis(physarray,outarray);
+	  if (m_coriolis.num_elements() != 0)
+	    {
+	      AddCoriolis(physarray,outarray);
+	    }
 	  //------------------------------------------------- 
-	  
+	   
+	  for(i = 0; i < nvariables; ++i)
+	    {
+	      m_fields[i]->MultiplyByElmtInvMass(outarray[i],outarray[i]);
+	    }
 	}
 	break;
       case eGalerkin:
@@ -417,7 +364,7 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
               {
                   m_fields[i]->MultiplyByInvMassMatrix(inarray[i],  
                                                        outarray[i],
-                                                       false,true);
+                                                       false);
               }
           }
           break;
@@ -435,78 +382,118 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
         ASSERTL0(false, "this routine needs implementation");
     }
   
-  
-    void ShallowWaterEquations::ExplicitlyIntegrateAdvection(int nsteps)
+  void ShallowWaterEquations::GeneralTimeIntegration(int nsteps, 
+						     LibUtilities::TimeIntegrationMethod IntMethod,
+						     LibUtilities::TimeIntegrationSchemeOperators ode)
     {
-      int i,n,nchk = 0;
+        int i,n,nchk = 0;
         int ncoeffs = m_fields[0]->GetNcoeffs();
         int nvariables = m_fields.num_elements();
 
-        // Get Integration scheme details
-        LibUtilities::TimeIntegrationSchemeKey       IntKey(LibUtilities::eClassicalRungeKutta4);
-        LibUtilities::TimeIntegrationSchemeSharedPtr IntScheme = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
-
         // Set up wrapper to fields data storage. 
         Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
-	Array<OneD, Array<OneD, NekDouble> >   in(nvariables);
-	Array<OneD, Array<OneD, NekDouble> >   out(nvariables);
-	Array<OneD, Array<OneD, NekDouble> >   tmp(nvariables);
-	Array<OneD, Array<OneD, NekDouble> >   phys(nvariables);
+        Array<OneD, Array<OneD, NekDouble> >   tmp(nvariables);
         
         for(i = 0; i < nvariables; ++i)
         {
             fields[i]  = m_fields[i]->UpdateCoeffs();
-	    in[i] = Array<OneD, NekDouble >(ncoeffs);
-	    out[i] = Array<OneD, NekDouble >(ncoeffs);
-	    tmp[i] = Array<OneD, NekDouble >(ncoeffs);
-	    phys[i] = Array<OneD, NekDouble>(m_fields[0]->GetTotPoints());
-	    Vmath::Vcopy(ncoeffs,m_fields[i]->GetCoeffs(),1,in[i],1);
         }
-                
-        int nInitSteps;
-        LibUtilities::TimeIntegrationSolutionSharedPtr u = IntScheme->InitializeScheme(m_timestep,m_time,nInitSteps,*this,fields);
 
-        for(n = nInitSteps; n < nsteps; ++n)
+        if(m_projectionType==eGalerkin)
+        {
+            // calculate the variable u* = Mu
+            // we are going to TimeIntegrate this new variable u*
+            MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
+            for(int i = 0; i < nvariables; ++i)
+            {
+                tmp[i] = Array<OneD, NekDouble>(ncoeffs);
+                m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,fields[i],fields[i]);
+            }
+        }
+
+        // Declare an array of TimeIntegrationSchemes
+        // For multi-stage methods, this array will have just one entry containing
+        // the actual multi-stage method...
+        // For multi-steps method, this can have multiple entries
+        //  - the first scheme will used for the first timestep (this is an initialization scheme)
+        //  - the second scheme will used for the first timestep (this is an initialization scheme)
+        //  - ...
+        //  - the last scheme will be used for all other time-steps (this will be the actual scheme)
+        Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> IntScheme;
+        LibUtilities::TimeIntegrationSolutionSharedPtr u;
+        int numMultiSteps;
+
+        switch(IntMethod)
+        {
+	case LibUtilities::eIMEXdirk_3_4_3:
+	case LibUtilities::eDIRKOrder3:
+        case LibUtilities::eBackwardEuler:      
+        case LibUtilities::eForwardEuler:      
+        case LibUtilities::eClassicalRungeKutta4:
+            {
+                numMultiSteps = 1;
+
+                IntScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr>(numMultiSteps);
+
+                LibUtilities::TimeIntegrationSchemeKey IntKey(IntMethod);
+                IntScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
+
+                u = IntScheme[0]->InitializeScheme(m_timestep,fields,m_time,ode);
+            }
+            break;
+        case LibUtilities::eAdamsBashforthOrder2:
+            {
+                numMultiSteps = 2;
+
+                IntScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr>(numMultiSteps);
+
+                // Used in the first time step to initalize the scheme
+                LibUtilities::TimeIntegrationSchemeKey IntKey0(LibUtilities::eForwardEuler);
+				
+                // Used for all other time steps 
+                LibUtilities::TimeIntegrationSchemeKey IntKey1(IntMethod); 
+                IntScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
+                IntScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
+
+                // Initialise the scheme for the actual time integration scheme
+                u = IntScheme[1]->InitializeScheme(m_timestep,fields,m_time,ode);
+            }
+            break;
+        default:
+            {
+                ASSERTL0(false,"populate switch statement for integration scheme");
+            }
+        }
+					          
+        for(n = 0; n < nsteps; ++n)
         {
             //----------------------------------------------
             // Perform time step integration
             //----------------------------------------------
- 
-	  switch(m_projectionType)
-	    {
-	    case eDiscontinuousGalerkin:
-	      fields = IntScheme->ExplicitIntegration(m_timestep,*this,u);
-	      break;
-	    case eGalerkin:
-	      {
-		//---------------------------------------------------------
-	// 	// this is just a forward Euler to illustate that CG works
-		 
-// 		// get -D u^n
-// 		ODEforcing(in,out,m_time); // note that MultiplyByInvMassMatrix is not performed inside ODEforcing
-	  
-// 		// compute M u^n
-// 		for (i = 0; i < nvariables; ++i)
-// 		  {
-// 		    m_fields[0]->BwdTrans(in[i],phys[i]);
-// 		    m_fields[0]->IProductWRTBase(phys[i],tmp[i]);
-		    
-// 		    // f = M u^n - Dt D u^n
-// 		    Vmath::Svtvp(ncoeffs,m_timestep,out[i],1,tmp[i],1,tmp[i],1);
-		    
-// 		    // u^{n+1} = M^{-1} f
-// 		    m_fields[i]->MultiplyByInvMassMatrix(tmp[i],out[i],false,false);
-		    
-// 		    // fill results
-// 		    Vmath::Vcopy(ncoeffs,out[i],1,in[i],1);
-// 		    Vmath::Vcopy(ncoeffs,out[i],1,fields[i],1);
-// 		  }
-// 		//--------------------------------------------------------
-	      }
-	      break;
-	    }
-	  m_time += m_timestep;
-            //----------------------------------------------
+            if( n < numMultiSteps-1)
+            {
+                // Use initialisation schemes
+                fields = IntScheme[n]->TimeIntegrate(m_timestep,u,ode);
+            }
+            else
+            {
+                fields = IntScheme[numMultiSteps-1]->TimeIntegrate(m_timestep,u,ode);
+            }
+
+            m_time += m_timestep;
+
+            if(m_projectionType==eGalerkin)
+            {
+	      ASSERTL0(false,"CG not implemented for SWE");
+              //   // Project the solution u* onto the boundary conditions to
+//                 // obtain the actual solution
+//                 SetBoundaryConditions(m_time);
+//                 for(i = 0; i < nvariables; ++i)
+//                 {
+//                     m_fields[i]->MultiplyByInvMassMatrix(fields[i],tmp[i],false);
+//                     fields[i] = tmp[i];	   		    
+//                 }
+            }
 
             //----------------------------------------------
             // Dump analyser information
@@ -529,10 +516,14 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 		  ConservativeToPrimitive();
 		  Checkpoint_Output(nchk++);
 		  PrimitiveToConservative();
+		  //dump depth
+		  Array_Output(nchk,"depth",m_depth,true);
 		}
 	      else
 		{
 		  Checkpoint_Output(nchk++);
+		  //dump depth
+		  Array_Output(nchk,"depth",m_depth,true);
 		}
 	    }
         }
@@ -542,6 +533,118 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 	  (m_fields[i]->UpdateCoeffs()) = fields[i];
         }
     }
+
+
+  //   void ShallowWaterEquations::ExplicitlyIntegrateAdvection(int nsteps)
+//     {
+//       int i,n,nchk = 0;
+//         int ncoeffs = m_fields[0]->GetNcoeffs();
+//         int nvariables = m_fields.num_elements();
+
+//         // Get Integration scheme details
+//         LibUtilities::TimeIntegrationSchemeKey       IntKey(LibUtilities::eClassicalRungeKutta4);
+//         LibUtilities::TimeIntegrationSchemeSharedPtr IntScheme = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
+
+//         // Set up wrapper to fields data storage. 
+//         Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
+// 	Array<OneD, Array<OneD, NekDouble> >   in(nvariables);
+// 	Array<OneD, Array<OneD, NekDouble> >   out(nvariables);
+// 	Array<OneD, Array<OneD, NekDouble> >   tmp(nvariables);
+// 	Array<OneD, Array<OneD, NekDouble> >   phys(nvariables);
+        
+//         for(i = 0; i < nvariables; ++i)
+//         {
+//             fields[i]  = m_fields[i]->UpdateCoeffs();
+// 	    in[i] = Array<OneD, NekDouble >(ncoeffs);
+// 	    out[i] = Array<OneD, NekDouble >(ncoeffs,0.0);
+// 	    tmp[i] = Array<OneD, NekDouble >(ncoeffs,0.0);
+// 	    phys[i] = Array<OneD, NekDouble>(m_fields[0]->GetTotPoints(),0.0);
+// 	    Vmath::Vcopy(ncoeffs,m_fields[i]->GetCoeffs(),1,in[i],1);
+//         }
+                
+//         int nInitSteps;
+//         LibUtilities::TimeIntegrationSolutionSharedPtr u = IntScheme->InitializeScheme(m_timestep,m_time,nInitSteps,*this,fields);
+
+//         for(n = nInitSteps; n < nsteps; ++n)
+//         {
+//             //----------------------------------------------
+//             // Perform time step integration
+//             //----------------------------------------------
+ 
+// 	  switch(m_projectionType)
+// 	    {
+// 	    case eDiscontinuousGalerkin:
+// 	      fields = IntScheme->ExplicitIntegration(m_timestep,*this,u);
+// 	      break;
+// 	    case eGalerkin:
+// 	      {
+// 		//---------------------------------------------------------
+// 	// 	// this is just a forward Euler to illustate that CG works
+		 
+// // 		// get -D u^n
+// // 		ODEforcing(in,out,m_time); // note that MultiplyByInvMassMatrix is not performed inside ODEforcing
+	  
+// // 		// compute M u^n
+// // 		for (i = 0; i < nvariables; ++i)
+// // 		  {
+// // 		    m_fields[0]->BwdTrans(in[i],phys[i]);
+// // 		    m_fields[0]->IProductWRTBase(phys[i],tmp[i]);
+		    
+// // 		    // f = M u^n - Dt D u^n
+// // 		    Vmath::Svtvp(ncoeffs,m_timestep,out[i],1,tmp[i],1,tmp[i],1);
+		    
+// // 		    // u^{n+1} = M^{-1} f
+// // 		    m_fields[i]->MultiplyByInvMassMatrix(tmp[i],out[i],false,false);
+		    
+// // 		    // fill results
+// // 		    Vmath::Vcopy(ncoeffs,out[i],1,in[i],1);
+// // 		    Vmath::Vcopy(ncoeffs,out[i],1,fields[i],1);
+// // 		  }
+// // 		//--------------------------------------------------------
+// 	      }
+// 	      break;
+// 	    }
+// 	  m_time += m_timestep;
+//             //----------------------------------------------
+
+//             //----------------------------------------------
+//             // Dump analyser information
+//             //----------------------------------------------
+//             if(!((n+1)%m_infosteps))
+//             {
+// 	      cout << "Steps: " << n+1 << "\t Time: " << m_time << endl;
+//             }
+            
+//             if(n&&(!((n+1)%m_checksteps)))
+//             {
+  
+// 	      for(i = 0; i < nvariables; ++i)
+// 		{
+// 		  (m_fields[i]->UpdateCoeffs()) = fields[i];
+// 		}
+	      
+// 	      if (m_variableType == eConservative)
+// 		{
+// 		  ConservativeToPrimitive();
+// 		  Checkpoint_Output(nchk++);
+// 		  PrimitiveToConservative();
+// 		  //dump depth
+// 		  Array_Output(nchk,"depth",m_depth,true);
+// 		}
+// 	      else
+// 		{
+// 		  Checkpoint_Output(nchk++);
+// 		  //dump depth
+// 		  Array_Output(nchk,"depth",m_depth,true);
+// 		}
+// 	    }
+//         }
+        
+//         for(i = 0; i < nvariables; ++i)
+//         {
+// 	  (m_fields[i]->UpdateCoeffs()) = fields[i];
+//         }
+//     }
     
   
   //----------------------------------------------------
@@ -664,7 +767,8 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
   void ShallowWaterEquations::AddCoriolis(Array<OneD, Array<OneD, NekDouble> > &physarray,
 					  Array<OneD, Array<OneD, NekDouble> > &outarray)
   {
-    
+   
+    // routine works for both primitive and conservative formulations
     int ncoeffs = outarray[0].num_elements();
     int nq      = physarray[0].num_elements();
     
@@ -718,6 +822,7 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
   void ShallowWaterEquations::GetFluxVector2D(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, 
 					      Array<OneD, Array<OneD, NekDouble> > &flux)
   {
+    int nq = m_fields[0]->GetTotPoints();
     
     // since this function can be called
     // from Boussinesq with i > 2
@@ -725,7 +830,7 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
       {
 	return;
       }
-  
+    
     NekDouble g = m_g;
 
     switch(m_linearType)
@@ -736,16 +841,16 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 	  
 	  // flux function for the eta equation
 	case 0:
-	  for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
+	  for (int j = 0; j < nq; ++j)
 	    {
-	      flux[0][j]  =  m_depth * physfield[1][j];
-	      flux[1][j]  =  m_depth * physfield[2][j];
+	      flux[0][j]  =  m_depth[j] * physfield[1][j];
+	      flux[1][j]  =  m_depth[j] * physfield[2][j];
 	    }
 	  break;
 	  
 	  // flux function for the u equation
 	case 1:
-	  for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
+	  for (int j = 0; j < nq; ++j)
 	    {
 	      flux[0][j] = g*physfield[0][j];
 	      flux[1][j] = 0.0;
@@ -754,7 +859,7 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 	  
 	  // flux function for the v equation
 	case 2:
-	  for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
+	  for (int j = 0; j < nq; ++j)
 	    {
 	      flux[0][j] = 0.0;
 	      flux[1][j] = g*physfield[0][j];
@@ -771,7 +876,7 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 	  
 	  // flux function for the eta equation
 	case 0:
-	  for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
+	  for (int j = 0; j < nq; ++j)
 	    {
 	      flux[0][j]  =  physfield[1][j];
 	      flux[1][j]  =  physfield[2][j];
@@ -780,7 +885,7 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 	  
 	  // flux function for the hu equation
 	case 1:
-	  for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
+	  for (int j = 0; j < nq; ++j)
 	    {
 	      flux[0][j] = physfield[1][j]*physfield[1][j]/physfield[0][j] +
 		0.5*g*physfield[0][j]*physfield[0][j];
@@ -790,7 +895,7 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 	  
 	  // flux function for the hv equation
 	case 2:
-	  for (int j = 0; j < m_fields[0]->GetTotPoints(); ++j)
+	  for (int j = 0; j < nq; ++j)
 	    {
 	      flux[0][j] = physfield[1][j]*physfield[2][j]/physfield[0][j];
 	      flux[1][j] = physfield[2][j]*physfield[2][j]/physfield[0][j] +
@@ -836,6 +941,7 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 						       Array<OneD, Array<OneD, NekDouble> > &numfluxX, 
 						       Array<OneD, Array<OneD, NekDouble> > &numfluxY)
   {
+
     int i;
     
     int nTraceNumPoints = GetTraceTotPoints();
@@ -895,31 +1001,38 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 						    Array<OneD, Array<OneD, NekDouble> > &numfluxX, 
 						    Array<OneD, Array<OneD, NekDouble> > &numfluxY)
   {
+
     int i;
     
     int nTraceNumPoints = GetTraceTotPoints();
-    int nvariables      = 3;//m_fields.num_elements();
+    int nvariables      = 4;// we need the boundary values of the depth//m_fields.num_elements();
     
     // get temporary arrays
     Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
     Array<OneD, Array<OneD, NekDouble> > Bwd(nvariables);
     
-	for (i = 0; i < nvariables; ++i)
-	  {
-            Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
-            Bwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
-	  }
-      
-        // get the physical values at the trace
-        for (i = 0; i < nvariables; ++i)
-	  {
-	    m_fields[i]->GetFwdBwdTracePhys(physfield[i],Fwd[i],Bwd[i]);
-	  }
+    for (i = 0; i < nvariables; ++i)
+      {
+	Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
+	Bwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
+      }
+    
+    // get the physical values at the trace from the dependent variables
+    for (i = 0; i < nvariables-1; ++i)
+      {
+	m_fields[i]->GetFwdBwdTracePhys(physfield[i],Fwd[i],Bwd[i]);
+      }
+    
+    // we also needs the values of d...
+    // need to fill the in m_fields[0]
+    SetGradientBoundary(m_depth,m_time,0);
+    m_fields[0]->GetFwdBwdTracePhys(m_depth,Fwd[3],Bwd[3]);
+
+    
+
+    NekDouble eta, u, v, d;
+    NekDouble g = m_g;
 	
-	
-	NekDouble eta, u, v;
-	NekDouble g = m_g;
-	NekDouble d = m_depth;
 	
 	// averaging
 	for (i = 0; i < nTraceNumPoints; ++i)
@@ -927,7 +1040,8 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 	    eta = 0.5*(Fwd[0][i] + Bwd[0][i]);
 	    u   = 0.5*(Fwd[1][i] + Bwd[1][i]);
 	    v   = 0.5*(Fwd[2][i] + Bwd[2][i]);
-	    
+	    d   = 0.5*(Fwd[3][i] + Bwd[3][i]);
+
 	    numfluxX[0][i]  = d * u;
 	    numfluxY[0][i]  = d * v;
 	    numfluxX[1][i]  = g * eta;
@@ -1017,8 +1131,7 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
   void ShallowWaterEquations::SWEAdvectionNonConservativeForm(const Array<OneD, const Array<OneD, NekDouble> >&physarray,
 							            Array<OneD,       Array<OneD, NekDouble> >&outarray)
   {
-   
-    //   ASSERTL0(false,"not implemented");
+    
     //--------------------------------------
     // local parameters
     
@@ -1027,7 +1140,6 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
     int nTraceNumPoints = GetTraceTotPoints();
     
     NekDouble g        = m_g;
-    NekDouble d        = m_depth; 
     //------------------------------------
   
     Array<OneD, NekDouble> tmp0(ncoeffs);
@@ -1075,12 +1187,8 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
     
     
     //----------------------------------------
-    // compute a_3 = \nabla \cdot (h{\bf u})
+    // compute a_3 = \nabla \cdot (d{\bf u})
    
-
-    // HACK! only correct for constant depth
-    // (d*a3 below)
-    // boundary conditions already up to date
 
     Array<OneD, NekDouble > a3(nq);
     {
@@ -1088,16 +1196,11 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 
       // here we make sure we get deep copies
       in[0] = Array<OneD, NekDouble>(nq);
-      Vmath::Vcopy(nq,physarray[1],1,in[0],1);
+      Vmath::Vmul(nq,physarray[1],1,m_depth,1,in[0],1);
       in[1] = Array<OneD, NekDouble>(nq);
-      Vmath::Vcopy(nq,physarray[2],1,in[1],1);
+      Vmath::Vmul(nq,physarray[2],1,m_depth,1,in[1],1);
       
-      
-      //Vmath::Vmul(nq,physarray[3],1,in[0],1,in[0],1);
-      //Vmath::Smul(nq,d,in[0],1,in[0],1);
-      //Vmath::Vmul(nq,physarray[3],1,in[1],1,in[1],1);
-      //Vmath::Smul(nq,d,in[1],1,in[1],1);
-      //SetDivergenceBoundary(in,m_time,1,2);
+      SetDivergenceBoundary(in,m_time,1,2);
       
       DivergenceFluxTerms(in,a3,1,2);
     } 
@@ -1131,7 +1234,7 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
     for (int i = 0; i < nq; ++i)
       {
 	// linear part
-	phys0[i] = d*a3[i];
+	phys0[i] = a3[i];
   	phys1[i] = g*e1[0][i];
  	phys2[i] = g*e1[1][i];
 	
@@ -1370,8 +1473,85 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
       }
 
   }
+ // in and out in physical space
+  void ShallowWaterEquations::GradientFluxUpwindTerms(Array<OneD, NekDouble> &in, 
+						      Array<OneD, Array<OneD, NekDouble> > &out,
+						      int field_0,
+						      const Array<OneD, Array<OneD, NekDouble> > &phys)
+  {
+    int ncoeffs         = GetNcoeffs();
+    int nTraceNumPoints = GetTraceTotPoints();
+    
+    Array<OneD, NekDouble> tmpX(ncoeffs);
+    Array<OneD, NekDouble> tmpY(ncoeffs);
+    
+    Array<OneD, NekDouble> upwindX(nTraceNumPoints);
+    Array<OneD, NekDouble> upwindY(nTraceNumPoints);
+    Array<OneD, NekDouble> upwindZero(nTraceNumPoints,0.0);
+    
+    m_fields[0]->IProductWRTDerivBase(0,in,tmpX);
+    m_fields[0]->IProductWRTDerivBase(1,in,tmpY);
+    
+    Vmath::Neg(ncoeffs,tmpX,1);
+    Vmath::Neg(ncoeffs,tmpY,1);
 
-  
+    NumericalFluxUpwindGradient(in,upwindX,upwindY,field_0,phys);
+    
+    m_fields[0]->AddTraceIntegral(upwindX,upwindZero,tmpX);
+    m_fields[0]->AddTraceIntegral(upwindZero,upwindY,tmpY);
+    
+    m_fields[0]->MultiplyByElmtInvMass(tmpX,tmpX);
+    m_fields[0]->MultiplyByElmtInvMass(tmpY,tmpY);
+
+    m_fields[0]->BwdTrans(tmpX,out[0]);
+    m_fields[0]->BwdTrans(tmpY,out[1]);
+  }
+  void ShallowWaterEquations::NumericalFluxUpwindGradient(Array<OneD, NekDouble> &in, 
+							  Array<OneD, NekDouble> &outX,
+							  Array<OneD, NekDouble> &outY,
+							  int field_0,
+							  const Array<OneD, Array<OneD, NekDouble> > &phys)
+  {
+    
+    int nTraceNumPoints = GetTraceTotPoints();
+
+    // get temporary arrays
+    Array<OneD, Array<OneD, NekDouble> > Fwd(1);
+    Array<OneD, Array<OneD, NekDouble> > Bwd(1);
+    
+    Fwd[0] = Array<OneD, NekDouble> (nTraceNumPoints,0.0); 
+    Bwd[0] = Array<OneD, NekDouble> (nTraceNumPoints,0.0);
+    Array<OneD, NekDouble>uFwd (nTraceNumPoints,0.0);
+    Array<OneD, NekDouble>uBwd (nTraceNumPoints,0.0);
+    
+    Array<OneD, NekDouble>vFwd (nTraceNumPoints,0.0);
+    Array<OneD, NekDouble>vBwd (nTraceNumPoints,0.0);
+
+
+    // get the physical values at the trace
+    m_fields[field_0]->GetFwdBwdTracePhys(in,Fwd[0],Bwd[0]);
+    m_fields[1]->GetFwdBwdTracePhys(phys[1],uFwd,uBwd);
+    m_fields[2]->GetFwdBwdTracePhys(phys[2],vFwd,vBwd);
+
+    
+    
+    for (int i = 0; i < nTraceNumPoints; ++i)
+      {
+	if (uFwd[i]*m_traceNormals[0][i]+
+	    vFwd[i]*m_traceNormals[1][i] >= 0.0)
+	  {
+	    outX[i]  = Fwd[0][i];
+	    outY[i]  = Fwd[0][i];
+	  }
+	else
+	  {
+	    outX[i]  = Bwd[0][i];
+	    outY[i]  = Bwd[0][i];
+	  }
+      }
+  }
+
+     
   /**
    * Computes the \hat{\bf f} term in the  \int_{\partial \Omega^e} \phi \hat{\bf f} \cdot {\bf n} dS 
    * integral. Using averaged fluxes.
@@ -1411,13 +1591,13 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
     int nq = GetTotPoints();
     
     // physical space
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < 3; ++i)
       {
-	m_fields[i]->BwdTrans(*m_fields[i]);
+	m_fields[i]->BwdTrans((m_fields[i]->GetCoeffs()),(m_fields[i]->UpdatePhys()));
       }
     
     // h = eta + d
-    Vmath::Vadd(nq,m_fields[0]->GetPhys(),1,m_fields[3]->GetPhys(),1,m_fields[0]->UpdatePhys(),1);
+    Vmath::Vadd(nq,m_fields[0]->GetPhys(),1,m_depth,1,m_fields[0]->UpdatePhys(),1);
 
     // hu = h * u
     Vmath::Vmul(nq,m_fields[0]->GetPhys(),1,m_fields[1]->GetPhys(),1,m_fields[1]->UpdatePhys(),1);
@@ -1426,9 +1606,9 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
     Vmath::Vmul(nq,m_fields[0]->GetPhys(),1,m_fields[2]->GetPhys(),1,m_fields[2]->UpdatePhys(),1);
 
     // modal space
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < 3; ++i)
       {
-	m_fields[i]->FwdTrans(*m_fields[i]);
+	m_fields[i]->FwdTrans((m_fields[i]->GetPhys()),(m_fields[i]->UpdateCoeffs()));
       }
   }
   
@@ -1441,8 +1621,8 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
     if(physin.get() == physout.get())
       {
 	// copy indata and work with tmp array
-	Array<OneD, Array<OneD, NekDouble> >tmp(4);
-	for (int i = 0; i < 4; ++i)
+	Array<OneD, Array<OneD, NekDouble> >tmp(3);
+	for (int i = 0; i < 3; ++i)
 	  {
 	    // deep copy
 	    tmp[i] = Array<OneD, NekDouble>(nq);
@@ -1450,7 +1630,7 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 	  }
 	
 	// h = \eta + d
-	Vmath::Vadd(nq,tmp[0],1,tmp[3],1,physout[0],1);
+	Vmath::Vadd(nq,tmp[0],1,m_depth,1,physout[0],1);
 	
 	// hu = h * u
 	Vmath::Vmul(nq,tmp[0],1,tmp[1],1,physout[1],1);
@@ -1462,7 +1642,7 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
     else
       {
 	// h = \eta + d
-	Vmath::Vadd(nq,physin[0],1,physin[3],1,physout[0],1);
+	Vmath::Vadd(nq,physin[0],1,m_depth,1,physout[0],1);
 	
 	// hu = h * u
 	Vmath::Vmul(nq,physin[0],1,physin[1],1,physout[1],1);
@@ -1479,9 +1659,9 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
     int nq = GetTotPoints();
     
     // physical space
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < 3; ++i)
       {
-	m_fields[i]->BwdTrans(*m_fields[i]);
+	m_fields[i]->BwdTrans((m_fields[i]->GetCoeffs()),(m_fields[i]->UpdatePhys()));
       }
     
     // u = hu/h
@@ -1491,12 +1671,12 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
     Vmath::Vdiv(nq,m_fields[2]->GetPhys(),1,m_fields[0]->GetPhys(),1,m_fields[2]->UpdatePhys(),1);
     
     // eta = h - d
-    Vmath::Vsub(nq,m_fields[0]->GetPhys(),1,m_fields[3]->GetPhys(),1,m_fields[0]->UpdatePhys(),1);
+    Vmath::Vsub(nq,m_fields[0]->GetPhys(),1,m_depth,1,m_fields[0]->UpdatePhys(),1);
     
     // modal space
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < 3; ++i)
       {
-	m_fields[i]->FwdTrans(*m_fields[i]);
+	m_fields[i]->FwdTrans((m_fields[i]->GetPhys()),(m_fields[i]->UpdateCoeffs()));
       }
   }
 
@@ -1508,8 +1688,8 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
     if(physin.get() == physout.get())
       {
 	// copy indata and work with tmp array
-	Array<OneD, Array<OneD, NekDouble> >tmp(4);
-	for (int i = 0; i < 4; ++i)
+	Array<OneD, Array<OneD, NekDouble> >tmp(3);
+	for (int i = 0; i < 3; ++i)
 	  {
 	    // deep copy
 	    tmp[i] = Array<OneD, NekDouble>(nq);
@@ -1517,7 +1697,7 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 	  }
 	
 	// \eta = h - d
-	Vmath::Vsub(nq,tmp[0],1,tmp[3],1,physout[0],1);
+	Vmath::Vsub(nq,tmp[0],1,m_depth,1,physout[0],1);
 	
 	// u = hu/h
 	Vmath::Vdiv(nq,tmp[1],1,tmp[0],1,physout[1],1);
@@ -1528,7 +1708,7 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
     else
       {
 	// \eta = h - d
-	Vmath::Vsub(nq,physin[0],1,physin[3],1,physout[0],1);
+	Vmath::Vsub(nq,physin[0],1,m_depth,1,physout[0],1);
 	
 	// u = hu/h
 	Vmath::Vdiv(nq,physin[1],1,physin[0],1,physout[1],1);
@@ -1542,10 +1722,25 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
   {
     cout << "=======================================================================" << endl;
       cout << "\tEquation Type   : Shallow Water Equations" << endl;
+      if (m_variableType == ePrimitive)
+	{
+	  cout << "\t                  Primitive varibles" << endl;
+	}
+      else if (m_variableType == eConservative)
+	{
+	  cout << "\t                  Conservative variables" << endl;
+	}
+      if (m_linearType == eNonLinear)
+	{
+	  cout << "\t                  Nonlinear equations " << endl;
+	}
+      else if (m_linearType == eLinear)
+	{
+	  cout << "\t                  Linearized equations" << endl;
+	}
       cout << "\t                  eta should be in field[0]" <<endl;
       cout << "\t                  u   should be in field[1]" <<endl;
       cout << "\t                  v   should be in field[2]" <<endl;
-      cout << "\t                  d   should be in field[3]" <<endl;
       ADRBase::Summary(out);
       cout << "=======================================================================" << endl;
       cout << endl;
@@ -1557,6 +1752,9 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 
 /**
 * $Log: ShallowWaterEquations.cpp,v $
+* Revision 1.4  2009/02/07 23:58:08  claes
+* Changed so I/O always are in terms of primitive variables
+*
 * Revision 1.3  2009/02/06 16:38:23  claes
 * Added primitive formulation
 *

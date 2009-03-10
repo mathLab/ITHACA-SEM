@@ -103,6 +103,8 @@ namespace Nektar
         void Output     (void);
 	
         void Checkpoint_Output(const int n);
+
+	void Array_Output(const int n, std::string name, const Array<OneD, const NekDouble>&inarray, bool IsInPhysicalSpace);
 	
 	void Summary          (std::ostream &out);
 	void SessionSummary   (std::ostream &out);
@@ -304,6 +306,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.4  2009/02/28 22:00:38  sehunchun
+*  Explicit Diffusion solver is added
+*
 * Revision 1.3  2009/02/03 14:33:44  pvos
 * Modifications for solvers with time-dependent dirichlet BC's
 *

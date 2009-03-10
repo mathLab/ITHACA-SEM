@@ -738,7 +738,38 @@ namespace Nektar
         }
     }
 
+
+      void ADRBase::Array_Output(const int n, std::string name, const Array<OneD, const NekDouble>&inarray, bool IsInPhysicalSpace)
+  {
     
+    int nq = m_fields[0]->GetTotPoints();
+    
+    Array<OneD, NekDouble> tmp(nq);
+
+    // save values 
+    Vmath::Vcopy(nq,(m_fields[0]->GetPhys()),1,tmp,1);
+    
+    // put inarray in m_phys
+    if (IsInPhysicalSpace == false)
+      {
+	m_fields[0]->BwdTrans(inarray,(m_fields[0]->UpdatePhys()));
+      }
+    else
+      {
+	Vmath::Vcopy(nq,inarray,1,(m_fields[0]->UpdatePhys()),1);	
+      }
+	
+    char chkout[16] = "";
+    sprintf(chkout, "%d", n);
+    std::string outname = m_sessionName +"_" + name + "_" + chkout + ".chk";
+    ofstream outfile(outname.c_str());
+    m_fields[0]->WriteToFile(outfile,eTecplot);
+    
+    // copy back the original values
+    Vmath::Vcopy(nq,tmp,1,m_fields[0]->UpdatePhys(),1);
+  }
+
+
     void ADRBase::Summary(std::ostream &out)
     {
         SessionSummary(out);
@@ -803,6 +834,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.6  2009/03/04 14:17:38  pvos
+* Removed all methods that take and Expansion as argument
+*
 * Revision 1.5  2009/02/28 22:00:38  sehunchun
 *  Explicit Diffusion solver is added
 *

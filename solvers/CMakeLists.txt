@@ -36,7 +36,7 @@ MACRO(ADD_SOLVER_EXECUTABLE name source)
             optimized ${Boost_IOSTREAMS_LIBRARY_RELEASE} debug ${Boost_IOSTREAMS_LIBRARY_DEBUG}
 	    optimized ${Boost_ZLIB_LIBRARY_RELEASE} debug ${Boost_ZLIB_LIBRARY_DEBUG}
             optimized ${Boost_DATE_TIME_LIBRARY_RELEASE} debug ${Boost_DATE_TIME_LIBRARY_DEBUG}     
-            optimized tinyxml debug tinyxml)
+            optimized tinyxml debug tinyxml blas lapack)
 
         SET_LAPACK_LINK_LIBRARIES(${name})
 
@@ -53,4 +53,4 @@ MACRO(SET_COMMON_PROPERTIES name)
 ENDMACRO(SET_COMMON_PROPERTIES name)
 
 #SUBDIRS(AdvectionDiffusionReactionSolver ShallowWaterSolver EulerSolver)
-SUBDIRS(AdvectionDiffusionReactionSolver)
+SUBDIRS(AdvectionDiffusionReactionSolver ShallowWaterSolver)

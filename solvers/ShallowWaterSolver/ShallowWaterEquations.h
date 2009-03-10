@@ -139,6 +139,10 @@ namespace Nektar
 		      const NekDouble time);
     
     void ExplicitlyIntegrateAdvection(int nsteps);
+     
+    void GeneralTimeIntegration(int nsteps, 
+				LibUtilities::TimeIntegrationMethod IntMethod,
+				LibUtilities::TimeIntegrationSchemeOperators ode);
     
     void Summary(std::ostream &out);
     
@@ -174,6 +178,16 @@ namespace Nektar
 			   Array<OneD, Array<OneD, NekDouble> > &out,
 			   int field_0);
     
+    void GradientFluxUpwindTerms(Array<OneD, NekDouble> &in, 
+				 Array<OneD, Array<OneD, NekDouble> > &out,
+				 int field_0,
+				 const Array<OneD, Array<OneD, NekDouble> > &phys);
+    void NumericalFluxUpwindGradient(Array<OneD, NekDouble> &in, 
+				     Array<OneD, NekDouble> &outX,
+				     Array<OneD, NekDouble> &outY,
+				     int field_0,
+				     const Array<OneD, Array<OneD, NekDouble> > &phys);
+      
     void NumericalFluxGradient(const Array <OneD, NekDouble> &physarray,
 			       Array<OneD, NekDouble> &outX, 
 			       Array<OneD, NekDouble> &outY,
@@ -198,11 +212,14 @@ namespace Nektar
     int m_infosteps;                            ///< dump info to stdout at steps time
     NekDouble m_g;                              ///< Acceleration of gravity
     Array<OneD, NekDouble>  m_coriolis;
-    //	Array<OneD, NekDouble>  m_depth;
+    
+    Array<OneD, NekDouble>  m_depth;
+    Array<OneD, Array<OneD, NekDouble> > m_d_depth;
+    Array<OneD, Array<OneD, NekDouble> > m_dd_depth;
+
     Array<OneD, NekDouble>  m_friction;
-    NekDouble m_depth; // constant water depth
-  
-    enum LinearType m_linearType; ///< linear or nonlinear
+    
+    enum LinearType   m_linearType; ///< linear or nonlinear
     enum VariableType m_variableType; ///< primitive or conservative
     
     void AddCoriolis(Array<OneD, Array<OneD, NekDouble> > &physarray, 
@@ -212,9 +229,9 @@ namespace Nektar
     
   private: 
     
+    void EvaluateDepth(void);
     void EvaluateCoriolis(void);
-    
-    
+       
     void WallBoundary1D(int bcRegion, Array<OneD, Array<OneD, NekDouble> > &physarray);
     void WallBoundary2D(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray);
     
@@ -265,6 +282,9 @@ namespace Nektar
 
 /**
 * $Log: ShallowWaterEquations.h,v $
+* Revision 1.4  2009/02/07 23:58:08  claes
+* Changed so I/O always are in terms of primitive variables
+*
 * Revision 1.3  2009/02/06 16:38:23  claes
 * Added primitive formulation
 *

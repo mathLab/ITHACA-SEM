@@ -81,7 +81,7 @@ namespace Vmath
     }
 
     /// \brief Multiply vector z = x/y
-    template<class T>  void Vdiv( int n, const T *x, const int incx, T *y,
+    template<class T>  void Vdiv( int n, const T *x, const int incx, const T *y,
                   const int incy,  T*z, const int incz)
     {
         while( n-- )
@@ -583,6 +583,9 @@ namespace Vmath
 
 /***
 $Log: Vmath.hpp,v $
+Revision 1.19  2009/01/21 16:57:26  pvos
+Added additional geometric factors to improve efficiency
+
 Revision 1.18  2008/12/17 16:56:46  pvos
 Performance updates
 

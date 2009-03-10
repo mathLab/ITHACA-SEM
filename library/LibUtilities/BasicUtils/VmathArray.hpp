@@ -84,7 +84,7 @@ using namespace Nektar;
         }
         
         /// \brief Multiply vector z = x/y
-        template<class T>  void Vdiv( int n, const Array<OneD,const T> &x, const int incx, Array<OneD,T> &y, const int incy,  Array<OneD,T> &z, const int incz)
+        template<class T>  void Vdiv( int n, const Array<OneD,const T> &x, const int incx, const Array<OneD,const T> &y, const int incy,  Array<OneD,T> &z, const int incz)
         {
             ASSERTL1(static_cast<unsigned int>(n*incx) <= x.num_elements()+x.GetOffset(),"Array out of bounds");
             ASSERTL1(static_cast<unsigned int>(n*incy) <= y.num_elements()+y.GetOffset(),"Array out of bounds");
@@ -335,6 +335,9 @@ using namespace Nektar;
 
 /***
 $Log: VmathArray.hpp,v $
+Revision 1.6  2008/11/01 22:04:34  bnelson
+Removed references to MatrixStoragePolicy<T>
+
 Revision 1.5  2008/11/01 19:10:03  bnelson
 Fixed compiler warning
 

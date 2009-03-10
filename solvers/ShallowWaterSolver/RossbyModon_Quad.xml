@@ -256,57 +256,56 @@
   </GEOMETRY>
   
   <EXPANSIONS>
-    <E COMPOSITE="C[0]" NUMMODES="11" TYPE="MODIFIED" />
+    <E COMPOSITE="C[0]" NUMMODES="9" TYPE="MODIFIED" />
   </EXPANSIONS>
 
   <CONDITIONS>
 
     <PARAMETERS>
-      <P> TimeStep       = 0.004             </P>
-      <P> NumSteps       = 10000             </P>
+      <P> NonLinear      = 1                 </P>
+      <P> Conservative   = 1                 </P>
+      <P> DisContinuous  = 1                 </P>
+      <P> TimeStep       = 0.04             </P>
+      <P> NumSteps       = 1000             </P>
       <P> FinTime        = TimeStep*NumSteps </P>
       <P> IO_CheckSteps  = 100               </P>
-      <P> IO_InfoSteps   = 100               </P>
-      <P> DisContinuous  = 1                 </P>
+      <P> IO_InfoSteps   = 100              </P>
       <P> Gravity        = 1.0               </P>
       <P> Coriolis       = 1                 </P>
     </PARAMETERS>
  
     <VARIABLES>
-      <V ID="0"> h  </V> 
-      <V ID="1"> hu </V>
-      <V ID="2"> hv </V> 
+      <V ID="0"> eta  </V> 
+      <V ID="1"> u </V>
+      <V ID="2"> v </V>
     </VARIABLES>
+  
     
     <BOUNDARYREGIONS>
       <B ID="0"> C[1,2,3,4]  </B>
     </BOUNDARYREGIONS>
     
-   <BOUNDARYCONDITIONS>
+    <BOUNDARYCONDITIONS>
       <REGION REF="0">
-	<D VAR="h"  USERDEFINEDTYPE="Wall"  VALUE="1" />
-	<D VAR="hu" USERDEFINEDTYPE="Wall"  VALUE="0" />
-	<D VAR="hv" USERDEFINEDTYPE="Wall"  VALUE="0" />
-  <!--	<D VAR="h"   VALUE="1" />
-	<D VAR="hu"  VALUE="0" />
-	<D VAR="hv"  VALUE="0" /> -->
+        <D VAR="eta"  USERDEFINEDTYPE="Wall"  VALUE="0" />
+	<D VAR="u" USERDEFINEDTYPE="Wall"  VALUE="0" />
+	<D VAR="v" USERDEFINEDTYPE="Wall"  VALUE="0" />
       </REGION>
-   </BOUNDARYCONDITIONS>
+    </BOUNDARYCONDITIONS>
     
    <USERDEFINEDEQNS>
       <F LHS="f" VALUE="0+1*y" />
-    </USERDEFINEDEQNS>   
+      <F LHS="d" VALUE="1"  />
+   </USERDEFINEDEQNS>   
     
     <EXACTSOLUTION>
-      <F VAR="h"  VALUE="1.0+(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(3.0+6.0*y*y)/(4.0)*exp(-0.5*y*y)" />
+      <F VAR="eta"  VALUE="(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(3.0+6.0*y*y)/(4.0)*exp(-0.5*y*y)" />
     </EXACTSOLUTION>
     
     <INITIALCONDITIONS>
-      <F VAR="h"  VALUE="1.0+(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(3.0+6.0*y*y)/(4.0)*exp(-0.5*y*y)" />
-      <F VAR="hu" VALUE="(1.0+(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(3.0+6.0*y*y)/(4.0)*exp(-0.5*y*y))*
-			 ( (0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(-9.0+6.0*y*y)/(4.0)*exp(-0.5*y*y) )" />
-      <F VAR="hv" VALUE="(1.0+(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(3.0+6.0*y*y)/(4.0)*exp(-0.5*y*y))*
-			 ( (-2.0*0.395*tanh(0.395*x))*(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(2.0*y)*exp(-0.5*y*y))" />
+      <F VAR="eta"  VALUE="(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(3.0+6.0*y*y)/(4.0)*exp(-0.5*y*y)" />
+      <F VAR="u" VALUE=" ( (0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(-9.0+6.0*y*y)/(4.0)*exp(-0.5*y*y) )" />
+      <F VAR="v" VALUE=" ( (-2.0*0.395*tanh(0.395*x))*(0.771*0.395*0.395*(1.0/cosh(0.395*x))*(1.0/cosh(0.395*x)))*(2.0*y)*exp(-0.5*y*y))" />
     </INITIALCONDITIONS>
     
   </CONDITIONS>

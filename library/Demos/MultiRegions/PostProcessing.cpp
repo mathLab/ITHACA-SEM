@@ -1,4 +1,4 @@
-#include <MultiRegions/ExpList1d.h>
+#include <MultiRegions/ExpList1D.h>
 #include <LibUtilities/Kernel/kernel.h>
 
 int main(int argc, char *argv[])

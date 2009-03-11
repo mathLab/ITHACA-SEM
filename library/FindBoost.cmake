@@ -243,12 +243,12 @@ ELSE (_boost_IN_CACHE)
   ENDIF( NOT $ENV{BOOST_LIBRARYDIR} STREQUAL "" )
 
   IF( BOOST_ROOT )
-    IF( WIN32 )
-      SET(_boost_INCLUDE_SEARCH_DIRS ${BOOST_ROOT}/include ${_boost_INCLUDE_SEARCH_DIRS})
-    ELSE( WIN32 )
-      SET(_boost_INCLUDE_SEARCH_DIRS ${BOOST_ROOT}/include ${_boost_INCLUDE_SEARCH_DIRS})
-    ENDIF( WIN32 )
-    SET(_boost_LIBRARIES_SEARCH_DIRS ${BOOST_ROOT}/lib ${_boost_LIBRARIES_SEARCH_DIRS})
+   
+    FOREACH(SearchDir ${BOOST_ROOT})
+        LIST(INSERT _boost_INCLUDE_SEARCH_DIRS 0 ${SearchDir}/include)
+        LIST(INSERT _boost_LIBRARIES_SEARCH_DIRS 0 ${SearchDir}/lib)
+    ENDFOREACH(SearchDir ${BOOST_ROOT})
+
   ENDIF( BOOST_ROOT )
 
   IF( BOOST_INCLUDEDIR )
@@ -427,6 +427,18 @@ ELSE (_boost_IN_CACHE)
       ENDIF(WIN32)
     ENDIF( Boost_USE_STATIC_LIBS )
 
+    # On Linux, if the libraries have the version.so.version format, we need to find 
+    # those files for installation of boost dlls to work correctly.
+    SET(_Boost_ADDITIONAL_NAMES "")
+    IF( CMAKE_HOST_UNIX )
+        SET(_Boost_ADDITIONAL_NAMES 
+               ${Boost_LIB_PREFIX}boost_${COMPONENT}${_boost_COMPILER}${_boost_MULTITHREADED}-${Boost_LIB_VERSION}.so
+               ${Boost_LIB_PREFIX}boost_${COMPONENT}${_boost_COMPILER}${_boost_MULTITHREADED}${_boost_STATIC_TAG}-${Boost_LIB_VERSION}
+               ${Boost_LIB_PREFIX}boost_${COMPONENT}${_boost_MULTITHREADED}
+               ${Boost_LIB_PREFIX}boost_${COMPONENT}${_boost_MULTITHREADED}${_boost_STATIC_TAG}
+               ${Boost_LIB_PREFIX}boost_${COMPONENT}
+            )
+    ENDIF( CMAKE_HOST_UNIX )
     FIND_LIBRARY(Boost_${UPPERCOMPONENT}_LIBRARY_RELEASE
         NAMES  ${Boost_LIB_PREFIX}boost_${COMPONENT}${_boost_COMPILER}${_boost_MULTITHREADED}-${Boost_LIB_VERSION}
                ${Boost_LIB_PREFIX}boost_${COMPONENT}${_boost_COMPILER}${_boost_MULTITHREADED}${_boost_STATIC_TAG}-${Boost_LIB_VERSION}

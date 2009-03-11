@@ -146,6 +146,12 @@ MACRO(SET_COMMON_PROPERTIES name)
     
     SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNEKTAR_RELEASE")
     
+    IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
+        # The static libraries must be compiled with position independent code 
+        # on 64 bit Linux.
+        SET_TARGET_PROPERTIES(${name} PROPERTIES COMPILE_FLAGS "-fPIC")
+    ENDIF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
+
     IF( ${CMAKE_COMPILER_IS_GNUCXX} )
         IF(NEKTAR_ENABLE_PROFILE)
             #SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -finstrument-functions")

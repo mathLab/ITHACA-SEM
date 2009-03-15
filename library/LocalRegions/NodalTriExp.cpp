@@ -252,11 +252,11 @@ namespace Nektar
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
             
             Array<OneD, NekDouble> tmp0 (6*wspsize);
-            Array<OneD, NekDouble> tmp1 (tmp1 +   wspsize);
-            Array<OneD, NekDouble> tmp2 (tmp1 + 2*wspsize);
-            Array<OneD, NekDouble> tmp3 (tmp1 + 3*wspsize);
-            Array<OneD, NekDouble> gfac0(tmp1 + 4*wspsize);
-            Array<OneD, NekDouble> gfac1(tmp1 + 5*wspsize);
+            Array<OneD, NekDouble> tmp1 (tmp0 +   wspsize);
+            Array<OneD, NekDouble> tmp2 (tmp0 + 2*wspsize);
+            Array<OneD, NekDouble> tmp3 (tmp0 + 3*wspsize);
+            Array<OneD, NekDouble> gfac0(tmp0 + 4*wspsize);
+            Array<OneD, NekDouble> gfac1(tmp0 + 5*wspsize);
 
             const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
             const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
@@ -1043,6 +1043,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.29  2009/01/21 16:59:57  pvos
+ *    Added additional geometric factors to improve efficiency
+ *
  *    Revision 1.28  2008/11/05 16:08:15  pvos
  *    Added elemental optimisation functionality
  *

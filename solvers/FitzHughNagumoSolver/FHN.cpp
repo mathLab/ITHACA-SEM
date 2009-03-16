@@ -37,7 +37,10 @@
 #include <FitzHugh-Nagumo/FHN.h>
 #include <cstdio>
 #include <cstdlib>
+#include <cmath>
+
 namespace Nektar
+
 {
     /**
      * Basic construnctor
@@ -66,8 +69,7 @@ namespace Nektar
         // Set up equation type enum using kEquationTypeStr
         std::string typeStr = m_boundaryConditions->GetSolverInfo("EQTYPE");
 
-        // for(i = 0; i < (int) eEquationTypeSize; ++i)
-        for(i = 0; i < 1; ++i)
+        for(i = 0; i < (int) eEquationTypeSize; ++i)
         {
             if(nocase_cmp(kEquationTypeStr[i],typeStr) == 0 )
             {
@@ -75,7 +77,7 @@ namespace Nektar
                 break;
             }
         }        
-        
+
         // Equation Setups 
   
             m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
@@ -106,6 +108,16 @@ namespace Nektar
             }
     }
 
+    void FHN::Evaluateepsilon()
+    {
+        m_epsilon = m_boundaryConditions->GetParameter("epsilon");
+    }
+
+    void FHN::ReadTimemarchingwithmass()
+    {
+        m_Timemarchingwithmass = m_boundaryConditions->GetParameter("TimemarchingWithmass");
+    }
+
     void FHN::EvaluateAdvectionVelocity()
     {
         int nq = m_fields[0]->GetNpoints();
@@ -131,26 +143,170 @@ namespace Nektar
 	}
     }
     
-    void FHN::ODETest_Reaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+    void FHN::ODETest_rhs_u(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
 			   Array<OneD, Array<OneD, NekDouble> >&outarray, 
 			   const NekDouble time)
 	
 	{
-                NekDouble epsilon = 1.0/32.0;
+                NekDouble PI = 3.14159265;
 
                 int nvariables = inarray.num_elements();
-                int ncoeffs    = inarray[0].num_elements();
-		const NekDouble coeff = 2.0/epsilon;
+                int ncoeffs    = inarray[0].num_elements();        
+                int npoints = m_fields[0]->GetNpoints();
 
-                Array<OneD, NekDouble> temp1(ncoeffs,0.0);
-                Array<OneD, NekDouble> temp2(ncoeffs,0.0);
+		Array<OneD,NekDouble> x0(npoints,0.0);
+                Array<OneD,NekDouble> x1(npoints,0.0);
+                Array<OneD,NekDouble> x2(npoints,0.0);  
+
+                Array<OneD,NekDouble> physfield(npoints);
+                Array<OneD,NekDouble> ft(npoints,0.0);
+
+                MassMultiply(inarray[0], outarray[0], -1, m_Timemarchingwithmass);
+
+                //Compute f(u) in physical field
+                m_fields[0]->BwdTrans(outarray[0],physfield);
+                m_fields[0]->GetCoords(x0,x1,x2);
+
+                for (int i =0; i< npoints; ++i)
+                {
+                    ft[i] = (2*PI*PI)*exp(-1.0*time)*cos(PI*x0[i])*cos(PI*x1[i]);
+                }
+                    
+                Vmath::Vsub(npoints, ft, 1, physfield, 1, physfield, 1);
+
+                // Back to modal field
+                m_fields[0]->FwdTrans(physfield,outarray[0]);
+
+                MassMultiply(outarray[0], outarray[0], 1, m_Timemarchingwithmass);
+	}
+
+
+    void FHN::ODETest_rhs_u2(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+			   Array<OneD, Array<OneD, NekDouble> >&outarray, 
+			   const NekDouble time)
+	
+	{
+                NekDouble PI = 3.14159265;
+
+                int nvariables = inarray.num_elements();
+                int ncoeffs    = inarray[0].num_elements();        
+                int npoints = m_fields[0]->GetNpoints();
+
+		Array<OneD,NekDouble> x0(npoints,0.0);
+                Array<OneD,NekDouble> x1(npoints,0.0);
+                Array<OneD,NekDouble> x2(npoints,0.0);  
+
+                Array<OneD,NekDouble> physfield(npoints);
+                Array<OneD,NekDouble> ft(npoints,0.0);
+
+                NekDouble csx,csy;
+
+                MassMultiply(inarray[0], outarray[0], -1, m_Timemarchingwithmass);
+
+                //Compute f(u) in physical field
+                m_fields[0]->BwdTrans(outarray[0],physfield);
+
+                Vmath::Vmul(npoints,physfield, 1, physfield, 1, physfield, 1);
+
+                m_fields[0]->GetCoords(x0,x1,x2);
+
+                for (int i =0; i< npoints; ++i)
+                {
+                    csx = cos(PI*x0[i]);
+                    csy = cos(PI*x1[i]);
+                    ft[i] = exp(-2.0*time)*csx*csx*csy*csy + (2*PI*PI-1.0)*exp(-1.0*time)*csx*csy; 
+                }
+                    
+                Vmath::Vsub(npoints, ft, 1, physfield, 1, physfield, 1);
+
+                // Back to modal field
+                m_fields[0]->FwdTrans(physfield,outarray[0]);
+
+                MassMultiply(outarray[0], outarray[0], 1, m_Timemarchingwithmass);
+	}
+
+
+    void FHN::ODEFHNtype_v1(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+			   Array<OneD, Array<OneD, NekDouble> >&outarray, 
+			   const NekDouble time)
+	
+	{
+                int nvariables = inarray.num_elements();
+                int ncoeffs    = inarray[0].num_elements();
+                int npoints = m_fields[0]->GetNpoints();
+
+		const NekDouble coeff = 2.0/m_epsilon;
+
+                Array<OneD, NekDouble> physfield(npoints);
+                Array<OneD, NekDouble> temp2(npoints,0.0);
+                Array<OneD, NekDouble> temp3(npoints,0.0);
+                Array<OneD, NekDouble> temp(npoints,0.0);
 					
 		for (int i = 0; i < nvariables; ++i)
 		{  
-                    Vmath::Vmul(ncoeffs, inarray[i], 1, inarray[i], 1, temp1, 1);
-                    Vmath::Vmul(ncoeffs, inarray[i], 1, temp1, 1, temp2, 1);
-                    Vmath::Vsub(ncoeffs, temp1, 1, temp2, 1, temp2, 1);
-		    Vmath::Smul(ncoeffs, coeff, temp2, 1, outarray[i], 1);
+
+                    MassMultiply(inarray[i], outarray[i], -1, m_Timemarchingwithmass);
+                    m_fields[i]->BwdTrans(outarray[i],physfield);
+
+
+                    // temp3 = (2/epsilon)*(u*u - u*u*u)
+                    Vmath::Vmul(npoints, physfield, 1, physfield, 1, temp, 1);
+                    Vmath::Vcopy(npoints, temp, 1, temp2, 1);
+                    Vmath::Vmul(npoints, physfield, 1, temp, 1, temp3, 1);
+                    Vmath::Vsub(npoints, temp2, 1, temp3, 1, physfield, 1);
+		    Vmath::Smul(npoints, coeff, physfield, 1, physfield, 1);
+
+                    m_fields[i]->FwdTrans(physfield,outarray[i]);
+                    MassMultiply(outarray[i], outarray[i], 1, m_Timemarchingwithmass);
+		}
+	}
+
+
+    void FHN::ODEFHNtype_v2(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+			   Array<OneD, Array<OneD, NekDouble> >&outarray, 
+			   const NekDouble time)
+	
+	{
+                int nvariables = inarray.num_elements();
+                int ncoeffs    = inarray[0].num_elements();
+                int npoints = m_fields[0]->GetNpoints();
+
+		Array<OneD,NekDouble> x0(npoints,0.0);
+                Array<OneD,NekDouble> x1(npoints,0.0);
+                Array<OneD,NekDouble> x2(npoints,0.0);  
+
+		const NekDouble coeff = 2.0/m_epsilon;
+                const NekDouble Tol = 0.0000001;
+
+                Array<OneD, NekDouble> physfield(npoints);
+                Array<OneD, NekDouble> dist(npoints,0.0);
+                Array<OneD, NekDouble> temp(npoints,0.0);
+					
+		for (int i = 0; i < nvariables; ++i)
+		{  
+
+                    MassMultiply(inarray[i], outarray[i], -1, m_Timemarchingwithmass);
+                    m_fields[i]->BwdTrans(outarray[i],physfield);
+
+                    // temp = u - u*u
+                    Vmath::Vmul(npoints, physfield, 1, physfield, 1, temp, 1);
+                    Vmath::Vsub(npoints, physfield, 1, temp, 1, temp, 1);
+
+                    m_fields[0]->GetCoords(x0,x1,x2);
+
+                    for (int j =0; j< npoints; ++j)
+                    {  
+                        dist[j] = 1.0/sqrt(x0[j]*x0[j]+x1[j]*x1[j]+Tol);
+                    }
+
+                    // v = (2/epsilon)*u + 1/|x|
+                    Vmath::Svtvp(npoints, coeff, physfield, 1, dist, 1, physfield, 1);
+
+                    // f(u) = temp*v = u(1-u)*( (2/epsilon)*u + 1/|x| )
+                    Vmath::Vmul(npoints, temp, 1, physfield, 1, physfield, 1);
+
+                    m_fields[i]->FwdTrans(physfield,outarray[i]);
+                    MassMultiply(outarray[i], outarray[i], 1, m_Timemarchingwithmass);
 		}
 	}
 
@@ -166,17 +322,27 @@ namespace Nektar
 
                 int nvariables = inarray.num_elements();
                 int ncoeffs    = inarray[0].num_elements();
+                int npoints = m_fields[0]->GetNpoints();
 
-                Array<OneD, NekDouble> temp1(ncoeffs,0.0);
-                Array<OneD, NekDouble> temp2(ncoeffs,0.0);
-					
-                // For v: lambda*(q - v*(1-v)*(v-theta) )
-                Vmath::Sadd(ncoeffs, 1.0, inarray[0], 1, temp1, 1);
-                Vmath::Sadd(ncoeffs, -1.0*theta, inarray[0], 1, temp2, 1);
-                Vmath::Vmul(ncoeffs, temp1, 1, temp2, 1, temp2, 1);
-                Vmath::Vmul(ncoeffs, inarray[0], 1, temp2, 1, temp2, 1);
-                Vmath::Vsub(ncoeffs, inarray[1], 1, temp2, 1, temp2, 2);
-		Vmath::Smul(ncoeffs, Rlambda, temp2, 1, outarray[0], 1);
+                Array<OneD, NekDouble> physfield(npoints);
+                Array<OneD, NekDouble> temp1(npoints,0.0);
+                Array<OneD, NekDouble> temp2(npoints,0.0);
+                Array<OneD, NekDouble> temp3(npoints,0.0);
+
+                MassMultiply(inarray[0], outarray[0], -1, m_Timemarchingwithmass);
+                m_fields[0]->BwdTrans(outarray[0],physfield);
+
+                // For v: lambda*(q + v*(v-1)*(v-theta) )
+                Vmath::Sadd(npoints, -1.0, physfield, 1, temp1, 1);
+                Vmath::Sadd(npoints, -1.0*theta, physfield, 1, temp2, 1);
+                Vmath::Vmul(npoints, temp1, 1, temp2, 1, temp3, 1);
+                Vmath::Vmul(npoints, temp3, 1, physfield, 1, physfield, 1);
+
+                m_fields[0]->FwdTrans(physfield,outarray[0]);
+                MassMultiply(outarray[0], outarray[0], 1, m_Timemarchingwithmass);
+
+                Vmath::Vadd(npoints, inarray[1], 1, outarray[0], 1, outarray[0], 1);
+		Vmath::Smul(npoints, Rlambda, outarray[0], 1, outarray[0], 1);
 
                 // For q: alpha*v - q
                 Vmath::Svtvp(ncoeffs, -1.0*alpha, inarray[0], 1, inarray[1], 1, outarray[1], 1);
@@ -184,25 +350,21 @@ namespace Nektar
 	}
 
   
-
     void FHN::ODEhelmSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
 			   Array<OneD, Array<OneD, NekDouble> >&outarray,
 			   const NekDouble time, 
                            const NekDouble lambda)
        {
-                NekDouble epsilon = 1.0/32.0;
-
                 int nvariables = inarray.num_elements();
                 int ncoeffs    = inarray[0].num_elements();
 
-                NekDouble kappa = 1.0/(lambda*epsilon);
+                NekDouble kappa = 1.0/(lambda*m_epsilon);
 									
-		MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
 		for (int i = 0; i < nvariables; ++i)
 		{
-		        // Multiply by inverse of mass matrix
-                         m_fields[i]->MultiplyByInvMassMatrix(inarray[i],outarray[i],false);
-				
+
+                         MassMultiply(inarray[i], outarray[i], -1, m_Timemarchingwithmass);
+
 			// Multiply rhs[i] with -1.0/gamma/timestep
                          Vmath::Smul(ncoeffs, -1.0*kappa, outarray[i], 1, outarray[i], 1);
 			
@@ -216,10 +378,10 @@ namespace Nektar
                           m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs(),kappa);
 			
 			// The solution is Y[i]
-			  outarray[i] = m_fields[i]->GetCoeffs();	  
-						  
-			// Multiply back by mass matrix
-                           m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,outarray[i],outarray[i]);
+			  outarray[i] = m_fields[i]->GetCoeffs();
+
+                         MassMultiply(outarray[i], outarray[i], 1, m_Timemarchingwithmass);
+
 		}
 	}
 	
@@ -228,19 +390,14 @@ namespace Nektar
 			   const NekDouble time, 
                            const NekDouble lambda)
        {
-                NekDouble epsilon = 0.01;
-
                 int nvariables = inarray.num_elements();
                 int ncoeffs    = inarray[0].num_elements();
 
-                NekDouble kappa = 1.0/(lambda*epsilon);
-									
-		MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
+                NekDouble kappa = 1.0/(lambda*m_epsilon);
 
                 // For v: ==============================
 
-		// Multiply by inverse of mass matrix
-                   m_fields[0]->MultiplyByInvMassMatrix(inarray[0],outarray[0],false);
+                   MassMultiply(inarray[0], outarray[0], -1, m_Timemarchingwithmass);
 				
 		// Multiply rhs[i] with -1.0/gamma/timestep
                    Vmath::Smul(ncoeffs, -1.0*kappa, outarray[0], 1, outarray[0], 1);
@@ -256,13 +413,39 @@ namespace Nektar
 			
 		// The solution is Y[i]
 		   outarray[0] = m_fields[0]->GetCoeffs();	  
-						  
-		// Multiply back by mass matrix
-                   m_fields[0]->MultiRegions::ExpList::GeneralMatrixOp(key,outarray[0],outarray[0]);
+             						  
+                   MassMultiply(outarray[0], outarray[0], 1, m_Timemarchingwithmass);
 
                 // For q: No helmholtz solver is needed=============================
                    Vmath::Vcopy(ncoeffs, inarray[1], 1, outarray[1], 1);
 	}
+	
+
+    void FHN::MassMultiply(const Array<OneD, NekDouble> &inarray, 
+                                 Array<OneD, NekDouble> &outarray, 
+                           const int direction, const int turnon )
+    {
+        int ncoeffs = inarray.num_elements();
+    
+          if(turnon)
+             {
+                 if(direction == -1)
+                 {
+                   m_fields[0]->MultiplyByInvMassMatrix(inarray,outarray,false);
+                 }
+                 else if(direction == 1)
+                 {
+		   MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
+                   m_fields[0]->MultiRegions::ExpList::GeneralMatrixOp(key,inarray,outarray);
+                 }
+             }
+
+          else
+          {
+              Vmath::Vcopy(ncoeffs, inarray, 1, outarray, 1);
+          }
+    }
+
 
 
     void FHN::GeneralTimeIntegration(int nsteps, 
@@ -282,7 +465,7 @@ namespace Nektar
             fields[i]  = m_fields[i]->UpdateCoeffs();
         }
 
-        if(m_projectionType==eGalerkin)
+        if( (m_projectionType==eGalerkin) && (m_Timemarchingwithmass==1) )
         {
             // calculate the variable u* = Mu
             // we are going to TimeIntegrate this new variable u*
@@ -347,7 +530,7 @@ namespace Nektar
 
             m_time += m_timestep;
 
-            if(m_projectionType==eGalerkin)
+         if( (m_projectionType==eGalerkin) && (m_Timemarchingwithmass==1) )
             {
                 // Project the solution u* onto the boundary conditions to
                 // obtain the actual solution
@@ -364,16 +547,23 @@ namespace Nektar
             //----------------------------------------------
             if(!((n+1)%m_infosteps))
             {
-	      cout << "Steps: " << n+1 << "\t Time: " << m_time << endl;
+                     for(i = 0; i < nvariables; ++i)
+                	{
+		          (m_fields[i]->UpdateCoeffs()) = fields[i];
+                          m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
+                        }
+
+                cout << "Steps: " << n+1 << "\t Time: " << m_time 
+                     << "\t L2err: " << this->L2Error(0) << endl;
             }
             
             if(n&&(!((n+1)%m_checksteps)))
             {
-	      for(i = 0; i < nvariables; ++i)
-		{
+                     for(i = 0; i < nvariables; ++i)
+                	{
 		  (m_fields[i]->UpdateCoeffs()) = fields[i];
-		}
-	      Checkpoint_Output(nchk++);
+                	}
+                // Checkpoint_Output(nchk++);
             }
         }
         
@@ -412,18 +602,35 @@ namespace Nektar
 
     void FHN::Summary(std::ostream &out)
     {   
-      cout << "=======================================================================" << endl;
-      cout << "\tEquation Type   : "<< kEquationTypeStr[m_equationType] << endl;
-      ADRBase::SessionSummary(out);
-      ADRBase::TimeParamSummary(out);
+        cout << "=======================================================================" << endl;
+        cout << "\tEquation Type   : "<< kEquationTypeStr[m_equationType] << endl;
+        out << "\tSession Name    : " << m_sessionName << endl;
+	out << "\tExp. Dimension  : " << m_expdim << endl;
+        out << "\tMax Exp. Order  : " << m_fields[0]->EvalBasisNumModesMax() << endl;
+        if(m_projectionType == eGalerkin)
+        {
+            out << "\tProjection Type : Galerkin" <<endl;
+        }
+        else
+        {
+            out << "\tProjection Type : Discontinuous Galerkin" <<endl;
+        }
+        out << "\tTime Step       : " << m_timestep << endl;
+        out << "\tNo. of Steps    : " << m_steps << endl;
+        out << "\tCheckpoints     : " << m_checksteps <<" steps" <<endl;
+        out << "\tepsilon         : " << m_epsilon << endl;
       cout << "=======================================================================" << endl;
 
     }
+
     
 } //end of namespace
 
 /**
 * $Log: FHN.cpp,v $
+* Revision 1.2  2009/03/07 21:18:00  sehunchun
+* FHN updated
+*
 * Revision 1.1  2009/03/06 16:02:55  sehunchun
 * FitzHugh-Nagumo modeling
 *

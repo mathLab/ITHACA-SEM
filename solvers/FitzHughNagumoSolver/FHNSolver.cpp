@@ -36,6 +36,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cmath> 
+#include <time.h> 
 
 #include <FitzHugh-Nagumo/FHN.h>
 
@@ -47,12 +48,17 @@ int main(int argc, char *argv[])
     ASSERTL0(argc == 2,"\n \t Usage: FHNSolver  meshfile \n");
 
     string fileNameString(argv[1]);
-    
+    int starttime, stoptime;    
+    NekDouble CPUtime;
+
     //----------------------------------------------------------------
     // Read the mesh and construct container class
     FHN heart(fileNameString);
     
     int nsteps = heart.GetSteps();
+
+    heart.Evaluateepsilon();
+    heart.ReadTimemarchingwithmass();
 
     heart.Summary(cout);
     
@@ -60,27 +66,56 @@ int main(int argc, char *argv[])
     
     // Set up the intial conditions 
     heart.SetInitialConditions();
-	
+
     // Create forcing function object
     LibUtilities::TimeIntegrationSchemeOperators ode;
-	
+
+    starttime = clock();	
     switch(heart.GetEquationType())
-    {			
-	case eTestmodel:
+    {	
+	case eIMEXtest:
 	 {
 	     // Choose time integration method
 	      LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eIMEXdirk_3_4_3;	
 		
 	     // Choose the method of deriving forcing functions
 	      ode.DefineImplicitSolve       (&FHN::ODEhelmSolve,heart);	
-	      ode.DefineOdeRhs              (&FHN::ODETest_Reaction,heart);	
+	      ode.DefineOdeRhs              (&FHN::ODETest_rhs_u2,heart);	
+				
+	     // General Linear Time Integration
+	      heart.GeneralTimeIntegration(nsteps, IntMethod, ode);
+	  }
+        break;
+		
+	case eFHNtest_v1:
+	 {
+	     // Choose time integration method
+	      LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eIMEXdirk_3_4_3;	
+		
+	     // Choose the method of deriving forcing functions
+	      ode.DefineImplicitSolve       (&FHN::ODEhelmSolve,heart);	
+	      ode.DefineOdeRhs              (&FHN::ODEFHNtype_v1,heart);	
 				
 	     // General Linear Time Integration
 	      heart.GeneralTimeIntegration(nsteps, IntMethod, ode);
 	  }
         break;
 
-	case eFHN1961:
+	case eFHNtest_v2:
+	 {
+	     // Choose time integration method
+	      LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eIMEXdirk_3_4_3;	
+		
+	     // Choose the method of deriving forcing functions
+	      ode.DefineImplicitSolve       (&FHN::ODEhelmSolve,heart);	
+	      ode.DefineOdeRhs              (&FHN::ODEFHNtype_v2,heart);	
+				
+	     // General Linear Time Integration
+	      heart.GeneralTimeIntegration(nsteps, IntMethod, ode);
+	  }
+        break;
+
+	case eFHNmono:
 	 {
 	     // Choose time integration method
 	      LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eIMEXdirk_3_4_3;	
@@ -97,8 +132,13 @@ int main(int argc, char *argv[])
     default:
         ASSERTL0(false,"Unknown or undefined equation type");
     }
+    stoptime = clock();
+    CPUtime = (stoptime-starttime)/1000000/60.0;
      // Dump output
     heart.Output();
+
+    cout << "-------------------------------------------" << endl;
+    cout << "Total Computation Time = " << CPUtime << " min." << endl;
 
     // Evaluate L2 Error
     for(int i = 0; i < heart.GetNvariables(); ++i)

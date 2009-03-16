@@ -45,15 +45,22 @@ namespace Nektar
 
     enum EquationType
     {
-        eTestmodel,
-         eFHN1961
+        eDefault,
+        eIMEXtest,
+        eFHNtest_v1,
+        eFHNtest_v2,
+        eFHNmono,
+        eEquationTypeSize
     };
     
     // Keep this consistent with the enums in EquationType.
     const std::string kEquationTypeStr[] = 
     {
-        "Testmodel",
-        "FHN1961"
+        "Default",
+        "IMEXtest",
+        "FHNtest_v1",
+        "FHNtest_v2",
+        "FHNmono"
     };
 
     /**
@@ -91,13 +98,25 @@ namespace Nektar
                           Array<OneD,        Array<OneD, NekDouble> >&outarray, 
                     const NekDouble time);
 
-        void ODETest_Reaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+        void ODETest_rhs_u(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
 			   Array<OneD, Array<OneD, NekDouble> >&outarray, 
 			   const NekDouble time);
 
-        void ODEFHN_Reaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+        void ODETest_rhs_u2(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+			   Array<OneD, Array<OneD, NekDouble> >&outarray, 
+			   const NekDouble time);
+
+        void ODEFHNtype_v1(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
 			   Array<OneD, Array<OneD, NekDouble> >&outarray, 
                                const NekDouble time);
+
+        void ODEFHNtype_v2(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+			   Array<OneD, Array<OneD, NekDouble> >&outarray, 
+                               const NekDouble time);
+
+        void ODEFHN_Reaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+			   Array<OneD, Array<OneD, NekDouble> >&outarray, 
+			   const NekDouble time);
 					
         void ODEhelmSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
 			   Array<OneD, Array<OneD, NekDouble> >&outarray,
@@ -109,9 +128,18 @@ namespace Nektar
 			      const NekDouble time, 
                               const NekDouble lambda);
 
+        void MassMultiply(const Array<OneD, NekDouble> &inarray, 
+                          Array<OneD, NekDouble> &outarray, 
+                          const int direction, const int turnon );
+
+
         void GeneralTimeIntegration(int nsteps, 
 		                   LibUtilities::TimeIntegrationMethod IntMethod,
 				   LibUtilities::TimeIntegrationSchemeOperators ode);
+
+        void Evaluateepsilon();
+
+        void ReadTimemarchingwithmass();
 
         void Summary(std::ostream &out);
 
@@ -121,55 +149,13 @@ namespace Nektar
         int m_infosteps;             ///< dump info to stdout at steps time
         EquationType m_equationType; ///< equation type;
         NekDouble m_epsilon;    /// constant epsilon
+        int m_Timemarchingwithmass;
 
         Array<OneD, Array<OneD, NekDouble> >  m_velocity;
 
         void EvaluateAdvectionVelocity();
 
-	void SetBoundaryConditions(NekDouble time); 
-				   
-        virtual void v_GetFluxVector(const int i,
-                                     Array<OneD, Array<OneD, NekDouble> > &physfield, 
-                                     Array<OneD, Array<OneD, NekDouble> > &flux)
-        {
-            GetFluxVector(i,physfield,flux);
-        }
-		
-	virtual void v_GetFluxVector(const int i, 
-                                         const int j, 
-                                         Array<OneD, Array<OneD, NekDouble> > &physfield, 
-                                         Array<OneD, Array<OneD, NekDouble> > &flux)
-        {
-            GetFluxVector(i,j,physfield,flux);
-        }
-        
-        virtual void v_NumericalFlux(Array<OneD, 
-                                     Array<OneD, NekDouble> > &physfield, 
-                                     Array<OneD, Array<OneD, NekDouble> > &numflux)
-        {
-            NumericalFlux(physfield, numflux); 
-        }
-        
-	virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
-                                     Array<OneD, Array<OneD, NekDouble> > &numfluxX, 
-                                     Array<OneD, Array<OneD, NekDouble> > &numfluxY )
-        {
-	    NumericalFlux(physfield, numfluxX, numfluxY); 
-        }
-		
-	virtual void v_NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield, 
-				      Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
-	{
-	    NumFluxforDiff(ufield, uflux);
-	}
-						   
-	virtual void v_NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield,
-	                              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-				      Array<OneD, Array<OneD, NekDouble> >  &qflux)
-	{
-	    NumFluxforDiff(ufield, qfield, qflux);
-	}
-      
+	void SetBoundaryConditions(NekDouble time);       
     };
     
     typedef boost::shared_ptr<FHN> FHNSharedPtr;
@@ -180,6 +166,9 @@ namespace Nektar
 
 /**
 * $Log: FHN.h,v $
+* Revision 1.2  2009/03/07 21:18:00  sehunchun
+* FHN updated
+*
 * Revision 1.1  2009/03/06 16:02:55  sehunchun
 * FitzHugh-Nagumo modeling
 *

@@ -50,24 +50,70 @@ int main(int argc, char *argv[])
 
     string fileNameString(argv[1]);
     
-    //----------------------------------------------------------------
-    // Read the mesh and construct container class
-    EulerEquations dom(fileNameString);
     
-    int nsteps = dom.GetSteps();
+    //----------------------------------------
+    // Read the mesh and construct container class
+    
+    EulerEquations dom(fileNameString);
+    //----------------------------------------
+
+    
+    //----------------------------------------
+    // print session info 
     
     dom.Summary(cout);
-        
-    // Set up the intial conditions -- Could put in initialisation??
+    //----------------------------------------
+
+    
+    //----------------------------------------   
+    dom.ZeroPhysFields(); 
+       
+    // Set up the intial conditions
     dom.SetInitialConditions();
 
+    // HACK!!! hardcoded for the isentropic vortex case
+    dom.SetIsenTropicVortex();
+    //----------------------------------------
+
+    
+    //----------------------------------------
     // Integrate from start time to end time
-    dom.ExplicitlyIntegrateAdvection(nsteps);
+    
+    int nsteps = dom.GetSteps();
 
-     // Dump output
+    // Create forcing function object
+    LibUtilities::TimeIntegrationSchemeOperators ode;
+    
+    // Choose time integration method
+    LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eClassicalRungeKutta4;		
+    
+    // Choose the method of deriving forcing functions
+    ode.DefineOdeRhs       (&EulerEquations::ODErhs,dom);		
+		
+    // General Linear Time Integration
+    dom.GeneralTimeIntegration(nsteps, IntMethod, ode);
+    //----------------------------------------
+
+
+    //----------------------------------------
+    // Dump output
+     
     dom.Output();
+    //----------------------------------------
 
-    cout << "L2 Error: " << dom.L2Error(0) << endl;
+    
+    //----------------------------------------
+    // print error
+    
+    // Evaluate L2 Error   
+    
+    // HACK!!!!
+    // hardcoded exactsolution for Isentropic Vortex
+    Array<OneD, NekDouble> exactsolution(dom.GetTotPoints());
+    dom.GetExactIsenTropicVortex(exactsolution, 0);
+    cout << "L2 Error (variable "<< dom.GetVariable(0) <<"): " << dom.L2Error(0,exactsolution) << endl;
+    //---------------------------------------
+    
    
 }
 

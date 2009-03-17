@@ -72,9 +72,6 @@ namespace Nektar
                            Array<OneD, Array<OneD, NekDouble> > &numfluxX,
 			   Array<OneD, Array<OneD, NekDouble> > &numfluxY);
         
-	// void ODEforcing(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
-	//Array<OneD, Array<OneD, NekDouble> >&outarray, NekDouble time);
-	 
 	void ODElhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
 		          Array<OneD,        Array<OneD, NekDouble> >&outarray, 
 		    const NekDouble time);
@@ -94,8 +91,13 @@ namespace Nektar
     
         void ExplicitlyIntegrateAdvection(int nsteps);
 
-        void Summary(std::ostream &out);
 
+	void GeneralTimeIntegration(int nsteps, 
+				    LibUtilities::TimeIntegrationMethod IntMethod,
+				    LibUtilities::TimeIntegrationSchemeOperators ode);
+	
+	void Summary(std::ostream &out);
+	
 	enum UpwindType
         {           ///< flux not defined
 	  eNotSet,  ///< averaged (or centred) flux
@@ -153,6 +155,9 @@ namespace Nektar
 
 /**
 * $Log: EulerEquations.h,v $
+* Revision 1.2  2009/02/02 16:10:16  claes
+* Update to make SWE, Euler and Boussinesq solvers up to date with the time integrator scheme. Linear and classical Boussinsq solver working
+*
 * Revision 1.1  2009/01/13 10:59:32  pvos
 * added new solvers file
 *

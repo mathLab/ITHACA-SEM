@@ -78,54 +78,204 @@ namespace Nektar
     
     
   }
-  
-  
- //  void EulerEquations::ODEforcing(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  Array<OneD, Array<OneD, NekDouble> >&outarray, NekDouble time) 
-//   {
-//     int i;
-//     int nvariables = inarray.num_elements();
-//     int ncoeffs    = inarray[0].num_elements();
-//     int nq         = GetTotPoints();
-    
-//     //-------------------------------------------------------
-//     // go to physical space
-    
-//     Array<OneD, Array<OneD, NekDouble> > physarray(nvariables);
-//     for (i = 0; i < nvariables; ++i)
-//       {
-// 	physarray[i] = Array<OneD, NekDouble>(nq);
-// 	m_fields[i]->BwdTrans(inarray[i],physarray[i]);
-//       }
-//     //-------------------------------------------------------
-    
-//     SetBoundaryConditions(physarray, time);
 
-//     switch(m_projectionType)
-//       {
-//       case eDiscontinuousGalerkin:
-// 	{
+
+  void EulerEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+				     Array<OneD,       Array<OneD, NekDouble> >&outarray, 
+				     const NekDouble time) 
+  {
+    int nvariables = inarray.num_elements();
+    MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
+    for(int i = 0; i < nvariables; ++i)
+      {
+	m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,inarray[i],outarray[i]);
+      }
+  }
+  
+  
+  void EulerEquations::ODElhsSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+					  Array<OneD,       Array<OneD, NekDouble> >&outarray, 
+                                                 const NekDouble time)   
+    {
+        int i;
+        int nvariables = inarray.num_elements();
+	
+        switch(m_projectionType)
+        {
+        case eDiscontinuousGalerkin:
+
+            for(i = 0; i < nvariables; ++i)
+            {
+                m_fields[i]->MultiplyByElmtInvMass(inarray[i],outarray[i]);
+            }
+	  break;
+        case eGalerkin:
+	  {
+              for(i = 0; i < nvariables; ++i)
+              {
+                  m_fields[i]->MultiplyByInvMassMatrix(inarray[i],  
+                                                       outarray[i],
+                                                       false);
+              }
+          }
+          break;
+        default:
+            ASSERTL0(false,"Unknown projection scheme");
+            break;
+        }
+    }
+
+  void EulerEquations::ODEdirkSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+						  Array<OneD,       Array<OneD, NekDouble> >&outarray, 
+                                                  const NekDouble lambda,
+                                                  const NekDouble time) 
+  {
+    ASSERTL0(false, "this routine needs implementation");
+  }
+  
+  
+  void EulerEquations::GeneralTimeIntegration(int nsteps, 
+					      LibUtilities::TimeIntegrationMethod IntMethod,
+					      LibUtilities::TimeIntegrationSchemeOperators ode)
+  {
+    int i,n,nchk = 0;
+    int ncoeffs = m_fields[0]->GetNcoeffs();
+    int nvariables = m_fields.num_elements();
+    
+    // Set up wrapper to fields data storage. 
+    Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
+    Array<OneD, Array<OneD, NekDouble> >   tmp(nvariables);
+    
+    for(i = 0; i < nvariables; ++i)
+      {
+	fields[i]  = m_fields[i]->UpdateCoeffs();
+      }
+    
+    if(m_projectionType==eGalerkin)
+      {
+	// calculate the variable u* = Mu
+	// we are going to TimeIntegrate this new variable u*
+	MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
+	for(int i = 0; i < nvariables; ++i)
+	  {
+	    tmp[i] = Array<OneD, NekDouble>(ncoeffs);
+	    m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,fields[i],fields[i]);
+	  }
+      }
+    
+    // Declare an array of TimeIntegrationSchemes
+    // For multi-stage methods, this array will have just one entry containing
+    // the actual multi-stage method...
+    // For multi-steps method, this can have multiple entries
+    //  - the first scheme will used for the first timestep (this is an initialization scheme)
+    //  - the second scheme will used for the first timestep (this is an initialization scheme)
+    //  - ...
+    //  - the last scheme will be used for all other time-steps (this will be the actual scheme)
+    Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> IntScheme;
+    LibUtilities::TimeIntegrationSolutionSharedPtr u;
+    int numMultiSteps;
+    
+    switch(IntMethod)
+      {
+      case LibUtilities::eIMEXdirk_3_4_3:
+      case LibUtilities::eDIRKOrder3:
+      case LibUtilities::eBackwardEuler:      
+      case LibUtilities::eForwardEuler:      
+      case LibUtilities::eClassicalRungeKutta4:
+	{
+	  numMultiSteps = 1;
 	  
-// 	  WeakDGAdvection(physarray, outarray, false, true);
+	  IntScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr>(numMultiSteps);
+	  
+	  LibUtilities::TimeIntegrationSchemeKey IntKey(IntMethod);
+	  IntScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
+	  
+	  u = IntScheme[0]->InitializeScheme(m_timestep,fields,m_time,ode);
+	}
+	break;
+      case LibUtilities::eAdamsBashforthOrder2:
+	{
+	  numMultiSteps = 2;
+	  
+	  IntScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr>(numMultiSteps);
+	  
+	  // Used in the first time step to initalize the scheme
+	  LibUtilities::TimeIntegrationSchemeKey IntKey0(LibUtilities::eForwardEuler);
+	  
+	  // Used for all other time steps 
+	  LibUtilities::TimeIntegrationSchemeKey IntKey1(IntMethod); 
+	  IntScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
+	  IntScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
+	  
+	  // Initialise the scheme for the actual time integration scheme
+	  u = IntScheme[1]->InitializeScheme(m_timestep,fields,m_time,ode);
+	}
+	break;
+      default:
+	{
+	  ASSERTL0(false,"populate switch statement for integration scheme");
+	}
+      }
+    
+    for(n = 0; n < nsteps; ++n)
+      {
+	//----------------------------------------------
+	// Perform time step integration
+	//----------------------------------------------
+	if( n < numMultiSteps-1)
+	  {
+	    // Use initialisation schemes
+	    fields = IntScheme[n]->TimeIntegrate(m_timestep,u,ode);
+	  }
+	else
+	  {
+	    fields = IntScheme[numMultiSteps-1]->TimeIntegrate(m_timestep,u,ode);
+	  }
+	
+	m_time += m_timestep;
+	
+	if(m_projectionType==eGalerkin)
+	  {
+	    ASSERTL0(false,"CG not implemented for Euler");
+              //   // Project the solution u* onto the boundary conditions to
+//                 // obtain the actual solution
+//                 SetBoundaryConditions(m_time);
+//                 for(i = 0; i < nvariables; ++i)
+//                 {
+//                     m_fields[i]->MultiplyByInvMassMatrix(fields[i],tmp[i],false);
+//                     fields[i] = tmp[i];	   		    
+//                 }
+            }
 
-// 	  // any source terms should be added here
-
-// 	  for(i = 0; i < nvariables; ++i)
-// 	    {
-// 	      m_fields[i]->MultiplyByElmtInvMass(outarray[i],outarray[i]);
+            //----------------------------------------------
+            // Dump analyser information
+            //----------------------------------------------
+            if(!((n+1)%m_infosteps))
+            {
+	      cout << "Steps: " << n+1 << "\t Time: " << m_time << endl;
+            }
+            
+            if(n&&(!((n+1)%m_checksteps)))
+            {
+  
+	      for(i = 0; i < nvariables; ++i)
+		{
+		  (m_fields[i]->UpdateCoeffs()) = fields[i];
+		}
 	      
-// 	      Vmath::Neg(ncoeffs,outarray[i],1);
-// 	    }
-// 	}
-// 	break;
-//       case eGalerkin:
-// 	ASSERTL0(false,"Continouos scheme not implemented for Euler");
-// 	break;
-//       default:
-// 	ASSERTL0(false,"Unknown projection scheme");
-// 	break;
-//       }
-//   } 
-
+	      Checkpoint_Output(nchk++);
+	    }
+      }
+    
+    for(i = 0; i < nvariables; ++i)
+      {
+	(m_fields[i]->UpdateCoeffs()) = fields[i];
+      }
+  }
+  
+  
+  
+  
   void EulerEquations::ODErhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
 			            Array<OneD,       Array<OneD, NekDouble> >&outarray, 
 			      const NekDouble time) 
@@ -156,11 +306,11 @@ namespace Nektar
 	  WeakDGAdvection(physarray, outarray, false, true);
 
 	  // any source terms should be added here
-
+	  
+	  
 	  for(i = 0; i < nvariables; ++i)
 	    {
-	      //     m_fields[i]->MultiplyByElmtInvMass(outarray[i],outarray[i]);
-	      
+	      m_fields[i]->MultiplyByElmtInvMass(outarray[i],outarray[i]);
 	      Vmath::Neg(ncoeffs,outarray[i],1);
 	    }
 	}
@@ -174,115 +324,70 @@ namespace Nektar
       }
   }
 
-  void EulerEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
-			      Array<OneD,       Array<OneD, NekDouble> >&outarray, 
-			      const NekDouble time) 
-    {
-        ASSERTL0(false, "this routine needs implementation");
-    }
+
     
-    void EulerEquations::ODElhsSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
-                                                       Array<OneD,       Array<OneD, NekDouble> >&outarray, 
-                                                 const NekDouble time)   
-    {
-        int i;
-        int nvariables = inarray.num_elements();
-	
-        switch(m_projectionType)
-        {
-        case eDiscontinuousGalerkin:
+  //   void EulerEquations::ExplicitlyIntegrateAdvection(int nsteps)
+//     {
+//         int i,n,nchk = 0;
+//         int ncoeffs = m_fields[0]->GetNcoeffs();
+//         int nvariables = m_fields.num_elements();
 
-            for(i = 0; i < nvariables; ++i)
-            {
-                m_fields[i]->MultiplyByElmtInvMass(inarray[i],outarray[i]);
-            }
-	  break;
-        case eGalerkin:
-	  {
-              for(i = 0; i < nvariables; ++i)
-              {
-                  m_fields[i]->MultiplyByInvMassMatrix(inarray[i],  
-                                                       outarray[i],
-                                                       false,true);
-              }
-          }
-          break;
-        default:
-            ASSERTL0(false,"Unknown projection scheme");
-            break;
-        }
-    }
-
-    void EulerEquations::ODEdirkSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
-						  Array<OneD,       Array<OneD, NekDouble> >&outarray, 
-                                                  const NekDouble lambda,
-                                                  const NekDouble time) 
-    {
-        ASSERTL0(false, "this routine needs implementation");
-    }
-  
-    void EulerEquations::ExplicitlyIntegrateAdvection(int nsteps)
-    {
-        int i,n,nchk = 0;
-        int ncoeffs = m_fields[0]->GetNcoeffs();
-        int nvariables = m_fields.num_elements();
-
-        // Get Integration scheme details
-        LibUtilities::TimeIntegrationSchemeKey       IntKey(LibUtilities::eForwardEuler);
-        LibUtilities::TimeIntegrationSchemeSharedPtr IntScheme = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
+//         // Get Integration scheme details
+//         LibUtilities::TimeIntegrationSchemeKey       IntKey(LibUtilities::eForwardEuler);
+//         LibUtilities::TimeIntegrationSchemeSharedPtr IntScheme = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
 
 
-	// HACK!!! 
-	//hardcoded initial conditions for Isenntropic vortex
-	 SetIsenTropicVortex();
+// 	// HACK!!! 
+// 	//hardcoded initial conditions for Isentropic vortex
+// 	 SetIsenTropicVortex();
 
-        // Set up wrapper to fields data storage. 
-        Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
+//         // Set up wrapper to fields data storage. 
+//         Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
         
-        for(i = 0; i < nvariables; ++i)
-        {
-            fields[i] = m_fields[i]->UpdateCoeffs();
-        }
+//         for(i = 0; i < nvariables; ++i)
+//         {
+//             fields[i] = m_fields[i]->UpdateCoeffs();
+//         }
                 
-         int nInitSteps;
-	 LibUtilities::TimeIntegrationSolutionSharedPtr u = IntScheme->InitializeScheme(m_timestep,m_time,nInitSteps,*this,fields);
+//          int nInitSteps;
+// 	 LibUtilities::TimeIntegrationSolutionSharedPtr u = IntScheme->InitializeScheme(m_timestep,m_time,nInitSteps,*this,fields);
 
 
-	 for(n = nInitSteps; n < nsteps; ++n)
-	  {
+// 	 for(n = nInitSteps; n < nsteps; ++n)
+// 	  {
 	    
-	    //----------------------------------------------
-            // Perform time step integration
-            //----------------------------------------------
+// 	    //----------------------------------------------
+//             // Perform time step integration
+//             //----------------------------------------------
 
-            fields = IntScheme->ExplicitIntegration(m_timestep,*this,u);
+//             fields = IntScheme->ExplicitIntegration(m_timestep,*this,u);
 	   
-	    m_time += m_timestep;
-            //----------------------------------------------
+// 	    m_time += m_timestep;
+//             //----------------------------------------------
 
-            //----------------------------------------------
-            // Dump analyser information
-            //----------------------------------------------
-            if(!((n+1)%m_infosteps))
-            {
-	      cout << "Steps: " << n+1 << "\t Time: " <<m_time<< endl;
-            }
+//             //----------------------------------------------
+//             // Dump analyser information
+//             //----------------------------------------------
+//             if(!((n+1)%m_infosteps))
+//             {
+// 	      cout << "Steps: " << n+1 << "\t Time: " <<m_time<< endl;
+//             }
             
-            if(n&&(!((n+1)%m_checksteps)))
-            {
-	      for(i = 0; i < nvariables; ++i)
-		{
-		  (m_fields[i]->UpdateCoeffs()) = fields[i];
-		}
-	      Checkpoint_Output(nchk++);
-            }
-	  }
+//             if(n&&(!((n+1)%m_checksteps)))
+//             {
+// 	      for(i = 0; i < nvariables; ++i)
+// 		{
+// 		  (m_fields[i]->UpdateCoeffs()) = fields[i];
+// 		}
+// 	      Checkpoint_Output(nchk++);
+//             }
+// 	  }
         
-	for(i = 0; i < nvariables; ++i)
-	  {
-	    (m_fields[i]->UpdateCoeffs()) = fields[i];
-	  }
-    }
+// 	for(i = 0; i < nvariables; ++i)
+// 	  {
+// 	    (m_fields[i]->UpdateCoeffs()) = fields[i];
+// 	  }
+//     }
     
   
   //----------------------------------------------------
@@ -602,10 +707,10 @@ namespace Nektar
     m_fields[2]->SetPhys(rhov);
     m_fields[3]->SetPhys(E);
 
-    // forward trabsform to fill the modal coeffs
+    // forward transform to fill the modal coeffs
     for(int i = 0; i < m_fields.num_elements(); ++i)
       {
-	m_fields[i]->FwdTrans(*(m_fields[i]));
+	m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
       }
   }
   
@@ -664,6 +769,9 @@ namespace Nektar
 
 /**
 * $Log: EulerEquations.cpp,v $
+* Revision 1.2  2009/02/02 16:10:16  claes
+* Update to make SWE, Euler and Boussinesq solvers up to date with the time integrator scheme. Linear and classical Boussinsq solver working
+*
 * Revision 1.1  2009/01/13 10:59:32  pvos
 * added new solvers file
 *

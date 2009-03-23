@@ -212,12 +212,14 @@ namespace Nektar
                                             const Array<OneD,const NekDouble> &inarray, 
                                                   Array<OneD,      NekDouble> &outarray)
         {
-            int n,cnt1,cnt2;
-            const DNekScalBlkMatSharedPtr& blockmat = GetBlockMatrix(gkey);
-
-            int nblocks = blockmat->GetNumberOfBlockRows();
             int nrows;
             int ncols;
+            const DNekScalBlkMatSharedPtr& blockmat = GetBlockMatrix(gkey);
+
+#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS     
+     
+            int n,cnt1,cnt2;
+            int nblocks = blockmat->GetNumberOfBlockRows();
 
             for(n = cnt1 = cnt2 = 0; n < nblocks; n++)
             {
@@ -232,6 +234,17 @@ namespace Nektar
                 cnt1 += nrows;
                 cnt2 += ncols;
             }
+
+#else
+
+            nrows = blockmat->GetRows();
+            ncols = blockmat->GetColumns();
+
+            NekVector<const NekDouble> in (ncols,inarray, eWrapper);
+            NekVector<      NekDouble> out(nrows,outarray,eWrapper); 
+            out = (*blockmat)*in;
+
+#endif
         }
         
         void ExpList::IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, 

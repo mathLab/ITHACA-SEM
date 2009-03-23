@@ -798,6 +798,11 @@ namespace Nektar
                                    const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD, NekDouble>          &outarray);
 
+
+            void MultiplyByBlockMatrix(const GlobalMatrixKey             &gkey,
+                                       const Array<OneD,const NekDouble> &inarray, 
+                                             Array<OneD,      NekDouble> &outarray);
+
         protected:
             
 
@@ -917,9 +922,6 @@ namespace Nektar
              */
             const DNekScalBlkMatSharedPtr  GenBlockMatrix(const GlobalMatrixKey &gkey);
             const DNekScalBlkMatSharedPtr& GetBlockMatrix(const GlobalMatrixKey &gkey);
-            void MultiplyByBlockMatrix(const GlobalMatrixKey             &gkey,
-                                       const Array<OneD,const NekDouble> &inarray, 
-                                             Array<OneD,      NekDouble> &outarray);
 
 
             
@@ -1204,6 +1206,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.56  2009/03/23 10:51:52  pvos
+* Added BlockMatrix support
+*
 * Revision 1.55  2009/03/04 14:17:38  pvos
 * Removed all methods that take and Expansion as argument
 *

@@ -477,12 +477,25 @@ namespace Nektar
                 }
                 else
                 { 
+#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
+
                     ASSERTL1(wsp.num_elements()>=nquad0*nmodes1,"Workspace size is not sufficient");
                     
                     Blas::Dgemm('N','N', nquad0,nmodes1,nmodes0,1.0, base0.get(),
                                 nquad0, &inarray[0], nmodes0,0.0,&wsp[0], nquad0);
                     Blas::Dgemm('N','T', nquad0, nquad1,nmodes1, 1.0, &wsp[0], nquad0, 
                                 base1.get(), nquad1, 0.0, &outarray[0], nquad0);
+
+#else //NEKTAR_USING_DIRECT_BLAS_CALLS
+
+                    NekMatrix<const NekDouble> B0(nquad0 ,nmodes0,m_base[0]->GetBdata(),eWrapper);
+                    NekMatrix<const NekDouble> B1(nquad1, nmodes1,m_base[1]->GetBdata(),eWrapper);
+                    NekMatrix<const NekDouble> in(nmodes0,nmodes1,inarray,              eWrapper);
+                    NekMatrix<      NekDouble> out(nquad0,nquad1, outarray,             eWrapper);
+
+                    out = B0*in*Transpose(B1); 
+
+#endif //NEKTAR_USING_DIRECT_BLAS_CALLS   
                 } 
             }
 
@@ -855,6 +868,9 @@ namespace Nektar
 
 /**
  * $Log: StdQuadExp.h,v $
+ * Revision 1.46  2009/01/21 16:58:39  pvos
+ * Added additional geometric factors to improve efficiency
+ *
  * Revision 1.45  2008/11/24 10:31:14  pvos
  * Changed name from _PartitionedOp to _MatFree
  *

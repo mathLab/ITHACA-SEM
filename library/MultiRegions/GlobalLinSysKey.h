@@ -33,11 +33,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef GLOBALLINSYSKEY_H
-#define GLOBALLINSYSKEY_H
+#ifndef NEKTAR_LIBS_MULTIREGIONS_GLOBALLINSYSKEY_H
+#define NEKTAR_LIBS_MULTIREGIONS_GLOBALLINSYSKEY_H
 
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/LocalToGlobalBaseMap.h>
+#include <MultiRegions/GlobalMatrixKey.h>
 
 namespace Nektar
 {
@@ -81,9 +81,14 @@ namespace Nektar
             friend bool operator<(const GlobalLinSysKey &lhs, 
                                   const GlobalLinSysKey &rhs);
 
-            inline const StdRegions::MatrixType GetLinSysType() const
+            inline const GlobalMatrixKeySharedPtr& GetGlobalMatrixKey() const
             {
-                return m_linSysType; 
+                return m_globMatKey;
+            }
+
+            inline const StdRegions::MatrixType GetMatrixType() const
+            {
+                return m_globMatKey->GetMatrixType(); 
             }
 
             inline const GlobalSysSolnType  GetGlobalSysSolnType() const
@@ -93,60 +98,45 @@ namespace Nektar
 
             inline const bool LocToGloMapIsDefined(void) const
             {
-                if( m_locToGloMap == NullLocalToGlobalBaseMapSharedPtr)
-                {
-                    return false;
-                }
-
-                return true;
+                return m_globMatKey->LocToGloMapIsDefined();
             }
             
             inline int GetNconstants() const
             {
-                return m_nconstants;
+                return m_globMatKey->GetNconstants();
             }
 
             inline NekDouble GetConstant(int i) const
             {
-                ASSERTL1(i < m_nconstants,"requesting constant which has not been definied");
-                return m_constant[i];
+                return m_globMatKey->GetConstant(i);
             }
 
             inline const Array<OneD,NekDouble>& GetConstants() const
             {         
-                return m_constant;
+                return m_globMatKey->GetConstants();
             }
 
             inline int GetNvariableCoefficients() const
             {
-                return m_nvariablecoefficients;
+                return m_globMatKey->GetNvariableCoefficients();
             }
 
             inline const Array<OneD,NekDouble>& GetVariableCoefficient(int i) const
             {
-                ASSERTL1(i < m_nvariablecoefficients,"requesting a coefficient which has not been defined");                
-                return m_variablecoefficient[i];
+                return m_globMatKey->GetVariableCoefficient(i);
             }
 
             inline const Array<OneD, Array<OneD,NekDouble> >& GetVariableCoefficients() const
             {       
-                return m_variablecoefficient;
+                return m_globMatKey->GetVariableCoefficients();
             }
 
         protected:
             GlobalLinSysKey(); 
 
-            GlobalSysSolnType      m_solnType;
-            StdRegions::MatrixType m_linSysType;
+            GlobalSysSolnType        m_solnType;
+            GlobalMatrixKeySharedPtr m_globMatKey;
             
-            int                   m_nconstants;
-            Array<OneD,NekDouble> m_constant;
-
-            int m_nvariablecoefficients;
-            Array<OneD, Array<OneD,NekDouble> >  m_variablecoefficient;
-            
-            LocalToGlobalBaseMapSharedPtr m_locToGloMap; 
-
         private:
         };
 
@@ -155,10 +145,13 @@ namespace Nektar
     } // end of namespace
 } // end of namespace
 
-#endif //GLOBALMATRIXKEY_H
+#endif //NEKTAR_LIBS_MULTIREGIONS_GLOBALLINSYSKEY_H
 
 /**
 * $Log: GlobalLinSysKey.h,v $
+* Revision 1.8  2009/02/09 16:12:08  sherwin
+* .
+*
 * Revision 1.7  2009/02/09 16:11:26  sherwin
 * made LocToGloMapIsDefined return a const value
 *

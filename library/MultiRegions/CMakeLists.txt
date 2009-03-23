@@ -14,6 +14,7 @@ ExpList.cpp
 GenExpList1D.cpp
 GlobalLinSys.cpp
 GlobalLinSysKey.cpp
+GlobalMatrixKey.cpp
 #LocalToGlobalMap.cpp
 LocalToGlobalBaseMap.cpp
 LocalToGlobalDGMap.cpp
@@ -40,6 +41,7 @@ ExpList.h
 GenExpList1D.h
 GlobalLinSys.h
 GlobalLinSysKey.h
+GlobalMatrixKey.h
 LocalToGlobalBaseMap.h
 LocalToGlobalDGMap.h
 LocalToGlobalC0ContMap.h

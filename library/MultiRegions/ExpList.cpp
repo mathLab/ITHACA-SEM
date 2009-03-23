@@ -46,9 +46,10 @@ namespace Nektar
             m_coeffs(),
             m_phys(),
             m_transState(eNotSet),
-            m_physState(false)
+            m_physState(false),
+            m_exp(MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr()),
+            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr())
         {            
-            m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
         }
         
         ExpList::ExpList(const ExpList &in):
@@ -206,6 +207,32 @@ namespace Nektar
             
             return sum; 
         }
+
+        void ExpList::MultiplyByBlockMatrix(const GlobalMatrixKey             &gkey,
+                                            const Array<OneD,const NekDouble> &inarray, 
+                                                  Array<OneD,      NekDouble> &outarray)
+        {
+            int n,cnt1,cnt2;
+            const DNekScalBlkMatSharedPtr& blockmat = GetBlockMatrix(gkey);
+
+            int nblocks = blockmat->GetNumberOfBlockRows();
+            int nrows;
+            int ncols;
+
+            for(n = cnt1 = cnt2 = 0; n < nblocks; n++)
+            {
+                DNekScalMat& elmMat = *(blockmat->GetBlock(n,n));
+
+                nrows = elmMat.GetRows();
+                ncols = elmMat.GetColumns();
+
+                Blas::Dgemv('N',nrows,ncols,elmMat.Scale(),elmMat.GetRawPtr(),
+                            nrows, inarray.get()+cnt2, 1.0, 0.0, outarray.get()+cnt1, 1.0);
+
+                cnt1 += nrows;
+                cnt2 += ncols;
+            }
+        }
         
         void ExpList::IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, 
                                       Array<OneD, NekDouble> &outarray)
@@ -296,12 +323,9 @@ namespace Nektar
         void ExpList::MultiplyByElmtInvMass(const Array<OneD, const NekDouble> &inarray, 
                                             Array<OneD, NekDouble> &outarray)
         {
-            static DNekScalBlkMatSharedPtr InvMass;
-            if(!InvMass.get())
-            {
-                InvMass = SetupBlockMatrix(StdRegions::eInvMass);
-            }
-            
+            GlobalMatrixKey mkey(StdRegions::eInvMass);
+            const DNekScalBlkMatSharedPtr& InvMass = GetBlockMatrix(mkey);
+
             // Inverse mass matrix
             NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);            
             if(inarray.get() == outarray.get())
@@ -344,34 +368,102 @@ namespace Nektar
                 cnt1 += (*m_exp)[i]->GetNcoeffs();
             }
         }
-        
-        DNekScalBlkMatSharedPtr  ExpList::SetupBlockMatrix(StdRegions::MatrixType mtype, NekDouble scalar, NekDouble constant)
+
+        const DNekScalBlkMatSharedPtr ExpList::GenBlockMatrix(const GlobalMatrixKey &gkey)
         {
-            int i;
+            int i,j,cnt1;
             int n_exp = GetExpSize();
-            Array<OneD,unsigned int> exp_size(n_exp);
-            DNekScalMatSharedPtr loc_mat;
-            DNekScalBlkMatSharedPtr BlkMatrix;
-            
-            // set up an array of integers for block matrix construction
-            for(i = 0; i < n_exp; ++i)
-            {
-                exp_size[i] = (*m_exp)[i]->GetNcoeffs();
+            Array<OneD,unsigned int> nrows(n_exp);
+            Array<OneD,unsigned int> ncols(n_exp);
+            DNekScalMatSharedPtr    loc_mat;
+            DNekScalBlkMatSharedPtr BlkMatrix;            
+
+            switch(gkey.GetMatrixType())
+            {      
+            case StdRegions::eBwdTrans:
+                {
+                    // set up an array of integers for block matrix construction
+                    for(i = 0; i < n_exp; ++i)
+                    {
+                        nrows[i] = (*m_exp)[i]->GetTotPoints();
+                        ncols[i] = (*m_exp)[i]->GetNcoeffs();
+                    }
+                }
+                break;
+            case StdRegions::eIProductWRTBase:
+                {
+                    // set up an array of integers for block matrix construction
+                    for(i = 0; i < n_exp; ++i)
+                    {
+                        nrows[i] = (*m_exp)[i]->GetNcoeffs();
+                        ncols[i] = (*m_exp)[i]->GetTotPoints();
+                    }
+                }
+                break;                           
+            case StdRegions::eMass: 
+            case StdRegions::eInvMass:
+            case StdRegions::eHelmholtz:
+            case StdRegions::eLaplacian:
+            case StdRegions::eInvHybridDGHelmholtz:
+                {
+                    // set up an array of integers for block matrix construction
+                    for(i = 0; i < n_exp; ++i)
+                    {
+                        nrows[i] = (*m_exp)[i]->GetNcoeffs();
+                        ncols[i] = (*m_exp)[i]->GetNcoeffs();
+                    }
+                }
+                break;
+            default:
+                {
+                    NEKERROR(ErrorUtil::efatal, "Global Matrix creation not defined for this type of matrix");
+                }
             }
 
-            BlkMatrix = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(exp_size,exp_size);
+            MatrixStorage blkmatStorage = eDIAGONAL;
+            BlkMatrix = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nrows,ncols,blkmatStorage);
+
+            int nvarcoeffs = gkey.GetNvariableCoefficients();
+            Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
             
-            for(i = 0; i < n_exp; ++i)
+            for(i = cnt1 = 0; i < n_exp; ++i)
             {
-                LocalRegions::MatrixKey mkey(mtype,(*m_exp)[i]->DetExpansionType(),*((*m_exp)[i]),scalar,constant);
-                loc_mat = (*m_exp)[i]->GetLocMatrix(mkey);
+                if(nvarcoeffs>0)
+                {
+                    for(j = 0; j < nvarcoeffs; j++)
+                    {
+                        varcoeffs[j] = gkey.GetVariableCoefficient(j) + cnt1;
+                    }
+                    cnt1  += (*m_exp)[i]->GetTotPoints();
+                }
+
+                LocalRegions::MatrixKey matkey(gkey.GetMatrixType(),
+                                               (*m_exp)[i]->DetExpansionType(),
+                                               *(*m_exp)[i],
+                                               gkey.GetConstants(),
+                                               varcoeffs);
+
+                loc_mat = (*m_exp)[i]->GetLocMatrix(matkey);
                 BlkMatrix->SetBlock(i,i,loc_mat);
             }
             
             return BlkMatrix;
         }
-        
-        
+
+        const DNekScalBlkMatSharedPtr& ExpList::GetBlockMatrix(const GlobalMatrixKey &gkey)
+        {
+            BlockMatrixMap::iterator matrixIter = m_blockMat->find(gkey);
+
+            if(matrixIter == m_blockMat->end())
+            {
+                return ((*m_blockMat)[gkey] = GenBlockMatrix(gkey));
+            }
+            else
+            {
+                return matrixIter->second;
+            }
+        }
+       
         void ExpList::GeneralMatrixOp(const GlobalLinSysKey &gkey,
                                       const Array<OneD, const NekDouble> &inarray,                     
                                       Array<OneD, NekDouble>    &outarray)
@@ -395,7 +487,7 @@ namespace Nektar
                     cnt1  += (*m_exp)[i]->GetTotPoints();
                 }
                 
-                StdRegions::StdMatrixKey mkey(gkey.GetLinSysType(),
+                StdRegions::StdMatrixKey mkey(gkey.GetMatrixType(),
                                               (*m_exp)[i]->DetExpansionType(),
                                               *((*m_exp)[i]),
                                               gkey.GetConstants(),varcoeffs);
@@ -453,7 +545,7 @@ namespace Nektar
                     cnt1  += (*m_exp)[n]->GetTotPoints();
                 }
 
-                LocalRegions::MatrixKey matkey(mkey.GetLinSysType(),
+                LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
                                                (*m_exp)[n]->DetExpansionType(),
                                                *(*m_exp)[n],
                                                mkey.GetConstants(),
@@ -576,7 +668,7 @@ namespace Nektar
                     cnt1  += (*m_exp)[n]->GetTotPoints();
                 }
 
-                LocalRegions::MatrixKey matkey(mkey.GetLinSysType(),
+                LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
                                                (*m_exp)[n]->DetExpansionType(),
                                                *(*m_exp)[n],
                                                mkey.GetConstants(),
@@ -661,7 +753,7 @@ namespace Nektar
             NekDouble zero    = 0.0,sign1,sign2; 
             NekDouble factor1 = mkey.GetConstant(0);
             NekDouble factor2 = mkey.GetConstant(1);
-            StdRegions::MatrixType linsystype = mkey.GetLinSysType();
+            StdRegions::MatrixType linsystype = mkey.GetMatrixType();
             
             DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero); 
             ASSERTL0(linsystype == StdRegions::eHybridDGHelmBndLam,

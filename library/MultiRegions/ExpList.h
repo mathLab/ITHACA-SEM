@@ -39,6 +39,7 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <StdRegions/StdExpansion.h>
 #include <MultiRegions/LocalToGlobalBaseMap.h>
+#include <MultiRegions/GlobalMatrixKey.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/GlobalLinSysKey.h>
 
@@ -56,6 +57,8 @@ namespace Nektar
         class GenExpList1D;
 	class ExpList1D;
 
+        typedef map<GlobalMatrixKey,DNekScalBlkMatSharedPtr> BlockMatrixMap;
+        typedef boost::shared_ptr<BlockMatrixMap> BlockMatrixMapShPtr; 
 
         /**
          * \brief This is the base class for all multi-elemental spectral/hp 
@@ -422,30 +425,6 @@ namespace Nektar
              */
             void   WriteToFile(std::ofstream &out, OutputFormat format = eTecplot);
     
-            /**
-             * \brief This function assembles the block diagonal
-             * matrix of local matrices of the type \a mtype.
-             *
-             * This function assembles the block diagonal matrix
-             * \f$\underline{\boldsymbol{M}}^e\f$, which is the
-             * concatenation of the local matrices
-             * \f$\boldsymbol{M}^e\f$ of the type \a mtype, that is
-             *
-             * \f[
-             * \underline{\boldsymbol{M}}^e = \left[
-             * \begin{array}{cccc}
-             * \boldsymbol{M}^1 & 0 & \hspace{3mm}0 \hspace{3mm}& 0 \\
-             *  0 & \boldsymbol{M}^2 & 0 & 0 \\
-             *  0 &  0 & \ddots &  0 \\
-             *  0 &  0 & 0 & \boldsymbol{M}^{N_{\mathrm{el}}} \end{array} \right].\f]
-             *
-             * \param mtype the type of matrix to be assembled
-             * \param scalar an optional parameter 
-             * \param constant an optional parameter 
-             */
-            DNekScalBlkMatSharedPtr  SetupBlockMatrix(StdRegions::MatrixType mtype, 
-                                                      NekDouble scalar = 0.0, 
-                                                      NekDouble constant = 0.0);
 
             /**
              * \brief This function returns the dimension of the
@@ -913,6 +892,35 @@ namespace Nektar
              */
             Array<OneD, int>  m_phys_offset;
 
+            BlockMatrixMapShPtr  m_blockMat;
+
+            /**
+             * \brief This function assembles the block diagonal
+             * matrix of local matrices of the type \a mtype.
+             *
+             * This function assembles the block diagonal matrix
+             * \f$\underline{\boldsymbol{M}}^e\f$, which is the
+             * concatenation of the local matrices
+             * \f$\boldsymbol{M}^e\f$ of the type \a mtype, that is
+             *
+             * \f[
+             * \underline{\boldsymbol{M}}^e = \left[
+             * \begin{array}{cccc}
+             * \boldsymbol{M}^1 & 0 & \hspace{3mm}0 \hspace{3mm}& 0 \\
+             *  0 & \boldsymbol{M}^2 & 0 & 0 \\
+             *  0 &  0 & \ddots &  0 \\
+             *  0 &  0 & 0 & \boldsymbol{M}^{N_{\mathrm{el}}} \end{array} \right].\f]
+             *
+             * \param mtype the type of matrix to be assembled
+             * \param scalar an optional parameter 
+             * \param constant an optional parameter 
+             */
+            const DNekScalBlkMatSharedPtr  GenBlockMatrix(const GlobalMatrixKey &gkey);
+            const DNekScalBlkMatSharedPtr& GetBlockMatrix(const GlobalMatrixKey &gkey);
+            void MultiplyByBlockMatrix(const GlobalMatrixKey             &gkey,
+                                       const Array<OneD,const NekDouble> &inarray, 
+                                             Array<OneD,      NekDouble> &outarray);
+
 
             
 
@@ -1196,6 +1204,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.55  2009/03/04 14:17:38  pvos
+* Removed all methods that take and Expansion as argument
+*
 * Revision 1.54  2009/03/04 05:58:49  bnelson
 * Fixed visual studio compile errors.
 *

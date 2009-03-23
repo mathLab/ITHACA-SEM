@@ -45,12 +45,7 @@ namespace Nektar
                                          const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                                          const GlobalSysSolnType solnType):
             m_solnType(solnType),
-            m_linSysType(matrixType),
-            m_locToGloMap(locToGloMap),
-            m_nconstants(0),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(0),
-            m_variablecoefficient(m_nvariablecoefficients)
+            m_globMatKey(MemoryManager<GlobalMatrixKey>::AllocateSharedPtr(matrixType,locToGloMap))
         {
         }
         
@@ -59,14 +54,8 @@ namespace Nektar
                                          const NekDouble factor,
                                          const GlobalSysSolnType solnType):
             m_solnType(solnType),
-            m_linSysType(matrixType),
-            m_locToGloMap(locToGloMap),
-            m_nconstants(1),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(0),
-            m_variablecoefficient(m_nvariablecoefficients)
+            m_globMatKey(MemoryManager<GlobalMatrixKey>::AllocateSharedPtr(matrixType,factor,locToGloMap))
         {
-            m_constant[0] = factor;
         }
         
         GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
@@ -75,15 +64,8 @@ namespace Nektar
                                          const NekDouble factor2,
                                          const GlobalSysSolnType solnType):
             m_solnType(solnType),
-            m_linSysType(matrixType),
-            m_locToGloMap(locToGloMap),
-            m_nconstants(2),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(0),
-            m_variablecoefficient(m_nvariablecoefficients)
+            m_globMatKey(MemoryManager<GlobalMatrixKey>::AllocateSharedPtr(matrixType,factor1,factor2,locToGloMap))
         {
-            m_constant[0] = factor1;
-            m_constant[1] = factor2;
         }
 
         GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
@@ -91,12 +73,7 @@ namespace Nektar
                                          const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
                                          const GlobalSysSolnType solnType):
             m_solnType(solnType),
-            m_linSysType(matrixType),
-            m_locToGloMap(locToGloMap),
-            m_nconstants(0),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(varcoeffs.num_elements()),
-            m_variablecoefficient(varcoeffs)
+            m_globMatKey(MemoryManager<GlobalMatrixKey>::AllocateSharedPtr(matrixType,varcoeffs,locToGloMap))
         {
         }          
             
@@ -106,40 +83,18 @@ namespace Nektar
                                          const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
                                          const GlobalSysSolnType solnType):
             m_solnType(solnType),
-            m_linSysType(matrixType),
-            m_locToGloMap(locToGloMap),
-            m_nconstants(1),
-            m_constant(m_nconstants),
-            m_nvariablecoefficients(varcoeffs.num_elements()),
-            m_variablecoefficient(varcoeffs)
+            m_globMatKey(MemoryManager<GlobalMatrixKey>::AllocateSharedPtr(matrixType,factor,varcoeffs,locToGloMap))
         {
-            m_constant[0] = factor;
         }     
 
         GlobalLinSysKey::GlobalLinSysKey(const GlobalLinSysKey &key):
             m_solnType(key.m_solnType),
-            m_linSysType(key.m_linSysType),
-            m_locToGloMap(key.m_locToGloMap),
-            m_nconstants(key.m_nconstants),
-            m_constant(key.m_constant),
-            m_nvariablecoefficients(key.m_nvariablecoefficients),
-            m_variablecoefficient(key.m_variablecoefficient)
-            
+            m_globMatKey(key.m_globMatKey)            
         {
         }
 
         bool operator<(const GlobalLinSysKey &lhs, const GlobalLinSysKey &rhs)
         {
-            if(lhs.m_linSysType < rhs.m_linSysType)
-            {
-                return true;
-            }
-
-            if(lhs.m_linSysType > rhs.m_linSysType)
-            {
-                return false;
-            }
-
             if(lhs.m_solnType < rhs.m_solnType)
             {
                 return true;
@@ -150,58 +105,14 @@ namespace Nektar
                 return false;
             }
 
-            if(lhs.m_nconstants < rhs.m_nconstants)
+            if( *(lhs.m_globMatKey) < *(rhs.m_globMatKey))
             {
                 return true;
             }
-            else if(lhs.m_nconstants > rhs.m_nconstants)
+
+            if( *(rhs.m_globMatKey) < *(lhs.m_globMatKey))
             {
                 return false;
-            }
-            else 
-            {
-                for(unsigned int i = 0; i < lhs.m_nconstants; ++i)
-                {
-                    if(lhs.m_constant[i] < rhs.m_constant[i])
-                    {
-                        return true;
-                    }
-                    
-                    if(lhs.m_constant[i] > rhs.m_constant[i])
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            if(lhs.m_nvariablecoefficients < rhs.m_nvariablecoefficients)
-            {
-                return true;
-            }
-            else if(lhs.m_nvariablecoefficients > rhs.m_nvariablecoefficients)
-            {
-                return false;
-            }
-            else 
-            {
-                for(unsigned int i = 0; i < lhs.m_nvariablecoefficients; ++i)
-                {
-                    if((lhs.m_variablecoefficient[i]).get() < (rhs.m_variablecoefficient[i]).get())
-                    {
-                        return true;
-                    }
-                    
-                    if((lhs.m_variablecoefficient[i]).get() > (rhs.m_variablecoefficient[i]).get())
-                    {
-                        return false;
-                    }
-                }
-            }
-
-
-            if(lhs.m_locToGloMap.get() < rhs.m_locToGloMap.get())
-            {
-                return true;
             }
 
             return false;
@@ -210,7 +121,7 @@ namespace Nektar
         std::ostream& operator<<(std::ostream& os, const GlobalLinSysKey& rhs)
         {
             int i;
-            os << "MatrixType: " << rhs.GetLinSysType() << endl;
+            os << "MatrixType: " << rhs.GetMatrixType() << endl;
             os << "Solution Type: " << GlobalSysSolnTypeMap[rhs.GetGlobalSysSolnType()] << endl;
             os << "Number of constants: " << rhs.GetNconstants() << endl;
             for(i = 0; i < rhs.GetNconstants();i++) 
@@ -226,6 +137,9 @@ namespace Nektar
 
 /**
 * $Log: GlobalLinSysKey.cpp,v $
+* Revision 1.6  2009/02/08 09:10:15  sherwin
+* Added member of LocalToGlobalBaseMap so that we can discern matrices of different boundary condition type
+*
 * Revision 1.5  2008/11/21 10:36:17  pvos
 * Added (limited) support for matrix types: ePOSITIVE_DEFINITE_SYMMETRIC and ePOSITIVE_DEFINITE_SYMMETRIC_BANDED
 *

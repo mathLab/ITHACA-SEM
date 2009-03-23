@@ -257,11 +257,12 @@ namespace Nektar
         {
             int i,j,n,cnt,cnt1,nbndry;
             int nexp = GetExpSize();
-            static DNekScalBlkMatSharedPtr InvHDGHelm;
+            NekDouble tau = 10;
+            GlobalMatrixKey invHDGhelmkey(StdRegions::eInvHybridDGHelmholtz,lambda,tau);
+            const DNekScalBlkMatSharedPtr& InvHDGHelm = GetBlockMatrix(invHDGhelmkey);
             Array<OneD, unsigned int> vmap;
             Array<OneD,NekDouble> f(m_ncoeffs);
             Array<OneD,NekDouble> e_f, e_bndsol;
-            NekDouble tau = 10;
 
             //----------------------------------
             // Setup RHS Inner product
@@ -407,10 +408,6 @@ namespace Nektar
             }
             
             // Inverse block diagonal interior solve
-            if(!InvHDGHelm.get())
-            {
-                InvHDGHelm = SetupBlockMatrix(StdRegions::eInvHybridDGHelmholtz, lambda, tau);
-            }
             DNekVec in (m_ncoeffs,f,eWrapper);
             DNekVec out(m_ncoeffs,outarray,eWrapper);            
             out = (*InvHDGHelm)*in;            

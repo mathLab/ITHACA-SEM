@@ -17,6 +17,7 @@ SET(NEKTAR_USE_TINYXML_STL ON CACHE BOOL "Use STL with TinyXML library.")
 SET(NEKTAR_USE_DIRECT_BLAS_CALLS OFF CACHE BOOL "Use direct BLAS calls rather than NekMatrix calls in the StdRegions and LocalRegions sublibrary")
 SET(NEKTAR_FULL_DEBUG OFF CACHE BOOL "Enable Full Debugging.")
 SET(NEKTAR_USE_PRECOMPILED_HEADERS OFF CACHE BOOL "Enable the use of precompiled headers.")
+SET(CMAKE_BUILD_TYPE Release CACHE String "" FORCE)
 
 IF (${CMAKE_COMPILER_IS_GNUCXX}) 
     SET(NEKTAR_ENABLE_PROFILE OFF CACHE BOOL "Compiles Nektar++ with the -pg compiler flag")

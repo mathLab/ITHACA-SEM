@@ -420,7 +420,16 @@ namespace Nektar
                 ResizeDataArrayIfNeeded();
                 
                 unsigned int requiredStorageSize = GetRequiredStorageSize();
-                std::copy(rhs.GetRawPtr(), rhs.GetRawPtr() + requiredStorageSize, m_data.data());
+                DataType scale = rhs.Scale();
+                
+                DataType* lhs_array = m_data.data();
+                const DataType* rhs_array = rhs.GetRawPtr();
+                
+                for(int i = 0; i < requiredStorageSize; ++i)
+                {
+                    lhs_array[i] = scale*rhs_array[i];
+                }
+                //std::copy(rhs.GetRawPtr(), rhs.GetRawPtr() + requiredStorageSize, m_data.data());
                 
                 return *this;
 
@@ -431,32 +440,40 @@ namespace Nektar
                 ThisType& operator=(const Expression<ExpressionPolicyType>& rhs)
                 {
                     BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<const DataType, StandardMatrixTag> > ));
-                    m_storagePolicy = eFULL;
-                    m_numberOfSubDiagonals = std::numeric_limits<unsigned int>::max();
-                    m_numberOfSuperDiagonals = std::numeric_limits<unsigned int>::max();
                     
-                    if( this->GetRows() != rhs.GetMetadata().Rows ||
-                        this->GetColumns() != rhs.GetMetadata().Columns )
+                    if( rhs.ContainsReference(*this) )
                     {
-                        Resize(rhs.GetMetadata().Rows, rhs.GetMetadata().Columns);
-                        ResizeDataArrayIfNeeded(rhs.GetMetadata());
+                        ThisType temp = rhs;
+                        *this = temp;
                     }
-
-                    this->SetTransposeFlag('N');
-                    Array<OneD, DataType> original = GetData();
-                    
-                    rhs.Evaluate(*this);
-                    
-                    if( m_wrapperType == eWrapper )
+                    else
                     {
-                        if( GetData().data() != original.data() )
+                        m_storagePolicy = eFULL;
+                        m_numberOfSubDiagonals = std::numeric_limits<unsigned int>::max();
+                        m_numberOfSuperDiagonals = std::numeric_limits<unsigned int>::max();
+                        
+                        if( this->GetRows() != rhs.GetMetadata().Rows ||
+                            this->GetColumns() != rhs.GetMetadata().Columns )
                         {
-                            this->SwapTempAndDataBuffers();
-                            std::copy(this->GetTempSpace().data(), this->GetTempSpace().data() + this->GetRequiredStorageSize(),
-                                this->GetData().data());
+                            Resize(rhs.GetMetadata().Rows, rhs.GetMetadata().Columns);
+                            ResizeDataArrayIfNeeded(rhs.GetMetadata());
+                        }
+
+                        this->SetTransposeFlag('N');
+                        Array<OneD, DataType> original = GetData();
+                        
+                        rhs.Evaluate(*this);
+                        
+                        if( m_wrapperType == eWrapper )
+                        {
+                            if( GetData().data() != original.data() )
+                            {
+                                this->SwapTempAndDataBuffers();
+                                std::copy(this->GetTempSpace().data(), this->GetTempSpace().data() + this->GetRequiredStorageSize(),
+                                    this->GetData().data());
+                            }
                         }
                     }
-                    
                     return *this;
                 }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
@@ -926,26 +943,33 @@ namespace Nektar
                             boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, StandardMatrixTag> >,
                             boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<const DataType, StandardMatrixTag> >
                         > ));
-                    
-                    if( this->GetRows() != rhs.GetMetadata().Rows ||
-                        this->GetColumns() != rhs.GetMetadata().Columns )
+                    if( rhs.ContainsReference(*this) )
                     {
-                        Resize(rhs.GetMetadata().Rows, rhs.GetMetadata().Columns);
-                        this->ResizeDataArrayIfNeeded(rhs.GetMetadata());
+                        ThisType temp = rhs;
+                        *this = temp;
                     }
-
-                    this->SetTransposeFlag('N');
-                    Array<OneD, DataType> original = this->GetData();
-                    
-                    rhs.Evaluate(*this);
-                    
-                    if( this->GetWrapperType() == eWrapper )
+                    else
                     {
-                        if( this->GetData().data() != original.data() )
+                        if( this->GetRows() != rhs.GetMetadata().Rows ||
+                            this->GetColumns() != rhs.GetMetadata().Columns )
                         {
-                            this->SwapTempAndDataBuffers();
-                            std::copy(this->GetTempSpace().data(), this->GetTempSpace().data() + this->GetRequiredStorageSize(),
-                                this->GetData().data());
+                            Resize(rhs.GetMetadata().Rows, rhs.GetMetadata().Columns);
+                            this->ResizeDataArrayIfNeeded(rhs.GetMetadata());
+                        }
+
+                        this->SetTransposeFlag('N');
+                        Array<OneD, DataType> original = this->GetData();
+                        
+                        rhs.Evaluate(*this);
+                        
+                        if( this->GetWrapperType() == eWrapper )
+                        {
+                            if( this->GetData().data() != original.data() )
+                            {
+                                this->SwapTempAndDataBuffers();
+                                std::copy(this->GetTempSpace().data(), this->GetTempSpace().data() + this->GetRequiredStorageSize(),
+                                    this->GetData().data());
+                            }
                         }
                     }
                     return *this;

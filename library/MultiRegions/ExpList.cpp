@@ -769,7 +769,7 @@ namespace Nektar
             NekDouble zero    = 0.0,sign1,sign2,value; 
             NekDouble factor1 = mkey.GetConstant(0);
             NekDouble factor2 = mkey.GetConstant(1);
-            StdRegions::MatrixType linsystype = mkey.GetLinSysType();
+            StdRegions::MatrixType linsystype = mkey.GetMatrixType();
 
             DNekMatSharedPtr Gmat;
             int bwidth = LocToGloBaseMap.GetBndSystemBandWidth();

@@ -125,9 +125,11 @@ namespace Nektar
                 if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
                     m_numLocalDirBndCoeffs += 1;
-                    m_numDirichletBndPhys   += 1;
+                    m_numDirichletBndPhys  += 1;
                 }
             }
+
+            CalculateBndSystemBandWidth(*exp1D);
         }
 
         LocalToGlobalDGMap::LocalToGlobalDGMap(SpatialDomains::MeshGraph2D &graph2D, 
@@ -294,7 +296,7 @@ namespace Nektar
                     
                     if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                     {
-                        m_numLocalDirBndCoeffs += locSegExp->GetNcoeffs();
+                        m_numLocalDirBndCoeffs  += locSegExp->GetNcoeffs();
                         m_numDirichletBndPhys   += locSegExp->GetTotPoints();
                     }
                 }
@@ -375,6 +377,64 @@ namespace Nektar
             
             m_numGlobalBndCoeffs = trace->GetNcoeffs();
 
+            CalculateBndSystemBandWidth(*exp2D);
         }
+
+
+
+        // ----------------------------------------------------------------
+        // Calculation of the bandwith ---- The bandwidth here
+        // calculated corresponds to what is referred to as
+        // half-bandwidth.  If the elements of the matrix are
+        // designated as a_ij, it corresponds to the maximum value of
+        // |i-j| for non-zero a_ij.  As a result, the value also
+        // corresponds to the number of sub or superdiagonals.
+        //
+        // The bandwith can be calculated elementally as it
+        // corresponds to the maximal elemental bandwith (i.e. the
+        // maximal difference in global DOF index for every element)
+        //
+        // 2 different bandwiths can be calculated: - the bandwith of
+        // the full global system - the bandwith of the global
+        // boundary system (as used for static condensation)
+        void LocalToGlobalDGMap::CalculateBndSystemBandWidth(const StdRegions::StdExpansionVector &locExpVector)
+        {
+            int i,j;
+            int cnt = 0;
+            int locSize;
+            int maxId;
+            int minId;
+            int bwidth = -1;
+
+            for(i = 0; i < locExpVector.size(); ++i)
+            {
+                locSize = locExpVector[i]->NumDGBndryCoeffs();
+                maxId = -1;
+                minId = m_numLocalBndCoeffs+1;
+                for(j = 0; j < locSize; j++)
+                {
+                    if(m_localToGlobalBndMap[cnt+j] >= m_numLocalDirBndCoeffs)
+                    {
+                        if(m_localToGlobalBndMap[cnt+j] > maxId)
+                        {
+                            maxId = m_localToGlobalBndMap[cnt+j];
+                        }
+                        
+                        if(m_localToGlobalBndMap[cnt+j] < minId)
+                        {
+                            minId = m_localToGlobalBndMap[cnt+j];
+                        }
+                    }
+                }
+                bwidth = (bwidth>(maxId-minId))?bwidth:(maxId-minId);
+
+                cnt+=locSize;
+            }
+
+            m_bndSystemBandWidth = bwidth;
+        }
+        
     }
+
+
 }

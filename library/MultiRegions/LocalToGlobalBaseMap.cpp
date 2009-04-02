@@ -75,12 +75,17 @@ namespace Nektar
          *   -  (optionally) have some optimal ordering (where optimality can be defined in different ways, e.g.
          *      minimal bandwith)
          *
-         * All intermittent steps from starting point to end point can basically be chosen freely but they should allow 
-         * for an efficient construction of the global numbering system starting from the elemental ordering
-         * of the local degrees of freedom. Currently, Nektar++ provides a number of tools and routines
-         * in the different sublibraries which can be employed to set up the mapping from local to global DOF's.
-         * These tools  will be listed below, but first the connectivity strategies for both modal and nodal expansions
-         * will be explained. Note that all explanations below are focussed on quadrilateral elements. However, the general 
+         * All intermittent steps from starting point to end point can
+         * basically be chosen freely but they should allow for an
+         * efficient construction of the global numbering system
+         * starting from the elemental ordering of the local degrees
+         * of freedom. Currently, Nektar++ provides a number of tools
+         * and routines in the different sublibraries which can be
+         * employed to set up the mapping from local to global DOF's.
+         * These tools will be listed below, but first the
+         * connectivity strategies for both modal and nodal expansions
+         * will be explained. Note that all explanations below are
+         * focussed on quadrilateral elements. However, the general
          * idea equally holds for triangles.
          *
          * \subsubsection Connectivitystrategies Connectivity strategies
@@ -274,12 +279,14 @@ namespace Nektar
             m_numLocalBndCoeffs(0),
             m_numGlobalBndCoeffs(0),
             m_numLocalDirBndCoeffs(0),
-            m_numGlobalDirBndCoeffs(0)
+            m_numGlobalDirBndCoeffs(0),
+            m_bndSystemBandWidth(0)
         {
         }
 
         LocalToGlobalBaseMap::~LocalToGlobalBaseMap(void)
         {
         };
+
     }
 }

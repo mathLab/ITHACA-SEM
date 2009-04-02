@@ -230,7 +230,6 @@ namespace Nektar
             GenExpList1DSharedPtr                              m_trace;
             LocalToGlobalDGMapSharedPtr                        m_traceMap;
 
-
             /**
              * \brief This function discretises the boundary conditions by setting up
              * a list of one-dimensional boundary expansions.    

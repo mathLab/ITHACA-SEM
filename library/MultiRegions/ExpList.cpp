@@ -567,7 +567,6 @@ namespace Nektar
                 loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);               
                 loc_lda = loc_mat->GetColumns();
 
-                //cout<<"loc mat "<<endl<<*loc_mat<<endl;
 		    
                 for(i = 0; i < loc_lda; ++i)
                 {
@@ -581,9 +580,11 @@ namespace Nektar
                             sign2 = locToGloMap->GetLocalToGlobalSign(cnt + j);
                             if(gid2 >= 0)
                             {
-                                // As the global matrix should be symmetric, only add the value
-                                // for the upper triangular part in order to avoid
-                                // entries to be entered twice
+                                // As the global matrix should be
+                                // symmetric, only add the value for
+                                // the upper triangular part in order
+                                // to avoid entries to be entered
+                                // twice
                                 if(gid2 >= gid1)
                                 {
                                     value = Gmat->GetValue(gid1,gid2) + sign1*sign2*(*loc_mat)(i,j);
@@ -707,9 +708,11 @@ namespace Nektar
                             sign2 = locToGloMap->GetLocalToGlobalBndSign(cnt + j);
                             if(gid2 >= 0)
                             {
-                                // As the global matrix should be symmetric, only add the value
-                                // for the upper triangular part in order to avoid
-                                // entries to be entered twice
+                                // As the global matrix should be
+                                // symmetric, only add the value for
+                                // the upper triangular part in order
+                                // to avoid entries to be entered
+                                // twice
                                 if(gid2 >= gid1)
                                 {
                                     value = Gmat->GetValue(gid1,gid2) + sign1*sign2*(*loc_mat)(i,j);
@@ -763,12 +766,25 @@ namespace Nektar
             int NumDirBCs     = LocToGloBaseMap.GetNumLocalDirBndCoeffs();
             unsigned int rows = totDofs - NumDirBCs;
             unsigned int cols = totDofs - NumDirBCs;
-            NekDouble zero    = 0.0,sign1,sign2; 
+            NekDouble zero    = 0.0,sign1,sign2,value; 
             NekDouble factor1 = mkey.GetConstant(0);
             NekDouble factor2 = mkey.GetConstant(1);
-            StdRegions::MatrixType linsystype = mkey.GetMatrixType();
-            
-            DNekMatSharedPtr Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero); 
+            StdRegions::MatrixType linsystype = mkey.GetLinSysType();
+
+            DNekMatSharedPtr Gmat;
+            int bwidth = LocToGloBaseMap.GetBndSystemBandWidth();
+
+            if( (2*(bwidth+1)) < rows)
+            {
+                MatrixStorage matStorage = ePOSITIVE_DEFINITE_SYMMETRIC_BANDED;
+                Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero,matStorage,bwidth,bwidth);
+            }
+            else
+            {
+                MatrixStorage matStorage = ePOSITIVE_DEFINITE_SYMMETRIC;
+                Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero,matStorage);
+            }                
+
             ASSERTL0(linsystype == StdRegions::eHybridDGHelmBndLam,
                      "Routine currently only tested for HybridDGHelmholtz");
             
@@ -779,23 +795,30 @@ namespace Nektar
                 LocalRegions::MatrixKey Umatkey(linsystype, (*m_exp)[n]->DetExpansionType(),*((*m_exp)[n]), factor1,factor2);
                 DNekScalMat &BndSys = *((*m_exp)[n]->GetLocMatrix(Umatkey)); 
                 
+
                 loc_lda = BndSys.GetColumns();
                 
                 for(i = 0; i < loc_lda; ++i)
                 {
-                    gid1  = LocToGloBaseMap.GetLocalToGlobalBndMap(cnt + i);
+                    gid1  = LocToGloBaseMap.GetLocalToGlobalBndMap (cnt + i) 
+                        - NumDirBCs;
                     sign1 = LocToGloBaseMap.GetLocalToGlobalBndSign(cnt + i); 
 
-                    if(gid1 >= NumDirBCs)
+                    if(gid1 >= 0)
                     {
                         for(j = 0; j < loc_lda; ++j)
                         {
-                            gid2 = LocToGloBaseMap.GetLocalToGlobalBndMap(cnt + j);
-                            sign2 = LocToGloBaseMap.GetLocalToGlobalBndSign(cnt + j); 
-                            if(gid2 >= NumDirBCs)
+                            gid2 = LocToGloBaseMap.GetLocalToGlobalBndMap(cnt+j) - NumDirBCs;
+                            sign2 = LocToGloBaseMap.GetLocalToGlobalBndSign(cnt+j); 
+                            if(gid2 >= 0)
                             {
-                                (*Gmat)(gid1-NumDirBCs,gid2-NumDirBCs) 
-                                    += sign1*sign2*(BndSys)(i,j);
+                                if(gid2 >= gid1)
+                                {
+                                    value = (*Gmat)(gid1,gid2) 
+                                        + sign1*sign2*(BndSys)(i,j);
+                                    
+                                    Gmat->SetValue(gid1, gid2, value);
+                                }
                             }
                         }		
                     }
@@ -803,9 +826,12 @@ namespace Nektar
                 cnt += loc_lda;
             }
             
-            // Believe that we need a call of the type:
-            // linsys=MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat,eWrapper);
-            linsys       = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat);
+            PointerWrapper w = eWrapper;
+            if(rows)
+            {
+                linsys = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat,w);
+            }
+
             returnlinsys = MemoryManager<GlobalLinSys>::AllocateSharedPtr(mkey,linsys);
             return returnlinsys;
         }

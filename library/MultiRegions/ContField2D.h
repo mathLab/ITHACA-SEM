@@ -296,8 +296,8 @@ namespace Nektar
                               bool UseContCoeffs = false);
           
             /**
-             * \brief This function evaluates the boundary conditions at a certain 
-             * time-level.
+             * \brief This function evaluates the boundary conditions
+             * at a certain time-level.
              *
              * Based on the boundary condition \f$g(\boldsymbol{x},t)\f$ evaluated
              * at a given time-level \a t, this function transforms the boundary 

@@ -577,17 +577,20 @@ namespace Nektar
                 Array<OneD, int>       localEdges; 
  
                 m_numLocalBndCoeffs = 0;
-                // First we are going to set up a temporary ordering of the mesh vertices and edges
-                // in the graph. We will then later use boost::cuthill_mckee_ordering (reverse Cuthill-McKee algorithm)  
-                // to minimize the bandwidth.
+                // First we are going to set up a temporary ordering
+                // of the mesh vertices and edges in the graph. We
+                // will then later use boost::cuthill_mckee_ordering
+                // (reverse Cuthill-McKee algorithm) to minimize the
+                // bandwidth.
                 //
-                // List the (non-dirichlet) vertices and edges of the mesh as the vertices of the temporary graph.
-                // Also define the adjancency between the different vertices of the graph.
+                // List the (non-dirichlet) vertices and edges of the
+                // mesh as the vertices of the temporary graph.  Also
+                // define the adjancency between the different
+                // vertices of the graph.
 
-                // List the periodic vertices and edges next.
-                // This allows to give corresponding DOF's the same
-                // global ID
-                // a) periodic vertices
+                // List the periodic vertices and edges next.  This
+                // allows to give corresponding DOF's the same global
+                // ID a) periodic vertices
                 for(mapConstIt = periodicVerticesId.begin(); mapConstIt != periodicVerticesId.end(); mapConstIt++)
                 {
                     meshVertId  = mapConstIt->first;
@@ -899,7 +902,8 @@ namespace Nektar
                     nEdgeInteriorCoeffs = locExpansion->GetEdgeNcoeffs(j)-2;
                     edgeOrient          = (locExpansion->GetGeom2D())->GetEorient(j);                        
                     meshEdgeId          = (locExpansion->GetGeom2D())->GetEid(j);
-                    meshVertId          = (locExpansion->GetGeom2D())->GetVid(j);
+                    meshVertId          = (locExpansion->GetGeom2D())->GetVid(j)
+;
                     
                     locExpansion->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
 
@@ -1420,19 +1424,22 @@ namespace Nektar
             m_numGlobalCoeffs = globalId;  
         }
 
-        // ----------------------------------------------------------------------------
-        // Calculation of the bandwith ----
-        // The bandwidth here calculated corresponds to what is referred to as half-bandwidth.
-        // If the elements of the matrix are designated as a_ij, it corresponds to
-        // the maximum value of |i-j| for non-zero a_ij.
-        // As a result, the value also corresponds to the number of sub or superdiagonals.
+
+        // ----------------------------------------------------------------
+        // Calculation of the bandwith ---- The bandwidth here
+        // calculated corresponds to what is referred to as
+        // half-bandwidth.  If the elements of the matrix are
+        // designated as a_ij, it corresponds to the maximum value of
+        // |i-j| for non-zero a_ij.  As a result, the value also
+        // corresponds to the number of sub or superdiagonals.
         //
-        // The bandwith can be calculated elementally as it corresponds to the maximal 
-        // elemental bandwith (i.e. the maximal difference in global DOF index for every element)
+        // The bandwith can be calculated elementally as it
+        // corresponds to the maximal elemental bandwith (i.e. the
+        // maximal difference in global DOF index for every element)
         //
-        // 2 different bandwiths can be calculated:
-        // - the bandwith of the full global system
-        // - the bandwith of the global boundary system (as used for static condensation)
+        // 2 different bandwiths can be calculated: - the bandwith of
+        // the full global system - the bandwith of the global
+        // boundary system (as used for static condensation)
         void LocalToGlobalC0ContMap::CalculateBndSystemBandWidth(const StdRegions::StdExpansionVector &locExpVector)
         {
             int i,j;
@@ -1468,7 +1475,7 @@ namespace Nektar
 
             m_bndSystemBandWidth = bwidth;
         }
-
+        
         void LocalToGlobalC0ContMap::CalculateFullSystemBandWidth(const StdRegions::StdExpansionVector &locExpVector)
         {
             int i,j;
@@ -1510,6 +1517,9 @@ namespace Nektar
 
 /**
  * $Log: LocalToGlobalC0ContMap.cpp,v $
+ * Revision 1.6  2009/02/27 15:47:13  sherwin
+ * Corrected bug in initialising just Neumann boundary conditions
+ *
  * Revision 1.5  2008/12/19 15:12:39  pvos
  * Updates for precomputed dirichlet forcing functionality
  *

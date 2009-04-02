@@ -251,6 +251,12 @@ namespace Nektar
                 }
             }   
 
+            inline int GetBndSystemBandWidth() const
+            {
+                return m_bndSystemBandWidth;
+            }
+
+
         protected:
             int m_numLocalBndCoeffs;      //< number of local Bnd coefficients
             int m_numGlobalBndCoeffs;     // Total number of global boundary coefficients
@@ -262,6 +268,8 @@ namespace Nektar
  
             Array<OneD,int> m_bndCondCoeffsToGlobalCoeffsMap;  //< integer map of bnd cond coeffs to global coefficients
             Array<OneD,NekDouble> m_bndCondCoeffsToGlobalCoeffsSign;  //< integer map of bnd cond coeffs to global coefficients
+
+            int m_bndSystemBandWidth;
         private:
         };
         typedef boost::shared_ptr<LocalToGlobalBaseMap>  LocalToGlobalBaseMapSharedPtr;
@@ -277,6 +285,9 @@ namespace Nektar
 
 /** 
  $Log: LocalToGlobalBaseMap.h,v $
+ Revision 1.11  2009/03/04 14:17:38  pvos
+ Removed all methods that take and Expansion as argument
+
  Revision 1.10  2009/02/08 09:10:47  sherwin
  Added NUllLocalToGlobalBaseMapSharedPtr definition
 

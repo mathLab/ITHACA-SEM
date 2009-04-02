@@ -96,6 +96,8 @@ namespace Nektar
             Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr> > m_elmtToTrace;  //< list of edge expansions for a given element 
             
             Array<OneD, AdjacentTraceOrientation > m_bndExpAdjacentOrient;
+
+            void CalculateBndSystemBandWidth(const StdRegions::StdExpansionVector &locExpVector);
         };
         
         typedef boost::shared_ptr<LocalToGlobalDGMap>  LocalToGlobalDGMapSharedPtr;
@@ -107,6 +109,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalDGMap.h,v $
+/** Revision 1.2  2008/09/16 13:36:06  pvos
+/** Restructured the LocalToGlobalMap classes
+/**
 /** Revision 1.1  2008/08/18 08:16:23  sherwin
 /** First version of this new class container for mappings
 /**

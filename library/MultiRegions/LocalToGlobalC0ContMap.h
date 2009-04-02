@@ -166,11 +166,6 @@ namespace Nektar
                 return m_fullSystemBandWidth;
             }
             
-            inline int GetBndSystemBandWidth() const
-            {
-                return m_bndSystemBandWidth;
-            }
-
         protected:
             int m_numLocalCoeffs;      //< number of local coefficients
             int m_numGlobalCoeffs;     // Total number of global coefficients
@@ -178,7 +173,6 @@ namespace Nektar
             Array<OneD,NekDouble> m_localToGlobalSign; //< integer sign of local coeffs to global space 
 
             int m_fullSystemBandWidth;
-            int m_bndSystemBandWidth;
  
         private:
             void SetUp1DExpansionC0ContMap(const int numLocalCoeffs, 
@@ -209,6 +203,8 @@ namespace Nektar
                                            const map<int,int>& periodicFacesId = NullIntIntMap);
 
             void CalculateBndSystemBandWidth(const StdRegions::StdExpansionVector &locExpVector);
+
+
             void CalculateFullSystemBandWidth(const StdRegions::StdExpansionVector &locExpVector);
         };
         typedef boost::shared_ptr<LocalToGlobalC0ContMap>  LocalToGlobalC0ContMapSharedPtr;
@@ -220,6 +216,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalC0ContMap.h,v $
+* Revision 1.6  2009/01/06 21:04:42  sherwin
+* Constified GlobalToLocal, LocalToGlobal and Assemble calls that take input and output argument
+*
 * Revision 1.5  2008/12/17 17:08:53  pvos
 * Performance updates
 *

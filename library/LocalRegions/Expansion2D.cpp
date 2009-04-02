@@ -169,93 +169,6 @@ namespace Nektar
             }
         }
 
-        // Boundary terms associated with elemental Helmholtz matrix operations
-        void Expansion2D::AddHDGHelmholtzMatrixBoundaryTerms(const NekDouble tau, 
-                                                             const Array<OneD,
-                                                             const NekDouble> &inarray,
-                                                             Array<OneD,StdRegions::StdExpansion1DSharedPtr > &EdgeExp,
-                                                             Array<OneD,NekDouble> &outarray)
-        {
-            int i,e;
-            int nbndry  = v_NumBndryCoeffs();
-            int nquad0  = v_GetNumPoints(0);
-            int nquad1  = v_GetNumPoints(1);
-            int coordim = v_GetCoordim();
-            int nedges  = v_GetNedges();
-
-            Array<OneD, unsigned int>   emap;
-            Array<OneD, int> sign;
-            StdRegions::EdgeOrientation edgedir;
-
-            Array<OneD,NekDouble>       in_phys(nquad0*nquad1);
-            Array<OneD,Array<OneD,NekDouble> > deriv(3);
-            
-            ASSERTL0(&inarray[0] != &outarray[0],"Input and output arrays use the same memory");
-
-            //  Get physical solution. 
-            v_BwdTrans(inarray,in_phys);
-
-            // Calculate derivative for matrix terms.
-            deriv[0] = Array<OneD,NekDouble>(nquad0*nquad1);
-            deriv[1] = Array<OneD,NekDouble>(nquad0*nquad1);
-
-            if(coordim == 2)
-            {
-                v_PhysDeriv(in_phys,deriv[0],deriv[1]);
-            }
-            else
-            {
-                deriv[2] = Array<OneD,NekDouble>(nquad0*nquad1);
-                v_PhysDeriv(in_phys,deriv[0],deriv[1],deriv[2]);
-            }
-
-            // Loop over edges
-            for(e = 0; e < nedges; ++e)
-            {
-                v_GetEdgePhysVals(e,EdgeExp[e],in_phys,EdgeExp[e]->UpdatePhys());
-                AddHDGHelmholtzEdgeTerms(tau,e,EdgeExp,outarray);
-                
-                //=============================================================
-                // Add -D^T M^{-1}G operation =-<n phi_i, n.d(in_phys)/dx]>
-                //term which arise in matrix formulations but not rhs
-                int nquad_e = EdgeExp[e]->GetNumPoints(0);                    
-                int order_e = EdgeExp[e]->GetNcoeffs();                    
-                Array<OneD,NekDouble> inval(nquad_e);
-                Array<OneD,NekDouble> normals = EdgeExp[e]->GetPhysNormals();
-
-                edgedir = v_GetEorient(e);
-                v_GetEdgeToElementMap(e,edgedir,emap,sign);
-                
-                Vmath::Zero(nquad_e,&(EdgeExp[e]->UpdatePhys())[0],1);
-                
-                for(i = 0; i < coordim; ++i)
-                {
-                    v_GetEdgePhysVals(e,EdgeExp[e],deriv[i],inval);
-                    
-                    Vmath::Vvtvp(nquad_e,&normals[i*nquad_e],1,&inval[0],1,
-                                 &(EdgeExp[e]->UpdatePhys())[0],1,
-                                 &(EdgeExp[e]->UpdatePhys())[0],1);
-                }
-                
-                // negate backwards normal
-                if(edgedir == StdRegions::eBackwards)
-                {
-                    Vmath::Neg(nquad_e,&(EdgeExp[e]->UpdatePhys())[0],1);
-                }
-
-                // Fill edge and take inner product
-                EdgeExp[e]->IProductWRTBase(EdgeExp[e]->GetPhys(),
-                                            EdgeExp[e]->UpdateCoeffs());
-                
-                // Put data in out array
-                for(i = 0; i < order_e; ++i)
-                {
-                    outarray[emap[i]] -= sign[i]*EdgeExp[e]->GetCoeff(i);
-                }                    
-            }
-            //================================================================
-        }
-
         
         // This method assumes that data in EdgeExp is orientated 
         // according to elemental counter clockwise format
@@ -314,7 +227,7 @@ namespace Nektar
             DNekVec                Tmpcoeff(ncoeffs,tmpcoeff,eWrapper);
             
             v_GetEdgeToElementMap(edge,edgedir,emap,sign);
-
+#if 1 
             //================================================================
             // Add F = \tau <phi_i,in_phys>
             // Fill edge and take inner product
@@ -326,6 +239,7 @@ namespace Nektar
                 outarray[emap[i]] += sign[i]*tau*EdgeExp[edge]->GetCoeff(i);
             }
             //================================================================
+#endif
 
             //===============================================================
             // Add -\sum_i D_i^T M^{-1} G_i + E_i M^{-1} G_i = 
@@ -335,7 +249,7 @@ namespace Nektar
                 //G;
                 Vmath::Vmul(nquad_e,&normals[n*nquad_e],1,
                             &(EdgeExp[edge]->GetPhys())[0],1, &inval[0],1);
-
+                
                 // negate for backwards facing edge
                 if(edgedir == StdRegions::eBackwards)
                 {
@@ -393,44 +307,58 @@ namespace Nektar
                              "HybridDGHelmholtz matrix not set up "
                              "for non boundary-interior expansions");
                     
-                    int i,j;
+                    int       i,j,k;
                     NekDouble lambdaval = mkey.GetConstant(0);
                     NekDouble tau       = mkey.GetConstant(1);
                     int       ncoeffs   = v_GetNcoeffs();
                     int       nedges    = v_GetNedges();
-                    Array<OneD,StdRegions::StdExpansion1DSharedPtr>  EdgeExp(nedges);
-                    
-                    // Get basic Galerkin Helmholtz matrix 
-                    DNekScalMat &Hmat = *v_GetLocMatrix(StdRegions::eHelmholtz,lambdaval);
-                    int rows = Hmat.GetRows();
-                    int cols = Hmat.GetColumns();
-                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
+                    Array<OneD,unsigned int> emap;
+                    Array<OneD,int> sign;
+                    StdRegions::EdgeOrientation edgedir;
+                    StdRegions::StdExpansion1DSharedPtr EdgeExp;
+
+                    int order_e, coordim = v_GetCoordim();
+                    DNekScalMat  &invMass = *v_GetLocMatrix(StdRegions::eInvMass);
+                    StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
+                                                           StdRegions::eWeakDeriv1,
+                                                           StdRegions::eWeakDeriv2};
+                    DNekMat LocMat(ncoeffs,ncoeffs); 
+
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(ncoeffs,ncoeffs);
                     DNekMat &Mat = *returnval;
 
-                    // Copy Hmat into Mat
-                    Vmath::Vcopy(rows*cols,Hmat.GetOwnedMatrix()->GetPtr(),1,Mat.GetPtr(),1);
-                    Vmath::Smul(rows*cols,Hmat.Scale(),Mat.GetPtr(),1,Mat.GetPtr(),1);
+                    Vmath::Zero(ncoeffs*ncoeffs,Mat.GetPtr(),1);
 
-                    Array<OneD,NekDouble> inarray(ncoeffs);
-                    Array<OneD,NekDouble> outarray(ncoeffs);
-                    
-                    // Set up edge segment expansions from local geom info
-                    for(i = 0; i < nedges; ++i)
+                    for(i=0;  i < coordim; ++i)
                     {
-                        EdgeExp[i] = v_GetEdgeExp(i);
+                        DNekScalMat &Dmat = *v_GetLocMatrix(DerivType[i]);
+
+                        LocMat = invMass*Transpose(Dmat);
+                        Mat = Mat + Dmat*LocMat;
+
+                        // Would like to do 
+                        // Mat = Mat + Dmat*invMat*Transpose(Dmat);
                     }
 
-                    for(j = 0; j < ncoeffs; ++j)
+                    // Add Mass Matrix Contribution
+                    DNekScalMat  &Mass = *v_GetLocMatrix(StdRegions::eMass);
+                    Mat = Mat + lambdaval*Mass;                    
+
+                    // Add tau*F_e using elemental mass matrices
+                    for(i = 0; i < nedges; ++i)
                     {
-                        Vmath::Zero(ncoeffs,&inarray[0],1);
-                        Vmath::Zero(ncoeffs,&outarray[0],1);
-                        inarray[j] = 1.0;
-                        
-                        AddHDGHelmholtzMatrixBoundaryTerms(tau,inarray,EdgeExp,outarray);
-                        
-                        for(i = 0; i < ncoeffs; ++i)
+                        EdgeExp = v_GetEdgeExp(i);
+                        DNekScalMat &eMass = *EdgeExp->GetLocMatrix(StdRegions::eMass);
+                        order_e = EdgeExp->GetNcoeffs();  
+                        v_GetEdgeToElementMap(i,edgedir,emap,sign);
+
+                        for(j = 0; j < order_e; ++j)
                         {
-                            Mat(i,j) += outarray[i];
+                            for(k = 0; k < order_e; ++k)
+                            {
+                                Mat(emap[j],emap[k]) = Mat(emap[j],emap[k]) + 
+                                    tau*sign[j]*sign[k]*eMass(j,k);
+                            }
                         }
                     }
                 }
@@ -485,6 +413,7 @@ namespace Nektar
                             Umat(k,j) = Ulam[k]; 
                         }
                     }
+
                 }
                 break;
             case StdRegions::eHybridDGLamToQ0:
@@ -681,7 +610,7 @@ namespace Nektar
                                              &work[0],1,&work[0],1);
                                 Vmath::Neg(nquad_e,work,1);
                             }
-                            
+
                             // - tau (ulam - lam)
                             for(j = 0; j < order_e; ++j)
                             {
@@ -693,7 +622,7 @@ namespace Nektar
                             
                             Vmath::Svtvp(nquad_e,-tau,EdgeExp[e]->GetPhys(),1,
                                          work,1,work,1);
-                            
+
                             EdgeExp[e]->IProductWRTBase(work,EdgeExp[e]->UpdateCoeffs());
                             
                             EdgeExp[e]->SetCoeffsToOrientation(edgedir);
@@ -721,6 +650,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.cpp,v $
+ *    Revision 1.5  2008/10/04 19:34:09  sherwin
+ *    Added an upwind method which takes the normal flux rather than than individual components
+ *
  *    Revision 1.4  2008/08/27 16:35:13  pvos
  *    Small efficiency update
  *

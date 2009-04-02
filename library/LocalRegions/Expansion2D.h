@@ -68,13 +68,7 @@ namespace Nektar
                                  Array<OneD, const NekDouble> &inarray,
                                  Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                                  Array<OneD,NekDouble> &outarray);
-                
-            void AddHDGHelmholtzMatrixBoundaryTerms(const NekDouble tau, 
-                                                    const Array<OneD,
-                                                    const NekDouble> &inarray,
-                                                    Array<OneD, StdRegions::StdExpansion1DSharedPtr > &EdgeExp,
-                                                    Array<OneD,NekDouble> &outarray);
-                
+                                
 
             void AddHDGHelmholtzTraceTerms(const NekDouble tau, 
                                            const Array<OneD, const NekDouble> &inarray, Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp, Array<OneD,NekDouble> &outarray);
@@ -166,6 +160,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.h,v $
+ *    Revision 1.5  2008/11/01 22:08:29  bnelson
+ *    Fixed compiler warning
+ *
  *    Revision 1.4  2008/10/04 19:34:09  sherwin
  *    Added an upwind method which takes the normal flux rather than than individual components
  *

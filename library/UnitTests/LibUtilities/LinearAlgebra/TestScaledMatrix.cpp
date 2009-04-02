@@ -580,6 +580,40 @@ namespace Nektar
                 BOOST_CHECK_EQUAL(expected_result, result2);
             }
         }
+        
+        BOOST_AUTO_TEST_CASE(BugReport1)
+        {
+            double dmat_buf[] = {1.0, 2.0,
+                                 3.0, 4.0,
+                                 5.0, 6.0};
+            boost::shared_ptr<NekMatrix<NekDouble> > inner(new NekMatrix<NekDouble>(2, 3, dmat_buf));
+            DNekScalMat Dmat(2.0, inner);
+            
+            boost::shared_ptr<NekMatrix<NekDouble> > inner1(new NekMatrix<NekDouble>(2, 3, dmat_buf));
+            DNekScalMat invMass(3.0, inner1);
+            
+            NekMatrix<NekDouble> LocMat; 
+            LocMat =  Transpose(Dmat);
+            LocMat = LocMat*invMass;
+            
+            BOOST_CHECK_EQUAL(LocMat(0,0), 54.0);
+            BOOST_CHECK_EQUAL(LocMat(0,1), 72.0);
+            BOOST_CHECK_EQUAL(LocMat(0,2), 90.0);
+            BOOST_CHECK_EQUAL(LocMat(1,0), 114.0);
+            BOOST_CHECK_EQUAL(LocMat(1,1), 156.0);
+            BOOST_CHECK_EQUAL(LocMat(1,2), 198.0);
+            BOOST_CHECK_EQUAL(LocMat(2,0), 174.0);
+            BOOST_CHECK_EQUAL(LocMat(2,1), 240.0);
+            BOOST_CHECK_EQUAL(LocMat(2,2), 306.0);
+            
+            //DNekScalMat Dmat, invMass;
+            //DNekMat LocMat;
+
+            //I want to perform;
+
+            //LocMat = Transpose(Dmat);
+            //LocaMat = invMass*LocMat; 
+        }
 
         BOOST_AUTO_TEST_CASE(TestScaledTMatrixVectorMultiply)
         {
@@ -597,6 +631,10 @@ namespace Nektar
                 double expected_result_buf[] = {10, 22, 34, 46};
                 NekVector<double> expected_result(4, expected_result_buf);
 
+                SMat m2 = Transpose(m1);
+                NekVector<double> result3 = m2*rhs;
+                BOOST_CHECK_EQUAL(expected_result, result3);
+                
                 in1->Transpose();
                 NekVector<double> result1 = m1*rhs;
                 BOOST_CHECK_EQUAL(expected_result, result1);

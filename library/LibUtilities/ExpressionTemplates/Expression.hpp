@@ -131,7 +131,7 @@ namespace Nektar
 
             void Evaluate(typename boost::call_traits<ResultType>::reference result) const
             {
-               if( !PolicyType::ContainsReference(result, m_data) )
+               if( !ContainsReference(result) )
                {
                     Accumulator<ResultType> accum(result);
                     PolicyType::Evaluate(accum, m_data);
@@ -146,6 +146,11 @@ namespace Nektar
                     
             }
 
+            bool ContainsReference(typename boost::call_traits<ResultType>::reference result) const
+            {
+                return PolicyType::ContainsReference(result, m_data);
+            }
+            
             void Evaluate(Accumulator<ResultType>& accum) const
             {
                 Evaluate<BinaryNullOp>(accum);
@@ -223,6 +228,9 @@ namespace Nektar
 #endif // NEKTAR_LIB_UTILITIES_EXPRESSION_HPP
 /**
     $Log: Expression.hpp,v $
+    Revision 1.24  2008/11/26 02:09:03  bnelson
+    *** empty log message ***
+
     Revision 1.23  2008/03/12 00:49:33  bnelson
     Forced a compile error if custom Metadata is supplied but not CreateFromMetadata specialization exists.
 

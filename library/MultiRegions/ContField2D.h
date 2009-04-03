@@ -302,7 +302,11 @@ namespace Nektar
                                       bool        UseContCoeffs = false,
                                       Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray);
             
-
+            void LinearAdvectionEigs(const NekDouble ax, 
+                                     const NekDouble ay,
+                                     Array<OneD, NekDouble> &Real, 
+                                     Array<OneD, NekDouble> &Imag, 
+                                     Array<OneD, NekDouble> &Evecs = NullNekDouble1DArray);
           
             /**
              * \brief This function evaluates the boundary conditions

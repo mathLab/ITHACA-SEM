@@ -805,6 +805,7 @@ namespace Nektar
 
         protected:
             
+            boost::shared_ptr<DNekMat> GenGlobalMatrixFull(const GlobalLinSysKey &mkey, const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
 
             void SetCoeffPhys(void);
                 
@@ -954,9 +955,14 @@ namespace Nektar
              * \return (A shared pointer to) the global linear system formed by the global 
              * matrix \f$\boldsymbol{M}\f$.
              */
-            boost::shared_ptr<GlobalLinSys>  GenGlobalLinSysFullDirect(const GlobalLinSysKey &mkey, 
-                                                                       const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
+            boost::shared_ptr<GlobalLinSys>  GenGlobalLinSysFullDirect(const GlobalLinSysKey &mkey, const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
 
+            
+            void GlobalEigenSystem(const boost::shared_ptr<DNekMat> &Gmat,
+                                   Array<OneD, NekDouble> &EigValsReal, 
+                                   Array<OneD, NekDouble> &EigValsImag, 
+                                   Array<OneD, NekDouble> &EigVecs = NullNekDouble1DArray);
+            
             /**
              * \brief This function constructs the necessary global matrices required for 
              * solving the linear system of type \a mkey by static condensation.
@@ -1206,6 +1212,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.57  2009/03/23 11:52:15  pvos
+* NekMatrix updates
+*
 * Revision 1.56  2009/03/23 10:51:52  pvos
 * Added BlockMatrix support
 *

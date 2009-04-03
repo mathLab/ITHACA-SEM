@@ -53,7 +53,7 @@ namespace Nektar
             m_bndConditions(In.m_bndConditions)
         {
         }
-
+        
         ContField2D::ContField2D(const ContField2D &In, 
                                  SpatialDomains::MeshGraph2D &graph2D,
                                  SpatialDomains::BoundaryConditions &bcs, 
@@ -394,6 +394,21 @@ namespace Nektar
                 GlobalSolve(key,wsp,tmp,dirForcing);
                 GlobalToLocal(tmp,outarray);
             }
+        }
+
+        void ContField2D::LinearAdvectionEigs(const NekDouble ax, 
+                                              const NekDouble ay,
+                                              Array<OneD, NekDouble> &Real, 
+                                              Array<OneD, NekDouble> &Imag, 
+                                              Array<OneD, NekDouble> &Evecs)
+        {
+            // Solve the system
+            GlobalLinSysKey key(StdRegions::eLinearAdvection,m_locToGloMap,
+                                ax,ay,eDirectFullMatrix);
+            
+            DNekMatSharedPtr   Gmat = GenGlobalMatrixFull(key,m_locToGloMap);
+            
+            GlobalEigenSystem(Gmat,Real,Imag,Evecs);
         }
 
 

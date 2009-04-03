@@ -35,6 +35,13 @@
 
 #include <MultiRegions/LocalToGlobalDGMap.h>
 
+#include <boost/config.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/cuthill_mckee_ordering.hpp>
+#include <boost/graph/properties.hpp>
+#include <boost/graph/bandwidth.hpp>
+
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -91,11 +98,11 @@ namespace Nektar
                 if(locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>((*exp1D)[i]))
                 {
                     locSegExp->GetBoundaryMap(vmap);
-                
+                        
                     for(j = 0; j < locSegExp->GetNverts(); ++j)
                     {   
                         vid = (locSegExp->GetGeom1D())->GetVid(j);
-
+                        
                         if(MeshVertToLocalVert.count(vid) == 0)
                         {
                             MeshVertToLocalVert[vid] = gid++;
@@ -143,7 +150,7 @@ namespace Nektar
             int ntrace_exp = trace->GetExpSize();
             int nel        = exp2D->size();
             int nbnd = bndCondExp.num_elements();
-            LocalRegions::SegExpSharedPtr  locSegExp;
+            LocalRegions::SegExpSharedPtr  locSegExp,locSegExp1;
             LocalRegions::QuadExpSharedPtr locQuadExp;
             LocalRegions::TriExpSharedPtr  locTriExp;
             SpatialDomains::Geometry1DSharedPtr SegGeom;
@@ -179,7 +186,7 @@ namespace Nektar
                 }
             }
 
-            // Count total number of edges edges
+            // Count total number of edges 
             cnt = 0;
             for(i = 0; i < nel; ++i)
             {
@@ -272,7 +279,7 @@ namespace Nektar
                             ASSERTL0(false,"Failed to find edge map");
                         }
 
-                        // Check to see which way boundar edge is
+                        // Check to see which way boundary edge is
                         // orientated with respect to connecting
                         // element counter-clockwise convention.
 
@@ -316,6 +323,106 @@ namespace Nektar
             m_localToGlobalBndMap  = Array<OneD, int > (nbndry);
             m_localToGlobalBndSign = Array<OneD, NekDouble > (nbndry,1);
 
+
+
+            // Set up array for potential mesh optimsation
+
+            Array<OneD,int> TraceElmtGid(ntrace_exp,-1);
+            int nDir = 0;
+            cnt = 0;
+
+            if(false) // Bandwidth optimisation
+            {
+                // the first template parameter (=OutEdgeList) is
+                // chosen to be of type std::set as in the set up of
+                // the adjacency, a similar edge might be created
+                // multiple times.  And to prevent the definition of
+                // parallell edges, we use std::set (=boost::setS)
+                // rather than std::vector (=boost::vecS)
+
+                typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
+                typedef boost::graph_traits<BoostGraph>::vertex_descriptor BoostVertex;
+
+                BoostGraph boostGraphObj;
+                int trace_id,trace_id1;
+
+                // make trace edge renumbering map where first solved
+                // edge starts at 0 so we can set up graph.
+                for(i = 0; i < ntrace_exp; ++i)
+                {
+                    if(trace->GetCoeff_Offset(i) >= m_numLocalDirBndCoeffs)
+                    {
+                        // Initial put in element ordering (starting
+                        // from zero) into TraceElmtGid
+                        TraceElmtGid[i] = cnt++;             
+                    }
+                    else
+                    {
+                        // Use existing offset for Dirichlet edges
+                        TraceElmtGid[i] = trace->GetCoeff_Offset(i);
+                        nDir++;
+                    }
+                }
+                
+                // Set up boost Graph
+                for(i = 0; i < nel; ++i)
+                {
+                    nbndry += (*exp2D)[i]->NumDGBndryCoeffs();
+                    
+                    for(j = 0; j < (*exp2D)[i]->GetNedges(); ++j)
+                    {   
+                        locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(m_elmtToTrace[i][j]);
+                        SegGeom = locSegExp->GetGeom1D();
+                        
+                        // Add edge to boost graph for non-Dirichlet Boundary 
+
+                        id  = SegGeom->GetEid();
+                        trace_id = MeshEdgeId.find(id)->second;
+                        if(trace->GetCoeff_Offset(trace_id) >= m_numLocalDirBndCoeffs) 
+                        {
+                            for(k = j; k < (*exp2D)[i]->GetNedges(); ++k)
+                            {   
+                                locSegExp1 = boost::dynamic_pointer_cast<LocalRegions::SegExp>(m_elmtToTrace[i][j]);
+                                SegGeom = locSegExp1->GetGeom1D();
+                        
+                                id1  = SegGeom->GetEid();
+                                trace_id1 = MeshEdgeId.find(id1)->second;
+                                if(trace->GetCoeff_Offset(trace_id1)
+                                   >= m_numLocalDirBndCoeffs)
+                                {
+                                    boost::add_edge( (size_t) TraceElmtGid[trace_id], (size_t) TraceElmtGid[trace_id1], boostGraphObj);                       
+                                }
+                            }
+                        }
+                    }
+                }
+                    
+                // Call boost::cuthill_mckee_ordering to reorder the
+                // graph-vertices using the reverse Cuthill-Mckee
+                // algorithm
+                vector<BoostVertex> inv_perm(ntrace_exp-nDir);
+                boost::cuthill_mckee_ordering(boostGraphObj, inv_perm.rbegin());
+
+                // Recast the inverse permutation so that it can be
+                // used as a map Form old trace edge ID to new trace
+                // edge ID
+                cnt = m_numLocalDirBndCoeffs;
+                for(i = 0; i < ntrace_exp-nDir; ++i)
+                {
+                    TraceElmtGid[inv_perm[i]+nDir]=cnt;
+                    cnt += trace->GetExp(inv_perm[i]+nDir)->GetNcoeffs();
+                }              
+            }
+            else // Basic numbering scheme. 
+            {
+                for(i = 0; i < ntrace_exp; ++i)
+                {
+                    TraceElmtGid[i] = trace->GetCoeff_Offset(i);
+                }
+            }
+
+            // Now have trace edges Gid position
+            
             nbndry = cnt = 0;
             for(i = 0; i < nel; ++i)
             {
@@ -327,7 +434,7 @@ namespace Nektar
                     SegGeom = locSegExp->GetGeom1D();
                     
                     id  = SegGeom->GetEid();
-                    gid = trace->GetCoeff_Offset(MeshEdgeId.find(id)->second);
+                    gid = TraceElmtGid[MeshEdgeId.find(id)->second];
                     
                     order_e = locSegExp->GetNcoeffs();
                     
@@ -378,6 +485,8 @@ namespace Nektar
             m_numGlobalBndCoeffs = trace->GetNcoeffs();
 
             CalculateBndSystemBandWidth(*exp2D);
+
+            cout << "bwidth: " << m_bndSystemBandWidth << endl;
         }
 
 

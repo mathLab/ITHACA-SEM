@@ -529,35 +529,52 @@ namespace Nektar
             unsigned int cols = totDofs - NumDirBCs;
             NekDouble zero = 0.0;
 
-
             DNekMatSharedPtr Gmat;
             int bwidth = locToGloMap->GetFullSystemBandWidth();
-            if( (2*(bwidth+1)) < rows)
-            {
-                MatrixStorage matStorage = ePOSITIVE_DEFINITE_SYMMETRIC_BANDED;
-                Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero,matStorage,bwidth,bwidth);
-            }
-            else
-            {
-                MatrixStorage matStorage = ePOSITIVE_DEFINITE_SYMMETRIC;
-                Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero,matStorage);
-            }  
 
+            
             int nvarcoeffs = mkey.GetNvariableCoefficients();
             Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
+            MatrixStorage matStorage;
+
+            switch(mkey.GetMatrixType())
+            {
+                // case for all symmetric matices
+            case StdRegions::eHelmholtz: 
+            case StdRegions::eLaplacian:
+                if( (2*(bwidth+1)) < rows)
+                {
+                    matStorage = ePOSITIVE_DEFINITE_SYMMETRIC_BANDED;
+                    Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero,matStorage,bwidth,bwidth);
+                }
+                else
+                {
+                    matStorage = ePOSITIVE_DEFINITE_SYMMETRIC;
+                    Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero,matStorage);
+                }  
+                
+                break;
+            default: // Assume general matrix - currently only set up for full invert
+                {
+                    matStorage = eFULL;
+                    Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero,matStorage);
             
-            // fill global matrix 
+                }       
+            }             
+
+            
+            // fill global symmetric matrix 
             for(n = cnt = cnt1 = 0; n < (*m_exp).size(); ++n)
             {
                 if(nvarcoeffs>0)
                 {
-                    for(j = 0; j < nvarcoeffs; j++)
-                    {
-                        varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
-                    }
-                    cnt1  += (*m_exp)[n]->GetTotPoints();
+                        for(j = 0; j < nvarcoeffs; j++)
+                        {
+                            varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
+                        }
+                        cnt1  += (*m_exp)[n]->GetTotPoints();
                 }
-
+                
                 LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
                                                (*m_exp)[n]->DetExpansionType(),
                                                *(*m_exp)[n],
@@ -566,8 +583,7 @@ namespace Nektar
                 
                 loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);               
                 loc_lda = loc_mat->GetColumns();
-
-		    
+                
                 for(i = 0; i < loc_lda; ++i)
                 {
                     gid1 = locToGloMap->GetLocalToGlobalMap(cnt + i) - NumDirBCs;
@@ -580,23 +596,22 @@ namespace Nektar
                             sign2 = locToGloMap->GetLocalToGlobalSign(cnt + j);
                             if(gid2 >= 0)
                             {
-                                // As the global matrix should be
-                                // symmetric, only add the value for
-                                // the upper triangular part in order
-                                // to avoid entries to be entered
-                                // twice
-                                if(gid2 >= gid1)
+                                // When global matrix is symmetric,
+                                // only add the value for the upper
+                                // triangular part in order to avoid
+                                // entries to be entered twice
+                                if((matStorage == eFULL)||(gid2 >= gid1))
                                 {
                                     value = Gmat->GetValue(gid1,gid2) + sign1*sign2*(*loc_mat)(i,j);
                                     Gmat->SetValue(gid1,gid2,value);
                                 }
-                            }
-                        }		
+                            }		
+                        }
                     }
                 }
                 cnt   += (*m_exp)[n]->GetNcoeffs();
-            }            
-            
+            }        
+
 //             for(i = NumDirBCs; i < NumDirBCs+NumRobinBCs; ++i)
 //             {
 //                 // Find a way to deal with second parameter of the Robin BC

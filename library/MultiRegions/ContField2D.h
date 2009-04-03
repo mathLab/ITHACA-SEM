@@ -294,6 +294,15 @@ namespace Nektar
                               const Array<OneD,       Array<OneD,NekDouble> >& variablecoeffs = NullNekDoubleArrayofArray,
                               NekDouble time = 0.0,
                               bool UseContCoeffs = false);
+
+
+            void LinearAdvectionSolve(const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                      NekDouble ax,     NekDouble ay,
+                                      bool        UseContCoeffs = false,
+                                      Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray);
+            
+
           
             /**
              * \brief This function evaluates the boundary conditions

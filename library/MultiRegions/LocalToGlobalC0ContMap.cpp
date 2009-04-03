@@ -422,11 +422,16 @@ namespace Nektar
                         vertCnt = 0;
                         edgeCnt = 0;
                         
-                        // List the (non-dirichlet) vertices and edges of the mesh as the vertices of the temporary graph
+                        // List the (non-dirichlet) vertices and edges
+                        // of the mesh as the vertices of the
+                        // temporary graph
                         //
-                        // At the same time, we can already start setting ip the adjacency information of the graph. 
-                        // This is required as input of the METIS routines. This adjacency information should list 
-                        // all adjacent graph-vertices for all the separate graph-vertices
+                        // At the same time, we can already start
+                        // setting ip the adjacency information of the
+                        // graph.  This is required as input of the
+                        // METIS routines. This adjacency information
+                        // should list all adjacent graph-vertices for
+                        // all the separate graph-vertices
                         for(j = 0; j < nVerts; ++j) 
                         {   
                             meshVertId = (locExpansion->GetGeom2D())->GetVid(j);
@@ -450,13 +455,19 @@ namespace Nektar
                             }  
                         }
 
-                        // Now loop over all local edges and vertices of this element and define 
-                        // that all other edges and verices of this element are adjacent to them.
-                        // To do so, we use an STL map where the key is the unique temporary graph-vertex id
-                        // and the mapped values is an STL set which contains the temporary graph-vertex id's
-                        // of all adajacent graph vertices. By looping over all elements in the mesh and everytime
-                        // appending the adjacent grapgh vertices, we will make sure that all the adjacency information
-                        // will be complete.
+                        // Now loop over all local edges and vertices
+                        // of this element and define that all other
+                        // edges and verices of this element are
+                        // adjacent to them.  To do so, we use an STL
+                        // map where the key is the unique temporary
+                        // graph-vertex id and the mapped values is an
+                        // STL set which contains the temporary
+                        // graph-vertex id's of all adajacent graph
+                        // vertices. By looping over all elements in
+                        // the mesh and everytime appending the
+                        // adjacent grapgh vertices, we will make sure
+                        // that all the adjacency information will be
+                        // complete.
                         for(j = 0; j < nVerts; j++)
                         {
                             if(localVerts[j]==-1)
@@ -521,8 +532,8 @@ namespace Nektar
                     adjncySize += graphAdjncySet[i].size();
                 }
 
-                // Now, translate this adjacency information to a format to the format that METIS 
-                // understands.
+                // Now, translate this adjacency information to a
+                // format to the format that METIS understands.
                 cnt = 0;
                 Array<OneD, int> xadj(tempGraphVertId+1);
                 Array<OneD, int> adjncy(adjncySize);
@@ -543,7 +554,9 @@ namespace Nektar
 
                 Metis::onmetis(tempGraphVertId,xadj,adjncy,perm,iperm);
 
-                // Fill the vertReorderedGraphVertId and edgeReorderedGraphVertId with the optimal ordering from METIS
+                // Fill the vertReorderedGraphVertId and
+                // edgeReorderedGraphVertId with the optimal ordering
+                // from METIS
                 for(mapIt = vertTempGraphVertId.begin(); mapIt != vertTempGraphVertId.end(); mapIt++)
                 {
                     vertReorderedGraphVertId[mapIt->first] = iperm[mapIt->second] + graphVertId; 
@@ -558,9 +571,11 @@ namespace Nektar
             // (as provided by the Boost Graph Library)
             if(true)
             {
-                // the first template parameter (=OutEdgeList) is chosen to be of type std::set
-                // as in the set up of the adjacency, a similar edge might be created multiple times.
-                // And to prevent the definition of paralelle edges, we use std::set (=boost::setS)
+                // the first template parameter (=OutEdgeList) is
+                // chosen to be of type std::set as in the set up of
+                // the adjacency, a similar edge might be created
+                // multiple times.  And to prevent the definition of
+                // parallell edges, we use std::set (=boost::setS)
                 // rather than std::vector (=boost::vecS)
                 typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
                 typedef boost::graph_traits<BoostGraph>::vertex_descriptor BoostVertex;
@@ -1517,6 +1532,9 @@ namespace Nektar
 
 /**
  * $Log: LocalToGlobalC0ContMap.cpp,v $
+ * Revision 1.7  2009/04/02 13:06:42  sherwin
+ * Modified to take symmetric banded system for HDH solver
+ *
  * Revision 1.6  2009/02/27 15:47:13  sherwin
  * Corrected bug in initialising just Neumann boundary conditions
  *

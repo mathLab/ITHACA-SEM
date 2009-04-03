@@ -336,6 +336,7 @@ namespace Nektar
             }
         }
 
+
         void ContField2D::LaplaceSolve(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,       NekDouble> &outarray,
                                              Array<OneD,       NekDouble> &dirForcing,
@@ -364,6 +365,37 @@ namespace Nektar
                 GlobalToLocal(tmp,outarray);
             }
         }
+
+
+        // Solve the linear advection problem assuming that m_contCoeff vector 
+        // contains an intial estimate for solution
+        void ContField2D::LinearAdvectionSolve(const Array<OneD, const NekDouble> &inarray,
+                                               Array<OneD,       NekDouble> &outarray,
+                                               NekDouble ax, NekDouble ay,
+                                               bool        UseContCoeffs,
+                                               Array<OneD, NekDouble>& dirForcing)
+        {
+            // Inner product of forcing
+            Array<OneD,NekDouble> wsp(m_contNcoeffs);  
+            IProductWRTBase(inarray,wsp,true);       
+
+
+            // Solve the system
+            GlobalLinSysKey key(StdRegions::eLinearAdvection,m_locToGloMap,
+                                ax,ay,eDirectFullMatrix);
+
+            if(UseContCoeffs)
+            {
+                GlobalSolve(key,wsp,outarray,dirForcing);
+            }
+            else
+            {
+                Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
+                GlobalSolve(key,wsp,tmp,dirForcing);
+                GlobalToLocal(tmp,outarray);
+            }
+        }
+
 
         void ContField2D::GenerateDirBndCondForcing(const GlobalLinSysKey &key, 
                                                     Array<OneD, NekDouble> &inout, 

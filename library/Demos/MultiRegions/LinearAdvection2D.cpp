@@ -21,18 +21,18 @@ int main(int argc, char *argv[])
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
-    NekDouble  lambda;
+    NekDouble  ax,ay;
     NekDouble   st, cps = (double)CLOCKS_PER_SEC;
 
     if(argc != 3)
     {
-        fprintf(stderr,"Usage: Helmholtz2D  meshfile boundaryfile\n");
+        fprintf(stderr,"Usage: LinearAdvection2D  meshfile boundaryfile\n");
         exit(1);
     }
 
     //----------------------------------------------
     // Read in mesh from input file
-    string meshfile(argv[1]);
+    string meshfile(argv[argc-2]);
     SpatialDomains::MeshGraph2D graph2D; 
 
     graph2D.ReadGeometry(meshfile);
@@ -41,20 +41,26 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // read the problem parameters from input file
-    string bcfile(argv[2]);
+    string bcfile(argv[argc-1]);
     SpatialDomains::BoundaryConditions bcs(&graph2D); 
     bcs.Read(bcfile);
     //----------------------------------------------
 
     //----------------------------------------------
+    // Get Advection Velocity
+    ax = bcs.GetParameter("Advection_x");
+    ay = bcs.GetParameter("Advection_y");
+    //----------------------------------------------
+
+    //----------------------------------------------
     // Print summary of solution details
-    lambda = bcs.GetParameter("Lambda");
     const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
     LibUtilities::BasisKey bkey = graph2D.GetBasisKey(expansions[0],0);
-    cout << "Solving 2D Helmholtz:"  << endl; 
-    cout << "         Lambda     : " << lambda << endl; 
-    cout << "         Expansion  : " << SpatialDomains::kExpansionTypeStr[expansions[0]->m_ExpansionType] << endl;
-    cout << "         No. modes  : " << (int) expansions[0]->m_NumModesEqn.Evaluate() << endl;
+    cout << "Solving 2D LinearAdvection :"  << endl; 
+    cout << "            Advection_x    : " << ax << endl; 
+    cout << "            Advection_y    : " << ay << endl; 
+    cout << "            Expansion      : " << SpatialDomains::kExpansionTypeStr[expansions[0]->m_ExpansionType] << endl;
+    cout << "            No. modes      : " << (int) expansions[0]->m_NumModesEqn.Evaluate() << endl;
     cout << endl;
     //----------------------------------------------
    
@@ -109,18 +115,9 @@ int main(int argc, char *argv[])
   
     //----------------------------------------------
     // Helmholtz solution taking physical forcing 
-    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), lambda);
+    Exp->LinearAdvectionSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), ax, ay);
     //----------------------------------------------
-    Timing("Helmholtz Solve ..");
-
-#ifdef TIMING
-    for(i = 0; i < 100; ++i)
-    {
-        Exp->HelmSolve(*Fce, lambda);
-    }
-    
-    Timing("100 Helmholtz Solves:... ");
-#endif 
+    Timing("Linear Advection Solve ..");
     
     //----------------------------------------------
     // Backward Transform Solution to get solved values 
@@ -129,11 +126,11 @@ int main(int argc, char *argv[])
     
     //----------------------------------------------
     // Write solution 
-    ofstream outfile("HelmholtzFile2D.pos");
+    ofstream outfile("LinearAdvectionFile2D.pos");
     Exp->WriteToFile(outfile,eGmsh);
     outfile.close();
 
-    ofstream outfile2("HelmholtzFile2D.dat");
+    ofstream outfile2("LinearAdvectionFile2D.dat");
     Exp->WriteToFile(outfile2,eTecplot);
     outfile2.close();
     //----------------------------------------------

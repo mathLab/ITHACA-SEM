@@ -3,7 +3,6 @@
 
 #include <MultiRegions/DisContField2D.h>
 
-
 #ifdef TIMING
 #include <time.h>
 #define Timing(s) \
@@ -121,7 +120,7 @@ int main(int argc, char *argv[])
     
     Timing("Helmholtz Solve ..");
 
-#if 0
+#ifdef TIMING
     for(i = 0; i < 100; ++i)
     {
         Exp->HelmSolve(*Fce, lambda);

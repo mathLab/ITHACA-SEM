@@ -71,6 +71,11 @@ ADD_NEKTAR_EXECUTABLE(Advection AdvectionSource)
 TARGET_LINK_LIBRARIES(Advection ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(Advection)
 
+SET(LinearAdvectionCont2DSource  LinearAdvection2D.cpp)
+ADD_NEKTAR_EXECUTABLE(LinearAdvection2D LinearAdvectionCont2DSource)
+TARGET_LINK_LIBRARIES(LinearAdvection2D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(LinearAdvection2D)
+
 SET(PostProcessingSource  PostProcessing.cpp)
 ADD_NEKTAR_EXECUTABLE(PostProcessing PostProcessingSource)
 TARGET_LINK_LIBRARIES(PostProcessing ${LinkLibraries})

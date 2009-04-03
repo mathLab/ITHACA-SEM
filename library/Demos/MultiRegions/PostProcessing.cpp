@@ -21,10 +21,10 @@ int main(int argc, char *argv[])
 	/***********************************************************/
 
 	// Construct an object from the class ExpList1D.
-    // This is the class which represents a multi-elemental expansion
+        // This is the class which represents a multi-elemental expansion
 	// This object can be constructed based on the input mesh
-    MultiRegions::ExpList1DSharedPtr u =
-        MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(mesh);
+        MultiRegions::ExpList1DSharedPtr u =
+            MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(mesh);
 
 	/***********************************************************/
 	// Get the number of elements
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 	int order = base[0]->GetNumModes();
 
 	
-	/************ Read in the data file and update the coefficients**********/
+	/****** Read in the data file and update the coefficients ***/
 	// Contains the local polynomial modes for each element
 	Array<OneD,NekDouble> uhat_pre = u->UpdateCoeffs();
 	

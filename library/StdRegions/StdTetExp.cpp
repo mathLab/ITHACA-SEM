@@ -973,7 +973,7 @@ namespace Nektar
             // Allocate the map array and sign array; set sign array to ones (+)
             if(maparray.num_elements() != nFaceCoeffs)
             {
-                maparray = Array<OneD, unsigned int>(nFaceCoeffs,-1);
+                maparray = Array<OneD, unsigned int>(nFaceCoeffs,1);
             }
             
             if(signarray.num_elements() != nFaceCoeffs)
@@ -1239,6 +1239,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTetExp.cpp,v $
+ * Revision 1.22  2009/01/01 02:40:25  ehan
+ * Added GetFaceToElementMap().
+ *
  * Revision 1.21  2008/12/18 14:11:35  pvos
  * NekConstants Update
  *

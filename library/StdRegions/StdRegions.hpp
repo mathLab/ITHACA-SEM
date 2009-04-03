@@ -195,6 +195,7 @@ namespace Nektar
             eWeakDeriv0,
             eWeakDeriv1,
             eWeakDeriv2,
+            eLinearAdvection,
             eNBasisTrans,
             eInvNBasisTrans,
             eBwdTrans,
@@ -360,6 +361,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.34  2009/02/16 16:06:20  pvos
+* Update of TimeIntegration classes
+*
 * Revision 1.33  2008/12/18 14:11:35  pvos
 * NekConstants Update
 *

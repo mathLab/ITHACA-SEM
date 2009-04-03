@@ -355,7 +355,7 @@ namespace Nektar
                     Array<OneD, NekDouble> tmpout(m_ncoeffs);
                     
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,m_ncoeffs);            
-                    
+                  
                     for(i=0; i < nq; ++i)
                     {
                         Vmath::Zero(nq, tmpin, 1);
@@ -380,6 +380,7 @@ namespace Nektar
             case eWeakDeriv0:
             case eWeakDeriv1:
             case eWeakDeriv2:
+            case eLinearAdvection:
                 {
                     Array<OneD, NekDouble> tmp(m_ncoeffs);
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);            
@@ -424,6 +425,9 @@ namespace Nektar
                 break;
             case eWeakDeriv2:
                 WeakDerivMatrixOp(2,inarray,outarray,mkey);
+                break;
+            case eLinearAdvection:
+                LinearAdvectionMatrixOp(inarray,outarray,mkey);
                 break;
             case eLaplacian:
                 LaplacianMatrixOp(inarray,outarray,mkey);
@@ -481,6 +485,9 @@ namespace Nektar
                 break;
             case eWeakDeriv2:
                 WeakDerivMatrixOp_MatFree(2,inarray,outarray,mkey);
+                break;
+            case eLinearAdvection:
+                LinearAdvectionMatrixOp_MatFree(inarray,outarray,mkey);
                 break;
             case eLaplacian:
                 LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
@@ -595,8 +602,7 @@ namespace Nektar
                         {
                             for(j = 0; j < dim; j++)
                             {
-                                mkeyij = MemoryManager<StdMatrixKey>::AllocateSharedPtr(mtype[i][j],etype,*this,mkey.GetConstants(),
-                                                                                        mkey.Get2DVariableLaplacianCoefficient(i,j));
+                                mkeyij = MemoryManager<StdMatrixKey>::AllocateSharedPtr(mtype[i][j],etype,*this,mkey.GetConstants(), mkey.Get2DVariableLaplacianCoefficient(i,j));
                                 
                                 LaplacianMatrixOp(i,j,inarray,store,*mkeyij);       
                                 Vmath::Vadd(m_ncoeffs, store, 1, store2, 1, store2, 1); 
@@ -671,6 +677,38 @@ namespace Nektar
             v_IProductWRTBase(tmp, outarray);
         }
 
+
+        void StdExpansion::LinearAdvectionMatrixOp_MatFree( const Array<OneD, const NekDouble> &inarray,
+                                                           Array<OneD,NekDouble> &outarray,
+                                                           const StdMatrixKey &mkey)
+        {
+
+            int i;
+            int ndir = mkey.GetNconstants(); // assume num.r consts corresponds to directions
+            
+            const Array<OneD, NekDouble> adv = mkey.GetConstants();
+            int   totpts = GetTotPoints();
+            Array<OneD, NekDouble> tmp(3*totpts);
+            Array<OneD, NekDouble> tmp_deriv = tmp + totpts;
+            Array<OneD, NekDouble> tmp_adv   = tmp_deriv + totpts;
+
+
+            ASSERTL1(ndir <= GetCoordim(),"Number of constants is larger than coordinate dimensions");
+
+            v_BwdTrans(inarray,tmp);
+
+            //calculate a dx + b dy + ..
+            Vmath::Zero(totpts,tmp_adv,1);
+            for(i = 0; i < ndir; ++i)
+            {
+                v_PhysDeriv(i,tmp,tmp_deriv);
+                Vmath::Svtvp(totpts,adv[i],tmp_deriv,1,tmp_adv,1,tmp_adv,1);
+            }
+            
+            v_IProductWRTBase(tmp_adv, outarray);
+        }
+
+
         void StdExpansion::HelmholtzMatrixOp_MatFree_GenericImpl(const Array<OneD, const NekDouble> &inarray,
                                                                        Array<OneD,NekDouble> &outarray,
                                                                        const StdMatrixKey &mkey)
@@ -712,6 +750,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.80  2008/11/24 10:31:14  pvos
+* Changed name from _PartitionedOp to _MatFree
+*
 * Revision 1.79  2008/11/19 16:02:47  pvos
 * Added functionality for variable Laplacian coeffcients
 *

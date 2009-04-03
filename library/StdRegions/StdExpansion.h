@@ -961,6 +961,13 @@ namespace Nektar
                 v_WeakDerivMatrixOp(i,inarray,outarray,mkey);
             }
 
+            void LinearAdvectionMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                   Array<OneD,NekDouble> &outarray,
+                                   const StdMatrixKey &mkey)
+            {
+                v_LinearAdvectionMatrixOp(inarray,outarray,mkey);
+            }
+
             void HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
                                    const StdMatrixKey &mkey)
@@ -1296,6 +1303,10 @@ namespace Nektar
                                                  Array<OneD,NekDouble> &outarray,
                                                  const StdMatrixKey &mkey);
             
+            void LinearAdvectionMatrixOp_MatFree( const Array<OneD, const NekDouble> &inarray,
+                                                  Array<OneD,NekDouble> &outarray,
+                                                  const StdMatrixKey &mkey);
+
             void HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                  Array<OneD,NekDouble> &outarray,
                                                  const StdMatrixKey &mkey)
@@ -1654,6 +1665,17 @@ namespace Nektar
                 WeakDerivMatrixOp_MatFree(i,inarray,outarray,mkey);
 
             }
+
+            virtual void v_LinearAdvectionMatrixOp(const Array<OneD, 
+                                                   const NekDouble> &inarray,
+                                                   Array<OneD,NekDouble> &outarray,
+                                                   const StdMatrixKey &mkey)
+            {
+                // If this function is not reimplemented on shape level, the function
+                // below will be called
+                LinearAdvectionMatrixOp_MatFree(inarray,outarray,mkey);
+
+            }
             
             virtual void v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray,
@@ -1696,6 +1718,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.109  2009/03/04 14:17:38  pvos
+ * Removed all methods that take and Expansion as argument
+ *
  * Revision 1.108  2008/12/18 14:11:35  pvos
  * NekConstants Update
  *

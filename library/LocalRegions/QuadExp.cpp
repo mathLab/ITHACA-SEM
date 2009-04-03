@@ -1489,18 +1489,6 @@ namespace Nektar
                     }
                 }
                 break;
-            case StdRegions::eHybridDGHelmholtz:
-            case StdRegions::eHybridDGLamToU:
-            case StdRegions::eHybridDGLamToQ0:
-            case StdRegions::eHybridDGLamToQ1:
-            case StdRegions::eHybridDGHelmBndLam:
-                {
-                    NekDouble one    = 1.0;
-                    
-                    DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
-                }
-                break;
             case StdRegions::eInvHybridDGHelmholtz:
                 {
                     NekDouble one = 1.0;
@@ -1516,7 +1504,12 @@ namespace Nektar
                 }
                 break;
             default:
-                NEKERROR(ErrorUtil::efatal, "Matrix creation not defined");
+                {
+                    NekDouble        one = 1.0;
+                    DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
+                    
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+                }
                 break;
             }
                 
@@ -1800,6 +1793,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.57  2009/01/21 16:59:57  pvos
+ *    Added additional geometric factors to improve efficiency
+ *
  *    Revision 1.56  2008/12/16 11:32:33  pvos
  *    Performance updates
  *

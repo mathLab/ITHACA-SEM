@@ -609,7 +609,7 @@ namespace Nektar
         {
             ASSERTL1(d1.num_elements()==m_coordim,"The dimension of array d1 does not"
                      "match the coordinate dimension");
-            ASSERTL1(d2.num_elements()==m_coordim,"The dimension of array d3 does not"
+            ASSERTL1(d2.num_elements()==m_coordim,"The dimension of array d2 does not"
                      "match the coordinate dimension");
             ASSERTL1(d3.num_elements()==m_coordim,"The dimension of array d3 does not"
                      "match the coordinate dimension");
@@ -642,16 +642,26 @@ namespace Nektar
             // m_gmat[2][0] =  (d1[1][0]*d2[2][0] - d1[2][0]*d3[1][0])/m_jac[0];
             // I am not sure which version is right. please verify!
             // Also check the deformed case.
+            //
+            // Update:
+            // Checked both expressions on Spencer's book:
+            // - J3D from pg 158 is fine, so the implementation.
+            // - There is a typo on d xi_3/dx_1. The third term is *not*
+            //   dx_2/dxi_3, but dx_2/dxi_2.
+            // - I guess terms or commentaries are swaped below; where you read
+            //   d xi_M/d x_N should be d xi_N/d x_M. In other words,
+            //   transposed.
+            // - Deformed case not checked.
 
             if((m_gtype == eRegular)||(m_gtype == eMovingRegular))
             {
                 m_jac     = Array<OneD, NekDouble>(1,0.0);
                 m_gmat    = Array<TwoD, NekDouble>(3*m_coordim,1,0.0);
                 
-                // J3D: Determinent of three-dimensional Jacobian
-                m_jac[0] =  d1[0][0]*(d2[1][0]*d3[2][0] - d2[2][0]*d3[1][0])
-                    -d1[1][0]*(d2[0][0]*d3[2][0] - d2[2][0]*d3[0][0])
-                    +d1[2][0]*(d2[0][0]*d3[1][0] - d2[1][0]*d3[0][0]);
+                // J3D: Determinant of three-dimensional Jacobian
+                m_jac[0] = d1[0][0]*( d2[1][0]*d3[2][0] - d2[2][0]*d3[1][0] )
+                          -d1[1][0]*( d2[0][0]*d3[2][0] - d2[2][0]*d3[0][0] )
+                          +d1[2][0]*( d2[0][0]*d3[1][0] - d2[1][0]*d3[0][0] );
                 
                 ASSERTL1(m_jac[0] > 0, "3D Regular Jacobian is not positive");
                 // Spen's book page 160
@@ -1288,6 +1298,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.38  2009/01/21 16:59:03  pvos
+// Added additional geometric factors to improve efficiency
+//
 // Revision 1.37  2009/01/01 02:33:29  ehan
 // cleaned up the code
 //

@@ -581,6 +581,28 @@ namespace Nektar
             }
         }
         
+        BOOST_AUTO_TEST_CASE(BugReport2)
+        {
+            double buf1[] = {1.0, 2.0, 3.0, 4.0};
+            double buf2[] = {5.0, 6.0, 7.0, 8.0};
+            double buf3[] = {-1.0, -2.0, -3.0, -4.0};
+            
+            boost::shared_ptr<NekMatrix<NekDouble> > DMatInner(
+                new NekMatrix<NekDouble>(2, 2, buf1));
+            boost::shared_ptr<NekMatrix<NekDouble> > InvMassInner(
+                new NekMatrix<NekDouble>(2, 2, buf2));
+            NekMatrix<NekDouble> Mat(2, 2, buf3);
+            DNekScalMat DMat(2.0, DMatInner);
+            DNekScalMat InvMass(3.0, InvMassInner);
+            
+            Mat = Mat + DMat*InvMass*Transpose(DMat);
+            
+            BOOST_CHECK_EQUAL(1391.0, Mat(0,0));
+            BOOST_CHECK_EQUAL(2037.0, Mat(0,1));
+            BOOST_CHECK_EQUAL(2062.0, Mat(1,0));
+            BOOST_CHECK_EQUAL(3020.0, Mat(1,1));
+        }
+        
         BOOST_AUTO_TEST_CASE(BugReport1)
         {
             {

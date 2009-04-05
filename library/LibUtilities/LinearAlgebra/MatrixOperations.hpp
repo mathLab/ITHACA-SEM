@@ -48,6 +48,7 @@
 #include <LibUtilities/LinearAlgebra/MatrixVectorMultiplication.hpp>
 #include <LibUtilities/ExpressionTemplates/BinaryExpressionEvaluatorFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrixMetadata.hpp>
+#include <LibUtilities/BasicUtils/RawType.hpp>
 
 #include <boost/utility/enable_if.hpp>
 
@@ -226,8 +227,38 @@ namespace Nektar
         }
     }
         
+    template<typename RhsInnerType, typename RhsMatrixType>
     void NekMultiplyEqual(NekMatrix<double, StandardMatrixTag>& result,
-                          const NekMatrix<const double, StandardMatrixTag>& rhs);
+                          const NekMatrix<RhsInnerType, RhsMatrixType>& rhs,
+                          typename boost::enable_if
+                          <
+                            boost::is_same<typename RawType<typename NekMatrix<RhsInnerType, RhsMatrixType>::NumberType>::type, double>
+                          >::type* t = 0)
+    {
+        ASSERTL0(result.GetType() == eFULL && rhs.GetType() == eFULL, "Only full matrices supported.");
+        unsigned int M = result.GetRows();
+        unsigned int N = rhs.GetColumns();
+        unsigned int K = result.GetColumns();
+
+        unsigned int LDA = M;
+        if( result.GetTransposeFlag() == 'T' )
+        {
+            LDA = K;
+        }
+
+        unsigned int LDB = K;
+        if( rhs.GetTransposeFlag() == 'T' )
+        {
+            LDB = N;
+        }
+        double scale = rhs.Scale();
+        Array<OneD, double>& buf = result.GetTempSpace();
+        Blas::Dgemm(result.GetTransposeFlag(), rhs.GetTransposeFlag(), M, N, K,
+            scale, result.GetRawPtr(), LDA, rhs.GetRawPtr(), LDB, 0.0,
+            buf.data(), result.GetRows());
+        result.SetSize(result.GetRows(), rhs.GetColumns());
+        result.SwapTempAndDataBuffers();
+    }
                           
 
 	template<typename LhsDataType, typename RhsDataType,

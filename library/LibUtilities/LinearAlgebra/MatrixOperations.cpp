@@ -37,33 +37,7 @@
 
 namespace Nektar
 {     
-    void NekMultiplyEqual(NekMatrix<double, StandardMatrixTag>& result,
-                          const NekMatrix<const double, StandardMatrixTag>& rhs)
-    {
-        ASSERTL0(result.GetType() == eFULL && rhs.GetType() == eFULL, "Only full matrices supported.");
-        unsigned int M = result.GetRows();
-        unsigned int N = rhs.GetColumns();
-        unsigned int K = result.GetColumns();
 
-        unsigned int LDA = M;
-        if( result.GetTransposeFlag() == 'T' )
-        {
-            LDA = K;
-        }
-
-        unsigned int LDB = K;
-        if( rhs.GetTransposeFlag() == 'T' )
-        {
-            LDB = N;
-        }
-
-        Array<OneD, double>& buf = result.GetTempSpace();
-        Blas::Dgemm(result.GetTransposeFlag(), rhs.GetTransposeFlag(), M, N, K,
-            1.0, result.GetRawPtr(), LDA, rhs.GetRawPtr(), LDB, 0.0,
-            buf.data(), result.GetRows());
-        result.SetSize(result.GetRows(), rhs.GetColumns());
-        result.SwapTempAndDataBuffers();
-    }
 }
 
 

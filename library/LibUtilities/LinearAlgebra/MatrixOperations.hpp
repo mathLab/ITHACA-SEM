@@ -802,7 +802,7 @@ namespace Nektar
 
             Blas::Dgemm(A.GetTransposeFlag(), B.GetTransposeFlag(), M, N, K,
                 A.Scale()*B.Scale()*alpha, A.GetRawPtr(), LDA,
-                B.GetRawPtr(), LDB, beta*C.Scale(),
+                B.GetRawPtr(), LDB, beta*result.Scale(),
                 result.GetRawPtr(), M);
         }
         

@@ -532,40 +532,6 @@ namespace Nektar
             return returnlinsys;
         }
 
-
-	void ExpList::GlobalEigenSystem(const DNekMatSharedPtr &Gmat, 
-                                        Array<OneD, NekDouble> &EigValReal, 
-                                        Array<OneD, NekDouble> &EigValImag, 
-                                        Array<OneD, NekDouble> &EigVecs)
-	{
-            switch(Gmat->GetStorageType())
-            {
-            case eFULL:
-                {
-                    int lda = Gmat->GetRows(),info = 0;
-                    NekDouble dum, lwork = 3*lda;
-                    Array<OneD,NekDouble> work(3*lda);
-
-                    if(EigVecs == NullNekDouble1DArray) // calculate Right Eigen Vectors
-                    {
-                        Lapack::Dgeev('N','V',lda, Gmat->GetRawPtr(),lda,&EigValReal[0],
-                                      &EigValImag[0],&dum,1,&EigVecs[0],lda,&work[0],lwork,info);
-                    }
-                    else
-                    {
-                        Lapack::Dgeev('N','N',lda, Gmat->GetRawPtr(),lda,&EigValReal[0],
-                                      &EigValImag[0],&dum,1,&dum,1,&work[0],lwork,info);
-                    }
-                    ASSERTL0(info == 0,"Info is not zero");
-                }
-                break;
-            default:
-                ASSERTL0(false,"Eigenvalue evaluation is not set up for this matrix storage type");
-                break;
-            }
-        }
-
-
         DNekMatSharedPtr ExpList::GenGlobalMatrixFull(const GlobalLinSysKey &mkey, const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
         {
             int i,j,n,gid1,gid2,loc_lda,cnt,cnt1;
@@ -797,7 +763,7 @@ namespace Nektar
 	GlobalLinSysSharedPtr ExpList::GenGlobalLinSys(const GlobalLinSysKey &mkey, const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
 	{
             GlobalLinSysSharedPtr returnlinsys; 
-
+            
             switch(mkey.GetGlobalSysSolnType())
             {
             case eDirectFullMatrix:

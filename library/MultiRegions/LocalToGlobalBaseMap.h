@@ -134,7 +134,8 @@ namespace Nektar
                 }
             }     
 
-            inline void GlobalToLocalBnd(const NekVector<const NekDouble>& global, NekVector<NekDouble>& loc)
+            inline void GlobalToLocalBnd(const NekVector<const NekDouble>& global, 
+                                         NekVector<NekDouble>& loc)
             {
                 ASSERTL1(loc.GetDimension() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
                 ASSERTL1(global.GetDimension() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
@@ -149,7 +150,8 @@ namespace Nektar
                 }
             } 
 
-            inline void GlobalToLocalBnd(const Array<OneD, const NekDouble>& global, Array<OneD,NekDouble>& loc, int offset)
+            inline void GlobalToLocalBnd(const Array<OneD, const NekDouble>& global, 
+                                         Array<OneD,NekDouble>& loc, int offset)
             {
                 ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
                 ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
@@ -168,7 +170,8 @@ namespace Nektar
                 }
             }     
 
-            inline void GlobalToLocalBnd(const Array<OneD, const NekDouble>& global, Array<OneD,NekDouble>& loc)
+            inline void GlobalToLocalBnd(const Array<OneD, const NekDouble>& global, 
+                                         Array<OneD,NekDouble>& loc)
             {
                 ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
                 ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
@@ -183,7 +186,8 @@ namespace Nektar
                 }
             } 
             
-            inline void AssembleBnd(const NekVector<const NekDouble>& loc, NekVector<NekDouble>& global, int offset)
+            inline void AssembleBnd(const NekVector<const NekDouble>& loc, 
+                                    NekVector<NekDouble>& global, int offset)
             {
                 ASSERTL1(loc.GetDimension() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
                 ASSERTL1(global.GetDimension() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
@@ -200,7 +204,8 @@ namespace Nektar
                 Vmath::Vcopy(global.GetDimension(), tmp.get() + offset, 1, global.GetRawPtr(), 1);
             }   
             
-            inline void AssembleBnd(const NekVector<const NekDouble>& loc, NekVector<NekDouble>& global)
+            inline void AssembleBnd(const NekVector<const NekDouble>& loc, 
+                                    NekVector<NekDouble>& global)
             {
                 ASSERTL1(loc.GetDimension() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
                 ASSERTL1(global.GetDimension() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
@@ -217,7 +222,8 @@ namespace Nektar
                 }
             }    
 
-            inline void AssembleBnd(const Array<OneD,const NekDouble>& loc, Array<OneD, NekDouble>& global, int offset)
+            inline void AssembleBnd(const Array<OneD,const NekDouble>& loc, 
+                                    Array<OneD, NekDouble>& global, int offset)
             {
                 ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local array is not of correct dimension");
                 ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs-offset,"Global array is not of correct dimension");
@@ -234,7 +240,8 @@ namespace Nektar
                 Vmath::Vcopy(m_numGlobalBndCoeffs-offset, tmp.get() + offset, 1, global.get(), 1);
             }   
             
-            inline void AssembleBnd(const Array<OneD, const NekDouble>& loc, Array<OneD, NekDouble>& global)
+            inline void AssembleBnd(const Array<OneD, const NekDouble>& loc, 
+                                    Array<OneD, NekDouble>& global)
             {
                 ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
                 ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
@@ -243,7 +250,8 @@ namespace Nektar
 
                 if(m_signChange)
                 {
-                    Vmath::Assmb(m_numLocalBndCoeffs,m_localToGlobalBndSign.get(), loc.get(), m_localToGlobalBndMap.get(), global.get());
+                    Vmath::Assmb(m_numLocalBndCoeffs,m_localToGlobalBndSign.get(), 
+                                 loc.get(), m_localToGlobalBndMap.get(), global.get());
                 }
                 else
                 {                
@@ -285,6 +293,9 @@ namespace Nektar
 
 /** 
  $Log: LocalToGlobalBaseMap.h,v $
+ Revision 1.12  2009/04/02 13:06:42  sherwin
+ Modified to take symmetric banded system for HDH solver
+
  Revision 1.11  2009/03/04 14:17:38  pvos
  Removed all methods that take and Expansion as argument
 

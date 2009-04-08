@@ -407,8 +407,7 @@ namespace Nektar
                                 ax,ay,eDirectFullMatrix);
             
             DNekMatSharedPtr   Gmat = GenGlobalMatrixFull(key,m_locToGloMap);
-            
-            GlobalEigenSystem(Gmat,Real,Imag,Evecs);
+            Gmat->EigenSolve(Real,Imag,Evecs);
         }
 
 

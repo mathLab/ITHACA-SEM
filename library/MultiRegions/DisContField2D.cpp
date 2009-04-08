@@ -157,8 +157,8 @@ namespace Nektar
 
         void DisContField2D::HelmSolve(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,       NekDouble> &outarray,
-                                       NekDouble lambda,
-                                       NekDouble tau)
+                                             NekDouble lambda,
+                                             NekDouble tau)
         {
             int e,i,j,n,cnt,cnt1,nbndry, order_e;
             int nexp = GetExpSize();
@@ -173,13 +173,13 @@ namespace Nektar
             //NekDouble tau = 10;
 
             //----------------------------------
-            // Setup RHS Inner product
+            //  Setup RHS Inner product
             //----------------------------------
             IProductWRTBase(inarray,f);
             Vmath::Neg(m_ncoeffs,f,1);
 
             //----------------------------------
-            // Solve continuous flux System
+            //  Solve continuous flux System
             //----------------------------------
             int GloBndDofs   = m_traceMap->GetNumGlobalBndCoeffs();
             int NumDirichlet = m_traceMap->GetNumLocalDirBndCoeffs();
@@ -244,6 +244,7 @@ namespace Nektar
                                      &(m_trace->UpdateCoeffs())[offset],1);
                     }
                 }
+                
                 // Add boundary flux
                 else if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eNeumann)
                 {
@@ -291,7 +292,7 @@ namespace Nektar
                         {
                             for(j = 0; j < e_ncoeffs; ++j)
                             {
-                                id        = m_traceMap->GetLocalToGlobalBndMap(cnt+cnt1);
+                                id        = m_traceMap->GetLocalToGlobalBndMap (cnt+cnt1);
                                 sign      = m_traceMap->GetLocalToGlobalBndSign(cnt+cnt1);
                                 vin[cnt1] = sign*m_trace->GetCoeffs(id); 
                                 cnt1++;
@@ -312,11 +313,12 @@ namespace Nektar
                     // Subtract vout from forcing terms 
                     for(i = 0; i < nbndry; ++i)
                     {
-                        id = m_traceMap->GetLocalToGlobalBndMap(cnt+i);
+                        id   = m_traceMap->GetLocalToGlobalBndMap (cnt+i);
                         sign = m_traceMap->GetLocalToGlobalBndSign(cnt+i);
 
                         if(id >= NumDirichlet)
                         {
+
                             m_trace->SetCoeff(id, m_trace->GetCoeff(id)
                                               - sign*vout[i]);
                         }
@@ -327,13 +329,13 @@ namespace Nektar
             
             if(GloBndDofs - NumDirichlet > 0)
             {
-                GlobalLinSysKey   key(StdRegions::eHybridDGHelmBndLam, 
-                                      m_traceMap,
-                                      lambda,tau,eDirectFullMatrix);
+                GlobalLinSysKey       key(StdRegions::eHybridDGHelmBndLam, 
+                                          m_traceMap,
+                                          lambda,tau,eDirectFullMatrix);
                 GlobalLinSysSharedPtr LinSys = GetGlobalBndLinSys(key);
                 
                 Array<OneD,NekDouble> sln = BndSol+NumDirichlet;
-
+                
                 LinSys->Solve(sln,sln);
             }
             
@@ -352,6 +354,8 @@ namespace Nektar
                 for(cnt1= j = 0; j < (*m_exp)[i]->GetNedges(); ++j)
                 {
                     offset = m_trace->GetCoeff_Offset(elmtToTrace[i][j]->GetElmtId());
+                    //!!!! Need to copy back using local to global mapping. 
+
                     order_e = (*m_exp)[i]->GetEdgeNcoeffs(j);
                     Vmath::Vcopy(order_e,&(m_trace->GetCoeffs())[offset],1,
                                  &e_lambda[cnt1],1);
@@ -463,7 +467,6 @@ namespace Nektar
             
         }
         
-
         void DisContField2D::ExtractTracePhys(Array<OneD,NekDouble> &outarray)
         {       
 

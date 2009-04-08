@@ -42,6 +42,7 @@
 #include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrixMetadata.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixFuncs.h>
+#include <LibUtilities/BasicUtils/Vmath.hpp>
 
 namespace Nektar
 {
@@ -1131,6 +1132,38 @@ namespace Nektar
                     return iterator(this, transpose, true);
                 }
             }
+
+        void EigenSolve(Array<OneD, NekDouble> &EigValReal, 
+                        Array<OneD, NekDouble> &EigValImag, 
+                        Array<OneD, NekDouble> &EigVecs =NullNekDouble1DArray)
+        {
+            ASSERTL0(this->GetRows()==this->GetColumns(), "Only square matrices can be called");
+            
+            switch(this->GetType())
+            {
+            case eFULL:
+                FullMatrixFuncs::EigenSolve(this->GetRows(),
+                                            this->GetData(), EigValReal,
+                                            EigValImag, EigVecs);
+                break;
+            case eDIAGONAL:
+                Vmath::Vcopy(this->GetRows(),&(this->GetData())[0],1, &EigValReal[0],1);
+                Vmath::Zero(this->GetRows(),&EigValImag[0],1);
+                break;
+            case eUPPER_TRIANGULAR:
+            case eLOWER_TRIANGULAR:
+            case eSYMMETRIC:
+                    case eBANDED:
+            case eSYMMETRIC_BANDED:
+            case eUPPER_TRIANGULAR_BANDED:
+            case eLOWER_TRIANGULAR_BANDED:
+                NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
+                break;
+                
+            default:
+                NEKERROR(ErrorUtil::efatal, "Unhandled matrix type");
+            }
+        }
 
             void Invert()
             {

@@ -82,10 +82,10 @@ namespace Lapack
                   int& info);
         void F77NAME(dsterf) (const int& n, double *d, double *e, int& info);
         void F77NAME(dgeev)  (const char& uplo, const char& lrev, const int& n,
-                  double* a, const int& lda, double* wr, double* wi,
-                  double* rev,  const int& ldr,
-                  double* lev,  const int& ldv,
-                  double* work, const int& lwork, int& info);
+                              const double* a, const int& lda, double* wr, double* wi,
+                              double* rev,  const int& ldr,
+                              double* lev,  const int& ldv,
+                              double* work, const int& lwork, int& info);
 
         void F77NAME(dspev)  (const char& jobz, const char& uplo, const int& n,
                   double* ap, double* w, double* z, const int& ldz,
@@ -200,7 +200,7 @@ namespace Lapack
 
     /// \brief Solve general real matrix eigenproblem.
     static inline void Dgeev (const char& uplo, const char& lrev, const int& n,
-             double* a, const int& lda, double* wr, double* wi,
+                              const double* a, const int& lda, double* wr, double* wi,
              double* rev,  const int& ldr,
              double* lev,  const int& ldv,
              double* work, const int& lwork, int& info)
@@ -247,6 +247,9 @@ namespace Lapack
 
 /***
 $Log: Lapack.hpp,v $
+Revision 1.5  2008/06/01 19:04:57  bnelson
+Added triangular solvers.
+
 Revision 1.4  2008/04/30 02:57:15  bnelson
 Fixed gcc compiler warning.
 

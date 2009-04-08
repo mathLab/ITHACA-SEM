@@ -325,6 +325,7 @@ namespace Nektar
             }
         }
     };
+
     
     class LinearSystem
     {
@@ -396,7 +397,7 @@ namespace Nektar
             }
 
             ~LinearSystem() {}
-
+        
             // In the following calls to Solve, VectorType must be a NekVector.
             // Anything else won't compile.        
             template<typename VectorType>
@@ -433,9 +434,7 @@ namespace Nektar
                                ConsistentObjectAccess<XType>::reference(x), m_matrixType,
                                m_ipivot, n, A, m_transposeFlag, m_numberOfSubDiagonals, m_numberOfSuperDiagonals);
             }
-            
-                
-
+        
             unsigned int GetRows() const { return n; }
             unsigned int GetColumns() const { return n; }
             

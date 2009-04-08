@@ -86,7 +86,7 @@ namespace Nektar
                            Array<OneD, DataType>& data,
                            const char transpose)
         {
-            #ifdef NEKTAR_USING_BLAS
+#ifdef NEKTAR_USING_BLAS
                 ASSERTL0(rows==columns, "Only square matrices can be inverted.");
                 ASSERTL0(transpose=='N', "Only untransposed matrices may be inverted.");
 
@@ -128,7 +128,38 @@ namespace Nektar
                 BOOST_STATIC_ASSERT(sizeof(DataType) == 0);
             #endif
         }
+
+        static void EigenSolve(unsigned int n,
+                               const Array<OneD, const double>& A,
+                               Array<OneD, NekDouble> &EigValReal, 
+                               Array<OneD, NekDouble> &EigValImag, 
+                               Array<OneD, NekDouble> &EigVecs = NullNekDouble1DArray)
+        {
+            int lda = n,info = 0;
+            NekDouble dum, lwork = 3*lda;
+            Array<OneD,NekDouble> work(3*lda);
             
+            if(EigVecs == NullNekDouble1DArray) // calculate Right Eigen Vectors
+            {
+                Lapack::Dgeev('N','V',lda, A.get(),lda,
+                              EigValReal.get(),
+                              EigValImag.get(),
+                              &dum,1,
+                              EigVecs.get(),lda,
+                              &work[0],lwork,info);
+            }
+            else
+            {
+                Lapack::Dgeev('N','N',lda, 
+                              A.get(),lda,
+                              EigValReal.get(),
+                              EigValImag.get(),
+                              &dum,1,&dum,1,
+                              &work[0],lwork,info);
+            }
+            ASSERTL0(info == 0,"Info is not zero");
+            
+        }
     };
 
     struct TriangularMatrixFuncs

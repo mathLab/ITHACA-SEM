@@ -36,7 +36,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cmath> 
-#include <time.h> 
+#include <ctime> 
 
 #include <FitzHugh-Nagumo/FHN.h>
 
@@ -48,9 +48,10 @@ int main(int argc, char *argv[])
     ASSERTL0(argc == 2,"\n \t Usage: FHNSolver  meshfile \n");
 
     string fileNameString(argv[1]);
-    int starttime, stoptime;    
+    time_t starttime, endtime;
     NekDouble CPUtime;
 
+    time(&starttime);
     //----------------------------------------------------------------
     // Read the mesh and construct container class
     FHN heart(fileNameString);
@@ -60,21 +61,27 @@ int main(int argc, char *argv[])
     heart.Evaluateepsilon();
     heart.ReadTimemarchingwithmass();
 
+    switch(heart.GetEquationType())
+    {
+	case eFHNspiral:
+            {
+              heart.Evaluatebeta();
+            }
+    }
+
     heart.Summary(cout);
     
     heart.ZeroPhysFields(); // Zero phys field so that following switch is consistent
-    
-    // Set up the intial conditions 
-    heart.SetInitialConditions();
 
     // Create forcing function object
     LibUtilities::TimeIntegrationSchemeOperators ode;
 
-    starttime = clock();	
     switch(heart.GetEquationType())
     {	
 	case eIMEXtest:
 	 {
+              heart.SetInitialConditions();
+
 	     // Choose time integration method
 	      LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eIMEXdirk_3_4_3;	
 		
@@ -89,6 +96,8 @@ int main(int argc, char *argv[])
 		
 	case eFHNtest_v1:
 	 {
+             heart.SetInitialConditions();
+
 	     // Choose time integration method
 	      LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eIMEXdirk_3_4_3;	
 		
@@ -103,6 +112,8 @@ int main(int argc, char *argv[])
 
 	case eFHNtest_v2:
 	 {
+              heart.SetInitialConditions();
+
 	     // Choose time integration method
 	      LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eIMEXdirk_3_4_3;	
 		
@@ -117,6 +128,8 @@ int main(int argc, char *argv[])
 
 	case eFHNmono:
 	 {
+              heart.SetInitialConditions();
+
 	     // Choose time integration method
 	      LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eIMEXdirk_3_4_3;	
 		
@@ -129,11 +142,27 @@ int main(int argc, char *argv[])
 	  }
         break;
 
+	case eFHNspiral:
+	 {
+             heart.SetUSERInitialConditions();
+
+	     // Choose time integration method
+	      LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eIMEXdirk_3_4_3;	
+		
+	     // Choose the method of deriving forcing functions
+	      ode.DefineImplicitSolve       (&FHN::ODEFHN_Spiral_helmSolve,heart);	
+	      ode.DefineOdeRhs              (&FHN::ODEFHN_Spiral_Reaction,heart);	
+				
+	     // General Linear Time Integration
+	      heart.GeneralTimeIntegration(nsteps, IntMethod, ode);
+	  }
+        break;
+
     default:
         ASSERTL0(false,"Unknown or undefined equation type");
     }
-    stoptime = clock();
-    CPUtime = (stoptime-starttime)/1000000/60.0;
+    time(&endtime);
+    CPUtime = (1.0/60.0)*difftime(endtime,starttime);
      // Dump output
     heart.Output();
 

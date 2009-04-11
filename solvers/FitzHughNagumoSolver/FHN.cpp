@@ -113,10 +113,104 @@ namespace Nektar
         m_epsilon = m_boundaryConditions->GetParameter("epsilon");
     }
 
+    void FHN::Evaluatebeta()
+    {
+        m_beta = m_boundaryConditions->GetParameter("beta");
+    }
+
     void FHN::ReadTimemarchingwithmass()
     {
         m_Timemarchingwithmass = m_boundaryConditions->GetParameter("TimemarchingWithmass");
     }
+
+
+    void FHN::SetUSERInitialConditions(NekDouble initialtime)
+    {
+        int nq = m_fields[0]->GetNpoints();
+      
+        Array<OneD,NekDouble> x0(nq);
+        Array<OneD,NekDouble> x1(nq);
+        Array<OneD,NekDouble> x2(nq);
+      
+        NekDouble unew, uinit, vinit, f, fd, Tol, fval, gval;
+
+        // get the coordinates (assuming all fields have the same
+        // discretisation)
+        m_fields[0]->GetCoords(x0,x1,x2);
+
+        // Get the initial constant u and v
+
+        uinit=0.0; unew=100.0; Tol=0.00000001;
+        for(int j=0; j<1000; j++)
+        {
+            f = fvalue(uinit);
+            fd = fderiv(uinit);
+
+            unew = uinit - f/fd;
+
+            if(abs(unew-uinit) < Tol)
+            {
+                break;
+            }
+
+            uinit = unew;
+        }
+        vinit = uinit - (1.0/3.0)*uinit*uinit*uinit;
+
+        fval = uinit - (1.0/3.0)*uinit*uinit*uinit - vinit;
+        gval = uinit + m_beta - 0.5*vinit;
+
+        cout <<"uinit = " << uinit << ", vinit = " << vinit << endl;
+        cout << "fval = " << fval << ", gval = " << gval << endl;
+        cout << " " << endl;
+
+        for(int j = 0; j < nq; j++)
+             {
+                  if( x0[j]<=3.50 )
+                   {
+                      (m_fields[0]->UpdatePhys())[j] = 2.0;
+                      (m_fields[1]->UpdatePhys())[j] = vinit;
+                   }
+                  else
+                  {
+                     (m_fields[0]->UpdatePhys())[j] = uinit;
+                     (m_fields[1]->UpdatePhys())[j] = vinit;
+                   }
+             }
+
+        for(int i = 0 ; i < m_fields.num_elements(); i++)
+	{
+            m_fields[i]->SetPhysState(true);
+            m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+	}
+
+
+	// dump initial conditions to file
+	for(int i = 0; i < m_fields.num_elements(); ++i)
+	  {
+	    std::string outname = m_sessionName +"_" + m_boundaryConditions->GetVariable(i) + "_initial.chk";
+            ofstream outfile(outname.c_str());
+	    m_fields[i]->WriteToFile(outfile,eTecplot);
+	  }       
+    }
+
+
+        NekDouble FHN::fvalue(const NekDouble u)
+            {
+                NekDouble value;
+
+                value = u*u*u + 3.0*u + 6.0*m_beta;
+                return value;
+            }
+
+        NekDouble FHN::fderiv(const NekDouble u)
+            {
+                NekDouble value;
+
+                value = 3.0*u*u + 3.0;
+                return value;
+            }
+
 
     void FHN::EvaluateAdvectionVelocity()
     {
@@ -341,12 +435,53 @@ namespace Nektar
                 m_fields[0]->FwdTrans(physfield,outarray[0]);
                 MassMultiply(outarray[0], outarray[0], 1, m_Timemarchingwithmass);
 
-                Vmath::Vadd(npoints, inarray[1], 1, outarray[0], 1, outarray[0], 1);
-		Vmath::Smul(npoints, Rlambda, outarray[0], 1, outarray[0], 1);
+                Vmath::Vadd(ncoeffs, inarray[1], 1, outarray[0], 1, outarray[0], 1);
+		Vmath::Smul(ncoeffs, Rlambda, outarray[0], 1, outarray[0], 1);
 
                 // For q: alpha*v - q
                 Vmath::Svtvp(ncoeffs, -1.0*alpha, inarray[0], 1, inarray[1], 1, outarray[1], 1);
                 Vmath::Neg(ncoeffs, outarray[1], 1);
+	}
+
+
+    void FHN::ODEFHN_Spiral_Reaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+			   Array<OneD, Array<OneD, NekDouble> >&outarray, 
+			   const NekDouble time)
+	
+	{
+
+                NekDouble m_gamma = 0.5;
+
+                int nvariables = inarray.num_elements();
+                int ncoeffs    = inarray[0].num_elements();
+                int npoints    = m_fields[0]->GetNpoints();
+
+                Array<OneD, NekDouble> physfield(npoints);
+                Array<OneD, NekDouble> temp2(npoints,0.0);
+                Array<OneD, NekDouble> temp3(npoints,0.0);
+
+                Array<OneD, NekDouble> temp(ncoeffs, 0.0);
+
+                MassMultiply(inarray[0], outarray[0], -1, m_Timemarchingwithmass);
+                m_fields[0]->BwdTrans(outarray[0],physfield);
+
+                // For v: (1/m_epsilon)*( u*(1-u*u/3) - q )
+                // physfield = u - (1.0/3.0)*u*u*u
+                Vmath::Vmul(npoints, physfield, 1, physfield, 1, temp2, 1);
+                Vmath::Vmul(npoints, physfield, 1, temp2, 1, temp3, 1);
+                Vmath::Svtvp(npoints, (-1.0/3.0), temp3, 1, physfield, 1, physfield, 1);
+
+                m_fields[0]->FwdTrans(physfield,outarray[0]);
+                MassMultiply(outarray[0], outarray[0], 1, m_Timemarchingwithmass);
+
+                Vmath::Vsub(ncoeffs, inarray[1], 1, outarray[0], 1, outarray[0], 1);
+		Vmath::Smul(ncoeffs, -1.0/m_epsilon, outarray[0], 1, outarray[0], 1);
+
+                // For q: m_epsilon*( v + m_beta - m_gamma*q )
+                Vmath::Smul(ncoeffs, -1.0*m_gamma, inarray[1], 1, temp, 1);
+                Vmath::Svtvp(ncoeffs, 1.0, inarray[0], 1, temp, 1, outarray[1], 1);
+                Vmath::Sadd(ncoeffs, m_beta, outarray[1], 1, outarray[1], 1);
+                Vmath::Smul(ncoeffs, m_epsilon, outarray[1], 1, outarray[1], 1);
 	}
 
   
@@ -420,6 +555,42 @@ namespace Nektar
                    Vmath::Vcopy(ncoeffs, inarray[1], 1, outarray[1], 1);
 	}
 	
+
+    void FHN::ODEFHN_Spiral_helmSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+			   Array<OneD, Array<OneD, NekDouble> >&outarray,
+			   const NekDouble time, 
+                           const NekDouble lambda)
+       {
+                int nvariables = inarray.num_elements();
+                int ncoeffs    = inarray[0].num_elements();
+
+                NekDouble kappa = 1.0/lambda;
+
+                // For v: ==============================
+
+                   MassMultiply(inarray[0], outarray[0], -1, m_Timemarchingwithmass);
+				
+		// Multiply rhs[i] with -1.0/gamma/timestep
+                   Vmath::Smul(ncoeffs, -1.0*kappa, outarray[0], 1, outarray[0], 1);
+			
+		// Update coeffs to m_fields
+		   m_fields[0]->UpdateCoeffs() = outarray[0];
+			
+		// Backward Transformation to nodal coefficients
+		   m_fields[0]->BwdTrans(m_fields[0]->GetCoeffs(), m_fields[0]->UpdatePhys());
+
+	    	// Solve a system of equations with Helmholtz solver
+                   m_fields[0]->HelmSolve(m_fields[0]->GetPhys(), m_fields[0]->UpdateCoeffs(), kappa);
+			
+		// The solution is Y[i]
+		   outarray[0] = m_fields[0]->GetCoeffs();	  
+             						  
+                   MassMultiply(outarray[0], outarray[0], 1, m_Timemarchingwithmass);
+
+                // For q: No helmholtz solver is needed=============================
+                   Vmath::Vcopy(ncoeffs, inarray[1], 1, outarray[1], 1);
+	}
+
 
     void FHN::MassMultiply(const Array<OneD, NekDouble> &inarray, 
                                  Array<OneD, NekDouble> &outarray, 
@@ -561,9 +732,9 @@ namespace Nektar
             {
                      for(i = 0; i < nvariables; ++i)
                 	{
-		  (m_fields[i]->UpdateCoeffs()) = fields[i];
+		             (m_fields[i]->UpdateCoeffs()) = fields[i];
                 	}
-                // Checkpoint_Output(nchk++);
+                  Checkpoint_Output(nchk++);
             }
         }
         
@@ -619,6 +790,7 @@ namespace Nektar
         out << "\tNo. of Steps    : " << m_steps << endl;
         out << "\tCheckpoints     : " << m_checksteps <<" steps" <<endl;
         out << "\tepsilon         : " << m_epsilon << endl;
+        out << "\tbeta            : " << m_beta << endl;
       cout << "=======================================================================" << endl;
 
     }
@@ -628,6 +800,9 @@ namespace Nektar
 
 /**
 * $Log: FHN.cpp,v $
+* Revision 1.3  2009/03/16 14:41:22  sehunchun
+* FHN model update
+*
 * Revision 1.2  2009/03/07 21:18:00  sehunchun
 * FHN updated
 *

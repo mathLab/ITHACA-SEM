@@ -50,6 +50,7 @@ namespace Nektar
         eFHNtest_v1,
         eFHNtest_v2,
         eFHNmono,
+        eFHNspiral,
         eEquationTypeSize
     };
     
@@ -60,7 +61,8 @@ namespace Nektar
         "IMEXtest",
         "FHNtest_v1",
         "FHNtest_v2",
-        "FHNmono"
+        "FHNmono",
+        "FHNspiral"
     };
 
     /**
@@ -117,6 +119,10 @@ namespace Nektar
         void ODEFHN_Reaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
 			   Array<OneD, Array<OneD, NekDouble> >&outarray, 
 			   const NekDouble time);
+
+        void ODEFHN_Spiral_Reaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+			   Array<OneD, Array<OneD, NekDouble> >&outarray, 
+                                    const NekDouble time);
 					
         void ODEhelmSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
 			   Array<OneD, Array<OneD, NekDouble> >&outarray,
@@ -128,6 +134,11 @@ namespace Nektar
 			      const NekDouble time, 
                               const NekDouble lambda);
 
+        void ODEFHN_Spiral_helmSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+			   Array<OneD, Array<OneD, NekDouble> >&outarray,
+			   const NekDouble time, 
+                           const NekDouble lambda);
+
         void MassMultiply(const Array<OneD, NekDouble> &inarray, 
                           Array<OneD, NekDouble> &outarray, 
                           const int direction, const int turnon );
@@ -138,10 +149,17 @@ namespace Nektar
 				   LibUtilities::TimeIntegrationSchemeOperators ode);
 
         void Evaluateepsilon();
+        void Evaluatebeta();
 
         void ReadTimemarchingwithmass();
 
         void Summary(std::ostream &out);
+
+        void SetUSERInitialConditions(NekDouble initialtime = 0.0);
+
+        NekDouble fvalue(const NekDouble u);
+        NekDouble fderiv(const NekDouble u);
+
 
     protected:
 
@@ -149,6 +167,8 @@ namespace Nektar
         int m_infosteps;             ///< dump info to stdout at steps time
         EquationType m_equationType; ///< equation type;
         NekDouble m_epsilon;    /// constant epsilon
+        NekDouble m_beta;   /// constant beta
+
         int m_Timemarchingwithmass;
 
         Array<OneD, Array<OneD, NekDouble> >  m_velocity;
@@ -166,6 +186,9 @@ namespace Nektar
 
 /**
 * $Log: FHN.h,v $
+* Revision 1.3  2009/03/16 14:41:22  sehunchun
+* FHN model update
+*
 * Revision 1.2  2009/03/07 21:18:00  sehunchun
 * FHN updated
 *

@@ -75,7 +75,15 @@ namespace Nektar
     template<typename MatrixType, typename LhsDataType>
     void NekMultiplyFullMatrix(double* result,
                                const NekMatrix<LhsDataType, MatrixType>& lhs,
-                               const double* rhs)
+                               const double* rhs,
+                               typename boost::enable_if
+                               <
+                                    boost::is_same
+                                    <
+                                        typename RawType<typename NekMatrix<LhsDataType, MatrixType>::NumberType>::type,
+                                        double
+                                    >
+                               >::type* p = 0)
     {
         int m = lhs.GetRows();
         int n = lhs.GetColumns();
@@ -109,7 +117,18 @@ namespace Nektar
     template<typename LhsDataType, typename MatrixType>
     void NekMultiplyBandedMatrix(double* result,
                     const NekMatrix<LhsDataType, MatrixType>& lhs,
-                    const double* rhs)
+                    const double* rhs,
+                    typename boost::enable_if
+                    <
+                        boost::is_same
+                        <
+                            typename RawType
+                            <
+                                typename NekMatrix<LhsDataType, MatrixType>::NumberType
+                            >::type, 
+                            double
+                        >
+                    >::type* p = 0)
     {
    
         int m = lhs.GetRows();
@@ -250,7 +269,7 @@ namespace Nektar
     {
         NekMultiplyLowerTriangularMatrix(result, *lhs.GetOwnedMatrix(), rhs);
         
-        for(int i = 0; i < lhs.GetColumns(); ++i)
+        for(unsigned int i = 0; i < lhs.GetColumns(); ++i)
         {
             result[i] *= lhs.Scale();
         }
@@ -310,11 +329,15 @@ namespace Nektar
     {
         unsigned int numberOfBlockRows = lhs.GetNumberOfBlockRows();
         unsigned int numberOfBlockColumns = lhs.GetNumberOfBlockColumns();
+        DataType* result_ptr = result.GetRawPtr();
+        const DataType* rhs_ptr = rhs.GetRawPtr();
         
         for(unsigned int i = 0; i < result.GetDimension(); ++i)
         {
-            result[i] = DataType(0);
+            result_ptr[i] = DataType(0);
         }
+        Array<OneD, DataType> temp(result.GetDimension());
+        DataType* temp_ptr = temp.get();
         
         unsigned int curResultRow = 0;
         for(unsigned int blockRow = 0; blockRow < numberOfBlockRows; ++blockRow)
@@ -331,7 +354,7 @@ namespace Nektar
                 continue;
             }
 
-            NekVector<DataType, VariableSizedVector, space> resultWrapper(rowsInBlock, result.GetPtr() + curResultRow, eWrapper);
+            DataType* resultWrapper = result_ptr + curResultRow;
             
             unsigned int curWrapperRow = 0;
             for(unsigned int blockColumn = 0; blockColumn < numberOfBlockColumns; ++blockColumn)
@@ -354,8 +377,12 @@ namespace Nektar
                     continue;
                 }
 
-                NekVector<const DataType, VariableSizedVector, space> rhsWrapper(columnsInBlock, rhs.GetPtr() + curWrapperRow, eWrapper);
-                resultWrapper += (*block)*rhsWrapper;
+                const DataType* rhsWrapper = rhs_ptr + curWrapperRow;
+                NekMultiply(temp_ptr, *block, rhsWrapper);
+                for(unsigned int i = 0; i < rowsInBlock; ++i)
+                {
+                    resultWrapper[i] += temp_ptr[i];
+                }
             }
         }
     }
@@ -366,7 +393,6 @@ namespace Nektar
                      const NekVector<const double, dim, space>& rhs)
     {
         unsigned int numberOfBlockRows = lhs.GetNumberOfBlockRows();
-        unsigned int numberOfBlockColumns = lhs.GetNumberOfBlockColumns();
         double* result_ptr = result.GetRawPtr();
         const double* rhs_ptr = rhs.GetRawPtr();
         
@@ -419,8 +445,7 @@ namespace Nektar
                      const NekVector<const DataType, dim, space>& rhs)
     {
         unsigned int numberOfBlockRows = lhs.GetNumberOfBlockRows();
-        unsigned int numberOfBlockColumns = lhs.GetNumberOfBlockColumns();
-        
+                
         unsigned int curResultRow = 0;
         unsigned int curWrapperRow = 0;
         for(unsigned int blockRow = 0; blockRow < numberOfBlockRows; ++blockRow)

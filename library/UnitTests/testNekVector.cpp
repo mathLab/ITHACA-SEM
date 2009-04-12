@@ -655,8 +655,8 @@ namespace Nektar
                 Array<OneD, double> a(4, buf);
                 NekVector<double> b(3, a);
 
-                BOOST_CHECK_EQUAL(b.GetRows(), 3);
-                BOOST_CHECK_EQUAL(b.GetDimension(), 3);
+                BOOST_CHECK_EQUAL(b.GetRows(), 3u);
+                BOOST_CHECK_EQUAL(b.GetDimension(), 3u);
                 BOOST_CHECK_EQUAL(b[0], 1.0);
                 BOOST_CHECK_EQUAL(b[1], 2.0);
                 BOOST_CHECK_EQUAL(b[2], 3.0);
@@ -676,8 +676,8 @@ namespace Nektar
                 Array<OneD, const double> a(4, buf);
                 NekVector<double> b(3, a);
 
-                BOOST_CHECK_EQUAL(b.GetRows(), 3);
-                BOOST_CHECK_EQUAL(b.GetDimension(), 3);
+                BOOST_CHECK_EQUAL(b.GetRows(), 3u);
+                BOOST_CHECK_EQUAL(b.GetDimension(), 3u);
                 BOOST_CHECK_EQUAL(b[0], 1.0);
                 BOOST_CHECK_EQUAL(b[1], 2.0);
                 BOOST_CHECK_EQUAL(b[2], 3.0);
@@ -697,8 +697,8 @@ namespace Nektar
                 Array<OneD, double> a(4, buf);
                 NekVector<double> b(3, a, eWrapper);
 
-                BOOST_CHECK_EQUAL(b.GetRows(), 3);
-                BOOST_CHECK_EQUAL(b.GetDimension(), 3);
+                BOOST_CHECK_EQUAL(b.GetRows(), 3u);
+                BOOST_CHECK_EQUAL(b.GetDimension(), 3u);
                 BOOST_CHECK_EQUAL(b[0], 1.0);
                 BOOST_CHECK_EQUAL(b[1], 2.0);
                 BOOST_CHECK_EQUAL(b[2], 3.0);

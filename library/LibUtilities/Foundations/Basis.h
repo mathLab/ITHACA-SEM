@@ -191,6 +191,10 @@ namespace Nektar
 
         static const BasisKey NullBasisKey(eNoBasisType, 0, NullPointsKey);
 
+
+        typedef std::vector< BasisKey > BasisKeyVector; 
+        typedef std::vector< BasisKey >::iterator BasisKeyVectorIter; 
+
         /////////////////////////////////////////////////////////////////////////
         class Basis
         {

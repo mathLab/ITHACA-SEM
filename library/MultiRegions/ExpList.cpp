@@ -1118,7 +1118,125 @@ namespace Nektar
             
             return sqrt(err);
         }
-    
+
+        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> ExpList::GetFieldDefinitions(void)
+        {
+            
+            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> returnval;
+
+            int startenum, endenum, s;
+
+            // count number of shapes
+            switch((*m_exp)[0]->GetShapeDimension())
+            {
+            case 1:
+                startenum = (int) SpatialDomains::eSegment;
+                endenum   = (int) SpatialDomains::eSegment;
+                break;
+            case 2:
+                startenum = (int) SpatialDomains::eTriangle;
+                endenum   = (int) SpatialDomains::eQuadrilateral;
+                break;
+            case 3:
+                startenum = (int) SpatialDomains::eTetrahedron;
+                endenum   = (int) SpatialDomains::eHexahedron;
+                break;
+            }
+            
+            for(s = startenum; s <= endenum; ++s)
+            {
+                SpatialDomains::GeomShapeType         shape; 
+                std::vector<unsigned int>             elementIDs;
+                std::vector<LibUtilities::BasisType>  basis;
+                std::vector<unsigned int>             numModes;
+                std::vector<std::string>              fields;
+            
+                bool first    = true;
+                bool UniOrder = true; 
+                
+                for(int i = 0; i < (*m_exp).size(); ++i)
+                {
+                    if((*m_exp)[i]->GetGeom()->GetGeomShapeType() == (SpatialDomains::GeomShapeType) s)
+                    {
+                        elementIDs.push_back((*m_exp)[i]->GetGeom()->GetGlobalID());
+                        if(first)
+                        {
+                            shape = (SpatialDomains::GeomShapeType) s;
+                            for(int j = 0; j < (*m_exp)[i]->GetNumBases(); ++j)
+                            {
+                                basis.push_back((*m_exp)[i]->GetBasis(j)->GetBasisType());
+                                numModes.push_back((*m_exp)[i]->GetBasis(j)->GetNumModes());
+                            }
+                            first = false;
+                        }
+                        else
+                        {
+                            ASSERTL0((*m_exp)[i]->GetBasis(0)->GetBasisType() == basis[0],"Routine is not yet set up for multiple basese definitions");
+                            
+                            for(int j = 0; j < (*m_exp)[i]->GetNumBases(); ++j)
+                            {
+                                numModes.push_back((*m_exp)[i]->GetBasis(j)->GetNumModes());
+                                if(numModes[j] != (*m_exp)[i]->GetBasis(j)->GetNumModes())
+                                {
+                                    bool UniOrder = false;
+                                }
+                            }
+                        }
+                    }
+                }
+                    
+                if(elementIDs.size() > 0)
+                {
+                    SpatialDomains::FieldDefinitionsSharedPtr fielddef  = MemoryManager<SpatialDomains::FieldDefinitions>::AllocateSharedPtr(shape, elementIDs, basis, UniOrder, numModes,fields);
+                    returnval.push_back(fielddef);
+                }
+            }
+            
+            return returnval;
+        }
+
+        //Append the element data listed in elements
+        //fielddef->m_ElementIDs onto fielddata
+        void ExpList::AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
+        {
+            for(int i = 0; i < fielddef->m_ElementIDs.size(); ++i)
+            {
+                int eid = fielddef->m_ElementIDs[i];
+                int datalen = (*m_exp)[eid]->GetNcoeffs();
+                fielddata.insert(fielddata.end(),&m_coeffs[m_coeff_offset[eid]],&m_coeffs[m_coeff_offset[eid]]+datalen);
+            }
+        }
+
+        //Extract the data in fielddata into the m_coeff list 
+        void ExpList::ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field)
+        {
+            int cnt = 0;
+            int i,f;
+            int offset = 0;
+            int datalen = fielddata.size()/fielddef->m_Fields.size();
+
+            // Find data location according to field definition
+            for(i = 0; i < fielddef->m_Fields.size(); ++i)
+            {
+                if(fielddef->m_Fields[i] == field)
+                {
+                    break;
+                }
+                offset += datalen;
+            }
+            
+            ASSERTL0(i!= fielddef->m_Fields.size(),"Field not found in data file");
+
+            for(int i = 0; i < fielddef->m_ElementIDs.size(); ++i)
+            {
+                int eid = fielddef->m_ElementIDs[i];
+                int datalen = (*m_exp)[eid]->GetNcoeffs();
+                Vmath::Vcopy(datalen,&fielddata[offset + cnt],1,&m_coeffs[m_coeff_offset[eid]],1);
+                cnt += datalen;
+            }
+        }
+
+        
     } //end of namespace
 } //end of namespace
 

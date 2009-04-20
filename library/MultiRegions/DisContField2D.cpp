@@ -200,7 +200,8 @@ namespace Nektar
             }
             e_lambda = Array<OneD,NekDouble>(cnt);
 
-            //Forcing based on analytical derivation From Cockburn
+            // Forcing based on analytical derivation From Cockburn
+            // <u_lam, f> term
             for(cnt1 = cnt = n = 0; n < nexp; ++n)
             {
                 nbndry = (*m_exp)[n]->NumDGBndryCoeffs(); 		    
@@ -228,43 +229,45 @@ namespace Nektar
                 cnt1 += nbndry;
             }
 
-            // Copy Dirichlet boundary conditions into trace space        
+            // Set Dirichlet info and Neumann Fluxes. 
             for(cnt = i = 0; i < m_bndConditions.num_elements(); ++i)
             {
                 m_bndCondExpansions[i]->PutCoeffsInToElmtExp();
+                // Copy Dirichlet boundary conditions into trace space        
                 if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
                     for(e = 0; e < m_bndCondExpansions[i]->GetExpSize(); ++e)
                     {
-                        id     = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt + e);
-                        offset = m_trace->GetCoeff_Offset(id);
                         BndExp = m_bndCondExpansions[i]->GetExp(e);
-                        Vmath::Vcopy(BndExp->GetNcoeffs(),
-                                     &(BndExp->GetCoeffs())[0],1,
-                                     &(m_trace->UpdateCoeffs())[offset],1);
+                        
+                        for(j = 0; j < BndExp->GetNcoeffs(); ++j)
+                        {
+                            id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
+                            m_trace->UpdateCoeffs()[id] = BndExp->GetCoeffs()[j];
+                        }
                     }
                 }
-                
                 // Add boundary flux
                 else if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eNeumann)
                 {
                     for(e = 0; e < m_bndCondExpansions[i]->GetExpSize(); ++e)
                     {
-                        id     = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt+ e);
-                        offset = m_trace->GetCoeff_Offset(id);
                         BndExp = m_bndCondExpansions[i]->GetExp(e);
-                        Vmath::Vadd(BndExp->GetNcoeffs(),
-                                    &(m_trace->UpdateCoeffs())[offset],1,
-                                    &(BndExp->GetCoeffs())[0],1,
-                                    &(m_trace->UpdateCoeffs())[offset],1);
+                        
+                        for(j = 0; j < BndExp->GetNcoeffs(); ++j)
+                        {
+                            id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
+                            m_trace->UpdateCoeffs()[id] += BndExp->GetCoeffs()[j];
+                        }
                     }
                 }
-
-                cnt += m_bndCondExpansions[i]->GetExpSize();
+                else
+                { // update cnt for any other BC type. 
+                    cnt += m_bndCondExpansions[i]->GetNcoeffs(); 
+                }
             }
 
-
-            // Dirichlet boundary forcing 
+            // Dirichlet boundary forcing <\tilde{q}_lam,g>  (using Bmatsys)
             for(cnt = e = 0; e < nexp; ++e)
             {
                 nbndry = (*m_exp)[e]->NumDGBndryCoeffs();
@@ -273,13 +276,9 @@ namespace Nektar
                 if(Vmath::Vmin(nbndry,&(m_traceMap->GetLocalToGlobalBndMap())[cnt],1) < NumDirichlet)
                 {
                     // Get BndSys Matrix
-                    
                     LocalRegions::MatrixKey Bmatkey(StdRegions::eHybridDGHelmBndLam,  (*m_exp)[e]->DetExpansionType(),*((*m_exp)[e]), lambda, tau);
-                    
-                    DNekScalMat &BndSys = *((*m_exp)[e]->GetLocMatrix(Bmatkey));               
-                    DNekVec vin (nbndry);
-                    DNekVec vout(nbndry);
-
+                    DNekScalMat &BndSys = *((*m_exp)[e]->GetLocMatrix(Bmatkey));
+                    Array<OneD, NekDouble> vout(nbndry,0.0);
 
                     // Set up Edge Dirichlet Values
                     for(cnt1 = i = 0; i < (*m_exp)[e]->GetNedges(); ++i)
@@ -287,28 +286,23 @@ namespace Nektar
                         e_ncoeffs = (*m_exp)[e]->GetEdgeNcoeffs(i); 
 
                         id = m_traceMap->GetLocalToGlobalBndMap(cnt+cnt1);
-                        
                         if(id < NumDirichlet)
                         {
                             for(j = 0; j < e_ncoeffs; ++j)
                             {
                                 id        = m_traceMap->GetLocalToGlobalBndMap (cnt+cnt1);
                                 sign      = m_traceMap->GetLocalToGlobalBndSign(cnt+cnt1);
-                                vin[cnt1] = sign*m_trace->GetCoeffs(id); 
+                                Vmath::Svtvp(nbndry,sign*m_trace->GetCoeffs(id),
+                                             BndSys.GetRawPtr()+cnt1*nbndry,1,
+                                             &vout[0],1,&vout[0],1);
                                 cnt1++;
                             } 
                         }
                         else
                         {
-                            for(j = 0; j < e_ncoeffs; ++j)
-                            {
-                                vin[cnt1] = 0.0;
-                                cnt1++;
-                            }
+                            cnt1 += e_ncoeffs;
                         }
                     }
-
-                    vout = BndSys*vin;
                     
                     // Subtract vout from forcing terms 
                     for(i = 0; i < nbndry; ++i)
@@ -318,7 +312,6 @@ namespace Nektar
 
                         if(id >= NumDirichlet)
                         {
-
                             m_trace->SetCoeff(id, m_trace->GetCoeff(id)
                                               - sign*vout[i]);
                         }
@@ -345,21 +338,32 @@ namespace Nektar
             Vmath::Zero(m_ncoeffs,outarray,1);
             Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr>  >
                 elmtToTrace = m_traceMap->GetElmtToTrace();
+            int cnt2; 
 
-            for(cnt = i = 0; i < nexp; ++i)
+            for(cnt2 =  cnt = i = 0; i < nexp; ++i)
             {
                 e_f      = f + cnt;
                 // put elemental solutions into local space; 
-                
+
+                // Get information from trace array (in shuffled form)
+                // and put it into local edge form
+                nbndry = (*m_exp)[i]->NumDGBndryCoeffs();
+                for(j = 0; j < nbndry; ++j)
+                {
+                    id   = m_traceMap->GetLocalToGlobalBndMap (cnt2+j);
+                    sign = m_traceMap->GetLocalToGlobalBndSign(cnt2+j);
+                    
+                    e_lambda[j] = sign*m_trace->GetCoeffs()[id];
+                }
+                cnt2 += nbndry;
+
+                Array<OneD, NekDouble> e_tmp;
+                // now need to put edge into Geometry orientation 
+                // should probably depracate this later
                 for(cnt1= j = 0; j < (*m_exp)[i]->GetNedges(); ++j)
                 {
-                    offset = m_trace->GetCoeff_Offset(elmtToTrace[i][j]->GetElmtId());
-                    //!!!! Need to copy back using local to global mapping. 
-
-                    order_e = (*m_exp)[i]->GetEdgeNcoeffs(j);
-                    Vmath::Vcopy(order_e,&(m_trace->GetCoeffs())[offset],1,
-                                 &e_lambda[cnt1],1);
-                    cnt1 += order_e;
+                    elmtToTrace[i][j]->SetCoeffsToOrientation((*m_exp)[i]->GetEorient(j),e_tmp = e_lambda + cnt1,e_tmp = e_lambda + cnt1);
+                    cnt1 += (*m_exp)[i]->GetEdgeNcoeffs(j);
                 }
 
                 (*m_exp)[i]->AddHDGHelmholtzTraceTerms(tau, e_lambda, 
@@ -438,31 +442,38 @@ namespace Nektar
             }
             
 
-            // fill boundary conditions into missing elements
-            
-            int id1,id2;
+            // fill boundary conditions into missing elements            
+            int id1,id2 = 0;
             for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
                 
-                for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
+                if(m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
-                    npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0);
-
-                    if(m_traceMap->GetBndExpAdjacentOrient(cnt+e) == eAdjacentEdgeIsForwards)
+                    
+                    for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
-                        id1 = m_bndCondExpansions[n]->GetPhys_Offset(e) ;
-                        id2 = m_trace->GetPhys_Offset(m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
-                        Vmath::Vcopy(npts,&(m_bndCondExpansions[n]->GetPhys())[id1],1,&Bwd[id2],1);
+                        npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0);
                         
+                        if(m_traceMap->GetBndExpAdjacentOrient(cnt+e) == eAdjacentEdgeIsForwards)
+                        {
+                            id1 = m_bndCondExpansions[n]->GetPhys_Offset(e) ;
+                            Vmath::Vcopy(npts,&(m_bndCondExpansions[n]->GetPhys())[id1],1,&Bwd[id2],1);
+                            id2 += npts; 
+                        }
+                        else
+                        {
+                            id1 = m_bndCondExpansions[n]->GetPhys_Offset(e) ;
+                            Vmath::Vcopy(npts,&(m_bndCondExpansions[n]->GetPhys())[id1],1,&Fwd[id2],1);
+                            id2 += npts; 
+                        }
                     }
-                    else
-                    {
-                        id1 = m_bndCondExpansions[n]->GetPhys_Offset(e) ;
-                        id2 = m_trace->GetPhys_Offset(m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
-                        Vmath::Vcopy(npts,&(m_bndCondExpansions[n]->GetPhys())[id1],1,&Fwd[id2],1);
-                    }
+
+                    cnt +=e;
                 }
-                cnt +=e;
+                else
+                {
+                    ASSERTL0(false,"method not set up for non-Dirichlet conditions");
+                }
             }
             
         }
@@ -529,7 +540,6 @@ namespace Nektar
                 }    
             }
         }
-
 
         /// Note this routine changes m_trace->m_coeffs space; 
         void DisContField2D::AddTraceIntegral(const Array<OneD, const NekDouble> &Fn, Array<OneD, NekDouble> &outarray)

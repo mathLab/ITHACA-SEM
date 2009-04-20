@@ -103,8 +103,8 @@ namespace Nektar
             
             for(i = 0; i < expansions.size(); ++i)
             {
-                LibUtilities::BasisKey bkey = graph1D.GetBasisKey(expansions[i],0);
-
+                LibUtilities::BasisKey bkey = expansions[i]->m_BasisKeyVector[0];
+                
                 if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>(expansions[i]->m_GeomShPtr))
                 {
                     seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegmentGeom);
@@ -127,7 +127,6 @@ namespace Nektar
             
         }
     
-
         ExpList1D::ExpList1D(const SpatialDomains::CompositeVector &domain, SpatialDomains::MeshGraph2D &graph2D):
             ExpList()
         {
@@ -176,7 +175,6 @@ namespace Nektar
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
             m_phys   = Array<OneD, NekDouble>(m_npoints);            
         }
-
 
         ExpList1D::ExpList1D(const Array<OneD,const ExpList1DSharedPtr>  &bndConstraint, 
                              const Array<OneD, const SpatialDomains::BoundaryConditionType>  &bndTypes, 
@@ -633,6 +631,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.35  2009/02/08 09:11:49  sherwin
+* General updates to introduce multiple matrix definitions based on different boundary types
+*
 * Revision 1.34  2009/01/13 02:50:10  mirzaee
 * Added definitions for the PostProcessing functions and PeriodicEval
 *

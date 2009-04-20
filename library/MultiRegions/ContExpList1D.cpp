@@ -96,8 +96,8 @@ namespace Nektar
             
             for(int i = 0; i < expansions.size(); ++i)
             {	    
-                ASSERTL1(((graph1D.GetBasisKey(expansions[i],0)).GetBasisType() == LibUtilities::eModified_A)
-                         ||((graph1D.GetBasisKey(expansions[i],0)).GetBasisType() == LibUtilities::eGLL_Lagrange),
+                ASSERTL1((expansions[i]->m_BasisKeyVector[0].GetBasisType() == LibUtilities::eModified_A)
+                          ||(expansions[i]->m_BasisKeyVector[0].GetBasisType() == LibUtilities::eGLL_Lagrange),
                          "Expansion not of an boundary-interior type");
             }
                         
@@ -191,6 +191,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.36  2009/03/04 14:17:38  pvos
+* Removed all methods that take and Expansion as argument
+*
 * Revision 1.35  2009/02/08 09:06:19  sherwin
 * Added updated definition of GlobalLinSysKey to include localtoglobalbasemap
 *

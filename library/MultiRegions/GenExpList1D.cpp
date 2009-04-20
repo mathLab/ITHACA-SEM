@@ -73,7 +73,7 @@ namespace Nektar
             SpatialDomains::Geometry1DSharedPtr SegGeom;
 
             // First loop over boundary conditions to renumber
-            // Dirichlet boundaries
+            // Dirichlet boundaries to be first 
             for(i = 0; i < bndCond.num_elements(); ++i)
             {
                 if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
@@ -256,6 +256,9 @@ namespace Nektar
 
 /**
 * $Log: GenExpList1D.cpp,v $
+* Revision 1.9  2009/02/28 21:28:40  sehunchun
+*  Now upwind has "forward" direction and "backward" direction. Default is forward and no changes are necessary for previous file.
+*
 * Revision 1.8  2008/10/29 22:46:35  sherwin
 * Updates for const correctness and a few other bits
 *

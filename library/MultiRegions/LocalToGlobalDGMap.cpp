@@ -108,7 +108,8 @@ namespace Nektar
                             MeshVertToLocalVert[vid] = gid++;
                         }   
                         
-                        m_localToGlobalBndMap[cnt + j] =  MeshVertToLocalVert.find(vid)->second;
+                        m_localToGlobalBndMap[cnt + j] = 
+                            MeshVertToLocalVert.find(vid)->second;
                     }    
                     cnt += locSegExp->NumBndryCoeffs();
                 }
@@ -150,6 +151,7 @@ namespace Nektar
             int ntrace_exp = trace->GetExpSize();
             int nel        = exp2D->size();
             int nbnd = bndCondExp.num_elements();
+            int offset; 
             LocalRegions::SegExpSharedPtr  locSegExp,locSegExp1;
             LocalRegions::QuadExpSharedPtr locQuadExp;
             LocalRegions::TriExpSharedPtr  locTriExp;
@@ -196,6 +198,7 @@ namespace Nektar
             Array<OneD, StdRegions::StdExpansion1DSharedPtr> edgemap(cnt);
             m_elmtToTrace = Array<OneD, Array<OneD,StdRegions::StdExpansion1DSharedPtr> >(nel);
 
+            // set up edge expansions links; 
             cnt = 0;
             for(i = 0; i < nel; ++i)
             {
@@ -253,10 +256,9 @@ namespace Nektar
             {
                 cnt += bndCondExp[i]->GetExpSize();
             }
+
             m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD,int >(cnt);
-            m_bndCondCoeffsToGlobalCoeffsSign = Array<OneD,NekDouble >(cnt,1.0);
             m_bndExpAdjacentOrient = Array<OneD, AdjacentTraceOrientation > (cnt);
-            
             m_numLocalDirBndCoeffs = 0;
             m_numDirichletBndPhys   = 0;
             cnt = 0;
@@ -268,8 +270,9 @@ namespace Nektar
                     {
                         SegGeom = locSegExp->GetGeom1D();
                         
-                        id = SegGeom->GetEid();
                         
+#if OLDMAP
+                        id = SegGeom->GetEid();
                         if(MeshEdgeId.count(id) > 0)
                         {
                             m_bndCondCoeffsToGlobalCoeffsMap[cnt+j] = MeshEdgeId.find(id)->second;
@@ -278,7 +281,7 @@ namespace Nektar
                         {
                             ASSERTL0(false,"Failed to find edge map");
                         }
-
+#endif
                         // Check to see which way boundary edge is
                         // orientated with respect to connecting
                         // element counter-clockwise convention.
@@ -323,15 +326,13 @@ namespace Nektar
             m_localToGlobalBndMap  = Array<OneD, int > (nbndry);
             m_localToGlobalBndSign = Array<OneD, NekDouble > (nbndry,1);
 
-
-
             // Set up array for potential mesh optimsation
 
             Array<OneD,int> TraceElmtGid(ntrace_exp,-1);
             int nDir = 0;
             cnt = 0;
 
-            if(false) // Bandwidth optimisation
+            if(true) // Bandwidth optimisation
             {
                 // the first template parameter (=OutEdgeList) is
                 // chosen to be of type std::set as in the set up of
@@ -375,16 +376,15 @@ namespace Nektar
                         SegGeom = locSegExp->GetGeom1D();
                         
                         // Add edge to boost graph for non-Dirichlet Boundary 
-
                         id  = SegGeom->GetEid();
                         trace_id = MeshEdgeId.find(id)->second;
                         if(trace->GetCoeff_Offset(trace_id) >= m_numLocalDirBndCoeffs) 
                         {
-                            for(k = j; k < (*exp2D)[i]->GetNedges(); ++k)
+                            for(k = j+1; k < (*exp2D)[i]->GetNedges(); ++k)
                             {   
-                                locSegExp1 = boost::dynamic_pointer_cast<LocalRegions::SegExp>(m_elmtToTrace[i][j]);
+                                locSegExp1 = boost::dynamic_pointer_cast<LocalRegions::SegExp>(m_elmtToTrace[i][k]);
                                 SegGeom = locSegExp1->GetGeom1D();
-                        
+                                
                                 id1  = SegGeom->GetEid();
                                 trace_id1 = MeshEdgeId.find(id1)->second;
                                 if(trace->GetCoeff_Offset(trace_id1)
@@ -422,7 +422,6 @@ namespace Nektar
             }
 
             // Now have trace edges Gid position
-            
             nbndry = cnt = 0;
             for(i = 0; i < nel; ++i)
             {
@@ -435,6 +434,7 @@ namespace Nektar
                     
                     id  = SegGeom->GetEid();
                     gid = TraceElmtGid[MeshEdgeId.find(id)->second];
+                    
                     
                     order_e = locSegExp->GetNcoeffs();
                     
@@ -481,15 +481,45 @@ namespace Nektar
                     cnt += order_e;
                 }
             }
+
+            // set up m_bndCondCoeffsToGlobalCoeffsMap to align with map
+            cnt = 0;
+            for(i = 0; i < nbnd; ++i)
+            {
+                cnt += bndCondExp[i]->GetNcoeffs();
+            }
             
+            m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD,int >(cnt);
+            
+            for(cnt = i = 0; i < nbnd; ++i)
+            {
+                for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
+                {
+                    if(locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j)))
+                    {
+                        SegGeom = locSegExp->GetGeom1D();
+                        id      = SegGeom->GetEid();
+                        gid     = TraceElmtGid[MeshEdgeId.find(id)->second];
+                        
+                        order_e = locSegExp->GetNcoeffs();
+
+                        // Since boundary information is defined to be
+                        // aligned with the geometry just use forward
+                        // defintiion for gid's
+                        for(k = 0; k < order_e; ++k)
+                        {
+                            m_bndCondCoeffsToGlobalCoeffsMap[cnt++] = gid + k;
+                        }
+                    }
+                }
+            }
+
             m_numGlobalBndCoeffs = trace->GetNcoeffs();
 
             CalculateBndSystemBandWidth(*exp2D);
 
-            cout << "bwidth: " << m_bndSystemBandWidth << endl;
+            //cout << "bwidth: " << m_bndSystemBandWidth << endl;
         }
-
-
 
         // ----------------------------------------------------------------
         // Calculation of the bandwith ---- The bandwidth here

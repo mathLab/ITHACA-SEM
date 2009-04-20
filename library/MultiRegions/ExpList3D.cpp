@@ -37,51 +37,22 @@
 
 namespace Nektar
 {
-  namespace MultiRegions
-  {
-
-    ExpList3D::ExpList3D(): ExpList()
+    namespace MultiRegions
     {
-    }
         
-    ExpList3D::ExpList3D(const ExpList3D &In): ExpList(In)
-    {
-    }
-
-    ExpList3D::~ExpList3D()
-    {
-    }
-
-    namespace
+        ExpList3D::ExpList3D(): ExpList()
         {
-            // Adds up the number of cells in a truncated Nc by Nc by Nc pyramid, 
-            // where the longest Na rows and longest Nb columns are kept.
-            // Example: (Na, Nb, Nc) = (3, 4, 5); The number of coefficients is the 
-            // sum of the elements of the following matrix:
-            //     |5  4  3  2  0|
-            //     |4  3  2  0   |
-            //     |3  2  0      |
-            //     |0  0         |
-            //     |0            |
-            // Sum = 28 = number of tet coefficients
-            inline int getNumberOfCoefficients( int Na, int Nb, int Nc ) 
-            {
-                int nCoef = 0;
-                for( int a = 0; a < Na; ++a )
-                {
-                    for( int b = 0; b < Nb - a; ++b )
-                    {
-                        for( int c = 0; c < Nc - a - b; ++c )
-                        {
-                            ++nCoef;
-                        }
-                    }
-                }
-                return nCoef;
-            }
         }
-
-       
+        
+        ExpList3D::ExpList3D(const ExpList3D &In): ExpList(In)
+        {
+        }
+        
+        ExpList3D::~ExpList3D()
+        {
+        }
+        
+        
         ExpList3D::ExpList3D(const LibUtilities::BasisKey &Ba,
                              const LibUtilities::BasisKey &Bb,
                              const LibUtilities::BasisKey &Bc,
@@ -118,7 +89,7 @@ namespace Nektar
                         (*m_exp).push_back(tet);
                     }
 
-                       m_ncoeffs += getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes());
+                    m_ncoeffs += StdRegions::StdTetData::getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes());
                         
                        m_npoints += Ba.GetNumPoints()*Bb.GetNumPoints()*Bc.GetNumPoints();
                 }
@@ -127,7 +98,7 @@ namespace Nektar
                       prism = MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(Ba,Bb,Bc,PrismGeom);
                       (*m_exp).push_back(prism);
 
-                      m_ncoeffs += getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes());
+                      m_ncoeffs += StdRegions::StdPrismData::getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes());
                       m_npoints +=  Ba.GetNumPoints()*Bb.GetNumPoints()*Bc.GetNumPoints();
                 
                 }
@@ -136,7 +107,7 @@ namespace Nektar
                      pyramid = MemoryManager<LocalRegions::PyrExp>::AllocateSharedPtr(Ba,Bb,Bc,PyrGeom);
                      (*m_exp).push_back(pyramid);
 
-                      m_ncoeffs += getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes());
+                     m_ncoeffs += StdRegions::StdPyrData::getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes());
                       m_npoints +=  Ba.GetNumPoints()*Bb.GetNumPoints()*Bc.GetNumPoints();
 
                 }
@@ -180,11 +151,11 @@ namespace Nektar
                 
                 if(TetGeom = boost::dynamic_pointer_cast<SpatialDomains::TetGeom>(expansions[i]->m_GeomShPtr))
                 {
-                    LibUtilities::BasisKey TetBa = graph3D.GetBasisKey(expansions[i],0);
-                    LibUtilities::BasisKey TetBb = graph3D.GetBasisKey(expansions[i],1);
-                    LibUtilities::BasisKey TetBc = graph3D.GetBasisKey(expansions[i],2);
+                    LibUtilities::BasisKey TetBa = expansions[i]->m_BasisKeyVector[0];
+                    LibUtilities::BasisKey TetBb = expansions[i]->m_BasisKeyVector[1];
+                    LibUtilities::BasisKey TetBc = expansions[i]->m_BasisKeyVector[2];
                     
-                    if(expansions[i]->m_ExpansionType == SpatialDomains::eGLL_Lagrange)
+                    if(TetBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
                     {
                       ASSERTL0(false,"LocalRegions::NodalTetExp is not implemented yet");
                     }
@@ -194,38 +165,38 @@ namespace Nektar
                         (*m_exp).push_back(tet);
                     }
                         
-                    m_ncoeffs += getNumberOfCoefficients(TetBa.GetNumModes(), TetBb.GetNumModes(), TetBc.GetNumModes());
+                    m_ncoeffs += StdRegions::StdTetData::getNumberOfCoefficients(TetBa.GetNumModes(), TetBb.GetNumModes(), TetBc.GetNumModes());
                     m_npoints += TetBa.GetNumPoints()*TetBb.GetNumPoints()*TetBc.GetNumPoints();
                 }
                 else if(PrismGeom = boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(expansions[i]->m_GeomShPtr))
                 {
-                    LibUtilities::BasisKey PrismBa = graph3D.GetBasisKey(expansions[i],0);
-                    LibUtilities::BasisKey PrismBb = graph3D.GetBasisKey(expansions[i],0);
-                    LibUtilities::BasisKey PrismBc = graph3D.GetBasisKey(expansions[i],1);
+                    LibUtilities::BasisKey PrismBa = expansions[i]->m_BasisKeyVector[0];
+                    LibUtilities::BasisKey PrismBb = expansions[i]->m_BasisKeyVector[1];
+                    LibUtilities::BasisKey PrismBc = expansions[i]->m_BasisKeyVector[2];
 
                     prism = MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(PrismBa,PrismBb,PrismBc,PrismGeom);
                     (*m_exp).push_back(prism);
-
-                    m_ncoeffs += getNumberOfCoefficients(PrismBa.GetNumModes(), PrismBb.GetNumModes(), PrismBc.GetNumModes());
+                    
+                    m_ncoeffs += StdRegions::StdPrismData::getNumberOfCoefficients(PrismBa.GetNumModes(), PrismBb.GetNumModes(), PrismBc.GetNumModes());
                     m_npoints += PrismBa.GetNumPoints()*PrismBb.GetNumPoints()*PrismBc.GetNumPoints();
                 }
                 else if(PyrGeom = boost::dynamic_pointer_cast<SpatialDomains::PyrGeom>(expansions[i]->m_GeomShPtr))
                 {
-                    LibUtilities::BasisKey PyrBa = graph3D.GetBasisKey(expansions[i],0);
-                    LibUtilities::BasisKey PyrBb = graph3D.GetBasisKey(expansions[i],0);
-                    LibUtilities::BasisKey PyrBc = graph3D.GetBasisKey(expansions[i],2);
+                    LibUtilities::BasisKey PyrBa = expansions[i]->m_BasisKeyVector[0];
+                    LibUtilities::BasisKey PyrBb = expansions[i]->m_BasisKeyVector[1];
+                    LibUtilities::BasisKey PyrBc = expansions[i]->m_BasisKeyVector[2];
 
                     pyramid = MemoryManager<LocalRegions::PyrExp>::AllocateSharedPtr(PyrBa,PyrBb,PyrBc,PyrGeom);
                     (*m_exp).push_back(pyramid);
-
-                    m_ncoeffs += getNumberOfCoefficients(PyrBa.GetNumModes(), PyrBb.GetNumModes(), PyrBc.GetNumModes());
+                    
+                    m_ncoeffs += StdRegions::StdPyrData::getNumberOfCoefficients(PyrBa.GetNumModes(), PyrBb.GetNumModes(), PyrBc.GetNumModes());
                     m_npoints += PyrBa.GetNumPoints()*PyrBb.GetNumPoints()*PyrBc.GetNumPoints();
                 }
                 else if(HexGeom = boost::dynamic_pointer_cast<SpatialDomains::HexGeom>(expansions[i]->m_GeomShPtr))
                 {
-                    LibUtilities::BasisKey HexBa = graph3D.GetBasisKey(expansions[i],0);
-                    LibUtilities::BasisKey HexBb = graph3D.GetBasisKey(expansions[i],0);
-                    LibUtilities::BasisKey HexBc = graph3D.GetBasisKey(expansions[i],0);
+                    LibUtilities::BasisKey HexBa = expansions[i]->m_BasisKeyVector[0];
+                    LibUtilities::BasisKey HexBb = expansions[i]->m_BasisKeyVector[1];
+                    LibUtilities::BasisKey HexBc = expansions[i]->m_BasisKeyVector[2];
                     
                     hex = MemoryManager<LocalRegions::HexExp>::AllocateSharedPtr(HexBa,HexBb,HexBc,HexGeom);
                     (*m_exp).push_back(hex);

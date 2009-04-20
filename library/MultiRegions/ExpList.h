@@ -46,6 +46,8 @@
 #include <LocalRegions/MatrixKey.h>
 #include <SpatialDomains/SegGeom.h>
 
+#include <SpatialDomains/MeshGraph.h>
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -803,6 +805,14 @@ namespace Nektar
                                        const Array<OneD,const NekDouble> &inarray, 
                                              Array<OneD,      NekDouble> &outarray);
 
+            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> GetFieldDefinitions(void);
+            // \brief Append the element data listed in elements
+            // fielddef->m_ElementIDs onto fielddata
+            void AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata);
+
+            /// \brief Extract the data in fielddata into the m_coeff list 
+            void ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field);
+
         protected:
             
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(const GlobalLinSysKey &mkey, const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
@@ -1198,8 +1208,8 @@ namespace Nektar
                 ASSERTL0(false,"This method is not defined or valid for this class type");            
             }
 
-
-    };
+            
+        };
 
         typedef boost::shared_ptr<ExpList>      ExpListSharedPtr;
 
@@ -1212,6 +1222,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.58  2009/04/03 20:33:57  sherwin
+* Update for Eigenfunction evaluation
+*
 * Revision 1.57  2009/03/23 11:52:15  pvos
 * NekMatrix updates
 *

@@ -101,7 +101,7 @@ namespace Nektar
                      
                     m_coeff_offset[i] = m_ncoeffs;
                     m_phys_offset[i] = m_npoints;
-                   m_ncoeffs += (TriBa.GetNumModes()*(TriBa.GetNumModes()+1))/2 
+                    m_ncoeffs += (TriBa.GetNumModes()*(TriBa.GetNumModes()+1))/2 
                         + TriBa.GetNumModes()*(TriBb.GetNumModes()-TriBa.GetNumModes());
                     m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
                 }
@@ -134,11 +134,11 @@ namespace Nektar
         {
             int i,j,elmtid=0;
             int nel;
-            LocalRegions::TriExpSharedPtr tri;
+            LocalRegions::TriExpSharedPtr      tri;
             LocalRegions::NodalTriExpSharedPtr Ntri;
-            LibUtilities::PointsType TriNb;
-            LocalRegions::QuadExpSharedPtr quad;
-            SpatialDomains::Composite comp;
+            LibUtilities::PointsType           TriNb;
+            LocalRegions::QuadExpSharedPtr     quad;
+            SpatialDomains::Composite          comp;
 
             const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();    
             
@@ -147,18 +147,21 @@ namespace Nektar
 
             for(i = 0; i < expansions.size(); ++i)
             {
-                SpatialDomains::TriGeomSharedPtr TriangleGeom;
+                SpatialDomains::TriGeomSharedPtr  TriangleGeom;
                 SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
                 
                 if(TriangleGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(expansions[i]->m_GeomShPtr))
                 {
-                    LibUtilities::BasisKey TriBa = graph2D.GetBasisKey(expansions[i],0);
-                    LibUtilities::BasisKey TriBb = graph2D.GetBasisKey(expansions[i],1);
+                    LibUtilities::BasisKey TriBa = expansions[i]->m_BasisKeyVector[0];
+                    LibUtilities::BasisKey TriBb = expansions[i]->m_BasisKeyVector[1];
                     
-                    if(expansions[i]->m_ExpansionType == SpatialDomains::eGLL_Lagrange)
+                    // This is not elegantly implemented needs re-thinking. 
+                    if(TriBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
                     {
+                        LibUtilities::BasisKey newBa(LibUtilities::eOrtho_A,TriBa.GetNumModes(), TriBa.GetPointsKey());
+                        
                         TriNb = LibUtilities::eNodalTriElec;
-                        Ntri = MemoryManager<LocalRegions::NodalTriExp>::AllocateSharedPtr(TriBa,TriBb,TriNb,TriangleGeom);
+                        Ntri = MemoryManager<LocalRegions::NodalTriExp>::AllocateSharedPtr(newBa,TriBb,TriNb,TriangleGeom);
                         Ntri->SetElmtId(elmtid++);
                         (*m_exp).push_back(Ntri);
                     }
@@ -176,8 +179,8 @@ namespace Nektar
                 }
                 else if(QuadrilateralGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(expansions[i]->m_GeomShPtr))
                 {
-                    LibUtilities::BasisKey QuadBa = graph2D.GetBasisKey(expansions[i],0);
-                    LibUtilities::BasisKey QuadBb = graph2D.GetBasisKey(expansions[i],0);
+                    LibUtilities::BasisKey QuadBa = expansions[i]->m_BasisKeyVector[0];
+                    LibUtilities::BasisKey QuadBb = expansions[i]->m_BasisKeyVector[1];
                     
                     quad = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(QuadBa,QuadBb,QuadrilateralGeom);
                     quad->SetElmtId(elmtid++);
@@ -233,8 +236,9 @@ namespace Nektar
                         LibUtilities::BasisKey TriBa = graph3D.GetFaceBasisKey(TriangleGeom,0);
                         LibUtilities::BasisKey TriBb = graph3D.GetFaceBasisKey(TriangleGeom,1);
                         
-                        if((graph3D.GetExpansions())[0]->m_ExpansionType == SpatialDomains::eGLL_Lagrange)
+                        if((graph3D.GetExpansions())[0]->m_BasisKeyVector[0].GetBasisType() == LibUtilities::eGLL_Lagrange)
                         {
+                            ASSERTL0(false,"This method needs sorting");
                             TriNb = LibUtilities::eNodalTriElec;
                             Ntri = MemoryManager<LocalRegions::NodalTriExp>::AllocateSharedPtr(TriBa,TriBb,TriNb,TriangleGeom);
                             Ntri->SetElmtId(elmtid++);
@@ -482,6 +486,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.cpp,v $
+* Revision 1.25  2009/03/04 14:17:38  pvos
+* Removed all methods that take and Expansion as argument
+*
 * Revision 1.24  2009/01/12 10:26:35  pvos
 * Added input tags for nodal expansions
 *

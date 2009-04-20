@@ -80,6 +80,8 @@ namespace Nektar
 
             CalculateBndSystemBandWidth(locExpVector);
             CalculateFullSystemBandWidth(locExpVector);
+
+            //cout << "bwidth: " << m_bndSystemBandWidth << endl;
         }
 
         LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(const int numLocalCoeffs, 
@@ -91,6 +93,7 @@ namespace Nektar
             SetUp1DExpansionC0ContMap(numLocalCoeffs, locExpVector, bndCondExp, bndConditions, periodicVerticesId);
             CalculateBndSystemBandWidth(locExpVector);
             CalculateFullSystemBandWidth(locExpVector);
+            cout << "bwidth: " << m_bndSystemBandWidth << endl;
         }
 
         LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(const int numLocalCoeffs, 
@@ -103,6 +106,7 @@ namespace Nektar
             SetUp2DExpansionC0ContMap(numLocalCoeffs, locExpVector, bndCondExp, bndConditions, periodicVerticesId, periodicEdgesId);
             CalculateBndSystemBandWidth(locExpVector);
             CalculateFullSystemBandWidth(locExpVector);
+            cout << "bwidth: " << m_bndSystemBandWidth << endl;
         }
 
         LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(const int numLocalCoeffs, 
@@ -1532,6 +1536,9 @@ namespace Nektar
 
 /**
  * $Log: LocalToGlobalC0ContMap.cpp,v $
+ * Revision 1.8  2009/04/03 15:06:35  sherwin
+ * Added LinearAdvection, Generalised GenGlobalLinSys and added in bandwidth routine for DG solver
+ *
  * Revision 1.7  2009/04/02 13:06:42  sherwin
  * Modified to take symmetric banded system for HDH solver
  *

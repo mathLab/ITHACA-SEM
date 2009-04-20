@@ -93,6 +93,11 @@ namespace Nektar
                 return m_metricinfo;
             }
 
+            const SpatialDomains::GeometrySharedPtr GetGeom() const
+            {
+                return m_geom;
+            }
+
             const SpatialDomains::Geometry1DSharedPtr& GetGeom1D() const
             {
                 return m_geom;
@@ -246,6 +251,12 @@ namespace Nektar
             {
                 return GetMetricInfo();
             }
+
+            virtual const SpatialDomains::GeometrySharedPtr v_GetGeom() const
+            {
+                return GetGeom();
+            }
+
 
             virtual const SpatialDomains::Geometry1DSharedPtr& v_GetGeom1D() const
             {
@@ -543,6 +554,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.42  2009/03/04 14:17:38  pvos
+// Removed all methods that take and Expansion as argument
+//
 // Revision 1.41  2008/08/14 22:12:57  sherwin
 // Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
 //

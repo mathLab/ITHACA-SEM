@@ -333,11 +333,11 @@ namespace Nektar
                     {
                         DNekScalMat &Dmat = *v_GetLocMatrix(DerivType[i]);
 
-                        LocMat = invMass*Transpose(Dmat);
-                        Mat = Mat + Dmat*LocMat;
+                        //LocMat = invMass*Transpose(Dmat);
+                        //Mat = Mat + Dmat*LocMat;
 
                         // Would like to do 
-                        // Mat = Mat + Dmat*invMat*Transpose(Dmat);
+                        Mat = Mat + Dmat*invMass*Transpose(Dmat);
                     }
 
                     // Add Mass Matrix Contribution
@@ -650,6 +650,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.cpp,v $
+ *    Revision 1.6  2009/04/02 13:04:36  sherwin
+ *    Modified Hybrid Matrix call to use matrix D M^{-1}D' formulation and removed operations based version
+ *
  *    Revision 1.5  2008/10/04 19:34:09  sherwin
  *    Added an upwind method which takes the normal flux rather than than individual components
  *

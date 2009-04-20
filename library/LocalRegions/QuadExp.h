@@ -97,6 +97,11 @@ namespace Nektar
                 return m_geom;
             }
 
+            const SpatialDomains::GeometrySharedPtr GetGeom() const
+            {
+                return m_geom;
+            }
+
             void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
 
             //----------------------------
@@ -402,6 +407,11 @@ namespace Nektar
                 return m_metricinfo;
             }
 
+            virtual const SpatialDomains::GeometrySharedPtr v_GetGeom() const
+            {
+                return GetGeom();
+            }
+
             virtual const SpatialDomains::Geometry2DSharedPtr& v_GetGeom2D() const
             {
                 return GetGeom2D();
@@ -690,6 +700,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.47  2009/01/21 16:59:57  pvos
+ *    Added additional geometric factors to improve efficiency
+ *
  *    Revision 1.46  2008/12/18 14:08:24  pvos
  *    NekConstants update
  *

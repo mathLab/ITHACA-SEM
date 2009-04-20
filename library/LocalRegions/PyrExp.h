@@ -125,6 +125,11 @@ namespace Nektar
                 return StdRegions::ePyramid;
             }
 
+            const SpatialDomains::GeometrySharedPtr GetGeom() const
+            {
+                return m_geom;
+            }
+
             const SpatialDomains::Geometry3DSharedPtr& GetGeom3D() const
             {
                 return m_geom;
@@ -188,6 +193,11 @@ namespace Nektar
                 return m_metricinfo;
             }
 
+
+            virtual const SpatialDomains::GeometrySharedPtr v_GetGeom() const
+            {
+                return m_geom;
+            }
 
             virtual const SpatialDomains::Geometry3DSharedPtr& v_GetGeom3D() const
             {
@@ -311,6 +321,9 @@ namespace Nektar
 
 /**
  *    $Log: PyrExp.h,v $
+ *    Revision 1.19  2008/08/14 22:12:56  sherwin
+ *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
+ *
  *    Revision 1.18  2008/07/29 22:25:34  sherwin
  *    general update for DG Advection including separation of GetGeom() into GetGeom1D,2D,3D()
  *

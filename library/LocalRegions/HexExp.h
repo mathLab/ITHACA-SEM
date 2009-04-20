@@ -80,6 +80,11 @@ namespace Nektar
                 return StdRegions::eHexahedron; 
             }
 
+            const SpatialDomains::GeometrySharedPtr GetGeom() const
+            {
+                return m_geom;
+            }
+
             const SpatialDomains::Geometry3DSharedPtr& GetGeom3D() const
             {
                 return m_geom;
@@ -185,6 +190,10 @@ namespace Nektar
                 return m_metricinfo;
             }
 
+            virtual const SpatialDomains::GeometrySharedPtr v_GetGeom() const
+            {
+                return GetGeom();
+            }
 
             virtual const SpatialDomains::Geometry3DSharedPtr& v_GetGeom3D() const
             {
@@ -295,6 +304,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.24  2008/09/23 18:20:25  pvos
+ *    Updates for working ProjectContField3D demo
+ *
  *    Revision 1.23  2008/09/17 17:30:28  ehan
  *    Fixed some errors to test the LocHexDemo.
  *

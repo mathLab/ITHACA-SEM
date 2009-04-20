@@ -45,8 +45,16 @@ namespace Nektar
 {
     namespace StdRegions
     {
+        
+        namespace StdTriData
+        {
+            inline int getNumberOfCoefficients(int Na, int Nb)
+            {
+                return Na*(Nb+1)/2 + Na*(Nb-Na);
+            }
+        }
 
-    class StdTriExp: public StdExpansion2D
+        class StdTriExp: public StdExpansion2D
         {
 
         public:
@@ -812,6 +820,9 @@ namespace Nektar
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.42  2009/01/21 16:58:39  pvos
+ * Added additional geometric factors to improve efficiency
+ *
  * Revision 1.41  2008/11/24 10:31:14  pvos
  * Changed name from _PartitionedOp to _MatFree
  *

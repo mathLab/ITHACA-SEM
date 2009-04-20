@@ -44,8 +44,26 @@ namespace Nektar
 {
     namespace StdRegions
     {
-    
-    class StdPrismExp: public StdExpansion3D
+        namespace StdPrismData
+        {
+            inline int getNumberOfCoefficients( int Na, int Nb, int Nc ) 
+            {
+                int nCoef = 0;
+                for( int a = 0; a < Na; ++a )
+                {
+                    for( int b = 0; b < Nb; ++b )
+                    {
+                        for( int c = 0; c < Nc - a; ++c )
+                        {
+                            ++nCoef;
+                        }
+                    }
+                }
+                return nCoef;
+            }
+        }
+        
+        class StdPrismExp: public StdExpansion3D
         {
         
         public:
@@ -391,6 +409,9 @@ namespace Nektar
 
 /**
  * $Log: StdPrismExp.h,v $
+ * Revision 1.22  2009/01/01 02:38:05  ehan
+ * cleaned up the code
+ *
  * Revision 1.21  2008/11/24 21:06:36  ehan
  * Added virtual functions for necessary mapping routines (boundary map, vertex map, interior map) of Prism.
  *

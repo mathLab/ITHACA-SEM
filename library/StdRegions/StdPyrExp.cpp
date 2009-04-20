@@ -39,31 +39,13 @@ namespace Nektar
 {
     namespace StdRegions
     {
-        namespace 
-        {
-            inline int getNumberOfCoefficients( int Na, int Nb, int Nc ) 
-            {
-                int nCoef = 0;
-                for( int a = 0; a < Na; ++a )
-                {
-                    for( int b = 0; b < Nb; ++b )
-                    {
-                        for( int c = 0; c < Nc - a - b; ++c )
-                        {
-                            ++nCoef;
-                        }
-                    }
-                }
-                return nCoef;
-            }
-        }
         
         StdPyrExp::StdPyrExp() // Deafult construct of standard expansion directly called. 
         {
         }
         
         StdPyrExp::StdPyrExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc) 
-            : StdExpansion3D(getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()), Ba, Bb, Bc)
+            : StdExpansion3D(StdPyrData::getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()), Ba, Bb, Bc)
               //     : StdExpansion3D(Ba.GetNumModes()*Bb.GetNumModes()*Bc.GetNumModes(), Ba, Bb, Bc)
         {
 
@@ -954,6 +936,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPyrExp.cpp,v $
+ * Revision 1.19  2009/04/03 14:57:34  sherwin
+ * Linear Advection matrices added, corrected unsigned int intialisation
+ *
  * Revision 1.18  2009/01/01 02:40:56  ehan
  * Added GetFaceToElementMap() and fixed some bugs.
  *

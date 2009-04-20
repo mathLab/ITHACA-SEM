@@ -47,7 +47,36 @@ namespace Nektar
     namespace StdRegions
     {
 
-    class StdTetExp: public StdExpansion3D
+        namespace StdTetData
+        {
+            // Adds up the number of cells in a truncated Nc by Nc by Nc pyramid, 
+            // where the longest Na rows and longest Nb columns are kept.
+            // Example: (Na, Nb, Nc) = (3, 4, 5); The number of coefficients is the 
+            // sum of the elements of the following matrix:
+            //     |5  4  3  2  0|
+            //     |4  3  2  0   |
+            //     |3  2  0      |
+            //     |0  0         |
+            //     |0            |
+            // Sum = 28 = number of tet coefficients
+            inline int getNumberOfCoefficients( int Na, int Nb, int Nc ) 
+            {
+                int nCoef = 0;
+                for( int a = 0; a < Na; ++a )
+                {
+                    for( int b = 0; b < Nb - a; ++b )
+                    {
+                        for( int c = 0; c < Nc - a - b; ++c )
+                        {
+                            ++nCoef;
+                        }
+                    }
+                }
+                return nCoef;
+            }
+        }
+
+        class StdTetExp: public StdExpansion3D
         {
 
         public:
@@ -417,6 +446,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.25  2009/01/01 02:34:46  ehan
+ * Added virtual functions.
+ *
  * Revision 1.24  2008/11/17 09:01:58  ehan
  * Implemented GetFaceNcoeffs
  *

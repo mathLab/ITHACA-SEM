@@ -44,12 +44,14 @@ namespace Nektar
         class Geometry;
         class EdgeComponent;
         class SegGeom;
+        class Geometry;
         class Geometry1D;
         class Geometry2D;
         class Geometry3D;
         class GeomFactors;
         
         static boost::shared_ptr<GeomFactors> NullGeomFactorsSharedPtr; 
+        static boost::shared_ptr<Geometry>    NullGeometrySharedPtr;
         static boost::shared_ptr<Geometry1D>  NullGeometry1DSharedPtr;
         static boost::shared_ptr<Geometry2D>  NullGeometry2DSharedPtr;
         static boost::shared_ptr<Geometry3D>  NullGeometry3DSharedPtr;
@@ -60,6 +62,9 @@ namespace Nektar
 
 /**
  * $Log: SpatialDomainsDeclarations.hpp,v $
+ * Revision 1.8  2008/08/03 20:13:03  sherwin
+ * Put return values in virtual functions
+ *
  * Revision 1.7  2008/07/29 22:21:15  sherwin
  * A bunch of mods for DG advection and separaring the GetGeom calls into GetGeom1D ...
  *

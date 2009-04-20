@@ -45,7 +45,26 @@ namespace Nektar
     namespace StdRegions
     {
     
-    class StdPyrExp: public StdExpansion3D
+        namespace StdPyrData
+        {
+            inline int getNumberOfCoefficients( int Na, int Nb, int Nc ) 
+            {
+                int nCoef = 0;
+                for( int a = 0; a < Na; ++a )
+                {
+                    for( int b = 0; b < Nb; ++b )
+                    {
+                        for( int c = 0; c < Nc - a - b; ++c )
+                        {
+                            ++nCoef;
+                        }
+                    }
+                }
+                return nCoef;
+            }
+        }
+
+        class StdPyrExp: public StdExpansion3D
         {
         
         public:
@@ -383,6 +402,9 @@ namespace Nektar
 
 /**
  * $Log: StdPyrExp.h,v $
+ * Revision 1.21  2009/01/01 02:36:18  ehan
+ * Added virtual functions.
+ *
  * Revision 1.20  2008/11/17 09:02:19  ehan
  * Added necessary mapping routines
  *

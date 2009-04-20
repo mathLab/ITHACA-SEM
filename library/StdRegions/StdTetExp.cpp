@@ -40,42 +40,13 @@ namespace Nektar
 {
     namespace StdRegions
     {
-        namespace
-        {
-            // Adds up the number of cells in a truncated Nc by Nc by Nc pyramid, 
-            // where the longest Na rows and longest Nb columns are kept.
-            // Example: (Na, Nb, Nc) = (3, 4, 5); The number of coefficients is the 
-            // sum of the elements of the following matrix:
-            //     |5  4  3  2  0|
-            //     |4  3  2  0   |
-            //     |3  2  0      |
-            //     |0  0         |
-            //     |0            |
-            // Sum = 28 = number of tet coefficients
-            inline int getNumberOfCoefficients( int Na, int Nb, int Nc ) 
-            {
-                int nCoef = 0;
-                for( int a = 0; a < Na; ++a )
-                {
-                    for( int b = 0; b < Nb - a; ++b )
-                    {
-                        for( int c = 0; c < Nc - a - b; ++c )
-                        {
-                            ++nCoef;
-                        }
-                    }
-                }
-                return nCoef;
-            }
-        }
-
 
         StdTetExp::StdTetExp() // default constructor of StdExpansion is directly called. 
         {
         } //default constructor
 
         StdTetExp::StdTetExp( const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc ) :
-            StdExpansion3D( getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()), Ba, Bb, Bc)
+            StdExpansion3D(StdTetData::getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()), Ba, Bb, Bc)
         {
             if(Ba.GetNumModes() >  Bb.GetNumModes())
             {
@@ -1239,6 +1210,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTetExp.cpp,v $
+ * Revision 1.23  2009/04/03 14:57:34  sherwin
+ * Linear Advection matrices added, corrected unsigned int intialisation
+ *
  * Revision 1.22  2009/01/01 02:40:25  ehan
  * Added GetFaceToElementMap().
  *

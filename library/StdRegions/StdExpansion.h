@@ -1042,6 +1042,11 @@ namespace Nektar
                 return v_GetMetricInfo();
             }
 
+            const boost::shared_ptr<SpatialDomains::Geometry> GetGeom(void) const
+            {
+                return v_GetGeom();
+            }
+            
             const boost::shared_ptr<SpatialDomains::Geometry1D>& GetGeom1D(void) const
             {
                 return v_GetGeom1D();
@@ -1587,6 +1592,13 @@ namespace Nektar
 
             }
             
+            virtual const boost::shared_ptr<SpatialDomains::Geometry> v_GetGeom() const 
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+
+                return SpatialDomains::NullGeometrySharedPtr;
+            }
+            
             virtual const boost::shared_ptr<SpatialDomains::Geometry1D>& v_GetGeom1D() const 
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
@@ -1718,6 +1730,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.110  2009/04/03 14:57:34  sherwin
+ * Linear Advection matrices added, corrected unsigned int intialisation
+ *
  * Revision 1.109  2009/03/04 14:17:38  pvos
  * Removed all methods that take and Expansion as argument
  *

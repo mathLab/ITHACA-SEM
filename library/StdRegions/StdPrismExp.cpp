@@ -40,31 +40,12 @@ namespace Nektar
     namespace StdRegions
     {
 
-        namespace 
-        {
-            inline int getNumberOfCoefficients( int Na, int Nb, int Nc ) 
-            {
-                int nCoef = 0;
-                for( int a = 0; a < Na; ++a )
-                {
-                    for( int b = 0; b < Nb; ++b )
-                    {
-                        for( int c = 0; c < Nc - a; ++c )
-                        {
-                            ++nCoef;
-                        }
-                    }
-                }
-                return nCoef;
-            }
-        }
-
         StdPrismExp::StdPrismExp() // Deafult construct of standard expansion directly called. 
         {
         }
 
         StdPrismExp::StdPrismExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc) 
-            : StdExpansion3D(getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()), Ba, Bb, Bc)
+            : StdExpansion3D(StdPrismData::getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()), Ba, Bb, Bc)
               //  : StdExpansion3D(Ba.GetNumModes()*Bb.GetNumModes()*Bc.GetNumModes(), Ba, Bb, Bc)
         {
 
@@ -1059,6 +1040,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPrismExp.cpp,v $
+ * Revision 1.22  2009/01/06 21:09:09  sherwin
+ * removed -1 initialisation of unsigned int
+ *
  * Revision 1.21  2009/01/01 02:41:26  ehan
  * cleaned up the code
  *

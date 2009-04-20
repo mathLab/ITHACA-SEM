@@ -40,16 +40,14 @@ namespace Nektar
 {
     namespace StdRegions
     {
-
+        
         StdTriExp::StdTriExp() // default constructor of StdExpansion is directly called. 
         {
         } //default constructor
 
 
         StdTriExp::StdTriExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb):
-            StdExpansion2D(Ba.GetNumModes()*(Ba.GetNumModes()+1)/2+
-                           Ba.GetNumModes()*(Bb.GetNumModes()-Ba.GetNumModes()), 
-                           Ba,Bb)
+            StdExpansion2D(StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Ba.GetNumModes())),Ba,Bb)
         {    
             ASSERTL0(Ba.GetNumModes() <=  Bb.GetNumModes(), "order in 'a' direction is higher than order in 'b' direction");
         }
@@ -1234,6 +1232,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTriExp.cpp,v $
+ * Revision 1.52  2009/01/21 16:58:39  pvos
+ * Added additional geometric factors to improve efficiency
+ *
  * Revision 1.51  2008/12/18 14:11:35  pvos
  * NekConstants Update
  *

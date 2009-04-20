@@ -44,12 +44,13 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Print summary of solution details
     const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
-    LibUtilities::BasisKey bkey = graph2D.GetBasisKey(expansions[0],0);
+    LibUtilities::BasisKey bkey0 = expansions[0]->m_BasisKeyVector[0];
+    LibUtilities::BasisKey bkey1 = expansions[0]->m_BasisKeyVector[1];
     cout << "Calc. LinearAdvection E-vals:"  << endl; 
     cout << "             Advection_x    : " << ax << endl; 
     cout << "             Advection_y    : " << ay << endl; 
-    cout << "             Expansion      : " << SpatialDomains::kExpansionTypeStr[expansions[0]->m_ExpansionType] << endl;
-    cout << "             No. modes      : " << (int) expansions[0]->m_NumModesEqn.Evaluate() << endl;
+    cout << "             Expansion      : (" << SpatialDomains::kExpansionTypeStr[bkey0.GetBasisType()] <<","<< SpatialDomains::kExpansionTypeStr[bkey1.GetBasisType()]  << ")" << endl;
+    cout << "             No. modes      : " << bkey0.GetNumModes() << endl;
     cout << endl;
     //----------------------------------------------
    

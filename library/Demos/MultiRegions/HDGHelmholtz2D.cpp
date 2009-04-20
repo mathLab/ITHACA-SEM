@@ -3,6 +3,7 @@
 
 #include <MultiRegions/DisContField2D.h>
 
+//#define TIMING
 #ifdef TIMING
 #include <time.h>
 #define Timing(s) \
@@ -50,18 +51,11 @@ int main(int argc, char *argv[])
     // Print summary of solution details
     lambda = bcs.GetParameter("Lambda");
     const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
+    LibUtilities::BasisKey bkey0 = expansions[0]->m_BasisKeyVector[0];
     cout << "Solving 2D Helmholtz:"  << endl; 
     cout << "         Lambda     : " << lambda << endl; 
-#if 0 
-    for(i = 0; i < expansions.size(); ++i)
-    {
-        LibUtilities::BasisKey bkey = graph2D.GetBasisKey(expansions[i],0);
-        cout << "      Element " << i << "   : " << endl;
-        cout << "         Expansion  : " << LibUtilities::BasisTypeMap[bkey.GetBasisType()] << endl;
-        cout << "         No. modes  : " << bkey.GetNumModes() << endl;
-    }
+    cout << "         No. modes  : " << bkey0.GetNumModes() << endl;
     cout << endl;
-#endif
     //----------------------------------------------
    
     //----------------------------------------------
@@ -123,25 +117,36 @@ int main(int argc, char *argv[])
 #ifdef TIMING
     for(i = 0; i < 100; ++i)
     {
-        Exp->HelmSolve(*Fce, lambda);
+        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), lambda);
     }
     
     Timing("100 Helmholtz Solves:... ");
 #endif 
 
-    //----------------------------------------------
+    //-----------------------------------------------
     // Backward Transform Solution to get solved values at 
     Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
-    //----------------------------------------------
+    //-----------------------------------------------
     Timing("Backard Transform ..");
     
-    //----------------------------------------------
-    // Write solution 
-    ofstream outfile("HDGHelmholtzFile2D.dat");
-    Exp->WriteToFile(outfile);
-    //----------------------------------------------
+    //-----------------------------------------------
+    // Write solution to file 
+    string   out(strtok(argv[argc-1],"."));
+    string   endfile(".fld");
+    out += endfile; 
+    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef = Exp->GetFieldDefinitions();
+    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size()); 
     
-    //----------------------------------------------
+    for(i = 0; i < FieldDef.size(); ++i)
+    {
+        FieldDef[i]->m_Fields.push_back("u");
+        Exp->AppendFieldData(FieldDef[i], FieldData[i]);
+    }
+    graph2D.Write(out, FieldDef, FieldData);
+
+    //-----------------------------------------------
+    
+    //-----------------------------------------------
     // See if there is an exact solution, if so 
     // evaluate and plot errors
     SpatialDomains::ConstExactSolutionShPtr ex_sol =

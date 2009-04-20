@@ -38,12 +38,8 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Print summary of solution details
     lambda = bcs.GetParameter("Lambda");
-    const SpatialDomains::ExpansionVector &expansions = graph3D.GetExpansions();
-    LibUtilities::BasisKey bkey = graph3D.GetBasisKey(expansions[0],0);
     cout << "Solving 3D Helmholtz:"  << endl;
     cout << "         Lambda     : " << lambda << endl; 
-    cout << "         Expansion  : " << SpatialDomains::kExpansionTypeStr[expansions[0]->m_ExpansionType] << endl;
-    cout << "         No. modes  : " << (int) expansions[0]->m_NumModesEqn.Evaluate() << endl;
     cout << endl;
     //----------------------------------------------
    

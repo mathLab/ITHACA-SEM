@@ -10,6 +10,16 @@ SET(LinkLibraries
     optimized tinyxml debug tinyxml
 )
 
+SET(FldToTec2DSource  FldToTecGmsh2D.cpp)
+ADD_NEKTAR_EXECUTABLE(FldToTec2D FldToTec2DSource)
+TARGET_LINK_LIBRARIES(FldToTec2D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(FldToTec2D)
+
+SET(FldToGmsh2DSource  FldToTecGmsh2D.cpp)
+ADD_NEKTAR_EXECUTABLE(FldToGmsh2D FldToGmsh2DSource)
+TARGET_LINK_LIBRARIES(FldToGmsh2D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(FldToGmsh2D)
+
 SET(ProjectLoc1DSource  ProjectLoc1D.cpp)
 ADD_NEKTAR_EXECUTABLE(ProjectLoc1D ProjectLoc1DSource)
 TARGET_LINK_LIBRARIES(ProjectLoc1D ${LinkLibraries})

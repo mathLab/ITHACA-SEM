@@ -9,12 +9,13 @@ using namespace Nektar;
 
 
 void rhsFunction(MultiRegions::DisContField2DSharedPtr hpExp, 
-                Array<OneD, const NekDouble> v1, 
+                 Array<OneD, const NekDouble> v1, 
 		 Array<OneD, const NekDouble> v2,
-                Array<OneD, const NekDouble> v1Trace, 
+                 Array<OneD, const NekDouble> v1Trace, 
 		 Array<OneD, const NekDouble> v2Trace, 
-                Array<OneD, const NekDouble> u0,
-		 Array<OneD, NekDouble> &rhs, const NekDouble time);
+                 Array<OneD, const NekDouble> u0,
+		 Array<OneD, NekDouble> &rhs, 
+                 const NekDouble time);
 
 int main(int argc, char *argv[])
 {
@@ -47,13 +48,11 @@ int main(int argc, char *argv[])
     boundaryConds.Read(fileNameString);
     //-----------------------------------------
 
-
     //-----------------------------------------
     // Construct an object from the class DisContField2D.
     MultiRegions::DisContField2DSharedPtr u =
         MemoryManager<MultiRegions::DisContField2D>::AllocateSharedPtr(mesh,boundaryConds,"u");
     //-----------------------------------------
-
 
     //-----------------------------------------
     // Read and evaluate the initial conditions
@@ -82,7 +81,6 @@ int main(int argc, char *argv[])
     u->SetPhys(u0);
     //-----------------------------------------------
 
-
     //-----------------------------------------------
     // Initiate the velocities on the trace
     int nTotTracePoints = u->GetTrace()->GetNpoints();
@@ -99,7 +97,6 @@ int main(int argc, char *argv[])
     u->SetPhys(u0);
     //-----------------------------------------------
 
-
     //-----------------------------------------------
     // Write initial conditions to file
     stringstream outfileName;
@@ -108,13 +105,11 @@ int main(int argc, char *argv[])
     u->WriteToFile(outfile,eTecplot);
     //-----------------------------------------------
 
-
     //-----------------------------------------------
     // RK vectors
     Array<OneD, NekDouble> f1(nTotQuadPoints,0.0);
     Array<OneD, NekDouble> f2(nTotQuadPoints,0.0);
     //-----------------------------------------------
-
 
     //-----------------------------------------------
     // Time stepping parameters
@@ -122,7 +117,6 @@ int main(int argc, char *argv[])
     int timeStep = boundaryConds.GetParameter("Steps");
     int chkStep  = boundaryConds.GetParameter("Check");
     //-----------------------------------------------
-
 
     //-----------------------------------------------
     // start the time loop
@@ -160,12 +154,11 @@ int main(int argc, char *argv[])
 	      ++chk;
 	    }
 	  //-----------------------------------------------
-	  
-	  
+	  	  
 	  //-----------------------------------------------
 	  // Compute the L2 error
 	  if (i == timeStep)
-	    {
+          {
 	      Array<OneD, NekDouble> exactSolution(nTotQuadPoints);
 	      SpatialDomains::ConstForcingFunctionShPtr exactSolutionEquation 
 		= boundaryConds.GetExactSolution(boundaryConds.GetVariable(0));
@@ -186,9 +179,7 @@ int main(int argc, char *argv[])
 	  //-----------------------------------------------
 
 	}
-
   }
-
 }
 
 

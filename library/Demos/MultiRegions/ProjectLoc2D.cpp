@@ -34,10 +34,11 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Print summary of solution details
     const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
-    LibUtilities::BasisKey bkey = graph2D.GetBasisKey(expansions[0],0);
-    int nmodes = (int) expansions[0]->m_NumModesEqn.Evaluate();
+    LibUtilities::BasisKey bkey0 = expansions[0]->m_BasisKeyVector[0];
+    LibUtilities::BasisKey bkey1 = expansions[0]->m_BasisKeyVector[01];
+    int nmodes = bkey0.GetNumModes(); 
     cout << "Solving 2D Projection"  << endl; 
-    cout << "    Expansion  : " << SpatialDomains::kExpansionTypeStr[expansions[0]->m_ExpansionType] << endl;
+    cout << "    Expansion  : (" << LibUtilities::BasisTypeMap[bkey0.GetBasisType()] <<","<< LibUtilities::BasisTypeMap[bkey1.GetBasisType()]  << ")" << endl;
     cout << "    No. modes  : " << nmodes << endl;
     cout << endl;
     //----------------------------------------------

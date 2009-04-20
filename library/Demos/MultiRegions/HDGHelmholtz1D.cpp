@@ -40,16 +40,6 @@ int main(int argc, char *argv[])
     const SpatialDomains::CompositeVector domain = (graph1D.GetDomain());
     cout << "Solving 1D Helmholtz:"  << endl; 
     cout << "         Lambda     : " << lambda << endl; 
-
-    const SpatialDomains::ExpansionVector &expansions = graph1D.GetExpansions();
-    for(i = 0; i < domain.size(); ++i)
-    {
-        LibUtilities::BasisKey bkey = graph1D.GetBasisKey(expansions[i],0);
-        cout << "      Composite " << i << "   : " << endl;
-        cout << "         Expansion  : " << LibUtilities::BasisTypeMap[bkey.GetBasisType()] << endl;
-        cout << "         No. modes  : " << bkey.GetNumModes() << endl;
-    }
-    cout << endl;
     //----------------------------------------------
    
     //----------------------------------------------

@@ -5,6 +5,7 @@
 
 using namespace Nektar;
 
+//#define TIMING
 #ifdef TIMING
 #include <time.h>
 #define Timing(s) \
@@ -50,11 +51,10 @@ int main(int argc, char *argv[])
     // Print summary of solution details
     lambda = bcs.GetParameter("Lambda");
     const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
-    LibUtilities::BasisKey bkey = graph2D.GetBasisKey(expansions[0],0);
+    LibUtilities::BasisKey bkey0 = expansions[0]->m_BasisKeyVector[0];
     cout << "Solving 2D Helmholtz:"  << endl; 
     cout << "         Lambda     : " << lambda << endl; 
-    cout << "         Expansion  : " << SpatialDomains::kExpansionTypeStr[expansions[0]->m_ExpansionType] << endl;
-    cout << "         No. modes  : " << (int) expansions[0]->m_NumModesEqn.Evaluate() << endl;
+    cout << "         No. modes  : " << bkey0.GetNumModes() << endl;
     cout << endl;
     //----------------------------------------------
    
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 #ifdef TIMING
     for(i = 0; i < 100; ++i)
     {
-        Exp->HelmSolve(*Fce, lambda);
+        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), lambda);
     }
     
     Timing("100 Helmholtz Solves:... ");
@@ -127,16 +127,22 @@ int main(int argc, char *argv[])
     Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
     //----------------------------------------------
     
-    //----------------------------------------------
-    // Write solution 
-    ofstream outfile("HelmholtzFile2D.pos");
-    Exp->WriteToFile(outfile,eGmsh);
-    outfile.close();
+    //-----------------------------------------------
+    // Write solution to file 
+    string   out(strtok(argv[argc-1],"."));
+    string   endfile(".fld");
+    out += endfile; 
+    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef = Exp->GetFieldDefinitions();
+    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size()); 
+    
+    for(i = 0; i < FieldDef.size(); ++i)
+    {
+        FieldDef[i]->m_Fields.push_back("u");
+        Exp->AppendFieldData(FieldDef[i], FieldData[i]);
+    }
+    graph2D.Write(out, FieldDef, FieldData);
 
-    ofstream outfile2("HelmholtzFile2D.dat");
-    Exp->WriteToFile(outfile2,eTecplot);
-    outfile2.close();
-    //----------------------------------------------
+    //-----------------------------------------------
     
     //----------------------------------------------
     // See if there is an exact solution, if so 

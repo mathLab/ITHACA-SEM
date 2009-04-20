@@ -55,7 +55,7 @@ namespace Nektar
             return parse(str,
                 // Begin grammar
                 (
-                lexeme_d[alpha_p >> *alnum_p][symbolFunctor] >> "=" >> real_p[valueFunctor]
+                 lexeme_d[alpha_p >> *alnum_p][symbolFunctor] >> "=" >> real_p[valueFunctor]
                 )
                 ,
                 // End grammar
@@ -72,15 +72,15 @@ namespace Nektar
             return parse(str,
                 //  Begin grammar
                 (
-                uint_p[functor1] >> !('-' >> uint_p[functor2]) >>
-                *(',' >> uint_p[functor1] >> !('-' >> uint_p[functor2]))
+                 uint_p[functor1] >> !('-' >> uint_p[functor2]) >>
+                 *(',' >> uint_p[functor1] >> !('-' >> uint_p[functor2]))
                 )
                 ,
                 //  End grammar
 
                 space_p).full;
         }
-
+        
         static bool GenerateOrderedVector(const char *const str, vector<unsigned int> &vec)
         {
             // Functors used to parse the sequence.
@@ -89,14 +89,14 @@ namespace Nektar
             return parse(str,
                 //  Begin grammar
                 (
-                uint_p[functor1] >> *(',' >> uint_p[functor1])
+                 uint_p[functor1] >> *(',' >> uint_p[functor1])
                 )
                 ,
                 //  End grammar
 
                 space_p).full;
         }
-
+        
 		static bool GenerateOrderedStringVector(const char *const str, vector<std::string> &vec)
         {
             // Functors used to parse the sequence.
@@ -156,6 +156,7 @@ namespace Nektar
 
             void operator()(unsigned int n) const
             {
+#ifdef NOTREQUIRED //SJS: I do not think we need this check 
                 if (!m_vector->empty())
                 {
                     unsigned int prevElem = m_vector->back();
@@ -166,6 +167,7 @@ namespace Nektar
                     }
                 }
                 else
+#endif
                 {
                     m_vector->push_back(n);
                 }
@@ -206,11 +208,11 @@ namespace Nektar
 
             void operator()(char const* first, char const* last) const
             {
-				m_vector->push_back(std::string(first, last));
+                m_vector->push_back(std::string(first, last));
             }
 
         private:
-			vector<std::string> *m_vector;
+            vector<std::string> *m_vector;
         };
     };
 }

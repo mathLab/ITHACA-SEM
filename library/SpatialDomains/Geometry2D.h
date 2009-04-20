@@ -352,6 +352,12 @@ namespace Nektar
                          "This function is only valid for shape type geometries");
                 return 0;
             }
+
+
+            virtual int v_GetShapeDim() const
+            {
+                return 2;
+            }
         };
 
 
@@ -362,6 +368,9 @@ namespace Nektar
 
 //
 // $Log: Geometry2D.h,v $
+// Revision 1.9  2008/11/17 09:00:11  ehan
+// Added GetNumVerts and GetNumEdges
+//
 // Revision 1.8  2008/09/12 11:26:19  pvos
 // Updates for mappings in 3D
 //

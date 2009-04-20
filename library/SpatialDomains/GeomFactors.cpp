@@ -252,7 +252,7 @@ namespace Nektar
             int nquad0_tbasis = pkey0_tbasis.GetNumPoints();
             int nquad1_tbasis = pkey1_tbasis.GetNumPoints();
             int nqtot_tbasis  = nquad0_tbasis*nquad1_tbasis;
-
+            
             // Set the pointskey equal to the pointskey as defined
             // in 'tbasis'
             m_pointsKey[0] = pkey0_tbasis;
@@ -967,6 +967,7 @@ namespace Nektar
             
                     switch(tbasis[1]->GetPointsType())
                     {
+                    case LibUtilities::ePolyEvenlySpaced:
                     case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
                         for(i = 0; i < nquad1; ++i)
                         {
@@ -1298,6 +1299,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.39  2009/04/04 00:29:37  rcantao
+// Made a few checks on J3D and companion. Remarks included.
+//
 // Revision 1.38  2009/01/21 16:59:03  pvos
 // Added additional geometric factors to improve efficiency
 //

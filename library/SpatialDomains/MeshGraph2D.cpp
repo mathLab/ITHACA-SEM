@@ -635,39 +635,25 @@ namespace Nektar
             // and order of expansion such that no confusion can arise.
             ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Element);
             
-            int nummodes = (int) expansion->m_NumModesEqn.Evaluate();
-            
-            switch(expansion->m_ExpansionType)
+
+            int edge_id = (*elements)[0]->m_EdgeIndx;
+
+            if(edge->GetGeomShapeType() == eTriangle)
             {
-            case eModified:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                    return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
-                }
-                break;
-            case eGLL_Lagrange:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                    return LibUtilities::BasisKey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
-                }
-                break;
-            case eOrthogonal:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                    return LibUtilities::BasisKey(LibUtilities::eOrtho_A,nummodes,pkey);
-                }
-                break;    
-            case eGLL_Lagrange_SEM:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussLobattoLegendre);
-                    return LibUtilities::BasisKey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
-                }
-                break;   
-            default:
-                ASSERTL0(false,"expansion type unknown");
-                return LibUtilities::NullBasisKey; // Keep things happy by returning a value.
-                break;
-            }            
+                edge_id = (edge_id)? 1:0;
+            }
+            else
+            {
+                edge_id = edge_id%2;
+            }
+
+            int nummodes  = expansion->m_BasisKeyVector[edge_id].GetNumModes();
+            int numpoints = expansion->m_BasisKeyVector[edge_id].GetNumPoints();
+            
+            
+            // Use edge 0 to define basis of order relevant to edge 
+            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+            return LibUtilities::BasisKey(expansion->m_BasisKeyVector[0].GetBasisType(),nummodes,pkey);
         }
         
     }; //end of namespace
@@ -675,6 +661,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.35  2009/01/21 16:59:03  pvos
+// Added additional geometric factors to improve efficiency
+//
 // Revision 1.34  2009/01/12 10:26:59  pvos
 // Added input tags for nodal expansions
 //

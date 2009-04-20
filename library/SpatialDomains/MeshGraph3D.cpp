@@ -1034,7 +1034,10 @@ namespace Nektar
             // elements->size!=1, all elements to which the edge belongs have the same type
             // and order of expansion such that no confusion can arise.
             ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Face);
-            
+
+
+            ASSERTL0(false,"This method needs reworking");
+#if 0 
             int nummodes = (int) expansion->m_NumModesEqn.Evaluate();
             
             switch(expansion->m_ExpansionType)
@@ -1131,6 +1134,7 @@ namespace Nektar
                 return LibUtilities::NullBasisKey; // Keep things happy by returning a value.
                 break;
             }            
+#endif
         }
 
 
@@ -1140,6 +1144,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph3D.cpp,v $
+// Revision 1.12  2009/01/12 10:26:59  pvos
+// Added input tags for nodal expansions
+//
 // Revision 1.11  2008/09/23 18:19:56  pvos
 // Updates for working ProjectContField3D demo
 //

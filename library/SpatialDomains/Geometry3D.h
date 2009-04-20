@@ -326,6 +326,10 @@ namespace Nektar
                 return 0;
             }
             
+            virtual int v_GetShapeDim() const
+            {
+                return 3;
+            }
         };
 
     }; //end of namespace
@@ -336,6 +340,9 @@ namespace Nektar
 
 //
 // $Log: Geometry3D.h,v $
+// Revision 1.8  2008/09/17 13:46:26  pvos
+// Added LocalToGlobalC0ContMap for 3D expansions
+//
 // Revision 1.7  2008/09/12 11:26:19  pvos
 // Updates for mappings in 3D
 //

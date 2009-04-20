@@ -110,19 +110,44 @@ namespace Nektar
 
         struct Expansion
         {
-            Expansion(GeometrySharedPtr geomShPtr, const Equation &numModesEqn, ExpansionType expansionType):
-                m_GeomShPtr(geomShPtr),
-                m_NumModesEqn(numModesEqn),
-                m_ExpansionType(expansionType)
+        Expansion(GeometrySharedPtr geomShPtr, const LibUtilities::BasisKeyVector basiskeyvec):
+            m_GeomShPtr(geomShPtr),
+                m_BasisKeyVector(basiskeyvec)
             {};
-            GeometrySharedPtr m_GeomShPtr;
-            Equation m_NumModesEqn;
-            ExpansionType m_ExpansionType;
+            GeometrySharedPtr             m_GeomShPtr;
+            LibUtilities::BasisKeyVector  m_BasisKeyVector;
         };
 
         typedef boost::shared_ptr<Expansion> ExpansionShPtr;
-        typedef std::vector<ExpansionShPtr> ExpansionVector;
+        typedef std::vector<ExpansionShPtr>  ExpansionVector;
         typedef std::vector<ExpansionShPtr>::iterator ExpansionVectorIter;
+
+        struct FieldDefinitions
+        {
+            
+        FieldDefinitions(SpatialDomains::GeomShapeType shapeType,
+                         std::vector<unsigned int> &elementIDs,
+                         std::vector<LibUtilities::BasisType> &basis,
+                         bool uniOrder,
+                         std::vector<unsigned int> &numModes,
+                         std::vector<std::string>  &fields) : 
+            m_ShapeType(shapeType),
+                m_ElementIDs(elementIDs),
+                m_Basis(basis),
+                m_UniOrder(uniOrder),
+                m_NumModes(numModes),
+                m_Fields(fields)
+            {};
+            SpatialDomains::GeomShapeType        m_ShapeType;
+            std::vector<unsigned int>            m_ElementIDs;
+            std::vector<LibUtilities::BasisType> m_Basis;
+            bool                                 m_UniOrder;
+            std::vector<unsigned int>            m_NumModes;
+            std::vector<std::string>             m_Fields;
+        };
+
+        typedef boost::shared_ptr<FieldDefinitions> FieldDefinitionsSharedPtr;
+        
 
         class MeshGraph
         {
@@ -157,27 +182,19 @@ namespace Nektar
             {
                 return int(m_vertset.size());
             }
+                        
+            int CheckFieldDefinition(FieldDefinitionsSharedPtr  &fielddefs);
+            void Write(std::string &outfilename, 
+                       std::vector<FieldDefinitionsSharedPtr> &fielddefs, 
+                       std::vector<std::vector<double> >      &fielddata);
+            void Write(std::ofstream                          &xmlFile, 
+                       std::vector<FieldDefinitionsSharedPtr> &fielddefs, 
+                       std::vector<std::vector<double> >      &fielddata);
+            void WriteElements(std::ofstream              &xmlFile, 
+                               FieldDefinitionsSharedPtr  &fielddefs, 
+                               std::vector<double>        &fielddata);
             
-            struct FieldDefinitions
-            {
-
-            FieldDefinitions(GeometryVector &elements,
-                             std::vector<LibUtilities::BasisType> &basis,
-                             std::vector<unsigned int> &numModes,
-                             std::vector<unsigned int> &numFields) : 
-                    m_Elements(elements),
-                    m_Basis(basis),
-                    m_NumModes(numModes),
-                    m_Fields(numFields)
-                {};
-                GeometryVector m_Elements;
-                std::vector<LibUtilities::BasisType> m_Basis;
-                std::vector<unsigned int> m_NumModes;
-                std::vector<unsigned int> m_Fields;
-            };
-            
-            void Write(std::string &outfilename, FieldDefinitions &fielddefs, std::vector<double> &fielddata);
-            void Import(std::string &infilename, std::vector<FieldDefinitions> &fielddefs, std::vector<std::vector<double> > &fielddata);
+            void Import(std::string &infilename, std::vector<FieldDefinitionsSharedPtr> &fielddefs, std::vector<std::vector<double> > &fielddata);
             
             GeometrySharedPtr GetCompositeItem(int whichComposite, int whichItem);
             Composite GetComposite(int whichComposite) const
@@ -200,7 +217,6 @@ namespace Nektar
             void ReadCurves(TiXmlDocument &doc);
             void ReadCurves(std::string &infilename);
             void GetCompositeList(const std::string &compositeStr, CompositeVector &compositeVector) const;
-            LibUtilities::BasisKey GetBasisKey(ExpansionShPtr in, const int flag = 0);
             
             ExpansionShPtr GetExpansion(GeometrySharedPtr geom)
             {
@@ -217,6 +233,10 @@ namespace Nektar
                 }
                 return returnval;
             }
+
+            
+            void SetExpansions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef, std::vector< std::vector<LibUtilities::PointsType> > &pointstype);
+         
 
             const ExpansionVector &GetExpansions(void) const
             {
@@ -248,7 +268,6 @@ namespace Nektar
             
         };
 
-        
         typedef boost::shared_ptr<MeshGraph> MeshGraphSharedPtr;
 
 
@@ -259,6 +278,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.31  2009/01/12 10:26:59  pvos
+// Added input tags for nodal expansions
+//
 // Revision 1.30  2008/10/04 19:32:47  sherwin
 // Added SharedPtr Typedef and replaced MeshDimension with SpaceDimension
 //

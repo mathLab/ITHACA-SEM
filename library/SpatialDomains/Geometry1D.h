@@ -232,6 +232,12 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,
                          "This function is only valid for expansion type geometries");
             }
+
+            virtual int v_GetShapeDim() const
+            {
+                return 1;
+            }
+
         };
         // shorthand for boost pointer
         typedef boost::shared_ptr<Geometry1D> Geometry1DSharedPtr;
@@ -245,6 +251,9 @@ namespace Nektar
 
 //
 // $Log: Geometry1D.h,v $
+// Revision 1.7  2008/05/30 00:33:48  delisi
+// Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
+//
 // Revision 1.6  2008/04/06 06:00:37  bnelson
 // Changed ConstArray to Array<const>
 //

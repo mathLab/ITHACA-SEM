@@ -149,6 +149,11 @@ namespace Nektar
                     return v_GetNumEdges();
                 }
 
+                inline int GetShapeDim() const
+                {
+                    return v_GetShapeDim();
+                }
+
             protected:
 
                 static GeomFactorsSharedPtr ValidateRegGeomFactor(GeomFactorsSharedPtr geomFactor);
@@ -188,6 +193,15 @@ namespace Nektar
                         "This function is only valid for shape type geometries");
                     return 0;
                 }                
+
+
+                virtual int v_GetShapeDim() const
+                {
+                    NEKERROR(ErrorUtil::efatal,
+                             "This function is only valid for shape type geometries");
+                    return 0;
+                }
+
         };
     }; //end of namespace
 }; // end of namespace
@@ -196,6 +210,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.28  2009/03/04 05:45:38  bnelson
+// Fixed visual studio compile errors.
+//
 // Revision 1.27  2009/01/21 16:59:03  pvos
 // Added additional geometric factors to improve efficiency
 //

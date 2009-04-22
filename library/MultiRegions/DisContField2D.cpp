@@ -216,7 +216,7 @@ namespace Nektar
                 DNekScalMat &LamToU = *((*m_exp)[n]->GetLocMatrix(Umatkey)); 
 
                 Floc = Transpose(LamToU)*ElmtFce;
-
+                
                 // Put value into trace space expansion
                 for(i = 0; i < nbndry; ++i)
                 {
@@ -340,10 +340,16 @@ namespace Nektar
                 elmtToTrace = m_traceMap->GetElmtToTrace();
             int cnt2; 
 
+            // I think this whole section can be replaced by
+            //   
+            //  
+            //  out =  (*InvHDGHelm)*f + (LamtoU)*Lam  
+       
             for(cnt2 =  cnt = i = 0; i < nexp; ++i)
             {
                 e_f      = f + cnt;
                 // put elemental solutions into local space; 
+
 
                 // Get information from trace array (in shuffled form)
                 // and put it into local edge form

@@ -1082,6 +1082,40 @@ namespace Nektar
                 ASSERTL0(false, "Output routine not implemented for requested type of output");
             }
         }
+
+
+
+        void ExpList::ReadFromFile(std::ifstream &in, OutputFormat format)
+        {  
+            if(format==eTecplot)
+            {
+                int i,cnt = 0;
+
+                Array<OneD, NekDouble> phys = m_phys;
+                int npts;
+
+                npts = (*m_exp)[0]->GetTotPoints();
+                (*m_exp)[0]->ReadFromFile(in,eTecplot,true);
+                Vmath::Vcopy(npts,&(*m_exp)[0]->GetPhys()[0],1,&phys[cnt],1);
+                cnt  += npts;
+                
+                for(i= 1; i < GetExpSize(); ++i)
+                {
+                    npts = (*m_exp)[i]->GetTotPoints();
+                    (*m_exp)[i]->ReadFromFile(in,eTecplot,false); 
+                    Vmath::Vcopy(npts,&((*m_exp)[i]->GetPhys())[0],1,
+                                 &phys[cnt],1);
+                    cnt  += npts;
+                }
+
+                FwdTrans(m_phys,m_coeffs);
+                
+            }
+            else
+            {
+                ASSERTL0(false, "Output routine not implemented for requested type of output");
+            }
+        }
     
         NekDouble  ExpList::Linf(const Array<OneD, const NekDouble> &soln)
         {            

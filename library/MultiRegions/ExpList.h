@@ -427,7 +427,8 @@ namespace Nektar
              */
             void   WriteToFile(std::ofstream &out, OutputFormat format = eTecplot);
     
-
+            void ReadFromFile(std::ifstream &in, OutputFormat format = eTecplot);
+            
             /**
              * \brief This function returns the dimension of the
              * coordinates of the element \a eid.
@@ -1222,6 +1223,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.59  2009/04/20 16:14:06  sherwin
+* Updates for optimising bandwidth of DG solver and allowing write import on explist
+*
 * Revision 1.58  2009/04/03 20:33:57  sherwin
 * Update for Eigenfunction evaluation
 *

@@ -20,6 +20,11 @@ ADD_NEKTAR_EXECUTABLE(FldToGmsh2D FldToGmsh2DSource)
 TARGET_LINK_LIBRARIES(FldToGmsh2D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(FldToGmsh2D)
 
+SET(DatToFldSource  DatToFld.cpp)
+ADD_NEKTAR_EXECUTABLE(DatToFld DatToFldSource)
+TARGET_LINK_LIBRARIES(DatToFld ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(DatToFld)
+
 SET(ProjectLoc1DSource  ProjectLoc1D.cpp)
 ADD_NEKTAR_EXECUTABLE(ProjectLoc1D ProjectLoc1DSource)
 TARGET_LINK_LIBRARIES(ProjectLoc1D ${LinkLibraries})

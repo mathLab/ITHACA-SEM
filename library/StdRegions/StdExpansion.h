@@ -758,7 +758,13 @@ namespace Nektar
             {
                 v_WriteToFile(outfile,format,dumpVar);
             }
+
                 
+            void ReadFromFile(std::ifstream &in, OutputFormat format, const bool dumpVar = true)
+            {
+                v_ReadFromFile(in,format,dumpVar);
+            }
+
             inline DNekMatSharedPtr& GetStdMatrix(const StdMatrixKey &mkey) 
             {
                 return m_stdMatrixManager[mkey];
@@ -1585,6 +1591,11 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "WriteToFile: Write method");
             }
 
+            virtual void v_ReadFromFile(std::ifstream &infile, OutputFormat format, const bool dumpVar = true)
+            {
+                NEKERROR(ErrorUtil::efatal, "ReadFromFile: Write method");
+            }
+
             virtual const  boost::shared_ptr<SpatialDomains::GeomFactors>& v_GetMetricInfo() const 
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
@@ -1730,6 +1741,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.111  2009/04/20 16:11:47  sherwin
+ * Mods to handle output and optimise DG work
+ *
  * Revision 1.110  2009/04/03 14:57:34  sherwin
  * Linear Advection matrices added, corrected unsigned int intialisation
  *

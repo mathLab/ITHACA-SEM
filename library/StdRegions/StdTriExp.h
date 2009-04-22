@@ -276,6 +276,7 @@ namespace Nektar
                                      Array<OneD, int> &signarray);
 
             void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
+            void ReadFromFile(std::ifstream &infile, OutputFormat format, const bool dumpVar = true);
             void WriteCoeffsToFile(std::ofstream &outfile);
 
             int GetEdgeNcoeffs(const int i) const
@@ -736,6 +737,11 @@ namespace Nektar
             {
                 WriteToFile(outfile,format,dumpVar);
             }
+            
+            virtual void v_ReadFromFile(std::ifstream &infile, OutputFormat format, const bool dumpVar = true)
+            {
+                ReadFromFile(infile,format,dumpVar);
+            }
 
             virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
             {
@@ -820,6 +826,9 @@ namespace Nektar
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.43  2009/04/20 16:11:47  sherwin
+ * Mods to handle output and optimise DG work
+ *
  * Revision 1.42  2009/01/21 16:58:39  pvos
  * Added additional geometric factors to improve efficiency
  *

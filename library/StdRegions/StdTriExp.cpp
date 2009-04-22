@@ -1136,6 +1136,42 @@ namespace Nektar
             }
         }
 
+        
+        void StdTriExp::ReadFromFile(std::ifstream &infile, OutputFormat format, const bool dumpVar)
+        {
+            if(format==eTecplot)
+            {
+                int  i,j;
+                int  nq0,nq1;
+                int  nquad0 = m_base[0]->GetNumPoints();
+                int  nquad1 = m_base[1]->GetNumPoints();
+                char str[256];
+
+                if(dumpVar)
+                {
+                    infile.getline(str,sizeof(str));
+                    infile.getline(str,sizeof(str));
+                }
+                infile.getline(str,sizeof(str));
+                sscanf(str,"Zone, I=%d, J=%d",&nq0,&nq1);
+                ASSERTL1(nq0 == nquad0,"nquad0 does not match");
+                ASSERTL1(nq1 == nquad1,"nquad0 does not match");
+                
+                for(j = 0; j < nquad1; ++j)
+                {
+                    for(i = 0; i < nquad0; ++i)
+                    {
+                        infile.getline(str,sizeof(str));
+                        sscanf(str,"%*lf %*lf %lf",&m_phys[0]+j*nquad0+i);
+                    }
+                }
+            } 
+            else
+            {
+                ASSERTL0(false, "Input routine not implemented for requested type of output");
+            }
+        }
+
         //   I/O routine
         void StdTriExp::WriteCoeffsToFile(std::ofstream &outfile)
         {
@@ -1232,6 +1268,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTriExp.cpp,v $
+ * Revision 1.53  2009/04/20 16:11:47  sherwin
+ * Mods to handle output and optimise DG work
+ *
  * Revision 1.52  2009/01/21 16:58:39  pvos
  * Added additional geometric factors to improve efficiency
  *

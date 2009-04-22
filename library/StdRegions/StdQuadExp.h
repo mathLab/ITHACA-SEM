@@ -263,6 +263,7 @@ namespace Nektar
                                      Array<OneD, int> &signarray);
 
             void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
+            void ReadFromFile(std::ifstream &infile, OutputFormat format, const bool dumpVar = true);
             void WriteCoeffsToFile(std::ofstream &outfile);
 
             int GetEdgeNcoeffs(const int i) const
@@ -777,6 +778,12 @@ namespace Nektar
                 WriteToFile(outfile,format,dumpVar);
             }
 
+            
+            virtual void v_ReadFromFile(std::ifstream &infile, OutputFormat format, const bool dumpVar = true)
+            {
+                ReadFromFile(infile,format,dumpVar);
+            }
+
             virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
             {
                 WriteCoeffsToFile(outfile);
@@ -868,6 +875,9 @@ namespace Nektar
 
 /**
  * $Log: StdQuadExp.h,v $
+ * Revision 1.47  2009/03/23 11:52:50  pvos
+ * NekMatrix Updates
+ *
  * Revision 1.46  2009/01/21 16:58:39  pvos
  * Added additional geometric factors to improve efficiency
  *

@@ -265,7 +265,7 @@ namespace Nektar
                                    Array<OneD,NekDouble> &outarray,
                                    const StdRegions::StdMatrixKey &mkey)
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eStdTriExp, NekOptimize::eHelmholtzMatrixOp>::
+                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eTriExp, NekOptimize::eHelmholtzMatrixOp>::
                     DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
                 
                 if(doMatOp)
@@ -674,6 +674,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.43  2009/04/20 16:12:28  sherwin
+ *    Updates related to output format and optimising DG solver
+ *
  *    Revision 1.42  2009/01/21 16:59:57  pvos
  *    Added additional geometric factors to improve efficiency
  *

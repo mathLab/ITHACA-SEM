@@ -282,7 +282,7 @@ namespace Nektar
                                    Array<OneD,NekDouble> &outarray,
                                    const StdRegions::StdMatrixKey &mkey)
             {
-                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eStdQuadExp, NekOptimize::eHelmholtzMatrixOp>::
+                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eQuadExp, NekOptimize::eHelmholtzMatrixOp>::
                     DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
                 
                 if(doMatOp)
@@ -700,6 +700,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.48  2009/04/20 16:12:28  sherwin
+ *    Updates related to output format and optimising DG solver
+ *
  *    Revision 1.47  2009/01/21 16:59:57  pvos
  *    Added additional geometric factors to improve efficiency
  *

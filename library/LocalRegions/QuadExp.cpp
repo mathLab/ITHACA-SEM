@@ -299,7 +299,7 @@ namespace Nektar
         void QuadExp::MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
                                                  Array<OneD, NekDouble> &outarray)
         {        
-            if(false)
+            if(m_metricinfo->UseQuadratureMetrics())
             {
                 int    nqtot = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();                
                 const Array<OneD, const NekDouble>& metric = m_metricinfo->GetQuadratureMetrics();  
@@ -1793,6 +1793,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.58  2009/04/03 15:02:36  sherwin
+ *    Made default Create Matrix the call through to the StdRegions generalised operators
+ *
  *    Revision 1.57  2009/01/21 16:59:57  pvos
  *    Added additional geometric factors to improve efficiency
  *

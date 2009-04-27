@@ -58,16 +58,16 @@ namespace Nektar
     {
         SpatialDomains::MeshGraph graph; 
 
-        // Both the geometry and the expansion information should be read
-        SpatialDomains::MeshGraphSharedPtr mesh = graph.Read(fileNameString);
+        // Read the geometry and the expansion information
+        m_graph = graph.Read(fileNameString);
 
         // Also read and store the boundary conditions
-	SpatialDomains::MeshGraph *meshptr = mesh.get();
+	SpatialDomains::MeshGraph *meshptr = m_graph.get();
         m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>::AllocateSharedPtr(meshptr);
         m_boundaryConditions->Read(fileNameString);
         
         // set space dimension for use in class
-        m_spacedim = mesh->GetSpaceDimension();
+        m_spacedim = m_graph->GetSpaceDimension();
         // save the input file name for output details. 
         m_sessionName = fileNameString;
         m_sessionName = m_sessionName.substr(0,m_sessionName.find_first_of(".")); // Pull out ending
@@ -77,14 +77,31 @@ namespace Nektar
         // directly from constructor
         if(UseInputFileForProjectionType == true)
         {
-            m_projectionType = eGalerkin;
             
-            if(m_boundaryConditions->CheckForParameter("DisContinuous") == true)
+
+            if(m_boundaryConditions->SolverInfoExists("Projection"))
             {
-                if((int) m_boundaryConditions->GetParameter("DisContinuous") != 0)
+                
+                std::string ProjectStr = m_boundaryConditions->GetSolverInfo("Projection");
+                
+                if((ProjectStr == "Continuous")||(ProjectStr == "Galerkin"))
+                {
+                    m_projectionType = eGalerkin;
+                }
+                else if(ProjectStr == "DisContinuous")
                 {
                     m_projectionType = eDiscontinuousGalerkin;
                 }
+                else 
+                {
+                    ASSERTL0(false,"Projection value not recognised");
+                }
+            }
+            else
+            {
+                cerr << "Projection type not specified in SOLVERINFO, defaulting to continuous Galerkin" << endl;
+                
+                m_projectionType = eGalerkin;
             }
         }
         else 
@@ -101,7 +118,7 @@ namespace Nektar
         }
 
 
-        SetADRBase(mesh,m_boundaryConditions->GetNumVariables());
+        SetADRBase(m_graph,m_boundaryConditions->GetNumVariables());
     }
     
   void ADRBase::SetADRBase(SpatialDomains::MeshGraphSharedPtr &mesh,
@@ -141,9 +158,13 @@ namespace Nektar
 		  ASSERTL0(false,"Dynamics cast failed");
               }
 	      
-	      for(i = 0 ; i < m_fields.num_elements(); i++)
+              i = 0;
+              MultiRegions::ContField2DSharedPtr firstfield =  MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(*mesh2D,*m_boundaryConditions,i);
+              
+              m_fields[0] = firstfield;
+	      for(i = 1 ; i < m_fields.num_elements(); i++)
               {
-                  m_fields[i] = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(*mesh2D,*m_boundaryConditions,i);
+                  m_fields[i] = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(*firstfield,*mesh2D,*m_boundaryConditions,i);
               }
 	      break;
 	    }
@@ -292,12 +313,9 @@ namespace Nektar
 
 
 	// dump initial conditions to file
-	for(int i = 0; i < m_fields.num_elements(); ++i)
-	  {
-	    std::string outname = m_sessionName +"_" + m_boundaryConditions->GetVariable(i) + "_initial.chk";
-            ofstream outfile(outname.c_str());
-	    m_fields[i]->WriteToFile(outfile,eTecplot);
-	  }       
+        std::string outname = m_sessionName + "_initial.chk";
+        ofstream outfile(outname.c_str());
+        WriteFld(outfile);
     }
   
 
@@ -368,24 +386,29 @@ namespace Nektar
         
     }
 
-  NekDouble ADRBase::L2Error(int field, const Array<OneD, NekDouble> &exactsoln)
+    NekDouble ADRBase::L2Error(int field, const Array<OneD, NekDouble> &exactsoln)
     {
-      
-      if(exactsoln.num_elements())
-	{
-	  return m_fields[field]->L2(exactsoln);
-	}
-      else
-	{
-	  Array<OneD, NekDouble> exactsoln(m_fields[field]->GetNpoints());
-	  
-	  EvaluateExactSolution(field,exactsoln,m_time);
-	  
-	  return m_fields[field]->L2(exactsoln);
-	}
+        if(m_fields[field]->GetPhysState() == false)
+        {
+            m_fields[field]->BwdTrans(m_fields[field]->GetCoeffs(),
+                                       m_fields[field]->UpdatePhys());
+        }
+        
+        if(exactsoln.num_elements())
+        {
+            return m_fields[field]->L2(exactsoln);
+        }
+        else
+        {
+            Array<OneD, NekDouble> exactsoln(m_fields[field]->GetNpoints());
+            
+            EvaluateExactSolution(field,exactsoln,m_time);
+            
+            return m_fields[field]->L2(exactsoln);
+        }
     }
-
-
+    
+    
     //-------------------------------------------------------------
     // Compute weak Green form of advection terms (without boundary
     // integral, i.e (\grad \phi \cdot F) where for example F = uV
@@ -442,41 +465,68 @@ namespace Nektar
     void ADRBase::WeakAdvectionNonConservativeForm(const Array<OneD, Array<OneD, NekDouble> > &V, const Array<OneD, const NekDouble> &u, Array<OneD, NekDouble> &outarray)
     {
         // use dimension of Velocity vector to dictate dimension of operation
-      int ndim       = V.num_elements();
-      //int ndim = m_expdim;
-      
-      // ToDo: here we should add a check that V has right dimension
-      
+        int ndim       = V.num_elements();
+        
+        
         int nPointsTot = m_fields[0]->GetNpoints();
         Array<OneD, NekDouble> tmp(nPointsTot);
-        Array<OneD, NekDouble> grad0(ndim*nPointsTot,0.0),grad1,grad2;
+        Array<OneD, NekDouble> wk(ndim*nPointsTot,0.0);
+
+        AdvectionNonConservativeForm(V,u,tmp,wk);
+        
+        m_fields[0]->IProductWRTBase_IterPerExp(tmp,outarray);
+    }
+
+    //-------------------------------------------------------------
+    // Calculate  V\cdot Grad(u)
+    // -------------------------------------------------------------
+
+    void ADRBase::AdvectionNonConservativeForm(const Array<OneD, Array<OneD, NekDouble> > &V, const Array<OneD, const NekDouble> &u, Array<OneD, NekDouble> &outarray, Array<OneD, NekDouble> &wk)
+    {
+        // use dimension of Velocity vector to dictate dimension of operation
+        int ndim       = V.num_elements();
+        //int ndim = m_expdim;
+        
+        // ToDo: here we should add a check that V has right dimension
+      
+        int nPointsTot = m_fields[0]->GetNpoints();
+        Array<OneD, NekDouble> grad0,grad1,grad2;
+
+        // check to see if wk space is defined
+        if(wk.num_elements()) 
+        {
+            grad0 = Array<OneD, NekDouble> (ndim*nPointsTot);
+
+        }
+        else
+        {
+            grad0 = wk;
+        }
 
         // Evaluate V\cdot Grad(u)
         switch(ndim)
         {
         case 1:
             m_fields[0]->PhysDeriv(u,grad0);
-            Vmath::Vmul(nPointsTot,grad0,1,V[0],1,tmp,1);
+            Vmath::Vmul(nPointsTot,grad0,1,V[0],1,outarray,1);
             break;
         case 2:
             grad1 = grad0 + nPointsTot;
             m_fields[0]->PhysDeriv(u,grad0,grad1);
-            Vmath::Vmul (nPointsTot,grad0,1,V[0],1,tmp,1);
-            Vmath::Vvtvp(nPointsTot,grad1,1,V[1],1,tmp,1,tmp,1);
+            Vmath::Vmul (nPointsTot,grad0,1,V[0],1,outarray,1);
+            Vmath::Vvtvp(nPointsTot,grad1,1,V[1],1,outarray,1,outarray,1);
             break;
         case 3:
             grad1 = grad0 + nPointsTot;
             grad2 = grad1 + nPointsTot;
             m_fields[0]->PhysDeriv(u,grad0,grad1,grad2);
-            Vmath::Vmul (nPointsTot,grad0,1,V[0],1,tmp,1);
-            Vmath::Vvtvp(nPointsTot,grad1,1,V[1],1,tmp,1,tmp,1);
-            Vmath::Vvtvp(nPointsTot,grad2,1,V[2],1,tmp,1,tmp,1);
+            Vmath::Vmul (nPointsTot,grad0,1,V[0],1,outarray,1);
+            Vmath::Vvtvp(nPointsTot,grad1,1,V[1],1,outarray,1,outarray,1);
+            Vmath::Vvtvp(nPointsTot,grad2,1,V[2],1,outarray,1,outarray,1);
             break;
         default:
             ASSERTL0(false,"dimension unknown");
         }
-
-        m_fields[0]->IProductWRTBase_IterPerExp(tmp,outarray);
     }
                                        
     //-------------------------------------------------------------
@@ -714,28 +764,38 @@ namespace Nektar
 		}
     }
 	
-  void ADRBase::Output(void)
+    void ADRBase::Output(void)
     {
-        for(int i = 0; i < m_fields.num_elements(); ++i)
-        {
-            std::string outname = m_sessionName +"_" + m_boundaryConditions->GetVariable(i) +  ".dat";
-            ofstream outfile(outname.c_str());
-            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
-            m_fields[i]->WriteToFile(outfile,eTecplot);
-        }
+        std::string outname = m_sessionName + ".fld";
+        ofstream outfile(outname.c_str());
+        WriteFld(outfile);
     }
 
     void ADRBase::Checkpoint_Output(const int n)
     {
-        for(int i = 0; i < m_fields.num_elements(); ++i)
+        char chkout[16] = "";
+        sprintf(chkout, "%d", n);
+        std::string outname = m_sessionName +"_" + chkout + ".chk";
+        ofstream outfile(outname.c_str());
+        WriteFld(outfile);
+    }
+
+    void ADRBase::WriteFld(std::ofstream &outfile)
+    {
+        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef = m_fields[0]->GetFieldDefinitions();
+        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size()); 
+
+        // copy Data into FieldData and set variable
+        for(int j = 0; j < m_fields.num_elements(); ++j)
         {
-            char chkout[16] = "";
-            sprintf(chkout, "%d", n);
-            std::string outname = m_sessionName +"_" + m_boundaryConditions->GetVariable(i) + "_" + chkout + ".chk";
-            ofstream outfile(outname.c_str());
-            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
-            m_fields[i]->WriteToFile(outfile,eTecplot);
+            for(int i = 0; i < FieldDef.size(); ++i)
+            {
+                FieldDef[i]->m_Fields.push_back(m_boundaryConditions->GetVariable(j));
+                m_fields[j]->AppendFieldData(FieldDef[i], FieldData[i]);
+            }
         }
+
+        m_graph->Write(outfile,FieldDef,FieldData);
     }
 
 
@@ -834,6 +894,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.7  2009/03/10 23:37:14  claes
+* Updated the ShallowWaterSolver to work with the general timestepping scheme
+*
 * Revision 1.6  2009/03/04 14:17:38  pvos
 * Removed all methods that take and Expansion as argument
 *

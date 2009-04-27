@@ -84,7 +84,7 @@ namespace Nektar
         case eHelmholtz:
             break;
 			
-	case eimDiffusion_exReaction:
+	case eimDiffusion_exReaction: 
         case eAdvection: 
 	case eDiffusion: 
 	case eimDiffusion: 
@@ -99,7 +99,7 @@ namespace Nektar
             goto UnsteadySetup;
             break;
 
-            UnsteadySetup:
+        UnsteadySetup:
             
             if(m_boundaryConditions->CheckForParameter("IO_InfoSteps") == true)
             {
@@ -238,7 +238,7 @@ namespace Nektar
                                             const NekDouble time) 
     {
         int nvariables = inarray.num_elements();
-        MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
+        MultiRegions::GlobalMatrixKey key(StdRegions::eMass);
 
         for(int i = 0; i < nvariables; ++i)
         {
@@ -286,39 +286,39 @@ namespace Nektar
         int nvariables = inarray.num_elements();
         int ncoeffs    = inarray[0].num_elements();
 							
-		// We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
-		// inarray = input: \hat{rhs} -> output: \hat{Y}    
-		// outarray = output: nabla^2 \hat{Y}       
-		// where \hat = modal coeffs
-		
-		MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
-		
-		for (int i = 0; i < nvariables; ++i)
-		{
-		        // Multiply by inverse of mass matrix
-                         m_fields[i]->MultiplyByInvMassMatrix(inarray[i],outarray[i],false);
-				
-			// Multiply rhs[i] with -1.0/gamma/timestep
-                         Vmath::Smul(ncoeffs, -1.0/lambda, outarray[i], 1, outarray[i], 1);
-			
-			// Update coeffs to m_fields
-			 m_fields[i]->UpdateCoeffs() = outarray[i];
-			
-			// Backward Transformation to nodal coefficients
-			  m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
-
-                          NekDouble kappa = 1.0/lambda;
-			  			
-	    	        // Solve a system of equations with Helmholtz solver
-                          m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs(),kappa);
-			
-			// The solution is Y[i]
-			  outarray[i] = m_fields[i]->GetCoeffs();	  
-						  
-			// Multiply back by mass matrix
-                           m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,outarray[i],outarray[i]);
-		}
-	}
+        // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
+        // inarray = input: \hat{rhs} -> output: \hat{Y}    
+        // outarray = output: nabla^2 \hat{Y}       
+        // where \hat = modal coeffs
+	
+        MultiRegions::GlobalMatrixKey key(StdRegions::eMass);
+	
+        for (int i = 0; i < nvariables; ++i)
+        {
+            // Multiply by inverse of mass matrix
+            m_fields[i]->MultiplyByInvMassMatrix(inarray[i],outarray[i],false);
+            
+            // Multiply rhs[i] with -1.0/gamma/timestep
+            Vmath::Smul(ncoeffs, -1.0/lambda, outarray[i], 1, outarray[i], 1);
+            
+            // Update coeffs to m_fields
+            m_fields[i]->UpdateCoeffs() = outarray[i];
+            
+            // Backward Transformation to nodal coefficients
+            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
+            
+            NekDouble kappa = 1.0/lambda;
+            
+            // Solve a system of equations with Helmholtz solver
+            m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs(),kappa);
+            
+            // The solution is Y[i]
+            outarray[i] = m_fields[i]->GetCoeffs();	  
+            
+            // Multiply back by mass matrix
+            m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,outarray[i],outarray[i]);
+        }
+    }
 	
 
     void AdvectionDiffusionReaction::SolveHelmholtz(NekDouble lambda)
@@ -326,6 +326,7 @@ namespace Nektar
         for(int i = 0; i < m_fields.num_elements(); ++i)
         {
             m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs(),lambda);
+            m_fields[i]->SetPhysState(false);
         }
     }
 
@@ -377,7 +378,7 @@ namespace Nektar
         {
             // calculate the variable u* = Mu
             // we are going to TimeIntegrate this new variable u*
-            MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
+            MultiRegions::GlobalMatrixKey key(StdRegions::eMass);
             for(int i = 0; i < nvariables; ++i)
             {
                 tmp[i] = Array<OneD, NekDouble>(ncoeffs);
@@ -835,6 +836,10 @@ namespace Nektar
       case eSteadyDiffusion: case eSteadyDiffusionReaction:
       case eHelmholtz: case eLaplace: case ePoisson:
           out << "\tLambda          : " << m_boundaryConditions->GetParameter("Lambda") << endl;
+          for(int i = 0; i < m_fields.num_elements(); ++i)
+          {
+              out << "\tForcing (field " << i << ") : " << m_boundaryConditions->GetForcingFunction(i)->GetEquation() << endl;
+          }
           
           break;
       case eAdvection: case eDiffusion: case eimDiffusion: case eimDiffusion_exReaction:
@@ -877,6 +882,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.14  2009/03/06 12:00:10  sehunchun
+* Some minor changes on nomenclatures and tabbing errors
+*
 * Revision 1.13  2009/03/05 14:02:38  pvos
 * Fixed bug
 *

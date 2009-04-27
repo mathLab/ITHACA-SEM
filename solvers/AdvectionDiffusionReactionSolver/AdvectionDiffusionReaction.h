@@ -38,10 +38,14 @@
 
 #include <MultiRegions/DisContField2D.h>
 #include <Auxiliary/ADRBase.h>
+#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 
 namespace Nektar
 {     
 
+
+    // Propose to use SteadyAdvection, UnsteadyAdvection etc with eHelmholtz
+    // The put into SolverInfo Advection Advancement=Implicit/Explict etc. 
     enum EquationType
     {
         eNoEquationType,
@@ -101,6 +105,24 @@ namespace Nektar
         EquationType GetEquationType(void)
         {
             return m_equationType;
+        }
+
+        // Return true if equation is a steady state problem 
+
+        bool IsSteadyStateEquation(void)
+        {
+            bool returnval = false;
+            
+            switch(m_equationType)
+            {
+            case eHelmholtz: case eSteadyDiffusionReaction:
+            case ePoisson: case eSteadyDiffusion: 
+            case eLaplace:                        
+                returnval = true;
+                break;
+            }
+            
+            return returnval;
         }
 
 
@@ -221,6 +243,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.h,v $
+* Revision 1.7  2009/03/06 12:00:10  sehunchun
+* Some minor changes on nomenclatures and tabbing errors
+*
 * Revision 1.6  2009/03/05 11:50:32  sehunchun
 * Implicit scheme and IMEX scheme are now implemented
 *

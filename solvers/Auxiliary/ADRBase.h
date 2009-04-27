@@ -77,7 +77,9 @@ namespace Nektar
 	    void EvaluateExactSolution(int field, Array<OneD, NekDouble > &outfield, const NekDouble time);
 
         void EvaluateUserDefinedEqn(Array<OneD, Array<OneD, NekDouble> > &outfield);
-      
+        
+        void AdvectionNonConservativeForm(const Array<OneD, Array<OneD, NekDouble> > &V, const Array<OneD, const NekDouble> &u, Array<OneD, NekDouble> &outarray, Array<OneD, NekDouble> &wk = NullNekDouble1DArray);
+            
      	void WeakAdvectionGreensDivergenceForm(const Array<OneD, Array<OneD, NekDouble> > &F, 
 					       Array<OneD, NekDouble> &outarray);
 
@@ -104,6 +106,8 @@ namespace Nektar
 	
         void Checkpoint_Output(const int n);
 
+        void WriteFld(std::ofstream &outfile);
+        
 	void Array_Output(const int n, std::string name, const Array<OneD, const NekDouble>&inarray, bool IsInPhysicalSpace);
 	
 	void Summary          (std::ostream &out);
@@ -233,6 +237,7 @@ namespace Nektar
     protected:
         Array<OneD, MultiRegions::ExpListSharedPtr> m_fields; ///< Array holding all dependent variables
         SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
+        SpatialDomains::MeshGraphSharedPtr          m_graph;
         std::string m_sessionName;   ///< Name of the sessions
         NekDouble m_time;            ///< continous time
         NekDouble m_timestep;        ///< time step size
@@ -306,6 +311,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.5  2009/03/10 23:37:14  claes
+* Updated the ShallowWaterSolver to work with the general timestepping scheme
+*
 * Revision 1.4  2009/02/28 22:00:38  sehunchun
 *  Explicit Diffusion solver is added
 *

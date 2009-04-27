@@ -61,12 +61,17 @@ int main(int argc, char *argv[])
     
     dom.ZeroPhysFields(); // Zero phys field so that following switch is consistent
     
-    // Set up the intial conditions 
-    dom.SetInitialConditions();
+    // if not steady state equation set up initial conditions
+    if(!dom.IsSteadyStateEquation()) 
+    {
+        // Set up the initial conditions 
+        dom.SetInitialConditions();
+	
+    }
 	
     // Create forcing function object
     LibUtilities::TimeIntegrationSchemeOperators ode;
-	
+
     switch(dom.GetEquationType())
     {
     case eHelmholtz: case eSteadyDiffusionReaction:
@@ -77,65 +82,63 @@ int main(int argc, char *argv[])
         // Solve the appropriate Helmholtz problem 
         dom.SolveHelmholtz(lambda);
         break;
-
-	case eAdvection:
-	   {
-		// Choose time integration method
-		LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eClassicalRungeKutta4;		
-		
-		// Choose the method of deriving forcing functions
-	        ode.DefineOdeRhs       (&AdvectionDiffusionReaction::ODErhs,dom);		
-		
-	       // General Linear Time Integration
-	        dom.GeneralTimeIntegration(nsteps, IntMethod, ode);
-	   }
+        
+    case eAdvection:
+        {
+            // Choose time integration method
+            LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eClassicalRungeKutta4;		
+            
+            // Choose the method of deriving forcing functions
+            ode.DefineOdeRhs       (&AdvectionDiffusionReaction::ODErhs,dom);		
+            
+            // General Linear Time Integration
+            dom.GeneralTimeIntegration(nsteps, IntMethod, ode);
+        }
         break;
-		
-	case eDiffusion:
-	   {
-		// Choose time integration method
-		LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eClassicalRungeKutta4;	
-		
-		// Choose the method of deriving forcing functions
-	         ode.DefineOdeRhs       (&AdvectionDiffusionReaction::ODErhs,dom);	
-		
-	       // General Linear Time Integration
-	         dom.GeneralTimeIntegration(nsteps, IntMethod, ode);
-	   }
+    case eDiffusion:
+        {
+            // Choose time integration method
+            LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eClassicalRungeKutta4;	
+            
+            // Choose the method of deriving forcing functions
+            ode.DefineOdeRhs       (&AdvectionDiffusionReaction::ODErhs,dom);	
+            
+            // General Linear Time Integration
+            dom.GeneralTimeIntegration(nsteps, IntMethod, ode);
+        }
         break;
-		
-	case eimDiffusion:
-	  {
-		// Choose time integration method
-		 LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eDIRKOrder3;		
-		
-		// Choose the method of deriving forcing functions
-	         ode.DefineImplicitSolve       (&AdvectionDiffusionReaction::ODEhelmSolve,dom);		
-		
-	       // General Linear Time Integration
-	         dom.GeneralTimeIntegration(nsteps, IntMethod, ode);
-	  }
-        break;			
-		
-	case eimDiffusion_exReaction:
-	 {
-		// Choose time integration method
-		 LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eIMEXdirk_3_4_3;	
-		
-		// Choose the method of deriving forcing functions
-	         ode.DefineImplicitSolve       (&AdvectionDiffusionReaction::ODEhelmSolve,dom);	
-		 ode.DefineOdeRhs       (&AdvectionDiffusionReaction::ODEeReaction,dom);	
-				
-	       // General Linear Time Integration
-	         dom.GeneralTimeIntegration(nsteps, IntMethod, ode);
-	  }
+    case eimDiffusion:
+        {
+            // Choose time integration method
+            LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eDIRKOrder3;		
+            
+            // Choose the method of deriving forcing functions
+            ode.DefineImplicitSolve       (&AdvectionDiffusionReaction::ODEhelmSolve,dom);		
+            
+            // General Linear Time Integration
+            dom.GeneralTimeIntegration(nsteps, IntMethod, ode);
+        }
+        break; 
+    case eimDiffusion_exReaction:
+        {
+            // Choose time integration method
+            LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eIMEXdirk_3_4_3;	
+            
+            // Choose the method of deriving forcing functions
+            ode.DefineImplicitSolve (&AdvectionDiffusionReaction::ODEhelmSolve,dom);	
+            ode.DefineOdeRhs        (&AdvectionDiffusionReaction::ODEeReaction,dom);	
+            
+            // General Linear Time Integration
+            dom.GeneralTimeIntegration(nsteps, IntMethod, ode);
+        }
         break;
-
+        
     case eNoEquationType:
     default:
         ASSERTL0(false,"Unknown or undefined equation type");
     }
-     // Dump output
+
+    // Write  output to .fld file
     dom.Output();
 
     // Evaluate L2 Error

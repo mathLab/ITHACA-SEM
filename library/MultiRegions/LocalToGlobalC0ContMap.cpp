@@ -93,7 +93,7 @@ namespace Nektar
             SetUp1DExpansionC0ContMap(numLocalCoeffs, locExpVector, bndCondExp, bndConditions, periodicVerticesId);
             CalculateBndSystemBandWidth(locExpVector);
             CalculateFullSystemBandWidth(locExpVector);
-            cout << "bwidth: " << m_bndSystemBandWidth << endl;
+            //cout << "bwidth: " << m_bndSystemBandWidth << endl;
         }
 
         LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(const int numLocalCoeffs, 
@@ -106,7 +106,7 @@ namespace Nektar
             SetUp2DExpansionC0ContMap(numLocalCoeffs, locExpVector, bndCondExp, bndConditions, periodicVerticesId, periodicEdgesId);
             CalculateBndSystemBandWidth(locExpVector);
             CalculateFullSystemBandWidth(locExpVector);
-            cout << "bwidth: " << m_bndSystemBandWidth << endl;
+            //cout << "bwidth: " << m_bndSystemBandWidth << endl;
         }
 
         LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(const int numLocalCoeffs, 
@@ -1536,6 +1536,9 @@ namespace Nektar
 
 /**
  * $Log: LocalToGlobalC0ContMap.cpp,v $
+ * Revision 1.9  2009/04/20 16:14:06  sherwin
+ * Updates for optimising bandwidth of DG solver and allowing write import on explist
+ *
  * Revision 1.8  2009/04/03 15:06:35  sherwin
  * Added LinearAdvection, Generalised GenGlobalLinSys and added in bandwidth routine for DG solver
  *

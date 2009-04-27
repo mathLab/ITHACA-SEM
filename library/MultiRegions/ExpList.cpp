@@ -1070,7 +1070,7 @@ namespace Nektar
             }
         }
     
-        void ExpList::WriteToFile(std::ofstream &out, OutputFormat format)
+        void ExpList::WriteToFile(std::ofstream &out, OutputFormat format, std::string var)
         {  
             if(format==eTecplot)
             {
@@ -1084,13 +1084,13 @@ namespace Nektar
                 }
                 
                 (*m_exp)[0]->SetPhys(phys);
-                (*m_exp)[0]->WriteToFile(out,eTecplot,1);
+                (*m_exp)[0]->WriteToFile(out,eTecplot,true,var);
                 cnt  += (*m_exp)[0]->GetTotPoints();
                 
                 for(i= 1; i < GetExpSize(); ++i)
                 {
                     (*m_exp)[i]->SetPhys(phys+cnt);
-                    (*m_exp)[i]->WriteToFile(out,eTecplot,false); 
+                    (*m_exp)[i]->WriteToFile(out,eTecplot,false,var); 
                     cnt  += (*m_exp)[i]->GetTotPoints();
                 }
             }

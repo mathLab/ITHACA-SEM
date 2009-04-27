@@ -427,7 +427,7 @@ namespace Nektar
              * \param out The file to which the solution should be
              * written.
              */
-            void   WriteToFile(std::ofstream &out, OutputFormat format = eTecplot);
+            void   WriteToFile(std::ofstream &out, OutputFormat format = eTecplot, std::string var = "v");
     
             void ReadFromFile(std::ifstream &in, OutputFormat format = eTecplot);
             
@@ -1246,6 +1246,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.61  2009/04/27 15:02:04  pvos
+* From h-to-p efficiently updates
+*
 * Revision 1.60  2009/04/22 22:32:10  sherwin
 * Added in method to read dat file
 *

@@ -224,7 +224,31 @@ namespace Nektar
         protected:
 
         private:
+            /**
+             * \brief The number of boundary segments on which
+             * Dirichlet boundary conditions are imposed
+             */ 
+            int m_numDirBndCondExpansions;
+
+            /**
+             * \brief An object which contains the discretised
+             * boundary conditions.
+             *
+             * It is an array of size equal to the number of boundary
+             * regions and consists of entries of the type
+             * MultiRegions#ExpList1D. Every entry corresponds to the
+             * one-dimensional spectral/hp expansion on a single
+             * boundary region.  The values of the boundary conditions
+             * are stored as the coefficients of the one-dimensional
+             * expansion.
+             */ 
             Array<OneD,MultiRegions::ExpList1DSharedPtr>       m_bndCondExpansions;
+
+            /**
+             * \brief An array which contains the information about
+             * the boundary condition on the different boundary
+             * regions.
+             */ 
             Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
             GlobalLinSysMapShPtr                               m_globalBndMat;
             GenExpList1DSharedPtr                              m_trace;

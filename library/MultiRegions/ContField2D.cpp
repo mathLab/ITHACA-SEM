@@ -314,6 +314,9 @@ namespace Nektar
                                     bool      UseContCoeffs,
                                     Array<OneD, NekDouble>& dirForcing)
         {
+            //----------------------------------
+            //  Setup RHS Inner product
+            //----------------------------------
             // Inner product of forcing
             Array<OneD,NekDouble> wsp(m_contNcoeffs);  
             IProductWRTBase(inarray,wsp,true);       

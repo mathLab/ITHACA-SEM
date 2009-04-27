@@ -61,6 +61,16 @@ namespace Nektar
                 return m_localToGlobalBndMap;
             }
 
+            bool GetSignChange()
+            {
+                return m_signChange;
+            }
+
+            Array<OneD, const NekDouble> GetLocalToGlobalBndSign(void) const
+            {
+                return m_localToGlobalBndSign;
+            }
+
             NekDouble GetLocalToGlobalBndSign(const int i) const
             {
                 if(m_signChange)
@@ -293,6 +303,9 @@ namespace Nektar
 
 /** 
  $Log: LocalToGlobalBaseMap.h,v $
+ Revision 1.13  2009/04/08 06:38:55  sherwin
+ Put eigensolve into NekMatrix. Some bandwidths mods
+
  Revision 1.12  2009/04/02 13:06:42  sherwin
  Modified to take symmetric banded system for HDH solver
 

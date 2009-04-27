@@ -119,13 +119,19 @@ namespace Nektar
             int nbnd = bregions.size();
 
             // count the number of non-periodic boundary regions
+            int cnt2 = 0;
             for(int i = 0; i < nbnd; ++i)
             {
                 if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType() != SpatialDomains::ePeriodic )
                 {
                     cnt++;
+                    if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType() == SpatialDomains::eDirichlet )
+                    {
+                        cnt2++;
+                    }
                 }
             }
+            m_numDirBndCondExpansions = cnt2;
             m_bndCondExpansions  = Array<OneD,MultiRegions::ExpList1DSharedPtr>(cnt);
             m_bndConditions      = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
             
@@ -162,15 +168,11 @@ namespace Nektar
         {
             int e,i,j,n,cnt,cnt1,nbndry, order_e;
             int nexp = GetExpSize();
-            GlobalMatrixKey invHDGhelmkey(StdRegions::eInvHybridDGHelmholtz,lambda,tau);
-            const DNekScalBlkMatSharedPtr& InvHDGHelm = GetBlockMatrix(invHDGhelmkey);
-            LocalRegions::GenSegExpSharedPtr  SegExp;
             StdRegions::StdExpansionSharedPtr BndExp;
 
             Array<OneD,NekDouble> f(m_ncoeffs);
-            Array<OneD,NekDouble> e_f, e_bndsol;
-            Array<OneD,NekDouble> e_lambda;
-            //NekDouble tau = 10;
+            DNekVec F(m_ncoeffs,f,eWrapper);
+            Array<OneD,NekDouble> e_f, e_l;
 
             //----------------------------------
             //  Setup RHS Inner product
@@ -187,96 +189,80 @@ namespace Nektar
             NekDouble sign;
 
             // linked data
-            Array<OneD,NekDouble> BndSol = m_trace->UpdateCoeffs(); 
-            DNekVec Floc;
+            GlobalMatrixKey HDGLamToUKey(StdRegions::eHybridDGLamToU,lambda,tau);
+            const DNekScalBlkMatSharedPtr &HDGLamToU = GetBlockMatrix(HDGLamToUKey);
 
+            Array<OneD,NekDouble> BndSol = m_trace->UpdateCoeffs(); 
             // Zero trace space
             Vmath::Zero(GloBndDofs,BndSol,1);
 
-            cnt = 0;
-            for(n = 0; n < nexp; ++n)
-            {
-                cnt = max(cnt,(*m_exp)[n]->NumDGBndryCoeffs());
-            }
-            e_lambda = Array<OneD,NekDouble>(cnt);
+            int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
+            Array<OneD, NekDouble> loc_lambda(LocBndCoeffs); 
+            DNekVec LocLambda(LocBndCoeffs,loc_lambda,eWrapper);
 
-            // Forcing based on analytical derivation From Cockburn
-            // <u_lam, f> term
+            //----------------------------------
+            // Evaluate Trace Forcing
+            //----------------------------------
+
+            // Determing <u_lam,f> terms using HDGLamToU matrix
             for(cnt1 = cnt = n = 0; n < nexp; ++n)
             {
                 nbndry = (*m_exp)[n]->NumDGBndryCoeffs(); 		    
-
-                LocalRegions::MatrixKey Umatkey(StdRegions::eHybridDGLamToU, 
-                   (*m_exp)[n]->DetExpansionType(),*((*m_exp)[n]), lambda, tau);
-
+                
                 e_ncoeffs = (*m_exp)[n]->GetNcoeffs();
                 e_f       = f+cnt;
-                
-                DNekVec     ElmtFce(e_ncoeffs, e_f ,eWrapper);
-                DNekScalMat &LamToU = *((*m_exp)[n]->GetLocMatrix(Umatkey)); 
+                e_l       = loc_lambda + cnt1;
 
-                Floc = Transpose(LamToU)*ElmtFce;
-                
-                // Put value into trace space expansion
-                for(i = 0; i < nbndry; ++i)
-                {
-                    id   = m_traceMap->GetLocalToGlobalBndMap(cnt1+i);
-                    sign = m_traceMap->GetLocalToGlobalBndSign(cnt1+i);
-                    m_trace->SetCoeffs(id,sign*Floc[i] + 
-                                       m_trace->GetCoeffs(id));
-                }
+                // use outarray as tmp space
+                DNekVec     Floc    (nbndry, e_l, eWrapper); 
+                DNekVec     ElmtFce (e_ncoeffs, e_f, eWrapper);
+                Floc = Transpose(*(HDGLamToU->GetBlock(n,n)))*ElmtFce;
+
                 cnt  += e_ncoeffs;
                 cnt1 += nbndry;
             }
+            // Might be nice if we could do 
+            // LocLambda = Transpose(*HDGLamToU)*F;
 
-            // Set Dirichlet info and Neumann Fluxes. 
-            for(cnt = i = 0; i < m_bndConditions.num_elements(); ++i)
+            // Assemble into global operator
+            m_traceMap->AssembleBnd(loc_lambda,BndSol);
+
+            
+            cnt = 0;
+            // Copy Dirichlet boundary conditions into trace space        
+            for(i = 0; i < m_numDirBndCondExpansions; ++i)
             {
-                m_bndCondExpansions[i]->PutCoeffsInToElmtExp();
-                // Copy Dirichlet boundary conditions into trace space        
-                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                 {
-                    for(e = 0; e < m_bndCondExpansions[i]->GetExpSize(); ++e)
-                    {
-                        BndExp = m_bndCondExpansions[i]->GetExp(e);
-                        
-                        for(j = 0; j < BndExp->GetNcoeffs(); ++j)
-                        {
-                            id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
-                            m_trace->UpdateCoeffs()[id] = BndExp->GetCoeffs()[j];
-                        }
-                    }
+                    id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
+                    BndSol[id] = m_bndCondExpansions[i]->GetCoeffs()[j];
                 }
-                // Add boundary flux
-                else if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eNeumann)
+            }
+
+            //Add weak boundary condition to trace forcing 
+            for(i = m_numDirBndCondExpansions; i < m_bndCondExpansions.num_elements(); ++i)
+            {
+                for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                 {
-                    for(e = 0; e < m_bndCondExpansions[i]->GetExpSize(); ++e)
-                    {
-                        BndExp = m_bndCondExpansions[i]->GetExp(e);
-                        
-                        for(j = 0; j < BndExp->GetNcoeffs(); ++j)
-                        {
-                            id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
-                            m_trace->UpdateCoeffs()[id] += BndExp->GetCoeffs()[j];
-                        }
-                    }
-                }
-                else
-                { // update cnt for any other BC type. 
-                    cnt += m_bndCondExpansions[i]->GetNcoeffs(); 
+                    id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
+                    BndSol[id] += m_bndCondExpansions[i]->GetCoeffs()[j];
                 }
             }
 
             // Dirichlet boundary forcing <\tilde{q}_lam,g>  (using Bmatsys)
+            Array<OneD, const int> LocToGloBndMap = m_traceMap->GetLocalToGlobalBndMap();
+            Array<OneD, const NekDouble> LocToGloBndSign = m_traceMap->GetLocalToGlobalBndSign();
             for(cnt = e = 0; e < nexp; ++e)
             {
                 nbndry = (*m_exp)[e]->NumDGBndryCoeffs();
                 // check to see if element has Dirichlet boundary
                 // Probably could use a quicker check here
-                if(Vmath::Vmin(nbndry,&(m_traceMap->GetLocalToGlobalBndMap())[cnt],1) < NumDirichlet)
+                if(Vmath::Vmin(nbndry,&LocToGloBndMap[cnt],1) < NumDirichlet)
                 {
-                    // Get BndSys Matrix
-                    LocalRegions::MatrixKey Bmatkey(StdRegions::eHybridDGHelmBndLam,  (*m_exp)[e]->DetExpansionType(),*((*m_exp)[e]), lambda, tau);
+                    // Get BndSys Matrix - Could get rid of searching here 
+                    LocalRegions::MatrixKey Bmatkey(StdRegions::eHybridDGHelmBndLam,
+                                                    (*m_exp)[e]->DetExpansionType(),
+                                                    *((*m_exp)[e]), lambda, tau);
                     DNekScalMat &BndSys = *((*m_exp)[e]->GetLocMatrix(Bmatkey));
                     Array<OneD, NekDouble> vout(nbndry,0.0);
 
@@ -285,14 +271,14 @@ namespace Nektar
                     {
                         e_ncoeffs = (*m_exp)[e]->GetEdgeNcoeffs(i); 
 
-                        id = m_traceMap->GetLocalToGlobalBndMap(cnt+cnt1);
+                        id = LocToGloBndMap[cnt+cnt1];
                         if(id < NumDirichlet)
                         {
                             for(j = 0; j < e_ncoeffs; ++j)
                             {
-                                id        = m_traceMap->GetLocalToGlobalBndMap (cnt+cnt1);
-                                sign      = m_traceMap->GetLocalToGlobalBndSign(cnt+cnt1);
-                                Vmath::Svtvp(nbndry,sign*m_trace->GetCoeffs(id),
+                                id        = LocToGloBndMap[cnt+cnt1];
+                                sign      = LocToGloBndSign[cnt+cnt1];
+                                Vmath::Svtvp(nbndry,sign*BndSol[id],
                                              BndSys.GetRawPtr()+cnt1*nbndry,1,
                                              &vout[0],1,&vout[0],1);
                                 cnt1++;
@@ -307,19 +293,21 @@ namespace Nektar
                     // Subtract vout from forcing terms 
                     for(i = 0; i < nbndry; ++i)
                     {
-                        id   = m_traceMap->GetLocalToGlobalBndMap (cnt+i);
-                        sign = m_traceMap->GetLocalToGlobalBndSign(cnt+i);
+                        id   = LocToGloBndMap [cnt+i];
+                        sign = LocToGloBndSign[cnt+i];
 
                         if(id >= NumDirichlet)
                         {
-                            m_trace->SetCoeff(id, m_trace->GetCoeff(id)
-                                              - sign*vout[i]);
+                            BndSol[id] -= sign*vout[i];
                         }
                     }
                 }
                 cnt += nbndry;
             }
-            
+
+            //----------------------------------
+            // Solve trace problem
+            //----------------------------------
             if(GloBndDofs - NumDirichlet > 0)
             {
                 GlobalLinSysKey       key(StdRegions::eHybridDGHelmBndLam, 
@@ -333,54 +321,18 @@ namespace Nektar
             }
             
             //----------------------------------
-            // Setup forcing for local interior solves
+            // Internal element solves
             //----------------------------------
-            Vmath::Zero(m_ncoeffs,outarray,1);
-            Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr>  >
-                elmtToTrace = m_traceMap->GetElmtToTrace();
-            int cnt2; 
-
-            // I think this whole section can be replaced by
-            //   
-            //  
-            //  out =  (*InvHDGHelm)*f + (LamtoU)*Lam  
-       
-            for(cnt2 =  cnt = i = 0; i < nexp; ++i)
-            {
-                e_f      = f + cnt;
-                // put elemental solutions into local space; 
-
-
-                // Get information from trace array (in shuffled form)
-                // and put it into local edge form
-                nbndry = (*m_exp)[i]->NumDGBndryCoeffs();
-                for(j = 0; j < nbndry; ++j)
-                {
-                    id   = m_traceMap->GetLocalToGlobalBndMap (cnt2+j);
-                    sign = m_traceMap->GetLocalToGlobalBndSign(cnt2+j);
-                    
-                    e_lambda[j] = sign*m_trace->GetCoeffs()[id];
-                }
-                cnt2 += nbndry;
-
-                Array<OneD, NekDouble> e_tmp;
-                // now need to put edge into Geometry orientation 
-                // should probably depracate this later
-                for(cnt1= j = 0; j < (*m_exp)[i]->GetNedges(); ++j)
-                {
-                    elmtToTrace[i][j]->SetCoeffsToOrientation((*m_exp)[i]->GetEorient(j),e_tmp = e_lambda + cnt1,e_tmp = e_lambda + cnt1);
-                    cnt1 += (*m_exp)[i]->GetEdgeNcoeffs(j);
-                }
-
-                (*m_exp)[i]->AddHDGHelmholtzTraceTerms(tau, e_lambda, 
-                                                       elmtToTrace[i], e_f);
-                cnt  += (*m_exp)[i]->GetNcoeffs();
-            }
-            
-            // Inverse block diagonal interior solve
-            DNekVec in (m_ncoeffs,f,eWrapper);
+            GlobalMatrixKey invHDGhelmkey(StdRegions::eInvHybridDGHelmholtz,lambda,tau);
+            const DNekScalBlkMatSharedPtr& InvHDGHelm = GetBlockMatrix(invHDGhelmkey);
             DNekVec out(m_ncoeffs,outarray,eWrapper);            
-            out = (*InvHDGHelm)*in;            
+            Vmath::Zero(m_ncoeffs,outarray,1);
+        
+            // get local trace solution from BndSol
+            m_traceMap->GlobalToLocalBnd(BndSol,loc_lambda);
+
+            //  out =  u_f + u_lam = (*InvHDGHelm)*f + (LamtoU)*Lam  
+            out = (*InvHDGHelm)*F + (*HDGLamToU)*LocLambda;       
         }
 
         // Construct the two trace vectors of the inner and outer

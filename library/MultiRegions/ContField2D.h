@@ -370,13 +370,16 @@ namespace Nektar
             int m_numDirBndCondExpansions;
         
             /**
-             * \brief An object which contains the discretised boundary conditions. 
+             * \brief An object which contains the discretised
+             * boundary conditions.
              *
-             * It is an array of size equal to the number of boundary regions and 
-             * consists of entries of the type MultiRegions#ExpList1D. Every entry corresponds to 
-             * the one-dimensional spectral/hp expansion on a single boundary region. 
-             * The values of the boundary conditions are stored as the coefficients 
-             * of the one-dimensional expansion.
+             * It is an array of size equal to the number of boundary
+             * regions and consists of entries of the type
+             * MultiRegions#ExpList1D. Every entry corresponds to the
+             * one-dimensional spectral/hp expansion on a single
+             * boundary region.  The values of the boundary conditions
+             * are stored as the coefficients of the one-dimensional
+             * expansion.
              */ 
             Array<OneD,MultiRegions::ExpList1DSharedPtr>       m_bndCondExpansions;
           

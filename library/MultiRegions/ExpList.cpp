@@ -427,6 +427,17 @@ namespace Nektar
                     }
                 }
                 break;
+            case StdRegions::eHybridDGLamToU:
+                {
+                    // set up an array of integers for block matrix construction
+                    for(i = 0; i < n_exp; ++i)
+                    {
+                        nrows[i] = (*m_exp)[i]->GetNcoeffs();
+                        ncols[i] = (*m_exp)[i]->NumDGBndryCoeffs();
+                    }
+                }
+                break;
+                
             default:
                 {
                     NEKERROR(ErrorUtil::efatal, "Global Matrix creation not defined for this type of matrix");

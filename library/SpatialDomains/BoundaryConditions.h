@@ -246,6 +246,7 @@ namespace Nektar
             }
 
             const std::string &GetSolverInfo(const std::string &lhs);
+            bool BoundaryConditions::SolverInfoExists(const std::string &property);
 
             const std::string &GetFunction(const std::string &lhs);
             Equation GetFunctionAsEquation(const std::string &lhs);

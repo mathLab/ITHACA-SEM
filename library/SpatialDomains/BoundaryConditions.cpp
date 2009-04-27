@@ -912,6 +912,21 @@ namespace Nektar
         }
 
 
+        bool BoundaryConditions::SolverInfoExists(const std::string &property)
+        {
+
+            bool returnval = true;
+            SolverInfoMap::iterator slvIter = m_SolverInfo.find(property);
+
+            if(slvIter == m_SolverInfo.end())
+            {
+                returnval = false;
+            }
+            
+            return returnval;
+        }
+
+
         Equation BoundaryConditions::GetFunctionAsEquation(const std::string &lhs)
         {
             FunctionMap::iterator fcnIter = m_Functions.find(lhs);

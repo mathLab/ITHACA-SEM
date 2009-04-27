@@ -120,18 +120,32 @@ namespace Nektar
             GeometrySharedPtr geom;
             
             // Set up list of ExpansionVectors with dummy values
-            LibUtilities::BasisKeyVector def; 
-
-            for(i = 0; i < fielddef.size(); ++i)
+            if(!m_ExpansionVector.size())
             {
-                num_elmts += fielddef[i]->m_ElementIDs.size();        
+                
+                LibUtilities::BasisKeyVector def; 
 
-                for(j = 0; j < fielddef[i]->m_ElementIDs.size(); ++j)
+                for(i = 0; i < fielddef.size(); ++i)
                 {
-                    ExpansionShPtr tmpexp =
-                        MemoryManager<Expansion>::AllocateSharedPtr(geom, def);
-                    m_ExpansionVector.push_back(tmpexp);
+                    num_elmts += fielddef[i]->m_ElementIDs.size();        
+
+                    for(j = 0; j < fielddef[i]->m_ElementIDs.size(); ++j)
+                    {
+                        ExpansionShPtr tmpexp =
+                            MemoryManager<Expansion>::AllocateSharedPtr(geom, def);
+                        m_ExpansionVector.push_back(tmpexp);
+                    }
                 }
+            }
+            else
+            {
+
+                for(i = 0; i < fielddef.size(); ++i)
+                {
+                    num_elmts += fielddef[i]->m_ElementIDs.size();        
+                }
+                
+                ASSERTL0(m_ExpansionVector.size() == num_elmts,"Existing graph size does not match new Expansion length");
             }
             
             
@@ -233,7 +247,7 @@ namespace Nektar
             
         }
         
-
+        
     // \brief Read will read the meshgraph vertices given a filename.
     void MeshGraph::ReadGeometry(std::string &infilename)
     {
@@ -1650,6 +1664,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.28  2009/04/20 16:13:23  sherwin
+// Modified Import and Write functions and redefined how Expansion is used
+//
 // Revision 1.27  2009/01/12 10:26:59  pvos
 // Added input tags for nodal expansions
 //

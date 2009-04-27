@@ -103,7 +103,7 @@ namespace Nektar
                 return m_geom;
             }
 
-            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
 
 
             //----------------------------
@@ -281,9 +281,9 @@ namespace Nektar
                 return m_geom->GetCoordim();
             }
 
-            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")
             {
-                WriteToFile(outfile,format,dumpVar);
+                WriteToFile(outfile,format,dumpVar,var);
             }
 
             virtual SpatialDomains::GeomType v_MetricInfoType()
@@ -554,6 +554,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.43  2009/04/20 16:12:28  sherwin
+// Updates related to output format and optimising DG solver
+//
 // Revision 1.42  2009/03/04 14:17:38  pvos
 // Removed all methods that take and Expansion as argument
 //

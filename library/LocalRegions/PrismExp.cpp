@@ -439,7 +439,7 @@ namespace Nektar
             }
         }
 
-        void PrismExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
+        void PrismExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
         {
             if(format==eTecplot)
             {
@@ -471,7 +471,7 @@ namespace Nektar
                     {
                         outfile << ", y, z";
                     }
-                    outfile << ", v\n" << std::endl;
+                    outfile << ", "<< var << std::endl << std::endl;
                 }
                 
                 outfile << "Zone, I=" << nquad0 << ", J=" << nquad1 << ", K=" << nquad2 << ", F=Point" << std::endl;
@@ -842,6 +842,9 @@ namespace Nektar
 
 /** 
  *    $Log: PrismExp.cpp,v $
+ *    Revision 1.18  2009/01/21 16:59:57  pvos
+ *    Added additional geometric factors to improve efficiency
+ *
  *    Revision 1.17  2008/11/24 21:09:20  ehan
  *    Fixed bugs and added necessary mapping routines for Prism.
  *

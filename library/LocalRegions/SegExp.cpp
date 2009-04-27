@@ -827,7 +827,7 @@ namespace Nektar
             }     
         }
 
-        void SegExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
+        void SegExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
         {
             if(format==eTecplot)
             {
@@ -859,7 +859,7 @@ namespace Nektar
                     {
                         outfile << ", y, z";
                     }
-                    outfile << ", v\n" << std::endl;
+                    outfile << ", "<< var << std::endl << std::endl;
                 }
                 
                 outfile << "Zone, I=" << nquad <<", F=Point" << std::endl;
@@ -1232,6 +1232,9 @@ namespace Nektar
 }//end of namespace
 
 // $Log: SegExp.cpp,v $
+// Revision 1.59  2009/03/04 14:17:38  pvos
+// Removed all methods that take and Expansion as argument
+//
 // Revision 1.58  2009/01/21 16:59:57  pvos
 // Added additional geometric factors to improve efficiency
 //

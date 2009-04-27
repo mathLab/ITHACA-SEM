@@ -102,7 +102,7 @@ namespace Nektar
                 return m_geom;
             }
 
-            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
 
             //----------------------------
             // Integration Methods
@@ -436,9 +436,9 @@ namespace Nektar
             }
             
 
-            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")
             {
-                WriteToFile(outfile,format,dumpVar);
+                WriteToFile(outfile,format,dumpVar,var);
             }
 
             /** \brief Virtual call to integrate the physical point list \a inarray
@@ -700,6 +700,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.49  2009/04/27 09:38:22  pvos
+ *    Fixed some bugs
+ *
  *    Revision 1.48  2009/04/20 16:12:28  sherwin
  *    Updates related to output format and optimising DG solver
  *

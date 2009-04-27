@@ -1077,7 +1077,7 @@ namespace Nektar
         }        
         
         
-        void TriExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
+        void TriExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
         {
             if(format==eTecplot)
             {
@@ -1108,7 +1108,7 @@ namespace Nektar
                     {
                         outfile << ", y, z";
                     }
-                    outfile << ", v\n" << std::endl;
+                    outfile << ", "<< var << std::endl << std::endl;
                 }
                 
                 outfile << "Zone, I=" << nquad0 << ", J=" << 
@@ -1779,6 +1779,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.51  2009/04/03 15:02:36  sherwin
+ *    Made default Create Matrix the call through to the StdRegions generalised operators
+ *
  *    Revision 1.50  2009/01/21 16:59:57  pvos
  *    Added additional geometric factors to improve efficiency
  *

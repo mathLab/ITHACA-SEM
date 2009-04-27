@@ -585,7 +585,7 @@ namespace Nektar
             }
         }
               
-        void NodalTriExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
+        void NodalTriExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
         { 
             if(format==eTecplot)
             {
@@ -616,7 +616,7 @@ namespace Nektar
                     {
                         outfile << ", y, z";
                     }
-                    outfile << ", v\n" << std::endl;
+                    outfile << ", "<< var << std::endl << std::endl;
                 }
                 
                 outfile << "Zone, I=" << nquad0 << ", J=" << 
@@ -1043,6 +1043,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.30  2009/03/15 22:13:54  sherwin
+ *    Fixed Array definition error spotted by Tim
+ *
  *    Revision 1.29  2009/01/21 16:59:57  pvos
  *    Added additional geometric factors to improve efficiency
  *

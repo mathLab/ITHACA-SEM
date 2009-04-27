@@ -453,7 +453,7 @@ namespace Nektar
             }
         }
        
-        void HexExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
+        void HexExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
         {
             if(format==eTecplot)
             {
@@ -473,7 +473,8 @@ namespace Nektar
                 
                 if(dumpVar)
                 {
-                    outfile << "Variables = x,  y,  z,  Coeffs \n" << endl;
+                    outfile << "Variables = x,  y,  z"; 
+                    outfile << ", "<< var << std::endl << std::endl;
                 }
                 
                 outfile << "Zone, I=" << nquad0 << ", J=" << nquad1 << ", K=" << nquad2 << ", F=Point" << std::endl;
@@ -871,6 +872,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.cpp,v $
+ *    Revision 1.23  2009/01/21 16:59:56  pvos
+ *    Added additional geometric factors to improve efficiency
+ *
  *    Revision 1.22  2008/09/23 18:20:25  pvos
  *    Updates for working ProjectContField3D demo
  *

@@ -333,10 +333,6 @@ namespace Nektar
                     {
                         DNekScalMat &Dmat = *v_GetLocMatrix(DerivType[i]);
 
-                        //LocMat = invMass*Transpose(Dmat);
-                        //Mat = Mat + Dmat*LocMat;
-
-                        // Would like to do 
                         Mat = Mat + Dmat*invMass*Transpose(Dmat);
                     }
 
@@ -650,6 +646,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.cpp,v $
+ *    Revision 1.7  2009/04/20 16:12:28  sherwin
+ *    Updates related to output format and optimising DG solver
+ *
  *    Revision 1.6  2009/04/02 13:04:36  sherwin
  *    Modified Hybrid Matrix call to use matrix D M^{-1}D' formulation and removed operations based version
  *

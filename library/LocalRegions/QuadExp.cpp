@@ -1022,7 +1022,7 @@ namespace Nektar
             }
         }
                
-        void QuadExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
+        void QuadExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
         {
             if(format==eTecplot)
             {
@@ -1053,7 +1053,7 @@ namespace Nektar
                     {
                         outfile << ", y, z";
                     }
-                    outfile << ", v\n" << std::endl;
+                    outfile << ", "<< var << std::endl << std::endl;
                 }
                 
                 outfile << "Zone, I=" << nquad0 << ", J=" << 
@@ -1661,8 +1661,8 @@ namespace Nektar
 
             // Interpolate if required 
             LibUtilities::Interp1D(m_base[edge%2]->GetPointsKey(),outtmp,
-                     EdgeExp->GetBasis(0)->GetPointsKey(),outarray);
-                
+                                   EdgeExp->GetBasis(0)->GetPointsKey(),outarray);
+            
             //Reverse data if necessary
             if(GetCartesianEorient(edge) == StdRegions::eBackwards)
             {
@@ -1793,6 +1793,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.59  2009/04/27 09:38:22  pvos
+ *    Fixed some bugs
+ *
  *    Revision 1.58  2009/04/03 15:02:36  sherwin
  *    Made default Create Matrix the call through to the StdRegions generalised operators
  *

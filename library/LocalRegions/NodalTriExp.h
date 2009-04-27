@@ -81,7 +81,7 @@ namespace Nektar
                 return m_geom;
             }
 
-            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
             
             //----------------------------
             // Integration Methods
@@ -313,9 +313,9 @@ namespace Nektar
                 return StdNodalTriExp::GetNodalPoints(x,y);
             }
             
-            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")
             {
-                WriteToFile(outfile,format,dumpVar);
+                WriteToFile(outfile,format,dumpVar,var);
             }
             
             /** \brief Virtual call to integrate the physical point list \a inarray
@@ -505,6 +505,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.h,v $
+ *    Revision 1.25  2009/01/21 16:59:57  pvos
+ *    Added additional geometric factors to improve efficiency
+ *
  *    Revision 1.24  2008/11/24 10:31:14  pvos
  *    Changed name from _PartitionedOp to _MatFree
  *

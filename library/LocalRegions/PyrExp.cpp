@@ -474,7 +474,7 @@ namespace Nektar
             }
         }
 
-        void PyrExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
+        void PyrExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
         {
             if(format==eTecplot)
             {
@@ -506,7 +506,7 @@ namespace Nektar
                     {
                         outfile << ", y, z";
                     }
-                    outfile << ", v\n" << std::endl;
+                    outfile << ", "<< var << std::endl << std::endl;
                 }
                 
                 outfile << "Zone, I=" << nquad0 << ", J=" << nquad1 << ", K=" << nquad2 << ", F=Point" << std::endl;
@@ -799,6 +799,9 @@ namespace Nektar
 
 /** 
  *    $Log: PyrExp.cpp,v $
+ *    Revision 1.17  2009/01/21 16:59:57  pvos
+ *    Added additional geometric factors to improve efficiency
+ *
  *    Revision 1.16  2008/09/09 15:05:09  sherwin
  *    Updates related to cuved geometries. Normals have been removed from m_metricinfo and replaced with a direct evaluation call. Interp methods have been moved to LibUtilities
  *

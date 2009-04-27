@@ -109,7 +109,7 @@ namespace Nektar
                            Array<OneD,NekDouble> &coords_3);
             void GetCoord(const Array<OneD, const NekDouble> &Lcoords, Array<OneD,NekDouble> &coords);
       
-            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
 
             //-----------------------------
             // Differentiation Methods
@@ -217,9 +217,9 @@ namespace Nektar
                 return m_geom->GetCoordim();
             }
 
-            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")
             {
-                WriteToFile(outfile,format,dumpVar);
+                WriteToFile(outfile,format,dumpVar,var);
             }
 
             /** \brief Virtual call to integrate the physical point list \a inarray
@@ -304,6 +304,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.25  2009/04/20 16:12:28  sherwin
+ *    Updates related to output format and optimising DG solver
+ *
  *    Revision 1.24  2008/09/23 18:20:25  pvos
  *    Updates for working ProjectContField3D demo
  *

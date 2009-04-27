@@ -39,6 +39,7 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/LocalToGlobalC0ContMap.h>
+#include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalLinSys.h>
 
 namespace Nektar
@@ -383,7 +384,30 @@ namespace Nektar
              */  
             void IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
                                        Array<OneD, NekDouble> &outarray,
-                                 bool  UseContCoeffs = false);
+                                 bool  UseContCoeffs = false)
+            {
+                if(UseContCoeffs)
+                {
+                    bool doGlobalOp = m_globalOptParam->DoGlobalMatOp(StdRegions::eIProductWRTBase);
+
+                    if(doGlobalOp)
+                    {
+                        GlobalMatrixKey gkey(StdRegions::eIProductWRTBase,m_locToGloMap);
+                        GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
+                        mat->Multiply(inarray,outarray);
+                    }
+                    else
+                    {
+                        Array<OneD, NekDouble> wsp(m_ncoeffs);
+                        IProductWRTBase_IterPerExp(inarray,wsp);
+                        Assemble(wsp,outarray);
+                    }
+                }
+                else
+                {
+                    IProductWRTBase_IterPerExp(inarray,outarray);
+                }
+            }
          
             /**
              * \brief This function performs the global forward transformation of a 
@@ -429,8 +453,30 @@ namespace Nektar
              */  
             void BwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                 Array<OneD,       NekDouble> &outarray,
-                          bool  UseContCoeffs = false);
+                          bool  UseContCoeffs = false)
+            {
+                if(UseContCoeffs)
+                {
+                    bool doGlobalOp = m_globalOptParam->DoGlobalMatOp(StdRegions::eBwdTrans);
 
+                    if(doGlobalOp)
+                    {
+                        GlobalMatrixKey gkey(StdRegions::eBwdTrans,m_locToGloMap);
+                        GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
+                        mat->Multiply(inarray,outarray);
+                    }
+                    else
+                    {
+                        Array<OneD, NekDouble> wsp(m_ncoeffs);
+                        GlobalToLocal(inarray,wsp);
+                        BwdTrans_IterPerExp(wsp,outarray);
+                    }
+                }
+                else
+                {
+                    BwdTrans_IterPerExp(inarray,outarray);
+                }
+            }
 
             /**
              * \brief This function calculates the result of the multiplication of a global 
@@ -449,10 +495,55 @@ namespace Nektar
              * \f$N_{\mathrm{dof}}\f$.
              * \param outarray The resulting vector of size \f$N_{\mathrm{dof}}\f$.
              */  
-            void GeneralMatrixOp(const GlobalLinSysKey              &gkey,
-                                 const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,       NekDouble> &outarray);
-            
+            void GeneralMatrixOp(const GlobalMatrixKey             &gkey,
+                                 const Array<OneD,const NekDouble> &inarray, 
+                                       Array<OneD,      NekDouble> &outarray,
+                                 bool  UseContCoeffs = false)
+            {
+                if(UseContCoeffs)
+                {
+                    bool doGlobalOp = m_globalOptParam->DoGlobalMatOp(gkey.GetMatrixType());
+
+                    if(doGlobalOp)
+                    {
+                        GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
+                        mat->Multiply(inarray,outarray);
+                    }
+                    else
+                    {
+                        Array<OneD,NekDouble> tmp1(2*m_ncoeffs);
+                        Array<OneD,NekDouble> tmp2(tmp1+m_ncoeffs);
+                        GlobalToLocal(inarray,tmp1);
+                        GeneralMatrixOp_IterPerExp(gkey,tmp1,tmp2);
+                        Assemble(tmp2,outarray);
+                    }
+                }
+                else
+                {
+                    GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
+                }
+            }
+
+            inline int GetGlobalMatrixNnz(const GlobalMatrixKey &gkey)
+            {
+                ASSERTL1(gkey.LocToGloMapIsDefined(),
+                         "To use method must have a LocalToGlobalBaseMap "
+                         "attached to key");
+                
+                GlobalMatrixMap::iterator matrixIter = m_globalMat->find(gkey);
+                
+                if(matrixIter == m_globalMat->end())
+                {
+                    return 0;
+                }
+                else
+                {
+                    return matrixIter->second->GetMatrix()->GetNumNonZeroEntries();
+                }
+                
+                return 0;
+            }
+
         protected: 
             /**
              * \brief (A shared pointer to) the object which contains all the required 
@@ -478,7 +569,17 @@ namespace Nektar
              * the global matrices being assembled, such that they
              * should be constructed only once.
              */  
-            GlobalLinSysMapShPtr      m_globalMat;
+            GlobalMatrixMapShPtr      m_globalMat;
+ 
+            /**
+             * \brief (A shared pointer to) a list which collects all
+             * the global linear system being assembled, such that they
+             * should be constructed only once.
+             */  
+            GlobalLinSysMapShPtr      m_globalLinSys;
+
+
+            GlobalMatrixSharedPtr GetGlobalMatrix(const GlobalMatrixKey &mkey);
                         
         private:
             
@@ -509,6 +610,14 @@ namespace Nektar
                 IProductWRTBase(inarray,outarray,UseContCoeffs);
             }
 
+            virtual void v_GeneralMatrixOp(const GlobalMatrixKey             &gkey,
+                                        const Array<OneD,const NekDouble> &inarray, 
+                                              Array<OneD,      NekDouble> &outarray,
+                                        bool  UseContCoeffs)
+            {
+                GeneralMatrixOp(gkey,inarray,outarray,UseContCoeffs);
+            }
+
         };
         
         typedef boost::shared_ptr<ContExpList2D>      ContExpList2DSharedPtr;
@@ -522,6 +631,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.h,v $
+* Revision 1.18  2009/03/04 14:17:38  pvos
+* Removed all methods that take and Expansion as argument
+*
 * Revision 1.17  2009/02/08 09:02:36  sherwin
 * .
 *

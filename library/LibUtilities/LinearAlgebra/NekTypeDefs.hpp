@@ -40,6 +40,7 @@
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
+#include <LibUtilities/LinearAlgebra/SparseStandardMatrix.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 namespace Nektar
@@ -67,12 +68,18 @@ namespace Nektar
 
     typedef boost::shared_ptr<DNekScalBlkMat>    DNekScalBlkMatSharedPtr;
     static DNekScalBlkMatSharedPtr NullDNekScalBlkMatSharedPtr;
+
+    typedef NekSparseMatrix<NekDouble>           DNekSparseMat;
+    typedef boost::shared_ptr<DNekSparseMat>     DNekSparseMatSharedPtr;
 }
 
 #endif //NEKTAR_LIB_UTILITIES_NEK_TYPEDEFS_HPP
 
 /**
     $Log: NekTypeDefs.hpp,v $
+    Revision 1.11  2008/11/01 19:15:28  bnelson
+    Updated matrices so the storage policy is no longer a template parameter.  Removed the template parameter from the LinearSystem class.
+
     Revision 1.10  2008/03/12 15:22:45  pvos
     Clean up of the code
 

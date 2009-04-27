@@ -41,6 +41,7 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
+#include <LibUtilities/LinearAlgebra/SparseBlas.hpp>
 #include <SpatialDomains/BoundaryConditions.h>
 #include <LibUtilities/BasicUtils/Metis.hpp>
 //#include <LibUtilities/LinearAlgebra/NekLinSys.hpp>

@@ -478,25 +478,14 @@ namespace Nektar
                 }
                 else
                 { 
-#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
-
                     ASSERTL1(wsp.num_elements()>=nquad0*nmodes1,"Workspace size is not sufficient");
                     
+                    // Those two calls correpsond to the operation
+                    // out = B0*in*Transpose(B1); 
                     Blas::Dgemm('N','N', nquad0,nmodes1,nmodes0,1.0, base0.get(),
                                 nquad0, &inarray[0], nmodes0,0.0,&wsp[0], nquad0);
                     Blas::Dgemm('N','T', nquad0, nquad1,nmodes1, 1.0, &wsp[0], nquad0, 
                                 base1.get(), nquad1, 0.0, &outarray[0], nquad0);
-
-#else //NEKTAR_USING_DIRECT_BLAS_CALLS
-
-                    NekMatrix<const NekDouble> B0(nquad0 ,nmodes0,m_base[0]->GetBdata(),eWrapper);
-                    NekMatrix<const NekDouble> B1(nquad1, nmodes1,m_base[1]->GetBdata(),eWrapper);
-                    NekMatrix<const NekDouble> in(nmodes0,nmodes1,inarray,              eWrapper);
-                    NekMatrix<      NekDouble> out(nquad0,nquad1, outarray,             eWrapper);
-
-                    out = B0*in*Transpose(B1); 
-
-#endif //NEKTAR_USING_DIRECT_BLAS_CALLS   
                 } 
             }
 
@@ -875,6 +864,9 @@ namespace Nektar
 
 /**
  * $Log: StdQuadExp.h,v $
+ * Revision 1.48  2009/04/22 22:30:48  sherwin
+ * Added ReadFromFile method to read back in .dat file
+ *
  * Revision 1.47  2009/03/23 11:52:50  pvos
  * NekMatrix Updates
  *

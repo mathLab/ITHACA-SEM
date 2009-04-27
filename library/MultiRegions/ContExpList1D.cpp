@@ -45,7 +45,7 @@ namespace Nektar
             m_locToGloMap(),
             m_contNcoeffs(0),
             m_contCoeffs(),
-            m_globalMat()
+            m_globalLinSys()
         {
         }
 
@@ -58,7 +58,7 @@ namespace Nektar
             m_locToGloMap(In.m_locToGloMap),
             m_contNcoeffs(In.m_contNcoeffs),
             m_contCoeffs(m_contNcoeffs,0.0),
-            m_globalMat(In.m_globalMat)
+            m_globalLinSys(In.m_globalLinSys)
         {
         }
 
@@ -69,7 +69,7 @@ namespace Nektar
             m_locToGloMap(),
             m_contNcoeffs(),
             m_contCoeffs(),
-            m_globalMat(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {   
             ASSERTL1((Ba.GetBasisType() == LibUtilities::eModified_A)
                      ||(Ba.GetBasisType() == LibUtilities::eGLL_Lagrange),
@@ -90,7 +90,7 @@ namespace Nektar
             m_locToGloMap(),
             m_contNcoeffs(),
             m_contCoeffs(),
-            m_globalMat(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             const SpatialDomains::ExpansionVector &expansions = graph1D.GetExpansions();
             
@@ -126,15 +126,24 @@ namespace Nektar
             }
         }
 
-        void ContExpList1D::GeneralMatrixOp(const GlobalLinSysKey &gkey,
-                                            const Array<OneD, const NekDouble> &inarray,
-                                            Array<OneD, NekDouble> &outarray)
+        void ContExpList1D::GeneralMatrixOp(const GlobalMatrixKey             &gkey,
+                                            const Array<OneD,const NekDouble> &inarray, 
+                                                  Array<OneD,      NekDouble> &outarray,
+                                            bool  UseContCoeffs)
 
         {
-            Array<OneD,NekDouble> tmp(m_ncoeffs);
-            GlobalToLocal(inarray,tmp);
-            ExpList1D::GeneralMatrixOp(gkey,tmp,tmp);
-            Assemble(tmp,outarray);
+            if(UseContCoeffs)
+            {
+                Array<OneD,NekDouble> tmp1(2*m_ncoeffs);
+                Array<OneD,NekDouble> tmp2(tmp1+m_ncoeffs);
+                GlobalToLocal(inarray,tmp1);
+                GeneralMatrixOp_IterPerExp(gkey,tmp1,tmp2);
+                Assemble(tmp2,outarray);
+            }
+            else
+            {
+                GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
+            }
         }
 
         void ContExpList1D::FwdTrans(const Array<OneD, const NekDouble> &inarray, 
@@ -143,12 +152,12 @@ namespace Nektar
         {
             GlobalLinSysSharedPtr mass_matrix;
             GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
-            GlobalLinSysMap::iterator matrixIter = m_globalMat->find(key);
+            GlobalLinSysMap::iterator matrixIter = m_globalLinSys->find(key);
             
-            if(matrixIter == m_globalMat->end())
+            if(matrixIter == m_globalLinSys->end())
             {
                 mass_matrix = GenGlobalLinSys(key,m_locToGloMap);
-                (*m_globalMat)[key] = mass_matrix;
+                (*m_globalLinSys)[key] = mass_matrix;
             }
             else
             {
@@ -191,6 +200,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.37  2009/04/20 16:14:06  sherwin
+* Updates for optimising bandwidth of DG solver and allowing write import on explist
+*
 * Revision 1.36  2009/03/04 14:17:38  pvos
 * Removed all methods that take and Expansion as argument
 *

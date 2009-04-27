@@ -76,28 +76,28 @@ namespace Nektar
 
         // This is the global function which can be used by the user to load all the
         // optimisation parameters based on an input file
-        void LoadOptimizationParameters(const std::string& fileName);
+        void LoadElementalOptimizationParameters(const std::string& fileName);
 
         // This class is merely an interface which collects all the different
         // loading routines
         class LoadOptimizationParametersInterface
         {
         private:
-            friend void LoadOptimizationParameters(const std::string& fileName);
+            friend void LoadElementalOptimizationParameters(const std::string& fileName);
 
             static void LoadElemental2DOptimizationParameters(const std::string& fileName);
         };
 
         // This is the global function which can be used by the user to dump all the
         // optimisation parameters to a stream
-        void DumpOptimizationParameters(std::ostream &outfile);
+        void DumpElementalOptimizationParameters(std::ostream &outfile);
 
         // This class is merely an interface which collects all the different
         // dumping routines
         class DumpOptimizationParametersInterface
         {
         private:
-            friend void DumpOptimizationParameters(std::ostream &outfile);
+            friend void DumpElementalOptimizationParameters(std::ostream &outfile);
 
             static void DumpElemental2DOptimizationParameters(std::ostream &outfile);
         };

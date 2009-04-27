@@ -6,6 +6,7 @@ SET(BasicConstHeaders
 
 SET(LinearAlgebraHeaders
     ./LinearAlgebra/Blas.hpp
+    ./LinearAlgebra/SparseBlas.hpp
     ./LinearAlgebra/BlasArray.hpp
     ./LinearAlgebra/BlockMatrix.hpp
     ./LinearAlgebra/Lapack.hpp
@@ -35,6 +36,7 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/Space.h
     ./LinearAlgebra/StandardMatrix.hpp
     ./LinearAlgebra/TransF77.hpp
+    ./LinearAlgebra/SparseStandardMatrix.hpp
 )
 
 SET(FoundationHeaders

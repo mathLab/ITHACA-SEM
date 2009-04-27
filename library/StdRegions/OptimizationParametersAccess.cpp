@@ -49,7 +49,7 @@ namespace Nektar
     namespace NekOptimize 
     {        
 
-        void LoadOptimizationParameters(const std::string& fileName)
+        void LoadElementalOptimizationParameters(const std::string& fileName)
         {
             LoadOptimizationParametersInterface::LoadElemental2DOptimizationParameters(fileName);
         }
@@ -133,7 +133,7 @@ namespace Nektar
             BOOST_PP_REPEAT_FROM_TO(0,BOOST_PP_ARRAY_SIZE(OPTIMIZE2DELEMENTS),PARSE_ELEMENTS,dummy);
         }
 
-        void DumpOptimizationParameters(std::ostream &outfile)
+        void DumpElementalOptimizationParameters(std::ostream &outfile)
         {
             DumpOptimizationParametersInterface::DumpElemental2DOptimizationParameters(outfile);
         }

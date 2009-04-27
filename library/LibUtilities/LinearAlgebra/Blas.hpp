@@ -83,6 +83,12 @@ namespace Blas
                  const double* a,   const double* x, const int& incx,
                  const double& beta,      double* y, const int& incy);
 
+        void F77NAME(dsbmv) (const char& uplo,  const int& m,
+                 const int& k,       const double& alpha,
+                 const double* a,    const int& lda,
+                 const double* x,    const int& incx,
+                 const double& beta, double* y, const int& incy);
+
         // -- BLAS level 3:
         void F77NAME(dgemm) (const char& trans,   const char& transb,
                  const int& m1,       const int& n,
@@ -191,6 +197,14 @@ namespace Blas
              const double& beta,       double* y, const int& incy)
     {
         F77NAME(dspmv) (trans,n,alpha,a,x,incx,beta,y,incy);
+    }  
+
+    static inline void Dsbmv (const char& uplo,   const int& m,    const int& k,
+             const double& alpha, const double* a, const int& lda,
+             const double* x,     const int& incx, const double& beta,
+             double* y,     const int& incy)
+    {
+        F77NAME(dsbmv) (uplo,m,k,alpha,a,lda,x,incx,beta,y,incy);
     }
 
 
@@ -219,6 +233,9 @@ namespace Blas
 
 /***
 $Log: Blas.hpp,v $
+Revision 1.6  2008/04/06 05:55:11  bnelson
+Changed ConstArray to Array<const>
+
 Revision 1.5  2008/02/28 09:57:08  sherwin
 Added array version of some routines
 

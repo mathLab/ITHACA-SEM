@@ -45,7 +45,8 @@ namespace Nektar
             m_locToGloMap(),
             m_contNcoeffs(0),
             m_contCoeffs(),
-            m_globalMat()
+            m_globalMat(),
+            m_globalLinSys()
         {
         }
         
@@ -58,7 +59,8 @@ namespace Nektar
             m_locToGloMap(In.m_locToGloMap),
             m_contNcoeffs(In.m_contNcoeffs),
             m_contCoeffs(m_contNcoeffs,0.0),
-            m_globalMat(In.m_globalMat)            
+            m_globalMat(In.m_globalMat),
+            m_globalLinSys(In.m_globalLinSys)            
         {
         }
 
@@ -73,7 +75,8 @@ namespace Nektar
             m_locToGloMap(),
             m_contNcoeffs(),
             m_contCoeffs(),
-            m_globalMat(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
+            m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             
             ASSERTL1((TriBa.GetBasisType() == LibUtilities::eModified_A)&&
@@ -113,7 +116,8 @@ namespace Nektar
             m_locToGloMap(),
             m_contNcoeffs(),
             m_contCoeffs(),
-            m_globalMat(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
+            m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {                        
             // setup mapping array 
             if(constructMap)
@@ -124,45 +128,18 @@ namespace Nektar
             }
         }
 
-        void ContExpList2D::IProductWRTBase(const Array<OneD, const NekDouble> &inarray,  
-                                                  Array<OneD,       NekDouble> &outarray,
-                                            bool  UseContCoeffs)
-        {
-            if(UseContCoeffs)
-            {
-                Array<OneD, NekDouble> wsp(m_ncoeffs);
-                IProductWRTBase_IterPerExp(inarray,wsp);
-                Assemble(wsp,outarray);
-            }
-            else
-            {
-                IProductWRTBase_IterPerExp(inarray,outarray);
-            }
-        }
-
-        void ContExpList2D::GeneralMatrixOp(const GlobalLinSysKey &gkey,
-                                            const Array<OneD, const NekDouble> &inarray,
-                                            Array<OneD, NekDouble> &outarray)
-                
-        {
-            Array<OneD,NekDouble> tmp(m_ncoeffs);
-            GlobalToLocal(inarray,tmp);
-            ExpList2D::GeneralMatrixOp(gkey,tmp,tmp);
-            Assemble(tmp,outarray);
-        }
-
         void ContExpList2D::FwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                            Array<OneD,       NekDouble> &outarray,
                                      bool  UseContCoeffs)
         {
             GlobalLinSysSharedPtr mass_matrix;
             GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
-            GlobalLinSysMap::iterator matrixIter = m_globalMat->find(key);
+            GlobalLinSysMap::iterator matrixIter = m_globalLinSys->find(key);
             
-            if(matrixIter == m_globalMat->end())
+            if(matrixIter == m_globalLinSys->end())
             {
                 mass_matrix = GenGlobalLinSys(key,m_locToGloMap);
-                (*m_globalMat)[key] = mass_matrix;
+                (*m_globalLinSys)[key] = mass_matrix;
             }
             else
             {
@@ -183,21 +160,27 @@ namespace Nektar
             }
 
         }
-        
-        void ContExpList2D::BwdTrans(const Array<OneD, const NekDouble> &inarray, 
-                                           Array<OneD,       NekDouble> &outarray,
-                                     bool  UseContCoeffs)
+
+        GlobalMatrixSharedPtr ContExpList2D::GetGlobalMatrix(const GlobalMatrixKey &mkey) 
         {
-            if(UseContCoeffs)
+            ASSERTL1(mkey.LocToGloMapIsDefined(),
+                     "To use method must have a LocalToGlobalBaseMap "
+                     "attached to key");
+
+            GlobalMatrixSharedPtr glo_matrix;
+            GlobalMatrixMap::iterator matrixIter = m_globalMat->find(mkey);
+
+            if(matrixIter == m_globalMat->end())
             {
-                Array<OneD, NekDouble> wsp(m_ncoeffs);
-                GlobalToLocal(inarray,wsp);
-                BwdTrans_IterPerExp(wsp,outarray);
+                glo_matrix = GenGlobalMatrix(mkey,m_locToGloMap);
+                (*m_globalMat)[mkey] = glo_matrix;
             }
             else
             {
-                BwdTrans_IterPerExp(inarray,outarray);
+                glo_matrix = matrixIter->second;
             }
+
+            return glo_matrix;
         }
    
     } //end of namespace
@@ -205,6 +188,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.cpp,v $
+* Revision 1.19  2009/03/04 14:17:38  pvos
+* Removed all methods that take and Expansion as argument
+*
 * Revision 1.18  2009/02/08 09:06:19  sherwin
 * Added updated definition of GlobalLinSysKey to include localtoglobalbasemap
 *

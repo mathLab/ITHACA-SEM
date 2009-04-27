@@ -40,7 +40,7 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        ExpList::ExpList(void):
+        ExpList::ExpList():
             m_ncoeffs(0),
             m_npoints(0),
             m_coeffs(),
@@ -48,8 +48,9 @@ namespace Nektar
             m_transState(eNotSet),
             m_physState(false),
             m_exp(MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr()),
+            m_globalOptParam(MemoryManager<NekOptimize::GlobalOptParam>::AllocateSharedPtr()),
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr())
-        {            
+        {     
         }
         
         ExpList::ExpList(const ExpList &in):
@@ -61,7 +62,9 @@ namespace Nektar
             m_physState(false),
             m_exp(in.m_exp),
             m_coeff_offset(in.m_coeff_offset), // Need to check if we need these
-            m_phys_offset(in.m_phys_offset)    // or at least use shared pointer
+            m_phys_offset(in.m_phys_offset),    // or at least use shared pointer
+            m_globalOptParam(in.m_globalOptParam),
+            m_blockMat(in.m_blockMat)
         {
         }
 
@@ -216,56 +219,43 @@ namespace Nektar
             int ncols;
             const DNekScalBlkMatSharedPtr& blockmat = GetBlockMatrix(gkey);
 
-#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS     
-     
-            int n,cnt1,cnt2;
-            int nblocks = blockmat->GetNumberOfBlockRows();
-
-            for(n = cnt1 = cnt2 = 0; n < nblocks; n++)
-            {
-                DNekScalMat& elmMat = *(blockmat->GetBlock(n,n));
-
-                nrows = elmMat.GetRows();
-                ncols = elmMat.GetColumns();
-
-                Blas::Dgemv('N',nrows,ncols,elmMat.Scale(),elmMat.GetRawPtr(),
-                            nrows, inarray.get()+cnt2, 1.0, 0.0, outarray.get()+cnt1, 1.0);
-
-                cnt1 += nrows;
-                cnt2 += ncols;
-            }
-
-#else
-
             nrows = blockmat->GetRows();
             ncols = blockmat->GetColumns();
 
             NekVector<const NekDouble> in (ncols,inarray, eWrapper);
             NekVector<      NekDouble> out(nrows,outarray,eWrapper); 
             out = (*blockmat)*in;
-
-#endif
         }
         
         void ExpList::IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, 
-                                      Array<OneD, NekDouble> &outarray)
+                                                       Array<OneD,       NekDouble> &outarray)
         {
-            int    i;
-            int    cnt  = 0;
-            int    cnt1 = 0;
-            
-            Array<OneD,NekDouble> e_outarray;
-            
-            for(i = 0; i < GetExpSize(); ++i)
+            bool doBlockMatOp = m_globalOptParam->DoBlockMatOp(StdRegions::eIProductWRTBase);
+
+            if(doBlockMatOp)
             {
-                (*m_exp)[i]->IProductWRTBase(inarray+cnt,
-                                             e_outarray = outarray+cnt1);
-                cnt  += (*m_exp)[i]->GetTotPoints();
-                cnt1 += (*m_exp)[i]->GetNcoeffs();
+                GlobalMatrixKey mkey(StdRegions::eIProductWRTBase);
+                MultiplyByBlockMatrix(mkey,inarray,outarray);
             }
-            m_transState = eLocal;
+            else
+            { 
+                int    i;
+                int    cnt  = 0;
+                int    cnt1 = 0;
+                
+                Array<OneD,NekDouble> e_outarray;
+                
+                for(i = 0; i < GetExpSize(); ++i)
+                {
+                    (*m_exp)[i]->IProductWRTBase(inarray+cnt,
+                                                 e_outarray = outarray+cnt1);
+                    cnt  += (*m_exp)[i]->GetTotPoints();
+                    cnt1 += (*m_exp)[i]->GetNcoeffs();
+                }
+                m_transState = eLocal;
+            }
         }
-              
+
         void ExpList::IProductWRTDerivBase(const int dir, 
                                            const Array<OneD, const NekDouble> &inarray, 
                                            Array<OneD, NekDouble> &outarray)
@@ -315,8 +305,6 @@ namespace Nektar
             }
         }
 
-
-
         void ExpList::PhysDeriv(const int dir, 
                                 const Array<OneD, const NekDouble> &inarray,
                                 Array<OneD, NekDouble> &out_d)
@@ -351,7 +339,6 @@ namespace Nektar
                 NekVector<const NekDouble> in(m_ncoeffs,inarray,eWrapper);
                 out = (*InvMass)*in;
             }
-
         }
 
         void ExpList::FwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray, 
@@ -380,7 +367,7 @@ namespace Nektar
                 cnt  += (*m_exp)[i]->GetTotPoints();
                 cnt1 += (*m_exp)[i]->GetNcoeffs();
             }
-        }
+        }        
 
         const DNekScalBlkMatSharedPtr ExpList::GenBlockMatrix(const GlobalMatrixKey &gkey)
         {
@@ -487,41 +474,176 @@ namespace Nektar
                 return matrixIter->second;
             }
         }
-       
-        void ExpList::GeneralMatrixOp(const GlobalLinSysKey &gkey,
-                                      const Array<OneD, const NekDouble> &inarray,                     
-                                      Array<OneD, NekDouble>    &outarray)
+        
+        void ExpList::GeneralMatrixOp_IterPerExp(const GlobalMatrixKey             &gkey,
+                                                 const Array<OneD,const NekDouble> &inarray, 
+                                                       Array<OneD,      NekDouble> &outarray)
         {
-            int  i,j;
-            int  cnt  = 0;
-            int  cnt1 = 0;
-            Array<OneD,NekDouble>      e_outarray;
 
-            int nvarcoeffs = gkey.GetNvariableCoefficients();
+            bool doBlockMatOp = m_globalOptParam->DoBlockMatOp(gkey.GetMatrixType());
+
+            if(doBlockMatOp)
+            {
+                MultiplyByBlockMatrix(gkey,inarray,outarray);
+            }
+            else
+            { 
+                int  i,j;
+                int  cnt  = 0;
+                int  cnt1 = 0;
+                Array<OneD,NekDouble>      e_outarray;
+                
+                int nvarcoeffs = gkey.GetNvariableCoefficients();
+                Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
+                
+                for(i= 0; i < GetExpSize(); ++i)
+                {
+                    if(nvarcoeffs>0)
+                    {
+                        for(j = 0; j < nvarcoeffs; j++)
+                        {
+                            varcoeffs[j] = gkey.GetVariableCoefficient(j) + cnt1;
+                        }
+                        cnt1  += (*m_exp)[i]->GetTotPoints();
+                    }
+                    
+                    StdRegions::StdMatrixKey mkey(gkey.GetMatrixType(),
+                                                  (*m_exp)[i]->DetExpansionType(),
+                                                  *((*m_exp)[i]),
+                                                  gkey.GetConstants(),varcoeffs);
+                    
+                    (*m_exp)[i]->GeneralMatrixOp(inarray + cnt, 
+                                                 e_outarray = outarray+cnt,
+                                                 mkey);
+                    
+                    cnt   += (*m_exp)[i]->GetNcoeffs();
+                }      
+            }
+        }
+
+	GlobalMatrixSharedPtr ExpList::GenGlobalMatrix(const GlobalMatrixKey &mkey, 
+                                                       const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
+	{
+            int i,j,n,gid1,gid2,cntdim1,cntdim2,cnt1;
+            NekDouble sign1,sign2;
+            DNekScalMatSharedPtr loc_mat;
+
+            unsigned int glob_rows;
+            unsigned int glob_cols;
+            unsigned int loc_rows;
+            unsigned int loc_cols;
+
+            bool assembleFirstDim;
+            bool assembleSecondDim;
+
+            switch(mkey.GetMatrixType())
+            {      
+            case StdRegions::eBwdTrans:
+                {
+                    glob_rows = m_npoints;
+                    glob_cols = locToGloMap->GetNumGlobalCoeffs();
+
+                    assembleFirstDim  = false;
+                    assembleSecondDim = true;
+                }
+                break;
+            case StdRegions::eIProductWRTBase:
+                {
+                    glob_rows = locToGloMap->GetNumGlobalCoeffs();
+                    glob_cols = m_npoints;
+
+                    assembleFirstDim  = true;
+                    assembleSecondDim = false;
+                }
+                break;                           
+            case StdRegions::eMass: 
+            case StdRegions::eHelmholtz:
+            case StdRegions::eLaplacian:
+                {
+                    glob_rows = locToGloMap->GetNumGlobalCoeffs();
+                    glob_cols = locToGloMap->GetNumGlobalCoeffs();
+
+                    assembleFirstDim  = true;
+                    assembleSecondDim = true;
+                }
+                break;
+            default:
+                {
+                    NEKERROR(ErrorUtil::efatal, "Global Matrix creation not defined for this type of matrix");
+                }
+            }
+
+            map< pair< int,  int>, NekDouble > spcoomat;
+            pair<int,int> coord;
+
+            int nvarcoeffs = mkey.GetNvariableCoefficients();
             Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
             
-            for(i= 0; i < GetExpSize(); ++i)
+            // fill global matrix 
+            for(n = cntdim1 = cntdim2 = cnt1 = 0; n < (*m_exp).size(); ++n)
             {
                 if(nvarcoeffs>0)
                 {
                     for(j = 0; j < nvarcoeffs; j++)
                     {
-                        varcoeffs[j] = gkey.GetVariableCoefficient(j) + cnt1;
+                        varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
                     }
-                    cnt1  += (*m_exp)[i]->GetTotPoints();
+                    cnt1  += (*m_exp)[n]->GetTotPoints();
                 }
+
+                LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
+                                               (*m_exp)[n]->DetExpansionType(),
+                                               *(*m_exp)[n],
+                                               mkey.GetConstants(),
+                                               varcoeffs);
                 
-                StdRegions::StdMatrixKey mkey(gkey.GetMatrixType(),
-                                              (*m_exp)[i]->DetExpansionType(),
-                                              *((*m_exp)[i]),
-                                              gkey.GetConstants(),varcoeffs);
-               
-                (*m_exp)[i]->GeneralMatrixOp(inarray + cnt, 
-                                             e_outarray = outarray+cnt,
-                                             mkey);
-                
-                cnt   += (*m_exp)[i]->GetNcoeffs();
-            }      
+                loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);               
+                loc_rows = loc_mat->GetRows();         
+                loc_cols = loc_mat->GetColumns();
+		    
+                for(i = 0; i < loc_rows; ++i)
+                {
+                    if(assembleFirstDim)
+                    {
+                        gid1  = locToGloMap->GetLocalToGlobalMap (cntdim1 + i);
+                        sign1 = locToGloMap->GetLocalToGlobalSign(cntdim1 + i);
+                    }
+                    else
+                    {
+                        gid1  = cntdim1 + i;
+                        sign1 = 1.0;
+                    }
+
+                        for(j = 0; j < loc_cols; ++j)
+                        {
+                            if(assembleSecondDim)
+                            {
+                                gid2  = locToGloMap->GetLocalToGlobalMap (cntdim2 + j);
+                                sign2 = locToGloMap->GetLocalToGlobalSign(cntdim2 + j);
+                            }
+                            else
+                            {
+                                gid2  = cntdim2 + j;
+                                sign2 = 1.0;
+                            }
+
+                            // sparse matrix fill
+                            coord = make_pair(gid1,gid2);
+                            if( spcoomat.count(coord) == 0 )
+                            {
+                                spcoomat[coord] = sign1*sign2*(*loc_mat)(i,j);
+                            }
+                            else
+                            {
+                                spcoomat[coord] += sign1*sign2*(*loc_mat)(i,j);
+                            }
+                        }		
+                }
+                cntdim1 += loc_rows;
+                cntdim2 += loc_cols;
+            }     
+            
+            return MemoryManager<GlobalMatrix>::AllocateSharedPtr(glob_rows,glob_cols,spcoomat);
         }
         
 	
@@ -874,18 +996,28 @@ namespace Nektar
         void ExpList::BwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD, NekDouble> &outarray)
         {
-            int  i;
-            int  cnt  = 0;
-            int  cnt1 = 0;
-            Array<OneD,NekDouble> e_outarray;
-            
-            for(i= 0; i < GetExpSize(); ++i)
+            bool doBlockMatOp = m_globalOptParam->DoBlockMatOp(StdRegions::eBwdTrans);
+
+            if(doBlockMatOp)
             {
-                (*m_exp)[i]->BwdTrans(inarray + cnt, 
-                                      e_outarray = outarray+cnt1);
-                cnt   += (*m_exp)[i]->GetNcoeffs();
-                cnt1  += (*m_exp)[i]->GetTotPoints();
-            }        
+                GlobalMatrixKey mkey(StdRegions::eBwdTrans);
+                MultiplyByBlockMatrix(mkey,inarray,outarray);
+            }
+            else
+            { 
+                int  i;
+                int  cnt  = 0;
+                int  cnt1 = 0;
+                Array<OneD,NekDouble> e_outarray;
+                
+                for(i= 0; i < GetExpSize(); ++i)
+                {
+                    (*m_exp)[i]->BwdTrans(inarray + cnt, 
+                                          e_outarray = outarray+cnt1);
+                    cnt   += (*m_exp)[i]->GetNcoeffs();
+                    cnt1  += (*m_exp)[i]->GetTotPoints();
+                }    
+            }    
         }
         
         void ExpList::GetCoords(Array<OneD, NekDouble> &coord_0,

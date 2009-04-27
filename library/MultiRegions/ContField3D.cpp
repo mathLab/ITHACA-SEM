@@ -309,7 +309,7 @@ namespace Nektar
                     inout[map[bndcnt++]] = sign * coeffs[j];
                 }
             }            
-            GeneralMatrixOp(key, inout, outarray);   
+            GeneralMatrixOp(*(key.GetGlobalMatrixKey()),inout,outarray,true);   
         }
 
 
@@ -364,12 +364,12 @@ namespace Nektar
         GlobalLinSysSharedPtr ContField3D::GetGlobalLinSys(const GlobalLinSysKey &mkey)
         {
             GlobalLinSysSharedPtr glo_matrix;
-            GlobalLinSysMap::iterator matrixIter = m_globalMat->find(mkey);
+            GlobalLinSysMap::iterator matrixIter = m_globalLinSys->find(mkey);
 
-            if(matrixIter == m_globalMat->end())
+            if(matrixIter == m_globalLinSys->end())
             {
                 glo_matrix = GenGlobalLinSys(mkey,m_locToGloMap);
-                (*m_globalMat)[mkey] = glo_matrix;
+                (*m_globalLinSys)[mkey] = glo_matrix;
             }
             else
             {

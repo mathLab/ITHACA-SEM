@@ -77,8 +77,8 @@ namespace Nektar
         }
 
         ContField1D::ContField1D(SpatialDomains::MeshGraph1D &graph1D,
-            SpatialDomains::BoundaryConditions &bcs, 
-            const std::string variable):
+                                 SpatialDomains::BoundaryConditions &bcs, 
+                                 const std::string variable):
             ContExpList1D(graph1D,false),
             m_bndCondExpansions(),
             m_bndConditions()
@@ -283,7 +283,7 @@ namespace Nektar
                 inout[i] = m_bndCondExpansions[i]->GetValue();
             }
 
-            GeneralMatrixOp(key, inout, outarray);  
+            GeneralMatrixOp(*(key.GetGlobalMatrixKey()),inout,outarray,true);  
         }
 
         // Note inout contains initial guess and final output. 
@@ -331,12 +331,12 @@ namespace Nektar
         GlobalLinSysSharedPtr ContField1D::GetGlobalLinSys(const GlobalLinSysKey &mkey) 
         {
             GlobalLinSysSharedPtr glo_matrix;
-            GlobalLinSysMap::iterator matrixIter = m_globalMat->find(mkey);
+            GlobalLinSysMap::iterator matrixIter = m_globalLinSys->find(mkey);
 
-            if(matrixIter == m_globalMat->end())
+            if(matrixIter == m_globalLinSys->end())
             {
                 glo_matrix = GenGlobalLinSys(mkey,m_locToGloMap);
-                (*m_globalMat)[mkey] = glo_matrix;
+                (*m_globalLinSys)[mkey] = glo_matrix;
             }
             else
             {

@@ -47,6 +47,7 @@
 
 #include <LibUtilities/LinearAlgebra/BandedMatrixStoragePolicy.hpp>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
+#include <LibUtilities/LinearAlgebra/SparseBlas.hpp>
 #include <LibUtilities/LinearAlgebra/BlockMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/DiagonalMatrixStoragePolicy.hpp>
 #include <LibUtilities/LinearAlgebra/FullMatrixStoragePolicy.hpp>
@@ -76,6 +77,7 @@
 #include <LibUtilities/LinearAlgebra/SymmetricMatrixStoragePolicy.hpp>
 #include <LibUtilities/LinearAlgebra/TransF77.hpp>
 #include <LibUtilities/LinearAlgebra/TriangularMatrixStoragePolicy.hpp>
+//#include <LibUtilities/LinearAlgebra/SparseStandardMatrix.hpp>
 
 #include <LibUtilities/Interpreter/ExpressionEvaluator.h>
 

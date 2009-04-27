@@ -100,8 +100,8 @@ namespace Nektar
              * \brief 
              */ 
             ContField2D(SpatialDomains::MeshGraph2D &graph2D,
-                SpatialDomains::BoundaryConditions &bcs, 
-                const int bc_loc = 0);
+                        SpatialDomains::BoundaryConditions &bcs, 
+                        const int bc_loc = 0);
 
             /**
              * \brief 
@@ -394,7 +394,7 @@ namespace Nektar
              * \brief This function returns the linear system specified by the key 
              * \a mkey.
              * 
-             * The function searches the map #m_globalMat to see if the global matrix 
+             * The function searches the map #m_globalLinSys to see if the global matrix 
              * has been created before. If not, it calls the function  
              #GenGlobalLinSys to generate the requested global system.
              *

@@ -101,8 +101,8 @@ namespace Nektar
              * \brief 
              */ 
             ContField1D(SpatialDomains::MeshGraph1D &graph1D,
-                SpatialDomains::BoundaryConditions &bcs, 
-                const int bc_loc = 0);
+                        SpatialDomains::BoundaryConditions &bcs, 
+                        const int bc_loc = 0);
   
             /**
              * \brief This constructor sets up global continuous field based on an 
@@ -129,8 +129,8 @@ namespace Nektar
              * the field should be constructed.
              */ 
             ContField1D(SpatialDomains::MeshGraph1D &graph1D,
-                SpatialDomains::BoundaryConditions &bcs, 
-                const std::string variable);
+                        SpatialDomains::BoundaryConditions &bcs, 
+                        const std::string variable);
       
             /**
              * \brief 
@@ -274,7 +274,7 @@ namespace Nektar
              * \brief This function returns the linear system specified by the key 
              * \a mkey.
              * 
-             * The function searches the map #m_globalMat to see if the global matrix 
+             * The function searches the map #m_globalLinSys to see if the global matrix 
              * has been created before. If not, it calls the function  
              #GenGlobalLinSys to generate the requested global system.
              *

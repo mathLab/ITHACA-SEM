@@ -413,9 +413,10 @@ namespace Nektar
              * \f$N_{\mathrm{dof}}\f$.
              * \param outarray The resulting vector of size \f$N_{\mathrm{dof}}\f$.
              */  
-            void GeneralMatrixOp(const GlobalLinSysKey              &gkey,
-                                 const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,       NekDouble> &outarray);
+            void GeneralMatrixOp(const GlobalMatrixKey             &gkey,
+                                 const Array<OneD,const NekDouble> &inarray, 
+                                       Array<OneD,      NekDouble> &outarray,
+                                 bool  UseContCoeffs = false);
 	    
 	protected:
             /**
@@ -440,7 +441,7 @@ namespace Nektar
              * \brief (A shared pointer to) a list which collects all the global matrices 
              * being assembled, such that they should be constructed only once.
              */  	
-            GlobalLinSysMapShPtr      m_globalMat;
+            GlobalLinSysMapShPtr      m_globalLinSys;
             
         private:
 
@@ -472,6 +473,14 @@ namespace Nektar
                 IProductWRTBase(inarray,outarray,UseContCoeffs);
             }
 
+            virtual void v_GeneralMatrixOp(const GlobalMatrixKey             &gkey,
+                                           const Array<OneD,const NekDouble> &inarray, 
+                                                 Array<OneD,      NekDouble> &outarray,
+                                           bool  UseContCoeffs)
+            {
+                GeneralMatrixOp(gkey,inarray,outarray,UseContCoeffs);
+            }
+
 
         };
 
@@ -487,6 +496,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.35  2009/03/04 14:17:38  pvos
+* Removed all methods that take and Expansion as argument
+*
 * Revision 1.34  2009/01/06 21:05:56  sherwin
 * Added virtual function calls for BwdTrans, FwdTrans and IProductWRTBase from the class ExpList. Introduced _IterPerExp versions of these methods in ExpList.cpp§
 *

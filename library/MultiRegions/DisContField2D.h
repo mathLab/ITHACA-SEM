@@ -57,7 +57,7 @@ namespace Nektar
             DisContField2D();
 
             DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
-                SpatialDomains::BoundaryConditions &bcs, 
+                           SpatialDomains::BoundaryConditions &bcs, 
                            const int bc_loc = 0);
 
             DisContField2D(SpatialDomains::MeshGraph2D &graph2D,

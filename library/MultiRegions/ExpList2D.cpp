@@ -129,8 +129,7 @@ namespace Nektar
 
 
 
-        ExpList2D::ExpList2D(SpatialDomains::MeshGraph2D &graph2D):
-            ExpList()
+        ExpList2D::ExpList2D(SpatialDomains::MeshGraph2D &graph2D):ExpList()
         {
             int i,j,elmtid=0;
             int nel;
@@ -486,6 +485,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.cpp,v $
+* Revision 1.26  2009/04/20 16:14:06  sherwin
+* Updates for optimising bandwidth of DG solver and allowing write import on explist
+*
 * Revision 1.25  2009/03/04 14:17:38  pvos
 * Removed all methods that take and Expansion as argument
 *

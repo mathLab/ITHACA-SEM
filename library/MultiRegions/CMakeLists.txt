@@ -14,6 +14,7 @@ ExpList.cpp
 GenExpList1D.cpp
 GlobalLinSys.cpp
 GlobalLinSysKey.cpp
+GlobalMatrix.cpp
 GlobalMatrixKey.cpp
 #LocalToGlobalMap.cpp
 LocalToGlobalBaseMap.cpp
@@ -23,6 +24,7 @@ LocalToGlobalC0ContMap.cpp
 #LocalToGlobalMap1D.cpp
 #LocalToGlobalMap2D.cpp
 #LocalToGlobalMap3D.cpp
+GlobalOptimizationParameters.cpp
 )
 
 SET(MULTI_REGIONS_HEADERS
@@ -41,6 +43,7 @@ ExpList.h
 GenExpList1D.h
 GlobalLinSys.h
 GlobalLinSysKey.h
+GlobalMatrix.h
 GlobalMatrixKey.h
 LocalToGlobalBaseMap.h
 LocalToGlobalDGMap.h
@@ -51,6 +54,7 @@ LocalToGlobalC0ContMap.h
 #LocalToGlobalMap3D.h
 #LocalToGlobalMap.h
 MultiRegions.hpp
+GlobalOptimizationParameters.h
 )
 
 

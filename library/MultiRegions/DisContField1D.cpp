@@ -57,7 +57,8 @@ namespace Nektar
         }
 
         DisContField1D::DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
-            SpatialDomains::BoundaryConditions &bcs, const int bc_loc):
+                                       SpatialDomains::BoundaryConditions &bcs, 
+                                       const int bc_loc):
             ExpList1D(graph1D)     
         {
             GenerateBoundaryConditionExpansion(graph1D,bcs,bcs.GetVariable(bc_loc));
@@ -76,8 +77,8 @@ namespace Nektar
         }
 
         DisContField1D::DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
-            SpatialDomains::BoundaryConditions &bcs, 
-            const std::string variable):
+                                       SpatialDomains::BoundaryConditions &bcs, 
+                                       const std::string variable):
             ExpList1D(graph1D)  
         {
             GenerateBoundaryConditionExpansion(graph1D,bcs,variable);

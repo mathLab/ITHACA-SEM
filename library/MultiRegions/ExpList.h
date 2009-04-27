@@ -39,9 +39,11 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <StdRegions/StdExpansion.h>
 #include <MultiRegions/LocalToGlobalBaseMap.h>
+#include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/GlobalLinSysKey.h>
+#include <MultiRegions/GlobalOptimizationParameters.h>
 
 #include <LocalRegions/MatrixKey.h>
 #include <SpatialDomains/SegGeom.h>
@@ -796,15 +798,19 @@ namespace Nektar
              * \param inarray The vector \f$\boldsymbol{\hat{u}}_l\f$ of size 
              * \f$N_{\mathrm{eof}}\f$.
              * \param outarray The resulting vector of size \f$N_{\mathrm{eof}}\f$.
-             */
-            void   GeneralMatrixOp(const GlobalLinSysKey &mkey,
-                                   const Array<OneD, const NekDouble> &inarray,
-                                   Array<OneD, NekDouble>          &outarray);
+             */      
+            void GeneralMatrixOp(const GlobalMatrixKey             &gkey,
+                                 const Array<OneD,const NekDouble> &inarray, 
+                                       Array<OneD,      NekDouble> &outarray,
+                                 bool  UseContCoeffs = false)
+            {
+                v_GeneralMatrixOp(gkey,inarray,outarray,UseContCoeffs);
+            }
 
+            void GeneralMatrixOp_IterPerExp(const GlobalMatrixKey             &gkey,
+                                            const Array<OneD,const NekDouble> &inarray, 
+                                            Array<OneD,      NekDouble> &outarray);
 
-            void MultiplyByBlockMatrix(const GlobalMatrixKey             &gkey,
-                                       const Array<OneD,const NekDouble> &inarray, 
-                                             Array<OneD,      NekDouble> &outarray);
 
             std::vector<SpatialDomains::FieldDefinitionsSharedPtr> GetFieldDefinitions(void);
             // \brief Append the element data listed in elements
@@ -813,6 +819,12 @@ namespace Nektar
 
             /// \brief Extract the data in fielddata into the m_coeff list 
             void ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field);
+
+            // load global optimisation parameters
+            inline void ReadGlobalOptimizationParameters(const std::string &infilename)
+            {
+                m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>::AllocateSharedPtr(infilename);
+            }
 
         protected:
             
@@ -909,6 +921,8 @@ namespace Nektar
              */
             Array<OneD, int>  m_phys_offset;
 
+            NekOptimize::GlobalOptParamSharedPtr m_globalOptParam;
+
             BlockMatrixMapShPtr  m_blockMat;
 
             /**
@@ -934,9 +948,12 @@ namespace Nektar
              */
             const DNekScalBlkMatSharedPtr  GenBlockMatrix(const GlobalMatrixKey &gkey);
             const DNekScalBlkMatSharedPtr& GetBlockMatrix(const GlobalMatrixKey &gkey);
-
-
+            void MultiplyByBlockMatrix(const GlobalMatrixKey             &gkey,
+                                       const Array<OneD,const NekDouble> &inarray, 
+                                             Array<OneD,      NekDouble> &outarray);
             
+            boost::shared_ptr<GlobalMatrix>  GenGlobalMatrix(const GlobalMatrixKey &mkey, 
+                                                             const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
 
             
             /**
@@ -1091,7 +1108,6 @@ namespace Nektar
             boost::shared_ptr<GlobalLinSys> GenGlobalBndLinSys(const GlobalLinSysKey     &mkey, const LocalToGlobalBaseMap &LocToGloBaseMap);
 
 
-
             // functions associated with DisContField
 	    inline virtual const Array<OneD,const boost::shared_ptr<ExpList1D> > &v_GetBndCondExpansions(void)
             {
@@ -1110,8 +1126,8 @@ namespace Nektar
 	    inline virtual boost::shared_ptr<LocalToGlobalDGMap> &v_GetTraceMap(void) 
 	    { 
 		ASSERTL0(false,"This method is not defined or valid for this class type"); 
-        static boost::shared_ptr<LocalToGlobalDGMap> result;
-        return result;
+                static boost::shared_ptr<LocalToGlobalDGMap> result;
+                return result;
 	    } 
 
             virtual void v_AddTraceIntegral(const Array<OneD, const NekDouble> &Fx, 
@@ -1194,6 +1210,13 @@ namespace Nektar
                 IProductWRTBase_IterPerExp(inarray,outarray);
             }
 
+            virtual void v_GeneralMatrixOp(const GlobalMatrixKey             &gkey,
+                                           const Array<OneD,const NekDouble> &inarray, 
+                                                 Array<OneD,      NekDouble> &outarray,
+                                           bool  UseContCoeffs)
+            {
+                GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
+            }
 
         private:
 
@@ -1223,6 +1246,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.60  2009/04/22 22:32:10  sherwin
+* Added in method to read dat file
+*
 * Revision 1.59  2009/04/20 16:14:06  sherwin
 * Updates for optimising bandwidth of DG solver and allowing write import on explist
 *

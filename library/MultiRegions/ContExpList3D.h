@@ -59,7 +59,7 @@ namespace Nektar
                           TetNb = LibUtilities::SIZE_PointsType,
                           const bool constructMap = true);
 
-                          ContExpList3D(SpatialDomains::MeshGraph3D &graph3D,
+            ContExpList3D(SpatialDomains::MeshGraph3D &graph3D,
                           const bool constructMap = true);
             
                           ContExpList3D(const ContExpList3D &In);
@@ -118,16 +118,17 @@ namespace Nektar
                                 Array<OneD,       NekDouble> &outarray,
                           bool  UseContCoeffs = false);
 
-            void GeneralMatrixOp(const GlobalLinSysKey            &gkey,
-                                 const Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD, NekDouble>          &outarray);
+            void GeneralMatrixOp(const GlobalMatrixKey             &gkey,
+                                 const Array<OneD,const NekDouble> &inarray, 
+                                       Array<OneD,      NekDouble> &outarray,
+                                 bool  UseContCoeffs = false);
             
 
         protected:
             LocalToGlobalC0ContMapSharedPtr m_locToGloMap;
       	    int                             m_contNcoeffs;
             Array<OneD, NekDouble>          m_contCoeffs;
-            GlobalLinSysMapShPtr            m_globalMat;
+            GlobalLinSysMapShPtr            m_globalLinSys;
                         
         private:
             
@@ -157,6 +158,14 @@ namespace Nektar
                                            bool  UseContCoeffs)
             {
                 IProductWRTBase(inarray,outarray,UseContCoeffs);
+            }
+
+            virtual void v_GeneralMatrixOp(const GlobalMatrixKey             &gkey,
+                                           const Array<OneD,const NekDouble> &inarray, 
+                                                 Array<OneD,      NekDouble> &outarray,
+                                           bool  UseContCoeffs)
+            {
+                GeneralMatrixOp(gkey,inarray,outarray,UseContCoeffs);
             }
 
         };

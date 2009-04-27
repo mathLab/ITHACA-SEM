@@ -294,7 +294,7 @@ namespace Nektar
                     Array<OneD, NekDouble> tmpin(nq);
                     Array<OneD, NekDouble> tmpout(m_ncoeffs);
                     
-                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,m_ncoeffs);            
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,nq);            
                     
                     for(i=0; i < nq; ++i)
                     {
@@ -750,6 +750,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.81  2009/04/03 14:57:34  sherwin
+* Linear Advection matrices added, corrected unsigned int intialisation
+*
 * Revision 1.80  2008/11/24 10:31:14  pvos
 * Changed name from _PartitionedOp to _MatFree
 *

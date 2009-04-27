@@ -1645,7 +1645,7 @@ namespace Nektar
         }
 
 
-        void StdHexExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
+        void StdHexExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
         {
             if(format==eTecplot)
             {
@@ -1660,7 +1660,8 @@ namespace Nektar
                 
                 if(dumpVar)
                 {
-                    outfile << "Variables = z1,  z2,  z3,  Coeffs \n" << endl;   
+                    outfile << "Variables = z1,  z2,  z3"; 
+                    outfile << ", "<< var << std::endl << std::endl;
                 }   
                 outfile << "Zone, I=" << Qx <<", J=" << Qy <<", K=" << Qz <<", F=Point" << endl;
                 
@@ -1788,6 +1789,9 @@ namespace Nektar
 
 /** 
  * $Log: StdHexExp.cpp,v $
+ * Revision 1.27  2008/11/18 16:05:34  pvos
+ * Modified(optimized) sequence of Blas calls for BwdTrans and IProduct
+ *
  * Revision 1.26  2008/09/23 18:19:26  pvos
  * Updates for working ProjectContField3D demo
  *

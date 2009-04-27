@@ -1031,7 +1031,7 @@ namespace Nektar
             }
         }       
 
-        void StdQuadExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
+        void StdQuadExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
         {
             if(format==eTecplot)
             {
@@ -1043,7 +1043,8 @@ namespace Nektar
                 
                 if(dumpVar)
                 {
-                    outfile << "Variables = z1,  z2, Coeffs \n" << std::endl;      
+                    outfile << "Variables = z1,  z2" ;      
+                    outfile << ", "<< var << std::endl << std::endl;
                 }
                 outfile << "Zone, I=" << nquad0 <<", J=" << nquad1 <<", F=Point" << std::endl;
                 
@@ -1294,6 +1295,9 @@ namespace Nektar
 
 /** 
  * $Log: StdQuadExp.cpp,v $
+ * Revision 1.50  2009/04/22 22:30:48  sherwin
+ * Added ReadFromFile method to read back in .dat file
+ *
  * Revision 1.49  2009/01/21 16:58:39  pvos
  * Added additional geometric factors to improve efficiency
  *

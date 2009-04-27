@@ -262,7 +262,7 @@ namespace Nektar
                                      Array<OneD, unsigned int> &maparray,
                                      Array<OneD, int> &signarray);
 
-            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
             void ReadFromFile(std::ifstream &infile, OutputFormat format, const bool dumpVar = true);
             void WriteCoeffsToFile(std::ofstream &outfile);
 
@@ -762,9 +762,9 @@ namespace Nektar
                 GetEdgeToElementMap(eid,edgeOrient,maparray,signarray);
             }
 
-            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")
             {
-                WriteToFile(outfile,format,dumpVar);
+                WriteToFile(outfile,format,dumpVar,var);
             }
 
             
@@ -864,6 +864,9 @@ namespace Nektar
 
 /**
  * $Log: StdQuadExp.h,v $
+ * Revision 1.49  2009/04/27 15:00:23  pvos
+ * From h-to-p efficiently updates
+ *
  * Revision 1.48  2009/04/22 22:30:48  sherwin
  * Added ReadFromFile method to read back in .dat file
  *

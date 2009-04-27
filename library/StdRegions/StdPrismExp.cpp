@@ -951,7 +951,7 @@ namespace Nektar
         }
         
 
-        void StdPrismExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
+        void StdPrismExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
         {
             if(format==eTecplot)
             {
@@ -966,7 +966,8 @@ namespace Nektar
                 
                 if(dumpVar)
                 {
-                    outfile << "Variables = z1,  z2,  z3,  Coeffs \n" << std::endl;
+                    outfile << "Variables = z1,  z2,  z3"; 
+                    outfile << ", "<< var << std::endl << std::endl;
                 }      
                 outfile << "Zone, I=" << Qx <<", J=" << Qy <<", K=" << Qz <<", F=Point" << std::endl;
                 
@@ -1040,6 +1041,9 @@ namespace Nektar
 
 /** 
  * $Log: StdPrismExp.cpp,v $
+ * Revision 1.23  2009/04/20 16:11:47  sherwin
+ * Mods to handle output and optimise DG work
+ *
  * Revision 1.22  2009/01/06 21:09:09  sherwin
  * removed -1 initialisation of unsigned int
  *

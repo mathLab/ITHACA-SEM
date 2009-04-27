@@ -130,7 +130,7 @@ namespace Nektar
              */
             void FillMode(const int mode, Array<OneD, NekDouble> &outarray);
             
-            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
             
             //-----------------------------
             // Evaluations Methods
@@ -386,9 +386,9 @@ namespace Nektar
             }
             
             
-            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")
             {
-                WriteToFile(outfile,format,dumpVar);
+                WriteToFile(outfile,format,dumpVar,var);
             }
 
             virtual void v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
@@ -491,6 +491,9 @@ namespace Nektar
 
 /**
  * $Log: StdNodalTriExp.h,v $
+ * Revision 1.30  2009/01/21 16:58:39  pvos
+ * Added additional geometric factors to improve efficiency
+ *
  * Revision 1.29  2008/11/24 10:31:14  pvos
  * Changed name from _PartitionedOp to _MatFree
  *

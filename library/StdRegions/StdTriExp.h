@@ -275,7 +275,7 @@ namespace Nektar
                                      Array<OneD, unsigned int> &maparray,
                                      Array<OneD, int> &signarray);
 
-            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
             void ReadFromFile(std::ifstream &infile, OutputFormat format, const bool dumpVar = true);
             void WriteCoeffsToFile(std::ofstream &outfile);
 
@@ -733,9 +733,9 @@ namespace Nektar
                 GetEdgeToElementMap(eid,edgeOrient,maparray,signarray);
             }
             
-            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")
             {
-                WriteToFile(outfile,format,dumpVar);
+                WriteToFile(outfile,format,dumpVar,var);
             }
             
             virtual void v_ReadFromFile(std::ifstream &infile, OutputFormat format, const bool dumpVar = true)
@@ -826,6 +826,9 @@ namespace Nektar
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.44  2009/04/22 22:30:48  sherwin
+ * Added ReadFromFile method to read back in .dat file
+ *
  * Revision 1.43  2009/04/20 16:11:47  sherwin
  * Mods to handle output and optimise DG work
  *

@@ -234,7 +234,7 @@ namespace Nektar
 
             void GetCoords(Array<OneD, NekDouble> &coords_1);
 
-            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
 
             void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray);
@@ -412,9 +412,9 @@ namespace Nektar
             }
 
 
-            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")
             {
-                WriteToFile(outfile,format,dumpVar);
+                WriteToFile(outfile,format,dumpVar,var);
             }
 
             virtual void v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
@@ -440,6 +440,9 @@ namespace Nektar
 
 /**
  * $Log: StdSegExp.h,v $
+ * Revision 1.43  2009/03/04 14:17:38  pvos
+ * Removed all methods that take and Expansion as argument
+ *
  * Revision 1.42  2008/08/14 22:09:51  sherwin
  * Modifications to remove HDG routines from StdRegions and removed StdExpMap
  *

@@ -1121,7 +1121,7 @@ namespace Nektar
         }
 
 
-        void StdTetExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
+        void StdTetExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
         {
             if(format==eTecplot)
             {              
@@ -1136,7 +1136,8 @@ namespace Nektar
                 
                 if(dumpVar)
                 {
-                    outfile << "Variables = z1,  z2,  z3,  Coeffs \n" << std::endl;      
+                    outfile << "Variables = z1,  z2,  z3"; 
+                    outfile << ", "<< var << std::endl << std::endl;
                 }
                 outfile << "Zone, I=" << Qx <<", J=" << Qy <<", K=" << Qz <<", F=Point" << std::endl;
                 
@@ -1210,6 +1211,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTetExp.cpp,v $
+ * Revision 1.24  2009/04/20 16:11:47  sherwin
+ * Mods to handle output and optimise DG work
+ *
  * Revision 1.23  2009/04/03 14:57:34  sherwin
  * Linear Advection matrices added, corrected unsigned int intialisation
  *

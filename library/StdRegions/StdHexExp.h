@@ -266,7 +266,7 @@ namespace Nektar
             {
                 return  StdExpansion3D::PhysEvaluate(coords);  
             }
-            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
             void WriteCoeffsToFile(std::ofstream &outfile);
             
             //----------------------------------
@@ -471,9 +471,9 @@ namespace Nektar
                 return GetEdgeNcoeffs(i);
             }
             
-            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)            
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")
             {
-                WriteToFile(outfile,format,dumpVar);
+                WriteToFile(outfile,format,dumpVar,var);
             }
 
             virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
@@ -492,6 +492,9 @@ namespace Nektar
 
 /**
  * $Log: StdHexExp.h,v $
+ * Revision 1.27  2008/09/17 13:46:06  pvos
+ * Added LocalToGlobalC0ContMap for 3D expansions
+ *
  * Revision 1.26  2008/09/15 13:18:08  pvos
  * Added more hexahedron mapping routines
  *

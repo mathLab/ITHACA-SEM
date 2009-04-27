@@ -948,7 +948,7 @@ namespace Nektar
             }  
         }
 
-        void StdTriExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
+        void StdTriExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
         {
             if(format==eTecplot)
             {
@@ -960,7 +960,8 @@ namespace Nektar
                 
                 if(dumpVar)
                 { 
-                    outfile << "Variables = z1,  z2, Coeffs \n" << std::endl;      
+                    outfile << "Variables = z1,  z2"; 
+                    outfile << ", "<< var << std::endl << std::endl;
                 }
                 outfile << "Zone, I=" << nquad0 <<", J=" << nquad1 <<", F=Point" << std::endl;
                 
@@ -1268,6 +1269,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTriExp.cpp,v $
+ * Revision 1.54  2009/04/22 22:30:48  sherwin
+ * Added ReadFromFile method to read back in .dat file
+ *
  * Revision 1.53  2009/04/20 16:11:47  sherwin
  * Mods to handle output and optimise DG work
  *

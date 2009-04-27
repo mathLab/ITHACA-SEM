@@ -209,7 +209,7 @@ namespace Nektar
             NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& xi);
        
             void GetCoords( Array<OneD, NekDouble> & xi_x, Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z);
-            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
             void WriteCoeffsToFile(std::ofstream &outfile);
                     
             DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey)
@@ -383,9 +383,9 @@ namespace Nektar
                 return GetEdgeNcoeffs(i);
             }
                 
-            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")
             {
-                WriteToFile(outfile,format,dumpVar);
+                WriteToFile(outfile,format,dumpVar,var);
             }
 
             virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
@@ -402,6 +402,9 @@ namespace Nektar
 
 /**
  * $Log: StdPyrExp.h,v $
+ * Revision 1.22  2009/04/20 16:11:47  sherwin
+ * Mods to handle output and optimise DG work
+ *
  * Revision 1.21  2009/01/01 02:36:18  ehan
  * Added virtual functions.
  *

@@ -367,7 +367,7 @@ namespace Nektar
                         1,&coords[0],1);
         }
 
-        void StdSegExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
+        void StdSegExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
         {
             if(format==eTecplot)
             {
@@ -377,7 +377,8 @@ namespace Nektar
                 
                 if(dumpVar)
                 {
-                    outfile << "Variables = z, Coeffs \n" << std::endl;   
+                    outfile << "Variables = z";   
+                    outfile << ", "<< var << std::endl << std::endl;
                 }
                 
                 outfile << "Zone, I=" << nquad <<", F=Point" << std::endl;
@@ -420,6 +421,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.57  2008/11/05 16:08:15  pvos
+* Added elemental optimisation functionality
+*
 * Revision 1.56  2008/09/23 18:19:26  pvos
 * Updates for working ProjectContField3D demo
 *

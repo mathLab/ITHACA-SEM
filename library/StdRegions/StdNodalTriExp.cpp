@@ -300,7 +300,7 @@ namespace Nektar
             }
         }
 
-        void StdNodalTriExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar)
+        void StdNodalTriExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
         { 
             if(format==eTecplot)
             {
@@ -312,7 +312,8 @@ namespace Nektar
                                                 
                 if(dumpVar)
                 {
-                    outfile << "Variables = z1,  z2, Coeffs \n" << std::endl;     
+                    outfile << "Variables = z1,  z2"; 
+                    outfile << ", "<< var << std::endl << std::endl;
                 }
                 
                 outfile << "Zone, I=" << nquad0 << ", J=" << 
@@ -483,6 +484,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.30  2008/11/05 16:08:15  pvos
+* Added elemental optimisation functionality
+*
 * Revision 1.29  2008/09/17 13:46:06  pvos
 * Added LocalToGlobalC0ContMap for 3D expansions
 *

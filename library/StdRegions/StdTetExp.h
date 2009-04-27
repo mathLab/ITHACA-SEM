@@ -183,7 +183,7 @@ namespace Nektar
             NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords);
             NekDouble PhysEvaluate3D(const Array<OneD, const NekDouble>& coords);
           
-            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true);
+            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
             void WriteCoeffsToFile(std::ofstream &outfile);
             void GetCoords(Array<OneD, NekDouble> &coords_0, 
                            Array<OneD, NekDouble> &coords_1, Array<OneD, NekDouble> &coords_2);
@@ -425,9 +425,9 @@ namespace Nektar
             }
 
 
-            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true)
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")
             {                
-                WriteToFile(outfile,format,dumpVar);
+                WriteToFile(outfile,format,dumpVar,var);
             }
 
             virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
@@ -446,6 +446,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.26  2009/04/20 16:11:47  sherwin
+ * Mods to handle output and optimise DG work
+ *
  * Revision 1.25  2009/01/01 02:34:46  ehan
  * Added virtual functions.
  *

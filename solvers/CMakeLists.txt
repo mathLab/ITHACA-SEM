@@ -36,7 +36,7 @@ MACRO(ADD_SOLVER_EXECUTABLE name source)
             optimized ${Boost_IOSTREAMS_LIBRARY_RELEASE} debug ${Boost_IOSTREAMS_LIBRARY_DEBUG}
 	    optimized ${Boost_ZLIB_LIBRARY_RELEASE} debug ${Boost_ZLIB_LIBRARY_DEBUG}
             optimized ${Boost_DATE_TIME_LIBRARY_RELEASE} debug ${Boost_DATE_TIME_LIBRARY_DEBUG}     
-            optimized tinyxml sbtk debug tinyxml blas lapack sbtk)
+            optimized tinyxml debug tinyxml)
 
         SET_LAPACK_LINK_LIBRARIES(${name})
 

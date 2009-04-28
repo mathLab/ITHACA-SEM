@@ -85,7 +85,7 @@ namespace Nektar
 				     const NekDouble time) 
   {
     int nvariables = inarray.num_elements();
-    MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
+    MultiRegions::GlobalMatrixKey key(StdRegions::eMass);
     for(int i = 0; i < nvariables; ++i)
       {
 	m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,inarray[i],outarray[i]);
@@ -155,7 +155,7 @@ namespace Nektar
       {
 	// calculate the variable u* = Mu
 	// we are going to TimeIntegrate this new variable u*
-	MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
+	MultiRegions::GlobalMatrixKey key(StdRegions::eMass);
 	for(int i = 0; i < nvariables; ++i)
 	  {
 	    tmp[i] = Array<OneD, NekDouble>(ncoeffs);
@@ -769,6 +769,9 @@ namespace Nektar
 
 /**
 * $Log: EulerEquations.cpp,v $
+* Revision 1.3  2009/03/17 12:32:01  claes
+* Updates to get the EulerSolver to work with the latest version of the TimeIntegrationScheme
+*
 * Revision 1.2  2009/02/02 16:10:16  claes
 * Update to make SWE, Euler and Boussinesq solvers up to date with the time integrator scheme. Linear and classical Boussinsq solver working
 *

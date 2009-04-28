@@ -335,7 +335,7 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 				    const NekDouble time) 
  {
    int nvariables = inarray.num_elements();
-   MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
+   MultiRegions::GlobalMatrixKey key(StdRegions::eMass);
    for(int i = 0; i < nvariables; ++i)
      {
        m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,inarray[i],outarray[i]);
@@ -403,7 +403,7 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
         {
             // calculate the variable u* = Mu
             // we are going to TimeIntegrate this new variable u*
-            MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
+            MultiRegions::GlobalMatrixKey key(StdRegions::eMass);
             for(int i = 0; i < nvariables; ++i)
             {
                 tmp[i] = Array<OneD, NekDouble>(ncoeffs);
@@ -1752,6 +1752,9 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 
 /**
 * $Log: ShallowWaterEquations.cpp,v $
+* Revision 1.5  2009/03/10 23:37:14  claes
+* Updated the ShallowWaterSolver to work with the general timestepping scheme
+*
 * Revision 1.4  2009/02/07 23:58:08  claes
 * Changed so I/O always are in terms of primitive variables
 *

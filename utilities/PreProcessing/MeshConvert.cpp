@@ -1,5 +1,5 @@
-#include "Gmsh.cpp"
-#include "TetGen.cpp"
+#include <PreProcessing/Gmsh.h>
+#include <PreProcessing/TetGen.h>
 #include <stdexcept>
 
 using namespace std;

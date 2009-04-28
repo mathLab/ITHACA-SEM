@@ -25,11 +25,22 @@ int main(int argc, char *argv[])
     NekDouble  lambda;
     NekDouble   st, cps = (double)CLOCKS_PER_SEC;
 
-    if(argc != 3)
+    if( (argc != 3) && (argc != 5) )
     {
-        fprintf(stderr,"Usage: Helmholtz2D  meshfile boundaryfile\n");
+        fprintf(stderr,"Usage: Helmholtz2D meshfile boundaryfile [GlobalOptimizationFile] [ElementalOptimizationFile]\n");
         exit(1);
     }
+
+    //----------------------------------------------
+    // Load the ELEMENTAL optimization parameters if they
+    // have been given as argument
+    // (use ElementalOptimisationParameters.xml as an example)
+    if( argc == 5 )
+    {
+        string eloptfile(argv[4]);
+        NekOptimize::LoadElementalOptimizationParameters(eloptfile);
+    }
+    //----------------------------------------------
 
     //----------------------------------------------
     // Read in mesh from input file
@@ -62,6 +73,17 @@ int main(int argc, char *argv[])
     // Define Expansion 
     Exp = MemoryManager<MultiRegions::ContField2D>::
         AllocateSharedPtr(graph2D,bcs);
+    //----------------------------------------------
+
+    //----------------------------------------------
+    // Load the global optimization parameters 
+    // as specified in the (optional) input file
+    // (use helmholtz2D.xml as an example)
+    if( argc == 5 )
+    {
+        string globoptfile(argv[3]);
+        Exp->ReadGlobalOptimizationParameters(globoptfile);
+    }
     //----------------------------------------------
 
     Timing("Read files and define exp ..");
@@ -109,14 +131,14 @@ int main(int argc, char *argv[])
   
     //----------------------------------------------
     // Helmholtz solution taking physical forcing 
-    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), lambda);
+    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), lambda, true);
     //----------------------------------------------
     Timing("Helmholtz Solve ..");
 
 #ifdef TIMING
     for(i = 0; i < 100; ++i)
     {
-        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), lambda);
+        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), lambda, true);
     }
     
     Timing("100 Helmholtz Solves:... ");
@@ -124,7 +146,7 @@ int main(int argc, char *argv[])
     
     //----------------------------------------------
     // Backward Transform Solution to get solved values 
-    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
+    Exp->BwdTrans(Exp->GetContCoeffs(), Exp->UpdatePhys(), true);
     //----------------------------------------------
     
     //-----------------------------------------------
@@ -135,6 +157,7 @@ int main(int argc, char *argv[])
     std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef = Exp->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size()); 
     
+    Exp->GlobalToLocal(Exp->GetContCoeffs(),Exp->UpdateCoeffs());
     for(i = 0; i < FieldDef.size(); ++i)
     {
         FieldDef[i]->m_Fields.push_back("u");

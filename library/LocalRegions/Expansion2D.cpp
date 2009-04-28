@@ -227,7 +227,7 @@ namespace Nektar
             DNekVec                Tmpcoeff(ncoeffs,tmpcoeff,eWrapper);
             
             v_GetEdgeToElementMap(edge,edgedir,emap,sign);
-#if 1 
+
             //================================================================
             // Add F = \tau <phi_i,in_phys>
             // Fill edge and take inner product
@@ -239,11 +239,13 @@ namespace Nektar
                 outarray[emap[i]] += sign[i]*tau*EdgeExp[edge]->GetCoeff(i);
             }
             //================================================================
-#endif
 
             //===============================================================
             // Add -\sum_i D_i^T M^{-1} G_i + E_i M^{-1} G_i = 
             //                         \sum_i D_i M^{-1} G_i term
+            StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
+                                                   StdRegions::eWeakDeriv1,
+                                                   StdRegions::eWeakDeriv2};
             for(n = 0; n < coordim; ++n)
             {
                 //G;
@@ -268,27 +270,8 @@ namespace Nektar
                     }
                 }
                 
-                switch(n)
-                {
-                case 0:
-                    {
-                        DNekScalMat &Dmat = *v_GetLocMatrix(StdRegions::eWeakDeriv0);
-                        Coeffs = Coeffs  + Dmat*Tmpcoeff; 
-                    }
-                    break;
-                case 1:
-                    {
-                        DNekScalMat &Dmat = *v_GetLocMatrix(StdRegions::eWeakDeriv1);
-                        Coeffs = Coeffs  + Dmat*Tmpcoeff; 
-                    }
-                    break;
-                case 2:
-                    {
-                        DNekScalMat &Dmat = *v_GetLocMatrix(StdRegions::eWeakDeriv2);
-                        Coeffs = Coeffs  + Dmat*Tmpcoeff; 
-                    }
-                    break;
-                }
+                DNekScalMat &Dmat = *v_GetLocMatrix(DerivType[n]);
+                Coeffs = Coeffs  + Dmat*Tmpcoeff;                 
             }
         }
 
@@ -646,6 +629,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.cpp,v $
+ *    Revision 1.8  2009/04/27 21:34:07  sherwin
+ *    Updated WriteToField
+ *
  *    Revision 1.7  2009/04/20 16:12:28  sherwin
  *    Updates related to output format and optimising DG solver
  *

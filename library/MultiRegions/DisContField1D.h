@@ -102,6 +102,12 @@ namespace Nektar
         protected:
 
         private:
+            /**
+             * \brief The number of boundary segments on which
+             * Dirichlet boundary conditions are imposed
+             */ 
+            int m_numDirBndCondExpansions;
+
             Array<OneD,LocalRegions::PointExpSharedPtr>        m_bndCondExpansions;
             Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
             GlobalLinSysMapShPtr                               m_globalBndMat;

@@ -115,7 +115,7 @@
         <p><a href="license.html" id="menu_License">License</a></p>
         <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
         <p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
-        <p style="font-size:9px;">Last Revision:<br/>$Date: 2008/09/04 08:27:53 $</p>
+        <p style="font-size:9px;">Last Revision:<br/>$Date: 2008/09/12 11:28:49 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
@@ -170,6 +170,18 @@
               </li>
             </ol>
           </li>
+	  <li>The last step is to extract and compile the sparse matrix library developed by <em>NIST</em>. (For more information about this library, see <a href="http://math.nist.gov/spblas/original.html" target="_blank">http://math.nist.gov/spblas/original.html</a>)
+            <ol>
+              <li>In <em>ThirdParty/</em>, extract the spblastk0.9b.tar.bz2 archive with &quot;tar -xjvf boost_1_35_0.tar.bz2&quot; (without the quotes). This will create the directory <em>spblastk0.9b/</em>.</li>
+              <li>Change to the directory <em>spblastk0.9b/build/</em></li>
+              <li>Compile the library using the previously installed <em>CMake</em></li>
+              <ol>
+		<li>Generate the makefiles using the command &quot;../../CMake/bin/cmake ../&quot;</li>
+		<li>Build the library by typing &quot;make&quot; </li>
+              </ol>
+            </li>
+          </ol>
+	</li>
         </ol>
         <h3>Generating the GCC Makefiles with CMake</h3>
         <p>Now that all of the required libraries are setup in the correct paths, we can use CMake to generate the Makefiles that GCC requires, or the project files that Xcode requires.</p>

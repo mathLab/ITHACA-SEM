@@ -132,6 +132,7 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
 	      ${CMAKE_SOURCE_DIR}/FindFramework.cmake
               ${CMAKE_SOURCE_DIR}/FindACML.cmake
               ${CMAKE_SOURCE_DIR}/FindAtlas.cmake
+              ${CMAKE_SOURCE_DIR}/FindNistSparseBlas.cmake
               ${CMAKE_SOURCE_DIR}/FindMKL.cmake
               ${CMAKE_SOURCE_DIR}/FindWin32Lapack.cmake
 	      ${CMAKE_SOURCE_DIR}/NektarCommon.cmake

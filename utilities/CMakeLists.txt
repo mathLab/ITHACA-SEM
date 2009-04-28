@@ -5,7 +5,7 @@
 ######################################################
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
-PROJECT(utilities)
+PROJECT(UTILITIES)
 
 
 # Setup where CMake will look for modules.  You probably 
@@ -21,7 +21,7 @@ IF( NEKTAR++_FOUND )
     LINK_DIRECTORIES(${NEKTAR++_LIBRARY_DIRS})
     ADD_DEFINITIONS(${NEKTAR++_DEFINITIONS})
 
-    INCLUDE_DIRECTORIES(${SOLVERS_SOURCE_DIR})        
+    INCLUDE_DIRECTORIES(${UTILITIES_SOURCE_DIR})        
 ENDIF( NEKTAR++_FOUND )
 
 MACRO(ADD_UTILITIES_EXECUTABLE name source)

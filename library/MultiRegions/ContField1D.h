@@ -361,6 +361,18 @@ namespace Nektar
                 HelmSolve(inarray,outarray,lambda,UseContCoeffs,dirForcing);
             }
           
+            virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions()
+            {
+                return GetBndConditions();
+            }
+
+
+            virtual void v_EvaluateBoundaryConditions(const NekDouble time = 0.0)
+            {
+                EvaluateBoundaryConditions(time);
+            }
+
+
             /**
              * \brief This function discretises the boundary conditions by setting up
              * a list of point expansions.    

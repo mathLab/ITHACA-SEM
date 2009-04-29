@@ -119,7 +119,7 @@ StdRegions Stochastic)
 SET(UnitTestSubDirs UnitTests)
 SET(DemoSubDirs Demos)
 
-SUBDIRS(${LibrarySubDirs})
+SUBDIRS(${LibrarySubDirs} ${UnitTestSubDirs} )
 IF( NEKTAR_BUILD_DEMOS )
     SUBDIRS(${DemoSubDirs})
 ENDIF( NEKTAR_BUILD_DEMOS )

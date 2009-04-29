@@ -39,7 +39,8 @@
 #include <SpatialDomains/Equation.h>
 #include <SpatialDomains/BoundaryConditions.h>
 #include <SpatialDomains/ParseUtils.hpp>
-
+#include <cctype>
+#include <algorithm>
 #include <string>
 
 namespace Nektar
@@ -755,6 +756,8 @@ namespace Nektar
                 while (solverInfo)
                 {
                     std::string solverProperty = solverInfo->Attribute("PROPERTY");
+                    // make sure that solver property is capitalised
+                    transform(solverProperty.begin(), solverProperty.end(), solverProperty.begin(), (int(*)(int))std::toupper);
                     ASSERTL0(!solverProperty.empty(), "Unable to find PROPERTY value.");
                     
                     std::string solverValue    = solverInfo->Attribute("VALUE");

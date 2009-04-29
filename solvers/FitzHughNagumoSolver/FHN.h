@@ -50,6 +50,7 @@ namespace Nektar
         eFHNtest_v1,
         eFHNtest_v2,
         eFHNmono,
+        eFHNmono_spiral,
         eFHNspiral,
         eEquationTypeSize
     };
@@ -62,6 +63,7 @@ namespace Nektar
         "FHNtest_v1",
         "FHNtest_v2",
         "FHNmono",
+        "FHNmono_spiral",
         "FHNspiral"
     };
 
@@ -150,12 +152,14 @@ namespace Nektar
 
         void Evaluateepsilon();
         void Evaluatebeta();
+        void EvaluateSecondStimulus();
 
         void ReadTimemarchingwithmass();
 
         void Summary(std::ostream &out);
 
         void SetUSERInitialConditions(NekDouble initialtime = 0.0);
+        void Generatesecondstimulus(Array<OneD, NekDouble> &outarray);
 
         NekDouble fvalue(const NekDouble u);
         NekDouble fderiv(const NekDouble u);
@@ -165,6 +169,7 @@ namespace Nektar
 
     private: 
         int m_infosteps;             ///< dump info to stdout at steps time
+        int m_secondstimulus;
         EquationType m_equationType; ///< equation type;
         NekDouble m_epsilon;    /// constant epsilon
         NekDouble m_beta;   /// constant beta
@@ -186,6 +191,10 @@ namespace Nektar
 
 /**
 * $Log: FHN.h,v $
+* Revision 1.4  2009/04/11 15:05:30  sehunchun
+*
+* Regular update
+*
 * Revision 1.3  2009/03/16 14:41:22  sehunchun
 * FHN model update
 *

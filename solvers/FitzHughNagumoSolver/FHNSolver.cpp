@@ -55,11 +55,12 @@ int main(int argc, char *argv[])
     //----------------------------------------------------------------
     // Read the mesh and construct container class
     FHN heart(fileNameString);
-    
+   
     int nsteps = heart.GetSteps();
 
     heart.Evaluateepsilon();
     heart.ReadTimemarchingwithmass();
+    heart.EvaluateSecondStimulus();
 
     switch(heart.GetEquationType())
     {
@@ -75,7 +76,6 @@ int main(int argc, char *argv[])
 
     // Create forcing function object
     LibUtilities::TimeIntegrationSchemeOperators ode;
-
     switch(heart.GetEquationType())
     {	
 	case eIMEXtest:
@@ -162,12 +162,12 @@ int main(int argc, char *argv[])
         ASSERTL0(false,"Unknown or undefined equation type");
     }
     time(&endtime);
-    CPUtime = (1.0/60.0)*difftime(endtime,starttime);
+    CPUtime = (1.0/60.0/60.0)*difftime(endtime,starttime);
      // Dump output
     heart.Output();
 
     cout << "-------------------------------------------" << endl;
-    cout << "Total Computation Time = " << CPUtime << " min." << endl;
+    cout << "Total Computation Time = " << CPUtime << " hr." << endl;
 
     // Evaluate L2 Error
     for(int i = 0; i < heart.GetNvariables(); ++i)

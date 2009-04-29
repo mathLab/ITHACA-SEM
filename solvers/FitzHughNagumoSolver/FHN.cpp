@@ -118,6 +118,11 @@ namespace Nektar
         m_beta = m_boundaryConditions->GetParameter("beta");
     }
 
+    void FHN::EvaluateSecondStimulus()
+    {
+        m_secondstimulus = m_boundaryConditions->GetParameter("secondstimulus");
+    }
+
     void FHN::ReadTimemarchingwithmass()
     {
         m_Timemarchingwithmass = m_boundaryConditions->GetParameter("TimemarchingWithmass");
@@ -160,10 +165,6 @@ namespace Nektar
         fval = uinit - (1.0/3.0)*uinit*uinit*uinit - vinit;
         gval = uinit + m_beta - 0.5*vinit;
 
-        cout <<"uinit = " << uinit << ", vinit = " << vinit << endl;
-        cout << "fval = " << fval << ", gval = " << gval << endl;
-        cout << " " << endl;
-
         for(int j = 0; j < nq; j++)
              {
                   if( x0[j]<=3.50 )
@@ -177,6 +178,27 @@ namespace Nektar
                      (m_fields[1]->UpdatePhys())[j] = vinit;
                    }
              }
+
+        if(m_secondstimulus)
+        {
+            cout << "SecondStimululs is activated..." << endl;
+        for(int j = 0; j < nq; j++)
+             {
+                 if( (x0[j]>31.0) && (x0[j]<=39.0) )
+                   {
+                       if( x1[j]<=35.0 )
+                       {
+                          (m_fields[0]->UpdatePhys())[j] = uinit;
+                          (m_fields[1]->UpdatePhys())[j] = 2.0;
+                       }
+                   }
+                  else
+                  {
+                     (m_fields[0]->UpdatePhys())[j] = uinit;
+                     (m_fields[1]->UpdatePhys())[j] = vinit;
+                   }
+             }
+        }
 
         for(int i = 0 ; i < m_fields.num_elements(); i++)
 	{
@@ -192,6 +214,36 @@ namespace Nektar
             ofstream outfile(outname.c_str());
 	    m_fields[i]->WriteToFile(outfile,eTecplot);
 	  }       
+    }
+
+
+    void FHN::Generatesecondstimulus(Array<OneD, NekDouble>&outarray)
+    {
+        int nq = m_fields[0]->GetNpoints();
+
+        Array<OneD,NekDouble> physfield(nq,0.0);      
+        Array<OneD,NekDouble> x0(nq);
+        Array<OneD,NekDouble> x1(nq);
+        Array<OneD,NekDouble> x2(nq);
+
+        NekDouble dist;
+      
+        // Second impulse for v
+        m_fields[0]->GetCoords(x0,x1,x2);
+        for(int j=0; j < nq; j++)
+        {
+            dist = sqrt( (x0[j]-0.5)*(x0[j]-0.5) + (x1[j]-0.5)*(x1[j]-0.5) );
+            if(dist <= 0.2)
+            {
+                physfield[j] = 1.0;
+            }
+            else
+            {
+                physfield[j] = 0.0;
+            }
+        }
+
+         m_fields[0]->FwdTrans(physfield,outarray);
     }
 
 
@@ -606,6 +658,7 @@ namespace Nektar
                  }
                  else if(direction == 1)
                  {
+
 		   MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
                    m_fields[0]->MultiRegions::ExpList::GeneralMatrixOp(key,inarray,outarray);
                  }
@@ -630,7 +683,8 @@ namespace Nektar
         // Set up wrapper to fields data storage. 
         Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
         Array<OneD, Array<OneD, NekDouble> >   tmp(nvariables);
-        
+        Array<OneD, NekDouble>   secondstim(ncoeffs);
+
         for(i = 0; i < nvariables; ++i)
         {
             fields[i]  = m_fields[i]->UpdateCoeffs();
@@ -659,6 +713,7 @@ namespace Nektar
         Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> IntScheme;
         LibUtilities::TimeIntegrationSolutionSharedPtr u;
         int numMultiSteps;
+        NekDouble timenow;
 
         switch(IntMethod)
         {
@@ -697,6 +752,12 @@ namespace Nektar
             else
             {
                 fields = IntScheme[numMultiSteps-1]->TimeIntegrate(m_timestep,u,ode);
+                timenow = abs(1.0*m_timestep*n - 4.0);
+                if( (m_secondstimulus==1) && (timenow<0.000001) )
+                {
+                    Generatesecondstimulus(secondstim);
+                    Vmath::Vadd(ncoeffs, secondstim, 1, fields[0], 1, fields[0], 1);
+                }
             }
 
             m_time += m_timestep;
@@ -791,6 +852,7 @@ namespace Nektar
         out << "\tCheckpoints     : " << m_checksteps <<" steps" <<endl;
         out << "\tepsilon         : " << m_epsilon << endl;
         out << "\tbeta            : " << m_beta << endl;
+        out << "\tsecondstimulus  : " << m_secondstimulus << endl;
       cout << "=======================================================================" << endl;
 
     }
@@ -800,6 +862,10 @@ namespace Nektar
 
 /**
 * $Log: FHN.cpp,v $
+* Revision 1.4  2009/04/11 15:05:29  sehunchun
+*
+* Regular update
+*
 * Revision 1.3  2009/03/16 14:41:22  sehunchun
 * FHN model update
 *

@@ -70,11 +70,11 @@
       <P> FinTime    = TimeStep*NumSteps </P>
       <P> IO_CheckSteps = 1000   </P>
       <P> IO_InfoSteps  = 500 </P>
-      <P> DisContinuous = 1 </P>
     </PARAMETERS>
 
     <SOLVERINFO>
-      <I EQTYPE="Advection" />
+      <I PROPERTY="EQType" VALUE="UnsteadyAdvection"/>
+      <I PROPERTY="Projection" VALUE="Continuous"/>
     </SOLVERINFO> 
 
     <VARIABLES>

@@ -44,20 +44,19 @@ namespace Nektar
 {     
 
 
-    // Propose to use SteadyAdvection, UnsteadyAdvection etc with eHelmholtz
-    // The put into SolverInfo Advection Advancement=Implicit/Explict etc. 
     enum EquationType
     {
         eNoEquationType,
-        eAdvection,
-	eDiffusion,
-	eimDiffusion,
-	eimDiffusion_exReaction,
-        eSteadyDiffusion,
-        eSteadyDiffusionReaction,
         eLaplace,
         ePoisson,
         eHelmholtz,
+        eSteadyAdvection,
+	eSteadyDiffusion,
+	eSteadyDiffusionReaction,
+        eNumSteadyEquationTypes,  // Must list all steady equations before this enum
+        eUnsteadyAdvection,
+        eUnsteadyDiffusion,
+        eUnsteadyDiffusionReaction,
         eEquationTypeSize
     };
     
@@ -65,15 +64,16 @@ namespace Nektar
     const std::string kEquationTypeStr[] = 
     {
         "NoType",
-        "Advection",
-	"ExDiffusion",
-	"ImDiffusion",
-	"ImDiffusion_ExReaction",
-        "SteadyDiffusion",
-        "SteadyDiffusionReaction",
         "Laplace",
         "Poisson",
-        "Helmholtz"
+        "Helmholtz",
+        "SteadyAdvection",
+	"SteadyDiffusion",
+	"SteadyDiffusionReaction",
+        "Dummy enum",
+        "UnsteadyAdvection",
+	"UnsteadyDiffusion",
+        "UnsteadyDiffusionReaction",
     };
 
     /**
@@ -93,7 +93,7 @@ namespace Nektar
          */ 
         AdvectionDiffusionReaction();
 
-
+    
         /**
          * Constructor.
          * /param 
@@ -107,21 +107,41 @@ namespace Nektar
             return m_equationType;
         }
 
+
+        bool  GetExplicitAdvection(void)
+        {
+            return m_explicitAdvection;
+        }
+
+
+        bool  GetExplicitDiffusion(void)
+        {
+            return m_explicitDiffusion;
+        }
+
+
+        bool  GetExplicitReaction(void)
+        {
+            return m_explicitReaction;
+        }
+
+
+        LibUtilities::TimeIntegrationMethod GetTimeIntMethod(void)
+        {
+            return m_timeIntMethod;
+        }
+
         // Return true if equation is a steady state problem 
 
         bool IsSteadyStateEquation(void)
         {
+            
             bool returnval = false;
-            
-            switch(m_equationType)
+
+            if(m_equationType < eNumSteadyEquationTypes)
             {
-            case eHelmholtz: case eSteadyDiffusionReaction:
-            case ePoisson: case eSteadyDiffusion: 
-            case eLaplace:                        
                 returnval = true;
-                break;
             }
-            
             return returnval;
         }
 
@@ -189,8 +209,14 @@ namespace Nektar
     protected:
 
     private: 
-        int m_infosteps;             ///< dump info to stdout at steps time
+        int          m_infosteps;    ///< dump info to stdout at steps time
         EquationType m_equationType; ///< equation type;
+        
+        bool m_explicitAdvection;  ///< Flag to identify explicit Advection
+        bool m_explicitDiffusion;  ///< Flag to identify explicit Diffusion
+        bool m_explicitReaction;   ///< Flag to identify explicit Reaction
+        
+        LibUtilities::TimeIntegrationMethod m_timeIntMethod; /// Time integration method
 
         Array<OneD, Array<OneD, NekDouble> >  m_velocity;
 
@@ -243,6 +269,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.h,v $
+* Revision 1.8  2009/04/27 21:37:14  sherwin
+* Updated to dump .fld and .chk file in compressed coefficient format
+*
 * Revision 1.7  2009/03/06 12:00:10  sehunchun
 * Some minor changes on nomenclatures and tabbing errors
 *

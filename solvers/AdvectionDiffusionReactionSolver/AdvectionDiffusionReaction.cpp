@@ -44,12 +44,13 @@ namespace Nektar
      */
     AdvectionDiffusionReaction::AdvectionDiffusionReaction(void):
         ADRBase(),
-        m_infosteps(100)
+        m_infosteps(100),
+        m_explicitAdvection(true),
+        m_explicitDiffusion(true),
+        m_explicitReaction(true)
     {     
     }
     
-    int nocase_cmp(const string & s1, const string& s2);
-
     /**
      * Constructor. Creates ...
      *
@@ -58,7 +59,9 @@ namespace Nektar
      */
     AdvectionDiffusionReaction::AdvectionDiffusionReaction(string &fileNameString):
         ADRBase(fileNameString,true),
-        m_infosteps(10)
+        m_infosteps(10),
+        m_explicitDiffusion(true),
+        m_explicitReaction(true)
     {
 
         int i;
@@ -68,7 +71,7 @@ namespace Nektar
 
         for(i = 0; i < (int) eEquationTypeSize; ++i)
         {
-            if(nocase_cmp(kEquationTypeStr[i],typeStr) == 0 )
+            if(NoCaseStringCompare(kEquationTypeStr[i],typeStr) == 0 )
             {
                 m_equationType = (EquationType)i; 
                 break;
@@ -77,17 +80,12 @@ namespace Nektar
 
         ASSERTL0(i != (int) eEquationTypeSize, "Invalid expansion type.");
         
-        
         // Equation specific Setups 
         switch(m_equationType)
         {
-        case eHelmholtz:
+        case eHelmholtz: case eLaplace: case ePoisson:
             break;
-			
-	case eimDiffusion_exReaction: 
-        case eAdvection: 
-	case eDiffusion: 
-	case eimDiffusion: 
+        case eSteadyAdvection:
             m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
         
             for(int i = 0; i < m_spacedim; ++i)
@@ -96,29 +94,130 @@ namespace Nektar
             }
             
             EvaluateAdvectionVelocity();
+            break;
+			
+        case eUnsteadyAdvection:
+            m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+        
+            for(int i = 0; i < m_spacedim; ++i)
+            {
+                m_velocity[i] = Array<OneD, NekDouble> (GetNpoints());
+            }
+            
+            EvaluateAdvectionVelocity();
+            m_timeIntMethod = LibUtilities::eClassicalRungeKutta4;		
+            goto UnsteadySetup;
+            break;
+        case eUnsteadyDiffusion:
+            // default explicit scheme 
+            m_timeIntMethod = LibUtilities::eClassicalRungeKutta4; 
+            goto UnsteadySetup;
+        case eUnsteadyDiffusionReaction:
+            m_timeIntMethod = LibUtilities::eIMEXdirk_3_4_3;	
             goto UnsteadySetup;
             break;
 
         UnsteadySetup:
-            
-            if(m_boundaryConditions->CheckForParameter("IO_InfoSteps") == true)
             {
-                m_infosteps =  m_boundaryConditions->GetParameter("IO_InfoSteps");
-            }
-            
-            // check that any user defined boundary condition is indeed implemented
-            for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
-            {	
-                // Time Dependent Boundary Condition (if no use defined then this is empty)
-                if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "")
+                std::string Implicit = "Implicit"; 
+                if(m_boundaryConditions->CheckForParameter("IO_InfoSteps") == true)
                 {
-                    if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "TimeDependent")
+                    m_infosteps =  m_boundaryConditions->GetParameter("IO_InfoSteps");
+                }
+                
+                // check that any user defined boundary condition is indeed implemented
+                for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+                {	
+                    // Time Dependent Boundary Condition (if no use defined then this is empty)
+                    if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "")
                     {
-                        ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
+                        if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "TimeDependent")
+                        {
+                            ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
+                        }
                     }
                 }
+                
+                // Check for definition of Implicit/Explicit terms in solverinfo
+                if(m_boundaryConditions->SolverInfoExists("ADVECTIONADVANCEMENT"))
+                {
+                    std::string AdvStr = m_boundaryConditions->GetSolverInfo("ADVECTIONADVANCEMENT");
+                    
+                    if(NoCaseStringCompare(AdvStr,Implicit) == 0)
+                    {
+                        m_explicitAdvection = false;
+                    }
+                    else
+                    {
+                        m_explicitAdvection = true;
+                    }
+                }
+                else
+                {
+                    m_explicitAdvection = true;
+                }
+                
+                
+                if(m_boundaryConditions->SolverInfoExists("DIFFUSIONADVANCEMENT"))
+                {
+                    std::string AdvStr = m_boundaryConditions->GetSolverInfo("DIFFUSIONADVANCEMENT");
+                    
+                    if(NoCaseStringCompare(AdvStr,Implicit) == 0 )
+                    {
+                        m_explicitDiffusion = false;
+                        // Reset default for implicit diffusion
+                        if(m_equationType == eUnsteadyDiffusion)
+                        {
+                            m_timeIntMethod = LibUtilities::eDIRKOrder3;		
+                        }
+                    }
+                    else
+                    {
+                        m_explicitDiffusion = true;
+                    }
+                }
+                else
+                {
+                    m_explicitDiffusion = true;
+                }
+                
+                if(m_boundaryConditions->SolverInfoExists("REACTIONADVANCEMENT"))
+                {
+                    std::string AdvStr = m_boundaryConditions->GetSolverInfo("REACTIONADVANCEMENT");
+                    
+                    if(NoCaseStringCompare(AdvStr,Implicit) == 0)
+                    {
+                        m_explicitReaction = false;
+                    }
+                    else
+                    {
+                        m_explicitReaction = true;
+                    }
+                }
+                else
+                {
+                    m_explicitReaction = true;
+                }
+
+                // check to see if time stepping has been reset
+                if(m_boundaryConditions->SolverInfoExists("TIMEINTEGRATIONMETHOD"))
+                {
+                    std::string TimeIntStr = m_boundaryConditions->GetSolverInfo("TIMEINTEGRATIONMETHOD");
+                    int i;
+                    for(i = 0; i < (int) LibUtilities::SIZE_TimeIntegrationMethod; ++i)
+                    {
+                        if(NoCaseStringCompare(LibUtilities::TimeIntegrationMethodMap[i],TimeIntStr) == 0 )
+                        {
+                            m_timeIntMethod = (LibUtilities::TimeIntegrationMethod)i; 
+                            break;
+                        }
+                    }
+
+                    ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
+                }
+
+                break;
             }
-            break;
         case eNoEquationType:
         default:
             ASSERTL0(false,"Unknown or undefined equation type");
@@ -165,7 +264,11 @@ namespace Nektar
             {	  
                 switch(m_equationType)
                 {
+#ifdef OLDENUM
                 case eAdvection:
+#else
+                case eUnsteadyAdvection:
+#endif
                     {
                         SetBoundaryConditions(time);
                         WeakDGAdvection(inarray, outarray);
@@ -177,7 +280,11 @@ namespace Nektar
                     }
                     break;
                     
+#ifdef OLDENUM
                 case eDiffusion:
+#else
+                case eUnsteadyDiffusion:
+#endif
                     {
 			// BoundaryConditions are imposed weakly at the Diffusion operator
                         WeakDGDiffusion(inarray,outarray);
@@ -384,6 +491,11 @@ namespace Nektar
                 tmp[i] = Array<OneD, NekDouble>(ncoeffs);
                 m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,fields[i],fields[i]);
             }
+
+            for(int i = 0; i < nvariables; ++i)
+            {
+                m_fields[i]->SetPhysState(false);
+            }
         }
 
         // Declare an array of TimeIntegrationSchemes
@@ -502,20 +614,6 @@ namespace Nektar
     {
         m_fields[i]->EvaluateBoundaryConditions(time);
     }
-    
-//     // loop over Boundary Regions
-//     for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
-//       {	
-	
-// 	// Time Dependent Boundary Condition
-// 	if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "TimeDependent")
-// 	  {
-// 	    for (int i = 0; i < nvariables; ++i)
-// 	      {
-// 		m_fields[i]->EvaluateBoundaryConditions(time);
-// 	      }
-// 	  }
-//       }
   }
   
   // Evaulate flux = m_fields*ivel for i th component of Vu 
@@ -842,7 +940,49 @@ namespace Nektar
           }
           
           break;
-      case eAdvection: case eDiffusion: case eimDiffusion: case eimDiffusion_exReaction:
+      case eUnsteadyAdvection: 
+          if(m_explicitAdvection)
+          {
+              out << "\t\tAdvection Advancement   : Explicit" <<endl;
+          }
+          else
+          {
+              out << "\t\tAdvection Advancement   : Implicit" <<endl;
+          }
+          out << "\t\tTime Integration Method : " << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod] << endl;
+          
+          ADRBase::TimeParamSummary(out);
+          break;
+      case eUnsteadyDiffusion:
+          if(m_explicitDiffusion)
+          {
+              out << "\t\tDiffusion Advancement   : Explicit" <<endl;
+          }
+          else
+          {
+              out << "\t\tDiffusion Advancement   : Implicit" <<endl;
+          }
+          out << "\t\tTime Integration Method : " << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod] << endl;
+          ADRBase::TimeParamSummary(out);
+          break;
+      case eUnsteadyDiffusionReaction:
+          if(m_explicitDiffusion)
+          {
+            out << "\t\tDiffusion Advancement   : Explicit" <<endl;
+          }
+          else
+          {
+              out << "\t\tDiffusion Advancement   : Implicit" <<endl;
+          }
+          if(m_explicitReaction)
+          {
+              out << "\t\tReaction Advancement    : Explicit" <<endl;
+          }
+          else
+          {
+              out << "\t\tReaction Advancement    : Implicit" <<endl;
+          }
+          out << "\t\tTime Integration Method : " << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod] << endl;
           ADRBase::TimeParamSummary(out);
           break;
       }
@@ -850,38 +990,13 @@ namespace Nektar
 
     }
     
-    // case insensitive string comparison from web
-    int nocase_cmp(const string & s1, const string& s2) 
-    {
-        string::const_iterator it1=s1.begin();
-        string::const_iterator it2=s2.begin();
-        
-        //stop when either string's end has been reached
-        while ( (it1!=s1.end()) && (it2!=s2.end()) ) 
-        { 
-            if(::toupper(*it1) != ::toupper(*it2)) //letters differ?
-            {
-                // return -1 to indicate smaller than, 1 otherwise
-                return (::toupper(*it1)  < ::toupper(*it2)) ? -1 : 1; 
-            }
-            //proceed to the next character in each string
-            ++it1;
-            ++it2;
-        }
-        size_t size1=s1.size(), size2=s2.size();// cache lengths
-        
-        //return -1,0 or 1 according to strings' lengths
-        if (size1==size2) 
-        {
-            return 0;
-        }
-        return (size1 < size2) ? -1 : 1;
-    }
-    
 } //end of namespace
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.15  2009/04/27 21:37:14  sherwin
+* Updated to dump .fld and .chk file in compressed coefficient format
+*
 * Revision 1.14  2009/03/06 12:00:10  sehunchun
 * Some minor changes on nomenclatures and tabbing errors
 *

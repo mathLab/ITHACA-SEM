@@ -70,11 +70,12 @@
       <P> FinTime    = TimeStep*NumSteps </P>
       <P> IO_CheckSteps = 1000   </P>
       <P> IO_InfoSteps  = 1000 </P>
-      <P> DisContinuous = 0 </P>
     </PARAMETERS>
 
     <SOLVERINFO>
-      <I PROPERTY="EQTYPE" VALUE="ImDiffusion_ExReaction" />
+      <I PROPERTY="EQTYPE" VALUE="UnsteadyDiffusionReaction" />
+      <I PROPERTY="Projection" VALUE="Continuous"/>
+      <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
     </SOLVERINFO>
 
     <VARIABLES>

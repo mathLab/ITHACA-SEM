@@ -70,12 +70,12 @@
       <P> FinTime    = TimeStep*NumSteps </P>
       <P> IO_CheckSteps = 1   </P>
       <P> IO_InfoSteps  = 1 </P>
-      <P> DisContinuous = 1 </P>
       <P> epsilon = 1.0 </P>
     </PARAMETERS>
 
     <SOLVERINFO>
-      <I EQTYPE="ExDiffusion" />
+      <I PROPERTY="EQType" VALUE="UnsteadyDiffusion"/>
+      <I PROPERTY="Projection" VALUE="DisContinuous"/>
     </SOLVERINFO> 
 
     <VARIABLES>

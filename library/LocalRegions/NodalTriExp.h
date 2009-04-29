@@ -75,6 +75,11 @@ namespace Nektar
                            Array<OneD,NekDouble> &coords_3 = NullNekDouble1DArray);
             void GetCoord(const Array<OneD, const NekDouble>& Lcoords, 
                           Array<OneD,NekDouble> &coords);
+
+            const SpatialDomains::GeometrySharedPtr GetGeom() const
+            {
+                return m_geom;
+            }
             
             const SpatialDomains::Geometry2DSharedPtr& GetGeom2D() const
             {
@@ -282,6 +287,11 @@ namespace Nektar
             virtual const SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const
             {
                 return m_metricinfo;
+            }
+
+            virtual const SpatialDomains::GeometrySharedPtr v_GetGeom() const
+            {
+                return GetGeom();
             }
 
             virtual const SpatialDomains::Geometry2DSharedPtr& v_GetGeom2D() const
@@ -505,6 +515,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.h,v $
+ *    Revision 1.26  2009/04/27 21:34:07  sherwin
+ *    Updated WriteToField
+ *
  *    Revision 1.25  2009/01/21 16:59:57  pvos
  *    Added additional geometric factors to improve efficiency
  *

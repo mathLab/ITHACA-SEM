@@ -1,12 +1,20 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"><!-- InstanceBegin template="/Templates/Main.dwt" codeOutsideHTMLIsLocked="false" -->
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <link rel="shortcut icon" href="images/favicon.ico" >
-    <!-- InstanceBeginEditable name="doctitle" -->
-<title>Nektar++ - OS X Compile Instructions</title>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<!-- InstanceBegin template="/Templates/Main.dwt" codeOutsideHTMLIsLocked="false" -->
+    
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    
+  <link rel="shortcut icon" href="images/favicon.ico">
+<!-- InstanceBeginEditable name="doctitle" -->
+    
+
+
+    
+  <title>Nektar++ - OS X Compile Instructions</title>
 <!-- InstanceEndEditable -->
-    <style type="text/css">
+  <style type="text/css">
     <!--
 	html {
 	  min-height: 101%; // force a scrollbar to always appear
@@ -68,180 +76,510 @@
 	  margin-bottom: 0;
 	}
     -->
-    </style>
-    <!-- InstanceBeginEditable name="CSS_Style" -->
-<style type="text/css">
+    </style><!-- InstanceBeginEditable name="CSS_Style" -->
+    
+  <style type="text/css">
 <!--
 #menu_CompileOSX {
 	font-weight: bold;
 }
 -->
-</style>
-<!-- InstanceEndEditable -->
-    <!--[if IE]>
+  </style><!-- InstanceEndEditable --><!--[if IE]>
     <style type="text/css"> 
       .twoColHybLt #sidebar1 { padding-top: 30px; margin-top: 20px; }
       .twoColHybLt #mainContent { zoom: 1; padding-top: 15px; }
     </style>
-    <![endif]-->
-    <!-- InstanceParam name="LibraryMenu" type="boolean" value="false" -->
-    <!-- InstanceParam name="CompileMenu" type="boolean" value="true" -->
-  </head>
+    <![endif]--><!-- InstanceParam name="LibraryMenu" type="boolean" value="false" --><!-- InstanceParam name="CompileMenu" type="boolean" value="true" -->
+</head>
+
+
   <body class="twoColHybLt">
-    <div id="container">
-      <div id="sidebar1">
-        <h3 style="text-align: center;"><a href="index.html" id="menu_Nektar"><img src="images/nektar.png" alt="Nektar++" width="155" height="38" /></a></h3>
-        <p><a href="downloads.html" id="menu_Downloads">Downloads</a></p>
-        <p>
+
+    
+<div id="container">
+      
+<div id="sidebar1">
+        
+<h3 style="text-align: center;"><a href="index.html" id="menu_Nektar"><img src="images/nektar.png" alt="Nektar++" height="38" width="155"></a></h3>
+
+        
+<p><a href="downloads.html" id="menu_Downloads">Downloads</a></p>
+
+        
+<p>
           <a href="compile.html" id="menu_Compile">Compile Instructions</a>
     	  
-          <br/>
-          &nbsp;&nbsp;&nbsp;<a href="compile_linux.html" id="menu_CompileLinux">Linux</a><br/>
-          &nbsp;&nbsp;&nbsp;<a href="compile_windows.html" id="menu_CompileWindows">Windows</a><br/>
-          &nbsp;&nbsp;&nbsp;<a href="compile_osx.html" id="menu_CompileOSX">Mac OS X</a><br/>
+          <br>
+
+          &nbsp;&nbsp;&nbsp;<a href="compile_linux.html" id="menu_CompileLinux">Linux</a><br>
+
+          &nbsp;&nbsp;&nbsp;<a href="compile_windows.html" id="menu_CompileWindows">Windows</a><br>
+
+          &nbsp;&nbsp;&nbsp;<a href="compile_osx.html" id="menu_CompileOSX">Mac OS X</a><br>
+
           
         </p>
-        <p>
+
+        
+<p>
           <a href="library.html" id="menu_Library">Library Overview</a>
     	  
         </p>
-        <p><a href="team.html" id="menu_Team">Team Members</a></p>
+
+        
+<p><a href="team.html" id="menu_Team">Team Members</a></p>
+
 <!--        <p><a href="pre-processing.html" id="menu_PreProcessing">Pre-processing</a></p>-->
 <!--        <p><a href="solvers.html" id="menu_Solvers">Solvers</a></p>-->
-        <p><a href="post-processing.html" id="menu_PostProcessing">Post-processing</a></p>
+        
+<p><a href="post-processing.html" id="menu_PostProcessing">Post-processing</a></p>
+
 <!--        <p><a href="demos.html" id="menu_Demos">Demos</a></p>-->
-        <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
-        <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
-        <p><a href="license.html" id="menu_License">License</a></p>
-        <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
-        <p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
-        <p style="font-size:9px;">Last Revision:<br/>$Date: 2008/09/12 11:28:49 $</p>
+        
+<p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
+
+        
+<p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
+
+        
+<p><a href="license.html" id="menu_License">License</a></p>
+
+        
+<p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
+
+        
+<p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
+
+        
+<p style="font-size: 9px;">Last Revision:<br>
+$Date: 2009/04/28 12:53:35 $</p>
+
       </div>
-      <div id="mainContent">
+
+      
+<div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
-    <h1>Compile Instructions</h1>
-	<h2>Mac OS X - GCC / Xcode</h2>
-    <!-- InstanceEndEditable -->
-        <hr/>
+    
+<h1>Compile Instructions</h1>
+
+	
+<h2>Mac OS X - GCC / Xcode</h2>
+
+    
+<ul>
+  <li>
+    <h3 align="left"><small><a href="#Setting_up_GCC">Setting up GCC</a></small></h3>
+  </li>
+  <li>
+    <h3 align="left"><small><a href="#Organizing_the_ThirdParty_Source_Files">Organizing the ThirdParty Source Files</a></small></h3>
+  </li>
+  <li>
+    <h3><small><a href="#Generating_the_GCC_Makefiles_with_CMake">Generating the GCC Makefiles with CMake</a></small></h3>
+  </li>
+  <li>
+    <h3><small><a href="#Compiling_the_library_">Compiling the library</a></small></h3>
+  </li>
+  <li>
+    <h3><a href="#Compiling_the_Solvers_and_Utilities"><small>Compiling the Solvers and Utilities</small></a></h3>
+  </li>
+</ul>
+
+        
+<hr>
         <!-- InstanceBeginEditable name="BodyText" -->
-        <h3 align="left">Setting up GCC</h3>
-        <p align="left">In order to compile Nektar++, you must GCC installed. The GCC compiler comes with Apple's XCode package. You can download this from <a href="http://connect.apple.com/" target="_blank">http://connect.apple.com/</a> (you are required to have an Apple Developer Connection account).</p>
-        <h3 align="left">Organizing the ThirdParty Source Files</h3>
-        <p align="left">You will be given a <em>Nektar++</em> directory and a <em>ThirdParty</em> directory (includes needed libraries from other sources). These need to be organized into the correct directory hierarchy   for CMake to find all of the required files. I will indicate a directory by following its name with a forward slash.</p>
-        <ol>
+        
+<h3 align="left"><a name="Setting_up_GCC"></a>Setting up GCC</h3>
+
+        
+<p align="left">In order to compile Nektar++, you must GCC installed.
+The GCC compiler comes with Apple's XCode package. You can download
+this from <a href="http://connect.apple.com/" target="_blank">http://connect.apple.com/</a> (you are required to have an Apple Developer Connection account).</p>
+
+        
+<h3 align="left"><a name="Organizing_the_ThirdParty_Source_Files"></a>Organizing the ThirdParty Source Files</h3>
+
+        
+<p align="left">You will be given a <em>Nektar++</em> directory and a <em>ThirdParty</em>
+directory (includes needed libraries from other sources). These need to
+be organized into the correct directory hierarchy for CMake to find all
+of the required files. I will indicate a directory by following its
+name with a forward slash.</p>
+
+        
+<ol>
+
           <li>Put the <em>ThirdParty/</em> directory in <em>Nektar++/</em>. (This will mean <em>library/</em> and <em>ThirdParty/</em> are both sub-directories of the original <em>Nektar++/</em>.)</li>
-          <li>At the terminal in <em>ThirdParty/</em>, extract the tinyxml_2_4_3.zip archive with &quot;unzip tinyxml_2_4_3.zip&quot; (without the quotes). This will create <em>tinyxml/</em>. </li>
-          <li>Extract the loki-0.1.3.tar.bz2 archive with &quot;tar -xjvf loki-0.1.3.tar.bz2&quot; (again, without the quotes). This will create <em>loki-0.1.3/</em>.
-            <ol>
-                <li>Change to the <em>loki-0.1.3/</em> directory, and type &quot;make&quot; (without the quotes). This will create the required library file.</li>
-            </ol>
+
+          <li>At the terminal in <em>ThirdParty/</em>, extract the tinyxml_2_4_3.zip archive with "unzip tinyxml_2_4_3.zip" (without the quotes). This will create <em>tinyxml/</em>. </li>
+
+          <li>Extract the loki-0.1.3.tar.bz2 archive with "tar -xjvf loki-0.1.3.tar.bz2" (again, without the quotes). This will create <em>loki-0.1.3/</em>.
+            
+    <ol>
+
+                <li>Change to the <em>loki-0.1.3/</em> directory, and type "make" (without the quotes). This will create the required library file.</li>
+
+            
+    </ol>
+
           </li>
-          <li>CMake is an open-source, cross-platform make file generator system. It can be used to generate the correct GCC Makefiles. We must now build the CMake executable.
-            <ol>
-              <li>In <em>ThirdParty/</em>, extract the CMake.tar.bz2 archive with &quot;tar -xjvf CMake.tar.bz2&quot; (no quotes).</li>
-              <li>Change to the <em>CMake/</em> directory, and type &quot;./configure&quot; (without the quotes). After configuration is complete, type &quot;make&quot; (again, without the quotes).</li>
-            </ol>
+
+          <li>CMake is an open-source, cross-platform make file
+generator system. It can be used to generate the correct GCC Makefiles.
+We must now build the CMake executable.
+    <ol>
+
+              <li>In <em>ThirdParty/</em>, extract the CMake.tar.bz2 archive with "tar -xjvf CMake.tar.bz2" (no quotes).</li>
+
+              <li>Change to the <em>CMake/</em> directory, and type
+"./configure" (without the quotes). After configuration is complete,
+type "make" (again, without the quotes).</li>
+
+            
+    </ol>
+
           </li>
-          <li>In <em>ThirdParty/</em>, extract the zlib-1.2.3.tar.bz2 archive with &quot;tar -xjvf zlib-1.2.3.tar.bz2&quot; (no quotes). This will create <em>zlib-1.2.3/</em>.
-            <ol>
+
+          <li>In <em>ThirdParty/</em>, extract the zlib-1.2.3.tar.bz2 archive with "tar -xjvf zlib-1.2.3.tar.bz2" (no quotes). This will create <em>zlib-1.2.3/</em>.
+            
+    <ol>
+
                 <li>You must set the ZLIB_SOURCE and NO_BZIP2 environment variables in order to tell Boost (step 7) to use zlib and not bzip2.
-                  <ul>
-                      <li>Bash or KSH Shells<br />
-                        Type &quot;export ZLIB_SOURCE=../../../../zlib-1.2.3&quot; and &quot;export NO_BZIP2=0&quot; (no quotes).</li>
-                    <li>CSH or Tcsh Shells<br />
-                      Type &quot;setenv ZLIB_SOURCE ../../../../zlib-1.2.3&quot; and &quot;setenv NO_BZIP2 0&quot; (no quotes).</li>
-                  </ul>
+                  
+        <ul>
+
+                      <li>Bash or KSH Shells<br>
+
+                        Type "export ZLIB_SOURCE=../../../../zlib-1.2.3" and "export NO_BZIP2=0" (no quotes).</li>
+
+                    <li>CSH or Tcsh Shells<br>
+
+                      Type "setenv ZLIB_SOURCE ../../../../zlib-1.2.3" and "setenv NO_BZIP2 0" (no quotes).</li>
+
+                  
+        </ul>
+
                 </li>
-            </ol>
+
+            
+    </ol>
+
           </li>
+
           <li>The next step is to compile bjam, which will allow for the building and installation of Boost.
-            <ol>
-              <li>In <em>ThirdParty/</em>, extract the boost-jam-3.1.16.tgz archive with &quot;tar -xzvf boost-jam-3.1.16.tgz&quot; (no quotes). This will create <em>boost-jam-3.1.16/</em>.</li>
-              <li>Change to the <em>boost-jam-3.1.16/</em> directory and type &quot;./build.sh&quot; (no quotes), to build the bjam executable</li>
-            </ol>
+            
+    <ol>
+
+              <li>In <em>ThirdParty/</em>, extract the boost-jam-3.1.16.tgz archive with "tar -xzvf boost-jam-3.1.16.tgz" (no quotes). This will create <em>boost-jam-3.1.16/</em>.</li>
+
+              <li>Change to the <em>boost-jam-3.1.16/</em> directory and type "./build.sh" (no quotes), to build the bjam executable</li>
+
+            
+    </ol>
+
           </li>
+
           <li>The next step is to extract and compile the correct libraries for <em>Boost</em>.
-            <ol>
-                <li>In <em>ThirdParty/</em>, extract the boost_1_35_0.tar.bz2 archive with &quot;tar -xjvf boost_1_35_0.tar.bz2&quot; (no quotes). This will create <em>boost_1_35_0/</em>.</li>
-              <li>Change to the <em>boost_1_35_0/</em> directory, and type &quot;../boost-jam-3.1.16/bin.*/bjam --prefix=../boost --build-type=complete  --with-thread --with-iostreams --with-test --with-date_time --toolset=darwin install&quot; (without the quotes). This will place the compiled libraries and include files in the correct path.
-                <ol>
-                      <li>The &quot;--with-*&quot; compiles Boost with only the libraries required by Nektar++. This is just meant to save time. You can leave the flag off and it will compile all the libraries, if you wish</li>
-                </ol>
+            
+    <ol>
+
+                <li>In <em>ThirdParty/</em>, extract the boost_1_35_0.tar.bz2 archive with "tar -xjvf boost_1_35_0.tar.bz2" (no quotes). This will create <em>boost_1_35_0/</em>.</li>
+
+              <li>Change to the <em>boost_1_35_0/</em> directory, and
+type "../boost-jam-3.1.16/bin.*/bjam --prefix=../boost
+--build-type=complete --with-thread --with-iostreams --with-test
+--with-date_time --toolset=darwin install" (without the quotes). This
+will place the compiled libraries and include files in the correct
+path.
+        <ol>
+
+                      <li>The "--with-*" compiles Boost with only the
+libraries required by Nektar++. This is just meant to save time. You
+can leave the flag off and it will compile all the libraries, if you
+wish</li>
+
+                
+        </ol>
+
               </li>
-            </ol>
+
+            
+    </ol>
+
           </li>
+
 	  <li>The last step is to extract and compile the sparse matrix library developed by <em>NIST</em>. (For more information about this library, see <a href="http://math.nist.gov/spblas/original.html" target="_blank">http://math.nist.gov/spblas/original.html</a>)
-            <ol>
-              <li>In <em>ThirdParty/</em>, extract the spblastk0.9b.tar.bz2 archive with &quot;tar -xjvf boost_1_35_0.tar.bz2&quot; (without the quotes). This will create the directory <em>spblastk0.9b/</em>.</li>
+            
+    <ol>
+
+              <li>In <em>ThirdParty/</em>, extract the
+spblastk0.9b.tar.bz2 archive with "tar -xjvf boost_1_35_0.tar.bz2"
+(without the quotes). This will create the directory <em>spblastk0.9b/</em>.</li>
+
               <li>Change to the directory <em>spblastk0.9b/build/</em></li>
+
               <li>Compile the library using the previously installed <em>CMake</em></li>
-              <ol>
-		<li>Generate the makefiles using the command &quot;../../CMake/bin/cmake ../&quot;</li>
-		<li>Build the library by typing &quot;make&quot; </li>
-              </ol>
-            </li>
-          </ol>
+
+              
+      <ol>
+
+		<li>Generate the makefiles using the command "../../CMake/bin/cmake ../"</li>
+
+		<li>Build the library by typing "make" </li>
+
+              
+      </ol>
+
+            
+          
+    </ol>
+
 	</li>
-        </ol>
-        <h3>Generating the GCC Makefiles with CMake</h3>
-        <p>Now that all of the required libraries are setup in the correct paths, we can use CMake to generate the Makefiles that GCC requires, or the project files that Xcode requires.</p>
-        <ol>
-          <li>From the terminal, change to a directory where you want the project Makefiles to be created. (This could be the <em>Nektar++/library/</em> directory, but that isn't recommended.)</li>
+
+        
+</ol>
+
+        
+<h3><a name="Generating_the_GCC_Makefiles_with_CMake"></a>Generating the GCC Makefiles with CMake</h3>
+
+        
+<p>Now that all of the required libraries are setup in the correct
+paths, we can use CMake to generate the Makefiles that GCC requires, or
+the project files that Xcode requires.</p>
+
+        
+<ol>
+
+          <li>From the terminal, change to a directory where you want the project Makefiles to be created, i.e. <span style="font-style: italic;">Nektar++/Builds/</span>. (This could be the <em>Nektar++/library/</em> directory, but that isn't recommended.)</li>
+
           <li>CMake can generate both GCC Makefiles, or Xcode project files.
-            <ul>
+            
+    <ul>
+
                 <li>GCC Makefiles
-                  <ul>
-                      <li>Type in &quot;&lt;path_to_cmake_directory&gt;/bin/cmake -i &lt;path_to_<em>Nektar++/library/</em>_directory&gt;&quot; (without the quotes). Fill in the &lt;...&gt;'s appropriately.
-                        <ul>
-                            <li>The &quot;-i&quot; indicates that you want to use the wizard mode.</li>
-                        </ul>
-                      </li>
-                      <li>Would you like to see advanced options? <strong>No</strong></li>
-                  </ul>
-                </li>
-              <li>Xcode Project Files
-                <ul>
-                      <li>Type in &quot;&lt;path_to_cmake_directory&gt;/bin/cmake -i -G Xcode &lt;path_to_<em>Nektar++/library/</em>_directory&gt;&quot; (without the quotes). Fill in the &lt;...&gt;'s appropriately.
-                        <ul>
-                          <li>The &quot;-i&quot; indicates that you want to use the wizard mode.</li>
-                        </ul>
-                  </li>
-                      <li>Would you like to see advanced options? <strong>No</strong></li>
-                </ul>
-              </li>
-            </ul>
-          </li>
-          <li>For most of the questions, you will be able to select the default value by just pressing enter. Most of the configuration will be locating the files you setup earlier in <em>ThirdParty/</em>, but it should find these files automatically. If you have a different setup, you may need to enter the paths manually if they couldn't be found. Below I will list some of the options that you need to pay attention to.<ul><li><strong>CMAKE_BUILD_TYPE</strong>
-                <ul>
-                  <li>This option sets the appropriate GCC flags for the different build types: Debug, Release, etc. For this tutorial, I'll choose Release, in order to get full optimizations.</li>
-                </ul>
-              </li>
-            <li><strong>EXECUTABLE_OUTPUT_PATH</strong>
-                  <ul>
-                    <li>This is the path GCC will put the generated executable files - it can be anywhere you wish.</li>
-                  </ul>
-            </li>
-            <li><strong>LIBRARY_OUTPUT_PATH</strong>
-                  <ul>
-                    <li>This is the path GCC will put the generated *.a library files.</li>
-                  </ul>
-            </li>
-            </ul>
-          </li>
-        </ol>
-        <h3>Compiling the Project</h3>
-        <p>Now that CMake generated the appropriate Makefiles, it can  be compiled with GCC. If you chose to generate a Xcode project, you can open <em>Nektar++.xcodeproj/</em> now, and skip the GCC instructions below.</p>
-        <ol>
-          <li>To compile the project, simply type &quot;make&quot; (no quotes) from your project directory (the directory where you started cmake from).
+                  
+        <ul>
+
+                      <li>Type in "&lt;path_to_cmake_directory&gt;/bin/cmake -i &lt;path_to_<em>Nektar++/library/</em>_directory&gt;" (without the quotes). Fill in the &lt;...&gt;'s appropriately.
+                        
             <ul>
-                <li>If you have multiple processors/cores, it might be beneficial to use &quot;make -j &lt;num_procs/cores&gt;&quot;. The &quot;-j&quot; options starts that many jobs, so all of the processors will be utilized, and it will compile faster</li>
+
+                            <li>The "-i" indicates that you want to use the wizard mode.</li>
+
+                        
             </ul>
+
+                      </li>
+
+                      <li>Would you like to see advanced options? <strong>No</strong></li>
+
+                  
+        </ul>
+
+                </li>
+
+              <li>Xcode Project Files
+                
+        <ul>
+
+                      <li>Type in "&lt;path_to_cmake_directory&gt;/bin/cmake -i -G Xcode &lt;path_to_<em>Nektar++/library/</em>_directory&gt;" (without the quotes). Fill in the &lt;...&gt;'s appropriately.
+                        
+            <ul>
+
+                          <li>The "-i" indicates that you want to use the wizard mode.</li>
+
+                        
+            </ul>
+
+                  </li>
+
+                      <li>Would you like to see advanced options? <strong>No</strong></li>
+
+                
+        </ul>
+
+              </li>
+
+            
+    </ul>
+
           </li>
+
+          <li>For most of the questions, you will be able to select
+the default value by just pressing enter. Most of the configuration
+will be locating the files you setup earlier in <em>ThirdParty/</em>,
+but it should find these files automatically. If you have a different
+setup, you may need to enter the paths manually if they couldn't be
+found. Below I will list some of the options that you need to pay
+attention to.
+    <ul>
+      <li><strong>CMAKE_BUILD_TYPE</strong>
+                
+        <ul>
+
+                  <li>This option sets the appropriate GCC flags for
+the different build types: Debug, Release, etc. For this tutorial, I'll
+choose Release, in order to get full optimizations.</li>
+
+                
+        </ul>
+
+              </li>
+
+            <li><strong>EXECUTABLE_OUTPUT_PATH</strong>
+                  
+        <ul>
+
+                    <li>This is the path GCC will put the generated executable files - it can be anywhere you wish.</li>
+
+                  
+        </ul>
+
+            </li>
+
+            <li><strong>LIBRARY_OUTPUT_PATH</strong>
+                  
+        <ul>
+
+                    <li>This is the path GCC will put the generated *.a library files.</li>
+
+                  
+        </ul>
+
+            </li>
+
+            
+    </ul>
+
+          </li>
+
+        
+</ol>
+
+        
+<h3><a name="Compiling_the_library_"></a>Compiling the library&nbsp;</h3>
+
+        
+<p>Now that CMake generated the appropriate Makefiles, it can be
+compiled with GCC. If you chose to generate a Xcode project, you can
+open <em>Nektar++.xcodeproj/</em> now, and skip the GCC instructions below.</p>
+
+        
+<ol>
+
+          <li>To compile the project, simply type "make" (no quotes) from your project directory (the directory where you started cmake from).
+            
+    <ul>
+
+                <li>If you have multiple processors/cores, it might be
+beneficial to use "make -j &lt;num_procs/cores&gt;". The "-j" options
+starts that many jobs, so all of the processors will be utilized, and
+it will compile faster</li>
+
+            
+    </ul>
+
+          </li>
+
           <li>The executable files will be located in the path you specified in the CMake utility.</li>
-        </ol>
-        <!-- InstanceEndEditable -->
-        <p><br class="clearfloat" /></p>
+  <li>Type "make install" (no quotes) to put all of the compiled
+libraries into a dist directory that can then be used by the solvers
+and utilities</li>
+
+        
+</ol>
+
+        
+<h3><a name="Compiling_the_Solvers_and_Utilities"></a>Compiling the Solvers and Utilities</h3>
+<br>
+To compile the solvers and the utilities you first need to have
+compiled the library and typed "make install' to place all of the
+Nektar++ and ThirdParty libraries into the dist director under the
+library builds directory you have speciified (i.e. Nektar++Builds/dist)<br>
+<p>Once again we use CMake to generate the Makefiles that GCC requires, or
+the project files that Xcode requires. From within the directory Nektar++/solvers:</p>
+
+        
+<ol>
+  <li>From the terminal, change to a directory where you want the project Makefiles to be created, i.e. Nektar++/solvers/Builds.</li>
+  <li>CMake can generate both GCC Makefiles, or Xcode project files.
+            
+    <ul>
+      <li>GCC Makefiles
+                  
+        <ul>
+          <li>Type in "&lt;path_to_cmake_directory&gt;/bin/cmake -i &lt;path_to_<em>Nektar++/solvers/</em>_directory&gt;" (without the quotes). Fill in the &lt;...&gt;'s appropriately.
+                        
+            <ul>
+              <li>The "-i" indicates that you want to use the wizard mode.</li>
+            </ul>
+
+                      </li>
+          <li>Would you like to see advanced options? <strong>No</strong></li>
+        </ul>
+
+                </li>
+      <li>Xcode Project Files
+                
+        <ul>
+          <li>Type in "&lt;path_to_cmake_directory&gt;/bin/cmake -i -G Xcode &lt;path_to_<em>Nektar++/solvers/</em>_directory&gt;" (without the quotes). Fill in the &lt;...&gt;'s appropriately.
+                        
+            <ul>
+              <li>The "-i" indicates that you want to use the wizard mode.</li>
+            </ul>
+
+                  </li>
+          <li>Would you like to see advanced options? <strong>No</strong></li>
+        </ul>
+
+              </li>
+    </ul>
+
+          </li>
+  <li>As before for
+most of the questions, you will be able to select the default value by
+just pressing enter. Most of the configuration will be locating the
+files you setup earlier in <em>ThirdParty/</em>, but it should find
+these files automatically. If you have a different setup, you may need
+to enter the paths manually if they couldn't be found. Below I will
+list some of the options that you need to pay attention to.
+    <ul>
+      <li><strong>CMAKE_BUILD_TYPE</strong>
+                
+        <ul>
+          <li>This
+option sets the appropriate GCC flags for the different build types:
+Debug, Release, etc. For this tutorial, I'll choose Release, in order
+to get full optimizations.</li>
+        </ul>
+
+              </li>
+      <li><strong>EXECUTABLE_OUTPUT_PATH</strong>
+                  
+        <ul>
+          <li>This is the path GCC will put the generated executable files - it can be anywhere you wish.<span style="font-weight: bold;"></span></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>Enter the solver diretory (i.e. AdvectionDiffusionReactionSolver)
+and type make. Sample input files for the
+AdvectionDiffusionReactionSolver can be found in
+Nektar++/solvers/AdvectionDiffusionReactionSolver.<span style="font-weight: bold;"><br>
+    </span></li>
+</ol>
+
+        
+<h3><br>
+</h3>
+To compile the utilities you follow an identical set of instructions but replace solvers in the above text w
+        
+<p><br class="clearfloat">
+</p>
+
       </div>
+
     </div>
-  </body>
-<!-- InstanceEnd --></html>
+
+  <!-- InstanceEnd -->
+</body>
+</html>

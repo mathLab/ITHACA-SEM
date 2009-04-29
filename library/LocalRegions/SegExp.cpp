@@ -638,7 +638,7 @@ namespace Nektar
                 {
                     outarray[m_ncoeffs-1-m] = inarray[m];
                 }
-                
+                break;                
             default:
                 ASSERTL0(false,"This basis is not allowed in this method");
                 break;
@@ -1232,6 +1232,9 @@ namespace Nektar
 }//end of namespace
 
 // $Log: SegExp.cpp,v $
+// Revision 1.60  2009/04/27 21:34:07  sherwin
+// Updated WriteToField
+//
 // Revision 1.59  2009/03/04 14:17:38  pvos
 // Removed all methods that take and Expansion as argument
 //

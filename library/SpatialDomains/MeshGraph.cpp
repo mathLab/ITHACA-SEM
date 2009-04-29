@@ -421,6 +421,7 @@ namespace Nektar
                         returnval.push_back(bkey);
                         returnval.push_back(bkey);
                     }
+                    break;
                 case eHexahedron:
                     {
                         const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
@@ -429,24 +430,25 @@ namespace Nektar
                         returnval.push_back(bkey);
                         returnval.push_back(bkey);
                     }
+                    break;
                 case eTriangle:
                     {
                         const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
                         LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
                         returnval.push_back(bkey);
-
+                        
                         const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
                         LibUtilities::BasisKey bkey1(LibUtilities::eModified_B,order,pkey1);
-
+                        
                         returnval.push_back(bkey1);
                     }
-                break;
+                    break;
                 case eTetrahedron:
                     {
                         const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
                         LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
                         returnval.push_back(bkey);
-
+                        
                         const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
                         LibUtilities::BasisKey bkey1(LibUtilities::eModified_B,order,pkey1);
                         returnval.push_back(bkey1);
@@ -472,7 +474,7 @@ namespace Nektar
                             LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
                             returnval.push_back(bkey);
                         }
-
+                        break;
                     case eQuadrilateral: 
                         {
                             const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
@@ -480,6 +482,7 @@ namespace Nektar
                             returnval.push_back(bkey);
                             returnval.push_back(bkey);
                         }
+                        break;
                     case eTriangle: // define with corrects points key
                                     // and change to Ortho on
                                     // construction
@@ -487,14 +490,15 @@ namespace Nektar
                             
                             const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
                             LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
-
+                            
                             returnval.push_back(bkey);
-
+                            
                             const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
                             LibUtilities::BasisKey bkey1(LibUtilities::eOrtho_B,order,pkey1);
                             
                             returnval.push_back(bkey1);
                         }
+                        break;
                     default:
                         ASSERTL0(false,"Expansion not defined in switch  for this shape");
                         break;
@@ -561,16 +565,16 @@ namespace Nektar
                     {
                     case eSegment:
                         {
-                            const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-                            LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A,order,pkey);
+                            const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussLobattoLegendre);
+                            LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
                             
                             returnval.push_back(bkey);
                         }
                         break;
                     case eQuadrilateral:
                         {
-                            const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-                            LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A,order,pkey);
+                            const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussLobattoLegendre);
+                            LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
                             
                             returnval.push_back(bkey);
                             returnval.push_back(bkey);
@@ -578,8 +582,8 @@ namespace Nektar
                         break;
                     case eHexahedron:
                         {
-                            const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-                            LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A,order,pkey);
+                            const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussLobattoLegendre);
+                            LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
                             
                             returnval.push_back(bkey);
                             returnval.push_back(bkey);
@@ -1664,6 +1668,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.29  2009/04/27 21:33:35  sherwin
+// Added SolverInfoExists and others
+//
 // Revision 1.28  2009/04/20 16:13:23  sherwin
 // Modified Import and Write functions and redefined how Expansion is used
 //

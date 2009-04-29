@@ -79,12 +79,13 @@ namespace Nektar
         {
             
 
-            if(m_boundaryConditions->SolverInfoExists("Projection"))
+            if(m_boundaryConditions->SolverInfoExists("PROJECTION"))
             {
                 
-                std::string ProjectStr = m_boundaryConditions->GetSolverInfo("Projection");
+                std::string ProjectStr = m_boundaryConditions->GetSolverInfo("PROJECTION");
                 
-                if((ProjectStr == "Continuous")||(ProjectStr == "Galerkin"))
+                if((ProjectStr == "Continuous")||(ProjectStr == "Galerkin")||
+                   (ProjectStr == "CONTINUOUS")||(ProjectStr == "GALERKIN"))
                 {
                     m_projectionType = eGalerkin;
                 }
@@ -94,7 +95,7 @@ namespace Nektar
                 }
                 else 
                 {
-                    ASSERTL0(false,"Projection value not recognised");
+                    ASSERTL0(false,"PROJECTION value not recognised");
                 }
             }
             else
@@ -862,7 +863,7 @@ namespace Nektar
 
   
   // case insensitive string comparison from web
-  int ADRBase::nocase_cmp(const string & s1, const string& s2) 
+  int ADRBase::NoCaseStringCompare(const string & s1, const string& s2) 
   {
     string::const_iterator it1=s1.begin();
     string::const_iterator it2=s2.begin();
@@ -894,6 +895,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.8  2009/04/27 21:37:14  sherwin
+* Updated to dump .fld and .chk file in compressed coefficient format
+*
 * Revision 1.7  2009/03/10 23:37:14  claes
 * Updated the ShallowWaterSolver to work with the general timestepping scheme
 *

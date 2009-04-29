@@ -251,7 +251,13 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > m_traceNormals; ///< Array holding the forward normals 
 
 	
-	int nocase_cmp(const string & s1, const string& s2); 
+        int NoCaseStringCompare(const string & s1, const string& s2) ;
+
+        // Here for consistency purposes with old version
+	int nocase_cmp(const string & s1, const string& s2)
+        {
+            return NoCaseStringCompare(s1,s2);
+        }
 	    
     private: 
         
@@ -311,6 +317,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.6  2009/04/27 21:37:14  sherwin
+* Updated to dump .fld and .chk file in compressed coefficient format
+*
 * Revision 1.5  2009/03/10 23:37:14  claes
 * Updated the ShallowWaterSolver to work with the general timestepping scheme
 *

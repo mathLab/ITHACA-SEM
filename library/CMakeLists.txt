@@ -28,6 +28,7 @@ IF (${CMAKE_COMPILER_IS_GNUCXX})
 ENDIF (${CMAKE_COMPILER_IS_GNUCXX}) 
 
 SET(NEKTAR_BUILD_DEMOS ON CACHE BOOL "Build Demo Projects")
+SET(NEKTAR_BUILD_UNIT_TESTS OFF CACHE BOOL "Build Unit Tests Projects")
 
 IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008" )
 	SET(ExpressionTemplateDefault OFF)
@@ -119,7 +120,12 @@ StdRegions Stochastic)
 SET(UnitTestSubDirs UnitTests)
 SET(DemoSubDirs Demos)
 
-SUBDIRS(${LibrarySubDirs} ${UnitTestSubDirs} )
+SUBDIRS(${LibrarySubDirs} )
+
+IF( NEKTAR_BUILD_UNIT_TESTS )
+    SUBDIRS(${UnitTestSubDirs})
+ENDIF( NEKTAR_BUILD_UNIT_TESTS )
+
 IF( NEKTAR_BUILD_DEMOS )
     SUBDIRS(${DemoSubDirs})
 ENDIF( NEKTAR_BUILD_DEMOS )

@@ -102,57 +102,28 @@
         
 <h3 style="text-align: center;"><a href="index.html" id="menu_Nektar"><img src="images/nektar.png" alt="Nektar++" height="38" width="155"></a></h3>
 
-        
-<p><a href="downloads.html" id="menu_Downloads">Downloads</a></p>
 
-        
-<p>
-          <a href="compile.html" id="menu_Compile">Compile Instructions</a>
-    	  
-          <br>
-
-          &nbsp;&nbsp;&nbsp;<a href="compile_linux.html" id="menu_CompileLinux">Linux</a><br>
-
-          &nbsp;&nbsp;&nbsp;<a href="compile_windows.html" id="menu_CompileWindows">Windows</a><br>
-
-          &nbsp;&nbsp;&nbsp;<a href="compile_osx.html" id="menu_CompileOSX">Mac OS X</a><br>
-
-          
-        </p>
-
-        
-<p>
-          <a href="library.html" id="menu_Library">Library Overview</a>
-    	  
-        </p>
-
-        
-<p><a href="team.html" id="menu_Team">Team Members</a></p>
-
-<!--        <p><a href="pre-processing.html" id="menu_PreProcessing">Pre-processing</a></p>-->
-<!--        <p><a href="solvers.html" id="menu_Solvers">Solvers</a></p>-->
-        
-<p><a href="post-processing.html" id="menu_PostProcessing">Post-processing</a></p>
-
-<!--        <p><a href="demos.html" id="menu_Demos">Demos</a></p>-->
-        
-<p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
-
-        
-<p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
-
-        
-<p><a href="license.html" id="menu_License">License</a></p>
-
-        
-<p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
-
-        
-<p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
+        <p><a href="downloads.html" id="menu_Downloads">Downloads</a></p>
+        <p><a href="compile.html" id="menu_Compile">Compile Instructions</a>
+          <br/>
+          &nbsp;&nbsp;&nbsp;<a href="compile_linux.html" id="menu_CompileLinux">Linux</a><br/>
+          &nbsp;&nbsp;&nbsp;<a href="compile_windows.html" id="menu_CompileWindows">Windows</a><br/>
+          &nbsp;&nbsp;&nbsp;<a href="compile_osx.html" id="menu_CompileOSX">Mac OS X</a><br/>
+	</p>
+        <p><a href="library.html" id="menu_Library">Library Overview</a></p>
+        <p><a href="team.html" id="menu_Team">Team Members</a></p>
+	<p><a href="pre-processing.html" id="menu_PreProcessing">Pre-processing</a></p>
+        <p><a href="post-processing.html" id="menu_PostProcessing">Post-processing</a></p>
+	<p><a href="usage.html" id="menu_Usage">Usage</a></p>
+        <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
+        <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
+        <p><a href="license.html" id="menu_License">License</a></p>
+        <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
+        <p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
 
         
 <p style="font-size: 9px;">Last Revision:<br>
-$Date: 2009/04/28 12:53:35 $</p>
+$Date: 2009/04/29 22:22:32 $</p>
 
       </div>
 
@@ -165,7 +136,10 @@ $Date: 2009/04/28 12:53:35 $</p>
 	
 <h2>Mac OS X - GCC / Xcode</h2>
 
-    
+      
+<hr>
+
+ 
 <ul>
   <li>
     <h3 align="left"><small><a href="#Setting_up_GCC">Setting up GCC</a></small></h3>
@@ -191,7 +165,7 @@ $Date: 2009/04/28 12:53:35 $</p>
 <h3 align="left"><a name="Setting_up_GCC"></a>Setting up GCC</h3>
 
         
-<p align="left">In order to compile Nektar++, you must GCC installed.
+<p align="left">In order to compile Nektar++, you must have GCC installed.
 The GCC compiler comes with Apple's XCode package. You can download
 this from <a href="http://connect.apple.com/" target="_blank">http://connect.apple.com/</a> (you are required to have an Apple Developer Connection account).</p>
 
@@ -213,13 +187,7 @@ name with a forward slash.</p>
           <li>At the terminal in <em>ThirdParty/</em>, extract the tinyxml_2_4_3.zip archive with "unzip tinyxml_2_4_3.zip" (without the quotes). This will create <em>tinyxml/</em>. </li>
 
           <li>Extract the loki-0.1.3.tar.bz2 archive with "tar -xjvf loki-0.1.3.tar.bz2" (again, without the quotes). This will create <em>loki-0.1.3/</em>.
-            
-    <ol>
-
-                <li>Change to the <em>loki-0.1.3/</em> directory, and type "make" (without the quotes). This will create the required library file.</li>
-
-            
-    </ol>
+           
 
           </li>
 
@@ -324,7 +292,7 @@ spblastk0.9b.tar.bz2 archive with "tar -xjvf boost_1_35_0.tar.bz2"
 
 		<li>Generate the makefiles using the command "../../CMake/bin/cmake ../"</li>
 
-		<li>Build the library by typing "make" </li>
+		<li>Build and install the library by typing "make install" </li>
 
               
       </ol>
@@ -349,7 +317,7 @@ the project files that Xcode requires.</p>
         
 <ol>
 
-          <li>From the terminal, change to a directory where you want the project Makefiles to be created, i.e. <span style="font-style: italic;">Nektar++/Builds/</span>. (This could be the <em>Nektar++/library/</em> directory, but that isn't recommended.)</li>
+          <li>From the terminal, change to the directory <em>Nektar++/builds/</em>. This is the directory where the library will be build.</li>
 
           <li>CMake can generate both GCC Makefiles, or Xcode project files.
             
@@ -359,7 +327,7 @@ the project files that Xcode requires.</p>
                   
         <ul>
 
-                      <li>Type in "&lt;path_to_cmake_directory&gt;/bin/cmake -i &lt;path_to_<em>Nektar++/library/</em>_directory&gt;" (without the quotes). Fill in the &lt;...&gt;'s appropriately.
+                      <li>Type in "../ThirdParty/CMake/bin/cmake -i ../library/" (without the quotes).
                         
             <ul>
 
@@ -381,7 +349,7 @@ the project files that Xcode requires.</p>
                 
         <ul>
 
-                      <li>Type in "&lt;path_to_cmake_directory&gt;/bin/cmake -i -G Xcode &lt;path_to_<em>Nektar++/library/</em>_directory&gt;" (without the quotes). Fill in the &lt;...&gt;'s appropriately.
+                      <li>Type in "../ThirdParty/CMake/bin/cmake -i -G Xcode ../library/" (without the quotes).
                         
             <ul>
 
@@ -425,7 +393,7 @@ choose Release, in order to get full optimizations.</li>
 
               </li>
 
-            <li><strong>EXECUTABLE_OUTPUT_PATH</strong>
+      <!--      <li><strong>EXECUTABLE_OUTPUT_PATH</strong>
                   
         <ul>
 
@@ -443,7 +411,7 @@ choose Release, in order to get full optimizations.</li>
                     <li>This is the path GCC will put the generated *.a library files.</li>
 
                   
-        </ul>
+        </ul> -->
 
             </li>
 
@@ -466,7 +434,7 @@ open <em>Nektar++.xcodeproj/</em> now, and skip the GCC instructions below.</p>
         
 <ol>
 
-          <li>To compile the project, simply type "make" (no quotes) from your project directory (the directory where you started cmake from).
+          <li>To compile the project, simply type "make" (no quotes) from the project directory (i.e. <em>Nektar++/builds/</em>).
             
     <ul>
 
@@ -480,7 +448,7 @@ it will compile faster</li>
 
           </li>
 
-          <li>The executable files will be located in the path you specified in the CMake utility.</li>
+        <!--  <li>The executable files will be located in the path you specified in the CMake utility.</li> -->
   <li>Type "make install" (no quotes) to put all of the compiled
 libraries into a dist directory that can then be used by the solvers
 and utilities</li>
@@ -492,22 +460,22 @@ and utilities</li>
 <h3><a name="Compiling_the_Solvers_and_Utilities"></a>Compiling the Solvers and Utilities</h3>
 <br>
 To compile the solvers and the utilities you first need to have
-compiled the library and typed "make install' to place all of the
+compiled the library and typed "make install" to place all of the
 Nektar++ and ThirdParty libraries into the dist director under the
-library builds directory you have speciified (i.e. Nektar++Builds/dist)<br>
+library builds directory (i.e. <em>Nektar++/Builds/dist</em>)<br>
 <p>Once again we use CMake to generate the Makefiles that GCC requires, or
-the project files that Xcode requires. From within the directory Nektar++/solvers:</p>
+the project files that Xcode requires.</p>
 
         
 <ol>
-  <li>From the terminal, change to a directory where you want the project Makefiles to be created, i.e. Nektar++/solvers/Builds.</li>
+  <li>From the terminal, change to the build directory of the solvers, i.e. <em>Nektar++/solvers/builds</em>.</li>
   <li>CMake can generate both GCC Makefiles, or Xcode project files.
             
     <ul>
       <li>GCC Makefiles
                   
         <ul>
-          <li>Type in "&lt;path_to_cmake_directory&gt;/bin/cmake -i &lt;path_to_<em>Nektar++/solvers/</em>_directory&gt;" (without the quotes). Fill in the &lt;...&gt;'s appropriately.
+          <li>Type in "../../ThirdParty/CMake/bin/cmake -i ../" (without the quotes). 
                         
             <ul>
               <li>The "-i" indicates that you want to use the wizard mode.</li>
@@ -521,7 +489,7 @@ the project files that Xcode requires. From within the directory Nektar++/solver
       <li>Xcode Project Files
                 
         <ul>
-          <li>Type in "&lt;path_to_cmake_directory&gt;/bin/cmake -i -G Xcode &lt;path_to_<em>Nektar++/solvers/</em>_directory&gt;" (without the quotes). Fill in the &lt;...&gt;'s appropriately.
+          <li>Type in "../../ThirdParty/CMake/bin/cmake -i -G Xcode ../" (without the quotes).
                         
             <ul>
               <li>The "-i" indicates that you want to use the wizard mode.</li>
@@ -553,25 +521,23 @@ to get full optimizations.</li>
         </ul>
 
               </li>
-      <li><strong>EXECUTABLE_OUTPUT_PATH</strong>
+    <!--  <li><strong>EXECUTABLE_OUTPUT_PATH</strong>
                   
         <ul>
           <li>This is the path GCC will put the generated executable files - it can be anywhere you wish.<span style="font-weight: bold;"></span></li>
         </ul>
-      </li>
+      </li> -->
     </ul>
   </li>
-  <li>Enter the solver diretory (i.e. AdvectionDiffusionReactionSolver)
-and type make. Sample input files for the
-AdvectionDiffusionReactionSolver can be found in
-Nektar++/solvers/AdvectionDiffusionReactionSolver.<span style="font-weight: bold;"><br>
+  <li>Now you have generated the Makefiles, you can compile the solvers by entering "make" from the command line in the directory <em>Nektar++/solvers/builds/</em>. If you chose to compile the solvers with Xcode, open the project "SOLVERS.xcodeproj". 
     </span></li>
 </ol>
+To compile the utilities you follow an identical set of instructions but replace solvers in the above text with utilities.
 
-        
 <h3><br>
 </h3>
-To compile the utilities you follow an identical set of instructions but replace solvers in the above text w
+The entire Nektar++ package should now have been succesfully compiled. Instructions on how to use Nektar++ are described on the <a href="usage.html" id="menu_Usage">usage</a> page.
+        
         
 <p><br class="clearfloat">
 </p>

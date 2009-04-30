@@ -90,38 +90,43 @@
     <div id="container">
       <div id="sidebar1">
         <h3 style="text-align: center;"><a href="index.html" id="menu_Nektar"><img src="images/nektar.png" alt="Nektar++" width="155" height="38" /></a></h3>
+
         <p><a href="downloads.html" id="menu_Downloads">Downloads</a></p>
-        <p>
-          <a href="compile.html" id="menu_Compile">Compile Instructions</a>
-    	  
-        </p>
-        <p>
-          <a href="library.html" id="menu_Library">Library Overview</a>
-    	  
-        </p>
+        <p><a href="compile.html" id="menu_Compile">Compile Instructions</a></p>
+        <p><a href="library.html" id="menu_Library">Library Overview</a></p>
         <p><a href="team.html" id="menu_Team">Team Members</a></p>
-<!--        <p><a href="pre-processing.html" id="menu_PreProcessing">Pre-processing</a></p>-->
-<!--        <p><a href="solvers.html" id="menu_Solvers">Solvers</a></p>-->
+	<p><a href="pre-processing.html" id="menu_PreProcessing">Pre-processing</a></p>
         <p><a href="post-processing.html" id="menu_PostProcessing">Post-processing</a></p>
-<!--        <p><a href="demos.html" id="menu_Demos">Demos</a></p>-->
+	<p><a href="usage.html" id="menu_Solvers">Usage</a></p>
         <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
         <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
         <p><a href="license.html" id="menu_License">License</a></p>
         <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
         <p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
-        <p style="font-size:9px;">Last Revision:<br/>$Date: 2008/06/06 16:22:04 $</p>
+
+        <p style="font-size:9px;">Last Revision:<br/>$Date: 2008/06/11 15:23:01 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
         <h1>Downloads</h1>
     	<!-- InstanceEndEditable -->
-        <hr/>
-        <!-- InstanceBeginEditable name="BodyText" -->
-	    <p><a href="downloads/Nektar++.tar.gz">Nektar++ Unix/Windows Code</a></p>
-    	<p><a href="downloads/ThirdParty.tar.gz">Required Third Party Libraries</a></p>
-	    <p><a href="getting_started.html" target="_blank">Getting Started Tutorial</a></p>
-        <!-- InstanceEndEditable -->
-        <p><br class="clearfloat" /></p>
+        <hr>
+
+	<p><a href="getting_started.html" target="_blank">Getting Started Tutorial</a></p>
+	<ul>
+	  <li>
+	    <h3 align="left">release 1.1 (May 2009) </h3>
+	    <p><a href="downloads/Nektar++1.1.tar.gz">Nektar++ Unix/Windows Code</a></p>
+    	    <p><a href="downloads/ThirdParty1.1.tar.gz">Required Third Party Libraries</a></p>
+	  </li>
+	  <BR>
+	  <li>
+	    <h3 align="left">release 1.0 (May 2008) </h3>
+	    <p><a href="downloads/Nektar++1.0.tar.gz">Nektar++ Unix/Windows Code</a></p>
+    	    <p><a href="downloads/ThirdParty1.0.tar.gz">Required Third Party Libraries</a></p>
+	  </li>
+	</ul>
+
       </div>
     </div>
   </body>

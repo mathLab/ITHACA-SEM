@@ -103,48 +103,21 @@
         
 <h3 style="text-align: center;"><a href="index.html" id="menu_Nektar"><img src="images/nektar.png" alt="Nektar++" height="38" width="155"></a></h3>
 
-        
-<p><a href="downloads.html" id="menu_Downloads">Downloads</a></p>
+        <p><a href="downloads.html" id="menu_Downloads">Downloads</a></p>
+        <p><a href="compile.html" id="menu_Compile">Compile Instructions</a></p>
+        <p><a href="library.html" id="menu_Library">Library Overview</a></p>
+        <p><a href="team.html" id="menu_Team">Team Members</a></p>
+	<p><a href="pre-processing.html" id="menu_PreProcessing">Pre-processing</a></p>
+        <p><a href="post-processing.html" id="menu_PostProcessing">Post-processing</a></p>
+	<p><a href="usage.html" id="menu_Usage">Usage</a></p>
+        <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
+        <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
+        <p><a href="license.html" id="menu_License">License</a></p>
+        <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
+        <p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
 
-        
-<p>
-          <a href="compile.html" id="menu_Compile">Compile Instructions</a>
-    	  
-        </p>
-
-        
-<p>
-          <a href="library.html" id="menu_Library">Library Overview</a>
-    	  
-        </p>
-
-        
-<p><a href="team.html" id="menu_Team">Team Members</a></p>
-
-<!--        <p><a href="pre-processing.html" id="menu_PreProcessing">Pre-processing</a></p>-->
-<!--        <p><a href="solvers.html" id="menu_Solvers">Solvers</a></p>-->
-        
-<p><a href="post-processing.html" id="menu_PostProcessing">Post-processing</a></p>
-
-<!--        <p><a href="demos.html" id="menu_Demos">Demos</a></p>-->
-        
-<p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
-
-        
-<p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
-
-        
-<p><a href="license.html" id="menu_License">License</a></p>
-
-        
-<p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
-
-        
-<p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
-
-        
 <p style="font-size: 9px;">Last Revision:<br>
-$Date: 2008/06/06 16:22:04 $</p>
+$Date: 2009/04/29 22:22:32 $</p>
 
       </div>
 
@@ -158,15 +131,17 @@ $Date: 2008/06/06 16:22:04 $</p>
         
 <hr>
         <!-- InstanceBeginEditable name="BodyText" -->
-        
-<p>The current distribution of the code has a specific Nektar++ output
-format. To convert this output to a known format we have provided two
-utilities in the Nektar++/utilities/PostProcessing direcotry call
+  
+<h3>Nektar++ based post-processing</h3><p>The current distribution of the code has a specific Nektar++ output
+format. The solvers write the solution to <em>.fld </em> files in the Nektar++ output format.</p>
+<h3>External packages</h3>
+<p>To convert this output to a known format we have provided two
+utilities in the <em>Nektar++/utilities/PostProcessing</em> directory called
 "FldToTecplot" and "FldToGmsh". These routines when compiled take a
-.xml format and .fld file and produce either Tecplot or Gmsh outputs
+.xml file (the 'mesh' in Nektar++ input format) and a .fld file (the solution in Nektar++ output format) and produce either Tecplot or Gmsh outputs
 using the WriteToFile routines &nbsp;within the StdRegions,
 LocalRegions and MultiRegions libraries.</p>
-<ul>
+ <ul> 
 
             <li>
               <b>Gmsh format</b><br>

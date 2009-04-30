@@ -91,31 +91,26 @@
     <div id="container">
       <div id="sidebar1">
         <h3 style="text-align: center;"><a href="index.html" id="menu_Nektar"><img src="images/nektar.png" alt="Nektar++" width="155" height="38" /></a></h3>
+
         <p><a href="downloads.html" id="menu_Downloads">Downloads</a></p>
-        <p>
-          <a href="compile.html" id="menu_Compile">Compile Instructions</a>
-    	  
+        <p><a href="compile.html" id="menu_Compile">Compile Instructions</a>
           <br/>
           &nbsp;&nbsp;&nbsp;<a href="compile_linux.html" id="menu_CompileLinux">Linux</a><br/>
           &nbsp;&nbsp;&nbsp;<a href="compile_windows.html" id="menu_CompileWindows">Windows</a><br/>
           &nbsp;&nbsp;&nbsp;<a href="compile_osx.html" id="menu_CompileOSX">Mac OS X</a><br/>
-          
-        </p>
-        <p>
-          <a href="library.html" id="menu_Library">Library Overview</a>
-    	  
-        </p>
+	</p>
+        <p><a href="library.html" id="menu_Library">Library Overview</a></p>
         <p><a href="team.html" id="menu_Team">Team Members</a></p>
-<!--        <p><a href="pre-processing.html" id="menu_PreProcessing">Pre-processing</a></p>-->
-<!--        <p><a href="solvers.html" id="menu_Solvers">Solvers</a></p>-->
+	<p><a href="pre-processing.html" id="menu_PreProcessing">Pre-processing</a></p>
         <p><a href="post-processing.html" id="menu_PostProcessing">Post-processing</a></p>
-<!--        <p><a href="demos.html" id="menu_Demos">Demos</a></p>-->
+	<p><a href="usage.html" id="menu_Usage">Usage</a></p>
         <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
         <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
         <p><a href="license.html" id="menu_License">License</a></p>
         <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
         <p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
-        <p style="font-size:9px;">Last Revision:<br/>$Date: 2008/09/12 11:28:49 $</p>
+
+        <p style="font-size:9px;">Last Revision:<br/>$Date: 2009/04/28 12:53:35 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
@@ -184,7 +179,7 @@
       <li>The next step is to extract and compile the correct libraries for <em>Boost</em>.
         <ol>
           <li>In <em>ThirdParty/</em>, extract the boost_1_35_0.tar.bz2 archive with &quot;tar -xjvf boost_1_35_0.tar.bz2&quot; (no quotes). This will create <em>boost_1_35_0/</em>.</li>
-          <li>Change to the <em>boost_1_35_0/</em> directory, and type &quot;../boost-jam-3.1.16/bin.linuxx86/bjam --prefix=../boost --build-type=complete --with-thread --with-iostreams --with-test --with-date_time --toolset=gcc install&quot; (without the quotes). This will place the compiled libraries and include files in the correct path.
+          <li>Change to the <em>boost_1_35_0/</em> directory, and type &quot;../boost-jam-3.1.16/bin.*/bjam --prefix=../boost --build-type=complete --with-thread --with-iostreams --with-test --with-date_time --toolset=gcc install&quot; (without the quotes). This will place the compiled libraries and include files in the correct path.
             <ol>
               <li>The &quot;--with-libraries&quot; compiles Boost with only the libraries required by Nektar++. This is just meant to save time. You can leave the flag off and it will compile all the libraries, if you wish.</li>
             </ol>
@@ -198,7 +193,7 @@
           <li>Compile the library using the previously installed <em>CMake</em></li>
             <ol>
               <li>Generate the makefiles using the command &quot;../../CMake/bin/cmake ../&quot;</li>
-              <li>Build the library by typing &quot;make&quot; </li>
+              <li>Build the library by typing &quot;make install&quot; </li>
             </ol>
           </li>
         </ol>

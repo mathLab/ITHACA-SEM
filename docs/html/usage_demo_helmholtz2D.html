@@ -110,40 +110,49 @@
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
-    <h1>Usage</h1>
+    <h1>Usage: helmholtz2D demo</h1>
 	<!-- InstanceEndEditable -->
         <hr/>
         <!-- InstanceBeginEditable name="BodyText" -->
-<p>Various demonstration files on how to use the library are being distributed together with the code. On this page, you can find instructions on how to run them. 
-This should provide a starting point to familiarize yourself with Nektar++ before starting to write your own code. We make a distinction between:</p>
+In this example, it will be demonstrated how the Helmholtz equation can be solved on a two-dimensional domain.
+<ol>
+<li><h3>Pre-processing</h3></li>
+First of all, you should describe the problem you want to solve in a way Nektar++ can properly interprete it. 
+Therefore, an input file in the Nektar++ input format should be created.
+For this example, we will use the readily available file <em>helmholtz2D.xml</em>, which can be found
+in the directory <em>Nektar++/library/Demos/MultiRegions/</em>. Opening this file, you can see that it
+contains of the following three parts:
+<ol>
+<li>Description of the mesh<BR>
+This is contained between the XML tags <tt>&lt;GEOMETRY&gt;...&lt;/GEOMETRY&gt;</tt>.
+It lists the vertices, edges and elements that form the mesh.
+It is possible to generate this part of the input file based upon a mesh created by Gmsh (see also <a href="pre-processing.html">here</a>).
+<li>Description of the spectral/hp expansion<BR>
+Between the XML tags <tt>&lt;EXPANSIONS&gt;...&lt;/EXPANSIONS&gt;</tt>, the spectral/hp expansion you want to 
+use to represent the solution can be specified. It is possible to define the type of basis functions, the expansion order and the numerical quadrature rule.</li>
+<li>Definition of parameters and boundary conditions<BR>
+In this section (between the XML tags <tt>&lt;CONDITIONS&gt;...&lt;/CONDITIONS&gt;</tt>), it is possible to specify other information such as
+boundary conditions. In case of the helmholtz problem, you can also use this section to define the parameter <em>lambda</em> and the forcing function. </li>
+</ol>
+<li><h3>Run the code</h3>
+To run the code (i.e. solve the helmholtz problem), follow these steps
 <ul>
-<li><h3>Demonstration at library level</h3>
-<p>For all different sublibraries, 'demo' codes are available that demonstrate the functionality of the library in question. The source codes of these demos are located in the directory <em>Nektar++/library/Demos/</em> and when compiled, the executables will be placed in the directory <em>Nektar++/build/Demos/</em>. We will here explain how to run these demo codes by means of the following example</p>
-<p>
+<li>Copy the input file <em>helmholtz2D.xml</em> to the directory <em>Nektar++/builds/Demos/MultiRegions/</em></li>
+<li>At the terminal, go this same directory <em>Nektar++/builds/Demos/MultiRegions/</em></li>
+<li>Run the code by entering "./Helmholtz2D helmholtz2D.xml helmholtz2D.xml". (If you have build the library in Debug mode, this should be "./Helmholtz2D-g helmholtz2D.xml helmholtz2D.xml")</li>
+</ul></li>
+<li><h3>Post-processing</h3><BR>
+The solution should now have been written to the file <em>helmholtz2D.fld</em>. This file is formatted in the Nektar++ output format (see also <a href="post-processing.html">here</a>). To visualize the solution in Gmsh, we first have to convert this file. This can be done in the following way:
 <ul>
-<li><a href="usage_demo_helmholtz2D.html">helmholtz2D demo</a></li>
+<li>At the terminal, make sure you are still at the dirctory <em>Nektar++/builds/Demos/MultiRegions/</em></li>
+<li>Type "../../../utilities/builds/PostProcessing/FldToGmsh helmholtz2D.xml helmholtz2D.fld". (If you have build the utilities in Debug mode, this should be "../../../utilities/builds/PostProcessing/FldToGmsh-g helmholtz2D.xml helmholtz2D.fld")</li>
 </ul>
-</p>
-<p>
-All other demo codes can be run in a similar fashion.
-</p>
+This should have been created the file <em>helmholtz2D_u.pos</em> in the current directory. If you open this file with Gmsh, you should see something like this:
+<h2 ALIGN=center><img src="images/helmholtz2D.png" width="500" height="367"></h2>
 
 
 </li>
-<li><h3>Demonstration at solver level</h3>
-<p>To be added</p>
-<p>
-<ul>
-<li><a href="usage_solver_ADR.html">text to be added</a></li>
-</ul>
-</p>
-<p>
-To be added
-</p>
-</li>
-
-</ul>
-
+</ol>
 
     <!-- InstanceEndEditable -->
         <p><br class="clearfloat" /></p>

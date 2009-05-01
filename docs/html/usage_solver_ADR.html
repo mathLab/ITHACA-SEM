@@ -106,7 +106,7 @@
         <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
         <p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
 
-        <p style="font-size:9px;">Last Revision:<br/>$Date: 2009/04/30 15:16:46 $</p>
+        <p style="font-size:9px;">Last Revision:<br/>$Date: 2009/05/01 10:29:26 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
@@ -114,8 +114,28 @@
 	<!-- InstanceEndEditable -->
         <hr/>
         <!-- InstanceBeginEditable name="BodyText" -->
-To be added
-
+In this example, it will be demonstrated how the Advection-Diffusion-Reaction equation can be solved on a two-dimensional domain.
+<ol>
+<li><h3>Pre-processing</h3></li>
+Similar to Helmholtz solver, the details of problems should be described in the Nektar input format.
+The description of the mesh, the spectral/hp expansion, the definition of parameters and boundary conditions are
+the same as the case of Helmholtz solver, but since it should be integrated for time variable in various forms of
+equations, the corresponding xml file have another part called as SOLVERINFO, i.e.:
+<ol>
+<li>Description of the mesh<BR>
+This is contained between the XML tags <tt>&lt;GEOMETRY&gt;...&lt;/GEOMETRY&gt;</tt>.
+It lists the vertices, edges and elements that form the mesh.
+It is possible to generate this part of the input file based upon a mesh created by Gmsh (see also <a href="pre-processing.html">here</a>).
+<li>Description of the spectral/hp expansion<BR>
+Between the XML tags <tt>&lt;EXPANSIONS&gt;...&lt;/EXPANSIONS&gt;</tt>, the spectral/hp expansion you want to 
+use to represent the solution can be specified. It is possible to define the type of basis functions, the expansion order and the numerical quadrature rule.</li>
+<li>Definition of parameters and boundary conditions<BR>
+In this section (between the XML tags <tt>&lt;CONDITIONS&gt;...&lt;/CONDITIONS&gt;</tt>), it is possible to specify other information such as
+boundary conditions. In case of the helmholtz problem, you can also use this section to define the parameter <em>lambda</em> and the forcing function. </li>
+<li>Description of Solver information<BR>
+In this section (between the XML tags <tt>&lt;CONDITIONS&gt;...&lt;/CONDITIONS&gt;</tt>), it is possible to specify other information such as
+boundary conditions. In case of the helmholtz problem, you can also use this section to define the parameter <em>lambda</em> and the forcing function. </li>
+</ol>
 </li>
 </ol>
 

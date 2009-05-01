@@ -41,11 +41,9 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Print summary of solution details
     const SpatialDomains::ExpansionVector &expansions = graph3D.GetExpansions();
-    LibUtilities::BasisKey bkey = graph3D.GetBasisKey(expansions[0],0);
-    int nmodes = (int) expansions[0]->m_NumModesEqn.Evaluate();
+    LibUtilities::BasisKey bkey = expansions[0]->m_BasisKeyVector[0];
     cout << "Solving 3D C0 continuous Projection (with boundary conditions)"  << endl; 
-    cout << "    Expansion  : " << SpatialDomains::kExpansionTypeStr[expansions[0]->m_ExpansionType] << endl;
-    cout << "    No. modes  : " << nmodes << endl;
+    cout << "    No. modes  : " << bkey.GetNumModes() << endl;
     cout << endl;
     //----------------------------------------------
    
@@ -57,7 +55,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Set up coordinates of mesh for Forcing function evaluation
     coordim = Exp->GetCoordim(0);
-    nq      = Exp->GetPointsTot();
+    nq      = Exp->GetTotPoints();
     
     xc0 = Array<OneD,NekDouble>(nq,0.0);
     xc1 = Array<OneD,NekDouble>(nq,0.0);
@@ -96,12 +94,12 @@ int main(int argc, char *argv[])
 
     //---------------------------------------------
     // Project onto Expansion 
-    Exp->FwdTrans(*Fce);
+    Exp->FwdTrans(Fce->GetPhys(), Exp->UpdateCoeffs());
     //---------------------------------------------
     
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    Exp->BwdTrans(*Exp);
+    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
     //-------------------------------------------  
 
     //----------------------------------------------
@@ -113,8 +111,8 @@ int main(int argc, char *argv[])
     
     //--------------------------------------------
     // Calculate L_inf error 
-    cout << "L infinity error: " << Exp->Linf(*Fce) << endl;
-    cout << "L 2 error:        " << Exp->L2  (*Fce) << endl;
+    cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
+    cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
     //--------------------------------------------
 
     return 0;

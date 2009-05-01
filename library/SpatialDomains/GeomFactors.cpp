@@ -622,7 +622,6 @@ namespace Nektar
             ASSERTL1(d2[0].num_elements() == nqtot,"Number of quadrature points do not match");
             ASSERTL1(d3[0].num_elements() == nqtot,"Number of quadrature points do not match");
 
-            ASSERTL0(false,"This routine needs corrections. Please see notes in the code...");
             // The jacobian seems to be calculated wrongly:
             // Rather than the formula:
             //    m_jac[0] =  d1[0][0]*(d2[1][0]*d3[2][0] - d2[2][0]*d3[1][0])
@@ -652,6 +651,12 @@ namespace Nektar
             //   d xi_M/d x_N should be d xi_N/d x_M. In other words,
             //   transposed.
             // - Deformed case not checked.
+            // 
+            // Update 2 (pvos):
+            // I did change the formulation of the jacobian from the first to the 
+            // second version. I think this should be correct
+            // (certainly if you know that dj[i] = dx_i/dxi_j)
+            // I only updated the regular geometry. Deformed still to be done
 
             if((m_gtype == eRegular)||(m_gtype == eMovingRegular))
             {
@@ -659,9 +664,12 @@ namespace Nektar
                 m_gmat    = Array<TwoD, NekDouble>(3*m_coordim,1,0.0);
                 
                 // J3D: Determinant of three-dimensional Jacobian
-                m_jac[0] = d1[0][0]*( d2[1][0]*d3[2][0] - d2[2][0]*d3[1][0] )
-                          -d1[1][0]*( d2[0][0]*d3[2][0] - d2[2][0]*d3[0][0] )
-                          +d1[2][0]*( d2[0][0]*d3[1][0] - d2[1][0]*d3[0][0] );
+//                 m_jac[0] = d1[0][0]*( d2[1][0]*d3[2][0] - d2[2][0]*d3[1][0] )
+//                           -d1[1][0]*( d2[0][0]*d3[2][0] - d2[2][0]*d3[0][0] )
+//                           +d1[2][0]*( d2[0][0]*d3[1][0] - d2[1][0]*d3[0][0] );
+                m_jac[0] =  d1[0][0]*(d2[1][0]*d3[2][0] - d3[1][0]*d2[2][0])
+                           -d2[0][0]*(d1[1][0]*d3[2][0] - d3[1][0]*d1[2][0])
+                           +d3[0][0]*(d1[1][0]*d2[2][0] - d2[1][0]*d1[2][0]);
                 
                 ASSERTL1(m_jac[0] > 0, "3D Regular Jacobian is not positive");
                 // Spen's book page 160
@@ -677,6 +685,7 @@ namespace Nektar
             }
             else // Deformed case
             {
+                ASSERTL0(false,"This routine needs corrections. Please see notes in the code...");
                 m_jac  = Array<OneD, NekDouble>(nqtot,0.0);
                 m_gmat = Array<TwoD, NekDouble>(3*m_coordim,nqtot,0.0);
 
@@ -1299,6 +1308,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.40  2009/04/20 16:13:23  sherwin
+// Modified Import and Write functions and redefined how Expansion is used
+//
 // Revision 1.39  2009/04/04 00:29:37  rcantao
 // Made a few checks on J3D and companion. Remarks included.
 //

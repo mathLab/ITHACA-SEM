@@ -95,7 +95,7 @@ namespace Nektar
 
         struct ElementFace
         {
-            GeometrySharedPtr m_Face;
+            GeometrySharedPtr m_Element;
             int m_FaceIndx;
         };
 
@@ -278,6 +278,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.32  2009/04/20 16:13:23  sherwin
+// Modified Import and Write functions and redefined how Expansion is used
+//
 // Revision 1.31  2009/01/12 10:26:59  pvos
 // Added input tags for nodal expansions
 //

@@ -118,7 +118,11 @@ namespace Nektar
             void PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
                            Array<OneD, NekDouble> &out_d0,
                            Array<OneD, NekDouble> &out_d1,
-                           Array<OneD, NekDouble> &out_d2);
+                           Array<OneD, NekDouble> &out_d2);  
+        
+            void PhysDeriv(const int dir, 
+                           const Array<OneD, const NekDouble>& inarray,
+                           Array<OneD, NekDouble> &outarray);
 
             //----------------------------
             // Evaluations Methods
@@ -244,6 +248,13 @@ namespace Nektar
                 PhysDeriv(inarray, out_d0, out_d1, out_d2);
             }
 
+            virtual void v_PhysDeriv(const int dir, 
+                                     const Array<OneD, const NekDouble>& inarray,
+                                     Array<OneD, NekDouble> &outarray)
+            {
+                PhysDeriv(dir,inarray,outarray);
+            }
+
             /// Virtual call to SegExp::FwdTrans
             virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                     Array<OneD, NekDouble> &outarray)
@@ -304,6 +315,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.26  2009/04/27 21:34:07  sherwin
+ *    Updated WriteToField
+ *
  *    Revision 1.25  2009/04/20 16:12:28  sherwin
  *    Updates related to output format and optimising DG solver
  *

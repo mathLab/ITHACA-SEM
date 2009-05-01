@@ -984,7 +984,7 @@ namespace Nektar
                             if ((faceNum = tetGeomShPtr->WhichFace(face)) > -1)
                             {
                                 elementFace = MemoryManager<ElementFace>::AllocateSharedPtr();
-                                elementFace->m_Face = tetGeomShPtr;
+                                elementFace->m_Element = tetGeomShPtr;
                                 elementFace->m_FaceIndx = faceNum;
                                 returnval->push_back(elementFace);
                             }
@@ -994,7 +994,7 @@ namespace Nektar
                             if ((faceNum = hexGeomShPtr->WhichFace(face)) > -1)
                             {
                                 elementFace = MemoryManager<ElementFace>::AllocateSharedPtr();
-                                elementFace->m_Face = hexGeomShPtr;
+                                elementFace->m_Element = hexGeomShPtr;
                                 elementFace->m_FaceIndx = faceNum;
                                 returnval->push_back(elementFace);
                             }
@@ -1004,7 +1004,7 @@ namespace Nektar
                             if ((faceNum = prismGeomShPtr->WhichFace(face)) > -1)
                             {
                                 elementFace = MemoryManager<ElementFace>::AllocateSharedPtr();
-                                elementFace->m_Face = prismGeomShPtr;
+                                elementFace->m_Element = prismGeomShPtr;
                                 elementFace->m_FaceIndx = faceNum;
                                 returnval->push_back(elementFace);
                             }
@@ -1014,7 +1014,7 @@ namespace Nektar
                             if ((faceNum = pyrGeomShPtr->WhichFace(face)) > -1)
                             {
                                 elementFace = MemoryManager<ElementFace>::AllocateSharedPtr();
-                                elementFace->m_Face = pyrGeomShPtr;
+                                elementFace->m_Element = pyrGeomShPtr;
                                 elementFace->m_FaceIndx = faceNum;
                                 returnval->push_back(elementFace);
                             }
@@ -1033,10 +1033,16 @@ namespace Nektar
             // Perhaps, a check should be done here to ensure that in case 
             // elements->size!=1, all elements to which the edge belongs have the same type
             // and order of expansion such that no confusion can arise.
-            ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Face);
+            ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Element);
 
+            ASSERTL0((*elements)[0]->m_Element->GetGeomShapeType() == eHexahedron,
+                     "This routine is not yet defined for this shape.");
+            ASSERTL0( (expansion->m_BasisKeyVector[0] == expansion->m_BasisKeyVector[1]) && 
+                      (expansion->m_BasisKeyVector[0] == expansion->m_BasisKeyVector[2]) &&
+                      (expansion->m_BasisKeyVector[1] == expansion->m_BasisKeyVector[2]),
+                      "This routine is not yet defined for anisotropic expansions");
 
-            ASSERTL0(false,"This method needs reworking");
+            return expansion->m_BasisKeyVector[0];
 #if 0 
             int nummodes = (int) expansion->m_NumModesEqn.Evaluate();
             
@@ -1144,6 +1150,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph3D.cpp,v $
+// Revision 1.13  2009/04/20 16:13:23  sherwin
+// Modified Import and Write functions and redefined how Expansion is used
+//
 // Revision 1.12  2009/01/12 10:26:59  pvos
 // Added input tags for nodal expansions
 //

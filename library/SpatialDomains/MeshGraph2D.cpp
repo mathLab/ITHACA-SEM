@@ -638,7 +638,7 @@ namespace Nektar
 
             int edge_id = (*elements)[0]->m_EdgeIndx;
 
-            if(edge->GetGeomShapeType() == eTriangle)
+            if((*elements)[0]->m_Element->GetGeomShapeType() == eTriangle)
             {
                 edge_id = (edge_id)? 1:0;
             }
@@ -661,6 +661,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.36  2009/04/20 16:13:23  sherwin
+// Modified Import and Write functions and redefined how Expansion is used
+//
 // Revision 1.35  2009/01/21 16:59:03  pvos
 // Added additional geometric factors to improve efficiency
 //

@@ -283,6 +283,35 @@ namespace Nektar
                 }
             }
         }
+        
+        void HexExp::PhysDeriv(const int dir, 
+                               const Array<OneD, const NekDouble>& inarray,
+                                     Array<OneD,       NekDouble>& outarray)
+        {
+            switch(dir)
+            {
+            case 0:
+                {
+                    PhysDeriv(inarray, outarray, NullNekDouble1DArray, NullNekDouble1DArray);   
+                }
+                break;
+            case 1:
+                {
+                    PhysDeriv(inarray, NullNekDouble1DArray, outarray, NullNekDouble1DArray);   
+                }
+                break;
+            case 2:
+                {
+                    PhysDeriv(inarray, NullNekDouble1DArray, NullNekDouble1DArray, outarray);   
+                }
+                break;
+            default:
+                {
+                    ASSERTL1(false,"input dir is out of range");
+                }
+                break;
+            }             
+        }
 
 
         /** \brief Forward transform from physical quadrature space
@@ -872,6 +901,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.cpp,v $
+ *    Revision 1.24  2009/04/27 21:34:07  sherwin
+ *    Updated WriteToField
+ *
  *    Revision 1.23  2009/01/21 16:59:56  pvos
  *    Added additional geometric factors to improve efficiency
  *

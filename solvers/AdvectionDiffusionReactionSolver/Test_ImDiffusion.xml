@@ -50,7 +50,7 @@
     <COMPOSITE>
       <C ID="0"> T[0-3] </C>
       <C ID="1"> Q[0-1] </C>
-      <C ID="2"> E[0,1,2,4,7,9,10,11] </C>
+      <C ID="2"> E[0,1,2,7] </C>
     </COMPOSITE>
 
     <DOMAIN> C[0-1] </DOMAIN>
@@ -65,18 +65,18 @@
   <CONDITIONS>
 
     <PARAMETERS>
-      <P> TimeStep   = 0.0001 </P>
-      <P> NumSteps      = 5000  </P>
-      <P> FinTime    = TimeStep*NumSteps </P>
-      <P> IO_CheckSteps = 1000   </P>
-      <P> IO_InfoSteps  = 1000 </P>
+      <P> TimeStep       = 0.0001            </P>
+      <P> NumSteps       = 5000              </P>
+      <P> FinTime        = TimeStep*NumSteps </P>
+      <P> IO_CheckSteps  = 1000              </P>
+      <P> IO_InfoSteps   = 1000               </P>
     </PARAMETERS>
 
     <SOLVERINFO>
       <I PROPERTY="EQTYPE" VALUE="UnsteadyDiffusion" />
       <I PROPERTY="Projection" VALUE="Continuous"/>
       <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
-    </SOLVERINFO>
+    </SOLVERINFO> 
 
     <VARIABLES>
       <V ID="0"> u </V> 
@@ -88,21 +88,21 @@
 
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
-        <D VAR="u" VALUE="0.0" />
+        <D VAR="u" VALUE="0" />
       </REGION>
     </BOUNDARYCONDITIONS>
 
     <USERDEFINEDEQNS>
-      <F LHS="Vx" VALUE="1.0" />
-      <F LHS="Vy" VALUE="1.0" />
+      <F LHS="Vx" VALUE="1" />
+      <F LHS="Vy" VALUE="1" />
     </USERDEFINEDEQNS>   
     
     <EXACTSOLUTION>
-      <F VAR="u" VALUE="exp(-2.0*PI*PI*FinTime)*sin(PI*x)*sin(PI*y)" />
+     <F VAR="u" VALUE="exp(-2.0*PI*PI*FinTime)*sin(PI*x)*sin(PI*y)" />
     </EXACTSOLUTION>
     
     <INITIALCONDITIONS>
-      <F VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+     <F VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
     </INITIALCONDITIONS>
     
   </CONDITIONS>

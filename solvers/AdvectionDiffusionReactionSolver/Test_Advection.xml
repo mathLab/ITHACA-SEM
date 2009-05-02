@@ -50,7 +50,7 @@
     <COMPOSITE>
       <C ID="0"> T[0-3] </C>
       <C ID="1"> Q[0-1] </C>
-      <C ID="2"> E[0,1,2,7] </C>
+      <C ID="2"> E[0,1,2,4,7,9,10,11] </C>
     </COMPOSITE>
 
     <DOMAIN> C[0-1] </DOMAIN>
@@ -77,7 +77,7 @@
       <I PROPERTY="Projection" VALUE="Continuous"/>
     </SOLVERINFO> 
 
-    <VARIABLES>
+<VARIABLES>
       <V ID="0"> u </V> 
     </VARIABLES>
 
@@ -87,21 +87,21 @@
 
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
-        <D VAR="u" VALUE="sin(PI*(x-t)+PI*(y-t))" />
+        <D VAR="u" VALUE="0" />
       </REGION>
     </BOUNDARYCONDITIONS>
 
     <USERDEFINEDEQNS>
-      <F LHS="Vx" VALUE="1" />
-      <F LHS="Vy" VALUE="1" />
+      <F LHS="Vx" VALUE="2*PI*y" />
+      <F LHS="Vy" VALUE="-2*PI*x" />
     </USERDEFINEDEQNS>   
     
     <EXACTSOLUTION>
-      <F VAR="u" VALUE="sin(PI*(x-t)+PI*(y-t))" />
+      <F VAR="u" VALUE="exp(-(((x*cos(2*PI*FinTime) + y*sin(2*PI*FinTime)+0.5)*(x*cos(2*PI*FinTime) + y*sin(2*PI*FinTime)+0.5))+((y*cos(2*PI*FinTime) - x*sin(2*PI*FinTime))*(y*cos(2*PI*FinTime) - x*sin(2*PI*FinTime))))/(2.0*(1.0/8.0)*(1.0/8.0)))" />
     </EXACTSOLUTION>
     
     <INITIALCONDITIONS>
-      <F VAR="u" VALUE="sin(PI*x+PI*y)" />
+      <F VAR="u" VALUE="exp(-(((x+0.5)*(x+0.5))+(y*y))/(2.0*(1.0/8.0)*(1.0/8.0)))" />
     </INITIALCONDITIONS>
     
   </CONDITIONS>

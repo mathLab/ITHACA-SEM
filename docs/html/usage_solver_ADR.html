@@ -106,11 +106,11 @@
         <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
         <p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
 
-        <p style="font-size:9px;">Last Revision:<br/>$Date: 2009/05/01 10:29:26 $</p>
+        <p style="font-size:9px;">Last Revision:<br/>$Date: 2009/05/01 17:37:11 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
-    <h1>Usage: advection-diffusion-reaction solver</h1>
+    <h1>Usage: Advection-Diffusion-Reaction solver</h1>
 	<!-- InstanceEndEditable -->
         <hr/>
         <!-- InstanceBeginEditable name="BodyText" -->
@@ -119,8 +119,8 @@ In this example, it will be demonstrated how the Advection-Diffusion-Reaction eq
 <li><h3>Pre-processing</h3></li>
 Similar to Helmholtz solver, the details of problems should be described in the Nektar input format.
 The description of the mesh, the spectral/hp expansion, the definition of parameters and boundary conditions are
-the same as the case of Helmholtz solver, but since it should be integrated for time variable in various forms of
-equations, the corresponding xml file have another part called as SOLVERINFO, i.e.:
+the same as the case of Helmholtz solver, but since it should be integrated for a time variable in various forms of
+equations, the corresponding xml file have another part called as Solver information, i.e.:
 <ol>
 <li>Description of the mesh<BR>
 This is contained between the XML tags <tt>&lt;GEOMETRY&gt;...&lt;/GEOMETRY&gt;</tt>.
@@ -130,12 +130,27 @@ It is possible to generate this part of the input file based upon a mesh created
 Between the XML tags <tt>&lt;EXPANSIONS&gt;...&lt;/EXPANSIONS&gt;</tt>, the spectral/hp expansion you want to 
 use to represent the solution can be specified. It is possible to define the type of basis functions, the expansion order and the numerical quadrature rule.</li>
 <li>Definition of parameters and boundary conditions<BR>
-In this section (between the XML tags <tt>&lt;CONDITIONS&gt;...&lt;/CONDITIONS&gt;</tt>), it is possible to specify other information such as
-boundary conditions. In case of the helmholtz problem, you can also use this section to define the parameter <em>lambda</em> and the forcing function. </li>
+In this section (between the XML tags <tt>&lt;CONDITIONS&gt;...&lt;/CONDITIONS&gt;</tt>), it is possible to specify other information such as boundary conditions. In case of the Advection-Diffusion-Reaction problem, you can also use this section to define the size of time step (<em>TimeStep<em>), the number of time step (<em>NumSteps<em>), the Final time of total computation (<em>FinTime<em>), the size of steps for Check output (<em>IO_CheckSteps<em>) and the the size of steps for Info output (<em>IO_InfoSteps<em>). </li>
 <li>Description of Solver information<BR>
-In this section (between the XML tags <tt>&lt;CONDITIONS&gt;...&lt;/CONDITIONS&gt;</tt>), it is possible to specify other information such as
-boundary conditions. In case of the helmholtz problem, you can also use this section to define the parameter <em>lambda</em> and the forcing function. </li>
+In this section (between the XML tags <tt>&lt;CONDITIONS&gt;...&lt;/CONDITIONS&gt;</tt>), it is possible to specify other information such as equation type, projection type and time marching scheme. In case of the Advection-Diffusion-Reaction problem, you can also use this section to define the equation type (<em>EQTYPE = {UnsteadyAdvection, UnsteadyDiffusion, UnsteadyDiffusionReaction}<em>), the projection type of the solution vector (<em>Projection = {Continuous, DisContinuous}<em>) and time marching method of diffusion term (<em>DiffusionAdvancement = {Explicit, Implicit}<em>). </li>
 </ol>
+<li><h3>Run the code</h3>
+To run the code for solving explicit advection problem with input file <em>Test_Advection.xml<em>, follow these steps.
+(Use explicit diffusion for Test_ExDiffusion.xml, implicit diffusion for Test_ImDiffusion.xml, diffusion reaction equation with implicit
+diffusion for Test_DiffusionReaction.xml)
+<ul>
+<li>Copy the input file, <em>Test_Advection.xml<em>, in <em>Nektar++/solvers/AdvectionDiffusionReactionSolver</em> to the directory where solver directory is compiled. For example, if you compiled the solver directory at <em>Nektar++/solvers/buildsDebug</em>, then copy those input files to <em>Nektar++/solvers/buildsDebug/AdvectionDiffusionReactionSolver.</em>   </li>
+<li>At the terminal, go this same directory. For example, when the solver direction is compiled at <em>Nektar++/solvers/buildsDebug</em>, go to <em>Nektar++/solvers/buildsDebug/AdvectionDiffusionReactionSolver</em></li>
+<li>Run the code by entering "./AdvectionDiffusionReactionSolver Test_Advection.xml"</li>
+</ul></li>
+<li><h3>Post-processing</h3><BR>
+The solution should now have been written to the file <em>Test_Advection.fld</em>. This file is formatted in the Nektar++ output format (see also <a href="post-processing.html">here</a>). To visualize the solution in Gmsh, we first have to convert this file. This can be done in the following way:
+<ul>
+<li>At the terminal, make sure you are still at the dirctory <em>Nektar++/solvers/buildsDebug/AdvectionDiffusionReactionSolver</em></li>
+<li>Type "../../../utilities/builds/PostProcessing/FldToGmsh Test_Advection.xml Test_Advection.fld". (If you have build the utilities in Debug mode, this should be "../../../utilities/builds/PostProcessing/FldToGmsh-g Test_Advection.xml Test_Advection.fld")</li>
+</ul>
+This should have been created the file <em>Test_Advection.pos</em> in the current directory. If you open this file with Gmsh, you should see something like this:
+<h2 ALIGN=center><img src="images/Test_Advection.png" width="500" height="367"></h2>
 </li>
 </ol>
 

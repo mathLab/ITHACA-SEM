@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
         const SpatialDomains::ExpansionVector &expansions = mesh.GetExpansions();
         for(i = 0; i < domain.size(); ++i)
         {
-            LibUtilities::BasisKey bkey = mesh.GetBasisKey(expansions[i],0);
+            LibUtilities::BasisKey bkey = expansions[0]->m_BasisKeyVector[0];
             cout << "      Composite " << i << "   : " << endl;
             cout << "         Expansion  : " << LibUtilities::BasisTypeMap[bkey.GetBasisType()] << endl;
             cout << "         No. modes  : " << bkey.GetNumModes() << endl;

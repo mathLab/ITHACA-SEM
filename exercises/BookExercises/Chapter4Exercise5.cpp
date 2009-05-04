@@ -92,9 +92,10 @@ int main(int argc, char *argv[])
             // Allocate space for the other blocks
             Array<OneD,unsigned int> bndBlockSize(nElements,nElementalBndDofs);
             Array<OneD,unsigned int> intBlockSize(nElements,nElementalDofs-nElementalBndDofs);
-            DNekScalBlkMatSharedPtr BinvD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(bndBlockSize,intBlockSize);
-            DNekScalBlkMatSharedPtr invD  = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(intBlockSize,intBlockSize);
-            DNekScalBlkMatSharedPtr C     = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(intBlockSize,bndBlockSize);
+            MatrixStorage blkmatStorage = eDIAGONAL;
+            DNekScalBlkMatSharedPtr BinvD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(bndBlockSize,intBlockSize,blkmatStorage);
+            DNekScalBlkMatSharedPtr invD  = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(intBlockSize,intBlockSize,blkmatStorage);
+            DNekScalBlkMatSharedPtr C     = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(intBlockSize,bndBlockSize,blkmatStorage);
 
             // Step 3: Assemble the global matrices from the elemental mass matrix
             int n,i,j;
@@ -191,7 +192,7 @@ int main(int argc, char *argv[])
 
             // Multiply the Dirichlet DOFs with the mass matrix to get the
             // rhs due to the dirichlet DOFs
-            MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
+            MultiRegions::GlobalMatrixKey key(StdRegions::eMass);
             multiElementExp->GeneralMatrixOp(key, dirDofsValues, dirForcing);
 
             // Substract this from the original rhs

@@ -53,5 +53,5 @@ MACRO(SET_COMMON_PROPERTIES name)
 ENDMACRO(SET_COMMON_PROPERTIES name)
 
 
-SUBDIRS(AdvectionDiffusionReactionSolver ShallowWaterSolver EulerSolver IncNavierStokesSolver)
+SUBDIRS(AdvectionDiffusionReactionSolver ShallowWaterSolver EulerSolver)
 

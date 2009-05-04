@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
     cout << "=====================================================" <<endl;
 
     cout << "-------------------" <<endl;
-    cout << "--- EXERCISE 4 ----" <<endl;
+    cout << "--- EXERCISE 5 ----" <<endl;
     cout << "-------------------" <<endl;
 
     // We will not solve this exercise without using the Nektar++ library
@@ -75,8 +75,8 @@ int main(int argc, char *argv[])
 
             // First, define some dimensions;
             int nElements         = multiElementExp->GetExpSize();
-            int nDirDofs          = (multiElementExp->GetLocalToGlobalMap())->GetNumDirichletDofs();
-            int nGlobalBndDofs    = (multiElementExp->GetLocalToGlobalMap())->GetTotGloBndDofs();
+            int nDirDofs          = (multiElementExp->GetLocalToGlobalMap())->GetNumGlobalDirBndCoeffs();
+            int nGlobalBndDofs    = (multiElementExp->GetLocalToGlobalMap())->GetNumGlobalBndCoeffs();
             int nGlobalIntDofs    = multiElementExp->GetContNcoeffs() - nGlobalBndDofs;
             // As all elements are identical, we can calculate the dimensions below just once
             int nElementalBndDofs = (multiElementExp->GetExp(0))->NumBndryCoeffs();
@@ -92,9 +92,10 @@ int main(int argc, char *argv[])
             // Allocate space for the other blocks
             Array<OneD,unsigned int> bndBlockSize(nElements,nElementalBndDofs);
             Array<OneD,unsigned int> intBlockSize(nElements,nElementalDofs-nElementalBndDofs);
-            DNekScalBlkMatSharedPtr BinvD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(bndBlockSize,intBlockSize);
-            DNekScalBlkMatSharedPtr invD  = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(intBlockSize,intBlockSize);
-            DNekScalBlkMatSharedPtr C     = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(intBlockSize,bndBlockSize);
+            MatrixStorage blkmatStorage = eDIAGONAL;
+            DNekScalBlkMatSharedPtr BinvD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(bndBlockSize,intBlockSize,blkmatStorage);
+            DNekScalBlkMatSharedPtr invD  = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(intBlockSize,intBlockSize,blkmatStorage);
+            DNekScalBlkMatSharedPtr C     = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(intBlockSize,bndBlockSize,blkmatStorage);
 
             // Step 3: Assemble the global matrices from the elemental mass matrix
             int n,i,j;
@@ -112,15 +113,15 @@ int main(int argc, char *argv[])
                 
                 for(i = 0; i < nElementalBndDofs; ++i)
                 {
-                    globalId1 = (multiElementExp->GetLocalToGlobalMap())->GetBndMap(cnt + i);
-                    sign1     = (multiElementExp->GetLocalToGlobalMap())->GetBndSign(cnt + i);
+                    globalId1 = (multiElementExp->GetLocalToGlobalMap())->GetLocalToGlobalBndMap(cnt + i);
+                    sign1     = (multiElementExp->GetLocalToGlobalMap())->GetLocalToGlobalBndSign(cnt + i);
                     
                     if(globalId1 >= nDirDofs)
                     {                        
                         for(j = 0; j < nElementalBndDofs; ++j)
                         {
-                            globalId2 = (multiElementExp->GetLocalToGlobalMap())->GetBndMap(cnt + j);
-                            sign2     = (multiElementExp->GetLocalToGlobalMap())->GetBndSign(cnt + j);
+                            globalId2 = (multiElementExp->GetLocalToGlobalMap())->GetLocalToGlobalBndMap(cnt + j);
+                            sign2     = (multiElementExp->GetLocalToGlobalMap())->GetLocalToGlobalBndSign(cnt + j);
                             
                             if(globalId2 >= nDirDofs)
                             {  
@@ -135,7 +136,7 @@ int main(int argc, char *argv[])
         
             // CONSTRUCT THE RIGHT HAND SIDE VECTOR
             // Evaluate the forcing function at the quadrature points
-            int nTotQuadPoints = multiElementExp->GetPointsTot();
+            int nTotQuadPoints = multiElementExp->GetTotPoints();
             Array<OneD,NekDouble> x1(nTotQuadPoints,0.0);
             Array<OneD,NekDouble> x2(nTotQuadPoints,0.0);
             Array<OneD,NekDouble> x3(nTotQuadPoints,0.0);
@@ -180,18 +181,18 @@ int main(int argc, char *argv[])
             Array<OneD,NekDouble> dirForcing(multiElementExp->GetContNcoeffs(),0.0);
 
             cnt = 0;
-            for(i = 0; i < (multiElementExp->GetBndCondExp()).num_elements(); ++i)
+            for(i = 0; i < (multiElementExp->GetBndCondExpansions()).num_elements(); ++i)
             {
-                for(j = 0; j < ((multiElementExp->GetBndCondExp())[i])->GetNcoeffs(); j++)
+                for(j = 0; j < ((multiElementExp->GetBndCondExpansions())[i])->GetNcoeffs(); j++)
                 {
-                    dirDofsValues[(multiElementExp->GetLocalToGlobalMap())->GetBndCondMap(cnt++)] = 
-                        (((multiElementExp->GetBndCondExp())[i])->GetCoeffs())[j];
+                    dirDofsValues[(multiElementExp->GetLocalToGlobalMap())->GetBndCondCoeffsToGlobalCoeffsMap(cnt++)] = 
+                        (((multiElementExp->GetBndCondExpansions())[i])->GetCoeffs())[j];
                 }
             }
 
             // Multiply the Dirichlet DOFs with the mass matrix to get the
             // rhs due to the dirichlet DOFs
-            MultiRegions::GlobalLinSysKey key(StdRegions::eMass);
+            MultiRegions::GlobalMatrixKey key(StdRegions::eMass);
             multiElementExp->GeneralMatrixOp(key, dirDofsValues, dirForcing);
 
             // Substract this from the original rhs
@@ -226,7 +227,7 @@ int main(int argc, char *argv[])
 
             // Solve interior system 
             Vmath::Zero(tmpVector.GetDimension(),tmpVector.GetRawPtr(),1);
-            (multiElementExp->GetLocalToGlobalMap())->ContToLocalBnd(localBndDofsSolutionVector,tmpVector,nDirDofs);
+            (multiElementExp->GetLocalToGlobalMap())->GlobalToLocalBnd(localBndDofsSolutionVector,tmpVector,nDirDofs);
             rhsIntVector = rhsIntVector - (*C)*tmpVector;
 
             localIntDofsSolutionVector = (*invD)*rhsIntVector;
@@ -238,7 +239,7 @@ int main(int argc, char *argv[])
 
             // DO A BACKWARD TRANSFORMATION TO CALCULATE THE EXPANSION
             // EVALUATED AT THE QUADRATURE POINTS
-            multiElementExp->ContToLocal();
+            multiElementExp->GlobalToLocal();
 
             cnt_phys  = 0;
             cnt_coeff = 0;
@@ -309,7 +310,7 @@ int main(int argc, char *argv[])
                 MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(mesh,boundaryConds);
 
             // Evaluate the forcing function at the quadrature points
-            int nTotQuadPoints = multiElementExp->GetPointsTot();
+            int nTotQuadPoints = multiElementExp->GetTotPoints();
             Array<OneD,NekDouble> x1(nTotQuadPoints,0.0);
             Array<OneD,NekDouble> x2(nTotQuadPoints,0.0);
             Array<OneD,NekDouble> x3(nTotQuadPoints,0.0);
@@ -334,15 +335,15 @@ int main(int argc, char *argv[])
             // Do the projection to obtain the coefficients of the expansion
             // The result is stored in the data member m_contCoeffs of the ContExpList2D 
             // object multiElementExp.
-            multiElementExp->FwdTrans(*forcingExp);
+            multiElementExp->FwdTrans(forcingExp->GetPhys(),multiElementExp->UpdateCoeffs());
 
             // Perform a backward transformation to obtain the solution at the quadrature points
             // The result is stored in the data member m_phys of the ContExpList2D 
             // object multiElementExp.
-            multiElementExp->BwdTrans(*multiElementExp);
+            multiElementExp->BwdTrans(multiElementExp->GetCoeffs(),multiElementExp->UpdatePhys());
 
             // Calculate the error
-            NekDouble error = multiElementExp->L2(*forcingExp);
+            NekDouble error = multiElementExp->L2(forcingExp->GetPhys());
 
             // Display the output              
             cout << "P = " << p << " => Error = " << error << endl;

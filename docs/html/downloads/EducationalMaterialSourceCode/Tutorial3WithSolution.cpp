@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 
         // Before actually starting to solve the Helmholtz problem, we need to evaluate the 
         // forcing function at the quadrature points of the (discrete) spectral/hp expansion
-        int nTotQuadPoints = spectralHpExp->GetPointsTot();
+        int nTotQuadPoints = spectralHpExp->GetTotPoints();
         // Get the (local) coordinates of all the quadrature points
         Array<OneD,NekDouble> x1(nTotQuadPoints,0.0);
         Array<OneD,NekDouble> x2(nTotQuadPoints,0.0);
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
         // function arguments:
 #if WITHSOLUTION
         NekDouble lambda =boundaryConds.GetParameter("Lambda");
-        spectralHpExp->HelmSolve(*forcingExp,lambda);
+        spectralHpExp->HelmSolve(forcingExp->GetPhys(),spectralHpExp->UpdateCoeffs(),lambda);
 #endif
 
         // The function above solves the linear system corresponding to the Helmholtz problem
@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
         // quadrature points, we need a second function. 
         // Insert this function here:
 #if WITHSOLUTION
-        spectralHpExp->BwdTrans(*spectralHpExp);
+        spectralHpExp->BwdTrans(spectralHpExp->GetCoeffs(),spectralHpExp->UpdatePhys());
 #endif
 
         // The last step is to calculate the L2 error of the approximation. Therefore, we should also
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
         // Now, call the right function to evaluate the L2 error of the spectral/hp approximation
         NekDouble error;
 #if WITHSOLUTION
-        error = spectralHpExp->L2(*exactSolutionExp);
+        error = spectralHpExp->L2(exactSolutionExp->GetPhys());
 #endif
 
         // Display the output              

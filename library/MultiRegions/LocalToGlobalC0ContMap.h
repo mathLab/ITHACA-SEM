@@ -50,6 +50,7 @@ namespace Nektar
     namespace MultiRegions
     {
         const static map<int,int> NullIntIntMap;
+        const static vector<map<int,int> > NullVecIntIntMap;
         
     class LocalToGlobalC0ContMap: public LocalToGlobalBaseMap
         {
@@ -72,7 +73,7 @@ namespace Nektar
                                    const StdRegions::StdExpansionVector &locExpVector, 
                                    const Array<OneD, const ExpList1DSharedPtr> &bndCondExp,
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
-                                   const map<int,int>& periodicVerticesId,
+                                   const vector<map<int,int> >& periodicVerticesId,
                                    const map<int,int>& periodicEdgesId);
 
             // Constructor for the 3D expansion mappings
@@ -189,7 +190,7 @@ namespace Nektar
                                                NullExpList1DSharedPtrArray,
                                            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions = 
                                                SpatialDomains::NullBoundaryConditionShPtrArray,
-                                           const map<int,int>& periodicVerticesId = NullIntIntMap,
+                                           const vector<map<int,int> >& periodicVerticesId = NullVecIntIntMap,
                                            const map<int,int>& periodicEdgesId = NullIntIntMap);
 
             void SetUp3DExpansionC0ContMap(const int numLocalCoeffs, 
@@ -216,6 +217,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalC0ContMap.h,v $
+* Revision 1.7  2009/04/02 13:06:42  sherwin
+* Modified to take symmetric banded system for HDH solver
+*
 * Revision 1.6  2009/01/06 21:04:42  sherwin
 * Constified GlobalToLocal, LocalToGlobal and Assemble calls that take input and output argument
 *

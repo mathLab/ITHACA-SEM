@@ -513,7 +513,6 @@ namespace Nektar
                 EvaluateBoundaryConditions(time);
             }
 
-
         };
         typedef boost::shared_ptr<ContField2D>      ContField2DSharedPtr;
 

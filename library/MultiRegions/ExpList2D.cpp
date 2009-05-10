@@ -380,7 +380,7 @@ namespace Nektar
         void ExpList2D::GetPeriodicEdges(SpatialDomains::MeshGraph2D &graph2D,
                                          SpatialDomains::BoundaryConditions &bcs, 
                                          const std::string variable,
-                                         map<int,int>& periodicVertices,
+                                         vector<map<int,int> >& periodicVerts,
                                          map<int,int>& periodicEdges)
         {
             int i,j,k;
@@ -405,6 +405,8 @@ namespace Nektar
             
             SpatialDomains::BoundaryConditionShPtr locBCond; 
 
+
+
             // This std::map is a check so that the periodic pairs
             // are not treated twice
             map<int, int> doneBndRegions;
@@ -424,6 +426,9 @@ namespace Nektar
                         ASSERTL0(bregions[region1ID]->size() == bregions[region2ID]->size(),
                                  "Size of the 2 periodic boundary regions should be equal");
                     
+
+                        map<int,int> periodicVertices;
+
                         for(j = 0; j < bregions[region1ID]->size(); j++)
                         {
                             comp1 = (*(bregions[region1ID]))[j];
@@ -468,6 +473,7 @@ namespace Nektar
                                 }
                             }
                         }
+                        periodicVerts.push_back(periodicVertices);
                     }
                     else
                     {
@@ -485,6 +491,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.cpp,v $
+* Revision 1.27  2009/04/27 15:02:04  pvos
+* From h-to-p efficiently updates
+*
 * Revision 1.26  2009/04/20 16:14:06  sherwin
 * Updates for optimising bandwidth of DG solver and allowing write import on explist
 *

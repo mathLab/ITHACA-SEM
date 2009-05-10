@@ -71,7 +71,7 @@ namespace Nektar
             // Set up matrix map
             m_globalBndMat = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
             map<int,int> periodicEdges;
-            map<int,int> periodicVertices;
+            vector<map<int,int> >periodicVertices;
             GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),periodicVertices,periodicEdges);
 
             // Set up Trace space
@@ -96,7 +96,7 @@ namespace Nektar
             m_globalBndMat   = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
 
             map<int,int> periodicEdges;
-            map<int,int> periodicVertices;
+            vector<map<int,int> > periodicVertices;
             GetPeriodicEdges(graph2D,bcs,variable,periodicVertices,periodicEdges);
 
             // Set up Trace space

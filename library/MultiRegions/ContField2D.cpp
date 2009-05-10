@@ -67,7 +67,7 @@ namespace Nektar
             if(!SameTypeOfBoundaryConditions(In))
             {
                 map<int,int> periodicEdges;
-                map<int,int> periodicVertices;
+                vector<map<int,int> >periodicVertices;
                 GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),periodicVertices,periodicEdges);
 
                 m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp, m_bndCondExpansions, m_bndConditions, periodicVertices, periodicEdges);
@@ -93,7 +93,7 @@ namespace Nektar
             EvaluateBoundaryConditions();
 
             map<int,int> periodicEdges;
-            map<int,int> periodicVertices;
+            vector<map<int,int> > periodicVertices;
             GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),periodicVertices,periodicEdges);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp, m_bndCondExpansions, m_bndConditions, periodicVertices, periodicEdges);
@@ -113,7 +113,7 @@ namespace Nektar
             EvaluateBoundaryConditions();
 
             map<int,int> periodicEdges;
-            map<int,int> periodicVertices;
+            vector<map<int,int> >periodicVertices;
             GetPeriodicEdges(graph2D,bcs,variable,periodicVertices,periodicEdges);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp,
@@ -142,7 +142,7 @@ namespace Nektar
             EvaluateBoundaryConditions();
 
             map<int,int> periodicEdges;
-            map<int,int> periodicVertices;
+            vector<map<int,int> >periodicVertices;
             GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),periodicVertices,periodicEdges);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp,
@@ -171,7 +171,7 @@ namespace Nektar
             EvaluateBoundaryConditions();
 
             map<int,int> periodicEdges;
-            map<int,int> periodicVertices;
+            vector<map<int,int> >periodicVertices;
             GetPeriodicEdges(graph2D,bcs,variable,periodicVertices,periodicEdges);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp,

@@ -126,7 +126,7 @@ namespace Nektar
             void GetPeriodicEdges(SpatialDomains::MeshGraph2D &graph2D,
                                   SpatialDomains::BoundaryConditions &bcs, 
                                   const std::string variable,
-                                  map<int,int>& periodicVertices,
+                                  vector<map<int,int> > & periodicVertices,
                                   map<int,int>& periodicEdges);
         private:
             
@@ -144,6 +144,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.h,v $
+* Revision 1.18  2009/03/04 14:17:38  pvos
+* Removed all methods that take and Expansion as argument
+*
 * Revision 1.17  2008/10/04 20:04:26  sherwin
 * Modifications for solver access
 *

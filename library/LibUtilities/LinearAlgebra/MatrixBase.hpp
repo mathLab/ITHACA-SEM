@@ -122,6 +122,7 @@ namespace Nektar
                 {
                     m_transpose = 'N';
                 }
+                v_Transpose();
             }
 
             char GetTransposeFlag() const 
@@ -281,6 +282,7 @@ namespace Nektar
             virtual typename boost::call_traits<DataType>::value_type v_GetValue(unsigned int row, unsigned int column) const = 0;            
             virtual unsigned int v_GetStorageSize() const = 0;            
             virtual MatrixStorage v_GetStorageType() const = 0;
+            virtual void v_Transpose() {};
             virtual char v_GetTransposeFlag() const { return m_transpose; }
             unsigned int m_size[2];
             char m_transpose;

@@ -49,32 +49,14 @@
 #include <LibUtilities/ExpressionTemplates/BinaryExpressionEvaluatorFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrixMetadata.hpp>
 #include <LibUtilities/BasicUtils/RawType.hpp>
-
+#include <LibUtilities/LinearAlgebra/CanGetRawPtr.hpp>
 #include <boost/utility/enable_if.hpp>
 
 #include <string>
 
 namespace Nektar
 {
-    template<typename MatrixType>
-    struct CanGetRawPtr : public boost::false_type {};
     
-    template<>
-    struct CanGetRawPtr<NekMatrix<double, StandardMatrixTag> > : public boost::true_type {};
-    
-    template<>
-    struct CanGetRawPtr<NekMatrix<NekMatrix<double>, ScaledMatrixTag> > : public boost::true_type {};
-    
-    template<typename T, typename M>
-    struct CanGetRawPtr<NekMatrix<T, M> > :
-        boost::mpl::if_
-        <
-            boost::mpl::and_
-            <
-                boost::mpl::not_<boost::is_same<BlockMatrixTag, M> >,
-                CanGetRawPtr<T>
-            >, boost::true_type, boost::false_type
-        >::type {};
         
     ////////////////////////////////////////////////////////////////////////////////////
     // Matrix-Constant Multiplication
@@ -143,7 +125,15 @@ namespace Nektar
              typename LhsMatrixType, typename RhsMatrixType>
     void NekMultiplyFullMatrixFullMatrix(NekMatrix<NekDouble, StandardMatrixTag>& result,
                                          const NekMatrix<LhsDataType, LhsMatrixType>& lhs,
-                                         const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
+                                         const NekMatrix<RhsDataType, RhsMatrixType>& rhs,
+                                         typename boost::enable_if
+                                         <
+                                            boost::mpl::and_
+                                            <
+                                                CanGetRawPtr<NekMatrix<LhsDataType, LhsMatrixType> >,
+                                                CanGetRawPtr<NekMatrix<RhsDataType, RhsMatrixType> >
+                                            >
+                                         >::type* p = 0)
     {
         ASSERTL1(lhs.GetType() == eFULL && rhs.GetType() == eFULL, "Only full matrices are supported.");
 
@@ -232,7 +222,11 @@ namespace Nektar
                           const NekMatrix<RhsInnerType, RhsMatrixType>& rhs,
                           typename boost::enable_if
                           <
-                            boost::is_same<typename RawType<typename NekMatrix<RhsInnerType, RhsMatrixType>::NumberType>::type, double>
+                            boost::mpl::and_
+                            <
+                                boost::is_same<typename RawType<typename NekMatrix<RhsInnerType, RhsMatrixType>::NumberType>::type, double>,
+                                CanGetRawPtr<NekMatrix<RhsInnerType, RhsMatrixType> >
+                            >
                           >::type* t = 0)
     {
         ASSERTL0(result.GetType() == eFULL && rhs.GetType() == eFULL, "Only full matrices supported.");

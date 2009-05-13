@@ -101,6 +101,33 @@ namespace Nektar
             BOOST_CHECK(m1_iter == m1.end());
             BOOST_CHECK(m2_iter == m2.end());
         }
+        
+        BOOST_AUTO_TEST_CASE(TestWrappedCopyConstructor)
+        {
+            double buf1[] = { 1, 4,
+                              2, 5,
+                              3, 6};
+
+            NekMatrix<double> m1(2, 3, buf1);
+            NekMatrix<double> m2 = NekMatrix<double>::CreateWrapper(m1);
+            
+            BOOST_CHECK_EQUAL(1.0, m1(0,0));
+            BOOST_CHECK_EQUAL(1.0, m2(0,0));
+            
+            m1(0,0) = -4.5;
+            
+            BOOST_CHECK_EQUAL(-4.5, m1(0,0));
+            BOOST_CHECK_EQUAL(-4.5, m2(0,0));
+            
+            BOOST_CHECK_EQUAL(4.0, m1(1,0));
+            BOOST_CHECK_EQUAL(4.0, m2(1,0));
+            
+            m2(1,0) = 6.7;
+            
+            BOOST_CHECK_EQUAL(6.7, m1(1,0));
+            BOOST_CHECK_EQUAL(6.7, m2(1,0));
+
+        }
     }
 
     namespace StandardMatrixOperationsUnitTests

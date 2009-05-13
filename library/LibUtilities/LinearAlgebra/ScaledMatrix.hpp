@@ -158,6 +158,16 @@ namespace Nektar
             const_iterator begin() const { return const_iterator(m_matrix->begin(this->GetTransposeFlag()), m_scale); }
             const_iterator end() const { return const_iterator(m_matrix->end(this->GetTransposeFlag()), m_scale); }
             
+            static ThisType CreateWrapper(const ThisType& rhs)
+            {
+                return ThisType(rhs);
+            }
+            
+            static boost::shared_ptr<ThisType> CreateWrapper(const boost::shared_ptr<ThisType>& rhs)
+            {
+                return boost::shared_ptr<ThisType>(new ThisType(*rhs));
+            }
+            
         public:
         
         private:
@@ -228,6 +238,17 @@ namespace Nektar
                 BaseType(rhs)
             {
             }
+            
+            static ThisType CreateWrapper(const ThisType& rhs)
+            {
+                return ThisType(rhs);
+            }
+            
+            static boost::shared_ptr<ThisType> CreateWrapper(const boost::shared_ptr<ThisType>& rhs)
+            {
+                return boost::shared_ptr<ThisType>(new ThisType(*rhs));
+            }
+
     };
     
     template<typename DataType>

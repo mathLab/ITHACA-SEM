@@ -350,16 +350,9 @@ namespace Nektar
                 m_numberOfSuperDiagonals(rhs.m_numberOfSuperDiagonals),
                 m_numberOfSubDiagonals(rhs.m_numberOfSubDiagonals)
             {
-                if( m_wrapperType == eWrapper )
-                {
-                    m_data = rhs.m_data;
-                }
-                else
-                {
-                    m_data = Array<OneD, DataType>(GetRequiredStorageSize());
-                    CopyArrayN(rhs.m_data, m_data, m_data.num_elements());
-                }
+                PerformCopyConstruction(rhs);
             }
+
             
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
                 explicit NekMatrix(const NekMatrixMetadata& d) :
@@ -762,7 +755,28 @@ namespace Nektar
                 return boost::tuples::tuple<unsigned int, unsigned int>(curRow, curColumn);
             }
          
+            static ThisType CreateWrapper(const ThisType& rhs)
+            {
+                return ThisType(rhs, eWrapper);
+            }
+            
+            static boost::shared_ptr<ThisType> CreateWrapper(const boost::shared_ptr<ThisType>& rhs)
+            {
+                return boost::shared_ptr<ThisType>(new ThisType(*rhs, eWrapper));
+            }
+
         protected:
+            NekMatrix(const ThisType& rhs, PointerWrapper wrapperType)  :
+                BaseType(rhs),
+                m_data(),
+                m_wrapperType(wrapperType),
+                m_storagePolicy(rhs.m_storagePolicy),
+                m_numberOfSuperDiagonals(rhs.m_numberOfSuperDiagonals),
+                m_numberOfSubDiagonals(rhs.m_numberOfSubDiagonals)
+            {
+                    PerformCopyConstruction(rhs);
+            }
+
             Array<OneD, DataType>& GetData() { return m_data; }
             void ResizeDataArrayIfNeeded(unsigned int requiredStorageSize)
             {
@@ -796,7 +810,19 @@ namespace Nektar
 
             
         private:
-                        
+            void PerformCopyConstruction(const ThisType& rhs)
+            {
+                if( m_wrapperType == eWrapper )
+                {
+                    m_data = rhs.m_data;
+                }
+                else
+                {
+                    m_data = Array<OneD, DataType>(GetRequiredStorageSize());
+                    CopyArrayN(rhs.m_data, m_data, m_data.num_elements());
+                }
+            }
+            
             virtual typename boost::call_traits<DataType>::value_type v_GetValue(unsigned int row, unsigned int column) const 
             {
                 return ThisType::operator()(row, column);
@@ -1215,10 +1241,35 @@ namespace Nektar
                 std::swap(m_tempSpace, this->GetData());
             }
             
+            static ThisType CreateWrapper(const ThisType& rhs)
+            {
+                return ThisType(rhs, eWrapper);
+            }
+            
+            static boost::shared_ptr<ThisType> CreateWrapper(const boost::shared_ptr<ThisType>& rhs)
+            {
+                return boost::shared_ptr<ThisType>(new ThisType(*rhs, eWrapper));
+            }
+            
+            ThisType& operator*=(const NumberType& s)
+            {
+                for(unsigned int i = 0; i < this->GetPtr().num_elements(); ++i)
+                {
+                    this->GetPtr()[i] *= s;
+                }
+                return *this;
+            }
+            
         protected:
             
             
         private:
+            NekMatrix(const ThisType& rhs, PointerWrapper wrapper) :
+                BaseType(rhs, wrapper),
+                m_tempSpace()
+            {
+            }
+            
             virtual void v_SetValue(unsigned int row, unsigned int column, typename boost::call_traits<DataType>::const_reference d)
             {
                 return ThisType::SetValue(row, column, d);

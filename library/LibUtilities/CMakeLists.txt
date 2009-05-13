@@ -9,6 +9,7 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/SparseBlas.hpp
     ./LinearAlgebra/BlasArray.hpp
     ./LinearAlgebra/BlockMatrix.hpp
+    ./LinearAlgebra/CanGetRawPtr.hpp
     ./LinearAlgebra/Lapack.hpp
     ./LinearAlgebra/MatrixBase.hpp
     ./LinearAlgebra/MatrixFuncs.h

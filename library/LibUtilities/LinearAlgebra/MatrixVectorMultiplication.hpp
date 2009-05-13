@@ -38,6 +38,7 @@
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
+#include <LibUtilities/LinearAlgebra/CanGetRawPtr.hpp>
 
 namespace Nektar
 {
@@ -78,10 +79,14 @@ namespace Nektar
                                const double* rhs,
                                typename boost::enable_if
                                <
-                                    boost::is_same
+                                    boost::mpl::and_
                                     <
-                                        typename RawType<typename NekMatrix<LhsDataType, MatrixType>::NumberType>::type,
-                                        double
+                                        boost::is_same
+                                        <
+                                            typename RawType<typename NekMatrix<LhsDataType, MatrixType>::NumberType>::type,
+                                            double
+                                        >,
+                                        CanGetRawPtr<NekMatrix<LhsDataType, MatrixType> >
                                     >
                                >::type* p = 0)
     {
@@ -120,13 +125,17 @@ namespace Nektar
                     const double* rhs,
                     typename boost::enable_if
                     <
-                        boost::is_same
+                        boost::mpl::and_
                         <
-                            typename RawType
+                            boost::is_same
                             <
-                                typename NekMatrix<LhsDataType, MatrixType>::NumberType
-                            >::type, 
-                            double
+                                typename RawType
+                                <
+                                    typename NekMatrix<LhsDataType, MatrixType>::NumberType
+                                >::type, 
+                                double
+                            >,
+                            CanGetRawPtr<NekMatrix<LhsDataType, MatrixType> >
                         >
                     >::type* p = 0)
     {
@@ -147,10 +156,27 @@ namespace Nektar
 
     }
 
+
     template<typename DataType, typename LhsDataType, typename MatrixType>
     void NekMultiplyBandedMatrix(DataType* result,
                     const NekMatrix<LhsDataType, MatrixType>& lhs,
-                    const DataType* rhs)
+                    const DataType* rhs,
+                    typename boost::enable_if
+                    <
+                        boost::mpl::not_<CanGetRawPtr<NekMatrix<LhsDataType, MatrixType> > >
+                    >::type* p = 0)
+    {
+        NEKERROR(ErrorUtil::efatal, "Banded block matrix multiplication not yet implemented");
+    }
+    
+    template<typename DataType, typename LhsDataType, typename MatrixType>
+    void NekMultiplyBandedMatrix(DataType* result,
+                    const NekMatrix<LhsDataType, MatrixType>& lhs,
+                    const DataType* rhs,
+                    typename boost::enable_if
+                    <
+                        CanGetRawPtr<NekMatrix<LhsDataType, MatrixType> >
+                    >::type* p = 0)
     {
         unsigned int subDiagonals = lhs.GetNumberOfSubDiagonals();
         unsigned int superDiagonals = lhs.GetNumberOfSuperDiagonals();
@@ -185,7 +211,14 @@ namespace Nektar
     void NekMultiplyUpperTriangularMatrix(double* result,
                      const NekMatrix<LhsDataType, StandardMatrixTag>& lhs,
                      const double* rhs,
-                     typename boost::enable_if<boost::is_same<double, typename RawType<LhsDataType>::type> >::type* p = 0)
+                     typename boost::enable_if
+                     <
+                        boost::mpl::and_
+                        <
+                            boost::is_same<double, typename RawType<LhsDataType>::type>,
+                            CanGetRawPtr<NekMatrix<LhsDataType, StandardMatrixTag> >
+                        >
+                     >::type* p = 0)
     {
         int vectorSize = lhs.GetColumns();
         std::copy(rhs, rhs+vectorSize, result);
@@ -249,7 +282,11 @@ namespace Nektar
                      const double* rhs,
                      typename boost::enable_if
                      <
-                        boost::is_same<double, typename RawType<LhsDataType>::type>
+                        boost::mpl::and_
+                        <
+                            boost::is_same<double, typename RawType<LhsDataType>::type>,
+                            CanGetRawPtr<NekMatrix<LhsDataType, StandardMatrixTag> >
+                        >
                      >::type* p = 0)
     {
         int vectorSize = lhs.GetColumns();

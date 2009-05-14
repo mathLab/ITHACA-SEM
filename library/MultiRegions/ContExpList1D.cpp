@@ -168,12 +168,12 @@ namespace Nektar
 
             if(UseContCoeffs)
             {                
-                mass_matrix->Solve(outarray,outarray,*m_locToGloMap);
+                mass_matrix->Solve(outarray,outarray,*m_locToGloMap,this);
             }
             else
             {
                 Array<OneD, NekDouble> wsp(m_contNcoeffs);
-                mass_matrix->Solve(outarray,wsp,*m_locToGloMap);
+                mass_matrix->Solve(outarray,wsp,*m_locToGloMap,this);
                 GlobalToLocal(wsp,outarray);
             }
 
@@ -200,6 +200,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.38  2009/04/27 15:02:03  pvos
+* From h-to-p efficiently updates
+*
 * Revision 1.37  2009/04/20 16:14:06  sherwin
 * Updates for optimising bandwidth of DG solver and allowing write import on explist
 *

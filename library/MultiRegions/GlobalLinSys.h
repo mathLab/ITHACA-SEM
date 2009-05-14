@@ -35,7 +35,6 @@
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYS_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYS_H
 
-#include <MultiRegions/ExpList.h>
 #include <MultiRegions/GlobalLinSysKey.h>
 
 namespace Nektar
@@ -43,6 +42,7 @@ namespace Nektar
     namespace MultiRegions
     {
         class LocalToGlobalC0ContMap;
+	class ExpList;
 
 	class GlobalLinSys
         {
@@ -52,6 +52,7 @@ namespace Nektar
 
             GlobalLinSys(const GlobalLinSysKey &mkey, 
                          const DNekLinSysSharedPtr linsys,
+                         const DNekScalBlkMatSharedPtr SchurCompl,
                          const DNekScalBlkMatSharedPtr BinvD,
                          const DNekScalBlkMatSharedPtr invDC,
                          const DNekScalBlkMatSharedPtr invD);
@@ -68,11 +69,13 @@ namespace Nektar
             }
 
             void Solve(const Array<OneD,const NekDouble> &in, 
-                       Array<OneD,NekDouble> &out);
+                             Array<OneD,      NekDouble> &out);
 
             void Solve(const Array<OneD, const NekDouble> &in, 
-                       Array<OneD,NekDouble> &out,
-                       LocalToGlobalC0ContMap &locToGloMap);
+                             Array<OneD,       NekDouble> &out,
+                             LocalToGlobalC0ContMap &locToGloMap,
+                             ExpList* exp,
+                       const Array<OneD, const NekDouble> &dirForcing = NullNekDouble1DArray);
 
         private:
             GlobalLinSysKey                     m_linSysKey;

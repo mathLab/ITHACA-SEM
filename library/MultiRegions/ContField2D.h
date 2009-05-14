@@ -238,7 +238,7 @@ namespace Nektar
                                  Array<OneD,       NekDouble> &outarray,
                            NekDouble lambda,
                            bool      UseContCoeffs = false,
-                           Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray);
+                           const Array<OneD, const NekDouble>& dirForcing = NullNekDouble1DArray);
 
             /**
              * \brief This function solves the two-dimensional Laplace equation, 
@@ -290,7 +290,7 @@ namespace Nektar
              */ 
             void LaplaceSolve(const Array<OneD, const NekDouble> &inarray,
                                     Array<OneD,       NekDouble> &outarray,
-                                    Array<OneD,       NekDouble> &dirForcing = NullNekDouble1DArray,
+                              const Array<OneD, const NekDouble> &dirForcing = NullNekDouble1DArray,
                               const Array<OneD,       Array<OneD,NekDouble> >& variablecoeffs = NullNekDoubleArrayofArray,
                               NekDouble time = 0.0,
                               bool UseContCoeffs = false);
@@ -300,7 +300,7 @@ namespace Nektar
                                       Array<OneD,       NekDouble> &outarray,
                                       NekDouble ax,     NekDouble ay,
                                       bool        UseContCoeffs = false,
-                                      Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray);
+                                      const Array<OneD, const NekDouble>& dirForcing = NullNekDouble1DArray);
             
             void LinearAdvectionEigs(const NekDouble ax, 
                                      const NekDouble ay,
@@ -355,10 +355,6 @@ namespace Nektar
             {
                 return m_bndConditions;
             }
-
-            void GenerateDirBndCondForcing(const GlobalLinSysKey &key, 
-                                           Array<OneD, NekDouble> &inout, 
-                                           Array<OneD, NekDouble> &outarray);
                 
         protected:
 
@@ -454,8 +450,8 @@ namespace Nektar
              */ 
             void GlobalSolve(const GlobalLinSysKey &key, 
                              const Array<OneD, const  NekDouble> &rhs, 
-                             Array<OneD, NekDouble> &inout,
-                             Array<OneD, NekDouble> &dirForcing = NullNekDouble1DArray);
+                                   Array<OneD,        NekDouble> &inout,
+                             const Array<OneD, const NekDouble> &dirForcing = NullNekDouble1DArray);
 
 
           
@@ -498,7 +494,7 @@ namespace Nektar
                                            Array<OneD,       NekDouble> &outarray,
                                      NekDouble lambda,
                                      bool      UseContCoeffs,
-                                     Array<OneD, NekDouble>& dirForcing)
+                                     const Array<OneD, const NekDouble>& dirForcing)
             {
                 HelmSolve(inarray,outarray,lambda,UseContCoeffs,dirForcing);
             }

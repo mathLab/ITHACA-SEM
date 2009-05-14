@@ -35,6 +35,7 @@
 
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/LocalToGlobalC0ContMap.h>
+#include <MultiRegions/GlobalLinSys.h>
 
 namespace Nektar
 {
@@ -809,6 +810,7 @@ namespace Nektar
             DNekScalBlkMatSharedPtr BinvD;
             DNekScalBlkMatSharedPtr invD;
             DNekScalBlkMatSharedPtr C;
+            DNekScalBlkMatSharedPtr SchurCompl;
 
             // set up an array of integers for block matrix construction
             for(i = 0; i < n_exp; ++i)
@@ -818,9 +820,10 @@ namespace Nektar
             }
             
             MatrixStorage blkmatStorage = eDIAGONAL;
-            BinvD = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nbdry_size,nint_size,blkmatStorage);
-            invD  = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nint_size,nint_size, blkmatStorage);
-            C     = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nint_size,nbdry_size,blkmatStorage);
+            SchurCompl = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nbdry_size,nbdry_size,blkmatStorage);
+            BinvD      = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nbdry_size,nint_size, blkmatStorage);
+            C          = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nint_size,nbdry_size, blkmatStorage);
+            invD       = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nint_size,nint_size,  blkmatStorage);
 
             DNekScalMatSharedPtr tmp_mat; 
 
@@ -848,9 +851,10 @@ namespace Nektar
                 loc_mat = (*m_exp)[n]->GetLocStaticCondMatrix(matkey);                   
                 loc_lda = (*m_exp)[n]->NumBndryCoeffs(); 
 
+                SchurCompl->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,0));
                 BinvD->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,1));
-                invD->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,1));
                 C->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,0));
+                invD->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,1));
                 
                 // Set up  Matrix; 
                 for(i = 0; i < loc_lda; ++i)
@@ -888,7 +892,7 @@ namespace Nektar
                 linsys = MemoryManager<DNekLinSys>::AllocateSharedPtr(Gmat,w);
             }
             
-            returnlinsys = MemoryManager<GlobalLinSys>::AllocateSharedPtr(mkey,linsys,BinvD,C,invD);
+            returnlinsys = MemoryManager<GlobalLinSys>::AllocateSharedPtr(mkey,linsys,SchurCompl,BinvD,C,invD);
             return returnlinsys;
         }
 

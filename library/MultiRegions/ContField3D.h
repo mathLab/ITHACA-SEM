@@ -98,7 +98,7 @@ namespace Nektar
                                  Array<OneD,       NekDouble> &outarray,
                            NekDouble lambda,
                            bool      UseContCoeffs = false,
-                           Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray);
+                           const Array<OneD, const NekDouble>& dirForcing = NullNekDouble1DArray);
 
 
             void EvaluateBoundaryConditions(const NekDouble time = 0.0)
@@ -135,7 +135,7 @@ namespace Nektar
             void GlobalSolve(const GlobalLinSysKey &key, 
                              const Array<OneD, const  NekDouble> &rhs, 
                              Array<OneD, NekDouble> &inout,
-                             Array<OneD, NekDouble> &dirForcing = NullNekDouble1DArray);
+                             const Array<OneD, const NekDouble> &dirForcing = NullNekDouble1DArray);
 
             void GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph3D &graph3D,
                                                     SpatialDomains::BoundaryConditions &bcs,
@@ -159,7 +159,7 @@ namespace Nektar
                                            Array<OneD,       NekDouble> &outarray,
                                      NekDouble lambda,
                                      bool      UseContCoeffs,
-                                     Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray)
+                                     const Array<OneD, const NekDouble>& dirForcing = NullNekDouble1DArray)
             {
                 HelmSolve(inarray,outarray,lambda,UseContCoeffs,dirForcing);
             }

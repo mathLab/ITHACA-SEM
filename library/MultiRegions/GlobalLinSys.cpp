@@ -50,18 +50,18 @@ namespace Nektar
 
 	GlobalLinSys::GlobalLinSys(const GlobalLinSysKey &mkey, 
                                    const DNekLinSysSharedPtr linsys,
+                                   const DNekScalBlkMatSharedPtr SchurCompl,
                                    const DNekScalBlkMatSharedPtr BinvD,
                                    const DNekScalBlkMatSharedPtr C,
                                    const DNekScalBlkMatSharedPtr invD):
-            m_linSysKey(mkey),
-            
-            m_linSys(linsys)
+            m_linSysKey(mkey),            
+            m_linSys(linsys),
+            m_blkMatrices(4)
 	{
-            m_blkMatrices = Array<OneD,DNekScalBlkMatSharedPtr>(3);
-
-            m_blkMatrices[0] = BinvD;
-            m_blkMatrices[1] = C;
-            m_blkMatrices[2] = invD;
+            m_blkMatrices[0] = SchurCompl;
+            m_blkMatrices[1] = BinvD;
+            m_blkMatrices[2] = C;
+            m_blkMatrices[3] = invD;
 	}
 
 
@@ -74,150 +74,121 @@ namespace Nektar
         }
 
         void GlobalLinSys::Solve(const Array<OneD, const NekDouble> &in, 
-                                 Array<OneD,NekDouble>  &out,
-                                 LocalToGlobalC0ContMap  &locToGloMap)
+                                       Array<OneD,       NekDouble> &out,
+                                       LocalToGlobalC0ContMap  &locToGloMap,
+                                       ExpList* exp,
+                                 const Array<OneD, const NekDouble> &dirForcing)
         {
+            bool dirForcCalculated = (bool) dirForcing.num_elements();
+
             switch(m_linSysKey.GetGlobalSysSolnType())
             {
             case eDirectFullMatrix:
                 {
-                    Solve(in,out); 
+                    int nDirDofs  = locToGloMap.GetNumGlobalDirBndCoeffs();
+                    
+                    if(nDirDofs)
+                    {
+                        // calculate the dirichlet forcing
+                        int nGlobDofs      = locToGloMap.GetNumGlobalCoeffs();
+                        Array<OneD, NekDouble> tmp(nGlobDofs);
+                        if(dirForcCalculated)
+                        {
+                            Vmath::Vsub(nGlobDofs,in.get(),1,dirForcing.get(),1,tmp.get(),1);
+                        }
+                        else
+                        {
+                            exp->GeneralMatrixOp(*(m_linSysKey.GetGlobalMatrixKey()),out,tmp,true);
+                            Vmath::Vsub(nGlobDofs,in.get(),1,tmp.get(),1,tmp.get(),1);
+                        }
+                        Array<OneD, NekDouble> offsetarray;
+                        Solve(tmp+nDirDofs,offsetarray = out+nDirDofs); 
+                    }
+                    else
+                    {
+                        Solve(in,out); 
+                    }
                 }
                 break;
             case eDirectStaticCond:
                 {
+                    int nGlobDofs        = locToGloMap.GetNumGlobalCoeffs();
+                    int nGlobBndDofs     = locToGloMap.GetNumGlobalBndCoeffs();
+                    int nDirBndDofs      = locToGloMap.GetNumGlobalDirBndCoeffs();
+                    int nGlobHomBndDofs  = nGlobBndDofs - nDirBndDofs;
+                    int nLocBndDofs      = locToGloMap.GetNumLocalBndCoeffs();
+                    int nIntDofs         = locToGloMap.GetNumGlobalCoeffs() - nGlobBndDofs; 
 
-#ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
-                    int nDirDofs  = locToGloMap.GetNumGlobalDirBndCoeffs();
-                    int nbndry    = locToGloMap.GetNumGlobalBndCoeffs() - nDirDofs;
-                    int nlocbndry = locToGloMap.GetNumLocalBndCoeffs();
-                    int nint      = in.num_elements() -nbndry; 
-                    
-
-                    int wspsize = (in.get() == out.get())?(nlocbndry+nbndry+nint):(nlocbndry+nint);
-                    Array<OneD,NekDouble> wsp(wspsize);
-                    Vmath::Vcopy(nbndry+nint,in.get(),1,wsp.get()+nlocbndry,1);
-
-                    DNekVec Vbnd(nbndry,out,eWrapper);
-
-                    int i;
-                    int cnt1;
-                    int cnt2;
-                    int nbndry_el;
-                    int nint_el;
-                    int nblocks = m_blkMatrices[0]->GetNumberOfBlockRows();
-
-                    if(nbndry)
+                    NekVector<NekDouble> F_HomBnd;
+                    NekVector<NekDouble> F_Int;
+                    Array<OneD, NekDouble> tmp;
+                    if(nDirBndDofs && dirForcCalculated)
                     {
-                        if(nint)
-                        {
-                            DNekScalBlkMat &BinvD = *m_blkMatrices[0];
-
-                            // construct boundary forcing                                 
-                            for(i = cnt1 = cnt2 = 0; i < nblocks; i++)
-                            {
-                                nbndry_el = BinvD.GetNumberOfRowsInBlockRow(i);
-                                nint_el   = BinvD.GetNumberOfColumnsInBlockColumn(i);
-
-                                if(nint_el)
-                                {
-                                    DNekScalMat& BinvD_el = *(BinvD.GetBlock(i,i));
-                                    Blas::Dgemv('N',nbndry_el,nint_el,BinvD_el.Scale(),BinvD_el.GetRawPtr(),
-                                                nbndry_el, in.get()+nbndry+cnt2, 1.0, 0.0, wsp.get()+cnt1, 1.0);
-                                }
-
-                                cnt1 += nbndry_el;
-                                cnt2 += nint_el;
-                            }      
- 
-                            locToGloMap.AssembleBnd(wsp,Vbnd.GetPtr(),nDirDofs);
-                            Vmath::Vsub(nbndry,wsp.get()+nlocbndry,1,out.get(),1,out.get(),1); 
-                        }
-                        
-                        // solve boundary system 
-                        m_linSys->Solve(Vbnd,Vbnd);
+                        tmp = Array<OneD, NekDouble>(nGlobDofs);
+                        Vmath::Vsub(nGlobDofs,in.get(),1,dirForcing.get(),1,tmp.get(),1);
+                        F_HomBnd = NekVector<NekDouble>(nGlobHomBndDofs,tmp+nDirBndDofs,eWrapper);
+                        F_Int    = NekVector<NekDouble>(nIntDofs,tmp+nGlobBndDofs,eWrapper);
+                    }
+                    else
+                    {
+                        F_HomBnd = NekVector<NekDouble>(nGlobHomBndDofs,in+nDirBndDofs,eCopy);
+                        F_Int    = NekVector<NekDouble>(nIntDofs,in+nGlobBndDofs,eCopy);
                     }
 
-                    // solve interior system 
-                    if(nint)
+                    NekVector<NekDouble> V_GlobBnd(nGlobBndDofs,out,eWrapper);
+                    NekVector<NekDouble> V_GlobHomBnd(nGlobHomBndDofs,out+nDirBndDofs,eWrapper);
+                    NekVector<NekDouble> V_Int(nIntDofs,out+nGlobBndDofs,eWrapper);
+                    NekVector<NekDouble> V_LocBnd(nLocBndDofs);
+
+                    if(nGlobHomBndDofs)
                     {
-                        DNekScalBlkMat &C     = *m_blkMatrices[1];
-                        DNekScalBlkMat &invD  = *m_blkMatrices[2];
-
-                        Vmath::Zero(nlocbndry,wsp.get(),1);
-                        locToGloMap.GlobalToLocalBnd(Vbnd.GetPtr(),wsp,nDirDofs);
-                             
-                        for(i = cnt1 = cnt2 = 0; i < nblocks; i++)
-                        {       
-                            nint_el   = C.GetNumberOfRowsInBlockRow(i);
-                            nbndry_el = C.GetNumberOfColumnsInBlockColumn(i);                     
-
-                            if(nbndry_el)
-                            {                                
-                                DNekScalMat& C_el = *(C.GetBlock(i,i));
-                                
-                                Blas::Dgemv('N',nint_el,nbndry_el,(-1.0*C_el.Scale()),C_el.GetRawPtr(),
-                                            nint_el, wsp.get()+cnt2, 1.0, 1.0, wsp.get()+nlocbndry+nbndry+cnt1, 1.0);
-                            }      
-                    
-                            if(nint_el)
-                            {              
-                                DNekScalMat& invD_el = *(invD.GetBlock(i,i));
-                                Blas::Dgemv('N',nint_el,nint_el,invD_el.Scale(),invD_el.GetRawPtr(),
-                                            nint_el, wsp.get()+nlocbndry+nbndry+cnt1, 1.0, 0.0, out.get()+nbndry+cnt1, 1.0);
-                            }
-                            
-                            cnt1 += nint_el;
-                            cnt2 += nbndry_el;
-                        }                
-                    }                
-#else
-                    int nDirDofs = locToGloMap.GetNumGlobalDirBndCoeffs();
-                    int nbndry  = locToGloMap.GetNumGlobalBndCoeffs() - nDirDofs;
-                    int nlocbndry = locToGloMap.GetNumLocalBndCoeffs();
-                    int nint    = in.num_elements() -nbndry; 
-
-                    Array<OneD,NekDouble>  offset;  
-                    DNekVec Fbnd(nbndry,in);
-                    DNekVec Vloc(nlocbndry);
-                    DNekVec Vbnd(nbndry,out,eWrapper);
-
-                    DNekVec Fint(nint,in + nbndry);
-                    DNekVec Vint(nint,offset = out + nbndry,eWrapper);
-
-                    if(nbndry)
-                    {
-                        if(nint)
+                        if(nIntDofs)
                         {
-                            DNekScalBlkMat &BinvD = *m_blkMatrices[0];
-
                             // construct boundary forcing 
-                            Vloc = BinvD*Fint;
-                            locToGloMap.AssembleBnd(Vloc,Vbnd,nDirDofs);
-                            Fbnd = Fbnd - Vbnd;
+                            DNekScalBlkMat &BinvD = *m_blkMatrices[1];
+
+                            if((nDirBndDofs) && (!dirForcCalculated))
+                            {
+                                //include dirichlet boundary forcing
+                                locToGloMap.GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
+                                DNekScalBlkMat &SchurCompl = *m_blkMatrices[0];
+
+                                V_LocBnd = SchurCompl*V_LocBnd + BinvD*F_Int;
+                            }
+                            else
+                            {
+                                V_LocBnd = BinvD*F_Int;
+                            }
+                            locToGloMap.AssembleBnd(V_LocBnd,V_GlobHomBnd,nDirBndDofs);
+                            F_HomBnd = F_HomBnd - V_GlobHomBnd;
                         }
                         
                         // solve boundary system 
-                        m_linSys->Solve(Fbnd,Vbnd);
+                        m_linSys->Solve(F_HomBnd,V_GlobHomBnd);
                     }
 
                     // solve interior system 
-                    if(nint)
+                    if(nIntDofs)
                     {
-                        DNekScalBlkMat &invD  = *m_blkMatrices[2];
+                        DNekScalBlkMat &invD  = *m_blkMatrices[3];
 
-                        if(nbndry)
+                        if(nGlobHomBndDofs)
                          {
-                             DNekScalBlkMat &C     = *m_blkMatrices[1];
+                             DNekScalBlkMat &C     = *m_blkMatrices[2];
 
-                             Vmath::Zero(Vloc.GetDimension(),Vloc.GetRawPtr(),1);
-                             locToGloMap.GlobalToLocalBnd(Vbnd,Vloc,nDirDofs);
-                             Fint = Fint - C*Vloc;
+                             if(dirForcCalculated && nDirBndDofs)
+                             {
+                                 locToGloMap.GlobalToLocalBnd(V_GlobHomBnd,V_LocBnd,nDirBndDofs);
+                             }
+                             else
+                             {                            
+                                 locToGloMap.GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
+                             }
+                             F_Int = F_Int - C*V_LocBnd;
                          }
 
-                        Vint = invD*Fint;
+                        V_Int = invD*F_Int;
                     }
-#endif
                 }
                 break;
             default:

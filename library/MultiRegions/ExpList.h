@@ -41,7 +41,7 @@
 #include <MultiRegions/LocalToGlobalBaseMap.h>
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalMatrixKey.h>
-#include <MultiRegions/GlobalLinSys.h>
+//#include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/GlobalLinSysKey.h>
 #include <MultiRegions/GlobalOptimizationParameters.h>
 
@@ -358,7 +358,7 @@ namespace Nektar
                                  Array<OneD,       NekDouble> &outarray,
                            NekDouble lambda,
                            bool      UseContCoeffs = false,
-                           Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray)
+                           const Array<OneD, const NekDouble>& dirForcing = NullNekDouble1DArray)
             {
                 v_HelmSolve(inarray,outarray,lambda,UseContCoeffs,dirForcing);
             }
@@ -1177,7 +1177,7 @@ namespace Nektar
                                            Array<OneD,       NekDouble> &outarray,
                                      NekDouble lambda,
                                      bool      UseContCoeffs,
-                                     Array<OneD, NekDouble>& dirForcing)
+                                     const Array<OneD, const NekDouble>& dirForcing)
             {
                 ASSERTL0(false,"This method is not defined or valid for this class type"); 
             }
@@ -1246,6 +1246,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.62  2009/04/27 21:34:58  sherwin
+* Modified WriteToField Method
+*
 * Revision 1.61  2009/04/27 15:02:04  pvos
 * From h-to-p efficiently updates
 *

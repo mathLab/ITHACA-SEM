@@ -342,7 +342,7 @@ namespace Nektar
                                            Array<OneD,       NekDouble> &outarray,
                                      NekDouble lambda,
                                      bool      UseContCoeffs,
-                                     Array<OneD, NekDouble>& dirForcing)
+                                     const Array<OneD, const NekDouble>& dirForcing)
             {
                 HelmSolve(inarray,outarray,lambda);
             }

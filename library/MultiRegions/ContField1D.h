@@ -219,7 +219,7 @@ namespace Nektar
                                  Array<OneD,       NekDouble> &outarray,
                            NekDouble lambda,
                            bool UseContCoeffs = false,
-                           Array<OneD, NekDouble>& dirForcing = NullNekDouble1DArray);
+                           const Array<OneD, const NekDouble>& dirForcing = NullNekDouble1DArray);
 
             /**
              * \brief This function evaluates the boundary conditions at a certain 
@@ -250,9 +250,6 @@ namespace Nektar
                 return m_bndConditions;
             }
 
-            void GenerateDirBndCondForcing(const GlobalLinSysKey &key, 
-                                           Array<OneD, NekDouble> &inout, 
-                                           Array<OneD, NekDouble> &outarray);
         protected:
 
         private:      
@@ -334,9 +331,9 @@ namespace Nektar
              * vector \f$\boldsymbol{\hat{f}}\f$ should be multiplied.
              */ 
             void GlobalSolve(const GlobalLinSysKey &key, 
-                             const Array<OneD, const  NekDouble> &rhs, 
-                             Array<OneD, NekDouble> &inout,
-                             Array<OneD, NekDouble> &dirForcing = NullNekDouble1DArray);
+                             const Array<OneD, const NekDouble> &rhs, 
+                                   Array<OneD,       NekDouble> &inout,
+                             const Array<OneD, const NekDouble> &dirForcing = NullNekDouble1DArray);
 
             virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                           Array<OneD,       NekDouble> &outarray,
@@ -356,7 +353,7 @@ namespace Nektar
                                            Array<OneD,       NekDouble> &outarray,
                                      NekDouble lambda,
                                      bool UseContCoeffs,
-                                     Array<OneD, NekDouble>& dirForcing)
+                                     const Array<OneD, const NekDouble>& dirForcing)
             {
                 HelmSolve(inarray,outarray,lambda,UseContCoeffs,dirForcing);
             }

@@ -268,7 +268,7 @@ namespace Nektar
                                           Array<OneD,       NekDouble> &outarray,
                                     NekDouble lambda,
                                     bool      UseContCoeffs,
-                                    Array<OneD, NekDouble>& dirForcing)
+                                    const Array<OneD, const NekDouble>& dirForcing)
         {
             // Inner product of forcing
             Array<OneD,NekDouble> wsp(m_contNcoeffs);  
@@ -276,6 +276,20 @@ namespace Nektar
             // Note -1.0 term necessary to invert forcing function to
             // be consistent with matrix definition
             Vmath::Neg(m_contNcoeffs, wsp, 1);
+
+            // Forcing function with weak boundary conditions 
+            int i,j;
+            int bndcnt=m_locToGloMap->GetNumLocalDirBndCoeffs();
+            NekDouble sign;
+            for(i = m_numDirBndCondExpansions; i < m_bndCondExpansions.num_elements(); ++i)
+            {
+                for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
+                {
+                    sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
+                    wsp[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)] +=  
+                        sign * (m_bndCondExpansions[i]->GetCoeffs())[j];
+                }
+            }
 
             // Solve the system
             GlobalLinSysKey key(StdRegions::eHelmholtz,m_locToGloMap,lambda);
@@ -315,50 +329,34 @@ namespace Nektar
 
         // Note inout contains initial guess and final output. 
         void ContField3D::GlobalSolve(const GlobalLinSysKey &key, 
-                                      const Array<OneD, const  NekDouble> &rhs, 
-                                      Array<OneD, NekDouble> &inout,
-                                      Array<OneD, NekDouble>& dirForcing)
+                                      const Array<OneD, const NekDouble>& rhs, 
+                                            Array<OneD,       NekDouble>& inout,
+                                      const Array<OneD, const NekDouble>& dirForcing)
         {
             int i,j;
-            int bndcnt=m_locToGloMap->GetNumLocalDirBndCoeffs();
+            int bndcnt=0;
             int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            Array<OneD,NekDouble> fce(m_contNcoeffs);
-                     
-            if(dirForcing.num_elements())
-            {
-                // Use the precomputed dirichlet forcing
-                Vmath::Vsub(m_contNcoeffs, rhs, 1, dirForcing, 1, fce, 1);
-            }
-            else
-            {
-                // Compute the dirichlet forcing
-                GenerateDirBndCondForcing(key,inout,fce);
-                Vmath::Vsub(m_contNcoeffs, rhs, 1, fce, 1, fce, 1);
-            }
 
-            // Forcing function with weak boundary conditions 
+            // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE
+            //         IN THE SOLUTION ARRAY       
+            const Array<OneD,const int>& map  = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
             NekDouble sign;
-            for(i = m_numDirBndCondExpansions; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = 0; i < m_numDirBndCondExpansions; ++i)
             {
-                for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
+                const Array<OneD,const NekDouble>& coeffs = m_bndCondExpansions[i]->GetCoeffs();
+                for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                 {
                     sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
-                    m_contCoeffs[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)] +=  
-                        sign * (m_bndCondExpansions[i]->GetCoeffs())[j];
+                    inout[map[bndcnt++]] = sign * coeffs[j];
                 }
-            }
+            }    
 
+            // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
             if(m_contNcoeffs - NumDirBcs > 0)
             {
                 GlobalLinSysSharedPtr LinSys = GetGlobalLinSys(key);
-                                       
-                Array<OneD,NekDouble> sln(fce+NumDirBcs);
-                LinSys->Solve(sln,sln,*m_locToGloMap);
+                LinSys->Solve(rhs,inout,*m_locToGloMap,this,dirForcing);
             }
-
-            // Recover solution by adding
-            Vmath::Zero(NumDirBcs, fce, 1);
-            Vmath::Vadd(m_contNcoeffs, fce, 1, inout, 1, inout, 1);
         }
 
         GlobalLinSysSharedPtr ContField3D::GetGlobalLinSys(const GlobalLinSysKey &mkey)

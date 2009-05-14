@@ -216,12 +216,12 @@ namespace Nektar
 
             if(UseContCoeffs)
             {                
-                mass_matrix->Solve(outarray,outarray,*m_locToGloMap);
+                mass_matrix->Solve(outarray,outarray,*m_locToGloMap,this);
             }
             else
             {
                 Array<OneD, NekDouble> wsp(m_contNcoeffs);
-                mass_matrix->Solve(outarray,wsp,*m_locToGloMap);
+                mass_matrix->Solve(outarray,wsp,*m_locToGloMap,this);
                 GlobalToLocal(wsp,outarray);
             }
 

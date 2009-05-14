@@ -150,12 +150,12 @@ namespace Nektar
 
             if(UseContCoeffs)
             {                
-                mass_matrix->Solve(outarray,outarray,*m_locToGloMap);
+                mass_matrix->Solve(outarray,outarray,*m_locToGloMap,this);
             }
             else
             {
                 Array<OneD, NekDouble> wsp(m_contNcoeffs);
-                mass_matrix->Solve(outarray,wsp,*m_locToGloMap);
+                mass_matrix->Solve(outarray,wsp,*m_locToGloMap,this);
                 GlobalToLocal(wsp,outarray);
             }
 
@@ -188,6 +188,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.cpp,v $
+* Revision 1.20  2009/04/27 15:02:04  pvos
+* From h-to-p efficiently updates
+*
 * Revision 1.19  2009/03/04 14:17:38  pvos
 * Removed all methods that take and Expansion as argument
 *

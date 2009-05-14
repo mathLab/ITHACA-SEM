@@ -249,6 +249,14 @@ namespace Nektar
             BOOST_CHECK_EQUAL(937, result_transpose[13]);
             BOOST_CHECK_EQUAL(979, result_transpose[14]);
             
+            BlockType globalTranspose = Transpose(b);
+            NekVector<double> globalResult = globalTranspose*v;
+            BOOST_CHECK_EQUAL(5, globalResult.GetRows());
+            BOOST_CHECK_EQUAL(2360, globalResult[0]);
+            BOOST_CHECK_EQUAL(2480, globalResult[1]);
+            BOOST_CHECK_EQUAL(7080, globalResult[2]);
+            BOOST_CHECK_EQUAL(7200, globalResult[3]);
+            BOOST_CHECK_EQUAL(7320, globalResult[4]);
             // 
         }
         

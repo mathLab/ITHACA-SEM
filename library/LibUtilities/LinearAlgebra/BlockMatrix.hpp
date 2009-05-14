@@ -495,6 +495,15 @@ namespace Nektar
     template<typename DataType, typename InnerMatrixType>
     typename NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::NumberType
     NekMatrix<NekMatrix<DataType, InnerMatrixType>, BlockMatrixTag>::m_zeroElement(0);
+    
+    template<typename InnerMatrixType>
+    NekMatrix<InnerMatrixType, BlockMatrixTag>
+    Transpose(NekMatrix<InnerMatrixType, BlockMatrixTag>& rhs)
+    {
+        NekMatrix<InnerMatrixType, BlockMatrixTag> result(rhs);
+        result.Transpose();
+        return result;
+    }
 }
 
 

@@ -771,8 +771,9 @@ namespace Nektar
             int nquad1 = m_pointsKey[1].GetNumPoints();
             int nqtot  = nquad0*nquad1;
 
-            m_laplacianmetrics     = Array<TwoD, NekDouble>(3,nqtot); 
-            m_laplacianMetricsFlag = true;
+            m_laplacianmetrics      = Array<TwoD, NekDouble>(3,nqtot); 
+            m_laplacianMetricIsZero = Array<OneD, bool>(3, false);
+            m_laplacianMetricsFlag  = true;
  
             // Get hold of the quadrature weights
             const Array<OneD, const NekDouble>& w0 = tbasis[0]->GetW();
@@ -796,7 +797,10 @@ namespace Nektar
                             g2 += m_gmat[5][0]*m_gmat[5][0];
                         }
 
-                        ASSERTL1(fabs(g1) < NekConstants::kGeomFactorsTol, "Regular quads should be undistorted");
+                        if(fabs(g1) < NekConstants::kGeomFactorsTol)
+                        {
+                            m_laplacianMetricIsZero[1] = true;
+                        }
 
                         Vmath::Fill(nqtot,g0,&m_laplacianmetrics[0][0],1);
                         Vmath::Fill(nqtot,g1,&m_laplacianmetrics[1][0],1);
@@ -1308,6 +1312,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.41  2009/05/01 13:23:21  pvos
+// Fixed various bugs
+//
 // Revision 1.40  2009/04/20 16:13:23  sherwin
 // Modified Import and Write functions and redefined how Expansion is used
 //

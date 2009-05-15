@@ -241,7 +241,12 @@ namespace Nektar
 
             FillGeom();
 
-            // check to see if expansions are linear
+            // We will first check whether we have a regular or deformed geometry.
+            // We will define regular as those cases where the Jacobian and the metric
+            // terms of the derivative are constants (i.e. not coordinate dependent)
+
+            // Check to see if expansions are linear
+            // If not linear => deformed geometry
             for(i = 0; i < m_coordim; ++i)
             {
                 if((m_xmap[i]->GetBasisNumModes(0) != 2)||
@@ -251,22 +256,34 @@ namespace Nektar
                 }
             }
 
-            // check to see if all angles are 90 degrees
+            // For linear expansions, the mapping from standard to local 
+            // element is given by the relation:
+            // x_i = 0.25 * [ ( x_i^A + x_i^B + x_i^C + x_i^D)       + 
+            //                (-x_i^A + x_i^B + x_i^C - x_i^D)*xi_1  + 
+            //                (-x_i^A - x_i^B + x_i^C + x_i^D)*xi_2  + 
+            //                ( x_i^A - x_i^B + x_i^C - x_i^D)*xi_1*xi_2 ] 
+            //
+            // The jacobian of the transformation and the metric terms dxi_i/dx_j,
+            // involve only terms of the form dx_i/dxi_j (both for coordim == 2 or 3).
+            // Inspecting the formula above, it can be appreciated that the derivatives
+            // dx_i/dxi_j will be constant, if the coefficient of the non-linear term
+            // is zero.
+            //
+            // That is why for regular geometry, we require
+            //
+            //     x_i^A - x_i^B + x_i^C - x_i^D = 0
+            //
+            // or equivalently
+            //
+            //     x_i^A - x_i^B = x_i^D - x_i^C
+            //
+            // This corresponds to quadrilaterals which are paralellograms.
             if(Gtype == eRegular)
             {
-                NekDouble dx1,dx2,dy1,dy2;
-
-                for(i = 0; i < 3; ++i)
+                for(i = 0; i < m_coordim; i++)
                 {
-                    dx1 = m_verts[i+1]->x() - m_verts[i]->x();
-                    dy1 = m_verts[i+1]->y() - m_verts[i]->y();
-
-                    dx2 = m_verts[((i+3)%4)]->x() - m_verts[i]->x();
-                    dy2 = m_verts[((i+3)%4)]->y() - m_verts[i]->y();
-
-                    if(fabs(dx1*dx2 + dy1*dy2) > 
-                        sqrt((dx1*dx1+dy1*dy1)*(dx2*dx2+dy2*dy2))*
-                       NekConstants::kGeomRightAngleTol)
+                    if( fabs( (*m_verts[0])(i) - (*m_verts[1])(i) + 
+                              (*m_verts[2])(i) - (*m_verts[3])(i) ) > NekConstants::kNekZeroTol )
                     {
                         Gtype = eDeformed;
                         break;
@@ -394,6 +411,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.cpp,v $
+// Revision 1.24  2009/01/21 16:59:03  pvos
+// Added additional geometric factors to improve efficiency
+//
 // Revision 1.23  2008/12/18 14:08:58  pvos
 // NekConstants update
 //

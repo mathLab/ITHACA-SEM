@@ -385,14 +385,14 @@ namespace Nektar
                     // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
                     // where g0, g1 and g2 are the metric terms set up in the GeomFactors class
                     // especially for this purpose
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    if(!m_metricinfo->LaplacianMetricIsZero(1))
                     {
                         Vmath::Vvtvvtp(nqtot,&metric[0][0],1,&wsp1[0],1,&metric[1][0],1,&wsp2[0],1,&wsp0[0],1);
                         Vmath::Vvtvvtp(nqtot,&metric[1][0],1,&wsp1[0],1,&metric[2][0],1,&wsp2[0],1,&wsp2[0],1);
                     }
                     else
                     {
-                        // special implementation in case g1 = 0 (which should hold for regular quads)
+                        // special implementation in case g1 = 0 (which should hold for undistorted quads)
                         // wsp0 = k = g0 * wsp1 = g0 * du_dxi1
                         // wsp2 = l = g2 * wsp2 = g2 * du_dxi2           
                         Vmath::Vmul(nqtot,&metric[0][0],1,&wsp1[0],1,&wsp0[0],1);
@@ -468,21 +468,28 @@ namespace Nektar
                         Vmath::Vvtvvtp(nqtot,&wsp4[0],1,&wsp1[0],1,&wsp5[0],1,&wsp2[0],1,&wsp2[0],1);
                     }
                     else
-                    {
-                        // special implementation in case g1 = 0 (which should hold for regular quads)
-                        // wsp0 = k = g0 * wsp1 = g0 * du_dxi1
-                        // wsp2 = l = g2 * wsp2 = g2 * du_dxi2           
+                    {         
                         NekDouble g0 = gmat[0][0]*gmat[0][0] + gmat[2][0]*gmat[2][0];
+                        NekDouble g1 = gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0];
                         NekDouble g2 = gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0];
                         
                         if(dim == 3)
                         {
                             g0 += gmat[4][0]*gmat[4][0];
+                            g1 += gmat[4][0]*gmat[5][0];
                             g2 += gmat[5][0]*gmat[5][0];
                         }
                         
-                        Vmath::Smul(nqtot,g0,&wsp1[0],1,&wsp0[0],1);
-                        Vmath::Smul(nqtot,g2,&wsp2[0],1,&wsp2[0],1);
+                        if(fabs(g1) < NekConstants::kGeomFactorsTol)
+                        {
+                            Vmath::Smul(nqtot,g0,&wsp1[0],1,&wsp0[0],1);
+                            Vmath::Smul(nqtot,g2,&wsp2[0],1,&wsp2[0],1);
+                        }
+                        else
+                        {
+                            Vmath::Svtsvtp(nqtot,g0,&wsp1[0],1,g1,&wsp2[0],1,&wsp0[0],1);
+                            Vmath::Svtsvtp(nqtot,g1,&wsp1[0],1,g2,&wsp2[0],1,&wsp2[0],1);
+                        }
                     }
                     
                     MultiplyByQuadratureMetric(wsp0,wsp0);
@@ -555,14 +562,14 @@ namespace Nektar
                 // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g1 * du_dxi1 + g2 * du_dxi2
                 // where g0, g1 and g2 are the metric terms set up in the GeomFactors class
                 // especially for this purpose
-                if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                if(!m_metricinfo->LaplacianMetricIsZero(1))
                 {
                     Vmath::Vvtvvtp(nqtot,&metric[0][0],1,&wsp1[0],1,&metric[1][0],1,&wsp2[0],1,&wsp0[0],1);
                     Vmath::Vvtvvtp(nqtot,&metric[1][0],1,&wsp1[0],1,&metric[2][0],1,&wsp2[0],1,&wsp2[0],1);
                 }
                 else
                 {
-                    // special implementation in case g1 = 0 (which should hold for regular quads)
+                    // special implementation in case g1 = 0 (which should hold for undistorted quads)
                     // wsp0 = k = g0 * wsp1 = g0 * du_dxi1
                     // wsp2 = l = g2 * wsp2 = g2 * du_dxi2           
                     Vmath::Vmul(nqtot,&metric[0][0],1,&wsp1[0],1,&wsp0[0],1);
@@ -649,20 +656,27 @@ namespace Nektar
                 }
                 else
                 {
-                    // special implementation in case g1 = 0 (which should hold for regular quads)
-                    // wsp0 = k = g0 * wsp1 = g0 * du_dxi1
-                    // wsp2 = l = g2 * wsp2 = g2 * du_dxi2
                     NekDouble g0 = gmat[0][0]*gmat[0][0] + gmat[2][0]*gmat[2][0];
+                    NekDouble g1 = gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0];
                     NekDouble g2 = gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0];
 
                     if(dim == 3)
                     {
-                            g0 += gmat[4][0]*gmat[4][0];
-                            g2 += gmat[5][0]*gmat[5][0];
+                        g0 += gmat[4][0]*gmat[4][0];
+                        g1 += gmat[4][0]*gmat[5][0];
+                        g2 += gmat[5][0]*gmat[5][0];
                     }
-
-                    Vmath::Smul(nqtot,g0,&wsp1[0],1,&wsp0[0],1);
-                    Vmath::Smul(nqtot,g2,&wsp2[0],1,&wsp2[0],1);
+                        
+                    if(fabs(g1) < NekConstants::kGeomFactorsTol)
+                    {
+                        Vmath::Smul(nqtot,g0,&wsp1[0],1,&wsp0[0],1);
+                        Vmath::Smul(nqtot,g2,&wsp2[0],1,&wsp2[0],1);
+                    }
+                    else
+                    {
+                        Vmath::Svtsvtp(nqtot,g0,&wsp1[0],1,g1,&wsp2[0],1,&wsp0[0],1);
+                        Vmath::Svtsvtp(nqtot,g1,&wsp1[0],1,g2,&wsp2[0],1,&wsp2[0],1);
+                    }
                 }
 
                 MultiplyByQuadratureMetric(wsp0,wsp0);
@@ -1793,6 +1807,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.60  2009/04/27 21:34:07  sherwin
+ *    Updated WriteToField
+ *
  *    Revision 1.59  2009/04/27 09:38:22  pvos
  *    Fixed some bugs
  *

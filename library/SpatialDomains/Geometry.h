@@ -115,11 +115,7 @@ namespace Nektar
 
                 inline GeomFactorsSharedPtr GetGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
                 {
-                    if(!m_geomfactors)
-                    {
-                        GenGeomFactors(tbasis);
-                    }
-
+                    GenGeomFactors(tbasis);
                     return ValidateRegGeomFactor(m_geomfactors);
                 }
 
@@ -210,6 +206,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.29  2009/04/20 16:13:23  sherwin
+// Modified Import and Write functions and redefined how Expansion is used
+//
 // Revision 1.28  2009/03/04 05:45:38  bnelson
 // Fixed visual studio compile errors.
 //

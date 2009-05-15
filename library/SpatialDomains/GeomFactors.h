@@ -142,6 +142,12 @@ namespace Nektar
                 return m_laplacianmetrics;
             }
 
+            inline bool LaplacianMetricIsZero(const int indx) const
+            {
+                ASSERTL0(m_laplacianMetricsFlag,"This metric has not been set up for this type of expansion");
+                return m_laplacianMetricIsZero[indx];
+            }
+
             Array<OneD, NekDouble> GenNormals2D(enum StdRegions::ExpansionType shape, const int edge,  const LibUtilities::PointsKey &to_key);
             
             
@@ -171,6 +177,7 @@ namespace Nektar
             Array<OneD,NekDouble> m_weightedjac;
             Array<TwoD,NekDouble> m_gmat;
             Array<TwoD,NekDouble> m_laplacianmetrics;
+            Array<OneD,bool>      m_laplacianMetricIsZero;
 
             Array<OneD,LibUtilities::PointsKey> m_pointsKey;
             
@@ -195,6 +202,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.24  2009/01/21 16:59:03  pvos
+// Added additional geometric factors to improve efficiency
+//
 // Revision 1.23  2008/12/17 16:57:20  pvos
 // Performance updates
 //

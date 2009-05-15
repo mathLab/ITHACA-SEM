@@ -284,6 +284,24 @@ namespace Vmath
         }
     }    
 
+    /// \brief  vvtvvtp (scalar times vector plus scalar times vector): 
+    // z = alpha*x + beta*y
+    template<class T> void Svtsvtp (int n,
+                                    const T alpha,
+                                    const T* x, int incx,
+                                    const T beta,
+                                    const T* y, int incy,
+                                          T* z, int incz)
+    {
+        while( n-- )
+        {
+            *z = alpha * (*x) + beta * (*y);
+            x += incx;
+            y += incy;
+            z += incz;
+        }
+    }   
+
     /// \brief  Vstvpp (scalar times vector plus vector plus vector): 
     // z = v*w + x*y
     template<class T> void Vstvpp(int n,
@@ -583,6 +601,9 @@ namespace Vmath
 
 /***
 $Log: Vmath.hpp,v $
+Revision 1.20  2009/03/10 23:44:15  claes
+Made y in z = x/y a constant in the parameter list.
+
 Revision 1.19  2009/01/21 16:57:26  pvos
 Added additional geometric factors to improve efficiency
 

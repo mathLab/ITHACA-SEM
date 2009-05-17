@@ -51,6 +51,7 @@
 #include <LibUtilities/BasicUtils/RawType.hpp>
 #include <LibUtilities/LinearAlgebra/CanGetRawPtr.hpp>
 #include <boost/utility/enable_if.hpp>
+#include <boost/type_traits.hpp>
 
 #include <string>
 
@@ -253,7 +254,42 @@ namespace Nektar
         result.SetSize(result.GetRows(), rhs.GetColumns());
         result.SwapTempAndDataBuffers();
     }
-                          
+    
+    template<typename DataType, typename RhsInnerType, typename RhsMatrixType>
+    void NekMultiplyEqual(NekMatrix<DataType, StandardMatrixTag>& result,
+                          const NekMatrix<RhsInnerType, RhsMatrixType>& rhs,
+                          typename boost::enable_if
+                          <
+                            boost::mpl::or_
+                            <
+                                boost::mpl::not_<boost::is_same<typename RawType<typename NekMatrix<RhsInnerType, RhsMatrixType>::NumberType>::type, double> >,
+                                boost::mpl::not_<CanGetRawPtr<NekMatrix<RhsInnerType, RhsMatrixType> > >
+                            >
+                          >::type* t = 0)
+    {
+        ASSERTL1(result.GetColumns() == rhs.GetRows(), std::string("A left side matrix with column count ") + 
+            boost::lexical_cast<std::string>(result.GetColumns()) + 
+            std::string(" and a right side matrix with row count ") + 
+            boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
+        NekMatrix<DataType, StandardMatrixTag> temp(result.GetRows(), result.GetColumns());
+        
+        for(unsigned int i = 0; i < result.GetRows(); ++i)
+        {
+            for(unsigned int j = 0; j < result.GetColumns(); ++j)
+            {
+                DataType t = DataType(0);
+
+                // Set the result(i,j) element.
+                for(unsigned int k = 0; k < result.GetColumns(); ++k)
+                {
+                    t += result(i,k)*rhs(k,j);
+                }
+                temp(i,j) = t;
+            }
+        }
+        
+        result = temp;
+    }
 
 	template<typename LhsDataType, typename RhsDataType,
              typename LhsMatrixType, typename RhsMatrixType>
@@ -800,6 +836,739 @@ namespace Nektar
                 result.GetRawPtr(), M);
         }
         
+        namespace Impl
+        {
+            template<typename LhsExpressionPolicyType, typename RhsExpressionPolicyType, typename ResultType, 
+                     template <typename, typename> class OpType, 
+                     template <typename, typename> class ParentOpType = BinaryNullOp,
+                     typename enabled = void>
+            struct DgemmBinaryExpressionEvaluator;
+                                
+            // AB + C
+            template<typename T1, typename M1, typename T2, typename M2, typename T3, typename M3>
+            struct DgemmBinaryExpressionEvaluator<BinaryExpressionPolicy
+                                            <
+                                                ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
+                                                MultiplyOp, 
+                                                ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                                            >,
+                                            ConstantExpressionPolicy<NekMatrix<T3, M3> >,
+                                            NekMatrix<double, StandardMatrixTag>,
+                                            AddOp, BinaryNullOp,
+                                            typename boost::enable_if
+                                            <
+                                                boost::mpl::and_
+                                                <
+                                                    CanGetRawPtr<NekMatrix<T1, M1> >,
+                                                    CanGetRawPtr<NekMatrix<T2, M2> >,
+                                                    CanGetRawPtr<NekMatrix<T3, M3> >
+                                                >
+                                            >::type>
+            {
+                typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
+                            MultiplyOp, 
+                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                        > LhsType;
+                typedef ConstantExpressionPolicy<NekMatrix<T3, M3> > RhsType;
+                
+                static void Eval(const Expression<LhsType>& lhs, 
+                                 const Expression<RhsType>& rhs,
+                                 Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
+                {
+                    const NekMatrix<T1, M1>& a = *LhsType::Left(*lhs);
+                    const NekMatrix<T2, M2>& b = *LhsType::Right(*lhs);
+                    const NekMatrix<T3, M3>& c = *rhs;
+                    
+                    if( a.GetType() == eFULL && b.GetType() == eFULL && c.GetType() == eFULL )
+                    {
+                        Dgemm(*result, 1.0, a, b, 1.0, c);
+                    }
+                    else
+                    {
+                        typedef typename LhsType::ResultType LhsResultType;
+                        typedef typename RhsType::ResultType RhsResultType;
+                        lhs.Evaluate(result);
+                        AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, *rhs);
+                    }
+                }
+            };
+            
+            // AB + C - in case there is a block matrix in the expression.
+            template<typename T1, typename M1, typename T2, typename M2, typename T3, typename M3>
+            struct DgemmBinaryExpressionEvaluator<BinaryExpressionPolicy
+                                            <
+                                                ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
+                                                MultiplyOp, 
+                                                ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                                            >,
+                                            ConstantExpressionPolicy<NekMatrix<T3, M3> >,
+                                            NekMatrix<double, StandardMatrixTag>,
+                                            AddOp, BinaryNullOp,
+                                            typename boost::enable_if
+                                            <
+                                                boost::mpl::or_
+                                                <
+                                                    boost::mpl::not_<CanGetRawPtr<NekMatrix<T1, M1> > >,
+                                                    boost::mpl::not_<CanGetRawPtr<NekMatrix<T2, M2> > >,
+                                                    boost::mpl::not_<CanGetRawPtr<NekMatrix<T3, M3> > >
+                                                >
+                                            >::type>
+            {
+                typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
+                            MultiplyOp, 
+                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                        > LhsType;
+                typedef ConstantExpressionPolicy<NekMatrix<T3, M3> > RhsType;
+                
+                static void Eval(const Expression<LhsType>& lhs, 
+                                 const Expression<RhsType>& rhs,
+                                 Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
+                {
+                    typedef typename LhsType::ResultType LhsResultType;
+                    typedef typename RhsType::ResultType RhsResultType;
+                    lhs.Evaluate(result);
+                    AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, *rhs);
+                }
+            };
+
+
+            // aAB + C
+            template<typename T1, typename M1, typename T2, typename M2, typename T3, typename M3>
+            struct DgemmBinaryExpressionEvaluator<BinaryExpressionPolicy
+                                            <
+                                                BinaryExpressionPolicy
+                                                <
+                                                    ConstantExpressionPolicy<double>,
+                                                    MultiplyOp,
+                                                    ConstantExpressionPolicy<NekMatrix<T1, M1> >
+                                                >,
+                                                MultiplyOp, 
+                                                ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                                            >,
+                                            ConstantExpressionPolicy<NekMatrix<T3, M3> >,
+                                            NekMatrix<double, StandardMatrixTag>,
+                                            AddOp, BinaryNullOp,
+                                            typename boost::enable_if
+                                            <
+                                                boost::mpl::and_
+                                                <
+                                                    CanGetRawPtr<NekMatrix<T1, M1> >,
+                                                    CanGetRawPtr<NekMatrix<T2, M2> >,
+                                                    CanGetRawPtr<NekMatrix<T3, M3> >
+                                                >
+                                            >::type>
+            {
+                typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<double>,
+                            MultiplyOp,
+                            ConstantExpressionPolicy<NekMatrix<T1, M1> >
+                        > LhsLhsType;
+                        
+                typedef BinaryExpressionPolicy
+                        <
+                            LhsLhsType,
+                            MultiplyOp, 
+                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                        > LhsType;
+                typedef ConstantExpressionPolicy<NekMatrix<T3, M3> > RhsType;
+                
+                static void Eval(const Expression<LhsType>& lhs, 
+                                 const Expression<RhsType>& rhs,
+                                 Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
+                {
+                    const Expression<LhsLhsType>& lhsExpression = LhsType::Left(*lhs);
+                    double alpha = *LhsLhsType::Left(*lhsExpression);
+                    const NekMatrix<T1, M1>& a = *LhsLhsType::Right(*lhsExpression);
+                    const NekMatrix<T2, M2>& b = *LhsType::Right(*lhs);
+                    const NekMatrix<T3, M3>& c = *rhs;
+                    
+                    if( a.GetType() == eFULL && b.GetType() == eFULL && c.GetType() == eFULL )
+                    {
+                        Dgemm(*result, alpha, a, b, 1.0, c);
+                    }
+                    else
+                    {
+                        typedef typename LhsType::ResultType LhsResultType;
+                        typedef typename RhsType::ResultType RhsResultType;
+                        lhs.Evaluate(result);
+                        AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, *rhs);
+                    }
+                }
+            };
+            
+            // aAB + C - in case there is a block matrix in the expression.
+            template<typename T1, typename M1, typename T2, typename M2, typename T3, typename M3>
+            struct DgemmBinaryExpressionEvaluator<BinaryExpressionPolicy
+                                            <
+                                                BinaryExpressionPolicy
+                                                <
+                                                    ConstantExpressionPolicy<double>,
+                                                    MultiplyOp,
+                                                    ConstantExpressionPolicy<NekMatrix<T1, M1> >
+                                                >,
+                                                MultiplyOp, 
+                                                ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                                            >,
+                                            ConstantExpressionPolicy<NekMatrix<T3, M3> >,
+                                            NekMatrix<double, StandardMatrixTag>,
+                                            AddOp, BinaryNullOp,
+                                            typename boost::enable_if
+                                            <
+                                                boost::mpl::or_
+                                                <
+                                                    boost::mpl::not_<CanGetRawPtr<NekMatrix<T1, M1> > >,
+                                                    boost::mpl::not_<CanGetRawPtr<NekMatrix<T2, M2> > >,
+                                                    boost::mpl::not_<CanGetRawPtr<NekMatrix<T3, M3> > >
+                                                >
+                                            >::type>
+            {
+                typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<double>,
+                            MultiplyOp,
+                            ConstantExpressionPolicy<NekMatrix<T1, M1> >
+                        > LhsLhsType;
+                        
+                typedef BinaryExpressionPolicy
+                        <
+                            LhsLhsType,
+                            MultiplyOp, 
+                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                        > LhsType;
+                typedef ConstantExpressionPolicy<NekMatrix<T3, M3> > RhsType;
+                
+                static void Eval(const Expression<LhsType>& lhs, 
+                                 const Expression<RhsType>& rhs,
+                                 Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
+                {
+                    typedef typename LhsType::ResultType LhsResultType;
+                    typedef typename RhsType::ResultType RhsResultType;
+                    lhs.Evaluate(result);
+                    AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, *rhs);
+                }
+            };
+
+
+            // AB + bC
+            template<typename T1, typename M1, typename T2, typename M2, typename T3, typename M3>
+            struct DgemmBinaryExpressionEvaluator<BinaryExpressionPolicy
+                                            <
+                                                ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
+                                                MultiplyOp, 
+                                                ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                                            >,
+                                            BinaryExpressionPolicy
+                                            <
+                                                ConstantExpressionPolicy<double>,
+                                                MultiplyOp,
+                                                ConstantExpressionPolicy<NekMatrix<T3, M3> >
+                                            >,
+                                            NekMatrix<double, StandardMatrixTag>,
+                                            AddOp, BinaryNullOp,
+                                            typename boost::enable_if
+                                            <
+                                                boost::mpl::and_
+                                                <
+                                                    CanGetRawPtr<NekMatrix<T1, M1> >,
+                                                    CanGetRawPtr<NekMatrix<T2, M2> >,
+                                                    CanGetRawPtr<NekMatrix<T3, M3> >
+                                                >
+                                            >::type>
+            {
+                typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
+                            MultiplyOp, 
+                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                        > LhsType;
+                typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<double>,
+                            MultiplyOp,
+                            ConstantExpressionPolicy<NekMatrix<T3, M3> >
+                        > RhsType;
+                
+                static void Eval(const Expression<LhsType>& lhs, 
+                                 const Expression<RhsType>& rhs,
+                                 Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
+                {
+                    const NekMatrix<T1, M1>& a = *LhsType::Left(*lhs);
+                    const NekMatrix<T2, M2>& b = *LhsType::Right(*lhs);
+                    double beta = *RhsType::Left(*rhs);
+                    const NekMatrix<T3, M3>& c = *RhsType::Right(*rhs);
+                    
+                    if( a.GetType() == eFULL && b.GetType() == eFULL && c.GetType() == eFULL )
+                    {
+                        Dgemm(*result, 1.0, a, b, beta, c);
+                    }
+                    else
+                    {
+                        lhs.Evaluate(result);
+                        NekMatrix<double> rhsTemp = rhs.Evaluate();
+                        AddOp<NekMatrix<double>, NekMatrix<double> >::ApplyEqual(result, rhsTemp);
+                    }
+                }
+            };
+            
+            // AB + bC - in case there is a block matrix in the expression.
+            template<typename T1, typename M1, typename T2, typename M2, typename T3, typename M3>
+            struct DgemmBinaryExpressionEvaluator<BinaryExpressionPolicy
+                                            <
+                                                ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
+                                                MultiplyOp, 
+                                                ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                                            >,
+                                            BinaryExpressionPolicy
+                                            <
+                                                ConstantExpressionPolicy<double>,
+                                                MultiplyOp,
+                                                ConstantExpressionPolicy<NekMatrix<T3, M3> >
+                                            >,
+                                            NekMatrix<double, StandardMatrixTag>,
+                                            AddOp, BinaryNullOp,
+                                            typename boost::enable_if
+                                            <
+                                                boost::mpl::or_
+                                                <
+                                                    boost::mpl::not_<CanGetRawPtr<NekMatrix<T1, M1> > >,
+                                                    boost::mpl::not_<CanGetRawPtr<NekMatrix<T2, M2> > >,
+                                                    boost::mpl::not_<CanGetRawPtr<NekMatrix<T3, M3> > >
+                                                >
+                                            >::type>
+            {
+                typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
+                            MultiplyOp, 
+                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                        > LhsType;
+                typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<double>,
+                            MultiplyOp,
+                            ConstantExpressionPolicy<NekMatrix<T3, M3> >
+                        > RhsType;
+                
+                static void Eval(const Expression<LhsType>& lhs, 
+                                 const Expression<RhsType>& rhs,
+                                 Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
+                {
+                    lhs.Evaluate(result);
+                    NekMatrix<double> rhsTemp = rhs.Evaluate();
+                    AddOp<NekMatrix<double>, NekMatrix<double> >::ApplyEqual(result, rhsTemp);
+                }
+            };
+            
+            // aAB + bC
+            template<typename T1, typename M1, typename T2, typename M2, typename T3, typename M3>
+            struct DgemmBinaryExpressionEvaluator<BinaryExpressionPolicy
+                                            <
+                                                BinaryExpressionPolicy
+                                                <
+                                                    ConstantExpressionPolicy<double>,
+                                                    MultiplyOp,
+                                                    ConstantExpressionPolicy<NekMatrix<T1, M1> >
+                                                >,
+                                                MultiplyOp,
+                                                ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                                            >,
+                                            BinaryExpressionPolicy
+                                            <
+                                                ConstantExpressionPolicy<double>,
+                                                MultiplyOp,
+                                                ConstantExpressionPolicy<NekMatrix<T3, M3> >
+                                            >,
+                                            NekMatrix<double, StandardMatrixTag>,
+                                            AddOp, BinaryNullOp,
+                                            typename boost::enable_if
+                                            <
+                                                boost::mpl::and_
+                                                <
+                                                    CanGetRawPtr<NekMatrix<T1, M1> >,
+                                                    CanGetRawPtr<NekMatrix<T2, M2> >,
+                                                    CanGetRawPtr<NekMatrix<T3, M3> >
+                                                >
+                                            >::type>
+            {
+                typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<double>,
+                            MultiplyOp,
+                            ConstantExpressionPolicy<NekMatrix<T1, M1> >
+                        > LhsLhsType;
+                        
+                typedef BinaryExpressionPolicy
+                        <
+                            LhsLhsType,
+                            MultiplyOp, 
+                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                        > LhsType;
+                typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<double>,
+                            MultiplyOp,
+                            ConstantExpressionPolicy<NekMatrix<T3, M3> >
+                        > RhsType;
+                
+                static void Eval(const Expression<LhsType>& lhs, 
+                                 const Expression<RhsType>& rhs,
+                                 Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
+                {
+                    const Expression<LhsLhsType>& lhsExpression = LhsType::Left(*lhs);
+                    double alpha = *LhsLhsType::Left(*lhsExpression);
+                    const NekMatrix<T1, M1>& a = *LhsLhsType::Right(*lhsExpression);
+                    const NekMatrix<T2, M2>& b = *LhsType::Right(*lhs);
+                    const double beta = *RhsType::Left(*rhs);
+                    const NekMatrix<T3, M3>& c = *RhsType::Right(*rhs);
+                    
+                    if( a.GetType() == eFULL && b.GetType() == eFULL && c.GetType() == eFULL )
+                    {
+                        Dgemm(*result, alpha, a, b, beta, c);
+                    }
+                    else
+                    {
+                        typedef typename LhsType::ResultType LhsResultType;
+                        typedef typename RhsType::ResultType RhsResultType;
+                        lhs.Evaluate(result);
+                        NekMatrix<double> rhsTemp = rhs.Evaluate();
+                        AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, rhsTemp);
+                    }
+                }
+            };
+            
+            // aAB + bC - in case there is a block matrix in the expression.
+            template<typename T1, typename M1, typename T2, typename M2, typename T3, typename M3>
+            struct DgemmBinaryExpressionEvaluator<BinaryExpressionPolicy
+                                            <
+                                                BinaryExpressionPolicy
+                                                <
+                                                    ConstantExpressionPolicy<double>,
+                                                    MultiplyOp,
+                                                    ConstantExpressionPolicy<NekMatrix<T1, M1> >
+                                                >,
+                                                MultiplyOp,
+                                                ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                                            >,
+                                            BinaryExpressionPolicy
+                                            <
+                                                ConstantExpressionPolicy<double>,
+                                                MultiplyOp,
+                                                ConstantExpressionPolicy<NekMatrix<T3, M3> >
+                                            >,
+                                            NekMatrix<double, StandardMatrixTag>,
+                                            AddOp, BinaryNullOp,
+                                            typename boost::enable_if
+                                            <
+                                                boost::mpl::or_
+                                                <
+                                                    boost::mpl::not_<CanGetRawPtr<NekMatrix<T1, M1> > >,
+                                                    boost::mpl::not_<CanGetRawPtr<NekMatrix<T2, M2> > >,
+                                                    boost::mpl::not_<CanGetRawPtr<NekMatrix<T3, M3> > >
+                                                >
+                                            >::type>
+            {
+                typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<double>,
+                            MultiplyOp,
+                            ConstantExpressionPolicy<NekMatrix<T1, M1> >
+                        > LhsLhsType;
+                        
+                typedef BinaryExpressionPolicy
+                        <
+                            LhsLhsType,
+                            MultiplyOp, 
+                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                        > LhsType;
+                 typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<double>,
+                            MultiplyOp,
+                            ConstantExpressionPolicy<NekMatrix<T3, M3> >
+                        > RhsType;
+                
+                static void Eval(const Expression<LhsType>& lhs, 
+                                 const Expression<RhsType>& rhs,
+                                 Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
+                {
+                    typedef typename LhsType::ResultType LhsResultType;
+                    typedef typename RhsType::ResultType RhsResultType;
+                    lhs.Evaluate(result);
+                    NekMatrix<double> rhsTemp = rhs.Evaluate();
+                    AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, rhsTemp);
+                }
+            };
+            
+            
+            // a(AB) + bC
+            template<typename T1, typename M1, typename T2, typename M2, typename T3, typename M3>
+            struct DgemmBinaryExpressionEvaluator<BinaryExpressionPolicy
+                                            <
+                                                ConstantExpressionPolicy<double>,
+                                                MultiplyOp,
+                                                BinaryExpressionPolicy
+                                                <
+                                                    ConstantExpressionPolicy<NekMatrix<T1, M1> >,
+                                                    MultiplyOp,
+                                                    ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                                                >
+                                            >,
+                                            BinaryExpressionPolicy
+                                            <
+                                                ConstantExpressionPolicy<double>,
+                                                MultiplyOp,
+                                                ConstantExpressionPolicy<NekMatrix<T3, M3> >
+                                            >,
+                                            NekMatrix<double, StandardMatrixTag>,
+                                            AddOp, BinaryNullOp,
+                                            typename boost::enable_if
+                                            <
+                                                boost::mpl::and_
+                                                <
+                                                    CanGetRawPtr<NekMatrix<T1, M1> >,
+                                                    CanGetRawPtr<NekMatrix<T2, M2> >,
+                                                    CanGetRawPtr<NekMatrix<T3, M3> >
+                                                >
+                                            >::type>
+            {
+                typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<NekMatrix<T1, M1> >,
+                            MultiplyOp,
+                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                        > LhsRhsType;
+                        
+                typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<double>,
+                            MultiplyOp, 
+                            LhsRhsType
+                        > LhsType;
+                typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<double>,
+                            MultiplyOp,
+                            ConstantExpressionPolicy<NekMatrix<T3, M3> >
+                        > RhsType;
+                
+                static void Eval(const Expression<LhsType>& lhs, 
+                                 const Expression<RhsType>& rhs,
+                                 Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
+                {
+                    double alpha = *LhsType::Left(*lhs);
+                    const Expression<LhsRhsType>& rhsExpression = LhsType::Right(*lhs);
+                    const NekMatrix<T1, M1>& a = *LhsRhsType::Left(*rhsExpression);
+                    const NekMatrix<T2, M2>& b = *LhsRhsType::Right(*rhsExpression);
+                    const double beta = *RhsType::Left(*rhs);
+                    const NekMatrix<T3, M3>& c = *RhsType::Right(*rhs);
+                    
+                    if( a.GetType() == eFULL && b.GetType() == eFULL && c.GetType() == eFULL )
+                    {
+                        Dgemm(*result, alpha, a, b, beta, c);
+                    }
+                    else
+                    {
+                        typedef typename LhsType::ResultType LhsResultType;
+                        typedef typename RhsType::ResultType RhsResultType;
+                        lhs.Evaluate(result);
+                        NekMatrix<double> rhsTemp = rhs.Evaluate();
+                        AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, rhsTemp);
+                    }
+                }
+            };
+            
+            // a(AB) + bC - in case there is a block matrix in the expression.
+            template<typename T1, typename M1, typename T2, typename M2, typename T3, typename M3>
+            struct DgemmBinaryExpressionEvaluator<BinaryExpressionPolicy
+                                            <
+                                                ConstantExpressionPolicy<double>,
+                                                MultiplyOp,
+                                                BinaryExpressionPolicy
+                                                <
+                                                    ConstantExpressionPolicy<NekMatrix<T1, M1> >,
+                                                    MultiplyOp,
+                                                    ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                                                >
+                                            >,
+                                            BinaryExpressionPolicy
+                                            <
+                                                ConstantExpressionPolicy<double>,
+                                                MultiplyOp,
+                                                ConstantExpressionPolicy<NekMatrix<T3, M3> >
+                                            >,
+                                            NekMatrix<double, StandardMatrixTag>,
+                                            AddOp, BinaryNullOp,
+                                            typename boost::enable_if
+                                            <
+                                                boost::mpl::or_
+                                                <
+                                                    boost::mpl::not_<CanGetRawPtr<NekMatrix<T1, M1> > >,
+                                                    boost::mpl::not_<CanGetRawPtr<NekMatrix<T2, M2> > >,
+                                                    boost::mpl::not_<CanGetRawPtr<NekMatrix<T3, M3> > >
+                                                >
+                                            >::type>
+            {
+                typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<NekMatrix<T1, M1> >,
+                            MultiplyOp,
+                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                        > LhsRhsType;
+                        
+                typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<double>,
+                            MultiplyOp, 
+                            LhsRhsType
+                        > LhsType;
+                typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<double>,
+                            MultiplyOp,
+                            ConstantExpressionPolicy<NekMatrix<T3, M3> >
+                        > RhsType;
+                
+                static void Eval(const Expression<LhsType>& lhs, 
+                                 const Expression<RhsType>& rhs,
+                                 Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
+                {
+                    typedef typename LhsType::ResultType LhsResultType;
+                    typedef typename RhsType::ResultType RhsResultType;
+                    lhs.Evaluate(result);
+                    NekMatrix<double> rhsTemp = rhs.Evaluate();
+                    AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, rhsTemp);
+                }
+            };
+            
+            // a(AB) + C
+            template<typename T1, typename M1, typename T2, typename M2, typename T3, typename M3>
+            struct DgemmBinaryExpressionEvaluator<BinaryExpressionPolicy
+                                            <
+                                                ConstantExpressionPolicy<double>,
+                                                MultiplyOp,
+                                                BinaryExpressionPolicy
+                                                <
+                                                    ConstantExpressionPolicy<NekMatrix<T1, M1> >,
+                                                    MultiplyOp,
+                                                    ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                                                >
+                                            >,
+                                            ConstantExpressionPolicy<NekMatrix<T3, M3> >,
+                                            NekMatrix<double, StandardMatrixTag>,
+                                            AddOp, BinaryNullOp,
+                                            typename boost::enable_if
+                                            <
+                                                boost::mpl::and_
+                                                <
+                                                    CanGetRawPtr<NekMatrix<T1, M1> >,
+                                                    CanGetRawPtr<NekMatrix<T2, M2> >,
+                                                    CanGetRawPtr<NekMatrix<T3, M3> >
+                                                >
+                                            >::type>
+            {
+                typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<NekMatrix<T1, M1> >,
+                            MultiplyOp,
+                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                        > LhsRhsType;
+                        
+                typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<double>,
+                            MultiplyOp, 
+                            LhsRhsType
+                        > LhsType;
+                typedef ConstantExpressionPolicy<NekMatrix<T3, M3> > RhsType;
+                
+                static void Eval(const Expression<LhsType>& lhs, 
+                                 const Expression<RhsType>& rhs,
+                                 Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
+                {
+                    double alpha = *LhsType::Left(*lhs);
+                    const Expression<LhsRhsType>& rhsExpression = LhsType::Right(*lhs);
+                    const NekMatrix<T1, M1>& a = *LhsRhsType::Left(*rhsExpression);
+                    const NekMatrix<T2, M2>& b = *LhsRhsType::Right(*rhsExpression);
+                    const NekMatrix<T3, M3>& c = *rhs;
+                    
+                    if( a.GetType() == eFULL && b.GetType() == eFULL && c.GetType() == eFULL )
+                    {
+                        Dgemm(*result, alpha, a, b, 1.0, c);
+                    }
+                    else
+                    {
+                        typedef typename LhsType::ResultType LhsResultType;
+                        typedef typename RhsType::ResultType RhsResultType;
+                        lhs.Evaluate(result);
+                        const NekMatrix<T3, M3>& rhsTemp = *rhs;
+                        AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, rhsTemp);
+                    }
+                }
+            };
+            
+            // a(AB) + C - in case there is a block matrix in the expression.
+            template<typename T1, typename M1, typename T2, typename M2, typename T3, typename M3>
+            struct DgemmBinaryExpressionEvaluator<BinaryExpressionPolicy
+                                            <
+                                                ConstantExpressionPolicy<double>,
+                                                MultiplyOp,
+                                                BinaryExpressionPolicy
+                                                <
+                                                    ConstantExpressionPolicy<NekMatrix<T1, M1> >,
+                                                    MultiplyOp,
+                                                    ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                                                >
+                                            >,
+                                            ConstantExpressionPolicy<NekMatrix<T3, M3> >,
+                                            NekMatrix<double, StandardMatrixTag>,
+                                            AddOp, BinaryNullOp,
+                                            typename boost::enable_if
+                                            <
+                                                boost::mpl::or_
+                                                <
+                                                    boost::mpl::not_<CanGetRawPtr<NekMatrix<T1, M1> > >,
+                                                    boost::mpl::not_<CanGetRawPtr<NekMatrix<T2, M2> > >,
+                                                    boost::mpl::not_<CanGetRawPtr<NekMatrix<T3, M3> > >
+                                                >
+                                            >::type>
+            {
+                typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<NekMatrix<T1, M1> >,
+                            MultiplyOp,
+                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                        > LhsRhsType;
+                        
+                typedef BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<double>,
+                            MultiplyOp, 
+                            LhsRhsType
+                        > LhsType;
+                typedef ConstantExpressionPolicy<NekMatrix<T3, M3> > RhsType;
+                
+                static void Eval(const Expression<LhsType>& lhs, 
+                                 const Expression<RhsType>& rhs,
+                                 Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
+                {
+                    typedef typename LhsType::ResultType LhsResultType;
+                    typedef typename RhsType::ResultType RhsResultType;
+                    lhs.Evaluate(result);
+                    const NekMatrix<T3, M3>& rhsTemp = *rhs;
+                    AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, rhsTemp);
+                }
+            };
+
+
+        }
+        
+        
+        // AB + C
         template<typename T1, typename M1, typename T2, typename M2, typename T3, typename M3>
         struct BinaryExpressionEvaluator<BinaryExpressionPolicy
                                         <
@@ -809,16 +1578,8 @@ namespace Nektar
                                         >,
                                         ConstantExpressionPolicy<NekMatrix<T3, M3> >,
                                         NekMatrix<double, StandardMatrixTag>,
-                                        AddOp, BinaryNullOp, 
-                                        typename boost::enable_if
-                                        <
-                                            boost::mpl::and_
-                                            <
-                                                CanGetRawPtr<NekMatrix<T1, M1> >,
-                                                CanGetRawPtr<NekMatrix<T2, M2> >,
-                                                CanGetRawPtr<NekMatrix<T3, M3> >
-                                            >
-                                        >::type >
+                                        AddOp, BinaryNullOp 
+                                        >
         {
             typedef BinaryExpressionPolicy
                     <
@@ -832,36 +1593,238 @@ namespace Nektar
                              const Expression<RhsType>& rhs,
                              Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
             {
-                const NekMatrix<T1, M1>& a = *LhsType::Left(*lhs);
-                const NekMatrix<T2, M2>& b = *LhsType::Right(*lhs);
-                const NekMatrix<T3, M3>& c = *rhs;
-                
-                if( a.GetType() == eFULL && b.GetType() == eFULL && c.GetType() == eFULL )
-                {
-                    Dgemm(*result, 1.0, a, b, 1.0, c);
-                }
-                else
-                {
-                    typedef typename LhsType::ResultType LhsResultType;
-                    typedef typename RhsType::ResultType RhsResultType;
-                    lhs.Evaluate(result);
-                    AddOp<LhsResultType, RhsResultType>::ApplyEqual(result, *rhs);
-                }
+                return Impl::DgemmBinaryExpressionEvaluator<LhsType, RhsType,
+                                        NekMatrix<double, StandardMatrixTag>,
+                                        AddOp, BinaryNullOp >::Eval(lhs, rhs, result);
             }
         };
 
+        // aAB + C
         template<typename T1, typename M1, typename T2, typename M2, typename T3, typename M3>
-        struct BinaryExpressionSpecializationExists
-            <
-                BinaryExpressionPolicy
-                <
-                    ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
-                    MultiplyOp, 
-                    ConstantExpressionPolicy<NekMatrix<T2, M2> > 
-                >,
-                ConstantExpressionPolicy<NekMatrix<T3, M3> >,
-                AddOp
-            > : public boost::true_type {};
+        struct BinaryExpressionEvaluator<BinaryExpressionPolicy
+                                        <
+                                            ConstantExpressionPolicy<double>,
+                                            MultiplyOp,
+                                            BinaryExpressionPolicy
+                                            <
+                                                ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
+                                                MultiplyOp, 
+                                                ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                                            >
+                                        >,
+                                        ConstantExpressionPolicy<NekMatrix<T3, M3> >,
+                                        NekMatrix<double, StandardMatrixTag>,
+                                        AddOp, BinaryNullOp 
+                                        >
+        {
+            typedef BinaryExpressionPolicy
+                    <
+                        ConstantExpressionPolicy<double>,
+                        MultiplyOp,
+                        BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
+                            MultiplyOp, 
+                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                        >
+                    > LhsType;
+            typedef ConstantExpressionPolicy<NekMatrix<T3, M3> > RhsType;
+            
+            static void Eval(const Expression<LhsType>& lhs, 
+                             const Expression<RhsType>& rhs,
+                             Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
+            {
+                return Impl::DgemmBinaryExpressionEvaluator<LhsType, RhsType,
+                                        NekMatrix<double, StandardMatrixTag>,
+                                        AddOp, BinaryNullOp >::Eval(lhs, rhs, result);
+            }
+        };
+
+
+        // aAB + C
+        template<typename T1, typename M1, typename T2, typename M2, typename T3, typename M3>
+        struct BinaryExpressionEvaluator<BinaryExpressionPolicy
+                                        <
+                                            BinaryExpressionPolicy
+                                            <                                            
+                                                ConstantExpressionPolicy<double>,
+                                                MultiplyOp,
+                                                ConstantExpressionPolicy<NekMatrix<T1, M1> >
+                                            >,
+                                            MultiplyOp, 
+                                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                                        >,
+                                        ConstantExpressionPolicy<NekMatrix<T3, M3> >,
+                                        NekMatrix<double, StandardMatrixTag>,
+                                        AddOp, BinaryNullOp 
+                                        >
+        {
+            typedef BinaryExpressionPolicy
+                    <
+                        BinaryExpressionPolicy
+                        <                                            
+                            ConstantExpressionPolicy<double>,
+                            MultiplyOp,
+                            ConstantExpressionPolicy<NekMatrix<T1, M1> >
+                        >,
+                        MultiplyOp, 
+                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                    > LhsType;
+            typedef ConstantExpressionPolicy<NekMatrix<T3, M3> > RhsType;
+            
+            static void Eval(const Expression<LhsType>& lhs, 
+                             const Expression<RhsType>& rhs,
+                             Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
+            {
+                return Impl::DgemmBinaryExpressionEvaluator<LhsType, RhsType,
+                                        NekMatrix<double, StandardMatrixTag>,
+                                        AddOp, BinaryNullOp >::Eval(lhs, rhs, result);
+            }
+        };
+        
+        // AB + bC
+        template<typename T1, typename M1, typename T2, typename M2, typename T3, typename M3>
+        struct BinaryExpressionEvaluator<BinaryExpressionPolicy
+                                        <
+                                            ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
+                                            MultiplyOp, 
+                                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                                        >,
+                                        BinaryExpressionPolicy
+                                        <
+                                            ConstantExpressionPolicy<double>,
+                                            MultiplyOp,
+                                            ConstantExpressionPolicy<NekMatrix<T3, M3> >
+                                        >,
+                                        NekMatrix<double, StandardMatrixTag>,
+                                        AddOp, BinaryNullOp>
+        {
+            typedef BinaryExpressionPolicy
+                    <
+                        ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
+                        MultiplyOp, 
+                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                    > LhsType;
+            typedef BinaryExpressionPolicy
+                    <
+                        ConstantExpressionPolicy<double>,
+                        MultiplyOp,
+                        ConstantExpressionPolicy<NekMatrix<T3, M3> >
+                    > RhsType;
+            
+            static void Eval(const Expression<LhsType>& lhs, 
+                             const Expression<RhsType>& rhs,
+                             Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
+            {
+                return Impl::DgemmBinaryExpressionEvaluator<LhsType, RhsType,
+                                    NekMatrix<double, StandardMatrixTag>,
+                        AddOp, BinaryNullOp >::Eval(lhs, rhs, result);
+            }
+        };
+
+        // aAB + bC
+        template<typename T1, typename M1, typename T2, typename M2, typename T3, typename M3>
+        struct BinaryExpressionEvaluator<BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<double>,
+                                        MultiplyOp,
+                                            BinaryExpressionPolicy
+                                            <
+                                                ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
+                                                MultiplyOp, 
+                                                ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                                            >
+                                        >,
+                                        BinaryExpressionPolicy
+                                        <
+                                            ConstantExpressionPolicy<double>,
+                                            MultiplyOp,
+                                            ConstantExpressionPolicy<NekMatrix<T3, M3> >
+                                        >,
+                                        NekMatrix<double, StandardMatrixTag>,
+                                        AddOp, BinaryNullOp 
+                                        >
+        {
+            typedef BinaryExpressionPolicy
+                    <
+                        ConstantExpressionPolicy<double>,
+                        MultiplyOp,
+                        BinaryExpressionPolicy
+                        <
+                            ConstantExpressionPolicy<NekMatrix<T1, M1> >, 
+                            MultiplyOp, 
+                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                        >
+                    > LhsType;
+            typedef BinaryExpressionPolicy
+                    <
+                        ConstantExpressionPolicy<double>,
+                        MultiplyOp,
+                        ConstantExpressionPolicy<NekMatrix<T3, M3> >
+                    > RhsType;
+            
+            static void Eval(const Expression<LhsType>& lhs, 
+                             const Expression<RhsType>& rhs,
+                             Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
+            {
+                return Impl::DgemmBinaryExpressionEvaluator<LhsType, RhsType,
+                                        NekMatrix<double, StandardMatrixTag>,
+                                        AddOp, BinaryNullOp >::Eval(lhs, rhs, result);
+            }
+        };
+
+        // (aA)B + bC
+        template<typename T1, typename M1, typename T2, typename M2, typename T3, typename M3>
+        struct BinaryExpressionEvaluator<BinaryExpressionPolicy
+                                        <
+                                            BinaryExpressionPolicy
+                                            <                                            
+                                                ConstantExpressionPolicy<double>,
+                                                MultiplyOp,
+                                                ConstantExpressionPolicy<NekMatrix<T1, M1> >
+                                            >,
+                                            MultiplyOp, 
+                                            ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                                        >,
+                                        BinaryExpressionPolicy
+                                        <
+                                            ConstantExpressionPolicy<double>,
+                                            MultiplyOp,
+                                            ConstantExpressionPolicy<NekMatrix<T3, M3> >
+                                        >,
+                                        NekMatrix<double, StandardMatrixTag>,
+                                        AddOp, BinaryNullOp 
+                                        >
+        {
+            typedef BinaryExpressionPolicy
+                    <
+                        BinaryExpressionPolicy
+                        <                                            
+                            ConstantExpressionPolicy<double>,
+                            MultiplyOp,
+                            ConstantExpressionPolicy<NekMatrix<T1, M1> >
+                        >,
+                        MultiplyOp, 
+                        ConstantExpressionPolicy<NekMatrix<T2, M2> > 
+                    > LhsType;
+            typedef BinaryExpressionPolicy
+                    <
+                        ConstantExpressionPolicy<double>,
+                        MultiplyOp,
+                        ConstantExpressionPolicy<NekMatrix<T3, M3> >
+                    > RhsType;
+            
+            static void Eval(const Expression<LhsType>& lhs, 
+                             const Expression<RhsType>& rhs,
+                             Accumulator<NekMatrix<double, StandardMatrixTag> >& result)
+            {
+                return Impl::DgemmBinaryExpressionEvaluator<LhsType, RhsType,
+                                        NekMatrix<double, StandardMatrixTag>,
+                                        AddOp, BinaryNullOp >::Eval(lhs, rhs, result);
+            }
+        };
+
+        
 
     #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
     

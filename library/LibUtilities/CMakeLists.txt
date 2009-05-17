@@ -75,6 +75,8 @@ SET(ExpressionTemplates
     ./ExpressionTemplates/AssociativeTraits.hpp
     ./ExpressionTemplates/BinaryExpression.hpp
     ./ExpressionTemplates/BinaryExpressionEvaluator.hpp
+    ./ExpressionTemplates/BinaryExpressionEvaluator_BinaryConstant.hpp
+    ./ExpressionTemplates/BinaryExpressionEvaluator_BinaryBinary.hpp
     ./ExpressionTemplates/BinaryExpressionEvaluatorFwd.hpp
     ./ExpressionTemplates/BinaryExpressionOperators.hpp
     ./ExpressionTemplates/BinaryExpressionPolicy.hpp

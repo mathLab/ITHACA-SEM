@@ -419,11 +419,10 @@ namespace Nektar
                 DataType* lhs_array = m_data.data();
                 const DataType* rhs_array = rhs.GetRawPtr();
                 
-                for(int i = 0; i < requiredStorageSize; ++i)
+                for(unsigned int i = 0; i < requiredStorageSize; ++i)
                 {
                     lhs_array[i] = scale*rhs_array[i];
                 }
-                //std::copy(rhs.GetRawPtr(), rhs.GetRawPtr() + requiredStorageSize, m_data.data());
                 
                 return *this;
 

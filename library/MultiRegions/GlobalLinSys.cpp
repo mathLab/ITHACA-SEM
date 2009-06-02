@@ -142,18 +142,23 @@ namespace Nektar
 
                     if(nGlobHomBndDofs)
                     {
-                        if(nIntDofs)
+                        if(nIntDofs || ((nDirBndDofs) && (!dirForcCalculated)) )
                         {
                             // construct boundary forcing 
                             DNekScalBlkMat &BinvD = *m_blkMatrices[1];
+                            DNekScalBlkMat &SchurCompl = *m_blkMatrices[0];
 
-                            if((nDirBndDofs) && (!dirForcCalculated))
+                            if( nIntDofs  && ((nDirBndDofs) && (!dirForcCalculated)) )
                             {
                                 //include dirichlet boundary forcing
                                 locToGloMap.GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
-                                DNekScalBlkMat &SchurCompl = *m_blkMatrices[0];
-
                                 V_LocBnd = SchurCompl*V_LocBnd + BinvD*F_Int;
+                            }
+                            else if((nDirBndDofs) && (!dirForcCalculated))
+                            {
+                                //include dirichlet boundary forcing
+                                locToGloMap.GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
+                                V_LocBnd = SchurCompl*V_LocBnd;
                             }
                             else
                             {

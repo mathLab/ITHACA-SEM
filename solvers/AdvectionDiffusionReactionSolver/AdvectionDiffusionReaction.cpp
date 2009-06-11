@@ -97,6 +97,7 @@ namespace Nektar
             break;
 			
         case eUnsteadyAdvection:
+
 	    m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
         
 	   for(int i = 0; i < m_spacedim; ++i)
@@ -586,17 +587,17 @@ namespace Nektar
 
             m_time += m_timestep;
 
-          //   if(m_projectionType==eGalerkin)
-//             {
-//                 // Project the solution u* onto the boundary conditions to
-//                 // obtain the actual solution
-//                 SetBoundaryConditions(m_time);
-//                 for(i = 0; i < nvariables; ++i)
-//                 {
-//                     m_fields[i]->MultiplyByInvMassMatrix(fields[i],tmp[i],false);
-//                     fields[i] = tmp[i];	   		    
-//                 }
-//             }
+            if(m_projectionType==eGalerkin)
+            {
+                // Project the solution u* onto the boundary conditions to
+                // obtain the actual solution
+                SetBoundaryConditions(m_time);
+                for(i = 0; i < nvariables; ++i)
+                {
+                    m_fields[i]->MultiplyByInvMassMatrix(fields[i],tmp[i],false);
+                    fields[i] = tmp[i];	   		    
+                }
+            }
 
             //----------------------------------------------
             // Dump analyser information
@@ -616,18 +617,6 @@ namespace Nektar
             }
         }
         
-	  if(m_projectionType==eGalerkin)
-            {
-                // Project the solution u* onto the boundary conditions to
-                // obtain the actual solution
-                SetBoundaryConditions(m_time);
-                for(i = 0; i < nvariables; ++i)
-                {
-                    m_fields[i]->MultiplyByInvMassMatrix(fields[i],tmp[i],false);
-                    fields[i] = tmp[i];	   		    
-                }
-            }
-
 
         for(i = 0; i < nvariables; ++i)
         {
@@ -647,11 +636,13 @@ namespace Nektar
   }
   
   // Evaulate flux = m_fields*ivel for i th component of Vu 
+  // alt
+  //          flux = 0.5(m_fields*m_fields) for the 
   void AdvectionDiffusionReaction::GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, 
 						 Array<OneD, Array<OneD, NekDouble> > &flux)
   {
 
-    switch(m_equationType)
+      switch(m_equationType)
       {
 #ifdef OLDENUM
       case eAdvection:
@@ -682,7 +673,6 @@ namespace Nektar
 	ASSERTL0(false,"unknown equationType");
       }
   }
-	
 	
  // Evaulate flux = m_fields*ivel for i th component of Vu for direction j
   void AdvectionDiffusionReaction::GetFluxVector(const int i, const int j, Array<OneD, Array<OneD, NekDouble> > &physfield, 
@@ -1104,6 +1094,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.17  2009/06/11 01:54:08  claes
+* Added Inviscid Burger
+*
 * Revision 1.16  2009/04/29 20:45:09  sherwin
 * Update for new eNum definition of EQTYPE
 *

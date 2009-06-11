@@ -55,6 +55,7 @@ namespace Nektar
 	eSteadyDiffusionReaction,
         eNumSteadyEquationTypes,  // Must list all steady equations before this enum
         eUnsteadyAdvection,
+	eUnsteadyInviscidBurger,
         eUnsteadyDiffusion,
         eUnsteadyDiffusionReaction,
         eEquationTypeSize
@@ -72,6 +73,7 @@ namespace Nektar
 	"SteadyDiffusionReaction",
         "Dummy enum",
         "UnsteadyAdvection",
+	"UnsteadyInviscidBurger",
 	"UnsteadyDiffusion",
         "UnsteadyDiffusionReaction",
     };
@@ -269,6 +271,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.h,v $
+* Revision 1.9  2009/04/29 20:45:09  sherwin
+* Update for new eNum definition of EQTYPE
+*
 * Revision 1.8  2009/04/27 21:37:14  sherwin
 * Updated to dump .fld and .chk file in compressed coefficient format
 *

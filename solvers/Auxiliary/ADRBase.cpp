@@ -222,7 +222,7 @@ namespace Nektar
 	switch(m_expdim)
 	  {
 	  case 1:
-	    // no need??... will always be unity except perhaps at the boundary edges....
+	    // no need??... 
 	    break;
 	  case 2:
 	    {
@@ -621,6 +621,7 @@ namespace Nektar
 	      {
 		Vmath::Neg(ncoeffs,OutField[i],1);
 		m_fields[i]->AddTraceIntegral(numflux[i],OutField[i]);
+		m_fields[i]->SetPhysState(false);
 	      }
 	  }
 	// if the NumericalFlux function does not include the
@@ -645,12 +646,13 @@ namespace Nektar
 	      {
 		Vmath::Neg(ncoeffs,OutField[i],1);
 		m_fields[i]->AddTraceIntegral(numfluxX[i],numfluxY[i],OutField[i]);
+		m_fields[i]->SetPhysState(false);
 	      }
 	    
 	  }
     }
 	
-	      //-------------------------------------------------------------
+    //-------------------------------------------------------------
     // Calculate weak DG Diffusion in the LDG form 
 	//  <\psi, \hat{u} \cdot n> - (\grad \psi \cdot u)
     //  <\phi, \hat{q}\cdot n> - (\grad \phi \cdot q)
@@ -895,6 +897,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.9  2009/04/29 20:45:55  sherwin
+* Update for new definition of enum
+*
 * Revision 1.8  2009/04/27 21:37:14  sherwin
 * Updated to dump .fld and .chk file in compressed coefficient format
 *

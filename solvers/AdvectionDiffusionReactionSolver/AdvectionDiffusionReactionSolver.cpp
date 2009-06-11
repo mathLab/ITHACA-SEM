@@ -82,8 +82,9 @@ int main(int argc, char *argv[])
         // Solve the appropriate Helmholtz problem 
         dom.SolveHelmholtz(lambda);
         break;
-        
+    
     case eUnsteadyAdvection:
+    case eUnsteadyInviscidBurger:
         {
             if(dom.GetExplicitAdvection())
             {
@@ -99,6 +100,7 @@ int main(int argc, char *argv[])
             }
         }
         break;
+	
     case eUnsteadyDiffusion:
         {
             if(dom.GetExplicitDiffusion())
@@ -142,6 +144,7 @@ int main(int argc, char *argv[])
                 ASSERTL0(false,"Implicit Reaction schemes not set up");
             }
         }
+
         break;
     case eNoEquationType:
     default:

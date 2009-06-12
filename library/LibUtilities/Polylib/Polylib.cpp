@@ -183,15 +183,17 @@ namespace Polylib {
 	/**
     \brief  Gauss-Kronrod-Jacobi zeros and weights.
 
-    \li Generate \a 2*np+1 Gauss-Kronrod Jacobi zeros, \a z, and weights,\a w,
+    \li Generate \a npt=2*np+1 Gauss-Kronrod Jacobi zeros, \a z, and weights,\a w,
     associated with the Jacobi polynomial \f$ P^{\alpha,\beta}_{np}(z)
     \f$,
 
     \li Exact for polynomials of order \a 3np+1 or less  
 	*/
-	void zwgk(double *z, double *w, const int np , const double alpha, 
+	void zwgk(double *z, double *w, const int npt , const double alpha, 
 		const double beta)
 	{
+		
+		int np = (npt-1)/2; 
 		
 		int  i,j;
 		
@@ -250,15 +252,16 @@ namespace Polylib {
 	/**
     \brief  Gauss-Radau-Kronrod-Jacobi zeros and weights.
 
-    \li Generate \a 2*np Radau-Kronrod Jacobi zeros, \a z, and weights,\a w,
+    \li Generate \a npt=2*np Radau-Kronrod Jacobi zeros, \a z, and weights,\a w,
     associated with the Jacobi polynomial \f$ P^{\alpha,\beta}_{np}(z)
     \f$,
     */
-	void zwrk(double* z, double* w, const int np ,const double alpha, 
+	void zwrk(double* z, double* w, const int npt ,const double alpha, 
 		      const double beta)
 	{
 		
-		
+		int np = npt/2;
+
 		if(np < 2)
 		{
 			fprintf(stderr,"too few points in formula\n");
@@ -345,14 +348,16 @@ namespace Polylib {
 	/**
     \brief  Gauss-Lobatto-Kronrod-Jacobi zeros and weights.
 
-    \li Generate \a 2*np-1 Lobatto-Kronrod Jacobi zeros, \a z, and weights,\a w,
+    \li Generate \a npt=2*np-1 Lobatto-Kronrod Jacobi zeros, \a z, and weights,\a w,
     associated with the Jacobi polynomial \f$ P^{\alpha,\beta}_{np}(z)
     \f$,
     */
-	void zwlk(double* z, double* w, const int np,  
+	void zwlk(double* z, double* w, const int npt,  
 		      const double alpha, const double beta)
 	{
 
+		int np = (npt+1)/2;
+		
 		if(np < 4)
 		{
 			fprintf (stderr,"too few points in formula\n");

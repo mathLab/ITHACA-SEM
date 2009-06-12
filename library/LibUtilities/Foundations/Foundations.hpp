@@ -97,9 +97,9 @@ namespace Nektar
             eGaussRadauMAlpha1Beta0,      //!<  Gauss Radau pinned at x=-1, \f$ \alpha =    1, \beta =    0 \f$
             eGaussRadauMAlpha2Beta0,      //!<  Gauss Radau pinned at x=-1, \f$ \alpha =    2, \beta =    0 \f$
             eGaussKronrodLegendre,        //!<  1D Gauss-Kronrod-Legendre quadrature points
-			eGaussRadauKronrodLegendre,	  //!<  1D Radau Kronrod quadrature points
-			eGaussLobattoKronrodLegendre, //!<  1D Lobatto Kronrod quadrature points
-			ePolyEvenlySpaced,            //!<  1D Evenly-spaced points using Lagrange polynomial
+            eGaussRadauKronrodLegendre,	  //!<  1D Radau Kronrod quadrature points
+	    eGaussLobattoKronrodLegendre, //!<  1D Lobatto Kronrod quadrature points
+	    ePolyEvenlySpaced,            //!<  1D Evenly-spaced points using Lagrange polynomial
             eFourierEvenlySpaced,         //!<  1D Evenly-spaced points using Fourier Fit
             eNodalTriElec,                //!<  2D Nodal Electrostatic Points on a Triangle
             eNodalTriFekete,              //!<  2D Nodal Fekete Points on a Triangle
@@ -124,9 +124,9 @@ namespace Nektar
             "GaussRadauMAlpha0Beta2",
             "GaussRadauMAlpha1Beta0",
             "GaussRadauMAlpha2Beta0",
-			"GaussKronrodLegendre",
-			"GaussRadauKronrodLegendre",
-			"GaussLobattoKronrodLegendre"
+	    "GaussKronrodLegendre",
+	    "GaussRadauKronrodLegendre",
+	    "GaussLobattoKronrodLegendre",
             "PolyEvenlySpaced",
             "FourierEvenlySpaced",
             "NodalTriElec",
@@ -134,6 +134,21 @@ namespace Nektar
             "NodalTriEvenlySpaced",
             "NodalTetEvenlySpaced",
             "NodalTetElec",
+        };
+
+        enum IntegrationType
+        {
+	    eStandard,        //!< Normal (linear) 
+            eConsistent,      //!< Over integrations (squared)
+            eAdaptive,     //!< Adaptive (Gauss-Konrod) 
+            SIZE_IntegrationType //!< Length of enum list
+        };
+
+        const char* const IntegrationTypeMap[] = 
+        {
+            "Standard",
+            "Consistent",
+            "Adaptive"
         };
 
     } // end of namespace

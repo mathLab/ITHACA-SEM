@@ -67,6 +67,9 @@ namespace Nektar
             const bool gaussInited10 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta2), GaussPoints::Create);
             const bool gaussInited11 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha1Beta0), GaussPoints::Create);
             const bool gaussInited12 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauMAlpha2Beta0), GaussPoints::Create);
+	    const bool gaussInited13 = PointsManager().RegisterCreator(PointsKey(0, eGaussKronrodLegendre), GaussPoints::Create);
+	    const bool gaussInited14 = PointsManager().RegisterCreator(PointsKey(0, eGaussRadauKronrodLegendre), GaussPoints::Create);
+	    const bool gaussInited15 = PointsManager().RegisterCreator(PointsKey(0, eGaussLobattoKronrodLegendre), GaussPoints::Create);
         
             const bool fourierInited0 = PointsManager().RegisterCreator(PointsKey(0, eFourierEvenlySpaced), FourierPoints::Create);
             const bool polyeInited10 =  PointsManager().RegisterCreator(PointsKey(0, ePolyEvenlySpaced), PolyEPoints::Create);
@@ -105,6 +108,9 @@ namespace Nektar
 
 /**
 $Log: ManagerAccess.cpp,v $
+Revision 1.21  2008/11/12 12:11:52  pvos
+Time Integration update
+
 Revision 1.20  2008/07/17 16:12:41  pvos
 Updated time integration manager into general linear method format
 

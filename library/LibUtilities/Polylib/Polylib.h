@@ -24,6 +24,7 @@ namespace Polylib {
        - h    -   Lagrange Interpolant
        - I    -   Interpolation matrix
        - g    -   Gauss
+	   - k	  -   Kronrod
        - gr   -   Gauss-Radau
        - gl   -   Gauss-Lobatto
        - j    -   Jacobi
@@ -40,6 +41,10 @@ namespace Polylib {
        - zwgrjm      Compute Gauss-Radau-Jacobi   points and weights (z=-1)
        - zwgrjp      Compute Gauss-Radau-Jacobi   points and weights (z= 1)
        - zwglj       Compute Gauss-Lobatto-Jacobi points and weights
+	   - zwgk        Compute Gauss-Kronrod-Jacobi points and weights
+	   - zwrk        Compute Radau-Kronrod        points and weights
+	   - zwlk        Compute Lobatto-Kronrod      points and weights
+	   - JacZeros    Compute Gauss-Jacobi         points and weights
 
        Derivative Matrices:
 
@@ -73,8 +78,9 @@ namespace Polylib {
 
        - jacobz      Returns Jacobi polynomial zeros
        - gammaf      Gamma function for integer values and halves
-
-
+	   - RecCoeff    Calculates the recurrence coefficients for orthogonal poly
+	   - TriQL		 QL algorithm for symmetrix tridiagonal matrix
+	   - JKMatrix	 Generates the Jacobi-Kronrod matrix
 
        ------------------------------------------------------------------------\n
 
@@ -107,6 +113,11 @@ namespace Polylib {
     void   zwgrjm  (double *, double *, const int , const double, const double);
     void   zwgrjp  (double *, double *, const int , const double, const double);
     void   zwglj   (double *, double *, const int , const double, const double);
+	void   zwgk    (double *, double *, const int , const double, const double);
+	void   zwrk    (double *, double *, const int , const double, const double);
+	void   zwlk    (double *, double *, const int , const double, const double);
+	void   JacZeros(const int, double *, double*, const double,const double);
+
 
     /* Derivative operators */
     void   Dgj     (double *, const double *, const int, const double, 
@@ -144,6 +155,7 @@ namespace Polylib {
     void jacobd  (const int, const double *, double *,  const int , 
                   const double, const double);
 
+	
 
 } // end of namespace
 

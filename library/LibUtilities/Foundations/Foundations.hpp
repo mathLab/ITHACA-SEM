@@ -84,26 +84,29 @@ namespace Nektar
         enum PointsType
         {
             eNoPointsType,
-            eGaussGaussLegendre,     //!<  1D Gauss-Gauss-Legendre quadrature points
-            eGaussRadauMLegendre,    //!<  1D Gauss-Radau-Legendre quadrature points, pinned at x=-1
-            eGaussRadauPLegendre,    //!<  1D Gauss-Radau-Legendre quadrature points, pinned at x=1
-            eGaussLobattoLegendre,   //!<  1D Gauss-Lobatto-Legendre quadrature points
-            eGaussGaussChebyshev,    //!<  1D Gauss-Gauss-Chebyshev quadrature points
-            eGaussRadauMChebyshev,   //!<  1D Gauss-Radau-Chebyshev quadrature points, pinned at x=-1
-            eGaussRadauPChebyshev,   //!<  1D Gauss-Radau-Chebyshev quadrature points, pinned at x=1
-            eGaussLobattoChebyshev,  //!<  1D Gauss-Lobatto-Legendre quadrature points
-            eGaussRadauMAlpha0Beta1, //!<  Gauss Radau pinned at x=-1, \f$ \alpha =    0, \beta =    1 \f$
-            eGaussRadauMAlpha0Beta2, //!<  Gauss Radau pinned at x=-1, \f$ \alpha =    0, \beta =    2 \f$
-            eGaussRadauMAlpha1Beta0, //!<  Gauss Radau pinned at x=-1, \f$ \alpha =    1, \beta =    0 \f$
-            eGaussRadauMAlpha2Beta0, //!<  Gauss Radau pinned at x=-1, \f$ \alpha =    2, \beta =    0 \f$
-            ePolyEvenlySpaced,       //!< 1D Evenly-spaced points using Lagrange polynomial
-            eFourierEvenlySpaced,    //!< 1D Evenly-spaced points using Fourier Fit
-            eNodalTriElec,           //!< 2D Nodal Electrostatic Points on a Triangle
-            eNodalTriFekete,         //!< 2D Nodal Fekete Points on a Triangle
-            eNodalTriEvenlySpaced,   //!< 2D Evenly-spaced points on a Triangle
-            eNodalTetEvenlySpaced,   //!< 3D Evenly-spaced points on a Tetrahedron
-            eNodalTetElec,           //!< 3D Nodal Electrostatic Points on a Tetrahedron
-            SIZE_PointsType          //!< Length of enum list
+            eGaussGaussLegendre,          //!<  1D Gauss-Gauss-Legendre quadrature points
+            eGaussRadauMLegendre,         //!<  1D Gauss-Radau-Legendre quadrature points, pinned at x=-1
+            eGaussRadauPLegendre,         //!<  1D Gauss-Radau-Legendre quadrature points, pinned at x=1
+            eGaussLobattoLegendre,        //!<  1D Gauss-Lobatto-Legendre quadrature points
+            eGaussGaussChebyshev,         //!<  1D Gauss-Gauss-Chebyshev quadrature points
+            eGaussRadauMChebyshev,        //!<  1D Gauss-Radau-Chebyshev quadrature points, pinned at x=-1
+            eGaussRadauPChebyshev,        //!<  1D Gauss-Radau-Chebyshev quadrature points, pinned at x=1
+            eGaussLobattoChebyshev,       //!<  1D Gauss-Lobatto-Legendre quadrature points
+            eGaussRadauMAlpha0Beta1,      //!<  Gauss Radau pinned at x=-1, \f$ \alpha =    0, \beta =    1 \f$
+            eGaussRadauMAlpha0Beta2,      //!<  Gauss Radau pinned at x=-1, \f$ \alpha =    0, \beta =    2 \f$
+            eGaussRadauMAlpha1Beta0,      //!<  Gauss Radau pinned at x=-1, \f$ \alpha =    1, \beta =    0 \f$
+            eGaussRadauMAlpha2Beta0,      //!<  Gauss Radau pinned at x=-1, \f$ \alpha =    2, \beta =    0 \f$
+            eGaussKronrodLegendre,        //!<  1D Gauss-Kronrod-Legendre quadrature points
+			eGaussRadauKronrodLegendre,	  //!<  1D Radau Kronrod quadrature points
+			eGaussLobattoKronrodLegendre, //!<  1D Lobatto Kronrod quadrature points
+			ePolyEvenlySpaced,            //!<  1D Evenly-spaced points using Lagrange polynomial
+            eFourierEvenlySpaced,         //!<  1D Evenly-spaced points using Fourier Fit
+            eNodalTriElec,                //!<  2D Nodal Electrostatic Points on a Triangle
+            eNodalTriFekete,              //!<  2D Nodal Fekete Points on a Triangle
+            eNodalTriEvenlySpaced,        //!<  2D Evenly-spaced points on a Triangle
+            eNodalTetEvenlySpaced,        //!<  3D Evenly-spaced points on a Tetrahedron
+            eNodalTetElec,                //!<  3D Nodal Electrostatic Points on a Tetrahedron
+            SIZE_PointsType               //!<  Length of enum list
         };
 
         const std::string kPointsTypeStr[] = 
@@ -121,6 +124,9 @@ namespace Nektar
             "GaussRadauMAlpha0Beta2",
             "GaussRadauMAlpha1Beta0",
             "GaussRadauMAlpha2Beta0",
+			"GaussKronrodLegendre",
+			"GaussRadauKronrodLegendre",
+			"GaussLobattoKronrodLegendre"
             "PolyEvenlySpaced",
             "FourierEvenlySpaced",
             "NodalTriElec",

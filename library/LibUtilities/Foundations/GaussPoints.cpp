@@ -105,6 +105,18 @@ namespace Nektar
                 Polylib::zwgrjm(m_points[0].data(),m_weights.data(),numpoints,2.0,0.0);
                 break;
 
+			case eGaussKronrodLegendre:
+				Polylib::zwgk(m_points[0].data(), m_weights.data(), numpoints, 0.0, 0.0);
+				break;
+			
+			case eGaussRadauKronrodLegendre:
+				Polylib::zwrk(m_points[0].data(), m_weights.data(), numpoints, 0.0, 0.0);
+				break;
+
+			case eGaussLobattoKronrodLegendre:
+				Polylib::zwlk(m_points[0].data(), m_weights.data(), numpoints, 0.0, 0.0);
+				break;
+
             default:
                 ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
             }
@@ -174,6 +186,15 @@ namespace Nektar
             case eGaussRadauMAlpha2Beta0:
                 Polylib::Dgrjm(dmtemp,m_points[0].data(),numpoints,2.0,0.0);
                 break;
+
+			case eGaussKronrodLegendre:
+				break;
+
+			case eGaussRadauKronrodLegendre:
+				break;
+
+			case eGaussLobattoKronrodLegendre:
+				break;
 
             default:
                 ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
@@ -291,6 +312,9 @@ namespace Nektar
 
 /**
 * $Log: GaussPoints.cpp,v $
+* Revision 1.25  2008/04/06 05:54:08  bnelson
+* Changed ConstArray to Array<const>
+*
 * Revision 1.24  2007/10/03 03:00:13  bnelson
 * Added precompiled headers.
 *

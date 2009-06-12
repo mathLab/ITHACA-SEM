@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
             cerr << setw(30) << kPointsTypeStr[i] << " = " << i << endl;
         }
 
-        cerr << "Note type = 13, 14, and 15 are for two dimensional bases" << endl;
+        cerr << "Note type = 18, 19, and 20 are for two dimensional bases" << endl;
         cerr << "\nExample: FoundationDemo 5 6" << endl;
         cerr << "\n\t Tests GaussGaussChebyshev on 6 points" << endl;
 
@@ -162,12 +162,14 @@ int main(int argc, char *argv[])
         cout << "p(x) = (((3.0*x*x - 5.0)*x + 1.0)*x - 2.0)*x + 3.0" << endl;
     }
 
-    
-    // Obtain a reference to a Points object via an appropriate PointsKey object
+      // Obtain a reference to a Points object via an appropriate PointsKey object
     PointsKey key(nPts, pointsType);
-    boost::shared_ptr<Points<NekDouble> > points = PointsManager()[key];
+    
+    PointsSharedPtr points = PointsManager()[key];
+    //boost::shared_ptr<Points<NekDouble> > points = PointsManager()[key];
     //const ptr<Points<NekDouble> > points = PointsManager()[key];
-
+    
+    
     // Get the abscissas and their matching quadrature weights
    //    SharedArray<const NekDouble> z, w;
     Array<OneD, const NekDouble> z, w;

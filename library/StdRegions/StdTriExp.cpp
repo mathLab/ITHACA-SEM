@@ -76,13 +76,15 @@ namespace Nektar
 
             switch(m_base[1]->GetPointsType())
             {
-            case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
+            case LibUtilities::eGaussLobattoLegendre:
+	    case LibUtilities::eGaussLobattoKronrodLegendre: // Legendre inner product 
                 for(i = 0; i < nquad1; ++i)
                 {
                     w1_tmp[i] = 0.5*(1-z1[i])*w1[i];
                 }
                 break;
-            case LibUtilities::eGaussRadauMAlpha1Beta0: // (0,1) Jacobi Inner product 
+            case LibUtilities::eGaussRadauMAlpha1Beta0:
+	    case LibUtilities::eGaussRadauKronrodMAlpha1Beta0: // (0,1) Jacobi Inner product 
                 Vmath::Smul(nquad1, 0.5, w1, 1, w1_tmp,1);      
                 break;
             default:
@@ -1229,10 +1231,18 @@ namespace Nektar
                                 return LibUtilities::BasisKey(LibUtilities::eModified_A,m_base[1]->GetNumModes(),pkey);
                             }
                             break;
-                            
+
+			case LibUtilities::eGaussRadauKronrodMAlpha1Beta0:
+			  {                            
+			    LibUtilities::PointsKey pkey(m_base[1]->GetBasisKey().GetPointsKey().GetNumPoints()+1,LibUtilities::eGaussLobattoLegendre);
+                                
+			    return LibUtilities::BasisKey(LibUtilities::eModified_A,m_base[1]->GetNumModes(),pkey);
+			  }
+			  break;
+			  
                         default:
-                            ASSERTL0(false,"unexpected points distribution");
-                            break;
+			  ASSERTL0(false,"unexpected points distribution");
+			  break;
                         }
                     }
                 default:
@@ -1269,6 +1279,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTriExp.cpp,v $
+ * Revision 1.55  2009/04/27 21:32:45  sherwin
+ * Updated WriteToField method
+ *
  * Revision 1.54  2009/04/22 22:30:48  sherwin
  * Added ReadFromFile method to read back in .dat file
  *

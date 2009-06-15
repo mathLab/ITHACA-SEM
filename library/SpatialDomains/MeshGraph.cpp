@@ -48,6 +48,7 @@
 #include <tinyxml/tinyxml.h>
 #include <cstring>
 #include <sstream>
+#include <cmath>
 
 #include <SpatialDomains/MeshGraph1D.h>
 #include <SpatialDomains/MeshGraph2D.h>
@@ -459,6 +460,96 @@ namespace Nektar
                     }
                     break;
                 default:
+                    ASSERTL0(false,"Expansion not defined in switch  for this shape");
+                    break;
+                }
+                break;
+		
+	     case eModifiedConsistent:
+	       switch (shape)
+                {
+                case eSegment:
+                    {
+		      const LibUtilities::PointsKey pkey(ceil(3*order/2)+2,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
+                        returnval.push_back(bkey);
+                    }
+                    break;
+                case eQuadrilateral:
+                    {
+                        const LibUtilities::PointsKey pkey(ceil(3*order/2)+2,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
+                        returnval.push_back(bkey);
+                        returnval.push_back(bkey);
+                    }
+                    break;
+                case eHexahedron:
+                    {
+                        const LibUtilities::PointsKey pkey(ceil(3*order/2)+2,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
+                        returnval.push_back(bkey);
+                        returnval.push_back(bkey);
+                        returnval.push_back(bkey);
+                    }
+                    break;
+                case eTriangle:
+                    {
+                        const LibUtilities::PointsKey pkey(ceil(3*order/2)+2,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
+                        returnval.push_back(bkey);
+                        
+                        const LibUtilities::PointsKey pkey1(ceil(3*order/2)+1,LibUtilities::eGaussRadauMAlpha1Beta0);
+                        LibUtilities::BasisKey bkey1(LibUtilities::eModified_B,order,pkey1);
+                        
+                        returnval.push_back(bkey1);
+                    }
+                    break;
+		default:
+                    ASSERTL0(false,"Expansion not defined in switch  for this shape");
+                    break;
+                }
+                break;
+
+	    case eModifiedGaussKronrod:
+	      switch (shape)
+                {
+                case eSegment:
+                    {
+		       const LibUtilities::PointsKey pkey(2*(order+1)+1,LibUtilities::eGaussLobattoKronrodLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
+                        returnval.push_back(bkey);
+                    }
+                    break;
+                case eQuadrilateral:
+                    {
+		      const LibUtilities::PointsKey pkey(2*(order+1)+1,LibUtilities::eGaussLobattoKronrodLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
+                        returnval.push_back(bkey);
+                        returnval.push_back(bkey);
+                    }
+                    break;
+                case eHexahedron:
+                    {
+		      const LibUtilities::PointsKey pkey(2*(order+1)+1,LibUtilities::eGaussLobattoKronrodLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
+                        returnval.push_back(bkey);
+                        returnval.push_back(bkey);
+                        returnval.push_back(bkey);
+                    }
+                    break;
+                case eTriangle:
+                    {
+		      const LibUtilities::PointsKey pkey(2*(order+1)+1,LibUtilities::eGaussLobattoKronrodLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
+                        returnval.push_back(bkey);
+                        
+                        const LibUtilities::PointsKey pkey1(2*(order)+1,LibUtilities::eGaussRadauKronrodMAlpha1Beta0);
+                        LibUtilities::BasisKey bkey1(LibUtilities::eModified_B,order,pkey1);
+                        
+                        returnval.push_back(bkey1);
+                    }
+                    break;
+		default:
                     ASSERTL0(false,"Expansion not defined in switch  for this shape");
                     break;
                 }
@@ -1668,6 +1759,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.30  2009/04/29 10:55:17  pvos
+// made demos working with nodal expansions
+//
 // Revision 1.29  2009/04/27 21:33:35  sherwin
 // Added SolverInfoExists and others
 //

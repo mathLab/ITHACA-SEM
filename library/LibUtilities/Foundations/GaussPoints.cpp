@@ -104,18 +104,22 @@ namespace Nektar
             case eGaussRadauMAlpha2Beta0:
                 Polylib::zwgrjm(m_points[0].data(),m_weights.data(),numpoints,2.0,0.0);
                 break;
-
-			case eGaussKronrodLegendre:
-				Polylib::zwgk(m_points[0].data(), m_weights.data(), numpoints, 0.0, 0.0);
-				break;
-			
-			case eGaussRadauKronrodLegendre:
-				Polylib::zwrk(m_points[0].data(), m_weights.data(), numpoints, 0.0, 0.0);
-				break;
-
-			case eGaussLobattoKronrodLegendre:
-				Polylib::zwlk(m_points[0].data(), m_weights.data(), numpoints, 0.0, 0.0);
-				break;
+		
+	    case eGaussKronrodLegendre:
+	      Polylib::zwgk(m_points[0].data(),m_weights.data(),numpoints,0.0,0.0);
+ 	      break;
+	      
+	    case eGaussRadauKronrodMLegendre:
+	      Polylib::zwrk(m_points[0].data(),m_weights.data(),numpoints,0.0,0.0);
+	      break;
+	      
+	    case eGaussRadauKronrodMAlpha1Beta0:
+	      Polylib::zwrk(m_points[0].data(),m_weights.data(),numpoints,1.0,0.0);
+	      break;
+	      
+	    case eGaussLobattoKronrodLegendre:
+	      Polylib::zwlk(m_points[0].data(),m_weights.data(),numpoints,0.0,0.0);
+	      break;
 
             default:
                 ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
@@ -187,14 +191,21 @@ namespace Nektar
                 Polylib::Dgrjm(dmtemp,m_points[0].data(),numpoints,2.0,0.0);
                 break;
 
-			case eGaussKronrodLegendre:
-				break;
+	    case eGaussKronrodLegendre:
+	      
+	      break;
+	      
+	    case eGaussRadauKronrodMLegendre:
+	      
+	      break;
 
-			case eGaussRadauKronrodLegendre:
-				break;
+	    case eGaussRadauKronrodMAlpha1Beta0:
 
-			case eGaussLobattoKronrodLegendre:
-				break;
+	      break;
+
+	    case eGaussLobattoKronrodLegendre:
+	      
+	      break;
 
             default:
                 ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
@@ -255,6 +266,24 @@ namespace Nektar
                 Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,2.0,0.0);
                 break;
 
+	    case eGaussKronrodLegendre:
+		    
+	      break;
+	      
+	    case eGaussRadauKronrodMLegendre:
+	      
+	      break;
+
+	      
+	    case eGaussRadauKronrodMAlpha1Beta0:
+
+	      break;
+
+	    case eGaussLobattoKronrodLegendre:
+	      
+	      break;
+
+
             default:
                 ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
             }
@@ -312,6 +341,9 @@ namespace Nektar
 
 /**
 * $Log: GaussPoints.cpp,v $
+* Revision 1.26  2009/06/12 15:50:11  mirzaee
+* no message
+*
 * Revision 1.25  2008/04/06 05:54:08  bnelson
 * Changed ConstArray to Array<const>
 *

@@ -297,7 +297,7 @@ namespace Polylib {
 
 		chri1(ncoeffs,a,b,a0,b0,end0);
 
-		double s = b0[0]/abs(b0[0]);
+		double s = b0[0]/fabs(b0[0]);
 		b0[0] = s*b0[0];
 
 		// Finding the 2*np-1 gauss-kronrod points
@@ -400,7 +400,7 @@ namespace Polylib {
 		chri1(ncoeffs-1,a0,b0,a1,b1,endr);
 
 
-		double s = b1[0]/abs(b1[0]);
+		double s = b1[0]/fabs(b1[0]);
 		b1[0] = s*b1[0];
 
 		// Finding the 2*np-1 gauss-kronrod points

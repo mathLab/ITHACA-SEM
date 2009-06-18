@@ -521,6 +521,9 @@ namespace Nektar
             case eGaussRadauMLegendre:
             case eGaussRadauPLegendre:
             case eGaussLobattoLegendre:
+	    case eGaussKronrodLegendre:
+	    case eGaussRadauKronrodMLegendre:
+	    case eGaussLobattoKronrodLegendre:
                 returnval = (GetNumPoints() >= GetNumModes());
                 break;
                 
@@ -588,6 +591,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.37  2009/01/13 02:17:15  ehan
+* Added documentation
+*
 * Revision 1.36  2008/11/23 00:31:19  sherwin
 * Added modified_C and normalised ortho_c
 *

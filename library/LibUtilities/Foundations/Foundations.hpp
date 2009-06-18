@@ -127,7 +127,7 @@ namespace Nektar
             "GaussRadauMAlpha2Beta0",
 	    "GaussKronrodLegendre",
 	    "GaussRadauKronrodMLegendre",
-	    "eGaussRadauKronrodMAlpha1Beta0",
+	    "GaussRadauKronrodMAlpha1Beta0",
 	    "GaussLobattoKronrodLegendre",
             "PolyEvenlySpaced",
             "FourierEvenlySpaced",
@@ -136,21 +136,6 @@ namespace Nektar
             "NodalTriEvenlySpaced",
             "NodalTetEvenlySpaced",
             "NodalTetElec",
-        };
-
-        enum IntegrationType
-        {
-	    eStandard,        //!< Normal (linear) 
-            eConsistent,      //!< Over integrations (squared)
-            eAdaptive,     //!< Adaptive (Gauss-Konrod) 
-            SIZE_IntegrationType //!< Length of enum list
-        };
-
-        const char* const IntegrationTypeMap[] = 
-        {
-            "Standard",
-            "Consistent",
-            "Adaptive"
         };
 
     } // end of namespace

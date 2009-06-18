@@ -543,7 +543,7 @@ namespace Nektar
                         LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
                         returnval.push_back(bkey);
                         
-                        const LibUtilities::PointsKey pkey1(2*(order)+1,LibUtilities::eGaussRadauKronrodMAlpha1Beta0);
+                        const LibUtilities::PointsKey pkey1(2*(order),LibUtilities::eGaussRadauKronrodMAlpha1Beta0);
                         LibUtilities::BasisKey bkey1(LibUtilities::eModified_B,order,pkey1);
                         
                         returnval.push_back(bkey1);
@@ -1759,6 +1759,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.31  2009/06/15 01:59:21  claes
+// Gauss-Kronrod updates
+//
 // Revision 1.30  2009/04/29 10:55:17  pvos
 // made demos working with nodal expansions
 //

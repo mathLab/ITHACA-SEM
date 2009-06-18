@@ -104,23 +104,23 @@ namespace Nektar
             case eGaussRadauMAlpha2Beta0:
                 Polylib::zwgrjm(m_points[0].data(),m_weights.data(),numpoints,2.0,0.0);
                 break;
-		
+
 	    case eGaussKronrodLegendre:
 	      Polylib::zwgk(m_points[0].data(),m_weights.data(),numpoints,0.0,0.0);
- 	      break;
+	      break;
 	      
-	    case eGaussRadauKronrodMLegendre:
+            case eGaussRadauKronrodMLegendre:
 	      Polylib::zwrk(m_points[0].data(),m_weights.data(),numpoints,0.0,0.0);
 	      break;
 	      
-	    case eGaussRadauKronrodMAlpha1Beta0:
+            case eGaussRadauKronrodMAlpha1Beta0:
 	      Polylib::zwrk(m_points[0].data(),m_weights.data(),numpoints,1.0,0.0);
 	      break;
 	      
-	    case eGaussLobattoKronrodLegendre:
+            case eGaussLobattoKronrodLegendre:
 	      Polylib::zwlk(m_points[0].data(),m_weights.data(),numpoints,0.0,0.0);
 	      break;
-
+		
             default:
                 ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
             }
@@ -190,27 +190,28 @@ namespace Nektar
             case eGaussRadauMAlpha2Beta0:
                 Polylib::Dgrjm(dmtemp,m_points[0].data(),numpoints,2.0,0.0);
                 break;
-
+		
 	    case eGaussKronrodLegendre:
-	      
-	      break;
-	      
 	    case eGaussRadauKronrodMLegendre:
-	      
-	      break;
-
 	    case eGaussRadauKronrodMAlpha1Beta0:
-
-	      break;
-
 	    case eGaussLobattoKronrodLegendre:
-	      
+	      {
+		for(unsigned int i=0;i<m_pointsKey.GetNumPoints();++i)
+		  {
+		    for(unsigned int j=0;j<m_pointsKey.GetNumPoints();++j)
+		      {
+			(*m_derivmatrix[0])(i,j) = LagrangePolyDeriv(m_points[0][i],j,m_pointsKey.GetNumPoints(),m_points[0]);
+		      }
+		  }
+		
+		return;
+	      }
 	      break;
-
+	      
             default:
-                ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
+	      ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
             }
-
+	    
             std::copy(dmtemp,dmtemp+totpoints*totpoints,m_derivmatrix[0]->begin());
         }
 
@@ -265,24 +266,21 @@ namespace Nektar
             case eGaussRadauMAlpha2Beta0:
                 Polylib::Imgrjm(interp.data(),m_points[0].data(),xpoints.data(),GetNumPoints(),npts,2.0,0.0);
                 break;
-
+		
 	    case eGaussKronrodLegendre:
-		    
-	      break;
-	      
 	    case eGaussRadauKronrodMLegendre:
-	      
-	      break;
-
-	      
 	    case eGaussRadauKronrodMAlpha1Beta0:
-
-	      break;
-
 	    case eGaussLobattoKronrodLegendre:
-	      
+	      {
+		for(unsigned int i=0;i<npts;++i)
+		  {
+		    for(unsigned int j=0;j<m_pointsKey.GetNumPoints();++j)
+		      {
+			interp[i + j*npts] = LagrangePoly(xpoints[i],j,m_pointsKey.GetNumPoints(),m_points[0]);
+		      }
+		  }
+	      }
 	      break;
-
 
             default:
                 ASSERTL0(false, "Unknown Gauss quadrature point distribution requested");
@@ -336,11 +334,72 @@ namespace Nektar
 
             return returnval;
         }
+
+         NekDouble GaussPoints::LagrangeInterpolant(NekDouble x, int npts, const Array<OneD, const NekDouble>& xpts,
+            const Array<OneD, const NekDouble>& funcvals)
+        {
+            NekDouble sum = 0.0;
+
+            for(int i=0;i<npts;++i)
+            {
+                sum += funcvals[i]*LagrangePoly(x,i,npts,xpts);
+            }
+            return sum;
+        }
+
+
+        NekDouble GaussPoints::LagrangePoly(NekDouble x, int pt, int npts, const Array<OneD, const NekDouble>& xpts)
+        {
+            NekDouble h=1.0;
+
+            for(int i=0;i<pt; ++i)
+            {
+                h = h * (x - xpts[i])/(xpts[pt]-xpts[i]);
+            }
+
+            for(int i=pt+1;i<npts;++i)
+            {
+                h = h * (x - xpts[i])/(xpts[pt]-xpts[i]);
+            }
+
+            return h;
+        }
+
+        NekDouble GaussPoints::LagrangePolyDeriv(NekDouble x, int pt, int npts, const Array<OneD, const NekDouble>& xpts)
+        {
+            NekDouble h;
+            NekDouble y=0.0;
+
+            for(int j=0;j<npts;++j)
+            {
+                if(j!=pt)
+                {
+                    h=1.0;
+                    for(int i=0;i<npts;++i)
+                    {
+                        if(i!=pt)
+                        {
+                            if(i!=j)
+                            {
+                                h = h*(x-xpts[i]);
+                            }
+                            h = h/(xpts[pt]-xpts[i]);
+                        }
+                    }
+                    y = y + h;
+                }
+            }
+            return y;
+        }
+
     } // end of namespace LibUtilities
 } // end of namespace Nektar
 
 /**
 * $Log: GaussPoints.cpp,v $
+* Revision 1.27  2009/06/15 01:59:21  claes
+* Gauss-Kronrod updates
+*
 * Revision 1.26  2009/06/12 15:50:11  mirzaee
 * no message
 *

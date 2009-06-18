@@ -229,13 +229,15 @@ namespace Nektar
 
                 switch(m_base[1]->GetPointsType())
                 {
-                case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
+                case LibUtilities::eGaussLobattoLegendre: 
+		case LibUtilities::eGaussLobattoKronrodLegendre:  // Legendre inner product 
                     for(i = 0; i < nquad1; ++i)
                     {
                         Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], outarray.get()+i*nquad0,1);
                     }
                     break;
-                case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product 
+                case LibUtilities::eGaussRadauMAlpha1Beta0:
+		case LibUtilities::eGaussRadauKronrodMAlpha1Beta0: // (1,0) Jacobi Inner product 
                     for(i = 0; i < nquad1; ++i)
                     {
                         Blas::Dscal(nquad0,0.5*w1[i], outarray.get()+i*nquad0,1);      
@@ -1779,6 +1781,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.52  2009/04/27 21:34:07  sherwin
+ *    Updated WriteToField
+ *
  *    Revision 1.51  2009/04/03 15:02:36  sherwin
  *    Made default Create Matrix the call through to the StdRegions generalised operators
  *

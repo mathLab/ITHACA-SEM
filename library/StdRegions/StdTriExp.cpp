@@ -312,13 +312,15 @@ namespace Nektar
                 
             switch(m_base[1]->GetPointsType())
             {
-            case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
+            case LibUtilities::eGaussLobattoLegendre: 
+	    case LibUtilities::eGaussLobattoKronrodLegendre: // Legendre inner product 
                 for(i = 0; i < nquad1; ++i)
                 {
                     Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], outarray.get()+i*nquad0,1);
                 }
                 break;
-            case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product 
+            case LibUtilities::eGaussRadauMAlpha1Beta0: 
+	    case LibUtilities::eGaussRadauKronrodMAlpha1Beta0: // (1,0) Jacobi Inner product 
                 for(i = 0; i < nquad1; ++i)
                 {
                     Blas::Dscal(nquad0,0.5*w1[i], outarray.get()+i*nquad0,1);      
@@ -1234,7 +1236,7 @@ namespace Nektar
 
 			case LibUtilities::eGaussRadauKronrodMAlpha1Beta0:
 			  {                            
-			    LibUtilities::PointsKey pkey(m_base[1]->GetBasisKey().GetPointsKey().GetNumPoints()+1,LibUtilities::eGaussLobattoLegendre);
+			    LibUtilities::PointsKey pkey(m_base[1]->GetBasisKey().GetPointsKey().GetNumPoints()+1,LibUtilities::eGaussLobattoKronrodLegendre);
                                 
 			    return LibUtilities::BasisKey(LibUtilities::eModified_A,m_base[1]->GetNumModes(),pkey);
 			  }
@@ -1279,6 +1281,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTriExp.cpp,v $
+ * Revision 1.56  2009/06/15 01:59:21  claes
+ * Gauss-Kronrod updates
+ *
  * Revision 1.55  2009/04/27 21:32:45  sherwin
  * Updated WriteToField method
  *

@@ -1,0 +1,195 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <!-- InstanceBegin template="/Templates/Main.dwt" codeOutsideHTMLIsLocked="false" -->
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="shortcut icon" href="images/favicon.ico" >
+      <!-- InstanceBeginEditable name="doctitle" -->
+      <title>Nektar++ - Generate doxygen documentation</title>
+      <!-- InstanceEndEditable -->
+      <style type="text/css">
+        <!--
+	html {
+	  min-height: 101%; // force a scrollbar to always appear
+	}
+    body {
+      font: 100% Verdana, Arial, Helvetica, sans-serif;
+      background: #FFFFFF;
+      margin: 0;
+	  padding: 0;
+	  text-align: center;
+	  color: #000000;
+    }
+    .twoColHybLt #container {
+	  //max-width: 90em;
+	  max-width: 60em;
+	  width: 99%;
+      background: #FFFFFF;
+      margin: 0 auto;
+      text-align: left;
+    }
+    .twoColHybLt #sidebar1 {
+	float: left;
+	width: 13.7em;
+	background: #EBEBEB;
+	border: 1px solid #000000;
+	padding-top: 15px;
+	padding-right: 0;
+	padding-bottom: 15px;
+	padding-left: 0;
+    }
+    .twoColHybLt #sidebar1 h3, .twoColHybLt #sidebar1 p {
+      margin-left: 10px;
+      margin-right: 10px;
+    }
+    .twoColHybLt #mainContent {
+	margin-top: 0;
+	margin-right: 20px;
+	margin-bottom: 0;
+	margin-left: 14.5em;
+    }
+    .fltrt {
+      float: right;
+      margin-left: 8px;
+    }
+    .fltlft {
+      float: left;
+      margin-right: 8px;
+    }
+    .clearfloat {
+      clear:both;
+      height:0;
+      font-size: 1px;
+      line-height: 0px;
+    }
+    img {
+      border:0;
+    }
+	h1,h2,h3 {
+	  margin-bottom: 0;
+	}
+    -->
+      </style>
+      <!-- InstanceBeginEditable name="CSS_Style" -->
+      <style type="text/css">
+        <!--
+#menu_CompileLinux {
+	font-weight: bold;
+}
+-->
+      </style>
+      <!-- InstanceEndEditable -->
+      <!--[if IE]>
+    <style type="text/css"> 
+      .twoColHybLt #sidebar1 { padding-top: 30px; margin-top: 20px; }
+      .twoColHybLt #mainContent { zoom: 1; padding-top: 15px; }
+    </style>
+    <![endif]-->
+      <!-- InstanceParam name="LibraryMenu" type="boolean" value="false" -->
+      <!-- InstanceParam name="CompileMenu" type="boolean" value="true" -->
+    </head>
+  <body class="twoColHybLt">
+    <div id="container">
+      <div id="sidebar1">
+        <h3 style="text-align: center;">
+          <a href="index.html" id="menu_Nektar">
+            <img src="images/nektar.png" alt="Nektar++" width="155" height="38" />
+          </a>
+        </h3>
+
+        <p>
+          <a href="downloads.html" id="menu_Downloads">Downloads</a>
+        </p>
+        <p>
+          <a href="compile.html" id="menu_Compile">Compile Instructions</a>
+          <br/>
+          &nbsp;&nbsp;&nbsp;<a href="compile_linux.html" id="menu_CompileLinux">Linux</a><br/>
+          &nbsp;&nbsp;&nbsp;<a href="compile_windows.html" id="menu_CompileWindows">Windows</a><br/>
+          &nbsp;&nbsp;&nbsp;<a href="compile_osx.html" id="menu_CompileOSX">Mac OS X</a><br/>
+          &nbsp;&nbsp;&nbsp;<a href="compile_documentation.html" id="menu_CompileDocumentation">Documentation</a><br/>
+        </p>
+        <p>
+          <a href="library.html" id="menu_Library">Library Overview</a>
+        </p>
+        <p>
+          <a href="team.html" id="menu_Team">Team Members</a>
+        </p>
+        <p>
+          <a href="pre-processing.html" id="menu_PreProcessing">Pre-processing</a>
+        </p>
+        <p>
+          <a href="post-processing.html" id="menu_PostProcessing">Post-processing</a>
+        </p>
+        <p>
+          <a href="usage.html" id="menu_Usage">Usage</a>
+        </p>
+        <p>
+          <a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)
+        </p>
+        <p>
+          <a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a>
+        </p>
+        <p>
+          <a href="license.html" id="menu_License">License</a>
+        </p>
+        <p>
+          <a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a>
+        </p>
+        <p>
+          <a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a>
+        </p>
+
+        <p style="font-size:9px;">
+          Last Revision:<br/>$Date: 2009/05/03 03:18:20 $
+        </p>
+      </div>
+      <div id="mainContent">
+        <!-- InstanceBeginEditable name="Title" -->
+        <h1>Generate Doxygen Documentation</h1>
+        <!-- InstanceEndEditable -->
+        <hr/>
+
+
+<p>
+Nektar++ uses the documentation system <em> Doxygen </em> for generating documentation. The Doxygen HTML files are not included in the tarball because the size prohibits it. To generate the full documentation, follow the steps below:
+<ol>  
+  <li>Required packages</li>
+    <ul>
+      <li><strong>Doxygen</strong><br />
+      If you do not have Doxygen installed, you may obtain it from <a href="http://www.stack.nl/~dimitri/doxygen/">http://www.stack.nl/~dimitri/doxygen/</a>. The web site also offers a manual for installation on both Windows and Unix.</li>
+      <li><strong>Graphviz Dot<br />
+      </strong>The <em>dot</em> program in the Graphviz package is also recommended. Having <em>dot</em> allows for the creation of graph diagrams at the top of the HTML pages. You may obtain it from <a href="http://www.graphviz.org/Download..php">http://www.graphviz.org/Download..php</a>. Once installed, make sure the Graphviz's bin directory is in your path, so Doxygen can see the programs.</li>
+      <li><strong>LaTeX<br />
+      </strong><em>LaTeX</em> is also a recommended program that may be installed with your Unix distribution's package manager. The LaTeX web site is at <a href="http://www.latex-project.org/">http://www.latex-project.org/</a>. A common Windows TeX package is called MiKTeX and can be downloaded from <a href="http://miktex.org/">http://miktex.org/</a>. After installation, make sure it is in your path so Doxygen can use it. Doxygen uses LaTeX to generate PNG images for the website.</li>
+    </ul>
+  </li>
+  <li>Doxygen instructions<br />
+    <ul>
+      <li>Windows
+        <ul>
+          <li>From the icon group that the Doxygen installation created, run the <em>Doxywizard</em> program.</li>
+          <li>Press the &quot;Load&quot; button and choose the <em>Nektar++/docs/html/doxygen/doxygen</em> file.</li>
+          <li>Press the &quot;Start&quot; button and wait until the HTML generation completes.</li>
+        </ul>
+      </li>
+      <li>Unix
+        <ul>
+          <li>Navigate to the <em>Nektar++/docs/html/doxygen/</em> from the terminal.</li>
+          <li>Execute the command <em>doxygen ./doxygen</em> to start documentation generation, and wait until it completes.</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>Open <em>Nektar++/docs/html/doxygen/index.html</em> with your web browser to view the full Nektar++ doxygen documentation.</li>
+  </ol>
+</p>
+
+          <!-- InstanceEndEditable -->
+          <p>
+            <br class="clearfloat" />
+          </p>
+        </div>
+    </div>
+  </body>
+  <!-- InstanceEnd -->
+</html>

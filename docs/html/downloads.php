@@ -104,15 +104,13 @@
         <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
         <p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
 
-        <p style="font-size:9px;">Last Revision:<br/>$Date: 2008/06/11 15:23:01 $</p>
+        <p style="font-size:9px;">Last Revision:<br/>$Date: 2009/04/30 15:16:46 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
         <h1>Downloads</h1>
     	<!-- InstanceEndEditable -->
         <hr>
-
-	<p><a href="getting_started.html" target="_blank">Getting Started Tutorial</a></p>
 	<ul>
 	  <li>
 	    <h3 align="left">release 1.1 (May 2009) </h3>

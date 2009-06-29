@@ -61,16 +61,16 @@ namespace Nektar
                 unsigned int curRow = 0; 
                 unsigned int curColumn = 0;
                 boost::tie(curRow, curColumn) = Policy::Advance(4, 4, curRow, curColumn);
-                BOOST_CHECK_EQUAL(1, curRow);
-                BOOST_CHECK_EQUAL(1, curColumn);
+                BOOST_CHECK_EQUAL(1u, curRow);
+                BOOST_CHECK_EQUAL(1u, curColumn);
 
                 boost::tie(curRow, curColumn) = Policy::Advance(4, 4, curRow, curColumn);
-                BOOST_CHECK_EQUAL(2, curRow);
-                BOOST_CHECK_EQUAL(2, curColumn);
+                BOOST_CHECK_EQUAL(2u, curRow);
+                BOOST_CHECK_EQUAL(2u, curColumn);
 
                 boost::tie(curRow, curColumn) = Policy::Advance(4, 4, curRow, curColumn);
-                BOOST_CHECK_EQUAL(3, curRow);
-                BOOST_CHECK_EQUAL(3, curColumn);
+                BOOST_CHECK_EQUAL(3u, curRow);
+                BOOST_CHECK_EQUAL(3u, curColumn);
 
                 boost::tie(curRow, curColumn) = Policy::Advance(2, 2, curRow, curColumn);
                 BOOST_CHECK_EQUAL(std::numeric_limits<unsigned int>::max(), curRow);

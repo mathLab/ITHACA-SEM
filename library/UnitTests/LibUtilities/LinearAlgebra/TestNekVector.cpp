@@ -57,15 +57,15 @@ namespace Nektar
             Array<OneD, NekDouble> out(10, buf);
 
             NekVector<NekDouble> Fint(nint, offset = out + nbndry);
-            BOOST_CHECK_EQUAL(1, Fint.GetDimension());
-            BOOST_CHECK_EQUAL(2, Fint[0]);
+            BOOST_CHECK_EQUAL(1u, Fint.GetDimension());
+            BOOST_CHECK_EQUAL(2u, Fint[0]);
 
             NekVector<NekDouble> Vint(nint, offset = out + nbndry, eWrapper); 
-            BOOST_CHECK_EQUAL(1, Vint.GetDimension());
+            BOOST_CHECK_EQUAL(1u, Vint.GetDimension());
             BOOST_CHECK_EQUAL(2, Vint[0]);
 
             NekVector<NekDouble> testVector(4, offset = out + 3, eWrapper); 
-            BOOST_CHECK_EQUAL(4, testVector.GetDimension());
+            BOOST_CHECK_EQUAL(4u, testVector.GetDimension());
             BOOST_CHECK_EQUAL(4, testVector[0]);
             BOOST_CHECK_EQUAL(5, testVector[1]);
             BOOST_CHECK_EQUAL(6, testVector[2]);

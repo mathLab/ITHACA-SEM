@@ -57,11 +57,11 @@ namespace Nektar
         BOOST_AUTO_TEST_CASE(TestDefaultConstructor)
         {
             SMat m;
-            BOOST_CHECK_EQUAL(0, m.GetRows());
-            BOOST_CHECK_EQUAL(0, m.GetColumns());
+            BOOST_CHECK_EQUAL(0u, m.GetRows());
+            BOOST_CHECK_EQUAL(0u, m.GetColumns());
             BOOST_CHECK(boost::shared_ptr<InnerMatrix>() != m.GetOwnedMatrix());
             BOOST_CHECK_EQUAL('N', m.GetTransposeFlag());
-            BOOST_CHECK_EQUAL(0, m.GetStorageSize());
+            BOOST_CHECK_EQUAL(0u, m.GetStorageSize());
             BOOST_CHECK_EQUAL(eFULL, m.GetStorageType());
             BOOST_CHECK_EQUAL(0.0, m.Scale());
 
@@ -74,11 +74,11 @@ namespace Nektar
 
             boost::shared_ptr<InnerMatrix> in(new InnerMatrix(3, 2, buf));
             SMat m(2.7, in);
-            BOOST_CHECK_EQUAL(3, m.GetRows());
-            BOOST_CHECK_EQUAL(2, m.GetColumns());
+            BOOST_CHECK_EQUAL(3u, m.GetRows());
+            BOOST_CHECK_EQUAL(2u, m.GetColumns());
             BOOST_CHECK_EQUAL(in, m.GetOwnedMatrix());
             BOOST_CHECK_EQUAL('N', m.GetTransposeFlag());
-            BOOST_CHECK_EQUAL(6, m.GetStorageSize());
+            BOOST_CHECK_EQUAL(6u, m.GetStorageSize());
             BOOST_CHECK_EQUAL(eFULL, m.GetStorageType());
             BOOST_CHECK_EQUAL(2.7, m.Scale());
 

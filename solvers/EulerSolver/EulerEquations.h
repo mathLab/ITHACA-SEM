@@ -125,7 +125,7 @@ namespace Nektar
 
 	void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
 	
-	void WallBoundary(int bcRegion, Array<OneD, Array<OneD, NekDouble> > &physarray);
+	void WallBoundary(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray);
 
 
 	void RiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
@@ -155,6 +155,9 @@ namespace Nektar
 
 /**
 * $Log: EulerEquations.h,v $
+* Revision 1.3  2009/03/17 12:32:01  claes
+* Updates to get the EulerSolver to work with the latest version of the TimeIntegrationScheme
+*
 * Revision 1.2  2009/02/02 16:10:16  claes
 * Update to make SWE, Euler and Boussinesq solvers up to date with the time integrator scheme. Linear and classical Boussinsq solver working
 *

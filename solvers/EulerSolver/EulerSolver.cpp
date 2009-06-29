@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
     dom.SetInitialConditions();
 
     // HACK!!! hardcoded for the isentropic vortex case
-    dom.SetIsenTropicVortex();
+    //dom.SetIsenTropicVortex();
     //----------------------------------------
 
     
@@ -109,9 +109,11 @@ int main(int argc, char *argv[])
     
     // HACK!!!!
     // hardcoded exactsolution for Isentropic Vortex
-    Array<OneD, NekDouble> exactsolution(dom.GetTotPoints());
-    dom.GetExactIsenTropicVortex(exactsolution, 0);
-    cout << "L2 Error (variable "<< dom.GetVariable(0) <<"): " << dom.L2Error(0,exactsolution) << endl;
+    // Array<OneD, NekDouble> exactsolution(dom.GetTotPoints());
+    // dom.GetExactIsenTropicVortex(exactsolution, 0);
+    //cout << "L2 Error (variable "<< dom.GetVariable(0) <<"): " << dom.L2Error(0,exactsolution) << endl;
+    
+    cout << "L2 Error (variable "<< dom.GetVariable(0) <<"): " << dom.L2Error(0) << endl;
     //---------------------------------------
     
    

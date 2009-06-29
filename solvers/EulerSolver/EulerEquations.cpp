@@ -296,15 +296,19 @@ namespace Nektar
       }
     //-------------------------------------------------------
     
+    
+    //-------------------------------------------------------
+    // set time dependent boundary conditions
+    
     SetBoundaryConditions(physarray, time);
-
+    //------------------------------------------------------
+    
     switch(m_projectionType)
       {
       case eDiscontinuousGalerkin:
 	{
-	  
 	  WeakDGAdvection(physarray, outarray, false, true);
-
+	  
 	  // any source terms should be added here
 	  
 	  
@@ -325,74 +329,12 @@ namespace Nektar
   }
 
 
-    
-  //   void EulerEquations::ExplicitlyIntegrateAdvection(int nsteps)
-//     {
-//         int i,n,nchk = 0;
-//         int ncoeffs = m_fields[0]->GetNcoeffs();
-//         int nvariables = m_fields.num_elements();
-
-//         // Get Integration scheme details
-//         LibUtilities::TimeIntegrationSchemeKey       IntKey(LibUtilities::eForwardEuler);
-//         LibUtilities::TimeIntegrationSchemeSharedPtr IntScheme = LibUtilities::TimeIntegrationSchemeManager()[IntKey];
-
-
-// 	// HACK!!! 
-// 	//hardcoded initial conditions for Isentropic vortex
-// 	 SetIsenTropicVortex();
-
-//         // Set up wrapper to fields data storage. 
-//         Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
-        
-//         for(i = 0; i < nvariables; ++i)
-//         {
-//             fields[i] = m_fields[i]->UpdateCoeffs();
-//         }
-                
-//          int nInitSteps;
-// 	 LibUtilities::TimeIntegrationSolutionSharedPtr u = IntScheme->InitializeScheme(m_timestep,m_time,nInitSteps,*this,fields);
-
-
-// 	 for(n = nInitSteps; n < nsteps; ++n)
-// 	  {
-	    
-// 	    //----------------------------------------------
-//             // Perform time step integration
-//             //----------------------------------------------
-
-//             fields = IntScheme->ExplicitIntegration(m_timestep,*this,u);
-	   
-// 	    m_time += m_timestep;
-//             //----------------------------------------------
-
-//             //----------------------------------------------
-//             // Dump analyser information
-//             //----------------------------------------------
-//             if(!((n+1)%m_infosteps))
-//             {
-// 	      cout << "Steps: " << n+1 << "\t Time: " <<m_time<< endl;
-//             }
-            
-//             if(n&&(!((n+1)%m_checksteps)))
-//             {
-// 	      for(i = 0; i < nvariables; ++i)
-// 		{
-// 		  (m_fields[i]->UpdateCoeffs()) = fields[i];
-// 		}
-// 	      Checkpoint_Output(nchk++);
-//             }
-// 	  }
-        
-// 	for(i = 0; i < nvariables; ++i)
-// 	  {
-// 	    (m_fields[i]->UpdateCoeffs()) = fields[i];
-// 	  }
-//     }
-    
-  
   //----------------------------------------------------
   void EulerEquations::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time)
   {
+    int nvariables = m_fields.num_elements();
+    int cnt = 0;
+
     // loop over Boundary Regions
     for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
       {	
@@ -400,38 +342,49 @@ namespace Nektar
 	// Wall Boundary Condition
 	if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "Wall")
 	  {
-	    WallBoundary(n,physarray);
+	    if (m_expdim == 2)
+	      {
+		WallBoundary(n,cnt,physarray);
+	      }
+	    else
+	      {
+		ASSERTL0(false,"1D, 3D not yet implemented");
+	      }
 	  }
 	
-	// Time dependent Boundary Condition
+	// Time Dependent Boundary Condition (specified in meshfile)
 	if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "TimeDependent")
 	  {
-	    for (int i = 0; m_fields.num_elements(); ++i)
+	    for (int i = 0; i < nvariables; ++i)
 	      {
 		m_fields[i]->EvaluateBoundaryConditions(time);
 	      }
 	  }
+	
+	cnt +=m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
       }
   }
+ 
   
   //----------------------------------------------------
  
-  void EulerEquations::WallBoundary(int bcRegion, Array<OneD, Array<OneD, NekDouble> > &physarray)
-  { 
-
-     // get physical values of rho, rho u, rho v and E for the forward trace
-    Array<OneD, NekDouble> rho(GetTraceTotPoints());
-    Array<OneD, NekDouble> rhou(GetTraceTotPoints());
-    Array<OneD, NekDouble> rhov(GetTraceTotPoints());
-    Array<OneD, NekDouble> E(GetTraceTotPoints());
-    m_fields[0]->ExtractTracePhys(physarray[0],rho);
-    m_fields[1]->ExtractTracePhys(physarray[1],rhou);
-    m_fields[2]->ExtractTracePhys(physarray[2],rhov);
-    m_fields[3]->ExtractTracePhys(physarray[3],E);
-
+    void EulerEquations::WallBoundary(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray)
+  {  
+    int i;
+    int nTraceNumPoints = GetTraceTotPoints();
+    int nvariables      = physarray.num_elements();
+    
+    // get physical values of the forward trace
+    Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+    for (i = 0; i < nvariables; ++i)
+      {
+	Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
+	m_fields[i]->ExtractTracePhys(physarray[i],Fwd[i]);
+      }
+    
     // Adjust the physical values of the trace to take 
     // user defined boundaries into account
-    int e, id1, id2, npts, cnt = 0; 
+    int e, id1, id2, npts;
     
     for(e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
       {
@@ -439,35 +392,52 @@ namespace Nektar
 	id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e) ;
 	id2  = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
 	
-	Array<OneD, NekDouble> tmp_n(npts);
-	Array<OneD, NekDouble> tmp_t(npts);
-	  
-	// rotate to compute the normal and tangential flux components
-	Vmath::Vmul(npts,&rhou[id2],1,&m_traceNormals[0][id2],1,&tmp_n[0],1);
-	Vmath::Vvtvp(npts,&rhov[id2],1,&m_traceNormals[1][id2],1,&tmp_n[0],1,&tmp_n[0],1);
-	
-	Vmath::Vmul(npts,&rhou[id2],1,&m_traceNormals[1][id2],1,&tmp_t[0],1);
-	Vmath::Vvtvm(npts,&rhov[id2],1,&m_traceNormals[0][id2],1,&tmp_t[0],1,&tmp_t[0],1);
-	  
-	// negate the normal flux
-	Vmath::Neg(npts,tmp_n,1);		      
-	
-	// rotate back to Cartesian
-	Vmath::Vmul(npts,&tmp_t[0],1,&m_traceNormals[1][id2],1,&rhou[id2],1);
-	Vmath::Vvtvm(npts,&tmp_n[0],1,&m_traceNormals[0][id2],1,&rhou[id2],1,&rhou[id2],1);
-	
-	Vmath::Vmul(npts,&tmp_t[0],1,&m_traceNormals[0][id2],1,&rhov[id2],1);
-	Vmath::Vvtvp(npts,&tmp_n[0],1,&m_traceNormals[1][id2],1,&rhov[id2],1,&rhov[id2],1);
-	
+	switch(m_expdim)
+	  {
+	  case 1:
+	    {
+	      // negate the forward flux
+	      Vmath::Neg(npts,&Fwd[1][id2],1);	
+	      
+	      ASSERTL0(false,"1D not yet implemented for the Euler");
+	    }
+	    break;
+	  case 2:
+	    {
+	      Array<OneD, NekDouble> tmp_n(npts);
+	      Array<OneD, NekDouble> tmp_t(npts);
+	      
+	      Vmath::Vmul(npts,&Fwd[1][id2],1,&m_traceNormals[0][id2],1,&tmp_n[0],1);
+	      Vmath::Vvtvp(npts,&Fwd[2][id2],1,&m_traceNormals[1][id2],1,&tmp_n[0],1,&tmp_n[0],1);
+	      
+	      Vmath::Vmul(npts,&Fwd[1][id2],1,&m_traceNormals[1][id2],1,&tmp_t[0],1);
+	      Vmath::Vvtvm(npts,&Fwd[2][id2],1,&m_traceNormals[0][id2],1,&tmp_t[0],1,&tmp_t[0],1);
+	      
+	      // negate the normal flux
+	      Vmath::Neg(npts,tmp_n,1);		      
+	      
+	      // rotate back to Cartesian
+	      Vmath::Vmul(npts,&tmp_t[0],1,&m_traceNormals[1][id2],1,&Fwd[1][id2],1);
+	      Vmath::Vvtvm(npts,&tmp_n[0],1,&m_traceNormals[0][id2],1,&Fwd[1][id2],1,&Fwd[1][id2],1);
+	      
+	      Vmath::Vmul(npts,&tmp_t[0],1,&m_traceNormals[0][id2],1,&Fwd[2][id2],1);
+	      Vmath::Vvtvp(npts,&tmp_n[0],1,&m_traceNormals[1][id2],1,&Fwd[2][id2],1,&Fwd[2][id2],1);
+	    }
+	    break;
+	  case 3:
+	    ASSERTL0(false,"3D not implemented for the Euler Equations");
+	    break;
+	  default:
+	    ASSERTL0(false,"Illegal expansion dimension");
+	  }
+
 	// copy boundary adjusted values into the boundary expansion
-	Vmath::Vcopy(npts,&rho[id2], 1,&(m_fields[0]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1],1);
-	Vmath::Vcopy(npts,&rhou[id2],1,&(m_fields[1]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1],1);
-	Vmath::Vcopy(npts,&rhov[id2],1,&(m_fields[2]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1],1);
-	Vmath::Vcopy(npts,&E[id2],1,&(m_fields[3]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1],1);
+	for (i = 0; i < nvariables; ++i)
+	  {
+	    Vmath::Vcopy(npts,&Fwd[i][id2], 1,&(m_fields[i]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1],1);
+	  }
       }
-    cnt +=e;
   }
-  
 
   void EulerEquations::GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux)
     {
@@ -769,6 +739,9 @@ namespace Nektar
 
 /**
 * $Log: EulerEquations.cpp,v $
+* Revision 1.4  2009/04/28 10:17:41  pvos
+* Some updates to make the solvers compile properly with the newly added sparse matrix library
+*
 * Revision 1.3  2009/03/17 12:32:01  claes
 * Updates to get the EulerSolver to work with the latest version of the TimeIntegrationScheme
 *

@@ -77,8 +77,6 @@ namespace Nektar
         // directly from constructor
         if(UseInputFileForProjectionType == true)
         {
-            
-
             if(m_boundaryConditions->SolverInfoExists("PROJECTION"))
             {
                 
@@ -621,7 +619,7 @@ namespace Nektar
 	      {
 		Vmath::Neg(ncoeffs,OutField[i],1);
 		m_fields[i]->AddTraceIntegral(numflux[i],OutField[i]);
-		m_fields[i]->SetPhysState(false);
+	      	m_fields[i]->SetPhysState(false);
 	      }
 	  }
 	// if the NumericalFlux function does not include the
@@ -660,113 +658,115 @@ namespace Nektar
   void ADRBase::WeakDGDiffusion(const Array<OneD, Array<OneD, NekDouble> >& InField, 
 				Array<OneD, Array<OneD, NekDouble> >& OutField,
 				bool NumericalFluxIncludesNormal, bool InFieldIsInPhysSpace, int nvariables)
-    {
-        int i,j;
-        int nVelDim         = m_spacedim;
-        int nPointsTot      = GetNpoints();
-        int ncoeffs         = GetNcoeffs();
-        int nTracePointsTot = GetTraceNpoints();
+  {
+    int i,j;
+    int nVelDim         = m_spacedim;
+    int nPointsTot      = GetNpoints();
+    int ncoeffs         = GetNcoeffs();
+    int nTracePointsTot = GetTraceNpoints();
+    
+    if (!nvariables)
+      {
+	nvariables      = m_fields.num_elements();
+      }
+    
+    Array<OneD, NekDouble>  qcoeffs (ncoeffs);
+    
+    Array<OneD, Array<OneD, NekDouble> > physfield (nvariables);
+    Array<OneD, Array<OneD, NekDouble> > fluxvector(nVelDim);
+    Array<OneD, Array<OneD, NekDouble> >  qflux   (nvariables);
+    
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  uflux   (nvariables);		
+    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  qfield  (nvariables);
+    
+    
+    for(i = 0; i < nvariables; ++i)
+      {
+	qfield[i] = Array<OneD, Array<OneD, NekDouble> >(nVelDim);
+	uflux[i] = Array<OneD, Array<OneD, NekDouble> >(nVelDim);
+	qflux[i] = Array<OneD, NekDouble>(nTracePointsTot,0.0);
 	
-	if (!nvariables)
+	for(j = 0; j< nVelDim; ++j)
 	  {
-	    nvariables      = m_fields.num_elements();
+	    fluxvector[j]    = Array<OneD, NekDouble>(nPointsTot,0.0);
+	    qfield[i][j]  = Array<OneD, NekDouble>(nPointsTot,0.0);
+	    uflux[i][j] = Array<OneD, NekDouble>(nTracePointsTot,0.0);
 	  }
-	  
-		Array<OneD, NekDouble>  qcoeffs (ncoeffs);
-	  
-	    Array<OneD, Array<OneD, NekDouble> > physfield (nvariables);
-		Array<OneD, Array<OneD, NekDouble> > fluxvector(nVelDim);
-		Array<OneD, Array<OneD, NekDouble> >  qflux   (nvariables);
-		
-		Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  uflux   (nvariables);		
-		Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  qfield  (nvariables);
-
-				  
-	    for(i = 0; i < nvariables; ++i)
-		{
-			qfield[i] = Array<OneD, Array<OneD, NekDouble> >(nVelDim);
-			uflux[i] = Array<OneD, Array<OneD, NekDouble> >(nVelDim);
-			qflux[i] = Array<OneD, NekDouble>(nTracePointsTot,0.0);
-		  
-		  for(j = 0; j< nVelDim; ++j)
-		    {
-			  fluxvector[j]    = Array<OneD, NekDouble>(nPointsTot,0.0);
-			  qfield[i][j]  = Array<OneD, NekDouble>(nPointsTot,0.0);
-			  uflux[i][j] = Array<OneD, NekDouble>(nTracePointsTot,0.0);
-			}
-		 }
+      }
 	
-	//--------------------------------------------
-	// Get the variables in physical space
-	
-	// already in physical space
-	if(InFieldIsInPhysSpace == true)
+    //--------------------------------------------
+    // Get the variables in physical space
+    
+    // already in physical space
+    if(InFieldIsInPhysSpace == true)
+      {
+	for(i = 0; i < nvariables; ++i)
 	  {
-            for(i = 0; i < nvariables; ++i)
-	      {
-                physfield[i] = InField[i];
-	      }
+	    physfield[i] = InField[i];
 	  }
-	// otherwise do a backward transformation
-        else
+      }
+    // otherwise do a backward transformation
+    else
+      {
+	for(i = 0; i < nvariables; ++i)
 	  {
-	    for(i = 0; i < nvariables; ++i)
-	      {
-		// Could make this point to m_fields[i]->UpdatePhys();
-		physfield[i] = Array<OneD, NekDouble>(nPointsTot);
-		m_fields[i]->BwdTrans(InField[i],physfield[i]);
-	      }
+	    // Could make this point to m_fields[i]->UpdatePhys();
+	    physfield[i] = Array<OneD, NekDouble>(nPointsTot);
+	    m_fields[i]->BwdTrans(InField[i],physfield[i]);
 	  }
-	//--------------------------------------------
-
-   // ########################################################################
-   //   Compute qx and qy from system of equations
-   // ########################################################################
-	    // Evaluate numerical flux in physical space which may in
-	    // general couple all component of vectors
-		
-		   NumFluxforDiff(physfield, uflux);
-		   
-	   for(i = 0; i < nvariables; ++i)
-        {
-		  for(j = 0; j < nVelDim; ++j)
-		  {
-              // Get the ith component of the  flux vector in (physical space)
-	   		    GetFluxVector(i, j, physfield, fluxvector);
+      }
+    //--------------------------------------------
+    
+    // ########################################################################
+    //   Compute qx and qy from system of equations
+    // ########################################################################
+    // Evaluate numerical flux in physical space which may in
+    // general couple all component of vectors
+    
+    NumFluxforDiff(physfield, uflux);
+    
+    for(i = 0; i < nvariables; ++i)
+      {
+	for(j = 0; j < nVelDim; ++j)
+	  {
+	    // Get the ith component of the  flux vector in (physical space)
+	    GetFluxVector(i, j, physfield, fluxvector);
             
-              // Calculate the i^th value of (\grad_i \phi, F)
-				WeakAdvectionGreensDivergenceForm(fluxvector,qcoeffs);
-	
-				Vmath::Neg(ncoeffs,qcoeffs,1);
-		        m_fields[i]->AddTraceIntegral(uflux[i][j],qcoeffs);
-
-		      // Multiply by the inverse of mass matrix
-			    m_fields[i]->MultiplyByElmtInvMass(qcoeffs,qcoeffs);
-				
-			  // Back to physical space
-				m_fields[i]->BwdTrans(qcoeffs,qfield[i][j]);
-			}
-		 }
-		
-	// ########################################################################
+	    // Calculate the i^th value of (\grad_i \phi, F)
+	    WeakAdvectionGreensDivergenceForm(fluxvector,qcoeffs);
+	    
+	    Vmath::Neg(ncoeffs,qcoeffs,1);
+	    m_fields[i]->AddTraceIntegral(uflux[i][j],qcoeffs);
+	    m_fields[i]->SetPhysState(false);
+	    
+	    // Multiply by the inverse of mass matrix
+	    m_fields[i]->MultiplyByElmtInvMass(qcoeffs,qcoeffs);
+	    
+	    // Back to physical space
+	    m_fields[i]->BwdTrans(qcoeffs,qfield[i][j]);
+	  }
+      }
+    
+    // ########################################################################
     //   Compute u from qx and qy
     // ########################################################################
-	    // Evaluate numerical flux in physical space which may in
-	    // general couple all component of vectors
-		
-	      NumFluxforDiff(physfield, qfield, qflux);
-
-		for(i = 0; i < nvariables; ++i)
-        {
-            // Calculate the i^th value of (\grad_i \phi, F)
-             WeakAdvectionGreensDivergenceForm(qfield[i],OutField[i]);
-			
-			// Evaulate  <\phi, \hat{F}\cdot n> - OutField[i] 
-		     Vmath::Neg(ncoeffs,OutField[i],1);
-		     m_fields[i]->AddTraceIntegral(qflux[i],OutField[i]);
-		}
-    }
+    // Evaluate numerical flux in physical space which may in
+    // general couple all component of vectors
+    
+    NumFluxforDiff(physfield, qfield, qflux);
+    
+    for(i = 0; i < nvariables; ++i)
+      {
+	// Calculate the i^th value of (\grad_i \phi, F)
+	WeakAdvectionGreensDivergenceForm(qfield[i],OutField[i]);
 	
+	// Evaulate  <\phi, \hat{F}\cdot n> - OutField[i] 
+	Vmath::Neg(ncoeffs,OutField[i],1);
+	m_fields[i]->AddTraceIntegral(qflux[i],OutField[i]);
+      	m_fields[i]->SetPhysState(false);
+      }
+  }
+  
     void ADRBase::Output(void)
     {
         std::string outname = m_sessionName + ".fld";
@@ -897,6 +897,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.10  2009/06/11 01:54:08  claes
+* Added Inviscid Burger
+*
 * Revision 1.9  2009/04/29 20:45:55  sherwin
 * Update for new definition of enum
 *

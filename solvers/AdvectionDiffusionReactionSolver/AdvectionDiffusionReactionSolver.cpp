@@ -69,7 +69,6 @@ int main(int argc, char *argv[])
     {
         // Set up the initial conditions 
         dom.SetInitialConditions();
-	
     }
 	
     switch(dom.GetEquationType())

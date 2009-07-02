@@ -35,6 +35,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <Auxiliary/ADRBase.h>
+#include <boost/math/special_functions/spherical_harmonic.hpp>
+
 #include <cstdio>
 #include <cstdlib>
 
@@ -54,7 +56,7 @@ namespace Nektar
      * Constructor. Creates ... of #DisContField2D fields
      */
     ADRBase::ADRBase(string &fileNameString, bool UseInputFileForProjectionType,
-                     bool UseContinuousField)
+                     bool UseContinuousField, bool ReadBoundaryConditions)
     {
         SpatialDomains::MeshGraph graph; 
 
@@ -64,7 +66,7 @@ namespace Nektar
         // Also read and store the boundary conditions
 	SpatialDomains::MeshGraph *meshptr = m_graph.get();
         m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>::AllocateSharedPtr(meshptr);
-        m_boundaryConditions->Read(fileNameString);
+        m_boundaryConditions->Read(fileNameString); // To be Fixed
         
         // set space dimension for use in class
         m_spacedim = m_graph->GetSpaceDimension();
@@ -72,7 +74,6 @@ namespace Nektar
         m_sessionName = fileNameString;
         m_sessionName = m_sessionName.substr(0,m_sessionName.find_first_of(".")); // Pull out ending
         
-
         // Options to determine type of projection from file or
         // directly from constructor
         if(UseInputFileForProjectionType == true)
@@ -285,7 +286,7 @@ namespace Nektar
         }
     }
   
-    void ADRBase::SetInitialConditions(NekDouble initialtime)
+    void ADRBase::SetInitialConditions(const int eqntype, bool ReadInitialConditions, NekDouble initialtime)
     {
         int nq = m_fields[0]->GetNpoints();
       
@@ -297,6 +298,8 @@ namespace Nektar
         // discretisation)
         m_fields[0]->GetCoords(x0,x1,x2);
       
+        if(ReadInitialConditions)
+        {
 
         for(int i = 0 ; i < m_fields.num_elements(); i++)
 	{
@@ -306,10 +309,43 @@ namespace Nektar
                 (m_fields[i]->UpdatePhys())[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],initialtime);
 	    }
             m_fields[i]->SetPhysState(true);
-
             m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
 	}
+        }
 
+        else
+        {
+
+	// For Advection Test
+	if(eqntype==1)
+	  {
+	    for(int i = 0 ; i < m_fields.num_elements(); i++)
+  	      {
+		for(int j = 0; j < nq; j++)
+	          {
+		    (m_fields[i]->UpdatePhys())[j] = AdvectionSphere(x0[j], x1[j], x2[j], initialtime);
+                  }
+
+		m_fields[i]->SetPhysState(true);
+		m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+	       }
+	  }
+
+	// For Diffusion-Reaction Test
+	else if(eqntype==2)
+	  {
+	    for(int i = 0 ; i < m_fields.num_elements(); i++)
+  	      {
+		for(int j = 0; j < nq; j++)
+	          {
+		    (m_fields[i]->UpdatePhys())[j] = Morphogenesis(i, x0[j], x1[j], x2[j], initialtime);
+                  }
+
+		m_fields[i]->SetPhysState(true);
+		m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+	      }
+	   }
+        }
 
 	// dump initial conditions to file
         std::string outname = m_sessionName + "_initial.chk";
@@ -327,8 +363,7 @@ namespace Nektar
         Array<OneD,NekDouble> x1(nq);
         Array<OneD,NekDouble> x2(nq);
       
-        // get the coordinates (assuming all fields have the same
-        // discretisation)
+        // get the coordinates (assuming all fields have the same discretisation)
         force[0]->GetCoords(x0,x1,x2);
       
         for(int i = 0 ; i < m_fields.num_elements(); i++)
@@ -344,7 +379,8 @@ namespace Nektar
     }
 
 
-    void ADRBase::EvaluateExactSolution(int field, Array<OneD, NekDouble> &outfield, const NekDouble time)
+    void ADRBase::EvaluateExactSolution(int field, Array<OneD, NekDouble> &outfield, 
+                                        const NekDouble time, const int eqntype, bool ReadInitialConditions)
     {
         int nq = m_fields[field]->GetNpoints();
       
@@ -355,12 +391,189 @@ namespace Nektar
         // get the coordinates of the quad points
         m_fields[field]->GetCoords(x0,x1,x2);
       
-        SpatialDomains::ConstExactSolutionShPtr ifunc = m_boundaryConditions->GetExactSolution(field);
-        for(int j = 0; j < nq; j++)
+        if(ReadInitialConditions)
         {
-            outfield[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],time);
+            SpatialDomains::ConstExactSolutionShPtr ifunc = m_boundaryConditions->GetExactSolution(field);
+            for(int j = 0; j < nq; j++)
+            {
+                outfield[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],time);
+            }
+        }
+
+        else
+        {
+            if(eqntype == 1)
+            {
+                for(int j = 0; j < nq; ++j)
+                {
+                    outfield[j] = AdvectionSphere(x0[j], x1[j], x2[j], time);
+                }
+            }
+            
+            else if(eqntype == 2)
+            {
+                for(int j = 0; j < nq; ++j)
+                {
+                    outfield[j] = Morphogenesis(field, x0[j], x1[j], x2[j], time);
+                }
+            }
         }
     }
+
+    NekDouble ADRBase::AdvectionSphere(const NekDouble x0j, const NekDouble x1j,
+                                                 const NekDouble x2j, const NekDouble time)
+  {
+
+        int nq = m_fields[0]->GetNpoints();
+        NekDouble dist, radius, cosdiff, sin_theta, cos_theta, sin_varphi, cos_varphi;
+        NekDouble pi = 3.14159265358979323846;
+        NekDouble newvarphi_c, newtheta_c, returnval;
+        NekDouble m_theta_c, m_varphi_c, m_radius_limit, m_c0;
+
+        Array<OneD, NekDouble> Exactsolution;
+
+        // Sets of parameters      
+        m_theta_c = 0.0;
+        m_varphi_c = 3.0*pi/2.0;
+        m_radius_limit = 7.0*pi/64.0;
+        m_c0 = 2.0;
+
+        newvarphi_c = m_varphi_c ;
+        newtheta_c = m_theta_c ;
+
+	radius = sqrt( x0j*x0j + x1j*x1j + x2j*x2j );
+
+	sin_varphi = x1j/sqrt( x0j*x0j + x1j*x1j );
+	cos_varphi = x0j/sqrt( x0j*x0j + x1j*x1j );
+
+	sin_theta = x2j/radius;
+	cos_theta = sqrt( x0j*x0j + x1j*x1j )/radius;
+
+	cosdiff =  cos_varphi*cos(m_varphi_c) + sin_varphi*sin(m_varphi_c);
+	dist = radius*acos( sin(m_theta_c)*sin_theta + cos(m_theta_c)*cos_theta*cosdiff );
+
+	if(dist < m_radius_limit)
+           {
+	     returnval = 0.5*( 1.0 + cos(pi*dist/m_radius_limit) ) + m_c0;
+           }
+        else
+           {
+	     returnval = m_c0;
+           }
+
+	return returnval;
+  }
+
+  NekDouble ADRBase::Morphogenesis(const int field, const NekDouble x0j, const NekDouble x1j, 
+                                             const NekDouble x2j, const NekDouble time)
+  
+  {
+        int nq = m_fields[0]->GetNpoints();
+        NekDouble pi = 3.14159265358979323846;
+
+        int i, j, m, n, ind, Maxn, Maxm;
+        NekDouble a_n, d_n, gamma_n, alpha_n, beta_n;
+        NekDouble A_mn, C_mn, theta, phi,radius,A,B;
+        NekDouble m_a, m_b, m_c, m_d, m_mu, m_nu;
+
+        std::complex<double> Spericharmonic, delta_n, varphi0, varphi1, temp;
+        std::complex<double> B_mn, D_mn;
+
+        // Set some parameter values
+        Maxn = 6; 
+        Maxm = 2*Maxn-1;
+
+        A = 2.0;
+        B = 5.0;
+        m_mu = 0.001;
+        m_nu = 0.002;
+
+        m_a = -1.0*B - 1.0;
+        m_b = A*A;
+        m_c = B;
+        m_d = -1.0*A*A;
+
+        Array<OneD, Array<OneD, NekDouble> > Ainit(Maxn);
+        Array<OneD, Array<OneD, NekDouble> > Binit(Maxn);
+
+        for (i = 0; i < Maxn; ++i)
+        {
+            Ainit[i] = Array<OneD, NekDouble>(Maxm, 0.0);
+            Binit[i] = Array<OneD, NekDouble>(Maxm, 0.0);
+        }
+
+        Ainit[5][0] = -0.5839;
+        Ainit[5][1] = -0.8436;
+        Ainit[5][2] = -0.4764;
+        Ainit[5][3] = 0.6475;
+        Ainit[5][4] = 0.1886;
+        Ainit[5][5] = 0.8709;
+        Ainit[5][6] = -0.8338;
+        Ainit[5][7] = 0.1795;
+        Ainit[5][8] = -0.7873;
+        Ainit[5][9] = 0.8842;
+        Ainit[5][10] = 0.2943;
+
+        Binit[5][0] = -0.6263;
+        Binit[5][1] = 0.9803;
+        Binit[5][2] = 0.7222;
+        Binit[5][3] = 0.5945;
+        Binit[5][4] = 0.6026;
+        Binit[5][5] = -0.2076;
+        Binit[5][6] = 0.4556;
+        Binit[5][7] = 0.6024;
+        Binit[5][8] = 0.9695;
+        Binit[5][9] = -0.4936;
+        Binit[5][10] = 0.1098;
+
+	radius = sqrt(x0j*x0j + x1j*x1j + x2j*x2j) ;
+
+        // theta is in [0, pi]
+	theta = asin( x2j/radius ) + 0.5*pi;
+
+        // phi is in [0, 2*pi]
+	phi = atan2( x1j, x0j ) + pi;
+
+	varphi0 = (0.0,0.0);
+	varphi1 = (0.0,0.0);
+	for (n = 0; n < Maxn; ++n)
+          {
+             // Set up parameters
+	     a_n = m_a - m_mu*( n*(n+1)/radius/radius );
+	     d_n = m_d - m_nu*( n*(n+1)/radius/radius );
+
+	     gamma_n = 0.5*( a_n + d_n );
+
+	     temp.real() = ( a_n + d_n )*( a_n + d_n ) - 4.0*( a_n*d_n - m_b*m_c );
+	     delta_n = 0.5*sqrt( temp );
+
+	     for (m = -n; m <=n; ++m)
+               {
+		  ind = m + n;
+		  A_mn = Ainit[n][ind];
+		  C_mn = Binit[n][ind];
+
+		  B_mn = ( (a_n - gamma_n)*Ainit[n][ind] + m_b*Binit[n][ind])/delta_n;
+		  D_mn = ( m_c*Ainit[n][ind] + (d_n - gamma_n)*Binit[n][ind])/delta_n;
+
+		  Spericharmonic = boost::math::spherical_harmonic(n, m, theta, phi);
+		  varphi0 += exp(gamma_n*time)*(A_mn*cosh(delta_n*time) + B_mn*sinh(delta_n*time))*Spericharmonic;
+		  varphi1 += exp(gamma_n*time)*(C_mn*cosh(delta_n*time) + D_mn*sinh(delta_n*time))*Spericharmonic;
+               }
+          }
+
+
+	if (field==0)
+	  {
+	    return varphi0.real();
+	  }
+
+	else if (field==1)
+	  {
+	    return varphi1.real();
+	  }
+  }
+
     
     void ADRBase::EvaluateUserDefinedEqn(Array<OneD, Array<OneD, NekDouble> > &outfield)
     {
@@ -385,7 +598,7 @@ namespace Nektar
         
     }
 
-    NekDouble ADRBase::L2Error(int field, const Array<OneD, NekDouble> &exactsoln)
+    NekDouble ADRBase::L2Error(int field, const int eqntype, const Array<OneD, NekDouble> &exactsoln, bool ReadInitialConditions)
     {
         if(m_fields[field]->GetPhysState() == false)
         {
@@ -401,7 +614,7 @@ namespace Nektar
         {
             Array<OneD, NekDouble> exactsoln(m_fields[field]->GetNpoints());
             
-            EvaluateExactSolution(field,exactsoln,m_time);
+            EvaluateExactSolution(field,exactsoln,m_time,eqntype,ReadInitialConditions);
             
             return m_fields[field]->L2(exactsoln);
         }
@@ -585,7 +798,6 @@ namespace Nektar
 	
         for(i = 0; i < nvariables; ++i)
         {
-            
             // Get the ith component of the  flux vector in (physical space)
             GetFluxVector(i, physfield, fluxvector);
             
@@ -843,7 +1055,8 @@ namespace Nektar
     {
 
         out << "\tSession Name    : " << m_sessionName << endl;
-	out << "\tExp. Dimension  : " << m_expdim << endl;
+	out << "\tExpansion Dimension : " << m_expdim << endl;
+	out << "\tSpacial Dimension : " << m_spacedim << endl;
         out << "\tMax Exp. Order  : " << m_fields[0]->EvalBasisNumModesMax() << endl;
         if(m_projectionType == eGalerkin)
         {
@@ -897,6 +1110,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.11  2009/07/01 21:55:00  sehunchun
+* Changes of WeakDiffusion according to updates
+*
 * Revision 1.10  2009/06/11 01:54:08  claes
 * Added Inviscid Burger
 *

@@ -156,7 +156,7 @@ namespace Nektar
 
                             if(edge_curved.count(indx) == 0)
                             {
-                                edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_MeshDimension, vertices);
+                                edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_SpaceDimension, vertices);
                             }
                             else
                             {
@@ -661,6 +661,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.37  2009/05/01 13:23:21  pvos
+// Fixed various bugs
+//
 // Revision 1.36  2009/04/20 16:13:23  sherwin
 // Modified Import and Write functions and redefined how Expansion is used
 //

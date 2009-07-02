@@ -75,6 +75,7 @@
     <SOLVERINFO>
       <I PROPERTY="EQTYPE" VALUE="UnsteadyDiffusion" />
       <I PROPERTY="Projection" VALUE="DisContinuous"/>
+      <I PROPERTY="DiffusionAdvancement" VALUE="Explicit"/>
     </SOLVERINFO> 
 
     <VARIABLES>

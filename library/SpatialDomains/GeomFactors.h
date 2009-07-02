@@ -120,6 +120,11 @@ namespace Nektar
                 return m_gmat;
             }
 
+            inline int GetCoordim() const
+            {
+                return m_coordim;
+            }
+
             inline bool UseQuadratureMetrics() const
             {
                 return m_quadratureMetricsFlag;
@@ -202,6 +207,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.25  2009/05/15 14:38:41  pvos
+// Changed check for regular quads so that it also includes parallellograms
+//
 // Revision 1.24  2009/01/21 16:59:03  pvos
 // Added additional geometric factors to improve efficiency
 //

@@ -250,7 +250,7 @@ namespace Nektar
         /// it is backward.  
         ///
         /// For example, assume edge1 is comprised of points 1 and 2,
-        /// and edge2 is comprised of points 2 and 3, then edge is
+        /// and edge2 is comprised of points 2 and 3, then edge1 is
         /// forward.
         ///
         /// If edge1 is comprised of points 2 and 1 and edge2 is
@@ -394,6 +394,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.25  2009/01/21 16:59:03  pvos
+// Added additional geometric factors to improve efficiency
+//
 // Revision 1.24  2008/12/18 14:08:59  pvos
 // NekConstants update
 //

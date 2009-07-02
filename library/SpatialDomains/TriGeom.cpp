@@ -41,7 +41,7 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-		TriGeom::TriGeom()
+        TriGeom::TriGeom()
         {
             m_GeomShapeType = eTriangle;
         }
@@ -367,6 +367,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.cpp,v $
+// Revision 1.21  2009/01/21 16:59:04  pvos
+// Added additional geometric factors to improve efficiency
+//
 // Revision 1.20  2008/09/12 11:26:19  pvos
 // Updates for mappings in 3D
 //

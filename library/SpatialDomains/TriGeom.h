@@ -73,7 +73,7 @@ namespace Nektar
                 
                 inline int GetCoordDim() const 
                 {
-					return m_coordim;
+                    return m_coordim;
                 }
                 
                 inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j)
@@ -194,10 +194,10 @@ namespace Nektar
                 VertexComponentVector           m_verts;
                 SegGeomVector                   m_edges;
                 StdRegions::EdgeOrientation     m_eorient [kNedges];
-				int								m_fid;
-				bool							m_ownverts;
-				std::list<CompToElmt>			m_elmtmap;
-
+                int				m_fid;
+                bool				m_ownverts;
+                std::list<CompToElmt>		m_elmtmap;
+                
                 void GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
             private:
                 bool m_owndata;
@@ -209,7 +209,7 @@ namespace Nektar
                 
                 virtual int  v_NumElmtConnected() const
                 {
-					return NumElmtConnected();
+                    return NumElmtConnected();
                 }
                 
                 virtual bool v_IsElmtConnected(int gvo_id, int locid) const
@@ -319,6 +319,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.27  2009/01/21 16:59:04  pvos
+// Added additional geometric factors to improve efficiency
+//
 // Revision 1.26  2008/11/17 08:58:00  ehan
 // Added GetNumVerts and GetNumEdges
 //

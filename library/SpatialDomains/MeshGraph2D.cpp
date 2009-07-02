@@ -160,7 +160,7 @@ namespace Nektar
                             }
                             else
                             {
-                                edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_MeshDimension, vertices, m_curvededges[edge_curved.find(indx)->second]);
+                                edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_SpaceDimension, vertices, m_curvededges[edge_curved.find(indx)->second]);
                             }
                             
                             m_seggeoms.push_back(edge);
@@ -661,6 +661,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.38  2009/07/02 11:39:44  sehunchun
+// Modification for 2D gemoetry embedded in 3D
+//
 // Revision 1.37  2009/05/01 13:23:21  pvos
 // Fixed various bugs
 //

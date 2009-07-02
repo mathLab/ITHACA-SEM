@@ -368,7 +368,7 @@ namespace Nektar
                     // indicating that there was nothing to read.
                     if (!vertexDataStrm.fail())
                     {
-                        VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_MeshDimension, indx, xval, yval, zval));
+                        VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_SpaceDimension, indx, xval, yval, zval));
                         m_vertset.push_back(vert);
                     }
                 }
@@ -1759,6 +1759,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.32  2009/06/18 11:47:24  claes
+// changes supporting the static use of Kronrod points
+//
 // Revision 1.31  2009/06/15 01:59:21  claes
 // Gauss-Kronrod updates
 //

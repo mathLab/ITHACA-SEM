@@ -532,9 +532,18 @@ namespace Nektar
                                                       Array<OneD,NekDouble> &outarray,
                                                       const StdMatrixKey &mkey)
         {
-            Array<OneD, NekDouble> tmp(GetTotPoints());
+            int nq = GetTotPoints();
+            Array<OneD, NekDouble> tmp(nq);
 
-            v_BwdTrans(inarray,tmp);            
+            v_BwdTrans(inarray,tmp);       
+
+            /*
+	    if(mkey.GetNvariableCoefficients() > 0)
+	      {
+	         Vmath::Vmul(nq, mkey.GetVariableCoefficient(), 1, tmp, 1, tmp, 1);
+	      }
+            */
+     
             v_IProductWRTBase(tmp, outarray);
         }
         
@@ -750,6 +759,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.82  2009/04/27 09:20:21  pvos
+* Fixed small bug
+*
 * Revision 1.81  2009/04/03 14:57:34  sherwin
 * Linear Advection matrices added, corrected unsigned int intialisation
 *

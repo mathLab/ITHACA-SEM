@@ -937,6 +937,17 @@ namespace Nektar
 
         }        
 
+        void QuadExp::GetTanBasis(Array<OneD,NekDouble> &tbasis1,
+                                 Array<OneD,NekDouble> &tbasis2,
+                                 const int k)
+	{
+            int m_num = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
+            
+            Vmath::Vcopy(m_num, m_metricinfo->GetTanBasis1(k), 1, tbasis1, 1);
+            Vmath::Vcopy(m_num, m_metricinfo->GetTanBasis2(k), 1, tbasis2, 1);
+      	}
+
+
         void QuadExp::GetCoords(Array<OneD,NekDouble> &coords_0,
                                 Array<OneD,NekDouble> &coords_1,
                                 Array<OneD,NekDouble> &coords_2)
@@ -1807,6 +1818,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.61  2009/05/15 14:38:41  pvos
+ *    Changed check for regular quads so that it also includes parallellograms
+ *
  *    Revision 1.60  2009/04/27 21:34:07  sherwin
  *    Updated WriteToField
  *

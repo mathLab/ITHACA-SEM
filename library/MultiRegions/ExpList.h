@@ -415,7 +415,20 @@ namespace Nektar
             void   GetCoords(Array<OneD, NekDouble> &coord_0,
                              Array<OneD, NekDouble> &coord_1 = NullNekDouble1DArray,
                              Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
+            /**
+             * \brief This function calculates two tangential basis of a smooth manifold.
+             *
+             * The operation is evaluated locally by the elemental
+             * function StdRegions#StdExpansion#GetTangentBasis.
+             *
+             * \param tanbasis_1 : tangential basis 1, \param tanbasis_2 : tangential basis 2.
+             *  Normally tanbasis_1 /cdot tanbasis_2 = 0
+             */
 
+                void GetTanBasis(Array<OneD,NekDouble> &tbasis1,
+                                 Array<OneD,NekDouble> &tbasis2,
+                                 const int k);
+            
             /**
              * \brief This function writes the spectral/hp element
              * solution to the file \a out.
@@ -1246,6 +1259,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.63  2009/05/14 14:26:41  pvos
+* Updates to apply the dirichlet boundary condition forcing inside the static condensation algorithm
+*
 * Revision 1.62  2009/04/27 21:34:58  sherwin
 * Modified WriteToField Method
 *

@@ -981,6 +981,17 @@ namespace Nektar
             }
         }
         
+        void TriExp::GetTanBasis(Array<OneD,NekDouble> &tbasis1,
+                                 Array<OneD,NekDouble> &tbasis2,
+                                 const int k)
+	{
+            int m_num = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
+            
+            Vmath::Vcopy(m_num, m_metricinfo->GetTanBasis1(k), 1, tbasis1, 1);
+            Vmath::Vcopy(m_num, m_metricinfo->GetTanBasis2(k), 1, tbasis2, 1);
+      	}
+
+
         void TriExp::GetCoords(Array<OneD,NekDouble> &coords_0,
                                Array<OneD,NekDouble> &coords_1,
                                Array<OneD,NekDouble> &coords_2)
@@ -1781,6 +1792,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.53  2009/06/18 11:47:24  claes
+ *    changes supporting the static use of Kronrod points
+ *
  *    Revision 1.52  2009/04/27 21:34:07  sherwin
  *    Updated WriteToField
  *

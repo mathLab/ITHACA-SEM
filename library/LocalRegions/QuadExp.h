@@ -92,6 +92,10 @@ namespace Nektar
             void GetCoord(const Array<OneD, const NekDouble>& Lcoords, 
                           Array<OneD,NekDouble> &coords);
 
+            void GetTanBasis(Array<OneD,NekDouble> &tbasis1,
+			     Array<OneD,NekDouble> &tbasis2,
+			     const int k);
+
             const SpatialDomains::Geometry2DSharedPtr& GetGeom2D() const
             {
                 return m_geom;
@@ -430,6 +434,13 @@ namespace Nektar
                 GetCoord(lcoord, coord);
             }
 
+            virtual void v_GetTanBasis(Array<OneD, NekDouble> &tbasis1,
+                                       Array<OneD, NekDouble> &tbasis2,
+				       const int k)
+            {
+	      GetTanBasis(tbasis1, tbasis2, k);
+            }
+
             virtual  int v_GetCoordim()
             {
                 return m_geom->GetCoordim();
@@ -700,6 +711,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.50  2009/04/27 21:34:07  sherwin
+ *    Updated WriteToField
+ *
  *    Revision 1.49  2009/04/27 09:38:22  pvos
  *    Fixed some bugs
  *

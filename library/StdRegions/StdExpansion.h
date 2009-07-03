@@ -741,6 +741,20 @@ namespace Nektar
                 v_GetCoord(Lcoord, coord);
             }
             
+            /** \brief this function returns two tangential basis of a manifold
+             *
+             *  This function is a wrapper around the virtual function 
+             *  \a v_GetTanBasis()
+             *
+             *  \param coords an array containing the coordinates of the
+             *  quadrature points (output of the function)
+             */
+            void GetTanBasis(Array<OneD, NekDouble> &tbasis1,
+			     Array<OneD, NekDouble> &tbasis2,
+			     const int k)
+            {
+                v_GetTanBasis(tbasis1, tbasis2, k);
+            }
         
             /** \brief this function writes the solution to the file \a outfile
              *
@@ -1529,6 +1543,13 @@ namespace Nektar
                 return -1;
             }
 
+            virtual void v_GetTanBasis(Array<OneD, NekDouble> &tbasis1,
+                                       Array<OneD, NekDouble> &tbasis2,
+				       const int k)
+            {
+                NEKERROR(ErrorUtil::efatal, "GetTanBasis Error");
+            }
+
             virtual void v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
@@ -1741,6 +1762,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.113  2009/04/27 21:32:45  sherwin
+ * Updated WriteToField method
+ *
  * Revision 1.112  2009/04/22 22:30:48  sherwin
  * Added ReadFromFile method to read back in .dat file
  *

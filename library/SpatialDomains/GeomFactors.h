@@ -125,6 +125,16 @@ namespace Nektar
                 return m_coordim;
             }
 
+            inline const Array<OneD, const NekDouble> &GetTanBasis1(const int k) const
+            {
+                return m_tbasis1[k];
+            }
+
+            inline const Array<OneD, const NekDouble> &GetTanBasis2(const int k) const
+            {
+                return m_tbasis2[k];
+            }
+
             inline bool UseQuadratureMetrics() const
             {
                 return m_quadratureMetricsFlag;
@@ -184,6 +194,9 @@ namespace Nektar
             Array<TwoD,NekDouble> m_laplacianmetrics;
             Array<OneD,bool>      m_laplacianMetricIsZero;
 
+	    Array<OneD, Array<OneD,NekDouble> > m_tbasis1;
+	    Array<OneD, Array<OneD,NekDouble> > m_tbasis2;
+
             Array<OneD,LibUtilities::PointsKey> m_pointsKey;
             
 
@@ -198,6 +211,9 @@ namespace Nektar
                                          const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
             void SetUpQuadratureMetrics2D(StdRegions::ExpansionType shape,
                                           const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
+
+            void SetUpTangentialbasis(const Array<OneD, Array<OneD,NekDouble> > d1_tbasis,
+                                      const Array<OneD, Array<OneD,NekDouble> > d2_tbasis);
             
         };
     } //end of namespace
@@ -207,6 +223,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.26  2009/07/02 13:32:24  sehunchun
+// *** empty log message ***
+//
 // Revision 1.25  2009/05/15 14:38:41  pvos
 // Changed check for regular quads so that it also includes parallellograms
 //

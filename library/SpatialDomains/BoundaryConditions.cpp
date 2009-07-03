@@ -80,6 +80,8 @@ namespace Nektar
             /// Look for all data in CONDITIONS block.
             conditions = docHandle.FirstChildElement("NEKTAR").FirstChildElement("CONDITIONS").Element();
 
+            TiXmlElement *boundaryRegions = conditions->FirstChildElement("BOUNDARYREGIONS");
+
             ASSERTL0(conditions, "Unable to find BOUNDARYCONDITIONS tag in file.");
 
             // Now read all the different tagged sections
@@ -91,9 +93,12 @@ namespace Nektar
 
             ReadVariables(conditions);
             
-            ReadBoundaryRegions(conditions);
-
-            ReadBoundaryConditions(conditions);
+            if(boundaryRegions)
+            {
+                ReadBoundaryRegions(conditions);
+                
+                ReadBoundaryConditions(conditions);
+            }
 
             ReadForcingFunctions(conditions);
 
@@ -1003,6 +1008,21 @@ namespace Nektar
             return returnval;
         }
 
+        bool BoundaryConditions::ExactSolutionExists(int indx) const
+        {
+            bool returnval = false;
+     
+            // Check that var is defined in forcing function list.
+            ExactSolutionMap::const_iterator exSolnIter = m_ExactSolution.find(m_Variables[indx]);
+
+            if(exSolnIter != m_ExactSolution.end())
+            {
+                returnval = true;
+            }
+
+             return returnval;
+        }
+
         ConstExactSolutionShPtr BoundaryConditions::GetExactSolution(int indx) const
         {
             ConstExactSolutionShPtr returnval;
@@ -1040,6 +1060,23 @@ namespace Nektar
             return returnval;
         }
 
+
+        bool BoundaryConditions::UserDefinedEqnExists(const std::string &var) const
+        {
+            bool returnval = false;
+            
+            // Check that var is defined in forcing function list.
+            UserDefinedEqnMap::const_iterator userDefIter = m_UserDefinedEqn.find(var);
+            
+            if(userDefIter != m_UserDefinedEqn.end())
+            {
+                returnval = true;
+            }
+
+             return returnval;
+        }
+
+
         ConstUserDefinedEqnShPtr BoundaryConditions::GetUserDefinedEqn(int indx) const
         {
             ConstUserDefinedEqnShPtr returnval;
@@ -1075,6 +1112,23 @@ namespace Nektar
             }
 
             return returnval;
+        }
+
+
+        bool BoundaryConditions::InitialConditionExists(int indx) const
+        {
+            bool returnval = false;
+     
+            // Check that var is defined in forcing function list.
+            InitialConditionsMap::const_iterator ffIter = m_InitialConditions.find(m_Variables[indx]);
+
+            bool found = false;
+            if( ffIter != m_InitialConditions.end() )
+            {
+                returnval = true;
+            }
+
+             return returnval;
         }
 
         ConstInitialConditionShPtr BoundaryConditions::GetInitialCondition(int indx) const

@@ -215,15 +215,18 @@ namespace Nektar
             /// Get forcing function based on name of variable.
             ConstForcingFunctionShPtr GetForcingFunction(const std::string &var) const;
 
+            bool ExactSolutionExists(int indx) const;
             ConstExactSolutionShPtr GetExactSolution(int indx) const;
             ConstExactSolutionShPtr GetExactSolution(const std::string &var) const;
 
+            bool UserDefinedEqnExists(const std::string &var) const;
             ConstUserDefinedEqnShPtr GetUserDefinedEqn(int indx) const;
             ConstUserDefinedEqnShPtr GetUserDefinedEqn(const std::string &var) const;
 
             /// Get initial condition function based on the index of the variable.
             /// The index is the order in which the variable was
             /// defined.
+            bool InitialConditionExists(int indx) const;
             ConstInitialConditionShPtr GetInitialCondition(int indx) const;
 
             /// Get initial condition function based on name of variable.

@@ -1,6 +1,5 @@
 SET(MULTI_REGIONS_SOURCES
 ContExpList1D.cpp
-ContExpList2D.cpp
 ContExpList3D.cpp
 ContField1D.cpp
 ContField2D.cpp
@@ -16,20 +15,14 @@ GlobalLinSys.cpp
 GlobalLinSysKey.cpp
 GlobalMatrix.cpp
 GlobalMatrixKey.cpp
-#LocalToGlobalMap.cpp
 LocalToGlobalBaseMap.cpp
 LocalToGlobalDGMap.cpp
 LocalToGlobalC0ContMap.cpp
-#LocalToGlobalBndryMap.cpp
-#LocalToGlobalMap1D.cpp
-#LocalToGlobalMap2D.cpp
-#LocalToGlobalMap3D.cpp
 GlobalOptimizationParameters.cpp
 )
 
 SET(MULTI_REGIONS_HEADERS
 ContExpList1D.h
-ContExpList2D.h
 ContExpList3D.h
 ContField1D.h
 ContField2D.h

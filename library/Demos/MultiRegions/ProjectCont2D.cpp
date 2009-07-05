@@ -2,7 +2,7 @@
 #include <cstdlib>
 
 #include "MultiRegions/MultiRegions.hpp"
-#include "MultiRegions/ContExpList2D.h"
+#include "MultiRegions/ContField2D.h"
 
 using namespace Nektar;
 
@@ -11,7 +11,7 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    MultiRegions::ContExpList2DSharedPtr Exp,Fce;
+    MultiRegions::ContField2DSharedPtr Exp,Fce;
     int     i, j, nq,  coordim;
     Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
    
     //----------------------------------------------
     // Define Expansion 
-    Exp = MemoryManager<MultiRegions::ContExpList2D>::AllocateSharedPtr(graph2D);
+    Exp = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(graph2D);
     //----------------------------------------------  
     
     //----------------------------------------------
@@ -87,8 +87,8 @@ int main(int argc, char *argv[])
     }
     
     //---------------------------------------------
-    // Set up ExpList1D containing the solution 
-    Fce = MemoryManager<MultiRegions::ContExpList2D>::AllocateSharedPtr(*Exp);
+    // Set up ContField2DD containing the solution 
+    Fce = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(*Exp);
     Fce->SetPhys(fce);
     //---------------------------------------------
 

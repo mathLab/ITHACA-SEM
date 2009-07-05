@@ -58,11 +58,13 @@ namespace Nektar
 
             DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
                            SpatialDomains::BoundaryConditions &bcs, 
-                           const int bc_loc = 0);
+                           const int bc_loc = 0,
+                           bool SetUpJustDG = true);
 
             DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
                            SpatialDomains::BoundaryConditions &bcs, 
-                           const std::string variable);
+                           const std::string variable,
+                           bool SetUpJustDG = true);
             
             DisContField2D(const DisContField2D &In);
 
@@ -222,8 +224,6 @@ namespace Nektar
             }
 
         protected:
-
-        private:
             /**
              * \brief The number of boundary segments on which
              * Dirichlet boundary conditions are imposed
@@ -250,9 +250,6 @@ namespace Nektar
              * regions.
              */ 
             Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
-            GlobalLinSysMapShPtr                               m_globalBndMat;
-            GenExpList1DSharedPtr                              m_trace;
-            LocalToGlobalDGMapSharedPtr                        m_traceMap;
 
             /**
              * \brief This function discretises the boundary conditions by setting up
@@ -274,6 +271,11 @@ namespace Nektar
             void GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D,
                                                     SpatialDomains::BoundaryConditions &bcs, 
                                                     const std::string variable);
+        private:
+            GlobalLinSysMapShPtr                               m_globalBndMat;
+            GenExpList1DSharedPtr                              m_trace;
+            LocalToGlobalDGMapSharedPtr                        m_traceMap;
+
 
             // virtual functions
             inline virtual GenExpList1DSharedPtr &v_GetTrace(void)

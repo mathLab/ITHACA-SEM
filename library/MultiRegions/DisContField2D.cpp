@@ -43,6 +43,7 @@ namespace Nektar
     {
 
         DisContField2D::DisContField2D(void):
+            ExpList2D(),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -60,7 +61,8 @@ namespace Nektar
 
         DisContField2D::DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
                                        SpatialDomains::BoundaryConditions &bcs,
-                                       const int bc_loc):
+                                       const int bc_loc,
+                                       bool SetUpJustDG):
             ExpList2D(graph2D),
             m_bndCondExpansions(),
             m_bndConditions()
@@ -68,46 +70,50 @@ namespace Nektar
             GenerateBoundaryConditionExpansion(graph2D,bcs,bcs.GetVariable(bc_loc));
             EvaluateBoundaryConditions();
 
-            // Set up matrix map
-            m_globalBndMat = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
-            map<int,int> periodicEdges;
-            vector<map<int,int> >periodicVertices;
-            GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),periodicVertices,periodicEdges);
-
-            // Set up Trace space
-            m_trace = MemoryManager<GenExpList1D>::AllocateSharedPtr(m_bndCondExpansions, m_bndConditions,*m_exp,graph2D, periodicEdges);
-
-
-            m_traceMap = MemoryManager<LocalToGlobalDGMap>::AllocateSharedPtr(graph2D,m_trace,m_exp,m_bndCondExpansions,m_bndConditions, periodicEdges);
+            if(SetUpJustDG)
+            {
+                // Set up matrix map
+                m_globalBndMat = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
+                map<int,int> periodicEdges;
+                vector<map<int,int> >periodicVertices;
+                GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),periodicVertices,periodicEdges);
+                
+                // Set up Trace space
+                m_trace = MemoryManager<GenExpList1D>::AllocateSharedPtr(m_bndCondExpansions, m_bndConditions,*m_exp,graph2D, periodicEdges);
+                
+                
+                m_traceMap = MemoryManager<LocalToGlobalDGMap>::AllocateSharedPtr(graph2D,m_trace,m_exp,m_bndCondExpansions,m_bndConditions, periodicEdges);
+            }
         }
 
         DisContField2D::DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
                                        SpatialDomains::BoundaryConditions &bcs,
-                                       const std::string variable):
+                                       const std::string variable,
+                                       bool SetUpJustDG):
+
             ExpList2D(graph2D),
             m_bndCondExpansions(),
             m_bndConditions()
-            
         {
             GenerateBoundaryConditionExpansion(graph2D,bcs,variable);
             EvaluateBoundaryConditions();
-
-            // Set up matrix map
-            m_globalBndMat   = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
-
-            map<int,int> periodicEdges;
-            vector<map<int,int> > periodicVertices;
-            GetPeriodicEdges(graph2D,bcs,variable,periodicVertices,periodicEdges);
-
-            // Set up Trace space
-            m_trace = MemoryManager<GenExpList1D>::AllocateSharedPtr(m_bndCondExpansions,m_bndConditions,*m_exp,graph2D,periodicEdges);
-
-            m_traceMap = MemoryManager<LocalToGlobalDGMap>::AllocateSharedPtr(graph2D,m_trace,m_exp,m_bndCondExpansions,m_bndConditions, periodicEdges);
+            
+            if(SetUpJustDG)
+            {
+                // Set up matrix map
+                m_globalBndMat   = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
+                
+                map<int,int> periodicEdges;
+                vector<map<int,int> > periodicVertices;
+                GetPeriodicEdges(graph2D,bcs,variable,periodicVertices,periodicEdges);
+                
+                // Set up Trace space
+                m_trace = MemoryManager<GenExpList1D>::AllocateSharedPtr(m_bndCondExpansions,m_bndConditions,*m_exp,graph2D,periodicEdges);
+                
+                m_traceMap = MemoryManager<LocalToGlobalDGMap>::AllocateSharedPtr(graph2D,m_trace,m_exp,m_bndCondExpansions,m_bndConditions, periodicEdges);
+            }
         }
-
-
-
-
+        
         void DisContField2D::GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D,
                                                                 SpatialDomains::BoundaryConditions &bcs, 
                                                                 const std::string variable)
@@ -169,7 +175,7 @@ namespace Nektar
             int e,i,j,n,cnt,cnt1,nbndry, order_e;
             int nexp = GetExpSize();
             StdRegions::StdExpansionSharedPtr BndExp;
-
+            
             Array<OneD,NekDouble> f(m_ncoeffs);
             DNekVec F(m_ncoeffs,f,eWrapper);
             Array<OneD,NekDouble> e_f, e_l;
@@ -506,7 +512,7 @@ namespace Nektar
             Array<OneD, NekDouble> e_outarray;
             Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr> >
                 elmtToTrace = m_traceMap->GetElmtToTrace();
-
+            
             for(n = 0; n < GetExpSize(); ++n)
             {
                 offset = GetCoeff_Offset(n);

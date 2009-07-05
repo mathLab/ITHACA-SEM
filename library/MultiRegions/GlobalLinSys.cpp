@@ -80,7 +80,7 @@ namespace Nektar
                                  const Array<OneD, const NekDouble> &dirForcing)
         {
             bool dirForcCalculated = (bool) dirForcing.num_elements();
-
+            
             switch(m_linSysKey.GetGlobalSysSolnType())
             {
             case eDirectFullMatrix:

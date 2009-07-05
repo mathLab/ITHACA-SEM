@@ -41,16 +41,21 @@ namespace Nektar
     {
 
         ContField2D::ContField2D(void):
-            ContExpList2D(),
-            m_bndCondExpansions(),
-            m_bndConditions()
+            DisContField2D(),
+            m_locToGloMap(),
+            m_contNcoeffs(0),
+            m_contCoeffs(),
+            m_globalMat()
         {
         }
 
         ContField2D::ContField2D(const ContField2D &In):
-            ContExpList2D(In),
-            m_bndCondExpansions(In.m_bndCondExpansions),
-            m_bndConditions(In.m_bndConditions)
+            DisContField2D(In),
+            m_locToGloMap(In.m_locToGloMap),
+            m_contNcoeffs(In.m_contNcoeffs),
+            m_contCoeffs(m_contNcoeffs,0.0),
+            m_globalMat(In.m_globalMat),
+            m_globalLinSys(In.m_globalLinSys)            
         {
         }
         
@@ -58,7 +63,9 @@ namespace Nektar
                                  SpatialDomains::MeshGraph2D &graph2D,
                                  SpatialDomains::BoundaryConditions &bcs, 
                                  const int bc_loc):
-            ContExpList2D(In)
+            DisContField2D(In),
+            m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             // Set up boundary conditions for this variable. 
             GenerateBoundaryConditionExpansion(graph2D,bcs,bcs.GetVariable(bc_loc));
@@ -82,16 +89,25 @@ namespace Nektar
 	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
+        ContField2D::ContField2D(SpatialDomains::MeshGraph2D &graph2D):
+            m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
+        {
+            
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp);
+            
+            
+	    m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+        }
+
         ContField2D::ContField2D(SpatialDomains::MeshGraph2D &graph2D,
                                  SpatialDomains::BoundaryConditions &bcs, 
                                  const int bc_loc):
-            ContExpList2D(graph2D,false)  ,
-            m_bndCondExpansions(),
-            m_bndConditions()
+            DisContField2D(graph2D,bcs,bc_loc,false),
+            m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            GenerateBoundaryConditionExpansion(graph2D,bcs,bcs.GetVariable(bc_loc));
-            EvaluateBoundaryConditions();
-
             map<int,int> periodicEdges;
             vector<map<int,int> > periodicVertices;
             GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),periodicVertices,periodicEdges);
@@ -105,9 +121,9 @@ namespace Nektar
         ContField2D::ContField2D(SpatialDomains::MeshGraph2D &graph2D,
                                  SpatialDomains::BoundaryConditions &bcs, 
                                  const std::string variable):
-            ContExpList2D(graph2D,false),
-            m_bndCondExpansions(),
-            m_bndConditions()
+            DisContField2D(graph2D,bcs,variable,false),
+            m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             GenerateBoundaryConditionExpansion(graph2D,bcs,variable);
             EvaluateBoundaryConditions();
@@ -134,9 +150,9 @@ namespace Nektar
                                  SpatialDomains::BoundaryConditions &bcs, 
                                  const int bc_loc,
                                  const LibUtilities::PointsType TriNb):
-            ContExpList2D(TriBa,TriBb,QuadBa,QuadBb,graph2D,TriNb,false)  ,
-            m_bndCondExpansions(),
-            m_bndConditions()
+            DisContField2D(graph2D,bcs,bc_loc,false),
+            m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             GenerateBoundaryConditionExpansion(graph2D,bcs,bcs.GetVariable(bc_loc));
             EvaluateBoundaryConditions();
@@ -163,9 +179,9 @@ namespace Nektar
                                  SpatialDomains::BoundaryConditions &bcs, 
                                  const std::string variable,
                                  const LibUtilities::PointsType TriNb):
-            ContExpList2D(TriBa,TriBb,QuadBa,QuadBb,graph2D,TriNb,false),
-            m_bndCondExpansions(),
-            m_bndConditions()
+            DisContField2D(graph2D,bcs,variable,false),
+            m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             GenerateBoundaryConditionExpansion(graph2D,bcs,variable);
             EvaluateBoundaryConditions();
@@ -211,38 +227,7 @@ namespace Nektar
             
             return returnval;
         }
-        
-
-        void ContField2D::GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D,
-                                                             SpatialDomains::BoundaryConditions &bcs, 
-                                                             const std::string variable)
-        {
-            int cnt1  = 0;
-            int cnt2  = 0;
-            SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();   
-
-            int nbnd = bregions.size();
-
-            // count the number of non-periodic boundary regions
-            for(int i = 0; i < nbnd; ++i)
-            {
-                if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType() != SpatialDomains::ePeriodic )
-                {
-                    cnt1++;
-                    if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType() == SpatialDomains::eDirichlet )
-                    {
-                        cnt2++;
-                    }
-                }
-            }
-            m_numDirBndCondExpansions = cnt2;
-            m_bndCondExpansions = Array<OneD,MultiRegions::ExpList1DSharedPtr>(cnt1);
-            m_bndConditions     = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt1);
             
-            SetBoundaryConditionExpansion(graph2D,bcs,variable,m_bndCondExpansions,m_bndConditions);
-        }
-        
         void ContField2D::FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                          Array<OneD,       NekDouble> &outarray,
                                    bool  UseContCoeffs)
@@ -465,6 +450,28 @@ namespace Nektar
                 GlobalLinSysSharedPtr LinSys = GetGlobalLinSys(key);
                 LinSys->Solve(rhs,inout,*m_locToGloMap,this,dirForcing);
             }
+        }
+
+       GlobalMatrixSharedPtr ContField2D::GetGlobalMatrix(const GlobalMatrixKey &mkey) 
+        {
+            ASSERTL1(mkey.LocToGloMapIsDefined(),
+                     "To use method must have a LocalToGlobalBaseMap "
+                     "attached to key");
+
+            GlobalMatrixSharedPtr glo_matrix;
+            GlobalMatrixMap::iterator matrixIter = m_globalMat->find(mkey);
+
+            if(matrixIter == m_globalMat->end())
+            {
+                glo_matrix = GenGlobalMatrix(mkey,m_locToGloMap);
+                (*m_globalMat)[mkey] = glo_matrix;
+            }
+            else
+            {
+                glo_matrix = matrixIter->second;
+            }
+
+            return glo_matrix;
         }
 
         GlobalLinSysSharedPtr ContField2D::GetGlobalLinSys(const GlobalLinSysKey &mkey) 

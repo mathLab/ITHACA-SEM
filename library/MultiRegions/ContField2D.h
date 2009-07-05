@@ -36,13 +36,16 @@
 #ifndef NEKTAR_LIBS_MULTIREGIONS_CONTFIELD2D_H
 #define NEKTAR_LIBS_MULTIREGIONS_CONTFIELD2D_H
 
-#include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/ContExpList2D.h>
-#include <MultiRegions/ExpList1D.h>
-#include <MultiRegions/GlobalLinSys.h>
-
 #include <SpatialDomains/MeshGraph2D.h>
 #include <SpatialDomains/BoundaryConditions.h>
+
+#include <MultiRegions/MultiRegions.hpp>
+#include <MultiRegions/DisContField2D.h>
+#include <MultiRegions/ExpList1D.h>
+
+#include <MultiRegions/LocalToGlobalC0ContMap.h>
+#include <MultiRegions/GlobalMatrix.h>
+#include <MultiRegions/GlobalLinSys.h>
 
 
 namespace Nektar
@@ -88,7 +91,7 @@ namespace Nektar
          * This class should be used when solving 2D problems using a standard Galerkin 
          * approach.
          */ 
-        class ContField2D: public ContExpList2D
+        class ContField2D: public DisContField2D
         {
         public:           
             /**
@@ -110,35 +113,43 @@ namespace Nektar
                         SpatialDomains::MeshGraph2D &graph2D,
                         SpatialDomains::BoundaryConditions &bcs, 
                         const int bc_loc = 0);
+
+            /**
+             * \brief 
+             */ 
+            ContField2D::ContField2D(SpatialDomains::MeshGraph2D &graph2D);
           
             /**
-             * \brief This constructor sets up global continuous field based on an 
-             * input mesh and boundary conditions.
+             * \brief This constructor sets up global continuous field
+             * based on an input mesh and boundary conditions.
              *
-             * Given a mesh \a graph2D, containing information about the domain and 
-             * the spectral/hp element expansion, this constructor fills the list of 
-             * local expansions #m_exp with the proper expansions, calculates the 
-             * total number of quadrature points \f$\boldsymbol{x}_i\f$ and local 
-             * expansion coefficients \f$\hat{u}^e_n\f$ and allocates memory for the 
-             * arrays #m_coeffs and #m_phys. Furthermore, it constructs the mapping 
-             * array (contained in #m_locToGloMap) for the transformation between 
-             * local elemental level and global level, it calculates the total 
-             * number global expansion coefficients \f$\hat{u}_n\f$ and allocates
-             *  memory for the array #m_contCoeffs. The constructor also discretises 
-             * the boundary conditions, specified by the argument \a bcs, by 
-             * expressing them in terms of the coefficient of the expansion on the 
-             * boundary. 
+             * Given a mesh \a graph2D, containing information about
+             * the domain and the spectral/hp element expansion, this
+             * constructor fills the list of local expansions #m_exp
+             * with the proper expansions, calculates the total number
+             * of quadrature points \f$\boldsymbol{x}_i\f$ and local
+             * expansion coefficients \f$\hat{u}^e_n\f$ and allocates
+             * memory for the arrays #m_coeffs and
+             * #m_phys. Furthermore, it constructs the mapping array
+             * (contained in #m_locToGloMap) for the transformation
+             * between local elemental level and global level, it
+             * calculates the total number global expansion
+             * coefficients \f$\hat{u}_n\f$ and allocates memory for
+             * the array #m_contCoeffs. The constructor also
+             * discretises the boundary conditions, specified by the
+             * argument \a bcs, by expressing them in terms of the
+             * coefficient of the expansion on the boundary.
              *
-             * \param graph2D A mesh, containing information about the domain and 
-             * the spectral/hp element expansion.
-             * \param bcs The boundary conditions.
-             * \param variable An optional parameter to indicate for which variable 
-             * the field should be constructed.
+             * \param graph2D A mesh, containing information about the
+             * domain and the spectral/hp element expansion.  \param
+             * bcs The boundary conditions.  \param variable An
+             * optional parameter to indicate for which variable the
+             * field should be constructed.
              */ 
             ContField2D(SpatialDomains::MeshGraph2D &graph2D,
                         SpatialDomains::BoundaryConditions &bcs, 
                         const std::string variable);
-          
+            
             /**
              * \brief 
              */ 
@@ -177,6 +188,300 @@ namespace Nektar
           
 
             bool SameTypeOfBoundaryConditions(const ContField2D &In);
+
+ 
+            /**
+             * \brief This function returns (a reference to) the array 
+             * \f$\boldsymbol{\hat{u}}_g\f$ (implemented as #m_contCoeffs) containing all 
+             * global expansion coefficients.
+             *
+             * If one wants to get hold of the underlying data without modifying them, 
+             * rather use the function #GetContCoeffs instead.
+             *
+             * \return (A reference to) the array #m_contCoeffs.
+             */  
+            inline Array<OneD, NekDouble> &UpdateContCoeffs()
+            {
+                m_transState = eContinuous;
+                return m_contCoeffs;
+            }
+
+            /**
+             * \brief This function returns (a reference to) the array 
+             * \f$\boldsymbol{\hat{u}}_g\f$ (implemented as #m_contCoeffs) containing all 
+             * global expansion coefficients.
+             *
+             * As the function returns a constant reference to a <em>const Array</em>, it is not 
+             * possible to modify the underlying data of the array #m_contCoeffs. In order to 
+             * do so, use the function #UpdateContCoeffs instead.
+             *
+             * \return (A reference to) the array #m_contCoeffs.
+             */  
+            inline const Array<OneD, const NekDouble> &GetContCoeffs() const
+            {
+                return m_contCoeffs;
+            }
+         
+            /**
+             * \brief This function returns the total number of global degrees of freedom 
+             * \f$N_{\mathrm{dof}}\f$.
+             *
+             * \return  #m_contNcoeffs, the total number of global degrees of 
+             * freedom.
+             */  
+            inline int GetContNcoeffs()
+            {
+                return m_contNcoeffs;
+            }
+             
+            /**
+             * \brief This function scatters from the global coefficients 
+             * \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients 
+             * \f$\boldsymbol{\hat{u}}_l\f$.
+             * 
+             * This operation is evaluated as:
+             * \f{tabbing}
+             * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
+             *  \>     \> Do \= $i=$  $0,N_m^e-1$ \\
+             *  \>     \>      \> $\boldsymbol{\hat{u}}^{e}[i] = \mbox{sign}[e][i] \cdot 
+             * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \\
+             *  \>     \>      continue \\
+             *  \> continue
+             *\f}
+             * where \a map\f$[e][i]\f$ is the mapping array and \a sign\f$[e][i]\f$ is an 
+             * array of similar dimensions ensuring the correct modal connectivity between 
+             * the different elements (both these arrays are contained in the data member 
+             * #m_locToGloMap). This operation is equivalent to the scatter operation 
+             * \f$\boldsymbol{\hat{u}}_l=\mathcal{A}\boldsymbol{\hat{u}}_g\f$, where 
+             * \f$\mathcal{A}\f$ is the \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ 
+             * permutation matrix.
+             *
+             * Note that the array #m_contCoeffs should be filled with the global 
+             * coefficients \f$\boldsymbol{\hat{u}}_g\f$ and that the resulting local 
+             * coefficients \f$\boldsymbol{\hat{u}}_l\f$ will be stored in #m_coeffs.
+             */  
+            inline void GlobalToLocal()
+            {
+                m_locToGloMap->GlobalToLocal(m_contCoeffs,m_coeffs);
+            }
+ 
+            /**
+             * \brief This function scatters from the global coefficients 
+             * \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients 
+             * \f$\boldsymbol{\hat{u}}_l\f$.
+             * 
+             * This operation is evaluated as:
+             * \f{tabbing}
+             * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
+             *  \>     \> Do \= $i=$  $0,N_m^e-1$ \\
+             *  \>     \>      \> $\boldsymbol{\hat{u}}^{e}[i] = \mbox{sign}[e][i] \cdot 
+             * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \\
+             *  \>     \>      continue \\
+             *  \> continue
+             *\f}
+             * where \a map\f$[e][i]\f$ is the mapping array and \a sign\f$[e][i]\f$ is an 
+             * array of similar dimensions ensuring the correct modal connectivity between 
+             * the different elements (both these arrays are contained in the data member 
+             * #m_locToGloMap). This operation is equivalent to the scatter operation 
+             * \f$\boldsymbol{\hat{u}}_l=\mathcal{A}\boldsymbol{\hat{u}}_g\f$, where 
+             * \f$\mathcal{A}\f$ is the \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ 
+             * permutation matrix.
+             *
+             * \param outarray The resulting local degrees of freedom \f$\boldsymbol{x}_l\f$
+             * will be stored in this array of size \f$N_\mathrm{eof}\f$.
+             */  
+            inline const void GlobalToLocal(Array<OneD,NekDouble> &outarray) const
+            {
+                m_locToGloMap->GlobalToLocal(m_contCoeffs,outarray);
+            }
+
+
+            /**
+             * \brief This function scatters from the global coefficients 
+             * \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients 
+             * \f$\boldsymbol{\hat{u}}_l\f$.
+             * 
+             * This operation is evaluated as:
+             * \f{tabbing}
+             * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
+             *  \>     \> Do \= $i=$  $0,N_m^e-1$ \\
+             *  \>     \>      \> $\boldsymbol{\hat{u}}^{e}[i] = \mbox{sign}[e][i] \cdot 
+             * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \\
+             *  \>     \>      continue \\
+             *  \> continue
+             *\f}
+             * where \a map\f$[e][i]\f$ is the mapping array and \a sign\f$[e][i]\f$ is an 
+             * array of similar dimensions ensuring the correct modal connectivity between 
+             * the different elements (both these arrays are contained in the data member 
+             * #m_locToGloMap). This operation is equivalent to the scatter operation 
+             * \f$\boldsymbol{\hat{u}}_l=\mathcal{A}\boldsymbol{\hat{u}}_g\f$, where 
+             * \f$\mathcal{A}\f$ is the \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ 
+             * permutation matrix.
+             *
+             * \param inarray An array of size \f$N_\mathrm{dof}\f$ containing the global 
+             * degrees of freedom \f$\boldsymbol{x}_g\f$.
+             * \param outarray The resulting local degrees of freedom \f$\boldsymbol{x}_l\f$
+             * will be stored in this array of size \f$N_\mathrm{eof}\f$.
+             */  
+            inline const void GlobalToLocal(const Array<OneD, const NekDouble> &inarray,
+                                                  Array<OneD,       NekDouble> &outarray) const 
+            {
+                m_locToGloMap->GlobalToLocal(inarray,outarray);
+            }
+
+            /**
+             * \brief This function gathers the global coefficients 
+             * \f$\boldsymbol{\hat{u}}_g\f$ from the local coefficients 
+             * \f$\boldsymbol{\hat{u}}_l\f$.
+             *
+             * This operation is evaluated as:
+             * \f{tabbing}
+             * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
+             *  \>     \> Do \= $i=$  $0,N_m^e-1$ \\
+             *  \>     \>      \> $\boldsymbol{\hat{u}}_g[\mbox{map}[e][i]] = 
+             *  \mbox{sign}[e][i] \cdot \boldsymbol{\hat{u}}^{e}[i]$\\
+             *  \>     \>      continue\\
+             *  \> continue
+             * \f}
+             * where \a map\f$[e][i]\f$ is the mapping array and \a sign\f$[e][i]\f$ is an 
+             * array of similar dimensions ensuring the correct modal connectivity between 
+             * the different elements (both these arrays are contained in the data member 
+             * #m_locToGloMap). This operation is equivalent to the gather operation 
+             * \f$\boldsymbol{\hat{u}}_g=\mathcal{A}^{-1}\boldsymbol{\hat{u}}_l\f$, 
+             * where \f$\mathcal{A}\f$ is the \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ 
+             * permutation matrix.
+             *
+             * Note that the array #m_coeffs should be filled with the local coefficients 
+             * \f$\boldsymbol{\hat{u}}_l\f$ and that the resulting global coefficients 
+             * \f$\boldsymbol{\hat{u}}_g\f$ will be stored in #m_contCoeffs.
+            */
+            inline void LocalToGlobal()
+            {
+                m_locToGloMap->LocalToGlobal(m_coeffs,m_contCoeffs);
+            }        
+         
+            /**
+             * \brief This function assembles the global coefficients 
+             * \f$\boldsymbol{\hat{u}}_g\f$ from the local coefficients 
+             * \f$\boldsymbol{\hat{u}}_l\f$.
+             *
+             * This operation is evaluated as:
+             * \f{tabbing}
+             * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
+             *  \>     \> Do \= $i=$  $0,N_m^e-1$ \\
+             *  \>     \>      \> $\boldsymbol{\hat{u}}_g[\mbox{map}[e][i]] = 
+             * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]+\mbox{sign}[e][i] \cdot 
+             * \boldsymbol{\hat{u}}^{e}[i]$\\
+             *  \>     \>      continue\\
+             *  \> continue
+             * \f}
+             * where \a map\f$[e][i]\f$ is the mapping array and \a sign\f$[e][i]\f$ is an 
+             * array of similar dimensions ensuring the correct modal connectivity between 
+             * the different elements (both these arrays are contained in the data member 
+             * #m_locToGloMap). This operation is equivalent to the gather operation 
+             * \f$\boldsymbol{\hat{u}}_g=\mathcal{A}^{T}\boldsymbol{\hat{u}}_l\f$, where 
+             * \f$\mathcal{A}\f$ is the \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ 
+             * permutation matrix.
+             *
+             * Note that the array #m_coeffs should be filled with the local coefficients 
+             * \f$\boldsymbol{\hat{u}}_l\f$ and that the resulting global coefficients 
+             * \f$\boldsymbol{\hat{u}}_g\f$ will be stored in #m_contCoeffs.
+             */  
+            inline void Assemble()
+            {
+                m_locToGloMap->Assemble(m_coeffs,m_contCoeffs);
+            }
+ 
+            /**
+             * \brief This function assembles the global coefficients 
+             * \f$\boldsymbol{\hat{u}}_g\f$ from the local coefficients 
+             * \f$\boldsymbol{\hat{u}}_l\f$.
+             *
+             * This operation is evaluated as:
+             * \f{tabbing}
+             * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
+             *  \>     \> Do \= $i=$  $0,N_m^e-1$ \\
+             *  \>     \>      \> $\boldsymbol{\hat{u}}_g[\mbox{map}[e][i]] = 
+             * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]+\mbox{sign}[e][i] \cdot 
+             * \boldsymbol{\hat{u}}^{e}[i]$\\ 
+            *  \>     \>      continue\\
+             *  \> continue
+             * \f}
+             * where \a map\f$[e][i]\f$ is the mapping array and \a sign\f$[e][i]\f$ is an 
+             * array of similar dimensions ensuring the correct modal connectivity between 
+             * the different elements (both these arrays are contained in the data member 
+             * #m_locToGloMap). This operation is equivalent to the gather operation 
+             * \f$\boldsymbol{\hat{u}}_g=\mathcal{A}^{T}\boldsymbol{\hat{u}}_l\f$, where 
+             * \f$\mathcal{A}\f$ is the \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ 
+             * permutation matrix.
+             *
+             * \param inarray An array of size \f$N_\mathrm{eof}\f$ containing the local 
+             * degrees of freedom \f$\boldsymbol{x}_l\f$.
+             * \param outarray The resulting global degrees of freedom 
+             * \f$\boldsymbol{x}_g\f$ will be stored in this array of size 
+             * \f$N_\mathrm{dof}\f$.
+             */  
+            inline const void Assemble(const Array<OneD, const NekDouble> &inarray,
+                                 Array<OneD,NekDouble> &outarray) const
+            {
+                m_locToGloMap->Assemble(inarray,outarray);
+            }
+ 
+            /**
+             * \brief This function returns the map from local to global level.
+             */  
+            inline const LocalToGlobalC0ContMapSharedPtr& GetLocalToGlobalMap() const
+            {
+                return  m_locToGloMap;
+            }
+
+
+        
+            /**
+             * \brief This function calculates the inner product of a function 
+             * \f$f(\boldsymbol{x})\f$ with respect to all <em>global</em> expansion modes 
+             * \f$\phi_n^e(\boldsymbol{x})\f$.
+             * 
+             * The operation is evaluated locally (i.e. with respect to all local expansion 
+             * modes) by the function ExpList#IProductWRTBase. The inner product with 
+             * respect to the global expansion modes is than obtained by a global assembly 
+             * operation.
+             *
+             * The values of the function \f$f(\boldsymbol{x})\f$ evaluated at the 
+             * quadrature points \f$\boldsymbol{x}_i\f$ should be contained in the variable 
+             * #m_phys of the ExpList object \a in. The result is stored in the array 
+             * #m_contCoeffs.
+             *
+             * \param In An ExpList, containing the discrete evaluation of 
+             * \f$f(\boldsymbol{x})\f$ at the quadrature points in its array #m_phys.
+             */  
+            void IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
+                                       Array<OneD, NekDouble> &outarray,
+                                 bool  UseContCoeffs = false)
+            {
+                if(UseContCoeffs)
+                {
+                    bool doGlobalOp = m_globalOptParam->DoGlobalMatOp(StdRegions::eIProductWRTBase);
+
+                    if(doGlobalOp)
+                    {
+                        GlobalMatrixKey gkey(StdRegions::eIProductWRTBase,m_locToGloMap);
+                        GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
+                        mat->Multiply(inarray,outarray);
+                    }
+                    else
+                    {
+                        Array<OneD, NekDouble> wsp(m_ncoeffs);
+                        IProductWRTBase_IterPerExp(inarray,wsp);
+                        Assemble(wsp,outarray);
+                    }
+                }
+                else
+                {
+                    IProductWRTBase_IterPerExp(inarray,outarray);
+                }
+            }
+
             /**
              * \brief This function performs the global forward transformation of a 
              * function \f$f(\boldsymbol{x})\f$, subject to the boundary conditions 
@@ -201,38 +506,88 @@ namespace Nektar
                                 Array<OneD,      NekDouble> &outarray,
                           bool  UseContCoeffs = false);
             
-            void MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, 
-                                               Array<OneD,       NekDouble> &outarray,
-                                         bool  UseContCoeffs = false);
-                      
+
             /**
-             * \brief This function solves the two-dimensional Helmholtz equation, 
-             * subject to the boundary conditions specified.
-             * 
-             * Consider the two dimensional Helmholtz equation, 
-             * \f[\nabla^2u(\boldsymbol{x})-\lambda u(\boldsymbol{x}) = 
-             * f(\boldsymbol{x}),\f]
-             * supplemented with appropriate boundary conditions (which are contained
-             * in the data member #m_bndCondExpansions). Applying a \f$C^0\f$ continuous 
-             * Galerkin discretisation, this equation leads to the following linear 
-             * system:
-             * \f[\left( \boldsymbol{L}+\lambda\boldsymbol{M}\right)
-             * \boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}}\f]
-             * where \f$\boldsymbol{L}\f$ and \f$\boldsymbol{M}\f$ are the Laplacian and 
-             * mass matrix respectively. This function solves the system above 
-             * for the global coefficients \f$\boldsymbol{\hat{u}}\f$ by a call to 
-             * the function #GlobalSolve.
+             * \brief This function performs the backward transformation of the spectral/hp 
+             * element expansion.
              *
-             * The values of the function \f$f(\boldsymbol{x})\f$ evaluated at the 
-             * quadrature points \f$\boldsymbol{x}_i\f$ should be contained in the 
-             * variable #m_phys of the ExpList object \a Sin. The resulting global 
-             * coefficients \f$\boldsymbol{\hat{u}}_g\f$ are stored in the array 
+             * Given the coefficients of an expansion, this function evaluates the 
+             * spectral/hp expansion \f$u^{\delta}(\boldsymbol{x})\f$ at the quadrature 
+             * points \f$\boldsymbol{x}_i\f$. This operation is evaluated locally by the 
+             * function ExpList#BwdTrans.
+             *
+             * The coefficients of the expansion should be contained in the variable 
+             * #m_coeffs of the ExpList object \a In. The resulting physical values at the 
+             * quadrature points \f$u^{\delta}(\boldsymbol{x}_i)\f$ are stored in the array 
+             * #m_phys.
+             *
+             * \param In An ExpList, containing the local coefficients \f$\hat{u}_n^e\f$ 
+             * in its array #m_coeffs.
+             */  
+            void BwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                Array<OneD,       NekDouble> &outarray,
+                          bool  UseContCoeffs = false)
+            {
+                if(UseContCoeffs)
+                {
+                    bool doGlobalOp = m_globalOptParam->DoGlobalMatOp(StdRegions::eBwdTrans);
+
+                    if(doGlobalOp)
+                    {
+                        GlobalMatrixKey gkey(StdRegions::eBwdTrans,m_locToGloMap);
+                        GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
+                        mat->Multiply(inarray,outarray);
+                    }
+                    else
+                    {
+                        Array<OneD, NekDouble> wsp(m_ncoeffs);
+                        GlobalToLocal(inarray,wsp);
+                        BwdTrans_IterPerExp(wsp,outarray);
+                    }
+                }
+                else
+                {
+                    BwdTrans_IterPerExp(inarray,outarray);
+                }
+            }
+
+
+            void MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, 
+                                         Array<OneD,  NekDouble> &outarray,
+                                         bool  UseContCoeffs = false);
+            /**
+             * \brief This function solves the two-dimensional
+             * Helmholtz equation, subject to the boundary conditions
+             * specified.
+             * 
+             * Consider the two dimensional Helmholtz equation,
+             * \f[\nabla^2u(\boldsymbol{x})-\lambda u(\boldsymbol{x})
+             * = f(\boldsymbol{x}),\f] supplemented with appropriate
+             * boundary conditions (which are contained in the data
+             * member #m_bndCondExpansions). Applying a \f$C^0\f$
+             * continuous Galerkin discretisation, this equation leads
+             * to the following linear system: \f[\left(
+             * \boldsymbol{L}+\lambda\boldsymbol{M}\right)
+             * \boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}}\f] where
+             * \f$\boldsymbol{L}\f$ and \f$\boldsymbol{M}\f$ are the
+             * Laplacian and mass matrix respectively. This function
+             * solves the system above for the global coefficients
+             * \f$\boldsymbol{\hat{u}}\f$ by a call to the function
+             * #GlobalSolve.
+             *
+             * The values of the function \f$f(\boldsymbol{x})\f$
+             * evaluated at the quadrature points
+             * \f$\boldsymbol{x}_i\f$ should be contained in the
+             * variable #m_phys of the ExpList object \a Sin. The
+             * resulting global coefficients
+             * \f$\boldsymbol{\hat{u}}_g\f$ are stored in the array
              * #m_contCoeffs.
              * 
-             * \param Sin An ExpList, containing the discrete evaluation of the 
-             * forcing function \f$f(\boldsymbol{x})\f$ at the quadrature points 
-             * in its array #m_phys.
-             * \param lambda The parameter \f$\lambda\f$ of the Helmholtz equation
+             * \param Sin An ExpList, containing the discrete
+             * evaluation of the forcing function
+             * \f$f(\boldsymbol{x})\f$ at the quadrature points in its
+             * array #m_phys.  \param lambda The parameter
+             * \f$\lambda\f$ of the Helmholtz equation
              */ 
             void HelmSolve(const Array<OneD, const NekDouble> &inarray,
                                  Array<OneD,       NekDouble> &outarray,
@@ -356,36 +711,125 @@ namespace Nektar
                 return m_bndConditions;
             }
                 
+
+            /**
+             * \brief This function calculates the result of the multiplication of a global 
+             * matrix of type specified by \a mkey with a vector given by \a inarray.
+             *
+             * This is equivalent to the operation:
+             * \f[\boldsymbol{M\hat{u}}_g\f]
+             * where \f$\boldsymbol{M}\f$ is the global matrix of type specified by \a mkey.
+             * After scattering the global array \a inarray to local level, this operation 
+             * is evaluated locally by the function ExpList#GeneralMatrixOp. The global 
+             * result is then obtained by a global assembly procedure.
+             *
+             * \param mkey This key uniquely defines the type matrix required for the
+             * operation.
+             * \param inarray The vector \f$\boldsymbol{\hat{u}}_g\f$ of size 
+             * \f$N_{\mathrm{dof}}\f$.
+             * \param outarray The resulting vector of size \f$N_{\mathrm{dof}}\f$.
+             */  
+            void GeneralMatrixOp(const GlobalMatrixKey             &gkey,
+                                 const Array<OneD,const NekDouble> &inarray, 
+                                       Array<OneD,      NekDouble> &outarray,
+                                 bool  UseContCoeffs = false)
+            {
+                if(UseContCoeffs)
+                {
+                    bool doGlobalOp = m_globalOptParam->DoGlobalMatOp(gkey.GetMatrixType());
+
+                    if(doGlobalOp)
+                    {
+                        GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
+                        mat->Multiply(inarray,outarray);
+                    }
+                    else
+                    {
+                        Array<OneD,NekDouble> tmp1(2*m_ncoeffs);
+                        Array<OneD,NekDouble> tmp2(tmp1+m_ncoeffs);
+                        GlobalToLocal(inarray,tmp1);
+                        GeneralMatrixOp_IterPerExp(gkey,tmp1,tmp2);
+                        Assemble(tmp2,outarray);
+                    }
+                }
+                else
+                {
+                    GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
+                }
+            }
+
+            inline int GetGlobalMatrixNnz(const GlobalMatrixKey &gkey)
+            {
+                ASSERTL1(gkey.LocToGloMapIsDefined(),
+                         "To use method must have a LocalToGlobalBaseMap "
+                         "attached to key");
+                
+                GlobalMatrixMap::iterator matrixIter = m_globalMat->find(gkey);
+                
+                if(matrixIter == m_globalMat->end())
+                {
+                    return 0;
+                }
+                else
+                {
+                    return matrixIter->second->GetMatrix()->GetNumNonZeroEntries();
+                }
+                
+                return 0;
+            }
+
         protected:
 
         private:  
             /**
-             * \brief The number of boundary segments on which
-             * Dirichlet boundary conditions are imposed
-             */ 
-            int m_numDirBndCondExpansions;
-        
+             * \brief (A shared pointer to) the object which contains
+             * all the required information for the transformation
+             * from local to global degrees of freedom.
+             */  
+            LocalToGlobalC0ContMapSharedPtr m_locToGloMap;
+  
             /**
-             * \brief An object which contains the discretised
-             * boundary conditions.
+             * \brief The total number of global degrees of freedom. 
+             * #m_contNcoeffs\f$=N_{\mathrm{dof}}\f$
+             */  
+      	    int                       m_contNcoeffs;
+
+  
+            /**
+             * \brief The array of length
+             * #m_ncoeffs\f$=N_{\mathrm{dof}}\f$ containing the global
+             * expansion coefficients.
+             */  
+	    Array<OneD, NekDouble>    m_contCoeffs;
+
+            /**
+             * \brief (A shared pointer to) a list which collects all
+             * the global matrices being assembled, such that they
+             * should be constructed only once.
+             */  
+            GlobalMatrixMapShPtr      m_globalMat;
+ 
+            /**
+             * \brief (A shared pointer to) a list which collects all
+             * the global linear system being assembled, such that they
+             * should be constructed only once.
+             */  
+            GlobalLinSysMapShPtr      m_globalLinSys;
+
+
+            GlobalMatrixSharedPtr GetGlobalMatrix(const GlobalMatrixKey &mkey);
+          
+            /**
+             * \brief This function returns the linear system specified by the key 
+             * \a mkey.
+             * 
+             * The function searches the map #m_globalLinSys to see if the global matrix 
+             * has been created before. If not, it calls the function  
+             #GenGlobalLinSys to generate the requested global system.
              *
-             * It is an array of size equal to the number of boundary
-             * regions and consists of entries of the type
-             * MultiRegions#ExpList1D. Every entry corresponds to the
-             * one-dimensional spectral/hp expansion on a single
-             * boundary region.  The values of the boundary conditions
-             * are stored as the coefficients of the one-dimensional
-             * expansion.
+             * \param mkey This key uniquely defines the requested linear system.
              */ 
-            Array<OneD,MultiRegions::ExpList1DSharedPtr>       m_bndCondExpansions;
-          
-            /**
-             * \brief An array which contains the information about
-             * the boundary condition on the different boundary
-             * regions.
-             */ 
-            Array<OneD,SpatialDomains::BoundaryConditionShPtr>  m_bndConditions;
-          
+
             /**
              * \brief This function returns the linear system specified by the key 
              * \a mkey.
@@ -399,8 +843,8 @@ namespace Nektar
             GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
           
             /**
-             * \brief This function solves the linear system specified by the key 
-             * \a key. NEEDS UPDATING (SJS)
+             * \brief This function solves the linear system specified
+             * by the key \a key. 
              * 
              * Given a linear system specified by the key \a key,
              * \f[\boldsymbol{M}\boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}},\f]
@@ -452,29 +896,6 @@ namespace Nektar
                              const Array<OneD, const  NekDouble> &rhs, 
                                    Array<OneD,        NekDouble> &inout,
                              const Array<OneD, const NekDouble> &dirForcing = NullNekDouble1DArray);
-
-
-          
-            /**
-             * \brief This function discretises the boundary conditions by setting up
-             * a list of one-dimensional boundary expansions.    
-             *
-             * According to their boundary region, the separate segmental boundary 
-             * expansions are bundled together in an object of the class 
-             * MultiRegions#ExpList1D. 
-             * The list of expansions of the Dirichlet boundary regions are listed 
-             * first in the array #m_bndCondExpansions.
-             *
-             * \param graph2D A mesh, containing information about the domain and 
-             * the spectral/hp element expansion.
-             * \param bcs An entity containing information about the boundaries and 
-             * boundary conditions.
-             * \param variable An optional parameter to indicate for which variable 
-             * the boundary conditions should be discretised.
-             */ 
-            void GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D,
-                                                    SpatialDomains::BoundaryConditions &bcs, 
-                                                    const std::string variable);
             
             virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                           Array<OneD,       NekDouble> &outarray,

@@ -157,8 +157,8 @@ namespace Nektar
             else
             {
                 I1 = PointsManager()[fpoints1]->GetI(tpoints1);
-                Blas::Dgemm('N', 'T', tnp1, fnp0, fnp1, 1.0, I1->GetPtr().get(),
-                            tnp1, from, fnp0, 0.0,  wsp.get(), tnp1);     
+                Blas::Dgemm('N', 'T', fnp0, tnp1, fnp1, 1.0, from, fnp0,
+                             I1->GetPtr().get(), tnp1, 0.0,  wsp.get(), fnp0);     
             }
 
             if(fpoints0 == tpoints0)
@@ -168,8 +168,8 @@ namespace Nektar
             else
             {
                 I0 = PointsManager()[fpoints0]->GetI(tpoints0);
-                Blas::Dgemm('N', 'T', tnp0, tnp1, fnp0, 1.0, I0->GetPtr().get(),
-                            tnp0, wsp.get(), tnp1, 0.0, to, tnp0);     
+                Blas::Dgemm('N', 'N', tnp0, tnp1, fnp0, 1.0, I0->GetPtr().get(),
+                            tnp0, wsp.get(), fnp0, 0.0, to, tnp0);     
             }
         }
 

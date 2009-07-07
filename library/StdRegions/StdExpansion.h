@@ -870,6 +870,15 @@ namespace Nektar
                 v_AddEdgeNormBoundaryInt(edge,EdgeExp,Fn,outarray);
             }
 
+            virtual void AddEdgeNormBoundaryBiInt(const int edge, 
+                                                boost::shared_ptr<StdExpansion1D>  &EdgeExp,
+                                                const Array<OneD, const NekDouble> &Fwd,  
+                                                const Array<OneD, const NekDouble> &Bwd,  
+                                                Array<OneD, NekDouble> &outarray)
+            {
+                v_AddEdgeNormBoundaryBiInt(edge,EdgeExp,Fwd,Bwd,outarray);
+            }
+
             virtual void AddNormTraceInt(const int dir,
                                          Array<OneD, const NekDouble> &inarray,
                                          Array<OneD,NekDouble> &outarray)
@@ -1169,6 +1178,14 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
 
+            virtual void v_AddEdgeNormBoundaryBiInt(const int edge,
+                                                    boost::shared_ptr<StdExpansion1D> &EdgeExp,
+                                                    const Array<OneD, const NekDouble> &Fwd,  
+                                                    const Array<OneD, const NekDouble> &Bwd,  
+                                                    Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "v_AddEdgeNormBoundaryBiInt is not defined for this shape");
+            }
  
            virtual void v_AddNormTraceInt(const int dir,
                                            Array<OneD, const NekDouble> &inarray,
@@ -1762,6 +1779,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.114  2009/07/03 15:37:12  sehunchun
+ * Adding GetTanBasis function
+ *
  * Revision 1.113  2009/04/27 21:32:45  sherwin
  * Updated WriteToField method
  *

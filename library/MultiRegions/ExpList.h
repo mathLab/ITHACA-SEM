@@ -745,6 +745,12 @@ namespace Nektar
                 v_AddTraceIntegral(Fn,outarray);
             }
 
+            void AddTraceBiIntegral(const Array<OneD, const NekDouble> &Fwd, 
+                                          const Array<OneD, const NekDouble> &Bwd, 
+                                          Array<OneD, NekDouble> &outarray)
+            {
+                v_AddTraceBiIntegral(Fwd,Bwd,outarray);
+            }
 
             void GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd, 
                                     Array<OneD,NekDouble> &Bwd)
@@ -1155,6 +1161,13 @@ namespace Nektar
                 ASSERTL0(false,"This method is not defined or valid for this class type");                
             }
 
+            virtual void v_AddTraceBiIntegral(const Array<OneD, const NekDouble> &Fwd, 
+                                          const Array<OneD, const NekDouble> &Bwd, 
+                                          Array<OneD, NekDouble> &outarray)
+            {
+                ASSERTL0(false,"This method is not defined or valid for this class type");                
+            }
+
             virtual void v_GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd, 
                                               Array<OneD,NekDouble> &Bwd)
             {
@@ -1259,6 +1272,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.64  2009/07/03 15:38:25  sehunchun
+* Adding GetTanBasis function
+*
 * Revision 1.63  2009/05/14 14:26:41  pvos
 * Updates to apply the dirichlet boundary condition forcing inside the static condensation algorithm
 *

@@ -527,5 +527,30 @@ namespace Nektar
             }
         }
 
+        /// Note this routine changes m_trace->m_coeffs space; 
+        void DisContField2D::AddTraceBiIntegral(const Array<OneD, const NekDouble> &Fwd, 
+                                                const Array<OneD, const NekDouble> &Bwd, 
+                                                Array<OneD, NekDouble> &outarray)
+        {
+            int e,n,offset, t_offset;
+            Array<OneD, NekDouble> e_outarray;
+            Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr> >
+                elmtToTrace = m_traceMap->GetElmtToTrace();
+
+            for(n = 0; n < GetExpSize(); ++n)
+            {
+                offset = GetCoeff_Offset(n);
+                for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
+                {
+                    t_offset = GetTrace()->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
+
+                    (*m_exp)[n]->AddEdgeNormBoundaryBiInt(e,elmtToTrace[n][e],
+                                                        Fwd + t_offset,
+                                                        Bwd + t_offset,
+                                                        e_outarray = outarray+offset);
+                }    
+            }
+        }
+
     } // end of namespace
 } //end of namespace

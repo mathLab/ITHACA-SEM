@@ -213,6 +213,10 @@ namespace Nektar
             void AddTraceIntegral(const Array<OneD, const NekDouble> &Fn, 
                                   Array<OneD, NekDouble> &outarray);
 
+            void AddTraceBiIntegral(const Array<OneD, const NekDouble> &Fwd, 
+                                    const Array<OneD, const NekDouble> &Bwd, 
+                                    Array<OneD, NekDouble> &outarray);
+
             inline const Array<OneD,const MultiRegions::ExpList1DSharedPtr>& GetBndCondExpansions()
             {
                 return m_bndCondExpansions;
@@ -301,6 +305,12 @@ namespace Nektar
                 AddTraceIntegral(Fn,outarray);
             }
 
+            virtual void v_AddTraceBiIntegral(const Array<OneD, const NekDouble> &Fwd, 
+                                          const Array<OneD, const NekDouble> &Bwd, 
+                                          Array<OneD, NekDouble> &outarray)
+            {
+                AddTraceBiIntegral(Fwd,Bwd,outarray);
+            }
 
             virtual void v_GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd, 
                                               Array<OneD,NekDouble> &Bwd)

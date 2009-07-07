@@ -220,16 +220,31 @@ namespace Nektar
                                             <
                                                 boost::mpl::and_
                                                 <
-                                                    boost::mpl::not_<IsCommutative<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> > >,
-                                                    boost::mpl::not_<typename OpType<LhsResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>::HasOpLeftEqual>,
+                                                    boost::mpl::not_
+                                                    <
+                                                        IsCommutative
+                                                        <
+                                                            typename ConstantExpressionPolicy<LhsResultType>::ResultType, 
+                                                            OpType, 
+                                                            typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType 
+                                                        > 
+                                                    >,
+                                                    boost::mpl::not_
+                                                    <
+                                                        typename OpType
+                                                        <
+                                                            LhsResultType, 
+                                                            typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType
+                                                        >::TraitsType::HasOpLeftEqual
+                                                    >,
                                                     boost::mpl::not_<boost::is_same<LhsResultType, ResultType> >,
                                                     boost::mpl::not_<boost::is_same<ResultType, typename AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >::LhsAsBinaryExpressionResultType> >
                                                 >,
                                                 boost::mpl::and_
                                                 <
                                                     boost::mpl::not_< typename AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >::IsAssociative>,
-                                                    boost::mpl::not_<IsCommutative<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> > >,
-                                                    boost::mpl::not_<typename OpType<LhsResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>::HasOpLeftEqual>,
+                                                    boost::mpl::not_<IsCommutative<typename ConstantExpressionPolicy<LhsResultType>::ResultType, OpType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType > >,
+                                                    boost::mpl::not_<typename OpType<LhsResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>::TraitsType::HasOpLeftEqual>,
                                                     boost::mpl::not_<boost::is_same<LhsResultType, ResultType> >
                                                 >,
                                                 boost::mpl::and_
@@ -296,8 +311,8 @@ namespace Nektar
                                                 boost::mpl::and_
                                                 <
                                                     boost::mpl::not_< typename AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >::IsAssociative>,
-                                                    boost::mpl::not_<IsCommutative<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> > >,
-                                                    boost::mpl::not_<typename OpType<LhsResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>::HasOpLeftEqual>,
+                                                    boost::mpl::not_<IsCommutative<typename ConstantExpressionPolicy<LhsResultType>::ResultType, OpType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType > >,
+                                                    boost::mpl::not_<typename OpType<LhsResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>::TraitsType::HasOpLeftEqual>,
                                                     boost::is_same<LhsResultType, ResultType>
                                                 >
                                             >
@@ -343,15 +358,15 @@ namespace Nektar
                                             <
                                                 boost::mpl::and_
                                                 <
-                                                    boost::mpl::not_<IsCommutative<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> > >,
-                                                    typename OpType<LhsResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>::HasOpLeftEqual,
+                                                    boost::mpl::not_<IsCommutative<typename ConstantExpressionPolicy<LhsResultType>::ResultType, OpType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType > >,
+                                                    typename OpType<LhsResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>::TraitsType::HasOpLeftEqual,
                                                     boost::mpl::not_<boost::is_same<LhsResultType, ResultType> >,
                                                     boost::is_same<ResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>
                                                 >,
                                                 boost::mpl::and_
                                                 <
                                                     boost::mpl::not_< typename AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >::IsAssociative>,
-                                                    typename OpType<LhsResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>::HasOpLeftEqual,
+                                                    typename OpType<LhsResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>::TraitsType::HasOpLeftEqual,
                                                     boost::mpl::not_<boost::is_same<LhsResultType, ResultType> >,
                                                     boost::is_same<ResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>
                                                 >                                                
@@ -402,7 +417,7 @@ namespace Nektar
                                             <
                                                 boost::mpl::and_
                                                 <
-                                                    IsCommutative<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >,
+                                                    IsCommutative<typename ConstantExpressionPolicy<LhsResultType>::ResultType, OpType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType >,
                                                     boost::mpl::not_<boost::is_same<ResultType, typename ConstantExpressionPolicy<LhsResultType>::ResultType> >,
                                                     boost::is_same<ResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType> 
                                                 >,
@@ -498,8 +513,16 @@ namespace Nektar
                                                 boost::mpl::and_
                                                 <
                                                     typename AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> >::IsAssociative,
-                                                    boost::mpl::not_<IsCommutative<ConstantExpressionPolicy<LhsResultType>, OpType, BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType> > >,
-                                                    boost::mpl::not_<typename OpType<LhsResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>::HasOpLeftEqual>,
+                                                    boost::mpl::not_
+                                                    <
+                                                        IsCommutative
+                                                        <
+                                                            typename ConstantExpressionPolicy<LhsResultType>::ResultType, 
+                                                            OpType,
+                                                            typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType 
+                                                        > 
+                                                    >,
+                                                    boost::mpl::not_<typename OpType<LhsResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>::TraitsType::HasOpLeftEqual>,
                                                     boost::mpl::not_<boost::is_same<ResultType, typename ConstantExpressionPolicy<LhsResultType>::ResultType> >,
                                                     boost::is_same<ResultType, typename BinaryExpressionPolicy<RhsLhsPolicyType, RhsOpType, RhsRhsPolicyType>::ResultType>
                                                 >,

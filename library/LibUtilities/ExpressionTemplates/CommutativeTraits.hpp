@@ -44,43 +44,15 @@
 namespace Nektar
 {
     template<typename FirstType,
-                template <typename, typename> class OpType,
-                typename SecondType>
-    class IsCommutative : public boost::false_type
-    {
-        public:
-            static const bool IsComm = false;
-    };
+             template <typename, typename> class OpType,
+             typename SecondType>
+    struct IsCommutative : public boost::false_type {};
     
     template<typename FirstType, typename SecondType>
-    class IsCommutative<FirstType, AddOp, SecondType> : public boost::true_type
-    {
-        public:
-            static const bool IsComm = true;
-    };
+    struct IsCommutative<FirstType, AddOp, SecondType> : public boost::true_type {};
     
     template<typename FirstType, typename SecondType>
-    class IsCommutative<FirstType, MultiplyOp, SecondType> : public boost::true_type
-    {
-        public:
-            static const bool IsComm = true;
-    };
-    
-    template<typename LhsPolicy, template <typename, typename> class OpType, typename RhsPolicy>
-    class IsCommutative<Expression<LhsPolicy>, OpType, Expression<RhsPolicy> > : public boost::mpl::if_
-                                                                                <
-                                                                                    boost::is_base_of
-                                                                                    <
-                                                                                        boost::true_type,
-                                                                                        IsCommutative<typename Expression<LhsPolicy>::ResultType, OpType, typename RhsPolicy::ResultType>
-                                                                                    >,
-                                                                                    boost::true_type,
-                                                                                    boost::false_type
-                                                                                >
-     {
-      public:
-            static const bool IsComm = true;
-     };
+    struct IsCommutative<FirstType, MultiplyOp, SecondType> : public boost::true_type {};
                                                                 
 }
 

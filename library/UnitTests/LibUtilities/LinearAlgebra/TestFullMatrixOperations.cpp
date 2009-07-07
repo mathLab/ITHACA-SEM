@@ -250,6 +250,7 @@ namespace Nektar
 
             BOOST_CHECK_EQUAL(expected_result, m1*m2*m3);
 
+            BOOST_CHECK_EQUAL(expected_result, m1*(m2*m3));                                                    
         }
 
         BOOST_AUTO_TEST_CASE(TestThreeMatrixMultiplicationWithTranspose)

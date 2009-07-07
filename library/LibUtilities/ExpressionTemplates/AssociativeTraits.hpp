@@ -294,19 +294,19 @@ namespace Nektar
         {
             typedef MultiplyOp<Lhs, Rhs> type;
         };
-//        
-//        struct OpEqualsAreDefined : public boost::mpl::if_
-//                                           <
-//                                                boost::mpl::and_
-//                                                <
-//                                                    HasOpEqualTraits<LhsResultType, typename RhsLhsPolicyType::ResultType, MultiplyOp>,
-//                                                    HasOpEqualTraits<LhsResultType, typename RhsRhsPolicyType::ResultType, MultiplyOp>
-//                                                >,
-//                                                boost::true_type,
-//                                                boost::false_type
-//                                           >::type
-//        {
-//        };
+        
+        struct OpEqualsAreDefined : public boost::mpl::if_
+                                           <
+                                                boost::mpl::and_
+                                                <
+                                                    HasOpEqualTraits<LhsResultType, typename RhsLhsPolicyType::ResultType, MultiplyOp>,
+                                                    HasOpEqualTraits<LhsResultType, typename RhsRhsPolicyType::ResultType, MultiplyOp>
+                                                >,
+                                                boost::true_type,
+                                                boost::false_type
+                                           >::type
+        {
+        };
         
         static void EvaluateNewRhs(const Expression<RhsRhsPolicyType>& exp, Accumulator<typename RhsRhsPolicyType::ResultType>& accum)
         {
@@ -326,19 +326,19 @@ namespace Nektar
         {
             typedef DivideOp<Lhs, Rhs> type;
         };
-//        
-//        struct OpEqualsAreDefined : public boost::mpl::if_
-//                                           <
-//                                                boost::mpl::and_
-//                                                <
-//                                                    HasOpEqualTraits<LhsResultType, typename RhsLhsPolicyType::ResultType, MultiplyOp>,
-//                                                    HasOpEqualTraits<LhsResultType, typename RhsRhsPolicyType::ResultType, MultiplyOp>
-//                                                >,
-//                                                boost::true_type,
-//                                                boost::false_type
-//                                           >::type
-//        {
-//        };
+        
+        struct OpEqualsAreDefined : public boost::mpl::if_
+                                           <
+                                                boost::mpl::and_
+                                                <
+                                                    HasOpEqualTraits<LhsResultType, typename RhsLhsPolicyType::ResultType, MultiplyOp>,
+                                                    HasOpEqualTraits<LhsResultType, typename RhsRhsPolicyType::ResultType, MultiplyOp>
+                                                >,
+                                                boost::true_type,
+                                                boost::false_type
+                                           >::type
+        {
+        };
         
         static void EvaluateNewRhs(const Expression<RhsRhsPolicyType>& exp, Accumulator<typename RhsRhsPolicyType::ResultType>& accum)
         {
@@ -358,19 +358,19 @@ namespace Nektar
         {
             typedef DivideOp<Lhs, Rhs> type;
         };
-//        
-//        struct OpEqualsAreDefined : public boost::mpl::if_
-//                                           <
-//                                                boost::mpl::and_
-//                                                <
-//                                                    HasOpEqualTraits<LhsResultType, typename RhsLhsPolicyType::ResultType, MultiplyOp>,
-//                                                    HasOpEqualTraits<LhsResultType, typename RhsRhsPolicyType::ResultType, MultiplyOp>
-//                                                >,
-//                                                boost::true_type,
-//                                                boost::false_type
-//                                           >::type
-//        {
-//        };
+        
+        struct OpEqualsAreDefined : public boost::mpl::if_
+                                           <
+                                                boost::mpl::and_
+                                                <
+                                                    HasOpEqualTraits<LhsResultType, typename RhsLhsPolicyType::ResultType, MultiplyOp>,
+                                                    HasOpEqualTraits<LhsResultType, typename RhsRhsPolicyType::ResultType, MultiplyOp>
+                                                >,
+                                                boost::true_type,
+                                                boost::false_type
+                                           >::type
+        {
+        };
         
         static void EvaluateNewRhs(const Expression<RhsRhsPolicyType>& exp, Accumulator<typename RhsRhsPolicyType::ResultType>& accum)
         {
@@ -390,19 +390,19 @@ namespace Nektar
         {
             typedef MultiplyOp<Lhs, Rhs> type;
         };
-//        
-//        struct OpEqualsAreDefined : public boost::mpl::if_
-//                                           <
-//                                                boost::mpl::and_
-//                                                <
-//                                                    HasOpEqualTraits<LhsResultType, typename RhsLhsPolicyType::ResultType, MultiplyOp>,
-//                                                    HasOpEqualTraits<LhsResultType, typename RhsRhsPolicyType::ResultType, MultiplyOp>
-//                                                >,
-//                                                boost::true_type,
-//                                                boost::false_type
-//                                           >::type
-//        {
-//        };
+        
+        struct OpEqualsAreDefined : public boost::mpl::if_
+                                           <
+                                                boost::mpl::and_
+                                                <
+                                                    HasOpEqualTraits<LhsResultType, typename RhsLhsPolicyType::ResultType, MultiplyOp>,
+                                                    HasOpEqualTraits<LhsResultType, typename RhsRhsPolicyType::ResultType, MultiplyOp>
+                                                >,
+                                                boost::true_type,
+                                                boost::false_type
+                                           >::type
+        {
+        };
         
         static void EvaluateNewRhs(const Expression<RhsRhsPolicyType>& exp, Accumulator<typename RhsRhsPolicyType::ResultType>& accum)
         {

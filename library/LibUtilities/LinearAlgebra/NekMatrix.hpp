@@ -43,6 +43,7 @@
 #include <LibUtilities/LinearAlgebra/ScaledMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/StandardMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixOperations.hpp>
+#include <LibUtilities/ExpressionTemplates/CommutativeTraits.hpp>
 
 namespace Nektar
 {        
@@ -69,89 +70,15 @@ namespace Nektar
         return os;
     }
 
-
     
-// #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-//     // All of the expression interfaces for NekMatrix should go here.
-//     namespace expt
-//     {
-//         template<typename DataType, Nektar::NekMatrixForm Form, MatrixBlockType BlockType, unsigned int space>
-//         class ConstantExpressionTraits<Nektar::NekMatrix<DataType, Form, BlockType, space> >
-//         {
-//             public:
-//                 typedef Nektar::NekMatrix<DataType, Form, BlockType, space> result_type;
-//                 typedef NekMatrixConstantMetadata MetadataType;
-//         };
-//                 
-//         template<typename DataType, Nektar::NekMatrixForm lhsForm, Nektar::NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
-//         class AdditionTraits<Nektar::NekMatrix<DataType, lhsForm, BlockType, space>, Nektar::NekMatrix<DataType, rhsForm, BlockType, space> >
-//         {
-//             public:
-//                 typedef Nektar::NekMatrix<DataType, lhsForm, BlockType, space> LhsType;
-//                 typedef Nektar::NekMatrix<DataType, rhsForm, BlockType, space> RhsType;
-//                 typedef Nektar::NekMatrixAdditionAndSubtractionMetadata MetadataType;
-//                 typedef Nektar::NekMatrix<DataType, Nektar::FullMatrixTag, BlockType, space> result_type;
-//                 static const bool HasOpEqual = true;
-//                 static const bool HasOpLeftEqual = false;
-//                 
-//                 static void Add(result_type& result, const LhsType& lhs, const RhsType& rhs)
-//                 {
-//                     result = lhs;
-//                     result += rhs;
-//                 }
-//         };
-//         
-//         template<typename DataType, Nektar::NekMatrixForm lhsForm, Nektar::NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
-//         class SubtractionTraits<Nektar::NekMatrix<DataType, lhsForm, BlockType, space>, Nektar::NekMatrix<DataType, rhsForm, BlockType, space> >
-//         {
-//             public:
-//                 typedef Nektar::NekMatrix<DataType, lhsForm, BlockType, space> LhsType;
-//                 typedef Nektar::NekMatrix<DataType, rhsForm, BlockType, space> RhsType;
-//                 typedef Nektar::NekMatrixAdditionAndSubtractionMetadata MetadataType;
-//                 typedef Nektar::NekMatrix<DataType, Nektar::FullMatrixTag, BlockType, space> result_type;
-//                 static const bool HasOpEqual = true;
-//                 static const bool HasOpLeftEqual = false;
-//                 
-//                 static void Subtract(result_type& result, const LhsType& lhs, const RhsType& rhs)
-//                 {
-//                     result = lhs;
-//                     result -= rhs;
-//                 }
-//         };
-//         
-//         template<typename DataType, Nektar::NekMatrixForm lhsForm, Nektar::NekMatrixForm rhsForm, MatrixBlockType BlockType, unsigned int space>
-//         class MultiplicationTraits<Nektar::NekMatrix<DataType, lhsForm, BlockType, space>, 
-//                                    Nektar::NekMatrix<DataType, rhsForm, BlockType, space> >
-//         {
-//             public:
-//                 typedef Nektar::NekMatrix<DataType, lhsForm, BlockType, space> LhsType;
-//                 typedef Nektar::NekMatrix<DataType, rhsForm, BlockType, space> RhsType;
-//                 typedef Nektar::NekMatrixMultiplicationMetadata MetadataType;
-//                 typedef Nektar::NekMatrix<DataType, Nektar::FullMatrixTag, BlockType, space> result_type;
-//                 static const bool HasOpEqual = true;
-//                 static const bool HasOpLeftEqual = false;
-//                 
-//                 static void Multiply(result_type& result, const LhsType& lhs, const RhsType& rhs)
-//                 {
-//                     result = lhs;
-//                     result *= rhs;
-//                 }
-// 
-//         };
-//         
-//        
-//         template<typename FirstDataType, typename SecondDataType, 
-//                  Nektar::NekMatrixForm firstForm, Nektar::NekMatrixForm secondForm,
-//                  MatrixBlockType firstBlockType, MatrixBlockType secondBlockType, 
-//                  unsigned int space>
-//         class CommutativeTraits<NekMatrix<FirstDataType, firstForm, firstBlockType, space>, MultiplyOp,
-//                                 NekMatrix<SecondDataType, secondForm, secondBlockType, space> >
-//         {
-//             public:
-//                 static const bool IsCommutative = false;
-//         };    
-//     }
-// #endif
+    #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+    template<typename LhsDataType, typename LhsMatrixType,
+             typename RhsDataType, typename RhsMatrixType>
+    class IsCommutative<NekMatrix<LhsDataType, LhsMatrixType>, MultiplyOp,
+                        NekMatrix<RhsDataType, RhsMatrixType> > : public boost::false_type
+    {
+    };    
+ #endif
 //     
 //     // Now define general purpose operators.
 //     
@@ -360,6 +287,9 @@ namespace Nektar
 
 /**
     $Log: NekMatrix.hpp,v $
+    Revision 1.37  2008/11/13 01:56:34  bnelson
+    Started BLAS specializations using expression templates.
+
     Revision 1.36  2008/11/01 22:36:06  bnelson
     Removed uneeded files.
 

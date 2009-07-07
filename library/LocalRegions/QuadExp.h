@@ -596,6 +596,15 @@ namespace Nektar
                 
             }
 
+            virtual void v_AddEdgeNormBoundaryBiInt(const int edge, 
+                                                  StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+                                                  const Array<OneD, const NekDouble> &Fwd,  
+                                                  const Array<OneD, const NekDouble> &Bwd,  
+                                                  Array<OneD, NekDouble> &outarray)
+            {
+                Expansion2D::AddEdgeNormBoundaryBiInt(edge,EdgeExp,Fwd,Bwd,outarray);
+                
+            }
 
             virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
                                                      const Array<OneD, const NekDouble> &inarray,
@@ -711,6 +720,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.51  2009/07/03 15:34:52  sehunchun
+ *    Adding GetTanBasis function
+ *
  *    Revision 1.50  2009/04/27 21:34:07  sherwin
  *    Updated WriteToField
  *

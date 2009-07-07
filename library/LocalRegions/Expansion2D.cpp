@@ -72,7 +72,7 @@ namespace Nektar
             Array<OneD,int>              sign;
             StdRegions::EdgeOrientation  edgedir = v_GetEorient(edge);
             
-            ASSERTL1(v_GetCoordim() == 2,"Routine only set up for two-dimensions");
+            //  ASSERTL1(v_GetCoordim() == 2,"Routine only set up for two-dimensions");
 
             v_GetEdgeToElementMap(edge,edgedir,map,sign);
 
@@ -83,6 +83,39 @@ namespace Nektar
             {
 
                 Vmath::Neg(order_e,EdgeExp->UpdateCoeffs(),1);
+            }
+
+            // add data to outarray if forward edge normal is outwards
+            for(i = 0; i < order_e; ++i)
+            {
+                outarray[map[i]] += sign[i]*EdgeExp->GetCoeff(i);
+            }
+        }
+
+        void Expansion2D::AddEdgeNormBoundaryBiInt(const int edge, 
+                                                 StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+                                                 const Array<OneD, const NekDouble> &Fwd,  
+                                                 const Array<OneD, const NekDouble> &Bwd,  
+                                                 Array<OneD, NekDouble> &outarray)
+        {
+            int i;
+            int order_e = EdgeExp->GetNcoeffs();
+            Array<OneD,unsigned int>     map;
+            Array<OneD,int>              sign;
+            StdRegions::EdgeOrientation  edgedir = v_GetEorient(edge);
+            
+            //    ASSERTL1(v_GetCoordim() == 2,"Routine only set up for two-dimensions");
+
+            v_GetEdgeToElementMap(edge,edgedir,map,sign);
+
+            if(edgedir == StdRegions::eForwards)
+            {
+                EdgeExp->IProductWRTBase(Fwd,EdgeExp->UpdateCoeffs());
+            }
+
+            else if(edgedir == StdRegions::eBackwards)
+            {
+                EdgeExp->IProductWRTBase(Bwd,EdgeExp->UpdateCoeffs());
             }
 
             // add data to outarray if forward edge normal is outwards
@@ -629,6 +662,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.cpp,v $
+ *    Revision 1.9  2009/04/28 09:58:17  sherwin
+ *    Updates to make HDG implementation consistent in 1D as to the 2D implementation
+ *
  *    Revision 1.8  2009/04/27 21:34:07  sherwin
  *    Updated WriteToField
  *

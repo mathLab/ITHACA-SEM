@@ -60,6 +60,12 @@ namespace Nektar
                                    StdRegions::StdExpansion1DSharedPtr &EdgeExp,
                                    const Array<OneD, const NekDouble> &Fn,  
                                         Array<OneD, NekDouble> &outarray);
+
+            void AddEdgeNormBoundaryBiInt(const int edge, 
+                                          StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+                                          const Array<OneD, const NekDouble> &Fwd,  
+                                          const Array<OneD, const NekDouble> &Bwd,  
+                                          Array<OneD, NekDouble> &outarray);
             
             void SetTraceToGeomOrientation(Array<OneD, StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                                            Array<OneD, NekDouble> &inout);
@@ -160,6 +166,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.h,v $
+ *    Revision 1.6  2009/04/02 13:04:36  sherwin
+ *    Modified Hybrid Matrix call to use matrix D M^{-1}D' formulation and removed operations based version
+ *
  *    Revision 1.5  2008/11/01 22:08:29  bnelson
  *    Fixed compiler warning
  *

@@ -592,6 +592,16 @@ namespace Nektar
                 
             }
 
+            virtual void v_AddEdgeNormBoundaryBiInt(const int edge, 
+                                                  StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+                                                  const Array<OneD, const NekDouble> &Fwd,  
+                                                  const Array<OneD, const NekDouble> &Bwd,  
+                                                  Array<OneD, NekDouble> &outarray)
+            {
+                Expansion2D::AddEdgeNormBoundaryBiInt(edge,EdgeExp,Fwd,Bwd,outarray);
+                
+            }
+
             virtual void v_AddEdgeNormBoundaryInt(const int edge, 
                                                   StdRegions::StdExpansion1DSharedPtr &EdgeExp,
                                                   const Array<OneD, const NekDouble> &Fn,  
@@ -685,6 +695,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.46  2009/07/03 15:34:52  sehunchun
+ *    Adding GetTanBasis function
+ *
  *    Revision 1.45  2009/04/27 21:34:07  sherwin
  *    Updated WriteToField
  *

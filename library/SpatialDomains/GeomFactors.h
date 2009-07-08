@@ -135,6 +135,11 @@ namespace Nektar
                 return m_tbasis2[k];
             }
 
+            inline const Array<OneD, const NekDouble> &GetSurfaceNormal(const int k) const
+            {
+                return m_SurfaceNormal[k];
+            }
+
             inline bool UseQuadratureMetrics() const
             {
                 return m_quadratureMetricsFlag;
@@ -194,8 +199,10 @@ namespace Nektar
             Array<TwoD,NekDouble> m_laplacianmetrics;
             Array<OneD,bool>      m_laplacianMetricIsZero;
 
-	    Array<OneD, Array<OneD,NekDouble> > m_tbasis1;
+            Array<OneD, Array<OneD,NekDouble> > m_tbasis1;
 	    Array<OneD, Array<OneD,NekDouble> > m_tbasis2;
+
+	    Array<OneD, Array<OneD,NekDouble> > m_SurfaceNormal;
 
             Array<OneD,LibUtilities::PointsKey> m_pointsKey;
             
@@ -214,6 +221,9 @@ namespace Nektar
 
             void SetUpTangentialbasis(const Array<OneD, Array<OneD,NekDouble> > d1_tbasis,
                                       const Array<OneD, Array<OneD,NekDouble> > d2_tbasis);
+
+            void SetUpSurfaceNormal(Array<OneD, Array<OneD,NekDouble> > d1_tbasis,
+                                    Array<OneD, Array<OneD,NekDouble> > d2_tbasis);
             
         };
     } //end of namespace
@@ -223,6 +233,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.27  2009/07/03 15:33:09  sehunchun
+// Introducing m_tanbasis for tangential basis of 2D manfiold
+//
 // Revision 1.26  2009/07/02 13:32:24  sehunchun
 // *** empty log message ***
 //

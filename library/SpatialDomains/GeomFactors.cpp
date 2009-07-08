@@ -295,7 +295,10 @@ namespace Nektar
 
             // Setting up two tangential basis vectors
             SetUpTangentialbasis(d1_tbasis, d2_tbasis);
-              
+
+            // Setting up two tangential basis vectors
+            SetUpSurfaceNormal(d1_tbasis,d2_tbasis);
+
             // Based upon these derivatives, calculate:
             // 1. The (determinant of the) jacobian and the differentation metrics
             SetUpJacGmat2D(d1_tbasis,d2_tbasis);
@@ -1017,6 +1020,50 @@ namespace Nektar
         // Post-process two tangential basis of 2D Manifold (differentiatino x_map in eta and xi directions )
         // to orthonormal vectors.
 
+        void GeomFactors::SetUpSurfaceNormal(Array<OneD, Array<OneD,NekDouble> > tbasis1,
+                                             Array<OneD, Array<OneD,NekDouble> > tbasis2)
+          {
+              int coordim = tbasis1.num_elements();
+              int nqtot = tbasis1[0].num_elements();
+  
+              Array<OneD, NekDouble> temp(nqtot,0.0);
+              Array<OneD, NekDouble> norm(nqtot,0.0);
+
+              // Initialization of tangential basis
+              m_SurfaceNormal = Array<OneD, Array<OneD, NekDouble> > (coordim);
+            
+              // Calculate local derivatives
+              for(int i = 0; i < coordim; ++i)
+              {
+                  m_SurfaceNormal[i] = Array<OneD,NekDouble>(nqtot);
+              }
+              
+            // Derive Geometric Normal vectors by cross product two tangential basis.
+              Vmath::Vmul(nqtot, tbasis1[2], 1, tbasis2[1], 1, temp, 1);
+              Vmath::Vvtvm(nqtot, tbasis1[1], 1, tbasis2[2], 1, temp, 1, m_SurfaceNormal[0], 1);
+              
+              Vmath::Vmul(nqtot, tbasis1[0], 1, tbasis2[2], 1, temp, 1);
+              Vmath::Vvtvm(nqtot, tbasis1[2], 1, tbasis2[0], 1, temp, 1, m_SurfaceNormal[1], 1);
+              
+              Vmath::Vmul(nqtot, tbasis1[1], 1, tbasis2[0], 1, temp, 1);
+              Vmath::Vvtvm(nqtot, tbasis1[0], 1, tbasis2[1], 1, temp, 1, m_SurfaceNormal[2], 1);
+              
+              // Normalization of Surface Normal
+              for (int i = 0; i < coordim; ++i)
+              {
+                  Vmath::Vvtvp(nqtot, m_SurfaceNormal[i], 1, m_SurfaceNormal[i], 1, norm, 1, norm, 1);
+              }
+              Vmath::Vsqrt(nqtot, norm, 1, norm, 1);
+              
+              for (int i = 0; i < coordim; ++i)
+              {
+                  Vmath::Vdiv(nqtot, m_SurfaceNormal[i], 1, norm, 1, m_SurfaceNormal[i], 1);
+              }
+          }
+
+        // Post-process two tangential basis of 2D Manifold (differentiatino x_map in eta and xi directions )
+        // to orthonormal vectors.
+
         void GeomFactors::SetUpTangentialbasis(const Array<OneD, Array<OneD,NekDouble> > d1_tbasis,
                                                const Array<OneD, Array<OneD,NekDouble> > d2_tbasis)
           {
@@ -1394,6 +1441,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.44  2009/07/03 15:33:09  sehunchun
+// Introducing m_tanbasis for tangential basis of 2D manfiold
+//
 // Revision 1.43  2009/06/15 01:59:21  claes
 // Gauss-Kronrod updates
 //

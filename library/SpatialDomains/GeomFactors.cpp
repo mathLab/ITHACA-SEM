@@ -293,15 +293,16 @@ namespace Nektar
                 }
             }
 
-            // Setting up two tangential basis vectors
-            SetUpTangentialbasis(d1_tbasis, d2_tbasis);
-
-            // Setting up two tangential basis vectors
-            SetUpSurfaceNormal(d1_tbasis,d2_tbasis);
+            // Setting up Surface Normal Vectors
+            if(coordim == 3)
+            {
+                SetUpSurfaceNormal(d1_tbasis,d2_tbasis);
+            }
 
             // Based upon these derivatives, calculate:
             // 1. The (determinant of the) jacobian and the differentation metrics
             SetUpJacGmat2D(d1_tbasis,d2_tbasis);
+
             // 2. the jacobian muliplied with the quadrature weights
             if(SetUpQuadratureMetrics)
             {
@@ -1027,7 +1028,6 @@ namespace Nektar
               int nqtot = tbasis1[0].num_elements();
   
               Array<OneD, NekDouble> temp(nqtot,0.0);
-              Array<OneD, NekDouble> norm(nqtot,0.0);
 
               // Initialization of tangential basis
               m_SurfaceNormal = Array<OneD, Array<OneD, NekDouble> > (coordim);
@@ -1048,95 +1048,19 @@ namespace Nektar
               Vmath::Vmul(nqtot, tbasis1[1], 1, tbasis2[0], 1, temp, 1);
               Vmath::Vvtvm(nqtot, tbasis1[0], 1, tbasis2[1], 1, temp, 1, m_SurfaceNormal[2], 1);
               
+              temp = Array<OneD, NekDouble>(nqtot,0.0);
               // Normalization of Surface Normal
               for (int i = 0; i < coordim; ++i)
               {
-                  Vmath::Vvtvp(nqtot, m_SurfaceNormal[i], 1, m_SurfaceNormal[i], 1, norm, 1, norm, 1);
+                  Vmath::Vvtvp(nqtot, m_SurfaceNormal[i], 1, m_SurfaceNormal[i], 1, temp, 1, temp, 1);
               }
-              Vmath::Vsqrt(nqtot, norm, 1, norm, 1);
+              Vmath::Vsqrt(nqtot, temp, 1, temp, 1);
               
               for (int i = 0; i < coordim; ++i)
               {
-                  Vmath::Vdiv(nqtot, m_SurfaceNormal[i], 1, norm, 1, m_SurfaceNormal[i], 1);
+                  Vmath::Vdiv(nqtot, m_SurfaceNormal[i], 1, temp, 1, m_SurfaceNormal[i], 1);
               }
           }
-
-        // Post-process two tangential basis of 2D Manifold (differentiatino x_map in eta and xi directions )
-        // to orthonormal vectors.
-
-        void GeomFactors::SetUpTangentialbasis(const Array<OneD, Array<OneD,NekDouble> > d1_tbasis,
-                                               const Array<OneD, Array<OneD,NekDouble> > d2_tbasis)
-          {
-              int coordim = d1_tbasis.num_elements();
-              int nqtot = d1_tbasis[0].num_elements();
-              //   m_coordim = coordim;
-
-              // Initialization of tangential basis
-	    m_tbasis1 = Array<OneD, Array<OneD, NekDouble> > (coordim);
-	    m_tbasis2 = Array<OneD, Array<OneD, NekDouble> > (coordim);
-            
-            // Calculate local derivatives
-            for(int i = 0; i < coordim; ++i)
-            {
-		m_tbasis1[i] = Array<OneD,NekDouble>(nqtot);
-		m_tbasis2[i] = Array<OneD,NekDouble>(nqtot);
-            }
-
-	    // Assign them as global variables
-	    for(int i = 0; i < coordim; ++i)
-	      {
-		Vmath::Vcopy(nqtot, &d1_tbasis[i][0], 1, &m_tbasis1[i][0], 1);
-		Vmath::Vcopy(nqtot, &d2_tbasis[i][0], 1, &m_tbasis2[i][0], 1);
-	      }
-
-             // Normalization of each tangent vector
-            Array<OneD, NekDouble> norm1(nqtot,0.0);
-            Array<OneD, NekDouble> norm2(nqtot,0.0);
-            Array<OneD, NekDouble> inner12(nqtot, 0.0);
-
-            for (int i = 0; i < coordim; ++i)
-            {
-                 Vmath::Vvtvp(nqtot, m_tbasis1[i], 1, m_tbasis1[i], 1, norm1, 1, norm1, 1);
-                 Vmath::Vvtvp(nqtot, m_tbasis2[i], 1, m_tbasis2[i], 1, norm2, 1, norm2, 1);
-            }
-            Vmath::Vsqrt(nqtot, norm1, 1, norm1, 1);
-            Vmath::Vsqrt(nqtot, norm2, 1, norm2, 1);
-
-            for (int i = 0; i < coordim; ++i)
-            {
-                Vmath::Vdiv(nqtot, m_tbasis1[i], 1, norm1, 1, m_tbasis1[i], 1);
-                Vmath::Vdiv(nqtot, m_tbasis2[i], 1, norm2, 1, m_tbasis2[i], 1);
-            }
-
-            // Gram-Schmitz orthogonalization of two tangent vectors
-            norm1 = Array<OneD, NekDouble>(nqtot, 0.0);
-            norm2 = Array<OneD, NekDouble>(nqtot, 0.0);
-            for (int i = 0; i < coordim; ++i)
-             {
-                     Vmath::Vvtvp(nqtot, m_tbasis1[i], 1, m_tbasis2[i], 1, inner12, 1, inner12, 1);
-                     Vmath::Vvtvp(nqtot, m_tbasis2[i], 1, m_tbasis2[i], 1, norm2, 1, norm2, 1);
-             }
-             Vmath::Vdiv(nqtot, inner12, 1, norm2, 1, inner12, 1);
-             Vmath::Neg(nqtot, inner12, 1);
-
-             for (int i = 0; i < coordim; ++i)
-              {
-                  Vmath::Vvtvp(nqtot, inner12, 1, m_tbasis1[i], 1, m_tbasis2[i], 1, m_tbasis2[i], 1);
-              }
-
-              norm2 = Array<OneD, NekDouble>(nqtot, 0.0);
-             for (int i = 0; i < coordim; ++i)
-              {
-                     Vmath::Vvtvp(nqtot, m_tbasis2[i], 1, m_tbasis2[i], 1, norm2, 1, norm2, 1);
-              }
-              Vmath::Vsqrt(nqtot, norm2, 1, norm2, 1);
-
-             for (int i = 0; i < coordim; ++i)
-              {
-                     Vmath::Vdiv(nqtot, m_tbasis2[i], 1, norm2, 1, m_tbasis2[i], 1);
-              }
-          }
-
 
         // Generate Normal vectors at all quadature points specified
         // to the pointsKey "to_key" according to anticlockwise
@@ -1441,6 +1365,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.45  2009/07/08 11:15:51  sehunchun
+// Adding Setup function fo Surface Normal and GetSurfaceNormal to obtain Surface Normal vector for a given 2D manifold
+//
 // Revision 1.44  2009/07/03 15:33:09  sehunchun
 // Introducing m_tanbasis for tangential basis of 2D manfiold
 //

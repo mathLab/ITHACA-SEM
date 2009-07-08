@@ -125,16 +125,6 @@ namespace Nektar
                 return m_coordim;
             }
 
-            inline const Array<OneD, const NekDouble> &GetTanBasis1(const int k) const
-            {
-                return m_tbasis1[k];
-            }
-
-            inline const Array<OneD, const NekDouble> &GetTanBasis2(const int k) const
-            {
-                return m_tbasis2[k];
-            }
-
             inline const Array<OneD, const NekDouble> &GetSurfaceNormal(const int k) const
             {
                 return m_SurfaceNormal[k];
@@ -199,9 +189,6 @@ namespace Nektar
             Array<TwoD,NekDouble> m_laplacianmetrics;
             Array<OneD,bool>      m_laplacianMetricIsZero;
 
-            Array<OneD, Array<OneD,NekDouble> > m_tbasis1;
-	    Array<OneD, Array<OneD,NekDouble> > m_tbasis2;
-
 	    Array<OneD, Array<OneD,NekDouble> > m_SurfaceNormal;
 
             Array<OneD,LibUtilities::PointsKey> m_pointsKey;
@@ -219,9 +206,6 @@ namespace Nektar
             void SetUpQuadratureMetrics2D(StdRegions::ExpansionType shape,
                                           const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
 
-            void SetUpTangentialbasis(const Array<OneD, Array<OneD,NekDouble> > d1_tbasis,
-                                      const Array<OneD, Array<OneD,NekDouble> > d2_tbasis);
-
             void SetUpSurfaceNormal(Array<OneD, Array<OneD,NekDouble> > d1_tbasis,
                                     Array<OneD, Array<OneD,NekDouble> > d2_tbasis);
             
@@ -233,6 +217,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.28  2009/07/08 11:15:51  sehunchun
+// Adding Setup function fo Surface Normal and GetSurfaceNormal to obtain Surface Normal vector for a given 2D manifold
+//
 // Revision 1.27  2009/07/03 15:33:09  sehunchun
 // Introducing m_tanbasis for tangential basis of 2D manfiold
 //

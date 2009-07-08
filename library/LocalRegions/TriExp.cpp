@@ -52,8 +52,10 @@ namespace Nektar
         {         
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,StdRegions::eNoExpansionType,*this), boost::bind(&TriExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i, StdRegions::eNoExpansionType,*this), boost::bind(&TriExp::CreateStaticCondMatrix, this, _1));
+                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,StdRegions::eNoExpansionType,*this), 
+                                                boost::bind(&TriExp::CreateMatrix, this, _1));
+                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i, StdRegions::eNoExpansionType,*this), 
+                                                          boost::bind(&TriExp::CreateStaticCondMatrix, this, _1));
             }            
             GenMetricInfo();
         }
@@ -61,7 +63,8 @@ namespace Nektar
         TriExp::TriExp(const LibUtilities::BasisKey &Ba,
                        const LibUtilities::BasisKey &Bb):
             StdRegions::StdTriExp(Ba,Bb), m_geom(),
-            m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()), m_matrixManager(std::string("TriExpMatrix")), m_staticCondMatrixManager(std::string("TriExpStaticCondMatrix"))
+            m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()), 
+            m_matrixManager(std::string("TriExpMatrix")), m_staticCondMatrixManager(std::string("TriExpStaticCondMatrix"))
         {
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
@@ -980,6 +983,13 @@ namespace Nektar
                 outarray[ mapArray[i] ] = result[i];
             }
         }
+
+        void TriExp::GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal, const int k)
+	{
+            int m_num = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
+            
+            Vmath::Vcopy(m_num, m_metricinfo->GetSurfaceNormal(k), 1, SurfaceNormal, 1);
+      	}
         
         void TriExp::GetTanBasis(Array<OneD,NekDouble> &tbasis1,
                                  Array<OneD,NekDouble> &tbasis2,
@@ -1792,6 +1802,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.54  2009/07/03 15:34:52  sehunchun
+ *    Adding GetTanBasis function
+ *
  *    Revision 1.53  2009/06/18 11:47:24  claes
  *    changes supporting the static use of Kronrod points
  *

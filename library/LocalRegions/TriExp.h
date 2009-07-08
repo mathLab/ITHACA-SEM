@@ -80,6 +80,9 @@ namespace Nektar
             void GetCoord(const Array<OneD, const NekDouble>& Lcoords, 
                           Array<OneD,NekDouble> &coords);
 
+            void GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal,
+                                  const int k);
+
             void GetTanBasis(Array<OneD,NekDouble> &tbasis1,
 			     Array<OneD,NekDouble> &tbasis2,
 			     const int k);
@@ -384,7 +387,8 @@ namespace Nektar
                 return GetEdgeNumPoints(i);
             }
 
-            virtual void v_GetEdgeToElementMap(const int eid, const StdRegions::EdgeOrientation edgeOrient, Array<OneD, unsigned int> &maparray, Array<OneD, int> &signarray)
+            virtual void v_GetEdgeToElementMap(const int eid, const StdRegions::EdgeOrientation edgeOrient, 
+                                               Array<OneD, unsigned int> &maparray, Array<OneD, int> &signarray)
             {
                 StdTriExp::GetEdgeToElementMap(eid,edgeOrient,maparray,signarray);
             }
@@ -417,6 +421,12 @@ namespace Nektar
                                     Array<OneD, NekDouble> &coord)
             {
                 GetCoord(lcoord, coord);
+            }
+
+            virtual void v_GetSurfaceNormal(Array<OneD, NekDouble> &SurfaceNormal,
+                                            const int k)
+            {
+                GetSurfaceNormal(SurfaceNormal, k);
             }
 
             virtual void v_GetTanBasis(Array<OneD, NekDouble> &tbasis1,
@@ -695,6 +705,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.47  2009/07/07 16:31:47  sehunchun
+ *    Adding AddEdgeBoundaryBiInt to line integrate depending on Fwd and Bwd
+ *
  *    Revision 1.46  2009/07/03 15:34:52  sehunchun
  *    Adding GetTanBasis function
  *

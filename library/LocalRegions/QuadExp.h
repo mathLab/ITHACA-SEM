@@ -92,6 +92,9 @@ namespace Nektar
             void GetCoord(const Array<OneD, const NekDouble>& Lcoords, 
                           Array<OneD,NekDouble> &coords);
 
+            void GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal,
+                                  const int k);
+
             void GetTanBasis(Array<OneD,NekDouble> &tbasis1,
 			     Array<OneD,NekDouble> &tbasis2,
 			     const int k);
@@ -434,11 +437,17 @@ namespace Nektar
                 GetCoord(lcoord, coord);
             }
 
+            virtual void v_GetSurfaceNormal(Array<OneD, NekDouble> &SurfaceNormal,
+                                            const int k)
+            {
+                GetSurfaceNormal(SurfaceNormal, k);
+            }
+
             virtual void v_GetTanBasis(Array<OneD, NekDouble> &tbasis1,
                                        Array<OneD, NekDouble> &tbasis2,
 				       const int k)
             {
-	      GetTanBasis(tbasis1, tbasis2, k);
+                GetTanBasis(tbasis1, tbasis2, k);
             }
 
             virtual  int v_GetCoordim()
@@ -720,6 +729,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.52  2009/07/07 16:31:47  sehunchun
+ *    Adding AddEdgeBoundaryBiInt to line integrate depending on Fwd and Bwd
+ *
  *    Revision 1.51  2009/07/03 15:34:52  sehunchun
  *    Adding GetTanBasis function
  *

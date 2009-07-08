@@ -937,6 +937,14 @@ namespace Nektar
 
         }        
 
+        void QuadExp::GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal,
+                                       const int k)
+	{
+            int m_num = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
+            
+            Vmath::Vcopy(m_num, m_metricinfo->GetSurfaceNormal(k), 1, SurfaceNormal, 1);
+      	}
+
         void QuadExp::GetTanBasis(Array<OneD,NekDouble> &tbasis1,
                                  Array<OneD,NekDouble> &tbasis2,
                                  const int k)
@@ -1818,6 +1826,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.62  2009/07/03 15:34:52  sehunchun
+ *    Adding GetTanBasis function
+ *
  *    Revision 1.61  2009/05/15 14:38:41  pvos
  *    Changed check for regular quads so that it also includes parallellograms
  *

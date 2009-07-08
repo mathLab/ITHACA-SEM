@@ -945,17 +945,6 @@ namespace Nektar
             Vmath::Vcopy(m_num, m_metricinfo->GetSurfaceNormal(k), 1, SurfaceNormal, 1);
       	}
 
-        void QuadExp::GetTanBasis(Array<OneD,NekDouble> &tbasis1,
-                                 Array<OneD,NekDouble> &tbasis2,
-                                 const int k)
-	{
-            int m_num = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
-            
-            Vmath::Vcopy(m_num, m_metricinfo->GetTanBasis1(k), 1, tbasis1, 1);
-            Vmath::Vcopy(m_num, m_metricinfo->GetTanBasis2(k), 1, tbasis2, 1);
-      	}
-
-
         void QuadExp::GetCoords(Array<OneD,NekDouble> &coords_0,
                                 Array<OneD,NekDouble> &coords_1,
                                 Array<OneD,NekDouble> &coords_2)
@@ -1826,6 +1815,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.63  2009/07/08 11:11:24  sehunchun
+ *    Adding GetSurfaceNormal Function
+ *
  *    Revision 1.62  2009/07/03 15:34:52  sehunchun
  *    Adding GetTanBasis function
  *

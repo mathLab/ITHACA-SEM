@@ -425,19 +425,6 @@ namespace Nektar
              */
 
             void  GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal,const int k);
-            /**
-             * \brief This function calculates two tangential basis of a smooth manifold.
-             *
-             * The operation is evaluated locally by the elemental
-             * function StdRegions#StdExpansion#GetTangentBasis.
-             *
-             * \param tanbasis_1 : tangential basis 1, \param tanbasis_2 : tangential basis 2.
-             *  Normally tanbasis_1 /cdot tanbasis_2 = 0
-             */
-
-            void  GetTanBasis(Array<OneD,NekDouble> &tbasis1,
-                             Array<OneD,NekDouble> &tbasis2,
-                             const int k);
             
             /**
              * \brief This function writes the spectral/hp element
@@ -1282,6 +1269,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.66  2009/07/08 11:13:54  sehunchun
+* Adding GetSurfaceNormal function
+*
 * Revision 1.65  2009/07/07 16:36:45  sehunchun
 * Adding AddTraceBiIntegral...
 *

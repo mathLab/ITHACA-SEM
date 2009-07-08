@@ -83,10 +83,6 @@ namespace Nektar
             void GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal,
                                   const int k);
 
-            void GetTanBasis(Array<OneD,NekDouble> &tbasis1,
-			     Array<OneD,NekDouble> &tbasis2,
-			     const int k);
-
             const SpatialDomains::GeometrySharedPtr GetGeom() const
             {
                 return m_geom;
@@ -429,13 +425,6 @@ namespace Nektar
                 GetSurfaceNormal(SurfaceNormal, k);
             }
 
-            virtual void v_GetTanBasis(Array<OneD, NekDouble> &tbasis1,
-                                       Array<OneD, NekDouble> &tbasis2,
-				       const int k)
-            {
-	      GetTanBasis(tbasis1, tbasis2, k);
-            }
-
             virtual int v_GetCoordim()
             {
                 return m_geom->GetCoordim();
@@ -705,6 +694,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.48  2009/07/08 11:11:24  sehunchun
+ *    Adding GetSurfaceNormal Function
+ *
  *    Revision 1.47  2009/07/07 16:31:47  sehunchun
  *    Adding AddEdgeBoundaryBiInt to line integrate depending on Fwd and Bwd
  *

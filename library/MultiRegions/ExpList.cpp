@@ -1086,22 +1086,6 @@ namespace Nektar
                 cnt += (*m_exp)[i]->GetTotPoints();
             }
         }
-    
-        void ExpList::GetTanBasis(Array<OneD, NekDouble> &tbasis1,
-                                  Array<OneD, NekDouble> &tbasis2,
-                                  const int k)
-        {
-            int i, cnt=0;
-            Array<OneD, NekDouble> e_dt1, e_dt2;
-            
-            for(i = 0; i < GetExpSize(); ++i)
-            {
-                e_dt1 = tbasis1 + cnt;
-                e_dt2 = tbasis2 + cnt;
-                (*m_exp)[i]->GetTanBasis(e_dt1, e_dt2, k);
-                cnt += (*m_exp)[i]->GetTotPoints();
-            }
-        }
 
         void ExpList::WriteToFile(std::ofstream &out, OutputFormat format, std::string var)
         {  

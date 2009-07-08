@@ -376,6 +376,7 @@ namespace Nektar
             }
         }
 
+
         void TetExp::GetCoords(Array<OneD,NekDouble> &coords_0,
                                Array<OneD,NekDouble> &coords_1,
                                Array<OneD,NekDouble> &coords_2)
@@ -807,6 +808,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.cpp,v $
+ *    Revision 1.19  2009/04/27 21:34:07  sherwin
+ *    Updated WriteToField
+ *
  *    Revision 1.18  2009/01/21 16:59:57  pvos
  *    Added additional geometric factors to improve efficiency
  *

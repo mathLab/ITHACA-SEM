@@ -415,6 +415,16 @@ namespace Nektar
             void   GetCoords(Array<OneD, NekDouble> &coord_0,
                              Array<OneD, NekDouble> &coord_1 = NullNekDouble1DArray,
                              Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
+
+            /**
+             * \brief This function calculates Surface Normal vector of a smooth manifold.
+             *
+             * The operation is evaluated locally by the elemental
+             * function StdRegions#StdExpansion#GetSurfaceNormal.
+             *
+             */
+
+            void  GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal,const int k);
             /**
              * \brief This function calculates two tangential basis of a smooth manifold.
              *
@@ -425,9 +435,9 @@ namespace Nektar
              *  Normally tanbasis_1 /cdot tanbasis_2 = 0
              */
 
-                void GetTanBasis(Array<OneD,NekDouble> &tbasis1,
-                                 Array<OneD,NekDouble> &tbasis2,
-                                 const int k);
+            void  GetTanBasis(Array<OneD,NekDouble> &tbasis1,
+                             Array<OneD,NekDouble> &tbasis2,
+                             const int k);
             
             /**
              * \brief This function writes the spectral/hp element
@@ -1272,6 +1282,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.65  2009/07/07 16:36:45  sehunchun
+* Adding AddTraceBiIntegral...
+*
 * Revision 1.64  2009/07/03 15:38:25  sehunchun
 * Adding GetTanBasis function
 *

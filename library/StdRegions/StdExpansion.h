@@ -740,6 +740,17 @@ namespace Nektar
             {
                 v_GetCoord(Lcoord, coord);
             }
+
+            /** \brief this function returns surface normal vector of a manifold
+             *
+             *  This function is a wrapper around the virtual function 
+             *  \a v_GetSurfaceNormal()
+             */
+            void GetSurfaceNormal(Array<OneD, NekDouble> &SurfaceNormal,
+                                  const int k)
+            {
+                v_GetSurfaceNormal(SurfaceNormal, k);
+            }
             
             /** \brief this function returns two tangential basis of a manifold
              *
@@ -1560,6 +1571,12 @@ namespace Nektar
                 return -1;
             }
 
+            virtual void v_GetSurfaceNormal(Array<OneD, NekDouble> &SurfaceNormal,
+                                            const int k)
+            {
+                NEKERROR(ErrorUtil::efatal, "GetSurfaceNormal Error");
+            }
+
             virtual void v_GetTanBasis(Array<OneD, NekDouble> &tbasis1,
                                        Array<OneD, NekDouble> &tbasis2,
 				       const int k)
@@ -1779,6 +1796,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.115  2009/07/07 16:33:14  sehunchun
+ * Adding AddEdgeNormBoundaryBiInt
+ *
  * Revision 1.114  2009/07/03 15:37:12  sehunchun
  * Adding GetTanBasis function
  *

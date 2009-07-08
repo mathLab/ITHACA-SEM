@@ -1073,6 +1073,19 @@ namespace Nektar
                 break;
             }
         }
+
+        void ExpList::GetSurfaceNormal(Array<OneD, NekDouble> &SurfaceNormal, const int k)
+        {
+            int i, cnt=0;
+            Array<OneD, NekDouble> e_SN;
+            
+            for(i = 0; i < GetExpSize(); ++i)
+            {
+                e_SN = SurfaceNormal + cnt;
+                (*m_exp)[i]->GetSurfaceNormal(e_SN, k);
+                cnt += (*m_exp)[i]->GetTotPoints();
+            }
+        }
     
         void ExpList::GetTanBasis(Array<OneD, NekDouble> &tbasis1,
                                   Array<OneD, NekDouble> &tbasis2,

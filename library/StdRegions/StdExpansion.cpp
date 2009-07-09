@@ -537,12 +537,10 @@ namespace Nektar
 
             v_BwdTrans(inarray,tmp);       
 
-            /*
 	    if(mkey.GetNvariableCoefficients() > 0)
 	      {
 	         Vmath::Vmul(nq, mkey.GetVariableCoefficient(), 1, tmp, 1, tmp, 1);
 	      }
-            */
      
             v_IProductWRTBase(tmp, outarray);
         }
@@ -759,6 +757,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.83  2009/07/02 13:27:51  sehunchun
+* Unnecessary error message for 2D restriction is deleted
+*
 * Revision 1.82  2009/04/27 09:20:21  pvos
 * Fixed small bug
 *

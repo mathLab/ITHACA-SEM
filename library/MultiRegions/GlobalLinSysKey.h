@@ -51,6 +51,11 @@ namespace Nektar
                             const GlobalSysSolnType solnType = eDirectStaticCond);
 
             GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+                            const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                            const LocalToGlobalBaseMapSharedPtr &locToGloMap = NullLocalToGlobalBaseMapSharedPtr,
+                            const GlobalSysSolnType solnType = eDirectStaticCond);
+
+            GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                             const NekDouble factor,
                             const GlobalSysSolnType solnType = eDirectStaticCond);
@@ -149,6 +154,9 @@ namespace Nektar
 
 /**
 * $Log: GlobalLinSysKey.h,v $
+* Revision 1.9  2009/03/23 10:51:52  pvos
+* Added BlockMatrix support
+*
 * Revision 1.8  2009/02/09 16:12:08  sherwin
 * .
 *

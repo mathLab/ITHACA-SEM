@@ -50,6 +50,15 @@ namespace Nektar
         }
         
         GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+                                         const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                                         const LocalToGlobalBaseMapSharedPtr &locToGloMap, 
+                                         const GlobalSysSolnType solnType):
+            m_solnType(solnType),
+            m_globMatKey(MemoryManager<GlobalMatrixKey>::AllocateSharedPtr(matrixType,varcoeffs,locToGloMap))
+        {
+        } 
+
+        GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                                          const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                                          const NekDouble factor,
                                          const GlobalSysSolnType solnType):
@@ -137,6 +146,9 @@ namespace Nektar
 
 /**
 * $Log: GlobalLinSysKey.cpp,v $
+* Revision 1.7  2009/03/23 10:51:52  pvos
+* Added BlockMatrix support
+*
 * Revision 1.6  2009/02/08 09:10:15  sherwin
 * Added member of LocalToGlobalBaseMap so that we can discern matrices of different boundary condition type
 *

@@ -161,11 +161,11 @@ namespace Nektar
 			   Array<OneD, Array<OneD, NekDouble> > &numfluxY);
 			   
 	void NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield, 
-						   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
+			    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
 						   
 	void NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield,
-	                       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-						   Array<OneD, Array<OneD, NekDouble> >  &qflux);
+			    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+			    Array<OneD, Array<OneD, NekDouble> >  &qflux);
 						   
 	void WeakPenaltyBoundary(const Array<OneD, const NekDouble> &Fwd, 
 				 Array<OneD, NekDouble> &penaltyflux,
@@ -271,6 +271,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.h,v $
+* Revision 1.10  2009/06/11 01:54:08  claes
+* Added Inviscid Burger
+*
 * Revision 1.9  2009/04/29 20:45:09  sherwin
 * Update for new eNum definition of EQTYPE
 *

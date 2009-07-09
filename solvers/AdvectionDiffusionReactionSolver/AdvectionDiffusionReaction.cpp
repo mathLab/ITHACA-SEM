@@ -849,7 +849,7 @@ namespace Nektar
 	m_fields[i]->GetFwdBwdTracePhys(ufield[i],Fwd,Bwd);
 	
 	//  uflux[i] = minmod (u+, u-)   
-	m_fields[i]->GetTrace()->Upwind(Vn,Fwd,Bwd,fluxtemp,1);  
+	m_fields[i]->GetTrace()->Upwind(Vn,Fwd,Bwd,fluxtemp);  
 	
 	// Imposing weak boundary condition with flux
 	m_fields[i]->ExtractTracePhys(ufield[i],Fwd);
@@ -904,7 +904,7 @@ namespace Nektar
 	    m_fields[i]->GetFwdBwdTracePhys(qfield[i][j],qFwd,qBwd);
 	    
 	    //  qfluxtemp = maxmod(q-,q+)
-	    m_fields[i]->GetTrace()->Upwind(Vn,qFwd,qBwd,qfluxtemp,-1);
+	    m_fields[i]->GetTrace()->Upwind(Vn,qBwd,qFwd,qfluxtemp);
 	    
 	    //   uterm = - C11 ( u+ - u- )
 	    m_fields[i]->GetFwdBwdTracePhys(ufield[i],Fwd,Bwd);
@@ -1104,6 +1104,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.19  2009/07/01 21:51:58  sehunchun
+* Modification of ExDiffusion Solver and tabbing
+*
 * Revision 1.18  2009/06/11 02:20:43  claes
 * *** empty log message ***
 *

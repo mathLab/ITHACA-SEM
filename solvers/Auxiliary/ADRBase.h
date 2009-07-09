@@ -66,21 +66,21 @@ namespace Nektar
          **/
         ADRBase(string &fileStringName,
                 bool UseInputFileForProjectionType = false, 
-                bool UseContinuousField = false,
-                bool ReadBoundaryConditions = true);
+                bool UseContinuousField = false);
 
         void SetADRBase(SpatialDomains::MeshGraphSharedPtr &graph,
                         int nvariables);
                 
-        void SetInitialConditions(const int eqntype = 1, 
-                                  bool ReadInitialConditions = true, NekDouble initialtime = 0.0);
+        void SetInitialConditions(const int eqntype = 1, NekDouble initialtime = 0.0);
 
         void SetPhysForcingFunctions(Array<OneD, MultiRegions::ExpListSharedPtr> &force);
             
         void EvaluateExactSolution(int field, Array<OneD, NekDouble > &outfield, 
-                                   const NekDouble time, const int eqntype = 0, bool ReadInitialConditions = true);
+                                   const NekDouble time, const int eqntype = 0);
 
-        NekDouble AdvectionSphere(const NekDouble x0j, const NekDouble x1j,
+        void SetUpSurfaceNormal();
+
+	NekDouble AdvectionSphere(const NekDouble x0j, const NekDouble x1j,
                                   const NekDouble x2j, const NekDouble time);
 
         NekDouble Morphogenesis(const int field, const NekDouble x0j, const NekDouble x1j, 
@@ -107,13 +107,18 @@ namespace Nektar
 			     bool NumericalFluxIncludesNormal = true, 
 			     bool InFieldIsInPhysSpace = false, int nvariables = 0); 
 				 
-        void WeakDGDiffusion(const Array<OneD, Array<OneD, NekDouble> >& InField, 
+        void WeakDGDiffusion3D(const Array<OneD, Array<OneD, NekDouble> >& InField, 
                              Array<OneD, Array<OneD, NekDouble> >& OutField,
                              bool NumericalFluxIncludesNormal = true, 
-                             bool InFieldIsInPhysSpace = false, int nvariables = 0);
+                             bool InFieldIsInPhysSpace = false);
 
-        NekDouble L2Error(int field, const int eqntype = 0, const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray, 
-                           bool ReadInitialConditions = true);
+        void WeakDGDiffusion(const Array<OneD, Array<OneD, NekDouble> >& InField, 
+			     Array<OneD, Array<OneD, NekDouble> >& OutField,
+			     bool NumericalFluxIncludesNormal = true, 
+			     bool InFieldIsInPhysSpace = false);
+
+        NekDouble L2Error(int field, const int eqntype = 0, 
+			  const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
 	
         void Output     (void);
 	
@@ -121,7 +126,8 @@ namespace Nektar
 
         void WriteFld(std::ofstream &outfile);
         
-	void Array_Output(const int n, std::string name, const Array<OneD, const NekDouble>&inarray, bool IsInPhysicalSpace);
+	void Array_Output(const int n, std::string name, 
+			  const Array<OneD, const NekDouble>&inarray, bool IsInPhysicalSpace);
 	
 	void Summary          (std::ostream &out);
 	void SessionSummary   (std::ostream &out);
@@ -232,19 +238,32 @@ namespace Nektar
         {
             v_NumericalFlux(physfield, numfluxX, numfluxY);
         }
-	
-	void NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield, 
-                            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
+
+	void NumFluxforScalar(Array<OneD, Array<OneD, NekDouble> > &ufield, 
+                              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
         {
-            v_NumFluxforDiff(ufield, uflux);
+            v_NumFluxforScalar(ufield, uflux);
         }
+	
+	void NumFluxforVector(Array<OneD, Array<OneD, NekDouble> > &ufield,
+			      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+			      Array<OneD, Array<OneD, NekDouble> >  &qflux)
+        {
+	  v_NumFluxforVector(ufield,qfield, qflux);
+        }
+
+	void NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield, 
+			    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
+	{
+	  v_NumFluxforDiff(ufield, uflux);
+	}
 	
 	void NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield,
-                            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-                            Array<OneD, Array<OneD, NekDouble> >  &qflux)
-        {
-            v_NumFluxforDiff(ufield,qfield, qflux);
-        }
+			    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+			    Array<OneD, Array<OneD, NekDouble> >  &qflux)
+	{
+	  v_NumFluxforDiff(ufield,qfield, qflux);
+	}
         
     protected:
         Array<OneD, MultiRegions::ExpListSharedPtr> m_fields; ///< Array holding all dependent variables
@@ -260,7 +279,12 @@ namespace Nektar
 
         enum ProjectionType m_projectionType; ///< Type of projection, i.e. Galerkin or DG 
 
-        Array<OneD, Array<OneD, NekDouble> > m_traceNormals; ///< Array holding the forward normals 
+        Array<OneD, Array<OneD, NekDouble> > m_traceNormals; ///< Array holding the forward normals
+	Array<OneD, Array<OneD, NekDouble> > m_traceNormals_tbasis; // forward normals in tangential basis
+
+        Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_curvature; // 1 by nvariable by nq
+        Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis; // 2 by m_spacedim by nq 
+        Array<OneD, Array<OneD, NekDouble> > m_SurfaceNormal; // m_spacedim by nq 
 	
         int NoCaseStringCompare(const string & s1, const string& s2) ;
 
@@ -304,18 +328,32 @@ namespace Nektar
             ASSERTL0(false,"v_NumericalFlux: This function is not valid for the Base class");
         }
 	
-	virtual void v_NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield, 
-                                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
+	virtual void v_NumFluxforScalar(Array<OneD, Array<OneD, NekDouble> > &ufield, 
+                                        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
         {
-            ASSERTL0(false,"v_NumFluxforDiffu: This function is not valid for the Base class");
+	  ASSERTL0(false,"v_NumFluxforScalar: This function is not valid for the Base class");
         }
-        
-        virtual void v_NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield,
-                                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-                                      Array<OneD, Array<OneD, NekDouble > >  &qflux)
+       
+        virtual void v_NumFluxforVector(Array<OneD, Array<OneD, NekDouble> > &ufield,
+					Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+					Array<OneD, Array<OneD, NekDouble > >  &qflux)
         {
-            ASSERTL0(false,"v_NumFluxforDiffq: This function is not valid for the Base class");
+	  ASSERTL0(false,"v_NumFluxforVector: This function is not valid for the Base class");
         }    
+
+	virtual void v_NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield, 
+						   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
+        {
+	  ASSERTL0(false,"v_NumFluxforDiffu: This function is not valid for the Base class");
+        }
+
+	 virtual void v_NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield,
+	                       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+						   Array<OneD, Array<OneD, NekDouble > >  &qflux)
+        {
+	  ASSERTL0(false,"v_NumFluxforDiffq: This function is not valid for the Base class");
+        }
+
     };
     
     typedef boost::shared_ptr<ADRBase> ADRBaseSharedPtr;
@@ -326,6 +364,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.8  2009/07/02 15:57:36  sehunchun
+* "ReadBoundaryCondition" options with extenstion to 2D geometry imbedded in 3D
+*
 * Revision 1.7  2009/04/29 20:45:55  sherwin
 * Update for new definition of enum
 *

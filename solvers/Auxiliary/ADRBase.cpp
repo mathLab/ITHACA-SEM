@@ -39,6 +39,8 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cmath>
+
 
 #include <string>
 
@@ -56,7 +58,7 @@ namespace Nektar
      * Constructor. Creates ... of #DisContField2D fields
      */
     ADRBase::ADRBase(string &fileNameString, bool UseInputFileForProjectionType,
-                     bool UseContinuousField, bool ReadBoundaryConditions)
+                     bool UseContinuousField)
     {
         SpatialDomains::MeshGraph graph; 
 
@@ -66,7 +68,7 @@ namespace Nektar
         // Also read and store the boundary conditions
 	SpatialDomains::MeshGraph *meshptr = m_graph.get();
         m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>::AllocateSharedPtr(meshptr);
-        m_boundaryConditions->Read(fileNameString); // To be Fixed
+        m_boundaryConditions->Read(fileNameString); 
         
         // set space dimension for use in class
         m_spacedim = m_graph->GetSpaceDimension();
@@ -278,6 +280,203 @@ namespace Nektar
     }
   }
 
+
+    void ADRBase::SetUpSurfaceNormal()
+     {
+         int i, j, k, nvariables = m_fields.num_elements();
+         int nq = m_fields[0]->GetNpoints();
+         int Tracenq = m_fields[0]->GetTrace()->GetNpoints();
+         NekDouble temp, CheckTB1=0.0, CheckTB2=0.0, TB1length=0.0;
+         NekDouble TB2length=0.0, TBangle=0.0, Bflag,Tol = 0.000000001;
+         bool CheckingTangentialBasis = true;
+
+         Array<OneD, NekDouble> deriv, derivtemp0, derivtemp1, Tracetemp;
+
+         Array<OneD,NekDouble> x0(nq);
+         Array<OneD,NekDouble> x1(nq);
+         Array<OneD,NekDouble> x2(nq);
+
+          Array<OneD, NekDouble> norm1(nq, 0.0);
+          Array<OneD, NekDouble> norm2(nq, 0.0);
+          Array<OneD, NekDouble> inner12(nq, 0.0);
+
+         // Set up a principle direction for the first tangential basis
+         Array<OneD, Array<OneD, NekDouble> > Principaldirection(m_spacedim);
+
+         Array<OneD, NekDouble> m_Pdir(3);
+         
+         m_Pdir[0]  = 1.0;
+         m_Pdir[1]  = 0.0;
+         m_Pdir[2]  = 0.0;
+
+         for (k = 0; k < nq; ++k)
+         {
+             Principaldirection[0] = Array<OneD, NekDouble>(nq, m_Pdir[0]);
+             Principaldirection[1] = Array<OneD, NekDouble>(nq, m_Pdir[1]);
+             Principaldirection[2] = Array<OneD, NekDouble>(nq, m_Pdir[2]);
+         }
+
+	 // Trace Normal vectors on the plane of tangential basis
+	 m_traceNormals_tbasis = Array<OneD, Array<OneD, NekDouble> > (2);
+
+         // Initialization of m_tanbasis and m_curvature vectors
+        m_fields[0]->GetCoords(x0,x1,x2);
+
+        m_curvature =  Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
+        m_tanbasis  =  Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
+        m_SurfaceNormal = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+        for (i = 0; i < 2; ++i)
+        {
+            m_tanbasis[i] = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+	    m_traceNormals_tbasis[i] = Array<OneD, NekDouble>(Tracenq,0.0);
+            for (k = 0; k < m_spacedim; ++k)
+            {
+                m_tanbasis[i][k] = Array<OneD, NekDouble>(nq, 0.0);
+                m_SurfaceNormal[k] = Array<OneD, NekDouble>(nq, 0.0);
+            }
+
+            m_curvature[i] = Array<OneD, Array<OneD, NekDouble> >(nvariables);
+            for (k = 0; k < nvariables; ++k)
+            {
+                m_curvature[i][k] = Array<OneD, NekDouble>(nq, 0.0);
+            }
+        }
+
+        // Get Tangent basis from GeomFactors::GeomFactors
+        for(k = 0; k < m_spacedim; ++k)
+        {
+            Tracetemp = Array<OneD, NekDouble>(nq, 0.0);
+            m_fields[0]->GetSurfaceNormal(Tracetemp,k);
+	    Vmath::Vcopy(nq, Tracetemp, 1, m_SurfaceNormal[k], 1);
+        }
+
+          // Projection of principal direction into the tangential plane, which becomes the first tangential vector
+          for (i = 0; i < m_spacedim; ++i)
+          {
+              Vmath::Vvtvp(nq, m_SurfaceNormal[i], 1, Principaldirection[i], 1, inner12, 1, inner12, 1);
+              Vmath::Vvtvp(nq, Principaldirection[i], 1, Principaldirection[i], 1, norm2, 1, norm2, 1);
+          }
+          Vmath::Vdiv(nq, inner12, 1, norm2, 1, inner12, 1);
+          Vmath::Neg(nq, inner12, 1);
+          
+          for (i = 0; i < m_spacedim; ++i)
+          {
+              Vmath::Vvtvp(nq, inner12, 1, m_SurfaceNormal[i], 1, Principaldirection[i], 1, m_tanbasis[0][i], 1);
+          }
+          
+          norm1 = Array<OneD, NekDouble>(nq, 0.0);
+          for (i = 0; i < m_spacedim; ++i)
+          {
+              Vmath::Vvtvp(nq, m_tanbasis[0][i], 1, m_tanbasis[0][i], 1, norm1, 1, norm1, 1);
+          }
+          Vmath::Vsqrt(nq, norm1, 1, norm1, 1);
+          
+          for (i = 0; i < m_spacedim; ++i)
+          {
+              Vmath::Vdiv(nq, m_tanbasis[0][i], 1, norm1, 1, m_tanbasis[0][i], 1);
+          }
+
+          Array<OneD, NekDouble> cross(nq, 0.0);
+          // The second tangential vector is obtained by cross-producting Surface Normal with the first tangential vector
+          Vmath::Vmul(nq, m_tanbasis[0][2], 1, m_SurfaceNormal[1], 1, cross, 1);
+          Vmath::Vvtvm(nq, m_tanbasis[0][1], 1, m_SurfaceNormal[2], 1, cross, 1, m_tanbasis[1][0], 1);
+          
+          Vmath::Vmul(nq, m_tanbasis[0][0], 1, m_SurfaceNormal[2], 1, cross, 1);
+          Vmath::Vvtvm(nq, m_tanbasis[0][2], 1, m_SurfaceNormal[0], 1, cross, 1, m_tanbasis[1][1], 1);
+          
+          Vmath::Vmul(nq, m_tanbasis[0][1], 1, m_SurfaceNormal[0], 1, cross, 1);
+          Vmath::Vvtvm(nq, m_tanbasis[0][0], 1, m_SurfaceNormal[1], 1, cross, 1, m_tanbasis[1][2], 1);
+          
+          norm1 = Array<OneD, NekDouble>(nq, 0.0);
+
+          // Normalization of the second tangential basis
+          for (int i = 0; i < m_spacedim; ++i)
+          {
+              Vmath::Vvtvp(nq, m_tanbasis[1][i], 1, m_tanbasis[1][i], 1, norm1, 1, norm1, 1);
+          }
+          Vmath::Vsqrt(nq, norm1, 1, norm1, 1);
+          
+          for (int i = 0; i < m_spacedim; ++i)
+          {
+              Vmath::Vdiv(nq, m_tanbasis[1][i], 1, norm1, 1, m_tanbasis[1][i], 1);
+          }
+          
+           for (int k = 0; k < nq; ++k)
+          {
+              cout << "k = " << k << ", (x,y,z) = (" << x0[k] << "," << x1[k] << "," << x2[k] << ")";
+              cout <<", m_tanbasis0 =(" << m_tanbasis[0][0][k] << "," << m_tanbasis[0][1][k] << "," << m_tanbasis[0][2][k] << ")";
+              cout <<", m_tanbasis1 = (" << m_tanbasis[1][0][k] << "," << m_tanbasis[1][1][k] << "," << m_tanbasis[1][2][k] << ")";
+              cout <<", m_SurfaceNormal = (" << m_SurfaceNormal[0][k] << "," << m_SurfaceNormal[1][k] << "," << m_SurfaceNormal[2][k] << ")" << endl;
+          }
+
+	  // Generate Normal vectors projected on tangential basis
+ 	    for (int i = 0; i < 2; ++i)
+	      {
+		for (int k = 0; k < m_spacedim; ++k)
+		  {
+		    m_fields[0]->ExtractTracePhys(m_tanbasis[i][k], Tracetemp);
+		    Vmath::Vvtvp(Tracenq, m_traceNormals[k], 1, Tracetemp, 1, m_traceNormals_tbasis[i], 1, m_traceNormals_tbasis[i], 1);
+		  }
+	      }
+
+          // Generate gradient \cdot tangentvector for weighted mass matrix
+          deriv = Array<OneD, NekDouble>(nq, 0.0);
+          derivtemp0 = Array<OneD, NekDouble>(nq, 0.0);
+          derivtemp1 = Array<OneD, NekDouble>(nq, 0.0);
+
+          for(int i = 0; i < nvariables; ++i)
+          {
+              for (int k = 0; k < 2; ++k)
+              {
+                  m_fields[0]->PhysDeriv(m_tanbasis[k][0], deriv, derivtemp0, derivtemp1);
+                  Vmath::Vadd(nq, deriv, 1, m_curvature[k][i], 1, m_curvature[k][i], 1);
+
+                  m_fields[0]->PhysDeriv(m_tanbasis[k][1], derivtemp0, deriv, derivtemp1);
+                  Vmath::Vadd(nq, deriv, 1, m_curvature[k][i], 1, m_curvature[k][i], 1);
+
+                  m_fields[0]->PhysDeriv(m_tanbasis[k][2], derivtemp0, derivtemp1, deriv);
+                  Vmath::Vadd(nq, deriv, 1, m_curvature[k][i], 1, m_curvature[k][i], 1);
+              }
+          }
+
+          // Check the orthogonality of tangential basis to geometric normal vectors of a sphere
+          if(CheckingTangentialBasis)
+          {
+              for (int j = 0; j < nq; j++)
+              {
+                  // cout << "Tanbasis1 = ( " << m_tanbasis[0][0][j] <<","<<m_tanbasis[0][1][j] <<","<<m_tanbasis[0][2][j] <<"), " ;
+                  // cout << "Tanbasis2 = ( " << m_tanbasis[1][0][j] <<","<<m_tanbasis[1][1][j] <<","<<m_tanbasis[1][2][j] <<") " <<endl;
+
+                  temp = m_tanbasis[0][0][j]*m_tanbasis[0][0][j] + m_tanbasis[0][1][j]*m_tanbasis[0][1][j] 
+		    + m_tanbasis[0][2][j]*m_tanbasis[0][2][j];
+                  TB1length += temp*temp;
+
+                  temp = m_tanbasis[1][0][j]*m_tanbasis[1][0][j] + m_tanbasis[1][1][j]*m_tanbasis[1][1][j] 
+		    + m_tanbasis[1][2][j]*m_tanbasis[1][2][j];
+                  TB2length += temp*temp;
+
+                  temp = m_tanbasis[0][0][j]*m_tanbasis[1][0][j] + m_tanbasis[0][1][j]*m_tanbasis[1][1][j] 
+		    + m_tanbasis[0][2][j]*m_tanbasis[1][2][j];
+                  TBangle += temp*temp;
+
+                  temp= x0[j]*m_tanbasis[0][0][j] +  x1[j]*m_tanbasis[0][1][j] +  x2[j]*m_tanbasis[0][2][j];
+                  CheckTB1 += temp*temp;
+                  
+                  temp= x0[j]*m_tanbasis[1][0][j] +  x1[j]*m_tanbasis[1][1][j] +  x2[j]*m_tanbasis[1][2][j];
+                  CheckTB2 += temp*temp;
+              }
+              TB1length = sqrt(TB1length)/sqrt(nq);
+              TB2length = sqrt(TB2length)/sqrt(nq);
+              TBangle = sqrt(TBangle)/sqrt(nq);
+              CheckTB1 = sqrt(CheckTB1)/sqrt(nq);
+              CheckTB2 = sqrt(CheckTB2)/sqrt(nq);
+              
+              cout << "The average length of = ( " << TB1length << ", " << TB2length << " ) with the inner angle = " << TBangle << endl;
+              cout << "Tangent basis are orthonormal to geometric normal vecotr with errors = ( " << CheckTB1 << "," << CheckTB2 << " )" << endl;
+          }
+   }
+
+
     void ADRBase::ZeroPhysFields(void)
     {
         for(int i = 0; i < m_fields.num_elements(); i++)
@@ -286,67 +485,65 @@ namespace Nektar
         }
     }
   
-    void ADRBase::SetInitialConditions(const int eqntype, bool ReadInitialConditions, NekDouble initialtime)
+    void ADRBase::SetInitialConditions(const int eqntype, NekDouble initialtime)
     {
         int nq = m_fields[0]->GetNpoints();
+        bool Readit = true;
       
         Array<OneD,NekDouble> x0(nq);
         Array<OneD,NekDouble> x1(nq);
         Array<OneD,NekDouble> x2(nq);
       
-        // get the coordinates (assuming all fields have the same
-        // discretisation)
+        // get the coordinates (assuming all fields have the same discretisation)
         m_fields[0]->GetCoords(x0,x1,x2);
       
-        if(ReadInitialConditions)
+        if(m_boundaryConditions->InitialConditionExists(0))
         {
-
-        for(int i = 0 ; i < m_fields.num_elements(); i++)
-	{
-            SpatialDomains::ConstInitialConditionShPtr ifunc = m_boundaryConditions->GetInitialCondition(i);
-            for(int j = 0; j < nq; j++)
-	    {
-                (m_fields[i]->UpdatePhys())[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],initialtime);
-	    }
-            m_fields[i]->SetPhysState(true);
-            m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
-	}
+            for(int i = 0 ; i < m_fields.num_elements(); i++)
+            {
+                SpatialDomains::ConstInitialConditionShPtr ifunc = m_boundaryConditions->GetInitialCondition(i);
+                for(int j = 0; j < nq; j++)
+                {
+                    (m_fields[i]->UpdatePhys())[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],initialtime);
+                }
+                m_fields[i]->SetPhysState(true);
+                m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+            }
         }
-
+        
         else
         {
-
-	// For Advection Test
-	if(eqntype==1)
-	  {
-	    for(int i = 0 ; i < m_fields.num_elements(); i++)
-  	      {
-		for(int j = 0; j < nq; j++)
-	          {
-		    (m_fields[i]->UpdatePhys())[j] = AdvectionSphere(x0[j], x1[j], x2[j], initialtime);
-                  }
-
-		m_fields[i]->SetPhysState(true);
-		m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
-	       }
-	  }
-
-	// For Diffusion-Reaction Test
-	else if(eqntype==2)
-	  {
-	    for(int i = 0 ; i < m_fields.num_elements(); i++)
-  	      {
-		for(int j = 0; j < nq; j++)
-	          {
-		    (m_fields[i]->UpdatePhys())[j] = Morphogenesis(i, x0[j], x1[j], x2[j], initialtime);
-                  }
-
-		m_fields[i]->SetPhysState(true);
-		m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
-	      }
-	   }
+            // For Advection Test
+            if(eqntype==1)
+            {
+                for(int i = 0 ; i < m_fields.num_elements(); i++)
+                {
+                    for(int j = 0; j < nq; j++)
+                    {
+                        (m_fields[i]->UpdatePhys())[j] = AdvectionSphere(x0[j], x1[j], x2[j], initialtime);
+                    }
+                    
+                    m_fields[i]->SetPhysState(true);
+                    m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+                }
+            }
+            
+            // For Diffusion-Reaction Test
+            else if(eqntype==2)
+            {
+                for(int i = 0 ; i < m_fields.num_elements(); i++)
+                {
+                    for(int j = 0; j < nq; j++)
+                    {
+                        (m_fields[i]->UpdatePhys())[j] = Morphogenesis(i, x0[j], x1[j], x2[j], initialtime);
+                    }
+                    
+                    m_fields[i]->SetPhysState(true);
+                    m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+                }
+            }
         }
-
+        
 	// dump initial conditions to file
         std::string outname = m_sessionName + "_initial.chk";
         ofstream outfile(outname.c_str());
@@ -380,9 +577,10 @@ namespace Nektar
 
 
     void ADRBase::EvaluateExactSolution(int field, Array<OneD, NekDouble> &outfield, 
-                                        const NekDouble time, const int eqntype, bool ReadInitialConditions)
+                                        const NekDouble time, const int eqntype)
     {
         int nq = m_fields[field]->GetNpoints();
+        bool Readit = true;
       
         Array<OneD,NekDouble> x0(nq);
         Array<OneD,NekDouble> x1(nq);
@@ -391,7 +589,7 @@ namespace Nektar
         // get the coordinates of the quad points
         m_fields[field]->GetCoords(x0,x1,x2);
       
-        if(ReadInitialConditions)
+        if(m_boundaryConditions->ExactSolutionExists(0))
         {
             SpatialDomains::ConstExactSolutionShPtr ifunc = m_boundaryConditions->GetExactSolution(field);
             for(int j = 0; j < nq; j++)
@@ -598,7 +796,7 @@ namespace Nektar
         
     }
 
-    NekDouble ADRBase::L2Error(int field, const int eqntype, const Array<OneD, NekDouble> &exactsoln, bool ReadInitialConditions)
+    NekDouble ADRBase::L2Error(int field, const int eqntype, const Array<OneD, NekDouble> &exactsoln)
     {
         if(m_fields[field]->GetPhysState() == false)
         {
@@ -614,7 +812,7 @@ namespace Nektar
         {
             Array<OneD, NekDouble> exactsoln(m_fields[field]->GetNpoints());
             
-            EvaluateExactSolution(field,exactsoln,m_time,eqntype,ReadInitialConditions);
+            EvaluateExactSolution(field,exactsoln,m_time,eqntype);
             
             return m_fields[field]->L2(exactsoln);
         }
@@ -674,7 +872,8 @@ namespace Nektar
     // ..... (\phi, V\cdot Grad(u))
     // -------------------------------------------------------------
 
-    void ADRBase::WeakAdvectionNonConservativeForm(const Array<OneD, Array<OneD, NekDouble> > &V, const Array<OneD, const NekDouble> &u, Array<OneD, NekDouble> &outarray)
+    void ADRBase::WeakAdvectionNonConservativeForm(const Array<OneD, Array<OneD, NekDouble> > &V, 
+                                                   const Array<OneD, const NekDouble> &u, Array<OneD, NekDouble> &outarray)
     {
         // use dimension of Velocity vector to dictate dimension of operation
         int ndim       = V.num_elements();
@@ -693,7 +892,8 @@ namespace Nektar
     // Calculate  V\cdot Grad(u)
     // -------------------------------------------------------------
 
-    void ADRBase::AdvectionNonConservativeForm(const Array<OneD, Array<OneD, NekDouble> > &V, const Array<OneD, const NekDouble> &u, Array<OneD, NekDouble> &outarray, Array<OneD, NekDouble> &wk)
+    void ADRBase::AdvectionNonConservativeForm(const Array<OneD, Array<OneD, NekDouble> > &V, 
+                                               const Array<OneD, const NekDouble> &u, Array<OneD, NekDouble> &outarray, Array<OneD, NekDouble> &wk)
     {
         // use dimension of Velocity vector to dictate dimension of operation
         int ndim       = V.num_elements();
@@ -862,6 +1062,145 @@ namespace Nektar
 	  }
     }
 	
+
+    //-------------------------------------------------------------
+    // Calculate weak DG Diffusion in the LDG form 
+    //  <\psi, \hat{u} \cdot n> - (\grad \psi \cdot u)
+    //  <\phi, \hat{q}\cdot n> - (\grad \phi \cdot q)
+    // -------------------------------------------------------------
+  void ADRBase::WeakDGDiffusion3D(const Array<OneD, Array<OneD, NekDouble> >& InField, 
+				  Array<OneD, Array<OneD, NekDouble> >& OutField,
+				  bool NumericalFluxIncludesNormal, bool InFieldIsInPhysSpace)
+    {
+        int i,j,k;
+        int nPointsTot      = GetNpoints();
+        int ncoeffs         = GetNcoeffs();
+        int nTracePointsTot = GetTraceNpoints();
+        int nvariables = m_fields.num_elements();
+        int nqvar = 2;
+
+	Array<OneD, NekDouble>  qcoeffs (ncoeffs);
+	Array<OneD, NekDouble>  temp (ncoeffs);
+	Array<OneD, NekDouble>  FMass (ncoeffs);
+
+	Array<OneD, Array<OneD, NekDouble> > physfield (nvariables);
+	Array<OneD, Array<OneD, NekDouble> > fluxvector (m_spacedim);
+	Array<OneD, Array<OneD, NekDouble> >  qflux   (nvariables);
+
+	Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  uflux   (nvariables);
+	Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  qfield  (nvariables);
+				  
+	for(i = 0; i < nvariables; ++i)
+	    {
+	      qfield[i] = Array<OneD, Array<OneD, NekDouble> >(nqvar);
+	      uflux[i] = Array<OneD, Array<OneD, NekDouble> >(nqvar);
+
+	      qflux[i] = Array<OneD, NekDouble>(nTracePointsTot,0.0);
+		  
+	      for(j = 0; j< nqvar; ++j)
+		{
+		  qfield[i][j]  = Array<OneD, NekDouble>(nPointsTot,0.0);
+		  uflux[i][j] = Array<OneD, NekDouble>(nTracePointsTot,0.0);
+		}
+	      
+	      for(j = 0; j< m_spacedim; ++j)
+		{
+		  fluxvector[j] = Array<OneD, NekDouble>(nPointsTot,0.0);
+		}
+	    }
+	
+	//--------------------------------------------
+	// Get the variables in physical space
+	
+	// already in physical space
+	if(InFieldIsInPhysSpace == true)
+	  {
+            for(i = 0; i < nvariables; ++i)
+	      {
+                physfield[i] = InField[i];
+	      }
+	  }
+	// otherwise do a backward transformation
+        else
+	  {
+	    for(i = 0; i < nvariables; ++i)
+	      {
+		// Could make this point to m_fields[i]->UpdatePhys();
+		physfield[i] = Array<OneD, NekDouble>(nPointsTot);
+		m_fields[i]->BwdTrans(InField[i],physfield[i]);
+	      }
+	  }
+
+        // ########################################################################
+        //   Compute q_{\eta} and q_{\xi} from su
+        // ########################################################################
+
+        // Obtain Numerical Fluxes        
+        NumFluxforScalar(physfield, uflux);
+        
+        for(i = 0; i < nvariables; ++i)
+        {
+            for(j = 0; j < nqvar; ++j)
+            {
+                // Get the ith component of the  flux vector in (physical space)
+                // fluxvector = m_tanbasis * u, where m_tanbasis = 2 by m_spacedim by nPointsTot
+                for (k = 0; k < m_spacedim; ++k)
+                {
+                    Vmath::Vmul(nPointsTot, m_tanbasis[j][k], 1, physfield[i], 1, fluxvector[k], 1);
+                }
+               
+                // Calculate the i^th value of (\grad_i \phi, F)
+                WeakAdvectionGreensDivergenceForm(fluxvector, qcoeffs);
+                
+                Vmath::Neg(ncoeffs,qcoeffs,1);
+                m_fields[i]->AddTraceIntegral(uflux[i][j], qcoeffs);
+                m_fields[i]->SetPhysState(false);
+                
+                // Add curvature force = M ( \nabla \cdot \tanvec )
+                 MultiRegions::GlobalMatrixKey key(StdRegions::eMass,m_curvature[j]);
+                 m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key, InField[i], FMass);
+                 Vmath::Svtvp(ncoeffs, -1.0, FMass, 1, qcoeffs, 1, qcoeffs, 1);
+                
+                 //Multiply by the inverse of mass matrix
+                m_fields[i]->MultiplyByElmtInvMass(qcoeffs, qcoeffs);
+		
+                // Back to physical space
+                m_fields[i]->BwdTrans(qcoeffs, qfield[i][j]);
+            }
+        }
+	
+        // ########################################################################
+        //   Compute u from q_{\eta} and q_{\xi}
+        // ########################################################################
+
+        // Obtain Numerical Fluxes
+	NumFluxforVector(physfield, qfield, qflux);
+
+	for (i = 0; i < nvariables; ++i)
+        {
+            // L = L(tan_eta) q_eta + L(tan_xi) q_xi
+            OutField[i] = Array<OneD, NekDouble>(ncoeffs, 0.0);
+            temp = Array<OneD, NekDouble>(ncoeffs, 0.0);
+            for(j = 0; j < nqvar; ++j)
+            {
+                for (k = 0; k < m_spacedim; ++k)
+                {
+                    Vmath::Vmul(nPointsTot, m_tanbasis[j][k], 1, qfield[i][j], 1, fluxvector[k], 1);
+                }
+                
+                WeakAdvectionGreensDivergenceForm(fluxvector, temp);
+
+                Vmath::Vadd(ncoeffs, temp, 1, OutField[i], 1, OutField[i], 1);
+            }
+            
+            // Evaulate  <\phi, \hat{F}\cdot n> - OutField[i] 
+            Vmath::Neg(ncoeffs,OutField[i],1);
+            m_fields[i]->AddTraceIntegral(qflux[i], OutField[i]);
+            m_fields[i]->SetPhysState(false);
+        }
+    }
+    
+
     //-------------------------------------------------------------
     // Calculate weak DG Diffusion in the LDG form 
 	//  <\psi, \hat{u} \cdot n> - (\grad \psi \cdot u)
@@ -869,18 +1208,14 @@ namespace Nektar
     // -------------------------------------------------------------
   void ADRBase::WeakDGDiffusion(const Array<OneD, Array<OneD, NekDouble> >& InField, 
 				Array<OneD, Array<OneD, NekDouble> >& OutField,
-				bool NumericalFluxIncludesNormal, bool InFieldIsInPhysSpace, int nvariables)
+				bool NumericalFluxIncludesNormal, bool InFieldIsInPhysSpace)
   {
     int i,j;
     int nVelDim         = m_spacedim;
     int nPointsTot      = GetNpoints();
     int ncoeffs         = GetNcoeffs();
     int nTracePointsTot = GetTraceNpoints();
-    
-    if (!nvariables)
-      {
-	nvariables      = m_fields.num_elements();
-      }
+    int nvariables      = m_fields.num_elements();
     
     Array<OneD, NekDouble>  qcoeffs (ncoeffs);
     
@@ -1110,6 +1445,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.12  2009/07/02 15:57:36  sehunchun
+* "ReadBoundaryCondition" options with extenstion to 2D geometry imbedded in 3D
+*
 * Revision 1.11  2009/07/01 21:55:00  sehunchun
 * Changes of WeakDiffusion according to updates
 *

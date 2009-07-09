@@ -186,9 +186,20 @@ namespace Nektar
                 return m_base;
             }
 
+            int GetNvariableCoefficients() const
+            {
+                return m_nvariablecoefficients;
+            }
+
             int GetNvariableLaplacianCoefficients() const
             {
                 return m_nvariablecoefficients;
+            }
+
+            inline const Array<OneD,NekDouble>& GetVariableCoefficient() const
+            {
+                ASSERTL1(m_nvariablecoefficients > 0,"No coeffcients have been defined");                
+                return m_variablecoefficient[0];
             }
 
             inline const Array<OneD,NekDouble>& GetVariableLaplacianCoefficient() const
@@ -246,6 +257,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.h,v $
+* Revision 1.21  2008/11/19 16:02:47  pvos
+* Added functionality for variable Laplacian coeffcients
+*
 * Revision 1.20  2008/05/30 00:33:49  delisi
 * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
 *

@@ -74,7 +74,7 @@
 
     <SOLVERINFO>
       <I PROPERTY="EQType" VALUE="UnsteadyAdvection"/>
-      <I PROPERTY="Projection" VALUE="Continuous"/>
+      <I PROPERTY="Projection" VALUE="DisContinuous"/>
     </SOLVERINFO> 
 
 <VARIABLES>

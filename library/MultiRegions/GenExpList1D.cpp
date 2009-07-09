@@ -147,8 +147,7 @@ namespace Nektar
         void GenExpList1D::Upwind(const Array<OneD, const Array<OneD, NekDouble> > &Vec,
                                   const Array<OneD, const NekDouble> &Fwd, 
                                   const Array<OneD, const NekDouble> &Bwd, 
-                                  Array<OneD, NekDouble> &Upwind,
-								  int direction)
+                                  Array<OneD, NekDouble> &Upwind)
         {
             int i,j,k,e_npoints,offset;
             Array<OneD,NekDouble> normals; 
@@ -177,7 +176,7 @@ namespace Nektar
                     }
 
                     // Upwind
-                    if(direction*Vn > 0.0)
+                    if(Vn > 0.0)
                     {
                         Upwind[offset + j] = Fwd[offset + j];
                     }
@@ -192,8 +191,7 @@ namespace Nektar
         void GenExpList1D::Upwind(const Array<OneD, const NekDouble> &Vn, 
                                   const Array<OneD, const NekDouble> &Fwd, 
                                   const Array<OneD, const NekDouble> &Bwd, 
-                                  Array<OneD, NekDouble> &Upwind,
-								  int direction)
+                                  Array<OneD, NekDouble> &Upwind)
         {
             int i,j,k,e_npoints,offset;
             Array<OneD,NekDouble> normals; 
@@ -209,7 +207,7 @@ namespace Nektar
                 for(j = 0; j < e_npoints; ++j)
                 {
                     // Upwind
-                    if(direction*Vn[offset + j] > 0.0)
+                    if(Vn[offset + j] > 0.0)
                     {
                         Upwind[offset + j] = Fwd[offset + j];
                     }
@@ -256,6 +254,9 @@ namespace Nektar
 
 /**
 * $Log: GenExpList1D.cpp,v $
+* Revision 1.10  2009/04/20 16:14:06  sherwin
+* Updates for optimising bandwidth of DG solver and allowing write import on explist
+*
 * Revision 1.9  2009/02/28 21:28:40  sehunchun
 *  Now upwind has "forward" direction and "backward" direction. Default is forward and no changes are necessary for previous file.
 *

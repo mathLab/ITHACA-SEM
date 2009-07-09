@@ -71,22 +71,18 @@ namespace Nektar
              * \brief The default destructor.
              */  
             ~GenExpList1D();
-            
-			// direction = 1 : Upwind
-			// direction = -1: Downwind
+
             void Upwind(const Array<OneD, const Array<OneD, NekDouble> > &Vec,
                         const Array<OneD, const NekDouble> &Fwd, 
                         const Array<OneD, const NekDouble> &Bwd, 
-                        Array<OneD, NekDouble> &Upwind,
-						int direction=1);
+                        Array<OneD, NekDouble> &Upwind);
 
 
-			void Upwind(const Array<OneD, const NekDouble> &Vn, 
-									  const Array<OneD, const NekDouble> &Fwd, 
-									  const Array<OneD, const NekDouble> &Bwd, 
-									  Array<OneD, NekDouble> &Upwind,
-									  int direction=1);
-
+            void Upwind(const Array<OneD, const NekDouble> &Vn, 
+                        const Array<OneD, const NekDouble> &Fwd, 
+                        const Array<OneD, const NekDouble> &Bwd, 
+                        Array<OneD, NekDouble> &Upwind);
+            
 	    void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals); 
 
         protected:
@@ -106,6 +102,9 @@ namespace Nektar
 
 /**
  * $Log: GenExpList1D.h,v $
+ * Revision 1.7  2009/02/28 21:28:40  sehunchun
+ *  Now upwind has "forward" direction and "backward" direction. Default is forward and no changes are necessary for previous file.
+ *
  * Revision 1.6  2008/10/29 22:46:35  sherwin
  * Updates for const correctness and a few other bits
  *

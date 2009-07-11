@@ -35,12 +35,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <Auxiliary/ADRBase.h>
-#include <boost/math/special_functions/spherical_harmonic.hpp>
 
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
-
 
 #include <string>
 
@@ -161,7 +159,8 @@ namespace Nektar
               }
 	      
               i = 0;
-              MultiRegions::ContField2DSharedPtr firstfield =  MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(*mesh2D,*m_boundaryConditions,i);
+              MultiRegions::ContField2DSharedPtr firstfield = 
+		MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(*mesh2D,*m_boundaryConditions,i);
               
               m_fields[0] = firstfield;
 	      for(i = 1 ; i < m_fields.num_elements(); i++)
@@ -280,203 +279,6 @@ namespace Nektar
     }
   }
 
-
-    void ADRBase::SetUpSurfaceNormal()
-     {
-         int i, j, k, nvariables = m_fields.num_elements();
-         int nq = m_fields[0]->GetNpoints();
-         int Tracenq = m_fields[0]->GetTrace()->GetNpoints();
-         NekDouble temp, CheckTB1=0.0, CheckTB2=0.0, TB1length=0.0;
-         NekDouble TB2length=0.0, TBangle=0.0, Bflag,Tol = 0.000000001;
-         bool CheckingTangentialBasis = true;
-
-         Array<OneD, NekDouble> deriv, derivtemp0, derivtemp1, Tracetemp;
-
-         Array<OneD,NekDouble> x0(nq);
-         Array<OneD,NekDouble> x1(nq);
-         Array<OneD,NekDouble> x2(nq);
-
-          Array<OneD, NekDouble> norm1(nq, 0.0);
-          Array<OneD, NekDouble> norm2(nq, 0.0);
-          Array<OneD, NekDouble> inner12(nq, 0.0);
-
-         // Set up a principle direction for the first tangential basis
-         Array<OneD, Array<OneD, NekDouble> > Principaldirection(m_spacedim);
-
-         Array<OneD, NekDouble> m_Pdir(3);
-         
-         m_Pdir[0]  = 1.0;
-         m_Pdir[1]  = 0.0;
-         m_Pdir[2]  = 0.0;
-
-         for (k = 0; k < nq; ++k)
-         {
-             Principaldirection[0] = Array<OneD, NekDouble>(nq, m_Pdir[0]);
-             Principaldirection[1] = Array<OneD, NekDouble>(nq, m_Pdir[1]);
-             Principaldirection[2] = Array<OneD, NekDouble>(nq, m_Pdir[2]);
-         }
-
-	 // Trace Normal vectors on the plane of tangential basis
-	 m_traceNormals_tbasis = Array<OneD, Array<OneD, NekDouble> > (2);
-
-         // Initialization of m_tanbasis and m_curvature vectors
-        m_fields[0]->GetCoords(x0,x1,x2);
-
-        m_curvature =  Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
-        m_tanbasis  =  Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
-        m_SurfaceNormal = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-        for (i = 0; i < 2; ++i)
-        {
-            m_tanbasis[i] = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-	    m_traceNormals_tbasis[i] = Array<OneD, NekDouble>(Tracenq,0.0);
-            for (k = 0; k < m_spacedim; ++k)
-            {
-                m_tanbasis[i][k] = Array<OneD, NekDouble>(nq, 0.0);
-                m_SurfaceNormal[k] = Array<OneD, NekDouble>(nq, 0.0);
-            }
-
-            m_curvature[i] = Array<OneD, Array<OneD, NekDouble> >(nvariables);
-            for (k = 0; k < nvariables; ++k)
-            {
-                m_curvature[i][k] = Array<OneD, NekDouble>(nq, 0.0);
-            }
-        }
-
-        // Get Tangent basis from GeomFactors::GeomFactors
-        for(k = 0; k < m_spacedim; ++k)
-        {
-            Tracetemp = Array<OneD, NekDouble>(nq, 0.0);
-            m_fields[0]->GetSurfaceNormal(Tracetemp,k);
-	    Vmath::Vcopy(nq, Tracetemp, 1, m_SurfaceNormal[k], 1);
-        }
-
-          // Projection of principal direction into the tangential plane, which becomes the first tangential vector
-          for (i = 0; i < m_spacedim; ++i)
-          {
-              Vmath::Vvtvp(nq, m_SurfaceNormal[i], 1, Principaldirection[i], 1, inner12, 1, inner12, 1);
-              Vmath::Vvtvp(nq, Principaldirection[i], 1, Principaldirection[i], 1, norm2, 1, norm2, 1);
-          }
-          Vmath::Vdiv(nq, inner12, 1, norm2, 1, inner12, 1);
-          Vmath::Neg(nq, inner12, 1);
-          
-          for (i = 0; i < m_spacedim; ++i)
-          {
-              Vmath::Vvtvp(nq, inner12, 1, m_SurfaceNormal[i], 1, Principaldirection[i], 1, m_tanbasis[0][i], 1);
-          }
-          
-          norm1 = Array<OneD, NekDouble>(nq, 0.0);
-          for (i = 0; i < m_spacedim; ++i)
-          {
-              Vmath::Vvtvp(nq, m_tanbasis[0][i], 1, m_tanbasis[0][i], 1, norm1, 1, norm1, 1);
-          }
-          Vmath::Vsqrt(nq, norm1, 1, norm1, 1);
-          
-          for (i = 0; i < m_spacedim; ++i)
-          {
-              Vmath::Vdiv(nq, m_tanbasis[0][i], 1, norm1, 1, m_tanbasis[0][i], 1);
-          }
-
-          Array<OneD, NekDouble> cross(nq, 0.0);
-          // The second tangential vector is obtained by cross-producting Surface Normal with the first tangential vector
-          Vmath::Vmul(nq, m_tanbasis[0][2], 1, m_SurfaceNormal[1], 1, cross, 1);
-          Vmath::Vvtvm(nq, m_tanbasis[0][1], 1, m_SurfaceNormal[2], 1, cross, 1, m_tanbasis[1][0], 1);
-          
-          Vmath::Vmul(nq, m_tanbasis[0][0], 1, m_SurfaceNormal[2], 1, cross, 1);
-          Vmath::Vvtvm(nq, m_tanbasis[0][2], 1, m_SurfaceNormal[0], 1, cross, 1, m_tanbasis[1][1], 1);
-          
-          Vmath::Vmul(nq, m_tanbasis[0][1], 1, m_SurfaceNormal[0], 1, cross, 1);
-          Vmath::Vvtvm(nq, m_tanbasis[0][0], 1, m_SurfaceNormal[1], 1, cross, 1, m_tanbasis[1][2], 1);
-          
-          norm1 = Array<OneD, NekDouble>(nq, 0.0);
-
-          // Normalization of the second tangential basis
-          for (int i = 0; i < m_spacedim; ++i)
-          {
-              Vmath::Vvtvp(nq, m_tanbasis[1][i], 1, m_tanbasis[1][i], 1, norm1, 1, norm1, 1);
-          }
-          Vmath::Vsqrt(nq, norm1, 1, norm1, 1);
-          
-          for (int i = 0; i < m_spacedim; ++i)
-          {
-              Vmath::Vdiv(nq, m_tanbasis[1][i], 1, norm1, 1, m_tanbasis[1][i], 1);
-          }
-          
-           for (int k = 0; k < nq; ++k)
-          {
-              cout << "k = " << k << ", (x,y,z) = (" << x0[k] << "," << x1[k] << "," << x2[k] << ")";
-              cout <<", m_tanbasis0 =(" << m_tanbasis[0][0][k] << "," << m_tanbasis[0][1][k] << "," << m_tanbasis[0][2][k] << ")";
-              cout <<", m_tanbasis1 = (" << m_tanbasis[1][0][k] << "," << m_tanbasis[1][1][k] << "," << m_tanbasis[1][2][k] << ")";
-              cout <<", m_SurfaceNormal = (" << m_SurfaceNormal[0][k] << "," << m_SurfaceNormal[1][k] << "," << m_SurfaceNormal[2][k] << ")" << endl;
-          }
-
-	  // Generate Normal vectors projected on tangential basis
- 	    for (int i = 0; i < 2; ++i)
-	      {
-		for (int k = 0; k < m_spacedim; ++k)
-		  {
-		    m_fields[0]->ExtractTracePhys(m_tanbasis[i][k], Tracetemp);
-		    Vmath::Vvtvp(Tracenq, m_traceNormals[k], 1, Tracetemp, 1, m_traceNormals_tbasis[i], 1, m_traceNormals_tbasis[i], 1);
-		  }
-	      }
-
-          // Generate gradient \cdot tangentvector for weighted mass matrix
-          deriv = Array<OneD, NekDouble>(nq, 0.0);
-          derivtemp0 = Array<OneD, NekDouble>(nq, 0.0);
-          derivtemp1 = Array<OneD, NekDouble>(nq, 0.0);
-
-          for(int i = 0; i < nvariables; ++i)
-          {
-              for (int k = 0; k < 2; ++k)
-              {
-                  m_fields[0]->PhysDeriv(m_tanbasis[k][0], deriv, derivtemp0, derivtemp1);
-                  Vmath::Vadd(nq, deriv, 1, m_curvature[k][i], 1, m_curvature[k][i], 1);
-
-                  m_fields[0]->PhysDeriv(m_tanbasis[k][1], derivtemp0, deriv, derivtemp1);
-                  Vmath::Vadd(nq, deriv, 1, m_curvature[k][i], 1, m_curvature[k][i], 1);
-
-                  m_fields[0]->PhysDeriv(m_tanbasis[k][2], derivtemp0, derivtemp1, deriv);
-                  Vmath::Vadd(nq, deriv, 1, m_curvature[k][i], 1, m_curvature[k][i], 1);
-              }
-          }
-
-          // Check the orthogonality of tangential basis to geometric normal vectors of a sphere
-          if(CheckingTangentialBasis)
-          {
-              for (int j = 0; j < nq; j++)
-              {
-                  // cout << "Tanbasis1 = ( " << m_tanbasis[0][0][j] <<","<<m_tanbasis[0][1][j] <<","<<m_tanbasis[0][2][j] <<"), " ;
-                  // cout << "Tanbasis2 = ( " << m_tanbasis[1][0][j] <<","<<m_tanbasis[1][1][j] <<","<<m_tanbasis[1][2][j] <<") " <<endl;
-
-                  temp = m_tanbasis[0][0][j]*m_tanbasis[0][0][j] + m_tanbasis[0][1][j]*m_tanbasis[0][1][j] 
-		    + m_tanbasis[0][2][j]*m_tanbasis[0][2][j];
-                  TB1length += temp*temp;
-
-                  temp = m_tanbasis[1][0][j]*m_tanbasis[1][0][j] + m_tanbasis[1][1][j]*m_tanbasis[1][1][j] 
-		    + m_tanbasis[1][2][j]*m_tanbasis[1][2][j];
-                  TB2length += temp*temp;
-
-                  temp = m_tanbasis[0][0][j]*m_tanbasis[1][0][j] + m_tanbasis[0][1][j]*m_tanbasis[1][1][j] 
-		    + m_tanbasis[0][2][j]*m_tanbasis[1][2][j];
-                  TBangle += temp*temp;
-
-                  temp= x0[j]*m_tanbasis[0][0][j] +  x1[j]*m_tanbasis[0][1][j] +  x2[j]*m_tanbasis[0][2][j];
-                  CheckTB1 += temp*temp;
-                  
-                  temp= x0[j]*m_tanbasis[1][0][j] +  x1[j]*m_tanbasis[1][1][j] +  x2[j]*m_tanbasis[1][2][j];
-                  CheckTB2 += temp*temp;
-              }
-              TB1length = sqrt(TB1length)/sqrt(nq);
-              TB2length = sqrt(TB2length)/sqrt(nq);
-              TBangle = sqrt(TBangle)/sqrt(nq);
-              CheckTB1 = sqrt(CheckTB1)/sqrt(nq);
-              CheckTB2 = sqrt(CheckTB2)/sqrt(nq);
-              
-              cout << "The average length of = ( " << TB1length << ", " << TB2length << " ) with the inner angle = " << TBangle << endl;
-              cout << "Tangent basis are orthonormal to geometric normal vecotr with errors = ( " << CheckTB1 << "," << CheckTB2 << " )" << endl;
-          }
-   }
-
-
     void ADRBase::ZeroPhysFields(void)
     {
         for(int i = 0; i < m_fields.num_elements(); i++)
@@ -536,6 +338,7 @@ namespace Nektar
                     for(int j = 0; j < nq; j++)
                     {
                         (m_fields[i]->UpdatePhys())[j] = Morphogenesis(i, x0[j], x1[j], x2[j], initialtime);
+			cout << " value = " << Morphogenesis(i, x0[j], x1[j], x2[j], initialtime) << endl;
                     }
                     
                     m_fields[i]->SetPhysState(true);
@@ -618,160 +421,6 @@ namespace Nektar
         }
     }
 
-    NekDouble ADRBase::AdvectionSphere(const NekDouble x0j, const NekDouble x1j,
-                                                 const NekDouble x2j, const NekDouble time)
-  {
-
-        int nq = m_fields[0]->GetNpoints();
-        NekDouble dist, radius, cosdiff, sin_theta, cos_theta, sin_varphi, cos_varphi;
-        NekDouble pi = 3.14159265358979323846;
-        NekDouble newvarphi_c, newtheta_c, returnval;
-        NekDouble m_theta_c, m_varphi_c, m_radius_limit, m_c0;
-
-        Array<OneD, NekDouble> Exactsolution;
-
-        // Sets of parameters      
-        m_theta_c = 0.0;
-        m_varphi_c = 3.0*pi/2.0;
-        m_radius_limit = 7.0*pi/64.0;
-        m_c0 = 2.0;
-
-        newvarphi_c = m_varphi_c ;
-        newtheta_c = m_theta_c ;
-
-	radius = sqrt( x0j*x0j + x1j*x1j + x2j*x2j );
-
-	sin_varphi = x1j/sqrt( x0j*x0j + x1j*x1j );
-	cos_varphi = x0j/sqrt( x0j*x0j + x1j*x1j );
-
-	sin_theta = x2j/radius;
-	cos_theta = sqrt( x0j*x0j + x1j*x1j )/radius;
-
-	cosdiff =  cos_varphi*cos(m_varphi_c) + sin_varphi*sin(m_varphi_c);
-	dist = radius*acos( sin(m_theta_c)*sin_theta + cos(m_theta_c)*cos_theta*cosdiff );
-
-	if(dist < m_radius_limit)
-           {
-	     returnval = 0.5*( 1.0 + cos(pi*dist/m_radius_limit) ) + m_c0;
-           }
-        else
-           {
-	     returnval = m_c0;
-           }
-
-	return returnval;
-  }
-
-  NekDouble ADRBase::Morphogenesis(const int field, const NekDouble x0j, const NekDouble x1j, 
-                                             const NekDouble x2j, const NekDouble time)
-  
-  {
-        int nq = m_fields[0]->GetNpoints();
-        NekDouble pi = 3.14159265358979323846;
-
-        int i, j, m, n, ind, Maxn, Maxm;
-        NekDouble a_n, d_n, gamma_n, alpha_n, beta_n;
-        NekDouble A_mn, C_mn, theta, phi,radius,A,B;
-        NekDouble m_a, m_b, m_c, m_d, m_mu, m_nu;
-
-        std::complex<double> Spericharmonic, delta_n, varphi0, varphi1, temp;
-        std::complex<double> B_mn, D_mn;
-
-        // Set some parameter values
-        Maxn = 6; 
-        Maxm = 2*Maxn-1;
-
-        A = 2.0;
-        B = 5.0;
-        m_mu = 0.001;
-        m_nu = 0.002;
-
-        m_a = -1.0*B - 1.0;
-        m_b = A*A;
-        m_c = B;
-        m_d = -1.0*A*A;
-
-        Array<OneD, Array<OneD, NekDouble> > Ainit(Maxn);
-        Array<OneD, Array<OneD, NekDouble> > Binit(Maxn);
-
-        for (i = 0; i < Maxn; ++i)
-        {
-            Ainit[i] = Array<OneD, NekDouble>(Maxm, 0.0);
-            Binit[i] = Array<OneD, NekDouble>(Maxm, 0.0);
-        }
-
-        Ainit[5][0] = -0.5839;
-        Ainit[5][1] = -0.8436;
-        Ainit[5][2] = -0.4764;
-        Ainit[5][3] = 0.6475;
-        Ainit[5][4] = 0.1886;
-        Ainit[5][5] = 0.8709;
-        Ainit[5][6] = -0.8338;
-        Ainit[5][7] = 0.1795;
-        Ainit[5][8] = -0.7873;
-        Ainit[5][9] = 0.8842;
-        Ainit[5][10] = 0.2943;
-
-        Binit[5][0] = -0.6263;
-        Binit[5][1] = 0.9803;
-        Binit[5][2] = 0.7222;
-        Binit[5][3] = 0.5945;
-        Binit[5][4] = 0.6026;
-        Binit[5][5] = -0.2076;
-        Binit[5][6] = 0.4556;
-        Binit[5][7] = 0.6024;
-        Binit[5][8] = 0.9695;
-        Binit[5][9] = -0.4936;
-        Binit[5][10] = 0.1098;
-
-	radius = sqrt(x0j*x0j + x1j*x1j + x2j*x2j) ;
-
-        // theta is in [0, pi]
-	theta = asin( x2j/radius ) + 0.5*pi;
-
-        // phi is in [0, 2*pi]
-	phi = atan2( x1j, x0j ) + pi;
-
-	varphi0 = (0.0,0.0);
-	varphi1 = (0.0,0.0);
-	for (n = 0; n < Maxn; ++n)
-          {
-             // Set up parameters
-	     a_n = m_a - m_mu*( n*(n+1)/radius/radius );
-	     d_n = m_d - m_nu*( n*(n+1)/radius/radius );
-
-	     gamma_n = 0.5*( a_n + d_n );
-
-	     temp.real() = ( a_n + d_n )*( a_n + d_n ) - 4.0*( a_n*d_n - m_b*m_c );
-	     delta_n = 0.5*sqrt( temp );
-
-	     for (m = -n; m <=n; ++m)
-               {
-		  ind = m + n;
-		  A_mn = Ainit[n][ind];
-		  C_mn = Binit[n][ind];
-
-		  B_mn = ( (a_n - gamma_n)*Ainit[n][ind] + m_b*Binit[n][ind])/delta_n;
-		  D_mn = ( m_c*Ainit[n][ind] + (d_n - gamma_n)*Binit[n][ind])/delta_n;
-
-		  Spericharmonic = boost::math::spherical_harmonic(n, m, theta, phi);
-		  varphi0 += exp(gamma_n*time)*(A_mn*cosh(delta_n*time) + B_mn*sinh(delta_n*time))*Spericharmonic;
-		  varphi1 += exp(gamma_n*time)*(C_mn*cosh(delta_n*time) + D_mn*sinh(delta_n*time))*Spericharmonic;
-               }
-          }
-
-
-	if (field==0)
-	  {
-	    return varphi0.real();
-	  }
-
-	else if (field==1)
-	  {
-	    return varphi1.real();
-	  }
-  }
-
     
     void ADRBase::EvaluateUserDefinedEqn(Array<OneD, Array<OneD, NekDouble> > &outfield)
     {
@@ -795,6 +444,7 @@ namespace Nektar
 	}
         
     }
+
 
     NekDouble ADRBase::L2Error(int field, const int eqntype, const Array<OneD, NekDouble> &exactsoln)
     {
@@ -1330,7 +980,7 @@ namespace Nektar
         WriteFld(outfile);
     }
 
-    void ADRBase::WriteFld(std::ofstream &outfile)
+  void ADRBase::WriteFld(std::ofstream &outfile)
     {
         std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef = m_fields[0]->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size()); 
@@ -1349,7 +999,7 @@ namespace Nektar
     }
 
 
-      void ADRBase::Array_Output(const int n, std::string name, const Array<OneD, const NekDouble>&inarray, bool IsInPhysicalSpace)
+  void ADRBase::Array_Output(const int n, std::string name, const Array<OneD, const NekDouble>&inarray, bool IsInPhysicalSpace)
   {
     
     int nq = m_fields[0]->GetTotPoints();
@@ -1439,12 +1089,35 @@ namespace Nektar
       }
     return (size1 < size2) ? -1 : 1;
   }
+
+  // Return a vector with unit length
+  void ADRBase::Unitlength(Array<OneD, Array<OneD, NekDouble> > &array)
+  {   
+    int i, nq = array[0].num_elements();
+    
+    Array<OneD, NekDouble> norm (nq, 0.0);
+    
+    for (i = 0; i < m_spacedim; ++i)
+      {
+	Vmath::Vvtvp(nq, array[i], 1, array[i], 1, norm, 1, norm, 1);
+      }
+    
+    Vmath::Vsqrt(nq, norm, 1, norm, 1);
+    
+    for (i = 0; i < m_spacedim; ++i)
+      {
+	Vmath::Vdiv(nq, array[i], 1, norm, 1, array[i], 1);
+      }
+  }
   
 
 } //end of namespace
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.13  2009/07/09 21:29:13  sehunchun
+* Add SetUpSurfaceNormal function..
+*
 * Revision 1.12  2009/07/02 15:57:36  sehunchun
 * "ReadBoundaryCondition" options with extenstion to 2D geometry imbedded in 3D
 *

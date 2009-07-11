@@ -77,14 +77,6 @@ namespace Nektar
             
         void EvaluateExactSolution(int field, Array<OneD, NekDouble > &outfield, 
                                    const NekDouble time, const int eqntype = 0);
-
-        void SetUpSurfaceNormal();
-
-	NekDouble AdvectionSphere(const NekDouble x0j, const NekDouble x1j,
-                                  const NekDouble x2j, const NekDouble time);
-
-        NekDouble Morphogenesis(const int field, const NekDouble x0j, const NekDouble x1j, 
-                                const NekDouble x2j, const NekDouble time);
         
         void EvaluateUserDefinedEqn(Array<OneD, Array<OneD, NekDouble> > &outfield);
         
@@ -132,6 +124,7 @@ namespace Nektar
 	void Summary          (std::ostream &out);
 	void SessionSummary   (std::ostream &out);
 	void TimeParamSummary (std::ostream &out);
+	void Unitlength(Array<OneD, Array<OneD, NekDouble> > &array);
         
         inline Array<OneD, MultiRegions::ExpListSharedPtr> &UpdateFields(void)
         {
@@ -264,6 +257,18 @@ namespace Nektar
 	{
 	  v_NumFluxforDiff(ufield,qfield, qflux);
 	}
+
+	NekDouble AdvectionSphere(const NekDouble x0j, const NekDouble x1j,
+				  const NekDouble x2j, const NekDouble time)
+	{
+	  return v_AdvectionSphere(x0j, x1j, x2j, time);
+	}
+
+	NekDouble Morphogenesis(const int field, const NekDouble x0j, const NekDouble x1j, 
+				const NekDouble x2j, const NekDouble time)
+	{
+	  return v_Morphogenesis(field, x0j, x1j, x2j, time);
+	}
         
     protected:
         Array<OneD, MultiRegions::ExpListSharedPtr> m_fields; ///< Array holding all dependent variables
@@ -280,11 +285,9 @@ namespace Nektar
         enum ProjectionType m_projectionType; ///< Type of projection, i.e. Galerkin or DG 
 
         Array<OneD, Array<OneD, NekDouble> > m_traceNormals; ///< Array holding the forward normals
-	Array<OneD, Array<OneD, NekDouble> > m_traceNormals_tbasis; // forward normals in tangential basis
 
         Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_curvature; // 1 by nvariable by nq
         Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis; // 2 by m_spacedim by nq 
-        Array<OneD, Array<OneD, NekDouble> > m_SurfaceNormal; // m_spacedim by nq 
 	
         int NoCaseStringCompare(const string & s1, const string& s2) ;
 
@@ -342,17 +345,29 @@ namespace Nektar
         }    
 
 	virtual void v_NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield, 
-						   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
+				      Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
         {
 	  ASSERTL0(false,"v_NumFluxforDiffu: This function is not valid for the Base class");
         }
 
 	 virtual void v_NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield,
-	                       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-						   Array<OneD, Array<OneD, NekDouble > >  &qflux)
+				       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+				       Array<OneD, Array<OneD, NekDouble > >  &qflux)
         {
 	  ASSERTL0(false,"v_NumFluxforDiffq: This function is not valid for the Base class");
         }
+
+	 virtual NekDouble v_AdvectionSphere(const NekDouble x0j, const NekDouble x1j,
+					     const NekDouble x2j, const NekDouble time)
+	{
+	  ASSERTL0(false,"v_AdvectionSphere: This function is not valid for the Base class");
+	}
+
+	virtual NekDouble v_Morphogenesis(const int field, const NekDouble x0j, const NekDouble x1j, 
+					  const NekDouble x2j, const NekDouble time)
+	{
+	  ASSERTL0(false,"v_Morphogenesis: This function is not valid for the Base class");
+	}
 
     };
     
@@ -364,6 +379,10 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.9  2009/07/09 21:29:13  sehunchun
+* VS: ----------------------------------------------------------------------
+* Add SetUpSurfaceNormal function..
+*
 * Revision 1.8  2009/07/02 15:57:36  sehunchun
 * "ReadBoundaryCondition" options with extenstion to 2D geometry imbedded in 3D
 *

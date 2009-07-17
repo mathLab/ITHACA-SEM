@@ -117,7 +117,7 @@ namespace Nektar
             /**
              * \brief 
              */ 
-            ContField2D::ContField2D(SpatialDomains::MeshGraph2D &graph2D);
+            ContField2D(SpatialDomains::MeshGraph2D &graph2D);
           
             /**
              * \brief This constructor sets up global continuous field

@@ -112,6 +112,10 @@ namespace Nektar
 	
 	void GetExactIsenTropicVortex(Array<OneD, NekDouble> &outarray, int field);
 
+	void SetInitialRinglebFlow(void);
+	void SetBoundaryRinglebFlow(int bcRegion, Array<OneD, Array<OneD, NekDouble> > &physarray);
+	void GetExactRinglebFlow(void);
+	
     protected:
 
     private: 
@@ -131,6 +135,17 @@ namespace Nektar
 	void RiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
 			   NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
 			   NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
+	void GetTimeStep(const NekDouble CFL, NekDouble &TimeStep);
+
+	inline NekDouble GetCFLNumber(int n)
+        {
+	  NekDouble CFLDG[21] = {2,6,11.8424,19.1569,27.8419,37.8247,49.0518,61.4815,75.0797,89.8181,105.67,122.62,140.64,159.73,179.85,201.01,223.18,246.36,270.53,295.69,321.83}; //CFLDG 1D [0-20]
+
+	  if(n<=20)
+	    return CFLDG[n];
+	  else
+	    ASSERTL0(false,"illegal modes dimension (CFL DG)");
+        }
 	
 	virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, 
 				     Array<OneD, Array<OneD, NekDouble> > &flux) 
@@ -155,6 +170,9 @@ namespace Nektar
 
 /**
 * $Log: EulerEquations.h,v $
+* Revision 1.4  2009/06/29 07:47:33  claes
+* bug fix in WallBoundary
+*
 * Revision 1.3  2009/03/17 12:32:01  claes
 * Updates to get the EulerSolver to work with the latest version of the TimeIntegrationScheme
 *

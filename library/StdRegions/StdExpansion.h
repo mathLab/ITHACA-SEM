@@ -940,6 +940,11 @@ namespace Nektar
             {
                 v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
             }
+	    
+	    boost::shared_ptr<StdExpansion1D> GetEdgeExp(int edge, bool SetUpNormals=true)
+            {
+	      v_GetEdgeExp(edge,true);
+            }
 
             // Matrix Routines
 
@@ -1618,6 +1623,11 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
+	    virtual boost::shared_ptr<StdExpansion1D> v_GetEdgeExp(const int edge, bool SetUpNormals=true)
+            {
+	      NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
+            }
+	    
 
             virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")
             {
@@ -1774,6 +1784,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.117  2009/07/08 17:21:12  sehunchun
+ * Deleting GetTanBasis
+ *
  * Revision 1.116  2009/07/08 11:12:48  sehunchun
  * Adding GetSurfaceNormal function
  *

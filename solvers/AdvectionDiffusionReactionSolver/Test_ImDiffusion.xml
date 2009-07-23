@@ -50,7 +50,7 @@
     <COMPOSITE>
       <C ID="0"> T[0-3] </C>
       <C ID="1"> Q[0-1] </C>
-      <C ID="2"> E[0,1,2,7] </C>
+      <C ID="2"> E[0,1,2,4,7,9,10,11] </C>
     </COMPOSITE>
 
     <DOMAIN> C[0-1] </DOMAIN>
@@ -74,7 +74,7 @@
 
     <SOLVERINFO>
       <I PROPERTY="EQTYPE" VALUE="UnsteadyDiffusion" />
-      <I PROPERTY="Projection" VALUE="Continuous"/>
+      <I PROPERTY="Projection" VALUE="DisContinuous"/>
       <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
     </SOLVERINFO> 
 
@@ -88,7 +88,7 @@
 
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
-        <D VAR="u" VALUE="0" />
+        <D VAR="u" VALUE="0.0" />
       </REGION>
     </BOUNDARYCONDITIONS>
 
@@ -98,11 +98,13 @@
     </USERDEFINEDEQNS>   
     
     <EXACTSOLUTION>
-     <F VAR="u" VALUE="exp(-2.0*PI*PI*FinTime)*sin(PI*x)*sin(PI*y)" />
+    <F VAR="u" VALUE="exp(-2.0*PI*PI*FinTime)*sin(PI*x)*sin(PI*y)" />
+    <!-- <F VAR="u" VALUE="x*x+y*y" /> -->
     </EXACTSOLUTION>
     
     <INITIALCONDITIONS>
-     <F VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+     <F VAR="u" VALUE="sin(PI*x)*sin(PI*y)" /> 
+     <!-- <F VAR="u" VALUE="x*x+y*y" /> -->
     </INITIALCONDITIONS>
     
   </CONDITIONS>

@@ -66,10 +66,10 @@
 
     <PARAMETERS>
       <P> TimeStep   = 0.000001 </P>
-      <P> NumSteps      = 5000  </P>
+      <P> NumSteps      = 500  </P>
       <P> FinTime    = TimeStep*NumSteps </P>
-      <P> IO_CheckSteps = 1000   </P>
-      <P> IO_InfoSteps  = 1000 </P>
+      <P> IO_CheckSteps = 100   </P>
+      <P> IO_InfoSteps  = 100 </P>
     </PARAMETERS>
 
     <SOLVERINFO>
@@ -91,11 +91,6 @@
 	 <D VAR="u" VALUE="0.0" />
       </REGION>
     </BOUNDARYCONDITIONS>
-
-    <USERDEFINEDEQNS>
-      <F LHS="Vx" VALUE="1.0" />
-      <F LHS="Vy" VALUE="0.0" />
-    </USERDEFINEDEQNS>   
     
     <EXACTSOLUTION>
       <F VAR="u" VALUE="exp(-2.0*PI*PI*FinTime)*sin(PI*x)*sin(PI*y)" />

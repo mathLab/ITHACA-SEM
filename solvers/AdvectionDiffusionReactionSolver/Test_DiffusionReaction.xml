@@ -74,7 +74,7 @@
 
     <SOLVERINFO>
       <I PROPERTY="EQTYPE" VALUE="UnsteadyDiffusionReaction" />
-      <I PROPERTY="Projection" VALUE="Continuous"/>
+      <I PROPERTY="Projection" VALUE="DisContinuous"/>
       <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
     </SOLVERINFO>
 
@@ -92,11 +92,6 @@
       </REGION>
     </BOUNDARYCONDITIONS>
 
-    <USERDEFINEDEQNS>
-      <F LHS="Vx" VALUE="1.0" />
-      <F LHS="Vy" VALUE="1.0" />
-    </USERDEFINEDEQNS>   
-    
     <EXACTSOLUTION>
       <F VAR="u" VALUE="exp(-1.0*PI*PI*FinTime)*sin(PI*x)*sin(PI*y)" />
     </EXACTSOLUTION>
@@ -108,4 +103,3 @@
   </CONDITIONS>
   
 </NEKTAR>
-

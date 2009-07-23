@@ -49,7 +49,11 @@ int main(int argc, char *argv[])
     ASSERTL0(argc == 2,"\n \t Usage: AdvectionDiffusionReactionSolver  meshfile \n");
 
     string fileNameString(argv[1]);
+    time_t starttime, endtime;
+    NekDouble CPUtime;
     
+    time(&starttime);    
+
     //----------------------------------------------------------------
     // Read the mesh and construct container class
     AdvectionDiffusionReaction dom(fileNameString);
@@ -150,8 +154,14 @@ int main(int argc, char *argv[])
         ASSERTL0(false,"Unknown or undefined equation type");
     }
 
+    time(&endtime);
+    CPUtime = (1.0/60.0/60.0)*difftime(endtime,starttime);
+
     // Write  output to .fld file
     dom.Output();
+
+    cout << "-------------------------------------------" << endl;
+    cout << "Total Computation Time = " << CPUtime << " hr." << endl;
 
     // Evaluate L2 Error
     for(int i = 0; i < dom.GetNvariables(); ++i)

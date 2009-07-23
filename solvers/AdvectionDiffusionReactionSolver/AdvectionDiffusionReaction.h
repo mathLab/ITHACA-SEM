@@ -159,24 +159,25 @@ namespace Nektar
 	void NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
                            Array<OneD, Array<OneD, NekDouble> > &numfluxX,
 			   Array<OneD, Array<OneD, NekDouble> > &numfluxY);
-			   
-	void NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield, 
-			    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
+
+       void NumFluxforScalar(Array<OneD, Array<OneD, NekDouble> > &ufield, 
+                              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
+
+	void NumFluxforVector(Array<OneD, Array<OneD, NekDouble> > &ufield,
+			      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+			      Array<OneD, Array<OneD, NekDouble> >  &qflux);
 						   
-	void NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield,
-			    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-			    Array<OneD, Array<OneD, NekDouble> >  &qflux);
-						   
-	void WeakPenaltyBoundary(const Array<OneD, const NekDouble> &Fwd, 
-				 Array<OneD, NekDouble> &penaltyflux,
-				 NekDouble initialtime=1.0);
+	void WeakPenaltyforScalar(const int var,
+                                  const Array<OneD, const NekDouble> &physfield, 
+                                  Array<OneD, NekDouble> &penaltyflux,
+                                  NekDouble time=0.0);
 									 
-        void WeakPenaltyBoundary(const int dir,
-	                         const Array<OneD, const NekDouble> &Fwd,
-				 const Array<OneD, const NekDouble> &qFwd,
-				 Array<OneD, NekDouble> &penaltyflux,
-				 NekDouble C11,
-				 NekDouble initialtime=1.0);	   
+        void WeakPenaltyforVector(const int var,
+                                  const int dir,
+                                  const Array<OneD, const NekDouble> &physfield,
+                                  Array<OneD, NekDouble> &penaltyflux,
+                                  NekDouble C11,
+                                  NekDouble time=0.0);	   
 			   
         void ODElhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
 		           Array<OneD,       Array<OneD, NekDouble> >&outarray, 
@@ -222,6 +223,8 @@ namespace Nektar
 
         Array<OneD, Array<OneD, NekDouble> >  m_velocity;
 
+	Array<OneD, Array<OneD, NekDouble> > m_traceNormals_tbasis; // forward normals in tangential basis
+
         void EvaluateAdvectionVelocity();
 
 	void SetBoundaryConditions(NekDouble time); 
@@ -248,17 +251,17 @@ namespace Nektar
 	    NumericalFlux(physfield, numfluxX, numfluxY); 
         }
 		
-	virtual void v_NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield, 
-				      Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
-	{
-	    NumFluxforDiff(ufield, uflux);
+        virtual void v_NumFluxforScalar(Array<OneD, Array<OneD, NekDouble> > &ufield, 
+                                        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
+        {
+            NumFluxforScalar(ufield, uflux);
 	}
-						   
-	virtual void v_NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield,
-	                              Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-				      Array<OneD, Array<OneD, NekDouble> >  &qflux)
+	
+	virtual void v_NumFluxforVector(Array<OneD, Array<OneD, NekDouble> > &ufield,
+					Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+					Array<OneD, Array<OneD, NekDouble> >  &qflux)
 	{
-	    NumFluxforDiff(ufield, qfield, qflux);
+            NumFluxforVector(ufield, qfield, qflux);
 	}
       
     };
@@ -271,6 +274,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.h,v $
+* Revision 1.11  2009/07/09 21:24:57  sehunchun
+* Upwind function is update
+*
 * Revision 1.10  2009/06/11 01:54:08  claes
 * Added Inviscid Burger
 *

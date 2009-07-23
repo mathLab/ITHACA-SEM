@@ -106,6 +106,7 @@ namespace Nektar
             }
             
             EvaluateAdvectionVelocity();
+
             m_timeIntMethod = LibUtilities::eClassicalRungeKutta4;		
             goto UnsteadySetup;
             break;
@@ -114,15 +115,6 @@ namespace Nektar
 	  goto UnsteadySetup;
 	  break;
         case eUnsteadyDiffusion:
-            // default explicit scheme 
-	    m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-        
-	   for(int i = 0; i < m_spacedim; ++i)
-            {
-                m_velocity[i] = Array<OneD, NekDouble> (GetNpoints());
-            }
-            
-            EvaluateAdvectionVelocity();
             m_timeIntMethod = LibUtilities::eClassicalRungeKutta4; 
             goto UnsteadySetup;
         case eUnsteadyDiffusionReaction:
@@ -429,27 +421,35 @@ namespace Nektar
     for (int i = 0; i < nvariables; ++i)
       {
 	// Multiply by inverse of mass matrix
-	m_fields[i]->MultiplyByInvMassMatrix(inarray[i],outarray[i],false);
+	if(m_projectionType==eGalerkin)
+	  {
+	    //  m_fields[i]->MultiplyByInvMassMatrix(inarray[i],outarray[i],false);
+	  }
         
 	// Multiply rhs[i] with -1.0/gamma/timestep
-	Vmath::Smul(ncoeffs, -1.0/lambda, outarray[i], 1, outarray[i], 1);
+	Vmath::Smul(ncoeffs, -1.0/lambda, inarray[i], 1, outarray[i], 1);
         
 	// Update coeffs to m_fields
 	m_fields[i]->UpdateCoeffs() = outarray[i];
-        
+
 	// Backward Transformation to nodal coefficients
 	m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
-        
+	// m_fields[i]->SetPhysState(true);        
+       
 	NekDouble kappa = 1.0/lambda;
         
 	// Solve a system of equations with Helmholtz solver
 	m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs(),kappa);
+	m_fields[i]->SetPhysState(false);        
         
 	// The solution is Y[i]
 	outarray[i] = m_fields[i]->GetCoeffs();	  
         
 	// Multiply back by mass matrix
-	m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,outarray[i],outarray[i]);
+	if(m_projectionType==eGalerkin)
+	  {
+	    // m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,outarray[i],outarray[i]);
+	  }
       }
   }
   
@@ -504,9 +504,10 @@ namespace Nektar
     
     for(i = 0; i < nvariables; ++i)
       {
+	m_fields[i]->SetPhysState(false);
 	fields[i]  = m_fields[i]->UpdateCoeffs();
       }
-    
+  
     if(m_projectionType==eGalerkin)
       {
 	// calculate the variable u* = Mu
@@ -515,12 +516,7 @@ namespace Nektar
 	for(int i = 0; i < nvariables; ++i)
 	  {
 	    tmp[i] = Array<OneD, NekDouble>(ncoeffs);
-	    m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,fields[i],fields[i]);
-	  }
-	
-	for(int i = 0; i < nvariables; ++i)
-	  {
-	    m_fields[i]->SetPhysState(false);
+	    //    m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,fields[i],fields[i]);
 	  }
       }
     
@@ -602,8 +598,10 @@ namespace Nektar
                 SetBoundaryConditions(m_time);
                 for(i = 0; i < nvariables; ++i)
                 {
-                    m_fields[i]->MultiplyByInvMassMatrix(fields[i],tmp[i],false);
-                    fields[i] = tmp[i];	   		    
+		  m_fields[i]->SetPhysState(false);
+
+		  //	  m_fields[i]->MultiplyByInvMassMatrix(fields[i],tmp[i],false);
+		  // fields[i] = tmp[i];	   		    
                 }
             }
 
@@ -815,131 +813,164 @@ namespace Nektar
 	    ASSERTL0(false,"unknown equationType");
 	  }
     }
+
+
+  // Compute the fluxes of q from the scalar functin u.
+  // Input:   ufield (1 by nTraceNumPoints) - Should be in physical field
+  // Output:  ufluxFwd  (2 by nTraceNumPoints) - Flux values for forward edges
+  //          ufluxBwd  (2 by nTraceNumPoints) - Flux values for backward edges
+
+    void AdvectionDiffusionReaction::NumFluxforScalar(Array<OneD, Array<OneD, NekDouble> > &ufield, 
+						      Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
+    {
+        int i,j;
+        int nTraceNumPoints = GetTraceNpoints();
+	int nvariables = m_fields.num_elements();
+        int nqvar = uflux.num_elements();
 	
-// Compute the fluxes of q and u vector fields for discontinuous diffusion term
-// Input:   ufield : 1 by # of total trace points
-// Output:  uflux  : 2 by # of total trace points
-	
-  void AdvectionDiffusionReaction::NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield, 
-						  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
-  {
-    int i,j;
-    
-    int nTraceNumPoints = GetTraceNpoints();
-    int nvel = m_velocity.num_elements();
-    
-    Array<OneD, NekDouble > Fwd(nTraceNumPoints);
-    Array<OneD, NekDouble > Bwd(nTraceNumPoints);
-    Array<OneD, NekDouble > Vn (nTraceNumPoints,0.0);
-    Array<OneD, NekDouble > fluxtemp (nTraceNumPoints);
-    
-     // Get the sign of (v \cdot n), v = an arbitrary vector
-    for(i = 0; i < nvel; ++i)
-      {
-	m_fields[0]->ExtractTracePhys(m_velocity[i], Fwd);
-	Vmath::Vvtvp(nTraceNumPoints,m_traceNormals[i],1,Fwd,1,Vn,1,Vn,1);
-      }
-    
-    for(i = 0; i < uflux.num_elements(); ++i)
-      {
-	
-	//  Evaulate upwind flux of uflux = \hat{u} \phi \cdot u = u^{(+,-)} n
-	
-	//  Fwd = u+,  Bwd = u-
-	m_fields[i]->GetFwdBwdTracePhys(ufield[i],Fwd,Bwd);
-	
-	//  uflux[i] = minmod (u+, u-)   
-	m_fields[i]->GetTrace()->Upwind(Vn,Fwd,Bwd,fluxtemp);  
-	
-	// Imposing weak boundary condition with flux
-	m_fields[i]->ExtractTracePhys(ufield[i],Fwd);
-	WeakPenaltyBoundary(Fwd,fluxtemp);
-	
-	for(j = 0; j < nvel; ++j)
-	  {
-	    Vmath::Vmul(nTraceNumPoints,m_traceNormals[j],1,fluxtemp,1,uflux[i][j],1);
-	  }
-      }
-  }
-  
+        Array<OneD, NekDouble > Fwd(nTraceNumPoints);
+        Array<OneD, NekDouble > Bwd(nTraceNumPoints);
+	Array<OneD, NekDouble > Vn (nTraceNumPoints,0.0);
+	Array<OneD, NekDouble > fluxtemp (nTraceNumPoints,0.0);
+        	  		  
+	// Get the sign of (v \cdot n), v = an arbitrary vector
+
+	// Vn = V \cdot n, where n is tracenormal for eForward edges. Set V = (1,0)
+	// Vmath::Vcopy(nTraceNumPoints,m_traceNormals_tbasis[0],1,Vn,1);
+
+        //  Evaulate upwind flux of uflux = \hat{u} \phi \cdot u = u^{(+,-)} n
+        for (j = 0; j < nqvar; ++j)
+        {
+            for(i = 0; i < nvariables ; ++i)
+            {
+                //  Compute Forward and Backward value of ufield of i direction
+                m_fields[i]->GetFwdBwdTracePhys(ufield[i],Fwd,Bwd);
+                
+                // if Vn >= 0, flux = uFwd, i.e.,
+                //  edge::eForward, if V*n>=0 <=> V*n_F>=0, pick uflux = uFwd
+                //  edge::eBackward, if V*n>=0 <=> V*n_B<0, pick uflux = uFwd
+                
+                // else if Vn < 0, flux = uBwd, i.e.,
+                //  edge::eForward, if V*n<0 <=> V*n_F<0, pick uflux = uBwd
+                //  edge::eBackward, if V*n<0 <=> V*n_B>=0, pick uflux = uBwd
+
+		m_fields[i]->GetTrace()->Upwind(m_traceNormals[j],Fwd,Bwd,fluxtemp);  
+                
+                // Imposing weak boundary condition with flux
+                // if Vn >= 0, uflux = uBwd at Neumann, i.e.,
+                //  edge::eForward, if V*n>=0 <=> V*n_F>=0, pick uflux = uBwd
+                //  edge::eBackward, if V*n>=0 <=> V*n_B<0, pick uflux = uBwd
+                
+                // if Vn >= 0, uflux = uFwd at Neumann, i.e.,
+                //  edge::eForward, if V*n<0 <=> V*n_F<0, pick uflux = uFwd
+                //  edge::eBackward, if V*n<0 <=> V*n_B>=0, pick uflux = uFwd
+                if(m_fields[0]->GetBndCondExpansions().num_elements())
+		{
+                    WeakPenaltyforScalar(i,ufield[i],fluxtemp);
+		}
+                
+                // if Vn >= 0, flux = uFwd*(tan_{\xi}^- \cdot \vec{n} ), i.e,
+                // edge::eForward, uFwd \(\tan_{\xi}^Fwd \cdot \vec{n} )
+                // edge::eBackward, uFwd \(\tan_{\xi}^Bwd \cdot \vec{n} )
+                
+                // else if Vn < 0, flux = uBwd*(tan_{\xi}^- \cdot \vec{n} ), i.e,
+                // edge::eForward, uBwd \(\tan_{\xi}^Fwd \cdot \vec{n} )
+                // edge::eBackward, uBwd \(\tan_{\xi}^Bwd \cdot \vec{n} )
+
+		Vmath::Vmul(nTraceNumPoints,m_traceNormals[j],1,fluxtemp,1,uflux[j][i],1);
+            }
+	}
+    }
+
+    // Compute the fluxes of q and u vector fields for discontinuous diffusion term
+    // Input:   qfield : 2 by # of total trace points
+    // Output:  qflux  : 2 by # of total trace points
+    void AdvectionDiffusionReaction::NumFluxforVector(Array<OneD, Array<OneD, NekDouble> > &ufield,
+                                         Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+                                         Array<OneD, Array<OneD, NekDouble> >  &qflux)
+    {
+        int nTraceNumPoints = GetTraceNpoints();
+	int nvariables = m_fields.num_elements();
+        int nqvar = qfield.num_elements();
+
+	NekDouble C11 = 1.0;			
+        Array<OneD, NekDouble > Fwd(nTraceNumPoints);
+        Array<OneD, NekDouble > Bwd(nTraceNumPoints);
+	Array<OneD, NekDouble > Vn (nTraceNumPoints,0.0);
 			
-  // Compute the fluxes of q and u vector fields for discontinuous diffusion term
-  // Input:   qfield : 2 by # of total trace points
-  // Output:  qflux  : 2 by # of total trace points
+	Array<OneD, NekDouble > qFwd(nTraceNumPoints);
+        Array<OneD, NekDouble > qBwd(nTraceNumPoints);
+	Array<OneD, NekDouble > qfluxtemp(nTraceNumPoints,0.0);
+
+	Array<OneD, NekDouble > uterm(nTraceNumPoints);
+	  		  
+        // Get the sign of (v \cdot n), v = an arbitrary vector
+	// Vn = V \cdot n, where n is tracenormal for eForward edges
+	// Vmath::Vcopy(nTraceNumPoints,m_traceNormals[0],1,Vn,1);
+        
+        // Evaulate upwind flux of qflux = \hat{q} \cdot u = q \cdot n - C_(11)*(u^+ - u^-)		   			
+        for(int i = 0; i < nvariables; ++i)
+        {
+            qflux[i] = Array<OneD, NekDouble> (nTraceNumPoints,0.0);
+            for(int j = 0; j < nqvar; ++j)
+            {
+		//  Compute Forward and Backward value of ufield of jth direction
+		m_fields[i]->GetFwdBwdTracePhys(qfield[j][i],qFwd,qBwd);
+                
+                // if Vn >= 0, flux = uFwd, i.e.,
+                //  edge::eForward, if V*n>=0 <=> V*n_F>=0, pick qflux = qBwd = q+
+                //  edge::eBackward, if V*n>=0 <=> V*n_B<0, pick qflux = qBwd = q-
+                
+                // else if Vn < 0, flux = uBwd, i.e.,
+                //  edge::eForward, if V*n<0 <=> V*n_F<0, pick qflux = qFwd = q-
+                //  edge::eBackward, if V*n<0 <=> V*n_B>=0, pick qflux = qFwd =q+
+
+		m_fields[i]->GetTrace()->Upwind(m_traceNormals[j],qBwd,qFwd,qfluxtemp);
+		Vmath::Vmul(nTraceNumPoints,m_traceNormals[j],1,qfluxtemp,1,qfluxtemp,1);
+
+		// Generate Stability term = - C11 ( u- - u+ )
+		m_fields[i]->GetFwdBwdTracePhys(ufield[i],Fwd,Bwd);
+		Vmath::Vsub(nTraceNumPoints,Fwd,1,Bwd,1,uterm,1);					  
+		Vmath::Smul(nTraceNumPoints,-1.0*C11,uterm,1,uterm,1);
+
+		//  Flux = {Fwd,Bwd}*(nx,ny,nz) + uterm*(nx,ny)
+		Vmath::Vadd(nTraceNumPoints,uterm,1,qfluxtemp,1,qfluxtemp,1);
+		
+		// Imposing weak boundary condition with flux
+		if(m_fields[0]->GetBndCondExpansions().num_elements())
+		  {
+		    WeakPenaltyforVector(i,j,qfield[j][i],qfluxtemp,C11);
+		  }
+		
+		// q_hat \cdot n = (q_xi \cdot n_xi) or (q_eta \cdot n_eta)
+		// n_xi = n_x*tan_xi_x + n_y*tan_xi_y + n_z*tan_xi_z
+		// n_xi = n_x*tan_eta_x + n_y*tan_eta_y + n_z*tan_eta_z
+                Vmath::Vadd(nTraceNumPoints,qfluxtemp,1,qflux[i],1,qflux[i],1);
+	    }
+        }
+    }
+    
+
 	
-  void AdvectionDiffusionReaction::NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield,
-	                                          Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-						  Array<OneD, Array<OneD, NekDouble> >  &qflux)
-  {
-    int nTraceNumPoints = GetTraceNpoints();
-    int nvel = m_velocity.num_elements();
-    NekDouble C11 = 1.0;
-    
-    int numBDEdge = m_fields[0]->GetBndCondExpansions()[0]->GetExpSize();
-    int Nfps = m_fields[0]->GetBndCondExpansions()[0]->GetExp(0)->GetNumPoints(0) ;
-    int id1, id2;
-    
-    Array<OneD, NekDouble > Fwd(nTraceNumPoints);
-    Array<OneD, NekDouble > Bwd(nTraceNumPoints);
-    Array<OneD, NekDouble > Vn (nTraceNumPoints,0.0);	
-    
-    Array<OneD, NekDouble > qFwd(nTraceNumPoints);
-    Array<OneD, NekDouble > qBwd(nTraceNumPoints);
-    Array<OneD, NekDouble > qfluxtemp(nTraceNumPoints,0.0);
-    Array<OneD, NekDouble > uterm(nTraceNumPoints);
-    
-    // Get the sign of (v \cdot n), v = an arbitrary vector
-    for(int j = 0; j < nvel; ++j)
-      {
-	m_fields[0]->ExtractTracePhys(m_velocity[j], qFwd);
-	Vmath::Vvtvp(nTraceNumPoints,m_traceNormals[j],1,qFwd,1,Vn,1,Vn,1);
-      }
-    
-    for(int i = 0; i < qfield.num_elements(); ++i)
-      {
-	// Evaulate upwind flux of qflux = \hat{q} \cdot u = q \cdot n - C_(11)*(u^+ - u^-)		   			
-	for(int j = 0; j < nvel; ++j)
-	  {
-	    //  qFwd = q+,  qBwd = q-
-	    m_fields[i]->GetFwdBwdTracePhys(qfield[i][j],qFwd,qBwd);
-	    
-	    //  qfluxtemp = maxmod(q-,q+)
-	    m_fields[i]->GetTrace()->Upwind(Vn,qBwd,qFwd,qfluxtemp);
-	    
-	    //   uterm = - C11 ( u+ - u- )
-	    m_fields[i]->GetFwdBwdTracePhys(ufield[i],Fwd,Bwd);
-	    Vmath::Vsub(nTraceNumPoints,Fwd,1,Bwd,1,uterm,1);					  
-	    Vmath::Smul(nTraceNumPoints,-1.0*C11,uterm,1,uterm,1);
-	    
-	    //   qflux[i][j] = (qhat_x, qhat_y) + temp*(n_x,n_y)  
-	    Vmath::Vvtvp(nTraceNumPoints,uterm,1,m_traceNormals[j],1,qfluxtemp,1,qfluxtemp,1);
-	    
-	    //   Imposing weak boundary condition with flux
-	    m_fields[i]->ExtractTracePhys(qfield[i][j],qFwd);
-	    m_fields[i]->ExtractTracePhys(ufield[i],Fwd);
-	    WeakPenaltyBoundary(j,Fwd,qFwd,qfluxtemp,C11);
-	    
-	    //   Calculate m_fields[i]*Vn
-	    Vmath::Vvtvp(nTraceNumPoints,m_traceNormals[j],1,qfluxtemp,1,qflux[i],1,qflux[i],1);	   	
-	  }			  
-      }
-  }
-  
   // Diffusion: Imposing weak boundary condition for u with flux 
   //  uflux = g_D  on Dirichlet boundary condition
   //  uflux = u_Fwd  on Neumann boundary condition
-  void AdvectionDiffusionReaction::WeakPenaltyBoundary(const Array<OneD, const NekDouble> &Fwd, 
-						       Array<OneD, NekDouble> &penaltyflux,
-						       NekDouble initialtime)
+  void AdvectionDiffusionReaction::WeakPenaltyforScalar(const int var,
+							const Array<OneD, const NekDouble> &physfield, 
+							Array<OneD, NekDouble> &penaltyflux,
+							NekDouble time)
   {
     int i, j, e, npoints, id1, id2;
     int nbnd = m_fields[0]->GetBndCondExpansions().num_elements();
     int numBDEdge = m_fields[0]->GetBndCondExpansions()[0]->GetExpSize();
     int Nfps = m_fields[0]->GetBndCondExpansions()[0]->GetExp(0)->GetNumPoints(0) ;
-    
+    int nTraceNumPoints = GetTraceNpoints();
+
+    Array<OneD, NekDouble > uplus(nTraceNumPoints);
+
+    m_fields[var]->ExtractTracePhys(physfield,uplus);            
     for(i = 0; i < nbnd; ++i)
       {                 
-	
 	// Evaluate boundary values g_D or g_N from input files
 	SpatialDomains::ConstInitialConditionShPtr ifunc = m_boundaryConditions->GetInitialCondition(i);
 	npoints = m_fields[0]->GetBndCondExpansions()[i]->GetNpoints();
@@ -952,7 +983,7 @@ namespace Nektar
 	m_fields[0]->GetBndCondExpansions()[i]->GetCoords(x0,x1,x2);
 	for(j = 0; j < npoints; j++)
 	  {
-	    BDphysics[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],initialtime);
+	    BDphysics[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],time);
 	  }
 	
 	// Weakly impose boundary conditions by modifying flux values
@@ -964,13 +995,13 @@ namespace Nektar
 	    // For Dirichlet boundary condition: uflux = g_D
 	    if(m_fields[0]->GetBndConditions()[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
 	      {
-		Vmath::Vcopy(Nfps,&BDphysics[id1],1,&penaltyflux[id2],1);
+                   Vmath::Vcopy(Nfps,&BDphysics[id1],1,&penaltyflux[id2],1);
 	      }
 	    
 	    // For Neumann boundary condition: uflux = u+
 	    else if((m_fields[0]->GetBndConditions()[i])->GetBoundaryConditionType() == SpatialDomains::eNeumann)
 	      {
-		Vmath::Vcopy(Nfps,&Fwd[id2],1,&penaltyflux[id2],1);
+		Vmath::Vcopy(Nfps,&uplus[id2],1,&penaltyflux[id2],1);
 	      }
 	  }
       }           
@@ -979,12 +1010,12 @@ namespace Nektar
   // Diffusion: Imposing weak boundary condition for q with flux 
   //  uflux = g_D  on Dirichlet boundary condition
   //  uflux = u_Fwd  on Neumann boundary condition
-  void AdvectionDiffusionReaction::WeakPenaltyBoundary(const int dir,
-						       const Array<OneD, const NekDouble> &Fwd, 
-						       const Array<OneD, const NekDouble> &qFwd, 
-						       Array<OneD, NekDouble> &penaltyflux,
-						       NekDouble C11,
-						       NekDouble initialtime)
+    void AdvectionDiffusionReaction::WeakPenaltyforVector(const int var,
+                                             const int dir,
+                                             const Array<OneD, const NekDouble> &physfield,
+                                             Array<OneD, NekDouble> &penaltyflux,
+                                             NekDouble C11,
+                                             NekDouble time)
   {
     int i, j, e, npoints, id1, id2;
     int nbnd = m_fields[0]->GetBndCondExpansions().num_elements();
@@ -992,11 +1023,13 @@ namespace Nektar
     int Nfps = m_fields[0]->GetBndCondExpansions()[0]->GetExp(0)->GetNumPoints(0) ;
     int nTraceNumPoints = GetTraceNpoints();
     Array<OneD, NekDouble > uterm(nTraceNumPoints);
+    Array<OneD, NekDouble > qtemp(nTraceNumPoints);
     
+    m_fields[var]->ExtractTracePhys(physfield,qtemp);            
+
     for(i = 0; i < nbnd; ++i)
       {                 
-	
-	// Evaluate boundary values g_D or g_N from input files
+      	// Evaluate boundary values g_D or g_N from input files
 	SpatialDomains::ConstInitialConditionShPtr ifunc = m_boundaryConditions->GetInitialCondition(i);
 	npoints = m_fields[0]->GetBndCondExpansions()[i]->GetNpoints();
 	
@@ -1008,7 +1041,7 @@ namespace Nektar
 	m_fields[0]->GetBndCondExpansions()[i]->GetCoords(x0,x1,x2);
 	for(j = 0; j < npoints; j++)
 	  {
-	    BDphysics[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],initialtime);
+	    BDphysics[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],time);
 	  }
 	
 	// Weakly impose boundary conditions by modifying flux values
@@ -1020,19 +1053,22 @@ namespace Nektar
 	    // For Dirichlet boundary condition: qflux = q+ - C_11 (u+ - g_D) (nx, ny)
 	    if(m_fields[0]->GetBndConditions()[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
 	      {
-		Vmath::Vsub(Nfps,&Fwd[id2],1,&BDphysics[id1],1,&uterm[id2],1);
-		Vmath::Vmul(Nfps,&m_traceNormals[dir][id2],1,&uterm[id2],1,&uterm[id2],1);
-		Vmath::Svtvp(Nfps,-1.0*C11,&uterm[id2],1,&qFwd[id2],1,&penaltyflux[id2],1);
+		Vmath::Vmul(Nfps,&m_traceNormals[dir][id2],1,&qtemp[id2],1,&penaltyflux[id2],1);
+
+                  // Vmath::Vsub(Nfps,&Fwd[id2],1,&BDphysics[id1],1,&uterm[id2],1);
+                  //	Vmath::Vmul(Nfps,&m_traceNormals[dir][id2],1,&uterm[id2],1,&uterm[id2],1);
+                  // Vmath::Svtvp(Nfps,-1.0*C11,&uterm[id2],1,&qFwd[id2],1,&penaltyflux[id2],1);
 	      }
-	    
+	   
 	    // For Neumann boundary condition: qflux = g_N
 	    else if((m_fields[0]->GetBndConditions()[i])->GetBoundaryConditionType() == SpatialDomains::eNeumann)
 	      {
-		Vmath::Vcopy(Nfps,&BDphysics[id1],1,&penaltyflux[id2],1);
+		Vmath::Vmul(Nfps,&m_traceNormals[dir][id2],1,&BDphysics[id1],1,&penaltyflux[id2],1);
 	      }
 	  }
       }       
   }
+  
   
   void AdvectionDiffusionReaction::Summary(std::ostream &out)
   {   
@@ -1104,6 +1140,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.20  2009/07/09 21:24:57  sehunchun
+* Upwind function is update
+*
 * Revision 1.19  2009/07/01 21:51:58  sehunchun
 * Modification of ExDiffusion Solver and tabbing
 *

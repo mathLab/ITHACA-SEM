@@ -99,15 +99,10 @@ namespace Nektar
 			     bool NumericalFluxIncludesNormal = true, 
 			     bool InFieldIsInPhysSpace = false, int nvariables = 0); 
 				 
-        void WeakDGDiffusion3D(const Array<OneD, Array<OneD, NekDouble> >& InField, 
+        void WeakDGDiffusion(const Array<OneD, Array<OneD, NekDouble> >& InField, 
                              Array<OneD, Array<OneD, NekDouble> >& OutField,
                              bool NumericalFluxIncludesNormal = true, 
                              bool InFieldIsInPhysSpace = false);
-
-        void WeakDGDiffusion(const Array<OneD, Array<OneD, NekDouble> >& InField, 
-			     Array<OneD, Array<OneD, NekDouble> >& OutField,
-			     bool NumericalFluxIncludesNormal = true, 
-			     bool InFieldIsInPhysSpace = false);
 
         NekDouble L2Error(int field, const int eqntype = 0, 
 			  const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
@@ -124,7 +119,6 @@ namespace Nektar
 	void Summary          (std::ostream &out);
 	void SessionSummary   (std::ostream &out);
 	void TimeParamSummary (std::ostream &out);
-	void Unitlength(Array<OneD, Array<OneD, NekDouble> > &array);
         
         inline Array<OneD, MultiRegions::ExpListSharedPtr> &UpdateFields(void)
         {
@@ -245,19 +239,6 @@ namespace Nektar
 	  v_NumFluxforVector(ufield,qfield, qflux);
         }
 
-	void NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield, 
-			    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
-	{
-	  v_NumFluxforDiff(ufield, uflux);
-	}
-	
-	void NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield,
-			    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-			    Array<OneD, Array<OneD, NekDouble> >  &qflux)
-	{
-	  v_NumFluxforDiff(ufield,qfield, qflux);
-	}
-
 	NekDouble AdvectionSphere(const NekDouble x0j, const NekDouble x1j,
 				  const NekDouble x2j, const NekDouble time)
 	{
@@ -286,7 +267,7 @@ namespace Nektar
 
         Array<OneD, Array<OneD, NekDouble> > m_traceNormals; ///< Array holding the forward normals
 
-        Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_curvature; // 1 by nvariable by nq
+        Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_gradtan; // 1 by nvariable by nq
         Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis; // 2 by m_spacedim by nq 
 	
         int NoCaseStringCompare(const string & s1, const string& s2) ;
@@ -344,19 +325,6 @@ namespace Nektar
 	  ASSERTL0(false,"v_NumFluxforVector: This function is not valid for the Base class");
         }    
 
-	virtual void v_NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield, 
-				      Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
-        {
-	  ASSERTL0(false,"v_NumFluxforDiffu: This function is not valid for the Base class");
-        }
-
-	 virtual void v_NumFluxforDiff(Array<OneD, Array<OneD, NekDouble> > &ufield,
-				       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-				       Array<OneD, Array<OneD, NekDouble > >  &qflux)
-        {
-	  ASSERTL0(false,"v_NumFluxforDiffq: This function is not valid for the Base class");
-        }
-
 	 virtual NekDouble v_AdvectionSphere(const NekDouble x0j, const NekDouble x1j,
 					     const NekDouble x2j, const NekDouble time)
 	{
@@ -379,6 +347,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.10  2009/07/11 23:39:23  sehunchun
+* Move uncommon functions to each solvers
+*
 * Revision 1.9  2009/07/09 21:29:13  sehunchun
 * VS: ----------------------------------------------------------------------
 * Add SetUpSurfaceNormal function..

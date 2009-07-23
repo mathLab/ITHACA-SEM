@@ -338,7 +338,6 @@ namespace Nektar
                     for(int j = 0; j < nq; j++)
                     {
                         (m_fields[i]->UpdatePhys())[j] = Morphogenesis(i, x0[j], x1[j], x2[j], initialtime);
-			cout << " value = " << Morphogenesis(i, x0[j], x1[j], x2[j], initialtime) << endl;
                     }
                     
                     m_fields[i]->SetPhysState(true);
@@ -543,7 +542,8 @@ namespace Nektar
     // -------------------------------------------------------------
 
     void ADRBase::AdvectionNonConservativeForm(const Array<OneD, Array<OneD, NekDouble> > &V, 
-                                               const Array<OneD, const NekDouble> &u, Array<OneD, NekDouble> &outarray, Array<OneD, NekDouble> &wk)
+                                               const Array<OneD, const NekDouble> &u, Array<OneD, NekDouble> &outarray, 
+					       Array<OneD, NekDouble> &wk)
     {
         // use dimension of Velocity vector to dictate dimension of operation
         int ndim       = V.num_elements();
@@ -572,12 +572,14 @@ namespace Nektar
             m_fields[0]->PhysDeriv(u,grad0);
             Vmath::Vmul(nPointsTot,grad0,1,V[0],1,outarray,1);
             break;
+
         case 2:
             grad1 = grad0 + nPointsTot;
             m_fields[0]->PhysDeriv(u,grad0,grad1);
             Vmath::Vmul (nPointsTot,grad0,1,V[0],1,outarray,1);
             Vmath::Vvtvp(nPointsTot,grad1,1,V[1],1,outarray,1,outarray,1);
             break;
+
         case 3:
             grad1 = grad0 + nPointsTot;
             grad2 = grad1 + nPointsTot;
@@ -586,6 +588,7 @@ namespace Nektar
             Vmath::Vvtvp(nPointsTot,grad1,1,V[1],1,outarray,1,outarray,1);
             Vmath::Vvtvp(nPointsTot,grad2,1,V[2],1,outarray,1,outarray,1);
             break;
+
         default:
             ASSERTL0(false,"dimension unknown");
         }
@@ -711,14 +714,13 @@ namespace Nektar
 	    
 	  }
     }
-	
 
     //-------------------------------------------------------------
     // Calculate weak DG Diffusion in the LDG form 
     //  <\psi, \hat{u} \cdot n> - (\grad \psi \cdot u)
     //  <\phi, \hat{q}\cdot n> - (\grad \phi \cdot q)
     // -------------------------------------------------------------
-  void ADRBase::WeakDGDiffusion3D(const Array<OneD, Array<OneD, NekDouble> >& InField, 
+  void ADRBase::WeakDGDiffusion(const Array<OneD, Array<OneD, NekDouble> >& InField, 
 				  Array<OneD, Array<OneD, NekDouble> >& OutField,
 				  bool NumericalFluxIncludesNormal, bool InFieldIsInPhysSpace)
     {
@@ -731,33 +733,44 @@ namespace Nektar
 
 	Array<OneD, NekDouble>  qcoeffs (ncoeffs);
 	Array<OneD, NekDouble>  temp (ncoeffs);
-	Array<OneD, NekDouble>  FMass (ncoeffs);
 
-	Array<OneD, Array<OneD, NekDouble> > physfield (nvariables);
 	Array<OneD, Array<OneD, NekDouble> > fluxvector (m_spacedim);
-	Array<OneD, Array<OneD, NekDouble> >  qflux   (nvariables);
+	Array<OneD, Array<OneD, NekDouble> > ufield (nvariables);
 
-	Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  uflux   (nvariables);
-	Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  qfield  (nvariables);
+	Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  flux   (nqvar);
+	Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  qfield  (nqvar);
 				  
-	for(i = 0; i < nvariables; ++i)
+	for(j = 0; j < nqvar; ++j)
 	    {
-	      qfield[i] = Array<OneD, Array<OneD, NekDouble> >(nqvar);
-	      uflux[i] = Array<OneD, Array<OneD, NekDouble> >(nqvar);
+	      qfield[j] = Array<OneD, Array<OneD, NekDouble> >(nqvar);
+	      flux[j] = Array<OneD, Array<OneD, NekDouble> >(nqvar);
 
-	      qflux[i] = Array<OneD, NekDouble>(nTracePointsTot,0.0);
-		  
-	      for(j = 0; j< nqvar; ++j)
+	      for(i = 0; i< nvariables; ++i)
 		{
-		  qfield[i][j]  = Array<OneD, NekDouble>(nPointsTot,0.0);
-		  uflux[i][j] = Array<OneD, NekDouble>(nTracePointsTot,0.0);
-		}
-	      
-	      for(j = 0; j< m_spacedim; ++j)
-		{
-		  fluxvector[j] = Array<OneD, NekDouble>(nPointsTot,0.0);
-		}
+                    ufield[i] = Array<OneD, NekDouble>(nPointsTot,0.0);
+
+                    qfield[j][i]  = Array<OneD, NekDouble>(nPointsTot,0.0);
+                    flux[j][i] = Array<OneD, NekDouble>(nTracePointsTot,0.0);
+		}      
 	    }
+
+        for(k = 0; k < m_spacedim; ++k)
+        {
+            fluxvector[k] = Array<OneD, NekDouble>(nPointsTot,0.0);
+        }
+
+        m_tanbasis  =  Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
+        for (i = 0; i < 2; ++i)
+        {
+            m_tanbasis[i] = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+            for (k = 0; k < m_spacedim; ++k)
+            {
+                m_tanbasis[i][k] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+            }
+	}
+
+	m_tanbasis[0][0] = Array<OneD, NekDouble>(nPointsTot,1.0);
+	m_tanbasis[1][1] = Array<OneD, NekDouble>(nPointsTot,1.0);
 	
 	//--------------------------------------------
 	// Get the variables in physical space
@@ -767,7 +780,7 @@ namespace Nektar
 	  {
             for(i = 0; i < nvariables; ++i)
 	      {
-                physfield[i] = InField[i];
+                ufield[i] = InField[i];
 	      }
 	  }
 	// otherwise do a backward transformation
@@ -776,8 +789,8 @@ namespace Nektar
 	    for(i = 0; i < nvariables; ++i)
 	      {
 		// Could make this point to m_fields[i]->UpdatePhys();
-		physfield[i] = Array<OneD, NekDouble>(nPointsTot);
-		m_fields[i]->BwdTrans(InField[i],physfield[i]);
+		ufield[i] = Array<OneD, NekDouble>(nPointsTot);
+		m_fields[i]->BwdTrans(InField[i],ufield[i]);
 	      }
 	  }
 
@@ -786,36 +799,53 @@ namespace Nektar
         // ########################################################################
 
         // Obtain Numerical Fluxes        
-        NumFluxforScalar(physfield, uflux);
-        
-        for(i = 0; i < nvariables; ++i)
-        {
-            for(j = 0; j < nqvar; ++j)
+        NumFluxforScalar(ufield, flux);
+
+        for(j = 0; j < nqvar; ++j)
+        {        
+            for(i = 0; i < nvariables; ++i)
             {
                 // Get the ith component of the  flux vector in (physical space)
                 // fluxvector = m_tanbasis * u, where m_tanbasis = 2 by m_spacedim by nPointsTot
-                for (k = 0; k < m_spacedim; ++k)
-                {
-                    Vmath::Vmul(nPointsTot, m_tanbasis[j][k], 1, physfield[i], 1, fluxvector[k], 1);
-                }
-               
+
+		  GetFluxVector(i, j, ufield, fluxvector);
+
+
+	      /*
+	      if(m_tanbasis.num_elements())
+		{
+		  for (k = 0; k < m_spacedim; ++k)
+		    {
+		      Vmath::Vmul(nPointsTot, m_tanbasis[j][k], 1, ufield[i], 1, fluxvector[k], 1);
+		    }
+		}
+
+	      else
+		{
+		  GetFluxVector(i, j, ufield, fluxvector);
+		}
+	      */
+                
                 // Calculate the i^th value of (\grad_i \phi, F)
                 WeakAdvectionGreensDivergenceForm(fluxvector, qcoeffs);
                 
                 Vmath::Neg(ncoeffs,qcoeffs,1);
-                m_fields[i]->AddTraceIntegral(uflux[i][j], qcoeffs);
+                m_fields[i]->AddTraceIntegral(flux[j][i], qcoeffs);
                 m_fields[i]->SetPhysState(false);
-                
-                // Add curvature force = M ( \nabla \cdot \tanvec )
-                 MultiRegions::GlobalMatrixKey key(StdRegions::eMass,m_curvature[j]);
-                 m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key, InField[i], FMass);
-                 Vmath::Svtvp(ncoeffs, -1.0, FMass, 1, qcoeffs, 1, qcoeffs, 1);
-                
+  
+                // Add weighted mass matrix = M ( \nabla \cdot Tanbasis )
+		if(m_gradtan.num_elements())
+		  {
+		    MultiRegions::GlobalMatrixKey key(StdRegions::eMass,m_gradtan[j]);
+		    m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key, InField[i], temp);
+		    Vmath::Svtvp(ncoeffs, -1.0, temp, 1, qcoeffs, 1, qcoeffs, 1);
+		  }
+
                  //Multiply by the inverse of mass matrix
                 m_fields[i]->MultiplyByElmtInvMass(qcoeffs, qcoeffs);
 		
                 // Back to physical space
-                m_fields[i]->BwdTrans(qcoeffs, qfield[i][j]);
+                m_fields[i]->BwdTrans(qcoeffs, qfield[j][i]);
             }
         }
 	
@@ -824,145 +854,44 @@ namespace Nektar
         // ########################################################################
 
         // Obtain Numerical Fluxes
-	NumFluxforVector(physfield, qfield, qflux);
+	NumFluxforVector(ufield, qfield, flux[0]);
 
 	for (i = 0; i < nvariables; ++i)
         {
             // L = L(tan_eta) q_eta + L(tan_xi) q_xi
             OutField[i] = Array<OneD, NekDouble>(ncoeffs, 0.0);
             temp = Array<OneD, NekDouble>(ncoeffs, 0.0);
-            for(j = 0; j < nqvar; ++j)
-            {
-                for (k = 0; k < m_spacedim; ++k)
-                {
-                    Vmath::Vmul(nPointsTot, m_tanbasis[j][k], 1, qfield[i][j], 1, fluxvector[k], 1);
-                }
-                
-                WeakAdvectionGreensDivergenceForm(fluxvector, temp);
 
-                Vmath::Vadd(ncoeffs, temp, 1, OutField[i], 1, OutField[i], 1);
-            }
+	    if(m_tanbasis.num_elements())
+	      {
+		for(j = 0; j < nqvar; ++j)
+		  {
+		    for (k = 0; k < m_spacedim; ++k)
+		      {
+			Vmath::Vmul(nPointsTot, m_tanbasis[j][k], 1, qfield[j][i], 1, fluxvector[k], 1);
+		      }
+		    
+		    WeakAdvectionGreensDivergenceForm(fluxvector, temp);
+		    Vmath::Vadd(ncoeffs, temp, 1, OutField[i], 1, OutField[i], 1);
+		  }
+	      }
+
+	      else
+		{
+		  for (k = 0; k < m_spacedim; ++k)
+		    {
+		      Vmath::Vcopy(nPointsTot, qfield[k][i], 1, fluxvector[k], 1);
+		    }
+
+		    WeakAdvectionGreensDivergenceForm(fluxvector, OutField[i]);
+		}
             
             // Evaulate  <\phi, \hat{F}\cdot n> - OutField[i] 
             Vmath::Neg(ncoeffs,OutField[i],1);
-            m_fields[i]->AddTraceIntegral(qflux[i], OutField[i]);
+            m_fields[i]->AddTraceIntegral(flux[0][i], OutField[i]);
             m_fields[i]->SetPhysState(false);
-        }
+	}
     }
-    
-
-    //-------------------------------------------------------------
-    // Calculate weak DG Diffusion in the LDG form 
-	//  <\psi, \hat{u} \cdot n> - (\grad \psi \cdot u)
-    //  <\phi, \hat{q}\cdot n> - (\grad \phi \cdot q)
-    // -------------------------------------------------------------
-  void ADRBase::WeakDGDiffusion(const Array<OneD, Array<OneD, NekDouble> >& InField, 
-				Array<OneD, Array<OneD, NekDouble> >& OutField,
-				bool NumericalFluxIncludesNormal, bool InFieldIsInPhysSpace)
-  {
-    int i,j;
-    int nVelDim         = m_spacedim;
-    int nPointsTot      = GetNpoints();
-    int ncoeffs         = GetNcoeffs();
-    int nTracePointsTot = GetTraceNpoints();
-    int nvariables      = m_fields.num_elements();
-    
-    Array<OneD, NekDouble>  qcoeffs (ncoeffs);
-    
-    Array<OneD, Array<OneD, NekDouble> > physfield (nvariables);
-    Array<OneD, Array<OneD, NekDouble> > fluxvector(nVelDim);
-    Array<OneD, Array<OneD, NekDouble> >  qflux   (nvariables);
-    
-    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  uflux   (nvariables);		
-    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  qfield  (nvariables);
-    
-    
-    for(i = 0; i < nvariables; ++i)
-      {
-	qfield[i] = Array<OneD, Array<OneD, NekDouble> >(nVelDim);
-	uflux[i] = Array<OneD, Array<OneD, NekDouble> >(nVelDim);
-	qflux[i] = Array<OneD, NekDouble>(nTracePointsTot,0.0);
-	
-	for(j = 0; j< nVelDim; ++j)
-	  {
-	    fluxvector[j]    = Array<OneD, NekDouble>(nPointsTot,0.0);
-	    qfield[i][j]  = Array<OneD, NekDouble>(nPointsTot,0.0);
-	    uflux[i][j] = Array<OneD, NekDouble>(nTracePointsTot,0.0);
-	  }
-      }
-	
-    //--------------------------------------------
-    // Get the variables in physical space
-    
-    // already in physical space
-    if(InFieldIsInPhysSpace == true)
-      {
-	for(i = 0; i < nvariables; ++i)
-	  {
-	    physfield[i] = InField[i];
-	  }
-      }
-    // otherwise do a backward transformation
-    else
-      {
-	for(i = 0; i < nvariables; ++i)
-	  {
-	    // Could make this point to m_fields[i]->UpdatePhys();
-	    physfield[i] = Array<OneD, NekDouble>(nPointsTot);
-	    m_fields[i]->BwdTrans(InField[i],physfield[i]);
-	  }
-      }
-    //--------------------------------------------
-    
-    // ########################################################################
-    //   Compute qx and qy from system of equations
-    // ########################################################################
-    // Evaluate numerical flux in physical space which may in
-    // general couple all component of vectors
-    
-    NumFluxforDiff(physfield, uflux);
-    
-    for(i = 0; i < nvariables; ++i)
-      {
-	for(j = 0; j < nVelDim; ++j)
-	  {
-	    // Get the ith component of the  flux vector in (physical space)
-	    GetFluxVector(i, j, physfield, fluxvector);
-            
-	    // Calculate the i^th value of (\grad_i \phi, F)
-	    WeakAdvectionGreensDivergenceForm(fluxvector,qcoeffs);
-	    
-	    Vmath::Neg(ncoeffs,qcoeffs,1);
-	    m_fields[i]->AddTraceIntegral(uflux[i][j],qcoeffs);
-	    m_fields[i]->SetPhysState(false);
-	    
-	    // Multiply by the inverse of mass matrix
-	    m_fields[i]->MultiplyByElmtInvMass(qcoeffs,qcoeffs);
-	    
-	    // Back to physical space
-	    m_fields[i]->BwdTrans(qcoeffs,qfield[i][j]);
-	  }
-      }
-    
-    // ########################################################################
-    //   Compute u from qx and qy
-    // ########################################################################
-    // Evaluate numerical flux in physical space which may in
-    // general couple all component of vectors
-    
-    NumFluxforDiff(physfield, qfield, qflux);
-    
-    for(i = 0; i < nvariables; ++i)
-      {
-	// Calculate the i^th value of (\grad_i \phi, F)
-	WeakAdvectionGreensDivergenceForm(qfield[i],OutField[i]);
-	
-	// Evaulate  <\phi, \hat{F}\cdot n> - OutField[i] 
-	Vmath::Neg(ncoeffs,OutField[i],1);
-	m_fields[i]->AddTraceIntegral(qflux[i],OutField[i]);
-      	m_fields[i]->SetPhysState(false);
-      }
-  }
   
     void ADRBase::Output(void)
     {
@@ -1061,7 +990,6 @@ namespace Nektar
         out << "\tCheckpoints     : " << m_checksteps <<" steps" <<endl;
     }
 
-  
   // case insensitive string comparison from web
   int ADRBase::NoCaseStringCompare(const string & s1, const string& s2) 
   {
@@ -1088,33 +1016,15 @@ namespace Nektar
 	return 0;
       }
     return (size1 < size2) ? -1 : 1;
-  }
-
-  // Return a vector with unit length
-  void ADRBase::Unitlength(Array<OneD, Array<OneD, NekDouble> > &array)
-  {   
-    int i, nq = array[0].num_elements();
-    
-    Array<OneD, NekDouble> norm (nq, 0.0);
-    
-    for (i = 0; i < m_spacedim; ++i)
-      {
-	Vmath::Vvtvp(nq, array[i], 1, array[i], 1, norm, 1, norm, 1);
-      }
-    
-    Vmath::Vsqrt(nq, norm, 1, norm, 1);
-    
-    for (i = 0; i < m_spacedim; ++i)
-      {
-	Vmath::Vdiv(nq, array[i], 1, norm, 1, array[i], 1);
-      }
-  }
-  
+  }  
 
 } //end of namespace
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.14  2009/07/11 23:39:23  sehunchun
+* Move uncommon functions to each solvers
+*
 * Revision 1.13  2009/07/09 21:29:13  sehunchun
 * Add SetUpSurfaceNormal function..
 *

@@ -742,35 +742,22 @@ namespace Nektar
 				  
 	for(j = 0; j < nqvar; ++j)
 	    {
-	      qfield[j] = Array<OneD, Array<OneD, NekDouble> >(nqvar);
-	      flux[j] = Array<OneD, Array<OneD, NekDouble> >(nqvar);
+                qfield[j] = Array<OneD, Array<OneD, NekDouble> >(nqvar);
+                flux[j] = Array<OneD, Array<OneD, NekDouble> >(nqvar);
 
-	      for(i = 0; i< nvariables; ++i)
+                for(i = 0; i< nvariables; ++i)
 		{
                     ufield[i] = Array<OneD, NekDouble>(nPointsTot,0.0);
-
+                    
                     qfield[j][i]  = Array<OneD, NekDouble>(nPointsTot,0.0);
                     flux[j][i] = Array<OneD, NekDouble>(nTracePointsTot,0.0);
 		}      
 	    }
-
+        
         for(k = 0; k < m_spacedim; ++k)
         {
             fluxvector[k] = Array<OneD, NekDouble>(nPointsTot,0.0);
         }
-
-        m_tanbasis  =  Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
-        for (i = 0; i < 2; ++i)
-        {
-            m_tanbasis[i] = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-            for (k = 0; k < m_spacedim; ++k)
-            {
-                m_tanbasis[i][k] = Array<OneD, NekDouble>(nPointsTot, 0.0);
-            }
-	}
-
-	m_tanbasis[0][0] = Array<OneD, NekDouble>(nPointsTot,1.0);
-	m_tanbasis[1][1] = Array<OneD, NekDouble>(nPointsTot,1.0);
 	
 	//--------------------------------------------
 	// Get the variables in physical space
@@ -788,12 +775,12 @@ namespace Nektar
 	  {
 	    for(i = 0; i < nvariables; ++i)
 	      {
-		// Could make this point to m_fields[i]->UpdatePhys();
-		ufield[i] = Array<OneD, NekDouble>(nPointsTot);
-		m_fields[i]->BwdTrans(InField[i],ufield[i]);
+                  // Could make this point to m_fields[i]->UpdatePhys();
+                  ufield[i] = Array<OneD, NekDouble>(nPointsTot);
+                  m_fields[i]->BwdTrans(InField[i],ufield[i]);
 	      }
 	  }
-
+        
         // ########################################################################
         //   Compute q_{\eta} and q_{\xi} from su
         // ########################################################################
@@ -807,11 +794,6 @@ namespace Nektar
             {
                 // Get the ith component of the  flux vector in (physical space)
                 // fluxvector = m_tanbasis * u, where m_tanbasis = 2 by m_spacedim by nPointsTot
-
-		  GetFluxVector(i, j, ufield, fluxvector);
-
-
-	      /*
 	      if(m_tanbasis.num_elements())
 		{
 		  for (k = 0; k < m_spacedim; ++k)
@@ -822,9 +804,8 @@ namespace Nektar
 
 	      else
 		{
-		  GetFluxVector(i, j, ufield, fluxvector);
+                    GetFluxVector(i, j, ufield, fluxvector);
 		}
-	      */
                 
                 // Calculate the i^th value of (\grad_i \phi, F)
                 WeakAdvectionGreensDivergenceForm(fluxvector, qcoeffs);
@@ -849,6 +830,7 @@ namespace Nektar
             }
         }
 	
+
         // ########################################################################
         //   Compute u from q_{\eta} and q_{\xi}
         // ########################################################################
@@ -1022,6 +1004,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.15  2009/07/23 05:23:21  sehunchun
+* WeakDiffusion operator is updated
+*
 * Revision 1.14  2009/07/11 23:39:23  sehunchun
 * Move uncommon functions to each solvers
 *

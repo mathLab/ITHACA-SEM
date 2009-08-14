@@ -70,7 +70,7 @@ namespace Nektar
 
         void SetADRBase(SpatialDomains::MeshGraphSharedPtr &graph,
                         int nvariables);
-                
+  
         void SetInitialConditions(const int eqntype = 1, NekDouble initialtime = 0.0);
 
         void SetPhysForcingFunctions(Array<OneD, MultiRegions::ExpListSharedPtr> &force);
@@ -111,6 +111,8 @@ namespace Nektar
 	
         void Checkpoint_Output(const int n);
 
+	void WriteVar(const int n, Array<OneD, MultiRegions::ExpListSharedPtr> field, const Array<OneD, NekDouble>&inarray, std::string name);
+
         void WriteFld(std::ofstream &outfile);
         
 	void Array_Output(const int n, std::string name, 
@@ -129,6 +131,12 @@ namespace Nektar
         {
             return m_fields[0]->GetNcoeffs();
         }
+
+	inline int GetNumExpModes(void)
+        {
+            return m_graph->GetExpansions()[0]->m_BasisKeyVector[0].GetNumModes();
+        }
+
         inline int GetNvariables(void)
         {
             return m_fields.num_elements();
@@ -253,6 +261,8 @@ namespace Nektar
         
     protected:
         Array<OneD, MultiRegions::ExpListSharedPtr> m_fields; ///< Array holding all dependent variables
+	Array<OneD, MultiRegions::ExpListSharedPtr> m_derivedfields; ///< Array holding all dependent variables
+
         SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
         SpatialDomains::MeshGraphSharedPtr          m_graph;
         std::string m_sessionName;   ///< Name of the sessions
@@ -347,6 +357,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.11  2009/07/23 05:23:21  sehunchun
+* WeakDiffusion operator is updated
+*
 * Revision 1.10  2009/07/11 23:39:23  sehunchun
 * Move uncommon functions to each solvers
 *

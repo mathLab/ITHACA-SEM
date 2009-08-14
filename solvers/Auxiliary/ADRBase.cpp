@@ -663,7 +663,7 @@ namespace Nektar
 	//----------------------------------------------
 	// Get the numerical flux and add to the modal coeffs
 	
-	// if the NumericalFlux function already includes the
+	// if the NumericalFluxs function already includes the
 	// normal in the output
 	if (NumericalFluxIncludesNormal == true)
 	  {
@@ -909,6 +909,34 @@ namespace Nektar
         m_graph->Write(outfile,FieldDef,FieldData);
     }
 
+  void ADRBase::WriteVar(const int n, Array<OneD, MultiRegions::ExpListSharedPtr> field, const Array<OneD, NekDouble>&inarray, std::string name)
+  {
+    int nq = field[0]->GetTotPoints();
+    int i;
+    // Filling Variable with the Physical variables and coefficient 
+    for(i = 0; i < nq; i++)
+      {
+	(field[0]->UpdatePhys())[i] = inarray[i];
+      }
+    field[0]->SetPhysState(true);
+    field[0]->FwdTrans(field[0]->GetPhys(),field[0]->UpdateCoeffs());
+    
+    char chkout[16] = "";
+    sprintf(chkout, "%d", n);
+    std::string outname = m_sessionName +"_D_" + chkout + ".chk";
+    ofstream outfile(outname.c_str());
+    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef = field[0]->GetFieldDefinitions();
+    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size()); 
+    
+    // copy Data into FieldData and set variable
+    for(i = 0; i < FieldDef.size(); ++i)
+      {
+	FieldDef[i]->m_Fields.push_back(name);
+	field[0]->AppendFieldData(FieldDef[i], FieldData[i]);
+      }
+    m_graph->Write(outfile,FieldDef,FieldData);
+    
+  }
 
   void ADRBase::Array_Output(const int n, std::string name, const Array<OneD, const NekDouble>&inarray, bool IsInPhysicalSpace)
   {
@@ -1004,6 +1032,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.16  2009/07/29 09:19:42  sehunchun
+* Generalization of WeakDGDiffusion
+*
 * Revision 1.15  2009/07/23 05:23:21  sehunchun
 * WeakDiffusion operator is updated
 *

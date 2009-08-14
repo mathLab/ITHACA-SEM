@@ -570,7 +570,7 @@ namespace Nektar
 
             virtual StdRegions::StdExpansion1DSharedPtr v_GetEdgeExp(const int edge, bool SetUpNormals=true)
             {
-                return GetEdgeExp(edge,true);
+                return GetEdgeExp(edge,SetUpNormals);
             }
 
             virtual void v_GetEdgePhysVals(const int edge, const StdRegions::StdExpansion1DSharedPtr &EdgeExp, 
@@ -694,6 +694,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.49  2009/07/08 17:19:48  sehunchun
+ *    Deleting GetTanBasis
+ *
  *    Revision 1.48  2009/07/08 11:11:24  sehunchun
  *    Adding GetSurfaceNormal Function
  *

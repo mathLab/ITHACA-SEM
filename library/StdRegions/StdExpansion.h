@@ -943,7 +943,7 @@ namespace Nektar
 	    
 	    boost::shared_ptr<StdExpansion1D> GetEdgeExp(int edge, bool SetUpNormals=true)
             {
-	      v_GetEdgeExp(edge,true);
+	      return v_GetEdgeExp(edge,SetUpNormals);
             }
 
             // Matrix Routines
@@ -1784,6 +1784,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.118  2009/07/20 14:15:44  cbiotto
+ * Adding GetEdgeExp function
+ *
  * Revision 1.117  2009/07/08 17:21:12  sehunchun
  * Deleting GetTanBasis
  *

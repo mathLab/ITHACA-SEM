@@ -47,7 +47,7 @@ namespace Nektar
 
 
         StdTriExp::StdTriExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb):
-            StdExpansion2D(StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Ba.GetNumModes())),Ba,Bb)
+            StdExpansion2D(StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),Ba,Bb)
         {    
             ASSERTL0(Ba.GetNumModes() <=  Bb.GetNumModes(), "order in 'a' direction is higher than order in 'b' direction");
         }
@@ -1281,6 +1281,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTriExp.cpp,v $
+ * Revision 1.57  2009/06/18 11:47:24  claes
+ * changes supporting the static use of Kronrod points
+ *
  * Revision 1.56  2009/06/15 01:59:21  claes
  * Gauss-Kronrod updates
  *

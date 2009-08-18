@@ -46,7 +46,7 @@ MARK_AS_ADVANCED(NEKTAR_USE_PRECOMPILED_HEADERS)
 MARK_AS_ADVANCED(NEKTAR_USE_EXPRESSION_TEMPLATES)
 
 SET(NEKTAR_USE_ACML OFF CACHE BOOL "Use the AMD Core Math Library (ACML) for BLAS and Lapack support." )
-SET(NEKTAR_USE_ATLAS OFF CACHE BOOL "Use ATLAS for BLAS and Lapack support." )
+#SET(NEKTAR_USE_ATLAS OFF CACHE BOOL "Use ATLAS for BLAS and Lapack support." )
 SET(NEKTAR_USE_MEMORY_POOLS ON CACHE BOOL "Use memory pools to accelerate memory allocation.")
 SET(NEKTAR_USE_BLAS_LAPACK ON CACHE BOOL "Use Blas and lapack routines.")
 MARK_AS_ADVANCED(NEKTAR_USE_BLAS_LAPACK)
@@ -137,7 +137,7 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/FindLoki.cmake
 	      ${CMAKE_SOURCE_DIR}/FindFramework.cmake
               ${CMAKE_SOURCE_DIR}/FindACML.cmake
-              ${CMAKE_SOURCE_DIR}/FindAtlas.cmake
+              #${CMAKE_SOURCE_DIR}/FindAtlas.cmake
               ${CMAKE_SOURCE_DIR}/FindNistSparseBlas.cmake
               ${CMAKE_SOURCE_DIR}/FindNativeBlasLapack.cmake
               ${CMAKE_SOURCE_DIR}/FindMKL.cmake

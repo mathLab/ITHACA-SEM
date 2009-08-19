@@ -62,9 +62,7 @@ namespace Nektar
         {
             eNoExpansionType,
             eModified,
-	    eModifiedConsistent,
-	    eModifiedGaussKronrod,
-            eOrthogonal,
+	    eOrthogonal,
             eGLL_Lagrange,
             eGLL_Lagrange_SEM,
             eExpansionTypeSize
@@ -76,9 +74,7 @@ namespace Nektar
         {
             "NOTYPE",
             "MODIFIED",
-	    "MODIFIEDCONSISTENT",
-	    "MODIFIEDGAUSSKRONROD",
-            "ORTHOGONAL",
+	    "ORTHOGONAL",
             "GLL_LAGRANGE",
             "GLL_LAGRANGE_SEM"
         };
@@ -282,6 +278,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.34  2009/06/15 01:59:21  claes
+// Gauss-Kronrod updates
+//
 // Revision 1.33  2009/05/01 13:23:21  pvos
 // Fixed various bugs
 //

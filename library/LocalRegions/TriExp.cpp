@@ -232,15 +232,13 @@ namespace Nektar
 
                 switch(m_base[1]->GetPointsType())
                 {
-                case LibUtilities::eGaussLobattoLegendre: 
-		case LibUtilities::eGaussLobattoKronrodLegendre:  // Legendre inner product 
+                case LibUtilities::eGaussLobattoLegendre:  // Legendre inner product 
                     for(i = 0; i < nquad1; ++i)
                     {
                         Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], outarray.get()+i*nquad0,1);
                     }
                     break;
-                case LibUtilities::eGaussRadauMAlpha1Beta0:
-		case LibUtilities::eGaussRadauKronrodMAlpha1Beta0: // (1,0) Jacobi Inner product 
+                case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product 
                     for(i = 0; i < nquad1; ++i)
                     {
                         Blas::Dscal(nquad0,0.5*w1[i], outarray.get()+i*nquad0,1);      
@@ -1791,6 +1789,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.56  2009/07/08 17:19:48  sehunchun
+ *    Deleting GetTanBasis
+ *
  *    Revision 1.55  2009/07/08 11:11:24  sehunchun
  *    Adding GetSurfaceNormal Function
  *

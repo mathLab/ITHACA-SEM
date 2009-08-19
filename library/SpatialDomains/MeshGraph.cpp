@@ -465,96 +465,7 @@ namespace Nektar
                 }
                 break;
 		
-	     case eModifiedConsistent:
-	       switch (shape)
-                {
-                case eSegment:
-                    {
-		      const LibUtilities::PointsKey pkey(ceil(3*order/2)+2,LibUtilities::eGaussLobattoLegendre);
-                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
-                        returnval.push_back(bkey);
-                    }
-                    break;
-                case eQuadrilateral:
-                    {
-                        const LibUtilities::PointsKey pkey(ceil(3*order/2)+2,LibUtilities::eGaussLobattoLegendre);
-                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
-                        returnval.push_back(bkey);
-                        returnval.push_back(bkey);
-                    }
-                    break;
-                case eHexahedron:
-                    {
-                        const LibUtilities::PointsKey pkey(ceil(3*order/2)+2,LibUtilities::eGaussLobattoLegendre);
-                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
-                        returnval.push_back(bkey);
-                        returnval.push_back(bkey);
-                        returnval.push_back(bkey);
-                    }
-                    break;
-                case eTriangle:
-                    {
-                        const LibUtilities::PointsKey pkey(ceil(3*order/2)+2,LibUtilities::eGaussLobattoLegendre);
-                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
-                        returnval.push_back(bkey);
-                        
-                        const LibUtilities::PointsKey pkey1(ceil(3*order/2)+1,LibUtilities::eGaussRadauMAlpha1Beta0);
-                        LibUtilities::BasisKey bkey1(LibUtilities::eModified_B,order,pkey1);
-                        
-                        returnval.push_back(bkey1);
-                    }
-                    break;
-		default:
-                    ASSERTL0(false,"Expansion not defined in switch  for this shape");
-                    break;
-                }
-                break;
-
-	    case eModifiedGaussKronrod:
-	      switch (shape)
-                {
-                case eSegment:
-                    {
-		       const LibUtilities::PointsKey pkey(2*(order+1)+1,LibUtilities::eGaussLobattoKronrodLegendre);
-                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
-                        returnval.push_back(bkey);
-                    }
-                    break;
-                case eQuadrilateral:
-                    {
-		      const LibUtilities::PointsKey pkey(2*(order+1)+1,LibUtilities::eGaussLobattoKronrodLegendre);
-                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
-                        returnval.push_back(bkey);
-                        returnval.push_back(bkey);
-                    }
-                    break;
-                case eHexahedron:
-                    {
-		      const LibUtilities::PointsKey pkey(2*(order+1)+1,LibUtilities::eGaussLobattoKronrodLegendre);
-                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
-                        returnval.push_back(bkey);
-                        returnval.push_back(bkey);
-                        returnval.push_back(bkey);
-                    }
-                    break;
-                case eTriangle:
-                    {
-		      const LibUtilities::PointsKey pkey(2*(order+1)+1,LibUtilities::eGaussLobattoKronrodLegendre);
-                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
-                        returnval.push_back(bkey);
-                        
-                        const LibUtilities::PointsKey pkey1(2*(order),LibUtilities::eGaussRadauKronrodMAlpha1Beta0);
-                        LibUtilities::BasisKey bkey1(LibUtilities::eModified_B,order,pkey1);
-                        
-                        returnval.push_back(bkey1);
-                    }
-                    break;
-		default:
-                    ASSERTL0(false,"Expansion not defined in switch  for this shape");
-                    break;
-                }
-                break;
-            case eGLL_Lagrange:
+	    case eGLL_Lagrange:
                 {
                     
                     switch(shape)
@@ -1759,6 +1670,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.33  2009/07/02 13:26:12  sehunchun
+// Changes for 2D manifold imbedded in 3D
+//
 // Revision 1.32  2009/06/18 11:47:24  claes
 // changes supporting the static use of Kronrod points
 //

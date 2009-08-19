@@ -76,15 +76,13 @@ namespace Nektar
 
             switch(m_base[1]->GetPointsType())
             {
-            case LibUtilities::eGaussLobattoLegendre:
-	    case LibUtilities::eGaussLobattoKronrodLegendre: // Legendre inner product 
+            case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
                 for(i = 0; i < nquad1; ++i)
                 {
                     w1_tmp[i] = 0.5*(1-z1[i])*w1[i];
                 }
                 break;
-            case LibUtilities::eGaussRadauMAlpha1Beta0:
-	    case LibUtilities::eGaussRadauKronrodMAlpha1Beta0: // (0,1) Jacobi Inner product 
+            case LibUtilities::eGaussRadauMAlpha1Beta0: // (0,1) Jacobi Inner product 
                 Vmath::Smul(nquad1, 0.5, w1, 1, w1_tmp,1);      
                 break;
             default:
@@ -312,15 +310,13 @@ namespace Nektar
                 
             switch(m_base[1]->GetPointsType())
             {
-            case LibUtilities::eGaussLobattoLegendre: 
-	    case LibUtilities::eGaussLobattoKronrodLegendre: // Legendre inner product 
+            case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
                 for(i = 0; i < nquad1; ++i)
                 {
                     Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], outarray.get()+i*nquad0,1);
                 }
                 break;
-            case LibUtilities::eGaussRadauMAlpha1Beta0: 
-	    case LibUtilities::eGaussRadauKronrodMAlpha1Beta0: // (1,0) Jacobi Inner product 
+            case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product 
                 for(i = 0; i < nquad1; ++i)
                 {
                     Blas::Dscal(nquad0,0.5*w1[i], outarray.get()+i*nquad0,1);      
@@ -1234,15 +1230,7 @@ namespace Nektar
                             }
                             break;
 
-			case LibUtilities::eGaussRadauKronrodMAlpha1Beta0:
-			  {                            
-			    LibUtilities::PointsKey pkey(m_base[1]->GetBasisKey().GetPointsKey().GetNumPoints()+1,LibUtilities::eGaussLobattoKronrodLegendre);
-                                
-			    return LibUtilities::BasisKey(LibUtilities::eModified_A,m_base[1]->GetNumModes(),pkey);
-			  }
-			  break;
-			  
-                        default:
+			default:
 			  ASSERTL0(false,"unexpected points distribution");
 			  break;
                         }
@@ -1281,6 +1269,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTriExp.cpp,v $
+ * Revision 1.58  2009/08/17 11:53:47  pvos
+ * Fixed bug
+ *
  * Revision 1.57  2009/06/18 11:47:24  claes
  * changes supporting the static use of Kronrod points
  *

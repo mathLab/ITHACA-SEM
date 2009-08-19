@@ -988,16 +988,14 @@ namespace Nektar
                     switch(tbasis[1]->GetPointsType())
                     {
                     case LibUtilities::ePolyEvenlySpaced:
-                    case LibUtilities::eGaussLobattoLegendre:
-		    case LibUtilities::eGaussLobattoKronrodLegendre: // Legendre inner product 
+                    case LibUtilities::eGaussLobattoLegendre:  // Legendre inner product 
                         for(i = 0; i < nquad1; ++i)
                         {
                             const Array<OneD, const NekDouble>& z1 = tbasis[1]->GetZ();
                             Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i],m_weightedjac.get()+i*nquad0,1);
                         }
                         break;
-                    case LibUtilities::eGaussRadauMAlpha1Beta0:
-		    case LibUtilities::eGaussRadauKronrodMAlpha1Beta0: // (1,0) Jacobi Inner product 
+                    case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product 
                         for(i = 0; i < nquad1; ++i)
                         {
                             Blas::Dscal(nquad0,0.5*w1[i],m_weightedjac.get()+i*nquad0,1);      
@@ -1365,6 +1363,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.cpp,v $
+// Revision 1.46  2009/07/08 17:24:52  sehunchun
+// Delete SetUpTanBasis and SetUp SurfaceNormal only when coordim == 3
+//
 // Revision 1.45  2009/07/08 11:15:51  sehunchun
 // Adding Setup function fo Surface Normal and GetSurfaceNormal to obtain Surface Normal vector for a given 2D manifold
 //

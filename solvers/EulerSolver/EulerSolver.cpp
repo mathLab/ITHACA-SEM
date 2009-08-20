@@ -50,7 +50,6 @@ int main(int argc, char *argv[])
 
     string fileNameString(argv[1]);
     
-    
     //----------------------------------------
     // Read the mesh and construct container class
     
@@ -68,11 +67,31 @@ int main(int argc, char *argv[])
     //----------------------------------------   
     dom.ZeroPhysFields(); 
        
-    // Set up the intial conditions
-    dom.SetInitialConditions();
+    // Set up the intial conditions 
+    switch(dom.m_problemType)
+      {
+      case eGeneral:
+	{
+	  dom.SetInitialConditions();
+	}
+	break;
+      case eIsentropicVortex:
+	{
+	  dom.SetIsenTropicVortex();
+	}
+	break;
+      case eSubsonicCylinder:
+	{
+	  dom.SetInitialConditions();
+	}
+	break;
+      case eRinglebFlow:
+	{
+	  dom.SetInitialRinglebFlow();
+	}
+	break;
+      }
 
-    // HACK!!! hardcoded for the isentropic vortex case
-    //dom.SetIsenTropicVortex();
     //----------------------------------------
 
     
@@ -106,14 +125,36 @@ int main(int argc, char *argv[])
     // print error
     
     // Evaluate L2 Error   
-    
-    // HACK!!!!
-    // hardcoded exactsolution for Isentropic Vortex
-    // Array<OneD, NekDouble> exactsolution(dom.GetTotPoints());
-    // dom.GetExactIsenTropicVortex(exactsolution, 0);
-    //cout << "L2 Error (variable "<< dom.GetVariable(0) <<"): " << dom.L2Error(0,exactsolution) << endl;
-    
+    Array<OneD, NekDouble> exactsolution(dom.GetTotPoints(),0.0);
+    switch(dom.m_problemType)
+      {
+      case eGeneral:
+	{
+	  dom.EvaluateExactSolution(0,exactsolution,0,0);
+	}
+	break;
+      case eIsentropicVortex:
+	{
+	  dom.GetExactIsenTropicVortex(exactsolution, 0);
+	}
+	break;
+      case eSubsonicCylinder:
+	{
+	  dom.EvaluateExactSolution(0,exactsolution,0,0);
+	}
+	break;
+      case eRinglebFlow:
+	{
+	  dom.GetExactRinglebFlow(exactsolution, 0);
+	}
+	break;
+      }	
+
+    cout << "L2 Error (variable "<< dom.GetVariable(0) <<"): " << dom.L2Error(0,0,exactsolution) << endl;
     cout << "L2 Error (variable "<< dom.GetVariable(0) <<"): " << dom.L2Error(0) << endl;
+
+    dom.GetExactRinglebFlow(exactsolution, 4);
+
     //---------------------------------------
     
    

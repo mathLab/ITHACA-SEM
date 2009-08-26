@@ -7,7 +7,7 @@
 #include <vector>
 #include <algorithm> 
 #include <string>
-#include <strstream>
+#include <sstream>
 
 #ifndef TIXML_USE_STL
 #define TIXML_USE_STL

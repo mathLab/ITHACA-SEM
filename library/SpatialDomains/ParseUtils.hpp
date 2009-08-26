@@ -37,10 +37,19 @@
 #ifndef NEKTAR_LIBUTILITIES_PARSEUTILS_HPP
 #define NEKTAR_LIBUTILITIES_PARSEUTILS_HPP
 
+#include <boost/version.hpp>
+
+#if( BOOST_VERSION / 100 % 1000 >= 36 )
+#include <boost/spirit/include/classic_core.hpp>
+#include <boost/spirit/include/classic_push_back_actor.hpp>
+
+using namespace boost::spirit::classic;
+#else
 #include <boost/spirit/core.hpp>
 #include <boost/spirit/actor/push_back_actor.hpp>
 
 using namespace boost::spirit;
+#endif
 
 namespace Nektar
 {

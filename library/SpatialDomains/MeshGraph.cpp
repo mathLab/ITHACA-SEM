@@ -986,7 +986,7 @@ namespace Nektar
                 std::string numptsStr = facelement->Attribute("NUMPOINTS");
                 ASSERTL0(!numptsStr.empty(), "NUMPOINTS must be specified in points definition");
                 int numPts=0;
-                std::strstream s;
+                std::stringstream s;
                 s << numptsStr;
                 s >> numPts;
                 
@@ -1670,6 +1670,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.34  2009/08/19 14:13:34  claes
+// Removed Gauss-Kronrod parts
+//
 // Revision 1.33  2009/07/02 13:26:12  sehunchun
 // Changes for 2D manifold imbedded in 3D
 //

@@ -8,11 +8,25 @@
 #ifndef _EXPRESSION_EVALUATOR_H
 #define _EXPRESSION_EVALUATOR_H
 
+#include <boost/version.hpp>
+
+#if( BOOST_VERSION / 100 % 1000 >= 36 )
+#include <boost/spirit/include/classic_core.hpp>
+#include <boost/spirit/include/classic_ast.hpp>
+#include <boost/spirit/include/classic_symbols.hpp>
+#include <boost/spirit/include/classic_assign_actor.hpp>
+#include <boost/spirit/include/classic_push_back_actor.hpp>
+
+namespace boost_spirit = boost::spirit::classic;
+#else
 #include <boost/spirit/core.hpp>
 #include <boost/spirit/tree/ast.hpp>
 #include <boost/spirit/symbols/symbols.hpp>
 #include <boost/spirit/actor/assign_actor.hpp>
 #include <boost/spirit/actor/push_back_actor.hpp>
+
+namespace boost_spirit = boost::spirit;
+#endif
 
 #include <iostream>
 #include <stdarg.h>
@@ -121,14 +135,14 @@ namespace Nektar
         private:
 
 	        /** This is the class that is used as the grammar parser for the spirit engine. **/
-	        class MathExpression : public boost::spirit::grammar<MathExpression>
+	        class MathExpression : public boost_spirit::grammar<MathExpression>
 	        {
 	        private:
-		        const boost::spirit::symbols<double>* constants_p;
+		        const boost_spirit::symbols<double>* constants_p;
 
 		        /** Variables is a customized parser that will match the variables that the function
 					depends on (the first argument of #DefineFunction). **/
-		        struct variables : boost::spirit::symbols<double*>
+		        struct variables : boost_spirit::symbols<double*>
 		        {
 			        variables(std::vector<std::string> const& vars)
 			        {
@@ -148,8 +162,8 @@ namespace Nektar
 		        static const int factorID		= 6;
 		        static const int operatorID		= 7;
 
-		        MathExpression(boost::spirit::symbols<double> const* constants, std::vector<std::string> const& variables) :
-					        boost::spirit::grammar<MathExpression>(), constants_p(constants), variables_p(variables) {}
+		        MathExpression(boost_spirit::symbols<double> const* constants, std::vector<std::string> const& variables) :
+					        boost_spirit::grammar<MathExpression>(), constants_p(constants), variables_p(variables) {}
 
 		        template <typename ScannerT>
 		        struct definition
@@ -160,24 +174,24 @@ namespace Nektar
 			        /** This holds the double value that is parsed by spirit so it can be stored in the AST. **/
 			        double ParsedDouble;
 
-			        boost::spirit::rule<ScannerT, boost::spirit::parser_context<>, boost::spirit::parser_tag<constantID> >		constant;
-			        boost::spirit::rule<ScannerT, boost::spirit::parser_context<>, boost::spirit::parser_tag<numberID> >		number;
-			        boost::spirit::rule<ScannerT, boost::spirit::parser_context<>, boost::spirit::parser_tag<variableID> >		variable;
-			        boost::spirit::rule<ScannerT, boost::spirit::parser_context<>, boost::spirit::parser_tag<parameterID> >		parameter;
-			        boost::spirit::rule<ScannerT, boost::spirit::parser_context<>, boost::spirit::parser_tag<functionID> >		function;
-			        boost::spirit::rule<ScannerT, boost::spirit::parser_context<>, boost::spirit::parser_tag<factorID> >		factor;
-			        boost::spirit::rule<ScannerT, boost::spirit::parser_context<>, boost::spirit::parser_tag<operatorID> >		exponential;
-			        boost::spirit::rule<ScannerT, boost::spirit::parser_context<>, boost::spirit::parser_tag<operatorID> >		mult_div;
-			        boost::spirit::rule<ScannerT, boost::spirit::parser_context<>, boost::spirit::parser_tag<operatorID> >		add_sub;
-			        boost::spirit::rule<ScannerT, boost::spirit::parser_context<>, boost::spirit::parser_tag<operatorID> >		lt_gt;
-			        boost::spirit::rule<ScannerT, boost::spirit::parser_context<>, boost::spirit::parser_tag<operatorID> >		equality;
-			        boost::spirit::rule<ScannerT, boost::spirit::parser_context<>, boost::spirit::parser_tag<operatorID> >		logical_and;
-			        boost::spirit::rule<ScannerT, boost::spirit::parser_context<>, boost::spirit::parser_tag<operatorID> >		logical_or;
-			        boost::spirit::rule<ScannerT, boost::spirit::parser_context<>, boost::spirit::parser_tag<operatorID> >		expression;
+			        boost_spirit::rule<ScannerT, boost_spirit::parser_context<>, boost_spirit::parser_tag<constantID> >		constant;
+			        boost_spirit::rule<ScannerT, boost_spirit::parser_context<>, boost_spirit::parser_tag<numberID> >		number;
+			        boost_spirit::rule<ScannerT, boost_spirit::parser_context<>, boost_spirit::parser_tag<variableID> >		variable;
+			        boost_spirit::rule<ScannerT, boost_spirit::parser_context<>, boost_spirit::parser_tag<parameterID> >		parameter;
+			        boost_spirit::rule<ScannerT, boost_spirit::parser_context<>, boost_spirit::parser_tag<functionID> >		function;
+			        boost_spirit::rule<ScannerT, boost_spirit::parser_context<>, boost_spirit::parser_tag<factorID> >		factor;
+			        boost_spirit::rule<ScannerT, boost_spirit::parser_context<>, boost_spirit::parser_tag<operatorID> >		exponential;
+			        boost_spirit::rule<ScannerT, boost_spirit::parser_context<>, boost_spirit::parser_tag<operatorID> >		mult_div;
+			        boost_spirit::rule<ScannerT, boost_spirit::parser_context<>, boost_spirit::parser_tag<operatorID> >		add_sub;
+			        boost_spirit::rule<ScannerT, boost_spirit::parser_context<>, boost_spirit::parser_tag<operatorID> >		lt_gt;
+			        boost_spirit::rule<ScannerT, boost_spirit::parser_context<>, boost_spirit::parser_tag<operatorID> >		equality;
+			        boost_spirit::rule<ScannerT, boost_spirit::parser_context<>, boost_spirit::parser_tag<operatorID> >		logical_and;
+			        boost_spirit::rule<ScannerT, boost_spirit::parser_context<>, boost_spirit::parser_tag<operatorID> >		logical_or;
+			        boost_spirit::rule<ScannerT, boost_spirit::parser_context<>, boost_spirit::parser_tag<operatorID> >		expression;
 
-			        boost::spirit::rule<ScannerT, boost::spirit::parser_context<>, boost::spirit::parser_tag<operatorID> >		op;
+			        boost_spirit::rule<ScannerT, boost_spirit::parser_context<>, boost_spirit::parser_tag<operatorID> >		op;
 
-			        boost::spirit::rule<ScannerT, boost::spirit::parser_context<>, boost::spirit::parser_tag<operatorID> > const&
+			        boost_spirit::rule<ScannerT, boost_spirit::parser_context<>, boost_spirit::parser_tag<operatorID> > const&
 				        start() const { return expression; }
 		        };
 	        };
@@ -328,7 +342,7 @@ namespace Nektar
 	        /** This is a parser for spirit that parses the CONSTANT values. The default
 				constants are those that are in math.h without the M_ prefix and they are
 				initialized in the ExpressionEvaluator constructor. **/
-	        boost::spirit::symbols<double>* constants_p;
+	        boost_spirit::symbols<double>* constants_p;
 
 			/** This function evaluates the AST created from #CreateAST and returns
 				the result as a double. It will throw an exception if it encounters a
@@ -348,8 +362,8 @@ namespace Nektar
 				the calculation doesn't need to be done for every evaluation. It also performs the
 				checks to make sure everything is in the correct range so these don't need to be
 				performed at evaluation either. **/
-	        Node* CreateAST(boost::spirit::tree_match<std::string::const_iterator,
-				            boost::spirit::node_val_data_factory<double> >::tree_iterator const &i);
+	        Node* CreateAST(boost_spirit::tree_match<std::string::const_iterator,
+				            boost_spirit::node_val_data_factory<double> >::tree_iterator const &i);
 
         };
     };

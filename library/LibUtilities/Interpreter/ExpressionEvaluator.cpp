@@ -12,7 +12,12 @@
 #endif //MSC_VER
 
 using namespace std;
+
+#if( BOOST_VERSION / 100 % 1000 >= 36 )
+using namespace boost::spirit::classic;
+#else
 using namespace boost::spirit;
+#endif
 
 #ifdef _MSC_VER
 #define NEKTAR_MATH_NAME(x) BOOST_PP_CAT(_, x)
@@ -545,7 +550,7 @@ namespace Nektar
         static int ConvertIsSpaceForGcc(char c) { return isspace(c); }
         
         /** \brief Creates a simplified AST from the Spirit parse. **/
-		ExpressionEvaluator::Node* ExpressionEvaluator::CreateAST(boost::spirit::tree_match<std::string::const_iterator, boost::spirit::node_val_data_factory<double> >::tree_iterator const &i)
+		ExpressionEvaluator::Node* ExpressionEvaluator::CreateAST(boost_spirit::tree_match<std::string::const_iterator, boost_spirit::node_val_data_factory<double> >::tree_iterator const &i)
 		{
 			string valueStr(i->value.begin(), i->value.end());
 			valueStr.erase(std::remove_if(valueStr.begin(), valueStr.end(), ConvertIsSpaceForGcc), valueStr.end());	// trim

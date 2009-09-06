@@ -3302,7 +3302,6 @@
     </BOUNDARYCONDITIONS>
 
    <INITIALCONDITIONS>
-     <R FILE="Cyl.rst" />
      <F VAR="u" VALUE="0" />
      <F VAR="v" VALUE="0" />
      <F VAR="p" VALUE="0" />

@@ -279,7 +279,7 @@ namespace Nektar
         }
         
 
-                          const StdMatrixKey &rhs) const
+        bool StdMatrixKey::opLess::operator()(const StdMatrixKey &lhs, const StdMatrixKey &rhs) const
         {        
             return (lhs.m_matrixType < rhs.m_matrixType);
         }
@@ -407,6 +407,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.cpp,v $
+* Revision 1.15  2009/09/06 21:55:26  sherwin
+* Updates related to Navier Stokes Solver
+*
 * Revision 1.14  2008/11/19 16:02:47  pvos
 * Added functionality for variable Laplacian coeffcients
 *

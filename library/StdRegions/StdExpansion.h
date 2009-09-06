@@ -810,6 +810,17 @@ namespace Nektar
                 v_SetPhysNormals(normal);
             }
 
+            virtual void SetUpPhysNormals(const boost::shared_ptr<StdExpansion>  &exp2d, const int edge)
+            {
+                v_SetUpPhysNormals(exp2d,edge);
+            }
+
+            
+            void NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray, bool NegateNorm = false)
+            {
+                v_NormVectorIProductWRTBase(Fx,Fy,outarray,NegateNorm);
+            }
+
             DNekScalBlkMatSharedPtr& GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
             {
                 return v_GetLocStaticCondMatrix(mkey);
@@ -830,7 +841,6 @@ namespace Nektar
             {
                 return v_GetCartesianEorient(edge);
             }
-
 
             void AddHDGHelmholtzTraceTerms(const NekDouble tau, 
                                            const Array<OneD, const NekDouble> &inarray,
@@ -1117,6 +1127,16 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
             }
 
+            virtual void v_SetUpPhysNormals(const boost::shared_ptr<StdExpansion> &exp2d, const int edge)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+            }
+            
+            virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray, bool NegateNorm = false)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+            }
+            
             virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
@@ -1784,6 +1804,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.119  2009/08/14 09:24:08  cbiotto
+ * Fixed bug in GetEdgeExp
+ *
  * Revision 1.118  2009/07/20 14:15:44  cbiotto
  * Adding GetEdgeExp function
  *

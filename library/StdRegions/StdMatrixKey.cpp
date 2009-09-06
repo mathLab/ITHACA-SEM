@@ -278,7 +278,7 @@ namespace Nektar
         {
         }
         
-        bool StdMatrixKey::opLess::operator()(const StdMatrixKey &lhs, 
+
                           const StdMatrixKey &rhs) const
         {        
             return (lhs.m_matrixType < rhs.m_matrixType);
@@ -407,6 +407,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.cpp,v $
+* Revision 1.14  2008/11/19 16:02:47  pvos
+* Added functionality for variable Laplacian coeffcients
+*
 * Revision 1.13  2008/05/30 00:33:49  delisi
 * Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
 *

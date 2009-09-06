@@ -52,7 +52,6 @@
     </BOUNDARYCONDITIONS>
 
    <INITIALCONDITIONS>
-     <R FILE="QuadMesh.rst" />
      <F VAR="u" VALUE="y*(1-y)" />
      <F VAR="v" VALUE="0" />
      <F VAR="p" VALUE="0" />

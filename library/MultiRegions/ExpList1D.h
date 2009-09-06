@@ -121,7 +121,7 @@ namespace Nektar
              * \brief The default destructor.
              */  
             ~ExpList1D();
-            
+
 
             void SetBoundaryConditionExpansion(const SpatialDomains::MeshGraph1D &graph1D,
                                                SpatialDomains::BoundaryConditions &bcs, 

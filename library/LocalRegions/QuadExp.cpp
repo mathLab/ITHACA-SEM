@@ -791,6 +791,7 @@ namespace Nektar
                 break;
             }             
         }
+
         
         /** \brief Forward transform from physical quadrature space
             stored in \a inarray and evaluate the expansion coefficients and
@@ -1647,9 +1648,6 @@ namespace Nektar
 
 
 
-        // Get edge values  following counter clockwise edge
-        // convention for definition of edgedir at points defined by EdgeExp.
-
         void QuadExp::GetEdgePhysVals(const int edge, const StdRegions::StdExpansion1DSharedPtr &EdgeExp, 
                                       const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
         {
@@ -1815,6 +1813,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.64  2009/07/08 17:19:48  sehunchun
+ *    Deleting GetTanBasis
+ *
  *    Revision 1.63  2009/07/08 11:11:24  sehunchun
  *    Adding GetSurfaceNormal Function
  *

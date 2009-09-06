@@ -226,6 +226,11 @@ namespace Nektar
             {
                 return m_bndConditions;
             }
+            
+            /// \brief Set up a list of element ids and edge ids the link to the
+            /// boundary conditions
+            void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, 
+                                      Array<OneD,int> &EdgeID);
 
         protected:
             /**
@@ -272,9 +277,13 @@ namespace Nektar
              * \param variable An optional parameter to indicate for which variable 
              * the boundary conditions should be discretised.
              */ 
-            void GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D,
-                                                    SpatialDomains::BoundaryConditions &bcs, 
-                                                    const std::string variable);
+            void GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D, SpatialDomains::BoundaryConditions &bcs, const std::string variable);
+
+            virtual void v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, 
+                                                Array<OneD,int> &EdgeID)
+            {
+                GetBoundaryToElmtMap(ElmtID,EdgeID);
+            }
         private:
             GlobalLinSysMapShPtr                               m_globalBndMat;
             GenExpList1DSharedPtr                              m_trace;
@@ -358,6 +367,9 @@ namespace Nektar
             {
                 HelmSolve(inarray,outarray,lambda);
             }
+
+
+
         };
 
         typedef boost::shared_ptr<DisContField2D>   DisContField2DSharedPtr;

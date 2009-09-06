@@ -54,6 +54,8 @@ namespace Nektar
              */  
             GenExpList1D();
             
+            GenExpList1D::GenExpList1D(const SpatialDomains::CompositeVector &domain, SpatialDomains::MeshGraph2D &graph2D);
+
             // constructor for trace space in connection with DisContField2D.cpp
             GenExpList1D(const Array<OneD,const MultiRegions::ExpList1DSharedPtr> &bndConstraint,  
                          const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>  &bndCond, 
@@ -65,29 +67,39 @@ namespace Nektar
              * \brief The copy constructor.
              */  
             GenExpList1D(const GenExpList1D &In);   
-            
-            
+                        
             /**
              * \brief The default destructor.
              */  
             ~GenExpList1D();
+            
+            void SetUpPhysNormals(const StdRegions::StdExpansionVector &locexp);
+
+            // direction =  1: Upwind
+            // direction = -1: Downwind
 
             void Upwind(const Array<OneD, const Array<OneD, NekDouble> > &Vec,
                         const Array<OneD, const NekDouble> &Fwd, 
                         const Array<OneD, const NekDouble> &Bwd, 
-                        Array<OneD, NekDouble> &Upwind);
-
+                        Array<OneD, NekDouble> &Upwind,
+                        int direction=1);
 
             void Upwind(const Array<OneD, const NekDouble> &Vn, 
                         const Array<OneD, const NekDouble> &Fwd, 
                         const Array<OneD, const NekDouble> &Bwd, 
-                        Array<OneD, NekDouble> &Upwind);
+                        Array<OneD, NekDouble> &Upwind,
+                        int direction=1);
             
 	    void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals); 
-
+            
         protected:
 
         private:
+            virtual void v_SetUpPhysNormals(const StdRegions::StdExpansionVector &locexp)
+            {
+                SetUpPhysNormals(locexp);
+            }
+
 
         };
 
@@ -102,6 +114,9 @@ namespace Nektar
 
 /**
  * $Log: GenExpList1D.h,v $
+ * Revision 1.8  2009/07/09 09:01:49  sehunchun
+ * Upwind function is modified in a faster form
+ *
  * Revision 1.7  2009/02/28 21:28:40  sehunchun
  *  Now upwind has "forward" direction and "backward" direction. Default is forward and no changes are necessary for previous file.
  *

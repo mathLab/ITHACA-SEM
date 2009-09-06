@@ -233,7 +233,7 @@ namespace Nektar
             }
         }
 
-
+        
         void Expansion2D::AddHDGHelmholtzEdgeTerms(const NekDouble tau, 
                                                       const int edge,
                                                       Array <OneD, StdRegions::StdExpansion1DSharedPtr > &EdgeExp, 
@@ -662,6 +662,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.cpp,v $
+ *    Revision 1.10  2009/07/07 16:31:47  sehunchun
+ *    Adding AddEdgeBoundaryBiInt to line integrate depending on Fwd and Bwd
+ *
  *    Revision 1.9  2009/04/28 09:58:17  sherwin
  *    Updates to make HDG implementation consistent in 1D as to the 2D implementation
  *

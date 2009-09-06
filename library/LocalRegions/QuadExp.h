@@ -111,7 +111,7 @@ namespace Nektar
             // Integration Methods
             //----------------------------
 
-            /// \brief Integrate the physical point list \a inarray over region
+
             NekDouble Integral(const Array<OneD, const NekDouble> &inarray);
 
             /** 
@@ -208,8 +208,31 @@ namespace Nektar
 
             void GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 
-            void GetEdgePhysVals(const int edge, const StdRegions::StdExpansion1DSharedPtr &EdgeExp, 
-                                 const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+/** \brief Extract the physical values along edge \a edge
+                from \a inarray into \a outarray following the local
+                edge orientation and point distribution defined by
+                defined in \a EdgeExp.
+                
+                Note: this function will check to see if points
+                distribution along the Tri expansion \a edge is the
+                same as the local edge definition and if not
+                interpolate. If they are the same no interpolation
+                will be performed as can be seen in the functino
+                LibUtilities::Interp1D
+                
+                \param edge the edge id which is to be extracted
+
+                \param EdgeExp The Edge Expansion defining the
+                orientation and point distrubution points are to be
+                interpolated. 
+
+                \param inarray is the 2D physical point set from which
+                data is to be extracted.
+
+                \param outarray is the output data
+            */
+            
+            void GetEdgePhysVals(const int edge, const StdRegions::StdExpansion1DSharedPtr &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
                
             void MassMatrixOp(const Array<OneD, const NekDouble> &inarray, 
                               Array<OneD,NekDouble> &outarray,
@@ -476,7 +499,7 @@ namespace Nektar
                                      Array<OneD, NekDouble> &out_d1,
                                      Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
             {
-                PhysDeriv(inarray, out_d0, out_d1);
+                PhysDeriv(inarray, out_d0, out_d1, out_d2);
             }
 
             virtual void v_PhysDeriv(const int dir, 
@@ -604,6 +627,7 @@ namespace Nektar
                 
             }
 
+
             virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
                                                      const Array<OneD, const NekDouble> &inarray,
                                                      Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp, 
@@ -624,6 +648,7 @@ namespace Nektar
                 GetEdgePhysVals(edge,inarray,outarray);
             }
             
+
             virtual void v_GetEdgePhysVals(const int edge, 
                                            const StdRegions::StdExpansion1DSharedPtr &EdgeExp, 
                                            const Array<OneD, const NekDouble> &inarray, 
@@ -718,6 +743,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.55  2009/08/14 09:17:40  cbiotto
+ *    Fixed bug in v_GetEdgeExp
+ *
  *    Revision 1.54  2009/07/08 17:19:48  sehunchun
  *    Deleting GetTanBasis
  *

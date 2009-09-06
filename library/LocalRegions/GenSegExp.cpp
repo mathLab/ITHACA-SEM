@@ -56,9 +56,6 @@ namespace Nektar
         {
         }
         
-        // Given a Geometry2D set normals to the same as the values
-        // along edge \a edge. If NegateNormals is true then negate the
-        // normals
         void GenSegExp::SetUpPhysNormals(const StdRegions::StdExpansionSharedPtr &exp2D, const int edge)
         {            
             int k;
@@ -82,10 +79,31 @@ namespace Nektar
             }
         }
 
+        void GenSegExp::NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray, bool NegateNormal)
+        {
+            int nq = m_base[0]->GetNumPoints();
+            Array<OneD, NekDouble > Fn(nq);
+
+            Vmath::Vmul (nq,&Fx[0],1,&m_physNormal[0], 1,&Fn[0],1);
+            Vmath::Vvtvp(nq,&Fy[0],1,&m_physNormal[nq],1,&Fn[0],1,&Fn[0],1);
+
+            if(NegateNormal == true)
+            {
+                Vmath::Neg(nq,Fn,1);
+            }
+            
+            IProductWRTBase(Fn,outarray);
+        }
+
+            
+                                                  
     } // end of namespace    
 }//end of namespace
 
 // $Log: GenSegExp.cpp,v $
+// Revision 1.3  2008/09/09 15:05:09  sherwin
+// Updates related to cuved geometries. Normals have been removed from m_metricinfo and replaced with a direct evaluation call. Interp methods have been moved to LibUtilities
+//
 // Revision 1.2  2008/08/14 22:12:56  sherwin
 // Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
 //

@@ -74,8 +74,7 @@ namespace Nektar
                                  Array<OneD, const NekDouble> &inarray,
                                  Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                                  Array<OneD,NekDouble> &outarray);
-                                
-
+            
             void AddHDGHelmholtzTraceTerms(const NekDouble tau, 
                                            const Array<OneD, const NekDouble> &inarray, Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp, Array<OneD,NekDouble> &outarray);
             
@@ -166,6 +165,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.h,v $
+ *    Revision 1.7  2009/07/07 16:31:47  sehunchun
+ *    Adding AddEdgeBoundaryBiInt to line integrate depending on Fwd and Bwd
+ *
  *    Revision 1.6  2009/04/02 13:04:36  sherwin
  *    Modified Hybrid Matrix call to use matrix D M^{-1}D' formulation and removed operations based version
  *

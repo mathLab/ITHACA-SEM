@@ -1742,8 +1742,6 @@ namespace Nektar
             return returnval; 
         }
 
-        // Get edge values  following counter clockwise edge
-        // convention for definition of edgedir at points defined by EdgeExp.
         void TriExp::GetEdgePhysVals(const int edge, const StdRegions::StdExpansion1DSharedPtr &EdgeExp, 
                                      const Array<OneD, const NekDouble> &inarray, 
                                      Array<OneD,NekDouble> &outarray)
@@ -1789,6 +1787,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.57  2009/08/19 14:13:35  claes
+ *    Removed Gauss-Kronrod parts
+ *
  *    Revision 1.56  2009/07/08 17:19:48  sehunchun
  *    Deleting GetTanBasis
  *

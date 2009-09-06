@@ -60,6 +60,18 @@ namespace Nektar
             ~GenSegExp();
 
             
+            /**  \brief Given a 2D Expansion, \a exp2d, set normals to
+                 the same as the values along edge \a edge. By
+                 definition the normal will be defined as outwards
+                 with respect to the two-dimensional element if the
+                 edge is orientated \e eForwards otherwise it will be
+                 inwards facing.
+
+                 \param exp2D is the 2D Element with respect to the
+                 normal which will be defined
+
+                 \param edge is the edge id where the normal should be set. 
+            **/
             void SetUpPhysNormals(const StdRegions::StdExpansionSharedPtr &exp2d, const int edge);
 
             void SetPhysNormals(Array<OneD, const NekDouble> &normal)
@@ -83,6 +95,9 @@ namespace Nektar
                 ASSERTL1(m_physBiNormal.num_elements(),"binormals not set");
                 return  m_physBiNormal;
             }
+
+            void NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray, bool NegateNormal = false);
+
         protected:
 
         private:
@@ -101,6 +116,17 @@ namespace Nektar
             {
                 SetPhysNormals(normals); 
             }
+
+            virtual void v_SetUpPhysNormals(const StdRegions::StdExpansionSharedPtr &exp2d, const int edge)
+            {
+                SetUpPhysNormals(exp2d,edge);
+            }
+
+            void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray,
+                                             bool NegateNorm = false)
+            {
+                NormVectorIProductWRTBase(Fx,Fy,outarray, NegateNorm);
+            }
         };
         
         // type defines for use of SegExp in a boost vector
@@ -113,6 +139,9 @@ namespace Nektar
 
 //
 // $Log: GenSegExp.h,v $
+// Revision 1.2  2008/09/09 15:05:09  sherwin
+// Updates related to cuved geometries. Normals have been removed from m_metricinfo and replaced with a direct evaluation call. Interp methods have been moved to LibUtilities
+//
 // Revision 1.1  2008/07/29 22:24:49  sherwin
 // Generalised Segment expansion which include a normal and binormal at the physical quadrature points
 //

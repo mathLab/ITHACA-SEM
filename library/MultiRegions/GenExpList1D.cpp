@@ -54,6 +54,56 @@ namespace Nektar
         {
         }
 
+        // specialised constructor for Neumann boundary conditions in
+        // DisContField2D and ContField2d
+        GenExpList1D::GenExpList1D(const SpatialDomains::CompositeVector &domain, SpatialDomains::MeshGraph2D &graph2D)
+        {
+            int i,j, nel,cnt,id=0;
+            SpatialDomains::Composite comp;
+            SpatialDomains::SegGeomSharedPtr SegmentGeom;
+            LocalRegions::SegExpSharedPtr seg;
+            
+            nel = 0;
+            for(i = 0; i < domain.size(); ++i)
+            {
+                nel += (domain[i])->size();
+            }
+
+            m_coeff_offset = Array<OneD,int>(nel,0);
+            m_phys_offset  = Array<OneD,int>(nel,0);
+
+            cnt = 0;
+            for(i = 0; i < domain.size(); ++i)
+            {
+                comp = domain[i];
+                
+                for(j = 0; j < comp->size(); ++j)
+                {
+                    if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*comp)[j]))
+                    {
+                        LibUtilities::BasisKey bkey = graph2D.GetEdgeBasisKey(SegmentGeom);
+                        seg = MemoryManager<LocalRegions::GenSegExp>::AllocateSharedPtr(bkey, SegmentGeom);
+                        
+                        seg->SetElmtId(id++);
+                        (*m_exp).push_back(seg);  
+
+                        m_coeff_offset[cnt] = m_ncoeffs; 
+                        m_phys_offset[cnt]  = m_npoints; cnt++;
+                        m_ncoeffs += bkey.GetNumModes();
+                        m_npoints += bkey.GetNumPoints();
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"dynamic cast to a SegGeom failed");
+                    }  
+                }
+                
+            }
+
+            ExpList::SetCoeffPhys();
+        }
+
+        // Specialised constructor for DisContField2D for trace expansion
 
         GenExpList1D::GenExpList1D(const Array<OneD,const MultiRegions::ExpList1DSharedPtr> &bndConstraint,  
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>  &bndCond, 
@@ -88,8 +138,7 @@ namespace Nektar
                         EdgeDone[SegGeom->GetEid()] = elmtid;
                         
                         Seg->SetElmtId(elmtid++);
-                        (*m_exp).push_back(Seg);   
-                        
+                        (*m_exp).push_back(Seg);                        
                     }
                 }
             }
@@ -138,8 +187,32 @@ namespace Nektar
             ExpList::SetCoeffPhys();
         }
 
+        void GenExpList1D::SetUpPhysNormals(const StdRegions::StdExpansionVector &locexp)
+        {
+            map<int, int> EdgeGID;
+            int i,j,cnt,n,id; 
 
-        
+            // setup map of all global ids along boundary
+            for(cnt = i = 0; i < (*m_exp).size(); ++i)
+            {
+                id =  (*m_exp)[i]->GetGeom1D()->GetEid();
+                EdgeGID[id] = cnt++;
+            }
+            
+            // Loop over elements and find edges that match;
+            for(cnt = n = 0; n < locexp.size(); ++n)
+            {
+                for(i = 0; i < locexp[n]->GetNedges(); ++i)
+                {
+                    id = locexp[n]->GetGeom2D()->GetEid(i);
+                    
+                    if(EdgeGID.count(id) > 0)
+                    {
+                        (*m_exp)[EdgeGID.find(id)->second]->SetUpPhysNormals(locexp[n],i);
+                    }
+                }
+            }                
+        }        
 
         // Upwind the left and right states given by the Arrays Fwd
         // and Bwd using the vector quantity Vec and ouput the
@@ -254,6 +327,9 @@ namespace Nektar
 
 /**
 * $Log: GenExpList1D.cpp,v $
+* Revision 1.11  2009/07/09 09:01:49  sehunchun
+* Upwind function is modified in a faster form
+*
 * Revision 1.10  2009/04/20 16:14:06  sherwin
 * Updates for optimising bandwidth of DG solver and allowing write import on explist
 *

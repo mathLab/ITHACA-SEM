@@ -276,10 +276,10 @@ namespace Nektar
 
 
         protected:
-            int m_numLocalBndCoeffs;      //< number of local Bnd coefficients
-            int m_numGlobalBndCoeffs;     // Total number of global boundary coefficients
+            int m_numLocalBndCoeffs;     //< number of local Bnd coefficients
+            int m_numGlobalBndCoeffs;    // Total number of global boundary coefficients
             int m_numLocalDirBndCoeffs;  // Number of Dirichlet Boundary Coefficient
-            int m_numGlobalDirBndCoeffs;  // Number of Dirichlet Boundary Coefficient
+            int m_numGlobalDirBndCoeffs; // Number of Dirichlet Boundary Coefficient
             bool m_signChange;
             Array<OneD,int> m_localToGlobalBndMap;  //< integer map of local boundary coeffs to global space 
             Array<OneD,NekDouble> m_localToGlobalBndSign; //< integer sign of local boundary coeffs to global space 
@@ -303,6 +303,9 @@ namespace Nektar
 
 /** 
  $Log: LocalToGlobalBaseMap.h,v $
+ Revision 1.14  2009/04/27 11:42:14  sherwin
+ Updated to make DG helmsolve efficient
+
  Revision 1.13  2009/04/08 06:38:55  sherwin
  Put eigensolve into NekMatrix. Some bandwidths mods
 

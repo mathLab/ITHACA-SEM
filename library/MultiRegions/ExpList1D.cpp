@@ -86,8 +86,7 @@ namespace Nektar
                 m_npoints += Ba.GetNumPoints();
             } 
             
-            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-            m_phys   = Array<OneD, NekDouble>(m_npoints);            
+            ExpList::SetCoeffPhys();
         }
 
         ExpList1D::ExpList1D(SpatialDomains::MeshGraph1D &graph1D):
@@ -172,8 +171,7 @@ namespace Nektar
                 
             } 
             
-            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-            m_phys   = Array<OneD, NekDouble>(m_npoints);            
+            ExpList::SetCoeffPhys();
         }
 
         ExpList1D::ExpList1D(const Array<OneD,const ExpList1DSharedPtr>  &bndConstraint, 
@@ -631,6 +629,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.36  2009/04/20 16:14:06  sherwin
+* Updates for optimising bandwidth of DG solver and allowing write import on explist
+*
 * Revision 1.35  2009/02/08 09:11:49  sherwin
 * General updates to introduce multiple matrix definitions based on different boundary types
 *

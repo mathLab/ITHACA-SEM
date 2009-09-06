@@ -39,6 +39,7 @@
 #include <vector>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/GenExpList1D.h>
 #include <LocalRegions/TriExp.h>
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/NodalTriExp.h>
@@ -144,6 +145,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.h,v $
+* Revision 1.19  2009/05/10 23:17:12  sherwin
+* Updated mainly to handle doubly periodic meshes which required modification to vertex handling from a numbering perspective
+*
 * Revision 1.18  2009/03/04 14:17:38  pvos
 * Removed all methods that take and Expansion as argument
 *

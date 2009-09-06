@@ -842,6 +842,17 @@ namespace Nektar
                 m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>::AllocateSharedPtr(infilename);
             }
 
+            void SetUpPhysNormals(const StdRegions::StdExpansionVector &locexp)
+            {
+                v_SetUpPhysNormals(locexp);
+            }
+
+            void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, 
+                                      Array<OneD,int> &EdgeID)
+            {
+                v_GetBoundaryToElmtMap(ElmtID,EdgeID);
+            }
+
         protected:
             
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(const GlobalLinSysKey &mkey, const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
@@ -1195,9 +1206,9 @@ namespace Nektar
                 ASSERTL0(false,"This method is not defined or valid for this class type");                
             }
 
-
+            
             virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,       NekDouble> &outarray,
+                                     Array<OneD,       NekDouble> &outarray,
                                      NekDouble lambda,
                                      bool      UseContCoeffs,
                                      const Array<OneD, const NekDouble>& dirForcing)
@@ -1241,6 +1252,18 @@ namespace Nektar
                 GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
             }
 
+
+            virtual void v_SetUpPhysNormals(const StdRegions::StdExpansionVector &locexp)
+            {
+                ASSERTL0(false,"This method is not defined or valid for this class type");                
+            }
+       
+            virtual void v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, 
+                                                Array<OneD,int> &EdgeID)
+            {
+                ASSERTL0(false,"This method is not defined or valid for this class type");                
+            }
+
         private:
 
             virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions()
@@ -1256,6 +1279,7 @@ namespace Nektar
             }
 
             
+
         };
 
         typedef boost::shared_ptr<ExpList>      ExpListSharedPtr;
@@ -1269,6 +1293,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.67  2009/07/08 17:22:47  sehunchun
+* Deleting GetTanBasis
+*
 * Revision 1.66  2009/07/08 11:13:54  sehunchun
 * Adding GetSurfaceNormal function
 *

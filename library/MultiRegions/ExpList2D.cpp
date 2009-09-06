@@ -316,7 +316,7 @@ namespace Nektar
                 locBCond = (*(bconditions[i]))[variable];  
                 if(locBCond->GetBoundaryConditionType() == SpatialDomains::eNeumann)
                 {                    
-                    locExpList = MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(*(bregions[i]),graph2D);
+                    locExpList = MemoryManager<MultiRegions::GenExpList1D>::AllocateSharedPtr(*(bregions[i]),graph2D);
                     bndCondExpansions[cnt]  = locExpList;
                     bndConditions[cnt++]    = locBCond;
                 }  
@@ -483,14 +483,16 @@ namespace Nektar
                     doneBndRegions[region2ID] = region1ID;
                 }                  
             }
-        }
+        }        
         
-
     } //end of namespace
 } //end of namespace
 
 /**
 * $Log: ExpList2D.cpp,v $
+* Revision 1.28  2009/05/10 23:17:12  sherwin
+* Updated mainly to handle doubly periodic meshes which required modification to vertex handling from a numbering perspective
+*
 * Revision 1.27  2009/04/27 15:02:04  pvos
 * From h-to-p efficiently updates
 *

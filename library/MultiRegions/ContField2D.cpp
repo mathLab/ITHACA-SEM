@@ -64,7 +64,7 @@ namespace Nektar
                                  SpatialDomains::BoundaryConditions &bcs, 
                                  const int bc_loc):
             DisContField2D(In),
-            m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
+            m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             // Set up boundary conditions for this variable. 

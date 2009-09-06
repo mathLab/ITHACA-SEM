@@ -76,6 +76,9 @@ namespace Nektar
             eClassicalRungeKutta4,            //!< Runge-Kutta multi-stage scheme
             eForwardEuler,                    //!< Forward euler scheme
             eBackwardEuler,                   //!< Backward euler scheme
+            eIMEXOrder1,                      //!< IMEX 1st order scheme using Euler Backwards/Euler Forwards
+            eIMEXOrder2,                      //!< IMEX 2nd order scheme using Backward Different Formula & Extrapolation
+            eIMEXOrder3,                      //!< IMEX 3rd order scheme using Backward Different Formula & Extrapolation
             eMidpoint,                        //!< midpoint method
             eDIRKOrder2,                      //!< Diagonally Implicit Runge Kutta scheme of order 3
             eDIRKOrder3,                      //!< Diagonally Implicit Runge Kutta scheme of order 3
@@ -93,6 +96,9 @@ namespace Nektar
             "ClassicalRungeKutta4",           
             "ForwardEuler",                    
             "BackwardEuler",                  
+            "IMEXOrder1",
+            "IMEXOrder2",
+            "IMEXOrder3",
             "Midpoint",                       
             "DIRKOrder2",                     
             "DIRKOrder3",                     
@@ -195,11 +201,11 @@ namespace Nektar
             
             inline void DoImplicitSolve(InArrayType     &inarray, 
                                         OutArrayType    &outarray, 
-                                        const NekDouble lambda,
-                                        const NekDouble time) const
+                                        const NekDouble time, 
+                                        const NekDouble lambda) const
             {
                 ASSERTL1(!(m_functors2[0].empty()),"ImplicitSolve should be defined for this time integration scheme");
-                m_functors2[0](inarray,outarray,lambda,time);
+                m_functors2[0](inarray,outarray,time,lambda);
             }
 
         protected:
@@ -457,23 +463,23 @@ namespace Nektar
             unsigned int              m_numsteps;   //< Number of steps in multi-step component. 
             unsigned int              m_numstages;  //< Number of stages in multi-stage component. 
 
-            bool m_firstStageEqualsOldSolution;  //< Optimisation-flag 
-            bool m_lastStageEqualsNewSolution;   //< Optimisation-flag
+            bool m_firstStageEqualsOldSolution; //< Optimisation-flag 
+            bool m_lastStageEqualsNewSolution;  //< Optimisation-flag
 
             unsigned int m_numMultiStepValues; // number of entries in input and output vector that correspond
                                                // to VALUES at previous time levels
             unsigned int m_numMultiStepDerivs; // number of entries in input and output vector that correspond
                                                // to DERIVATIVES at previous time levels
             Array<OneD,unsigned int> m_timeLevelOffset; // denotes to which time-level the entries in both 
-                                                             // input and output vector correspond, e.g.
-                                                             //     INPUT VECTOR --------> m_inputTimeLevelOffset
-                                                             //    _            _               _ _
-                                                             //   | u^n          |             | 0 | 
-                                                             //   | u^{n-1}      |             | 1 | 
-                                                             //   | u^{n-2}      |  ----->     | 2 | 
-                                                             //   | dt f(u^{n-1})|             | 1 | 
-                                                             //   | dt f(u^{n-2})|             | 2 | 
-                                                             //    -            -               - -
+                                                        // input and output vector correspond, e.g.
+                                                        //     INPUT VECTOR --------> m_inputTimeLevelOffset
+                                                        //    _            _               _ _
+                                                        //   | u^n          |             | 0 | 
+                                                        //   | u^{n-1}      |             | 1 | 
+                                                        //   | u^{n-2}      |  ----->     | 2 | 
+                                                        //   | dt f(u^{n-1})|             | 1 | 
+                                                        //   | dt f(u^{n-2})|             | 2 | 
+                                                        //    -            -               - -
 
             Array<OneD, Array<TwoD,NekDouble> >   m_A;
             Array<OneD, Array<TwoD,NekDouble> >   m_B;
@@ -713,7 +719,8 @@ namespace Nektar
                 return m_t[0];
             }
 
-            // sets the (multi-step) value and time in the solution vector which corresponds to 
+            // sets the (multi-step) value and time in the solution
+            // vector which corresponds to
             // the value at the time-level with specified offset
             inline void SetValue(const unsigned int timeLevelOffset, const DoubleArray& y, const NekDouble t)
             {
@@ -732,7 +739,8 @@ namespace Nektar
                 }
             }
 
-            // sets the (multi-step) derivative and time in the solution vector which corresponds to 
+            // sets the (multi-step) derivative and time in the
+            // solution vector which corresponds to
             // the derivative at the time-level with specified offset
             inline void SetDerivative(const unsigned int timeLevelOffset, const DoubleArray& y, const NekDouble timestep)
             {

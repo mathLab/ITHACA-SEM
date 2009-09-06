@@ -52,7 +52,7 @@ namespace Nektar
         {
             return (lhs.m_method == rhs.m_method);
         }
-
+        
         bool operator<(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs)
         {            
             return (lhs.m_method < rhs.m_method);
@@ -217,6 +217,118 @@ namespace Nektar
                     m_numMultiStepValues = 1;
                     m_numMultiStepDerivs = 0;
                     m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                }
+                break;
+            case eIMEXOrder1:
+                {
+                    m_numsteps  = 2;
+                    m_numstages = 1;
+
+                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
+                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
+
+                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,1.0);
+                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,1.0);
+                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,1.0);
+                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
+                    m_V    = Array<TwoD,NekDouble>(m_numsteps ,m_numsteps, 0.0);
+                    
+                    m_B[0][1][0] = 0.0;
+                    m_B[1][0][0] = 0.0;
+                    m_V[0][0] = 1.0;
+                    m_V[0][1] = 1.0;
+
+                    m_schemeType = eIMEX;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 1;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
+                    m_timeLevelOffset[1] = 0;
+                }
+                break;
+            case eIMEXOrder2:
+                {
+                    NekDouble third = 1.0/3.0;
+                    m_numsteps  = 4;
+                    m_numstages = 1;
+
+                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
+                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
+
+                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,2*third);
+                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
+                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
+                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 4*third);
+                    m_V    = Array<TwoD,NekDouble>(m_numsteps ,m_numsteps, 0.0);
+                    
+                    m_B[0][0][0] = 2*third;
+                    m_B[1][2][0] = 1.0;
+                    m_U[0][1] = -third;
+                    m_U[0][3] = -2*third;
+
+                    m_V[0][0] =  4*third;
+                    m_V[0][1] = -third;
+                    m_V[0][2] =  4*third;
+                    m_V[0][3] = -2*third;
+                    m_V[1][0] =  1.0;
+                    m_V[3][2] =  1.0;
+
+                    m_schemeType = eIMEX;
+                    m_numMultiStepValues = 2;
+                    m_numMultiStepDerivs = 2;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
+                    m_timeLevelOffset[1] = 0;
+                    m_timeLevelOffset[2] = 0;
+                    m_timeLevelOffset[3] = 0;
+                }
+                break;
+            case eIMEXOrder3:
+                {
+                    NekDouble eleventh = 1.0/11.0;
+                    m_numsteps  = 6;
+                    m_numstages = 1;
+
+                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
+                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
+
+                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,6*eleventh);
+                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
+                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps ,m_numstages,0.0);
+                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 18*eleventh);
+                    m_V    = Array<TwoD,NekDouble>(m_numsteps ,m_numsteps, 0.0);
+                    
+                    m_B[0][0][0] = 6*eleventh;
+                    m_B[1][3][0] = 1.0;
+                    m_U[0][1] = -9*eleventh;
+                    m_U[0][2] =  2*eleventh;
+                    m_U[0][4] = -18*eleventh;
+                    m_U[0][5] =  6*eleventh;
+
+                    m_V[0][0] =  18*eleventh;
+                    m_V[0][1] = -9*eleventh;
+                    m_V[0][2] =  2*eleventh;
+                    m_V[0][3] =  18*eleventh;
+                    m_V[0][4] = -18*eleventh;
+                    m_V[0][5] =  1.0;
+                    m_V[1][0] =  1.0;
+                    m_V[2][1] =  1.0;
+                    m_V[4][3] =  1.0;
+                    m_V[5][4] =  1.0;
+
+                    m_schemeType = eIMEX;
+                    m_numMultiStepValues = 3;
+                    m_numMultiStepDerivs = 3;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
+                    m_timeLevelOffset[1] = 0;
+                    m_timeLevelOffset[2] = 0;
+                    m_timeLevelOffset[3] = 0;
+                    m_timeLevelOffset[4] = 0;
+                    m_timeLevelOffset[5] = 0;
                 }
                 break;
             case eAdamsMoultonOrder2:
@@ -491,7 +603,8 @@ namespace Nektar
             TimeIntegrationSolutionSharedPtr y_out = 
                 MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(m_schemeKey,y_0,time,timestep);
 
-            // calculate the initial derivative, if is part of the solution vector of the current scheme
+            // calculate the initial derivative, if is part of the
+            // solution vector of the current scheme
             if(m_numMultiStepDerivs)
             {
                 if( m_timeLevelOffset[m_numMultiStepValues] == 0)
@@ -520,8 +633,8 @@ namespace Nektar
         }        
         
         TimeIntegrationScheme::ConstDoubleArray& 
-        TimeIntegrationScheme::TimeIntegrate(const NekDouble                        timestep,          
-                                                   TimeIntegrationSolutionSharedPtr &solvector      ,
+        TimeIntegrationScheme::TimeIntegrate(const NekDouble    timestep, 
+                                             TimeIntegrationSolutionSharedPtr &solvector      ,
                                              const TimeIntegrationSchemeOperators   &op     ) const
         {
             ASSERTL1(!(GetIntegrationSchemeType() == eImplicit),
@@ -532,21 +645,33 @@ namespace Nektar
 
             if( (solvector->GetIntegrationScheme()).get() != this )
             {
-                // This branch will be taken when the solution vector (solvector) is set up
-                // for a different scheme than the object this method is called from.
-                // (typically needed to calculate the first time-levels of a multi-step scheme)
+                // This branch will be taken when the solution vector
+                // (solvector) is set up for a different scheme than
+                // the object this method is called from.  (typically
+                // needed to calculate the first time-levels of a
+                // multi-step scheme)
 
-                // Do do this kind of 'non-matching' integration, we perform the following three steps:
-                // 1: copy the required input information from the solution vector of the master scheme to 
-                //    the input solution vector of the current scheme
-                // 2: time-integrate for one step using the current scheme
-                // 3: copy the information contained in the output vector of the current scheme to the
-                //    solution vector of the master scheme
+                // To do this kind of 'non-matching' integration, we
+                // perform the following three steps:
+                //
+                // 1: copy the required input information from the
+                //    solution vector of the master scheme to the
+                //    input solution vector of the current scheme
+                //
+                // 2: time-integrate for one step using the current
+                //    scheme
+                //
+                // 3: copy the information contained in the output
+                //    vector of the current scheme to the solution
+                //    vector of the master scheme
 
-                // STEP 1:  copy the required input information from the solution vector of the master scheme to 
-                //          the input solution vector of the current scheme
+                // STEP 1: copy the required input information from
+                //          the solution vector of the master scheme
+                //          to the input solution vector of the
+                //          current scheme
 
-                // 1.1 Determine which information is required for the current scheme                
+                // 1.1 Determine which information is required for the
+                // current scheme
                 int n;
                 unsigned int nCurSchemeVals  = m_numMultiStepValues; // number of required values of the current scheme
                 unsigned int nCurSchemeDers  = m_numMultiStepDerivs; // number of required derivs of the current scheme
@@ -554,13 +679,15 @@ namespace Nektar
                 unsigned int nMasterSchemeVals  = solvector->GetNvalues(); // number of values of the master scheme
                 unsigned int nMasterSchemeDers  = solvector->GetNderivs(); // number of derivs of the master scheme
                 unsigned int nMasterSchemeSteps = solvector->GetNsteps();  // number of steps in the master scheme
-                // The arrays below contains information to which time-level the values and derivatives
-                // of the schemes belong
+                // The arrays below contains information to which
+                // time-level the values and derivatives of the
+                // schemes belong
                 const Array<OneD, const unsigned int>& curTimeLevels = m_timeLevelOffset; 
                 const Array<OneD, const unsigned int>& masterTimeLevels = solvector->GetTimeLevelOffset(); 
 
-                // 1.2 Copy the required information from the master solution vector to the input solution
-                //     vector of the current scheme
+                // 1.2 Copy the required information from the master
+                //     solution vector to the input solution vector of
+                //     the current scheme
                 TimeIntegrationSolutionSharedPtr solvector_in = MemoryManager<TimeIntegrationSolution>::
                     AllocateSharedPtr(GetIntegrationSchemeKey()); // input solution vector of the current scheme
 
@@ -570,19 +697,23 @@ namespace Nektar
                     DoubleArray& y_n = solvector->GetValue    ( curTimeLevels[n] );
                     NekDouble    t_n = solvector->GetValueTime( curTimeLevels[n] );
 
-                    // Set the required value in the input solution vector of the current scheme
+                    // Set the required value in the input solution
+                    // vector of the current scheme
                     solvector_in->SetValue(curTimeLevels[n],y_n,t_n);
                 }
                 for(n = nCurSchemeVals; n < nCurSchemeSteps; n++)
                 {
-                    // Get the required derivative out of the master solution vector
+                    // Get the required derivative out of the master
+                    // solution vector
                     DoubleArray& dtFy_n = solvector->GetDerivative    ( curTimeLevels[n] );
 
-                    // Set the required derivative in the input solution vector of the current scheme
+                    // Set the required derivative in the input
+                    // solution vector of the current scheme
                     solvector_in->SetDerivative(curTimeLevels[n],dtFy_n,timestep);
                 }
 
-                // STEP 2: time-integrate for one step using the current scheme             
+                // STEP 2: time-integrate for one step using the
+                // current scheme
                 TimeIntegrationSolutionSharedPtr solvector_out = MemoryManager<TimeIntegrationSolution>::
                     AllocateSharedPtr(GetIntegrationSchemeKey(),nvar,npoints);  // output solution vector of the current scheme
 
@@ -591,13 +722,16 @@ namespace Nektar
                               solvector_out->UpdateSolutionVector(),solvector_out->UpdateTimeVector(),op);
 
 
-                // STEP 3: copy the information contained in the output vector of the current scheme to the
-                //         solution vector of the master scheme   
+                // STEP 3: copy the information contained in the
+                //         output vector of the current scheme to the
+                //         solution vector of the master scheme
 
-                // 3.1 Check whether the current time scheme updates the most recent derivative that should be updated
-                //     in the master scheme.
-                //     If not, calculate the derivative. This can be done based upon the corresponding value and the
-                //     OdeRhs operator.
+                // 3.1 Check whether the current time scheme updates
+                //     the most recent derivative that should be
+                //     updated in the master scheme.  If not,
+                //     calculate the derivative. This can be done
+                //     based upon the corresponding value and the
+                //     DoOdeRhs operator.
                 int j;
                 bool CalcNewDeriv = false; // flag inidicating whether the new derivative is availble in the output of
                                            // of the current scheme or whether it should be calculated
@@ -666,17 +800,19 @@ namespace Nektar
                 }
                 else
                 {
-                    // Rotate the solution vector 
-                    // (i.e. updating without calculating/inserting new values)
+                    // Rotate the solution vector (i.e. updating
+                    // without calculating/inserting new values)
                     solvector->RotateSolutionVector();
                 }
 
 
-                // 1.2 Copy the information calculated using the current scheme from the output solution vector
-                //     to the master solution vector 
+                // 1.2 Copy the information calculated using the
+                //     current scheme from the output solution vector
+                //     to the master solution vector
                 for(n = 0; n < nCurSchemeVals; n++)
                 {
-                    // Get the calculated value out of the output solution vector of the current scheme
+                    // Get the calculated value out of the output
+                    // solution vector of the current scheme
                     DoubleArray& y_n = solvector_out->GetValue    ( curTimeLevels[n] );
                     NekDouble    t_n = solvector_out->GetValueTime( curTimeLevels[n] );
 
@@ -685,7 +821,8 @@ namespace Nektar
                 }
                 for(n = nCurSchemeVals; n < nCurSchemeSteps; n++)
                 {
-                    // Get the calculated derivative out of the output solution vector of the current scheme
+                    // Get the calculated derivative out of the output
+                    // solution vector of the current scheme
                     DoubleArray& dtFy_n = solvector_out->GetDerivative    ( curTimeLevels[n] );
 
                     // Set the calculated derivative in the master solution vector
@@ -696,8 +833,7 @@ namespace Nektar
             {
                 const TimeIntegrationSchemeKey& key = solvector->GetIntegrationSchemeKey();
                 
-                TimeIntegrationSolutionSharedPtr solvector_new = MemoryManager<TimeIntegrationSolution>::
-                    AllocateSharedPtr(key,nvar,npoints); 
+                TimeIntegrationSolutionSharedPtr solvector_new = MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(key,nvar,npoints); 
                 
                 TimeIntegrate(timestep,solvector->GetSolutionVector(),solvector->GetTimeVector(),
                               solvector_new->UpdateSolutionVector(),solvector_new->UpdateTimeVector(),op); 
@@ -729,7 +865,7 @@ namespace Nektar
             // - F   corresponds to the stage derivatives
             // - T   corresponds to the time at the different stages
             // - tmp corresponds to the explicit right hand side of each stage equation 
-            //        (for explicit schemes, this correspond to Y)
+            //   (for explicit schemes, this correspond to Y)
             DoubleArray Y;        
             DoubleArray tmp(nvar);        
             TripleArray F  (m_numstages);  
@@ -743,6 +879,7 @@ namespace Nektar
             {
                 tmp[j]   = Array<OneD, NekDouble>(npoints);
             }
+
             // The same storage will be used for every stage -> tmp is a DoubleArray
             if(type == eExplicit)
             {
@@ -756,6 +893,7 @@ namespace Nektar
                     Y[j] = Array<OneD, NekDouble>(npoints);
                 }
             }
+
             // Different storage for every stage derivative as the data
             // will be re-used to update the solution -> F is a TripleArray
             for(i = 0; i < m_numstages; ++i)
@@ -766,6 +904,7 @@ namespace Nektar
                     F[i][j] = Array<OneD, NekDouble>(npoints,0.0);
                 }
             }
+
             if(type == eIMEX)
             {
                 F_IMEX = TripleArray(m_numstages);
@@ -795,34 +934,34 @@ namespace Nektar
                     // The stage values Y are a linear combination of:
                     // 1: the stage derivatives
 					
-					if( i == 0 )
-					  {
-					    for (k=0; k<nvar; k++)
-						{
-					       tmp[k] = Array<OneD, NekDouble>(npoints,0.0);
-						}
-					  }
-					else
-					{
-                      for(k = 0; k < nvar; k++)
-                      {
-                        Vmath::Smul(npoints,timestep*A(i,0),F[0][k],1,
-                                    tmp[k],1);
-                        if(type == eIMEX)       
+                    if( i == 0 )
+                    {
+                        for (k=0; k<nvar; k++)
                         {
-                            Vmath::Svtvp(npoints,timestep*A_IMEX(i,0),F_IMEX[0][k],1,
-                                         tmp[k],1,tmp[k],1);
+                            tmp[k] = Array<OneD, NekDouble>(npoints,0.0);
                         }
-                      }
-					}          
+                    }
+                    else
+                    {
+                        for(k = 0; k < nvar; k++)
+                        {
+                            Vmath::Smul(npoints,timestep*A(i,0),F[0][k],1,tmp[k],1);
+                            
+                            if(type == eIMEX)       
+                            {
+                                Vmath::Svtvp(npoints,timestep*A_IMEX(i,0),F_IMEX[0][k],1,
+                                             tmp[k],1,tmp[k],1);
+                            }
+                        }
+                    }          
                     T = A(i,0)*timestep;
-
+                    
                     for( j = 1; j < i; j++ )
                     {
                         for(k = 0; k < nvar; k++)
                         {
                             Vmath::Svtvp(npoints,timestep*A(i,j),F[j][k],1,
-                                     tmp[k],1,tmp[k],1);
+                                         tmp[k],1,tmp[k],1);
                             if(type == eIMEX)       
                             {
                                 Vmath::Svtvp(npoints,timestep*A_IMEX(i,j),F_IMEX[j][k],1,
@@ -841,14 +980,13 @@ namespace Nektar
                                          tmp[k],1,tmp[k],1);
                         }
                         T += U(i,j)*t_old[j];
-                    }
-					
-			     }
-                				
+                    } 
+                }
+            			
                 // Calculate the stage derivative based upon the stage value
                 if(type == eDiagonallyImplicit)
                 {
-					op.DoImplicitSolve(tmp, Y, T, A(i,i)*timestep);
+                    op.DoImplicitSolve(tmp, Y, T, A(i,i)*timestep);
 					
                     for(k = 0; k < nvar; k++)
                     {
@@ -859,39 +997,43 @@ namespace Nektar
                 else if(type == eIMEX)
                 { 
 				
-				   if (i != 0)
-				    {
-				      op.DoImplicitSolve(tmp, Y, T, A(i,i)*timestep);
-				
-					for(k = 0; k < nvar; k++)
-					 {
-						 Vmath::Vsub(npoints,Y[k],1,tmp[k],1,F[i][k],1);
-						 Vmath::Smul(npoints,1.0/(A(i,i)*timestep),F[i][k],1,F[i][k],1);
-					 }
-					}
-
+                    // if (i != 0) SJS turned off since it seems to stop implicit solve step in IMEX.
+                    {
+                        op.DoImplicitSolve(tmp, Y, T, A(i,i)*timestep);
+			
+                        for(k = 0; k < nvar; k++)
+                        {
+                            Vmath::Vsub(npoints,Y[k],1,tmp[k],1,F[i][k],1);
+                            Vmath::Smul(npoints,1.0/(A(i,i)*timestep),F[i][k],1,F[i][k],1);
+                        }
+                    }
+                    
                     op.DoOdeRhs(Y, F_IMEX[i], T);
-					 
                 }
                 else //( type == eExplicit)
                 {
-                    op.DoOdeRhs(Y, F[i], T);
-
+                    op.DoOdeRhs(Y, F[i], T);                   
                 }
             }
             
-            // Next, the solution at the new time level will be calculated.
-            // For multi-step methods, this includes updating the values 
-            // of the auxiliary pare=ameters
-            
-            // The loop below calculates the solution at the new time level
-
-            // If last stage equals new solution, the new solution needs not be 
-            // calculated explicitely but can simply be copied. This saves
-            // a solve as this normally would require a call to DoOdeLhsSolve
+            // Next, the solution vector y at the new time level will
+            // be calculated.
+            //
+            // For multi-step methods, this includes updating the
+            // values of the auxiliary parameters
+            //
+            // The loop below calculates the solution at the new time
+            // level
+            //
+            // If last stage equals the new solution, the new solution
+            // needs not be calculated explicitly but can simply be
+            // copied. This saves a solve as this normally would
+            // require a call to DoOdeLhsSolve
 						
             int i_start = 0;
-            if( (m_lastStageEqualsNewSolution) && (type == eExplicit) )
+            // SJS: Not clear to me this should be restricted to Explicit Schemes
+            // if( (m_lastStageEqualsNewSolution) && (type == eExplicit) )
+            if( (m_lastStageEqualsNewSolution) ) 
             {
                 for(k = 0; k < nvar; k++)
                 {
@@ -918,7 +1060,8 @@ namespace Nektar
                 for(k = 0; k < nvar; k++)
                 {
                     Vmath::Smul(npoints,timestep*B(i,0),F[0][k],1,y_new[i][k],1);
-                    if(type == eIMEX)
+ 
+                   if(type == eIMEX)
                     {
                         Vmath::Svtvp(npoints,timestep*B_IMEX(i,0),F_IMEX[0][k],1,
                                      y_new[i][k],1,y_new[i][k],1);
@@ -933,6 +1076,7 @@ namespace Nektar
                     {					
                         Vmath::Svtvp(npoints,timestep*B(i,j),F[j][k],1,
                                      y_new[i][k],1,y_new[i][k],1);
+
                         if(type == eIMEX)
                         {
                             Vmath::Svtvp(npoints,timestep*B_IMEX(i,j),F_IMEX[j][k],1,
@@ -956,7 +1100,7 @@ namespace Nektar
 				
             }
 
-        }        
+        }    
         
         bool TimeIntegrationScheme::CheckIfFirstStageEqualsOldSolution(const Array<OneD, const Array<TwoD, NekDouble> >& A,
                                                                        const Array<OneD, const Array<TwoD, NekDouble> >& B,
@@ -1139,17 +1283,22 @@ namespace Nektar
 
         /**
          * \page pageGeneralLinearMethods General Linear Methods 
-         *  the implementation of time integration schemes in Nektar++
+         *
+         *  The implementation of time integration schemes in Nektar++
          *
          * \section sectionGeneralLinearMethodsIntroduction Introduction
-         * General linear methods can be considered as the generalisation of a broad 
-         * range of different numerical methods for ordinary differential equations. 
-         * They were introduced by Butcher and they provide a unified formulation for 
-         * traditional methods such as the Runge-Kutta methods and the linear multi-step methods. 
-         * From an implementational point of view, this means that all these numerical methods 
-         * can be abstracted in a similar way. As this allows a high level of generality, 
-         * it is chosen in Nektar++ to cast all time integration schemes in the framework of 
-         * general linear methods.
+         *
+         * General linear methods can be considered as the
+         * generalisation of a broad range of different numerical
+         * methods for ordinary differential equations.  They were
+         * introduced by Butcher and they provide a unified
+         * formulation for traditional methods such as the Runge-Kutta
+         * methods and the linear multi-step methods.  From an
+         * implementational point of view, this means that all these
+         * numerical methods can be abstracted in a similar way. As
+         * this allows a high level of generality, it is chosen in
+         * Nektar++ to cast all time integration schemes in the
+         * framework of general linear methods.
          *
          *
          * For background information about general linear methods, please consult the 
@@ -1355,12 +1504,17 @@ namespace Nektar
          *   step. However, the calculation of the different stage values is still uncoupled. Best known are the
          *   DIRK schemes.
          * - <b>IMEX schemes</b><BR>
-         *  <i>information to be added</i>
+         * These schemes support the concept of being able to split
+         * right hand forcing term \f$ l(t,y)\f$ into an explicit and
+         * implicit component. This is useful in advection diffusion
+         * type problems where the advection is handled explicity and
+         * the diffusion is handled implicit.
          * - <b>Fully Implicit Methods Methods</b><BR>
          *   The coefficient matrix has a non-zero upper triangular part. The calculation of all stages values is fully coupled. 
          *
-         * The aim in Nektar++ is to fully support the first two (three?) types of General Linear Methods. 
-         * Fully implicit methods are currently not implemented.
+         * The aim in Nektar++ is to fully support the first three
+         * types of General Linear Methods.  Fully implicit methods
+         * are currently not implemented.
          *
          * \subsection sectionGeneralLinearMethodsNektarSchemesHowTo How to use
          * The goal of abstracting the concept of General Linear Methods is to provide users with a single interface 
@@ -1449,9 +1603,9 @@ namespace Nektar
          * \subsection sectionGeneralLinearMethodsNektarSchemesRequiredMethods Required Methods
          * An object <code>bar</code> of the class <code>Foo</code> should be passed to the TimeIntegrationScheme
          * class routines. This class <code>Foo</code> should have the following public member functions:
-         * - <code>Foo::ODErhs</code>
+         * - <code>Foo::DoOdeRhs</code>
          *   \code    
-         *   void Foo::ODErhs(const Array<OneD, const Array<OneD, NekDouble> >& inarray,  
+         *   void Foo::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >& inarray,  
          *                          Array<OneD,       Array<OneD, NekDouble> >& outarray, 
          *                    const NekDouble time);
          *   \endcode
@@ -1510,9 +1664,9 @@ namespace Nektar
          *   corresponds to the number of variables (eg. u,v,w) and
          *   the second dimension corresponds to the number length of the variables
          *   (e.g. the number of modes).
-         * - <code>Foo::ODEdirkSolve</code>
+         * - <code>Foo::DoImplicitSolve</code>
          *   \code    
-         *   void Foo::ODEdirkSolve(const Array<OneD, const Array<OneD, NekDouble> >& inarray,  
+         *   void Foo::DoImplicitSolve(const Array<OneD, const Array<OneD, NekDouble> >& inarray,  
          *                                Array<OneD,       Array<OneD, NekDouble> >& outarray, 
          *                          const NekDouble time,
          *                          const NekDouble lambda);
@@ -1527,7 +1681,7 @@ namespace Nektar
          *   \f[
          *   \boldsymbol{m}(t,\boldsymbol{y}) - \lambda \boldsymbol{l}(t,\boldsymbol{y}) = \boldsymbol{b}
          *   \f]
-         *   for the unknown vector \f$\boldsymbol{y}\f$. <code>Foo::ODEdirkSolve</code> is the method
+         *   for the unknown vector \f$\boldsymbol{y}\f$. <code>Foo::DoImplicitSolve</code> is the method
          *   designed to do this. For linear operators, this can be thought of
          *   as the inverse matrix operator, i.e.
          *   \f[
@@ -1619,9 +1773,9 @@ namespace Nektar
          *      \f[  \boldsymbol{b}^{\mathcal{H}} - \boldsymbol{M}^{\mathcal{HD}}\boldsymbol{y}^{\mathcal{D}} \f]
          *   -# Solve the system below for the unknown \f$\boldsymbol{y}^{\mathcal{H}}\f$,
          *      \f[ \boldsymbol{M}^{\mathcal{HH}}\boldsymbol{y}^{\mathcal{H}} = \boldsymbol{b}^{\mathcal{H}} - \boldsymbol{M}^{\mathcal{HD}}\boldsymbol{y}^{\mathcal{D}} \f]
-         * - <code>Foo::ODErhs</code>
+         * - <code>Foo::DoOdeRhs</code>
          *   \code    
-         *   void Foo::ODErhs(const Array<OneD, const Array<OneD, NekDouble> >& inarray,  
+         *   void Foo::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >& inarray,  
          *                          Array<OneD,       Array<OneD, NekDouble> >& outarray, 
          *                    const NekDouble time);
          *   \endcode
@@ -1643,7 +1797,7 @@ namespace Nektar
          *   essentially, only the bottom part of the operation above, i.e.
          *   \f[ \boldsymbol{L}^{\mathcal{HD}}\boldsymbol{y}^{\mathcal{D}} + \boldsymbol{L}^{\mathcal{HH}}\boldsymbol{y}^{\mathcal{H}} \f]
          *   is required. However, sometimes it might be more convenient to use/implement routines for the
-         *   <code>Foo::ODErhs</code> method that also calculate \f$\boldsymbol{b}^{\mathcal{D}}\f$.
+         *   <code>Foo::DoOdeRhs</code> method that also calculate \f$\boldsymbol{b}^{\mathcal{D}}\f$.
          * - <code>Foo::ODElhs</code>
          *   \code    
          *   void Foo::ODElhs(const Array<OneD, const Array<OneD, NekDouble> >& inarray,  
@@ -1669,9 +1823,9 @@ namespace Nektar
          *   \f[ \boldsymbol{M}^{\mathcal{HD}}\boldsymbol{y}^{\mathcal{D}} + \boldsymbol{M}^{\mathcal{HH}}\boldsymbol{y}^{\mathcal{H}} \f]
          *   is required. However, sometimes it might be more convenient to use/implement routines for the
          *   <code>Foo::ODElhs</code> method that also calculate \f$\boldsymbol{b}^{\mathcal{D}}\f$.
-         * - <code>Foo::ODEdirkSolve</code>
+         * - <code>Foo::DoImplicitSolve</code>
          *   \code    
-         *   void Foo::ODEdirkSolve(const Array<OneD, const Array<OneD, NekDouble> >& inarray,  
+         *   void Foo::DoImplicitSolve(const Array<OneD, const Array<OneD, NekDouble> >& inarray,  
          *                                Array<OneD,       Array<OneD, NekDouble> >& outarray, 
          *                          const NekDouble time,
          *                          const NekDouble lambda);
@@ -1780,6 +1934,98 @@ namespace Nektar
          * \Delta t \boldsymbol{l}(t^{n-1},\boldsymbol{y}^{n-1})
          * \end{array}\right]
          * \f]
+         * - 1st order IMEX Euler backwards/ Euler Forwards
+         *   - enum value: <code>eIMEXOrder1</code>
+         *   - coefficients and parameters:
+         * \f[
+         * \left[ \begin{array}{cc|c}
+         * A^{\mathrm{IM}} & A^{\mathrm{EM}} & U \\
+         * \hline 
+         * B^{\mathrm{IM}} & B^{\mathrm{EM}} & V
+         * \end{array} \right ] = 
+         * \left[\begin{array}{cc|c}
+         *  \left [ \begin{array}{c} 1 \end{array} \right ] & \left [ \begin{array}{c} 0 \end{array} \right ] &
+         *  \left [ \begin{array}{cc} 1 & 1 \end{array} \right ] \\
+         * \hline 
+         *  \left [ \begin{array}{c} 1 \\ 0 \end{array} \right ] & \left [ \begin{array}{c} 0 \\ 1 \end{array} \right ]&
+         *  \left [ \begin{array}{cc} 1 & 1 \\ 0 & 0 \end{array} \right ]
+         * \end{array}\right] \quad \mathrm{with}\quad 
+         * \boldsymbol{y}^{[n]}=
+         * \left[\begin{array}{c}
+         * \boldsymbol{y}^{[n]}_0\\ 
+         * \boldsymbol{y}^{[n]}_1 
+         * \end{array}\right]=
+         * \left[\begin{array}{c}
+         * \boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right)\\
+         * \Delta t \boldsymbol{l}\left ( t^n, \boldsymbol{y}^{n}\right)
+         * \end{array}\right]
+         * \f]
+         * - 2nd order IMEX Backward Different Formula & Extrapolation
+         *   - enum value: <code>eIMEXOrder2</code>
+         *   - coefficients and parameters:
+         * \f[
+         * \left[ \begin{array}{cc|c}
+         * A^{\mathrm{IM}} & A^{\mathrm{EM}} & U \\
+         * \hline 
+         * B^{\mathrm{IM}} & B^{\mathrm{EM}} & V
+         * \end{array} \right ] = 
+         * \left[\begin{array}{cc|c}
+         *  \left [ \begin{array}{c} \frac{2}{3} \end{array} \right ] & \left [ \begin{array}{c} 0 \end{array} \right ] &
+         *  \left [ \begin{array}{cccc} \frac{4}{3} & -\frac{1}{3} & \frac{4}{3} &  -\frac{2}{3} \end{array} \right ] \\
+         * \hline 
+         *  \left [ \begin{array}{c} \frac{2}{3} \\ 0 \\ 0 \\ 0 \end{array} \right ] & \left [ \begin{array}{c} 0 \\0 \\ 1 \\ 0 \end{array} \right ]&
+         *  \left [ \begin{array}{cccc} \frac{4}{3} & -\frac{1}{3} & \frac{4}{3} & -\frac{2}{3} \\ 1 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0\\ 0 & 0 & 1 & 0 \end{array} \right ]
+         * \end{array}\right] \quad \mathrm{with}\quad 
+         * \boldsymbol{y}^{[n]}=
+         * \left[\begin{array}{c}
+         * \boldsymbol{y}^{[n]}_0\\ 
+         * \boldsymbol{y}^{[n]}_1 \\
+         * \boldsymbol{y}^{[n]}_2 \\
+         * \boldsymbol{y}^{[n]}_3 
+         * \end{array}\right]=
+         * \left[\begin{array}{l}
+         * \boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right)\\
+         * \boldsymbol{m}\left(t^{n-1},\boldsymbol{y}^{n-1}\right)\\
+         * \Delta t \boldsymbol{l}\left ( t^n, \boldsymbol{y}^{n}\right)\\
+         * \Delta t \boldsymbol{l}\left ( t^{n-1}, \boldsymbol{y}^{n-1}\right)
+         * \end{array}\right]
+         * \f]
+         * (Note: the first two rows are normalised so the coefficient on \f$ \boldsymbol{y}_n^{[n+1]} \f$ is one. In the standard formulation it is 3/2)
+         * - 3rdorder IMEX Backward Different Formula & Extrapolation
+         *   - enum value: <code>eIMEXOrder3</code>
+         *   - coefficients and parameters:
+         * \f[
+         * \left[ \begin{array}{cc|c}
+         * A^{\mathrm{IM}} & A^{\mathrm{EM}} & U \\
+         * \hline 
+         * B^{\mathrm{IM}} & B^{\mathrm{EM}} & V
+         * \end{array} \right ] = 
+         * \left[\begin{array}{cc|c}
+         *  \left [ \begin{array}{c} \frac{6}{11} \end{array} \right ] & \left [ \begin{array}{c} 0 \end{array} \right ] &
+         *  \left [ \begin{array}{cccccc} \frac{18}{11} & -\frac{9}{11} & \frac{2}{11} & \frac{18}{11} &  -\frac{18}{11} & \frac{6}{11} \end{array} \right ] \\
+         * \hline 
+         *  \left [ \begin{array}{c} \frac{6}{11}\\ 0 \\ 0 \\ 0 \\0 \\0 \end{array} \right ] & \left [ \begin{array}{c} 0 \\0 \\ 0 \\ 1 \\ 0 \\ 0 \end{array} \right ]&
+         *  \left [ \begin{array}{cccccc} \frac{18}{11} & -\frac{9}{11} & \frac{2}{11} & \frac{18}{11} & -\frac{18}{11} & \frac{6}{11} \\ 1 & 0 & 0 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 & 0 & 0\\ 0 & 0 & 0 & 1 & 0 & 0 \\ 0 & 0 &  0 & 0 & 1 & 0 \end{array} \right ]
+         * \end{array}\right] \quad \mathrm{with}\quad 
+         * \boldsymbol{y}^{[n]}=
+         * \left[\begin{array}{l}
+         * \boldsymbol{y}^{[n]}_0 \\ 
+         * \boldsymbol{y}^{[n]}_1 \\
+         * \boldsymbol{y}^{[n]}_2 \\
+         * \boldsymbol{y}^{[n]}_3 \\
+         * \boldsymbol{y}^{[n]}_4 \\
+         * \boldsymbol{y}^{[n]}_5 
+         * \end{array}\right]=
+         * \left[\begin{array}{l}
+         * \boldsymbol{m}\left(t^n,\boldsymbol{y}^{n}\right)\\
+         * \boldsymbol{m}\left(t^{n-1},\boldsymbol{y}^{n-1}\right)\\
+         * \boldsymbol{m}\left(t^{n-2},\boldsymbol{y}^{n-2}\right)\\
+         * \Delta t \boldsymbol{l}\left ( t^n, \boldsymbol{y}^{n}\right)\\
+         * \Delta t \boldsymbol{l}\left ( t^{n-1}, \boldsymbol{y}^{n-1}\right)\\
+         * \Delta t \boldsymbol{l}\left ( t^{n-2}, \boldsymbol{y}^{n-2}\right)
+         * \end{array}\right]
+         * \f]
+         * (Note: the first two rows are normalised so the coefficient on \f$ \boldsymbol{y}_n^{[n+1]} \f$ is one. In the standard formulation it is 11/6)
          * - 2nd order Adams Moulton
          *   - enum value: <code>eAdamsMoultonOrder2</code>
          *   - coefficients and parameters:

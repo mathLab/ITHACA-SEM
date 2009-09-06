@@ -62,83 +62,130 @@ namespace Nektar
         ADRBase(fileNameString,false,true),
         m_infosteps(10)
     {
-	switch(m_expdim)
-	  {
-	  case 2:
-	    {
-	      SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-              
-	      if(!(mesh2D = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(mesh)))
-              {
-		  ASSERTL0(false,"Dynamics cast failed");
-              }
-	      
-              m_pressure =  MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(*mesh2D,*m_boundaryConditions/??);
-              
-	      break;
-	    }
-	  case 3:
-	    ASSERTL0(false,"3 D not set up");
-	  default:
-	    ASSERTL0(false,"Expansion dimension not recognised");
-	    break;
-	  }
+        int i,j;
+        int numfields = m_fields.num_elements();
+        std::string velids[] = {"u","v","w"};
 
-        // Set up equation type enum using kEquationTypeStr
+        // Set up Velocity field to point to the first m_expdim of m_fields; 
+        m_velocity = Array<OneD,int>(m_spacedim);
         
-        const std::string typeStr = m_boundaryConditions->GetEquationTypeStr();
-
-        for(int i = 0; i < (int) eEquationTypeSize; ++i)
+        for(i = 0; i < m_expdim; ++i)
         {
-            if(nocase_cmp(kEquationTypeStr[i],typeStr) == 0 )
+            for(j = 0; j < numfields; ++j)
             {
-                m_equationType = (EquationType)i; 
-                break;
-            }
-        }
-
-        
-        // Equation specific Setups 
-        switch(m_equationType)
-        {
-        case eUnsteadyStokes: case eUnsteadyNavierStokes:
-            
-            if(m_boundaryConditions->CheckForParameter("IO_InfoSteps") == true)
-            {
-                m_infosteps =  m_boundaryConditions->GetParameter("IO_InfoSteps");
-            }
-            
-            // check to see if any user defined boundary condition is
-            // indeed implemented
-            for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
-            {	
-                // Time Dependent Boundary Condition (if no user
-                // defined then this is empty)
-                if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "")
+                std::string var = m_boundaryConditions->GetVariable(j);
+                if(NoCaseStringCompare(velids[i],var) == 0)
                 {
-                    if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "TimeDependent")
-                    {
-                        ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
-                    }
+                    m_velocity[i] = j;
+                    break;
+                }
+                
+                if(j == numfields)
+                {
+                    std::string error = "Failed to find field: " + var; 
+                    ASSERTL0(false,error.c_str());
                 }
             }
-            break;
-        case eNoEquationType:
-        default:
-            ASSERTL0(false,"Unknown or undefined equation type");
+        }
+        
+        // Asuume all fields but last to be convected by velocity. 
+        m_nConvectiveFields = numfields-1;
+        
+        // Set m_pressure to point to last field of m_fields; 
+        ASSERTL0(!NoCaseStringCompare(m_boundaryConditions->GetVariable(numfields-1),"p"),"Require last field to be defined as p");
+        m_pressure = m_fields[numfields-1];
+
+         // Set up equation type enum using kEquationTypeStr
+         const std::string typeStr = m_boundaryConditions->GetSolverInfo("EQTYPE");
+         for(i = 0; i < (int) eEquationTypeSize; ++i)
+         {
+             if(nocase_cmp(kEquationTypeStr[i],typeStr) == 0 )
+             {
+                 m_equationType = (EquationType)i; 
+                 break;
+             }
+         }
+         ASSERTL0(i != eEquationTypeSize,"EQTYPE not found in SOLVERINFO section");
+
+         m_advectionForm = eNoAdvectionForm;
+
+         // Equation specific Setups 
+         switch(m_equationType)
+         {
+         case eUnsteadyNavierStokes:
+             {
+                 // Set up advection form
+                 const std::string advStr = m_boundaryConditions->GetSolverInfo("ADVECTIONFORM");
+                 for(i = 0; i < (int) eAdvectionFormSize; ++i)
+                 {
+                     if(nocase_cmp(kAdvectionFormStr[i],advStr) == 0 )
+                     {
+                         m_advectionForm = (AdvectionForm)i; 
+                         break;
+                     }
+                 }
+                 ASSERTL0(i != eAdvectionFormSize,"ADVECTIONFORM not found in SOLVERINFO section");
+             }
+         case eUnsteadyStokes:
+
+             if(m_boundaryConditions->CheckForParameter("IO_InfoSteps") == true)
+             {
+                 m_infosteps =  m_boundaryConditions->GetParameter("IO_InfoSteps");
+             }
+
+             // check to see if any user defined boundary condition is
+             // indeed implemented
+             for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+             {	
+                 // Time Dependent Boundary Condition (if no user
+                 // defined then this is empty)
+                 if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "")
+                 {
+                     if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() != "TimeDependent")
+                     {
+                         ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
+                     }
+                 }
+             }
+             break;
+         case eNoEquationType:
+         default:
+             ASSERTL0(false,"Unknown or undefined equation type");
+         }
+         
+        if(m_boundaryConditions->CheckForParameter("Kinvis") == true)
+        {
+            m_kinvis = m_boundaryConditions->GetParameter("Kinvis");
+        }
+        else
+        {
+            ASSERTL0(false,"Kinvis is not specified");
         }
     }
 
-    void IncNavierStokes::EvaluateAdvectionTerms(Array<OneD, Array<OneD, const NekDouble> > &Velocity,
-                                                 Array<OneD, Array<OneD, const NekDouble> > &inarray, 
-                                                 Array<OneD, Array< OneD, NekDouble> > &outarray, Array<OneD, NekDouble> &wk)
+    void IncNavierStokes::Summary(std::ostream &out)
     {
-        int j;
+        SessionSummary(out);
+        TimeParamSummary(out);
+    }
+
+    // Evaluation -N(V) for all fields except pressure using m_velocity
+    void IncNavierStokes::EvaluateAdvectionTerms(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+                                                 Array<OneD, Array<OneD, NekDouble> > &outarray, 
+                                                 Array<OneD, NekDouble> &wk)
+    {
+        int i,j;
         int nvariables = inarray.num_elements();
-        int nqtot      = m_fields[i]->GetTotPoints();
-        int VelDim     = Velocity.num_elements();
-        Array<OneD, OneD, NekDouble > Deriv;
+        int nqtot      = m_fields[0]->GetTotPoints();
+        int VelDim     = m_velocity.num_elements();
+        Array<OneD, Array<OneD, NekDouble> > velocity(VelDim);
+        Array<OneD, NekDouble > Deriv;
         
+        for(i = 0; i < VelDim; ++i)
+        {
+            velocity[i] = inarray[m_velocity[i]]; 
+        }
+
         // Set up Derivative work space; 
         if(wk.num_elements())
         {
@@ -147,7 +194,7 @@ namespace Nektar
         }
         else
         {
-            Deriv = Array<OneD, NekDoube> (nqtot*VelDim);;p
+            Deriv = Array<OneD, NekDouble> (nqtot*VelDim);
         }
 
 
@@ -155,16 +202,19 @@ namespace Nektar
         {
         case eConvective: case eNonConservative:
             {
-                AdvectionnNonConservativeForm(Velocity,inarray,outarray,Deriv);
+                int i;
+                for(i = 0; i < m_nConvectiveFields; ++i)
+                {
+                    AdvectionNonConservativeForm(velocity,inarray[i],outarray[i],Deriv);
+                    Vmath::Neg(nqtot,outarray[i],1);
+                }
             }
             break;
         default:
             ASSERTL0(false,"Advection form not known");
             break;
-        }
-        
+        }        
     }
-    
 
     // case insensitive string comparison from web
     int nocase_cmp(const string & s1, const string& s2) 
@@ -197,35 +247,6 @@ namespace Nektar
 } //end of namespace
 
 /**
-* $Log: AdvectionDiffusionReaction.cpp,v $
-* Revision 1.6  2009/01/06 21:10:34  sherwin
-* Updates for virtual calls to IProductWRTBase and introduced reader to handle SOLVERINFO section to specify different solvers
-*
-* Revision 1.5  2008/11/19 10:53:51  pvos
-* Made 2D CG version working
-*
-* Revision 1.4  2008/11/17 08:20:14  claes
-* Temporary fix for CG schemes. 1D CG working (but not for userdefined BC). 1D DG not working
-*
-* Revision 1.3  2008/11/12 12:12:26  pvos
-* Time Integration update
-*
-* Revision 1.2  2008/11/02 22:38:51  sherwin
-* Updated parameter naming convention
-*
-* Revision 1.1  2008/10/31 10:50:10  pvos
-* Restructured directory and CMakeFiles
-*
-* Revision 1.3  2008/10/29 22:51:07  sherwin
-* Updates for const correctness and ODEforcing
-*
-* Revision 1.2  2008/10/19 15:59:20  sherwin
-* Added Summary method
-*
-* Revision 1.1  2008/10/16 15:25:45  sherwin
-* Working verion of restructured AdvectionDiffusionReactionSolver
-*
-* Revision 1.1  2008/08/22 09:48:23  pvos
-* Added Claes' AdvectionDiffusionReaction, ShallowWater and Euler solver
+* $Log: IncNavierStokes.cpp,v $
 *
 **/

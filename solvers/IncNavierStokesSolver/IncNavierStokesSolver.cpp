@@ -47,28 +47,33 @@ using namespace Nektar;
 int main(int argc, char *argv[])
 {
     
-    ASSERTL0(argc == 2,"\n \t Usage: IncNavierStokes  meshfile \n");
+    if(argc != 2)
+    {
+        cout << "\n \t Usage: IncNavierStokes  input.xml \n" << endl;
+        exit(1);
+    }
 
     string fileNameString(argv[1]);
-    IncNavierStokesSharedPtr dom;
 
+    //----------------------------------------------------------------
+    // Read the mesh and construct container class
+    VelocityCorrectionScheme dom(fileNameString);
+
+    dom.Summary(cout);
     
-    switch(dom->GetEquationType())
+    switch(dom.GetEquationType())
     {
     case eUnsteadyStokes: 
     case eUnsteadyNavierStokes:
         {   
-            //----------------------------------------------------------------
-            // Read the mesh and construct container class
-            dom = MemoryManager<VelocityCorrectionScheme>::AllocateSharedPtr(fileNameString);
-            //---------------------------------------------------------------
             
-            int nsteps = dom->GetSteps();
+            int nsteps = dom.GetSteps();
             
-            dom->Summary(cout);
+            // Set initial condition using time t=0
+            dom.SetInitialConditions(0.0);
 
             // Integrate from start time to end time
-            dom->AdvanceInTime(nsteps);
+            dom.AdvanceInTime(nsteps);
             break;
         }
     case eNoEquationType:
@@ -77,13 +82,15 @@ int main(int argc, char *argv[])
     }
     
     // Dump output
-    dom->Output();
+    dom.Output();
     
     // Evaluate L2 Error
-    for(int i = 0; i < dom->GetNvariables(); ++i)
+    cout << "Error:" << endl;
+    for(int i = 0; i < dom.GetNvariables(); ++i)
     {
-        cout << "L2 Error (variable "<< dom->GetVariable(i) 
-             <<"): " << dom->L2Error(i) << endl;
+        cout << "\t"<< dom.GetVariable(i) << ": "
+             << dom.LinfError(i) << " (Linf), "
+             << dom.L2Error(i) << " (L2) " << endl;
     }
 }
 

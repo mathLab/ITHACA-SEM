@@ -170,6 +170,13 @@ namespace Nektar
         private:
                 GeomType m_GeomType;
                 
+                virtual int v_GetEid(int i) const
+                {
+                    NEKERROR(ErrorUtil::efatal,
+                             "This function is only valid for shape type geometries");
+                    return 0;
+                }
+
                 virtual void v_GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
                 {
                     NEKERROR(ErrorUtil::efatal,
@@ -206,6 +213,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.30  2009/05/15 14:38:41  pvos
+// Changed check for regular quads so that it also includes parallellograms
+//
 // Revision 1.29  2009/04/20 16:13:23  sherwin
 // Modified Import and Write functions and redefined how Expansion is used
 //

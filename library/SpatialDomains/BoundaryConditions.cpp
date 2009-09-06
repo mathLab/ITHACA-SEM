@@ -383,7 +383,7 @@ namespace Nektar
                                 while(attr) {
                                 
                                     attrName = attr->Name();
-
+                                    
                                     if (attrName=="USERDEFINEDTYPE") {
                                         
                                         // Do stuff for the user defined attribute
@@ -703,21 +703,23 @@ namespace Nektar
         {
             TiXmlElement *exactSolutionElement = solution->FirstChildElement("EXACTSOLUTION");
 
+            // All exact solution functions are initialized to "0".
+            // This means that even if the section is not specified
+            // they will have a default value of "0". Alternatively
+            // they only have to be partially specified.  That is, not
+            // all variables have to have functions specified.  For
+            // those that are missing it is assumed they are "0".
+            for (Variable::iterator varIter = m_Variables.begin();
+                 varIter != m_Variables.end(); ++varIter)
+            {
+                ExactSolutionShPtr exactSolutionShPtr(MemoryManager<ExactSolution>::AllocateSharedPtr("0"));
+                m_ExactSolution[*varIter] = exactSolutionShPtr;
+            }
+            
             if (exactSolutionElement)
             {
                 TiXmlElement *exactSolution = exactSolutionElement->FirstChildElement("F");
 
-                // All exact solution functions are initialized to "0"
-                // so they only have to be partially specified.  That
-                // is, not all variables have to have functions
-                // specified.  For those that are missing it is
-                // assumed they are "0".
-                for (Variable::iterator varIter = m_Variables.begin();
-                    varIter != m_Variables.end(); ++varIter)
-                {
-                    ExactSolutionShPtr exactSolutionShPtr(MemoryManager<ExactSolution>::AllocateSharedPtr("0"));
-                    m_ExactSolution[*varIter] = exactSolutionShPtr;
-                }
 
                 while (exactSolution)
                 {
@@ -826,11 +828,13 @@ namespace Nektar
 
             if (initialConditionsElement)
             {
-                TiXmlElement *initialCondition = initialConditionsElement->FirstChildElement("F");
+                TiXmlElement *initialCondition = initialConditionsElement->FirstChildElement();
 
-                // All initial conditions are initialized to "0" so they only have to be
-                // partially specified.  That is, not all variables have to have functions
-                // specified.  For those that are missing it is assumed they are "0".
+                // All initial conditions are initialized to "0" so
+                // they only have to be partially specified.  That is,
+                // not all variables have to have functions specified.
+                // For those that are missing it is assumed they are
+                // "0".
                 for (Variable::iterator varIter = m_Variables.begin();
                     varIter != m_Variables.end(); ++varIter)
                 {
@@ -840,32 +844,53 @@ namespace Nektar
 
                 while (initialCondition)
                 {
-                    std::string variableStr = initialCondition->Attribute("VAR");
-                    ASSERTL0(!variableStr.empty(), "The variable must be specified for the exact solution.");
+                    std::string conditionType = initialCondition->Value();
 
-                    std::string fcnStr = initialCondition->Attribute("VALUE");
-                    ASSERTL0(!fcnStr.empty(),
-                        (std::string("The initial condition function must be specified for variable: ") + variableStr).c_str());
-
-                    /// Check the RHS against the functions defined in m_Functions.  If the name on the RHS
-                    /// is found in the function map, then use the function contained in the function
-                    /// map in place of the RHS.
-                    SubstituteFunction(fcnStr);
-
-                    InitialConditionsMap::iterator initialConditionFcnsIter =
-                        m_InitialConditions.find(variableStr);
-
-                    if (initialConditionFcnsIter != m_InitialConditions.end())
+                    if(conditionType == "F")
                     {
-                        m_InitialConditions[variableStr]->SetEquation(fcnStr);
+                        std::string variableStr = initialCondition->Attribute("VAR");
+                        ASSERTL0(!variableStr.empty(), "The variable must be specified for the initial solution.");
+                        
+                        std::string fcnStr = initialCondition->Attribute("VALUE");
+                        ASSERTL0(!fcnStr.empty(),
+                                 (std::string("The initial condition function must be specified for variable: ") + variableStr).c_str());
+                        
+                        /// Check the RHS against the functions defined in
+                        /// m_Functions.  If the name on the RHS is found
+                        /// in the function map, then use the function
+                        /// contained in the function map in place of the
+                        /// RHS.
+                        SubstituteFunction(fcnStr);
+                        
+                        InitialConditionsMap::iterator initialConditionFcnsIter = m_InitialConditions.find(variableStr);
+
+                        if (initialConditionFcnsIter != m_InitialConditions.end())
+                        {
+                            m_InitialConditions[variableStr]->SetEquation(fcnStr);
+                        }
+                        else
+                        {
+                            NEKERROR(ErrorUtil::efatal,
+                                     (std::string("Error setting initial condition for variable: ") + variableStr).c_str());
+                        }
+                    }
+                    else if(conditionType == "R")
+                    {
+                        std::string restartStr = "RESTART";
+                        std::string fileStr = initialCondition->Attribute("FILE");
+                        ASSERTL0(!fileStr.empty(), "A file  must be specified for the restart initial solution.");
+                        
+                        InitialConditionShPtr initialConditionShPtr(MemoryManager<InitialCondition>::AllocateSharedPtr("00.0"));
+                        
+                        m_InitialConditions[restartStr] = initialConditionShPtr;
+                        m_InitialConditions[restartStr]->SetEquation(fileStr);
                     }
                     else
                     {
-                        NEKERROR(ErrorUtil::efatal,
-                            (std::string("Error setting initial condition for variable: ") + variableStr).c_str());
+                        NEKERROR(ErrorUtil::ewarning,(std::string("Identifier ")+conditionType+std::string(" in Initial Conditions not recognised")).c_str());
                     }
 
-                    initialCondition = initialCondition->NextSiblingElement("F");
+                    initialCondition = initialCondition->NextSiblingElement();
                 }
             }
         }
@@ -1167,13 +1192,20 @@ namespace Nektar
                     (std::string("Unable to find variable used in obtaining initial condition: ") + var).c_str());
             }
 
-            if (found)
+            return returnval;
+        }
+
+
+        bool BoundaryConditions::FoundInitialCondition(const std::string &var)
+        {
+            bool returnval = false;
+            
+            // Check that var is defined in forcing function list.
+            InitialConditionsMap::const_iterator ffIter = m_InitialConditions.find(var);
+
+            if( ffIter != m_InitialConditions.end() )
             {
-                if (returnval->GetEquation() == "00.0")
-                {
-                    NEKERROR(ErrorUtil::efatal,
-                        (std::string("Default initial condition used for variable: ") + var).c_str());
-                }
+                returnval = true;
             }
 
             return returnval;

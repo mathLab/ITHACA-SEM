@@ -330,10 +330,10 @@ namespace Nektar
             std::string attrName(vertexAttr->Name());
 
             ASSERTL0(attrName == "ID", (std::string("Unknown attribute name: ") + attrName).c_str());
-
+            
             err = vertexAttr->QueryIntValue(&indx);
             ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
-            ASSERTL0(indx == nextVertexNumber, "Element IDs must begin with zero and be sequential.");
+            ASSERTL0(indx == nextVertexNumber, "Vertex IDs must begin with zero and be sequential.");
 
             // Now read body of vertex
             std::string vertexBodyStr;
@@ -1670,6 +1670,11 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.35  2009/08/26 11:42:47  rcantao
+// - Adequation to new namespace scheme of Spirit version 2. Tested against Boost
+// 1.35 and 1.39.
+// - Cleared some deprecated headers warnings.
+//
 // Revision 1.34  2009/08/19 14:13:34  claes
 // Removed Gauss-Kronrod parts
 //

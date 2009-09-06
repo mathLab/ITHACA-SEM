@@ -231,7 +231,9 @@ namespace Nektar
 
             /// Get initial condition function based on name of variable.
             ConstInitialConditionShPtr GetInitialCondition(const std::string &var) const;
-
+            /// Check to see if initial condition exists in list. 
+            bool FoundInitialCondition(const std::string &var);
+            
             const std::string &GetVariable(unsigned int indx)
             {
                 ASSERTL0(0 <= indx && indx < m_Variables.size(),"Variable index is out of range");

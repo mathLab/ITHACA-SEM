@@ -70,14 +70,14 @@ namespace Nektar
 
         void SetADRBase(SpatialDomains::MeshGraphSharedPtr &graph,
                         int nvariables);
-  
-        void SetInitialConditions(const int eqntype = 1, NekDouble initialtime = 0.0);
-
+                
+        void SetInitialConditions(NekDouble initialtime = 0.0, 
+                                  bool dumpInitialConditions = true);
         void SetPhysForcingFunctions(Array<OneD, MultiRegions::ExpListSharedPtr> &force);
             
         void EvaluateExactSolution(int field, Array<OneD, NekDouble > &outfield, 
-                                   const NekDouble time, const int eqntype = 0);
-        
+                                   const NekDouble time);
+                
         void EvaluateUserDefinedEqn(Array<OneD, Array<OneD, NekDouble> > &outfield);
         
         void AdvectionNonConservativeForm(const Array<OneD, Array<OneD, NekDouble> > &V, 
@@ -104,8 +104,9 @@ namespace Nektar
                              bool NumericalFluxIncludesNormal = true, 
                              bool InFieldIsInPhysSpace = false);
 
-        NekDouble L2Error(int field, const int eqntype = 0, 
-			  const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
+        NekDouble L2Error(int field, const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
+
+        NekDouble LinfError(int field, const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
 	
         void Output     (void);
 	
@@ -114,6 +115,7 @@ namespace Nektar
 	void WriteVar(const int n, Array<OneD, MultiRegions::ExpListSharedPtr> field, const Array<OneD, NekDouble>&inarray, std::string name);
 
         void WriteFld(std::ofstream &outfile);
+        void ImportFld(std::string &infile);
         
 	void Array_Output(const int n, std::string name, 
 			  const Array<OneD, const NekDouble>&inarray, bool IsInPhysicalSpace);
@@ -357,6 +359,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.12  2009/08/14 09:29:13  cbiotto
+* Add WriteVar function
+*
 * Revision 1.11  2009/07/23 05:23:21  sehunchun
 * WeakDiffusion operator is updated
 *

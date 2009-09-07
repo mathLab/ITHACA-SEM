@@ -108,12 +108,12 @@ namespace Nektar
         {
             if(UseContinuousField == true)
             {
-                m_projectionType == eGalerkin;
+                m_projectionType = eGalerkin;
                 
             }
             else
             {
-                m_projectionType == eDiscontinuousGalerkin;
+                m_projectionType = eDiscontinuousGalerkin;
             }
         }
 
@@ -207,7 +207,7 @@ namespace Nektar
 	      
 	      for(i = 0 ; i < m_fields.num_elements(); i++)
 		{
-		  m_fields[i] = MemoryManager<MultiRegions::DisContField2D>::AllocateSharedPtr(*mesh2D,*m_boundaryConditions,i);
+                  m_fields[i] = MemoryManager<MultiRegions::DisContField2D>::AllocateSharedPtr(*mesh2D,*m_boundaryConditions,i);
 		}
 	    }
 	    break;
@@ -287,20 +287,32 @@ namespace Nektar
         }
     }
   
-    void ADRBase::SetInitialConditions(const int eqntype, NekDouble initialtime)
+    void ADRBase::SetInitialConditions(NekDouble initialtime, bool dumpInitialConditions)
     {
-        int nq = m_fields[0]->GetNpoints();
-        bool Readit = true;
-      
-        Array<OneD,NekDouble> x0(nq);
-        Array<OneD,NekDouble> x1(nq);
-        Array<OneD,NekDouble> x2(nq);
-      
-        // get the coordinates (assuming all fields have the same discretisation)
-        m_fields[0]->GetCoords(x0,x1,x2);
-      
-        if(m_boundaryConditions->InitialConditionExists(0))
+        std::string restartstr = "RESTART";
+
+        cout << "Initial Conditions:" << endl;
+        // Check for restart file. 
+        if(m_boundaryConditions->FoundInitialCondition(restartstr))
         {
+            SpatialDomains::ConstInitialConditionShPtr ifunc = m_boundaryConditions->GetInitialCondition(restartstr);
+
+            std::string restartfile = ifunc->GetEquation();
+            cout << "\tRestart file: "<< restartfile << endl; 
+            ImportFld(restartfile);
+        }
+        else
+        {
+            int nq = m_fields[0]->GetNpoints();
+            
+            Array<OneD,NekDouble> x0(nq);
+            Array<OneD,NekDouble> x1(nq);
+            Array<OneD,NekDouble> x2(nq);
+            
+            // get the coordinates (assuming all fields have the same
+            // discretisation)
+            m_fields[0]->GetCoords(x0,x1,x2);
+            
             for(int i = 0 ; i < m_fields.num_elements(); i++)
             {
                 SpatialDomains::ConstInitialConditionShPtr ifunc = m_boundaryConditions->GetInitialCondition(i);
@@ -310,48 +322,18 @@ namespace Nektar
                 }
                 m_fields[i]->SetPhysState(true);
                 m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+                cout << "\tField "<< m_boundaryConditions->GetVariable(i) <<": " << ifunc->GetEquation() << endl;
             }
         }
         
-        else
+        if(dumpInitialConditions)
         {
-            // For Advection Test
-            if(eqntype==1)
-            {
-                for(int i = 0 ; i < m_fields.num_elements(); i++)
-                {
-                    for(int j = 0; j < nq; j++)
-                    {
-                        (m_fields[i]->UpdatePhys())[j] = AdvectionSphere(x0[j], x1[j], x2[j], initialtime);
-                    }
-                    
-                    m_fields[i]->SetPhysState(true);
-                    m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
-                }
-            }
-            
-            // For Diffusion-Reaction Test
-            else if(eqntype==2)
-            {
-                for(int i = 0 ; i < m_fields.num_elements(); i++)
-                {
-                    for(int j = 0; j < nq; j++)
-                    {
-                        (m_fields[i]->UpdatePhys())[j] = Morphogenesis(i, x0[j], x1[j], x2[j], initialtime);
-                    }
-                    
-                    m_fields[i]->SetPhysState(true);
-                    m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
-                }
-            }
+            // dump initial conditions to file
+            std::string outname = m_sessionName + "_initial.chk";
+            ofstream outfile(outname.c_str());
+            WriteFld(outfile);
         }
-        
-	// dump initial conditions to file
-        std::string outname = m_sessionName + "_initial.chk";
-        ofstream outfile(outname.c_str());
-        WriteFld(outfile);
     }
-  
 
     void ADRBase::SetPhysForcingFunctions(Array<OneD, MultiRegions::ExpListSharedPtr> &force)
         
@@ -379,7 +361,7 @@ namespace Nektar
 
 
     void ADRBase::EvaluateExactSolution(int field, Array<OneD, NekDouble> &outfield, 
-                                        const NekDouble time, const int eqntype)
+                                        const NekDouble time)
     {
         int nq = m_fields[field]->GetNpoints();
         bool Readit = true;
@@ -390,33 +372,11 @@ namespace Nektar
       
         // get the coordinates of the quad points
         m_fields[field]->GetCoords(x0,x1,x2);
-      
-        if(m_boundaryConditions->ExactSolutionExists(0))
+        
+        SpatialDomains::ConstExactSolutionShPtr ifunc = m_boundaryConditions->GetExactSolution(field);
+        for(int j = 0; j < nq; j++)
         {
-            SpatialDomains::ConstExactSolutionShPtr ifunc = m_boundaryConditions->GetExactSolution(field);
-            for(int j = 0; j < nq; j++)
-            {
-                outfield[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],time);
-            }
-        }
-
-        else
-        {
-            if(eqntype == 1)
-            {
-                for(int j = 0; j < nq; ++j)
-                {
-                    outfield[j] = AdvectionSphere(x0[j], x1[j], x2[j], time);
-                }
-            }
-            
-            else if(eqntype == 2)
-            {
-                for(int j = 0; j < nq; ++j)
-                {
-                    outfield[j] = Morphogenesis(field, x0[j], x1[j], x2[j], time);
-                }
-            }
+            outfield[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],time);
         }
     }
 
@@ -444,8 +404,7 @@ namespace Nektar
         
     }
 
-
-    NekDouble ADRBase::L2Error(int field, const int eqntype, const Array<OneD, NekDouble> &exactsoln)
+    NekDouble ADRBase::L2Error(int field, const Array<OneD, NekDouble> &exactsoln)
     {
         if(m_fields[field]->GetPhysState() == false)
         {
@@ -461,9 +420,32 @@ namespace Nektar
         {
             Array<OneD, NekDouble> exactsoln(m_fields[field]->GetNpoints());
             
-            EvaluateExactSolution(field,exactsoln,m_time,eqntype);
+            EvaluateExactSolution(field,exactsoln,m_time);
             
             return m_fields[field]->L2(exactsoln);
+        }
+    }
+
+
+    NekDouble ADRBase::LinfError(int field, const Array<OneD, NekDouble> &exactsoln)
+    {
+        if(m_fields[field]->GetPhysState() == false)
+        {
+            m_fields[field]->BwdTrans(m_fields[field]->GetCoeffs(),
+                                      m_fields[field]->UpdatePhys());
+        }
+        
+        if(exactsoln.num_elements())
+        {
+            return m_fields[field]->Linf(exactsoln);
+        }
+        else
+        {
+            Array<OneD, NekDouble> exactsoln(m_fields[field]->GetNpoints());
+            
+            EvaluateExactSolution(field,exactsoln,m_time);
+            
+            return m_fields[field]->Linf(exactsoln);
         }
     }
     
@@ -901,6 +883,7 @@ namespace Nektar
         {
             for(int i = 0; i < FieldDef.size(); ++i)
             {
+                // Could do a search here to find correct variable
                 FieldDef[i]->m_Fields.push_back(m_boundaryConditions->GetVariable(j));
                 m_fields[j]->AppendFieldData(FieldDef[i], FieldData[i]);
             }
@@ -909,34 +892,29 @@ namespace Nektar
         m_graph->Write(outfile,FieldDef,FieldData);
     }
 
-  void ADRBase::WriteVar(const int n, Array<OneD, MultiRegions::ExpListSharedPtr> field, const Array<OneD, NekDouble>&inarray, std::string name)
-  {
-    int nq = field[0]->GetTotPoints();
-    int i;
-    // Filling Variable with the Physical variables and coefficient 
-    for(i = 0; i < nq; i++)
-      {
-	(field[0]->UpdatePhys())[i] = inarray[i];
-      }
-    field[0]->SetPhysState(true);
-    field[0]->FwdTrans(field[0]->GetPhys(),field[0]->UpdateCoeffs());
-    
-    char chkout[16] = "";
-    sprintf(chkout, "%d", n);
-    std::string outname = m_sessionName +"_D_" + chkout + ".chk";
-    ofstream outfile(outname.c_str());
-    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef = field[0]->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size()); 
-    
-    // copy Data into FieldData and set variable
-    for(i = 0; i < FieldDef.size(); ++i)
-      {
-	FieldDef[i]->m_Fields.push_back(name);
-	field[0]->AppendFieldData(FieldDef[i], FieldData[i]);
-      }
-    m_graph->Write(outfile,FieldDef,FieldData);
-    
-  }
+    /** \brief Import field from infile and load into \a
+        m_fields. This routine will also perform a \a BwdTrans to
+        ensure data is in both the physical and coefficient storage.
+    **/
+    void ADRBase::ImportFld(std::string &infile)
+    {
+        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+        std::vector<std::vector<NekDouble> > FieldData; 
+
+        m_graph->Import(infile,FieldDef,FieldData);
+
+        // copy FieldData into m_fields 
+        for(int j = 0; j < m_fields.num_elements(); ++j)
+        {
+            for(int i = 0; i < FieldDef.size(); ++i)
+            {
+                ASSERTL1(FieldDef[i]->m_fields[j] == m_boundaryConditions->GetVariable(j),(std::string("Order of ")+infile+std::string(" data and that defined in m_boundaryconditions differs")).c_str());
+
+                m_fields[j]->ExtractDataToCoeffs(FieldDef[i],FieldData[i],FieldDef[i]->m_Fields[j]);
+            }
+            m_fields[j]->BwdTrans(m_fields[j]->GetCoeffs(),m_fields[j]->UpdatePhys());
+        }
+    }
 
   void ADRBase::Array_Output(const int n, std::string name, const Array<OneD, const NekDouble>&inarray, bool IsInPhysicalSpace)
   {
@@ -979,8 +957,8 @@ namespace Nektar
     {
 
         out << "\tSession Name    : " << m_sessionName << endl;
-	out << "\tExpansion Dimension : " << m_expdim << endl;
-	out << "\tSpacial Dimension : " << m_spacedim << endl;
+	out << "\tExpansion Dim.  : " << m_expdim << endl;
+	out << "\tSpatial   Dim.  : " << m_spacedim << endl;
         out << "\tMax Exp. Order  : " << m_fields[0]->EvalBasisNumModesMax() << endl;
         if(m_projectionType == eGalerkin)
         {
@@ -1000,7 +978,9 @@ namespace Nektar
         out << "\tCheckpoints     : " << m_checksteps <<" steps" <<endl;
     }
 
-  // case insensitive string comparison from web
+  
+    // case insensitive string comparison from web
+    // Return 0 when they are the same. 
   int ADRBase::NoCaseStringCompare(const string & s1, const string& s2) 
   {
     string::const_iterator it1=s1.begin();
@@ -1022,9 +1002,9 @@ namespace Nektar
     
     //return -1,0 or 1 according to strings' lengths
     if (size1==size2) 
-      {
+    {
 	return 0;
-      }
+    }
     return (size1 < size2) ? -1 : 1;
   }  
 
@@ -1032,6 +1012,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.17  2009/08/14 09:30:01  cbiotto
+* Add WriteVar function
+*
 * Revision 1.16  2009/07/29 09:19:42  sehunchun
 * Generalization of WeakDGDiffusion
 *

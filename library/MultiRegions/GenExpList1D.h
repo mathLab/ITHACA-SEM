@@ -54,7 +54,7 @@ namespace Nektar
              */  
             GenExpList1D();
             
-            GenExpList1D::GenExpList1D(const SpatialDomains::CompositeVector &domain, SpatialDomains::MeshGraph2D &graph2D);
+            GenExpList1D(const SpatialDomains::CompositeVector &domain, SpatialDomains::MeshGraph2D &graph2D);
 
             // constructor for trace space in connection with DisContField2D.cpp
             GenExpList1D(const Array<OneD,const MultiRegions::ExpList1DSharedPtr> &bndConstraint,  
@@ -114,6 +114,9 @@ namespace Nektar
 
 /**
  * $Log: GenExpList1D.h,v $
+ * Revision 1.9  2009/09/06 22:28:45  sherwin
+ * Updates for Navier-Stokes solver
+ *
  * Revision 1.8  2009/07/09 09:01:49  sehunchun
  * Upwind function is modified in a faster form
  *

@@ -220,7 +220,8 @@ namespace Nektar
         void GenExpList1D::Upwind(const Array<OneD, const Array<OneD, NekDouble> > &Vec,
                                   const Array<OneD, const NekDouble> &Fwd, 
                                   const Array<OneD, const NekDouble> &Bwd, 
-                                  Array<OneD, NekDouble> &Upwind)
+                                  Array<OneD, NekDouble> &Upwind,
+                                  int direction)
         {
             int i,j,k,e_npoints,offset;
             Array<OneD,NekDouble> normals; 
@@ -264,7 +265,8 @@ namespace Nektar
         void GenExpList1D::Upwind(const Array<OneD, const NekDouble> &Vn, 
                                   const Array<OneD, const NekDouble> &Fwd, 
                                   const Array<OneD, const NekDouble> &Bwd, 
-                                  Array<OneD, NekDouble> &Upwind)
+                                  Array<OneD, NekDouble> &Upwind,
+                                  int direction)
         {
             int i,j,k,e_npoints,offset;
             Array<OneD,NekDouble> normals; 
@@ -327,6 +329,9 @@ namespace Nektar
 
 /**
 * $Log: GenExpList1D.cpp,v $
+* Revision 1.12  2009/09/06 22:28:45  sherwin
+* Updates for Navier-Stokes solver
+*
 * Revision 1.11  2009/07/09 09:01:49  sehunchun
 * Upwind function is modified in a faster form
 *

@@ -118,7 +118,7 @@ namespace Nektar
                                                                 SpatialDomains::BoundaryConditions &bcs, 
                                                                 const std::string variable)
         {
-            int cnt  = 0;
+            int i,n,cnt  = 0;
             SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
             SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();   
 
@@ -126,7 +126,7 @@ namespace Nektar
 
             // count the number of non-periodic boundary regions
             int cnt2 = 0;
-            for(int i = 0; i < nbnd; ++i)
+            for(i = 0; i < nbnd; ++i)
             {
                 if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType() != SpatialDomains::ePeriodic )
                 {
@@ -142,6 +142,16 @@ namespace Nektar
             m_bndConditions      = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
             
             SetBoundaryConditionExpansion(graph2D,bcs,variable,m_bndCondExpansions,m_bndConditions);
+
+            // Set up normals on Neumann boundary conditions 
+            for(i = 0; i < m_bndConditions.num_elements(); ++i)
+            {
+                if(m_bndConditions[i]->GetBoundaryConditionType()
+                   == SpatialDomains::eNeumann)
+                {
+                    m_bndCondExpansions[i]->SetUpPhysNormals(*m_exp);
+                }
+            }
         }
         
         DisContField2D::~DisContField2D()
@@ -525,6 +535,67 @@ namespace Nektar
                                                         e_outarray = outarray+offset);
                 }    
             }
+        }
+
+        // Set up a list of element ids and edge ids the link to the
+        // boundary conditions
+        void DisContField2D::GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, Array<OneD,int> &EdgeID)
+        {
+            map<int, int> EdgeGID;
+            int i,n,id;
+            int bid,cnt,Eid; 
+            int nbcs = 0;
+            
+            for(i = 0; i < m_bndConditions.num_elements(); ++i)
+            {
+                nbcs += m_bndCondExpansions[i]->GetExpSize();
+            }
+
+            // make sure arrays are of sufficient length
+            if(ElmtID.num_elements() != nbcs)
+            {
+                ElmtID = Array<OneD, int>(nbcs,-1);
+            }
+            else
+            {
+                fill(EdgeID.get(), EdgeID.get()+nbcs, -1);
+            }
+            
+            if(EdgeID.num_elements() != nbcs)
+            {
+                EdgeID = Array<OneD, int>(nbcs);
+            }
+
+            // setup map of all global ids along boundary
+            for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            {
+                for(i = 0; i < m_bndCondExpansions[n]->GetExpSize(); ++i)
+                {
+                    Eid =  m_bndCondExpansions[n]->GetExp(i)->GetGeom1D()->GetEid();
+                    EdgeGID[Eid] = cnt++;
+                }
+            }
+            
+            
+            // Loop over elements and find edges that match;
+            for(cnt = n = 0; n < GetExpSize(); ++n)
+            {
+                for(i = 0; i < (*m_exp)[n]->GetNedges(); ++i)
+                {
+                    id = (*m_exp)[n]->GetGeom2D()->GetEid(i);
+                    
+                    if(EdgeGID.count(id) > 0)
+                    {
+                        bid = EdgeGID.find(id)->second; 
+                        ASSERTL1(ElmtID[bid] == -1,"Edge already set");
+                        ElmtID[bid] = n; 
+                        EdgeID[bid] = i;
+                        cnt ++;
+                    }
+                }
+            }
+
+            ASSERTL1(cnt == nbcs,"Failed to visit all boundary condtiions");
         }
 
         /// Note this routine changes m_trace->m_coeffs space; 

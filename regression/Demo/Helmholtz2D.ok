@@ -1,0 +1,22 @@
+Helmholtz2D
+==========================================
+Helmholtz2D_low.xml
+         No. modes  : 3
+L infinity error: 1.2884e+000
+L 2 error:        1.7819e+000
+----------------------------------------
+Helmholtz2D_high.xml
+         No. modes  : 8
+L infinity error: 1.6774e-003
+L 2 error:        1.3048e-003
+----------------------------------------
+helmholtz2D_low.xml
+         No. modes  : 3
+L infinity error: 1.2884e+000
+L 2 error:        1.7819e+000
+----------------------------------------
+helmholtz2D_high.xml
+         No. modes  : 8
+L infinity error: 1.6774e-003
+L 2 error:        1.3048e-003
+----------------------------------------

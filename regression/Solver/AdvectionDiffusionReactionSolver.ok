@@ -1,0 +1,50 @@
+AdvectionDiffusionReactionSolver
+==========================================
+Test_Advection_low.xml
+Projection=Continuous
+	Time Step       : 0.0001
+	Max Exp. Order  : 3
+L2 Error (variable u): 0.199811
+----------------------------------------
+Test_Advection_high.xml
+Projection=Continuous
+	Time Step       : 0.0001
+	Max Exp. Order  : 8
+L2 Error (variable u): 0.0607994
+----------------------------------------
+Test_DiffusionReaction_low.xml
+Projection=Continuous
+	Time Step       : 0.0001
+	Max Exp. Order  : 3
+L2 Error (variable u): 1.#INF
+----------------------------------------
+Test_DiffusionReaction_high.xml
+Projection=Continuous
+	Time Step       : 0.0001
+	Max Exp. Order  : 8
+L2 Error (variable u): 165.148
+----------------------------------------
+Test_ImDiffusion_low.xml
+Projection=Continuous
+	Time Step       : 0.0001
+	Max Exp. Order  : 3
+L2 Error (variable u): 1.#INF
+----------------------------------------
+Test_ImDiffusion_high.xml
+Projection=Continuous
+	Time Step       : 0.0001
+	Max Exp. Order  : 8
+L2 Error (variable u): 1474.52
+----------------------------------------
+Test_ExDiffusion_low.xml
+Projection=DisContinuous
+	Time Step       : 1e-006
+	Max Exp. Order  : 3
+L2 Error (variable u): 0.0946749
+----------------------------------------
+Test_ExDiffusion_high.xml
+Projection=DisContinuous
+	Time Step       : 1e-006
+	Max Exp. Order  : 8
+L2 Error (variable u): 0.0939819
+----------------------------------------

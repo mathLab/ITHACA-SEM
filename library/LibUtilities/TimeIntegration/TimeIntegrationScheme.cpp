@@ -280,9 +280,9 @@ namespace Nektar
                     m_numMultiStepDerivs = 2;
                     m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
                     m_timeLevelOffset[0] = 0;
-                    m_timeLevelOffset[1] = 0;
+                    m_timeLevelOffset[1] = 1;
                     m_timeLevelOffset[2] = 0;
-                    m_timeLevelOffset[3] = 0;
+                    m_timeLevelOffset[3] = 1;
                 }
                 break;
             case eIMEXOrder3:
@@ -313,7 +313,7 @@ namespace Nektar
                     m_V[0][2] =  2*eleventh;
                     m_V[0][3] =  18*eleventh;
                     m_V[0][4] = -18*eleventh;
-                    m_V[0][5] =  1.0;
+                    m_V[0][5] =  6*eleventh;
                     m_V[1][0] =  1.0;
                     m_V[2][1] =  1.0;
                     m_V[4][3] =  1.0;
@@ -324,11 +324,11 @@ namespace Nektar
                     m_numMultiStepDerivs = 3;
                     m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
                     m_timeLevelOffset[0] = 0;
-                    m_timeLevelOffset[1] = 0;
-                    m_timeLevelOffset[2] = 0;
+                    m_timeLevelOffset[1] = 1;
+                    m_timeLevelOffset[2] = 2;
                     m_timeLevelOffset[3] = 0;
-                    m_timeLevelOffset[4] = 0;
-                    m_timeLevelOffset[5] = 0;
+                    m_timeLevelOffset[4] = 1;
+                    m_timeLevelOffset[5] = 2;
                 }
                 break;
             case eAdamsMoultonOrder2:

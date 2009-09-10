@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
     LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eClassicalRungeKutta4;		
     
     // Choose the method of deriving forcing functions
-    ode.DefineOdeRhs       (&ShallowWaterEquations::ODErhs,dom);		
+    ode.DefineOdeRhs       (&ShallowWaterEquations::ODErhs,&dom);		
 		
     // General Linear Time Integration
     dom.GeneralTimeIntegration(nsteps, IntMethod, ode);

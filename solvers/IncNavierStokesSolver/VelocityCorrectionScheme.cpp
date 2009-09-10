@@ -139,9 +139,9 @@ namespace Nektar
             m_pressureHBCs[n] = Array<OneD, NekDouble>(cnt);
         }
         
-        m_integrationOps.DefineOdeRhs(&VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs, *this);
+        m_integrationOps.DefineOdeRhs(&VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs, this);
         
-        m_integrationOps.DefineImplicitSolve(&VelocityCorrectionScheme::SolveUnsteadyStokesSystem,*this);
+        m_integrationOps.DefineImplicitSolve(&VelocityCorrectionScheme::SolveUnsteadyStokesSystem,this);
 
     }
 
@@ -460,6 +460,9 @@ namespace Nektar
 
 /**
 * $Log: VelocityCorrectionScheme.cpp,v $
+* Revision 1.2  2009/09/06 22:31:16  sherwin
+* First working version of Navier-Stokes solver and input files
+*
 * Revision 1.1  2009/03/14 16:43:21  sherwin
 * First non-working version
 *

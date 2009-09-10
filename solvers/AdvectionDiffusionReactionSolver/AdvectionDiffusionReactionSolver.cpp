@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
             if(dom.GetExplicitAdvection())
             {
                 // Choose the method of deriving forcing functions
-                ode.DefineOdeRhs    (&AdvectionDiffusionReaction::ODErhs,dom);
+                ode.DefineOdeRhs    (&AdvectionDiffusionReaction::ODErhs,&dom);
                 
                 // General Linear Time Integration
                 dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);
@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
             if(dom.GetExplicitDiffusion())
             {
                 // Choose the method of deriving forcing functions
-                ode.DefineOdeRhs       (&AdvectionDiffusionReaction::ODErhs,dom);	
+                ode.DefineOdeRhs       (&AdvectionDiffusionReaction::ODErhs,&dom);	
                 
                 // General Linear Time Integration
                 dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
             else
             {
                 // Choose the method of deriving forcing functions
-                ode.DefineImplicitSolve       (&AdvectionDiffusionReaction::ODEhelmSolve,dom);		
+                ode.DefineImplicitSolve       (&AdvectionDiffusionReaction::ODEhelmSolve,&dom);		
                 
                 // General Linear Time Integration
                 dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);
@@ -131,8 +131,8 @@ int main(int argc, char *argv[])
                 if(dom.GetExplicitDiffusion() == false) // Implicit Diffusion
                 {
                     // Choose the method of deriving forcing functions
-                    ode.DefineImplicitSolve (&AdvectionDiffusionReaction::ODEhelmSolve,dom);	
-                    ode.DefineOdeRhs        (&AdvectionDiffusionReaction::ODEeReaction,dom);	
+                    ode.DefineImplicitSolve (&AdvectionDiffusionReaction::ODEhelmSolve,&dom);	
+                    ode.DefineOdeRhs        (&AdvectionDiffusionReaction::ODEeReaction,&dom);	
                     
                     // General Linear Time Integration
                     dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);

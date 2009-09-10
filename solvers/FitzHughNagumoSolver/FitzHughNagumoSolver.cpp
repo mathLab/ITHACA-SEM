@@ -76,8 +76,8 @@ int main(int argc, char *argv[])
     case eFHNtest1:
         {
 	  // Choose the method of deriving forcing functions
-	  ode.DefineImplicitSolve (&FitzHughNagumo::ODEhelmSolve,EAD);	
-	  ode.DefineOdeRhs        (&FitzHughNagumo::ODEeReactiontest1,EAD);	
+	  ode.DefineImplicitSolve (&FitzHughNagumo::ODEhelmSolve,&EAD);	
+	  ode.DefineOdeRhs        (&FitzHughNagumo::ODEeReactiontest1,&EAD);	
           
 	  // General Linear Time Integration
 	  EAD.GeneralTimeIntegration(nsteps, EAD.GetTimeIntMethod(), ode);
@@ -88,8 +88,8 @@ int main(int argc, char *argv[])
     case eFHNtest2:
         {
 	  // Choose the method of deriving forcing functions
-	  ode.DefineImplicitSolve (&FitzHughNagumo::ODEhelmSolve,EAD);	
-	  ode.DefineOdeRhs        (&FitzHughNagumo::ODEeReactiontest2,EAD);	
+	  ode.DefineImplicitSolve (&FitzHughNagumo::ODEhelmSolve,&EAD);	
+	  ode.DefineOdeRhs        (&FitzHughNagumo::ODEeReactiontest2,&EAD);	
           
 	  // General Linear Time Integration
 	  EAD.GeneralTimeIntegration(nsteps, EAD.GetTimeIntMethod(), ode);
@@ -100,8 +100,8 @@ int main(int argc, char *argv[])
     case eFHNmonoplane:
         {
 	  // Choose the method of deriving forcing functions
-	  ode.DefineImplicitSolve (&FitzHughNagumo::ODEhelmSolve,EAD);	
-	  ode.DefineOdeRhs        (&FitzHughNagumo::ODEeReactionmono,EAD);	
+	  ode.DefineImplicitSolve (&FitzHughNagumo::ODEhelmSolve,&EAD);	
+	  ode.DefineOdeRhs        (&FitzHughNagumo::ODEeReactionmono,&EAD);	
           
 	  // General Linear Time Integration
 	  EAD.GeneralTimeIntegration(nsteps, EAD.GetTimeIntMethod(), ode);

@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
     //----------------------------------------   
     dom.ZeroPhysFields(); 
        
-    // Set up the intial conditions 
+    // Set up the initial conditions 
     switch(dom.m_problemType)
       {
       case eGeneral:
@@ -91,7 +91,10 @@ int main(int argc, char *argv[])
 	}
 	break;
       }
-
+    if(dom.m_restart)
+      {
+	dom.SetRestartCondition(fileNameString);
+      }
     //----------------------------------------
 
     
@@ -130,7 +133,7 @@ int main(int argc, char *argv[])
       {
       case eGeneral:
 	{
-	  dom.EvaluateExactSolution(0,exactsolution,0,0);
+	  dom.EvaluateExactSolution(0,exactsolution,0);
 	}
 	break;
       case eIsentropicVortex:
@@ -140,7 +143,7 @@ int main(int argc, char *argv[])
 	break;
       case eSubsonicCylinder:
 	{
-	  dom.EvaluateExactSolution(0,exactsolution,0,0);
+	  dom.EvaluateExactSolution(0,exactsolution,0);
 	}
 	break;
       case eRinglebFlow:
@@ -150,10 +153,17 @@ int main(int argc, char *argv[])
 	break;
       }	
 
-    cout << "L2 Error (variable "<< dom.GetVariable(0) <<"): " << dom.L2Error(0,0,exactsolution) << endl;
+    cout << "L2 Error (variable "<< dom.GetVariable(0) <<"): " << dom.L2Error(0,exactsolution) << endl;
     cout << "L2 Error (variable "<< dom.GetVariable(0) <<"): " << dom.L2Error(0) << endl;
 
-    dom.GetExactRinglebFlow(exactsolution, 4);
+    switch(dom.m_problemType)
+      {
+      case eRinglebFlow:
+	{
+	  dom.GetExactRinglebFlow(exactsolution, 4);
+	}
+	break;
+      }
 
     //---------------------------------------
     

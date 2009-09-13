@@ -12,11 +12,11 @@ L 2 error:        1.3048e-003
 ----------------------------------------
 helmholtz2D_low.xml
          No. modes  : 3
-L infinity error: 1.2884e+000
-L 2 error:        1.7819e+000
+L infinity error: 0.910204
+L 2 error:        1.55751
 ----------------------------------------
 helmholtz2D_high.xml
          No. modes  : 8
-L infinity error: 1.6774e-003
-L 2 error:        1.3048e-003
+L infinity error: 0.00167736
+L 2 error:        0.0013048
 ----------------------------------------

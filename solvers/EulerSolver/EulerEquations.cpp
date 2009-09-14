@@ -200,9 +200,6 @@ namespace Nektar
 	  }
       }
 
-    // Derived Variables:
-    Derived_field[0] = MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr(*m_fields[0]);
-
     // Declaring the DG-CFL limit
     int num_mods = GetNumExpModes(); //ADRBase.h
     NekDouble CFLDG = GetCFLNumber(num_mods);
@@ -232,7 +229,7 @@ namespace Nektar
 	{
 	  numMultiSteps = 1;
 	  
-	  // Maybe it is better to save it somewhere in the integration class
+	  // save it somewhere in the integration class
 	  NekDouble CFLRK = 2.784;
 	  CFL = CFLRK/CFLDG;
 	  
@@ -247,7 +244,7 @@ namespace Nektar
       case LibUtilities::eAdamsBashforthOrder2:
 	{
 
-	  // Maybe it is better to save it somewhere in the integration class
+	  // save it somewhere in the integration class
 	  NekDouble CFLRK = 1.0;
 	  CFL = CFLRK/CFLDG;
 
@@ -277,7 +274,7 @@ namespace Nektar
     n = 0;
     double check = m_timecheck;
 
-    while(m_time<m_fintime)//while(n<nsteps)
+    while(m_time<m_fintime)
       {
 	//----------------------------------------------
 	// Perform time step integration
@@ -302,14 +299,6 @@ namespace Nektar
 	if(m_projectionType==eGalerkin)
 	  {
 	    ASSERTL0(false,"CG not implemented for Euler");
-	    //   // Project the solution u* onto the boundary conditions to
-	    //                 // obtain the actual solution
-	    //                 SetBoundaryConditions(m_time);
-	    //                 for(i = 0; i < nvariables; ++i)
-	    //                 {
-	    //                     m_fields[i]->MultiplyByInvMassMatrix(fields[i],tmp[i],false);
-	    //                     fields[i] = tmp[i];	   		    
-	    //                 }
 	  }
 	
 	//----------------------------------------------
@@ -324,8 +313,7 @@ namespace Nektar
 	//if(n&&(!((n+1)%m_checksteps)))
 	if(m_time>=m_timecheck || m_time>=m_fintime)
 	  { 
-	    nchk++;
-	    cout << "Printing file: "<< nchk << ".chk" << endl;
+	    cout << "Printing file: "<<  m_sessionName << "_" << nchk << ".chk" << endl;
 	    for(i = 0; i < nvariables; ++i)
 	      {
 		(m_fields[i]->UpdateCoeffs()) = fields[i];
@@ -343,20 +331,15 @@ namespace Nektar
 		physarray[i] = Array<OneD, NekDouble>(nq);
 		m_fields[i]->BwdTrans(fields[i],physarray[i]);
 	      }
-	    GetPressure(physarray,pressure);
-	    GetSoundSpeed(physarray,pressure,soundspeed);
-	    GetMach(physarray,soundspeed,mach);
-	    
-	    // Writing the binary Mach file 
-	    WriteVar(nchk,Derived_field,mach,"Mach");
-	    
+
 	    // Writing Wall file in gnuplot
 	    ExtractWall(nchk,physarray);
-	    
+
 	    // Writing binary file of the solution
 	    Checkpoint_Output(nchk);
-	    
+
 	    m_timecheck += check;
+	    nchk++;
 	  }    
 	n++;
       }
@@ -365,9 +348,8 @@ namespace Nektar
       {
 	(m_fields[i]->UpdateCoeffs()) = fields[i];
       }
+  
   }
-  
-  
   
   
   void EulerEquations::ODErhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
@@ -553,7 +535,7 @@ namespace Nektar
 
   void EulerEquations::ExtractWall(int nchk, Array<OneD, Array<OneD, NekDouble> > &physarray)
   {
-    int cnt = 0;
+    int cnt = 0;	    
     for(int bcRegion = 0; bcRegion < m_fields[0]->GetBndConditions().num_elements(); ++bcRegion)
       {	
 	// Wall Boundary Condition
@@ -562,7 +544,7 @@ namespace Nektar
 	    int i;
 	    int nTraceNumPoints = GetTraceTotPoints();
 	    int nvariables      = physarray.num_elements();
-	    
+
 	    // get physical values of the forward trace (from exp to phys)
 	    Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
 	    for (i = 0; i < nvariables; ++i)
@@ -573,11 +555,11 @@ namespace Nektar
 	    
 	    int e, id2, npts;
 	    
-	    NekDouble L = 0.0;
 	    char buffer[1024];
 	    sprintf(buffer,"WallRegion%d_%d.data",bcRegion,nchk);
 	    FILE* out=fopen(buffer,"w");
-	    
+
+	    fprintf(out, "#x     y      rho     rhou     rhov     rhoe\n");
 	    for(e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
 	      {
 		npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExp(e)->GetNumPoints(0);
@@ -589,21 +571,10 @@ namespace Nektar
 		Array<OneD,NekDouble> x2(npts,0.0); 
 		m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExp(e)->GetCoords(x0,x1,x2);
 		
-		// Tangential velocity
-		Array<OneD, NekDouble> tmp_t(npts);	
-		Vmath::Vmul(npts,&Fwd[1][id2],1,&m_traceNormals[1][id2],1,&tmp_t[0],1);
-		Vmath::Vvtvm(npts,&Fwd[2][id2],1,&m_traceNormals[0][id2],1,&tmp_t[0],1,&tmp_t[0],1);
-		
-		
-		fprintf(out, "%f\t%f\t%f\t%f\t%f\t%f\n",L,Fwd[0][id2],Fwd[1][id2],Fwd[2][id2],Fwd[3][id2],fabs(tmp_t[0])/Fwd[0][id2]);
 		// write the wall file
-		for (i = 1; i < npts; ++i)
+		for (i = 0; i < npts; ++i)
 		  {
-		    NekDouble dx = x0[i]-x0[i-1];
-		    NekDouble dy = x1[i]-x1[i-1];
-		    NekDouble dl  = sqrt(1.0+dy/dx*dy/dx)*fabs(dx);
-		    L = L + dl;
-		    fprintf(out, "%f\t%f\t%f\t%f\t%f\t%f\n",L,Fwd[0][id2+i],Fwd[1][id2+i],Fwd[2][id2+i],Fwd[3][id2+i],tmp_t[i]/Fwd[0][id2+1]);
+		    fprintf(out, "%f\t%f\t%f\t%f\t%f\t%f\n",x0[i],x1[i],Fwd[0][id2+i],Fwd[1][id2+i],Fwd[2][id2+i],Fwd[3][id2+i]);
 		  }
 	      }
 	    fclose(out);
@@ -1594,8 +1565,6 @@ namespace Nektar
     TimeStep = CFL*CFLParameter;
   }
   
-
-  
   void EulerEquations::Summary(std::ostream &out)
   {
     cout << "=======================================================================" << endl;
@@ -1609,7 +1578,6 @@ namespace Nektar
     cout << endl;
     
   }
-  
   
   void EulerEquations::SetIsenTropicVortex(void)
   {
@@ -1771,7 +1739,7 @@ namespace Nektar
 		// dV = -dV/dx * Fx
 		dV = -1.0/J22*Fx;
 		dtheta = 0.0;
-		theta = M_PI/2;
+		theta = M_PI/2.0;
 	      }
 	    else
 	      {
@@ -1828,7 +1796,6 @@ namespace Nektar
 	m_fields[1]->SetPhys(rhou);
 	m_fields[2]->SetPhys(rhov);
 	m_fields[3]->SetPhys(E);
-	
 	// forward transform to fill the modal coeffs
 	for(int i = 0; i < m_fields.num_elements(); ++i)
 	  {
@@ -1942,7 +1909,7 @@ namespace Nektar
 		    // dV = -dV/dx * Fx
 		    dV = -1.0/J22*Fx;
 		    dtheta = 0.0;
-		    theta = M_PI/2;
+		    theta = M_PI/2.0;
 		  }
 		else
 		  {
@@ -2057,7 +2024,7 @@ namespace Nektar
 			// dV = -dV/dx * Fx
 			dV = -1.0/J22*Fx;
 			dtheta = 0.0;
-			theta = M_PI/2;
+			theta = M_PI/2.0;
 		      }
 		    else
 		      {
@@ -2177,6 +2144,10 @@ namespace Nektar
 
 /**
 * $Log: EulerEquations.cpp,v $
+* Revision 1.6  2009/08/20 10:26:55  cbiotto
+* Subsonic and smooth supersonic Euler. Adding numerical fluxes, boundary conditions,
+* initial conditions, CFL check.
+*
 * Revision 1.5  2009/06/29 07:47:33  claes
 * bug fix in WallBoundary
 *

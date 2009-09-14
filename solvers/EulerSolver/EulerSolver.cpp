@@ -91,10 +91,6 @@ int main(int argc, char *argv[])
 	}
 	break;
       }
-    if(dom.m_restart)
-      {
-	dom.SetRestartCondition(fileNameString);
-      }
     //----------------------------------------
 
     
@@ -151,11 +147,18 @@ int main(int argc, char *argv[])
 	  dom.GetExactRinglebFlow(exactsolution, 0);
 	}
 	break;
-      }	
+      }
 
-    cout << "L2 Error (variable "<< dom.GetVariable(0) <<"): " << dom.L2Error(0,exactsolution) << endl;
-    cout << "L2 Error (variable "<< dom.GetVariable(0) <<"): " << dom.L2Error(0) << endl;
+    // Evaluate L2 Error
+    cout << "Error:" << endl;
+    for(int i = 0; i < dom.GetNvariables(); ++i)
+    {
+      cout << "\t"<< dom.GetVariable(i) << ": "
+	   << dom.LinfError(i) << " (Linf), "
+	   << dom.L2Error(i) << " (L2) " << endl;
+    }
 
+    // Writing exactsolution file
     switch(dom.m_problemType)
       {
       case eRinglebFlow:

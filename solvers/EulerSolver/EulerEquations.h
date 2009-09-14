@@ -231,7 +231,7 @@ namespace Nektar
 			    NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
     
     void ExtractWall(int nchk, Array<OneD, Array<OneD, NekDouble> > &physarray);
-    
+
     // CFL checking functions
     void GetMinLength(Array<OneD, NekDouble> &MinLength);
     void GetTimeStep(const NekDouble CFL,Array<OneD, NekDouble> &MinLengt,Array<OneD, Array<OneD, NekDouble> > inarray,NekDouble &TimeStep);
@@ -269,6 +269,10 @@ namespace Nektar
 
 /**
 * $Log: EulerEquations.h,v $
+* Revision 1.6  2009/08/20 10:27:52  cbiotto
+* Subsonic and smooth supersonic Euler. Adding numerical fluxes, boundary conditions,
+* initial conditions, CFL check.
+*
 * Revision 1.5  2009/07/17 09:39:51  cbiotto
 * Ringleb flow and CFL check
 *

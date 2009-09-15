@@ -272,9 +272,8 @@ namespace Nektar
  
 	
     n = 0;
-    double check = m_timecheck;
 
-    while(m_time<m_fintime)
+    while(n<nsteps)
       {
 	//----------------------------------------------
 	// Perform time step integration
@@ -290,9 +289,6 @@ namespace Nektar
 	  {
 	    fields = IntScheme[numMultiSteps-1]->TimeIntegrate(m_timestep,u,ode);
 	  }
-	
-	if(m_time+m_timestep>m_fintime)
-	  m_timestep = m_fintime - m_time;
 	
 	m_time += m_timestep;
 	
@@ -310,8 +306,7 @@ namespace Nektar
 	    cout << "Steps: " << n+1 << "\t Time: " << m_time <<  "\t TimeStep: " << m_timestep << endl;
 	  }
 	
-	//if(n&&(!((n+1)%m_checksteps)))
-	if(m_time>=m_timecheck || m_time>=m_fintime)
+	if(n&&(!((n+1)%m_checksteps)))
 	  { 
 	    cout << "Printing file: "<<  m_sessionName << "_" << nchk << ".chk" << endl;
 	    for(i = 0; i < nvariables; ++i)
@@ -338,7 +333,6 @@ namespace Nektar
 	    // Writing binary file of the solution
 	    Checkpoint_Output(nchk);
 
-	    m_timecheck += check;
 	    nchk++;
 	  }    
 	n++;
@@ -1570,8 +1564,6 @@ namespace Nektar
     cout << "=======================================================================" << endl;
     cout << "\tEquation Type   : Compressible Euler Equations" << endl;
     ADRBase::Summary(out);
-    cout << "\tTime max        : " << m_fintime   << endl;
-    cout << "\tChecktime       : " << m_timecheck << endl;
     cout << "\tUpwind Flux     : " << UpwindTypeMap[m_upwindType] << endl;
     cout << "\tProblem Type    : " << ProblemTypeMap[m_problemType] << endl;
     cout << "=======================================================================" << endl;
@@ -1807,25 +1799,6 @@ namespace Nektar
 	ofstream outfile(outname.c_str());
 	WriteFld(outfile);
 	
-	// Extracting primitive variables on the wall and Mach in the field
-	int nq         = m_fields[0]->GetTotPoints();
-	int nvariables = m_fields.num_elements();
-	Array<OneD, NekDouble> mach(nq);
-	Array<OneD, NekDouble> pressure(nq);
-	Array<OneD, NekDouble> soundspeed(nq);
-	Array<OneD, Array<OneD, NekDouble> > physarray(nvariables);
-	
-	for (int i = 0; i < nvariables; ++i)
-	  {
-	    physarray[i] = Array<OneD, NekDouble>(nq);
-	    m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),physarray[i]);
-	  }
-	GetPressure(physarray,pressure);
-	GetSoundSpeed(physarray,pressure,soundspeed);
-	GetMach(physarray,soundspeed,mach);
-	Derived_field[0] = MemoryManager<MultiRegions::ExpList>::AllocateSharedPtr(*m_fields[0]);
-	// Writing the binary Mach file 
-	WriteVar(-1,Derived_field,mach,"Mach");
       }
       break;
     }
@@ -2144,6 +2117,9 @@ namespace Nektar
 
 /**
 * $Log: EulerEquations.cpp,v $
+* Revision 1.7  2009/09/14 16:08:59  cbiotto
+* *** empty log message ***
+*
 * Revision 1.6  2009/08/20 10:26:55  cbiotto
 * Subsonic and smooth supersonic Euler. Adding numerical fluxes, boundary conditions,
 * initial conditions, CFL check.

@@ -1,6 +1,7 @@
 
 SET(PrecompiledHeaderSources
     TestConsistentObjectAccess.cpp
+    TestExpressionEvaluator.cpp
     TestLowerTriangularMatrix.cpp
     TestMatrixStoragePolicies.cpp
     TestNekMatrixMultiplication.cpp

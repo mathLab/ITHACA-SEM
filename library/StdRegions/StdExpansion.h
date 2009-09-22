@@ -1643,9 +1643,10 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
-	    virtual boost::shared_ptr<StdExpansion1D> v_GetEdgeExp(const int edge, bool SetUpNormals=true)
+	        virtual boost::shared_ptr<StdExpansion1D> v_GetEdgeExp(const int edge, bool SetUpNormals=true)
             {
-	      NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
+	            NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
+                return boost::shared_ptr<StdExpansion1D>();
             }
 	    
 
@@ -1804,6 +1805,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.120  2009/09/06 21:55:26  sherwin
+ * Updates related to Navier Stokes Solver
+ *
  * Revision 1.119  2009/08/14 09:24:08  cbiotto
  * Fixed bug in GetEdgeExp
  *

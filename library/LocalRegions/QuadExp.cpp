@@ -150,9 +150,9 @@ namespace Nektar
         { 
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
-            int    order1 = m_base[1]->GetNumModes();
+            int    order0 = m_base[0]->GetNumModes();
 
-            Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad0*order1);
+            Array<OneD,NekDouble> tmp(nquad0*nquad1+nquad1*order0);
             Array<OneD,NekDouble> wsp(tmp+nquad0*nquad1);
 
             MultiplyByQuadratureMetric(inarray,tmp);
@@ -183,14 +183,14 @@ namespace Nektar
             int    nquad0  = m_base[0]->GetNumPoints();
             int    nquad1  = m_base[1]->GetNumPoints();
             int    nqtot   = nquad0*nquad1;
-            int    wspsize = max(nqtot,m_ncoeffs);
+            int    nmodes0 = m_base[0]->GetNumModes();
  
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
 
-            Array<OneD, NekDouble> tmp1(4*wspsize);
-            Array<OneD, NekDouble> tmp2(tmp1 +   wspsize);
-            Array<OneD, NekDouble> tmp3(tmp1 + 2*wspsize);
-            Array<OneD, NekDouble> tmp4(tmp1 + 3*wspsize);
+            Array<OneD, NekDouble> tmp1(2*nqtot+m_ncoeffs+nmodes0*nquad1);
+            Array<OneD, NekDouble> tmp2(tmp1 +   nqtot);
+            Array<OneD, NekDouble> tmp3(tmp1 + 2*nqtot);
+            Array<OneD, NekDouble> tmp4(tmp1 + 2*nqtot+m_ncoeffs);
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
@@ -354,7 +354,9 @@ namespace Nektar
                     int       nquad0  = m_base[0]->GetNumPoints();
                     int       nquad1  = m_base[1]->GetNumPoints();
                     int       nqtot   = nquad0*nquad1; 
-                    int       wspsize = max(nqtot,m_ncoeffs);
+                    int       nmodes0 = m_base[0]->GetNumModes();
+                    int       nmodes1 = m_base[1]->GetNumModes();
+                    int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
                     
                     const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
                     const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
@@ -413,7 +415,9 @@ namespace Nektar
                     int       nquad0  = m_base[0]->GetNumPoints();
                     int       nquad1  = m_base[1]->GetNumPoints();
                     int       nqtot   = nquad0*nquad1; 
-                    int       wspsize = max(nqtot,m_ncoeffs);
+                    int       nmodes0 = m_base[0]->GetNumModes();
+                    int       nmodes1 = m_base[1]->GetNumModes();
+                    int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
                     
                     const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
                     const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
@@ -520,7 +524,9 @@ namespace Nektar
                 int       nquad0  = m_base[0]->GetNumPoints();
                 int       nquad1  = m_base[1]->GetNumPoints();
                 int       nqtot   = nquad0*nquad1; 
-                int       wspsize = max(nqtot,m_ncoeffs);
+                int       nmodes0 = m_base[0]->GetNumModes();
+                int       nmodes1 = m_base[1]->GetNumModes();
+                int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
                 NekDouble lambda  = mkey.GetConstant(0);
                 
                 const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
@@ -590,7 +596,9 @@ namespace Nektar
                 int       nquad0  = m_base[0]->GetNumPoints();
                 int       nquad1  = m_base[1]->GetNumPoints();
                 int       nqtot   = nquad0*nquad1; 
-                int       wspsize = max(nqtot,m_ncoeffs);
+                int       nmodes0 = m_base[0]->GetNumModes();
+                int       nmodes1 = m_base[1]->GetNumModes();
+                int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
                 NekDouble lambda  = mkey.GetConstant(0);
                 
                 const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
@@ -1813,6 +1821,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.65  2009/09/06 22:24:00  sherwin
+ *    Updates for Navier-Stokes solver
+ *
  *    Revision 1.64  2009/07/08 17:19:48  sehunchun
  *    Deleting GetTanBasis
  *

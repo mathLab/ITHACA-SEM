@@ -280,7 +280,9 @@ namespace Nektar
                 int       nquad0  = m_base[0]->GetNumPoints();
                 int       nquad1  = m_base[1]->GetNumPoints();
                 int       nqtot   = nquad0*nquad1; 
-                int       wspsize = max(nqtot,m_ncoeffs);
+                int       nmodes0 = m_base[0]->GetNumModes();
+                int       nmodes1 = m_base[1]->GetNumModes();
+                int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
                 
                 const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
                 const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
@@ -333,7 +335,9 @@ namespace Nektar
             int       nquad0  = m_base[0]->GetNumPoints();
             int       nquad1  = m_base[1]->GetNumPoints();
             int       nqtot   = nquad0*nquad1; 
-            int       wspsize = max(nqtot,m_ncoeffs);
+            int       nmodes0 = m_base[0]->GetNumModes();
+            int       nmodes1 = m_base[1]->GetNumModes();
+            int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
             NekDouble lambda  = mkey.GetConstant(0);
                                 
             const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
@@ -1295,6 +1299,9 @@ namespace Nektar
 
 /** 
  * $Log: StdQuadExp.cpp,v $
+ * Revision 1.51  2009/04/27 21:32:45  sherwin
+ * Updated WriteToField method
+ *
  * Revision 1.50  2009/04/22 22:30:48  sherwin
  * Added ReadFromFile method to read back in .dat file
  *

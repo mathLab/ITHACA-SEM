@@ -128,7 +128,8 @@ namespace Nektar
             int    nquad0  = m_base[0]->GetNumPoints();
             int    nquad1  = m_base[1]->GetNumPoints();
             int    nqtot   = nquad0*nquad1; 
-            int    wspsize = max(nqtot,m_ncoeffs);
+            int    nmodes0 = m_base[0]->GetNumModes();
+            int    wspsize = max(max(nqtot,m_ncoeffs),nquad1*nmodes0);
 
             Array<OneD, NekDouble> gfac0(2*wspsize);
             Array<OneD, NekDouble> tmp0 (gfac0+wspsize);
@@ -1269,6 +1270,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTriExp.cpp,v $
+ * Revision 1.59  2009/08/19 14:13:35  claes
+ * Removed Gauss-Kronrod parts
+ *
  * Revision 1.58  2009/08/17 11:53:47  pvos
  * Fixed bug
  *

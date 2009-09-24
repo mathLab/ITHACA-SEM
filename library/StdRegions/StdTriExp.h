@@ -50,7 +50,8 @@ namespace Nektar
         {
             inline int getNumberOfCoefficients(int Na, int Nb)
             {
-                return Na*(Nb+1)/2 + Na*(Nb-Na);
+	      ASSERTL0(Na <=  Nb, "order in 'a' direction is higher than order in 'b' direction");
+                return Na*(Na+1)/2 + Na*(Nb-Na);
             }
         }
 
@@ -826,6 +827,9 @@ namespace Nektar
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.45  2009/04/27 21:32:45  sherwin
+ * Updated WriteToField method
+ *
  * Revision 1.44  2009/04/22 22:30:48  sherwin
  * Added ReadFromFile method to read back in .dat file
  *

@@ -49,7 +49,7 @@ namespace Nektar
             m_metricinfo(),
             m_matrixManager(std::string("TriExpMatrix")),
             m_staticCondMatrixManager(std::string("TriExpStaticCondMatrix"))
-        {         
+        {     
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
                 m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,StdRegions::eNoExpansionType,*this), 
@@ -1796,6 +1796,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.59  2009/09/23 12:42:40  pvos
+ *    Updates for variable order expansions
+ *
  *    Revision 1.58  2009/09/06 22:24:00  sherwin
  *    Updates for Navier-Stokes solver
  *

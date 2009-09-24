@@ -71,7 +71,7 @@ namespace Nektar
 {
 
 #ifndef NEKTAR_MAX_MEMORY_MANAGER_CONSTRUCTOR_ARGS
-#define NEKTAR_MAX_MEMORY_MANAGER_CONSTRUCTOR_ARGS 9
+#define NEKTAR_MAX_MEMORY_MANAGER_CONSTRUCTOR_ARGS 11
 #endif //NEKTAR_MAX_MEMORY_MANAGER_CONSTRUCTOR_ARGS
 
     /// \brief General purpose memory allocation routines with the ability
@@ -368,6 +368,9 @@ namespace Nektar
 
 /**
     $Log: NekMemoryManager.hpp,v $
+    Revision 1.19  2008/06/10 06:00:37  bnelson
+    Updated documentation.
+
     Revision 1.18  2008/05/16 05:43:19  bnelson
     Updated the memory manager so it is faster choosing the allocator to use, doesn't use the pools for anything larger than 1024 bytes, and doesn't issue a warning for large allocations.
 

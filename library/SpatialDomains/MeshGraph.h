@@ -122,30 +122,46 @@ namespace Nektar
         typedef std::vector<ExpansionShPtr>  ExpansionVector;
         typedef std::vector<ExpansionShPtr>::iterator ExpansionVectorIter;
 
+
+	static std::vector<LibUtilities::PointsType> NullPointsTypeVector;
+	static std::vector<unsigned int> NullUnsignedIntVector;
+
         struct FieldDefinitions
         {
-            
+	  
         FieldDefinitions(SpatialDomains::GeomShapeType shapeType,
                          std::vector<unsigned int> &elementIDs,
-                         std::vector<LibUtilities::BasisType> &basis,
+                         std::vector<LibUtilities::BasisType> &basis, // vector[2]
                          bool uniOrder,
-                         std::vector<unsigned int> &numModes,
-                         std::vector<std::string>  &fields) : 
-            m_ShapeType(shapeType),
-                m_ElementIDs(elementIDs),
-                m_Basis(basis),
-                m_UniOrder(uniOrder),
-                m_NumModes(numModes),
-                m_Fields(fields)
-            {};
-            SpatialDomains::GeomShapeType        m_ShapeType;
-            std::vector<unsigned int>            m_ElementIDs;
-            std::vector<LibUtilities::BasisType> m_Basis;
-            bool                                 m_UniOrder;
-            std::vector<unsigned int>            m_NumModes;
-            std::vector<std::string>             m_Fields;
+                         std::vector<unsigned int> &numModes, // UniOrder = vector[dimension] - MixOrder = vector[element*dimension]
+                         std::vector<std::string>  &fields,
+			 std::vector<LibUtilities::PointsType> &points = NullPointsTypeVector,
+			 bool pointsDef = false,
+			 std::vector<unsigned int> &numPoints = NullUnsignedIntVector,
+			 bool numPointsDef = false) : 
+	  m_ShapeType(shapeType),
+	    m_ElementIDs(elementIDs),
+	    m_Basis(basis),
+	    m_Points(points),
+	    m_PointsDef(pointsDef),
+	    m_UniOrder(uniOrder),
+	    m_NumModes(numModes),
+	    m_NumPoints(numPoints),
+	    m_NumPointsDef(numPointsDef),
+	    m_Fields(fields)
+	  {};
+	  SpatialDomains::GeomShapeType         m_ShapeType;
+	  std::vector<unsigned int>             m_ElementIDs;
+	  std::vector<LibUtilities::BasisType>  m_Basis;
+	  std::vector<LibUtilities::PointsType> m_Points;      //!< Define the type of points per direction
+	  bool                                  m_PointsDef;
+	  bool                                  m_UniOrder;    //!< Define order of the element group (UniOrder: same order for each element - MixOrder: definition of a different order for each element)
+	  std::vector<unsigned int>             m_NumModes;    //!< Define number of modes per direction
+	  std::vector<unsigned int>             m_NumPoints;
+	  bool                                  m_NumPointsDef;
+	  std::vector<std::string>              m_Fields;
         };
-
+	
         typedef boost::shared_ptr<FieldDefinitions> FieldDefinitionsSharedPtr;
         
 
@@ -183,18 +199,30 @@ namespace Nektar
                 return int(m_vertset.size());
             }
                         
-            int CheckFieldDefinition(FieldDefinitionsSharedPtr  &fielddefs);
-            void Write(std::string &outfilename, 
+            int CheckFieldDefinition(const FieldDefinitionsSharedPtr  &fielddefs);
+            void Write(std::string &outFile, 
                        std::vector<FieldDefinitionsSharedPtr> &fielddefs, 
                        std::vector<std::vector<double> >      &fielddata);
-            void Write(std::ofstream                          &xmlFile, 
-                       std::vector<FieldDefinitionsSharedPtr> &fielddefs, 
-                       std::vector<std::vector<double> >      &fielddata);
-            void WriteElements(std::ofstream              &xmlFile, 
-                               FieldDefinitionsSharedPtr  &fielddefs, 
-                               std::vector<double>        &fielddata);
-            
+
+	    /**
+	     * \brief This function imports the input xml file. It defines the fields and their data.
+	     *
+	     */
             void Import(std::string &infilename, std::vector<FieldDefinitionsSharedPtr> &fielddefs, std::vector<std::vector<double> > &fielddata);
+
+	    /**
+	     * \brief This function imports the definition of the fields.
+	     *
+	     * The bool decide if the FiledDefs are in <EXPANSION> or in <NEKTAR>.
+	     *
+	     */
+	    void ImportFieldDefs(TiXmlDocument &doc, std::vector<FieldDefinitionsSharedPtr> &fielddefs, bool expChild);
+	    
+	    /**
+	     * \brief This function imports the data fileds.
+	     *
+	     */
+	    void ImportFieldData(TiXmlDocument &doc, const std::vector<FieldDefinitionsSharedPtr> &fielddefs, std::vector<std::vector<double> > &fielddata);
             
             GeometrySharedPtr GetCompositeItem(int whichComposite, int whichItem);
             Composite GetComposite(int whichComposite) const
@@ -234,9 +262,17 @@ namespace Nektar
                 return returnval;
             }
 
-            
+            /**
+	     * \brief This function sets the expansion giving the definition of the field and the quadrature points.
+	     *
+	     */
             void SetExpansions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef, std::vector< std::vector<LibUtilities::PointsType> > &pointstype);
-         
+          
+	    /**
+	     * \brief This function sets the expansion giving the definition of the field. The quadrature points type and number is defined as default.
+	     *
+	     */
+	    void SetExpansions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef);
 
             const ExpansionVector &GetExpansions(void) const
             {
@@ -278,6 +314,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.35  2009/08/19 14:13:34  claes
+// Removed Gauss-Kronrod parts
+//
 // Revision 1.34  2009/06/15 01:59:21  claes
 // Gauss-Kronrod updates
 //

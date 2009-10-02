@@ -59,14 +59,21 @@
   <CONDITIONS>
 
     <PARAMETERS>
-      <P> DisContinuous  = 1                 </P>
-      <P> TimeStep       = 0.001            </P>
-      <P> NumSteps       = 1000                 </P>
-      <P> FinTime        = TimeStep*NumSteps </P>
-      <P> IO_CheckSteps  = 100               </P>
-      <P> IO_InfoSteps   = 100                 </P>
-      <P> Gamma          = 1.4               </P>
-     </PARAMETERS>
+      <P> TimeStep       = 0        </P>
+      <P> NumSteps       = 50        </P>
+      <P> FinTime        = 500      </P>
+      <P> IO_CheckSteps  = 10        </P>
+      <P> IO_InfoSteps   = 1        </P>
+      <P> Gamma          = 1.4      </P>
+      <P> IO_CheckTime   = 100      </P>
+    </PARAMETERS>
+
+    <SOLVERINFO>
+      <I PROPERTY="EQType" VALUE="eNoEquationType"/>
+      <I PROPERTY="Projection" VALUE="DisContinuous"/> 
+      <I PROPERTY="UpwindType" VALUE="Exact"/>
+      <I PROPERTY="ProblemType" VALUE="IsentropicVortex"/>
+    </SOLVERINFO>
 
     <VARIABLES>
       <V ID="0"> rho  </V>

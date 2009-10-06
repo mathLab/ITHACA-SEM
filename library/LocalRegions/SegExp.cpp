@@ -645,6 +645,26 @@ namespace Nektar
             }
         }
 
+      /** \brief Mass inversion product from \a inarray to \a outarray
+	  
+	  Multiply by the inverse of the mass matrix
+	  \f$ {\bf \hat{u}} = {\bf M}^{-1} {\bf I} \f$
+	  
+      */ 
+       
+      void SegExp::MultiplyByElmtInvMass(const Array<OneD, const NekDouble>& inarray, 
+					Array<OneD,NekDouble> &outarray)
+        {
+	  // get Mass matrix inverse
+	  MatrixKey             masskey(StdRegions::eInvMass, DetExpansionType(),*this);
+	  DNekScalMatSharedPtr& matsys = m_matrixManager[masskey];
+          
+	  NekVector<const NekDouble> in(m_ncoeffs,inarray,eCopy);
+	  NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
+          
+	  out = (*matsys)*in;
+	}
+
         /** \brief Forward transform from physical quadrature space
             stored in \a inarray and evaluate the expansion coefficients and
             store in \a outarray
@@ -733,7 +753,7 @@ namespace Nektar
                     StdRegions::StdMatrixKey  stdmasskey(StdRegions::eMass,DetExpansionType(),*this);
                     MassMatrixOp(outarray,tmp0,stdmasskey);
                     IProductWRTBase(inarray,tmp1);
-                    
+
                     Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
                     
                     // get Mass matrix inverse (only of interior DOF)
@@ -1232,6 +1252,9 @@ namespace Nektar
 }//end of namespace
 
 // $Log: SegExp.cpp,v $
+// Revision 1.61  2009/04/29 11:18:09  pvos
+// Made demo codes working with nodal expansions
+//
 // Revision 1.60  2009/04/27 21:34:07  sherwin
 // Updated WriteToField
 //

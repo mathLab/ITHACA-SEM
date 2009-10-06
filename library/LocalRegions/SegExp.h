@@ -168,6 +168,10 @@ namespace Nektar
             void ReverseCoeffsAndSign(const Array<OneD,NekDouble> &inarray,
                                       Array<OneD,NekDouble> &outarray);
         
+	    /** \brief Inverse Matrix Product */
+	    void MultiplyByElmtInvMass(const Array<OneD, const NekDouble>& inarray, 
+					      Array<OneD,NekDouble> &outarray);
+	    
             /** \brief Forward transform from physical quadrature space
                 stored in \a inarray and evaluate the expansion coefficients and
                 store in \a (this)->_coeffs  */
@@ -554,6 +558,9 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.44  2009/04/27 21:34:07  sherwin
+// Updated WriteToField
+//
 // Revision 1.43  2009/04/20 16:12:28  sherwin
 // Updates related to output format and optimising DG solver
 //

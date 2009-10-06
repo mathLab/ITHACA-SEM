@@ -65,6 +65,12 @@ namespace Nektar
                 return -1;
             }
 
+	    virtual int v_GetNedges(void) const 
+            {
+                NEKERROR(ErrorUtil::efatal, "This method is not valid in this class");
+                return -1;
+            }
+
             virtual int v_GetNumPoints(const int dir) const 
             {
                 NEKERROR(ErrorUtil::efatal, "This method is not valid in this class");
@@ -143,6 +149,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion.h,v $
+ *    Revision 1.3  2008/12/18 14:08:24  pvos
+ *    NekConstants update
+ *
  *    Revision 1.2  2008/08/20 09:16:39  sherwin
  *    Modified generation of HDG matrices so that they use Expansion1D, Expansion2D GenMatrix method rather than Expansion method. Have also removed methods which were generating edge expansions locally as this was too expensive
  *

@@ -355,6 +355,12 @@ namespace Nektar
             {
                 return DetExpansionType();
             }
+	     
+	    virtual const LibUtilities::BasisSharedPtr& v_GetBasis(int dir) const
+            {
+	      ASSERTL1(dir >= 0 &&dir <= 1,"input dir is out of range");
+	      return m_base[dir];
+	    }
 
             virtual int v_GetNumPoints(const int dir) const 
             {
@@ -717,6 +723,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.51  2009/09/06 22:24:00  sherwin
+ *    Updates for Navier-Stokes solver
+ *
  *    Revision 1.50  2009/08/14 09:20:08  cbiotto
  *    Fixed bug in v_GetEdgeExp
  *

@@ -365,6 +365,12 @@ namespace Nektar
 
             QuadExp();
 
+	    virtual const LibUtilities::BasisSharedPtr& v_GetBasis(int dir) const
+            {
+	      ASSERTL1(dir >= 0 &&dir <= 1,"input dir is out of range");
+	      return m_base[dir];
+	    }
+
             virtual int v_GetNumPoints(const int dir) const 
             {
                 return GetNumPoints(dir);
@@ -743,6 +749,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.56  2009/09/06 22:24:00  sherwin
+ *    Updates for Navier-Stokes solver
+ *
  *    Revision 1.55  2009/08/14 09:17:40  cbiotto
  *    Fixed bug in v_GetEdgeExp
  *

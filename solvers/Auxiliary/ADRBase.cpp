@@ -330,8 +330,7 @@ namespace Nektar
         {
             // dump initial conditions to file
             std::string outname = m_sessionName + "_initial.chk";
-            ofstream outfile(outname.c_str());
-            WriteFld(outfile);
+            WriteFld(outname);
         }
     }
 
@@ -860,8 +859,7 @@ namespace Nektar
     void ADRBase::Output(void)
     {
         std::string outname = m_sessionName + ".fld";
-        ofstream outfile(outname.c_str());
-        WriteFld(outfile);
+        WriteFld(outname);
     }
 
     void ADRBase::Checkpoint_Output(const int n)
@@ -869,11 +867,10 @@ namespace Nektar
         char chkout[16] = "";
         sprintf(chkout, "%d", n);
         std::string outname = m_sessionName +"_" + chkout + ".chk";
-        ofstream outfile(outname.c_str());
-        WriteFld(outfile);
+        WriteFld(outname);
     }
 
-  void ADRBase::WriteFld(std::ofstream &outfile)
+  void ADRBase::WriteFld(std::string &outname)
     {
         std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef = m_fields[0]->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size()); 
@@ -889,7 +886,7 @@ namespace Nektar
             }
         }
 
-        m_graph->Write(outfile,FieldDef,FieldData);
+        m_graph->Write(outname,FieldDef,FieldData);
     }
 
     /** \brief Import field from infile and load into \a
@@ -1012,6 +1009,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.18  2009/09/07 11:21:58  sherwin
+* Updates related to Navier-Stokes solver
+*
 * Revision 1.17  2009/08/14 09:30:01  cbiotto
 * Add WriteVar function
 *

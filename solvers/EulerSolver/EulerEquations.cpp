@@ -1796,8 +1796,7 @@ namespace Nektar
 	
 	// dump analytical solution conditions to file
 	std::string outname = m_sessionName + "_RinglebFlow_analytical.chk";
-	ofstream outfile(outname.c_str());
-	WriteFld(outfile);
+	WriteFld(outname);
 	
       }
       break;
@@ -2108,8 +2107,7 @@ namespace Nektar
     
     // dump initial conditions to file
     std::string outname = m_sessionName + "_initialRingleb.chk";
-    ofstream outfile(outname.c_str());
-    WriteFld(outfile);
+    WriteFld(outname);
 
   }
   
@@ -2117,6 +2115,9 @@ namespace Nektar
 
 /**
 * $Log: EulerEquations.cpp,v $
+* Revision 1.8  2009/09/15 09:45:04  cbiotto
+* *** empty log message ***
+*
 * Revision 1.7  2009/09/14 16:08:59  cbiotto
 * *** empty log message ***
 *

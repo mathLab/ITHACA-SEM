@@ -112,9 +112,7 @@ namespace Nektar
 	
         void Checkpoint_Output(const int n);
 
-	void WriteVar(const int n, Array<OneD, MultiRegions::ExpListSharedPtr> field, const Array<OneD, NekDouble>&inarray, std::string name);
-
-        void WriteFld(std::ofstream &outfile);
+        void WriteFld(std::string &outname);
         void ImportFld(std::string &infile);
         
 	void Array_Output(const int n, std::string name, 
@@ -359,6 +357,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.13  2009/09/07 11:21:58  sherwin
+* Updates related to Navier-Stokes solver
+*
 * Revision 1.12  2009/08/14 09:29:13  cbiotto
 * Add WriteVar function
 *

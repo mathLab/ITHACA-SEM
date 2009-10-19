@@ -834,6 +834,14 @@ namespace Nektar
 	  ExactRiemannSolver(rhoL,rhouL,rhovL,EL,rhoR,rhouR,rhovR,ER,rhoflux,rhouflux,rhovflux,Eflux);
 	}
 	break;
+      case eAUSM:
+      case eAUSMPlus:
+      case eAUSMPlusUp:
+      case eAUSMPlusUpAllSpeed:
+	{
+	  AUSMRiemannSolver(rhoL,rhouL,rhovL,EL,rhoR,rhouR,rhovR,ER,rhoflux,rhouflux,rhovflux,Eflux);
+	}
+	break;
       default:
 	{
 	  ASSERTL0(false,"populate switch statement for upwind flux");
@@ -977,6 +985,7 @@ namespace Nektar
     
   }
 
+
   void EulerEquations::LFRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
 				       NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
 				       NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux)
@@ -1029,6 +1038,189 @@ namespace Nektar
     rhovflux = 0.5*(rhoL*uL*vL+rhoR*uR*vR);
     Eflux    = 0.5*(uL*(EL+pL)+uR*(ER+pR));
     
+  }
+
+    void EulerEquations::AUSMRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
+					 NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
+					 NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux)
+  {
+    
+    NekDouble gamma = m_gamma;
+    
+    NekDouble uL = rhouL/rhoL;
+    NekDouble vL = rhovL/rhoL;
+    NekDouble uR = rhouR/rhoR;
+    NekDouble vR = rhovR/rhoR;
+    NekDouble pL = (gamma - 1.0) * (EL - 0.5 * (rhouL*uL + rhovL*vL));
+    NekDouble pR = (gamma - 1.0) * (ER - 0.5 * (rhouR*uR + rhovR*vR));
+    NekDouble cL = sqrt(gamma * pL / rhoL);
+    NekDouble cR = sqrt(gamma * pR / rhoR);
+    NekDouble hL = (EL+pL)/rhoL;
+    NekDouble hR = (ER+pR)/rhoR;
+    
+    // average sound speed
+    NekDouble cA = 0.5 * (cL + cR);
+    
+    // local Mach numbers
+    NekDouble ML = uL/cA;
+    NekDouble MR = uR/cA;
+
+    // parameters that specifies the upwinding...
+    NekDouble Mbar, pbar;
+
+    switch(m_upwindType)
+      {
+      case eAUSM:
+	{
+	  NekDouble beta  = 0.0;
+	  NekDouble alpha = 0.0;
+	  Mbar = M4Function(0, beta, ML) + M4Function(1, beta, MR);
+	  pbar = pL*P5Function(0, alpha, ML) + pR*P5Function(1, alpha, MR);
+	}
+	break;
+      case eAUSMPlus:
+	{
+	  NekDouble beta  = 1.0/8.0;
+	  NekDouble alpha = 3.0/16.0;
+	  Mbar = M4Function(0, beta, ML) + M4Function(1, beta, MR);
+	  pbar = pL*P5Function(0, alpha, ML) + pR*P5Function(1, alpha, MR);
+	}
+	break;
+      case eAUSMPlusUp:
+	{
+	  NekDouble beta  = 1.0/8.0;
+	  NekDouble alpha = 3.0/16.0;
+	  NekDouble sigma = 1.0;
+	  NekDouble Kp    = 0.25;
+	  NekDouble Ku    = 0.75;
+	  NekDouble Mtilde = 0.5 * (ML*ML + MR*MR);
+	  NekDouble rhoA   = 0.5 * (rhoL + rhoR);
+	  NekDouble Mp     = -Kp * ((pR-pL)/(rhoA*cA*cA)) * max(1.0 - sigma * Mtilde, 0.0);
+	  Mbar =  M4Function(0, beta, ML) + M4Function(1, beta, MR) + Mp;
+	  NekDouble pu     = -2.0*Ku*rhoA*cA*cA*(MR-ML)*P5Function(0, alpha, ML)*P5Function(1, alpha, MR);
+	  pbar = pL*P5Function(0, alpha, ML) + pR*P5Function(1, alpha, MR) + pu;
+	}
+	break;
+      case eAUSMPlusUpAllSpeed:
+	{
+	  // if fa = 1 then AUSMPlusUpAllSpeed equal to AUSMPlusUp...
+	  NekDouble Mo    = 0.01; // note: here we specify Mo, but if M_\infty is known then Mo = min(1,max(Mtilde,M_infty^2))
+	  NekDouble fa    = Mo*(2.0-Mo);
+	  NekDouble beta  = 1.0/8.0;
+	  NekDouble alpha = 3.0/16.0;
+	  NekDouble sigma = 1.0;
+	  NekDouble Kp    = 0.25;
+	  NekDouble Ku    = 0.75;
+	  NekDouble Mtilde = 0.5 * (ML*ML + MR*MR);
+	  NekDouble rhoA   = 0.5 * (rhoL + rhoR);
+	  NekDouble Mp     = -(Kp/fa) * ((pR-pL)/(rhoA*cA*cA)) * max(1.0 - sigma * Mtilde, 0.0);
+	  Mbar =  M4Function(0, beta, ML) + M4Function(1, beta, MR) + Mp;
+	  NekDouble pu     = -2.0*Ku*rhoA*cA*cA*(MR-ML)*P5Function(0, alpha, ML)*P5Function(1, alpha, MR);
+	  pbar = pL*P5Function(0, alpha, ML) + pR*P5Function(1, alpha, MR) + pu;
+	}
+	break;
+      default:
+	{
+	  ASSERTL0(false,"AUSM family chosen but specific scheme not implemented");
+	}
+      }
+    
+    if (Mbar >= 0.0)
+      {
+	rhoflux  = cA * Mbar * rhoL;
+	rhouflux = cA * Mbar * rhoL * uL + pbar;
+	rhovflux = cA * Mbar * rhoL * vL;
+	Eflux    = cA * Mbar * rhoL * hL;
+      }
+    else
+      {
+	rhoflux  = cA * Mbar * rhoR;
+	rhouflux = cA * Mbar * rhoR * uR + pbar;
+	rhovflux = cA * Mbar * rhoR * vR;
+	Eflux    = cA * Mbar * rhoR * hR;
+      }
+  }
+
+  NekDouble EulerEquations::M1Function(int A, NekDouble M)
+  {
+    NekDouble out;
+    
+    if (A == 0)
+      {
+	out = 0.5 * (M + fabs(M));
+      }
+    else 
+      {
+	out = 0.5 * (M - fabs(M));
+      }
+    
+    return out; 
+  }
+
+  NekDouble EulerEquations::M2Function(int A, NekDouble M)
+  {
+    NekDouble out;
+    
+    if (A == 0)
+      {
+	out = 0.25 * pow(M + 1.0, 2.0);
+      }
+    else
+      {
+	out = -0.25 * pow(M - 1.0, 2.0);
+      }
+    
+    return out;
+  }
+
+  NekDouble EulerEquations::M4Function(int A, NekDouble beta, NekDouble M)
+  {
+    NekDouble out;
+    
+    if (fabs(M) >= 1.0)
+      {
+	out = M1Function(A,M);
+      }
+    else
+      {
+	out = M2Function(A,M);
+	
+	if (A == 0)
+	  {
+	    out *= 1.0 - 16.0*beta*M2Function(1,M);
+	  }
+	else
+	  {
+	    out *= 1.0 + 16.0 * M2Function(0,M);
+	  }
+      }
+
+    return out;
+  }
+
+  NekDouble EulerEquations::P5Function(int A, NekDouble alpha, NekDouble M)
+  {
+    NekDouble out;
+
+    if (fabs(M) >= 1.0)
+      {
+	out = (1.0/M) * M1Function(A,M);
+      }
+    else
+      {
+	out = M2Function(A,M);
+	
+	if (A == 0)
+	  {
+	    out *= (2.0-M) - 16.0*alpha*M*M2Function(1,M);
+	  }
+	else
+	  {
+	    out *= (-2.0-M) + 16.0*alpha*M*M2Function(0,M);
+	  }
+      }
+    
+    return out;
   }
 
   void EulerEquations::ExactRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
@@ -1797,7 +1989,6 @@ namespace Nektar
 	// dump analytical solution conditions to file
 	std::string outname = m_sessionName + "_RinglebFlow_analytical.chk";
 	WriteFld(outname);
-	
       }
       break;
     }
@@ -2108,13 +2299,15 @@ namespace Nektar
     // dump initial conditions to file
     std::string outname = m_sessionName + "_initialRingleb.chk";
     WriteFld(outname);
-
   }
   
 } //end of namespace
 
 /**
 * $Log: EulerEquations.cpp,v $
+* Revision 1.9  2009/10/07 16:34:49  cbiotto
+* Updating Write function
+*
 * Revision 1.8  2009/09/15 09:45:04  cbiotto
 * *** empty log message ***
 *

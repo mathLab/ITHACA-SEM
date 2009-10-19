@@ -77,15 +77,19 @@ namespace Nektar
   // ======================================================================= 
   enum UpwindType
   {           
-    eNotSet,   ///< flux not defined
-    eAverage,  ///< averaged (or centred) flux
-    eUpwind,   ///< simple upwind flux
-    eLLF,      ///< local Lax-Friedrich flux
-    eHLL,      ///< Harten-Lax-Leer flux
-    eHLLC,     ///< Harten-Lax-Leer Contact corrected flux
-    eRoe,      ///< Roe flux
-    eExact,    ///< Exact flux
-    SIZE_UpwindType ///< Length of enum list
+    eNotSet,             ///< flux not defined
+    eAverage,            ///< averaged (or centred) flux
+    eUpwind,             ///< simple upwind flux
+    eLLF,                ///< local Lax-Friedrich flux
+    eHLL,                ///< Harten-Lax-Leer flux
+    eHLLC,               ///< Harten-Lax-Leer Contact corrected flux
+    eAUSM,               ///< Advection-Upstream-Splitting-Method flux
+    eAUSMPlus,           ///< Advection-Upstream-Splitting-Method flux with reduced pressure oscillations
+    eAUSMPlusUp,         ///< Advection-Upstream-Splitting-Method flux for low Mach flows   
+    eAUSMPlusUpAllSpeed, ///< Advection-Upstream-Splitting-Method flux for all Mach flows
+    eRoe,                ///< Roe flux
+    eExact,              ///< Exact flux
+    SIZE_UpwindType      ///< Length of enum list
   };
   
   const char* const UpwindTypeMap[] =
@@ -96,6 +100,10 @@ namespace Nektar
       "LF",
       "HLL",
       "HLLC",
+      "AUSM",
+      "AUSMPlus",
+      "AUSMPlusUp",
+      "AUSMPlusUpAllSpeed",
       "Roe",
       "Exact"
     };
@@ -221,7 +229,7 @@ namespace Nektar
     void LFRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
 			 NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
 			 NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
-
+	    
     void AverageRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
 			      NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
 			      NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
@@ -229,6 +237,15 @@ namespace Nektar
     void ExactRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
 			    NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
 			    NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
+
+    void AUSMRiemannSolver(NekDouble rhoL, NekDouble rhouL, NekDouble rhovL, NekDouble EL,
+			   NekDouble rhoR, NekDouble rhouR, NekDouble rhovR, NekDouble ER,
+			   NekDouble &rhoflux, NekDouble &rhouflux, NekDouble &rhovflux, NekDouble &Eflux);
+    
+    NekDouble M1Function(int A, NekDouble M);
+    NekDouble M2Function(int A, NekDouble M);
+    NekDouble M4Function(int A, NekDouble beta, NekDouble M);
+    NekDouble P5Function(int A, NekDouble alpha, NekDouble M);
     
     void ExtractWall(int nchk, Array<OneD, Array<OneD, NekDouble> > &physarray);
 
@@ -269,6 +286,9 @@ namespace Nektar
 
 /**
 * $Log: EulerEquations.h,v $
+* Revision 1.7  2009/09/14 16:09:28  cbiotto
+* *** empty log message ***
+*
 * Revision 1.6  2009/08/20 10:27:52  cbiotto
 * Subsonic and smooth supersonic Euler. Adding numerical fluxes, boundary conditions,
 * initial conditions, CFL check.

@@ -75,6 +75,8 @@ namespace Nektar
     void ConservativeToPrimitive(const Array<OneD, const Array<OneD, NekDouble> >&physin,
 				       Array<OneD,       Array<OneD, NekDouble> >&physout);
     
+    void CheckNegativeWaterDepth(Array<OneD, Array<OneD, NekDouble> >&physarray);
+
     void SWEAdvectionNonConservativeForm(const Array<OneD, const Array<OneD, NekDouble> >&physarray,
 					       Array<OneD,       Array<OneD, NekDouble> >&outarray);
     
@@ -211,6 +213,7 @@ namespace Nektar
   protected:
     int m_infosteps;                            ///< dump info to stdout at steps time
     NekDouble m_g;                              ///< Acceleration of gravity
+    NekDouble m_min_depth;                      ///< water depths below this tolerance is considered dry
     Array<OneD, NekDouble>  m_coriolis;
     
     Array<OneD, NekDouble>  m_depth;
@@ -282,6 +285,9 @@ namespace Nektar
 
 /**
 * $Log: ShallowWaterEquations.h,v $
+* Revision 1.5  2009/03/10 23:37:14  claes
+* Updated the ShallowWaterSolver to work with the general timestepping scheme
+*
 * Revision 1.4  2009/02/07 23:58:08  claes
 * Changed so I/O always are in terms of primitive variables
 *

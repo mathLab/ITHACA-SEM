@@ -152,6 +152,15 @@ namespace Nektar
 	ASSERTL0(false,"Gravity not specified");
       }
 
+
+    if(m_boundaryConditions->CheckForParameter("Hmin") == true)
+      {
+	m_min_depth =  m_boundaryConditions->GetParameter("Hmin");
+      }
+    else
+      {
+	ASSERTL0(false,"Minimum water depth not specified");
+      }
   
     // check that any user defined boundary condition is indeed implemented
     for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
@@ -246,6 +255,18 @@ namespace Nektar
 	    {
 	      physarray[i] = Array<OneD, NekDouble>(nq);
 	      m_fields[i]->BwdTrans(inarray[i],physarray[i]);
+	    }
+	  //-------------------------------------------------------
+
+
+	  //-------------------------------------------------------
+	  // go to primitive variables and check for negative water depths
+	    
+	  CheckNegativeWaterDepth(physarray);
+	  
+	  if (m_variableType == eConservative)
+	    {
+	      ConservativeToPrimitive(physarray,physarray);
 	    }
 	  //-------------------------------------------------------
 	  
@@ -343,6 +364,17 @@ namespace Nektar
 						   false);
 	      m_fields[i]->BwdTrans_IterPerExp(outarray[i],physarray[i]);
 	    }
+
+	  //-------------------------------------------------------
+	  // go to primitive variables and check for negative water depths
+	    
+	  CheckNegativeWaterDepth(physarray);
+	  
+	  if (m_variableType == eConservative)
+	    {
+	      ConservativeToPrimitive(physarray,physarray);
+	    }
+	  //-------------------------------------------------------
 
 	  
 	  Array<OneD,NekDouble> tmp(nq);
@@ -543,10 +575,9 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 
             if(m_projectionType==eGalerkin)
             {
-	      // ASSERTL0(false,"CG not implemented for SWE");
-                // Project the solution u* onto the boundary conditions to
-                // obtain the actual solution
-	      //SetBoundaryConditions(m_time);
+	      // Project the solution u* onto the boundary conditions to
+	      // obtain the actual solution
+	      // SetBoundaryConditions(m_time);
                 for(i = 0; i < nvariables; ++i)
                 {
                     m_fields[i]->MultiplyByInvMassMatrix(fields[i],tmp[i],false);
@@ -719,15 +750,31 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
     int nq      = physarray[0].num_elements();
     
     Array<OneD, NekDouble> tmp(nq);
-    
+    Array<OneD, NekDouble> h(nq);
+	
+    // conservative formulation compute h
+    if (m_variableType == eConservative)
+       {
+	 // h = \eta + d
+	Vmath::Vadd(nq,physarray[0],1,m_depth,1,h,1);
+	}
+	
+
     // add to hu equation
     Vmath::Vmul(nq,m_coriolis,1,physarray[2],1,tmp,1);
+   if (m_variableType == eConservative)
+      {
+	Vmath::Vmul(nq,h,1,tmp,1,tmp,1);
+      }
     m_fields[0]->IProductWRTBase(tmp,tmp);
-    // Vmath::Neg(nq,tmp,1); 
     Vmath::Vadd(ncoeffs,tmp,1,outarray[1],1,outarray[1],1);
     
     // add to hv equation
     Vmath::Vmul(nq,m_coriolis,1,physarray[1],1,tmp,1);
+     if (m_variableType == eConservative)
+      {
+	Vmath::Vmul(nq,h,1,tmp,1,tmp,1);
+      }
     Vmath::Neg(nq,tmp,1);
     m_fields[0]->IProductWRTBase(tmp,tmp);
     Vmath::Vadd(ncoeffs,tmp,1,outarray[2],1,outarray[2],1);
@@ -787,29 +834,26 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 	  
 	  // flux function for the eta equation
 	case 0:
-	  for (int j = 0; j < nq; ++j)
-	    {
-	      flux[0][j]  =  m_depth[j] * physfield[1][j];
-	      flux[1][j]  =  m_depth[j] * physfield[2][j];
-	    }
+	  {
+	    Vmath::Vmul(nq, m_depth, 1, physfield[1], 1, flux[0], 1);
+	    Vmath::Vmul(nq, m_depth, 1, physfield[2], 1, flux[0], 1);
+	  }
 	  break;
 	  
 	  // flux function for the u equation
 	case 1:
-	  for (int j = 0; j < nq; ++j)
-	    {
-	      flux[0][j] = g*physfield[0][j];
-	      flux[1][j] = 0.0;
-	    }
+	  {
+	    Vmath::Smul(nq, g, physfield[0], 1, flux[0], 1);
+	    Vmath::Zero(nq, flux[1], 1);
+	  }
 	  break;
 	  
 	  // flux function for the v equation
 	case 2:
-	  for (int j = 0; j < nq; ++j)
-	    {
-	      flux[0][j] = 0.0;
-	      flux[1][j] = g*physfield[0][j];
-	    }
+	  {
+	    Vmath::Zero(nq, flux[0], 1);
+	    Vmath::Smul(nq, g, physfield[0], 1, flux[1], 1);
+	  }
 	  break;
 	  
 	default:
@@ -820,35 +864,81 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
       case eNonLinear:
      	switch(i){
 	  
-	  // flux function for the eta equation
+	  //----------------------------------------------------
+	  // flux function for the h equation
+	
 	case 0:
-	  for (int j = 0; j < nq; ++j)
-	    {
-	      flux[0][j]  =  physfield[1][j];
-	      flux[1][j]  =  physfield[2][j];
-	    }
+	  {
+	    // h in flux 1
+	    Vmath::Vadd(nq, physfield[0], 1, m_depth, 1, flux[1], 1);
+	    
+	    // hu in flux 0
+	    Vmath::Vmul(nq, flux[1], 1, physfield[1], 1, flux[0], 1);
+	    
+	    // hv in flux 1
+	    Vmath::Vmul(nq, flux[1], 1, physfield[2], 1, flux[1], 1);
+	  }
 	  break;
+	  //----------------------------------------------------
 	  
+	  
+	  //----------------------------------------------------
 	  // flux function for the hu equation
+	
 	case 1:
-	  for (int j = 0; j < nq; ++j)
-	    {
-	      flux[0][j] = physfield[1][j]*physfield[1][j]/physfield[0][j] +
-		0.5*g*physfield[0][j]*physfield[0][j];
-	      flux[1][j] = physfield[1][j]*physfield[2][j]/physfield[0][j];
-	    }
+	  {
+	    Array<OneD, NekDouble> tmp(nq);
+	    
+	    // h in tmp
+	    Vmath::Vadd(nq, physfield[0], 1, m_depth, 1, tmp, 1);
+	    
+	    // hu in flux 1
+	    Vmath::Vmul(nq, tmp, 1, physfield[1], 1, flux[1], 1);
+
+	    // huu in flux 0
+	    Vmath::Vmul(nq, flux[1], 1, physfield[1], 1, flux[0], 1);
+
+	    //  hh in tmp
+	    Vmath::Vmul(nq, tmp, 1, tmp, 1, tmp, 1);
+	    
+	    // huu + 0.5 g hh in flux 0
+	    Blas::Daxpy(nq, 0.5*g, tmp, 1, flux[0], 1);
+
+	    // huv in flux 1
+	    Vmath::Vmul(nq, flux[1], 1, physfield[2], 1, flux[1], 1);
+	  }
 	  break;
+	  //----------------------------------------------------
 	  
+	  
+	  //----------------------------------------------------
 	  // flux function for the hv equation
+	
 	case 2:
-	  for (int j = 0; j < nq; ++j)
-	    {
-	      flux[0][j] = physfield[1][j]*physfield[2][j]/physfield[0][j];
-	      flux[1][j] = physfield[2][j]*physfield[2][j]/physfield[0][j] +
-		0.5*g*physfield[0][j]*physfield[0][j];
-	    }
+	  {
+	    Array<OneD, NekDouble> tmp(nq);
+	    
+	    // h in tmp
+	    Vmath::Vadd(nq, physfield[0], 1, m_depth, 1, tmp, 1);
+	    
+	    // hv in flux 0
+	    Vmath::Vmul(nq, tmp, 1, physfield[2], 1, flux[0], 1);
+
+	    // hvv in flux 1
+	    Vmath::Vmul(nq, flux[0], 1, physfield[2], 1, flux[1], 1);
+
+	    //  hh in tmp
+	    Vmath::Vmul(nq, tmp, 1, tmp, 1, tmp, 1);
+
+	      // huv in flux 0
+	    Vmath::Vmul(nq, flux[0], 1, physfield[1], 1, flux[0], 1);
+	    
+	    // hvv + 0.5 g hh in flux 1
+	    Blas::Daxpy(nq, 0.5*g, tmp, 1, flux[1], 1);
+	  }
 	  break;
-	  
+	  //----------------------------------------------------
+
 	default:
 	  ASSERTL0(false,"GetFluxVector2D: illegal vector index");
 	}
@@ -911,6 +1001,7 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 	
 	// rotate the values to the normal direction
         NekDouble tmpX, tmpY;
+	
         for (i = 0; i < nTraceNumPoints; ++i)
 	  {
             tmpX =  Fwd[1][i]*m_traceNormals[0][i]+Fwd[2][i]*m_traceNormals[1][i];
@@ -929,8 +1020,8 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 	
         for (i = 0; i < nTraceNumPoints; ++i)
 	  {
-	    RiemannSolver(Fwd[0][i],Fwd[1][i],Fwd[2][i],
-                          Bwd[0][i],Bwd[1][i],Bwd[2][i],
+	    RiemannSolver(Fwd[0][i]+m_depth[i],Fwd[1][i],Fwd[2][i],
+                          Bwd[0][i]+m_depth[i],Bwd[1][i],Bwd[2][i],
                           hflux, huflux, hvflux );
 	    
             // rotate back to Cartesian
@@ -1001,17 +1092,12 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
   /***
       
    */
-  void ShallowWaterEquations::RiemannSolver(NekDouble hL,NekDouble huL,NekDouble hvL,NekDouble hR,NekDouble huR, 
-					    NekDouble hvR, NekDouble &hflux, NekDouble &huflux,NekDouble &hvflux )
+  void ShallowWaterEquations::RiemannSolver(NekDouble hL,NekDouble uL,NekDouble vL,NekDouble hR,NekDouble uR, 
+					    NekDouble vR, NekDouble &hflux, NekDouble &huflux,NekDouble &hvflux )
   {
     NekDouble g = m_g;
     
     NekDouble hC,huC,hvC,SL,SR,hstar,Sstar;
-    
-    NekDouble uL = huL/hL;
-    NekDouble vL = hvL/hL;
-    NekDouble uR = huR/hR;
-    NekDouble vR = hvR/hR;
     NekDouble cL = sqrt(g * hL);
     NekDouble cR = sqrt(g * hR);
     
@@ -1664,6 +1750,36 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
       }
   }
     
+  void ShallowWaterEquations::CheckNegativeWaterDepth(Array<OneD, Array<OneD, NekDouble> >&physarray)
+  {
+    
+    int nq = GetTotPoints();
+
+    if (m_variableType == ePrimitive)
+      {
+	// get the total water depth h = eta + d
+	Vmath::Vadd(nq, physarray[0], 1, m_depth, 1, physarray[0], 1);
+      }
+      
+    for (int i = 0; i < nq; ++i)
+      {
+	if (physarray[0][i] < m_min_depth)
+	  {
+	    // set the water depth = h_min
+	    physarray[0][i] = m_min_depth;
+	    // zero the velocities
+	    physarray[1][i] = 0.0;
+	    physarray[2][i] = 0.0;
+	  }
+      }
+    
+    if (m_variableType == ePrimitive)
+      {
+	// get the free surface elevation eta = h - d
+	Vmath::Vsub(nq, physarray[0], 1, m_depth, 1, physarray[0], 1);
+      }
+  }
+  
   void ShallowWaterEquations::Summary(std::ostream &out)
   {
     cout << "=======================================================================" << endl;
@@ -1698,6 +1814,9 @@ void ShallowWaterEquations::ODElhs(const Array<OneD, const Array<OneD, NekDouble
 
 /**
 * $Log: ShallowWaterEquations.cpp,v $
+* Revision 1.7  2009/06/29 08:00:51  claes
+* Added CG support for conservative SWE. Note: bc not properly implemented yet.
+*
 * Revision 1.6  2009/04/28 10:17:41  pvos
 * Some updates to make the solvers compile properly with the newly added sparse matrix library
 *

@@ -278,7 +278,7 @@ namespace Nektar
 	//----------------------------------------------
 	// Perform time step integration
 	//---------------------------------------------- 
-	GetTimeStep(CFL,MinLength,fields,m_timestep);
+	//GetTimeStep(CFL,MinLength,fields,m_timestep);
 
 	if( n < numMultiSteps-1)
 	  {
@@ -1104,14 +1104,15 @@ namespace Nektar
       case eAUSMPlusUpAllSpeed:
 	{
 	  // if fa = 1 then AUSMPlusUpAllSpeed equal to AUSMPlusUp...
-	  NekDouble Mo    = 0.01; // note: here we specify Mo, but if M_\infty is known then Mo = min(1,max(Mtilde,M_infty^2))
+	  NekDouble Mco    = 0.01;
+	  NekDouble Mtilde = 0.5 * (ML*ML + MR*MR);
+	  NekDouble Mo     = min(1.0, max(Mtilde,Mco*Mco));
 	  NekDouble fa    = Mo*(2.0-Mo);
 	  NekDouble beta  = 1.0/8.0;
 	  NekDouble alpha = 3.0/16.0;
 	  NekDouble sigma = 1.0;
 	  NekDouble Kp    = 0.25;
 	  NekDouble Ku    = 0.75;
-	  NekDouble Mtilde = 0.5 * (ML*ML + MR*MR);
 	  NekDouble rhoA   = 0.5 * (rhoL + rhoR);
 	  NekDouble Mp     = -(Kp/fa) * ((pR-pL)/(rhoA*cA*cA)) * max(1.0 - sigma * Mtilde, 0.0);
 	  Mbar =  M4Function(0, beta, ML) + M4Function(1, beta, MR) + Mp;
@@ -1130,14 +1131,14 @@ namespace Nektar
 	rhoflux  = cA * Mbar * rhoL;
 	rhouflux = cA * Mbar * rhoL * uL + pbar;
 	rhovflux = cA * Mbar * rhoL * vL;
-	Eflux    = cA * Mbar * rhoL * hL;
+	Eflux    = cA * Mbar * (EL + pL);
       }
     else
       {
 	rhoflux  = cA * Mbar * rhoR;
 	rhouflux = cA * Mbar * rhoR * uR + pbar;
 	rhovflux = cA * Mbar * rhoR * vR;
-	Eflux    = cA * Mbar * rhoR * hR;
+	Eflux    = cA * Mbar * (ER + pR);
       }
   }
 
@@ -1145,7 +1146,7 @@ namespace Nektar
   {
     NekDouble out;
     
-    if (A == 0)
+    if (A == 0) // i.e. "plus"
       {
 	out = 0.5 * (M + fabs(M));
       }
@@ -1161,13 +1162,13 @@ namespace Nektar
   {
     NekDouble out;
     
-    if (A == 0)
+    if (A == 0) // i.e. "plus"
       {
-	out = 0.25 * pow(M + 1.0, 2.0);
+	out = 0.25 * (M + 1.0) * (M + 1.0);
       }
     else
       {
-	out = -0.25 * pow(M - 1.0, 2.0);
+	out = -0.25 * (M - 1.0) * (M - 1.0);
       }
     
     return out;
@@ -1191,7 +1192,7 @@ namespace Nektar
 	  }
 	else
 	  {
-	    out *= 1.0 + 16.0 * M2Function(0,M);
+	    out *= 1.0 + 16.0*beta*M2Function(0,M);
 	  }
       }
 
@@ -2305,6 +2306,9 @@ namespace Nektar
 
 /**
 * $Log: EulerEquations.cpp,v $
+* Revision 1.10  2009/10/19 14:15:44  claes
+* Added the AUSM family of numerical fluxes
+*
 * Revision 1.9  2009/10/07 16:34:49  cbiotto
 * Updating Write function
 *

@@ -211,8 +211,10 @@ namespace Nektar
 
             ElementEdgeVectorSharedPtr GetElementsFromEdge(Geometry1DSharedPtr edge);
 
-            /// \brief Return the BasisKey corresponding to an edge of an element
-            LibUtilities::BasisKey GetEdgeBasisKey(SegGeomSharedPtr edge);
+            /** \brief Return the BasisKey corresponding to an edge of an element
+	     *  If the expansion is a triangle the Modified_B direction is modified to be one-dimensional Modified_A,GaussLobattoLegendre.
+	     **/
+	    LibUtilities::BasisKey GetEdgeBasisKey(SegGeomSharedPtr edge);
 
         protected:
             void ReadEdges    (TiXmlDocument &doc);
@@ -237,6 +239,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.h,v $
+// Revision 1.26  2008/10/04 19:32:47  sherwin
+// Added SharedPtr Typedef and replaced MeshDimension with SpaceDimension
+//
 // Revision 1.25  2008/08/14 22:11:03  sherwin
 // Mods for HDG update
 //

@@ -650,17 +650,63 @@ namespace Nektar
             int nummodes  = expansion->m_BasisKeyVector[edge_id].GetNumModes();
             int numpoints = expansion->m_BasisKeyVector[edge_id].GetNumPoints();
             
-            
-            // Use edge 0 to define basis of order relevant to edge 
-            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-            return LibUtilities::BasisKey(expansion->m_BasisKeyVector[0].GetBasisType(),nummodes,pkey);
+	    if((*elements)[0]->m_Element->GetGeomShapeType() == eTriangle)
+	      {
+		// Use edge 0 to define basis of order relevant to edge 
+                switch(expansion->m_BasisKeyVector[edge_id].GetBasisType())
+		  {
+		  case LibUtilities::eModified_B:
+                    {
+		      switch(expansion->m_BasisKeyVector[edge_id].GetPointsType())
+                        {
+                        case LibUtilities::eGaussRadauMAlpha1Beta0:
+			  {                            
+			    const LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
+			    return LibUtilities::BasisKey(expansion->m_BasisKeyVector[0].GetBasisType(),nummodes,pkey);
+			  }
+			  break;
+			default:
+			  ASSERTL0(false,"Unexpected points distribution");
+			  break;
+			}
+		    }
+		    break;
+		  case LibUtilities::eModified_A:
+                    {
+		      switch(expansion->m_BasisKeyVector[edge_id].GetPointsType())
+                        {
+                        case LibUtilities::eGaussLobattoLegendre:
+			  {                            
+			    const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
+			    return LibUtilities::BasisKey(expansion->m_BasisKeyVector[0].GetBasisType(),nummodes,pkey);
+			  }
+			  break;
+			default:
+			  ASSERTL0(false,"Unexpected points distribution");
+			  break;
+			}
+		    }
+		    break;
+		  default:
+		    ASSERTL0(false,"Unexpected basis distribution");
+		  }
+	      }
+	    else
+	      {
+		// Quadrilateral
+		const LibUtilities::PointsKey pkey(numpoints,expansion->m_BasisKeyVector[edge_id].GetPointsType());
+		return LibUtilities::BasisKey(expansion->m_BasisKeyVector[edge_id].GetBasisType(),nummodes,pkey);
+	      }
         }
-        
+      
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.39  2009/07/02 13:32:24  sehunchun
+// *** empty log message ***
+//
 // Revision 1.38  2009/07/02 11:39:44  sehunchun
 // Modification for 2D gemoetry embedded in 3D
 //

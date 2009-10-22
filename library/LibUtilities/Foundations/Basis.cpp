@@ -100,6 +100,7 @@ namespace Nektar
             m_bdata(bkey.GetTotNumModes()*bkey.GetTotNumPoints()),
             m_dbdata(bkey.GetTotNumModes()*bkey.GetTotNumPoints())
         {
+	  m_InterpManager.RegisterGlobalCreator(boost::bind(&Basis::CalculateInterpMatrix,this,_1));
         }
         
         boost::shared_ptr<Basis> Basis::Create(const BasisKey &bkey)
@@ -117,6 +118,39 @@ namespace Nektar
 
             GenBasis();
         };
+
+        /** \brief Calculate the interpolation Matrix for coefficient from
+        *  one base (m_basisKey) to another (tbasis0) 
+        */
+        boost::shared_ptr< NekMatrix<NekDouble> > Basis::CalculateInterpMatrix(const BasisKey &tbasis0)
+        {
+	  int dim = m_basisKey.GetNumModes();
+	  const PointsKey pkey(dim,LibUtilities::eGaussLobattoLegendre);
+	  BasisKey fbkey(m_basisKey.GetBasisType(),dim,pkey);
+	  BasisKey tbkey(tbasis0.GetBasisType(),dim,pkey);
+	  
+	  // "Constructur" of the basis
+	  BasisSharedPtr fbasis = BasisManager()[fbkey]; 
+	  BasisSharedPtr tbasis = BasisManager()[tbkey];
+	  
+	  // Get B Matrices
+	  Array<OneD, NekDouble> fB_data = fbasis->GetBdata();
+	  Array<OneD, NekDouble> tB_data = tbasis->GetBdata();
+	  
+	  // Convert to a NekMatrix
+	  NekMatrix<NekDouble> fB(dim,dim,fB_data);
+	  NekMatrix<NekDouble> tB(dim,dim,tB_data);
+	  
+	  // Invert the "to" matrix: tu = tB^(-1)*fB fu = ftB fu
+	  tB.Invert();
+	  
+	  // Compute transformation matrix
+	  Array<OneD, NekDouble> zero1D(dim*dim,0.0);
+	  boost::shared_ptr< NekMatrix<NekDouble> > ftB(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(dim,dim,zero1D));
+	  (*ftB) = tB*fB;
+
+	  return ftB;
+        }
 
         // Method used to generate appropriate basis
 
@@ -534,7 +568,6 @@ namespace Nektar
             return returnval;
         }
 
-
         /** \brief Determine if basis has collocation property,
         *  i.e. GLL_Lagrange with Lobatto integration of appropriate order.
         */
@@ -591,6 +624,9 @@ namespace Nektar
 
 /** 
 * $Log: Basis.cpp,v $
+* Revision 1.38  2009/06/18 11:47:24  claes
+* changes supporting the static use of Kronrod points
+*
 * Revision 1.37  2009/01/13 02:17:15  ehan
 * Added documentation
 *

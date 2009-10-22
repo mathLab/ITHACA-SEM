@@ -43,6 +43,7 @@
 #include <LibUtilities/Foundations/Graph.h>
 
 #include <LibUtilities/Foundations/Interp.h>
+#include <LibUtilities/Foundations/InterpCoeff.h>
 
 namespace Nektar
 {    
@@ -83,6 +84,9 @@ namespace Nektar
 
 //
 // $Log: SpatialDomains.hpp,v $
+// Revision 1.7  2008/12/18 14:08:59  pvos
+// NekConstants update
+//
 // Revision 1.6  2008/09/09 14:35:54  sherwin
 // Added reference interp.h
 //

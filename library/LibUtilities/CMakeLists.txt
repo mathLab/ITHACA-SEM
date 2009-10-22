@@ -47,6 +47,7 @@ SET(FoundationHeaders
     ./Foundations/FourierPoints.h
     ./Foundations/GaussPoints.h
     ./Foundations/Interp.h
+    ./Foundations/InterpCoeff.h
     ./Foundations/ManagerAccess.h
     ./Foundations/NodalTetElec.h
     ./Foundations/NodalTriElec.h
@@ -134,6 +135,7 @@ SET(FoundationSources
 	./Foundations/FourierPoints.cpp
 	./Foundations/GaussPoints.cpp
 	./Foundations/Interp.cpp
+	./Foundations/InterpCoeff.cpp
 	./Foundations/ManagerAccess.cpp
 	./Foundations/NodalTetElec.cpp
 	./Foundations/NodalTriElec.cpp

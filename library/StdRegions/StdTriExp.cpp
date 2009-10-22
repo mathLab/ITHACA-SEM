@@ -391,7 +391,6 @@ namespace Nektar
                                                          Array<OneD,NekDouble> &outarray,
                                                          const StdMatrixKey &mkey)
         {
-            cout << "hie" << endl;
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -1270,6 +1269,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTriExp.cpp,v $
+ * Revision 1.60  2009/09/23 12:42:09  pvos
+ * Updates for variable order expansions
+ *
  * Revision 1.59  2009/08/19 14:13:35  claes
  * Removed Gauss-Kronrod parts
  *

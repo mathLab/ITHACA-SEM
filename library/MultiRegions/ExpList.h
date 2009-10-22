@@ -138,6 +138,23 @@ namespace Nektar
                 return returnval;
             }
 
+	    /**
+             * \brief This function returns the vector of the number of
+             * modes in the elemental basis order over all elements
+             */
+            inline const Array<OneD,int> EvalBasisNumModesMaxVector(void) const
+            {
+                int i;
+                Array<OneD,int> returnval((*m_exp).size(),0);
+
+                for(i= 0; i < (*m_exp).size(); ++i)
+                {
+                    returnval[i] = max(returnval[i],(*m_exp)[i]->EvalBasisNumModesMax());
+                }
+
+                return returnval;
+            }
+
 
             /**
              * \brief This function returns the total number of quadrature points #m_npoints
@@ -857,6 +874,9 @@ namespace Nektar
             
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(const GlobalLinSysKey &mkey, const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
 
+	    /**
+	     * \brief Definition of the total number of degrees of freedom and quadrature points.
+	     */
             void SetCoeffPhys(void);
                 
 
@@ -1293,6 +1313,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.68  2009/09/06 22:28:45  sherwin
+* Updates for Navier-Stokes solver
+*
 * Revision 1.67  2009/07/08 17:22:47  sehunchun
 * Deleting GetTanBasis
 *

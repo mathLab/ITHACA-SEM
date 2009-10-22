@@ -1372,7 +1372,7 @@ namespace Nektar
                                 numModes.push_back((*m_exp)[i]->GetBasis(j)->GetNumModes());
                                 if(numModes[j] != (*m_exp)[i]->GetBasis(j)->GetNumModes())
                                 {
-                                    bool UniOrder = false;
+                                    UniOrder = false;
                                 }
                             }
                         }
@@ -1396,7 +1396,7 @@ namespace Nektar
             for(int i = 0; i < fielddef->m_ElementIDs.size(); ++i)
             {
                 int eid = fielddef->m_ElementIDs[i];
-                int datalen = (*m_exp)[eid]->GetNcoeffs();
+                int datalen = (*m_exp)[eid]->GetNcoeffs(); 
                 fielddata.insert(fielddata.end(),&m_coeffs[m_coeff_offset[eid]],&m_coeffs[m_coeff_offset[eid]]+datalen);
             }
         }

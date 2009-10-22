@@ -236,6 +236,7 @@ namespace Nektar
                 return m_basisKey.GetBasisType();
             }
 
+	    /** \brief return pointskey of expansion basis */
             inline PointsKey GetPointsKey() const
             {
                 return m_basisKey.GetPointsKey();
@@ -272,6 +273,12 @@ namespace Nektar
             {
                 return m_points->GetI(x);
             }
+
+	    const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const BasisKey &bkey)
+	    {  
+	      ASSERTL0(bkey.GetPointsKey().GetPointsDim()==1, "Interpolation only to other 1d basis"); 
+	      return m_InterpManager[bkey];
+	    }
             
             /** \brief determine if basis definition has exact integration for
             *  inner product
@@ -314,6 +321,7 @@ namespace Nektar
             PointsSharedPtr m_points;
             Array<OneD, NekDouble> m_bdata; /**< Basis definition */
             Array<OneD, NekDouble> m_dbdata; /**< Derivative Basis definition */
+	    NekManager<BasisKey, NekMatrix<NekDouble>, BasisKey::opLess> m_InterpManager;
 
         private:
 
@@ -323,6 +331,8 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal,"Default Constructor for Basis should not be called");
             }
+            
+	    boost::shared_ptr< NekMatrix<NekDouble> > CalculateInterpMatrix(const BasisKey &tbasis0);
 
             /** \brief Method used to generate appropriate basis and
              * their derivatives which are stored in \a m_bdata and \a

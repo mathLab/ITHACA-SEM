@@ -91,7 +91,7 @@ namespace Nektar
                         m_phys_offset[cnt]  = m_npoints; cnt++;
                         m_ncoeffs += bkey.GetNumModes();
                         m_npoints += bkey.GetNumPoints();
-                    }
+                     }
                     else
                     {
                         ASSERTL0(false,"dynamic cast to a SegGeom failed");
@@ -115,7 +115,7 @@ namespace Nektar
             // Could replace these with maps
             map<int, int> EdgeDone;
             map<int, int> NormalSet;
-            
+
             StdRegions::EdgeOrientation      orient;
             LocalRegions::GenSegExpSharedPtr Seg;
             SpatialDomains::ElementEdgeVectorSharedPtr con_elmt;
@@ -124,8 +124,9 @@ namespace Nektar
 
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries to be first 
+
             for(i = 0; i < bndCond.num_elements(); ++i)
-            {
+	      {
                 if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
                     for(j = 0; j < bndConstraint[i]->GetExpSize(); ++j)
@@ -138,12 +139,12 @@ namespace Nektar
                         EdgeDone[SegGeom->GetEid()] = elmtid;
                         
                         Seg->SetElmtId(elmtid++);
-                        (*m_exp).push_back(Seg);                        
+                        (*m_exp).push_back(Seg);
                     }
                 }
             }
-            
-            // loop over all other edges and fill out other connectivities
+
+            // loop over all other edges and fill out other connectivities	    
             for(i = 0; i < locexp.size(); ++i)
             {
                 for(j = 0; j < locexp[i]->GetNedges(); ++j)
@@ -151,27 +152,46 @@ namespace Nektar
                     const SpatialDomains::Geometry1DSharedPtr& SegGeom = (locexp[i]->GetGeom2D())->GetEdge(j);
                     
                     id = SegGeom->GetEid();
-                    
-                    if(EdgeDone.count(id) == 0)
-                    {
-                        
-                        LibUtilities::BasisKey EdgeBkey = locexp[i]->DetEdgeBasisKey(j);
-                        
-                        Seg = MemoryManager<LocalRegions::GenSegExp>::AllocateSharedPtr(EdgeBkey, SegGeom);
-                        
-                        EdgeDone[id] = elmtid;
 
+                    if(EdgeDone.count(id)==0)
+		      {
+			
+                        LibUtilities::BasisKey EdgeBkey = locexp[i]->DetEdgeBasisKey(j);
+			
+                        Seg = MemoryManager<LocalRegions::GenSegExp>::AllocateSharedPtr(EdgeBkey, SegGeom);
+
+                        EdgeDone[id] = elmtid;
+			
                         // set periodic edge 
                         if(periodicEdges.count(id) > 0)
-                        {
+			  {
                             EdgeDone[periodicEdges.find(id)->second] = elmtid;
-                        }
-
+			  }
+			
                         Seg->SetElmtId(elmtid++);
                         
                         (*m_exp).push_back(Seg);
-                    }
-
+		      }
+		    else // variable modes/points
+		      {
+			LibUtilities::BasisKey EdgeBkey = locexp[i]->DetEdgeBasisKey(j);
+			
+			if((*m_exp)[EdgeDone[id]]->GetNumPoints(0) >= EdgeBkey.GetNumPoints() && (*m_exp)[EdgeDone[id]]->GetBasisNumModes(0) >= EdgeBkey.GetNumModes())
+			  {
+			  }
+			else if((*m_exp)[EdgeDone[id]]->GetNumPoints(0) <= EdgeBkey.GetNumPoints() && (*m_exp)[EdgeDone[id]]->GetBasisNumModes(0) <= EdgeBkey.GetNumModes())
+			  {
+			    Seg = MemoryManager<LocalRegions::GenSegExp>::AllocateSharedPtr(EdgeBkey, SegGeom);
+			    Seg->SetElmtId(EdgeDone[id]);
+			    (*m_exp)[EdgeDone[id]] = Seg;
+			    NormalSet.erase(id);          
+			  }
+			else
+			  {
+			    ASSERTL0(false,"inappropriate number of points/modes (max num of points is not set with max order)")
+			  }
+		      }
+		    
                     if(NormalSet.count(id) == 0)
                     {
                         Seg = boost::dynamic_pointer_cast<LocalRegions::GenSegExp>((*m_exp)[EdgeDone.find(id)->second]);
@@ -183,7 +203,6 @@ namespace Nektar
                     }
                 }
             }
-
             ExpList::SetCoeffPhys();
         }
 
@@ -236,6 +255,7 @@ namespace Nektar
             for(i = 0; i < m_exp->size(); ++i)
             {
                 e_npoints = (*m_exp)[i]->GetNumPoints(0);
+		 
                 normals   = (*m_exp)[i]->GetPhysNormals();
                 
                 offset = m_phys_offset[i];
@@ -329,6 +349,10 @@ namespace Nektar
 
 /**
 * $Log: GenExpList1D.cpp,v $
+* Revision 1.13  2009/09/08 14:56:47  rcantao
+* - Fixed an extra class qualifier inside *.h
+* - Fixed missing parameter direction on Upwind methods
+*
 * Revision 1.12  2009/09/06 22:28:45  sherwin
 * Updates for Navier-Stokes solver
 *

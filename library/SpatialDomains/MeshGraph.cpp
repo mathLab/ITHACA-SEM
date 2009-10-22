@@ -109,7 +109,6 @@ namespace Nektar
 	  returnval->ReadGeometry(infilename);
 	  returnval->ReadExpansions(infilename);
 	}
-      
       return returnval;
     }
     
@@ -151,8 +150,9 @@ namespace Nektar
       
       // loop over all elements find the geometry shared ptr and
       // set up basiskey vector
-      for(cnt = i = 0; i < fielddef.size(); ++i)
+      for(i = 0; i < fielddef.size(); ++i)
 	{
+	  cnt = 0;
 	  std::vector<unsigned int> nmodes = fielddef[i]->m_NumModes;
 	  std::vector<LibUtilities::BasisType> basis = fielddef[i]->m_Basis;
 	  bool pointDef = fielddef[i]->m_PointsDef;
@@ -248,7 +248,6 @@ namespace Nektar
 			    const LibUtilities::PointsKey pkey2(npoints[cnt],LibUtilities::eGaussLobattoLegendre);
 			    pkey = pkey2;
 			  }
-		    
 			LibUtilities::BasisKey bkey(basis[0],nmodes[cnt],pkey);
 
 			bkeyvec.push_back(bkey);
@@ -269,7 +268,6 @@ namespace Nektar
 			    const LibUtilities::PointsKey pkey2(npoints[cnt+1],LibUtilities::eGaussRadauMAlpha1Beta0);
 			    pkey1 = pkey2;
 			  }
-		    
 			LibUtilities::BasisKey bkey1(basis[1],nmodes[cnt+1],pkey1);
 			bkeyvec.push_back(bkey1);
 		    
@@ -290,7 +288,6 @@ namespace Nektar
 			      }
 			  }
 			ASSERTL0(k != m_quadgeoms.size(),"Failed to find geometry with same global id");
-		    
 			for(int b = 0; b < 2; ++b)
 			  {
 			    LibUtilities::PointsKey pkey(nmodes[cnt+b]+1,LibUtilities::eGaussLobattoLegendre);
@@ -310,7 +307,6 @@ namespace Nektar
 				const LibUtilities::PointsKey pkey2(npoints[cnt+b],LibUtilities::eGaussLobattoLegendre);
 				pkey = pkey2;
 			      }
-
 			    LibUtilities::BasisKey bkey(basis[b],nmodes[cnt+b],pkey);
 			    bkeyvec.push_back(bkey);
 			  }
@@ -325,7 +321,7 @@ namespace Nektar
 		      ASSERTL0(false,"Need to set up for 3D Expansions");
 		      break;                        
 		    }
-	      
+
 		  m_ExpansionVector[id]->m_GeomShPtr = geom;
 		  m_ExpansionVector[id]->m_BasisKeyVector = bkeyvec;
 		}
@@ -343,6 +339,7 @@ namespace Nektar
     
     void MeshGraph::SetExpansions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef, std::vector< std::vector<LibUtilities::PointsType> > &pointstype)
     {
+
       int i,j,k,cnt,id;
       int num_elmts = 0;
       GeometrySharedPtr geom;
@@ -379,12 +376,13 @@ namespace Nektar
       
       // loop over all elements find the geometry shared ptr and
       // set up basiskey vector
-      for(cnt = i = 0; i < fielddef.size(); ++i)
+      for(i = 0; i < fielddef.size(); ++i)
 	{
+	  cnt = 0;
 	  std::vector<unsigned int> nmodes = fielddef[i]->m_NumModes;
 	  std::vector<LibUtilities::BasisType> basis = fielddef[i]->m_Basis;
 	  bool UniOrder =  fielddef[i]->m_UniOrder;
-          
+
 	  for(j = 0; j < fielddef[i]->m_ElementIDs.size(); ++j)
 	    {
 	      
@@ -404,7 +402,6 @@ namespace Nektar
 			  }
 		      }
 		    ASSERTL0(k != m_seggeoms.size(),"Failed to find geometry with same global id");
-                    
 		    const LibUtilities::PointsKey pkey(nmodes[cnt],pointstype[i][0]);
 		    LibUtilities::BasisKey bkey(basis[0],nmodes[cnt],pkey);
 		    if(!UniOrder)
@@ -467,7 +464,6 @@ namespace Nektar
 		  ASSERTL0(false,"Need to set up for 3D Expansions");
 		  break;                        
 		}
-	      
 	      m_ExpansionVector[id]->m_GeomShPtr = geom;
 	      m_ExpansionVector[id]->m_BasisKeyVector = bkeyvec;
 	    }
@@ -1427,7 +1423,8 @@ namespace Nektar
       unsigned int datasize = 0;             
             
       ASSERTL0(fielddefs->m_Basis.size() == numbasis, "Length of basis vector is incorrect");
-      if(fielddefs->m_UniOrder == true)
+
+       if(fielddefs->m_UniOrder == true)
 	{
 	  unsigned int cnt = 0; 
 	  // calculate datasize
@@ -1533,8 +1530,8 @@ namespace Nektar
 		  break;
 		}
 	    }
-	}
-            
+    }
+       
       return datasize;
     }
     
@@ -1543,13 +1540,13 @@ namespace Nektar
 			  std::vector<std::vector<double> >      &fielddata)
     {
       ASSERTL1(fielddefs.size() == fielddata.size(),"Length of fielddefs and fielddata incompatible");
-
-      cout << fielddefs.size() << " " << fielddata.size() << endl;
             
       TiXmlDocument doc;
       TiXmlDeclaration * decl = new TiXmlDeclaration( "1.0", "utf-8", "");  
       doc.LinkEndChild( decl );  
-	    
+	   
+      cout << "Writing outfile: " << outFile << endl;
+ 
       TiXmlElement * root = new TiXmlElement( "NEKTAR" );  
       doc.LinkEndChild( root ); 
             
@@ -1711,7 +1708,7 @@ namespace Nektar
       errstr << "Reason: " << doc.ErrorDesc() << std::endl;
       errstr << "Position: Line " << doc.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
       ASSERTL0(loadOkay, errstr.str().c_str());
-	
+ 
       ImportFieldDefs(doc, fielddefs, false);
       ImportFieldData(doc, fielddefs, fielddata);
     }
@@ -1862,6 +1859,7 @@ namespace Nektar
 		{
 		  UniOrder  = true;
 		}
+
 	      valid = ParseUtils::GenerateOrderedVector(numModesString.c_str()+9, numModes);
 	      ASSERTL0(valid, "Unable to correctly parse the number of modes.");
 
@@ -1878,12 +1876,12 @@ namespace Nektar
 	      std::vector<std::string> Fields;
 	      valid = ParseUtils::GenerateOrderedStringVector(fieldsString.c_str(), Fields);
 	      ASSERTL0(valid, "Unable to correctly parse the number of fields.");
-		
 	      SpatialDomains::FieldDefinitionsSharedPtr fielddef  = MemoryManager<SpatialDomains::FieldDefinitions>::AllocateSharedPtr(shape, elementIds, basis, UniOrder, numModes, Fields, points, pointDef, numPoints, numPointDef);
+
 	      int datasize = CheckFieldDefinition(fielddef);
 		
 	      fielddefs.push_back(fielddef);
-		
+
 	      element = element->NextSiblingElement("ELEMENTS");
 	    }
 	  loopXml = loopXml->NextSiblingElement(strLoop);
@@ -1972,15 +1970,15 @@ namespace Nektar
 		
 	      // Deserialize the array.
 	      double* readFieldData = (double*) elementDecompressedData.str().c_str();
+
 	      std::vector<double> elementFieldData(readFieldData, readFieldData + elementDecompressedData.str().length() * sizeof(*elementDecompressedData.str().c_str()) / sizeof(double));
 	      fielddata.push_back(elementFieldData);
 
 	      int datasize = CheckFieldDefinition(fielddefs[cntdumps]);
-	    
 	      ASSERTL0(fielddata[cntdumps].size() == datasize*fielddefs[cntdumps]->m_Fields.size(),"Input data is not the same length as header information");
-
+	      
 	      cntdumps++;
-
+	      
 	      element = element->NextSiblingElement("ELEMENTS");
 	    }
 	  master = master->NextSiblingElement("NEKTAR");
@@ -1995,6 +1993,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.37  2009/09/24 10:58:12  cbiotto
+// Updates for variable order expansions
+//
 // Revision 1.36  2009/09/06 21:56:42  sherwin
 // Updates for Navier-Stokes solver including restart details
 //

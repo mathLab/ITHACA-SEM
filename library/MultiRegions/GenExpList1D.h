@@ -56,7 +56,12 @@ namespace Nektar
             
             GenExpList1D(const SpatialDomains::CompositeVector &domain, SpatialDomains::MeshGraph2D &graph2D);
 
-            // constructor for trace space in connection with DisContField2D.cpp
+	    /**
+             * \brief Constructor for trace space in connection with DisContField2D.cpp 
+	     *
+	     * The maximum number of modes/points on each trace is set in order to avoid 
+	     * unconstrained modes
+             */ 
             GenExpList1D(const Array<OneD,const MultiRegions::ExpList1DSharedPtr> &bndConstraint,  
                          const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>  &bndCond, 
                          const StdRegions::StdExpansionVector &locexp, 
@@ -114,6 +119,10 @@ namespace Nektar
 
 /**
  * $Log: GenExpList1D.h,v $
+ * Revision 1.10  2009/09/08 14:56:47  rcantao
+ * - Fixed an extra class qualifier inside *.h
+ * - Fixed missing parameter direction on Upwind methods
+ *
  * Revision 1.9  2009/09/06 22:28:45  sherwin
  * Updates for Navier-Stokes solver
  *

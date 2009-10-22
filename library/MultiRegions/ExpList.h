@@ -142,7 +142,7 @@ namespace Nektar
              * \brief This function returns the vector of the number of
              * modes in the elemental basis order over all elements
              */
-            inline const Array<OneD,int> EvalBasisNumModesMaxVector(void) const
+            inline const Array<OneD,int> EvalBasisNumModesMaxPerExp(void) const
             {
                 int i;
                 Array<OneD,int> returnval((*m_exp).size(),0);
@@ -1313,6 +1313,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.69  2009/10/22 16:40:35  cbiotto
+* *** empty log message ***
+*
 * Revision 1.68  2009/09/06 22:28:45  sherwin
 * Updates for Navier-Stokes solver
 *

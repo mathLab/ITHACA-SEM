@@ -244,6 +244,52 @@ namespace Nektar
             return val;
         }
 
+        NekDouble StdExpansion::H1(const Array<OneD, const NekDouble>& sol)
+        {
+            int         i; 
+            NekDouble  val;
+            int     ntot = GetTotPoints();
+            int     coordim = v_GetCoordim();
+            Array<OneD, NekDouble> wsp(3*ntot);
+            Array<OneD, NekDouble> wsp_deriv = wsp + ntot;
+            Array<OneD, NekDouble> sum = wsp_deriv + ntot;
+
+            Vmath::Vsub(ntot, sol, 1, m_phys, 1, wsp, 1);
+            Vmath::Vmul(ntot, wsp, 1, wsp, 1, sum, 1);
+            for(i = 0; i < coordim; ++i)
+            {
+                v_PhysDeriv(i,wsp,wsp_deriv);
+                Vmath::Vvtvp(ntot,wsp_deriv,1,wsp_deriv,1,sum,1,sum,1);
+            }
+
+            val = sqrt(v_Integral(sum));
+
+            return val;
+        }
+
+        NekDouble StdExpansion::H1()
+        {
+            int i;
+            NekDouble  val;
+            int     ntot = GetTotPoints();
+            int     coordim = v_GetCoordim();
+            Array<OneD, NekDouble> wsp_deriv(2*ntot);
+            Array<OneD, NekDouble> sum = wsp_deriv + ntot;
+
+            Vmath::Vmul(ntot, m_phys, 1, m_phys, 1, sum, 1);
+
+            for(i = 0; i < coordim; ++i)
+            {
+                v_PhysDeriv(i,m_phys,wsp_deriv);
+                Vmath::Vvtvp(ntot,wsp_deriv,1,wsp_deriv,1,sum,1,sum,1);
+            }
+
+            val = sqrt(v_Integral(sum));
+
+            return val;
+        }
+
+
         DNekMatSharedPtr StdExpansion::CreateGeneralMatrix(const StdMatrixKey &mkey)
         {
             int     i;
@@ -757,6 +803,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.84  2009/07/09 21:43:29  sehunchun
+* Mass Matrix multiplicatin with variablecoefficient
+*
 * Revision 1.83  2009/07/02 13:27:51  sehunchun
 * Unnecessary error message for 2D restriction is deleted
 *

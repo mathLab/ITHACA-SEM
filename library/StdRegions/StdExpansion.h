@@ -1262,6 +1262,31 @@ namespace Nektar
              */
             NekDouble L2();
 
+            /** \brief Function to evaluate the discrete \f$ H^1\f$
+             *  error, \f$ | \epsilon |^1_{2} = \left [ \int^1_{-1} [u -
+             *  u_{exact}]^2 + \grad(u - u_{exact})\cdot\grad(u -
+             *  u_{exact})\cdot dx \right]^{1/2} d\xi_1 \f$ where \f$
+             *  u_{exact}\f$ is given by the array \a sol.
+             *
+             *    This function takes the physical value space array
+             *  \a m_phys as approximate solution
+             *
+             *  \param sol array of solution function  at physical quadrature
+             *  points
+             *  \return returns the \f$ H_1 \f$ error as a double. 
+             */
+            NekDouble H1(const Array<OneD, const NekDouble>& sol);
+
+            /** \brief Function to evaluate the discrete \f$ H^1\f$ norm of the
+             *  function defined at the physical points \a (this)->m_phys.
+             *
+             *    This function takes the physical value space array
+             *  \a m_phys as discrete function to be evaluated
+             *
+             *  \return returns the \f$ H^1 \f$ norm as a double
+             */
+            NekDouble H1();
+
             // I/O routines
             void WriteCoeffsToFile(std::ofstream &outfile);
 
@@ -1805,6 +1830,12 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.121  2009/09/22 21:23:48  bnelson
+ * Fixed windows compile error.
+ * Committed on the Free edition of March Hare Software CVSNT Server.
+ * Upgrade to CVS Suite for more features and support:
+ * http://march-hare.com/cvsnt/
+ *
  * Revision 1.120  2009/09/06 21:55:26  sherwin
  * Updates related to Navier Stokes Solver
  *

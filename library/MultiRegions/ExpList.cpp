@@ -935,7 +935,7 @@ namespace Nektar
             DNekMatSharedPtr Gmat;
             int bwidth = LocToGloBaseMap.GetBndSystemBandWidth();
 
-            if( (2*(bwidth+1)) < rows)
+            if((2*(bwidth+1)) < rows)
             {
                 MatrixStorage matStorage = ePOSITIVE_DEFINITE_SYMMETRIC_BANDED;
                 Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero,matStorage,bwidth,bwidth);
@@ -956,7 +956,6 @@ namespace Nektar
                 LocalRegions::MatrixKey Umatkey(linsystype, (*m_exp)[n]->DetExpansionType(),*((*m_exp)[n]), factor1,factor2);
                 DNekScalMat &BndSys = *((*m_exp)[n]->GetLocMatrix(Umatkey)); 
                 
-
                 loc_lda = BndSys.GetColumns();
                 
                 for(i = 0; i < loc_lda; ++i)
@@ -1307,6 +1306,25 @@ namespace Nektar
                 (*m_exp)[i]->SetPhys(phys+cnt);
                 errl2 = (*m_exp)[i]->L2(soln+cnt);
                 err += errl2*errl2;
+                cnt  += (*m_exp)[i]->GetTotPoints();
+            }
+            
+            return sqrt(err);
+        }
+
+        NekDouble ExpList::H1(const Array<OneD, const NekDouble> &soln)
+        {
+            
+            NekDouble err = 0.0,errh1;
+            int    i,cnt = 0;
+            Array<OneD, const NekDouble> phys = m_phys;
+            
+            for(i= 0; i < GetExpSize(); ++i)
+            {
+                // set up physical solution in local element
+                (*m_exp)[i]->SetPhys(phys+cnt);
+                errh1 =  (*m_exp)[i]->H1(soln+cnt);
+                err  += errh1*errh1;
                 cnt  += (*m_exp)[i]->GetTotPoints();
             }
             

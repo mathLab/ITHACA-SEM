@@ -609,6 +609,32 @@ namespace Nektar
             NekDouble L2 (const Array<OneD, const NekDouble> &soln);
 
             /**
+             * \brief This function calculates the \f$H^1\f$ error of
+             * the global spectral/hp element approximation.
+             *
+             * Given a spectral/hp approximation
+             * \f$u^{\delta}(\boldsymbol{x})\f$ evaluated at the
+             * quadrature points (which should be contained in
+             * #m_phys), this function calculates the \f$H^1_2\f$ error
+             * of this approximation with respect to an exact
+             * solution. The local distribution of the quadrature
+             * points allows an elemental evaluation of this operation
+             * through the functions StdRegions#StdExpansion#H1.
+             *
+             * The exact solution, also evaluated at the quadrature
+             * points, should be contained in the variable #m_phys of
+             * the ExpList object \a Sol.
+             *
+             * \param Sol An ExpList, containing the discrete
+             * evaluation of the exact solution at the quadrature
+             * points in its array #m_phys.
+             *
+             * \return The \f$H^1_2\f$ error of the approximation.
+             */
+            NekDouble H1 (const Array<OneD, const NekDouble> &soln);
+
+
+            /**
              * \brief This function returns the number of elements in
              * the expansion.
              *
@@ -1313,6 +1339,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.70  2009/10/22 16:46:15  cbiotto
+* Adding function EvalBasisNumModesMaxPerExp
+*
 * Revision 1.69  2009/10/22 16:40:35  cbiotto
 * *** empty log message ***
 *

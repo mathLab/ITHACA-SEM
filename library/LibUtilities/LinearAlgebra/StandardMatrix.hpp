@@ -43,6 +43,7 @@
 #include <LibUtilities/LinearAlgebra/NekMatrixMetadata.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixFuncs.h>
 #include <LibUtilities/BasicUtils/Vmath.hpp>
+#include <LibUtilities/BasicUtils/VmathArray.hpp>
 
 namespace Nektar
 {
@@ -1157,6 +1158,24 @@ namespace Nektar
                     return iterator(this, transpose, true);
                 }
             }
+
+        NekDouble AbsMaxtoMinEigenValueRatio(void)
+        {
+            NekDouble returnval; 
+            int nvals = this->GetColumns();
+            Array<OneD, NekDouble> EigValReal(nvals);
+            Array<OneD, NekDouble> EigValImag(nvals);
+
+            EigenSolve(EigValReal,EigValImag);
+
+            Vmath::Vmul(nvals,EigValReal,1,EigValReal,1,EigValReal,1);
+            Vmath::Vmul(nvals,EigValImag,1,EigValImag,1,EigValImag,1);
+            Vmath::Vadd(nvals,EigValReal,1,EigValImag,1,EigValReal,1);
+            
+            returnval = sqrt(Vmath::Vmax(nvals,EigValReal,1)/Vmath::Vmin(nvals,EigValReal,1));
+            
+            return returnval; 
+        }
 
         void EigenSolve(Array<OneD, NekDouble> &EigValReal, 
                         Array<OneD, NekDouble> &EigValImag, 

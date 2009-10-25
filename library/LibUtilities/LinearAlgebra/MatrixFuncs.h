@@ -136,12 +136,15 @@ namespace Nektar
                                Array<OneD, NekDouble> &EigVecs = NullNekDouble1DArray)
         {
             int lda = n,info = 0;
-            NekDouble dum, lwork = 3*lda;
+            NekDouble dum;
+            int lwork = 3*lda;
             Array<OneD,NekDouble> work(3*lda);
-            
-            if(EigVecs == NullNekDouble1DArray) // calculate Right Eigen Vectors
+            char uplo = 'N';
+
+            if(EigVecs != NullNekDouble1DArray) // calculate Right Eigen Vectors
             {
-                Lapack::Dgeev('N','V',lda, A.get(),lda,
+                char lrev = 'V';
+                Lapack::Dgeev(uplo,lrev,lda, A.get(),lda,
                               EigValReal.get(),
                               EigValImag.get(),
                               &dum,1,
@@ -150,7 +153,8 @@ namespace Nektar
             }
             else
             {
-                Lapack::Dgeev('N','N',lda, 
+                char lrev = 'N';
+                Lapack::Dgeev(uplo,lrev,lda, 
                               A.get(),lda,
                               EigValReal.get(),
                               EigValImag.get(),

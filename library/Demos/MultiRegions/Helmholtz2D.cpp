@@ -31,6 +31,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    cout << "Check" <<endl;
     //----------------------------------------------
     // Load the ELEMENTAL optimization parameters if they
     // have been given as argument
@@ -41,15 +42,20 @@ int main(int argc, char *argv[])
         NekOptimize::LoadElementalOptimizationParameters(eloptfile);
     }
     //----------------------------------------------
+    cout << "Check1" <<endl;
 
     //----------------------------------------------
     // Read in mesh from input file
     string meshfile(argv[1]);
     SpatialDomains::MeshGraph2D graph2D; 
 
+    cout << "Check2" <<endl;
     graph2D.ReadGeometry(meshfile);
+    cout << "Check3" <<endl;
     graph2D.ReadExpansions(meshfile);
     //----------------------------------------------
+
+    cout << "Read Geometry" <<endl;
 
     //----------------------------------------------
     // read the problem parameters from input file
@@ -57,6 +63,7 @@ int main(int argc, char *argv[])
     SpatialDomains::BoundaryConditions bcs(&graph2D); 
     bcs.Read(bcfile);
     //----------------------------------------------
+    cout << "Read boundary conditions" <<endl;
 
     //----------------------------------------------
     // Print summary of solution details
@@ -74,6 +81,7 @@ int main(int argc, char *argv[])
     Exp = MemoryManager<MultiRegions::ContField2D>::
         AllocateSharedPtr(graph2D,bcs);
     //----------------------------------------------
+    cout << "define expansion" <<endl;
 
     //----------------------------------------------
     // Load the global optimization parameters 
@@ -129,12 +137,14 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     Timing("Define forcing ..");
   
+    cout << "define forcing" <<endl;
     //----------------------------------------------
     // Helmholtz solution taking physical forcing 
     Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), lambda, true);
     //----------------------------------------------
     Timing("Helmholtz Solve ..");
 
+    cout << "Helmsolve" <<endl;
 #ifdef TIMING
     for(i = 0; i < 100; ++i)
     {
@@ -191,6 +201,7 @@ int main(int argc, char *argv[])
 
         cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
         cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
+        cout << "H 1 error:        " << Exp->H1  (Fce->GetPhys()) << endl;
         //--------------------------------------------        
     }
     //----------------------------------------------        

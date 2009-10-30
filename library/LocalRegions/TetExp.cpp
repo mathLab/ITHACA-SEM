@@ -704,6 +704,7 @@ namespace Nektar
 
             switch(mkey.GetMatrixType())
             {
+            case StdRegions::eLaplacian: 
             case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
 
                 // use Deformed case for both regular and deformed geometries 
@@ -808,6 +809,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.cpp,v $
+ *    Revision 1.20  2009/07/08 17:19:48  sehunchun
+ *    Deleting GetTanBasis
+ *
  *    Revision 1.19  2009/04/27 21:34:07  sherwin
  *    Updated WriteToField
  *

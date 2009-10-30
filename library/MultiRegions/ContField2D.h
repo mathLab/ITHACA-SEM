@@ -104,7 +104,8 @@ namespace Nektar
              */ 
             ContField2D(SpatialDomains::MeshGraph2D &graph2D,
                         SpatialDomains::BoundaryConditions &bcs, 
-                        const int bc_loc = 0);
+                        const int bc_loc = 0,
+                        const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond);
 
             /**
              * \brief 
@@ -117,7 +118,8 @@ namespace Nektar
             /**
              * \brief 
              */ 
-            ContField2D(SpatialDomains::MeshGraph2D &graph2D);
+            ContField2D(SpatialDomains::MeshGraph2D &graph2D,
+                        const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond);
           
             /**
              * \brief This constructor sets up global continuous field
@@ -148,7 +150,8 @@ namespace Nektar
              */ 
             ContField2D(SpatialDomains::MeshGraph2D &graph2D,
                         SpatialDomains::BoundaryConditions &bcs, 
-                        const std::string variable);
+                        const std::string variable,
+                        const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond);
             
             /**
              * \brief 
@@ -161,7 +164,8 @@ namespace Nektar
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0,
                         const LibUtilities::PointsType 
-                        TriNb = LibUtilities::SIZE_PointsType);
+                        TriNb = LibUtilities::SIZE_PointsType,
+                        const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond);
                       
             /**
              * \brief 
@@ -174,7 +178,8 @@ namespace Nektar
                         SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable,
                         const LibUtilities::PointsType 
-                        TriNb = LibUtilities::SIZE_PointsType);
+                        TriNb = LibUtilities::SIZE_PointsType,
+                        const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond);
           
             /**
              * \brief The copy constructor.

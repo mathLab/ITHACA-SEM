@@ -740,6 +740,7 @@ namespace Nektar
 
             switch(mkey.GetMatrixType())
             {
+            case StdRegions::eLaplacian: 
             case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
 
                 // use Deformed case for both regular and deformed geometries 
@@ -842,6 +843,9 @@ namespace Nektar
 
 /** 
  *    $Log: PrismExp.cpp,v $
+ *    Revision 1.19  2009/04/27 21:34:07  sherwin
+ *    Updated WriteToField
+ *
  *    Revision 1.18  2009/01/21 16:59:57  pvos
  *    Added additional geometric factors to improve efficiency
  *

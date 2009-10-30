@@ -1178,7 +1178,7 @@ namespace Nektar
              * provided by the key "mkey" and the mapping provided in
              * LocToGloBaseMap
              */      
-            boost::shared_ptr<GlobalLinSys> GenGlobalBndLinSys(const GlobalLinSysKey     &mkey, const LocalToGlobalBaseMap &LocToGloBaseMap);
+            boost::shared_ptr<GlobalLinSys> GenGlobalBndLinSys(const GlobalLinSysKey     &mkey, const LocalToGlobalBaseMapSharedPtr &LocToGloBaseMap);
 
 
             // functions associated with DisContField
@@ -1339,6 +1339,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.71  2009/10/25 18:54:38  sherwin
+* Added H1 norm for error evaluation
+*
 * Revision 1.70  2009/10/22 16:46:15  cbiotto
 * Adding function EvalBasisNumModesMaxPerExp
 *

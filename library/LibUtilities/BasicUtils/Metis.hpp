@@ -42,7 +42,10 @@ namespace Metis
     {
         // -- Sparse MAtrix Reordering (equivalent to onmetis)
         void   METIS_NodeND (int *nVerts, int *xadj, int *adjncy, int *numflag, int *options, 
-                  int *perm, int *iperm);       
+                             int *perm, int *iperm);  
+
+        void AS_METIS_NodeND(int *nVerts, int *xadj, int *adjncy, int *numflag, int *options, 
+                             int *perm, int *iperm, int *map, int *mdswitch) ;     
     }
 
 #ifdef NEKTAR_USING_METIS
@@ -50,6 +53,12 @@ namespace Metis
                   int *perm, int *iperm)
     {
         METIS_NodeND(nVerts,xadj,adjncy,numflag,options,perm,iperm);
+    }
+
+    static void as_onmetis(int *nVerts, int *xadj, int *adjncy, int *numflag, int *options, 
+                           int *perm, int *iperm, int *map, int *mdswitch)
+    {
+        AS_METIS_NodeND(nVerts,xadj,adjncy,numflag,options,perm,iperm,map,mdswitch) ;   
     }
 
     static void onmetis(int nVerts, Nektar::Array<OneD, int> xadj, Nektar::Array<OneD, int> adjncy, 
@@ -63,6 +72,20 @@ namespace Metis
         int options[8];
         options[0]=0;
         METIS_NodeND(&nVerts,&xadj[0],&adjncy[0],&numflag,options,&perm[0],&iperm[0]);
+    }
+
+    static void as_onmetis(int nVerts, Nektar::Array<OneD, int> xadj, Nektar::Array<OneD, int> adjncy, 
+                           Nektar::Array<OneD, int> perm,  Nektar::Array<OneD, int> iperm, Nektar::Array<OneD, int> map,
+                           int mdswitch)
+    {
+        ASSERTL1(xadj.num_elements() == nVerts+1,"Array xadj out of bounds");
+        ASSERTL1(perm.num_elements() == nVerts,"Array perm out of bounds");
+        ASSERTL1(iperm.num_elements() == nVerts,"Array iperm out of bounds");
+
+        int numflag = 0;
+        int options[8];
+        options[0]=0;
+        AS_METIS_NodeND(&nVerts,&xadj[0],&adjncy[0],&numflag,options,&perm[0],&iperm[0],&map[0],&mdswitch);
     }
    
 

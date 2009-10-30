@@ -722,7 +722,7 @@ namespace Nektar
                                                            Array<OneD,NekDouble> &outarray,
                                                            const StdMatrixKey &mkey)
         {
-            ASSERTL1(k1 >= 0 && k1 < ExpansionTypeDimMap[v_DetExpansionType()],"invalid first  argument");
+            // ASSERTL1(k1 >= 0 && k1 < ExpansionTypeDimMap[v_DetExpansionType()],"invalid first  argument");
             
             Array<OneD, NekDouble> tmp(GetTotPoints());
             v_BwdTrans(inarray,tmp);
@@ -803,6 +803,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.85  2009/10/25 18:53:39  sherwin
+* Added H1 norm definition
+*
 * Revision 1.84  2009/07/09 21:43:29  sehunchun
 * Mass Matrix multiplicatin with variablecoefficient
 *

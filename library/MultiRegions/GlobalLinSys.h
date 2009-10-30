@@ -43,19 +43,26 @@ namespace Nektar
     {
         class LocalToGlobalC0ContMap;
 	class ExpList;
+	class GlobalLinSys;
+
+        typedef boost::shared_ptr<GlobalLinSys> GlobalLinSysSharedPtr;
+        typedef map<GlobalLinSysKey,GlobalLinSysSharedPtr> GlobalLinSysMap;
+        typedef boost::shared_ptr<GlobalLinSysMap> GlobalLinSysMapShPtr; 
 
 	class GlobalLinSys
         {
         public:
-            GlobalLinSys(const GlobalLinSysKey &mkey, 
-                         const DNekLinSysSharedPtr linSys);
 
             GlobalLinSys(const GlobalLinSysKey &mkey, 
-                         const DNekLinSysSharedPtr linsys,
                          const DNekScalBlkMatSharedPtr SchurCompl,
                          const DNekScalBlkMatSharedPtr BinvD,
                          const DNekScalBlkMatSharedPtr invDC,
-                         const DNekScalBlkMatSharedPtr invD);
+                         const DNekScalBlkMatSharedPtr invD,
+                         const LocalToGlobalBaseMapSharedPtr &locToGloMap);
+
+            GlobalLinSys(const GlobalLinSysKey &mkey, 
+                         const DNekScalBlkMatSharedPtr Mat,
+                         const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
 
 
             const GlobalLinSysKey &GetKey(void) const
@@ -73,20 +80,35 @@ namespace Nektar
 
             void Solve(const Array<OneD, const NekDouble> &in, 
                              Array<OneD,       NekDouble> &out,
-                             LocalToGlobalC0ContMap &locToGloMap,
-                             ExpList* exp,
+                       const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                        const Array<OneD, const NekDouble> &dirForcing = NullNekDouble1DArray);
 
         private:
             GlobalLinSysKey                     m_linSysKey;
             DNekLinSysSharedPtr                 m_linSys;
             Array<OneD,DNekScalBlkMatSharedPtr> m_blkMatrices;
+
+            GlobalLinSysSharedPtr m_recursiveSchurCompl;
+
+
+
+
+            void SolveDirectFullMatrix(const Array<OneD, const NekDouble>    &in, 
+                                             Array<OneD,       NekDouble>    &out,
+                                       const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap,
+                                       const Array<OneD, const NekDouble>    &dirForcing = NullNekDouble1DArray);
+            void SolveDirectStaticCond(const Array<OneD, const NekDouble>   &in, 
+                                             Array<OneD,       NekDouble>   &out,
+                                       const LocalToGlobalBaseMapSharedPtr  &locToGloMap,
+                                       const Array<OneD, const NekDouble>   &dirForcing = NullNekDouble1DArray);
+            void AssembleSchurComplement(const LocalToGlobalBaseMapSharedPtr& locToGloMap);
+            void AssembleFullMatrix(const boost::shared_ptr<LocalToGlobalC0ContMap>& locToGloMap);
+            void ConstructCondensedBlockMatrices(const DNekScalBlkMatSharedPtr        schurComplOld,
+                                                 const LocalToGlobalBaseMapSharedPtr& locToGloMap);
+
+            void ConstructNextLevelCondensedSystem(const LocalToGlobalBaseMapSharedPtr& locToGloMap);
 	};
 
-        typedef boost::shared_ptr<GlobalLinSys> GlobalLinSysSharedPtr;
-
-        typedef map<GlobalLinSysKey,GlobalLinSysSharedPtr> GlobalLinSysMap;
-        typedef boost::shared_ptr<GlobalLinSysMap> GlobalLinSysMapShPtr; 
 
     } //end of namespace
 } //end of namespace

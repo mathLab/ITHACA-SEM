@@ -171,13 +171,6 @@ namespace Nektar
             eContinuous,  ///< Continuous Modal space array contains "true" expansion values
             eLocalCont,   ///< Both local and continuous space array contains "true" Expansion values 
         };
-        
-        enum GlobalSysSolnType
-        {
-            eNoSolnType,    ///< No Solution type specified
-            eDirectFullMatrix,
-            eDirectStaticCond,
-        };
 
         // Orientation of adjacent edge for use with boundary
         // constraints
@@ -187,12 +180,21 @@ namespace Nektar
             eAdjacentEdgeIsBackwards
         };
         
+        enum GlobalSysSolnType
+        {
+            eNoSolnType,    ///< No Solution type specified
+            eDirectFullMatrix,
+            eDirectStaticCond,
+            eDirectMultiLevelStaticCond
+        };
+        
         
         const char* const GlobalSysSolnTypeMap[] = 
             {
             "No Solution Type",
             "Direct Solve: Full Matrix",
-            "Direct Solve: Static Condensation"
+            "Direct Solve: Static Condensation",
+            "Direct Solve: Multi-Level Static Condensation"
         };
 
         

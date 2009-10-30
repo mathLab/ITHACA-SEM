@@ -55,13 +55,15 @@ namespace Nektar
             ~LocalToGlobalDGMap();
 
             LocalToGlobalDGMap( const SpatialDomains::MeshGraph1D &graph1D,
-                                const boost::shared_ptr<StdRegions::StdExpansionVector> &exp1D, 
+                                const boost::shared_ptr<StdRegions::StdExpansionVector> &exp1D,
+                                const GlobalSysSolnType solnType, 
                                 const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndConstraint,
                                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond);
             
             LocalToGlobalDGMap(SpatialDomains::MeshGraph2D &graph2D, 
                                const GenExpList1DSharedPtr &trace, 
-                               const boost::shared_ptr<StdRegions::StdExpansionVector> &exp2D, 
+                               const boost::shared_ptr<StdRegions::StdExpansionVector> &exp2D,
+                               const GlobalSysSolnType solnType, 
                                const Array<OneD, MultiRegions::ExpList1DSharedPtr> &bndContraint, 
                                const Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndCond,
                                const map<int,int> &periodicEdges);
@@ -96,8 +98,6 @@ namespace Nektar
             Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr> > m_elmtToTrace;  //< list of edge expansions for a given element 
             
             Array<OneD, AdjacentTraceOrientation > m_bndExpAdjacentOrient;
-
-            void CalculateBndSystemBandWidth(const StdRegions::StdExpansionVector &locExpVector);
         };
         
         typedef boost::shared_ptr<LocalToGlobalDGMap>  LocalToGlobalDGMapSharedPtr;
@@ -109,6 +109,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalDGMap.h,v $
+/** Revision 1.3  2009/04/02 13:06:42  sherwin
+/** Modified to take symmetric banded system for HDH solver
+/**
 /** Revision 1.2  2008/09/16 13:36:06  pvos
 /** Restructured the LocalToGlobalMap classes
 /**

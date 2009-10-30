@@ -799,6 +799,7 @@ namespace Nektar
 
             switch(mkey.GetMatrixType())
             {
+            case StdRegions::eLaplacian: 
             case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
 
                 // use Deformed case for both regular and deformed geometries 
@@ -901,6 +902,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.cpp,v $
+ *    Revision 1.25  2009/05/01 13:23:21  pvos
+ *    Fixed various bugs
+ *
  *    Revision 1.24  2009/04/27 21:34:07  sherwin
  *    Updated WriteToField
  *

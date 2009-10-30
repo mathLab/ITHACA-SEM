@@ -85,6 +85,7 @@ namespace Nektar
                           const SpatialDomains::MeshGraph2D &graph2D,
                           const LibUtilities::PointsType 
                           TriNb = LibUtilities::SIZE_PointsType,
+                          const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
                           const bool constructMap = true);
  
             /**
@@ -107,6 +108,7 @@ namespace Nektar
              * array should be constructed or not. 
              */  
             ContExpList2D(SpatialDomains::MeshGraph2D &graph2D,
+                          const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
                           const bool constructMap = true);
              
             /**
@@ -631,6 +633,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList2D.h,v $
+* Revision 1.19  2009/04/27 15:02:04  pvos
+* From h-to-p efficiently updates
+*
 * Revision 1.18  2009/03/04 14:17:38  pvos
 * Removed all methods that take and Expansion as argument
 *

@@ -64,6 +64,7 @@ namespace Nektar
 
         ContExpList1D::ContExpList1D(const LibUtilities::BasisKey &Ba,
                                      const SpatialDomains::MeshGraph1D &graph1D,
+                                     const GlobalSysSolnType solnType,
                                      const bool constructMap):
 	    ExpList1D(Ba,graph1D),
             m_locToGloMap(),
@@ -78,13 +79,15 @@ namespace Nektar
 	    // setup mapping array 
             if(constructMap)
             {
-                m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp);
+                m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::
+                    AllocateSharedPtr(m_ncoeffs,*m_exp,solnType);
                 m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
                 m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
             }
 	}
         
         ContExpList1D::ContExpList1D(SpatialDomains::MeshGraph1D &graph1D,
+                                     const GlobalSysSolnType solnType,
                                      const bool constructMap):
 	    ExpList1D(graph1D),
             m_locToGloMap(),
@@ -104,7 +107,8 @@ namespace Nektar
 	    // setup mapping array 
             if(constructMap)
             {
-                m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp);
+                m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::
+                    AllocateSharedPtr(m_ncoeffs,*m_exp,solnType);
                 m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
                 m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
             }
@@ -151,7 +155,9 @@ namespace Nektar
                                      bool  UseContCoeffs)
         {
             GlobalLinSysSharedPtr mass_matrix;
-            GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
+            GlobalLinSysKey key(StdRegions::eMass, 
+                                m_locToGloMap,
+                                m_locToGloMap->GetGlobalSysSolnType());
             GlobalLinSysMap::iterator matrixIter = m_globalLinSys->find(key);
             
             if(matrixIter == m_globalLinSys->end())
@@ -168,12 +174,12 @@ namespace Nektar
 
             if(UseContCoeffs)
             {                
-                mass_matrix->Solve(outarray,outarray,*m_locToGloMap,this);
+                mass_matrix->Solve(outarray,outarray,m_locToGloMap);
             }
             else
             {
                 Array<OneD, NekDouble> wsp(m_contNcoeffs);
-                mass_matrix->Solve(outarray,wsp,*m_locToGloMap,this);
+                mass_matrix->Solve(outarray,wsp,m_locToGloMap);
                 GlobalToLocal(wsp,outarray);
             }
 
@@ -200,6 +206,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.cpp,v $
+* Revision 1.39  2009/05/14 14:26:41  pvos
+* Updates to apply the dirichlet boundary condition forcing inside the static condensation algorithm
+*
 * Revision 1.38  2009/04/27 15:02:03  pvos
 * From h-to-p efficiently updates
 *

@@ -62,6 +62,7 @@ namespace Nektar
         DisContField2D::DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
                                        SpatialDomains::BoundaryConditions &bcs,
                                        const int bc_loc,
+                                       const GlobalSysSolnType solnType,
                                        bool SetUpJustDG):
             ExpList2D(graph2D),
             m_bndCondExpansions(),
@@ -79,16 +80,19 @@ namespace Nektar
                 GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),periodicVertices,periodicEdges);
                 
                 // Set up Trace space
-                m_trace = MemoryManager<GenExpList1D>::AllocateSharedPtr(m_bndCondExpansions, m_bndConditions,*m_exp,graph2D, periodicEdges);
+                m_trace = MemoryManager<GenExpList1D>::
+                    AllocateSharedPtr(m_bndCondExpansions, m_bndConditions,*m_exp,graph2D, periodicEdges);                
                 
-                
-                m_traceMap = MemoryManager<LocalToGlobalDGMap>::AllocateSharedPtr(graph2D,m_trace,m_exp,m_bndCondExpansions,m_bndConditions, periodicEdges);
+                m_traceMap = MemoryManager<LocalToGlobalDGMap>::
+                    AllocateSharedPtr(graph2D,m_trace,m_exp,solnType,
+                                      m_bndCondExpansions,m_bndConditions, periodicEdges);
             }
         }
 
         DisContField2D::DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
                                        SpatialDomains::BoundaryConditions &bcs,
                                        const std::string variable,
+                                       const GlobalSysSolnType solnType,
                                        bool SetUpJustDG):
 
             ExpList2D(graph2D),
@@ -108,9 +112,12 @@ namespace Nektar
                 GetPeriodicEdges(graph2D,bcs,variable,periodicVertices,periodicEdges);
                 
                 // Set up Trace space
-                m_trace = MemoryManager<GenExpList1D>::AllocateSharedPtr(m_bndCondExpansions,m_bndConditions,*m_exp,graph2D,periodicEdges);
+                m_trace = MemoryManager<GenExpList1D>::
+                    AllocateSharedPtr(m_bndCondExpansions,m_bndConditions,*m_exp,graph2D,periodicEdges);
                 
-                m_traceMap = MemoryManager<LocalToGlobalDGMap>::AllocateSharedPtr(graph2D,m_trace,m_exp,m_bndCondExpansions,m_bndConditions, periodicEdges);
+                m_traceMap = MemoryManager<LocalToGlobalDGMap>::
+                    AllocateSharedPtr(graph2D,m_trace,m_exp,solnType,
+                                      m_bndCondExpansions,m_bndConditions, periodicEdges);
             }
         }
         
@@ -160,12 +167,19 @@ namespace Nektar
 
         GlobalLinSysSharedPtr DisContField2D::GetGlobalBndLinSys(const GlobalLinSysKey &mkey) 
         {
+            ASSERTL0(mkey.GetMatrixType() == StdRegions::eHybridDGHelmBndLam,
+                     "Routine currently only tested for HybridDGHelmholtz");
+            ASSERTL1(mkey.GetGlobalSysSolnType()!=eDirectFullMatrix,
+                     "Full matrix global systems are not supported for HDG expansions");
+            ASSERTL1(mkey.GetGlobalSysSolnType()==m_traceMap->GetGlobalSysSolnType(),
+                     "The local to global map is not set up for the requested solution type");
+
             GlobalLinSysSharedPtr glo_matrix;
             GlobalLinSysMap::iterator matrixIter = m_globalBndMat->find(mkey);
 
             if(matrixIter == m_globalBndMat->end())
             {
-                glo_matrix = GenGlobalBndLinSys(mkey,*m_traceMap);
+                glo_matrix = GenGlobalBndLinSys(mkey,m_traceMap);
                 (*m_globalBndMat)[mkey] = glo_matrix;
             }
             else
@@ -209,6 +223,7 @@ namespace Nektar
             const DNekScalBlkMatSharedPtr &HDGLamToU = GetBlockMatrix(HDGLamToUKey);
 
             Array<OneD,NekDouble> BndSol = m_trace->UpdateCoeffs(); 
+            Array<OneD,NekDouble> BndRhs(GloBndDofs,0.0); 
             // Zero trace space
             Vmath::Zero(GloBndDofs,BndSol,1);
 
@@ -241,7 +256,7 @@ namespace Nektar
             // LocLambda = Transpose(*HDGLamToU)*F;
 
             // Assemble into global operator
-            m_traceMap->AssembleBnd(loc_lambda,BndSol);
+            m_traceMap->AssembleBnd(loc_lambda,BndRhs);
 
             
             cnt = 0;
@@ -261,64 +276,8 @@ namespace Nektar
                 for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                 {
                     id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
-                    BndSol[id] += m_bndCondExpansions[i]->GetCoeffs()[j];
+                    BndRhs[id] += m_bndCondExpansions[i]->GetCoeffs()[j];
                 }
-            }
-
-            // Dirichlet boundary forcing <\tilde{q}_lam,g>  (using Bmatsys)
-            Array<OneD, const int> LocToGloBndMap = m_traceMap->GetLocalToGlobalBndMap();
-            Array<OneD, const NekDouble> LocToGloBndSign = m_traceMap->GetLocalToGlobalBndSign();
-            for(cnt = e = 0; e < nexp; ++e)
-            {
-                nbndry = (*m_exp)[e]->NumDGBndryCoeffs();
-                // check to see if element has Dirichlet boundary
-                // Probably could use a quicker check here
-                if(Vmath::Vmin(nbndry,&LocToGloBndMap[cnt],1) < NumDirichlet)
-                {
-                    // Get BndSys Matrix - Could get rid of searching here 
-                    LocalRegions::MatrixKey Bmatkey(StdRegions::eHybridDGHelmBndLam,
-                                                    (*m_exp)[e]->DetExpansionType(),
-                                                    *((*m_exp)[e]), lambda, tau);
-                    DNekScalMat &BndSys = *((*m_exp)[e]->GetLocMatrix(Bmatkey));
-                    Array<OneD, NekDouble> vout(nbndry,0.0);
-
-                    // Set up Edge Dirichlet Values
-                    for(cnt1 = i = 0; i < (*m_exp)[e]->GetNedges(); ++i)
-                    {
-                        e_ncoeffs = (*m_exp)[e]->GetEdgeNcoeffs(i); 
-
-                        id = LocToGloBndMap[cnt+cnt1];
-                        if(id < NumDirichlet)
-                        {
-                            for(j = 0; j < e_ncoeffs; ++j)
-                            {
-                                id        = LocToGloBndMap[cnt+cnt1];
-                                sign      = LocToGloBndSign[cnt+cnt1];
-                                Vmath::Svtvp(nbndry,sign*BndSol[id],
-                                             BndSys.GetRawPtr()+cnt1*nbndry,1,
-                                             &vout[0],1,&vout[0],1);
-                                cnt1++;
-                            } 
-                        }
-                        else
-                        {
-                            cnt1 += e_ncoeffs;
-                        }
-                    }
-                    
-                    // Subtract vout from forcing terms 
-                    for(i = 0; i < nbndry; ++i)
-                    {
-                        id   = LocToGloBndMap [cnt+i];
-                        sign = LocToGloBndSign[cnt+i];
-
-                        if(id >= NumDirichlet)
-                        {
-                            BndSol[id] -= sign*vout[i];
-                        }
-                    }
-                }
-                cnt += nbndry;
             }
 
             //----------------------------------
@@ -327,13 +286,10 @@ namespace Nektar
             if(GloBndDofs - NumDirichlet > 0)
             {
                 GlobalLinSysKey       key(StdRegions::eHybridDGHelmBndLam, 
-                                          m_traceMap,
-                                          lambda,tau,eDirectFullMatrix);
+                                          m_traceMap,lambda,tau,
+                                          m_traceMap->GetGlobalSysSolnType());
                 GlobalLinSysSharedPtr LinSys = GetGlobalBndLinSys(key);
-                
-                Array<OneD,NekDouble> sln = BndSol+NumDirichlet;
-                
-                LinSys->Solve(sln,sln);
+                LinSys->Solve(BndRhs,BndSol,m_traceMap);
             }
             
             //----------------------------------

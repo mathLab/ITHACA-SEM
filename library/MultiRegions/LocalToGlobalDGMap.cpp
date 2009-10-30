@@ -57,6 +57,7 @@ namespace Nektar
 
         LocalToGlobalDGMap::LocalToGlobalDGMap( const SpatialDomains::MeshGraph1D &graph1D,
                                                 const boost::shared_ptr<StdRegions::StdExpansionVector> &exp1D,
+                                                const GlobalSysSolnType solnType,
                                                 const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp,
                                                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond)
         {
@@ -69,15 +70,24 @@ namespace Nektar
             LocalRegions::SegExpSharedPtr locSegExp;
             
             m_numGlobalBndCoeffs  = exp1D->size()+1;
-
+            m_numGlobalCoeffs = m_numGlobalBndCoeffs;
             m_numLocalBndCoeffs = 2*exp1D->size();
+            m_numLocalCoeffs = m_numLocalBndCoeffs;
             m_localToGlobalBndMap   = Array<OneD, int>(m_numLocalBndCoeffs,-1);
             m_localToGlobalBndSign  = Array<OneD, NekDouble>(m_numLocalBndCoeffs,1.0);
-
             m_signChange = true;
+            m_solnType = solnType;
+            m_staticCondLevel = 0;
+            m_numPatches = exp1D->size();
+            m_numLocalBndCoeffsPerPatch =  Array<OneD, unsigned int>(m_numPatches);
+            m_numLocalIntCoeffsPerPatch =  Array<OneD, unsigned int>(m_numPatches);
+            for(i = 0; i < m_numPatches; ++i) 
+            {
+                m_numLocalBndCoeffsPerPatch[i] = (unsigned int) (*exp1D)[i]->NumDGBndryCoeffs();
+                m_numLocalIntCoeffsPerPatch[i] = (unsigned int) 0;
+            }
 
-            map<int, int> MeshVertToLocalVert;
-            
+            map<int, int> MeshVertToLocalVert;            
             // Order the Dirichlet vertices first.
             gid = 0;
             for(i = 0; i < nbnd; i++)
@@ -137,12 +147,14 @@ namespace Nektar
                 }
             }
 
-            CalculateBndSystemBandWidth(*exp1D);
+            m_numGlobalDirBndCoeffs = m_numLocalDirBndCoeffs;
+            CalculateBndSystemBandWidth();
         }
 
         LocalToGlobalDGMap::LocalToGlobalDGMap(SpatialDomains::MeshGraph2D &graph2D, 
                                                const GenExpList1DSharedPtr &trace, 
-                                               const boost::shared_ptr<StdRegions::StdExpansionVector> &exp2D, 
+                                               const boost::shared_ptr<StdRegions::StdExpansionVector> &exp2D,
+                                               const GlobalSysSolnType solnType, 
                                                const Array<OneD, MultiRegions::ExpList1DSharedPtr> &bndCondExp,
                                                const Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndCond, 
                                                const map<int,int> &periodicEdges)
@@ -314,112 +326,136 @@ namespace Nektar
             }
             
             // Set up integer mapping array and sign change for each
-            // degree of freedom
-
+            // degree of freedom + initialise some more data members
+            m_solnType = solnType;
+            m_staticCondLevel = 0;
+            m_numPatches = nel;
+            m_numLocalBndCoeffsPerPatch =  Array<OneD, unsigned int>(nel);
+            m_numLocalIntCoeffsPerPatch =  Array<OneD, unsigned int>(nel);
             int nbndry = 0;
             for(i = 0; i < nel; ++i) // count number of elements in array
             {
                 nbndry += (*exp2D)[i]->NumDGBndryCoeffs();
+                m_numLocalBndCoeffsPerPatch[i] = (unsigned int) (*exp2D)[i]->NumDGBndryCoeffs();
+                m_numLocalIntCoeffsPerPatch[i] = (unsigned int) 0;
             }
 
+            m_numGlobalDirBndCoeffs = m_numLocalDirBndCoeffs;
             m_numLocalBndCoeffs = nbndry;
+            m_numLocalCoeffs = nbndry;
             m_localToGlobalBndMap  = Array<OneD, int > (nbndry);
             m_localToGlobalBndSign = Array<OneD, NekDouble > (nbndry,1);
 
             // Set up array for potential mesh optimsation
-
             Array<OneD,int> TraceElmtGid(ntrace_exp,-1);
             int nDir = 0;
             cnt = 0;
 
-            if(true) // Bandwidth optimisation
+            // We are now going to construct a graph of the mesh
+            // which can be reordered depending on the type of solver we would
+            // like to use.
+            typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
+            typedef boost::graph_traits<BoostGraph>::vertex_descriptor BoostVertex;
+
+            BoostGraph boostGraphObj;
+            int trace_id,trace_id1;
+            
+            // make trace edge renumbering map where first solved
+            // edge starts at 0 so we can set up graph.
+            for(i = 0; i < ntrace_exp; ++i)
             {
-                // the first template parameter (=OutEdgeList) is
-                // chosen to be of type std::set as in the set up of
-                // the adjacency, a similar edge might be created
-                // multiple times.  And to prevent the definition of
-                // parallell edges, we use std::set (=boost::setS)
-                // rather than std::vector (=boost::vecS)
-
-                typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
-                typedef boost::graph_traits<BoostGraph>::vertex_descriptor BoostVertex;
-
-                BoostGraph boostGraphObj;
-                int trace_id,trace_id1;
-
-                // make trace edge renumbering map where first solved
-                // edge starts at 0 so we can set up graph.
-                for(i = 0; i < ntrace_exp; ++i)
+                if(trace->GetCoeff_Offset(i) >= m_numLocalDirBndCoeffs)
                 {
-                    if(trace->GetCoeff_Offset(i) >= m_numLocalDirBndCoeffs)
-                    {
-                        // Initial put in element ordering (starting
-                        // from zero) into TraceElmtGid
-                        TraceElmtGid[i] = cnt++;             
-                    }
-                    else
-                    {
-                        // Use existing offset for Dirichlet edges
-                        TraceElmtGid[i] = trace->GetCoeff_Offset(i);
-                        nDir++;
-                    }
+                    // Initial put in element ordering (starting
+                    // from zero) into TraceElmtGid
+                    TraceElmtGid[i] = cnt++;             
                 }
-                
-                // Set up boost Graph
-                for(i = 0; i < nel; ++i)
+                else
                 {
-                    nbndry += (*exp2D)[i]->NumDGBndryCoeffs();
+                    // Use existing offset for Dirichlet edges
+                    TraceElmtGid[i] = trace->GetCoeff_Offset(i);
+                    nDir++;
+                }
+            }
+            
+            // Set up boost Graph
+            for(i = 0; i < nel; ++i)
+            {
+                nbndry += (*exp2D)[i]->NumDGBndryCoeffs();
+                
+                for(j = 0; j < (*exp2D)[i]->GetNedges(); ++j)
+                {   
+                    locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(m_elmtToTrace[i][j]);
+                    SegGeom = locSegExp->GetGeom1D();
                     
-                    for(j = 0; j < (*exp2D)[i]->GetNedges(); ++j)
-                    {   
-                        locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(m_elmtToTrace[i][j]);
-                        SegGeom = locSegExp->GetGeom1D();
-                        
-                        // Add edge to boost graph for non-Dirichlet Boundary 
-                        id  = SegGeom->GetEid();
-                        trace_id = MeshEdgeId.find(id)->second;
-                        if(trace->GetCoeff_Offset(trace_id) >= m_numLocalDirBndCoeffs) 
-                        {
-                            for(k = j+1; k < (*exp2D)[i]->GetNedges(); ++k)
-                            {   
-                                locSegExp1 = boost::dynamic_pointer_cast<LocalRegions::SegExp>(m_elmtToTrace[i][k]);
-                                SegGeom = locSegExp1->GetGeom1D();
-                                
-                                id1  = SegGeom->GetEid();
-                                trace_id1 = MeshEdgeId.find(id1)->second;
-                                if(trace->GetCoeff_Offset(trace_id1)
-                                   >= m_numLocalDirBndCoeffs)
-                                {
-                                    boost::add_edge( (size_t) TraceElmtGid[trace_id], (size_t) TraceElmtGid[trace_id1], boostGraphObj);                       
-                                }
+                    // Add edge to boost graph for non-Dirichlet Boundary 
+                    id  = SegGeom->GetEid();
+                    trace_id = MeshEdgeId.find(id)->second;
+                    if(trace->GetCoeff_Offset(trace_id) >= m_numLocalDirBndCoeffs) 
+                    {
+                        for(k = j+1; k < (*exp2D)[i]->GetNedges(); ++k)
+                        {   
+                            locSegExp1 = boost::dynamic_pointer_cast<LocalRegions::SegExp>(m_elmtToTrace[i][k]);
+                            SegGeom = locSegExp1->GetGeom1D();
+                            
+                            id1  = SegGeom->GetEid();
+                            trace_id1 = MeshEdgeId.find(id1)->second;
+                            if(trace->GetCoeff_Offset(trace_id1)
+                               >= m_numLocalDirBndCoeffs)
+                            {
+                                boost::add_edge( (size_t) TraceElmtGid[trace_id], (size_t) TraceElmtGid[trace_id1], boostGraphObj);                       
                             }
                         }
                     }
                 }
-                    
-                // Call boost::cuthill_mckee_ordering to reorder the
-                // graph-vertices using the reverse Cuthill-Mckee
-                // algorithm
-                vector<BoostVertex> inv_perm(ntrace_exp-nDir);
-                boost::cuthill_mckee_ordering(boostGraphObj, inv_perm.rbegin());
-
-                // Recast the inverse permutation so that it can be
-                // used as a map Form old trace edge ID to new trace
-                // edge ID
-                cnt = m_numLocalDirBndCoeffs;
-                for(i = 0; i < ntrace_exp-nDir; ++i)
-                {
-                    TraceElmtGid[inv_perm[i]+nDir]=cnt;
-                    cnt += trace->GetExp(inv_perm[i]+nDir)->GetNcoeffs();
-                }              
             }
-            else // Basic numbering scheme. 
+            
+            
+            int nGraphVerts = ntrace_exp-nDir;
+            Array<OneD, int> perm(nGraphVerts);
+            Array<OneD, int> iperm(nGraphVerts);
+            BottomUpSubStructuredGraphSharedPtr bottomUpGraph;
+            Array<OneD, int> vwgts(nGraphVerts);
+            for(i = 0; i < nGraphVerts; ++i)
             {
-                for(i = 0; i < ntrace_exp; ++i)
-                {
-                    TraceElmtGid[i] = trace->GetCoeff_Offset(i);
-                }
+                vwgts[i] = trace->GetExp(i+nDir)->GetNcoeffs();   
             }
+
+            if(nGraphVerts)
+            {
+                switch(solnType)
+                {
+                case eDirectFullMatrix:
+                    {
+                        NoReordering(boostGraphObj,perm,iperm);
+                    }
+                    break;
+                case eDirectStaticCond:
+                    {
+                        CuthillMckeeReordering(boostGraphObj,perm,iperm);
+                    }
+                    break;
+                case eDirectMultiLevelStaticCond: 
+                    {
+                        MultiLevelBisectionReordering(boostGraphObj,vwgts,perm,iperm,bottomUpGraph);
+                    }
+                    break;
+                default:
+                    {
+                        ASSERTL0(false,"Unrecognised solution type");
+                    }
+                }  
+            }
+ 
+            // Recast the permutation so that it can be
+            // used as a map Form old trace edge ID to new trace
+            // edge ID
+            cnt = m_numLocalDirBndCoeffs;
+            for(i = 0; i < ntrace_exp-nDir; ++i)
+            {
+                TraceElmtGid[perm[i]+nDir]=cnt;
+                cnt += trace->GetExp(perm[i]+nDir)->GetNcoeffs();
+            }  
 
             // Now have trace edges Gid position
             nbndry = cnt = 0;
@@ -515,62 +551,18 @@ namespace Nektar
             }
 
             m_numGlobalBndCoeffs = trace->GetNcoeffs();
+            m_numGlobalCoeffs = m_numGlobalBndCoeffs;
 
-            CalculateBndSystemBandWidth(*exp2D);
+            CalculateBndSystemBandWidth();
 
-            //cout << "bwidth: " << m_bndSystemBandWidth << endl;
-        }
-
-        // ----------------------------------------------------------------
-        // Calculation of the bandwith ---- The bandwidth here
-        // calculated corresponds to what is referred to as
-        // half-bandwidth.  If the elements of the matrix are
-        // designated as a_ij, it corresponds to the maximum value of
-        // |i-j| for non-zero a_ij.  As a result, the value also
-        // corresponds to the number of sub or superdiagonals.
-        //
-        // The bandwith can be calculated elementally as it
-        // corresponds to the maximal elemental bandwith (i.e. the
-        // maximal difference in global DOF index for every element)
-        //
-        // 2 different bandwiths can be calculated: - the bandwith of
-        // the full global system - the bandwith of the global
-        // boundary system (as used for static condensation)
-        void LocalToGlobalDGMap::CalculateBndSystemBandWidth(const StdRegions::StdExpansionVector &locExpVector)
-        {
-            int i,j;
-            int cnt = 0;
-            int locSize;
-            int maxId;
-            int minId;
-            int bwidth = -1;
-
-            for(i = 0; i < locExpVector.size(); ++i)
+            if( (solnType == eDirectMultiLevelStaticCond) && nGraphVerts )
             {
-                locSize = locExpVector[i]->NumDGBndryCoeffs();
-                maxId = -1;
-                minId = m_numLocalBndCoeffs+1;
-                for(j = 0; j < locSize; j++)
+                if(m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
                 {
-                    if(m_localToGlobalBndMap[cnt+j] >= m_numLocalDirBndCoeffs)
-                    {
-                        if(m_localToGlobalBndMap[cnt+j] > maxId)
-                        {
-                            maxId = m_localToGlobalBndMap[cnt+j];
-                        }
-                        
-                        if(m_localToGlobalBndMap[cnt+j] < minId)
-                        {
-                            minId = m_localToGlobalBndMap[cnt+j];
-                        }
-                    }
+                    m_nextLevelLocalToGlobalMap = MemoryManager<LocalToGlobalBaseMap>::
+                        AllocateSharedPtr(this,bottomUpGraph);
                 }
-                bwidth = (bwidth>(maxId-minId))?bwidth:(maxId-minId);
-
-                cnt+=locSize;
             }
-
-            m_bndSystemBandWidth = bwidth;
         }
         
     }

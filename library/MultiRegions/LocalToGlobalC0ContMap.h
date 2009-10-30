@@ -49,6 +49,8 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+
+
         const static map<int,int> NullIntIntMap;
         const static vector<map<int,int> > NullVecIntIntMap;
         
@@ -59,18 +61,21 @@ namespace Nektar
             LocalToGlobalC0ContMap(); 
             
             LocalToGlobalC0ContMap(const int numLocalCoeffs, 
-                                   const StdRegions::StdExpansionVector &locExpVector);
+                                   const StdRegions::StdExpansionVector &locExpVector,
+                                   const GlobalSysSolnType solnType);
 
             // Constructor for the 1D expansion mappings
             LocalToGlobalC0ContMap(const int numLocalCoeffs, 
-                                   const StdRegions::StdExpansionVector &locExpVector, 
+                                   const StdRegions::StdExpansionVector &locExpVector,
+                                   const GlobalSysSolnType solnType, 
                                    const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp,
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                    const map<int,int>& periodicVerticesId);
 
             // Constructor for the 2D expansion mappings
             LocalToGlobalC0ContMap(const int numLocalCoeffs, 
-                                   const StdRegions::StdExpansionVector &locExpVector, 
+                                   const StdRegions::StdExpansionVector &locExpVector,
+                                   const GlobalSysSolnType solnType, 
                                    const Array<OneD, const ExpList1DSharedPtr> &bndCondExp,
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                    const vector<map<int,int> >& periodicVerticesId,
@@ -78,7 +83,8 @@ namespace Nektar
 
             // Constructor for the 3D expansion mappings
             LocalToGlobalC0ContMap(const int numLocalCoeffs, 
-                                   const StdRegions::StdExpansionVector &locExpVector, 
+                                   const StdRegions::StdExpansionVector &locExpVector,
+                                   const GlobalSysSolnType solnType, 
                                    const Array<OneD, const ExpList2DSharedPtr> &bndCondExp,
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                    const map<int,int>& periodicVerticesId,
@@ -108,16 +114,6 @@ namespace Nektar
                     return 1.0;
                 }
             }
-
-            inline int GetNumLocalCoeffs() const
-            {
-                return m_numLocalCoeffs;
-            }
-
-            inline int GetNumGlobalCoeffs() const
-            {
-                return m_numGlobalCoeffs;
-            }
             
             inline const void LocalToGlobal(const Array<OneD, const NekDouble>& loc, 
                                       Array<OneD, NekDouble>& global) const
@@ -130,6 +126,12 @@ namespace Nektar
                 {                
                     Vmath::Scatr(m_numLocalCoeffs, loc.get(), m_localToGlobalMap.get(), global.get());
                 }
+            }
+
+            inline const void LocalToGlobal(const NekVector<const NekDouble>& loc, 
+                                                  NekVector<      NekDouble>& global) const
+            {
+                LocalToGlobal(loc.GetPtr(),global.GetPtr());
             }
             
             inline const void GlobalToLocal(const Array<OneD, const NekDouble>& global, 
@@ -145,6 +147,12 @@ namespace Nektar
                 }
             }
             
+            inline const void GlobalToLocal(const NekVector<const NekDouble>& global, 
+                                                  NekVector<      NekDouble>& loc) const
+            {
+                GlobalToLocal(global.GetPtr(),loc.GetPtr());
+            }
+
             inline const void Assemble(const Array<OneD, const NekDouble> &loc, 
                                  Array<OneD, NekDouble> &global) const
             {
@@ -162,14 +170,18 @@ namespace Nektar
                 }
             } 
 
+            inline const void Assemble(const NekVector<const NekDouble>& loc, 
+                                             NekVector<      NekDouble>& global) const
+            {
+                Assemble(loc.GetPtr(),global.GetPtr());
+            }
+
             inline int GetFullSystemBandWidth() const
             {
                 return m_fullSystemBandWidth;
             }
-            
+
         protected:
-            int m_numLocalCoeffs;      //< number of local coefficients
-            int m_numGlobalCoeffs;     // Total number of global coefficients
             Array<OneD,int> m_localToGlobalMap;  //< integer map of local coeffs to global space 
             Array<OneD,NekDouble> m_localToGlobalSign; //< integer sign of local coeffs to global space 
 
@@ -177,7 +189,8 @@ namespace Nektar
  
         private:
             void SetUp1DExpansionC0ContMap(const int numLocalCoeffs, 
-                                           const StdRegions::StdExpansionVector &locExpVector, 
+                                           const StdRegions::StdExpansionVector &locExpVector,
+                                           const GlobalSysSolnType solnType, 
                                            const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp = 
                                                LocalRegions::NullPointExpSharedPtrArray,
                                            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions = 
@@ -185,7 +198,8 @@ namespace Nektar
                                            const map<int,int>& periodicVerticesId = NullIntIntMap);
             
             void SetUp2DExpansionC0ContMap(const int numLocalCoeffs, 
-                                           const StdRegions::StdExpansionVector &locExpVector, 
+                                           const StdRegions::StdExpansionVector &locExpVector,
+                                           const GlobalSysSolnType solnType, 
                                            const Array<OneD, const MultiRegions::ExpList1DSharedPtr> &bndCondExp = 
                                                NullExpList1DSharedPtrArray,
                                            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions = 
@@ -194,7 +208,8 @@ namespace Nektar
                                            const map<int,int>& periodicEdgesId = NullIntIntMap);
 
             void SetUp3DExpansionC0ContMap(const int numLocalCoeffs, 
-                                           const StdRegions::StdExpansionVector &locExpVector, 
+                                           const StdRegions::StdExpansionVector &locExpVector,
+                                           const GlobalSysSolnType solnType, 
                                            const Array<OneD, const ExpList2DSharedPtr> &bndCondExp = 
                                                NullExpList2DSharedPtrArray,
                                            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions = 
@@ -203,10 +218,7 @@ namespace Nektar
                                            const map<int,int>& periodicEdgesId = NullIntIntMap,
                                            const map<int,int>& periodicFacesId = NullIntIntMap);
 
-            void CalculateBndSystemBandWidth(const StdRegions::StdExpansionVector &locExpVector);
-
-
-            void CalculateFullSystemBandWidth(const StdRegions::StdExpansionVector &locExpVector);
+            void CalculateFullSystemBandWidth();
         };
         typedef boost::shared_ptr<LocalToGlobalC0ContMap>  LocalToGlobalC0ContMapSharedPtr;
         
@@ -217,6 +229,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalC0ContMap.h,v $
+* Revision 1.8  2009/05/10 23:17:12  sherwin
+* Updated mainly to handle doubly periodic meshes which required modification to vertex handling from a numbering perspective
+*
 * Revision 1.7  2009/04/02 13:06:42  sherwin
 * Modified to take symmetric banded system for HDH solver
 *

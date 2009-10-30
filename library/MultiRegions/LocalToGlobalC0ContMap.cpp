@@ -46,30 +46,30 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(void):
-            m_numLocalCoeffs(0),
-            m_numGlobalCoeffs(0)
+        LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(void)
         {
         }
 
+
         LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(const int numLocalCoeffs, 
-                                                       const StdRegions::StdExpansionVector &locExpVector)
+                                                       const StdRegions::StdExpansionVector &locExpVector,
+                                                       const GlobalSysSolnType solnType)
         {
             switch(locExpVector[0]->GetShapeDimension())
             {
             case 1:
                 {
-                    SetUp1DExpansionC0ContMap(numLocalCoeffs, locExpVector);
+                    SetUp1DExpansionC0ContMap(numLocalCoeffs, locExpVector, solnType);
                 }
                 break;
             case 2:
                 {
-                    SetUp2DExpansionC0ContMap(numLocalCoeffs, locExpVector);
+                    SetUp2DExpansionC0ContMap(numLocalCoeffs, locExpVector, solnType);
                 }
                 break;
             case 3:
                 {
-                    SetUp3DExpansionC0ContMap(numLocalCoeffs, locExpVector);
+                    SetUp3DExpansionC0ContMap(numLocalCoeffs, locExpVector, solnType);
                 }
                 break;
             default:
@@ -78,48 +78,68 @@ namespace Nektar
                 }
             }
 
-            CalculateBndSystemBandWidth(locExpVector);
-            CalculateFullSystemBandWidth(locExpVector);
-
-            //cout << "bwidth: " << m_bndSystemBandWidth << endl;
+            CalculateBndSystemBandWidth();
+            CalculateFullSystemBandWidth();
         }
 
         LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(const int numLocalCoeffs, 
-                                                       const StdRegions::StdExpansionVector &locExpVector, 
+                                                       const StdRegions::StdExpansionVector &locExpVector,
+                                                       const GlobalSysSolnType solnType, 
                                                        const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp,
                                                        const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                                        const map<int,int>& periodicVerticesId)
         {
-            SetUp1DExpansionC0ContMap(numLocalCoeffs, locExpVector, bndCondExp, bndConditions, periodicVerticesId);
-            CalculateBndSystemBandWidth(locExpVector);
-            CalculateFullSystemBandWidth(locExpVector);
-            //cout << "bwidth: " << m_bndSystemBandWidth << endl;
+            SetUp1DExpansionC0ContMap(numLocalCoeffs, 
+                                      locExpVector, 
+                                      solnType, 
+                                      bndCondExp, 
+                                      bndConditions, 
+                                      periodicVerticesId);
+
+            CalculateBndSystemBandWidth();
+            CalculateFullSystemBandWidth();
         }
 
         LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(const int numLocalCoeffs, 
-                                                       const StdRegions::StdExpansionVector &locExpVector, 
+                                                       const StdRegions::StdExpansionVector &locExpVector,
+                                                       const GlobalSysSolnType solnType, 
                                                        const Array<OneD, const ExpList1DSharedPtr> &bndCondExp,
                                                        const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                                        const vector<map<int,int> >& periodicVerticesId,
                                                        const map<int,int>& periodicEdgesId)
         {
-            SetUp2DExpansionC0ContMap(numLocalCoeffs, locExpVector, bndCondExp, bndConditions, periodicVerticesId, periodicEdgesId);
-            CalculateBndSystemBandWidth(locExpVector);
-            CalculateFullSystemBandWidth(locExpVector);
-            //cout << "bwidth: " << m_bndSystemBandWidth << endl;
+            SetUp2DExpansionC0ContMap(numLocalCoeffs, 
+                                      locExpVector, 
+                                      solnType, 
+                                      bndCondExp, 
+                                      bndConditions, 
+                                      periodicVerticesId, 
+                                      periodicEdgesId);
+
+            CalculateBndSystemBandWidth();
+            CalculateFullSystemBandWidth();
         }
 
         LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(const int numLocalCoeffs, 
-                                                       const StdRegions::StdExpansionVector &locExpVector, 
+                                                       const StdRegions::StdExpansionVector &locExpVector,
+                                                       const GlobalSysSolnType solnType, 
                                                        const Array<OneD, const ExpList2DSharedPtr> &bndCondExp,
                                                        const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                                        const map<int,int>& periodicVerticesId,
                                                        const map<int,int>& periodicEdgesId,
                                                        const map<int,int>& periodicFacesId)
         {
-            SetUp3DExpansionC0ContMap(numLocalCoeffs, locExpVector, bndCondExp, bndConditions, periodicVerticesId, periodicEdgesId, periodicFacesId);
-            CalculateBndSystemBandWidth(locExpVector);
-            CalculateFullSystemBandWidth(locExpVector);
+            SetUp3DExpansionC0ContMap(numLocalCoeffs, 
+                                      locExpVector, 
+                                      solnType, 
+                                      bndCondExp, 
+                                      bndConditions, 
+                                      periodicVerticesId, 
+                                      periodicEdgesId, 
+                                      periodicFacesId);
+
+            CalculateBndSystemBandWidth();
+            CalculateFullSystemBandWidth();
         }
         
         LocalToGlobalC0ContMap::~LocalToGlobalC0ContMap(void)
@@ -127,7 +147,8 @@ namespace Nektar
         }
             
         void LocalToGlobalC0ContMap::SetUp1DExpansionC0ContMap(const int numLocalCoeffs, 
-                                                               const StdRegions::StdExpansionVector &locExpVector, 
+                                                               const StdRegions::StdExpansionVector &locExpVector,
+                                                               const GlobalSysSolnType solnType, 
                                                                const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp,
                                                                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                                                const map<int,int>& periodicVerticesId)
@@ -142,13 +163,23 @@ namespace Nektar
             LocalRegions::SegExpSharedPtr locSegExp;
 
             int nbnd = bndCondExp.num_elements();
-            
+
+            m_staticCondLevel                = 0; 
+            m_solnType                       = solnType;
             m_signChange                     = false;
+            m_numPatches                     = locExpVector.size();
             m_numLocalCoeffs                 = numLocalCoeffs;        
             m_numLocalBndCoeffs              = 2*locExpVector.size();
             m_localToGlobalMap               = Array<OneD, int>(m_numLocalCoeffs,-1);
             m_localToGlobalBndMap            = Array<OneD, int>(m_numLocalBndCoeffs,-1);
             m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD, int>(nbnd);   
+            m_numLocalBndCoeffsPerPatch      = Array<OneD, unsigned int>(m_numPatches);
+            m_numLocalIntCoeffsPerPatch      = Array<OneD, unsigned int>(m_numPatches);
+            for(i = 0; i < m_numPatches; ++i)
+            { 
+                m_numLocalBndCoeffsPerPatch[i] = (unsigned int) locExpVector[i]->NumBndryCoeffs();
+                m_numLocalIntCoeffsPerPatch[i] = (unsigned int) locExpVector[i]->GetNcoeffs() - locExpVector[i]->NumBndryCoeffs();
+            }
 
             // The only unique identifiers of the vertices of the mesh are the
             // vertex id (stored in their corresponding Geometry object).
@@ -253,7 +284,8 @@ namespace Nektar
         }
 
         void LocalToGlobalC0ContMap::SetUp2DExpansionC0ContMap(const int numLocalCoeffs, 
-                                                               const StdRegions::StdExpansionVector &locExpVector, 
+                                                               const StdRegions::StdExpansionVector &locExpVector,
+                                                               const GlobalSysSolnType solnType, 
                                                                const Array<OneD, const MultiRegions::ExpList1DSharedPtr> &bndCondExp,
                                                                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                                                const vector<map<int,int> >& periodicVerticesId,
@@ -279,7 +311,6 @@ namespace Nektar
             Array<OneD, int>                    edgeInteriorSign;  
 
             m_signChange = false;
-
             // The only unique identifiers of the vertices and edges
             // of the mesh are the vertex id and the mesh id (stored
             // in their corresponding Geometry object).  However,
@@ -339,647 +370,297 @@ namespace Nektar
             m_numLocalDirBndCoeffs = nLocDirBndCondDofs;
             firstNonDirGraphVertId = graphVertId;
 
-            // STEP 2: Now order all other vertices and edges in the graph
-#ifdef NEKTAR_USING_METIS
-            // Possibility 1: Use METIS to obtain a gloabl matrix ordering which leads 
-            // to minimimal fill in of the factorised matrix (by Cholesky decomposition)
-            {      
-                int tempGraphVertId = 0;
-                int adjncySize = 0;
-                int nVerts;
-                int vertCnt;
-                int edgeCnt;
-                map<int, int>          vertTempGraphVertId;
-                map<int, int>          edgeTempGraphVertId;
-                map<int, set<int> >    graphAdjncySet;  
-                set<int>::iterator     setIt;
-                Array<OneD, int>       localVerts;
-                Array<OneD, int>       localEdges;               
+            // STEP 2: Now order all other vertices and edges in the graph       
+            // We will use a boost graph object to store this graph
 
-                m_numLocalBndCoeffs = 0;
-                // First we are going to set up a temporary ordering
-                // of the mesh vertices and edges in the graph. We
-                // will then later use METIS to optimise this ordering
-
-                // List the periodic vertices and edges next.  This
-                // allows us to give corresponding DOF's the same
-                // global ID a) periodic vertices
-
-                for(k = 0; k < PeriodicVerticesId.size(); ++k)
+            // the first template parameter (=OutEdgeList) is
+            // chosen to be of type std::set as in the set up of
+            // the adjacency, a similar edge might be created
+            // multiple times.  And to prevent the definition of
+            // parallell edges, we use std::set (=boost::setS)
+            // rather than std::vector (=boost::vecS)
+            typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
+            typedef boost::graph_traits<BoostGraph>::vertex_descriptor BoostVertex;
+            BoostGraph boostGraphObj;
+            
+            int tempGraphVertId = 0;
+            int nVerts;
+            int vertCnt;
+            int edgeCnt;
+            map<int, int>          vertTempGraphVertId;
+            map<int, int>          edgeTempGraphVertId;
+            map<int, int>          vwgts_map;
+            Array<OneD, int>       localVerts;
+            Array<OneD, int>       localEdges; 
+                    
+            m_numLocalBndCoeffs = 0;
+            // First we are going to set up a temporary ordering
+            // of the mesh vertices and edges in the graph. We
+            // will then later use boost::cuthill_mckee_ordering
+            // (reverse Cuthill-McKee algorithm) to minimize the
+            // bandwidth.
+            //
+            // List the (non-dirichlet) vertices and edges of the
+            // mesh as the vertices of the temporary graph.  Also
+            // define the adjancency between the different
+            // vertices of the graph.
+                    
+            // List the periodic vertices and edges next.  This
+            // allows to give corresponding DOF's the same global
+            // ID a) periodic vertices
+            for(k = 0; k < periodicVerticesId.size(); ++k)
+            {
+                for(mapConstIt = periodicVerticesId[k].begin(); mapConstIt != periodicVerticesId[k].end(); mapConstIt++)
                 {
-                    for(mapConstIt = periodicVerticesId[k].begin(); 
-                        mapConstIt != periodicVerticesId[k].end();
-                        mapConstIt++)
+                    meshVertId  = mapConstIt->first;
+                    meshVertId2 = mapConstIt->second;
+                            
+                            
+                    // Not entirely sure why we need to have
+                    // vertReorderedGraphVertId and
+                    // vertTempGraphVertId
+                    if(vertReorderedGraphVertId.count(meshVertId) == 0) 
                     {
-                        meshVertId  = mapConstIt->first;
-                        meshVertId2 = mapConstIt->second;
-
-                        if(vertReorderedGraphVertId.count(meshVertId) == 0)        
+                                
+                        if(vertReorderedGraphVertId.count(meshVertId2) == 0)
                         {
-                            if(vertReorderedGraphVertId.count(meshVertId2) == 0)        
+                                    
+                            if(vertTempGraphVertId.count(meshVertId) == 0)
                             {
                                 vertTempGraphVertId[meshVertId]  = tempGraphVertId;
-                                vertTempGraphVertId[meshVertId2] = tempGraphVertId++;
-                            }
-                            else
-                            {
-                                vertReorderedGraphVertId[meshVertId] = vertReorderedGraphVertId[meshVertId2];
-                            }
-                        }
-                        else
-                        {
-                            if(vertReorderedGraphVertId.count(meshVertId2) == 0)        
-                            {
-                                vertReorderedGraphVertId[meshVertId2] = vertReorderedGraphVertId[meshVertId];
-                            }
-                            else // Doubly periodic vertex case. 
-                            {
-                                int id1 = vertTempGraphVertId[meshVertId];
-                                int id2 = vertTempGraphVertId[meshVertId2];
-                                int id;
-                                
-                                if(id1 != id2)
+                                if(vertTempGraphVertId.count(meshVertId2) == 0)
                                 {
-                                    // Reset any values set to id2 to id1. In
-                                    // addition if local id is greater than
-                                    // id2 decrement list
-                                    for(i = 0; i < vertTempGraphVertId.size(); ++i)
-                                    {
-                                        id = vertTempGraphVertId[i];
-                                        if(id == id2)
-                                        {
-                                            vertTempGraphVertId[i] = id1;
-                                        }
-                                        else if (id > id2)
-                                        {
-                                            vertTempGraphVertId[i] = id-1;
-                                        }
-                                    }
-                                    tempGraphVertId--;
-                                }
-                            }
-                        }
-                    }
-                }
-                    
-                // b) periodic edges
-                for(mapConstIt = periodicEdgesId.begin(); mapConstIt != periodicEdgesId.end(); mapConstIt++)
-                {
-                    meshEdgeId  = mapConstIt->first;
-                    meshEdgeId2 = mapConstIt->second;
-                    
-                    if(meshEdgeId < meshEdgeId2)
-                    {
-                        ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId) == 0,
-                                 "This periodic boundary edge has been specified before");
-                        ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId2) == 0,
-                                 "This periodic boundary edge has been specified before");
-                        
-                        edgeTempGraphVertId[meshEdgeId]  = tempGraphVertId;
-                        edgeTempGraphVertId[meshEdgeId2] = tempGraphVertId++;
-                    }
-                }
-
-                // List all other vertices and edges
-                for(i = 0; i < locExpVector.size(); ++i)
-                { 
-                    if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[i]))
-                    {
-                        m_numLocalBndCoeffs += locExpansion->NumBndryCoeffs();
-                        
-                        nVerts = locExpansion->GetNverts();
-                        // For element i, store the temporary graph vertex id's of all element
-                        // edges and verices in these 2 arrays below
-                        localVerts = Array<OneD, int>(nVerts,-1);
-                        localEdges = Array<OneD, int>(nVerts,-1);
-                        vertCnt = 0;
-                        edgeCnt = 0;
-                        
-                        // List the (non-dirichlet) vertices and edges
-                        // of the mesh as the vertices of the
-                        // temporary graph
-                        //
-                        // At the same time, we can already start
-                        // setting ip the adjacency information of the
-                        // graph.  This is required as input of the
-                        // METIS routines. This adjacency information
-                        // should list all adjacent graph-vertices for
-                        // all the separate graph-vertices
-                        for(j = 0; j < nVerts; ++j) 
-                        {   
-                            meshVertId = (locExpansion->GetGeom2D())->GetVid(j);
-                            if(vertReorderedGraphVertId.count(meshVertId) == 0)        
-                            {                                
-                                if(vertTempGraphVertId.count(meshVertId) == 0)
-                                {
-                                    vertTempGraphVertId[meshVertId] = tempGraphVertId++;
-                                }
-                                localVerts[vertCnt++] = vertTempGraphVertId[meshVertId];
-                            }                             
-                            
-                            meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
-                            if(edgeReorderedGraphVertId.count(meshEdgeId) == 0)        
-                            {                            
-                                if(edgeTempGraphVertId.count(meshEdgeId) == 0)
-                                {
-                                    edgeTempGraphVertId[meshEdgeId] = tempGraphVertId++;
-                                }
-                                localEdges[edgeCnt++] = edgeTempGraphVertId[meshEdgeId];
-                            }  
-                        }
-
-                        // Now loop over all local edges and vertices
-                        // of this element and define that all other
-                        // edges and verices of this element are
-                        // adjacent to them.  To do so, we use an STL
-                        // map where the key is the unique temporary
-                        // graph-vertex id and the mapped values is an
-                        // STL set which contains the temporary
-                        // graph-vertex id's of all adajacent graph
-                        // vertices. By looping over all elements in
-                        // the mesh and everytime appending the
-                        // adjacent grapgh vertices, we will make sure
-                        // that all the adjacency information will be
-                        // complete.
-                        for(j = 0; j < nVerts; j++)
-                        {
-                            if(localVerts[j]==-1)
-                            {
-                                break;
-                            }
-                            for(k = 0; k < nVerts; k++)
-                            {
-                                if(localVerts[k]==-1)
-                                {
-                                    break;
-                                }
-                                if(k!=j)
-                                {
-                                    graphAdjncySet[ localVerts[j] ].insert(localVerts[k]);
-                                }
-                            }
-                            for(k = 0; k < nVerts; k++)
-                            {     
-                                if(localEdges[k]==-1)
-                                {
-                                    break;
-                                }                       
-                                graphAdjncySet[ localVerts[j] ].insert(localEdges[k]);                            
-                            }
-                        }
-                        for(j = 0; j < nVerts; j++)
-                        {
-                            if(localEdges[j]==-1)
-                            {
-                                break;
-                            }
-                            for(k = 0; k < nVerts; k++)
-                            {
-                                if(localEdges[k]==-1)
-                                {
-                                    break;
-                                }
-                                if(k!=j)
-                                {
-                                    graphAdjncySet[ localEdges[j] ].insert(localEdges[k]);
-                                }
-                            }
-                            for(k = 0; k < nVerts; k++)
-                            {                            
-                                if(localVerts[k]==-1)
-                                {
-                                    break;
-                                }
-                                graphAdjncySet[ localEdges[j] ].insert(localVerts[k]);                            
-                            }
-                        }                        
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a local 2D expansion failed");
-                    }
-                }
-                
-                for( i = 0; i < tempGraphVertId; i++ )
-                {
-                    adjncySize += graphAdjncySet[i].size();
-                }
-
-                // Now, translate this adjacency information to a
-                // format to the format that METIS understands.
-                cnt = 0;
-                Array<OneD, int> xadj(tempGraphVertId+1);
-                Array<OneD, int> adjncy(adjncySize);
-                xadj[0]=0;
-
-                for( i = 0; i < tempGraphVertId; i++ )
-                {
-                    xadj[i+1] = xadj[i] + graphAdjncySet[i].size();
-                    for(setIt=(graphAdjncySet[i]).begin(); setIt!=(graphAdjncySet[i]).end(); setIt++)
-                    {
-                        adjncy[cnt++] = *setIt;
-                    }
-                }
-
-                // Call METIS to reorder the graph-vertices
-                Array<OneD,int> perm(tempGraphVertId);
-                Array<OneD,int> iperm(tempGraphVertId);
-
-                Metis::onmetis(tempGraphVertId,xadj,adjncy,perm,iperm);
-
-                // Fill the vertReorderedGraphVertId and
-                // edgeReorderedGraphVertId with the optimal ordering
-                // from METIS
-                for(mapIt = vertTempGraphVertId.begin(); mapIt != vertTempGraphVertId.end(); mapIt++)
-                {
-                    vertReorderedGraphVertId[mapIt->first] = iperm[mapIt->second] + graphVertId; 
-                }
-                for(mapIt = edgeTempGraphVertId.begin(); mapIt != edgeTempGraphVertId.end(); mapIt++)
-                {
-                    edgeReorderedGraphVertId[mapIt->first] = iperm[mapIt->second] + graphVertId; 
-                }            
-            } 
-#else //NEKTAR_USING_METIS
-            // Possibility 2: Minimize the bandwith using a reversed
-            // Cuthill-McKee algorithm (as provided by the Boost Graph
-            // Library)
-            if(true)
-            {
-                // the first template parameter (=OutEdgeList) is
-                // chosen to be of type std::set as in the set up of
-                // the adjacency, a similar edge might be created
-                // multiple times.  And to prevent the definition of
-                // parallell edges, we use std::set (=boost::setS)
-                // rather than std::vector (=boost::vecS)
-                typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
-                typedef boost::graph_traits<BoostGraph>::vertex_descriptor BoostVertex;
-                BoostGraph boostGraphObj;
-
-                int tempGraphVertId = 0;
-                int nVerts;
-                int vertCnt;
-                int edgeCnt;
-                map<int, int>          vertTempGraphVertId;
-                map<int, int>          edgeTempGraphVertId;
-                Array<OneD, int>       localVerts;
-                Array<OneD, int>       localEdges; 
- 
-                m_numLocalBndCoeffs = 0;
-                // First we are going to set up a temporary ordering
-                // of the mesh vertices and edges in the graph. We
-                // will then later use boost::cuthill_mckee_ordering
-                // (reverse Cuthill-McKee algorithm) to minimize the
-                // bandwidth.
-                //
-                // List the (non-dirichlet) vertices and edges of the
-                // mesh as the vertices of the temporary graph.  Also
-                // define the adjancency between the different
-                // vertices of the graph.
-
-                // List the periodic vertices and edges next.  This
-                // allows to give corresponding DOF's the same global
-                // ID a) periodic vertices
-                for(k = 0; k < periodicVerticesId.size(); ++k)
-                {
-                    for(mapConstIt = periodicVerticesId[k].begin(); mapConstIt != periodicVerticesId[k].end(); mapConstIt++)
-                    {
-                        meshVertId  = mapConstIt->first;
-                        meshVertId2 = mapConstIt->second;
-                        
-
-                        // Not entirely sure why we need to have
-                        // vertReorderedGraphVertId and
-                        // vertTempGraphVertId
-                        if(vertReorderedGraphVertId.count(meshVertId) == 0) 
-                        {
-
-                            if(vertReorderedGraphVertId.count(meshVertId2) == 0)
-                            {
-                                
-                                if(vertTempGraphVertId.count(meshVertId) == 0)
-                                {
-                                    vertTempGraphVertId[meshVertId]  = tempGraphVertId;
-                                    if(vertTempGraphVertId.count(meshVertId2) == 0)
-                                    {
-                                        vertTempGraphVertId[meshVertId2] = tempGraphVertId++;
-                                    }
-                                    else
-                                    {
-                                        ASSERTL0(false,"Unexplained Periodicity connectivity");
-                                    }
+                                    vertTempGraphVertId[meshVertId2] = tempGraphVertId++;
                                 }
                                 else
                                 {
-                                    if(vertTempGraphVertId.count(meshVertId2) == 0)
+                                    ASSERTL0(false,"Unexplained Periodicity connectivity");
+                                }
+                            }
+                            else
+                            {
+                                if(vertTempGraphVertId.count(meshVertId2) == 0)
+                                {
+                                    ASSERTL0(false,"Unexplained Periodicity connectivity");
+                                }
+                                else // Doubly periodic region
+                                {
+                                    int id1 = vertTempGraphVertId[meshVertId];
+                                    int id2 = vertTempGraphVertId[meshVertId2];
+                                    int id;
+                                            
+                                    if(id1 != id2)
                                     {
-                                        ASSERTL0(false,"Unexplained Periodicity connectivity");
-                                    }
-                                    else // Doubly periodic region
-                                    {
-                                        int id1 = vertTempGraphVertId[meshVertId];
-                                        int id2 = vertTempGraphVertId[meshVertId2];
-                                        int id;
-                                
-                                        if(id1 != id2)
+                                        // Reset any values set to
+                                        // id2 to id1. In addition
+                                        // if local id is greater
+                                        // than id2 decrement list
+                                        for(mapIt = vertTempGraphVertId.begin(); 
+                                            mapIt != vertTempGraphVertId.end(); mapIt++)
                                         {
-                                            // Reset any values set to
-                                            // id2 to id1. In addition
-                                            // if local id is greater
-                                            // than id2 decrement list
-                                            for(mapIt = vertTempGraphVertId.begin(); 
-                                                mapIt != vertTempGraphVertId.end(); mapIt++)
+                                            id = mapIt->second;
+                                            if(id == id2)
                                             {
-                                                id = mapIt->second;
-                                                if(id == id2)
-                                                {
-                                                    vertTempGraphVertId[mapIt->first] = id1;
-                                                }
-                                                else if (id > id2)
-                                                {
-                                                    vertTempGraphVertId[mapIt->first] = id-1;
-                                                }
+                                                vertTempGraphVertId[mapIt->first] = id1;
                                             }
-                                            tempGraphVertId--;
+                                            else if (id > id2)
+                                            {
+                                                vertTempGraphVertId[mapIt->first] = id-1;
+                                            }
                                         }
-                                    }            
-                                    
-
-                                }
-                                
-                            }
-                            else
-                            {
-                                vertReorderedGraphVertId[meshVertId] = vertReorderedGraphVertId[meshVertId2];
-                            }
-                        }
-                        else
-                        {
-                            if(vertReorderedGraphVertId.count(meshVertId2) == 0)
-                            {
-                                vertReorderedGraphVertId[meshVertId2] = vertReorderedGraphVertId[meshVertId];
-                            }
-                        }
-                    }
-                }
-
-                // b) periodic edges
-                for(mapConstIt = periodicEdgesId.begin(); mapConstIt != periodicEdgesId.end(); mapConstIt++)
-                {
-                    meshEdgeId  = mapConstIt->first;
-                    meshEdgeId2 = mapConstIt->second;
-
-                    if(meshEdgeId < meshEdgeId2)
-                    {
-                        ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId) == 0,
-                                 "This periodic boundary edge has been specified before");
-                        ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId2) == 0,
-                                 "This periodic boundary edge has been specified before");
-                    
-                        edgeTempGraphVertId[meshEdgeId]  = tempGraphVertId;
-                        edgeTempGraphVertId[meshEdgeId2] = tempGraphVertId++;
-                    }
-                }
-
-                // List all other vertices and edges
-                for(i = 0; i < locExpVector.size(); ++i)
-                { 
-                    if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[i]))
-                    {
-                        m_numLocalBndCoeffs += locExpansion->NumBndryCoeffs();
-
-                        nVerts = locExpansion->GetNverts();
-                        // For element i, store the temporary graph
-                        // vertex id's of all element edges and
-                        // verices in these 2 arrays below
-                        localVerts = Array<OneD, int>(nVerts,-1);
-                        localEdges = Array<OneD, int>(nVerts,-1);
-                        vertCnt = 0;
-                        edgeCnt = 0;
-                        
-                        for(j = 0; j < nVerts; ++j) 
-                        {   
-                            meshVertId = (locExpansion->GetGeom2D())->GetVid(j);
-                            if(vertReorderedGraphVertId.count(meshVertId) == 0)        
-                            {                                
-                                if(vertTempGraphVertId.count(meshVertId) == 0)
-                                {
-                                    vertTempGraphVertId[meshVertId] = tempGraphVertId++;
-                                }
-                                localVerts[vertCnt++] = vertTempGraphVertId[meshVertId];
-                            }                             
-                            
-                            meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
-                            if(edgeReorderedGraphVertId.count(meshEdgeId) == 0)        
-                            {                            
-                                if(edgeTempGraphVertId.count(meshEdgeId) == 0)
-                                {
-                                    edgeTempGraphVertId[meshEdgeId] = tempGraphVertId++;
-                                }
-                                localEdges[edgeCnt++] = edgeTempGraphVertId[meshEdgeId];
-                            }  
-                        }
-
-                        // Now loop over all local edges and vertices
-                        // of this element and define that all other
-                        // edges and verices of this element are
-                        // adjacent to them.
-                        for(j = 0; j < nVerts; j++)
-                        {
-                            if(localVerts[j]==-1)
-                            {
-                                break;
-                            }
-                            for(k = 0; k < nVerts; k++)
-                            {
-                                if(localVerts[k]==-1)
-                                {
-                                    break;
-                                }
-                                if(k!=j)
-                                {
-                                    boost::add_edge( (size_t) localVerts[j], (size_t) localVerts[k],boostGraphObj);
-                                }
-                            }
-                            for(k = 0; k < nVerts; k++)
-                            {     
-                                if(localEdges[k]==-1)
-                                {
-                                    break;
-                                }    
-                                boost::add_edge( (size_t) localVerts[j], (size_t) localEdges[k],boostGraphObj);                       
-                            }
-                        }
-                        for(j = 0; j < nVerts; j++)
-                        {
-                            if(localEdges[j]==-1)
-                            {
-                                break;
-                            }
-                            for(k = 0; k < nVerts; k++)
-                            {
-                                if(localEdges[k]==-1)
-                                {
-                                    break;
-                                }
-                                if(k!=j)
-                                {
-                                    boost::add_edge( (size_t) localEdges[j], (size_t) localEdges[k],boostGraphObj);   
-                                }
-                            }
-                            for(k = 0; k < nVerts; k++)
-                            {                            
-                                if(localVerts[k]==-1)
-                                {
-                                    break;
-                                }
-                                boost::add_edge( (size_t) localEdges[j], (size_t) localVerts[k],boostGraphObj);                       
-                            }
-                        }
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a local 2D expansion failed");
-                    }
-                }
-
-                // Call boost::cuthill_mckee_ordering to reorder the graph-vertices
-                // using the reverse Cuthill-Mckee algorithm
-                vector<BoostVertex> inv_perm(tempGraphVertId);
-                boost::cuthill_mckee_ordering(boostGraphObj, inv_perm.rbegin());
-
-                // Recast the inverse permutation such that it can be used as a map
-                // from old vertex ID to new vertex ID
-                Array<OneD, int> iperm(tempGraphVertId);
-                for(i = 0; i < tempGraphVertId; i++)
-                {
-                    iperm[inv_perm[i]]=i;
-                }              
-
-                // Fill the vertReorderedGraphVertId and edgeReorderedGraphVertId with the optimal ordering from boost
-                for(mapIt = vertTempGraphVertId.begin(); mapIt != vertTempGraphVertId.end(); mapIt++)
-                {
-                    vertReorderedGraphVertId[mapIt->first] = iperm[mapIt->second] + graphVertId; 
-                }
-                for(mapIt = edgeTempGraphVertId.begin(); mapIt != edgeTempGraphVertId.end(); mapIt++)
-                {
-                    edgeReorderedGraphVertId[mapIt->first] = iperm[mapIt->second] + graphVertId; 
-                }  
-            }
-            else
-                // Possibility 3: Do not use any optomisation at
-                // all. Just list the edges and verices in the order
-                // they appear when looping over all the elements in
-                // the domain
-            {
-                m_numLocalBndCoeffs = 0;
-
-                // List the periodic vertices and edges next.
-                // This allows to give corresponding DOF's the same
-                // global ID
-                // a) periodic vertices
-                
-                for(k = 0; k < periodicVerticesId.size(); ++k)
-                {
-                    for(mapConstIt = periodicVerticesId[k].begin(); mapConstIt != periodicVerticesId[k].end(); mapConstIt++)
-                    {
-                        meshVertId  = mapConstIt->first;
-                        meshVertId2 = mapConstIt->second;
-                        
-                        if(vertReorderedGraphVertId.count(meshVertId) == 0)        
-                        {
-                            if(vertReorderedGraphVertId.count(meshVertId2) == 0)        
-                            {
-                                vertReorderedGraphVertId[meshVertId]  = graphVertId;
-                                vertReorderedGraphVertId[meshVertId2] = graphVertId++;
-                            }
-                            else
-                            {
-                                vertReorderedGraphVertId[meshVertId] = vertReorderedGraphVertId[meshVertId2];
-                            }
-                        }
-                        else
-                        {
-                            if(vertReorderedGraphVertId.count(meshVertId2) == 0)        
-                            {
-                                vertReorderedGraphVertId[meshVertId2] = vertReorderedGraphVertId[meshVertId];
-                            }
-                            else // Doubly periodic vertex case. 
-                            {
-                                int id1 = vertReorderedGraphVertId[meshVertId];
-                                int id2 = vertReorderedGraphVertId[meshVertId2];
-                                int id;
-                                
-                                if(id1 != id2)
-                                {
-                                    // Reset any values set to id2 to id1. In
-                                    // addition if local id is greater than
-                                    // id2 decrement list
-                                    for(mapIt = vertReorderedGraphVertId.begin(); 
-                                        mapIt != vertReorderedGraphVertId.end(); mapIt++)
-                                    {
-                                        id = mapIt->second;
-                                        if(id == id2)
-                                        {
-                                            vertReorderedGraphVertId[mapIt->first] = id1;
-                                        }
-                                        else if (id > id2)
-                                        {
-                                            vertReorderedGraphVertId[mapIt->first] = id-1;
-                                        }
+                                        tempGraphVertId--;
                                     }
-                                    graphVertId--;
-                                }
+                                }                                      
                             }
+                                    
                         }
-                    }
-                }
-
-                // b) periodic edges
-                for(mapConstIt = periodicEdgesId.begin(); mapConstIt != periodicEdgesId.end(); mapConstIt++)
-                {
-                    meshEdgeId  = mapConstIt->first;
-                    meshEdgeId2 = mapConstIt->second;
-
-                    if(meshEdgeId < meshEdgeId2)
-                    {
-                        ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId) == 0,
-                                 "This periodic boundary edge has been specified before");
-                        ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId2) == 0,
-                                 "This periodic boundary edge has been specified before");
-                    
-                        edgeReorderedGraphVertId[meshEdgeId]  = graphVertId;
-                        edgeReorderedGraphVertId[meshEdgeId2] = graphVertId++;
-                    }
-                }
-
-                // List all other vertices and edges
-                for(i = 0; i < locExpVector.size(); ++i)
-                { 
-                    if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[i]))
-                    {
-                        for(j = 0; j < locExpansion->GetNverts(); ++j) // number verts = number edges for 2D geom
-                        {   
-                            meshVertId = (locExpansion->GetGeom2D())->GetVid(j);
-                            if(vertReorderedGraphVertId.count(meshVertId) == 0)        
-                            {
-                                vertReorderedGraphVertId[meshVertId] = graphVertId++;
-                            }
-                            
-                            meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
-                            if(edgeReorderedGraphVertId.count(meshEdgeId) == 0)        
-                            {
-                                edgeReorderedGraphVertId[meshEdgeId] = graphVertId++;
-                            }                      
+                        else
+                        {
+                            vertReorderedGraphVertId[meshVertId] = vertReorderedGraphVertId[meshVertId2];
                         }
-                        m_numLocalBndCoeffs += locExpansion->NumBndryCoeffs();
                     }
                     else
                     {
-                        ASSERTL0(false,"dynamic cast to a local 2D expansion failed");
+                        if(vertReorderedGraphVertId.count(meshVertId2) == 0)
+                        {
+                            vertReorderedGraphVertId[meshVertId2] = vertReorderedGraphVertId[meshVertId];
+                        }
                     }
                 }
             }
-#endif //NEKTAR_USING_METIS            
+                    
+            // b) periodic edges
+            for(mapConstIt = periodicEdgesId.begin(); mapConstIt != periodicEdgesId.end(); mapConstIt++)
+            {
+                meshEdgeId  = mapConstIt->first;
+                meshEdgeId2 = mapConstIt->second;
+                        
+                if(meshEdgeId < meshEdgeId2)
+                {
+                    ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId) == 0,
+                             "This periodic boundary edge has been specified before");
+                    ASSERTL0(edgeReorderedGraphVertId.count(meshEdgeId2) == 0,
+                             "This periodic boundary edge has been specified before");
+                            
+                    edgeTempGraphVertId[meshEdgeId]  = tempGraphVertId;
+                    edgeTempGraphVertId[meshEdgeId2] = tempGraphVertId++;
+                }
+            }
+                    
+            // List all other vertices and edges
+            for(i = 0; i < locExpVector.size(); ++i)
+            { 
+                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[i]))
+                {
+                    m_numLocalBndCoeffs += locExpansion->NumBndryCoeffs();
+                            
+                    nVerts = locExpansion->GetNverts();
+                    // For element i, store the temporary graph
+                    // vertex id's of all element edges and
+                    // verices in these 2 arrays below
+                    localVerts = Array<OneD, int>(nVerts,-1);
+                    localEdges = Array<OneD, int>(nVerts,-1);
+                    vertCnt = 0;
+                    edgeCnt = 0;
+                            
+                    for(j = 0; j < nVerts; ++j) 
+                    {   
+                        nEdgeCoeffs = locExpansion->GetEdgeNcoeffs(j);
+
+                        meshVertId = (locExpansion->GetGeom2D())->GetVid(j);
+                        if(vertReorderedGraphVertId.count(meshVertId) == 0)        
+                        {                                
+                            if(vertTempGraphVertId.count(meshVertId) == 0)
+                            {
+                                vertTempGraphVertId[meshVertId] = tempGraphVertId++;
+                            }
+                            localVerts[vertCnt++] = vertTempGraphVertId[meshVertId];
+                            vwgts_map[ vertTempGraphVertId[meshVertId] ] = 1;
+                        }                             
+                                
+                        meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
+                        if(edgeReorderedGraphVertId.count(meshEdgeId) == 0)        
+                        {                            
+                            if(edgeTempGraphVertId.count(meshEdgeId) == 0)
+                            {
+                                edgeTempGraphVertId[meshEdgeId] = tempGraphVertId++;
+                            }
+                            localEdges[edgeCnt++] = edgeTempGraphVertId[meshEdgeId];
+                            vwgts_map[ edgeTempGraphVertId[meshEdgeId] ] = nEdgeCoeffs - 2;
+                        }  
+                    }
+                            
+                    // Now loop over all local edges and vertices
+                    // of this element and define that all other
+                    // edges and verices of this element are
+                    // adjacent to them.
+                    for(j = 0; j < nVerts; j++)
+                    {
+                        if(localVerts[j]==-1)
+                        {
+                            break;
+                        }
+                        for(k = 0; k < nVerts; k++)
+                        {
+                            if(localVerts[k]==-1)
+                            {
+                                break;
+                            }
+                            if(k!=j)
+                            {
+                                boost::add_edge( (size_t) localVerts[j], (size_t) localVerts[k],boostGraphObj);
+                            }
+                        }
+                        for(k = 0; k < nVerts; k++)
+                        {     
+                            if(localEdges[k]==-1)
+                            {
+                                break;
+                            }    
+                            boost::add_edge( (size_t) localVerts[j], (size_t) localEdges[k],boostGraphObj);                       
+                        }
+                    }
+                    for(j = 0; j < nVerts; j++)
+                    {
+                        if(localEdges[j]==-1)
+                        {
+                            break;
+                        }
+                        for(k = 0; k < nVerts; k++)
+                        {
+                            if(localEdges[k]==-1)
+                            {
+                                break;
+                            }
+                            if(k!=j)
+                            {
+                                boost::add_edge( (size_t) localEdges[j], (size_t) localEdges[k],boostGraphObj);   
+                            }
+                        }
+                        for(k = 0; k < nVerts; k++)
+                        {                            
+                            if(localVerts[k]==-1)
+                            {
+                                break;
+                            }
+                            boost::add_edge( (size_t) localEdges[j], (size_t) localVerts[k],boostGraphObj);                       
+                        }
+                    }
+                }
+                else
+                {
+                    ASSERTL0(false,"dynamic cast to a local 2D expansion failed");
+                }
+            }
+
+            // Now the graph has been set-up reorder it 
+            BottomUpSubStructuredGraphSharedPtr bottomUpGraph;
+            int nGraphVerts = tempGraphVertId;
+            Array<OneD, int> perm(nGraphVerts);
+            Array<OneD, int> iperm(nGraphVerts);
+            Array<OneD, int> vwgts(nGraphVerts);
+            ASSERTL1(vwgts_map.size()==nGraphVerts,"Non matching dimensions");
+            for(i = 0; i < nGraphVerts; ++i)
+            {
+                vwgts[i] = vwgts_map[i];   
+            }
+
+            if(nGraphVerts)
+            {
+                switch(solnType)
+                {
+                case eDirectFullMatrix:
+                    {
+                        NoReordering(boostGraphObj,perm,iperm);
+                    }
+                    break;
+                case eDirectStaticCond:
+                    {
+                        CuthillMckeeReordering(boostGraphObj,perm,iperm);
+                    }
+                    break;
+                case eDirectMultiLevelStaticCond: 
+                    {
+                        MultiLevelBisectionReordering(boostGraphObj,vwgts,perm,iperm,bottomUpGraph);
+                    }
+                    break;
+                default:
+                    {
+                        ASSERTL0(false,"Unrecognised solution type");
+                    }
+                }        
+            }  
+                    
+            // Fill the vertReorderedGraphVertId and edgeReorderedGraphVertId with the optimal ordering from boost
+            for(mapIt = vertTempGraphVertId.begin(); mapIt != vertTempGraphVertId.end(); mapIt++)
+            {
+                vertReorderedGraphVertId[mapIt->first] = iperm[mapIt->second] + graphVertId; 
+            }
+            for(mapIt = edgeTempGraphVertId.begin(); mapIt != edgeTempGraphVertId.end(); mapIt++)
+            {
+                edgeReorderedGraphVertId[mapIt->first] = iperm[mapIt->second] + graphVertId; 
+            }  
+
             // Set up an array wich contains the offset information of the different
             // graph vertices. This basically means to identify to how many global degrees
             // of freedom the individual graph vertices correspond. Obviously, the graph vertices
@@ -1010,13 +691,15 @@ namespace Nektar
                         m_signChange = true;
                     }
                 }                
-            }            
+            }     
+  
             for(i = 1; i < graphVertOffset.num_elements(); i++)
             {
                 graphVertOffset[i] += graphVertOffset[i-1];
             }
 
-            // Allocate the proper amount of space for the class-data 
+            // Allocate the proper amount of space for the class-data and fill 
+            // the ones that we can allready fill
             m_numLocalCoeffs                 = numLocalCoeffs;
             m_numGlobalDirBndCoeffs          = graphVertOffset[firstNonDirGraphVertId];
             m_localToGlobalMap               = Array<OneD, int>(m_numLocalCoeffs,-1);
@@ -1028,6 +711,17 @@ namespace Nektar
                 m_localToGlobalSign = Array<OneD, NekDouble>(m_numLocalCoeffs,1.0);
                 m_localToGlobalBndSign = Array<OneD, NekDouble>(m_numLocalBndCoeffs,1.0);
                 m_bndCondCoeffsToGlobalCoeffsSign = Array<OneD,NekDouble>(nLocBndCondDofs,1.0);
+            }
+
+            m_solnType = solnType;
+            m_staticCondLevel = 0; 
+            m_numPatches =  locExpVector.size();
+            m_numLocalBndCoeffsPerPatch = Array<OneD, unsigned int>(m_numPatches);
+            m_numLocalIntCoeffsPerPatch = Array<OneD, unsigned int>(m_numPatches);
+            for(i = 0; i < m_numPatches; ++i)
+            { 
+                m_numLocalBndCoeffsPerPatch[i] = (unsigned int) locExpVector[i]->NumBndryCoeffs();
+                m_numLocalIntCoeffsPerPatch[i] = (unsigned int) locExpVector[i]->GetNcoeffs() - locExpVector[i]->NumBndryCoeffs();
             }
 
             // Now, all ingredients are ready to set up the actual local to global mapping
@@ -1043,8 +737,7 @@ namespace Nektar
                     nEdgeInteriorCoeffs = locExpansion->GetEdgeNcoeffs(j)-2;
                     edgeOrient          = (locExpansion->GetGeom2D())->GetEorient(j);                        
                     meshEdgeId          = (locExpansion->GetGeom2D())->GetEid(j);
-                    meshVertId          = (locExpansion->GetGeom2D())->GetVid(j)
-;
+                    meshVertId          = (locExpansion->GetGeom2D())->GetVid(j);
                     
                     locExpansion->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
 
@@ -1122,10 +815,24 @@ namespace Nektar
                 }
             }
             m_numGlobalCoeffs = globalId;  
+
+            // Set up the local to global map for the next level when using
+            // multi-level static condensation 
+            if( (solnType == eDirectMultiLevelStaticCond) && nGraphVerts )
+            {
+                if(m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
+                {
+                    m_nextLevelLocalToGlobalMap = MemoryManager<LocalToGlobalBaseMap>::
+                        AllocateSharedPtr(this,bottomUpGraph);
+                }
+            }
         }
 
+
+
         void LocalToGlobalC0ContMap::SetUp3DExpansionC0ContMap(const int numLocalCoeffs, 
-                                                               const StdRegions::StdExpansionVector &locExpVector, 
+                                                               const StdRegions::StdExpansionVector &locExpVector,
+                                                               const GlobalSysSolnType solnType, 
                                                                const Array<OneD, const ExpList2DSharedPtr> &bndCondExp,
                                                                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                                                const map<int,int>& periodicVerticesId,
@@ -1420,6 +1127,17 @@ namespace Nektar
                 m_bndCondCoeffsToGlobalCoeffsSign = Array<OneD,NekDouble>(nLocBndCondDofs,1.0);
             }
 
+            m_solnType = solnType;
+            m_staticCondLevel = 0; 
+            m_numPatches =  locExpVector.size();
+            m_numLocalBndCoeffsPerPatch = Array<OneD, unsigned int>(m_numPatches);
+            m_numLocalIntCoeffsPerPatch = Array<OneD, unsigned int>(m_numPatches);
+            for(i = 0; i < m_numPatches; ++i)
+            { 
+                m_numLocalBndCoeffsPerPatch[i] = (unsigned int) locExpVector[i]->NumBndryCoeffs();
+                m_numLocalIntCoeffsPerPatch[i] = (unsigned int) locExpVector[i]->GetNcoeffs() - locExpVector[i]->NumBndryCoeffs();
+            }
+
             // Now, all ingredients are ready to set up the actual local to global mapping
             cnt = 0;
             // Loop over all the elements in the domain
@@ -1565,7 +1283,6 @@ namespace Nektar
             m_numGlobalCoeffs = globalId;  
         }
 
-
         // ----------------------------------------------------------------
         // Calculation of the bandwith ---- The bandwidth here
         // calculated corresponds to what is referred to as
@@ -1578,10 +1295,9 @@ namespace Nektar
         // corresponds to the maximal elemental bandwith (i.e. the
         // maximal difference in global DOF index for every element)
         //
-        // 2 different bandwiths can be calculated: - the bandwith of
-        // the full global system - the bandwith of the global
-        // boundary system (as used for static condensation)
-        void LocalToGlobalC0ContMap::CalculateBndSystemBandWidth(const StdRegions::StdExpansionVector &locExpVector)
+        // we here caluclate the bandwith of
+        // the full global system 
+        void LocalToGlobalC0ContMap::CalculateFullSystemBandWidth()
         {
             int i,j;
             int cnt = 0;
@@ -1589,45 +1305,9 @@ namespace Nektar
             int maxId;
             int minId;
             int bwidth = -1;
-            for(i = 0; i < locExpVector.size(); ++i)
+            for(i = 0; i < m_numPatches; ++i)
             {
-                locSize = locExpVector[i]->NumBndryCoeffs();
-                maxId = -1;
-                minId = m_numLocalCoeffs+1;
-                for(j = 0; j < locSize; j++)
-                {
-                    if(m_localToGlobalBndMap[cnt+j] >= m_numGlobalDirBndCoeffs)
-                    {
-                        if(m_localToGlobalBndMap[cnt+j] > maxId)
-                        {
-                            maxId = m_localToGlobalBndMap[cnt+j];
-                        }
-                        
-                        if(m_localToGlobalBndMap[cnt+j] < minId)
-                        {
-                            minId = m_localToGlobalBndMap[cnt+j];
-                        }
-                    }
-                }
-                bwidth = (bwidth>(maxId-minId))?bwidth:(maxId-minId);
-
-                cnt+=locSize;
-            }
-
-            m_bndSystemBandWidth = bwidth;
-        }
-        
-        void LocalToGlobalC0ContMap::CalculateFullSystemBandWidth(const StdRegions::StdExpansionVector &locExpVector)
-        {
-            int i,j;
-            int cnt = 0;
-            int locSize;
-            int maxId;
-            int minId;
-            int bwidth = -1;
-            for(i = 0; i < locExpVector.size(); ++i)
-            {
-                locSize = locExpVector[i]->GetNcoeffs();
+                locSize = m_numLocalBndCoeffsPerPatch[i]+m_numLocalIntCoeffsPerPatch[i];
                 maxId = -1;
                 minId = m_numLocalCoeffs+1;
                 for(j = 0; j < locSize; j++)
@@ -1651,13 +1331,16 @@ namespace Nektar
             }
 
             m_fullSystemBandWidth = bwidth;
-        }
-
+        }  
     }
 }
+    
 
 /**
  * $Log: LocalToGlobalC0ContMap.cpp,v $
+ * Revision 1.11  2009/05/10 23:17:12  sherwin
+ * Updated mainly to handle doubly periodic meshes which required modification to vertex handling from a numbering perspective
+ *
  * Revision 1.10  2009/04/27 21:34:58  sherwin
  * Modified WriteToField Method
  *

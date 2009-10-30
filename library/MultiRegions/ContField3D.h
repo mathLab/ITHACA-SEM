@@ -56,11 +56,13 @@ namespace Nektar
 
             ContField3D(SpatialDomains::MeshGraph3D &graph3D,
                         SpatialDomains::BoundaryConditions &bcs, 
-                        const int bc_loc = 0);
+                        const int bc_loc = 0,
+                        const GlobalSysSolnType solnType = eDirectStaticCond);
 
             ContField3D(SpatialDomains::MeshGraph3D &graph3D,
                         SpatialDomains::BoundaryConditions &bcs, 
-                        const std::string variable);
+                        const std::string variable,
+                        const GlobalSysSolnType solnType = eDirectStaticCond);
 
             ContField3D(const LibUtilities::BasisKey &Ba,
                         const LibUtilities::BasisKey &Bb,
@@ -69,7 +71,8 @@ namespace Nektar
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0,
                         const LibUtilities::PointsType 
-                        TetNb = LibUtilities::SIZE_PointsType);
+                        TetNb = LibUtilities::SIZE_PointsType,
+                        const GlobalSysSolnType solnType = eDirectStaticCond);
 
             ContField3D(const LibUtilities::BasisKey &Ba,
                         const LibUtilities::BasisKey &Bb,
@@ -78,7 +81,8 @@ namespace Nektar
                         SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable,
                         const LibUtilities::PointsType 
-                        TetNb = LibUtilities::SIZE_PointsType);
+                        TetNb = LibUtilities::SIZE_PointsType,
+                        const GlobalSysSolnType solnType = eDirectStaticCond);
 
 
 

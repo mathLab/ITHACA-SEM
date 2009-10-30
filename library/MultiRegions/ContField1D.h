@@ -102,7 +102,8 @@ namespace Nektar
              */ 
             ContField1D(SpatialDomains::MeshGraph1D &graph1D,
                         SpatialDomains::BoundaryConditions &bcs, 
-                        const int bc_loc = 0);
+                        const int bc_loc = 0,
+                        const GlobalSysSolnType solnType = eDirectStaticCond);
   
             /**
              * \brief This constructor sets up global continuous field based on an 
@@ -130,23 +131,26 @@ namespace Nektar
              */ 
             ContField1D(SpatialDomains::MeshGraph1D &graph1D,
                         SpatialDomains::BoundaryConditions &bcs, 
-                        const std::string variable);
+                        const std::string variable,
+                        const GlobalSysSolnType solnType = eDirectStaticCond);
       
             /**
              * \brief 
              */ 
             ContField1D(const LibUtilities::BasisKey &Ba,
-                const SpatialDomains::MeshGraph1D &graph1D,
-                SpatialDomains::BoundaryConditions &bcs,
-                const int bc_loc = 0);
+                        const SpatialDomains::MeshGraph1D &graph1D,
+                        SpatialDomains::BoundaryConditions &bcs,
+                        const int bc_loc = 0,
+                        const GlobalSysSolnType solnType = eDirectStaticCond);
       
             /**
              * \brief 
              */ 
             ContField1D(const LibUtilities::BasisKey &Ba,
-                const SpatialDomains::MeshGraph1D &graph1D,
-                SpatialDomains::BoundaryConditions &bcs,
-                const std::string variable);
+                        const SpatialDomains::MeshGraph1D &graph1D,
+                        SpatialDomains::BoundaryConditions &bcs,
+                        const std::string variable,
+                        const GlobalSysSolnType solnType = eDirectStaticCond);
 
             /**
              * \brief The copy constructor.

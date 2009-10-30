@@ -37,6 +37,7 @@
 #define MULTIREGIONS_LOCALTOGLOBALBASEMAP_H
 
 #include <MultiRegions/MultiRegions.hpp>
+#include <MultiRegions/SubStructuredGraph.h>
 #include <vector>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
@@ -44,12 +45,19 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        class LocalToGlobalBaseMap;
+        typedef boost::shared_ptr<LocalToGlobalBaseMap>  LocalToGlobalBaseMapSharedPtr;
+        static LocalToGlobalBaseMapSharedPtr NullLocalToGlobalBaseMapSharedPtr;
+
         class LocalToGlobalBaseMap
         {
         public:
             LocalToGlobalBaseMap(); 
+
+            LocalToGlobalBaseMap(LocalToGlobalBaseMap* oldLevelMap, 
+                                 const BottomUpSubStructuredGraphSharedPtr& multiLevelGraph);
             
-            ~LocalToGlobalBaseMap(); 
+            virtual ~LocalToGlobalBaseMap(); 
                 
             int GetLocalToGlobalBndMap(const int i) const
             {
@@ -123,6 +131,16 @@ namespace Nektar
             inline int GetNumGlobalBndCoeffs() const
             {
                 return m_numGlobalBndCoeffs;
+            }
+
+            inline int GetNumLocalCoeffs() const
+            {
+                return m_numLocalCoeffs;
+            }
+
+            inline int GetNumGlobalCoeffs() const
+            {
+                return m_numGlobalCoeffs;
             }
 
             inline void GlobalToLocalBnd(const NekVector<const NekDouble>& global, NekVector<NekDouble>& loc, int offset)
@@ -274,25 +292,106 @@ namespace Nektar
                 return m_bndSystemBandWidth;
             }
 
+            inline int GetStaticCondLevel() const
+            {
+                return m_staticCondLevel;
+            }
+
+            inline int GetNumPatches() const
+            {
+                return m_numPatches;
+            }   
+      
+            inline const Array<OneD,const unsigned int>& GetNumLocalBndCoeffsPerPatch(void)
+            {
+                return m_numLocalBndCoeffsPerPatch;
+            }  
+      
+            inline const Array<OneD,const unsigned int>& GetNumLocalIntCoeffsPerPatch(void)
+            {
+                return m_numLocalIntCoeffsPerPatch;
+            }
+
+            inline const LocalToGlobalBaseMapSharedPtr GetNextLevelLocalToGlobalMap() const
+            {
+                return  m_nextLevelLocalToGlobalMap;
+            }
+
+            inline const PatchMapSharedPtr& GetPatchMapFromPrevLevel(const int i) const
+            {
+                return m_patchMapFromPrevLevel[i];
+            }
+
+            inline bool AtLastLevel() const
+            {
+                return !( (bool) m_nextLevelLocalToGlobalMap.get() );
+            }
+
+            inline const GlobalSysSolnType  GetGlobalSysSolnType() const
+            {
+                return m_solnType; 
+            }
 
         protected:
+            // ---- Data members ----
             int m_numLocalBndCoeffs;     //< number of local Bnd coefficients
-            int m_numGlobalBndCoeffs;    // Total number of global boundary coefficients
-            int m_numLocalDirBndCoeffs;  // Number of Dirichlet Boundary Coefficient
-            int m_numGlobalDirBndCoeffs; // Number of Dirichlet Boundary Coefficient
+            int m_numGlobalBndCoeffs;    //< Total number of global boundary coefficients
+            int m_numLocalDirBndCoeffs;  //< Number of Dirichlet Boundary Coefficient
+            int m_numGlobalDirBndCoeffs; //< Number of Dirichlet Boundary Coefficient
+
+            // Both data members below correspond to the number of total coefficients
+            // - for CG
+            //   This correpsonds to the total of bnd + int dofs
+            // - for DG
+            //   This corresponds to the number of bnd dofs 
+            //   This means that
+            //    m_numLocalCoeffs  = m_numLocalBndCoeffs
+            //    m_numGlobalCoeffs = m_numGlobalBndCoeffs
+            //   This way, we can consider the trace-system solve as
+            //   a satically condensed solve without interior dofs
+            //   This allows us to use the same global system solver for both
+            //   cases.
+            int m_numLocalCoeffs;      //< number of local coefficients
+            int m_numGlobalCoeffs;     //< Total number of global coefficients
+
             bool m_signChange;
-            Array<OneD,int> m_localToGlobalBndMap;  //< integer map of local boundary coeffs to global space 
+            Array<OneD,int>       m_localToGlobalBndMap;  //< integer map of local boundary coeffs to global space 
             Array<OneD,NekDouble> m_localToGlobalBndSign; //< integer sign of local boundary coeffs to global space 
  
-            Array<OneD,int> m_bndCondCoeffsToGlobalCoeffsMap;  //< integer map of bnd cond coeffs to global coefficients
-            Array<OneD,NekDouble> m_bndCondCoeffsToGlobalCoeffsSign;  //< integer map of bnd cond coeffs to global coefficients
+            Array<OneD,int>       m_bndCondCoeffsToGlobalCoeffsMap;  //< integer map of bnd cond coeffs to global coefficients
+            Array<OneD,NekDouble> m_bndCondCoeffsToGlobalCoeffsSign; //< integer map of bnd cond coeffs to global coefficients
 
-            int m_bndSystemBandWidth;
+            GlobalSysSolnType m_solnType; //< The solution type of the global system
+            int m_bndSystemBandWidth;     //< the bandwith of the global bnd system
+
+            // The data below are introduced to allow a multilevel static condensation implementation
+            int m_staticCondLevel;  //< The level of recursion
+            int m_numPatches;       //< the number of patches (~elements) in the current level
+            Array<OneD, unsigned int> m_numLocalBndCoeffsPerPatch; //< the number of bnd dofs per patch
+            Array<OneD, unsigned int> m_numLocalIntCoeffsPerPatch; //< the number of int dofs per patch
+
+            Array<OneD, PatchMapSharedPtr> m_patchMapFromPrevLevel; //< map from the patches of the previous level
+                                                                    //< to the patches of the current level
+
+            LocalToGlobalBaseMapSharedPtr m_nextLevelLocalToGlobalMap; //< The local to global mapping of 
+                                                                       //< the next level of recursion
+
+            // ---- End Data members ----
+
+            void CalculateBndSystemBandWidth();
+
+            inline void GlobalToLocalBndWithoutSign(const Array<OneD, const NekDouble>& global, 
+                                                    Array<OneD,NekDouble>& loc)
+            {
+                ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+                ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
+                
+                Vmath::Gathr(m_numLocalBndCoeffs, global.get(), m_localToGlobalBndMap.get(), loc.get()); 
+            } 
+            
+
         private:
-        };
-        typedef boost::shared_ptr<LocalToGlobalBaseMap>  LocalToGlobalBaseMapSharedPtr;
-
-        static LocalToGlobalBaseMapSharedPtr NullLocalToGlobalBaseMapSharedPtr; 
+        }; 
 
         
     } // end of namespace
@@ -303,6 +402,9 @@ namespace Nektar
 
 /** 
  $Log: LocalToGlobalBaseMap.h,v $
+ Revision 1.15  2009/09/06 22:28:45  sherwin
+ Updates for Navier-Stokes solver
+
  Revision 1.14  2009/04/27 11:42:14  sherwin
  Updated to make DG helmsolve efficient
 

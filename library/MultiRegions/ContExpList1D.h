@@ -79,6 +79,7 @@ namespace Nektar
              */  
             ContExpList1D(const LibUtilities::BasisKey &Ba, 
                           const SpatialDomains::MeshGraph1D &graph1D,
+                          const GlobalSysSolnType solnType = eDirectStaticCond,
                           const bool constructMap = true);
  
             /**
@@ -101,6 +102,7 @@ namespace Nektar
              * array should be constructed or not. 
              */  
             ContExpList1D(SpatialDomains::MeshGraph1D &graph1D,
+                          const GlobalSysSolnType solnType = eDirectStaticCond,
                           const bool constructMap = true);
              
             /**
@@ -496,6 +498,9 @@ namespace Nektar
 
 /**
 * $Log: ContExpList1D.h,v $
+* Revision 1.36  2009/04/27 15:02:03  pvos
+* From h-to-p efficiently updates
+*
 * Revision 1.35  2009/03/04 14:17:38  pvos
 * Removed all methods that take and Expansion as argument
 *

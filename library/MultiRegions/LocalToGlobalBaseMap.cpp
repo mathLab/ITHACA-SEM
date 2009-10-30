@@ -275,6 +275,25 @@ namespace Nektar
          * Computational Fluid Dynamics, Oxford Science Publications, 2005
          */
 
+
+        inline int RoundNekDoubleToInt(NekDouble x)
+        {
+            return int(x > 0.0 ? x + 0.5 : x - 0.5);
+        }
+
+        inline void RoundNekDoubleToInt(const Array<OneD,const NekDouble> inarray, Array<OneD,int> outarray)
+        {
+            int size = inarray.num_elements();
+            ASSERTL1(outarray.num_elements()>=size,"Array sizes not compatible");
+
+            NekDouble x;
+            for(int i = 0; i < size; i++)
+            {
+                x = inarray[i];
+                outarray[i] =  int(x > 0.0 ? x + 0.5 : x - 0.5);
+            }
+        }
+
         LocalToGlobalBaseMap::LocalToGlobalBaseMap(void):
             m_numLocalBndCoeffs(0),
             m_numGlobalBndCoeffs(0),
@@ -284,9 +303,282 @@ namespace Nektar
         {
         }
 
+        LocalToGlobalBaseMap::LocalToGlobalBaseMap(LocalToGlobalBaseMap* oldLevelMap, 
+                                                   const BottomUpSubStructuredGraphSharedPtr& multiLevelGraph)
+        {
+            int i;
+            int j;
+            int cnt;
+
+            //--------------------------------------------------------------
+            // -- Extract information from the input argument
+            int numGlobalBndCoeffsOld    = oldLevelMap->GetNumGlobalBndCoeffs();
+            int numGlobalDirBndCoeffsOld = oldLevelMap->GetNumGlobalDirBndCoeffs();
+            int numGlobalHomBndCoeffsOld = numGlobalBndCoeffsOld - numGlobalDirBndCoeffsOld;
+            int numLocalBndCoeffsOld     = oldLevelMap->GetNumLocalBndCoeffs();
+            int numLocalDirBndCoeffsOld  = oldLevelMap->GetNumLocalDirBndCoeffs();
+            bool signChangeOld           = oldLevelMap->GetSignChange();
+
+            int staticCondLevelOld       = oldLevelMap->GetStaticCondLevel();
+            int numPatchesOld            = oldLevelMap->GetNumPatches();
+            GlobalSysSolnType solnTypeOld = oldLevelMap->GetGlobalSysSolnType();
+            const Array<OneD, const unsigned int>& numLocalBndCoeffsPerPatchOld = oldLevelMap->GetNumLocalBndCoeffsPerPatch(); 
+            //--------------------------------------------------------------
+
+            //--------------------------------------------------------------
+            int newLevel = staticCondLevelOld+1;
+            // STEP 1: we are going to setup a mask array
+            //         to determine to which patch of the new level
+            //         every patch of the current old belongs
+            // Therefore, set up following four arrays
+            // These arrays will be used to check which local dofs of
+            // the old level belong to which patch of the new level
+            Array<OneD, NekDouble> globPatchMask         (numGlobalBndCoeffsOld,-1.0);
+            Array<OneD, NekDouble> globHomPatchMask      (globPatchMask+numGlobalDirBndCoeffsOld);
+            Array<OneD, NekDouble> locPatchMask_NekDouble(numLocalBndCoeffsOld,-3.0);
+            Array<OneD, int>       locPatchMask          (numLocalBndCoeffsOld);
+
+            // Fill the array globPatchMask as follows: 
+            // - The first part (i.e. the glob bnd dofs) is filled with the value -1
+            // - The second part (i.e. the glob interior dofs) is numbered 
+            //   according to the patch it belongs to (i.e. dofs in first
+            //   block all are numbered 0, the second block numbered are 1, etc...)
+            multiLevelGraph->MaskPatches(newLevel,globHomPatchMask);
+            // Map from Global Dofs to Local Dofs
+            // As a result, we know for each local dof whether
+            // it is mapped to the boundary of the next level, or to which
+            // patch. Based upon this, we can than later associate every patch 
+            // of the current level with a patch in the next level.
+            oldLevelMap->GlobalToLocalBndWithoutSign(globPatchMask,locPatchMask_NekDouble);
+            // Convert the result to an array of integers rather than doubles
+            RoundNekDoubleToInt(locPatchMask_NekDouble,locPatchMask);
+
+            // STEP 2: We are going to calculate how many local bnd dofs of the old level
+            // belong to the boundaries of each patch at the new level. We need this
+            // information to set up the mapping between different levels.
+
+            // Retrieve the number of patches at the next level
+            int numPatchesWithIntNew = multiLevelGraph->GetNpatchesWithInterior(newLevel);
+            int numPatchesNew        = numPatchesWithIntNew;
+
+            // Allocate memory to store the number of local dofs associated to each
+            // of elemental boundaries of these patches
+            map<int, int> numLocalBndCoeffsPerPatchNew;
+            for(int i = 0; i < numPatchesNew; i++)
+            {
+                numLocalBndCoeffsPerPatchNew[i] = 0;
+            }
+
+            int minval;
+            int maxval;
+            int curPatch;
+            for(i = cnt = 0; i < numPatchesOld; i++)
+            {
+                // For every patch at the current level, the mask array locPatchMask
+                // should be filled with
+                // - the same (positive) number for each entry 
+                //   (which will correspond to the patch at the next level it belongs to)
+                // - the same (positive) number for each entry, except some entries that are -1
+                //   (the enties correspond to -1, will be mapped to the local boundary of the
+                //    next level patch given by the positive number) 
+                // - -1 for all entries. In this case, we will make an additional patch only
+                //   consisting of boundaries at the next level
+                minval = *min_element(&locPatchMask[cnt],&locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);
+                maxval = *max_element(&locPatchMask[cnt],&locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);            
+                ASSERTL0((minval==maxval)||(minval==-1),"These values should never be the same");
+
+                if(maxval == -1)
+                {
+                    curPatch = numPatchesNew;
+                    numLocalBndCoeffsPerPatchNew[curPatch] = 0;
+                    numPatchesNew++;
+                }
+                else
+                {
+                    curPatch = maxval;
+                }
+            
+                for(j = 0; j < numLocalBndCoeffsPerPatchOld[i]; j++ )
+                {
+                    ASSERTL0((locPatchMask[cnt]==maxval)||(locPatchMask[cnt]==minval),
+                             "These values should never be the same");
+                    if(locPatchMask[cnt] == -1)
+                    {
+                        ++numLocalBndCoeffsPerPatchNew[curPatch];
+                    }
+                    cnt++;
+                }
+            }
+
+            // Count how many local dofs of the old level are mapped
+            // to the local boundary dofs of the new level
+            m_numLocalBndCoeffs  = 0;     
+            m_numPatches         = numLocalBndCoeffsPerPatchNew.size();      
+            m_numLocalBndCoeffsPerPatch = Array<OneD, unsigned int>(m_numPatches);
+            m_numLocalIntCoeffsPerPatch = Array<OneD, unsigned int>(m_numPatches,0.0);
+            for(int i = 0; i < m_numPatches; i++)
+            {
+                m_numLocalBndCoeffsPerPatch[i] = (unsigned int) numLocalBndCoeffsPerPatchNew[i];
+                m_numLocalBndCoeffs           += numLocalBndCoeffsPerPatchNew[i];
+            }
+            multiLevelGraph->GetNintDofsPerPatch(newLevel,m_numLocalIntCoeffsPerPatch);
+
+            // Also initialise some more data members
+            m_solnType              = solnTypeOld;
+            ASSERTL1(m_solnType==eDirectMultiLevelStaticCond,
+                     "This method should only be called for in case of multi-level static condensation.")
+            m_staticCondLevel       = newLevel;
+            m_signChange            = signChangeOld;  
+            m_numLocalDirBndCoeffs  = numLocalDirBndCoeffsOld;  
+            m_numGlobalDirBndCoeffs = numGlobalDirBndCoeffsOld;  
+            m_numGlobalBndCoeffs    = multiLevelGraph->GetInteriorOffset(newLevel) +
+                m_numGlobalDirBndCoeffs;
+            m_numGlobalCoeffs       = multiLevelGraph->GetNumGlobalDofs(newLevel) +
+                m_numGlobalDirBndCoeffs;
+            m_localToGlobalBndMap   = Array<OneD,int>(m_numLocalBndCoeffs); 
+            if(m_signChange)
+            {
+                m_localToGlobalBndSign    = Array<OneD,NekDouble>(m_numLocalBndCoeffs);
+            }
+            m_patchMapFromPrevLevel = Array<OneD, PatchMapSharedPtr>(numLocalBndCoeffsOld);
+
+            // Set up an offset array that denotes the offset of the local
+            // boundary degrees of freedom of the next level
+            Array<OneD, int> numLocalBndCoeffsPerPatchOffset(m_numPatches+1,0);
+            for(int i = 1; i < m_numPatches+1; i++)
+            {
+                numLocalBndCoeffsPerPatchOffset[i] += numLocalBndCoeffsPerPatchOffset[i-1] + numLocalBndCoeffsPerPatchNew[i-1];
+            }
+
+            int additionalPatchCnt = numPatchesWithIntNew;
+            int newid;
+            int blockid;
+            bool isBndDof;
+            NekDouble sign;
+            Array<OneD, int> bndDofPerPatchCnt(m_numPatches,0);
+            for(i = cnt = 0; i < numPatchesOld; i++)
+            {
+                minval = *min_element(&locPatchMask[cnt],&locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);
+                maxval = *max_element(&locPatchMask[cnt],&locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);            
+                ASSERTL0((minval==maxval)||(minval==-1),"These values should never be the same");
+
+                if(maxval == -1)
+                {
+                    curPatch = additionalPatchCnt;
+                    additionalPatchCnt++;
+                }
+                else
+                {
+                    curPatch = maxval;
+                }
+            
+                for(j = 0; j < numLocalBndCoeffsPerPatchOld[i]; j++ )
+                {
+                    ASSERTL0((locPatchMask[cnt]==maxval)||(locPatchMask[cnt]==minval),
+                             "These values should never be the same");
+
+                    sign = oldLevelMap->GetLocalToGlobalBndSign(cnt);
+
+                    if(locPatchMask[cnt] == -1)
+                    {
+                        newid = numLocalBndCoeffsPerPatchOffset[curPatch];
+
+                        m_localToGlobalBndMap[newid] = oldLevelMap->GetLocalToGlobalBndMap(cnt);
+                        if(m_signChange)
+                        {
+                            m_localToGlobalBndSign[ newid ] = sign;
+                        }
+
+                        blockid = bndDofPerPatchCnt[curPatch];
+                        isBndDof = true;
+
+
+                        numLocalBndCoeffsPerPatchOffset[curPatch]++;
+                        bndDofPerPatchCnt[curPatch]++;
+                    }
+                    else
+                    {
+                        newid = oldLevelMap->GetLocalToGlobalBndMap(cnt) -
+                            m_numGlobalBndCoeffs+m_numLocalBndCoeffs;
+
+                        blockid = oldLevelMap->GetLocalToGlobalBndMap(cnt)-
+                            m_numGlobalDirBndCoeffs - multiLevelGraph->GetInteriorOffset(newLevel,curPatch);
+                        isBndDof = false;
+                    }   
+
+                    sign = isBndDof?1.0:sign;
+                    m_patchMapFromPrevLevel[cnt] =  MemoryManager<PatchMap>::
+                        AllocateSharedPtr(curPatch,blockid,isBndDof,sign);
+
+                    cnt++;
+                }
+            }
+            CalculateBndSystemBandWidth();
+
+            // Postprocess the computed information
+            // - Update the old level with the mapping to new evel
+            // oldLevelMap->SetLocalBndToNextLevelMap(oldLocalBndToNewLevelMap,oldLocalBndToNewLevelSign);
+            // - Construct the next level mapping object
+            if(m_staticCondLevel < (multiLevelGraph->GetNlevels()-1))
+            {
+                m_nextLevelLocalToGlobalMap = MemoryManager<LocalToGlobalBaseMap>::AllocateSharedPtr(this,multiLevelGraph);
+            }
+        }
+
+
         LocalToGlobalBaseMap::~LocalToGlobalBaseMap(void)
         {
-        };
+        }
+
+        // ----------------------------------------------------------------
+        // Calculation of the bandwith ---- The bandwidth here
+        // calculated corresponds to what is referred to as
+        // half-bandwidth.  If the elements of the matrix are
+        // designated as a_ij, it corresponds to the maximum value of
+        // |i-j| for non-zero a_ij.  As a result, the value also
+        // corresponds to the number of sub or superdiagonals.
+        //
+        // The bandwith can be calculated elementally as it
+        // corresponds to the maximal elemental bandwith (i.e. the
+        // maximal difference in global DOF index for every element)
+        //
+        // we here calculate the bandwith of the global
+        // boundary system (as used for static condensation) 
+        void LocalToGlobalBaseMap::CalculateBndSystemBandWidth()
+        {
+            int i,j;
+            int cnt = 0;
+            int locSize;
+            int maxId;
+            int minId;
+            int bwidth = -1;
+            for(i = 0; i < m_numPatches; ++i)
+            {
+                locSize = m_numLocalBndCoeffsPerPatch[i];
+                maxId = -1;
+                minId = m_numLocalBndCoeffs+1;
+                for(j = 0; j < locSize; j++)
+                {
+                    if(m_localToGlobalBndMap[cnt+j] >= m_numGlobalDirBndCoeffs)
+                    {
+                        if(m_localToGlobalBndMap[cnt+j] > maxId)
+                        {
+                            maxId = m_localToGlobalBndMap[cnt+j];
+                        }
+                        
+                        if(m_localToGlobalBndMap[cnt+j] < minId)
+                        {
+                            minId = m_localToGlobalBndMap[cnt+j];
+                        }
+                    }
+                }
+                bwidth = (bwidth>(maxId-minId))?bwidth:(maxId-minId);
+
+                cnt+=locSize;
+            }
+
+            m_bndSystemBandWidth = bwidth;
+        }
 
     }
 }

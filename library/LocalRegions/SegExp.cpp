@@ -1016,9 +1016,15 @@ namespace Nektar
                             dir = 2;
                             break;
                         }
+
+                        MatrixKey deriv0key(StdRegions::eWeakDeriv0,
+                                            mkey.GetExpansionType(), *this);  
+
+                        DNekMatSharedPtr WeakDerivStd = GetStdMatrix(*deriv0key.GetStdMatKey());
                         fac = m_metricinfo->GetGmat()[dir][0]*
                             m_metricinfo->GetJac()[0];
-                        goto UseStdRegionsMatrix;
+
+                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(fac,WeakDerivStd);
                     }
                 }
                 break;
@@ -1150,6 +1156,7 @@ namespace Nektar
 
             switch(mkey.GetMatrixType())
             {
+            case StdRegions::eLaplacian: 
             case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
 
                 // use Deformed case for both regular and deformed geometries 
@@ -1252,6 +1259,9 @@ namespace Nektar
 }//end of namespace
 
 // $Log: SegExp.cpp,v $
+// Revision 1.62  2009/10/06 09:48:31  cbiotto
+// Adding MultiplyByElmtInvMass
+//
 // Revision 1.61  2009/04/29 11:18:09  pvos
 // Made demo codes working with nodal expansions
 //

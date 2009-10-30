@@ -57,9 +57,11 @@ namespace Nektar
                           const SpatialDomains::MeshGraph3D &graph3D,
                           const LibUtilities::PointsType 
                           TetNb = LibUtilities::SIZE_PointsType,
+                          const GlobalSysSolnType solnType = eDirectStaticCond,
                           const bool constructMap = true);
 
             ContExpList3D(SpatialDomains::MeshGraph3D &graph3D,
+                          const GlobalSysSolnType solnType = eDirectStaticCond,
                           const bool constructMap = true);
             
                           ContExpList3D(const ContExpList3D &In);

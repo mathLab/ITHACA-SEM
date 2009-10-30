@@ -942,6 +942,7 @@ namespace Nektar
 
             switch(mkey.GetMatrixType())
             {
+            case StdRegions::eLaplacian: 
             case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
 
                 // use Deformed case for both regular and deformed geometries 
@@ -1043,6 +1044,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.31  2009/04/27 21:34:07  sherwin
+ *    Updated WriteToField
+ *
  *    Revision 1.30  2009/03/15 22:13:54  sherwin
  *    Fixed Array definition error spotted by Tim
  *

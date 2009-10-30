@@ -19,6 +19,7 @@ LocalToGlobalBaseMap.cpp
 LocalToGlobalDGMap.cpp
 LocalToGlobalC0ContMap.cpp
 GlobalOptimizationParameters.cpp
+SubStructuredGraph.cpp
 )
 
 SET(MULTI_REGIONS_HEADERS
@@ -41,13 +42,9 @@ GlobalMatrixKey.h
 LocalToGlobalBaseMap.h
 LocalToGlobalDGMap.h
 LocalToGlobalC0ContMap.h
-#LocalToGlobalBndryMap.h
-#LocalToGlobalMap1D.h
-#LocalToGlobalMap2D.h
-#LocalToGlobalMap3D.h
-#LocalToGlobalMap.h
 MultiRegions.hpp
 GlobalOptimizationParameters.h
+SubStructuredGraph.h
 )
 
 

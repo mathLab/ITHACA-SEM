@@ -15,7 +15,8 @@ endif(COMMAND cmake_policy)
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR} ${CMAKE_MODULE_PATH})
 SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dist CACHE FILEPATH "" FORCE)
 
-SET(NEKTAR_USE_METIS OFF CACHE BOOL "Use Metis routines for partitioning and reordering graphs.")
+SET(NEKTAR_USE_METIS ON CACHE BOOL "Use Metis routines for partitioning and reordering graphs.")
+MARK_AS_ADVANCED(NEKTAR_USE_METIS)
 SET(NEKTAR_USE_TINYXML_STL ON CACHE BOOL "Use STL with TinyXML library.")
 SET(NEKTAR_USE_DIRECT_BLAS_CALLS OFF CACHE BOOL "Use direct BLAS calls rather than NekMatrix calls in the StdRegions and LocalRegions sublibrary")
 SET(NEKTAR_FULL_DEBUG OFF CACHE BOOL "Enable Full Debugging.")
@@ -92,13 +93,6 @@ SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost
   ${CMAKE_SOURCE_DIR}/../../ThirdParty/boost)
 SET(Boost_ADDITIONAL_VERSIONS "1.35.0" "1.35")
 FIND_PACKAGE( Boost 1.35.0 REQUIRED COMPONENTS thread iostreams zlib date_time)
-
-
-IF( NEKTAR_USE_METIS )
-    FIND_PACKAGE(Metis REQUIRED)
-ENDIF( NEKTAR_USE_METIS )
-
-
 
 
 INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR} ${Boost_INCLUDE_DIRS} ${LOKI_INCLUDE_DIR} ${TINYXML_BASE})

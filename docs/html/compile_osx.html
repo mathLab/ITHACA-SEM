@@ -124,7 +124,7 @@
 
         
 <p style="font-size: 9px;">Last Revision:<br>
-$Date: 2009/06/29 03:34:17 $</p>
+$Date: 2009/06/29 09:24:47 $</p>
 
       </div>
 
@@ -276,39 +276,75 @@ wish</li>
 
           </li>
 
-	  <li>The last step is to extract and compile the sparse matrix library developed by <em>NIST</em>. (For more information about this library, see <a href="http://math.nist.gov/spblas/original.html" target="_blank">http://math.nist.gov/spblas/original.html</a>)
-            
-    <ol>
+	        <li>The following step is to extract and compile the sparse matrix library developed by <em>NIST</em>. (For more information about this library, see <a href="http://math.nist.gov/spblas/original.html" target="_blank">http://math.nist.gov/spblas/original.html</a>)
+                  
+                  <ol>
+                    
+                    <li>In <em>ThirdParty/</em>, extract the
+                      spblastk0.9b.tar.bz2 archive with "tar -xjvf spblastk0.9b.tar.bz2"
+                      (without the quotes). This will create the directory <em>spblastk0.9b/</em>.</li>
+                    
+                    <li>Change to the directory <em>spblastk0.9b/build/</em></li>
+                    
+                    <li>Compile the library using the previously installed <em>CMake</em></li>
+                    
+                    
+                    <ol>
+                      
+		      <li>Generate the makefiles using the command "../../CMake/bin/cmake ../"</li>
+                      
+		      <li>Build and install the library by typing "make install" </li>
+                      
+                      
+                    </ol>
+                    
+                    
+                    
+                  </ol>
+                  
+	        </li>
 
-              <li>In <em>ThirdParty/</em>, extract the
-                spblastk0.9b.tar.bz2 archive with "tar -xjvf spblastk0.9b.tar.bz2"
-                (without the quotes). This will create the directory <em>spblastk0.9b/</em>.</li>
-
-              <li>Change to the directory <em>spblastk0.9b/build/</em></li>
-
-              <li>Compile the library using the previously installed <em>CMake</em></li>
-
-              
-      <ol>
-
-		<li>Generate the makefiles using the command "../../CMake/bin/cmake ../"</li>
-
-		<li>Build and install the library by typing "make install" </li>
-
-              
-      </ol>
-
-            
-          
+	        <li>
+                  The last step is to extract and compile the graph partitioning package <em>METIS</em>. As we use a modified version of the 
+                  standard METIS distribution, you are required to link against this version rather than the standard version possibly
+                  available on your system. (For more information about the original METIS library, see <a href="http://www.cs.umn.edu/~karypis/metis" 
+                                                                                                           target="_blank">http://www.cs.umn.edu/~karypis/metis</a>,
+                  for more information about the modified version, click <a href="./metisandnektar++.txt" 
+                                                                            target="_blank">here</a>)
+                  
+                  <ol>
+                    
+                    <li>
+                      In <em>ThirdParty/</em>, extract the modmetis-4.0.tar.bz2 archive with &quot;tar -xjvf  modmetis-4.0.tar.bz2&quot; (without the quotes). This will create the directory <em>modmetis-4.0/</em>.
+                    </li>
+                    
+                    <li>
+                      Change to the directory <em>modmetis-4.0/build/</em>
+                    </li>
+                    
+                    <li>Compile the library using the previously installed <em>CMake</em></li>
+                    
+                    
+                    <ol>
+                      
+		      <li>Generate the makefiles using the command "../../CMake/bin/cmake ../"</li>
+                      
+		      <li>Build and install the library by typing "make install" </li>
+                      
+                      
+                    </ol>
+                    
+                    
+                    
+                  </ol>
+                  
+	        </li>
+                
+                
     </ol>
-
-	</li>
-
-        
-</ol>
-
-        
-<h3><a name="Generating_the_GCC_Makefiles_with_CMake"></a>Generating the GCC Makefiles with CMake</h3>
+    
+    
+    <h3><a name="Generating_the_GCC_Makefiles_with_CMake"></a>Generating the GCC Makefiles with CMake</h3>
 
         
 <p>Now that all of the required libraries are setup in the correct

@@ -140,7 +140,7 @@
         </p>
 
         <p style="font-size:9px;">
-          Last Revision:<br/>$Date: 2009/06/29 09:24:47 $
+          Last Revision:<br/>$Date: 2009/07/03 02:53:06 $
         </p>
       </div>
       <div id="mainContent">
@@ -300,7 +300,7 @@
           </li>
 
           <li>
-            The last step is to extract and compile the sparse matrix library developed by <em>NIST</em>. (For more information about this library, see <a href="http://math.nist.gov/spblas/original.html" target="_blank">http://math.nist.gov/spblas/original.html</a>)
+            The following step is to extract and compile the sparse matrix library developed by <em>NIST</em>. (For more information about this library, see <a href="http://math.nist.gov/spblas/original.html" target="_blank">http://math.nist.gov/spblas/original.html</a>)
             <ol>
               <li>
                 In <em>ThirdParty/</em>, extract the spblastk0.9b.tar.bz2 archive with &quot;tar -xjvf spblastk0.9b.tar.bz2&quot; (without the quotes). This will create the directory <em>spblastk0.9b/</em>.
@@ -318,6 +318,31 @@
             </li>
           </ol>
           </li>
+
+
+          <li>
+            The last step is to extract and compile the graph partitioning package <em>METIS</em>. As we use a modified version of the 
+            standard METIS distribution, you are required to link against this version rather than the standard version possibly
+            available on your system. (For more information about the original METIS library, see <a href="http://www.cs.umn.edu/~karypis/metis" 
+                                                                                                    target="_blank">http://www.cs.umn.edu/~karypis/metis</a>,
+            for more information about the modified version, click <a href="./metisandnektar++.txt" 
+                                                                      target="_blank">here</a>)
+            <ol>
+              <li>
+                In <em>ThirdParty/</em>, extract the modmetis-4.0.tar.bz2 archive with &quot;tar -xjvf  modmetis-4.0.tar.bz2&quot; (without the quotes). This will create the directory <em>modmetis-4.0/</em>.
+              </li>
+              <li>
+                Change to the directory <em>modmetis-4.0/build/</em>
+              </li>
+              <li>
+                Compile the library using the previously installed <em>CMake</em>
+              </li>
+              <ol>
+                <li>Generate the makefiles using the command &quot;../../CMake/bin/cmake ../&quot; (or "../../cmake_cvs/CMake/bin/cmake ../" for 64 bit Linux) (no quotes).</li>
+                <li>Build the library by typing &quot;make install&quot; </li>
+              </ol>
+            </li>
+
           </ol>
           <h3>
             <a name="Setting_up_BLAS"></a> Setting up BLAS

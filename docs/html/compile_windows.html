@@ -111,7 +111,7 @@
         <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
         <p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
 
-        <p style="font-size:9px;">Last Revision:<br/>$Date: 2009/05/12 16:18:58 $</p>
+        <p style="font-size:9px;">Last Revision:<br/>$Date: 2009/06/29 09:24:47 $</p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
@@ -198,7 +198,7 @@
           </li>
         </ol>
       </li>
-      <li> The last step is to extract and compile the sparse matrix library developed by <em>NIST</em>.(For more information about this library, see <a href="http://math.nist.gov/spblas/original.html" target="_blank">http://math.nist.gov/spblas/original.html</a>)
+      <li> The following step is to extract and compile the sparse matrix library developed by <em>NIST</em>.(For more information about this library, see <a href="http://math.nist.gov/spblas/original.html" target="_blank">http://math.nist.gov/spblas/original.html</a>)
       <ol>
         <li>In <em>ThirdParty\,</em> extract the spblastk0.9.tar.bz2 archive. This will create the directory <em>spblastk0.9\</em>.
         <li> Launch the previously installed <em>CMake</em> by typing "CMakeSetup.exe" at the VS command prompt (without the quotes) or by just double clicking on the <em>CMake</em> icon that appears on your desktop after installation. 
@@ -206,18 +206,47 @@
             <li>If launching from the VS command prompt and it can't find the file give it the full path. If you installed it in the default path, try entering &quot;C:\Program Files\CMake 2.6\bin\CMakeSetup.exe&quot; (this time with the quotes).</li>
           </ul>
         </li>
-          <li>Fill in the "Where is the source code:" field at the top of the CMake. This is the path to the <em>ThirdParty\spblastk0.9\</em> directory. For example, <em>C:\Nektar++\ThirdParty\spblastk0.9</em>
+        <li>Fill in the "Where is the source code:" field at the top of the CMake. This is the path to the <em>ThirdParty\spblastk0.9\</em> directory. For example, <em>C:\Nektar++\ThirdParty\spblastk0.9</em>
         </li>
-          <li>Fill in the "Where to build the binaries:" field at the top of CMake. This is the path to the <em>ThirdParty\spblastk0.9\build\</em> directory. For example, <em>C:\Nektar++\ThirdParty\spblastk0.9\build</em>. The Visual Studio solution files will be placed here.
+        <li>Fill in the "Where to build the binaries:" field at the top of CMake. This is the path to the <em>ThirdParty\spblastk0.9\build\</em> directory. For example, <em>C:\Nektar++\ThirdParty\spblastk0.9\build</em>. The Visual Studio solution files will be placed here.
         </li>
-          <li>
-            Click the &quot;Configure&quot; button at the bottom of the program. It will ask for the platform to generate the files for. Select <em>Visual Studio 9 2008</em>. Press <em>OK</em>.
-          </li>
-          <li>Press the &quot;Configure&quot; button again. This time everything should be GRAY, meaning everything is set. Press the &quot;OK&quot; button, and the Visual Studio solution will be created. </li>
-      </li>
+        <li>
+          Click the &quot;Configure&quot; button at the bottom of the program. It will ask for the platform to generate the files for. Select <em>Visual Studio 9 2008</em>. Press <em>OK</em>.
+        </li>
+        <li>Press the &quot;Configure&quot; button again. This time everything should be GRAY, meaning everything is set. Press the &quot;OK&quot; button, and the Visual Studio solution will be created. </li>
+        </li>
         <li>Open the solution file with Visual Studio.From the &quot;Build&quot; menu, select &quot;Configuration Manager...&quot;. For full optimizations, select &quot;Release&quot; from the &quot;Active solution configuration:&quot; menu.</li>
         <li>
-           Select the "INSTALL" project from the "Solution Explorer" on the left. From the "Build" menu, select "build INSTALL". This will build and install the library.
+          Select the "INSTALL" project from the "Solution Explorer" on the left. From the "Build" menu, select "build INSTALL". This will build and install the library.
+        </li>
+      </ol>
+      </li> 
+      <li> 
+        The last step is to extract and compile the graph partitioning package <em>METIS</em>. As we use a modified version of the 
+        standard METIS distribution, you are required to link against this version rather than the standard version possibly
+        available on your system. (For more information about the original METIS library, see <a href="http://www.cs.umn.edu/~karypis/metis" 
+                                                                                                 target="_blank">http://www.cs.umn.edu/~karypis/metis</a>,
+        for more information about the modified version, click <a href="./metisandnektar++.txt" 
+                                                                  target="_blank">here</a>)
+        <ol>
+        <li>In <em>ThirdParty\,</em> extract the modmetis-4.0.tar.bz2 archive. This will create the directory <em>modmetis-4.0\</em>.
+        <li> Launch the previously installed <em>CMake</em> by typing "CMakeSetup.exe" at the VS command prompt (without the quotes) or by just double clicking on the <em>CMake</em> icon that appears on your desktop after installation. 
+          <ul>
+            <li>If launching from the VS command prompt and it can't find the file give it the full path. If you installed it in the default path, try entering &quot;C:\Program Files\CMake 2.6\bin\CMakeSetup.exe&quot; (this time with the quotes).</li>
+          </ul>
+        </li>
+        <li>Fill in the "Where is the source code:" field at the top of the CMake. This is the path to the <em>ThirdParty\modmetis-4.0\</em> directory. For example, <em>C:\Nektar++\ThirdParty\modmetis-4.0</em>
+        </li>
+        <li>Fill in the "Where to build the binaries:" field at the top of CMake. This is the path to the <em>ThirdParty\modmetis-4.0\build\</em> directory. For example, <em>C:\Nektar++\ThirdParty\modmetis-4.0\build</em>. The Visual Studio solution files will be placed here.
+        </li>
+        <li>
+          Click the &quot;Configure&quot; button at the bottom of the program. It will ask for the platform to generate the files for. Select <em>Visual Studio 9 2008</em>. Press <em>OK</em>.
+        </li>
+        <li>Press the &quot;Configure&quot; button again. This time everything should be GRAY, meaning everything is set. Press the &quot;OK&quot; button, and the Visual Studio solution will be created. </li>
+        </li>
+        <li>Open the solution file with Visual Studio.From the &quot;Build&quot; menu, select &quot;Configuration Manager...&quot;. For full optimizations, select &quot;Release&quot; from the &quot;Active solution configuration:&quot; menu.</li>
+        <li>
+          Select the "INSTALL" project from the "Solution Explorer" on the left. From the "Build" menu, select "build INSTALL". This will build and install the library.
         </li>
       </ol>
       </li> 

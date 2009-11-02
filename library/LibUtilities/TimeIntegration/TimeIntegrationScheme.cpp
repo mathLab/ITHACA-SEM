@@ -997,9 +997,9 @@ namespace Nektar
                 else if(type == eIMEX)
                 { 
 				
-                    // if (i != 0) SJS turned off since it seems to stop implicit solve step in IMEX.
-                    {
-                        op.DoImplicitSolve(tmp, Y, T, A(i,i)*timestep);
+                  if(fabs(A(i,i)) > NekConstants::kNekZeroTol)
+                  {
+                       op.DoImplicitSolve(tmp, Y, T, A(i,i)*timestep);
 			
                         for(k = 0; k < nvar; k++)
                         {

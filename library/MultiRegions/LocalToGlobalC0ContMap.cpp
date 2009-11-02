@@ -531,7 +531,8 @@ namespace Nektar
                         if(vertReorderedGraphVertId.count(meshVertId) == 0)        
                         {                                
                             if(vertTempGraphVertId.count(meshVertId) == 0)
-                            {
+                            { 
+                                boost::add_vertex(boostGraphObj);
                                 vertTempGraphVertId[meshVertId] = tempGraphVertId++;
                             }
                             localVerts[vertCnt++] = vertTempGraphVertId[meshVertId];
@@ -543,6 +544,7 @@ namespace Nektar
                         {                            
                             if(edgeTempGraphVertId.count(meshEdgeId) == 0)
                             {
+                                boost::add_vertex(boostGraphObj);
                                 edgeTempGraphVertId[meshEdgeId] = tempGraphVertId++;
                             }
                             localEdges[edgeCnt++] = edgeTempGraphVertId[meshEdgeId];
@@ -1338,6 +1340,9 @@ namespace Nektar
 
 /**
  * $Log: LocalToGlobalC0ContMap.cpp,v $
+ * Revision 1.12  2009/10/30 14:02:55  pvos
+ * Multi-level static condensation updates
+ *
  * Revision 1.11  2009/05/10 23:17:12  sherwin
  * Updated mainly to handle doubly periodic meshes which required modification to vertex handling from a numbering perspective
  *

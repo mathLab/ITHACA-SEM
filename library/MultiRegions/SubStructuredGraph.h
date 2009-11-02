@@ -177,6 +177,7 @@ namespace Nektar
         public:
             BottomUpSubStructuredGraph(const Array<OneD, const int> septree);
             BottomUpSubStructuredGraph(const MultiLevelBisectedGraphSharedPtr& graph);
+            BottomUpSubStructuredGraph(const int nVerts);
 
             int GetTotDofs() const;
 
@@ -253,5 +254,8 @@ namespace Nektar
 #endif // MULTIREGIONS_SUBSTRUCTUREDGRAPH_H
 
 /**
-* $Log: $
+* $Log: SubStructuredGraph.h,v $
+* Revision 1.1  2009/10/30 14:02:55  pvos
+* Multi-level static condensation updates
+*
 **/

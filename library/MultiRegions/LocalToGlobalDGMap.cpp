@@ -368,6 +368,7 @@ namespace Nektar
                 {
                     // Initial put in element ordering (starting
                     // from zero) into TraceElmtGid
+                    boost::add_vertex(boostGraphObj);
                     TraceElmtGid[i] = cnt++;             
                 }
                 else

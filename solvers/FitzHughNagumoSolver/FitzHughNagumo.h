@@ -45,6 +45,7 @@ namespace Nektar
     enum EquationType
     {
         eNoEquationType,
+        eIMEXtest,
 	eFHNtest1,
 	eFHNtest2,
 	eFHNmonoplane,
@@ -55,6 +56,7 @@ namespace Nektar
     const std::string kEquationTypeStr[] = 
     {
         "NoType",
+        "IMEXtest",
 	"FHNtest1",
 	"FHNtest2",
 	"FHNmonoplane",
@@ -109,6 +111,10 @@ namespace Nektar
             return m_explicitReaction;
         }
 
+	inline int Usespiralwave(void)
+        {
+            return m_spiralwave;
+        }
 
         LibUtilities::TimeIntegrationMethod GetTimeIntMethod(void)
         {
@@ -146,6 +152,10 @@ namespace Nektar
                           Array<OneD,        Array<OneD, NekDouble> >&outarray, 
                     const NekDouble time);
 
+        void ODEeReactionIMEXtest(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+                                  Array<OneD, Array<OneD, NekDouble> >&outarray, 
+                                  const NekDouble time);
+
 	void ODEeReactiontest1(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
 			       Array<OneD, Array<OneD, NekDouble> >&outarray, 
 			       const NekDouble time);
@@ -161,11 +171,16 @@ namespace Nektar
 	void ODEeReaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
 			  Array<OneD, Array<OneD, NekDouble> >&outarray, 
 			  const NekDouble time);
-					
-	void ODEhelmSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-			  Array<OneD, Array<OneD, NekDouble> >&outarray,
-			  NekDouble time, 
-			  NekDouble lambda);
+	
+	void ODEhelmSolvetest(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                              Array<OneD, Array<OneD, NekDouble> >&outarray,
+                              NekDouble time, 
+                              NekDouble lambda);
+				
+	void ODEhelmSolvemono(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                              Array<OneD, Array<OneD, NekDouble> >&outarray,
+                              NekDouble time, 
+                              NekDouble lambda);
 
         void GeneralTimeIntegration(int nsteps, 
 		                   LibUtilities::TimeIntegrationMethod IntMethod,
@@ -175,20 +190,26 @@ namespace Nektar
 	void Evaluateepsilon();
 	void Evaluatebeta();
 
+        void SetFHNInitialConditions(const int Usespiralwave, NekDouble initialtime = 0.0);
+
+        void Generatesecondstimulus(const int Usespiralwave, Array<OneD, NekDouble>&outarray);
+
 	void MassMultiply(const Array<OneD, NekDouble> &inarray, 
 			  Array<OneD, NekDouble> &outarray, 
 			  const int direction, bool turnon = false);
 
         void Summary(std::ostream &out);
 
-
     protected:
 
     private: 
         int          m_infosteps;    ///< dump info to stdout at steps time
         EquationType m_equationType; ///< equation type;
-        NekDouble m_epsilon;    /// constant epsilon
-        NekDouble m_beta;   /// constant beta
+        NekDouble  m_epsilon;         /// constant epsilon
+        NekDouble  m_beta;            /// constant beta
+        NekDouble   m_timedelay;      // Spiral wave activation time delay
+        NekDouble   m_duration;       /// Impulse duration time
+        int        m_spiralwave;      /// Spiral wave activation 
         
         bool m_explicitAdvection;  ///< Flag to identify explicit Advection
         bool m_explicitDiffusion;  ///< Flag to identify explicit Diffusion
@@ -226,7 +247,10 @@ namespace Nektar
 #endif //NEKTAR_SOLVERS_FitzHughNagumo_FitzHughNagumo_H
 
 /**
-* $Log: AdvectionDiffusionReaction.h,v $
+* $Log: FitzHughNagumo.h,v $
+* Revision 1.1  2009/07/23 12:40:08  sehunchun
+* *** empty log message ***
+*
 * Revision 1.12  2009/07/23 05:32:28  sehunchun
 * Implicit and Explicit diffusion debugging
 *

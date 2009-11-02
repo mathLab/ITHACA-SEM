@@ -66,6 +66,51 @@ namespace Nektar
 
         int i;
 
+        if(m_boundaryConditions->CheckForParameter("epsilon") == true)
+        {
+            m_epsilon = m_boundaryConditions->GetParameter("epsilon");
+        }
+        else
+        {
+            m_epsilon = 0;
+        }
+
+        if(m_boundaryConditions->CheckForParameter("beta") == true)
+        {
+            m_beta = m_boundaryConditions->GetParameter("beta");
+        }
+        else
+        {
+            m_beta  = 0;
+        }
+
+        if(m_boundaryConditions->CheckForParameter("spiralwave") == true)
+        {
+            m_spiralwave = m_boundaryConditions->GetParameter("spiralwave");
+        }
+        else
+        {
+            m_spiralwave  = 0;
+        }
+
+        if(m_boundaryConditions->CheckForParameter("timedelay") == true)
+        {
+            m_timedelay = m_boundaryConditions->GetParameter("timedelay");
+        }
+        else
+        {
+            m_timedelay  = 0.0;
+        }
+
+        if(m_boundaryConditions->CheckForParameter("duration") == true)
+        {
+            m_duration = m_boundaryConditions->GetParameter("duration");
+        }
+        else
+        {
+            m_duration  = 3.5;
+        }
+
         // Set up equation type enum using kEquationTypeStr
         std::string typeStr = m_boundaryConditions->GetSolverInfo("EQTYPE");
 
@@ -80,8 +125,6 @@ namespace Nektar
 
         ASSERTL0(i != (int) eEquationTypeSize, "Invalid expansion type.");
  
-	m_timeIntMethod = LibUtilities::eIMEXdirk_3_4_3;	
-
 	std::string Implicit = "Implicit"; 
 	if(m_boundaryConditions->CheckForParameter("IO_InfoSteps") == true)
 	  {
@@ -129,7 +172,6 @@ namespace Nektar
 	      {
 		m_explicitDiffusion = false;
 		// Reset default for implicit diffusion
-		m_timeIntMethod = LibUtilities::eDIRKOrder3;		
 	      }
 	    else
 	      {
@@ -159,6 +201,9 @@ namespace Nektar
 	    m_explicitReaction = true;
 	  }
 
+        m_timeIntMethod = LibUtilities::eIMEXdirk_3_4_3;	
+
+
 	// check to see if time stepping has been reset
 	if(m_boundaryConditions->SolverInfoExists("TIMEINTEGRATIONMETHOD"))
 	  {
@@ -177,14 +222,253 @@ namespace Nektar
 	  }
     }
 
-    void FitzHughNagumo::Evaluateepsilon()
+    void FitzHughNagumo::SetFHNInitialConditions(const int Usespiralwave, NekDouble initialtime)
     {
-        m_epsilon = m_boundaryConditions->GetParameter("epsilon");
+        int nq = m_fields[0]->GetNpoints();
+      
+        Array<OneD,NekDouble> x0(nq);
+        Array<OneD,NekDouble> x1(nq);
+        Array<OneD,NekDouble> x2(nq);
+      
+        NekDouble unew=100.0, uinit=0.0, vinit, f, fd, fval, gval,Tol=0.00000001;
+
+        // get the coordinates (assuming all fields have the same discretisation)
+        m_fields[0]->GetCoords(x0,x1,x2);
+
+        // Get the initial constant u and v
+        for(int j = 0; j<1000; j++)
+        {
+            // f = fvalue(uinit);
+            f = uinit*uinit*uinit + 3.0*uinit + 6.0*m_beta;
+
+            // fd = fderiv(uinit);
+            fd = 3.0*uinit*uinit + 3.0;
+
+            unew = uinit - f/fd;
+
+            if(abs(unew-uinit) < Tol)
+            {
+                break;
+            }
+            uinit = unew;
+        }
+        vinit = uinit - (1.0/3.0)*uinit*uinit*uinit;
+
+        fval = uinit - (1.0/3.0)*uinit*uinit*uinit - vinit;
+        gval = uinit + m_beta - 0.5*vinit;
+
+        NekDouble xmin = Vmath::Vmin(nq,x0,1);
+        NekDouble xmax = Vmath::Vmax(nq,x0,1);
+        NekDouble ymin = Vmath::Vmin(nq,x1,1);
+        NekDouble ymax = Vmath::Vmax(nq,x1,1);
+        NekDouble rad;
+        NekDouble xc = 0.5*(xmin+xmax);
+        NekDouble yc = 0.5*(ymin+ymax);
+
+        // Infarction block in the middle of the domain
+        if(Usespiralwave==1)
+        {
+            for(int j = 0; j < nq; j++)
+            {
+                if( x0[j] <= (xmin+m_duration) )
+                {
+                    (m_fields[0]->UpdatePhys())[j] = 2.0;
+                    (m_fields[1]->UpdatePhys())[j] = vinit;
+                }
+
+                else if( (x0[j]>31.0) && (x0[j]<=39.0) )
+                {
+                    if( x1[j]<=35.0 )
+                    {
+                        (m_fields[0]->UpdatePhys())[j] = uinit;
+                        (m_fields[1]->UpdatePhys())[j] = 2.0;
+                    }
+                }
+
+                else
+                {
+                    (m_fields[0]->UpdatePhys())[j] = uinit;
+                    (m_fields[1]->UpdatePhys())[j] = vinit;
+                }
+            }
+        }
+
+        if(Usespiralwave==10)
+        {
+            for(int j = 0; j < nq; j++)
+            {
+                rad = sqrt( (x0[j]-xc)*(x0[j]-xc) + (x1[j]-yc)*(x1[j]-yc) );
+
+                if( rad <= m_duration )
+                {
+                    (m_fields[0]->UpdatePhys())[j] = 2.0;
+                    (m_fields[1]->UpdatePhys())[j] = vinit;
+                }
+
+                else
+                {
+                    (m_fields[0]->UpdatePhys())[j] = uinit;
+                    (m_fields[1]->UpdatePhys())[j] = vinit;
+                }
+            }
+        }
+
+        else
+        {
+            for(int j = 0; j < nq; j++)
+            {
+                if( x0[j] <= (xmin+m_duration) )
+                {
+                    (m_fields[0]->UpdatePhys())[j] = 2.0;
+                    (m_fields[1]->UpdatePhys())[j] = vinit;
+                }
+                else
+                {
+                    (m_fields[0]->UpdatePhys())[j] = uinit;
+                    (m_fields[1]->UpdatePhys())[j] = vinit;
+                }
+            }   
+        }
+
+
+        for(int i = 0 ; i < m_fields.num_elements(); i++)
+	  {
+              m_fields[i]->SetPhysState(true);
+              m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+          }
+
+        /*
+        // Smoothing out the initial conditions
+        for(int i = 0 ; i < m_fields.num_elements(); i++)
+        {
+            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
+
+            m_fields[i]->SetPhysState(true);
+            m_fields[i]->FwdTrans_BndConstrained(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+        }
+*/
+
+	// dump initial conditions to file
+	for(int i = 0; i < m_fields.num_elements(); ++i)
+	  {
+              std::string outname = m_sessionName + "_initial.chk";
+              ofstream outfile(outname.c_str());
+              WriteFld(outfile);
+	  }       
     }
 
-    void FitzHughNagumo::Evaluatebeta()
+    void FitzHughNagumo::Generatesecondstimulus(const int Usespiralwave, 
+                                                Array<OneD, NekDouble>&outarray)
     {
-        m_beta = m_boundaryConditions->GetParameter("beta");
+        int nvar = m_fields.num_elements();
+        int nq = m_fields[0]->GetNpoints();
+        Array<OneD,NekDouble> x0(nq);
+        Array<OneD,NekDouble> x1(nq);
+        Array<OneD,NekDouble> x2(nq);
+      
+        NekDouble unew=100.0, uinit=0.0, vinit, f, fd, fval, gval,Tol=0.00000001;
+
+        // get the coordinates (assuming all fields have the same discretisation)
+        m_fields[0]->GetCoords(x0,x1,x2);
+
+        Array<OneD, NekDouble> physfield(nq,0.0); 
+
+        NekDouble xmin = Vmath::Vmin(nq,x0,1);
+        NekDouble xmax = Vmath::Vmax(nq,x0,1);
+        NekDouble ymin = Vmath::Vmin(nq,x1,1);
+        NekDouble ymax = Vmath::Vmax(nq,x1,1);
+        NekDouble rad;
+        // Two waves propagating in (1,0) and (0,1) directions
+        if(Usespiralwave==2)
+        {
+            for(int j = 0; j < nq; j++)
+            {
+                if( x1[j] <= (ymin+m_duration) )
+                {
+                    physfield[j] = 2.0;
+                }
+            }   
+        }
+ 
+        // Two waves propagating in (1,0) and (-1,-1) directions
+        else if(Usespiralwave==3)
+        {
+            for(int j = 0; j < nq; j++)
+            {
+                rad = sqrt( (x0[j]-xmax)*(x0[j]-xmax) + (x1[j]-ymax)*(x1[j]-ymax) );
+
+                if( rad <= m_duration )
+                {
+                    physfield[j] = 2.0;
+                }
+            }   
+        }
+ 
+        else if(Usespiralwave==4)
+        {
+            for(int j = 0; j < nq; j++)
+            {
+                rad = sqrt( (x0[j]-xmax)*(x0[j]-xmax) + (x1[j]-ymax)*(x1[j]-ymax) );
+
+                if( x1[j] <= (ymin+m_duration) )
+                {
+                    physfield[j] = 2.0;
+                }
+
+                else if( rad <= m_duration )
+                {
+                    physfield[j] = 2.0;
+                }
+            }   
+        }
+
+         m_fields[0]->FwdTrans(physfield,outarray);
+    }
+
+    void FitzHughNagumo::ODEeReactionIMEXtest(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+                                              Array<OneD, Array<OneD, NekDouble> >&outarray, 
+                                              const NekDouble time)
+	
+    {
+        NekDouble PI = 3.141592653589793238462;
+        
+        int nvariables = inarray.num_elements();
+        int ncoeffs    = inarray[0].num_elements();        
+        int npoints = m_fields[0]->GetNpoints();
+        
+        Array<OneD,NekDouble> x0(npoints,0.0);
+        Array<OneD,NekDouble> x1(npoints,0.0);
+        Array<OneD,NekDouble> x2(npoints,0.0);  
+        
+        Array<OneD,NekDouble> physfield(npoints);
+        Array<OneD,NekDouble> ft(npoints,0.0);
+        
+        NekDouble csx,csy;
+
+        MassMultiply(inarray[0], outarray[0], -1);
+        
+        //Compute f(u) in physical field
+        m_fields[0]->BwdTrans(outarray[0],physfield);
+	m_fields[0]->SetPhysState(true);        
+        
+        Vmath::Vmul(npoints,physfield, 1, physfield, 1, physfield, 1);
+        
+        m_fields[0]->GetCoords(x0,x1,x2);
+        
+        for (int i =0; i< npoints; ++i)
+        {
+            csx = cos(PI*x0[i]);
+            csy = cos(PI*x1[i]);
+            ft[i] = exp(-2.0*time)*csx*csx*csy*csy + (2*PI*PI-1.0)*exp(-1.0*time)*csx*csy; 
+        }
+        
+        Vmath::Vsub(npoints, ft, 1, physfield, 1, physfield, 1);
+        
+        // Back to modal field
+        m_fields[0]->FwdTrans(physfield,outarray[0]);
+      	m_fields[0]->SetPhysState(false);        
+        
+        MassMultiply(outarray[0], outarray[0], 1);
     }
     
     void FitzHughNagumo::ODEeReactiontest1(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
@@ -199,24 +483,25 @@ namespace Nektar
       const NekDouble coeff = 2.0/m_epsilon;
       
       Array<OneD, NekDouble> physfield(npoints);
-      Array<OneD, NekDouble> temp2(npoints,0.0);
-      Array<OneD, NekDouble> temp3(npoints,0.0);
-      Array<OneD, NekDouble> temp(npoints,0.0);
-      
+      Array<OneD, NekDouble> utemp2(npoints,0.0);
+      Array<OneD, NekDouble> utemp3(npoints,0.0);
+
       for (int i = 0; i < nvariables; ++i)
 	{  
-	  
 	  MassMultiply(inarray[i], outarray[i], -1);
+
 	  m_fields[i]->BwdTrans(outarray[i],physfield);
+          m_fields[i]->SetPhysState(true);        
 	  
 	  // temp3 = (2/epsilon)*(u*u - u*u*u)
-	  Vmath::Vmul(npoints, physfield, 1, physfield, 1, temp, 1);
-	  Vmath::Vcopy(npoints, temp, 1, temp2, 1);
-	  Vmath::Vmul(npoints, physfield, 1, temp, 1, temp3, 1);
-	  Vmath::Vsub(npoints, temp2, 1, temp3, 1, physfield, 1);
+	  Vmath::Vmul(npoints, physfield, 1, physfield, 1, utemp2, 1);
+	  Vmath::Vmul(npoints, physfield, 1, utemp2, 1, utemp3, 1);
+	  Vmath::Vsub(npoints, utemp2, 1, utemp3, 1, physfield, 1);
 	  Vmath::Smul(npoints, coeff, physfield, 1, physfield, 1);
 	  
 	  m_fields[i]->FwdTrans(physfield,outarray[i]);
+          m_fields[i]->SetPhysState(false);        
+
 	  MassMultiply(outarray[i], outarray[i], 1);
 	}
     }
@@ -243,9 +528,10 @@ namespace Nektar
       
       for (int i = 0; i < nvariables; ++i)
 	{  
-	  
 	  MassMultiply(inarray[i], outarray[i], -1);
+
 	  m_fields[i]->BwdTrans(outarray[i],physfield);
+          m_fields[0]->SetPhysState(true);        
 	  
 	  // temp = u - u*u
 	  Vmath::Vmul(npoints, physfield, 1, physfield, 1, temp, 1);
@@ -265,6 +551,7 @@ namespace Nektar
 	  Vmath::Vmul(npoints, temp, 1, physfield, 1, physfield, 1);
 	  
 	  m_fields[i]->FwdTrans(physfield,outarray[i]);
+          m_fields[0]->SetPhysState(false);        
 
 	  MassMultiply(outarray[i], outarray[i], 1);
 	}
@@ -288,33 +575,35 @@ namespace Nektar
       
       Array<OneD, NekDouble> temp(ncoeffs, 0.0);
       
-      MassMultiply(inarray[0], outarray[0], -1);
-      m_fields[0]->BwdTrans(outarray[0],physfield);
+      //      MassMultiply(inarray[0], outarray[0], -1);
 
-      // For v: (1/m_epsilon)*( u*(1-u*u/3) - q )
+      m_fields[0]->BwdTrans(inarray[0],physfield);
+      m_fields[0]->SetPhysState(true);        
+
+      // For v: (1/m_epsilon)*( u*-u*u*u/3 - v )
       // physfield = u - (1.0/3.0)*u*u*u
       Vmath::Vmul(npoints, physfield, 1, physfield, 1, temp2, 1);
       Vmath::Vmul(npoints, physfield, 1, temp2, 1, temp3, 1);
       Vmath::Svtvp(npoints, (-1.0/3.0), temp3, 1, physfield, 1, physfield, 1);
       
       m_fields[0]->FwdTrans(physfield,outarray[0]);
-      MassMultiply(outarray[0], outarray[0], 1);
+      m_fields[0]->SetPhysState(false);        
+
+      // MassMultiply(outarray[0], outarray[0], 1);
       
       Vmath::Vsub(ncoeffs, inarray[1], 1, outarray[0], 1, outarray[0], 1);
       Vmath::Smul(ncoeffs, -1.0/m_epsilon, outarray[0], 1, outarray[0], 1);
       
       // For q: m_epsilon*( v + m_beta - m_gamma*q )
-      Vmath::Smul(ncoeffs, -1.0*m_gamma, inarray[1], 1, temp, 1);
-      Vmath::Svtvp(ncoeffs, 1.0, inarray[0], 1, temp, 1, outarray[1], 1);
+      Vmath::Svtvp(ncoeffs, -1.0*m_gamma, inarray[1], 1, inarray[0], 1, outarray[1], 1);
       Vmath::Sadd(ncoeffs, m_beta, outarray[1], 1, outarray[1], 1);
       Vmath::Smul(ncoeffs, m_epsilon, outarray[1], 1, outarray[1], 1);
     }
   
-
-  void FitzHughNagumo::ODEhelmSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-						Array<OneD, Array<OneD, NekDouble> >&outarray,
-						NekDouble time, 
-						NekDouble lambda)
+  void FitzHughNagumo::ODEhelmSolvetest(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                                        Array<OneD, Array<OneD, NekDouble> >&outarray,
+                                        NekDouble time, 
+                                        NekDouble lambda)
   {
     int nvariables = inarray.num_elements();
     int ncoeffs    = inarray[0].num_elements();
@@ -323,34 +612,73 @@ namespace Nektar
     // inarray = input: \hat{rhs} -> output: \hat{Y}    
     // outarray = output: nabla^2 \hat{Y}       
     // where \hat = modal coeffs
+
+    NekDouble kappa = 1.0/(lambda*m_epsilon);
+
     for (int i = 0; i < nvariables; ++i)
       {
 	// For v: ==============================
-	MassMultiply(inarray[0], outarray[0], -1);
+        MassMultiply(inarray[i], outarray[i], -1);
 	
 	// Multiply rhs[i] with -1.0/gamma/timestep
-	Vmath::Smul(ncoeffs, -1.0/lambda, outarray[0], 1, outarray[0], 1);
+	Vmath::Smul(ncoeffs, -1.0*kappa, outarray[i], 1, outarray[i], 1);
 	
 	// Update coeffs to m_fields
-	m_fields[0]->UpdateCoeffs() = outarray[0];
+	m_fields[i]->UpdateCoeffs() = outarray[i];
 			
 	// Backward Transformation to nodal coefficients
-	m_fields[0]->BwdTrans(m_fields[0]->GetCoeffs(), m_fields[0]->UpdatePhys());
+	m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
 
-	NekDouble kappa = 1.0/lambda;
-	
 	// Solve a system of equations with Helmholtz solver
-	m_fields[0]->HelmSolve(m_fields[0]->GetPhys(),m_fields[0]->UpdateCoeffs(),kappa);
+	m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs(),kappa);
 	m_fields[i]->SetPhysState(false);        
 	
 	// The solution is Y[i]
-	outarray[0] = m_fields[0]->GetCoeffs();	  
+	outarray[i] = m_fields[i]->GetCoeffs();	  
         
-	MassMultiply(outarray[0], outarray[0], 1);
-	
-	// For q: No helmholtz solver is needed=============================
-	Vmath::Vcopy(ncoeffs, inarray[1], 1, outarray[1], 1);
+      	MassMultiply(outarray[i], outarray[i], 1);
       }
+  }
+
+
+  void FitzHughNagumo::ODEhelmSolvemono(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                                        Array<OneD, Array<OneD, NekDouble> >&outarray,
+                                        NekDouble time, 
+                                        NekDouble lambda)
+  {
+    int nvariables = inarray.num_elements();
+    int ncoeffs    = inarray[0].num_elements();
+    
+    NekDouble kappa = 1.0/lambda;
+
+    // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
+    // inarray = input: \hat{rhs} -> output: \hat{Y}    
+    // outarray = output: nabla^2 \hat{Y}       
+    // where \hat = modal coeffs
+
+    // For v: ==============================
+    // MassMultiply(inarray[0], outarray[0], -1);
+    
+    // Multiply rhs[i] with -1.0/gamma/timestep
+    Vmath::Smul(ncoeffs, -1.0*kappa, inarray[0], 1, outarray[0], 1);
+    
+    // Update coeffs to m_fields
+    m_fields[0]->UpdateCoeffs() = outarray[0];
+    
+    // Backward Transformation to nodal coefficients
+    m_fields[0]->BwdTrans(m_fields[0]->GetCoeffs(), m_fields[0]->UpdatePhys());
+    
+    // Solve a system of equations with Helmholtz solver
+    m_fields[0]->HelmSolve(m_fields[0]->GetPhys(),m_fields[0]->UpdateCoeffs(),kappa);
+    m_fields[0]->SetPhysState(false);        
+    
+    // The solution is Y[i]
+    outarray[0] = m_fields[0]->GetCoeffs();	  
+    
+    // MassMultiply(outarray[0], outarray[0], 1);
+    
+    // For q: No helmholtz solver is needed=============================
+    Vmath::Vcopy(ncoeffs, inarray[1], 1, outarray[1], 1);
   }
   
   
@@ -401,6 +729,7 @@ namespace Nektar
     // Set up wrapper to fields data storage. 
     Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
     Array<OneD, Array<OneD, NekDouble> >   tmp(nvariables);
+    Array<OneD, NekDouble>   secondimpulse(ncoeffs);
     
     for(i = 0; i < nvariables; ++i)
       {
@@ -474,6 +803,7 @@ namespace Nektar
             }
         }
 					          
+        NekDouble timenow;
         for(n = 0; n < nsteps; ++n)
         {
             //----------------------------------------------
@@ -487,6 +817,16 @@ namespace Nektar
             else
             {
                 fields = IntScheme[numMultiSteps-1]->TimeIntegrate(m_timestep,u,ode);
+
+                timenow = abs(1.0*m_timestep*n - m_timedelay);
+                if( (m_spiralwave>1) && (m_spiralwave<10) )
+                {
+                    if(timenow<0.000001)
+                    {
+                        Generatesecondstimulus(m_spiralwave,secondimpulse);
+                        Vmath::Vadd(ncoeffs, &secondimpulse[0], 1, &fields[0][0], 1, &fields[0][0], 1);
+                    }
+                }
             }
 
             m_time += m_timestep;
@@ -837,14 +1177,20 @@ namespace Nektar
       }
     if(m_explicitReaction)
       {
-	out << "\t\tReaction Advancement    : Explicit" <<endl;
+	out << "\tReaction Advancement    : Explicit" <<endl;
       }
     else
       {
-	out << "\t\tReaction Advancement    : Implicit" <<endl;
+	out << "\tReaction Advancement    : Implicit" <<endl;
       }
 
     out << "\tTime Integration Method : " << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod] << endl;
+    out << "\tEpsilon    : " << m_epsilon << endl;
+    out << "\tBeta    : " << m_beta << endl;
+    out << "\tSpiralwave : " << m_spiralwave << endl;
+    out << "\tTimedelay : " << m_timedelay << endl;
+    out << "\tDuration : " << m_duration << endl;
+
     ADRBase::TimeParamSummary(out);
 
     cout << "=======================================================================" << endl;

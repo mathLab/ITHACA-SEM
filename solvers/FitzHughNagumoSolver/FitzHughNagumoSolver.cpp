@@ -62,52 +62,69 @@ int main(int argc, char *argv[])
     LibUtilities::TimeIntegrationSchemeOperators ode;
 
     int nsteps = EAD.GetSteps();
+    int Usespiralwave = EAD.Usespiralwave();;
+
     NekDouble lambda = 0.0;
 
     EAD.Summary(cout);
     
     EAD.ZeroPhysFields(); // Zero phys field so that following switch is consistent
-    
-    // if not steady state equation set up initial conditions 
-    EAD.SetInitialConditions();
 
     switch(EAD.GetEquationType())
     {
-    case eFHNtest1:
+    case eIMEXtest:
         {
+            EAD.SetInitialConditions();
+
 	  // Choose the method of deriving forcing functions
-	  ode.DefineImplicitSolve (&FitzHughNagumo::ODEhelmSolve,&EAD);	
-	  ode.DefineOdeRhs        (&FitzHughNagumo::ODEeReactiontest1,&EAD);	
+	  ode.DefineImplicitSolve (&FitzHughNagumo::ODEhelmSolvetest,EAD);	
+	  ode.DefineOdeRhs        (&FitzHughNagumo::ODEeReactionIMEXtest,EAD);	
           
 	  // General Linear Time Integration
 	  EAD.GeneralTimeIntegration(nsteps, EAD.GetTimeIntMethod(), ode);
         }
+        break;
 
+    case eFHNtest1:
+        {
+            EAD.SetInitialConditions();
+
+	  // Choose the method of deriving forcing functions
+	  ode.DefineImplicitSolve (&FitzHughNagumo::ODEhelmSolvetest,EAD);	
+	  ode.DefineOdeRhs        (&FitzHughNagumo::ODEeReactiontest1,EAD);	
+          
+	  // General Linear Time Integration
+	  EAD.GeneralTimeIntegration(nsteps, EAD.GetTimeIntMethod(), ode);
+        }
         break;
 
     case eFHNtest2:
         {
+            EAD.SetInitialConditions();
+            
 	  // Choose the method of deriving forcing functions
-	  ode.DefineImplicitSolve (&FitzHughNagumo::ODEhelmSolve,&EAD);	
-	  ode.DefineOdeRhs        (&FitzHughNagumo::ODEeReactiontest2,&EAD);	
+	  ode.DefineImplicitSolve (&FitzHughNagumo::ODEhelmSolvetest,EAD);	
+	  ode.DefineOdeRhs        (&FitzHughNagumo::ODEeReactiontest2,EAD);	
           
 	  // General Linear Time Integration
 	  EAD.GeneralTimeIntegration(nsteps, EAD.GetTimeIntMethod(), ode);
         }
-
         break;
 
     case eFHNmonoplane:
         {
+            EAD.SetFHNInitialConditions(Usespiralwave);
+
 	  // Choose the method of deriving forcing functions
-	  ode.DefineImplicitSolve (&FitzHughNagumo::ODEhelmSolve,&EAD);	
-	  ode.DefineOdeRhs        (&FitzHughNagumo::ODEeReactionmono,&EAD);	
+	  ode.DefineImplicitSolve (&FitzHughNagumo::ODEhelmSolvemono,EAD);	
+	  ode.DefineOdeRhs        (&FitzHughNagumo::ODEeReactionmono,EAD);	
           
 	  // General Linear Time Integration
 	  EAD.GeneralTimeIntegration(nsteps, EAD.GetTimeIntMethod(), ode);
         }
 
         break;
+
     case eNoEquationType:
     default:
         ASSERTL0(false,"Unknown or undefined equation type");

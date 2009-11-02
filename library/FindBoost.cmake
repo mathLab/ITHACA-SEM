@@ -483,6 +483,24 @@ ELSE (_boost_IN_CACHE)
       SET(CMAKE_FIND_LIBRARY_SUFFIXES ${_boost_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES})
     ENDIF( Boost_USE_STATIC_LIBS )
   ENDFOREACH(COMPONENT)
+  
+  # Option to use system provided ZLIB library instead of requiring the one
+  # build by Boost on UNIX systems.
+  # If Boost is not built with ZLIB on your system, set NEKTAR_USE_SYSTEM_ZLIB
+  # to allow the system libz.so to be used instead.
+  IF (UNIX)
+    SET(NEKTAR_USE_SYSTEM_ZLIB OFF CACHE BOOL "Use system ZLIB library")
+    IF (NOT Boost_ZLIB_LIBRARY_FOUND AND NEKTAR_USE_SYSTEM_ZLIB)
+        INCLUDE(FindZLIB)
+        IF (NOT Boost_ZLIB_LIBRARY_RELEASE AND ZLIB_FOUND)
+            SET(Boost_ZLIB_LIBRARY_RELEASE ${ZLIB_LIBRARY} CACHE STRING "ZLIB   library"
+                FORCE)
+            SET(Boost_ZLIB_LIBRARY_DEBUG ${ZLIB_LIBRARY} CACHE STRING "ZLIB     library"
+                FORCE)
+        ENDIF (NOT Boost_ZLIB_LIBRARY_RELEASE AND ZLIB_FOUND)
+    ENDIF (NOT Boost_ZLIB_LIBRARY_FOUND AND NEKTAR_USE_SYSTEM_ZLIB)
+  ENDIF (UNIX)
+
   # ------------------------------------------------------------------------
   #  End finding boost libraries
   # ------------------------------------------------------------------------
@@ -571,8 +589,8 @@ ELSE (_boost_IN_CACHE)
       ENDFOREACH(COMPONENT)
   ELSE (Boost_FOUND)
       IF (Boost_FIND_REQUIRED)
-        MESSAGE(STATUS "Boost version required: ${Boost_FIND_VERSION}. Found: ${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}.${Boost_SUBMINOR_VERSION}")
-        MESSAGE(FATAL_ERROR "Couldn't find the Boost libraries and/or include directory, or the version found is too old. Please install the Boost libraries AND development packages. You can set BOOST_ROOT, BOOST_INCLUDEDIR and BOOST_LIBRARYDIR to help find Boost.")
+          #MESSAGE(STATUS "Boost version required: ${Boost_FIND_VERSION}. Found: ${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}.${Boost_SUBMINOR_VERSION}")
+          #MESSAGE(FATAL_ERROR "Couldn't find the Boost libraries and/or include directory, or the version found is too old. Please install the Boost libraries AND development packages. You can set BOOST_ROOT, BOOST_INCLUDEDIR and BOOST_LIBRARYDIR to help find Boost.")
       ENDIF(Boost_FIND_REQUIRED)
   ENDIF(Boost_FOUND)
 

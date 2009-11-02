@@ -110,7 +110,7 @@ namespace Nektar
                 \begin{array}{rcl}
                 I_{pq} = (\phi_q \phi_q, u) & = & \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1}
                 \phi_p(\xi_{0,i}) \phi_q(\xi_{1,j}) w^0_i w^1_j u(\xi_{0,i} \xi_{1,j}) 
-                J_{i,j}\                                    \
+                J_{i,j}\\
                 & = & \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i})
                 \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j}  J_{i,j}
                 \end{array}
@@ -723,6 +723,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.52  2009/10/06 09:43:57  cbiotto
+ *    Adding virtual function GetBasis
+ *
  *    Revision 1.51  2009/09/06 22:24:00  sherwin
  *    Updates for Navier-Stokes solver
  *

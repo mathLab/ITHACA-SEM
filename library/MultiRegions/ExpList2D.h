@@ -39,7 +39,6 @@
 #include <vector>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList1D.h>
-#include <MultiRegions/GenExpList1D.h>
 #include <LocalRegions/TriExp.h>
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/NodalTriExp.h>
@@ -145,6 +144,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.h,v $
+* Revision 1.20  2009/09/06 22:28:45  sherwin
+* Updates for Navier-Stokes solver
+*
 * Revision 1.19  2009/05/10 23:17:12  sherwin
 * Updated mainly to handle doubly periodic meshes which required modification to vertex handling from a numbering perspective
 *

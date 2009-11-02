@@ -37,7 +37,8 @@
 #define NEKTAR_LIBS_MULTIREGIONS_CONTFIELD1D_H
 
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/ContExpList1D.h>
+#include <MultiRegions/DisContField1D.h>
+#include <MultiRegions/LocalToGlobalC0ContMap.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/ExpList1D.h>
 
@@ -49,351 +50,464 @@
 namespace Nektar
 {
     namespace MultiRegions
-    {           
-        /**
-         * \brief This class is the abstraction of a global continuous one-dimensional 
-         * spectral/hp element expansion which approximates the solution of a set of  
-         * partial differential equations.
-         *
-         * As opposed to the class #ContExpList1D, the class #ContField1D is able to 
-         * incorporate the boundary conditions imposed to the problem to be solved. 
-         * Therefore, the class is equipped with three additional data members:
-         * - #m_bndCondExpansions
-         * - #m_bndTypes
-         * - #m_bndCondEquations
-         *
-         * The first data structure, #m_bndCondExpansions, 
-         * contains the point Expansion on the boundary,  #m_bndTypes
-         * stores information about the type of boundary condition on the different parts
-         * of the boundary while #m_bndCondEquations holds the equation of the imposed
-         * boundary conditions.<BR>
-         * Furthermore, in case of Dirichlet boundary conditions,
-         * this class is capable of lifting a known solution satisfying these boundary 
-         * conditions. If we denote the unknown solution by 
-         * \f$u^{\mathcal{H}}(\boldsymbol{x})\f$ and the known Dirichlet boundary conditions
-         *  by \f$u^{\mathcal{D}}(\boldsymbol{x})\f$, the expansion then can be decomposed 
-         * as
-         * \f[ u^{\delta}(\boldsymbol{x}_i)=u^{\mathcal{D}}(\boldsymbol{x}_i)+
-         * u^{\mathcal{H}}(\boldsymbol{x}_i)=\sum_{n=0}^{N^{\mathcal{D}}-1}
-         * \hat{u}_n^{\mathcal{D}}\Phi_n(\boldsymbol{x}_i)+
-         * \sum_{n={N^{\mathcal{D}}}}^{N_{\mathrm{dof}}-1}\hat{u}_n^{\mathcal{H}}
-         * \Phi_n(\boldsymbol{x}_i).\f]
-         * This lifting is accomplished by ordering the known global degrees of freedom, 
-         * prescribed by the Dirichlet boundary conditions, first in the global array 
-         * \f$\boldsymbol{\hat{u}}\f$, that is,
-         * \f[\boldsymbol{\hat{u}}=\left[ \begin{array}{c}
-         * \boldsymbol{\hat{u}}^{\mathcal{D}}\\
-         * \boldsymbol{\hat{u}}^{\mathcal{H}}
-         * \end{array} \right].\f]
-         * Such kind of expansions are also referred to as continuoous fields.
-         * This class should be used when solving 2D problems using a standard Galerkin 
-         * approach.
-         */ 
-        class ContField1D: public ContExpList1D
+    {
+        /// Abstraction of a global continuous one-dimensional spectral/hp
+        /// element expansion which approximates the solution of a set of
+        /// partial differential equations.
+        class ContField1D: public DisContField1D
         {
-        public:           
-            /**
-             * \brief The default constructor. 
-             */ 
+        public:
+            /// Default constructor.
             ContField1D();
-          
-            /**
-             * \brief 
-             */ 
+
+            /// Constructor.
             ContField1D(SpatialDomains::MeshGraph1D &graph1D,
-                        SpatialDomains::BoundaryConditions &bcs, 
-                        const int bc_loc = 0,
-                        const GlobalSysSolnType solnType = eDirectStaticCond);
-  
-            /**
-             * \brief This constructor sets up global continuous field based on an 
-             * input mesh and boundary conditions.
-             *
-             * Given a mesh \a graph1D, containing information about the domain and 
-             * the spectral/hp element expansion, this constructor fills the list of 
-             * local expansions #m_exp with the proper expansions, calculates the 
-             * total number of quadrature points \f$\boldsymbol{x}_i\f$ and local 
-             * expansion coefficients \f$\hat{u}^e_n\f$ and allocates memory for the 
-             * arrays #m_coeffs and #m_phys. Furthermore, it constructs the mapping 
-             * array (contained in #m_locToGloMap) for the transformation between 
-             * local elemental level and global level, it calculates the total 
-             * number global expansion coefficients \f$\hat{u}_n\f$ and allocates
-             *  memory for the array #m_contCoeffs. The constructor also discretises 
-             * the boundary conditions, specified by the argument \a bcs, by 
-             * expressing them in terms of the coefficient of the expansion on the 
-             * boundary. 
-             *
-             * \param graph1D A mesh, containing information about the domain and 
-             * the spectral/hp element expansion.
-             * \param bcs The boundary conditions.
-             * \param variable An optional parameter to indicate for which variable 
-             * the field should be constructed.
-             */ 
-            ContField1D(SpatialDomains::MeshGraph1D &graph1D,
-                        SpatialDomains::BoundaryConditions &bcs, 
-                        const std::string variable,
-                        const GlobalSysSolnType solnType = eDirectStaticCond);
-      
-            /**
-             * \brief 
-             */ 
-            ContField1D(const LibUtilities::BasisKey &Ba,
-                        const SpatialDomains::MeshGraph1D &graph1D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0,
                         const GlobalSysSolnType solnType = eDirectStaticCond);
-      
-            /**
-             * \brief 
-             */ 
-            ContField1D(const LibUtilities::BasisKey &Ba,
-                        const SpatialDomains::MeshGraph1D &graph1D,
+
+            /// Set up global continuous field based on an input mesh and
+            /// boundary conditions.
+            ContField1D(SpatialDomains::MeshGraph1D &graph1D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable,
                         const GlobalSysSolnType solnType = eDirectStaticCond);
 
-            /**
-             * \brief The copy constructor.
-             */ 
+            /// Set up global continuous field based on an input mesh, basis
+            /// key and boundary conditions.
+            ContField1D(const LibUtilities::BasisKey &Ba,
+                        SpatialDomains::MeshGraph1D &graph1D,
+                        SpatialDomains::BoundaryConditions &bcs,
+                        const int bc_loc = 0,
+                        const GlobalSysSolnType solnType = eDirectStaticCond);
+
+            /// Set up global continuous field based on an input mesh, basis
+            /// key and boundary conditions.
+            ContField1D(const LibUtilities::BasisKey &Ba,
+                        SpatialDomains::MeshGraph1D &graph1D,
+                        SpatialDomains::BoundaryConditions &bcs,
+                        const std::string variable,
+                        const GlobalSysSolnType solnType = eDirectStaticCond);
+
+            /// Copy constructor.
             ContField1D(const ContField1D &In);
 
-            /**
-             * \brief The default destructor.
-             */ 
+            /// Destructor
             ~ContField1D();
 
-            /**
-             * \brief This function performs the global forward transformation of a 
-             * function \f$f(x)\f$, subject to the boundary conditions 
-             * specified.
-             *
-             * Given a function \f$f(x)\f$ defined at the quadrature 
-             * points, this function determines the unknown global coefficients 
-             * \f$\boldsymbol{\hat{u}}^{\mathcal{H}}\f$ employing a discrete 
-             * Galerkin projection from physical space to coefficient 
-             * space. The operation is evaluated by the function #GlobalSolve using 
-             * the global mass matrix.
-             *
-             * The values of the function \f$f(x)\f$ evaluated at the 
-             * quadrature points \f$x_i\f$ should be contained in the 
-             * variable #m_phys of the ExpList object \a Sin. The resulting global 
-             * coefficients \f$\hat{u}_g\f$ are stored in the array #m_contCoeffs.
-             *
-             * \param Sin An ExpList, containing the discrete evaluation of 
-             * \f$f(x)\f$ at the quadrature points in its array #m_phys.
-             */ 
-            void FwdTrans(const Array<OneD, const NekDouble> &inarray,
-                                Array<OneD,      NekDouble> &outarray,
-                          bool  UseContCoeffs = false);
-            
-            void MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, 
-                                               Array<OneD,       NekDouble> &outarray,
-                                         bool  UseContCoeffs = false);
-          
-            /**
-             * \brief This function solves the one-dimensional Helmholtz equation, 
-             * subject to the boundary conditions specified.
-             * 
-             * Consider the one dimensional Helmholtz equation, 
-             * \f[\frac{d^2u}{dx^2}-\lambda u(x) = 
-             * f(x),\f]
-             * supplemented with appropriate boundary conditions (which are contained
-             * in the data member #m_bndCondExpansions). Applying a \f$C^0\f$ continuous 
-             * Galerkin discretisation, this equation leads to the following linear 
-             * system:
-             * \f[\left( \boldsymbol{M}+\lambda\boldsymbol{L}\right)
-             * \boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}}\f]
-             * where \f$\boldsymbol{M}\f$ and \f$\boldsymbol{L}\f$ are the mass and 
-             * Laplacian matrix respectively. This function solves the system above 
-             * for the global coefficients \f$\boldsymbol{\hat{u}}\f$ by a call to 
-             * the function #GlobalSolve.
-             *
-             * The values of the function \f$f(x)\f$ evaluated at the 
-             * quadrature points \f$\boldsymbol{x}_i\f$ should be contained in the 
-             * variable #m_phys of the ExpList object \a Sin. The resulting global 
-             * coefficients \f$\boldsymbol{\hat{u}}_g\f$ are stored in the array 
-             * #m_contCoeffs.
-             * 
-             * \param Sin An ExpList, containing the discrete evaluation of the 
-             * forcing function \f$f(x)\f$ at the quadrature points 
-             * in its array #m_phys.
-             * \param lambda The parameter \f$\lambda\f$ of the Helmholtz equation
-             */ 
-            void HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD,       NekDouble> &outarray,
-                           NekDouble lambda,
-                           bool UseContCoeffs = false,
-                           const Array<OneD, const NekDouble>& dirForcing = NullNekDouble1DArray);
+            /// Perform global forward transformation of a function \f$f(x)\f$,
+            //  subject to the boundary conditions specified.
+            void FwdTrans(      const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,      NekDouble> &outarray,
+                                bool  UseContCoeffs = false);
 
-            /**
-             * \brief This function evaluates the boundary conditions at a certain 
-             * time-level.
-             *
-             * Based on the expression \f$g(x,t)\f$ for the boundary conditions, this
-             * function evaluates the boundary conditions for all boundaries at 
-             * time-level \a t.
-             *
-             * \param time The time at which the boundary conditions should be 
-             * evaluated
-             */ 
-            void EvaluateBoundaryConditions(const NekDouble time = 0.0)
-            {
-                ExpList1D::EvaluateBoundaryConditions(time,m_bndCondExpansions,m_bndConditions);
-            };
-          
-            /**
-             * \brief This function return the boundary conditions expansion.
-             */ 
-            inline const Array<OneD,const LocalRegions::PointExpSharedPtr>& GetBndCondExpansions()
-            {
-                return m_bndCondExpansions;
-            }
-            
-            inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& GetBndConditions()
-            {
-                return m_bndConditions;
-            }
+            ///
+            void MultiplyByInvMassMatrix(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                bool  UseContCoeffs = false);
+
+            /// Solve the Helmholtz problem.
+            void HelmSolve(     const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                NekDouble lambda,
+                                bool UseContCoeffs = false,
+                                const Array<OneD, const NekDouble>& dirForcing
+                                                    = NullNekDouble1DArray);
+
+            /// Evaluates the boundary conditions at a certain time-level.
+            // inline
+            void EvaluateBoundaryConditions(const NekDouble time = 0.0);
+
+
+            /// Return the boundary conditions expansion.
+            // inline
+            const Array<OneD,const LocalRegions::PointExpSharedPtr>&
+                                                     GetBndCondExpansions();
+
+            // inline
+            const Array<OneD,const SpatialDomains
+                                ::BoundaryConditionShPtr>& GetBndConditions();
+
+            /// Returns the total number of global degrees of freedom
+            /// \f$N_{\mathrm{dof}}\f$.
+            // inline
+            int GetContNcoeffs();
+
+            /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$
+            /// (implemented as #m_contCoeffs) containing all global expansion
+            /// coefficients.
+            // inline
+            Array<OneD, NekDouble> &UpdateContCoeffs();
+
+            /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$
+            /// (implemented as #m_contCoeffs) containing all global expansion
+            /// coefficients.
+            // inline
+            const Array<OneD, const NekDouble> &GetContCoeffs() const;
+
+            /// Scatters from the global coefficients
+            /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
+            /// \f$\boldsymbol{\hat{u}}_l\f$.
+            // inline
+            void GlobalToLocal();
+
+            /// Scatters from the global coefficients
+            /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
+            /// \f$\boldsymbol{\hat{u}}_l\f$.
+            // inline
+            void GlobalToLocal( const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,NekDouble> &outarray);
+
+            /// Gathers the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
+            /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
+            // inline
+            void LocalToGlobal();
+
+            /// Assembles the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
+            /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
+            // inline
+            void Assemble();
+
+            /// Assembles the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
+            /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
+            // inline
+            void Assemble(const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,NekDouble> &outarray);
+
+            /// Returns the map from local to global level.
+            // inline
+            const LocalToGlobalC0ContMapSharedPtr& GetLocalToGlobalMap() const;
+
+            /// Calculates the inner product of a function \f$f(x)\f$ with
+            /// respect to all <em>global</em> expansion modes
+            /// \f$\phi_n^e(x)\f$.
+            void IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD, NekDouble> &outarray,
+                                bool  UseContCoeffs = false);
+
+            /// Calculates the result of the multiplication of a global matrix
+            /// of type specified by \a mkey with a vector given by \a inarray.
+            void GeneralMatrixOp(const GlobalMatrixKey             &gkey,
+                                const Array<OneD,const NekDouble> &inarray,
+                                      Array<OneD,      NekDouble> &outarray,
+                                bool  UseContCoeffs = false);
 
         protected:
+            /// (A shared pointer to) the object which contains all the required
+            /// information for the transformation from local to global degrees
+            /// of freedom.
+            LocalToGlobalC0ContMapSharedPtr m_locToGloMap;
 
-        private:      
-            /**
-             * \brief An object which contains the discretised boundary conditions. 
-             *
-             * It is an array of size equal to the number of boundary regions and 
-             * consists of entries of the type LocalRegions#PointExp. 
-             */ 
-            Array<OneD,LocalRegions::PointExpSharedPtr>         m_bndCondExpansions;
-          
-            /**
-             * \brief An array which contains the information about the boundary condition  
-             * on the different boundary regions.
-             */ 
+            /// The total number of global degrees of freedom.
+            /// #m_contNcoeffs\f$=N_{\mathrm{dof}}\f$
+            int                             m_contNcoeffs;
+
+            /// The array of length #m_ncoeffs\f$=N_{\mathrm{dof}}\f$ containing
+            /// the global expansion coefficients.
+            Array<OneD, NekDouble>          m_contCoeffs;
+
+            /// (A shared pointer to) a list which collects all the global
+            /// matrices being assembled, such that they should be constructed
+            /// only once.
+            GlobalLinSysMapShPtr            m_globalLinSys;
+
+        private:
+            /// Discretised boundary. Array of size equal to the number of
+            /// boundary regions and consists of entries of the type
+            /// LocalRegions#PointExp.
+            Array<OneD,LocalRegions::PointExpSharedPtr> m_bndCondExpansions;
+
+            /// An array which contains the information about the boundary
+            /// condition on the different boundary regions.
             Array<OneD,SpatialDomains::BoundaryConditionShPtr>  m_bndConditions;
-          
-            /**
-             * \brief This function returns the linear system specified by the key 
-             * \a mkey.
-             * 
-             * The function searches the map #m_globalLinSys to see if the global matrix 
-             * has been created before. If not, it calls the function  
-             #GenGlobalLinSys to generate the requested global system.
-             *
-             * \param mkey This key uniquely defines the requested linear system.
-             */ 
+
+            /// Returns the linear system specified by \a mkey.
             GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
 
-          
-            /**
-             * \brief This function solves the linear system specified by the key 
-             * \a key.
-             * 
-             * Given a linear system specified by the key \a key,
-             * \f[\boldsymbol{M}\boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}},\f]
-             * this function solves this linear system taking into account the 
-             * boundary conditions specified in the data member #m_bndCondExpansions. 
-             * Therefore, it adds an array \f$\boldsymbol{\hat{g}}\f$ which 
-             * represents the non-zero surface integral resulting from the weak 
-             * boundary conditions (e.g. Neumann boundary conditions) to the right 
-             * hand side, that is,
-             * \f[\boldsymbol{M}\boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}}+
-             * \boldsymbol{\hat{g}}.\f]
-             * Furthermore, it lifts the known degrees of freedom which are 
-             * prescribed by the Dirichlet boundary conditions. As these known 
-             * coefficients \f$\boldsymbol{\hat{u}}^{\mathcal{D}}\f$ are numbered 
-             * first in the global coefficient array \f$\boldsymbol{\hat{u}}_g\f$, 
-             * the linear system can be decomposed as,
-             * \f[\left[\begin{array}{cc}
-             * \boldsymbol{M}^{\mathcal{DD}}&\boldsymbol{M}^{\mathcal{DH}}\\
-             * \boldsymbol{M}^{\mathcal{HD}}&\boldsymbol{M}^{\mathcal{HH}}
-             * \end{array}\right]
-             * \left[\begin{array}{c}
-             * \boldsymbol{\hat{u}}^{\mathcal{D}}\\
-             * \boldsymbol{\hat{u}}^{\mathcal{H}}
-             * \end{array}\right]=
-             * \left[\begin{array}{c}
-             * \boldsymbol{\hat{f}}^{\mathcal{D}}\\
-             * \boldsymbol{\hat{f}}^{\mathcal{H}}
-             * \end{array}\right]+
-             * \left[\begin{array}{c}
-             * \boldsymbol{\hat{g}}^{\mathcal{D}}\\
-             * \boldsymbol{\hat{g}}^{\mathcal{H}}
-             * \end{array}\right]
-             * \f]
-             * which will then be solved for the unknown coefficients 
-             * \f$\boldsymbol{\hat{u}}^{\mathcal{H}}\f$ as,
-             * \f[
-             * \boldsymbol{M}^{\mathcal{HH}}\boldsymbol{\hat{u}}^{\mathcal{H}}=
-             * \boldsymbol{\hat{f}}^{\mathcal{H}}+\boldsymbol{\hat{g}}^{\mathcal{H}}-
-             * \boldsymbol{M}^{\mathcal{HD}}\boldsymbol{\hat{u}}^{\mathcal{D}}\f]
-             *
-             * \param mkey This key uniquely defines the linear system to be solved.
-             * \param Sin An ExpList, containing the discrete evaluation of the 
-             * forcing function \f$f(\boldsymbol{x})\f$ at the quadrature points in 
-             * its array #m_phys.
-             * \param ScaleForcing An optional parameter with which the forcing 
-             * vector \f$\boldsymbol{\hat{f}}\f$ should be multiplied.
-             */ 
-            void GlobalSolve(const GlobalLinSysKey &key, 
-                             const Array<OneD, const NekDouble> &rhs, 
-                                   Array<OneD,       NekDouble> &inout,
-                             const Array<OneD, const NekDouble> &dirForcing = NullNekDouble1DArray);
+            /// Solve the linear system specified by the key \a key.
+            void GlobalSolve(   const GlobalLinSysKey &key,
+                                const Array<OneD, const NekDouble> &rhs,
+                                      Array<OneD,       NekDouble> &inout,
+                                const Array<OneD, const NekDouble> &dirForcing
+                                                        = NullNekDouble1DArray);
 
-            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
-                                          Array<OneD,       NekDouble> &outarray,
-                                    bool  UseContCoeffs)
-            {
-                FwdTrans(inarray,outarray,UseContCoeffs);
-            }
+            /// Perform a forward transform
+            virtual void v_FwdTrans(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                bool  UseContCoeffs);
 
-            virtual void v_MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, 
-                                                         Array<OneD,       NekDouble> &outarray,
-                                                   bool  UseContCoeffs)
-            {
-                MultiplyByInvMassMatrix(inarray,outarray,UseContCoeffs);
-            }
+            virtual void v_MultiplyByInvMassMatrix(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                bool  UseContCoeffs);
 
-            virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,       NekDouble> &outarray,
-                                     NekDouble lambda,
-                                     bool UseContCoeffs,
-                                     const Array<OneD, const NekDouble>& dirForcing)
-            {
-                HelmSolve(inarray,outarray,lambda,UseContCoeffs,dirForcing);
-            }
-          
-            virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions()
-            {
-                return GetBndConditions();
-            }
+            virtual void v_HelmSolve(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                NekDouble lambda,
+                                bool UseContCoeffs,
+                                const Array<OneD, const NekDouble>& dirForcing);
+
+            virtual const Array<OneD,const SpatialDomains
+                                ::BoundaryConditionShPtr>& v_GetBndConditions();
 
 
-            virtual void v_EvaluateBoundaryConditions(const NekDouble time = 0.0)
-            {
-                EvaluateBoundaryConditions(time);
-            }
+            virtual void v_EvaluateBoundaryConditions(
+                                            const NekDouble time = 0.0);
 
+            virtual const Array<OneD, const NekDouble> &v_GetContCoeffs() const;
 
-            /**
-             * \brief This function discretises the boundary conditions by setting up
-             * a list of point expansions.    
-             *
-             * The point expansions of the Dirichlet boundary regions are listed 
-             * first in the array #m_bndCondExpansions.
-             *
-             * \param graph1D A mesh, containing information about the domain and 
-             * the spectral/hp element expansion.
-             * \param bcs An entity containing information about the boundaries and 
-             * boundary conditions.
-             * \param variable An optional parameter to indicate for which variable 
-             * the boundary conditions should be discretised.
-             */ 
-            void GenerateBoundaryConditionExpansion(const SpatialDomains::MeshGraph1D        &graph1D,
-                                                          SpatialDomains::BoundaryConditions &bcs, 
-                                                    const std::string variable);
-            
+            virtual void v_BwdTrans(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                bool  UseContCoeffs);
+
+            virtual void v_IProductWRTBase(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                bool  UseContCoeffs);
+
+            virtual void v_GeneralMatrixOp(
+                                const GlobalMatrixKey             &gkey,
+                                const Array<OneD,const NekDouble> &inarray,
+                                      Array<OneD,      NekDouble> &outarray,
+                                bool  UseContCoeffs);
+
+            /// Discretises the boundary by setting up a list of point
+            /// expansions.
+            void GenerateBoundaryConditionExpansion(
+                            const SpatialDomains::MeshGraph1D &graph1D,
+                            SpatialDomains::BoundaryConditions &bcs,
+                            const std::string variable);
         };
         typedef boost::shared_ptr<ContField1D>      ContField1DSharedPtr;
+
+        // Inline implementations follow
+
+        /**
+         * Based on the expression \f$g(x,t)\f$ for the boundary
+         * conditions, this function evaluates the boundary conditions for
+         * all boundaries at time-level \a t.
+         *
+         * @param   time        The time at which the boundary conditions
+         *                      should be evaluated.
+         */
+        inline void ContField1D::EvaluateBoundaryConditions(
+                                const NekDouble time)
+        {
+            ExpList1D::EvaluateBoundaryConditions(time,m_bndCondExpansions,
+                                                  m_bndConditions);
+        };
+
+        inline const Array<OneD,const LocalRegions::PointExpSharedPtr>&
+                                ContField1D::GetBndCondExpansions()
+        {
+            return m_bndCondExpansions;
+        }
+
+        inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>&
+                                ContField1D::GetBndConditions()
+        {
+            return m_bndConditions;
+        }
+
+        /**
+         * @return  #m_contNcoeffs, the total number of global degrees of
+         * freedom.
+         */
+        inline int ContField1D::GetContNcoeffs()
+        {
+            return m_contNcoeffs;
+        }
+
+        /**
+         * If one wants to get hold of the underlying data without modifying
+         * them, rather use the function #GetContCoeffs instead.
+         *
+         * @return (A reference to) the array #m_contCoeffs.
+         */
+        inline Array<OneD, NekDouble> &ContField1D::UpdateContCoeffs()
+        {
+            m_transState = eContinuous;
+            return m_contCoeffs;
+        }
+
+        /**
+         * As the function returns a constant reference to a 
+         * <em>const Array</em>, it is not possible to modify the underlying
+         * data of the array #m_contCoeffs. In order to do so, use the function
+         * #UpdateContCoeffs instead.
+         *
+         * \return (A reference to) the array #m_contCoeffs.
+         */
+        inline const Array<OneD, const NekDouble>&
+                                ContField1D::GetContCoeffs() const
+        {
+            return m_contCoeffs;
+        }
+
+        /**
+         * This operation is evaluated as:
+         * \f{tabbing}
+         * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
+         * \> \> Do \= $i=$  $0,N_m^e-1$ \\
+         * \> \> \> $\boldsymbol{\hat{u}}^{e}[i] = \mbox{sign}[e][i] \cdot
+         * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \\
+         * \> \> continue \\
+         * \> continue
+         * \f}
+         * where \a map\f$[e][i]\f$ is the mapping array and 
+         * \a sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
+         * correct modal connectivity between the different elements (both
+         * these arrays are contained in the data member #m_locToGloMap). This
+         * operation is equivalent to the scatter operation
+         * \f$\boldsymbol{\hat{u}}_l=\mathcal{A}\boldsymbol{\hat{u}}_g\f$, where
+         * \f$\mathcal{A}\f$ is the 
+         * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
+         *
+         * @note The array #m_contCoeffs should be filled with the global
+         * coefficients \f$\boldsymbol{\hat{u}}_g\f$ and that the resulting
+         * local coefficients \f$\boldsymbol{\hat{u}}_l\f$ will be stored in
+         * #m_coeffs.
+         */
+        inline void ContField1D::GlobalToLocal()
+        {
+            m_locToGloMap->GlobalToLocal(m_contCoeffs,m_coeffs);
+        }
+
+        /**
+         * This operation is evaluated as:
+         * \f{tabbing}
+         * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
+         * \> \> Do \= $i=$  $0,N_m^e-1$ \\
+         * \> \> \> $\boldsymbol{\hat{u}}^{e}[i] = \mbox{sign}[e][i] \cdot
+         * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \\
+         * \> \> continue \\
+         * \> continue
+         * \f}
+         * where \a map\f$[e][i]\f$ is the mapping array and \a
+         * sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
+         * correct modal connectivity between the different elements (both
+         * these arrays are contained in the data member #m_locToGloMap). This
+         * operation is equivalent to the scatter operation
+         * \f$\boldsymbol{\hat{u}}_l=\mathcal{A}\boldsymbol{\hat{u}}_g\f$, where
+         * \f$\mathcal{A}\f$ is the
+         * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
+         *
+         * @param   inarray     An array of size \f$N_\mathrm{dof}\f$
+         *                      containing the global degrees of freedom
+         *                      \f$\boldsymbol{x}_g\f$.
+         * @param   outarray    The resulting local degrees of freedom
+         *                      \f$\boldsymbol{x}_l\f$ will be stored in this
+         *                      array of size \f$N_\mathrm{eof}\f$.
+         */
+        inline void ContField1D::GlobalToLocal(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,NekDouble> &outarray)
+        {
+            m_locToGloMap->GlobalToLocal(inarray,outarray);
+        }
+
+        /**
+         * This operation is evaluated as:
+         * \f{tabbing}
+         * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
+         * \> \> Do \= $i=$  $0,N_m^e-1$ \\
+         * \> \> \> $\boldsymbol{\hat{u}}_g[\mbox{map}[e][i]] =
+         * \mbox{sign}[e][i] \cdot \boldsymbol{\hat{u}}^{e}[i]$\\
+         * \> \> continue\\
+         * \> continue
+         * \f}
+         * where \a map\f$[e][i]\f$ is the mapping array and \a 
+         * sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
+         * correct modal connectivity between the different elements (both
+         * these arrays are contained in the data member #m_locToGloMap). This
+         * operation is equivalent to the gather operation
+         * \f$\boldsymbol{\hat{u}}_g=\mathcal{A}^{-1}\boldsymbol{\hat{u}}_l\f$,
+         * where \f$\mathcal{A}\f$ is the 
+         * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
+         *
+         * @note    The array #m_coeffs should be filled with the local
+         *          coefficients \f$\boldsymbol{\hat{u}}_l\f$ and that the
+         *          resulting global coefficients \f$\boldsymbol{\hat{u}}_g\f$
+         *          will be stored in #m_contCoeffs.
+         */
+        inline void ContField1D::LocalToGlobal()
+        {
+            m_locToGloMap->LocalToGlobal(m_coeffs,m_contCoeffs);
+        }
+
+        /**
+         * This operation is evaluated as:
+         * \f{tabbing}
+         * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
+         * \> \> Do \= $i=$  $0,N_m^e-1$ \\
+         * \> \> \> $\boldsymbol{\hat{u}}_g[\mbox{map}[e][i]] =
+         * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]+\mbox{sign}[e][i] \cdot
+         * \boldsymbol{\hat{u}}^{e}[i]$\\
+         * \> \> continue\\
+         * \> continue
+         * \f}
+         * where \a map\f$[e][i]\f$ is the mapping array and \a
+         * sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
+         * correct modal connectivity between the different elements (both
+         * these arrays are contained in the data member #m_locToGloMap). This
+         * operation is equivalent to the gather operation
+         * \f$\boldsymbol{\hat{u}}_g=\mathcal{A}^{T}\boldsymbol{\hat{u}}_l\f$,
+         * where \f$\mathcal{A}\f$ is the
+         * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
+         *
+         * @note    The array #m_coeffs should be filled with the local
+         * coefficients \f$\boldsymbol{\hat{u}}_l\f$ and that the resulting
+         * global coefficients \f$\boldsymbol{\hat{u}}_g\f$ will be stored in
+         * #m_contCoeffs.
+         */
+        inline void ContField1D::Assemble()
+        {
+            m_locToGloMap->Assemble(m_coeffs,m_contCoeffs);
+        }
+
+        /**
+         * This operation is evaluated as:
+         * \f{tabbing}
+         * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
+         * \> \> Do \= $i=$  $0,N_m^e-1$ \\
+         * \> \> \> $\boldsymbol{\hat{u}}_g[\mbox{map}[e][i]] =
+         * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]+\mbox{sign}[e][i] \cdot
+         * \boldsymbol{\hat{u}}^{e}[i]$\\
+         * \> \> continue\\
+         * \> continue
+         * \f}
+         * where \a map\f$[e][i]\f$ is the mapping array and \a
+         * sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
+         * correct modal connectivity between the different elements (both
+         * these arrays are contained in the data member #m_locToGloMap). This
+         * operation is equivalent to the gather operation
+         * \f$\boldsymbol{\hat{u}}_g=\mathcal{A}^{T}\boldsymbol{\hat{u}}_l\f$,
+         * where \f$\mathcal{A}\f$ is the 
+         * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
+         *
+         * @param   inarray     An array of size \f$N_\mathrm{eof}\f$
+         *                      containing the local degrees of freedom
+         *                      \f$\boldsymbol{x}_l\f$.
+         * @param   outarray    The resulting global degrees of freedom
+         *                      \f$\boldsymbol{x}_g\f$ will be stored in this
+         *                      array of size \f$N_\mathrm{dof}\f$.
+         */
+        inline void ContField1D::Assemble(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,NekDouble> &outarray)
+        {
+            m_locToGloMap->Assemble(inarray,outarray);
+        }
+
+        inline const LocalToGlobalC0ContMapSharedPtr&
+                                    ContField1D::GetLocalToGlobalMap() const
+        {
+            return  m_locToGloMap;
+        }
 
     } //end of namespace
 } //end of namespace

@@ -40,100 +40,178 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-    
+        /**
+         * @class ExpList1D
+         * This multi-elemental expansion, which does not exhibit any coupling
+         * between the expansion on the separate elements, can be formulated
+         * as, \f[u^{\delta}(x_i)=\sum_{e=1}^{{N_{\mathrm{el}}}}
+         * \sum_{n=0}^{N^{e}_m-1}\hat{u}_n^e\phi_n^e(x_i).\f]
+         * where \f${N_{\mathrm{el}}}\f$ is the number of elements and
+         * \f$N^{e}_m\f$ is the local elemental number of expansion modes.
+         * This class inherits all its variables and member functions from the 
+         * base class #ExpList.
+         */
+
         ExpList1D::ExpList1D():
-            ExpList()
-        {
-        }
-        
-        ExpList1D::~ExpList1D()
-        {
-        }
-        
-        ExpList1D::ExpList1D(const ExpList1D &In):
-            ExpList(In)
+            ExpList(),
+            m_UseGenSegExp(false)
         {
         }
 
+        ExpList1D::~ExpList1D()
+        {
+        }
+
+        ExpList1D::ExpList1D(const ExpList1D &In):
+            ExpList(In),
+            m_UseGenSegExp(In.m_UseGenSegExp)
+        {
+        }
+
+
+        /**
+         * After initialising the data inherited through MultiRegions#ExpList,
+         * populate the expansion list from the segments defined in the supplied
+         * SpatialDomains#MeshGraph1D.
+         * @param   Ba          BasisKey describing quadrature points and
+         *                      number of modes.
+         * @param   graph1D     Domain and expansion definitions.
+         * @param   UseGenSegExp If true, create general segment expansions
+         *                      instead of just normal segment expansions.
+         */
         ExpList1D::ExpList1D(const LibUtilities::BasisKey &Ba,
-                             const SpatialDomains::MeshGraph1D &graph1D):
-            ExpList()
+                             const SpatialDomains::MeshGraph1D &graph1D,
+                             bool UseGenSegExp):
+            ExpList(),
+            m_UseGenSegExp(UseGenSegExp)
         {
             int i,j, id=0;
             LocalRegions::SegExpSharedPtr seg;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
 
-            const SpatialDomains::ExpansionVector &expansions = graph1D.GetExpansions();
+            const SpatialDomains::ExpansionVector &expansions
+                                                    = graph1D.GetExpansions();
             m_coeff_offset =  Array<OneD, int> (expansions.size());
             m_phys_offset  =  Array<OneD, int> (expansions.size());
-            
+
+            // For each element in the mesh, create a segment expansion using
+            // the supplied BasisKey and segment geometry.
             for(i = 0; i < expansions.size(); ++i)
-            {                
-                if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>(expansions[i]->m_GeomShPtr))
+            {
+                if(SegmentGeom = boost
+                            ::dynamic_pointer_cast<SpatialDomains::SegGeom>(
+                                                expansions[i]->m_GeomShPtr))
                 {
-                    seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(Ba,SegmentGeom);
+                    // Use a general segment expansion with normal and binormal?
+                    if (UseGenSegExp)
+                    {
+                        seg = MemoryManager<LocalRegions::GenSegExp>
+                                            ::AllocateSharedPtr(Ba,SegmentGeom);
+                    }
+                    else {
+                        seg = MemoryManager<LocalRegions::SegExp>
+                                            ::AllocateSharedPtr(Ba,SegmentGeom);
+                    }
                     seg->SetElmtId(id++);
                     (*m_exp).push_back(seg);
                 }
                 else
                 {
                     ASSERTL0(false,"dynamic cast to a SegGeom failed");
-                }  
-            
+                }
+
                 m_coeff_offset[i] = m_ncoeffs;
                 m_phys_offset[i]  = m_npoints;
                 m_ncoeffs += Ba.GetNumModes();
                 m_npoints += Ba.GetNumPoints();
-            } 
-            
+            }
+
             ExpList::SetCoeffPhys();
         }
 
-        ExpList1D::ExpList1D(SpatialDomains::MeshGraph1D &graph1D):
-            ExpList()
+
+        /**
+         * Given a mesh \a graph1D, containing information about the domain and
+         * the spectral/hp element expansion, this constructor fills the list
+         * of local expansions \texttt{m_exp} with the proper expansions,
+         * calculates the total number of quadrature points \f$x_i\f$ and local
+         * expansion coefficients \f$\hat{u}^e_n\f$ and allocates memory for
+         * the arrays #m_coeffs and #m_phys.
+         *
+         * @param   graph1D     A mesh, containing information about the
+         *                      domain and the spectral/hp element expansion.
+         * @param   UseGenSegExp If true, create general segment expansions
+         *                      instead of just normal segment expansions.
+         */
+        ExpList1D::ExpList1D(SpatialDomains::MeshGraph1D &graph1D,
+                             bool UseGenSegExp):
+            ExpList(),
+            m_UseGenSegExp(UseGenSegExp)
         {
             int i,id=0;
             LocalRegions::SegExpSharedPtr seg;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
 
-            const SpatialDomains::ExpansionVector &expansions = graph1D.GetExpansions();
+            const SpatialDomains::ExpansionVector &expansions
+                                                    = graph1D.GetExpansions();
             m_coeff_offset = Array<OneD,int>(expansions.size());
             m_phys_offset  = Array<OneD,int>(expansions.size());
-            
+
             for(i = 0; i < expansions.size(); ++i)
             {
-                LibUtilities::BasisKey bkey = expansions[i]->m_BasisKeyVector[0];
-                
-                if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>(expansions[i]->m_GeomShPtr))
+                LibUtilities::BasisKey bkey
+                                        = expansions[i]->m_BasisKeyVector[0];
+
+                if(SegmentGeom = boost
+                            ::dynamic_pointer_cast<SpatialDomains::SegGeom>(
+                                                expansions[i]->m_GeomShPtr))
                 {
-                    seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegmentGeom);
+                    if (UseGenSegExp)
+                    {
+                        seg = MemoryManager<LocalRegions::GenSegExp>
+                                        ::AllocateSharedPtr(bkey, SegmentGeom);
+                    }
+                    else {
+                        seg = MemoryManager<LocalRegions::SegExp>
+                                        ::AllocateSharedPtr(bkey, SegmentGeom);
+                    }
                     seg->SetElmtId(id++);
                     (*m_exp).push_back(seg);
                 }
                 else
                 {
                     ASSERTL0(false,"dynamic cast to a SegGeom failed");
-                }  
+                }
 
                 m_coeff_offset[i] = m_ncoeffs;
                 m_phys_offset[i]  = m_npoints;
                 m_ncoeffs += bkey.GetNumModes();
                 m_npoints += bkey.GetNumPoints();
             }
-      
+
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
             m_phys   = Array<OneD, NekDouble>(m_npoints);
-            
+
         }
-    
-        ExpList1D::ExpList1D(const SpatialDomains::CompositeVector &domain, SpatialDomains::MeshGraph2D &graph2D):
-            ExpList()
+
+
+        /**
+         * @param   domain      ?
+         * @param   graph2D     ?
+         * @param   UseGenSegExp If true, create general segment expansions
+         *                      instead of just normal segment expansions.
+         */
+        ExpList1D::ExpList1D(const SpatialDomains::CompositeVector &domain,
+                             SpatialDomains::MeshGraph2D &graph2D,
+                             bool UseGenSegExp):
+            ExpList(),
+            m_UseGenSegExp(UseGenSegExp)
         {
             int i,j, nel,cnt,id=0;
             SpatialDomains::Composite comp;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
             LocalRegions::SegExpSharedPtr seg;
-            
+
             nel = 0;
             for(i = 0; i < domain.size(); ++i)
             {
@@ -147,18 +225,30 @@ namespace Nektar
             for(i = 0; i < domain.size(); ++i)
             {
                 comp = domain[i];
-                
-                for(j = 0; j < comp->size(); ++j)
-                {                    
-                    if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*comp)[j]))
-                    {
-                        LibUtilities::BasisKey bkey = graph2D.GetEdgeBasisKey(SegmentGeom);
-                        seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegmentGeom);
-                        
-                        seg->SetElmtId(id++);
-                        (*m_exp).push_back(seg);  
 
-                        m_coeff_offset[cnt] = m_ncoeffs; 
+                for(j = 0; j < comp->size(); ++j)
+                {
+                    if(SegmentGeom = boost
+                            ::dynamic_pointer_cast<SpatialDomains::SegGeom>(
+                                                                    (*comp)[j]))
+                    {
+                        LibUtilities::BasisKey bkey
+                                        = graph2D.GetEdgeBasisKey(SegmentGeom);
+                        if (UseGenSegExp)
+                        {
+                            seg = MemoryManager<LocalRegions::GenSegExp>
+                                        ::AllocateSharedPtr(bkey, SegmentGeom);
+                        }
+                        else
+                        {
+                            seg = MemoryManager<LocalRegions::SegExp>
+                                        ::AllocateSharedPtr(bkey, SegmentGeom);
+                        }
+
+                        seg->SetElmtId(id++);
+                        (*m_exp).push_back(seg);
+
+                        m_coeff_offset[cnt] = m_ncoeffs;
                         m_phys_offset[cnt]  = m_npoints; cnt++;
                         m_ncoeffs += bkey.GetNumModes();
                         m_npoints += bkey.GetNumPoints();
@@ -166,39 +256,65 @@ namespace Nektar
                     else
                     {
                         ASSERTL0(false,"dynamic cast to a SegGeom failed");
-                    }  
+                    }
                 }
-                
-            } 
-            
+
+            }
+
             ExpList::SetCoeffPhys();
         }
 
-        ExpList1D::ExpList1D(const Array<OneD,const ExpList1DSharedPtr>  &bndConstraint, 
-                             const Array<OneD, const SpatialDomains::BoundaryConditionType>  &bndTypes, 
-                             const StdRegions::StdExpansionVector &locexp, SpatialDomains::MeshGraph2D &graph2D)
+
+        /**
+         *
+         */
+        ExpList1D::ExpList1D(
+                    const Array<OneD,const ExpList1DSharedPtr>  &bndConstraint,
+                    const Array<OneD, const SpatialDomains
+                                           ::BoundaryConditionShPtr>  &bndCond,
+                    const StdRegions::StdExpansionVector &locexp,
+                    SpatialDomains::MeshGraph2D &graph2D,
+                    const map<int,int> &periodicEdges,
+                    bool UseGenSegExp):
+            ExpList(),
+            m_UseGenSegExp(UseGenSegExp)
         {
             int i,j,k,cnt,id, elmtid=0;
-            Array<OneD, int> EdgeDone(graph2D.GetNseggeoms(),0);
-            
+            map<int,int> EdgeDone;
+            map<int,int> NormalSet;
+
+            SpatialDomains::Geometry1DSharedPtr SegGeom;
+            LocalRegions::SegExpSharedPtr Seg;
+
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
             cnt = 0;
-            for(i = 0; i < bndTypes.num_elements(); ++i)
+            for(i = 0; i < bndCond.num_elements(); ++i)
             {
-                if(bndTypes[i] == SpatialDomains::eDirichlet)
+                if(bndCond[i]->GetBoundaryConditionType()
+                                            == SpatialDomains::eDirichlet)
                 {
                     for(j = 0; j < bndConstraint[i]->GetExpSize(); ++j)
                     {
-                        LibUtilities::BasisKey bkey = bndConstraint[i]->GetExp(j)->GetBasis(0)->GetBasisKey();
-                        const SpatialDomains::Geometry1DSharedPtr& SegGeom = bndConstraint[i]->GetExp(j)->GetGeom1D();
-                            
-                        LocalRegions::SegExpSharedPtr Seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(bkey, SegGeom);
-                            
-                        Seg->SetElmtId(elmtid++);
-                        (*m_exp).push_back(Seg);   
+                        LibUtilities::BasisKey bkey = bndConstraint[i]
+                                    ->GetExp(j)->GetBasis(0)->GetBasisKey();
+                        SegGeom = bndConstraint[i]->GetExp(j)->GetGeom1D();
 
-                        EdgeDone[SegGeom->GetEid()] = 1;
+                        if (UseGenSegExp)
+                        {
+                            Seg = MemoryManager<LocalRegions::GenSegExp>
+                                            ::AllocateSharedPtr(bkey, SegGeom);
+                            EdgeDone[SegGeom->GetEid()] = elmtid;
+                        }
+                        else
+                        {
+                            Seg = MemoryManager<LocalRegions::SegExp>
+                                            ::AllocateSharedPtr(bkey, SegGeom);
+                            EdgeDone[SegGeom->GetEid()] = 1;
+                        }
+
+                        Seg->SetElmtId(elmtid++);
+                        (*m_exp).push_back(Seg);
                     }
                 }
             }
@@ -207,115 +323,172 @@ namespace Nektar
             for(i = 0; i < locexp.size(); ++i)
             {
                 for(j = 0; j < locexp[i]->GetNedges(); ++j)
-                {   
-                    const SpatialDomains::Geometry1DSharedPtr& SegGeom = (locexp[i]->GetGeom2D())->GetEdge(j);
-                    
+                {
+                    SegGeom = (locexp[i]->GetGeom2D())->GetEdge(j);
+
                     id = SegGeom->GetEid();
-                        
+
                     if(!EdgeDone[id])
                     {
-                        LibUtilities::BasisKey EdgeBkey = locexp[i]->DetEdgeBasisKey(j);
-                        
-                        LocalRegions::SegExpSharedPtr Seg = MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(EdgeBkey, SegGeom);
+                        LibUtilities::BasisKey EdgeBkey
+                                    = locexp[i]->DetEdgeBasisKey(j);
+
+                        if (UseGenSegExp)
+                        {
+                            Seg = MemoryManager<LocalRegions::GenSegExp>
+                                        ::AllocateSharedPtr(EdgeBkey, SegGeom);
+                            EdgeDone[id] = elmtid;
+
+                            if (periodicEdges.count(id) > 0)
+                            {
+                                EdgeDone[periodicEdges.find(id)->second]
+                                        = elmtid;
+                            }
+                        }
+                        else
+                        {
+                            Seg = MemoryManager<LocalRegions::SegExp>
+                                        ::AllocateSharedPtr(EdgeBkey, SegGeom);
+                            EdgeDone[id] = 1;
+                        }
+
                         Seg->SetElmtId(elmtid++);
                         (*m_exp).push_back(Seg);
-                        
-                        EdgeDone[id] = 1;
+                    }
+
+                    if (UseGenSegExp && NormalSet.count(id) == 0)
+                    {
+                        Seg = boost::dynamic_pointer_cast
+                                    <LocalRegions::GenSegExp>(
+                                        (*m_exp)[EdgeDone.find(id)->second]);
+
+                        // Set up normals at all Segment Quadrature points
+                        Seg->SetUpPhysNormals(locexp[i],j);
+                        NormalSet[id] = 1;
                     }
                 }
             }
 
             // Set up offset information and array sizes
             ExpList::SetCoeffPhys();
-            
+
         }
 
 
-        void ExpList1D::SetBoundaryConditionExpansion(const SpatialDomains::MeshGraph1D &graph1D,
-                                                      SpatialDomains::BoundaryConditions &bcs, 
-                                                      const std::string variable,
-                                                      Array<OneD, LocalRegions::PointExpSharedPtr> &bndCondExpansions,
-                                                      Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndConditions)
+        /**
+         *
+         */
+        void ExpList1D::SetBoundaryConditionExpansion(
+                                const SpatialDomains::MeshGraph1D &graph1D,
+                                      SpatialDomains::BoundaryConditions &bcs,
+                                const std::string variable,
+                                Array<OneD, LocalRegions::PointExpSharedPtr>
+                                                            &bndCondExpansions,
+                                Array<OneD, SpatialDomains
+                                    ::BoundaryConditionShPtr> &bndConditions)
         {
             int i,j,k;
             int cnt  = 0;
-            
-            SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();   
-            
+
+            SpatialDomains::BoundaryRegionCollection &bregions
+                                                = bcs.GetBoundaryRegions();
+            SpatialDomains::BoundaryConditionCollection &bconditions 
+                                                = bcs.GetBoundaryConditions();
+
             LocalRegions::PointExpSharedPtr          locPointExp;
-            SpatialDomains::BoundaryConditionShPtr   locBCond; 
+            SpatialDomains::BoundaryConditionShPtr   locBCond;
             SpatialDomains::VertexComponentSharedPtr vert;
 
-            int nbnd = bregions.size(); 
-            
+            int nbnd = bregions.size();
+
             cnt=0;
             // list Dirichlet boundaries first
             for(i = 0; i < nbnd; ++i)
-            {  
-                locBCond = (*(bconditions[i]))[variable];  
-                if(locBCond->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-                {       
+            {
+                locBCond = (*(bconditions[i]))[variable];
+                if(locBCond->GetBoundaryConditionType()
+                        == SpatialDomains::eDirichlet)
+                {
                     for(j = 0; j < bregions[i]->size(); j++)
                     {
                         for(k = 0; k < ((*bregions[i])[j])->size(); k++)
                         {
-                            if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[j])[k]))
+                            if(vert = boost::dynamic_pointer_cast
+                                    <SpatialDomains::VertexComponent>(
+                                        (*(*bregions[i])[j])[k]))
                             {
-                                locPointExp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
+                                locPointExp
+                                    = MemoryManager<LocalRegions::PointExp>
+                                                ::AllocateSharedPtr(vert);
                                 bndCondExpansions[cnt]  = locPointExp;
                                 bndConditions[cnt++]    = locBCond;
                             }
                             else
                             {
-                                ASSERTL0(false,"dynamic cast to a vertex failed");
+                                ASSERTL0(false,
+                                         "dynamic cast to a vertex failed");
                             }
                         }
                     }
-                } 
+                }
             } // end if Dirichlet
-            
+
             // then, list the other (non-periodic) boundaries
             for(i = 0; i < nbnd; ++i)
-            {        
-                locBCond = (*(bconditions[i]))[variable];  
-                if(locBCond->GetBoundaryConditionType() == SpatialDomains::eNeumann)
-                {    
+            {
+                locBCond = (*(bconditions[i]))[variable];
+                if(locBCond->GetBoundaryConditionType()
+                        == SpatialDomains::eNeumann)
+                {
                     for(j = 0; j < bregions[i]->size(); j++)
                     {
                         for(k = 0; k < ((*bregions[i])[j])->size(); k++)
-                        {     
-                            if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*(*bregions[i])[j])[k]))
+                        {
+                            if(vert = boost::dynamic_pointer_cast
+                                    <SpatialDomains::VertexComponent>(
+                                        (*(*bregions[i])[j])[k]))
                             {
-                                locPointExp = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(vert);
+                                locPointExp 
+                                    = MemoryManager<LocalRegions::PointExp>
+                                                ::AllocateSharedPtr(vert);
                                 bndCondExpansions[cnt]  = locPointExp;
                                 bndConditions[cnt++]    = locBCond;
                             }
                             else
                             {
-                                ASSERTL0(false,"dynamic cast to a vertex failed");
-                            }            
+                                ASSERTL0(false,
+                                         "dynamic cast to a vertex failed");
+                            }
                         }
                     }
-                }    
-                else if((locBCond->GetBoundaryConditionType() != SpatialDomains::eDirichlet) && 
-                        (locBCond->GetBoundaryConditionType() != SpatialDomains::ePeriodic))
+                }
+                else if((locBCond->GetBoundaryConditionType()
+                            != SpatialDomains::eDirichlet) &&
+                        (locBCond->GetBoundaryConditionType()
+                            != SpatialDomains::ePeriodic))
                 {
                     ASSERTL0(false,"This type of BC not implemented yet");
-                }                  
+                }
             }
         }
 
-        void ExpList1D::GetPeriodicVertices(const SpatialDomains::MeshGraph1D &graph1D,
-                                              SpatialDomains::BoundaryConditions &bcs, 
-                                              const std::string variable,
-                                              map<int,int>& periodicVertices)
+
+        /**
+         *
+         */
+        void ExpList1D::GetPeriodicVertices(
+                                const SpatialDomains::MeshGraph1D &graph1D,
+                                      SpatialDomains::BoundaryConditions &bcs,
+                                const std::string variable,
+                                      map<int,int>& periodicVertices)
         {
 
             int i,j,k;
-            
-            SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();
+
+            SpatialDomains::BoundaryRegionCollection &bregions
+                    = bcs.GetBoundaryRegions();
+            SpatialDomains::BoundaryConditionCollection &bconditions
+                    = bcs.GetBoundaryConditions();
 
             int region1ID;
             int region2ID;
@@ -325,46 +498,58 @@ namespace Nektar
 
             SpatialDomains::VertexComponentSharedPtr vert1;
             SpatialDomains::VertexComponentSharedPtr vert2;
-            
-            SpatialDomains::BoundaryConditionShPtr locBCond; 
+
+            SpatialDomains::BoundaryConditionShPtr locBCond;
 
             // This std::map is a check so that the periodic pairs
             // are not treated twice
             map<int, int> doneBndRegions;
 
             int nbnd = bregions.size();
-          
+
             for(i = 0; i < nbnd; ++i)
-            {        
-                locBCond = (*(bconditions[i]))[variable];  
-                if(locBCond->GetBoundaryConditionType() == SpatialDomains::ePeriodic)
-                {    
+            {
+                locBCond = (*(bconditions[i]))[variable];
+                if(locBCond->GetBoundaryConditionType()
+                        == SpatialDomains::ePeriodic)
+                {
                     region1ID = i;
-                    region2ID = (boost::static_pointer_cast<SpatialDomains::PeriodicBoundaryCondition>(locBCond))->m_ConnectedBoundaryRegion;
+                    region2ID = (boost::static_pointer_cast<SpatialDomains::
+                                    PeriodicBoundaryCondition>(locBCond))
+                                        ->m_ConnectedBoundaryRegion;
 
                     if(doneBndRegions.count(region1ID)==0)
-                    {                    
-                        ASSERTL0(bregions[region1ID]->size() == bregions[region2ID]->size(),
-                                 "Size of the 2 periodic boundary regions should be equal");
-                    
+                    {
+                        ASSERTL0(bregions[region1ID]->size()
+                                    == bregions[region2ID]->size(),
+                                 "Size of the 2 periodic boundary regions "
+                                 "should be equal");
+
                         for(j = 0; j < bregions[region1ID]->size(); j++)
                         {
                             comp1 = (*(bregions[region1ID]))[j];
                             comp2 = (*(bregions[region2ID]))[j];
-                            
+
                             ASSERTL0(comp1->size() == comp2->size(),
-                                     "Size of the 2 periodic composites should be equal");
-                            
+                                     "Size of the 2 periodic composites should "
+                                     "be equal");
+
                             for(k = 0; k < comp1->size(); k++)
-                            {                                      
-                                if(!(vert1 = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*comp1)[k]))||
-                                   !(vert2 = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*comp2)[k])))
+                            {
+                                if(!(vert1 = boost::dynamic_pointer_cast
+                                        <SpatialDomains::VertexComponent>(
+                                            (*comp1)[k]))||
+                                   !(vert2 = boost::dynamic_pointer_cast
+                                        <SpatialDomains::VertexComponent>(
+                                            (*comp2)[k])))
                                 {
-                                    ASSERTL0(false,"dynamic cast to a VertexComponent failed");
-                                } 
+                                    ASSERTL0(false,"dynamic cast to a "
+                                                   "VertexComponent failed");
+                                }
 
                                 // Extract the periodic vertices
-                                periodicVertices[vert1->GetVid()] = vert2->GetVid();
+                                periodicVertices[vert1->GetVid()]
+                                    = vert2->GetVid();
                             }
                         }
                     }
@@ -374,261 +559,406 @@ namespace Nektar
                                  "Boundary regions are not mutually periodic");
                     }
                     doneBndRegions[region2ID] = region1ID;
-                }                  
+                }
             }
         }
 
-        void ExpList1D::EvaluateBoundaryConditions(const NekDouble time,
-                                                   Array<OneD, LocalRegions::PointExpSharedPtr> &bndCondExpansions,
-                                                   Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndConditions)
+
+        /**
+         *
+         */
+        void ExpList1D::EvaluateBoundaryConditions(
+                                const NekDouble time,
+                                Array<OneD, LocalRegions::PointExpSharedPtr>
+                                                            &bndCondExpansions,
+                                Array<OneD, SpatialDomains
+                                    ::BoundaryConditionShPtr> &bndConditions)
         {
             int i;
 
             NekDouble x0;
             NekDouble x1;
             NekDouble x2;
-            
+
             for(i = 0; i < bndCondExpansions.num_elements(); ++i)
             {
                 bndCondExpansions[i]->GetCoords(x0,x1,x2);
-                
-                if(bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-                { 
-                    bndCondExpansions[i]->SetValue((boost::static_pointer_cast<SpatialDomains::DirichletBoundaryCondition>(bndConditions[i])->
-                                                    m_DirichletCondition).Evaluate(x0,x1,x2,time));
+
+                if(bndConditions[i]->GetBoundaryConditionType()
+                        == SpatialDomains::eDirichlet)
+                {
+                    bndCondExpansions[i]->SetValue(
+                            (boost::static_pointer_cast<SpatialDomains
+                             ::DirichletBoundaryCondition>(bndConditions[i])
+                             ->m_DirichletCondition).Evaluate(x0,x1,x2,time));
                 }
-                else if(bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eNeumann)
-                { 
-                    bndCondExpansions[i]->SetValue((boost::static_pointer_cast<SpatialDomains::NeumannBoundaryCondition>(bndConditions[i])->
-                                                      m_NeumannCondition).Evaluate(x0,x1,x2,time));
+                else if(bndConditions[i]->GetBoundaryConditionType() 
+                        == SpatialDomains::eNeumann)
+                {
+                    bndCondExpansions[i]->SetValue(
+                            (boost::static_pointer_cast<SpatialDomains
+                             ::NeumannBoundaryCondition>(bndConditions[i])
+                             ->m_NeumannCondition).Evaluate(x0,x1,x2,time));
                 }
                 else
                 {
                     ASSERTL0(false,"This type of BC not implemented yet");
                 }
-            }                
+            }
         }
 
-		void ExpList1D::PostProcess(LibUtilities::KernelSharedPtr kernel, 
-									Array<OneD,NekDouble> &inarray,
-									Array<OneD,NekDouble> &outarray, 
-									int elmId,
-									NekDouble h)
 
-		{
-			int i,j,r;
-			
-			// get the local element expansion of the elmId element
-			StdRegions::StdExpansionSharedPtr elmExp = GetExp(elmId);
+        /**
+         * To perform post-processing on the entire domain use \a elmtId = 0.
+         * @param   kernel      The post-processing kernel.
+         * @param   inarray     The set of evaluation points.
+         * @param   outarray    Contains the resulting post-processed
+         *                      solution for element \a elmId.
+         * @param   h           The mesh spacing.
+         * @param   elmId       Optionally specifies which element to perform
+         *                      the post-processing on (0=whole domain).
+         */
+        void ExpList1D::PostProcess(LibUtilities::KernelSharedPtr kernel,
+                                    Array<OneD,NekDouble> &inarray,
+                                    Array<OneD,NekDouble> &outarray,
+                                    NekDouble h,
+                                    int elmId)
 
-			// Get the quadrature points and weights required for integration
-			int quad_npoints = elmExp->GetTotPoints();
-			LibUtilities::PointsKey quadPointsKey(quad_npoints, elmExp->GetPointsType(0));
-			Array<OneD,NekDouble> quad_points = LibUtilities::PointsManager()[quadPointsKey]->GetZ();
-			Array<OneD,NekDouble> quad_weights = LibUtilities::PointsManager()[quadPointsKey]->GetW();
-			
-			// Declare variable for the local kernel breaks
-			int kernel_width = kernel->GetKernelWidth();
-			Array<OneD,NekDouble> local_kernel_breaks(kernel_width+1);
+        {
+            int i,j,r;
 
-			// Declare variable for the transformed quadrature points
-			Array<OneD,NekDouble> mapped_quad_points(quad_npoints);
-			
-			// For each evaluation point
-			for(i = 0; i < inarray.num_elements(); i++)
-			{
-				// Move the center of the kernel to the current point
-				kernel->MoveKernelCenter(inarray[i],local_kernel_breaks);
-							
-				// Find the mesh breaks under the kernel support
-				Array<OneD,NekDouble> mesh_breaks;
-				kernel->FindMeshUnderKernel(local_kernel_breaks,h,mesh_breaks);
-				
-				// Sort the total breaks for integration purposes
-				int total_nbreaks = local_kernel_breaks.num_elements() + 
-									mesh_breaks.num_elements(); // number of the total breaks
-				Array<OneD,NekDouble> total_breaks(total_nbreaks);
-				kernel->Sort(local_kernel_breaks,mesh_breaks,total_breaks);
-				
-				// Integrate the product of kernel and function over the total breaks
-				NekDouble integral_value = 0.0;
-				for(j = 0; j < total_breaks.num_elements()-1; j++)
-				{
-					double a = total_breaks[j];
-					double b = total_breaks[j+1];
-					
-					// Map the quadrature points to the appropriate interval
-					for(r = 0; r < quad_points.num_elements(); r++)
-					{
-						mapped_quad_points[r] = (quad_points[r]+1.0)*0.5*(b-a)+a;
-					}
+            // get the local element expansion of the elmId element
+            StdRegions::StdExpansionSharedPtr elmExp = GetExp(elmId);
 
-					// Evaluate the function at the transformed quadrature points
-					Array<OneD,NekDouble> u_value(quad_npoints);
-					Array<OneD,NekDouble> coeffs = GetCoeffs();
+            // Get the quadrature points and weights required for integration
+            int quad_npoints = elmExp->GetTotPoints();
+            LibUtilities::PointsKey quadPointsKey(quad_npoints,
+                                                    elmExp->GetPointsType(0));
+            Array<OneD,NekDouble> quad_points
+                        = LibUtilities::PointsManager()[quadPointsKey]->GetZ();
+            Array<OneD,NekDouble> quad_weights
+                        = LibUtilities::PointsManager()[quadPointsKey]->GetW();
 
-					//PeriodicEval(mapped_quad_points,h,u->GetExpSize(),elmExp->GetBasisNumModes(0),coeffs,u_value);
-					PeriodicEval(coeffs,mapped_quad_points,h,elmExp->GetBasisNumModes(0),u_value);
-					
-					// Evaluate the kernel at the transformed quadrature points
-					Array<OneD,NekDouble> k_value(quad_npoints);
-					kernel->EvaluateKernel(mapped_quad_points,h,k_value);
+            // Declare variable for the local kernel breaks
+            int kernel_width = kernel->GetKernelWidth();
+            Array<OneD,NekDouble> local_kernel_breaks(kernel_width+1);
 
-					// Integrate
-					for(r = 0; r < quad_npoints; r++)
-					{
-						integral_value += (b-a)*0.5*k_value[r]*u_value[r]*quad_weights[r];
-					}
-				}
-				outarray[i] = integral_value/h;
-			}
-		}
+            // Declare variable for the transformed quadrature points
+            Array<OneD,NekDouble> mapped_quad_points(quad_npoints);
 
-		void ExpList1D::PostProcess( LibUtilities::KernelSharedPtr kernel,
-									 Array<OneD,NekDouble> &inarray,
-									 Array<OneD,NekDouble> &outarray,
-									 NekDouble h)
-		{
-			int i,j,r;
-		
-			// Get the quadrature points and weights required for integration
-			int quad_npoints = (GetExp(0))->GetTotPoints();
-			LibUtilities::PointsKey quadPointsKey(quad_npoints, GetExp(0)->GetPointsType(0));
-			Array<OneD,NekDouble> quad_points = LibUtilities::PointsManager()[quadPointsKey]->GetZ();
-			Array<OneD,NekDouble> quad_weights = LibUtilities::PointsManager()[quadPointsKey]->GetW();
+            // For each evaluation point
+            for(i = 0; i < inarray.num_elements(); i++)
+            {
+                // Move the center of the kernel to the current point
+                kernel->MoveKernelCenter(inarray[i],local_kernel_breaks);
 
-			// Declare variable for the local kernel breaks
-			int kernel_width = kernel->GetKernelWidth();
-			Array<OneD,NekDouble> local_kernel_breaks(kernel_width+1);
+                // Find the mesh breaks under the kernel support
+                Array<OneD,NekDouble> mesh_breaks;
+                kernel->FindMeshUnderKernel(local_kernel_breaks,h,mesh_breaks);
 
-			// Declare variable for the transformed quadrature points
-			Array<OneD,NekDouble> mapped_quad_points(quad_npoints);
-			
-			// For each evaluation point
-			for(i = 0; i < inarray.num_elements(); i++)
-			{
-				// Move the center of the kernel to the current point
-				kernel->MoveKernelCenter(inarray[i],local_kernel_breaks);
-							
-				// Find the mesh breaks under the kernel support
-				Array<OneD,NekDouble> mesh_breaks;
-				kernel->FindMeshUnderKernel(local_kernel_breaks,h,mesh_breaks);
-				
-				// Sort the total breaks for integration purposes
-				int total_nbreaks = local_kernel_breaks.num_elements() + 
-									mesh_breaks.num_elements(); // number of the total breaks
-				Array<OneD,NekDouble> total_breaks(total_nbreaks);
-				kernel->Sort(local_kernel_breaks,mesh_breaks,total_breaks);
-				
-				// Integrate the product of kernel and function over the total breaks
-				NekDouble integral_value = 0.0;
-				for(j = 0; j < total_breaks.num_elements()-1; j++)
-				{
-					double a = total_breaks[j];
-					double b = total_breaks[j+1];
-					
-					// Map the quadrature points to the appropriate interval
-					for(r = 0; r < quad_points.num_elements(); r++)
-					{
-						mapped_quad_points[r] = (quad_points[r]+1.0)*0.5*(b-a)+a;
-					}
+                // Sort the total breaks for integration purposes
+                int total_nbreaks = local_kernel_breaks.num_elements() +
+                                    mesh_breaks.num_elements();
+                                    // number of the total breaks
+                Array<OneD,NekDouble> total_breaks(total_nbreaks);
+                kernel->Sort(local_kernel_breaks,mesh_breaks,total_breaks);
 
-					// Evaluate the function at the transformed quadrature points
-					Array<OneD,NekDouble> u_value(quad_npoints);
-					Array<OneD,NekDouble> coeffs = GetCoeffs();
+                // Integrate the product of kernel and function over the total 
+                // breaks
+                NekDouble integral_value = 0.0;
+                for(j = 0; j < total_breaks.num_elements()-1; j++)
+                {
+                    double a = total_breaks[j];
+                    double b = total_breaks[j+1];
 
-					//PeriodicEval(mapped_quad_points,h,u->GetExpSize(),(u->GetExp(0))->GetBasisNumModes(0),coeffs,u_value);
-					PeriodicEval(coeffs,mapped_quad_points,h,(GetExp(0))->GetBasisNumModes(0),u_value);
-					
-					// Evaluate the kernel at the transformed quadrature points
-					Array<OneD,NekDouble> k_value(quad_npoints);
-					kernel->EvaluateKernel(mapped_quad_points,h,k_value);
+                    // Map the quadrature points to the appropriate interval
+                    for(r = 0; r < quad_points.num_elements(); r++)
+                    {
+                        mapped_quad_points[r]
+                                = (quad_points[r] + 1.0) * 0.5 * (b - a) + a;
+                    }
 
-					// Integrate
-					for(r = 0; r < quad_npoints; r++)
-					{
-						integral_value += (b-a)*0.5*k_value[r]*u_value[r]*quad_weights[r];
-					}
-					
-				}
-				
-				outarray[i] = integral_value/h;
-			}
-			
-		}
+                    // Evaluate the function at the transformed quadrature
+                    // points
+                    Array<OneD,NekDouble> u_value(quad_npoints);
+                    Array<OneD,NekDouble> coeffs = GetCoeffs();
 
-		void ExpList1D::PeriodicEval(Array<OneD,NekDouble> &inarray1, Array<OneD,NekDouble> &inarray2,
-									 NekDouble h, int nmodes,
-									 Array<OneD,NekDouble> &outarray)
-		{
-			int i,j,r;
+                    PeriodicEval(coeffs,mapped_quad_points,h,
+                                 elmExp->GetBasisNumModes(0),u_value);
 
-			// Get the number of elements in the domain
-			int num_elm = GetExpSize();
+                    // Evaluate the kernel at the transformed quadrature points
+                    Array<OneD,NekDouble> k_value(quad_npoints);
+                    kernel->EvaluateKernel(mapped_quad_points,h,k_value);
 
-			// initializing the outarray
-			for(i = 0; i < outarray.num_elements(); i++)
-			{
-				outarray[i] = 0.0;
-			}
-			
-			// Make a copy for further modification
-			int x_size = inarray2.num_elements();
-			Array<OneD,NekDouble> x_values_cp(x_size);
-			
-			// Determining the element to which the x belongs
-			Array<OneD,int> x_elm(x_size);
-			for(i = 0; i < x_size; i++ )
-			{
-				x_elm[i] = floor(inarray2[i]/h);
-			}
+                    // Integrate
+                    for(r = 0; r < quad_npoints; r++)
+                    {
+                        integral_value += (b - a) * 0.5 * k_value[r]
+                                                * u_value[r] * quad_weights[r];
+                    }
+                }
+                outarray[i] = integral_value/h;
+            }
+        }
 
-			// Clamp indices periodically
-			for(i = 0; i < x_size; i++)
-			{
-				while(x_elm[i] < 0)
-				{
-					x_elm[i] += num_elm;
-				}
-				while(x_elm[i] >= num_elm)
-				{
-					x_elm[i] -= num_elm ;
-				}
-			}
-			
-			// Map the values of x to [-1 1] on its interval
-			for(i = 0; i < x_size; i++)
-			{
-				x_values_cp[i] = (inarray2[i]/h - floor(inarray2[i]/h))*2 - 1.0;
-			}
 
-			//Evaluate the jocobi polynomials
-			// (Evaluating the base at some points other than the quadrature points)
-			// Should it be added to the base class????
-			Array<TwoD,NekDouble> jacobi_poly(nmodes,x_size);
-			for(i = 0; i < nmodes; i++)
-			{	
-				Polylib::jacobfd(x_size,x_values_cp.get(),jacobi_poly.get()+i*x_size,NULL,i,0.0,0.0);
-			}
+        /**
+         * Given the elemental coefficients \f$\hat{u}_n^e\f$ of an expansion,
+         * periodically evaluate the spectral/hp expansion 
+         * \f$u^{\delta}(\boldsymbol{x})\f$ at arbitrary points.
+         * @param   inarray1    An array of size \f$N_{\mathrm{eof}}\f$
+         *                      containing the local coefficients
+         *                      \f$\hat{u}_n^e\f$.
+         * @param   inarray2    Contains the set of evaluation points.
+         * @param   h           The mesh spacing.
+         * @param   nmodes      The number of polynomial modes for each element
+         *                      (we consider that each element has the same
+         *                      number of polynomial modes).
+         * @param   outarray    Contains the resulting values at the
+         *                      evaluation points
+         */
+        void ExpList1D::PeriodicEval(Array<OneD,NekDouble> &inarray1,
+                                     Array<OneD,NekDouble> &inarray2,
+                                     NekDouble h, int nmodes,
+                                     Array<OneD,NekDouble> &outarray)
+        {
+            int i,j,r;
 
-			// Evaluate the function values
-			for(r = 0; r < nmodes; r++)
-			{
-				for(j = 0; j < x_size; j++)
-				{
-					int index = ((x_elm[j])*nmodes)+r;
-					outarray[j] += inarray1[index]*jacobi_poly[r][j];
-				}
-			}
+            // Get the number of elements in the domain
+            int num_elm = GetExpSize();
 
-		}
+            // initializing the outarray
+            for(i = 0; i < outarray.num_elements(); i++)
+            {
+                outarray[i] = 0.0;
+            }
 
+            // Make a copy for further modification
+            int x_size = inarray2.num_elements();
+            Array<OneD,NekDouble> x_values_cp(x_size);
+
+            // Determining the element to which the x belongs
+            Array<OneD,int> x_elm(x_size);
+            for(i = 0; i < x_size; i++ )
+            {
+                x_elm[i] = floor(inarray2[i]/h);
+            }
+
+            // Clamp indices periodically
+            for(i = 0; i < x_size; i++)
+            {
+                while(x_elm[i] < 0)
+                {
+                    x_elm[i] += num_elm;
+                }
+                while(x_elm[i] >= num_elm)
+                {
+                    x_elm[i] -= num_elm ;
+                }
+            }
+
+            // Map the values of x to [-1 1] on its interval
+            for(i = 0; i < x_size; i++)
+            {
+                x_values_cp[i] = (inarray2[i]/h - floor(inarray2[i]/h))*2 - 1.0;
+            }
+
+            // Evaluate the jocobi polynomials
+            // (Evaluating the base at some points other than the quadrature
+            // points). Should it be added to the base class????
+            Array<TwoD,NekDouble> jacobi_poly(nmodes,x_size);
+            for(i = 0; i < nmodes; i++)
+            {
+                Polylib::jacobfd(x_size,x_values_cp.get(),
+                                    jacobi_poly.get()+i*x_size,NULL,i,0.0,0.0);
+            }
+
+            // Evaluate the function values
+            for(r = 0; r < nmodes; r++)
+            {
+                for(j = 0; j < x_size; j++)
+                {
+                    int index = ((x_elm[j])*nmodes)+r;
+                    outarray[j] += inarray1[index]*jacobi_poly[r][j];
+                }
+            }
+
+        }
+
+
+        /**
+         *
+         */
+        void ExpList1D::SetUpPhysNormals(
+                                const StdRegions::StdExpansionVector &locexp)
+        {
+            ASSERTL0(m_UseGenSegExp, "Must use GenSegExp to use normals.");
+
+            map<int, int> EdgeGID;
+            int i,j,cnt,n,id;
+
+            // setup map of all global ids along boundary
+            for(cnt = i = 0; i < (*m_exp).size(); ++i)
+            {
+                id =  (*m_exp)[i]->GetGeom1D()->GetEid();
+                EdgeGID[id] = cnt++;
+            }
+
+            // Loop over elements and find edges that match;
+            for(cnt = n = 0; n < locexp.size(); ++n)
+            {
+                for(i = 0; i < locexp[n]->GetNedges(); ++i)
+                {
+                    id = locexp[n]->GetGeom2D()->GetEid(i);
+
+                    if(EdgeGID.count(id) > 0)
+                    {
+                        (*m_exp)[EdgeGID.find(id)->second]
+                                            ->SetUpPhysNormals(locexp[n],i);
+                    }
+                }
+            }
+        }
+
+
+        /**
+         * Upwind the left and right states given by the Arrays Fwd
+         * and Bwd using the vector quantity Vec and ouput the
+         * upwinded value in the array upwind.
+         */
+        void ExpList1D::Upwind(
+                        const Array<OneD, const Array<OneD, NekDouble> > &Vec,
+                        const Array<OneD, const NekDouble> &Fwd,
+                        const Array<OneD, const NekDouble> &Bwd,
+                              Array<OneD, NekDouble> &Upwind,
+                        int direction)
+        {
+            ASSERTL0(m_UseGenSegExp, "Must use GenSegExp to use normals.");
+
+            int i,j,k,e_npoints,offset;
+            Array<OneD,NekDouble> normals;
+            NekDouble Vn;
+
+            // Assume whole array is of same coordimate dimention
+            int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
+
+            ASSERTL1(Vec.num_elements() >= coordim,
+                    "Input vector does not have sufficient dimensions to "
+                    "match coordim");
+
+            for(i = 0; i < m_exp->size(); ++i)
+            {
+                e_npoints = (*m_exp)[i]->GetNumPoints(0);
+                normals   = (*m_exp)[i]->GetPhysNormals();
+
+                offset = m_phys_offset[i];
+
+                for(j = 0; j < e_npoints; ++j)
+                {
+                    // Calculate normal velocity
+                    Vn = 0.0;
+                    for(k = 0; k < coordim; ++k)
+                    {
+                        Vn += Vec[k][offset+j]*normals[k*e_npoints + j];
+                    }
+
+                    // Upwind
+                    if(Vn > 0.0)
+                    {
+                        Upwind[offset + j] = Fwd[offset + j];
+                    }
+                    else
+                    {
+                        Upwind[offset + j] = Bwd[offset + j];
+                    }
+                }
+            }
+        }
+
+
+        /**
+         *
+         */
+        void ExpList1D::Upwind(   const Array<OneD, const NekDouble> &Vn,
+                                  const Array<OneD, const NekDouble> &Fwd,
+                                  const Array<OneD, const NekDouble> &Bwd,
+                                  Array<OneD, NekDouble> &Upwind,
+                                  int direction)
+        {
+            ASSERTL0(m_UseGenSegExp, "Must use GenSegExp to use normals.");
+
+            int i,j,k,e_npoints,offset;
+            Array<OneD,NekDouble> normals;
+
+            // Assume whole array is of same coordimate dimention
+            int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
+
+            for(i = 0; i < m_exp->size(); ++i)
+            {
+                e_npoints = (*m_exp)[i]->GetNumPoints(0);
+                offset = m_phys_offset[i];
+
+                for(j = 0; j < e_npoints; ++j)
+                {
+                    // Upwind
+                    if(Vn[offset + j] > 0.0)
+                    {
+                        Upwind[offset + j] = Fwd[offset + j];
+                    }
+                    else
+                    {
+                        Upwind[offset + j] = Bwd[offset + j];
+                    }
+                }
+            }
+        }
+
+
+        /**
+         * For each local element, copy the normals stored in the element list
+         * into the array \a normals.
+         * @param   normals     Array in which to copy normals into.
+         */
+        void ExpList1D::GetNormals(
+                                Array<OneD, Array<OneD, NekDouble> > &normals)
+        {
+            ASSERTL0(m_UseGenSegExp, "Must use GenSegExp to use normals.");
+
+            int i,j,k,e_npoints,offset;
+            Array<OneD,NekDouble> locnormals;
+
+            // Assume whole array is of same coordinate dimension
+            int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
+
+            ASSERTL1(normals.num_elements() >= coordim,
+                     "Output vector does not have sufficient dimensions to "
+                     "match coordim");
+
+            for(i = 0; i < m_exp->size(); ++i)
+            {
+                e_npoints  = (*m_exp)[i]->GetNumPoints(0);
+                locnormals = (*m_exp)[i]->GetPhysNormals();
+
+                offset = m_phys_offset[i];
+
+                for(j = 0; j < e_npoints; ++j)
+                {
+                    for(k = 0; k < coordim; ++k)
+                    {
+                        normals[k][offset+j] = locnormals[k*e_npoints + j];
+                    }
+                }
+            }
+        }
 
     } //end of namespace
 } //end of namespace
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.37  2009/09/06 22:28:45  sherwin
+* Updates for Navier-Stokes solver
+*
 * Revision 1.36  2009/04/20 16:14:06  sherwin
 * Updates for optimising bandwidth of DG solver and allowing write import on explist
 *

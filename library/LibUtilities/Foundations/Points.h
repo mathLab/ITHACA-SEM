@@ -50,6 +50,7 @@ namespace Nektar
         // Need to add method to compute total number of points given dimension
         // and number of points.
 
+        /// Defines a specification for a set of points.
         class PointsKey
         {
         public:
@@ -61,22 +62,26 @@ namespace Nektar
                 bool operator()(const PointsKey &lhs, const PointsKey &rhs) const;
             };
             
+            /// Default constructor.
             PointsKey(void):
                 m_numpoints(0), 
                 m_pointstype(eNoPointsType)
             {
             }
 
+            /// Constructor defining the number and distribution of points.
             PointsKey(const int &numpoints, const PointsType &pointstype): 
                 m_numpoints(numpoints), 
                 m_pointstype(pointstype)
             {
             }
 
+            /// Destructor.
             virtual ~PointsKey()
             {
             }
 
+            /// Copy constructor.
             PointsKey(const PointsKey &key)
             {
                 *this = key; // defer to assignment operator
@@ -186,6 +191,7 @@ namespace Nektar
         bool operator<(const PointsKey &lhs, const PointsKey &rhs);
         std::ostream& operator<<(std::ostream& os, const PointsKey& rhs);
 
+        /// Stores a set of points of datatype DataT, defined by a PointKey.
         template<typename DataT>
         class Points
         {

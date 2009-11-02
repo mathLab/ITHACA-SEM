@@ -637,7 +637,7 @@ namespace Nektar
 
 	    And sumfactorizing step of the form is as:\\
 
-	    \f$$ f_{pq} (\xi_{3k}) = \sum_{r=0}^{Q_z} \hat u_{pqr}
+	    \f$ f_{pq} (\xi_{3k}) = \sum_{r=0}^{Q_z} \hat u_{pqr}
 	    \psi_{pqr}^c (\xi_{3k}),\\
 
             g_{p} (\xi_{2j}, \xi_{3k}) = \sum_{r=0}^{Q_y} \psi_{pq}^b
@@ -1211,6 +1211,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTetExp.cpp,v $
+ * Revision 1.25  2009/04/27 21:32:45  sherwin
+ * Updated WriteToField method
+ *
  * Revision 1.24  2009/04/20 16:11:47  sherwin
  * Mods to handle output and optimise DG work
  *

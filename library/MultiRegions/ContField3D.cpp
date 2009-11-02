@@ -41,14 +41,14 @@ namespace Nektar
   {
 
         ContField3D::ContField3D(void):
-            ContExpList3D(),
+            DisContField3D(),
             m_bndCondExpansions(),
             m_bndConditions()
         {
         }
 
         ContField3D::ContField3D(const ContField3D &In):
-            ContExpList3D(In),
+            DisContField3D(In),
             m_bndCondExpansions(In.m_bndCondExpansions),
             m_bndConditions(In.m_bndConditions)
         {
@@ -58,7 +58,7 @@ namespace Nektar
                                  SpatialDomains::BoundaryConditions &bcs, 
                                  const int bc_loc,
                                  const GlobalSysSolnType solnType):
-            ContExpList3D(graph3D,solnType,false),
+            DisContField3D(graph3D,solnType,false),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -86,7 +86,7 @@ namespace Nektar
                                  SpatialDomains::BoundaryConditions &bcs, 
                                  const std::string variable,
                                  const GlobalSysSolnType solnType):
-            ContExpList3D(graph3D,solnType,false),
+            DisContField3D(graph3D,solnType,false),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -116,7 +116,7 @@ namespace Nektar
                                  const int bc_loc,
                                  const LibUtilities::PointsType TetNb,
                                  const GlobalSysSolnType solnType):
-            ContExpList3D(Ba,Bb,Bc,graph3D,TetNb,solnType,false),
+            DisContField3D(graph3D,solnType,false),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -147,7 +147,7 @@ namespace Nektar
                                  const std::string variable,
                                  const LibUtilities::PointsType TetNb,
                                  const GlobalSysSolnType solnType):
-            ContExpList3D(Ba,Bb,Bc,graph3D,TetNb,solnType,false),
+            DisContField3D(graph3D,solnType,false),
             m_bndCondExpansions(),
             m_bndConditions()
         {

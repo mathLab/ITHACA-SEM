@@ -28,8 +28,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
-// Description: Header file of Basis definition 
+//
+// Description: Header file of Basis definition
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -42,8 +42,9 @@
 
 namespace Nektar
 {
-    namespace LibUtilities 
+    namespace LibUtilities
     {
+        /// Describes the specification for a Basis.
         class BasisKey
         {
         public:
@@ -55,31 +56,35 @@ namespace Nektar
                 bool operator()(const BasisKey &lhs, const BasisKey &rhs) const;
             };
 
-
-            BasisKey(const BasisType btype, const int nummodes, const PointsKey pkey):
+            /// Constructor
+            BasisKey(const BasisType btype, const int nummodes,
+                     const PointsKey pkey):
                 m_nummodes(nummodes),
-                m_basistype(btype), 
+                m_basistype(btype),
                 m_pointsKey(pkey)
             {
             }
 
-            BasisKey(const BasisKey &B): 
+            /// Copy constructor
+            BasisKey(const BasisKey &B):
                 m_nummodes(B.m_nummodes),
                 m_basistype(B.m_basistype),
                 m_pointsKey(B.m_pointsKey)
             {
             }
 
+            /// Destructor
             ~BasisKey()
             {
             }
 
-            /** \brief return order of basis */
+            /// Returns the order of the basis.
             inline int GetNumModes() const
             {
                 return m_nummodes;
             }
 
+            /// \todo Generalise to arbitrary polynomials
             inline int GetTotNumModes() const
             {
                 int value = 0;
@@ -90,17 +95,17 @@ namespace Nektar
                 case eModified_B:
                     value = m_nummodes*(m_nummodes+1)/2;
                     break;
-                    
+
                 case eModified_C:
                 case eOrtho_C:
                     value = m_nummodes*(m_nummodes+1)*(m_nummodes+2)/6;
                     break;
 
-                case eOrtho_A:      
-                case eModified_A:   
-                case eFourier:      
-                case eGLL_Lagrange: 
-                case eLegendre:    
+                case eOrtho_A:
+                case eModified_A:
+                case eFourier:
+                case eGLL_Lagrange:
+                case eLegendre:
                 case eChebyshev:
                 case eMonomial:
                     value = m_nummodes;
@@ -113,7 +118,7 @@ namespace Nektar
             }
 
 
-            /** \brief return points order at which  basis is defined */
+            /// Return points order at which  basis is defined
             inline int GetNumPoints() const
             {
                 return m_pointsKey.GetNumPoints();
@@ -124,45 +129,41 @@ namespace Nektar
                 return m_pointsKey.GetTotNumPoints();
             }
 
-            /** \brief return type of expansion basis */
+            /// Return type of expansion basis.
             inline BasisType GetBasisType() const
             {
                 return m_basistype;
             }
 
+            /// Return distribution of points.
             inline PointsKey GetPointsKey() const
             {
                 return m_pointsKey;
             }
 
-            /** \brief return type of quadrature */
+            /// Return type of quadrature.
             inline PointsType GetPointsType() const
             {
                 return m_pointsKey.GetPointsType();
-            }    
+            }
 
-            /** \brief Check to see if the quadrature of expansions x is the same as the calling basis */
-
+            /// Determine if quadrature of expansion \a x matches this.
             inline bool SamePoints(const BasisKey &x) const
             {
                 return (x.m_pointsKey == m_pointsKey);
             }
 
-            /** \brief Check to see if basis expansions x is the same as the calling basis */
+            /// Determine if basis expansion \a x matches this.
             inline bool SameExp(const BasisKey &x) const
             {
-                return ((x.m_nummodes == m_nummodes)&&(x.m_basistype == m_basistype));
+                return ((x.m_nummodes == m_nummodes)
+                                &&(x.m_basistype == m_basistype));
             }
 
-
-            /** \brief determine if basis definition has exact integration for
-            *  inner product
-            */
+            /// Determine if basis has exact integration for inner product.
             bool ExactIprodInt() const;
 
-            /** \brief Determine if basis has collocation properties,
-            *  i.e. GLL_Lagrange with appropriate quadrature
-            */
+            /// Determine if basis has collocation properties.
             bool  Collocation() const;
 
             //Overloaded Operators
@@ -174,141 +175,146 @@ namespace Nektar
             friend bool operator  != (const BasisKey& x, const BasisKey *y);
 
             friend bool operator<(const BasisKey &lhs, const BasisKey &rhs);
-            friend bool opLess::operator()(const BasisKey &lhs, const BasisKey &rhs) const;
+            friend bool opLess::operator()( const BasisKey &lhs,
+                                            const BasisKey &rhs) const;
 
         protected:
-            int        m_nummodes;   /**< Expansion Order */
-            BasisType  m_basistype;  /**< Expansion Type */
-            PointsKey  m_pointsKey;
+            int        m_nummodes;   ///< Expansion order.
+            BasisType  m_basistype;  ///< Expansion type.
+            PointsKey  m_pointsKey;  ///< Points specification.
 
         private:
-        BasisKey():m_pointsKey(NullPointsKey)
+            BasisKey():m_pointsKey(NullPointsKey)
             {
-                NEKERROR(ErrorUtil::efatal,"Default Constructor BasisKey should never be called");
+                NEKERROR(ErrorUtil::efatal,
+                         "Default Constructor BasisKey should never be called");
             }
 
         };
 
+        /// Defines a null basis with no type or points.
         static const BasisKey NullBasisKey(eNoBasisType, 0, NullPointsKey);
 
+        /// Name for a vector of BasisKeys.
+        typedef std::vector< BasisKey > BasisKeyVector;
+        /// Name for an iterator over a BasisKeyVector.
+        typedef std::vector< BasisKey >::iterator BasisKeyVectorIter;
 
-        typedef std::vector< BasisKey > BasisKeyVector; 
-        typedef std::vector< BasisKey >::iterator BasisKeyVectorIter; 
-
-        /////////////////////////////////////////////////////////////////////////
+        /// Represents a basis of a given type.
         class Basis
         {
         public:
-
+            /// Returns a new instance of a Basis with given BasisKey.
             static boost::shared_ptr<Basis> Create(const BasisKey &bkey);
 
-            // default destructor()
+            /// Destructor.
             virtual ~Basis()
             {
             };
 
-            /** \brief return order of basis */
+            /// Return order of basis from the basis specification.
             inline int GetNumModes() const
             {
                 return m_basisKey.GetNumModes();
             }
 
+            /// Return total number of modes from the basis specification.
             inline int GetTotNumModes() const
             {
                 return m_basisKey.GetTotNumModes();
             }
 
-            /** \brief return points order at which  basis is defined */
+            /// Return the number of points from the basis specification.
             inline int GetNumPoints() const
             {
                 return m_basisKey.GetNumPoints();
             }
 
-            /** \brief return points order at which  basis is defined */
+            /// Return total number of points from the basis specification.
             inline int GetTotNumPoints() const
             {
                 return m_basisKey.GetTotNumPoints();
             }
 
-            /** \brief return type of expansion basis */
+            /// Return the type of expansion basis.
             inline BasisType GetBasisType() const
             {
                 return m_basisKey.GetBasisType();
             }
 
-	    /** \brief return pointskey of expansion basis */
+            /// Return the points specification for the basis.
             inline PointsKey GetPointsKey() const
             {
                 return m_basisKey.GetPointsKey();
             }
 
-            /** \brief return type of quadrature */
+            /// Return the type of quadrature.
             inline PointsType GetPointsType() const
             {
                 return m_basisKey.GetPointsType();
-            }  
+            }
 
             inline const Array<OneD, const NekDouble>& GetZ() const
             {
                 return m_points->GetZ();
             }
-            
-            inline const Array<OneD, const NekDouble>& GetW() const 
+
+            inline const Array<OneD, const NekDouble>& GetW() const
             {
-                return m_points->GetW(); 
-            } 
-            
-            inline void GetZW(Array<OneD, const NekDouble> &z,
-                              Array<OneD, const NekDouble> &w) const 
-            {
-                m_points->GetZW(z,w); 
+                return m_points->GetW();
             }
 
-            inline const  boost::shared_ptr<NekMatrix<NekDouble> >& GetD(Direction dir = xDir) const
+            inline void GetZW(  Array<OneD, const NekDouble> &z,
+                                Array<OneD, const NekDouble> &w) const
+            {
+                m_points->GetZW(z,w);
+            }
+
+            inline const  boost::shared_ptr<NekMatrix<NekDouble> > & GetD(
+                                Direction dir = xDir) const
             {
                 return m_points->GetD(dir);
             }
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const Array<OneD, const NekDouble>& x)
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(
+                                const Array<OneD, const NekDouble>& x)
             {
                 return m_points->GetI(x);
             }
 
-	    const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const BasisKey &bkey)
-	    {  
-	      ASSERTL0(bkey.GetPointsKey().GetPointsDim()==1, "Interpolation only to other 1d basis"); 
-	      return m_InterpManager[bkey];
-	    }
-            
-            /** \brief determine if basis definition has exact integration for
-            *  inner product
-            */
+            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(
+                                const BasisKey &bkey)
+            {
+                ASSERTL0(bkey.GetPointsKey().GetPointsDim()==1,
+                         "Interpolation only to other 1d basis");
+                return m_InterpManager[bkey];
+            }
+
+            /// Determine if basis has exact integration for inner product.
             inline bool ExactIprodInt() const
             {
                 return m_basisKey.ExactIprodInt();
             }
 
-            /** \brief Determine if basis has collocation properties,
-            *  i.e. GLL_Lagrange with appropriate quadrature
-            */
+            /// Determine if basis has collocation properties.
             inline bool  Collocation() const
             {
                 return m_basisKey.Collocation();
             }
 
-            /** \brief return basis definition array m_bdata */
-            inline const Array<OneD, const NekDouble>& GetBdata() const 
+            /// Return basis definition array m_bdata.
+            inline const Array<OneD, const NekDouble>& GetBdata() const
             {
                 return m_bdata;
             }
 
-            /** \brief return basis definition array m_dbdata */
-
+            /// Return basis definition array m_dbdata.
             inline const Array<OneD, const NekDouble>& GetDbdata() const
             {
                 return m_dbdata;
             }
 
+            /// Returns the specification for the Basis.
             inline const BasisKey GetBasisKey() const
             {
                 return m_basisKey;
@@ -317,92 +323,29 @@ namespace Nektar
             virtual void Initialize();
 
         protected:
-            BasisKey        m_basisKey;
-            PointsSharedPtr m_points;
-            Array<OneD, NekDouble> m_bdata; /**< Basis definition */
-            Array<OneD, NekDouble> m_dbdata; /**< Derivative Basis definition */
-	    NekManager<BasisKey, NekMatrix<NekDouble>, BasisKey::opLess> m_InterpManager;
+            BasisKey            m_basisKey; ///< Basis specification.
+            PointsSharedPtr     m_points;   ///< Set of points.
+            Array<OneD, NekDouble> m_bdata; ///< Basis definition.
+            Array<OneD, NekDouble> m_dbdata;///< Derivative Basis definition.
+            NekManager<BasisKey, NekMatrix<NekDouble>, BasisKey::opLess>
+                                m_InterpManager;
 
         private:
-
+            /// Private constructor with BasisKey.
             Basis(const BasisKey &bkey);
 
+            /// Private default constructor.
             Basis():m_basisKey(NullBasisKey)
             {
-                NEKERROR(ErrorUtil::efatal,"Default Constructor for Basis should not be called");
+                NEKERROR(ErrorUtil::efatal,
+                         "Default Constructor for Basis should not be called");
             }
-            
-	    boost::shared_ptr< NekMatrix<NekDouble> > CalculateInterpMatrix(const BasisKey &tbasis0);
 
-            /** \brief Method used to generate appropriate basis and
-             * their derivatives which are stored in \a m_bdata and \a
-             * m_dbdata
-             *  
-             * The following expansions are generated depending on the
-             * enum type defined in \a m_basisKey.m_basistype:
-             *
-             * NOTE: This definition does not follow the order in the
-             * Karniadakis \& Sherwin book since this leads to a more
-             * compact hierarchical pattern for implementation
-             * purposes. The order of these modes dictates the
-             * ordering of the expansion coefficients.
-             * 
-             * In the following m_numModes = P
-             * 
-             * \a eModified_A: 
-             *
-             * m_bdata[i + j*m_numpoints] = 
-             * \f$ \phi^a_i(z_j) = \left \{
-             * \begin{array}{ll} \left ( \frac{1-z_j}{2}\right ) & i = 0 \\ 
-             * \\ 
-             * \left ( \frac{1+z_j}{2}\right ) & i = 1 \\
-             * \\
-             * \left ( \frac{1-z_j}{2}\right )\left ( \frac{1+z_j}{2}\right )
-             *  P^{1,1}_{i-2}(z_j) & 2\leq i < P\\ 
-             *  \end{array} \right . \f$ 
-             * 
-             * \a eModified_B: 
-             *
-             * m_bdata[n(i,j) + k*m_numpoints] =
-             * \f$ \phi^b_{ij}(z_k) = \left \{ \begin{array}{lll}
-             * \phi^a_j(z_k) & i = 0, &   0\leq j < P  \\
-             * \\
-             * \left ( \frac{1-z_k}{2}\right )^{i}  & 1 \leq i < P,&   j = 0 \\
-             * \\                                                         
-             * \left ( \frac{1-z_k}{2}\right )^{i} \left ( \frac{1+z_k}{2}\right )
-             * P^{2i-1,1}_{j-1}(z_k) & 1 \leq i < P,\ &  1\leq j < P-i\ \\
-             * \end{array}	\right . , \f$
-             * 
-             * where \f n(i,j) \f is a consecutive ordering of the
-             * triangular indices \f$ 0 \leq i, i+j < P \f$ where \a j
-             * runs fastest. 
-             *
-             *
-             * \a eModified_C: 
-             *
-             * m_bdata[n(i,j,k) + l*m_numpoints] =
-             * \f$ \phi^c_{ij,k}(z_l) = \phi^b_{i+j,k}(z_l) =
-             *  \left \{ \begin{array}{llll}
-             * \phi^b_{j,k}(z_l) & i = 0, &   0\leq j < P  &  0\leq k < P-j\\
-             * \\
-             * \left ( \frac{1-z_l}{2}\right )^{i+j}  & 1\leq i < P,\ 
-             * &  0\leq j <  P-i,\  & k = 0 \\
-             * \\
-             * \left ( \frac{1-z_l}{2}\right )^{i+j} 
-             * \left ( \frac{1+z_l}{2}\right ) 
-             * P^{2i+2j-1,1}_{k-1}(z_k) & 1\leq i < P,&  0\leq j < P-i& 
-             * 1\leq k < P-i-j \\
-             * \\
-             * \end{array}	\right . , \f$
-             * 
-             * where \f n(i,j,k) \f is a consecutive ordering of the
-             * triangular indices \f$ 0 \leq i, i+j, i+j+k < P \f$ where \a k
-             * runs fastest, then \a j and finally \a i.
-             * 
-             */
+            boost::shared_ptr< NekMatrix<NekDouble> > CalculateInterpMatrix(
+                                const BasisKey &tbasis0);
 
+            /// Generate appropriate basis and their derivatives.
             void GenBasis();
-
         };
 
         bool operator<(const BasisKey &lhs, const BasisKey &rhs);
@@ -411,13 +354,13 @@ namespace Nektar
         std::ostream& operator<<(std::ostream& os, const BasisKey& rhs);
 
         typedef boost::shared_ptr<Basis> BasisSharedPtr;
-        typedef std::vector< BasisSharedPtr > BasisVector; 
-        typedef std::vector< BasisSharedPtr >::iterator BasisVectorIter; 
-        
+        typedef std::vector< BasisSharedPtr > BasisVector;
+        typedef std::vector< BasisSharedPtr >::iterator BasisVectorIter;
+
         static BasisSharedPtr NullBasisSharedPtr;
 
-    } // end of namespace
-} // end of namespace
+    } // end of namespace LibUtilities
+} // end of namespace Nektar
 
 #endif //NEKTAR_LIB_UTILIITIES_FOUNDATIONS_BASIS_H
 

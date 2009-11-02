@@ -41,19 +41,50 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        /**
+         * @class ExpList
+         * All multi-elemental expansions \f$u^{\delta}(\boldsymbol{x})\f$ can
+         * be considered as the assembly of the various elemental contributions.
+         * On a discrete level, this yields,
+         * \f[u^{\delta}(\boldsymbol{x}_i)=\sum_{e=1}^{{N_{\mathrm{el}}}}
+         * \sum_{n=0}^{N^{e}_m-1}\hat{u}_n^e\phi_n^e(\boldsymbol{x}_i).\f]
+         * where \f${N_{\mathrm{el}}}\f$ is the number of elements and
+         * \f$N^{e}_m\f$ is the local elemental number of expansion modes.
+         * As it is the lowest level class, it contains the definition of the
+         * common data and common routines to all multi-elemental expansions.
+         *
+         * The class stores a vector of expansions, \a m_exp, (each derived from
+         * StdRegions#StdExpansion) which define the constituent components of
+         * the domain. The coefficients from these expansions are concatenated
+         * in \a m_coeffs, while the expansion evaluated at the quadrature
+         * points is stored in \a m_phys.
+         */
+
+        /**
+         * Creates an empty expansion list. The expansion list will typically be
+         * populated by a derived class (namely one of MultiRegions#ExpList1D,
+         * MultiRegions#ExpList2D or MultiRegions#ExpList3D).
+         */
         ExpList::ExpList():
             m_ncoeffs(0),
-            m_npoints(0),   
+            m_npoints(0),
             m_coeffs(),
             m_phys(),
             m_transState(eNotSet),
             m_physState(false),
-            m_exp(MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr()),
-            m_globalOptParam(MemoryManager<NekOptimize::GlobalOptParam>::AllocateSharedPtr()),
+            m_exp(MemoryManager<StdRegions::StdExpansionVector>
+                                                        ::AllocateSharedPtr()),
+            m_globalOptParam(MemoryManager<NekOptimize::GlobalOptParam>
+                                                        ::AllocateSharedPtr()),
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr())
-        {     
+        {
         }
-        
+
+
+        /**
+         * Copies an existing expansion list.
+         * @param   in              Source expansion list.
+         */
         ExpList::ExpList(const ExpList &in):
             m_ncoeffs(in.m_ncoeffs),
             m_npoints(in.m_npoints),
@@ -63,39 +94,47 @@ namespace Nektar
             m_physState(false),
             m_exp(in.m_exp),
             m_coeff_offset(in.m_coeff_offset), // Need to check if we need these
-            m_phys_offset(in.m_phys_offset),    // or at least use shared pointer
+            m_phys_offset(in.m_phys_offset),   // or at least use shared pointer
             m_globalOptParam(in.m_globalOptParam),
             m_blockMat(in.m_blockMat)
         {
         }
 
 
-        
-        void ExpList::SetCoeffPhys(void)
+        /**
+         * Set up the storage for the concatenated list of coefficients and
+         * physical evaluations at the quadrature points. Each expansion (local
+         * element) is processed in turn to determine the number of coefficients
+         * and physical data points it contributes to the domain.
+         */
+        void ExpList::SetCoeffPhys()
         {
             int i;
-            
+
             // Set up offset information and array sizes
             m_coeff_offset = Array<OneD,int>(m_exp->size());
             m_phys_offset  = Array<OneD,int>(m_exp->size());
-            
+
             m_ncoeffs = m_npoints = 0;
-            
+
             for(i = 0; i < m_exp->size(); ++i)
             {
                 m_coeff_offset[i] = m_ncoeffs;
-                m_phys_offset [i] = m_npoints; 
+                m_phys_offset [i] = m_npoints;
                 m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
                 m_npoints += (*m_exp)[i]->GetNumPoints(0);
             }
-            
+
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
             m_phys   = Array<OneD, NekDouble>(m_npoints);
         }
 
 
-
-        void ExpList::PutCoeffsInToElmtExp(void)
+        /**
+         * For each element, copy the coefficients from \a m_coeffs into their
+         * respective element expansion from \a m_exp.
+         */
+        void ExpList::PutCoeffsInToElmtExp()
         {
             int i, order_e;
             int cnt = 0;
@@ -103,12 +142,18 @@ namespace Nektar
             for(i = 0; i < (*m_exp).size(); ++i)
             {
                 order_e = (*m_exp)[i]->GetNcoeffs();
-                Vmath::Vcopy(order_e,&m_coeffs[cnt], 1, 
-                             &((*m_exp)[i]->UpdateCoeffs())[0],1);
+                Vmath::Vcopy(order_e,&m_coeffs[cnt], 1,
+                                         &((*m_exp)[i]->UpdateCoeffs())[0],1);
                 cnt += order_e;
             }
         }
 
+
+        /**
+         * Copy the coefficients associated with element \a eid from \a m_coeffs
+         * to the corresponding element expansion object from \a m_exp.
+         * @param   eid         Index of element for which copy is performed.
+         */
         void ExpList::PutCoeffsInToElmtExp(int eid)
         {
             int order_e;
@@ -116,11 +161,15 @@ namespace Nektar
 
             order_e = (*m_exp)[eid]->GetNcoeffs();
             cnt = m_coeff_offset[eid];
-            Vmath::Vcopy(order_e,&m_coeffs[cnt], 1, 
+            Vmath::Vcopy(order_e,&m_coeffs[cnt], 1,
                          &((*m_exp)[eid]->UpdateCoeffs())[0],1);
         }
 
 
+        /**
+         * Coefficients from each local expansion are copied into the
+         * concatenated list of coefficients for all elements.
+         */
         void ExpList::PutElmtExpInToCoeffs(void)
         {
             int i, order_e;
@@ -136,6 +185,11 @@ namespace Nektar
         }
 
 
+        /**
+         * Coefficients for a single element are copied from the associated
+         * element expansion to the concatenated coefficient array.
+         * @param   eid         Index of element to copy.
+         */
         void ExpList::PutElmtExpInToCoeffs(int eid)
         {
             int order_e;
@@ -143,24 +197,48 @@ namespace Nektar
 
             order_e = (*m_exp)[eid]->GetNcoeffs();
             cnt = m_coeff_offset[eid];
-            
+
             Vmath::Vcopy(order_e, &((*m_exp)[eid]->UpdateCoeffs())[0],1,
                              &m_coeffs[cnt],1);
         }
-        
+
+
+        /**
+         * The local expansion objects are populated with the physical
+         * evaluation at the quadrature points stored in the \a m_phys storage.
+         */
+        void ExpList::PutPhysInToElmtExp()
+        {
+            PutPhysInToElmtExp(m_phys);
+        }
+
+
+        /**
+         * The local expansion objects are populated with the supplied physical
+         * evaluations at the quadrature points. The layout and order of the
+         * supplied data is assumed to conform to the expansion list.
+         * @param   in          Physical quadrature data.
+         */
         void ExpList::PutPhysInToElmtExp(Array<OneD,const NekDouble> &in)
         {
             int i, npoints_e;
             int cnt = 0;
-            
+
             for(i = 0; i < (*m_exp).size(); ++i)
             {
                 npoints_e = (*m_exp)[i]->GetTotPoints();
-                Vmath::Vcopy(npoints_e, &in[cnt],1, &((*m_exp)[i]->UpdatePhys())[0],1);
+                Vmath::Vcopy(npoints_e, &in[cnt],1, 
+                                        &((*m_exp)[i]->UpdatePhys())[0],1);
                 cnt += npoints_e;
             }
         }
 
+
+        /**
+         * The physical evaluations at the quadrature points from the expansion
+         * objects are concatenated and stored in \a out.
+         * @param   out         Storage for physical values.
+         */
         void ExpList::PutElmtExpInToPhys(Array<OneD,NekDouble> &out)
         {
             int i, npoints_e;
@@ -175,6 +253,12 @@ namespace Nektar
             }
         }
 
+
+        /**
+         * The physical evaluations at the quadrature points in the element
+         * expansion \a eid are copied to \a out.
+         * @param   out         Storage for physical values.
+         */
         void ExpList::PutElmtExpInToPhys(int eid, Array<OneD,NekDouble> &out)
         {
             int npoints_e;
@@ -182,39 +266,76 @@ namespace Nektar
 
             npoints_e = (*m_exp)[eid]->GetTotPoints();
             Vmath::Vcopy(npoints_e, &((*m_exp)[eid]->GetPhys())[0],1,
-                         &out[cnt],1);            
+                         &out[cnt],1);
         }
+
 
         ExpList::~ExpList()
         {
         }
-    
-        NekDouble ExpList::PhysIntegral(void)
+
+
+        /**
+         * The integration is evaluated locally, that is
+         * \f[\int
+         *    f(\boldsymbol{x})d\boldsymbol{x}=\sum_{e=1}^{{N_{\mathrm{el}}}}
+         * \left\{\int_{\Omega_e}f(\boldsymbol{x})d\boldsymbol{x}\right\},  \f]
+         * where the integration over the separate elements is done by the
+         * function StdRegions#StdExpansion#Integral, which discretely
+         * evaluates the integral using Gaussian quadrature.
+         *
+         * Note that the array #m_phys should be filled with the values of the
+         * function \f$f(\boldsymbol{x})\f$ at the quadrature points
+         * \f$\boldsymbol{x}_i\f$.
+         *
+         * @return  The value of the discretely evaluated integral
+         *          \f$\int f(\boldsymbol{x})d\boldsymbol{x}\f$.
+         */
+        NekDouble ExpList::PhysIntegral()
         {
             ASSERTL1(m_physState == true,
                      "local physical space is not true ");
 
             return PhysIntegral(m_phys);
         }
-        
-        NekDouble ExpList::PhysIntegral(const Array<OneD, const NekDouble> &inarray)
+
+
+        /**
+         * The integration is evaluated locally, that is
+         * \f[\int
+         *    f(\boldsymbol{x})d\boldsymbol{x}=\sum_{e=1}^{{N_{\mathrm{el}}}}
+         * \left\{\int_{\Omega_e}f(\boldsymbol{x})d\boldsymbol{x}\right\},  \f]
+         * where the integration over the separate elements is done by the
+         * function StdRegions#StdExpansion#Integral, which discretely
+         * evaluates the integral using Gaussian quadrature.
+         *
+         * @param   inarray         An array of size \f$Q_{\mathrm{tot}}\f$
+         *                          containing the values of the function
+         *                          \f$f(\boldsymbol{x})\f$ at the quadrature
+         *                          points \f$\boldsymbol{x}_i\f$.
+         * @return  The value of the discretely evaluated integral
+         *          \f$\int f(\boldsymbol{x})d\boldsymbol{x}\f$.
+         */
+        NekDouble ExpList::PhysIntegral(
+                                const Array<OneD, const NekDouble> &inarray)
         {
             int       i;
             int       cnt = 0;
             NekDouble sum = 0.0;
-            
+
             for(i = 0; i < GetExpSize(); ++i)
             {
                 sum += (*m_exp)[i]->Integral(inarray + cnt);
                 cnt += (*m_exp)[i]->GetTotPoints();
             }
-            
-            return sum; 
+
+            return sum;
         }
 
-        void ExpList::MultiplyByBlockMatrix(const GlobalMatrixKey             &gkey,
-                                            const Array<OneD,const NekDouble> &inarray, 
-                                                  Array<OneD,      NekDouble> &outarray)
+        void ExpList::MultiplyByBlockMatrix(
+                                const GlobalMatrixKey             &gkey,
+                                const Array<OneD,const NekDouble> &inarray,
+                                      Array<OneD,      NekDouble> &outarray)
         {
             int nrows;
             int ncols;
@@ -224,14 +345,28 @@ namespace Nektar
             ncols = blockmat->GetColumns();
 
             NekVector<const NekDouble> in (ncols,inarray, eWrapper);
-            NekVector<      NekDouble> out(nrows,outarray,eWrapper); 
+            NekVector<      NekDouble> out(nrows,outarray,eWrapper);
             out = (*blockmat)*in;
         }
-        
-        void ExpList::IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, 
-                                                       Array<OneD,       NekDouble> &outarray)
+
+
+        /**
+         * The operation is evaluated locally for every element by the function
+         * StdRegions#StdExpansion#IProductWRTBase.
+         *
+         * @param   inarray         An array of size \f$Q_{\mathrm{tot}}\f$
+         *                          containing the values of the function
+         *                          \f$f(\boldsymbol{x})\f$ at the quadrature
+         *                          points \f$\boldsymbol{x}_i\f$.
+         * @param   outarray        An array of size \f$N_{\mathrm{eof}}\f$
+         *                          used to store the result.
+         */
+        void ExpList::IProductWRTBase_IterPerExp(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray)
         {
-            bool doBlockMatOp = m_globalOptParam->DoBlockMatOp(StdRegions::eIProductWRTBase);
+            bool doBlockMatOp
+                = m_globalOptParam->DoBlockMatOp(StdRegions::eIProductWRTBase);
 
             if(doBlockMatOp)
             {
@@ -239,13 +374,13 @@ namespace Nektar
                 MultiplyByBlockMatrix(mkey,inarray,outarray);
             }
             else
-            { 
+            {
                 int    i;
                 int    cnt  = 0;
                 int    cnt1 = 0;
-                
+
                 Array<OneD,NekDouble> e_outarray;
-                
+
                 for(i = 0; i < GetExpSize(); ++i)
                 {
                     (*m_exp)[i]->IProductWRTBase(inarray+cnt,
@@ -257,16 +392,29 @@ namespace Nektar
             }
         }
 
-        void ExpList::IProductWRTDerivBase(const int dir, 
-                                           const Array<OneD, const NekDouble> &inarray, 
-                                           Array<OneD, NekDouble> &outarray)
+        /**
+         * The operation is evaluated locally for every element by the function
+         * StdRegions#StdExpansion#IProductWRTDerivBase.
+         *
+         * @param   dir             {0,1} is the direction in which the
+         *                          derivative of the basis should be taken
+         * @param   inarray         An array of size \f$Q_{\mathrm{tot}}\f$
+         *                          containing the values of the function
+         *                          \f$f(\boldsymbol{x})\f$ at the quadrature
+         *                          points \f$\boldsymbol{x}_i\f$.
+         * @param   outarray        An array of size \f$N_{\mathrm{eof}}\f$
+         *                          used to store the result.
+         */
+        void ExpList::IProductWRTDerivBase(const int dir,
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD, NekDouble> &outarray)
         {
             int    i;
             int    cnt  = 0;
             int    cnt1 = 0;
-            
+
             Array<OneD,NekDouble> e_outarray;
-            
+
             for(i = 0; i < GetExpSize(); ++i)
             {
                 (*m_exp)[i]->IProductWRTDerivBase(dir,inarray+cnt,
@@ -276,10 +424,44 @@ namespace Nektar
             }
             m_transState = eLocal;
         }
-            
+
+        /**
+         * Given a function \f$f(\boldsymbol{x})\f$ evaluated at
+         * the quadrature points, this function calculates the
+         * derivatives \f$\frac{d}{dx_1}\f$, \f$\frac{d}{dx_2}\f$
+         * and \f$\frac{d}{dx_3}\f$ of the function
+         * \f$f(\boldsymbol{x})\f$ at the same quadrature
+         * points. The local distribution of the quadrature points
+         * allows an elemental evaluation of the derivative. This
+         * is done by a call to the function
+         * StdRegions#StdExpansion#PhysDeriv.
+         *
+         * @param   inarray         An array of size \f$Q_{\mathrm{tot}}\f$
+         *                          containing the values of the function
+         *                          \f$f(\boldsymbol{x})\f$ at the quadrature
+         *                          points \f$\boldsymbol{x}_i\f$.
+         * @param   out_d0          The discrete evaluation of the
+         *                          derivative\f$\frac{d}{dx_1}\f$ will
+         *                          be stored in this array of size
+         *                          \f$Q_{\mathrm{tot}}\f$.
+         * @param   out_d1          The discrete evaluation of the
+         *                          derivative\f$\frac{d}{dx_2}\f$ will be
+         *                          stored in this array of size
+         *                          \f$Q_{\mathrm{tot}}\f$. Note that if no
+         *                          memory is allocated for \a out_d1, the
+         *                          derivative \f$\frac{d}{dx_2}\f$ will not be
+         *                          calculated.
+         * @param   out_d2          The discrete evaluation of the
+         *                          derivative\f$\frac{d}{dx_3}\f$ will be
+         *                          stored in this array of size
+         *                          \f$Q_{\mathrm{tot}}\f$. Note that if no
+         *                          memory is allocated for \a out_d2, the
+         *                          derivative \f$\frac{d}{dx_3}\f$ will not be
+         *                          calculated.
+         */
         void ExpList::PhysDeriv(const Array<OneD, const NekDouble> &inarray,
-                                Array<OneD, NekDouble> &out_d0, 
-                                Array<OneD, NekDouble> &out_d1, 
+                                Array<OneD, NekDouble> &out_d0,
+                                Array<OneD, NekDouble> &out_d1,
                                 Array<OneD, NekDouble> &out_d2)
         {
             int  cnt = 0;
@@ -287,7 +469,7 @@ namespace Nektar
             Array<OneD, NekDouble> e_out_d0;
             Array<OneD, NekDouble> e_out_d1;
             Array<OneD, NekDouble> e_out_d2;
-            
+
             for(i= 0; i < GetExpSize(); ++i)
             {
                 e_out_d0 = out_d0 + cnt;
@@ -295,41 +477,51 @@ namespace Nektar
                 {
                     e_out_d1 = out_d1 + cnt;
                 }
-                
+
                 if(out_d2.num_elements())
                 {
                     e_out_d2 = out_d2 + cnt;
                 }
-                
+
                 (*m_exp)[i]->PhysDeriv(inarray+cnt,e_out_d0,e_out_d1,e_out_d2);
                 cnt  += (*m_exp)[i]->GetTotPoints();
             }
         }
 
-        void ExpList::PhysDeriv(const int dir, 
+        void ExpList::PhysDeriv(const int dir,
                                 const Array<OneD, const NekDouble> &inarray,
                                 Array<OneD, NekDouble> &out_d)
         {
             int  cnt = 0;
             int  i;
             Array<OneD, NekDouble> e_out_d;
-            
+
             for(i= 0; i < GetExpSize(); ++i)
             {
                 e_out_d = out_d + cnt;
                 (*m_exp)[i]->PhysDeriv(dir, inarray+cnt, e_out_d);
                 cnt  += (*m_exp)[i]->GetTotPoints();
             }
-        }  
+        }
 
-        void ExpList::MultiplyByElmtInvMass(const Array<OneD, const NekDouble> &inarray, 
-                                            Array<OneD, NekDouble> &outarray)
+
+        /**
+         * The coefficients of the function to be acted upon
+         * should be contained in the \param inarray. The
+         * resulting coefficients are stored in \param outarray
+         *
+         * @param   inarray         An array of size \f$N_{\mathrm{eof}}\f$
+         *                          containing the inner product.
+         */
+        void ExpList::MultiplyByElmtInvMass(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD, NekDouble> &outarray)
         {
             GlobalMatrixKey mkey(StdRegions::eInvMass);
             const DNekScalBlkMatSharedPtr& InvMass = GetBlockMatrix(mkey);
 
             // Inverse mass matrix
-            NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);            
+            NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
             if(inarray.get() == outarray.get())
             {
                 NekVector<const NekDouble> in(m_ncoeffs,inarray); // copy data
@@ -342,8 +534,27 @@ namespace Nektar
             }
         }
 
-        void ExpList::FwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray, 
-                                          Array<OneD, NekDouble> &outarray)
+        /**
+         * Given a function \f$u(\boldsymbol{x})\f$ defined at the
+         * quadrature points, this function determines the
+         * transformed elemental coefficients \f$\hat{u}_n^e\f$
+         * employing a discrete elemental Galerkin projection from
+         * physical space to coefficient space. For each element,
+         * the operation is evaluated locally by the function
+         * StdRegions#StdExpansion#IproductWRTBase followed by a
+         * call to #MultiRegions#MultiplyByElmtInvMass.
+         *
+         * @param   inarray         An array of size \f$Q_{\mathrm{tot}}\f$
+         *                          containing the values of the function
+         *                          \f$f(\boldsymbol{x})\f$ at the quadrature
+         *                          points \f$\boldsymbol{x}_i\f$.
+         * @param   outarray        The resulting coefficients
+         *                          \f$\hat{u}_n^e\f$ will be stored in this
+         *                          array of size \f$N_{\mathrm{eof}}\f$.
+         */
+        void ExpList::FwdTrans_IterPerExp(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD, NekDouble> &outarray)
         {
             Array<OneD,NekDouble> f(m_ncoeffs);
 
@@ -352,35 +563,55 @@ namespace Nektar
 
         }
 
-        void ExpList::FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
-                                             Array<OneD, NekDouble> &outarray)
+        void ExpList::FwdTrans_BndConstrained(
+                                const Array<OneD, const NekDouble>& inarray,
+                                      Array<OneD, NekDouble> &outarray)
         {
             int cnt  = 0;
             int cnt1 = 0;
             int i;
-            
+
             Array<OneD,NekDouble> e_outarray;
-            
+
             for(i= 0; i < GetExpSize(); ++i)
             {
-                (*m_exp)[i]->FwdTrans_BndConstrained(inarray+cnt, 
+                (*m_exp)[i]->FwdTrans_BndConstrained(inarray+cnt,
                                       e_outarray = outarray+cnt1);
                 cnt  += (*m_exp)[i]->GetTotPoints();
                 cnt1 += (*m_exp)[i]->GetNcoeffs();
             }
-        }        
+        }
 
-        const DNekScalBlkMatSharedPtr ExpList::GenBlockMatrix(const GlobalMatrixKey &gkey)
+        /**
+         * This function assembles the block diagonal matrix
+         * \f$\underline{\boldsymbol{M}}^e\f$, which is the
+         * concatenation of the local matrices
+         * \f$\boldsymbol{M}^e\f$ of the type \a mtype, that is
+         *
+         * \f[
+         * \underline{\boldsymbol{M}}^e = \left[
+         * \begin{array}{cccc}
+         * \boldsymbol{M}^1 & 0 & \hspace{3mm}0 \hspace{3mm}& 0 \\
+         *  0 & \boldsymbol{M}^2 & 0 & 0 \\
+         *  0 &  0 & \ddots &  0 \\
+         *  0 &  0 & 0 & \boldsymbol{M}^{N_{\mathrm{el}}} \end{array}\right].\f]
+         *
+         * @param   mtype           the type of matrix to be assembled
+         * @param   scalar          an optional parameter
+         * @param   constant        an optional parameter
+         */
+        const DNekScalBlkMatSharedPtr ExpList::GenBlockMatrix(
+                                const GlobalMatrixKey &gkey)
         {
             int i,j,cnt1;
             int n_exp = GetExpSize();
             Array<OneD,unsigned int> nrows(n_exp);
             Array<OneD,unsigned int> ncols(n_exp);
             DNekScalMatSharedPtr    loc_mat;
-            DNekScalBlkMatSharedPtr BlkMatrix;            
+            DNekScalBlkMatSharedPtr BlkMatrix;
 
             switch(gkey.GetMatrixType())
-            {      
+            {
             case StdRegions::eBwdTrans:
                 {
                     // set up an array of integers for block matrix construction
@@ -400,8 +631,8 @@ namespace Nektar
                         ncols[i] = (*m_exp)[i]->GetTotPoints();
                     }
                 }
-                break;                           
-            case StdRegions::eMass: 
+                break;
+            case StdRegions::eMass:
             case StdRegions::eInvMass:
             case StdRegions::eHelmholtz:
             case StdRegions::eLaplacian:
@@ -425,19 +656,22 @@ namespace Nektar
                     }
                 }
                 break;
-                
+
             default:
                 {
-                    NEKERROR(ErrorUtil::efatal, "Global Matrix creation not defined for this type of matrix");
+                    NEKERROR(ErrorUtil::efatal, 
+                             "Global Matrix creation not defined for this type "
+                             "of matrix");
                 }
             }
 
             MatrixStorage blkmatStorage = eDIAGONAL;
-            BlkMatrix = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nrows,ncols,blkmatStorage);
+            BlkMatrix = MemoryManager<DNekScalBlkMat>
+                                ::AllocateSharedPtr(nrows,ncols,blkmatStorage);
 
             int nvarcoeffs = gkey.GetNvariableCoefficients();
             Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
-            
+
             for(i = cnt1 = 0; i < n_exp; ++i)
             {
                 if(nvarcoeffs>0)
@@ -458,11 +692,12 @@ namespace Nektar
                 loc_mat = (*m_exp)[i]->GetLocMatrix(matkey);
                 BlkMatrix->SetBlock(i,i,loc_mat);
             }
-            
+
             return BlkMatrix;
         }
 
-        const DNekScalBlkMatSharedPtr& ExpList::GetBlockMatrix(const GlobalMatrixKey &gkey)
+        const DNekScalBlkMatSharedPtr& ExpList::GetBlockMatrix(
+                                const GlobalMatrixKey &gkey)
         {
             BlockMatrixMap::iterator matrixIter = m_blockMat->find(gkey);
 
@@ -475,55 +710,59 @@ namespace Nektar
                 return matrixIter->second;
             }
         }
-        
-        void ExpList::GeneralMatrixOp_IterPerExp(const GlobalMatrixKey             &gkey,
-                                                 const Array<OneD,const NekDouble> &inarray, 
-                                                       Array<OneD,      NekDouble> &outarray)
+
+        void ExpList::GeneralMatrixOp_IterPerExp(
+                                const GlobalMatrixKey             &gkey,
+                                const Array<OneD,const NekDouble> &inarray,
+                                      Array<OneD,      NekDouble> &outarray)
         {
-            bool doBlockMatOp = m_globalOptParam->DoBlockMatOp(gkey.GetMatrixType());
+            bool doBlockMatOp = m_globalOptParam->DoBlockMatOp(
+                                                        gkey.GetMatrixType());
 
             if(doBlockMatOp)
             {
                 MultiplyByBlockMatrix(gkey,inarray,outarray);
             }
             else
-            { 
+            {
                 int  i,j;
                 int  cnt  = 0;
                 int  cnt1 = 0;
                 Array<OneD,NekDouble>      e_outarray;
-                
+
                 int nvarcoeffs = gkey.GetNvariableCoefficients();
                 Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
-                
+
                 for(i= 0; i < GetExpSize(); ++i)
                 {
                     if(nvarcoeffs>0)
                     {
                         for(j = 0; j < nvarcoeffs; j++)
                         {
-                            varcoeffs[j] = gkey.GetVariableCoefficient(j) + cnt1;
+                            varcoeffs[j] = gkey.GetVariableCoefficient(j)
+                                            + cnt1;
                         }
                         cnt1  += (*m_exp)[i]->GetTotPoints();
                     }
-                    
+
                     StdRegions::StdMatrixKey mkey(gkey.GetMatrixType(),
-                                                  (*m_exp)[i]->DetExpansionType(),
-                                                  *((*m_exp)[i]),
-                                                  gkey.GetConstants(),varcoeffs);
-                    
-                    (*m_exp)[i]->GeneralMatrixOp(inarray + cnt, 
+                                                (*m_exp)[i]->DetExpansionType(),
+                                                *((*m_exp)[i]),
+                                                gkey.GetConstants(),varcoeffs);
+
+                    (*m_exp)[i]->GeneralMatrixOp(inarray + cnt,
                                                  e_outarray = outarray+cnt,
                                                  mkey);
-                    
+
                     cnt   += (*m_exp)[i]->GetNcoeffs();
-                }      
+                }
             }
         }
 
-	GlobalMatrixSharedPtr ExpList::GenGlobalMatrix(const GlobalMatrixKey &mkey, 
-                                                       const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
-	{
+        GlobalMatrixSharedPtr ExpList::GenGlobalMatrix(
+                            const GlobalMatrixKey &mkey,
+                            const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
+        {
             int i,j,n,gid1,gid2,cntdim1,cntdim2,cnt1;
             NekDouble sign1,sign2;
             DNekScalMatSharedPtr loc_mat;
@@ -537,7 +776,7 @@ namespace Nektar
             bool assembleSecondDim;
 
             switch(mkey.GetMatrixType())
-            {      
+            {
             case StdRegions::eBwdTrans:
                 {
                     glob_rows = m_npoints;
@@ -555,8 +794,8 @@ namespace Nektar
                     assembleFirstDim  = true;
                     assembleSecondDim = false;
                 }
-                break;                           
-            case StdRegions::eMass: 
+                break;
+            case StdRegions::eMass:
             case StdRegions::eHelmholtz:
             case StdRegions::eLaplacian:
                 {
@@ -569,7 +808,9 @@ namespace Nektar
                 break;
             default:
                 {
-                    NEKERROR(ErrorUtil::efatal, "Global Matrix creation not defined for this type of matrix");
+                    NEKERROR(ErrorUtil::efatal, 
+                             "Global Matrix creation not defined for this type "
+                             "of matrix");
                 }
             }
 
@@ -578,8 +819,8 @@ namespace Nektar
 
             int nvarcoeffs = mkey.GetNvariableCoefficients();
             Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
-            
-            // fill global matrix 
+
+            // fill global matrix
             for(n = cntdim1 = cntdim2 = cnt1 = 0; n < (*m_exp).size(); ++n)
             {
                 if(nvarcoeffs>0)
@@ -596,11 +837,11 @@ namespace Nektar
                                                *(*m_exp)[n],
                                                mkey.GetConstants(),
                                                varcoeffs);
-                
-                loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);               
-                loc_rows = loc_mat->GetRows();         
+
+                loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);
+                loc_rows = loc_mat->GetRows();
                 loc_cols = loc_mat->GetColumns();
-		    
+
                 for(i = 0; i < loc_rows; ++i)
                 {
                     if(assembleFirstDim)
@@ -614,40 +855,76 @@ namespace Nektar
                         sign1 = 1.0;
                     }
 
-                        for(j = 0; j < loc_cols; ++j)
+                    for(j = 0; j < loc_cols; ++j)
+                    {
+                        if(assembleSecondDim)
                         {
-                            if(assembleSecondDim)
-                            {
-                                gid2  = locToGloMap->GetLocalToGlobalMap (cntdim2 + j);
-                                sign2 = locToGloMap->GetLocalToGlobalSign(cntdim2 + j);
-                            }
-                            else
-                            {
-                                gid2  = cntdim2 + j;
-                                sign2 = 1.0;
-                            }
+                            gid2  = locToGloMap
+                                            ->GetLocalToGlobalMap(cntdim2 + j);
+                            sign2 = locToGloMap
+                                            ->GetLocalToGlobalSign(cntdim2 + j);
+                        }
+                        else
+                        {
+                            gid2  = cntdim2 + j;
+                            sign2 = 1.0;
+                        }
 
-                            // sparse matrix fill
-                            coord = make_pair(gid1,gid2);
-                            if( spcoomat.count(coord) == 0 )
-                            {
-                                spcoomat[coord] = sign1*sign2*(*loc_mat)(i,j);
-                            }
-                            else
-                            {
-                                spcoomat[coord] += sign1*sign2*(*loc_mat)(i,j);
-                            }
-                        }		
+                        // sparse matrix fill
+                        coord = make_pair(gid1,gid2);
+                        if( spcoomat.count(coord) == 0 )
+                        {
+                            spcoomat[coord] = sign1*sign2*(*loc_mat)(i,j);
+                        }
+                        else
+                        {
+                            spcoomat[coord] += sign1*sign2*(*loc_mat)(i,j);
+                        }
+                    }
                 }
                 cntdim1 += loc_rows;
                 cntdim2 += loc_cols;
-            }     
-            
-            return MemoryManager<GlobalMatrix>::AllocateSharedPtr(glob_rows,glob_cols,spcoomat);
+            }
+
+            return MemoryManager<GlobalMatrix>
+                            ::AllocateSharedPtr(glob_rows,glob_cols,spcoomat);
         }
-       
-	GlobalLinSysSharedPtr ExpList::GenGlobalLinSysFullDirect(const GlobalLinSysKey &mkey, const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
-	{
+
+
+        /**
+         * Consider a linear system
+         *   \f$\boldsymbol{M\hat{u}}_g=\boldsymbol{\hat{f}}\f$
+         * to be solved, where \f$\boldsymbol{M}\f$ is a matrix of type
+         * specified by \a mkey. This function assembles the global system
+         * matrix \f$\boldsymbol{M}\f$ out of the elemental submatrices
+         * \f$\boldsymbol{M}^e\f$. This is equivalent to:
+         * \f[ \boldsymbol{M}=\boldsymbol{\mathcal{A}}^T
+         * \underline{\boldsymbol{M}}^e\boldsymbol{\mathcal{A}}.\f]
+         * where the matrix \f$\boldsymbol{\mathcal{A}}\f$ is a sparse
+         * permutation matrix of size \f$N_{\mathrm{eof}}\times
+         * N_{\mathrm{dof}}\f$. However, due to the size and sparsity of the
+         * matrix \f$\boldsymbol{\mathcal{A}}\f$, it is more efficient to
+         * assemble the global matrix using the mapping array \a
+         * map\f$[e][i]\f$ contained in the input argument \a locToGloMap.
+         * The global assembly is then evaluated as:
+         * \f[ \boldsymbol{M}\left[\mathrm{\texttt{map}}[e][i]\right]
+         * \left[\mathrm{\texttt{map}}[e][j]\right]
+         *       =\mathrm{\texttt{sign}}[e][i]\cdot
+         * \mathrm{\texttt{sign}}[e][j] \cdot\boldsymbol{M}^e[i][j]\f]
+         * where the values \a sign\f$[e][i]\f$ ensure the correct connectivity.
+         *
+         * @param   mkey            A key which uniquely defines the global
+         *                          matrix to be constructed.
+         * @param   locToGloMap     Contains the mapping array and
+         *                          required information for the transformation
+         *                          from local to global degrees of freedom.
+         * @return  (A shared pointer to) the global linear system formed by
+         *          the global matrix \f$\boldsymbol{M}\f$.
+         */
+        GlobalLinSysSharedPtr ExpList::GenGlobalLinSysFullDirect(
+                            const GlobalLinSysKey &mkey,
+                            const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
+        {
             int n,j;
             int cnt1;
             int n_exp = GetExpSize();
@@ -715,7 +992,7 @@ namespace Nektar
             switch(mkey.GetMatrixType())
             {
                 // case for all symmetric matices
-            case StdRegions::eHelmholtz: 
+            case StdRegions::eHelmholtz:
             case StdRegions::eLaplacian:
                 if( (2*(bwidth+1)) < rows)
                 {
@@ -726,8 +1003,8 @@ namespace Nektar
                 {
                     matStorage = ePOSITIVE_DEFINITE_SYMMETRIC;
                     Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero,matStorage);
-                }  
-                
+                }
+
                 break;
             default: // Assume general matrix - currently only set up for full invert
                 {
@@ -736,8 +1013,7 @@ namespace Nektar
                 }       
             }             
 
-            
-            // fill global symmetric matrix 
+            // fill global symmetric matrix
             for(n = cnt = cnt1 = 0; n < (*m_exp).size(); ++n)
             {
                 if(nvarcoeffs>0)
@@ -748,16 +1024,16 @@ namespace Nektar
                         }
                         cnt1  += (*m_exp)[n]->GetTotPoints();
                 }
-                
+
                 LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
                                                (*m_exp)[n]->DetExpansionType(),
                                                *(*m_exp)[n],
                                                mkey.GetConstants(),
                                                varcoeffs);
-                
-                loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);               
+
+                loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);
                 loc_lda = loc_mat->GetColumns();
-                
+
                 for(i = 0; i < loc_lda; ++i)
                 {
                     gid1 = locToGloMap->GetLocalToGlobalMap(cnt + i) - NumDirBCs;
@@ -779,12 +1055,12 @@ namespace Nektar
                                     value = Gmat->GetValue(gid1,gid2) + sign1*sign2*(*loc_mat)(i,j);
                                     Gmat->SetValue(gid1,gid2,value);
                                 }
-                            }		
+                            }
                         }
                     }
                 }
                 cnt   += (*m_exp)[n]->GetNcoeffs();
-            }        
+            }
 
 //             for(i = NumDirBCs; i < NumDirBCs+NumRobinBCs; ++i)
 //             {
@@ -794,13 +1070,111 @@ namespace Nektar
 //                         (locToGloMap->GetBndCondGlobalID())[i]-NumDirBCs)
 //                     -= mkey.GetScaleFactor() * b;
 //             }
-            
+
 
             return Gmat;
         }
 
-        GlobalLinSysSharedPtr ExpList::GenGlobalLinSysStaticCond(const GlobalLinSysKey &mkey, const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
-	{           
+
+        /**
+         * Consider the linear system
+         * \f$\boldsymbol{M\hat{u}}_g=\boldsymbol{\hat{f}}\f$.
+         * Distinguishing between the boundary and interior components of
+         * \f$\boldsymbol{\hat{u}}_g\f$ and \f$\boldsymbol{\hat{f}}\f$ using
+         * \f$\boldsymbol{\hat{u}}_b\f$,\f$\boldsymbol{\hat{u}}_i\f$ and
+         * \f$\boldsymbol{\hat{f}}_b\f$,\f$\boldsymbol{\hat{f}}_i\f$
+         * respectively, this system can be split into its constituent parts as
+         * \f[\left[\begin{array}{cc}
+         * \boldsymbol{M}_b&\boldsymbol{M}_{c1}\\
+         * \boldsymbol{M}_{c2}&\boldsymbol{M}_i\\
+         * \end{array}\right]
+         * \left[\begin{array}{c}
+         * \boldsymbol{\hat{u}_b}\\
+         * \boldsymbol{\hat{u}_i}\\
+         * \end{array}\right]=
+         * \left[\begin{array}{c}
+         * \boldsymbol{\hat{f}_b}\\
+         * \boldsymbol{\hat{f}_i}\\
+         * \end{array}\right]\f]
+         * where \f$\boldsymbol{M}_b\f$ represents the components of
+         * \f$\boldsymbol{M}\f$ resulting from boundary-boundary mode
+         * interactions,
+         * \f$\boldsymbol{M}_{c1}\f$ and \f$\boldsymbol{M}_{c2}\f$ represent the
+         * components resulting from coupling between the boundary-interior
+         * modes, and \f$\boldsymbol{M}_i\f$ represents the components of
+         * \f$\boldsymbol{M}\f$ resulting from interior-interior mode
+         * interactions.
+         *
+         * The solution of the linear system can now be determined in two steps:
+         * \f{eqnarray*}
+         * \mathrm{step 1:}&\quad&(\boldsymbol{M}_b-\boldsymbol{M}_{c1}
+         * \boldsymbol{M}_i^{-1}\boldsymbol{M}_{c2}) \boldsymbol{\hat{u}_b} =
+         * \boldsymbol{\hat{f}}_b - \boldsymbol{M}_{c1}\boldsymbol{M}_i^{-1}
+         * \boldsymbol{\hat{f}}_i,\nonumber \\
+         * \mathrm{step 2:}&\quad&\boldsymbol{\hat{u}_i}=\boldsymbol{M}_i^{-1}
+         * \left( \boldsymbol{\hat{f}}_i
+         *      - \boldsymbol{M}_{c2}\boldsymbol{\hat{u}_b}
+         * \right). \nonumber \\ \f}
+         * As the inverse of \f$\boldsymbol{M}_i^{-1}\f$ is
+         * \f[ \boldsymbol{M}_i^{-1} = \left [\underline{\boldsymbol{M}^e_i}
+         * \right ]^{-1} = \underline{[\boldsymbol{M}^e_i]}^{-1} \f]
+         * and the following operations can be evaluated as,
+         * \f{eqnarray*}
+         * \boldsymbol{M}_{c1}\boldsymbol{M}_i^{-1}\boldsymbol{\hat{f}}_i &
+         * =& \boldsymbol{\mathcal{A}}_b^T \underline{\boldsymbol{M}^e_{c1}}
+         * \underline{[\boldsymbol{M}^e_i]}^{-1} \boldsymbol{\hat{f}}_i \\
+         * \boldsymbol{M}_{c2} \boldsymbol{\hat{u}_b} &=&
+         * \underline{\boldsymbol{M}^e_{c2}} \boldsymbol{\mathcal{A}}_b
+         * \boldsymbol{\hat{u}_b}.\f}
+         * where \f$\boldsymbol{\mathcal{A}}_b \f$ is the permutation matrix
+         * which scatters from global to local degrees of freedom, only the
+         * following four matrices should be constructed:
+         * - \f$\underline{[\boldsymbol{M}^e_i]}^{-1}\f$
+         * - \f$\underline{\boldsymbol{M}^e_{c1}}
+         *                          \underline{[\boldsymbol{M}^e_i]}^{-1}\f$
+         * - \f$\underline{\boldsymbol{M}^e_{c2}}\f$
+         * - The Schur complement: \f$\boldsymbol{M}_{\mathrm{Schur}}=
+         *   \quad\boldsymbol{M}_b-\boldsymbol{M}_{c1}\boldsymbol{M}_i^{-1}
+         *   \boldsymbol{M}_{c2}\f$
+         *
+         * The first three matrices are just a concatenation of the
+         * corresponding local matrices and they can be created as such. They
+         * also allow for an elemental evaluation of the operations concerned.
+         *
+         * The global Schur complement however should be assembled from the
+         * concatenation of the local elemental Schur complements, that is,
+         * \f[ \boldsymbol{M}_{\mathrm{Schur}}=\boldsymbol{M}_b
+         *          - \boldsymbol{M}_{c1}
+         * \boldsymbol{M}_i^{-1} \boldsymbol{M}_{c2} =
+         * \boldsymbol{\mathcal{A}}_b^T \left [\underline{\boldsymbol{M}^e_b -
+         * \boldsymbol{M}^e_{c1} [\boldsymbol{M}^e_i]^{-1}
+         * (\boldsymbol{M}^e_{c2})} \right ] \boldsymbol{\mathcal{A}}_b \f]
+         * and it is the only matrix operation that need to be evaluated on a
+         * global level when using static condensation.
+         * However, due to the size and sparsity of the matrix
+         * \f$\boldsymbol{\mathcal{A}}_b\f$, it is more efficient to assemble
+         * the global Schur matrix using the mapping array bmap\f$[e][i]\f$
+         * contained in the input argument \a locToGloMap. The global Schur
+         * complement is then constructed as:
+         * \f[\boldsymbol{M}_{\mathrm{Schur}}\left[\mathrm{\a bmap}[e][i]\right]
+         * \left[\mathrm{\a bmap}[e][j]\right]=\mathrm{\a bsign}[e][i]\cdot
+         * \mathrm{\a bsign}[e][j]
+         * \cdot\boldsymbol{M}^e_{\mathrm{Schur}}[i][j]\f]
+         * All four matrices are stored in the \a GlobalLinSys returned by this
+         * function.
+         *
+         * @param   mkey            A key which uniquely defines the global
+         *                          matrix to be constructed.
+         * @param   locToGloMap     Contains the mapping array and required
+         *                          information for the transformation from
+         *                          local to global degrees of freedom.
+         * @return  (A shared pointer to) the statically condensed global
+         *          linear system.
+         */
+        GlobalLinSysSharedPtr ExpList::GenGlobalLinSysStaticCond(
+                        const GlobalLinSysKey &mkey,
+                        const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
+        {
             int n,j;
             int cnt1;
 
@@ -843,22 +1217,41 @@ namespace Nektar
                                                mkey.GetConstants(),
                                                varcoeffs);
 
-                loc_mat = (*m_exp)[n]->GetLocStaticCondMatrix(matkey);    
+                loc_mat = (*m_exp)[n]->GetLocStaticCondMatrix(matkey);
 
                 SchurCompl->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,0));
                 BinvD     ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,1));
                 C         ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,0));
-                invD      ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,1));                
+                invD      ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,1));
             }
-           
+
             return MemoryManager<GlobalLinSys>::AllocateSharedPtr(mkey,SchurCompl,BinvD,C,invD,locToGloMap);
         }
 
 
-	GlobalLinSysSharedPtr ExpList::GenGlobalLinSys(const GlobalLinSysKey &mkey, const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
-	{
-            GlobalLinSysSharedPtr returnlinsys; 
-            
+        /**
+         * Consider a linear system
+         * \f$\boldsymbol{M\hat{u}}_g=\boldsymbol{f}\f$ to be solved. Dependent
+         * on the solution method, this function constructs
+         * - <b>The full linear system</b><BR>
+         *   A call to the function #GenGlobalLinSysFullDirect
+         * - <b>The statically condensed linear system</b><BR>
+         *   A call to the function #GenGlobalLinSysStaticCond
+         *
+         * @param   mkey            A key which uniquely defines the global
+         *                          matrix to be constructed.
+         * @param   locToGloMap     Contains the mapping array and required
+         *                          information for the transformation from
+         *                          local to global degrees of freedom.
+         * @return  (A shared pointer to) the global linear system in
+         *          required format.
+         */
+        GlobalLinSysSharedPtr ExpList::GenGlobalLinSys(
+                        const GlobalLinSysKey &mkey,
+                        const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
+        {
+            GlobalLinSysSharedPtr returnlinsys;
+
             switch(mkey.GetGlobalSysSolnType())
             {
             case eDirectFullMatrix:
@@ -884,13 +1277,14 @@ namespace Nektar
                 ASSERTL0(false,"Matrix solution type not defined");
                 break;
             }
-            
+
             return returnlinsys;
         }
 
-        GlobalLinSysSharedPtr ExpList::GenGlobalBndLinSys(const GlobalLinSysKey &mkey, 
-                                                          const LocalToGlobalBaseMapSharedPtr &locToGloMap)
-	{
+        GlobalLinSysSharedPtr ExpList::GenGlobalBndLinSys(
+                        const GlobalLinSysKey     &mkey,
+                        const LocalToGlobalBaseMapSharedPtr &locToGloMap)
+        {
             StdRegions::MatrixType linsystype = mkey.GetMatrixType();
             ASSERTL0(linsystype == StdRegions::eHybridDGHelmBndLam,
                      "Routine currently only tested for HybridDGHelmholtz");
@@ -942,10 +1336,30 @@ namespace Nektar
             return MemoryManager<GlobalLinSys>::AllocateSharedPtr(mkey,SchurCompl,BinvD,C,invD,locToGloMap);
         }
 
-        void ExpList::BwdTrans_IterPerExp(const Array<OneD, const NekDouble> &inarray,
-                                   Array<OneD, NekDouble> &outarray)
+
+        /**
+         * Given the elemental coefficients \f$\hat{u}_n^e\f$ of
+         * an expansion, this function evaluates the spectral/hp
+         * expansion \f$u^{\delta}(\boldsymbol{x})\f$ at the
+         * quadrature points \f$\boldsymbol{x}_i\f$. The operation
+         * is evaluated locally by the elemental function
+         * StdRegions#StdExpansion#BwdTrans.
+         *
+         * @param   inarray         An array of size \f$N_{\mathrm{eof}}\f$
+         *                          containing the local coefficients
+         *                          \f$\hat{u}_n^e\f$.
+         * @param   outarray        The resulting physical values at the
+         *                          quadrature points
+         *                          \f$u^{\delta}(\boldsymbol{x}_i)\f$
+         *                          will be stored in this array of size
+         *                          \f$Q_{\mathrm{tot}}\f$.
+         */
+        void ExpList::BwdTrans_IterPerExp(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD, NekDouble> &outarray)
         {
-            bool doBlockMatOp = m_globalOptParam->DoBlockMatOp(StdRegions::eBwdTrans);
+            bool doBlockMatOp
+                    = m_globalOptParam->DoBlockMatOp(StdRegions::eBwdTrans);
 
             if(doBlockMatOp)
             {
@@ -953,22 +1367,33 @@ namespace Nektar
                 MultiplyByBlockMatrix(mkey,inarray,outarray);
             }
             else
-            { 
+            {
                 int  i;
                 int  cnt  = 0;
                 int  cnt1 = 0;
                 Array<OneD,NekDouble> e_outarray;
-                
+
                 for(i= 0; i < GetExpSize(); ++i)
                 {
-                    (*m_exp)[i]->BwdTrans(inarray + cnt, 
+                    (*m_exp)[i]->BwdTrans(inarray + cnt,
                                           e_outarray = outarray+cnt1);
                     cnt   += (*m_exp)[i]->GetNcoeffs();
                     cnt1  += (*m_exp)[i]->GetTotPoints();
-                }    
-            }    
+                }
+            }
         }
-        
+
+        /**
+         * The operation is evaluated locally by the elemental
+         * function StdRegions#StdExpansion#GetCoords.
+         *
+         * @param   coord_0         After calculation, the \f$x_1\f$ coordinate
+         *                          will be stored in this array.
+         * @param   coord_1         After calculation, the \f$x_2\f$ coordinate
+         *                          will be stored in this array.
+         * @param   coord_2         After calculation, the \f$x_3\f$ coordinate
+         *                          will be stored in this array.
+         */
         void ExpList::GetCoords(Array<OneD, NekDouble> &coord_0,
                                 Array<OneD, NekDouble> &coord_1,
                                 Array<OneD, NekDouble> &coord_2)
@@ -977,7 +1402,7 @@ namespace Nektar
             Array<OneD, NekDouble> e_coord_0;
             Array<OneD, NekDouble> e_coord_1;
             Array<OneD, NekDouble> e_coord_2;
-            
+
             switch(GetExp(0)->GetCoordim())
             {
             case 1:
@@ -988,10 +1413,10 @@ namespace Nektar
                     cnt  += (*m_exp)[i]->GetTotPoints();
                 }
                 break;
-            case 2: 
-                ASSERTL0(coord_1.num_elements() != 0, 
+            case 2:
+                ASSERTL0(coord_1.num_elements() != 0,
                          "output coord_1 is not defined");
-                
+
                 for(i= 0; i < GetExpSize(); ++i)
                 {
                     e_coord_0 = coord_0 + cnt;
@@ -1000,18 +1425,18 @@ namespace Nektar
                     cnt  += (*m_exp)[i]->GetTotPoints();
                 }
                 break;
-            case 3: 
+            case 3:
                 ASSERTL0(coord_1.num_elements() != 0,
                          "output coord_1 is not defined");
                 ASSERTL0(coord_2.num_elements() != 0,
                          "output coord_2 is not defined");
-                
+
                 for(i= 0; i < GetExpSize(); ++i)
                 {
                     e_coord_0 = coord_0 + cnt;
                     e_coord_1 = coord_1 + cnt;
                     e_coord_2 = coord_2 + cnt;
-                    
+
                     (*m_exp)[i]->GetCoords(e_coord_0,e_coord_1,e_coord_2);
                     cnt  += (*m_exp)[i]->GetTotPoints();
                 }
@@ -1019,11 +1444,16 @@ namespace Nektar
             }
         }
 
-        void ExpList::GetSurfaceNormal(Array<OneD, NekDouble> &SurfaceNormal, const int k)
+        /**
+         * The operation is evaluated locally by the elemental
+         * function StdRegions#StdExpansion#GetSurfaceNormal.
+         */
+        void ExpList::GetSurfaceNormal(Array<OneD, NekDouble> &SurfaceNormal,
+                                const int k)
         {
             int i, cnt=0;
             Array<OneD, NekDouble> e_SN;
-            
+
             for(i = 0; i < GetExpSize(); ++i)
             {
                 e_SN = SurfaceNormal + cnt;
@@ -1032,39 +1462,49 @@ namespace Nektar
             }
         }
 
-        void ExpList::WriteToFile(std::ofstream &out, OutputFormat format, std::string var)
-        {  
+        /**
+         * The coordinates of the quadrature points, together with
+         * the content of the array #m_phys, are written to the
+         * file \a out.
+         *
+         * @param   out             The file to which the solution should be
+         *                          written.
+         */
+        void ExpList::WriteToFile(std::ofstream &out, OutputFormat format,
+                                std::string var)
+        {
             if(format==eTecplot)
             {
                 int i,cnt = 0;
 
                 Array<OneD, const NekDouble> phys = m_phys;
-                
+
                 if(m_physState == false)
                 {
                     BwdTrans(m_coeffs,m_phys);
                 }
-                
+
                 (*m_exp)[0]->SetPhys(phys);
                 (*m_exp)[0]->WriteToFile(out,eTecplot,true,var);
                 cnt  += (*m_exp)[0]->GetTotPoints();
-                
+
                 for(i= 1; i < GetExpSize(); ++i)
                 {
                     (*m_exp)[i]->SetPhys(phys+cnt);
-                    (*m_exp)[i]->WriteToFile(out,eTecplot,false,var); 
+                    (*m_exp)[i]->WriteToFile(out,eTecplot,false,var);
                     cnt  += (*m_exp)[i]->GetTotPoints();
                 }
             }
             else if(format==eGmsh)
-            {   
-               
+            {
+
                 out<<"View.MaxRecursionLevel = 8;"<<endl;
                 out<<"View.TargetError = 0.00;"<<endl;
-                 
+
                 int i,j,k;
                 int nElementalCoeffs =  (*m_exp)[0]->GetBasisNumModes(0);
-                StdRegions::ExpansionType locShape = (*m_exp)[0]->DetExpansionType();
+                StdRegions::ExpansionType locShape
+                                            = (*m_exp)[0]->DetExpansionType();
 
                 int nDumpCoeffs =  nElementalCoeffs*nElementalCoeffs;
                 Array<TwoD, int> exponentMap(nDumpCoeffs,3,0);
@@ -1075,23 +1515,25 @@ namespace Nektar
                     {
                         exponentMap[cnt][0] = j;
                         exponentMap[cnt++][1] = i;
-                    }         
+                    }
                 }
 
                 PutCoeffsInToElmtExp();
                 bool dumpNewView = true;
                 bool closeView = false;
                 for(i= 0; i < GetExpSize(); ++i)
-                {                 
+                {
                     if(nElementalCoeffs != (*m_exp)[i]->GetBasisNumModes(0))
                     {
-                        ASSERTL0(false,"Not all elements have the same number of expansions, this will"
-                                 "probably lead to a corrupt Gmsh-output file")
+                        ASSERTL0(false,"Not all elements have the same number "
+                                       "of expansions, this will probably lead "
+                                       "to a corrupt Gmsh-output file.")
                     }
 
                     if(i>0)
                     {
-                        if ( ((*m_exp)[i]->DetExpansionType())!=((*m_exp)[i-1]->DetExpansionType()) )
+                        if ( ((*m_exp)[i]->DetExpansionType())
+                                        !=((*m_exp)[i-1]->DetExpansionType()) )
                         {
                             dumpNewView = true;
                         }
@@ -1102,7 +1544,8 @@ namespace Nektar
                     }
                     if(i<GetExpSize()-1)
                     {
-                        if ( ((*m_exp)[i]->DetExpansionType())!=((*m_exp)[i+1]->DetExpansionType()) )
+                        if ( ((*m_exp)[i]->DetExpansionType())
+                                        !=((*m_exp)[i+1]->DetExpansionType()) )
                         {
                             closeView = true;
                         }
@@ -1121,7 +1564,7 @@ namespace Nektar
                         out<<"View \" \" {"<<endl;
                     }
 
-                    (*m_exp)[i]->WriteToFile(out,eGmsh,false); 
+                    (*m_exp)[i]->WriteToFile(out,eGmsh,false);
 
                     if(closeView)
                     {
@@ -1154,7 +1597,7 @@ namespace Nektar
                                 out<<"}"<<endl<<"}"<<endl;
                             }
                         }
-                        
+
                         out<<"{"<<endl;
                         for(k=0; k < nDumpCoeffs; k++)
                         {
@@ -1177,21 +1620,22 @@ namespace Nektar
                             }
                         }
                         out<<"};"<<endl;
-                    }                 
-                }       
+                    }
+                }
                 out<<"Combine ElementsFromAllViews;"<<endl;
                 out<<"View.Name = \"\";"<<endl;
-            }                    
+            }
             else
             {
-                ASSERTL0(false, "Output routine not implemented for requested type of output");
+                ASSERTL0(false, "Output routine not implemented for requested "
+                                "type of output");
             }
         }
 
 
 
         void ExpList::ReadFromFile(std::ifstream &in, OutputFormat format)
-        {  
+        {
             if(format==eTecplot)
             {
                 int i,cnt = 0;
@@ -1203,27 +1647,45 @@ namespace Nektar
                 (*m_exp)[0]->ReadFromFile(in,eTecplot,true);
                 Vmath::Vcopy(npts,&(*m_exp)[0]->GetPhys()[0],1,&phys[cnt],1);
                 cnt  += npts;
-                
+
                 for(i= 1; i < GetExpSize(); ++i)
                 {
                     npts = (*m_exp)[i]->GetTotPoints();
-                    (*m_exp)[i]->ReadFromFile(in,eTecplot,false); 
+                    (*m_exp)[i]->ReadFromFile(in,eTecplot,false);
                     Vmath::Vcopy(npts,&((*m_exp)[i]->GetPhys())[0],1,
                                  &phys[cnt],1);
                     cnt  += npts;
                 }
 
                 FwdTrans(m_phys,m_coeffs);
-                
+
             }
             else
             {
                 ASSERTL0(false, "Output routine not implemented for requested type of output");
             }
         }
-    
+
+        /**
+         * Given a spectral/hp approximation
+         * \f$u^{\delta}(\boldsymbol{x})\f$ evaluated at the quadrature points
+         * (which should be contained in #m_phys), this function calculates the
+         * \f$L_\infty\f$ error of this approximation with respect to an exact
+         * solution. The local distribution of the quadrature points allows an
+         * elemental evaluation of this operation through the functions
+         * StdRegions#StdExpansion#Linf.
+         *
+         * The exact solution, also evaluated at the quadrature
+         * points, should be contained in the variable #m_phys of
+         * the ExpList object \a Sol.
+         *
+         * @param   Sol             An ExpList, containing the discrete
+         *                          evaluation of the exact solution at the
+         *                          quadrature points in its array #m_phys.
+         * @return  The \f$L_\infty\f$ error of the approximation.
+         */
         NekDouble  ExpList::Linf(const Array<OneD, const NekDouble> &soln)
-        {            
+        {
             NekDouble err = 0.0;
             int       i,cnt = 0;
             Array<OneD, const NekDouble> phys = m_phys;
@@ -1235,17 +1697,33 @@ namespace Nektar
                 err  = std::max(err,(*m_exp)[i]->Linf(soln + cnt));
                 cnt  += (*m_exp)[i]->GetTotPoints();
             }
-            
+
             return err;
         }
-        
+
+        /**
+         * Given a spectral/hp approximation \f$u^{\delta}(\boldsymbol{x})\f$
+         * evaluated at the quadrature points (which should be contained in
+         * #m_phys), this function calculates the \f$L_2\f$ error of this
+         * approximation with respect to an exact solution. The local
+         * distribution of the quadrature points allows an elemental evaluation
+         * of this operation through the functions StdRegions#StdExpansion#L2.
+         *
+         * The exact solution, also evaluated at the quadrature points, should
+         * be contained in the variable #m_phys of the ExpList object \a Sol.
+         *
+         * @param   Sol             An ExpList, containing the discrete
+         *                          evaluation of the exact solution at the
+         *                          quadrature points in its array #m_phys.
+         * @return  The \f$L_2\f$ error of the approximation.
+         */
         NekDouble ExpList::L2(const Array<OneD, const NekDouble> &soln)
         {
-            
+
             NekDouble err = 0.0,errl2;
             int    i,cnt = 0;
             Array<OneD, const NekDouble> phys = m_phys;
-            
+
             for(i= 0; i < GetExpSize(); ++i)
             {
                 // set up physical solution in local element
@@ -1254,17 +1732,35 @@ namespace Nektar
                 err += errl2*errl2;
                 cnt  += (*m_exp)[i]->GetTotPoints();
             }
-            
+
             return sqrt(err);
         }
 
+        /**
+         * Given a spectral/hp approximation
+         * \f$u^{\delta}(\boldsymbol{x})\f$ evaluated at the quadrature points
+         * (which should be contained in #m_phys), this function calculates the
+         * \f$H^1_2\f$ error of this approximation with respect to an exact
+         * solution. The local distribution of the quadrature points allows an
+         * elemental evaluation of this operation through the functions
+         * StdRegions#StdExpansion#H1.
+         *
+         * The exact solution, also evaluated at the quadrature points, should
+         * be contained in the variable #m_phys of the ExpList object \a Sol.
+         *
+         * @param   Sol         An ExpList, containing the discrete evaluation
+         *                      of the exact solution at the quadrature points
+         *                      in its array #m_phys.
+         *
+         * @return  The \f$H^1_2\f$ error of the approximation.
+         */
         NekDouble ExpList::H1(const Array<OneD, const NekDouble> &soln)
         {
-            
+
             NekDouble err = 0.0,errh1;
             int    i,cnt = 0;
             Array<OneD, const NekDouble> phys = m_phys;
-            
+
             for(i= 0; i < GetExpSize(); ++i)
             {
                 // set up physical solution in local element
@@ -1273,13 +1769,13 @@ namespace Nektar
                 err  += errh1*errh1;
                 cnt  += (*m_exp)[i]->GetTotPoints();
             }
-            
+
             return sqrt(err);
         }
 
         std::vector<SpatialDomains::FieldDefinitionsSharedPtr> ExpList::GetFieldDefinitions(void)
         {
-            
+
             std::vector<SpatialDomains::FieldDefinitionsSharedPtr> returnval;
 
             int startenum, endenum, s;
@@ -1300,18 +1796,18 @@ namespace Nektar
                 endenum   = (int) SpatialDomains::eHexahedron;
                 break;
             }
-            
+
             for(s = startenum; s <= endenum; ++s)
             {
-                SpatialDomains::GeomShapeType         shape; 
+                SpatialDomains::GeomShapeType         shape;
                 std::vector<unsigned int>             elementIDs;
                 std::vector<LibUtilities::BasisType>  basis;
                 std::vector<unsigned int>             numModes;
                 std::vector<std::string>              fields;
-            
+
                 bool first    = true;
-                bool UniOrder = true; 
-                
+                bool UniOrder = true;
+
                 for(int i = 0; i < (*m_exp).size(); ++i)
                 {
                     if((*m_exp)[i]->GetGeom()->GetGeomShapeType() == (SpatialDomains::GeomShapeType) s)
@@ -1330,7 +1826,7 @@ namespace Nektar
                         else
                         {
                             ASSERTL0((*m_exp)[i]->GetBasis(0)->GetBasisType() == basis[0],"Routine is not yet set up for multiple basese definitions");
-                            
+
                             for(int j = 0; j < (*m_exp)[i]->GetNumBases(); ++j)
                             {
                                 numModes.push_back((*m_exp)[i]->GetBasis(j)->GetNumModes());
@@ -1342,14 +1838,14 @@ namespace Nektar
                         }
                     }
                 }
-                    
+
                 if(elementIDs.size() > 0)
                 {
                     SpatialDomains::FieldDefinitionsSharedPtr fielddef  = MemoryManager<SpatialDomains::FieldDefinitions>::AllocateSharedPtr(shape, elementIDs, basis, UniOrder, numModes,fields);
                     returnval.push_back(fielddef);
                 }
             }
-            
+
             return returnval;
         }
 
@@ -1360,12 +1856,12 @@ namespace Nektar
             for(int i = 0; i < fielddef->m_ElementIDs.size(); ++i)
             {
                 int eid = fielddef->m_ElementIDs[i];
-                int datalen = (*m_exp)[eid]->GetNcoeffs(); 
+                int datalen = (*m_exp)[eid]->GetNcoeffs();
                 fielddata.insert(fielddata.end(),&m_coeffs[m_coeff_offset[eid]],&m_coeffs[m_coeff_offset[eid]]+datalen);
             }
         }
 
-        //Extract the data in fielddata into the m_coeff list 
+        //Extract the data in fielddata into the m_coeff list
         void ExpList::ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field)
         {
             int cnt = 0;
@@ -1382,7 +1878,7 @@ namespace Nektar
                 }
                 offset += datalen;
             }
-            
+
             ASSERTL0(i!= fielddef->m_Fields.size(),"Field not found in data file");
 
             for(int i = 0; i < fielddef->m_ElementIDs.size(); ++i)
@@ -1394,7 +1890,7 @@ namespace Nektar
             }
         }
 
-        
+
     } //end of namespace
 } //end of namespace
 

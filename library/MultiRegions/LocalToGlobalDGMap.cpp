@@ -152,8 +152,8 @@ namespace Nektar
         }
 
         LocalToGlobalDGMap::LocalToGlobalDGMap(SpatialDomains::MeshGraph2D &graph2D, 
-                                               const GenExpList1DSharedPtr &trace, 
-                                               const boost::shared_ptr<StdRegions::StdExpansionVector> &exp2D,
+                                               const ExpList1DSharedPtr &trace, 
+                                               const boost::shared_ptr<StdRegions::StdExpansionVector> &exp2D, 
                                                const GlobalSysSolnType solnType, 
                                                const Array<OneD, MultiRegions::ExpList1DSharedPtr> &bndCondExp,
                                                const Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndCond, 

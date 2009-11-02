@@ -39,7 +39,7 @@
 
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList2D.h>
-#include <MultiRegions/GenExpList1D.h>
+#include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/LocalToGlobalDGMap.h>
 #include <LocalRegions/SegExp.h>
@@ -72,7 +72,7 @@ namespace Nektar
 
             ~DisContField2D();
             
-            inline GenExpList1DSharedPtr &GetTrace(void)
+            inline ExpList1DSharedPtr &GetTrace(void)
             {
                 return m_trace;
             }
@@ -288,12 +288,12 @@ namespace Nektar
             }
         private:
             GlobalLinSysMapShPtr                               m_globalBndMat;
-            GenExpList1DSharedPtr                              m_trace;
+            ExpList1DSharedPtr                              m_trace;
             LocalToGlobalDGMapSharedPtr                        m_traceMap;
 
 
             // virtual functions
-            inline virtual GenExpList1DSharedPtr &v_GetTrace(void)
+            inline virtual ExpList1DSharedPtr &v_GetTrace(void)
             {
                 return GetTrace();
             }

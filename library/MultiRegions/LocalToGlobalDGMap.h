@@ -38,7 +38,7 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/LocalToGlobalBaseMap.h>
 #include <SpatialDomains/MeshGraph2D.h>
-#include <MultiRegions/GenExpList1D.h>
+#include <MultiRegions/ExpList1D.h>
 
 #include <LocalRegions/PointExp.h>
 
@@ -61,8 +61,8 @@ namespace Nektar
                                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond);
             
             LocalToGlobalDGMap(SpatialDomains::MeshGraph2D &graph2D, 
-                               const GenExpList1DSharedPtr &trace, 
-                               const boost::shared_ptr<StdRegions::StdExpansionVector> &exp2D,
+                               const ExpList1DSharedPtr &trace, 
+                               const boost::shared_ptr<StdRegions::StdExpansionVector> &exp2D, 
                                const GlobalSysSolnType solnType, 
                                const Array<OneD, MultiRegions::ExpList1DSharedPtr> &bndContraint, 
                                const Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndCond,
@@ -109,6 +109,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalDGMap.h,v $
+/** Revision 1.4  2009/10/30 14:02:55  pvos
+/** Multi-level static condensation updates
+/**
 /** Revision 1.3  2009/04/02 13:06:42  sherwin
 /** Modified to take symmetric banded system for HDH solver
 /**

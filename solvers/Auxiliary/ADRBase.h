@@ -44,130 +44,159 @@
 #include <MultiRegions/DisContField2D.h>
 
 namespace Nektar
-{     
-    /**
-     * \brief This class is the base class for the development of solvers.
-     *
-     * It is basically a class handling vector valued fields
-     **/
-    
+{
+    /// Base class for the development of solvers.
     class ADRBase
     {
-    public:           
-      
-        /**
-         * Default constructor. 
-	 **/ 
+    public:
+
+        /// Default constructor.
         ADRBase();
 
-
-        /**
-         * Constructor.
-         **/
+        /// Constructor.
         ADRBase(string &fileStringName,
-                bool UseInputFileForProjectionType = false, 
+                bool UseInputFileForProjectionType = false,
                 bool UseContinuousField = false);
 
+        /// Initialise dependent variable fields.
         void SetADRBase(SpatialDomains::MeshGraphSharedPtr &graph,
                         int nvariables);
-                
-        void SetInitialConditions(NekDouble initialtime = 0.0, 
+
+        /// Initialise the data in the dependent fields.
+        void SetInitialConditions(NekDouble initialtime = 0.0,
                                   bool dumpInitialConditions = true);
-        void SetPhysForcingFunctions(Array<OneD, MultiRegions::ExpListSharedPtr> &force);
-            
-        void EvaluateExactSolution(int field, Array<OneD, NekDouble > &outfield, 
+
+        /// Populate given fields with the forcing function from session.
+        void SetPhysForcingFunctions(
+                        Array<OneD, MultiRegions::ExpListSharedPtr> &force);
+
+        /// Populate given field with the exact solution from session.
+        void EvaluateExactSolution(int field,
+                                   Array<OneD, NekDouble > &outfield,
                                    const NekDouble time);
-                
-        void EvaluateUserDefinedEqn(Array<OneD, Array<OneD, NekDouble> > &outfield);
-        
-        void AdvectionNonConservativeForm(const Array<OneD, Array<OneD, NekDouble> > &V, 
-                                          const Array<OneD, const NekDouble> &u, Array<OneD, NekDouble> &outarray, 
-                                          Array<OneD, NekDouble> &wk = NullNekDouble1DArray);
-            
-     	void WeakAdvectionGreensDivergenceForm(const Array<OneD, Array<OneD, NekDouble> > &F, 
-					       Array<OneD, NekDouble> &outarray);
 
-        void WeakAdvectionDivergenceForm(const Array<OneD, Array<OneD, NekDouble> > &F, 
-					 Array<OneD, NekDouble> &outarray);
-        
-        void WeakAdvectionNonConservativeForm(const Array<OneD, Array<OneD, NekDouble> > &V, 
-					      const Array<OneD, const NekDouble> &u, 
-					      Array<OneD, NekDouble> &outarray);
-        
-        void WeakDGAdvection(const Array<OneD, Array<OneD, NekDouble> >& InField, 
-			     Array<OneD, Array<OneD, NekDouble> >& OutField, 
-			     bool NumericalFluxIncludesNormal = true, 
-			     bool InFieldIsInPhysSpace = false, int nvariables = 0); 
-				 
-        void WeakDGDiffusion(const Array<OneD, Array<OneD, NekDouble> >& InField, 
-                             Array<OneD, Array<OneD, NekDouble> >& OutField,
-                             bool NumericalFluxIncludesNormal = true, 
-                             bool InFieldIsInPhysSpace = false);
+        /// Populate given fields with a user expression from session.
+        void EvaluateUserDefinedEqn(
+                        Array<OneD, Array<OneD, NekDouble> > &outfield);
 
-        NekDouble L2Error(int field, const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
+        /// Compute the L2 error between fields and a given exact solution.
+        NekDouble L2Error(int field, 
+                const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
 
-        NekDouble LinfError(int field, const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
-	
-        void Output     (void);
-	
+        /// Compute the L_inf error between fields and a given exact solution.
+        NekDouble LinfError(int field, 
+                const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
+
+        /// Compute the inner product \f$ (\nabla \phi \cdot F) \f$.
+        void WeakAdvectionGreensDivergenceForm(
+                const Array<OneD, Array<OneD, NekDouble> > &F,
+                Array<OneD, NekDouble> &outarray);
+
+        /// Compute the inner product \f$ (\phi, \nabla \cdot F) \f$.
+        void WeakAdvectionDivergenceForm(
+                const Array<OneD, Array<OneD, NekDouble> > &F,
+                Array<OneD, NekDouble> &outarray);
+
+        /// Compute the inner product \f$ (\phi, V\cdot \nabla u) \f$.
+        void WeakAdvectionNonConservativeForm(
+                const Array<OneD, Array<OneD, NekDouble> > &V,
+                const Array<OneD, const NekDouble> &u,
+                Array<OneD, NekDouble> &outarray);
+
+        /// Compute the non-conservative advection \f$ (V \cdot \nabla u) \f$.
+        void AdvectionNonConservativeForm(
+                const Array<OneD, Array<OneD, NekDouble> > &V,
+                const Array<OneD, const NekDouble> &u,
+                Array<OneD, NekDouble> &outarray,
+                Array<OneD, NekDouble> &wk = NullNekDouble1DArray);
+
+        /// Calculate the weak discontinuous Galerkin advection.
+        void WeakDGAdvection(
+                const Array<OneD, Array<OneD, NekDouble> >& InField,
+                Array<OneD, Array<OneD, NekDouble> >& OutField,
+                bool NumericalFluxIncludesNormal = true,
+                bool InFieldIsInPhysSpace = false, 
+                int nvariables = 0);
+
+        /// Calculate weak DG Diffusion in the LDG form.
+        void WeakDGDiffusion(
+                const Array<OneD, Array<OneD, NekDouble> >& InField,
+                Array<OneD, Array<OneD, NekDouble> >& OutField,
+                bool NumericalFluxIncludesNormal = true,
+                bool InFieldIsInPhysSpace = false);
+
+        /// Write field to file.
+        void Output();
+
+        /// Write checkpoint file.
         void Checkpoint_Output(const int n);
 
+        /// Write field data to the given filename.
         void WriteFld(std::string &outname);
+
+        /// Input field data from the given file.
         void ImportFld(std::string &infile);
-        
-	void Array_Output(const int n, std::string name, 
-			  const Array<OneD, const NekDouble>&inarray, bool IsInPhysicalSpace);
-	
-	void Summary          (std::ostream &out);
-	void SessionSummary   (std::ostream &out);
-	void TimeParamSummary (std::ostream &out);
-        
+
+        /// Output a field.
+        void Array_Output(const int n, std::string name,
+                          const Array<OneD, const NekDouble>&inarray,
+                          bool IsInPhysicalSpace);
+
+        /// Write out a full summary.
+        void Summary          (std::ostream &out);
+
+        /// Write out a session summary.
+        void SessionSummary   (std::ostream &out);
+
+        /// Write out a summary of the time parameters.
+        void TimeParamSummary (std::ostream &out);
+
         inline Array<OneD, MultiRegions::ExpListSharedPtr> &UpdateFields(void)
         {
-            return m_fields; 
+            return m_fields;
         }
 
-	inline int GetNcoeffs(void)
+        inline int GetNcoeffs(void)
         {
             return m_fields[0]->GetNcoeffs();
         }
 
-	inline int GetNumExpModes(void)
+        inline int GetNumExpModes(void)
         {
-            return m_graph->GetExpansions()[0]->m_BasisKeyVector[0].GetNumModes();
+            return m_graph->GetExpansions()[0]->m_BasisKeyVector[0]
+                                                        .GetNumModes();
         }
 
         inline int GetNvariables(void)
         {
             return m_fields.num_elements();
         }
-      
+
         inline const std::string &GetVariable(unsigned int i)
         {
             return m_boundaryConditions->GetVariable(i);
         }
 
-
         inline int GetTraceTotPoints(void)
         {
             return GetTraceNpoints();
         }
-            
+
         inline int GetTraceNpoints(void)
         {
-	  switch(m_expdim)
-	    {
-	    case 1:
-	      // can't have two &GetTrace in ExpList.h hmm...
-	      //return m_fields[0]->GetTrace().num_elements();
-	      break;
-	    case 2:
-	    case 3:
-	      return m_fields[0]->GetTrace()->GetNpoints();
-	      break;
-	    default:
-	      ASSERTL0(false,"illegal expansion dimension");
-	    }
+            switch(m_expdim)
+            {
+                case 1:
+                    // can't have two &GetTrace in ExpList.h hmm...
+                    //return m_fields[0]->GetTrace().num_elements();
+                    break;
+                case 2:
+                case 3:
+                    return m_fields[0]->GetTrace()->GetNpoints();
+                    break;
+                default:
+                    ASSERTL0(false,"illegal expansion dimension");
+            }
         }
 
         inline int GetTotPoints(void)
@@ -179,8 +208,8 @@ namespace Nektar
         {
             return m_fields[0]->GetNpoints();
         }
-      
-	inline int GetSteps(void)
+
+        inline int GetSteps(void)
         {
             return m_steps;
         }
@@ -192,171 +221,203 @@ namespace Nektar
 
         void ZeroPhysFields(void);
 
-	enum ProjectionType
+        /// Type of Galerkin projection.
+        enum ProjectionType
         {
-            eGalerkin, 
+            eGalerkin,
             eDiscontinuousGalerkin
         };
-	
-	//--------------------------------------------------------------------------
+
+        //-----------------------------------------------------------
         // virtual functions wrappers
-	
-        void GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> >&physfield, 
-			   Array<OneD, Array<OneD, NekDouble> >&flux)
+
+        void GetFluxVector(const int i,
+                            Array<OneD, Array<OneD, NekDouble> >&physfield,
+                            Array<OneD, Array<OneD, NekDouble> >&flux)
         {
             v_GetFluxVector(i,physfield, flux);
         }
-	
-	void GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> >&physfield, 
-			   Array<OneD, Array<OneD, NekDouble> >&fluxX, 
-			   Array<OneD, Array<OneD, NekDouble> > &fluxY)
+
+        void GetFluxVector(const int i,
+                            Array<OneD, Array<OneD, NekDouble> >&physfield,
+                            Array<OneD, Array<OneD, NekDouble> >&fluxX,
+                            Array<OneD, Array<OneD, NekDouble> > &fluxY)
         {
             v_GetFluxVector(i,physfield, fluxX, fluxY);
         }
-		
-	virtual void GetFluxVector(const int i, const int j, 
-                                   Array<OneD, Array<OneD, NekDouble> > &physfield, 
-                                   Array<OneD, Array<OneD, NekDouble> > &flux)
+
+        virtual void GetFluxVector(const int i, const int j,
+                            Array<OneD, Array<OneD, NekDouble> > &physfield,
+                            Array<OneD, Array<OneD, NekDouble> > &flux)
         {
             v_GetFluxVector(i,j,physfield,flux);
         }
-        
-	void NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
+
+        void NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
                            Array<OneD, Array<OneD, NekDouble> > &numflux)
         {
             v_NumericalFlux(physfield, numflux);
         }
-        
-	void NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
+
+        void NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
                            Array<OneD, Array<OneD, NekDouble> > &numfluxX,
-			   Array<OneD, Array<OneD, NekDouble> > &numfluxY)
+                           Array<OneD, Array<OneD, NekDouble> > &numfluxY)
         {
             v_NumericalFlux(physfield, numfluxX, numfluxY);
         }
 
-	void NumFluxforScalar(Array<OneD, Array<OneD, NekDouble> > &ufield, 
-                              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
+        void NumFluxforScalar(Array<OneD, Array<OneD, NekDouble> > &ufield,
+                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
         {
             v_NumFluxforScalar(ufield, uflux);
         }
-	
-	void NumFluxforVector(Array<OneD, Array<OneD, NekDouble> > &ufield,
-			      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-			      Array<OneD, Array<OneD, NekDouble> >  &qflux)
+
+        void NumFluxforVector(Array<OneD, Array<OneD, NekDouble> > &ufield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+                  Array<OneD, Array<OneD, NekDouble> >  &qflux)
         {
-	  v_NumFluxforVector(ufield,qfield, qflux);
+            v_NumFluxforVector(ufield,qfield, qflux);
         }
 
-	NekDouble AdvectionSphere(const NekDouble x0j, const NekDouble x1j,
-				  const NekDouble x2j, const NekDouble time)
-	{
-	  return v_AdvectionSphere(x0j, x1j, x2j, time);
-	}
+        NekDouble AdvectionSphere(const NekDouble x0j, const NekDouble x1j,
+                            const NekDouble x2j, const NekDouble time)
+        {
+            return v_AdvectionSphere(x0j, x1j, x2j, time);
+        }
 
-	NekDouble Morphogenesis(const int field, const NekDouble x0j, const NekDouble x1j, 
-				const NekDouble x2j, const NekDouble time)
-	{
-	  return v_Morphogenesis(field, x0j, x1j, x2j, time);
-	}
-        
+        NekDouble Morphogenesis(const int field, const NekDouble x0j,
+                            const NekDouble x1j, const NekDouble x2j,
+                            const NekDouble time)
+        {
+            return v_Morphogenesis(field, x0j, x1j, x2j, time);
+        }
+
     protected:
-        Array<OneD, MultiRegions::ExpListSharedPtr> m_fields; ///< Array holding all dependent variables
-	Array<OneD, MultiRegions::ExpListSharedPtr> m_derivedfields; ///< Array holding all dependent variables
-
+        /// Array holding all dependent variables.
+        Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
+        /// Array holding all dependent variables.
+        Array<OneD, MultiRegions::ExpListSharedPtr> m_derivedfields;
+        /// Pointer to boundary conditions object.
         SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
+        /// Pointer to graph defining mesh.
         SpatialDomains::MeshGraphSharedPtr          m_graph;
+
         std::string m_sessionName;   ///< Name of the sessions
-        NekDouble m_time;            ///< continous time
-        NekDouble m_timestep;        ///< time step size
-        int m_steps;                 ///< number of steps to be taken during the simulation
-        int m_checksteps;            ///< number of steps between dumping check files 
-        int m_spacedim;              ///< Dimension of the space (> expansion dim)
-	int m_expdim;                ///< Dimension of the expansion
+        NekDouble m_time;            ///< Continous time
+        NekDouble m_timestep;        ///< Time step size
+        int m_steps;                 ///< Number of steps to take
+        int m_checksteps;            ///< Number of steps between checkpoints
+        int m_spacedim;              ///< Spatial dimension (> expansion dim)
+        int m_expdim;                ///< Dimension of the expansion
 
-        enum ProjectionType m_projectionType; ///< Type of projection, i.e. Galerkin or DG 
+        /// Type of projection, i.e. Galerkin or DG.
+        enum ProjectionType m_projectionType;
 
-        Array<OneD, Array<OneD, NekDouble> > m_traceNormals; ///< Array holding the forward normals
+        /// Array holding the forward normals.
+        Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
+        /// 1 x nvariable x nq
+        Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_gradtan;
+        /// 2 x m_spacedim x nq
+        Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis;
 
-        Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_gradtan; // 1 by nvariable by nq
-        Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis; // 2 by m_spacedim by nq 
-	
+        /// Perform a case-insensitive string comparison.
         int NoCaseStringCompare(const string & s1, const string& s2) ;
 
         // Here for consistency purposes with old version
-	int nocase_cmp(const string & s1, const string& s2)
+        int nocase_cmp(const string & s1, const string& s2)
         {
             return NoCaseStringCompare(s1,s2);
         }
-	    
-    private: 
-        
-        virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> >&physfield, 
-				     Array<OneD, Array<OneD, NekDouble> >&flux)
+
+    private:
+        virtual void v_GetFluxVector(const int i, Array<OneD,
+                            Array<OneD, NekDouble> >&physfield,
+                            Array<OneD, Array<OneD, NekDouble> >&flux)
         {
-            ASSERTL0(false,"v_GetFluxVector: This function is not valid for the Base class");
-        }
-        
-        virtual void v_GetFluxVector(const int i, const int j, Array<OneD, Array<OneD, NekDouble> >&physfield, 
-				     Array<OneD, Array<OneD, NekDouble> >&flux)
-        {
-            ASSERTL0(false,"v_GetqFluxVector: This function is not valid for the Base class");
-        }
-        
-	virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> >&physfield, 
-				     Array<OneD, Array<OneD, NekDouble> >&fluxX, 
-				     Array<OneD, Array<OneD, NekDouble> > &fluxY)
-        {
-            ASSERTL0(false,"v_GetFluxVector: This function is not valid for the Base class");
+            ASSERTL0(false, "v_GetFluxVector: This function is not valid "
+                            "for the Base class");
         }
 
-        virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
-				     Array<OneD, Array<OneD, NekDouble> > &numflux)
+        virtual void v_GetFluxVector(const int i, const int j,
+                            Array<OneD, Array<OneD, NekDouble> >&physfield,
+                            Array<OneD, Array<OneD, NekDouble> >&flux)
         {
-            ASSERTL0(false,"v_NumericalFlux: This function is not valid for the Base class");
+            ASSERTL0(false, "v_GetqFluxVector: This function is not valid "
+                            "for the Base class");
         }
-        
-	virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
-				     Array<OneD, Array<OneD, NekDouble> > &numfluxX,
-				     Array<OneD, Array<OneD, NekDouble> > &numfluxY )
+
+        virtual void v_GetFluxVector(const int i, Array<OneD,
+                            Array<OneD, NekDouble> >&physfield,
+                            Array<OneD, Array<OneD, NekDouble> >&fluxX,
+                            Array<OneD, Array<OneD, NekDouble> > &fluxY)
         {
-            ASSERTL0(false,"v_NumericalFlux: This function is not valid for the Base class");
+            ASSERTL0(false, "v_GetFluxVector: This function is not valid "
+                            "for the Base class");
         }
-	
-	virtual void v_NumFluxforScalar(Array<OneD, Array<OneD, NekDouble> > &ufield, 
-                                        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
+
+        virtual void v_NumericalFlux(
+                            Array<OneD, Array<OneD, NekDouble> > &physfield,
+                            Array<OneD, Array<OneD, NekDouble> > &numflux)
         {
-	  ASSERTL0(false,"v_NumFluxforScalar: This function is not valid for the Base class");
+            ASSERTL0(false, "v_NumericalFlux: This function is not valid "
+                            "for the Base class");
         }
-       
-        virtual void v_NumFluxforVector(Array<OneD, Array<OneD, NekDouble> > &ufield,
-					Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-					Array<OneD, Array<OneD, NekDouble > >  &qflux)
+
+        virtual void v_NumericalFlux(
+                            Array<OneD, Array<OneD, NekDouble> > &physfield,
+                            Array<OneD, Array<OneD, NekDouble> > &numfluxX,
+                            Array<OneD, Array<OneD, NekDouble> > &numfluxY )
         {
-	  ASSERTL0(false,"v_NumFluxforVector: This function is not valid for the Base class");
-        }    
+            ASSERTL0(false, "v_NumericalFlux: This function is not valid "
+                            "for the Base class");
+        }
 
-	 virtual NekDouble v_AdvectionSphere(const NekDouble x0j, const NekDouble x1j,
-					     const NekDouble x2j, const NekDouble time)
-	{
-	  ASSERTL0(false,"v_AdvectionSphere: This function is not valid for the Base class");
-	}
+        virtual void v_NumFluxforScalar(
+                    Array<OneD, Array<OneD, NekDouble> > &ufield,
+                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
+        {
+            ASSERTL0(false, "v_NumFluxforScalar: This function is not valid "
+                            "for the Base class");
+        }
 
-	virtual NekDouble v_Morphogenesis(const int field, const NekDouble x0j, const NekDouble x1j, 
-					  const NekDouble x2j, const NekDouble time)
-	{
-	  ASSERTL0(false,"v_Morphogenesis: This function is not valid for the Base class");
-	}
+        virtual void v_NumFluxforVector(
+                    Array<OneD, Array<OneD, NekDouble> > &ufield,
+                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+                    Array<OneD, Array<OneD, NekDouble > >  &qflux)
+        {
+            ASSERTL0(false, "v_NumFluxforVector: This function is not valid "
+                            "for the Base class");
+        }
 
+        virtual NekDouble v_AdvectionSphere(const NekDouble x0j,
+                            const NekDouble x1j, const NekDouble x2j,
+                            const NekDouble time)
+        {
+            ASSERTL0(false, "v_AdvectionSphere: This function is not valid "
+                            "for the Base class");
+        }
+
+        virtual NekDouble v_Morphogenesis(const int field, const NekDouble x0j,
+                            const NekDouble x1j, const NekDouble x2j, 
+                            const NekDouble time)
+        {
+            ASSERTL0(false, "v_Morphogenesis: This function is not valid "
+                            "for the Base class");
+        }
     };
-    
+
+    /// Pointer to an ADRBase object.
     typedef boost::shared_ptr<ADRBase> ADRBaseSharedPtr;
-    
+
 } //end of namespace
 
 #endif //NEKTAR_SOLVERS_AUXILIARY_ADRBASE_H
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.14  2009/10/07 16:52:20  cbiotto
+* Updating WriteFld function
+*
 * Revision 1.13  2009/09/07 11:21:58  sherwin
 * Updates related to Navier-Stokes solver
 *

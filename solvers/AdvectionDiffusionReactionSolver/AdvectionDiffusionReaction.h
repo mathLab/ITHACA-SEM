@@ -41,9 +41,8 @@
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 
 namespace Nektar
-{     
-
-
+{
+    /// Type of equation to solve
     enum EquationType
     {
         eNoEquationType,
@@ -51,64 +50,48 @@ namespace Nektar
         ePoisson,
         eHelmholtz,
         eSteadyAdvection,
-	eSteadyDiffusion,
-	eSteadyDiffusionReaction,
-        eNumSteadyEquationTypes,  // Must list all steady equations before this enum
+        eSteadyDiffusion,
+        eSteadyDiffusionReaction,
+        eNumSteadyEquationTypes, // Ensure all steady equations before this enum
         eUnsteadyAdvection,
-	eUnsteadyInviscidBurger,
+        eUnsteadyInviscidBurger,
         eUnsteadyDiffusion,
         eUnsteadyDiffusionReaction,
         eEquationTypeSize
     };
-    
+
     // Keep this consistent with the enums in EquationType.
-    const std::string kEquationTypeStr[] = 
+    const std::string kEquationTypeStr[] =
     {
         "NoType",
         "Laplace",
         "Poisson",
         "Helmholtz",
         "SteadyAdvection",
-	"SteadyDiffusion",
-	"SteadyDiffusionReaction",
+        "SteadyDiffusion",
+        "SteadyDiffusionReaction",
         "Dummy enum",
         "UnsteadyAdvection",
-	"UnsteadyInviscidBurger",
-	"UnsteadyDiffusion",
+        "UnsteadyInviscidBurger",
+        "UnsteadyDiffusion",
         "UnsteadyDiffusionReaction",
     };
 
-    /**
-     * \brief This class is the base class for the development of solvers.
-     *
-     * It is basically a class handling vector valued fields where every field is
-     * a DisContField2D class 
-     */
-    
+    /// Solver for Advection-Diffusion-Reaction problems
     class AdvectionDiffusionReaction: public ADRBase
     {
-    public:           
+    public:
 
-        /**
-         * Default constructor. 
-         * 
-         */ 
+        /// Default constructor.
         AdvectionDiffusionReaction();
 
-    
-        /**
-         * Constructor.
-         * /param 
-         * 
-         *
-         */
+        /// Constructor
         AdvectionDiffusionReaction(string &fileStringName);
 
         EquationType GetEquationType(void)
         {
             return m_equationType;
         }
-
 
         bool  GetExplicitAdvection(void)
         {
@@ -150,37 +133,37 @@ namespace Nektar
 
         void GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> >&physfield, Array<OneD, Array<OneD, NekDouble> >&flux);
 
-	void GetFluxVector(const int i, const int j, Array<OneD, Array<OneD, NekDouble> > &physfield, 
-						 Array<OneD, Array<OneD, NekDouble> > &flux);
+    void GetFluxVector(const int i, const int j, Array<OneD, Array<OneD, NekDouble> > &physfield, 
+                         Array<OneD, Array<OneD, NekDouble> > &flux);
 
         void NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
                            Array<OneD, Array<OneD, NekDouble> > &numflux);
 
-	void NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
+    void NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
                            Array<OneD, Array<OneD, NekDouble> > &numfluxX,
-			   Array<OneD, Array<OneD, NekDouble> > &numfluxY);
+               Array<OneD, Array<OneD, NekDouble> > &numfluxY);
 
        void NumFluxforScalar(Array<OneD, Array<OneD, NekDouble> > &ufield, 
                               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
 
-	void NumFluxforVector(Array<OneD, Array<OneD, NekDouble> > &ufield,
-			      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-			      Array<OneD, Array<OneD, NekDouble> >  &qflux);
-						   
-	void WeakPenaltyforScalar(const int var,
+    void NumFluxforVector(Array<OneD, Array<OneD, NekDouble> > &ufield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+                  Array<OneD, Array<OneD, NekDouble> >  &qflux);
+                           
+    void WeakPenaltyforScalar(const int var,
                                   const Array<OneD, const NekDouble> &physfield, 
                                   Array<OneD, NekDouble> &penaltyflux,
                                   NekDouble time=0.0);
-									 
+                                     
         void WeakPenaltyforVector(const int var,
                                   const int dir,
                                   const Array<OneD, const NekDouble> &physfield,
                                   Array<OneD, NekDouble> &penaltyflux,
                                   NekDouble C11,
-                                  NekDouble time=0.0);	   
-			   
+                                  NekDouble time=0.0);     
+               
         void ODElhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
-		           Array<OneD,       Array<OneD, NekDouble> >&outarray, 
+                   Array<OneD,       Array<OneD, NekDouble> >&outarray, 
                     const NekDouble time);
 
         void ODElhsSolve(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
@@ -191,18 +174,18 @@ namespace Nektar
                           Array<OneD,        Array<OneD, NekDouble> >&outarray, 
                     const NekDouble time);
 
-	void ODEeReaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
-			  Array<OneD, Array<OneD, NekDouble> >&outarray, 
-			  const NekDouble time);
-					
-	void ODEhelmSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-			  Array<OneD, Array<OneD, NekDouble> >&outarray,
-			  NekDouble time, 
-			  NekDouble lambda);
+    void ODEeReaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+              Array<OneD, Array<OneD, NekDouble> >&outarray, 
+              const NekDouble time);
+                    
+    void ODEhelmSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+              Array<OneD, Array<OneD, NekDouble> >&outarray,
+              NekDouble time, 
+              NekDouble lambda);
 
         void GeneralTimeIntegration(int nsteps, 
-		                   LibUtilities::TimeIntegrationMethod IntMethod,
-				   LibUtilities::TimeIntegrationSchemeOperators ode);
+                           LibUtilities::TimeIntegrationMethod IntMethod,
+                   LibUtilities::TimeIntegrationSchemeOperators ode);
 
         void SolveHelmholtz(NekDouble lambda);
 
@@ -219,22 +202,22 @@ namespace Nektar
         bool m_explicitDiffusion;  ///< Flag to identify explicit Diffusion
         bool m_explicitReaction;   ///< Flag to identify explicit Reaction
         
-        LibUtilities::TimeIntegrationMethod m_timeIntMethod; /// Time integration method
+        LibUtilities::TimeIntegrationMethod m_timeIntMethod; ///< Time integration method
 
         Array<OneD, Array<OneD, NekDouble> >  m_velocity;
 
-	Array<OneD, Array<OneD, NekDouble> > m_traceNormals_tbasis; // forward normals in tangential basis
+    Array<OneD, Array<OneD, NekDouble> > m_traceNormals_tbasis; ///< forward normals in tangential basis
 
         void EvaluateAdvectionVelocity();
 
-	void SetBoundaryConditions(NekDouble time); 
-				   
+    void SetBoundaryConditions(NekDouble time); 
+                   
         virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux)
         {
             GetFluxVector(i,physfield,flux);
         }
-		
-	    virtual void v_GetFluxVector(const int i, const int j, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux)
+        
+        virtual void v_GetFluxVector(const int i, const int j, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux)
         {
             GetFluxVector(i,j,physfield,flux);
         }
@@ -244,25 +227,25 @@ namespace Nektar
             NumericalFlux(physfield, numflux); 
         }
         
-	virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
+    virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
                                      Array<OneD, Array<OneD, NekDouble> > &numfluxX, 
                                      Array<OneD, Array<OneD, NekDouble> > &numfluxY )
         {
-	    NumericalFlux(physfield, numfluxX, numfluxY); 
+        NumericalFlux(physfield, numfluxX, numfluxY); 
         }
-		
+        
         virtual void v_NumFluxforScalar(Array<OneD, Array<OneD, NekDouble> > &ufield, 
                                         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
         {
             NumFluxforScalar(ufield, uflux);
-	}
-	
-	virtual void v_NumFluxforVector(Array<OneD, Array<OneD, NekDouble> > &ufield,
-					Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-					Array<OneD, Array<OneD, NekDouble> >  &qflux)
-	{
+    }
+    
+    virtual void v_NumFluxforVector(Array<OneD, Array<OneD, NekDouble> > &ufield,
+                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
+                    Array<OneD, Array<OneD, NekDouble> >  &qflux)
+    {
             NumFluxforVector(ufield, qfield, qflux);
-	}
+    }
       
     };
     
@@ -274,6 +257,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.h,v $
+* Revision 1.12  2009/07/23 05:32:28  sehunchun
+* Implicit and Explicit diffusion debugging
+*
 * Revision 1.11  2009/07/09 21:24:57  sehunchun
 * Upwind function is update
 *

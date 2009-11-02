@@ -56,6 +56,10 @@ namespace Nektar
             DisContField1D();
 
             DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
+                           const GlobalSysSolnType solnType = eDirectStaticCond,
+                           const bool constructMap = true);
+
+            DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
                            SpatialDomains::BoundaryConditions &bcs, 
                            const int bc_loc = 0,
                            const GlobalSysSolnType solnType = eDirectStaticCond);

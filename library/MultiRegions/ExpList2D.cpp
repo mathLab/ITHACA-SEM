@@ -315,8 +315,9 @@ namespace Nektar
             {        
                 locBCond = (*(bconditions[i]))[variable];  
                 if(locBCond->GetBoundaryConditionType() == SpatialDomains::eNeumann)
-                {                    
-                    locExpList = MemoryManager<MultiRegions::GenExpList1D>::AllocateSharedPtr(*(bregions[i]),graph2D);
+                {
+                    bool UseGenSegExp = true;
+                    locExpList = MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(*(bregions[i]),graph2D,UseGenSegExp);
                     bndCondExpansions[cnt]  = locExpList;
                     bndConditions[cnt++]    = locBCond;
                 }  
@@ -490,6 +491,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.cpp,v $
+* Revision 1.29  2009/09/06 22:28:45  sherwin
+* Updates for Navier-Stokes solver
+*
 * Revision 1.28  2009/05/10 23:17:12  sherwin
 * Updated mainly to handle doubly periodic meshes which required modification to vertex handling from a numbering perspective
 *

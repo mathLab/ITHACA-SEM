@@ -6,8 +6,7 @@
     <link rel="shortcut icon" href="images/favicon.ico" >
       <!-- InstanceBeginEditable name="doctitle" -->
       <title>Nektar++ - Linux Compile Instructions</title>
-      <!-- InstanceEndEditable -->
-      <style type="text/css">
+      <!-- InstanceEndEditable --><style type="text/css">
         <!--
 	html {
 	  min-height: 101%; // force a scrollbar to always appear
@@ -70,8 +69,7 @@
 	}
     -->
       </style>
-      <!-- InstanceBeginEditable name="CSS_Style" -->
-      <style type="text/css">
+      <!-- InstanceBeginEditable name="CSS_Style" --><style type="text/css">
         <!--
 #menu_CompileLinux {
 	font-weight: bold;
@@ -140,7 +138,7 @@
         </p>
 
         <p style="font-size:9px;">
-          Last Revision:<br/>$Date: 2009/07/03 02:53:06 $
+          Last Revision:<br/>$Date: 2009/10/30 13:56:36 $
         </p>
       </div>
       <div id="mainContent">
@@ -193,7 +191,9 @@
           <h3 align="left">
             <a name ="Setting_up_GCC" ></a>Setting up GCC
           </h3>
-          <p align="left">In order to compile Nektar++, you must have a newer version of GCC installed. GCC 4.1 and newer will work, but 4.2 or newer is recommended because the ATLAS (a BLAS implementation) website says 4.2 results in better performance. Below I will give instructions on how to check the GCC version number, and installing a new version if it is too old.</p>
+          <p align="left">
+          In order to compile Nektar++, you must have a newer version of GCC installed. GCC 4.1 and newer will work, but 4.2 or newer is recommended because the ATLAS (a BLAS implementation) website says 4.2 results in better performance. Below I will give instructions on how to check the GCC version number, and installing a new version if it is too old.
+        </p>
           <ol>
             <li>
               At the terminal, type &quot;gcc -v&quot; (without the quotes).
@@ -224,6 +224,15 @@
           <h3 align="left">
             <a name="Organizing_the_ThirdParty_Source_Files"></a> Organizing the ThirdParty Source Files
           </h3>
+          <p align="left">
+            <em>Nektar++</em> requires additional software to function. Many of
+            these libraries are included in a typical distribution and so not
+            all the library sources provided in the <em>ThirdParty</em>
+            directory may be needed. However, while unlikely, the version
+            provided by your distribution may not be compatible with the
+            current build of <em>Nektar++</em>. If you encounter problems, you
+            should first link to those versions distributed in the ThirdParty
+            distribution.</p>
           <p align="left">
             You will be given a <em>Nektar++</em> directory and a <em>ThirdParty</em> directory (includes needed libraries from other sources). These need to be organized into the correct directory hierarchy   for CMake to find all of the required files. I will indicate a directory by following its name with a forward slash.
           </p>
@@ -297,6 +306,7 @@
                 </li>
               </li>
           </ol>
+             <b>Note:</b> if Boost is provided with your distribution, it probably does not provide the <tt>libboost_zlib</tt> library since this is provided by <tt>libz.a</tt>. See the <em>Generating the GCC Makefiles with CMake</em> section for details on how to use this library instead.
           </li>
 
           <li>
@@ -464,6 +474,14 @@
                       Set this value to <em>
                         <strong>ON</strong>
                       </em> if you are using the system provided blas and lapack libraries and neither of the previously mentioned implementations.
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>USE_SYSTEM_ZLIB</strong>
+                  <ul>
+                    <li>
+                      Set this value to <em><strong>ON</strong></em> if you are using a version of Boost supplied with your distribution which does not provide the <tt>libboost_zlib</tt> library. This will link to the <tt>libz</tt> library instead, which is provided on most systems.
                     </li>
                   </ul>
                 </li>

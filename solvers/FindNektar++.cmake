@@ -4,6 +4,7 @@ SET(NEKTAR_SEARCH_PATH
 	${CMAKE_BINARY_DIR}/../Nektar++/dist/
 	${CMAKE_SOURCE_DIR}/../../Nektar++/*/dist/
 	${CMAKE_BINARY_DIR}/../Nektar++/*/dist/
+    ${CMAKE_SOURCE_DIR}/../*/dist/
 	/usr/include 
 	/usr/local/include
 )  

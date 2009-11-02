@@ -44,6 +44,12 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
+        /**
+        * @class PointsKey
+        * Specification for a set of points. This includes the total number of
+        * points, as well as their distribution.
+        */
+
         bool operator==(const PointsKey &lhs, const PointsKey &rhs)
         {
             return (lhs.m_numpoints == rhs.m_numpoints &&
@@ -76,6 +82,16 @@ namespace Nektar
 
             return os;
         }
+        
+        
+        /**
+         * @class Nektar::LibUtilities::Points
+         * This encapsulates a set of points, specified by a PointKey. The 
+         * class stores not only the point coordinates, but also the 
+         * integration weights and derivative matrix coefficients. Memory is 
+         * allocated from the memory pool if in use.
+         */
+
     }
 }
 

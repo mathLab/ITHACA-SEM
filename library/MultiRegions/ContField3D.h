@@ -37,9 +37,10 @@
 #define NEKTAR_LIBS_MULTIREGIONS_CONTFIELD3D_H
 
 #include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/ContExpList3D.h>
+#include <MultiRegions/DisContField3D.h>
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/LocalToGlobalC0ContMap.h>
 #include <MultiRegions/GlobalLinSys.h>
 
 #include <SpatialDomains/MeshGraph3D.h>
@@ -49,7 +50,7 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        class ContField3D: public ContExpList3D
+        class ContField3D: public DisContField3D
         {
         public:
             ContField3D();
@@ -83,8 +84,6 @@ namespace Nektar
                         const LibUtilities::PointsType 
                         TetNb = LibUtilities::SIZE_PointsType,
                         const GlobalSysSolnType solnType = eDirectStaticCond);
-
-
 
             ContField3D(const ContField3D &In);
 
@@ -120,9 +119,40 @@ namespace Nektar
             void GenerateDirBndCondForcing(const GlobalLinSysKey &key, 
                                                         Array<OneD, NekDouble> &inout, 
                                                         Array<OneD, NekDouble> &outarray);
+                       inline void GlobalToLocal()
+            {
+                m_locToGloMap->GlobalToLocal(m_contCoeffs, m_coeffs);
+            }
+            inline void GlobalToLocal(const Array<OneD, const NekDouble>        &inarray, Array<OneD,NekDouble> &outarray)
+            {
+                m_locToGloMap->GlobalToLocal(inarray, outarray);
+            }
             
+            inline void LocalToGlobal()
+            {
+                m_locToGloMap->LocalToGlobal(m_coeffs, m_contCoeffs);
+            }        
+        
+            inline void Assemble()
+            {
+                m_locToGloMap->Assemble(m_coeffs, m_contCoeffs);
+            }
+
+            inline void Assemble(const Array<OneD, const NekDouble> &inarray,   Array<OneD,NekDouble> &outarray)
+            {
+                m_locToGloMap->Assemble(inarray, outarray);
+            }
+
+            inline const LocalToGlobalC0ContMapSharedPtr& GetLocalToGlobalMap() const
+            {
+                return  m_locToGloMap;
+            } 
 
         protected:
+            LocalToGlobalC0ContMapSharedPtr m_locToGloMap;
+            int                             m_contNcoeffs;
+            Array<OneD, NekDouble>          m_contCoeffs;
+            GlobalLinSysMapShPtr            m_globalLinSys;
 
         private:
             /**

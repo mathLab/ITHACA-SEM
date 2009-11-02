@@ -39,8 +39,48 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        /**
+         * @class ContField2D
+         * As opposed to the class #ContExpList2D, the class #ContField2D is
+         * able to incorporate the boundary conditions imposed to the problem
+         * to be solved. Therefore, the class is equipped with three additional
+         * data members:
+         * - #m_bndCondExpansions
+         * - #m_bndTypes
+         * - #m_bndCondEquations
+         *
+         * The first data structure, #m_bndCondExpansions, contains the
+         * one-dimensional spectral/hp expansion on the boundary,  #m_bndTypes
+         * stores information about the type of boundary condition on the
+         * different parts of the boundary while #m_bndCondEquations holds the
+         * equation of the imposed boundary conditions.
+         *
+         * Furthermore, in case of Dirichlet boundary conditions, this class is
+         * capable of lifting a known solution satisfying these boundary
+         * conditions. If we denote the unknown solution by
+         * \f$u^{\mathcal{H}}(\boldsymbol{x})\f$ and the known Dirichlet
+         * boundary conditions by \f$u^{\mathcal{D}}(\boldsymbol{x})\f$, the
+         * expansion then can be decomposed as
+         * \f[ u^{\delta}(\boldsymbol{x}_i)=u^{\mathcal{D}}(\boldsymbol{x}_i)+
+         * u^{\mathcal{H}}(\boldsymbol{x}_i)=\sum_{n=0}^{N^{\mathcal{D}}-1}
+         * \hat{u}_n^{\mathcal{D}}\Phi_n(\boldsymbol{x}_i)+
+         * \sum_{n={N^{\mathcal{D}}}}^{N_{\mathrm{dof}}-1}
+         *  \hat{u}_n^{\mathcal{H}} \Phi_n(\boldsymbol{x}_i).\f]
+         * This lifting is accomplished by ordering the known global degrees of
+         * freedom, prescribed by the Dirichlet boundary conditions, first in
+         * the global array 
+         * \f$\boldsymbol{\hat{u}}\f$, that is,
+         * \f[\boldsymbol{\hat{u}}=\left[ \begin{array}{c}
+         * \boldsymbol{\hat{u}}^{\mathcal{D}}\\
+         * \boldsymbol{\hat{u}}^{\mathcal{H}}
+         * \end{array} \right].\f]
+         * Such kind of expansions are also referred to as continuoous fields.
+         * This class should be used when solving 2D problems using a standard
+         * Galerkin approach.
+         */
 
-        ContField2D::ContField2D(void):
+
+        ContField2D::ContField2D():
             DisContField2D(),
             m_locToGloMap(),
             m_contNcoeffs(0),
@@ -49,28 +89,37 @@ namespace Nektar
         {
         }
 
+
+        /**
+         *
+         */
         ContField2D::ContField2D(const ContField2D &In):
             DisContField2D(In),
             m_locToGloMap(In.m_locToGloMap),
             m_contNcoeffs(In.m_contNcoeffs),
             m_contCoeffs(m_contNcoeffs,0.0),
             m_globalMat(In.m_globalMat),
-            m_globalLinSys(In.m_globalLinSys)            
+            m_globalLinSys(In.m_globalLinSys)
         {
         }
-        
-        ContField2D::ContField2D(const ContField2D &In, 
+
+
+        /**
+         *
+         */
+        ContField2D::ContField2D(const ContField2D &In,
                                  SpatialDomains::MeshGraph2D &graph2D,
-                                 SpatialDomains::BoundaryConditions &bcs, 
+                                 SpatialDomains::BoundaryConditions &bcs,
                                  const int bc_loc):
             DisContField2D(In),
             m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            // Set up boundary conditions for this variable. 
-            GenerateBoundaryConditionExpansion(graph2D,bcs,bcs.GetVariable(bc_loc));
+            // Set up boundary conditions for this variable.
+            GenerateBoundaryConditionExpansion(graph2D,bcs,
+                                                bcs.GetVariable(bc_loc));
             EvaluateBoundaryConditions();
-                        
+
             if(!SameTypeOfBoundaryConditions(In))
             {
                 map<int,int> periodicEdges;
@@ -78,11 +127,14 @@ namespace Nektar
                 GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),
                                  periodicVertices,periodicEdges);
 
-                GlobalSysSolnType solnType = In.m_locToGloMap->GetGlobalSysSolnType();
-                m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::
-                    AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,m_bndCondExpansions, 
-                                      m_bndConditions, periodicVertices, periodicEdges);
-                
+                GlobalSysSolnType solnType
+                                    = In.m_locToGloMap->GetGlobalSysSolnType();
+                m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
+                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
+                                                    m_bndCondExpansions,
+                                                    m_bndConditions,
+                                                    periodicVertices,
+                                                    periodicEdges);
             }
             else
             {
@@ -90,24 +142,33 @@ namespace Nektar
             }
 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
+
+        /**
+         *
+         */
         ContField2D::ContField2D(SpatialDomains::MeshGraph2D &graph2D,
                                  const GlobalSysSolnType solnType):
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            
-            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType);
-            
-            
-	    m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
+                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType);
+
+
+            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
+
+        /**
+         *
+         */
         ContField2D::ContField2D(SpatialDomains::MeshGraph2D &graph2D,
-                                 SpatialDomains::BoundaryConditions &bcs, 
+                                 SpatialDomains::BoundaryConditions &bcs,
                                  const int bc_loc,
                                  const GlobalSysSolnType solnType):
             DisContField2D(graph2D,bcs,bc_loc,solnType,false),
@@ -119,16 +180,41 @@ namespace Nektar
             GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),
                              periodicVertices,periodicEdges);
 
-            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::
-                AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,m_bndCondExpansions, 
-                                  m_bndConditions,periodicVertices,periodicEdges);
-	    
-	    m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
+                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
+                                                    m_bndCondExpansions,
+                                                    m_bndConditions,
+                                                    periodicVertices,
+                                                    periodicEdges);
+
+            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
+
+        /**
+         * Given a mesh \a graph2D, containing information about the domain and
+         * the spectral/hp element expansion, this constructor fills the list
+         * of local expansions #m_exp with the proper expansions, calculates
+         * the total number of quadrature points \f$\boldsymbol{x}_i\f$ and
+         * local expansion coefficients \f$\hat{u}^e_n\f$ and allocates memory
+         * for the arrays #m_coeffs and #m_phys. Furthermore, it constructs the
+         * mapping array (contained in #m_locToGloMap) for the transformation
+         * between local elemental level and global level, it calculates the
+         * total number global expansion coefficients \f$\hat{u}_n\f$ and
+         * allocates memory for the array #m_contCoeffs. The constructor also
+         * discretises the boundary conditions, specified by the argument \a
+         * bcs, by expressing them in terms of the coefficient of the expansion
+         * on the boundary.
+         *
+         * @param   graph2D     A mesh, containing information about the domain
+         *                      and the spectral/hp element expansion.  
+         * @param   bcs         The boundary conditions.  
+         * @param   variable    An optional parameter to indicate for which
+         *                      variable the field should be constructed.
+         */
         ContField2D::ContField2D(SpatialDomains::MeshGraph2D &graph2D,
-                                 SpatialDomains::BoundaryConditions &bcs, 
+                                 SpatialDomains::BoundaryConditions &bcs,
                                  const std::string variable,
                                  const GlobalSysSolnType solnType):
             DisContField2D(graph2D,bcs,variable,solnType,false),
@@ -140,22 +226,30 @@ namespace Nektar
 
             map<int,int> periodicEdges;
             vector<map<int,int> >periodicVertices;
-            GetPeriodicEdges(graph2D,bcs,variable,periodicVertices,periodicEdges);
+            GetPeriodicEdges(graph2D,bcs,variable,periodicVertices,
+                             periodicEdges);
 
-            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::
-                AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,m_bndCondExpansions,
-                                  m_bndConditions,periodicVertices,periodicEdges);
-	    
-	    m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
+                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
+                                                    m_bndCondExpansions,
+                                                    m_bndConditions,
+                                                    periodicVertices,
+                                                    periodicEdges);
+
+            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
-        ContField2D::ContField2D(const LibUtilities::BasisKey &TriBa, 
-                                 const LibUtilities::BasisKey &TriBb, 
-                                 const LibUtilities::BasisKey &QuadBa, 
+
+        /**
+         *
+         */
+        ContField2D::ContField2D(const LibUtilities::BasisKey &TriBa,
+                                 const LibUtilities::BasisKey &TriBb,
+                                 const LibUtilities::BasisKey &QuadBa,
                                  const LibUtilities::BasisKey &QuadBb,
                                  SpatialDomains::MeshGraph2D &graph2D,
-                                 SpatialDomains::BoundaryConditions &bcs, 
+                                 SpatialDomains::BoundaryConditions &bcs,
                                  const int bc_loc,
                                  const LibUtilities::PointsType TriNb,
                                  const GlobalSysSolnType solnType):
@@ -163,7 +257,8 @@ namespace Nektar
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            GenerateBoundaryConditionExpansion(graph2D,bcs,bcs.GetVariable(bc_loc));
+            GenerateBoundaryConditionExpansion(graph2D,bcs,
+                                               bcs.GetVariable(bc_loc));
             EvaluateBoundaryConditions();
 
             map<int,int> periodicEdges;
@@ -171,20 +266,27 @@ namespace Nektar
             GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),
                              periodicVertices,periodicEdges);
 
-            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::
-                AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,m_bndCondExpansions,
-                                  m_bndConditions,periodicVertices,periodicEdges);
-	    
-	    m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
+                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
+                                                    m_bndCondExpansions,
+                                                    m_bndConditions,
+                                                    periodicVertices,
+                                                    periodicEdges);
+
+            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
-        ContField2D::ContField2D(const LibUtilities::BasisKey &TriBa, 
-                                 const LibUtilities::BasisKey &TriBb, 
-                                 const LibUtilities::BasisKey &QuadBa, 
-                                 const LibUtilities::BasisKey &QuadBb, 
+
+        /**
+         *
+         */
+        ContField2D::ContField2D(const LibUtilities::BasisKey &TriBa,
+                                 const LibUtilities::BasisKey &TriBb,
+                                 const LibUtilities::BasisKey &QuadBa,
+                                 const LibUtilities::BasisKey &QuadBb,
                                  SpatialDomains::MeshGraph2D &graph2D,
-                                 SpatialDomains::BoundaryConditions &bcs, 
+                                 SpatialDomains::BoundaryConditions &bcs,
                                  const std::string variable,
                                  const LibUtilities::PointsType TriNb,
                                  const GlobalSysSolnType solnType):
@@ -200,14 +302,21 @@ namespace Nektar
             GetPeriodicEdges(graph2D,bcs,variable,
                              periodicVertices,periodicEdges);
 
-            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::
-                AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,m_bndCondExpansions,
-                                  m_bndConditions,periodicVertices,periodicEdges);
-	    
-	    m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-	    m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
+                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
+                                                    m_bndCondExpansions,
+                                                    m_bndConditions,
+                                                    periodicVertices,
+                                                    periodicEdges);
+
+            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
-        
+
+
+        /**
+         *
+         */
         ContField2D::~ContField2D()
         {
         }
@@ -217,33 +326,51 @@ namespace Nektar
         {
             int i;
             bool returnval = true;
-            
+
             for(i = 0; i < m_bndConditions.num_elements(); ++i)
             {
-             
+
                 // check to see if boundary condition type is the same
                 // and there are the same number of boundary
                 // conditions in the boundary definition.
                 if((m_bndConditions[i]->GetBoundaryConditionType()
                     != In.m_bndConditions[i]->GetBoundaryConditionType())||
-                   (m_bndCondExpansions[i]->GetExpSize() != In.m_bndCondExpansions[i]->GetExpSize()))
+                   (m_bndCondExpansions[i]->GetExpSize()
+                                    != In.m_bndCondExpansions[i]->GetExpSize()))
                 {
                     returnval = false;
                     break;
                 }
             }
-            
+
             return returnval;
         }
-            
+
+        /**
+         * Given a function \f$f(\boldsymbol{x})\f$ defined at the quadrature
+         * points, this function determines the unknown global coefficients
+         * \f$\boldsymbol{\hat{u}}^{\mathcal{H}}\f$ employing a discrete
+         * Galerkin projection from physical space to coefficient
+         * space. The operation is evaluated by the function #GlobalSolve using
+         * the global mass matrix.
+         *
+         * The values of the function \f$f(\boldsymbol{x})\f$ evaluated at the
+         * quadrature points \f$\boldsymbol{x}_i\f$ should be contained in the
+         * variable #m_phys of the ExpList object \a Sin. The resulting global
+         * coefficients \f$\hat{u}_g\f$ are stored in the array #m_contCoeffs.
+         *
+         * @param   Sin         An ExpList, containing the discrete evaluation
+         *                      of \f$f(\boldsymbol{x})\f$ at the quadrature
+         *                      points in its array #m_phys.
+         */
         void ContField2D::FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                          Array<OneD,       NekDouble> &outarray,
                                    bool  UseContCoeffs)
-        {            
+        {
             // Inner product of forcing
-            Array<OneD,NekDouble> wsp(m_contNcoeffs);  
+            Array<OneD,NekDouble> wsp(m_contNcoeffs);
             IProductWRTBase(inarray,wsp,true);
-            
+
             // Solve the system
             GlobalLinSysKey key(StdRegions::eMass,
                                 m_locToGloMap,
@@ -261,19 +388,20 @@ namespace Nektar
             }
         }
 
-        void ContField2D::MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray,
-                                                        Array<OneD,       NekDouble> &outarray,
-                                                  bool  UseContCoeffs)
-                                                  
+        void ContField2D::MultiplyByInvMassMatrix(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                bool  UseContCoeffs)
+
         {
             GlobalLinSysKey key(StdRegions::eMass,m_locToGloMap,
                                 m_locToGloMap->GetGlobalSysSolnType());
-            
+
             if(UseContCoeffs)
             {
                 if(inarray.data() == outarray.data())
                 {
-                    Array<OneD, NekDouble> tmp(m_contNcoeffs,0.0);   
+                    Array<OneD, NekDouble> tmp(m_contNcoeffs,0.0);
                     Vmath::Vcopy(m_contNcoeffs,inarray,1,tmp,1);
                     GlobalSolve(key,tmp,outarray);
                 }
@@ -288,7 +416,7 @@ namespace Nektar
 
                 if(inarray.data() == outarray.data())
                 {
-                    Array<OneD,NekDouble> tmp(inarray.num_elements()); 
+                    Array<OneD,NekDouble> tmp(inarray.num_elements());
                     Vmath::Vcopy(inarray.num_elements(),inarray,1,tmp,1);
                     Assemble(tmp,outarray);
                 }
@@ -296,39 +424,67 @@ namespace Nektar
                 {
                     Assemble(inarray,outarray);
                 }
-                    
+
                 GlobalSolve(key,outarray,globaltmp);
                 GlobalToLocal(globaltmp,outarray);
             }
         }
 
-        // Solve the helmholtz problem assuming that m_contCoeff vector 
-        // contains an intial estimate for solution
-        void ContField2D::HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                          Array<OneD,       NekDouble> &outarray,
-                                    NekDouble lambda,
-                                    bool      UseContCoeffs,
-                                    const Array<OneD, const NekDouble>& dirForcing)
+        /**
+         * Consider the two dimensional Helmholtz equation,
+         * \f[\nabla^2u(\boldsymbol{x})-\lambda u(\boldsymbol{x})
+         * = f(\boldsymbol{x}),\f] supplemented with appropriate boundary
+         * conditions (which are contained in the data member
+         * #m_bndCondExpansions). Applying a \f$C^0\f$ continuous Galerkin
+         * discretisation, this equation leads to the following linear system:
+         * \f[\left(\boldsymbol{L}+\lambda\boldsymbol{M}\right)
+         * \boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}}\f] where
+         * \f$\boldsymbol{L}\f$ and \f$\boldsymbol{M}\f$ are the Laplacian and
+         * mass matrix respectively. This function solves the system above for
+         * the global coefficients \f$\boldsymbol{\hat{u}}\f$ by a call to the
+         * function #GlobalSolve. It is assumed #m_contCoeff contains an
+         * initial estimate for the solution.
+         *
+         * The values of the function \f$f(\boldsymbol{x})\f$ evaluated at the
+         * quadrature points \f$\boldsymbol{x}_i\f$ should be contained in the
+         * variable #m_phys of the ExpList object \a Sin. The resulting global
+         * coefficients \f$\boldsymbol{\hat{u}}_g\f$ are stored in the array
+         * #m_contCoeffs.
+         *
+         * @param   Sin         An ExpList, containing the discrete evaluation
+         *                      of the forcing function \f$f(\boldsymbol{x})\f$
+         *                      at the quadrature points in its array #m_phys.
+         * @param   lambda      The parameter \f$\lambda\f$ of the Helmholtz
+         *                      equation
+         */
+        void ContField2D::HelmSolve(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                NekDouble lambda,
+                                bool      UseContCoeffs,
+                                const Array<OneD, const NekDouble>& dirForcing)
         {
             //----------------------------------
             //  Setup RHS Inner product
             //----------------------------------
             // Inner product of forcing
-            Array<OneD,NekDouble> wsp(m_contNcoeffs);  
-            IProductWRTBase(inarray,wsp,true);       
+            Array<OneD,NekDouble> wsp(m_contNcoeffs);
+            IProductWRTBase(inarray,wsp,true);
             // Note -1.0 term necessary to invert forcing function to
             // be consistent with matrix definition
-            Vmath::Neg(m_contNcoeffs, wsp, 1);        
+            Vmath::Neg(m_contNcoeffs, wsp, 1);
 
-            // Forcing function with weak boundary conditions 
+            // Forcing function with weak boundary conditions
             int i,j;
             int bndcnt=m_locToGloMap->GetNumLocalDirBndCoeffs();
-            for(i = m_numDirBndCondExpansions; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = m_numDirBndCondExpansions;
+                                    i < m_bndCondExpansions.num_elements(); ++i)
             {
                 for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                 {
-                    wsp[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)] +=  
-                        (m_bndCondExpansions[i]->GetCoeffs())[j];
+                    wsp[m_locToGloMap
+                                ->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)]
+                        += (m_bndCondExpansions[i]->GetCoeffs())[j];
                 }
             }
 
@@ -348,35 +504,85 @@ namespace Nektar
             }
         }
 
-
-        void ContField2D::LaplaceSolve(const Array<OneD, const NekDouble> &inarray,
-                                             Array<OneD,       NekDouble> &outarray,
-                                       const Array<OneD, const NekDouble> &dirForcing,
-                                       const Array<OneD,       Array<OneD,NekDouble> >& variablecoeffs,
-                                       NekDouble time,
-                                       bool UseContCoeffs)
+        /**
+         * Consider the two dimensional Laplace equation,
+         * \f[\nabla\cdot\left(\boldsymbol{\sigma}\nabla
+         * u(\boldsymbol{x})\right) = f(\boldsymbol{x}),\f] supplemented with
+         * appropriate boundary conditions (which are contained in the data
+         * member #m_bndCondExpansions). In the equation above
+         * \f$\boldsymbol{\sigma}\f$ is the (symmetric positive definite)
+         * diffusion tensor:
+         * \f[ \sigma = \left[ \begin{array}{cc}
+         * \sigma_{00}(\boldsymbol{x},t) & \sigma_{01}(\boldsymbol{x},t) \\
+         * \sigma_{01}(\boldsymbol{x},t) & \sigma_{11}(\boldsymbol{x},t)
+         * \end{array} \right]. \f]
+         * Applying a \f$C^0\f$ continuous Galerkin discretisation, this
+         * equation leads to the following linear system:
+         * \f[\boldsymbol{L}
+         * \boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}}\f]
+         * where \f$\boldsymbol{L}\f$ is the Laplacian matrix. This function
+         * solves the system above for the global coefficients
+         * \f$\boldsymbol{\hat{u}}\f$ by a call to the function #GlobalSolve.
+         *
+         * The values of the function \f$f(\boldsymbol{x})\f$ evaluated at the
+         * quadrature points \f$\boldsymbol{x}_i\f$ should be contained in the
+         * variable #m_phys of the ExpList object \a Sin. The resulting global
+         * coefficients \f$\boldsymbol{\hat{u}}_g\f$ are stored in the array
+         * #m_contCoeffs.
+         *
+         * @param   Sin         An ExpList, containing the discrete evaluation
+         *                      of the forcing function \f$f(\boldsymbol{x})\f$
+         *                      at the quadrature points in its array #m_phys.
+         * @param   variablecoeffs The (optional) parameter containing the
+         *                      coefficients evaluated at the quadrature
+         *                      points. It is an Array of (three) arrays which
+         *                      stores the laplacian coefficients in the
+         *                      following way
+         * \f[\mathrm{variablecoeffs} = \left[ \begin{array}{c}
+         * \left[\sigma_{00}(\boldsymbol{x_i},t)\right]_i \\
+         * \left[\sigma_{01}(\boldsymbol{x_i},t)\right]_i \\
+         * \left[\sigma_{11}(\boldsymbol{x_i},t)\right]_i
+         * \end{array}\right]
+         * \f]
+         * If this argument is not passed to the function, the following
+         * equation will be solved:
+         * \f[\nabla^2u(\boldsymbol{x}) = f(\boldsymbol{x}),\f]
+         *
+         * @param   time        The time-level at which the coefficients are
+         *                      evaluated
+         */
+        void ContField2D::LaplaceSolve(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                const Array<OneD, const NekDouble> &dirForcing,
+                const Array<OneD,       Array<OneD,NekDouble> >& variablecoeffs,
+                NekDouble time,
+                bool UseContCoeffs)
         {
             // Inner product of forcing
-            Array<OneD,NekDouble> wsp(m_contNcoeffs);  
-            IProductWRTBase(inarray,wsp,true);       
+            Array<OneD,NekDouble> wsp(m_contNcoeffs);
+            IProductWRTBase(inarray,wsp,true);
             // Note -1.0 term necessary to invert forcing function to
             // be consistent with matrix definition
-            Vmath::Neg(m_contNcoeffs, wsp, 1);    
+            Vmath::Neg(m_contNcoeffs, wsp, 1);
 
-            // Forcing function with weak boundary conditions 
+            // Forcing function with weak boundary conditions
             int i,j;
             int bndcnt=m_locToGloMap->GetNumLocalDirBndCoeffs();
-            for(i = m_numDirBndCondExpansions; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = m_numDirBndCondExpansions;
+                                    i < m_bndCondExpansions.num_elements(); ++i)
             {
                 for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                 {
-                    wsp[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)] +=  
-                        (m_bndCondExpansions[i]->GetCoeffs())[j];
+                    wsp[m_locToGloMap
+                                ->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)]
+                        += (m_bndCondExpansions[i]->GetCoeffs())[j];
                 }
             }
 
             // Solve the system
-            GlobalLinSysKey key(StdRegions::eLaplacian,m_locToGloMap,time,variablecoeffs,
+            GlobalLinSysKey key(StdRegions::eLaplacian,m_locToGloMap,time,
+                                variablecoeffs,
                                 m_locToGloMap->GetGlobalSysSolnType());
 
             if(UseContCoeffs)
@@ -392,17 +598,19 @@ namespace Nektar
         }
 
 
-        // Solve the linear advection problem assuming that m_contCoeff vector 
-        // contains an intial estimate for solution
-        void ContField2D::LinearAdvectionSolve(const Array<OneD, const NekDouble> &inarray,
-                                               Array<OneD,       NekDouble> &outarray,
-                                               NekDouble ax, NekDouble ay,
-                                               bool        UseContCoeffs,
-                                               const Array<OneD, const NekDouble>& dirForcing)
+        /**
+         *
+         */
+        void ContField2D::LinearAdvectionSolve(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                NekDouble ax, NekDouble ay,
+                                bool        UseContCoeffs,
+                                const Array<OneD, const NekDouble>& dirForcing)
         {
             // Inner product of forcing
-            Array<OneD,NekDouble> wsp(m_contNcoeffs);  
-            IProductWRTBase(inarray,wsp,true);       
+            Array<OneD,NekDouble> wsp(m_contNcoeffs);
+            IProductWRTBase(inarray,wsp,true);
 
 
             // Solve the system
@@ -421,41 +629,99 @@ namespace Nektar
             }
         }
 
-        void ContField2D::LinearAdvectionEigs(const NekDouble ax, 
+
+        /**
+         *
+         */
+        void ContField2D::LinearAdvectionEigs(const NekDouble ax,
                                               const NekDouble ay,
-                                              Array<OneD, NekDouble> &Real, 
-                                              Array<OneD, NekDouble> &Imag, 
+                                              Array<OneD, NekDouble> &Real,
+                                              Array<OneD, NekDouble> &Imag,
                                               Array<OneD, NekDouble> &Evecs)
         {
             // Solve the system
             GlobalLinSysKey key(StdRegions::eLinearAdvection,m_locToGloMap,
                                 ax,ay,eDirectFullMatrix);
-            
+
             DNekMatSharedPtr   Gmat = GenGlobalMatrixFull(key,m_locToGloMap);
             Gmat->EigenSolve(Real,Imag,Evecs);
         }
 
-        // Note inout contains initial guess and final output. 
-        void ContField2D::GlobalSolve(const GlobalLinSysKey &key, 
-                                      const Array<OneD, const NekDouble>& rhs, 
-                                            Array<OneD,       NekDouble>& inout,
-                                      const Array<OneD, const NekDouble>& dirForcing)
+
+        /**
+         * Given a linear system specified by the key \a key,
+         * \f[\boldsymbol{M}\boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}},\f]
+         * this function solves this linear system taking into account the
+         * boundary conditions specified in the data member
+         * #m_bndCondExpansions. Therefore, it adds an array
+         * \f$\boldsymbol{\hat{g}}\f$ which represents the non-zero surface
+         * integral resulting from the weak boundary conditions (e.g. Neumann
+         * boundary conditions) to the right hand side, that is,
+         * \f[\boldsymbol{M}\boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}}+
+         * \boldsymbol{\hat{g}}.\f]
+         * Furthermore, it lifts the known degrees of freedom which are
+         * prescribed by the Dirichlet boundary conditions. As these known
+         * coefficients \f$\boldsymbol{\hat{u}}^{\mathcal{D}}\f$ are numbered
+         * first in the global coefficient array \f$\boldsymbol{\hat{u}}_g\f$,
+         * the linear system can be decomposed as,
+         * \f[\left[\begin{array}{cc}
+         * \boldsymbol{M}^{\mathcal{DD}}&\boldsymbol{M}^{\mathcal{DH}}\\
+         * \boldsymbol{M}^{\mathcal{HD}}&\boldsymbol{M}^{\mathcal{HH}}
+         * \end{array}\right]
+         * \left[\begin{array}{c}
+         * \boldsymbol{\hat{u}}^{\mathcal{D}}\\
+         * \boldsymbol{\hat{u}}^{\mathcal{H}}
+         * \end{array}\right]=
+         * \left[\begin{array}{c}
+         * \boldsymbol{\hat{f}}^{\mathcal{D}}\\
+         * \boldsymbol{\hat{f}}^{\mathcal{H}}
+         * \end{array}\right]+
+         * \left[\begin{array}{c}
+         * \boldsymbol{\hat{g}}^{\mathcal{D}}\\
+         * \boldsymbol{\hat{g}}^{\mathcal{H}}
+         * \end{array}\right]
+         * \f]
+         * which will then be solved for the unknown coefficients
+         * \f$\boldsymbol{\hat{u}}^{\mathcal{H}}\f$ as,
+         * \f[
+         * \boldsymbol{M}^{\mathcal{HH}}\boldsymbol{\hat{u}}^{\mathcal{H}}=
+         * \boldsymbol{\hat{f}}^{\mathcal{H}}+
+         * \boldsymbol{\hat{g}}^{\mathcal{H}}-
+         * \boldsymbol{M}^{\mathcal{HD}}\boldsymbol{\hat{u}}^{\mathcal{D}}\f]
+         *
+         * @param   mkey        This key uniquely defines the linear system to
+         *                      be solved.
+         * @param   Sin         An ExpList, containing the discrete evaluation
+         *                      of the forcing function \f$f(\boldsymbol{x})\f$
+         *                      at the quadrature points in its array #m_phys.
+         * @param   ScaleForcing An optional parameter with which the forcing
+         *                      vector \f$\boldsymbol{\hat{f}}\f$ should be
+         *                      multiplied.
+         * @note    inout contains initial guess and final output.
+         */
+        void ContField2D::GlobalSolve(
+                                const GlobalLinSysKey &key,
+                                const Array<OneD, const NekDouble>& rhs,
+                                      Array<OneD,       NekDouble>& inout,
+                                const Array<OneD, const NekDouble>& dirForcing)
         {
             int i,j;
             int bndcnt=0;
             int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-                  
+
             // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE
             //         IN THE SOLUTION ARRAY
-            const Array<OneD,const int>& map = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
+            const Array<OneD,const int>& map 
+                        = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
             for(i = 0; i < m_numDirBndCondExpansions; ++i)
             {
-                const Array<OneD,const NekDouble>& coeffs = m_bndCondExpansions[i]->GetCoeffs();
+                const Array<OneD,const NekDouble>& coeffs 
+                                        = m_bndCondExpansions[i]->GetCoeffs();
                 for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                 {
                     inout[map[bndcnt++]] = coeffs[j];
                 }
-            }  
+            }
             // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
             if(m_contNcoeffs - NumDirBcs > 0)
             {
@@ -464,7 +730,8 @@ namespace Nektar
             }
         }
 
-       GlobalMatrixSharedPtr ContField2D::GetGlobalMatrix(const GlobalMatrixKey &mkey) 
+       GlobalMatrixSharedPtr ContField2D::GetGlobalMatrix(
+                                const GlobalMatrixKey &mkey)
         {
             ASSERTL1(mkey.LocToGloMapIsDefined(),
                      "To use method must have a LocalToGlobalBaseMap "
@@ -486,7 +753,16 @@ namespace Nektar
             return glo_matrix;
         }
 
-        GlobalLinSysSharedPtr ContField2D::GetGlobalLinSys(const GlobalLinSysKey &mkey) 
+        /**
+         * The function searches the map #m_globalLinSys to see if the
+         * global matrix has been created before. If not, it calls the function
+         * #GenGlobalLinSys to generate the requested global system.
+         *
+         * @param   mkey        This key uniquely defines the requested
+         *                      linear system.
+         */
+        GlobalLinSysSharedPtr ContField2D::GetGlobalLinSys(
+                                const GlobalLinSysKey &mkey)
         {
             ASSERTL1(mkey.LocToGloMapIsDefined(),
                      "To use method must have a LocalToGlobalBaseMap "
@@ -508,6 +784,43 @@ namespace Nektar
             return glo_matrix;
         }
 
+        void ContField2D::v_FwdTrans(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                bool  UseContCoeffs)
+        {
+            FwdTrans(inarray,outarray,UseContCoeffs);
+        }
+
+        void ContField2D::v_MultiplyByInvMassMatrix(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                bool  UseContCoeffs)
+        {
+            MultiplyByInvMassMatrix(inarray,outarray,UseContCoeffs);
+        }
+
+        void ContField2D::v_HelmSolve(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                NekDouble lambda,
+                                bool      UseContCoeffs,
+                                const Array<OneD, const NekDouble>& dirForcing)
+        {
+            HelmSolve(inarray,outarray,lambda,UseContCoeffs,dirForcing);
+        }
+
+        const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>&
+                                ContField2D::v_GetBndConditions()
+        {
+            return GetBndConditions();
+        }
+
+        void ContField2D::v_EvaluateBoundaryConditions(
+                                const NekDouble time)
+        {
+            EvaluateBoundaryConditions(time);
+        }
 
     } // end of namespace
 } //end of namespace

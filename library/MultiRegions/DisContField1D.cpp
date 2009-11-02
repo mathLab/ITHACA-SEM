@@ -44,7 +44,15 @@ namespace Nektar
         DisContField1D::DisContField1D(void)
         {
         }
-        
+
+
+        DisContField1D::DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
+                                       const GlobalSysSolnType solnType,
+                                       const bool constructMap):
+            ExpList1D(graph1D)
+        {
+        }
+
         // Copy constructor
         DisContField1D::DisContField1D(const DisContField1D &In):
             ExpList1D(In),
@@ -101,6 +109,7 @@ namespace Nektar
 
             m_trace = Array<OneD, NekDouble>(m_traceMap->GetNumLocalBndCoeffs());
         }
+
 
         void DisContField1D::GenerateBoundaryConditionExpansion(const SpatialDomains::MeshGraph1D &graph1D,
                                                              SpatialDomains::BoundaryConditions &bcs, 
@@ -316,7 +325,7 @@ namespace Nektar
             // Determing <u_lam,f> terms using HDGLamToU matrix
             for(cnt1 = cnt = n = 0; n < nexp; ++n)
             {
-                nbndry = (*m_exp)[n]->NumDGBndryCoeffs(); 		    
+                nbndry = (*m_exp)[n]->NumDGBndryCoeffs();           
 
                 e_ncoeffs = (*m_exp)[n]->GetNcoeffs();
                 e_f       = f+cnt;

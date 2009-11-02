@@ -798,11 +798,566 @@ namespace Nektar
             }
         }
 
+// VIRTUAL INLINE FUNCTIONS FROM HEADER FILE
+            void StdExpansion::SetUpPhysNormals(const boost::shared_ptr<StdExpansion>  &exp2d, const int edge)
+            {
+                v_SetUpPhysNormals(exp2d,edge);
+            }
+
+            void StdExpansion::AddEdgeNormBoundaryInt(const int edge, 
+                                                boost::shared_ptr<StdExpansion1D>  &EdgeExp,
+                                                const Array<OneD, const NekDouble> &Fx,  
+                                                const Array<OneD, const NekDouble> &Fy,  
+                                                Array<OneD, NekDouble> &outarray)
+            {
+                v_AddEdgeNormBoundaryInt(edge,EdgeExp,Fx,Fy,outarray);
+            }
+
+            void StdExpansion::AddEdgeNormBoundaryInt(const int edge, 
+                                                boost::shared_ptr<StdExpansion1D>  &EdgeExp,
+                                                const Array<OneD, const NekDouble> &Fn,  
+                                                Array<OneD, NekDouble> &outarray)
+            {
+                v_AddEdgeNormBoundaryInt(edge,EdgeExp,Fn,outarray);
+            }
+
+            void StdExpansion::AddEdgeNormBoundaryBiInt(const int edge, 
+                                                boost::shared_ptr<StdExpansion1D>  &EdgeExp,
+                                                const Array<OneD, const NekDouble> &Fwd,  
+                                                const Array<OneD, const NekDouble> &Bwd,  
+                                                Array<OneD, NekDouble> &outarray)
+            {
+                v_AddEdgeNormBoundaryBiInt(edge,EdgeExp,Fwd,Bwd,outarray);
+            }
+
+            void StdExpansion::AddNormTraceInt(const int dir,
+                                         Array<OneD, const NekDouble> &inarray,
+                                         Array<OneD,NekDouble> &outarray)
+            {
+                v_AddNormTraceInt(dir,inarray,outarray);
+            }
+
+            DNekScalMatSharedPtr& StdExpansion::v_GetLocMatrix(const LocalRegions::MatrixKey &mkey)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+                return NullDNekScalMatSharedPtr;
+            }
+
+            DNekScalMatSharedPtr& StdExpansion::v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+                return NullDNekScalMatSharedPtr;
+            }
+
+            
+            const Array<OneD, const NekDouble>& StdExpansion::v_GetPhysNormals(void)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+                return NullNekDouble1DArray; 
+            }
+
+
+            void StdExpansion::v_SetPhysNormals(Array<OneD, const NekDouble> &normal)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+            }
+
+            void StdExpansion::v_SetUpPhysNormals(const boost::shared_ptr<StdExpansion> &exp2d, const int edge)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+            }
+            
+            void StdExpansion::v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray, bool NegateNorm)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+            }
+            
+            DNekScalBlkMatSharedPtr& StdExpansion::v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+                return NullDNekScalBlkMatSharedPtr;
+            }
+
+
+            StdRegions::FaceOrientation StdExpansion::v_GetFaceorient(int face)
+
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for three-dimensional  LocalRegions");  
+                return eDir1FwdDir1_Dir2FwdDir2;              
+            }
+
+            StdRegions::EdgeOrientation StdExpansion::v_GetEorient(int edge)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");  
+                return eForwards;              
+            }
+
+
+            StdRegions::EdgeOrientation StdExpansion::v_GetCartesianEorient(int edge)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");  
+                return eForwards;              
+            }
+
+
+            void StdExpansion::v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
+                                                     const Array<OneD, const NekDouble> &inarray,
+                                                     Array<OneD,NekDouble> &outarray)
+            { 
+                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+            }
+
+
+            void StdExpansion::v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
+                                                     const Array<OneD, const NekDouble> &inarray,
+                                                     Array<OneD, boost::shared_ptr< StdExpansion1D > > &edgeExp, 
+                                                     Array<OneD,NekDouble> &outarray)
+            { 
+                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+            }
+
+            
+            void StdExpansion::v_AddEdgeNormBoundaryInt(const int edge,
+                                                  boost::shared_ptr<StdExpansion1D> &EdgeExp,
+                                                  const Array<OneD, const NekDouble> &Fx,  
+                                                  const Array<OneD, const NekDouble> &Fy,  
+                                                  Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+            }
+
+             void StdExpansion::v_AddEdgeNormBoundaryInt(const int edge,
+                                                  boost::shared_ptr<StdExpansion1D> &EdgeExp,
+                                                  const Array<OneD, const NekDouble> &Fn,  
+                                                  Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+            }
+
+            void StdExpansion::v_AddEdgeNormBoundaryBiInt(const int edge,
+                                                    boost::shared_ptr<StdExpansion1D> &EdgeExp,
+                                                    const Array<OneD, const NekDouble> &Fwd,  
+                                                    const Array<OneD, const NekDouble> &Bwd,  
+                                                    Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "v_AddEdgeNormBoundaryBiInt is not defined for this shape");
+            }
+ 
+           void StdExpansion::v_AddNormTraceInt(const int dir,
+                                           Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD,NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+            }
+
+            int StdExpansion::v_GetNedges() const
+            {
+                ASSERTL0(false, "This function is needs defining for this shape");
+                return 0;
+            }
+
+            int StdExpansion::v_GetNfaces() const
+            {
+                ASSERTL0(false, "This function is needs defining for this shape");
+                return 0;
+            }
+
+
+            int StdExpansion::v_NumBndryCoeffs() const 
+            {
+                ASSERTL0(false, "This function is needs defining for this shape");
+                return 0;
+            }
+            
+            int StdExpansion::v_NumDGBndryCoeffs() const 
+            {
+                ASSERTL0(false, "This function is needs defining for this shape");
+                return 0;
+            }
+            
+            int StdExpansion::v_GetEdgeNcoeffs(const int i) const
+            {
+                ASSERTL0(false, "This function is not valid or not defined");
+                return 0;
+            }
+
+            int StdExpansion::v_GetEdgeNumPoints(const int i) const
+            {
+                ASSERTL0(false, "This function is not valid or not defined");
+                return 0;
+            }
+                        
+            int StdExpansion::v_DetCartesianDirOfEdge(const int edge)
+            {
+                ASSERTL0(false, "This function is not valid or not defined");
+                return 0;
+            }
+
+            const LibUtilities::BasisKey StdExpansion::v_DetEdgeBasisKey(const int i) const
+            {
+                ASSERTL0(false, "This function is not valid or not defined");
+                return LibUtilities::NullBasisKey;
+            }
+
+
+            int StdExpansion::v_GetFaceNcoeffs(const int i) const
+            {
+                ASSERTL0(false, "This function is not valid or not defined");
+                return 0;
+            }    
+
+            int StdExpansion::v_GetFaceIntNcoeffs(const int i) const
+            {
+                ASSERTL0(false, "This function is not valid or not defined");
+                return 0;
+            }
+
+            LibUtilities::BasisType StdExpansion::v_GetEdgeBasisType(const int i) const
+            {
+                ASSERTL0(false, "This function is not valid or not defined");
+
+                return LibUtilities::eNoBasisType;
+            }
+        
+            ExpansionType StdExpansion::v_DetExpansionType() const
+            {
+                ASSERTL0(false, "This expansion does not have a shape type defined");
+                return eNoExpansionType;
+            }
+
+            int StdExpansion::v_GetShapeDimension() const
+            {
+                ASSERTL0(false, "This function is not valid or not defined");
+                return 0;
+            }
+
+            bool StdExpansion::v_IsBoundaryInteriorExpansion() 
+            {
+                ASSERTL0(false,"This function has not been defined for this expansion");
+                return false;
+            }
+
+            void  StdExpansion::v_IProductWRTDerivBase (const int dir, 
+                                                   const Array<OneD, const NekDouble>& inarray, 
+                                                   Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "This method has not been defined");
+            }
+
+            void StdExpansion::v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
+                                                   Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "This method has not been defined");                
+            }
+
+
+            NekDouble StdExpansion::v_Integral(const Array<OneD, const NekDouble>& inarray )
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                         "local expansions");
+                return 0;
+            }
+
+
+            void   StdExpansion::v_PhysDeriv (const Array<OneD, const NekDouble>& inarray,
+                                        Array<OneD, NekDouble> &out_d1,
+                                        Array<OneD, NekDouble> &out_d2,
+                                        Array<OneD, NekDouble> &out_d3)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                         "local expansions");
+            }
+
+            void StdExpansion::v_PhysDeriv(const int dir, 
+                                     const Array<OneD, const NekDouble>& inarray,
+                                     Array<OneD, NekDouble> &out_d0)
+
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                         "specific element types");
+            }
+
+            void StdExpansion::v_StdPhysDeriv (const Array<OneD, const NekDouble>& inarray,
+                                         Array<OneD, NekDouble> &out_d1,
+                                         Array<OneD, NekDouble> &out_d2,
+                                         Array<OneD, NekDouble> &out_d3)
+            {
+                NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
+            } 
+
+            void   StdExpansion::v_StdPhysDeriv (const int dir, 
+                                           const Array<OneD, const NekDouble>& inarray, 
+                                           Array<OneD, NekDouble> &outarray)
+            {  
+                NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");            
+            } 
+
+            NekDouble StdExpansion::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
+            {
+                NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
+                return 0;
+            }
+            
+
+            void StdExpansion::v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function has not "
+                         "been defined for this shape");
+            }
+
+            DNekMatSharedPtr StdExpansion::v_GenMatrix(const StdMatrixKey &mkey)  
+            {
+                NEKERROR(ErrorUtil::efatal, "This function has not "
+                         "been defined for this element");
+                DNekMatSharedPtr returnval;
+                return returnval;
+            }
+
+            DNekMatSharedPtr StdExpansion::v_CreateStdMatrix(const StdMatrixKey &mkey)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function has not "
+                         "been defined for this element");
+                DNekMatSharedPtr returnval;
+                return returnval;
+            }
+            
+            void StdExpansion::v_GetCoords(Array<OneD, NekDouble> &coords_0,
+                                     Array<OneD, NekDouble> &coords_1,
+                                     Array<OneD, NekDouble> &coords_2)
+            {
+                NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
+            }
+
+            void StdExpansion::v_GetCoord(const Array<OneD, const NekDouble>& Lcoord, 
+                                    Array<OneD, NekDouble> &coord)
+            {
+                NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
+            }
+
+            int StdExpansion::v_GetCoordim(void)
+            {
+                NEKERROR(ErrorUtil::efatal, "Write method");        
+                return -1;
+            }
+
+            void StdExpansion::v_GetSurfaceNormal(Array<OneD, NekDouble> &SurfaceNormal,
+                                            const int k)
+            {
+                NEKERROR(ErrorUtil::efatal, "GetSurfaceNormal Error");
+            }
+
+            void StdExpansion::v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            }
+
+            void StdExpansion::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            }
+
+            int StdExpansion::v_GetVertexMap(const int localVertexId)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+                return 0;
+            }
+ 
+            void StdExpansion::v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+                                              Array<OneD, unsigned int> &maparray,
+                                              Array<OneD, int> &signarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            }   
+
+            void StdExpansion::v_GetFaceInteriorMap(const int fid, const FaceOrientation faceOrient,
+                                              Array<OneD, unsigned int> &maparray,
+                                              Array<OneD, int> &signarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            }
+
+            void StdExpansion::v_GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
+                                               Array<OneD, unsigned int> &maparray,
+                                               Array<OneD, int> &signarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            }
+
+            void StdExpansion::v_GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
+                                               Array<OneD, unsigned int> &maparray,
+                                               Array<OneD, int> &signarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            }
+
+
+            void StdExpansion::v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
+            }
+        
+
+            void StdExpansion::v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion1D>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
+            }
+
+            boost::shared_ptr<StdExpansion1D> StdExpansion::v_GetEdgeExp(const int edge, bool SetUpNormals)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
+                return boost::shared_ptr<StdExpansion1D>();
+            }
+        
+
+            void StdExpansion::v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
+            {
+                NEKERROR(ErrorUtil::efatal, "WriteToFile: Write method");
+            }
+
+            void StdExpansion::v_ReadFromFile(std::ifstream &infile, OutputFormat format, const bool dumpVar)
+            {
+                NEKERROR(ErrorUtil::efatal, "ReadFromFile: Write method");
+            }
+
+            const  boost::shared_ptr<SpatialDomains::GeomFactors>& StdExpansion::v_GetMetricInfo() const 
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+                return SpatialDomains::NullGeomFactorsSharedPtr;
+
+            }
+            
+            const boost::shared_ptr<SpatialDomains::Geometry> StdExpansion::v_GetGeom() const 
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+
+                return SpatialDomains::NullGeometrySharedPtr;
+            }
+            
+            const boost::shared_ptr<SpatialDomains::Geometry1D>& StdExpansion::v_GetGeom1D() const 
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+
+                return SpatialDomains::NullGeometry1DSharedPtr;
+            }
+        
+            const boost::shared_ptr<SpatialDomains::Geometry2D>& StdExpansion::v_GetGeom2D() const 
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+
+                return SpatialDomains::NullGeometry2DSharedPtr;
+            }
+        
+            const boost::shared_ptr<SpatialDomains::Geometry3D>& StdExpansion::v_GetGeom3D() const 
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+
+                return SpatialDomains::NullGeometry3DSharedPtr;
+            }
+                            
+            void StdExpansion::v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
+                                           Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            }
+            
+            void StdExpansion::v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
+                                                  Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            }            
+            
+            void StdExpansion::v_IProductWRTDerivBase_SumFac(const int dir,
+                                                       const Array<OneD, const NekDouble>& inarray, 
+                                                       Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            }
+
+            void StdExpansion::v_MassMatrixOp(const Array<OneD, const NekDouble> &inarray, 
+                                        Array<OneD,NekDouble> &outarray,
+                                        const StdMatrixKey &mkey)
+            {
+                // If this function is not reimplemented on shape level, the function
+                // below will be called
+                MassMatrixOp_MatFree(inarray,outarray,mkey);
+            }
+
+            void StdExpansion::v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray,
+                                             const StdMatrixKey &mkey)
+            {
+                // If this function is not reimplemented on shape level, the function
+                // below will be called
+                LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
+            }
+
+            void StdExpansion::v_LaplacianMatrixOp(const int k1, const int k2, 
+                                             const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray,
+                                             const StdMatrixKey &mkey)
+            {
+                // If this function is not reimplemented on shape level, the function
+                // below will be called
+                LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,mkey);
+            }
+
+            void StdExpansion::v_WeakDerivMatrixOp(const int i,
+                                             const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray,
+                                             const StdMatrixKey &mkey)
+            {
+                // If this function is not reimplemented on shape level, the function
+                // below will be called
+                WeakDerivMatrixOp_MatFree(i,inarray,outarray,mkey);
+
+            }
+
+            void StdExpansion::v_LinearAdvectionMatrixOp(const Array<OneD, 
+                                                   const NekDouble> &inarray,
+                                                   Array<OneD,NekDouble> &outarray,
+                                                   const StdMatrixKey &mkey)
+            {
+                // If this function is not reimplemented on shape level, the function
+                // below will be called
+                LinearAdvectionMatrixOp_MatFree(inarray,outarray,mkey);
+
+            }
+            
+            void StdExpansion::v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD,NekDouble> &outarray,
+                                             const StdMatrixKey &mkey)
+            {
+                // If this function is not reimplemented on shape level, the function
+                // below will be called
+                HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
+            }
+
+            void StdExpansion::v_LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
+                                                           Array<OneD,NekDouble> &outarray,
+                                                           const StdMatrixKey &mkey)
+            {
+                // If this function is not reimplemented on shape level, the function
+                // below will be called
+                LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
+            }
+            
+            void StdExpansion::v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
+                                                           Array<OneD,NekDouble> &outarray,
+                                                           const StdMatrixKey &mkey)
+            {
+                // If this function is not reimplemented on shape level, the function
+                // below will be called
+                HelmholtzMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
+            }
+
     }//end namespace
 }//end namespace
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.86  2009/10/30 14:01:19  pvos
+* Multi-level static condensation updates
+*
 * Revision 1.85  2009/10/25 18:53:39  sherwin
 * Added H1 norm definition
 *

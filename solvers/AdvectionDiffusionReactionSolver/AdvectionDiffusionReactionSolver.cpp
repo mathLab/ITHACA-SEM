@@ -74,7 +74,8 @@ int main(int argc, char *argv[])
         // Set up the initial conditions 
         dom.SetInitialConditions();
     }
-	
+
+    // eSteadyAdvection???    
     switch(dom.GetEquationType())
     {
     case eHelmholtz: case eSteadyDiffusionReaction:

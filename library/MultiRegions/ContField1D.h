@@ -101,6 +101,12 @@ namespace Nektar
                                       Array<OneD,      NekDouble> &outarray,
                                 bool  UseContCoeffs = false);
 
+            /// This function performs the backward transformation of the
+            /// spectral/hp element expansion.
+            void BwdTrans(      const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                bool  UseContCoeffs = false);
+
             ///
             void MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,

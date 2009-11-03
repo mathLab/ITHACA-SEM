@@ -84,6 +84,9 @@ namespace Nektar
          */
         ContField1D::ContField1D():
             DisContField1D(),
+            m_locToGloMap(),
+            m_contNcoeffs(0),
+            m_contCoeffs(),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -116,6 +119,10 @@ namespace Nektar
                                  const int bc_loc,
                                  const GlobalSysSolnType solnType):
             DisContField1D(graph1D,solnType,false),
+            m_locToGloMap(),
+            m_contNcoeffs(0),
+            m_contCoeffs(),
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr()),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -165,6 +172,10 @@ namespace Nektar
                                  const std::string variable,
                                  const GlobalSysSolnType solnType):
             DisContField1D(graph1D,solnType,false),
+            m_locToGloMap(),
+            m_contNcoeffs(0),
+            m_contCoeffs(),
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr()),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -216,6 +227,10 @@ namespace Nektar
                                  const int bc_loc,
                                  const GlobalSysSolnType solnType):
             DisContField1D(graph1D,solnType,false),
+            m_locToGloMap(),
+            m_contNcoeffs(0),
+            m_contCoeffs(),
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr()),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -272,6 +287,10 @@ namespace Nektar
                                  const std::string variable,
                                  const GlobalSysSolnType solnType):
             DisContField1D(graph1D,solnType,false),
+            m_locToGloMap(),
+            m_contNcoeffs(0),
+            m_contCoeffs(),
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr()),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -299,6 +318,10 @@ namespace Nektar
          */
         ContField1D::ContField1D(const ContField1D &In):
             DisContField1D(In),
+            m_locToGloMap(In.m_locToGloMap),
+            m_contNcoeffs(In.m_contNcoeffs),
+            m_contCoeffs(m_contNcoeffs,0.0),
+            m_globalLinSys(In.m_globalLinSys),
             m_bndCondExpansions(In.m_bndCondExpansions),
             m_bndConditions(In.m_bndConditions)
         {
@@ -404,6 +427,39 @@ namespace Nektar
                 Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
                 GlobalSolve(key,wsp,tmp);
                 GlobalToLocal(tmp,outarray);
+            }
+        }
+
+
+        /**
+         * Given the coefficients of an expansion, this function evaluates the
+         * spectral/hp expansion \f$u^{\delta}(x)\f$ at the quadrature 
+         * points \f$x_i\f$. This operation is evaluated locally by the 
+         * function ExpList#BwdTrans.
+         *
+         * The coefficients of the expansion should be contained in the
+         * variable #m_coeffs of the ExpList object \a In. The resulting
+         * physical values at the quadrature points \f$u^{\delta}(x_i)\f$ are
+         * stored in the array #m_phys.
+         *
+         * @param   In          An ExpList, containing the local
+         *                      coefficients \f$\hat{u}_n^e\f$ in its array
+         *                      #m_coeffs.
+         */
+        void ContField1D::BwdTrans(
+                                const Array<OneD, const NekDouble>  &inarray,
+                                      Array<OneD,       NekDouble>  &outarray,
+                                bool  UseContCoeffs)
+        {
+            if(UseContCoeffs)
+            {
+                Array<OneD, NekDouble> wsp(m_ncoeffs);
+                GlobalToLocal(inarray,wsp);
+                BwdTrans_IterPerExp(wsp,outarray);
+            }
+            else
+            {
+                BwdTrans_IterPerExp(inarray,outarray);
             }
         }
 

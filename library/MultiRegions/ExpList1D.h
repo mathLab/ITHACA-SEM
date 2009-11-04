@@ -87,7 +87,7 @@ namespace Nektar
                       SpatialDomains::MeshGraph2D &graph2D,
                       bool UseGenSegExp = false);
 
-            /// Specialised constructor for DisContField2D for trace expansion.
+            /// Specialised constructor for trace expansion in DisContField2D.
             ExpList1D(const Array<OneD,const ExpList1DSharedPtr> &bndConstraint,
                       const Array<OneD,const SpatialDomains
                                             ::BoundaryConditionShPtr>  &bndCond,
@@ -96,6 +96,7 @@ namespace Nektar
                       const map<int,int> &periodicEdges,
                       bool UseGenSegExp = false);
 
+            /// Destructor.
             ~ExpList1D();
 
 
@@ -137,28 +138,35 @@ namespace Nektar
                                 NekDouble h, int nmodes,
                                 Array<OneD,NekDouble> &outarray);
 
+            /// Set up the normals on each expansion.
             void SetUpPhysNormals(const StdRegions::StdExpansionVector &locexp);
 
             // direction =  1: Upwind
             // direction = -1: Downwind
 
+            /// Upwind the \a Fwd and \a Bwd states based on the velocity field
+            /// given by \a Vec.
             void Upwind(const Array<OneD, const Array<OneD, NekDouble> > &Vec,
-                        const Array<OneD, const NekDouble> &Fwd, 
-                        const Array<OneD, const NekDouble> &Bwd, 
+                        const Array<OneD, const NekDouble> &Fwd,
+                        const Array<OneD, const NekDouble> &Bwd,
                         Array<OneD, NekDouble> &Upwind,
                         int direction=1);
 
-            void Upwind(const Array<OneD, const NekDouble> &Vn, 
-                        const Array<OneD, const NekDouble> &Fwd, 
-                        const Array<OneD, const NekDouble> &Bwd, 
+            /// Upwind the \a Fwd and \a Bwd states based on the one-
+            /// dimensional normal velocity field given by \a Vn.
+            void Upwind(const Array<OneD, const NekDouble> &Vn,
+                        const Array<OneD, const NekDouble> &Fwd,
+                        const Array<OneD, const NekDouble> &Bwd,
                         Array<OneD, NekDouble> &Upwind,
                         int direction=1);
-            
+
+            /// Populate \a normals with the normals of all expansions.
             void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
 
         protected:
 
         private:
+            /// Set up the normals on each expansion.
             virtual void v_SetUpPhysNormals(
                                 const StdRegions::StdExpansionVector &locexp)
             {
@@ -169,6 +177,7 @@ namespace Nektar
             bool m_UseGenSegExp;
         };
 
+        /// Empty ExpList1D object.
         const static Array<OneD, ExpList1DSharedPtr>
                                 NullExpList1DSharedPtrArray;
 

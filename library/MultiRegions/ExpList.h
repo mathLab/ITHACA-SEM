@@ -41,7 +41,6 @@
 #include <MultiRegions/LocalToGlobalBaseMap.h>
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalMatrixKey.h>
-//#include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/GlobalLinSysKey.h>
 #include <MultiRegions/GlobalOptimizationParameters.h>
 
@@ -54,6 +53,7 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        // Forward declarations
         class GlobalLinSys;
         class LocalToGlobalC0ContMap;
         class LocalToGlobalBaseMap;
@@ -61,7 +61,10 @@ namespace Nektar
         class ExpList1D;
         class ExpList1D;
 
+        /// A map between global matrix keys and their associated block
+        /// matrices.
         typedef map<GlobalMatrixKey,DNekScalBlkMatSharedPtr> BlockMatrixMap;
+        /// A shared pointer to a BlockMatrixMap.
         typedef boost::shared_ptr<BlockMatrixMap> BlockMatrixMapShPtr;
 
         /// Base class for all multi-elemental spectral/hp expansions.
@@ -597,62 +600,50 @@ namespace Nektar
                 const LocalToGlobalBaseMapSharedPtr &locToGloMap);
 
             // functions associated with DisContField
-            // inline
             virtual const
                 Array<OneD,const boost::shared_ptr<ExpList1D> >
                 &v_GetBndCondExpansions(void);
 
-            // inline
             virtual boost::shared_ptr<ExpList1D> &v_GetTrace();
 
-            // inline
             virtual boost::shared_ptr<LocalToGlobalDGMap>
                 &v_GetTraceMap();
 
-            // inline
             virtual void v_AddTraceIntegral(
                                     const Array<OneD, const NekDouble> &Fx,
                                     const Array<OneD, const NekDouble> &Fy,
                                           Array<OneD, NekDouble> &outarray);
 
-            // inline
             virtual void v_AddTraceIntegral(
                                     const Array<OneD, const NekDouble> &Fn,
                                           Array<OneD, NekDouble> &outarray);
 
-            // inline
             virtual void v_AddTraceBiIntegral(
                                     const Array<OneD, const NekDouble> &Fwd,
                                     const Array<OneD, const NekDouble> &Bwd,
                                           Array<OneD, NekDouble> &outarray);
 
-            // inline
             virtual void v_GetFwdBwdTracePhys(
                                           Array<OneD,NekDouble> &Fwd,
                                           Array<OneD,NekDouble> &Bwd);
 
-            // inline
             virtual void v_GetFwdBwdTracePhys(
                                     const Array<OneD,const NekDouble>  &field,
                                           Array<OneD,NekDouble> &Fwd,
                                           Array<OneD,NekDouble> &Bwd);
 
-            // inline
             virtual void v_ExtractTracePhys(
                                           Array<OneD,NekDouble> &outarray);
 
-            // inline
             virtual void v_ExtractTracePhys(
                                     const Array<OneD, const NekDouble> &inarray,
                                           Array<OneD,NekDouble> &outarray);
 
-            // inline
             virtual void v_MultiplyByInvMassMatrix(
                                     const Array<OneD,const NekDouble> &inarray,
                                           Array<OneD,      NekDouble> &outarray,
                                     bool  UseContCoeffs);
 
-            // inline
             virtual void v_HelmSolve(
                                 const Array<OneD,const NekDouble> &inarray,
                                       Array<OneD,      NekDouble> &outarray,
@@ -661,60 +652,52 @@ namespace Nektar
                                 const Array<OneD, const NekDouble>& dirForcing);
 
             // wrapper functions about virtual functions
-            // inline
             virtual const
                 Array<OneD, const NekDouble> &v_GetContCoeffs() const;
 
-            // inline
             virtual void v_BwdTrans(
                                     const Array<OneD,const NekDouble> &inarray,
                                           Array<OneD,      NekDouble> &outarray,
                                     bool  UseContCoeffs);
 
-            // inline
             virtual void v_FwdTrans(
                                     const Array<OneD,const NekDouble> &inarray,
                                           Array<OneD,      NekDouble> &outarray,
                                     bool  UseContCoeffs);
 
-            // inline
             virtual void v_IProductWRTBase(
                                     const Array<OneD,const NekDouble> &inarray,
                                           Array<OneD,      NekDouble> &outarray,
                                     bool  UseContCoeffs);
 
-            // inline
             virtual void v_GeneralMatrixOp(
                                     const GlobalMatrixKey             &gkey,
                                     const Array<OneD,const NekDouble> &inarray,
                                           Array<OneD,      NekDouble> &outarray,
                                     bool  UseContCoeffs);
 
-            // inline
             virtual void v_SetUpPhysNormals(
                                 const StdRegions::StdExpansionVector &locexp);
 
-            // inline
             virtual void v_GetBoundaryToElmtMap(
                                     Array<OneD, int> &ElmtID,
                                     Array<OneD,int> &EdgeID);
 
         private:
-
-            // inline
             virtual const
                 Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
                 &v_GetBndConditions();
 
-            // inline
             virtual void v_EvaluateBoundaryConditions(
                                     const NekDouble time = 0.0);
 
         };
 
+        /// Shared pointer to an ExpList object.
         typedef boost::shared_ptr<ExpList>      ExpListSharedPtr;
-
+        /// An empty ExpList object.
         static ExpList NullExpList;
+
 
         // Inline routines follow.
 
@@ -1170,182 +1153,6 @@ namespace Nektar
             v_GetBoundaryToElmtMap(ElmtID,EdgeID);
         }
 
-
-        // functions associated with DisContField
-        inline const Array<OneD,const boost::shared_ptr<ExpList1D> >
-                                        &ExpList::v_GetBndCondExpansions()
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static Array<OneD,const boost::shared_ptr<ExpList1D> > result;
-            return result;
-        }
-
-        inline boost::shared_ptr<ExpList1D> &ExpList::v_GetTrace()
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static boost::shared_ptr<ExpList1D> returnVal;
-            return returnVal;
-        }
-
-        inline boost::shared_ptr<LocalToGlobalDGMap> &ExpList::v_GetTraceMap()
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static boost::shared_ptr<LocalToGlobalDGMap> result;
-            return result;
-        }
-
-        inline void ExpList::v_AddTraceIntegral(
-                                const Array<OneD, const NekDouble> &Fx,
-                                const Array<OneD, const NekDouble> &Fy,
-                                      Array<OneD, NekDouble> &outarray)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-
-        inline void ExpList::v_AddTraceIntegral(
-                                const Array<OneD, const NekDouble> &Fn,
-                                      Array<OneD, NekDouble> &outarray)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-
-        inline void ExpList::v_AddTraceBiIntegral(
-                                const Array<OneD, const NekDouble> &Fwd,
-                                const Array<OneD, const NekDouble> &Bwd,
-                                      Array<OneD, NekDouble> &outarray)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-
-        inline void ExpList::v_GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd,
-                                           Array<OneD,NekDouble> &Bwd)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-
-        inline void ExpList::v_GetFwdBwdTracePhys(
-                                const Array<OneD,const NekDouble>  &field,
-                                      Array<OneD,NekDouble> &Fwd,
-                                      Array<OneD,NekDouble> &Bwd)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-
-        inline void ExpList::v_ExtractTracePhys(Array<OneD,NekDouble> &outarray)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-
-        inline void ExpList::v_ExtractTracePhys(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,NekDouble> &outarray)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-
-        inline void ExpList::v_MultiplyByInvMassMatrix(
-                                const Array<OneD,const NekDouble> &inarray,
-                                      Array<OneD,      NekDouble> &outarray,
-                                bool  UseContCoeffs)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-
-
-        inline void ExpList::v_HelmSolve(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                NekDouble lambda,
-                                bool      UseContCoeffs,
-                                const Array<OneD, const NekDouble>& dirForcing)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-
-        // wrapper functions about virtual functions
-        inline const Array<OneD, const NekDouble> &ExpList::v_GetContCoeffs()
-                                                                        const
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            return NullNekDouble1DArray;
-        }
-
-        inline void ExpList::v_BwdTrans(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs)
-        {
-            BwdTrans_IterPerExp(inarray,outarray);
-        }
-
-        inline void ExpList::v_FwdTrans(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs)
-        {
-            FwdTrans_IterPerExp(inarray,outarray);
-        }
-
-        inline void ExpList::v_IProductWRTBase(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs)
-        {
-            IProductWRTBase_IterPerExp(inarray,outarray);
-        }
-
-        inline void ExpList::v_GeneralMatrixOp(
-                                const GlobalMatrixKey             &gkey,
-                                const Array<OneD,const NekDouble> &inarray,
-                                      Array<OneD,      NekDouble> &outarray,
-                                bool  UseContCoeffs)
-        {
-            GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
-        }
-
-        inline void ExpList::v_SetUpPhysNormals(
-                                const StdRegions::StdExpansionVector &locexp)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-
-        inline void ExpList::v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
-                                            Array<OneD,int> &EdgeID)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-
-        inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
-                                            &ExpList::v_GetBndConditions()
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
-                                                                        result;
-            return result;
-        }
-
-        inline void ExpList::v_EvaluateBoundaryConditions(const NekDouble time)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-
   } //end of namespace
 } //end of namespace
 
@@ -1353,6 +1160,18 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.73  2009/11/02 19:15:43  cantwell
+* Moved ContField1D to inherit from DisContField1D.
+* Moved ContField3D to inherit from DisContField3D.
+* Incorporated GenExpList1D functionality into ExpList1D.
+* Tidied up and added documentation to various classes.
+* Moved Namespace documentation and introductions to separate files along with
+* doxygen configuration.
+* Added option to use system ZLIB library instead of libboost_zlib on UNIX.
+* Added extra search paths to FindMetis.cmake and FindNektar++.cmake.
+* Updated Linux compiling instructions.
+* Updated regDemo to use Helmholtz2D-g when built as debug.
+*
 * Revision 1.72  2009/10/30 14:02:55  pvos
 * Multi-level static condensation updates
 *

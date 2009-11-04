@@ -48,20 +48,41 @@ namespace Nektar
          * \sum_{n=0}^{N^{e}_m-1}\hat{u}_n^e\phi_n^e(x_i).\f]
          * where \f${N_{\mathrm{el}}}\f$ is the number of elements and
          * \f$N^{e}_m\f$ is the local elemental number of expansion modes.
-         * This class inherits all its variables and member functions from the 
-         * base class #ExpList.
+         *
+         * Instances of this class may be optionally constructed which use
+         * generalised segment expansions (LocalRegions#GenSegExp), rather than
+         * the standard segment expansions (LocalRegions#SegExp).
+         * LocalRegions#GenSegExp provides additional spatial
+         * data including segment normals and is enabled using the \a
+         * UseGenSegExp flag.
+         *
+         * This class inherits all its variables and member functions from the
+         * base class MultiRegions#ExpList.
          */
 
+        /**
+         * Assumes use of standard segment expansions only. All data storage
+         * areas are initialised to empty arrays by the default ExpList
+         * constructor.
+         */
         ExpList1D::ExpList1D():
             ExpList(),
             m_UseGenSegExp(false)
         {
         }
 
+
+        /**
+         *
+         */
         ExpList1D::~ExpList1D()
         {
         }
 
+
+        /**
+         * Creates an identical copy of another ExpList1D object.
+         */
         ExpList1D::ExpList1D(const ExpList1D &In):
             ExpList(In),
             m_UseGenSegExp(In.m_UseGenSegExp)
@@ -72,7 +93,13 @@ namespace Nektar
         /**
          * After initialising the data inherited through MultiRegions#ExpList,
          * populate the expansion list from the segments defined in the supplied
-         * SpatialDomains#MeshGraph1D.
+         * SpatialDomains#MeshGraph1D. All expansions in the graph are defined
+         * using the same LibUtilities#BasisKey.
+         *
+         * @see     ExpList1D#ExpList1D(SpatialDomains::MeshGraph1D&, bool)
+         *          for details.
+         * @deprecated          This constructor is no longer required since
+         *                      the basis key is now available from the graph.
          * @param   Ba          BasisKey describing quadrature points and
          *                      number of modes.
          * @param   graph1D     Domain and expansion definitions.
@@ -91,8 +118,6 @@ namespace Nektar
 
             const SpatialDomains::ExpansionVector &expansions
                                                     = graph1D.GetExpansions();
-            m_coeff_offset =  Array<OneD, int> (expansions.size());
-            m_phys_offset  =  Array<OneD, int> (expansions.size());
 
             // For each element in the mesh, create a segment expansion using
             // the supplied BasisKey and segment geometry.
@@ -119,13 +144,9 @@ namespace Nektar
                 {
                     ASSERTL0(false,"dynamic cast to a SegGeom failed");
                 }
-
-                m_coeff_offset[i] = m_ncoeffs;
-                m_phys_offset[i]  = m_npoints;
-                m_ncoeffs += Ba.GetNumModes();
-                m_npoints += Ba.GetNumPoints();
             }
 
+            // Allocate storage for data and populate element offset lists.
             ExpList::SetCoeffPhys();
         }
 
@@ -137,6 +158,13 @@ namespace Nektar
          * calculates the total number of quadrature points \f$x_i\f$ and local
          * expansion coefficients \f$\hat{u}^e_n\f$ and allocates memory for
          * the arrays #m_coeffs and #m_phys.
+         *
+         * For each element its corresponding LibUtilities#BasisKey is
+         * retrieved and this is used to construct either a standard segment
+         * (LocalRegions#SegExp) or a generalised segment
+         * (LocalRegions#GenSegExp) which is stored in the list #m_exp.
+         * Finally, ExpList#SetCoeffPhys is called to initialise the data
+         * storage areas and set up the offset arrays.
          *
          * @param   graph1D     A mesh, containing information about the
          *                      domain and the spectral/hp element expansion.
@@ -152,13 +180,14 @@ namespace Nektar
             LocalRegions::SegExpSharedPtr seg;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
 
+            // Retrieve the list of expansions
             const SpatialDomains::ExpansionVector &expansions
                                                     = graph1D.GetExpansions();
-            m_coeff_offset = Array<OneD,int>(expansions.size());
-            m_phys_offset  = Array<OneD,int>(expansions.size());
 
+            // Process each expansion in the graph
             for(i = 0; i < expansions.size(); ++i)
             {
+                // Retrieve basis key from expansion
                 LibUtilities::BasisKey bkey
                                         = expansions[i]->m_BasisKeyVector[0];
 
@@ -166,6 +195,7 @@ namespace Nektar
                             ::dynamic_pointer_cast<SpatialDomains::SegGeom>(
                                                 expansions[i]->m_GeomShPtr))
                 {
+                    // Switch depending on if using general segment expansions.
                     if (UseGenSegExp)
                     {
                         seg = MemoryManager<LocalRegions::GenSegExp>
@@ -175,29 +205,30 @@ namespace Nektar
                         seg = MemoryManager<LocalRegions::SegExp>
                                         ::AllocateSharedPtr(bkey, SegmentGeom);
                     }
+                    // Assign next ID
                     seg->SetElmtId(id++);
+
+                    // Add the expansion
                     (*m_exp).push_back(seg);
                 }
                 else
                 {
                     ASSERTL0(false,"dynamic cast to a SegGeom failed");
                 }
-
-                m_coeff_offset[i] = m_ncoeffs;
-                m_phys_offset[i]  = m_npoints;
-                m_ncoeffs += bkey.GetNumModes();
-                m_npoints += bkey.GetNumPoints();
             }
 
-            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-            m_phys   = Array<OneD, NekDouble>(m_npoints);
-
+            // Allocate storage for data and populate element offset lists.
+            ExpList::SetCoeffPhys();
         }
 
 
         /**
-         * @param   domain      ?
-         * @param   graph2D     ?
+         * @see     ExpList1D#ExpList1D(SpatialDomains::MeshGraph1D&, bool)
+         *          for details.
+         * @param   domain      A domain, comprising of one or more composite
+         *                      regions, each containing a number of segments.
+         * @param   graph2D     A mesh, containing information about the
+         *                      domain and the spectral/hp element expansion.
          * @param   UseGenSegExp If true, create general segment expansions
          *                      instead of just normal segment expansions.
          */
@@ -207,33 +238,29 @@ namespace Nektar
             ExpList(),
             m_UseGenSegExp(UseGenSegExp)
         {
-            int i,j, nel,cnt,id=0;
+            int i,j,cnt,id=0;
             SpatialDomains::Composite comp;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
             LocalRegions::SegExpSharedPtr seg;
 
-            nel = 0;
-            for(i = 0; i < domain.size(); ++i)
-            {
-                nel += (domain[i])->size();
-            }
-
-            m_coeff_offset = Array<OneD,int>(nel,0);
-            m_phys_offset  = Array<OneD,int>(nel,0);
-
+            // Process each composite region.
             cnt = 0;
             for(i = 0; i < domain.size(); ++i)
             {
                 comp = domain[i];
 
+                // Process each expansion in the region.
                 for(j = 0; j < comp->size(); ++j)
                 {
                     if(SegmentGeom = boost
                             ::dynamic_pointer_cast<SpatialDomains::SegGeom>(
                                                                     (*comp)[j]))
                     {
+                        // Retrieve the basis key from the expansion.
                         LibUtilities::BasisKey bkey
                                         = graph2D.GetEdgeBasisKey(SegmentGeom);
+
+                        // Use general expansions?
                         if (UseGenSegExp)
                         {
                             seg = MemoryManager<LocalRegions::GenSegExp>
@@ -245,13 +272,9 @@ namespace Nektar
                                         ::AllocateSharedPtr(bkey, SegmentGeom);
                         }
 
+                        // Add the segment to the expansion list.
                         seg->SetElmtId(id++);
                         (*m_exp).push_back(seg);
-
-                        m_coeff_offset[cnt] = m_ncoeffs;
-                        m_phys_offset[cnt]  = m_npoints; cnt++;
-                        m_ncoeffs += bkey.GetNumModes();
-                        m_npoints += bkey.GetNumPoints();
                     }
                     else
                     {
@@ -261,12 +284,19 @@ namespace Nektar
 
             }
 
+            // Allocate storage for data and populate element offset lists.
             ExpList::SetCoeffPhys();
         }
 
 
         /**
-         *
+         * @param   bndConstraint   ?
+         * @param   bndCond     ?
+         * @param   locexp      ?
+         * @param   graph2D     ?
+         * @param   periodicEdges   ?
+         * @param   UseGenSegExp If true, create general segment expansions
+         *                      instead of just normal segment expansions.
          */
         ExpList1D::ExpList1D(
                     const Array<OneD,const ExpList1DSharedPtr>  &bndConstraint,
@@ -407,7 +437,11 @@ namespace Nektar
 
 
         /**
-         *
+         * @param   graph1D     ?
+         * @param   bcs         ?
+         * @param   variable    ?
+         * @param   bndCondExpansions   ?
+         * @param   bncConditions   ?
          */
         void ExpList1D::SetBoundaryConditionExpansion(
                                 const SpatialDomains::MeshGraph1D &graph1D,
@@ -505,7 +539,10 @@ namespace Nektar
 
 
         /**
-         *
+         * @param   graph1D     ?
+         * @param   bcs         ?
+         * @param   variable    ?
+         * @param   periodicVertices    ?
          */
         void ExpList1D::GetPeriodicVertices(
                                 const SpatialDomains::MeshGraph1D &graph1D,
@@ -596,7 +633,10 @@ namespace Nektar
 
 
         /**
-         *
+         * @param   time        The time at which the boundary conditions
+         *                      should be evaluated.
+         * @param   bndCondExpansions   ?
+         * @param   bndConditions   ?
          */
         void ExpList1D::EvaluateBoundaryConditions(
                                 const NekDouble time,
@@ -818,7 +858,8 @@ namespace Nektar
 
 
         /**
-         *
+         * 
+         * @param   locexp      ?
          */
         void ExpList1D::SetUpPhysNormals(
                                 const StdRegions::StdExpansionVector &locexp)
@@ -856,6 +897,11 @@ namespace Nektar
          * Upwind the left and right states given by the Arrays Fwd
          * and Bwd using the vector quantity Vec and ouput the
          * upwinded value in the array upwind.
+         * @param   Vec         Velocity field.
+         * @param   Fwd         Left state.
+         * @param   Bwd         Right state.
+         * @param   Upwind      Output vector.
+         * @param   direction   (Unused)
          */
         void ExpList1D::Upwind(
                         const Array<OneD, const Array<OneD, NekDouble> > &Vec,
@@ -870,30 +916,34 @@ namespace Nektar
             Array<OneD,NekDouble> normals;
             NekDouble Vn;
 
-            // Assume whole array is of same coordimate dimention
+            // Assume whole array is of same coordimate dimension
             int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
 
             ASSERTL1(Vec.num_elements() >= coordim,
                     "Input vector does not have sufficient dimensions to "
                     "match coordim");
 
+            // Process each expansion
             for(i = 0; i < m_exp->size(); ++i)
             {
+                // Get the number of points in the expansion and the normals.
                 e_npoints = (*m_exp)[i]->GetNumPoints(0);
                 normals   = (*m_exp)[i]->GetPhysNormals();
 
+                // Get the physical data offset of the expansion in m_phys.
                 offset = m_phys_offset[i];
 
+                // Compute each data point.
                 for(j = 0; j < e_npoints; ++j)
                 {
-                    // Calculate normal velocity
+                    // Calculate normal velocity.
                     Vn = 0.0;
                     for(k = 0; k < coordim; ++k)
                     {
                         Vn += Vec[k][offset+j]*normals[k*e_npoints + j];
                     }
 
-                    // Upwind
+                    // Upwind based on direction of normal velocity.
                     if(Vn > 0.0)
                     {
                         Upwind[offset + j] = Fwd[offset + j];
@@ -908,7 +958,17 @@ namespace Nektar
 
 
         /**
-         *
+         * One-dimensional upwind.
+         * \see    ExpList1D::Upwind(
+         *           const Array<OneD, const Array<OneD, NekDouble> >,
+         *           const Array<OneD, const NekDouble>,
+         *           const Array<OneD, const NekDouble>,
+         *                 Array<OneD, NekDouble>, int)
+         * @param   Vn          Velocity field.
+         * @param   Fwd         Left state.
+         * @param   Bwd         Right state.
+         * @param   Upwind      Output vector.
+         * @param   direction   (Unused).
          */
         void ExpList1D::Upwind(   const Array<OneD, const NekDouble> &Vn,
                                   const Array<OneD, const NekDouble> &Fwd,
@@ -924,14 +984,17 @@ namespace Nektar
             // Assume whole array is of same coordimate dimention
             int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
 
+            // Process each expansion.
             for(i = 0; i < m_exp->size(); ++i)
             {
+                // Get the number of points and the data offset.
                 e_npoints = (*m_exp)[i]->GetNumPoints(0);
                 offset = m_phys_offset[i];
 
+                // Process each point in the expansion.
                 for(j = 0; j < e_npoints; ++j)
                 {
-                    // Upwind
+                    // Upwind based on one-dimensional velocity.
                     if(Vn[offset + j] > 0.0)
                     {
                         Upwind[offset + j] = Fwd[offset + j];
@@ -948,7 +1011,9 @@ namespace Nektar
         /**
          * For each local element, copy the normals stored in the element list
          * into the array \a normals.
-         * @param   normals     Array in which to copy normals into.
+         * @param   normals     Multidimensional array in which to copy normals
+         *                      to. Must have dimension equal to or larger than
+         *                      the spatial dimension of the elements.
          */
         void ExpList1D::GetNormals(
                                 Array<OneD, Array<OneD, NekDouble> > &normals)
@@ -965,15 +1030,21 @@ namespace Nektar
                      "Output vector does not have sufficient dimensions to "
                      "match coordim");
 
+            // Process each expansion.
             for(i = 0; i < m_exp->size(); ++i)
             {
+                // Get the number of points and normals for this expansion.
                 e_npoints  = (*m_exp)[i]->GetNumPoints(0);
                 locnormals = (*m_exp)[i]->GetPhysNormals();
 
+                // Get the physical data offset for this expansion.
                 offset = m_phys_offset[i];
 
+                // Process each point in the expansion.
                 for(j = 0; j < e_npoints; ++j)
                 {
+                    // Process each spatial dimension and copy the values into
+                    // the output array.
                     for(k = 0; k < coordim; ++k)
                     {
                         normals[k][offset+j] = locnormals[k*e_npoints + j];
@@ -987,6 +1058,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.39  2009/11/04 12:33:38  cantwell
+* Fix for HDGHelmholtz2D solver.
+*
 * Revision 1.38  2009/11/02 19:15:43  cantwell
 * Moved ContField1D to inherit from DisContField1D.
 * Moved ContField3D to inherit from DisContField3D.

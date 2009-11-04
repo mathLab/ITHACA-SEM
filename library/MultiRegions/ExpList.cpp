@@ -105,7 +105,10 @@ namespace Nektar
          * Set up the storage for the concatenated list of coefficients and
          * physical evaluations at the quadrature points. Each expansion (local
          * element) is processed in turn to determine the number of coefficients
-         * and physical data points it contributes to the domain.
+         * and physical data points it contributes to the domain. A second pair
+         * of arrays, #m_coeff_offset and #m_phys_offset, are also initialised
+         * and updated to store the data offsets of each element in the
+         * #m_coeffs and #m_phys arrays, respectively.
          */
         void ExpList::SetCoeffPhys()
         {
@@ -332,20 +335,30 @@ namespace Nektar
             return sum;
         }
 
+
+        /**
+         * Retrieves the block matrix specified by \a bkey, and computes
+         * \f$ y=Mx \f$.
+         * @param   gkey        GlobalMatrixKey specifying the block matrix to
+         *                      use in the matrix-vector multiply.
+         * @param   inarray     Input vector \f$ x \f$.
+         * @param   outarray    Output vector \f$ y \f$.
+         */
         void ExpList::MultiplyByBlockMatrix(
                                 const GlobalMatrixKey             &gkey,
                                 const Array<OneD,const NekDouble> &inarray,
                                       Array<OneD,      NekDouble> &outarray)
         {
-            int nrows;
-            int ncols;
+            // Retrieve the block matrix using the given key.
             const DNekScalBlkMatSharedPtr& blockmat = GetBlockMatrix(gkey);
+            int nrows = blockmat->GetRows();
+            int ncols = blockmat->GetColumns();
 
-            nrows = blockmat->GetRows();
-            ncols = blockmat->GetColumns();
-
+            // Create NekVectors from the given data arrays
             NekVector<const NekDouble> in (ncols,inarray, eWrapper);
             NekVector<      NekDouble> out(nrows,outarray,eWrapper);
+
+            // Perform matrix-vector multiply.
             out = (*blockmat)*in;
         }
 
@@ -391,6 +404,7 @@ namespace Nektar
                 m_transState = eLocal;
             }
         }
+
 
         /**
          * The operation is evaluated locally for every element by the function
@@ -1890,6 +1904,184 @@ namespace Nektar
             }
         }
 
+        //
+        // Virtual functions
+        //
+        
+        // functions associated with DisContField
+        const Array<OneD,const boost::shared_ptr<ExpList1D> >
+                                        &ExpList::v_GetBndCondExpansions()
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            static Array<OneD,const boost::shared_ptr<ExpList1D> > result;
+            return result;
+        }
+
+        boost::shared_ptr<ExpList1D> &ExpList::v_GetTrace()
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            static boost::shared_ptr<ExpList1D> returnVal;
+            return returnVal;
+        }
+
+        boost::shared_ptr<LocalToGlobalDGMap> &ExpList::v_GetTraceMap()
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            static boost::shared_ptr<LocalToGlobalDGMap> result;
+            return result;
+        }
+
+        void ExpList::v_AddTraceIntegral(
+                                const Array<OneD, const NekDouble> &Fx,
+                                const Array<OneD, const NekDouble> &Fy,
+                                      Array<OneD, NekDouble> &outarray)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_AddTraceIntegral(
+                                const Array<OneD, const NekDouble> &Fn,
+                                      Array<OneD, NekDouble> &outarray)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_AddTraceBiIntegral(
+                                const Array<OneD, const NekDouble> &Fwd,
+                                const Array<OneD, const NekDouble> &Bwd,
+                                      Array<OneD, NekDouble> &outarray)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd,
+                                           Array<OneD,NekDouble> &Bwd)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_GetFwdBwdTracePhys(
+                                const Array<OneD,const NekDouble>  &field,
+                                      Array<OneD,NekDouble> &Fwd,
+                                      Array<OneD,NekDouble> &Bwd)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_ExtractTracePhys(Array<OneD,NekDouble> &outarray)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_ExtractTracePhys(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,NekDouble> &outarray)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_MultiplyByInvMassMatrix(
+                                const Array<OneD,const NekDouble> &inarray,
+                                      Array<OneD,      NekDouble> &outarray,
+                                bool  UseContCoeffs)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+
+        void ExpList::v_HelmSolve(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                NekDouble lambda,
+                                bool      UseContCoeffs,
+                                const Array<OneD, const NekDouble>& dirForcing)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        // wrapper functions about virtual functions
+        const Array<OneD, const NekDouble> &ExpList::v_GetContCoeffs()
+                                                                        const
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            return NullNekDouble1DArray;
+        }
+
+        void ExpList::v_BwdTrans(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                bool  UseContCoeffs)
+        {
+            BwdTrans_IterPerExp(inarray,outarray);
+        }
+
+        void ExpList::v_FwdTrans(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                bool  UseContCoeffs)
+        {
+            FwdTrans_IterPerExp(inarray,outarray);
+        }
+
+        void ExpList::v_IProductWRTBase(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                bool  UseContCoeffs)
+        {
+            IProductWRTBase_IterPerExp(inarray,outarray);
+        }
+
+        void ExpList::v_GeneralMatrixOp(
+                                const GlobalMatrixKey             &gkey,
+                                const Array<OneD,const NekDouble> &inarray,
+                                      Array<OneD,      NekDouble> &outarray,
+                                bool  UseContCoeffs)
+        {
+            GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
+        }
+
+        void ExpList::v_SetUpPhysNormals(
+                                const StdRegions::StdExpansionVector &locexp)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
+                                            Array<OneD,int> &EdgeID)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
+                                            &ExpList::v_GetBndConditions()
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            static Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
+                                                                        result;
+            return result;
+        }
+
+        void ExpList::v_EvaluateBoundaryConditions(const NekDouble time)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
 
     } //end of namespace
 } //end of namespace

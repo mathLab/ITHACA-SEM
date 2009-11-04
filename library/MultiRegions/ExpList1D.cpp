@@ -328,7 +328,7 @@ namespace Nektar
 
                     id = SegGeom->GetEid();
 
-                    if(!EdgeDone[id])
+                    if(EdgeDone.count(id)==0)
                     {
                         LibUtilities::BasisKey EdgeBkey
                                     = locexp[i]->DetEdgeBasisKey(j);
@@ -354,6 +354,37 @@ namespace Nektar
 
                         Seg->SetElmtId(elmtid++);
                         (*m_exp).push_back(Seg);
+                    }
+                    else // variable modes/points
+                    {
+                        if (UseGenSegExp) {
+                            LibUtilities::BasisKey EdgeBkey
+                                    = locexp[i]->DetEdgeBasisKey(j);
+
+                            if((*m_exp)[EdgeDone[id]]->GetNumPoints(0)
+                                    >= EdgeBkey.GetNumPoints()
+                                && (*m_exp)[EdgeDone[id]]->GetBasisNumModes(0)
+                                    >= EdgeBkey.GetNumModes())
+                            {
+                            }
+                            else if((*m_exp)[EdgeDone[id]]->GetNumPoints(0)
+                                    <= EdgeBkey.GetNumPoints()
+                                && (*m_exp)[EdgeDone[id]]->GetBasisNumModes(0)
+                                    <= EdgeBkey.GetNumModes())
+                            {
+                                Seg = MemoryManager<LocalRegions::GenSegExp>
+                                        ::AllocateSharedPtr(EdgeBkey, SegGeom);
+                                Seg->SetElmtId(EdgeDone[id]);
+                                (*m_exp)[EdgeDone[id]] = Seg;
+                                NormalSet.erase(id);
+                            }
+                            else
+                            {
+                                ASSERTL0(false,
+                                    "inappropriate number of points/modes (max "
+                                    "num of points is not set with max order)")
+                            }
+                        }
                     }
 
                     if (UseGenSegExp && NormalSet.count(id) == 0)
@@ -956,6 +987,18 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.38  2009/11/02 19:15:43  cantwell
+* Moved ContField1D to inherit from DisContField1D.
+* Moved ContField3D to inherit from DisContField3D.
+* Incorporated GenExpList1D functionality into ExpList1D.
+* Tidied up and added documentation to various classes.
+* Moved Namespace documentation and introductions to separate files along with
+* doxygen configuration.
+* Added option to use system ZLIB library instead of libboost_zlib on UNIX.
+* Added extra search paths to FindMetis.cmake and FindNektar++.cmake.
+* Updated Linux compiling instructions.
+* Updated regDemo to use Helmholtz2D-g when built as debug.
+*
 * Revision 1.37  2009/09/06 22:28:45  sherwin
 * Updates for Navier-Stokes solver
 *

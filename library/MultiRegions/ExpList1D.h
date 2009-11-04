@@ -159,6 +159,12 @@ namespace Nektar
         protected:
 
         private:
+            virtual void v_SetUpPhysNormals(
+                                const StdRegions::StdExpansionVector &locexp)
+            {
+                SetUpPhysNormals(locexp);
+            }
+
             /// Flag to indicate if GenSegExp's are being used.
             bool m_UseGenSegExp;
         };

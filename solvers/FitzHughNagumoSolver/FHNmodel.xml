@@ -4056,8 +4056,16 @@ E[0,4,9,16,18,21,25,28,33,39,42,55,58,74,90,103,130,234,245,248,250,253,255,258,
       <P> IO_InfoSteps  = 1000  </P>
       <P> epsilon = 0.20 </P>
       <P> beta = 0.77 </P>
-      <P> spiralwave = 0 </P>
-      <P> timedelay = 0.0 </P>
+      <P> timedelay = 5.0 </P>
+	  <P> duration = 1.0 </P>
+	  <P> initialwavetype = 0 </P>
+	  <P> x1center = 0.0 </P>
+	  <P> y1cetner = 0.0 </P>
+	  <P> frequency1 = 10.0 </P>
+  	  <P> secondwavetype = 0 </P>
+  	  <P> x2center = 0.0 </P>
+	  <P> y2cetner = 0.0 </P>
+	  <P> frequency2 = 0.0 </P>
     </PARAMETERS>
 
     <SOLVERINFO>

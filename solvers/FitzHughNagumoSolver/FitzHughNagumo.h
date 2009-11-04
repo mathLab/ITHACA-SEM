@@ -111,9 +111,9 @@ namespace Nektar
             return m_explicitReaction;
         }
 
-	inline int Usespiralwave(void)
+	inline int initialwavetype(void)
         {
-            return m_spiralwave;
+            return m_initialwavetype;
         }
 
         LibUtilities::TimeIntegrationMethod GetTimeIntMethod(void)
@@ -187,12 +187,10 @@ namespace Nektar
 				   LibUtilities::TimeIntegrationSchemeOperators ode);
 
         void SolveHelmholtz(NekDouble lambda);
-	void Evaluateepsilon();
-	void Evaluatebeta();
 
-        void SetFHNInitialConditions(const int Usespiralwave, NekDouble initialtime = 0.0);
+        void SetFHNInitialConditions(const int initialwavetype, NekDouble initialtime = 0.0);
 
-        void Generatesecondstimulus(const int Usespiralwave, Array<OneD, NekDouble>&outarray);
+        void Generatesecondstimulus(const int initialwavetype, Array<OneD, NekDouble>&outarray);
 
 	void MassMultiply(const Array<OneD, NekDouble> &inarray, 
 			  Array<OneD, NekDouble> &outarray, 
@@ -209,7 +207,10 @@ namespace Nektar
         NekDouble  m_beta;            /// constant beta
         NekDouble   m_timedelay;      // Spiral wave activation time delay
         NekDouble   m_duration;       /// Impulse duration time
-        int        m_spiralwave;      /// Spiral wave activation 
+        int        m_initialwavetype;      /// initial wave type 
+        int        m_secondwavetype;      /// second wave type
+        NekDouble m_x1center, m_y1center, m_x2center, m_y2center;     // center of waves
+        NekDouble m_frequency1, m_frequency2 ;      // frequency of wave1 and wave2
         
         bool m_explicitAdvection;  ///< Flag to identify explicit Advection
         bool m_explicitDiffusion;  ///< Flag to identify explicit Diffusion
@@ -248,6 +249,9 @@ namespace Nektar
 
 /**
 * $Log: FitzHughNagumo.h,v $
+* Revision 1.2  2009/11/02 10:44:51  sehunchun
+* regular updates
+*
 * Revision 1.1  2009/07/23 12:40:08  sehunchun
 * *** empty log message ***
 *

@@ -39,9 +39,7 @@
 
 #include <FitzHughNagumoSolver/FitzHughNagumo.h>
 
-
 using namespace Nektar;
-
 
 int main(int argc, char *argv[])
 {
@@ -62,7 +60,7 @@ int main(int argc, char *argv[])
     LibUtilities::TimeIntegrationSchemeOperators ode;
 
     int nsteps = EAD.GetSteps();
-    int Usespiralwave = EAD.Usespiralwave();;
+    int initialwavetype = EAD.initialwavetype();;
 
     NekDouble lambda = 0.0;
 
@@ -72,6 +70,7 @@ int main(int argc, char *argv[])
 
     switch(EAD.GetEquationType())
     {
+        // IMEX test for diffusion reaction test problem
     case eIMEXtest:
         {
             EAD.SetInitialConditions();
@@ -85,6 +84,8 @@ int main(int argc, char *argv[])
         }
         break;
 
+        // du/dt = \varepsilon \nabla + (1/\varepsilon) u*( 1- u) * { 2*u + \varepsilon  }
+        // the exact solution = 1.0 / ( 1 + exp((|x| - t - 1.0)/varepsilon) )
     case eFHNtest1:
         {
             EAD.SetInitialConditions();
@@ -98,6 +99,8 @@ int main(int argc, char *argv[])
         }
         break;
 
+        // du/dt = \varepsilon \nabla + (2/\varepsilon) ( 1- u) u*u
+        // the exact solution = 1.0 / ( 1 + exp((x - t - 1.5)/varepsilon) )
     case eFHNtest2:
         {
             EAD.SetInitialConditions();
@@ -113,7 +116,7 @@ int main(int argc, char *argv[])
 
     case eFHNmonoplane:
         {
-            EAD.SetFHNInitialConditions(Usespiralwave);
+            EAD.SetFHNInitialConditions(initialwavetype);
 
 	  // Choose the method of deriving forcing functions
 	  ode.DefineImplicitSolve (&FitzHughNagumo::ODEhelmSolvemono,EAD);	

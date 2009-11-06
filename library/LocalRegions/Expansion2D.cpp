@@ -39,7 +39,7 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
-
+        
         void Expansion2D::AddEdgeNormBoundaryInt(const int edge, 
                                                  StdRegions::StdExpansion1DSharedPtr &EdgeExp,
                                                  const Array<OneD, const NekDouble> &Fx,  
@@ -50,7 +50,7 @@ namespace Nektar
             Array<OneD, const NekDouble> normals = EdgeExp->GetPhysNormals();
 
             ASSERTL1(v_GetCoordim() == 2,"Routine only set up for two-dimensions");
-
+            
             Vmath::Vmul(nquad_e,&(normals[0]),1,&Fx[0],1,
                         &(EdgeExp->UpdatePhys())[0],1);
             Vmath::Vvtvp(nquad_e,&(normals[nquad_e]),1,
@@ -58,7 +58,6 @@ namespace Nektar
                          &(EdgeExp->UpdatePhys())[0],1);
 
             AddEdgeNormBoundaryInt(edge, EdgeExp, EdgeExp->GetPhys(), outarray);
-            
         }
 
         void Expansion2D::AddEdgeNormBoundaryInt(const int edge, 
@@ -76,14 +75,14 @@ namespace Nektar
 	  int n_coeffs = (EdgeExp->GetCoeffs()).num_elements(); // Order of the trace
 	  
 	  if(n_coeffs!=order_e) // Going to orthogonal space
-	    {
+	  {
 	      EdgeExp->FwdTrans(Fn,EdgeExp->UpdateCoeffs());
 	      // negate backward edge values due to inwards normal definition
 	      if(edgedir == StdRegions::eBackwards)
-		{
+	      {
 		  
 		  Vmath::Neg(n_coeffs,EdgeExp->UpdateCoeffs(),1);
-		}
+              }
 
 	      Array<OneD, NekDouble> coeff(n_coeffs,0.0);
 	      LibUtilities::BasisType btype = ((LibUtilities::BasisType) 1); //1-->Ortho_A
@@ -208,8 +207,43 @@ namespace Nektar
         }
 
 
+        void Expansion2D::AddNormTraceInt(const int dir,
+                                          Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
+                                          Array<OneD,NekDouble> &outarray) 
+        {
+            int i,e,cnt;
+            int order_e,nquad_e;
+            int nedges = v_GetNedges();
+
+            Array<OneD,NekDouble> normals;
+
+            cnt = 0;
+            for(e = 0; e < nedges; ++e)
+            {
+                order_e = EdgeExp[e]->GetNcoeffs();
+                nquad_e = EdgeExp[e]->GetNumPoints(0);
+                normals = EdgeExp[e]->GetPhysNormals();
+                
+                EdgeExp[e]->BwdTrans(EdgeExp[e]->GetCoeffs(),
+                                     EdgeExp[e]->UpdatePhys());
+                
+                Vmath::Vmul(nquad_e,&(normals[dir*nquad_e]),1,
+                            &(EdgeExp[e]->GetPhys())[0],1,
+                            &(EdgeExp[e]->UpdatePhys())[0],1);
+
+                // negate backwards normal
+                if(v_GetEorient(e) == StdRegions::eBackwards)
+                {
+                    Vmath::Neg(nquad_e,&(EdgeExp[e]->UpdatePhys())[0],1);
+                }
+                
+                AddEdgeBoundaryInt(e,EdgeExp[e],outarray);
+            }
+        }
+
+
         void Expansion2D:: AddEdgeBoundaryInt(const int edge, 
-                                              StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+                                              const StdRegions::StdExpansion1DSharedPtr &EdgeExp,
                                               Array <OneD,NekDouble > &outarray)
         {
             
@@ -217,14 +251,16 @@ namespace Nektar
             int order_e = EdgeExp->GetNcoeffs();                    
             Array<OneD,unsigned int> map;
             Array<OneD,int> sign;
+            Array<OneD, NekDouble> coeff(order_e);
 
             v_GetEdgeToElementMap(edge,v_GetEorient(edge),map,sign);
 
-            EdgeExp->IProductWRTBase(EdgeExp->GetPhys(),EdgeExp->UpdateCoeffs());
+            EdgeExp->IProductWRTBase(EdgeExp->GetPhys(),coeff);
+
             // add data to out array
             for(i = 0; i < order_e; ++i)
             {
-                outarray[map[i]] += sign[i]*EdgeExp->GetCoeff(i);
+                outarray[map[i]] += sign[i]*coeff[i];
             }
         }
 
@@ -260,6 +296,8 @@ namespace Nektar
         }
 
         
+      //  evaluate additional terms in HDG edges. Not that this assumes that
+      // edges are unpacked into local cartesian order. 
         void Expansion2D::AddHDGHelmholtzEdgeTerms(const NekDouble tau, 
                                                       const int edge,
                                                       Array <OneD, StdRegions::StdExpansion1DSharedPtr > &EdgeExp, 
@@ -282,6 +320,7 @@ namespace Nektar
             
             StdRegions::EdgeOrientation edgedir = v_GetEorient(edge);
 
+
             DNekVec                Coeffs  (ncoeffs,outarray,eWrapper);
             DNekVec                Tmpcoeff(ncoeffs,tmpcoeff,eWrapper);
             
@@ -300,8 +339,8 @@ namespace Nektar
             //================================================================
 
             //===============================================================
-            // Add -\sum_i D_i^T M^{-1} G_i + E_i M^{-1} G_i = 
-            //                         \sum_i D_i M^{-1} G_i term
+            // Add -\sum_i D_i^T M^{-1} G_i + E_i M^{-1} \tilde{F}_i = 
+            //                         \sum_i D_i M^{-1} \tilde{F}_i term
             StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
                                                    StdRegions::eWeakDeriv1,
                                                    StdRegions::eWeakDeriv2};
@@ -319,7 +358,7 @@ namespace Nektar
                 
                 EdgeExp[edge]->IProductWRTBase(inval,outcoeff);
                 
-                // M^{-1} G
+                // M^{-1} \tilde{F}_i
                 for(i = 0; i < ncoeffs; ++i)
                 {
                     tmpcoeff[i] = 0;
@@ -424,10 +463,38 @@ namespace Nektar
                     
                     // Helmholtz matrix
                     DNekScalMat  &invHmat = *v_GetLocMatrix(StdRegions::eInvHybridDGHelmholtz, lambdaval, tau);
+
+                    Array<OneD,unsigned int> emap;
+                    Array<OneD,int> sign;
                     
+
+#if 0 
                     for(i = 0; i < nedges; ++i)
                     {
                         EdgeExp[i] = v_GetEdgeExp(i);
+                      
+                        DNekScalMat &MassMat = *(EdgeExp[i]->v_GetLocMatrix(StdRegions::eMass));
+                        Array<OneD, const NekDouble> normals = EdgeExp[edge]->GetPhysNormals();
+                        MatrixKey    mass_n0(StdRegions::eMass,*this,normals[0]);
+                        DNekScalMat &MassMatN0 = *(EdgeExp[i]->v_GetLocMatrix(mass_n0));
+                        MatrixKey    mass_n1(StdRegions::eMass,*this,normals[1]);
+                        DNekScalMat &MassMatN0 = *(EdgeExp[i]->v_GetLocMatrix(mass_n1));
+
+                        StdRegions::EdgeOrientation edgedir = v_GetEorient(edge);
+                        v_GetEdgeToElementMap(edge,edgedir,emap,sign);
+                        
+                        // sum up appropriate terms in matrix 
+                        
+
+                        // D M^{-1}
+
+                        
+                    }
+
+#else
+                    for(i = 0; i < nedges; ++i)
+                    {
+                      EdgeExp[i] = v_GetEdgeExp(i);
                     }
 
                     // for each degree of freedom of the lambda space
@@ -451,6 +518,7 @@ namespace Nektar
                             Umat(k,j) = Ulam[k]; 
                         }
                     }
+#endif
 
                 }
                 break;
@@ -682,12 +750,47 @@ namespace Nektar
             
             return returnval;
         }
+
+      //Evaluate Coefficients of weak deriviative in the direction dir
+      //given the input coefficicents incoeffs and the imposed
+      //boundary values in EdgeExp (which will have its phys space updated);
+      void Expansion2D::DGDeriv(int dir, 
+                                const Array<OneD, const NekDouble>&incoeffs,
+                                Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
+                                Array<OneD, NekDouble> &out_d)
+      {
+        StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
+                                               StdRegions::eWeakDeriv1,
+                                               StdRegions::eWeakDeriv2};
         
+          int ncoeffs = v_GetNcoeffs();
+          int nedges  = v_GetNedges();
+          
+          DNekScalMat &InvMass = *v_GetLocMatrix(StdRegions::eInvMass);
+          DNekScalMat &Dmat    = *v_GetLocMatrix(DerivType[dir]);
+          
+          Array<OneD, NekDouble> coeffs = incoeffs;
+          DNekVec     Coeffs  (ncoeffs,coeffs, eWrapper);
+          
+          Coeffs = Transpose(Dmat)*Coeffs;
+          Vmath::Neg(ncoeffs, coeffs,1);
+
+          // Add the boundary integral including the relevant part of
+          // the normal
+          AddNormTraceInt(dir,EdgeExp,coeffs);
+        
+          DNekVec Out_d (ncoeffs,out_d,eWrapper);
+
+          Out_d  = InvMass*Coeffs;
+      }
     } //end of namespace
 } //end of namespace
 
 /** 
  *    $Log: Expansion2D.cpp,v $
+ *    Revision 1.12  2009/10/22 18:05:33  cbiotto
+ *    Update for variable order expansion
+ *
  *    Revision 1.11  2009/09/06 22:24:00  sherwin
  *    Updates for Navier-Stokes solver
  *

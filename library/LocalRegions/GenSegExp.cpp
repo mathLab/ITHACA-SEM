@@ -94,13 +94,14 @@ namespace Nektar
             
             IProductWRTBase(Fn,outarray);
         }
-
             
-                                                  
     } // end of namespace    
 }//end of namespace
 
 // $Log: GenSegExp.cpp,v $
+// Revision 1.4  2009/09/06 22:24:00  sherwin
+// Updates for Navier-Stokes solver
+//
 // Revision 1.3  2008/09/09 15:05:09  sherwin
 // Updates related to cuved geometries. Normals have been removed from m_metricinfo and replaced with a direct evaluation call. Interp methods have been moved to LibUtilities
 //

@@ -74,6 +74,7 @@ namespace Nektar
                                  Array<OneD, const NekDouble> &inarray,
                                  Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                                  Array<OneD,NekDouble> &outarray);
+
             
             void AddHDGHelmholtzTraceTerms(const NekDouble tau, 
                                            const Array<OneD, const NekDouble> &inarray, Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp, Array<OneD,NekDouble> &outarray);
@@ -82,15 +83,24 @@ namespace Nektar
         protected:
             DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
 
+
+            void AddNormTraceInt(const int dir,
+                                 Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
+                                 Array<OneD,NekDouble> &outarray);
+
             void AddHDGHelmholtzEdgeTerms(const NekDouble tau, 
                                           const int edge,
                                           Array <OneD,  StdRegions::StdExpansion1DSharedPtr > &EdgeExp, Array <OneD,NekDouble > &outarray);
             
             void AddEdgeBoundaryInt(const int edge, 
-                                    StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+                                    const StdRegions::StdExpansion1DSharedPtr &EdgeExp,
                                     Array <OneD,NekDouble > &outarray);
             
-
+            void DGDeriv(int dir, 
+                         const Array<OneD, const NekDouble>&incoeffs,
+                         Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
+                         Array<OneD, NekDouble> &out_d);
+              
             private:
             // Do not add members here since it may lead to conflicts.
             // Only use this class for member functions
@@ -101,6 +111,11 @@ namespace Nektar
                 return StdRegions::eForwards;              
             }
 
+            virtual StdRegions::EdgeOrientation v_GetCartesianEorient(int edge)
+            {
+              NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");  
+                return StdRegions::eForwards;              
+            }
 
             virtual void v_GetEdgeToElementMap(const int eid, const StdRegions::EdgeOrientation edgeOrient, Array<OneD, unsigned int> &maparray, Array<OneD, int> &signarray)
             {
@@ -149,7 +164,7 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
-            
+                        
          };
         
         // type defines for use of PrismExp in a boost vector
@@ -165,6 +180,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.h,v $
+ *    Revision 1.8  2009/09/06 22:24:00  sherwin
+ *    Updates for Navier-Stokes solver
+ *
  *    Revision 1.7  2009/07/07 16:31:47  sehunchun
  *    Adding AddEdgeBoundaryBiInt to line integrate depending on Fwd and Bwd
  *

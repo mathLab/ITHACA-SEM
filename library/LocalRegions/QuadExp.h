@@ -642,7 +642,13 @@ namespace Nektar
                 Expansion2D::AddHDGHelmholtzTraceTerms(tau,inarray,EdgeExp,outarray);
             }
             
-
+            virtual void v_DGDeriv(int dir, 
+                                   const Array<OneD, const NekDouble>&incoeffs,
+                                   Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
+                                   Array<OneD, NekDouble> &out_d)
+            {
+              Expansion2D::DGDeriv(dir,incoeffs,EdgeExp,out_d);
+            }
 
             virtual StdRegions::StdExpansion1DSharedPtr v_GetEdgeExp(const int edge, bool SetUpNormals=true)
             {
@@ -749,6 +755,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.57  2009/10/06 09:42:28  cbiotto
+ *    Adding virtual function GetBasis
+ *
  *    Revision 1.56  2009/09/06 22:24:00  sherwin
  *    Updates for Navier-Stokes solver
  *

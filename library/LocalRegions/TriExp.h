@@ -594,8 +594,15 @@ namespace Nektar
                                                      Array <OneD,NekDouble > &outarray)
             {
                 Expansion2D::AddHDGHelmholtzTraceTerms(tau,inarray,EdgeExp,outarray);
+            }            
+
+            virtual void v_DGDeriv(int dir, 
+                                   const Array<OneD, const NekDouble>&incoeffs,
+                                   Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
+                                   Array<OneD, NekDouble> &out_d)
+            {
+              Expansion2D::DGDeriv(dir,incoeffs,EdgeExp,out_d);
             }
-            
 
             virtual StdRegions::StdExpansion1DSharedPtr v_GetEdgeExp(const int edge, bool SetUpNormals=true)
             {
@@ -723,6 +730,18 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.53  2009/11/02 19:15:42  cantwell
+ *    Moved ContField1D to inherit from DisContField1D.
+ *    Moved ContField3D to inherit from DisContField3D.
+ *    Incorporated GenExpList1D functionality into ExpList1D.
+ *    Tidied up and added documentation to various classes.
+ *    Moved Namespace documentation and introductions to separate files along with
+ *    doxygen configuration.
+ *    Added option to use system ZLIB library instead of libboost_zlib on UNIX.
+ *    Added extra search paths to FindMetis.cmake and FindNektar++.cmake.
+ *    Updated Linux compiling instructions.
+ *    Updated regDemo to use Helmholtz2D-g when built as debug.
+ *
  *    Revision 1.52  2009/10/06 09:43:57  cbiotto
  *    Adding virtual function GetBasis
  *

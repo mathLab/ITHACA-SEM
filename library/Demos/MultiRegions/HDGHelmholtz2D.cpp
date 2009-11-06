@@ -163,14 +163,19 @@ int main(int argc, char *argv[])
         //----------------------------------------------
 
         //--------------------------------------------
-        // Calculate L_inf error 
+        // Calculate error 
         Fce->SetPhys(fce);
         Fce->SetPhysState(true);
 
 
-        cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
-        cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
-        cout << "H 1 error:        " << Exp->H1  (Fce->GetPhys()) << endl;
+        cout << "L infinity error:  " << Exp->Linf(Fce->GetPhys()) << endl;
+        cout << "L 2 error  :       " << Exp->L2  (Fce->GetPhys()) << endl;
+        cout << "H 1 error  :       " << Exp->H1  (Fce->GetPhys()) << endl;
+
+        Fce->PhysDeriv(0,Fce->GetPhys(),fce);
+        cout << "Q0 L2 error:       " <<Exp->L2_DGDeriv(0,fce) << endl;
+        Fce->PhysDeriv(1,Fce->GetPhys(),fce);
+        cout << "Q1 L2 error:       " <<Exp->L2_DGDeriv(1,fce) << endl;
         //--------------------------------------------        
     }
     

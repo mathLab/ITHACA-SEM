@@ -1035,6 +1035,15 @@ namespace Nektar
                 v_StdPhysDeriv(dir,inarray,outarray);
             }       
 
+            void DGDeriv(const int dir, 
+                         const Array<OneD, const NekDouble>& inarray,
+                         Array<OneD, boost::shared_ptr< StdExpansion1D > > &EdgeExp, 
+                         Array<OneD, NekDouble> &outarray)
+            {
+                v_DGDeriv (dir, inarray, EdgeExp, outarray);
+            }
+
+
             /** \brief This function evaluates the expansion at a single
              *  (arbitrary) point of the domain
              *
@@ -1393,6 +1402,11 @@ namespace Nektar
                                            const Array<OneD, const NekDouble>& inarray, 
                                            Array<OneD, NekDouble> &outarray);
 
+            virtual void v_DGDeriv(const int dir, 
+                                   const Array<OneD, const NekDouble>& inarray,
+                                   Array<OneD, boost::shared_ptr< StdExpansion1D > > &EdgeExp, 
+                                   Array<OneD, NekDouble> &outarray);
+
             virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords);
 
             virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray);
@@ -1514,6 +1528,18 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.123  2009/11/02 19:15:43  cantwell
+ * Moved ContField1D to inherit from DisContField1D.
+ * Moved ContField3D to inherit from DisContField3D.
+ * Incorporated GenExpList1D functionality into ExpList1D.
+ * Tidied up and added documentation to various classes.
+ * Moved Namespace documentation and introductions to separate files along with
+ * doxygen configuration.
+ * Added option to use system ZLIB library instead of libboost_zlib on UNIX.
+ * Added extra search paths to FindMetis.cmake and FindNektar++.cmake.
+ * Updated Linux compiling instructions.
+ * Updated regDemo to use Helmholtz2D-g when built as debug.
+ *
  * Revision 1.122  2009/10/25 18:53:39  sherwin
  * Added H1 norm definition
  *

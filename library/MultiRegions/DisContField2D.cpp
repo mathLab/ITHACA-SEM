@@ -127,6 +127,43 @@ namespace Nektar
             }
         }
         
+        DisContField2D::DisContField2D(const LibUtilities::BasisKey &TriBa, 
+                                       const LibUtilities::BasisKey &TriBb, 
+                                       const LibUtilities::BasisKey &QuadBa, 
+                                       const LibUtilities::BasisKey &QuadBb, 
+                                       SpatialDomains::MeshGraph2D &graph2D,
+                                       SpatialDomains::BoundaryConditions &bcs,
+                                       const int bc_loc,
+                                       const GlobalSysSolnType solnType,
+                                       bool SetUpJustDG):
+            ExpList2D(TriBa,TriBb,QuadBa,QuadBb,graph2D),
+            m_bndCondExpansions(),
+            m_bndConditions()
+        {
+            GenerateBoundaryConditionExpansion(graph2D,bcs,bcs.GetVariable(bc_loc));
+            EvaluateBoundaryConditions();
+            
+            if(SetUpJustDG)
+            {
+                // Set up matrix map
+                m_globalBndMat   = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
+                
+                map<int,int> periodicEdges;
+                vector<map<int,int> > periodicVertices;
+                GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),
+                                 periodicVertices,periodicEdges);
+                
+                // Set up Trace space
+                bool UseGenSegExp = true;
+                m_trace = MemoryManager<ExpList1D>::AllocateSharedPtr(m_bndCondExpansions,m_bndConditions,*m_exp,graph2D,periodicEdges, UseGenSegExp);
+                
+                m_traceMap = MemoryManager<LocalToGlobalDGMap>::
+                    AllocateSharedPtr(graph2D,m_trace,m_exp,solnType,
+                                      m_bndCondExpansions,m_bndConditions, periodicEdges);
+            }
+        }
+        
+
         void DisContField2D::GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D,
                                                                 SpatialDomains::BoundaryConditions &bcs, 
                                                                 const std::string variable)
@@ -259,12 +296,9 @@ namespace Nektar
                 cnt  += e_ncoeffs;
                 cnt1 += nbndry;
             }
-            // Might be nice if we could do 
-            // LocLambda = Transpose(*HDGLamToU)*F;
 
             // Assemble into global operator
             m_traceMap->AssembleBnd(loc_lambda,BndRhs);
-
             
             cnt = 0;
             // Copy Dirichlet boundary conditions into trace space        
@@ -585,6 +619,59 @@ namespace Nektar
                 }    
             }
         }
-
+    
+        /** Calculate the L2 error of the Q_dir derivative using the
+            consistent DG evaluation of Q_dir. The soln provided is of
+            the primative variation at the quadrature points and the
+            derivative is compared to the discrete derivative at these
+            points which is likely to be undesireable unless using a
+            much higher number of quadrature points than the
+            polynomial order used to evaluate Q_dir
+         */ 
+           
+       NekDouble DisContField2D::L2_DGDeriv(const int dir, 
+                                           const Array<OneD, const NekDouble> &soln)
+      {
+        
+          int    i,e,ncoeff_edge,cnt = 0;
+          Array<OneD, const NekDouble> tmp_coeffs;
+          Array<OneD, NekDouble> out_d(m_ncoeffs), out_tmp;
+          
+          Array<OneD, Array< OneD, StdRegions::StdExpansion1DSharedPtr> > elmtToTrace = m_traceMap->GetElmtToTrace();
+          
+          StdRegions::EdgeOrientation edgedir;
+          
+          int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
+          Array<OneD, NekDouble> loc_lambda(LocBndCoeffs), edge_lambda; 
+          m_traceMap->GlobalToLocalBnd(m_trace->GetCoeffs(),loc_lambda);
+          
+          edge_lambda = loc_lambda;
+          // calculate Q using standard DG formulation. 
+          for(i= 0; i < GetExpSize(); ++i)
+          {              
+              // Probably a better way of setting up lambda than this.
+              // Note cannot use PutCoeffsInToElmts since lambda space
+              // is mapped during the solve. 
+              for(e = 0; e < (*m_exp)[i]->GetNedges(); ++e)
+              {
+                  edgedir = (*m_exp)[i]->GetEorient(e);
+                  
+                  ncoeff_edge = elmtToTrace[i][e]->GetNcoeffs(); 
+                  elmtToTrace[i][e]->SetCoeffsToOrientation(edgedir,edge_lambda,edge_lambda);
+                  Vmath::Vcopy(ncoeff_edge,edge_lambda,1,elmtToTrace[i][e]->UpdateCoeffs(),1);
+                  edge_lambda = edge_lambda + ncoeff_edge;
+              }
+              
+              (*m_exp)[i]->DGDeriv(dir,tmp_coeffs = m_coeffs+cnt,
+                                   elmtToTrace[i],
+                                   out_tmp = out_d+cnt);
+              cnt += (*m_exp)[i]->GetNcoeffs();
+          }
+          BwdTrans(out_d,m_phys);
+          Vmath::Vsub(m_npoints,m_phys,1,soln,1,m_phys,1);
+          
+          return L2();
+      }
+      
     } // end of namespace
 } //end of namespace

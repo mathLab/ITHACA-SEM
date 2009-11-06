@@ -107,19 +107,20 @@ namespace Nektar
          * The direction of these coordinate axis is such that it points in counterclockwise direction for edges 0 and 1, and
          * in clockwise direction for edge 2 and 3.
          *
-         * Another important feature in the connectivity strategy is the concept of edge orientation.
-         * For a better understanding, consider the input format of an edge as used in the input .xml files which contain
-         * the information about the mesh. An edge is defined as:
-         * \code
-         * <E ID="i"> v0 v1 </E>
-         * \endcode
-         * where \a v0 and \a v1 are the ID's of the two vertices that define the edge (Note that these
-         * vertices are passed in the same order to the constructor of the edge). Now, 
-         * the orientation of an edge of a two-dimensional element (i.e. quadrilateral or triangle) is 
-         * defined as:
-         * - <b> Forward </b> if the vertex with ID \a v0 comes before the vertex with ID \a v1
-         *   when considering the vertices the vertices of the element in a counterclockwise direction
-         * - <b> Backward </b> otherwise.<BR>
+         * Another important feature in the connectivity strategy is
+         * the concept of edge orientation.  For a better
+         * understanding, consider the input format of an edge as used
+         * in the input .xml files which contain the information about
+         * the mesh. An edge is defined as: \code <E ID="i"> v0 v1
+         * </E> \endcode where \a v0 and \a v1 are the ID's of the two
+         * vertices that define the edge (Note that these vertices are
+         * passed in the same order to the constructor of the
+         * edge). Now, the orientation of an edge of a two-dimensional
+         * element (i.e. quadrilateral or triangle) is defined as: -
+         * <b> Forward </b> if the vertex with ID \a v0 comes before
+         * the vertex with ID \a v1 when considering the vertices the
+         * vertices of the element in a counterclockwise direction -
+         * <b> Backward </b> otherwise.<BR>
          * 
          *
          * This has the following implications:
@@ -129,20 +130,27 @@ namespace Nektar
          *   It is a property which is not only inherent to the edge itself, but depends on the
          *   element it belongs to. (This also means that a segment does not have an orientation) 
          *
-         * \paragraph Modalexpansions Modal expansions
-         * We will follow the basic principles of the connectivity strategy as explained in Section 4.2.1.1 of [1] (such as the
-         * hierarchic ordering of the edge modes).
-         * However, we do not follow the strategy described to negate the odd modes of an intersecting edge of 
-         * two adjacent elements if the local coordinate systems have an opposite direction. The explained strategy 
-         * involves checking the direction of the local coordinate systems of the neighbouring elements.
-         * However, for a simpler automatic procedure to identify which edges need to have odd mode negated, we 
-         * would like to have an approach which can be applied to the elements individually, without information 
-         * being coupled between neighbouring elements.<BR>
-         * This can be accomplished in the following way:<BR>
-         * Note that this approach is based on the earlier observation that the intersecting edge of two elements
-         * always has opposite orientation. Proper connectivity can now be guaranteed if:
-         * - forward oriented edges always have a counterclockwise local coordinate axis
-         * - backward oriented edges always have a clockwise local coordinate axis.
+         * \paragraph Modalexpansions Modal expansions We will follow
+         * the basic principles of the connectivity strategy as
+         * explained in Section 4.2.1.1 of [1] (such as the hierarchic
+         * ordering of the edge modes).  However, we do not follow the
+         * strategy described to negate the odd modes of an
+         * intersecting edge of two adjacent elements if the local
+         * coordinate systems have an opposite direction. The
+         * explained strategy involves checking the direction of the
+         * local coordinate systems of the neighbouring elements.
+         * However, for a simpler automatic procedure to identify
+         * which edges need to have odd mode negated, we would like to
+         * have an approach which can be applied to the elements
+         * individually, without information being coupled between
+         * neighbouring elements.<BR> This can be accomplished in the
+         * following way:<BR> Note that this approach is based on the
+         * earlier observation that the intersecting edge of two
+         * elements always has opposite orientation. Proper
+         * connectivity can now be guaranteed if: - forward oriented
+         * edges always have a counterclockwise local coordinate axis
+         * - backward oriented edges always have a clockwise local
+         * coordinate axis.
          * 
          * Both the local coordinate axis along an intersecting edge will then point in the same
          * direction.
@@ -165,21 +173,32 @@ namespace Nektar
          *     }
          * }
          * \endcode
-         * This algorithm above is based on the earlier observation that the local coordinate axis automatically point in
-         * counterclockwise direction for edges 0 and 1 and in clockwise direction for the other edges.
-         * As explained in [1] the change in local coordinate axis can actually be done by reversing the sign
-         * of the odd modes. This is implemented by means of an additional sign vector.
-         * \paragraph Nodalexpansions Nodal expansions
-         * For the nodal expansions, we will use the connectivity strategy as explained in Section 4.2.1.1 of [1]. 
-         * However, we will clarify this strategy from a Nektar++ point of view. As pointed out in [1], the nodal
-         * edge modes can be identified with the physical location of the nodal points. In order to ensure proper connectivity
-         * between elements the egde modes with the same nodal location should be matched. This will be accomplished if both the 
-         * sets of local edge modes along the intersection edge of two elements are numbered in the same direction. And as the 
-         * intersecting edge of two elements always has opposite direction, this can be guaranteed if:
-         * - the local numbering of the edge modes is counterclockwise for forward oriented edges
-         * - the local numbering of the edge modes is clockwise for backward oriented edges.
+         * This algorithm above is based on the earlier observation
+         * that the local coordinate axis automatically point in
+         * counterclockwise direction for edges 0 and 1 and in
+         * clockwise direction for the other edges.  As explained in
+         * [1] the change in local coordinate axis can actually be
+         * done by reversing the sign of the odd modes. This is
+         * implemented by means of an additional sign vector.
+         * \paragraph Nodalexpansions Nodal expansions For the nodal
+         * expansions, we will use the connectivity strategy as
+         * explained in Section 4.2.1.1 of [1].  However, we will
+         * clarify this strategy from a Nektar++ point of view. As
+         * pointed out in [1], the nodal edge modes can be identified
+         * with the physical location of the nodal points. In order to
+         * ensure proper connectivity between elements the egde modes
+         * with the same nodal location should be matched. This will
+         * be accomplished if both the sets of local edge modes along
+         * the intersection edge of two elements are numbered in the
+         * same direction. And as the intersecting edge of two
+         * elements always has opposite direction, this can be
+         * guaranteed if: - the local numbering of the edge modes is
+         * counterclockwise for forward oriented edges - the local
+         * numbering of the edge modes is clockwise for backward
+         * oriented edges.
          *
-         * This will ensure that the numbering of the global DOF's on an edge is in the same direction as the tow subsets of
+         * This will ensure that the numbering of the global DOF's on
+         * an edge is in the same direction as the tow subsets of
          * local DOF's on the intersecting edge.
          *
          * \subsubsection Implementation Implementation
@@ -353,9 +372,10 @@ namespace Nektar
             // Convert the result to an array of integers rather than doubles
             RoundNekDoubleToInt(locPatchMask_NekDouble,locPatchMask);
 
-            // STEP 2: We are going to calculate how many local bnd dofs of the old level
-            // belong to the boundaries of each patch at the new level. We need this
-            // information to set up the mapping between different levels.
+            // STEP 2: We are going to calculate how many local bnd
+            // dofs of the old level belong to the boundaries of each
+            // patch at the new level. We need this information to set
+            // up the mapping between different levels.
 
             // Retrieve the number of patches at the next level
             int numPatchesWithIntNew = multiLevelGraph->GetNpatchesWithInterior(newLevel);
@@ -515,8 +535,8 @@ namespace Nektar
             }
             CalculateBndSystemBandWidth();
 
-            // Postprocess the computed information
-            // - Update the old level with the mapping to new evel
+            // Postprocess the computed information - Update the old
+            // level with the mapping to new evel
             // oldLevelMap->SetLocalBndToNextLevelMap(oldLocalBndToNewLevelMap,oldLocalBndToNewLevelSign);
             // - Construct the next level mapping object
             if(m_staticCondLevel < (multiLevelGraph->GetNlevels()-1))
@@ -542,7 +562,7 @@ namespace Nektar
         // corresponds to the maximal elemental bandwith (i.e. the
         // maximal difference in global DOF index for every element)
         //
-        // we here calculate the bandwith of the global
+        // We here calculate the bandwith of the global
         // boundary system (as used for static condensation) 
         void LocalToGlobalBaseMap::CalculateBndSystemBandWidth()
         {

@@ -1693,7 +1693,7 @@ namespace Nektar
          * points, should be contained in the variable #m_phys of
          * the ExpList object \a Sol.
          *
-         * @param   Sol             An ExpList, containing the discrete
+         * @param   soln            A 1D array, containing the discrete
          *                          evaluation of the exact solution at the
          *                          quadrature points in its array #m_phys.
          * @return  The \f$L_\infty\f$ error of the approximation.
@@ -1702,12 +1702,11 @@ namespace Nektar
         {
             NekDouble err = 0.0;
             int       i,cnt = 0;
-            Array<OneD, const NekDouble> phys = m_phys;
 
             for(i= 0; i < GetExpSize(); ++i)
             {
                 // set up physical solution in local element
-                (*m_exp)[i]->SetPhys(phys+cnt);
+                (*m_exp)[i]->SetPhys(m_phys+cnt);
                 err  = std::max(err,(*m_exp)[i]->Linf(soln + cnt));
                 cnt  += (*m_exp)[i]->GetTotPoints();
             }
@@ -1736,13 +1735,48 @@ namespace Nektar
 
             NekDouble err = 0.0,errl2;
             int    i,cnt = 0;
-            Array<OneD, const NekDouble> phys = m_phys;
 
             for(i= 0; i < GetExpSize(); ++i)
             {
                 // set up physical solution in local element
-                (*m_exp)[i]->SetPhys(phys+cnt);
+                (*m_exp)[i]->SetPhys(m_phys+cnt);
                 errl2 = (*m_exp)[i]->L2(soln+cnt);
+                err += errl2*errl2;
+                cnt  += (*m_exp)[i]->GetTotPoints();
+            }
+
+            return sqrt(err);
+        }
+
+
+        /**
+         * Given a spectral/hp approximation
+         * \f$u^{\delta}(\boldsymbol{x})\f$ evaluated at the
+         * quadrature points (which should be contained in #m_phys),
+         * this function calculates the \f$L_2\f$ measure of this
+         * approximation. The local distribution of the quadrature
+         * points allows an elemental evaluation of this operation
+         * through the functions StdRegions#StdExpansion#L2.
+         *
+         * The exact solution, also evaluated at the quadrature points, should
+         * be contained in the variable #m_phys of the ExpList object \a Sol.
+         *
+         * @param   soln            A 1D array, containing the discrete
+         *                          evaluation of the exact solution at the
+         *                          quadrature points.
+         * @return  The \f$L_2\f$ error of the approximation.
+         */
+        NekDouble ExpList::L2(void)
+        {
+
+            NekDouble err = 0.0,errl2;
+            int    i,cnt = 0;
+
+            for(i= 0; i < GetExpSize(); ++i)
+            {
+                // set up physical solution in local element
+                (*m_exp)[i]->SetPhys(m_phys+cnt);
+                errl2 = (*m_exp)[i]->L2();
                 err += errl2*errl2;
                 cnt  += (*m_exp)[i]->GetTotPoints();
             }
@@ -1762,9 +1796,8 @@ namespace Nektar
          * The exact solution, also evaluated at the quadrature points, should
          * be contained in the variable #m_phys of the ExpList object \a Sol.
          *
-         * @param   Sol         An ExpList, containing the discrete evaluation
-         *                      of the exact solution at the quadrature points
-         *                      in its array #m_phys.
+         * @param   soln        An 1D array, containing the discrete evaluation
+         *                      of the exact solution at the quadrature points.
          *
          * @return  The \f$H^1_2\f$ error of the approximation.
          */
@@ -1773,12 +1806,11 @@ namespace Nektar
 
             NekDouble err = 0.0,errh1;
             int    i,cnt = 0;
-            Array<OneD, const NekDouble> phys = m_phys;
 
             for(i= 0; i < GetExpSize(); ++i)
             {
                 // set up physical solution in local element
-                (*m_exp)[i]->SetPhys(phys+cnt);
+                (*m_exp)[i]->SetPhys(m_phys+cnt);
                 errh1 =  (*m_exp)[i]->H1(soln+cnt);
                 err  += errh1*errh1;
                 cnt  += (*m_exp)[i]->GetTotPoints();

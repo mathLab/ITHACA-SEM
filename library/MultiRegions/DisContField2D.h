@@ -67,6 +67,17 @@ namespace Nektar
                            const std::string variable,
                            const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
                            bool SetUpJustDG = true);
+
+
+            DisContField2D(const LibUtilities::BasisKey &TriBa, 
+                           const LibUtilities::BasisKey &TriBb, 
+                           const LibUtilities::BasisKey &QuadBa, 
+                           const LibUtilities::BasisKey &QuadBb, 
+                           SpatialDomains::MeshGraph2D &graph2D,
+                           SpatialDomains::BoundaryConditions &bcs,
+                           const int bc_loc = 0,
+                           const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
+                           bool SetUpJustDG = true);
             
             DisContField2D(const DisContField2D &In);
 
@@ -86,7 +97,7 @@ namespace Nektar
             void HelmSolve(const Array<OneD, const NekDouble> &inarray,
                                  Array<OneD,       NekDouble> &outarray,
                            NekDouble lambda,
-                           NekDouble tau = 10);
+                           NekDouble tau = 1);
             /**
              * \brief This function evaluates the boundary conditions at a certain 
              * time-level.
@@ -234,6 +245,8 @@ namespace Nektar
             void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, 
                                       Array<OneD,int> &EdgeID);
 
+            NekDouble L2_DGDeriv(const int dir, 
+                                 const Array<OneD, const NekDouble> &soln);
         protected:
             /**
              * \brief The number of boundary segments on which

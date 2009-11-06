@@ -296,9 +296,14 @@ namespace Nektar
             /// spectral/hp element approximation.
             NekDouble Linf (const Array<OneD, const NekDouble> &soln);
 
-            /// This function calculates the \f$L_2\f$ error of the global
+            /// This function calculates the \f$L_2\f$ error with
+            /// respect to soln of the global
             /// spectral/hp element approximation.
             NekDouble L2 (const Array<OneD, const NekDouble> &soln);
+
+            /// This function calculates the \f$L_2\f$ measure of the global
+            /// spectral/hp element approximation.
+            NekDouble L2 (void);
 
             /// Calculates the \f$H^1\f$ error of the global spectral/hp
             /// element approximation.
@@ -1160,6 +1165,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.74  2009/11/04 20:30:15  cantwell
+* Added documentation to ExpList and ExpList1D and tidied up code.
+*
 * Revision 1.73  2009/11/02 19:15:43  cantwell
 * Moved ContField1D to inherit from DisContField1D.
 * Moved ContField3D to inherit from DisContField3D.

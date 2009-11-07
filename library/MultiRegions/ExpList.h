@@ -125,6 +125,11 @@ namespace Nektar
             // inline
             int GetTotPoints(void) const;
 
+            /// Returns the total number of quadrature points for eid's element
+            /// \f$=Q_{\mathrm{tot}}\f$.
+            // inline
+            int GetTotPoints(const int eid) const;
+
             /// Returns the total number of quadrature points #m_npoints
             /// \f$=Q_{\mathrm{tot}}\f$.
             // inline
@@ -760,6 +765,11 @@ namespace Nektar
             return m_npoints;
         }
 
+        inline int ExpList::GetTotPoints(const int eid) const
+        {
+            return (*m_exp)[eid]->GetTotPoints();
+        }
+
         /**
          *
          */
@@ -1165,6 +1175,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.75  2009/11/06 21:51:18  sherwin
+* Added L2_DGDeriv method
+*
 * Revision 1.74  2009/11/04 20:30:15  cantwell
 * Added documentation to ExpList and ExpList1D and tidied up code.
 *

@@ -617,7 +617,7 @@ namespace Nektar
         const DNekScalBlkMatSharedPtr ExpList::GenBlockMatrix(
                                 const GlobalMatrixKey &gkey)
         {
-            int i,j,cnt1;
+            int i,j,cnt1,matrixid;
             int n_exp = GetExpSize();
             Array<OneD,unsigned int> nrows(n_exp);
             Array<OneD,unsigned int> ncols(n_exp);
@@ -686,7 +686,7 @@ namespace Nektar
             int nvarcoeffs = gkey.GetNvariableCoefficients();
             Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
 
-            for(i = cnt1 = 0; i < n_exp; ++i)
+            for(i = cnt1 = matrixid = 0; i < n_exp; ++i)
             {
                 if(nvarcoeffs>0)
                 {
@@ -694,14 +694,18 @@ namespace Nektar
                     {
                         varcoeffs[j] = gkey.GetVariableCoefficient(j) + cnt1;
                     }
-                    cnt1  += (*m_exp)[i]->GetTotPoints();
+
+                    cout << "ExpList: Coordim = " << GetCoordim(i) << endl;
+                    cnt1  += GetCoordim(i)*( (*m_exp)[i]->GetTotPoints() );
+                    matrixid++;
                 }
 
                 LocalRegions::MatrixKey matkey(gkey.GetMatrixType(),
                                                (*m_exp)[i]->DetExpansionType(),
                                                *(*m_exp)[i],
                                                gkey.GetConstants(),
-                                               varcoeffs);
+                                               varcoeffs,
+                                               matrixid);
 
                 loc_mat = (*m_exp)[i]->GetLocMatrix(matkey);
                 BlkMatrix->SetBlock(i,i,loc_mat);
@@ -751,10 +755,11 @@ namespace Nektar
                 {
                     if(nvarcoeffs>0)
                     {
+                        ASSERTL0(false,"nvarcoeffs are not set up");
+
                         for(j = 0; j < nvarcoeffs; j++)
                         {
-                            varcoeffs[j] = gkey.GetVariableCoefficient(j)
-                                            + cnt1;
+                            varcoeffs[j] = gkey.GetVariableCoefficient(j) + cnt1;
                         }
                         cnt1  += (*m_exp)[i]->GetTotPoints();
                     }
@@ -762,7 +767,7 @@ namespace Nektar
                     StdRegions::StdMatrixKey mkey(gkey.GetMatrixType(),
                                                 (*m_exp)[i]->DetExpansionType(),
                                                 *((*m_exp)[i]),
-                                                gkey.GetConstants(),varcoeffs);
+                                                  gkey.GetConstants(),varcoeffs);
 
                     (*m_exp)[i]->GeneralMatrixOp(inarray + cnt,
                                                  e_outarray = outarray+cnt,
@@ -835,22 +840,28 @@ namespace Nektar
             Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
 
             // fill global matrix
+            int matrixid=0;
             for(n = cntdim1 = cntdim2 = cnt1 = 0; n < (*m_exp).size(); ++n)
             {
                 if(nvarcoeffs>0)
                 {
                     for(j = 0; j < nvarcoeffs; j++)
                     {
+                        
+                        ASSERTL0(false,"method not set up for non-Dirichlet conditions");
+
                         varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
                     }
                     cnt1  += (*m_exp)[n]->GetTotPoints();
+                    matrixid++;
                 }
 
                 LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
                                                (*m_exp)[n]->DetExpansionType(),
                                                *(*m_exp)[n],
                                                mkey.GetConstants(),
-                                               varcoeffs);
+                                               varcoeffs,
+                                               matrixid);
 
                 loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);
                 loc_rows = loc_mat->GetRows();
@@ -940,7 +951,7 @@ namespace Nektar
                             const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
         {
             int n,j;
-            int cnt1;
+            int cnt1,matrixid;
             int n_exp = GetExpSize();
             Array<OneD, unsigned int> nCoeffsPerElmt(n_exp);
             for(j = 0; j < n_exp; j++)
@@ -957,22 +968,26 @@ namespace Nektar
             int nvarcoeffs = mkey.GetNvariableCoefficients();
             Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
             
-            for(n = cnt1 = 0; n < n_exp; ++n)
+            for(n = cnt1 = matrixid = 0; n < n_exp; ++n)
             {
                 if(nvarcoeffs>0)
                 {
+                    ASSERTL0(false,"method not set up for non-Dirichlet conditions");
+
                         for(j = 0; j < nvarcoeffs; j++)
                         {
                             varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
                         }
-                        cnt1  += (*m_exp)[n]->GetTotPoints();
+                        cnt1  += GetCoordim(n)*( (*m_exp)[n]->GetTotPoints() );
+                        matrixid++;
                 }
                 
                 LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
                                                (*m_exp)[n]->DetExpansionType(),
                                                *(*m_exp)[n],
                                                mkey.GetConstants(),
-                                               varcoeffs);
+                                               varcoeffs,
+                                               matrixid);
                 
                 loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);  
 
@@ -1032,6 +1047,8 @@ namespace Nektar
             {
                 if(nvarcoeffs>0)
                 {
+                    ASSERTL0(false,"method not set up for non-Dirichlet conditions");
+
                         for(j = 0; j < nvarcoeffs; j++)
                         {
                             varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
@@ -1218,6 +1235,8 @@ namespace Nektar
             {
                 if(nvarcoeffs>0)
                 {
+                    ASSERTL0(false,"method not set up for non-Dirichlet conditions");
+
                     for(j = 0; j < nvarcoeffs; j++)
                     {
                         varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
@@ -1310,7 +1329,7 @@ namespace Nektar
             // We will set up this matrix as a statically condensed system 
             // where the interior blocks are zero
             int n,j;
-            int cnt1;
+            int cnt1,matrixid;
 
             NekDouble factor1 = mkey.GetConstant(0);
             NekDouble factor2 = mkey.GetConstant(1);
@@ -1333,14 +1352,30 @@ namespace Nektar
 
             DNekScalMatSharedPtr loc_mat;
 
-            for(n = cnt1 = 0; n < n_exp; ++n)
+            int nvarcoeffs = mkey.GetNvariableCoefficients();
+            Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
+            for(n = cnt1 = matrixid = 0; n < n_exp; ++n)
             {
-                LocalRegions::MatrixKey Umatkey(linsystype, (*m_exp)[n]->DetExpansionType(),*((*m_exp)[n]), factor1,factor2);
+                if(nvarcoeffs>0)
+                {
+                    for(j = 0; j < nvarcoeffs; j++)
+                    {
+                        varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
+                    }
+
+                    cnt1  += GetCoordim(n)*( (*m_exp)[n]->GetTotPoints() );
+                    matrixid++;
+                }
+
+                LocalRegions::MatrixKey Umatkey(linsystype, 
+                                                (*m_exp)[n]->DetExpansionType(),
+                                                *((*m_exp)[n]), factor1,factor2,varcoeffs,matrixid);
+
                 DNekScalMat &BndSys = *((*m_exp)[n]->GetLocMatrix(Umatkey)); 
 
                 LocalRegions::MatrixKey matkey(linsystype,
                                                (*m_exp)[n]->DetExpansionType(),
-                                               *(*m_exp)[n],factor1,factor2);
+                                               *(*m_exp)[n],factor1,factor2,varcoeffs,matrixid);
 
                 loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);    
 

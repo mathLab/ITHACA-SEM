@@ -81,6 +81,18 @@ namespace Nektar
         }
 
         GlobalMatrixKey::GlobalMatrixKey(const StdRegions::MatrixType matrixType, 
+                                         const Array<OneD,NekDouble>& varcoeffs,
+                                         const LocalToGlobalBaseMapSharedPtr &locToGloMap):
+            m_matrixType(matrixType),
+            m_locToGloMap(locToGloMap),
+            m_nconstants(0),
+            m_constant(m_nconstants),
+            m_nvariablecoefficients(1)
+        {
+            m_variablecoefficient[0] = varcoeffs;
+        }  
+
+        GlobalMatrixKey::GlobalMatrixKey(const StdRegions::MatrixType matrixType, 
                                          const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
                                          const LocalToGlobalBaseMapSharedPtr &locToGloMap):
             m_matrixType(matrixType),
@@ -105,6 +117,22 @@ namespace Nektar
         {
             m_constant[0] = factor;
         }     
+
+        GlobalMatrixKey::GlobalMatrixKey(const StdRegions::MatrixType matrixType,
+                                         const NekDouble factor1,
+                                         const NekDouble factor2,
+                                         const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                                         const LocalToGlobalBaseMapSharedPtr &locToGloMap):
+            m_matrixType(matrixType),
+            m_locToGloMap(locToGloMap),
+            m_nconstants(2),
+            m_constant(m_nconstants),
+            m_nvariablecoefficients(varcoeffs.num_elements()),
+            m_variablecoefficient(varcoeffs)
+        {
+            m_constant[0] = factor1;
+            m_constant[1] = factor2;
+        }
 
         GlobalMatrixKey::GlobalMatrixKey(const GlobalMatrixKey &key):
             m_matrixType(key.m_matrixType),
@@ -204,5 +232,8 @@ namespace Nektar
 
 /**
 * $Log: GlobalMatrixKey.cpp,v $
+* Revision 1.1  2009/03/23 10:46:54  pvos
+* Added GlobalMatrixKey
+*
 **/
 

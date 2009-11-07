@@ -96,6 +96,17 @@ namespace Nektar
         {
         }     
 
+        GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+                                         const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                                         const NekDouble factor1,
+                                         const NekDouble factor2, 
+                                         const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                                         const GlobalSysSolnType solnType):
+            m_solnType(solnType),
+            m_globMatKey(MemoryManager<GlobalMatrixKey>::AllocateSharedPtr(matrixType,factor1,factor2,varcoeffs,locToGloMap))
+        {
+        }   
+
         GlobalLinSysKey::GlobalLinSysKey(const GlobalLinSysKey &key):
             m_solnType(key.m_solnType),
             m_globMatKey(key.m_globMatKey)            
@@ -146,6 +157,9 @@ namespace Nektar
 
 /**
 * $Log: GlobalLinSysKey.cpp,v $
+* Revision 1.8  2009/07/09 21:39:18  sehunchun
+* Add another constructor which deals with varcoeffs
+*
 * Revision 1.7  2009/03/23 10:51:52  pvos
 * Added BlockMatrix support
 *

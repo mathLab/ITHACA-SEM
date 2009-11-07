@@ -58,12 +58,22 @@ namespace Nektar
                             const NekDouble factor2,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap = NullLocalToGlobalBaseMapSharedPtr);
 
+            GlobalMatrixKey(const StdRegions::MatrixType matrixType, 
+                            const Array<OneD,NekDouble>& varcoeffs,
+                            const LocalToGlobalBaseMapSharedPtr &locToGloMap = NullLocalToGlobalBaseMapSharedPtr);
+
             GlobalMatrixKey(const StdRegions::MatrixType matrixType,
                             const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap = NullLocalToGlobalBaseMapSharedPtr);
 
             GlobalMatrixKey(const StdRegions::MatrixType matrixType,
                             const NekDouble factor,
+                            const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                            const LocalToGlobalBaseMapSharedPtr &locToGloMap = NullLocalToGlobalBaseMapSharedPtr);
+
+            GlobalMatrixKey(const StdRegions::MatrixType matrixType,
+                            const NekDouble factor1,
+                            const NekDouble factor2,
                             const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap = NullLocalToGlobalBaseMapSharedPtr);
 
@@ -150,4 +160,7 @@ namespace Nektar
 
 /**
 * $Log: GlobalMatrixKey.h,v $
+* Revision 1.1  2009/03/23 10:46:41  pvos
+* Added GlobalMatrixKey
+*
 **/

@@ -234,11 +234,10 @@ namespace Nektar
             return glo_matrix;
         }
 
-
         void DisContField2D::HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                             Array<OneD,       NekDouble> &outarray,
-                                             NekDouble lambda,
-                                             NekDouble tau)
+                                       Array<OneD,       NekDouble> &outarray,
+                                       NekDouble lambda,
+                                       NekDouble tau)
         {
             int e,i,j,n,cnt,cnt1,nbndry, order_e;
             int nexp = GetExpSize();
@@ -337,6 +336,123 @@ namespace Nektar
             // Internal element solves
             //----------------------------------
             GlobalMatrixKey invHDGhelmkey(StdRegions::eInvHybridDGHelmholtz,lambda,tau);
+            const DNekScalBlkMatSharedPtr& InvHDGHelm = GetBlockMatrix(invHDGhelmkey);
+            DNekVec out(m_ncoeffs,outarray,eWrapper);            
+            Vmath::Zero(m_ncoeffs,outarray,1);
+        
+            // get local trace solution from BndSol
+            m_traceMap->GlobalToLocalBnd(BndSol,loc_lambda);
+
+            //  out =  u_f + u_lam = (*InvHDGHelm)*f + (LamtoU)*Lam  
+            out = (*InvHDGHelm)*F + (*HDGLamToU)*LocLambda;       
+        }
+
+
+        // HelmSolver with varcoeffs ======================================
+        void DisContField2D::HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                       Array<OneD,       NekDouble> &outarray,
+                                       const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
+                                       NekDouble lambda,
+                                       NekDouble tau)
+        {
+            int e,i,j,n,cnt,cnt1,nbndry, order_e;
+            int nexp = GetExpSize();
+            StdRegions::StdExpansionSharedPtr BndExp;
+            
+            Array<OneD,NekDouble> f(m_ncoeffs);
+            DNekVec F(m_ncoeffs,f,eWrapper);
+            Array<OneD,NekDouble> e_f, e_l;
+
+            //----------------------------------
+            //  Setup RHS Inner product
+            //----------------------------------
+            IProductWRTBase(inarray,f);
+            Vmath::Neg(m_ncoeffs,f,1);
+
+            //----------------------------------
+            //  Solve continuous flux System
+            //----------------------------------
+            int GloBndDofs   = m_traceMap->GetNumGlobalBndCoeffs();
+            int NumDirichlet = m_traceMap->GetNumLocalDirBndCoeffs();
+            int e_ncoeffs, loc,id,offset;
+            NekDouble sign;
+
+            // linked data
+            GlobalMatrixKey HDGLamToUKey(StdRegions::eHybridDGLamToU,lambda,tau,varcoeffs);
+            const DNekScalBlkMatSharedPtr &HDGLamToU = GetBlockMatrix(HDGLamToUKey);
+
+            Array<OneD,NekDouble> BndSol = m_trace->UpdateCoeffs(); 
+            Array<OneD,NekDouble> BndRhs(GloBndDofs,0.0); 
+            // Zero trace space
+            Vmath::Zero(GloBndDofs,BndSol,1);
+
+            int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
+            Array<OneD, NekDouble> loc_lambda(LocBndCoeffs); 
+            DNekVec LocLambda(LocBndCoeffs,loc_lambda,eWrapper);
+
+            //----------------------------------
+            // Evaluate Trace Forcing
+            //----------------------------------
+
+            // Determing <u_lam,f> terms using HDGLamToU matrix
+            for(cnt1 = cnt = n = 0; n < nexp; ++n)
+            {
+                nbndry = (*m_exp)[n]->NumDGBndryCoeffs(); 		    
+                
+                e_ncoeffs = (*m_exp)[n]->GetNcoeffs();
+                e_f       = f+cnt;
+                e_l       = loc_lambda + cnt1;
+
+                // use outarray as tmp space
+                DNekVec     Floc    (nbndry, e_l, eWrapper); 
+                DNekVec     ElmtFce (e_ncoeffs, e_f, eWrapper);
+                Floc = Transpose(*(HDGLamToU->GetBlock(n,n)))*ElmtFce;
+
+                cnt  += e_ncoeffs;
+                cnt1 += nbndry;
+            }
+
+            // Assemble into global operator
+            m_traceMap->AssembleBnd(loc_lambda,BndRhs);
+            
+            cnt = 0;
+            // Copy Dirichlet boundary conditions into trace space        
+            for(i = 0; i < m_numDirBndCondExpansions; ++i)
+            {
+                for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+                {
+                    id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
+                    BndSol[id] = m_bndCondExpansions[i]->GetCoeffs()[j];
+                }
+            }
+
+            //Add weak boundary condition to trace forcing 
+            for(i = m_numDirBndCondExpansions; i < m_bndCondExpansions.num_elements(); ++i)
+            {
+                for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+                {
+                    id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
+                    BndRhs[id] += m_bndCondExpansions[i]->GetCoeffs()[j];
+                }
+            }
+
+            //----------------------------------
+            // Solve trace problem
+            //----------------------------------
+            if(GloBndDofs - NumDirichlet > 0)
+            {
+                GlobalLinSysKey       key(StdRegions::eHybridDGHelmBndLam, 
+                                          m_traceMap,lambda,tau,
+                                          varcoeffs,
+                                          m_traceMap->GetGlobalSysSolnType());
+                GlobalLinSysSharedPtr LinSys = GetGlobalBndLinSys(key);
+                LinSys->Solve(BndRhs,BndSol,m_traceMap);
+            }
+            
+            //----------------------------------
+            // Internal element solves
+            //----------------------------------
+            GlobalMatrixKey invHDGhelmkey(StdRegions::eInvHybridDGHelmholtz,lambda,tau,varcoeffs);
             const DNekScalBlkMatSharedPtr& InvHDGHelm = GetBlockMatrix(invHDGhelmkey);
             DNekVec out(m_ncoeffs,outarray,eWrapper);            
             Vmath::Zero(m_ncoeffs,outarray,1);

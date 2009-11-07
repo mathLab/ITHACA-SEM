@@ -98,6 +98,12 @@ namespace Nektar
                                  Array<OneD,       NekDouble> &outarray,
                            NekDouble lambda,
                            NekDouble tau = 1);
+
+            void HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                           Array<OneD,       NekDouble> &outarray,
+                           const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
+                           NekDouble lambda,
+                           NekDouble tau = 1);
             /**
              * \brief This function evaluates the boundary conditions at a certain 
              * time-level.

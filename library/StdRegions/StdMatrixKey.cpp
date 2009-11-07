@@ -53,6 +53,7 @@ namespace Nektar
             m_constant(m_nconstants),
             m_nvariablecoefficients(0),
             m_variablecoefficient(m_nvariablecoefficients),
+            m_matrixid(0),
             m_nodalPointsType(nodalType)
         {
         }
@@ -70,6 +71,7 @@ namespace Nektar
             m_constant(m_nconstants),
             m_nvariablecoefficients(0),
             m_variablecoefficient(m_nvariablecoefficients),
+            m_matrixid(0),
             m_nodalPointsType(nodalType)
         {
             m_constant[0] = const0;
@@ -79,6 +81,7 @@ namespace Nektar
                                     const StdRegions::ExpansionType expansionType, 
                                     const StdRegions::StdExpansion &stdExpansion,
                                     const Array<OneD, NekDouble>& varcoeffs,
+                                    const int matrixid,
                                     LibUtilities::PointsType nodalType):
             m_expansionType(expansionType),
             m_base(stdExpansion.GetBase()),
@@ -88,6 +91,7 @@ namespace Nektar
             m_constant(m_nconstants),
             m_nvariablecoefficients(1),
             m_variablecoefficient(m_nvariablecoefficients),
+            m_matrixid(matrixid),
             m_nodalPointsType(nodalType)
         {
             m_variablecoefficient[0] = varcoeffs;
@@ -97,6 +101,7 @@ namespace Nektar
                                     const StdRegions::ExpansionType expansionType, 
                                     const StdRegions::StdExpansion &stdExpansion,
                                     const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                                    const int matrixid,
                                     LibUtilities::PointsType nodalType):
             m_expansionType(expansionType),
             m_base(stdExpansion.GetBase()),
@@ -106,6 +111,7 @@ namespace Nektar
             m_constant(m_nconstants),
             m_nvariablecoefficients(varcoeffs.num_elements()),
             m_variablecoefficient(varcoeffs),
+            m_matrixid(matrixid),
             m_nodalPointsType(nodalType)
         {
         }
@@ -115,6 +121,7 @@ namespace Nektar
                                     const StdRegions::StdExpansion &stdExpansion,
                                     const NekDouble const0,
                                     const Array<OneD, NekDouble>& varcoeffs,
+                                    const int matrixid,
                                     LibUtilities::PointsType nodalType):
             m_expansionType(expansionType),
             m_base(stdExpansion.GetBase()),
@@ -124,6 +131,7 @@ namespace Nektar
             m_constant(m_nconstants),
             m_nvariablecoefficients(1),
             m_variablecoefficient(m_nvariablecoefficients),
+            m_matrixid(matrixid),
             m_nodalPointsType(nodalType)
         {
             m_constant[0] = const0;
@@ -135,6 +143,7 @@ namespace Nektar
                                     const StdRegions::StdExpansion &stdExpansion,
                                     const NekDouble const0,
                                     const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                                    const int matrixid,
                                     LibUtilities::PointsType nodalType):
             m_expansionType(expansionType),
             m_base(stdExpansion.GetBase()),
@@ -144,6 +153,7 @@ namespace Nektar
             m_constant(m_nconstants),
             m_nvariablecoefficients(varcoeffs.num_elements()),
             m_variablecoefficient(varcoeffs),
+            m_matrixid(matrixid),
             m_nodalPointsType(nodalType)
         {
             m_constant[0] = const0;
@@ -154,6 +164,7 @@ namespace Nektar
                                    const StdRegions::StdExpansion &stdExpansion,
                                    const Array<OneD,NekDouble>& constants,
                                    const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                                   const int matrixid,
                                    LibUtilities::PointsType nodalType):
             m_expansionType(expansionType),
             m_base(stdExpansion.GetBase()),
@@ -163,6 +174,7 @@ namespace Nektar
             m_constant(constants),
             m_nvariablecoefficients(varcoeffs.num_elements()),
             m_variablecoefficient(varcoeffs),
+            m_matrixid(matrixid),
             m_nodalPointsType(nodalType)
         {
         }
@@ -172,6 +184,7 @@ namespace Nektar
                                    const StdRegions::StdExpansion &stdExpansion,
                                    const Array<OneD,NekDouble>& constants,
                                    const Array<OneD,NekDouble>& varcoeffs,
+                                   const int matrixid,
                                    LibUtilities::PointsType nodalType):
             m_expansionType(expansionType),
             m_base(stdExpansion.GetBase()),
@@ -181,6 +194,7 @@ namespace Nektar
             m_constant(constants),
             m_nvariablecoefficients(1),
             m_variablecoefficient(m_nvariablecoefficients),
+            m_matrixid(matrixid),
             m_nodalPointsType(nodalType)
         {
             m_variablecoefficient[0] = varcoeffs;
@@ -200,12 +214,59 @@ namespace Nektar
             m_constant(m_nconstants),
             m_nvariablecoefficients(0),
             m_variablecoefficient(m_nvariablecoefficients),
+            m_matrixid(0),
             m_nodalPointsType(nodalType)
         {
             m_constant[0] = const0;
             m_constant[1] = const1;
         }
 
+        StdMatrixKey::StdMatrixKey( const StdRegions::MatrixType matrixType, 
+                                    const StdRegions::ExpansionType expansionType, 
+                                    const StdRegions::StdExpansion &stdExpansion,
+                                    const NekDouble const0,
+                                    const NekDouble const1,
+                                    const Array<OneD, NekDouble>& varcoeffs,
+                                    const int matrixid,
+                                    LibUtilities::PointsType nodalType):
+            m_expansionType(expansionType),
+            m_base(stdExpansion.GetBase()),
+            m_ncoeffs(stdExpansion.GetNcoeffs()),
+            m_matrixType(matrixType),
+            m_nconstants(2),
+            m_constant(m_nconstants),
+	    m_nvariablecoefficients(1),
+            m_variablecoefficient(m_nvariablecoefficients),
+            m_matrixid(matrixid),
+            m_nodalPointsType(nodalType)
+        {
+            m_constant[0] = const0;
+            m_constant[1] = const1;
+            m_variablecoefficient[0] = varcoeffs;
+        }   
+
+        StdMatrixKey::StdMatrixKey( const StdRegions::MatrixType matrixType, 
+                                    const StdRegions::ExpansionType expansionType, 
+                                    const StdRegions::StdExpansion &stdExpansion,
+                                    const NekDouble const0,
+                                    const NekDouble const1,
+                                    const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                                    const int matrixid,
+                                    LibUtilities::PointsType nodalType):
+            m_expansionType(expansionType),
+            m_base(stdExpansion.GetBase()),
+            m_ncoeffs(stdExpansion.GetNcoeffs()),
+            m_matrixType(matrixType),
+            m_nconstants(2),
+            m_constant(m_nconstants),
+            m_nvariablecoefficients(varcoeffs.num_elements()),
+            m_variablecoefficient(varcoeffs),
+            m_matrixid(matrixid),
+            m_nodalPointsType(nodalType)
+        {
+            m_constant[0] = const0;
+            m_constant[1] = const1;
+        }       
 
         StdMatrixKey::StdMatrixKey(const MatrixType matrixType, 
                                    const ExpansionType expansionType,
@@ -407,6 +468,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.cpp,v $
+* Revision 1.16  2009/09/06 22:23:18  sherwin
+* Somehow deleted opless operator in previous submission
+*
 * Revision 1.15  2009/09/06 21:55:26  sherwin
 * Updates related to Navier Stokes Solver
 *

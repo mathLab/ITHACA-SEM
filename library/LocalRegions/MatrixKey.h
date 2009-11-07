@@ -65,12 +65,55 @@ namespace Nektar
                        double scalefactor,
                        double constant,
                        LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
+
+	    MatrixKey(StdRegions::MatrixType matrixType,
+		      StdRegions::ExpansionType expansionType,
+		      StdRegions::StdExpansion &stdExpansion,
+		      NekDouble    scalefactor,
+		      NekDouble    constant, 
+		      const Array<OneD,NekDouble>& varcoeffs,
+                      const int matrixid = NekConstants::kNekUnsetDouble,
+                      LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
+
+	    MatrixKey(StdRegions::MatrixType matrixType,
+		      StdRegions::ExpansionType expansionType,
+		      StdRegions::StdExpansion &stdExpansion,
+		      NekDouble    scalefactor,
+		      NekDouble    constant, 
+		      const Array<OneD,NekDouble>& varcoeffs1,
+		      const Array<OneD,NekDouble>& varcoeffs2,
+                      const int matrixid = NekConstants::kNekUnsetDouble,
+                      LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
+
+	    MatrixKey(StdRegions::MatrixType matrixType,
+		      StdRegions::ExpansionType expansionType,
+		      StdRegions::StdExpansion &stdExpansion,
+		      NekDouble    scalefactor,
+		      NekDouble    constant, 
+		      const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                      const int matrixid = NekConstants::kNekUnsetDouble,
+                      LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
+
+            MatrixKey(const StdRegions::MatrixType matrixType, 
+                      const StdRegions::ExpansionType expansionType, 
+                      const StdRegions::StdExpansion &stdExpansion,
+                      const Array<OneD,NekDouble>& varcoeffs,
+                      const int matrixid = NekConstants::kNekUnsetDouble,
+                      LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
+
+            MatrixKey(const StdRegions::MatrixType matrixType, 
+                      const StdRegions::ExpansionType expansionType, 
+                      const StdRegions::StdExpansion &stdExpansion,
+                      const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                      const int matrixid = NekConstants::kNekUnsetDouble,
+                      LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
             
             MatrixKey(const StdRegions::MatrixType matrixType, 
                       const StdRegions::ExpansionType expansionType, 
                       const StdRegions::StdExpansion &stdExpansion,
                       const Array<OneD, NekDouble>& constants,
                       const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                      const int matrixid = NekConstants::kNekUnsetDouble,
                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
             virtual ~MatrixKey()
@@ -166,6 +209,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.h,v $
+* Revision 1.18  2008/11/19 16:01:41  pvos
+* Added functionality for variable Laplacian coeffcients
+*
 * Revision 1.17  2008/07/09 11:39:48  sherwin
 * Removed m_scalefactor and made operator< dependent upon StdMatKey
 *

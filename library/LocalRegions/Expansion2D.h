@@ -75,10 +75,24 @@ namespace Nektar
                                  Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                                  Array<OneD,NekDouble> &outarray);
 
-            
+            void AddNormTraceInt(const int dir,
+                                 Array<OneD, const NekDouble> &inarray,
+                                 Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
+                                 const Array<OneD, NekDouble> &directional,
+                                 Array<OneD,NekDouble> &outarray);
+
             void AddHDGHelmholtzTraceTerms(const NekDouble tau, 
-                                           const Array<OneD, const NekDouble> &inarray, Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp, Array<OneD,NekDouble> &outarray);
-            
+                                           const Array<OneD, const NekDouble> &inarray, 
+                                           Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
+                                           const Array<OneD, Array<OneD, NekDouble> > &dirForcing,
+                                           Array<OneD,NekDouble> &outarray,
+                                           const int matrixid = 0);
+
+            void Getnormalindir(const int edge,
+                                StdRegions::StdExpansion1DSharedPtr &EdgeExp_e,
+                                const Array<OneD, const NekDouble> &normals, 
+                                const Array<OneD, const NekDouble> &directional,
+                                Array<OneD, NekDouble> &outarray);
             
         protected:
             DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
@@ -90,7 +104,10 @@ namespace Nektar
 
             void AddHDGHelmholtzEdgeTerms(const NekDouble tau, 
                                           const int edge,
-                                          Array <OneD,  StdRegions::StdExpansion1DSharedPtr > &EdgeExp, Array <OneD,NekDouble > &outarray);
+                                          Array <OneD, StdRegions::StdExpansion1DSharedPtr > &EdgeExp,
+                                          const Array<OneD, Array<OneD, NekDouble> > &dirForcing, 
+                                          Array <OneD,NekDouble > &outarray,
+                                          const int matrixid = 0);
             
             void AddEdgeBoundaryInt(const int edge, 
                                     const StdRegions::StdExpansion1DSharedPtr &EdgeExp,
@@ -180,6 +197,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.h,v $
+ *    Revision 1.9  2009/11/06 21:43:56  sherwin
+ *    DGDeriv function
+ *
  *    Revision 1.8  2009/09/06 22:24:00  sherwin
  *    Updates for Navier-Stokes solver
  *

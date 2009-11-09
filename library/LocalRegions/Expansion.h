@@ -109,6 +109,26 @@ namespace Nektar
             }
 
             virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, 
+                                                         const Array<OneD, Array<OneD, NekDouble> >& dirForcing,
+                                                         int element = 0,
+                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
+                                                         NekDouble tau = NekConstants::kNekUnsetDouble)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+                return NullDNekScalMatSharedPtr;
+            }
+
+            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, 
+                                                         const Array<OneD, NekDouble>& dirForcing,
+                                                         int element = 0,
+                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
+                                                         NekDouble tau = NekConstants::kNekUnsetDouble)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+                return NullDNekScalMatSharedPtr;
+            }
+
+            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, 
                                                          NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
                                                          NekDouble tau = NekConstants::kNekUnsetDouble)
             {
@@ -149,6 +169,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion.h,v $
+ *    Revision 1.4  2009/10/06 09:27:17  cbiotto
+ *    Adding GetNedges virtual function
+ *
  *    Revision 1.3  2008/12/18 14:08:24  pvos
  *    NekConstants update
  *

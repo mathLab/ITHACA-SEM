@@ -572,6 +572,27 @@ namespace Nektar
                 MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau);
                 return m_matrixManager[mkey];
             }
+
+
+            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
+							 const Array<OneD, NekDouble> &dir1Forcing,
+                                                         const int matrixid = 0,
+                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
+                                                         NekDouble tau = NekConstants::kNekUnsetDouble)
+            {
+	         MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau,dir1Forcing,matrixid);
+		 return m_matrixManager[mkey];
+            }
+
+            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
+							 const Array<OneD, Array<OneD, NekDouble> >& dirForcing,
+                                                         const int matrixid = 0,
+                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
+                                                         NekDouble tau = NekConstants::kNekUnsetDouble)
+            {
+	        MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau,dirForcing,matrixid);
+                return m_matrixManager[mkey];
+            }
         
             virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const MatrixKey &mkey)
             {
@@ -590,12 +611,14 @@ namespace Nektar
 
             virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
                                                      const Array<OneD, const NekDouble> &inarray,
-                                                     Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp, 
-                                                     Array <OneD,NekDouble > &outarray)
+                                                     Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
+						     const Array<OneD, Array<OneD, NekDouble> > &dirForcing, 
+                                                     Array <OneD,NekDouble > &outarray,
+                                                     const int matrixid)
             {
-                Expansion2D::AddHDGHelmholtzTraceTerms(tau,inarray,EdgeExp,outarray);
-            }            
-
+                Expansion2D::AddHDGHelmholtzTraceTerms(tau,inarray,EdgeExp,dirForcing,outarray,matrixid);
+            }
+            
             virtual void v_DGDeriv(int dir, 
                                    const Array<OneD, const NekDouble>&incoeffs,
                                    Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
@@ -730,6 +753,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.54  2009/11/06 21:43:56  sherwin
+ *    DGDeriv function
+ *
  *    Revision 1.53  2009/11/02 19:15:42  cantwell
  *    Moved ContField1D to inherit from DisContField1D.
  *    Moved ContField3D to inherit from DisContField3D.

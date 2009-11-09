@@ -636,10 +636,12 @@ namespace Nektar
 
             virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
                                                      const Array<OneD, const NekDouble> &inarray,
-                                                     Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp, 
-                                                     Array <OneD,NekDouble > &outarray)
+                                                     Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
+						     const Array<OneD, Array<OneD, NekDouble> > &dirForcing, 
+                                                     Array <OneD,NekDouble > &outarray,
+                                                     const int matrixid)
             {
-                Expansion2D::AddHDGHelmholtzTraceTerms(tau,inarray,EdgeExp,outarray);
+                Expansion2D::AddHDGHelmholtzTraceTerms(tau,inarray,EdgeExp,dirForcing,outarray,matrixid);
             }
             
             virtual void v_DGDeriv(int dir, 
@@ -755,6 +757,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.58  2009/11/06 21:43:56  sherwin
+ *    DGDeriv function
+ *
  *    Revision 1.57  2009/10/06 09:42:28  cbiotto
  *    Adding virtual function GetBasis
  *

@@ -59,7 +59,7 @@ namespace Nektar
             int nLeftIntDofs  = sepTree[offset+2];
             int nRightIntDofs = sepTree[offset+3];
             int nBndDofs      = sepTree[offset+4];
-  
+
             int idx;
             bool daughtersConstructed[2] = {false,false};
             
@@ -67,27 +67,6 @@ namespace Nektar
             {
                 while( sepTree[offset+5] > recurLevel ) 
                 {         
-                    // This if statement below is for the special case
-                    // in which the metis output returns 0 as the number
-                    // of bnd dofs as the next partitioning...
-                    // This does not really make sense, but with the following
-                    // fix, we might get around with it.
-                    if(sepTree[offset+9] == 0)
-                    {
-                        ASSERTL0(((sepTree[offset+6]==2)?nLeftIntDofs:nRightIntDofs)==0,
-                                 "Don't know how to process this metis output");
-
-                        nLeftIntDofs  = sepTree[offset+7];
-                        nRightIntDofs = sepTree[offset+8]; 
-
-                        offset += 5;
-                        if( (offset + 5) >= sepTree.num_elements() )
-                        {
-                            break;
-                        }
-                        continue;
-                    }        
-
                     switch(sepTree[offset+6])
                     {
                     case 1:
@@ -854,6 +833,9 @@ namespace Nektar
 
 /**
  * $Log: SubStructuredGraph.cpp,v $
+ * Revision 1.2  2009/11/02 11:19:44  pvos
+ * Fixed a bug for reordering a graph without edges
+ *
  * Revision 1.1  2009/10/30 14:02:55  pvos
  * Multi-level static condensation updates
  *

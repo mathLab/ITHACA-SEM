@@ -232,7 +232,7 @@ namespace Nektar
                                            Array<OneD, int>& perm,
                                            Array<OneD, int>& iperm,
                                            BottomUpSubStructuredGraphSharedPtr& substructgraph,
-                                           const int mdswitch = 30);
+                                           const int mdswitch = 1);
         // The parameter MDSWITCH.
         // This parameters defines the maximal size of the smallest patches.
         // If at a certain level, a patch bundles less than MDSWITCH graph-vertices,
@@ -255,6 +255,9 @@ namespace Nektar
 
 /**
 * $Log: SubStructuredGraph.h,v $
+* Revision 1.2  2009/11/02 11:19:44  pvos
+* Fixed a bug for reordering a graph without edges
+*
 * Revision 1.1  2009/10/30 14:02:55  pvos
 * Multi-level static condensation updates
 *

@@ -220,6 +220,25 @@ namespace Nektar
                 return m_nvariablecoefficients;
             }
 
+            int GetMatrixID() const
+            {
+                return m_matrixid;
+            }
+
+            inline const Array<OneD,NekDouble>& GetVariableCoefficient(int i) const
+            {
+	      // ASSERTL1(m_nvariablecoefficients > 0,"No coeffcients have been defined");   
+	      if(m_nvariablecoefficients>0)
+		{
+		  return m_variablecoefficient[i];
+		}          
+
+	      else
+		{ 
+		  return NullNekDouble1DArray;  
+		}
+            }
+
             inline const Array<OneD,NekDouble>& GetVariableCoefficient() const
             {
                 ASSERTL1(m_nvariablecoefficients > 0,"No coeffcients have been defined");                
@@ -282,6 +301,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.h,v $
+* Revision 1.23  2009/11/07 21:09:11  sehunchun
+* Add more functions with various parameters
+*
 * Revision 1.22  2009/07/09 21:44:49  sehunchun
 * *** empty log message ***
 *

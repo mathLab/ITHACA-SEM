@@ -132,6 +132,8 @@ namespace Nektar
             eWeakDeriv0,
             eWeakDeriv1,
             eWeakDeriv2,
+            eWeakDirectionalDeriv,
+            eMassLevelCurvature,
             eLinearAdvection,
             eNBasisTrans,
             eInvNBasisTrans,
@@ -168,6 +170,8 @@ namespace Nektar
             "WeakDeriv0",
             "WeakDeriv1",
             "WeakDeriv2",
+            "WeakDirectionalDeriv",
+            "MassLevelCurvature",
             "NBasisTrans",
             "InvNBasisTrans", 
             "BwdTrans",
@@ -298,6 +302,18 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.36  2009/11/02 19:15:43  cantwell
+* Moved ContField1D to inherit from DisContField1D.
+* Moved ContField3D to inherit from DisContField3D.
+* Incorporated GenExpList1D functionality into ExpList1D.
+* Tidied up and added documentation to various classes.
+* Moved Namespace documentation and introductions to separate files along with
+* doxygen configuration.
+* Added option to use system ZLIB library instead of libboost_zlib on UNIX.
+* Added extra search paths to FindMetis.cmake and FindNektar++.cmake.
+* Updated Linux compiling instructions.
+* Updated regDemo to use Helmholtz2D-g when built as debug.
+*
 * Revision 1.35  2009/04/03 14:57:34  sherwin
 * Linear Advection matrices added, corrected unsigned int intialisation
 *

@@ -166,14 +166,34 @@ namespace Nektar
                 return m_metricinfo;
             }
 
+            int GetMatrixID() const
+            {
+                return m_stdMatKey->GetMatrixID(); 
+            }
+
             const NekDouble GetConstant(int i) const 
             {
                 return m_stdMatKey->GetConstant(i);
             }
 
+           int GetNvariableCoefficients() const
+            {
+                return m_stdMatKey->GetNvariableCoefficients();
+            }
+
             int GetNvariableLaplacianCoefficients() const
             {
                 return m_stdMatKey->GetNvariableLaplacianCoefficients();
+            }
+
+            inline const Array<OneD,NekDouble>& GetVariableCoefficient() const
+            {             
+                return m_stdMatKey->GetVariableCoefficient();
+            }
+
+            inline const Array<OneD,NekDouble>& GetVariableCoefficient(int i) const
+            {             
+                return m_stdMatKey->GetVariableCoefficient(i);
             }
 
             inline const Array<OneD,NekDouble>& GetVariableLaplacianCoefficient() const
@@ -209,6 +229,9 @@ namespace Nektar
 
 /**
 * $Log: MatrixKey.h,v $
+* Revision 1.19  2009/11/07 21:10:13  sehunchun
+* Add more functions with various parameters
+*
 * Revision 1.18  2008/11/19 16:01:41  pvos
 * Added functionality for variable Laplacian coeffcients
 *

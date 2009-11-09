@@ -769,8 +769,14 @@ namespace Nektar
                         SetTraceToGeomOrientation(EdgeExp,lambda);
                         
                         // + \tilde{G} \lambda
-                        // AddNormTraceInt(dir,lambda,EdgeExp,f); 
-                        AddNormTraceInt(dir,lambda,EdgeExp,varcoeffs[dir],f); 
+                        if(nvarcoeffs>0)
+                        {
+                            AddNormTraceInt(dir,lambda,EdgeExp,varcoeffs[dir],f); 
+                        }
+                        else
+                        {
+                            AddNormTraceInt(dir,lambda,EdgeExp,f); 
+                        }
                         
                         // multiply by inverse mass matrix
                         Ulam = invMass*F; 
@@ -999,6 +1005,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.cpp,v $
+ *    Revision 1.14  2009/11/09 15:43:51  sehunchun
+ *    HDG2DManifold Solver with Variable coefficients
+ *
  *    Revision 1.13  2009/11/06 21:43:56  sherwin
  *    DGDeriv function
  *

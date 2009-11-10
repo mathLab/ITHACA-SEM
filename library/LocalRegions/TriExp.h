@@ -174,6 +174,10 @@ namespace Nektar
                            const Array<OneD, const NekDouble>& inarray,
                            Array<OneD, NekDouble> &outarray);
 
+            void PhysDirectionalDeriv(const Array<OneD, const NekDouble> &inarray, 
+                                      const Array<OneD, const NekDouble>& direction,
+                                      Array<OneD, NekDouble> &out);  
+
             //----------------------------
             // Evaluations Methods
             //---------------------------
@@ -287,7 +291,41 @@ namespace Nektar
                     StdExpansion::WeakDerivMatrixOp_MatFree(i,inarray,outarray,mkey);
                 }
             }
+
+            void WeakDirectionalDerivMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                              Array<OneD,NekDouble> &outarray,
+                                              const StdRegions::StdMatrixKey &mkey)
+            {
+                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eTriExp, NekOptimize::eWeakDerivMatrixOp>::
+                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
+                
+                if(doMatOp)
+                {
+                    TriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
+                }
+                else
+                {
+                    StdExpansion::WeakDirectionalDerivMatrixOp_MatFree(inarray,outarray,mkey);
+                }
+            }
             
+            void MassLevelCurvatureMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                              Array<OneD,NekDouble> &outarray,
+                                              const StdRegions::StdMatrixKey &mkey)
+            {
+                bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eTriExp, NekOptimize::eMassMatrixOp>::
+                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
+                
+                if(doMatOp)
+                {
+                    TriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
+                }
+                else
+                {
+                    StdExpansion::MassLevelCurvatureMatrixOp_MatFree(inarray,outarray,mkey);
+                }
+            }
+
             void HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
                                    const StdRegions::StdMatrixKey &mkey)
@@ -500,6 +538,13 @@ namespace Nektar
                                      Array<OneD, NekDouble> &outarray)
             {
                 PhysDeriv(dir,inarray,outarray);
+            }
+
+            virtual void v_PhysDirectionalDeriv(const Array<OneD, const NekDouble>& inarray,
+                                                const Array<OneD, const NekDouble>& direction,
+                                                Array<OneD, NekDouble> &outarray)
+            {
+                PhysDirectionalDeriv(inarray,direction,outarray);
             }
         
             /// Virtual call to TriExp::FwdTrans
@@ -717,7 +762,21 @@ namespace Nektar
             {
                 WeakDerivMatrixOp(i,inarray,outarray,mkey);
             }
+
+            virtual void v_WeakDirectionalDerivMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                                        Array<OneD,NekDouble> &outarray,
+                                                        const StdRegions::StdMatrixKey &mkey)
+            {
+                WeakDirectionalDerivMatrixOp(inarray,outarray,mkey);
+            }
             
+            virtual void v_MassLevelCurvatureMatrixOp(const Array<OneD, const NekDouble> &inarray, 
+                                                      Array<OneD,NekDouble> &outarray,
+                                                      const StdRegions::StdMatrixKey &mkey)
+            {
+                MassLevelCurvatureMatrixOp(inarray,outarray,mkey);
+            }
+
             virtual void v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray,
                                              const StdRegions::StdMatrixKey &mkey)
@@ -753,6 +812,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.55  2009/11/09 15:43:50  sehunchun
+ *    HDG2DManifold Solver with Variable coefficients
+ *
  *    Revision 1.54  2009/11/06 21:43:56  sherwin
  *    DGDeriv function
  *

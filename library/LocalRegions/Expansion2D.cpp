@@ -527,7 +527,8 @@ namespace Nektar
                     {
                         if(nvarcoeffs>0)
                         {
-                            DNekScalMat &Dmat = *v_GetLocMatrix(StdRegions::eWeakDirectionalDeriv,mkey.GetVariableCoefficient(i),matrixid+i*10000);
+                            DNekScalMat &Dmat = *v_GetLocMatrix(StdRegions::eWeakDirectionalDeriv,
+                                                                mkey.GetVariableCoefficient(i),matrixid+i*10000);
                             Mat = Mat + Dmat*invMass*Transpose(Dmat);
                         }
 
@@ -788,8 +789,8 @@ namespace Nektar
                 break;            
             case StdRegions::eHybridDGHelmBndLam:
                 {
-                    int order_e, nquad_e;
                     int i,j,e,cnt;
+                    int order_e, nquad_e;
                     int nbndry  = v_NumDGBndryCoeffs();
                     int coordim = v_GetCoordim();
                     int nedges  = v_GetNedges();
@@ -1005,6 +1006,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.cpp,v $
+ *    Revision 1.15  2009/11/09 18:12:55  sehunchun
+ *    *** empty log message ***
+ *
  *    Revision 1.14  2009/11/09 15:43:51  sehunchun
  *    HDG2DManifold Solver with Variable coefficients
  *

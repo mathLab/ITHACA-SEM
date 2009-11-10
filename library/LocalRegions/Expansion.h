@@ -150,6 +150,12 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "This function is not valid in this class ");
             }
 
+            virtual void  v_PhysDirectionalDeriv (const Array<OneD, const NekDouble> &inarray, 
+                                                  const Array<OneD, const NekDouble>& direction,
+                                                  Array<OneD, NekDouble> &out)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not valid in this class ");
+            }
 
             private:
             // Do not add members here since it may lead to conflicts.
@@ -169,6 +175,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion.h,v $
+ *    Revision 1.5  2009/11/09 15:43:51  sehunchun
+ *    HDG2DManifold Solver with Variable coefficients
+ *
  *    Revision 1.4  2009/10/06 09:27:17  cbiotto
  *    Adding GetNedges virtual function
  *

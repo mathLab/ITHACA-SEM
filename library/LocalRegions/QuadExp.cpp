@@ -800,6 +800,49 @@ namespace Nektar
             }             
         }
 
+        // Physical Derivation along direction vector
+        void QuadExp::PhysDirectionalDeriv(const Array<OneD, const NekDouble> & inarray,
+                                           const Array<OneD, const NekDouble>& direction,
+                                           Array<OneD,NekDouble> &out)
+        {
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    nqtot = nquad0*nquad1;
+
+            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+
+            Array<OneD,NekDouble> diff0(2*nqtot);
+            Array<OneD,NekDouble> diff1(diff0+nqtot);
+
+            StdQuadExp::PhysDeriv(inarray, diff0, diff1);
+
+            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {
+                Array<OneD, Array<OneD, NekDouble> > tangmat(2);
+
+                // d/dx_v^s = v_x*ds/dx + v_y*ds/dy + v_z*dx/dz
+                for (int i=0; i< 2; ++i)
+                {
+                    tangmat[i] = Array<OneD, NekDouble>(nqtot,0.0);
+                    for (int k=0; k<(m_geom->GetCoordim()); ++k)
+                    {
+                        Vmath::Vvtvp(nqtot,&gmat[2*k+i][0],1,&direction[k*nqtot],1,&tangmat[i][0],1,&tangmat[i][0],1);
+                    }
+                }
+
+                /// D_v = d/dx_v^s + d/dx_v^r
+                if(out.num_elements())
+                {
+                    Vmath::Vmul  (nqtot,&tangmat[0][0],1,&diff0[0],1, &out[0], 1);
+                    Vmath::Vvtvp (nqtot,&tangmat[1][0],1,&diff1[0],1, &out[0], 1, &out[0],1);
+                }
+
+            }
+            else
+            {
+                ASSERTL1(m_metricinfo->GetGtype() == SpatialDomains::eDeformed,"Wrong route");
+            }
+        }
         
         /** \brief Forward transform from physical quadrature space
             stored in \a inarray and evaluate the expansion coefficients and
@@ -1926,6 +1969,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.67  2009/11/09 15:43:51  sehunchun
+ *    HDG2DManifold Solver with Variable coefficients
+ *
  *    Revision 1.66  2009/09/23 12:42:40  pvos
  *    Updates for variable order expansions
  *

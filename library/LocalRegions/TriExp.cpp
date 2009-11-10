@@ -862,6 +862,52 @@ namespace Nektar
             }             
         }
         
+        // Physical Derivation along direction vector
+        void TriExp::PhysDirectionalDeriv(const Array<OneD, const NekDouble> & inarray,
+                                          const Array<OneD, const NekDouble>& direction,
+                                          Array<OneD,NekDouble> &out)
+        {
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    nqtot = nquad0*nquad1;
+
+            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+
+            Array<OneD,NekDouble> diff0(2*nqtot);
+            Array<OneD,NekDouble> diff1(diff0+nqtot);
+
+            // diff0 = du/d_xi, diff1 = du/d_eta
+            StdTriExp::PhysDeriv(inarray, diff0, diff1);
+
+            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {
+                Array<OneD, Array<OneD, NekDouble> > tangmat(2);
+
+                // D^v_xi = v_x*d_xi/dx + v_y*d_xi/dy + v_z*d_xi/dz
+                // D^v_eta = v_x*d_eta/dx + v_y*d_eta/dy + v_z*d_eta/dz
+                for (int i=0; i< 2; ++i)
+                {
+                    tangmat[i] = Array<OneD, NekDouble>(nqtot,0.0);
+                    for (int k=0; k<(m_geom->GetCoordim()); ++k)
+                    {
+                        Vmath::Vvtvp(nqtot,&gmat[2*k+i][0],1,&direction[k*nqtot],1,&tangmat[i][0],1,&tangmat[i][0],1);
+                    }
+                }
+
+                /// D_v = D^v_xi * du/d_xi + D^v_eta * du/d_eta
+                if(out.num_elements())
+                {
+                    Vmath::Vmul  (nqtot,&tangmat[0][0],1,&diff0[0],1, &out[0], 1);
+                    Vmath::Vvtvp (nqtot,&tangmat[1][0],1,&diff1[0],1, &out[0], 1, &out[0],1);
+                }
+
+            }
+            else
+            {
+                ASSERTL1(m_metricinfo->GetGtype() == SpatialDomains::eDeformed,"Wrong route");
+            }
+        }
+
         /** \brief Forward transform from physical quadrature space
             stored in \a inarray and evaluate the expansion coefficients and
             store in \a (this)->m_coeffs  
@@ -1901,6 +1947,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.61  2009/11/09 15:43:50  sehunchun
+ *    HDG2DManifold Solver with Variable coefficients
+ *
  *    Revision 1.60  2009/09/24 10:50:51  cbiotto
  *    Updates for variable order expansions
  *

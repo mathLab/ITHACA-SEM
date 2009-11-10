@@ -426,6 +426,8 @@ namespace Nektar
             case eWeakDeriv0:
             case eWeakDeriv1:
             case eWeakDeriv2:
+            case eWeakDirectionalDeriv:
+            case eMassLevelCurvature: 
             case eLinearAdvection:
                 {
                     Array<OneD, NekDouble> tmp(m_ncoeffs);
@@ -471,6 +473,12 @@ namespace Nektar
                 break;
             case eWeakDeriv2:
                 WeakDerivMatrixOp(2,inarray,outarray,mkey);
+                break;
+            case eWeakDirectionalDeriv:
+                WeakDirectionalDerivMatrixOp(inarray,outarray,mkey);
+                break;
+            case eMassLevelCurvature:
+                MassLevelCurvatureMatrixOp(inarray,outarray,mkey);
                 break;
             case eLinearAdvection:
                 LinearAdvectionMatrixOp(inarray,outarray,mkey);
@@ -531,6 +539,12 @@ namespace Nektar
                 break;
             case eWeakDeriv2:
                 WeakDerivMatrixOp_MatFree(2,inarray,outarray,mkey);
+                break;
+            case eWeakDirectionalDeriv:
+                WeakDirectionalDerivMatrixOp_MatFree(inarray,outarray,mkey);
+                break;
+            case eMassLevelCurvature:
+                MassLevelCurvatureMatrixOp_MatFree(inarray,outarray,mkey);
                 break;
             case eLinearAdvection:
                 LinearAdvectionMatrixOp_MatFree(inarray,outarray,mkey);
@@ -730,6 +744,94 @@ namespace Nektar
             v_IProductWRTBase(tmp, outarray);
         }
 
+        void StdExpansion::WeakDirectionalDerivMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
+                                                                Array<OneD,NekDouble> &outarray,
+                                                                const StdMatrixKey &mkey)
+        {           
+            int k, dim = 3;
+            int nq = GetTotPoints();
+            int matrixid = mkey.GetMatrixID();
+            int varsize = ((mkey.GetVariableCoefficient(0)).num_elements())/dim;
+
+            Array<OneD, NekDouble> tmp(nq);
+            Array<OneD, NekDouble> dtmp(nq);
+            Array<OneD, NekDouble> stmp(nq,0.0);
+
+            v_BwdTrans(inarray,tmp);
+
+            // For Deformed mesh ==============
+            if (varsize==nq)
+            {
+                v_PhysDirectionalDeriv(tmp,mkey.GetVariableCoefficient(0),tmp);
+            }
+
+            // For Regular mesh ==========
+            else
+            {
+                for (k=0; k<dim;++k)
+                {
+                    v_PhysDeriv(k,tmp,dtmp);
+
+                    if(mkey.GetNvariableCoefficients() > 0)
+                    {
+                        Vmath::Vmul(nq, &(mkey.GetVariableCoefficient(0))[k*nq], 1, &dtmp[0], 1, &stmp[0], 1);
+                    }
+                }
+            }
+
+            v_IProductWRTBase(stmp, outarray);
+        }
+
+        void StdExpansion::MassLevelCurvatureMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
+                                                               Array<OneD,NekDouble> &outarray,
+                                                               const StdMatrixKey &mkey)
+      {
+          int i, k;
+          int nqtot = GetTotPoints();
+          int matrixid = mkey.GetMatrixID();
+
+          int dim = 3 ;
+          NekDouble checkweight=0.0;
+          Array<OneD, NekDouble> tmp(nqtot), tan(nqtot), dtan0(nqtot), dtan1(nqtot), weight(nqtot,0.0);
+
+          int gmatnumber = (mkey.GetVariableCoefficient(1)).num_elements();
+          
+          v_BwdTrans(inarray,tmp);       
+
+          // weight = \grad \cdot tanvec
+          for(int k=0; k<dim; ++k)
+	  {
+	    Vmath::Vcopy(nqtot,&(mkey.GetVariableCoefficient(0))[k*nqtot],1,&tan[0],1);
+              
+              // For Regular mesh ...
+              if(gmatnumber==1)
+              {
+                  // D_{/xi} and D_{/eta}
+                  v_PhysDeriv(0,tan,dtan0);
+                  v_PhysDeriv(1,tan,dtan1);
+                  
+                  // d v / d x_i = (d \xi / d x_i)*( d v / d \xi ) + (d \eta / d x_i)*( d v / d \eta )
+                  Vmath::Svtvp(nqtot,(mkey.GetVariableCoefficient(2*k+1))[0],&dtan0[0],1,&weight[0],1,&weight[0],1);
+                  Vmath::Svtvp(nqtot,(mkey.GetVariableCoefficient(2*k+2))[0],&dtan1[0],1,&weight[0],1,&weight[0],1);
+              }
+              
+              // For Curved mesh ...
+              else if(gmatnumber==nqtot)
+              {
+                  // D_{x} and D_{y}
+                  v_PhysDeriv(k,tan,dtan0);
+                  Vmath::Vadd(nqtot,&dtan0[0],1,&weight[0],1,&weight[0],1);
+              }
+
+              else
+              {
+                  ASSERTL1( ((gmatnumber=1) || (gmatnumber==nqtot) ), "Gmat is not in a right size");
+              }
+	  }
+          
+          Vmath::Vmul(nqtot, &weight[0], 1, &tmp[0], 1, &tmp[0], 1);	
+          v_IProductWRTBase(tmp, outarray);
+      }
 
         void StdExpansion::LinearAdvectionMatrixOp_MatFree( const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
@@ -1068,7 +1170,7 @@ namespace Nektar
                          "specific element types");
             }
 
-            void   StdExpansion::v_PhysDeriv (const Array<OneD, const NekDouble>& inarray,
+            void StdExpansion::v_PhysDeriv (const Array<OneD, const NekDouble>& inarray,
                                         Array<OneD, NekDouble> &out_d1,
                                         Array<OneD, NekDouble> &out_d2,
                                         Array<OneD, NekDouble> &out_d3)
@@ -1081,6 +1183,14 @@ namespace Nektar
                                      const Array<OneD, const NekDouble>& inarray,
                                      Array<OneD, NekDouble> &out_d0)
 
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                         "specific element types");
+            }
+
+            void StdExpansion::v_PhysDirectionalDeriv(const Array<OneD, const NekDouble>& inarray,
+                                                const Array<OneD, const NekDouble>& direction,
+                                                Array<OneD, NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for "
                          "specific element types");
@@ -1321,6 +1431,25 @@ namespace Nektar
 
             }
 
+        void StdExpansion::v_WeakDirectionalDerivMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                                          Array<OneD,NekDouble> &outarray,
+                                                          const StdMatrixKey &mkey)
+            {
+                // If this function is not reimplemented on shape level, the function
+                // below will be called
+                WeakDirectionalDerivMatrixOp_MatFree(inarray,outarray,mkey);
+
+            }
+
+        void StdExpansion::v_MassLevelCurvatureMatrixOp(const Array<OneD, const NekDouble> &inarray, 
+                                                        Array<OneD,NekDouble> &outarray,
+                                                        const StdMatrixKey &mkey)
+        {
+            // If this function is not reimplemented on shape level, the function
+            // below will be called
+            MassLevelCurvatureMatrixOp_MatFree(inarray,outarray,mkey);
+        }
+
             void StdExpansion::v_LinearAdvectionMatrixOp(const Array<OneD, 
                                                    const NekDouble> &inarray,
                                                    Array<OneD,NekDouble> &outarray,
@@ -1364,6 +1493,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.88  2009/11/06 21:42:16  sherwin
+* Added call to DGDeriv function
+*
 * Revision 1.87  2009/11/02 19:15:43  cantwell
 * Moved ContField1D to inherit from DisContField1D.
 * Moved ContField3D to inherit from DisContField3D.

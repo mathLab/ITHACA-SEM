@@ -986,6 +986,20 @@ namespace Nektar
                 v_WeakDerivMatrixOp(i,inarray,outarray,mkey);
             }
 
+            void WeakDirectionalDerivMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                              Array<OneD,NekDouble> &outarray,
+                                              const StdMatrixKey &mkey)
+            {
+                v_WeakDirectionalDerivMatrixOp(inarray,outarray,mkey);
+            }
+
+            void MassLevelCurvatureMatrixOp(const Array<OneD, const NekDouble> &inarray, 
+                                            Array<OneD,NekDouble> &outarray,
+                                            const StdMatrixKey &mkey)
+            {
+                v_MassLevelCurvatureMatrixOp(inarray,outarray,mkey);
+            }
+
             void LinearAdvectionMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
                                    const StdMatrixKey &mkey)
@@ -1018,6 +1032,13 @@ namespace Nektar
                            Array<OneD, NekDouble> &outarray)
             {
                 v_PhysDeriv (dir, inarray, outarray);
+            }
+
+            void PhysDirectionalDeriv(const Array<OneD, const NekDouble>& inarray,
+                                      const Array<OneD, const NekDouble>& direction,
+                                      Array<OneD, NekDouble> &outarray)
+            {
+                v_PhysDirectionalDeriv (inarray, direction, outarray);
             }
 
             void StdPhysDeriv(const Array<OneD, const NekDouble>& inarray, 
@@ -1321,6 +1342,14 @@ namespace Nektar
                                                  const Array<OneD, const NekDouble> &inarray,
                                                  Array<OneD,NekDouble> &outarray,
                                                  const StdMatrixKey &mkey);
+
+            void WeakDirectionalDerivMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
+                                                      Array<OneD,NekDouble> &outarray,
+                                                      const StdMatrixKey &mkey);
+
+            void MassLevelCurvatureMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
+                                                    Array<OneD,NekDouble> &outarray,
+                                                    const StdMatrixKey &mkey);
             
             void LinearAdvectionMatrixOp_MatFree( const Array<OneD, const NekDouble> &inarray,
                                                   Array<OneD,NekDouble> &outarray,
@@ -1392,6 +1421,10 @@ namespace Nektar
             virtual void v_PhysDeriv(const int dir, 
                                      const Array<OneD, const NekDouble>& inarray,
                                      Array<OneD, NekDouble> &out_d0);
+
+            virtual void v_PhysDirectionalDeriv(const Array<OneD, const NekDouble>& inarray,
+                                                const Array<OneD, const NekDouble>& direction,
+                                                Array<OneD, NekDouble> &outarray);
 
             virtual void v_StdPhysDeriv (const Array<OneD, const NekDouble>& inarray,
                                          Array<OneD, NekDouble> &out_d1,
@@ -1497,6 +1530,14 @@ namespace Nektar
                                              Array<OneD,NekDouble> &outarray,
                                              const StdMatrixKey &mkey);
 
+            virtual void v_WeakDirectionalDerivMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                                        Array<OneD,NekDouble> &outarray,
+                                                        const StdMatrixKey &mkey);
+
+            virtual void v_MassLevelCurvatureMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                                        Array<OneD,NekDouble> &outarray,
+                                                        const StdMatrixKey &mkey);
+
             virtual void v_LinearAdvectionMatrixOp(const Array<OneD, 
                                                    const NekDouble> &inarray,
                                                    Array<OneD,NekDouble> &outarray,
@@ -1528,6 +1569,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.124  2009/11/06 21:42:17  sherwin
+ * Added call to DGDeriv function
+ *
  * Revision 1.123  2009/11/02 19:15:43  cantwell
  * Moved ContField1D to inherit from DisContField1D.
  * Moved ContField3D to inherit from DisContField3D.

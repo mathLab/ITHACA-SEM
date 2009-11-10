@@ -665,6 +665,13 @@ namespace Nektar
                 PhysDeriv(dir,inarray,outarray);
             }
 
+           virtual void v_PhysDirectionalDeriv(const Array<OneD, const NekDouble>& inarray,
+                                                const Array<OneD, const NekDouble>& direction,
+                                                Array<OneD, NekDouble> &outarray)
+            {
+                ASSERTL0(false,"This method is not defined or valid for this class type");
+            }
+
             virtual void v_StdPhysDeriv(const Array<OneD, const NekDouble>& inarray, 
                                         Array<OneD, NekDouble> &out_d0,
                                         Array<OneD, NekDouble> &out_d1,
@@ -827,6 +834,9 @@ namespace Nektar
 
 /**
  * $Log: StdTriExp.h,v $
+ * Revision 1.46  2009/09/24 10:55:57  cbiotto
+ * Updates for variable expansion
+ *
  * Revision 1.45  2009/04/27 21:32:45  sherwin
  * Updated WriteToField method
  *

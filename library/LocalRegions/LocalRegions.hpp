@@ -41,14 +41,8 @@
 
 namespace Nektar
 {    
-    /** \brief The namespace associated with the the LocalRegions library 
-     * (\ref pageLocalRegions "LocalRegions introduction")
-     */
     namespace LocalRegions
     {
-        /** \page pageLocalRegions The LocalRegions library
-         *
-         */
         enum GeomState
         {
             eNotFilled,
@@ -94,6 +88,9 @@ namespace Nektar
 
 /** 
 *    $Log: LocalRegions.hpp,v $
+*    Revision 1.5  2008/09/09 15:05:09  sherwin
+*    Updates related to cuved geometries. Normals have been removed from m_metricinfo and replaced with a direct evaluation call. Interp methods have been moved to LibUtilities
+*
 *    Revision 1.4  2008/06/05 15:06:42  pvos
 *    Added documentation
 *

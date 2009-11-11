@@ -1477,36 +1477,38 @@ namespace Nektar
                     }
                     else
                     {
-                        Array<OneD, Array<OneD, NekDouble> > tangmat1(nvarcoeffs);
-                        Array<OneD, Array<OneD, NekDouble> > tangmat2(nvarcoeffs);      
+                        Array<OneD, Array<OneD, NekDouble> > Cxi(1);
+                        Array<OneD, Array<OneD, NekDouble> > Ceta(2);      
 
                         // Directional Forcing is applied                           
-                        tangmat1[0] = Array<OneD, NekDouble> (nqtot,0.0);
-                        tangmat2[0] = Array<OneD, NekDouble> (nqtot,0.0);
+                        Cxi[0] = Array<OneD, NekDouble> (nqtot,0.0);
+                        Ceta[0] = Array<OneD, NekDouble> (nqtot,0.0);
                         
-                        // Compute /sum_k t_k gmat_k
+                        // Cxi = tan_{xi_x} * d \xi/dx + tan_{xi_y} * d \xi/dy + tan_{xi_z} * d \xi/dz
+                        // Ceta = tan_{eta_x} * d \eta/dx + tan_{xi_y} * d \xi/dy + tan_{xi_z} * d \xi/dz
                         for (int k=0; k<dim; ++k)
                         {
                             Vmath::Svtvp(nqtot,gmat[2*k][0],&(mkey.GetVariableCoefficient(0))[k*nqtot],1,
-                                         &tangmat1[0][0],1,&tangmat1[0][0],1);
+                                         &Cxi[0][0],1,&Cxi[0][0],1);
                             Vmath::Svtvp(nqtot,gmat[2*k+1][0],&(mkey.GetVariableCoefficient(0))[k*nqtot],1,
-                                         &tangmat2[0][0],1,&tangmat2[0][0],1);
+                                         &Ceta[0][0],1,&Ceta[0][0],1);
                         }
-                        
-                        // Generate different deriv0 and deriv1 depending on directionality of each tangential basis.
-                        MatrixKey deriv0key(StdRegions::eWeakDirectionalDeriv, mkey.GetExpansionType(), *this, tangmat1, matrixid);  
-                        MatrixKey deriv1key(StdRegions::eWeakDirectionalDeriv, mkey.GetExpansionType(), *this, tangmat2, matrixid+10000);  
 
-                        DNekMat &deriv0 = *GetStdMatrix(*deriv0key.GetStdMatKey());
-                        DNekMat &deriv1 = *GetStdMatrix(*deriv1key.GetStdMatKey());
+                        // derivxi = Cxi * ( B * D_{\xi} *B^T )  
+                        // deriveta = Ceta * ( B * D_{\eta} * B^T )
+                        MatrixKey derivxikey(StdRegions::eWeakDeriv0, mkey.GetExpansionType(), *this, Cxi, matrixid);  
+                        MatrixKey derivetakey(StdRegions::eWeakDeriv1, mkey.GetExpansionType(), *this, Ceta, matrixid+10000);  
+
+                        DNekMat &derivxi = *GetStdMatrix(*derivxikey.GetStdMatKey());
+                        DNekMat &deriveta = *GetStdMatrix(*derivetakey.GetStdMatKey());
                         
-                        int rows = deriv0.GetRows();
-                        int cols = deriv1.GetColumns();
+                        int rows = derivxi.GetRows();
+                        int cols = deriveta.GetColumns();
 
                         DNekMatSharedPtr WeakDirectionalDeriv = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
 
-                        // D = D_tan1 + D_tan2
-                        (*WeakDirectionalDeriv) = deriv0 + deriv1;
+                        // D_t = D_xi 
+                        (*WeakDirectionalDeriv) = derivxi + deriveta;
 
                         // Add Weighted Mass with (\grad \cdot u )
                         Array<OneD, Array<OneD, NekDouble> > Weight(1+2*dim);
@@ -1969,6 +1971,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.68  2009/11/10 19:04:24  sehunchun
+ *    Variable coefficients for HDG2D Solver
+ *
  *    Revision 1.67  2009/11/09 15:43:51  sehunchun
  *    HDG2DManifold Solver with Variable coefficients
  *

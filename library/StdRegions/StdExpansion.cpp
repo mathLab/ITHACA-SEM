@@ -739,8 +739,16 @@ namespace Nektar
             // ASSERTL1(k1 >= 0 && k1 < ExpansionTypeDimMap[v_DetExpansionType()],"invalid first  argument");
             
             Array<OneD, NekDouble> tmp(GetTotPoints());
+            int nq = GetTotPoints();
+
             v_BwdTrans(inarray,tmp);
             v_PhysDeriv(k1,tmp,tmp);
+
+            if(mkey.GetNvariableCoefficients() > 0)
+            {
+                Vmath::Vmul(nq, &(mkey.GetVariableCoefficient(0))[k1*nq], 1, &tmp[0], 1, &tmp[0], 1);
+            }
+            
             v_IProductWRTBase(tmp, outarray);
         }
 
@@ -750,7 +758,6 @@ namespace Nektar
         {           
             int k, dim = 3;
             int nq = GetTotPoints();
-            int matrixid = mkey.GetMatrixID();
             int varsize = ((mkey.GetVariableCoefficient(0)).num_elements())/dim;
 
             Array<OneD, NekDouble> tmp(nq);
@@ -768,15 +775,7 @@ namespace Nektar
             // For Regular mesh ==========
             else
             {
-                for (k=0; k<dim;++k)
-                {
-                    v_PhysDeriv(k,tmp,dtmp);
-
-                    if(mkey.GetNvariableCoefficients() > 0)
-                    {
-                        Vmath::Vmul(nq, &(mkey.GetVariableCoefficient(0))[k*nq], 1, &dtmp[0], 1, &stmp[0], 1);
-                    }
-                }
+                ASSERTL0(false, "Wrong route");
             }
 
             v_IProductWRTBase(stmp, outarray);
@@ -1493,6 +1492,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.89  2009/11/10 19:01:37  sehunchun
+* Update related to Variable coefficients of HDG2D Solver
+*
 * Revision 1.88  2009/11/06 21:42:16  sherwin
 * Added call to DGDeriv function
 *

@@ -405,23 +405,23 @@ namespace Nektar
                                                    StdRegions::eWeakDeriv2};
 
 	    int nvarcoeffs = dirForcing.num_elements();
-
 	    // Two independent direction
             for(n = 0; n < 2; ++n)
             {
+
                 //G;
-                if(nvarcoeffs>0)
-		{
-                    Array<OneD, NekDouble> normalindir(nquad_e);
-                    Getnormalindir(edge,EdgeExp[edge],normals,dirForcing[n],normalindir);
-                    Vmath::Vmul(nquad_e,&normalindir[0],1,&(EdgeExp[edge]->GetPhys())[0],1,&inval[0],1);
-                }                
-                
-                else
-                {
-                    Vmath::Vmul(nquad_e,&normals[n*nquad_e],1,&(EdgeExp[edge]->GetPhys())[0],1,&inval[0],1);
-                }
-              
+                  if(nvarcoeffs>0)
+                  {
+                      Array<OneD, NekDouble> normalindir(nquad_e);
+                      Getnormalindir(edge,EdgeExp[edge],normals,dirForcing[n],normalindir);
+                      Vmath::Vmul(nquad_e,&normalindir[0],1,&(EdgeExp[edge]->GetPhys())[0],1,&inval[0],1);
+                   }                
+                  
+                  else
+                  {
+                      Vmath::Vmul(nquad_e,&normals[n*nquad_e],1,&(EdgeExp[edge]->GetPhys())[0],1,&inval[0],1);
+                  }
+             
                 // negate for backwards facing edge
                 if(edgedir == StdRegions::eBackwards)
                 {
@@ -440,7 +440,7 @@ namespace Nektar
                     }
                 }
 
-                if(nvarcoeffs>0)
+                 if(nvarcoeffs>0)
                 {
                     DNekScalMat &Dmat = *v_GetLocMatrix(StdRegions::eWeakDirectionalDeriv,dirForcing[n],matrixid+n*10000);
                     Coeffs = Coeffs  + Dmat*Tmpcoeff;                 
@@ -518,11 +518,10 @@ namespace Nektar
 
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(ncoeffs,ncoeffs);
                     DNekMat &Mat = *returnval;
-
                     Vmath::Zero(ncoeffs*ncoeffs,Mat.GetPtr(),1);
 
                     int nvarcoeffs = mkey.GetNvariableCoefficients();
-
+                    cout << "eHybridDGHelmholtz for element " << matrixid  << endl;
                     for(i=0;  i < 2; ++i)
                     {
                         if(nvarcoeffs>0)
@@ -594,6 +593,8 @@ namespace Nektar
                         }
                     }
 
+                    cout << "eHybridDGLamToU for element " << matrixid << endl;
+
                     // Helmholtz matrix
                     //  DNekScalMat  &invHmat = *v_GetLocMatrix(StdRegions::eInvHybridDGHelmholtz, lambdaval, tau);
 		    DNekScalMat  &invHmat = *v_GetLocMatrix(StdRegions::eInvHybridDGHelmholtz, varcoeffs, matrixid, lambdaval, tau);
@@ -640,7 +641,7 @@ namespace Nektar
                         
                         SetTraceToGeomOrientation(EdgeExp,lambda);
                         
-                        //   AddHDGHelmholtzTraceTerms(tau,lambda,EdgeExp,f);
+                        // AddHDGHelmholtzTraceTerms(tau,lambda,EdgeExp,f);
                         AddHDGHelmholtzTraceTerms(tau, lambda, EdgeExp, varcoeffs, f, matrixid);
                         
                         Ulam = invHmat*F; // generate Ulam from lambda
@@ -677,6 +678,7 @@ namespace Nektar
                     NekDouble lambdaval = mkey.GetConstant(0);
                     NekDouble tau       = mkey.GetConstant(1);
                     
+                    cout << "eHybridDGLamTOQ " << endl;
 
                     // declare matrix space
                     returnval  = MemoryManager<DNekMat>::AllocateSharedPtr(ncoeffs,nbndry); 
@@ -692,12 +694,6 @@ namespace Nektar
                             varcoeffs[j] = mkey.GetVariableCoefficient(j);
                         }
                     }
-
-                    // Helmholtz matrix
-                    // DNekScalMat &invHmat = *v_GetLocMatrix(StdRegions::eInvHybridDGHelmholtz, lambdaval,tau);
-                    
-                    // Lambda to U matrix
-                    // DNekScalMat &lamToU = *v_GetLocMatrix(StdRegions::eHybridDGLamToU, lambdaval, tau);
                     
                     DNekScalMat  &invHmat = *v_GetLocMatrix(StdRegions::eInvHybridDGHelmholtz, varcoeffs, matrixid, lambdaval, tau);
                     
@@ -1006,6 +1002,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.cpp,v $
+ *    Revision 1.16  2009/11/10 19:04:24  sehunchun
+ *    Variable coefficients for HDG2D Solver
+ *
  *    Revision 1.15  2009/11/09 18:12:55  sehunchun
  *    *** empty log message ***
  *

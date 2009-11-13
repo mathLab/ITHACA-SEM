@@ -683,23 +683,25 @@ namespace Nektar
             BlkMatrix = MemoryManager<DNekScalBlkMat>
                                 ::AllocateSharedPtr(nrows,ncols,blkmatStorage);
 
-            int nvarcoeffs = gkey.GetNvariableCoefficients();
+            int totnq, nvarcoeffs = gkey.GetNvariableCoefficients();
             Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
 
             for(i = cnt1 = matrixid = 0; i < n_exp; ++i)
             {
+                totnq = GetCoordim(i)*( (*m_exp)[i]->GetTotPoints() );
                 if(nvarcoeffs>0)
                 {
                     for(j = 0; j < nvarcoeffs; j++)
                     {
-                        varcoeffs[j] = gkey.GetVariableCoefficient(j) + cnt1;
+                         varcoeffs[j] = Array<OneD, NekDouble>(totnq,0.0);
+                         Vmath::Vcopy(totnq, &(gkey.GetVariableCoefficient(j))[cnt1], 1, &varcoeffs[j][0],1);
                     }
 
-                    cout << "ExpList: Coordim = " << GetCoordim(i) << endl;
-                    cnt1  += GetCoordim(i)*( (*m_exp)[i]->GetTotPoints() );
+                    cnt1  += totnq;
                     matrixid++;
                 }
 
+                cout << "ExpList: element id = " << matrixid << endl;
                 LocalRegions::MatrixKey matkey(gkey.GetMatrixType(),
                                                (*m_exp)[i]->DetExpansionType(),
                                                *(*m_exp)[i],
@@ -783,7 +785,7 @@ namespace Nektar
                             const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
         {
             int i,j,n,gid1,gid2,cntdim1,cntdim2,cnt1;
-            NekDouble sign1,sign2;
+            NekDouble sign1,sign2,matrixid;
             DNekScalMatSharedPtr loc_mat;
 
             unsigned int glob_rows;
@@ -840,8 +842,7 @@ namespace Nektar
             Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
 
             // fill global matrix
-            int matrixid=0;
-            for(n = cntdim1 = cntdim2 = cnt1 = 0; n < (*m_exp).size(); ++n)
+            for(n = cntdim1 = cntdim2 = cnt1 = matrixid = 0; n < (*m_exp).size(); ++n)
             {
                 if(nvarcoeffs>0)
                 {
@@ -965,23 +966,26 @@ namespace Nektar
 
             DNekScalMatSharedPtr loc_mat; 
 
-            int nvarcoeffs = mkey.GetNvariableCoefficients();
+            int totnq, nvarcoeffs = mkey.GetNvariableCoefficients();
             Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
             
             for(n = cnt1 = matrixid = 0; n < n_exp; ++n)
             {
+                totnq = GetCoordim(n)*( (*m_exp)[n]->GetTotPoints() );
                 if(nvarcoeffs>0)
                 {
                     ASSERTL0(false,"method not set up for non-Dirichlet conditions");
 
-                        for(j = 0; j < nvarcoeffs; j++)
-                        {
-                            varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
-                        }
-                        cnt1  += GetCoordim(n)*( (*m_exp)[n]->GetTotPoints() );
-                        matrixid++;
+                    for(j = 0; j < nvarcoeffs; j++)
+                    {
+                         varcoeffs[j] = Array<OneD, NekDouble>(totnq,0.0);
+                         Vmath::Vcopy(totnq, &(mkey.GetVariableCoefficient(j))[cnt1], 1, &varcoeffs[j][0],1);
+                    }
+
+                    cnt1  += totnq;
+                    matrixid++;
                 }
-                
+
                 LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
                                                (*m_exp)[n]->DetExpansionType(),
                                                *(*m_exp)[n],
@@ -1352,18 +1356,22 @@ namespace Nektar
 
             DNekScalMatSharedPtr loc_mat;
 
-            int nvarcoeffs = mkey.GetNvariableCoefficients();
+            int totnq, nvarcoeffs = mkey.GetNvariableCoefficients();
             Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
             for(n = cnt1 = matrixid = 0; n < n_exp; ++n)
             {
+                 totnq = GetCoordim(n)*( (*m_exp)[n]->GetTotPoints() );
                 if(nvarcoeffs>0)
                 {
+                    //    ASSERTL0(false,"method not set up for non-Dirichlet conditions");
+
                     for(j = 0; j < nvarcoeffs; j++)
                     {
-                        varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
+                         varcoeffs[j] = Array<OneD, NekDouble>(totnq,0.0);
+                         Vmath::Vcopy(totnq, &(mkey.GetVariableCoefficient(j))[cnt1], 1, &varcoeffs[j][0],1);
                     }
 
-                    cnt1  += GetCoordim(n)*( (*m_exp)[n]->GetTotPoints() );
+                    cnt1  += totnq;
                     matrixid++;
                 }
 

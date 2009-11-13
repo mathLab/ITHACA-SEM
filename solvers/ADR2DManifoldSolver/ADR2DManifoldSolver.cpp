@@ -61,10 +61,10 @@ int main(int argc, char *argv[])
     LibUtilities::TimeIntegrationSchemeOperators ode;
 
     int nsteps = dom.GetSteps();
-    int ReadFnType = dom.GetReadFnType();
+    int initialwavetype = dom.Getinitialwavetype();
 
     // Set up the intial conditions 
-    dom.SetUSERDEFINEDInitialConditions(ReadFnType);
+    dom.SetUSERDEFINEDInitialConditions(initialwavetype);
 
     dom.Summary(cout);
     dom.ZeroPhysFields(); // Zero phys field so that following switch is consistent
@@ -124,7 +124,8 @@ int main(int argc, char *argv[])
             {
                 // Choose the method of deriving forcing functions
                 ode.DefineImplicitSolve       (&ADR2DManifold::ODEhelmSolve,dom);		
-                ode.DefineOdeRhs              (&ADR2DManifold::ODEeLinearMGReaction,dom);	
+                //   ode.DefineOdeRhs              (&ADR2DManifold::ODEeLinearMGReaction,dom);	
+                 ode.DefineOdeRhs              (&ADR2DManifold::ODEeReaction,dom);	
                 
                 // General Linear Time Integration
                 dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);
@@ -142,17 +143,6 @@ int main(int argc, char *argv[])
             dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);
         }
         break; 
-
-    case eFHNtesttype1:
-        {
-	  // Choose the method of deriving forcing functions
-	  ode.DefineImplicitSolve (&ADR2DManifold::ODEhelmSolveFHNtest1,dom);	
-	  ode.DefineOdeRhs        (&ADR2DManifold::ODEeReactionFHNtest1,dom);	
-          
-	  // General Linear Time Integration
-	  dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);
-        }
-        break;
 
     case eFHNMONO:
         {
@@ -182,7 +172,7 @@ int main(int argc, char *argv[])
     // Evaluate L2 Error
     for(int i = 0; i < dom.GetNvariables(); ++i)
     {
-        cout << "L2 Error (variable "<< dom.GetVariable(i) <<"): " << dom.L2USERDEFINEDError(i,ReadFnType) << endl;
+        cout << "L2 Error (variable "<< dom.GetVariable(i) <<"): " << dom.L2USERDEFINEDError(i,initialwavetype) << endl;
     }
  }
 

@@ -746,7 +746,7 @@ namespace Nektar
 
             if(mkey.GetNvariableCoefficients() > 0)
             {
-                Vmath::Vmul(nq, &(mkey.GetVariableCoefficient(0))[k1*nq], 1, &tmp[0], 1, &tmp[0], 1);
+                Vmath::Vmul(nq, &(mkey.GetVariableCoefficient(0))[0], 1, &tmp[0], 1, &tmp[0], 1);
             }
             
             v_IProductWRTBase(tmp, outarray);
@@ -756,16 +756,12 @@ namespace Nektar
                                                                 Array<OneD,NekDouble> &outarray,
                                                                 const StdMatrixKey &mkey)
         {           
-            int k, dim = 3;
+            int dim = 3;
             int nq = GetTotPoints();
             int varsize = ((mkey.GetVariableCoefficient(0)).num_elements())/dim;
-
             Array<OneD, NekDouble> tmp(nq);
-            Array<OneD, NekDouble> dtmp(nq);
-            Array<OneD, NekDouble> stmp(nq,0.0);
 
-            v_BwdTrans(inarray,tmp);
-
+             v_BwdTrans(inarray,tmp);
             // For Deformed mesh ==============
             if (varsize==nq)
             {
@@ -778,7 +774,7 @@ namespace Nektar
                 ASSERTL0(false, "Wrong route");
             }
 
-            v_IProductWRTBase(stmp, outarray);
+            v_IProductWRTBase(tmp, outarray);
         }
 
         void StdExpansion::MassLevelCurvatureMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
@@ -1492,6 +1488,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.90  2009/11/11 18:43:58  sehunchun
+* *** empty log message ***
+*
 * Revision 1.89  2009/11/10 19:01:37  sehunchun
 * Update related to Variable coefficients of HDG2D Solver
 *

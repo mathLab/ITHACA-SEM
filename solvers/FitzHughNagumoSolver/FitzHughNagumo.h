@@ -190,7 +190,9 @@ namespace Nektar
 
         void SetFHNInitialConditions(const int initialwavetype, NekDouble initialtime = 0.0);
 
-        void Generatesecondstimulus(const int initialwavetype, Array<OneD, NekDouble>&outarray);
+        void Generatesecondstimulus(const int secondwavetype, Array<OneD, NekDouble>&outarray,
+                                    const NekDouble xc = 0.0,
+                                    const NekDouble yc = 0.0);
 
 	void MassMultiply(const Array<OneD, NekDouble> &inarray, 
 			  Array<OneD, NekDouble> &outarray, 
@@ -249,6 +251,9 @@ namespace Nektar
 
 /**
 * $Log: FitzHughNagumo.h,v $
+* Revision 1.3  2009/11/04 14:12:31  sehunchun
+* Regular clean-up
+*
 * Revision 1.2  2009/11/02 10:44:51  sehunchun
 * regular updates
 *

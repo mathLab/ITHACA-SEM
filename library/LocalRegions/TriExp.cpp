@@ -1534,7 +1534,7 @@ namespace Nektar
                     else
                     {
                         Array<OneD, Array<OneD, NekDouble> > Cxi(1);
-                        Array<OneD, Array<OneD, NekDouble> > Ceta(2);      
+                        Array<OneD, Array<OneD, NekDouble> > Ceta(1);      
 
                         // Directional Forcing is applied                           
                         Cxi[0] = Array<OneD, NekDouble> (nqtot,0.0);
@@ -1549,7 +1549,6 @@ namespace Nektar
                             Vmath::Svtvp(nqtot,gmat[2*k+1][0],&(mkey.GetVariableCoefficient(0))[k*nqtot],1,
                                          &Ceta[0][0],1,&Ceta[0][0],1);
                         }
-
 
                         // derivxi = Cxi * ( B * D_{\xi} *B^T )  
                         // deriveta = Ceta * ( B * D_{\eta} * B^T )
@@ -1950,6 +1949,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.63  2009/11/11 18:45:09  sehunchun
+ *    *** empty log message ***
+ *
  *    Revision 1.62  2009/11/10 19:04:25  sehunchun
  *    Variable coefficients for HDG2D Solver
  *

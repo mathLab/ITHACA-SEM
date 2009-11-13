@@ -1478,7 +1478,7 @@ namespace Nektar
                     else
                     {
                         Array<OneD, Array<OneD, NekDouble> > Cxi(1);
-                        Array<OneD, Array<OneD, NekDouble> > Ceta(2);      
+                        Array<OneD, Array<OneD, NekDouble> > Ceta(1);      
 
                         // Directional Forcing is applied                           
                         Cxi[0] = Array<OneD, NekDouble> (nqtot,0.0);
@@ -1971,6 +1971,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.69  2009/11/11 18:45:09  sehunchun
+ *    *** empty log message ***
+ *
  *    Revision 1.68  2009/11/10 19:04:24  sehunchun
  *    Variable coefficients for HDG2D Solver
  *

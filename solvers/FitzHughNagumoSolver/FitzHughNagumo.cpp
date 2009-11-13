@@ -99,6 +99,15 @@ namespace Nektar
             m_initialwavetype  = 0;
         }
 
+        if(m_boundaryConditions->CheckForParameter("secondwavetype") == true)
+        {
+            m_secondwavetype = m_boundaryConditions->GetParameter("secondwavetype");
+        }
+        else
+        {
+            m_secondwavetype  = -1;
+        }
+
         if(m_boundaryConditions->CheckForParameter("timedelay") == true)
         {
             m_timedelay = m_boundaryConditions->GetParameter("timedelay");
@@ -123,7 +132,7 @@ namespace Nektar
         }
         else
         {
-            m_frequency1  = 5.0;
+            m_frequency1  = 0.0;
         }
 
         if(m_boundaryConditions->CheckForParameter("frequency2") == true)
@@ -132,7 +141,7 @@ namespace Nektar
         }
         else
         {
-            m_frequency2  = 5.0;
+            m_frequency2  = 0.0;
         }
 
         if(m_boundaryConditions->CheckForParameter("x1center") == true)
@@ -329,6 +338,9 @@ namespace Nektar
         // plane wave from the bottom
         case(1):
             {
+
+                cout << " plane wave bottom" << endl;
+
                 for(int j = 0; j < nq; j++)
                 {
                     if( x1[j] <= (ymin+m_duration) )
@@ -342,11 +354,15 @@ namespace Nektar
                         (m_fields[1]->UpdatePhys())[j] = vinit;
                     }
                 }   
-            }            
+            }
+            break;            
             
             // Circular wave from the top-right corner
         case(2):
             {
+
+                cout << " circular wave " << endl;
+
                 for(int j = 0; j < nq; j++)
                 {
                     rad = sqrt( (x0[j]-xmax)*(x0[j]-xmax) + (x1[j]-ymax)*(x1[j]-ymax) );
@@ -364,10 +380,14 @@ namespace Nektar
                     }
                 }
             }
+            break;
 
             // Point initialization at 
         case(3):
             {
+
+                cout << " point initialization " << endl;
+
                 for(int j = 0; j < nq; j++)
                 {
                     rad = sqrt( (x0[j]-m_x1center)*(x0[j]-m_x1center) + (x1[j]-m_y1center)*(x1[j]-m_y1center) );
@@ -385,10 +405,14 @@ namespace Nektar
                     }
                 }
             }
+            break;
                        
             // otherwise planar wave from the left
         default:
             {
+
+                cout << " plane wave left " << endl;
+
                 for(int j = 0; j < nq; j++)
                 {
                     if( x0[j] <= (xmin+m_duration) )
@@ -403,7 +427,6 @@ namespace Nektar
                     }
                 }   
             }
-            
         }
         
         for(int i = 0 ; i < m_fields.num_elements(); i++)
@@ -421,8 +444,10 @@ namespace Nektar
 	  }       
     }
 
-    void FitzHughNagumo::Generatesecondstimulus(const int initialwavetype, 
-                                                Array<OneD, NekDouble>&outarray)
+    void FitzHughNagumo::Generatesecondstimulus(const int secondwavetype, 
+                                                Array<OneD, NekDouble>&outarray,
+                                                const NekDouble xc,
+                                                const NekDouble yc)
     {
         int nvar = m_fields.num_elements();
         int nq = m_fields[0]->GetNpoints();
@@ -443,11 +468,14 @@ namespace Nektar
         NekDouble ymax = Vmath::Vmax(nq,x1,1);
         NekDouble rad;
 
-        switch(initialwavetype)
+        switch(secondwavetype)
         {
             // Plane wave from the left
         case(0):
             {
+
+                cout << " 2nd: plane wave left " << endl;
+
                 for(int j = 0; j < nq; j++)
                 {
                     if( x0[j] <= (xmin+m_duration) )
@@ -456,10 +484,14 @@ namespace Nektar
                     }
                 }   
             }
+            break;
 
             // Plane wave from the bottom
         case(1):
             {
+
+                cout << " 2nd: plane wave " << endl;
+
                 for(int j = 0; j < nq; j++)
                 {
                     if( x1[j] <= (ymin+m_duration) )
@@ -468,10 +500,14 @@ namespace Nektar
                     }
                 }   
             }
+            break;
             
             // Circular wave from the corner
         case(2):
             {
+
+                cout << " 2nd: circular wave " << endl;
+
                 for(int j = 0; j < nq; j++)
                 {
                     rad = sqrt( (x0[j]-xmax)*(x0[j]-xmax) + (x1[j]-ymax)*(x1[j]-ymax) );
@@ -482,13 +518,17 @@ namespace Nektar
                     }
                 }   
             }
+            break;
             
             // Point initialization at (m_x2center, m_y2center)
-        case(4):
+        case(3):
             {
+
+                cout << " 2nd: point init " << endl;
+
                 for(int j = 0; j < nq; j++)
                 {
-                    rad = sqrt( (x0[j]-m_x2center)*(x0[j]-m_x2center) + (x1[j]-m_y2center)*(x1[j]-m_y2center) );
+                    rad = sqrt( (x0[j]-xc)*(x0[j]-xc) + (x1[j]-yc)*(x1[j]-yc) );
                     
                     if( rad <= m_duration )
                     {
@@ -496,6 +536,7 @@ namespace Nektar
                     }
                 }   
             }
+            break;
         }
         
         m_fields[0]->FwdTrans(physfield,outarray);
@@ -775,6 +816,7 @@ namespace Nektar
     int i,n,nchk = 0;
     int ncoeffs = m_fields[0]->GetNcoeffs();
     int nvariables = m_fields.num_elements();
+    int nq = m_fields[0]->GetNpoints();
     
     // Set up wrapper to fields data storage. 
     Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
@@ -856,6 +898,29 @@ namespace Nektar
 					          
         NekDouble timenow1, timenow2,Tol=0.00001;
         int nofreq1=0, nofreq2=0;
+        Array<OneD, NekDouble> physfield(nq);
+        Array<OneD, Array<OneD, NekDouble> > fieldmax(nvariables);
+        Array<OneD, Array<OneD, NekDouble> > fieldmin(nvariables);
+        Array<OneD, Array<OneD, NekDouble> > Maxloc(nvariables);
+        Array<OneD, Array<OneD, NekDouble> > Minloc(nvariables);
+
+        int chksteps = nsteps/m_checksteps;
+        for(i = 0; i < nvariables; ++i)
+        {
+            fieldmax[i] = Array<OneD, NekDouble>(chksteps,0.0);
+            fieldmin[i] = Array<OneD, NekDouble>(chksteps,0.0);
+            Maxloc[i] = Array<OneD, NekDouble>(chksteps,0.0);
+            Minloc[i] = Array<OneD, NekDouble>(chksteps,0.0);
+        }
+
+        NekDouble maxindex, minindex;
+        Array<OneD,NekDouble> x0(nq);
+        Array<OneD,NekDouble> x1(nq);
+        Array<OneD,NekDouble> x2(nq);
+        
+        // get the coordinates (assuming all fields have the same discretisation)
+        m_fields[0]->GetCoords(x0,x1,x2);
+        
         for(n = 0; n < nsteps; ++n)
         {
             //----------------------------------------------
@@ -870,20 +935,26 @@ namespace Nektar
             {
                 fields = IntScheme[numMultiSteps-1]->TimeIntegrate(m_timestep,u,ode);
 
-                timenow1 = abs(1.0*m_timestep*n - ( (nofreq1+1)*m_frequency1) );
-                if(timenow1<Tol)
+                if(fabs(m_frequency1)>Tol)
                 {
-                    Generatesecondstimulus(m_secondwavetype,initialimpulse);
-                    Vmath::Vadd(ncoeffs, &initialimpulse[0], 1, &fields[0][0], 1, &fields[0][0], 1);
-                    nofreq1++;
+                    timenow1 = abs(1.0*m_timestep*n - ( (nofreq1+1)*m_frequency1) );
+                    if(timenow1<Tol)
+                    {
+                        Generatesecondstimulus(m_initialwavetype,initialimpulse, m_x1center, m_y1center);
+                        Vmath::Vadd(ncoeffs, &initialimpulse[0], 1, &fields[0][0], 1, &fields[0][0], 1);
+                        nofreq1++;
+                    }
                 }
 
-                timenow2 = abs(1.0*m_timestep*n - ( (nofreq2*m_frequency2)+ m_timedelay) );
-                if(timenow2<Tol)
+                if(fabs(m_frequency2)>Tol)
                 {
-                    Generatesecondstimulus(m_secondwavetype,secondimpulse);
-                    Vmath::Vadd(ncoeffs, &secondimpulse[0], 1, &fields[0][0], 1, &fields[0][0], 1);
-                    nofreq2++;
+                    timenow2 = abs(1.0*m_timestep*n - ( (nofreq2*m_frequency2)+ m_timedelay) );
+                    if(timenow2<Tol)
+                    {
+                        Generatesecondstimulus(m_secondwavetype,secondimpulse, m_x2center, m_y2center);
+                        Vmath::Vadd(ncoeffs, &secondimpulse[0], 1, &fields[0][0], 1, &fields[0][0], 1);
+                        nofreq2++;
+                    }
                 }
             }
 
@@ -913,21 +984,73 @@ namespace Nektar
             
             if(n&&(!((n+1)%m_checksteps)))
             {
-	      for(i = 0; i < nvariables; ++i)
+                for(i = 0; i < nvariables; ++i)
 		{
-		  (m_fields[i]->UpdateCoeffs()) = fields[i];
+                    (m_fields[i]->UpdateCoeffs()) = fields[i];
 		}
-	      Checkpoint_Output(nchk++);
+               
+                // Get Vmax and Vmin ==========
+                for(i = 0; i < nvariables; ++i)
+                {
+                    m_fields[i]->BwdTrans(fields[i],physfield);
+                    m_fields[i]->SetPhysState(true);        
+                    
+                    fieldmax[i][nchk] = Vmath::Vmax(nq,physfield,1);
+                    fieldmin[i][nchk] = Vmath::Vmin(nq,physfield,1);
+                    
+                    maxindex = Vmath::Imax(nq,physfield,1);
+                    minindex = Vmath::Imin(nq,physfield,1);
+                    
+                    Maxloc[i][nchk] = x0[maxindex];
+                    Minloc[i][nchk] = x0[minindex];
+                    
+                    m_fields[i]->FwdTrans(physfield,fields[i]);
+                    m_fields[i]->SetPhysState(false);        
+                }
+
+                Checkpoint_Output(nchk++);
+            }
+            
+            for(i = 0; i < nvariables; ++i)
+            {
+                (m_fields[i]->UpdateCoeffs()) = fields[i];
             }
         }
-        
-
-        for(i = 0; i < nvariables; ++i)
-        {
-	  (m_fields[i]->UpdateCoeffs()) = fields[i];
-        }
-    }
 	
+        cout << " =========================================== " << endl;
+        // Print out Vmax and Vmin
+        for (i =0; i < nvariables; ++i)
+        {
+            cout << "fieldmax, i = " << i << endl;
+            for (n =0; n < nchk; ++n)
+            {
+                cout << fieldmax[i][n] << ",";
+            }
+            
+            cout << endl << endl;
+            cout << "fieldmin, i = " << i << endl;
+            for (n =0; n < nchk; ++n)
+            {
+                cout << fieldmin[i][n] << ",";
+            }
+            
+            cout << endl << endl;
+            cout << "Maxloc, i = " << i << endl;
+            for (n =0; n < nchk; ++n)
+            {
+                cout << Maxloc[i][n] << ",";
+            }
+            
+            cout << endl << endl;
+            cout << "Minloc, i = " << i << endl;
+            for (n =0; n < nchk; ++n)
+            {
+                cout << Minloc[i][n] << ",";
+            }
+            cout << endl << endl;
+        }
+        cout << " =========================================== " << endl;
+  }
     
   //----------------------------------------------------
   void FitzHughNagumo::SetBoundaryConditions(NekDouble time)
@@ -1246,8 +1369,15 @@ namespace Nektar
     out << "\tEpsilon    : " << m_epsilon << endl;
     out << "\tBeta    : " << m_beta << endl;
     out << "\tinitialwavetype : " << m_initialwavetype << endl;
+    out << "\tx1center : " << m_x1center << endl;
+    out << "\ty1center : " << m_y1center << endl;
+    out << "\tfrequency1 : " << m_frequency1 << endl;
     out << "\tTimedelay : " << m_timedelay << endl;
     out << "\tDuration : " << m_duration << endl;
+    out << "\tsecondwavetype : " << m_secondwavetype << endl;
+    out << "\tx2center : " << m_x2center << endl;
+    out << "\ty2center : " << m_y2center << endl;
+    out << "\tfrequency2 : " << m_frequency2 << endl;
 
     ADRBase::TimeParamSummary(out);
 

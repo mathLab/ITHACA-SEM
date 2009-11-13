@@ -281,6 +281,7 @@ namespace Nektar
             m_constant(m_nconstants),
             m_nvariablecoefficients(0),
             m_variablecoefficient(m_nvariablecoefficients),
+            m_matrixid(0),
             m_nodalPointsType(nodalType)
         {
         }
@@ -300,6 +301,7 @@ namespace Nektar
             m_constant(m_nconstants),
             m_nvariablecoefficients(0),
             m_variablecoefficient(m_nvariablecoefficients),
+            m_matrixid(0),
             m_nodalPointsType(nodalType)
         {
             m_constant[0] = const0;
@@ -320,6 +322,7 @@ namespace Nektar
             m_constant(m_nconstants),
             m_nvariablecoefficients(0),
             m_variablecoefficient(m_nvariablecoefficients),
+            m_matrixid(0),
             m_nodalPointsType(nodalType)
         {
             m_constant[0] = const0;
@@ -335,6 +338,7 @@ namespace Nektar
             m_constant(rhs.m_constant),
             m_nvariablecoefficients(rhs.m_nvariablecoefficients),
             m_variablecoefficient(rhs.m_variablecoefficient),
+            m_matrixid(rhs.m_matrixid),
             m_nodalPointsType(rhs.m_nodalPointsType)
         {
         }
@@ -408,10 +412,12 @@ namespace Nektar
             {
                 return true;
             }
-            else if(lhs.m_nvariablecoefficients > rhs.m_nvariablecoefficients)
+            if(lhs.m_nvariablecoefficients > rhs.m_nvariablecoefficients)
             {
                 return false;
             }
+
+            /*
             else 
             {
                 for(unsigned int i = 0; i < lhs.m_nvariablecoefficients; ++i)
@@ -426,6 +432,16 @@ namespace Nektar
                         return false;
                     }
                 }
+            }
+            */
+
+            if(lhs.m_matrixid < rhs.m_matrixid)
+            {
+                return true;
+            }
+            if(lhs.m_matrixid > rhs.m_matrixid)
+            {
+                return false;
             }
             
             if(lhs.m_nodalPointsType < rhs.m_nodalPointsType)
@@ -468,6 +484,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.cpp,v $
+* Revision 1.17  2009/11/07 21:09:11  sehunchun
+* Add more functions with various parameters
+*
 * Revision 1.16  2009/09/06 22:23:18  sherwin
 * Somehow deleted opless operator in previous submission
 *

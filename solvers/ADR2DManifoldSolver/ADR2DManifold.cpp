@@ -103,14 +103,30 @@ namespace Nektar
         {
             m_UseDirDeriv  = 0;
         }
+        
+        // -2: Advection problem on sphere
+        // -1: Linear Morphogenesis problem for diffusion-reaction test
+        // 0: Planar propagation from -x direction
+        // 1: Planar propagation from -y direction
+        // 2: For Planar propagation from -x direction in xy plane
+        // 10: For Planar propagation from +z direction
 
-        if(m_boundaryConditions->CheckForParameter("ReadFnType") == true)
+        if(m_boundaryConditions->CheckForParameter("initialwavetype") == true)
         {
-            m_ReadFnType = m_boundaryConditions->GetParameter("ReadFnType");
+            m_initialwavetype = m_boundaryConditions->GetParameter("initialwavetype");
         }
         else
         {
-            m_ReadFnType  = 0;
+            m_initialwavetype  = 0;
+        }
+
+        if(m_boundaryConditions->CheckForParameter("duration") == true)
+        {
+            m_duration = m_boundaryConditions->GetParameter("duration");
+        }
+        else
+        {
+            m_duration  = 3.5;
         }
 
         if(m_boundaryConditions->CheckForParameter("Connection") == true)
@@ -120,15 +136,6 @@ namespace Nektar
         else
         {
             m_Connection  = 0;
-        }
-
-        if(m_boundaryConditions->CheckForParameter("Spiralwave") == true)
-        {
-            m_Spiralwave = m_boundaryConditions->GetParameter("Spiralwave");
-        }
-        else
-        {
-            m_Spiralwave  = 0;
         }
         
         if(m_boundaryConditions->CheckForParameter("Angularfreq") == true)
@@ -148,7 +155,6 @@ namespace Nektar
         {
             m_Angleofaxis = 0.0;
         }
-
 
         // Set up equation type enum using kEquationTypeStr
         std::string typeStr = m_boundaryConditions->GetSolverInfo("EQTYPE");
@@ -262,8 +268,13 @@ namespace Nektar
                 GeneratePrincipaldirection(m_Connection,m_velocity);
 
                 // Evaluate two tangential vectors on 2D manifold
-                SetUpSurfaceNormal(m_velocity);
+                 if(m_spacedim==3)
+                 {
+                    SetUpSurfaceNormal(m_velocity);
+                 }
                 
+                int nelem, offset_e;
+
                 if(GetExplicitDiffusion())
                 {
                     m_timeIntMethod = LibUtilities::eClassicalRungeKutta4; 
@@ -285,7 +296,10 @@ namespace Nektar
                 GeneratePrincipaldirection(m_Connection,m_velocity);
 
                 // Evaluate two tangential vectors on 2D manifold
-                SetUpSurfaceNormal(m_velocity);
+                if(m_spacedim==3)
+                {
+                    SetUpSurfaceNormal(m_velocity);
+                }
 
                 m_timeIntMethod = LibUtilities::eIMEXdirk_3_4_3;
 
@@ -557,6 +571,7 @@ namespace Nektar
       
                 Array<OneD, NekDouble> Reaction1(ncoeffs,0.0);
                 Array<OneD, NekDouble> Reaction2(ncoeffs,0.0);
+
 		// Mophogenesis reaction diffusion equation
 		Vmath::Svtvp(ncoeffs,m_a,&inarray[0][0],1,&Reaction1[0],1,&Reaction1[0],1);
 		Vmath::Svtvp(ncoeffs,m_b,&inarray[1][0],1,&Reaction1[0],1,&Reaction1[0],1);
@@ -595,6 +610,21 @@ namespace Nektar
         temp = Array<OneD, NekDouble>(ncoeffs,0.0);
         Vmath::Svtvp(ncoeffs,m_c,&inarray[0][0],1,&temp[0],1,&temp[0],1);
         Vmath::Svtvp(ncoeffs,m_d,&inarray[1][0],1,&temp[0],1,&outarray[1][0],1);
+    }
+
+    void ADR2DManifold::ODEeReaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                                     Array<OneD, Array<OneD, NekDouble> >&outarray,
+                                     const NekDouble time)
+    {
+        int i,k;
+        int nvariables = inarray.num_elements();
+        int ncoeffs    = inarray[0].num_elements();
+        const NekDouble coeff = 3.14159265*3.14159265;
+
+        for (i = 0; i < nvariables; ++i)
+        {
+            Vmath::Smul(ncoeffs, coeff, inarray[i], 1, outarray[i], 1);
+        }
     }
   
     void ADR2DManifold::ODEeNonlinearMorphoReaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
@@ -710,37 +740,7 @@ namespace Nektar
       Vmath::Sadd(ncoeffs, m_beta, &outarray[1][0], 1, &outarray[1][0], 1);
       Vmath::Smul(ncoeffs, m_epsilon[0], &outarray[1][0], 1, &outarray[1][0], 1);
     }
-
-  void ADR2DManifold::ODElhsSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
-				  Array<OneD, Array<OneD, NekDouble> >&outarray, 
-				  const NekDouble time)   
-  {
-    int i;
-    int nvariables = inarray.num_elements();
-    
-    switch(m_projectionType)
-      {
-      case eDiscontinuousGalerkin:
-	
-	for(i = 0; i < nvariables; ++i)
-	  {
-	    m_fields[i]->MultiplyByElmtInvMass(inarray[i],outarray[i]);
-	  }
-	break;
-      case eGalerkin:
-	{
-	  for(i = 0; i < nvariables; ++i)
-	    {
-	      m_fields[i]->MultiplyByInvMassMatrix(inarray[i],outarray[i],false);
-	    }
-	}
-	break;
-      default:
-	ASSERTL0(false,"Unknown projection scheme");
-	break;
-      }
-  }
-  
+ 
 
   void ADR2DManifold::ODEhelmSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                                    Array<OneD, Array<OneD, NekDouble> >&outarray,
@@ -772,18 +772,7 @@ namespace Nektar
           // Backward Transformation to nodal coefficients
           m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
                    
-          // Solve a system of equations with Helmholtz solver
-          if(m_UseDirDeriv)
-          {
-              m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs(),kappa,m_dirForcing);
-          }
-          
-          else
-          {
-              m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs(),kappa);
-          }
-
-          m_fields[i]->SetPhysState(false);        
+          SolveHelmholtz(i,kappa,m_UseDirDeriv);  
           
           // The solution is Y[i]
           outarray[i] = m_fields[i]->GetCoeffs();	  
@@ -816,19 +805,8 @@ namespace Nektar
 			
 	// Backward Transformation to nodal coefficients
 	m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
-
-	// Solve a system of equations with Helmholtz solver
-        if(m_UseDirDeriv)
-        {
-            m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs(),kappa,m_dirForcing);
-        }
         
-        else
-        {
-            m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs(),kappa);
-        }
-
-	m_fields[i]->SetPhysState(false);        
+        SolveHelmholtz(i,kappa,m_UseDirDeriv);      
 	
 	// The solution is Y[i]
 	outarray[i] = m_fields[i]->GetCoeffs();	  
@@ -844,6 +822,8 @@ namespace Nektar
         int ncoeffs    = inarray[0].num_elements();
         
         NekDouble kappa = 1.0/lambda;
+
+        SetBoundaryConditions(inarray,time);
         
         // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
         // inarray = input: \hat{rhs} -> output: \hat{Y}    
@@ -859,17 +839,7 @@ namespace Nektar
         // Backward Transformation to nodal coefficients
         m_fields[0]->BwdTrans(m_fields[0]->GetCoeffs(), m_fields[0]->UpdatePhys());
         
-        // Solve a system of equations with Helmholtz solver
-        if(m_UseDirDeriv)
-        {
-            m_fields[0]->HelmSolve(m_fields[0]->GetPhys(),m_fields[0]->UpdateCoeffs(),kappa,m_dirForcing);
-        }
-        
-        else
-        {
-            m_fields[0]->HelmSolve(m_fields[0]->GetPhys(),m_fields[0]->UpdateCoeffs(),kappa);
-        }
-        m_fields[0]->SetPhysState(false);        
+        SolveHelmholtz(0,kappa,m_UseDirDeriv);    
     
         // The solution is Y[i]
         outarray[0] = m_fields[0]->GetCoeffs();	  
@@ -878,14 +848,20 @@ namespace Nektar
         Vmath::Vcopy(ncoeffs, &inarray[1][0], 1, &outarray[1][0], 1);
     }
 
-
-  void ADR2DManifold::SolveHelmholtz(NekDouble lambda)
+  void ADR2DManifold:: SolveHelmholtz(const int indx, const NekDouble kappa,const int m_UseDirDeriv)
   {
-    for(int i = 0; i < m_fields.num_elements(); ++i)
+      if(m_UseDirDeriv)
       {
-	m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs(),lambda);
-	m_fields[i]->SetPhysState(false);
+          //  m_fields[indx]->HelmSolve(m_fields[indx]->GetPhys(),m_fields[indx]->UpdateCoeffs(),kappa);
+          m_fields[indx]->HelmSolve(m_fields[indx]->GetPhys(),m_fields[indx]->UpdateCoeffs(),m_dirForcing,kappa);
       }
+
+      else
+      {
+          m_fields[indx]->HelmSolve(m_fields[indx]->GetPhys(),m_fields[indx]->UpdateCoeffs(),kappa);
+      }
+
+      m_fields[indx]->SetPhysState(false);
   }
 
     // For Continuous Galerkin projections with time-dependent dirichlet boundary conditions,
@@ -942,10 +918,7 @@ namespace Nektar
 	  {
 	    tmp[i] = Array<OneD, NekDouble>(ncoeffs);
 	    m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,fields[i],fields[i]);
-	  }
-	
-	for(int i = 0; i < nvariables; ++i)
-	  {
+
 	    m_fields[i]->SetPhysState(false);
 	  }
       }
@@ -1218,6 +1191,7 @@ namespace Nektar
                 }
 	    }
 	    break;
+
 	  default:
 	    ASSERTL0(false,"unknown equationType");
 	  }
@@ -1239,7 +1213,7 @@ namespace Nektar
           // Read Boundary Condition from a function in this cpp file
           if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "MG")
           {
-              UserDefinedBoundaryCondtions(n,cnt,time);
+              MGBoundaryCondtions(n,cnt,time);
           }
 
           else if (m_fields[0]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "WALL")
@@ -1260,7 +1234,7 @@ namespace Nektar
       }
   }
 
-    void ADR2DManifold::UserDefinedBoundaryCondtions(const int bcRegion, const int cnt, const NekDouble time)
+    void ADR2DManifold::MGBoundaryCondtions(const int bcRegion, const int cnt, const NekDouble time)
   { 
 
       int i,j,indx;
@@ -1290,10 +1264,7 @@ namespace Nektar
               for (j =0; j < npts; ++j)
               {
                   indx = id2+j;
-                  if(m_ReadFnType==2)
-                  {
-                      Fwd[i][j] = Morphogenesis(i, x0[indx], x1[indx], x2[indx], time);
-                  }
+                  Fwd[i][j] = Morphogenesis(i, x0[indx], x1[indx], x2[indx], time);
               }
 
               Vmath::Vcopy(npts,&Fwd[i][0], 1,&(m_fields[i]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1],1);
@@ -1709,7 +1680,7 @@ namespace Nektar
     for(i = 0; i < nbnd; ++i)
       {                 
       	// Evaluate boundary values g_D or g_N from input files
-	SpatialDomains::ConstInitialConditionShPtr ifunc = m_boundaryConditions->GetInitialCondition(i);
+        SpatialDomains::ConstInitialConditionShPtr ifunc = m_boundaryConditions->GetInitialCondition(i);
 	npoints = m_fields[0]->GetBndCondExpansions()[i]->GetNpoints();
 	
 	Array<OneD,NekDouble> BDphysics(npoints);
@@ -1814,17 +1785,44 @@ namespace Nektar
 
         Unitlength(m_tanbasis[1]);
           
+        int nelem ,npts_e, offset0, offset1;
         // Using this tangential basis as dirForcing
+
+        nelem = GetExpSize();
         for (int i=0; i<m_spacedim; ++i)
         {
-            for (int i=0; i<m_spacedim; ++i)
+            for (int k=0; k<2; ++k)
             {
-                for (int k=0; k<2; ++k)
+                offset1 = 0;
+                for (int j=0; j<nelem; ++j)
                 {
-                    Vmath::Vcopy(nq,&m_tanbasis[k][i][0],1,&m_dirForcing[k][i*nq],1);
+                    npts_e = GetTotPoints(j);
+                    offset0 =  GetPhys_Offset(j);
+  
+                    Vmath::Vcopy(npts_e,&m_tanbasis[k][i][offset0],1,&m_dirForcing[k][offset1+i*npts_e],1);
+
+                    offset1 += npts_e*m_spacedim;
                 }
             }
         }
+
+        Vmath::Neg(offset1, &m_dirForcing[1][0], 1);
+
+        /*
+        offset0=0;
+        for (int j = 0; j < nelem; ++j)
+        {
+            npts_e = GetTotPoints(j);
+            for (int k =0; k < npts_e; ++k)
+            {
+            cout << "elem = " << j << ", dirforcing1 = (" << m_dirForcing[0][k+offset0] << "," << m_dirForcing[0][k+offset0+npts_e] 
+                 << "," << m_dirForcing[0][k+offset0+2*npts_e] << "), dirforcing2 = (" << m_dirForcing[1][k+offset0] << "," << m_dirForcing[1][k+offset0+npts_e] 
+                 << "," << m_dirForcing[1][k+offset0+2*npts_e] << ")" <<endl;
+            }
+            offset0 += npts_e*m_spacedim;
+        }
+        */
+
 
          Array<OneD, NekDouble> temp0(nq), temp1(nq), temp2(nq);
         // Generate \nabla \cdot tangentvector for weighted mass matrix
@@ -1844,7 +1842,7 @@ namespace Nektar
         }         
      }
 
-    void ADR2DManifold::SetUSERDEFINEDInitialConditions(const int ReadFnType, NekDouble initialtime)
+    void ADR2DManifold::SetUSERDEFINEDInitialConditions(const int initialwavetype, NekDouble initialtime)
     {
         int nq = m_fields[0]->GetNpoints();
         int nvariables = m_fields.num_elements();
@@ -1856,187 +1854,149 @@ namespace Nektar
         // get the coordinates (assuming all fields have the same discretisation)
         m_fields[0]->GetCoords(x0,x1,x2);
 
-        if(ReadFnType==1)
+        switch(initialwavetype)
         {
-            for(int i = 0 ; i <nvariables ; i++)
+            // -2: Advection problem on sphere
+        case(-2):
             {
-                for(int j = 0; j < nq; j++)
+                for(int i = 0 ; i <nvariables ; i++)
                 {
-                    (m_fields[i]->UpdatePhys())[j] = AdvectionSphere(x0[j], x1[j], x2[j], initialtime);
-                }
-                
-                m_fields[i]->SetPhysState(true);
-                m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
-            }
-        }
-        
-        // For Diffusion-Reaction Test
-        else if(ReadFnType==2)
-        {
-            for(int i = 0 ; i < nvariables ; i++)
-            {
-                for(int j = 0; j < nq; j++)
-                {
-                    (m_fields[i]->UpdatePhys())[j] = Morphogenesis(i, x0[j], x1[j], x2[j], initialtime);
-                }
-                
-                m_fields[i]->SetPhysState(true);
-                m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
-            }
-        }
-
-        // For Normal Planar propagation
-        else if(ReadFnType==3)
-        {     
-            NekDouble unew=100.0, uinit=0.0, vinit, f, fd, fval, gval,Tol=0.00000001;
-    
-            // Get the initial constant u and v
-            for(int j = 0; j<1000; j++)
-            {
-                // f = fvalue(uinit);
-                f = uinit*uinit*uinit + 3.0*uinit + 6.0*m_beta;
-                
-                // fd = fderiv(uinit);
-                fd = 3.0*uinit*uinit + 3.0;
-                
-                unew = uinit - f/fd;
-                
-                if(abs(unew-uinit) < Tol)
-                {
-                    break;
-                }
-                uinit = unew;
-            }
-            vinit = uinit - (1.0/3.0)*uinit*uinit*uinit;
-            
-            fval = uinit - (1.0/3.0)*uinit*uinit*uinit - vinit;
-            gval = uinit + m_beta - 0.5*vinit;
-            
-            // Set the left side as the initial excitation
-            NekDouble xmin = Vmath::Vmin(nq,x0,1);
-            for(int j = 0; j < nq; j++)
-            {
-                if( x0[j] <= (xmin+3.50) )
-                {
-                    (m_fields[0]->UpdatePhys())[j] = 2.0;
-                    (m_fields[1]->UpdatePhys())[j] = vinit;
-                }
-                else
-                {
-                    (m_fields[0]->UpdatePhys())[j] = uinit;
-                    (m_fields[1]->UpdatePhys())[j] = vinit;
-                }
-            }
-            
-            for(int i = 0 ; i < m_fields.num_elements(); i++)
-            {
-                m_fields[i]->SetPhysState(true);
-                m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
-            }
-        }
-        
-        // For Normal Planar propagation with a infarction
-        else if(ReadFnType==4)
-        {     
-            NekDouble unew=100.0, uinit=0.0, vinit, f, fd, fval, gval,Tol=0.00000001;
-    
-            // Get the initial constant u and v
-            for(int j = 0; j<1000; j++)
-            {
-                // f = fvalue(uinit);
-                f = uinit*uinit*uinit + 3.0*uinit + 6.0*m_beta;
-                
-                // fd = fderiv(uinit);
-                fd = 3.0*uinit*uinit + 3.0;
-                
-                unew = uinit - f/fd;
-                
-                if(abs(unew-uinit) < Tol)
-                {
-                    break;
-                }
-                uinit = unew;
-            }
-            vinit = uinit - (1.0/3.0)*uinit*uinit*uinit;
-            
-            fval = uinit - (1.0/3.0)*uinit*uinit*uinit - vinit;
-            gval = uinit + m_beta - 0.5*vinit;
-
-            NekDouble infarctionwidth = 2.0;
-            
-            // Set the left side as the initial excitation
-            NekDouble xmin = Vmath::Vmin(nq,x0,1);
-            for(int j = 0; j < nq; j++)
-            {
-                if( x0[j] <= (xmin+3.50) )
-                {
-                    (m_fields[0]->UpdatePhys())[j] = 2.0;
-                    (m_fields[1]->UpdatePhys())[j] = vinit;
-                }
-
-                else if( (x0[j]>(-1.0*infarctionwidth)) && (x0[j]<=infarctionwidth) )
-                {
-                    if( x1[j]<=0 )
+                    for(int j = 0; j < nq; j++)
                     {
-                        (m_fields[0]->UpdatePhys())[j] = uinit;
-                        (m_fields[1]->UpdatePhys())[j] = 2.0;
+                        (m_fields[i]->UpdatePhys())[j] = AdvectionSphere(x0[j], x1[j], x2[j], initialtime);
                     }
-                }
-
-                else
-                {
-                    (m_fields[0]->UpdatePhys())[j] = uinit;
-                    (m_fields[1]->UpdatePhys())[j] = vinit;
+                    
+                    m_fields[i]->SetPhysState(true);
+                m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
                 }
             }
+            break;
+        
+        // -1: Linear Morphogenesis problem for diffusion-reaction test
+        case(-1):
+            {
+                for(int i = 0 ; i < nvariables ; i++)
+                {
+                    for(int j = 0; j < nq; j++)
+                    {
+                        (m_fields[i]->UpdatePhys())[j] = Morphogenesis(i, x0[j], x1[j], x2[j], initialtime);
+                    }
+                    
+                    m_fields[i]->SetPhysState(true);
+                    m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+                }
+            }
+            break;
 
+        // 0: Planar propagation from -x direction
+        case(0):
+        {     
+            Array<OneD, NekDouble> rstates(2);
+            Getrestingstate(m_epsilon[0], m_beta, rstates);
+            
+            // Set the left side as the initial excitation
+            NekDouble xmin = Vmath::Vmin(nq,x0,1);
+            for(int j = 0; j < nq; j++)
+            {
+                if( x0[j] <= (xmin+m_duration) )
+                {
+                    (m_fields[0]->UpdatePhys())[j] = 2.0;
+                    (m_fields[1]->UpdatePhys())[j] = rstates[1];
+                }
+                else
+                {
+                    (m_fields[0]->UpdatePhys())[j] = rstates[0];
+                    (m_fields[1]->UpdatePhys())[j] = rstates[1];
+                }
+            }
+            
             for(int i = 0 ; i < m_fields.num_elements(); i++)
             {
                 m_fields[i]->SetPhysState(true);
                 m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
             }
         }
+        break;
 
-        // Fro FHN Half-Sphere propatation from the north poles
-        else if(ReadFnType==5)
+        // 1: Planar propagation from -y direction
+        case(1):
         {     
-            NekDouble unew=100.0, uinit=0.0, vinit, f, fd, fval, gval,Tol=0.00000001;
-    
-            // Get the initial constant u and v
-            for(int j = 0; j<1000; j++)
-            {
-                // f = fvalue(uinit);
-                f = uinit*uinit*uinit + 3.0*uinit + 6.0*m_beta;
-                
-                // fd = fderiv(uinit);
-                fd = 3.0*uinit*uinit + 3.0;
-                
-                unew = uinit - f/fd;
-                
-                if(abs(unew-uinit) < Tol)
-                {
-                    break;
-                }
-                uinit = unew;
-            }
-            vinit = uinit - (1.0/3.0)*uinit*uinit*uinit;
+            Array<OneD, NekDouble> rstates(2);
+            Getrestingstate(m_epsilon[0], m_beta, rstates);
             
-            fval = uinit - (1.0/3.0)*uinit*uinit*uinit - vinit;
-            gval = uinit + m_beta - 0.5*vinit;
+            // Set the left side as the initial excitation
+            NekDouble ymin = Vmath::Vmin(nq,x1,1);
+            for(int j = 0; j < nq; j++)
+            {
+                if( x2[j] > (ymin+m_duration) )
+                {
+                    (m_fields[0]->UpdatePhys())[j] = 2.0;
+                    (m_fields[1]->UpdatePhys())[j] = rstates[1];
+                }
+                else
+                {
+                    (m_fields[0]->UpdatePhys())[j] = rstates[0];
+                    (m_fields[1]->UpdatePhys())[j] = rstates[1];
+                }
+            }
+            
+            for(int i = 0 ; i < m_fields.num_elements(); i++)
+            {
+                m_fields[i]->SetPhysState(true);
+                m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+            }
+        }
+        break;
+
+        // 2: For Planar propagation from -x direction in xy plane
+        case(2):
+        {     
+            Array<OneD, NekDouble> rstates(2);
+            Getrestingstate(m_epsilon[0], m_beta, rstates);
+            
+            // Set the left side as the initial excitation
+            NekDouble xmin = Vmath::Vmin(nq,x0,1);
+            for(int j = 0; j < nq; j++)
+            {
+                if( ( x0[j] <= (xmin+m_duration) ) && ( fabs(x2[j]) <= 0.01 ) ) 
+                {
+                    (m_fields[0]->UpdatePhys())[j] = 2.0;
+                    (m_fields[1]->UpdatePhys())[j] = rstates[1];
+                }
+                else
+                {
+                    (m_fields[0]->UpdatePhys())[j] = rstates[0];
+                    (m_fields[1]->UpdatePhys())[j] = rstates[1];
+                }
+            }
+            
+            for(int i = 0 ; i < m_fields.num_elements(); i++)
+            {
+                m_fields[i]->SetPhysState(true);
+                m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+            }
+        }
+        break;
+
+        // 10: For Planar propagation from +z direction
+        case(10):
+        {     
+            Array<OneD, NekDouble> rstates(2);
+            Getrestingstate(m_epsilon[0], m_beta, rstates);
             
             // Set the left side as the initial excitation
             NekDouble zmax = Vmath::Vmax(nq,x2,1);
             for(int j = 0; j < nq; j++)
             {
-                if( x2[j] > (zmax-3.50) )
+                if( x2[j] > (zmax-m_duration) )
                 {
                     (m_fields[0]->UpdatePhys())[j] = 2.0;
-                    (m_fields[1]->UpdatePhys())[j] = vinit;
+                    (m_fields[1]->UpdatePhys())[j] = rstates[1];
                 }
                 else
                 {
-                    (m_fields[0]->UpdatePhys())[j] = uinit;
-                    (m_fields[1]->UpdatePhys())[j] = vinit;
+                    (m_fields[0]->UpdatePhys())[j] = rstates[0];
+                    (m_fields[1]->UpdatePhys())[j] = rstates[1];
                 }
             }
             
@@ -2046,70 +2006,21 @@ namespace Nektar
                 m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
             }
         }
+        break;
 
-        // For Normal Planar propagation first only in xy plane
-        else if(ReadFnType==6)
-        {     
-            NekDouble unew=100.0, uinit=0.0, vinit, f, fd, fval, gval,Tol=0.00000001;
-    
-            // Get the initial constant u and v
-            for(int j = 0; j<1000; j++)
+        default:
             {
-                // f = fvalue(uinit);
-                f = uinit*uinit*uinit + 3.0*uinit + 6.0*m_beta;
-                
-                // fd = fderiv(uinit);
-                fd = 3.0*uinit*uinit + 3.0;
-                
-                unew = uinit - f/fd;
-                
-                if(abs(unew-uinit) < Tol)
-                {
-                    break;
-                }
-                uinit = unew;
+                SetInitialConditions(initialtime);
             }
-            vinit = uinit - (1.0/3.0)*uinit*uinit*uinit;
-            
-            fval = uinit - (1.0/3.0)*uinit*uinit*uinit - vinit;
-            gval = uinit + m_beta - 0.5*vinit;
-            
-            // Set the left side as the initial excitation
-            NekDouble xmin = Vmath::Vmin(nq,x0,1);
-            for(int j = 0; j < nq; j++)
-            {
-                if( ( x0[j] <= (xmin+3.50) ) && ( fabs(x2[j]) <= 0.01 ) ) 
-                {
-                    (m_fields[0]->UpdatePhys())[j] = 2.0;
-                    (m_fields[1]->UpdatePhys())[j] = vinit;
-                }
-                else
-                {
-                    (m_fields[0]->UpdatePhys())[j] = uinit;
-                    (m_fields[1]->UpdatePhys())[j] = vinit;
-                }
-            }
-            
-            for(int i = 0 ; i < m_fields.num_elements(); i++)
-            {
-                m_fields[i]->SetPhysState(true);
-                m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
-            }
-        }
-
-        else
-        {
-            SetInitialConditions(initialtime);
         }
         
 	// dump initial conditions to file
         std::string outname = m_sessionName + "_initial.chk";
-        ofstream outfile(outname.c_str());
-        WriteFld(outfile);
+        WriteFld(outname);
     }
 
     void ADR2DManifold::EvaluateUSERDEFINEDExactSolution(int field, Array<OneD, NekDouble> &outfield, 
-                                                         const NekDouble time, const int ReadFnType)
+                                                         const NekDouble time, const int initialwavetype)
     {
         int nq = m_fields[field]->GetNpoints();
       
@@ -2120,41 +2031,43 @@ namespace Nektar
         // get the coordinates of the quad points
         m_fields[field]->GetCoords(x0,x1,x2);
 
-        if(ReadFnType == 1)
+        switch(initialwavetype)
         {
-            for(int j = 0; j < nq; ++j)
+        case(-1):
             {
-                outfield[j] = AdvectionSphere(x0[j], x1[j], x2[j], time);
+                for(int j = 0; j < nq; ++j)
+                {
+                    outfield[j] = AdvectionSphere(x0[j], x1[j], x2[j], time);
+                }
             }
-        }
-        
-        else if(ReadFnType == 2)
-        {
-            for(int j = 0; j < nq; ++j)
+            break;
+            
+        case(-2):
             {
-                outfield[j] = Morphogenesis(field, x0[j], x1[j], x2[j], time);
+                for(int j = 0; j < nq; ++j)
+                {
+                    outfield[j] = Morphogenesis(field, x0[j], x1[j], x2[j], time);
+                }
             }
-        }
+            break;
+            
+        case(0):
+        case(1):
+        case(2):
+        case(3):
+        case(10):
+            {
+                for(int j = 0; j < nq; ++j)
+                {
+                    Vmath::Zero(nq,outfield,1);
+                }
+            }
+            break;
 
-        else if(ReadFnType == 3)
-        {
-            for(int j = 0; j < nq; ++j)
+        default:
             {
-                Vmath::Zero(nq,outfield,1);
+                EvaluateExactSolution(field,outfield,time);
             }
-        }
-
-        else if(ReadFnType == 6)
-        {
-            for(int j = 0; j < nq; ++j)
-            {
-                Vmath::Zero(nq,outfield,1);
-            }
-        }
-
-        else
-        {
-            EvaluateExactSolution(field, outfield,time);
         }
     }
 
@@ -2457,11 +2370,45 @@ namespace Nektar
         
         // dump initial conditions to file
         std::string outname = m_sessionName + "_TanVecMap.fld";
-        ofstream outfile(outname.c_str());
-        WriteFld(outfile);
+        WriteFld(outname);
     }
+
+    void ADR2DManifold::Getrestingstate(const NekDouble epsilon, const NekDouble beta,
+                                        Array<OneD, NekDouble> rstates)
+    {
+            NekDouble unew=100.0, uinit=0.0, vinit, f, fd, fval, gval,Tol=0.00000001;
     
-    NekDouble ADR2DManifold::L2USERDEFINEDError(int field, const int ReadFnType,
+            // Get the initial constant u and v
+            for(int j = 0; j<1000; j++)
+            {
+                // f = fvalue(uinit);
+                f = uinit*uinit*uinit + 3.0*uinit + 6.0*m_beta;
+                
+                // fd = fderiv(uinit);
+                fd = 3.0*uinit*uinit + 3.0;
+                
+                unew = uinit - f/fd;
+                
+                if(abs(unew-uinit) < Tol)
+                {
+                    break;
+                }
+                uinit = unew;
+            }
+            vinit = uinit - (1.0/3.0)*uinit*uinit*uinit;
+            
+            fval = uinit - (1.0/3.0)*uinit*uinit*uinit - vinit;
+            gval = uinit + m_beta - 0.5*vinit;
+
+            if ( (fabs(fval)<Tol) && (fabs(gval)<Tol) )
+            {
+                rstates[0] = uinit;
+                rstates[1] = vinit;
+            }
+    }
+            
+    
+    NekDouble ADR2DManifold::L2USERDEFINEDError(int field, const int initialwavetype,
                                                 Array<OneD, NekDouble> &exactsoln)
     {
         if(m_fields[field]->GetPhysState() == false)
@@ -2471,7 +2418,7 @@ namespace Nektar
         }
         
         exactsoln = Array<OneD, NekDouble>(m_fields[field]->GetNpoints());
-        EvaluateUSERDEFINEDExactSolution(field,exactsoln,m_time,ReadFnType);
+        EvaluateUSERDEFINEDExactSolution(field,exactsoln,m_time,initialwavetype);
 
         return m_fields[field]->L2(exactsoln);        
     }
@@ -2479,7 +2426,7 @@ namespace Nektar
     void ADR2DManifold::AdditionalSessionSummary(std::ostream &out)
     {
 
-        out << "\tReadFnType    : " << m_ReadFnType << endl;
+        out << "\tinitialwavetype    : " << m_initialwavetype << endl;
         out << "\tUseDirDeriv   : " << m_UseDirDeriv << endl;
         out << "\tConnection    : " << m_Connection << endl;
         out << "\tm_mu          : " << m_epsilon[0] << endl;

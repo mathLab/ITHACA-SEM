@@ -124,9 +124,9 @@ namespace Nektar
             return m_timeIntMethod;
         }
 
-	inline int GetReadFnType(void)
+	inline int Getinitialwavetype(void)
         {
-            return m_ReadFnType;
+            return m_initialwavetype;
         }
 
 	inline int GetUsedirDeriv(void)
@@ -151,7 +151,7 @@ namespace Nektar
                                        const Array<OneD, Array<OneD, NekDouble> > &dirForcing,
                                        Array<OneD, NekDouble> &outarray);      
 
-        void UserDefinedBoundaryCondtions(int bcRegion, int cnt, NekDouble time);
+        void MGBoundaryCondtions(int bcRegion, int cnt, NekDouble time);
 
         void WallBoundary2D(const int bcRegion, const int cnt, 
                             const Array<OneD, const Array<OneD, NekDouble> >&inarray);
@@ -207,13 +207,13 @@ namespace Nektar
                                   NekDouble C11,
                                   NekDouble time=0.0);	   
 
-        void ODElhsSolve(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
-                               Array<OneD,        Array<OneD, NekDouble> >&outarray, 
-                         const NekDouble time);
-
         void ODErhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray, 
                           Array<OneD,        Array<OneD, NekDouble> >&outarray, 
                     const NekDouble time);
+
+        void ODEeReaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                          Array<OneD, Array<OneD, NekDouble> >&outarray,
+                          const NekDouble time);
 
 	void ODEeLinearMGReaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
                                   Array<OneD, Array<OneD, NekDouble> >&outarray, 
@@ -250,7 +250,7 @@ namespace Nektar
 		                   LibUtilities::TimeIntegrationMethod IntMethod,
 				   LibUtilities::TimeIntegrationSchemeOperators ode);
 
-        void SolveHelmholtz(NekDouble lambda);
+        void SolveHelmholtz(const int indx, const NekDouble kappa, const int m_UseDirDeriv = 1);
 
         void CrossProduct(Array<OneD, Array<OneD, NekDouble> > &v1,
                           Array<OneD, Array<OneD, NekDouble> > &v2,
@@ -260,8 +260,11 @@ namespace Nektar
 
         void PlotTangentialVectorMap();
 
-        void GeneratePrincipaldirection(const int Connection, Array<OneD, Array<OneD, NekDouble> > &Principaldirection);
-        void PlotTVecs(std::ofstream &outfile); 
+        void GeneratePrincipaldirection(const int Connection, Array<OneD, 
+                                        Array<OneD, NekDouble> > &Principaldirection);
+
+        void Getrestingstate(const NekDouble epsilon, const NekDouble beta,
+                             Array<OneD, NekDouble> rstates);
 
         void Summary(std::ostream &out);
 
@@ -269,11 +272,10 @@ namespace Nektar
 
 
     protected:	
-        int m_ReadFnType;                ///< Type of function for initial condition and exact solutions
+        int m_initialwavetype;                ///< Type of function for initial condition and exact solutions
+        int m_duration;
         int m_UseDirDeriv;
         int m_Connection;
-        int m_PlotTvecs;
-        int m_Spiralwave;
         NekDouble m_Angularfreq;
         NekDouble m_Angleofaxis;
 
@@ -298,6 +300,8 @@ namespace Nektar
         Array<OneD, NekDouble> m_Vn;
 
 	Array<OneD, Array<OneD, NekDouble> > m_traceNormals_tbasis; // forward normals in tangential basis
+
+        Array<OneD, Array<OneD,NekDouble> > m_dirForcing; // 2 by dim*nq 
 
         void EvaluateAdvectionVelocity();
 

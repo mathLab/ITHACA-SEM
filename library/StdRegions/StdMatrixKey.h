@@ -210,6 +210,11 @@ namespace Nektar
                 return m_base;
             }
 
+            int GetMatrixID() const
+            {
+                return m_matrixid;
+            }
+
             int GetNvariableCoefficients() const
             {
                 return m_nvariablecoefficients;
@@ -218,11 +223,6 @@ namespace Nektar
             int GetNvariableLaplacianCoefficients() const
             {
                 return m_nvariablecoefficients;
-            }
-
-            int GetMatrixID() const
-            {
-                return m_matrixid;
             }
 
             inline const Array<OneD,NekDouble>& GetVariableCoefficient(int i) const
@@ -301,6 +301,9 @@ namespace Nektar
 
 /**
 * $Log: StdMatrixKey.h,v $
+* Revision 1.24  2009/11/09 15:41:38  sehunchun
+* eWeakDirectionalDerivative and eMassLevelCurvature are added.
+*
 * Revision 1.23  2009/11/07 21:09:11  sehunchun
 * Add more functions with various parameters
 *

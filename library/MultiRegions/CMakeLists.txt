@@ -1,5 +1,6 @@
 SET(MULTI_REGIONS_SOURCES
 ContExpList1D.cpp
+ContExpList2D.cpp
 ContExpList3D.cpp
 ContField1D.cpp
 ContField2D.cpp
@@ -24,6 +25,7 @@ SubStructuredGraph.cpp
 
 SET(MULTI_REGIONS_HEADERS
 ContExpList1D.h
+ContExpList2D.h
 ContExpList3D.h
 ContField1D.h
 ContField2D.h

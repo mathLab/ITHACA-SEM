@@ -199,9 +199,24 @@ namespace Nektar
             }
         }
 
+	inline int GetExpSize(void)
+	{
+	  return m_fields[0]->GetExpSize();
+	}
+
+	inline int GetPhys_Offset(int n)
+	{
+	  return m_fields[0]->GetPhys_Offset(n);
+	}
+
         inline int GetTotPoints(void)
         {
             return m_fields[0]->GetNpoints();
+        }
+
+        inline int GetTotPoints(int n)
+        {
+            return m_fields[0]->GetTotPoints(n);
         }
 
         inline int GetNpoints(void)
@@ -415,6 +430,18 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.15  2009/11/02 19:15:43  cantwell
+* Moved ContField1D to inherit from DisContField1D.
+* Moved ContField3D to inherit from DisContField3D.
+* Incorporated GenExpList1D functionality into ExpList1D.
+* Tidied up and added documentation to various classes.
+* Moved Namespace documentation and introductions to separate files along with
+* doxygen configuration.
+* Added option to use system ZLIB library instead of libboost_zlib on UNIX.
+* Added extra search paths to FindMetis.cmake and FindNektar++.cmake.
+* Updated Linux compiling instructions.
+* Updated regDemo to use Helmholtz2D-g when built as debug.
+*
 * Revision 1.14  2009/10/07 16:52:20  cbiotto
 * Updating WriteFld function
 *

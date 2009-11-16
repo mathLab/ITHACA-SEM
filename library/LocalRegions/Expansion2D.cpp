@@ -594,7 +594,6 @@ namespace Nektar
 
 
                     // Helmholtz matrix
-                    //  DNekScalMat  &invHmat = *v_GetLocMatrix(StdRegions::eInvHybridDGHelmholtz, lambdaval, tau);
 		    DNekScalMat  &invHmat = *v_GetLocMatrix(StdRegions::eInvHybridDGHelmholtz, varcoeffs, matrixid, lambdaval, tau);
 
                     Array<OneD,unsigned int> emap;
@@ -639,7 +638,6 @@ namespace Nektar
                         
                         SetTraceToGeomOrientation(EdgeExp,lambda);
                         
-                        // AddHDGHelmholtzTraceTerms(tau,lambda,EdgeExp,f);
                         AddHDGHelmholtzTraceTerms(tau, lambda, EdgeExp, varcoeffs, f, matrixid);
                         
                         Ulam = invHmat*F; // generate Ulam from lambda
@@ -998,6 +996,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.cpp,v $
+ *    Revision 1.18  2009/11/16 13:43:01  sehunchun
+ *    *** empty log message ***
+ *
  *    Revision 1.17  2009/11/13 16:18:34  sehunchun
  *    *** empty log message ***
  *

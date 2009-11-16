@@ -43,6 +43,10 @@
     <DOMAIN> C[0] </DOMAIN>
 </GEOMETRY>
 
+<EXPANSIONS>
+  <E COMPOSITE="C[0]" NUMMODES="4" TYPE="MODIFIED" />
+</EXPANSIONS>
+
 <CONDITIONS>
 
         <!-- Removed redundancy since we can specify any level of granularity

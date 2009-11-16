@@ -701,7 +701,6 @@ namespace Nektar
                     matrixid++;
                 }
 
-                cout << "ExpList: element id = " << matrixid << endl;
                 LocalRegions::MatrixKey matkey(gkey.GetMatrixType(),
                                                (*m_exp)[i]->DetExpansionType(),
                                                *(*m_exp)[i],

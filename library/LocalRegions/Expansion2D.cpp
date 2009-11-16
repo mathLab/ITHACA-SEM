@@ -521,7 +521,6 @@ namespace Nektar
                     Vmath::Zero(ncoeffs*ncoeffs,Mat.GetPtr(),1);
 
                     int nvarcoeffs = mkey.GetNvariableCoefficients();
-                    cout << "eHybridDGHelmholtz for element " << matrixid  << endl;
                     for(i=0;  i < 2; ++i)
                     {
                         if(nvarcoeffs>0)
@@ -593,7 +592,6 @@ namespace Nektar
                         }
                     }
 
-                    cout << "eHybridDGLamToU for element " << matrixid << endl;
 
                     // Helmholtz matrix
                     //  DNekScalMat  &invHmat = *v_GetLocMatrix(StdRegions::eInvHybridDGHelmholtz, lambdaval, tau);
@@ -678,8 +676,6 @@ namespace Nektar
                     NekDouble lambdaval = mkey.GetConstant(0);
                     NekDouble tau       = mkey.GetConstant(1);
                     
-                    cout << "eHybridDGLamTOQ " << endl;
-
                     // declare matrix space
                     returnval  = MemoryManager<DNekMat>::AllocateSharedPtr(ncoeffs,nbndry); 
                     DNekMat &Qmat = *returnval;
@@ -1002,6 +998,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.cpp,v $
+ *    Revision 1.17  2009/11/13 16:18:34  sehunchun
+ *    *** empty log message ***
+ *
  *    Revision 1.16  2009/11/10 19:04:24  sehunchun
  *    Variable coefficients for HDG2D Solver
  *

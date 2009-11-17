@@ -770,8 +770,6 @@ namespace Nektar
                 {
                     if(nvarcoeffs>0)
                     {
-                        ASSERTL0(false,"nvarcoeffs are not set up");
-
                         for(j = 0; j < nvarcoeffs; j++)
                         {
                             varcoeffs[j] = gkey.GetVariableCoefficient(j) + cnt1;

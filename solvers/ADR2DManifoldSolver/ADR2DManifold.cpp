@@ -2033,7 +2033,7 @@ namespace Nektar
 
         switch(initialwavetype)
         {
-        case(-1):
+        case(-2):
             {
                 for(int j = 0; j < nq; ++j)
                 {
@@ -2042,7 +2042,7 @@ namespace Nektar
             }
             break;
             
-        case(-2):
+        case(-1):
             {
                 for(int j = 0; j < nq; ++j)
                 {
@@ -2408,9 +2408,12 @@ namespace Nektar
     }
             
     
-    NekDouble ADR2DManifold::L2USERDEFINEDError(int field, const int initialwavetype,
-                                                Array<OneD, NekDouble> &exactsoln)
+    NekDouble ADR2DManifold::USERDEFINEDError(int field, const int type, const int initialwavetype,
+                                              Array<OneD, NekDouble> &exactsoln)
     {
+
+        NekDouble error=0;
+
         if(m_fields[field]->GetPhysState() == false)
         {
             m_fields[field]->BwdTrans(m_fields[field]->GetCoeffs(),
@@ -2420,7 +2423,34 @@ namespace Nektar
         exactsoln = Array<OneD, NekDouble>(m_fields[field]->GetNpoints());
         EvaluateUSERDEFINEDExactSolution(field,exactsoln,m_time,initialwavetype);
 
-        return m_fields[field]->L2(exactsoln);        
+        switch(type)
+        {
+        case(0):
+            {
+                error = m_fields[field]->Linf(exactsoln);        
+            }
+            break;
+            
+        case(1):
+            {
+                error = m_fields[field]->H1(exactsoln);        
+            }
+            break;
+            
+        case(2):
+            {
+                error = m_fields[field]->L2(exactsoln);        
+            }
+            break;
+            
+        default:
+            {
+                error = m_fields[field]->L2(exactsoln);     
+                break;   
+            }
+        }
+
+        return error;
     }
 
     void ADR2DManifold::AdditionalSessionSummary(std::ostream &out)

@@ -124,8 +124,7 @@ int main(int argc, char *argv[])
             {
                 // Choose the method of deriving forcing functions
                 ode.DefineImplicitSolve       (&ADR2DManifold::ODEhelmSolve,dom);		
-                //   ode.DefineOdeRhs              (&ADR2DManifold::ODEeLinearMGReaction,dom);	
-                 ode.DefineOdeRhs              (&ADR2DManifold::ODEeReaction,dom);	
+                ode.DefineOdeRhs              (&ADR2DManifold::ODEeLinearMGReaction,dom);	
                 
                 // General Linear Time Integration
                 dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);
@@ -167,12 +166,15 @@ int main(int argc, char *argv[])
     dom.Output();
 
     cout << "-------------------------------------------" << endl;
-    cout << "Total Computation Time = " << CPUtime << " hr." << endl;
+    cout << "Total Computation Time = " << CPUtime << " hr." << endl << endl;
 
     // Evaluate L2 Error
     for(int i = 0; i < dom.GetNvariables(); ++i)
     {
-        cout << "L2 Error (variable "<< dom.GetVariable(i) <<"): " << dom.L2USERDEFINEDError(i,initialwavetype) << endl;
+        cout << "For variable "<< dom.GetVariable(i) <<", " << endl;
+        cout << "Lint Error: " << dom.USERDEFINEDError(i,0,initialwavetype) << endl;
+        cout << "H1 Error: " << dom.USERDEFINEDError(i,1,initialwavetype) << endl;
+        cout << "L2 Error: " << dom.USERDEFINEDError(i,2,initialwavetype) << endl << endl;
     }
  }
 

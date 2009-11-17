@@ -73,13 +73,8 @@ namespace Nektar
             void AddNormTraceInt(const int dir,
                                  Array<OneD, const NekDouble> &inarray,
                                  Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
-                                 Array<OneD,NekDouble> &outarray);
-
-            void AddNormTraceInt(const int dir,
-                                 Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
-                                 const Array<OneD, NekDouble> &directional,
-                                 Array<OneD,NekDouble> &outarray);
+                                 Array<OneD,NekDouble> &outarray,
+                                 const Array<OneD, NekDouble> &directional = NullNekDouble1DArray );
 
             void AddHDGHelmholtzTraceTerms(const NekDouble tau, 
                                            const Array<OneD, const NekDouble> &inarray, 
@@ -197,6 +192,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.h,v $
+ *    Revision 1.10  2009/11/09 15:43:51  sehunchun
+ *    HDG2DManifold Solver with Variable coefficients
+ *
  *    Revision 1.9  2009/11/06 21:43:56  sherwin
  *    DGDeriv function
  *

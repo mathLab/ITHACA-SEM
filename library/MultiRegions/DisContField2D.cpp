@@ -488,7 +488,6 @@ namespace Nektar
             }
         }
             
-
         /// Note this routine changes m_trace->m_coeffs space; 
         void DisContField2D::AddTraceIntegral(const Array<OneD, const NekDouble> &Fx, 
                                               const Array<OneD, const NekDouble> &Fy, 

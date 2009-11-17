@@ -161,7 +161,7 @@ namespace Nektar
         void EvaluateUSERDEFINEDExactSolution(int field, Array<OneD, NekDouble> &outfield, 
                                               const NekDouble time, const int Readfntype);
 
-        NekDouble L2USERDEFINEDError(int field, const int Readfntype = 0,
+        NekDouble USERDEFINEDError(int field, const int type, const int Readfntype = 0,
                                      Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
 
         void SetUpSurfaceNormal(Array<OneD, Array<OneD, NekDouble> > &Principaldirection); 

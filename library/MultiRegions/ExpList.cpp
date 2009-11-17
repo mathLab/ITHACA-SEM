@@ -689,16 +689,30 @@ namespace Nektar
             for(i = cnt1 = matrixid = 0; i < n_exp; ++i)
             {
                 totnq = GetCoordim(i)*( (*m_exp)[i]->GetTotPoints() );
+                
                 if(nvarcoeffs>0)
                 {
-                    for(j = 0; j < nvarcoeffs; j++)
-                    {
-                         varcoeffs[j] = Array<OneD, NekDouble>(totnq,0.0);
-                         Vmath::Vcopy(totnq, &(gkey.GetVariableCoefficient(j))[cnt1], 1, &varcoeffs[j][0],1);
+                    // When two varcoeffs in a specific order
+                    if(nvarcoeffs==2)
+                    {                       
+                        for(j = 0; j < nvarcoeffs; j++)
+                        {
+                            varcoeffs[j] = Array<OneD, NekDouble>(totnq,0.0);
+                            Vmath::Vcopy(totnq, &(gkey.GetVariableCoefficient(j))[cnt1], 1, &varcoeffs[j][0],1);
+                        }
+                        
+                        cnt1  += totnq;
+                        matrixid++;
                     }
 
-                    cnt1  += totnq;
-                    matrixid++;
+                    else
+                    {
+                        for(j = 0; j < nvarcoeffs; j++)
+                        {
+                            varcoeffs[j] = gkey.GetVariableCoefficient(j) + cnt1;
+                        }
+                        cnt1  += (*m_exp)[i]->GetTotPoints();
+                    }
                 }
 
                 LocalRegions::MatrixKey matkey(gkey.GetMatrixType(),
@@ -951,7 +965,7 @@ namespace Nektar
                             const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
         {
             int n,j;
-            int cnt1,matrixid;
+            int cnt1;
             int n_exp = GetExpSize();
             Array<OneD, unsigned int> nCoeffsPerElmt(n_exp);
             for(j = 0; j < n_exp; j++)
@@ -968,29 +982,25 @@ namespace Nektar
             int totnq, nvarcoeffs = mkey.GetNvariableCoefficients();
             Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
             
-            for(n = cnt1 = matrixid = 0; n < n_exp; ++n)
+            for(n = cnt1 = 0; n < n_exp; ++n)
             {
-                totnq = GetCoordim(n)*( (*m_exp)[n]->GetTotPoints() );
                 if(nvarcoeffs>0)
                 {
                     ASSERTL0(false,"method not set up for non-Dirichlet conditions");
 
                     for(j = 0; j < nvarcoeffs; j++)
                     {
-                         varcoeffs[j] = Array<OneD, NekDouble>(totnq,0.0);
-                         Vmath::Vcopy(totnq, &(mkey.GetVariableCoefficient(j))[cnt1], 1, &varcoeffs[j][0],1);
+                        varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
                     }
 
-                    cnt1  += totnq;
-                    matrixid++;
+                    cnt1  +=  (*m_exp)[n]->GetTotPoints();
                 }
 
                 LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
                                                (*m_exp)[n]->DetExpansionType(),
                                                *(*m_exp)[n],
                                                mkey.GetConstants(),
-                                               varcoeffs,
-                                               matrixid);
+                                               varcoeffs);
                 
                 loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);  
 
@@ -1362,16 +1372,27 @@ namespace Nektar
                  totnq = GetCoordim(n)*( (*m_exp)[n]->GetTotPoints() );
                 if(nvarcoeffs>0)
                 {
-                    //    ASSERTL0(false,"method not set up for non-Dirichlet conditions");
-
-                    for(j = 0; j < nvarcoeffs; j++)
-                    {
-                         varcoeffs[j] = Array<OneD, NekDouble>(totnq,0.0);
-                         Vmath::Vcopy(totnq, &(mkey.GetVariableCoefficient(j))[cnt1], 1, &varcoeffs[j][0],1);
+                    // When two varcoeffs in a specific order
+                    if(nvarcoeffs==2)
+                    {                       
+                        for(j = 0; j < nvarcoeffs; j++)
+                        {
+                            varcoeffs[j] = Array<OneD, NekDouble>(totnq,0.0);
+                            Vmath::Vcopy(totnq, &(mkey.GetVariableCoefficient(j))[cnt1], 1, &varcoeffs[j][0],1);
+                        }
+                        
+                        cnt1  += totnq;
+                        matrixid++;
                     }
 
-                    cnt1  += totnq;
-                    matrixid++;
+                    else
+                    {
+                        for(j = 0; j < nvarcoeffs; j++)
+                        {
+                            varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
+                        }
+                        cnt1  += (*m_exp)[n]->GetTotPoints();
+                    }
                 }
 
                 LocalRegions::MatrixKey Umatkey(linsystype, 
@@ -1380,7 +1401,7 @@ namespace Nektar
 
                 DNekScalMat &BndSys = *((*m_exp)[n]->GetLocMatrix(Umatkey)); 
 
-                LocalRegions::MatrixKey matkey(linsystype,
+               LocalRegions::MatrixKey matkey(linsystype,
                                                (*m_exp)[n]->DetExpansionType(),
                                                *(*m_exp)[n],factor1,factor2,varcoeffs,matrixid);
 

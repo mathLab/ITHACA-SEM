@@ -1,0 +1,150 @@
+\documentclass{elsart}
+\usepackage{amsmath,amssymb}
+\usepackage{amsfonts}
+\usepackage{epsfig}
+\usepackage{cite}
+\usepackage{fancybox}
+\usepackage{multicol}
+\usepackage{graphicx}
+
+\bibliographystyle{unsrt}
+\journal{Journal of Computational Physics}
+
+%\psfigdriver{dvips}
+
+\setlength{\oddsidemargin}{-0.06in}
+\setlength{\evensidemargin}{0.06in}
+\setlength{\topmargin}{0.4in}
+\setlength{\textwidth}{6.50in}
+\setlength{\textheight}{8.93in}
+\raggedbottom \hfuzz=3pt
+
+\newcommand{\BM }[1] {\mbox{\boldmath $#1$}}  
+\newcommand{\nektar}{{\boldmath ${\mathcal N}\varepsilon \kappa {\mathcal T}\alpha r$}}
+
+\begin{document}
+
+\section{HDG algorithm for Diffusion-Reaction equation on 2D Manifold}
+For the following time-dependent diffusion-reaction problem,
+\begin{eqnarray*}
+\frac{du}{dt} = \frac{1}{\varepsilon} \nabla^2 u (\mathbf{x}) + F(u) ~~~ \mathbf{x} \in \mathit{M} \\
+u(\mathbf{x}) = g_D (\mathbf{x}), ~~~ \mathbf{x} \in \partial \mathit{M}_D \nonumber \\
+ \mathbf{n} \cdot \nabla u(\mathbf{x}) = g_N (\mathbf{x}), ~~~ \mathbf{x} \in \partial \mathit{M}_N \nonumber
+\end{eqnarray*}
+or in the mixed formulation,
+\begin{eqnarray*}
+\frac{du}{dt}  = \frac{1}{\varepsilon}  \nabla \cdot \mathbf{q} + F(u), ~~~ \mathbf{x} \in \mathit{M} \\
+\mathbf{q} = \nabla u(\mathbf{x}),  ~~~ \mathbf{q} \in \mathit{R^3} \\
+u(\mathbf{x}) = g_D (\mathbf{x}), ~~~ \mathbf{x} \in \partial \mathit{M}_D \\
+\mathbf{n} \cdot \mathbf{q}= g_N (\mathbf{x}), ~~~ \mathbf{x} \in \partial \mathit{M}_N
+\end{eqnarray*}
+Taking inner product with respect to test function $v$ and $\boldsymbol{\omega}$ which are defined in the same submanifold $\mathit{M}$ leads to,
+\begin{eqnarray*}
+ & &\int_{\mathit{M}} v \frac{du}{dt} d \mathbf{x} = \frac{1}{\varepsilon} \int_{\mathit{M}} v  \nabla_{\mathit{M}} \cdot \mathbf{q} d \mathbf{x} + \int_{\mathit{M}} F(u) v d \mathbf{x} \label{eqn1} \\
+ & &\int_{\mathit{M}} \boldsymbol{\omega}  \cdot \mathbf{q} d \mathbf{x} = \int_{\mathit{M}} \boldsymbol{\omega} \cdot  \nabla_{\mathit{M}} u d \mathbf{x} \label{eqn2} 
+\end{eqnarray*}
+We can rewrite the above equations in matrix forms,
+\begin{eqnarray*}
+\varepsilon \mathbf{M}^e  \frac{d \hat{u}^e}{dt} = \left (\mathbf{D}^e_{\mathbf{t}_{\xi}} \right )^T \hat{q}_{\xi}^e + \left ( \mathbf{D}^e_{\mathbf{t}_{\eta}} \right )^T \hat{q}_{\eta}^e - \mathbf{E}^e_{\mathbf{t}_{\xi}} \hat{q}_{\xi}^e  - \mathbf{E}^e_{\mathbf{t}_{\eta}} \hat{q}_{\eta}^e - \tau \left [ \mathbf{F}^e_{\mathbf{n}_f} \hat{\lambda}^e - \mathbf{E}^e_{\mathbf{n}_f} \hat{u}^e  \right ] 
+\end{eqnarray*}
+\begin{eqnarray*}
+& & \mathbf{M}^e \hat{q}_{\xi}^e = - \left ( \mathbf{D}^e_{\mathbf{t}_{\xi}} \right )^T \hat{u}^e - \mathbf{M}^e_{\mathbf{t}_{\xi}} \hat{u}^e + \mathbf{F}^e_{\mathbf{t}_{\xi}} \hat{\lambda}^e \label{meqn_q1} \\
+& & \mathbf{M}^e \hat{q}_{\eta}^e = - \left ( \mathbf{D}^e_{\mathbf{t}_{\eta}} \right )^T \hat{u}^e - \mathbf{M}^e_{\mathbf{t}_{\eta}} \hat{u}^e + \mathbf{F}^e_{\mathbf{t}_{\eta}} \hat{\lambda}^e \label{meqn_q2} 
+\end{eqnarray*}
+Using the equality of $\mathbf{D}_{\mathbf{t}}^e = - ( \mathbf{D}^e_{\mathbf{t}})^T - \mathbf{M}_{\mathbf{t}}^e + \mathbf{E}_{\mathbf{t}}^e$ induced from the following integration by parts
+\begin{eqnarray*}
+\lefteqn{ \int_{\mathit{M}^e} ( \mathbf{t} \cdot \nabla \phi_i) \phi_j v d \mathbf{x} + \int_{\mathit{M}^e} (\nabla \cdot \mathbf{t}  ) \phi_i \phi_j v d \mathbf{x} = \int_{\mathit{M}^e} \nabla ( \mathbf{t} \phi_i) \phi_j v d \mathbf{x} } \hspace{3cm} \\
+& & = - \int_{\mathit{M}^e} \phi_m ( \mathbf{t} \cdot \nabla \phi_i) v d \mathbf{x} + \int_{\partial \mathit{M}^e} \phi_i \phi_j (\mathbf{t} \cdot \mathbf{n} ) v ds
+\end{eqnarray*}
+and using $\left ( \mathbf{D}_{\mathit{M}} \right )_{\mathbf{t}}^e= \mathbf{D}_{\mathbf{t}}^e + \mathbf{M}_{\mathbf{t}}^e$, we get the following discrete formulation,
+\begin{eqnarray}
+& & \mathbf{M}^e \frac{d \hat{u}^e}{dt} = \left ( \mathbf{D}_{\mathit{M}} \right )^e_{\mathbf{t}_{\xi}}  \hat{q}_{\xi}^e +  \left ( \mathbf{D}_{\mathit{M}} \right )^e_{\mathbf{t}_{\eta}} \hat{q}_{\eta}^e - \tau \left [ \mathbf{F}^e_{\mathbf{n}_f} \hat{\lambda}^e - \mathbf{E}^e_{\mathbf{n}_f} \hat{u}^e  \right ]  \label{meqn_uf} \\
+& & \mathbf{M}^e \hat{q}_{\xi}^e = - \left (  \left ( \mathbf{D}_{\mathit{M}} \right )^e_{\mathbf{t}_{\xi}} \right )^T \hat{u}^e + \mathbf{F}^e_{\mathbf{t}_{\xi}} \hat{\lambda}^e \label{meqn_qf1} \\
+& & \mathbf{M}^e \hat{q}_{\eta}^e = - \left (  \left ( \mathbf{D}_{\mathit{M}} \right )^e_{\mathbf{t}_{\eta}} \right )^T \hat{u}^e + \mathbf{F}^e_{\mathbf{t}_{\eta}} \hat{\lambda}^e \label{meqn_qf2} 
+\end{eqnarray}
+with the matrix form of jump condition,
+\begin{eqnarray}
+\mathbf{F}_{\mathbf{t}_{\xi}} \hat{q}_{\xi}^+ + \mathbf{F}_{\mathbf{t}_{\eta}} \hat{q}_{\eta}^+ + \mathbf{F}_{\mathbf{t}_{\xi}} \hat{q}_{\xi}^- + \mathbf{F}_{\mathbf{t}_{\eta}} \hat{q}_{\eta}^-
++ 2 \tau \mathbf{G} \hat{\lambda}^- - \tau \left ( \mathbf{F}_{\mathbf{n}} \hat{u}^+ + \mathbf{F}_{\mathbf{n}} \hat{u}^-   \right ) = 0 \label{matrixjumpcond}
+\end{eqnarray}
+
+Computation of (1),(2) and (3) can be done by using two dimensional array of "varcoeffs" in HDGHelmholtz2D solver. In ADR2DManifold.cpp, \\
+\\
+\texttt{m$\_$fields[indx]-$>$HelmSolve(m$\_$fields[indx]-$>$GetPhys(),\\
+$~~~~~~~~~~~~~~~~~~~~~~~$m$\_$fields[indx]-$>$UpdateCoeffs(),m$\_$dirForcing,kappa);}
+ \\
+ \\
+pass down the variable coefficients, m$\_$dirForcing, to DisContField2D.cpp and finally to operation matrix generation at StdExpansion.cpp. This m$\_$dirForcing contains two tangential vectors for the surface of a manifold and they are generated by the function SurfaceNormal in GeomFactor. In DisContField2D::HelmSolve, varcoeffs are used as inputs for the following keys.\\
+\\
+\texttt{           1) GlobalMatrixKey HDGLamToUKey(StdRegions::eHybridDGLamToU,lambda,tau,varcoeffs); \\
+            \\
+             2) GlobalLinSysKey       key(StdRegions::eHybridDGHelmBndLam,m$\_$traceMap,lambda,tau,varcoeffs,m$\_$traceMap-$>$GetGlobalSysSolnType());\\
+                            $~~~$ GlobalLinSysSharedPtr LinSys = GetGlobalBndLinSys(key); \\
+                             \\
+             3) GlobalMatrixKey invHDGhelmkey(StdRegions::eInvHybridDGHelmholtz,lambda,tau,varcoeffs);}
+\\
+\\
+When there is no matrix as the same as needed, then this key goes to ExpList::GenBockMatrix(const GlobalMatrixKey $\&$gkey), where local matrix
+for each elements are generated such as follows.\\
+\\
+\texttt{                LocalRegions::MatrixKey matkey(gkey.GetMatrixType(),                                               (*m$\_$exp)[i]-$>$DetExpansionType(), \\                                         $ ~~~~~~~~~~~~~~~~~~~~~~~~$     *(*m$\_$exp)[i],                                               gkey.GetConstants(),                                               varcoeffs,                                               matrixid); \\\\                loc$\_$mat = (*m$\_$exp)[i]->GetLocMatrix(matkey);}
+\\
+\\
+Here the size of varcoeffs is the number of quadrature points of the current element times the space dimension. For generating a block matrix of HDGHelmholtz solver in Expansion2D.cpp, computational routine goes through several matrix key such as eHybridDGHelmholtz, eHybridDGLamToU, eInvHybridDGHelmholtz, eHybridDGLamToQ0, eHybridDGLamToQ1, eHybridDGHelmBndLam, but the only difference from normal HDGHelmholtz solver lies on differential matrix and flux terms such as, \\
+\\
+For \texttt{eHybridDGHelmholtz}:
+\begin{eqnarray*}
+\mathbf{H} = \mathbf{D}_{\mathbf{t}_{\xi}} \mathbf{M}^{-1} \mathbf{D}_{\mathbf{t}_{\xi}}^T +  \mathbf{D}_{\mathbf{t}_{\eta}} \mathbf{M}^{-1} \mathbf{D}_{\mathbf{t}_{\eta}}^T + \lambda_H \mathbf{M} + \tau \mathbf{E}
+\end{eqnarray*}
+instead of $
+\mathbf{H}_0 = \mathbf{D}_x \mathbf{M}^{-1} \mathbf{D}_x^T +  \mathbf{D}_y \mathbf{M}^{-1} \mathbf{D}_y^T + \lambda_H \mathbf{M} + \tau \mathbf{E}
+$ \\
+\\
+For \texttt{eHybridDGLamToU}:
+\begin{eqnarray*}
+\mathbf{U} = \mathbf{D}_{\mathbf{t}_{\xi}} \mathbf{M}^{-1} G_{(\mathbf{t}_{\xi} \cdot \mathbf{n})} +  \mathbf{D}_{\mathbf{t}_{\eta}} \mathbf{M}^{-1} G_{(\mathbf{t}_{\eta} \cdot \mathbf{n})}  + \tau \mathbf{F}
+\end{eqnarray*}
+instead of $
+\mathbf{U}_0 = \mathbf{D}_x \mathbf{M}^{-1} G_{n_x} +  \mathbf{D}_y \mathbf{M}^{-1} G_{n_y}  + \tau \mathbf{F}
+$
+\\
+\\
+For \texttt{eHybridDGLamToQ}:
+\begin{eqnarray*}
+\mathbf{Q}_{\xi} = \mathbf{M}^{-1} \left [ -   \mathbf{D}_{\mathbf{t}_{\xi}} + \mathbf{F}_{(\mathbf{t}_{\xi} \cdot \mathbf{n} )} \right ],~~~\mathbf{Q}_{\eta} = \mathbf{M}^{-1} \left [ -   \mathbf{D}_{\mathbf{t}_{\eta}} + \mathbf{F}_{(\mathbf{t}_{\eta} \cdot \mathbf{n} )} \right ]
+\end{eqnarray*}
+instead of $ \mathbf{Q}_x = \mathbf{M}^{-1} \left [ -   \mathbf{D}_x + \mathbf{F}_{n_x} \right ],~~~~~\mathbf{Q}_y = \mathbf{M}^{-1} \left [ -   \mathbf{D}_y + \mathbf{F}_{n_y} \right ] $ \\
+\\
+For \texttt{eHybridDGHelmBndLam}:
+\begin{eqnarray*}
+\mathbf{B} \left ( \mathbf{t} \cdot \mathbf{n} \hat{q}_{\xi} +  \mathbf{t} \cdot \mathbf{n} \hat{q}_{\xi} - \tau ( \hat{u} - \lambda ) \right ) = 0
+\end{eqnarray*}
+instead of $ 
+\mathbf{B} \left (n_x \hat{q}_x +  n_y \hat{q}_y- \tau ( \hat{u} - \lambda ) \right ) = 0
+$
+\\
+\\
+When variable coefficients are nontrivial, differential matrix routine goes to \\
+\\
+                           \texttt{DNekScalMat $\&$Dmat = *v$\_$GetLocMatrix(StdRegions::eWeakDirectionalDeriv, \\
+                          $~~~~~~~~~~~~~~~~~~~~~~~~~~~$ mkey.GetVariableCoefficient(i),matrixid+i*10000) }\\
+\\
+instead of, \\
+\\
+             \texttt{       DNekScalMat $\&$Dmat = *v$\_$GetLocMatrix(eWeakDeriv0 or eWeakDeriv1);} \\
+\\
+The Local matrix for eWeakDirectinalDeriv is a directional derivative matrix along the direction of a tangential vector that is contained in varcoeffs. This matrix is actually  $\left ( \mathbf{D}_{\mathit{M}} \right )_{\mathbf{t}}^e = \mathbf{D}_{\mathbf{t}}^e + \mathbf{M}_{\mathbf{t}}^e$ and 
+generated at \texttt{TriExp::CreateMatrix(const MatrixKey $\&$mkey)} or \texttt{QuadExp::CreateMatrix(const MatrixKey $\&$mkey)}. $\mathbf{M}_{\mathbf{t}}^e$ has its own key name such as "eMassLevelCurvature" and computed at \texttt{StdExpansion::MassLevelCurvatureMatrixOp$\_$MatFree} \\
+\\
+Flux terms such as $\mathbf{F}_{t_{\xi}}$ and $\mathbf{F}_{t_{\xi}}$ are computed at \texttt{ Expansion2D::AddNormTraceInt } with additional input array which is one of tangential vectors in that element\\
+\\
+The variable matrixid, which is the same as the element number, is introduced to generate each block matrix for each element.
+
+\vspace{3cm}
+
+Nov. 17 2009, Sehun Chun
+
+\bibliography{Article}
+\end{document}
+
+

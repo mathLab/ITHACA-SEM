@@ -41,7 +41,6 @@
 
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList.h>
-#include <MultiRegions/ExpList1D.h>
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/GenSegExp.h>
 #include <LocalRegions/TriExp.h>
@@ -55,9 +54,14 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        // Forward declarations for typedefs
         class ExpList1D;
+
+        /// Shared pointer to an ExpList1D object.
         typedef boost::shared_ptr<ExpList1D>      ExpList1DSharedPtr;
+        /// Vector of pointers to ExpList1D objects.
         typedef std::vector<ExpList1DSharedPtr>   ExpList1DVector;
+        /// Iterator for the vector of ExpList1D pointers.
         typedef std::vector<ExpList1DSharedPtr>::iterator ExpList1DVectorIter;
 
         /// This class is the abstraction of a one-dimensional multi-elemental
@@ -87,7 +91,7 @@ namespace Nektar
                       SpatialDomains::MeshGraph2D &graph2D,
                       bool UseGenSegExp = false);
 
-            /// Specialised constructor for trace expansion in DisContField2D.
+            /// Specialised constructor for trace expansions.
             ExpList1D(const Array<OneD,const ExpList1DSharedPtr> &bndConstraint,
                       const Array<OneD,const SpatialDomains
                                             ::BoundaryConditionShPtr>  &bndCond,
@@ -99,7 +103,7 @@ namespace Nektar
             /// Destructor.
             ~ExpList1D();
 
-
+            /// Populates the list of boundary condition expansions.
             void SetBoundaryConditionExpansion(
                                 const SpatialDomains::MeshGraph1D &graph1D,
                                       SpatialDomains::BoundaryConditions &bcs,
@@ -109,13 +113,14 @@ namespace Nektar
                                 Array<OneD, SpatialDomains
                                     ::BoundaryConditionShPtr> &bndConditions);
 
-
+            /// Generate a associative map of periodic vertices in a mesh.
             void GetPeriodicVertices(
                                 const SpatialDomains::MeshGraph1D &graph1D,
                                       SpatialDomains::BoundaryConditions &bcs,
                                 const std::string variable,
                                       map<int,int>& periodicVertices);
 
+            // Evaluates boundary conditions.
             void EvaluateBoundaryConditions(
                                 const NekDouble time,
                                 Array<OneD, LocalRegions::PointExpSharedPtr>
@@ -164,17 +169,13 @@ namespace Nektar
             void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
 
         protected:
+            /// Flag to indicate if GenSegExp's are being used.
+            bool m_UseGenSegExp;
 
         private:
             /// Set up the normals on each expansion.
             virtual void v_SetUpPhysNormals(
-                                const StdRegions::StdExpansionVector &locexp)
-            {
-                SetUpPhysNormals(locexp);
-            }
-
-            /// Flag to indicate if GenSegExp's are being used.
-            bool m_UseGenSegExp;
+                                const StdRegions::StdExpansionVector &locexp);
         };
 
         /// Empty ExpList1D object.

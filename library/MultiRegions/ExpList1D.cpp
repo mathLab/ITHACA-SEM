@@ -73,14 +73,6 @@ namespace Nektar
 
 
         /**
-         *
-         */
-        ExpList1D::~ExpList1D()
-        {
-        }
-
-
-        /**
          * Creates an identical copy of another ExpList1D object.
          */
         ExpList1D::ExpList1D(const ExpList1D &In):
@@ -94,7 +86,8 @@ namespace Nektar
          * After initialising the data inherited through MultiRegions#ExpList,
          * populate the expansion list from the segments defined in the supplied
          * SpatialDomains#MeshGraph1D. All expansions in the graph are defined
-         * using the same LibUtilities#BasisKey.
+         * using the same LibUtilities#BasisKey which overrides that specified
+         * in \a graph1D.
          *
          * @see     ExpList1D#ExpList1D(SpatialDomains::MeshGraph1D&, bool)
          *          for details.
@@ -223,10 +216,13 @@ namespace Nektar
 
 
         /**
+         * Fills the list of local expansions with the segments from the 2D
+         * mesh specified by \a domain. This CompositeVector contains a list of
+         * Composites which define the Neumann boundary.
          * @see     ExpList1D#ExpList1D(SpatialDomains::MeshGraph1D&, bool)
          *          for details.
          * @param   domain      A domain, comprising of one or more composite
-         *                      regions, each containing a number of segments.
+         *                      regions,
          * @param   graph2D     A mesh, containing information about the
          *                      domain and the spectral/hp element expansion.
          * @param   UseGenSegExp If true, create general segment expansions
@@ -290,11 +286,18 @@ namespace Nektar
 
 
         /**
-         * @param   bndConstraint   ?
-         * @param   bndCond     ?
-         * @param   locexp      ?
-         * @param   graph2D     ?
-         * @param   periodicEdges   ?
+         * Store expansions for the trace space expansions used in
+         * DisContField2D.
+         *
+         * @param   bndConstraint   Array of ExpList1D objects each containing a
+         *                      1D spectral/hp element expansion on a single
+         *                      boundary region.
+         * @param   bndCond     Array of BoundaryCondition objects which contain
+         *                      information about the boundary conditions on the
+         *                      different boundary regions.
+         * @param   locexp      Complete domain expansion list.
+         * @param   graph2D     2D mesh corresponding to the expansion list.
+         * @param   periodicEdges   List of periodic edges.
          * @param   UseGenSegExp If true, create general segment expansions
          *                      instead of just normal segment expansions.
          */
@@ -437,11 +440,24 @@ namespace Nektar
 
 
         /**
-         * @param   graph1D     ?
-         * @param   bcs         ?
-         * @param   variable    ?
-         * @param   bndCondExpansions   ?
-         * @param   bncConditions   ?
+         *
+         */
+        ExpList1D::~ExpList1D()
+        {
+        }
+
+
+        /**
+         * @param   graph1D     A mesh containing information about the domain
+         *                      and the Spectral/hp element expansion.
+         * @param   bcs         Information about the boundary conditions.
+         * @param   variable    Specifies the field.
+         * @param   bndCondExpansions   Array of ExpList1D objects each
+         *                      containing a 1D spectral/hp element expansion
+         *                      on a single boundary region.
+         * @param   bncConditions   Array of BoundaryCondition objects which
+         *                      contain information about the boundary
+         *                      conditions on the different boundary regions.
          */
         void ExpList1D::SetBoundaryConditionExpansion(
                                 const SpatialDomains::MeshGraph1D &graph1D,
@@ -457,7 +473,7 @@ namespace Nektar
 
             SpatialDomains::BoundaryRegionCollection &bregions
                                                 = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions 
+            SpatialDomains::BoundaryConditionCollection &bconditions
                                                 = bcs.GetBoundaryConditions();
 
             LocalRegions::PointExpSharedPtr          locPointExp;
@@ -513,7 +529,7 @@ namespace Nektar
                                     <SpatialDomains::VertexComponent>(
                                         (*(*bregions[i])[j])[k]))
                             {
-                                locPointExp 
+                                locPointExp
                                     = MemoryManager<LocalRegions::PointExp>
                                                 ::AllocateSharedPtr(vert);
                                 bndCondExpansions[cnt]  = locPointExp;
@@ -539,10 +555,12 @@ namespace Nektar
 
 
         /**
-         * @param   graph1D     ?
-         * @param   bcs         ?
-         * @param   variable    ?
-         * @param   periodicVertices    ?
+         * @param   graph1D     A mesh containing information about the domain
+         *                      and the spectral/hp element expansion.
+         * @param   bcs         Information about the boundary conditions.
+         * @param   variable    Specified the field.
+         * @param   periodicVertices    Map into which the list of periodic
+         *                      vertices is placed.
          */
         void ExpList1D::GetPeriodicVertices(
                                 const SpatialDomains::MeshGraph1D &graph1D,
@@ -633,10 +651,12 @@ namespace Nektar
 
 
         /**
+         * Evaluates the boundary condition expansions, \a bndCondExpansions,
+         * given the information provided by \a bndConditions.
          * @param   time        The time at which the boundary conditions
          *                      should be evaluated.
-         * @param   bndCondExpansions   ?
-         * @param   bndConditions   ?
+         * @param   bndCondExpansions   List of boundary expansions.
+         * @param   bndConditions   Information about the boundary conditions.
          */
         void ExpList1D::EvaluateBoundaryConditions(
                                 const NekDouble time,
@@ -663,7 +683,7 @@ namespace Nektar
                              ::DirichletBoundaryCondition>(bndConditions[i])
                              ->m_DirichletCondition).Evaluate(x0,x1,x2,time));
                 }
-                else if(bndConditions[i]->GetBoundaryConditionType() 
+                else if(bndConditions[i]->GetBoundaryConditionType()
                         == SpatialDomains::eNeumann)
                 {
                     bndCondExpansions[i]->SetValue(
@@ -734,7 +754,7 @@ namespace Nektar
                 Array<OneD,NekDouble> total_breaks(total_nbreaks);
                 kernel->Sort(local_kernel_breaks,mesh_breaks,total_breaks);
 
-                // Integrate the product of kernel and function over the total 
+                // Integrate the product of kernel and function over the total
                 // breaks
                 NekDouble integral_value = 0.0;
                 for(j = 0; j < total_breaks.num_elements()-1; j++)
@@ -775,7 +795,7 @@ namespace Nektar
 
         /**
          * Given the elemental coefficients \f$\hat{u}_n^e\f$ of an expansion,
-         * periodically evaluate the spectral/hp expansion 
+         * periodically evaluate the spectral/hp expansion
          * \f$u^{\delta}(\boldsymbol{x})\f$ at arbitrary points.
          * @param   inarray1    An array of size \f$N_{\mathrm{eof}}\f$
          *                      containing the local coefficients
@@ -858,8 +878,8 @@ namespace Nektar
 
 
         /**
-         * 
-         * @param   locexp      ?
+         * Sets up the normals on all edges of expansions in the domain.
+         * @param   locexp      Complete list of domain expansions.
          */
         void ExpList1D::SetUpPhysNormals(
                                 const StdRegions::StdExpansionVector &locexp)
@@ -1053,11 +1073,24 @@ namespace Nektar
             }
         }
 
+
+        /**
+         *
+         */
+        void ExpList1D::v_SetUpPhysNormals(
+                                const StdRegions::StdExpansionVector &locexp)
+        {
+            SetUpPhysNormals(locexp);
+        }
+
     } //end of namespace
 } //end of namespace
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.40  2009/11/04 20:30:15  cantwell
+* Added documentation to ExpList and ExpList1D and tidied up code.
+*
 * Revision 1.39  2009/11/04 12:33:38  cantwell
 * Fix for HDGHelmholtz2D solver.
 *

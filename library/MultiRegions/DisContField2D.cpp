@@ -369,7 +369,7 @@ namespace Nektar
             int nexp = GetExpSize();
             StdRegions::EdgeOrientation edgedir;
             int nquad_e,cnt,n,e,npts,offset, phys_offset;
-            Array<OneD,NekDouble> e_tmp, e_tmp1;
+            Array<OneD,NekDouble> e_tmp;
 
             Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr> >
                 elmtToTrace = m_traceMap->GetElmtToTrace();
@@ -390,8 +390,8 @@ namespace Nektar
                     {
                         offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
                         (*m_exp)[n]->GetEdgePhysVals(e, elmtToTrace[n][e], 
-                                                     e_tmp = field + phys_offset, 
-                                                     e_tmp1 = Fwd + offset);
+                                                     field + phys_offset, 
+                                                     e_tmp = Fwd + offset);
                     }
                 }
             }
@@ -408,8 +408,8 @@ namespace Nektar
                     {
                         offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
                         (*m_exp)[n]->GetEdgePhysVals(e, elmtToTrace[n][e],
-                                                     e_tmp = field + phys_offset,
-                                                     e_tmp1 = Bwd+offset);
+                                                     field + phys_offset,
+                                                     e_tmp = Bwd + offset);
                     }
                 }
             }
@@ -465,7 +465,7 @@ namespace Nektar
             // Loop over elemente and collect forward expansion
             int nexp = GetExpSize();
             int nquad_e,cnt,n,e,npts,offset,phys_offset;
-            Array<OneD,NekDouble> e_tmp,e_tmp1;
+            Array<OneD,NekDouble> e_tmp;
             Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr> >
                 elmtToTrace = m_traceMap->GetElmtToTrace();
 
@@ -482,8 +482,8 @@ namespace Nektar
                     nquad_e = (*m_exp)[n]->GetEdgeNumPoints(e);
                     offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
                     (*m_exp)[n]->GetEdgePhysVals(e,  elmtToTrace[n][e], 
-                                                 e_tmp  = inarray + phys_offset,
-                                                 e_tmp1 = outarray + offset);
+                                                 inarray + phys_offset,
+                                                 e_tmp = outarray + offset);
                 }
             }
         }

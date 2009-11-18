@@ -1535,7 +1535,7 @@ namespace Nektar
       return datasize;
     }
     
-    void MeshGraph::Write(std::string                            &outFile, 
+    void MeshGraph::Write(const std::string                            &outFile, 
 			  std::vector<FieldDefinitionsSharedPtr> &fielddefs,
 			  std::vector<std::vector<double> >      &fielddata)
     {
@@ -1993,6 +1993,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.38  2009/10/22 17:34:20  cbiotto
+// Fixing bug for variable order expansion
+//
 // Revision 1.37  2009/09/24 10:58:12  cbiotto
 // Updates for variable order expansions
 //

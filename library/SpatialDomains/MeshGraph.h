@@ -200,7 +200,7 @@ namespace Nektar
             }
                         
             int CheckFieldDefinition(const FieldDefinitionsSharedPtr  &fielddefs);
-            void Write(std::string &outFile, 
+            void Write(const std::string &outFile, 
                        std::vector<FieldDefinitionsSharedPtr> &fielddefs, 
                        std::vector<std::vector<double> >      &fielddata);
 
@@ -314,6 +314,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.36  2009/09/24 10:57:54  cbiotto
+// Updates for variable order expansions
+//
 // Revision 1.35  2009/08/19 14:13:34  claes
 // Removed Gauss-Kronrod parts
 //

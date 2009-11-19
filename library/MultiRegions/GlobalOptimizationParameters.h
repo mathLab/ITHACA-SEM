@@ -28,7 +28,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: Header file of global optimisation parameters class
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -36,104 +36,144 @@
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALOPTIMIZATIONPARAMETERS_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALOPTIMIZATIONPARAMETERS_H
 
-#include<StdRegions/ElementalOptimizationParameters.hpp>
+#include <StdRegions/ElementalOptimizationParameters.hpp>
 
 namespace Nektar
 {
-    namespace NekOptimize 
-    {        
-        class GlobalOptParam 
+    namespace NekOptimize
+    {
+        /// Processes global optimisation parameters from a session.
+        class GlobalOptParam
         {
         public:
+            /// Use default values.
+            GlobalOptParam();
 
-            GlobalOptParam(void);
-
+            /// Read optimisation parameters from a given file.
             GlobalOptParam(const std::string& fileName);
 
-            inline const bool DoGlobalMatOp(const StdRegions::MatrixType i) const
-            {
-                ElementalOptimizationOperationType type;
-                switch(i)
-                {
-                case StdRegions::eBwdTrans: 
-                    {
-                        type = eBwdTrans;
-                    }
-                    break;
-                case StdRegions::eIProductWRTBase:
-                    {
-                        type = eIProductWRTBase;
-                    }
-                    break;      
-                case StdRegions::eMass: 
-                    {
-                        type = eMassMatrixOp;
-                    }
-                    break;   
-                case StdRegions::eHelmholtz:
-                    {
-                        type = eHelmholtzMatrixOp;
-                    }
-                    break;   
-                case StdRegions::eLaplacian:
-                    {
-                        type = eLaplacianMatrixOp;
-                    }
-                    break;   
-                default:
-                    {
-                        ASSERTL0(false,"Optimisation suite not set up for this type of matrix");
-                    }
-                }
-                return m_doGlobalMatOp[type];
-            }
-            
-            inline const bool DoBlockMatOp(const StdRegions::MatrixType i) const
-            {
-                ElementalOptimizationOperationType type;
-                switch(i)
-                {
-                case StdRegions::eBwdTrans: 
-                    {
-                        type = eBwdTrans;
-                    }
-                    break;
-                case StdRegions::eIProductWRTBase:
-                    {
-                        type = eIProductWRTBase;
-                    }
-                    break;      
-                case StdRegions::eMass: 
-                    {
-                        type = eMassMatrixOp;
-                    }
-                    break;   
-                case StdRegions::eHelmholtz:
-                    {
-                        type = eHelmholtzMatrixOp;
-                    }
-                    break;   
-                case StdRegions::eLaplacian:
-                    {
-                        type = eLaplacianMatrixOp;
-                    }
-                    break;   
-                default:
-                    {
-                        ASSERTL0(false,"Optimisation suite not set up for this type of matrix");
-                    }
-                }
-                return m_doBlockMatOp[type];
-            }
-            
-        private:
-            Array<OneD,bool> m_doGlobalMatOp;
-            Array<OneD,bool> m_doBlockMatOp;
-        };    
+            /// For a given matrix type, determines if the operation should
+            /// be done globally.
+            // inline
+            const bool DoGlobalMatOp(const StdRegions::MatrixType i) const;
 
+            /// For a given matrix type, determines if the operation should be
+            /// done
+            // inline
+            const bool DoBlockMatOp(const StdRegions::MatrixType i) const;
+
+        private:
+            /// Flags indicating if different matrices should be evaluated
+            /// globally.
+            Array<OneD,bool> m_doGlobalMatOp;
+
+            /// Flags indicating if different matrices should be evaluated
+            /// in block form.
+            Array<OneD,bool> m_doBlockMatOp;
+        };
+
+        /// Pointer to a GlobalOptParam object.
         typedef  boost::shared_ptr<GlobalOptParam> GlobalOptParamSharedPtr;
+
+        /// Pointer to an empty GlobalOptParam object.
         static   GlobalOptParamSharedPtr NullGlobalOptParamSharedPtr;
-        
+
+
+        /**
+         * Determines the elemental optimisation type enum, given the
+         * MatrixType and returns the corresponding entry in the table.
+         * @param   i           Type of matrix.
+         * @returns True if this type of matrix should be evaluated globally.
+         */
+        inline const bool GlobalOptParam::DoGlobalMatOp(
+                                const StdRegions::MatrixType i) const
+        {
+            ElementalOptimizationOperationType type;
+            switch(i)
+            {
+            case StdRegions::eBwdTrans:
+                {
+                    type = eBwdTrans;
+                }
+                break;
+            case StdRegions::eIProductWRTBase:
+                {
+                    type = eIProductWRTBase;
+                }
+                break;
+            case StdRegions::eMass:
+                {
+                    type = eMassMatrixOp;
+                }
+                break;
+            case StdRegions::eHelmholtz:
+                {
+                    type = eHelmholtzMatrixOp;
+                }
+                break;
+            case StdRegions::eLaplacian:
+                {
+                    type = eLaplacianMatrixOp;
+                }
+                break;
+            default:
+                {
+                    ASSERTL0(false,"Optimisation suite not set up for this type"
+                                   " of matrix");
+                }
+            }
+            return m_doGlobalMatOp[type];
+        }
+
+
+        /**
+         * Determines the elemental optimisation type enum, given the
+         * MatrixType and returns the corresponding entry in the table.
+         * @param   i           Type of matrix.
+         * @returns True if this type of matrix should be evaluated in block
+         *          form.
+         */
+        inline const bool GlobalOptParam::DoBlockMatOp(
+                                const StdRegions::MatrixType i) const
+        {
+            ElementalOptimizationOperationType type;
+            switch(i)
+            {
+            case StdRegions::eBwdTrans:
+                {
+                    type = eBwdTrans;
+                }
+                break;
+            case StdRegions::eIProductWRTBase:
+                {
+                    type = eIProductWRTBase;
+                }
+                break;
+            case StdRegions::eMass:
+                {
+                    type = eMassMatrixOp;
+                }
+                break;
+            case StdRegions::eHelmholtz:
+                {
+                    type = eHelmholtzMatrixOp;
+                }
+                break;
+            case StdRegions::eLaplacian:
+                {
+                    type = eLaplacianMatrixOp;
+                }
+                break;
+            default:
+                {
+                    ASSERTL0(false,"Optimisation suite not set up for this type"
+                                   " of matrix");
+                }
+            }
+            return m_doBlockMatOp[type];
+        }
+
+
     } // end of namespace
 } // end of namespace
 

@@ -28,7 +28,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: Source file of global optimisation parameters class
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -41,62 +41,94 @@
 
 namespace Nektar
 {
-    namespace NekOptimize 
-    {        
-        GlobalOptParam::GlobalOptParam(void):
+    namespace NekOptimize
+    {
+        /**
+         * @class GlobalOptParam
+         *
+         * Global optimisation parameters determines how the various matrices
+         * in the spectral/hp element formulation are evaluated. For details
+         * see the page on \ref optimisation Optimisation.
+         */
+
+        /**
+         * No global optimisation parameters present.
+         */
+        GlobalOptParam::GlobalOptParam():
             m_doGlobalMatOp(SIZE_OptimizeOperationType,false),
             m_doBlockMatOp(SIZE_OptimizeOperationType,false)
         {
         }
 
+
+        /**
+         * Read global optimisation parameters from a file and set up flags.
+         * @param   fileName    File to read parameters from.
+         */
         GlobalOptParam::GlobalOptParam(const std::string& fileName):
             m_doGlobalMatOp(SIZE_OptimizeOperationType,false),
             m_doBlockMatOp(SIZE_OptimizeOperationType,false)
         {
             TiXmlDocument doc(fileName);
             bool loadOkay = doc.LoadFile();
-            
-            ASSERTL0(loadOkay, (std::string("Unable to load file: ") + 
+
+            ASSERTL0(loadOkay, (std::string("Unable to load file: ") +
                                 fileName).c_str());
 
             TiXmlHandle docHandle(&doc);
-            TiXmlElement* master    = docHandle.FirstChildElement("NEKTAR").Element();
-            TiXmlElement* paramList = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GLOBALOPTIMIZATIONPARAMETERS").Element();
-                
+            TiXmlElement* master
+                        = docHandle.FirstChildElement("NEKTAR").Element();
+            TiXmlElement* paramList
+                        = docHandle.FirstChildElement("NEKTAR")
+                            .FirstChildElement("GLOBALOPTIMIZATIONPARAMETERS")
+                            .Element();
+
             ASSERTL0(master   , "Unable to find NEKTAR tag in file.");
-            ASSERTL0(paramList, "Unable to find ELEMENTALOPTIMIZATIONPARAMETERS tag in file.");
+            ASSERTL0(paramList, "Unable to find ELEMENTALOPTIMIZATIONPARAMETERS"
+                                " tag in file.");
             int n;
             for(n = 0; n < SIZE_OptimizeOperationType; n++)
             {
-                TiXmlElement* operationType = paramList->FirstChildElement(ElementalOptimizationOperationTypeMap[n]); 
-                if(operationType)                                   
-                {                                                   
-                    TiXmlElement* arrayElement = operationType->FirstChildElement("DO_GLOBAL_MAT_OP"); 
-                    if(arrayElement)                                 
-                    {                                                   
-                        int value;                                      
-                        int err;                                        
-                            
-                        err = arrayElement->QueryIntAttribute("VALUE", &value); 
-                        ASSERTL0(err == TIXML_SUCCESS, (std::string("Unable to read DO_GLOBAL_MAT_OP attribute VALUE for ") + 
-                                                        std::string(ElementalOptimizationOperationTypeMap[n]) + std::string("."))); 
-                            
-                        m_doGlobalMatOp[n] = (bool) value;
-                    } 
+                TiXmlElement* operationType = paramList->FirstChildElement(
+                                      ElementalOptimizationOperationTypeMap[n]);
+                if(operationType)
+                {
+                    TiXmlElement* arrayElement = operationType
+                                        ->FirstChildElement("DO_GLOBAL_MAT_OP");
+                    if(arrayElement)
+                    {
+                        int value;
+                        int err;
 
-                    arrayElement = operationType->FirstChildElement("DO_BLOCK_MAT_OP"); 
-                    if(arrayElement)                                 
-                    {                                                   
-                        int value;                                      
-                        int err;                                        
-                            
-                        err = arrayElement->QueryIntAttribute("VALUE", &value); 
-                        ASSERTL0(err == TIXML_SUCCESS, (std::string("Unable to read DO_BLOCK_MAT_OP attribute VALUE for ") + 
-                                                        std::string(ElementalOptimizationOperationTypeMap[n]) + std::string("."))); 
-                            
+                        err = arrayElement->QueryIntAttribute("VALUE", &value);
+                        ASSERTL0(err == TIXML_SUCCESS,(
+                           std::string("Unable to read DO_GLOBAL_MAT_OP "
+                                       "attribute VALUE for ")
+                         + std::string(ElementalOptimizationOperationTypeMap[n])
+                         + std::string(".")
+                        ));
+
+                        m_doGlobalMatOp[n] = (bool) value;
+                    }
+
+                    arrayElement
+                        = operationType->FirstChildElement("DO_BLOCK_MAT_OP");
+                    if(arrayElement)
+                    {
+                        int value;
+                        int err;
+
+                        err = arrayElement->QueryIntAttribute("VALUE", &value);
+                        ASSERTL0(err == TIXML_SUCCESS, (
+                           std::string("Unable to read DO_BLOCK_MAT_OP "
+                                       "attribute VALUE for ")
+                         + std::string(ElementalOptimizationOperationTypeMap[n])
+                         + std::string(".")
+                        ));
+
                         m_doBlockMatOp[n] = (bool) value;
-                    }                                            
-                }   
+                    }
+                }
             }
         }
 

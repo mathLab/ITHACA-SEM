@@ -395,6 +395,15 @@ namespace Nektar
             virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD,       NekDouble> &outarray,
                                      NekDouble lambda,
+                                     NekDouble tau)
+            {
+                Array<OneD, Array<OneD, NekDouble> > varcoeffs;
+                HelmSolve(inarray,outarray,varcoeffs,lambda,tau);
+            }
+
+            virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                     Array<OneD,       NekDouble> &outarray,
+                                     NekDouble lambda,
                                      bool      UseContCoeffs = false,
                                      const Array<OneD, const NekDouble>& dirForcing = NullNekDouble1DArray)
             {

@@ -2105,6 +2105,15 @@ namespace Nektar
 
         void ExpList::v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,       NekDouble> &outarray,
+                                  NekDouble lambda,
+                                  NekDouble tau)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                  Array<OneD,       NekDouble> &outarray,
                                   const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
                                   NekDouble lambda,
                                   NekDouble tau)

@@ -223,6 +223,12 @@ namespace Nektar
                                 bool      UseContCoeffs = false,
                                 const Array<OneD, const NekDouble>& dirForcing = NullNekDouble1DArray);
 
+           void HelmSolve(
+                           const Array<OneD, const NekDouble> &inarray,
+                           Array<OneD,       NekDouble> &outarray,
+                           NekDouble lambda,
+                           NekDouble tau);
+
             void HelmSolve(
                            const Array<OneD, const NekDouble> &inarray,
                            Array<OneD,       NekDouble> &outarray,
@@ -667,7 +673,14 @@ namespace Nektar
                                 bool      UseContCoeffs,
                                 const Array<OneD, const NekDouble>& dirForcing);
 
-            virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
+            virtual void v_HelmSolve(
+                                     const Array<OneD, const NekDouble> &inarray,
+                                   Array<OneD,       NekDouble> &outarray,
+                                   NekDouble lambda,
+                                   NekDouble tau);
+
+            virtual void v_HelmSolve(
+                                     const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,       NekDouble> &outarray,
                                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
                                    NekDouble lambda,
@@ -885,6 +898,14 @@ namespace Nektar
                         const Array<OneD, const NekDouble>& dirForcing)
         {
             v_HelmSolve(inarray,outarray,lambda,UseContCoeffs,dirForcing);
+        }
+
+        inline void ExpList::HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                       Array<OneD,       NekDouble> &outarray,
+                                       NekDouble lambda,
+                                       NekDouble tau)
+        {
+            v_HelmSolve(inarray,outarray,lambda,tau);
         }
 
         inline void ExpList::HelmSolve(const Array<OneD, const NekDouble> &inarray,
@@ -1195,6 +1216,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.79  2009/11/19 13:48:06  sehunchun
+* *** empty log message ***
+*
 * Revision 1.78  2009/11/19 11:41:07  pvos
 * Fixed various bugs
 *

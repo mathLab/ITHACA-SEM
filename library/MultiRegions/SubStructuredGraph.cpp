@@ -220,6 +220,60 @@ namespace Nektar
             return cnt;
         } 
 
+        int MultiLevelBisectedGraph::CutEmptyLeaves()
+        {
+            int returnval;
+            static int level = 0;
+            static int nLeaves = 0;
+            level++;
+
+            if( (level == 1) && 
+                (!m_leftDaughterGraph.get()) && 
+                (!m_rightDaughterGraph.get()) )
+            {
+                level = 0;
+                nLeaves = 0;
+                return 0;
+            }
+
+            if(m_leftDaughterGraph.get())
+            {
+                if( (m_leftDaughterGraph->GetNdaughterGraphs() == 0) && 
+                    (m_leftDaughterGraph->GetBndDofsGraph()->GetNverts() == 0) )
+                {
+                    m_leftDaughterGraph = MultiLevelBisectedGraphSharedPtr();
+                    nLeaves++;
+                }
+                else
+                {
+                    m_leftDaughterGraph->CutEmptyLeaves();
+                }
+            }
+            if(m_rightDaughterGraph.get())
+            {
+                if( (m_rightDaughterGraph->GetNdaughterGraphs() == 0) &&
+                    (m_rightDaughterGraph->GetBndDofsGraph()->GetNverts() == 0) )
+                {
+                    m_rightDaughterGraph = MultiLevelBisectedGraphSharedPtr();
+                    nLeaves++;
+                }
+                else
+                {
+                    m_rightDaughterGraph->CutEmptyLeaves();
+                }
+            }
+
+            returnval = nLeaves;
+ 
+            level--;
+            if(level == 0)
+            {
+                nLeaves = 0;
+            }
+
+            return returnval;
+        }
+
         int MultiLevelBisectedGraph::CutLeaves()
         {
             int returnval;
@@ -302,6 +356,7 @@ namespace Nektar
             // set the global numbering of the top-down graph
             topDownGraph->SetGlobalNumberingOffset();
 
+            topDownGraph->CutEmptyLeaves();
             // Secondly, recursively construct the subgraphs of the bottom up point of view
             // 1. Collect all the leaves of the topdown graph this will be the first level
             //    of the bottom up graph
@@ -321,6 +376,7 @@ namespace Nektar
             m_daughterGraph()
         {
             int ncuts;
+            graph->CutEmptyLeaves();
             graph->CollectLeaves(m_IntBlocks);
             ncuts = graph->CutLeaves();
 
@@ -833,6 +889,9 @@ namespace Nektar
 
 /**
  * $Log: SubStructuredGraph.cpp,v $
+ * Revision 1.3  2009/11/09 15:57:11  pvos
+ * multi-level recursion bug fixes
+ *
  * Revision 1.2  2009/11/02 11:19:44  pvos
  * Fixed a bug for reordering a graph without edges
  *

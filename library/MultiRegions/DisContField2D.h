@@ -97,12 +97,12 @@ namespace Nektar
                            Array<OneD,       NekDouble> &outarray,
                            const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
                            NekDouble lambda,
-                           NekDouble tau = 1);
+                           NekDouble tau = 10);
 
             void HelmSolve(const Array<OneD, const NekDouble> &inarray,
                            Array<OneD,       NekDouble> &outarray,
                            NekDouble lambda,
-                           NekDouble tau = 1)
+                           NekDouble tau = 10)
             {
                 Array<OneD, Array<OneD, NekDouble> > varcoeffs;
                 HelmSolve(inarray,outarray,varcoeffs,lambda,tau);

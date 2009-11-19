@@ -473,7 +473,7 @@ namespace Nektar
                     gid = TraceElmtGid[MeshEdgeId.find(id)->second];
                     
                     
-                    order_e = locSegExp->GetNcoeffs();
+                    order_e = (*exp2D)[i]->GetEdgeNcoeffs(j);//locSegExp->GetNcoeffs();
                     
                     if((*exp2D)[i]->GetEorient(j) == StdRegions::eForwards)
                     {

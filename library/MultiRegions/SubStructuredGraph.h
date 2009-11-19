@@ -160,6 +160,8 @@ namespace Nektar
 
             int CutLeaves();
 
+            int CutEmptyLeaves();
+
             inline const SubGraphSharedPtr GetBndDofsGraph() const
             {
                 return m_BndDofs;
@@ -255,6 +257,9 @@ namespace Nektar
 
 /**
 * $Log: SubStructuredGraph.h,v $
+* Revision 1.3  2009/11/09 15:57:11  pvos
+* multi-level recursion bug fixes
+*
 * Revision 1.2  2009/11/02 11:19:44  pvos
 * Fixed a bug for reordering a graph without edges
 *

@@ -216,16 +216,13 @@ namespace Nektar
                                 bool  UseContCoeffs = false);
 
             // inline
-            void HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD,       NekDouble> &outarray,
-                           NekDouble lambda,
-                           NekDouble tau = 1);
-
-            void HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                           Array<OneD,       NekDouble> &outarray,
-                           const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
-                           NekDouble lambda,
-                           NekDouble tau = 1);
+            void HelmSolve(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                NekDouble lambda,
+                                bool      UseContCoeffs = false,
+                                const Array<OneD, const NekDouble>& dirForcing
+                                                    = NullNekDouble1DArray);
 
             void FwdTrans_BndConstrained(
                                 const Array<OneD, const NekDouble> &inarray,
@@ -656,17 +653,13 @@ namespace Nektar
                                     const Array<OneD,const NekDouble> &inarray,
                                           Array<OneD,      NekDouble> &outarray,
                                     bool  UseContCoeffs);
-            
-            virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                     Array<OneD,       NekDouble> &outarray,
-                                     NekDouble lambda,
-                                     NekDouble tau);
-            
-            virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                   Array<OneD,       NekDouble> &outarray,
-                                   const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
-                                   NekDouble lambda,
-                                   NekDouble tau);
+
+            virtual void v_HelmSolve(
+                                const Array<OneD,const NekDouble> &inarray,
+                                      Array<OneD,      NekDouble> &outarray,
+                                NekDouble lambda,
+                                bool      UseContCoeffs,
+                                const Array<OneD, const NekDouble>& dirForcing);
 
             // wrapper functions about virtual functions
             virtual const
@@ -872,21 +865,14 @@ namespace Nektar
         /**
          *
          */
-        inline void ExpList::HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,       NekDouble> &outarray,
-                                       NekDouble lambda,
-                                       NekDouble tau)
+        inline void ExpList::HelmSolve(
+                        const Array<OneD, const NekDouble> &inarray,
+                              Array<OneD,       NekDouble> &outarray,
+                        NekDouble lambda,
+                        bool      UseContCoeffs,
+                        const Array<OneD, const NekDouble>& dirForcing)
         {
-            v_HelmSolve(inarray,outarray,lambda,tau);
-        }
-        
-        inline void ExpList::HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,       NekDouble> &outarray,
-                                       const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
-                                       NekDouble lambda,
-                                       NekDouble tau)
-        {
-            v_HelmSolve(inarray,outarray,varcoeffs,lambda,tau);
+            v_HelmSolve(inarray,outarray,lambda,UseContCoeffs,dirForcing);
         }
 
 
@@ -1189,6 +1175,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.77  2009/11/10 19:05:34  sehunchun
+* *** empty log message ***
+*
 * Revision 1.76  2009/11/07 17:15:17  sehunchun
 * Add GetTotPoints(idx)
 *

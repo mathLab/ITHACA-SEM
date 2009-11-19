@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Definition of GlobalMatrixKey 
+// Description: Definition of GlobalMatrixKey
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -40,9 +40,10 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        // Register Mass Matrix creator. 
-        GlobalMatrixKey::GlobalMatrixKey(const StdRegions::MatrixType matrixType,
-                                         const LocalToGlobalBaseMapSharedPtr &locToGloMap):
+        // Register Mass Matrix creator.
+        GlobalMatrixKey::GlobalMatrixKey(
+                        const StdRegions::MatrixType matrixType,
+                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
             m_matrixType(matrixType),
             m_locToGloMap(locToGloMap),
             m_nconstants(0),
@@ -51,10 +52,11 @@ namespace Nektar
             m_variablecoefficient(m_nvariablecoefficients)
         {
         }
-        
-        GlobalMatrixKey::GlobalMatrixKey(const StdRegions::MatrixType matrixType,
-                                         const NekDouble factor,
-                                         const LocalToGlobalBaseMapSharedPtr &locToGloMap):
+
+        GlobalMatrixKey::GlobalMatrixKey(
+                        const StdRegions::MatrixType matrixType,
+                        const NekDouble factor,
+                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
             m_matrixType(matrixType),
             m_locToGloMap(locToGloMap),
             m_nconstants(1),
@@ -64,11 +66,12 @@ namespace Nektar
         {
             m_constant[0] = factor;
         }
-        
-        GlobalMatrixKey::GlobalMatrixKey(const StdRegions::MatrixType matrixType,
-                                         const NekDouble factor1,
-                                         const NekDouble factor2,
-                                         const LocalToGlobalBaseMapSharedPtr &locToGloMap):
+
+        GlobalMatrixKey::GlobalMatrixKey(
+                        const StdRegions::MatrixType matrixType,
+                        const NekDouble factor1,
+                        const NekDouble factor2,
+                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
             m_matrixType(matrixType),
             m_locToGloMap(locToGloMap),
             m_nconstants(2),
@@ -80,9 +83,10 @@ namespace Nektar
             m_constant[1] = factor2;
         }
 
-        GlobalMatrixKey::GlobalMatrixKey(const StdRegions::MatrixType matrixType, 
-                                         const Array<OneD,NekDouble>& varcoeffs,
-                                         const LocalToGlobalBaseMapSharedPtr &locToGloMap):
+        GlobalMatrixKey::GlobalMatrixKey(
+                        const StdRegions::MatrixType matrixType,
+                        const Array<OneD,NekDouble>& varcoeffs,
+                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
             m_matrixType(matrixType),
             m_locToGloMap(locToGloMap),
             m_nconstants(0),
@@ -90,11 +94,12 @@ namespace Nektar
             m_nvariablecoefficients(1)
         {
             m_variablecoefficient[0] = varcoeffs;
-        }  
+        }
 
-        GlobalMatrixKey::GlobalMatrixKey(const StdRegions::MatrixType matrixType, 
-                                         const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                                         const LocalToGlobalBaseMapSharedPtr &locToGloMap):
+        GlobalMatrixKey::GlobalMatrixKey(
+                        const StdRegions::MatrixType matrixType,
+                        const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
             m_matrixType(matrixType),
             m_locToGloMap(locToGloMap),
             m_nconstants(0),
@@ -102,12 +107,13 @@ namespace Nektar
             m_nvariablecoefficients(varcoeffs.num_elements()),
             m_variablecoefficient(varcoeffs)
         {
-        }          
-            
-        GlobalMatrixKey::GlobalMatrixKey(const StdRegions::MatrixType matrixType,
-                                         const NekDouble factor,
-                                         const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                                         const LocalToGlobalBaseMapSharedPtr &locToGloMap):
+        }
+
+        GlobalMatrixKey::GlobalMatrixKey(
+                        const StdRegions::MatrixType matrixType,
+                        const NekDouble factor,
+                        const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
             m_matrixType(matrixType),
             m_locToGloMap(locToGloMap),
             m_nconstants(1),
@@ -116,13 +122,14 @@ namespace Nektar
             m_variablecoefficient(varcoeffs)
         {
             m_constant[0] = factor;
-        }     
+        }
 
-        GlobalMatrixKey::GlobalMatrixKey(const StdRegions::MatrixType matrixType,
-                                         const NekDouble factor1,
-                                         const NekDouble factor2,
-                                         const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                                         const LocalToGlobalBaseMapSharedPtr &locToGloMap):
+        GlobalMatrixKey::GlobalMatrixKey(
+                        const StdRegions::MatrixType matrixType,
+                        const NekDouble factor1,
+                        const NekDouble factor2,
+                        const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
             m_matrixType(matrixType),
             m_locToGloMap(locToGloMap),
             m_nconstants(2),
@@ -141,7 +148,11 @@ namespace Nektar
             m_constant(key.m_constant),
             m_nvariablecoefficients(key.m_nvariablecoefficients),
             m_variablecoefficient(key.m_variablecoefficient)
-            
+
+        {
+        }
+
+        GlobalMatrixKey::~GlobalMatrixKey()
         {
         }
 
@@ -165,7 +176,7 @@ namespace Nektar
             {
                 return false;
             }
-            else 
+            else
             {
                 for(unsigned int i = 0; i < lhs.m_nconstants; ++i)
                 {
@@ -173,7 +184,7 @@ namespace Nektar
                     {
                         return true;
                     }
-                    
+
                     if(lhs.m_constant[i] > rhs.m_constant[i])
                     {
                         return false;
@@ -189,7 +200,7 @@ namespace Nektar
             {
                 return false;
             }
-            else 
+            else
             {
                 for(unsigned int i = 0; i < lhs.m_nvariablecoefficients; ++i)
                 {
@@ -197,7 +208,7 @@ namespace Nektar
                     {
                         return true;
                     }
-                    
+
                     if((lhs.m_variablecoefficient[i]).get() > (rhs.m_variablecoefficient[i]).get())
                     {
                         return false;
@@ -219,12 +230,12 @@ namespace Nektar
             int i;
             os << "MatrixType: " << rhs.GetMatrixType() << endl;
             os << "Number of constants: " << rhs.GetNconstants() << endl;
-            for(i = 0; i < rhs.GetNconstants();i++) 
+            for(i = 0; i < rhs.GetNconstants();i++)
             {
                 os << "  Constant " << i << ": " << rhs.GetConstant(i) << endl;
             }
             os << "Number of variable coefficients: " << rhs.GetNvariableCoefficients() << endl;
-            
+
             return os;
         }
     }
@@ -232,6 +243,9 @@ namespace Nektar
 
 /**
 * $Log: GlobalMatrixKey.cpp,v $
+* Revision 1.2  2009/11/07 21:11:30  sehunchun
+* Variable coefficients parameters are added
+*
 * Revision 1.1  2009/03/23 10:46:54  pvos
 * Added GlobalMatrixKey
 *

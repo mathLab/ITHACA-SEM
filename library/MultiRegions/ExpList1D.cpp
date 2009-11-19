@@ -558,7 +558,7 @@ namespace Nektar
          * @param   graph1D     A mesh containing information about the domain
          *                      and the spectral/hp element expansion.
          * @param   bcs         Information about the boundary conditions.
-         * @param   variable    Specified the field.
+         * @param   variable    Specifies the field.
          * @param   periodicVertices    Map into which the list of periodic
          *                      vertices is placed.
          */
@@ -1088,6 +1088,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.41  2009/11/18 17:12:29  cantwell
+* Added documentation to ExpList1D.
+*
 * Revision 1.40  2009/11/04 20:30:15  cantwell
 * Added documentation to ExpList and ExpList1D and tidied up code.
 *

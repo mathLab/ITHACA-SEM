@@ -68,17 +68,6 @@ namespace Nektar
                            const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
                            bool SetUpJustDG = true);
 
-
-            DisContField2D(const LibUtilities::BasisKey &TriBa, 
-                           const LibUtilities::BasisKey &TriBb, 
-                           const LibUtilities::BasisKey &QuadBa, 
-                           const LibUtilities::BasisKey &QuadBb, 
-                           SpatialDomains::MeshGraph2D &graph2D,
-                           SpatialDomains::BoundaryConditions &bcs,
-                           const int bc_loc = 0,
-                           const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
-                           bool SetUpJustDG = true);
-            
             DisContField2D(const DisContField2D &In);
 
             ~DisContField2D();

@@ -49,94 +49,71 @@
 namespace Nektar
 {
     namespace MultiRegions
-    {      
-        /**
-         * \brief This class is the abstraction of a two-dimensional multi-elemental 
-         * expansions which is merely a collection of local expansions.
-         * 
-         * This multi-elemental expansion, which does not exhibit any coupling between the 
-         * expansion on the separate elements, can be formulated as,
-         * \f[u^{\delta}(\boldsymbol{x}_i)=\sum_{e=1}^{{N_{\mathrm{el}}}}
-         * \sum_{n=0}^{N^{e}_m-1}\hat{u}_n^e\phi_n^e(\boldsymbol{x}_i).\f]
-         * where \f${N_{\mathrm{el}}}\f$ is the number of elements and \f$N^{e}_m\f$ is the 
-         * local elemental number of expansion modes.
-         * This class inherits all its variables and member functions from the base class 
-         * #ExpList.
-         */  
-    class ExpList2D:
-        public ExpList
+    {
+        // Forward declaration for typedefs
+        class ExpList2D;
+
+        /// Shared pointer to an ExpList2D object.
+        typedef boost::shared_ptr<ExpList2D>      ExpList2DSharedPtr;
+        /// Vector of pointers to ExpList2D objects.
+        typedef std::vector< ExpList2DSharedPtr > ExpList2DVector;
+        /// Iterator for the vector of ExpList2D pointers.
+        typedef std::vector< ExpList2DSharedPtr >::iterator ExpList2DVectorIter;
+
+        /// Abstraction of a two-dimensional multi-elemental expansions which
+        /// is merely a collection of local expansions.
+        class ExpList2D: public ExpList
         {
         public:
-            /**
-             * \brief The default constructor.  
-             */  
-            ExpList2D(); 
-            
-            /**
-             * \brief The copy constructor.
-             */  
-            ExpList2D(const ExpList2D &In);   
-            
-            /**
-             * \brief 
-             */  
-            ExpList2D(const LibUtilities::BasisKey &TriBa, 
-                      const LibUtilities::BasisKey &TriBb, 
-                      const LibUtilities::BasisKey &QuadBa, 
-                      const LibUtilities::BasisKey &QuadBb, 
-                      const SpatialDomains::MeshGraph2D &graph2D,
-                      const LibUtilities::PointsType 
-                      TriNb = LibUtilities::SIZE_PointsType);
+            /// Default constructor.
+            ExpList2D();
 
-            /**
-             * \brief This constructor sets up a list of local expansions based on an input 
-             * mesh.
-             * 
-             * Given a mesh \a graph2D, containing information about the domain and the 
-             * spectral/hp element expansion, this constructor fills the list of local 
-             * expansions \texttt{m_exp} with the proper expansions, calculates the total 
-             * number of quadrature points \f$\boldsymbol{x}_i\f$ and local expansion 
-             * coefficients \f$\hat{u}^e_n\f$ and allocates memory for the arrays #m_coeffs 
-             * and #m_phys.
-             *
-             * \param graph2D A mesh, containing information about the domain and the 
-             * spectral/hp element expansion.
-             */  
-            ExpList2D(SpatialDomains::MeshGraph2D &graph2D);
+            /// Copy constructor.
+            ExpList2D(  const ExpList2D &In);
 
-            ExpList2D(const SpatialDomains::CompositeVector &domain, 
-                      SpatialDomains::MeshGraph3D &graph3D); 
-            
-            /**
-             * \brief The default destructor.
-             */  
+            /// Sets up a list of local expansions based on an input mesh.
+            ExpList2D(  SpatialDomains::MeshGraph2D &graph2D);
+
+            /// Specialised constructor for Neumann boundary conditions in
+            /// DisContField3D and ContField3D.
+            ExpList2D(  const SpatialDomains::CompositeVector &domain,
+                        SpatialDomains::MeshGraph3D &graph3D);
+
+            /// Destructor.
             ~ExpList2D();
 
         protected:
-            void SetBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D,
-                                               SpatialDomains::BoundaryConditions &bcs, 
-                                               const std::string variable,
-                                               Array<OneD, ExpList1DSharedPtr> &bndCondExpansions,
-                                               Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndConditions);
+            /// Populates the list of boundary condition expansions.
+            void SetBoundaryConditionExpansion(
+                        SpatialDomains::MeshGraph2D &graph2D,
+                        SpatialDomains::BoundaryConditions &bcs,
+                        const std::string variable,
+                        Array<OneD, ExpList1DSharedPtr> &bndCondExpansions,
+                        Array<OneD, SpatialDomains::BoundaryConditionShPtr>
+                                                                &bndConditions);
 
-            void EvaluateBoundaryConditions(const NekDouble time,
-                                            Array<OneD, ExpList1DSharedPtr> &bndCondExpansions,
-                                            Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndConditions);
-            
-            void GetPeriodicEdges(SpatialDomains::MeshGraph2D &graph2D,
-                                  SpatialDomains::BoundaryConditions &bcs, 
-                                  const std::string variable,
-                                  vector<map<int,int> > & periodicVertices,
-                                  map<int,int>& periodicEdges);
+            /// Evaluates boundary conditions.
+            void EvaluateBoundaryConditions(
+                        const NekDouble time,
+                        Array<OneD, ExpList1DSharedPtr> &bndCondExpansions,
+                        Array<OneD, SpatialDomains::BoundaryConditionShPtr>
+                                                                &bndConditions);
+
+            /// Generates a map of periodic edges in the mesh.
+            void GetPeriodicEdges(
+                        SpatialDomains::MeshGraph2D &graph2D,
+                        SpatialDomains::BoundaryConditions &bcs,
+                        const std::string variable,
+                        vector<map<int,int> > & periodicVertices,
+                        map<int,int>& periodicEdges);
+
         private:
-            
-        };
-        
-        typedef boost::shared_ptr<ExpList2D>      ExpList2DSharedPtr;
-        typedef std::vector< ExpList2DSharedPtr > ExpList2DVector;
-        typedef std::vector< ExpList2DSharedPtr >::iterator ExpList2DVectorIter;
 
-        const static Array<OneD, ExpList2DSharedPtr> NullExpList2DSharedPtrArray;
+        };
+
+        /// Empty ExpList2D object.
+        const static Array<OneD, ExpList2DSharedPtr>
+                                                NullExpList2DSharedPtrArray;
     } //end of namespace
 } //end of namespace
 
@@ -144,6 +121,18 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.h,v $
+* Revision 1.21  2009/11/02 19:15:43  cantwell
+* Moved ContField1D to inherit from DisContField1D.
+* Moved ContField3D to inherit from DisContField3D.
+* Incorporated GenExpList1D functionality into ExpList1D.
+* Tidied up and added documentation to various classes.
+* Moved Namespace documentation and introductions to separate files along with
+* doxygen configuration.
+* Added option to use system ZLIB library instead of libboost_zlib on UNIX.
+* Added extra search paths to FindMetis.cmake and FindNektar++.cmake.
+* Updated Linux compiling instructions.
+* Updated regDemo to use Helmholtz2D-g when built as debug.
+*
 * Revision 1.20  2009/09/06 22:28:45  sherwin
 * Updates for Navier-Stokes solver
 *

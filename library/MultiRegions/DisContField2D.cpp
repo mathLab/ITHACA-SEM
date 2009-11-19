@@ -126,43 +126,7 @@ namespace Nektar
                                       m_bndCondExpansions,m_bndConditions, periodicEdges);
             }
         }
-        
-        DisContField2D::DisContField2D(const LibUtilities::BasisKey &TriBa, 
-                                       const LibUtilities::BasisKey &TriBb, 
-                                       const LibUtilities::BasisKey &QuadBa, 
-                                       const LibUtilities::BasisKey &QuadBb, 
-                                       SpatialDomains::MeshGraph2D &graph2D,
-                                       SpatialDomains::BoundaryConditions &bcs,
-                                       const int bc_loc,
-                                       const GlobalSysSolnType solnType,
-                                       bool SetUpJustDG):
-            ExpList2D(TriBa,TriBb,QuadBa,QuadBb,graph2D),
-            m_bndCondExpansions(),
-            m_bndConditions()
-        {
-            GenerateBoundaryConditionExpansion(graph2D,bcs,bcs.GetVariable(bc_loc));
-            EvaluateBoundaryConditions();
-            
-            if(SetUpJustDG)
-            {
-                // Set up matrix map
-                m_globalBndMat   = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
-                
-                map<int,int> periodicEdges;
-                vector<map<int,int> > periodicVertices;
-                GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),
-                                 periodicVertices,periodicEdges);
-                
-                // Set up Trace space
-                bool UseGenSegExp = true;
-                m_trace = MemoryManager<ExpList1D>::AllocateSharedPtr(m_bndCondExpansions,m_bndConditions,*m_exp,graph2D,periodicEdges, UseGenSegExp);
-                
-                m_traceMap = MemoryManager<LocalToGlobalDGMap>::
-                    AllocateSharedPtr(graph2D,m_trace,m_exp,solnType,
-                                      m_bndCondExpansions,m_bndConditions, periodicEdges);
-            }
-        }
-        
+
 
         void DisContField2D::GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D,
                                                                 SpatialDomains::BoundaryConditions &bcs, 

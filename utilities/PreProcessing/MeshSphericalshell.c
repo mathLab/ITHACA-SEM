@@ -9,9 +9,9 @@
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //Dr. Laurent Risser (Imperial College London)
 //l.risser@imperial.ac.uk
-//29.05.2009
+//12.06.2009
 //
-//Command line to compile:  gcc -o Mesh_Sphericalshell Mesh_Sphericalshell.c -O -lm
+//Command line to compile:  gcc -o MeshSphericalshell MeshSphericalshell.c -O -lm
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -307,7 +307,88 @@ void ProjectMeshSphere(Mesh * LocMesh, double R){
   }
 }
 
+//order the edges of all element so that this order is clockwise if we see it from outside the shape
+void MakeClockwiseOrder(Mesh * LocMesh){
+  int i,j,jswap;
+  int Ve1,Ed1,Ve2,Ed2,Ve3,Ed3;  //Order: Vertex 1 -> Edge1 -> Vertex 2 -> Edge 2 -> Vertex 3 -> Edge 3 -> Vertex 1 ...
+  int temp;
+  double x1,x2,x3,y1,y2,y3,z1,z2,z3; //coordinates
+  double u1,u2,u3,v1,v2,v3;  //vectors
+  double vp1,vp2,vp3;  //cross product
+  double tempDbl;
+  
+  //test all elements of the mesh
+  for (i=0;i<LocMesh->NbElements;i++){
+    //order the vertexes and edges
+    Ed1=LocMesh->Elements[i].E1;
+    Ed2=LocMesh->Elements[i].E2;
+    Ed3=LocMesh->Elements[i].E3;
+    
+    if ((LocMesh->Edges[Ed1].V2!=LocMesh->Edges[Ed2].V1)&&(LocMesh->Edges[Ed1].V2!=LocMesh->Edges[Ed2].V2)){ //swap edges
+      temp=Ed2; Ed2=Ed3; Ed3=temp;
+    }
+    
+    if (LocMesh->Edges[Ed1].V2!=LocMesh->Edges[Ed2].V1){ //swap vertexes
+      temp=LocMesh->Edges[Ed2].V1; LocMesh->Edges[Ed2].V1=LocMesh->Edges[Ed2].V2; LocMesh->Edges[Ed2].V2=temp;
+      if (LocMesh->Edges[Ed2].NbSubdiv>1)
+        for (j=0;j<=LocMesh->Edges[Ed2].NbSubdiv/2;j++){
+          jswap=LocMesh->Edges[Ed2].NbSubdiv-j;
+          tempDbl=LocMesh->Edges[Ed2].SubiVertex[j].X; LocMesh->Edges[Ed2].SubiVertex[j].X=LocMesh->Edges[Ed2].SubiVertex[jswap].X;  LocMesh->Edges[Ed2].SubiVertex[jswap].X=tempDbl;
+          tempDbl=LocMesh->Edges[Ed2].SubiVertex[j].Y; LocMesh->Edges[Ed2].SubiVertex[j].Y=LocMesh->Edges[Ed2].SubiVertex[jswap].Y;  LocMesh->Edges[Ed2].SubiVertex[jswap].Y=tempDbl;
+          tempDbl=LocMesh->Edges[Ed2].SubiVertex[j].Z; LocMesh->Edges[Ed2].SubiVertex[j].Z=LocMesh->Edges[Ed2].SubiVertex[jswap].Z;  LocMesh->Edges[Ed2].SubiVertex[jswap].Z=tempDbl;
+        }
+    }
+    
+    if (LocMesh->Edges[Ed2].V2!=LocMesh->Edges[Ed3].V1){ //swap vertexes
+      temp=LocMesh->Edges[Ed3].V1; LocMesh->Edges[Ed3].V1=LocMesh->Edges[Ed3].V2; LocMesh->Edges[Ed3].V2=temp;
+      if (LocMesh->Edges[Ed3].NbSubdiv>1)
+        for (j=0;j<=LocMesh->Edges[Ed3].NbSubdiv/2;j++){
+          jswap=LocMesh->Edges[Ed3].NbSubdiv-j;
+          tempDbl=LocMesh->Edges[Ed3].SubiVertex[j].X; LocMesh->Edges[Ed3].SubiVertex[j].X=LocMesh->Edges[Ed3].SubiVertex[jswap].X;  LocMesh->Edges[Ed3].SubiVertex[jswap].X=tempDbl;
+          tempDbl=LocMesh->Edges[Ed3].SubiVertex[j].Y; LocMesh->Edges[Ed3].SubiVertex[j].Y=LocMesh->Edges[Ed3].SubiVertex[jswap].Y;  LocMesh->Edges[Ed3].SubiVertex[jswap].Y=tempDbl;
+          tempDbl=LocMesh->Edges[Ed3].SubiVertex[j].Z; LocMesh->Edges[Ed3].SubiVertex[j].Z=LocMesh->Edges[Ed3].SubiVertex[jswap].Z;  LocMesh->Edges[Ed3].SubiVertex[jswap].Z=tempDbl;
+        }
+    }
+    
+    if (LocMesh->Edges[Ed3].V2!=LocMesh->Edges[Ed1].V1){
+      printf("This is not good!!!\n");
+    }
+    
+    //invert the order if necessary
+    x1=LocMesh->Vertexes[LocMesh->Edges[Ed1].V1].X;  y1=LocMesh->Vertexes[LocMesh->Edges[Ed1].V1].Y;  z1=LocMesh->Vertexes[LocMesh->Edges[Ed1].V1].Z;
+    x2=LocMesh->Vertexes[LocMesh->Edges[Ed1].V2].X;  y2=LocMesh->Vertexes[LocMesh->Edges[Ed1].V2].Y;  z2=LocMesh->Vertexes[LocMesh->Edges[Ed1].V2].Z;
+    x3=LocMesh->Vertexes[LocMesh->Edges[Ed3].V1].X;  y3=LocMesh->Vertexes[LocMesh->Edges[Ed3].V1].Y;  z3=LocMesh->Vertexes[LocMesh->Edges[Ed3].V1].Z;
+    
+    u1=x2-x1; u2=y2-y1; u3=z2-z1;
+    v1=x3-x1; v2=y3-y1; v3=z3-z1;
+    
+    vp1=u2*v3-u3*v2;
+    vp2=u3*v1-u1*v3;
+    vp3=u1*v2-u2*v1;
+    
+    //printf("%3.2lf %3.2lf %3.2lf | %3.2lf %3.2lf %3.2lf | %3.2lf %3.2lf %3.2lf || %3.2lf %3.2lf %3.2lf || %3.2lf %3.2lf %3.2lf | %lf\n",x1,y1,z1,x2,y2,z2,x3,y3,z3,u1,u2,u3,v1,v2,v3,x1*vp1+y1*vp2+z1*vp3);
+    //printf("%3.2lf %3.2lf %3.2lf | %3.2lf %3.2lf %3.2lf | %3.2lf\n",x1,y1,z1,vp1,vp2,vp3,x1*vp1+y1*vp2+z1*vp3);
+    
+    if (x1*vp1+y1*vp2+z1*vp3<0){//we consider that the origin is within the spheric shape so the vector (x1,y1,z1) points out of the shape
+      //swap edges
+      temp=Ed3; Ed3=Ed2; Ed2=temp;
+      //swap vertexes
+      temp=LocMesh->Edges[Ed1].V1; LocMesh->Edges[Ed1].V1=LocMesh->Edges[Ed1].V2; LocMesh->Edges[Ed1].V2=temp;
+      if (LocMesh->Edges[Ed1].NbSubdiv>1)
+        for (j=0;j<=LocMesh->Edges[Ed1].NbSubdiv/2;j++){
+          jswap=LocMesh->Edges[Ed1].NbSubdiv-j;
+          tempDbl=LocMesh->Edges[Ed1].SubiVertex[j].X; LocMesh->Edges[Ed1].SubiVertex[j].X=LocMesh->Edges[Ed1].SubiVertex[jswap].X;  LocMesh->Edges[Ed1].SubiVertex[jswap].X=tempDbl;
+          tempDbl=LocMesh->Edges[Ed1].SubiVertex[j].Y; LocMesh->Edges[Ed1].SubiVertex[j].Y=LocMesh->Edges[Ed1].SubiVertex[jswap].Y;  LocMesh->Edges[Ed1].SubiVertex[jswap].Y=tempDbl;
+          tempDbl=LocMesh->Edges[Ed1].SubiVertex[j].Z; LocMesh->Edges[Ed1].SubiVertex[j].Z=LocMesh->Edges[Ed1].SubiVertex[jswap].Z;  LocMesh->Edges[Ed1].SubiVertex[jswap].Z=tempDbl;
+        }
+    }
+    //new order of the elements
+    LocMesh->Elements[i].E1=Ed1;
+    LocMesh->Elements[i].E2=Ed2;
+    LocMesh->Elements[i].E3=Ed3;
+  }
 
+}
 
 //subdivide into 2 edges all edges in the mesh 'LocMesh'
 void RefineMesh(Mesh * LocMesh){
@@ -443,6 +524,9 @@ void ProjectMeshSphereAndRefine(Mesh * LocMesh, double R,double MaxEdgeLength,in
 void WriteMesh(Mesh * LocMesh,char FileName[256]){
   FILE * XmlMeshGeomFile;
   int i,j,NbCurvedEdge;
+  
+  //to have a proper order of the edges within the elements
+  MakeClockwiseOrder(LocMesh);
   
   //open file
   XmlMeshGeomFile = fopen(FileName,"w");

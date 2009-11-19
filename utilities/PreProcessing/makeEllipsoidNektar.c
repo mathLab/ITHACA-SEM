@@ -531,9 +531,12 @@ void ExtractSubmesh(Mesh * LocMesh,double Xmin,double Xmax,double Ymin,double Ym
   int * ElementsToKeep;
   int NewValue;
   int NewI;
+  double epsilon;
   Mesh TempMesh;
 
   //1) allocations and initializations
+  epsilon=0.001;
+  
   VertexesToKeep=(int*)malloc(LocMesh->NbVertexes*sizeof(int));
   for (i=0;i<LocMesh->NbVertexes;i++) VertexesToKeep[i]=0;
 
@@ -545,9 +548,9 @@ void ExtractSubmesh(Mesh * LocMesh,double Xmin,double Xmax,double Ymin,double Ym
 
   //2) find the vertexes to keep
   for (i=0;i<LocMesh->NbVertexes;i++)
-    if ((LocMesh->Vertexes[i].X>Xmin)&&(LocMesh->Vertexes[i].X<Xmax)&&
-        (LocMesh->Vertexes[i].Y>Ymin)&&(LocMesh->Vertexes[i].Y<Ymax)&&
-        (LocMesh->Vertexes[i].Z>Zmin)&&(LocMesh->Vertexes[i].Z<Zmax)) VertexesToKeep[i]=1;
+    if ((LocMesh->Vertexes[i].X>Xmin-epsilon)&&(LocMesh->Vertexes[i].X<Xmax+epsilon)&&
+        (LocMesh->Vertexes[i].Y>Ymin-epsilon)&&(LocMesh->Vertexes[i].Y<Ymax+epsilon)&&
+        (LocMesh->Vertexes[i].Z>Zmin-epsilon)&&(LocMesh->Vertexes[i].Z<Zmax+epsilon)) VertexesToKeep[i]=1;
 
   //3) find the edges to keep
   for (i=0;i<LocMesh->NbEdges;i++) if ((VertexesToKeep[LocMesh->Edges[i].V1]==1)&&(VertexesToKeep[LocMesh->Edges[i].V2]==1))

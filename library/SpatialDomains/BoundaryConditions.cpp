@@ -996,7 +996,7 @@ namespace Nektar
                 strStream << indx;
 
                 NEKERROR(ErrorUtil::efatal,
-                    (std::string("Unable to find variable corresponding to index: ") + errStr).c_str());
+                    (std::string("Unable to find variable corresponding to index (ForcingFunction): ") + errStr).c_str());
             }
 
             return GetForcingFunction(m_Variables[indx]);
@@ -1059,7 +1059,7 @@ namespace Nektar
                 strStream << indx;
 
                 NEKERROR(ErrorUtil::efatal,
-                    (std::string("Unable to find variable corresponding to index: ") + errStr).c_str());
+                    (std::string("Unable to find variable corresponding to index (ExactSolution): ") + errStr).c_str());
             }
 
             return GetExactSolution(m_Variables[indx]);
@@ -1113,7 +1113,7 @@ namespace Nektar
                 strStream << indx;
 
                 NEKERROR(ErrorUtil::efatal,
-                    (std::string("Unable to find variable corresponding to index: ") + errStr).c_str());
+                    (std::string("Unable to find variable corresponding to index (UserDefineEqn): ") + errStr).c_str());
             }
 
             return GetUserDefinedEqn(m_Variables[indx]);
@@ -1167,7 +1167,7 @@ namespace Nektar
                 strStream << indx;
 
                 NEKERROR(ErrorUtil::efatal,
-                    (std::string("Unable to find variable corresponding to index: ") + errStr).c_str());
+                    (std::string("Unable to find variable corresponding to index (InitialCondition): ") + errStr).c_str());
             }
 
             return GetInitialCondition(m_Variables[indx]);

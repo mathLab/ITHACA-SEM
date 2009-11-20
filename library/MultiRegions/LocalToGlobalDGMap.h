@@ -68,6 +68,10 @@ namespace Nektar
                                const Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndCond,
                                const map<int,int> &periodicEdges);
             
+	    /**
+             * \brief Return the number of boundary segments on which
+             * Dirichlet boundary conditions are imposed
+             */
             int GetNumDirichletBndPhys()
             {
                 return m_numDirichletBndPhys;
@@ -93,8 +97,7 @@ namespace Nektar
         protected:
 
         private:
-            int m_numDirichletBndPhys;  // Number of physical dirichlet boundary values in trace
-
+            int m_numDirichletBndPhys;  //< Number of physical dirichlet boundary values in trace
             Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr> > m_elmtToTrace;  //< list of edge expansions for a given element 
             
             Array<OneD, AdjacentTraceOrientation > m_bndExpAdjacentOrient;
@@ -109,6 +112,18 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalDGMap.h,v $
+/** Revision 1.5  2009/11/02 19:15:43  cantwell
+/** Moved ContField1D to inherit from DisContField1D.
+/** Moved ContField3D to inherit from DisContField3D.
+/** Incorporated GenExpList1D functionality into ExpList1D.
+/** Tidied up and added documentation to various classes.
+/** Moved Namespace documentation and introductions to separate files along with
+/** doxygen configuration.
+/** Added option to use system ZLIB library instead of libboost_zlib on UNIX.
+/** Added extra search paths to FindMetis.cmake and FindNektar++.cmake.
+/** Updated Linux compiling instructions.
+/** Updated regDemo to use Helmholtz2D-g when built as debug.
+/**
 /** Revision 1.4  2009/10/30 14:02:55  pvos
 /** Multi-level static condensation updates
 /**

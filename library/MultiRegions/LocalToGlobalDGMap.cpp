@@ -273,6 +273,7 @@ namespace Nektar
             m_bndExpAdjacentOrient = Array<OneD, AdjacentTraceOrientation > (cnt);
             m_numLocalDirBndCoeffs = 0;
             m_numDirichletBndPhys   = 0;
+
             cnt = 0;
             for(i = 0; i < bndCondExp.num_elements(); ++i)
             {
@@ -281,7 +282,7 @@ namespace Nektar
                     if(locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j)))
                     {
                         SegGeom = locSegExp->GetGeom1D();
-                        
+                        id = SegGeom->GetEid();
                         
 #if OLDMAP
                         id = SegGeom->GetEid();
@@ -317,10 +318,11 @@ namespace Nektar
                     }
                     
                     if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-                    {
+		      {
                         m_numLocalDirBndCoeffs  += locSegExp->GetNcoeffs();
                         m_numDirichletBndPhys   += locSegExp->GetTotPoints();
-                    }
+		      }
+
                 }
                 cnt += j;
             }
@@ -341,6 +343,7 @@ namespace Nektar
             }
 
             m_numGlobalDirBndCoeffs = m_numLocalDirBndCoeffs;
+
             m_numLocalBndCoeffs = nbndry;
             m_numLocalCoeffs = nbndry;
             m_localToGlobalBndMap  = Array<OneD, int > (nbndry);
@@ -472,8 +475,8 @@ namespace Nektar
                     id  = SegGeom->GetEid();
                     gid = TraceElmtGid[MeshEdgeId.find(id)->second];
                     
-                    
-                    order_e = (*exp2D)[i]->GetEdgeNcoeffs(j);//locSegExp->GetNcoeffs();
+                    //Peter order_e = locSegExp->GetNcoeffs();
+		    order_e = (*exp2D)[i]->GetEdgeNcoeffs(j);
                     
                     if((*exp2D)[i]->GetEorient(j) == StdRegions::eForwards)
                     {
@@ -528,29 +531,32 @@ namespace Nektar
             
             m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD,int >(cnt);
             
+	    // Number of boundary expansions
+	    int nbndexp = 0;
             for(cnt = i = 0; i < nbnd; ++i)
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
                     if(locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j)))
                     {
-                        SegGeom = locSegExp->GetGeom1D();
-                        id      = SegGeom->GetEid();
-                        gid     = TraceElmtGid[MeshEdgeId.find(id)->second];
-                        
-                        order_e = locSegExp->GetNcoeffs();
-
-                        // Since boundary information is defined to be
-                        // aligned with the geometry just use forward
-                        // defintiion for gid's
-                        for(k = 0; k < order_e; ++k)
+		      nbndexp++;
+		      SegGeom = locSegExp->GetGeom1D();
+		      id      = SegGeom->GetEid();
+		      gid     = TraceElmtGid[MeshEdgeId.find(id)->second];
+                      
+		      order_e = locSegExp->GetNcoeffs();
+		      
+		      // Since boundary information is defined to be
+		      // aligned with the geometry just use forward
+		      // defintiion for gid's
+		      for(k = 0; k < order_e; ++k)
                         {
-                            m_bndCondCoeffsToGlobalCoeffsMap[cnt++] = gid + k;
+			  m_bndCondCoeffsToGlobalCoeffsMap[cnt++] = gid + k;
                         }
                     }
                 }
             }
-
+	    
             m_numGlobalBndCoeffs = trace->GetNcoeffs();
             m_numGlobalCoeffs = m_numGlobalBndCoeffs;
 
@@ -564,6 +570,25 @@ namespace Nektar
                         AllocateSharedPtr(this,bottomUpGraph);
                 }
             }
+
+	    cnt = 0;
+	    m_bndCondTraceToGlobalTraceMap = Array<OneD, int >(nbndexp);
+	    for(i = 0; i < bndCondExp.num_elements(); ++i)
+	      {
+                for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
+		  {
+                    if(locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j)))
+		      {
+                        SegGeom = locSegExp->GetGeom1D();
+                        id = SegGeom->GetEid();
+			
+			m_bndCondTraceToGlobalTraceMap[cnt++] = MeshEdgeId.find(id)->second; 
+		      }
+		  }
+	      }
+            
+
+
         }
         
     }

@@ -378,12 +378,11 @@ namespace Nektar
                 }
             }
             
-
             // fill boundary conditions into missing elements            
             int id1,id2 = 0;
-            for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+	    cnt = 0;
+            for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
-                
                 if(m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
                     
@@ -394,19 +393,43 @@ namespace Nektar
                         if(m_traceMap->GetBndExpAdjacentOrient(cnt+e) == eAdjacentEdgeIsForwards)
                         {
                             id1 = m_bndCondExpansions[n]->GetPhys_Offset(e) ;
-                            Vmath::Vcopy(npts,&(m_bndCondExpansions[n]->GetPhys())[id1],1,&Bwd[id2],1);
-                            id2 += npts; 
+			    id2 = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                            Vmath::Vcopy(npts,&(m_bndCondExpansions[n]->GetPhys())[id1],1,&Bwd[id2],1); 
                         }
                         else
                         {
                             id1 = m_bndCondExpansions[n]->GetPhys_Offset(e) ;
+			    id2 = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                             Vmath::Vcopy(npts,&(m_bndCondExpansions[n]->GetPhys())[id1],1,&Fwd[id2],1);
-                            id2 += npts; 
                         }
                     }
 
                     cnt +=e;
                 }
+		else if(m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eNeumann)
+		  {
+		     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
+		      {
+                        npts = m_bndCondExpansions[n]->GetExp(e)->GetNumPoints(0);
+
+                        if(m_traceMap->GetBndExpAdjacentOrient(cnt+e) == eAdjacentEdgeIsForwards)
+                        {
+                            id1 = m_bndCondExpansions[n]->GetPhys_Offset(e); 
+			    ASSERTL0((m_bndCondExpansions[n]->GetPhys())[id1] == 0.0,"method not set up for non-zero Neumann boundary condition");
+			    id2 = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+                            Vmath::Vcopy(npts,&Fwd[id2],1,&Bwd[id2],1);
+                        }
+                        else
+                        {
+                            id1 = m_bndCondExpansions[n]->GetPhys_Offset(e);
+			    ASSERTL0((m_bndCondExpansions[n]->GetPhys())[id1] == 0.0,"method not set up for non-zero Neumann boundary condition");
+			    id2 = m_trace->GetPhys_Offset(m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
+			    Vmath::Vcopy(npts,&Bwd[id2],1,&Fwd[id2],1);
+			}
+		      }
+
+                    cnt +=e;
+		}
                 else
                 {
                     ASSERTL0(false,"method not set up for non-Dirichlet conditions");

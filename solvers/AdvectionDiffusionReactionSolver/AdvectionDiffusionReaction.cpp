@@ -345,12 +345,15 @@ namespace Nektar
                     {
                         // BoundaryConditions are imposed weakly at the
                         // Diffusion operator
+
                         WeakDGDiffusion(inarray,outarray);
+
                         for(i = 0; i < nvariables; ++i)
                         {
                             m_fields[i]->MultiplyByElmtInvMass(outarray[i],
                                                                 outarray[i]);
                         }
+
                         break;
                     }
                 }
@@ -582,7 +585,7 @@ namespace Nektar
     int i,n,nchk = 0;
     int ncoeffs = m_fields[0]->GetNcoeffs();
     int nvariables = m_fields.num_elements();
-    
+ 
     // Set up wrapper to fields data storage. 
     Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
     Array<OneD, Array<OneD, NekDouble> >   tmp(nvariables);
@@ -604,7 +607,7 @@ namespace Nektar
         //    m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,fields[i],fields[i]);
       }
       }
-    
+  
     // Declare an array of TimeIntegrationSchemes
     // For multi-stage methods, this array will have just one entry containing
     // the actual multi-stage method...
@@ -658,7 +661,7 @@ namespace Nektar
                 ASSERTL0(false,"populate switch statement for integration scheme");
             }
         }
-                              
+                   
         for(n = 0; n < nsteps; ++n)
         {
             //----------------------------------------------
@@ -929,8 +932,9 @@ namespace Nektar
             for(i = 0; i < nvariables ; ++i)
             {
                 //  Compute Forward and Backward value of ufield of i direction
+
                 m_fields[i]->GetFwdBwdTracePhys(ufield[i],Fwd,Bwd);
-                
+
                 // if Vn >= 0, flux = uFwd, i.e.,
                 //  edge::eForward, if V*n>=0 <=> V*n_F>=0, pick uflux = uFwd
                 //  edge::eBackward, if V*n>=0 <=> V*n_B<0, pick uflux = uFwd
@@ -940,7 +944,7 @@ namespace Nektar
                 //  edge::eBackward, if V*n<0 <=> V*n_B>=0, pick uflux = uBwd
 
         m_fields[i]->GetTrace()->Upwind(m_traceNormals[j],Fwd,Bwd,fluxtemp);  
-                
+    
                 // Imposing weak boundary condition with flux
                 // if Vn >= 0, uflux = uBwd at Neumann, i.e.,
                 //  edge::eForward, if V*n>=0 <=> V*n_F>=0, pick uflux = uBwd
@@ -949,11 +953,12 @@ namespace Nektar
                 // if Vn >= 0, uflux = uFwd at Neumann, i.e.,
                 //  edge::eForward, if V*n<0 <=> V*n_F<0, pick uflux = uFwd
                 //  edge::eBackward, if V*n<0 <=> V*n_B>=0, pick uflux = uFwd
-                if(m_fields[0]->GetBndCondExpansions().num_elements())
-        {
+
+	        if(m_fields[0]->GetBndCondExpansions().num_elements())
+		  {
                     WeakPenaltyforScalar(i,ufield[i],fluxtemp);
-        }
-                
+		  }
+
                 // if Vn >= 0, flux = uFwd*(tan_{\xi}^- \cdot \vec{n} ), i.e,
                 // edge::eForward, uFwd \(\tan_{\xi}^Fwd \cdot \vec{n} )
                 // edge::eBackward, uFwd \(\tan_{\xi}^Bwd \cdot \vec{n} )
@@ -963,6 +968,7 @@ namespace Nektar
                 // edge::eBackward, uBwd \(\tan_{\xi}^Bwd \cdot \vec{n} )
 
         Vmath::Vmul(nTraceNumPoints,m_traceNormals[j],1,fluxtemp,1,uflux[j][i],1);
+
             }
     }
     }
@@ -1041,116 +1047,124 @@ namespace Nektar
   //  uflux = g_D  on Dirichlet boundary condition
   //  uflux = u_Fwd  on Neumann boundary condition
   void AdvectionDiffusionReaction::WeakPenaltyforScalar(const int var,
-                            const Array<OneD, const NekDouble> &physfield, 
-                            Array<OneD, NekDouble> &penaltyflux,
-                            NekDouble time)
+							const Array<OneD, const NekDouble> &physfield, 
+							Array<OneD, NekDouble> &penaltyflux,
+							NekDouble time)
   {
     int i, j, e, npoints, id1, id2;
-    int nbnd = m_fields[0]->GetBndCondExpansions().num_elements();
-    int numBDEdge = m_fields[0]->GetBndCondExpansions()[0]->GetExpSize();
-    int Nfps = m_fields[0]->GetBndCondExpansions()[0]->GetExp(0)->GetNumPoints(0) ;
+    // Number of boundary regions
+    int nbnd = m_fields[var]->GetBndCondExpansions().num_elements();
+    int Nfps, numBDEdge;
     int nTraceNumPoints = GetTraceNpoints();
+    int cnt = 0;
 
     Array<OneD, NekDouble > uplus(nTraceNumPoints);
-
-    m_fields[var]->ExtractTracePhys(physfield,uplus);            
+    
+    m_fields[var]->ExtractTracePhys(physfield,uplus);   
     for(i = 0; i < nbnd; ++i)
-      {                 
-    // Evaluate boundary values g_D or g_N from input files
-    SpatialDomains::ConstInitialConditionShPtr ifunc = m_boundaryConditions->GetInitialCondition(i);
-    npoints = m_fields[0]->GetBndCondExpansions()[i]->GetNpoints();
-    
-    Array<OneD,NekDouble> BDphysics(npoints);
-    Array<OneD,NekDouble> x0(npoints,0.0);
-    Array<OneD,NekDouble> x1(npoints,0.0);
-    Array<OneD,NekDouble> x2(npoints,0.0);  
+      {     
+	// Number of boundary expansion related to that region
+	numBDEdge = m_fields[var]->GetBndCondExpansions()[i]->GetExpSize();
+	// Evaluate boundary values g_D or g_N from input files
+	SpatialDomains::ConstInitialConditionShPtr ifunc = m_boundaryConditions->GetInitialCondition(0);
+	npoints = m_fields[var]->GetBndCondExpansions()[i]->GetNpoints();
+	Array<OneD,NekDouble> BDphysics(npoints);
+	Array<OneD,NekDouble> x0(npoints,0.0);
+	Array<OneD,NekDouble> x1(npoints,0.0);
+	Array<OneD,NekDouble> x2(npoints,0.0);  
         
-    m_fields[0]->GetBndCondExpansions()[i]->GetCoords(x0,x1,x2);
-    for(j = 0; j < npoints; j++)
-      {
-        BDphysics[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],time);
+	m_fields[var]->GetBndCondExpansions()[i]->GetCoords(x0,x1,x2);
+	for(j = 0; j < npoints; j++)
+	  {
+	    BDphysics[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],time);
+	  }
+	
+	// Weakly impose boundary conditions by modifying flux values
+	for (e = 0; e < numBDEdge ; ++e)
+	  {
+	    // Number of points on the expansion
+	    Nfps = m_fields[var]->GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0) ;
+	    id1 = m_fields[var]->GetBndCondExpansions()[i]->GetPhys_Offset(e);
+	    id2 = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->GetBndCondTraceToGlobalTraceMap(cnt++));
+
+	    // For Dirichlet boundary condition: uflux = g_D
+	    if(m_fields[var]->GetBndConditions()[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+	      {
+		Vmath::Vcopy(Nfps,&BDphysics[id1],1,&penaltyflux[id2],1);
+	      }
+	    
+	    // For Neumann boundary condition: uflux = u+
+	    else if((m_fields[var]->GetBndConditions()[i])->GetBoundaryConditionType() == SpatialDomains::eNeumann)
+	      {
+		Vmath::Vcopy(Nfps,&uplus[id2],1,&penaltyflux[id2],1);
+	      }
+	  }
       }
-    
-    // Weakly impose boundary conditions by modifying flux values
-    for (e = 0; e < numBDEdge ; ++e)
-      {
-        id1 = m_fields[i]->GetBndCondExpansions()[0]->GetPhys_Offset(e);
-        id2 = m_fields[i]->GetTrace()->GetPhys_Offset(m_fields[i]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(e));
-        
-        // For Dirichlet boundary condition: uflux = g_D
-        if(m_fields[0]->GetBndConditions()[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-          {
-                   Vmath::Vcopy(Nfps,&BDphysics[id1],1,&penaltyflux[id2],1);
-          }
-        
-        // For Neumann boundary condition: uflux = u+
-        else if((m_fields[0]->GetBndConditions()[i])->GetBoundaryConditionType() == SpatialDomains::eNeumann)
-          {
-        Vmath::Vcopy(Nfps,&uplus[id2],1,&penaltyflux[id2],1);
-          }
-      }
-      }           
+
   }
   
   // Diffusion: Imposing weak boundary condition for q with flux 
   //  uflux = g_D  on Dirichlet boundary condition
   //  uflux = u_Fwd  on Neumann boundary condition
-    void AdvectionDiffusionReaction::WeakPenaltyforVector(const int var,
-                                             const int dir,
-                                             const Array<OneD, const NekDouble> &physfield,
-                                             Array<OneD, NekDouble> &penaltyflux,
-                                             NekDouble C11,
-                                             NekDouble time)
+  void AdvectionDiffusionReaction::WeakPenaltyforVector(const int var,
+							const int dir,
+							const Array<OneD, const NekDouble> &physfield,
+							Array<OneD, NekDouble> &penaltyflux,
+							NekDouble C11,
+							NekDouble time)
   {
     int i, j, e, npoints, id1, id2;
-    int nbnd = m_fields[0]->GetBndCondExpansions().num_elements();
-    int numBDEdge = m_fields[0]->GetBndCondExpansions()[0]->GetExpSize();
-    int Nfps = m_fields[0]->GetBndCondExpansions()[0]->GetExp(0)->GetNumPoints(0) ;
+    int nbnd = m_fields[var]->GetBndCondExpansions().num_elements();
+    int numBDEdge, Nfps;
     int nTraceNumPoints = GetTraceNpoints();
     Array<OneD, NekDouble > uterm(nTraceNumPoints);
     Array<OneD, NekDouble > qtemp(nTraceNumPoints);
-    
+    int cnt = 0;
+
     m_fields[var]->ExtractTracePhys(physfield,qtemp);            
-
+    
     for(i = 0; i < nbnd; ++i)
-      {                 
+      {    
+        numBDEdge = m_fields[var]->GetBndCondExpansions()[i]->GetExpSize();     
         // Evaluate boundary values g_D or g_N from input files
-    SpatialDomains::ConstInitialConditionShPtr ifunc = m_boundaryConditions->GetInitialCondition(i);
-    npoints = m_fields[0]->GetBndCondExpansions()[i]->GetNpoints();
-    
-    Array<OneD,NekDouble> BDphysics(npoints);
-    Array<OneD,NekDouble> x0(npoints,0.0);
-    Array<OneD,NekDouble> x1(npoints,0.0);
-    Array<OneD,NekDouble> x2(npoints,0.0);  
+	SpatialDomains::ConstInitialConditionShPtr ifunc = m_boundaryConditions->GetInitialCondition(0);
+	npoints = m_fields[var]->GetBndCondExpansions()[i]->GetNpoints();
+	
+	Array<OneD,NekDouble> BDphysics(npoints);
+	Array<OneD,NekDouble> x0(npoints,0.0);
+	Array<OneD,NekDouble> x1(npoints,0.0);
+	Array<OneD,NekDouble> x2(npoints,0.0);  
         
-    m_fields[0]->GetBndCondExpansions()[i]->GetCoords(x0,x1,x2);
-    for(j = 0; j < npoints; j++)
-      {
-        BDphysics[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],time);
-      }
-    
-    // Weakly impose boundary conditions by modifying flux values
-    for (e = 0; e < numBDEdge ; ++e)
-      {
-        id1 = m_fields[i]->GetBndCondExpansions()[0]->GetPhys_Offset(e);
-        id2 = m_fields[i]->GetTrace()->GetPhys_Offset(m_fields[i]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(e));
-        
-        // For Dirichlet boundary condition: qflux = q+ - C_11 (u+ - g_D) (nx, ny)
-        if(m_fields[0]->GetBndConditions()[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-          {
-        Vmath::Vmul(Nfps,&m_traceNormals[dir][id2],1,&qtemp[id2],1,&penaltyflux[id2],1);
+	m_fields[var]->GetBndCondExpansions()[i]->GetCoords(x0,x1,x2);
+	for(j = 0; j < npoints; j++)
+	  {
+	    BDphysics[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],time);
+	  }
+	
+	// Weakly impose boundary conditions by modifying flux values
+	for (e = 0; e < numBDEdge ; ++e)
+	  {
+	    Nfps = m_fields[var]->GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
+     
+	    id1 = m_fields[var]->GetBndCondExpansions()[i]->GetPhys_Offset(e);
+	    id2 = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->GetBndCondTraceToGlobalTraceMap(cnt++));
 
-                  // Vmath::Vsub(Nfps,&Fwd[id2],1,&BDphysics[id1],1,&uterm[id2],1);
-                  //    Vmath::Vmul(Nfps,&m_traceNormals[dir][id2],1,&uterm[id2],1,&uterm[id2],1);
-                  // Vmath::Svtvp(Nfps,-1.0*C11,&uterm[id2],1,&qFwd[id2],1,&penaltyflux[id2],1);
-          }
-       
-        // For Neumann boundary condition: qflux = g_N
-        else if((m_fields[0]->GetBndConditions()[i])->GetBoundaryConditionType() == SpatialDomains::eNeumann)
-          {
-        Vmath::Vmul(Nfps,&m_traceNormals[dir][id2],1,&BDphysics[id1],1,&penaltyflux[id2],1);
-          }
-      }
+	    // For Dirichlet boundary condition: qflux = q+ - C_11 (u+ - g_D) (nx, ny)
+	    if(m_fields[var]->GetBndConditions()[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+	      {
+		Vmath::Vmul(Nfps,&m_traceNormals[dir][id2],1,&qtemp[id2],1,&penaltyflux[id2],1);
+		
+		// Vmath::Vsub(Nfps,&Fwd[id2],1,&BDphysics[id1],1,&uterm[id2],1);
+		//    Vmath::Vmul(Nfps,&m_traceNormals[dir][id2],1,&uterm[id2],1,&uterm[id2],1);
+		// Vmath::Svtvp(Nfps,-1.0*C11,&uterm[id2],1,&qFwd[id2],1,&penaltyflux[id2],1);
+	      }
+	    
+	    // For Neumann boundary condition: qflux = g_N
+	    else if((m_fields[var]->GetBndConditions()[i])->GetBoundaryConditionType() == SpatialDomains::eNeumann)
+	      {
+		Vmath::Vmul(Nfps,&m_traceNormals[dir][id2],1,&BDphysics[id1],1,&penaltyflux[id2],1);
+	      }
+	  }
       }       
   }
   
@@ -1225,6 +1239,18 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.22  2009/11/02 19:15:43  cantwell
+* Moved ContField1D to inherit from DisContField1D.
+* Moved ContField3D to inherit from DisContField3D.
+* Incorporated GenExpList1D functionality into ExpList1D.
+* Tidied up and added documentation to various classes.
+* Moved Namespace documentation and introductions to separate files along with
+* doxygen configuration.
+* Added option to use system ZLIB library instead of libboost_zlib on UNIX.
+* Added extra search paths to FindMetis.cmake and FindNektar++.cmake.
+* Updated Linux compiling instructions.
+* Updated regDemo to use Helmholtz2D-g when built as debug.
+*
 * Revision 1.21  2009/07/23 05:32:28  sehunchun
 * Implicit and Explicit diffusion debugging
 *

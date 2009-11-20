@@ -95,6 +95,15 @@ namespace Nektar
             {
                 return m_bndCondCoeffsToGlobalCoeffsMap[i];
             }
+
+	    /**
+             * \brief It returns the global index of the boundary trace giving the 
+	     * index on the boundary  expansion
+             */ 
+	    inline int GetBndCondTraceToGlobalTraceMap(const int i)
+            {
+                return m_bndCondTraceToGlobalTraceMap[i];
+            }
             
             inline NekDouble GetBndCondCoeffsToGlobalCoeffsSign(const int i)
             {
@@ -336,8 +345,8 @@ namespace Nektar
             // ---- Data members ----
             int m_numLocalBndCoeffs;     //< number of local Bnd coefficients
             int m_numGlobalBndCoeffs;    //< Total number of global boundary coefficients
-            int m_numLocalDirBndCoeffs;  //< Number of Dirichlet Boundary Coefficient
-            int m_numGlobalDirBndCoeffs; //< Number of Dirichlet Boundary Coefficient
+            int m_numLocalDirBndCoeffs;  //< Number of Local Dirichlet Boundary Coefficient
+            int m_numGlobalDirBndCoeffs; //< Number of Global Dirichlet Boundary Coefficient
 
             // Both data members below correspond to the number of total coefficients
             // - for CG
@@ -360,6 +369,7 @@ namespace Nektar
  
             Array<OneD,int>       m_bndCondCoeffsToGlobalCoeffsMap;  //< integer map of bnd cond coeffs to global coefficients
             Array<OneD,NekDouble> m_bndCondCoeffsToGlobalCoeffsSign; //< integer map of bnd cond coeffs to global coefficients
+	    Array<OneD,int>       m_bndCondTraceToGlobalTraceMap;  //< integer map of bnd cond trace number to global trace number
 
             GlobalSysSolnType m_solnType; //< The solution type of the global system
             int m_bndSystemBandWidth;     //< the bandwith of the global bnd system
@@ -402,6 +412,9 @@ namespace Nektar
 
 /** 
  $Log: LocalToGlobalBaseMap.h,v $
+ Revision 1.16  2009/10/30 14:02:55  pvos
+ Multi-level static condensation updates
+
  Revision 1.15  2009/09/06 22:28:45  sherwin
  Updates for Navier-Stokes solver
 

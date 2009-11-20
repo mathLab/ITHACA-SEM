@@ -100,6 +100,7 @@ namespace Nektar
             /// Destructor
             ~GlobalMatrixKey();
 
+            /// Provides ordering of GlobalMatrixKey objects.
             friend bool operator<(const GlobalMatrixKey &lhs,
                                   const GlobalMatrixKey &rhs);
 
@@ -145,8 +146,10 @@ namespace Nektar
 
         };
 
+        /// Writes statistics about the matrix key to an output stream.
         std::ostream& operator<<(std::ostream& os, const GlobalMatrixKey& rhs);
 
+        /// A pointer to a GlobalMatrixKey.
         typedef  boost::shared_ptr<GlobalMatrixKey> GlobalMatrixKeySharedPtr;
 
         inline const StdRegions::MatrixType
@@ -210,6 +213,10 @@ namespace Nektar
 
 /**
 * $Log: GlobalMatrixKey.h,v $
+* Revision 1.3  2009/11/19 23:30:36  cantwell
+* Documentation for ExpList2D and GlobalMatrixKey
+* Updated doxygen pages.
+*
 * Revision 1.2  2009/11/07 21:11:30  sehunchun
 * Variable coefficients parameters are added
 *

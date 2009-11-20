@@ -204,12 +204,14 @@ namespace Nektar
             {
                 for(unsigned int i = 0; i < lhs.m_nvariablecoefficients; ++i)
                 {
-                    if((lhs.m_variablecoefficient[i]).get() < (rhs.m_variablecoefficient[i]).get())
+                    if((lhs.m_variablecoefficient[i]).get() 
+                                        < (rhs.m_variablecoefficient[i]).get())
                     {
                         return true;
                     }
 
-                    if((lhs.m_variablecoefficient[i]).get() > (rhs.m_variablecoefficient[i]).get())
+                    if((lhs.m_variablecoefficient[i]).get() 
+                                        > (rhs.m_variablecoefficient[i]).get())
                     {
                         return false;
                     }
@@ -234,7 +236,8 @@ namespace Nektar
             {
                 os << "  Constant " << i << ": " << rhs.GetConstant(i) << endl;
             }
-            os << "Number of variable coefficients: " << rhs.GetNvariableCoefficients() << endl;
+            os << "Number of variable coefficients: " 
+               << rhs.GetNvariableCoefficients() << endl;
 
             return os;
         }
@@ -243,6 +246,10 @@ namespace Nektar
 
 /**
 * $Log: GlobalMatrixKey.cpp,v $
+* Revision 1.3  2009/11/19 23:30:36  cantwell
+* Documentation for ExpList2D and GlobalMatrixKey
+* Updated doxygen pages.
+*
 * Revision 1.2  2009/11/07 21:11:30  sehunchun
 * Variable coefficients parameters are added
 *

@@ -126,10 +126,11 @@ ENDIF( NEKTAR_BUILD_DEMOS )
 
 CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/Nektar++Config.cmake.in 
                ${CMAKE_BINARY_DIR}/Nektar++Config.cmake @ONLY)
+               
 INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake 
               ${CMAKE_SOURCE_DIR}/FindBoost.cmake
               ${CMAKE_SOURCE_DIR}/FindLoki.cmake
-	      ${CMAKE_SOURCE_DIR}/FindFramework.cmake
+              ${CMAKE_SOURCE_DIR}/FindFramework.cmake
               ${CMAKE_SOURCE_DIR}/FindACML.cmake
               #${CMAKE_SOURCE_DIR}/FindAtlas.cmake
               ${CMAKE_SOURCE_DIR}/FindNistSparseBlas.cmake
@@ -137,7 +138,7 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/FindMKL.cmake
               ${CMAKE_SOURCE_DIR}/FindMetis.cmake
               ${CMAKE_SOURCE_DIR}/FindWin32Lapack.cmake
-	      ${CMAKE_SOURCE_DIR}/NektarCommon.cmake
+              ${CMAKE_SOURCE_DIR}/NektarCommon.cmake
               ${CMAKE_SOURCE_DIR}/FindTinyXml.cmake
               DESTINATION ${CMAKE_INSTALL_PREFIX}) 
 

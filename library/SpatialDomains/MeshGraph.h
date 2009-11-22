@@ -62,7 +62,7 @@ namespace Nektar
         {
             eNoExpansionType,
             eModified,
-	    eOrthogonal,
+			eOrthogonal,
             eGLL_Lagrange,
             eGLL_Lagrange_SEM,
             eExpansionTypeSize
@@ -74,7 +74,7 @@ namespace Nektar
         {
             "NOTYPE",
             "MODIFIED",
-	    "ORTHOGONAL",
+			"ORTHOGONAL",
             "GLL_LAGRANGE",
             "GLL_LAGRANGE_SEM"
         };
@@ -314,6 +314,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.37  2009/11/18 22:31:46  bnelson
+// Changed Write parameter list to accept a const string& as a first parameter.
+//
 // Revision 1.36  2009/09/24 10:57:54  cbiotto
 // Updates for variable order expansions
 //

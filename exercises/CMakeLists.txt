@@ -29,10 +29,11 @@ MACRO(ADD_EXERCISE_EXECUTABLE name source)
         # add them here.
         TARGET_LINK_LIBRARIES(${name}
 	    ${NEKTAR++_LIBRARIES}
-	    optimized ${Boost_THREAD_LIBRARY_RELEASE} debug ${Boost_THREAD_LIBRARY_DEBUG}
-            optimized ${Boost_IOSTREAMS_LIBRARY_RELEASE} debug ${Boost_IOSTREAMS_LIBRARY_DEBUG}
-	    optimized ${Boost_ZLIB_LIBRARY_RELEASE} debug ${Boost_ZLIB_LIBRARY_DEBUG}
-            optimized tinyxml debug tinyxml)
+        optimized ${Boost_THREAD_LIBRARY_RELEASE} debug ${Boost_THREAD_LIBRARY_DEBUG}
+        optimized ${Boost_IOSTREAMS_LIBRARY_RELEASE} debug ${Boost_IOSTREAMS_LIBRARY_DEBUG}
+        optimized ${Boost_ZLIB_LIBRARY_RELEASE} debug ${Boost_ZLIB_LIBRARY_DEBUG}
+        optimized ${Boost_DATE_TIME_LIBRARY_RELEASE} debug ${Boost_DATE_TIME_LIBRARY_DEBUG}
+        optimized tinyxml debug tinyxml)
 
         SET_LAPACK_LINK_LIBRARIES(${name})
     ENDIF( NEKTAR++_FOUND )

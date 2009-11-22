@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
             }
 
             // Display the output
-            NekDouble exactResult = (sin(1)-sin(-1));
+            NekDouble exactResult = (sin(1.0)-sin(-1.0));
             cout << "Q = " << nQuadPoints << ": Error = "<< fabs(result-exactResult) << endl;
         }
 #endif

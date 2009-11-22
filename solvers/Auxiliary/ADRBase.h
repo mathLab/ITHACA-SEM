@@ -410,6 +410,7 @@ namespace Nektar
         {
             ASSERTL0(false, "v_AdvectionSphere: This function is not valid "
                             "for the Base class");
+            return 0.0;
         }
 
         virtual NekDouble v_Morphogenesis(const int field, const NekDouble x0j,
@@ -418,6 +419,7 @@ namespace Nektar
         {
             ASSERTL0(false, "v_Morphogenesis: This function is not valid "
                             "for the Base class");
+            return 0.0;
         }
     };
 
@@ -430,6 +432,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.16  2009/11/15 18:40:57  sehunchun
+* Add GetExpSize(), GetPhys_Offset and GetTotPoints(int n)
+*
 * Revision 1.15  2009/11/02 19:15:43  cantwell
 * Moved ContField1D to inherit from DisContField1D.
 * Moved ContField3D to inherit from DisContField3D.

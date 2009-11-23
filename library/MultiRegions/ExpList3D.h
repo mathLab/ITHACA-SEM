@@ -51,54 +51,68 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        /// Abstraction of a three-dimensional multi-elemental expansion which
+        /// is merely a collection of local expansions.
+        class ExpList3D:  public ExpList
+        {
+        public:
+            /// Default constructor.
+            ExpList3D();
 
-    class ExpList3D:  public ExpList
-    {
-    public:
-        ExpList3D();
-        
-        ExpList3D(const ExpList3D &In);
-        
-        ExpList3D(const LibUtilities::BasisKey &Ba,
+            /// Copy constructor.
+            ExpList3D(const ExpList3D &In);
+
+/*          ExpList3D(const LibUtilities::BasisKey &Ba,
                   const LibUtilities::BasisKey &Bb,
                   const LibUtilities::BasisKey &Bc,
                   const SpatialDomains::MeshGraph3D &graph3D,
                   const LibUtilities::PointsType
                   TetNb = LibUtilities::SIZE_PointsType);
+*/
+            /// Sets up a list of local expansions based on an input mesh.
+            ExpList3D(SpatialDomains::MeshGraph3D &graph3D);
 
-         ExpList3D(SpatialDomains::MeshGraph3D &graph3D);
-        
-        ~ExpList3D();
-        
-    protected:
+            /// Destructor.
+            ~ExpList3D();
 
-        void SetBoundaryConditionExpansion(SpatialDomains::MeshGraph3D &graph3D,
-                                        SpatialDomains::BoundaryConditions &bcs,
-                                        const std::string variable,
-                                        Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
-                                        Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndConditions);
+        protected:
+            /// Populates the list of boundary condition expansions.
+            void SetBoundaryConditionExpansion(
+                        SpatialDomains::MeshGraph3D &graph3D,
+                        SpatialDomains::BoundaryConditions &bcs,
+                        const std::string variable,
+                        Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
+                        Array<OneD, SpatialDomains::BoundaryConditionShPtr>
+                                                                &bndConditions);
 
-        void EvaluateBoundaryConditions(const NekDouble time,
-                                        Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
-                                        Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndConditions);
+            /// Evaluates boundary conditions.
+            void EvaluateBoundaryConditions(
+                        const NekDouble time,
+                        Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
+                        Array<OneD, SpatialDomains::BoundaryConditionShPtr>
+                                                                &bndConditions);
 
-        void GetPeriodicFaces(SpatialDomains::MeshGraph3D &graph3D,
-                                SpatialDomains::BoundaryConditions &bcs,
-                                const std::string variable,
-                                map<int,int>& periodicVertices,
-                                map<int,int>& periodicEdges,
-                                map<int,int>& periodicFaces);
-        
-    private:
-        LocalRegions::HexExpVector    m_hex;
-        LocalRegions::PrismExpVector  m_prism;
-        LocalRegions::PyrExpVector    m_pyr;
-        LocalRegions::TetExpVector    m_tet;
-        
-    };
-        
+            /// Generates a map of periodic faces in the mesh.
+            void GetPeriodicFaces(SpatialDomains::MeshGraph3D &graph3D,
+                        SpatialDomains::BoundaryConditions &bcs,
+                        const std::string variable,
+                        map<int,int>& periodicVertices,
+                        map<int,int>& periodicEdges,
+                        map<int,int>& periodicFaces);
+
+        private:
+/*            LocalRegions::HexExpVector    m_hex;
+            LocalRegions::PrismExpVector  m_prism;
+            LocalRegions::PyrExpVector    m_pyr;
+            LocalRegions::TetExpVector    m_tet;
+*/
+        };
+
+        /// Shared pointer to an ExpList3D object.
         typedef boost::shared_ptr<ExpList3D>      ExpList3DSharedPtr;
+        /// Vector of pointers to ExpList3D objects.
         typedef std::vector<ExpList3DSharedPtr>   ExpList3DVector;
+        /// Iterator over an ExpList3DVector.
         typedef std::vector<ExpList3DSharedPtr>::iterator ExpList3DVectorIter;
 
     } //end of namespace

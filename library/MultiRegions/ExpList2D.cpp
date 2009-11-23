@@ -293,7 +293,7 @@ namespace Nektar
 
         /**
          * @param   graph2D     A mesh containing information about the domain
-         *                      and the Spectral/hp element expansions.
+         *                      and the spectral/hp element expansions.
          * @param   bcs         Information about the boundary conditions.
          * @param   variable    Specifies the field.
          * @param   bndCondExpansions   Array of ExpList1D objects each
@@ -590,6 +590,10 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.cpp,v $
+* Revision 1.31  2009/11/19 23:30:36  cantwell
+* Documentation for ExpList2D and GlobalMatrixKey
+* Updated doxygen pages.
+*
 * Revision 1.30  2009/11/02 19:15:43  cantwell
 * Moved ContField1D to inherit from DisContField1D.
 * Moved ContField3D to inherit from DisContField3D.

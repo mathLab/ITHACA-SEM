@@ -209,6 +209,7 @@ namespace Nektar
         NekDouble  m_beta;            /// constant beta
         NekDouble   m_timedelay;      // Spiral wave activation time delay
         NekDouble   m_duration;       /// Impulse duration time
+        NekDouble  m_initeps;          // m_initeps
         int        m_initialwavetype;      /// initial wave type 
         int        m_secondwavetype;      /// second wave type
         NekDouble m_x1center, m_y1center, m_x2center, m_y2center;     // center of waves
@@ -251,6 +252,9 @@ namespace Nektar
 
 /**
 * $Log: FitzHughNagumo.h,v $
+* Revision 1.4  2009/11/13 16:20:58  sehunchun
+* *** empty log message ***
+*
 * Revision 1.3  2009/11/04 14:12:31  sehunchun
 * Regular clean-up
 *

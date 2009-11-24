@@ -99,6 +99,15 @@ namespace Nektar
             m_initialwavetype  = 0;
         }
 
+        if(m_boundaryConditions->CheckForParameter("initeps") == true)
+        {
+            m_initeps = m_boundaryConditions->GetParameter("initeps");
+        }
+        else
+        {
+            m_initeps  = 1.0/32.0;
+        }
+
         if(m_boundaryConditions->CheckForParameter("secondwavetype") == true)
         {
             m_secondwavetype = m_boundaryConditions->GetParameter("secondwavetype");
@@ -338,22 +347,13 @@ namespace Nektar
         // plane wave from the bottom
         case(1):
             {
-
-                cout << " plane wave bottom" << endl;
-
+                cout << " Exponential wave left with m_initeps= " << m_initeps << endl;
                 for(int j = 0; j < nq; j++)
                 {
-                    if( x1[j] <= (ymin+m_duration) )
-                    {
-                        (m_fields[0]->UpdatePhys())[j] = 2.0;
-                        (m_fields[1]->UpdatePhys())[j] = vinit;
-                    }
-                    else
-                    {
-                        (m_fields[0]->UpdatePhys())[j] = uinit;
-                        (m_fields[1]->UpdatePhys())[j] = vinit;
-                    }
-                }   
+                    (m_fields[0]->UpdatePhys())[j] = (2.0-uinit)/( 1.0 + exp((x0[j] - xmin - m_duration)/m_initeps ) ) + uinit;
+                    (m_fields[1]->UpdatePhys())[j] = vinit;
+                }
+
             }
             break;            
             
@@ -403,6 +403,18 @@ namespace Nektar
                         (m_fields[0]->UpdatePhys())[j] = uinit;
                         (m_fields[1]->UpdatePhys())[j] = vinit;
                     }
+                }
+            }
+            break;
+
+        case(-100):
+            {
+                cout << "Stable status" << endl;
+
+                for(int j = 0; j < nq; j++)
+                {
+                    (m_fields[0]->UpdatePhys())[j] = uinit;
+                    (m_fields[1]->UpdatePhys())[j] = vinit;
                 }
             }
             break;
@@ -489,16 +501,12 @@ namespace Nektar
             // Plane wave from the bottom
         case(1):
             {
-
-                cout << " 2nd: plane wave " << endl;
-
+                cout << " Exponential wave left" << endl;
                 for(int j = 0; j < nq; j++)
                 {
-                    if( x1[j] <= (ymin+m_duration) )
-                    {
-                        physfield[j] = 2.0;
-                    }
-                }   
+                    physfield[j] = 1.0/( 1.0 + exp((x0[j] - xmin - m_duration)/m_initeps ) );
+                }
+
             }
             break;
             

@@ -107,6 +107,17 @@ namespace Nektar
         {
         }   
 
+        GlobalLinSysKey::GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+                                         const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                                         const Array<OneD, NekDouble> &factor1,
+                                         const NekDouble factor2, 
+                                         const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                                         const GlobalSysSolnType solnType):
+            m_solnType(solnType),
+            m_globMatKey(MemoryManager<GlobalMatrixKey>::AllocateSharedPtr(matrixType,factor1,factor2,varcoeffs,locToGloMap))
+        {
+        }   
+
         GlobalLinSysKey::GlobalLinSysKey(const GlobalLinSysKey &key):
             m_solnType(key.m_solnType),
             m_globMatKey(key.m_globMatKey)            
@@ -157,6 +168,9 @@ namespace Nektar
 
 /**
 * $Log: GlobalLinSysKey.cpp,v $
+* Revision 1.9  2009/11/07 21:11:30  sehunchun
+* Variable coefficients parameters are added
+*
 * Revision 1.8  2009/07/09 21:39:18  sehunchun
 * Add another constructor which deals with varcoeffs
 *

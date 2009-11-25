@@ -141,6 +141,27 @@ namespace Nektar
             m_constant[1] = factor2;
         }
 
+        GlobalMatrixKey::GlobalMatrixKey(
+                        const StdRegions::MatrixType matrixType,
+                        const Array<OneD,NekDouble>& factor1,
+                        const NekDouble factor2,
+                        const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
+            m_matrixType(matrixType),
+            m_locToGloMap(locToGloMap),
+            m_nconstants(factor1.num_elements()+1),
+            m_constant(m_nconstants),
+            m_nvariablecoefficients(varcoeffs.num_elements()),
+            m_variablecoefficient(varcoeffs)
+        {
+            for (int i=0; i<(m_nconstants-1); ++i)
+            {
+                m_constant[i] = factor1[i];
+            }
+
+            m_constant[m_nconstants-1] = factor2;
+        }
+
         GlobalMatrixKey::GlobalMatrixKey(const GlobalMatrixKey &key):
             m_matrixType(key.m_matrixType),
             m_locToGloMap(key.m_locToGloMap),
@@ -246,6 +267,9 @@ namespace Nektar
 
 /**
 * $Log: GlobalMatrixKey.cpp,v $
+* Revision 1.4  2009/11/20 18:02:23  cantwell
+* Docs.
+*
 * Revision 1.3  2009/11/19 23:30:36  cantwell
 * Documentation for ExpList2D and GlobalMatrixKey
 * Updated doxygen pages.

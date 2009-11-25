@@ -94,6 +94,13 @@ namespace Nektar
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap
                                         = NullLocalToGlobalBaseMapSharedPtr);
 
+            // Matrix with one vector parameters and one real parameter and multiple variable coeffs.
+            GlobalMatrixKey(const StdRegions::MatrixType matrixType,
+                            const Array<OneD,NekDouble>& factor1,
+                            const NekDouble factor2,
+                            const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                            const LocalToGlobalBaseMapSharedPtr &locToGloMap
+                                        = NullLocalToGlobalBaseMapSharedPtr);
             /// Copy constructor.
             GlobalMatrixKey(const GlobalMatrixKey &key);
 
@@ -213,6 +220,9 @@ namespace Nektar
 
 /**
 * $Log: GlobalMatrixKey.h,v $
+* Revision 1.4  2009/11/20 18:02:23  cantwell
+* Docs.
+*
 * Revision 1.3  2009/11/19 23:30:36  cantwell
 * Documentation for ExpList2D and GlobalMatrixKey
 * Updated doxygen pages.

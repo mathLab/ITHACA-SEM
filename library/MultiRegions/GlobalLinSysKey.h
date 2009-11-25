@@ -84,6 +84,13 @@ namespace Nektar
                             const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
                             const GlobalSysSolnType solnType);
 
+            GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+                            const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                            const Array<OneD,NekDouble> &factor1,
+                            const NekDouble factor2, 
+                            const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                            const GlobalSysSolnType solnType);
+
             GlobalLinSysKey(const GlobalLinSysKey &key);
 
             ~GlobalLinSysKey()
@@ -161,6 +168,9 @@ namespace Nektar
 
 /**
 * $Log: GlobalLinSysKey.h,v $
+* Revision 1.12  2009/11/07 21:11:30  sehunchun
+* Variable coefficients parameters are added
+*
 * Revision 1.11  2009/10/30 14:02:55  pvos
 * Multi-level static condensation updates
 *

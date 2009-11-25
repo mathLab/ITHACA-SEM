@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+  <CONDITIONS>
+
+    <PARAMETERS>
+      <P> Lambda    = 1 </P>
+    </PARAMETERS>
+    
+    <VARIABLES>
+      <V ID="0"> u </V> 
+    </VARIABLES>
+
+    <!--These composites must be defined in the geometry file.-->
+    <BOUNDARYREGIONS>
+      <B ID="0"> C[1] </B>
+      <B ID="1"> C[2] </B>
+      <B ID="2"> C[3] </B>
+      <B ID="3"> C[4] </B>
+    </BOUNDARYREGIONS>
+
+    <!--The region numbers below correspond to the regions specified in the
+        BoundaryRegion definition above.-->
+    <BOUNDARYCONDITIONS>
+      <REGION REF="0">
+        <N VAR="u" VALUE="-PI*sin(PI*x)*cos(PI*y)" />
+      </REGION>
+      <REGION REF="1">
+        <N VAR="u" VALUE="PI*cos(PI*x)*sin(PI*y)" />
+      </REGION>
+      <REGION REF="2">
+        <N VAR="u" VALUE="PI*sin(PI*x)*cos(PI*y)" />
+      </REGION>
+      <REGION REF="3">
+        <N VAR="u" VALUE="-PI*cos(PI*x)*sin(PI*y)" />
+      </REGION>
+    </BOUNDARYCONDITIONS>
+        
+    <FORCING>
+      <F VAR="u" VALUE="-(Lambda + 2*PI*PI)*sin(PI*x)*sin(PI*y)" />
+    </FORCING>
+    
+    <EXACTSOLUTION>
+      <F VAR ="u" VALUE="sin(PI*x)*sin(PI*y)" />
+    </EXACTSOLUTION>
+    
+  </CONDITIONS>
+</NEKTAR>

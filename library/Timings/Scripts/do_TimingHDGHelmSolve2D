@@ -1,0 +1,52 @@
+#!/bin/bash
+if [ -z "$1" ]; then
+echo usage: $0 number_of_loops
+exit
+fi
+
+NumLoops=$1
+TimingResultsFile="./TimingResultsHDGHelmSolve2D.dat"
+ExecutableDumpFile="./TimingHDGHelmSolve2D.dat"
+MinTimeFile="./MinTime.dat"
+
+MaxNumModesp1=16;
+
+echo "%     Type  nElements     nModes     nCalls       Time  Time/Call         L2Error L2Error(hi-res)       LinfError LinfErr(hi-res)   nLocCoef  nGlobCoef  nLocBCoef nGlobBCoef  nLocDCoef nGlobDCoef        nnz   optlevel" > $TimingResultsFile
+
+# Loop over the element type
+for Type in 1 2 3
+do
+    # Loop over the optimisation level
+    for OptimisationLevel in 0 2 3
+    do
+        # Loop over the mesh-size
+        for MeshSize in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+        do
+            # Loop over the number of modes
+            for ((NumModes=2; NumModes<MaxNumModesp1; NumModes++))
+            do                
+                # Initialise the minimal time to a really big value 
+                MinTime=10000000000000000;
+
+                # Loop over the number of Loops you want to run it
+	        for ((a=0; a<NumLoops; a++))
+	        do
+	            ./TimingHDGHelmSolve2D $Type $MeshSize $NumModes $OptimisationLevel
+                    echo Nektar++ TimingHDGHelmSolve2D $Type $MeshSize $NumModes $OptimisationLevel
+
+                    read TypeOut NumElementsOut NumModesOut NumCallsOut ElapsedTimeOut TimepCallOut L2Out L2OutBis LinfOut LinfOutBis nLocCoefOut  nGlobCoefOut nLocBCoefOut  nGlobBCoefOut  nLocDCoefOut nGlobDCoefOut nnzOut optLevelOut< $ExecutableDumpFile
+	            if [ $ElapsedTimeOut -lt $MinTime ]; 
+	            then
+		        MinTime=$ElapsedTimeOut
+   		        cp $ExecutableDumpFile $MinTimeFile
+	            fi
+	        done
+
+	        cat $MinTimeFile >> $TimingResultsFile
+	    done
+        done
+    done
+done
+
+rm -f $MinTimeFile
+rm -f $ExecutableDumpFile

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NEKTAR>
+  <EXPANSIONS>
+    <E COMPOSITE="C[0]" NUMMODES="10" TYPE="MODIFIED" />
+  </EXPANSIONS>
+</NEKTAR>
+

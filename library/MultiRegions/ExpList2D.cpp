@@ -181,6 +181,105 @@ namespace Nektar
 
 
         /**
+         * Given a mesh \a graph2D, containing information about the domain and
+         * the a list of basiskeys, this constructor fills the list
+         * of local expansions \texttt{m_exp} with the proper expansions,
+         * calculates the total number of quadrature points
+         * \f$\boldsymbol{x}_i\f$ and local expansion coefficients
+         * \f$\hat{u}^e_n\f$ and allocates memory for the arrays #m_coeffs
+         * and #m_phys.
+         *
+         * @param   TriBa       A BasisKey, containing the definition of the   
+         *                      basis in the first coordinate direction for 
+         *                      triangular elements
+         * @param   TriBb       A BasisKey, containing the definition of the   
+         *                      basis in the second coordinate direction for 
+         *                      triangular elements
+         * @param   QuadBa      A BasisKey, containing the definition of the   
+         *                      basis in the first coordinate direction for 
+         *                      quadrilateral elements
+         * @param   QuadBb      A BasisKey, containing the definition of the   
+         *                      basis in the second coordinate direction for 
+         *                      quadrilateral elements
+         * @param   graph2D     A mesh, containing information about the domain
+         *                      and the spectral/hp element expansion.
+         * @param   TriNb       The PointsType of possible nodal points
+         */
+         ExpList2D::ExpList2D(const LibUtilities::BasisKey &TriBa, 
+                              const LibUtilities::BasisKey &TriBb, 
+                              const LibUtilities::BasisKey &QuadBa, 
+                              const LibUtilities::BasisKey &QuadBb, 
+                              const SpatialDomains::MeshGraph2D &graph2D,
+                              const LibUtilities::PointsType TriNb):
+             ExpList()
+         {
+             int i,j,elmtid=0;
+             int nel;
+             LocalRegions::TriExpSharedPtr tri;
+             LocalRegions::NodalTriExpSharedPtr Ntri;
+             LocalRegions::QuadExpSharedPtr quad;
+             SpatialDomains::Composite comp;
+ 
+             const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
+             m_ncoeffs = 0;
+             m_npoints = 0;
+             
+             m_transState = eNotSet; 
+             m_physState  = false;
+             
+             m_coeff_offset = Array<OneD,int>(expansions.size());
+             m_phys_offset = Array<OneD,int>(expansions.size());
+ 
+             for(i = 0; i < expansions.size(); ++i)
+             {
+                 SpatialDomains::TriGeomSharedPtr TriangleGeom;
+                 SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
+                 
+                 if(TriangleGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(expansions[i]->m_GeomShPtr))
+                 {
+                     if(TriNb < LibUtilities::SIZE_PointsType)
+                     {
+                         Ntri = MemoryManager<LocalRegions::NodalTriExp>::AllocateSharedPtr(TriBa,TriBb,TriNb,TriangleGeom);
+                         Ntri->SetElmtId(elmtid++);
+                         (*m_exp).push_back(Ntri);
+                     }
+                     else
+                     {
+                         tri = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(TriBa,TriBb,TriangleGeom);
+                         tri->SetElmtId(elmtid++);
+                         (*m_exp).push_back(tri);
+                     }
+                      
+                     m_coeff_offset[i] = m_ncoeffs;
+                     m_phys_offset[i] = m_npoints;
+                     m_ncoeffs += (TriBa.GetNumModes()*(TriBa.GetNumModes()+1))/2 
+                         + TriBa.GetNumModes()*(TriBb.GetNumModes()-TriBa.GetNumModes());
+                     m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
+                 }
+                 else if(QuadrilateralGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(expansions[i]->m_GeomShPtr))
+                 {
+                     quad = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(QuadBa,QuadBb,QuadrilateralGeom);
+                     quad->SetElmtId(elmtid++);
+                     (*m_exp).push_back(quad);
+ 
+                     m_coeff_offset[i] = m_ncoeffs;
+                     m_phys_offset[i] = m_npoints;
+                     m_ncoeffs += QuadBa.GetNumModes()*QuadBb.GetNumModes();
+                     m_npoints += QuadBa.GetNumPoints()*QuadBb.GetNumPoints();
+                 }
+                 else
+                 {
+                     ASSERTL0(false,"dynamic cast to a proper Geometry2D failed");
+                 }  
+                 
+             }
+             
+             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+             m_phys   = Array<OneD, NekDouble>(m_npoints);
+         }
+
+
+        /**
          * Fills the list of local expansions with the segments from the 3D
          * mesh specified by \a domain. This CompositeVector contains a list of
          * Composites which define the Neumann boundary.
@@ -590,6 +689,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.cpp,v $
+* Revision 1.32  2009/11/23 22:11:07  cantwell
+* Documentation.
+*
 * Revision 1.31  2009/11/19 23:30:36  cantwell
 * Documentation for ExpList2D and GlobalMatrixKey
 * Updated doxygen pages.

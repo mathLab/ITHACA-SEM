@@ -30,6 +30,8 @@ ENDIF (${CMAKE_COMPILER_IS_GNUCXX})
 
 SET(NEKTAR_BUILD_DEMOS ON CACHE BOOL "Build Demo Projects")
 SET(NEKTAR_BUILD_UNIT_TESTS OFF CACHE BOOL "Build Unit Tests Projects")
+SET(NEKTAR_BUILD_TIMINGS OFF CACHE BOOL "Build Timings directory")
+MARK_AS_ADVANCED(NEKTAR_BUILD_TIMINGS)
 
 IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008 Win64" )
 	SET(ExpressionTemplateDefault OFF)
@@ -55,7 +57,9 @@ SET(NEKTAR_USE_NIST_SPARSE_BLAS_TOOLKIT ON CACHE BOOL "Use NIST Fortran Sparse B
 MARK_AS_ADVANCED(NEKTAR_USE_NIST_SPARSE_BLAS_TOOLKIT)
 SET(NEKTAR_USE_MKL OFF CACHE BOOL "Use the Intel Math Kernel Library (MKL) for BLAS and Lapack support." )
 IF( APPLE )
-    SET(NEKTAR_USE_FRAMEWORK ON CACHE BOOL "Use the Mac Framework system for BLAS and Lapack support." )
+    SET(NEKTAR_USE_ACCELERATE_FRAMEWORK ON CACHE BOOL "Use the Mac Accelerate Framework for BLAS and Lapack support." )
+    SET(NEKTAR_USE_CHUD_FRAMEWORK OFF CACHE BOOL "Use the Mac CHUD Framework (for Shark support)." )
+    MARK_AS_ADVANCED(NEKTAR_USE_CHUD_FRAMEWORK)
 ENDIF(APPLE)
 IF( UNIX )
   SET(NEKTAR_USE_SYSTEM_BLAS_LAPACK OFF CACHE BOOL "Use the system provided blas and lapack libraries")
@@ -92,7 +96,7 @@ SET(Boost_USE_MULTITHREAD ON)
 SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost 
   ${CMAKE_SOURCE_DIR}/../../ThirdParty/boost)
 SET(Boost_ADDITIONAL_VERSIONS "1.40" "1.40.0" "1.35.0" "1.35")
-FIND_PACKAGE( Boost 1.40.0 REQUIRED COMPONENTS thread iostreams zlib date_time)
+FIND_PACKAGE( Boost 1.40.0 REQUIRED COMPONENTS thread iostreams zlib date_time filesystem system)
 
 
 INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR} ${Boost_INCLUDE_DIRS} ${LOKI_INCLUDE_DIR} ${TINYXML_BASE})
@@ -113,6 +117,7 @@ SET(LibrarySubDirs LibUtilities LocalRegions MultiRegions SpatialDomains
 StdRegions Stochastic)
 SET(UnitTestSubDirs UnitTests)
 SET(DemoSubDirs Demos)
+SET(TimingsSubDirs Timings)
 
 SUBDIRS(${LibrarySubDirs} )
 
@@ -124,13 +129,18 @@ IF( NEKTAR_BUILD_DEMOS )
     SUBDIRS(${DemoSubDirs})
 ENDIF( NEKTAR_BUILD_DEMOS )
 
+IF( NEKTAR_BUILD_TIMINGS ) 
+    SUBDIRS(${TimingsSubDirs})
+ENDIF( NEKTAR_BUILD_TIMINGS ) 
+
 CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/Nektar++Config.cmake.in 
                ${CMAKE_BINARY_DIR}/Nektar++Config.cmake @ONLY)
                
 INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake 
               ${CMAKE_SOURCE_DIR}/FindBoost.cmake
               ${CMAKE_SOURCE_DIR}/FindLoki.cmake
-              ${CMAKE_SOURCE_DIR}/FindFramework.cmake
+              ${CMAKE_SOURCE_DIR}/FindAccelerateFramework.cmake
+              ${CMAKE_SOURCE_DIR}/FindCHUDFramework.cmake
               ${CMAKE_SOURCE_DIR}/FindACML.cmake
               #${CMAKE_SOURCE_DIR}/FindAtlas.cmake
               ${CMAKE_SOURCE_DIR}/FindNistSparseBlas.cmake

@@ -74,6 +74,17 @@ namespace Nektar
             /// Sets up a list of local expansions based on an input mesh.
             ExpList2D(  SpatialDomains::MeshGraph2D &graph2D);
 
+            /// Sets up a list of local expansions based on an input mesh
+            /// and separately defined basiskeys
+            ExpList2D(const LibUtilities::BasisKey &TriBa, 
+                      const LibUtilities::BasisKey &TriBb, 
+                      const LibUtilities::BasisKey &QuadBa, 
+                      const LibUtilities::BasisKey &QuadBb, 
+                      const SpatialDomains::MeshGraph2D &graph2D,
+                      const LibUtilities::PointsType 
+                      TriNb = LibUtilities::SIZE_PointsType);
+            
+
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField3D and ContField3D.
             ExpList2D(  const SpatialDomains::CompositeVector &domain,
@@ -121,6 +132,10 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.h,v $
+* Revision 1.22  2009/11/19 23:30:36  cantwell
+* Documentation for ExpList2D and GlobalMatrixKey
+* Updated doxygen pages.
+*
 * Revision 1.21  2009/11/02 19:15:43  cantwell
 * Moved ContField1D to inherit from DisContField1D.
 * Moved ContField3D to inherit from DisContField3D.

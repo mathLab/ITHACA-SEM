@@ -93,11 +93,14 @@ ELSE(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
 ENDIF(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
 
 SET(Boost_USE_MULTITHREAD ON)
-SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost 
-  ${CMAKE_SOURCE_DIR}/../../ThirdParty/boost)
+SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost)
 SET(Boost_ADDITIONAL_VERSIONS "1.40" "1.40.0" "1.35.0" "1.35")
 FIND_PACKAGE( Boost 1.40.0 REQUIRED COMPONENTS thread iostreams zlib date_time filesystem system)
 
+IF( NOT BOOST_FOUND )
+  SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../../ThirdParty/boost)
+  FIND_PACKAGE( Boost 1.40.0 REQUIRED thread iostreams zlib date_time filesystem system)
+ENDIF(NOT BOOST_FOUND)
 
 INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR} ${Boost_INCLUDE_DIRS} ${LOKI_INCLUDE_DIR} ${TINYXML_BASE})
 
@@ -137,12 +140,10 @@ CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/Nektar++Config.cmake.in
                ${CMAKE_BINARY_DIR}/Nektar++Config.cmake @ONLY)
                
 INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake 
-              ${CMAKE_SOURCE_DIR}/FindBoost.cmake
               ${CMAKE_SOURCE_DIR}/FindLoki.cmake
               ${CMAKE_SOURCE_DIR}/FindAccelerateFramework.cmake
               ${CMAKE_SOURCE_DIR}/FindCHUDFramework.cmake
               ${CMAKE_SOURCE_DIR}/FindACML.cmake
-              #${CMAKE_SOURCE_DIR}/FindAtlas.cmake
               ${CMAKE_SOURCE_DIR}/FindNistSparseBlas.cmake
               ${CMAKE_SOURCE_DIR}/FindNativeBlasLapack.cmake
               ${CMAKE_SOURCE_DIR}/FindMKL.cmake

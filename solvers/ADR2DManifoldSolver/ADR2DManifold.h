@@ -164,7 +164,7 @@ namespace Nektar
         NekDouble USERDEFINEDError(int field, const int type, const int Readfntype = 0,
                                      Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
 
-        void SetUpSurfaceNormal(Array<OneD, Array<OneD, NekDouble> > &Principaldirection); 
+        void SetUpTangentialVectors(Array<OneD, Array<OneD, NekDouble> > &Principaldirection); 
 
         void GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> >&physfield, Array<OneD, Array<OneD, NekDouble> >&flux);
 
@@ -276,8 +276,10 @@ namespace Nektar
         int m_duration;
         int m_UseDirDeriv;
         int m_Connection;
+        int m_Anisotropy;
         NekDouble m_Angularfreq;
         NekDouble m_Angleofaxis;
+        NekDouble m_x0c, m_x1c, m_x2c;
 
     private: 
         int          m_infosteps;    ///< dump info to stdout at steps time

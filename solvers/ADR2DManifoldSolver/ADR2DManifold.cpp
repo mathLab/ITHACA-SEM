@@ -129,6 +129,33 @@ namespace Nektar
             m_duration  = 3.5;
         }
 
+        if(m_boundaryConditions->CheckForParameter("x0c") == true)
+        {
+            m_x0c = m_boundaryConditions->GetParameter("x0c");
+        }
+        else
+        {
+            m_x0c  = 0.0;
+        }
+
+        if(m_boundaryConditions->CheckForParameter("x1c") == true)
+        {
+            m_x1c = m_boundaryConditions->GetParameter("x1c");
+        }
+        else
+        {
+            m_x1c  = 0.0;
+        }
+
+        if(m_boundaryConditions->CheckForParameter("x2c") == true)
+        {
+            m_x2c = m_boundaryConditions->GetParameter("x2c");
+        }
+        else
+        {
+            m_x2c  = 0.0;
+        }
+
         if(m_boundaryConditions->CheckForParameter("Connection") == true)
         {
             m_Connection = m_boundaryConditions->GetParameter("Connection");
@@ -136,6 +163,15 @@ namespace Nektar
         else
         {
             m_Connection  = 0;
+        }
+
+        if(m_boundaryConditions->CheckForParameter("Anisotropy") == true)
+        {
+            m_Anisotropy = m_boundaryConditions->GetParameter("Anisotropy");
+        }
+        else
+        {
+            m_Anisotropy  = 0;
         }
         
         if(m_boundaryConditions->CheckForParameter("Angularfreq") == true)
@@ -270,7 +306,7 @@ namespace Nektar
                 // Evaluate two tangential vectors on 2D manifold
                  if(m_spacedim==3)
                  {
-                    SetUpSurfaceNormal(m_velocity);
+                    SetUpTangentialVectors(m_velocity);
                  }
                 
                 int nelem, offset_e;
@@ -298,7 +334,7 @@ namespace Nektar
                 // Evaluate two tangential vectors on 2D manifold
                 if(m_spacedim==3)
                 {
-                    SetUpSurfaceNormal(m_velocity);
+                    SetUpTangentialVectors(m_velocity);
                 }
 
                 m_timeIntMethod = LibUtilities::eIMEXdirk_3_4_3;
@@ -712,33 +748,38 @@ namespace Nektar
       int ncoeffs    = inarray[0].num_elements();
       int npoints    = m_fields[0]->GetNpoints();
       
-      Array<OneD, NekDouble> physfield(npoints);
-      Array<OneD, NekDouble> temp2(npoints,0.0);
-      Array<OneD, NekDouble> temp3(npoints,0.0);
+      Array<OneD, NekDouble> physfieldu(npoints);
+      Array<OneD, NekDouble> physfieldv(npoints);
+
+      Array<OneD, NekDouble> Ru(npoints,0.0);
+      Array<OneD, NekDouble> Rv(npoints, 0.0);
+      Array<OneD, NekDouble> u3(npoints,0.0);      
       
-      Array<OneD, NekDouble> temp(ncoeffs, 0.0);
-      
-      m_fields[0]->BwdTrans(inarray[0],physfield);
+      m_fields[0]->BwdTrans(inarray[0],physfieldu);
       m_fields[0]->SetPhysState(true);        
 
-      // For v: (1/m_epsilon)*( u*-u*u*u/3 - v )
+      m_fields[1]->BwdTrans(inarray[1],physfieldv);
+      m_fields[1]->SetPhysState(true);        
+
+      // For u: (1/m_epsilon)*( u*-u*u*u/3 - v )
       // physfield = u - (1.0/3.0)*u*u*u
-      Vmath::Vmul(npoints, &physfield[0], 1, &physfield[0], 1, &temp2[0], 1);
-      Vmath::Vmul(npoints, &physfield[0], 1, &temp2[0], 1, &temp3[0], 1);
-      Vmath::Svtvp(npoints, (-1.0/3.0), &temp3[0], 1, &physfield[0], 1, &physfield[0], 1);
-      
-      m_fields[0]->FwdTrans(physfield,outarray[0]);
+      Vmath::Vmul(npoints, &physfieldu[0], 1, &physfieldu[0], 1, &Ru[0], 1);
+      Vmath::Vmul(npoints, &physfieldu[0], 1, &Ru[0], 1, &u3[0], 1);
+      Vmath::Svtvp(npoints, (-1.0/3.0), &u3[0], 1, &physfieldu[0], 1, &Ru[0], 1);
+     
+      Vmath::Vsub(npoints, &physfieldv[0], 1, &Ru[0], 1, &Ru[0], 1);
+      Vmath::Smul(npoints, -1.0/m_epsilon[0], &Ru[0], 1, &Ru[0], 1);
+
+      m_fields[0]->FwdTrans(Ru,outarray[0]);
       m_fields[0]->SetPhysState(false);        
-      
-      NekDouble coeff = -1.0/m_epsilon[0];
-      Vmath::Vsub(ncoeffs, &inarray[1][0], 1, &outarray[0][0], 1, &outarray[0][0], 1);
-      Vmath::Smul(ncoeffs, coeff, &outarray[0][0], 1, &outarray[0][0], 1);
-      
-      coeff = -1.0*m_gamma;
-      // For q: m_epsilon*( v + m_beta - m_gamma*q )
-      Vmath::Svtvp(ncoeffs, coeff, &inarray[1][0], 1, &inarray[0][0], 1, &outarray[1][0], 1);
-      Vmath::Sadd(ncoeffs, m_beta, &outarray[1][0], 1, &outarray[1][0], 1);
-      Vmath::Smul(ncoeffs, m_epsilon[0], &outarray[1][0], 1, &outarray[1][0], 1);
+
+      // For v: m_epsilon*( u + m_beta - m_gamma*v )
+      Vmath::Svtvp(npoints, -1.0*m_gamma, &physfieldv[0], 1, &physfieldu[0], 1, &Rv[0], 1);
+      Vmath::Sadd(npoints, m_beta, &Rv[0], 1, &Rv[0], 1);
+      Vmath::Smul(npoints, m_epsilon[0], &Rv[0], 1, &Rv[0], 1);
+
+      m_fields[1]->FwdTrans(Rv,outarray[1]);
+      m_fields[1]->SetPhysState(false); 
     }
  
 
@@ -1719,7 +1760,7 @@ namespace Nektar
       }       
   }
   
-  void ADR2DManifold::SetUpSurfaceNormal(Array<OneD, Array<OneD, NekDouble> > &Principaldirection)
+  void ADR2DManifold::SetUpTangentialVectors(Array<OneD, Array<OneD, NekDouble> > &Principaldirection)
      {
          int i, j, k;
          int nvariables = m_fields.num_elements();
@@ -1780,10 +1821,21 @@ namespace Nektar
          
         Unitlength(m_tanbasis[0]);
          
-        // The second tangential vector is obtained by cross-producting Surface Normal with the first tangential vector
-        CrossProduct(m_tanbasis[0], m_SurfaceNormal, m_tanbasis[1]);
+        // When there is an anisotropy layers, the second tangential vector is killed.
+        if(m_Anisotropy>0)
+        {
+            for(k = 0; k < m_spacedim; ++k)
+            {
+                m_tanbasis[1][k] = Array<OneD, NekDouble>(nq,0.0);
+            }
+        }
 
-        Unitlength(m_tanbasis[1]);
+        // The second tangential vector is obtained by cross-producting Surface Normal with the first tangential vector
+        else
+        {
+            CrossProduct(m_tanbasis[0], m_SurfaceNormal, m_tanbasis[1]);
+            Unitlength(m_tanbasis[1]);
+        }
           
         int nelem ,npts_e, offset0, offset1;
         // Using this tangential basis as dirForcing
@@ -1807,22 +1859,6 @@ namespace Nektar
         }
 
         Vmath::Neg(offset1, &m_dirForcing[1][0], 1);
-
-        /*
-        offset0=0;
-        for (int j = 0; j < nelem; ++j)
-        {
-            npts_e = GetTotPoints(j);
-            for (int k =0; k < npts_e; ++k)
-            {
-            cout << "elem = " << j << ", dirforcing1 = (" << m_dirForcing[0][k+offset0] << "," << m_dirForcing[0][k+offset0+npts_e] 
-                 << "," << m_dirForcing[0][k+offset0+2*npts_e] << "), dirforcing2 = (" << m_dirForcing[1][k+offset0] << "," << m_dirForcing[1][k+offset0+npts_e] 
-                 << "," << m_dirForcing[1][k+offset0+2*npts_e] << ")" <<endl;
-            }
-            offset0 += npts_e*m_spacedim;
-        }
-        */
-
 
          Array<OneD, NekDouble> temp0(nq), temp1(nq), temp2(nq);
         // Generate \nabla \cdot tangentvector for weighted mass matrix
@@ -1850,6 +1886,9 @@ namespace Nektar
         Array<OneD,NekDouble> x0(nq);
         Array<OneD,NekDouble> x1(nq);
         Array<OneD,NekDouble> x2(nq);
+
+        Array<OneD, NekDouble> rstates(2);
+        Getrestingstate(m_epsilon[0], m_beta, rstates);
       
         // get the coordinates (assuming all fields have the same discretisation)
         m_fields[0]->GetCoords(x0,x1,x2);
@@ -1890,10 +1929,7 @@ namespace Nektar
 
         // 0: Planar propagation from -x direction
         case(0):
-        {     
-            Array<OneD, NekDouble> rstates(2);
-            Getrestingstate(m_epsilon[0], m_beta, rstates);
-            
+        {                 
             // Set the left side as the initial excitation
             NekDouble xmin = Vmath::Vmin(nq,x0,1);
             for(int j = 0; j < nq; j++)
@@ -1920,10 +1956,7 @@ namespace Nektar
 
         // 1: Planar propagation from -y direction
         case(1):
-        {     
-            Array<OneD, NekDouble> rstates(2);
-            Getrestingstate(m_epsilon[0], m_beta, rstates);
-            
+        {                 
             // Set the left side as the initial excitation
             NekDouble ymin = Vmath::Vmin(nq,x1,1);
             for(int j = 0; j < nq; j++)
@@ -1951,9 +1984,6 @@ namespace Nektar
         // 2: For Planar propagation from -x direction in xy plane
         case(2):
         {     
-            Array<OneD, NekDouble> rstates(2);
-            Getrestingstate(m_epsilon[0], m_beta, rstates);
-            
             // Set the left side as the initial excitation
             NekDouble xmin = Vmath::Vmin(nq,x0,1);
             for(int j = 0; j < nq; j++)
@@ -1978,12 +2008,39 @@ namespace Nektar
         }
         break;
 
+        case(3):
+            {
+                cout << "Point initialization " << endl;
+
+                NekDouble rad;
+                for(int j = 0; j < nq; j++)
+                {
+                    rad = sqrt( (x0[j]-m_x0c)*(x0[j]-m_x0c) + (x1[j]-m_x1c)*(x1[j]-m_x1c) + (x2[j]-m_x2c)*(x2[j]-m_x2c) );
+                    
+                    if( rad <= m_duration )
+                    {
+                        (m_fields[0]->UpdatePhys())[j] = 2.0;
+                        (m_fields[1]->UpdatePhys())[j] = rstates[1];
+                    }
+                    
+                    else
+                    {
+                        (m_fields[0]->UpdatePhys())[j] = rstates[0];
+                        (m_fields[1]->UpdatePhys())[j] = rstates[1];
+                    }
+                }
+
+                for(int i = 0 ; i < m_fields.num_elements(); i++)
+                {
+                    m_fields[i]->SetPhysState(true);
+                    m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+                }
+            }
+            break;
+
         // 10: For Planar propagation from +z direction
         case(10):
-        {     
-            Array<OneD, NekDouble> rstates(2);
-            Getrestingstate(m_epsilon[0], m_beta, rstates);
-            
+        {                 
             // Set the left side as the initial excitation
             NekDouble zmax = Vmath::Vmax(nq,x2,1);
             for(int j = 0; j < nq; j++)
@@ -2309,6 +2366,7 @@ namespace Nektar
             }
         break;
         
+
         case(4):
             {
                 // circular around the center of the domain
@@ -2330,6 +2388,38 @@ namespace Nektar
                     radius = sqrt(xdis*xdis+ydis*ydis);
                     Principaldirection[0][i] = ydis/radius;
                     Principaldirection[1][i] = -1.0*xdis/radius;
+                }
+            }
+            break;
+
+        case(10):
+            {
+
+                cout << "Anisotropy layers" << endl;
+
+                // circular around the center of the domain
+                NekDouble radius, xc, yc, xdis, ydis;
+   
+                xc = 25.0;
+                yc = 0.0;
+
+                for (int i = 0; i < nq; i++)
+                {
+
+                    if(x0[i]<=xc)
+                    {
+                        Principaldirection[0][i] = 1.0;
+                        Principaldirection[1][i] = 0.0;
+                    }
+
+                    else
+                    {
+                        xdis = x0[i]-xc;
+                        ydis = x1[i]-yc;
+                        radius = sqrt(xdis*xdis+ydis*ydis);
+                        Principaldirection[0][i] = ydis/radius;
+                        Principaldirection[1][i] = -1.0*xdis/radius;
+                    }
                 }
             }
         }
@@ -2457,8 +2547,10 @@ namespace Nektar
     {
 
         out << "\tinitialwavetype    : " << m_initialwavetype << endl;
+        out << "\tinitialcenter = ( " << m_x0c << "," << m_x1c << "," << m_x2c << " )" << endl;
         out << "\tUseDirDeriv   : " << m_UseDirDeriv << endl;
         out << "\tConnection    : " << m_Connection << endl;
+        out << "\tAnisotropy    : " << m_Anisotropy << endl;
         out << "\tm_mu          : " << m_epsilon[0] << endl;
         out << "\tm_nu          : " << m_epsilon[1] << endl;
         out << "\tm_beta        : " << m_beta << endl;
@@ -2525,4 +2617,5 @@ namespace Nektar
       }
     cout << "=======================================================================" << endl;
   }   
+
 } //end of namespace

@@ -230,12 +230,12 @@ MACRO(ADD_NEKTAR_EXECUTABLE name sources)
 
     TARGET_LINK_LIBRARIES(${name}
         optimized LibUtilities debug LibUtilities-g
-        optimized ${Boost_THREAD_LIBRARY_RELEASE} debug ${Boost_THREAD_LIBRARY_DEBUG}
-	optimized ${Boost_ZLIB_LIBRARY_RELEASE} debug ${Boost_ZLIB_LIBRARY_DEBUG}	
-        optimized ${Boost_IOSTREAMS_LIBRARY_RELEASE} debug ${Boost_IOSTREAMS_LIBRARY_DEBUG}
-        optimized ${Boost_DATE_TIME_LIBRARY_RELEASE} debug ${Boost_DATE_TIME_LIBRARY_DEBUG}
-        optimized ${Boost_FILESYSTEM_LIBRARY_RELEASE} debug ${Boost_FILESYSTEM_LIBRARY_DEBUG}
-        optimized ${Boost_SYSTEM_LIBRARY_RELEASE} debug ${Boost_SYSTEM_LIBRARY_DEBUG}
+        ${Boost_THREAD_LIBRARY} 
+	${Boost_ZLIB_LIBRARY} 
+        ${Boost_IOSTREAMS_LIBRARY} 
+        ${Boost_DATE_TIME_LIBRARY} 
+        ${Boost_FILESYSTEM_LIBRARY} 
+        ${Boost_SYSTEM_LIBRARY} 
         optimized tinyxml debug tinyxml
 	)
 

@@ -33,10 +33,10 @@ MACRO(ADD_UTILITIES_EXECUTABLE name source)
         # add them here.
         TARGET_LINK_LIBRARIES(${name}
 	    ${NEKTAR++_LIBRARIES}
-	    optimized ${Boost_THREAD_LIBRARY_RELEASE} debug ${Boost_THREAD_LIBRARY_DEBUG}
-            optimized ${Boost_IOSTREAMS_LIBRARY_RELEASE} debug ${Boost_IOSTREAMS_LIBRARY_DEBUG}
-	    optimized ${Boost_ZLIB_LIBRARY_RELEASE} debug ${Boost_ZLIB_LIBRARY_DEBUG}
-            optimized ${Boost_DATE_TIME_LIBRARY_RELEASE} debug ${Boost_DATE_TIME_LIBRARY_DEBUG}     
+	    ${Boost_THREAD_LIBRARY}
+            ${Boost_IOSTREAMS_LIBRARY}
+	    ${Boost_ZLIB_LIBRARY}
+            ${Boost_DATE_TIME_LIBRARY}
             optimized tinyxml debug tinyxml)
 
         SET_LAPACK_LINK_LIBRARIES(${name})

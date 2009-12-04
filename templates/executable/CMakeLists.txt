@@ -39,8 +39,7 @@ IF( NEKTAR++_FOUND )
     # add them here.
     TARGET_LINK_LIBRARIES(${ProjectName}
 	${NEKTAR++_LIBRARIES}
-	optimized ${Boost_THREAD_LIBRARY_RELEASE} 
-	debug ${Boost_THREAD_LIBRARY_DEBUG})
+	${Boost_THREAD_LIBRARY} 
 
     SET_LAPACK_LINK_LIBRARIES(${ProjectName})
 ENDIF( NEKTAR++_FOUND )

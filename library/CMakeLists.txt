@@ -95,20 +95,11 @@ ENDIF(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
 SET(Boost_USE_MULTITHREAD ON)
 SET(Boost_ADDITIONAL_VERSIONS "1.40" "1.40.0" "1.35.0" "1.35")
 
-# This is a little awkward.  The FindBoost.cmake in 2.8 made a change to BOOST_ROOT so it can 
-# only contain a single directory.  So we first search one location then another, but to prevent 
-# setting BOOST_ROOT to the wrong value during multiple configures, we need to first check 
-# if it has already been found.
-IF( NOT Boost_FOUND )
 
-	SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost) 
-	FIND_PACKAGE( Boost 1.40.0 REQUIRED COMPONENTS thread iostreams zlib date_time filesystem system)
-
-	IF( NOT Boost_FOUND )
-  		SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../../ThirdParty/boost)
-  		FIND_PACKAGE( Boost 1.40.0 REQUIRED thread iostreams zlib date_time filesystem system)
-	ENDIF(NOT Boost_FOUND)
-ENDIF(NOT Boost_FOUND)
+SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost) 
+FIND_PACKAGE( Boost 1.40.0 REQUIRED COMPONENTS thread iostreams zlib date_time filesystem system)
+SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../../ThirdParty/boost)
+FIND_PACKAGE( Boost 1.40.0 REQUIRED thread iostreams zlib date_time filesystem system)
  
 INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR} ${Boost_INCLUDE_DIRS} ${LOKI_INCLUDE_DIR} ${TINYXML_BASE})
 
@@ -163,5 +154,4 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
 
 INSTALL(EXPORT Nektar++Libraries DESTINATION lib)
 
-CMAKE_EXPORT_BUILD_SETTINGS("Nektar++BuildSettings.cmake")
 

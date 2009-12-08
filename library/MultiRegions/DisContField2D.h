@@ -82,19 +82,35 @@ namespace Nektar
                 return m_traceMap;
             }
 
+
+            void HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                           Array<OneD,       NekDouble> &outarray,
+                           const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
+                           const Array<OneD, NekDouble>  &lambda,
+                           NekDouble tau = 1.0);
+
             void HelmSolve(const Array<OneD, const NekDouble> &inarray,
                            Array<OneD,       NekDouble> &outarray,
                            const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
                            NekDouble lambda,
-                           NekDouble tau = 1.0);
+                           NekDouble tau = 1.0)
+            {
+                Array<OneD, NekDouble> lambda_v(1);
+                lambda_v[0] = lambda;
+
+                HelmSolve(inarray,outarray,varcoeffs,lambda_v,tau);
+            }
 
             void HelmSolve(const Array<OneD, const NekDouble> &inarray,
                            Array<OneD,       NekDouble> &outarray,
                            NekDouble lambda,
                            NekDouble tau = 1.0)
             {
+                Array<OneD, NekDouble> lambda_v(1);
+                lambda_v[0] = lambda;
+
                 Array<OneD, Array<OneD, NekDouble> > varcoeffs;
-                HelmSolve(inarray,outarray,varcoeffs,lambda,tau);
+                HelmSolve(inarray,outarray,varcoeffs,lambda_v,tau);
             }
             /**
              * \brief This function evaluates the boundary conditions at a certain 
@@ -378,7 +394,10 @@ namespace Nektar
                                      NekDouble lambda,
                                      NekDouble tau)
             {
-                HelmSolve(inarray,outarray,varcoeffs,lambda,tau);
+                Array<OneD, NekDouble> lambda_v(1);
+                lambda_v[0] = lambda;
+
+                HelmSolve(inarray,outarray,varcoeffs,lambda_v,tau);
             }
 
             virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
@@ -386,8 +405,11 @@ namespace Nektar
                                      NekDouble lambda,
                                      NekDouble tau)
             {
+                Array<OneD, NekDouble> lambda_v(1);
+                lambda_v[0] = lambda;
+
                 Array<OneD, Array<OneD, NekDouble> > varcoeffs;
-                HelmSolve(inarray,outarray,varcoeffs,lambda,tau);
+                HelmSolve(inarray,outarray,varcoeffs,lambda_v,tau);
             }
 
             virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
@@ -397,7 +419,32 @@ namespace Nektar
                                      const Array<OneD, const NekDouble>& dirForcing = NullNekDouble1DArray)
             {
                 NekDouble tau = 1.0;
+
+                Array<OneD, NekDouble> lambda_v(1);
+                lambda_v[0] = lambda;
+
                 Array<OneD, Array<OneD, NekDouble> > varcoeffs;
+                HelmSolve(inarray,outarray,varcoeffs,lambda_v,tau);
+            }
+
+            virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                     Array<OneD,       NekDouble> &outarray,
+                                     const Array<OneD, NekDouble> &lambda,
+                                     bool      UseContCoeffs = false,
+                                     const Array<OneD, const NekDouble>& dirForcing = NullNekDouble1DArray)
+            {
+                NekDouble tau = 1.0;
+
+                Array<OneD, Array<OneD, NekDouble> > varcoeffs;
+                HelmSolve(inarray,outarray,varcoeffs,lambda,tau);
+            }
+
+            virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD,       NekDouble> &outarray,
+                                     const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
+                                     const Array<OneD, NekDouble> &lambda,
+                                     NekDouble tau)
+            {
                 HelmSolve(inarray,outarray,varcoeffs,lambda,tau);
             }
 

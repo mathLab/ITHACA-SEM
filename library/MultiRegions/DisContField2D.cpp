@@ -198,11 +198,11 @@ namespace Nektar
             return glo_matrix;
         }
 
-        // HelmSolver with varcoeffs ======================================
+        // HelmSolver with variable lambda and varcoeffs ======================================
         void DisContField2D::HelmSolve(const Array<OneD, const NekDouble> &inarray,
                                        Array<OneD,       NekDouble> &outarray,
                                        const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
-                                       NekDouble lambda,
+                                       const Array<OneD, NekDouble> &lambda,
                                        NekDouble tau)
         {
             int e,i,j,n,cnt,cnt1,nbndry, order_e;
@@ -313,6 +313,7 @@ namespace Nektar
             //  out =  u_f + u_lam = (*InvHDGHelm)*f + (LamtoU)*Lam  
             out = (*InvHDGHelm)*F + (*HDGLamToU)*LocLambda;       
         }
+
 
         // Construct the two trace vectors of the inner and outer
         // trace solution from the field contained in m_phys, where

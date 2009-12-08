@@ -111,6 +111,9 @@ namespace Nektar
             // inline
             int GetNcoeffs(void) const;
 
+            // Returns the total number of local degrees of freedom for element eid
+            int GetNcoeffs(const int eid) const;
+
             /// Evaulates the maximum number of modes in the elemental basis
             /// order over all elements
             // inline
@@ -223,6 +226,13 @@ namespace Nektar
                                 bool      UseContCoeffs = false,
                                 const Array<OneD, const NekDouble>& dirForcing = NullNekDouble1DArray);
 
+            void HelmSolve(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                const Array<OneD, NekDouble> &lambda,
+                                bool      UseContCoeffs = false,
+                                const Array<OneD, const NekDouble>& dirForcing = NullNekDouble1DArray);
+
            void HelmSolve(
                            const Array<OneD, const NekDouble> &inarray,
                            Array<OneD,       NekDouble> &outarray,
@@ -234,6 +244,13 @@ namespace Nektar
                            Array<OneD,       NekDouble> &outarray,
                            const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
                            NekDouble lambda,
+                           NekDouble tau = 1);
+
+            void HelmSolve(
+                           const Array<OneD, const NekDouble> &inarray,
+                           Array<OneD,       NekDouble> &outarray,
+                           const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
+                           const Array<OneD, NekDouble> &lambda,
                            NekDouble tau = 1);
 
             void FwdTrans_BndConstrained(
@@ -674,6 +691,13 @@ namespace Nektar
                                 const Array<OneD, const NekDouble>& dirForcing);
 
             virtual void v_HelmSolve(
+                                const Array<OneD,const NekDouble> &inarray,
+                                      Array<OneD,      NekDouble> &outarray,
+                                const Array<OneD, NekDouble> &lambda,
+                                bool      UseContCoeffs,
+                                const Array<OneD, const NekDouble>& dirForcing);
+
+            virtual void v_HelmSolve(
                                      const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,       NekDouble> &outarray,
                                    NekDouble lambda,
@@ -684,6 +708,13 @@ namespace Nektar
                                    Array<OneD,       NekDouble> &outarray,
                                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
                                    NekDouble lambda,
+                                   NekDouble tau);
+
+            virtual void v_HelmSolve(
+                                     const Array<OneD, const NekDouble> &inarray,
+                                   Array<OneD,       NekDouble> &outarray,
+                                   const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
+                                   const Array<OneD, NekDouble> &lambda,
                                    NekDouble tau);
 
             // wrapper functions about virtual functions
@@ -743,6 +774,11 @@ namespace Nektar
         inline int ExpList::GetNcoeffs() const
         {
             return m_ncoeffs;
+        }
+
+        inline int ExpList::GetNcoeffs(const int eid) const
+        {
+            return (*m_exp)[eid]->GetNcoeffs();
         }
 
         /**
@@ -900,6 +936,16 @@ namespace Nektar
             v_HelmSolve(inarray,outarray,lambda,UseContCoeffs,dirForcing);
         }
 
+        inline void ExpList::HelmSolve(
+                        const Array<OneD, const NekDouble> &inarray,
+                              Array<OneD,       NekDouble> &outarray,
+                        const Array<OneD, NekDouble> &lambda,
+                        bool      UseContCoeffs,
+                        const Array<OneD, const NekDouble>& dirForcing)
+        {
+            v_HelmSolve(inarray,outarray,lambda,UseContCoeffs,dirForcing);
+        }
+
         inline void ExpList::HelmSolve(const Array<OneD, const NekDouble> &inarray,
                                        Array<OneD,       NekDouble> &outarray,
                                        NekDouble lambda,
@@ -912,6 +958,15 @@ namespace Nektar
                                        Array<OneD,       NekDouble> &outarray,
                                        const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
                                        NekDouble lambda,
+                                       NekDouble tau)
+        {
+            v_HelmSolve(inarray,outarray,varcoeffs,lambda,tau);
+        }
+
+        inline void ExpList::HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                       Array<OneD,       NekDouble> &outarray,
+                                       const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
+                                       const Array<OneD, NekDouble> &lambda,
                                        NekDouble tau)
         {
             v_HelmSolve(inarray,outarray,varcoeffs,lambda,tau);
@@ -1216,6 +1271,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.80  2009/11/19 14:06:00  sehunchun
+* *** empty log message ***
+*
 * Revision 1.79  2009/11/19 13:48:06  sehunchun
 * *** empty log message ***
 *

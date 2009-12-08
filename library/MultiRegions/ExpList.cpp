@@ -692,36 +692,39 @@ namespace Nektar
                 
                 if(nvarcoeffs>0)
                 {
-                    // When two varcoeffs in a specific order
-                    if(nvarcoeffs==2)
-                    {                       
-                        for(j = 0; j < nvarcoeffs; j++)
-                        {
-                            varcoeffs[j] = Array<OneD, NekDouble>(totnq,0.0);
-                            Vmath::Vcopy(totnq, &(gkey.GetVariableCoefficient(j))[cnt1], 1, &varcoeffs[j][0],1);
-                        }
-                        
-                        cnt1  += totnq;
-                        matrixid++;
-                    }
-
-                    else
+                    // When two varcoeffs in a specific order               
+                    for(j = 0; j < nvarcoeffs; j++)
                     {
-                        for(j = 0; j < nvarcoeffs; j++)
-                        {
-                            varcoeffs[j] = gkey.GetVariableCoefficient(j) + cnt1;
-                        }
-                        cnt1  += (*m_exp)[i]->GetTotPoints();
+                        varcoeffs[j] = Array<OneD, NekDouble>(totnq,0.0);
+                        Vmath::Vcopy(totnq, &(gkey.GetVariableCoefficient(j))[cnt1], 1, &varcoeffs[j][0],1);
                     }
+                    
+                    cnt1  += totnq;
+                    matrixid++;
                 }
+
+                int Nconstants = gkey.GetNconstants();
+                Array<OneD, NekDouble> Constants(Nconstants);
+                if(Nconstants>2)
+                {
+                    Constants[0] = gkey.GetConstant(i);
+                    Constants[1] = gkey.GetConstant(Nconstants-1);
+                }
+
+                else if(Nconstants==2)
+                {
+                    Constants[0] = gkey.GetConstant(0);
+                    Constants[1] = gkey.GetConstant(1);
+                }
+
 
                 LocalRegions::MatrixKey matkey(gkey.GetMatrixType(),
                                                (*m_exp)[i]->DetExpansionType(),
                                                *(*m_exp)[i],
-                                               gkey.GetConstants(),
+                                               Constants,
                                                varcoeffs,
                                                matrixid);
-
+                
                 loc_mat = (*m_exp)[i]->GetLocMatrix(matkey);
                 BlkMatrix->SetBlock(i,i,loc_mat);
             }
@@ -1342,8 +1345,7 @@ namespace Nektar
             int n,j;
             int cnt1,matrixid;
 
-            NekDouble factor1 = mkey.GetConstant(0);
-            NekDouble factor2 = mkey.GetConstant(1);
+            NekDouble factor1, factor2;
 
             // Setup Block Matrix systems
             int n_exp = GetExpSize();
@@ -1370,27 +1372,28 @@ namespace Nektar
                  totnq = GetCoordim(n)*( (*m_exp)[n]->GetTotPoints() );
                 if(nvarcoeffs>0)
                 {
-                    // When two varcoeffs in a specific order
-                    if(nvarcoeffs==2)
-                    {                       
-                        for(j = 0; j < nvarcoeffs; j++)
-                        {
-                            varcoeffs[j] = Array<OneD, NekDouble>(totnq,0.0);
-                            Vmath::Vcopy(totnq, &(mkey.GetVariableCoefficient(j))[cnt1], 1, &varcoeffs[j][0],1);
-                        }
-                        
-                        cnt1  += totnq;
-                        matrixid++;
-                    }
-
-                    else
+                    // When two varcoeffs in a specific order            
+                    for(j = 0; j < nvarcoeffs; j++)
                     {
-                        for(j = 0; j < nvarcoeffs; j++)
-                        {
-                            varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
-                        }
-                        cnt1  += (*m_exp)[n]->GetTotPoints();
+                        varcoeffs[j] = Array<OneD, NekDouble>(totnq,0.0);
+                        Vmath::Vcopy(totnq, &(mkey.GetVariableCoefficient(j))[cnt1], 1, &varcoeffs[j][0],1);
                     }
+                    
+                    cnt1  += totnq;
+                    matrixid++;
+                }
+
+                int Nconstants = mkey.GetNconstants();
+                if(Nconstants>2)
+                {
+                    factor1 = mkey.GetConstant(n);
+                    factor2 = mkey.GetConstant(Nconstants-1);
+                }
+
+                else
+                {
+                    factor1 = mkey.GetConstant(0);
+                    factor2 = mkey.GetConstant(1);
                 }
 
                 LocalRegions::MatrixKey Umatkey(linsystype, 
@@ -2103,6 +2106,17 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
+        void ExpList::v_HelmSolve(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                const Array<OneD, NekDouble> &lambda,
+                                bool      UseContCoeffs,
+                                const Array<OneD, const NekDouble>& dirForcing)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
         void ExpList::v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,       NekDouble> &outarray,
                                   NekDouble lambda,
@@ -2116,6 +2130,16 @@ namespace Nektar
                                   Array<OneD,       NekDouble> &outarray,
                                   const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
                                   NekDouble lambda,
+                                  NekDouble tau)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
+                                  Array<OneD,       NekDouble> &outarray,
+                                  const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
+                                  const Array<OneD, NekDouble> &lambda,
                                   NekDouble tau)
         {
             ASSERTL0(false,

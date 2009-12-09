@@ -230,7 +230,7 @@ namespace Nektar
                                                                              m_integrationOps);
             
             m_time += m_timestep;
-
+			
             if(!((n+1)%m_infosteps))
             {
 	      cout << "Step: " << n+1 << "  Time: " << m_time << endl;
@@ -242,6 +242,13 @@ namespace Nektar
                 Checkpoint_Output(nchk++);
             }
         }
+		
+		//updatig physical space
+		for(i = 0; i < m_nConvectiveFields; ++i)
+		{
+			m_fields[i]->SetPhys(fields[i]);
+		}			
+		
     }
         
     void VelocityCorrectionScheme::EvaluatePressureBCs(const Array<OneD, const Array<OneD, NekDouble> >  &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N)
@@ -460,6 +467,10 @@ namespace Nektar
 
 /**
 * $Log: VelocityCorrectionScheme.cpp,v $
+* Revision 1.3  2009/09/10 10:42:49  pvos
+* Modification to bind object pointer rather than object itself to time-integration functions.
+* (Prevents unwanted copy-constructor calls)
+*
 * Revision 1.2  2009/09/06 22:31:16  sherwin
 * First working version of Navier-Stokes solver and input files
 *

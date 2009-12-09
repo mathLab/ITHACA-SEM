@@ -273,12 +273,13 @@ namespace Nektar
 	
     n = 0;
 
-    while(n<nsteps)
+    //while(n<nsteps)
+    while(m_time<m_fintime)
       {
 	//----------------------------------------------
 	// Perform time step integration
 	//---------------------------------------------- 
-	//GetTimeStep(CFL,MinLength,fields,m_timestep);
+	GetTimeStep(CFL,MinLength,fields,m_timestep);
 
 	if( n < numMultiSteps-1)
 	  {
@@ -289,6 +290,9 @@ namespace Nektar
 	  {
 	    fields = IntScheme[numMultiSteps-1]->TimeIntegrate(m_timestep,u,ode);
 	  }
+
+	if(m_time+m_timestep>m_fintime)
+	  m_timestep = m_fintime - m_time;
 	
 	m_time += m_timestep;
 	
@@ -1783,12 +1787,11 @@ namespace Nektar
     NekDouble x0   = 5.0;
     NekDouble y0   = 0.0;
     NekDouble beta  = 5.0;
-    NekDouble u0    = 1.0;
+    NekDouble u0    = 0.0;
     NekDouble v0    = 0.0;
     NekDouble gamma = m_gamma;
     NekDouble time  = m_time;
     NekDouble r;
-
     for (int i = 0; i < nTotQuadPoints; ++i)
       {
         r       = sqrt( pow(x[i]-u0*time-x0, 2.0) + pow(y[i]-v0*time-y0, 2.0));
@@ -1829,7 +1832,7 @@ namespace Nektar
     NekDouble x0   = 5.0;
     NekDouble y0   = 0.0;
     NekDouble beta  = 5.0;
-    NekDouble u0    = 1.0;
+    NekDouble u0    = 0.0;
     NekDouble v0    = 0.0;
     NekDouble gamma = m_gamma;
     NekDouble time  = m_time;
@@ -2306,6 +2309,9 @@ namespace Nektar
 
 /**
 * $Log: EulerEquations.cpp,v $
+* Revision 1.11  2009/10/20 07:40:29  claes
+* Fixed a typo in M4Function
+*
 * Revision 1.10  2009/10/19 14:15:44  claes
 * Added the AUSM family of numerical fluxes
 *

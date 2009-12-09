@@ -1,0 +1,22 @@
+EulerSolver
+==========================================
+Test_IsentropicVortex1_low.xml
+Projection=DisContinuous
+	Time Step       : 0
+	Max Exp. Order  : 3
+Error:
+L2 Error (variable rho): 0.37227
+L2 Error (variable rhou): 0.665192
+L2 Error (variable rhov): 0.552913
+L2 Error (variable E): 1.52424
+----------------------------------------
+Test_IsentropicVortex1_high.xml
+Projection=DisContinuous
+	Time Step       : 0
+	Max Exp. Order  : 8
+Error:
+L2 Error (variable rho): 0.208836
+L2 Error (variable rhou): 0.353114
+L2 Error (variable rhov): 0.4747
+L2 Error (variable E): 0.837601
+----------------------------------------

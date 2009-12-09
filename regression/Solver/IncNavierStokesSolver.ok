@@ -1,0 +1,34 @@
+IncNavierStokesSolver
+==========================================
+Test_ChaFlow_low.xml
+Projection=Galerkin
+	Time Step       : 0.001
+	Max Exp. Order  : 3
+L2 Error (variable u) : 3.03245e-16
+L2 Error (variable v) : 1.22297e-16
+L2 Error (variable p) : 1.12614e-14
+----------------------------------------
+Test_ChaFlow_high.xml
+Projection=Galerkin
+	Time Step       : 0.001
+	Max Exp. Order  : 8
+L2 Error (variable u) : 2.74819e-16
+L2 Error (variable v) : 2.19227e-16
+L2 Error (variable p) : 1.38161e-14
+----------------------------------------
+Test_KovFlow_low.xml
+Projection=Galerkin
+	Time Step       : 0.001
+	Max Exp. Order  : 3
+L2 Error (variable u) : 0.3432
+L2 Error (variable v) : 0.025772
+L2 Error (variable p) : 0.348575
+----------------------------------------
+Test_KovFlow_high.xml
+Projection=Galerkin
+	Time Step       : 0.001
+	Max Exp. Order  : 8
+L2 Error (variable u) : 3.77665e-07
+L2 Error (variable v) : 1.68898e-06
+L2 Error (variable p) : 1.46072e-05
+----------------------------------------

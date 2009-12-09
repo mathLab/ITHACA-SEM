@@ -130,11 +130,27 @@ int main(int argc, char *argv[])
       case eGeneral:
 	{
 	  dom.EvaluateExactSolution(0,exactsolution,0);
+	  // Evaluate L2 Error
+	  cout << "Error:" << endl;
+	  for(int i = 0; i < dom.GetNvariables(); ++i)
+	    {
+	      cout << "\t"<< dom.GetVariable(i) << ": "
+		   << dom.LinfError(i) << " (Linf), "
+		   << dom.L2Error(i) << " (L2) " << endl;
+	    }
 	}
 	break;
       case eIsentropicVortex:
 	{
-	  dom.GetExactIsenTropicVortex(exactsolution, 0);
+	  // Evaluate L2 Error
+	  cout << "Error:" << endl;
+
+	  // Evaluate L2 Error
+	  for(int i = 0; i < dom.GetNvariables(); ++i)
+	    {
+	      dom.GetExactIsenTropicVortex(exactsolution, i);
+	      cout << "L2 Error (variable "<< dom.GetVariable(i) <<"): " << dom.L2Error(i, exactsolution) << endl;
+	    }
 	}
 	break;
       case eSubsonicCylinder:
@@ -148,15 +164,6 @@ int main(int argc, char *argv[])
 	}
 	break;
       }
-
-    // Evaluate L2 Error
-    cout << "Error:" << endl;
-    for(int i = 0; i < dom.GetNvariables(); ++i)
-    {
-      cout << "\t"<< dom.GetVariable(i) << ": "
-	   << dom.LinfError(i) << " (Linf), "
-	   << dom.L2Error(i) << " (L2) " << endl;
-    }
 
     // Writing exactsolution file
     switch(dom.m_problemType)

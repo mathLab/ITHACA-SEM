@@ -319,6 +319,7 @@ namespace Nektar
 
         std::string m_sessionName;   ///< Name of the sessions
         NekDouble m_time;            ///< Continous time
+	NekDouble m_fintime;         ///< time to be taken during the simulation
         NekDouble m_timestep;        ///< Time step size
         int m_steps;                 ///< Number of steps to take
         int m_checksteps;            ///< Number of steps between checkpoints
@@ -432,6 +433,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.17  2009/11/22 19:36:47  bnelson
+* Fixed windows compile error.
+*
 * Revision 1.16  2009/11/15 18:40:57  sehunchun
 * Add GetExpSize(), GetPhys_Offset and GetTotPoints(int n)
 *

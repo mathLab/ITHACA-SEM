@@ -60,7 +60,46 @@ int main(int argc, char* argv[]) {
     fail=TestADR.TestL2();
     fail? result="FAIL":result="PASS";
     cout << result << endl;
-
+	
+	//////////////////////////////////
+	// INCOMPRESSIBLE NAVIER-STOKES SOLVER
+	
+	solver = "IncNavierStokesSolver";
+	mesh   = "Test_ChaFlow.xml";
+    
+	regSolver TestINS(solver,mesh);
+	
+	// TEST Channal Flow
+	cout << "\nTesting "<< solver <<":\n\n\t"<<mesh<<"..." ;
+    // TEST L2 ERROR FOR ALL VARIABLES
+    fail=TestINS.TestL2();
+    fail? result="FAIL":result="PASS";
+    cout << result << endl;
+	
+	// TEST Kovasznay Flow 
+    mesh = "Test_KovFlow.xml";
+    cout <<"\n\t"<<mesh<<"..." ;
+    TestINS.setMesh(mesh);
+    // TEST L2 ERROR FOR ALL VARIABLES
+    fail=TestINS.TestL2();
+    fail? result="FAIL":result="PASS";
+    cout << result << endl;
+	
+	//////////////////////////////////
+	// EULER SOLVER
+	
+	solver = "EulerSolver";
+	mesh   = "Test_IsentropicVortex1.xml";
+	
+	regSolver TestEUL(solver,mesh);
+	
+	// TEST Isentropic vortex
+	cout << "\nTesting "<< solver <<":\n\n\t"<<mesh<<"..." ;
+	// TEST L2 ERROR FOR ALL VARIABLES
+	fail=TestEUL.TestL2();
+	fail? result="FAIL":result="PASS";
+	cout << result << endl;
+	
     return 0; 
 };
 

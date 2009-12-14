@@ -1711,38 +1711,86 @@ namespace Nektar
         }
 
 
-
-        void ExpList::ReadFromFile(std::ifstream &in, OutputFormat format)
-        {
-            if(format==eTecplot)
-            {
-                int i,cnt = 0;
-
-                Array<OneD, NekDouble> phys = m_phys;
-                int npts;
-
-                npts = (*m_exp)[0]->GetTotPoints();
-                (*m_exp)[0]->ReadFromFile(in,eTecplot,true);
-                Vmath::Vcopy(npts,&(*m_exp)[0]->GetPhys()[0],1,&phys[cnt],1);
-                cnt  += npts;
-
-                for(i= 1; i < GetExpSize(); ++i)
-                {
-                    npts = (*m_exp)[i]->GetTotPoints();
-                    (*m_exp)[i]->ReadFromFile(in,eTecplot,false);
-                    Vmath::Vcopy(npts,&((*m_exp)[i]->GetPhys())[0],1,
-                                 &phys[cnt],1);
-                    cnt  += npts;
-                }
-
-                FwdTrans(m_phys,m_coeffs);
-
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for requested type of output");
-            }
-        }
+      /**
+       * Write Tecplot Files Header
+       * @param   outfile Output file name.
+       * @param   var                 variables names
+       */
+      void ExpList::WriteTecplotHeader(std::ofstream &outfile, std::string var)
+      {
+	
+	int coordim  = GetExp(0)->GetCoordim();
+	outfile << "Variables = x";
+	
+	if(coordim == 2)
+	  {
+	    outfile << ", y";
+	  }
+	else if (coordim == 3)
+	  {
+	    outfile << ", y, z";
+	  }
+	outfile << ", "<< var << std::endl << std::endl;
+	
+      }
+      
+      /**
+       * Write Tecplot Files Zone
+       * @param   outfile    Output file name.
+       * @param   expansion  Expansion that is considered
+       */
+      void ExpList::WriteTecplotZone(std::ofstream &outfile, int expansion)
+      { 
+	(*m_exp)[expansion]->WriteTecplotZone(outfile);
+      }
+      
+      /**
+       * Write Tecplot Files Field
+       * @param   outfile    Output file name.
+       * @param   expansion  Expansion that is considered
+       */
+      void ExpList::WriteTecplotField(std::ofstream &outfile, int expansion)
+      { 
+	int cnt = 0;
+	for(int i= 0; i < expansion; ++i)
+	  {
+	    cnt  += (*m_exp)[i]->GetTotPoints();
+	  }
+	(*m_exp)[expansion]->SetPhys(m_phys+cnt);
+	(*m_exp)[expansion]->WriteTecplotField(outfile);
+      }
+      
+      void ExpList::ReadFromFile(std::ifstream &in, OutputFormat format)
+      {
+	if(format==eTecplot)
+	  {
+	    int i,cnt = 0;
+	    
+	    Array<OneD, NekDouble> phys = m_phys;
+	    int npts;
+	    
+	    npts = (*m_exp)[0]->GetTotPoints();
+	    (*m_exp)[0]->ReadFromFile(in,eTecplot,true);
+	    Vmath::Vcopy(npts,&(*m_exp)[0]->GetPhys()[0],1,&phys[cnt],1);
+	    cnt  += npts;
+	    
+	    for(i= 1; i < GetExpSize(); ++i)
+	      {
+		npts = (*m_exp)[i]->GetTotPoints();
+		(*m_exp)[i]->ReadFromFile(in,eTecplot,false);
+		Vmath::Vcopy(npts,&((*m_exp)[i]->GetPhys())[0],1,
+			     &phys[cnt],1);
+		cnt  += npts;
+	      }
+	    
+	    FwdTrans(m_phys,m_coeffs);
+	    
+	  }
+	else
+	  {
+	    ASSERTL0(false, "Output routine not implemented for requested type of output");
+	  }
+      }
 
         /**
          * Given a spectral/hp approximation

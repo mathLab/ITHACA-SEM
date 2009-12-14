@@ -286,6 +286,10 @@ namespace Nektar
                                 OutputFormat format = eTecplot,
                                 std::string var = "v");
 
+	    void WriteTecplotHeader(std::ofstream &outfile, std::string var = "v");
+	    void WriteTecplotZone(std::ofstream &outfile, int expansion);
+	    void WriteTecplotField(std::ofstream &outfile, int expansion);
+	    
             void ReadFromFile(std::ifstream &in,
                                 OutputFormat format = eTecplot);
 
@@ -1271,6 +1275,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.81  2009/12/08 15:10:50  sehunchun
+* HelmholtzSolver with additional variables are added
+*
 * Revision 1.80  2009/11/19 14:06:00  sehunchun
 * *** empty log message ***
 *

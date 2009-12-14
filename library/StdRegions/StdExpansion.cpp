@@ -895,6 +895,54 @@ namespace Nektar
             }
         }
 
+     void StdExpansion::WriteTecplotZone(std::ofstream &outfile)
+      {
+	int i,j;
+
+	int coordim  = GetCoordim();
+
+	int nquad0 = GetNumPoints(0);
+	int nquad1 = GetNumPoints(1);
+	
+	Array<OneD,NekDouble> coords[3];
+        
+	coords[0] = Array<OneD,NekDouble>(nquad0*nquad1);
+	coords[1] = Array<OneD,NekDouble>(nquad0*nquad1);
+	coords[2] = Array<OneD,NekDouble>(nquad0*nquad1);
+        
+	GetCoords(coords[0],coords[1],coords[2]);
+
+	outfile << "Zone, I=" << nquad0 << ", J=" << nquad1 <<", F=Block" << std::endl;
+
+	for(j = 0; j < coordim; ++j)
+	  {
+	    for(i = 0; i < nquad0*nquad1; ++i)
+	      {
+		outfile << coords[j][i] << " ";
+	      }
+	    outfile << std::endl;
+	  }
+
+      }
+
+      void StdExpansion::WriteTecplotField(std::ofstream &outfile)
+      {
+	
+	int i,j;
+	
+	int nquad0 = GetNumPoints(0);
+	int nquad1 = GetNumPoints(1);	
+	
+	// printing the fields of that zone
+	for(i = 0; i < nquad0*nquad1; ++i)
+	  {
+	    outfile << m_phys[i] << " ";
+	  }
+	outfile << std::endl;
+	
+	}
+
+
 // VIRTUAL INLINE FUNCTIONS FROM HEADER FILE
             void StdExpansion::SetUpPhysNormals(const boost::shared_ptr<StdExpansion>  &exp2d, const int edge)
             {
@@ -1488,6 +1536,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.91  2009/11/13 16:17:46  sehunchun
+* *** empty log message ***
+*
 * Revision 1.90  2009/11/11 18:43:58  sehunchun
 * *** empty log message ***
 *

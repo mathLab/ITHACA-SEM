@@ -769,6 +769,10 @@ namespace Nektar
                 v_WriteToFile(outfile,format,dumpVar,var);
             }
 
+	    void WriteTecplotZone(std::ofstream &outfile);
+	    
+	    void WriteTecplotField(std::ofstream &outfile);
+
                 
             void ReadFromFile(std::ifstream &in, OutputFormat format, const bool dumpVar = true)
             {
@@ -1569,6 +1573,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.125  2009/11/10 19:01:37  sehunchun
+ * Update related to Variable coefficients of HDG2D Solver
+ *
  * Revision 1.124  2009/11/06 21:42:17  sherwin
  * Added call to DGDeriv function
  *

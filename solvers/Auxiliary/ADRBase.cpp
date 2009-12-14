@@ -1102,6 +1102,49 @@ namespace Nektar
         Vmath::Vcopy(nq,tmp,1,m_fields[0]->UpdatePhys(),1);
     }
 
+  /**
+   * Write data to file in Tecplot format
+   * @param   n                   Checkpoint index.
+   * @param   name                Additional name (appended to session name).
+   * @param   var                 variables names
+   * @param   IsInPhysicalSpace   Indicates if field data is in phys space.
+   */
+  void ADRBase::WriteTecplotFile(const int n, std::string name, bool IsInPhysicalSpace)
+  {
+    int nq = m_fields[0]->GetTotPoints();
+
+    std::string var = "";
+    for(int j = 0; j < m_fields.num_elements(); ++j)
+      {
+	var = var + ", " + m_boundaryConditions->GetVariable(j);
+      }
+
+    char chkout[16] = "";
+    sprintf(chkout, "%d", n);
+    std::string outname = m_sessionName + "_" + name + "_" + chkout + ".dat";
+    ofstream outfile(outname.c_str());
+    
+    // put inarray in m_phys
+    if (IsInPhysicalSpace == false)
+      {
+	for(int i = 0; i < m_fields.num_elements(); ++i)
+	  {
+	    m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
+	  }
+      }
+    
+    m_fields[0]->WriteTecplotHeader(outfile,var);
+    
+    for(int i = 0; i < m_fields[0]->GetExpSize(); ++i)
+      {
+	m_fields[0]->WriteTecplotZone(outfile,i);
+	for(int j = 0; j < m_fields.num_elements(); ++j)
+    	  {
+    	    m_fields[j]->WriteTecplotField(outfile,i);
+    	  }
+      }
+  }
+
 
     /**
      * Write out a summary of the session and timestepping to the given output
@@ -1187,6 +1230,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.21  2009/12/09 12:37:12  cbiotto
+* Update for regression test
+*
 * Revision 1.20  2009/11/02 19:15:43  cantwell
 * Moved ContField1D to inherit from DisContField1D.
 * Moved ContField3D to inherit from DisContField3D.

@@ -142,6 +142,8 @@ namespace Nektar
                           const Array<OneD, const NekDouble>&inarray,
                           bool IsInPhysicalSpace);
 
+	void WriteTecplotFile(const int n, std::string name, bool IsInPhysicalSpace);
+
         /// Write out a full summary.
         void Summary          (std::ostream &out);
 
@@ -433,6 +435,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.18  2009/12/09 12:36:36  cbiotto
+* Update for regression test
+*
 * Revision 1.17  2009/11/22 19:36:47  bnelson
 * Fixed windows compile error.
 *

@@ -335,7 +335,10 @@ namespace Nektar
 	    ExtractWall(nchk,physarray);
 
 	    // Writing binary file of the solution
-	    Checkpoint_Output(nchk);
+	    //Checkpoint_Output(nchk);
+
+	    // Writing tecplot file
+	    WriteTecplotFile(nchk,"tec",false);
 
 	    nchk++;
 	  }    
@@ -2309,6 +2312,9 @@ namespace Nektar
 
 /**
 * $Log: EulerEquations.cpp,v $
+* Revision 1.12  2009/12/09 11:40:00  cbiotto
+* Changes for regression test
+*
 * Revision 1.11  2009/10/20 07:40:29  claes
 * Fixed a typo in M4Function
 *

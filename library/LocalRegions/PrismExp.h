@@ -41,7 +41,7 @@
 #include <StdRegions/StdPrismExp.h>
 #include <SpatialDomains/PrismGeom.h>
 
-#include <SpatialDomains/GeomFactors.h>
+#include <SpatialDomains/GeomFactors3D.h>
 #include <LocalRegions/MatrixKey.h>
 
 #include <LocalRegions/Expansion3D.h>
@@ -61,10 +61,6 @@ namespace Nektar
                      const LibUtilities::BasisKey &Bb,
                      const LibUtilities::BasisKey &Bc,
                      const SpatialDomains::PrismGeomSharedPtr &geom);
-
-            PrismExp(const LibUtilities::BasisKey &Ba,
-                     const LibUtilities::BasisKey &Bb,
-                     const LibUtilities::BasisKey &Bc);
 
 	    
             /// Copy Constructor
@@ -142,9 +138,6 @@ namespace Nektar
 
         protected:
             DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
-
-            //SpatialDomains::PrismGeom *m_geom;
-            void GenMetricInfo();
 
             /**
                \brief Calculate the inner product of inarray with respect to
@@ -328,6 +321,9 @@ namespace Nektar
 
 /** 
  *    $Log: PrismExp.h,v $
+ *    Revision 1.20  2009/04/27 21:34:07  sherwin
+ *    Updated WriteToField
+ *
  *    Revision 1.19  2009/04/20 16:12:28  sherwin
  *    Updates related to output format and optimising DG solver
  *

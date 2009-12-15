@@ -43,7 +43,7 @@
 #include <SpatialDomains/HexGeom.h>
 #include <LocalRegions/QuadExp.h>
 
-#include <SpatialDomains/GeomFactors.h>
+#include <SpatialDomains/GeomFactors3D.h>
 
 #include <LocalRegions/MatrixKey.h>
 
@@ -64,9 +64,6 @@ namespace Nektar
  
             HexExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb,
                    const LibUtilities::BasisKey &Bc, const SpatialDomains::HexGeomSharedPtr &geom);
-
-            HexExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, 
-                   const LibUtilities::BasisKey &Bc);
 
             /// Copy Constructor
             HexExp(const HexExp &T);
@@ -135,7 +132,6 @@ namespace Nektar
 
         protected:
             DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
-            void GenMetricInfo();
 
             DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
@@ -315,6 +311,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.27  2009/05/01 13:23:21  pvos
+ *    Fixed various bugs
+ *
  *    Revision 1.26  2009/04/27 21:34:07  sherwin
  *    Updated WriteToField
  *

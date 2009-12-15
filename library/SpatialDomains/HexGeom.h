@@ -39,7 +39,7 @@
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdHexExp.h>
 
-#include <SpatialDomains/GeomFactors.h>
+#include <SpatialDomains/GeomFactors3D.h>
 #include <SpatialDomains/Geometry3D.h>
 #include <SpatialDomains/QuadGeom.h>
 #include <SpatialDomains/TriGeom.h>
@@ -325,6 +325,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.h,v $
+// Revision 1.24  2009/01/21 16:59:03  pvos
+// Added additional geometric factors to improve efficiency
+//
 // Revision 1.23  2008/11/17 08:59:46  ehan
 // Added necessary mapping routines for Tet
 //

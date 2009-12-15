@@ -107,6 +107,7 @@ namespace Nektar
       if (returnval)
 	{
 	  returnval->ReadGeometry(infilename);
+      returnval->ReadGeometryInfo(infilename);
 	  returnval->ReadExpansions(infilename);
 	}
       return returnval;
@@ -1042,7 +1043,65 @@ namespace Nektar
 	    ASSERTL0(false,"Expansion type not defined");
 	}
     }
-    
+
+
+    /**
+     * Read the geometry-related information from the given file. This
+     * information is located within the XML tree under
+     * <NEKTAR><GEOMETRY><GEOMINFO>.
+     * @param   infilename      Filename of XML file.
+     */
+    void MeshGraph::ReadGeometryInfo(std::string &infilename)
+    {
+      TiXmlDocument doc(infilename);
+      bool loadOkay = doc.LoadFile();
+      
+      std::string errstr = "Unable to load file: ";
+      errstr += infilename;
+      ASSERTL0(loadOkay, errstr.c_str());
+      
+      ReadGeometryInfo(doc);
+    }
+
+
+    /**
+     * Read the geometry-related information from the given XML document. 
+     * This information is located within the XML tree under
+     * <NEKTAR><GEOMETRY><GEOMINFO>.
+     * @param   doc             XML document.
+     */
+    void MeshGraph::ReadGeometryInfo(TiXmlDocument &doc)
+    {
+        TiXmlElement *master = doc.FirstChildElement("NEKTAR");
+        ASSERTL0(master, "Unable to find NEKTAR tag in file.");
+        
+        // Find the Expansions tag
+        TiXmlElement *geomTag = master->FirstChildElement("GEOMETRY");
+        ASSERTL0(geomTag, "Unable to find GEOMETRY tag in file.");
+      
+        // See if we have GEOMINFO. If there is none, it's fine.
+        TiXmlElement *geomInfoTag = geomTag->FirstChildElement("GEOMINFO");
+        if (!geomInfoTag) return;
+      
+        TiXmlElement *infoItem = geomInfoTag->FirstChildElement("I");
+
+        // Multiple nodes will only occur if there is a comment in between
+        // definitions.
+        while (infoItem)
+        {
+            std::string geomProperty = infoItem->Attribute("PROPERTY");
+            std::string geomValue    = infoItem->Attribute("VALUE");
+            GeomInfoMap::iterator x  = mGeomInfo.find(geomProperty);
+            
+            ASSERTL0(x == mGeomInfo.end(),
+                    "Property " + geomProperty + " already specified.");
+            mGeomInfo[geomProperty] = geomValue;
+            infoItem = infoItem->NextSiblingElement("I");
+        }
+    }
+
+        
+            
     void MeshGraph::ReadCurves(TiXmlDocument &doc)
     {
       /// We know we have it since we made it this far.
@@ -1993,6 +2052,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.39  2009/11/18 22:31:46  bnelson
+// Changed Write parameter list to accept a const string& as a first parameter.
+//
 // Revision 1.38  2009/10/22 17:34:20  cbiotto
 // Fixing bug for variable order expansion
 //

@@ -40,7 +40,7 @@
 #include <StdRegions/StdNodalTriExp.h>
 #include <SpatialDomains/TriGeom.h>
 
-#include <SpatialDomains/GeomFactors.h>
+#include <SpatialDomains/GeomFactors2D.h>
 
 #include <LocalRegions/MatrixKey.h>
 
@@ -58,10 +58,6 @@ namespace Nektar
                         const LibUtilities::BasisKey &Bb,
                         const LibUtilities::PointsType Ntype,
                         const SpatialDomains::TriGeomSharedPtr &geom);
-            
-            NodalTriExp(const LibUtilities::BasisKey &Ba,
-                        const LibUtilities::BasisKey &Bb,
-                        const LibUtilities::PointsType Ntype);
             
             /// Copy Constructor
             NodalTriExp(const NodalTriExp &T); 
@@ -239,8 +235,6 @@ namespace Nektar
             }  
             
         protected:
-            
-            void GenMetricInfo();
             
             DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekScalMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
@@ -515,6 +509,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.h,v $
+ *    Revision 1.27  2009/04/29 10:53:48  pvos
+ *    Made demos working with nodal expansions
+ *
  *    Revision 1.26  2009/04/27 21:34:07  sherwin
  *    Updated WriteToField
  *

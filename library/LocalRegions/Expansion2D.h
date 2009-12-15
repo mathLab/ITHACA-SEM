@@ -85,9 +85,14 @@ namespace Nektar
 
             void Getnormalindir(const int edge,
                                 StdRegions::StdExpansion1DSharedPtr &EdgeExp_e,
-                                const Array<OneD, const NekDouble> &normals, 
+                                const Array<OneD, const Array<OneD, NekDouble> > &normals, 
                                 const Array<OneD, const NekDouble> &directional,
                                 Array<OneD, NekDouble> &outarray);
+            
+            StdRegions::StdExpansion1DSharedPtr GetEdgeExp(int edge, bool SetUpNormal=true)
+            {
+                return v_GetEdgeExp(edge, SetUpNormal);
+            }
             
         protected:
             DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
@@ -113,7 +118,7 @@ namespace Nektar
                          Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                          Array<OneD, NekDouble> &out_d);
               
-            private:
+        private:
             // Do not add members here since it may lead to conflicts.
             // Only use this class for member functions
 
@@ -175,8 +180,7 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
-
-                        
+       
          };
         
         // type defines for use of PrismExp in a boost vector
@@ -192,6 +196,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.h,v $
+ *    Revision 1.11  2009/11/17 17:43:36  sehunchun
+ *    *** empty log message ***
+ *
  *    Revision 1.10  2009/11/09 15:43:51  sehunchun
  *    HDG2DManifold Solver with Variable coefficients
  *

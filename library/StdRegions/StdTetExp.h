@@ -49,9 +49,9 @@ namespace Nektar
 
         namespace StdTetData
         {
-            // Adds up the number of cells in a truncated Nc by Nc by Nc pyramid, 
+            // Adds up the number of cells in a truncated Nc by Nc by Nc pyramid,
             // where the longest Na rows and longest Nb columns are kept.
-            // Example: (Na, Nb, Nc) = (3, 4, 5); The number of coefficients is the 
+            // Example: (Na, Nb, Nc) = (3, 4, 5); The number of coefficients is the
             // sum of the elements of the following matrix:
             //     |5  4  3  2  0|
             //     |4  3  2  0   |
@@ -59,7 +59,7 @@ namespace Nektar
             //     |0  0         |
             //     |0            |
             // Sum = 28 = number of tet coefficients
-            inline int getNumberOfCoefficients( int Na, int Nb, int Nc ) 
+            inline int getNumberOfCoefficients( int Na, int Nb, int Nc )
             {
                 int nCoef = 0;
                 for( int a = 0; a < Na; ++a )
@@ -82,7 +82,7 @@ namespace Nektar
         public:
 
             StdTetExp();
-            /** \brief Constructor using BasisKey class for quadrature points and order definition 
+            /** \brief Constructor using BasisKey class for quadrature points and order definition
              */
             StdTetExp(const  LibUtilities::BasisKey &Ba, const  LibUtilities::BasisKey &Bb, const  LibUtilities::BasisKey &Bc);
 
@@ -94,20 +94,20 @@ namespace Nektar
             StdTetExp(const StdTetExp &T);
 
             /** \brief Destructor */
-            ~StdTetExp(); 
+            ~StdTetExp();
 
-            /** \brief Return Shape of region, using  ShapeType enum list. 
+            /** \brief Return Shape of region, using  ShapeType enum list.
              *  i.e. Tetrahedron
              */
             ExpansionType DetExpansionType() const
             {
                 return eTetrahedron;
             }
-            
+
             virtual bool v_IsBoundaryInteriorExpansion()
             {
                 bool returnval = false;
-                
+
                 if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
                 {
                     if(m_base[1]->GetBasisType() == LibUtilities::eModified_B)
@@ -118,36 +118,45 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 return returnval;
             }
 
+            void TripleTensorProduct(
+                                const Array<OneD, const NekDouble>& fx,
+                                const Array<OneD, const NekDouble>& gy,
+                                const Array<OneD, const NekDouble>& hz,
+                                const Array<OneD, const NekDouble>& inarray,
+                                      Array<OneD, NekDouble> & outarray );
 
-            NekDouble Integral3D(const Array<OneD, const NekDouble>& inarray, const Array<OneD, const NekDouble>& w0,
-                                 const Array<OneD, const NekDouble>& w1, const Array<OneD, const NekDouble>&w2);
+            NekDouble TripleInnerProduct(
+                                const Array<OneD, const NekDouble>& fxyz,
+                                const Array<OneD, const NekDouble>& wx,
+                                const Array<OneD, const NekDouble>& wy,
+                                const Array<OneD, const NekDouble>& wz );
+
+            NekDouble Integral3D(const Array<OneD, const NekDouble>& inarray,
+                                const Array<OneD, const NekDouble>& w0,
+                                const Array<OneD, const NekDouble>& w1,
+                                const Array<OneD, const NekDouble>&w2);
+
+            /// Integrate the physical point list \a inarray over tetrahedral
+            /// region and return the value
             NekDouble Integral(const Array<OneD, const NekDouble>& inarray);
 
 
 
 
-        /** \brief  Inner product of \a inarray over region with respect to the
-		expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata() and return in \a outarray 
-	
-		Wrapper call to StdTetExp::IProductWRTBase
-	
-		Input:\n
-	
-		- \a inarray: array of function evaluated at the physical collocation points
-	
-		Output:\n
-	
-		- \a outarray: array of inner product with respect to each basis over region
-
-        */
-            void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
+            /// Inner product of \a inarray over region with respect to the
+            /// expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(),
+            /// m_base[2]->GetBdata() and return in \a outarray.
+            void IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
                                  Array<OneD, NekDouble> &outarray)
             {
-                IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata(),inarray,outarray);
+                IProductWRTBase(m_base[0]->GetBdata(),
+                                m_base[1]->GetBdata(),
+                                m_base[2]->GetBdata(),
+                                inarray,outarray);
             }
 
             void FillMode(const int mode, Array<OneD, NekDouble> &outarray);
@@ -162,36 +171,37 @@ namespace Nektar
                            Array<OneD, NekDouble> &out_d1,
                            Array<OneD, NekDouble> &out_d2);
 
-            void StdPhysDeriv(const Array<OneD, const NekDouble>& inarray, 
+            void StdPhysDeriv(const Array<OneD, const NekDouble>& inarray,
                               Array<OneD, NekDouble> &out_d0,
                               Array<OneD, NekDouble> &out_d1,
                               Array<OneD, NekDouble> &out_d2)
             {
                 PhysDeriv(inarray, out_d0, out_d1, out_d2);
             }
-                         
-            /** \brief Backward tranform for tetrahedral elements
-             *
-             *  \b Note: That 'r' (base[2]) runs fastest in this element
-             */
-            void BwdTrans(const Array<OneD, const NekDouble>& inarray, 
+
+            /// Backward tranform for tetrahedral elements
+            void BwdTrans(const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
-            void FwdTrans(const Array<OneD, const NekDouble>& inarray, 
+
+            /// Forward transform from physical quadrature space stored in \a
+            /// inarray and evaluate the expansion coefficients and store in \a
+            /// outarray.
+            void FwdTrans(const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
-                        
+
             /** \brief Single Point Evaluation */
             NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords);
             NekDouble PhysEvaluate3D(const Array<OneD, const NekDouble>& coords);
-          
+
             void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
             void WriteCoeffsToFile(std::ofstream &outfile);
-            void GetCoords(Array<OneD, NekDouble> &coords_0, 
+            void GetCoords(Array<OneD, NekDouble> &coords_0,
                            Array<OneD, NekDouble> &coords_1, Array<OneD, NekDouble> &coords_2);
-                                                                                                         
+
             void GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                      Array<OneD, unsigned int> &maparray,
                                      Array<OneD, int>& signarray);
-                                   
+
 
             // int GetBasisNumModes   (const int dir)
             int GetFaceNcoeffs(const int i) const
@@ -256,36 +266,36 @@ namespace Nektar
                     return GetBasisType(2);
                 }
             }
-        
+
         protected:
 
-	    /** 
+        /**
                 \brief Calculate the inner product of inarray with respect to
                 the basis B=base0*base1*base2 and put into outarray:
-              
+
                 \f$ \begin{array}{rcl} I_{pqr} = (\phi_{pqr}, u)_{\delta} & = &
                 \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \sum_{k=0}^{nq_2}
                 \psi_{p}^{a} (\eta_{1i}) \psi_{pq}^{b} (\eta_{2j}) \psi_{pqr}^{c} (\eta_{3k})
-                w_i w_j w_k u(\eta_{1,i} \eta_{2,j} \eta_{3,k})	     
+                w_i w_j w_k u(\eta_{1,i} \eta_{2,j} \eta_{3,k})
                 J_{i,j,k}\\ & = & \sum_{i=0}^{nq_0} \psi_p^a(\eta_{1,i})
                 \sum_{j=0}^{nq_1} \psi_{pq}^b(\eta_{2,j}) \sum_{k=0}^{nq_2} \psi_{pqr}^c u(\eta_{1i},\eta_{2j},\eta_{3k})
                 J_{i,j,k} \end{array} \f$ \n
-            
+
                 where
-            
+
                 \f$ \phi_{pqr} (\xi_1 , \xi_2 , \xi_3) = \psi_p^a (\eta_1) \psi_{pq}^b (\eta_2) \psi_{pqr}^c (\eta_3) \f$
-            
+
                 which can be implemented as \n
                 \f$f_{pqr} (\xi_{3k}) = \sum_{k=0}^{nq_3} \psi_{pqr}^c u(\eta_{1i},\eta_{2j},\eta_{3k})
                 J_{i,j,k} = {\bf B_3 U}   \f$ \n
                 \f$ g_{pq} (\xi_{3k}) = \sum_{j=0}^{nq_1} \psi_{pq}^b (\xi_{2j}) f_{pqr} (\xi_{3k})  = {\bf B_2 F}  \f$ \n
-                \f$ (\phi_{pqr}, u)_{\delta} = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k})  = {\bf B_1 G} \f$ 
+                \f$ (\phi_{pqr}, u)_{\delta} = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k})  = {\bf B_1 G} \f$
 
             **/
-            void IProductWRTBase(const Array<OneD, const NekDouble>& bx, 
-                                 const Array<OneD, const NekDouble>& by, 
-                                 const Array<OneD, const NekDouble>& bz, 
-                                 const Array<OneD, const NekDouble>& inarray, 
+            void IProductWRTBase(const Array<OneD, const NekDouble>& bx,
+                                 const Array<OneD, const NekDouble>& by,
+                                 const Array<OneD, const NekDouble>& bz,
+                                 const Array<OneD, const NekDouble>& inarray,
                                  Array<OneD, NekDouble> & outarray);
 
         private:
@@ -330,7 +340,7 @@ namespace Nektar
             {
                 GetInteriorMap(outarray);
             }
-            
+
             virtual int v_GetVertexMap(const int localVertexId)
             {
                 return GetVertexMap(localVertexId);
@@ -341,8 +351,8 @@ namespace Nektar
                                               Array<OneD, int> &signarray)
             {
                 GetEdgeInteriorMap(eid,edgeOrient,maparray,signarray);
-            } 
-                      
+            }
+
             virtual void v_GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                                Array<OneD, unsigned int> &maparray,
                                                Array<OneD, int>& signarray)
@@ -350,7 +360,7 @@ namespace Nektar
                 GetFaceToElementMap(fid,faceOrient,maparray,signarray);
             }
 
-            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey) 
+            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey)
             {
                 return GenMatrix(mkey);
             }
@@ -358,7 +368,7 @@ namespace Nektar
             virtual DNekMatSharedPtr v_CreateStdMatrix(const StdMatrixKey &mkey)
             {
                 return GenMatrix(mkey);
-            }            
+            }
 
             virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const
             {
@@ -376,7 +386,7 @@ namespace Nektar
             {
                 return Integral(inarray);
             }
-            
+
             virtual void v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray)
             {
@@ -433,19 +443,19 @@ namespace Nektar
 
 
             virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")
-            {                
+            {
                 WriteToFile(outfile,format,dumpVar,var);
             }
 
             virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
-            {               
+            {
                 WriteCoeffsToFile(outfile);
             }
 
         };
-        
+
         typedef boost::shared_ptr<StdTetExp> StdTetExpSharedPtr;
-        
+
     } //end of namespace
 } //end of namespace
 
@@ -453,6 +463,9 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.28  2009/11/10 19:02:20  sehunchun
+ * *** empty log message ***
+ *
  * Revision 1.27  2009/04/27 21:32:45  sherwin
  * Updated WriteToField method
  *

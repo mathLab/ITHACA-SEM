@@ -39,7 +39,7 @@
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdQuadExp.h>
 
-#include <SpatialDomains/GeomFactors.h>
+#include <SpatialDomains/GeomFactors2D.h>
 #include <SpatialDomains/Geometry2D.h>
 #include <SpatialDomains/MeshComponents.h>
 
@@ -323,6 +323,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.h,v $
+// Revision 1.26  2009/01/21 16:59:03  pvos
+// Added additional geometric factors to improve efficiency
+//
 // Revision 1.25  2008/11/17 08:59:01  ehan
 // Added GetNumVerts and GetNumEdges
 //

@@ -237,9 +237,6 @@ namespace Nektar
                 }
             }
 
-            void FwdTrans(const Array<OneD, const NekDouble>& inarray,
-                          Array<OneD, NekDouble> &outarray);
-
             void FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
                                          Array<OneD, NekDouble> &outarray);
 
@@ -724,10 +721,10 @@ namespace Nektar
             }
 
             virtual void v_FwdTrans(const Array<OneD, const NekDouble>& inarray, 
-                                    Array<OneD, NekDouble> &outarray)
-            {
-                FwdTrans(inarray, outarray);
-            }
+                                    Array<OneD, NekDouble> &outarray);
+//            {
+//                FwdTrans(inarray, outarray);
+//            }
 
             virtual void v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
                                                    Array<OneD, NekDouble> &outarray)
@@ -871,6 +868,9 @@ namespace Nektar
 
 /**
  * $Log: StdQuadExp.h,v $
+ * Revision 1.51  2009/11/10 19:02:20  sehunchun
+ * *** empty log message ***
+ *
  * Revision 1.50  2009/04/27 21:32:45  sherwin
  * Updated WriteToField method
  *

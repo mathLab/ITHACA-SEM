@@ -47,15 +47,17 @@ namespace Nektar
                                                  Array<OneD, NekDouble> &outarray)
         {
             int nquad_e = EdgeExp->GetNumPoints(0);
-            Array<OneD, const NekDouble> normals = EdgeExp->GetPhysNormals();
+            int coordim = v_GetCoordim();
+            const Array<OneD, const Array<OneD, NekDouble> > normals
+                                    = EdgeExp->GetMetricInfo()->GetNormal();
 
             ASSERTL1(v_GetCoordim() == 2,"Routine only set up for two-dimensions");
             
-            Vmath::Vmul(nquad_e,&(normals[0]),1,&Fx[0],1,
-                        &(EdgeExp->UpdatePhys())[0],1);
-            Vmath::Vvtvp(nquad_e,&(normals[nquad_e]),1,
-                         &Fy[0],1,&(EdgeExp->GetPhys())[0],1,
-                         &(EdgeExp->UpdatePhys())[0],1);
+            Vmath::Vmul(nquad_e,normals[0],1,Fx,1,
+                        EdgeExp->UpdatePhys(),1);
+            Vmath::Vvtvp(nquad_e,normals[1],1,
+                         Fy,1,EdgeExp->GetPhys(),1,
+                         EdgeExp->UpdatePhys(),1);
 
             AddEdgeNormBoundaryInt(edge, EdgeExp, EdgeExp->GetPhys(), outarray);
         }
@@ -176,14 +178,12 @@ namespace Nektar
             int nedges = v_GetNedges();
             int coordim = v_GetCoordim();
 
-            Array<OneD,NekDouble> normals;
-
             cnt = 0;
             for(e = 0; e < nedges; ++e)
             {
                 order_e = EdgeExp[e]->GetNcoeffs();
                 nquad_e = EdgeExp[e]->GetNumPoints(0);
-                normals = EdgeExp[e]->GetPhysNormals();
+                const Array<OneD, const Array<OneD, NekDouble> > normals = EdgeExp[e]->GetMetricInfo()->GetNormal();
                 
                 for(i = 0; i < order_e; ++i)
                 {
@@ -198,22 +198,22 @@ namespace Nektar
 		{
                     Array<OneD, NekDouble> normalindir(nquad_e);
                     Getnormalindir(e,EdgeExp[e],normals,directional,normalindir);
-                    Vmath::Vmul(nquad_e,&normalindir[0],1,
-                                &(EdgeExp[e]->GetPhys())[0],1,
-                                &(EdgeExp[e]->UpdatePhys())[0],1);
+                    Vmath::Vmul(nquad_e,normalindir,1,
+                                EdgeExp[e]->GetPhys(),1,
+                                EdgeExp[e]->UpdatePhys(),1);
                 }                
 
                 else
                 {
-                    Vmath::Vmul(nquad_e,&(normals[dir*nquad_e]),1,
-                                &(EdgeExp[e]->GetPhys())[0],1,
-                                &(EdgeExp[e]->UpdatePhys())[0],1);
+                    Vmath::Vmul(nquad_e,normals[dir],1,
+                                EdgeExp[e]->GetPhys(),1,
+                                EdgeExp[e]->UpdatePhys(),1);
                 }
 
                 // negate backwards normal
                 if(v_GetEorient(e) == StdRegions::eBackwards)
                 {
-                    Vmath::Neg(nquad_e,&(EdgeExp[e]->UpdatePhys())[0],1);
+                    Vmath::Neg(nquad_e,EdgeExp[e]->UpdatePhys(),1);
                 }
                 
                 AddEdgeBoundaryInt(e,EdgeExp[e],outarray);
@@ -228,26 +228,24 @@ namespace Nektar
             int order_e,nquad_e;
             int nedges = v_GetNedges();
 
-            Array<OneD,NekDouble> normals;
-
             cnt = 0;
             for(e = 0; e < nedges; ++e)
             {
                 order_e = EdgeExp[e]->GetNcoeffs();
                 nquad_e = EdgeExp[e]->GetNumPoints(0);
-                normals = EdgeExp[e]->GetPhysNormals();
+                const Array<OneD, const Array<OneD, NekDouble> > normals = EdgeExp[e]->GetMetricInfo()->GetNormal();
                 
                 EdgeExp[e]->BwdTrans(EdgeExp[e]->GetCoeffs(),
                                      EdgeExp[e]->UpdatePhys());
                 
-                Vmath::Vmul(nquad_e,&(normals[dir*nquad_e]),1,
-                            &(EdgeExp[e]->GetPhys())[0],1,
-                            &(EdgeExp[e]->UpdatePhys())[0],1);
+                Vmath::Vmul(nquad_e,normals[dir],1,
+                            EdgeExp[e]->GetPhys(),1,
+                            EdgeExp[e]->UpdatePhys(),1);
 
                 // negate backwards normal
                 if(v_GetEorient(e) == StdRegions::eBackwards)
                 {
-                    Vmath::Neg(nquad_e,&(EdgeExp[e]->UpdatePhys())[0],1);
+                    Vmath::Neg(nquad_e,EdgeExp[e]->UpdatePhys(),1);
                 }
                 
                 AddEdgeBoundaryInt(e,EdgeExp[e],outarray);
@@ -331,7 +329,9 @@ namespace Nektar
             Array<OneD, NekDouble> inval   (nquad_e);
             Array<OneD, NekDouble> outcoeff(order_e);
             Array<OneD, NekDouble> tmpcoeff(ncoeffs);
-            Array<OneD, const NekDouble> normals = EdgeExp[edge]->GetPhysNormals();
+            const Array<OneD, const Array<OneD, NekDouble> > normals 
+                                = EdgeExp[edge]->GetMetricInfo()->GetNormal();
+
             Array<OneD,unsigned int> emap;
             Array<OneD,int> sign;
 
@@ -373,12 +373,12 @@ namespace Nektar
                   {
                       Array<OneD, NekDouble> normalindir(nquad_e);
                       Getnormalindir(edge,EdgeExp[edge],normals,dirForcing[n],normalindir);
-                      Vmath::Vmul(nquad_e,&normalindir[0],1,&(EdgeExp[edge]->GetPhys())[0],1,&inval[0],1);
+                      Vmath::Vmul(nquad_e,normalindir,1,EdgeExp[edge]->GetPhys(),1,inval,1);
                    }                
                   
                   else
                   {
-                      Vmath::Vmul(nquad_e,&normals[n*nquad_e],1,&(EdgeExp[edge]->GetPhys())[0],1,&inval[0],1);
+                      Vmath::Vmul(nquad_e,normals[n],1,EdgeExp[edge]->GetPhys(),1,inval,1);
                   }
              
                 // negate for backwards facing edge
@@ -415,7 +415,7 @@ namespace Nektar
 
       void Expansion2D::Getnormalindir(const int edge,
 				       StdRegions::StdExpansion1DSharedPtr &EdgeExp_e,
-				       const Array<OneD, const NekDouble> &normals, 
+				       const Array<OneD, const Array<OneD, NekDouble> > &normals, 
 				       const Array<OneD, const NekDouble> &directional,
 				       Array<OneD, NekDouble> &outarray)
       {
@@ -438,7 +438,7 @@ namespace Nektar
                 v_GetEdgePhysVals(edge, EdgeExp_e, dirtemp, dirForcing_e);
                 
                 // new_normal = nx*dirForcingx + ny*dirForcingy + nz*dirForcingz
-                Vmath::Vvtvp(nquad_e,&dirForcing_e[0],1,&normals[k*nquad_e],1,&outarray[0],1,&outarray[0],1);
+                Vmath::Vvtvp(nquad_e,&dirForcing_e[0],1,&normals[k][0],1,&outarray[0],1,&outarray[0],1);
             }
         }
 
@@ -565,7 +565,7 @@ namespace Nektar
                         EdgeExp[i] = v_GetEdgeExp(i);
                       
                         DNekScalMat &MassMat = *(EdgeExp[i]->v_GetLocMatrix(StdRegions::eMass));
-                        Array<OneD, const NekDouble> normals = EdgeExp[edge]->GetPhysNormals();
+                        const Array<OneD, const NekDouble> normals = EdgeExp[edge]->GetMetricInfo()->GetNormal();
                         MatrixKey    mass_n0(StdRegions::eMass,*this,normals[0]);
                         DNekScalMat &MassMatN0 = *(EdgeExp[i]->v_GetLocMatrix(mass_n0));
                         MatrixKey    mass_n1(StdRegions::eMass,*this,normals[1]);
@@ -740,7 +740,7 @@ namespace Nektar
                     int matrixid = mkey.GetMatrixID();
                     
                     Array<OneD,NekDouble>       work;
-                    Array<OneD,const NekDouble> normals; 
+                    Array<OneD,const Array<OneD, NekDouble> > normals; 
                     Array<OneD, NekDouble> normalindir;
                     Array<OneD,StdRegions::StdExpansion1DSharedPtr>  EdgeExp(nedges);
                     Array<OneD, NekDouble> lam(nbndry); 
@@ -795,7 +795,7 @@ namespace Nektar
                         {
                             order_e = EdgeExp[e]->GetNcoeffs();  
                             nquad_e = EdgeExp[e]->GetNumPoints(0);    
-                            normals = EdgeExp[e]->GetPhysNormals();
+                            normals = EdgeExp[e]->GetMetricInfo()->GetNormal();
                             edgedir = v_GetEorient(e);
                             
                             work = Array<OneD,NekDouble>(nquad_e);
@@ -821,7 +821,7 @@ namespace Nektar
 
                             else
                             {
-                                Vmath::Vmul(nquad_e,normals,1,EdgeExp[e]->GetPhys(),1,work,1);
+                                Vmath::Vmul(nquad_e,normals[0],1,EdgeExp[e]->GetPhys(),1,work,1);
                             }
                             
                             if(edgedir == StdRegions::eBackwards)
@@ -845,14 +845,14 @@ namespace Nektar
                                     // normalindir = normals /cdot dirForcing[1]
                                     normalindir = Array<OneD, NekDouble>(nquad_e,0.0);
                                     Getnormalindir(e,EdgeExp[e],normals,mkey.GetVariableCoefficient(1),normalindir);
-                                    Vmath::Vvtvp(nquad_e,&normalindir[0],1,&EdgeExp[e]->GetPhys()[0],1,&work[0],1,&work[0],1);
+                                    Vmath::Vvtvp(nquad_e,normalindir,1,EdgeExp[e]->GetPhys(),1,work,1,work,1);
                                 }
 
                                 else
                                 {
-                                    Vmath::Vvtvp(nquad_e,&normals[nquad_e],1,
-                                                 &EdgeExp[e]->GetPhys()[0],1,
-                                                 &work[0],1,&work[0],1);
+                                    Vmath::Vvtvp(nquad_e,normals[1],1,
+                                                 EdgeExp[e]->GetPhys(),1,
+                                                 work,1,work,1);
                                 }
                             }
                             else // subtrace values for negative normal
@@ -862,15 +862,15 @@ namespace Nektar
                                     // normalindir = normals /cdot dirForcing[1]
                                     normalindir = Array<OneD, NekDouble>(nquad_e,0.0);
                                     Getnormalindir(e,EdgeExp[e],normals,mkey.GetVariableCoefficient(1),normalindir);
-                                    Vmath::Vvtvm(nquad_e,&normalindir[0],1,&EdgeExp[e]->GetPhys()[0],1,&work[0],1,&work[0],1);
+                                    Vmath::Vvtvm(nquad_e,normalindir,1,EdgeExp[e]->GetPhys(),1,work,1,work,1);
                                     Vmath::Neg(nquad_e,work,1);
                                 }
                                 
                                 else
                                 {
-                                    Vmath::Vvtvm(nquad_e,&normals[nquad_e],1,
-                                                 &EdgeExp[e]->GetPhys()[0],1,
-                                                 &work[0],1,&work[0],1);
+                                    Vmath::Vvtvm(nquad_e,normals[1],1,
+                                                 EdgeExp[e]->GetPhys(),1,
+                                                 work,1,work,1);
                                     Vmath::Neg(nquad_e,work,1);
                                 }
                             }
@@ -946,6 +946,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.cpp,v $
+ *    Revision 1.20  2009/11/17 17:43:36  sehunchun
+ *    *** empty log message ***
+ *
  *    Revision 1.19  2009/11/16 16:27:48  sehunchun
  *    *** empty log message ***
  *

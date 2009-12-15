@@ -44,7 +44,8 @@
 #include <SpatialDomains/GeomFactors.h>
 
 #include <LocalRegions/MatrixKey.h>
-#include <LocalRegions/GenSegExp.h>
+#include <LocalRegions/SegExp.h>
+//#include <LocalRegions/GenSegExp.h>
 
 #include <LocalRegions/Expansion2D.h>
 
@@ -63,10 +64,6 @@ namespace Nektar
             TriExp(const LibUtilities::BasisKey &Ba,
                    const LibUtilities::BasisKey &Bb,
                    const SpatialDomains::TriGeomSharedPtr &geom);
-
-            TriExp(const LibUtilities::BasisKey &Ba,
-                   const LibUtilities::BasisKey &Bb);
-
 
             /// Copy Constructor
             TriExp(const TriExp &T);
@@ -345,9 +342,6 @@ namespace Nektar
 
 
         protected:
-
-            void GenMetricInfo();
-
             DNekMatSharedPtr     GenMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekMatSharedPtr     CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekScalMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
@@ -812,6 +806,9 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.56  2009/11/10 19:04:24  sehunchun
+ *    Variable coefficients for HDG2D Solver
+ *
  *    Revision 1.55  2009/11/09 15:43:50  sehunchun
  *    HDG2DManifold Solver with Variable coefficients
  *

@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:
+//  Description: Geometric Factors base class
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,169 +47,383 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+        // Forward declarations and useful typedefs
         class GeomFactors;
-        class Geometry2D;
+        class GeomFactors2D;
+        typedef boost::shared_ptr<Geometry> GeometrySharedPtr;
 
         bool operator==(const GeomFactors &lhs, const GeomFactors &rhs);
 
+        /// Pointer to a GeomFactors object.
         typedef boost::shared_ptr<GeomFactors>      GeomFactorsSharedPtr;
+        /// A vector of GeomFactor pointers.
         typedef std::vector< GeomFactorsSharedPtr > GeomFactorsVector;
+        /// Iterator for the GeomFactorsVector.
         typedef GeomFactorsVector::iterator GeomFactorsVectorIter;
-        
+
+        /// Describes the principle direction for tangents on the domain.
+        enum GeomTangents
+        {
+            eTangentX,          ///< X coordinate direction.
+            eTangentY,          ///< Y coordinate direction.
+            eTangentZ,          ///< Z coordinate direction.
+            eTangentCircular,   ///< Circular around the centre of domain.
+            eTangentCircular2,
+            SIZE_GeomTangents
+        };
+
+        /// Session file names associated with tangent principle directions.
+        const char* const GeomTangentsMap[] =
+        {
+            "TangentX",
+            "TangentY",
+            "TangentZ",
+            "TangentCircular",
+            "TangentCircular2",
+        };
+
+        /// Calculation and storage of geometric factors.
         class GeomFactors
         {
         public:
 
-            friend bool operator==(const GeomFactors &lhs, const GeomFactors &rhs);
-            friend bool operator<(const GeomFactors &lhs, const GeomFactors &rhs);
+            friend bool operator==( const GeomFactors &lhs,
+                                    const GeomFactors &rhs);
+            friend bool operator<(  const GeomFactors &lhs,
+                                    const GeomFactors &rhs);
 
-            GeomFactors(void);
+            /// Destructor.
+            virtual ~GeomFactors();
 
-            GeomFactors(const GeomType gtype, const int expdim, const int coordim);
+            /// Return the type of geometry.
+            inline GeomType GetGtype();
 
-            /** \brief One dimensional geometric factors based on one,
-            two or three dimensional coordinate description
-            The argument 'tbasis' contains the information about the quadrature points 
-            on which the weighted metric terms should be specified
-            **/
-            GeomFactors(const GeomType gtype, 
-                        const int coordim,
-                        const Array<OneD, const StdRegions::StdExpansion1DSharedPtr> &Coords,
-                        const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis,
-                        const bool SetUpQuadratureMetrics = false,
-                        const bool SetUpLaplacianMetrics  = false);
+            /// Return the Jacobian
+            inline const Array<OneD, const NekDouble> &GetJac() const;
 
-            /**  \brief Two dimensional geometric factors based on two
-            or three dimensional coordinate description
-            The argument 'tbasis' contains the information about the quadrature points 
-            on which the weighted metric terms should be specified
-            **/
-            GeomFactors(const GeomType gtype, 
-                        const int coordim,
-                        const Array<OneD, const StdRegions::StdExpansion2DSharedPtr> &Coords,
-                        const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis,
-                        const bool SetUpQuadratureMetrics = true,
-                        const bool SetUpLaplacianMetrics  = true);
+            /// Return the G matrix.
+            inline const Array<TwoD, const NekDouble> &GetGmat() const;
 
-            /**  \brief Three dimensional geometric factors based on two
-            or three dimensional coordinate description
-            The argument 'tbasis' contains the information about the quadrature points 
-            on which the weighted metric terms should be specified
-            **/
-            GeomFactors(const GeomType gtype, 
-                        const int coordim,
-                        const Array<OneD, const StdRegions::StdExpansion3DSharedPtr> &Coords,
-                        const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis,
-                        const bool SetUpQuadratureMetrics = false,
-                        const bool SetUpLaplacianMetrics  = false);
+            /// Return the number of dimensions of the coordinate system.
+            inline int GetCoordim() const;
 
-            ~GeomFactors();
+            /// Flag indicating if quadrature metrics are in use.
+            inline bool IsUsingQuadMetrics() const;
 
-            inline GeomType GetGtype()
-            {
-                return m_gtype;
-            }
+            /// Flag indicating if Laplacian metrics are in use.
+            inline bool IsUsingLaplMetrics() const;
 
-            inline const Array<OneD, const NekDouble> &GetJac() const 
-            {
-                return m_jac;
-            }
+            /// Set up quadrature metrics
+            inline void SetUpQuadratureMetrics(
+                        StdRegions::ExpansionType shape,
+                        const Array<OneD, const LibUtilities::BasisSharedPtr>
+                                                                       &tbasis);
 
-            inline const Array<TwoD, const NekDouble> &GetGmat() const
-            {
-                return m_gmat;
-            }
+            /// Set up Laplacian metrics
+            inline void SetUpLaplacianMetrics(
+                        StdRegions::ExpansionType shape,
+                        const Array<OneD, const LibUtilities::BasisSharedPtr>
+                                                                       &tbasis);
 
-            inline int GetCoordim() const
-            {
-                return m_coordim;
-            }
+            /// Retrieve the quadrature metrics.
+            inline const Array<OneD, const NekDouble> &GetQuadratureMetrics()
+                        const;
 
-            inline const Array<OneD, const NekDouble> &GetSurfaceNormal(const int k) const
-            {
-                return m_SurfaceNormal[k];
-            }
+            /// Retrieve the Laplacian metrics.
+            inline const Array<TwoD, const NekDouble> &GetLaplacianMetrics()
+                        const;
 
-            inline bool UseQuadratureMetrics() const
-            {
-                return m_quadratureMetricsFlag;
-            }
+            /// Indicates if the Laplacian metric with index \a indx is zero.
+            inline bool LaplacianMetricIsZero(const int indx) const;
 
-            inline bool UseLaplacianMetrics() const 
-            {
-                return m_laplacianMetricsFlag;
-            }
+            /// Computes the edge normals from a 2D element
+            inline void ComputeNormals(
+                            const GeometrySharedPtr &geom2D,
+                            const int edge,
+                            const LibUtilities::PointsKey &to_key);
 
-            inline const Array<OneD, const NekDouble> &GetQuadratureMetrics() const 
-            {
-                ASSERTL0(m_quadratureMetricsFlag,"This metric has not been set up for this type of expansion");
-                return m_weightedjac;
-            }
+            /// Computes the edge normals for 1D geometries only.
+            inline void ComputeEdgeNormals(
+                            const int edge,
+                            const LibUtilities::PointsKey &to_key,
+                            Array<OneD, Array<OneD, NekDouble> > &output) const;
 
-            inline const Array<TwoD, const NekDouble> &GetLaplacianMetrics() const
-            {
-                ASSERTL0(m_laplacianMetricsFlag,"This metric has not been set up for this type of expansion");
-                return m_laplacianmetrics;
-            }
+            /// Set tangent orientation
+            inline void SetTangentOrientation(std::string conn);
 
-            inline bool LaplacianMetricIsZero(const int indx) const
-            {
-                ASSERTL0(m_laplacianMetricsFlag,"This metric has not been set up for this type of expansion");
-                return m_laplacianMetricIsZero[indx];
-            }
+            /// Returns the normal vectors evaluated at each quadrature point.
+            inline const Array<OneD, const Array<OneD, NekDouble> >
+                                                            &GetNormal() const;
 
-            Array<OneD, NekDouble> GenNormals2D(enum StdRegions::ExpansionType shape, const int edge,  const LibUtilities::PointsKey &to_key);
-            
-            
+            /// Returns a single tangent vector.
+            inline const Array<OneD, const Array<OneD, NekDouble> >
+                                                            &GetTangent(int i);
+
+            /// Set the G-matrix data.
             inline void ResetGmat(const Array<OneD, const NekDouble> &ndata,
                                   const int nq, const int expdim,
-                                  const int coordim)
-            {
-                m_gmat = Array<TwoD,NekDouble>(expdim*coordim,nq,ndata.data());
-            }
+                                  const int coordim);
 
-            inline void ResetJac(int nq, const Array<OneD, const NekDouble> &ndata)
-            {
-                m_jac = Array<OneD, NekDouble>(nq, ndata.data());
-            }
+            /// Set the Jacobian data.
+            inline void ResetJac(int nq,
+                        const Array<OneD, const NekDouble> &ndata);
+
+            /// Normalises a set of vectors.
+            static void VectorNormalise(
+                        Array<OneD, Array<OneD, NekDouble> > &array);
+
+            /// Computes the cross-product between sets of vectors.
+            static void VectorCrossProd(
+                        const Array<OneD, const Array<OneD, NekDouble> > &in1,
+                        const Array<OneD, const Array<OneD, NekDouble> > &in2,
+                              Array<OneD, Array<OneD, NekDouble> > &out);
 
         protected:
+            /// Type of geometry (e.g. eRegular, eDeformed, eMovingRegular).
+            GeomType mType;
+            /// Dimension of expansion.
+            int mExpDim;
+            /// Dimension of coordinate system.
+            int mCoordDim;
+            /// Stores information about the expansion.
+            Array<OneD, StdRegions::StdExpansionSharedPtr> mCoords;
+            /// Use Quadrature metrics
+            bool mIsUsingQuadMetrics;
+            /// Use Laplacian metrics
+            bool mIsUsingLaplMetrics;
+            /// Principle tangent direction.
+            enum GeomTangents mTangentDir;
 
-        private:
-            GeomType m_gtype;
-            int m_expdim;
-            int m_coordim;
-
-            bool m_quadratureMetricsFlag;
-            bool m_laplacianMetricsFlag;
-
+            /// Jacobian. If geometry is regular, or moving regular, this is
+            /// just an array of one element - the value of the Jacobian across
+            /// the whole element. If deformed, the array has the size of the
+            /// number of quadrature points and contains the Jacobian evaluated
+            /// at each of those points.
             Array<OneD,NekDouble> m_jac;
+
+            ///
             Array<OneD,NekDouble> m_weightedjac;
+
+            /// Array of size coordim x nquad which holds the inverse of the
+            /// derivative of the local map in each direction at each
+            /// quadrature point.
             Array<TwoD,NekDouble> m_gmat;
+
+            ///
             Array<TwoD,NekDouble> m_laplacianmetrics;
+
+            ///
             Array<OneD,bool>      m_laplacianMetricIsZero;
 
-	    Array<OneD, Array<OneD,NekDouble> > m_SurfaceNormal;
+            /// Array of size coordim which stores a key describing the
+            /// location of the quadrature points in each dimension.
+            Array<OneD,LibUtilities::PointsKey> mPointsKey;
 
-            Array<OneD,LibUtilities::PointsKey> m_pointsKey;
-            
+            /// Array of derivatives of size (mExpDim)x(mCoordim)x(nq)
+            Array<OneD,Array<OneD,Array<OneD,NekDouble> > > mDeriv;
 
-            void SetUpJacGmat1D(const Array<OneD, Array<OneD, NekDouble> > d1);            
-            void SetUpJacGmat2D(const Array<OneD, Array<OneD, NekDouble> > d1,
-                                const Array<OneD, Array<OneD, NekDouble> > d2);        
-            void SetUpJacGmat3D(const Array<OneD, Array<OneD, NekDouble> > d1,
-                                const Array<OneD, Array<OneD, NekDouble> > d2,
-                                const Array<OneD, Array<OneD, NekDouble> > d3);
+            /// Array of size (mCoordDim-1)x(mCoordDim x nq).
+            Array<OneD, Array<OneD, Array<OneD,NekDouble> > > mTangents;
 
-            void SetUpLaplacianMetrics2D(StdRegions::ExpansionType shape,
-                                         const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
-            void SetUpQuadratureMetrics2D(StdRegions::ExpansionType shape,
-                                          const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
+            /// Array of size (coordim)x(nquad) which holds the components of
+            /// the normal vector at each quadrature point. The array is
+            /// populated as \a mCoordDim consecutive blocks of size equal to
+            /// the number of quadrature points. Each block holds a component
+            /// of the normal vectors.
+            Array<OneD, Array<OneD,NekDouble> > mNormal;
 
-            void SetUpSurfaceNormal(Array<OneD, Array<OneD,NekDouble> > d1_tbasis,
-                                    Array<OneD, Array<OneD,NekDouble> > d2_tbasis);
-            
+            /// Instance for a specific expansion/coordinate dimension without
+            /// the generation of any factors. This constructor is protected
+            /// since only dimension-specific GeomFactors classes should be
+            /// instantiated externally.
+            GeomFactors(const GeomType gtype,
+                        const int expdim,
+                        const int coordim,
+                        const bool UseQuadMet,
+                        const bool UseLaplMet);
+
+            /// Copy constructor.
+            GeomFactors(const GeomFactors &S);
+
+        private:
+            /// (1D only) Compute normals based on a 2D element.
+            virtual void v_ComputeNormals(
+                        const GeometrySharedPtr &geom2D,
+                        const int edge,
+                        const LibUtilities::PointsKey &to_key);
+
+            /// (2D only) Compute the outward normals for a given edge.
+            virtual void v_ComputeEdgeNormals(
+                        const int edge,
+                        const LibUtilities::PointsKey &to_key,
+                        Array<OneD, Array<OneD, NekDouble> > &output) const;
+
+            /// Set up surface normals
+            virtual void v_ComputeSurfaceNormals();
+
+            /// Set up the tangent vectors
+            virtual void v_ComputeTangents();
+
+            /// Set up quadrature metrics
+            virtual void v_SetUpQuadratureMetrics(
+                        StdRegions::ExpansionType shape,
+                        const Array<OneD, const LibUtilities::BasisSharedPtr>
+                                                                       &tbasis);
+
+            /// Set up Laplacian metrics
+            virtual void v_SetUpLaplacianMetrics(
+                        StdRegions::ExpansionType shape,
+                        const Array<OneD, const LibUtilities::BasisSharedPtr>
+                                                                       &tbasis);
+
         };
+
+        /// Return the type of geometry.
+        inline GeomType GeomFactors::GetGtype()
+        {
+            return mType;
+        }
+
+        /// Return the Jacobian
+        inline const Array<OneD, const NekDouble> &GeomFactors::GetJac() const
+        {
+            return m_jac;
+        }
+
+        /// Return the G matrix.
+        inline const Array<TwoD, const NekDouble> &GeomFactors::GetGmat() const
+        {
+            return m_gmat;
+        }
+
+        /// Return the number of dimensions of the coordinate system.
+        inline int GeomFactors::GetCoordim() const
+        {
+            return mCoordDim;
+        }
+
+        /// Flag indicating if quadrature metrics are in use.
+        inline bool GeomFactors::IsUsingQuadMetrics() const
+        {
+            return mIsUsingQuadMetrics;
+        }
+
+        /// Flag indicating if Laplacian metrics are in use.
+        inline bool GeomFactors::IsUsingLaplMetrics() const
+        {
+            return mIsUsingLaplMetrics;
+        }
+
+        /// Set up quadrature metrics
+        inline void GeomFactors::SetUpQuadratureMetrics(
+                    StdRegions::ExpansionType shape,
+                    const Array<OneD, const LibUtilities::BasisSharedPtr>
+                                                                    &tbasis)
+        {
+            v_SetUpQuadratureMetrics(shape, tbasis);
+        }
+
+        /// Set up Laplacian metrics
+        inline void GeomFactors::SetUpLaplacianMetrics(
+                    StdRegions::ExpansionType shape,
+                    const Array<OneD, const LibUtilities::BasisSharedPtr>
+                                                                    &tbasis)
+        {
+            v_SetUpLaplacianMetrics(shape, tbasis);
+        }
+
+        /// Retrieve the quadrature metrics.
+        inline const Array<OneD, const NekDouble>
+                                    &GeomFactors::GetQuadratureMetrics() const
+        {
+            ASSERTL0(mIsUsingQuadMetrics,
+                     "This metric has not been set up for this type of "
+                     "expansion");
+            return m_weightedjac;
+        }
+
+        /// Retrieve the Laplacian metrics.
+        inline const Array<TwoD, const NekDouble>
+                                    &GeomFactors::GetLaplacianMetrics() const
+        {
+            ASSERTL0(mIsUsingLaplMetrics,
+                     "This metric has not been set up for this type of "
+                     "expansion");
+            return m_laplacianmetrics;
+        }
+
+        /// Indicates if the Laplacian metric with index \a indx is zero.
+        inline bool GeomFactors::LaplacianMetricIsZero(const int indx) const
+        {
+            ASSERTL0(mIsUsingLaplMetrics,
+                     "This metric has not been set up for this type of "
+                     "expansion");
+            return m_laplacianMetricIsZero[indx];
+        }
+
+        /// Computes the edge normals from a 2D element
+        inline void GeomFactors::ComputeNormals(
+                        const GeometrySharedPtr &geom2D,
+                        const int edge,
+                        const LibUtilities::PointsKey &to_key)
+        {
+            v_ComputeNormals(geom2D, edge, to_key);
+        }
+
+        /// Computes the edge normals for 1D geometries only.
+        inline void GeomFactors::ComputeEdgeNormals(
+                        const int edge,
+                        const LibUtilities::PointsKey &to_key,
+                        Array<OneD, Array<OneD, NekDouble> > &output) const
+        {
+            v_ComputeEdgeNormals(edge, to_key, output);
+        }
+
+        /// Set tangent orientation
+        inline void GeomFactors::SetTangentOrientation(std::string conn)
+        {
+            if (conn == "TangentX")         mTangentDir = eTangentX;
+            if (conn == "TangentY")         mTangentDir = eTangentY;
+            if (conn == "TangentZ")         mTangentDir = eTangentZ;
+            if (conn == "TangentCircular")  mTangentDir = eTangentCircular;
+            if (conn == "TangentCircular2") mTangentDir = eTangentCircular2;
+        }
+
+        /// Returns the normal vectors evaluated at each quadrature point.
+        inline const Array<OneD, const Array<OneD, NekDouble> >
+                                                &GeomFactors::GetNormal() const
+        {
+            return mNormal;
+        }
+
+        /// Returns a single tangent vector.
+        inline const Array<OneD, const Array<OneD, NekDouble> >
+                                                &GeomFactors::GetTangent(int i)
+        {
+            ASSERTL0(i < mExpDim,
+                     "Index must be less than expansion dimension.");
+            if (mTangents.num_elements() == 0) {
+                v_ComputeTangents();
+            }
+            return mTangents[i];
+        }
+
+        /// Set the G-matrix data.
+        inline void GeomFactors::ResetGmat(
+                        const Array<OneD, const NekDouble> &ndata,
+                        const int nq, const int expdim,
+                        const int coordim)
+        {
+            m_gmat = Array<TwoD,NekDouble>(mExpDim * mCoordDim, nq,
+                                           ndata.data());
+        }
+
+        /// Set the Jacobian data.
+        inline void GeomFactors::ResetJac(int nq,
+                        const Array<OneD, const NekDouble> &ndata)
+        {
+            m_jac = Array<OneD, NekDouble>(nq, ndata.data());
+        }
     } //end of namespace
 } //end of namespace
 
@@ -217,6 +431,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.29  2009/07/08 17:24:52  sehunchun
+// Delete SetUpTanBasis and SetUp SurfaceNormal only when coordim == 3
+//
 // Revision 1.28  2009/07/08 11:15:51  sehunchun
 // Adding Setup function fo Surface Normal and GetSurfaceNormal to obtain Surface Normal vector for a given 2D manifold
 //

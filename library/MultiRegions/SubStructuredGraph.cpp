@@ -356,7 +356,7 @@ namespace Nektar
             // set the global numbering of the top-down graph
             topDownGraph->SetGlobalNumberingOffset();
 
-            topDownGraph->CutEmptyLeaves();
+//            topDownGraph->CutEmptyLeaves();
             // Secondly, recursively construct the subgraphs of the bottom up point of view
             // 1. Collect all the leaves of the topdown graph this will be the first level
             //    of the bottom up graph
@@ -376,7 +376,7 @@ namespace Nektar
             m_daughterGraph()
         {
             int ncuts;
-            graph->CutEmptyLeaves();
+//            graph->CutEmptyLeaves();
             graph->CollectLeaves(m_IntBlocks);
             ncuts = graph->CutLeaves();
 
@@ -889,6 +889,9 @@ namespace Nektar
 
 /**
  * $Log: SubStructuredGraph.cpp,v $
+ * Revision 1.4  2009/11/19 11:41:07  pvos
+ * Fixed various bugs
+ *
  * Revision 1.3  2009/11/09 15:57:11  pvos
  * multi-level recursion bug fixes
  *

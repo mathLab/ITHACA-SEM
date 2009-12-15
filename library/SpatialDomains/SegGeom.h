@@ -40,7 +40,7 @@
 #include <StdRegions/StdRegions.hpp>
 #include <SpatialDomains/SpatialDomains.hpp>
 
-#include <SpatialDomains/GeomFactors.h>
+#include <SpatialDomains/GeomFactors1D.h>
 #include <SpatialDomains/Geometry1D.h>
 #include <SpatialDomains/MeshComponents.h>
 
@@ -270,6 +270,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.24  2009/03/04 14:17:38  pvos
+// Removed all methods that take and Expansion as argument
+//
 // Revision 1.23  2009/01/21 16:59:03  pvos
 // Added additional geometric factors to improve efficiency
 //

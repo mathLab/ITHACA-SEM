@@ -600,7 +600,7 @@ namespace Nektar
                     Gtype = eDeformed;
                 }
             }
-            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
+            m_geomfactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
         }
 
           /** \brief put all quadrature information into edge structure 
@@ -708,6 +708,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.cpp,v $
+// Revision 1.17  2009/01/21 16:59:03  pvos
+// Added additional geometric factors to improve efficiency
+//
 // Revision 1.16  2008/12/18 14:08:59  pvos
 // NekConstants update
 //

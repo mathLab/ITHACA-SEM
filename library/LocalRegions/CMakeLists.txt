@@ -3,11 +3,9 @@ Expansion.cpp
 Expansion1D.cpp
 Expansion2D.cpp
 Expansion3D.cpp
-GenSegExp.cpp
 QuadExp.cpp
 HexExp.cpp
 MatrixKey.cpp
-#MetricRelatedInfo.cpp
 NodalTetExp.cpp
 NodalTriExp.cpp
 PointExp.cpp
@@ -23,13 +21,11 @@ Expansion.h
 Expansion1D.h
 Expansion2D.h
 Expansion3D.h
-GenSegExp.h
 HexExp.h
 LinSys.hpp
 LocalRegions.h
 LocalRegions.hpp
 MatrixKey.h
-#MetricRelatedInfo.h
 NodalTetExp.h
 NodalTriExp.h
 PointExp.h

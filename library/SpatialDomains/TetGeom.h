@@ -41,6 +41,7 @@
  
  #include <SpatialDomains/Geometry3D.h>
  #include <SpatialDomains/TriGeom.h>
+ #include <SpatialDomains/GeomFactors3D.h>
 
 namespace Nektar
 {
@@ -332,6 +333,9 @@ namespace Nektar
 
 //
 // $Log: TetGeom.h,v $
+// Revision 1.17  2009/01/21 16:59:04  pvos
+// Added additional geometric factors to improve efficiency
+//
 // Revision 1.16  2008/11/17 08:58:32  ehan
 // Added necessary mapping routines for Tet
 //

@@ -123,7 +123,7 @@ namespace Nektar
                     // Use a general segment expansion with normal and binormal?
                     if (UseGenSegExp)
                     {
-                        seg = MemoryManager<LocalRegions::GenSegExp>
+                        seg = MemoryManager<LocalRegions::SegExp>
                                             ::AllocateSharedPtr(Ba,SegmentGeom);
                     }
                     else {
@@ -191,7 +191,7 @@ namespace Nektar
                     // Switch depending on if using general segment expansions.
                     if (UseGenSegExp)
                     {
-                        seg = MemoryManager<LocalRegions::GenSegExp>
+                        seg = MemoryManager<LocalRegions::SegExp>
                                         ::AllocateSharedPtr(bkey, SegmentGeom);
                     }
                     else {
@@ -259,7 +259,7 @@ namespace Nektar
                         // Use general expansions?
                         if (UseGenSegExp)
                         {
-                            seg = MemoryManager<LocalRegions::GenSegExp>
+                            seg = MemoryManager<LocalRegions::SegExp>
                                         ::AllocateSharedPtr(bkey, SegmentGeom);
                         }
                         else
@@ -335,7 +335,7 @@ namespace Nektar
 
                         if (UseGenSegExp)
                         {
-                            Seg = MemoryManager<LocalRegions::GenSegExp>
+                            Seg = MemoryManager<LocalRegions::SegExp>
                                             ::AllocateSharedPtr(bkey, SegGeom);
                             EdgeDone[SegGeom->GetEid()] = elmtid;
                         }
@@ -368,7 +368,7 @@ namespace Nektar
 
                         if (UseGenSegExp)
                         {
-                            Seg = MemoryManager<LocalRegions::GenSegExp>
+                            Seg = MemoryManager<LocalRegions::SegExp>
                                         ::AllocateSharedPtr(EdgeBkey, SegGeom);
                             EdgeDone[id] = elmtid;
 
@@ -405,7 +405,7 @@ namespace Nektar
                                 && (*m_exp)[EdgeDone[id]]->GetBasisNumModes(0)
                                     <= EdgeBkey.GetNumModes())
                             {
-                                Seg = MemoryManager<LocalRegions::GenSegExp>
+                                Seg = MemoryManager<LocalRegions::SegExp>
                                         ::AllocateSharedPtr(EdgeBkey, SegGeom);
                                 Seg->SetElmtId(EdgeDone[id]);
                                 (*m_exp)[EdgeDone[id]] = Seg;
@@ -423,7 +423,7 @@ namespace Nektar
                     if (UseGenSegExp && NormalSet.count(id) == 0)
                     {
                         Seg = boost::dynamic_pointer_cast
-                                    <LocalRegions::GenSegExp>(
+                                    <LocalRegions::SegExp>(
                                         (*m_exp)[EdgeDone.find(id)->second]);
 
                         // Set up normals at all Segment Quadrature points
@@ -1041,7 +1041,7 @@ namespace Nektar
             ASSERTL0(m_UseGenSegExp, "Must use GenSegExp to use normals.");
 
             int i,j,k,e_npoints,offset;
-            Array<OneD,NekDouble> locnormals;
+            Array<OneD,Array<OneD,NekDouble> > locnormals;
 
             // Assume whole array is of same coordinate dimension
             int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
@@ -1055,7 +1055,7 @@ namespace Nektar
             {
                 // Get the number of points and normals for this expansion.
                 e_npoints  = (*m_exp)[i]->GetNumPoints(0);
-                locnormals = (*m_exp)[i]->GetPhysNormals();
+                locnormals = (*m_exp)[i]->GetMetricInfo()->GetNormal();
 
                 // Get the physical data offset for this expansion.
                 offset = m_phys_offset[i];
@@ -1067,12 +1067,57 @@ namespace Nektar
                     // the output array.
                     for(k = 0; k < coordim; ++k)
                     {
-                        normals[k][offset+j] = locnormals[k*e_npoints + j];
+                        //normals[k][offset+j] = locnormals[k*e_npoints + j];
+                        normals[k][offset+j] = locnormals[k][j];
                     }
                 }
             }
         }
 
+/*        void ExpList1D::v_GetTangents(
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &tangents)
+        {
+            int i,j,k,e_npoints,offset;
+            Array<OneD,Array<OneD, NekDouble> > loctangent;
+
+            // Assume whole array is of same coordinate dimension
+            int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
+
+            ASSERTL1(normals.num_elements() >= coordim,
+                     "Output vector does not have sufficient dimensions to "
+                     "match coordim");
+
+            // Process each expansion.
+            for(i = 0; i < m_exp->size(); ++i)
+            {
+                // Get the number of points and normals for this expansion.
+                e_npoints  = (*m_exp)[i]->GetNumPoints(0);
+                for (j = 0; j < 2; ++j)
+                {
+                    loctangent = (*m_exp)[i]->GetMetricInfo()->GetTangent(j);
+
+                    // Get the physical data offset for this expansion.
+                    offset = m_phys_offset[i];
+                    for (k = 0; k < coordim; ++k)
+                    {
+                        Vmath::Vcopy(e_npoints, &(loctangent[k][0]), 1, 
+                                                &(tangents[j][k][offset]), 1);
+                    }
+                }
+            }
+*/                // Process each point in the expansion.
+/*                for(j = 0; j < e_npoints; ++j)
+                {
+                    // Process each spatial dimension and copy the values into
+                    // the output array.
+                    for(k = 0; k < coordim; ++k)
+                    {
+                        //normals[k][offset+j] = locnormals[k*e_npoints + j];
+                        normals[k][offset+j] = locnormals[k][j];
+                    }
+                }*/
+            
+//        }
 
         /**
          *
@@ -1088,6 +1133,10 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.42  2009/11/19 23:30:36  cantwell
+* Documentation for ExpList2D and GlobalMatrixKey
+* Updated doxygen pages.
+*
 * Revision 1.41  2009/11/18 17:12:29  cantwell
 * Added documentation to ExpList1D.
 *

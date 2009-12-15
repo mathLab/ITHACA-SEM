@@ -28,7 +28,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: Header field for tetrahedral routines built upon
 // StdExpansion3D
 //
@@ -40,35 +40,56 @@ namespace Nektar
 {
     namespace StdRegions
     {
-
-        StdTetExp::StdTetExp() // default constructor of StdExpansion is directly called. 
+        /**
+         *
+         */
+        StdTetExp::StdTetExp()
         {
-        } //default constructor
+        }
 
-        StdTetExp::StdTetExp( const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc ) :
-            StdExpansion3D(StdTetData::getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()), Ba, Bb, Bc)
+
+        /**
+         * @param   Ba          ?
+         * @param   Bb          ?
+         * @param   Bc          ?
+         */
+        StdTetExp::StdTetExp(   const LibUtilities::BasisKey &Ba,
+                                const LibUtilities::BasisKey &Bb,
+                                const LibUtilities::BasisKey &Bc )
+            : StdExpansion3D(StdTetData::getNumberOfCoefficients(
+                        Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()),
+                    Ba, Bb, Bc)
         {
             if(Ba.GetNumModes() >  Bb.GetNumModes())
             {
-                ASSERTL0(false, "order in 'a' direction is higher than order in 'b' direction");
+                ASSERTL0(false, "order in 'a' direction is higher than order "
+                                "in 'b' direction");
             }
             if(Ba.GetNumModes() >  Bc.GetNumModes())
             {
-                ASSERTL0(false, "order in 'a' direction is higher than order in 'c' direction");
+                ASSERTL0(false, "order in 'a' direction is higher than order "
+                                "in 'c' direction");
             }
             if(Bb.GetNumModes() >  Bc.GetNumModes())
             {
-                ASSERTL0(false, "order in 'b' direction is higher than order in 'c' direction");
+                ASSERTL0(false, "order in 'b' direction is higher than order "
+                                "in 'c' direction");
             }
         }
 
 
-
+        /**
+         * @param   T           StdTetExp object to copy.
+         */
         StdTetExp::StdTetExp(const StdTetExp &T):
             StdExpansion3D(T)
         {
         }
 
+
+        /**
+         *
+         */
         StdTetExp::~StdTetExp()
         {
         }
@@ -76,145 +97,168 @@ namespace Nektar
         //////////////////////////////
         // Integration Methods
         //////////////////////////////
-        namespace 
+        void StdTetExp::TripleTensorProduct(
+                                const Array<OneD, const NekDouble>& fx,
+                                const Array<OneD, const NekDouble>& gy,
+                                const Array<OneD, const NekDouble>& hz,
+                                const Array<OneD, const NekDouble>& inarray,
+                                      Array<OneD, NekDouble> & outarray )
         {
-            void TripleTensorProduct(   const Array<OneD, const NekDouble>& fx, 
-                                        const Array<OneD, const NekDouble>& gy, 
-                                        const Array<OneD, const NekDouble>& hz, 
-                                        const Array<OneD, const NekDouble>& inarray, 
-                                        Array<OneD, NekDouble> & outarray )
+            // Using matrix operation, not sum-factorization.
+            // Regarding the 3D array, inarray[k][j][i], x is changing the
+            // fastest and z the slowest. Thus, the first x-vector of points
+            // refers to the first row of the first stack. The first y-vector
+            // refers to the first column of the first stack. The first z-
+            // vector refers to the vector of stacks intersecting the first row
+            // and first column. So in C++, i refers to column, j to row, and k
+            // to stack. Contrasting this with the usual C++ matrix convention,
+            // note that i does not refer to a C++ row, nor j to C++ column.
+
+            int nx = fx.num_elements();
+            int ny = gy.num_elements();
+            int nz = hz.num_elements();
+
+            // Multiply by integration constants...
+            // Hadamard multiplication refers to elementwise multiplication of
+            // two vectors.
+
+            // Hadamard each row with the first vector (x-vector); the index i
+            // is changing the fastest.
+            // For each j and k, iterate over each row in all of the stacks at
+            // once
+            for (int jk = 0; jk < ny*nz; ++jk)
             {
-                // Using matrix operation, not sum-factorization.
-                // Regarding the 3D array, inarray[k][j][i], x is changing the fastest and z the slowest.
-                // Thus, the first x-vector of points refers to the first row of the first stack. The first y-vector
-                // refers to the first column of the first stack. The first z-vector refers to the vector of stacks
-                // intersecting the first row and first column. So in C++, i refers to column, j to row, and k to stack.
-                // Contrasting this with the usual C++ matrix convention, note that i does not refer to a C++ row, nor j to C++ column.
+                Vmath::Vmul(
+                        nx,                 // Size of first weight vector
+                        &inarray[0] + jk*nx, 1, // Offset and stride of each
+                                            //  row-vector (x is changing
+                                            //  fastest)
+                        fx.get(), 1,        // First weight vector (with stride
+                                            //  of 1)
+                        &outarray[0] + jk*nx, 1     // Output has same offset
+                                            //  and stride as input
+                        );
+            }
 
-
-                int nx = fx.num_elements();
-                int ny = gy.num_elements();
-                int nz = hz.num_elements();
-
-
-                // Multiply by integration constants...
-                // Hadamard multiplication refers to elementwise multiplication of two vectors.
-
-                // Hadamard each row with the first vector (x-vector); the index i is changing the fastest.
-                for (int jk = 0; jk < ny*nz; ++jk)  // For each j and k, iterate over each row in all of the stacks at once
+            // Hadamard each column with the second vector (y-vector)
+            // For each stack   in the 3D-array, do the following...
+            for (int k = 0; k < nz; ++k)
+            {
+                // Iterate over each column in the current stack
+                for (int i = 0; i < nx; ++i)
                 {
                     Vmath::Vmul(
-                                nx,                         // Size of first weight vector
-                                &inarray[0] + jk*nx, 1,     // Offset and stride of each row-vector (x is changing fastest)
-                                fx.get(), 1,                // First weight vector (with stride of 1)
-                                &outarray[0] + jk*nx, 1     // Output has same offset and stride as input
-                                );
+                        ny,                 // Size of second weight vector
+                        &outarray[0] + i + nx*ny*k, nx, // Offset and stride of
+                                            //  each column-vector
+                        gy.get(), 1,        // second weight vector (with
+                                            //  stride of 1)
+                        &outarray[0] + i + nx*ny*k, nx  // Output has same
+                                            //  offset and stride as input
+                        );
                 }
-
-                // Hadamard each column with the second vector (y-vector)
-                for (int k = 0; k < nz; ++k)                    // For each stack in the 3D-array, do the following...
-                {
-                    for (int i = 0; i < nx; ++i)                // Iterate over each column in the current stack
-                    {
-                        Vmath::Vmul(
-                                    ny,                                 // Size of second weight vector
-                                    &outarray[0] + i + nx*ny*k, nx,     // Offset and stride of each column-vector
-                                    gy.get(), 1,                        // second weight vector (with stride of 1)
-                                    &outarray[0] + i + nx*ny*k, nx      // Output has same offset and stride as input
-                                    );
-                    }
-                }
-
-                // Hadamard each stack-vector with the third vector (z-vector)
-                for (int ij = 0; ij < nx*ny; ++ij)              // Iterate over each element in the topmost stack
-                {
-                    Vmath::Vmul(
-                                nz,                                     // Size of third weight vector
-                                &outarray[0] + ij, nx*ny,               // Offset and stride of each stack-vector
-                                hz.get(), 1,                            // Third weight vector (with stride of 1)
-                                &outarray[0] + ij, nx*ny                // Output has same offset and stride as input
-                                );
-                }
-
             }
-            
 
-            // Inner-Product with respect to the weights: i.e., this is the triple sum of the product 
-            // of the four inputs over the Hexahedron
-            // x-dimension is the row, it is the index that changes the fastest
-            // y-dimension is the column
-            // z-dimension is the stack, it is the index that changes the slowest
-            NekDouble TripleInnerProduct( 
-                                         const Array<OneD, const NekDouble>& fxyz, 
-                                         const Array<OneD, const NekDouble>& wx, 
-                                         const Array<OneD, const NekDouble>& wy, 
-                                         const Array<OneD, const NekDouble>& wz
-                                          )
+            // Hadamard each stack-vector with the third vector (z-vector)
+            // Iterate over each element in the topmost stack
+            for (int ij = 0; ij < nx*ny; ++ij)
             {
-                int Qx = wx.num_elements();
-                int Qy = wy.num_elements();
-                int Qz = wz.num_elements();
-
-                if( fxyz.num_elements() != Qx*Qy*Qz ) {
-                    cerr << "TripleTetrahedralInnerProduct expected " << fxyz.num_elements() << 
-                        " quadrature points from the discretized input function but got " << 
-                        Qx*Qy*Qz << " instead." << endl;
-                }
-
-                // Sum-factorizing over the stacks
-                Array<OneD, NekDouble> A(Qx*Qy, 0.0);
-                for( int i = 0; i < Qx; ++i ) {
-                    for( int j = 0; j < Qy; ++j ) {
-                        for( int k = 0; k < Qz; ++k ) {
-                            A[i + Qx*j] +=  fxyz[i + Qx*(j + Qy*k)] * wz[k];
-                        }
-                    }
-                }
-
-                // Sum-factorizing over the columns
-                Array<OneD, NekDouble> b(Qx, 0.0);
-                for( int i = 0; i < Qx; ++i ) {
-                    for( int j = 0; j < Qy; ++j ) {
-                        b[i] +=  A[i + Qx*j] * wy[j];
-                    }
-                }
-
-                // Sum-factorizing over the rows
-                NekDouble c = 0;
-                for( int i = 0; i < Qx; ++i ) {
-                    c +=  b[i] * wx[i];
-                }
-
-                return c;
+                Vmath::Vmul(
+                        nz,                 // Size of third weight vector
+                        &outarray[0] + ij, nx*ny,   // Offset and stride of
+                                            //  each stack-vector
+                        hz.get(), 1,        // Third weight vector (with stride
+                                            //  of 1)
+                        &outarray[0] + ij, nx*ny    // Output has same offset
+                                            //  and stride as input
+                        );
             }
+
         }
 
 
-        NekDouble StdTetExp::Integral3D(const Array<OneD, const NekDouble>& inarray, 
-                                        const Array<OneD, const NekDouble>& wx,
-                                        const Array<OneD, const NekDouble>& wy, 
-                                        const Array<OneD, const NekDouble>& wz)
+        /**
+         * Inner-Product with respect to the weights: i.e., this is the triple
+         * sum of the product of the four inputs over the Hexahedron.
+         * x-dimension is the row, it is the index that changes the fastest
+         * y-dimension is the column
+         * z-dimension is the stack, it is the index that changes the slowest
+         */
+        NekDouble StdTetExp::TripleInnerProduct(
+                                const Array<OneD, const NekDouble>& fxyz,
+                                const Array<OneD, const NekDouble>& wx,
+                                const Array<OneD, const NekDouble>& wy,
+                                const Array<OneD, const NekDouble>& wz)
+        {
+            int Qx = wx.num_elements();
+            int Qy = wy.num_elements();
+            int Qz = wz.num_elements();
+
+            if( fxyz.num_elements() != Qx*Qy*Qz ) {
+                cerr << "TripleTetrahedralInnerProduct expected "
+                     << fxyz.num_elements()
+                     << " quadrature points from the discretized input "
+                        "function but got "
+                     << Qx*Qy*Qz << " instead." << endl;
+            }
+
+            // Sum-factorizing over the stacks
+            Array<OneD, NekDouble> A(Qx*Qy, 0.0);
+            for( int i = 0; i < Qx; ++i ) {
+                for( int j = 0; j < Qy; ++j ) {
+                    for( int k = 0; k < Qz; ++k ) {
+                        A[i + Qx*j] +=  fxyz[i + Qx*(j + Qy*k)] * wz[k];
+                    }
+                }
+            }
+
+            // Sum-factorizing over the columns
+            Array<OneD, NekDouble> b(Qx, 0.0);
+            for( int i = 0; i < Qx; ++i ) {
+                for( int j = 0; j < Qy; ++j ) {
+                    b[i] +=  A[i + Qx*j] * wy[j];
+                }
+            }
+
+            // Sum-factorizing over the rows
+            NekDouble c = 0;
+            for( int i = 0; i < Qx; ++i ) {
+                c +=  b[i] * wx[i];
+            }
+
+            return c;
+        }
+
+
+        NekDouble StdTetExp::Integral3D(
+                                const Array<OneD, const NekDouble>& inarray,
+                                const Array<OneD, const NekDouble>& wx,
+                                const Array<OneD, const NekDouble>& wy,
+                                const Array<OneD, const NekDouble>& wz)
         {
             return TripleInnerProduct( inarray, wx, wy, wz );
 
         }
 
-	/** \brief Integrate the physical point list \a inarray over tetrahedral region and return the value
-            
-            Inputs:\n
-            
-            - \a inarray: definition of function to be returned at quadrature point of expansion. 
 
-            Outputs:\n
 
-            - returns \f$\int^1_{-1}\int^1_{-1}\int^1_{-1} u(\eta_1, \eta_2, \eta_3) J[i,j,k] d \eta_1 d \eta_2 d \eta_3 \f$ \n
-            = \f$\sum_{i=0}^{Q_1 - 1} \sum_{j=0}^{Q_2 - 1} \sum_{k=0}^{Q_3 - 1} u(\eta_{1i}^{0,0}, \eta_{2j}^{1,0},\eta_{3k}^{2,0})w_{i}^{1,0} \hat w_{j}^{1,0} \hat w_{k}^{2,0}    \f$ \n
-            where \f$inarray[i,j, k] = u(\eta_{1i},\eta_{2j}, \eta_{3k}) \f$, \n
-            \f$\hat w_{j}^{1,0} = \frac {w_{j}^{1,0}} {2}, \hat w_{k}^{2,0} = \frac{w_{k}^{2,0}} {4} \f$ \n
-            and \f$ J[i,j,k] \f$ is the Jacobian evaluated at the quadrature point.
-
-        */
-        NekDouble StdTetExp::Integral(const Array<OneD, const NekDouble>& inarray)
+        /**
+         * @param   inarray     definition of function to be returned at
+         *                      quadrature point of expansion.
+         * @returns \f$\int^1_{-1}\int^1_{-1}\int^1_{-1}
+         * u(\eta_1, \eta_2, \eta_3) J[i,j,k] d \eta_1 d \eta_2 d \eta_3 \f$ \n
+         * = \f$\sum_{i=0}^{Q_1 - 1} \sum_{j=0}^{Q_2 - 1} \sum_{k=0}^{Q_3 - 1}
+         *   u(\eta_{1i}^{0,0}, \eta_{2j}^{1,0},\eta_{3k}^{2,0})w_{i}^{1,0}
+         *   \hat w_{j}^{1,0} \hat w_{k}^{2,0}    \f$ \n
+         * where
+         * \f$inarray[i,j, k]  = u(\eta_{1i},\eta_{2j}, \eta_{3k}) \f$, \n
+         * \f$\hat w_{j}^{1,0} = \frac {w_{j}^{1,0}} {2}, \hat w_{k}^{2,0}
+         *                     = \frac{w_{k}^{2,0}} {4} \f$ \n
+         * and \f$ J[i,j,k] \f$ is the Jacobian evaluated at the quadrature
+         * point.
+         */
+        NekDouble StdTetExp::Integral(
+                                const Array<OneD, const NekDouble>& inarray)
         {
             // Using implementation from page 145 of Spencer Sherwin's book
             int Qy = m_base[1]->GetNumPoints();
@@ -236,7 +280,7 @@ namespace Nektar
             switch(m_base[1]->GetPointsType())
             {
             case LibUtilities::eGaussLobattoLegendre:   // Legendre inner product (Falls-through to next case)
-            case LibUtilities::eGaussRadauMLegendre:    // (0,0) Jacobi Inner product 
+            case LibUtilities::eGaussRadauMLegendre:    // (0,0) Jacobi Inner product
                 for(int j = 0; j < Qy; ++j)
                 {
                     NekDouble eta = 2.0*(1.0 + y[j])/(1.0 - z[j]) - 1.0;
@@ -244,7 +288,7 @@ namespace Nektar
                 }
                 break;
 
-            case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product 
+            case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product
                 Vmath::Smul( Qy, 0.5, (NekDouble *)wy.get(), 1, wy_hat.get(), 1 );
                 break;
             }
@@ -256,14 +300,14 @@ namespace Nektar
             switch(m_base[2]->GetPointsType())
             {
             case LibUtilities::eGaussLobattoLegendre:   // Legendre inner product (Falls-through to next case)
-            case LibUtilities::eGaussRadauMLegendre:    // (0,0) Jacobi Inner product 
+            case LibUtilities::eGaussRadauMLegendre:    // (0,0) Jacobi Inner product
                 for(int k = 0; k < Qz; ++k)
                 {
                     wz_hat[k] = 0.25*(1.0 - z[k])*(1.0 - z[k]) * wz[k];
                 }
                 break;
 
-            case LibUtilities::eGaussRadauMAlpha2Beta0: // (2,0) Jacobi Inner product 
+            case LibUtilities::eGaussRadauMAlpha2Beta0: // (2,0) Jacobi Inner product
                 Vmath::Smul( Qz, 0.25,(NekDouble *)wz.get(), 1, wz_hat.get(), 1 );
                 break;
             }
@@ -271,13 +315,24 @@ namespace Nektar
             return Integral3D( inarray, wx, wy_hat, wz_hat );
         }
 
-        void StdTetExp::IProductWRTBase(const Array<OneD, const NekDouble>& bx, 
-                                        const Array<OneD, const NekDouble>& by, 
-                                        const Array<OneD, const NekDouble>& bz, 
-                                        const Array<OneD, const NekDouble>& inarray, 
-                                        Array<OneD, NekDouble> & outarray)
+
+        /**
+         * @param   bx          ?
+         * @param   by          ?
+         * @param   bz          ?
+         * @param   inarray     Function evaluated at physical collocation
+         *                      points.
+         * @param   outarray    Inner product with respect to each basis
+         *                      function over the element.
+         */
+        void StdTetExp::IProductWRTBase(
+                                const Array<OneD, const NekDouble>& bx,
+                                const Array<OneD, const NekDouble>& by,
+                                const Array<OneD, const NekDouble>& bz,
+                                const Array<OneD, const NekDouble>& inarray,
+                                      Array<OneD, NekDouble> & outarray)
         {
-            
+
             ASSERTL1( (m_base[1]->GetBasisType() != LibUtilities::eOrtho_B)  ||
                       (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
                       "Basis[1] is not a general tensor type");
@@ -285,7 +340,7 @@ namespace Nektar
             ASSERTL1( (m_base[2]->GetBasisType() != LibUtilities::eOrtho_C) ||
                       (m_base[2]->GetBasisType() != LibUtilities::eModified_C),
                       "Basis[2] is not a general tensor type");
-#if 1 
+#if 1
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
             int  nquad2 = m_base[2]->GetNumPoints();
@@ -297,7 +352,7 @@ namespace Nektar
             Array<OneD, const NekDouble> base0 = m_base[0]->GetBdata();
             Array<OneD, const NekDouble> base1 = m_base[1]->GetBdata();
             Array<OneD, const NekDouble> base2 = m_base[2]->GetBdata();
-            
+
             Array<OneD, NekDouble > tmp (nquad0*nquad1*nquad2);
             Array<OneD, NekDouble > tmp1(nquad1*nquad2*order0);
             Array<OneD, NekDouble > tmp2(nquad2*order0*(order1+1)/2);
@@ -308,10 +363,10 @@ namespace Nektar
 
             const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
             const Array<OneD, const NekDouble>& z2 = m_base[2]->GetZ();
-            
-            int i,j, mode,mode1, cnt; 
 
-            // multiply by integration constants 
+            int i,j, mode,mode1, cnt;
+
+            // multiply by integration constants
             for(i = 0; i < nquad1*nquad2; ++i)
             {
                 Vmath::Vmul(nquad0,(NekDouble*)&inarray[0]+i*nquad0,1,
@@ -319,24 +374,29 @@ namespace Nektar
             }
             switch(m_base[1]->GetPointsType())
             {
-            case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
-                
+            // Legendre inner product.
+            case LibUtilities::eGaussLobattoLegendre:
+
                 for(j = 0; j < nquad2; ++j)
                 {
                     for(i = 0; i < nquad1; ++i)
                     {
-                        Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], &tmp[0]+i*nquad0 + 
-                                    j*nquad0*nquad1,1);
+                        Blas::Dscal(nquad0,
+                                    0.5*(1-z1[i])*w1[i],
+                                    &tmp[0]+i*nquad0 + j*nquad0*nquad1,
+                                    1 );
                     }
                 }
                 break;
-            case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product 
+
+            // (1,0) Jacobi Inner product.
+            case LibUtilities::eGaussRadauMAlpha1Beta0:
                 for(j = 0; j < nquad2; ++j)
                 {
                     for(i = 0; i < nquad1; ++i)
                     {
-                        Blas::Dscal(nquad0,0.5*w1[i], &tmp[0]+i*nquad0 + 
-                                    j*nquad0*nquad1,1);      
+                        Blas::Dscal(nquad0,0.5*w1[i], &tmp[0]+i*nquad0 +
+                                    j*nquad0*nquad1,1);
                     }
                 }
                 break;
@@ -344,37 +404,39 @@ namespace Nektar
 
             switch(m_base[2]->GetPointsType())
             {
-            case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
+            // Legendre inner product.
+            case LibUtilities::eGaussLobattoLegendre:
                 for(i = 0; i < nquad2; ++i)
                 {
-                    Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*(1-z2[i])*w2[i], 
+                    Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*(1-z2[i])*w2[i],
                                 &tmp[0]+i*nquad0*nquad1,1);
                 }
                 break;
-            case LibUtilities::eGaussRadauMAlpha2Beta0: // (2,0) Jacobi Inner product 
+            // (2,0) Jacobi inner product.
+            case LibUtilities::eGaussRadauMAlpha2Beta0:
                 for(i = 0; i < nquad2; ++i)
                 {
-                    Blas::Dscal(nquad0*nquad1, 0.25*w2[i], 
-                                &tmp[0]+i*nquad0*nquad1, 1);      
+                    Blas::Dscal(nquad0*nquad1, 0.25*w2[i],
+                                &tmp[0]+i*nquad0*nquad1, 1);
                 }
                 break;
             }
 
             // Inner product with respect to the '0' direction
-            Blas::Dgemm('T','N', nquad1*nquad2, order0, nquad0, 1.0, 
-                        &tmp[0], nquad0, base0.get(), nquad0, 0.0, 
+            Blas::Dgemm('T','N', nquad1*nquad2, order0, nquad0, 1.0,
+                        &tmp[0], nquad0, base0.get(), nquad0, 0.0,
                         &tmp1[0], nquad1*nquad2);
-            
-            
+
+
             // Inner product with respect to the '1' direction
             for(mode=i=0; i < order0; ++i)
             {
                 Blas::Dgemm('T','N',nquad2,order1-i,nquad1,1.0,
-                            &tmp1[0]+i*nquad1*nquad2, nquad1, 
-                            base1.get()+mode*nquad1, nquad1, 
+                            &tmp1[0]+i*nquad1*nquad2, nquad1,
+                            base1.get()+mode*nquad1, nquad1,
                             0.0, &tmp2[0]+mode*nquad2, nquad2);
                 mode  += order1-i;
-            }                
+            }
 
 
             // fix for modified basis for base singular vertex
@@ -385,7 +447,7 @@ namespace Nektar
                 Blas::Dgemv('T', nquad1,nquad2, 1.0, &tmp1[0]+nquad1*nquad2,
                             nquad1, base1.get()+nquad1,1, 1.0, &tmp2[nquad2],1);
             }
-            
+
 
             // Inner product with respect to the '2' direction
             mode = mode1 = cnt = 0;
@@ -398,7 +460,7 @@ namespace Nektar
                                 nquad2,&tmp2[0]+cnt*nquad2, 1,
                                 0.0, &outarray[0]+mode1,1);
                     mode  += order2-i-j;
-                    mode1 += order2-i-j;                    
+                    mode1 += order2-i-j;
                 }
 
                 //increment mode1 in case order1!=order2
@@ -415,7 +477,7 @@ namespace Nektar
                 // add in (1+c)/2 (1+b)/2   component
                 outarray[1] += Blas::Ddot(nquad2,base2.get()+nquad2,1,
                                           &tmp2[nquad2],1);
-                
+
                 // add in (1+c)/2 (1-b)/2 (1+a)/2 component
                 outarray[1] += Blas::Ddot(nquad2,base2.get()+nquad2,1,
                                           &tmp2[nquad2*order1],1);
@@ -455,20 +517,23 @@ namespace Nektar
                 for( int q = 0; q <= Q - p; ++q ) {
                     for( int r = 0; r <= R - p - q; ++r ) {
 
-                        // Determine the index for specifying which mode to use in the basis
+                        // Determine the index for specifying which mode to use
+                        // in the basis
                         int mode_p      = p;
                         int mode_pq     = pq[q + (Q+1)*p];
                         int mode_pqr    = pqr[r + (R+1)*(q + (Q+1)*p)];
 
-                        // Compute tensor product of inarray with the 3 basis functions
-                        Array<OneD, NekDouble> g_pqr = Array<OneD, NekDouble>( Qx*Qy*Qz, 0.0 );
+                        // Compute tensor product of inarray with the 3 basis
+                        // functions
+                        Array<OneD, NekDouble> g_pqr 
+                                    = Array<OneD, NekDouble>( Qx*Qy*Qz, 0.0 );
                         for( int k = 0; k < Qz; ++k ) {
                             for( int j = 0; j < Qy; ++j ) {
                                 for( int i = 0; i < Qx; ++i ) {
                                     int s = i + Qx*(j + Qy*k);
-                                    g_pqr[s] += inarray[s] * 
-                                        bx[i + Qx*mode_p] * 
-                                        by[j + Qy*mode_pq] * 
+                                    g_pqr[s] += inarray[s] *
+                                        bx[i + Qx*mode_p] *
+                                        by[j + Qy*mode_pq] *
                                         bz[k + Qz*mode_pqr];
                                 }
                             }
@@ -482,11 +547,14 @@ namespace Nektar
         }
 
 
-        void StdTetExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
+        void StdTetExp::FillMode(
+                            const int mode, Array<OneD, NekDouble> &outarray)
         {
             if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
             {
-                ASSERTL0(false,"This function will not work with modified basis since we have not dealt with singular vertces/edges");
+                ASSERTL0(false,"This function will not work with modified "
+                               "basis since we have not dealt with singular "
+                               "vertces/edges");
             }
 
             int     Qx = m_base[0]->GetNumPoints();
@@ -508,7 +576,8 @@ namespace Nektar
 
             // Create an index map from the hexahedron to the tetrahedron.
             // The actual index is too difficult to compute explicitly.
-            Array<OneD, int> mode_pqr = Array<OneD, int>( (P+1)*(Q+1)*(R+1), -1 );
+            Array<OneD, int> mode_pqr
+                                = Array<OneD, int>( (P+1)*(Q+1)*(R+1), -1 );
             for( int p = 0, m = 0; p <= P; ++p ) {
                 for( int q = 0; q <= Q - p; ++q ) {
                     for( int r = 0; r <= R - p - q; ++r, ++m ) {
@@ -545,14 +614,15 @@ namespace Nektar
 
 
             // Compute tensor product of inarray with the 3 basis functions
-            Array<OneD, NekDouble> g_pqr = Array<OneD, NekDouble>( Qx*Qy*Qz, 0.0 );
+            Array<OneD, NekDouble> g_pqr
+                                = Array<OneD, NekDouble>( Qx*Qy*Qz, 0.0 );
             for( int k = 0; k < Qz; ++k ) {
                 for( int j = 0; j < Qy; ++j ) {
                     for( int i = 0; i < Qx; ++i ) {
                         int s = i + Qx*(j + Qy*(k + Qz*mode));
-                        outarray[s] = 
-                            bx[i + sigma_p] * 
-                            by[j + sigma_pq] * 
+                        outarray[s] =
+                            bx[i + sigma_p] *
+                            by[j + sigma_pq] *
                             bz[k + sigma_pqr];
                     }
                 }
@@ -566,21 +636,21 @@ namespace Nektar
         /// Differentiation Methods
         //-----------------------------
 
-	/** 
-            \brief Calculate the derivative of the physical points 
-		
-	    The derivative is evaluated at the nodal physical points.
-            Derivatives with respect to the local Cartesian coordinates  
+    /**
+            \brief Calculate the derivative of the physical points
 
-	    \f$\begin{Bmatrix} \frac {\partial} {\partial \xi_1}  \\ \frac {\partial} {\partial \xi_2} \\ \frac {\partial} {\partial \xi_3}  \end{Bmatrix}  = \begin{Bmatrix} \frac 4 {(1-\eta_2)(1-\eta_3)} \frac \partial {\partial \eta_1} \\ 
-	    \frac {2(1+\eta_1)} {(1-\eta_2)(1-\eta_3)} \frac \partial {\partial \eta_1} + \frac 2 {1-\eta_3} \frac \partial {\partial \eta_3} \\
-	    \frac {2(1 + \eta_1)} {2(1 - \eta_2)(1-\eta_3)} \frac \partial {\partial \eta_1} + \frac {1 + \eta_2} {1 - \eta_3} \frac \partial {\partial \eta_2} + \frac \partial {\partial \eta_3}
-	    \end{Bmatrix}\f$	 
+        The derivative is evaluated at the nodal physical points.
+            Derivatives with respect to the local Cartesian coordinates
+
+        \f$\begin{Bmatrix} \frac {\partial} {\partial \xi_1}  \\ \frac {\partial} {\partial \xi_2} \\ \frac {\partial} {\partial \xi_3}  \end{Bmatrix}  = \begin{Bmatrix} \frac 4 {(1-\eta_2)(1-\eta_3)} \frac \partial {\partial \eta_1} \\
+        \frac {2(1+\eta_1)} {(1-\eta_2)(1-\eta_3)} \frac \partial {\partial \eta_1} + \frac 2 {1-\eta_3} \frac \partial {\partial \eta_3} \\
+        \frac {2(1 + \eta_1)} {2(1 - \eta_2)(1-\eta_3)} \frac \partial {\partial \eta_1} + \frac {1 + \eta_2} {1 - \eta_3} \frac \partial {\partial \eta_2} + \frac \partial {\partial \eta_3}
+        \end{Bmatrix}\f$
 
         **/
-        // PhysDerivative implementation based on Spen's book page 152.    
-        void StdTetExp::PhysDeriv(const Array<OneD, const NekDouble>& u_physical, 
-                                  Array<OneD, NekDouble> &out_dxi1, 
+        // PhysDerivative implementation based on Spen's book page 152.
+        void StdTetExp::PhysDeriv(const Array<OneD, const NekDouble>& u_physical,
+                                  Array<OneD, NekDouble> &out_dxi1,
                                   Array<OneD, NekDouble> &out_dxi2,
                                   Array<OneD, NekDouble> &out_dxi3 )
         {
@@ -621,35 +691,33 @@ namespace Nektar
         /// Evaluation Methods
         ///////////////////////////////
 
-        /** 
-            \brief Backward transformation is evaluated at the quadrature points
-		
-	    \f$ u^{\delta} (\xi_{1i}, \xi_{2j}, \xi_{3k}) =
-	    \sum_{m(pqr)} \hat u_{pqr} \phi_{pqr} (\xi_{1i}, \xi_{2j},
-	    \xi_{3k})\f$
-	    
-            Backward transformation is three dimensional tensorial expansion
-		
-	    \f$ u (\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{p=0}^{Q_x}
-	    \psi_p^a (\xi_{1i}) \lbrace { \sum_{q=0}^{Q_y} \psi_{pq}^b
-	    (\xi_{2j}) \lbrace { \sum_{r=0}^{Q_z} \hat u_{pqr}
-	    \psi_{pqr}^c (\xi_{3k}) \rbrace} \rbrace}. \f$
-
-	    And sumfactorizing step of the form is as:\\
-
-	    \f$ f_{pq} (\xi_{3k}) = \sum_{r=0}^{Q_z} \hat u_{pqr}
-	    \psi_{pqr}^c (\xi_{3k}),\\
-
-            g_{p} (\xi_{2j}, \xi_{3k}) = \sum_{r=0}^{Q_y} \psi_{pq}^b
-            (\xi_{2j}) f_{pq} (\xi_{3k}),\\
-
-            u(\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{p=0}^{Q_x}
-	    \psi_{p}^a (\xi_{1i}) g_{p} (\xi_{2j}, \xi_{3k}).  \f$
-        **/
-        void StdTetExp::BwdTrans(const Array<OneD, const NekDouble>& inarray, 
+        /**
+         * @note 'r' (base[2]) runs fastest in this element
+         *
+         * \f$ u^{\delta} (\xi_{1i}, \xi_{2j}, \xi_{3k}) 
+         *  =  \sum_{m(pqr)} \hat u_{pqr} 
+         *          \phi_{pqr} (\xi_{1i}, \xi_{2j}, \xi_{3k})\f$
+         *
+         * Backward transformation is three dimensional tensorial expansion
+         * \f$ u (\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{p=0}^{Q_x}
+         * \psi_p^a (\xi_{1i}) \lbrace { \sum_{q=0}^{Q_y} \psi_{pq}^b
+         * (\xi_{2j}) \lbrace { \sum_{r=0}^{Q_z} \hat u_{pqr}
+         * \psi_{pqr}^c (\xi_{3k}) \rbrace} \rbrace}. \f$
+         * And sumfactorizing step of the form is as:\\
+         *
+         * \f$ f_{pq} (\xi_{3k}) = \sum_{r=0}^{Q_z} \hat u_{pqr}
+         * \psi_{pqr}^c (\xi_{3k}),\\
+         *
+         * g_{p} (\xi_{2j}, \xi_{3k}) = \sum_{r=0}^{Q_y} \psi_{pq}^b
+         * (\xi_{2j}) f_{pq} (\xi_{3k}),\\
+         *
+         * u(\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{p=0}^{Q_x}
+         * \psi_{p}^a (\xi_{1i}) g_{p} (\xi_{2j}, \xi_{3k}).  \f$
+         */
+        void StdTetExp::BwdTrans(const Array<OneD, const NekDouble>& inarray,
                                  Array<OneD, NekDouble> &outarray)
         {
-            
+
             ASSERTL1( (m_base[1]->GetBasisType() != LibUtilities::eOrtho_B)  ||
                       (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
                       "Basis[1] is not a general tensor type");
@@ -669,12 +737,12 @@ namespace Nektar
             Array<OneD, const NekDouble> base0 = m_base[0]->GetBdata();
             Array<OneD, const NekDouble> base1 = m_base[1]->GetBdata();
             Array<OneD, const NekDouble> base2 = m_base[2]->GetBdata();
-            
+
             Array<OneD, NekDouble > tmp(nquad2*order0*(order1+1)/2);
             Array<OneD, NekDouble > tmp1(nquad2*nquad1*order0);
 
-            int i,j, mode,mode1, cnt; 
-            
+            int i,j, mode,mode1, cnt;
+
             // Perform summation over '2' direction
             mode = mode1 = cnt = 0;
             for(i = 0; i < order0; ++i)
@@ -686,7 +754,7 @@ namespace Nektar
                                 nquad2,&inarray[0]+mode1,1,0.0,
                                 &tmp[0]+cnt*nquad2,1);
                     mode  += order2-i-j;
-                    mode1 += order2-i-j;                    
+                    mode1 += order2-i-j;
                 }
                 //increment mode1 in case order1!=order2
                 for(j = order1-i; j < order2-i; ++j)
@@ -714,12 +782,12 @@ namespace Nektar
             for(i = 0; i < order0; ++i)
             {
                 Blas::Dgemm('N','T',nquad1,nquad2,order1-i,1.0,
-                            base1.get()+mode*nquad1,nquad1, 
+                            base1.get()+mode*nquad1,nquad1,
                             &tmp[0]+mode*nquad2,nquad2,0.0,
                             &tmp1[0]+i*nquad1*nquad2,nquad1);
                 mode  += order1-i;
             }
-            
+
             // fix for modified basis by adding additional split of
             // top and base singular vertex modes as well as singular
             // edge
@@ -731,11 +799,11 @@ namespace Nektar
                 {
                     Blas::Daxpy(nquad1,tmp[nquad2+i], base1.get()+nquad1,1,
                                 &tmp1[nquad1*nquad2]+i*nquad1,1);
-                }                
+                }
             }
 
             // Perform summation over '0' direction
-            Blas::Dgemm('N','T', nquad0,nquad1*nquad2,order0,1.0, 
+            Blas::Dgemm('N','T', nquad0,nquad1*nquad2,order0,1.0,
                         base0.get(),nquad0, &tmp1[0], nquad1*nquad2,
                         0.0, &outarray[0], nquad0);
 
@@ -762,7 +830,8 @@ namespace Nektar
             }
 
             // Create an index map from the hexahedron to the tetrahedron.
-            // Explicit computation of the actual index is error-prone and too difficult.
+            // Explicit computation of the actual index is error-prone and too
+            // difficult.
             Array<OneD, int> pqr = Array<OneD, int>( (P+1)*(Q+1)*(R+1), -1 );
             for( int p = 0, mode = 0; p <= P; ++p ) {
                 for( int q = 0; q <= Q - p; ++q ) {
@@ -781,7 +850,8 @@ namespace Nektar
                     for( int q = 0; q <= Q - p; ++q ) {
                         for( int r = 0; r <= R - p - q; ++r ) {
                             int mode = pqr[r + (R+1)*(q + (Q+1)*p)];
-                            Ak[q + (Q+1)*p]   +=   inarray[mode]  *  zBasis[k + Qz*mode];
+                            Ak[q + (Q+1)*p] += inarray[mode]
+                                                * zBasis[k + Qz*mode];
                         }
                     }
                 }
@@ -789,12 +859,14 @@ namespace Nektar
                 // Factorize the y-dimension
                 for( int j = 0; j < Qy; ++j ) {
 
-                    // Create the vector of coefficients summed over the y and z-modes
+                    // Create the vector of coefficients summed over the y and
+                    // z-modes
                     Array<OneD, NekDouble> bjk(P+1, 0.0);
                     for( int p = 0; p <= P; ++p ) {
                         for( int q = 0; q <= Q - p; ++q ) {
                             int mode = pq[q + (Q+1)*p];
-                            bjk[p]   +=   Ak[q + (Q+1)*p]  *  yBasis[j + Qy*mode];
+                            bjk[p] += Ak[q + (Q+1)*p]
+                                                * yBasis[j + Qy*mode];
                         }
                     }
 
@@ -813,20 +885,13 @@ namespace Nektar
 #endif
         }
 
-	/** \brief Forward transform from physical quadrature space
-            stored in \a inarray and evaluate the expansion coefficients and
-            store in \a (this)->m_coeffs  
-            
-            Inputs:\n
-            
-            - \a inarray: array of physical quadrature points to be transformed
-            
-            Outputs:\n
-            
-            - (this)->_coeffs: updated array of expansion coefficients. 
-            
-        */    
-        void StdTetExp::FwdTrans(const Array<OneD, const NekDouble>& inarray,  
+
+        /**
+         * @param   inarray     array of physical quadrature points to be
+         *                      transformed.
+         * @param   outarray    updated array of expansion coefficients.
+         */
+        void StdTetExp::FwdTrans(const Array<OneD, const NekDouble>& inarray,
                                  Array<OneD, NekDouble> &outarray)
         {
             IProductWRTBase(inarray,outarray);
@@ -834,7 +899,7 @@ namespace Nektar
             // get Mass matrix inverse
             StdMatrixKey      masskey(eInvMass,DetExpansionType(),*this);
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
-            
+
             // copy inarray in case inarray == outarray
             DNekVec in (m_ncoeffs, outarray);
             DNekVec out(m_ncoeffs, outarray, eWrapper);
@@ -858,26 +923,26 @@ namespace Nektar
             else
             {
                 // eta_z = xi_z
-                eta[2] = xi[2]; 
+                eta[2] = xi[2];
                 //eta_y = 2(1 + xi_y)/(1 - xi_z) - 1
-                eta[1] = 2.0*(1.0+xi[1])/(1.0-xi[2]) - 1.0; 
-                if( fabs(eta[1]-1.0) <  NekConstants::kNekZeroTol ) 
+                eta[1] = 2.0*(1.0+xi[1])/(1.0-xi[2]) - 1.0;
+                if( fabs(eta[1]-1.0) <  NekConstants::kNekZeroTol )
                 {
                     // Distant diagonal edge shared by all eta_x
                     // coordinate planes: the xi_y == -xi_z line
                     eta[0] = -1.0;
-                } 
-                else 
+                }
+                else
                 {
                     //eta_x = 2(1 + xi_x)/(-xi_y - xi_z) - 1
-                    eta[0] = 2.0*(1.0+xi[0])/(-xi[1]-xi[2]) - 1.0; 
+                    eta[0] = 2.0*(1.0+xi[0])/(-xi[1]-xi[2]) - 1.0;
                 }
 
-            } 
+            }
 
-            return  StdExpansion3D::PhysEvaluate(eta);  
+            return  StdExpansion3D::PhysEvaluate(eta);
         }
-        
+
 
         void StdTetExp::GetCoords( Array<OneD, NekDouble> & xi_x, Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z)
         {
@@ -906,7 +971,7 @@ namespace Nektar
                                             Array<OneD, unsigned int> &maparray,
                                             Array<OneD, int>& signarray)
         {
-          
+
             int i,j;
             const int nummodes0 = m_base[0]->GetNumModes();
             const int nummodes1 = m_base[1]->GetNumModes();
@@ -916,14 +981,14 @@ namespace Nektar
             const LibUtilities::BasisType bType0 = GetEdgeBasisType(0);
             const LibUtilities::BasisType bType1 = GetEdgeBasisType(1);
             const LibUtilities::BasisType bType2 = GetEdgeBasisType(3);
-            
+
             ASSERTL1( (bType0==LibUtilities::eModified_A) && (bType1==LibUtilities::eModified_B)&& (bType2==LibUtilities::eModified_C),
                       "Method only implemented for Modified_A BasisType (x direction), Modified_B BasisType (y direction), and Modified_C BasisType(z direction)");
 
             bool isQuad = true;
 
             int nFaceCoeffs = 0;
-            if( fid == 0 ) // Base quad 
+            if( fid == 0 ) // Base quad
             {
                 nummodesA = nummodes0;
                 nummodesB = nummodes1;
@@ -946,7 +1011,7 @@ namespace Nektar
             {
                 maparray = Array<OneD, unsigned int>(nFaceCoeffs,1);
             }
-            
+
             if(signarray.num_elements() != nFaceCoeffs)
             {
                 signarray = Array<OneD, int>(nFaceCoeffs,1);
@@ -977,12 +1042,12 @@ namespace Nektar
 
 
             int baseCoefficient = 0;
-            
+
             switch(fid)
             {
 
             // Base triangle
-            case 0: 
+            case 0:
                 for(int a = 0; a < nummodesA; ++a) {
                     for(int b = 0; b < nummodesB - a; ++b) {
                         ASSERTL0(arrayindex[b + nummodesB*a] != -1, "arrayindex is not set up properly.");
@@ -990,7 +1055,7 @@ namespace Nektar
                     }
                 }
             break;
-            
+
             // Rear triangle
             case 3:
                 baseCoefficient = (nummodes1 - 1) * nummodes2;
@@ -1004,7 +1069,7 @@ namespace Nektar
             break;
 
             // Front triangle
-            case 1: 
+            case 1:
                 for(int a = 0; a < nummodesA; ++a) {
                     for(int b = 0; b <  nummodesB - a; ++b) {
                         ASSERTL0(arrayindex[b + nummodesB*a] != -1, "arrayindex is not set up properly.");
@@ -1016,7 +1081,7 @@ namespace Nektar
 
 
             // Vertical triangle
-            case 4: 
+            case 4:
                 for(int a = 0, n = 0; a < nummodesA; ++a) {
                     for(int b = 0; b < nummodesB-a; ++b, ++n) {
                         ASSERTL0(arrayindex[b + nummodesB*a] != -1, "arrayindex is not set up properly.");
@@ -1024,7 +1089,7 @@ namespace Nektar
                     }
                 }
             break;
-            
+
 
             // Slanted triangle
             case 2:
@@ -1036,12 +1101,12 @@ namespace Nektar
                     baseCoefficient += nummodesA*(b+1);
                 }
             break;
-            
+
             }
 
             if( (faceOrient==1) || (faceOrient==3) ||
                 (faceOrient==6) || (faceOrient==7) )
-            {    
+            {
 
                 if(faceOrient<4)
                 {
@@ -1053,7 +1118,7 @@ namespace Nektar
                                 signarray[ arrayindex[i*nummodesA+j] ] *= -1;
                         }
                     }
-                        
+
                     for(i = 0; i < nummodesA; i++)
                     {
                         swap( maparray[i] , maparray[i+nummodesA] );
@@ -1061,7 +1126,7 @@ namespace Nektar
                     }
                 }
                 else
-                {  
+                {
                     for(i = 0; i < nummodesB; i++)
                     {
                         for(j = 3; j < nummodesA; j+=2)
@@ -1069,8 +1134,8 @@ namespace Nektar
                             if( arrayindex[i*nummodesA+j] >= 0 )
                                 signarray[ arrayindex[i*nummodesA+j] ] *= -1;
                         }
-                    } 
-                        
+                    }
+
                     for(i = 0; i < nummodesB; i++)
                     {
                         swap( maparray[i] , maparray[i+nummodesB] );
@@ -1078,12 +1143,12 @@ namespace Nektar
                     }
                 }
             }
-                
+
             if( (faceOrient==2) || (faceOrient==3) ||
                 (faceOrient==5) || (faceOrient==7) )
-            {  
+            {
                 if(faceOrient<4)
-                {                                   
+                {
                     for(i = 0; i < nummodesB; i++)
                     {
                         for(j = 3; j < nummodesA; j+=2)
@@ -1091,8 +1156,8 @@ namespace Nektar
                             if( arrayindex[i*nummodesA+j] >= 0 )
                                 signarray[ arrayindex[i*nummodesA+j] ] *= -1;
                         }
-                    }                 
-                        
+                    }
+
                     for(i = 0; i < nummodesB; i++)
                     {
                         swap( maparray[i*nummodesA] , maparray[i*nummodesA+1] );
@@ -1100,7 +1165,7 @@ namespace Nektar
                     }
                 }
                 else
-                { 
+                {
                     for(i = 3; i < nummodesB; i+=2)
                     {
                         for(j = 0; j < nummodesA; j++)
@@ -1108,15 +1173,15 @@ namespace Nektar
                             if( arrayindex[i*nummodesA+j] >= 0 )
                                 signarray[ arrayindex[i*nummodesA+j] ] *= -1;
                         }
-                    }                
-                        
+                    }
+
                     for(i = 0; i < nummodesA; i++)
                     {
                         swap( maparray[i*nummodesB] , maparray[i*nummodesB+1] );
                         swap( signarray[i*nummodesB] , signarray[i*nummodesB+1] );
                     }
                 }
-            }       
+            }
 
         }
 
@@ -1124,24 +1189,24 @@ namespace Nektar
         void StdTetExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
         {
             if(format==eTecplot)
-            {              
+            {
                 int  Qx = m_base[0]->GetNumPoints();
                 int  Qy = m_base[1]->GetNumPoints();
                 int  Qz = m_base[2]->GetNumPoints();
-                
+
                 Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
                 eta_x = m_base[0]->GetZ();
                 eta_y = m_base[1]->GetZ();
                 eta_z = m_base[2]->GetZ();
-                
+
                 if(dumpVar)
                 {
-                    outfile << "Variables = z1,  z2,  z3"; 
+                    outfile << "Variables = z1,  z2,  z3";
                     outfile << ", "<< var << std::endl << std::endl;
                 }
                 outfile << "Zone, I=" << Qx <<", J=" << Qy <<", K=" << Qz <<", F=Point" << std::endl;
-                
-                for(int k = 0; k < Qz; ++k) 
+
+                for(int k = 0; k < Qz; ++k)
                 {
                     for(int j = 0; j < Qy; ++j)
                     {
@@ -1158,9 +1223,9 @@ namespace Nektar
                 ASSERTL0(false, "Output routine not implemented for requested type of output");
             }
         }
-        
 
-        //   I/O routine        
+
+        //   I/O routine
         void StdTetExp::WriteCoeffsToFile(std::ofstream &outfile)
         {
             int  order0 = m_base[0]->GetNumModes();
@@ -1169,7 +1234,7 @@ namespace Nektar
 
             Array<OneD, NekDouble> wsp  = Array<OneD, NekDouble>(order0*order1*order2, 0.0);
 
-            NekDouble *mat = wsp.get(); 
+            NekDouble *mat = wsp.get();
 
             // put coeffs into matrix and reverse order so that p index is fastest recall q is fastest for tri's
             Vmath::Zero(order0*order1*order2, mat, 1);
@@ -1186,10 +1251,10 @@ namespace Nektar
                 }
             }
 
-            outfile <<"Coeffs = [" << " "; 
+            outfile <<"Coeffs = [" << " ";
 
             for(int k = 0; k < order2; ++k)
-            {            
+            {
                 for(int j = 0; j < order1; ++j)
                 {
                     for(int i = 0; i < order0; ++i)
@@ -1197,10 +1262,10 @@ namespace Nektar
                         //                         outfile << mat[j*order0+i] <<" ";
                         outfile << mat[i + order0*(j + order1*k)] <<" ";
                     }
-                    outfile << std::endl; 
+                    outfile << std::endl;
                 }
             }
-            outfile << "]" ; 
+            outfile << "]" ;
         }
 
 
@@ -1209,8 +1274,20 @@ namespace Nektar
     }//end namespace
 }//end namespace
 
-/** 
+/**
  * $Log: StdTetExp.cpp,v $
+ * Revision 1.26  2009/11/02 19:15:43  cantwell
+ * Moved ContField1D to inherit from DisContField1D.
+ * Moved ContField3D to inherit from DisContField3D.
+ * Incorporated GenExpList1D functionality into ExpList1D.
+ * Tidied up and added documentation to various classes.
+ * Moved Namespace documentation and introductions to separate files along with
+ * doxygen configuration.
+ * Added option to use system ZLIB library instead of libboost_zlib on UNIX.
+ * Added extra search paths to FindMetis.cmake and FindNektar++.cmake.
+ * Updated Linux compiling instructions.
+ * Updated regDemo to use Helmholtz2D-g when built as debug.
+ *
  * Revision 1.25  2009/04/27 21:32:45  sherwin
  * Updated WriteToField method
  *
@@ -1295,7 +1372,7 @@ namespace Nektar
  *
  * First compiling version of StdRegions
  *
- **/ 
+ **/
 
 
 

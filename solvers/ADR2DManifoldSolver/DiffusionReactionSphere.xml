@@ -10252,7 +10252,11 @@
   </COMPOSITE>
   
   <DOMAIN> C[0] </DOMAIN>
-  
+
+  <GEOMINFO>
+      <I PROPERTY="TANGENTDIR" VALUE="TangentZ"/>
+  </GEOMINFO>
+
 </GEOMETRY>
 
 <EXPANSIONS>
@@ -10270,7 +10274,6 @@
       <P> epsilon0 = 0.001                 </P>
       <P> epsilon1 = 0.002                 </P>
       <P> ReadFnType = 2                   </P>
-      <P> Connection = 2                   </P>
       <P> UseDirDeriv = 1                  </P>
     </PARAMETERS>
 

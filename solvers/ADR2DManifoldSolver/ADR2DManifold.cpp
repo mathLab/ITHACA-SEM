@@ -156,15 +156,6 @@ namespace Nektar
             m_x2c  = 0.0;
         }
 
-        if(m_boundaryConditions->CheckForParameter("Connection") == true)
-        {
-            m_Connection = m_boundaryConditions->GetParameter("Connection");
-        }
-        else
-        {
-            m_Connection  = 0;
-        }
-
         if(m_boundaryConditions->CheckForParameter("Anisotropy") == true)
         {
             m_Anisotropy = m_boundaryConditions->GetParameter("Anisotropy");
@@ -300,13 +291,10 @@ namespace Nektar
             break;
         case eUnsteadyDiffusion:
             {
-                // Construction of Connection
-                GeneratePrincipaldirection(m_Connection,m_velocity);
-
                 // Evaluate two tangential vectors on 2D manifold
                  if(m_spacedim==3)
                  {
-                    SetUpTangentialVectors(m_velocity);
+                    SetUpTangentialVectors();
                  }
                 
                 int nelem, offset_e;
@@ -328,13 +316,10 @@ namespace Nektar
         case eFHNtesttype1:
         case eFHNMONO:
             {
-                // Construction of Connection
-                GeneratePrincipaldirection(m_Connection,m_velocity);
-
                 // Evaluate two tangential vectors on 2D manifold
                 if(m_spacedim==3)
                 {
-                    SetUpTangentialVectors(m_velocity);
+                    SetUpTangentialVectors();
                 }
 
                 m_timeIntMethod = LibUtilities::eIMEXdirk_3_4_3;
@@ -894,7 +879,7 @@ namespace Nektar
       if(m_UseDirDeriv)
       {
           //  m_fields[indx]->HelmSolve(m_fields[indx]->GetPhys(),m_fields[indx]->UpdateCoeffs(),kappa);
-          m_fields[indx]->HelmSolve(m_fields[indx]->GetPhys(),m_fields[indx]->UpdateCoeffs(),m_dirForcing,kappa);
+          m_fields[indx]->HelmSolve(m_fields[indx]->GetPhys(),m_fields[indx]->UpdateCoeffs(),kappa,NullNekDouble1DArray,m_dirForcing);
       }
 
       else
@@ -1760,13 +1745,11 @@ namespace Nektar
       }       
   }
   
-  void ADR2DManifold::SetUpTangentialVectors(Array<OneD, Array<OneD, NekDouble> > &Principaldirection)
+  void ADR2DManifold::SetUpTangentialVectors()
      {
          int i, j, k;
          int nvariables = m_fields.num_elements();
          int nq = m_fields[0]->GetNpoints();
-
-         Array<OneD, Array<OneD, NekDouble> > m_SurfaceNormal; // m_spacedim by nq 
 
          Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_gradtan; // 1 by nvariable by nq
          Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis; // 2 by m_spacedim by nq 
@@ -1775,7 +1758,7 @@ namespace Nektar
          m_dirForcing = Array<OneD, Array<OneD, NekDouble> >(2);
          m_gradtan =  Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
          m_tanbasis  =  Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
-         m_SurfaceNormal = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+         
          for (i = 0; i < 2; ++i)
          {
              m_dirForcing[i] = Array<OneD, NekDouble>(m_spacedim*nq);
@@ -1783,7 +1766,6 @@ namespace Nektar
              for (k = 0; k < m_spacedim; ++k)
              {
                  m_tanbasis[i][k] = Array<OneD, NekDouble>(nq, 0.0);
-                 m_SurfaceNormal[k] = Array<OneD, NekDouble>(nq, 0.0);
              }
              
              m_gradtan[i] = Array<OneD, Array<OneD, NekDouble> >(nvariables);
@@ -1793,33 +1775,7 @@ namespace Nektar
             }
          }
 
-         Array<OneD, NekDouble> temp(nq, 0.0);
-         // Get Tangent basis from GeomFactors::GeomFactors
-         for(k = 0; k < m_spacedim; ++k)
-         {
-             temp = Array<OneD, NekDouble>(nq, 0.0);
-             m_fields[0]->GetSurfaceNormal(temp,k);
-             Vmath::Vcopy(nq, temp, 1, m_SurfaceNormal[k], 1);
-         }
-
-         // Gram-schmidz process to make this principaldirection orthonormal to surface normal vector
-         // Let u1 = v1 = SurfaceNormal, v2 = Principaldirection, which should be orthogornalized to u2
-         // inner12 = < u1, v2 >, norm2 = < u1, u1 > = 1 by default
-         // ipro = - < u1, v2 > / < u1, u1 >
-         temp = Array<OneD, NekDouble>(nq, 0.0);
-         for (i = 0; i < m_spacedim; ++i)
-         {
-             Vmath::Vvtvp(nq, &m_SurfaceNormal[i][0], 1, &Principaldirection[i][0], 1, &temp[0], 1, &temp[0], 1);
-         }
-         Vmath::Neg(nq, temp, 1);
-         
-         // u2 = v2 - < u1 , v2 > ( u1 / < u1, u1 > ) 
-         for (i = 0; i < m_spacedim; ++i)
-         {
-             Vmath::Vvtvp(nq, &temp[0], 1, &m_SurfaceNormal[i][0], 1, &Principaldirection[i][0], 1, &m_tanbasis[0][i][0], 1);
-         }
-         
-        Unitlength(m_tanbasis[0]);
+         m_fields[0]->GetTangents(m_tanbasis);
          
         // When there is an anisotropy layers, the second tangential vector is killed.
         if(m_Anisotropy>0)
@@ -1830,13 +1786,6 @@ namespace Nektar
             }
         }
 
-        // The second tangential vector is obtained by cross-producting Surface Normal with the first tangential vector
-        else
-        {
-            CrossProduct(m_tanbasis[0], m_SurfaceNormal, m_tanbasis[1]);
-            Unitlength(m_tanbasis[1]);
-        }
-          
         int nelem ,npts_e, offset0, offset1;
         // Using this tangential basis as dirForcing
 
@@ -2182,7 +2131,7 @@ namespace Nektar
 
         int i, j, m, n, ind;
         NekDouble a_n, d_n, gamma_n, alpha_n, beta_n;
-        NekDouble A_mn, C_mn, theta, phi,radius,;
+        NekDouble A_mn, C_mn, theta, phi,radius;
 
         std::complex<double> Spericharmonic, delta_n, varphi0, varphi1, temp;
         std::complex<double> B_mn, D_mn;
@@ -2282,148 +2231,6 @@ namespace Nektar
 	  }
   }
 
-    void ADR2DManifold::CrossProduct(Array<OneD, Array<OneD, NekDouble> > &v1,
-                                     Array<OneD, Array<OneD, NekDouble> > &v2,
-                                     Array<OneD, Array<OneD, NekDouble> > &v3)
-    {
-        int nq = m_fields[0]->GetNpoints();
-        Array<OneD, NekDouble> temp(nq);
-
-        Vmath::Vmul(nq, v1[2], 1, v2[1], 1, temp, 1);
-        Vmath::Vvtvm(nq, v1[1], 1, v2[2], 1, temp, 1, v3[0], 1);
-        
-        Vmath::Vmul(nq, v1[0], 1, v2[2], 1, temp, 1);
-        Vmath::Vvtvm(nq, v1[2], 1, v2[0], 1, temp, 1, v3[1], 1);
-        
-        Vmath::Vmul(nq, v1[1], 1, v2[0], 1, temp, 1);
-        Vmath::Vvtvm(nq, v1[0], 1, v2[1], 1, temp, 1, v3[2], 1);
-    }
-
-
-
-  // Return a vector with unit length
-  void ADR2DManifold::Unitlength(Array<OneD, Array<OneD, NekDouble> > &array)
-  {   
-    int i, nq = array[0].num_elements(), Tol = 0.0000000001;
-    Array<OneD, NekDouble> norm (nq, 0.0);
-    for (i = 0; i < m_spacedim; ++i)
-    {
-	Vmath::Vvtvp(nq, &array[i][0], 1, &array[i][0], 1, &norm[0], 1, &norm[0], 1);
-    }
-    Vmath::Vsqrt(nq, norm, 1, norm, 1);
-
-    for (i = 0; i < nq; ++i)
-    {
-        if(abs(norm[i]) < Tol)
-        {
-            norm[i] = 1.0;
-        }
-    }
-    
-    for (i = 0; i < m_spacedim; ++i)
-    {
-	Vmath::Vdiv(nq, array[i], 1, norm, 1, array[i], 1);
-    }
-  }
-
-    void ADR2DManifold::GeneratePrincipaldirection(const int Connection, 
-                                                   Array<OneD, Array<OneD, NekDouble> > &Principaldirection)
-    {
-        Principaldirection = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-        int nq = m_fields[0]->GetNpoints();
-        
-        Array<OneD,NekDouble> x0(nq);
-        Array<OneD,NekDouble> x1(nq);
-        Array<OneD,NekDouble> x2(nq);
-        m_fields[0]->GetCoords(x0,x1,x2);
-        
-        for(int i = 0; i < m_spacedim; ++i)
-        {
-            m_velocity[i] = Array<OneD, NekDouble> (GetNpoints(),0.0);
-        }
-        
-        // Construction of Connection
-        switch(Connection)
-        {
-        // projection to x-axis
-        case(0):
-            {
-                Principaldirection[Connection] = Array<OneD, NekDouble> (GetNpoints(),1.0);
-            }
-        break;
-
-        // projection to y-axis
-        case(1):
-            {
-                Principaldirection[Connection] = Array<OneD, NekDouble> (GetNpoints(),1.0);
-            }
-        break;
-
-        // projection to z-axis
-        case(2):
-            {
-                Principaldirection[Connection] = Array<OneD, NekDouble> (GetNpoints(),1.0);
-            }
-        break;
-        
-
-        case(4):
-            {
-                // circular around the center of the domain
-                NekDouble radius,xmax, xmin, xmid, ymax, ymin, ymid, xdis, ydis;
-            
-                xmax = Vmath::Vmax(nq,x0,1);
-                xmin = Vmath::Vmin(nq,x0,1);
-                ymax = Vmath::Vmax(nq,x1,1);
-                ymin = Vmath::Vmin(nq,x1,1);
-                
-                xmid = 0.5*(xmax+xmin);
-                ymid = 0.5*(ymax+ymin);
-                
-                for (int i = 0; i < nq; i++)
-                {
-                    xdis = x0[i]-xmid;
-                    ydis = x1[i]-ymid;
-                    
-                    radius = sqrt(xdis*xdis+ydis*ydis);
-                    Principaldirection[0][i] = ydis/radius;
-                    Principaldirection[1][i] = -1.0*xdis/radius;
-                }
-            }
-            break;
-
-        case(10):
-            {
-
-                cout << "Anisotropy layers" << endl;
-
-                // circular around the center of the domain
-                NekDouble radius, xc, yc, xdis, ydis;
-   
-                xc = 25.0;
-                yc = 0.0;
-
-                for (int i = 0; i < nq; i++)
-                {
-
-                    if(x0[i]<=xc)
-                    {
-                        Principaldirection[0][i] = 1.0;
-                        Principaldirection[1][i] = 0.0;
-                    }
-
-                    else
-                    {
-                        xdis = x0[i]-xc;
-                        ydis = x1[i]-yc;
-                        radius = sqrt(xdis*xdis+ydis*ydis);
-                        Principaldirection[0][i] = ydis/radius;
-                        Principaldirection[1][i] = -1.0*xdis/radius;
-                    }
-                }
-            }
-        }
-    }
         
     // Plot tangential vector map
     void ADR2DManifold::PlotTangentialVectorMap()
@@ -2549,7 +2356,15 @@ namespace Nektar
         out << "\tinitialwavetype    : " << m_initialwavetype << endl;
         out << "\tinitialcenter = ( " << m_x0c << "," << m_x1c << "," << m_x2c << " )" << endl;
         out << "\tUseDirDeriv   : " << m_UseDirDeriv << endl;
-        out << "\tConnection    : " << m_Connection << endl;
+        out << "\tConnection    : ";
+        if (m_graph->CheckForGeomInfo("TANGENTDIR"))
+        {
+            out << m_graph->GetGeomInfo("TANGENTDIR") << endl;
+        }
+        else
+        {
+            out << "Not defined." << endl;
+        }
         out << "\tAnisotropy    : " << m_Anisotropy << endl;
         out << "\tm_mu          : " << m_epsilon[0] << endl;
         out << "\tm_nu          : " << m_epsilon[1] << endl;

@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: GlobalMatrix header 
+// Description: GlobalMatrix header
 //
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALMATRIX_H
@@ -41,33 +41,39 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-	class GlobalMatrix
+        /// Represents a matrix of all degrees of freedom.
+        class GlobalMatrix
         {
         public:
             typedef std::pair<  int,  int> CoordType;
             typedef std::map< CoordType, NekDouble > COOMatType;
 
-        public:
-            GlobalMatrix(unsigned int rows, 
+            /// Construct a new matrix.
+            GlobalMatrix(unsigned int rows,
                          unsigned int columns,
                          const COOMatType &cooMat);
-            
-            const DNekSparseMatSharedPtr GetMatrix(void) const 
+
+            /// Returns a pointer to the DNekSparseMat matrix.
+            const DNekSparseMatSharedPtr GetMatrix(void) const
             {
                 return m_matrix;
             }
 
-            void Multiply(const Array<OneD,const NekDouble> &in, 
+            /// Perform a matrix-vector multiply.
+            void Multiply(const Array<OneD,const NekDouble> &in,
                                 Array<OneD,      NekDouble> &out);
 
         private:
+            /// Pointer to a double-precision Nektar++ sparse matrix.
             DNekSparseMatSharedPtr  m_matrix;
-	};
+        };
 
+        /// Shared pointer to a GlobalMatrix object.
         typedef boost::shared_ptr<GlobalMatrix> GlobalMatrixSharedPtr;
-
+        /// Mapping from global matrix keys to global matrices.
         typedef map<GlobalMatrixKey,GlobalMatrixSharedPtr> GlobalMatrixMap;
-        typedef boost::shared_ptr<GlobalMatrixMap> GlobalMatrixMapShPtr; 
+        /// Shared pointer to a global matrix map.
+        typedef boost::shared_ptr<GlobalMatrixMap> GlobalMatrixMapShPtr;
 
     } //end of namespace
 } //end of namespace

@@ -119,7 +119,8 @@ namespace Nektar
             GenerateBoundaryConditionExpansion(graph2D,bcs,
                                                 bcs.GetVariable(bc_loc));
             EvaluateBoundaryConditions();
-
+            ApplyGeomInfo(graph2D);
+            
             if(!SameTypeOfBoundaryConditions(In))
             {
                 map<int,int> periodicEdges;
@@ -154,7 +155,8 @@ namespace Nektar
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-
+            ApplyGeomInfo(graph2D);
+            
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
                                 ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType);
 
@@ -175,6 +177,8 @@ namespace Nektar
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
+            ApplyGeomInfo(graph2D);
+            
             map<int,int> periodicEdges;
             vector<map<int,int> > periodicVertices;
             GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),
@@ -223,7 +227,8 @@ namespace Nektar
         {
             GenerateBoundaryConditionExpansion(graph2D,bcs,variable);
             EvaluateBoundaryConditions();
-
+            ApplyGeomInfo(graph2D);
+            
             map<int,int> periodicEdges;
             vector<map<int,int> >periodicVertices;
             GetPeriodicEdges(graph2D,bcs,variable,periodicVertices,
@@ -260,7 +265,8 @@ namespace Nektar
             GenerateBoundaryConditionExpansion(graph2D,bcs,
                                                bcs.GetVariable(bc_loc));
             EvaluateBoundaryConditions();
-
+            ApplyGeomInfo(graph2D);
+            
             map<int,int> periodicEdges;
             vector<map<int,int> >periodicVertices;
             GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),
@@ -296,7 +302,8 @@ namespace Nektar
         {
             GenerateBoundaryConditionExpansion(graph2D,bcs,variable);
             EvaluateBoundaryConditions();
-
+            ApplyGeomInfo(graph2D);
+            
             map<int,int> periodicEdges;
             vector<map<int,int> >periodicVertices;
             GetPeriodicEdges(graph2D,bcs,variable,
@@ -430,79 +437,6 @@ namespace Nektar
             }
         }
 
-        /**
-         * Consider the two dimensional Helmholtz equation,
-         * \f[\nabla^2u(\boldsymbol{x})-\lambda u(\boldsymbol{x})
-         * = f(\boldsymbol{x}),\f] supplemented with appropriate boundary
-         * conditions (which are contained in the data member
-         * #m_bndCondExpansions). Applying a \f$C^0\f$ continuous Galerkin
-         * discretisation, this equation leads to the following linear system:
-         * \f[\left(\boldsymbol{L}+\lambda\boldsymbol{M}\right)
-         * \boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}}\f] where
-         * \f$\boldsymbol{L}\f$ and \f$\boldsymbol{M}\f$ are the Laplacian and
-         * mass matrix respectively. This function solves the system above for
-         * the global coefficients \f$\boldsymbol{\hat{u}}\f$ by a call to the
-         * function #GlobalSolve. It is assumed #m_contCoeff contains an
-         * initial estimate for the solution.
-         *
-         * The values of the function \f$f(\boldsymbol{x})\f$ evaluated at the
-         * quadrature points \f$\boldsymbol{x}_i\f$ should be contained in the
-         * variable #m_phys of the ExpList object \a Sin. The resulting global
-         * coefficients \f$\boldsymbol{\hat{u}}_g\f$ are stored in the array
-         * #m_contCoeffs.
-         *
-         * @param   Sin         An ExpList, containing the discrete evaluation
-         *                      of the forcing function \f$f(\boldsymbol{x})\f$
-         *                      at the quadrature points in its array #m_phys.
-         * @param   lambda      The parameter \f$\lambda\f$ of the Helmholtz
-         *                      equation
-         */
-        void ContField2D::HelmSolve(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                NekDouble lambda,
-                                bool      UseContCoeffs,
-                                const Array<OneD, const NekDouble>& dirForcing)
-        {
-            //----------------------------------
-            //  Setup RHS Inner product
-            //----------------------------------
-            // Inner product of forcing
-            Array<OneD,NekDouble> wsp(m_contNcoeffs);
-            IProductWRTBase(inarray,wsp,true);
-            // Note -1.0 term necessary to invert forcing function to
-            // be consistent with matrix definition
-            Vmath::Neg(m_contNcoeffs, wsp, 1);
-
-            // Forcing function with weak boundary conditions
-            int i,j;
-            int bndcnt=m_locToGloMap->GetNumLocalDirBndCoeffs();
-            for(i = m_numDirBndCondExpansions;
-                                    i < m_bndCondExpansions.num_elements(); ++i)
-            {
-                for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
-                {
-                    wsp[m_locToGloMap
-                                ->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)]
-                        += (m_bndCondExpansions[i]->GetCoeffs())[j];
-                }
-            }
-
-            // Solve the system
-            GlobalLinSysKey key(StdRegions::eHelmholtz,m_locToGloMap,lambda,
-                                m_locToGloMap->GetGlobalSysSolnType());
-
-            if(UseContCoeffs)
-            {
-                GlobalSolve(key,wsp,outarray,dirForcing);
-            }
-            else
-            {
-                Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
-                GlobalSolve(key,wsp,tmp,dirForcing);
-                GlobalToLocal(tmp,outarray);
-            }
-        }
 
         /**
          * Consider the two dimensional Laplace equation,
@@ -800,16 +734,94 @@ namespace Nektar
             MultiplyByInvMassMatrix(inarray,outarray,UseContCoeffs);
         }
 
+
         void ContField2D::v_HelmSolve(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                NekDouble lambda,
-                                bool      UseContCoeffs,
-                                const Array<OneD, const NekDouble>& dirForcing)
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                    const Array<OneD, const NekDouble> &Sigma,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff)
         {
-            HelmSolve(inarray,outarray,lambda,UseContCoeffs,dirForcing);
+            v_HelmSolveCG(inarray, outarray, lambda, Sigma, varcoeff,
+                              false, NullNekDouble1DArray);
         }
 
+        /**
+         * Consider the two dimensional Helmholtz equation,
+         * \f[\nabla^2u(\boldsymbol{x})-\lambda u(\boldsymbol{x})
+         * = f(\boldsymbol{x}),\f] supplemented with appropriate boundary
+         * conditions (which are contained in the data member
+         * #m_bndCondExpansions). Applying a \f$C^0\f$ continuous Galerkin
+         * discretisation, this equation leads to the following linear system:
+         * \f[\left(\boldsymbol{L}+\lambda\boldsymbol{M}\right)
+         * \boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}}\f] where
+         * \f$\boldsymbol{L}\f$ and \f$\boldsymbol{M}\f$ are the Laplacian and
+         * mass matrix respectively. This function solves the system above for
+         * the global coefficients \f$\boldsymbol{\hat{u}}\f$ by a call to the
+         * function #GlobalSolve. It is assumed #m_contCoeff contains an
+         * initial estimate for the solution.
+         *
+         * The values of the function \f$f(\boldsymbol{x})\f$ evaluated at the
+         * quadrature points \f$\boldsymbol{x}_i\f$ should be contained in the
+         * variable #m_phys of the ExpList object \a Sin. The resulting global
+         * coefficients \f$\boldsymbol{\hat{u}}_g\f$ are stored in the array
+         * #m_contCoeffs.
+         *
+         * @param   Sin         An ExpList, containing the discrete evaluation
+         *                      of the forcing function \f$f(\boldsymbol{x})\f$
+         *                      at the quadrature points in its array #m_phys.
+         * @param   lambda      The parameter \f$\lambda\f$ of the Helmholtz
+         *                      equation
+         */
+        void ContField2D::v_HelmSolveCG(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                    const Array<OneD, const NekDouble> &Sigma,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
+                          bool UseContCoeffs,
+                    const Array<OneD, const NekDouble> &dirForcing)
+        {
+            //----------------------------------
+            //  Setup RHS Inner product
+            //----------------------------------
+            // Inner product of forcing
+            Array<OneD,NekDouble> wsp(m_contNcoeffs);
+            IProductWRTBase(inarray,wsp,true);
+            // Note -1.0 term necessary to invert forcing function to
+            // be consistent with matrix definition
+            Vmath::Neg(m_contNcoeffs, wsp, 1);
+
+            // Forcing function with weak boundary conditions
+            int i,j;
+            int bndcnt=m_locToGloMap->GetNumLocalDirBndCoeffs();
+            for(i = m_numDirBndCondExpansions;
+                                    i < m_bndCondExpansions.num_elements(); ++i)
+            {
+                for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
+                {
+                    wsp[m_locToGloMap
+                                ->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)]
+                        += (m_bndCondExpansions[i]->GetCoeffs())[j];
+                }
+            }
+
+            // Solve the system
+            GlobalLinSysKey key(StdRegions::eHelmholtz,m_locToGloMap,lambda,
+                                m_locToGloMap->GetGlobalSysSolnType());
+
+            if(UseContCoeffs)
+            {
+                GlobalSolve(key,wsp,outarray,dirForcing);
+            }
+            else
+            {
+                Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
+                GlobalSolve(key,wsp,tmp,dirForcing);
+                GlobalToLocal(tmp,outarray);
+            }            
+        }
+        
         const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>&
                                 ContField2D::v_GetBndConditions()
         {

@@ -47,7 +47,7 @@ namespace Nektar
                         ):
             StdRegions::StdTetExp(Ba,Bb,Bc),
             m_geom(geom),
-            m_metricinfo(),
+            m_metricinfo(m_geom->GetGeomFactors(m_base)),
             m_matrixManager(std::string("TetExpMatrix")),
             m_staticCondMatrixManager(std::string("TetExpStaticCondMatrix"))
         {
@@ -60,37 +60,6 @@ namespace Nektar
                                                                     StdRegions::eNoExpansionType,*this),
                                                           boost::bind(&TetExp::CreateStaticCondMatrix, this, _1));
             }
-
-            GenMetricInfo();
-        }
-
-        TetExp::TetExp(const LibUtilities::BasisKey &Ba,
-                       const LibUtilities::BasisKey &Bb,
-                       const LibUtilities::BasisKey &Bc
-                       ):
-            StdRegions::StdTetExp(Ba,Bb,Bc),
-            m_geom(),
-            m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()),
-            m_matrixManager(std::string("TetExpMatrix")),
-            m_staticCondMatrixManager(std::string("TetExpStaticCondMatrix"))
-        {
-            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
-            {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                          StdRegions::eNoExpansionType,*this),
-                                                boost::bind(&TetExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                                    StdRegions::eNoExpansionType,*this),
-                                                          boost::bind(&TetExp::CreateStaticCondMatrix, this, _1));
-            }
-
-            // Set up unit geometric factors.
-            int coordim = 3;
-            Array<OneD,NekDouble> ndata = Array<OneD,NekDouble>(coordim*coordim*coordim,0.0);
-            ndata[0] = ndata[4] = 1.0; //TODO must check
-            m_metricinfo->ResetGmat(ndata, 1, 3, coordim);//TODO must check
-            m_metricinfo->ResetJac(1, ndata); //TODO must check
-
         }
 
 
@@ -107,99 +76,6 @@ namespace Nektar
         {
         }
 
-        //TODO: check following computations and function
-        void TetExp::GenMetricInfo()
-        {
-            m_metricinfo = m_geom->GetGeomFactors(m_base);
-//             SpatialDomains::GeomFactorsSharedPtr Xgfac;
-
-//             Xgfac = m_geom->GetGeomFactors();
-
-//             if(Xgfac->GetGtype() != SpatialDomains::eDeformed)
-//             {
-//                 m_metricinfo = Xgfac;
-//             }
-//             else
-//             {
-//                 int nq = GetTotPoints();   
-//                 int coordim = m_geom->GetCoordim();
-//                 int expdim = 3;
-//                 SpatialDomains::GeomType gtype = SpatialDomains::eDeformed;
-
-//                 LibUtilities::BasisSharedPtr CBasis0;
-//                 LibUtilities::BasisSharedPtr CBasis1;
-//                 LibUtilities::BasisSharedPtr CBasis2;
-//                 CBasis0 = m_geom->GetBasis(0,0); // assumes all goembasis are same
-//                 CBasis1 = m_geom->GetBasis(0,1);
-//                 CBasis2 = m_geom->GetBasis(0,2);
-//                 int Cnq0 = CBasis0->GetNumPoints();
-//                 int Cnq1 = CBasis1->GetNumPoints();
-//                 int Cnq2 = CBasis2->GetNumPoints();
-
-//                 Array<OneD, const NekDouble> ojac = Xgfac->GetJac();
-//                 Array<TwoD, const NekDouble> ogmat = Xgfac->GetGmat();
-//                 Array<OneD,NekDouble> njac(nq);
-//                 Array<OneD,NekDouble> ndata(3*coordim*nq);//TODO: check ndata
-
-//                 m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr(gtype,expdim,coordim);
-
-//                 //basis are different distributions
-//                 if(!(m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey()))||
-//                    !(m_base[1]->GetBasisKey().SamePoints(CBasis1->GetBasisKey()))||
-//                    !(m_base[2]->GetBasisKey().SamePoints(CBasis2->GetBasisKey())))
-//                 {
-//                     int i;   
-//                     int nq0 = m_base[0]->GetNumPoints();
-//                     int nq1 = m_base[1]->GetNumPoints();
-//                     int nq2 = m_base[2]->GetNumPoints();
-
-//                     // interpolate Jacobian        
-//                     LibUtilities::Interp3D(CBasis0->GetPointsKey(),
-//                              CBasis1->GetPointsKey(),
-// 		             CBasis2->GetPointsKey(),
-//                              &ojac[0],
-//                              m_base[0]->GetPointsKey(),
-//                              m_base[1]->GetPointsKey(),
-//                              m_base[2]->GetPointsKey(),
-//                              &njac[0]);
-
-//                     m_metricinfo->ResetJac(nq,njac);
-
-//                     // interpolate Geometric data
-//                     Array<OneD,NekDouble> dxdxi(nq);
-//                     for(i = 0; i < 2*coordim; ++i) //TODO : find out why  2*coordim
-//                     {
-//                         Vmath::Vmul(nq,&ojac[0],1,&ogmat[i][0],1,&dxdxi[0],1);
-//                         LibUtilities::Interp2D(CBasis0->GetPointsKey(),
-//                                  CBasis1->GetPointsKey(), 
-//                                  &dxdxi[0], 
-//                                  m_base[0]->GetPointsKey(),
-//                                  m_base[1]->GetPointsKey(),
-//                                  &ndata[0] + i*nq);
-//                         Vmath::Vdiv(nq,&ndata[0]+i*nq,1,&njac[0],1,&ndata[0]+i*nq,1);
-//                     }
-//                     m_metricinfo->ResetGmat(ndata,nq,3,coordim); 
-
-//                     NEKERROR(ErrorUtil::ewarning,
-//                              "Need to check/debug routine for deformed elements");
-//                 }
-//                 else // Same data can be used 
-//                 {                   
-//                     // Copy Jacobian
-//                     Blas::Dcopy(nq,&ojac[0],1,&njac[0],1);
-//                     m_metricinfo->ResetJac(nq,njac);
-
-//                     // interpolate Geometric data
-//                     ndata = Array<OneD,NekDouble>(3*nq*coordim); //TODO: check this function
-//                     Blas::Dcopy(3*coordim*nq, &ogmat[0][0], 1, ndata.data(), 1); //TODO: check this function
-
-//                     m_metricinfo->ResetGmat(ndata,nq,3,coordim);
-
-//                     NEKERROR(ErrorUtil::ewarning,
-//                              "Need to check/debug routine for deformed elements");
-//                 }
-//             }
-        }
 
         //----------------------------
         // Integration Methods
@@ -809,6 +685,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.cpp,v $
+ *    Revision 1.21  2009/10/30 14:00:07  pvos
+ *    Multi-level static condensation updates
+ *
  *    Revision 1.20  2009/07/08 17:19:48  sehunchun
  *    Deleting GetTanBasis
  *

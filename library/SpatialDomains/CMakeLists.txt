@@ -3,6 +3,9 @@ BoundaryConditions.cpp
 #EdgeComponent.cpp
 Equation.cpp
 GeomFactors.cpp
+GeomFactors1D.cpp
+GeomFactors2D.cpp
+GeomFactors3D.cpp
 Geometry1D.cpp
 Geometry2D.cpp
 Geometry3D.cpp
@@ -31,6 +34,9 @@ Curve.hpp
 Equation.h
 #EdgeComponent.h
 GeomFactors.h
+GeomFactors1D.h
+GeomFactors2D.h
+GeomFactors3D.h
 Geometry1D.h
 Geometry2D.h
 Geometry3D.h

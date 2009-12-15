@@ -49,7 +49,7 @@ namespace Nektar
                                  const SpatialDomains::TriGeomSharedPtr &geom):
             StdRegions::StdNodalTriExp(Ba,Bb,Ntype),
             m_geom(geom),
-            m_metricinfo(),
+            m_metricinfo(m_geom->GetGeomFactors(m_base)),
             m_matrixManager(std::string("NodalTriExpMatrix")),
             m_staticCondMatrixManager(std::string("NodalTriExpStaticCondMatrix"))
         {
@@ -62,36 +62,8 @@ namespace Nektar
                                                                     StdRegions::eNoExpansionType,*this),
                                                           boost::bind(&NodalTriExp::CreateStaticCondMatrix, this, _1));
             } 
-            GenMetricInfo();            
         }
         
-    
-        NodalTriExp::NodalTriExp(const LibUtilities::BasisKey &Ba,
-                                 const LibUtilities::BasisKey &Bb,
-                                 const LibUtilities::PointsType Ntype):
-            StdRegions::StdNodalTriExp(Ba,Bb,Ntype),
-            m_geom(),
-            m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()),
-            m_matrixManager(std::string("NodalTriExpMatrix")),
-            m_staticCondMatrixManager(std::string("NodalTriExpStaticCondMatrix"))
-        {
-            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
-            {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                          StdRegions::eNoExpansionType,*this),
-                                                boost::bind(&NodalTriExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                                    StdRegions::eNoExpansionType,*this),
-                                                          boost::bind(&NodalTriExp::CreateStaticCondMatrix, this, _1));
-            } 
-
-            // Set up unit geometric factors. 
-            Array<OneD,NekDouble> ndata = Array<OneD,NekDouble>(4,0.0); 
-            ndata[0] = ndata[3] = 1.0;
-            m_metricinfo->ResetGmat(ndata,1,2,2);
-            m_metricinfo->ResetJac(1,ndata);
-        }
-    
         NodalTriExp::NodalTriExp(const NodalTriExp &T):
             StdRegions::StdNodalTriExp(T),
             m_geom(T.m_geom),
@@ -104,11 +76,6 @@ namespace Nektar
         NodalTriExp::~NodalTriExp()
         {
         }
-        
-        void NodalTriExp::GenMetricInfo()
-        {
-            m_metricinfo = m_geom->GetGeomFactors(m_base);
-        }     
         
         //----------------------------
         // Integration Methods
@@ -157,7 +124,7 @@ namespace Nektar
         void NodalTriExp::MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
                                                      Array<OneD, NekDouble> &outarray)
         {        
-            if(m_metricinfo->UseQuadratureMetrics())
+            if(m_metricinfo->IsUsingQuadMetrics())
             {
                 int    nqtot = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();                
                 const Array<OneD, const NekDouble>& metric = m_metricinfo->GetQuadratureMetrics();  
@@ -1044,6 +1011,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.32  2009/10/30 14:00:06  pvos
+ *    Multi-level static condensation updates
+ *
  *    Revision 1.31  2009/04/27 21:34:07  sherwin
  *    Updated WriteToField
  *

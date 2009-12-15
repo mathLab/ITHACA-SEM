@@ -645,7 +645,7 @@ namespace Nektar
                  }
               }
 
-            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
+            m_geomfactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
         }
 
 
@@ -753,6 +753,9 @@ namespace Nektar
 
 //
 // $Log: PyrGeom.cpp,v $
+// Revision 1.13  2009/01/21 16:59:03  pvos
+// Added additional geometric factors to improve efficiency
+//
 // Revision 1.12  2008/12/18 14:08:58  pvos
 // NekConstants update
 //

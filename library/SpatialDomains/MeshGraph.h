@@ -164,6 +164,7 @@ namespace Nektar
 	
         typedef boost::shared_ptr<FieldDefinitions> FieldDefinitionsSharedPtr;
         
+        typedef std::map<std::string, std::string> GeomInfoMap;
 
         class MeshGraph
         {
@@ -174,6 +175,13 @@ namespace Nektar
             static boost::shared_ptr<MeshGraph> Read(std::string &infilename);
             virtual void ReadGeometry(std::string &infilename);
             virtual void ReadGeometry(TiXmlDocument &doc);
+            
+            /// Read geometric information from a file.
+            void ReadGeometryInfo(std::string &infilename);
+            
+            /// Read geometric information from an XML document.
+            void ReadGeometryInfo(TiXmlDocument &doc);
+            
             void ReadExpansions(std::string &infilename);
             void ReadExpansions(TiXmlDocument &doc);
 
@@ -279,6 +287,18 @@ namespace Nektar
                 return m_ExpansionVector;
             }
             
+            const bool CheckForGeomInfo(std::string parameter)
+            {
+                return mGeomInfo.find(parameter) != mGeomInfo.end();
+            }
+            
+            const std::string GetGeomInfo(std::string parameter)
+            {
+                ASSERTL1(mGeomInfo.find(parameter) != mGeomInfo.end(),
+                        "Parameter " + parameter + " does not exist.");
+                return mGeomInfo[parameter];
+            }
+            
        protected:
             VertexVector            m_vertset;
             InterfaceCompList       m_icomps;
@@ -302,6 +322,7 @@ namespace Nektar
             CompositeVector m_Domain;
             ExpansionVector m_ExpansionVector;
             
+            GeomInfoMap             mGeomInfo;
         };
 
         typedef boost::shared_ptr<MeshGraph> MeshGraphSharedPtr;
@@ -314,6 +335,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.38  2009/11/22 19:43:32  bnelson
+// Updating formatting.
+//
 // Revision 1.37  2009/11/18 22:31:46  bnelson
 // Changed Write parameter list to accept a const string& as a first parameter.
 //

@@ -226,7 +226,7 @@ namespace Nektar
                         
                         if(MeshEdgeId.count(id) > 0)
                         {
-                            m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::GenSegExp> ((*trace).GetExp(MeshEdgeId.find(id)->second));
+                            m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::SegExp> ((*trace).GetExp(MeshEdgeId.find(id)->second));
 
                         }
                         else
@@ -245,7 +245,7 @@ namespace Nektar
                         
                         if(MeshEdgeId.count(id) > 0)
                         {
-                            m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::GenSegExp> ((*trace).GetExp((MeshEdgeId.find(id))->second));
+                            m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::SegExp> ((*trace).GetExp((MeshEdgeId.find(id))->second));
 
                         }
                         else

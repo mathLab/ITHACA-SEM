@@ -77,41 +77,12 @@ namespace Nektar
                 return m_trace;
             }
 	    
-	    inline LocalToGlobalDGMapSharedPtr &GetTraceMap(void)
+	        inline LocalToGlobalDGMapSharedPtr &GetTraceMap(void)
             {
                 return m_traceMap;
             }
 
 
-            void HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                           Array<OneD,       NekDouble> &outarray,
-                           const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
-                           const Array<OneD, NekDouble>  &lambda,
-                           NekDouble tau = 1.0);
-
-            void HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                           Array<OneD,       NekDouble> &outarray,
-                           const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
-                           NekDouble lambda,
-                           NekDouble tau = 1.0)
-            {
-                Array<OneD, NekDouble> lambda_v(1);
-                lambda_v[0] = lambda;
-
-                HelmSolve(inarray,outarray,varcoeffs,lambda_v,tau);
-            }
-
-            void HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                           Array<OneD,       NekDouble> &outarray,
-                           NekDouble lambda,
-                           NekDouble tau = 1.0)
-            {
-                Array<OneD, NekDouble> lambda_v(1);
-                lambda_v[0] = lambda;
-
-                Array<OneD, Array<OneD, NekDouble> > varcoeffs;
-                HelmSolve(inarray,outarray,varcoeffs,lambda_v,tau);
-            }
             /**
              * \brief This function evaluates the boundary conditions at a certain 
              * time-level.
@@ -387,67 +358,21 @@ namespace Nektar
             {
                 EvaluateBoundaryConditions(time);
             }
-	    
-            virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,       NekDouble> &outarray,
-                                     const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
-                                     NekDouble lambda,
-                                     NekDouble tau)
-            {
-                Array<OneD, NekDouble> lambda_v(1);
-                lambda_v[0] = lambda;
 
-                HelmSolve(inarray,outarray,varcoeffs,lambda_v,tau);
-            }
-
-            virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                     Array<OneD,       NekDouble> &outarray,
-                                     NekDouble lambda,
-                                     NekDouble tau)
-            {
-                Array<OneD, NekDouble> lambda_v(1);
-                lambda_v[0] = lambda;
-
-                Array<OneD, Array<OneD, NekDouble> > varcoeffs;
-                HelmSolve(inarray,outarray,varcoeffs,lambda_v,tau);
-            }
-
-            virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                     Array<OneD,       NekDouble> &outarray,
-                                     NekDouble lambda,
-                                     bool      UseContCoeffs = false,
-                                     const Array<OneD, const NekDouble>& dirForcing = NullNekDouble1DArray)
-            {
-                NekDouble tau = 1.0;
-
-                Array<OneD, NekDouble> lambda_v(1);
-                lambda_v[0] = lambda;
-
-                Array<OneD, Array<OneD, NekDouble> > varcoeffs;
-                HelmSolve(inarray,outarray,varcoeffs,lambda_v,tau);
-            }
-
-            virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                     Array<OneD,       NekDouble> &outarray,
-                                     const Array<OneD, NekDouble> &lambda,
-                                     bool      UseContCoeffs = false,
-                                     const Array<OneD, const NekDouble>& dirForcing = NullNekDouble1DArray)
-            {
-                NekDouble tau = 1.0;
-
-                Array<OneD, Array<OneD, NekDouble> > varcoeffs;
-                HelmSolve(inarray,outarray,varcoeffs,lambda,tau);
-            }
-
-            virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,       NekDouble> &outarray,
-                                     const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
-                                     const Array<OneD, NekDouble> &lambda,
-                                     NekDouble tau)
-            {
-                HelmSolve(inarray,outarray,varcoeffs,lambda,tau);
-            }
-
+            virtual void v_HelmSolve(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                    const Array<OneD, const NekDouble> &Sigma,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff);
+            
+            virtual void v_HelmSolveDG(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                    const Array<OneD, const NekDouble> &Sigma,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
+                          NekDouble tau);
         };
 
         typedef boost::shared_ptr<DisContField2D>   DisContField2DSharedPtr;

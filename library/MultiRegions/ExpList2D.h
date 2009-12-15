@@ -38,10 +38,8 @@
 
 #include <vector>
 #include <MultiRegions/MultiRegions.hpp>
+#include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList1D.h>
-#include <LocalRegions/TriExp.h>
-#include <LocalRegions/QuadExp.h>
-#include <LocalRegions/NodalTriExp.h>
 #include <SpatialDomains/MeshGraph2D.h>
 #include <SpatialDomains/MeshGraph3D.h>
 #include <SpatialDomains/BoundaryConditions.h>
@@ -60,7 +58,7 @@ namespace Nektar
         /// Iterator for the vector of ExpList2D pointers.
         typedef std::vector< ExpList2DSharedPtr >::iterator ExpList2DVectorIter;
 
-        /// Abstraction of a two-dimensional multi-elemental expansions which
+        /// Abstraction of a two-dimensional multi-elemental expansion which
         /// is merely a collection of local expansions.
         class ExpList2D: public ExpList
         {
@@ -72,7 +70,8 @@ namespace Nektar
             ExpList2D(  const ExpList2D &In);
 
             /// Sets up a list of local expansions based on an input mesh.
-            ExpList2D(  SpatialDomains::MeshGraph2D &graph2D);
+            ExpList2D(  SpatialDomains::MeshGraph2D &graph2D,
+                        bool UseGenExp = false);
 
             /// Sets up a list of local expansions based on an input mesh
             /// and separately defined basiskeys
@@ -88,7 +87,8 @@ namespace Nektar
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField3D and ContField3D.
             ExpList2D(  const SpatialDomains::CompositeVector &domain,
-                        SpatialDomains::MeshGraph3D &graph3D);
+                        SpatialDomains::MeshGraph3D &graph3D,
+                        bool UseGenExp = false);
 
             /// Destructor.
             ~ExpList2D();
@@ -118,8 +118,20 @@ namespace Nektar
                         vector<map<int,int> > & periodicVertices,
                         map<int,int>& periodicEdges);
 
-        private:
+            /// Set up the normals on each expansion.
+            void SetUpPhysNormals(
+                        const StdRegions::StdExpansionVector &locexp);
 
+            /// Populate \a normals with the normals of all expansions.
+            void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
+
+        private:
+            /// Flag to indicate if general expansions are being used.
+            bool m_UseGenExp;
+            
+            /// Set up the normals on each expansion.
+            virtual void v_SetUpPhysNormals(
+                                const StdRegions::StdExpansionVector &locexp);
         };
 
         /// Empty ExpList2D object.
@@ -132,6 +144,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.h,v $
+* Revision 1.23  2009/11/25 14:51:29  pvos
+* Updates for added Timings directory
+*
 * Revision 1.22  2009/11/19 23:30:36  cantwell
 * Documentation for ExpList2D and GlobalMatrixKey
 * Updated doxygen pages.

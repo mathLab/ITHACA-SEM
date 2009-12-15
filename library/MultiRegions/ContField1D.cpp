@@ -129,7 +129,8 @@ namespace Nektar
             GenerateBoundaryConditionExpansion(graph1D,bcs,
                                                     bcs.GetVariable(bc_loc));
             EvaluateBoundaryConditions();
-
+            ApplyGeomInfo(graph1D);
+            
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,bcs.GetVariable(bc_loc),
                                                     periodicVertices);
@@ -181,7 +182,8 @@ namespace Nektar
         {
             GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
             EvaluateBoundaryConditions();
-
+            ApplyGeomInfo(graph1D);
+            
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
 
@@ -237,7 +239,8 @@ namespace Nektar
             GenerateBoundaryConditionExpansion(graph1D,bcs,
                                                bcs.GetVariable(bc_loc));
             EvaluateBoundaryConditions();
-
+            ApplyGeomInfo(graph1D);
+            
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,bcs.GetVariable(bc_loc),
                                 periodicVertices);
@@ -296,7 +299,8 @@ namespace Nektar
         {
             GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
             EvaluateBoundaryConditions();
-
+            ApplyGeomInfo(graph1D);
+            
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
 
@@ -510,76 +514,6 @@ namespace Nektar
 
 
         /**
-         * Consider the one dimensional Helmholtz equation,
-         * \f[\frac{d^2u}{dx^2}-\lambda u(x) = f(x),\f]
-         * supplemented with appropriate boundary conditions (which are
-         * contained in the data member #m_bndCondExpansions). Applying a
-         * \f$C^0\f$ continuous Galerkin discretisation, this equation leads to
-         * the following linear system:
-         * \f[\left( \boldsymbol{M}+\lambda\boldsymbol{L}\right)
-         * \boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}}\f]
-         * where \f$\boldsymbol{M}\f$ and \f$\boldsymbol{L}\f$ are the mass and
-         * Laplacian matrix respectively. This function solves the system above
-         * for the global coefficients \f$\boldsymbol{\hat{u}}\f$ by a call to
-         * the function #GlobalSolve.
-         *
-         * The values of the function \f$f(x)\f$ evaluated at the
-         * quadrature points \f$\boldsymbol{x}_i\f$ should be contained in the
-         * variable #m_phys of the ExpList object \a inarray. The resulting
-         * global coefficients \f$\boldsymbol{\hat{u}}_g\f$ are stored in the
-         * array #m_contCoeffs.
-         *
-         * @param   inarray     Input containing forcing function
-         *                      \f$\boldsymbol{f}\f$ at the quadrature points.
-         * @param   outarray    Output containing the coefficients
-         *                      \f$\boldsymbol{u}_g\f$
-         * @param   lambda      Parameter value.
-         * @param   UseContCoeffs   Default: false
-         * @param   dirForcing  .
-         */
-        void ContField1D::HelmSolve(
-                        const Array<OneD, const NekDouble> &inarray,
-                              Array<OneD,       NekDouble> &outarray,
-                        NekDouble lambda,
-                        bool UseContCoeffs,
-                        const Array<OneD, const NekDouble>& dirForcing)
-        {
-            // Inner product of forcing
-            Array<OneD,NekDouble> wsp(m_contNcoeffs);
-            IProductWRTBase(inarray,wsp,true);
-            // Note -1.0 term necessary to invert forcing function to
-            // be consistent with matrix definition
-            Vmath::Neg(m_contNcoeffs, wsp, 1);
-
-            // Forcing function with weak boundary conditions
-            int i;
-            int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            for(i = 0; i < m_bndCondExpansions.num_elements()-NumDirBcs; ++i)
-            {
-                wsp[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(
-                                                                i + NumDirBcs)]
-                    += m_bndCondExpansions[i+NumDirBcs]->GetValue();
-            }
-
-            // Solve the system
-            GlobalLinSysKey key(StdRegions::eHelmholtz,
-                                m_locToGloMap,lambda,
-                                m_locToGloMap->GetGlobalSysSolnType());
-
-            if(UseContCoeffs)
-            {
-                GlobalSolve(key,wsp,outarray,dirForcing);
-            }
-            else
-            {
-                Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
-                GlobalSolve(key,wsp,tmp,dirForcing);
-                GlobalToLocal(tmp,outarray);
-            }
-        }
-
-
-        /**
          * Given a linear system specified by the key \a key,
          * \f[\boldsymbol{M}\boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}},\f]
          * this function solves this linear system taking into account the
@@ -763,13 +697,87 @@ namespace Nektar
         }
 
         void ContField1D::v_HelmSolve(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                NekDouble lambda,
-                                bool UseContCoeffs,
-                                const Array<OneD, const NekDouble>& dirForcing)
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                    const Array<OneD, const NekDouble> &Sigma,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff)
         {
-            HelmSolve(inarray,outarray,lambda,UseContCoeffs,dirForcing);
+            v_HelmSolveCG(inarray, outarray, lambda, Sigma, varcoeff,
+                                false, NullNekDouble1DArray);
+        }
+
+        /**
+         * Consider the one dimensional Helmholtz equation,
+         * \f[\frac{d^2u}{dx^2}-\lambda u(x) = f(x),\f]
+         * supplemented with appropriate boundary conditions (which are
+         * contained in the data member #m_bndCondExpansions). Applying a
+         * \f$C^0\f$ continuous Galerkin discretisation, this equation leads to
+         * the following linear system:
+         * \f[\left( \boldsymbol{M}+\lambda\boldsymbol{L}\right)
+         * \boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}}\f]
+         * where \f$\boldsymbol{M}\f$ and \f$\boldsymbol{L}\f$ are the mass and
+         * Laplacian matrix respectively. This function solves the system above
+         * for the global coefficients \f$\boldsymbol{\hat{u}}\f$ by a call to
+         * the function #GlobalSolve.
+         *
+         * The values of the function \f$f(x)\f$ evaluated at the
+         * quadrature points \f$\boldsymbol{x}_i\f$ should be contained in the
+         * variable #m_phys of the ExpList object \a inarray. The resulting
+         * global coefficients \f$\boldsymbol{\hat{u}}_g\f$ are stored in the
+         * array #m_contCoeffs.
+         *
+         * @param   inarray     Input containing forcing function
+         *                      \f$\boldsymbol{f}\f$ at the quadrature points.
+         * @param   outarray    Output containing the coefficients
+         *                      \f$\boldsymbol{u}_g\f$
+         * @param   lambda      Parameter value.
+         * @param   Sigma       Coefficients of lambda.
+         * @param   varcoeff    Variable diffusivity coefficients.
+         * @param   UseContCoeffs   Default: false
+         * @param   dirForcing  Dirichlet Forcing.
+         */        
+        void ContField1D::v_HelmSolveCG(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                    const Array<OneD, const NekDouble> &Sigma,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
+                          bool UseContCoeffs,
+                    const Array<OneD, const NekDouble> &dirForcing)
+        {
+            // Inner product of forcing
+            Array<OneD,NekDouble> wsp(m_contNcoeffs);
+            IProductWRTBase(inarray,wsp,true);
+            // Note -1.0 term necessary to invert forcing function to
+            // be consistent with matrix definition
+            Vmath::Neg(m_contNcoeffs, wsp, 1);
+
+            // Forcing function with weak boundary conditions
+            int i;
+            int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            for(i = 0; i < m_bndCondExpansions.num_elements()-NumDirBcs; ++i)
+            {
+                wsp[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(
+                                                                i + NumDirBcs)]
+                    += m_bndCondExpansions[i+NumDirBcs]->GetValue();
+            }
+
+            // Solve the system
+            GlobalLinSysKey key(StdRegions::eHelmholtz,
+                                m_locToGloMap,lambda,
+                                m_locToGloMap->GetGlobalSysSolnType());
+
+            if(UseContCoeffs)
+            {
+                GlobalSolve(key,wsp,outarray,dirForcing);
+            }
+            else
+            {
+                Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
+                GlobalSolve(key,wsp,tmp,dirForcing);
+                GlobalToLocal(tmp,outarray);
+            }
         }
 
         const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>&

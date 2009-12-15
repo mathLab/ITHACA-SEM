@@ -72,7 +72,8 @@ namespace Nektar
         {
             GenerateBoundaryConditionExpansion(graph1D,bcs,bcs.GetVariable(bc_loc));
             EvaluateBoundaryConditions();
-
+            ApplyGeomInfo(graph1D);
+            
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,bcs.GetVariable(bc_loc),periodicVertices);
 
@@ -95,6 +96,7 @@ namespace Nektar
         {
             GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
             EvaluateBoundaryConditions();
+            ApplyGeomInfo(graph1D);
             
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
@@ -284,13 +286,26 @@ namespace Nektar
             return glo_matrix;
         }
 
-        void DisContField1D::HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,       NekDouble> &outarray,
-                                       NekDouble lambda)
+        void DisContField1D::v_HelmSolve(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                    const Array<OneD, const NekDouble> &Sigma,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff)
+        {
+            v_HelmSolveDG(inarray, outarray, lambda, Sigma, varcoeff, 1);
+        }
+            
+        void DisContField1D::v_HelmSolveDG(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                    const Array<OneD, const NekDouble> &Sigma,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
+                          NekDouble tau)
         {
             int i,j,n,cnt,cnt1,nbndry;
             int nexp = GetExpSize();
-            NekDouble tau = 10;
             Array<OneD,NekDouble> f(m_ncoeffs);
             DNekVec F(m_ncoeffs,f,eWrapper);
             Array<OneD,NekDouble> e_f, e_l;
@@ -382,7 +397,7 @@ namespace Nektar
             m_traceMap->GlobalToLocalBnd(m_trace,loc_lambda);
 
             //  out =  u_f + u_lam = (*InvHDGHelm)*f + (LamtoU)*Lam  
-            out = (*InvHDGHelm)*F + (*HDGLamToU)*LocLambda;       
+            out = (*InvHDGHelm)*F + (*HDGLamToU)*LocLambda;            
         }
     } // end of namespace
 } //end of namespace

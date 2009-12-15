@@ -44,7 +44,7 @@
 #include <SpatialDomains/GeomFactors.h>
 
 #include <LocalRegions/MatrixKey.h>
-#include <LocalRegions/GenSegExp.h>
+#include <LocalRegions/SegExp.h>
 
 #include <LibUtilities/BasicUtils/VmathArray.hpp> 
 #include <LibUtilities/BasicUtils/Vmath.hpp> 
@@ -65,13 +65,6 @@ namespace Nektar
             QuadExp(const LibUtilities::BasisKey &Ba,
                     const LibUtilities::BasisKey &Bb,
                     const SpatialDomains::QuadGeomSharedPtr &geom);
-        
-            QuadExp(const LibUtilities::BasisKey &Ba,
-                    const LibUtilities::BasisKey &Bb);
-
-            /// \brief Constructor using BasisKey class for quadrature
-            /// points and order definition where it has standard geometric factors 
-            QuadExp(const LibUtilities::BasisKey &Ba);
 
             /// Copy Constructor
             QuadExp(const QuadExp &T);
@@ -207,8 +200,6 @@ namespace Nektar
                                          Array<OneD, NekDouble> &outarray);
         
             NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);        
-        
-            StdRegions::StdExpansion1DSharedPtr GetEdgeExp(int edge, bool SetUpNormal=true);
 
             void GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 
@@ -360,9 +351,6 @@ namespace Nektar
             }       
 
         protected:
-
-            void GenMetricInfo();
-
             DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
@@ -717,11 +705,6 @@ namespace Nektar
               Expansion2D::DGDeriv(dir,incoeffs,EdgeExp,out_d);
             }
 
-            virtual StdRegions::StdExpansion1DSharedPtr v_GetEdgeExp(const int edge, bool SetUpNormals=true)
-            {
-                return GetEdgeExp(edge,SetUpNormals);
-            }
-
             virtual void v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 GetEdgePhysVals(edge,inarray,outarray);
@@ -736,6 +719,8 @@ namespace Nektar
                 GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
             }
             
+            virtual StdRegions::StdExpansion1DSharedPtr v_GetEdgeExp(int edge, bool SetUpNormal=true);
+
             virtual void v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray)
             {
@@ -836,6 +821,9 @@ namespace Nektar
 
 /**
  *    $Log: QuadExp.h,v $
+ *    Revision 1.60  2009/11/10 19:04:24  sehunchun
+ *    Variable coefficients for HDG2D Solver
+ *
  *    Revision 1.59  2009/11/09 15:43:51  sehunchun
  *    HDG2DManifold Solver with Variable coefficients
  *

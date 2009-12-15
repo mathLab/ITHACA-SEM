@@ -39,7 +39,7 @@
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdTriExp.h>
 
-#include <SpatialDomains/GeomFactors.h>
+#include <SpatialDomains/GeomFactors2D.h>
 #include <SpatialDomains/Geometry2D.h>
 #include <SpatialDomains/MeshComponents.h>
 
@@ -319,6 +319,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.28  2009/07/02 13:32:24  sehunchun
+// *** empty log message ***
+//
 // Revision 1.27  2009/01/21 16:59:04  pvos
 // Added additional geometric factors to improve efficiency
 //

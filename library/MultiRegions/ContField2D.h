@@ -121,68 +121,61 @@ namespace Nektar
             /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$ 
             /// (implemented as #m_contCoeffs) containing all global expansion 
             /// coefficients.
-            // inline
-            Array<OneD, NekDouble> &UpdateContCoeffs();
+            inline Array<OneD, NekDouble> &UpdateContCoeffs();
 
             /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$
             /// (implemented as #m_contCoeffs) containing all global expansion
             /// coefficients.
-            // inline
-            const Array<OneD, const NekDouble> &GetContCoeffs() const;
+            inline const Array<OneD, const NekDouble> &GetContCoeffs() const;
 
             /// Returns the total number of global degrees of freedom
             /// \f$N_{\mathrm{dof}}\f$.
-            // inline
-            int GetContNcoeffs();
+            inline int GetContNcoeffs();
 
             /// Scatters from the global coefficients
             /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
             /// \f$\boldsymbol{\hat{u}}_l\f$.
-            // inline
-            void GlobalToLocal();
+            inline void GlobalToLocal();
 
             /// Scatters from the global coefficients
             /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
             /// \f$\boldsymbol{\hat{u}}_l\f$.
-            // inline
-            const void GlobalToLocal(Array<OneD,NekDouble> &outarray) const;
+            inline const void GlobalToLocal(
+                                  Array<OneD,NekDouble> &outarray) const;
 
             /// Scatters from the global coefficients
             /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
             /// \f$\boldsymbol{\hat{u}}_l\f$.
-            // inline
-            const void GlobalToLocal(
+            inline const void GlobalToLocal(
                             const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,       NekDouble> &outarray) const;
 
             /// Gathers the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
-            // inline
-            void LocalToGlobal();
+            inline void LocalToGlobal();
 
             /// Assembles the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
-            // inline
-            void Assemble();
+            inline void Assemble();
 
             /// Assembles the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
-            // inline
-            const void Assemble(const Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD,NekDouble> &outarray) const;
+            inline const void Assemble(
+                            const Array<OneD, const NekDouble> &inarray,
+                                  Array<OneD,NekDouble> &outarray) const;
 
             /// Returns the map from local to global level.
-            // inline
-            const LocalToGlobalC0ContMapSharedPtr& GetLocalToGlobalMap() const;
+            inline const LocalToGlobalC0ContMapSharedPtr& GetLocalToGlobalMap() 
+                                                                        const;
 
 
             /// Calculates the inner product of a function
             /// \f$f(\boldsymbol{x})\f$ with respect to all <em>global</em>
             /// expansion modes \f$\phi_n^e(\boldsymbol{x})\f$.
-            // inline
-            void IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD, NekDouble> &outarray,
-                                 bool  UseContCoeffs = false);
+            inline void IProductWRTBase(
+                            const Array<OneD, const NekDouble> &inarray,
+                                  Array<OneD, NekDouble> &outarray,
+                                  bool  UseContCoeffs = false);
 
             /// Performs the global forward transformation of a function
             /// \f$f(\boldsymbol{x})\f$, subject to the boundary conditions
@@ -193,24 +186,15 @@ namespace Nektar
 
             /// Performs the backward transformation of the spectral/hp
             /// element expansion.
-            // inline
-            void BwdTrans(const Array<OneD, const NekDouble> &inarray,
-                                Array<OneD,       NekDouble> &outarray,
-                          bool  UseContCoeffs = false);
+            inline void BwdTrans(
+                            const Array<OneD, const NekDouble> &inarray,
+                                  Array<OneD,       NekDouble> &outarray,
+                                  bool  UseContCoeffs = false);
 
             void MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,  NekDouble> &outarray,
                                 bool  UseContCoeffs = false);
-
-            /// Solves the two-dimensional Helmholtz equation, subject to the
-            /// boundary conditions specified.
-            void HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD,       NekDouble> &outarray,
-                           NekDouble lambda,
-                           bool      UseContCoeffs = false,
-                           const Array<OneD, const NekDouble>& dirForcing
-                                                        = NullNekDouble1DArray);
 
             /// Solves the two-dimensional Laplace equation, subject to the
             /// boundary conditions specified.
@@ -241,29 +225,25 @@ namespace Nektar
                                                         = NullNekDouble1DArray);
 
             /// Evaluates the boundary conditions at a certain time-level.
-            // inline
-            void EvaluateBoundaryConditions(const NekDouble time = 0.0);
+            inline void EvaluateBoundaryConditions(const NekDouble time = 0.0);
 
             /// Returns the boundary conditions expansion.
-            // inline
-            const Array<OneD,const MultiRegions::ExpList1DSharedPtr>&
+            inline const Array<OneD,const MultiRegions::ExpList1DSharedPtr>&
                                                         GetBndCondExpansions();
 
-            // inline
-            const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>&
+            inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>&
                                                         GetBndConditions();
 
             /// Calculates the result of the multiplication of a global
             /// matrix of type specified by \a mkey with a vector given by \a
             /// inarray.
-            // inline
-            void GeneralMatrixOp(const GlobalMatrixKey             &gkey,
-                                 const Array<OneD,const NekDouble> &inarray,
-                                       Array<OneD,      NekDouble> &outarray,
-                                 bool  UseContCoeffs = false);
+            inline void GeneralMatrixOp(
+                                const GlobalMatrixKey             &gkey,
+                                const Array<OneD,const NekDouble> &inarray,
+                                      Array<OneD,      NekDouble> &outarray,
+                                bool  UseContCoeffs = false);
 
-            // inline
-            int GetGlobalMatrixNnz(const GlobalMatrixKey &gkey);
+            inline int GetGlobalMatrixNnz(const GlobalMatrixKey &gkey);
 
         protected:
 
@@ -315,12 +295,26 @@ namespace Nektar
                                       Array<OneD,       NekDouble> &outarray,
                                 bool  UseContCoeffs);
 
+            /// Solves the two-dimensional Helmholtz equation, subject to the
+            /// boundary conditions specified.
             virtual void v_HelmSolve(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                NekDouble lambda,
-                                bool      UseContCoeffs,
-                                const Array<OneD, const NekDouble>& dirForcing);
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                    const Array<OneD, const NekDouble> &Sigma,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff);
+            
+            /// Solves the two-dimensional Helmholtz equation, subject to the
+            /// boundary conditions specified (Continuous Galerkin specific
+            /// version).
+            virtual void v_HelmSolveCG(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                    const Array<OneD, const NekDouble> &Sigma,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
+                          bool UseContCoeffs,
+                    const Array<OneD, const NekDouble> &dirForcing);
 
             virtual const Array<OneD,const SpatialDomains
                                 ::BoundaryConditionShPtr>& v_GetBndConditions();
@@ -331,7 +325,6 @@ namespace Nektar
 
         typedef boost::shared_ptr<ContField2D>      ContField2DSharedPtr;
 
-        // Inline functions follow
 
         /**
          * If one wants to get hold of the underlying data without modifying

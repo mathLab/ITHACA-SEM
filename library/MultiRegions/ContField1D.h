@@ -113,14 +113,6 @@ namespace Nektar
                                       Array<OneD,       NekDouble> &outarray,
                                 bool  UseContCoeffs = false);
 
-            /// Solve the Helmholtz problem.
-            void HelmSolve(     const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                NekDouble lambda,
-                                bool UseContCoeffs = false,
-                                const Array<OneD, const NekDouble>& dirForcing
-                                                    = NullNekDouble1DArray);
-
             /// Evaluates the boundary conditions at a certain time-level.
             // inline
             void EvaluateBoundaryConditions(const NekDouble time = 0.0);
@@ -250,11 +242,20 @@ namespace Nektar
                                 bool  UseContCoeffs);
 
             virtual void v_HelmSolve(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                NekDouble lambda,
-                                bool UseContCoeffs,
-                                const Array<OneD, const NekDouble>& dirForcing);
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                    const Array<OneD, const NekDouble> &Sigma,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff);
+
+            virtual void v_HelmSolveCG(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                    const Array<OneD, const NekDouble> &Sigma,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
+                          bool UseContCoeffs,
+                    const Array<OneD, const NekDouble> &dirForcing);
 
             virtual const Array<OneD,const SpatialDomains
                                 ::BoundaryConditionShPtr>& v_GetBndConditions();

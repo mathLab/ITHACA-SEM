@@ -108,16 +108,14 @@ namespace Nektar
 
             /// Returns the total number of local degrees of freedom
             /// \f$N_{\mathrm{eof}}=\sum_{e=1}^{{N_{\mathrm{el}}}}N^{e}_m\f$.
-            // inline
-            int GetNcoeffs(void) const;
+            inline int GetNcoeffs(void) const;
 
             // Returns the total number of local degrees of freedom for element eid
             int GetNcoeffs(const int eid) const;
 
             /// Evaulates the maximum number of modes in the elemental basis
             /// order over all elements
-            // inline
-            int EvalBasisNumModesMax(void) const;
+            inline int EvalBasisNumModesMax(void) const;
 
             /// Returns the vector of the number of modes in the elemental
             /// basis order over all elements.
@@ -125,44 +123,36 @@ namespace Nektar
 
             /// Returns the total number of quadrature points #m_npoints
             /// \f$=Q_{\mathrm{tot}}\f$.
-            // inline
-            int GetTotPoints(void) const;
+            inline int GetTotPoints(void) const;
 
             /// Returns the total number of quadrature points for eid's element
             /// \f$=Q_{\mathrm{tot}}\f$.
-            // inline
-            int GetTotPoints(const int eid) const;
+            inline int GetTotPoints(const int eid) const;
 
             /// Returns the total number of quadrature points #m_npoints
             /// \f$=Q_{\mathrm{tot}}\f$.
-            // inline
-            int GetNpoints(void) const;
+            inline int GetNpoints(void) const;
 
             /// Sets the transformed state #m_transState of the coefficient
             /// arrays.
-            // inline
-            void SetTransState(const TransState transState);
+            inline void SetTransState(const TransState transState);
 
             /// This function returns the transformed state #m_transState of
             /// the coefficient arrays.
-            // inline
-            TransState GetTransState(void) const;
+            inline TransState GetTransState(void) const;
 
             /// Fills the array #m_phys
-            // inline
-            void SetPhys(const Array<OneD, const NekDouble> &inarray);
+            inline void SetPhys(const Array<OneD, const NekDouble> &inarray);
 
             /// This function manually sets whether the array of physical
             /// values \f$\boldsymbol{u}_l\f$ (implemented as #m_phys) is
             /// filled or not.
-            // inline
-            void SetPhysState(const bool physState);
+            inline void SetPhysState(const bool physState);
 
             /// This function indicates whether the array of physical values
             /// \f$\boldsymbol{u}_l\f$ (implemented as #m_phys) is filled or
             /// not.
-            // inline
-            bool GetPhysState(void) const;
+            inline bool GetPhysState(void) const;
 
             /// This function integrates a function \f$f(\boldsymbol{x})\f$
             /// over the domain consisting of all the elements of the expansion.
@@ -179,8 +169,8 @@ namespace Nektar
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray);
 
-            // inline
-            void IProductWRTBase(
+            ///
+            inline void IProductWRTBase(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
                                 bool  UseContCoeffs = false);
@@ -200,8 +190,8 @@ namespace Nektar
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray);
 
-            // inline
-            void FwdTrans(
+            ///
+            inline void FwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
                                 bool  UseContCoeffs = false);
@@ -212,62 +202,63 @@ namespace Nektar
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray);
 
-            // inline
-            void MultiplyByInvMassMatrix(
+            ///
+            inline void MultiplyByInvMassMatrix(
                                 const Array<OneD,const NekDouble> &inarray,
                                       Array<OneD,      NekDouble> &outarray,
                                 bool  UseContCoeffs = false);
 
-            // inline
-            void HelmSolve(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                NekDouble lambda,
-                                bool      UseContCoeffs = false,
-                                const Array<OneD, const NekDouble>& dirForcing = NullNekDouble1DArray);
+            /// Solve helmholtz problem
+            inline void HelmSolve(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda = 0.0,
+                    const Array<OneD, const NekDouble> &Sigma 
+                                                = NullNekDouble1DArray,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff 
+                                                = NullNekDoubleArrayofArray);
+            
+            /// Solve helmholtz problem (continuous case parameters).
+            inline void HelmSolve(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                          bool UseContCoeffs,
+                    const Array<OneD, const NekDouble> &dirForcing 
+                                                = NullNekDouble1DArray,
+                    const Array<OneD, const NekDouble> &Sigma 
+                                                = NullNekDouble1DArray,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff 
+                                                = NullNekDoubleArrayofArray);
+            
+            /// Solve helmholtz problem (discontinuous case parameters).
+            inline void HelmSolve(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                          NekDouble tau,
+                    const Array<OneD, const NekDouble> &Sigma 
+                                                = NullNekDouble1DArray,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff 
+                                                = NullNekDoubleArrayofArray);
 
-            void HelmSolve(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                const Array<OneD, NekDouble> &lambda,
-                                bool      UseContCoeffs = false,
-                                const Array<OneD, const NekDouble>& dirForcing = NullNekDouble1DArray);
-
-           void HelmSolve(
-                           const Array<OneD, const NekDouble> &inarray,
-                           Array<OneD,       NekDouble> &outarray,
-                           NekDouble lambda,
-                           NekDouble tau);
-
-            void HelmSolve(
-                           const Array<OneD, const NekDouble> &inarray,
-                           Array<OneD,       NekDouble> &outarray,
-                           const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
-                           NekDouble lambda,
-                           NekDouble tau = 1);
-
-            void HelmSolve(
-                           const Array<OneD, const NekDouble> &inarray,
-                           Array<OneD,       NekDouble> &outarray,
-                           const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
-                           const Array<OneD, NekDouble> &lambda,
-                           NekDouble tau = 1);
-
+            ///
             void FwdTrans_BndConstrained(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray);
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray);
 
 
             /// This function elementally evaluates the backward transformation
             /// of the global spectral/hp element expansion.
             void BwdTrans_IterPerExp (
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray);
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray);
 
-            // inline
-            void BwdTrans (const Array<OneD, const NekDouble> &inarray,
-                                   Array<OneD,       NekDouble> &outarray,
-                             bool  UseContCoeffs = false);
+            ///
+            inline void BwdTrans (
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          bool  UseContCoeffs = false);
 
             /// This function calculates the coordinates of all the elemental
             /// quadrature points \f$\boldsymbol{x}_i\f$.
@@ -280,6 +271,13 @@ namespace Nektar
             void GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal,
                                 const int k);
 
+            /// Populate tangents vector with tangents from each element.
+            void GetTangents(
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &tangents);
+
+            /// Apply geometry information to each expansion.
+            void ApplyGeomInfo(SpatialDomains::MeshGraph &graph);
+            
             /// This function writes the spectral/hp element solution to the
             /// file \a out.
             void WriteToFile(std::ofstream &out,
@@ -299,29 +297,24 @@ namespace Nektar
             int GetCoordim(int eid);
 
             /// Set the \a i th coefficiient in \a m_coeffs to value \a val
-            // inline
-            void SetCoeff(int i, NekDouble val);
+            inline void SetCoeff(int i, NekDouble val);
 
             /// Set the \a i th coefficiient in  #m_coeffs to value \a val
-            // inline
-            void SetCoeffs(int i, NekDouble val);
+            inline void SetCoeffs(int i, NekDouble val);
 
             /// This function returns (a reference to) the array
             /// \f$\boldsymbol{\hat{u}}_l\f$ (implemented as #m_coeffs)
             /// containing all local expansion coefficients.
-            // inline
-            const Array<OneD, const NekDouble> &GetCoeffs() const;
+            inline const Array<OneD, const NekDouble> &GetCoeffs() const;
 
-            // inline
-            const Array<OneD, const NekDouble> &GetContCoeffs() const;
-
-            /// Get the \a i th value  (coefficient) of #m_coeffs
-            // inline
-            NekDouble GetCoeff(int i);
+            ///
+            inline const Array<OneD, const NekDouble> &GetContCoeffs() const;
 
             /// Get the \a i th value  (coefficient) of #m_coeffs
-            // inline
-            NekDouble GetCoeffs(int i);
+            inline NekDouble GetCoeff(int i);
+
+            /// Get the \a i th value  (coefficient) of #m_coeffs
+            inline NekDouble GetCoeffs(int i);
 
             /// This function returns (a reference to) the array
             /// \f$\boldsymbol{u}_l\f$ (implemented as #m_phys) containing the
@@ -348,36 +341,30 @@ namespace Nektar
             NekDouble H1 (const Array<OneD, const NekDouble> &soln);
 
             /// This function returns the number of elements in the expansion.
-            // inline
-            int GetExpSize(void);
+            inline int GetExpSize(void);
 
             /// This function returns (a shared pointer to) the local elemental
             /// expansion of the \f$n^{\mathrm{th}}\f$ element.
-            // inline
-            StdRegions::StdExpansionSharedPtr& GetExp(int n);
+            inline StdRegions::StdExpansionSharedPtr& GetExp(int n);
 
             /// Get the start offset position for a global list of #m_coeffs
             /// correspoinding to element n.
-            // inline
-            int GetCoeff_Offset(int n);
+            inline int GetCoeff_Offset(int n);
 
             /// Get the start offset position for a global list of m_phys
             /// correspoinding to element n.
-            // inline
-            int GetPhys_Offset(int n);
+            inline int GetPhys_Offset(int n);
 
             /// This function returns (a reference to) the array
             /// \f$\boldsymbol{\hat{u}}_l\f$ (implemented as #m_coeffs)
             /// containing all local expansion coefficients.
-            // inline
-            Array<OneD, NekDouble> &UpdateCoeffs();
+            inline Array<OneD, NekDouble> &UpdateCoeffs();
 
             /// This function returns (a reference to) the array
             /// \f$\boldsymbol{u}_l\f$ (implemented as #m_phys) containing the
             /// function \f$u^{\delta}(\boldsymbol{x})\f$ evaluated at the
             /// quadrature points.
-            // inline
-            Array<OneD, NekDouble> &UpdatePhys();
+            inline Array<OneD, NekDouble> &UpdatePhys();
 
             /// This function discretely evaluates the derivative of a function
             /// \f$f(\boldsymbol{x})\f$ on the domain consisting of all
@@ -393,66 +380,53 @@ namespace Nektar
 
 
             // functions associated with DisContField
-            // inline
-            const Array<OneD, const  boost::shared_ptr<ExpList1D> >
+            inline const Array<OneD, const  boost::shared_ptr<ExpList1D> >
                                                 &GetBndCondExpansions();
 
-            // inline
-            boost::shared_ptr<ExpList1D> &GetTrace();
+            inline boost::shared_ptr<ExpList1D> &GetTrace();
 
-            // inline
-            boost::shared_ptr<LocalToGlobalDGMap> &GetTraceMap(void);
+            inline boost::shared_ptr<LocalToGlobalDGMap> &GetTraceMap(void);
 
-            // inline
-            void AddTraceIntegral(
+            inline void AddTraceIntegral(
                                 const Array<OneD, const NekDouble> &Fx,
                                 const Array<OneD, const NekDouble> &Fy,
                                       Array<OneD, NekDouble> &outarray);
 
-            // inline
-            void AddTraceIntegral(
+            inline void AddTraceIntegral(
                                 const Array<OneD, const NekDouble> &Fn,
                                       Array<OneD, NekDouble> &outarray);
 
-            // inline
-            void AddTraceBiIntegral(
+            inline void AddTraceBiIntegral(
                                 const Array<OneD, const NekDouble> &Fwd,
                                 const Array<OneD, const NekDouble> &Bwd,
                                       Array<OneD, NekDouble> &outarray);
 
-            // inline
-            void GetFwdBwdTracePhys( Array<OneD,NekDouble> &Fwd,
+            inline void GetFwdBwdTracePhys( Array<OneD,NekDouble> &Fwd,
                                             Array<OneD,NekDouble> &Bwd);
 
-            // inline
-            void GetFwdBwdTracePhys(
+            inline void GetFwdBwdTracePhys(
                                 const Array<OneD,const NekDouble> &field,
                                       Array<OneD,NekDouble> &Fwd,
                                       Array<OneD,NekDouble> &Bwd);
 
-            // inline
-            virtual void ExtractTracePhys(
+            inline void ExtractTracePhys(
                                 Array<OneD,NekDouble> &outarray);
 
-            // inline
-            void ExtractTracePhys(
+            inline void ExtractTracePhys(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,NekDouble> &outarray);
 
-            // inline
-            const Array<OneD, const SpatialDomains
+            inline const Array<OneD, const SpatialDomains
                                 ::BoundaryConditionShPtr>& GetBndConditions();
 
-            // inline
-            void EvaluateBoundaryConditions(const NekDouble time = 0.0);
+            inline void EvaluateBoundaryConditions(const NekDouble time = 0.0);
 
 
             // Routines for continous matrix solution
             /// This function calculates the result of the multiplication of a
             /// matrix of type specified by \a mkey with a vector given by \a
             /// inarray.
-            // inline
-            void GeneralMatrixOp(
+            inline void GeneralMatrixOp(
                                 const GlobalMatrixKey             &gkey,
                                 const Array<OneD,const NekDouble> &inarray,
                                       Array<OneD,      NekDouble> &outarray,
@@ -480,16 +454,13 @@ namespace Nektar
                         std::string &field);
 
             /// load global optimisation parameters
-            // inline
-            void ReadGlobalOptimizationParameters(
+            inline void ReadGlobalOptimizationParameters(
                                 const std::string &infilename);
 
-            // inline
-            void SetUpPhysNormals(
+            inline void SetUpPhysNormals(
                                 const StdRegions::StdExpansionVector &locexp);
 
-            // inline
-            void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
+            inline void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                 Array<OneD,int> &EdgeID);
 
         protected:
@@ -686,33 +657,30 @@ namespace Nektar
                                     const Array<OneD,const NekDouble> &inarray,
                                           Array<OneD,      NekDouble> &outarray,
                                     bool  UseContCoeffs);
-
+                                    
             virtual void v_HelmSolve(
-                                const Array<OneD,const NekDouble> &inarray,
-                                      Array<OneD,      NekDouble> &outarray,
-                                NekDouble lambda,
-                                bool      UseContCoeffs,
-                                const Array<OneD, const NekDouble>& dirForcing);
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                    const Array<OneD, const NekDouble> &Sigma,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff);
+            
+            virtual void v_HelmSolveCG(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                    const Array<OneD, const NekDouble> &Sigma,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
+                          bool UseContCoeffs,
+                    const Array<OneD, const NekDouble> &dirForcing);
 
-            virtual void v_HelmSolve(
-                                const Array<OneD,const NekDouble> &inarray,
-                                      Array<OneD,      NekDouble> &outarray,
-                                const Array<OneD, NekDouble> &lambda,
-                                bool      UseContCoeffs,
-                                const Array<OneD, const NekDouble>& dirForcing);
-
-            virtual void v_HelmSolve(
-                                     const Array<OneD, const NekDouble> &inarray,
-                                   Array<OneD,       NekDouble> &outarray,
-                                   NekDouble lambda,
-                                   NekDouble tau);
-
-            virtual void v_HelmSolve(
-                                     const Array<OneD, const NekDouble> &inarray,
-                                   Array<OneD,       NekDouble> &outarray,
-                                   const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
-                                   NekDouble lambda,
-                                   NekDouble tau);
+            virtual void v_HelmSolveDG(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                    const Array<OneD, const NekDouble> &Sigma,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
+                          NekDouble tau);      
 
             virtual void v_HelmSolve(
                                      const Array<OneD, const NekDouble> &inarray,
@@ -928,52 +896,62 @@ namespace Nektar
         }
 
         /**
-         *
+         * 
          */
         inline void ExpList::HelmSolve(
-                        const Array<OneD, const NekDouble> &inarray,
-                              Array<OneD,       NekDouble> &outarray,
-                        NekDouble lambda,
-                        bool      UseContCoeffs,
-                        const Array<OneD, const NekDouble>& dirForcing)
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                      NekDouble lambda,
+                const Array<OneD, const NekDouble> &Sigma,
+                const Array<OneD, const Array<OneD, NekDouble> > &varcoeff)
         {
-            v_HelmSolve(inarray,outarray,lambda,UseContCoeffs,dirForcing);
+            // HelmSolve(inarray, outarray);
+            // HelmSolve(inarray, outarray, lambda);
+            // HelmSolve(inarray, outarray, lambda, Lambda);
+            // HelmSolve(inarray, outarray, lambda, Lambda, varcoeff);
+            v_HelmSolve(inarray, outarray, lambda, Sigma, varcoeff);
+            // v_HelmSolve -> v_HelmSolveCG or v_HelmSolveDG in derived classes
         }
 
+        
+        /**
+         * 
+         */
         inline void ExpList::HelmSolve(
-                        const Array<OneD, const NekDouble> &inarray,
-                              Array<OneD,       NekDouble> &outarray,
-                        const Array<OneD, NekDouble> &lambda,
-                        bool      UseContCoeffs,
-                        const Array<OneD, const NekDouble>& dirForcing)
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                      NekDouble lambda,
+                      bool UseContCoeffs,
+                const Array<OneD, const NekDouble> &dirForcing,
+                const Array<OneD, const NekDouble> &Sigma,
+                const Array<OneD, const Array<OneD, NekDouble> > &varcoeff)
         {
-            v_HelmSolve(inarray,outarray,lambda,UseContCoeffs,dirForcing);
+            // HelmSolve(inarray, outarray, lambda, useContCoeff);
+            // HelmSolve(inarray, outarray, lambda, useContCoeff, dirForcing);
+            // HelmSolve(inarray, outarray, lambda, useContCoeff, dirForcing, 
+            //                                              Lambda);
+            // HelmSolve(inarray, outarray, lambda, useContCoeff, dirForcing, 
+            //                                              Lambda, varcoeff);
+            v_HelmSolveCG(inarray, outarray, lambda, Sigma, varcoeff, 
+                          UseContCoeffs, dirForcing);
         }
+        
 
-        inline void ExpList::HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,       NekDouble> &outarray,
-                                       NekDouble lambda,
-                                       NekDouble tau)
+        /**
+         * 
+         */
+        inline void ExpList::HelmSolve(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                      NekDouble lambda,
+                      NekDouble tau,
+                const Array<OneD, const NekDouble> &Sigma,
+                const Array<OneD, const Array<OneD, NekDouble> > &varcoeff)
         {
-            v_HelmSolve(inarray,outarray,lambda,tau);
-        }
-
-        inline void ExpList::HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,       NekDouble> &outarray,
-                                       const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
-                                       NekDouble lambda,
-                                       NekDouble tau)
-        {
-            v_HelmSolve(inarray,outarray,varcoeffs,lambda,tau);
-        }
-
-        inline void ExpList::HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                       Array<OneD,       NekDouble> &outarray,
-                                       const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
-                                       const Array<OneD, NekDouble> &lambda,
-                                       NekDouble tau)
-        {
-            v_HelmSolve(inarray,outarray,varcoeffs,lambda,tau);
+            // HelmSolve(inarray, outarray, lambda, tau);
+            // HelmSolve(inarray, outarray, lambda, tau, Lambda);
+            // HelmSolve(inarray, outarray, lambda, tau, Lambda, varcoeff);
+            v_HelmSolveDG(inarray, outarray, lambda, Sigma, varcoeff, tau);
         }
 
         /**
@@ -1275,6 +1253,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.82  2009/12/14 18:01:08  cbiotto
+* Adding functions for printing out tecplot file
+*
 * Revision 1.81  2009/12/08 15:10:50  sehunchun
 * HelmholtzSolver with additional variables are added
 *

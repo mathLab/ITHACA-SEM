@@ -40,146 +40,64 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
-
-        // constructor
-        SegExp::SegExp(const LibUtilities::BasisKey &Ba, 
-                       const SpatialDomains::Geometry1DSharedPtr &geom):
+        /**
+         * @param   Ba          Basis key of segment expansion.
+         * @param   geom        Description of geometry.
+         */
+        SegExp::SegExp( const LibUtilities::BasisKey &Ba,
+                        const SpatialDomains::Geometry1DSharedPtr &geom):
             StdRegions::StdSegExp(Ba),
             m_geom(geom),
-            m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()),
-            m_matrixManager(std::string("SegExpMatrix")),
-            m_staticCondMatrixManager(std::string("SegExpStaticCondMatrix"))
-        {         
-            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
-            {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,  StdRegions::eNoExpansionType,*this),boost::bind(&SegExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i, StdRegions::eNoExpansionType,*this), boost::bind(&SegExp::CreateStaticCondMatrix, this, _1));
-            }
-
-            GenMetricInfo();
-        }
-
-        SegExp::SegExp(const LibUtilities::BasisKey &Ba):
-            StdRegions::StdSegExp(Ba),
-            m_geom(),
-            m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()),
+            m_metricinfo(m_geom->GetGeomFactors(m_base)),
             m_matrixManager(std::string("SegExpMatrix")),
             m_staticCondMatrixManager(std::string("SegExpStaticCondMatrix"))
         {
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,StdRegions::eNoExpansionType,*this),  
-                                                boost::bind(&SegExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,StdRegions::eNoExpansionType,*this),  
-                                                          boost::bind(&SegExp::CreateStaticCondMatrix, this, _1));
+                m_matrixManager.RegisterCreator(
+                                MatrixKey((StdRegions::MatrixType) i,
+                                          StdRegions::eNoExpansionType,*this),
+                                boost::bind(&SegExp::CreateMatrix, this, _1));
+                m_staticCondMatrixManager.RegisterCreator(
+                                MatrixKey((StdRegions::MatrixType) i, 
+                                          StdRegions::eNoExpansionType,*this), 
+                                boost::bind(&SegExp::CreateStaticCondMatrix, 
+                                            this, _1));
             }
-
-            // Set up unit geometric factors. ; 
-            Array<OneD,NekDouble> ndata(1,1.0); 
-            m_metricinfo->ResetGmat(ndata,1,1,1);
-            m_metricinfo->ResetJac(1,ndata);
         }
 
-        // copy constructor
+
+        /**
+         * @param   S           Existing segment to duplicate.
+         */
         SegExp::SegExp(const SegExp &S):
             StdRegions::StdSegExp(S),
             m_geom(S.m_geom),
             m_metricinfo(S.m_metricinfo),
             m_matrixManager(std::string("SegExpMatrix")),
             m_staticCondMatrixManager(std::string("SegExpStaticCondMatrix"))
-        {      
+        {
             for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
             {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,StdRegions::eNoExpansionType,*this),  
-                                                boost::bind(&SegExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,StdRegions::eNoExpansionType,*this),  
-                                                          boost::bind(&SegExp::CreateStaticCondMatrix, this, _1));
-            }       
+                m_matrixManager.RegisterCreator(
+                                MatrixKey((StdRegions::MatrixType) i,
+                                          StdRegions::eNoExpansionType,*this),
+                                boost::bind(&SegExp::CreateMatrix, this, _1));
+                m_staticCondMatrixManager.RegisterCreator(
+                                MatrixKey((StdRegions::MatrixType) i,
+                                          StdRegions::eNoExpansionType,*this),
+                                boost::bind(&SegExp::CreateStaticCondMatrix,
+                                            this, _1));
+            }
         }
 
-        // by default the StdExpansion1D destructor will be called
 
+        /**
+         *
+         */
         SegExp::~SegExp()
         {
         }
-
-        // interpolate and possibly generate geometric factors. 
-        void SegExp::GenMetricInfo()
-        {
-            m_metricinfo = m_geom->GetGeomFactors(m_base);
-//             SpatialDomains::GeomFactorsSharedPtr Xgfac = m_geom->GetGeomFactors();
-
-//             if( Xgfac->GetGtype() != SpatialDomains::eDeformed)
-//             {
-//                 m_metricinfo = Xgfac;
-//             }
-//             else
-//             {                
-//                 int coordim = m_geom->GetCoordim();
-//                 int expdim  = 1;
-//                 int  nq = m_base[0]->GetNumPoints();
-//                 SpatialDomains::GeomType gtype = SpatialDomains::eDeformed;
-//                 Array<OneD,NekDouble> ndata(coordim*nq); 
-//                 Array<OneD, const NekDouble> ojac  = Xgfac->GetJac();
-//                 Array<TwoD, const NekDouble> gmat  = Xgfac->GetGmat();;
-
-//                 // assume all directiosn of geombasis are same
-//                 LibUtilities::BasisSharedPtr CBasis0 = m_geom->GetBasis(0,0); 
-
-//                 m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>::
-//                     AllocateSharedPtr(gtype,expdim,coordim); 
-
-//                 // check to see if basis are different distributions
-//                 if(!(m_base[0]->GetBasisKey().SamePoints(CBasis0->GetBasisKey())))
-//                 {
-//                     int i,j;
-//                     int cnq = CBasis0->GetNumPoints();
-//                     Array<OneD, NekDouble> ctmp(cnq);
-//                     Array<OneD, NekDouble> tmp(nq);
-//                     Array<OneD, NekDouble> jac(nq,0.0);
-
-//                     // interpolate Geometric data   
-//                     for(i = 0; i < coordim; ++i)
-//                     {
-//                         // Calculate  lcoal derivatives for interpolation
-//                         // Need check in case points are aligned to x,y axis
-//                         for(j = 0; j < cnq; ++j)
-//                         {
-//                             ctmp[j] = (fabs(gmat[i][j]) > NekConstants::kNekZeroTol)? 1.0/gmat[i][j]: 0.0;
-//                         }
-
-//                         LibUtilities::Interp1D(CBasis0->GetBasisKey(),  ctmp, 
-//                                  m_base[0]->GetBasisKey(), tmp);
-     
-//                         for(j = 0; j < nq; ++j)
-//                         {
-//                             ndata[i*nq+j] = (fabs(tmp[j]) > NekConstants::kNekZeroTol)? 1.0/tmp[j]: 0.0;
-//                         }
-
-//                         Vmath::Vvtvp(nq,tmp,1,tmp,1,jac,1,jac,1);
-
-//                     }
-//                     Vmath::Vsqrt(nq,jac,1,jac,1);
-
-//                     m_metricinfo->ResetGmat(ndata,nq,1,coordim);
-//                     m_metricinfo->ResetJac(nq,jac);                    
-//                 }
-//                 else  // Same data can be used 
-//                 {
-//                     // Copy Geometric data
-//                     Blas::Dcopy(nq*coordim,&gmat[0][0],1,&ndata[0],1);
-
-//                     m_metricinfo->ResetGmat(ndata,nq,1,coordim);
-
-//                     // Copy Jacobian
-//                     ndata = Array<OneD,NekDouble>(nq);    
-//                     Blas::Dcopy(nq,ojac,1,ndata,1);
-
-//                     m_metricinfo->ResetJac(nq,ndata);                    
-//                 }   
-//             }
-        }
-
 
         //----------------------------
         // Integration Methods
@@ -1255,10 +1173,40 @@ namespace Nektar
             return returnval;
         }
 
+        void SegExp::v_SetUpPhysNormals(const StdRegions::StdExpansionSharedPtr &exp2D, const int edge)
+        {
+            GetMetricInfo()->ComputeNormals(exp2D->GetGeom(), edge, GetBasis(0)->GetPointsKey());            
+/*            int k;
+            int coordim = exp2D->GetCoordim();
+            int nq      = m_base[0]->GetNumPoints();
+            
+            // Retrieve the GeomFactors object describing the shape geometry
+            // and generate the normals to the edge.
+            m_physNormal =  exp2D->GetMetricInfo()->GenNormals2D(exp2D->DetExpansionType(),edge,m_base[0]->GetPointsKey());
+            
+            if(exp2D->GetEorient(edge) == StdRegions::eBackwards)
+            {
+                if(exp2D->GetMetricInfo()->GetGtype() == SpatialDomains::eDeformed)
+                {
+                    for(k = 0; k < coordim; ++k)
+                    {
+                        Vmath::Reverse(nq,&m_physNormal[k*nq],1,
+                                       &m_physNormal[k*nq],1);
+                    }
+                }
+
+                Vmath::Neg(nq*coordim,m_physNormal,1);
+            }
+*/        }
+
+
     } // end of namespace    
 }//end of namespace
 
 // $Log: SegExp.cpp,v $
+// Revision 1.63  2009/10/30 14:00:07  pvos
+// Multi-level static condensation updates
+//
 // Revision 1.62  2009/10/06 09:48:31  cbiotto
 // Adding MultiplyByElmtInvMass
 //

@@ -735,7 +735,7 @@ namespace Nektar
 //                     }
 //               }
 
-            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
+            m_geomfactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
 			
 		}
 
@@ -840,6 +840,9 @@ namespace Nektar
 
 //
 // $Log: PrismGeom.cpp,v $
+// Revision 1.16  2009/02/08 07:04:55  sherwin
+// Changed initialisation of maparray to take positive number
+//
 // Revision 1.15  2009/01/21 16:59:03  pvos
 // Added additional geometric factors to improve efficiency
 //

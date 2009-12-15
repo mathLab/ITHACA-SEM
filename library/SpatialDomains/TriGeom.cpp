@@ -210,7 +210,7 @@ namespace Nektar
                 }
             }
 
-            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
+            m_geomfactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
         }
 
         void TriGeom::AddElmtConnected(int gvo_id, int locid)
@@ -367,6 +367,9 @@ namespace Nektar
 
 //
 // $Log: TriGeom.cpp,v $
+// Revision 1.22  2009/07/02 13:32:24  sehunchun
+// *** empty log message ***
+//
 // Revision 1.21  2009/01/21 16:59:04  pvos
 // Added additional geometric factors to improve efficiency
 //

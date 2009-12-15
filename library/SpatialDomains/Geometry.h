@@ -119,6 +119,11 @@ namespace Nektar
                     return ValidateRegGeomFactor(m_geomfactors);
                 }
 
+                inline GeomFactorsSharedPtr GetMetricInfo()
+                {
+                    return m_geomfactors;
+                }
+
                 inline GeomShapeType GetGeomShapeType(void)
                 {
                     return m_GeomShapeType;
@@ -213,6 +218,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.31  2009/09/06 21:56:42  sherwin
+// Updates for Navier-Stokes solver including restart details
+//
 // Revision 1.30  2009/05/15 14:38:41  pvos
 // Changed check for regular quads so that it also includes parallellograms
 //

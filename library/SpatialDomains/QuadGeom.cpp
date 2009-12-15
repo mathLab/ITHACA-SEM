@@ -291,7 +291,7 @@ namespace Nektar
                 }
             }
 
-            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
+            m_geomfactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
         }
 
         /** \brief put all quadrature information into edge structure 
@@ -411,6 +411,9 @@ namespace Nektar
 
 //
 // $Log: QuadGeom.cpp,v $
+// Revision 1.25  2009/05/15 14:38:41  pvos
+// Changed check for regular quads so that it also includes parallellograms
+//
 // Revision 1.24  2009/01/21 16:59:03  pvos
 // Added additional geometric factors to improve efficiency
 //

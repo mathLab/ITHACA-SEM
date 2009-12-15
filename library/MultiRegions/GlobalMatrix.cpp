@@ -39,14 +39,33 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        /**
+         * @class GlobalMatrix
+         * This matrix is essentially a wrapper around a DNekSparseMat.
+         */
 
+        /**
+         * Allocates a new DNekSparseMat object from the given specification.
+         * @param   rows        Number of rows in matrix.
+         * @param   columns     Number of columns in matrix.
+         * @param   cooMat      ?
+         */
         GlobalMatrix::GlobalMatrix(unsigned int rows, 
                                    unsigned int columns,
                                    const COOMatType &cooMat):
-            m_matrix(MemoryManager<DNekSparseMat>::AllocateSharedPtr(rows,columns,cooMat))
+            m_matrix(MemoryManager<DNekSparseMat>
+                                        ::AllocateSharedPtr(rows,columns,
+                                                            cooMat))
         {
         }
 
+
+        /**
+         * Performs a matrix-vector multiply using the Sparse BLAS routine
+         * DCSRMV.
+         * @param   in          Input vector.
+         * @param   out         Output vector.
+         */
         void GlobalMatrix::Multiply(const Array<OneD,const NekDouble> &in, 
                                           Array<OneD,      NekDouble> &out)
         {

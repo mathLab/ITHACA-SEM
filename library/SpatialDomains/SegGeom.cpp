@@ -292,7 +292,7 @@ namespace Nektar
                 gType = eDeformed;
             }
 
-            m_geomfactors = MemoryManager<GeomFactors>::AllocateSharedPtr(gType, m_coordim, m_xmap, tbasis);
+            m_geomfactors = MemoryManager<GeomFactors1D>::AllocateSharedPtr(gType, m_coordim, m_xmap, tbasis);
         }
         
         
@@ -394,6 +394,9 @@ namespace Nektar
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.26  2009/07/02 13:32:24  sehunchun
+// *** empty log message ***
+//
 // Revision 1.25  2009/01/21 16:59:03  pvos
 // Added additional geometric factors to improve efficiency
 //

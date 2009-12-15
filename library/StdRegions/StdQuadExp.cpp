@@ -440,7 +440,7 @@ namespace Nektar
                                   inarray,outarray,wsp,true,true);
         }
 
-        void StdQuadExp::FwdTrans(const Array<OneD, const NekDouble>& inarray,
+        void StdQuadExp::v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
                                   Array<OneD, NekDouble> &outarray)
         {
             if((m_base[0]->Collocation())&&(m_base[1]->Collocation()))
@@ -1299,6 +1299,9 @@ namespace Nektar
 
 /** 
  * $Log: StdQuadExp.cpp,v $
+ * Revision 1.52  2009/09/23 12:42:09  pvos
+ * Updates for variable order expansions
+ *
  * Revision 1.51  2009/04/27 21:32:45  sherwin
  * Updated WriteToField method
  *

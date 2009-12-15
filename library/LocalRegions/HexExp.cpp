@@ -49,7 +49,7 @@ namespace Nektar
                        const SpatialDomains::HexGeomSharedPtr &geom):
             StdRegions::StdHexExp(Ba,Bb,Bc),
             m_geom(geom),
-            m_metricinfo(),
+            m_metricinfo(m_geom->GetGeomFactors(m_base)),
             m_matrixManager(std::string("HexExpMatrix")),
             m_staticCondMatrixManager(std::string("HexExpStaticCondMatrix"))
         {
@@ -61,40 +61,8 @@ namespace Nektar
                                                                      StdRegions::eNoExpansionType,*this),
                                                                      boost::bind(&HexExp::CreateStaticCondMatrix, this, _1));
             }
-            GenMetricInfo();
         }
 
-        HexExp::HexExp(const LibUtilities::BasisKey &Ba,
-                       const LibUtilities::BasisKey &Bb,
-                       const LibUtilities::BasisKey &Bc ):
-            StdRegions::StdHexExp(Ba,Bb,Bc),
-            m_geom(),
-            m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()),
-            m_matrixManager(std::string("HexExpMatrix")),
-            m_staticCondMatrixManager(std::string("HexExpStaticCondMatrix"))
-        {
-
-            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
-            {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                          StdRegions::eNoExpansionType,*this),
-                                                boost::bind(&HexExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                          StdRegions::eNoExpansionType,*this),
-                                                          boost::bind(&HexExp::CreateStaticCondMatrix, this, _1));
-            }
-
-            // Set up unit geometric factors. 
-            int coordim = 3;
-            Array<OneD,NekDouble> ndata = Array<OneD,NekDouble>(coordim*coordim*coordim,0.0); 
-            ndata[0] = ndata[26] = 1.0; //TODO must check
-            //ResetGmat (const Array< OneD, const NekDouble > &ndata, const int nq, const int expdim, const int coordim
-            m_metricinfo->ResetGmat(ndata,1,3,coordim); 
-           //ResetJac (int nq, const Array< OneD, const NekDouble > &ndata)
-            m_metricinfo->ResetJac(1,ndata); 
-
-        }
-        
         HexExp::HexExp(const HexExp &T):
             StdRegions::StdHexExp(T),
             m_geom(T.m_geom),
@@ -107,37 +75,6 @@ namespace Nektar
         // by default the StdHexExp destructor will be called
         HexExp::~HexExp()
         {
-        }
-
-        void HexExp::GenMetricInfo()
-        {
-            m_metricinfo = m_geom->GetGeomFactors(m_base);
-//             SpatialDomains::GeomFactorsSharedPtr Xgfac;
-            
-//             Xgfac = m_geom->GetGeomFactors();
-
-//             if(Xgfac->GetGtype() != SpatialDomains::eDeformed)
-//             {
-//                 m_metricinfo = Xgfac;
-//             }
-//             else
-//             {
-//                 //basis are different distributions
-//                if(!(m_base[0]->GetBasisKey().SamePoints(m_geom->GetBasis(0,0)->GetBasisKey()))||
-//                   !(m_base[1]->GetBasisKey().SamePoints(m_geom->GetBasis(0,1)->GetBasisKey()))||
-//                   !(m_base[2]->GetBasisKey().SamePoints(m_geom->GetBasis(0,2)->GetBasisKey())))
-//                 {
-//                     StdRegions::ExpansionType shape = StdRegions::eHexahedron;
-                    
-//                     m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>:: AllocateSharedPtr(shape,*Xgfac,m_base);
-
-//                 }
-//                 else // Same data can be used 
-//                 {                   
-//                     m_metricinfo = Xgfac;
-//                 } 
-                
-//             }
         }
 
 
@@ -902,6 +839,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.cpp,v $
+ *    Revision 1.26  2009/10/30 14:00:06  pvos
+ *    Multi-level static condensation updates
+ *
  *    Revision 1.25  2009/05/01 13:23:21  pvos
  *    Fixed various bugs
  *

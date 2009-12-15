@@ -114,11 +114,6 @@ namespace Nektar
             return m_explicitReaction;
         }
 
-        bool  GetConnection(void)
-        {
-            return m_Connection;
-        }
-
         LibUtilities::TimeIntegrationMethod GetTimeIntMethod(void)
         {
             return m_timeIntMethod;
@@ -164,7 +159,7 @@ namespace Nektar
         NekDouble USERDEFINEDError(int field, const int type, const int Readfntype = 0,
                                      Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
 
-        void SetUpTangentialVectors(Array<OneD, Array<OneD, NekDouble> > &Principaldirection); 
+        void SetUpTangentialVectors(); 
 
         void GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> >&physfield, Array<OneD, Array<OneD, NekDouble> >&flux);
 
@@ -252,16 +247,10 @@ namespace Nektar
 
         void SolveHelmholtz(const int indx, const NekDouble kappa, const int m_UseDirDeriv = 1);
 
-        void CrossProduct(Array<OneD, Array<OneD, NekDouble> > &v1,
-                          Array<OneD, Array<OneD, NekDouble> > &v2,
-                          Array<OneD, Array<OneD, NekDouble> > &v3);
-
-	void Unitlength(Array<OneD, Array<OneD, NekDouble> > &array);     
-
         void PlotTangentialVectorMap();
 
-        void GeneratePrincipaldirection(const int Connection, Array<OneD, 
-                                        Array<OneD, NekDouble> > &Principaldirection);
+//        void GeneratePrincipaldirection(const int Connection, Array<OneD, 
+//                                        Array<OneD, NekDouble> > &Principaldirection);
 
         void Getrestingstate(const NekDouble epsilon, const NekDouble beta,
                              Array<OneD, NekDouble> rstates);
@@ -275,7 +264,6 @@ namespace Nektar
         int m_initialwavetype;                ///< Type of function for initial condition and exact solutions
         int m_duration;
         int m_UseDirDeriv;
-        int m_Connection;
         int m_Anisotropy;
         NekDouble m_Angularfreq;
         NekDouble m_Angleofaxis;

@@ -46,7 +46,7 @@ namespace Nektar
                            const SpatialDomains::PrismGeomSharedPtr &geom):
             StdRegions::StdPrismExp(Ba,Bb,Bc),
             m_geom(geom),
-            m_metricinfo(),
+            m_metricinfo(m_geom->GetGeomFactors(m_base)),
             m_matrixManager(std::string("PrismExpMatrix")),
             m_staticCondMatrixManager(std::string("PrismExpStaticCondMatrix"))
         {
@@ -60,37 +60,6 @@ namespace Nektar
                                                                     StdRegions::eNoExpansionType,*this),
                                                           boost::bind(&PrismExp::CreateStaticCondMatrix, this, _1));
             }
-
-            GenMetricInfo();
-        }
-
-        PrismExp::PrismExp(const LibUtilities::BasisKey &Ba,
-                           const LibUtilities::BasisKey &Bb,
-                           const LibUtilities::BasisKey &Bc
-                           ):
-            StdRegions::StdPrismExp(Ba,Bb,Bc),
-            m_geom(),
-            m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()),
-            m_matrixManager(std::string("PrismExpMatrix")),
-            m_staticCondMatrixManager(std::string("PrismExpStaticCondMatrix"))
-        {
-
-            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
-            {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                          StdRegions::eNoExpansionType,*this),
-                                                boost::bind(&PrismExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                                    StdRegions::eNoExpansionType,*this),
-                                                          boost::bind(&PrismExp::CreateStaticCondMatrix, this, _1));
-            }
-
-            // Set up unit geometric factors. 
-            int coordim = 3;
-            Array<OneD,NekDouble> ndata = Array<OneD,NekDouble>(coordim*coordim*coordim,0.0); 
-            ndata[0] = ndata[26] = 1.0; //TODO must check
-            m_metricinfo->ResetGmat(ndata,1,3,coordim);
-            m_metricinfo->ResetJac(1,ndata); 
         }
 
         PrismExp::PrismExp(const PrismExp &T):
@@ -106,37 +75,6 @@ namespace Nektar
         {
         }
 
-        void PrismExp::GenMetricInfo()
-        {
-            m_metricinfo = m_geom->GetGeomFactors(m_base);
-//             SpatialDomains::GeomFactorsSharedPtr Xgfac;
-
-//             Xgfac = m_geom->GetGeomFactors();
-
-//             if(Xgfac->GetGtype() != SpatialDomains::eDeformed)
-//             {
-//                 m_metricinfo = Xgfac;
-//             }
-//             else
-//             {
-//                 //basis are different distributions
-//                if(!(m_base[0]->GetBasisKey().SamePoints(m_geom->GetBasis(0,0)->GetBasisKey()))||
-//                   !(m_base[1]->GetBasisKey().SamePoints(m_geom->GetBasis(0,1)->GetBasisKey()))||
-//                   !(m_base[2]->GetBasisKey().SamePoints(m_geom->GetBasis(0,2)->GetBasisKey())))
-//                 {
-//                     StdRegions::ExpansionType shape = StdRegions::ePrism;
-
-//                     m_metricinfo = MemoryManager<SpatialDomains::GeomFactors>:: AllocateSharedPtr(shape,*Xgfac,m_base);
-
-//                 }
-//                 else // Same data can be used
-//                 {
-//                     m_metricinfo = Xgfac;
-//                 }
-
-//             }
-        }
-	
 
         //----------------------------
         // Integration Methods
@@ -843,6 +781,9 @@ namespace Nektar
 
 /** 
  *    $Log: PrismExp.cpp,v $
+ *    Revision 1.20  2009/10/30 14:00:06  pvos
+ *    Multi-level static condensation updates
+ *
  *    Revision 1.19  2009/04/27 21:34:07  sherwin
  *    Updated WriteToField
  *

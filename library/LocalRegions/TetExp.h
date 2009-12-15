@@ -41,7 +41,7 @@
 #include <StdRegions/StdTetExp.h>
 #include <SpatialDomains/TetGeom.h>
 
-#include <SpatialDomains/GeomFactors.h>
+#include <SpatialDomains/GeomFactors3D.h>
 #include <LocalRegions/MatrixKey.h>
 
 #include <LocalRegions/Expansion3D.h>
@@ -60,14 +60,9 @@ namespace Nektar
                 points and order definition */
             TetExp(const LibUtilities::BasisKey &Ba,
                    const LibUtilities::BasisKey &Bb,
-	           const LibUtilities::BasisKey &Bc,
+                   const LibUtilities::BasisKey &Bc,
                    const SpatialDomains::TetGeomSharedPtr &geom);
 
-            TetExp(const LibUtilities::BasisKey &Ba,
-                   const LibUtilities::BasisKey &Bb,
-                   const LibUtilities::BasisKey &Bc);
-
-	    
             /// Copy Constructor
             TetExp(const TetExp &T);
 
@@ -145,9 +140,6 @@ namespace Nektar
 
 
         protected:
-
-            void GenMetricInfo();
-
             /** 
                 \brief Calculate the inner product of inarray with respect to
                 the basis B=base0*base1*base2 and put into outarray:
@@ -182,14 +174,14 @@ namespace Nektar
 
 
         private:
-	    SpatialDomains::Geometry3DSharedPtr m_geom; 
+        SpatialDomains::Geometry3DSharedPtr m_geom; 
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
 
-	    LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
+        LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
             TetExp();
-	
+    
             virtual StdRegions::ExpansionType v_DetExpansionType() const
             {
                 return DetExpansionType();
@@ -325,6 +317,9 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.h,v $
+ *    Revision 1.22  2009/04/27 21:34:07  sherwin
+ *    Updated WriteToField
+ *
  *    Revision 1.21  2009/04/20 16:12:28  sherwin
  *    Updates related to output format and optimising DG solver
  *

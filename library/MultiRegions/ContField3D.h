@@ -97,13 +97,6 @@ namespace Nektar
                                                Array<OneD,       NekDouble> &outarray,
                                          bool  UseContCoeffs = false);
 
-            void HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD,       NekDouble> &outarray,
-                           NekDouble lambda,
-                           bool      UseContCoeffs = false,
-                           const Array<OneD, const NekDouble>& dirForcing = NullNekDouble1DArray);
-
-
             void EvaluateBoundaryConditions(const NekDouble time = 0.0)
             {
                 ExpList3D::EvaluateBoundaryConditions(time,m_bndCondExpansions,m_bndConditions);
@@ -189,14 +182,21 @@ namespace Nektar
                 MultiplyByInvMassMatrix(inarray,outarray,UseContCoeffs);
             }
 
-            virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,       NekDouble> &outarray,
-                                     NekDouble lambda,
-                                     bool      UseContCoeffs,
-                                     const Array<OneD, const NekDouble>& dirForcing = NullNekDouble1DArray)
-            {
-                HelmSolve(inarray,outarray,lambda,UseContCoeffs,dirForcing);
-            }
+            virtual void v_HelmSolve(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                    const Array<OneD, const NekDouble> &Sigma,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff);
+            
+            virtual void v_HelmSolveCG(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                    const Array<OneD, const NekDouble> &Sigma,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
+                          bool UseContCoeffs,
+                    const Array<OneD, const NekDouble> &dirForcing);
 
         };
         typedef boost::shared_ptr<ContField3D>      ContField3DSharedPtr;

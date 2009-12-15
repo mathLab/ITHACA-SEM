@@ -41,7 +41,7 @@
 #include <StdRegions/StdPyrExp.h>
 #include <SpatialDomains/PyrGeom.h>
 
-#include <SpatialDomains/GeomFactors.h>
+#include <SpatialDomains/GeomFactors3D.h>
 #include <LocalRegions/MatrixKey.h>
 
 #include <LocalRegions/Expansion3D.h>
@@ -63,11 +63,6 @@ namespace Nektar
                    const LibUtilities::BasisKey &Bc,
                    const SpatialDomains::PyrGeomSharedPtr &geom);
 
-            PyrExp(const LibUtilities::BasisKey &Ba,
-                   const LibUtilities::BasisKey &Bb,
-                   const LibUtilities::BasisKey &Bc);
-
-	    
             /// Copy Constructor
             PyrExp(const PyrExp &T);
 
@@ -138,9 +133,6 @@ namespace Nektar
             void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
 
         protected:
-            //SpatialDomains::PyrGeom * m_geom;
-            void GenMetricInfo();
-
             /**
                \brief Calculate the inner product of inarray with respect to
                the basis B=base0*base1*base2 and put into outarray:
@@ -321,6 +313,9 @@ namespace Nektar
 
 /**
  *    $Log: PyrExp.h,v $
+ *    Revision 1.21  2009/04/27 21:34:07  sherwin
+ *    Updated WriteToField
+ *
  *    Revision 1.20  2009/04/20 16:12:28  sherwin
  *    Updates related to output format and optimising DG solver
  *

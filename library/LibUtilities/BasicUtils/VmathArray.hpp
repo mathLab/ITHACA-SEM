@@ -207,7 +207,7 @@ using namespace Nektar;
         }
     
         /// \brief vvtvm (vector times vector plus vector): z = w*x - y
-        template<class T> void Vvtvm(int n, const Array<OneD,T> &w, const int incw, Array<OneD,T> &x, const int incx, const Array<OneD,T> &y, const int incy,  Array<OneD,T> &z, const int incz)
+        template<class T> void Vvtvm(int n, const Array<OneD,const T> &w, const int incw, const Array<OneD,const T> &x, const int incx, const Array<OneD,const T> &y, const int incy,  Array<OneD,T> &z, const int incz)
         {
             ASSERTL1(n*incw <= w.num_elements()+w.GetOffset(),"Array out of bounds");
             ASSERTL1(n*incx <= x.num_elements()+x.GetOffset(),"Array out of bounds");
@@ -329,12 +329,23 @@ using namespace Nektar;
 
             Vcopy(n,&x[0],incx,&y[0],incy);
         }
+
+        template<class T> void Reverse(int n, const Array<OneD, const T> &x, int incx, Array<OneD,T> &y, int const incy)
+        {
+            ASSERTL1(static_cast<unsigned int>(std::abs(n*incx)) <= x.num_elements()+x.GetOffset(),"Array out of bounds");
+            ASSERTL1(static_cast<unsigned int>(std::abs(n*incy)) <= y.num_elements()+y.GetOffset(),"Array out of bounds");
+
+            Reverse(n,&x[0],incx,&y[0],incy);
+        }
         
     }
 #endif //VECTORMATHARRAY_HPP
 
 /***
 $Log: VmathArray.hpp,v $
+Revision 1.7  2009/03/10 23:44:15  claes
+Made y in z = x/y a constant in the parameter list.
+
 Revision 1.6  2008/11/01 22:04:34  bnelson
 Removed references to MatrixStoragePolicy<T>
 

@@ -47,7 +47,7 @@ namespace Nektar
                          const SpatialDomains::QuadGeomSharedPtr &geom):
             StdRegions::StdQuadExp(Ba,Bb),
             m_geom(geom),
-            m_metricinfo(),
+            m_metricinfo(m_geom->GetGeomFactors(m_base)),
             m_matrixManager(std::string("QuadExpMatrix")),
             m_staticCondMatrixManager(std::string("QuadExpStaticCondMatrix"))
         {      
@@ -58,29 +58,6 @@ namespace Nektar
                                                                     StdRegions::eNoExpansionType,*this),
                                                           boost::bind(&QuadExp::CreateStaticCondMatrix, this, _1));
             }            
-            GenMetricInfo();
-        }
-    
-    
-        QuadExp::QuadExp(const LibUtilities::BasisKey &Ba,
-                         const LibUtilities::BasisKey &Bb):
-            StdRegions::StdQuadExp(Ba,Bb),
-            m_geom(),
-            m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()),
-            m_matrixManager(std::string("QuadExpMatrix")),
-            m_staticCondMatrixManager(std::string("QuadExpStaticCondMatrix"))
-        {            
-            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
-            {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,StdRegions::eNoExpansionType,*this), boost::bind(&QuadExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,StdRegions::eNoExpansionType,*this), boost::bind(&QuadExp::CreateStaticCondMatrix, this, _1));
-            }
-            
-            // Set up unit geometric factors. 
-            Array<OneD,NekDouble> ndata(4,0.0); 
-            ndata[0] = ndata[3] = 1.0;
-            m_metricinfo->ResetGmat(ndata,1,2,2);
-            m_metricinfo->ResetJac(1,ndata);
         }
 
         QuadExp::QuadExp(const QuadExp &T):
@@ -95,11 +72,6 @@ namespace Nektar
         // by default the StdQuadExp destructor will be called    
         QuadExp::~QuadExp()
         {
-        }
-    
-        void QuadExp::GenMetricInfo()
-        {
-            m_metricinfo = m_geom->GetGeomFactors(m_base);
         }
         
         //----------------------------        
@@ -299,7 +271,7 @@ namespace Nektar
         void QuadExp::MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
                                                  Array<OneD, NekDouble> &outarray)
         {        
-            if(m_metricinfo->UseQuadratureMetrics())
+            if(m_metricinfo->IsUsingQuadMetrics())
             {
                 int    nqtot = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();                
                 const Array<OneD, const NekDouble>& metric = m_metricinfo->GetQuadratureMetrics();  
@@ -349,7 +321,7 @@ namespace Nektar
             {
                 // This implementation is only valid when there are no coefficients
                 // associated to the Laplacian operator
-                if(m_metricinfo->UseLaplacianMetrics())       
+                if(m_metricinfo->IsUsingLaplMetrics())       
                 {  
                     int       nquad0  = m_base[0]->GetNumPoints();
                     int       nquad1  = m_base[1]->GetNumPoints();
@@ -519,7 +491,7 @@ namespace Nektar
                                                       Array<OneD,NekDouble> &outarray,
                                                       const StdRegions::StdMatrixKey &mkey)
         {   
-            if(m_metricinfo->UseLaplacianMetrics())       
+            if(m_metricinfo->IsUsingLaplMetrics())       
             {  
                 int       nquad0  = m_base[0]->GetNumPoints();
                 int       nquad1  = m_base[1]->GetNumPoints();
@@ -991,10 +963,11 @@ namespace Nektar
 
         void QuadExp::GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal,
                                        const int k)
-	{
+	    {
             int m_num = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
             
-            Vmath::Vcopy(m_num, m_metricinfo->GetSurfaceNormal(k), 1, SurfaceNormal, 1);
+            Vmath::Vcopy(m_num, m_metricinfo->GetNormal()[k], 1,
+                                SurfaceNormal, 1);
       	}
 
         void QuadExp::GetCoords(Array<OneD,NekDouble> &coords_0,
@@ -1697,44 +1670,6 @@ namespace Nektar
             return returnval;
         }
 
-        StdRegions::StdExpansion1DSharedPtr QuadExp::GetEdgeExp(int edge, bool SetUpNormals)
-        {
-            GenSegExpSharedPtr returnval; 
-            SpatialDomains::Geometry1DSharedPtr edg = m_geom->GetEdge(edge);
-            
-            returnval = MemoryManager<GenSegExp>::AllocateSharedPtr(DetEdgeBasisKey(edge),edg);
-            
-            
-            if(SetUpNormals)
-            {
-                int i;
-                int coordim = GetCoordim();
-                int npoints = returnval->GetNumPoints(0);
-                StdRegions::EdgeOrientation edgedir = GetEorient(edge);
-
-                Array<OneD,NekDouble> phys_normals = m_metricinfo->GenNormals2D(StdRegions::eQuadrilateral,edge,returnval->GetBasis(0)->GetPointsKey());
-
-                if(edgedir == StdRegions::eBackwards)
-                {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        for(i = 0; i < coordim; ++i)
-                        {
-                            Vmath::Reverse(npoints,&phys_normals[i*npoints],1,
-                                           &phys_normals[i*npoints],1);
-                        }
-                    }
-                    
-                    Vmath::Neg(coordim*npoints,phys_normals,1);
-                }
-                
-                returnval->SetPhysNormals(phys_normals);
-            }
-            
-            return returnval;
-        }
-
-
 
         // Get edge values from the 2D Phys space along an edge
         // following a counter clockwise edge convention for definition
@@ -1965,12 +1900,60 @@ namespace Nektar
             return returnval;
         }
         
+        StdRegions::StdExpansion1DSharedPtr QuadExp::v_GetEdgeExp(int edge, bool SetUpNormals)
+        {
+            // Need checking of range of edge
+            ASSERTL0(edge >= 0 && edge < 4,
+                     "Value for edge must be 0 to 3 inclusive.");
+                     
+            SegExpSharedPtr returnval; 
+            SpatialDomains::Geometry1DSharedPtr edg = m_geom->GetEdge(edge);
+            
+            returnval = MemoryManager<SegExp>::AllocateSharedPtr(DetEdgeBasisKey(edge),edg);
+            
+            if (SetUpNormals)
+            {
+                returnval->GetMetricInfo()->ComputeNormals(m_geom, edge, returnval->GetBasis(0)->GetPointsKey());
+            }
+/*            
+            if(SetUpNormals)
+            {
+                int i;
+                int coordim = GetCoordim();
+                int npoints = returnval->GetNumPoints(0);
+                StdRegions::EdgeOrientation edgedir = GetEorient(edge);
 
+                Array<OneD,NekDouble> phys_normals = m_metricinfo->GenNormals2D(StdRegions::eQuadrilateral,edge,returnval->GetBasis(0)->GetPointsKey());
+
+                if(edgedir == StdRegions::eBackwards)
+                {
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        for(i = 0; i < coordim; ++i)
+                        {
+                            Vmath::Reverse(npoints,&phys_normals[i*npoints],1,
+                                           &phys_normals[i*npoints],1);
+                        }
+                    }
+                    
+                    Vmath::Neg(coordim*npoints,phys_normals,1);
+                }
+                
+                returnval->SetPhysNormals(phys_normals);
+            }
+*/            
+            return returnval;
+            
+        }
+        
     }//end of namespace
 }//end of namespace
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.70  2009/11/13 16:18:34  sehunchun
+ *    *** empty log message ***
+ *
  *    Revision 1.69  2009/11/11 18:45:09  sehunchun
  *    *** empty log message ***
  *

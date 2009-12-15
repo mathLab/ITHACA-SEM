@@ -1181,7 +1181,10 @@
   </COMPOSITE>
   
   <DOMAIN> C[0] </DOMAIN>
- 
+
+  <GEOMINFO>
+      <I PARAMETER="TANGENTDIR" VALUE="TangentZ" /> 
+  </GEOMINFO>
 </GEOMETRY>
 
   <EXPANSIONS>
@@ -1197,7 +1200,6 @@
       <P> IO_CheckSteps  = 1000              </P>
       <P> IO_InfoSteps   = 1000              </P>
       <P> ReadFnType = 1                   </P>
-      <P> Connection = 2                   </P>
       <P> UseDirDeriv = 1                  </P>
     </PARAMETERS>
 

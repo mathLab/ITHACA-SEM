@@ -4,9 +4,9 @@
 <!-- Embed a 2-dimensional object in a 2-dimensional space -->
 <!-- DIM <= SPACE -->
 <!-- This provides a method of optimizing code for a 1-D curve embedded in 3-space. -->
-<GEOMETRY DIM="2" SPACE="3">
+  <GEOMETRY DIM="2" SPACE="3">
 
-  <VERTEX>
+   <VERTEX>
     <!-- Always must have four values per entry. -->
     <V ID="0">  -0.577350   -0.577350   -0.577350  </V>
     <V ID="1">  0.577350   -0.577350   -0.577350  </V>
@@ -10233,29 +10233,33 @@
     0.676715 -0.579667 0.453920
     0.717250 -0.523156 0.460282
     0.754117 -0.464385 0.464385
-   </E>
+    </E>
 
     <E ID="1135" EDGEID="1135" TYPE="PolyEvenlySpaced" NUMPOINTS="4">
     0.464385 -0.754117 0.464385
     0.523156 -0.717250 0.460282
     0.579667 -0.676715 0.453920
     0.633099 -0.633099 0.445390
-   </E>
+    </E>
 
    </CURVED>
 <!-- V - vertex, E - edge, F - face, L - element -->
-  <COMPOSITE>
+   <COMPOSITE>
     <C ID="0"> T[0-751]
     </C>
     <C ID="1"> E[784,785,789,790,818,819,826,827,831,832,836,837,838,839,843,844]
     </C>
-  </COMPOSITE>
+   </COMPOSITE>
   
-  <DOMAIN> C[0] </DOMAIN>
-  
-</GEOMETRY>
+   <DOMAIN> C[0] </DOMAIN>
 
-<EXPANSIONS>
+   <GEOMINFO>
+    <!-- TangentX, TangentY, TangentZ, TangentCircular, TangentCircular2 -->   
+       <I PROPERTY="TANGENTDIR" VALUE="TangentZ" />
+   </GEOMINFO>
+  </GEOMETRY>
+
+  <EXPANSIONS>
     <E COMPOSITE="C[0]" NUMMODES="5" TYPE="MODIFIED" />
   </EXPANSIONS>
 
@@ -10270,7 +10274,6 @@
       <P> epsilon0 = 0.001                 </P>
       <P> epsilon1 = 0.002                 </P>
       <P> initialwavetype = -1             </P>
-      <P> Connection = 2                   </P>
       <P> UseDirDeriv = 1                  </P>
     </PARAMETERS>
 

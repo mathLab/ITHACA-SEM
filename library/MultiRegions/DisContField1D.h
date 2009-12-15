@@ -73,10 +73,6 @@ namespace Nektar
 
             ~DisContField1D();
 
-            void HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                 Array<OneD,       NekDouble> &outarray,
-                           NekDouble lambda);
-
             /**
              * \brief This function evaluates the boundary conditions at a certain 
              * time-level.
@@ -126,15 +122,22 @@ namespace Nektar
             
             void GenerateFieldBnd1D(SpatialDomains::BoundaryConditions &bcs,  
                                     const std::string variable);
-	    
-            virtual void v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,       NekDouble> &outarray,
-                                     NekDouble lambda,
-                                     bool      UseContCoeffs,
-                                     const Array<OneD, const NekDouble>& dirForcing)
-            {
-                HelmSolve(inarray,outarray,lambda);
-            }
+
+            virtual void v_HelmSolve(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                    const Array<OneD, const NekDouble> &Sigma,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff);
+
+            virtual void v_HelmSolveDG(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                    const Array<OneD, const NekDouble> &Sigma,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
+                          NekDouble tau);
+
             virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions()
             {
                 return GetBndConditions();

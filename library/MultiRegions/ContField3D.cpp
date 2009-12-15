@@ -64,7 +64,8 @@ namespace Nektar
         {
             GenerateBoundaryConditionExpansion(graph3D,bcs,bcs.GetVariable(bc_loc));
             EvaluateBoundaryConditions();
-
+            ApplyGeomInfo(graph3D);
+            
             map<int,int> periodicFaces;
             map<int,int> periodicEdges;
             map<int,int> periodicVertices;
@@ -90,7 +91,8 @@ namespace Nektar
         {
             GenerateBoundaryConditionExpansion(graph3D, bcs, variable);
             EvaluateBoundaryConditions();
-
+            ApplyGeomInfo(graph3D);
+            
             map<int,int> periodicFaces;
             map<int,int> periodicEdges;
             map<int,int> periodicVertices;
@@ -120,7 +122,8 @@ namespace Nektar
         {
             GenerateBoundaryConditionExpansion(graph3D,bcs,bcs.GetVariable(bc_loc));
             EvaluateBoundaryConditions();
-
+            ApplyGeomInfo(graph3D);
+            
             map<int,int> periodicFaces;
             map<int,int> periodicEdges;
             map<int,int> periodicVertices;
@@ -151,7 +154,8 @@ namespace Nektar
         {
             GenerateBoundaryConditionExpansion(graph3D,bcs,variable);
             EvaluateBoundaryConditions();
-
+            ApplyGeomInfo(graph3D);
+            
             map<int,int> periodicFaces;
             map<int,int> periodicEdges;
             map<int,int> periodicVertices;
@@ -268,52 +272,6 @@ namespace Nektar
             }
         }
 
-        // Solve the helmholtz problem assuming that m_contCoeff vector 
-        // contains an intial estimate for solution
-        void ContField3D::HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                          Array<OneD,       NekDouble> &outarray,
-                                    NekDouble lambda,
-                                    bool      UseContCoeffs,
-                                    const Array<OneD, const NekDouble>& dirForcing)
-        {
-            // Inner product of forcing
-            Array<OneD,NekDouble> wsp(m_contNcoeffs);  
-            IProductWRTBase(inarray,wsp,true);       
-            // Note -1.0 term necessary to invert forcing function to
-            // be consistent with matrix definition
-            Vmath::Neg(m_contNcoeffs, wsp, 1);
-
-            // Forcing function with weak boundary conditions 
-            int i,j;
-            int bndcnt=m_locToGloMap->GetNumLocalDirBndCoeffs();
-            NekDouble sign;
-            for(i = m_numDirBndCondExpansions; i < m_bndCondExpansions.num_elements(); ++i)
-            {
-                for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
-                {
-                    sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
-                    wsp[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)] +=  
-                        sign * (m_bndCondExpansions[i]->GetCoeffs())[j];
-                }
-            }
-
-            // Solve the system
-            GlobalLinSysKey key(StdRegions::eHelmholtz,
-                                m_locToGloMap,lambda,
-                                m_locToGloMap->GetGlobalSysSolnType());
-
-            if(UseContCoeffs)
-            {
-                GlobalSolve(key,wsp,outarray,dirForcing);
-            }
-            else
-            {
-                Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
-                GlobalSolve(key,wsp,tmp,dirForcing);
-                GlobalToLocal(tmp,outarray);
-            }
-        }
-
         void ContField3D::GenerateDirBndCondForcing(const GlobalLinSysKey &key, 
                                                     Array<OneD, NekDouble> &inout, 
                                                     Array<OneD, NekDouble> &outarray)
@@ -384,7 +342,66 @@ namespace Nektar
 
             return glo_matrix;
         }
-    
+
+        void ContField3D::v_HelmSolve(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                    const Array<OneD, const NekDouble> &Sigma,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff)
+        {
+            v_HelmSolveCG(inarray, outarray, lambda, Sigma, varcoeff,
+                              false, NullNekDouble1DArray);
+        }
+
+        // Solve the helmholtz problem assuming that m_contCoeff vector 
+        // contains an intial estimate for solution            
+        void ContField3D::v_HelmSolveCG(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          NekDouble lambda,
+                    const Array<OneD, const NekDouble> &Sigma,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
+                          bool UseContCoeffs,
+                    const Array<OneD, const NekDouble> &dirForcing)
+        {
+            // Inner product of forcing
+            Array<OneD,NekDouble> wsp(m_contNcoeffs);  
+            IProductWRTBase(inarray,wsp,true);       
+            // Note -1.0 term necessary to invert forcing function to
+            // be consistent with matrix definition
+            Vmath::Neg(m_contNcoeffs, wsp, 1);
+
+            // Forcing function with weak boundary conditions 
+            int i,j;
+            int bndcnt=m_locToGloMap->GetNumLocalDirBndCoeffs();
+            NekDouble sign;
+            for(i = m_numDirBndCondExpansions; i < m_bndCondExpansions.num_elements(); ++i)
+            {
+                for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
+                {
+                    sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
+                    wsp[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)] +=  
+                        sign * (m_bndCondExpansions[i]->GetCoeffs())[j];
+                }
+            }
+
+            // Solve the system
+            GlobalLinSysKey key(StdRegions::eHelmholtz,
+                                m_locToGloMap,lambda,
+                                m_locToGloMap->GetGlobalSysSolnType());
+
+            if(UseContCoeffs)
+            {
+                GlobalSolve(key,wsp,outarray,dirForcing);
+            }
+            else
+            {
+                Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
+                GlobalSolve(key,wsp,tmp,dirForcing);
+                GlobalToLocal(tmp,outarray);
+            }            
+        }    
 
   } //end of namespace
 } //end of namespace

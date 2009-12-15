@@ -42,7 +42,7 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList.h>
 #include <LocalRegions/SegExp.h>
-#include <LocalRegions/GenSegExp.h>
+//#include <LocalRegions/GenSegExp.h>
 #include <LocalRegions/TriExp.h>
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/PointExp.h>
@@ -173,6 +173,9 @@ namespace Nektar
             bool m_UseGenSegExp;
 
         private:
+//            virtual void GetTangents(
+//                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &tangents);
+                
             /// Set up the normals on each expansion.
             virtual void v_SetUpPhysNormals(
                                 const StdRegions::StdExpansionVector &locexp);

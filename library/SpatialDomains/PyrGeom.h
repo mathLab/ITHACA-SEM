@@ -42,6 +42,7 @@
 #include <SpatialDomains/Geometry3D.h>
 #include <SpatialDomains/QuadGeom.h>
 #include <SpatialDomains/TriGeom.h>
+#include <SpatialDomains/GeomFactors3D.h>
 
 namespace Nektar
 {
@@ -267,6 +268,9 @@ namespace Nektar
 
 //
 // $Log: PyrGeom.h,v $
+// Revision 1.14  2009/01/21 16:59:03  pvos
+// Added additional geometric factors to improve efficiency
+//
 // Revision 1.13  2008/11/17 08:59:12  ehan
 // Added necessary mapping routines for Tet
 //

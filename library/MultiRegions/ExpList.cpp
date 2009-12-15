@@ -1540,6 +1540,68 @@ namespace Nektar
             }
         }
 
+        void ExpList::GetTangents(
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &tangents)
+        {
+            int i,j,k,e_npoints,offset;
+            Array<OneD,Array<OneD, NekDouble> > loctangent;
+
+            // Assume whole array is of same coordinate dimension
+            int coordim = (*m_exp)[0]->GetGeom()->GetCoordim();
+
+            ASSERTL0(tangents.num_elements() > 0,
+                     "Must have storage for at least one tangent");
+            ASSERTL1(tangents[0].num_elements() >= coordim,
+                     "Output vector does not have sufficient dimensions to "
+                     "match coordim");
+
+            // Process each expansion.
+            for(i = 0; i < m_exp->size(); ++i)
+            {
+                // Get the number of points and normals for this expansion.
+                e_npoints  = (*m_exp)[i]->GetTotPoints();
+                offset = m_phys_offset[i];
+                
+                for (j = 0; j < tangents.num_elements(); ++j)
+                {
+                    loctangent = (*m_exp)[i]->GetMetricInfo()->GetTangent(j);
+                    // Get the physical data offset for this expansion.
+
+                    for (k = 0; k < coordim; ++k)
+                    {
+                        Vmath::Vcopy(e_npoints, &(loctangent[k][0]), 1, 
+                                                &(tangents[j][k][offset]), 1);
+                    }
+                }
+            }
+            
+        }
+        
+        /**
+         * Configures geometric info, such as tangent direction, on each
+         * expansion.
+         * @param   graph2D         Mesh
+         */
+        void ExpList::ApplyGeomInfo(SpatialDomains::MeshGraph &graph)
+        {
+            if(graph.CheckForGeomInfo("TANGENTDIR"))
+            {
+                for (int i = 0; i < m_exp->size(); ++i)
+                {
+                    (*m_exp)[i]->GetMetricInfo()->SetTangentOrientation(
+                                            graph.GetGeomInfo("TANGENTDIR"));
+                }
+            }
+            else
+            {
+                for (int i = 0; i < m_exp->size(); ++i)
+                {
+                    (*m_exp)[i]->GetMetricInfo()
+                                            ->SetTangentOrientation("TangentX");
+                }
+            }
+        }
+        
         /**
          * The coordinates of the quadrature points, together with
          * the content of the array #m_phys, are written to the
@@ -2144,45 +2206,41 @@ namespace Nektar
         }
 
         void ExpList::v_HelmSolve(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                NekDouble lambda,
-                                bool      UseContCoeffs,
-                                const Array<OneD, const NekDouble>& dirForcing)
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                      NekDouble lambda,
+                const Array<OneD, const NekDouble> &Sigma,
+                const Array<OneD, const Array<OneD, NekDouble> > &varcoeff)
         {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
+            ASSERTL0(false, "HelmSolve not implemented.");
+            // For ContFieldX classes, -> ContFieldX::v_HelmSolveCG
+            // For DisContFieldX classes, -> DisContFieldX::v_HelmSolveDG
+        }
+        
+        void ExpList::v_HelmSolveCG(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                      NekDouble lambda,
+                const Array<OneD, const NekDouble> &Sigma,
+                const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
+                      bool UseContCoeffs,
+                const Array<OneD, const NekDouble> &dirForcing)
+        {
+            ASSERTL0(false, "HelmSolveCG not implemented.");
+            // Only implemented in ContFieldX classes
         }
 
-        void ExpList::v_HelmSolve(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                const Array<OneD, NekDouble> &lambda,
-                                bool      UseContCoeffs,
-                                const Array<OneD, const NekDouble>& dirForcing)
+        void ExpList::v_HelmSolveDG(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                      NekDouble lambda,
+                const Array<OneD, const NekDouble> &Sigma,
+                const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
+                      NekDouble tau)
         {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-
-        void ExpList::v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                  Array<OneD,       NekDouble> &outarray,
-                                  NekDouble lambda,
-                                  NekDouble tau)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-
-        void ExpList::v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
-                                  Array<OneD,       NekDouble> &outarray,
-                                  const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
-                                  NekDouble lambda,
-                                  NekDouble tau)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
+            ASSERTL0(false, "HelmSolveDG not implemented.");
+            // Only implemented in DisContFieldX classes
+        }            
 
         void ExpList::v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,       NekDouble> &outarray,

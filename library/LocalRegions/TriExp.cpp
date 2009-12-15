@@ -46,7 +46,7 @@ namespace Nektar
                        const SpatialDomains::TriGeomSharedPtr &geom):    
             StdRegions::StdTriExp(Ba,Bb),
             m_geom(geom),
-            m_metricinfo(),
+            m_metricinfo(m_geom->GetGeomFactors(m_base)),
             m_matrixManager(std::string("TriExpMatrix")),
             m_staticCondMatrixManager(std::string("TriExpStaticCondMatrix"))
         {     
@@ -57,32 +57,8 @@ namespace Nektar
                 m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i, StdRegions::eNoExpansionType,*this), 
                                                           boost::bind(&TriExp::CreateStaticCondMatrix, this, _1));
             }            
-            GenMetricInfo();
         }
-        
-        TriExp::TriExp(const LibUtilities::BasisKey &Ba,
-                       const LibUtilities::BasisKey &Bb):
-            StdRegions::StdTriExp(Ba,Bb), m_geom(),
-            m_metricinfo(MemoryManager<SpatialDomains::GeomFactors>::AllocateSharedPtr()), 
-            m_matrixManager(std::string("TriExpMatrix")), m_staticCondMatrixManager(std::string("TriExpStaticCondMatrix"))
-        {
-            for(int i = 0; i < StdRegions::SIZE_MatrixType; ++i)
-            {
-                m_matrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                          StdRegions::eNoExpansionType,*this),
-                                                boost::bind(&TriExp::CreateMatrix, this, _1));
-                m_staticCondMatrixManager.RegisterCreator(MatrixKey((StdRegions::MatrixType) i,
-                                                                    StdRegions::eNoExpansionType,*this),
-                                                          boost::bind(&TriExp::CreateStaticCondMatrix, this, _1));
-            }
 
-            // Set up unit geometric factors. 
-            Array<OneD,NekDouble> ndata = Array<OneD,NekDouble>(4,0.0); 
-            ndata[0] = ndata[3] = 1.0;
-            m_metricinfo->ResetGmat(ndata,1,2,2);
-            m_metricinfo->ResetJac(1,ndata);
-        }
-        
         TriExp::TriExp(const TriExp &T):
             StdRegions::StdTriExp(T),
             m_geom(T.m_geom),
@@ -95,13 +71,8 @@ namespace Nektar
         TriExp::~TriExp()
         {
         }
-    
-    
-        void TriExp::GenMetricInfo()
-        {
-            m_metricinfo = m_geom->GetGeomFactors(m_base);
-        }      
-        
+
+
         //----------------------------
         // Integration Methods
         //----------------------------
@@ -195,7 +166,7 @@ namespace Nektar
         void TriExp::MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
                                                 Array<OneD, NekDouble> &outarray)
         {        
-            if(m_metricinfo->UseQuadratureMetrics())
+            if(m_metricinfo->IsUsingQuadMetrics())
             {
                 int    nqtot = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();                
                 const Array<OneD, const NekDouble>& metric = m_metricinfo->GetQuadratureMetrics();  
@@ -256,7 +227,7 @@ namespace Nektar
             {      
                 // This implementation is only valid when there are no coefficients
                 // associated to the Laplacian operator
-                if(m_metricinfo->UseLaplacianMetrics())
+                if(m_metricinfo->IsUsingLaplMetrics())
                 {
                     int       nquad0  = m_base[0]->GetNumPoints();
                     int       nquad1  = m_base[1]->GetNumPoints();
@@ -440,7 +411,7 @@ namespace Nektar
                                                       Array<OneD,NekDouble> &outarray,
                                                       const StdRegions::StdMatrixKey &mkey)
         {
-            if(m_metricinfo->UseLaplacianMetrics())
+            if(m_metricinfo->IsUsingLaplMetrics())
             {
                 int       nquad0  = m_base[0]->GetNumPoints();
                 int       nquad1  = m_base[1]->GetNumPoints();
@@ -1038,10 +1009,10 @@ namespace Nektar
         }
 
         void TriExp::GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal, const int k)
-	{
+        {
             int m_num = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
             
-            Vmath::Vcopy(m_num, m_metricinfo->GetSurfaceNormal(k), 1, SurfaceNormal, 1);
+            Vmath::Vcopy(m_num, m_metricinfo->GetNormal()[k], 1, SurfaceNormal, 1);
       	}
 
         void TriExp::GetCoords(Array<OneD,NekDouble> &coords_0,
@@ -1870,11 +1841,16 @@ namespace Nektar
 
         StdRegions::StdExpansion1DSharedPtr TriExp::GetEdgeExp(int edge, bool SetUpNormals)
         {
-            GenSegExpSharedPtr returnval; 
+            SegExpSharedPtr returnval; 
             SpatialDomains::Geometry1DSharedPtr edg = m_geom->GetEdge(edge);
             
-            returnval = MemoryManager<GenSegExp>::AllocateSharedPtr(DetEdgeBasisKey(edge),edg);
+            returnval = MemoryManager<SegExp>::AllocateSharedPtr(DetEdgeBasisKey(edge),edg);
             
+            if (SetUpNormals)
+            {
+                returnval->GetMetricInfo()->ComputeNormals(m_geom, edge, returnval->GetBasis(0)->GetPointsKey());
+            }
+/*            
             if(SetUpNormals)
             {
                 int i;
@@ -1900,7 +1876,7 @@ namespace Nektar
                 
                 returnval->SetPhysNormals(phys_normals);
             }
-
+*/
             return returnval; 
         }
 
@@ -1949,6 +1925,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.64  2009/11/13 16:18:34  sehunchun
+ *    *** empty log message ***
+ *
  *    Revision 1.63  2009/11/11 18:45:09  sehunchun
  *    *** empty log message ***
  *

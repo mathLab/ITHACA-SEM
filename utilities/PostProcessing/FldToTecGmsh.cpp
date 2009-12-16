@@ -123,15 +123,28 @@ nfields; ++i)
     //----------------------------------------------
     // Write solution  depending on #define
 #ifdef TECPLOT
-    for(i = 0; i < nfields; ++i)
-    {
-        string   outfile(strtok(argv[argc-1],"."));
-        outfile += "_" + fielddef[0]->m_Fields[i] + ".dat"; 
-        ofstream outstrm(outfile.c_str());
+    std::string var = "";
 
-        Exp[i]->WriteToFile(outstrm,eTecplot,fielddef[0]->m_Fields[i]);
-        outstrm.close();
-    }
+    for(int j = 0; j < Exp.num_elements(); ++j)
+      {
+	var = var + ", " + fielddef[0]->m_Fields[j];
+      }
+
+    string   outname(strtok(argv[argc-1],"."));
+    outname += ".dat";
+    ofstream outfile(outname.c_str());
+    cout << "Writing file: " << outname << " ... ";
+
+    Exp[0]->WriteTecplotHeader(outfile,var);
+    for(int i = 0; i < Exp[0]->GetExpSize(); ++i)
+      {
+	Exp[0]->WriteTecplotZone(outfile,i);
+	for(int j = 0; j < Exp.num_elements(); ++j)
+    	  {
+    	    Exp[j]->WriteTecplotField(outfile,i);
+    	  }
+      }
+    cout << "Done " << endl;
 #else
     for(i = 0; i < nfields; ++i)
     {

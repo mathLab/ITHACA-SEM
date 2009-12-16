@@ -682,7 +682,6 @@ namespace Nektar
 
                 Array<OneD, unsigned int> mapArray (nFaceCoeffs);
                 Array<OneD, int>    signArray(nFaceCoeffs);
-                NekDouble sign;
 
                 for(i = 0; i < kNfaces; i++)
                 {
@@ -764,6 +763,17 @@ namespace Nektar
 
 //
 // $Log: HexGeom.cpp,v $
+// Revision 1.19  2009/12/15 18:09:02  cantwell
+// Split GeomFactors into 1D, 2D and 3D
+// Added generation of tangential basis into GeomFactors
+// Updated ADR2DManifold solver to use GeomFactors for tangents
+// Added <GEOMINFO> XML session section support in MeshGraph
+// Fixed const-correctness in VmathArray
+// Cleaned up LocalRegions code to generate GeomFactors
+// Removed GenSegExp
+// Temporary fix to SubStructuredGraph
+// Documentation for GlobalLinSys and GlobalMatrix classes
+//
 // Revision 1.18  2009/01/21 16:59:03  pvos
 // Added additional geometric factors to improve efficiency
 //

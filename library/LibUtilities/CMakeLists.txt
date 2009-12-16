@@ -227,7 +227,7 @@ SET(LibUtilitySources
         ${TimeIntegrationSources}
 )
 
-ADD_NEKTAR_LIBRARY(LibUtilities STATIC ${LibUtilitySources} ${LibUtilityHeaders})
+ADD_NEKTAR_LIBRARY(LibUtilities ${NEKTAR_LIBRARY_TYPE} ${LibUtilitySources} ${LibUtilityHeaders})
 
 SET(PrecompiledHeaderName LibUtilities/LibUtilities.h)
 SETUP_PRECOMPILED_HEADERS(LibUtilitySources PrecompiledHeaderName)

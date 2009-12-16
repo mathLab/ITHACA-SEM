@@ -29,8 +29,10 @@ SET(NodalTetElecSources
 
    		
 ADD_NEKTAR_EXECUTABLE(Graph GraphSources )
+SET_LAPACK_LINK_LIBRARIES(Graph)
 #ADD_NEKTAR_EXECUTABLE(MemoryManager MemoryManagerSources )
 ADD_NEKTAR_EXECUTABLE(Matrix VecMatSources)
+SET_LAPACK_LINK_LIBRARIES(Matrix)
 
 ADD_NEKTAR_EXECUTABLE(FoundationDemo FoundationSources )
 SET_LAPACK_LINK_LIBRARIES(FoundationDemo)

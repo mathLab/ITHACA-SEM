@@ -172,17 +172,18 @@ namespace Nektar
             MeshGraph();
             virtual ~MeshGraph();
 
-            static boost::shared_ptr<MeshGraph> Read(std::string &infilename);
-            virtual void ReadGeometry(std::string &infilename);
+            static boost::shared_ptr<MeshGraph> Read(const std::string& infilename);
+            virtual void ReadGeometry(const std::string& infilename);
             virtual void ReadGeometry(TiXmlDocument &doc);
             
             /// Read geometric information from a file.
-            void ReadGeometryInfo(std::string &infilename);
+            void ReadGeometryInfo(const std::string &infilename);
             
             /// Read geometric information from an XML document.
             void ReadGeometryInfo(TiXmlDocument &doc);
             
-            void ReadExpansions(std::string &infilename);
+            void ReadExpansions(const std::string &infilename);
+
             void ReadExpansions(TiXmlDocument &doc);
 
             inline VertexComponentSharedPtr GetVertex(int id)
@@ -216,7 +217,7 @@ namespace Nektar
 	     * \brief This function imports the input xml file. It defines the fields and their data.
 	     *
 	     */
-            void Import(std::string &infilename, std::vector<FieldDefinitionsSharedPtr> &fielddefs, std::vector<std::vector<double> > &fielddata);
+            void Import(const std::string& infilename, std::vector<FieldDefinitionsSharedPtr> &fielddefs, std::vector<std::vector<double> > &fielddata);
 
 	    /**
 	     * \brief This function imports the definition of the fields.
@@ -335,6 +336,17 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.39  2009/12/15 18:09:02  cantwell
+// Split GeomFactors into 1D, 2D and 3D
+// Added generation of tangential basis into GeomFactors
+// Updated ADR2DManifold solver to use GeomFactors for tangents
+// Added <GEOMINFO> XML session section support in MeshGraph
+// Fixed const-correctness in VmathArray
+// Cleaned up LocalRegions code to generate GeomFactors
+// Removed GenSegExp
+// Temporary fix to SubStructuredGraph
+// Documentation for GlobalLinSys and GlobalMatrix classes
+//
 // Revision 1.38  2009/11/22 19:43:32  bnelson
 // Updating formatting.
 //

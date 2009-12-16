@@ -73,7 +73,7 @@ namespace Nektar
     {
     }
     
-    boost::shared_ptr<MeshGraph> MeshGraph::Read(std::string &infilename)
+    boost::shared_ptr<MeshGraph> MeshGraph::Read(const std::string& infilename)
     {
       boost::shared_ptr<MeshGraph> returnval;
       
@@ -115,15 +115,14 @@ namespace Nektar
     
     void MeshGraph::SetExpansions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef)
     {
-      int i,j,k,cnt,id;
-      int num_elmts = 0;
-      GeometrySharedPtr geom;
-      
-      // Set up list of ExpansionVectors with dummy values
-      if(!m_ExpansionVector.size())
-	{
-	  
-	  LibUtilities::BasisKeyVector def; 
+        int i,j,k,cnt,id;
+        int num_elmts = 0;
+        GeometrySharedPtr geom;
+
+        // Set up list of ExpansionVectors with dummy values
+        if(!m_ExpansionVector.size())
+        {
+	        LibUtilities::BasisKeyVector def; 
 	  
 	  for(i = 0; i < fielddef.size(); ++i)
 	    {
@@ -152,7 +151,7 @@ namespace Nektar
       // loop over all elements find the geometry shared ptr and
       // set up basiskey vector
       for(i = 0; i < fielddef.size(); ++i)
-	{
+    {
 	  cnt = 0;
 	  std::vector<unsigned int> nmodes = fielddef[i]->m_NumModes;
 	  std::vector<LibUtilities::BasisType> basis = fielddef[i]->m_Basis;
@@ -474,7 +473,7 @@ namespace Nektar
     
     
     // \brief Read will read the meshgraph vertices given a filename.
-    void MeshGraph::ReadGeometry(std::string &infilename)
+    void MeshGraph::ReadGeometry(const std::string& infilename)
     {
       TiXmlDocument doc(infilename);
       bool loadOkay = doc.LoadFile();
@@ -607,7 +606,7 @@ namespace Nektar
     }
       
     // \brief Read the expansions given the XML file path.
-    void MeshGraph::ReadExpansions(std::string &infilename)
+    void MeshGraph::ReadExpansions(const std::string& infilename)
     {
       TiXmlDocument doc(infilename);
       bool loadOkay = doc.LoadFile();
@@ -1051,7 +1050,7 @@ namespace Nektar
      * <NEKTAR><GEOMETRY><GEOMINFO>.
      * @param   infilename      Filename of XML file.
      */
-    void MeshGraph::ReadGeometryInfo(std::string &infilename)
+    void MeshGraph::ReadGeometryInfo(const std::string &infilename)
     {
       TiXmlDocument doc(infilename);
       bool loadOkay = doc.LoadFile();
@@ -1757,7 +1756,7 @@ namespace Nektar
     // Change numModes to numModesPerDir, add initial identifier 
     // to be "UniOrder" or "MixOrder"
       
-    void MeshGraph::Import(std::string &infilename, std::vector<FieldDefinitionsSharedPtr> &fielddefs, std::vector<std::vector<NekDouble> > &fielddata)
+    void MeshGraph::Import(const std::string& infilename, std::vector<FieldDefinitionsSharedPtr> &fielddefs, std::vector<std::vector<NekDouble> > &fielddata)
     {
       TiXmlDocument doc(infilename);
       bool loadOkay = doc.LoadFile();
@@ -2052,6 +2051,17 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.cpp,v $
+// Revision 1.40  2009/12/15 18:09:02  cantwell
+// Split GeomFactors into 1D, 2D and 3D
+// Added generation of tangential basis into GeomFactors
+// Updated ADR2DManifold solver to use GeomFactors for tangents
+// Added <GEOMINFO> XML session section support in MeshGraph
+// Fixed const-correctness in VmathArray
+// Cleaned up LocalRegions code to generate GeomFactors
+// Removed GenSegExp
+// Temporary fix to SubStructuredGraph
+// Documentation for GlobalLinSys and GlobalMatrix classes
+//
 // Revision 1.39  2009/11/18 22:31:46  bnelson
 // Changed Write parameter list to accept a const string& as a first parameter.
 //

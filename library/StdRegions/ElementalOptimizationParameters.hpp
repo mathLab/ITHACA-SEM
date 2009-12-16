@@ -104,7 +104,7 @@ namespace Nektar
 
             // This Loki function should be a friend, as only this function
             // can access the private default constructor (used to create the singleton)
-            template <typename T> friend class Loki::CreateUsingNew;
+            template <typename T> friend struct Loki::CreateUsingNew;
 
             // The class below should be made friend as well as it is used to load the 
             // parameters

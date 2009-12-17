@@ -713,9 +713,7 @@ namespace Nektar
         }
         
         void HexGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
-        {
-            int i;
-            
+        {           
             FillGeom();
 
             // calculate local coordinate for coord 
@@ -763,6 +761,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.cpp,v $
+// Revision 1.20  2009/12/16 21:29:31  bnelson
+// Removed unused variables to fix compiler warnings.
+//
 // Revision 1.19  2009/12/15 18:09:02  cantwell
 // Split GeomFactors into 1D, 2D and 3D
 // Added generation of tangential basis into GeomFactors

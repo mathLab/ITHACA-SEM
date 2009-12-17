@@ -641,7 +641,7 @@ namespace Nektar
                     }
                  }
                  else if(GSType == eTriangle) {
-                    Gtype == eDeformed;
+                    Gtype = eDeformed;
                  }
               }
 
@@ -667,7 +667,6 @@ namespace Nektar
 
                 Array<OneD, unsigned int> mapArray (nFaceCoeffs);
                 Array<OneD, int>    signArray(nFaceCoeffs);
-                NekDouble sign;
 
                 for(i = 0; i < kNfaces; i++)
                 {
@@ -751,6 +750,9 @@ namespace Nektar
 
 //
 // $Log: PyrGeom.cpp,v $
+// Revision 1.15  2009/12/16 21:36:53  bnelson
+// Removed unused variables to fix compiler warnings.
+//
 // Revision 1.14  2009/12/15 18:09:02  cantwell
 // Split GeomFactors into 1D, 2D and 3D
 // Added generation of tangential basis into GeomFactors

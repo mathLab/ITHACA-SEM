@@ -665,7 +665,6 @@ namespace Nektar
             // the (multi-step) value at the time-level with specified offset
             inline DoubleArray& GetValue(const unsigned int timeLevelOffset)
             {
-                int i;
                 int nMultiStepVals = m_scheme->GetNmultiStepValues();
                 const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
 
@@ -684,7 +683,6 @@ namespace Nektar
             // the (multi-step) derivative at the time-level with specified offset
             inline DoubleArray& GetDerivative(const unsigned int timeLevelOffset)
             {
-                int i;
                 int nMultiStepVals = m_scheme->GetNmultiStepValues();
                 int size           = m_scheme->GetNsteps();
                 const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
@@ -704,7 +702,6 @@ namespace Nektar
             // given offset
             inline NekDouble GetValueTime(const unsigned int timeLevelOffset)
             {
-                int i;
                 int nMultiStepVals = m_scheme->GetNmultiStepValues();
                 const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
 
@@ -724,7 +721,6 @@ namespace Nektar
             // the value at the time-level with specified offset
             inline void SetValue(const unsigned int timeLevelOffset, const DoubleArray& y, const NekDouble t)
             {
-                int i;
                 int nMultiStepVals = m_scheme->GetNmultiStepValues();
                 const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
 
@@ -744,7 +740,6 @@ namespace Nektar
             // the derivative at the time-level with specified offset
             inline void SetDerivative(const unsigned int timeLevelOffset, const DoubleArray& y, const NekDouble timestep)
             {
-                int i;
                 int nMultiStepVals = m_scheme->GetNmultiStepValues();
                 int size           = m_scheme->GetNsteps();
                 const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();

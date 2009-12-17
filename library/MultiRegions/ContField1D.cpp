@@ -358,7 +358,7 @@ namespace Nektar
                                 SpatialDomains::BoundaryConditions &bcs,
                                 const std::string variable)
         {
-            int i,j,k;
+            int j;
             int cnt  = 0;
 
             SpatialDomains::BoundaryRegionCollection &bregions

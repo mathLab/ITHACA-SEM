@@ -230,7 +230,7 @@ namespace Nektar
 			double first = ceil(inarray[0]/h)*h;
 			int index = k_width;
 			double last = floor(inarray[index]/h)*h;
-			int count = ((last-first)/h)+1; // number of mesh breaks under the kernel support
+			int count = (int)((last-first)/h)+1; // number of mesh breaks under the kernel support
 			Array<OneD,NekDouble> mesh_breaks(count);
 			mesh_breaks[0] = first;
 			for(j = 1; j < count; j++)
@@ -285,7 +285,7 @@ namespace Nektar
 			{
 				inarray_cp[i] = inarray[i] - offset;
 				inarray_cp[i] = inarray_cp[i]/h;
-				int interval = floor(inarray_cp[i] - min_value); // determines to which interval of the bspline the value belongs
+				int interval = (int)floor(inarray_cp[i] - min_value); // determines to which interval of the bspline the value belongs
 				
 				if(inarray_cp[i] >= min_value && inarray_cp[i] <= max_value)
 				{

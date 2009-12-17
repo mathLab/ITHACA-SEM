@@ -75,7 +75,6 @@ namespace Nektar
         void StdQuadExp::IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
                                                 Array<OneD, NekDouble> &outarray)
         {
-            int i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    order0 = m_base[0]->GetNumModes();
@@ -99,7 +98,7 @@ namespace Nektar
             DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);            
             
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
-                        m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);
+                        m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
         }
         
         void StdQuadExp::IProductWRTDerivBase_SumFac(const int dir, 
@@ -156,7 +155,7 @@ namespace Nektar
             DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);            
  
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
-                        m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);            
+                        m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);            
         }
         
         void StdQuadExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
@@ -236,12 +235,12 @@ namespace Nektar
                 Vmath::Vcopy(m_ncoeffs,inarray.get(),1,tmp.get(),1);
                 
                 Blas::Dgemv('N', m_ncoeffs, m_ncoeffs, 1.0, mat->GetPtr().get(),
-                            m_ncoeffs, tmp.get(), 1.0, 0.0, outarray.get(), 1.0); 
+                            m_ncoeffs, tmp.get(), 1, 0.0, outarray.get(), 1); 
             }
             else
             {
                 Blas::Dgemv('N', m_ncoeffs, m_ncoeffs, 1.0, mat->GetPtr().get(),
-                            m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0); 
+                            m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1); 
             }
         }
         
@@ -1078,7 +1077,7 @@ namespace Nektar
                 outfile<<")"<<endl;
 
                 // calculate the coefficients (monomial format)
-                int i,j,k;
+                int i,j;
 
                 int nModes0 = m_base[0]->GetNumModes();
                 int nModes1 = m_base[1]->GetNumModes();
@@ -1299,6 +1298,17 @@ namespace Nektar
 
 /** 
  * $Log: StdQuadExp.cpp,v $
+ * Revision 1.53  2009/12/15 18:09:02  cantwell
+ * Split GeomFactors into 1D, 2D and 3D
+ * Added generation of tangential basis into GeomFactors
+ * Updated ADR2DManifold solver to use GeomFactors for tangents
+ * Added <GEOMINFO> XML session section support in MeshGraph
+ * Fixed const-correctness in VmathArray
+ * Cleaned up LocalRegions code to generate GeomFactors
+ * Removed GenSegExp
+ * Temporary fix to SubStructuredGraph
+ * Documentation for GlobalLinSys and GlobalMatrix classes
+ *
  * Revision 1.52  2009/09/23 12:42:09  pvos
  * Updates for variable order expansions
  *

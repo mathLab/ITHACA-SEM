@@ -133,7 +133,6 @@ namespace Nektar
         void StdSegExp::LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                           Array<OneD,NekDouble> &outarray)
         {
-            int    i;
             int    nquad = m_base[0]->GetNumPoints();
 
             Array<OneD,NekDouble> physValues(nquad);
@@ -150,7 +149,6 @@ namespace Nektar
                                           Array<OneD,NekDouble> &outarray,
                                           const double lambda)
         {
-            int    i;
             int    nquad = m_base[0]->GetNumPoints();
 
             Array<OneD,NekDouble> physValues(nquad);
@@ -371,7 +369,7 @@ namespace Nektar
         {
             if(format==eTecplot)
             {
-                int i,j;
+                int i;
                 int     nquad = m_base[0]->GetNumPoints();
                 Array<OneD, const NekDouble> z = m_base[0]->GetZ();
                 
@@ -390,7 +388,7 @@ namespace Nektar
             }
             else if(format==eGmsh)
             {
-                int i,j;
+                int i;
                 int     nquad = m_base[0]->GetNumPoints();
                 Array<OneD, const NekDouble> z = m_base[0]->GetZ();
 
@@ -421,6 +419,9 @@ namespace Nektar
 
 /** 
 * $Log: StdSegExp.cpp,v $
+* Revision 1.58  2009/04/27 21:32:45  sherwin
+* Updated WriteToField method
+*
 * Revision 1.57  2008/11/05 16:08:15  pvos
 * Added elemental optimisation functionality
 *

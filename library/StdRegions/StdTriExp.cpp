@@ -100,13 +100,12 @@ namespace Nektar
             DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);            
             
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
-                        m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);
+                        m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
         }
 
         void StdTriExp::IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
                                                 Array<OneD, NekDouble> &outarray)
         {
-            int i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    order0 = m_base[0]->GetNumModes();
@@ -222,7 +221,7 @@ namespace Nektar
             DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);            
  
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
-                        m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);            
+                        m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);            
         }
 
         void StdTriExp::FillMode(const int mode, Array<OneD, NekDouble> &outarray)
@@ -991,7 +990,7 @@ namespace Nektar
                 outfile<<")"<<endl;
 
                 // calculate the coefficients (monomial format)
-                int i,j,k;
+                int i,j;
                 int maxnummodes = max(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
                    
                 const LibUtilities::PointsKey Pkey1Gmsh(maxnummodes,LibUtilities::eGaussGaussLegendre);
@@ -1269,6 +1268,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTriExp.cpp,v $
+ * Revision 1.61  2009/10/22 17:29:37  cbiotto
+ * Updates for variable order expansion
+ *
  * Revision 1.60  2009/09/23 12:42:09  pvos
  * Updates for variable order expansions
  *

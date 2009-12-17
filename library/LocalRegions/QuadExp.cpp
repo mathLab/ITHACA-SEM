@@ -141,7 +141,7 @@ namespace Nektar
             DNekScalMatSharedPtr& iprodmat = m_matrixManager[iprodmatkey];            
             
             Blas::Dgemv('N',m_ncoeffs,nq,iprodmat->Scale(),(iprodmat->GetOwnedMatrix())->GetPtr().get(),
-                        m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);
+                        m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
 
         }
 
@@ -218,7 +218,7 @@ namespace Nektar
             DNekScalMatSharedPtr& iprodmat = m_matrixManager[iprodmatkey];            
             
             Blas::Dgemv('N',m_ncoeffs,nq,iprodmat->Scale(),(iprodmat->GetOwnedMatrix())->GetPtr().get(),
-                        m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);
+                        m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
         }
         
         void QuadExp::GeneralMatrixOp_MatOp(const Array<OneD, const NekDouble> &inarray,
@@ -259,12 +259,12 @@ namespace Nektar
                 Vmath::Vcopy(m_ncoeffs,inarray.get(),1,tmp.get(),1);
                 
                 Blas::Dgemv('N',m_ncoeffs,m_ncoeffs,mat->Scale(),(mat->GetOwnedMatrix())->GetPtr().get(),
-                            m_ncoeffs, tmp.get(), 1.0, 0.0, outarray.get(), 1.0);
+                            m_ncoeffs, tmp.get(), 1, 0.0, outarray.get(), 1);
             }
             else
             {                
                 Blas::Dgemv('N',m_ncoeffs,m_ncoeffs,mat->Scale(),(mat->GetOwnedMatrix())->GetPtr().get(),
-                            m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);
+                            m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
             }
         }
 
@@ -1148,7 +1148,7 @@ namespace Nektar
                 outfile<<")"<<endl;
 
                 // calculate the coefficients (monomial format)
-                int i,j,k;
+                int i,j;
 
                 int nModes0 = m_base[0]->GetNumModes();
                 int nModes1 = m_base[1]->GetNumModes();
@@ -1414,7 +1414,6 @@ namespace Nektar
                 break;
           case StdRegions::eWeakDirectionalDeriv:
                 {
-                    int dir;
                     int matrixid = mkey.GetMatrixID();                   
                     int dim = m_geom->GetCoordim();
                     int nqtot   = (m_base[0]->GetNumPoints())*(m_base[1]->GetNumPoints()); 
@@ -1951,6 +1950,17 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.71  2009/12/15 18:09:02  cantwell
+ *    Split GeomFactors into 1D, 2D and 3D
+ *    Added generation of tangential basis into GeomFactors
+ *    Updated ADR2DManifold solver to use GeomFactors for tangents
+ *    Added <GEOMINFO> XML session section support in MeshGraph
+ *    Fixed const-correctness in VmathArray
+ *    Cleaned up LocalRegions code to generate GeomFactors
+ *    Removed GenSegExp
+ *    Temporary fix to SubStructuredGraph
+ *    Documentation for GlobalLinSys and GlobalMatrix classes
+ *
  *    Revision 1.70  2009/11/13 16:18:34  sehunchun
  *    *** empty log message ***
  *

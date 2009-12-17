@@ -223,7 +223,6 @@ namespace Nektar
         void SegExp::LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                        Array<OneD,NekDouble> &outarray)
         {
-            int    i;
             int    nquad = m_base[0]->GetNumPoints();
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
 
@@ -304,7 +303,6 @@ namespace Nektar
                                        Array<OneD,NekDouble> &outarray,
                                        const double lambda)
         {
-            int    i;
             int    nquad = m_base[0]->GetNumPoints();
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
 
@@ -813,7 +811,7 @@ namespace Nektar
             }
             else if(format==eGmsh)
             {  
-                int i,j;
+                int i;
                 int     nquad = m_base[0]->GetNumPoints();
                 
                 Array<OneD,NekDouble> coords[3];
@@ -1204,6 +1202,17 @@ namespace Nektar
 }//end of namespace
 
 // $Log: SegExp.cpp,v $
+// Revision 1.64  2009/12/15 18:09:02  cantwell
+// Split GeomFactors into 1D, 2D and 3D
+// Added generation of tangential basis into GeomFactors
+// Updated ADR2DManifold solver to use GeomFactors for tangents
+// Added <GEOMINFO> XML session section support in MeshGraph
+// Fixed const-correctness in VmathArray
+// Cleaned up LocalRegions code to generate GeomFactors
+// Removed GenSegExp
+// Temporary fix to SubStructuredGraph
+// Documentation for GlobalLinSys and GlobalMatrix classes
+//
 // Revision 1.63  2009/10/30 14:00:07  pvos
 // Multi-level static condensation updates
 //

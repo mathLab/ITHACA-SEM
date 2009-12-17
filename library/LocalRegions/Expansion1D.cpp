@@ -92,7 +92,7 @@ namespace Nektar
                 break;
             case StdRegions::eHybridDGLamToU:
                 {
-                    int i,j,k;
+                    int j,k;
                     int nbndry = v_NumDGBndryCoeffs();
                     int ncoeffs = v_GetNcoeffs();
                     NekDouble lambdaval = mkey.GetConstant(0);
@@ -137,7 +137,7 @@ namespace Nektar
             case StdRegions::eHybridDGLamToQ1:
             case StdRegions::eHybridDGLamToQ2:
                 {
-                    int i,j,k,dir;
+                    int j,k,dir;
                     int nbndry = v_NumDGBndryCoeffs();
                     int nquad  = v_GetNumPoints(0);
                     int ncoeffs = v_GetNcoeffs();
@@ -331,12 +331,11 @@ namespace Nektar
                                                     const Array<OneD, const NekDouble> &inarray,
                                                     Array<OneD,NekDouble> &outarray)
         {
-            int i,j,k,n;
+            int i,n;
             int nbndry  = v_NumBndryCoeffs();
             int nquad   = v_GetNumPoints(0);
             int ncoeffs = v_GetNcoeffs();
             int coordim = v_GetCoordim();
-            NekDouble  val, val1;
             Array<OneD, unsigned int> vmap;
             
             ASSERTL0(&inarray[0] != &outarray[0],"Input and output arrays use the same memory");
@@ -389,6 +388,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion1D.cpp,v $
+ *    Revision 1.4  2009/04/28 09:58:17  sherwin
+ *    Updates to make HDG implementation consistent in 1D as to the 2D implementation
+ *
  *    Revision 1.3  2008/08/20 09:16:39  sherwin
  *    Modified generation of HDG matrices so that they use Expansion1D, Expansion2D GenMatrix method rather than Expansion method. Have also removed methods which were generating edge expansions locally as this was too expensive
  *

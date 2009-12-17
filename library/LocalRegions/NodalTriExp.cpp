@@ -200,7 +200,7 @@ namespace Nektar
             DNekScalMatSharedPtr& iprodmat = m_matrixManager[iprodmatkey];            
             
             Blas::Dgemv('N',m_ncoeffs,nq,iprodmat->Scale(),(iprodmat->GetOwnedMatrix())->GetPtr().get(),
-                        m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);
+                        m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
         }
 
         void NodalTriExp::IProductWRTDerivBase_SumFac(const int dir, 
@@ -306,7 +306,7 @@ namespace Nektar
             DNekScalMatSharedPtr& iprodmat = m_matrixManager[iprodmatkey];            
             
             Blas::Dgemv('N',m_ncoeffs,nq,iprodmat->Scale(),(iprodmat->GetOwnedMatrix())->GetPtr().get(),
-                        m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);
+                        m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
 
         }
     
@@ -443,12 +443,12 @@ namespace Nektar
                 Vmath::Vcopy(m_ncoeffs,inarray.get(),1,tmp.get(),1);
                 
                 Blas::Dgemv('N',m_ncoeffs,m_ncoeffs,mat->Scale(),(mat->GetOwnedMatrix())->GetPtr().get(),
-                            m_ncoeffs, tmp.get(), 1.0, 0.0, outarray.get(), 1.0);
+                            m_ncoeffs, tmp.get(), 1, 0.0, outarray.get(), 1);
             }
             else
             {                
                 Blas::Dgemv('N',m_ncoeffs,m_ncoeffs,mat->Scale(),(mat->GetOwnedMatrix())->GetPtr().get(),
-                            m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);
+                            m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
             }
         }
         
@@ -628,7 +628,7 @@ namespace Nektar
 
 
                 // calculate the coefficients (monomial format)
-                int i,j,k;
+                int i,j;
 
                 Array<OneD,NekDouble> xi1(GetNcoeffs());
                 Array<OneD,NekDouble> xi2(GetNcoeffs());
@@ -1011,6 +1011,17 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.33  2009/12/15 18:09:02  cantwell
+ *    Split GeomFactors into 1D, 2D and 3D
+ *    Added generation of tangential basis into GeomFactors
+ *    Updated ADR2DManifold solver to use GeomFactors for tangents
+ *    Added <GEOMINFO> XML session section support in MeshGraph
+ *    Fixed const-correctness in VmathArray
+ *    Cleaned up LocalRegions code to generate GeomFactors
+ *    Removed GenSegExp
+ *    Temporary fix to SubStructuredGraph
+ *    Documentation for GlobalLinSys and GlobalMatrix classes
+ *
  *    Revision 1.32  2009/10/30 14:00:06  pvos
  *    Multi-level static condensation updates
  *

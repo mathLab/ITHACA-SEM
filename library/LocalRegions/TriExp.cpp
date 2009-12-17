@@ -1188,7 +1188,7 @@ namespace Nektar
                 outfile<<")"<<endl;
 
                 // calculate the coefficients (monomial format)
-                int i,j,k;
+                int i,j;
                 int maxnummodes = max(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
                    
                 const LibUtilities::PointsKey Pkey1Gmsh(maxnummodes,LibUtilities::eGaussGaussLegendre);
@@ -1468,7 +1468,6 @@ namespace Nektar
                 break;
             case StdRegions::eWeakDirectionalDeriv:
                 {
-                    int dir;
                     int matrixid = mkey.GetMatrixID();                   
                     int dim = m_geom->GetCoordim();
                     int nqtot   = (m_base[0]->GetNumPoints())*(m_base[1]->GetNumPoints()); 
@@ -1925,6 +1924,17 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.65  2009/12/15 18:09:02  cantwell
+ *    Split GeomFactors into 1D, 2D and 3D
+ *    Added generation of tangential basis into GeomFactors
+ *    Updated ADR2DManifold solver to use GeomFactors for tangents
+ *    Added <GEOMINFO> XML session section support in MeshGraph
+ *    Fixed const-correctness in VmathArray
+ *    Cleaned up LocalRegions code to generate GeomFactors
+ *    Removed GenSegExp
+ *    Temporary fix to SubStructuredGraph
+ *    Documentation for GlobalLinSys and GlobalMatrix classes
+ *
  *    Revision 1.64  2009/11/13 16:18:34  sehunchun
  *    *** empty log message ***
  *

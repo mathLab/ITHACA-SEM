@@ -224,7 +224,7 @@ namespace Nektar
                                           Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                                           Array<OneD,NekDouble> &outarray) 
         {
-            int i,e,cnt;
+            int e,cnt;
             int order_e,nquad_e;
             int nedges = v_GetNedges();
 
@@ -946,6 +946,17 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.cpp,v $
+ *    Revision 1.21  2009/12/15 18:09:02  cantwell
+ *    Split GeomFactors into 1D, 2D and 3D
+ *    Added generation of tangential basis into GeomFactors
+ *    Updated ADR2DManifold solver to use GeomFactors for tangents
+ *    Added <GEOMINFO> XML session section support in MeshGraph
+ *    Fixed const-correctness in VmathArray
+ *    Cleaned up LocalRegions code to generate GeomFactors
+ *    Removed GenSegExp
+ *    Temporary fix to SubStructuredGraph
+ *    Documentation for GlobalLinSys and GlobalMatrix classes
+ *
  *    Revision 1.20  2009/11/17 17:43:36  sehunchun
  *    *** empty log message ***
  *

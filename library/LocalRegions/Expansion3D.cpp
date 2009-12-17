@@ -47,9 +47,9 @@ namespace Nektar
             
             switch(mkey.GetMatrixType())
             {
-            default:
-                ASSERTL0(false,"This matrix type cannot is not set up");
-                break;
+                default:
+                    ASSERTL0(false,"This matrix type cannot is not set up");
+                    break;
             }
             
             return returnval;
@@ -60,6 +60,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion3D.cpp,v $
+ *    Revision 1.2  2008/08/20 09:16:39  sherwin
+ *    Modified generation of HDG matrices so that they use Expansion1D, Expansion2D GenMatrix method rather than Expansion method. Have also removed methods which were generating edge expansions locally as this was too expensive
+ *
  *    Revision 1.1  2008/08/14 22:12:56  sherwin
  *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
  *

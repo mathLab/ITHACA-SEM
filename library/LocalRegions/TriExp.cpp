@@ -153,12 +153,12 @@ namespace Nektar
                 Vmath::Vcopy(m_ncoeffs,inarray.get(),1,tmp.get(),1);
                 
                 Blas::Dgemv('N',m_ncoeffs,m_ncoeffs,mat->Scale(),(mat->GetOwnedMatrix())->GetPtr().get(),
-                            m_ncoeffs, tmp.get(), 1.0, 0.0, outarray.get(), 1.0);
+                            m_ncoeffs, tmp.get(), 1, 0.0, outarray.get(), 1);
             }
             else
             {                
                 Blas::Dgemv('N',m_ncoeffs,m_ncoeffs,mat->Scale(),(mat->GetOwnedMatrix())->GetPtr().get(),
-                            m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);
+                            m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
             }
         }
 
@@ -626,7 +626,7 @@ namespace Nektar
             DNekScalMatSharedPtr& iprodmat = m_matrixManager[iprodmatkey];            
             
             Blas::Dgemv('N',m_ncoeffs,nq,iprodmat->Scale(),(iprodmat->GetOwnedMatrix())->GetPtr().get(),
-                        m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);
+                        m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
 
         }
 
@@ -733,7 +733,7 @@ namespace Nektar
             DNekScalMatSharedPtr& iprodmat = m_matrixManager[iprodmatkey];            
             
             Blas::Dgemv('N',m_ncoeffs,nq,iprodmat->Scale(),(iprodmat->GetOwnedMatrix())->GetPtr().get(),
-                        m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);
+                        m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
 
         }
         
@@ -1740,26 +1740,27 @@ namespace Nektar
             
             switch(mkey.GetMatrixType())
             {
-            case StdRegions::eLaplacian: 
-            case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
+                case StdRegions::eLaplacian: 
+                case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
 
-                // use Deformed case for both regular and deformed geometries 
-                factor = 1.0;
-                goto UseLocRegionsMatrix;
-                break;
-            default:
-                if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                {
+                    // use Deformed case for both regular and deformed geometries 
                     factor = 1.0;
                     goto UseLocRegionsMatrix;
-                }
-                else
-                {
-                    factor = 1.0;
-                    goto UseLocRegionsMatrix;
-                }
-                break;
-            UseStdRegionsMatrix:
+                    break;
+                default:
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    {
+                        factor = 1.0;
+                        goto UseLocRegionsMatrix;
+                    }
+                    else
+                    {
+                        factor = 1.0;
+                        goto UseLocRegionsMatrix;
+                    }
+                    break;
+
+                UseStdRegionsMatrix:
                 {
                     NekDouble            invfactor = 1.0/factor;
                     NekDouble            one = 1.0;
@@ -1773,7 +1774,8 @@ namespace Nektar
                     returnval->SetBlock(1,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(invfactor,Asubmat = mat->GetBlock(1,1)));
                 }
                 break;
-            UseLocRegionsMatrix:
+
+                UseLocRegionsMatrix:
                 {
                     int i,j;
                     NekDouble            invfactor = 1.0/factor;
@@ -1924,6 +1926,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.66  2009/12/17 17:48:22  bnelson
+ *    Fixed visual studio compiler warning.
+ *
  *    Revision 1.65  2009/12/15 18:09:02  cantwell
  *    Split GeomFactors into 1D, 2D and 3D
  *    Added generation of tangential basis into GeomFactors

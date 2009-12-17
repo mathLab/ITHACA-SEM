@@ -1899,7 +1899,7 @@ namespace Nektar
             return returnval;
         }
         
-        StdRegions::StdExpansion1DSharedPtr QuadExp::v_GetEdgeExp(int edge, bool SetUpNormals)
+        StdRegions::StdExpansion1DSharedPtr QuadExp::v_GetEdgeExp(const int edge, bool SetUpNormals)
         {
             // Need checking of range of edge
             ASSERTL0(edge >= 0 && edge < 4,
@@ -1950,6 +1950,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.72  2009/12/17 17:48:22  bnelson
+ *    Fixed visual studio compiler warning.
+ *
  *    Revision 1.71  2009/12/15 18:09:02  cantwell
  *    Split GeomFactors into 1D, 2D and 3D
  *    Added generation of tangential basis into GeomFactors

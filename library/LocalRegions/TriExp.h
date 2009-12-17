@@ -614,22 +614,22 @@ namespace Nektar
 
 
             virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
-							 const Array<OneD, NekDouble> &dir1Forcing,
-                                                         const int matrixid = 0,
+							                             const Array<OneD, NekDouble> &dir1Forcing,
+                                                         int matrixid = 0,
                                                          NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
                                                          NekDouble tau = NekConstants::kNekUnsetDouble)
             {
-	         MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau,dir1Forcing,matrixid);
-		 return m_matrixManager[mkey];
+	            MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau,dir1Forcing,matrixid);
+		        return m_matrixManager[mkey];
             }
 
             virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
-							 const Array<OneD, Array<OneD, NekDouble> >& dirForcing,
-                                                         const int matrixid = 0,
+                                                         const Array<OneD, Array<OneD, NekDouble> >& dirForcing,
+                                                         int matrixid = 0,
                                                          NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
                                                          NekDouble tau = NekConstants::kNekUnsetDouble)
             {
-	        MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau,dirForcing,matrixid);
+	            MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau,dirForcing,matrixid);
                 return m_matrixManager[mkey];
             }
         
@@ -658,12 +658,12 @@ namespace Nektar
                 Expansion2D::AddHDGHelmholtzTraceTerms(tau,inarray,EdgeExp,dirForcing,outarray,matrixid);
             }
             
-            virtual void v_DGDeriv(int dir, 
+            virtual void v_DGDeriv(const int dir, 
                                    const Array<OneD, const NekDouble>&incoeffs,
                                    Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                                    Array<OneD, NekDouble> &out_d)
             {
-              Expansion2D::DGDeriv(dir,incoeffs,EdgeExp,out_d);
+                Expansion2D::DGDeriv(dir,incoeffs,EdgeExp,out_d);
             }
 
             virtual StdRegions::StdExpansion1DSharedPtr v_GetEdgeExp(const int edge, bool SetUpNormals=true)
@@ -806,6 +806,17 @@ namespace Nektar
 
 /**
  *    $Log: TriExp.h,v $
+ *    Revision 1.57  2009/12/15 18:09:02  cantwell
+ *    Split GeomFactors into 1D, 2D and 3D
+ *    Added generation of tangential basis into GeomFactors
+ *    Updated ADR2DManifold solver to use GeomFactors for tangents
+ *    Added <GEOMINFO> XML session section support in MeshGraph
+ *    Fixed const-correctness in VmathArray
+ *    Cleaned up LocalRegions code to generate GeomFactors
+ *    Removed GenSegExp
+ *    Temporary fix to SubStructuredGraph
+ *    Documentation for GlobalLinSys and GlobalMatrix classes
+ *
  *    Revision 1.56  2009/11/10 19:04:24  sehunchun
  *    Variable coefficients for HDG2D Solver
  *

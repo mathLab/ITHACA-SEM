@@ -36,4 +36,8 @@ TARGET_LINK_LIBRARIES(LibUtilitiesUnitTests
 SET_LAPACK_LINK_LIBRARIES(LibUtilitiesUnitTests)
 
 
-SUBDIRS(LinearAlgebra ExpressionTemplates)
+SUBDIRS(LinearAlgebra)
+
+IF( NOT MSVC )
+    SUBDIRS(ExpressionTemplates)
+ENDIF()

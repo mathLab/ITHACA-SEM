@@ -358,7 +358,7 @@ namespace Nektar
                                 SpatialDomains::BoundaryConditions &bcs,
                                 const std::string variable)
         {
-            int j;
+            int i,j;
             int cnt  = 0;
 
             SpatialDomains::BoundaryRegionCollection &bregions
@@ -565,7 +565,6 @@ namespace Nektar
                                       Array<OneD,       NekDouble>& inout,
                                 const Array<OneD, const NekDouble>& dirForcing)
         {
-            int i;
             int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
 
             // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE

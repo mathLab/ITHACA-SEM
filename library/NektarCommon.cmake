@@ -3,6 +3,12 @@ SET(NEKTAR_BIN_DIR bin)
 SET(NEKTAR_LIB_DIR lib)
 SET(NEKTAR_INCLUDE_DIR include)
 
+MACRO(CHANGE_EXTENSION output var new_ext)
+    GET_FILENAME_COMPONENT(FileName ${var} NAME_WE)
+    GET_FILENAME_COMPONENT(Path ${var} PATH)
+    SET(${output} ${Path}/${FileName}.${new_ext})
+ENDMACRO()
+
 IF( MSVC )
 	# Needed for M_PI to be visible in visual studio.
 	ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
@@ -151,12 +157,14 @@ MACRO(SET_COMMON_PROPERTIES name)
     SET_TARGET_PROPERTIES(${name} PROPERTIES MINSIZEREL_POSTFIX -ms)
     SET_TARGET_PROPERTIES(${name} PROPERTIES RELWITHDEBINFO_POSTFIX -rg)
 
-    IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008" )
+    IF( MSVC )
         # Disable the warnings about duplicate copy/assignment methods (4521, 4522)
         # Disable the warning that arrays are default intialized (4351)	
+        # Disable "forcing value to bool 'true' or 'false' (performance warning)" warning (4800)
+
         # /Za is necessary to prevent temporaries being bound to reference parameters.
-        SET_TARGET_PROPERTIES(${name} PROPERTIES COMPILE_FLAGS "/wd4521 /wd4522 /wd4351 /wd4018")
-    ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008" )	
+        SET_TARGET_PROPERTIES(${name} PROPERTIES COMPILE_FLAGS "/wd4521 /wd4522 /wd4351 /wd4018 /wd4800")
+    ENDIF(  )	
 
     SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DNEKTAR_DEBUG")
     
@@ -186,18 +194,18 @@ ENDMACRO(SET_COMMON_PROPERTIES name)
 
 MACRO(SETUP_PRECOMPILED_HEADERS sourceFiles precompiledHeader)
     IF( NEKTAR_USE_PRECOMPILED_HEADERS )
-        IF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008" )	
+        IF( MSVC )	
             # /Yu"stdafx.h" 
             #MESSAGE(${${precompiledHeader}})
-	    #MESSAGE(${${sourceFiles}})
+    	    #MESSAGE(${${sourceFiles}})
             SET_SOURCE_FILES_PROPERTIES(${${sourceFiles}} PROPERTIES COMPILE_FLAGS "/Yu\"${${precompiledHeader}}\"")
             LIST(GET ${sourceFiles} 0 OUTVAR)
             #MESSAGE(${OUTVAR})
             SET_SOURCE_FILES_PROPERTIES(${OUTVAR} PROPERTIES COMPILE_FLAGS "/Yc\"${${precompiledHeader}}\"")
             
-        ENDIF( ${CMAKE_GENERATOR} STREQUAL "Visual Studio 8 2005"  OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 9 2008")	
-    ENDIF( NEKTAR_USE_PRECOMPILED_HEADERS )
-ENDMACRO(SETUP_PRECOMPILED_HEADERS sourceFiles precompiledHeader)
+        ENDIF()	
+    ENDIF()
+ENDMACRO()
 
 MACRO(ADD_NEKTAR_EXECUTABLE name sources)
     IF( ${ARGC} LESS 3 )

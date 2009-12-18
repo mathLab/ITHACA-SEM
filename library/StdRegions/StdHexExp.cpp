@@ -122,7 +122,6 @@ namespace Nektar
                       "Basis[2] is not a general tensor type");
 
 #if 1
-            int i;
             int           nquad0 = m_base[0]->GetNumPoints();
             int           nquad1 = m_base[1]->GetNumPoints();
             int           nquad2 = m_base[2]->GetNumPoints();
@@ -2058,6 +2057,17 @@ namespace Nektar
 
 /**
  * $Log: StdHexExp.cpp,v $
+ * Revision 1.29  2009/12/15 18:09:02  cantwell
+ * Split GeomFactors into 1D, 2D and 3D
+ * Added generation of tangential basis into GeomFactors
+ * Updated ADR2DManifold solver to use GeomFactors for tangents
+ * Added <GEOMINFO> XML session section support in MeshGraph
+ * Fixed const-correctness in VmathArray
+ * Cleaned up LocalRegions code to generate GeomFactors
+ * Removed GenSegExp
+ * Temporary fix to SubStructuredGraph
+ * Documentation for GlobalLinSys and GlobalMatrix classes
+ *
  * Revision 1.28  2009/04/27 21:32:45  sherwin
  * Updated WriteToField method
  *

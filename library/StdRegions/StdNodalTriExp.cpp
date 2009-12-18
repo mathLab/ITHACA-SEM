@@ -345,7 +345,7 @@ namespace Nektar
                 outfile<<")"<<endl;
 
                 // calculate the coefficients (monomial format)
-                int i,j,k;
+                int i,j;
 
                 Array<OneD,NekDouble> xi1(GetNcoeffs());
                 Array<OneD,NekDouble> xi2(GetNcoeffs());
@@ -484,6 +484,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.31  2009/04/27 21:32:45  sherwin
+* Updated WriteToField method
+*
 * Revision 1.30  2008/11/05 16:08:15  pvos
 * Added elemental optimisation functionality
 *

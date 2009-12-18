@@ -107,7 +107,6 @@ namespace Nektar
         {   
             ASSERTL0((dir==0)||(dir==1),"input dir is out of range");
  
-            int i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int     nqtot = nquad0*nquad1;
@@ -1298,6 +1297,9 @@ namespace Nektar
 
 /** 
  * $Log: StdQuadExp.cpp,v $
+ * Revision 1.54  2009/12/17 01:37:54  bnelson
+ * Fixed visual studio compiler warning.
+ *
  * Revision 1.53  2009/12/15 18:09:02  cantwell
  * Split GeomFactors into 1D, 2D and 3D
  * Added generation of tangential basis into GeomFactors

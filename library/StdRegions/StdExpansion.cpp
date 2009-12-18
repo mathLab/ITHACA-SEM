@@ -781,7 +781,6 @@ namespace Nektar
                                                                Array<OneD,NekDouble> &outarray,
                                                                const StdMatrixKey &mkey)
       {
-          int i, k;
           int nqtot = GetTotPoints();
           int matrixid = mkey.GetMatrixID();
 
@@ -882,7 +881,7 @@ namespace Nektar
             DNekMatSharedPtr& bwdtransmat = GetStdMatrix(bwdtransmatkey);
            
             Blas::Dgemv('N',nq,m_ncoeffs,1.0,bwdtransmat->GetPtr().get(),
-                        nq, inarray.get(), 1.0, 0.0, outarray.get(), 1.0);            
+                        nq, inarray.get(), 1, 0.0, outarray.get(), 1);            
         }
 
         //   I/O routine
@@ -925,20 +924,19 @@ namespace Nektar
 
       }
 
-      void StdExpansion::WriteTecplotField(std::ofstream &outfile)
-      {
-	
-	int i,j;
-	
-	int nquad0 = GetNumPoints(0);
-	int nquad1 = GetNumPoints(1);	
-	
-	// printing the fields of that zone
-	for(i = 0; i < nquad0*nquad1; ++i)
-	  {
-	    outfile << m_phys[i] << " ";
-	  }
-	outfile << std::endl;
+    void StdExpansion::WriteTecplotField(std::ofstream &outfile)
+    {
+        int i;
+
+        int nquad0 = GetNumPoints(0);
+        int nquad1 = GetNumPoints(1);	
+
+        // printing the fields of that zone
+        for(i = 0; i < nquad0*nquad1; ++i)
+        {
+            outfile << m_phys[i] << " ";
+        }
+        outfile << std::endl;
 	
 	}
 
@@ -1536,6 +1534,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.92  2009/12/14 18:03:18  cbiotto
+* Adding functions for tecplot file
+*
 * Revision 1.91  2009/11/13 16:17:46  sehunchun
 * *** empty log message ***
 *

@@ -281,12 +281,12 @@ namespace Nektar
                 Vmath::Vcopy(m_ncoeffs,inarray.get(),1,tmp.get(),1);
                 
                 Blas::Dgemv('N', m_ncoeffs, m_ncoeffs, 1.0, mat->GetPtr().get(),
-                            m_ncoeffs, tmp.get(), 1.0, 0.0, outarray.get(), 1.0); 
+                            m_ncoeffs, tmp.get(), 1, 0.0, outarray.get(), 1); 
             }
             else
             {
                 Blas::Dgemv('N', m_ncoeffs, m_ncoeffs, 1.0, mat->GetPtr().get(),
-                            m_ncoeffs, inarray.get(), 1.0, 0.0, outarray.get(), 1.0); 
+                            m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1); 
             }
         }
         
@@ -1268,6 +1268,9 @@ namespace Nektar
 
 /** 
  * $Log: StdTriExp.cpp,v $
+ * Revision 1.62  2009/12/17 01:37:54  bnelson
+ * Fixed visual studio compiler warning.
+ *
  * Revision 1.61  2009/10/22 17:29:37  cbiotto
  * Updates for variable order expansion
  *

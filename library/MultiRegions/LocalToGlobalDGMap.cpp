@@ -163,7 +163,6 @@ namespace Nektar
             int ntrace_exp = trace->GetExpSize();
             int nel        = exp2D->size();
             int nbnd = bndCondExp.num_elements();
-            int offset; 
             LocalRegions::SegExpSharedPtr  locSegExp,locSegExp1;
             LocalRegions::QuadExpSharedPtr locQuadExp;
             LocalRegions::TriExpSharedPtr  locTriExp;

@@ -105,8 +105,7 @@ namespace Nektar
             ExpList(),
             m_UseGenExp(UseGenExp)
         {
-            int i,j,elmtid=0;
-            int nel;
+            int i,elmtid=0;
             LocalRegions::TriExpSharedPtr      tri;
             LocalRegions::NodalTriExpSharedPtr Ntri;
             LibUtilities::PointsType           TriNb;
@@ -252,8 +251,7 @@ namespace Nektar
                               const LibUtilities::PointsType TriNb):
              ExpList()
          {
-             int i,j,elmtid=0;
-             int nel;
+             int i,elmtid=0;
              LocalRegions::TriExpSharedPtr tri;
              LocalRegions::NodalTriExpSharedPtr Ntri;
              LocalRegions::QuadExpSharedPtr quad;
@@ -790,6 +788,17 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.cpp,v $
+* Revision 1.34  2009/12/15 18:09:03  cantwell
+* Split GeomFactors into 1D, 2D and 3D
+* Added generation of tangential basis into GeomFactors
+* Updated ADR2DManifold solver to use GeomFactors for tangents
+* Added <GEOMINFO> XML session section support in MeshGraph
+* Fixed const-correctness in VmathArray
+* Cleaned up LocalRegions code to generate GeomFactors
+* Removed GenSegExp
+* Temporary fix to SubStructuredGraph
+* Documentation for GlobalLinSys and GlobalMatrix classes
+*
 * Revision 1.33  2009/11/25 14:51:29  pvos
 * Updates for added Timings directory
 *

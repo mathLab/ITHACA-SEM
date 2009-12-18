@@ -150,7 +150,6 @@ namespace Nektar
             LocalRegions::HexExpSharedPtr hex;
             LocalRegions::PrismExpSharedPtr prism;
             LocalRegions::PyrExpSharedPtr pyramid;
-            LibUtilities::PointsType TetNb;
 
             const SpatialDomains::ExpansionVector &expansions
                                         = graph3D.GetExpansions();

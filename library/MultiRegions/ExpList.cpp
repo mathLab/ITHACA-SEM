@@ -980,7 +980,7 @@ namespace Nektar
 
             DNekScalMatSharedPtr loc_mat; 
 
-            int totnq, nvarcoeffs = mkey.GetNvariableCoefficients();
+            int nvarcoeffs = mkey.GetNvariableCoefficients();
             Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
             
             for(n = cnt1 = 0; n < n_exp; ++n)
@@ -2085,7 +2085,7 @@ namespace Nektar
         void ExpList::ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field)
         {
             int cnt = 0;
-            int i,f;
+            int i;
             int offset = 0;
             int datalen = fielddata.size()/fielddef->m_Fields.size();
 

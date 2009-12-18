@@ -537,8 +537,8 @@ namespace Nektar
             int i,j,n,cnt;
             NekDouble one  = 1.0;
             NekDouble zero = 0.0;
-            int nBndDofs;
-            int nIntDofs;
+
+
             const Array<OneD,const unsigned int>& nBndDofsPerPatch = locToGloMap->GetNumLocalBndCoeffsPerPatch();
             const Array<OneD,const unsigned int>& nIntDofsPerPatch = locToGloMap->GetNumLocalIntCoeffsPerPatch();
 
@@ -704,8 +704,8 @@ namespace Nektar
             int i,j,n,cnt;
             NekDouble one  = 1.0;
             NekDouble zero = 0.0;
-            int nBndDofs;
-            int nIntDofs;
+
+
             const Array<OneD,const unsigned int>& nBndDofsPerPatch = locToGloMap->GetNumLocalBndCoeffsPerPatch();
             const Array<OneD,const unsigned int>& nIntDofsPerPatch = locToGloMap->GetNumLocalIntCoeffsPerPatch();
 

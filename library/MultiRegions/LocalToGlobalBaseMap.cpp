@@ -181,7 +181,7 @@ namespace Nektar
             m_numLocalBndCoeffs  = 0;     
             m_numPatches         = numLocalBndCoeffsPerPatchNew.size();      
             m_numLocalBndCoeffsPerPatch = Array<OneD, unsigned int>(m_numPatches);
-            m_numLocalIntCoeffsPerPatch = Array<OneD, unsigned int>(m_numPatches,0.0);
+            m_numLocalIntCoeffsPerPatch = Array<OneD, unsigned int>(m_numPatches,0u);
             for(int i = 0; i < m_numPatches; i++)
             {
                 m_numLocalBndCoeffsPerPatch[i] = (unsigned int) numLocalBndCoeffsPerPatchNew[i];

@@ -117,7 +117,7 @@ namespace Nektar
                                                              SpatialDomains::BoundaryConditions &bcs, 
                                                              const std::string variable)
         {
-            int i,j,k;
+            int i,j;
             int cnt  = 0;
             int cnt2 = 0;
             
@@ -304,7 +304,7 @@ namespace Nektar
                     const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
                           NekDouble tau)
         {
-            int i,j,n,cnt,cnt1,nbndry;
+            int i,n,cnt,cnt1,nbndry;
             int nexp = GetExpSize();
             Array<OneD,NekDouble> f(m_ncoeffs);
             DNekVec F(m_ncoeffs,f,eWrapper);

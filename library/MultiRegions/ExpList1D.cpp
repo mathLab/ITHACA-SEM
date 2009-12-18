@@ -105,7 +105,7 @@ namespace Nektar
             ExpList(),
             m_UseGenSegExp(UseGenSegExp)
         {
-            int i,j, id=0;
+            int i, id=0;
             LocalRegions::SegExpSharedPtr seg;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
 
@@ -312,7 +312,7 @@ namespace Nektar
             ExpList(),
             m_UseGenSegExp(UseGenSegExp)
         {
-            int i,j,k,cnt,id, elmtid=0;
+            int i,j,cnt,id, elmtid=0;
             map<int,int> EdgeDone;
             map<int,int> NormalSet;
 
@@ -832,7 +832,7 @@ namespace Nektar
             Array<OneD,int> x_elm(x_size);
             for(i = 0; i < x_size; i++ )
             {
-                x_elm[i] = floor(inarray2[i]/h);
+                x_elm[i] = (int)floor(inarray2[i]/h);
             }
 
             // Clamp indices periodically
@@ -887,7 +887,7 @@ namespace Nektar
             ASSERTL0(m_UseGenSegExp, "Must use GenSegExp to use normals.");
 
             map<int, int> EdgeGID;
-            int i,j,cnt,n,id;
+            int i,cnt,n,id;
 
             // setup map of all global ids along boundary
             for(cnt = i = 0; i < (*m_exp).size(); ++i)
@@ -998,7 +998,7 @@ namespace Nektar
         {
             ASSERTL0(m_UseGenSegExp, "Must use GenSegExp to use normals.");
 
-            int i,j,k,e_npoints,offset;
+            int i,j,e_npoints,offset;
             Array<OneD,NekDouble> normals;
 
             // Assume whole array is of same coordimate dimention
@@ -1133,6 +1133,17 @@ namespace Nektar
 
 /**
 * $Log: ExpList1D.cpp,v $
+* Revision 1.43  2009/12/15 18:09:02  cantwell
+* Split GeomFactors into 1D, 2D and 3D
+* Added generation of tangential basis into GeomFactors
+* Updated ADR2DManifold solver to use GeomFactors for tangents
+* Added <GEOMINFO> XML session section support in MeshGraph
+* Fixed const-correctness in VmathArray
+* Cleaned up LocalRegions code to generate GeomFactors
+* Removed GenSegExp
+* Temporary fix to SubStructuredGraph
+* Documentation for GlobalLinSys and GlobalMatrix classes
+*
 * Revision 1.42  2009/11/19 23:30:36  cantwell
 * Documentation for ExpList2D and GlobalMatrixKey
 * Updated doxygen pages.

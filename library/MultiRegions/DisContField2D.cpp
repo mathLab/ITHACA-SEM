@@ -134,7 +134,7 @@ namespace Nektar
                                                                 SpatialDomains::BoundaryConditions &bcs, 
                                                                 const std::string variable)
         {
-            int i,n,cnt  = 0;
+            int i,cnt  = 0;
             SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
             SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();   
 
@@ -336,7 +336,7 @@ namespace Nektar
         {
             // Loop over elemente and collect forward expansion
             int nexp = GetExpSize();
-            int nquad_e,cnt,n,e,npts,offset,phys_offset;
+            int nquad_e,n,e,offset,phys_offset;
             Array<OneD,NekDouble> e_tmp;
             Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr> >
                 elmtToTrace = m_traceMap->GetElmtToTrace();
@@ -564,7 +564,7 @@ namespace Nektar
                     const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
                           NekDouble tau)
         {
-            int e,i,j,n,cnt,cnt1,nbndry, order_e;
+            int i,j,n,cnt,cnt1,nbndry;
             int nexp = GetExpSize();
             StdRegions::StdExpansionSharedPtr BndExp;
             
@@ -583,8 +583,7 @@ namespace Nektar
             //----------------------------------
             int GloBndDofs   = m_traceMap->GetNumGlobalBndCoeffs();
             int NumDirichlet = m_traceMap->GetNumLocalDirBndCoeffs();
-            int e_ncoeffs, loc,id,offset;
-            NekDouble sign;
+            int e_ncoeffs,id;
 
             // linked data
             GlobalMatrixKey HDGLamToUKey(StdRegions::eHybridDGLamToU,lambda,tau,varcoeff);

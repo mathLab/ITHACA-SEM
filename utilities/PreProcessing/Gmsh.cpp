@@ -17,6 +17,8 @@ namespace Utilities
       int nEntities        = 0;
       int nBoundComposites = 0;
       int expDim           = 3;
+      int spaceDim   = 2;
+      int elm_type = 0;
      
       vector<Vertex> vertices;
       vector<Edge> edges;
@@ -60,6 +62,11 @@ namespace Utilities
 		      stringstream st(line);
 		      double x=0, y=0, z=0;
 		      st >> id >> x >> y >> z;
+
+		      if((z*z)>0.000001)
+			{
+			  spaceDim = 3;
+			}
 		      id -= 1; // counter starts at 0 
 		      vertices.push_back( Vertex(id, x, y, z) );
 		    }               
@@ -74,12 +81,27 @@ namespace Utilities
 		    {
 		      getline(mshFile, line);
 		      stringstream st(line);
-		      int id=0, elm_type=0, num_tag=0, num_nodes=0;
+		      int id=0, num_tag=0, num_nodes=0;
 		      
 		      st >> id >> elm_type >> num_tag;
 		      id -= 1; // counter starts at 0 
 		      
-		      num_nodes = GetNnodes(elm_type);
+		      // curved edge
+		      if(elm_type==8)
+			{
+			  num_nodes = 3;
+			}
+		      
+		      // curved triangular or quadratic
+		      else if(elm_type==9)
+			{
+			  num_nodes = 6;
+			}
+		      
+		      else
+			{
+			  num_nodes = GetNnodes(elm_type);
+			}
 		      
 		      vector<int> tags;
 		      for(int j=0; j<num_tag; ++j)
@@ -109,10 +131,12 @@ namespace Utilities
 			  zeroDElements.push_back( ZeroDElement(zeroDid++,elm_type, tags, nodeList) );
 			  break;
 			case 1:
+			case 8:
 			  oneDElements.push_back( OneDElement(oneDid++,elm_type, tags, nodeList) );
 			  break;
 			case 2:
 			case 3:
+			case 9:
 			  twoDElements.push_back( TwoDElement(twoDid++,elm_type, tags, nodeList, edgeList) );
 			  break;
 			default:
@@ -153,8 +177,15 @@ namespace Utilities
 	  SortOneDComposites(oneDElements, zeroDElements, composites, nBoundComposites);
 	  break;
 	case 2:
+	  // Fill the edges vectors from twoDElements.edge
+	  // When twoDElements are triangles, twoDElements.vert has three components.
+	  // With two vertices we find edge id and update it to edges.
 	  SortEdgeToVertex(twoDElements,edges);
+
+	  // Correct edges id of oneDElements from edges
 	  SortOneDElements(oneDElements,edges);
+
+	  // Set elements composite
 	  SortTwoDComposites(twoDElements, oneDElements, composites, nBoundComposites);
 	  break;
 	case 3:
@@ -168,14 +199,14 @@ namespace Utilities
 	  }
 	}
 
-      WriteToXMLFile(outfile, expDim, vertices, edges, faces, oneDElements, twoDElements, threeDElements, composites);
+      WriteToXMLFile(outfile, expDim, spaceDim, vertices, edges, faces, oneDElements, twoDElements, threeDElements, composites, elm_type);
 
     }
     
 
     // note: this function is only working for 2nodes edges.
     // Any of Gmsh higher order edges are not supported 
-    int GetEdge(vector<int> &vert, vector<Edge>& edges)
+    int GetEdge(vector<int> &vert, vector<Edge>& edges, int elm_type)
     {
       int i;
       int size = edges.size();
@@ -195,6 +226,10 @@ namespace Utilities
       vector<int> edgevert;
       edgevert.push_back(vert[0]);
       edgevert.push_back(vert[1]);
+      if(elm_type==9)
+	{
+	  edgevert.push_back(vert[2]);
+	}
       edges.push_back( Edge(size,edgevert) );
       return size;
     }
@@ -203,30 +238,60 @@ namespace Utilities
 
     void SortEdgeToVertex(vector<TwoDElement> & elements, vector<Edge> & edges)
     {     
-      int i, j;
+      int i, j, elm_type;
       int size = elements.size();
       
       // fill the edge vector in the elements struct with unique edges
       for (i = 0; i < size; ++i)
 	{
-	  for (j = 0; j < elements[i].vert.size()-1; ++j)
+	  elm_type = elements[i].type;
+
+	  if(elm_type==9)
 	    {
-	      int edgeid;
-	      vector<int> vert;
-	      vert.push_back(elements[i].vert[j]);
-	      vert.push_back(elements[i].vert[j+1]);
-	      edgeid = GetEdge(vert,edges);
-	      elements[i].edge.push_back(edgeid);
+	      for (j = 0; j < 2; ++j)
+		{
+		  int edgeid;
+		  vector<int> vert;
+		  vert.push_back(elements[i].vert[j]);
+		  vert.push_back(elements[i].vert[j+1]);
+		  vert.push_back(elements[i].vert[j+3]);
+		  edgeid = GetEdge(vert,edges,elm_type);
+		  elements[i].edge.push_back(edgeid);
+		}
+	      
+	      {
+		int edgeid;
+		vector<int> vert;
+		vert.push_back(elements[i].vert[2]);
+		vert.push_back(elements[i].vert[0]);
+		vert.push_back(elements[i].vert[5]);
+		edgeid = GetEdge(vert,edges,elm_type);
+		elements[i].edge.push_back(edgeid);
+	      }
+	      
 	    }
 	  
-	  {
-	    int edgeid;
-	    vector<int> vert;
-	    vert.push_back(elements[i].vert[elements[i].vert.size()-1]);
-	    vert.push_back(elements[i].vert[0]);
-	    edgeid = GetEdge(vert,edges);
-	    elements[i].edge.push_back(edgeid);
-	  }
+	  else
+	    {
+	      for (j = 0; j < elements[i].vert.size()-1; ++j)
+		{
+		  int edgeid;
+		  vector<int> vert;
+		  vert.push_back(elements[i].vert[j]);
+		  vert.push_back(elements[i].vert[j+1]);
+		  edgeid = GetEdge(vert,edges,elm_type);
+		  elements[i].edge.push_back(edgeid);
+		}
+	      
+	      {
+		int edgeid;
+		vector<int> vert;
+		vert.push_back(elements[i].vert[elements[i].vert.size()-1]);
+		vert.push_back(elements[i].vert[0]);
+		edgeid = GetEdge(vert,edges,elm_type);
+		elements[i].edge.push_back(edgeid);
+	      }
+	    }
 	}
       cout << "...done sorting EdgeToVertex relations" << endl;
     } 
@@ -298,7 +363,7 @@ namespace Utilities
       int twoDcomp = 0;
       for (int i = 0; i < elements.size(); ++i)
 	{
-	  if (elements[i].type == 2)
+	  if ( (elements[i].type == 2) || (elements[i].type == 9) )
 	    nTri++;
 	  if (elements[i].type == 3)
 	    nQuad++;
@@ -339,6 +404,7 @@ namespace Utilities
 	      switch(edges[i].type)
 		{
 		case 1:
+		case 8:
 		  {
 		    composites[comp-1+twoDcomp].eid.push_back(edges[i].id);
 		    composites[comp-1+twoDcomp].type = edges[i].type;
@@ -416,10 +482,10 @@ namespace Utilities
     }
 
     
-    void WriteToXMLFile(const char* outfile, int expDim, const vector<Vertex> & nodes, const vector<Edge> & edges, 
+    void WriteToXMLFile(const char* outfile, int expDim, int spaceDim, const vector<Vertex> & nodes, const vector<Edge> & edges, 
 			const vector<Face> & faces, const vector<OneDElement> & oneDElements,
 			const vector<TwoDElement> & twoDElements, const vector<ThreeDElement> & threeDElements,
-			const vector<Composite> & composites)
+			const vector<Composite> & composites, const int elm_type)
     {  
       
       TiXmlDocument doc;      
@@ -442,7 +508,7 @@ namespace Utilities
       
       TiXmlElement * geomTag = new TiXmlElement( "GEOMETRY" );
       geomTag->SetAttribute("DIM", expDim);
-      geomTag->SetAttribute("SPACE", expDim);    
+      geomTag->SetAttribute("SPACE", spaceDim);    
       root->LinkEndChild( geomTag );
       
       comment = new TiXmlComment();
@@ -531,7 +597,7 @@ namespace Utilities
       case 1:
 	{
 	  for(int i=0; i<oneDElements.size(); ++i){
-	    if (oneDElements[i].type == 1){ // 1 denotes Seg
+	    if ( (oneDElements[i].type == 1) || (oneDElements[i].type == 8) ){ // 1 denotes Seg
 	      
 	      stringstream st;
 	      for(int j=0; j<oneDElements[i].vert.size(); ++j){
@@ -553,7 +619,7 @@ namespace Utilities
 	  int elmcnt = 0;
 	  
 	  for(int i=0; i<twoDElements.size(); ++i){
-	    if (twoDElements[i].type == 2 || twoDElements[i].type == 3){ // 2 denotes Tri/3 denotes Quad
+	    if ( (twoDElements[i].type == 2) || (twoDElements[i].type == 3) ){ // 2 denotes Tri/3 denotes Quad
 	      
 	      stringstream st;
 	      for(int j=0; j<twoDElements[i].edge.size(); ++j){
@@ -566,6 +632,27 @@ namespace Utilities
 	      }
 	      else if (twoDElements[i].type == 3) {
 		elm_tag = new TiXmlElement("Q");
+	      }
+	      else{
+		cout << "No valid 2D element" << endl;
+		exit(1);
+	      }
+	      
+	      elm_tag->SetAttribute("ID", elmcnt++);
+	      elm_tag->LinkEndChild( new TiXmlText(st.str()) );
+	      verTag->LinkEndChild(elm_tag);
+	    }
+
+	    else if (twoDElements[i].type == 9){ // 9 denotes curved Tri
+	      
+	      stringstream st;
+	      for(int j=0; j<twoDElements[i].edge.size(); ++j){
+		st << setw(5) << twoDElements[i].edge[j] << " ";
+	      }
+	      
+	      TiXmlElement *elm_tag;
+	      if (twoDElements[i].type == 9) {
+		elm_tag = new TiXmlElement("T"); 
 	      }
 	      else{
 		cout << "No valid 2D element" << endl;
@@ -619,7 +706,39 @@ namespace Utilities
       geomTag->LinkEndChild( verTag );
       //--------------------------------------------------
       
+      if(elm_type==9)
+	{
+	  // Write Curved elements
+	  TiXmlElement * curved = new TiXmlElement ("CURVED" );
+	  
+	  int edgecnt = 0;
+	  vector<int> order;
+	  
+	  order.push_back(0);
+	  order.push_back(2);
+	  order.push_back(1);
+	  
+	  for( int i = 0; i < edges.size(); ++i ) {
+	    stringstream s;
+	    
+	    for (int k = 0; k < edges[i].vert.size(); ++k) {
+	      int nodeid = edges[i].vert[order[k]];
+	      s << scientific << setprecision(3) << "     " <<  nodes[nodeid].x << "  " << nodes[nodeid].y << "  " << nodes[nodeid].z << "  ";
+	    }
+	    
+	    TiXmlElement * e = new TiXmlElement( "E" );
+	    e->SetAttribute("ID",edgecnt);
+	    e->SetAttribute("EDGEID",edgecnt++);
+	    e->SetAttribute("TYPE","PolyEvenlySpaced");
+	    e->SetAttribute("NUMPOINTS",3);
+	    TiXmlText * t0 = new TiXmlText(s.str());
+	    e->LinkEndChild(t0);
+	    curved->LinkEndChild(e);
+	  }
+	  geomTag->LinkEndChild( curved );
+	}
       
+
       //--------------------------------------------------
       // Write COMPOSITE
       
@@ -650,6 +769,7 @@ namespace Utilities
 	switch(composites[i].type) 
 	  {
 	  case 1:
+	  case 8:
 	    { 
 	      if (expDim == 1)
 		st_start << " S[0-"; // Segment
@@ -657,7 +777,8 @@ namespace Utilities
 		st_start << " E[";  // Segment -> Edges
 	    }
 	    break; 
-	  case 2: 
+	  case 2:
+	  case 9: 
 	    {
 	      if (expDim == 2)
 		st_start << " T[0-";  // Triangle

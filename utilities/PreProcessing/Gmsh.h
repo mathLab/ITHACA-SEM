@@ -124,10 +124,10 @@ namespace Utilities
     
 
     void ParseGmshFile(const char* inFile, const char* outfile);
-    void WriteToXMLFile(const char* outfile, int expDim, const vector<Vertex> & vertices, const vector<Edge> & edges, 
+    void WriteToXMLFile(const char* outfile, int expDim, int spaceDim, const vector<Vertex> & vertices, const vector<Edge> & edges, 
 			const vector<Face> & faces, const vector<OneDElement> & oneDElements,
 			const vector<TwoDElement> & twoDElements, const vector<ThreeDElement> & threeDElements,
-			const vector<Composite> & composites);
+			const vector<Composite> & composites, const int elm_type);
     void SortEdgeToVertex(vector<TwoDElement> & elements, vector<Edge> & edges);
     void SortZeroDElements(vector<ZeroDElement> & points,const vector<Vertex> & vertices);
     void SortOneDElements(vector<OneDElement> &segments, const vector<Edge>& edges);
@@ -136,7 +136,7 @@ namespace Utilities
     void SortOneDComposites(const vector<OneDElement> & elements, const vector<ZeroDElement> & points, 
 			    vector<Composite> & composites, int ncomposites);
     int  GetNnodes(int GmshEntity);
-    int GetEdge(vector<int> &vert, vector<Edge>& edges);  
+    int GetEdge(vector<int> &vert, vector<Edge>& edges, int elm_type);  
      
    
   } //end of namespace Gmsh

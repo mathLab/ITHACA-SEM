@@ -189,6 +189,15 @@ namespace Nektar
             m_y2center  = 0.0;
         }
 
+        if(m_boundaryConditions->CheckForParameter("diffrate") == true)
+        {
+            m_diffrate = m_boundaryConditions->GetParameter("diffrate");
+        }
+        else
+        {
+            m_diffrate  = 1.0;
+        }
+
         // Set up equation type enum using kEquationTypeStr
         std::string typeStr = m_boundaryConditions->GetSolverInfo("EQTYPE");
 
@@ -331,6 +340,9 @@ namespace Nektar
             uinit = unew;
         }
         vinit = uinit - (1.0/3.0)*uinit*uinit*uinit;
+
+        m_uinit = uinit;
+        m_vinit = vinit;
 
         cout << "Static u0 = " << uinit << ", Static v0 = " << vinit << endl;
 
@@ -675,39 +687,47 @@ namespace Nektar
 					  const NekDouble time)
 	
     {
-
       NekDouble m_gamma = 0.5;
 
       int nvariables = inarray.num_elements();
       int ncoeffs    = inarray[0].num_elements();
       int npoints    = m_fields[0]->GetNpoints();
       
-      Array<OneD, NekDouble> physfield(npoints);
-      Array<OneD, NekDouble> temp2(npoints,0.0);
-      Array<OneD, NekDouble> temp3(npoints,0.0);
+      Array<OneD, NekDouble> physfieldu(npoints);
+      Array<OneD, NekDouble> physfieldv(npoints);
+
+      Array<OneD, NekDouble> Ru(npoints,0.0);
+      Array<OneD, NekDouble> Rv(npoints, 0.0);
+      Array<OneD, NekDouble> u3(npoints,0.0);      
       
-      Array<OneD, NekDouble> temp(ncoeffs, 0.0);
-      
-      m_fields[0]->BwdTrans(inarray[0],physfield);
+      m_fields[0]->BwdTrans(inarray[0],physfieldu);
       m_fields[0]->SetPhysState(true);        
+
+      m_fields[1]->BwdTrans(inarray[1],physfieldv);
+      m_fields[1]->SetPhysState(true);        
 
       // For u: (1/m_epsilon)*( u*-u*u*u/3 - v )
       // physfield = u - (1.0/3.0)*u*u*u
-      Vmath::Vmul(npoints, physfield, 1, physfield, 1, temp2, 1);
-      Vmath::Vmul(npoints, physfield, 1, temp2, 1, temp3, 1);
-      Vmath::Svtvp(npoints, (-1.0/3.0), temp3, 1, physfield, 1, physfield, 1);
-      
-      m_fields[0]->FwdTrans(physfield,outarray[0]);
-      m_fields[0]->SetPhysState(false);        
+      Vmath::Vmul(npoints, &physfieldu[0], 1, &physfieldu[0], 1, &Ru[0], 1);
+      Vmath::Vmul(npoints, &physfieldu[0], 1, &Ru[0], 1, &u3[0], 1);
+      Vmath::Svtvp(npoints, (-1.0/3.0), &u3[0], 1, &physfieldu[0], 1, &Ru[0], 1);
      
-      Vmath::Vsub(ncoeffs, inarray[1], 1, outarray[0], 1, outarray[0], 1);
-      Vmath::Smul(ncoeffs, -1.0/m_epsilon, outarray[0], 1, outarray[0], 1);
-      
+      Vmath::Vsub(npoints, &physfieldv[0], 1, &Ru[0], 1, &Ru[0], 1);
+      Vmath::Smul(npoints, -1.0/m_epsilon, &Ru[0], 1, &Ru[0], 1);
+
+      m_fields[0]->FwdTrans(Ru,outarray[0]);
+      m_fields[0]->SetPhysState(false);        
+
       // For v: m_epsilon*( u + m_beta - m_gamma*v )
-      Vmath::Svtvp(ncoeffs, -1.0*m_gamma, inarray[1], 1, inarray[0], 1, outarray[1], 1);
-      Vmath::Sadd(ncoeffs, m_beta, outarray[1], 1, outarray[1], 1);
-      Vmath::Smul(ncoeffs, m_epsilon, outarray[1], 1, outarray[1], 1);
+      Vmath::Svtvp(npoints, -1.0*m_gamma, &physfieldv[0], 1, &physfieldu[0], 1, &Rv[0], 1);
+      Vmath::Sadd(npoints, m_beta, &Rv[0], 1, &Rv[0], 1);
+      Vmath::Smul(npoints, m_epsilon, &Rv[0], 1, &Rv[0], 1);
+
+      m_fields[1]->FwdTrans(Rv,outarray[1]);
+      m_fields[1]->SetPhysState(false); 
     }
+
+
   
   void FitzHughNagumo::ODEhelmSolvetest(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                                         Array<OneD, Array<OneD, NekDouble> >&outarray,
@@ -736,8 +756,7 @@ namespace Nektar
 	m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
 
 	// Solve a system of equations with Helmholtz solver
-	m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs(),kappa);
-	m_fields[i]->SetPhysState(false);        
+	SolveHelmholtz(i, kappa);   
 	
 	// The solution is Y[i]
 	outarray[i] = m_fields[i]->GetCoeffs();	  
@@ -770,8 +789,7 @@ namespace Nektar
     m_fields[0]->BwdTrans(m_fields[0]->GetCoeffs(), m_fields[0]->UpdatePhys());
     
     // Solve a system of equations with Helmholtz solver
-    m_fields[0]->HelmSolve(m_fields[0]->GetPhys(),m_fields[0]->UpdateCoeffs(),kappa);
-    m_fields[0]->SetPhysState(false);        
+    SolveHelmholtz(0, kappa);        
     
     // The solution is Y[i]
     outarray[0] = m_fields[0]->GetCoeffs();	  
@@ -779,16 +797,63 @@ namespace Nektar
     // For q: No helmholtz solver is needed=============================
     Vmath::Vcopy(ncoeffs, inarray[1], 1, outarray[1], 1);
   }
-  
-  
-    void FitzHughNagumo::SolveHelmholtz(NekDouble lambda)
+
+    void FitzHughNagumo::ODEhelmSolvehetero(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                                            Array<OneD, Array<OneD, NekDouble> >&outarray,
+                                            NekDouble time, 
+                                            NekDouble lambda)
+  {
+    int nvariables = inarray.num_elements();
+    int ncoeffs    = inarray[0].num_elements();
+    int nq = m_fields[0]->GetNpoints();
+    
+    int Nelem = m_fields[0]->GetExpSize();
+
+    Array<OneD, NekDouble> tmp(nq);
+    Array<OneD, NekDouble> physfield(nq);
+    Array<OneD, NekDouble> kappa_v(Nelem);
+
+    // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
+    // inarray = input: \hat{rhs} -> output: \hat{Y}    
+    // outarray = output: nabla^2 \hat{Y}       
+    // where \hat = modal coeffs
+
+    int i, nc_e, offset;
+    for(int i=0; i<Nelem; ++i)
     {
-        for(int i = 0; i < m_fields.num_elements(); ++i)
-        {
-            m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs(),lambda);
-            m_fields[i]->SetPhysState(false);
-        }
+        nc_e = GetNcoeffs(i);
+        offset = GetCoeff_Offset(i);
+
+        kappa_v[i] = 1.0/(lambda*m_diffusivity[i]);
+
+        Vmath::Smul(nc_e, -1.0*kappa_v[i], &inarray[0][offset], 1, &outarray[0][offset], 1);
     }
+
+    // Multiply rhs[i] with -1.0/gamma/timestep
+    // Vmath::Smul(ncoeffs, -1.0*kappa, inarray[0], 1, outarray[0], 1);
+    
+    // Update coeffs to m_fields
+    m_fields[0]->UpdateCoeffs() = outarray[0];
+    
+    // Backward Transformation to nodal coefficients
+    m_fields[0]->BwdTrans(m_fields[0]->GetCoeffs(), m_fields[0]->UpdatePhys());
+    
+    // Solve a system of equations with Helmholtz solver
+
+    // SolveHelmholtz(0, kappa_v);
+
+    // The solution is Y[i]
+    outarray[0] = m_fields[0]->GetCoeffs();	  
+        
+    // For q: No helmholtz solver is needed=============================
+    Vmath::Vcopy(ncoeffs, &inarray[1][0], 1, &outarray[1][0], 1);
+  }
+
+  void FitzHughNagumo:: SolveHelmholtz(const int indx, const NekDouble kappa)
+  {
+    m_fields[indx]->HelmSolve(m_fields[indx]->GetPhys(),m_fields[indx]->UpdateCoeffs(),kappa);
+    m_fields[indx]->SetPhysState(false);
+  }
 
     // For Continuous Galerkin projections with time-dependent dirichlet boundary conditions,
     // the time integration can be done as follows:
@@ -1351,6 +1416,43 @@ namespace Nektar
        }
    }  
 
+
+    void FitzHughNagumo::Setdiffusivity(void)
+    {
+        int Nelem = m_fields[0]->GetExpSize();
+        int nq = m_fields[0]->GetNpoints();
+        int nq_e, offset;      
+
+        Array<OneD,NekDouble> x0(nq);
+        Array<OneD,NekDouble> x1(nq);
+        Array<OneD,NekDouble> x2(nq);
+      
+        // get the coordinates (assuming all fields have the same discretisation)
+        m_fields[0]->GetCoords(x0,x1,x2);
+
+        NekDouble xc, yc;
+        m_diffusivity = Array<OneD, NekDouble> (Nelem,1.0);
+
+        for(int i=0; i<Nelem; ++i)
+        {
+            nq_e = GetTotPoints(i);
+            offset = GetPhys_Offset(i);
+            xc = Vmath::Vsum(nq_e, &x0[offset], 1);
+            yc = Vmath::Vsum(nq_e, &x1[offset], 1);
+
+            xc = xc/nq_e;
+            yc = yc/nq_e;
+            if( (xc > 15.0) && ( xc < 30.0) )
+            {
+                if( (yc > 15.0) && ( yc < 25.0) )
+                {
+                    m_diffusivity[i] = m_diffrate;
+                }
+            }
+        }
+    }
+
+
   void FitzHughNagumo::Summary(std::ostream &out)
   {   
     cout << "=======================================================================" << endl;
@@ -1386,6 +1488,7 @@ namespace Nektar
     out << "\tx2center : " << m_x2center << endl;
     out << "\ty2center : " << m_y2center << endl;
     out << "\tfrequency2 : " << m_frequency2 << endl;
+    out << "\tdiffrate : " << m_diffrate << endl;
 
     ADRBase::TimeParamSummary(out);
 

@@ -61,7 +61,6 @@ int main(int argc, char *argv[])
 
     int nsteps = EAD.GetSteps();
     int initialwavetype = EAD.initialwavetype();;
-
     NekDouble lambda = 0.0;
 
     EAD.Summary(cout);
@@ -125,7 +124,21 @@ int main(int argc, char *argv[])
 	  // General Linear Time Integration
 	  EAD.GeneralTimeIntegration(nsteps, EAD.GetTimeIntMethod(), ode);
         }
+        break;
 
+    case eFHNmonohetero:
+        {
+            EAD.SetFHNInitialConditions(initialwavetype);
+
+            EAD.Setdiffusivity();
+
+	  // Choose the method of deriving forcing functions
+	  ode.DefineImplicitSolve (&FitzHughNagumo::ODEhelmSolvehetero,EAD);	
+	  ode.DefineOdeRhs        (&FitzHughNagumo::ODEeReactionmono,EAD);	
+          
+	  // General Linear Time Integration
+	  EAD.GeneralTimeIntegration(nsteps, EAD.GetTimeIntMethod(), ode);
+        }
         break;
 
     case eNoEquationType:

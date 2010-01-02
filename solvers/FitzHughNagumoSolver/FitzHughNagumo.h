@@ -49,6 +49,7 @@ namespace Nektar
 	eFHNtest1,
 	eFHNtest2,
 	eFHNmonoplane,
+	eFHNmonohetero,
         eEquationTypeSize
     };
     
@@ -60,6 +61,7 @@ namespace Nektar
 	"FHNtest1",
 	"FHNtest2",
 	"FHNmonoplane",
+	"FHNmonohetero",
     };
 
     /**
@@ -114,6 +116,11 @@ namespace Nektar
 	inline int initialwavetype(void)
         {
             return m_initialwavetype;
+        }
+
+	inline int diffrate(void)
+        {
+            return m_diffrate;
         }
 
         LibUtilities::TimeIntegrationMethod GetTimeIntMethod(void)
@@ -182,11 +189,16 @@ namespace Nektar
                               NekDouble time, 
                               NekDouble lambda);
 
+        void ODEhelmSolvehetero(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                                Array<OneD, Array<OneD, NekDouble> >&outarray,
+                                NekDouble time, 
+                                NekDouble lambda);
+
         void GeneralTimeIntegration(int nsteps, 
 		                   LibUtilities::TimeIntegrationMethod IntMethod,
 				   LibUtilities::TimeIntegrationSchemeOperators ode);
 
-        void SolveHelmholtz(NekDouble lambda);
+        void SolveHelmholtz(const int indx, const NekDouble kappa);
 
         void SetFHNInitialConditions(const int initialwavetype, NekDouble initialtime = 0.0);
 
@@ -198,11 +210,14 @@ namespace Nektar
 			  Array<OneD, NekDouble> &outarray, 
 			  const int direction, bool turnon = false);
 
+        void Setdiffusivity(void);
+
         void Summary(std::ostream &out);
 
     protected:
 
     private: 
+        NekDouble m_uinit, m_vinit;
         int          m_infosteps;    ///< dump info to stdout at steps time
         EquationType m_equationType; ///< equation type;
         NekDouble  m_epsilon;         /// constant epsilon
@@ -214,6 +229,9 @@ namespace Nektar
         int        m_secondwavetype;      /// second wave type
         NekDouble m_x1center, m_y1center, m_x2center, m_y2center;     // center of waves
         NekDouble m_frequency1, m_frequency2 ;      // frequency of wave1 and wave2
+
+        NekDouble      m_diffrate;
+        Array<OneD, NekDouble>      m_diffusivity;
         
         bool m_explicitAdvection;  ///< Flag to identify explicit Advection
         bool m_explicitDiffusion;  ///< Flag to identify explicit Diffusion
@@ -252,6 +270,9 @@ namespace Nektar
 
 /**
 * $Log: FitzHughNagumo.h,v $
+* Revision 1.5  2009/11/24 11:14:50  sehunchun
+* *** empty log message ***
+*
 * Revision 1.4  2009/11/13 16:20:58  sehunchun
 * *** empty log message ***
 *

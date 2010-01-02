@@ -163,6 +163,11 @@ namespace Nektar
             return m_fields[0]->GetNcoeffs();
         }
 
+        inline int GetNcoeffs(const int eid)
+        {
+            return m_fields[0]->GetNcoeffs(eid);
+        }
+
         inline int GetNumExpModes(void)
         {
             return m_graph->GetExpansions()[0]->m_BasisKeyVector[0]
@@ -210,6 +215,11 @@ namespace Nektar
 	{
 	  return m_fields[0]->GetPhys_Offset(n);
 	}
+
+        inline int GetCoeff_Offset(int n)
+        {
+            return m_fields[0]->GetCoeff_Offset(n);
+        }
 
         inline int GetTotPoints(void)
         {
@@ -435,6 +445,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.19  2009/12/14 17:59:07  cbiotto
+* Adding writing tecplot file
+*
 * Revision 1.18  2009/12/09 12:36:36  cbiotto
 * Update for regression test
 *

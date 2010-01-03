@@ -41,7 +41,7 @@ namespace Nektar
     {
         /**
          * @class ContField2D
-         * As opposed to the class #ContExpList2D, the class #ContField2D is
+         * The class #ContField2D is
          * able to incorporate the boundary conditions imposed to the problem
          * to be solved. Therefore, the class is equipped with three additional
          * data members:
@@ -79,7 +79,9 @@ namespace Nektar
          * Galerkin approach.
          */
 
-
+        /**
+         * 
+         */
         ContField2D::ContField2D():
             DisContField2D(),
             m_locToGloMap(),
@@ -91,21 +93,75 @@ namespace Nektar
 
 
         /**
+         * Given a mesh \a graph2D, containing information about the domain and
+         * the spectral/hp element expansion, this constructor fills the list
+         * of local expansions #m_exp with the proper expansions, calculates
+         * the total number of quadrature points \f$\boldsymbol{x}_i\f$ and
+         * local expansion coefficients \f$\hat{u}^e_n\f$ and allocates memory
+         * for the arrays #m_coeffs and #m_phys. Furthermore, it constructs the
+         * mapping array (contained in #m_locToGloMap) for the transformation
+         * between local elemental level and global level, it calculates the
+         * total number global expansion coefficients \f$\hat{u}_n\f$ and
+         * allocates memory for the array #m_contCoeffs. The constructor also
+         * discretises the boundary conditions, specified by the argument \a
+         * bcs, by expressing them in terms of the coefficient of the expansion
+         * on the boundary.
          *
+         * @param   graph2D     A mesh, containing information about the domain
+         *                      and the spectral/hp element expansion.  
+         * @param   bcs         The boundary conditions.  
+         * @param   bc_loc      
+         * @param   solnType    Type of global system to use.
          */
-        ContField2D::ContField2D(const ContField2D &In):
-            DisContField2D(In),
-            m_locToGloMap(In.m_locToGloMap),
-            m_contNcoeffs(In.m_contNcoeffs),
-            m_contCoeffs(m_contNcoeffs,0.0),
-            m_globalMat(In.m_globalMat),
-            m_globalLinSys(In.m_globalLinSys)
+        ContField2D::ContField2D(SpatialDomains::MeshGraph2D &graph2D,
+                                 SpatialDomains::BoundaryConditions &bcs,
+                                 const int bc_loc,
+                                 const GlobalSysSolnType solnType):
+            DisContField2D(graph2D,bcs,bc_loc,solnType,false),
+            m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
+            ApplyGeomInfo(graph2D);
+            
+            map<int,int> periodicEdges;
+            vector<map<int,int> > periodicVertices;
+            GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),
+                             periodicVertices,periodicEdges);
+
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
+                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
+                                                    m_bndCondExpansions,
+                                                    m_bndConditions,
+                                                    periodicVertices,
+                                                    periodicEdges);
+
+            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
 
         /**
+         * Given a mesh \a graph2D, containing information about the domain and
+         * the spectral/hp element expansion, this constructor fills the list
+         * of local expansions #m_exp with the proper expansions, calculates
+         * the total number of quadrature points \f$\boldsymbol{x}_i\f$ and
+         * local expansion coefficients \f$\hat{u}^e_n\f$ and allocates memory
+         * for the arrays #m_coeffs and #m_phys. Furthermore, it constructs the
+         * mapping array (contained in #m_locToGloMap) for the transformation
+         * between local elemental level and global level, it calculates the
+         * total number global expansion coefficients \f$\hat{u}_n\f$ and
+         * allocates memory for the array #m_contCoeffs. The constructor also
+         * discretises the boundary conditions, specified by the argument \a
+         * bcs, by expressing them in terms of the coefficient of the expansion
+         * on the boundary.
          *
+         * @param   In          Existing ContField2D object used to provide the
+         *                      local to global mapping information and
+         *                      global solution type.
+         * @param   graph2D     A mesh, containing information about the domain
+         *                      and the spectral/hp element expansion.  
+         * @param   bcs         The boundary conditions.  
+         * @param   bc_loc      
          */
         ContField2D::ContField2D(const ContField2D &In,
                                  SpatialDomains::MeshGraph2D &graph2D,
@@ -148,7 +204,20 @@ namespace Nektar
 
 
         /**
+         * Given a mesh \a graph2D, containing information about the domain and
+         * the spectral/hp element expansion, this constructor fills the list
+         * of local expansions #m_exp with the proper expansions, calculates
+         * the total number of quadrature points \f$\boldsymbol{x}_i\f$ and
+         * local expansion coefficients \f$\hat{u}^e_n\f$ and allocates memory
+         * for the arrays #m_coeffs and #m_phys. Furthermore, it constructs the
+         * mapping array (contained in #m_locToGloMap) for the transformation
+         * between local elemental level and global level, it calculates the
+         * total number global expansion coefficients \f$\hat{u}_n\f$ and
+         * allocates memory for the array #m_contCoeffs.
          *
+         * @param   graph2D     A mesh, containing information about the domain
+         *                      and the spectral/hp element expansion.  
+         * @param   solnType    Type of global system to use.
          */
         ContField2D::ContField2D(SpatialDomains::MeshGraph2D &graph2D,
                                  const GlobalSysSolnType solnType):
@@ -160,36 +229,6 @@ namespace Nektar
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
                                 ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType);
 
-
-            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
-        }
-
-
-        /**
-         *
-         */
-        ContField2D::ContField2D(SpatialDomains::MeshGraph2D &graph2D,
-                                 SpatialDomains::BoundaryConditions &bcs,
-                                 const int bc_loc,
-                                 const GlobalSysSolnType solnType):
-            DisContField2D(graph2D,bcs,bc_loc,solnType,false),
-            m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
-            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
-        {
-            ApplyGeomInfo(graph2D);
-            
-            map<int,int> periodicEdges;
-            vector<map<int,int> > periodicVertices;
-            GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),
-                             periodicVertices,periodicEdges);
-
-            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
-                                                    m_bndCondExpansions,
-                                                    m_bndConditions,
-                                                    periodicVertices,
-                                                    periodicEdges);
 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
@@ -247,77 +286,17 @@ namespace Nektar
 
 
         /**
-         *
+         * Initialises the object as a copy of an existing ContField2D object.
+         * @param   In          Existing ContField2D object.
          */
-        ContField2D::ContField2D(const LibUtilities::BasisKey &TriBa,
-                                 const LibUtilities::BasisKey &TriBb,
-                                 const LibUtilities::BasisKey &QuadBa,
-                                 const LibUtilities::BasisKey &QuadBb,
-                                 SpatialDomains::MeshGraph2D &graph2D,
-                                 SpatialDomains::BoundaryConditions &bcs,
-                                 const int bc_loc,
-                                 const LibUtilities::PointsType TriNb,
-                                 const GlobalSysSolnType solnType):
-            DisContField2D(graph2D,bcs,bc_loc,solnType,false),
-            m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
-            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
+        ContField2D::ContField2D(const ContField2D &In):
+            DisContField2D(In),
+            m_locToGloMap(In.m_locToGloMap),
+            m_contNcoeffs(In.m_contNcoeffs),
+            m_contCoeffs(m_contNcoeffs,0.0),
+            m_globalMat(In.m_globalMat),
+            m_globalLinSys(In.m_globalLinSys)
         {
-            GenerateBoundaryConditionExpansion(graph2D,bcs,
-                                               bcs.GetVariable(bc_loc));
-            EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph2D);
-            
-            map<int,int> periodicEdges;
-            vector<map<int,int> >periodicVertices;
-            GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),
-                             periodicVertices,periodicEdges);
-
-            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
-                                                    m_bndCondExpansions,
-                                                    m_bndConditions,
-                                                    periodicVertices,
-                                                    periodicEdges);
-
-            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
-        }
-
-
-        /**
-         *
-         */
-        ContField2D::ContField2D(const LibUtilities::BasisKey &TriBa,
-                                 const LibUtilities::BasisKey &TriBb,
-                                 const LibUtilities::BasisKey &QuadBa,
-                                 const LibUtilities::BasisKey &QuadBb,
-                                 SpatialDomains::MeshGraph2D &graph2D,
-                                 SpatialDomains::BoundaryConditions &bcs,
-                                 const std::string variable,
-                                 const LibUtilities::PointsType TriNb,
-                                 const GlobalSysSolnType solnType):
-            DisContField2D(graph2D,bcs,variable,solnType,false),
-            m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
-            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
-        {
-            GenerateBoundaryConditionExpansion(graph2D,bcs,variable);
-            EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph2D);
-            
-            map<int,int> periodicEdges;
-            vector<map<int,int> >periodicVertices;
-            GetPeriodicEdges(graph2D,bcs,variable,
-                             periodicVertices,periodicEdges);
-
-            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
-                                                    m_bndCondExpansions,
-                                                    m_bndConditions,
-                                                    periodicVertices,
-                                                    periodicEdges);
-
-            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
 
@@ -329,6 +308,12 @@ namespace Nektar
         }
 
 
+        /**
+         * For each boundary region, checks that the types and number of 
+         * boundary expansions in that region match.
+         * @param   In          ContField2D to compare with.
+         * @returns True if boundary conditions match.
+         */
         bool ContField2D::SameTypeOfBoundaryConditions(const ContField2D &In)
         {
             int i;
@@ -352,6 +337,7 @@ namespace Nektar
 
             return returnval;
         }
+
 
         /**
          * Given a function \f$f(\boldsymbol{x})\f$ defined at the quadrature
@@ -395,6 +381,18 @@ namespace Nektar
             }
         }
 
+
+        /**
+         * Computes the matrix vector product
+         * @f$ \mathbf{y} = \mathbf{M}^{-1}\mathbf{x} @f$. If \a UseContCoeffs
+         * is set then the elemental system is used directly. If not set, the 
+         * global system is assembled, the system is solved, and mapped back to
+         * the local elemental system. 
+         * 
+         * @param   inarray     Input vector @f$\mathbf{x}@f$.
+         * @param   outarray    Output vector @f$\mathbf{y}@f$.
+         * @param   UseContCoeffs   Flag for using global system.
+         */
         void ContField2D::MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
@@ -533,7 +531,14 @@ namespace Nektar
 
 
         /**
-         *
+         * First compute the inner product of forcing function with respect to
+         * base, and then solve the system with the linear advection operator.
+         * @param   inarray     Forcing function.
+         * @param   outarray    Result.
+         * @param   ax          Advection parameter, x.
+         * @param   ay          Advection parameter, y.
+         * @param   UseContCoeffs   Use continuous coefficients.
+         * @param   dirForcing  Dirichlet Forcing.
          */
         void ContField2D::LinearAdvectionSolve(
                                 const Array<OneD, const NekDouble> &inarray,
@@ -565,7 +570,14 @@ namespace Nektar
 
 
         /**
-         *
+         * Constructs the GlobalLinearSysKey for the linear advection operator
+         * with the supplied parameters, and computes the eigenvectors and
+         * eigenvalues of the associated matrix.
+         * @param   ax          Advection parameter, x.
+         * @param   ay          Advection parameter, y.
+         * @param   Real        Computed eigenvalues, real component.
+         * @param   Imag        Computed eigenvalues, imag component.
+         * @param   Evecs       Computed eigenvectors.
          */
         void ContField2D::LinearAdvectionEigs(const NekDouble ax,
                                               const NekDouble ay,
@@ -664,7 +676,15 @@ namespace Nektar
             }
         }
 
-       GlobalMatrixSharedPtr ContField2D::GetGlobalMatrix(
+
+        /**
+         * Returns the global matrix associated with the given GlobalMatrixKey.
+         * If the global matrix has not yet been constructed on this field, 
+         * it is first constructed using GenGlobalMatrix().
+         * @param   mkey        Global matrix key.
+         * @returns Assocated global matrix.
+         */
+        GlobalMatrixSharedPtr ContField2D::GetGlobalMatrix(
                                 const GlobalMatrixKey &mkey)
         {
             ASSERTL1(mkey.LocToGloMapIsDefined(),
@@ -686,6 +706,7 @@ namespace Nektar
 
             return glo_matrix;
         }
+
 
         /**
          * The function searches the map #m_globalLinSys to see if the
@@ -718,6 +739,10 @@ namespace Nektar
             return glo_matrix;
         }
 
+
+        /**
+         * 
+         */
         void ContField2D::v_FwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
@@ -726,6 +751,10 @@ namespace Nektar
             FwdTrans(inarray,outarray,UseContCoeffs);
         }
 
+
+        /**
+         * 
+         */
         void ContField2D::v_MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
@@ -735,6 +764,14 @@ namespace Nektar
         }
 
 
+        /**
+         * Solve the two-dimensional Helmholtz equation.
+         * @param   inarray     Input forcing function.
+         * @param   outarray    Output solution.
+         * @param   lambda      Coefficient @f$\lambda@f$.
+         * @param   Sigma       Spatially-dependent form of coefficient.
+         * @param   varcoeff    Diffusive coefficient.
+         */
         void ContField2D::v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
@@ -745,6 +782,7 @@ namespace Nektar
             v_HelmSolveCG(inarray, outarray, lambda, Sigma, varcoeff,
                               false, NullNekDouble1DArray);
         }
+
 
         /**
          * Consider the two dimensional Helmholtz equation,
@@ -822,12 +860,20 @@ namespace Nektar
             }            
         }
         
+        
+        /**
+         * 
+         */
         const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>&
                                 ContField2D::v_GetBndConditions()
         {
             return GetBndConditions();
         }
 
+
+        /**
+         * 
+         */
         void ContField2D::v_EvaluateBoundaryConditions(
                                 const NekDouble time)
         {

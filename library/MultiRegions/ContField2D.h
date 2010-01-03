@@ -61,17 +61,23 @@ namespace Nektar
             /// The default constructor.
             ContField2D();
 
+            /// Construct a global continuous field based on an input mesh with
+            /// boundary conditions.
             ContField2D(SpatialDomains::MeshGraph2D &graph2D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0,
                         const GlobalSysSolnType solnType
                                                 = eDirectMultiLevelStaticCond);
 
+            /// Construct a global continuous field with solution type based on
+            /// another field but using a separate input mesh and boundary 
+            /// conditions.
             ContField2D(const ContField2D &In,
                         SpatialDomains::MeshGraph2D &graph2D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0);
 
+            /// Construct a global continuous field based on an input mesh.
             ContField2D(SpatialDomains::MeshGraph2D &graph2D,
                         const GlobalSysSolnType solnType
                                                 = eDirectMultiLevelStaticCond);
@@ -84,30 +90,6 @@ namespace Nektar
                         const GlobalSysSolnType solnType
                                                 = eDirectMultiLevelStaticCond);
 
-            ContField2D(const LibUtilities::BasisKey &TriBa,
-                        const LibUtilities::BasisKey &TriBb,
-                        const LibUtilities::BasisKey &QuadBa,
-                        const LibUtilities::BasisKey &QuadBb,
-                        SpatialDomains::MeshGraph2D &graph2D,
-                        SpatialDomains::BoundaryConditions &bcs,
-                        const int bc_loc = 0,
-                        const LibUtilities::PointsType
-                        TriNb = LibUtilities::SIZE_PointsType,
-                        const GlobalSysSolnType solnType
-                                                = eDirectMultiLevelStaticCond);
-
-            ContField2D(const LibUtilities::BasisKey &TriBa,
-                        const LibUtilities::BasisKey &TriBb,
-                        const LibUtilities::BasisKey &QuadBa,
-                        const LibUtilities::BasisKey &QuadBb,
-                        SpatialDomains::MeshGraph2D &graph2D,
-                        SpatialDomains::BoundaryConditions &bcs,
-                        const std::string variable,
-                        const LibUtilities::PointsType
-                        TriNb = LibUtilities::SIZE_PointsType,
-                        const GlobalSysSolnType solnType
-                                                = eDirectMultiLevelStaticCond);
-
             /// The copy constructor.
             ContField2D(const ContField2D &In);
 
@@ -115,6 +97,8 @@ namespace Nektar
             ~ContField2D();
 
 
+            /// Determines if another ContField2D shares the same boundary
+            /// conditions as this field.
             bool SameTypeOfBoundaryConditions(const ContField2D &In);
 
 
@@ -191,6 +175,7 @@ namespace Nektar
                                   Array<OneD,       NekDouble> &outarray,
                                   bool  UseContCoeffs = false);
 
+            /// Multiply a solution by the inverse mass matrix.
             void MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,  NekDouble> &outarray,
@@ -217,6 +202,7 @@ namespace Nektar
                                       const Array<OneD, const NekDouble>&
                                             dirForcing = NullNekDouble1DArray);
 
+            /// Compute the eigenvalues of the linear advection operator.
             void LinearAdvectionEigs(const NekDouble ax,
                                      const NekDouble ay,
                                      Array<OneD, NekDouble> &Real,
@@ -231,6 +217,7 @@ namespace Nektar
             inline const Array<OneD,const MultiRegions::ExpList1DSharedPtr>&
                                                         GetBndCondExpansions();
 
+            /// Returns the boundary conditions.
             inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>&
                                                         GetBndConditions();
 
@@ -273,11 +260,6 @@ namespace Nektar
             GlobalLinSysMapShPtr            m_globalLinSys;
 
 
-            GlobalMatrixSharedPtr GetGlobalMatrix(const GlobalMatrixKey &mkey);
-
-            /// Returns the linear system specified by the key \a mkey.
-            GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
-
             /// Solves the linear system specified by the key \a key.
             void GlobalSolve(const GlobalLinSysKey &key,
                              const Array<OneD, const  NekDouble> &rhs,
@@ -285,11 +267,19 @@ namespace Nektar
                              const Array<OneD, const NekDouble> &dirForcing
                                                         = NullNekDouble1DArray);
 
+            /// Returns the global matrix specified by \a mkey.
+            GlobalMatrixSharedPtr GetGlobalMatrix(const GlobalMatrixKey &mkey);
+
+            /// Returns the linear system specified by the key \a mkey.
+            GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
+
+            /// Template method virtual forwarder for FwdTrans().
             virtual void v_FwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
                                 bool  UseContCoeffs);
 
+            /// Template method virtual forwarder for MultiplyByInvMassMatrix().
             virtual void v_MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
@@ -316,9 +306,12 @@ namespace Nektar
                           bool UseContCoeffs,
                     const Array<OneD, const NekDouble> &dirForcing);
 
+            /// Template method virtual forwarder for GetBndConditions().
             virtual const Array<OneD,const SpatialDomains
                                 ::BoundaryConditionShPtr>& v_GetBndConditions();
 
+            /// Template method virtual forwarder for 
+            /// EvaluateBoundaryConditions().
             virtual void v_EvaluateBoundaryConditions(
                                 const NekDouble time = 0.0);
         };

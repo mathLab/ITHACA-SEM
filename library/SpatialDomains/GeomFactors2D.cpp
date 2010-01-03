@@ -888,7 +888,7 @@ namespace Nektar
         void GeomFactors2D::v_SetUpQuadratureMetrics(StdRegions::ExpansionType shape,
                                                    const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
-            ASSERTL1(tbasis.num_elements() == m_expdim,"Inappropriate dimension of tbasis");
+            ASSERTL1(tbasis.num_elements() == mExpDim,"Inappropriate dimension of tbasis");
 
             int i;
             int nquad0 = mPointsKey[0].GetNumPoints();
@@ -976,7 +976,7 @@ namespace Nektar
         void GeomFactors2D::v_SetUpLaplacianMetrics(StdRegions::ExpansionType shape,
                                                   const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
-            ASSERTL1(tbasis.num_elements() == m_expdim,"Inappropriate dimension of tbasis");
+            ASSERTL1(tbasis.num_elements() == mExpDim,"Inappropriate dimension of tbasis");
             ASSERTL1((mCoordDim == 2)||(mCoordDim <= 3),
                      "The coordinate dimension should be equal to two or three"
                      "for two-dimensional elements");

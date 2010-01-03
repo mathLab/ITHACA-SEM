@@ -134,11 +134,11 @@ namespace Nektar
                         const Array<OneD, Array<OneD, NekDouble> > d2,
                         const Array<OneD, Array<OneD, NekDouble> > d3)
         {
-            ASSERTL1(d1.num_elements()==m_coordim,"The dimension of array d1 does not"
+            ASSERTL1(d1.num_elements()==mCoordDim,"The dimension of array d1 does not"
                      "match the coordinate dimension");
-            ASSERTL1(d2.num_elements()==m_coordim,"The dimension of array d2 does not"
+            ASSERTL1(d2.num_elements()==mCoordDim,"The dimension of array d2 does not"
                      "match the coordinate dimension");
-            ASSERTL1(d3.num_elements()==m_coordim,"The dimension of array d3 does not"
+            ASSERTL1(d3.num_elements()==mCoordDim,"The dimension of array d3 does not"
                      "match the coordinate dimension");
 
             int nqtot = mPointsKey[0].GetNumPoints() *

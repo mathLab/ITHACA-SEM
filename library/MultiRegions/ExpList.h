@@ -277,17 +277,26 @@ namespace Nektar
 
             /// Apply geometry information to each expansion.
             void ApplyGeomInfo(SpatialDomains::MeshGraph &graph);
-            
+
             /// This function writes the spectral/hp element solution to the
             /// file \a out.
             void WriteToFile(std::ofstream &out,
                                 OutputFormat format = eTecplot,
                                 std::string var = "v");
 
-	    void WriteTecplotHeader(std::ofstream &outfile, std::string var = "v");
-	    void WriteTecplotZone(std::ofstream &outfile, int expansion);
-	    void WriteTecplotField(std::ofstream &outfile, int expansion);
-	    
+            void WriteTecplotHeader(std::ofstream &outfile,
+                                std::string var = "v");
+
+            void WriteTecplotZone(std::ofstream &outfile, int expansion);
+            void WriteTecplotField(std::ofstream &outfile, int expansion);
+
+            void WriteVtkHeader(std::ofstream &outfile);
+            void WriteVtkFooter(std::ofstream &outfile);
+            void WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
+            void WriteVtkPieceFooter(std::ofstream &outfile, int expansion);
+            void WriteVtkPieceData  (std::ofstream &outfile, int expansion,
+                                     std::string var = "v");
+
             void ReadFromFile(std::ifstream &in,
                                 OutputFormat format = eTecplot);
 
@@ -1253,6 +1262,17 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.83  2009/12/15 18:09:02  cantwell
+* Split GeomFactors into 1D, 2D and 3D
+* Added generation of tangential basis into GeomFactors
+* Updated ADR2DManifold solver to use GeomFactors for tangents
+* Added <GEOMINFO> XML session section support in MeshGraph
+* Fixed const-correctness in VmathArray
+* Cleaned up LocalRegions code to generate GeomFactors
+* Removed GenSegExp
+* Temporary fix to SubStructuredGraph
+* Documentation for GlobalLinSys and GlobalMatrix classes
+*
 * Revision 1.82  2009/12/14 18:01:08  cbiotto
 * Adding functions for printing out tecplot file
 *

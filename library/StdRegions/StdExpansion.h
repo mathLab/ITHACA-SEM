@@ -769,10 +769,13 @@ namespace Nektar
                 v_WriteToFile(outfile,format,dumpVar,var);
             }
 
-	    void WriteTecplotZone(std::ofstream &outfile);
-	    
-	    void WriteTecplotField(std::ofstream &outfile);
+            void WriteTecplotZone(std::ofstream &outfile);
 
+            void WriteTecplotField(std::ofstream &outfile);
+
+            void WriteVtkPieceHeader(std::ofstream &outfile);
+            void WriteVtkPieceFooter(std::ofstream &outfile);
+            void WriteVtkPieceData  (std::ofstream &outfile, std::string var);
                 
             void ReadFromFile(std::ifstream &in, OutputFormat format, const bool dumpVar = true)
             {
@@ -939,10 +942,10 @@ namespace Nektar
             {
                 v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
             }
-	    
-	    boost::shared_ptr<StdExpansion1D> GetEdgeExp(int edge, bool SetUpNormals=true)
+        
+        boost::shared_ptr<StdExpansion1D> GetEdgeExp(int edge, bool SetUpNormals=true)
             {
-	      return v_GetEdgeExp(edge,SetUpNormals);
+          return v_GetEdgeExp(edge,SetUpNormals);
             }
 
             // Matrix Routines
@@ -1490,7 +1493,7 @@ namespace Nektar
 
             virtual void v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion1D>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 
-	        virtual boost::shared_ptr<StdExpansion1D> v_GetEdgeExp(const int edge, bool SetUpNormals=true);
+            virtual boost::shared_ptr<StdExpansion1D> v_GetEdgeExp(const int edge, bool SetUpNormals=true);
 
             virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
 
@@ -1573,6 +1576,9 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.126  2009/12/14 18:02:55  cbiotto
+ * Adding functions for tecplot file
+ *
  * Revision 1.125  2009/11/10 19:01:37  sehunchun
  * Update related to Variable coefficients of HDG2D Solver
  *

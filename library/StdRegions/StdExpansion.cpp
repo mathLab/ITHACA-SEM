@@ -597,10 +597,10 @@ namespace Nektar
 
             v_BwdTrans(inarray,tmp);       
 
-	    if(mkey.GetNvariableCoefficients() > 0)
-	      {
-	         Vmath::Vmul(nq, mkey.GetVariableCoefficient(), 1, tmp, 1, tmp, 1);
-	      }
+        if(mkey.GetNvariableCoefficients() > 0)
+          {
+             Vmath::Vmul(nq, mkey.GetVariableCoefficient(), 1, tmp, 1, tmp, 1);
+          }
      
             v_IProductWRTBase(tmp, outarray);
         }
@@ -794,8 +794,8 @@ namespace Nektar
 
           // weight = \grad \cdot tanvec
           for(int k=0; k<dim; ++k)
-	  {
-	    Vmath::Vcopy(nqtot,&(mkey.GetVariableCoefficient(0))[k*nqtot],1,&tan[0],1);
+      {
+        Vmath::Vcopy(nqtot,&(mkey.GetVariableCoefficient(0))[k*nqtot],1,&tan[0],1);
               
               // For Regular mesh ...
               if(gmatnumber==1)
@@ -821,9 +821,9 @@ namespace Nektar
               {
                   ASSERTL1( ((gmatnumber=1) || (gmatnumber==nqtot) ), "Gmat is not in a right size");
               }
-	  }
+      }
           
-          Vmath::Vmul(nqtot, &weight[0], 1, &tmp[0], 1, &tmp[0], 1);	
+          Vmath::Vmul(nqtot, &weight[0], 1, &tmp[0], 1, &tmp[0], 1);    
           v_IProductWRTBase(tmp, outarray);
       }
 
@@ -896,31 +896,31 @@ namespace Nektar
 
      void StdExpansion::WriteTecplotZone(std::ofstream &outfile)
       {
-	int i,j;
+    int i,j;
 
-	int coordim  = GetCoordim();
+    int coordim  = GetCoordim();
 
-	int nquad0 = GetNumPoints(0);
-	int nquad1 = GetNumPoints(1);
-	
-	Array<OneD,NekDouble> coords[3];
+    int nquad0 = GetNumPoints(0);
+    int nquad1 = GetNumPoints(1);
+    
+    Array<OneD,NekDouble> coords[3];
         
-	coords[0] = Array<OneD,NekDouble>(nquad0*nquad1);
-	coords[1] = Array<OneD,NekDouble>(nquad0*nquad1);
-	coords[2] = Array<OneD,NekDouble>(nquad0*nquad1);
+    coords[0] = Array<OneD,NekDouble>(nquad0*nquad1);
+    coords[1] = Array<OneD,NekDouble>(nquad0*nquad1);
+    coords[2] = Array<OneD,NekDouble>(nquad0*nquad1);
         
-	GetCoords(coords[0],coords[1],coords[2]);
+    GetCoords(coords[0],coords[1],coords[2]);
 
-	outfile << "Zone, I=" << nquad0 << ", J=" << nquad1 <<", F=Block" << std::endl;
+    outfile << "Zone, I=" << nquad0 << ", J=" << nquad1 <<", F=Block" << std::endl;
 
-	for(j = 0; j < coordim; ++j)
-	  {
-	    for(i = 0; i < nquad0*nquad1; ++i)
-	      {
-		outfile << coords[j][i] << " ";
-	      }
-	    outfile << std::endl;
-	  }
+    for(j = 0; j < coordim; ++j)
+      {
+        for(i = 0; i < nquad0*nquad1; ++i)
+          {
+        outfile << coords[j][i] << " ";
+          }
+        outfile << std::endl;
+      }
 
       }
 
@@ -929,7 +929,7 @@ namespace Nektar
         int i;
 
         int nquad0 = GetNumPoints(0);
-        int nquad1 = GetNumPoints(1);	
+        int nquad1 = GetNumPoints(1);   
 
         // printing the fields of that zone
         for(i = 0; i < nquad0*nquad1; ++i)
@@ -937,8 +937,99 @@ namespace Nektar
             outfile << m_phys[i] << " ";
         }
         outfile << std::endl;
-	
-	}
+    
+    }
+
+        void StdExpansion::WriteVtkPieceHeader(std::ofstream &outfile)
+        {
+            int i,j;
+            int coordim  = GetCoordim();
+            int nquad0 = GetNumPoints(0);
+            int nquad1 = GetNumPoints(1);
+
+            Array<OneD,NekDouble> coords[3];
+            coords[0] = Array<OneD,NekDouble>(nquad0*nquad1);
+            coords[1] = Array<OneD,NekDouble>(nquad0*nquad1);
+            coords[2] = Array<OneD,NekDouble>(nquad0*nquad1);
+            GetCoords(coords[0],coords[1],coords[2]);
+
+            outfile << "    <Piece NumberOfPoints=\""
+                    << nquad0*nquad1 << "\" NumberOfCells=\""
+                    << (nquad0-1)*(nquad1-1) << "\">" << endl;
+            outfile << "      <Points>" << endl;
+            outfile << "        <DataArray type=\"Float32\" "
+                    << "NumberOfComponents=\"3\" format=\"ascii\">" << endl;
+            outfile << "          ";
+            for (i = 0; i < nquad0*nquad1; ++i)
+            {
+                for (j = 0; j < 3; ++j)
+                {
+                    outfile << coords[j][i] << " ";
+                }
+                outfile << endl;
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "      </Points>" << endl;
+            outfile << "      <Cells>" << endl;
+            outfile << "        <DataArray type=\"Int32\" "
+                    << "Name=\"connectivity\" format=\"ascii\">" << endl;
+            for (i = 0; i < nquad0-1; ++i)
+            {
+                for (j = 0; j < nquad1-1; ++j)
+                {
+                    outfile << j*nquad0 + i << " "
+                            << j*nquad0 + i + 1 << " "
+                            << (j+1)*nquad0 + i + 1 << " "
+                            << (j+1)*nquad0 + i << endl;
+                }
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "        <DataArray type=\"Int32\" "
+                    << "Name=\"offsets\" format=\"ascii\">" << endl;
+            for (i = 0; i < (nquad0-1)*(nquad1-1); ++i)
+            {
+                outfile << i*4+4 << " ";
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "        <DataArray type=\"UInt8\" "
+                    << "Name=\"types\" format=\"ascii\">" << endl;
+            for (i = 0; i < (nquad0-1)*(nquad1-1); ++i)
+            {
+                outfile << "9 ";
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "      </Cells>" << endl;
+            outfile << "      <PointData>" << endl;
+        }
+
+        void StdExpansion::WriteVtkPieceFooter(std::ofstream &outfile)
+        {
+            outfile << "      </PointData>" << endl;
+            outfile << "    </Piece>" << endl;
+        }
+
+        void StdExpansion::WriteVtkPieceData  (std::ofstream &outfile,
+                                               std::string var)
+        {
+            int i;
+            int nquad0 = GetNumPoints(0);
+            int nquad1 = GetNumPoints(1);
+
+            // printing the fields of that zone
+            outfile << "        <DataArray type=\"Float32\" Name=\"" 
+                    << var << "\">" << endl;
+            outfile << "          ";
+            for(i = 0; i < nquad0*nquad1; ++i)
+            {
+                outfile << m_phys[i] << " ";
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+        }
 
 
 // VIRTUAL INLINE FUNCTIONS FROM HEADER FILE
@@ -1534,6 +1625,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.93  2009/12/18 00:11:03  bnelson
+* Fixed windows compiler warnings.
+*
 * Revision 1.92  2009/12/14 18:03:18  cbiotto
 * Adding functions for tecplot file
 *

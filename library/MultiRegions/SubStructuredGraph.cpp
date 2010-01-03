@@ -35,6 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/SubStructuredGraph.h>
+#include <LibUtilities/BasicUtils/Metis.hpp>
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/cuthill_mckee_ordering.hpp>
@@ -889,6 +890,9 @@ namespace Nektar
 
 /**
  * $Log: SubStructuredGraph.cpp,v $
+ * Revision 1.6  2009/12/21 17:50:09  cantwell
+ * Restored CutEmptyLeaves calls.
+ *
  * Revision 1.5  2009/12/15 18:09:03  cantwell
  * Split GeomFactors into 1D, 2D and 3D
  * Added generation of tangential basis into GeomFactors

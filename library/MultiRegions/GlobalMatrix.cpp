@@ -33,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <LibUtilities/LinearAlgebra/SparseBlas.hpp>
+
 #include <MultiRegions/GlobalMatrix.h>
 
 namespace Nektar

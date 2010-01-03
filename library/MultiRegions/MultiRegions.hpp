@@ -36,16 +36,14 @@
 #ifndef MULTIREGIONS_H
 #define MULTIREGIONS_H
 
-#include <LocalRegions/LocalRegions.hpp>
+//#include <LocalRegions/LocalRegions.hpp>
 #include <vector>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
-#include <LibUtilities/LinearAlgebra/NekVector.hpp>
-#include <LibUtilities/LinearAlgebra/SparseBlas.hpp>
+//#include <LibUtilities/Memory/NekMemoryManager.hpp>
+//#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+//#include <LibUtilities/LinearAlgebra/NekVector.hpp>
+//#include <LibUtilities/LinearAlgebra/SparseBlas.hpp>
 #include <SpatialDomains/BoundaryConditions.h>
-#include <LibUtilities/BasicUtils/Metis.hpp>
-//#include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
-//#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+//#include <LibUtilities/BasicUtils/Metis.hpp>
 
 
 namespace Nektar

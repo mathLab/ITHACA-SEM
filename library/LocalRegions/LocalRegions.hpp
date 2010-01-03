@@ -36,8 +36,6 @@
 #define LOCALREGIONS_H
 
 #include <string>
-#include <StdRegions/StdRegions.hpp>
-#include <SpatialDomains/SpatialDomains.hpp>
 
 namespace Nektar
 {    
@@ -88,6 +86,10 @@ namespace Nektar
 
 /** 
 *    $Log: LocalRegions.hpp,v $
+*    Revision 1.6  2009/11/11 14:56:12  cantwell
+*    Moved detailed connectivity documentation out of code.
+*    Updated MultiRegions documentation.
+*
 *    Revision 1.5  2008/09/09 15:05:09  sherwin
 *    Updates related to cuved geometries. Normals have been removed from m_metricinfo and replaced with a direct evaluation call. Interp methods have been moved to LibUtilities
 *

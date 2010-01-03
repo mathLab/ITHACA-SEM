@@ -57,7 +57,7 @@ namespace Nektar
         class GlobalLinSys
         {
         public:
-            ///
+            /// Constructor for static condensation solutions.
             GlobalLinSys(const GlobalLinSysKey &mkey,
                          const DNekScalBlkMatSharedPtr SchurCompl,
                          const DNekScalBlkMatSharedPtr BinvD,
@@ -65,7 +65,7 @@ namespace Nektar
                          const DNekScalBlkMatSharedPtr invD,
                          const LocalToGlobalBaseMapSharedPtr &locToGloMap);
 
-            ///
+            /// Constructor for full direct matrix solve.
             GlobalLinSys(const GlobalLinSysKey &mkey,
                          const DNekScalBlkMatSharedPtr Mat,
                          const boost::shared_ptr<LocalToGlobalC0ContMap>
@@ -105,7 +105,7 @@ namespace Nektar
             /// Schur complement for Direct Static Condensation.
             GlobalLinSysSharedPtr m_recursiveSchurCompl;
 
-            ///
+            /// Solve a linear system stored in full matrix form.
             void SolveDirectFullMatrix(
                         const Array<OneD, const NekDouble>    &in,
                               Array<OneD,       NekDouble>    &out,
@@ -114,7 +114,7 @@ namespace Nektar
                         const Array<OneD, const NekDouble>    &dirForcing
                                                         = NullNekDouble1DArray);
 
-            ///
+            /// Solve a linear system stored in static condensed form.
             void SolveDirectStaticCond(
                         const Array<OneD, const NekDouble>   &in,
                               Array<OneD,       NekDouble>   &out,
@@ -122,11 +122,11 @@ namespace Nektar
                         const Array<OneD, const NekDouble>   &dirForcing 
                                                         = NullNekDouble1DArray);
 
-            ///
+            /// Assemble the Schur complement matrix.
             void AssembleSchurComplement(
                         const LocalToGlobalBaseMapSharedPtr& locToGloMap);
 
-            ///
+            /// Assemble the full matrix.
             void AssembleFullMatrix(
                         const boost::shared_ptr<LocalToGlobalC0ContMap>&
                                                                    locToGloMap);

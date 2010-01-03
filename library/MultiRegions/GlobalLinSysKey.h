@@ -43,123 +43,156 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        /// Describe a linear system.
         class GlobalLinSysKey
         {
         public:
+            /// Linear system with no parameters.
             GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                             const GlobalSysSolnType solnType);
-
+            /// Linear system with variable coefficients
             GlobalLinSysKey(const StdRegions::MatrixType matrixType,
-                            const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                            const Array<OneD,Array<OneD,NekDouble> >& varcoeffs,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                             const GlobalSysSolnType solnType);
-
+            /// Linear system with a single real factor.
             GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                             const NekDouble factor,
                             const GlobalSysSolnType solnType);
-
+            /// Linear system with two real factors.
             GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                             const NekDouble factor1,
                             const NekDouble factor2,
                             const GlobalSysSolnType solnType);
-
-            GlobalLinSysKey(const StdRegions::MatrixType matrixType,
-                            const LocalToGlobalBaseMapSharedPtr &locToGloMap,
-                            const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                            const GlobalSysSolnType solnType);
-
+            /// Linear system with a real factor and variable coefficients.
             GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                             const NekDouble factor,
-                            const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                            const Array<OneD,Array<OneD,NekDouble> >& varcoeffs,
                             const GlobalSysSolnType solnType);
-
+            /// Linear system with two real factors and variable coefficients.
             GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                             const NekDouble factor1,
                             const NekDouble factor2, 
-                            const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                            const Array<OneD,Array<OneD,NekDouble> >& varcoeffs,
                             const GlobalSysSolnType solnType);
-
+            /// Linear system with an array of real factors, a second real
+            /// factor and variable coefficients.
             GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                             const Array<OneD,NekDouble> &factor1,
                             const NekDouble factor2, 
-                            const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
+                            const Array<OneD,Array<OneD,NekDouble> >& varcoeffs,
                             const GlobalSysSolnType solnType);
-
+            /// Copy constructor.
             GlobalLinSysKey(const GlobalLinSysKey &key);
+            /// Destructor.
+            ~GlobalLinSysKey();
 
-            ~GlobalLinSysKey()
-            {
-            }
-
+            /// Less-than operator for GlobalLinSysKey comparison.
             friend bool operator<(const GlobalLinSysKey &lhs, 
                                   const GlobalLinSysKey &rhs);
-
-            inline const GlobalMatrixKeySharedPtr& GetGlobalMatrixKey() const
-            {
-                return m_globMatKey;
-            }
-
-            inline const StdRegions::MatrixType GetMatrixType() const
-            {
-                return m_globMatKey->GetMatrixType(); 
-            }
-
-            inline const GlobalSysSolnType  GetGlobalSysSolnType() const
-            {
-                return m_solnType; 
-            }
-
-            inline const bool LocToGloMapIsDefined(void) const
-            {
-                return m_globMatKey->LocToGloMapIsDefined();
-            }
-            
-            inline int GetNconstants() const
-            {
-                return m_globMatKey->GetNconstants();
-            }
-
-            inline NekDouble GetConstant(int i) const
-            {
-                return m_globMatKey->GetConstant(i);
-            }
-
-            inline const Array<OneD,NekDouble>& GetConstants() const
-            {         
-                return m_globMatKey->GetConstants();
-            }
-
-            inline int GetNvariableCoefficients() const
-            {
-                return m_globMatKey->GetNvariableCoefficients();
-            }
-
-            inline const Array<OneD,NekDouble>& GetVariableCoefficient(int i) const
-            {
-                return m_globMatKey->GetVariableCoefficient(i);
-            }
-
-            inline const Array<OneD, Array<OneD,NekDouble> >& GetVariableCoefficients() const
-            {       
-                return m_globMatKey->GetVariableCoefficients();
-            }
+            /// Return the associated global matrix key.
+            inline const GlobalMatrixKeySharedPtr& GetGlobalMatrixKey() const;
+            /// Return the type of the associated matrix.
+            inline const StdRegions::MatrixType GetMatrixType() const;
+            /// Return the associated solution type.
+            inline const GlobalSysSolnType  GetGlobalSysSolnType() const;
+            /// Determine if a local to global mapping exists.
+            inline const bool LocToGloMapIsDefined(void) const;
+            /// Return the number of constants.
+            inline int GetNconstants() const;
+            /// Retrieve a specific constant.
+            inline NekDouble GetConstant(int i) const;
+            /// Retrieve the vector of constants.
+            inline const Array<OneD,NekDouble>& GetConstants() const;
+            /// Returns the number of variable coefficients.
+            inline int GetNvariableCoefficients() const;
+            /// Retrieve a particular variable coefficient.
+            inline const Array<OneD,NekDouble>& 
+                                            GetVariableCoefficient(int i) const;
+            /// Retrieve the array of variable coefficients.
+            inline const Array<OneD, Array<OneD,NekDouble> >& 
+                                            GetVariableCoefficients() const;
 
         protected:
+            /// Default constructor.
             GlobalLinSysKey(); 
 
+            /// Store the solution type associated with the linear system. This
+            /// may be none, full matrix, static condensation or multi-level
+            /// static condensation.
             GlobalSysSolnType        m_solnType;
+            
+            /// Stores a shared pointer to the associated global matrix key.
             GlobalMatrixKeySharedPtr m_globMatKey;
             
         private:
+        
         };
 
+        /// Writes information about the object to a given stream.
         std::ostream& operator<<(std::ostream& os, const GlobalLinSysKey& rhs);
+
+        inline const GlobalMatrixKeySharedPtr& 
+                                    GlobalLinSysKey::GetGlobalMatrixKey() const
+        {
+            return m_globMatKey;
+        }
+
+        inline const StdRegions::MatrixType GlobalLinSysKey::GetMatrixType() 
+                                                                        const
+        {
+            return m_globMatKey->GetMatrixType(); 
+        }
+
+        inline const GlobalSysSolnType GlobalLinSysKey::GetGlobalSysSolnType() 
+                                                                        const
+        {
+            return m_solnType; 
+        }
+
+        inline const bool GlobalLinSysKey::LocToGloMapIsDefined(void) const
+        {
+            return m_globMatKey->LocToGloMapIsDefined();
+        }
+
+        inline int GlobalLinSysKey::GetNconstants() const
+        {
+            return m_globMatKey->GetNconstants();
+        }
+
+        inline NekDouble GlobalLinSysKey::GetConstant(int i) const
+        {
+            return m_globMatKey->GetConstant(i);
+        }
+
+        inline const Array<OneD,NekDouble>& GlobalLinSysKey::GetConstants() 
+                                                                        const
+        {         
+            return m_globMatKey->GetConstants();
+        }
+
+        inline int GlobalLinSysKey::GetNvariableCoefficients() const
+        {
+            return m_globMatKey->GetNvariableCoefficients();
+        }
+
+        inline const Array<OneD,NekDouble>& 
+                        GlobalLinSysKey::GetVariableCoefficient(int i) const
+        {
+            return m_globMatKey->GetVariableCoefficient(i);
+        }
+
+        inline const Array<OneD, Array<OneD,NekDouble> >& 
+                        GlobalLinSysKey::GetVariableCoefficients() const
+        {       
+            return m_globMatKey->GetVariableCoefficients();
+        }
 
     } // end of namespace
 } // end of namespace
@@ -168,6 +201,9 @@ namespace Nektar
 
 /**
 * $Log: GlobalLinSysKey.h,v $
+* Revision 1.13  2009/11/25 17:15:45  sehunchun
+* Add a function when factor1 is a vector
+*
 * Revision 1.12  2009/11/07 21:11:30  sehunchun
 * Variable coefficients parameters are added
 *

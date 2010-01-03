@@ -51,27 +51,34 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        /// Abstraction of a global discontinuous three-dimensional spectral/hp
+        /// element expansion which approximates the solution of a set of
+        /// partial differential equations.
         class DisContField3D: public ExpList3D
         {
         public:
+            /// Default constructor
             DisContField3D();
-
+            /// Constructs a global discontinuous field based on an input mesh
+            /// with boundary conditions.
             DisContField3D(SpatialDomains::MeshGraph3D &graph3D,
                            SpatialDomains::BoundaryConditions &bcs,
                            const int bc_loc = 0,
                            bool SetUpJustDG = true);
-
+            /// Constructs a global discontinuous field based on an input mesh
+            /// with boundary conditions.
             DisContField3D(SpatialDomains::MeshGraph3D &graph3D,
                            SpatialDomains::BoundaryConditions &bcs,
                            const std::string variable,
                            bool SetUpJustDG = true);
-
+            /// Constructs a global discontinuous field based on an input mesh.
             DisContField3D(SpatialDomains::MeshGraph3D &graph3D,
                           const GlobalSysSolnType solnType = eDirectStaticCond,
                           const bool constructMap = true);
-
+            /// Constructs a global discontinuous field based on another
+            /// discontinuous field.
             DisContField3D(const DisContField3D &In);
-
+            /// Destructor.
             ~DisContField3D();
 
         };

@@ -45,7 +45,26 @@ namespace Nektar
          */
 
         /**
-         *
+         * For a matrix system of the form @f[
+         * \left[ \begin{array}{cc}
+         * \boldsymbol{A} & \boldsymbol{B}\\
+         * \boldsymbol{C} & \boldsymbol{D}
+         * \end{array} \right]
+         * \left[ \begin{array}{c} \boldsymbol{x_1}\\ \boldsymbol{x_2}
+         * \end{array}\right]
+         * = \left[ \begin{array}{c} \boldsymbol{y_1}\\ \boldsymbol{y_2}
+         * \end{array}\right],
+         * @f]
+         * where @f$\boldsymbol{D}@f$ and 
+         * @f$(\boldsymbol{A-BD^{-1}C})@f$ are invertible, store and assemble 
+         * a static condensation system, according to a given local to global
+         * mapping. #m_linSys is constructed by AssembleSchurComplement().
+         * @param   mKey        Associated matrix key.
+         * @param   SchurCompl  @f$(\boldsymbol{A-BD^{-1}C})@f$
+         * @param   BinvD       @f$\boldsymbol{BD^{-1}}@f$
+         * @param   C           @f$\boldsymbol{C}@f$
+         * @param   invD        @f$\boldsymbol{D^{-1}}@f$
+         * @param   locToGloMap Local to global mapping.
          */
         GlobalLinSys::GlobalLinSys(
                         const GlobalLinSysKey &mkey,
@@ -86,7 +105,12 @@ namespace Nektar
 
 
         /**
-         *
+         * Given a block matrix, construct a global matrix system according to
+         * a local to global mapping. #m_linSys is constructed by
+         * AssembleFullMatrix().
+         * @param   mkey        Associated linear system key.
+         * @param   Mat         Block matrix.
+         * @param   locToGloMap Local to global mapping.
          */
         GlobalLinSys::GlobalLinSys(
                         const GlobalLinSysKey &mkey,
@@ -120,7 +144,12 @@ namespace Nektar
 
 
         /**
-         *
+         * Solves a linear system \f$ Ax=b \f$, subject to Dirichlet forcing
+         * using the given local to global mapping.
+         * @param   in          Input vector, \f$ b \f$.
+         * @param   out         Solution vector, \f$ x \f$.
+         * @param   locToGloMap Local to global mapping.
+         * @param   dirForcing  Dirichlet forcing.
          */
         void GlobalLinSys::Solve(
                             const Array<OneD, const NekDouble>  &in,
@@ -171,7 +200,11 @@ namespace Nektar
 
 
         /**
-         *
+         * Solves a linear system in full matrix form.
+         * @param   in          Input vector, \f$ b \f$.
+         * @param   out         Solution vector, \f$ x \f$.
+         * @param   locToGloMap Local to global mapping.
+         * @param   dirForcing  Dirichlet forcing.
          */
         void GlobalLinSys::SolveDirectFullMatrix(
                             const Array<OneD, const NekDouble>    &in,
@@ -220,6 +253,13 @@ namespace Nektar
         }
 
 
+        /**
+         * Solves a linear system in static condensed form.
+         * @param   in          Input vector, \f$ b \f$.
+         * @param   out         Solution vector, \f$ x \f$.
+         * @param   locToGloMap Local to global mapping.
+         * @param   dirForcing  Dirichlet forcing.
+         */
         void GlobalLinSys::SolveDirectStaticCond(
                         const Array<OneD, const NekDouble>  &in,
                               Array<OneD,       NekDouble>  &out,
@@ -330,6 +370,12 @@ namespace Nektar
             }
         }
 
+
+        /**
+         * Assemble a full matrix from the block matrix stored in
+         * #m_blkMatrices and the given local to global mapping information.
+         * @param   locToGloMap Local to global mapping information.
+         */
         void GlobalLinSys::AssembleFullMatrix(
                         const LocalToGlobalC0ContMapSharedPtr& locToGloMap)
         {
@@ -430,6 +476,12 @@ namespace Nektar
             }
         }
 
+
+        /**
+         * Assemble the schur complement matrix from the block matrices stored 
+         * in #m_blkMatrices and the given local to global mapping information.
+         * @param   locToGloMap Local to global mapping information.
+         */
         void GlobalLinSys::AssembleSchurComplement(
                         const LocalToGlobalBaseMapSharedPtr &locToGloMap)
         {
@@ -532,7 +584,8 @@ namespace Nektar
         /**
          *
          */
-        void GlobalLinSys::ConstructNextLevelCondensedSystem(const LocalToGlobalBaseMapSharedPtr& locToGloMap)
+        void GlobalLinSys::ConstructNextLevelCondensedSystem(
+                        const LocalToGlobalBaseMapSharedPtr& locToGloMap)
         {
             int i,j,n,cnt;
             NekDouble one  = 1.0;
@@ -698,8 +751,13 @@ namespace Nektar
                 AllocateSharedPtr(m_linSysKey,blkMatrices[0],blkMatrices[1],blkMatrices[2],blkMatrices[3],locToGloMap);
         }
 
-        void GlobalLinSys::ConstructCondensedBlockMatrices(const DNekScalBlkMatSharedPtr        schurComplOld,
-                                                           const LocalToGlobalBaseMapSharedPtr& locToGloMap)
+
+        /**
+         * 
+         */
+        void GlobalLinSys::ConstructCondensedBlockMatrices(
+                        const DNekScalBlkMatSharedPtr        schurComplOld,
+                        const LocalToGlobalBaseMapSharedPtr& locToGloMap)
         {
             int i,j,n,cnt;
             NekDouble one  = 1.0;

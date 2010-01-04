@@ -9,9 +9,7 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    int     i, j, nq,  coordim;
-    Array<OneD,NekDouble>  fce;
-    Array<OneD,NekDouble>  xc0,xc1,xc2;
+    int i,j;
 
     if(argc != 3)
     {
@@ -65,7 +63,7 @@ int main(int argc, char *argv[])
             if(!(mesh = boost::dynamic_pointer_cast<
                                     SpatialDomains::MeshGraph1D>(graphShPt)))
             {
-                ASSERTL0(false,"Dynamics cast failed");
+                ASSERTL0(false,"Dynamic cast failed");
             }
 
             MultiRegions::ExpList1DSharedPtr Exp1D;
@@ -86,7 +84,7 @@ int main(int argc, char *argv[])
             if(!(mesh = boost::dynamic_pointer_cast<
                                     SpatialDomains::MeshGraph2D>(graphShPt)))
             {
-                ASSERTL0(false,"Dynamics cast failed");
+                ASSERTL0(false,"Dynamic cast failed");
             }
 
             MultiRegions::ExpList2DSharedPtr Exp2D;
@@ -116,9 +114,9 @@ int main(int argc, char *argv[])
     {
         for(int i = 0; i < fielddata.size(); ++i)
         {
-            Exp[j]->ExtractDataToCoeffs(fielddef[i],
+            Exp[j]->ExtractDataToCoeffs(fielddef [i],
                                         fielddata[i],
-                                        fielddef[i]->m_Fields[j]);
+                                        fielddef [i]->m_Fields[j]);
         }
         Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
     }
@@ -126,31 +124,23 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Write solution
-//    std::string var = "";
-
-//    for(int j = 0; j < Exp.num_elements(); ++j)
-//    {
-//        var = var + ", " + fielddef[0]->m_Fields[j];
-//    }
-
     string   outname(strtok(argv[argc-1],"."));
     outname += ".vtu";
     ofstream outfile(outname.c_str());
-    cout << "Writing file: " << outname << " ... ";
 
     Exp[0]->WriteVtkHeader(outfile);
-    for(int i = 0; i < Exp[0]->GetExpSize(); ++i)
+    for(i = 0; i < Exp[0]->GetExpSize(); ++i)
     {
         Exp[0]->WriteVtkPieceHeader(outfile,i);
-        for(int j = 0; j < Exp.num_elements(); ++j)
+        for(j = 0; j < Exp.num_elements(); ++j)
         {
             Exp[j]->WriteVtkPieceData(outfile,i, fielddef[0]->m_Fields[j]);
         }
         Exp[0]->WriteVtkPieceFooter(outfile,i);
     }
     Exp[0]->WriteVtkFooter(outfile);
-    cout << "Done " << endl;
     //----------------------------------------------
+
     return 0;
 }
 

@@ -9,13 +9,11 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    int     i, j, nq,  coordim;
-    Array<OneD,NekDouble>  fce;
-    Array<OneD,NekDouble>  xc0,xc1,xc2;
+    int i;
 
     if(argc != 2)
     {
-        fprintf(stderr,"Usage: FldToVtk  meshfile\n");
+        fprintf(stderr,"Usage: XmlToVtk  meshfile\n");
         exit(1);
     }
 
@@ -74,20 +72,21 @@ int main(int argc, char *argv[])
     }
     //----------------------------------------------
 
+    //----------------------------------------------
+    // Write out VTK file.
     string   outname(strtok(argv[argc-1],"."));
     outname += ".vtu";
     ofstream outfile(outname.c_str());
-    cout << "Writing file: " << outname << " ... ";
 
     Exp[0]->WriteVtkHeader(outfile);
-    for(int i = 0; i < Exp[0]->GetExpSize(); ++i)
+    for(i = 0; i < Exp[0]->GetExpSize(); ++i)
     {
         Exp[0]->WriteVtkPieceHeader(outfile,i);
         Exp[0]->WriteVtkPieceFooter(outfile,i);
     }
     Exp[0]->WriteVtkFooter(outfile);
-    cout << "Done " << endl;
     //----------------------------------------------
+
     return 0;
 }
 

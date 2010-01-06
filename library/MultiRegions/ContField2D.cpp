@@ -74,7 +74,7 @@ namespace Nektar
          * \boldsymbol{\hat{u}}^{\mathcal{D}}\\
          * \boldsymbol{\hat{u}}^{\mathcal{H}}
          * \end{array} \right].\f]
-         * Such kind of expansions are also referred to as continuoous fields.
+         * Such kind of expansions are also referred to as continuous fields.
          * This class should be used when solving 2D problems using a standard
          * Galerkin approach.
          */
@@ -110,7 +110,8 @@ namespace Nektar
          * @param   graph2D     A mesh, containing information about the domain
          *                      and the spectral/hp element expansion.  
          * @param   bcs         The boundary conditions.  
-         * @param   bc_loc      
+         * @param   bc_loc      The index of the session variable associated
+         *                      with the boundary conditions to enforce.
          * @param   solnType    Type of global system to use.
          */
         ContField2D::ContField2D(SpatialDomains::MeshGraph2D &graph2D,
@@ -769,17 +770,17 @@ namespace Nektar
          * @param   inarray     Input forcing function.
          * @param   outarray    Output solution.
          * @param   lambda      Coefficient @f$\lambda@f$.
-         * @param   Sigma       Spatially-dependent form of coefficient.
-         * @param   varcoeff    Diffusive coefficient.
+         * @param   varLambda   Spatially-dependent form of coefficient.
+         * @param   varCoeff    Diffusive coefficient.
          */
         void ContField2D::v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
                           NekDouble lambda,
-                    const Array<OneD, const NekDouble> &Sigma,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff)
+                    const Array<OneD, const NekDouble> &varLambda,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff)
         {
-            v_HelmSolveCG(inarray, outarray, lambda, Sigma, varcoeff,
+            v_HelmSolveCG(inarray, outarray, lambda, varLambda, varCoeff,
                               false, NullNekDouble1DArray);
         }
 
@@ -815,8 +816,8 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
                           NekDouble lambda,
-                    const Array<OneD, const NekDouble> &Sigma,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
+                    const Array<OneD, const NekDouble> &varLambda,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
                           bool UseContCoeffs,
                     const Array<OneD, const NekDouble> &dirForcing)
         {

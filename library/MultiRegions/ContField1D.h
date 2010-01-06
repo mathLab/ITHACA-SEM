@@ -245,15 +245,15 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
                           NekDouble lambda,
-                    const Array<OneD, const NekDouble> &Sigma,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff);
+                    const Array<OneD, const NekDouble> &varLambda,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff);
 
             virtual void v_HelmSolveCG(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
                           NekDouble lambda,
-                    const Array<OneD, const NekDouble> &Sigma,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
+                    const Array<OneD, const NekDouble> &varLambda,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
                           bool UseContCoeffs,
                     const Array<OneD, const NekDouble> &dirForcing);
 

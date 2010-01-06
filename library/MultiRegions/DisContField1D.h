@@ -49,108 +49,139 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-  
+        /// This class is the abstraction of a global discontinuous two-
+        /// dimensional spectral/hp element expansion which approximates the
+        /// solution of a set of partial differential equations.
         class DisContField1D: public ExpList1D
         {
         public:
+            /// Default constructor.
             DisContField1D();
 
+            /// Constructs a 1D discontinuous field based on a mesh.
             DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
-                           const GlobalSysSolnType solnType = eDirectStaticCond,
-                           const bool constructMap = true);
+                    const GlobalSysSolnType solnType = eDirectStaticCond,
+                    const bool constructMap = true);
 
+            /// Constructs a 1D discontinuous field based on a mesh and boundary
+            /// conditions.
             DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
-                           SpatialDomains::BoundaryConditions &bcs, 
-                           const int bc_loc = 0,
-                           const GlobalSysSolnType solnType = eDirectStaticCond);
+                    SpatialDomains::BoundaryConditions &bcs,
+                    const int bc_loc = 0,
+                    const GlobalSysSolnType solnType = eDirectStaticCond);
 
+            /// Constructs a 1D discontinuous field based on a mesh and boundary
+            /// conditions.
             DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
-                           SpatialDomains::BoundaryConditions &bcs, 
-                           const std::string variable,
-                           const GlobalSysSolnType solnType = eDirectStaticCond);
+                    SpatialDomains::BoundaryConditions &bcs,
+                    const std::string variable,
+                    const GlobalSysSolnType solnType = eDirectStaticCond);
 
+            /// Constructs a 1D discontinuous field based on an existing field.
             DisContField1D(const DisContField1D &In);
 
+            /// Destructor.
             ~DisContField1D();
 
-            /**
-             * \brief This function evaluates the boundary conditions at a certain 
-             * time-level.
-             *
-             * Based on the expression \f$g(x,t)\f$ for the boundary conditions, this
-             * function evaluates the boundary conditions for all boundaries at 
-             * time-level \a t.
-             *
-             * \param time The time at which the boundary conditions should be 
-             * evaluated
-             */ 
-            void EvaluateBoundaryConditions(const NekDouble time = 0.0)
-            {
-                ExpList1D::EvaluateBoundaryConditions(time,m_bndCondExpansions,m_bndConditions);
-            };
+            /// This function evaluates the boundary conditions at a certain
+            /// time-level.
+            inline void EvaluateBoundaryConditions(const NekDouble time = 0.0);
 
-            GlobalLinSysSharedPtr GetGlobalBndLinSys(const GlobalLinSysKey &mkey);
+            /// For a given key, returns the associated global linear system.
+            GlobalLinSysSharedPtr GetGlobalBndLinSys(
+                    const GlobalLinSysKey &mkey);
 
-            inline const Array<OneD,const LocalRegions::PointExpSharedPtr>& GetBndCondExpansions()
-            {
-                return m_bndCondExpansions;
-            }
-            
-            inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& GetBndConditions()
-            {
-                return m_bndConditions;
-            }
+            /// Retrieve the boundary condition expansions.
+            inline const Array<OneD,const LocalRegions::PointExpSharedPtr>&
+                                                        GetBndCondExpansions();
 
         protected:
 
         private:
-            /**
-             * \brief The number of boundary segments on which
-             * Dirichlet boundary conditions are imposed
-             */ 
+            /// The number of boundary segments on which Dirichlet boundary
+            /// conditions are imposed.
             int m_numDirBndCondExpansions;
 
-            Array<OneD,LocalRegions::PointExpSharedPtr>        m_bndCondExpansions;
-            Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
-            GlobalLinSysMapShPtr                               m_globalBndMat;
-            Array<OneD,NekDouble>                              m_trace;
-            LocalToGlobalDGMapSharedPtr                        m_traceMap;
-            
-            void GenerateBoundaryConditionExpansion(const SpatialDomains::MeshGraph1D &graph1D,
-                                                    SpatialDomains::BoundaryConditions &bcs, 
-                                                    const std::string variable);
-            
-            void GenerateFieldBnd1D(SpatialDomains::BoundaryConditions &bcs,  
-                                    const std::string variable);
+            /// Discretised boundary conditions.
+            /**
+             * It is an array of size equal to the number of boundary points
+             * and consists of entries of the type LocalRegions#PointExp. Every
+             * entry corresponds to a point on a single boundary region.
+             */
+            Array<OneD,LocalRegions::PointExpSharedPtr> m_bndCondExpansions;
 
+            /// An array which contains the information about the boundary
+            /// condition on the different boundary regions.
+            Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
+
+            /// Global boundary matrix.
+            GlobalLinSysMapShPtr                               m_globalBndMat;
+
+            /// Trace space storage for points between elements.
+            Array<OneD,NekDouble>                              m_trace;
+
+            /// Local to global DG mapping for trace space.
+            LocalToGlobalDGMapSharedPtr                        m_traceMap;
+
+            /// Discretises the boundary conditions.
+            void GenerateBoundaryConditionExpansion(
+                    const SpatialDomains::MeshGraph1D &graph1D,
+                    SpatialDomains::BoundaryConditions &bcs,
+                    const std::string variable);
+
+            void GenerateFieldBnd1D(
+                    SpatialDomains::BoundaryConditions &bcs,
+                    const std::string variable);
+
+            /// Solve the Helmholtz equation.
             virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
                           NekDouble lambda,
-                    const Array<OneD, const NekDouble> &Sigma,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff);
+                    const Array<OneD, const NekDouble> &varLambda,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff);
 
+            /// Solve the Helmholtz equation (DG specific).
             virtual void v_HelmSolveDG(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
                           NekDouble lambda,
-                    const Array<OneD, const NekDouble> &Sigma,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
+                    const Array<OneD, const NekDouble> &varLambda,
+                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
                           NekDouble tau);
 
-            virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions()
-            {
-                return GetBndConditions();
-            }
+            /// Retrieve the boundary condition descriptions.
+            virtual const Array<OneD,const SpatialDomains
+                                ::BoundaryConditionShPtr>& v_GetBndConditions();
 
-            virtual void v_EvaluateBoundaryConditions(const NekDouble time = 0.0)
-            {
-                EvaluateBoundaryConditions(time);
-            }
+            /// Evaluate all boundary conditions at a given time..
+            virtual void v_EvaluateBoundaryConditions(
+                    const NekDouble time = 0.0);
         };
 
         typedef boost::shared_ptr<DisContField1D>   DisContField1DSharedPtr;
-        
+
+        /**
+         * Based on the expression \f$g(x,t)\f$ for the boundary conditions,
+         * this function evaluates the boundary conditions for all boundaries
+         * at time-level \a t.
+         *
+         * @param   time        The time at which the boundary conditions
+         *                      should be evaluated
+         */
+        inline void DisContField1D::EvaluateBoundaryConditions(
+                        const NekDouble time)
+        {
+            ExpList1D::EvaluateBoundaryConditions(time,m_bndCondExpansions,
+                                                  m_bndConditions);
+        };
+
+        inline const Array<OneD,const LocalRegions::PointExpSharedPtr>&
+                                        DisContField1D::GetBndCondExpansions()
+        {
+            return m_bndCondExpansions;
+        }
+
     } //end of namespace
 } //end of namespace
 

@@ -794,6 +794,14 @@ namespace Nektar
             }
         }
 
+
+        /**
+         * Retrieves local matrices from each expansion in the expansion list
+         * and combines them together to generate a global matrix system.
+         * @param   mkey        Matrix key for the matrix to be generated.
+         * @param   locToGloMap Local to global mapping.
+         * @returns Shared pointer to the generated global matrix.
+         */
         GlobalMatrixSharedPtr ExpList::GenGlobalMatrix(
                             const GlobalMatrixKey &mkey,
                             const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
@@ -2245,8 +2253,8 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                       NekDouble lambda,
-                const Array<OneD, const NekDouble> &Sigma,
-                const Array<OneD, const Array<OneD, NekDouble> > &varcoeff)
+                const Array<OneD, const NekDouble> &varLambda,
+                const Array<OneD, const Array<OneD, NekDouble> > &varCoeff)
         {
             ASSERTL0(false, "HelmSolve not implemented.");
             // For ContFieldX classes, -> ContFieldX::v_HelmSolveCG
@@ -2257,8 +2265,8 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                       NekDouble lambda,
-                const Array<OneD, const NekDouble> &Sigma,
-                const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
+                const Array<OneD, const NekDouble> &varLambda,
+                const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
                       bool UseContCoeffs,
                 const Array<OneD, const NekDouble> &dirForcing)
         {
@@ -2270,8 +2278,8 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                       NekDouble lambda,
-                const Array<OneD, const NekDouble> &Sigma,
-                const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
+                const Array<OneD, const NekDouble> &varLambda,
+                const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
                       NekDouble tau)
         {
             ASSERTL0(false, "HelmSolveDG not implemented.");
@@ -2280,7 +2288,7 @@ namespace Nektar
 
         void ExpList::v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,       NekDouble> &outarray,
-                                  const Array<OneD, const Array<OneD, NekDouble> > &varcoeffs,
+                                  const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
                                   const Array<OneD, NekDouble> &lambda,
                                   NekDouble tau)
         {

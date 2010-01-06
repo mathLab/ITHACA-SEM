@@ -213,9 +213,9 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
                           NekDouble lambda = 0.0,
-                    const Array<OneD, const NekDouble> &Sigma 
+                    const Array<OneD, const NekDouble> &varLambda 
                                                 = NullNekDouble1DArray,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff 
+                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff 
                                                 = NullNekDoubleArrayofArray);
             
             /// Solve helmholtz problem (continuous case parameters).
@@ -226,9 +226,9 @@ namespace Nektar
                           bool UseContCoeffs,
                     const Array<OneD, const NekDouble> &dirForcing 
                                                 = NullNekDouble1DArray,
-                    const Array<OneD, const NekDouble> &Sigma 
+                    const Array<OneD, const NekDouble> &varLambda 
                                                 = NullNekDouble1DArray,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff 
+                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff 
                                                 = NullNekDoubleArrayofArray);
             
             /// Solve helmholtz problem (discontinuous case parameters).
@@ -237,9 +237,9 @@ namespace Nektar
                           Array<OneD,       NekDouble> &outarray,
                           NekDouble lambda,
                           NekDouble tau,
-                    const Array<OneD, const NekDouble> &Sigma 
+                    const Array<OneD, const NekDouble> &varLambda 
                                                 = NullNekDouble1DArray,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varcoeff 
+                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff 
                                                 = NullNekDoubleArrayofArray);
 
             ///
@@ -585,6 +585,7 @@ namespace Nektar
                                 const Array<OneD,const NekDouble> &inarray,
                                       Array<OneD,      NekDouble> &outarray);
 
+            /// Generates a global matrix from the given key and map.
             boost::shared_ptr<GlobalMatrix>  GenGlobalMatrix(
                 const GlobalMatrixKey &mkey,
                 const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
@@ -1262,6 +1263,10 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.84  2010/01/03 19:39:09  cantwell
+* Added FldToVtk converter.
+* Added XmlToVtk converter.
+*
 * Revision 1.83  2009/12/15 18:09:02  cantwell
 * Split GeomFactors into 1D, 2D and 3D
 * Added generation of tangential basis into GeomFactors

@@ -150,7 +150,11 @@ namespace Nektar
 
             /// Set tangent orientation
             inline void SetTangentOrientation(std::string conn);
-
+            
+            /// Set tangent circular orientation centre.
+            inline void SetTangentCircularCentre(
+                            Array<OneD,NekDouble> &centre);
+                            
             /// Returns the normal vectors evaluated at each quadrature point.
             inline const Array<OneD, const Array<OneD, NekDouble> >
                                                             &GetNormal() const;
@@ -193,7 +197,9 @@ namespace Nektar
             bool mIsUsingLaplMetrics;
             /// Principle tangent direction.
             enum GeomTangents mTangentDir;
-
+            /// Principle tangent circular dir coords
+            Array<OneD,NekDouble> mTangentDirCentre;
+            
             /// Jacobian. If geometry is regular, or moving regular, this is
             /// just an array of one element - the value of the Jacobian across
             /// the whole element. If deformed, the array has the size of the
@@ -389,6 +395,16 @@ namespace Nektar
             if (conn == "TangentCircular2") mTangentDir = eTangentCircular2;
         }
 
+        /**
+         * Sets the centre point for circular tangent vectors.
+         * @param   centre      Array holding coordinates of centre point.
+         */
+        inline void GeomFactors::SetTangentCircularCentre(
+                    Array<OneD,NekDouble> &centre)
+        {
+            mTangentDirCentre = centre;
+        }
+        
         /// Returns the normal vectors evaluated at each quadrature point.
         inline const Array<OneD, const Array<OneD, NekDouble> >
                                                 &GeomFactors::GetNormal() const
@@ -431,6 +447,17 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.30  2009/12/15 18:09:02  cantwell
+// Split GeomFactors into 1D, 2D and 3D
+// Added generation of tangential basis into GeomFactors
+// Updated ADR2DManifold solver to use GeomFactors for tangents
+// Added <GEOMINFO> XML session section support in MeshGraph
+// Fixed const-correctness in VmathArray
+// Cleaned up LocalRegions code to generate GeomFactors
+// Removed GenSegExp
+// Temporary fix to SubStructuredGraph
+// Documentation for GlobalLinSys and GlobalMatrix classes
+//
 // Revision 1.29  2009/07/08 17:24:52  sehunchun
 // Delete SetUpTanBasis and SetUp SurfaceNormal only when coordim == 3
 //

@@ -1585,6 +1585,7 @@ namespace Nektar
             
         }
         
+        
         /**
          * Configures geometric info, such as tangent direction, on each
          * expansion.
@@ -1592,23 +1593,30 @@ namespace Nektar
          */
         void ExpList::ApplyGeomInfo(SpatialDomains::MeshGraph &graph)
         {
-            if(graph.CheckForGeomInfo("TANGENTDIR"))
+            std::string dir = "TangentX";
+            Array<OneD,NekDouble> coords(2);
+            
+            // Retrieve geometric info from session.
+            if(graph.CheckForGeomInfo("TangentDir"))
             {
-                for (int i = 0; i < m_exp->size(); ++i)
-                {
-                    (*m_exp)[i]->GetMetricInfo()->SetTangentOrientation(
-                                            graph.GetGeomInfo("TANGENTDIR"));
-                }
+                dir = graph.GetGeomInfo("TangentDir");
             }
-            else
+            if (graph.CheckForGeomInfo("TangentCentreX")
+                    && graph.CheckForGeomInfo("TangentCentreY"))
             {
-                for (int i = 0; i < m_exp->size(); ++i)
-                {
-                    (*m_exp)[i]->GetMetricInfo()
-                                            ->SetTangentOrientation("TangentX");
-                }
+                
+                coords[0] = atof(graph.GetGeomInfo("TangentCentreX").c_str());
+                coords[1] = atof(graph.GetGeomInfo("TangentCentreY").c_str());
+            }
+            
+            // Apply geometric info to each expansion.
+            for (int i = 0; i < m_exp->size(); ++i)
+            {
+                (*m_exp)[i]->GetMetricInfo()->SetTangentOrientation(dir);
+                (*m_exp)[i]->GetMetricInfo()->SetTangentCircularCentre(coords);
             }
         }
+        
         
         /**
          * The coordinates of the quadrature points, together with

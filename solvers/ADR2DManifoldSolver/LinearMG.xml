@@ -10255,7 +10255,9 @@
 
    <GEOMINFO>
     <!-- TangentX, TangentY, TangentZ, TangentCircular, TangentCircular2 -->   
-       <I PROPERTY="TANGENTDIR" VALUE="TangentZ" />
+        <I PROPERTY="TangentDir" VALUE="TangentZ" />
+        <I PROPERTY="TangentCentreX" VALUE="25.0" />
+        <I PROPERTY="TangentCentreY" VALUE="0.0"  />
    </GEOMINFO>
   </GEOMETRY>
 

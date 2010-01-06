@@ -454,16 +454,16 @@ namespace Nektar
                     Array<OneD,NekDouble> x2(nq);
                     mCoords[0]->GetCoords(x0,x1,x2);
 
-
                     // circular around the center of the domain
-                    NekDouble radius, xc, yc, xdis, ydis;
+                    NekDouble radius, xc=0.0, yc=0.0, xdis, ydis;
 
-                    xc = 25.0;
-                    yc = 0.0;
+                    if (mTangentDirCentre.num_elements() == 2) {
+                        xc = mTangentDirCentre[0];
+                        yc = mTangentDirCentre[1];
+                    }
 
                     for (int i = 0; i < nq; i++)
                     {
-
                         if(x0[i]<=xc)
                         {
                             output[0][i] = 1.0;

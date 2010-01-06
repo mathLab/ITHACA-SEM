@@ -1744,40 +1744,39 @@ namespace Nektar
 	  }
       }       
   }
-  
-  void ADR2DManifold::SetUpTangentialVectors()
-     {
-         int i, j, k;
-         int nvariables = m_fields.num_elements();
-         int nq = m_fields[0]->GetNpoints();
 
-         Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_gradtan; // 1 by nvariable by nq
-         Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis; // 2 by m_spacedim by nq 
 
-	 // Trace Normal vectors on the plane of tangential basis
-         m_dirForcing = Array<OneD, Array<OneD, NekDouble> >(2);
-         m_gradtan =  Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
-         m_tanbasis  =  Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
-         
-         for (i = 0; i < 2; ++i)
-         {
-             m_dirForcing[i] = Array<OneD, NekDouble>(m_spacedim*nq);
-             m_tanbasis[i] = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-             for (k = 0; k < m_spacedim; ++k)
-             {
-                 m_tanbasis[i][k] = Array<OneD, NekDouble>(nq, 0.0);
-             }
-             
-             m_gradtan[i] = Array<OneD, Array<OneD, NekDouble> >(nvariables);
-             for (k = 0; k < nvariables; ++k)
-             {
-                 m_gradtan[i][k] = Array<OneD, NekDouble>(nq, 0.0);
+    void ADR2DManifold::SetUpTangentialVectors()
+    {
+        int i, j, k;
+        int nvariables = m_fields.num_elements();
+        int nq = m_fields[0]->GetNpoints();
+
+        // Trace Normal vectors on the plane of tangential basis
+        m_dirForcing = Array<OneD, Array<OneD, NekDouble> >(2);
+        m_gradtan =  Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
+        m_tanbasis  =  Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
+
+        for (i = 0; i < 2; ++i)
+        {
+            m_dirForcing[i] = Array<OneD, NekDouble>(m_spacedim*nq);
+            m_tanbasis[i] = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+            for (k = 0; k < m_spacedim; ++k)
+            {
+                m_tanbasis[i][k] = Array<OneD, NekDouble>(nq, 0.0);
             }
-         }
 
-         m_fields[0]->GetTangents(m_tanbasis);
-         
-        // When there is an anisotropy layers, the second tangential vector is killed.
+            m_gradtan[i] = Array<OneD, Array<OneD, NekDouble> >(nvariables);
+            for (k = 0; k < nvariables; ++k)
+            {
+                m_gradtan[i][k] = Array<OneD, NekDouble>(nq, 0.0);
+            }
+        }
+
+        m_fields[0]->GetTangents(m_tanbasis);
+
+        // When there is an anisotropy layers, the second tangential vector is
+        // killed.
         if(m_Anisotropy>0)
         {
             for(k = 0; k < m_spacedim; ++k)
@@ -1824,7 +1823,7 @@ namespace Nektar
                 m_fields[0]->PhysDeriv(m_tanbasis[k][2], temp0, temp1, temp2);
                 Vmath::Vadd(nq, temp2, 1, m_gradtan[k][i], 1, m_gradtan[k][i], 1);
             }
-        }         
+        }
      }
 
     void ADR2DManifold::SetUSERDEFINEDInitialConditions(const int initialwavetype, NekDouble initialtime)
@@ -2356,15 +2355,31 @@ namespace Nektar
         out << "\tinitialwavetype    : " << m_initialwavetype << endl;
         out << "\tinitialcenter = ( " << m_x0c << "," << m_x1c << "," << m_x2c << " )" << endl;
         out << "\tUseDirDeriv   : " << m_UseDirDeriv << endl;
-        out << "\tConnection    : ";
-        if (m_graph->CheckForGeomInfo("TANGENTDIR"))
+        out << "\tTangentDir    : ";
+        if (m_graph->CheckForGeomInfo("TangentDir"))
         {
-            out << m_graph->GetGeomInfo("TANGENTDIR") << endl;
+            out << m_graph->GetGeomInfo("TangentDir") << endl;
+            if (m_graph->GetGeomInfo("TangentDir") == "TangentCircular")
+            {
+                out << "\tTangentCentre : ";
+                if (m_graph->CheckForGeomInfo("TangentCentreX")
+                    && m_graph->CheckForGeomInfo("TangentCentreY"))
+                {
+                    out << "("  << m_graph->GetGeomInfo("TangentCentreX")
+                        << ", " << m_graph->GetGeomInfo("TangentCentreY") 
+                        << ")"  << endl;
+                }
+                else
+                {
+                    out << "Not defined." << endl;
+                }
+            }
         }
         else
         {
             out << "Not defined." << endl;
         }
+
         out << "\tAnisotropy    : " << m_Anisotropy << endl;
         out << "\tm_mu          : " << m_epsilon[0] << endl;
         out << "\tm_nu          : " << m_epsilon[1] << endl;

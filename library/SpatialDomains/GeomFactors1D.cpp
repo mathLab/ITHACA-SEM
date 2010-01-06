@@ -157,12 +157,12 @@ namespace Nektar
          */
         void GeomFactors1D::SetUpJacGmat1D()
         {
-            ASSERTL1(mDeriv.num_elements()==mCoordDim,
-                     "The dimension of array der does not match the coordinate "
-                     "dimension");
+            ASSERTL1(mDeriv[0].num_elements()==mCoordDim,
+                     "The dimension of array mDeriv does not match the "
+                     "coordinate dimension");
             int i;
             int nquad = mPointsKey[0].GetNumPoints();
-            ASSERTL1(mDeriv[0].num_elements() == nquad,
+            ASSERTL1(mDeriv[0][0].num_elements() == nquad,
                      "Number of quadrature points do not match");
 
             NekDouble fac0,fac1;

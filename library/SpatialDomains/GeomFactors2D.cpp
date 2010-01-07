@@ -227,6 +227,8 @@ namespace Nektar
          */
         void GeomFactors2D::SetUpJacGmat2D()
         {
+            // Check the number of derivative dimensions matches the coordinate
+            // space.
             ASSERTL1(mDeriv[0].num_elements()==mCoordDim,
                      "The dimension of array d1 does not match the coordinate "
                      "dimension");
@@ -237,24 +239,41 @@ namespace Nektar
             int nqtot = mPointsKey[0].GetNumPoints() *
                         mPointsKey[1].GetNumPoints();
 
-            ASSERTL1(mDeriv[0][0].num_elements() == nqtot,
-                     "Number of quadrature points do not match");
-            ASSERTL1(mDeriv[1][0].num_elements() == nqtot,
-                     "Number of quadrature points do not match");
+            // Check each derivative combination has the correct sized storage
+            // for all quadrature points.
+            for (int i = 0; i < 2; ++i)
+            {
+                for (int j = 0; j < mCoordDim; ++j)
+                {
+                    ASSERTL1(mDeriv[i][j].num_elements() == nqtot,
+                             "Number of quadrature points do not match");
+                }
+            }
 
+            // Proceed differently depending on whether the geometry is
+            // regular or deformed.
             if((mType == eRegular)||(mType == eMovingRegular))
             {
+                // Jacobian is constant across the element.
                 m_jac     = Array<OneD, NekDouble>(1,0.0);
+                
+                // Number of entries corresponds to twice the coordinate
+                // dimension. Entries are constant across element so second
+                // dimension is 1.
                 m_gmat    = Array<TwoD, NekDouble>(2*mCoordDim,1,0.0);
 
                 if(mCoordDim == 2) // assume g = [0,0,1]
                 {
-                    m_jac[0] = mDeriv[0][0][0]*mDeriv[1][1][0] - mDeriv[1][0][0]*mDeriv[0][1][0];
+                    // Compute Jacobian
+                    m_jac[0] = mDeriv[0][0][0]*mDeriv[1][1][0] 
+                                            - mDeriv[1][0][0]*mDeriv[0][1][0];
 
                     ASSERTL1(m_jac[0] > 0,
                              "2D Regular Jacobian is not positive");
 
                     // Spencer's book page 160
+                    // Compute derivatives of standard coordinate with respect
+                    // to local coordinates.
                     m_gmat[0][0] =  mDeriv[1][1][0]/m_jac[0]; // d xi_1/d x_1
                     m_gmat[1][0] = -mDeriv[0][1][0]/m_jac[0]; // d xi_2/d x_1
                     m_gmat[2][0] = -mDeriv[1][0][0]/m_jac[0]; // d xi_1/d x_2
@@ -419,10 +438,31 @@ namespace Nektar
                 }
                 case eTangentCircular:
                 {
+                    // Tangent direction depends on spatial location.
                     Array<OneD,NekDouble> x0(nq);
                     Array<OneD,NekDouble> x1(nq);
                     Array<OneD,NekDouble> x2(nq);
-                    mCoords[0]->GetCoords(x0,x1,x2);
+                    
+                    // mCoords are StdExpansions which store the mapping
+                    // between the std element and the local element. Bwd
+                    // transforming the std element minimum basis gives a
+                    // minimum physical basis for geometry. Need to then
+                    // interpolate this up to the quadrature basis.
+                    LibUtilities::Interp2D(
+                                    mCoords[0]->GetBasis(0)->GetPointsKey(), 
+                                    mCoords[0]->GetBasis(1)->GetPointsKey(), 
+                                    mCoords[0]->GetPhys(),
+                                    mPointsKey[0], mPointsKey[1], x0);
+                    LibUtilities::Interp2D(
+                                    mCoords[0]->GetBasis(0)->GetPointsKey(), 
+                                    mCoords[0]->GetBasis(1)->GetPointsKey(),
+                                    mCoords[1]->GetPhys(),
+                                    mPointsKey[0], mPointsKey[1], x1);
+                    LibUtilities::Interp2D(
+                                    mCoords[0]->GetBasis(0)->GetPointsKey(), 
+                                    mCoords[0]->GetBasis(1)->GetPointsKey(),
+                                    mCoords[2]->GetPhys(),
+                                    mPointsKey[0], mPointsKey[1], x2);
 
                     // circular around the center of the domain
                     NekDouble radius,xmax, xmin, xmid, ymax, ymin, ymid, xdis, ydis;
@@ -449,10 +489,31 @@ namespace Nektar
                 case eTangentCircular2:
                 {
                     cout << "Anisotropy layers" << endl;
+                    // Tangent direction depends on spatial location.
                     Array<OneD,NekDouble> x0(nq);
                     Array<OneD,NekDouble> x1(nq);
                     Array<OneD,NekDouble> x2(nq);
-                    mCoords[0]->GetCoords(x0,x1,x2);
+                    
+                    // mCoords are StdExpansions which store the mapping
+                    // between the std element and the local element. Bwd
+                    // transforming the std element minimum basis gives a
+                    // minimum physical basis for geometry. Need to then
+                    // interpolate this up to the quadrature basis.
+                    LibUtilities::Interp2D(
+                                    mCoords[0]->GetBasis(0)->GetPointsKey(), 
+                                    mCoords[0]->GetBasis(1)->GetPointsKey(), 
+                                    mCoords[0]->GetPhys(),
+                                    mPointsKey[0], mPointsKey[1], x0);
+                    LibUtilities::Interp2D(
+                                    mCoords[0]->GetBasis(0)->GetPointsKey(), 
+                                    mCoords[0]->GetBasis(1)->GetPointsKey(),
+                                    mCoords[1]->GetPhys(),
+                                    mPointsKey[0], mPointsKey[1], x1);
+                    LibUtilities::Interp2D(
+                                    mCoords[0]->GetBasis(0)->GetPointsKey(), 
+                                    mCoords[0]->GetBasis(1)->GetPointsKey(),
+                                    mCoords[2]->GetPhys(),
+                                    mPointsKey[0], mPointsKey[1], x2);
 
                     // circular around the center of the domain
                     NekDouble radius, xc=0.0, yc=0.0, xdis, ydis;

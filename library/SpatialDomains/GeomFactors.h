@@ -68,7 +68,6 @@ namespace Nektar
             eTangentY,          ///< Y coordinate direction.
             eTangentZ,          ///< Z coordinate direction.
             eTangentCircular,   ///< Circular around the centre of domain.
-            eTangentCircular2,
             SIZE_GeomTangents
         };
 
@@ -79,7 +78,6 @@ namespace Nektar
             "TangentY",
             "TangentZ",
             "TangentCircular",
-            "TangentCircular2",
         };
 
         /// Calculation and storage of geometric factors.
@@ -392,7 +390,6 @@ namespace Nektar
             if (conn == "TangentY")         mTangentDir = eTangentY;
             if (conn == "TangentZ")         mTangentDir = eTangentZ;
             if (conn == "TangentCircular")  mTangentDir = eTangentCircular;
-            if (conn == "TangentCircular2") mTangentDir = eTangentCircular2;
         }
 
         /**
@@ -447,6 +444,9 @@ namespace Nektar
 
 //
 // $Log: GeomFactors.h,v $
+// Revision 1.31  2010/01/06 14:53:03  cantwell
+// Added geominfo parameters TangentCentre{X,Y} for circular tangent vectors.
+//
 // Revision 1.30  2009/12/15 18:09:02  cantwell
 // Split GeomFactors into 1D, 2D and 3D
 // Added generation of tangential basis into GeomFactors

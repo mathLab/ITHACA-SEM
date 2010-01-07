@@ -465,57 +465,6 @@ namespace Nektar
                                     mPointsKey[0], mPointsKey[1], x2);
 
                     // circular around the center of the domain
-                    NekDouble radius,xmax, xmin, xmid, ymax, ymin, ymid, xdis, ydis;
-
-                    xmax = Vmath::Vmax(nq,x0,1);
-                    xmin = Vmath::Vmin(nq,x0,1);
-                    ymax = Vmath::Vmax(nq,x1,1);
-                    ymin = Vmath::Vmin(nq,x1,1);
-
-                    xmid = 0.5*(xmax+xmin);
-                    ymid = 0.5*(ymax+ymin);
-
-                    for (int i = 0; i < nq; i++)
-                    {
-                        xdis = x0[i]-xmid;
-                        ydis = x1[i]-ymid;
-
-                        radius = sqrt(xdis*xdis+ydis*ydis);
-                        output[0][i] = ydis/radius;
-                        output[1][i] = -1.0*xdis/radius;
-                    }
-                    break;
-                }
-                case eTangentCircular2:
-                {
-                    cout << "Anisotropy layers" << endl;
-                    // Tangent direction depends on spatial location.
-                    Array<OneD,NekDouble> x0(nq);
-                    Array<OneD,NekDouble> x1(nq);
-                    Array<OneD,NekDouble> x2(nq);
-                    
-                    // mCoords are StdExpansions which store the mapping
-                    // between the std element and the local element. Bwd
-                    // transforming the std element minimum basis gives a
-                    // minimum physical basis for geometry. Need to then
-                    // interpolate this up to the quadrature basis.
-                    LibUtilities::Interp2D(
-                                    mCoords[0]->GetBasis(0)->GetPointsKey(), 
-                                    mCoords[0]->GetBasis(1)->GetPointsKey(), 
-                                    mCoords[0]->GetPhys(),
-                                    mPointsKey[0], mPointsKey[1], x0);
-                    LibUtilities::Interp2D(
-                                    mCoords[0]->GetBasis(0)->GetPointsKey(), 
-                                    mCoords[0]->GetBasis(1)->GetPointsKey(),
-                                    mCoords[1]->GetPhys(),
-                                    mPointsKey[0], mPointsKey[1], x1);
-                    LibUtilities::Interp2D(
-                                    mCoords[0]->GetBasis(0)->GetPointsKey(), 
-                                    mCoords[0]->GetBasis(1)->GetPointsKey(),
-                                    mCoords[2]->GetPhys(),
-                                    mPointsKey[0], mPointsKey[1], x2);
-
-                    // circular around the center of the domain
                     NekDouble radius, xc=0.0, yc=0.0, xdis, ydis;
 
                     if (mTangentDirCentre.num_elements() == 2) {
@@ -525,20 +474,11 @@ namespace Nektar
 
                     for (int i = 0; i < nq; i++)
                     {
-                        if(x0[i]<=xc)
-                        {
-                            output[0][i] = 1.0;
-                            output[1][i] = 0.0;
-                        }
-
-                        else
-                        {
-                            xdis = x0[i]-xc;
-                            ydis = x1[i]-yc;
-                            radius = sqrt(xdis*xdis+ydis*ydis);
-                            output[0][i] = ydis/radius;
-                            output[1][i] = -1.0*xdis/radius;
-                        }
+                        xdis = x0[i]-xc;
+                        ydis = x1[i]-yc;
+                        radius = sqrt(xdis*xdis+ydis*ydis);
+                        output[0][i] = ydis/radius;
+                        output[1][i] = -1.0*xdis/radius;
                     }
                 }
             }

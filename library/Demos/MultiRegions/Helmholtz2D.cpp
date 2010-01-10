@@ -20,91 +20,82 @@ int main(int argc, char *argv[])
 {
     MultiRegions::ContField2DSharedPtr Exp,Fce;
     int     i, nq,  coordim;
-    Array<OneD,NekDouble>  fce; 
-    Array<OneD,NekDouble>  xc0,xc1,xc2; 
+    Array<OneD,NekDouble>  fce;
+    Array<OneD,NekDouble>  xc0,xc1,xc2;
     NekDouble  lambda;
     NekDouble   st, cps = (double)CLOCKS_PER_SEC;
 
-    if( (argc != 3) && (argc != 5) )
+    if( (argc != 2) && (argc != 4) )
     {
-        fprintf(stderr,"Usage: Helmholtz2D meshfile boundaryfile [GlobalOptimizationFile] [ElementalOptimizationFile]\n");
+        fprintf(stderr,"Usage: Helmholtz2D meshfile "
+                    " [GlobalOptimizationFile] [ElementalOptimizationFile]\n");
         exit(1);
     }
 
-    cout << "Check" <<endl;
     //----------------------------------------------
     // Load the ELEMENTAL optimization parameters if they
     // have been given as argument
     // (use ElementalOptimisationParameters.xml as an example)
-    if( argc == 5 )
+    if( argc == 4 )
     {
-        string eloptfile(argv[4]);
+        string eloptfile(argv[3]);
         NekOptimize::LoadElementalOptimizationParameters(eloptfile);
     }
     //----------------------------------------------
-    cout << "Check1" <<endl;
 
     //----------------------------------------------
     // Read in mesh from input file
     string meshfile(argv[1]);
-    SpatialDomains::MeshGraph2D graph2D; 
-
-    cout << "Check2" <<endl;
+    SpatialDomains::MeshGraph2D graph2D;
     graph2D.ReadGeometry(meshfile);
-    cout << "Check3" <<endl;
     graph2D.ReadExpansions(meshfile);
     //----------------------------------------------
 
-    cout << "Read Geometry" <<endl;
-
     //----------------------------------------------
     // read the problem parameters from input file
-    string bcfile(argv[2]);
-    SpatialDomains::BoundaryConditions bcs(&graph2D); 
-    bcs.Read(bcfile);
+    SpatialDomains::BoundaryConditions bcs(&graph2D);
+    bcs.Read(meshfile);
     //----------------------------------------------
-    cout << "Read boundary conditions" <<endl;
 
     //----------------------------------------------
     // Print summary of solution details
     lambda = bcs.GetParameter("Lambda");
     const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
     LibUtilities::BasisKey bkey0 = expansions[0]->m_BasisKeyVector[0];
-    cout << "Solving 2D Helmholtz:"  << endl; 
-    cout << "         Lambda     : " << lambda << endl; 
+    cout << "Solving 2D Helmholtz:"  << endl;
+    cout << "         Lambda     : " << lambda << endl;
     cout << "         No. modes  : " << bkey0.GetNumModes() << endl;
     cout << endl;
     //----------------------------------------------
-   
+
     //----------------------------------------------
-    // Define Expansion 
+    // Define Expansion
     Exp = MemoryManager<MultiRegions::ContField2D>::
         AllocateSharedPtr(graph2D,bcs);
     //----------------------------------------------
-    cout << "define expansion" <<endl;
 
     //----------------------------------------------
-    // Load the global optimization parameters 
+    // Load the global optimization parameters
     // as specified in the (optional) input file
     // (use helmholtz2D.xml as an example)
-    if( argc == 5 )
+    if( argc == 4 )
     {
-        string globoptfile(argv[3]);
+        string globoptfile(argv[2]);
         Exp->ReadGlobalOptimizationParameters(globoptfile);
     }
     //----------------------------------------------
 
     Timing("Read files and define exp ..");
-    
+
     //----------------------------------------------
     // Set up coordinates of mesh for Forcing function evaluation
     coordim = Exp->GetCoordim(0);
     nq      = Exp->GetTotPoints();
-    
+
     xc0 = Array<OneD,NekDouble>(nq,0.0);
     xc1 = Array<OneD,NekDouble>(nq,0.0);
     xc2 = Array<OneD,NekDouble>(nq,0.0);
-    
+
     switch(coordim)
     {
     case 1:
@@ -118,13 +109,13 @@ int main(int argc, char *argv[])
         break;
     }
     //----------------------------------------------
-    
+
     //----------------------------------------------
-    // Define forcing function for first variable defined in file 
+    // Define forcing function for first variable defined in file
     fce = Array<OneD,NekDouble>(nq);
-    SpatialDomains::ConstForcingFunctionShPtr ffunc 
+    SpatialDomains::ConstForcingFunctionShPtr ffunc
         = bcs.GetForcingFunction(bcs.GetVariable(0));
-    for(i = 0; i < nq; ++i) 
+    for(i = 0; i < nq; ++i)
     {
         fce[i] = ffunc->Evaluate(xc0[i],xc1[i],xc2[i]);
     }
@@ -136,37 +127,36 @@ int main(int argc, char *argv[])
     Fce->SetPhys(fce);
     //----------------------------------------------
     Timing("Define forcing ..");
-  
-    cout << "define forcing" <<endl;
+
     //----------------------------------------------
-    // Helmholtz solution taking physical forcing 
+    // Helmholtz solution taking physical forcing
     Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), lambda, true);
     //----------------------------------------------
     Timing("Helmholtz Solve ..");
 
-    cout << "Helmsolve" <<endl;
 #ifdef TIMING
     for(i = 0; i < 100; ++i)
     {
         Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), lambda, true);
     }
-    
+
     Timing("100 Helmholtz Solves:... ");
-#endif 
-    
+#endif
+
     //----------------------------------------------
-    // Backward Transform Solution to get solved values 
+    // Backward Transform Solution to get solved values
     Exp->BwdTrans(Exp->GetContCoeffs(), Exp->UpdatePhys(), true);
     //----------------------------------------------
-    
+
     //-----------------------------------------------
-    // Write solution to file 
+    // Write solution to file
     string   out(strtok(argv[argc-1],"."));
     string   endfile(".fld");
-    out += endfile; 
-    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef = Exp->GetFieldDefinitions();
-    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size()); 
-    
+    out += endfile;
+    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef 
+                                                = Exp->GetFieldDefinitions();
+    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+
     Exp->GlobalToLocal(Exp->GetContCoeffs(),Exp->UpdateCoeffs());
     for(i = 0; i < FieldDef.size(); ++i)
     {
@@ -176,9 +166,9 @@ int main(int argc, char *argv[])
     graph2D.Write(out, FieldDef, FieldData);
 
     //-----------------------------------------------
-    
+
     //----------------------------------------------
-    // See if there is an exact solution, if so 
+    // See if there is an exact solution, if so
     // evaluate and plot errors
     SpatialDomains::ConstExactSolutionShPtr ex_sol =
         bcs.GetExactSolution(bcs.GetVariable(0));
@@ -186,7 +176,7 @@ int main(int argc, char *argv[])
     if(ex_sol)
     {
         //----------------------------------------------
-        // evaluate exact solution 
+        // evaluate exact solution
         for(i = 0; i < nq; ++i)
         {
             fce[i] = ex_sol->Evaluate(xc0[i],xc1[i],xc2[i]);
@@ -194,7 +184,7 @@ int main(int argc, char *argv[])
         //----------------------------------------------
 
         //--------------------------------------------
-        // Calculate L_inf error 
+        // Calculate L_inf error
         Fce->SetPhys(fce);
         Fce->SetPhysState(true);
 
@@ -202,9 +192,10 @@ int main(int argc, char *argv[])
         cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
         cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
         cout << "H 1 error:        " << Exp->H1  (Fce->GetPhys()) << endl;
-        //--------------------------------------------        
+        //--------------------------------------------
     }
-    //----------------------------------------------        
-        return 0;
+    //----------------------------------------------
+
+    return 0;
 }
 

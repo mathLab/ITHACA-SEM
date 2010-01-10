@@ -313,6 +313,11 @@ namespace Nektar
             }
         }
         
+        /**
+         * @param   inarray     Input coefficients.
+         * @param   output      Output coefficients.
+         * @param   mkey        Matrix key 
+         */
         void QuadExp::LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                 Array<OneD,NekDouble> &outarray,
                                                 const StdRegions::StdMatrixKey &mkey)
@@ -426,17 +431,21 @@ namespace Nektar
                     int    dim = m_geom->GetCoordim();
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
-                        // wsp3 = g0
+                        // wsp3 = g0*g0 + g2*g2
                         Vmath::Vvtvvtp(nqtot,&gmat[0][0],1,&gmat[0][0],1,&gmat[2][0],1,&gmat[2][0],1,&wsp3[0],1);
-                        // wsp4 = g1;
+                        // wsp4 = g0*g1 + g2*g3;
                         Vmath::Vvtvvtp(nqtot,&gmat[0][0],1,&gmat[1][0],1,&gmat[2][0],1,&gmat[3][0],1,&wsp4[0],1);
-                        // wsp5 = g2;
+                        // wsp5 = g1*g1 + g3*g3; 
                         Vmath::Vvtvvtp(nqtot,&gmat[1][0],1,&gmat[1][0],1,&gmat[3][0],1,&gmat[3][0],1,&wsp5[0],1);
                         
+                        // If 3D coordinates, tag on extra terms
                         if(dim == 3)
                         {
+                            // wsp3 += g4*g4
                             Vmath::Vvtvp(nqtot,&gmat[4][0],1,&gmat[4][0],1,&wsp3[0],1,&wsp3[0],1);
+                            // wsp4 += g4*g5
                             Vmath::Vvtvp(nqtot,&gmat[4][0],1,&gmat[5][0],1,&wsp4[0],1,&wsp4[0],1);
+                            // wsp5 += g5*g5
                             Vmath::Vvtvp(nqtot,&gmat[5][0],1,&gmat[5][0],1,&wsp5[0],1,&wsp5[0],1);
                         }
                         
@@ -487,12 +496,18 @@ namespace Nektar
             }
         }
 
+        /**
+         * @param   inarray     Input array @f$ \mathbf{u} @f$.
+         * @param   outarray    Output array @f$ \boldsymbol{\nabla^2u}
+         *                          + \lambda \boldsymbol{u} @f$.
+         * @param   mkey        
+         */
         void QuadExp::HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                       Array<OneD,NekDouble> &outarray,
                                                       const StdRegions::StdMatrixKey &mkey)
         {   
             if(m_metricinfo->IsUsingLaplMetrics())       
-            {  
+            {
                 int       nquad0  = m_base[0]->GetNumPoints();
                 int       nquad1  = m_base[1]->GetNumPoints();
                 int       nqtot   = nquad0*nquad1; 
@@ -564,7 +579,7 @@ namespace Nektar
                 Vmath::Vstvpp(m_ncoeffs,lambda,&outarray[0],1,&wsp1[0],1,&wsp0[0],1,&outarray[0],1);
             }
             else
-            {   
+            {
                 int       nquad0  = m_base[0]->GetNumPoints();
                 int       nquad1  = m_base[1]->GetNumPoints();
                 int       nqtot   = nquad0*nquad1; 
@@ -1516,7 +1531,6 @@ namespace Nektar
                     }
                     else
                     {
-                        ASSERTL1(m_geom->GetCoordDim() == 2,"Standard Region Laplacian is only set up for Quads in two-dimensional");
                         MatrixKey lap00key(StdRegions::eLaplacian00,
                                            mkey.GetExpansionType(), *this);  
                         MatrixKey lap01key(StdRegions::eLaplacian01,
@@ -1536,9 +1550,18 @@ namespace Nektar
 
                         DNekMatSharedPtr lap = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
 
-                        (*lap) = (gmat[0][0]*gmat[0][0]+gmat[2][0]*gmat[2][0])*lap00 + 
-                            (gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0])*(lap01 + Transpose(lap01)) +
-                            (gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0])*lap11;
+                        // Additional terms if Quad embedded in 3D coordinate system
+                        if (m_geom->GetCoordDim() == 3)
+                        {
+                            (*lap) = (gmat[0][0]*gmat[0][0]+gmat[2][0]*gmat[2][0]+gmat[4][0]*gmat[4][0])*lap00 + 
+                                (gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0] + gmat[4][0]*gmat[5][0])*(lap01 + Transpose(lap01)) +
+                                (gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0] + gmat[5][0]*gmat[5][0])*lap11;
+                        }
+                        else {
+                            (*lap) = (gmat[0][0]*gmat[0][0]+gmat[2][0]*gmat[2][0])*lap00 + 
+                                (gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0])*(lap01 + Transpose(lap01)) +
+                                (gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0])*lap11;
+                        }                        
 
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,lap);
                     }
@@ -1561,7 +1584,7 @@ namespace Nektar
 
                     NekDouble one = 1.0;
                     (*helm) = LapMat + factor*MassMat;
-                    
+
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,helm);            
                 }
                 break;
@@ -1950,6 +1973,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.73  2009/12/17 23:43:25  bnelson
+ *    Fixed windows compiler warnings.
+ *
  *    Revision 1.72  2009/12/17 17:48:22  bnelson
  *    Fixed visual studio compiler warning.
  *

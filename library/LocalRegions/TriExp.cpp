@@ -1570,7 +1570,6 @@ namespace Nektar
                     }
                     else
                     { 
-                        ASSERTL1(m_geom->GetCoordDim() == 2,"Standard Region Laplacian is only set up for Quads in two-dimensional");
                         MatrixKey lap00key(StdRegions::eLaplacian00,
                                            mkey.GetExpansionType(), *this);  
                         MatrixKey lap01key(StdRegions::eLaplacian01,
@@ -1589,10 +1588,19 @@ namespace Nektar
                         int cols = lap00->GetColumns();
                         
                         DNekMatSharedPtr lap = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
-                        
-                        (*lap) = (gmat[0][0]*gmat[0][0] + gmat[2][0]*gmat[2][0]) * (*lap00) + 
-                            (gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0]) * (*lap01 + Transpose(*lap01)) +
-                            (gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0]) * (*lap11);
+
+                        // Additional terms if Tri embedded in 3D coordinate system
+                        if (m_geom->GetCoordDim() == 3)
+                        {
+                            (*lap) = (gmat[0][0]*gmat[0][0]+gmat[2][0]*gmat[2][0]+gmat[4][0]*gmat[4][0])* (*lap00) + 
+                                (gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0] + gmat[4][0]*gmat[5][0])*(*lap01 + Transpose(*lap01)) +
+                                (gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0] + gmat[5][0]*gmat[5][0])* (*lap11);
+                        }
+                        else {
+                            (*lap) = (gmat[0][0]*gmat[0][0]+gmat[2][0]*gmat[2][0])* (*lap00) + 
+                                (gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0])*(*lap01 + Transpose(*lap01)) +
+                                (gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0])* (*lap11);
+                        }                        
                         
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,lap);
                     }
@@ -1926,6 +1934,9 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.67  2009/12/17 23:43:25  bnelson
+ *    Fixed windows compiler warnings.
+ *
  *    Revision 1.66  2009/12/17 17:48:22  bnelson
  *    Fixed visual studio compiler warning.
  *

@@ -300,7 +300,7 @@
         BoundaryRegion definition above.-->
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
-        <D VAR="u" VALUE="sin(PI*z)*sin(PI*y)" />
+        <D VAR="u" VALUE="sin(PI*y)*sin(PI*z)" />
       </REGION>
       <REGION REF="1">
         <N VAR="u" VALUE="-PI*sin(PI*y)*cos(PI*z)" />
@@ -309,55 +309,55 @@
         <N VAR="u" VALUE="(5/sqrt(61))*PI*cos(PI*y)*sin(PI*z)-(6/sqrt(61))*PI*sin(PI*y)*cos(PI*z)" />
       </REGION>
       <REGION REF="3">
-        <D VAR="u" VALUE="sin(PI*z)*sin(PI*y)" />
+        <D VAR="u" VALUE="sin(PI*y)*sin(PI*z)" />
       </REGION>
       <REGION REF="4">
-        <D VAR="u" VALUE="sin(PI*z)*sin(PI*y)" />
+        <D VAR="u" VALUE="sin(PI*y)*sin(PI*z)" />
       </REGION>            
       <REGION REF="5">
         <N VAR="u" VALUE="PI*cos(PI*y)*sin(PI*z)" />
       </REGION>
       <REGION REF="6">
-        <D VAR="u" VALUE="sin(PI*z)*sin(PI*y)" />
+        <D VAR="u" VALUE="sin(PI*y)*sin(PI*z)" />
       </REGION>
       <REGION REF="7">
         <N VAR="u" VALUE="(5/sqrt(61))*PI*cos(PI*y)*sin(PI*z)+(6/sqrt(61))*PI*sin(PI*y)*cos(PI*z)" />
       </REGION>
       <REGION REF="8">
-        <D VAR="u" VALUE="sin(PI*z)*sin(PI*y)" />
+        <D VAR="u" VALUE="sin(PI*y)*sin(PI*z)" />
       </REGION>
       <REGION REF="9">
-        <D VAR="u" VALUE="sin(PI*z)*sin(PI*y)" />
+        <D VAR="u" VALUE="sin(PI*y)*sin(PI*z)" />
       </REGION>
       <REGION REF="10">
-        <D VAR="u" VALUE="sin(PI*z)*sin(PI*y)" />
+        <D VAR="u" VALUE="sin(PI*y)*sin(PI*z)" />
       </REGION>
       <REGION REF="11">
-        <D VAR="u" VALUE="sin(PI*z)*sin(PI*y)" />
+        <D VAR="u" VALUE="sin(PI*y)*sin(PI*z)" />
       </REGION>
       <REGION REF="12">
-        <D VAR="u" VALUE="sin(PI*z)*sin(PI*y)" />
+        <D VAR="u" VALUE="sin(PI*y)*sin(PI*z)" />
       </REGION>
       <REGION REF="13">
-        <D VAR="u" VALUE="sin(PI*z)*sin(PI*y)" />
+        <D VAR="u" VALUE="sin(PI*y)*sin(PI*z)" />
       </REGION>
       <REGION REF="14">
-        <D VAR="u" VALUE="sin(PI*z)*sin(PI*y)" />
+        <D VAR="u" VALUE="sin(PI*y)*sin(PI*z)" />
       </REGION>
       <REGION REF="15">
-        <D VAR="u" VALUE="sin(PI*z)*sin(PI*y)" />
+        <D VAR="u" VALUE="sin(PI*y)*sin(PI*z)" />
       </REGION>
       <REGION REF="16">
-        <D VAR="u" VALUE="sin(PI*z)*sin(PI*y)" />
+        <D VAR="u" VALUE="sin(PI*y)*sin(PI*z)" />
     </REGION>    
     </BOUNDARYCONDITIONS>
     
     <FORCING>
-      <F VAR="u" VALUE="-(Lambda + 2*PI*PI)*sin(PI*z)*sin(PI*y)" />
+      <F VAR="u" VALUE="-(Lambda + 2*PI*PI)*sin(PI*y)*sin(PI*z)" />
     </FORCING>
   
     <EXACTSOLUTION>
-      <F VAR ="u" VALUE="sin(PI*z)*sin(PI*y)" />
+      <F VAR ="u" VALUE="sin(PI*y)*sin(PI*z)" />
     </EXACTSOLUTION>
   
   </CONDITIONS>

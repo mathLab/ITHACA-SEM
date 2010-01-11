@@ -365,7 +365,7 @@ namespace Nektar
 
 	    int nvarcoeffs = dirForcing.num_elements();
 	    // Two independent direction
-            for(n = 0; n < 2; ++n)
+            for(n = 0; n < coordim; ++n)
             {
 
                 //G;
@@ -481,7 +481,7 @@ namespace Nektar
 
                     int nvarcoeffs = mkey.GetNvariableCoefficients();
 
-                    for(i=0;  i < 2; ++i)
+                    for(i=0;  i < coordim; ++i)
                     {
                         if(nvarcoeffs>0)
                         {
@@ -766,15 +766,22 @@ namespace Nektar
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nbndry, nbndry);
                     DNekMat &BndMat = *returnval;
                     
+                    DNekScalMatSharedPtr LamToQ[3];
+                    
                     // Matrix to map Lambda to U
                     DNekScalMat &LamToU = *v_GetLocMatrix(StdRegions::eHybridDGLamToU, varcoeffs, matrixid, lambdaval, tau);                
 
                     // Matrix to map Lambda to Q0
-                    DNekScalMat &LamToQ0 = *v_GetLocMatrix(StdRegions::eHybridDGLamToQ0, varcoeffs, matrixid, lambdaval,tau);
+                    LamToQ[0] = v_GetLocMatrix(StdRegions::eHybridDGLamToQ0, varcoeffs, matrixid, lambdaval,tau);
  
                     // Matrix to map Lambda to Q1
-                    DNekScalMat &LamToQ1 = *v_GetLocMatrix(StdRegions::eHybridDGLamToQ1, varcoeffs, matrixid, lambdaval,tau);
+                    LamToQ[1] = v_GetLocMatrix(StdRegions::eHybridDGLamToQ1, varcoeffs, matrixid, lambdaval,tau);
 
+                    // Matrix to map Lambda to Q2 for 3D coordinates
+                    if (coordim == 3)
+                    {
+                        LamToQ[2] = v_GetLocMatrix(StdRegions::eHybridDGLamToQ2, varcoeffs, matrixid, lambdaval,tau);
+                    }
 
                     // Set up edge segment expansions from local geom info
                     for(i = 0; i < nedges; ++i)
@@ -805,7 +812,7 @@ namespace Nektar
                             // Q0 * n0
                             for(j = 0; j < order_e; ++j)
                             {
-                                EdgeExp[e]->SetCoeff(j,sign[j]*LamToQ0(emap[j],i));
+                                EdgeExp[e]->SetCoeff(j,sign[j]*(*LamToQ[0])(emap[j],i));
                             }
                             
                             EdgeExp[e]->BwdTrans(EdgeExp[e]->GetCoeffs(),
@@ -832,7 +839,7 @@ namespace Nektar
                             // Q1 * n1
                             for(j = 0; j < order_e; ++j)
                             {
-                                EdgeExp[e]->SetCoeff(j,sign[j]*LamToQ1(emap[j],i));
+                                EdgeExp[e]->SetCoeff(j,sign[j]*(*LamToQ[1])(emap[j],i));
                             }
                             
                             EdgeExp[e]->BwdTrans(EdgeExp[e]->GetCoeffs(),
@@ -875,6 +882,55 @@ namespace Nektar
                                 }
                             }
 
+                            // Q2 * n2
+                            if (coordim == 3)
+                            {
+                                for(j = 0; j < order_e; ++j)
+                                {
+                                    EdgeExp[e]->SetCoeff(j,sign[j]*(*LamToQ[2])(emap[j],i));
+                                }
+                                
+                                EdgeExp[e]->BwdTrans(EdgeExp[e]->GetCoeffs(),
+                                                     EdgeExp[e]->UpdatePhys());
+    
+                                if(edgedir == StdRegions::eForwards)
+                                {
+                                    if(nvarcoeffs>0)
+                                    {
+                                        // normalindir = normals /cdot dirForcing[1]
+                                        normalindir = Array<OneD, NekDouble>(nquad_e,0.0);
+                                        Getnormalindir(e,EdgeExp[e],normals,mkey.GetVariableCoefficient(2),normalindir);
+                                        Vmath::Vvtvp(nquad_e,normalindir,1,EdgeExp[e]->GetPhys(),1,work,1,work,1);
+                                    }
+    
+                                    else
+                                    {
+                                        Vmath::Vvtvp(nquad_e,normals[2],1,
+                                                     EdgeExp[e]->GetPhys(),1,
+                                                     work,1,work,1);
+                                    }
+                                }
+                                else // subtrace values for negative normal
+                                {
+                                    if(nvarcoeffs>0)
+                                    {
+                                        // normalindir = normals /cdot dirForcing[1]
+                                        normalindir = Array<OneD, NekDouble>(nquad_e,0.0);
+                                        Getnormalindir(e,EdgeExp[e],normals,mkey.GetVariableCoefficient(2),normalindir);
+                                        Vmath::Vvtvm(nquad_e,normalindir,1,EdgeExp[e]->GetPhys(),1,work,1,work,1);
+                                        Vmath::Neg(nquad_e,work,1);
+                                    }
+                                    
+                                    else
+                                    {
+                                        Vmath::Vvtvm(nquad_e,normals[2],1,
+                                                     EdgeExp[e]->GetPhys(),1,
+                                                     work,1,work,1);
+                                        Vmath::Neg(nquad_e,work,1);
+                                    }
+                                }
+                            }
+                            
                             // - tau (ulam - lam)
                             for(j = 0; j < order_e; ++j)
                             {
@@ -946,6 +1002,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.cpp,v $
+ *    Revision 1.22  2009/12/17 17:48:22  bnelson
+ *    Fixed visual studio compiler warning.
+ *
  *    Revision 1.21  2009/12/15 18:09:02  cantwell
  *    Split GeomFactors into 1D, 2D and 3D
  *    Added generation of tangential basis into GeomFactors

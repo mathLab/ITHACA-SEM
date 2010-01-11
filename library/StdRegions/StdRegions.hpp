@@ -172,6 +172,7 @@ namespace Nektar
             "WeakDeriv2",
             "WeakDirectionalDeriv",
             "MassLevelCurvature",
+            "LinearAdvection",
             "NBasisTrans",
             "InvNBasisTrans", 
             "BwdTrans",
@@ -181,8 +182,12 @@ namespace Nektar
             "IProductWRTDerivBase2",
             "Helmholtz",
             "HybridDGHelmholz",
-            "HybridDGQIprodWRTQ",
-            "HybridDGLamToQ"
+            "InvHybridDGHelmholtz",
+            "HybridDGHelmBndLam",
+            "HybridDGLamToQ0",
+            "HybridDGLamToQ1",
+            "HybridDGLamToQ2",
+            "HybridDGLamToU"
         };
 
         /** enum list of StdExpansion regions */
@@ -302,6 +307,9 @@ namespace Nektar
 
 /**
 * $Log: StdRegions.hpp,v $
+* Revision 1.37  2009/11/09 15:41:38  sehunchun
+* eWeakDirectionalDerivative and eMassLevelCurvature are added.
+*
 * Revision 1.36  2009/11/02 19:15:43  cantwell
 * Moved ContField1D to inherit from DisContField1D.
 * Moved ContField3D to inherit from DisContField3D.

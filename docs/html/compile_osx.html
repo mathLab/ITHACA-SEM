@@ -124,7 +124,7 @@
 
         
 <p style="font-size: 9px;">Last Revision:<br>
-$Date: 2009/10/30 13:56:36 $</p>
+$Date: 2009/11/25 14:48:10 $</p>
 
       </div>
 
@@ -238,9 +238,9 @@ type "make" (again, without the quotes).</li>
             
     <ol>
 
-              <li>In <em>ThirdParty/</em>, extract the boost-jam-3.1.16.tgz archive with "tar -xzvf boost-jam-3.1.16.tgz" (no quotes). This will create <em>boost-jam-3.1.16/</em>.</li>
+              <li>In <em>ThirdParty/</em>, extract the boost-jam-3.1.16.tgz archive with "tar -xzvf boost-jam-3.1.17.tgz" (no quotes). This will create <em>boost-jam-3.1.17/</em>.</li>
 
-              <li>Change to the <em>boost-jam-3.1.16/</em> directory and type "./build.sh" (no quotes), to build the bjam executable</li>
+              <li>Change to the <em>boost-jam-3.1.17/</em> directory and type "./build.sh" (no quotes), to build the bjam executable</li>
 
             
     </ol>
@@ -251,14 +251,18 @@ type "make" (again, without the quotes).</li>
             
     <ol>
 
-                <li>In <em>ThirdParty/</em>, extract the boost_1_35_0.tar.bz2 archive with "tar -xjvf boost_1_35_0.tar.bz2" (no quotes). This will create <em>boost_1_35_0/</em>.</li>
+                <li>In <em>ThirdParty/</em>, extract the boost_1_40_0.tar.bz2 archive with "tar -xjvf boost_1_40_0.tar.bz2" (no quotes). This will create <em>boost_1_40_0/</em>.</li>
 
-              <li>Change to the <em>boost_1_35_0/</em> directory, and
-type "../boost-jam-3.1.16/bin.macosxx86/bjam --prefix=../boost
+              <li>Change to the <em>boost_1_40_0/</em> directory, and
+type "../boost-jam-3.1.17/bin.macosxx86/bjam --prefix=../boost
 --build-type=complete --with-thread --with-iostreams --with-test
---with-date_time --with-filesystem --with-system --toolset=darwin install" (without the quotes). This
-will place the compiled libraries and include files in the correct
-path.
+--with-date_time --with-filesystem --with-system --layout=versioned
+--toolset=darwin install" (without the quotes). This will place the
+compiled libraries and include files in the correct
+path. (<em>Note:</em> that for a 64 bit operating system, such as Mac
+OSX 10.6, it may be necessary to use
+"../boost-jam-3.1.17/bin.macosxx86_64/bjam" instead of
+"../boost-jam-3.1.17/bin.macosxx86/bjam")
         <ol>
 
                       <li>The "--with-*" compiles Boost with only the

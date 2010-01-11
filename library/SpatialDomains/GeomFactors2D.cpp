@@ -832,54 +832,90 @@ namespace Nektar
                 v_ComputeSurfaceNormals();
             }
 
-            // Get a principle direction for the expansion.
-            Array<OneD, Array<OneD,NekDouble> > PrincipleDir;
-            ComputePrincipleDirection(PrincipleDir);
-
-            // Allocate temporary and tangent storage.
-            Array<OneD, NekDouble> temp(nq, 0.0);
-            mTangents  =  Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
-            for (i = 0; i < 2; ++i)
-            {
-                mTangents[i] = Array<OneD, Array<OneD, NekDouble> >(mCoordDim);
-                for (k = 0; k < mCoordDim; ++k)
+            if(mTangentDir==eLOCAL)
+            {  
+                // Allocate temporary and tangent storage.
+                Array<OneD, NekDouble> temp(nq, 0.0);
+                mTangents  =  Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
+                for (i = 0; i < 2; ++i)
                 {
-                    mTangents[i][k] = Array<OneD, NekDouble>(nq, 0.0);
+                    mTangents[i] = Array<OneD, Array<OneD, NekDouble> >(mCoordDim);
+                    for (k = 0; k < mCoordDim; ++k)
+                    {
+                        mTangents[i][k] = Array<OneD, NekDouble>(nq, 0.0);
+                    }
                 }
+                
+                for (i = 0; i < mCoordDim; ++i)
+                {
+                    for(j =0; j < 2; ++j)
+                    {
+                        Vmath::Vcopy(nq, mDeriv[0][i], 1, mTangents[0][i], 1);
+                    }
+                }
+
+                // Normalise first tangent vectors.
+                VectorNormalise(mTangents[0]);
+                
+                // The second set of tangential vectors is obtained by cross-
+                // producting the surface normal with the first tangential vectors.
+                VectorCrossProd(mTangents[0], mNormal, mTangents[1]);
+                
+                // Normalise second tangent vectors.
+                VectorNormalise(mTangents[1]);
             }
 
-            // Gram-schmidz process to make this principaldirection orthonormal
-            // to surface normal vectors. Let u1 = v1 = SurfaceNormal,
-            // v2 = Principaldirection, which should be orthogornalised to u2
-            // inner12 = < u1, v2 >, norm2 = < u1, u1 > = 1 by default
-            // ipro = - < u1, v2 > / < u1, u1 >
-            for (i = 0; i < mCoordDim; ++i)
+            else
             {
-                Vmath::Vvtvp(nq, mNormal[i],        1,
+                // Get a principle direction for the expansion.
+                Array<OneD, Array<OneD,NekDouble> > PrincipleDir;
+                ComputePrincipleDirection(PrincipleDir);
+                
+                // Allocate temporary and tangent storage.
+                Array<OneD, NekDouble> temp(nq, 0.0);
+                mTangents  =  Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
+                for (i = 0; i < 2; ++i)
+                {
+                    mTangents[i] = Array<OneD, Array<OneD, NekDouble> >(mCoordDim);
+                    for (k = 0; k < mCoordDim; ++k)
+                    {
+                        mTangents[i][k] = Array<OneD, NekDouble>(nq, 0.0);
+                    }
+                }
+
+                // Gram-schmidz process to make this principaldirection orthonormal
+                // to surface normal vectors. Let u1 = v1 = SurfaceNormal,
+                // v2 = Principaldirection, which should be orthogornalised to u2
+                // inner12 = < u1, v2 >, norm2 = < u1, u1 > = 1 by default
+                // ipro = - < u1, v2 > / < u1, u1 >
+                for (i = 0; i < mCoordDim; ++i)
+                {
+                    Vmath::Vvtvp(nq, mNormal[i],        1,
                                  PrincipleDir[i],   1,
                                  temp,              1,
                                  temp,              1);
-            }
-            Vmath::Neg(nq, temp, 1);
-
-            // u2 = v2 - < u1 , v2 > ( u1 / < u1, u1 > )
-            for (i = 0; i < mCoordDim; ++i)
-            {
-                Vmath::Vvtvp(nq, temp,              1,
+                }
+                Vmath::Neg(nq, temp, 1);
+                
+                // u2 = v2 - < u1 , v2 > ( u1 / < u1, u1 > )
+                for (i = 0; i < mCoordDim; ++i)
+                {
+                    Vmath::Vvtvp(nq, temp,              1,
                                  mNormal[i],        1,
                                  PrincipleDir[i],   1,
                                  mTangents[0][i],   1);
+                }
+                
+                // Normalise first tangent vectors.
+                VectorNormalise(mTangents[0]);
+                
+                // The second set of tangential vectors is obtained by cross-
+                // producting the surface normal with the first tangential vectors.
+                VectorCrossProd(mTangents[0], mNormal, mTangents[1]);
+                
+                // Normalise second tangent vectors.
+                VectorNormalise(mTangents[1]);
             }
-
-            // Normalise first tangent vectors.
-            VectorNormalise(mTangents[0]);
-
-            // The second set of tangential vectors is obtained by cross-
-            // producting the surface normal with the first tangential vectors.
-            VectorCrossProd(mTangents[0], mNormal, mTangents[1]);
-
-            // Normalise second tangent vectors.
-            VectorNormalise(mTangents[1]);
         }
 
 

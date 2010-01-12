@@ -62,7 +62,7 @@ namespace Nektar
         {
             eNoExpansionType,
             eModified,
-			eOrthogonal,
+            eOrthogonal,
             eGLL_Lagrange,
             eGLL_Lagrange_SEM,
             eExpansionTypeSize
@@ -70,22 +70,22 @@ namespace Nektar
 
         // Keep this consistent with the enums in ExpansionType.
         // This is used in the BC file to specify the expansion type.
-        const std::string kExpansionTypeStr[] = 
+        const std::string kExpansionTypeStr[] =
         {
             "NOTYPE",
             "MODIFIED",
-			"ORTHOGONAL",
+            "ORTHOGONAL",
             "GLL_LAGRANGE",
             "GLL_LAGRANGE_SEM"
         };
 
-        typedef boost::shared_ptr<InterfaceComponent> SharedInterfaceCompPtr;
-        typedef std::vector< VertexComponentSharedPtr >  VertexVector;
-        typedef std::list< SharedInterfaceCompPtr > InterfaceCompList;
+        typedef boost::shared_ptr< InterfaceComponent > SharedInterfaceCompPtr;
+        typedef std::vector< VertexComponentSharedPtr > VertexVector;
+        typedef std::list< SharedInterfaceCompPtr >     InterfaceCompList;
 
-        typedef boost::shared_ptr< GeometryVector > Composite;
-        typedef std::vector< Composite >            CompositeVector;
-        typedef std::vector< Composite >::iterator  CompositeVectorIter;
+        typedef boost::shared_ptr< GeometryVector >     Composite;
+        typedef std::vector< Composite >                CompositeVector;
+        typedef std::vector< Composite >::iterator      CompositeVectorIter;
 
         struct ElementEdge
         {
@@ -110,10 +110,13 @@ namespace Nektar
 
         struct Expansion
         {
-        Expansion(GeometrySharedPtr geomShPtr, const LibUtilities::BasisKeyVector basiskeyvec):
-            m_GeomShPtr(geomShPtr),
+            Expansion(GeometrySharedPtr geomShPtr,
+                      const LibUtilities::BasisKeyVector basiskeyvec):
+                m_GeomShPtr(geomShPtr),
                 m_BasisKeyVector(basiskeyvec)
-            {};
+            {
+            }
+
             GeometrySharedPtr             m_GeomShPtr;
             LibUtilities::BasisKeyVector  m_BasisKeyVector;
         };
@@ -123,183 +126,157 @@ namespace Nektar
         typedef std::vector<ExpansionShPtr>::iterator ExpansionVectorIter;
 
 
-	static std::vector<LibUtilities::PointsType> NullPointsTypeVector;
-	static std::vector<unsigned int> NullUnsignedIntVector;
+        static std::vector<LibUtilities::PointsType> NullPointsTypeVector;
+        static std::vector<unsigned int> NullUnsignedIntVector;
 
         struct FieldDefinitions
         {
-	  
-        FieldDefinitions(SpatialDomains::GeomShapeType shapeType,
-                         std::vector<unsigned int> &elementIDs,
-                         std::vector<LibUtilities::BasisType> &basis, // vector[2]
-                         bool uniOrder,
-                         std::vector<unsigned int> &numModes, // UniOrder = vector[dimension] - MixOrder = vector[element*dimension]
-                         std::vector<std::string>  &fields,
-			 std::vector<LibUtilities::PointsType> &points = NullPointsTypeVector,
-			 bool pointsDef = false,
-			 std::vector<unsigned int> &numPoints = NullUnsignedIntVector,
-			 bool numPointsDef = false) : 
-	  m_ShapeType(shapeType),
-	    m_ElementIDs(elementIDs),
-	    m_Basis(basis),
-	    m_Points(points),
-	    m_PointsDef(pointsDef),
-	    m_UniOrder(uniOrder),
-	    m_NumModes(numModes),
-	    m_NumPoints(numPoints),
-	    m_NumPointsDef(numPointsDef),
-	    m_Fields(fields)
-	  {};
-	  SpatialDomains::GeomShapeType         m_ShapeType;
-	  std::vector<unsigned int>             m_ElementIDs;
-	  std::vector<LibUtilities::BasisType>  m_Basis;
-	  std::vector<LibUtilities::PointsType> m_Points;      //!< Define the type of points per direction
-	  bool                                  m_PointsDef;
-	  bool                                  m_UniOrder;    //!< Define order of the element group (UniOrder: same order for each element - MixOrder: definition of a different order for each element)
-	  std::vector<unsigned int>             m_NumModes;    //!< Define number of modes per direction
-	  std::vector<unsigned int>             m_NumPoints;
-	  bool                                  m_NumPointsDef;
-	  std::vector<std::string>              m_Fields;
+            FieldDefinitions(SpatialDomains::GeomShapeType shapeType,
+                             std::vector<unsigned int> &elementIDs,
+                             // vector[2]
+                             std::vector<LibUtilities::BasisType> &basis,
+                             bool uniOrder,
+                             // UniOrder = vector[dimension] - MixOrder
+                             //          = vector[element*dimension]
+                             std::vector<unsigned int> &numModes,
+                             std::vector<std::string>  &fields,
+                             std::vector<LibUtilities::PointsType> &points
+                                                        = NullPointsTypeVector,
+                             bool pointsDef = false,
+                             std::vector<unsigned int> &numPoints
+                                                        = NullUnsignedIntVector,
+                             bool numPointsDef = false) :
+                m_ShapeType(shapeType),
+                m_ElementIDs(elementIDs),
+                m_Basis(basis),
+                m_Points(points),
+                m_PointsDef(pointsDef),
+                m_UniOrder(uniOrder),
+                m_NumModes(numModes),
+                m_NumPoints(numPoints),
+                m_NumPointsDef(numPointsDef),
+                m_Fields(fields)
+            {
+            }
+
+            SpatialDomains::GeomShapeType         m_ShapeType;
+            std::vector<unsigned int>             m_ElementIDs;
+            std::vector<LibUtilities::BasisType>  m_Basis;
+            /// Define the type of points per direction.
+            std::vector<LibUtilities::PointsType> m_Points;
+            bool                                  m_PointsDef;
+            /// Define order of the element group.
+            /// * UniOrder: same order for each element
+            /// * MixOrder: definition of a different order for each element.
+            bool                                  m_UniOrder;
+            /// Define number of modes per direction.
+            std::vector<unsigned int>             m_NumModes;
+            std::vector<unsigned int>             m_NumPoints;
+            bool                                  m_NumPointsDef;
+            std::vector<std::string>              m_Fields;
         };
-	
+
         typedef boost::shared_ptr<FieldDefinitions> FieldDefinitionsSharedPtr;
-        
+
         typedef std::map<std::string, std::string> GeomInfoMap;
 
+
+        /// Base class for a spectral/hp element mesh.
         class MeshGraph
         {
         public:
             MeshGraph();
             virtual ~MeshGraph();
 
-            static boost::shared_ptr<MeshGraph> Read(const std::string& infilename);
+            static boost::shared_ptr<MeshGraph> Read(
+                    const std::string& infilename);
+
             virtual void ReadGeometry(const std::string& infilename);
             virtual void ReadGeometry(TiXmlDocument &doc);
-            
+
             /// Read geometric information from a file.
             void ReadGeometryInfo(const std::string &infilename);
-            
+
             /// Read geometric information from an XML document.
             void ReadGeometryInfo(TiXmlDocument &doc);
-            
+
             void ReadExpansions(const std::string &infilename);
 
             void ReadExpansions(TiXmlDocument &doc);
 
-            inline VertexComponentSharedPtr GetVertex(int id)
-            {
-                return m_vertset[id];
-            }
+            inline VertexComponentSharedPtr GetVertex(int id);
 
             /// \brief Dimension of the mesh (can be a 1D curve in 3D space).
-            inline int GetMeshDimension(void) const
-            {
-                return m_MeshDimension;
-            }
+            inline int GetMeshDimension(void) const;
 
             /// \brief Dimension of the space (can be a 1D curve in 3D space).
-            inline int GetSpaceDimension(void) const
-            {
-                return m_SpaceDimension;
-            }
+            inline int GetSpaceDimension(void) const;
 
-            inline const int GetNvertices() const 
-            {
-                return int(m_vertset.size());
-            }
-                        
-            int CheckFieldDefinition(const FieldDefinitionsSharedPtr  &fielddefs);
-            void Write(const std::string &outFile, 
-                       std::vector<FieldDefinitionsSharedPtr> &fielddefs, 
+            inline const int GetNvertices() const;
+
+            int CheckFieldDefinition(
+                    const FieldDefinitionsSharedPtr  &fielddefs);
+
+            void Write(const std::string &outFile,
+                       std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                        std::vector<std::vector<double> >      &fielddata);
 
-	    /**
-	     * \brief This function imports the input xml file. It defines the fields and their data.
-	     *
-	     */
-            void Import(const std::string& infilename, std::vector<FieldDefinitionsSharedPtr> &fielddefs, std::vector<std::vector<double> > &fielddata);
+            /// This function imports the input xml file. It defines the fields
+            /// and their data.
+            void Import(const std::string& infilename, 
+                    std::vector<FieldDefinitionsSharedPtr> &fielddefs,
+                    std::vector<std::vector<double> > &fielddata);
 
-	    /**
-	     * \brief This function imports the definition of the fields.
-	     *
-	     * The bool decide if the FiledDefs are in <EXPANSION> or in <NEKTAR>.
-	     *
-	     */
-	    void ImportFieldDefs(TiXmlDocument &doc, std::vector<FieldDefinitionsSharedPtr> &fielddefs, bool expChild);
-	    
-	    /**
-	     * \brief This function imports the data fileds.
-	     *
-	     */
-	    void ImportFieldData(TiXmlDocument &doc, const std::vector<FieldDefinitionsSharedPtr> &fielddefs, std::vector<std::vector<double> > &fielddata);
-            
-            GeometrySharedPtr GetCompositeItem(int whichComposite, int whichItem);
-            Composite GetComposite(int whichComposite) const
-            {
-                Composite returnval;
-                if (whichComposite >= 0 && whichComposite < int(m_MeshCompositeVector.size()))
-                {
-                    returnval = m_MeshCompositeVector[whichComposite];
-                }
-                
-                return returnval;
-            }
-            
-            const CompositeVector &GetDomain(void) const
-            {
-                return m_Domain;
-            }
-            
+            /// This function imports the definition of the fields.
+            void ImportFieldDefs(TiXmlDocument &doc, 
+                    std::vector<FieldDefinitionsSharedPtr> &fielddefs, 
+                    bool expChild);
+
+            /// This function imports the data fileds.
+            void ImportFieldData(TiXmlDocument &doc, 
+                    const std::vector<FieldDefinitionsSharedPtr> &fielddefs, 
+                    std::vector<std::vector<double> > &fielddata);
+
+            GeometrySharedPtr GetCompositeItem(int whichComposite, 
+                    int whichItem);
+
+            inline Composite GetComposite(int whichComposite) const;
+
+            inline const CompositeVector &GetDomain(void) const;
+
             void ReadDomain(TiXmlDocument &doc);
             void ReadCurves(TiXmlDocument &doc);
             void ReadCurves(std::string &infilename);
-            void GetCompositeList(const std::string &compositeStr, CompositeVector &compositeVector) const;
-            
-            ExpansionShPtr GetExpansion(GeometrySharedPtr geom)
-            {
-                ExpansionVectorIter iter;
-                ExpansionShPtr returnval;
-                
-                for (iter = m_ExpansionVector.begin(); iter!=m_ExpansionVector.end(); ++iter)
-                {
-                    if ((*iter)->m_GeomShPtr == geom)
-                    {
-                        returnval = *iter;
-                        break;
-                    }
-                }
-                return returnval;
-            }
+            void GetCompositeList(const std::string &compositeStr,
+                    CompositeVector &compositeVector) const;
 
-            /**
-	     * \brief This function sets the expansion giving the definition of the field and the quadrature points.
-	     *
-	     */
-            void SetExpansions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef, std::vector< std::vector<LibUtilities::PointsType> > &pointstype);
-          
-	    /**
-	     * \brief This function sets the expansion giving the definition of the field. The quadrature points type and number is defined as default.
-	     *
-	     */
-	    void SetExpansions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef);
+            inline ExpansionShPtr GetExpansion(GeometrySharedPtr geom);
 
-            const ExpansionVector &GetExpansions(void) const
-            {
-                return m_ExpansionVector;
-            }
+            /// This function sets the expansion giving the definition of the
+            /// field and the quadrature points.
+            void SetExpansions(
+                    std::vector<SpatialDomains::FieldDefinitionsSharedPtr>
+                                                                &fielddef,
+                    std::vector< std::vector<LibUtilities::PointsType> > 
+                                                                &pointstype);
+
+            /// This function sets the expansion giving the definition of the
+            /// field. The quadrature points type and number is defined as
+            /// default.
+            void SetExpansions(
+                    std::vector<SpatialDomains::FieldDefinitionsSharedPtr>
+                                                                &fielddef);
+
+            /// Sets the basis key for all expansions of the given shape.
+            void SetBasisKey(SpatialDomains::GeomShapeType shape,
+                             LibUtilities::BasisKeyVector &keys);
             
-            const bool CheckForGeomInfo(std::string parameter)
-            {
-                return mGeomInfo.find(parameter) != mGeomInfo.end();
-            }
-            
-            const std::string GetGeomInfo(std::string parameter)
-            {
-                ASSERTL1(mGeomInfo.find(parameter) != mGeomInfo.end(),
-                        "Parameter " + parameter + " does not exist.");
-                return mGeomInfo[parameter];
-            }
-            
+            inline const ExpansionVector &GetExpansions(void) const;
+
+            inline const bool CheckForGeomInfo(std::string parameter);
+
+            inline const std::string GetGeomInfo(std::string parameter);
+
        protected:
             VertexVector            m_vertset;
             InterfaceCompList       m_icomps;
@@ -316,19 +293,90 @@ namespace Nektar
             PrismGeomVector         m_prismgeoms;
             HexGeomVector           m_hexgeoms;
 
-            int m_MeshDimension;
-            int m_SpaceDimension;
+            int                     m_MeshDimension;
+            int                     m_SpaceDimension;
 
-            CompositeVector m_MeshCompositeVector;
-            CompositeVector m_Domain;
-            ExpansionVector m_ExpansionVector;
-            
+            CompositeVector         m_MeshCompositeVector;
+            CompositeVector         m_Domain;
+            ExpansionVector         m_ExpansionVector;
+
             GeomInfoMap             mGeomInfo;
         };
 
         typedef boost::shared_ptr<MeshGraph> MeshGraphSharedPtr;
 
+        inline VertexComponentSharedPtr MeshGraph::GetVertex(int id)
+        {
+            return m_vertset[id];
+        }
 
+        /// \brief Dimension of the mesh (can be a 1D curve in 3D space).
+        inline int MeshGraph::GetMeshDimension(void) const
+        {
+            return m_MeshDimension;
+        }
+
+        /// \brief Dimension of the space (can be a 1D curve in 3D space).
+        inline int MeshGraph::GetSpaceDimension(void) const
+        {
+            return m_SpaceDimension;
+        }
+
+        inline const int MeshGraph::GetNvertices() const
+        {
+            return int(m_vertset.size());
+        }
+
+        inline Composite MeshGraph::GetComposite(int whichComposite) const
+        {
+            Composite returnval;
+            if (whichComposite >= 0 
+                    && whichComposite < int(m_MeshCompositeVector.size()))
+            {
+                returnval = m_MeshCompositeVector[whichComposite];
+            }
+
+            return returnval;
+        }
+
+        inline const CompositeVector &MeshGraph::GetDomain(void) const
+        {
+            return m_Domain;
+        }
+        
+        inline ExpansionShPtr MeshGraph::GetExpansion(GeometrySharedPtr geom)
+        {
+            ExpansionVectorIter iter;
+            ExpansionShPtr returnval;
+
+            for (iter = m_ExpansionVector.begin(); 
+                                    iter!=m_ExpansionVector.end(); ++iter)
+            {
+                if ((*iter)->m_GeomShPtr == geom)
+                {
+                    returnval = *iter;
+                    break;
+                }
+            }
+            return returnval;
+        }
+        
+        inline const ExpansionVector &MeshGraph::GetExpansions(void) const
+        {
+            return m_ExpansionVector;
+        }
+
+        inline const bool MeshGraph::CheckForGeomInfo(std::string parameter)
+        {
+            return mGeomInfo.find(parameter) != mGeomInfo.end();
+        }
+
+        inline const std::string MeshGraph::GetGeomInfo(std::string parameter)
+        {
+            ASSERTL1(mGeomInfo.find(parameter) != mGeomInfo.end(),
+                    "Parameter " + parameter + " does not exist.");
+            return mGeomInfo[parameter];
+        }
     }; //end of namespace
 }; //end of namespace
 
@@ -336,6 +384,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph.h,v $
+// Revision 1.40  2009/12/16 21:09:13  bnelson
+// Updated file read methods to take const std::string& instead of std::string&
+//
 // Revision 1.39  2009/12/15 18:09:02  cantwell
 // Split GeomFactors into 1D, 2D and 3D
 // Added generation of tangential basis into GeomFactors

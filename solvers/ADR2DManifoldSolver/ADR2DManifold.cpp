@@ -660,33 +660,36 @@ namespace Nektar
         NekDouble A = 2.0;
         NekDouble B = 5.0;
 
+        Array<OneD, NekDouble> phys0(npoints);
         Array<OneD, NekDouble> phys1(npoints);
-        Array<OneD, NekDouble> phys2(npoints);
-        Array<OneD, NekDouble> temp(npoints,0.0);
-        Array<OneD, NekDouble> tempcoeff(ncoeffs,0.0);
+        Array<OneD, NekDouble> phys0out(npoints);
+        Array<OneD, NekDouble> phys1out(npoints);
+        Array<OneD, NekDouble> cubterm(npoints,0.0);
 
         // Back to Physicsfield
-        m_fields[0]->BwdTrans(inarray[0],phys1);
+        m_fields[0]->BwdTrans(inarray[0],phys0);
         m_fields[0]->SetPhysState(true);        
 
-        m_fields[1]->BwdTrans(inarray[1],phys2);
+        m_fields[1]->BwdTrans(inarray[1],phys1);
         m_fields[1]->SetPhysState(true);        
 
-        // temp = phys1*phys1*phy2
-        Vmath::Vmul(npoints,&phys1[0],1,&phys1[0],1,&temp[0],1);
-        Vmath::Vmul(npoints,&phys2[0],1,&temp[0],1,&temp[0],1);
+        // temp = phys0*phys0*phy1
+        Vmath::Vmul(npoints,&phys0[0],1,&phys0[0],1,&cubterm[0],1);
+        Vmath::Vmul(npoints,&phys1[0],1,&cubterm[0],1,&cubterm[0],1);
 
-        m_fields[0]->FwdTrans(temp,tempcoeff);
-        m_fields[0]->SetPhysState(false);   
-        m_fields[1]->SetPhysState(false);            
-
-        // outarray[0] = A - B*phy1 + phy1*phy1*phy2 - phy1
+        // outarray[0] = A - B*phy0 + phy0*phy0*phy1 - phy0
         NekDouble coeff = -1.0*(B+1.0);
-        Vmath::Svtvp(ncoeffs,coeff,&inarray[0][0],1,&tempcoeff[0],1,&outarray[0][0],1);
-        Vmath::Sadd(ncoeffs,A,&outarray[0][0],1,&outarray[0][0],1);
+        Vmath::Svtvp(npoints,coeff,&phys0[0],1,&cubterm[0],1,&phys0out[0],1);
+        Vmath::Sadd(npoints,A,&phys0out[0],1,&phys0out[0],1);
 
-        // outarray[1] = B*phys1 - phy1*phy1*phy2
-        Vmath::Svtsvtp(ncoeffs,B,&inarray[0][0],1,-1.0,&tempcoeff[0],1,&outarray[1][0],1);
+        // outarray[1] = B*phys1 - phy0*phy0*phy1
+        Vmath::Svtsvtp(npoints,B,&phys1[0],1,-1.0,&cubterm[0],1,&phys1out[0],1);
+
+        m_fields[0]->FwdTrans(phys0out, outarray[0]);
+        m_fields[0]->SetPhysState(false);   
+
+        m_fields[1]->FwdTrans(phys1out, outarray[1]);
+        m_fields[1]->SetPhysState(false);            
     }
 
     void ADR2DManifold::ODEeReactionFHNtest1(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
@@ -1859,7 +1862,7 @@ namespace Nektar
             }
             break;
         
-        // -1: Linear Morphogenesis problem for diffusion-reaction test
+        // -1:Morphogenesis problem for diffusion-reaction test
         case(-1):
             {
                 for(int i = 0 ; i < nvariables ; i++)

@@ -214,6 +214,21 @@ namespace Vmath
             z += incz;
         }
     }
+    
+    /// \brief vvtvm (vector times vector plus vector): z = w*x - y
+    template<class T> void Vvtvm(int n, const T *w, const int incw, const T *x,
+                 const int incx, const T *y, const int incy,
+                 T *z, const int incz)
+    {
+        while( n-- )
+        {
+            *z = (*w) * (*x) - (*y);
+            w += incw;
+            x += incx;
+            y += incy;
+            z += incz;
+        }
+    }
 
     /// \brief  svtvp (scalar times vector plus vector): z = alpha*x + y
     template<class T> void Svtvp(int n, const T alpha, const T *x,
@@ -228,16 +243,15 @@ namespace Vmath
             z += incz;
         }
     }
-    
-    /// \brief vvtvm (vector times vector plus vector): z = w*x - y
-    template<class T> void Vvtvm(int n, const T *w, const int incw, const T *x,
+
+    /// \brief  svtvp (scalar times vector plus vector): z = alpha*x - y
+    template<class T> void Svtvm(int n, const T alpha, const T *x,
                  const int incx, const T *y, const int incy,
                  T *z, const int incz)
     {
         while( n-- )
         {
-            *z = (*w) * (*x) - (*y);
-            w += incw;
+            *z = alpha * (*x) - (*y);
             x += incx;
             y += incy;
             z += incz;
@@ -601,6 +615,9 @@ namespace Vmath
 
 /***
 $Log: Vmath.hpp,v $
+Revision 1.21  2009/05/15 14:38:41  pvos
+Changed check for regular quads so that it also includes parallellograms
+
 Revision 1.20  2009/03/10 23:44:15  claes
 Made y in z = x/y a constant in the parameter list.
 

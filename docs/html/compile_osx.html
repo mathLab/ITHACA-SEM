@@ -115,6 +115,7 @@
         <p><a href="team.html" id="menu_Team">Team Members</a></p>
 	<p><a href="pre-processing.html" id="menu_PreProcessing">Pre-processing</a></p>
         <p><a href="post-processing.html" id="menu_PostProcessing">Post-processing</a></p>
+        <p><a href="regression_tests.html" id="menu_RegressionTests">Regression Tests</a></p>
 	<p><a href="usage.html" id="menu_Usage">Usage</a></p>
         <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
         <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
@@ -124,7 +125,7 @@
 
         
 <p style="font-size: 9px;">Last Revision:<br>
-$Date: 2009/11/25 14:48:10 $</p>
+$Date: 2010/01/11 18:36:38 $</p>
 
       </div>
 
@@ -156,6 +157,9 @@ $Date: 2009/11/25 14:48:10 $</p>
   </li>
   <li>
     <h3><a href="#Compiling_the_Solvers_and_Utilities"><small>Compiling the Solvers and Utilities</small></a></h3>
+  </li>
+  <li>
+    <h3><a href="#Compiling_Regression_Tests"><small>Compiling the Regression Tests</small></a></h3>
   </li>
 </ul>
 
@@ -576,10 +580,81 @@ to get full optimizations.</li>
 </ol>
 To compile the utilities you follow an identical set of instructions but replace solvers in the above text with utilities.
 
+
+<h3><a name="Compiling_Regression_Tests"></a>Compiling the Regression Tests</h3>
+<br>
+To compile the regression tests you first need to have
+compiled the Nektar++ library and Solvers </br>
+
+<p>Once again we use CMake to generate the Makefiles that GCC requires, or
+the project files that Xcode requires.</p>
+
+<ol>
+  <li>From the terminal, change to the build directory of the regressionTests, i.e. <em>Nektar++/regressionTests/builds</em>.</li>
+  <li>CMake can generate both GCC Makefiles, or Xcode project files.
+            
+    <ul>
+      <li>GCC Makefiles
+                  
+        <ul>
+          <li>Type in "../../ThirdParty/CMake/bin/cmake -i ../" (without the quotes). 
+                        
+            <ul>
+              <li>The "-i" indicates that you want to use the wizard mode.</li>
+            </ul>
+
+                      </li>
+          <li>Would you like to see advanced options? <strong>No</strong></li>
+        </ul>
+
+                </li>
+      <li>Xcode Project Files
+                
+        <ul>
+          <li>Type in "../../ThirdParty/CMake/bin/cmake -i -G Xcode ../" (without the quotes).
+                        
+            <ul>
+              <li>The "-i" indicates that you want to use the wizard mode.</li>
+            </ul>
+
+                  </li>
+          <li>Would you like to see advanced options? <strong>No</strong></li>
+        </ul>
+
+              </li>
+    </ul>
+
+          </li>
+  <li>As before for most of the questions, you will be able to select
+the default value by just pressing enter. Most of the configuration
+will be locating the files you setup earlier in <em>ThirdParty/</em>,
+but it should find these files automatically. If you have a different
+setup, you may need to enter the paths manually if they couldn't be
+found. Below I will list some of the options that you need to pay
+attention to.
+    <ul>
+      <li><strong>CMAKE_BUILD_TYPE</strong>
+                
+        <ul>
+          <li>This
+option sets the appropriate GCC flags for the different build types:
+Debug, Release, etc. For this tutorial, I'll choose Release, in order
+to get full optimizations.</li>
+        </ul>
+        </li>
+    </ul>
+  </li>
+  <li>Now you have generated the Makefiles, you can compile the regression tests by typing "make" from the command line in any of the sub-directories of the current build location. For example to compile the regression tests for <em> Demos/StdRegions</em>, move to this directory and type "make". This will generate an executable called <em>StdRegionsDemoTest</em>. Executing this file will run a series of demos located in the <em>Nektar++/library/Demos/StdRegions</em> directory and check them against known solutions for these demos. 
+    </span></li>
+  <li> If you are modifying the regression tests by adding or removing tests you can generate a new master ".ok" file by answering  <strong>No</strong> to the <em> "Would you like to see advanced options?"</em> in step 2 and setting the variable <em>REGRESSION_MAKE_OK_FILES_EXEC</em> to <em>ON</em>. This will, for example, generate the executable <em>StdRegionsDemoMakeOKFile</em> which when executed will execute a series of demos and make the updated .ok files. 
+   </span></li>
+</ol>
+
 <h3><br>
 
 The entire Nektar++ package should now have been succesfully compiled. Instructions on how to use Nektar++ are described on the <a href="usage.html" id="menu_Usage">usage</a> page.
   </h3>      
+
         
 <p><br class="clearfloat">
 </p>

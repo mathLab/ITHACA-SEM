@@ -399,7 +399,7 @@ namespace Nektar
             DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
             
             // copy inarray in case inarray == outarray
-            NekVector<const NekDouble> in(m_ncoeffs,outarray,eWrapper);
+            NekVector<const NekDouble> in(m_ncoeffs,outarray,eCopy);
             NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
             
             out = (*matsys)*in;
@@ -1011,6 +1011,9 @@ namespace Nektar
 
 /** 
  *    $Log: NodalTriExp.cpp,v $
+ *    Revision 1.34  2009/12/17 17:48:22  bnelson
+ *    Fixed visual studio compiler warning.
+ *
  *    Revision 1.33  2009/12/15 18:09:02  cantwell
  *    Split GeomFactors into 1D, 2D and 3D
  *    Added generation of tangential basis into GeomFactors

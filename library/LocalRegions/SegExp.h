@@ -338,6 +338,12 @@ namespace Nektar
                 IProductWRTDerivBase(dir,inarray,outarray);
             }
 
+            virtual void v_NormVectorIProductWRTBase(
+                    const Array<OneD, const NekDouble>   &Fx, 
+                    const Array<OneD, const NekDouble> &Fy, 
+                    Array< OneD, NekDouble> &outarray, 
+                    bool NegateNormal = false);
+                    
             virtual void v_PhysDeriv(const Array<OneD, const NekDouble>& inarray,
                                      Array<OneD,NekDouble> &out_d0,
                                      Array<OneD,NekDouble> &out_d1 = NullNekDouble1DArray,
@@ -567,6 +573,17 @@ namespace Nektar
 
 //
 // $Log: SegExp.h,v $
+// Revision 1.46  2009/12/15 18:09:02  cantwell
+// Split GeomFactors into 1D, 2D and 3D
+// Added generation of tangential basis into GeomFactors
+// Updated ADR2DManifold solver to use GeomFactors for tangents
+// Added <GEOMINFO> XML session section support in MeshGraph
+// Fixed const-correctness in VmathArray
+// Cleaned up LocalRegions code to generate GeomFactors
+// Removed GenSegExp
+// Temporary fix to SubStructuredGraph
+// Documentation for GlobalLinSys and GlobalMatrix classes
+//
 // Revision 1.45  2009/10/06 09:45:54  cbiotto
 // Adding MultiplyByElmtInvMass
 //

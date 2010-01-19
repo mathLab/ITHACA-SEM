@@ -1171,6 +1171,27 @@ namespace Nektar
             return returnval;
         }
 
+        void SegExp::v_NormVectorIProductWRTBase(
+                const Array<OneD, const NekDouble> &Fx, 
+                const Array<OneD, const NekDouble> &Fy, 
+                Array< OneD, NekDouble> &outarray, 
+                bool NegateNormal)
+        {
+            int nq = m_base[0]->GetNumPoints();
+            Array<OneD, NekDouble > Fn(nq);
+
+            const Array<OneD, const Array<OneD, NekDouble> > &normals = GetMetricInfo()->GetNormal();
+            Vmath::Vmul (nq,&Fx[0],1,&normals[0][0], 1,&Fn[0],1);
+            Vmath::Vvtvp(nq,&Fy[0],1,&normals[0][1],1,&Fn[0],1,&Fn[0],1);
+
+            if(NegateNormal == true)
+            {
+                Vmath::Neg(nq,Fn,1);
+            }
+            
+            IProductWRTBase(Fn,outarray);
+        }
+
         void SegExp::v_SetUpPhysNormals(const StdRegions::StdExpansionSharedPtr &exp2D, const int edge)
         {
             GetMetricInfo()->ComputeNormals(exp2D->GetGeom(), edge, GetBasis(0)->GetPointsKey());            
@@ -1202,6 +1223,9 @@ namespace Nektar
 }//end of namespace
 
 // $Log: SegExp.cpp,v $
+// Revision 1.65  2009/12/17 17:48:22  bnelson
+// Fixed visual studio compiler warning.
+//
 // Revision 1.64  2009/12/15 18:09:02  cantwell
 // Split GeomFactors into 1D, 2D and 3D
 // Added generation of tangential basis into GeomFactors

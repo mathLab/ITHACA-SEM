@@ -71,6 +71,8 @@ int main(int argc, char* argv[])
 
     Execute("StdProject2D", "3 4 4 6 6 7 7  ", "Quadrilateral Modified Basis modes=6, quad=7");
 
+    Execute("StdProject2D", "3 8 8 6 6 7 7  ", "Quadrilateral Nodal/Lagrange Basis modes=6, quad=7");
+
 
     // 2D Differntiation and Projection Tests
     Execute("StdProject_Diff2D", "2 1 2 6 6 7 7 ", "Triangular Ortho Basis, modes=6, quad=7");
@@ -82,6 +84,8 @@ int main(int argc, char* argv[])
     Execute("StdProject_Diff2D", "3 1 1 6 6 7 7 ", "Quadrilateral Ortho Basis, modes=4, quad=5");
 
     Execute("StdProject_Diff2D", "3 4 4 6 6 7 7  ", "Quadrilateral Modified Basis modes=6, quad=7");
+
+    Execute("StdProject_Diff2D", "3 8 8 6 6 7 7  ", "Quadrilateral Nodal/Lagrange Basis modes=6, quad=7");
 
 
     return 0;

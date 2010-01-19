@@ -199,7 +199,7 @@ namespace Nektar
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
 
             // copy inarray in case inarray == outarray
-            NekVector<const NekDouble> in(m_ncoeffs,outarray,eWrapper);
+            NekVector<const NekDouble> in(m_ncoeffs,outarray,eCopy);
             NekVector<NekDouble> out(m_ncoeffs,outarray,eWrapper);
             
             out = (*matsys)*in;
@@ -484,6 +484,9 @@ namespace Nektar
 
 /** 
 * $Log: StdNodalTriExp.cpp,v $
+* Revision 1.32  2009/12/18 00:26:54  bnelson
+* Fixed visual studio compiler warning.
+*
 * Revision 1.31  2009/04/27 21:32:45  sherwin
 * Updated WriteToField method
 *

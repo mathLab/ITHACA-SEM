@@ -33,8 +33,8 @@ int main(int argc, char *argv[]){
   
   if(argc != 8)
   {
-    fprintf(stderr,"Usage: Project2D RegionShape Type1 Type2 order1 "       
-        "order2  nq1 nq2  \n");
+      fprintf(stderr,"Usage: StdProject2D RegionShape Type1 Type2 order1 "
+              "order2  nq1 nq2  \n");
 
     fprintf(stderr,"Where RegionShape is an integer value which "
         "dictates the region shape:\n");
@@ -84,11 +84,11 @@ int main(int argc, char *argv[]){
       
       if(btype1_val == 11)
       {
-      NodalType = LibUtilities::eNodalTriElec;
+          NodalType = LibUtilities::eNodalTriElec;
       }
       else
       {
-      NodalType = LibUtilities::eNodalTriFekete;
+          NodalType = LibUtilities::eNodalTriFekete;
       }
 
   }
@@ -154,20 +154,20 @@ int main(int argc, char *argv[]){
   {
   case StdRegions::eTriangle:
       {
-      const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
-      const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
-      const LibUtilities::BasisKey  Bkey1(btype1,order1,Pkey1);
-      const LibUtilities::BasisKey  Bkey2(btype2,order2,Pkey2);
-
-      if(btype1_val >= 10)
-      {
-          E = new StdRegions::StdNodalTriExp(Bkey1,Bkey2,NodalType);
-      }
-      else
-      {
-          E = new StdRegions::StdTriExp(Bkey1,Bkey2);
-      }
-
+          const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
+          const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
+          const LibUtilities::BasisKey  Bkey1(btype1,order1,Pkey1);
+          const LibUtilities::BasisKey  Bkey2(btype2,order2,Pkey2);
+          
+          if(btype1_val >= 10)
+          {
+              E = new StdRegions::StdNodalTriExp(Bkey1,Bkey2,NodalType);
+          }
+          else
+          {
+              E = new StdRegions::StdTriExp(Bkey1,Bkey2);
+          }
+          
       Array<OneD,NekDouble> x = Array<OneD,NekDouble>(nq1*nq2);
       Array<OneD,NekDouble> y = Array<OneD,NekDouble>(nq1*nq2);
       E->GetCoords(x,y);
@@ -184,24 +184,24 @@ int main(int argc, char *argv[]){
       
   case StdRegions::eQuadrilateral:
       {
-      const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
-      const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
-      const LibUtilities::BasisKey Bkey1(btype1,order1,Pkey1);
-      const LibUtilities::BasisKey Bkey2(btype2,order2,Pkey2);
-      E = new StdRegions::StdQuadExp(Bkey1,Bkey2);
-      
-      //----------------------------------------------
-      // Define solution to be projected
-      
-      Array<OneD, NekDouble> x = Array<OneD, NekDouble>(nq1*nq2);
-      Array<OneD, NekDouble> y = Array<OneD, NekDouble>(nq1*nq2);
-      E->GetCoords(x,y);
-      
-      for(i = 0; i < nq1*nq2; ++i)
-      {
-          sol[i]  = Quad_sol(x[i],y[i],order1,order2,btype1,btype2);
-      }
-      //---------------------------------------------
+          const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
+          const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
+          const LibUtilities::BasisKey Bkey1(btype1,order1,Pkey1);
+          const LibUtilities::BasisKey Bkey2(btype2,order2,Pkey2);
+          E = new StdRegions::StdQuadExp(Bkey1,Bkey2);
+          
+          //----------------------------------------------
+          // Define solution to be projected
+          
+          Array<OneD, NekDouble> x = Array<OneD, NekDouble>(nq1*nq2);
+          Array<OneD, NekDouble> y = Array<OneD, NekDouble>(nq1*nq2);
+          E->GetCoords(x,y);
+          
+          for(i = 0; i < nq1*nq2; ++i)
+          {
+              sol[i]  = Quad_sol(x[i],y[i],order1,order2,btype1,btype2);
+          }
+          //---------------------------------------------
       }
       break;
   }

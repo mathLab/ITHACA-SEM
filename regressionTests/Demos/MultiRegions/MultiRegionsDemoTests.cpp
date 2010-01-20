@@ -48,6 +48,10 @@ void MakeOkFile(std::string demo, std::string input, std::string info);
 
 int main(int argc, char* argv[]) 
 { 
+    // 1D Demos
+    Execute("Helmholtz1D", "helmholtz1D_8modes.xml","CG Helmholtz1D  modes=8");
+    Execute("HDGHelmholtz1D", "helmholtz1D_8modes.xml","HDG Helmholtz1D  modes=8");
+
     // 2D Demos
     Execute("Helmholtz2D", "helmholtz2D_7modes.xml","CG Helmholtz2D  modes=7");
     Execute("HDGHelmholtz2D", "helmholtz2D_7modes.xml","HDG Helmholtz2D  modes=7");

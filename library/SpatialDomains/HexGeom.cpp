@@ -756,11 +756,30 @@ namespace Nektar
             }
         }
 
+        bool HexGeom::v_ContainsPoint(
+                const Array<OneD, const NekDouble> &gloCoord)
+        {
+            ASSERTL1(gloCoord.num_elements() == 3,
+                     "Three dimensional geometry expects three coordinates.");
+                     
+            Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);
+            GetLocCoords(gloCoord, stdCoord);
+            if (stdCoord[0] >= -1 && stdCoord[0] <= 1
+                && stdCoord[1] >= -1 && stdCoord[1] <= 1
+                && stdCoord[2] >= -1 && stdCoord[2] <= 1)
+            {
+                return true;
+            }
+            return false;
+        }
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: HexGeom.cpp,v $
+// Revision 1.21  2009/12/17 01:47:31  bnelson
+// Fixed visual studio compiler warning.
+//
 // Revision 1.20  2009/12/16 21:29:31  bnelson
 // Removed unused variables to fix compiler warnings.
 //

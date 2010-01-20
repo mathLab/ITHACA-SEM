@@ -388,12 +388,34 @@ namespace Nektar
                 outfile << std::endl;
             }
         }
-        
+
+        bool SegGeom::v_ContainsPoint(
+                const Array<OneD, const NekDouble> &gloCoord)
+        {
+            Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);
+            GetLocCoords(gloCoord, stdCoord);
+            if (stdCoord[0] >= -1 && stdCoord[0] <= 1)
+            {
+                return true;
+            }
+            return false;
+        }
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: SegGeom.cpp,v $
+// Revision 1.27  2009/12/15 18:09:02  cantwell
+// Split GeomFactors into 1D, 2D and 3D
+// Added generation of tangential basis into GeomFactors
+// Updated ADR2DManifold solver to use GeomFactors for tangents
+// Added <GEOMINFO> XML session section support in MeshGraph
+// Fixed const-correctness in VmathArray
+// Cleaned up LocalRegions code to generate GeomFactors
+// Removed GenSegExp
+// Temporary fix to SubStructuredGraph
+// Documentation for GlobalLinSys and GlobalMatrix classes
+//
 // Revision 1.26  2009/07/02 13:32:24  sehunchun
 // *** empty log message ***
 //

@@ -256,6 +256,9 @@ namespace Nektar
                 {
                     return kNedges;
                 }                
+
+                virtual bool v_ContainsPoint(
+                        const Array<OneD, const NekDouble> &gloCoord);
         };
         
         // shorthand for boost pointer
@@ -270,6 +273,17 @@ namespace Nektar
 
 //
 // $Log: SegGeom.h,v $
+// Revision 1.25  2009/12/15 18:09:02  cantwell
+// Split GeomFactors into 1D, 2D and 3D
+// Added generation of tangential basis into GeomFactors
+// Updated ADR2DManifold solver to use GeomFactors for tangents
+// Added <GEOMINFO> XML session section support in MeshGraph
+// Fixed const-correctness in VmathArray
+// Cleaned up LocalRegions code to generate GeomFactors
+// Removed GenSegExp
+// Temporary fix to SubStructuredGraph
+// Documentation for GlobalLinSys and GlobalMatrix classes
+//
 // Revision 1.24  2009/03/04 14:17:38  pvos
 // Removed all methods that take and Expansion as argument
 //

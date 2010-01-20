@@ -1469,6 +1469,18 @@ namespace Nektar
             }
         }
 
+        StdRegions::StdExpansionSharedPtr& ExpList::GetExp(
+                    const Array<OneD, const NekDouble> &gloCoord)
+        {
+            Array<OneD, NekDouble> stdCoord(GetCoordim(0),0.0);
+            for (int i = 0; i < GetExpSize(); ++i)
+            {
+                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoord))
+                {
+                    return (*m_exp)[i];
+                }
+            }
+        }
         /**
          * The operation is evaluated locally by the elemental
          * function StdRegions#StdExpansion#GetCoords.
@@ -2312,6 +2324,7 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
             return NullNekDouble1DArray;
         }
+
 
         void ExpList::v_BwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,

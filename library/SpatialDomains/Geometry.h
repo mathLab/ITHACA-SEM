@@ -155,6 +155,12 @@ namespace Nektar
                     return v_GetShapeDim();
                 }
 
+                inline bool ContainsPoint(
+                        const Array<OneD, const NekDouble> &gloCoord)
+                {
+                    return v_ContainsPoint(gloCoord);
+                }
+                        
             protected:
 
                 static GeomFactorsSharedPtr ValidateRegGeomFactor(GeomFactorsSharedPtr geomFactor);
@@ -210,6 +216,12 @@ namespace Nektar
                     return 0;
                 }
 
+                virtual bool v_ContainsPoint(
+                        const Array<OneD, const NekDouble> &gloCoord)
+                {
+                    NEKERROR(ErrorUtil::efatal,
+                             "This function has not been defined for this geometry");
+                }
         };
     }; //end of namespace
 }; // end of namespace
@@ -218,6 +230,17 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.32  2009/12/15 18:09:02  cantwell
+// Split GeomFactors into 1D, 2D and 3D
+// Added generation of tangential basis into GeomFactors
+// Updated ADR2DManifold solver to use GeomFactors for tangents
+// Added <GEOMINFO> XML session section support in MeshGraph
+// Fixed const-correctness in VmathArray
+// Cleaned up LocalRegions code to generate GeomFactors
+// Removed GenSegExp
+// Temporary fix to SubStructuredGraph
+// Documentation for GlobalLinSys and GlobalMatrix classes
+//
 // Revision 1.31  2009/09/06 21:56:42  sherwin
 // Updates for Navier-Stokes solver including restart details
 //

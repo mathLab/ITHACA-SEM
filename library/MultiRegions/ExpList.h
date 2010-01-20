@@ -356,6 +356,11 @@ namespace Nektar
             /// expansion of the \f$n^{\mathrm{th}}\f$ element.
             inline StdRegions::StdExpansionSharedPtr& GetExp(int n);
 
+            /// This function returns (a shared pointer to) the local elemental
+            /// expansion containing the arbitrary point given by \a gloCoord.
+            StdRegions::StdExpansionSharedPtr& GetExp(
+                    const Array<OneD, const NekDouble> &gloCoord);
+
             /// Get the start offset position for a global list of #m_coeffs
             /// correspoinding to element n.
             inline int GetCoeff_Offset(int n);
@@ -702,7 +707,7 @@ namespace Nektar
             // wrapper functions about virtual functions
             virtual const
                 Array<OneD, const NekDouble> &v_GetContCoeffs() const;
-
+                    
             virtual void v_BwdTrans(
                                     const Array<OneD,const NekDouble> &inarray,
                                           Array<OneD,      NekDouble> &outarray,
@@ -1263,6 +1268,10 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.85  2010/01/06 13:24:48  cantwell
+* Corrected naming of parameters in HelmSolve routines.
+* Documentation of DisContField1D.
+*
 * Revision 1.84  2010/01/03 19:39:09  cantwell
 * Added FldToVtk converter.
 * Added XmlToVtk converter.

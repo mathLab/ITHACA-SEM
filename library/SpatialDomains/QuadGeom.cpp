@@ -406,11 +406,37 @@ namespace Nektar
             return returnval;
         }
 
+        bool QuadGeom::v_ContainsPoint(
+                    const Array<OneD, const NekDouble> &gloCoord)
+        {
+            ASSERTL1(gloCoord.num_elements() >= 2,
+                 "Two dimensional geometry expects at least two coordinates.");
+                 
+            Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);
+            GetLocCoords(gloCoord, stdCoord);
+            if (stdCoord[0] >= -1 && stdCoord[1] >= -1
+                    && stdCoord[0] <= 1 && stdCoord[1] <= 1)
+            {
+                return true;
+            }
+            return false;
+        }
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: QuadGeom.cpp,v $
+// Revision 1.26  2009/12/15 18:09:02  cantwell
+// Split GeomFactors into 1D, 2D and 3D
+// Added generation of tangential basis into GeomFactors
+// Updated ADR2DManifold solver to use GeomFactors for tangents
+// Added <GEOMINFO> XML session section support in MeshGraph
+// Fixed const-correctness in VmathArray
+// Cleaned up LocalRegions code to generate GeomFactors
+// Removed GenSegExp
+// Temporary fix to SubStructuredGraph
+// Documentation for GlobalLinSys and GlobalMatrix classes
+//
 // Revision 1.25  2009/05/15 14:38:41  pvos
 // Changed check for regular quads so that it also includes parallellograms
 //

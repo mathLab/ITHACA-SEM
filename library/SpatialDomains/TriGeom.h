@@ -311,6 +311,9 @@ namespace Nektar
                 {
                     return kNedges;
                 }
+
+                virtual bool v_ContainsPoint(
+                        const Array<OneD, const NekDouble> &gloCoord);
         };
     }; //end of namespace SpatialDomains
 }; //end of namespace Nektar
@@ -319,6 +322,17 @@ namespace Nektar
 
 //
 // $Log: TriGeom.h,v $
+// Revision 1.29  2009/12/15 18:09:02  cantwell
+// Split GeomFactors into 1D, 2D and 3D
+// Added generation of tangential basis into GeomFactors
+// Updated ADR2DManifold solver to use GeomFactors for tangents
+// Added <GEOMINFO> XML session section support in MeshGraph
+// Fixed const-correctness in VmathArray
+// Cleaned up LocalRegions code to generate GeomFactors
+// Removed GenSegExp
+// Temporary fix to SubStructuredGraph
+// Documentation for GlobalLinSys and GlobalMatrix classes
+//
 // Revision 1.28  2009/07/02 13:32:24  sehunchun
 // *** empty log message ***
 //

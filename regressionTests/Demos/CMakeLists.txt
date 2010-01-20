@@ -1,2 +1,2 @@
-SUBDIRS(StdRegions LocalRegions)
+SUBDIRS(StdRegions LocalRegions MultiRegions)
 

@@ -1,0 +1,16 @@
+HDGHelmholtz2D
+==========================================
+helmholtz2D_9modes.xml
+L infinity error:  0.00198634
+L 2 error  :       0.000456173
+H 1 error  :       0.0147977
+Q0 L2 error:       0.000885982
+Q1 L2 error:       0.00107602
+----------------------------------------
+helmholtz2D_7modes.xml
+L infinity error:  0.0355625
+L 2 error  :       0.011251
+H 1 error  :       0.259079
+Q0 L2 error:       0.0212058
+Q1 L2 error:       0.0240779
+----------------------------------------

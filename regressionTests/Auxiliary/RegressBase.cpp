@@ -665,7 +665,7 @@ int RegressBase::GetVal(std::string l, std::string code, std::string &val)
 {
     int pos=0; //initial position
     std::string line="";
-    bool stop=false,got1=false;
+    bool stop=false, got1=false;
     val="";
     if (l.find(code)<std::string::npos)
     {
@@ -746,6 +746,30 @@ int RegressBase::CompareError(std::string e1, std::string e2)
         return 1;
     }
     return 0;
+
+    /*
+    // std::string f6="",exp=""; //first 5 digits "0.1234" and exp "e-004"
+    // std::string f6M="",expM=""; //first 5 digits and exp of Master Error
+    
+    // Get first 6 digits and exp from Master errors
+    f6M=RegressBase::getDig(L2);
+    RegressBase::getExp(L2,expM);
+    
+    int pos=error.find(f6M,0);
+    if (pos!=0){
+    std::cout << "First 5 Digits of Prog Error and Master Error don't match!"<<std::endl;
+    ++fail;
+    break;
+    }
+    
+    //////// COMPARE EXPONENTS  ///////////
+    RegressBase::getExp(error,exp);
+    if(RegressBase::compareExp(expM, exp)){
+    std::cout << "Exponents do not correspond!"<<std::endl;
+    ++fail;
+    }
+    
+    */	
 };
 
 
@@ -781,7 +805,7 @@ int RegressBase::ReadOutput(std::string &errStr, std::string &err)
         
         if (line.find(errStr)<std::string::npos)
         {
-            // GET ERROR AND CONVERT TO DOUBLE 
+            // GET ERROR
             gotErr=GetVal(line,errStr, err);
         }		
     }

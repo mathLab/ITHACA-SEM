@@ -184,14 +184,14 @@ protected:
      * \param error formated string as given by getError
      * \return double containing the error 
      */
-    double ErrorToDouble(std::string error);
+    inline double ErrorToDouble(std::string error);
 
     /**- \brief 
      * \param  error is a string of the error formated as given by getError
      *
      * \return First 4 significant figures 
      */ 
-    std::string GetDig(std::string error);
+    inline std::string GetDig(std::string error);
 
     /** \brief 
      * \param error : Error formated string as given by getError()

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File StdRegionsDemoTests.cpp
+// File LocalRegionsDemoTests.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,8 +29,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Run a series of tests on StdRegions Demos using
-// StdRegionsDemo class
+// Description: Run a series of tests on LocalRegions Demos using
+// LocalRegionsDemo class
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include "../../Auxiliary/RegressBase.h"
@@ -51,45 +51,52 @@ int main(int argc, char* argv[])
 { 
 
     // 1D Projection Tests
-    Execute("StdProject1D", "1 6 7","Segment Ortho Basis, modes=6, quad=7");
+    Execute("LocProject1D", "1 6 7 0.0 1.0","Segment [0,1] Ortho Basis, modes=6, quad=7");
 
-    Execute("StdProject1D", "4 6 7","Segment Modified Basis, modes=6, quad=7");
+    Execute("LocProject1D", "4 6 7 0.0 1.0","Segment [0,1] Modified Basis, modes=6, quad=7");
 
     // 1D Differentiation Projection Tests
-    Execute("StdProject_Diff1D", "1 6 7","Segment Ortho Basis, modes=6, quad=7");
+    Execute("LocProject_Diff1D", "1 6 7 0.0 1.0","Segment [0,1] Ortho Basis, modes=6, quad=7");
 
-    Execute("StdProject_Diff1D", "4 6 7","Segment Modified Basis, modes=6, quad=7");
+    Execute("LocProject_Diff1D", "4 6 7 0.0 1.0","Segment [0.1] Modified Basis, modes=6, quad=7");
 
     // 2D Projection Tests
-    Execute("StdProject2D", "2 1 2 6 6 7 7", "Triangular Ortho Basis, modes=6, quad=7");
+    Execute("LocProject2D", "2 1 2 6 6 7 7 0.0 0.0 1.0 1.0 0.5 1.0", "Triangular Ortho Basis, modes=6, quad=7");
 
-    Execute("StdProject2D", "2 4 5 6 6 7 7", "Triangular Modified Basis modes=6, quad=7");
+    Execute("LocProject2D", "2 4 5 6 6 7 7 0.0 0.0 1.0 1.0 0.5 1.0", "Triangular Modified Basis modes=6, quad=7");
 
-    Execute("StdProject2D", "2 11 11 6 6 7 7", "Triangular Nodal Basis modes=6, quad=7");
+    Execute("LocProject2D", "2 11 11 6 6 7 7  0.0 0.0 1.0 1.0 0.5 1.0", "Triangular Nodal Basis modes=6, quad=7");
 
-    Execute("StdProject2D", "3 1 1 6 6 7 7", "Quadrilateral Ortho Basis, modes=4, quad=5");
+    Execute("LocProject2D", "3 1 1 6 6 7 7 0.0 0.0 1.0 0.0 1.0 1.0 0.0 1.0", "Regular Quadrilateral Ortho Basis, modes=4, quad=5");
 
-    Execute("StdProject2D", "3 4 4 6 6 7 7", "Quadrilateral Modified Basis modes=6, quad=7");
+    Execute("LocProject2D", "3 4 4 6 6 7 7 0.0 0.0 1.0 0.0 1.0 1.0 0.0 1.0", "Regular Quadrilateral Modified Basis modes=6, quad=7");
 
-    Execute("StdProject2D", "3 8 8 6 6 7 7", "Quadrilateral Nodal/Lagrange Basis modes=6, quad=7");
+    Execute("LocProject2D", "3 8 8 6 6 7 7 0.0 0.0 1.0 0.0 1.0 1.0 0.0 1.0", "Regular Quadrilateral Nodal/Lagrange Basis modes=6, quad=7");
 
-    Execute("StdProject2D", "3 7 7 6 6 8 8 ", "Quadrilateral Fourier Basis modes=6, quad=8");
+    Execute("LocProject2D", "3 1 1 6 6 7 7 0.0 0.0 1.0 0.0 1.5 1.5 0.0 1.0", "Linearly Deformed Quadrilateral Ortho Basis, modes=4, quad=5");
 
+    Execute("LocProject2D", "3 4 4 6 6 7 7 0.0 0.0 1.0 0.0 1.5 1.5 0.0 1.0", "Linearly Deformed Quadrilateral Modified Basis modes=6, quad=7");
+
+    Execute("LocProject2D", "3 8 8 6 6 7 7 0.0 0.0 1.0 0.0 1.5 1.5 0.0 1.0", "Linearly Deformed Quadrilateral Nodal/Lagrange Basis modes=6, quad=7");
 
     // 2D Differntiation and Projection Tests
-    Execute("StdProject_Diff2D", "2 1 2 6 6 7 7 ", "Triangular Ortho Basis, modes=6, quad=7");
+    Execute("LocProject_Diff2D", "2 1 2 6 6 7 7 0.0 0.0 1.0 1.0 0.5 1.0", "Triangular Ortho Basis, modes=6, quad=7");
 
-    Execute("StdProject_Diff2D", "2 4 5 6 6 7 7  ", "Triangular Modified Basis modes=6, quad=7");
+    Execute("LocProject_Diff2D", "2 4 5 6 6 7 7 0.0 0.0 1.0 1.0 0.5 1.0", "Triangular Modified Basis modes=6, quad=7");
 
-    Execute("StdProject_Diff2D", "2 11 11 6 6 7 7  ", "Triangular Nodal Basis modes=6, quad=7");
+    Execute("LocProject_Diff2D", "2 11 11 6 6 7 7  0.0 0.0 1.0 1.0 0.5 1.0", "Triangular Nodal Basis modes=6, quad=7");
 
-    Execute("StdProject_Diff2D", "3 1 1 6 6 7 7 ", "Quadrilateral Ortho Basis, modes=4, quad=5");
+    Execute("LocProject_Diff2D", "3 1 1 6 6 7 7 0.0 0.0 1.0 0.0 1.0 1.0 0.0 1.0", "Regular Quadrilateral Ortho Basis, modes=4, quad=5");
 
-    Execute("StdProject_Diff2D", "3 4 4 6 6 7 7  ", "Quadrilateral Modified Basis modes=6, quad=7");
+    Execute("LocProject_Diff2D", "3 4 4 6 6 7 7 0.0 0.0 1.0 0.0 1.0 1.0 0.0 1.0", "Regular Quadrilateral Modified Basis modes=6, quad=7");
 
-    Execute("StdProject_Diff2D", "3 8 8 6 6 7 7  ", "Quadrilateral Nodal/Lagrange Basis modes=6, quad=7");
+    Execute("LocProject_Diff2D", "3 8 8 6 6 7 7 0.0 0.0 1.0 0.0 1.0 1.0 0.0 1.0", "Regular Quadrilateral Nodal/Lagrange Basis modes=6, quad=7");
 
-    Execute("StdProject_Diff2D", "3 7 7 6 6 8 8 ", "Quadrilateral Fourier Basis modes=6, quad=8");
+    Execute("LocProject_Diff2D", "3 1 1 6 6 7 7 0.0 0.0 1.0 0.0 1.5 1.5 0.0 1.0", "Linearly Deformed Quadrilateral Ortho Basis, modes=4, quad=5");
+
+    Execute("LocProject_Diff2D", "3 4 4 6 6 7 7 0.0 0.0 1.0 0.0 1.5 1.5 0.0 1.0", "Linearly Deformed Quadrilateral Modified Basis modes=6, quad=7");
+
+    Execute("LocProject_Diff2D", "3 8 8 6 6 7 7 0.0 0.0 1.0 0.0 1.5 1.5 0.0 1.0", "Linearly Deformed Quadrilateral Nodal/Lagrange Basis modes=6, quad=7");
 
 
     return 0;
@@ -97,7 +104,7 @@ int main(int argc, char* argv[])
 
 void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
 {
-    RegressBase Test("../builds/Demos/StdRegions/",Demo,input,"Demos/StdRegions/OkFiles/");
+    RegressBase Test("../builds/Demos/LocalRegions/",Demo,input,"Demos/LocalRegions/OkFiles/");
     int fail;
 
     std::cout << Demo << ":  info = \"" << info <<"\""<<std::endl;
@@ -117,7 +124,7 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
 
 void MakeOkFile(std::string Demo, std::string input, std::string info)
 {
-    RegressBase Test("../builds/Demos/StdRegions/",Demo,input,"Demos/StdRegions/OkFiles/");
+    RegressBase Test("../builds/Demos/LocalRegions/",Demo,input,"Demos/LocalRegions/OkFiles/");
     int fail;
 
     if(fail = Test.MakeOkFile())

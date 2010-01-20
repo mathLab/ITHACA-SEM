@@ -209,7 +209,7 @@ main(int argc, char *argv[])
           
           for(i = 0; i < nq1*nq2; ++i)
           {
-              sol[i]  = Quad_sol(x[i],y[j],order1,order2,btype1,btype2);
+              sol[i]  = Quad_sol(x[i],y[i],order1,order2,btype1,btype2);
           }
           //---------------------------------------------
       }
@@ -265,7 +265,8 @@ main(int argc, char *argv[])
   //--------------------------------------------
 }
 
-NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2){
+NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2)
+{
     int    l,k;
     NekDouble sol = 0;
   
@@ -280,7 +281,8 @@ NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2){
     return sol;
 }
 
-NekDouble Tri_Dsol(NekDouble x, NekDouble y, int order1, int order2){
+NekDouble Tri_Dsol(NekDouble x, NekDouble y, int order1, int order2)
+{
     int    l,k;
     NekDouble sol = 0;
   
@@ -296,7 +298,8 @@ NekDouble Tri_Dsol(NekDouble x, NekDouble y, int order1, int order2){
     return sol;
 }
 
-NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2, LibUtilities::BasisType btype1, LibUtilities::BasisType btype2){
+NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2, LibUtilities::BasisType btype1, LibUtilities::BasisType btype2)
+{
     
     int k,l;
     NekDouble sol = 0;
@@ -355,7 +358,8 @@ NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2, LibUtilitie
 }
 
 
-NekDouble Quad_Dsol(NekDouble x, NekDouble y, int order1, int order2, LibUtilities::BasisType btype1,LibUtilities::BasisType btype2){
+NekDouble Quad_Dsol(NekDouble x, NekDouble y, int order1, int order2, LibUtilities::BasisType btype1,LibUtilities::BasisType btype2)
+{
     
     int k,l;
     NekDouble sol = 0;
@@ -409,13 +413,13 @@ NekDouble Quad_Dsol(NekDouble x, NekDouble y, int order1, int order2, LibUtiliti
                 for(l = 0; l < order2/2; ++l)
                 {
                     sol += M_PI*k*cos(M_PI*k*x)*sin(M_PI*l*y)
-                        + M_PI*l*sin(M_PI*k*x)*cos(M_PI*l*y)
-                        + M_PI*k*cos(M_PI*k*x)*cos(M_PI*l*y)
-                        + M_PI*l*sin(M_PI*k*x)*sin(M_PI*l*y)
-                        - M_PI*k*sin(M_PI*k*x)*sin(M_PI*l*y)
-                        + M_PI*l*cos(M_PI*k*x)*cos(M_PI*l*y)
-                        - M_PI*k*sin(M_PI*k*x)*cos(M_PI*l*y)
-                        - M_PI*l*cos(M_PI*k*x)*sin(M_PI*l*y);
+                        +  M_PI*l*sin(M_PI*k*x)*cos(M_PI*l*y)
+                        +  M_PI*k*cos(M_PI*k*x)*cos(M_PI*l*y)
+                        -  M_PI*l*sin(M_PI*k*x)*sin(M_PI*l*y)
+                        -  M_PI*k*sin(M_PI*k*x)*sin(M_PI*l*y)
+                        +  M_PI*l*cos(M_PI*k*x)*cos(M_PI*l*y)
+                        -  M_PI*k*sin(M_PI*k*x)*cos(M_PI*l*y)
+                        -  M_PI*l*cos(M_PI*k*x)*sin(M_PI*l*y);
                 }
             }
         }

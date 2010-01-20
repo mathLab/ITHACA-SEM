@@ -35,6 +35,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
+#include <cmath>
 
 #ifndef RegressBase_H
 #define RegressBase_H
@@ -43,16 +44,14 @@
 #define USR_WIN_32 false
 #endif //USR_WIN_32
 
-#ifndef MODES_HIGH
-#define MODES_HIGH 8
-#define MODES_LOW 3
-#endif //MODES_HIGH
-
 #define DEMO_L2ERROR_STR "L 2 error"
 #define DEMO_LINF_ERROR_STR "L infinity error"
 
+#define REGRESS_DOUBLE_TOL 1e-9
+
 //header of class RegressBase
-class RegressBase{
+class RegressBase
+{
 protected:
 
     std::string m_prog;     /**< Name of Prog/Demo        */
@@ -179,37 +178,6 @@ protected:
                  PROCESS ERRORS
        -----------------------------------------------------------*/
 
-    /** \brief convert error string to a double 
-     *
-     * \param error formated string as given by getError
-     * \return double containing the error 
-     */
-    inline double ErrorToDouble(std::string error);
-
-    /**- \brief 
-     * \param  error is a string of the error formated as given by getError
-     *
-     * \return First 4 significant figures 
-     */ 
-    inline std::string GetDig(std::string error);
-
-    /** \brief 
-     * \param error : Error formated string as given by getError()
-     * \param exp   : string containing exponent info (e.g. -004)
-     *
-     * \return 0 if successful, 1 othewise. 
-     */ 
-    int GetExp(std::string error, std::string &exp);
-
-    /* \brief 
-     *
-     * \param e1  Error formated string as given by getError()
-     * \param e2  Error formated string as given by getError()
-     *
-     * \return  0 if exponents are equal, 1 otherwise
-     */
-    int CompareExp(std::string e1 , std::string e2);
-    
     /** \brief 
      *
      * \param c: Any char

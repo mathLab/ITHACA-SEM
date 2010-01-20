@@ -610,38 +610,6 @@ std::string RegressBase::GetError(std::string code)
     return err;
 };
 
-double RegressBase::ErrorToDouble(std::string error)
-{
-    double err_d=0.0;
-    err_d=std::strtod(error.c_str(),NULL);
-    return err_d;
-};
-
-std::string RegressBase::GetDig(std::string error)
-{
-    return error.substr(0,6);
-};
-
-int RegressBase::GetExp(std::string error, std::string &exp)
-{
-    // Assuming error is formated using getError or getVal
-    int pos=0;
-    exp="";
-    if (error.find("e")<std::string::npos)
-    {
-        pos=error.find("e")+1;
-        exp=error.substr(pos,std::string::npos);
-        return 0;
-    }
-    if (error.find("E")<std::string::npos)
-    {
-        pos=error.find("E")+1;
-        exp=error.substr(pos,std::string::npos);
-        return 0;
-    }
-    return 1;
-};
-
 int RegressBase::IsDoubleChar(std::string c)
 {
     bool isd=false;	
@@ -695,81 +663,27 @@ int RegressBase::GetVal(std::string l, std::string code, std::string &val)
     if (val==""){return 1;}
     return 0;
 }
-
-int RegressBase::CompareExp(std::string e1, std::string e2)
-{
-    int intE1,intE2;
-    if (e1!="")
-    {
-        if (e2=="")
-        {
-            // e1!=e2
-            return 1;
-        }
-        intE1=std::atoi(e1.c_str());
-        intE2=std::atoi(e2.c_str());
-        if (intE1==intE2)
-        {
-            return 0;
-        }		
-        else
-        {
-            return 1;
-        }
-    }
-    else
-    {
-        if (e2=="")
-        {
-            return 0;
-        }		
-        else
-        {
-            return 1;
-        }
-    }
-};
-
 /*---------------------------------------------------------/
 / Compare Errors
 /---------------------------------------------------------*/
 int RegressBase::CompareError(std::string e1, std::string e2)
 {
-    double err, errM;
+    double err1, err2, diff;
 
-    /////// CONVERT ERRORS FROM STRING TO DOUBLE /////////
-    errM = ErrorToDouble(e1);
-    err  = ErrorToDouble(e2);
+    // Convert error string to double and compare if different is less
+    // that REGRESS_DOUBLE_TOL
 
-    if(errM!=err)
+    err1 = std::strtod(e1.c_str(),NULL);
+    err2 = std::strtod(e2.c_str(),NULL);
+
+    diff = err1-err2;
+    diff = (diff < 0)? -diff:diff;
+
+    if(diff < REGRESS_DOUBLE_TOL)
     {
-        return 1;
+        return 0;
     }
-    return 0;
-
-    /*
-    // std::string f6="",exp=""; //first 5 digits "0.1234" and exp "e-004"
-    // std::string f6M="",expM=""; //first 5 digits and exp of Master Error
-    
-    // Get first 6 digits and exp from Master errors
-    f6M=RegressBase::getDig(L2);
-    RegressBase::getExp(L2,expM);
-    
-    int pos=error.find(f6M,0);
-    if (pos!=0){
-    std::cout << "First 5 Digits of Prog Error and Master Error don't match!"<<std::endl;
-    ++fail;
-    break;
-    }
-    
-    //////// COMPARE EXPONENTS  ///////////
-    RegressBase::getExp(error,exp);
-    if(RegressBase::compareExp(expM, exp)){
-    std::cout << "Exponents do not correspond!"<<std::endl;
-    ++fail;
-    }
-    
-    */	
+    return 1;
 };
 
 

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <!-- Embed a 2-dimensional object in a 2-dimensional space -->
+    <!-- DIM <= SPACE -->
+    <!-- This provides a method of optimizing code for a 1-D curve embedded in 3-space. -->
+    <GEOMETRY DIM="3" SPACE="3">
+        <!-- Definitions that can be used below in this file. -->
+        <!-- Not currently implemented -->
+        <DEF>
+            A = 1.0
+            B = 2.0
+            C = 3.0
+        </DEF>
+        <VERTEX>
+            <!-- Always must have four values per entry. -->
+            <V ID="0"> -1.0 -1.0 -1.0 </V>
+            <V ID="1">  1.0 -1.0 -1.0 </V>
+            <V ID="2"> -1.0  1.0 -1.0 </V>
+            <V ID="3"> -1.0 -1.0  1.0 </V>
+
+        </VERTEX>
+
+        <!-- Edges are vertex pairs -->
+        <EDGE>
+            <E ID="0"> 0 1 </E>
+            <E ID="1"> 1 2 </E>
+            <E ID="2"> 2 0 </E>
+            <E ID="3"> 0 3 </E>
+            <E ID="4"> 1 3 </E>
+            <E ID="5"> 2 3 </E>
+            
+        </EDGE>
+
+        <!-- Can include Q - quads, T - triangles -->
+        <FACE>
+            <T ID="0"> 0 1 2 </T>
+            <T ID="1"> 0 4 3 </T>
+            <T ID="2"> 1 5 4 </T>
+            <T ID="3"> 2 5 3 </T>
+        </FACE>
+
+        <!-- Q - quads, T - triangles, S - segments, A - tet, P - pyramid, R - prism, H - hex -->
+        <!-- Only certain element types are appropriate for the given dimension (dim on mesh) -->
+        <!-- Can also use faces to define 3-D elements.  Specify with F[1] for face 1, for example. -->
+        <!-- Element need to be entered in consistent "anti-clockwise" manner -->
+        <ELEMENT>
+
+            <A ID="0"> 0 1 2 3</A>
+
+        </ELEMENT>
+
+        <!-- V - vertex, E - edge, F - face, T - Triangle, Q - Quad -->
+        <COMPOSITE>
+            <C ID="0"> A[0] </C>
+        </COMPOSITE>
+
+        <DOMAIN> C[0] </DOMAIN>
+
+    </GEOMETRY>    
+</NEKTAR>

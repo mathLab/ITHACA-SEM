@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- This file contains the elemental optimisation parameters.
+
+     The flags in these files can be set in such a way that the 
+     evaluation of an operator inside the elemental libraries 
+     (i.e. StdRegions and LocalRegions) is directed to one
+     of the two implementation choices
+      - evaluation using a matrix operation
+      - evaluation using the sum-factorisation technique 
+     depending on the polynomial order of the expansion.
+
+     Although the optimal break-even point between the
+     two approaches is computer specific and would ideally
+     require some 'self-tuning' optimisation suite (cfr ATLAS), 
+     use the following rule of thums to set the parameters:
+
+     The most efficient way of elementally evaluating an
+     operator depends on the complexity of the operator
+     in the sum-factorisation approach.
+     # For simple operators (such as BwdTrans and IProductWRTBase)
+         set DO_MAT_OP to TRUE (VALUE=1) for low orders (e.g. P<=4)
+         set DO_MAT_OP to FALSE (VALUE=0) in the other case
+     # For more complex operators (such as MassMatrixOp)
+        set DO_MAT_OP to TRUE for low and intermediate orders (e.g. P<=8)
+        set DO_MAT_OP to FALSE in the other case
+     # For very complex operators (such as HelmholtzMatrixOp)
+        always set DO_MAT_OP to TRUE
+     In general, the break-even point between the elemental matrix approach 
+     and the sum-factorisation technique is higher for triangles than
+     for quadrilaterals. That is why you for exmaple may want to set 
+     following flags for the IProductWRTBase operator:
+     (quadrilaterals) set DO_MAT_OP to TRUE if P<=4
+     (triangles)      set DO_MAT_OP to TRUE if P<=6
+  -->
+<NEKTAR>
+  <ELEMENTALOPTIMIZATIONPARAMETERS>
+
+    <QuadExp>
+      <BwdTrans>
+        <DO_MAT_OP NUMMODES0="2"  NUMMODES1="2"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="3"  NUMMODES1="3"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="4"  NUMMODES1="4"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="5"  NUMMODES1="5"  VALUE="1" />
+      </BwdTrans>
+      <IProductWRTBase>
+        <DO_MAT_OP NUMMODES0="2"  NUMMODES1="2"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="3"  NUMMODES1="3"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="4"  NUMMODES1="4"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="5"  NUMMODES1="5"  VALUE="1" />
+      </IProductWRTBase>
+      <MassMatrixOp>
+        <DO_MAT_OP NUMMODES0="2"  NUMMODES1="2"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="3"  NUMMODES1="3"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="4"  NUMMODES1="4"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="5"  NUMMODES1="5"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="6"  NUMMODES1="6"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="7"  NUMMODES1="7"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="8"  NUMMODES1="8"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="9"  NUMMODES1="9"  VALUE="1" />
+      </MassMatrixOp>
+      <HelmholtzMatrixOp>
+        <DO_MAT_OP NUMMODES0="2"  NUMMODES1="2"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="3"  NUMMODES1="3"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="4"  NUMMODES1="4"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="5"  NUMMODES1="5"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="6"  NUMMODES1="6"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="7"  NUMMODES1="7"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="8"  NUMMODES1="8"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="9"  NUMMODES1="9"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="10" NUMMODES1="10" VALUE="1" />
+        <DO_MAT_OP NUMMODES0="11" NUMMODES1="11" VALUE="1" />
+        <DO_MAT_OP NUMMODES0="12" NUMMODES1="12" VALUE="1" />
+        <DO_MAT_OP NUMMODES0="13" NUMMODES1="13" VALUE="1" />
+        <DO_MAT_OP NUMMODES0="14" NUMMODES1="14" VALUE="1" />
+        <DO_MAT_OP NUMMODES0="15" NUMMODES1="15" VALUE="1" />
+        <DO_MAT_OP NUMMODES0="16" NUMMODES1="16" VALUE="1" />
+        <DO_MAT_OP NUMMODES0="17" NUMMODES1="17" VALUE="1" />
+      </HelmholtzMatrixOp>
+    </QuadExp>
+
+    <TriExp>
+      <BwdTrans>
+        <DO_MAT_OP NUMMODES0="2"  NUMMODES1="2"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="3"  NUMMODES1="3"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="4"  NUMMODES1="4"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="5"  NUMMODES1="5"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="6"  NUMMODES1="6"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="7"  NUMMODES1="7"  VALUE="1" />
+      </BwdTrans>
+      <IProductWRTBase>
+        <DO_MAT_OP NUMMODES0="2"  NUMMODES1="2"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="3"  NUMMODES1="3"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="4"  NUMMODES1="4"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="5"  NUMMODES1="5"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="6"  NUMMODES1="6"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="7"  NUMMODES1="7"  VALUE="1" />
+      </IProductWRTBase>
+      <MassMatrixOp>
+        <DO_MAT_OP NUMMODES0="2"  NUMMODES1="2"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="3"  NUMMODES1="3"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="4"  NUMMODES1="4"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="5"  NUMMODES1="5"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="6"  NUMMODES1="6"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="7"  NUMMODES1="7"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="8"  NUMMODES1="8"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="9"  NUMMODES1="9"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="10"  NUMMODES1="10"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="11"  NUMMODES1="11"  VALUE="1" />
+      </MassMatrixOp>
+      <HelmholtzMatrixOp>
+        <DO_MAT_OP NUMMODES0="2"  NUMMODES1="2"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="3"  NUMMODES1="3"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="4"  NUMMODES1="4"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="5"  NUMMODES1="5"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="6"  NUMMODES1="6"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="7"  NUMMODES1="7"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="8"  NUMMODES1="8"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="9"  NUMMODES1="9"  VALUE="1" />
+        <DO_MAT_OP NUMMODES0="10" NUMMODES1="10" VALUE="1" />
+        <DO_MAT_OP NUMMODES0="11" NUMMODES1="11" VALUE="1" />
+        <DO_MAT_OP NUMMODES0="12" NUMMODES1="12" VALUE="1" />
+        <DO_MAT_OP NUMMODES0="13" NUMMODES1="13" VALUE="1" />
+        <DO_MAT_OP NUMMODES0="14" NUMMODES1="14" VALUE="1" />
+        <DO_MAT_OP NUMMODES0="15" NUMMODES1="15" VALUE="1" />
+        <DO_MAT_OP NUMMODES0="16" NUMMODES1="16" VALUE="1" />
+        <DO_MAT_OP NUMMODES0="17" NUMMODES1="17" VALUE="1" />
+      </HelmholtzMatrixOp>
+    </TriExp>
+
+  </ELEMENTALOPTIMIZATIONPARAMETERS>
+</NEKTAR>
+

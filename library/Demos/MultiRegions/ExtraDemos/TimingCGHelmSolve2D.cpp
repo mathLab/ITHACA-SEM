@@ -307,13 +307,23 @@ int main(int argc, char *argv[])
         const LibUtilities::PointsKey PkeyT2(30,LibUtilities::eGaussRadauMAlpha1Beta0);
         const LibUtilities::PointsKey PkeyQ1(30,LibUtilities::eGaussLobattoLegendre);
         const LibUtilities::PointsKey PkeyQ2(30,LibUtilities::eGaussLobattoLegendre);
-        const LibUtilities::BasisKey  BkeyT1(LibUtilities::eModified_A,NumModes,PkeyT1);
-        const LibUtilities::BasisKey  BkeyT2(LibUtilities::eModified_B,NumModes,PkeyT2);
-        const LibUtilities::BasisKey  BkeyQ1(LibUtilities::eModified_A,NumModes,PkeyQ1);
-        const LibUtilities::BasisKey  BkeyQ2(LibUtilities::eModified_A,NumModes,PkeyQ2);
-        
+        LibUtilities::BasisKeyVector  BkeyT;
+        LibUtilities::BasisKeyVector  BkeyQ;
+        BkeyT.push_back(LibUtilities::BasisKey(LibUtilities::eModified_A,
+                                               NumModes, PkeyT1));
+        BkeyT.push_back(LibUtilities::BasisKey(LibUtilities::eModified_B,
+                                               NumModes, PkeyT2));
+        BkeyQ.push_back(LibUtilities::BasisKey(LibUtilities::eModified_A,
+                                               NumModes, PkeyQ1));
+        BkeyQ.push_back(LibUtilities::BasisKey(LibUtilities::eModified_A,
+                                               NumModes, PkeyQ2));
+
+        graph2D.SetBasisKey(SpatialDomains::eTriangle, BkeyT);
+        graph2D.SetBasisKey(SpatialDomains::eQuadrilateral, BkeyQ);
+
         MultiRegions::ExpList2DSharedPtr ErrorExp = 
-            MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(BkeyT1,BkeyT2,BkeyQ1,BkeyQ2,graph2D);
+            MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(graph2D);
+    
     
         int ErrorCoordim = ErrorExp->GetCoordim(0);
         int ErrorNq      = ErrorExp->GetTotPoints();

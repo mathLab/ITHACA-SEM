@@ -255,7 +255,7 @@
 
   <!-- Define expansions on elemental composites -->
   <EXPANSIONS>
-    <E COMPOSITE="C[0]" NUMMODES="7" TYPE="MODIFIED" />
+    <E COMPOSITE="C[0]" NUMMODES="3" TYPE="MODIFIED" />
     <E COMPOSITE="C[1]" NUMMODES="7" TYPE="MODIFIED" />
   </EXPANSIONS>
 

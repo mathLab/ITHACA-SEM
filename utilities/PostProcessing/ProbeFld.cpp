@@ -133,12 +133,12 @@ int main(int argc, char *argv[])
     NekDouble x0    = atof(argv[4]);
     NekDouble y0    = atof(argv[5]);
     NekDouble z0    = atof(argv[6]);
-    NekDouble dx    = atof(argv[7])/(N-1);
-    NekDouble dy    = atof(argv[8])/(N-1);
-    NekDouble dz    = atof(argv[9])/(N-1);
+    NekDouble dx    = atof(argv[7])/(N>1 ? (N-1) : 1);
+    NekDouble dy    = atof(argv[8])/(N>1 ? (N-1) : 1);
+    NekDouble dz    = atof(argv[9])/(N>1 ? (N-1) : 1);
     NekDouble u     = 0.0;
 
-    Array<OneD, NekDouble> gloCoord(3,0.0);
+    Array<OneD, NekDouble> gloCoord(3,0.0);    
 
     for (int i = 0; i < N; ++i)
     {
@@ -148,10 +148,11 @@ int main(int argc, char *argv[])
         cout << gloCoord[0] << "   " << gloCoord[1] << "   " << gloCoord[2];
         for (int j = 0; j < nfields; ++j)
         {
-            cout << "   " << Exp[j]->GetExp(gloCoord)->PhysEvaluate(gloCoord)
-                 << endl;
+            cout << "   " << Exp[j]->GetExp(gloCoord)->PhysEvaluate(gloCoord);
         }
+        cout << endl;
     }
+    
     //----------------------------------------------
     return 0;
 }

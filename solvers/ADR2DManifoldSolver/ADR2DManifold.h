@@ -262,7 +262,7 @@ namespace Nektar
 
     protected:	
         int m_initialwavetype;                ///< Type of function for initial condition and exact solutions
-        int m_duration;
+        NekDouble m_duration;
         int m_UseDirDeriv;
         int m_Anisotropy;
         NekDouble m_Angularfreq;

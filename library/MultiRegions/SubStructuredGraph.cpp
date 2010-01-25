@@ -416,7 +416,7 @@ namespace Nektar
             return returnval;
         }
 
-        int BottomUpSubStructuredGraph::Dump() const
+        void BottomUpSubStructuredGraph::Dump() const
         {
             static int level = 0;
             level++;
@@ -890,6 +890,9 @@ namespace Nektar
 
 /**
  * $Log: SubStructuredGraph.cpp,v $
+ * Revision 1.7  2010/01/03 12:18:26  cantwell
+ * Removed unnecessary header file inclusions.
+ *
  * Revision 1.6  2009/12/21 17:50:09  cantwell
  * Restored CutEmptyLeaves calls.
  *

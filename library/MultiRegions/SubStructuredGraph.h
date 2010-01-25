@@ -200,7 +200,7 @@ namespace Nektar
 
             int GetNlevels() const;
 
-            int Dump() const;
+            void Dump() const;
 
         protected:
             vector<SubGraphSharedPtr> m_IntBlocks;
@@ -257,6 +257,9 @@ namespace Nektar
 
 /**
 * $Log: SubStructuredGraph.h,v $
+* Revision 1.4  2009/11/19 11:41:07  pvos
+* Fixed various bugs
+*
 * Revision 1.3  2009/11/09 15:57:11  pvos
 * multi-level recursion bug fixes
 *

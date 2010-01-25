@@ -26,7 +26,7 @@ static double  pow_loc(const double val, const int i)
   return (i < 0)? 1.0: pow(val,i);
 }
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
   int           i,j,k,l;
   const         double *z1,*z2,*w;
@@ -263,6 +263,7 @@ main(int argc, char *argv[])
   cout << "L infinity error: " << E->Linf(sol) << endl;
   cout << "L 2 error:        " << E->L2  (sol) << endl;
   //--------------------------------------------
+  return 0;
 }
 
 NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2)

@@ -221,6 +221,7 @@ namespace Nektar
                 {
                     NEKERROR(ErrorUtil::efatal,
                              "This function has not been defined for this geometry");
+                    return false;
                 }
         };
     }; //end of namespace
@@ -230,6 +231,9 @@ namespace Nektar
 
 //
 // $Log: Geometry.h,v $
+// Revision 1.33  2010/01/20 18:05:09  cantwell
+// Added utility for probing a line of points in a FLD file.
+//
 // Revision 1.32  2009/12/15 18:09:02  cantwell
 // Split GeomFactors into 1D, 2D and 3D
 // Added generation of tangential basis into GeomFactors

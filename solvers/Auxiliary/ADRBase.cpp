@@ -1226,10 +1226,36 @@ namespace Nektar
         return (size1 < size2) ? -1 : 1;
     }
 
+    void ADRBase::LoadParameter(std::string name, int &var, int def)
+    {
+        if(m_boundaryConditions->CheckForParameter(name) == true)
+        {
+            var = m_boundaryConditions->GetParameter(name);
+        }
+        else
+        {
+            var  = def;
+        }
+    }
+
+    void ADRBase::LoadParameter(std::string name, NekDouble &var, NekDouble def)
+    {
+        if(m_boundaryConditions->CheckForParameter(name) == true)
+        {
+            var = m_boundaryConditions->GetParameter(name);
+        }
+        else
+        {
+            var  = def;
+        }
+    }
 } //end of namespace
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.22  2009/12/14 17:59:33  cbiotto
+* Adding writing tecplot file
+*
 * Revision 1.21  2009/12/09 12:37:12  cbiotto
 * Update for regression test
 *

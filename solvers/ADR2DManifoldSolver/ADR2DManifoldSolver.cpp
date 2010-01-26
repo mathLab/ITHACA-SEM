@@ -153,6 +153,16 @@ int main(int argc, char *argv[])
             dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);
         }
         break;
+    case eAlievPanfilov:
+        {
+      // Choose the method of deriving forcing functions
+            ode.DefineImplicitSolve (&ADR2DManifold::ODEhelmSolveAP,dom);  
+            ode.DefineOdeRhs        (&ADR2DManifold::ODEeReactionAP,dom);  
+          
+            // General Linear Time Integration
+            dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);            
+        }
+        break;
 
     case eNoEquationType:
     default:

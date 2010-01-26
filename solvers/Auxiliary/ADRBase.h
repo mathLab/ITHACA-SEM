@@ -357,6 +357,12 @@ namespace Nektar
             return NoCaseStringCompare(s1,s2);
         }
 
+        /// Check for and load an integer parameter
+        void LoadParameter(std::string name, int &var, int def = 0);
+        
+        /// Check for and load a double precision parameter
+        void LoadParameter(std::string name, NekDouble &var, NekDouble def= 0.0);
+
     private:
         virtual void v_GetFluxVector(const int i, Array<OneD,
                             Array<OneD, NekDouble> >&physfield,
@@ -445,6 +451,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.20  2010/01/02 04:32:14  sehunchun
+* Add additional inline functions
+*
 * Revision 1.19  2009/12/14 17:59:07  cbiotto
 * Adding writing tecplot file
 *

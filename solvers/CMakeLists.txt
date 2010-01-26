@@ -54,5 +54,4 @@ ENDMACRO(SET_COMMON_PROPERTIES name)
 
 
 SUBDIRS(AdvectionDiffusionReactionSolver ShallowWaterSolver
-    IncNavierStokesSolver EulerSolver ADR2DManifoldSolver)
-
+    IncNavierStokesSolver EulerSolver ADR2DManifoldSolver FitzHughNagumoSolver)

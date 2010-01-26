@@ -54,6 +54,7 @@ namespace Nektar
         eNonlinearMorphogenensis,
         eFHNtesttype1,
         eFHNMONO,
+        eAlievPanfilov,
         eEquationTypeSize,
     };
     
@@ -67,6 +68,7 @@ namespace Nektar
         "NonlinearMorphogenensis",
         "FHNtesttype1",
         "FHNMONO",
+        "AlievPanfilov"
     };
 
     /**
@@ -225,7 +227,11 @@ namespace Nektar
         void ODEeReactionFHNmono(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
                                  Array<OneD, Array<OneD, NekDouble> >&outarray, 
                                  const NekDouble time);
-					
+
+        void ODEeReactionAP(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+                                 Array<OneD, Array<OneD, NekDouble> >&outarray, 
+                                 const NekDouble time);
+
 	void ODEhelmSolve(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
 			  Array<OneD, Array<OneD, NekDouble> >&outarray,
 			  NekDouble time, 
@@ -240,7 +246,12 @@ namespace Nektar
                                  Array<OneD, Array<OneD, NekDouble> >&outarray,
                                  NekDouble time, 
                                  NekDouble lambda);
-        
+
+        void ODEhelmSolveAP(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                                 Array<OneD, Array<OneD, NekDouble> >&outarray,
+                                 NekDouble time, 
+                                 NekDouble lambda);
+                
         void GeneralTimeIntegration(int nsteps, 
 		                   LibUtilities::TimeIntegrationMethod IntMethod,
 				   LibUtilities::TimeIntegrationSchemeOperators ode);
@@ -278,6 +289,10 @@ namespace Nektar
         bool m_explicitReaction;   ///< Flag to identify explicit Reaction
         
         NekDouble m_a, m_b, m_c, m_d;
+
+        // -- AP variables
+        NekDouble mK, mA, mB, mC, mEps, mMu1, mMu2;
+        // -- end AP variables
 
         Array<OneD, NekDouble>   m_epsilon;
         NekDouble   m_beta;

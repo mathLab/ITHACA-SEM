@@ -337,7 +337,7 @@ namespace Nektar
         /// Pointer to graph defining mesh.
         SpatialDomains::MeshGraphSharedPtr          m_graph;
 
-        std::map<SpatialDomains::VertexComponentSharedPtr, int>
+        std::list<std::pair<SpatialDomains::VertexComponentSharedPtr, int> >
                                                     m_historyList;
         
         std::string m_sessionName;   ///< Name of the sessions
@@ -462,6 +462,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.22  2010/01/27 13:19:13  cantwell
+* Added functions to write history/probe data during timestepping.
+*
 * Revision 1.21  2010/01/26 17:43:08  cantwell
 * Updated CMakeLists.txt to build FitzHughNagumoSolver
 * Added Aliev-Panfilov model to ADR2DManifoldSolver

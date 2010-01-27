@@ -87,7 +87,7 @@ namespace Nektar
         // Save the basename of input file name for output details.
         m_sessionName = fileNameString;
         m_sessionName = m_sessionName.substr(0,
-                                m_sessionName.find_first_of("."));
+                                m_sessionName.find_last_of("."));
 
         // Options to determine type of projection from file or
         // directly from constructor
@@ -1160,7 +1160,7 @@ namespace Nektar
             
             int eId = m_fields[0]->GetExpIndex(gloCoord);
             
-            m_historyList.insert(
+            m_historyList.push_back(
                 std::pair<SpatialDomains::VertexComponentSharedPtr, int>(vtx, eId));
         }
     }
@@ -1177,7 +1177,7 @@ namespace Nektar
         }
         
         Array<OneD, NekDouble> gloCoord(3,0.0);
-        std::map<SpatialDomains::VertexComponentSharedPtr, int>::iterator x;
+        std::list<pair<SpatialDomains::VertexComponentSharedPtr, int> >::iterator x;
         for (x = m_historyList.begin(); x != m_historyList.end(); ++x)
         {
             (*x).first->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
@@ -1306,6 +1306,9 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.24  2010/01/27 13:19:13  cantwell
+* Added functions to write history/probe data during timestepping.
+*
 * Revision 1.23  2010/01/26 17:43:08  cantwell
 * Updated CMakeLists.txt to build FitzHughNagumoSolver
 * Added Aliev-Panfilov model to ADR2DManifoldSolver

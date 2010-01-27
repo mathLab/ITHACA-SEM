@@ -1032,6 +1032,9 @@ namespace Nektar
             }
         }
 
+        std::string outname = m_sessionName + ".his";
+        std::ofstream hisFile (outname.c_str());
+        
         for(n = 0; n < nsteps; ++n)
         {
             //----------------------------------------------
@@ -1067,6 +1070,7 @@ namespace Nektar
             if(!((n+1)%m_infosteps))
             {
           cout << "Steps: " << n+1 << "\t Time: " << m_time << endl;
+          WriteHistoryData(hisFile);
             }
 
             if(n&&(!((n+1)%m_checksteps)))

@@ -108,6 +108,7 @@ namespace Nektar
 
             ReadUserDefinedEqn(conditions);
 
+            ReadHistoryPoints(conditions);
         }
 
         void BoundaryConditions::ReadParameters(TiXmlElement *conditions)
@@ -894,6 +895,79 @@ namespace Nektar
                 }
             }
         }
+
+        void BoundaryConditions::ReadHistoryPoints(TiXmlElement *history)
+        {
+              // Now read the vertices
+              TiXmlElement* element = history->FirstChildElement("HISTORY");
+              if (!element) return;
+        
+              TiXmlElement *vertex = element->FirstChildElement("H");
+        
+              int indx;
+              int nextVertexNumber = -1;
+        
+              while (vertex)
+                {
+              nextVertexNumber++;
+        
+              TiXmlAttribute *vertexAttr = vertex->FirstAttribute();
+              std::string attrName(vertexAttr->Name());
+        
+              ASSERTL0(attrName == "ID", (std::string("Unknown attribute name: ") + attrName).c_str());
+        
+              int err = vertexAttr->QueryIntValue(&indx);
+              ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
+              ASSERTL0(indx == nextVertexNumber, "Vertex IDs must begin with zero and be sequential.");
+        
+              // Now read body of vertex
+              std::string vertexBodyStr;
+        
+              TiXmlNode *vertexBody = vertex->FirstChild();
+        
+              while (vertexBody)
+                    {
+                  // Accumulate all non-comment body data.
+                  if (vertexBody->Type() == TiXmlNode::TEXT)
+                        {
+                  vertexBodyStr += vertexBody->ToText()->Value();
+                  vertexBodyStr += " ";
+                        }
+        
+                  vertexBody = vertexBody->NextSibling();
+                    }
+        
+              ASSERTL0(!vertexBodyStr.empty(), "Vertex definitions must contain vertex data.");
+        
+              // Get vertex data from the data string.
+              double xval, yval, zval;
+              std::istringstream vertexDataStrm(vertexBodyStr.c_str());
+              int dim = m_MeshGraph->GetSpaceDimension();
+              
+              try
+                    {
+                  while(!vertexDataStrm.fail())
+                        {
+                  vertexDataStrm >> xval >> yval >> zval;
+        
+                  // Need to check it here because we may not be good after the read
+                  // indicating that there was nothing to read.
+                  if (!vertexDataStrm.fail())
+                            {
+                      VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(dim, indx, xval, yval, zval));
+                      m_HistoryPoints.push_back(vert);
+                            }
+                        }
+                    }
+              catch(...)
+                    {
+                  ASSERTL0(false, "Unable to read HISTORY data.");
+                    }
+        
+              vertex = vertex->NextSiblingElement("H");
+                }
+
+        }
         
         bool BoundaryConditions::CheckForParameter(const std::string &parmName)
         {
@@ -1209,6 +1283,17 @@ namespace Nektar
             }
 
             return returnval;
+        }
+
+        int BoundaryConditions::GetNumHistoryPoints() const
+        {
+            return m_HistoryPoints.size();
+        }
+        
+        VertexComponentSharedPtr BoundaryConditions::GetHistoryPoint(int idx) 
+                                                                        const
+        {
+            return m_HistoryPoints.at(idx);
         }
 
     }

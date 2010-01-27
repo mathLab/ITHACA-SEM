@@ -1481,6 +1481,20 @@ namespace Nektar
                 }
             }
         }
+
+        int ExpList::GetExpIndex(
+                    const Array<OneD, const NekDouble> &gloCoord)
+        {
+            Array<OneD, NekDouble> stdCoord(GetCoordim(0),0.0);
+            for (int i = 0; i < GetExpSize(); ++i)
+            {
+                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoord))
+                {
+                    return i;
+                }
+            }
+        }
+
         /**
          * The operation is evaluated locally by the elemental
          * function StdRegions#StdExpansion#GetCoords.

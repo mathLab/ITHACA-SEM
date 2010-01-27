@@ -37,6 +37,8 @@
 #ifndef NEKTAR_SOLVERS_AUXILIARY_ADRBASE_H
 #define NEKTAR_SOLVERS_AUXILIARY_ADRBASE_H
 
+#include <SpatialDomains/MeshComponents.h>
+
 #include <MultiRegions/ContField1D.h>
 #include <MultiRegions/ContField2D.h>
 
@@ -144,6 +146,12 @@ namespace Nektar
 
 	void WriteTecplotFile(const int n, std::string name, bool IsInPhysicalSpace);
 
+        /// Builds map of which element holds each history point.
+        void ScanForHistoryPoints();
+        
+        /// Probe each history point and write to file.
+        void WriteHistoryData (std::ostream &out);
+        
         /// Write out a full summary.
         void Summary          (std::ostream &out);
 
@@ -329,6 +337,9 @@ namespace Nektar
         /// Pointer to graph defining mesh.
         SpatialDomains::MeshGraphSharedPtr          m_graph;
 
+        std::map<SpatialDomains::VertexComponentSharedPtr, int>
+                                                    m_historyList;
+        
         std::string m_sessionName;   ///< Name of the sessions
         NekDouble m_time;            ///< Continous time
 	NekDouble m_fintime;         ///< time to be taken during the simulation
@@ -451,6 +462,10 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.21  2010/01/26 17:43:08  cantwell
+* Updated CMakeLists.txt to build FitzHughNagumoSolver
+* Added Aliev-Panfilov model to ADR2DManifoldSolver
+*
 * Revision 1.20  2010/01/02 04:32:14  sehunchun
 * Add additional inline functions
 *

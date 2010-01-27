@@ -361,6 +361,10 @@ namespace Nektar
             StdRegions::StdExpansionSharedPtr& GetExp(
                     const Array<OneD, const NekDouble> &gloCoord);
 
+            /// This function returns the index of the local elemental
+            /// expansion containing the arbitrary point given by \a gloCoord.
+            int GetExpIndex(const Array<OneD, const NekDouble> &gloCoord);
+
             /// Get the start offset position for a global list of #m_coeffs
             /// correspoinding to element n.
             inline int GetCoeff_Offset(int n);
@@ -1268,6 +1272,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.86  2010/01/20 18:05:09  cantwell
+* Added utility for probing a line of points in a FLD file.
+*
 * Revision 1.85  2010/01/06 13:24:48  cantwell
 * Corrected naming of parameters in HelmSolve routines.
 * Documentation of DisContField1D.

@@ -325,6 +325,8 @@ namespace Nektar
 	  {
 	    m_fintime = 0;
 	  }
+      
+      ScanForHistoryPoints();
     }
 
 
@@ -1145,6 +1147,57 @@ namespace Nektar
       }
   }
 
+    /**
+     * 
+     */
+    void ADRBase::ScanForHistoryPoints()
+    {
+        m_historyList.clear();
+        Array<OneD, NekDouble> gloCoord(3,0.0);
+        for (int i = 0; i < m_boundaryConditions->GetNumHistoryPoints(); ++i) {
+            SpatialDomains::VertexComponentSharedPtr vtx = m_boundaryConditions->GetHistoryPoint(i);
+            vtx->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
+            
+            int eId = m_fields[0]->GetExpIndex(gloCoord);
+            
+            m_historyList.insert(
+                std::pair<SpatialDomains::VertexComponentSharedPtr, int>(vtx, eId));
+        }
+    }
+    
+    /**
+     * 
+     */ 
+    void ADRBase::WriteHistoryData (std::ostream &out)
+    {
+        for (int j = 0; j < m_fields.num_elements(); ++j)
+        {
+            m_fields[j]->BwdTrans(m_fields[j]->GetCoeffs(),m_fields[j]->UpdatePhys());
+            m_fields[j]->PutPhysInToElmtExp();
+        }
+        
+        Array<OneD, NekDouble> gloCoord(3,0.0);
+        std::map<SpatialDomains::VertexComponentSharedPtr, int>::iterator x;
+        for (x = m_historyList.begin(); x != m_historyList.end(); ++x)
+        {
+            (*x).first->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
+            out.width(8);
+            out << m_time;
+            out.width(8); 
+            out << gloCoord[0];
+            out.width(8);
+            out << gloCoord[1];
+            out.width(8);
+            out << gloCoord[2];
+            for (int j = 0; j < m_fields.num_elements(); ++j)
+            {
+                out.width(14);
+                out << m_fields[j]->GetExp((*x).second)->PhysEvaluate(gloCoord);
+            }
+            out << endl;
+        }
+    }
+        
 
     /**
      * Write out a summary of the session and timestepping to the given output
@@ -1253,6 +1306,10 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.23  2010/01/26 17:43:08  cantwell
+* Updated CMakeLists.txt to build FitzHughNagumoSolver
+* Added Aliev-Panfilov model to ADR2DManifoldSolver
+*
 * Revision 1.22  2009/12/14 17:59:33  cbiotto
 * Adding writing tecplot file
 *

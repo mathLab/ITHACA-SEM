@@ -548,14 +548,16 @@ namespace Nektar
             int i,j;
             int npoints;
             int nbnd = bndCondExpansions.num_elements();
+			
             MultiRegions::ExpList1DSharedPtr locExpList;
 
             for(i = 0; i < nbnd; ++i)
             {
+			  if(time == 0.0 || bndConditions[i]->GetUserDefined().GetEquation()=="TimeDependent")
+			  {
                 locExpList = bndCondExpansions[i];
                 npoints = locExpList->GetNpoints();
-
-                Array<OneD,NekDouble> x0(npoints,0.0);
+				Array<OneD,NekDouble> x0(npoints,0.0);
                 Array<OneD,NekDouble> x1(npoints,0.0);
                 Array<OneD,NekDouble> x2(npoints,0.0);
 
@@ -595,6 +597,7 @@ namespace Nektar
                 {
                     ASSERTL0(false,"This type of BC not implemented yet");
                 }
+			  }
             }
         }
 
@@ -788,6 +791,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.cpp,v $
+* Revision 1.35  2009/12/18 18:53:14  bnelson
+* Fixed windows compiler warnings.
+*
 * Revision 1.34  2009/12/15 18:09:03  cantwell
 * Split GeomFactors into 1D, 2D and 3D
 * Added generation of tangential basis into GeomFactors

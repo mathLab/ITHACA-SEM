@@ -64,7 +64,7 @@ namespace Nektar
     {
         int i,j;
         int numfields = m_fields.num_elements();
-        std::string velids[] = {"u","v","w"};
+		std::string velids[] = {"u","v","w"};
 
         // Set up Velocity field to point to the first m_expdim of m_fields; 
         m_velocity = Array<OneD,int>(m_spacedim);
@@ -135,7 +135,8 @@ namespace Nektar
 
              // check to see if any user defined boundary condition is
              // indeed implemented
-             for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+             
+			for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
              {	
                  // Time Dependent Boundary Condition (if no user
                  // defined then this is empty)
@@ -215,6 +216,32 @@ namespace Nektar
             break;
         }        
     }
+	
+	//time dependent boundary conditions updating
+	
+	void IncNavierStokes::SetBoundaryConditions(NekDouble time)
+	{
+		int  nvariables = m_fields.num_elements();
+		
+		for (int i = 0; i < nvariables; ++i)
+		{
+			bool m_timeDepBcFlag = false;
+			
+			for(int n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
+			{	
+			  if(m_fields[i]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "TimeDependent")
+			  {
+				m_timeDepBcFlag = true;
+			  }
+			}
+			
+		    if(m_timeDepBcFlag)	
+			{
+			   m_fields[i]->EvaluateBoundaryConditions(time);
+			}
+		}
+	}
+	
 
     // case insensitive string comparison from web
     int nocase_cmp(const string & s1, const string& s2) 
@@ -243,10 +270,15 @@ namespace Nektar
         }
         return (size1 < size2) ? -1 : 1;
     }
+	
+	
     
 } //end of namespace
 
 /**
 * $Log: IncNavierStokes.cpp,v $
+* Revision 1.2  2009/09/06 22:31:15  sherwin
+* First working version of Navier-Stokes solver and input files
+*
 *
 **/

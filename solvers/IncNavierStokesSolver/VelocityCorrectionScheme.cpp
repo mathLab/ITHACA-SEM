@@ -73,7 +73,7 @@ namespace Nektar
 
         ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
         
-        // Set to 1 for first step and it will then be increased in
+		// Set to 1 for first step and it will then be increased in
         // time advance routines
         switch(intMethod)
         {
@@ -170,7 +170,7 @@ namespace Nektar
                                                              const NekDouble time, 
                                                              const NekDouble aii_Dt)
     {
-        int i,n;
+		int i,n;
         int phystot = m_fields[0]->GetTotPoints();
         int ncoeffs = m_fields[0]->GetNcoeffs();
         Array<OneD, Array< OneD, NekDouble> > F(m_nConvectiveFields);
@@ -181,22 +181,25 @@ namespace Nektar
         {
             F[n] = F[n-1] + phystot;
         }
-        
+		
         // Pressure Forcing = Divergence Velocity; 
         SetUpPressureForcing(inarray, F, aii_Dt);
         
         // Solver Pressure Poisson Equation 
         m_pressure->HelmSolve(F[0], m_pressure->UpdateCoeffs(),0.0);
         
-        // Viscous Term forcing
+	    // Viscous Term forcing
         SetUpViscousForcing(inarray, F, aii_Dt);
     
-        // Solve Helmholtz system and put in Physical space 
+        // Solve Helmholtz system and put in Physical space
         for(i = 0; i < m_nConvectiveFields; ++i)
         {
             m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(), lambda);
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
         }
+		
+		//Updatig time dipendent boundary conditions
+		SetBoundaryConditions(time);
     }
 
     void VelocityCorrectionScheme::AdvanceInTime(int nsteps)
@@ -243,11 +246,12 @@ namespace Nektar
             }
         }
 		
+
 		//updatig physical space
 		for(i = 0; i < m_nConvectiveFields; ++i)
 		{
 			m_fields[i]->SetPhys(fields[i]);
-		}			
+		}
 		
     }
         
@@ -405,8 +409,8 @@ namespace Nektar
                 }
                 
             }
-            else if(type == "") // setting if just standard BC without
-                                // userdefined value
+            else if(type == "" || type == "TimeDependent")  // setting if just standard BC no High order
+                                                            
             {
                 cnt += PBndExp[n]->GetExpSize();
             }
@@ -467,6 +471,9 @@ namespace Nektar
 
 /**
 * $Log: VelocityCorrectionScheme.cpp,v $
+* Revision 1.4  2009/12/09 13:16:58  abolis
+* Update related to regression test
+*
 * Revision 1.3  2009/09/10 10:42:49  pvos
 * Modification to bind object pointer rather than object itself to time-integration functions.
 * (Prevents unwanted copy-constructor calls)

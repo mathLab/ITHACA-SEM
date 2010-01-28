@@ -74,7 +74,7 @@ namespace Nektar
         "Convective",
         "NonConservative"
     };
-    
+	
     /**
      * \brief This class is the base class for Navier Stokes problems
      *
@@ -119,6 +119,12 @@ namespace Nektar
         void EvaluateAdvectionTerms(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
                                     Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                     Array<OneD, NekDouble> &wk = NullNekDouble1DArray);
+		
+		//time dependent boundary conditions updating
+		
+		void SetBoundaryConditions(NekDouble time);
+		
+		
     protected:
 
         int   m_nConvectiveFields;  /// Number of fields to be convected; 
@@ -127,15 +133,15 @@ namespace Nektar
 
         MultiRegions::ExpListSharedPtr m_pressure;  ///< Pointer to field holding pressure field
 
-        NekDouble     m_kinvis;        ///< Kinematic viscosity
-        int           m_infosteps;     ///< dump info to stdout at steps time
-
+        NekDouble     m_kinvis;                ///< Kinematic viscosity
+        int           m_infosteps;             ///< dump info to stdout at steps time
+		
     private: 
         EquationType  m_equationType;  ///< equation type;
         AdvectionForm m_advectionForm; ///< Form of advection terms. 
 
 
-	void SetBoundaryConditions(NekDouble time); 
+	//void SetBoundaryConditions(NekDouble time); 
 				   
 
         // Virtual functions
@@ -153,5 +159,8 @@ namespace Nektar
 #endif //NEKTAR_SOLVERS_INCNAVIERSTOKES_H
 
 /**
-* $Log:  $
+* $Log: IncNavierStokes.h,v $
+* Revision 1.1  2009/09/06 22:31:15  sherwin
+* First working version of Navier-Stokes solver and input files
+*
 **/

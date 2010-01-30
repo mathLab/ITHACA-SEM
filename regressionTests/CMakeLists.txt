@@ -8,8 +8,13 @@ MACRO(ADD_REGRESSION_EXECUTABLE name source)
     ADD_EXECUTABLE(${name} ${source} ${ARGN})
 ENDMACRO(ADD_REGRESSION_EXECUTABLE name source)
 
+<<<<<<< CMakeLists.txt
+SUBDIRS(Demos Solvers)
+
+=======
 SUBDIRS(Demos)
 
+>>>>>>> 1.3
 SET(REGRESSION_MAKE_OK_FILES_EXEC OFF CACHE BOOL "Make routines to generation .ok files")
 MARK_AS_ADVANCED(REGRESSION_MAKE_OK_FILES_EXEC)
 

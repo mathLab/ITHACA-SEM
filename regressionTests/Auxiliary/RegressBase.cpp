@@ -60,7 +60,7 @@ RegressBase::RegressBase(std::string relative_demo_path, std::string demo_name, 
     m_input    = input;
 
     // DEMO and .OK PATH
-    m_progPath.assign(REG_PATH);
+    //m_progPath.assign(REG_PATH);
     m_progPath+=relative_demo_path;
     if(USR_WIN_32)
     {

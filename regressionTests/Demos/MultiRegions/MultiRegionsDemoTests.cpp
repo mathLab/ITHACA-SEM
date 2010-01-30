@@ -61,11 +61,11 @@ int main(int argc, char* argv[])
 
 void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
 {
-    RegressBase Test("../builds/Demos/MultiRegions/",Demo,input,"Demos/MultiRegions/OkFiles/");
+    RegressBase Test(NEKTAR_BIN_DIR,Demo,input,"Demos/MultiRegions/OkFiles/");
     int fail;
 
     // Copy input file to current location
-    std::string syscommand = "cp ../../../Demos/MultiRegions/InputFiles/"+input +" .";
+    std::string syscommand = std::string("cp ") + REG_PATH + "Demos/MultiRegions/InputFiles/"+input +" .";
     int status = system(syscommand.c_str());
     if(status)
     {

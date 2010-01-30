@@ -97,7 +97,8 @@ int main(int argc, char* argv[])
 
 void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
 {
-    RegressBase Test("../builds/Demos/StdRegions/",Demo,input,"Demos/StdRegions/OkFiles/");
+    //RegressBase Test("../builds/Demos/StdRegions/",Demo,input,"Demos/StdRegions/OkFiles/");
+    RegressBase Test(NEKTAR_BIN_DIR,Demo,input,"Demos/StdRegions/OkFiles/");
     int fail;
 
     std::cout << Demo << ":  info = \"" << info <<"\""<<std::endl;

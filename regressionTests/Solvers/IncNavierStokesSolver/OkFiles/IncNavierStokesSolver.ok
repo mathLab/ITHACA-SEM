@@ -1,0 +1,32 @@
+IncNavierStokesSolver
+==========================================
+Test_ChanFlow_m3.xml
+L2 Error (variable u) : 3.43365e-16
+L2 Error (variable v) : 1.07421e-16
+L2 Error (variable p) : 8.02347e-15
+----------------------------------------
+Test_ChanFlow_m8.xml
+L2 Error (variable u) : 5.8456e-16
+L2 Error (variable v) : 2.82882e-16
+L2 Error (variable p) : 1.23484e-14
+----------------------------------------
+Test_KovaFlow_m3.xml
+L2 Error (variable u) : 0.34362
+L2 Error (variable v) : 0.0255633
+L2 Error (variable p) : 0.34777
+----------------------------------------
+Test_KovaFlow_m8.xml
+L2 Error (variable u) : 3.22913e-07
+L2 Error (variable v) : 1.68898e-06
+L2 Error (variable p) : 9.87816e-06
+----------------------------------------
+Test_DecVortex_m3.xml
+L2 Error (variable u) : 0.00955255
+L2 Error (variable v) : 0.00955568
+L2 Error (variable p) : 0.0259517
+----------------------------------------
+Test_DecVortex_m8.xml
+L2 Error (variable u) : 3.97856e-06
+L2 Error (variable v) : 2.56526e-06
+L2 Error (variable p) : 1.6336e-05
+----------------------------------------

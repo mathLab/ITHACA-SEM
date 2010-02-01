@@ -1,6 +1,8 @@
 #pragma once
 
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif //NOMINMAX
 
 #include <list>
 #include <set>

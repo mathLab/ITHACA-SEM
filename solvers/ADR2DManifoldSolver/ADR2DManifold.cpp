@@ -81,6 +81,8 @@ namespace Nektar
         LoadParameter("mu1",            mMu1, 0.0);
         LoadParameter("mu2",            mMu2, 0.0);
 
+        LoadParameter("diam",           mDiam,1.0);
+        
         // -2: Advection problem on sphere
         // -1: Linear Morphogenesis problem for diffusion-reaction test
         // 0: Planar propagation from -x direction
@@ -1037,6 +1039,11 @@ namespace Nektar
         
         for(n = 0; n < nsteps; ++n)
         {
+            if (m_time < m_duration)
+            {
+                SetUSERDEFINEDInitialConditions(m_initialwavetype, false);
+            }
+            
             //----------------------------------------------
             // Perform time step integration
             //----------------------------------------------
@@ -1860,7 +1867,7 @@ namespace Nektar
         }
      }
 
-    void ADR2DManifold::SetUSERDEFINEDInitialConditions(const int initialwavetype, NekDouble initialtime)
+    void ADR2DManifold::SetUSERDEFINEDInitialConditions(const int initialwavetype, bool SetRestingState, NekDouble initialtime)
     {
         int nq = m_fields[0]->GetNpoints();
         int nvariables = m_fields.num_elements();
@@ -1870,15 +1877,18 @@ namespace Nektar
         Array<OneD,NekDouble> x2(nq);
 
         Array<OneD, NekDouble> rstates(2);
-        Getrestingstate(m_epsilon[0], m_beta, rstates);
-
+        if (SetRestingState)
+        {
+            Getrestingstate(m_epsilon[0], m_beta, rstates);
+        }
+        
         // get the coordinates (assuming all fields have the same discretisation)
         m_fields[0]->GetCoords(x0,x1,x2);
 
         switch(initialwavetype)
         {
             // -2: Advection problem on sphere
-        case(-2):
+            case(-2):
             {
                 for(int i = 0 ; i <nvariables ; i++)
                 {
@@ -1886,15 +1896,15 @@ namespace Nektar
                     {
                         (m_fields[i]->UpdatePhys())[j] = AdvectionSphere(x0[j], x1[j], x2[j], initialtime);
                     }
-
+    
                     m_fields[i]->SetPhysState(true);
-                m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+                    m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
                 }
             }
             break;
-
-        // -1:Morphogenesis problem for diffusion-reaction test
-        case(-1):
+    
+            // -1:Morphogenesis problem for diffusion-reaction test
+            case(-1):
             {
                 for(int i = 0 ; i < nvariables ; i++)
                 {
@@ -1902,116 +1912,36 @@ namespace Nektar
                     {
                         (m_fields[i]->UpdatePhys())[j] = Morphogenesis(i, x0[j], x1[j], x2[j], initialtime);
                     }
-
+    
                     m_fields[i]->SetPhysState(true);
                     m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
                 }
             }
             break;
-
-        // 0: Planar propagation from -x direction
-        case(0):
-        {
-            // Set the left side as the initial excitation
-            NekDouble xmin = Vmath::Vmin(nq,x0,1);
-            for(int j = 0; j < nq; j++)
+    
+            // 0: Planar propagation from -x direction
+            case(0):
             {
-                if( x0[j] <= (xmin+m_duration) )
-                {
-                    (m_fields[0]->UpdatePhys())[j] = 2.0;
-                    (m_fields[1]->UpdatePhys())[j] = rstates[1];
-                }
-                else
-                {
-                    (m_fields[0]->UpdatePhys())[j] = rstates[0];
-                    (m_fields[1]->UpdatePhys())[j] = rstates[1];
-                }
-            }
-
-            for(int i = 0 ; i < m_fields.num_elements(); i++)
-            {
-                m_fields[i]->SetPhysState(true);
-                m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
-            }
-        }
-        break;
-
-        // 1: Planar propagation from -y direction
-        case(1):
-        {
-            // Set the left side as the initial excitation
-            NekDouble ymin = Vmath::Vmin(nq,x1,1);
-            for(int j = 0; j < nq; j++)
-            {
-                if( x2[j] > (ymin+m_duration) )
-                {
-                    (m_fields[0]->UpdatePhys())[j] = 2.0;
-                    (m_fields[1]->UpdatePhys())[j] = rstates[1];
-                }
-                else
-                {
-                    (m_fields[0]->UpdatePhys())[j] = rstates[0];
-                    (m_fields[1]->UpdatePhys())[j] = rstates[1];
-                }
-            }
-
-            for(int i = 0 ; i < m_fields.num_elements(); i++)
-            {
-                m_fields[i]->SetPhysState(true);
-                m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
-            }
-        }
-        break;
-
-        // 2: For Planar propagation from -x direction in xy plane
-        case(2):
-        {
-            // Set the left side as the initial excitation
-            NekDouble xmin = Vmath::Vmin(nq,x0,1);
-            for(int j = 0; j < nq; j++)
-            {
-                if( ( x0[j] <= (xmin+m_duration) ) && ( fabs(x2[j]) <= 0.01 ) )
-                {
-                    (m_fields[0]->UpdatePhys())[j] = 2.0;
-                    (m_fields[1]->UpdatePhys())[j] = rstates[1];
-                }
-                else
-                {
-                    (m_fields[0]->UpdatePhys())[j] = rstates[0];
-                    (m_fields[1]->UpdatePhys())[j] = rstates[1];
-                }
-            }
-
-            for(int i = 0 ; i < m_fields.num_elements(); i++)
-            {
-                m_fields[i]->SetPhysState(true);
-                m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
-            }
-        }
-        break;
-
-        case(3):
-            {
-                cout << "Point initialization " << endl;
-
-                NekDouble rad;
+                // Set the left side as the initial excitation
+                NekDouble xmin = Vmath::Vmin(nq,x0,1);
                 for(int j = 0; j < nq; j++)
                 {
-                    rad = sqrt( (x0[j]-m_x0c)*(x0[j]-m_x0c) + (x1[j]-m_x1c)*(x1[j]-m_x1c) + (x2[j]-m_x2c)*(x2[j]-m_x2c) );
-
-                    if( rad <= m_duration )
+                    // Set U
+                    if( x0[j] <= (xmin+m_duration) )
                     {
                         (m_fields[0]->UpdatePhys())[j] = 2.0;
-                        (m_fields[1]->UpdatePhys())[j] = rstates[1];
                     }
-
-                    else
+                    else if (SetRestingState)
                     {
                         (m_fields[0]->UpdatePhys())[j] = rstates[0];
+                    }
+                    // Set V
+                    if (SetRestingState)
+                    {
                         (m_fields[1]->UpdatePhys())[j] = rstates[1];
                     }
                 }
-
+    
                 for(int i = 0 ; i < m_fields.num_elements(); i++)
                 {
                     m_fields[i]->SetPhysState(true);
@@ -2019,43 +1949,135 @@ namespace Nektar
                 }
             }
             break;
-
-        // 10: For Planar propagation from +z direction
-        case(10):
-        {
-            // Set the left side as the initial excitation
-            NekDouble zmax = Vmath::Vmax(nq,x2,1);
-            for(int j = 0; j < nq; j++)
+    
+            // 1: Planar propagation from -y direction
+            case(1):
             {
-                if( x2[j] > (zmax-m_duration) )
+                // Set the left side as the initial excitation
+                NekDouble ymin = Vmath::Vmin(nq,x1,1);
+                for(int j = 0; j < nq; j++)
                 {
-                    (m_fields[0]->UpdatePhys())[j] = 2.0;
-                    (m_fields[1]->UpdatePhys())[j] = rstates[1];
+                    if( x2[j] > (ymin+m_duration) )
+                    {
+                        (m_fields[0]->UpdatePhys())[j] = 2.0;
+                    }
+                    else if (SetRestingState)
+                    {
+                        (m_fields[0]->UpdatePhys())[j] = rstates[0];
+                    }
+                    if (SetRestingState)
+                    {
+                        (m_fields[1]->UpdatePhys())[j] = rstates[1];
+                    }
                 }
-                else
+    
+                for(int i = 0 ; i < m_fields.num_elements(); i++)
                 {
-                    (m_fields[0]->UpdatePhys())[j] = rstates[0];
-                    (m_fields[1]->UpdatePhys())[j] = rstates[1];
+                    m_fields[i]->SetPhysState(true);
+                    m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
                 }
             }
-
-            for(int i = 0 ; i < m_fields.num_elements(); i++)
+            break;
+    
+            // 2: For Planar propagation from -x direction in xy plane
+            case(2):
             {
-                m_fields[i]->SetPhysState(true);
-                m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+                // Set the left side as the initial excitation
+                NekDouble xmin = Vmath::Vmin(nq,x0,1);
+                for(int j = 0; j < nq; j++)
+                {
+                    if( ( x0[j] <= (xmin+m_duration) ) && ( fabs(x2[j]) <= 0.01 ) )
+                    {
+                        (m_fields[0]->UpdatePhys())[j] = 2.0;
+                    }
+                    else if (SetRestingState)
+                    {
+                        (m_fields[0]->UpdatePhys())[j] = rstates[0];
+                    }
+                    if (SetRestingState)
+                    {
+                        (m_fields[1]->UpdatePhys())[j] = rstates[1];
+                    }
+                }
+    
+                for(int i = 0 ; i < m_fields.num_elements(); i++)
+                {
+                    m_fields[i]->SetPhysState(true);
+                    m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+                }
             }
-        }
-        break;
-
-        default:
+            break;
+    
+            case(3):
+            {
+                NekDouble rad;
+                for(int j = 0; j < nq; j++)
+                {
+                    rad = sqrt( (x0[j]-m_x0c)*(x0[j]-m_x0c) + (x1[j]-m_x1c)*(x1[j]-m_x1c) + (x2[j]-m_x2c)*(x2[j]-m_x2c) );
+    
+                    if (SetRestingState)
+                    {
+                         (m_fields[1]->UpdatePhys())[j] = rstates[1];
+                    }
+                    if( rad <= mDiam )
+                    {
+                        (m_fields[0]->UpdatePhys())[j] = 1.0;
+                    }
+                    else if (SetRestingState)
+                    {
+                        (m_fields[0]->UpdatePhys())[j] = rstates[0];
+                    }
+                }
+    
+                for(int i = 0 ; i < m_fields.num_elements(); i++)
+                {
+                    m_fields[i]->SetPhysState(true);
+                    m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+                }
+            }
+            break;
+    
+            // 10: For Planar propagation from +z direction
+            case(10):
+            {
+                // Set the left side as the initial excitation
+                NekDouble zmax = Vmath::Vmax(nq,x2,1);
+                for(int j = 0; j < nq; j++)
+                {
+                    if (SetRestingState)
+                    {
+                        (m_fields[1]->UpdatePhys())[j] = rstates[1];
+                    }
+                    if( x2[j] > (zmax-m_duration) )
+                    {
+                        (m_fields[0]->UpdatePhys())[j] = 2.0;
+                    }
+                    else if (SetRestingState)
+                    {
+                        (m_fields[0]->UpdatePhys())[j] = rstates[0];
+                    }
+                }
+    
+                for(int i = 0 ; i < m_fields.num_elements(); i++)
+                {
+                    m_fields[i]->SetPhysState(true);
+                    m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+                }
+            }
+            break;
+    
+            default:
             {
                 SetInitialConditions(initialtime);
             }
         }
 
-    // dump initial conditions to file
-        std::string outname = m_sessionName + "_initial.chk";
-        WriteFld(outname);
+        // dump initial conditions to file
+        if (m_time == 0.0)
+        {
+            std::string outname = m_sessionName + "_initial.chk";
+            WriteFld(outname);
+        }
     }
 
     void ADR2DManifold::EvaluateUSERDEFINEDExactSolution(int field, Array<OneD, NekDouble> &outfield,
@@ -2418,6 +2440,7 @@ namespace Nektar
         switch(m_equationType)
         {
             case eAlievPanfilov:
+                out << "\tmK            : " << mK << endl;
                 out << "\tmA            : " << mA << endl;
                 out << "\tmEps          : " << mEps << endl;
                 out << "\tmMu1          : " << mMu1 << endl;

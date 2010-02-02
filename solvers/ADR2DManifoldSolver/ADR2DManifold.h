@@ -153,7 +153,7 @@ namespace Nektar
         void WallBoundary2D(const int bcRegion, const int cnt, 
                             const Array<OneD, const Array<OneD, NekDouble> >&inarray);
 
-        void SetUSERDEFINEDInitialConditions(const int Readfntype, NekDouble initialtime=0.0);
+        void SetUSERDEFINEDInitialConditions(const int Readfntype, bool SetRestingState = true, NekDouble initialtime=0.0);
 
         void EvaluateUSERDEFINEDExactSolution(int field, Array<OneD, NekDouble> &outfield, 
                                               const NekDouble time, const int Readfntype);
@@ -292,6 +292,7 @@ namespace Nektar
 
         // -- AP variables
         NekDouble mK, mA, mB, mC, mEps, mMu1, mMu2;
+        NekDouble mDiam;
         // -- end AP variables
 
         Array<OneD, NekDouble>   m_epsilon;

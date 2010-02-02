@@ -222,9 +222,6 @@ namespace Nektar
             bool UserDefinedEqnExists(const std::string &var) const;
             ConstUserDefinedEqnShPtr GetUserDefinedEqn(int indx) const;
             ConstUserDefinedEqnShPtr GetUserDefinedEqn(const std::string &var) const;
-
-            int GetNumHistoryPoints() const;
-            VertexComponentSharedPtr GetHistoryPoint(int idx) const;
             
             /// Get initial condition function based on the index of the variable.
             /// The index is the order in which the variable was
@@ -276,7 +273,6 @@ namespace Nektar
             void ReadInitialConditions(TiXmlElement *conditions);
             void ReadExactSolution(TiXmlElement *solution);
             void ReadUserDefinedEqn(TiXmlElement *functions);
-            void ReadHistoryPoints(TiXmlElement *history);
 
             // Containers to hold conditions and associated data
             static ParamMap m_Parameters;
@@ -290,7 +286,6 @@ namespace Nektar
             UserDefinedEqnMap           m_UserDefinedEqn;
 
             SolverInfoMap               m_SolverInfo; //< Solver Information 
-            VertexComponentVector       m_HistoryPoints;
 
             /// The mesh graph to use for referencing geometry info.
             const MeshGraph *m_MeshGraph;

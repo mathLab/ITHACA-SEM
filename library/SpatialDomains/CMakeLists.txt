@@ -11,6 +11,7 @@ Geometry2D.cpp
 Geometry3D.cpp
 Geometry.cpp
 HexGeom.cpp
+History.cpp
 InterfaceComponent.cpp
 MeshComponents.cpp
 MeshGraph.cpp
@@ -42,6 +43,7 @@ Geometry2D.h
 Geometry3D.h
 Geometry.h
 HexGeom.h
+History.h
 InterfaceComponent.h
 MeshComponents.h
 MeshGraph1D.h

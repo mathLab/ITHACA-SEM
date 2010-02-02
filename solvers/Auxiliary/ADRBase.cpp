@@ -81,6 +81,11 @@ namespace Nektar
                                         ::AllocateSharedPtr(meshptr);
         m_boundaryConditions->Read(fileNameString);
 
+        // Read and store history point data
+        m_historyPoints = MemoryManager<SpatialDomains::History>
+                                        ::AllocateSharedPtr(meshptr);
+        m_historyPoints->Read(fileNameString);
+        
         // Set space dimension for use in class
         m_spacedim = m_graph->GetSpaceDimension();
 
@@ -1154,8 +1159,8 @@ namespace Nektar
     {
         m_historyList.clear();
         Array<OneD, NekDouble> gloCoord(3,0.0);
-        for (int i = 0; i < m_boundaryConditions->GetNumHistoryPoints(); ++i) {
-            SpatialDomains::VertexComponentSharedPtr vtx = m_boundaryConditions->GetHistoryPoint(i);
+        for (int i = 0; i < m_historyPoints->GetNumHistoryPoints(); ++i) {
+            SpatialDomains::VertexComponentSharedPtr vtx = m_historyPoints->GetHistoryPoint(i);
             vtx->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
             
             int eId = m_fields[0]->GetExpIndex(gloCoord);
@@ -1306,6 +1311,12 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.25  2010/01/27 15:55:57  cantwell
+* Fixed incorrect ordering of history point data.
+* Fixed parsing of session name when session filename contains multiple
+*   full-stops.
+* Removed extra empty composite entries in XML generation from Gmsh.
+*
 * Revision 1.24  2010/01/27 13:19:13  cantwell
 * Added functions to write history/probe data during timestepping.
 *

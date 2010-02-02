@@ -556,18 +556,18 @@
                 <N VAR="v" VALUE="0.0" />
             </REGION>
         </BOUNDARYCONDITIONS>
-
-        <HISTORY>
-            <H ID="0"> 1 0.5 0 </H>
-            <H ID="1"> 2 0.5 0 </H>
-            <H ID="2"> 3 0.5 0 </H>
-            <H ID="3"> 4 0.5 0 </H>
-            <H ID="4"> 5 0.5 0 </H>
-            <H ID="5"> 6 0.5 0 </H>
-            <H ID="6"> 7 0.5 0 </H>
-            <H ID="7"> 8 0.5 0 </H>
-            <H ID="8"> 9 0.5 0 </H>
-        </HISTORY>
     </CONDITIONS>
+
+    <HISTORY>
+        <H ID="0"> 1 0.5 0 </H>
+        <H ID="1"> 2 0.5 0 </H>
+        <H ID="2"> 3 0.5 0 </H>
+        <H ID="3"> 4 0.5 0 </H>
+        <H ID="4"> 5 0.5 0 </H>
+        <H ID="5"> 6 0.5 0 </H>
+        <H ID="6"> 7 0.5 0 </H>
+        <H ID="7"> 8 0.5 0 </H>
+        <H ID="8"> 9 0.5 0 </H>
+    </HISTORY>
 </NEKTAR>
 

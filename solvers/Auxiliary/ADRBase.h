@@ -38,6 +38,7 @@
 #define NEKTAR_SOLVERS_AUXILIARY_ADRBASE_H
 
 #include <SpatialDomains/MeshComponents.h>
+#include <SpatialDomains/History.h>
 
 #include <MultiRegions/ContField1D.h>
 #include <MultiRegions/ContField2D.h>
@@ -334,6 +335,8 @@ namespace Nektar
         Array<OneD, MultiRegions::ExpListSharedPtr> m_derivedfields;
         /// Pointer to boundary conditions object.
         SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
+        /// Pointer to history data object.
+        SpatialDomains::HistorySharedPtr            m_historyPoints;
         /// Pointer to graph defining mesh.
         SpatialDomains::MeshGraphSharedPtr          m_graph;
 
@@ -462,6 +465,12 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.23  2010/01/27 15:55:57  cantwell
+* Fixed incorrect ordering of history point data.
+* Fixed parsing of session name when session filename contains multiple
+*   full-stops.
+* Removed extra empty composite entries in XML generation from Gmsh.
+*
 * Revision 1.22  2010/01/27 13:19:13  cantwell
 * Added functions to write history/probe data during timestepping.
 *

@@ -48,7 +48,8 @@ namespace Nektar
         eIMEXtest,
 	eFHNtest1,
 	eFHNtest2,
-	eFHNmonoplane,
+	eFitzHughNagumo,
+        eFHNRogers,
 	eFHNmonohetero,
         eEquationTypeSize
     };
@@ -60,7 +61,8 @@ namespace Nektar
         "IMEXtest",
 	"FHNtest1",
 	"FHNtest2",
-	"FHNmonoplane",
+	"FitzHughNagumo",
+        "FHNRogers",
 	"FHNmonohetero",
     };
 
@@ -171,9 +173,13 @@ namespace Nektar
 			       Array<OneD, Array<OneD, NekDouble> >&outarray, 
 			       const NekDouble time);
 
-	void ODEeReactionmono(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
-			       Array<OneD, Array<OneD, NekDouble> >&outarray, 
-			       const NekDouble time);
+	void ODEFitzHughNagumo(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+                               Array<OneD, Array<OneD, NekDouble> >&outarray, 
+                               const NekDouble time);
+
+	void ODEFHNRogers(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+                          Array<OneD, Array<OneD, NekDouble> >&outarray, 
+                          const NekDouble time);
 
 	void ODEeReaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
 			  Array<OneD, Array<OneD, NekDouble> >&outarray, 
@@ -229,6 +235,9 @@ namespace Nektar
         int        m_secondwavetype;      /// second wave type
         NekDouble m_x1center, m_y1center, m_x2center, m_y2center;     // center of waves
         NekDouble m_frequency1, m_frequency2 ;      // frequency of wave1 and wave2
+        NekDouble m_kr ;          // refractory constant
+
+        NekDouble m_Rogers_a, m_Rogers_b, m_Rogers_c1, m_Rogers_c2, m_Rogers_d;
 
         NekDouble      m_diffrate;
         Array<OneD, NekDouble>      m_diffusivity;
@@ -270,6 +279,9 @@ namespace Nektar
 
 /**
 * $Log: FitzHughNagumo.h,v $
+* Revision 1.6  2010/01/02 04:33:42  sehunchun
+* Adjust HelmSolver
+*
 * Revision 1.5  2009/11/24 11:14:50  sehunchun
 * *** empty log message ***
 *

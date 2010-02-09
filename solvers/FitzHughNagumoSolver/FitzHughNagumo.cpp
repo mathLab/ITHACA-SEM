@@ -84,6 +84,51 @@ namespace Nektar
             m_beta  = 0.77;
         }
 
+        if(m_boundaryConditions->CheckForParameter("Rogers_a") == true)
+        {
+            m_Rogers_a = m_boundaryConditions->GetParameter("Rogers_a");
+        }
+        else
+        {
+            m_Rogers_a  = 0.12;
+        }
+
+        if(m_boundaryConditions->CheckForParameter("Rogers_b") == true)
+        {
+            m_Rogers_b = m_boundaryConditions->GetParameter("Rogers_b");
+        }
+        else
+        {
+            m_Rogers_b  = 0.011;
+        }
+
+        if(m_boundaryConditions->CheckForParameter("Rogers_c1") == true)
+        {
+            m_Rogers_c1 = m_boundaryConditions->GetParameter("Rogers_c1");
+        }
+        else
+        {
+            m_Rogers_c1  = 0.175;
+        }
+
+        if(m_boundaryConditions->CheckForParameter("Rogers_c2") == true)
+        {
+            m_Rogers_c2 = m_boundaryConditions->GetParameter("Rogers_c2");
+        }
+        else
+        {
+            m_Rogers_c2  = 0.03;
+        }
+
+        if(m_boundaryConditions->CheckForParameter("Rogers_d") == true)
+        {
+            m_Rogers_d = m_boundaryConditions->GetParameter("Rogers_d");
+        }
+        else
+        {
+            m_Rogers_d  = 0.55;
+        }
+
         // initialwave type
         // 0 = plane wave propagation from the left
         // 1 = plane wave propagation from the bottom
@@ -132,7 +177,16 @@ namespace Nektar
         }
         else
         {
-            m_duration  = 3.5;
+            m_duration  = 2.0;
+        }
+
+        if(m_boundaryConditions->CheckForParameter("refractory") == true)
+        {
+            m_kr = m_boundaryConditions->GetParameter("refractory");
+        }
+        else
+        {
+            m_kr = 1.0;
         }
 
         if(m_boundaryConditions->CheckForParameter("frequency1") == true)
@@ -317,32 +371,46 @@ namespace Nektar
         Array<OneD,NekDouble> x1(nq);
         Array<OneD,NekDouble> x2(nq);
       
-        NekDouble unew=100.0, uinit=0.0, vinit, f, fd, fval, gval,Tol=0.00000001;
+        NekDouble unew=100.0, uinit=0.0, vinit=0.0, f, fd, fval, gval,Tol=0.00000001;
 
-        // get the coordinates (assuming all fields have the same discretisation)
         m_fields[0]->GetCoords(x0,x1,x2);
 
-        // Get the initial constant u and v
-        for(int j = 0; j<1000; j++)
+        switch(m_equationType)
         {
-            // f = fvalue(uinit);
-            f = uinit*uinit*uinit + 3.0*uinit + 6.0*m_beta;
-
-            // fd = fderiv(uinit);
-            fd = 3.0*uinit*uinit + 3.0;
-
-            unew = uinit - f/fd;
-
-            if(abs(unew-uinit) < Tol)
+        case(4):
             {
-                break;
+            // get the coordinates (assuming all fields have the same discretisation)
+            
+            // Get the initial constant u and v
+            for(int j = 0; j<1000; j++)
+            {
+                // f = fvalue(uinit);
+                f = uinit*uinit*uinit + 3.0*uinit + 6.0*m_beta;
+                
+                // fd = fderiv(uinit);
+                fd = 3.0*uinit*uinit + 3.0;
+                
+                unew = uinit - f/fd;
+                
+                if(abs(unew-uinit) < Tol)
+                {
+                    break;
+                }
+                uinit = unew;
             }
-            uinit = unew;
-        }
-        vinit = uinit - (1.0/3.0)*uinit*uinit*uinit;
+            vinit = uinit - (1.0/3.0)*uinit*uinit*uinit;
+            
+            m_uinit = uinit;
+            m_vinit = vinit;
+            }
+            break;
 
-        m_uinit = uinit;
-        m_vinit = vinit;
+        default:
+            {
+                m_uinit=0.0;
+                m_vinit=0.0;
+            }
+        }
 
         cout << "Static u0 = " << uinit << ", Static v0 = " << vinit << endl;
 
@@ -359,7 +427,6 @@ namespace Nektar
         // plane wave from the bottom
         case(1):
             {
-                cout << " Exponential wave left with m_initeps= " << m_initeps << endl;
                 for(int j = 0; j < nq; j++)
                 {
                     (m_fields[0]->UpdatePhys())[j] = (2.0-uinit)/( 1.0 + exp((x0[j] - xmin - m_duration)/m_initeps ) ) + uinit;
@@ -372,9 +439,6 @@ namespace Nektar
             // Circular wave from the top-right corner
         case(2):
             {
-
-                cout << " circular wave " << endl;
-
                 for(int j = 0; j < nq; j++)
                 {
                     rad = sqrt( (x0[j]-xmax)*(x0[j]-xmax) + (x1[j]-ymax)*(x1[j]-ymax) );
@@ -397,9 +461,6 @@ namespace Nektar
             // Point initialization at 
         case(3):
             {
-
-                cout << " point initialization " << endl;
-
                 for(int j = 0; j < nq; j++)
                 {
                     rad = sqrt( (x0[j]-m_x1center)*(x0[j]-m_x1center) + (x1[j]-m_y1center)*(x1[j]-m_y1center) );
@@ -421,8 +482,6 @@ namespace Nektar
 
         case(-100):
             {
-                cout << "Stable status" << endl;
-
                 for(int j = 0; j < nq; j++)
                 {
                     (m_fields[0]->UpdatePhys())[j] = uinit;
@@ -434,9 +493,6 @@ namespace Nektar
             // otherwise planar wave from the left
         default:
             {
-
-                cout << " plane wave left " << endl;
-
                 for(int j = 0; j < nq; j++)
                 {
                     if( x0[j] <= (xmin+m_duration) )
@@ -497,9 +553,6 @@ namespace Nektar
             // Plane wave from the left
         case(0):
             {
-
-                cout << " 2nd: plane wave left " << endl;
-
                 for(int j = 0; j < nq; j++)
                 {
                     if( x0[j] <= (xmin+m_duration) )
@@ -513,7 +566,6 @@ namespace Nektar
             // Plane wave from the bottom
         case(1):
             {
-                cout << " Exponential wave left" << endl;
                 for(int j = 0; j < nq; j++)
                 {
                     physfield[j] = 1.0/( 1.0 + exp((x0[j] - xmin - m_duration)/m_initeps ) );
@@ -525,9 +577,6 @@ namespace Nektar
             // Circular wave from the corner
         case(2):
             {
-
-                cout << " 2nd: circular wave " << endl;
-
                 for(int j = 0; j < nq; j++)
                 {
                     rad = sqrt( (x0[j]-xmax)*(x0[j]-xmax) + (x1[j]-ymax)*(x1[j]-ymax) );
@@ -543,9 +592,6 @@ namespace Nektar
             // Point initialization at (m_x2center, m_y2center)
         case(3):
             {
-
-                cout << " 2nd: point init " << endl;
-
                 for(int j = 0; j < nq; j++)
                 {
                     rad = sqrt( (x0[j]-xc)*(x0[j]-xc) + (x1[j]-yc)*(x1[j]-yc) );
@@ -682,9 +728,9 @@ namespace Nektar
 	}
     }
 
-    void FitzHughNagumo::ODEeReactionmono(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
-					  Array<OneD, Array<OneD, NekDouble> >&outarray, 
-					  const NekDouble time)
+    void FitzHughNagumo::ODEFitzHughNagumo(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+                                           Array<OneD, Array<OneD, NekDouble> >&outarray, 
+                                           const NekDouble time)
 	
     {
       NekDouble m_gamma = 0.5;
@@ -723,10 +769,66 @@ namespace Nektar
       Vmath::Sadd(npoints, m_beta, &Rv[0], 1, &Rv[0], 1);
       Vmath::Smul(npoints, m_epsilon, &Rv[0], 1, &Rv[0], 1);
 
+      for (int i=0; i<npoints; ++i)
+      {
+          if(Rv[i]<0)
+          {
+              Rv[i] = m_kr*Rv[i];
+          }
+      }
+
       m_fields[1]->FwdTrans(Rv,outarray[1]);
       m_fields[1]->SetPhysState(false); 
     }
 
+
+    void FitzHughNagumo::ODEFHNRogers(const Array<OneD, const Array<OneD, NekDouble> >&inarray,  
+                                      Array<OneD, Array<OneD, NekDouble> >&outarray, 
+                                      const NekDouble time)
+	
+    {
+      int nvariables = inarray.num_elements();
+      int ncoeffs    = inarray[0].num_elements();
+      int npoints    = m_fields[0]->GetNpoints();
+      
+      Array<OneD, NekDouble> physfieldu(npoints);
+      Array<OneD, NekDouble> physfieldv(npoints);
+      Array<OneD, NekDouble> temp1(npoints,0.0);
+      Array<OneD, NekDouble> temp2(npoints,0.0);
+
+      Array<OneD, NekDouble> Ru(npoints,0.0);
+      Array<OneD, NekDouble> Rv(npoints, 0.0);
+      
+      // Computation in Physical space
+      m_fields[0]->BwdTrans(inarray[0],physfieldu);
+      m_fields[0]->SetPhysState(true);        
+
+      m_fields[1]->BwdTrans(inarray[1],physfieldv);
+      m_fields[1]->SetPhysState(true);        
+
+      // F(u,v) = c1 * u * ( u - a ) * ( 1 - u ) - c2 * u * v
+      Vmath::Sadd(npoints, -1.0*m_Rogers_a, &physfieldu[0], 1, &temp1[0], 1);
+      Vmath::Sadd(npoints, -1.0, &physfieldu[0], 1, &temp2[0], 1);
+      Vmath::Vmul(npoints, &temp1[0], 1, &temp2[0], 1, &Ru[0], 1);
+      Vmath::Vmul(npoints, &physfieldu[0], 1, &Ru[0], 1, &Ru[0], 1);
+      Vmath::Smul(npoints, -1.0*m_Rogers_c1, &Ru[0], 1, &Ru[0], 1);
+
+      Vmath::Vmul(npoints, &physfieldu[0], 1, &physfieldv[0], 1, &temp1[0], 1);
+      Vmath::Smul(npoints, -1.0*m_Rogers_c2, &temp1[0], 1, &temp1[0], 1);
+
+      Vmath::Vadd(npoints, &temp1[0], 1, &Ru[0], 1, &Ru[0], 1);
+
+      // G(u,v) = b * ( u - d * v ) 
+      Vmath::Svtvp(npoints, -1.0*m_Rogers_d, &physfieldv[0], 1, &physfieldu[0], 1, &Rv[0], 1);
+      Vmath::Smul(npoints, m_Rogers_b, &Rv[0], 1, &Rv[0], 1);
+
+      // Back to Modal Space
+      m_fields[0]->FwdTrans(Ru,outarray[0]);
+      m_fields[0]->SetPhysState(false);        
+
+      m_fields[1]->FwdTrans(Rv,outarray[1]);
+      m_fields[1]->SetPhysState(false); 
+    }
 
   
   void FitzHughNagumo::ODEhelmSolvetest(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
@@ -1092,6 +1194,7 @@ namespace Nektar
 	
         cout << " =========================================== " << endl;
         // Print out Vmax and Vmin
+        /*
         for (i =0; i < nvariables; ++i)
         {
             cout << "fieldmax, i = " << i << endl;
@@ -1122,6 +1225,7 @@ namespace Nektar
             }
             cout << endl << endl;
         }
+        */
         cout << " =========================================== " << endl;
   }
     
@@ -1478,12 +1582,20 @@ namespace Nektar
     out << "\tTime Integration Method : " << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod] << endl;
     out << "\tEpsilon    : " << m_epsilon << endl;
     out << "\tBeta    : " << m_beta << endl;
+    out << "\tRogers_a    : " << m_Rogers_a << endl;
+    out << "\tRogers_b    : " << m_Rogers_b << endl;
+    out << "\tRogers_c1    : " << m_Rogers_c1 << endl;
+    out << "\tRogers_c2    : " << m_Rogers_c2 << endl;
+    out << "\tRogers_d    : " << m_Rogers_d << endl;
+
     out << "\tinitialwavetype : " << m_initialwavetype << endl;
     out << "\tx1center : " << m_x1center << endl;
     out << "\ty1center : " << m_y1center << endl;
     out << "\tfrequency1 : " << m_frequency1 << endl;
     out << "\tTimedelay : " << m_timedelay << endl;
     out << "\tDuration : " << m_duration << endl;
+    out << "\tRefractory : " << m_kr << endl;
+
     out << "\tsecondwavetype : " << m_secondwavetype << endl;
     out << "\tx2center : " << m_x2center << endl;
     out << "\ty2center : " << m_y2center << endl;

@@ -68,11 +68,15 @@ namespace Nektar
             /// Look for all data in HISTORY block.
             history = docHandle.FirstChildElement("NEKTAR").FirstChildElement("HISTORY").Element();
 
+            if (!history) return;
+
             ReadHistoryPoints(history);
         }
 
         void History::ReadHistoryPoints(TiXmlElement *history)
         {
+            if (!history) return;
+
             TiXmlElement *vertex = history->FirstChildElement("H");
         
             int indx;

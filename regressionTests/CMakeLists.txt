@@ -18,6 +18,11 @@ IF( WIN32 )
 ENDIF(WIN32)
 
 ADD_DEFINITIONS(-DREG_PATH="${CMAKE_SOURCE_DIR}/")
+
+# Look for Nektar++ in the standard location (Nektar++/builds) 
+# This will work no matter where the regression build is.
+SET(Nektar++_DIR "${CMAKE_SOURCE_DIR}/../builds/dist" CACHE PATH "")
+
 FIND_PACKAGE(Nektar++ REQUIRED)
 ADD_DEFINITIONS(-DNEKTAR_BIN_DIR="${NEKTAR++_BIN_DIR}/")
 

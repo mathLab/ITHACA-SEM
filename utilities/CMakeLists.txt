@@ -12,6 +12,10 @@ PROJECT(UTILITIES)
 # won't need to modify this.
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR} ${CMAKE_MODULE_PATH})
 
+# Look for Nektar++ in the standard location (Nektar++/builds) 
+# Users can modify this directly in CMake if they used a non-standard location.
+SET(Nektar++_DIR "${CMAKE_SOURCE_DIR}/../builds/dist" CACHE PATH "")
+
 # Finds Nektar++.  This may introduce other dependencies, such 
 # as Boost and Loki.
 FIND_PACKAGE(Nektar++ REQUIRED)

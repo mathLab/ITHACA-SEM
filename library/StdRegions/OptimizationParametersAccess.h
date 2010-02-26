@@ -28,7 +28,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: Header file of optimisation parameters class
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -41,36 +41,69 @@
 
 namespace Nektar
 {
-    namespace NekOptimize 
-    {        
+    namespace NekOptimize
+    {
+        template<StdRegions::ElementType etype, ElementalOptimizationOperationType mtype, int dim = 2>
+        class ElementalOptimization;
+
         // This class can be used to access the elemental optimisation parameters.
         // No direct access to the ElementalOptimizationParameters class is allowed as
         // they should be accessed through a Loki::Singleton
         template<StdRegions::ElementType etype, ElementalOptimizationOperationType mtype>
-            class ElementalOptimization
+            class ElementalOptimization<etype, mtype, 2>
         {
         public:
-            static bool DoMatOp(int nummodes0, int nummodes1) 
+            static bool DoMatOp(int nummodes0, int nummodes1)
             {
                 ASSERTL1((nummodes0>1)&&(nummodes0<MaxBoolContainerDim+2),"Invalid number of modes in direction 0");
                 ASSERTL1((nummodes1>1)&&(nummodes1<MaxBoolContainerDim+2),"Invalid number of modes in direction 1");
 
-                return (Loki::SingletonHolder<ElementalOptimizationParameters<etype,mtype> >::Instance()).DoMatOp(nummodes0,nummodes1);
+                return (Loki::SingletonHolder<ElementalOptimizationParameters<etype,mtype,2> >::Instance()).DoMatOp(nummodes0,nummodes1);
             }
-            
+
             static void DumpParameters(std::ostream &outfile)
             {
-                return (Loki::SingletonHolder<ElementalOptimizationParameters<etype,mtype> >::Instance()).DumpParameters(outfile);
+                return (Loki::SingletonHolder<ElementalOptimizationParameters<etype,mtype,2> >::Instance()).DumpParameters(outfile);
             }
 
         private:
             friend class LoadOptimizationParametersInterface;
-            static void SetDoMatOp(int nummodes0, int nummodes1, bool a) 
+            static void SetDoMatOp(int nummodes0, int nummodes1, bool a)
             {
                 ASSERTL1((nummodes0>1)&&(nummodes0<MaxBoolContainerDim+2),"Invalid number of modes in direction 0");
                 ASSERTL1((nummodes1>1)&&(nummodes1<MaxBoolContainerDim+2),"Invalid number of modes in direction 1");
 
-                return (Loki::SingletonHolder<ElementalOptimizationParameters<etype,mtype> >::Instance()).SetDoMatOp(nummodes0,nummodes1,a);
+                return (Loki::SingletonHolder<ElementalOptimizationParameters<etype,mtype,2> >::Instance()).SetDoMatOp(nummodes0,nummodes1,a);
+            }
+        };
+
+        template<StdRegions::ElementType etype, ElementalOptimizationOperationType mtype>
+            class ElementalOptimization<etype, mtype, 3>
+        {
+        public:
+            static bool DoMatOp(int nummodes0, int nummodes1, int nummodes2)
+            {
+                ASSERTL1((nummodes0>1)&&(nummodes0<MaxBoolContainerDim+2),"Invalid number of modes in direction 0");
+                ASSERTL1((nummodes1>1)&&(nummodes1<MaxBoolContainerDim+2),"Invalid number of modes in direction 1");
+                ASSERTL1((nummodes2>1)&&(nummodes2<MaxBoolContainerDim+2),"Invalid number of modes in direction 2");
+
+                return (Loki::SingletonHolder<ElementalOptimizationParameters<etype,mtype,3> >::Instance()).DoMatOp(nummodes0,nummodes1,nummodes2);
+            }
+
+            static void DumpParameters(std::ostream &outfile)
+            {
+                return (Loki::SingletonHolder<ElementalOptimizationParameters<etype,mtype,3> >::Instance()).DumpParameters(outfile);
+            }
+
+        private:
+            friend class LoadOptimizationParametersInterface;
+            static void SetDoMatOp(int nummodes0, int nummodes1, int nummodes2, bool a)
+            {
+                ASSERTL1((nummodes0>1)&&(nummodes0<MaxBoolContainerDim+2),"Invalid number of modes in direction 0");
+                ASSERTL1((nummodes1>1)&&(nummodes1<MaxBoolContainerDim+2),"Invalid number of modes in direction 1");
+                ASSERTL1((nummodes2>1)&&(nummodes2<MaxBoolContainerDim+2),"Invalid number of modes in direction 2");
+
+                return (Loki::SingletonHolder<ElementalOptimizationParameters<etype,mtype,3> >::Instance()).SetDoMatOp(nummodes0,nummodes1,nummodes2,a);
             }
         };
 

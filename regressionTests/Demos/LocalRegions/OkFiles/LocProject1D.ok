@@ -1,12 +1,12 @@
 LocProject1D
 ==========================================
 1 6 7 0.0 1.0
-L infinity error: 1.77636e-15
-L 2 error:        3.10384e-16
-error at (xi = 0) x = 0.5 : 0
+L infinity error: 8.88178e-16
+L 2 error:        4.26337e-16
+error at (xi = 0) x = 0.5 : -2.22045e-16
 ----------------------------------------
 4 6 7 0.0 1.0
-L infinity error: 1.86517e-14
-L 2 error:        6.24593e-15
-error at (xi = 0) x = 0.5 : 5.55112e-15
+L infinity error: 5.88418e-15
+L 2 error:        2.22438e-15
+error at (xi = 0) x = 0.5 : -1.33227e-15
 ----------------------------------------

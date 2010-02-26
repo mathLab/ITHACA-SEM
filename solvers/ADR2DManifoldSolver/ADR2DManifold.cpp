@@ -708,30 +708,39 @@ namespace Nektar
       m_fields[1]->BwdTrans(inarray[1],physfieldv);
       m_fields[1]->SetPhysState(true);
 
-      // For u: (1/m_epsilon)*( u*-u*u*u/3 - v )
-      // physfield = u - (1.0/3.0)*u*u*u
       // u2 = u*u
       Vmath::Vmul(npoints, &physfieldu[0], 1, &physfieldu[0], 1, &u2[0], 1);
       // u3 = u*u*u
       Vmath::Vmul(npoints, &physfieldu[0], 1, &u2[0], 1, &u3[0], 1);
 
-      // Ru = au
-      Vmath::Smul(npoints, mA, &physfieldu[0], 1, &Ru[0], 1);
-      // Ru = (-1-a)u*u + au
-      Vmath::Svtvp(npoints, (-1.0-mA), &u2[0], 1, &Ru[0], 1, &Ru[0], 1);
+      if (m_spatialParameters->Exists("a"))
+      {
+        Vmath::Vmul(npoints, &m_spatialParameters->GetData("a")->GetPhys()[0], 1, &physfieldu[0], 1, &Ru[0], 1);
+        Vmath::Vvtvm(npoints, &m_spatialParameters->GetData("a")->GetPhys()[0], 1, &u2[0], 1, &Ru[0], 1, &Ru[0], 1);
+        Vmath::Svtvm(npoints, -1.0, &u2[0], 1, &Ru[0], 1, &Ru[0], 1);
+      }
+      else
+      {
+        // Ru = au
+        Vmath::Smul(npoints, mA, &physfieldu[0], 1, &Ru[0], 1);
+        // Ru = (-1-a)u*u + au
+        Vmath::Svtvp(npoints, (-1.0-mA), &u2[0], 1, &Ru[0], 1, &Ru[0], 1);
+      }
       // Ru = u*u*u - (1+a)u*u + au
       Vmath::Vadd(npoints, &u3[0], 1, &Ru[0], 1, &Ru[0], 1);
       // Ru = k(u*u*u - (1+a)u*u + au)
-      Vmath::Smul(npoints, mK, &Ru[0], 1, &Ru[0], 1);
+      if (m_spatialParameters->Exists("k"))
+      {
+        Vmath::Vmul(npoints, &m_spatialParameters->GetData("k")->GetPhys()[0], 1, &Ru[0], 1, &Ru[0], 1);
+      }
+      else
+      {
+        Vmath::Smul(npoints, mK, &Ru[0], 1, &Ru[0], 1);
+      }
       // Ru = k(u*u*u - (1+a)u*u + au) + uv
       Vmath::Vvtvp(npoints, &physfieldu[0], 1, &physfieldv[0], 1, &Ru[0], 1, &Ru[0], 1);
       // Ru = -k(u*u*u - (1+a)u*u + au) - uv
       Vmath::Neg(npoints, &Ru[0], 1);
-
-//      Vmath::Svtvp(npoints, mK, &u3[0], 1, &physfieldu[0], 1, &Ru[0], 1);
-
-//      Vmath::Vsub(npoints, &physfieldv[0], 1, &Ru[0], 1, &Ru[0], 1);
-//      Vmath::Smul(npoints, -1.0/m_epsilon[0], &Ru[0], 1, &Ru[0], 1);
 
       m_fields[0]->FwdTrans(Ru,outarray[0]);
       m_fields[0]->SetPhysState(false);
@@ -747,18 +756,81 @@ namespace Nektar
       Vmath::Sadd(npoints, mEps, &Rv[0], 1, &Rv[0], 1);
 
       // Ru = (-a-1) + u
-      Vmath::Sadd(npoints, (-mA-1), &physfieldu[0], 1, &Ru[0], 1);
+      if (m_spatialParameters->Exists("a"))
+      {
+        Vmath::Vsub(npoints, &physfieldu[0], 1, &m_spatialParameters->GetData("a")->GetPhys()[0], 1, &Ru[0], 1);
+        Vmath::Sadd(npoints, -1.0, &physfieldu[0], 1, &Ru[0], 1); 
+      }
+      else
+      {
+        Vmath::Sadd(npoints, (-mA-1), &physfieldu[0], 1, &Ru[0], 1);
+      }
       // Ru = k(u-a-1)
-      Vmath::Smul(npoints, mK, &Ru[0], 1, &Ru[0], 1);
+      if (m_spatialParameters->Exists("k"))
+      {
+        Vmath::Vmul(npoints, &m_spatialParameters->GetData("k")->GetPhys()[0], 1, &Ru[0], 1, &Ru[0], 1);
+      }
+      else
+      {
+        Vmath::Smul(npoints, mK, &Ru[0], 1, &Ru[0], 1);
+      }
       // Ru = ku(u-a-1) + v
       Vmath::Vvtvp(npoints, &physfieldu[0], 1, &Ru[0], 1, &physfieldv[0], 1, &Ru[0], 1);
       // Ru = -ku(u-a-1)-v
       Vmath::Neg(npoints, &Ru[0], 1);
 
       Vmath::Vmul(npoints, &Ru[0], 1, &Rv[0], 1, &Rv[0], 1);
-//      Vmath::Svtvp(npoints, -1.0*m_gamma, &physfieldv[0], 1, &physfieldu[0], 1, &Rv[0], 1);
-//      Vmath::Sadd(npoints, m_beta, &Rv[0], 1, &Rv[0], 1);
-//      Vmath::Smul(npoints, m_epsilon[0], &Rv[0], 1, &Rv[0], 1);
+
+      m_fields[1]->FwdTrans(Rv,outarray[1]);
+      m_fields[1]->SetPhysState(false);
+    }
+
+    void ADR2DManifold::ODEeReactionBarkley(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                                            Array<OneD, Array<OneD, NekDouble> >&outarray,
+                                            const NekDouble time)
+
+    {
+      int nvariables = inarray.num_elements();
+      int ncoeffs    = inarray[0].num_elements();
+      int npoints    = m_fields[0]->GetNpoints();
+
+      Array<OneD, NekDouble> physfieldu(npoints);
+      Array<OneD, NekDouble> physfieldv(npoints);
+
+      Array<OneD, NekDouble> Ru(npoints,0.0);
+      Array<OneD, NekDouble> Rv(npoints, 0.0);
+      Array<OneD, NekDouble> u2(npoints,0.0);
+      Array<OneD, NekDouble> u3(npoints,0.0);
+
+      m_fields[0]->BwdTrans(inarray[0],physfieldu);
+      m_fields[0]->SetPhysState(true);
+
+      m_fields[1]->BwdTrans(inarray[1],physfieldv);
+      m_fields[1]->SetPhysState(true);
+
+      // u2 = u*u
+      Vmath::Vmul(npoints, &physfieldu[0], 1, &physfieldu[0], 1, &u2[0], 1);
+      // u3 = u*u*u
+      Vmath::Vmul(npoints, &physfieldu[0], 1, &u2[0], 1, &u3[0], 1);
+
+      // Ru = v + b - a
+      Vmath::Sadd(npoints, mB - mA, &physfieldv[0], 1, &Ru[0], 1);
+      // Ru = u(v + b - a) - v
+      Vmath::Vvtvm(npoints, &Ru[0], 1, &physfieldu[0], 1, &physfieldv[0], 1, &Ru[0], 1);
+      // Ru = u(v + b - a) - v - b
+      Vmath::Sadd(npoints, -mB, &Ru[0], 1, &Ru[0], 1);
+      // Ru = 1/a(u(v + b - a) - v - b)
+      Vmath::Smul(npoints, 1/mA, &Ru[0], 1, &Ru[0], 1);
+      // Ru = u*(1/a)*(u(v + b - a) - v - b) - u*u*u
+      Vmath::Vvtvm(npoints, &physfieldu[0], 1, &Ru[0], 1, &u3[0], 1, &Ru[0], 1);
+      // Ru = k[u*(1/a)*(u(v + b - a) - v - b) - u*u*u]
+      Vmath::Smul(npoints, mK, &Ru[0], 1, &Ru[0], 1); 
+
+      m_fields[0]->FwdTrans(Ru,outarray[0]);
+      m_fields[0]->SetPhysState(false);
+
+      // Rv = u - v
+      Vmath::Vsub(npoints, &physfieldu[0], 1, &physfieldv[0], 1, &Rv[0], 1);
 
       m_fields[1]->FwdTrans(Rv,outarray[1]);
       m_fields[1]->SetPhysState(false);
@@ -836,41 +908,6 @@ namespace Nektar
   }
 
     void ADR2DManifold::ODEhelmSolveFHNmono(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                                            Array<OneD, Array<OneD, NekDouble> >&outarray,
-                                            NekDouble time,
-                                            NekDouble lambda)
-    {
-        int nvariables = inarray.num_elements();
-        int ncoeffs    = inarray[0].num_elements();
-
-        NekDouble kappa = 1.0/lambda;
-
-        SetBoundaryConditions(inarray,time);
-
-        // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
-        // inarray = input: \hat{rhs} -> output: \hat{Y}
-        // outarray = output: nabla^2 \hat{Y}
-        // where \hat = modal coeffs
-
-        // Multiply rhs[i] with -1.0/gamma/timestep
-        Vmath::Smul(ncoeffs, -1.0*kappa, &inarray[0][0], 1, &outarray[0][0], 1);
-
-        // Update coeffs to m_fields
-        m_fields[0]->UpdateCoeffs() = outarray[0];
-
-        // Backward Transformation to nodal coefficients
-        m_fields[0]->BwdTrans(m_fields[0]->GetCoeffs(), m_fields[0]->UpdatePhys());
-
-        SolveHelmholtz(0,kappa,m_UseDirDeriv);
-
-        // The solution is Y[i]
-        outarray[0] = m_fields[0]->GetCoeffs();
-
-        // For q: No helmholtz solver is needed=============================
-        Vmath::Vcopy(ncoeffs, &inarray[1][0], 1, &outarray[1][0], 1);
-    }
-
-    void ADR2DManifold::ODEhelmSolveAP(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                                             Array<OneD, Array<OneD, NekDouble> >&outarray,
                                             NekDouble time,
                                             NekDouble lambda)

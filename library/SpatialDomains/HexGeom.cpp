@@ -635,19 +635,34 @@ namespace Nektar
                       {0,3,7,4} ,
                       {4,5,6,7} }; 
 
-                NekDouble dx1,dx2,dy1,dy2;
+                NekDouble dx1,dx2,dy1,dy2,dz1,dz2;
                 for(f = 0; f < kNfaces; f++)
                 {
-                    for(i = 0; i < 3; ++i)
+                    // This condition ensures each angle is a right-angle.
+                    // It is a stronger condition than necessary.
+/*                    for(i = 0; i < 3; ++i)
                     {
                         dx1 = m_verts[ faceVerts[f][i+1] ]->x() - m_verts[ faceVerts[f][i] ]->x();
                         dy1 = m_verts[ faceVerts[f][i+1] ]->y() - m_verts[ faceVerts[f][i] ]->y();
+                        dz1 = m_verts[ faceVerts[f][i+1] ]->z() - m_verts[ faceVerts[f][i] ]->z();
                         
                         dx2 = m_verts[ faceVerts[f][((i+3)%4)] ]->x() - m_verts[ faceVerts[f][i] ]->x();
                         dy2 = m_verts[ faceVerts[f][((i+3)%4)] ]->y() - m_verts[ faceVerts[f][i] ]->y();
+                        dz2 = m_verts[ faceVerts[f][((i+3)%4)] ]->z() - m_verts[ faceVerts[f][i] ]->z();
                         
-                        if(fabs(dx1*dx2 + dy1*dy2) > sqrt((dx1*dx1+dy1*dy1)*(dx2*dx2+dy2*dy2))
+                        if(fabs(dx1*dx2 + dy1*dy2 + dz1*dz2) > sqrt((dx1*dx1 + dy1*dy1 + dz1*dz1)*(dx2*dx2 + dy2*dy2 + dz2*dz2))
                            * NekConstants::kGeomRightAngleTol)
+                        {
+                            Gtype = eDeformed;
+                            break;
+                        }                        
+                    }
+*/
+                    // Ensure each face is a parallelogram? Check this.
+                    for(i = 0; i < m_coordim; i++)
+                    {
+                        if( fabs( (*m_verts[ faceVerts[f][0] ])(i) - (*m_verts[ faceVerts[f][1] ])(i) + 
+                                (*m_verts[ faceVerts[f][2] ])(i) - (*m_verts[ faceVerts[f][3] ])(i) ) > NekConstants::kNekZeroTol )
                         {
                             Gtype = eDeformed;
                             break;
@@ -659,7 +674,7 @@ namespace Nektar
                     }
                 }
             }
-
+//Gtype = eDeformed;            
             m_geomfactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
         }
 
@@ -713,41 +728,49 @@ namespace Nektar
         }
         
         void HexGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
-        {           
+        {
+            int i;
+            
             FillGeom();
 
             // calculate local coordinate for coord 
             if(GetGtype() == eRegular)
             {   // Based on Spen's book, page 99
+                NekDouble len0 = 0.0 ;
+                NekDouble len1 = 0.0;
+                NekDouble len2 = 0.0;
+                NekDouble xi0 = 0.0;
+                NekDouble xi1 = 0.0;
+                NekDouble xi2 = 0.0;
+                Array<OneD, const NekDouble> pts;
+                int nq0, nq1, nq2;
 
-                // Point inside tetrahedron
-                VertexComponent r(m_coordim, 0, coords[0], coords[1], coords[2]);
+                // get points;
+                //find end points
+                for(i = 0; i < m_coordim; ++i)
+                {
+                    nq0 = m_xmap[i]->GetNumPoints(0);
+                    nq1 = m_xmap[i]->GetNumPoints(1);
+                    nq2 = m_xmap[i]->GetNumPoints(2);
+                    
+                    pts = m_xmap[i]->GetPhys();
 
-                // Edges
-                VertexComponent er0, e10, e30, e40;
-                er0.Sub(r,*m_verts[0]);
-                e10.Sub(*m_verts[1],*m_verts[0]);
-                e30.Sub(*m_verts[3],*m_verts[0]);
-                e40.Sub(*m_verts[4],*m_verts[0]);
+                    // use projection to side 1 to determine xi_1 coordinate based on length
+                    len0 += (pts[nq0-1]-pts[0])*(pts[nq0-1]-pts[0]);    
+                    xi0  += (coords[i] -pts[0])*(pts[nq0-1]-pts[0]);
 
+                    // use projection to side 4 to determine xi_2 coordinate based on length
+                    len1 += (pts[nq0*(nq1-1)]-pts[0])*(pts[nq0*(nq1-1)]-pts[0]); 
+                    xi1  += (coords[i] -pts[0])*(pts[nq0*(nq1-1)]-pts[0]);    
 
-                // Cross products (Normal times area)
-                VertexComponent cp1030, cp3040, cp4010;
-                cp1030.Mult(e10,e30);
-                cp3040.Mult(e30,e40);
-                cp4010.Mult(e40,e10);
+                    // use projection to side 4 to determine xi_2 coordinate based on length
+                    len2 += (pts[nq0*nq1*(nq2-1)]-pts[0])*(pts[nq0*nq1*(nq2-1)]-pts[0]); 
+                    xi2  += (coords[i] -pts[0])*(pts[nq0*nq1*(nq2-1)]-pts[0]);    
+                }
 
-
-                // Barycentric coordinates (relative volume)
-                NekDouble V = e40.dot(cp1030);// Hex Volume = {(e40)dot(e10)x(e30)}
-                NekDouble beta  = er0.dot(cp3040) / (4.0*V); // volume1 = {(er0)dot(e30)x(e40)}/4
-                NekDouble gamma = er0.dot(cp4010) / (4.0*V); // volume1 = {(er0)dot(e40)x(e10)}/4
-                NekDouble delta = er0.dot(cp1030) / (4.0*V); // volume1 = {(er0)dot(e10)x(e30)}/4
-
-                // Make Hex bigger
-                Lcoords[0] = 2.0*beta  - 1.0;
-                Lcoords[1] = 2.0*gamma - 1.0;
-                Lcoords[2] = 2.0*delta - 1.0;
+                Lcoords[0] =  2*xi0/len0-1.0;
+                Lcoords[1] =  2*xi1/len1-1.0;
+                Lcoords[2] =  2*xi2/len2-1.0;
             }
             else
             {
@@ -777,6 +800,9 @@ namespace Nektar
 
 //
 // $Log: HexGeom.cpp,v $
+// Revision 1.22  2010/01/20 18:05:09  cantwell
+// Added utility for probing a line of points in a FLD file.
+//
 // Revision 1.21  2009/12/17 01:47:31  bnelson
 // Fixed visual studio compiler warning.
 //

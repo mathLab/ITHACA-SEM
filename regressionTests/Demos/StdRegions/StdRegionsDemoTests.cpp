@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
 
     Execute("StdProject_Diff2D", "2 11 11 6 6 7 7  ", "Triangular Nodal Basis modes=6, quad=7");
 
-    Execute("StdProject_Diff2D", "3 1 1 6 6 7 7 ", "Quadrilateral Ortho Basis, modes=4, quad=5");
+    Execute("StdProject_Diff2D", "3 1 1 6 6 7 7 ", "Quadrilateral Ortho Basis, modes=6, quad=7");
 
     Execute("StdProject_Diff2D", "3 4 4 6 6 7 7  ", "Quadrilateral Modified Basis modes=6, quad=7");
 
@@ -92,6 +92,40 @@ int main(int argc, char* argv[])
     Execute("StdProject_Diff2D", "3 7 7 6 6 8 8 ", "Quadrilateral Fourier Basis modes=6, quad=8");
 
 
+    // 3D Projection Tests
+    Execute("StdProject3D", "4 1 2 3 6 6 6 7 7 7", "Tetrahedron Ortho Basis, modes=6, quad=7");
+
+    Execute("StdProject3D", "4 4 5 6 6 6 6 7 7 7", "Tetrahedron Modified Basis modes=6, quad=7");
+
+    Execute("StdProject3D", "7 1 1 1 6 6 6 7 7 7", "Hexahedral Ortho Basis, modes=4, quad=7");
+
+    Execute("StdProject3D", "7 4 4 4 6 6 6 7 7 7", "Hexahedral Modified Basis modes=6, quad=7");
+
+    // Fourier not yet working
+//    Execute("StdProject3D", "7 7 7 7 6 6 6 8 8 8 ", "Hexahedral Fourier Basis modes=6, quad=8");
+
+    Execute("StdProject3D", "7 8 8 8 6 6 6 7 7 7", "Hexahedral Nodal/Lagrange Basis modes=6, quad=7");
+
+    Execute("StdProject3D", "7 9 9 9 6 6 6 7 7 7", "Hexahedral Legendre Basis modes=6, quad=7");
+
+    Execute("StdProject3D", "7 10 10 10 6 6 6 7 7 7", "Hexahedral Chebyshev Basis modes=6, quad=7");
+    
+    
+    // 3D Differentiation and Projection Tests
+    Execute("StdProject_Diff3D", "4 1 2 3 6 6 6 7 7 7", "Tetrahedral Ortho Basis, modes=4, quad=7");
+
+    Execute("StdProject_Diff3D", "4 4 5 6 6 6 6 7 7 7", "Tetrahedral Modified Basis modes=6, quad=7");
+
+    Execute("StdProject_Diff3D", "7 1 1 1 6 6 6 7 7 7", "Hexahedral Ortho Basis, modes=4, quad=7");
+
+    Execute("StdProject_Diff3D", "7 4 4 4 6 6 6 7 7 7", "Hexahedral Modified Basis modes=6, quad=7");
+
+    Execute("StdProject_Diff3D", "7 8 8 8 6 6 6 7 7 7", "Hexahedral Nodal/Lagrange Basis modes=6, quad=7");
+
+    Execute("StdProject_Diff3D", "7 9 9 9 6 6 6 7 7 7", "Hexahedral Legendre Basis modes=6, quad=7");
+
+    Execute("StdProject_Diff3D", "7 10 10 10 6 6 6 7 7 7", "Hexahedral Chebyshev Basis modes=6, quad=7");
+        
     return 0;
 }
 
@@ -118,7 +152,7 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
 
 void MakeOkFile(std::string Demo, std::string input, std::string info)
 {
-    RegressBase Test("../builds/Demos/StdRegions/",Demo,input,"Demos/StdRegions/OkFiles/");
+    RegressBase Test(NEKTAR_BIN_DIR,Demo,input,"Demos/StdRegions/OkFiles/");
     int fail;
 
     if(fail = Test.MakeOkFile())

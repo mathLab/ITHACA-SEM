@@ -116,12 +116,83 @@ namespace Nektar
         
         return val;    
     }
-    
+
+        /**
+         * Writes out the header for a <PIECE> VTK XML segment describing the
+         * geometric information which comprises this element. This includes
+         * vertex coordinates for each quadrature point, vertex connectivity
+         * information, cell types and cell offset data.
+         * 
+         * @param   outfile     Output stream to write data to.
+         */
+        void StdExpansion1D::v_WriteVtkPieceHeader(std::ofstream &outfile)
+        {
+            int i,j;
+            int coordim  = GetCoordim();
+            int nquad0 = GetNumPoints(0);
+            int ntot = nquad0;
+            int ntotminus = (nquad0-1);
+            
+            Array<OneD,NekDouble> coords[3];
+            coords[0] = Array<OneD,NekDouble>(ntot);
+            coords[1] = Array<OneD,NekDouble>(ntot);
+            coords[2] = Array<OneD,NekDouble>(ntot);
+            GetCoords(coords[0],coords[1],coords[2]);
+
+            outfile << "    <Piece NumberOfPoints=\""
+                    << ntot << "\" NumberOfCells=\""
+                    << ntotminus << "\">" << endl;
+            outfile << "      <Points>" << endl;
+            outfile << "        <DataArray type=\"Float32\" "
+                    << "NumberOfComponents=\"3\" format=\"ascii\">" << endl;
+            outfile << "          ";
+            for (i = 0; i < ntot; ++i)
+            {
+                for (j = 0; j < 3; ++j)
+                {
+                    outfile << coords[j][i] << " ";
+                }
+                outfile << endl;
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "      </Points>" << endl;
+            outfile << "      <Cells>" << endl;
+            outfile << "        <DataArray type=\"Int32\" "
+                    << "Name=\"connectivity\" format=\"ascii\">" << endl;
+            for (i = 0; i < nquad0-1; ++i)
+            {
+                outfile << i << " " << i+1 << endl;
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "        <DataArray type=\"Int32\" "
+                    << "Name=\"offsets\" format=\"ascii\">" << endl;
+            for (i = 0; i < ntotminus; ++i)
+            {
+                outfile << i*2+2 << " ";
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "        <DataArray type=\"UInt8\" "
+                    << "Name=\"types\" format=\"ascii\">" << endl;
+            for (i = 0; i < ntotminus; ++i)
+            {
+                outfile << "3 ";
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "      </Cells>" << endl;
+            outfile << "      <PointData>" << endl;
+        }    
     }//end namespace
 }//end namespace
 
 /** 
  * $Log: StdExpansion1D.cpp,v $
+ * Revision 1.28  2008/08/20 09:14:57  sherwin
+ * In TensorDeriv replaced comparison of arrays with comparison of stored pointer
+ *
  * Revision 1.27  2008/08/18 08:31:26  sherwin
  * Update to fix PhysTensorDeriv  when inarray == outarray
  *

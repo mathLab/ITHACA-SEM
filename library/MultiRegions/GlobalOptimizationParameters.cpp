@@ -84,7 +84,7 @@ namespace Nektar
                             .Element();
 
             ASSERTL0(master   , "Unable to find NEKTAR tag in file.");
-            ASSERTL0(paramList, "Unable to find ELEMENTALOPTIMIZATIONPARAMETERS"
+            ASSERTL0(paramList, "Unable to find GLOBALOPTIMIZATIONPARAMETERS"
                                 " tag in file.");
             int n;
             for(n = 0; n < SIZE_OptimizeOperationType; n++)

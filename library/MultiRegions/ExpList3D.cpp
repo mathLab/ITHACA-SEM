@@ -145,7 +145,6 @@ namespace Nektar
          */
         ExpList3D::ExpList3D(SpatialDomains::MeshGraph3D &graph3D):ExpList()
         {
-
             LocalRegions::TetExpSharedPtr tet;
             LocalRegions::HexExpSharedPtr hex;
             LocalRegions::PrismExpSharedPtr prism;
@@ -265,6 +264,7 @@ namespace Nektar
                 }
 
             }
+
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
             m_phys   = Array<OneD, NekDouble>(m_npoints);
         }

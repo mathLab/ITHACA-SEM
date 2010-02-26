@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Universal type defines  in the Nektar Library 
+// Description: Universal type defines  in the Nektar Library
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -43,16 +43,16 @@
 namespace Nektar
 {
     typedef double NekDouble;
-  
-    struct OneD 
+
+    struct OneD
     {
         static const unsigned int Value = 1;
     };
-    struct TwoD 
+    struct TwoD
     {
         static const unsigned int Value = 2;
     };
-    struct ThreeD 
+    struct ThreeD
     {
         static const unsigned int Value = 3;
     };
@@ -61,7 +61,7 @@ namespace Nektar
     {
         static const unsigned int Value = 4;
     };
-    
+
     enum Direction
     {
         xDir = 0,
@@ -72,17 +72,18 @@ namespace Nektar
     enum OutputFormat
     {
         eTecplot,
-        eGmsh
+        eGmsh,
+        eGnuplot
     };
-        
-
-
-} //end of namespace 
+} //end of namespace
 
 #endif
 
 /***
 $Log: NektarUnivTypeDefs.hpp,v $
+Revision 1.16  2008/06/10 06:00:37  bnelson
+Updated documentation.
+
 Revision 1.15  2008/05/29 21:32:11  pvos
 Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
 

@@ -171,7 +171,7 @@ namespace Nektar
             int nextFaceNumber = -1;
 
             /// All faces are of the form: "<? ID="#"> ... </?>", with
-			/// ? being an element type (either Q or T).
+            /// ? being an element type (either Q or T).
 
             TiXmlElement *element = field->FirstChildElement();
 
@@ -350,46 +350,46 @@ namespace Nektar
                 {
                     try
                     {
-						/// Create arrays for the tri and quad faces.
-						const int kNfaces = TetGeom::kNfaces;
-						const int kNtfaces = TetGeom::kNtfaces;
-						const int kNqfaces = TetGeom::kNqfaces;
-						TriGeomSharedPtr tfaces[kNtfaces];
-						//QuadGeomSharedPtr qfaces[kNqfaces];
-						int Ntfaces = 0;
-						int Nqfaces = 0;
+                        /// Create arrays for the tri and quad faces.
+                        const int kNfaces = TetGeom::kNfaces;
+                        const int kNtfaces = TetGeom::kNtfaces;
+                        const int kNqfaces = TetGeom::kNqfaces;
+                        TriGeomSharedPtr tfaces[kNtfaces];
+                        //QuadGeomSharedPtr qfaces[kNqfaces];
+                        int Ntfaces = 0;
+                        int Nqfaces = 0;
 
-						/// Fill the arrays and make sure there aren't too many faces.
-						std::stringstream errorstring;
-						errorstring << "Element " << indx << " must have " << kNtfaces << " triangle face(s), and " << kNqfaces << " quadrilateral face(s).";
-						for (int i = 0; i < kNfaces; i++)
-						{
-							int faceID;
-							elementDataStrm >> faceID;
-							Geometry2DSharedPtr face = GetGeometry2D(faceID);
-							if (face == Geometry2DSharedPtr() ||
-								(face->GetGeomShapeType() != eTriangle && face->GetGeomShapeType() != eQuadrilateral))
-							{
-								std::stringstream errorstring;
-								errorstring << "Element " << indx << " has invalid face: " << faceID;
-								ASSERTL0(false, errorstring.str().c_str());
-							}
-							else if (face->GetGeomShapeType() == eTriangle)
-							{
-								ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
-								tfaces[Ntfaces++] = boost::static_pointer_cast<TriGeom>(face);
-							}
-							else if (face->GetGeomShapeType() == eQuadrilateral)
-							{
-								ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
-								//qfaces[Nqfaces++] = boost::static_pointer_cast<QuadGeom>(face);
-							}
-						}
+                        /// Fill the arrays and make sure there aren't too many faces.
+                        std::stringstream errorstring;
+                        errorstring << "Element " << indx << " must have " << kNtfaces << " triangle face(s), and " << kNqfaces << " quadrilateral face(s).";
+                        for (int i = 0; i < kNfaces; i++)
+                        {
+                            int faceID;
+                            elementDataStrm >> faceID;
+                            Geometry2DSharedPtr face = GetGeometry2D(faceID);
+                            if (face == Geometry2DSharedPtr() ||
+                                (face->GetGeomShapeType() != eTriangle && face->GetGeomShapeType() != eQuadrilateral))
+                            {
+                                std::stringstream errorstring;
+                                errorstring << "Element " << indx << " has invalid face: " << faceID;
+                                ASSERTL0(false, errorstring.str().c_str());
+                            }
+                            else if (face->GetGeomShapeType() == eTriangle)
+                            {
+                                ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
+                                tfaces[Ntfaces++] = boost::static_pointer_cast<TriGeom>(face);
+                            }
+                            else if (face->GetGeomShapeType() == eQuadrilateral)
+                            {
+                                ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
+                                //qfaces[Nqfaces++] = boost::static_pointer_cast<QuadGeom>(face);
+                            }
+                        }
 
-						/// Make sure all of the face indicies could be read, and that there weren't too few.
-						ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for TETRAHEDRON: ") + elementStr).c_str());
-						ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
-						ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
+                        /// Make sure all of the face indicies could be read, and that there weren't too few.
+                        ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for TETRAHEDRON: ") + elementStr).c_str());
+                        ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
+                        ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
 
                         StdRegions::FaceOrientation faceorient[kNfaces] = 
                         {
@@ -399,9 +399,8 @@ namespace Nektar
                             //TriGeom::GetFaceOrientation(*faces[3], *faces[0])
                         };
 
-                        //TetGeomSharedPtr tetgeom(MemoryManager<TetGeom>::AllocateSharedPtr(tfaces, qfaces, faceorient));
-						TetGeomSharedPtr tetgeom(MemoryManager<TetGeom>::AllocateSharedPtr(tfaces, faceorient));
-						tetgeom->SetGlobalID(indx);
+                        TetGeomSharedPtr tetgeom(MemoryManager<TetGeom>::AllocateSharedPtr(tfaces));
+                        tetgeom->SetGlobalID(indx);
 
                         m_tetgeoms.push_back(tetgeom);
                     }
@@ -416,46 +415,46 @@ namespace Nektar
                 {
                     try
                     {
-						/// Create arrays for the tri and quad faces.
-						const int kNfaces = PyrGeom::kNfaces;
-						const int kNtfaces = PyrGeom::kNtfaces;
-						const int kNqfaces = PyrGeom::kNqfaces;
-						TriGeomSharedPtr tfaces[kNtfaces];
-						QuadGeomSharedPtr qfaces[kNqfaces];
-						int Ntfaces = 0;
-						int Nqfaces = 0;
+                        /// Create arrays for the tri and quad faces.
+                        const int kNfaces = PyrGeom::kNfaces;
+                        const int kNtfaces = PyrGeom::kNtfaces;
+                        const int kNqfaces = PyrGeom::kNqfaces;
+                        TriGeomSharedPtr tfaces[kNtfaces];
+                        QuadGeomSharedPtr qfaces[kNqfaces];
+                        int Ntfaces = 0;
+                        int Nqfaces = 0;
 
-						/// Fill the arrays and make sure there aren't too many faces.
-						std::stringstream errorstring;
-						errorstring << "Element " << indx << " must have " << kNtfaces << " triangle face(s), and " << kNqfaces << " quadrilateral face(s).";
-						for (int i = 0; i < kNfaces; i++)
-						{
-							int faceID;
-							elementDataStrm >> faceID;
-							Geometry2DSharedPtr face = GetGeometry2D(faceID);
-							if (face == Geometry2DSharedPtr() ||
-								(face->GetGeomShapeType() != eTriangle && face->GetGeomShapeType() != eQuadrilateral))
-							{
-								std::stringstream errorstring;
-								errorstring << "Element " << indx << " has invalid face: " << faceID;
-								ASSERTL0(false, errorstring.str().c_str());
-							}
-							else if (face->GetGeomShapeType() == eTriangle)
-							{
-								ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
-								tfaces[Ntfaces++] = boost::static_pointer_cast<TriGeom>(face);
-							}
-							else if (face->GetGeomShapeType() == eQuadrilateral)
-							{
-								ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
-								qfaces[Nqfaces++] = boost::static_pointer_cast<QuadGeom>(face);
-							}
-						}
+                        /// Fill the arrays and make sure there aren't too many faces.
+                        std::stringstream errorstring;
+                        errorstring << "Element " << indx << " must have " << kNtfaces << " triangle face(s), and " << kNqfaces << " quadrilateral face(s).";
+                        for (int i = 0; i < kNfaces; i++)
+                        {
+                            int faceID;
+                            elementDataStrm >> faceID;
+                            Geometry2DSharedPtr face = GetGeometry2D(faceID);
+                            if (face == Geometry2DSharedPtr() ||
+                                (face->GetGeomShapeType() != eTriangle && face->GetGeomShapeType() != eQuadrilateral))
+                            {
+                                std::stringstream errorstring;
+                                errorstring << "Element " << indx << " has invalid face: " << faceID;
+                                ASSERTL0(false, errorstring.str().c_str());
+                            }
+                            else if (face->GetGeomShapeType() == eTriangle)
+                            {
+                                ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
+                                tfaces[Ntfaces++] = boost::static_pointer_cast<TriGeom>(face);
+                            }
+                            else if (face->GetGeomShapeType() == eQuadrilateral)
+                            {
+                                ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
+                                qfaces[Nqfaces++] = boost::static_pointer_cast<QuadGeom>(face);
+                            }
+                        }
 
-						/// Make sure all of the face indicies could be read, and that there weren't too few.
-						ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for PYRAMID: ") + elementStr).c_str());
-						ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
-						ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
+                        /// Make sure all of the face indicies could be read, and that there weren't too few.
+                        ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for PYRAMID: ") + elementStr).c_str());
+                        ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
+                        ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
 
                         StdRegions::FaceOrientation faceorient[kNfaces] = 
                         {
@@ -466,7 +465,7 @@ namespace Nektar
                         };
 
                         PyrGeomSharedPtr pyrgeom(MemoryManager<PyrGeom>::AllocateSharedPtr(tfaces, qfaces, faceorient));
-						pyrgeom->SetGlobalID(indx);
+                        pyrgeom->SetGlobalID(indx);
 
                         m_pyrgeoms.push_back(pyrgeom);
                     }
@@ -481,46 +480,46 @@ namespace Nektar
                 {
                     try
                     {
-						/// Create arrays for the tri and quad faces.
-						const int kNfaces = PrismGeom::kNfaces;
-						const int kNtfaces = PrismGeom::kNtfaces;
-						const int kNqfaces = PrismGeom::kNqfaces;
-						TriGeomSharedPtr tfaces[kNtfaces];
-						QuadGeomSharedPtr qfaces[kNqfaces];
-						int Ntfaces = 0;
-						int Nqfaces = 0;
+                        /// Create arrays for the tri and quad faces.
+                        const int kNfaces = PrismGeom::kNfaces;
+                        const int kNtfaces = PrismGeom::kNtfaces;
+                        const int kNqfaces = PrismGeom::kNqfaces;
+                        TriGeomSharedPtr tfaces[kNtfaces];
+                        QuadGeomSharedPtr qfaces[kNqfaces];
+                        int Ntfaces = 0;
+                        int Nqfaces = 0;
 
-						/// Fill the arrays and make sure there aren't too many faces.
-						std::stringstream errorstring;
-						errorstring << "Element " << indx << " must have " << kNtfaces << " triangle face(s), and " << kNqfaces << " quadrilateral face(s).";
-						for (int i = 0; i < kNfaces; i++)
-						{
-							int faceID;
-							elementDataStrm >> faceID;
-							Geometry2DSharedPtr face = GetGeometry2D(faceID);
-							if (face == Geometry2DSharedPtr() ||
-								(face->GetGeomShapeType() != eTriangle && face->GetGeomShapeType() != eQuadrilateral))
-							{
-								std::stringstream errorstring;
-								errorstring << "Element " << indx << " has invalid face: " << faceID;
-								ASSERTL0(false, errorstring.str().c_str());
-							}
-							else if (face->GetGeomShapeType() == eTriangle)
-							{
-								ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
-								tfaces[Ntfaces++] = boost::static_pointer_cast<TriGeom>(face);
-							}
-							else if (face->GetGeomShapeType() == eQuadrilateral)
-							{
-								ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
-								qfaces[Nqfaces++] = boost::static_pointer_cast<QuadGeom>(face);
-							}
-						}
+                        /// Fill the arrays and make sure there aren't too many faces.
+                        std::stringstream errorstring;
+                        errorstring << "Element " << indx << " must have " << kNtfaces << " triangle face(s), and " << kNqfaces << " quadrilateral face(s).";
+                        for (int i = 0; i < kNfaces; i++)
+                        {
+                            int faceID;
+                            elementDataStrm >> faceID;
+                            Geometry2DSharedPtr face = GetGeometry2D(faceID);
+                            if (face == Geometry2DSharedPtr() ||
+                                (face->GetGeomShapeType() != eTriangle && face->GetGeomShapeType() != eQuadrilateral))
+                            {
+                                std::stringstream errorstring;
+                                errorstring << "Element " << indx << " has invalid face: " << faceID;
+                                ASSERTL0(false, errorstring.str().c_str());
+                            }
+                            else if (face->GetGeomShapeType() == eTriangle)
+                            {
+                                ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
+                                tfaces[Ntfaces++] = boost::static_pointer_cast<TriGeom>(face);
+                            }
+                            else if (face->GetGeomShapeType() == eQuadrilateral)
+                            {
+                                ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
+                                qfaces[Nqfaces++] = boost::static_pointer_cast<QuadGeom>(face);
+                            }
+                        }
 
-						/// Make sure all of the face indicies could be read, and that there weren't too few.
-						ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for PRISM: ") + elementStr).c_str());
-						ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
-						ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
+                        /// Make sure all of the face indicies could be read, and that there weren't too few.
+                        ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for PRISM: ") + elementStr).c_str());
+                        ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
+                        ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
 
                         StdRegions::FaceOrientation faceorient[kNfaces] = 
                         {
@@ -531,7 +530,7 @@ namespace Nektar
                         };
 
                         PrismGeomSharedPtr prismgeom(MemoryManager<PrismGeom>::AllocateSharedPtr(tfaces, qfaces, faceorient));
-						prismgeom->SetGlobalID(indx);
+                        prismgeom->SetGlobalID(indx);
 
                         m_prismgeoms.push_back(prismgeom);
                     }
@@ -546,46 +545,46 @@ namespace Nektar
                 {
                     try
                     {
-						/// Create arrays for the tri and quad faces.
-						const int kNfaces = HexGeom::kNfaces;
-						const int kNtfaces = HexGeom::kNtfaces;
-						const int kNqfaces = HexGeom::kNqfaces;
-						//TriGeomSharedPtr tfaces[kNtfaces];
-						QuadGeomSharedPtr qfaces[kNqfaces];
-						int Ntfaces = 0;
-						int Nqfaces = 0;
+                        /// Create arrays for the tri and quad faces.
+                        const int kNfaces = HexGeom::kNfaces;
+                        const int kNtfaces = HexGeom::kNtfaces;
+                        const int kNqfaces = HexGeom::kNqfaces;
+                        //TriGeomSharedPtr tfaces[kNtfaces];
+                        QuadGeomSharedPtr qfaces[kNqfaces];
+                        int Ntfaces = 0;
+                        int Nqfaces = 0;
 
-						/// Fill the arrays and make sure there aren't too many faces.
-						std::stringstream errorstring;
-						errorstring << "Element " << indx << " must have " << kNtfaces << " triangle face(s), and " << kNqfaces << " quadrilateral face(s).";
-						for (int i = 0; i < kNfaces; i++)
-						{
-							int faceID;
-							elementDataStrm >> faceID;
-							Geometry2DSharedPtr face = GetGeometry2D(faceID);
-							if (face == Geometry2DSharedPtr() ||
-								(face->GetGeomShapeType() != eTriangle && face->GetGeomShapeType() != eQuadrilateral))
-							{
-								std::stringstream errorstring;
-								errorstring << "Element " << indx << " has invalid face: " << faceID;
-								ASSERTL0(false, errorstring.str().c_str());
-							}
-							else if (face->GetGeomShapeType() == eTriangle)
-							{
-								ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
-								//tfaces[Ntfaces++] = boost::static_pointer_cast<TriGeom>(face);
-							}
-							else if (face->GetGeomShapeType() == eQuadrilateral)
-							{
-								ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
-								qfaces[Nqfaces++] = boost::static_pointer_cast<QuadGeom>(face);
-							}
-						}
+                        /// Fill the arrays and make sure there aren't too many faces.
+                        std::stringstream errorstring;
+                        errorstring << "Element " << indx << " must have " << kNtfaces << " triangle face(s), and " << kNqfaces << " quadrilateral face(s).";
+                        for (int i = 0; i < kNfaces; i++)
+                        {
+                            int faceID;
+                            elementDataStrm >> faceID;
+                            Geometry2DSharedPtr face = GetGeometry2D(faceID);
+                            if (face == Geometry2DSharedPtr() ||
+                                (face->GetGeomShapeType() != eTriangle && face->GetGeomShapeType() != eQuadrilateral))
+                            {
+                                std::stringstream errorstring;
+                                errorstring << "Element " << indx << " has invalid face: " << faceID;
+                                ASSERTL0(false, errorstring.str().c_str());
+                            }
+                            else if (face->GetGeomShapeType() == eTriangle)
+                            {
+                                ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
+                                //tfaces[Ntfaces++] = boost::static_pointer_cast<TriGeom>(face);
+                            }
+                            else if (face->GetGeomShapeType() == eQuadrilateral)
+                            {
+                                ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
+                                qfaces[Nqfaces++] = boost::static_pointer_cast<QuadGeom>(face);
+                            }
+                        }
 
-						/// Make sure all of the face indicies could be read, and that there weren't too few.
-						ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for HEXAHEDRAL: ") + elementStr).c_str());
-						ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
-						ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
+                        /// Make sure all of the face indicies could be read, and that there weren't too few.
+                        ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for HEXAHEDRAL: ") + elementStr).c_str());
+                        ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
+                        ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
 
                         StdRegions::FaceOrientation faceorient[kNfaces] = 
                         {
@@ -715,21 +714,21 @@ namespace Nektar
 
         Geometry2DSharedPtr MeshGraph3D::GetGeometry2D(int gID)
         {
-			for (TriGeomVectorIter iter = m_trigeoms.begin(); iter != m_trigeoms.end(); iter++)
-			{
-				if ((*iter)->GetGlobalID() == gID)
-				{
-					return *iter;
-				}
-			}
+            for (TriGeomVectorIter iter = m_trigeoms.begin(); iter != m_trigeoms.end(); iter++)
+            {
+                if ((*iter)->GetGlobalID() == gID)
+                {
+                    return *iter;
+                }
+            }
 
-			for (QuadGeomVectorIter iter = m_quadgeoms.begin(); iter != m_quadgeoms.end(); iter++)
-			{
-				if ((*iter)->GetGlobalID() == gID)
-				{
-					return *iter;
-				}
-			}
+            for (QuadGeomVectorIter iter = m_quadgeoms.begin(); iter != m_quadgeoms.end(); iter++)
+            {
+                if ((*iter)->GetGlobalID() == gID)
+                {
+                    return *iter;
+                }
+            }
 
             return Geometry2DSharedPtr();
         };
@@ -822,7 +821,7 @@ namespace Nektar
                 case 'F':   // Face
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
-						Geometry2DSharedPtr face = GetGeometry2D(*seqIter);
+                        Geometry2DSharedPtr face = GetGeometry2D(*seqIter);
                         if (face == Geometry2DSharedPtr())
                         {
                             char errStr[16] = "";
@@ -1150,6 +1149,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph3D.cpp,v $
+// Revision 1.14  2009/05/01 13:23:21  pvos
+// Fixed various bugs
+//
 // Revision 1.13  2009/04/20 16:13:23  sherwin
 // Modified Import and Write functions and redefined how Expansion is used
 //

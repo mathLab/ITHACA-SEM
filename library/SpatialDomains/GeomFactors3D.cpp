@@ -149,139 +149,192 @@ namespace Nektar
             ASSERTL1(d2[0].num_elements() == nqtot,"Number of quadrature points do not match");
             ASSERTL1(d3[0].num_elements() == nqtot,"Number of quadrature points do not match");
 
-            // The jacobian seems to be calculated wrongly:
-            // Rather than the formula:
-            //    m_jac[0] =  d1[0][0]*(d2[1][0]*d3[2][0] - d2[2][0]*d3[1][0])
-            //               -d1[1][0]*(d2[0][0]*d3[2][0] - d2[2][0]*d3[0][0])
-            //               +d1[2][0]*(d2[0][0]*d3[1][0] - d2[1][0]*d3[0][0]);
-            // I think this should be (According to Spencer's book page 158):
-            //    m_jac[0] =  d1[0][0]*(d2[1][0]*d3[2][0] - d3[1][0]*d2[2][0])
-            //               -d2[0][0]*(d1[1][0]*d3[2][0] - d3[1][0]*d1[2][0])
-            //               +d3[0][0]*(d1[1][0]*d2[2][0] - d2[1][0]*d1[2][0]);
-            // Please verify and update this, also for the deformed case...
-            //
-            // In addition, m_gmat[2][0] seems to be calculated differently
-            // as in Spencer's book page 160)
-            // Currently, it is:
-            // m_gmat[2][0] =  (d1[1][0]*d2[2][0] - d1[2][0]*d2[1][0])/m_jac[0];
-            // but Spencer's book would suggest:
-            // m_gmat[2][0] =  (d1[1][0]*d2[2][0] - d1[2][0]*d3[1][0])/m_jac[0];
-            // I am not sure which version is right. please verify!
-            // Also check the deformed case.
-            //
-            // Update:
-            // Checked both expressions on Spencer's book:
-            // - J3D from pg 158 is fine, so the implementation.
-            // - There is a typo on d xi_3/dx_1. The third term is *not*
-            //   dx_2/dxi_3, but dx_2/dxi_2.
-            // - I guess terms or commentaries are swaped below; where you read
-            //   d xi_M/d x_N should be d xi_N/d x_M. In other words,
-            //   transposed.
-            // - Deformed case not checked.
-            //
-            // Update 2 (pvos):
-            // I did change the formulation of the jacobian from the first to the
-            // second version. I think this should be correct
-            // (certainly if you know that dj[i] = dx_i/dxi_j)
-            // I only updated the regular geometry. Deformed still to be done
-
             if((mType == eRegular)||(mType == eMovingRegular))
             {
                 m_jac     = Array<OneD, NekDouble>(1,0.0);
                 m_gmat    = Array<TwoD, NekDouble>(3*mCoordDim,1,0.0);
 
-                // J3D: Determinant of three-dimensional Jacobian
-//                 m_jac[0] = d1[0][0]*( d2[1][0]*d3[2][0] - d2[2][0]*d3[1][0] )
-//                           -d1[1][0]*( d2[0][0]*d3[2][0] - d2[2][0]*d3[0][0] )
-//                           +d1[2][0]*( d2[0][0]*d3[1][0] - d2[1][0]*d3[0][0] );
                 m_jac[0] =  d1[0][0]*(d2[1][0]*d3[2][0] - d3[1][0]*d2[2][0])
                            -d2[0][0]*(d1[1][0]*d3[2][0] - d3[1][0]*d1[2][0])
                            +d3[0][0]*(d1[1][0]*d2[2][0] - d2[1][0]*d1[2][0]);
 
-                ASSERTL1(m_jac[0] > 0, "3D Regular Jacobian is not positive");
+                ASSERTL1(fabs(m_jac[0]) > 0, "3D Regular Jacobian is not positive");
+                
                 // Spen's book page 160
-                m_gmat[0][0] =  (d2[1][0]*d3[2][0] - d2[2][0]*d3[1][0])/m_jac[0];  // d xi_1/d x_1
-                m_gmat[1][0] = -(d1[1][0]*d3[2][0] - d1[2][0]*d3[1][0])/m_jac[0];  // d xi_2/d x_1
-                m_gmat[2][0] =  (d1[1][0]*d2[2][0] - d1[2][0]*d2[1][0])/m_jac[0];  // d xi_3/d x_1
-                m_gmat[3][0] = -(d2[0][0]*d3[2][0] - d2[2][0]*d3[0][0])/m_jac[0];  // d xi_1/d x_2
-                m_gmat[4][0] =  (d1[0][0]*d3[2][0] - d1[2][0]*d3[0][0])/m_jac[0];  // d xi_2/d x_2
-                m_gmat[5][0] = -(d1[0][0]*d2[2][0] - d1[2][0]*d2[0][0])/m_jac[0];  // d xi_3/d x_2
-                m_gmat[6][0] =  (d2[0][0]*d3[1][0] - d2[1][0]*d3[0][0])/m_jac[0];  // d xi_1/d x_3
-                m_gmat[7][0] = -(d1[0][0]*d3[1][0] - d1[1][0]*d3[0][0])/m_jac[0];  // d xi_2/d x_3
-                m_gmat[8][0] =  (d1[0][0]*d2[1][0] - d1[1][0]*d2[0][0])/m_jac[0];  // d xi_3/d x_3
+                m_gmat[0][0] =  (d2[1][0]*d3[2][0] - d3[1][0]*d2[2][0])/m_jac[0];  // d xi_1/d x_1
+                m_gmat[1][0] = -(d1[1][0]*d3[2][0] - d3[1][0]*d1[2][0])/m_jac[0];  // d xi_2/d x_1
+                m_gmat[2][0] =  (d1[1][0]*d2[2][0] - d2[1][0]*d1[2][0])/m_jac[0];  // d xi_3/d x_1
+                m_gmat[3][0] = -(d2[0][0]*d3[2][0] - d3[0][0]*d2[2][0])/m_jac[0];  // d xi_1/d x_2
+                m_gmat[4][0] =  (d1[0][0]*d3[2][0] - d3[0][0]*d1[2][0])/m_jac[0];  // d xi_2/d x_2
+                m_gmat[5][0] = -(d1[0][0]*d2[2][0] - d2[0][0]*d1[2][0])/m_jac[0];  // d xi_3/d x_2
+                m_gmat[6][0] =  (d2[0][0]*d3[1][0] - d3[0][0]*d2[1][0])/m_jac[0];  // d xi_1/d x_3
+                m_gmat[7][0] = -(d1[0][0]*d3[1][0] - d3[0][0]*d1[1][0])/m_jac[0];  // d xi_2/d x_3
+                m_gmat[8][0] =  (d1[0][0]*d2[1][0] - d2[0][0]*d1[1][0])/m_jac[0];  // d xi_3/d x_3
             }
             else // Deformed case
             {
-                ASSERTL0(false,"This routine needs corrections. Please see notes in the code...");
                 m_jac  = Array<OneD, NekDouble>(nqtot,0.0);
                 m_gmat = Array<TwoD, NekDouble>(3*mCoordDim,nqtot,0.0);
 
-                // set up Jacobian
-                Array<OneD,NekDouble> tmp[3] = {Array<OneD, NekDouble>(nqtot),
-                                                Array<OneD, NekDouble>(nqtot),
-                                                Array<OneD, NekDouble>(nqtot)};
-                // g[0]
-                Vmath::Vmul (nqtot,&d2[2][0],1,&d3[1][0],1,&tmp[0][0],1);
-                Vmath::Vvtvm(nqtot,&d2[1][0],1,&d3[2][0],1,&tmp[0][0],1,&tmp[0][0],1);
-                //g[1]
-                Vmath::Vmul (nqtot,&d2[0][0],1,&d3[2][0],1,&tmp[1][0],1);
-                Vmath::Vvtvm(nqtot,&d2[2][0],1,&d3[0][0],1,&tmp[1][0],1,&tmp[1][0],1);
-                //g[2]
-                Vmath::Vmul (nqtot,&d2[1][0],1,&d3[0][0],1,&tmp[2][0],1);
-                Vmath::Vvtvm(nqtot,&d2[0][0],1,&d3[1][0],1,&tmp[2][0],1,&tmp[2][0],1);
+                // Derivatives of the form: dj[i] = dx_(i+1)/dxi_j
+                
+                // Spencers book page 160
+                // g[0] = d xi_1/d x_1
+                Vmath::Vmul (nqtot,&d3[1][0],1,&d2[2][0],1,&m_gmat[0][0],1);
+                Vmath::Vvtvm(nqtot,&d2[1][0],1,&d3[2][0],1,&m_gmat[0][0],1,&m_gmat[0][0],1);
+                // g[1] = d xi_2/d x_1
+                Vmath::Vmul (nqtot,&d1[1][0],1,&d3[2][0],1,&m_gmat[1][0],1);
+                Vmath::Vvtvm(nqtot,&d3[1][0],1,&d1[2][0],1,&m_gmat[1][0],1,&m_gmat[1][0],1);
+                // g[2] = d xi_3/d x_1
+                Vmath::Vmul (nqtot,&d2[1][0],1,&d1[2][0],1,&m_gmat[2][0],1);
+                Vmath::Vvtvm(nqtot,&d1[1][0],1,&d2[2][0],1,&m_gmat[2][0],1,&m_gmat[2][0],1);
+                // g[3] = d xi_2/d x_1
+                Vmath::Vmul (nqtot,&d2[0][0],1,&d3[2][0],1,&m_gmat[3][0],1);
+                Vmath::Vvtvm(nqtot,&d3[0][0],1,&d2[2][0],1,&m_gmat[3][0],1,&m_gmat[3][0],1);
+                // g[4] = d xi_2/d x_2
+                Vmath::Vmul (nqtot,&d3[0][0],1,&d1[2][0],1,&m_gmat[4][0],1);
+                Vmath::Vvtvm(nqtot,&d1[0][0],1,&d3[2][0],1,&m_gmat[4][0],1,&m_gmat[4][0],1);
+                // g[5] = d xi_2/d x_3
+                Vmath::Vmul (nqtot,&d1[0][0],1,&d2[2][0],1,&m_gmat[5][0],1);
+                Vmath::Vvtvm(nqtot,&d2[0][0],1,&d1[2][0],1,&m_gmat[5][0],1,&m_gmat[5][0],1);
+                // g[6] = d xi_3/d x_1
+                Vmath::Vmul (nqtot,&d3[0][0],1,&d2[1][0],1,&m_gmat[6][0],1);
+                Vmath::Vvtvm(nqtot,&d2[0][0],1,&d3[1][0],1,&m_gmat[6][0],1,&m_gmat[6][0],1);
+                // g[7] = d xi_3/d x_2
+                Vmath::Vmul (nqtot,&d1[0][0],1,&d3[1][0],1,&m_gmat[7][0],1);
+                Vmath::Vvtvm(nqtot,&d3[0][0],1,&d1[1][0],1,&m_gmat[7][0],1,&m_gmat[7][0],1);
+                // g[8] = d xi_3/d x_3
+                Vmath::Vmul (nqtot,&d2[0][0],1,&d1[1][0],1,&m_gmat[8][0],1);
+                Vmath::Vvtvm(nqtot,&d1[0][0],1,&d2[1][0],1,&m_gmat[8][0],1,&m_gmat[8][0],1);
 
-                // J3D
-                Vmath::Vmul (nqtot,&d1[0][0],1,&tmp[0][0],1,&m_jac[0],1);
-                Vmath::Vvtvp(nqtot,&d1[1][0],1,&tmp[1][0],1,&m_jac[0],1,&m_jac[0],1);
-                Vmath::Vvtvp(nqtot,&d1[2][0],1,&tmp[2][0],1,&m_jac[0],1,&m_jac[0],1);
+                // J3D - Spencers book page 158
+                Vmath::Vmul (nqtot,&d1[0][0],1,&m_gmat[0][0],1,&m_jac[0],1);
+                Vmath::Vvtvp(nqtot,&d2[0][0],1,&m_gmat[1][0],1,&m_jac[0],1,&m_jac[0],1);
+                Vmath::Vvtvp(nqtot,&d3[0][0],1,&m_gmat[2][0],1,&m_jac[0],1,&m_jac[0],1);
 
                 ASSERTL1(Vmath::Vmin(nqtot,&m_jac[0],1) > 0, "3D Deformed Jacobian is not positive");
 
-                // d xi_1/d x_1
-                Vmath::Vmul (nqtot,&d2[2][0],1,&d3[1][0],1,&m_gmat[0][0],1);
-                Vmath::Vvtvm(nqtot,&d2[1][0],1,&d3[2][0],1,&m_gmat[0][0],1,&m_gmat[0][0],1);
+                // Scale g[i] by 1/J3D
                 Vmath::Vdiv(nqtot,&m_gmat[0][0],1,&m_jac[0],1,&m_gmat[0][0],1);
-
-                // d xi_1/d x_2
-                Vmath::Vmul (nqtot,&d1[1][0],1,&d3[2][0],1,&m_gmat[1][0],1);
-                Vmath::Vvtvm(nqtot,&d1[2][0],1,&d3[1][0],1,&m_gmat[1][0],1,&m_gmat[1][0],1);
                 Vmath::Vdiv(nqtot,&m_gmat[1][0],1,&m_jac[0],1,&m_gmat[1][0],1);
-
-                // d xi_1/d x_3
-                Vmath::Vmul (nqtot,&d1[2][0],1,&d2[1][0],1,&m_gmat[2][0],1);
-                Vmath::Vvtvm(nqtot,&d1[1][0],1,&d2[2][0],1,&m_gmat[2][0],1,&m_gmat[2][0],1);
                 Vmath::Vdiv(nqtot,&m_gmat[2][0],1,&m_jac[0],1,&m_gmat[2][0],1);
-
-                // d xi_2/d x_1
-                Vmath::Vmul (nqtot,&d2[0][0],1,&d3[2][0],1,&m_gmat[3][0],1);
-                Vmath::Vvtvm(nqtot,&d2[2][0],1,&d3[0][0],1,&m_gmat[3][0],1,&m_gmat[3][0],1);
                 Vmath::Vdiv(nqtot,&m_gmat[3][0],1,&m_jac[0],1,&m_gmat[3][0],1);
-
-                // d xi_2/d x_2
-                Vmath::Vmul (nqtot,&d1[2][0],1,&d3[0][0],1,&m_gmat[4][0],1);
-                Vmath::Vvtvm(nqtot,&d1[0][0],1,&d2[2][0],1,&m_gmat[4][0],1,&m_gmat[4][0],1);
                 Vmath::Vdiv(nqtot,&m_gmat[4][0],1,&m_jac[0],1,&m_gmat[4][0],1);
-
-                // d xi_2/d x_3
-                Vmath::Vmul (nqtot,&d1[0][0],1,&d2[2][0],1,&m_gmat[5][0],1);
-                Vmath::Vvtvm(nqtot,&d1[2][0],1,&d2[0][0],1,&m_gmat[5][0],1,&m_gmat[5][0],1);
                 Vmath::Vdiv(nqtot,&m_gmat[5][0],1,&m_jac[0],1,&m_gmat[5][0],1);
-
-                // d xi_3/d x_1
-                Vmath::Vmul (nqtot,&d2[1][0],1,&d3[0][0],1,&m_gmat[6][0],1);
-                Vmath::Vvtvm(nqtot,&d2[0][0],1,&d3[1][0],1,&m_gmat[6][0],1,&m_gmat[6][0],1);
                 Vmath::Vdiv(nqtot,&m_gmat[6][0],1,&m_jac[0],1,&m_gmat[6][0],1);
-
-                // d xi_3/d x_2
-                Vmath::Vmul (nqtot,&d1[0][0],1,&d3[1][0],1,&m_gmat[7][0],1);
-                Vmath::Vvtvm(nqtot,&d1[1][0],1,&d3[0][0],1,&m_gmat[7][0],1,&m_gmat[7][0],1);
                 Vmath::Vdiv(nqtot,&m_gmat[7][0],1,&m_jac[0],1,&m_gmat[7][0],1);
-
-                // d xi_3/d x_3
-                Vmath::Vmul (nqtot,&d1[1][0],1,&d2[0][0],1,&m_gmat[8][0],1);
-                Vmath::Vvtvm(nqtot,&d1[0][0],1,&d2[1][0],1,&m_gmat[8][0],1,&m_gmat[8][0],1);
                 Vmath::Vdiv(nqtot,&m_gmat[8][0],1,&m_jac[0],1,&m_gmat[8][0],1);
             }
+        }
+
+
+        /**
+         *
+         */
+        void GeomFactors3D::v_SetUpQuadratureMetrics(StdRegions::ExpansionType shape,
+                                                   const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        {
+            ASSERTL1(tbasis.num_elements() == mExpDim,"Inappropriate dimension of tbasis");
+
+            int i,j,k;
+            int nquad0 = mPointsKey[0].GetNumPoints();
+            int nquad1 = mPointsKey[1].GetNumPoints();
+            int nquad2 = mPointsKey[2].GetNumPoints();
+            int nqtot  = nquad0*nquad1*nquad2;
+
+            m_weightedjac           = Array<OneD, NekDouble>(nqtot);
+            mIsUsingQuadMetrics = true;
+
+            // Fill the array m_weighted jac with the values
+            // of the (already computed) jacobian (=m_jac)
+            if((mType == eRegular)||(mType == eMovingRegular))
+            {
+                Vmath::Fill(nqtot,m_jac[0],m_weightedjac.get(),1);
+            }
+            else
+            {
+                Vmath::Vcopy(nqtot,m_jac.get(),1,m_weightedjac.get(),1);
+            }
+
+            // Get hold of the quadrature weights
+            const Array<OneD, const NekDouble>& w0 = tbasis[0]->GetW();
+            const Array<OneD, const NekDouble>& w1 = tbasis[1]->GetW();
+            const Array<OneD, const NekDouble>& w2 = tbasis[2]->GetW();
+
+            // Multiply the jacobian with the quadrature weights
+            switch(shape)
+            {
+            case StdRegions::eHexahedron:
+                {
+                    for(k = 0; k < nquad2; ++k)
+                    {
+                        for(j = 0; j < nquad1; ++j)
+                        {
+                            Vmath::Vmul(nquad0,m_weightedjac.get()+(k*nquad1+j)*nquad0,1,
+                                    w0.get(),1,m_weightedjac.get()+(k*nquad1+j)*nquad0,1);
+                        }
+                    }
+
+                    for(k = 0; k < nquad2; ++k)
+                    {
+                        for(i = 0; i < nquad0; ++i)
+                        {
+                            Vmath::Vmul(nquad1,m_weightedjac.get()+k*nquad0*nquad1+i,nquad0,
+                                    w1.get(),1,m_weightedjac.get()+k*nquad0*nquad1+i,nquad0);
+                        }
+                    }
+
+                    for(j = 0; j < nquad1; ++j)
+                    {
+                        for(i = 0; i < nquad0; ++i)
+                        {
+                            Vmath::Vmul(nquad2,m_weightedjac.get()+j*nquad0+i,nquad0*nquad1,
+                                    w1.get(),1,m_weightedjac.get()+j*nquad0+i,nquad0*nquad1);
+                        }
+                    }
+                }
+                break;
+            case StdRegions::eTetrahedron:
+            case StdRegions::ePrism:
+            case StdRegions::ePyramid:
+                {
+                    ASSERTL0(false, "SetUpQuadratureWeights: Need to implement quadrature weights for this shape.");
+                    
+                    for(i = 0; i < nquad1; ++i)
+                    {
+                        Vmath::Vmul(nquad0,m_weightedjac.get()+i*nquad0,1,
+                                    w0.get(),1,m_weightedjac.get()+i*nquad0,1);
+                    }
+
+                    switch(tbasis[1]->GetPointsType())
+                    {
+                    case LibUtilities::ePolyEvenlySpaced:
+                    case LibUtilities::eGaussLobattoLegendre:  // Legendre inner product
+                        for(i = 0; i < nquad1; ++i)
+                        {
+                            const Array<OneD, const NekDouble>& z1 = tbasis[1]->GetZ();
+                            Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i],m_weightedjac.get()+i*nquad0,1);
+                        }
+                        break;
+                    case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product
+                        for(i = 0; i < nquad1; ++i)
+                        {
+                            Blas::Dscal(nquad0,0.5*w1[i],m_weightedjac.get()+i*nquad0,1);
+                        }
+                        break;
+                    default:
+                        {
+                            ASSERTL0(false,"Currently no implementation for this PointsType");
+                        }
+                    }
+                }
+                break;
+            default:
+                {
+                    ASSERTL0(false,"Invalid shape type");
+                }
+            }
+
         }
 
     }

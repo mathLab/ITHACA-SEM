@@ -5,8 +5,8 @@ SET(LinkLibraries
     optimized StdRegions debug StdRegions-g
     optimized LibUtilities debug LibUtilities-g
     optimized ${Boost_THREAD_LIBRARY_RELEASE} debug ${Boost_THREAD_LIBRARY_DEBUG}
-    optimized ${Boost_ZLIB_LIBRARY_RELEASE} debug ${Boost_ZLIB_LIBRARY_DEBUG}	
     optimized ${Boost_IOSTREAMS_LIBRARY_RELEASE} debug ${Boost_IOSTREAMS_LIBRARY_DEBUG}
+    optimized ${Boost_ZLIB_LIBRARY_RELEASE} debug ${Boost_ZLIB_LIBRARY_DEBUG}	
     optimized ${Boost_DATE_TIME_LIBRARY_RELEASE} debug ${Boost_DATE_TIME_LIBRARY_DEBUG}
     optimized ${Boost_FILESYSTEM_LIBRARY_RELEASE} debug ${Boost_FILESYSTEM_LIBRARY_DEBUG}
     optimized ${Boost_SYSTEM_LIBRARY_RELEASE} debug ${Boost_SYSTEM_LIBRARY_DEBUG}
@@ -33,3 +33,11 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Scripts/do_TimingHDGHelmSolve2D
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Scripts/do_TimingHelmSolve2D       
     ${CMAKE_CURRENT_BINARY_DIR}/do_TimingHelmSolve2D COPYONLY)
+
+
+SET(TimingGeneralMatrixOp3DSource TimingGeneralMatrixOp3D.cpp)
+ADD_NEKTAR_EXECUTABLE(TimingGeneralMatrixOp3D TimingGeneralMatrixOp3DSource)
+TARGET_LINK_LIBRARIES(TimingGeneralMatrixOp3D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(TimingGeneralMatrixOp3D)
+SET_TARGET_PROPERTIES(TimingGeneralMatrixOp3D PROPERTIES COMPILE_FLAGS -DBASE_PATH="\\"${CMAKE_SOURCE_DIR}\\"")
+

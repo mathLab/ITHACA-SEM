@@ -120,6 +120,9 @@ namespace Nektar
             {
                 ASSERTL0(false,"method only valid in local regions 1D classes");
             }
+
+            /// Writes VTK geometry information for this expansion.
+            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile);
         };
 
         typedef boost::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;
@@ -131,6 +134,9 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion1D.h,v $
+* Revision 1.32  2008/09/16 13:37:03  pvos
+* Restructured the LocalToGlobalMap classes
+*
 * Revision 1.31  2008/08/14 22:09:50  sherwin
 * Modifications to remove HDG routines from StdRegions and removed StdExpMap
 *

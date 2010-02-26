@@ -11,7 +11,7 @@ Geometry2D.cpp
 Geometry3D.cpp
 Geometry.cpp
 HexGeom.cpp
-History.cpp
+HistoryPoints.cpp
 InterfaceComponent.cpp
 MeshComponents.cpp
 MeshGraph.cpp
@@ -24,6 +24,7 @@ PyrGeom.cpp
 #QuadFaceComponent.cpp
 QuadGeom.cpp
 SegGeom.cpp
+SpatialData.cpp
 TetGeom.cpp
 #TriFaceComponent.cpp
 TriGeom.cpp
@@ -43,7 +44,7 @@ Geometry2D.h
 Geometry3D.h
 Geometry.h
 HexGeom.h
-History.h
+HistoryPoints.h
 InterfaceComponent.h
 MeshComponents.h
 MeshGraph1D.h
@@ -57,6 +58,7 @@ PyrGeom.h
 #QuadFaceComponent.h
 QuadGeom.h
 SegGeom.h
+SpatialData.h
 TetGeom.h
 #TriFaceComponent.h
 TriGeom.h

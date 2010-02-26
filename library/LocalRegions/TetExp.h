@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File TetExp.h 
+// File TetExp.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 
+// Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -48,7 +48,7 @@
 
 namespace Nektar
 {
-    namespace LocalRegions 
+    namespace LocalRegions
     {
 
         class TetExp: public StdRegions::StdTetExp, public Expansion3D
@@ -68,7 +68,7 @@ namespace Nektar
 
             /// Destructor
             ~TetExp();
- 
+
             void GetCoords(Array<OneD,NekDouble> &coords_0,
                            Array<OneD,NekDouble> &coords_1,
                            Array<OneD,NekDouble> &coords_2);
@@ -82,39 +82,16 @@ namespace Nektar
             /// \brief Integrate the physical point list \a inarray over region
             NekDouble Integral(const Array<OneD, const NekDouble> &inarray);
 
-            /** \brief  Inner product of \a inarray over region with respect to the 
-                expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata() and return in \a outarray 
-    
-                Wrapper call to StdTetExp::IProductWRTBase
-    
-                Input:\n
-    
-                - \a inarray: array of function evaluated at the physical collocation points
-    
-                Output:\n
-    
-                - \a outarray: array of inner product with respect to each basis over region
-
-            */
-            void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
-                                 Array<OneD, NekDouble> &outarray)
-            {
-                IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata(),
-                                inarray,outarray);
-            }
-
             /** \brief Forward transform from physical quadrature space
                 stored in \a inarray and evaluate the expansion coefficients and
                 store in \a (this)->_coeffs  */
             void FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray);
 
-            NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);
-
             //-----------------------------
             // Differentiation Methods
             //-----------------------------
 
-            void PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
+            void PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                            Array<OneD, NekDouble> &out_d0,
                            Array<OneD, NekDouble> &out_d1,
                            Array<OneD, NekDouble> &out_d2);
@@ -140,9 +117,9 @@ namespace Nektar
 
 
         protected:
-            /** 
+            /**
                 \brief Calculate the inner product of inarray with respect to
-                the basis B=base0*base1*base2 and put into outarray:
+                the basis B=m_base0*m_base1*m_base2 and put into outarray:
 
                 \f$ \begin{array}{rcl} I_{pqr} = (\phi_{pqr}, u)_{\delta} & = &
                 \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \sum_{k=0}^{nq_2}
@@ -159,14 +136,11 @@ namespace Nektar
                 \f$f_{pqr} (\xi_{3k}) = \sum_{k=0}^{nq_3} \psi_{pqr}^c u(\eta_{1i},\eta_{2j},\eta_{3k})
                 J_{i,j,k} = {\bf B_3 U}   \f$ \n
                 \f$ g_{pq} (\xi_{3k}) = \sum_{j=0}^{nq_1} \psi_{pq}^b (\xi_{2j}) f_{pqr} (\xi_{3k})  = {\bf B_2 F}  \f$ \n
-                \f$ (\phi_{pqr}, u)_{\delta} = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k})  = {\bf B_1 G} \f$ 
+                \f$ (\phi_{pqr}, u)_{\delta} = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k})  = {\bf B_1 G} \f$
             **/
-            void IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
-                                 const Array<OneD, const NekDouble>& base1, 
-                                 const Array<OneD, const NekDouble>& base2, 
-                                 const Array<OneD, const NekDouble>& inarray, 
+            void IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
                                  Array<OneD, NekDouble> & outarray);
-            
+
             DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
@@ -174,14 +148,14 @@ namespace Nektar
 
 
         private:
-        SpatialDomains::Geometry3DSharedPtr m_geom; 
+        SpatialDomains::Geometry3DSharedPtr m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
 
         LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
             TetExp();
-    
+
             virtual StdRegions::ExpansionType v_DetExpansionType() const
             {
                 return DetExpansionType();
@@ -209,7 +183,7 @@ namespace Nektar
                 GetCoords(coords_0, coords_1, coords_2);
             }
 
-            virtual void v_GetCoord(const Array<OneD, const NekDouble> &lcoord, 
+            virtual void v_GetCoord(const Array<OneD, const NekDouble> &lcoord,
                                     Array<OneD, NekDouble> &coord)
             {
                 GetCoord(lcoord, coord);
@@ -261,10 +235,7 @@ namespace Nektar
             }
 
             /// Virtual call to TetExp::Evaluate
-            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords)
-            {
-                return PhysEvaluate(coords);
-            }
+            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords);
 
             virtual NekDouble v_Linf(const Array<OneD, const NekDouble> &sol)
             {
@@ -315,8 +286,19 @@ namespace Nektar
 
 #endif // TETEXP_H
 
-/** 
+/**
  *    $Log: TetExp.h,v $
+ *    Revision 1.23  2009/12/15 18:09:02  cantwell
+ *    Split GeomFactors into 1D, 2D and 3D
+ *    Added generation of tangential basis into GeomFactors
+ *    Updated ADR2DManifold solver to use GeomFactors for tangents
+ *    Added <GEOMINFO> XML session section support in MeshGraph
+ *    Fixed const-correctness in VmathArray
+ *    Cleaned up LocalRegions code to generate GeomFactors
+ *    Removed GenSegExp
+ *    Temporary fix to SubStructuredGraph
+ *    Documentation for GlobalLinSys and GlobalMatrix classes
+ *
  *    Revision 1.22  2009/04/27 21:34:07  sherwin
  *    Updated WriteToField
  *

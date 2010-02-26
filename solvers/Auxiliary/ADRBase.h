@@ -38,7 +38,8 @@
 #define NEKTAR_SOLVERS_AUXILIARY_ADRBASE_H
 
 #include <SpatialDomains/MeshComponents.h>
-#include <SpatialDomains/History.h>
+#include <SpatialDomains/HistoryPoints.h>
+#include <SpatialDomains/SpatialData.h>
 
 #include <MultiRegions/ContField1D.h>
 #include <MultiRegions/ContField2D.h>
@@ -343,6 +344,9 @@ namespace Nektar
         std::list<std::pair<SpatialDomains::VertexComponentSharedPtr, int> >
                                                     m_historyList;
         
+        SpatialDomains::SpatialParametersSharedPtr  m_spatialParameters;
+        
+        std::string m_filename;     ///< Filename
         std::string m_sessionName;   ///< Name of the sessions
         NekDouble m_time;            ///< Continous time
 	NekDouble m_fintime;         ///< time to be taken during the simulation
@@ -465,6 +469,12 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.24  2010/02/02 13:53:26  cantwell
+* Moved reading in of history data to separate SpatialDomains class.
+* Updated AlievPanfilov demo to move history specification.
+* Replaced FindNektar line and NEKTAR_BIN_DIR def in regressionTests
+* CMakeLists.txt as this is required to locate the regression test execs.
+*
 * Revision 1.23  2010/01/27 15:55:57  cantwell
 * Fixed incorrect ordering of history point data.
 * Fixed parsing of session name when session filename contains multiple

@@ -31,7 +31,6 @@ ADD_NEKTAR_EXECUTABLE(ProjectLoc1D ProjectLoc1DSource)
 TARGET_LINK_LIBRARIES(ProjectLoc1D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(ProjectLoc1D)
 
-
 SET(ProjectCont1DSource  ProjectCont1D.cpp)
 ADD_NEKTAR_EXECUTABLE(ProjectCont1D ProjectCont1DSource)
 TARGET_LINK_LIBRARIES(ProjectCont1D ${LinkLibraries})
@@ -67,11 +66,6 @@ SET(AdvectionSource  Advection.cpp)
 ADD_NEKTAR_EXECUTABLE(Advection AdvectionSource)
 TARGET_LINK_LIBRARIES(Advection ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(Advection)
-
-SET(TimingHDGHelmSolve2DSource  TimingHDGHelmSolve2D.cpp)
-ADD_NEKTAR_EXECUTABLE(TimingHDGHelmSolve2D TimingHDGHelmSolve2DSource)
-TARGET_LINK_LIBRARIES(TimingHDGHelmSolve2D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(TimingHDGHelmSolve2D)
 
 SET(LinearAdvectionCont2DSource  LinearAdvection2D.cpp)
 ADD_NEKTAR_EXECUTABLE(LinearAdvection2D LinearAdvectionCont2DSource)

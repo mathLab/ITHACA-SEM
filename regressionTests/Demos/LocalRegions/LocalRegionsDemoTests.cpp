@@ -98,7 +98,41 @@ int main(int argc, char* argv[])
 
     Execute("LocProject_Diff2D", "3 8 8 6 6 7 7 0.0 0.0 1.0 0.0 1.5 1.5 0.0 1.0", "Linearly Deformed Quadrilateral Nodal/Lagrange Basis modes=6, quad=7");
 
+    
+    // 3D Projection Tests
+    Execute("LocProject3D", "4 1 2 3 6 6 6 7 7 7 0 0 0  1 0 0  0 1 0  0 0 1", "Regular Tetrahedron Ortho Basis, modes=6, quad=7");
+    
+    Execute("LocProject3D", "4 4 5 6 6 6 6 7 7 7 0 0 0  1 0 0  0 1 0  0 0 1", "Regular Tetrahedron Modified Basis, modes=6, quad=7");
 
+    Execute("LocProject3D", "7 1 1 1 6 6 6 7 7 7 0 0 0  1 0 0  1 1 0  0 1 0  0 0 1  1 0 1  1 1 1  0 1 1", "Regular Hexahedron Ortho Basis, modes=6, quad=7");
+    
+    Execute("LocProject3D", "7 4 4 4 6 6 6 7 7 7 0 0 0  1 0 0  1 1 0  0 1 0  0 0 1  1 0 1  1 1 1  0 1 1", "Regular Hexahedron Modified Basis, modes=6, quad=7");
+
+    Execute("LocProject3D", "7 8 8 8 6 6 6 7 7 7 0 0 0  1 0 0  1 1 0  0 1 0  0 0 1  1 0 1  1 1 1  0 1 1", "Regular Hexahedron Nodal/Lagrange Basis, modes=6, quad=7");
+    
+    Execute("LocProject3D", "7 1 1 1 6 6 6 7 7 7 0 0 0  1 0 0  1 1.5 0  0 1 0  0 0 1  1.5 0 1  1 1 1  0 1 1.5", "Linearly Deformed Hexahedron Ortho Basis, modes=6, quad=7");
+    
+    Execute("LocProject3D", "7 4 4 4 6 6 6 7 7 7 0 0 0  1 0 0  1 1.5 0  0 1 0  0 0 1  1.5 0 1  1 1 1  0 1 1.5", "Linearly Deformed Hexahedron Modified Basis, modes=6, quad=7");
+
+    Execute("LocProject3D", "7 8 8 8 6 6 6 7 7 7 0 0 0  1 0 0  1 1.5 0  0 1 0  0 0 1  1.5 0 1  1 1 1  0 1 1.5", "Linearly Deformed Hexahedron Nodal/Lagrange Basis, modes=6, quad=7");
+
+    // 3D Differentiation and Projection Tests
+    Execute("LocProject_Diff3D", "4 1 2 3 6 6 6 7 7 7 0 0 0  1 0 0  0 1 0  0 0 1", "Regular Tetrahedron Ortho Basis, modes=6, quad=7");
+    
+    Execute("LocProject_Diff3D", "4 4 5 6 6 6 6 7 7 7 0 0 0  1 0 0  0 1 0  0 0 1", "Regular Tetrahedron Modified Basis, modes=6, quad=7");
+
+    Execute("LocProject_Diff3D", "7 1 1 1 6 6 6 7 7 7 0 0 0  1 0 0  1 1 0  0 1 0  0 0 1  1 0 1  1 1 1  0 1 1", "Regular Hexahedron Ortho Basis, modes=6, quad=7");
+    
+    Execute("LocProject_Diff3D", "7 4 4 4 6 6 6 7 7 7 0 0 0  1 0 0  1 1 0  0 1 0  0 0 1  1 0 1  1 1 1  0 1 1", "Regular Hexahedron Modified Basis, modes=6, quad=7");
+
+    Execute("LocProject_Diff3D", "7 8 8 8 6 6 6 7 7 7 0 0 0  1 0 0  1 1 0  0 1 0  0 0 1  1 0 1  1 1 1  0 1 1", "Regular Hexahedron Nodal/Lagrange Basis, modes=6, quad=7");
+    
+    Execute("LocProject_Diff3D", "7 1 1 1 6 6 6 7 7 7 0 0 0  1 0 0  1 1.5 0  0 1 0  0 0 1  1.5 0 1  1 1 1  0 1 1.5", "Linearly Deformed Hexahedron Ortho Basis, modes=6, quad=7");
+    
+    Execute("LocProject_Diff3D", "7 4 4 4 6 6 6 7 7 7 0 0 0  1 0 0  1 1.5 0  0 1 0  0 0 1  1.5 0 1  1 1 1  0 1 1.5", "Linearly Deformed Hexahedron Modified Basis, modes=6, quad=7");
+
+    Execute("LocProject_Diff3D", "7 8 8 8 6 6 6 7 7 7 0 0 0  1 0 0  1 1.5 0  0 1 0  0 0 1  1.5 0 1  1 1 1  0 1 1.5", "Linearly Deformed Hexahedron Nodal/Lagrange Basis, modes=6, quad=7");
+    
     return 0;
 }
 
@@ -124,7 +158,7 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
 
 void MakeOkFile(std::string Demo, std::string input, std::string info)
 {
-    RegressBase Test("../builds/Demos/LocalRegions/",Demo,input,"Demos/LocalRegions/OkFiles/");
+    RegressBase Test(NEKTAR_BIN_DIR,Demo,input,"Demos/LocalRegions/OkFiles/");
     int fail;
 
     if(fail = Test.MakeOkFile())

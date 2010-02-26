@@ -34,7 +34,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <SpatialDomains/History.h>
+#include <SpatialDomains/HistoryPoints.h>
 #include <string>
 
 namespace Nektar

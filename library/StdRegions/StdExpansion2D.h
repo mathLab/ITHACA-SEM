@@ -149,6 +149,8 @@ namespace Nektar
                 return PhysEvaluate(coords);
             }
 
+            /// Writes VTK geometry information for this expansion.
+            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile);
         };
 
         typedef boost::shared_ptr<StdExpansion2D> StdExpansion2DSharedPtr;
@@ -160,6 +162,9 @@ namespace Nektar
 
 /**
  * $Log: StdExpansion2D.h,v $
+ * Revision 1.25  2008/09/16 13:37:03  pvos
+ * Restructured the LocalToGlobalMap classes
+ *
  * Revision 1.24  2008/08/14 22:09:50  sherwin
  * Modifications to remove HDG routines from StdRegions and removed StdExpMap
  *

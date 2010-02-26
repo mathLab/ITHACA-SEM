@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
 
     case eFHNMONO:
         {
-	  // Choose the method of deriving forcing functions
+            // Choose the method of deriving forcing functions
             ode.DefineImplicitSolve (&ADR2DManifold::ODEhelmSolveFHNmono,dom);	
             ode.DefineOdeRhs        (&ADR2DManifold::ODEeReactionFHNmono,dom);	
           
@@ -155,9 +155,19 @@ int main(int argc, char *argv[])
         break;
     case eAlievPanfilov:
         {
-      // Choose the method of deriving forcing functions
-            ode.DefineImplicitSolve (&ADR2DManifold::ODEhelmSolveAP,dom);  
+            // Choose the method of deriving forcing functions
+            ode.DefineImplicitSolve (&ADR2DManifold::ODEhelmSolveFHNmono,dom);  
             ode.DefineOdeRhs        (&ADR2DManifold::ODEeReactionAP,dom);  
+          
+            // General Linear Time Integration
+            dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);            
+        }
+        break;
+    case eBarkley:
+        {
+            // Choose the method of deriving forcing functions
+            ode.DefineImplicitSolve (&ADR2DManifold::ODEhelmSolveFHNmono,dom);  
+            ode.DefineOdeRhs        (&ADR2DManifold::ODEeReactionBarkley,dom);  
           
             // General Linear Time Integration
             dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);            

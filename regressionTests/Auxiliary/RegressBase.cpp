@@ -225,6 +225,12 @@ int RegressBase::PrintTestError(int fail)
             std::cout << "- Suggestions:\n\tCheck Path:\n\t"<<m_okPath<<std::endl;
             break;
         };
+    case 4:
+        {
+            std::cout << "- The file "<< m_okFile << " was found but no values matched this set of parameters"<< std::endl;
+            std::cout << "- Check a reference value has been generated for:\n\t"
+                      << "Program    : " << m_prog << "\n\tParameters: " << m_input << std::endl;
+        }
     case 5:
         {
             std::cout << "- There is no info for this mesh in .OK file!"<<std::endl;
@@ -407,7 +413,7 @@ int RegressBase::MakeOkFile()
 int RegressBase::ReadOkFile(std::string &errStr, std::string &L2e)
 {
     FILE *OkFile;
-    char buffer[50];
+    char buffer[BUFSIZ];
     std::string line = "", fname = "";
     bool gotErr = false, nextInfo = true, stop = false;
     std::string mm = "";
@@ -421,7 +427,7 @@ int RegressBase::ReadOkFile(std::string &errStr, std::string &L2e)
         // Unable to open file
         return 1;
     }
-    
+
     while(fgets(buffer, sizeof(buffer), OkFile)&&!stop)
     {
         line.assign(buffer,sizeof(buffer)-1);
@@ -452,9 +458,11 @@ int RegressBase::ReadOkFile(std::string &errStr, std::string &L2e)
                     {
                         line.assign(buffer,sizeof(buffer)-1);		
 
+                        ClearBuffer(buffer,sizeof(buffer));
+                        
                         if(line.find(errStr)<std::string::npos)
                         {
-                            gotErr=GetVal(line,errStr, L2e);
+                            gotErr=!GetVal(line,errStr, L2e);
                         }
                         else if(line.find("-------")< std::string::npos)
                         {
@@ -470,11 +478,11 @@ int RegressBase::ReadOkFile(std::string &errStr, std::string &L2e)
 
     if(!gotErr)
     {
-        return 0;
+        return 1;
     }
     else 
     {
-        return 1;
+        return 0;
     }
 };
 
@@ -661,6 +669,7 @@ int RegressBase::GetVal(std::string l, std::string code, std::string &val)
         }
     }
     if (val==""){return 1;}
+
     return 0;
 }
 /*---------------------------------------------------------/

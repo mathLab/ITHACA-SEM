@@ -89,146 +89,141 @@ namespace Nektar
         {
         }
 
-
         /**
-         * Backward transformation is three dimensional tensorial expansion
-         * \f$ u (\xi_{1i}, \xi_{2j}, \xi_{3k})
-         *  = \sum_{p=0}^{Q_x} \psi_p^a (\xi_{1i})
-         *  \lbrace { \sum_{q=0}^{Q_y} \psi_{q}^a (\xi_{2j})
-         *    \lbrace { \sum_{r=0}^{Q_z} \hat u_{pqr} \psi_{r}^a (\xi_{3k})
-         *    \rbrace}
-         *  \rbrace}. \f$
-         * And sumfactorizing step of the form is as:\\
-         * \f$ f_{r} (\xi_{3k})
-         * = \sum_{r=0}^{Q_z} \hat u_{pqr} \psi_{r}^a (\xi_{3k}),\\
-         * g_{p} (\xi_{2j}, \xi_{3k})
-         * = \sum_{r=0}^{Q_y} \psi_{p}^a (\xi_{2j}) f_{r} (\xi_{3k}),\\
-         * u(\xi_{1i}, \xi_{2j}, \xi_{3k})
-         * = \sum_{p=0}^{Q_x} \psi_{p}^a (\xi_{1i}) g_{p} (\xi_{2j}, \xi_{3k}).
-         * \f$
-         *
-         * @param   inarray     ?
-         * @param   outarray    ?
+         * 
          */
-        void StdHexExp::BwdTrans(const Array<OneD, const NekDouble>& inarray,
-                                       Array<OneD, NekDouble> &outarray)
+        void StdHexExp::v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
+                                         Array<OneD, NekDouble> &outarray)
         {
-            ASSERTL1( (m_base[1]->GetBasisType() != LibUtilities::eOrtho_B)  ||
-                      (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
-                      "Basis[1] is not a general tensor type");
+            Array<OneD, NekDouble> wsp(m_base[0]->GetNumPoints()* 
+                                       m_base[2]->GetNumModes()*
+                                       (m_base[1]->GetNumModes() + m_base[1]->GetNumPoints())); // FIX THIS
 
-            ASSERTL1( (m_base[2]->GetBasisType() != LibUtilities::eOrtho_C) ||
-                      (m_base[2]->GetBasisType() != LibUtilities::eModified_C),
-                      "Basis[2] is not a general tensor type");
-
-#if 1
-            int           nquad0 = m_base[0]->GetNumPoints();
-            int           nquad1 = m_base[1]->GetNumPoints();
-            int           nquad2 = m_base[2]->GetNumPoints();
-
-            int           nummodes0 = m_base[0]->GetNumModes();
-            int           nummodes1 = m_base[1]->GetNumModes();
-            int           nummodes2 = m_base[2]->GetNumModes();
-
-
-            Array<OneD, NekDouble> tmp0(nquad0*nummodes1*nummodes2);
-            Array<OneD, NekDouble> tmp1(nquad0*nquad1*nummodes2);
-
-            Blas::Dgemm('T','T', nummodes1*nummodes2, nquad0, nummodes0,
-                        1.0, inarray.get(), nummodes0,
-                        (m_base[0]->GetBdata()).get(), nquad0,
-                        0.0, tmp0.get(), nummodes1*nummodes2);
-
-            Blas::Dgemm('T','T', nummodes2*nquad0, nquad1, nummodes1,
-                        1.0, tmp0.get(), nummodes1,
-                        (m_base[1]->GetBdata()).get(), nquad1,
-                        0.0, tmp1.get(),nummodes2*nquad0);
-
-            Blas::Dgemm('T','T', nquad0*nquad1, nquad2, nummodes2,
-                        1.0, tmp1.get(), nummodes2,
-                        (m_base[2]->GetBdata()).get(), nquad2,
-                        0.0, outarray.get(), nquad0*nquad1);
-
-#else
-            int     Qx = m_base[0]->GetNumPoints();
-            int     Qy = m_base[1]->GetNumPoints();
-            int     Qz = m_base[2]->GetNumPoints();
-
-            int     P = m_base[0]->GetNumModes() - 1;
-            int     Q = m_base[1]->GetNumModes() - 1;
-            int     R = m_base[2]->GetNumModes() - 1;
-
-            Array<OneD, const NekDouble> xBasis  = m_base[0]->GetBdata();
-            Array<OneD, const NekDouble> yBasis  = m_base[1]->GetBdata();
-            Array<OneD, const NekDouble> zBasis  = m_base[2]->GetBdata();
-
-
-            // Build an index map from the rectangle to the triangle
-            // -- This is not necessary for hexahedron
-            Array<OneD, int> pq  = Array<OneD, int>( (P+1)*(Q+1), -1 );
-            for( int p = 0, mode = 0; p <= P; ++p ) {
-                for( int q = 0; q <= Q; ++q, ++mode ) {
-                    pq[q + (Q+1)*p] = mode;
-                }
-            }
-
-            // Create an index map from the hexahedron to the tetrahedron.
-            // -- This is not necessary for hexahedron
-            // Explicit computation of the actual index is error-prone and too
-            // difficult.
-            Array<OneD, int> pqr = Array<OneD, int>( (P+1)*(Q+1)*(R+1), -1 );
-            for( int p = 0, mode = 0; p <= P; ++p ) {
-                for( int q = 0; q <= Q; ++q ) {
-                    for( int r = 0; r <= R; ++r, ++mode ) {
-                        pqr[r + (R+1)*(q + (Q+1)*p)] = mode;
-                    }
-                }
-            }
-
-            // Sum-factorize the triple summation starting with the z-dimension
-            for( int k = 0; k < Qz; ++k ) {
-
-                // Create the matrix of coefficients summed over the z-modes
-                Array<OneD, NekDouble> Ak((P+1)*(Q+1), 0.0);
-                for( int p = 0; p <= P; ++p ) {
-                    for( int q = 0; q <= Q; ++q ) {
-                        for( int r = 0; r <= R; ++r ) {
-                            int mode = r + (R+1)*(q + (Q+1)*p);
-                            Ak[q + (Q+1)*p] += inarray[mode] * zBasis[k + Qz*r];
-                        }
-                    }
-                }
-
-                // Factorize the y-dimension
-                for( int j = 0; j < Qy; ++j ) {
-
-                    // Create the vector of coefficients summed over the y and
-                    // z-modes
-                    Array<OneD, NekDouble> bjk(P+1, 0.0);
-                    for( int p = 0; p <= P; ++p ) {
-                        for( int q = 0; q <= Q; ++q ) {
-                            int mode = q + (Q+1)*p;
-                            bjk[p]   +=   Ak[q + (Q+1)*p]  *  yBasis[j + Qy*q];
-                        }
-                    }
-
-                    // Factorize the x-dimension
-                    for( int i = 0; i < Qx; ++i ) {
-
-                        NekDouble cijk = 0.0;
-                        for( int p = 0; p <= P; ++p ) {
-                            int mode = p;
-                            cijk   +=   bjk[p]  *  xBasis[i + Qx*p];
-                        }
-                        outarray[i + Qx*(j + Qy*k)] = cijk;
-                    }
-                }
-            }
-
-#endif
+            BwdTrans_SumFacKernel(m_base[0]->GetBdata(),
+                                  m_base[1]->GetBdata(),
+                                  m_base[2]->GetBdata(),
+                                  inarray,outarray,wsp,true,true,true);
         }
 
 
+        /**
+         * @param   base0       x-dirn basis matrix
+         * @param   base1       y-dirn basis matrix
+         * @param   base2       z-dirn basis matrix
+         * @param   inarray     Input vector of modes.
+         * @param   outarray    Output vector of physical space data.
+         * @param   wsp         Workspace of size Q_x*P_z*(P_y+Q_y)
+         * @param   doCheckCollDir0     Check for collocation of basis.
+         * @param   doCheckCollDir1     Check for collocation of basis.
+         * @param   doCheckCollDir2     Check for collocation of basis.
+         * @todo    Account for some directions being collocated. See 
+         *          StdQuadExp as an example.             
+         */
+        void StdHexExp::BwdTrans_SumFacKernel(
+                    const Array<OneD, const NekDouble>& base0, 
+                    const Array<OneD, const NekDouble>& base1,
+                    const Array<OneD, const NekDouble>& base2,
+                    const Array<OneD, const NekDouble>& inarray, 
+                          Array<OneD, NekDouble> &outarray,
+                          Array<OneD, NekDouble> &wsp,
+                    bool doCheckCollDir0,
+                    bool doCheckCollDir1,
+                    bool doCheckCollDir2)
+        {
+            int  nquad0  = m_base[0]->GetNumPoints();
+            int  nquad1  = m_base[1]->GetNumPoints();
+            int  nquad2  = m_base[2]->GetNumPoints();
+            int  nmodes0 = m_base[0]->GetNumModes();
+            int  nmodes1 = m_base[1]->GetNumModes();
+            int  nmodes2 = m_base[2]->GetNumModes();
+            
+            // Check if using collocation, if requested.
+            bool colldir0 = doCheckCollDir0?(m_base[0]->Collocation()):false;
+            bool colldir1 = doCheckCollDir1?(m_base[1]->Collocation()):false;
+            bool colldir2 = doCheckCollDir2?(m_base[2]->Collocation()):false;
+
+            // If collocation in all directions, Physical values at quadrature
+            // points is just a copy of the modes.
+            if(colldir0 && colldir1 && colldir2)
+            {
+                Vmath::Vcopy(m_ncoeffs,inarray.get(),1,outarray.get(),1);
+            }
+            else
+            {
+                // Check sufficiently large workspace.
+                ASSERTL1(wsp.num_elements()>=nquad0*nmodes2*(nmodes1+nquad1),
+                         "Workspace size is not sufficient");
+
+                // Assign second half of workspace for 2nd DGEMM operation.
+                Array<OneD, NekDouble> wsp2 = wsp + nquad0*nmodes1*nmodes2;
+
+                // BwdTrans in each direction using DGEMM                
+                Blas::Dgemm('T','T', nmodes1*nmodes2, nquad0, nmodes0, 
+                            1.0, &inarray[0],   nmodes0, 
+                                 base0.get(),   nquad0, 
+                            0.0, &wsp[0],       nmodes1*nmodes2);
+                Blas::Dgemm('T','T', nquad0*nmodes2,  nquad1, nmodes1, 
+                            1.0, &wsp[0],       nmodes1, 
+                                 base1.get(),   nquad1, 
+                            0.0, &wsp2[0],      nquad0*nmodes2);
+                Blas::Dgemm('T','T', nquad0*nquad1,   nquad2, nmodes2, 
+                            1.0, &wsp2[0],      nmodes2, 
+                                 base2.get(),   nquad2, 
+                            0.0, &outarray[0],  nquad0*nquad1);
+            } 
+        }
+
+
+        /**
+         * Solves the system
+         * \f$ \mathbf{B^{\top}WB\hat{u}}=\mathbf{B^{\top}Wu^{\delta}} \f$
+         *
+         * @param   inarray     array of physical quadrature points to be
+         *                      transformed, \f$ \mathbf{u^{\delta}} \f$.
+         * @param   outarray    array of expansion coefficients,
+         *                      \f$ \mathbf{\hat{u}} \f$.
+         */
+        void StdHexExp::v_FwdTrans(
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray)
+        {
+            // If using collocation expansion, coefficients match physical
+            // data points so just do a direct copy.
+            if( (m_base[0]->Collocation())
+                    &&(m_base[1]->Collocation())
+                    &&(m_base[2]->Collocation()) )
+            {
+                Vmath::Vcopy(GetNcoeffs(), &inarray[0], 1, &outarray[0], 1);
+            }
+            else
+            {
+                // Compute B^TWu
+                IProductWRTBase(inarray,outarray);
+
+                // get Mass matrix inverse
+                StdMatrixKey      masskey(eInvMass,DetExpansionType(),*this);
+                DNekMatSharedPtr matsys = GetStdMatrix(masskey);
+
+                // copy inarray in case inarray == outarray
+                DNekVec in (m_ncoeffs,outarray);
+                DNekVec out(m_ncoeffs,outarray,eWrapper);
+
+                // Solve for coefficients.
+                out = (*matsys)*in;
+
+            }
+        }
+
+
+        void StdHexExp::v_IProductWRTBase(
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD, NekDouble> &outarray)
+        {
+            StdHexExp::v_IProductWRTBase(m_base[0]->GetBdata(),
+                            m_base[1]->GetBdata(),
+                            m_base[2]->GetBdata(),
+                            inarray,outarray,1);
+        }
 
         /**
          * \f$
@@ -263,177 +258,641 @@ namespace Nektar
          * @param   inarray     ?
          * @param   outarray    ?
          */
-        void StdHexExp::IProductWRTBase(const Array<OneD, const NekDouble>& bx,
-                                const Array<OneD, const NekDouble>& by,
-                                const Array<OneD, const NekDouble>& bz,
-                                const Array<OneD, const NekDouble>& inarray,
-                                      Array<OneD, NekDouble> & outarray,
-                                int coll_check)
+        void StdHexExp::v_IProductWRTBase(
+                    const Array<OneD, const NekDouble>& bx,
+                    const Array<OneD, const NekDouble>& by,
+                    const Array<OneD, const NekDouble>& bz,
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> & outarray,
+                    int coll_check)
         {
+            if(m_base[0]->Collocation() && m_base[1]->Collocation())
+            {  
+                MultiplyByQuadratureMetric(inarray,outarray);
+            }
+            else
+            {
+                bool doMatOp = NekOptimize::ElementalOptimization<eStdHexExp, NekOptimize::eIProductWRTBase, 3>::
+                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes(),m_base[2]->GetNumModes());
+                
+                if(doMatOp)
+                {
+                    StdHexExp::v_IProductWRTBase_MatOp(inarray,outarray);
+                }
+                else
+                {
+                    StdHexExp::v_IProductWRTBase_SumFac(inarray,outarray);
+                }  
+            }
+        }
 
-#if 1
 
-            int i;
-            int           nquad0 = m_base[0]->GetNumPoints();
-            int           nquad1 = m_base[1]->GetNumPoints();
-            int           nquad2 = m_base[2]->GetNumPoints();
+        /**
+         * Implementation of the local matrix inner product operation.
+         */
+        void StdHexExp::v_IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray, 
+                                               Array<OneD, NekDouble> &outarray)
+        {
+            int nq = GetTotPoints();
+            StdMatrixKey      iprodmatkey(eIProductWRTBase,DetExpansionType(),*this);
+            DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);            
+            
+            Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
+                        m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
+        }
 
-            int           nummodes0 = m_base[0]->GetNumModes();
-            int           nummodes1 = m_base[1]->GetNumModes();
-            int           nummodes2 = m_base[2]->GetNumModes();
 
-            Array<OneD, NekDouble> tmp(nquad0*nquad1*nquad2);
-            Array<OneD, NekDouble> tmp0(nquad0*nquad1*nummodes0);
-            Array<OneD, NekDouble> tmp1(nummodes0*nummodes1*nquad2);
+        /**
+         * Implementation of the sum-factorization inner product operation.
+         */
+        void StdHexExp::v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
+                                        Array<OneD, NekDouble> &outarray)
+        {
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    nquad2 = m_base[2]->GetNumPoints();
+            int    order0 = m_base[0]->GetNumModes();
+            int    order1 = m_base[1]->GetNumModes();
+            
+            Array<OneD, NekDouble> tmp(inarray.num_elements());
+            Array<OneD, NekDouble> wsp(nquad0*nquad1*(nquad2+order0) + order0*order1*nquad2);
+            
+            MultiplyByQuadratureMetric(inarray,tmp);
+
+            StdHexExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                         m_base[1]->GetBdata(),
+                                         m_base[2]->GetBdata(),
+                                         tmp,outarray,wsp,true,true,true);
+        }
+
+
+        /**
+         * Implementation of the sum-factorisation inner product operation.
+         * @todo    Implement cases where only some directions are collocated.
+         */
+        void StdHexExp::IProductWRTBase_SumFacKernel(const Array<OneD, const NekDouble>& base0, 
+                                                     const Array<OneD, const NekDouble>& base1,
+                                                     const Array<OneD, const NekDouble>& base2,
+                                                     const Array<OneD, const NekDouble>& inarray, 
+                                                     Array<OneD, NekDouble> &outarray,
+                                                     Array<OneD, NekDouble> &wsp,
+                                                     bool doCheckCollDir0,
+                                                     bool doCheckCollDir1,
+                                                     bool doCheckCollDir2)
+        {
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    nquad2 = m_base[2]->GetNumPoints();
+            int    nmodes0 = m_base[0]->GetNumModes();
+            int    nmodes1 = m_base[1]->GetNumModes();
+            int    nmodes2 = m_base[2]->GetNumModes();
+
+            bool colldir0 = doCheckCollDir0?(m_base[0]->Collocation()):false;
+            bool colldir1 = doCheckCollDir1?(m_base[1]->Collocation()):false;
+            bool colldir2 = doCheckCollDir2?(m_base[2]->Collocation()):false;
+                            
+            if(colldir0 && colldir1 && colldir2)
+            {
+                Vmath::Vcopy(m_ncoeffs,inarray.get(),1,outarray.get(),1);
+            }
+            else
+            {
+                int i;
+                
+                ASSERTL1(wsp.num_elements() >= nquad0*nquad1*(nquad2+nmodes0) 
+                                                + nmodes0*nmodes1*nquad2,
+                            "Insufficient workspace size");
+                
+                Array<OneD, NekDouble> tmp = wsp;
+                Array<OneD, NekDouble> tmp0 = wsp+nquad0*nquad1*nquad2;
+                Array<OneD, NekDouble> tmp1 = tmp0+nquad0*nquad1*nmodes0;
+    
+                const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
+                const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
+                const Array<OneD, const NekDouble>& w2 = m_base[2]->GetW();
+    
+                Blas::Dgemm('T', 'N', nquad1*nquad2, nmodes0, nquad0,
+                            1.0, inarray.get(), nquad0,
+                            base0.get(), nquad0,
+                            0.0, tmp0.get(), nquad1*nquad2);
+
+                Blas::Dgemm('T', 'N', nquad2*nmodes0, nmodes1, nquad1,
+                            1.0, tmp0.get(), nquad1,
+                            base1.get(), nquad1,
+                            0.0, tmp1.get(), nquad2*nmodes0);
+
+                Blas::Dgemm('T', 'N', nmodes0*nmodes1, nmodes2, nquad2,
+                            1.0, tmp1.get(), nquad2,
+                            base2.get(), nquad2,
+                            0.0, outarray.get(), nmodes0*nmodes1);
+            }
+        }        
+
+        void StdHexExp::MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
+                                                 Array<OneD, NekDouble> &outarray)
+        {     
+            int    i,j,k;
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    nquad2 = m_base[2]->GetNumPoints();
+            int    nqtot  = nquad0*nquad1*nquad2;
 
             const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
             const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
             const Array<OneD, const NekDouble>& w2 = m_base[2]->GetW();
 
-            // multiply by integration constants
             for(i = 0; i < nquad1*nquad2; ++i)
             {
                 Vmath::Vmul(nquad0, inarray.get()+i*nquad0, 1,
-                            w0.get(), 1, tmp.get()+i*nquad0,1);
+                            w0.get(), 1, outarray.get()+i*nquad0,1);
             }
 
             for(i = 0; i < nquad1*nquad2; ++i)
             {
-                Vmath::Smul(nquad0, w1[i%nquad2], tmp.get()+i*nquad0, 1,
-                            tmp.get()+i*nquad0, 1);
+                Vmath::Smul(nquad0, w1[i%nquad2], outarray.get()+i*nquad0, 1,
+                            outarray.get()+i*nquad0, 1);
             }
 
             for(i = 0; i < nquad2; ++i)
             {
-                Vmath::Smul(nquad0*nquad1, w2[i], tmp.get()+i*nquad0*nquad1, 1,
-                            tmp.get()+i*nquad0*nquad1, 1);
+                Vmath::Smul(nquad0*nquad1, w2[i], outarray.get()+i*nquad0*nquad1, 1,
+                            outarray.get()+i*nquad0*nquad1, 1);
             }
-
-            Blas::Dgemm('T', 'N', nquad1*nquad2, nummodes0, nquad0,
-                        1.0, tmp.get(), nquad0,
-                        bx.get(), nquad0,
-                        0.0, tmp0.get(), nquad1*nquad2);
-
-            Blas::Dgemm('T', 'N', nquad2*nummodes0, nummodes1, nquad1,
-                        1.0, tmp0.get(), nquad1,
-                        by.get(), nquad1,
-                        0.0, tmp1.get(), nquad2*nummodes0);
-
-            Blas::Dgemm('T', 'N', nummodes0*nummodes1, nummodes2, nquad2,
-                        1.0, tmp1.get(), nquad2,
-                        bz.get(), nquad2,
-                        0.0, outarray.get(), nummodes0*nummodes1);
-
-#else
-            int     Qx = m_base[0]->GetNumPoints();
-            int     Qy = m_base[1]->GetNumPoints();
-            int     Qz = m_base[2]->GetNumPoints();
-
-            int     P = m_base[0]->GetNumModes() - 1;
-            int     Q = m_base[1]->GetNumModes() - 1;
-            int     R = m_base[2]->GetNumModes() - 1;
-
-            // Build an index map from the rectangle to the triangle
-            // -- This is not necessary for hexahedron
-            Array<OneD, int> pq  = Array<OneD, int>( (P+1)*(Q+1), -1 );
-            for( int p = 0, mode = 0; p <= P; ++p ) {
-                for( int q = 0; q <= Q ; ++q, ++mode ) {
-                    pq[q + (Q+1)*p] = mode;
+/*
+            // multiply by integration constants 
+            // w0
+            for(j = 0; j < nquad1; ++j)
+            {
+                for (k = 0; k < nquad2; ++k)
+                {
+                    Vmath::Vmul(nquad0, inarray.get()+(j+k*nquad1)*nquad0,1,
+                            w0.get(),1,outarray.get()+(j+k*nquad1)*nquad0,1);
+                }
+            }
+                
+            // w1
+            for(i = 0; i < nquad0; ++i)
+            {
+                for (k = 0; k < nquad2; ++k)
+                {
+                    Vmath::Vmul(nquad1,outarray.get()+i+(k*nquad0*nquad1),nquad0,w1.get(),1,
+                            outarray.get()+i+(k*nquad0*nquad1),nquad0);
                 }
             }
 
-            // Create an index map from the hexahedron to the tetrahedron.
-            // -- This is not necessary for hexahedron
-            // The actual index is too difficult to compute explicitly.
-            Array<OneD, int> pqr = Array<OneD, int>( (P+1)*(Q+1)*(R+1), -1 );
-            for( int p = 0, mode = 0; p <= P; ++p ) {
-                for( int q = 0; q <= Q; ++q ) {
-                    for( int r = 0; r <= R; ++r, ++mode ) {
-                        pqr[r + (R+1)*(q + (Q+1)*p)] = mode;
-                    }
+            // w2
+            for(i = 0; i < nquad0; ++i)
+            {
+                for (j = 0; j < nquad2; ++j)
+                {
+                    Vmath::Vmul(nquad2,outarray.get()+i+(j*nquad0),nquad0*nquad1,w2.get(),1,
+                            outarray.get()+i+(j*nquad0),nquad0*nquad1);
+                }
+            }
+            */
+        }
+
+
+
+        /**
+         * @note for hexahedral expansions _base[0] (i.e. p) modes run fastest.
+         */
+        void StdHexExp::FillMode(const int mode,
+                                Array<OneD, NekDouble> &outarray)
+        {
+            int    i,j;
+            int   nquad0 = m_base[0]->GetNumPoints();
+            int   nquad1 = m_base[1]->GetNumPoints();
+            int   nquad2 = m_base[2]->GetNumPoints();
+
+            Array<OneD, const NekDouble> base0  = m_base[0]->GetBdata();
+            Array<OneD, const NekDouble> base1  = m_base[1]->GetBdata();
+            Array<OneD, const NekDouble> base2  = m_base[2]->GetBdata();
+
+            int   btmp0 = m_base[0]->GetNumModes();
+            int   btmp1 = m_base[1]->GetNumModes();
+            int   mode2 = mode/(btmp0*btmp1);
+            int   mode1 = (mode-mode2*btmp0*btmp1)/btmp0;
+            int   mode0 = (mode-mode2*btmp0*btmp1)%btmp0;
+
+            ASSERTL2(mode2 == (int)floor((1.0*mode)/(btmp0*btmp1)),
+                     "Integer Truncation not Equiv to Floor");
+            ASSERTL2(mode1 == (int)floor((1.0*mode-mode2*btmp0*btmp1)
+                                /(btmp0*btmp1)),
+                     "Integer Truncation not Equiv to Floor");
+            ASSERTL2(m_ncoeffs <= mode,
+                     "calling argument mode is larger than total expansion "
+                     "order");
+
+            for(i = 0; i < nquad1*nquad2; ++i)
+            {
+                Vmath::Vcopy(nquad0,(double *)(base0.get() + mode0*nquad0),1,
+                             &outarray[0]+i*nquad0, 1);
+            }
+
+            for(j = 0; j < nquad2; ++j)
+            {
+                for(i = 0; i < nquad0; ++i)
+                {
+                    Vmath::Vmul(nquad1,(double *)(base1.get() + mode1*nquad1),1,
+                                &outarray[0]+i+j*nquad0*nquad1, nquad0,
+                                &outarray[0]+i+j*nquad0*nquad1, nquad0);
                 }
             }
 
-            // Compute innerproduct over each mode in the Hexahedron domain
-            for( int p = 0; p <= P; ++p ) {
-                for( int q = 0; q <= Q; ++q ) {
-                    for( int r = 0; r <= R; ++r ) {
+            for(i = 0; i < nquad2; i++)
+            {
+                Blas::Dscal(nquad0*nquad1,base2[mode2*nquad2+i],
+                            &outarray[0]+i*nquad0*nquad1,1);
+            }
+        }
 
-                        // Determine the index for specifying which mode to use
-                        // in the basis
-                        int mode_p      = p;
-                        int mode_pq     = pq[q + (Q+1)*p];
-                        int mode_pqr    = pqr[r + (R+1)*(q + (Q+1)*p)];
 
-                        // Compute tensor product of inarray with the 3 basis
-                        // functions
-                        Array<OneD, NekDouble> g_pqr
-                                = Array<OneD, NekDouble>( Qx*Qy*Qz, 0.0 );
+        //////////////////////////////
+        // Integration Methods
+        //////////////////////////////
+        /**
+         * @param   fx          ?
+         * @param   gy          ?
+         * @param   hz          ?
+         * @param   inarray     ?
+         * @param   outarray    ?
+         */
+        void StdHexExp::TripleTensorProduct(
+                                const Array<OneD, const NekDouble>& fx,
+                                const Array<OneD, const NekDouble>& gy,
+                                const Array<OneD, const NekDouble>& hz,
+                                const Array<OneD, const NekDouble>& inarray,
+                                      Array<OneD, NekDouble> & outarray )
+        {
 
-                        for( int k = 0; k < Qz; ++k ) {
-                            for( int j = 0; j < Qy; ++j ) {
-                                for( int i = 0; i < Qx; ++i ) {
-                                    int s = i + Qx*(j + Qy*k);
-                                    g_pqr[s] += inarray[s] *
-                                        bx[i + Qx*p] *
-                                        by[j + Qy*q] *
-                                        bz[k + Qz*r];
-                                }
-                            }
-                        }
+            // Using matrix operation, not sum-factorization.
+            // Regarding the 3D array, inarray[k][j][i], x is changing the
+            // fastest and z the slowest. Thus, the first x-vector of points
+            // refers to the first row of the first stack. The first y-vector
+            // refers to the first column of the first stack. The first z-
+            // vector refers to the vector of stacks intersecting the first row
+            // and first column. So in C++, i refers to column, j to row, and k
+            // to stack. Contrasting this with the usual C++ matrix convention,
+            // note that i does not refer to a C++ row, nor j to C++ column.
 
-                        outarray[r + (R+1)*(q + (Q+1)*p)] = Integral( g_pqr );
-                    }
+            int nx = fx.num_elements();
+            int ny = gy.num_elements();
+            int nz = hz.num_elements();
+
+            // Multiply by integration constants...
+            // Hadamard multiplication refers to elementwise multiplication of
+            // two vectors.
+
+            // Hadamard each row with the first vector (x-vector); the index i
+            // is changing the fastest.
+            // For each j and k, iterate over each row in all of the stacks at
+            // once.
+            for (int jk = 0; jk < ny*nz; ++jk)
+            {
+                Vmath::Vmul(
+                    nx,                     // Size of first weight vector
+                    &inarray[0] + jk*nx, 1, // Offset and stride of each row-
+                                            //  vector (x is changing fastest)
+                    fx.get(), 1,            // First weight vector (with stride
+                                            //  of 1)
+                    &outarray[0] + jk*nx, 1 // Output has same offset and
+                                            //  stride as input
+                    );
+            }
+
+            // Hadamard each column with the second vector (y-vector)
+            // For each stack in the 3D-array,  do the following...
+            for (int k = 0; k < nz; ++k)
+            {
+                // Iterate over each column in the current stack
+                for (int i = 0; i < nx; ++i)
+                {
+                    Vmath::Vmul(
+                        ny,                     // Size of second weight vector
+                        &outarray[0] + i + nx*ny*k, nx,     // Offset and
+                                                //  stride of each column-vector
+                        gy.get(), 1,            // second weight vector (with
+                                                //  stride of 1)
+                        &outarray[0] + i + nx*ny*k, nx      // Output has same
+                                                //  offset and stride as input
+                        );
                 }
             }
-#endif
+
+            // Hadamard each stack-vector with the third vector (z-vector)
+            // Iterate over each element in the topmost stack
+            for (int ij = 0; ij < nx*ny; ++ij)
+            {
+                Vmath::Vmul(
+                    nz,                         // Size of third weight vector
+                    &outarray[0] + ij, nx*ny,   // Offset and stride of each
+                                                //  stack-vector
+                    hz.get(), 1,                // Third weight vector (with
+                                                //  stride of 1)
+                    &outarray[0] + ij, nx*ny    // Output has same offset and
+                                                //  stride as input
+                    );
+            }
+
         }
 
 
         /**
-         * Solves the system
-         * \f$ \mathbf{B^{\top}WB\hat{u}}=\mathbf{B^{\top}Wu^{\delta}} \f$
-         *
-         * @param   inarray     array of physical quadrature points to be
-         *                      transformed, \f$ \mathbf{u^{\delta}} \f$.
-         * @param   outarray    array of expansion coefficients,
-         *                      \f$ \mathbf{\hat{u}} \f$.
+         * Inner-Product with respect to the weights: i.e., this is the triple
+         * sum of the product of the four inputs over the Hexahedron
+         * x-dimension is the row, it is the index that changes the fastest
+         * y-dimension is the column
+         * z-dimension is the stack, it is the index that changes the slowest
          */
-        void StdHexExp::FwdTrans(const Array<OneD, const NekDouble>& inarray,
-                                 Array<OneD, NekDouble> &outarray)
+        NekDouble StdHexExp::TripleInnerProduct(
+                                     const Array<OneD, const NekDouble>& fxyz,
+                                     const Array<OneD, const NekDouble>& wx,
+                                     const Array<OneD, const NekDouble>& wy,
+                                     const Array<OneD, const NekDouble>& wz
+                                      )
         {
-            // If using collocation expansion, coefficients match physical
-            // data points so just do a direct copy.
-            if( (m_base[0]->Collocation())
-                    &&(m_base[1]->Collocation())
-                    &&(m_base[2]->Collocation()) )
+            int Qx = wx.num_elements();
+            int Qy = wy.num_elements();
+            int Qz = wz.num_elements();
+
+            if( fxyz.num_elements() != Qx*Qy*Qz ) {
+                cerr << "TripleTetrahedralInnerProduct expected "
+                     << fxyz.num_elements()
+                     << " quadrature points from the discretized input "
+                        "function but got "
+                     << Qx*Qy*Qz << " instead." << endl;
+            }
+
+            // Sum-factorizing over the stacks
+            Array<OneD, NekDouble> A(Qx*Qy, 0.0);
+            for( int i = 0; i < Qx; ++i ) {
+                for( int j = 0; j < Qy; ++j ) {
+                    for( int k = 0; k < Qz; ++k ) {
+                        A[i + Qx*j] +=  fxyz[i + Qx*(j + Qy*k)] * wz[k];
+                    }
+                }
+            }
+
+            // Sum-factorizing over the columns
+            Array<OneD, NekDouble> b(Qx, 0.0);
+            for( int i = 0; i < Qx; ++i ) {
+                for( int j = 0; j < Qy; ++j ) {
+                    b[i] +=  A[i + Qx*j] * wy[j];
+                }
+            }
+
+            // Sum-factorizing over the rows
+            NekDouble c = 0;
+            for( int i = 0; i < Qx; ++i ) {
+                c +=  b[i] * wx[i];
+            }
+
+            return c;
+        }
+
+
+        /**
+         * @param   inarray     ?
+         * @param   wx          ?
+         * @param   wy          ?
+         * @param   wz          ?
+         */
+        NekDouble StdHexExp::Integral3D(
+                                const Array<OneD, const NekDouble>& inarray,
+                                const Array<OneD, const NekDouble>& wx,
+                                const Array<OneD, const NekDouble>& wy,
+                                const Array<OneD, const NekDouble>& wz)
+        {
+            return TripleInnerProduct( inarray, wx, wy, wz );
+
+        }
+
+
+        /**
+         * @param   inarray     Definition of function to be returned at
+         *                      quadrature point of expansion.
+         * @returns
+         *  \f$\int^1_{-1}\int^1_{-1}\int^1_{-1} u(\xi_1, \xi_2, \xi_3)
+         *                      J[i,j,k] d  \xi_1 d \xi_2 d \xi_3 \f$ \n
+         *  \f$ = \sum_{i=0}^{Q_1 - 1} \sum_{j=0}^{Q_2 - 1}
+         *          \sum_{k=0}^{Q_3 - 1} u(\xi_{1i}, \xi_{2j},\xi_{3k})
+         *          w_{i} w_{j}  w_{k}   \f$ \n
+         *  where \f$inarray[i,j, k] = u(\xi_{1i},\xi_{2j}, \xi_{3k}) \f$ \n
+         *  and \f$ J[i,j,k] \f$ is the Jacobian evaluated at the quadrature
+         *  point.
+         */
+        NekDouble StdHexExp::Integral(
+                                const Array<OneD, const NekDouble>& inarray)
+        {
+            Array<OneD, const NekDouble> w0, w1, w2;
+
+            w0 = m_base[0]->GetW();
+            w1 = m_base[1]->GetW();
+            w2 = m_base[2]->GetW();
+
+            return Integral3D(inarray, w0, w1, w2);
+        }
+
+
+        ///////////////////////////////
+        /// Differentiation Methods
+        ///////////////////////////////
+
+        /**
+         * For Hexahedral region can use the PhysTensorDeriv function defined
+         * under StdExpansion. Following tenserproduct:
+         */
+        void StdHexExp::PhysDeriv(const Array<OneD, const NekDouble>& inarray,
+                                  Array<OneD, NekDouble> &out_d0,
+                                  Array<OneD, NekDouble> &out_d1,
+                                  Array<OneD, NekDouble> &out_d2)
+        {
+            PhysTensorDeriv(inarray, out_d0, out_d1, out_d2);
+        }
+
+        void StdHexExp::GetCoords( Array<OneD, NekDouble> & xi_x,
+                                Array<OneD, NekDouble> & xi_y,
+                                Array<OneD, NekDouble> & xi_z)
+        {
+            Array<OneD, const NekDouble> eta_x = m_base[0]->GetZ();
+            Array<OneD, const NekDouble> eta_y = m_base[1]->GetZ();
+            Array<OneD, const NekDouble> eta_z = m_base[2]->GetZ();
+            int Qx = GetNumPoints(0);
+            int Qy = GetNumPoints(1);
+            int Qz = GetNumPoints(2);
+
+            // Convert collapsed coordinates into cartesian coordinates:
+            // eta --> xi
+            for( int k = 0; k < Qz; ++k ) {
+                for( int j = 0; j < Qy; ++j ) {
+                    for( int i = 0; i < Qx; ++i ) {
+                        int s = i + Qx*(j + Qy*k);
+                        xi_x[s] = eta_x[i];
+                        xi_y[s] = eta_y[j];
+                        xi_z[s] = eta_z[k];
+
+                    }
+                }
+            }
+        }
+
+
+        void StdHexExp::WriteToFile(std::ofstream &outfile,
+                                OutputFormat format,
+                                const bool dumpVar,
+                                std::string var)
+        {
+            if(format==eTecplot)
             {
-                Vmath::Vcopy(GetNcoeffs(), &inarray[0], 1, &outarray[0], 1);
+                int  Qx = m_base[0]->GetNumPoints();
+                int  Qy = m_base[1]->GetNumPoints();
+                int  Qz = m_base[2]->GetNumPoints();
+
+                Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
+                eta_x = m_base[0]->GetZ();
+                eta_y = m_base[1]->GetZ();
+                eta_z = m_base[2]->GetZ();
+
+                if(dumpVar)
+                {
+                    outfile << "Variables = z1,  z2,  z3";
+                    outfile << ", "<< var << std::endl << std::endl;
+                }
+                outfile << "Zone, I=" << Qx <<", J=" << Qy <<", K=" << Qz
+                        <<", F=Point" << endl;
+
+                for(int k = 0; k < Qz; ++k)
+                {
+                    for(int j = 0; j < Qy; ++j)
+                    {
+                        for(int i = 0; i < Qx; ++i)
+                        {
+                            outfile <<  eta_x[i] <<  " " << eta_y[j] << " "
+                                    << eta_z[k] << " "
+                                    << m_phys[i + Qx*(j + Qy*k)] << endl;
+                        }
+                    }
+                }
+            }
+            else if (format==eGnuplot)
+            {
+                int  Qx = m_base[0]->GetNumPoints();
+                int  Qy = m_base[1]->GetNumPoints();
+                int  Qz = m_base[2]->GetNumPoints();
+
+                Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
+                eta_x = m_base[0]->GetZ();
+                eta_y = m_base[1]->GetZ();
+                eta_z = m_base[2]->GetZ();
+
+                for(int k = 0; k < Qz; ++k)
+                {
+                    for(int j = 0; j < Qy; ++j)
+                    {
+                        for(int i = 0; i < Qx; ++i)
+                        {
+                            outfile <<  eta_x[i] <<  " " << eta_y[j] << " "
+                                    << eta_z[k] << " "
+                                    << m_phys[i + Qx*(j + Qy*k)] << endl;
+                        }
+                        outfile << endl;
+                    }
+                    outfile << endl;
+                }                
             }
             else
             {
-                // Compute B^TWu
-                IProductWRTBase(inarray,outarray);
-
-                // get Mass matrix inverse
-                StdMatrixKey      masskey(eInvMass,DetExpansionType(),*this);
-                DNekMatSharedPtr matsys = GetStdMatrix(masskey);
-
-                // copy inarray in case inarray == outarray
-                DNekVec in (m_ncoeffs,outarray);
-                DNekVec out(m_ncoeffs,outarray,eWrapper);
-
-                // Solve for coefficients.
-                out = (*matsys)*in;
-
+                ASSERTL0(false, "Output routine not implemented for requested "
+                                "type of output");
             }
+
+        }
+
+        //   I/O routine
+        void StdHexExp::WriteCoeffsToFile(std::ofstream &outfile)
+        {
+            int  order0 = m_base[0]->GetNumModes();
+            int  order1 = m_base[1]->GetNumModes();
+            int  order2 = m_base[2]->GetNumModes();
+
+            Array<OneD, NekDouble> wsp
+                            = Array<OneD, NekDouble>(order0*order1*order2, 0.0);
+
+            NekDouble *mat = wsp.get();
+
+            // put coeffs into matrix and reverse order so that r index is
+            // fastest for Prism
+            Vmath::Zero(order0*order1*order2, mat, 1);
+
+            for(int i = 0, cnt=0; i < order0; ++i)
+            {
+                for(int j = 0; j < order1-i; ++j)
+                {
+                    for(int k = 0; k < order2-i-j; ++k, cnt++)
+                    {
+                        mat[i + order1*(j + order2*k)] = m_coeffs[cnt];
+                    }
+                }
+            }
+
+            outfile <<"Coeffs = [" << " ";
+
+            for(int k = 0; k < order2; ++k)
+            {
+                for(int j = 0; j < order1; ++j)
+                {
+                    for(int i = 0; i < order0; ++i)
+                    {
+                        outfile << mat[i + order0*(j + order1*k)] <<" ";
+                    }
+                    outfile << std::endl;
+                }
+            }
+            outfile << "]" ;
+        }
+
+        // Virtual functions
+        int StdHexExp::v_GetNverts() const
+        {
+            return 8;
+        }
+
+        int StdHexExp::v_GetNedges() const
+        {
+            return 12;
+        }
+
+        int StdHexExp::v_GetNfaces() const
+        {
+            return 6;
+        }
+
+        ExpansionType StdHexExp::v_DetExpansionType() const
+        {
+            return DetExpansionType();
+        };
+
+        int StdHexExp::v_NumBndryCoeffs() const
+        {
+            return NumBndryCoeffs();
+        }
+
+        int StdHexExp::v_GetFaceNcoeffs(const int i) const
+        {
+            return GetFaceNcoeffs(i);
+        }
+
+        int StdHexExp::v_GetFaceIntNcoeffs(const int i) const
+        {
+            return GetFaceIntNcoeffs(i);
         }
 
 
         /**
          * @param   outarray    Storage for computed map.
          */
-        void StdHexExp::GetBoundaryMap(Array<OneD, unsigned int>& outarray)
+        void StdHexExp::v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
         {
             ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
                      GetBasisType(0) == LibUtilities::eGLL_Lagrange,
@@ -529,7 +988,7 @@ namespace Nektar
         /**
          * @param   outarray    Storage area for computed map.
          */
-        void StdHexExp::GetInteriorMap(Array<OneD, unsigned int>& outarray)
+        void StdHexExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
         {
             ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
                      GetBasisType(0) == LibUtilities::eGLL_Lagrange,
@@ -597,7 +1056,7 @@ namespace Nektar
          * @param   localVertexId   ID of vertex (0..7)
          * @returns Position of vertex in local numbering scheme.
          */
-        int StdHexExp::GetVertexMap(const int localVertexId)
+        int StdHexExp::v_GetVertexMap(const int localVertexId)
         {
             ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
                      GetBasisType(0) == LibUtilities::eGLL_Lagrange,
@@ -671,7 +1130,7 @@ namespace Nektar
          * @param   maparray    Storage for computed mapping array.
          * @param   signarray   ?
          */
-        void StdHexExp::GetEdgeInteriorMap(const int eid,
+        void StdHexExp::v_GetEdgeInteriorMap(const int eid,
                                 const EdgeOrientation edgeOrient,
                                 Array<OneD, unsigned int> &maparray,
                                 Array<OneD, int> &signarray)
@@ -968,7 +1427,7 @@ namespace Nektar
         /**
          *
          */
-        void StdHexExp::GetFaceInteriorMap(const int fid,
+        void StdHexExp::v_GetFaceInteriorMap(const int fid,
                                 const FaceOrientation faceOrient,
                                 Array<OneD, unsigned int> &maparray,
                                 Array<OneD, int>& signarray)
@@ -1303,7 +1762,7 @@ namespace Nektar
         /**
          * Only for basis type Modified_A in all directions.
          */
-        void StdHexExp::GetFaceToElementMap(const int fid,
+        void StdHexExp::v_GetFaceToElementMap(const int fid,
                                 const FaceOrientation faceOrient,
                                 Array<OneD, unsigned int> &maparray,
                                 Array<OneD, int>& signarray)
@@ -1498,454 +1957,6 @@ namespace Nektar
             }
         }
 
-
-        /**
-         * @note for hexahedral expansions _base[0] (i.e. p) modes run fastest.
-         */
-        void StdHexExp::FillMode(const int mode,
-                                Array<OneD, NekDouble> &outarray)
-        {
-            int    i,j;
-            int   nquad0 = m_base[0]->GetNumPoints();
-            int   nquad1 = m_base[1]->GetNumPoints();
-            int   nquad2 = m_base[2]->GetNumPoints();
-
-            Array<OneD, const NekDouble> base0  = m_base[0]->GetBdata();
-            Array<OneD, const NekDouble> base1  = m_base[1]->GetBdata();
-            Array<OneD, const NekDouble> base2  = m_base[2]->GetBdata();
-
-            int   btmp0 = m_base[0]->GetNumModes();
-            int   btmp1 = m_base[1]->GetNumModes();
-            int   mode2 = mode/(btmp0*btmp1);
-            int   mode1 = (mode-mode2*btmp0*btmp1)/btmp0;
-            int   mode0 = (mode-mode2*btmp0*btmp1)%btmp0;
-
-            ASSERTL2(mode2 == (int)floor((1.0*mode)/(btmp0*btmp1)),
-                     "Integer Truncation not Equiv to Floor");
-            ASSERTL2(mode1 == (int)floor((1.0*mode-mode2*btmp0*btmp1)
-                                /(btmp0*btmp1)),
-                     "Integer Truncation not Equiv to Floor");
-            ASSERTL2(m_ncoeffs <= mode,
-                     "calling argument mode is larger than total expansion "
-                     "order");
-
-            for(i = 0; i < nquad1*nquad2; ++i)
-            {
-                Vmath::Vcopy(nquad0,(double *)(base0.get() + mode0*nquad0),1,
-                             &outarray[0]+i*nquad0, 1);
-            }
-
-            for(j = 0; j < nquad2; ++j)
-            {
-                for(i = 0; i < nquad0; ++i)
-                {
-                    Vmath::Vmul(nquad1,(double *)(base1.get() + mode1*nquad1),1,
-                                &outarray[0]+i+j*nquad0*nquad1, nquad0,
-                                &outarray[0]+i+j*nquad0*nquad1, nquad0);
-                }
-            }
-
-            for(i = 0; i < nquad2; i++)
-            {
-                Blas::Dscal(nquad0*nquad1,base2[mode2*nquad2+i],
-                            &outarray[0]+i*nquad0*nquad1,1);
-            }
-        }
-
-
-        //////////////////////////////
-        // Integration Methods
-        //////////////////////////////
-        /**
-         * @param   fx          ?
-         * @param   gy          ?
-         * @param   hz          ?
-         * @param   inarray     ?
-         * @param   outarray    ?
-         */
-        void StdHexExp::TripleTensorProduct(
-                                const Array<OneD, const NekDouble>& fx,
-                                const Array<OneD, const NekDouble>& gy,
-                                const Array<OneD, const NekDouble>& hz,
-                                const Array<OneD, const NekDouble>& inarray,
-                                      Array<OneD, NekDouble> & outarray )
-        {
-
-            // Using matrix operation, not sum-factorization.
-            // Regarding the 3D array, inarray[k][j][i], x is changing the
-            // fastest and z the slowest. Thus, the first x-vector of points
-            // refers to the first row of the first stack. The first y-vector
-            // refers to the first column of the first stack. The first z-
-            // vector refers to the vector of stacks intersecting the first row
-            // and first column. So in C++, i refers to column, j to row, and k
-            // to stack. Contrasting this with the usual C++ matrix convention,
-            // note that i does not refer to a C++ row, nor j to C++ column.
-
-            int nx = fx.num_elements();
-            int ny = gy.num_elements();
-            int nz = hz.num_elements();
-
-            // Multiply by integration constants...
-            // Hadamard multiplication refers to elementwise multiplication of
-            // two vectors.
-
-            // Hadamard each row with the first vector (x-vector); the index i
-            // is changing the fastest.
-            // For each j and k, iterate over each row in all of the stacks at
-            // once.
-            for (int jk = 0; jk < ny*nz; ++jk)
-            {
-                Vmath::Vmul(
-                    nx,                     // Size of first weight vector
-                    &inarray[0] + jk*nx, 1, // Offset and stride of each row-
-                                            //  vector (x is changing fastest)
-                    fx.get(), 1,            // First weight vector (with stride
-                                            //  of 1)
-                    &outarray[0] + jk*nx, 1 // Output has same offset and
-                                            //  stride as input
-                    );
-            }
-
-            // Hadamard each column with the second vector (y-vector)
-            // For each stack in the 3D-array,  do the following...
-            for (int k = 0; k < nz; ++k)
-            {
-                // Iterate over each column in the current stack
-                for (int i = 0; i < nx; ++i)
-                {
-                    Vmath::Vmul(
-                        ny,                     // Size of second weight vector
-                        &outarray[0] + i + nx*ny*k, nx,     // Offset and
-                                                //  stride of each column-vector
-                        gy.get(), 1,            // second weight vector (with
-                                                //  stride of 1)
-                        &outarray[0] + i + nx*ny*k, nx      // Output has same
-                                                //  offset and stride as input
-                        );
-                }
-            }
-
-            // Hadamard each stack-vector with the third vector (z-vector)
-            // Iterate over each element in the topmost stack
-            for (int ij = 0; ij < nx*ny; ++ij)
-            {
-                Vmath::Vmul(
-                    nz,                         // Size of third weight vector
-                    &outarray[0] + ij, nx*ny,   // Offset and stride of each
-                                                //  stack-vector
-                    hz.get(), 1,                // Third weight vector (with
-                                                //  stride of 1)
-                    &outarray[0] + ij, nx*ny    // Output has same offset and
-                                                //  stride as input
-                    );
-            }
-
-        }
-
-
-        /**
-         * Inner-Product with respect to the weights: i.e., this is the triple
-         * sum of the product of the four inputs over the Hexahedron
-         * x-dimension is the row, it is the index that changes the fastest
-         * y-dimension is the column
-         * z-dimension is the stack, it is the index that changes the slowest
-         */
-        NekDouble StdHexExp::TripleInnerProduct(
-                                     const Array<OneD, const NekDouble>& fxyz,
-                                     const Array<OneD, const NekDouble>& wx,
-                                     const Array<OneD, const NekDouble>& wy,
-                                     const Array<OneD, const NekDouble>& wz
-                                      )
-        {
-            int Qx = wx.num_elements();
-            int Qy = wy.num_elements();
-            int Qz = wz.num_elements();
-
-            if( fxyz.num_elements() != Qx*Qy*Qz ) {
-                cerr << "TripleTetrahedralInnerProduct expected "
-                     << fxyz.num_elements()
-                     << " quadrature points from the discretized input "
-                        "function but got "
-                     << Qx*Qy*Qz << " instead." << endl;
-            }
-
-            // Sum-factorizing over the stacks
-            Array<OneD, NekDouble> A(Qx*Qy, 0.0);
-            for( int i = 0; i < Qx; ++i ) {
-                for( int j = 0; j < Qy; ++j ) {
-                    for( int k = 0; k < Qz; ++k ) {
-                        A[i + Qx*j] +=  fxyz[i + Qx*(j + Qy*k)] * wz[k];
-                    }
-                }
-            }
-
-            // Sum-factorizing over the columns
-            Array<OneD, NekDouble> b(Qx, 0.0);
-            for( int i = 0; i < Qx; ++i ) {
-                for( int j = 0; j < Qy; ++j ) {
-                    b[i] +=  A[i + Qx*j] * wy[j];
-                }
-            }
-
-            // Sum-factorizing over the rows
-            NekDouble c = 0;
-            for( int i = 0; i < Qx; ++i ) {
-                c +=  b[i] * wx[i];
-            }
-
-            return c;
-        }
-
-
-        /**
-         * @param   inarray     ?
-         * @param   wx          ?
-         * @param   wy          ?
-         * @param   wz          ?
-         */
-        NekDouble StdHexExp::Integral3D(
-                                const Array<OneD, const NekDouble>& inarray,
-                                const Array<OneD, const NekDouble>& wx,
-                                const Array<OneD, const NekDouble>& wy,
-                                const Array<OneD, const NekDouble>& wz)
-        {
-            return TripleInnerProduct( inarray, wx, wy, wz );
-
-        }
-
-
-        /**
-         * @param   inarray     Definition of function to be returned at
-         *                      quadrature point of expansion.
-         * @returns
-         *  \f$\int^1_{-1}\int^1_{-1}\int^1_{-1} u(\xi_1, \xi_2, \xi_3)
-         *                      J[i,j,k] d  \xi_1 d \xi_2 d \xi_3 \f$ \n
-         *  \f$ = \sum_{i=0}^{Q_1 - 1} \sum_{j=0}^{Q_2 - 1}
-         *          \sum_{k=0}^{Q_3 - 1} u(\xi_{1i}, \xi_{2j},\xi_{3k})
-         *          w_{i} w_{j}  w_{k}   \f$ \n
-         *  where \f$inarray[i,j, k] = u(\xi_{1i},\xi_{2j}, \xi_{3k}) \f$ \n
-         *  and \f$ J[i,j,k] \f$ is the Jacobian evaluated at the quadrature
-         *  point.
-         */
-        NekDouble StdHexExp::Integral(
-                                const Array<OneD, const NekDouble>& inarray)
-        {
-            Array<OneD, const NekDouble> w0, w1, w2;
-
-            w0 = m_base[0]->GetW();
-            w1 = m_base[1]->GetW();
-            w2 = m_base[2]->GetW();
-
-            return Integral3D(inarray, w0, w1, w2);
-        }
-
-
-        ///////////////////////////////
-        /// Differentiation Methods
-        ///////////////////////////////
-
-        /**
-         * For Hexahedral region can use the PhysTensorDeriv function defined
-         * under StdExpansion. Following tenserproduct:
-         */
-        void StdHexExp::PhysDeriv(const Array<OneD, const NekDouble>& inarray,
-                                  Array<OneD, NekDouble> &out_d0,
-                                  Array<OneD, NekDouble> &out_d1,
-                                  Array<OneD, NekDouble> &out_d2)
-        {
-            PhysTensorDeriv(inarray, out_d0, out_d1, out_d2);
-        }
-
-        void StdHexExp::GetCoords( Array<OneD, NekDouble> & xi_x,
-                                Array<OneD, NekDouble> & xi_y,
-                                Array<OneD, NekDouble> & xi_z)
-        {
-            Array<OneD, const NekDouble> eta_x = m_base[0]->GetZ();
-            Array<OneD, const NekDouble> eta_y = m_base[1]->GetZ();
-            Array<OneD, const NekDouble> eta_z = m_base[2]->GetZ();
-            int Qx = GetNumPoints(0);
-            int Qy = GetNumPoints(1);
-            int Qz = GetNumPoints(2);
-
-            // Convert collapsed coordinates into cartesian coordinates:
-            // eta --> xi
-            for( int k = 0; k < Qz; ++k ) {
-                for( int j = 0; j < Qy; ++j ) {
-                    for( int i = 0; i < Qx; ++i ) {
-                        int s = i + Qx*(j + Qy*k);
-                        xi_x[s] = eta_x[i];
-                        xi_y[s] = eta_y[j];
-                        xi_z[s] = eta_z[k];
-
-                    }
-                }
-            }
-        }
-
-
-        void StdHexExp::WriteToFile(std::ofstream &outfile,
-                                OutputFormat format,
-                                const bool dumpVar,
-                                std::string var)
-        {
-            if(format==eTecplot)
-            {
-                int  Qx = m_base[0]->GetNumPoints();
-                int  Qy = m_base[1]->GetNumPoints();
-                int  Qz = m_base[2]->GetNumPoints();
-
-                Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
-                eta_x = m_base[0]->GetZ();
-                eta_y = m_base[1]->GetZ();
-                eta_z = m_base[2]->GetZ();
-
-                if(dumpVar)
-                {
-                    outfile << "Variables = z1,  z2,  z3";
-                    outfile << ", "<< var << std::endl << std::endl;
-                }
-                outfile << "Zone, I=" << Qx <<", J=" << Qy <<", K=" << Qz
-                        <<", F=Point" << endl;
-
-                for(int k = 0; k < Qz; ++k)
-                {
-                    for(int j = 0; j < Qy; ++j)
-                    {
-                        for(int i = 0; i < Qx; ++i)
-                        {
-                            outfile <<  eta_x[i] <<  " " << eta_y[j] << " "
-                                    << eta_z[k] << " "
-                                    << m_phys[i + Qx*(j + Qy*k)] << endl;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for requested "
-                                "type of output");
-            }
-
-        }
-
-        //   I/O routine
-        void StdHexExp::WriteCoeffsToFile(std::ofstream &outfile)
-        {
-            int  order0 = m_base[0]->GetNumModes();
-            int  order1 = m_base[1]->GetNumModes();
-            int  order2 = m_base[2]->GetNumModes();
-
-            Array<OneD, NekDouble> wsp
-                            = Array<OneD, NekDouble>(order0*order1*order2, 0.0);
-
-            NekDouble *mat = wsp.get();
-
-            // put coeffs into matrix and reverse order so that r index is
-            // fastest for Prism
-            Vmath::Zero(order0*order1*order2, mat, 1);
-
-            for(int i = 0, cnt=0; i < order0; ++i)
-            {
-                for(int j = 0; j < order1-i; ++j)
-                {
-                    for(int k = 0; k < order2-i-j; ++k, cnt++)
-                    {
-                        mat[i + order1*(j + order2*k)] = m_coeffs[cnt];
-                    }
-                }
-            }
-
-            outfile <<"Coeffs = [" << " ";
-
-            for(int k = 0; k < order2; ++k)
-            {
-                for(int j = 0; j < order1; ++j)
-                {
-                    for(int i = 0; i < order0; ++i)
-                    {
-                        outfile << mat[i + order0*(j + order1*k)] <<" ";
-                    }
-                    outfile << std::endl;
-                }
-            }
-            outfile << "]" ;
-        }
-
-        // Virtual functions
-        int StdHexExp::v_GetNverts() const
-        {
-            return 8;
-        }
-
-        int StdHexExp::v_GetNedges() const
-        {
-            return 12;
-        }
-
-        int StdHexExp::v_GetNfaces() const
-        {
-            return 6;
-        }
-
-        ExpansionType StdHexExp::v_DetExpansionType() const
-        {
-            return DetExpansionType();
-        };
-
-        int StdHexExp::v_NumBndryCoeffs() const
-        {
-            return NumBndryCoeffs();
-        }
-
-        int StdHexExp::v_GetFaceNcoeffs(const int i) const
-        {
-            return GetFaceNcoeffs(i);
-        }
-
-        int StdHexExp::v_GetFaceIntNcoeffs(const int i) const
-        {
-            return GetFaceIntNcoeffs(i);
-        }
-
-        void StdHexExp::v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
-        {
-            GetBoundaryMap(outarray);
-        }
-
-        void StdHexExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
-        {
-            GetInteriorMap(outarray);
-        }
-
-        int StdHexExp::v_GetVertexMap(const int localVertexId)
-        {
-            return GetVertexMap(localVertexId);
-        }
-
-        void StdHexExp::v_GetEdgeInteriorMap(const int eid,
-                                const EdgeOrientation edgeOrient,
-                                Array<OneD, unsigned int> &maparray,
-                                Array<OneD, int> &signarray)
-        {
-            GetEdgeInteriorMap(eid,edgeOrient,maparray,signarray);
-        }
-
-        void StdHexExp::v_GetFaceInteriorMap(const int fid,
-                                const FaceOrientation faceOrient,
-                                Array<OneD, unsigned int> &maparray,
-                                Array<OneD, int>& signarray)
-        {
-            GetFaceInteriorMap(fid,faceOrient,maparray,signarray);
-        }
-
-        void StdHexExp::v_GetFaceToElementMap(const int fid,
-                                const FaceOrientation faceOrient,
-                                Array<OneD, unsigned int> &maparray,
-                                Array<OneD, int>& signarray)
-        {
-            GetFaceToElementMap(fid,faceOrient,maparray,signarray);
-        }
-
         DNekMatSharedPtr StdHexExp::v_GenMatrix(const StdMatrixKey &mkey)
         {
             return GenMatrix(mkey);
@@ -1972,13 +1983,6 @@ namespace Nektar
                                 const Array<OneD, const NekDouble>& inarray )
         {
             return Integral(inarray);
-        }
-
-        void StdHexExp::v_IProductWRTBase(
-                                const Array<OneD, const NekDouble>& inarray,
-                                      Array<OneD, NekDouble> &outarray)
-        {
-            IProductWRTBase(inarray, outarray);
         }
 
         void StdHexExp::v_FillMode(const int mode,
@@ -2014,24 +2018,172 @@ namespace Nektar
             StdPhysDeriv(inarray, out_d0, out_d1, out_d2);
         }
 
+        /**
+         * Backward transformation is three dimensional tensorial expansion
+         * \f$ u (\xi_{1i}, \xi_{2j}, \xi_{3k})
+         *  = \sum_{p=0}^{Q_x} \psi_p^a (\xi_{1i})
+         *  \lbrace { \sum_{q=0}^{Q_y} \psi_{q}^a (\xi_{2j})
+         *    \lbrace { \sum_{r=0}^{Q_z} \hat u_{pqr} \psi_{r}^a (\xi_{3k})
+         *    \rbrace}
+         *  \rbrace}. \f$
+         * And sumfactorizing step of the form is as:\\
+         * \f$ f_{r} (\xi_{3k})
+         * = \sum_{r=0}^{Q_z} \hat u_{pqr} \psi_{r}^a (\xi_{3k}),\\
+         * g_{p} (\xi_{2j}, \xi_{3k})
+         * = \sum_{r=0}^{Q_y} \psi_{p}^a (\xi_{2j}) f_{r} (\xi_{3k}),\\
+         * u(\xi_{1i}, \xi_{2j}, \xi_{3k})
+         * = \sum_{p=0}^{Q_x} \psi_{p}^a (\xi_{1i}) g_{p} (\xi_{2j}, \xi_{3k}).
+         * \f$
+         *
+         * @param   inarray     ?
+         * @param   outarray    ?
+         */
         void StdHexExp::v_BwdTrans(
                                 const Array<OneD, const NekDouble>& inarray,
                                       Array<OneD, NekDouble> &outarray)
         {
-            BwdTrans(inarray, outarray);
-        }
+            ASSERTL1( (m_base[1]->GetBasisType() != LibUtilities::eOrtho_B)  ||
+                      (m_base[1]->GetBasisType() != LibUtilities::eModified_B),
+                      "Basis[1] is not a general tensor type");
 
-        void StdHexExp::v_FwdTrans(
-                                const Array<OneD, const NekDouble>& inarray,
-                                      Array<OneD, NekDouble> &outarray)
-        {
-            FwdTrans(inarray, outarray);
-        }
+            ASSERTL1( (m_base[2]->GetBasisType() != LibUtilities::eOrtho_C) ||
+                      (m_base[2]->GetBasisType() != LibUtilities::eModified_C),
+                      "Basis[2] is not a general tensor type");
+
+            if(m_base[0]->Collocation() && m_base[1]->Collocation()
+                    && m_base[2]->Collocation())
+            {  
+                Vmath::Vcopy(m_base[0]->GetNumPoints() 
+                                * m_base[1]->GetNumPoints()
+                                * m_base[2]->GetNumPoints(), 
+                             inarray, 1, outarray, 1);
+            }
+            else
+            {
+                bool doMatOp = NekOptimize::ElementalOptimization<eStdHexExp, NekOptimize::eBwdTrans, 3>::
+                    DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes(),m_base[2]->GetNumModes());
+
+                if(doMatOp)
+                {
+                    StdExpansion::BwdTrans_MatOp(inarray,outarray);
+                }
+                else
+                {
+                    StdHexExp::BwdTrans_SumFac(inarray,outarray);
+                }  
+            }
+/*
+#if 1
+            int           nquad0 = m_base[0]->GetNumPoints();
+            int           nquad1 = m_base[1]->GetNumPoints();
+            int           nquad2 = m_base[2]->GetNumPoints();
+
+            int           nummodes0 = m_base[0]->GetNumModes();
+            int           nummodes1 = m_base[1]->GetNumModes();
+            int           nummodes2 = m_base[2]->GetNumModes();
+
+
+            Array<OneD, NekDouble> tmp0(nquad0*nummodes1*nummodes2);
+            Array<OneD, NekDouble> tmp1(nquad0*nquad1*nummodes2);
+
+            Blas::Dgemm('T','T', nummodes1*nummodes2, nquad0, nummodes0,
+                        1.0, inarray.get(), nummodes0,
+                        (m_base[0]->GetBdata()).get(), nquad0,
+                        0.0, tmp0.get(), nummodes1*nummodes2);
+
+            Blas::Dgemm('T','T', nummodes2*nquad0, nquad1, nummodes1,
+                        1.0, tmp0.get(), nummodes1,
+                        (m_base[1]->GetBdata()).get(), nquad1,
+                        0.0, tmp1.get(),nummodes2*nquad0);
+
+            Blas::Dgemm('T','T', nquad0*nquad1, nquad2, nummodes2,
+                        1.0, tmp1.get(), nummodes2,
+                        (m_base[2]->GetBdata()).get(), nquad2,
+                        0.0, outarray.get(), nquad0*nquad1);
+
+#else
+            int     Qx = m_base[0]->GetNumPoints();
+            int     Qy = m_base[1]->GetNumPoints();
+            int     Qz = m_base[2]->GetNumPoints();
+
+            int     P = m_base[0]->GetNumModes() - 1;
+            int     Q = m_base[1]->GetNumModes() - 1;
+            int     R = m_base[2]->GetNumModes() - 1;
+
+            Array<OneD, const NekDouble> xBasis  = m_base[0]->GetBdata();
+            Array<OneD, const NekDouble> yBasis  = m_base[1]->GetBdata();
+            Array<OneD, const NekDouble> zBasis  = m_base[2]->GetBdata();
+
+
+            // Build an index map from the rectangle to the triangle
+            // -- This is not necessary for hexahedron
+            Array<OneD, int> pq  = Array<OneD, int>( (P+1)*(Q+1), -1 );
+            for( int p = 0, mode = 0; p <= P; ++p ) {
+                for( int q = 0; q <= Q; ++q, ++mode ) {
+                    pq[q + (Q+1)*p] = mode;
+                }
+            }
+
+            // Create an index map from the hexahedron to the tetrahedron.
+            // -- This is not necessary for hexahedron
+            // Explicit computation of the actual index is error-prone and too
+            // difficult.
+            Array<OneD, int> pqr = Array<OneD, int>( (P+1)*(Q+1)*(R+1), -1 );
+            for( int p = 0, mode = 0; p <= P; ++p ) {
+                for( int q = 0; q <= Q; ++q ) {
+                    for( int r = 0; r <= R; ++r, ++mode ) {
+                        pqr[r + (R+1)*(q + (Q+1)*p)] = mode;
+                    }
+                }
+            }
+
+            // Sum-factorize the triple summation starting with the z-dimension
+            for( int k = 0; k < Qz; ++k ) {
+
+                // Create the matrix of coefficients summed over the z-modes
+                Array<OneD, NekDouble> Ak((P+1)*(Q+1), 0.0);
+                for( int p = 0; p <= P; ++p ) {
+                    for( int q = 0; q <= Q; ++q ) {
+                        for( int r = 0; r <= R; ++r ) {
+                            int mode = r + (R+1)*(q + (Q+1)*p);
+                            Ak[q + (Q+1)*p] += inarray[mode] * zBasis[k + Qz*r];
+                        }
+                    }
+                }
+
+                // Factorize the y-dimension
+                for( int j = 0; j < Qy; ++j ) {
+
+                    // Create the vector of coefficients summed over the y and
+                    // z-modes
+                    Array<OneD, NekDouble> bjk(P+1, 0.0);
+                    for( int p = 0; p <= P; ++p ) {
+                        for( int q = 0; q <= Q; ++q ) {
+                            int mode = q + (Q+1)*p;
+                            bjk[p]   +=   Ak[q + (Q+1)*p]  *  yBasis[j + Qy*q];
+                        }
+                    }
+
+                    // Factorize the x-dimension
+                    for( int i = 0; i < Qx; ++i ) {
+
+                        NekDouble cijk = 0.0;
+                        for( int p = 0; p <= P; ++p ) {
+                            int mode = p;
+                            cijk   +=   bjk[p]  *  xBasis[i + Qx*p];
+                        }
+                        outarray[i + Qx*(j + Qy*k)] = cijk;
+                    }
+                }
+            }
+
+#endif
+*/        }
 
         NekDouble StdHexExp::v_PhysEvaluate(
                                 Array<OneD, const NekDouble>& Lcoords)
         {
-            return PhysEvaluate(Lcoords);
+            return StdExpansion3D::v_PhysEvaluate(Lcoords);
         }
 
         int StdHexExp::v_GetEdgeNcoeffs(const int i) const
@@ -2057,6 +2209,9 @@ namespace Nektar
 
 /**
  * $Log: StdHexExp.cpp,v $
+ * Revision 1.30  2009/12/18 00:26:54  bnelson
+ * Fixed visual studio compiler warning.
+ *
  * Revision 1.29  2009/12/15 18:09:02  cantwell
  * Split GeomFactors into 1D, 2D and 3D
  * Added generation of tangential basis into GeomFactors

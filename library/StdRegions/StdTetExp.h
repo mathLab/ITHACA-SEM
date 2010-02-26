@@ -145,20 +145,6 @@ namespace Nektar
             NekDouble Integral(const Array<OneD, const NekDouble>& inarray);
 
 
-
-
-            /// Inner product of \a inarray over region with respect to the
-            /// expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(),
-            /// m_base[2]->GetBdata() and return in \a outarray.
-            void IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
-                                 Array<OneD, NekDouble> &outarray)
-            {
-                IProductWRTBase(m_base[0]->GetBdata(),
-                                m_base[1]->GetBdata(),
-                                m_base[2]->GetBdata(),
-                                inarray,outarray);
-            }
-
             void FillMode(const int mode, Array<OneD, NekDouble> &outarray);
 
 
@@ -180,17 +166,16 @@ namespace Nektar
             }
 
             /// Backward tranform for tetrahedral elements
-            void BwdTrans(const Array<OneD, const NekDouble>& inarray,
-                          Array<OneD, NekDouble> &outarray);
+//            void BwdTrans(const Array<OneD, const NekDouble>& inarray,
+//                          Array<OneD, NekDouble> &outarray);
 
             /// Forward transform from physical quadrature space stored in \a
             /// inarray and evaluate the expansion coefficients and store in \a
             /// outarray.
-            void FwdTrans(const Array<OneD, const NekDouble>& inarray,
-                          Array<OneD, NekDouble> &outarray);
+//            void FwdTrans(const Array<OneD, const NekDouble>& inarray,
+//                          Array<OneD, NekDouble> &outarray);
 
             /** \brief Single Point Evaluation */
-            NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords);
             NekDouble PhysEvaluate3D(const Array<OneD, const NekDouble>& coords);
 
             void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
@@ -207,7 +192,7 @@ namespace Nektar
             int GetFaceNcoeffs(const int i) const
             {
                 ASSERTL2((i >= 0) && (i <= 3), "face id is out of range");
-                if((i == 0))
+/*                if((i == 0))
                 {
                     return GetBasisNumModes(0)*GetBasisNumModes(1);
                 }
@@ -219,6 +204,28 @@ namespace Nektar
                 {
                     return GetBasisNumModes(1)*GetBasisNumModes(2);
                 }
+*/
+                int nFaceCoeffs = 0;
+                int nummodesA, nummodesB, P, Q;
+                if (i == 0)
+                {
+                    nummodesA = GetBasisNumModes(0);
+                    nummodesB = GetBasisNumModes(1);
+                }
+                else if ((i == 1) || (i == 2))
+                {
+                    nummodesA = GetBasisNumModes(0);
+                    nummodesB = GetBasisNumModes(2);
+                }
+                else
+                {
+                    nummodesA = GetBasisNumModes(1);
+                    nummodesB = GetBasisNumModes(2);
+                }
+                P = nummodesA - 1;
+                Q = nummodesB - 1;
+                nFaceCoeffs = Q+1 + (P*(1 + 2*Q - P))/2;
+                return nFaceCoeffs;
             }
 
 
@@ -269,36 +276,53 @@ namespace Nektar
 
         protected:
 
-        /**
-                \brief Calculate the inner product of inarray with respect to
-                the basis B=base0*base1*base2 and put into outarray:
+            /// Compute backward transform of modes to quadrature points.
+            virtual void v_BwdTrans(const Array<OneD, const NekDouble>& inarray,
+                                    Array<OneD, NekDouble> &outarray );
 
-                \f$ \begin{array}{rcl} I_{pqr} = (\phi_{pqr}, u)_{\delta} & = &
-                \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \sum_{k=0}^{nq_2}
-                \psi_{p}^{a} (\eta_{1i}) \psi_{pq}^{b} (\eta_{2j}) \psi_{pqr}^{c} (\eta_{3k})
-                w_i w_j w_k u(\eta_{1,i} \eta_{2,j} \eta_{3,k})
-                J_{i,j,k}\\ & = & \sum_{i=0}^{nq_0} \psi_p^a(\eta_{1,i})
-                \sum_{j=0}^{nq_1} \psi_{pq}^b(\eta_{2,j}) \sum_{k=0}^{nq_2} \psi_{pqr}^c u(\eta_{1i},\eta_{2j},\eta_{3k})
-                J_{i,j,k} \end{array} \f$ \n
+            /// Perform forward transform of quadrature data to coefficients.
+            virtual void v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
+                                    Array<OneD, NekDouble> &outarray );
 
-                where
+            /// Inner product of \a inarray over region with respect to the
+            /// expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(),
+            /// m_base[2]->GetBdata() and return in \a outarray.
+            virtual void v_IProductWRTBase(
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> & outarray);
 
-                \f$ \phi_{pqr} (\xi_1 , \xi_2 , \xi_3) = \psi_p^a (\eta_1) \psi_{pq}^b (\eta_2) \psi_{pqr}^c (\eta_3) \f$
+            /// Fundamental Tet sum-factorisation implementation of IProduct.
+            void IProductWRTBase_SumFacKernel (
+                    const Array<OneD, const NekDouble>& base0, 
+                    const Array<OneD, const NekDouble>& base1,
+                    const Array<OneD, const NekDouble>& base2,
+                    const Array<OneD, const NekDouble>& inarray, 
+                          Array<OneD, NekDouble> &outarray,
+                          Array<OneD, NekDouble> &wsp,
+                    bool doCheckCollDir0,
+                    bool doCheckCollDir1,
+                    bool doCheckCollDir2);
 
-                which can be implemented as \n
-                \f$f_{pqr} (\xi_{3k}) = \sum_{k=0}^{nq_3} \psi_{pqr}^c u(\eta_{1i},\eta_{2j},\eta_{3k})
-                J_{i,j,k} = {\bf B_3 U}   \f$ \n
-                \f$ g_{pq} (\xi_{3k}) = \sum_{j=0}^{nq_1} \psi_{pq}^b (\xi_{2j}) f_{pqr} (\xi_{3k})  = {\bf B_2 F}  \f$ \n
-                \f$ (\phi_{pqr}, u)_{\delta} = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k})  = {\bf B_1 G} \f$
+            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords);
 
-            **/
-            void IProductWRTBase(const Array<OneD, const NekDouble>& bx,
-                                 const Array<OneD, const NekDouble>& by,
-                                 const Array<OneD, const NekDouble>& bz,
-                                 const Array<OneD, const NekDouble>& inarray,
-                                 Array<OneD, NekDouble> & outarray);
 
         private:
+            virtual void v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
+                                 Array<OneD, NekDouble> &outarray);
+
+            virtual void v_IProductWRTBase_MatOp (
+                                const Array<OneD, const NekDouble>& inarray,
+                                      Array<OneD, NekDouble> & outarray);
+
+            virtual void v_IProductWRTBase_SumFac (
+                                const Array<OneD, const NekDouble>& inarray,
+                                      Array<OneD, NekDouble> & outarray);
+
+            void MultiplyByQuadratureMetric(
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray);
+
+
 
             virtual int v_GetNverts() const
             {
@@ -387,11 +411,6 @@ namespace Nektar
                 return Integral(inarray);
             }
 
-            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
-                                           Array<OneD, NekDouble> &outarray)
-            {
-                IProductWRTBase(inarray, outarray);
-            }
 
             virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
             {
@@ -422,26 +441,6 @@ namespace Nektar
                 StdPhysDeriv(inarray, out_d0, out_d1, out_d2);
             }
 
-            /** \brief Virtual call to StdTetExp::BwdTrans */
-            virtual void v_BwdTrans(const Array<OneD, const NekDouble>& inarray,
-                                    Array<OneD, NekDouble> &outarray )
-            {
-                BwdTrans(inarray,outarray);
-            }
-
-            /** \brief Virtual call to StdTetExp::FwdTrans */
-            virtual void v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
-                                    Array<OneD, NekDouble> &outarray )
-            {
-                FwdTrans(inarray,outarray);
-            }
-
-            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
-            {
-                return PhysEvaluate(coords);
-            }
-
-
             virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")
             {
                 WriteToFile(outfile,format,dumpVar,var);
@@ -463,6 +462,17 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.29  2009/12/15 18:09:02  cantwell
+ * Split GeomFactors into 1D, 2D and 3D
+ * Added generation of tangential basis into GeomFactors
+ * Updated ADR2DManifold solver to use GeomFactors for tangents
+ * Added <GEOMINFO> XML session section support in MeshGraph
+ * Fixed const-correctness in VmathArray
+ * Cleaned up LocalRegions code to generate GeomFactors
+ * Removed GenSegExp
+ * Temporary fix to SubStructuredGraph
+ * Documentation for GlobalLinSys and GlobalMatrix classes
+ *
  * Revision 1.28  2009/11/10 19:02:20  sehunchun
  * *** empty log message ***
  *

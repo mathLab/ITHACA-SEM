@@ -7,7 +7,7 @@
 //  The MIT License
 //
 //  Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
-//  Department of Aeronautics, Imperial College London (UK), and Scientific 
+//  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
 //  License for the specific language governing rights and limitations under
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:  
+//  Description:
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,7 +54,7 @@ namespace Nektar
                  Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
         {
             m_GeomShapeType = eTetrahedron;
-            
+
             /// Copy the face shared pointers
             m_faces.insert(m_faces.begin(), faces, faces+TetGeom::kNfaces);
 
@@ -71,7 +71,7 @@ namespace Nektar
                                            LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha1Beta0));
             const LibUtilities::BasisKey C(LibUtilities::eModified_C, 2,
                                            LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha2Beta0));
-            
+
             m_xmap = Array<OneD, StdRegions::StdExpansion3DSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
@@ -95,13 +95,13 @@ namespace Nektar
             m_coordim = faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim();
             ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
         }
-        
+
          TetGeom::TetGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[],
                           const TriGeomSharedPtr faces[], const StdRegions::EdgeOrientation eorient[],
                           const StdRegions::FaceOrientation forient[])
          {
 			m_GeomShapeType = eTetrahedron;
- 
+
             /// Copy the vert shared pointers.
             m_verts.insert(m_verts.begin(), verts, verts+TetGeom::kNverts);
 
@@ -124,8 +124,8 @@ namespace Nektar
             m_coordim = verts[0]->GetCoordim();
             ASSERTL0(m_coordim > 2,"Cannot call function with dim == 2");
         }
-       
-        TetGeom::TetGeom(const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[])          
+
+        TetGeom::TetGeom(const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[])
         {
             m_GeomShapeType = eTetrahedron;
 
@@ -158,7 +158,7 @@ namespace Nektar
         }
 
         void TetGeom::SetUpLocalEdges(){
-        
+
             // find edge 0
             int i,j;
             unsigned int check;
@@ -182,7 +182,7 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 if( check < 1 )
                 {
                     std::ostringstream errstrm;
@@ -196,9 +196,9 @@ namespace Nektar
                     errstrm << "Connected faces share more than one egde. Faces ";
                     errstrm << (m_faces[0])->GetFid() << ", " << (m_faces[faceConnected])->GetFid();
                     ASSERTL0(false, errstrm.str());
-                }                
-            }           
-            
+                }
+            }
+
             // Then, set up the 3 vertical edges
             check = 0;
             for(i = 0; i < 3; i++) //Set up the vertical edge :face(1) and face(3)
@@ -243,7 +243,7 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 if( check < 1 )
                 {
                     std::ostringstream errstrm;
@@ -257,22 +257,20 @@ namespace Nektar
                     errstrm << "Connected faces share more than one egde. Faces ";
                     errstrm << (m_faces[faceConnected])->GetFid() << ", " << (m_faces[faceConnected+1])->GetFid();
                     ASSERTL0(false, errstrm.str());
-                }                
+                }
             }
-
         };
 
-        
         void TetGeom::SetUpLocalVertices(){
-        
+
             // Set up the first 2 vertices (i.e. vertex 0,1)
-            if( ( m_edges[0]->GetVid(0) == m_edges[1]->GetVid(0) ) || 
+            if( ( m_edges[0]->GetVid(0) == m_edges[1]->GetVid(0) ) ||
                 ( m_edges[0]->GetVid(0) == m_edges[1]->GetVid(1) ) )
             {
                 m_verts.push_back(m_edges[0]->GetVertex(1));
                 m_verts.push_back(m_edges[0]->GetVertex(0));
             }
-            else if( ( m_edges[0]->GetVid(1) == m_edges[1]->GetVid(0) ) || 
+            else if( ( m_edges[0]->GetVid(1) == m_edges[1]->GetVid(0) ) ||
                      ( m_edges[0]->GetVid(1) == m_edges[1]->GetVid(1) ) )
             {
                 m_verts.push_back(m_edges[0]->GetVertex(0));
@@ -306,18 +304,41 @@ namespace Nektar
                 }
             }
 
-            // set up top vertices  
-            // First, set up top vertice 3 TODO
+            // set up top vertex
+            if (m_edges[3]->GetVid(0) == m_verts[0]->GetVid())
+            {
+                m_verts.push_back(m_edges[3]->GetVertex(1));
+            }
+            else {
+                m_verts.push_back(m_edges[3]->GetVertex(0));
+            }
 
-
-            
+            // Check the other edges match up.
+            int check = 0;
+            for (int i = 4; i < 6; ++i)
+            {
+                if( (m_edges[i]->GetVid(0) == m_verts[i-3]->GetVid()
+                    && m_edges[i]->GetVid(1) == m_verts[3]->GetVid())
+                    ||(m_edges[i]->GetVid(1) == m_verts[i-3]->GetVid()
+                    && m_edges[i]->GetVid(0) == m_verts[3]->GetVid()))
+                {
+                    check++;
+                }
+            }
+            if (check != 2) {
+                std::ostringstream errstrm;
+                errstrm << "Connected edges do not share a vertex. Edges ";
+                errstrm << m_edges[3]->GetEid() << ", " << m_edges[2]->GetEid();
+                ASSERTL0(false, errstrm.str());
+            }
         };
+
         void TetGeom::SetUpEdgeOrientation(){
-        
+
             // This 2D array holds the local id's of all the vertices
-            // for every edge. For every edge, they are ordered to what we 
+            // for every edge. For every edge, they are ordered to what we
             // define as being Forwards
-            const unsigned int edgeVerts[kNedges][2] = 
+            const unsigned int edgeVerts[kNedges][2] =
                 { {0,1},
                   {1,2},
                   {0,2},
@@ -343,17 +364,17 @@ namespace Nektar
             }
 
         };
-        
+
         void TetGeom::SetUpFaceOrientation(){
-        
-           int f,i;
+
+            int f,i;
 
             // These arrays represent the vector of the A and B
             // coordinate of the local elemental coordinate system
-            // where A corresponds with the coordinate direction xi_i 
+            // where A corresponds with the coordinate direction xi_i
             // with the lowest index i (for that particular face)
             // Coordinate 'B' then corresponds to the other local
-            // coordinate (i.e. with the highest index) 
+            // coordinate (i.e. with the highest index)
             Array<OneD,NekDouble> elementAaxis(m_coordim);
             Array<OneD,NekDouble> elementBaxis(m_coordim);
 
@@ -365,7 +386,7 @@ namespace Nektar
             Array<OneD,NekDouble> faceBaxis(m_coordim);
 
             // This is the base vertex of the face (i.e. the Geometry2D)
-            // This corresponds to thevertex with local ID 0 of the 
+            // This corresponds to thevertex with local ID 0 of the
             // Geometry2D
             unsigned int baseVertex;
 
@@ -379,7 +400,7 @@ namespace Nektar
             // for every face. For every face, they are ordered in such
             // a way that the implementation below allows a unified approach
             // for all faces.
-            const unsigned int faceVerts[kNfaces][TriGeom::kNverts] =  
+            const unsigned int faceVerts[kNfaces][TriGeom::kNverts] =
                 { {0,1,2} ,
                   {0,1,3} ,
                   {1,2,3} ,
@@ -390,7 +411,7 @@ namespace Nektar
 
             unsigned int orientation;
 
-            // Loop over all the faces to set up the orientation 
+            // Loop over all the faces to set up the orientation
             for(f = 0; f < kNqfaces + kNtfaces; f++)
             {
                 // initialisation
@@ -398,11 +419,11 @@ namespace Nektar
                 elementBaxis_length = 0.0;
                 faceAaxis_length = 0.0;
                 faceBaxis_length = 0.0;
-                
+
                 dotproduct1 = 0.0;
                 dotproduct2 = 0.0;
 
-                baseVertex = m_faces[f]->GetVid(0);                
+                baseVertex = m_faces[f]->GetVid(0);
 
                 // We are going to construct the vectors representing the A and B axis
                 // of every face. These vectors will be constructed as a vector-representation
@@ -415,45 +436,45 @@ namespace Nektar
                 if( baseVertex == m_verts[ faceVerts[f][0] ]->GetVid() )
                 {
                     for(i = 0; i < m_coordim; i++)
-                    {                    
+                    {
                         elementAaxis[i] = (*m_verts[ faceVerts[f][1] ])[i] - (*m_verts[ faceVerts[f][0] ])[i];
                         elementBaxis[i] = (*m_verts[ faceVerts[f][2] ])[i] - (*m_verts[ faceVerts[f][0] ])[i];
-                    }                
+                    }
                 }
                 else if( baseVertex == m_verts[ faceVerts[f][1] ]->GetVid() )
                 {
                     for(i = 0; i < m_coordim; i++)
-                    {                    
+                    {
                         elementAaxis[i] = (*m_verts[ faceVerts[f][1] ])[i] - (*m_verts[ faceVerts[f][0] ])[i];
                         elementBaxis[i] = (*m_verts[ faceVerts[f][2] ])[i] - (*m_verts[ faceVerts[f][1] ])[i];
-                    }                
+                    }
                 }
                 else if( baseVertex == m_verts[ faceVerts[f][2] ]->GetVid() )
                 {
                     for(i = 0; i < m_coordim; i++)
-                    {                    
+                    {
                         elementAaxis[i] = (*m_verts[ faceVerts[f][1] ])[i] - (*m_verts[ faceVerts[f][2] ])[i];
                         elementBaxis[i] = (*m_verts[ faceVerts[f][2] ])[i] - (*m_verts[ faceVerts[f][0] ])[i];
-                    }                
+                    }
                 }
                 else
                 {
                     ASSERTL0(false, "Could not find matching vertex for the face");
                 }
-                
-                // Now, construct the edge-vectors of the local coordinates of 
+
+                // Now, construct the edge-vectors of the local coordinates of
                 // the Geometry2D-representation of the face
                 for(i = 0; i < m_coordim; i++)
-                { 
+                {
                     faceAaxis[i] = (*m_faces[f]->GetVertex(1))[i] - (*m_faces[f]->GetVertex(0))[i];
                     faceBaxis[i] = (*m_faces[f]->GetVertex(2))[i] - (*m_faces[f]->GetVertex(0))[i];
-                
+
                     elementAaxis_length += pow(elementAaxis[i],2);
                     elementBaxis_length += pow(elementBaxis[i],2);
                     faceAaxis_length += pow(faceAaxis[i],2);
                     faceBaxis_length += pow(faceBaxis[i],2);
                 }
-            
+
                 elementAaxis_length = sqrt(elementAaxis_length);
                 elementBaxis_length = sqrt(elementBaxis_length);
                 faceAaxis_length = sqrt(faceAaxis_length);
@@ -467,7 +488,7 @@ namespace Nektar
                 }
 
                 orientation = 0;
-                // if the innerproduct is equal to the (absolute value of the ) products of the lengths 
+                // if the innerproduct is equal to the (absolute value of the ) products of the lengths
                 // of both vectors, then, the coordinate systems will NOT be transposed
                 if( fabs(elementAaxis_length*faceAaxis_length - fabs(dotproduct1)) < NekConstants::kNekZeroTol )
                 {
@@ -485,7 +506,7 @@ namespace Nektar
                     }
 
                     // check that both these axis are indeed parallel
-                    ASSERTL1(fabs(elementBaxis_length*faceBaxis_length - fabs(dotproduct2)) < 
+                    ASSERTL1(fabs(elementBaxis_length*faceBaxis_length - fabs(dotproduct2)) <
                              NekConstants::kNekZeroTol,
                              "These vectors should be parallel");
 
@@ -508,12 +529,12 @@ namespace Nektar
                     {
                         dotproduct1 += elementAaxis[i]*faceBaxis[i];
                     }
-                    
+
                     // check that both these axis are indeed parallel
-                    ASSERTL1(fabs(elementAaxis_length*faceBaxis_length - fabs(dotproduct1)) < 
+                    ASSERTL1(fabs(elementAaxis_length*faceBaxis_length - fabs(dotproduct1)) <
                              NekConstants::kNekZeroTol,
                              "These vectors should be parallel");
- 
+
                     // if the result is negative, both axis point in reverse
                     // directions
                     if(dotproduct1 < 0.0)
@@ -529,7 +550,7 @@ namespace Nektar
                     }
 
                     // check that both these axis are indeed parallel
-                    ASSERTL1(fabs(elementBaxis_length*faceAaxis_length - fabs(dotproduct2)) < 
+                    ASSERTL1(fabs(elementBaxis_length*faceAaxis_length - fabs(dotproduct2)) <
                              NekConstants::kNekZeroTol,
                              "These vectors should be parallel");
 
@@ -573,7 +594,7 @@ namespace Nektar
         /** given local collapsed coordinate Lcoord return the value of
         physical coordinate in direction i **/
 
-        NekDouble TetGeom::GetCoord(const int i, 
+        NekDouble TetGeom::GetCoord(const int i,
                                           const Array<OneD, const NekDouble> &Lcoord)
         {
             ASSERTL1(m_state == ePtsFilled,
@@ -587,7 +608,7 @@ namespace Nektar
         void TetGeom::GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
             GeomType Gtype = eRegular;
-            
+
             FillGeom();
 
             // check to see if expansions are linear
@@ -603,8 +624,8 @@ namespace Nektar
             m_geomfactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
         }
 
-          /** \brief put all quadrature information into edge structure 
-        and backward transform 
+          /** \brief put all quadrature information into edge structure
+        and backward transform
 
         Note verts, edges, and faces are listed according to anticlockwise
         convention but points in _coeffs have to be in array format from
@@ -614,11 +635,11 @@ namespace Nektar
 
         void TetGeom::FillGeom()
         {
-    // check to see if geometry structure is already filled
+            // check to see if geometry structure is already filled
             if(m_state != ePtsFilled)
             {
                 int i,j,k;
-                int nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(0); 
+                int nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(0);
 
                 Array<OneD, unsigned int> mapArray (nFaceCoeffs);
                 Array<OneD, int>    signArray(nFaceCoeffs);
@@ -626,30 +647,24 @@ namespace Nektar
                 for(i = 0; i < kNfaces; i++)
                 {
                     m_faces[i]->FillGeom();
-                    m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray); 
-                    
+                    m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray);
                     nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(i);
-
                     for(j = 0 ; j < m_coordim; j++)
                     {
                         for(k = 0; k < nFaceCoeffs; k++)
                         {
-//                             const Array<OneD, const NekDouble> & coeffs = (*m_faces[i])[j]->GetCoeffs(); //TODO fix this
-//                             double v = signArray[k]* coeffs[k];
-//                             (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = v;
-
+                             const Array<OneD, const NekDouble> & coeffs = (*m_faces[i])[j]->GetCoeffs(); //TODO fix this
+                             double v = signArray[k]* coeffs[k];
+                             (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = v;
                         }
                     }
                 }
-                
                 for(i = 0; i < m_coordim; ++i)
                 {
                     m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(), m_xmap[i]->UpdatePhys());
                 }
-                
                 m_state = ePtsFilled;
             }
-
         }
 
 
@@ -657,7 +672,7 @@ namespace Nektar
        {
             FillGeom();
 
-            // calculate local coordinate for coord 
+            // calculate local coordinate for coord
             if(GetGtype() == eRegular)
             {   // Based on Spen's book, page 99
 
@@ -689,7 +704,6 @@ namespace Nektar
                 Lcoords[0] = 2.0*beta  - 1.0;
                 Lcoords[1] = 2.0*gamma - 1.0;
                 Lcoords[2] = 2.0*delta - 1.0;
-                
             }
             else
             {
@@ -701,12 +715,15 @@ namespace Nektar
 
 
 
-        
+
     }; //end of namespace
 }; //end of namespace
 
 //
 // $Log: TetGeom.cpp,v $
+// Revision 1.19  2009/12/17 01:47:31  bnelson
+// Fixed visual studio compiler warning.
+//
 // Revision 1.18  2009/12/15 18:09:02  cantwell
 // Split GeomFactors into 1D, 2D and 3D
 // Added generation of tangential basis into GeomFactors

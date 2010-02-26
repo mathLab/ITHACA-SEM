@@ -79,75 +79,11 @@ namespace Nektar
                 return eHexahedron;
             }
 
-
-            /// Backward transformation is evaluated at the quadrature points
-            /// \f$ u^{\delta} (\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{m(pqr)}
-            /// \hat u_{pqr} \phi_{pqr} (\xi_{1i}, \xi_{2j}, \xi_{3k})\f$
-            void BwdTrans(const Array<OneD, const NekDouble>& inarray,
-                        Array<OneD, NekDouble> &outarray);
-
-            /// Inner product of \a inarray over region with respect to the
-            /// expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(),
-            /// m_base[2]->GetBdata() and return in \a outarray.
-            /**
-             * Wrapper call to StdHexExp::IProductWRTBase
-             * Input:\n
-             * - \a inarray: array of function evaluated at the physical
-             *   collocation points
-             * Output:\n
-             * - \a outarray: array of inner product with respect to each basis
-             *   over region
-             */
-            void IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
-                                 Array<OneD, NekDouble> &outarray)
-            {
-                IProductWRTBase(m_base[0]->GetBdata(),
-                                m_base[1]->GetBdata(),
-                                m_base[2]->GetBdata(),
-                                inarray,outarray,1);
-            }
-
-            /// Forward transform from physical quadrature space stored in \a
-            /// inarray and evaluate the expansion coefficients and store in
-            /// #m_coeffs
-            void FwdTrans(const Array<OneD, const NekDouble>& inarray,
-                        Array<OneD, NekDouble> &outarray);
-
             /// Evaluate the solution at a given coordinate.
-            NekDouble PhysEvaluate(Array<OneD, const NekDouble>& coords)
-            {
-                return  StdExpansion3D::PhysEvaluate(coords);
-            }
-
-            //--------------------------
-            // Mappings
-            //--------------------------
-            void GetBoundaryMap(Array<OneD, unsigned int>& outarray);
-
-            /// Compute the local mode numbers for the element-interior modes.
-            void GetInteriorMap(Array<OneD, unsigned int>& outarray);
-
-            /// Calculate the position of a vertex in the local numbering
-            /// scheme.
-            int GetVertexMap(const int localVertexId);
-
-            /// Compute the local mode numbers for the modes along an edge.
-            void GetEdgeInteriorMap(const int eid,
-                        const EdgeOrientation edgeOrient,
-                        Array<OneD, unsigned int> &maparray,
-                        Array<OneD, int> &signarray);
-
-            /// Compute the local mode numbers for the modes on the interior of
-            /// a face.
-            void GetFaceInteriorMap(const int fid,
-                        const FaceOrientation faceOrient,
-                        Array<OneD, unsigned int> &maparray,
-                        Array<OneD, int> &signarray);
-
-            void GetFaceToElementMap(const int fid,
-                        const FaceOrientation faceOrient,
-                        Array<OneD, unsigned int> &maparray,
-                        Array<OneD, int> &signarray);
+//            NekDouble PhysEvaluate(Array<OneD, const NekDouble>& coords)
+//            {
+//                return  StdExpansion3D::PhysEvaluate(coords);
+//            }
 
 
             //-----------------------------------
@@ -280,18 +216,17 @@ namespace Nektar
             //----------------------------
 
             /// Calculate the deritive of the physical points
-            void PhysDeriv(const Array<OneD, const NekDouble>& inarray,
-                        Array<OneD, NekDouble> &out_d0,
-                        Array<OneD, NekDouble> &out_d1,
-                        Array<OneD, NekDouble> &out_d2);
+            void PhysDeriv(
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &out_d0,
+                          Array<OneD, NekDouble> &out_d1,
+                          Array<OneD, NekDouble> &out_d2);
 
-            void StdPhysDeriv(const Array<OneD, const NekDouble>& inarray,
-                        Array<OneD, NekDouble> &out_d0,
-                        Array<OneD, NekDouble> &out_d1,
-                        Array<OneD, NekDouble> &out_d2)
-            {
-                PhysDeriv(inarray, out_d0, out_d1, out_d2);
-            }
+            void StdPhysDeriv(
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &out_d0,
+                          Array<OneD, NekDouble> &out_d1,
+                          Array<OneD, NekDouble> &out_d2);
 
             void GetCoords(Array<OneD, NekDouble> &coords_0,
                         Array<OneD, NekDouble> &coords_1,
@@ -327,18 +262,102 @@ namespace Nektar
             }
 
         protected:
+            /// Backward transformation is evaluated at the quadrature points
+            /// \f$ u^{\delta} (\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{m(pqr)}
+            /// \hat u_{pqr} \phi_{pqr} (\xi_{1i}, \xi_{2j}, \xi_{3k})\f$
+            virtual void v_BwdTrans(
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray);
+
+            /// Performs the sum factorisation form of the BwdTrans operation.
+            void BwdTrans_SumFacKernel(
+                    const Array<OneD, const NekDouble>& base0, 
+                    const Array<OneD, const NekDouble>& base1,
+                    const Array<OneD, const NekDouble>& base2,
+                    const Array<OneD, const NekDouble>& inarray, 
+                          Array<OneD, NekDouble> &outarray,
+                          Array<OneD, NekDouble> &wsp,
+                    bool doCheckCollDir0,
+                    bool doCheckCollDir1,
+                    bool doCheckCollDir2);
+
+            /// Forward transform from physical quadrature space stored in \a
+            /// inarray and evaluate the expansion coefficients and store in
+            /// #m_coeffs
+            virtual void v_FwdTrans(
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray);
+
+            /// Inner product of \a inarray over region with respect to the
+            /// expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(),
+            /// m_base[2]->GetBdata() and return in \a outarray.
+            /**
+             * Wrapper call to StdHexExp::IProductWRTBase
+             * Input:\n
+             * - \a inarray: array of function evaluated at the physical
+             *   collocation points
+             * Output:\n
+             * - \a outarray: array of inner product with respect to each basis
+             *   over region
+             */
+            virtual void v_IProductWRTBase(
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray);
 
             /// Calculate the inner product of inarray with respect to the
             /// basis B = base0 * base1 * base2.
-            void IProductWRTBase(const Array<OneD, const NekDouble>& bx,
-                                 const Array<OneD, const NekDouble>& by,
-                                 const Array<OneD, const NekDouble>& bz,
-                                 const Array<OneD, const NekDouble>& inarray,
-                                 Array<OneD, NekDouble> & outarray,
-                                 int coll_check);
+            virtual void v_IProductWRTBase(
+                    const Array<OneD, const NekDouble>& bx,
+                    const Array<OneD, const NekDouble>& by,
+                    const Array<OneD, const NekDouble>& bz,
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> & outarray,
+                    int coll_check);
+
+            // the arguments doCheckCollDir0 and doCheckCollDir1 allow you to specify whether
+            // to check if the basis has collocation properties (i.e. for the classical spectral 
+            // element basis, In this case the 1D 'B' matrix is equal to the identity matrix
+            // which can be exploited to speed up the calculations).
+            // However, as this routine also allows to pass the matrix 'DB' (derivative of the basis),
+            // the collocation property cannot always be used. Therefor follow this rule:
+            // if base0 == m_base[0]->GetBdata() --> set doCheckCollDir0 == true;
+            //    base1 == m_base[1]->GetBdata() --> set doCheckCollDir1 == true;
+            //    base0 == m_base[0]->GetDbdata() --> set doCheckCollDir0 == false;
+            //    base1 == m_base[1]->GetDbdata() --> set doCheckCollDir1 == false;
+            void IProductWRTBase_SumFacKernel(
+                    const Array<OneD, const NekDouble>& base0, 
+                    const Array<OneD, const NekDouble>& base1,
+                    const Array<OneD, const NekDouble>& base2,
+                    const Array<OneD, const NekDouble>& inarray, 
+                          Array<OneD, NekDouble> &outarray,
+                          Array<OneD, NekDouble> &wsp,
+                    bool doCheckCollDir0,
+                    bool doCheckCollDir1,
+                    bool doCheckCollDir2);
+                                                                                             
+            virtual NekDouble v_PhysEvaluate(Array<OneD,
+                                const NekDouble>& Lcoords);
 
         private:
+            virtual void v_BwdTrans_SumFac(
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray);
+                          
+            virtual void v_IProductWRTBase_MatOp(
+                    const Array<OneD, const NekDouble>& inarray, 
+                          Array<OneD, NekDouble> &outarray);
+                          
+            virtual void v_IProductWRTBase_SumFac(
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray);
+                          
+            void MultiplyByQuadratureMetric(
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray);
 
+            //---------------------------
+            // Helper functions
+            //---------------------------
             virtual int  v_GetNverts() const;
             virtual int  v_GetNedges() const;
             virtual int  v_GetNfaces() const;
@@ -346,6 +365,10 @@ namespace Nektar
             virtual int  v_NumBndryCoeffs() const;
             virtual int  v_GetFaceNcoeffs(const int i) const;
             virtual int  v_GetFaceIntNcoeffs(const int i) const;
+
+            //--------------------------
+            // Mappings
+            //--------------------------
             virtual void v_GetBoundaryMap(Array<OneD, unsigned int>& outarray);
             virtual void v_GetInteriorMap(Array<OneD, unsigned int>& outarray);
             virtual int  v_GetVertexMap(const int localVertexId);
@@ -361,6 +384,7 @@ namespace Nektar
                                 const FaceOrientation faceOrient,
                                 Array<OneD, unsigned int> &maparray,
                                 Array<OneD, int>& signarray);
+                                
             virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey);
             virtual DNekMatSharedPtr v_CreateStdMatrix(
                                 const StdMatrixKey &mkey);
@@ -371,9 +395,7 @@ namespace Nektar
                                      Array<OneD, NekDouble> &coords_z);
             virtual NekDouble v_Integral(const Array<OneD,
                                 const NekDouble>& inarray );
-            virtual void v_IProductWRTBase(const Array<OneD,
-                                const NekDouble>& inarray,
-                                Array<OneD, NekDouble> &outarray);
+                                
             virtual void v_FillMode(const int mode,
                                 Array<OneD, NekDouble> &outarray);
             virtual void v_PhysDeriv(const Array<OneD,
@@ -390,12 +412,7 @@ namespace Nektar
                                 Array<OneD, NekDouble> &out_d0,
                                 Array<OneD, NekDouble> &out_d1,
                                 Array<OneD, NekDouble> &out_d2);
-            virtual void v_BwdTrans(const Array<OneD, const NekDouble>& inarray,
-                                    Array<OneD, NekDouble> &outarray);
-            virtual void v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
-                                    Array<OneD, NekDouble> &outarray);
-            virtual NekDouble v_PhysEvaluate(Array<OneD,
-                                const NekDouble>& Lcoords);
+
             virtual int  v_GetEdgeNcoeffs(const int i) const;
             virtual void v_WriteToFile(std::ofstream &outfile,
                                 OutputFormat format,
@@ -403,9 +420,18 @@ namespace Nektar
                                 std::string var = "v");
             virtual void v_WriteCoeffsToFile(std::ofstream &outfile);
         };
+
         typedef boost::shared_ptr<StdHexExp> StdHexExpSharedPtr;
 
 
+        inline void StdHexExp::StdPhysDeriv(
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD, NekDouble> &out_d0,
+                      Array<OneD, NekDouble> &out_d1,
+                      Array<OneD, NekDouble> &out_d2)
+        {
+            PhysDeriv(inarray, out_d0, out_d1, out_d2);
+        }
     } //end of namespace
 } //end of namespace
 
@@ -413,6 +439,17 @@ namespace Nektar
 
 /**
  * $Log: StdHexExp.h,v $
+ * Revision 1.30  2009/12/15 18:09:02  cantwell
+ * Split GeomFactors into 1D, 2D and 3D
+ * Added generation of tangential basis into GeomFactors
+ * Updated ADR2DManifold solver to use GeomFactors for tangents
+ * Added <GEOMINFO> XML session section support in MeshGraph
+ * Fixed const-correctness in VmathArray
+ * Cleaned up LocalRegions code to generate GeomFactors
+ * Removed GenSegExp
+ * Temporary fix to SubStructuredGraph
+ * Documentation for GlobalLinSys and GlobalMatrix classes
+ *
  * Revision 1.29  2009/11/10 19:02:20  sehunchun
  * *** empty log message ***
  *

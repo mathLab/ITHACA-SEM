@@ -28,7 +28,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: Header file of optimisation parameters class
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -46,8 +46,8 @@
 
 namespace Nektar
 {
-    namespace NekOptimize 
-    {        
+    namespace NekOptimize
+    {
 
         void LoadElementalOptimizationParameters(const std::string& fileName)
         {
@@ -58,14 +58,14 @@ namespace Nektar
         {
             TiXmlDocument doc(fileName);
             bool loadOkay = doc.LoadFile();
-            
-            ASSERTL0(loadOkay, (std::string("Unable to load file: ") + 
+
+            ASSERTL0(loadOkay, (std::string("Unable to load file: ") +
                                 fileName).c_str());
 
             TiXmlHandle docHandle(&doc);
             TiXmlElement* master    = docHandle.FirstChildElement("NEKTAR").Element();
             TiXmlElement* paramList = docHandle.FirstChildElement("NEKTAR").FirstChildElement("ELEMENTALOPTIMIZATIONPARAMETERS").Element();
-                
+
             ASSERTL0(master   , "Unable to find NEKTAR tag in file.");
             ASSERTL0(paramList, "Unable to find ELEMENTALOPTIMIZATIONPARAMETERS tag in file.");
 
@@ -74,8 +74,13 @@ namespace Nektar
                                 StdRegions::eStdNodalTriExp,            \
                                 StdRegions::eQuadExp,                   \
                                 StdRegions::eTriExp,                    \
-                                StdRegions::eNodalTriExp))                  
-            
+                                StdRegions::eNodalTriExp))
+
+#define OPTIMIZE3DELEMENTS (4,  (StdRegions::eStdHexExp,                 \
+                                StdRegions::eHexExp,                    \
+                                StdRegions::eStdTetExp,                 \
+                                StdRegions::eTetExp))
+
 #define OPTIMIZEOPERATIONS (8, (eBwdTrans,                      \
                                 eIProductWRTBase,               \
                                 eIProductWRTDerivBase,          \
@@ -84,8 +89,8 @@ namespace Nektar
                                 eLaplacianMatrixIJOp,           \
                                 eWeakDerivMatrixOp,             \
                                 eHelmholtzMatrixOp))
-            
-#define PARSE_OPERATIONS(z,n,elType)                                    \
+
+#define PARSE_2DOPERATIONS(z,n,elType)                                    \
             {                                                           \
                 const ElementalOptimizationOperationType opType = BOOST_PP_ARRAY_ELEM(n,OPTIMIZEOPERATIONS); \
                 TiXmlElement* operationType = elementType->FirstChildElement(ElementalOptimizationOperationTypeMap[n]); \
@@ -114,23 +119,74 @@ namespace Nektar
                         ASSERTL0(err == TIXML_SUCCESS, (std::string("Unable to read DO_MAT_OP attribute VALUE for ") + \
                                                         std::string(StdRegions::ElementTypeMap[elType]) + std::string("_") + \
                                                         std::string(ElementalOptimizationOperationTypeMap[opType]) + std::string("."))); \
-                        ElementalOptimization<elType,opType>::SetDoMatOp(nummodes0,nummodes1,(bool) value); \
+                        ElementalOptimization<elType,opType,2>::SetDoMatOp(nummodes0,nummodes1,(bool) value); \
                         arrayElement = arrayElement->NextSiblingElement(); \
                     }                                                   \
                 }                                                       \
-            }                                                           
+            }
 
-#define PARSE_ELEMENTS(z,n,i)                                           \
+#define PARSE_3DOPERATIONS(z,n,elType)                                    \
+            {                                                           \
+                const ElementalOptimizationOperationType opType = BOOST_PP_ARRAY_ELEM(n,OPTIMIZEOPERATIONS); \
+                TiXmlElement* operationType = elementType->FirstChildElement(ElementalOptimizationOperationTypeMap[n]); \
+                if(operationType)                                       \
+                {                                                       \
+                    TiXmlElement* arrayElement = operationType->FirstChildElement("DO_MAT_OP"); \
+                                                                        \
+                    ASSERTL0(arrayElement, (std::string("Unable to find DO_MAT_OP tag for ") + \
+                                            std::string(StdRegions::ElementTypeMap[elType]) + std::string("_") + \
+                                            std::string(ElementalOptimizationOperationTypeMap[opType]) + std::string("."))); \
+                    while(arrayElement)                                 \
+                    {                                                   \
+                        int nummodes0;                                  \
+                        int nummodes1;                                  \
+                        int nummodes2;                                  \
+                        int value;                                      \
+                        int err;                                        \
+                        err = arrayElement->QueryIntAttribute("NUMMODES0", &nummodes0); \
+                        ASSERTL0(err == TIXML_SUCCESS, (std::string("Unable to read DO_MAT_OP attribute NUMMODES0 for ") + \
+                                                        std::string(StdRegions::ElementTypeMap[elType]) + std::string("_") + \
+                                                        std::string(ElementalOptimizationOperationTypeMap[opType]) + std::string("."))); \
+                        err = arrayElement->QueryIntAttribute("NUMMODES1", &nummodes1); \
+                        ASSERTL0(err == TIXML_SUCCESS, (std::string("Unable to read DO_MAT_OP attribute NUMMODES1 for ") + \
+                                                        std::string(StdRegions::ElementTypeMap[elType]) + std::string("_") + \
+                                                        std::string(ElementalOptimizationOperationTypeMap[opType]) + std::string("."))); \
+                        err = arrayElement->QueryIntAttribute("NUMMODES2", &nummodes2); \
+                        ASSERTL0(err == TIXML_SUCCESS, (std::string("Unable to read DO_MAT_OP attribute NUMMODES2 for ") + \
+                                                        std::string(StdRegions::ElementTypeMap[elType]) + std::string("_") + \
+                                                        std::string(ElementalOptimizationOperationTypeMap[opType]) + std::string("."))); \
+                        err = arrayElement->QueryIntAttribute("VALUE", &value); \
+                        ASSERTL0(err == TIXML_SUCCESS, (std::string("Unable to read DO_MAT_OP attribute VALUE for ") + \
+                                                        std::string(StdRegions::ElementTypeMap[elType]) + std::string("_") + \
+                                                        std::string(ElementalOptimizationOperationTypeMap[opType]) + std::string("."))); \
+                        ElementalOptimization<elType,opType,3>::SetDoMatOp(nummodes0,nummodes1,nummodes2,(bool) value); \
+                        arrayElement = arrayElement->NextSiblingElement(); \
+                    }                                                   \
+                }                                                       \
+            }
+
+#define PARSE_2DELEMENTS(z,n,i)                                           \
             {                                                           \
                 const StdRegions::ElementType el = BOOST_PP_ARRAY_ELEM(n,OPTIMIZE2DELEMENTS); \
                 TiXmlElement* elementType = paramList->FirstChildElement(StdRegions::ElementTypeMap[el]); \
                 if(elementType)                                         \
                 {                                                       \
-                    BOOST_PP_REPEAT_FROM_TO(0,BOOST_PP_ARRAY_SIZE(OPTIMIZEOPERATIONS),PARSE_OPERATIONS,BOOST_PP_ARRAY_ELEM(n,OPTIMIZE2DELEMENTS)); \
+                    BOOST_PP_REPEAT_FROM_TO(0,BOOST_PP_ARRAY_SIZE(OPTIMIZEOPERATIONS),PARSE_2DOPERATIONS,BOOST_PP_ARRAY_ELEM(n,OPTIMIZE2DELEMENTS)); \
                 }                                                       \
-            }                 
-            
-            BOOST_PP_REPEAT_FROM_TO(0,BOOST_PP_ARRAY_SIZE(OPTIMIZE2DELEMENTS),PARSE_ELEMENTS,dummy);
+            }
+
+#define PARSE_3DELEMENTS(z,n,i)                                           \
+            {                                                           \
+                const StdRegions::ElementType el = BOOST_PP_ARRAY_ELEM(n,OPTIMIZE3DELEMENTS); \
+                TiXmlElement* elementType = paramList->FirstChildElement(StdRegions::ElementTypeMap[el]); \
+                if(elementType)                                         \
+                {                                                       \
+                    BOOST_PP_REPEAT_FROM_TO(0,BOOST_PP_ARRAY_SIZE(OPTIMIZEOPERATIONS),PARSE_3DOPERATIONS,BOOST_PP_ARRAY_ELEM(n,OPTIMIZE3DELEMENTS)); \
+                }                                                       \
+            }
+
+            BOOST_PP_REPEAT_FROM_TO(0,BOOST_PP_ARRAY_SIZE(OPTIMIZE2DELEMENTS),PARSE_2DELEMENTS,dummy);
+            BOOST_PP_REPEAT_FROM_TO(0,BOOST_PP_ARRAY_SIZE(OPTIMIZE3DELEMENTS),PARSE_3DELEMENTS,dummy);
         }
 
         void DumpElementalOptimizationParameters(std::ostream &outfile)
@@ -140,19 +196,32 @@ namespace Nektar
 
         void DumpOptimizationParametersInterface::DumpElemental2DOptimizationParameters(std::ostream &outfile)
         {
-#define DUMP_OPERATIONS(z,n,elType)                                     \
+#define DUMP_2DOPERATIONS(z,n,elType)                                     \
             {                                                           \
                 const ElementalOptimizationOperationType opType = BOOST_PP_ARRAY_ELEM(n,OPTIMIZEOPERATIONS); \
-                ElementalOptimization<elType,opType>::DumpParameters(outfile); \
-            }                                     
+                ElementalOptimization<elType,opType,2>::DumpParameters(outfile); \
+            }
 
-#define DUMP_ELEMENTS(z,n,i)                                            \
+#define DUMP_2DELEMENTS(z,n,i)                                            \
             {                                                           \
                 const StdRegions::ElementType el = BOOST_PP_ARRAY_ELEM(n,OPTIMIZE2DELEMENTS); \
-                BOOST_PP_REPEAT_FROM_TO(0,BOOST_PP_ARRAY_SIZE(OPTIMIZEOPERATIONS),DUMP_OPERATIONS,BOOST_PP_ARRAY_ELEM(n,OPTIMIZE2DELEMENTS)); \
-            }          
-            
-            BOOST_PP_REPEAT_FROM_TO(0,BOOST_PP_ARRAY_SIZE(OPTIMIZE2DELEMENTS),DUMP_ELEMENTS,dummy);
+                BOOST_PP_REPEAT_FROM_TO(0,BOOST_PP_ARRAY_SIZE(OPTIMIZEOPERATIONS),DUMP_2DOPERATIONS,BOOST_PP_ARRAY_ELEM(n,OPTIMIZE2DELEMENTS)); \
+            }
+
+#define DUMP_3DOPERATIONS(z,n,elType)                                     \
+            {                                                           \
+                const ElementalOptimizationOperationType opType = BOOST_PP_ARRAY_ELEM(n,OPTIMIZEOPERATIONS); \
+                ElementalOptimization<elType,opType,3>::DumpParameters(outfile); \
+            }
+
+#define DUMP_3DELEMENTS(z,n,i)                                            \
+            {                                                           \
+                const StdRegions::ElementType el = BOOST_PP_ARRAY_ELEM(n,OPTIMIZE3DELEMENTS); \
+                BOOST_PP_REPEAT_FROM_TO(0,BOOST_PP_ARRAY_SIZE(OPTIMIZEOPERATIONS),DUMP_3DOPERATIONS,BOOST_PP_ARRAY_ELEM(n,OPTIMIZE3DELEMENTS)); \
+            }
+
+            BOOST_PP_REPEAT_FROM_TO(0,BOOST_PP_ARRAY_SIZE(OPTIMIZE2DELEMENTS),DUMP_2DELEMENTS,dummy);
+            BOOST_PP_REPEAT_FROM_TO(0,BOOST_PP_ARRAY_SIZE(OPTIMIZE3DELEMENTS),DUMP_3DELEMENTS,dummy);
         }
 
 

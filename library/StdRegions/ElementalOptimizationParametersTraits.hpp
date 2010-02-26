@@ -28,7 +28,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: Header file of optimisation parameters class
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -43,10 +43,10 @@
 
 namespace Nektar
 {
-    namespace NekOptimize 
-    {       
+    namespace NekOptimize
+    {
 
-        // ===============================================================================
+        // ==================================================================
         // Class to hold the boolean values of the optimisation parameters
         // ============
         // if - value = true :  matrix operations
@@ -61,7 +61,7 @@ namespace Nektar
         template<int dim>
         class BoolContainer;
 
-        static const int MaxBoolContainerDim = 20;
+        static const int MaxBoolContainerDim = 18;
 
         // Implementation for 2D expansions
         template<>
@@ -81,17 +81,50 @@ namespace Nektar
                 m_data[i][j] = a;
             }
 
-            bool GetValue(int i, int j) const 
+            bool GetValue(int i, int j) const
             {
                 ASSERTL1((i>-1)&&(i<MaxBoolContainerDim),"Index out of range");
                 ASSERTL1((j>-1)&&(j<MaxBoolContainerDim),"Index out of range");
 
                 return m_data[i][j];
             }
-            
+
         private:
             bool m_data[MaxBoolContainerDim][MaxBoolContainerDim];
         };
+
+        // Implementation for 3D expansions
+        template<>
+        class BoolContainer<3>
+        {
+        public:
+            BoolContainer()
+            {
+                std::fill_n(&m_data[0][0][0],MaxBoolContainerDim*MaxBoolContainerDim*MaxBoolContainerDim,false);
+            }
+
+            void SetValue(int i, int j, int k, bool a)
+            {
+                ASSERTL1((i>-1)&&(i<MaxBoolContainerDim),"Index out of range");
+                ASSERTL1((j>-1)&&(j<MaxBoolContainerDim),"Index out of range");
+                ASSERTL1((k>-1)&&(k<MaxBoolContainerDim),"Index out of range");
+
+                m_data[i][j][k] = a;
+            }
+
+            bool GetValue(int i, int j, int k) const
+            {
+                ASSERTL1((i>-1)&&(i<MaxBoolContainerDim),"Index out of range");
+                ASSERTL1((j>-1)&&(j<MaxBoolContainerDim),"Index out of range");
+                ASSERTL1((k>-1)&&(k<MaxBoolContainerDim),"Index out of range");
+
+                return m_data[i][j][k];
+            }
+
+        private:
+            bool m_data[MaxBoolContainerDim][MaxBoolContainerDim][MaxBoolContainerDim];
+        };
+
 
         //default implementation (e.g. for 1D and 3D which are not implemented yet)
         template<>
@@ -108,14 +141,14 @@ namespace Nektar
                 m_data = a;
             }
 
-            bool GetValue() const 
+            bool GetValue() const
             {
                 return m_data;
             }
-            
+
         private:
             bool m_data;
-        }; 
+        };
         // ===============================================================================
 
 
@@ -138,55 +171,92 @@ namespace Nektar
         class ElementalOptimizationParametersTraits<StdRegions::eStdQuadExp>
         {
         public:
-            static int const elementDim = 2;         
-            typedef BoolContainer<elementDim> DataHolderType;   
-        };     
+            static int const elementDim = 2;
+            typedef BoolContainer<elementDim> DataHolderType;
+        };
 
         template<>
         class ElementalOptimizationParametersTraits<StdRegions::eStdTriExp>
         {
-        public:          
-            static int const elementDim = 2;         
+        public:
+            static int const elementDim = 2;
             typedef BoolContainer<elementDim> DataHolderType;
-        };     
+        };
 
         template<>
         class ElementalOptimizationParametersTraits<StdRegions::eStdNodalTriExp>
         {
-        public:     
-            static int const elementDim = 2;         
-            typedef BoolContainer<elementDim> DataHolderType;  
+        public:
+            static int const elementDim = 2;
+            typedef BoolContainer<elementDim> DataHolderType;
         };
 
         template<>
         class ElementalOptimizationParametersTraits<StdRegions::eQuadExp>
         {
-        public:     
-            static int const elementDim = 2;         
+        public:
+            static int const elementDim = 2;
             typedef BoolContainer<elementDim> DataHolderType;
-        };     
+        };
 
         template<>
         class ElementalOptimizationParametersTraits<StdRegions::eTriExp>
         {
-        public:   
-            static int const elementDim = 2;         
-            typedef BoolContainer<elementDim> DataHolderType;       
-        };     
+        public:
+            static int const elementDim = 2;
+            typedef BoolContainer<elementDim> DataHolderType;
+        };
 
         template<>
         class ElementalOptimizationParametersTraits<StdRegions::eNodalTriExp>
         {
-        public:  
-            static int const elementDim = 2;         
-            typedef BoolContainer<elementDim> DataHolderType;         
+        public:
+            static int const elementDim = 2;
+            typedef BoolContainer<elementDim> DataHolderType;
         };
+
+
+        // ----------------------
+        // 3D elements - NEEDS FIXING
+        // ----------------------
+        template<>
+        class ElementalOptimizationParametersTraits<StdRegions::eStdHexExp>
+        {
+        public:
+            static int const elementDim = 3;
+            typedef BoolContainer<elementDim> DataHolderType;
+        };
+
+        template<>
+        class ElementalOptimizationParametersTraits<StdRegions::eHexExp>
+        {
+        public:
+            static int const elementDim = 3;
+            typedef BoolContainer<elementDim> DataHolderType;
+        };
+
+        template<>
+        class ElementalOptimizationParametersTraits<StdRegions::eStdTetExp>
+        {
+        public:
+            static int const elementDim = 3;
+            typedef BoolContainer<elementDim> DataHolderType;
+        };
+
+        template<>
+        class ElementalOptimizationParametersTraits<StdRegions::eTetExp>
+        {
+        public:
+            static int const elementDim = 3;
+            typedef BoolContainer<elementDim> DataHolderType;
+        };
+
         // ===============================================================================
 
         // ===============================================================================
         // Dump policy of the ElementalOptimizationParameters class
         // ============
-        
+
         // Default implementation
         template<int dim>
         class ElementalOptimizationParametersDumpPolicy;
@@ -210,7 +280,7 @@ namespace Nektar
                     outfile << right << std::setw(4) << "----";
                 }
                 outfile << endl;
-                
+
                 for(i = 0; i < MaxBoolContainerDim; i++)
                 {
                     outfile << std::setw(2) << i+2 << std::setw(1) << "|";
@@ -222,6 +292,43 @@ namespace Nektar
                 }
             }
         };
+
+        template<>
+        class ElementalOptimizationParametersDumpPolicy<3>
+        {
+        public:
+            static void DumpElementalOptimizationParameters(std::ostream &outfile, BoolContainer<3> data)
+            {
+                int k = 0;
+                for (k = 0; k < MaxBoolContainerDim; ++k)
+                {
+                    int i,j;
+                    outfile << std::setw(2) << "  " << std::setw(1) << "|";
+                    for(i = 0; i < MaxBoolContainerDim; i++)
+                    {
+                        outfile << std::right << std::setw(3) << i+2 << std::setw(1) << " ";
+                    }
+                    outfile << std::endl;
+                    outfile << "---";
+                    for(i = 0; i < MaxBoolContainerDim; i++)
+                    {
+                        outfile << right << std::setw(4) << "----";
+                    }
+                    outfile << endl;
+
+                    for(i = 0; i < MaxBoolContainerDim; i++)
+                    {
+                        outfile << std::setw(2) << i+2 << std::setw(1) << "|";
+                        for( j = 0; j < MaxBoolContainerDim; j++)
+                        {
+                            outfile << std::right << std::setw(3)  << data.GetValue(i,j,k) << std::setw(1) <<" ";
+                        }
+                        outfile << std::endl;
+                    }
+                }
+            }
+        };
+
         // ===============================================================================
 
     } // end of namespace

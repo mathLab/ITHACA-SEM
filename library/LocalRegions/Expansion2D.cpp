@@ -484,7 +484,6 @@ namespace Nektar
                     {
                         if(nvarcoeffs>0)
                         {
-                            cout << "Directional derivative " << endl;
                             DNekScalMat &Dmat = *v_GetLocMatrix(StdRegions::eWeakDirectionalDeriv,
                                                                 mkey.GetVariableCoefficient(i),matrixid+i*10000);
                             Mat = Mat + Dmat*invMass*Transpose(Dmat);
@@ -492,8 +491,6 @@ namespace Nektar
 
                         else
                         {
-                            cout << "Eulerian derivative " << endl;
-
                             DNekScalMat &Dmat = *v_GetLocMatrix(DerivType[i]);
                             Mat = Mat + Dmat*invMass*Transpose(Dmat);
                         }
@@ -1004,6 +1001,9 @@ namespace Nektar
 
 /** 
  *    $Log: Expansion2D.cpp,v $
+ *    Revision 1.24  2010/02/19 13:58:07  sehunchun
+ *    *** empty log message ***
+ *
  *    Revision 1.23  2010/01/11 20:52:16  cantwell
  *    Fixed HDGHelmholtz solver for embedded 2D expansion in 3D coordinate system.
  *    Fixed inconsistent MatrixTypeMap in StdRegions.

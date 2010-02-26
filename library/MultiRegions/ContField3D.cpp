@@ -41,16 +41,12 @@ namespace Nektar
   {
 
         ContField3D::ContField3D(void):
-            DisContField3D(),
-            m_bndCondExpansions(),
-            m_bndConditions()
+            DisContField3D()
         {
         }
 
         ContField3D::ContField3D(const ContField3D &In):
-            DisContField3D(In),
-            m_bndCondExpansions(In.m_bndCondExpansions),
-            m_bndConditions(In.m_bndConditions)
+            DisContField3D(In)
         {
         }
 
@@ -58,13 +54,12 @@ namespace Nektar
                                  SpatialDomains::BoundaryConditions &bcs, 
                                  const int bc_loc,
                                  const GlobalSysSolnType solnType):
-            DisContField3D(graph3D,solnType,false),
-            m_bndCondExpansions(),
-            m_bndConditions()
+            DisContField3D(graph3D,bcs,solnType,false)
         {
-            GenerateBoundaryConditionExpansion(graph3D,bcs,bcs.GetVariable(bc_loc));
-            EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph3D);
+            cout << "start contfield3d constructor." << endl;
+//            GenerateBoundaryConditionExpansion(graph3D,bcs,bcs.GetVariable(bc_loc));
+//            EvaluateBoundaryConditions();
+//            ApplyGeomInfo(graph3D);
             
             map<int,int> periodicFaces;
             map<int,int> periodicEdges;
@@ -85,20 +80,18 @@ namespace Nektar
                                  SpatialDomains::BoundaryConditions &bcs, 
                                  const std::string variable,
                                  const GlobalSysSolnType solnType):
-            DisContField3D(graph3D,solnType,false),
-            m_bndCondExpansions(),
-            m_bndConditions()
+            DisContField3D(graph3D,bcs,solnType,false)
         {
-            GenerateBoundaryConditionExpansion(graph3D, bcs, variable);
-            EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph3D);
+//            GenerateBoundaryConditionExpansion(graph3D, bcs, variable);
+//            EvaluateBoundaryConditions();
+//            ApplyGeomInfo(graph3D);
             
             map<int,int> periodicFaces;
             map<int,int> periodicEdges;
             map<int,int> periodicVertices;
             GetPeriodicFaces(graph3D,bcs,variable,periodicVertices,periodicEdges,periodicFaces);
 
-           m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
                                                                                     m_bndCondExpansions,
                                                                                     m_bndConditions,
                                                                                     periodicVertices,
@@ -107,7 +100,7 @@ namespace Nektar
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
-
+/*
         ContField3D::ContField3D(const LibUtilities::BasisKey &Ba,
                                  const LibUtilities::BasisKey &Bb,
                                  const LibUtilities::BasisKey &Bc,
@@ -116,14 +109,8 @@ namespace Nektar
                                  const int bc_loc,
                                  const LibUtilities::PointsType TetNb,
                                  const GlobalSysSolnType solnType):
-            DisContField3D(graph3D,solnType,false),
-            m_bndCondExpansions(),
-            m_bndConditions()
+            DisContField3D(graph3D,bcs,solnType,false)
         {
-            GenerateBoundaryConditionExpansion(graph3D,bcs,bcs.GetVariable(bc_loc));
-            EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph3D);
-            
             map<int,int> periodicFaces;
             map<int,int> periodicEdges;
             map<int,int> periodicVertices;
@@ -170,40 +157,11 @@ namespace Nektar
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
-
+*/
         ContField3D::~ContField3D()
         {
         }
 
-        void ContField3D::GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph3D &graph3D,
-                                                             SpatialDomains::BoundaryConditions &bcs, 
-                                                             const std::string variable)
-        {
-            int cnt1  = 0;
-            int cnt2  = 0;
-            SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();   
-
-            int nbnd = bregions.size();
-
-            // count the number of non-periodic boundary regions
-            for(int i = 0; i < nbnd; ++i)
-            {
-                if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType() != SpatialDomains::ePeriodic )
-                {
-                    cnt1++;
-                    if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType() == SpatialDomains::eDirichlet )
-                    {
-                        cnt2++;
-                    }
-                }
-            }
-            m_numDirBndCondExpansions = cnt2;
-            m_bndCondExpansions  = Array<OneD,MultiRegions::ExpList2DSharedPtr>(cnt1);
-            m_bndConditions      = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt1);
-            
-            SetBoundaryConditionExpansion(graph3D,bcs,variable,m_bndCondExpansions,m_bndConditions);
-        }
 
         void ContField3D::FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                          Array<OneD,       NekDouble> &outarray,

@@ -94,7 +94,7 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
 void MakeOkFile(std::string Demo, std::string input, std::string info)
 {
 
-    RegressBase Test("../builds/Demos/MultiRegions/",Demo,input,"Demos/MultiRegions/OkFiles/");
+    RegressBase Test(NEKTAR_BIN_DIR,Demo,input,"Demos/MultiRegions/OkFiles/");
     int fail;
 
 

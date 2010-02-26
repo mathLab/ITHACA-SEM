@@ -124,9 +124,14 @@ namespace Nektar
              *  \param coords the coordinates of the single point
              *  \return returns the value of the expansion at the single point
              */
-            NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords);
+            NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords)
+            {
+                return v_PhysEvaluate(coords);
+            }
         
         protected:
+
+            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords);
 
         private:
 
@@ -140,10 +145,8 @@ namespace Nektar
                 return 3; 
             }
 
-            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
-            {
-                return PhysEvaluate(coords);
-            }
+            /// Writes VTK geometry information for this expansion.
+            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile);
         };
     } //end of namespace
 } //end of namespace
@@ -152,6 +155,9 @@ namespace Nektar
 
 /**
  * $Log: StdExpansion3D.h,v $
+ * Revision 1.19  2008/09/16 13:37:03  pvos
+ * Restructured the LocalToGlobalMap classes
+ *
  * Revision 1.18  2008/07/04 10:18:40  pvos
  * Some updates
  *

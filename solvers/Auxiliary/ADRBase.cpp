@@ -71,7 +71,8 @@ namespace Nektar
                      bool UseContinuousField)
     {
         SpatialDomains::MeshGraph graph;
-
+        m_filename = fileNameString;
+        
         // Read the geometry and the expansion information
         m_graph = graph.Read(fileNameString);
 
@@ -330,6 +331,16 @@ namespace Nektar
 	  {
 	    m_fintime = 0;
 	  }
+      
+      // Read in spatial data
+      int nq = m_fields[0]->GetNpoints();
+      m_spatialParameters = MemoryManager<SpatialDomains::SpatialParameters>
+                                        ::AllocateSharedPtr(nq);
+      m_spatialParameters->Read(m_filename);
+      
+      Array<OneD, NekDouble> x(nq), y(nq), z(nq);
+      m_fields[0]->GetCoords(x,y,z);
+      m_spatialParameters->EvaluateParameters(x,y,z);
       
       ScanForHistoryPoints();
     }
@@ -1259,6 +1270,9 @@ namespace Nektar
      */
     int ADRBase::NoCaseStringCompare(const string & s1, const string& s2)
     {
+        //if (s1.size() < s2.size()) return -1;
+        //if (s1.size() > s2.size()) return 1;
+        
         string::const_iterator it1=s1.begin();
         string::const_iterator it2=s2.begin();
 
@@ -1270,17 +1284,21 @@ namespace Nektar
                 // return -1 to indicate smaller than, 1 otherwise
                 return (::toupper(*it1)  < ::toupper(*it2)) ? -1 : 1;
             }
+
             //proceed to the next character in each string
             ++it1;
             ++it2;
         }
-        size_t size1=s1.size(), size2=s2.size();// cache lengths
+
+        size_t size1=s1.size();
+        size_t size2=s2.size();// cache lengths
 
         //return -1,0 or 1 according to strings' lengths
         if (size1==size2)
         {
             return 0;
         }
+
         return (size1 < size2) ? -1 : 1;
     }
 
@@ -1311,6 +1329,12 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.26  2010/02/02 13:53:26  cantwell
+* Moved reading in of history data to separate SpatialDomains class.
+* Updated AlievPanfilov demo to move history specification.
+* Replaced FindNektar line and NEKTAR_BIN_DIR def in regressionTests
+* CMakeLists.txt as this is required to locate the regression test execs.
+*
 * Revision 1.25  2010/01/27 15:55:57  cantwell
 * Fixed incorrect ordering of history point data.
 * Fixed parsing of session name when session filename contains multiple

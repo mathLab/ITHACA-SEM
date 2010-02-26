@@ -227,9 +227,17 @@ namespace Nektar
             Vmath::Vsub(ntot, sol, 1, m_phys, 1, wsp, 1);
             Vmath::Vmul(ntot, wsp, 1, wsp, 1, wsp, 1);
 
-            val = sqrt(v_Integral(wsp));
-
-            return val;
+            val = v_Integral(wsp);
+            
+            // if val too small, sqrt returns nan.
+            if (fabs(val) < NekConstants::kNekZeroTol)
+            {
+                return 0.0;
+            }
+            else
+            {
+                return sqrt(val);
+            }
         }
 
         NekDouble StdExpansion::L2()
@@ -940,90 +948,33 @@ namespace Nektar
     
     }
 
-        void StdExpansion::WriteVtkPieceHeader(std::ofstream &outfile)
-        {
-            int i,j;
-            int coordim  = GetCoordim();
-            int nquad0 = GetNumPoints(0);
-            int nquad1 = GetNumPoints(1);
-
-            Array<OneD,NekDouble> coords[3];
-            coords[0] = Array<OneD,NekDouble>(nquad0*nquad1);
-            coords[1] = Array<OneD,NekDouble>(nquad0*nquad1);
-            coords[2] = Array<OneD,NekDouble>(nquad0*nquad1);
-            GetCoords(coords[0],coords[1],coords[2]);
-
-            outfile << "    <Piece NumberOfPoints=\""
-                    << nquad0*nquad1 << "\" NumberOfCells=\""
-                    << (nquad0-1)*(nquad1-1) << "\">" << endl;
-            outfile << "      <Points>" << endl;
-            outfile << "        <DataArray type=\"Float32\" "
-                    << "NumberOfComponents=\"3\" format=\"ascii\">" << endl;
-            outfile << "          ";
-            for (i = 0; i < nquad0*nquad1; ++i)
-            {
-                for (j = 0; j < 3; ++j)
-                {
-                    outfile << coords[j][i] << " ";
-                }
-                outfile << endl;
-            }
-            outfile << endl;
-            outfile << "        </DataArray>" << endl;
-            outfile << "      </Points>" << endl;
-            outfile << "      <Cells>" << endl;
-            outfile << "        <DataArray type=\"Int32\" "
-                    << "Name=\"connectivity\" format=\"ascii\">" << endl;
-            for (i = 0; i < nquad0-1; ++i)
-            {
-                for (j = 0; j < nquad1-1; ++j)
-                {
-                    outfile << j*nquad0 + i << " "
-                            << j*nquad0 + i + 1 << " "
-                            << (j+1)*nquad0 + i + 1 << " "
-                            << (j+1)*nquad0 + i << endl;
-                }
-            }
-            outfile << endl;
-            outfile << "        </DataArray>" << endl;
-            outfile << "        <DataArray type=\"Int32\" "
-                    << "Name=\"offsets\" format=\"ascii\">" << endl;
-            for (i = 0; i < (nquad0-1)*(nquad1-1); ++i)
-            {
-                outfile << i*4+4 << " ";
-            }
-            outfile << endl;
-            outfile << "        </DataArray>" << endl;
-            outfile << "        <DataArray type=\"UInt8\" "
-                    << "Name=\"types\" format=\"ascii\">" << endl;
-            for (i = 0; i < (nquad0-1)*(nquad1-1); ++i)
-            {
-                outfile << "9 ";
-            }
-            outfile << endl;
-            outfile << "        </DataArray>" << endl;
-            outfile << "      </Cells>" << endl;
-            outfile << "      <PointData>" << endl;
-        }
-
+        /**
+         * @param   outfile     Stream to write VTK data to.
+         */
         void StdExpansion::WriteVtkPieceFooter(std::ofstream &outfile)
         {
             outfile << "      </PointData>" << endl;
             outfile << "    </Piece>" << endl;
         }
 
+
+        /**
+         * @param   outfile     Stream to write VTK data to.
+         * @param   var         Variable name associated with this data.
+         */
         void StdExpansion::WriteVtkPieceData  (std::ofstream &outfile,
                                                std::string var)
         {
             int i;
             int nquad0 = GetNumPoints(0);
             int nquad1 = GetNumPoints(1);
+            int nquad2 = GetNumPoints(2);
 
             // printing the fields of that zone
             outfile << "        <DataArray type=\"Float32\" Name=\"" 
                     << var << "\">" << endl;
             outfile << "          ";
-            for(i = 0; i < nquad0*nquad1; ++i)
+            for(i = 0; i < nquad0*nquad1*nquad2; ++i)
             {
                 outfile << m_phys[i] << " ";
             }
@@ -1470,6 +1421,12 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "ReadFromFile: Write method");
             }
 
+            void StdExpansion::v_WriteVtkPieceHeader(std::ofstream &outfile)
+            {
+                NEKERROR(ErrorUtil::efatal, 
+                         "Write VTK: This dimension is not implemented yet.");    
+            }
+            
             const  boost::shared_ptr<SpatialDomains::GeomFactors>& StdExpansion::v_GetMetricInfo() const 
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
@@ -1625,6 +1582,10 @@ namespace Nektar
 
 /**
 * $Log: StdExpansion.cpp,v $
+* Revision 1.94  2010/01/03 19:39:09  cantwell
+* Added FldToVtk converter.
+* Added XmlToVtk converter.
+*
 * Revision 1.93  2009/12/18 00:11:03  bnelson
 * Fixed windows compiler warnings.
 *

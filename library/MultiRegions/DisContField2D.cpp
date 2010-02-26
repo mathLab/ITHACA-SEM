@@ -656,7 +656,7 @@ namespace Nektar
                 GlobalLinSysSharedPtr LinSys = GetGlobalBndLinSys(key);
                 LinSys->Solve(BndRhs,BndSol,m_traceMap);
             }
-            
+         
             //----------------------------------
             // Internal element solves
             //----------------------------------

@@ -64,7 +64,7 @@ namespace Nektar
                         SpatialDomains::BoundaryConditions &bcs, 
                         const std::string variable,
                         const GlobalSysSolnType solnType = eDirectStaticCond);
-
+/*
             ContField3D(const LibUtilities::BasisKey &Ba,
                         const LibUtilities::BasisKey &Bb,
                         const LibUtilities::BasisKey &Bc,
@@ -84,7 +84,7 @@ namespace Nektar
                         const LibUtilities::PointsType 
                         TetNb = LibUtilities::SIZE_PointsType,
                         const GlobalSysSolnType solnType = eDirectStaticCond);
-
+*/
             ContField3D(const ContField3D &In);
 
             ~ContField3D();
@@ -97,10 +97,6 @@ namespace Nektar
                                                Array<OneD,       NekDouble> &outarray,
                                          bool  UseContCoeffs = false);
 
-            void EvaluateBoundaryConditions(const NekDouble time = 0.0)
-            {
-                ExpList3D::EvaluateBoundaryConditions(time,m_bndCondExpansions,m_bndConditions);
-            }
             /**
              * \brief This function return the boundary conditions expansion.
              */ 
@@ -148,25 +144,12 @@ namespace Nektar
             GlobalLinSysMapShPtr            m_globalLinSys;
 
         private:
-            /**
-             * \brief The number of boundary segments on which
-             * Dirichlet boundary conditions are imposed
-             */ 
-            int m_numDirBndCondExpansions;
-
-            Array<OneD,MultiRegions::ExpList2DSharedPtr>           m_bndCondExpansions;
-            Array<OneD,SpatialDomains::BoundaryConditionShPtr>     m_bndConditions;
-
             GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
 
             void GlobalSolve(const GlobalLinSysKey &key, 
                              const Array<OneD, const  NekDouble> &rhs, 
                              Array<OneD, NekDouble> &inout,
                              const Array<OneD, const NekDouble> &dirForcing = NullNekDouble1DArray);
-
-            void GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph3D &graph3D,
-                                                    SpatialDomains::BoundaryConditions &bcs,
-                                                    const std::string variable);
           
             virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                           Array<OneD,       NekDouble> &outarray,

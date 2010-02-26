@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include <PreProcessing/Gmsh.h>
 
 #define ERROR(msg)                              \
@@ -117,6 +119,7 @@ namespace Utilities
 
               vector<int> edgeList;
               vector<int> nodeList;
+              vector<int> faceList;
               for(int k=0; k<num_nodes; ++k)
             {
               int node = 0;
@@ -138,6 +141,10 @@ namespace Utilities
             case 3:
             case 9:
               twoDElements.push_back( TwoDElement(twoDid++,elm_type, tags, nodeList, edgeList) );
+              break;
+            case 4:
+            case 5:
+              threeDElements.push_back( ThreeDElement(threeDid++, elm_type, tags, nodeList, faceList) );
               break;
             default:
               {
@@ -190,7 +197,14 @@ namespace Utilities
       break;
     case 3:
       {
-        ERROR("3D not supported yet");
+        OrientTets(threeDElements, vertices);
+        // Fill the faces vector from threeDElements.face
+        SortFaceToVertex(threeDElements,faces);
+        SortFaceToEdge(faces, edges);
+        // Correct faces id of twoDElements from faces
+        //SortTwoDElements(twoDElements,faces);
+        
+        SortThreeDComposites(threeDElements, twoDElements, composites, nBoundComposites);
       }
       break;
     default:
@@ -234,6 +248,38 @@ namespace Utilities
       return size;
     }
 
+
+    int GetFace(vector<int> &vert, vector<Face>& faces, int elm_type)
+    {
+        int i, j;
+        int size = faces.size();
+        
+        // Check if face vertices match an existing face
+        for(i = 0; i < size; i++)
+        {
+            bool match = true;
+            for (j = 0; j < vert.size(); ++j)
+            {
+                vector<int>::iterator x = std::find(faces[i].vert.begin(), faces[i].vert.end(), vert[j]);
+                if (x == faces[i].vert.end()) {
+                    match = false;
+                }
+            }
+            if (match)
+            {
+                return i;
+            }
+        }
+
+        // for the last edge of an element
+        vector<int> facevert;
+        for (j = 0; j < vert.size(); ++j)
+        {
+            facevert.push_back(vert[j]);
+        }
+        faces.push_back( Face(size,facevert) );
+        return size;
+    }
 
 
     void SortEdgeToVertex(vector<TwoDElement> & elements, vector<Edge> & edges)
@@ -296,8 +342,117 @@ namespace Utilities
       cout << "...done sorting EdgeToVertex relations" << endl;
     }
 
+    void OrientTets(vector<ThreeDElement> &elements, vector<Vertex> &vertices)
+    {
+        for (int i = 0; i < elements.size(); ++i)
+        {
+            // Don't do anything for Hex's
+            if (elements[i].type != 4) continue;
+            
+            // Order vertices with lowest global vertex at top degenerate point
+            // Place second lowest global vertex at base degenerate point
+            vector<int> everts = elements[i].vert;
+            sort(elements[i].vert.begin(), elements[i].vert.end());
+            reverse(elements[i].vert.begin(), elements[i].vert.end());
+            
+            // Check orientation of tet and order remaining two points
+            double ax, ay, az, vol;
+            vector<Vertex> v;
+            v.push_back(vertices[elements[i].vert[0]]);
+            v.push_back(vertices[elements[i].vert[1]]);
+            v.push_back(vertices[elements[i].vert[2]]);
+            v.push_back(vertices[elements[i].vert[3]]);
+            // Compute cross produc (b x c)
+            ax = (v[1].y-v[3].y)*(v[2].z-v[3].z) - (v[1].z-v[3].z)*(v[2].y-v[3].y);
+            ay = (v[2].x-v[3].x)*(v[1].z-v[3].z) - (v[1].x-v[3].x)*(v[2].z-v[3].z);
+            az = (v[1].x-v[3].x)*(v[2].y-v[3].y) - (v[2].x-v[3].x)*(v[1].y-v[3].y);
+            // Compute signed volume: 1/6 * (a . (b x c))
+            vol = 1.0/6.0*(ax*(v[0].x-v[3].x) + ay*(v[0].y-v[3].y) + az*(v[0].z-v[3].z));
+            // If negative volume, reverse order to correctly orientate tet.
+            if (vol < 0)
+            {
+                swap(elements[i].vert[2], elements[i].vert[3]);
+                swap(v[2], v[3]);
+            }
+        }
+        cout << "...done orientating 3D elements" << endl;
+    }
+    
+    void SortFaceToVertex(vector<ThreeDElement> & elements, vector<Face> & faces)
+    {
+        int i, j, k, elm_type;
+        int size = elements.size();
 
-
+        // fill the edge vector in the elements struct with unique edges
+        for (i = 0; i < size; ++i)
+        {
+            elm_type = elements[i].type;
+            // Hex
+            if (elm_type == 5)
+            {
+                int face_ids[6][4] = {
+                    {0,1,2,3},{0,1,5,4},{1,2,6,5},{2,3,7,6},{3,0,4,7},{4,5,6,7}};
+                for (j = 0; j < 6; ++j)
+                {
+                    int faceid;
+                    vector<int> vert;
+                    for (k = 0; k < 4; ++k)
+                    {
+                        vert.push_back(elements[i].vert[face_ids[j][k]]);
+                    }
+                    faceid = GetFace(vert,faces,elm_type);
+                    elements[i].face.push_back(faceid);    
+                }            
+            }
+            // Tet
+            else if (elm_type == 4)
+            {
+                int face_ids[4][3] = {
+                    {0,1,2},{0,1,3},{1,2,3},{2,0,3}};
+                for (j = 0; j < 4; ++j)
+                {
+                    int faceid;
+                    vector<int> vert;
+                    for (k = 0; k < 3; ++k)
+                    {
+                        vert.push_back(elements[i].vert[face_ids[j][k]]);
+                    }
+                    faceid = GetFace(vert,faces,elm_type);
+                    elements[i].face.push_back(faceid);
+                }
+            }
+            else
+            {
+                ERROR("This element type is not supported yet.");
+            }
+        }
+        cout << "...done sorting FaceToVertex relations" << endl;
+    }
+    
+    void SortFaceToEdge(vector<Face> &faces, vector<Edge> &edges)
+    {
+        int i, j, elm_type;
+        int size = faces.size();
+        
+        for (i = 0; i < size; ++i)
+        {
+            int fsize = faces[i].vert.size();
+            if (fsize == 3) elm_type = 2;
+            else if (fsize == 4) elm_type = 3;
+            for (j = 0; j < fsize; ++j)
+            {
+                int edgeid;
+                vector<int> vert;
+                vert.push_back(faces[i].vert[j%fsize]);
+                vert.push_back(faces[i].vert[(j+1)%fsize]);
+                edgeid = GetEdge(vert,edges,elm_type);
+                faces[i].edge.push_back(edgeid);
+            }
+        }
+        cout << "...done sorting FaceToEdge relations" << endl;
+    }
+    
+    
     // Get the correct edge id's from the edge struct
     void SortZeroDElements(vector<ZeroDElement> & points,const vector<Vertex> & vertices)
     {
@@ -425,6 +580,80 @@ namespace Utilities
 
     }
 
+    void SortThreeDComposites(const vector<ThreeDElement> & elements, const vector<TwoDElement> & faces,
+                vector<Composite> & composites, int num_composites)
+    {
+        int i;
+
+        // set elements composite
+        // for these composites we do not store
+        // the individual element ids (as the composites
+        // still will be defined from 0 to nElm-1), we just store the
+        // total number of tets or hexes
+        int nTet  = 0;
+        int nHex = 0;
+        int threeDcomp = 0;
+        for (int i = 0; i < elements.size(); ++i)
+        {
+            if ( (elements[i].type == 4) )
+                nTet++;
+            if (elements[i].type == 5)
+                nHex++;
+        }
+
+        if (nTet != 0)
+        {
+            list<int> eid;
+            eid.push_back(nTet-1); // -1 since start from 0
+            composites.push_back(Composite(threeDcomp,4,eid));
+            threeDcomp++;
+        }
+        if (nHex != 0)
+        {
+            list<int> eid;
+            eid.push_back(nHex-1); // -1 since start from 0
+            composites.push_back(Composite(threeDcomp,5,eid));
+            threeDcomp++;
+        }
+/*
+        int comp;
+
+        // Initialize edge composite
+        for (i = threeDcomp; i < num_composites+threeDcomp; ++i)
+        {
+            list<int> eid;
+            composites.push_back(Composite(i,0,eid));
+        }
+
+        // Boundary comp are stored as physical entities and are stored in elements.tags[0]
+        // should be numbered from 1 to num_composites (zero mean not included in composite)
+        for (i = 0; i < edges.size(); ++i)
+        {
+            comp = edges[i].tags[0];
+            if (comp != 0)
+            {
+                // need to sort
+                switch(edges[i].type)
+                {
+                    case 1:
+                    case 8:
+                    {
+                        composites[comp-1+twoDcomp].eid.push_back(edges[i].id);
+                        composites[comp-1+twoDcomp].type = edges[i].type;
+                    }
+                    break;
+                }
+            }
+        }
+
+        // sort the eid list
+        // composites must be increasing numbers...
+        for (i = 0; i < num_composites+twoDcomp; ++i)
+        {
+            composites[i].eid.sort();
+        }
+*/        cout << "...done sorting composites" << endl;
+    }
 
     void SortOneDComposites(const vector<OneDElement> & elements, const vector<ZeroDElement> & points,
               vector<Composite> & composites, int num_composites)
@@ -569,10 +798,40 @@ namespace Utilities
 
         //--------------------------------------------
         // Write FACES
-        // only if expansion dimension = 3
-        //  if (expDim == 3)
-        //
-        //--------------------------------------------
+        // only if expansion dimension == 3
+        if (expDim == 3)
+        {
+            int facecnt = 0;
+            int small, large;
+            verTag = new TiXmlElement( "FACE" );
+
+            comment = new TiXmlComment();
+            comment->SetValue( "Faces are sets of edges ");
+            verTag->LinkEndChild( comment );
+
+            for( int i = 0; i < faces.size(); ++i ) {
+                stringstream s;
+
+                for ( int j = 0; j < faces[i].edge.size(); ++j)
+                {
+                    s << setw(5) << faces[i].edge[j];
+                }
+                TiXmlElement * f;
+                if (faces[i].edge.size() == 3)
+                {
+                    f = new TiXmlElement( "T" );
+                }
+                else
+                {
+                    f = new TiXmlElement( "Q" );
+                }
+                f->SetAttribute("ID",facecnt++);
+                f->LinkEndChild( new TiXmlText(s.str()) );
+                verTag->LinkEndChild(f);
+            }
+            geomTag->LinkEndChild( verTag );
+        }
+        //---------------------------------------------
 
 
         //--------------------------------------------
@@ -806,7 +1065,7 @@ namespace Utilities
                     case 15:st_start << " V["; break;   // Points -> Vertex
                 }
 
-                comp_tag->SetAttribute("ID", id++);
+                comp_tag->SetAttribute("ID", composites[i].id);
                 comp_tag->LinkEndChild( new TiXmlText(st_start.str()) );
                 comp_tag->LinkEndChild( new TiXmlText(st.str()) );
                 verTag->LinkEndChild(comp_tag);
@@ -817,13 +1076,17 @@ namespace Utilities
         //--------------------------------------------------
 
         TiXmlElement * domain = new TiXmlElement ("DOMAIN" );
-        domain->LinkEndChild( new TiXmlText( "Set the domain here...." ));
+        domain->LinkEndChild( new TiXmlText( " C[0] " ));
         geomTag->LinkEndChild( domain );
 
         TiXmlElement * exp = new TiXmlElement( "EXPANSIONS" );
-        exp->LinkEndChild( new TiXmlText( "Set the expansion here...." ));
+        TiXmlElement * exp_tag = new TiXmlElement( "E" );
+        exp_tag->SetAttribute("COMPOSITE", "C[0]");
+        exp_tag->SetAttribute("NUMMODES", 7);
+        exp_tag->SetAttribute("TYPE", "MODIFIED");
+        exp->LinkEndChild( exp_tag );
         root->LinkEndChild( exp );
-
+/*
         TiXmlElement * conds = new TiXmlElement( "CONDITIONS" );
         root->LinkEndChild( conds );
 
@@ -869,7 +1132,7 @@ namespace Utilities
         TiXmlElement* exact = new TiXmlElement( "EXACTSOLUTION" );
         exact->LinkEndChild( new TiXmlText( "Set the exact solution here..." ));
         conds->LinkEndChild( exact );
-
+*/
         doc.SaveFile(outfile );
     } // end of function WriteToXMLFile
 

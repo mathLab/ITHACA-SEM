@@ -23,6 +23,16 @@ ADD_NEKTAR_EXECUTABLE(StdProject_Diff2D StdProject_Diff2DSource)
 TARGET_LINK_LIBRARIES(StdProject_Diff2D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(StdProject_Diff2D)
 
+SET(StdProject3DSource  StdProject3D.cpp)
+ADD_NEKTAR_EXECUTABLE(StdProject3D StdProject3DSource)
+TARGET_LINK_LIBRARIES(StdProject3D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(StdProject3D)
+
+SET(StdProject_Diff3DSource  StdProject_Diff3D.cpp)
+ADD_NEKTAR_EXECUTABLE(StdProject_Diff3D StdProject_Diff3DSource)
+TARGET_LINK_LIBRARIES(StdProject_Diff3D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(StdProject_Diff3D)
+
 SET(StdTetExpDemoSource StdTetExpDemo.cpp)
 ADD_NEKTAR_EXECUTABLE(StdTetExpDemo StdTetExpDemoSource)
 TARGET_LINK_LIBRARIES(StdTetExpDemo ${LinkLibraries})
@@ -37,6 +47,12 @@ SET(StdTetExp_Diff3DSource StdTetExp_Diff3D.cpp)
 ADD_NEKTAR_EXECUTABLE(StdTetExp_Diff3D StdTetExp_Diff3DSource)
 TARGET_LINK_LIBRARIES(StdTetExp_Diff3D ${LinkLibraries})  
 SET_LAPACK_LINK_LIBRARIES(StdTetExp_Diff3D)   
+
+SET(StdHexExp_Diff3DSource StdHexExp_Diff3D.cpp)
+ADD_NEKTAR_EXECUTABLE(StdHexExp_Diff3D StdHexExp_Diff3DSource)
+TARGET_LINK_LIBRARIES(StdHexExp_Diff3D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(StdHexExp_Diff3D)
+
 
 SET(StdPrismExpDemoSource StdPrismExpDemo.cpp)
 ADD_NEKTAR_EXECUTABLE(StdPrismExpDemo StdPrismExpDemoSource)

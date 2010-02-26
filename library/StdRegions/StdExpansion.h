@@ -773,8 +773,15 @@ namespace Nektar
 
             void WriteTecplotField(std::ofstream &outfile);
 
-            void WriteVtkPieceHeader(std::ofstream &outfile);
+            /// Writes VTK geometry information for this expansion.
+            void WriteVtkPieceHeader(std::ofstream &outfile) {
+                v_WriteVtkPieceHeader(outfile);
+            }
+            
+            /// Writes terminating tags for VTK geometry information.
             void WriteVtkPieceFooter(std::ofstream &outfile);
+            
+            /// Writes values at quadrature points.
             void WriteVtkPieceData  (std::ofstream &outfile, std::string var);
                 
             void ReadFromFile(std::ifstream &in, OutputFormat format, const bool dumpVar = true)
@@ -1499,6 +1506,8 @@ namespace Nektar
 
             virtual void v_ReadFromFile(std::ifstream &infile, OutputFormat format, const bool dumpVar = true);
 
+            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile);
+            
             virtual const  boost::shared_ptr<SpatialDomains::GeomFactors>& v_GetMetricInfo() const; 
             
             virtual const boost::shared_ptr<SpatialDomains::Geometry> v_GetGeom() const; 
@@ -1576,6 +1585,10 @@ namespace Nektar
 #endif //STANDARDDEXPANSION_H
 /**
  * $Log: StdExpansion.h,v $
+ * Revision 1.127  2010/01/03 19:39:09  cantwell
+ * Added FldToVtk converter.
+ * Added XmlToVtk converter.
+ *
  * Revision 1.126  2009/12/14 18:02:55  cbiotto
  * Adding functions for tecplot file
  *

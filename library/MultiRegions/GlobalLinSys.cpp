@@ -296,7 +296,9 @@ namespace Nektar
                                               eWrapper);
             NekVector<NekDouble> V_Int(nIntDofs,out+nGlobBndDofs,eWrapper);
             NekVector<NekDouble> V_LocBnd(nLocBndDofs,0.0);
-
+            NekVector<NekDouble> V_LocBndTmp1(nLocBndDofs,0.0);
+            NekVector<NekDouble> V_LocBndTmp2(nLocBndDofs,0.0);
+            
             NekVector<NekDouble> V_GlobHomBndTmp(nGlobHomBndDofs,0.0);
 
             if(nGlobHomBndDofs)
@@ -312,7 +314,9 @@ namespace Nektar
                         DNekScalBlkMat &BinvD      = *m_blkMatrices[1];
                         DNekScalBlkMat &SchurCompl = *m_blkMatrices[0];
                         locToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
-                        V_LocBnd = SchurCompl*V_LocBnd + BinvD*F_Int;
+                        V_LocBndTmp1 = BinvD*F_Int;
+                        V_LocBndTmp2 = SchurCompl*V_LocBnd;
+                        V_LocBnd = V_LocBndTmp1 + V_LocBndTmp2;
                     }
                     else if((nDirBndDofs) && (!dirForcCalculated)
                                           && (atLastLevel))

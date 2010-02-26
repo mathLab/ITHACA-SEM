@@ -120,10 +120,7 @@ namespace Nektar
             return retrunVal; 
         }
 
-        void TetExp::IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
-                                     const Array<OneD, const NekDouble>& base1, 
-                                     const Array<OneD, const NekDouble>& base2, 
-                                     const Array<OneD, const NekDouble>& inarray, 
+        void TetExp::IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
                                      Array<OneD, NekDouble> & outarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
@@ -142,7 +139,7 @@ namespace Nektar
                 Vmath::Smul(nquad0*nquad1*nquad2,jac[0],(NekDouble*)&inarray[0],1,&tmp[0],1);
             }
 
-            StdTetExp::IProductWRTBase(base0,base1,base2,tmp,outarray);
+            StdTetExp::v_IProductWRTBase(tmp,outarray);
         }
 
         ///////////////////////////////
@@ -265,7 +262,7 @@ namespace Nektar
             ASSERTL0(m_geom, "m_geom not define");
             
             // get physical points defined in Geom
-            //             m_geom->FillGeom();  //TODO: implement
+            m_geom->FillGeom();  //TODO: implement
             
             switch(m_geom->GetCoordim())
             {
@@ -335,8 +332,6 @@ namespace Nektar
             }
         }
 
-	
-      
         // get the coordinates "coords" at the local coordinates "Lcoords"
         void TetExp::GetCoord(const Array<OneD, const NekDouble> &Lcoords, Array<OneD,NekDouble> &coords)
         {
@@ -357,24 +352,24 @@ namespace Nektar
 
         void TetExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
         {
+            int i,j,k;
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+            int nquad2 = m_base[2]->GetNumPoints();
+            Array<OneD,NekDouble> coords[3];
+            
+            ASSERTL0(m_geom,"m_geom not defined");
+            
+            int     coordim  = m_geom->GetCoordim();
+            
+            coords[0] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
+            coords[1] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
+            coords[2] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
+            
+            GetCoords(coords[0],coords[1],coords[2]);
+            
             if(format==eTecplot)
-            {
-                int i,j,k;
-                int nquad0 = m_base[0]->GetNumPoints();
-                int nquad1 = m_base[1]->GetNumPoints();
-                int nquad2 = m_base[2]->GetNumPoints();
-                Array<OneD,NekDouble> coords[3];
-                
-                ASSERTL0(m_geom,"m_geom not defined");
-                
-                int     coordim  = m_geom->GetCoordim();
-                
-                coords[0] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-                coords[1] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-                coords[2] = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-                
-                GetCoords(coords[0],coords[1],coords[2]);
-                
+            {                
                 if(dumpVar)
                 { 
                     outfile << "Variables = x";
@@ -405,20 +400,38 @@ namespace Nektar
                     outfile << m_phys[i] << std::endl;
                 }
             }
+            else if (format==eGnuplot)
+            {
+                for(int k = 0; k < nquad2; ++k)
+                {
+                    for(int j = 0; j < nquad1; ++j)
+                    {
+                        for(int i = 0; i < nquad0; ++i)
+                        {
+                            int n = (k*nquad1 + j)*nquad0 + i;
+                            outfile <<  coords[0][n] <<  " " << coords[1][n] << " "
+                                    << coords[2][n] << " "
+                                    << m_phys[i + nquad0*(j + nquad1*k)] << endl;
+                        }
+                        outfile << endl;
+                    }
+                    outfile << endl;
+                }                
+            }
             else
             {
                 ASSERTL0(false, "Output routine not implemented for requested type of output");
             }
         }
       
-        NekDouble TetExp::PhysEvaluate(const Array<OneD, const NekDouble> &coord)
+        NekDouble TetExp::v_PhysEvaluate(const Array<OneD, const NekDouble> &coord)
         {
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(3);
             
             ASSERTL0(m_geom,"m_geom not defined");
             m_geom->GetLocCoords(coord,Lcoord);
-            
-            return StdTetExp::PhysEvaluate(Lcoord);
+            return StdTetExp::v_PhysEvaluate(Lcoord);
+            //return StdExpansion3D::v_PhysEvaluate(Lcoord);
         }
 
 
@@ -685,6 +698,17 @@ namespace Nektar
 
 /** 
  *    $Log: TetExp.cpp,v $
+ *    Revision 1.22  2009/12/15 18:09:02  cantwell
+ *    Split GeomFactors into 1D, 2D and 3D
+ *    Added generation of tangential basis into GeomFactors
+ *    Updated ADR2DManifold solver to use GeomFactors for tangents
+ *    Added <GEOMINFO> XML session section support in MeshGraph
+ *    Fixed const-correctness in VmathArray
+ *    Cleaned up LocalRegions code to generate GeomFactors
+ *    Removed GenSegExp
+ *    Temporary fix to SubStructuredGraph
+ *    Documentation for GlobalLinSys and GlobalMatrix classes
+ *
  *    Revision 1.21  2009/10/30 14:00:07  pvos
  *    Multi-level static condensation updates
  *

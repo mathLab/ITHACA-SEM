@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     Fce->SetPhys(fce);
     //----------------------------------------------
     Timing("Define forcing ..");
-
+    
     //----------------------------------------------
     // Helmholtz solution taking physical forcing
     Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), lambda);
@@ -130,9 +130,7 @@ int main(int argc, char *argv[])
 
     //-----------------------------------------------
     // Write solution to file
-    string   out(strtok(argv[argc-1],"."));
-    string   endfile(".fld");
-    out += endfile;
+    string   out = meshfile.substr(0, meshfile.find_last_of(".")) + ".fld";
     std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
                                                 = Exp->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());

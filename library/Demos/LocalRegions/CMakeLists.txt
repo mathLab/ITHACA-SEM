@@ -20,6 +20,11 @@ ADD_NEKTAR_EXECUTABLE(LocProject2D LocProject2DSource)
 TARGET_LINK_LIBRARIES(LocProject2D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(LocProject2D)
 
+SET(LocProject3DSource  LocProject3D.cpp)
+ADD_NEKTAR_EXECUTABLE(LocProject3D LocProject3DSource)
+TARGET_LINK_LIBRARIES(LocProject3D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(LocProject3D)
+
 
 SET(LocProject_Diff1DSource  LocProject_Diff1D.cpp)
 ADD_NEKTAR_EXECUTABLE(LocProject_Diff1D LocProject_Diff1DSource)
@@ -30,6 +35,11 @@ SET(LocProject_Diff2DSource  LocProject_Diff2D.cpp)
 ADD_NEKTAR_EXECUTABLE(LocProject_Diff2D LocProject_Diff2DSource)
 TARGET_LINK_LIBRARIES(LocProject_Diff2D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(LocProject_Diff2D)
+
+SET(LocProject_Diff3DSource  LocProject_Diff3D.cpp)
+ADD_NEKTAR_EXECUTABLE(LocProject_Diff3D LocProject_Diff3DSource)
+TARGET_LINK_LIBRARIES(LocProject_Diff3D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(LocProject_Diff3D)
 
 SET(LocTetExpDemoSource  LocTetExpDemo.cpp)
 ADD_NEKTAR_EXECUTABLE(LocTetExpDemo LocTetExpDemoSource)

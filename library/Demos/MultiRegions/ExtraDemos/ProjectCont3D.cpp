@@ -3,7 +3,6 @@
 
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ContField3D.h>
-#include <SpatialDomains/BoundaryConditions.h>
 using namespace Nektar;
 
 // This routine projects a polynomial which has energy in all mdoes of
@@ -29,8 +28,6 @@ int main(int argc, char *argv[])
     SpatialDomains::MeshGraph3D graph3D;
     graph3D.ReadGeometry(meshfile);
     graph3D.ReadExpansions(meshfile);
-    SpatialDomains::BoundaryConditions bcs(&graph3D);
-    bcs.Read(meshfile);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -46,7 +43,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define Expansion
     Exp = MemoryManager<MultiRegions::ContField3D>
-                                ::AllocateSharedPtr(graph3D,bcs);
+                                ::AllocateSharedPtr(graph3D);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -93,20 +90,27 @@ int main(int argc, char *argv[])
     Fce->SetPhys(fce);
     //---------------------------------------------
 
+    //----------------------------------------------
+    // Write solution
+    ofstream outfile("ProjectContFileOrig3D.dat");
+    Fce->WriteToFile(outfile,eGnuplot);
+    outfile.close();
+    //----------------------------------------------
+
     //---------------------------------------------
     // Project onto Expansion
-    Exp->FwdTrans(Fce->GetPhys(), Exp->UpdateCoeffs());
+    Exp->FwdTrans(Fce->GetPhys(), Exp->UpdateCoeffs(), true);    
     //---------------------------------------------
 
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
+    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(), true);
     //-------------------------------------------
 
     //----------------------------------------------
     // Write solution
     ofstream outfile2("ProjectContFile3D.dat");
-    Exp->WriteToFile(outfile2,eTecplot);
+    Exp->WriteToFile(outfile2,eGnuplot);
     outfile2.close();
     //----------------------------------------------
 

@@ -857,6 +857,9 @@ namespace Nektar
         inline void ExpList::SetPhys(
                                 const Array<OneD, const NekDouble> &inarray)
         {
+            ASSERTL0(inarray.num_elements() == m_npoints,
+                     "Input array does not have correct number of elements.");
+
             Vmath::Vcopy(m_npoints,&inarray[0],1,&m_phys[0],1);
             m_physState = true;
         }
@@ -1272,6 +1275,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.87  2010/01/27 13:19:13  cantwell
+* Added functions to write history/probe data during timestepping.
+*
 * Revision 1.86  2010/01/20 18:05:09  cantwell
 * Added utility for probing a line of points in a FLD file.
 *

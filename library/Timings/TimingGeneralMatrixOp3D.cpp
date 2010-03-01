@@ -3,7 +3,7 @@
 #include <sys/time.h>
 
 #include "boost/filesystem/path.hpp"
-#include <MultiRegions/ExpList3D.h>
+#include <MultiRegions/ContField3D.h>
 
 #ifdef NEKTAR_USING_CHUD
 #include <CHUD/CHUD.h> 
@@ -12,11 +12,11 @@
 
 using namespace Nektar;
 
-NekDouble TimeMatrixOp(StdRegions::MatrixType &type, MultiRegions::ExpList3DSharedPtr &Exp, int &NumCalls);
+NekDouble TimeMatrixOp(StdRegions::MatrixType &type, MultiRegions::ContField3DSharedPtr &Exp, int &NumCalls);
 
 int main(int argc, char *argv[])
 {
-    MultiRegions::ExpList3DSharedPtr Exp,Fce,Sol;
+    MultiRegions::ContField3DSharedPtr Exp,Fce,Sol;
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce,sol; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
    
     //----------------------------------------------
     // Define Expansion 
-    Exp = MemoryManager<MultiRegions::ExpList3D>::AllocateSharedPtr(graph3D);
+    Exp = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(graph3D, bcs);
     //----------------------------------------------
     int NumElements = Exp->GetExpSize();
 
@@ -247,10 +247,10 @@ int main(int argc, char *argv[])
 //    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(),lambda,true);
     //----------------------------------------------
 
-    Exp->FwdTrans(Fce->GetPhys(), Exp->UpdateCoeffs());
+    Exp->FwdTrans(Fce->GetPhys(), Exp->UpdateCoeffs(), true);
     //----------------------------------------------
     // Backward Transform Solution to get solved values at 
-    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
+    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(), true);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -355,11 +355,11 @@ int main(int argc, char *argv[])
     exeTime = TimeMatrixOp(type, Exp, NumCalls);
     
     int nLocCoeffs     = Exp->GetNcoeffs();
-//    int nGlobCoeffs    = Exp->GetContNcoeffs();
-//    int nLocBndCoeffs  = Exp->GetLocalToGlobalMap()->GetNumLocalBndCoeffs();
-//    int nGlobBndCoeffs = Exp->GetLocalToGlobalMap()->GetNumGlobalBndCoeffs();
-//    int nLocDirCoeffs  = Exp->GetLocalToGlobalMap()->GetNumLocalDirBndCoeffs();
-//    int nGlobDirCoeffs = Exp->GetLocalToGlobalMap()->GetNumGlobalDirBndCoeffs();
+    int nGlobCoeffs    = Exp->GetContNcoeffs();
+    int nLocBndCoeffs  = Exp->GetLocalToGlobalMap()->GetNumLocalBndCoeffs();
+    int nGlobBndCoeffs = Exp->GetLocalToGlobalMap()->GetNumGlobalBndCoeffs();
+    int nLocDirCoeffs  = Exp->GetLocalToGlobalMap()->GetNumLocalDirBndCoeffs();
+    int nGlobDirCoeffs = Exp->GetLocalToGlobalMap()->GetNumGlobalDirBndCoeffs();
 //    MultiRegions::GlobalMatrixKey key(StdRegions::eHelmholtz,lambda,Exp->GetLocalToGlobalMap());
 //    int nnz            = Exp->GetGlobalMatrixNnz(key);
 
@@ -377,11 +377,11 @@ int main(int argc, char *argv[])
     outfile << setw(15) << scientific << noshowpoint << LinfError << " ";
     outfile << setw(15) << scientific << noshowpoint << "- ";// << LinfErrorBis << " ";
     outfile << setw(10) << nLocCoeffs  << " ";
-    outfile << setw(10) << "- "; // << nGlobCoeffs << " ";
-    outfile << setw(10) << "- "; // << nLocBndCoeffs  << " ";
-    outfile << setw(10) << "- "; // << nGlobBndCoeffs << " ";
-    outfile << setw(10) << "- "; // << nLocDirCoeffs  << " ";
-    outfile << setw(10) << "- "; // << nGlobDirCoeffs << " ";
+    outfile << setw(10) << nGlobCoeffs << " ";
+    outfile << setw(10) << nLocBndCoeffs  << " ";
+    outfile << setw(10) << nGlobBndCoeffs << " ";
+    outfile << setw(10) << nLocDirCoeffs  << " ";
+    outfile << setw(10) << nGlobDirCoeffs << " ";
     outfile << setw(10) << "- "; // << nnz << " ";
     outfile << setw(10) << optLevel << " ";
     outfile << endl;
@@ -395,7 +395,7 @@ int main(int argc, char *argv[])
 }
 
 
-NekDouble TimeMatrixOp(StdRegions::MatrixType &type, MultiRegions::ExpList3DSharedPtr &Exp, int &NumCalls)
+NekDouble TimeMatrixOp(StdRegions::MatrixType &type, MultiRegions::ContField3DSharedPtr &Exp, int &NumCalls)
 {
         //----------------------------------------------
     // Do the timings
@@ -411,16 +411,16 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type, MultiRegions::ExpList3DShar
     //Exp->BwdTrans (Exp->GetCoeffs(),Exp->UpdatePhys(),true);
     if (type == StdRegions::eBwdTrans)
     {
-        Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
+        Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(), true);
     }
     else if (type == StdRegions::eIProductWRTBase)
     {
-        Exp->IProductWRTBase(Exp->GetPhys(), Exp->UpdateCoeffs());
+        Exp->IProductWRTBase(Exp->GetPhys(), Exp->UpdateCoeffs(), true);
     }
     else
     {
         MultiRegions::GlobalMatrixKey key(type);
-        Exp->GeneralMatrixOp (key, Exp->GetCoeffs(),Exp->UpdatePhys());
+        Exp->GeneralMatrixOp (key, Exp->GetCoeffs(),Exp->UpdatePhys(), true);
     }
     gettimeofday(&timer2, NULL);
     time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
@@ -448,14 +448,14 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type, MultiRegions::ExpList3DShar
     {
         for(i = 0; i < NumCalls; ++i)
         {
-            Exp->BwdTrans (Exp->GetCoeffs(),Exp->UpdatePhys());
+            Exp->BwdTrans (Exp->GetCoeffs(),Exp->UpdatePhys(), true);
         }
     }
     else if (type == StdRegions::eIProductWRTBase)
     {
         for(i = 0; i < NumCalls; ++i)
         {
-            Exp->IProductWRTBase (Exp->GetPhys(),Exp->UpdateCoeffs());
+            Exp->IProductWRTBase (Exp->GetPhys(),Exp->UpdateCoeffs(), true);
         }
     }
     else
@@ -463,7 +463,7 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type, MultiRegions::ExpList3DShar
         MultiRegions::GlobalMatrixKey key(type);
         for(i = 0; i < NumCalls; ++i)
         {
-            Exp->GeneralMatrixOp (key, Exp->GetCoeffs(),Exp->UpdatePhys());
+            Exp->GeneralMatrixOp (key, Exp->GetCoeffs(),Exp->UpdatePhys(), true);
         }
     }
     gettimeofday(&timer2, NULL);

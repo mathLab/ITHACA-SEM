@@ -60,6 +60,11 @@ namespace Nektar
             /// Default constructor.
             ContField1D();
 
+            /// Construct a global continuous field based on an input mesh.
+            ContField1D(SpatialDomains::MeshGraph1D &graph1D,
+                        const GlobalSysSolnType solnType
+                                                = eDirectMultiLevelStaticCond);
+
             /// Constructor.
             ContField1D(SpatialDomains::MeshGraph1D &graph1D,
                         SpatialDomains::BoundaryConditions &bcs,
@@ -204,6 +209,11 @@ namespace Nektar
             /// The array of length #m_ncoeffs\f$=N_{\mathrm{dof}}\f$ containing
             /// the global expansion coefficients.
             Array<OneD, NekDouble>          m_contCoeffs;
+
+            /// (A shared pointer to) a list which collects all the global
+            /// matrices being assembled, such that they should be constructed
+            /// only once.
+            GlobalMatrixMapShPtr            m_globalMat;
 
             /// (A shared pointer to) a list which collects all the global
             /// matrices being assembled, such that they should be constructed

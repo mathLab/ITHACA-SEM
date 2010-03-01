@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     // Print summary of solution details
     const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
     LibUtilities::BasisKey bkey0 = expansions[0]->m_BasisKeyVector[0];
-    LibUtilities::BasisKey bkey1 = expansions[0]->m_BasisKeyVector[01];
+    LibUtilities::BasisKey bkey1 = expansions[0]->m_BasisKeyVector[1];
     int nmodes = bkey0.GetNumModes(); 
     cout << "Solving 2D Continuous Projection"  << endl; 
     cout << "    Expansion  : (" << LibUtilities::BasisTypeMap[bkey0.GetBasisType()] <<","<< LibUtilities::BasisTypeMap[bkey1.GetBasisType()]  << ")" << endl;

@@ -51,7 +51,10 @@ namespace Nektar
          * Constructs an empty expansion list with no boundary conditions.
          */
         DisContField1D::DisContField1D():
-            ExpList1D()
+            ExpList1D(),
+            m_numDirBndCondExpansions(0),
+            m_bndCondExpansions(),
+            m_bndConditions()
         {
         }
 
@@ -67,7 +70,10 @@ namespace Nektar
                     SpatialDomains::MeshGraph1D &graph1D,
                     const GlobalSysSolnType solnType,
                     const bool constructMap):
-            ExpList1D(graph1D)
+            ExpList1D(graph1D),
+            m_numDirBndCondExpansions(0),
+            m_bndCondExpansions(),
+            m_bndConditions()
         {
         }
 
@@ -78,6 +84,7 @@ namespace Nektar
          */
         DisContField1D::DisContField1D(const DisContField1D &In):
             ExpList1D(In),
+            m_numDirBndCondExpansions(0),
             m_bndCondExpansions(In.m_bndCondExpansions),
             m_bndConditions(In.m_bndConditions),
             m_globalBndMat(In.m_globalBndMat),
@@ -103,7 +110,10 @@ namespace Nektar
                     SpatialDomains::BoundaryConditions &bcs,
                     const int bc_loc,
                     const GlobalSysSolnType solnType):
-            ExpList1D(graph1D)
+            ExpList1D(graph1D),
+            m_numDirBndCondExpansions(0),
+            m_bndCondExpansions(),
+            m_bndConditions()
         {
             GenerateBoundaryConditionExpansion(graph1D,bcs,
                                                bcs.GetVariable(bc_loc));
@@ -145,7 +155,10 @@ namespace Nektar
                     SpatialDomains::BoundaryConditions &bcs,
                     const std::string variable,
                     const GlobalSysSolnType solnType):
-            ExpList1D(graph1D)
+            ExpList1D(graph1D),
+            m_numDirBndCondExpansions(0),
+            m_bndCondExpansions(),
+            m_bndConditions()
         {
             GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
             EvaluateBoundaryConditions();

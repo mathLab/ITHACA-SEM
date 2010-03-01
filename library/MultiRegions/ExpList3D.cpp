@@ -239,7 +239,7 @@ namespace Nektar
                 }
                 else if(HexGeom = boost::dynamic_pointer_cast<
                         SpatialDomains::HexGeom>(expansions[i]->m_GeomShPtr))
-                {
+                { 
                     LibUtilities::BasisKey HexBa
                                         = expansions[i]->m_BasisKeyVector[0];
                     LibUtilities::BasisKey HexBb

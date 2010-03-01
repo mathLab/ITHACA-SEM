@@ -1677,6 +1677,28 @@ namespace Nektar
                     cnt  += (*m_exp)[i]->GetTotPoints();
                 }
             }
+            else if(format==eGnuplot)
+            {
+                int i,cnt = 0;
+
+                Array<OneD, const NekDouble> phys = m_phys;
+
+                if(m_physState == false)
+                {
+                    BwdTrans(m_coeffs,m_phys);
+                }
+
+                (*m_exp)[0]->SetPhys(phys);
+                (*m_exp)[0]->WriteToFile(out,eGnuplot,true,var);
+                cnt  += (*m_exp)[0]->GetTotPoints();
+
+                for(i= 1; i < GetExpSize(); ++i)
+                {
+                    (*m_exp)[i]->SetPhys(phys+cnt);
+                    (*m_exp)[i]->WriteToFile(out,eTecplot,false,var);
+                    cnt  += (*m_exp)[i]->GetTotPoints();
+                }
+            }
             else if(format==eGmsh)
             {
 

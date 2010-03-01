@@ -26,11 +26,52 @@ namespace Nektar
          * 
          */
         DisContField3D::DisContField3D( SpatialDomains::MeshGraph3D &graph3D,
+                                        const GlobalSysSolnType solnType,
+                                        bool SetUpJustDG) :
+            ExpList3D(graph3D),
+            m_numDirBndCondExpansions(0),
+            m_bndCondExpansions(),
+            m_bndConditions()
+        {
+            ApplyGeomInfo(graph3D);
+            
+            if(SetUpJustDG)
+            {
+                ASSERTL0(false, "DisContField3D Constructor needs trace implementation.");
+                // Set up matrix map
+                m_globalBndMat = MemoryManager<GlobalLinSysMap>
+                                                    ::AllocateSharedPtr();
+//                map<int,int> periodicEdges;
+//                map<int,int> periodicVertices;
+//                map<int,int> periodicFaces;
+//                GetPeriodicFaces(graph3D,bcs,bcs.GetVariable(bc_loc),
+//                                 periodicVertices,periodicEdges,periodicFaces);
+
+/*                // Set up Trace space
+                bool UseGenSegExp = true;
+                m_trace = MemoryManager<ExpList1D>
+                    ::AllocateSharedPtr(m_bndCondExpansions, m_bndConditions,
+                                *m_exp,graph2D, periodicEdges, UseGenSegExp);
+
+                m_traceMap = MemoryManager<LocalToGlobalDGMap>::
+                    AllocateSharedPtr(graph2D,m_trace,m_exp,solnType,
+                                      m_bndCondExpansions,m_bndConditions,
+                                      periodicEdges);
+*/            }
+
+        }
+
+
+        /**
+         * 
+         */
+        DisContField3D::DisContField3D( SpatialDomains::MeshGraph3D &graph3D,
                                         SpatialDomains::BoundaryConditions &bcs,
                                         const int bc_loc,
                                         const GlobalSysSolnType solnType,
                                         bool SetUpJustDG) :
             ExpList3D(graph3D),
+            m_numDirBndCondExpansions(0),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -39,9 +80,9 @@ namespace Nektar
             EvaluateBoundaryConditions();
             ApplyGeomInfo(graph3D);
             
-            ASSERTL0(false, "DisContField3D Constructor needs implementation.");
             if(SetUpJustDG)
             {
+                ASSERTL0(false, "DisContField3D Constructor needs trace implementation.");
                 // Set up matrix map
                 m_globalBndMat = MemoryManager<GlobalLinSysMap>
                                                     ::AllocateSharedPtr();
@@ -75,6 +116,7 @@ namespace Nektar
                                         const GlobalSysSolnType solnType,
                                         bool SetUpJustDG) :
             ExpList3D(graph3D),
+            m_numDirBndCondExpansions(0),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -113,18 +155,29 @@ namespace Nektar
         /**
          * 
          */
-        DisContField3D::DisContField3D( SpatialDomains::MeshGraph3D &graph3D,
+/*        DisContField3D::DisContField3D( SpatialDomains::MeshGraph3D &graph3D,
                                         SpatialDomains::BoundaryConditions &bcs,
                                         const GlobalSysSolnType solnType,
-                                        const bool constructMap)
+                                        const bool constructMap) :
+            ExpList3D(graph3D),
+            m_numDirBndCondExpansions(0),
+            m_bndCondExpansions(),
+            m_bndConditions()
         {
         }
-
+*/
 
         /**
          * 
          */
-        DisContField3D::DisContField3D(const DisContField3D &In)
+        DisContField3D::DisContField3D(const DisContField3D &In) :
+            ExpList3D(In),
+            m_bndCondExpansions   (In.m_bndCondExpansions),
+            m_bndConditions       (In.m_bndConditions),
+            m_globalBndMat        (In.m_globalBndMat),
+            m_trace               (In.m_trace),  
+            m_traceMap            (In.m_traceMap)
+
         {
         }
 

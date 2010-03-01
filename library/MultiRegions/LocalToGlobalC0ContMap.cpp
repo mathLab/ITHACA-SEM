@@ -901,7 +901,7 @@ namespace Nektar
             map<int,int> faceReorderedGraphVertId; 
             map<int,int>::iterator mapIt;
             map<int,int>::const_iterator mapConstIt;
-           
+
             // STEP 1: Order the Dirichlet vertices and edges first
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
@@ -977,7 +977,7 @@ namespace Nektar
                     }
                 }
             }
-            
+
             // b) periodic edges
             for(mapConstIt = periodicEdgesId.begin(); mapConstIt != periodicEdgesId.end(); mapConstIt++)
             {
@@ -1009,7 +1009,7 @@ namespace Nektar
                     }
                 }
             }
-            
+
             // b) periodic faces
             for(mapConstIt = periodicFacesId.begin(); mapConstIt != periodicFacesId.end(); mapConstIt++)
             {
@@ -1076,7 +1076,7 @@ namespace Nektar
                                              edgeReorderedGraphVertId.size()+
                                              faceReorderedGraphVertId.size()+1);
             graphVertOffset[0] = 0;
-            
+
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(locExpVector[i]);
@@ -1215,7 +1215,6 @@ namespace Nektar
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); j++)
                 {
                     bndCondFaceExp  = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(bndCondExp[i]->GetExp(j));
-                
                     for(k = 0; k < bndCondFaceExp->GetNverts(); k++)
                     {
                         meshVertId = (bndCondFaceExp->GetGeom2D())->GetVid(k);
@@ -1264,7 +1263,7 @@ namespace Nektar
     
             globalId = Vmath::Vmax(m_numLocalCoeffs,&m_localToGlobalMap[0],1)+1;
             m_numGlobalBndCoeffs = globalId;
-            
+
             cnt=0;
             // Setup interior mapping and the boundary map 
             for(i = 0; i < m_numLocalCoeffs; ++i)
@@ -1340,6 +1339,9 @@ namespace Nektar
 
 /**
  * $Log: LocalToGlobalC0ContMap.cpp,v $
+ * Revision 1.13  2009/11/02 11:19:44  pvos
+ * Fixed a bug for reordering a graph without edges
+ *
  * Revision 1.12  2009/10/30 14:02:55  pvos
  * Multi-level static condensation updates
  *

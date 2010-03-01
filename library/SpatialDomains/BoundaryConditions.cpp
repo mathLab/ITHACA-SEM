@@ -80,9 +80,9 @@ namespace Nektar
             /// Look for all data in CONDITIONS block.
             conditions = docHandle.FirstChildElement("NEKTAR").FirstChildElement("CONDITIONS").Element();
 
-            TiXmlElement *boundaryRegions = conditions->FirstChildElement("BOUNDARYREGIONS");
+            ASSERTL0(conditions, "Unable to find CONDITIONS tag in file.");
 
-            ASSERTL0(conditions, "Unable to find BOUNDARYCONDITIONS tag in file.");
+            TiXmlElement *boundaryRegions = conditions->FirstChildElement("BOUNDARYREGIONS");
 
             // Now read all the different tagged sections
             ReadSolverInfo(conditions);

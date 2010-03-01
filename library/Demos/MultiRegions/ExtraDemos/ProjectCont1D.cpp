@@ -37,14 +37,25 @@ int main(int argc, char *argv[])
     graph1D.ReadGeometry(in);
     graph1D.ReadExpansions(in);
 
-    SpatialDomains::BoundaryConditions bcs(&graph1D);
-    bcs.Read(in);
+//    SpatialDomains::BoundaryConditions bcs(&graph1D);
+//    bcs.Read(in);
+    //----------------------------------------------
+
+    //----------------------------------------------
+    // Print summary of solution details
+    const SpatialDomains::ExpansionVector &expansions = graph1D.GetExpansions();
+    LibUtilities::BasisKey bkey0 = expansions[0]->m_BasisKeyVector[0];
+    int nmodes = bkey0.GetNumModes(); 
+    cout << "Solving 1D Continuous Projection"  << endl; 
+    cout << "    Expansion  : (" << LibUtilities::BasisTypeMap[bkey0.GetBasisType()] <<")" << endl;
+    cout << "    No. modes  : " << nmodes << endl;
+    cout << endl;
     //----------------------------------------------
 
     //----------------------------------------------
     // Define Expansion
     Exp = MemoryManager<MultiRegions::ContField1D>
-                                        ::AllocateSharedPtr(graph1D,bcs);
+                                        ::AllocateSharedPtr(graph1D);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -91,7 +102,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Setup Temporary expansion and put in solution
     Sol = MemoryManager<MultiRegions::ContField1D>
-                                ::AllocateSharedPtr(graph1D,bcs);
+                                ::AllocateSharedPtr(*Exp);
     Sol->SetPhys(sol);
     //----------------------------------------------
 

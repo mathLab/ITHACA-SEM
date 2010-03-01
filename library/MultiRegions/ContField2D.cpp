@@ -102,6 +102,39 @@ namespace Nektar
          * mapping array (contained in #m_locToGloMap) for the transformation
          * between local elemental level and global level, it calculates the
          * total number global expansion coefficients \f$\hat{u}_n\f$ and
+         * allocates memory for the array #m_contCoeffs.
+         *
+         * @param   graph2D     A mesh, containing information about the domain
+         *                      and the spectral/hp element expansion.  
+         * @param   solnType    Type of global system to use.
+         */
+        ContField2D::ContField2D(SpatialDomains::MeshGraph2D &graph2D,
+                                 const GlobalSysSolnType solnType):
+            DisContField2D(graph2D,solnType,false),
+            m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
+        {
+            ApplyGeomInfo(graph2D);
+            
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
+                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType);
+
+
+            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+        }
+
+
+        /**
+         * Given a mesh \a graph2D, containing information about the domain and
+         * the spectral/hp element expansion, this constructor fills the list
+         * of local expansions #m_exp with the proper expansions, calculates
+         * the total number of quadrature points \f$\boldsymbol{x}_i\f$ and
+         * local expansion coefficients \f$\hat{u}^e_n\f$ and allocates memory
+         * for the arrays #m_coeffs and #m_phys. Furthermore, it constructs the
+         * mapping array (contained in #m_locToGloMap) for the transformation
+         * between local elemental level and global level, it calculates the
+         * total number global expansion coefficients \f$\hat{u}_n\f$ and
          * allocates memory for the array #m_contCoeffs. The constructor also
          * discretises the boundary conditions, specified by the argument \a
          * bcs, by expressing them in terms of the coefficient of the expansion
@@ -198,38 +231,6 @@ namespace Nektar
             {
                 m_locToGloMap = In.m_locToGloMap;
             }
-
-            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
-        }
-
-
-        /**
-         * Given a mesh \a graph2D, containing information about the domain and
-         * the spectral/hp element expansion, this constructor fills the list
-         * of local expansions #m_exp with the proper expansions, calculates
-         * the total number of quadrature points \f$\boldsymbol{x}_i\f$ and
-         * local expansion coefficients \f$\hat{u}^e_n\f$ and allocates memory
-         * for the arrays #m_coeffs and #m_phys. Furthermore, it constructs the
-         * mapping array (contained in #m_locToGloMap) for the transformation
-         * between local elemental level and global level, it calculates the
-         * total number global expansion coefficients \f$\hat{u}_n\f$ and
-         * allocates memory for the array #m_contCoeffs.
-         *
-         * @param   graph2D     A mesh, containing information about the domain
-         *                      and the spectral/hp element expansion.  
-         * @param   solnType    Type of global system to use.
-         */
-        ContField2D::ContField2D(SpatialDomains::MeshGraph2D &graph2D,
-                                 const GlobalSysSolnType solnType):
-            m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
-            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
-        {
-            ApplyGeomInfo(graph2D);
-            
-            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType);
-
 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);

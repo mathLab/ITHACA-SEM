@@ -59,6 +59,11 @@ namespace Nektar
         public:
             /// Default constructor
             DisContField3D();
+
+            /// Constructs a global discontinuous field based on an input mesh.
+            DisContField3D(SpatialDomains::MeshGraph3D &graph3D,
+                           const GlobalSysSolnType solnType = eDirectStaticCond,
+                           bool SetUpJustDG = true);
             
             /// Constructs a global discontinuous field based on an input mesh
             /// with boundary conditions.
@@ -77,11 +82,11 @@ namespace Nektar
                            bool SetUpJustDG = true);
                            
             /// Constructs a global discontinuous field based on an input mesh.
-            DisContField3D(SpatialDomains::MeshGraph3D &graph3D,
+/*            DisContField3D(SpatialDomains::MeshGraph3D &graph3D,
                           SpatialDomains::BoundaryConditions &bcs,
                           const GlobalSysSolnType solnType = eDirectStaticCond,
                           const bool constructMap = true);
-                          
+*/                          
             /// Constructs a global discontinuous field based on another
             /// discontinuous field.
             DisContField3D(const DisContField3D &In);
@@ -93,6 +98,21 @@ namespace Nektar
             {
                 ExpList3D::EvaluateBoundaryConditions(time,m_bndCondExpansions,m_bndConditions);
             }
+
+            inline const Array<OneD,const MultiRegions::ExpList2DSharedPtr>& GetBndCondExpansions()
+            {
+                return m_bndCondExpansions;
+            }
+            
+            inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& GetBndConditions()
+            {
+                return m_bndConditions;
+            }
+            
+            /// \brief Set up a list of element ids and edge ids the link to the
+            /// boundary conditions
+            void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, 
+                                      Array<OneD,int> &EdgeID);
 
         protected:
             /**

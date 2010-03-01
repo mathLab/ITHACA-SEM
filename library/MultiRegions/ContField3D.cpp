@@ -40,51 +40,89 @@ namespace Nektar
   namespace MultiRegions
   {
 
-        ContField3D::ContField3D(void):
-            DisContField3D()
+        ContField3D::ContField3D():
+            DisContField3D(),
+            m_locToGloMap(),
+            m_contNcoeffs(0),
+            m_contCoeffs(),
+            m_globalMat()
         {
         }
 
-        ContField3D::ContField3D(const ContField3D &In):
-            DisContField3D(In)
+
+        /**
+         * Given a mesh \a graph3D, containing information about the domain and
+         * the spectral/hp element expansion, this constructor fills the list
+         * of local expansions #m_exp with the proper expansions, calculates
+         * the total number of quadrature points \f$\boldsymbol{x}_i\f$ and
+         * local expansion coefficients \f$\hat{u}^e_n\f$ and allocates memory
+         * for the arrays #m_coeffs and #m_phys. Furthermore, it constructs the
+         * mapping array (contained in #m_locToGloMap) for the transformation
+         * between local elemental level and global level, it calculates the
+         * total number global expansion coefficients \f$\hat{u}_n\f$ and
+         * allocates memory for the array #m_contCoeffs.
+         *
+         * @param   graph3D     A mesh, containing information about the domain
+         *                      and the spectral/hp element expansion.  
+         * @param   solnType    Type of global system to use.
+         */
+        ContField3D::ContField3D(SpatialDomains::MeshGraph3D &graph3D,
+                                 const GlobalSysSolnType solnType):
+            DisContField3D(graph3D,solnType,false),
+            m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
+            ApplyGeomInfo(graph3D);
+            
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
+                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType);
+
+
+            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
+
 
         ContField3D::ContField3D(SpatialDomains::MeshGraph3D &graph3D,
                                  SpatialDomains::BoundaryConditions &bcs, 
                                  const int bc_loc,
                                  const GlobalSysSolnType solnType):
-            DisContField3D(graph3D,bcs,solnType,false)
+                DisContField3D(graph3D,bcs,bc_loc,solnType,false),
+                m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
+                m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            cout << "start contfield3d constructor." << endl;
-//            GenerateBoundaryConditionExpansion(graph3D,bcs,bcs.GetVariable(bc_loc));
-//            EvaluateBoundaryConditions();
-//            ApplyGeomInfo(graph3D);
+            GenerateBoundaryConditionExpansion(graph3D,bcs,bcs.GetVariable(bc_loc));
+            EvaluateBoundaryConditions();
+            ApplyGeomInfo(graph3D);
             
             map<int,int> periodicFaces;
             map<int,int> periodicEdges;
             map<int,int> periodicVertices;
-
             GetPeriodicFaces(graph3D,bcs,bcs.GetVariable(bc_loc),periodicVertices,periodicEdges,periodicFaces);
+
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
                                                                                      m_bndCondExpansions,
                                                                                      m_bndConditions,
                                                                                      periodicVertices,
                                                                                      periodicEdges,
                                                                                      periodicFaces); 
+
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
+
 
         ContField3D::ContField3D(SpatialDomains::MeshGraph3D &graph3D,
                                  SpatialDomains::BoundaryConditions &bcs, 
                                  const std::string variable,
                                  const GlobalSysSolnType solnType):
-            DisContField3D(graph3D,bcs,solnType,false)
+                DisContField3D(graph3D,bcs,variable,solnType,false),
+                m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
+                m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-//            GenerateBoundaryConditionExpansion(graph3D, bcs, variable);
-//            EvaluateBoundaryConditions();
-//            ApplyGeomInfo(graph3D);
+            GenerateBoundaryConditionExpansion(graph3D, bcs, variable);
+            EvaluateBoundaryConditions();
+            ApplyGeomInfo(graph3D);
             
             map<int,int> periodicFaces;
             map<int,int> periodicEdges;
@@ -100,77 +138,122 @@ namespace Nektar
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
-/*
-        ContField3D::ContField3D(const LibUtilities::BasisKey &Ba,
-                                 const LibUtilities::BasisKey &Bb,
-                                 const LibUtilities::BasisKey &Bc,
-                                 SpatialDomains::MeshGraph3D &graph3D,
-                                 SpatialDomains::BoundaryConditions &bcs, 
-                                 const int bc_loc,
-                                 const LibUtilities::PointsType TetNb,
-                                 const GlobalSysSolnType solnType):
-            DisContField3D(graph3D,bcs,solnType,false)
-        {
-            map<int,int> periodicFaces;
-            map<int,int> periodicEdges;
-            map<int,int> periodicVertices;
-            GetPeriodicFaces(graph3D,bcs,bcs.GetVariable(bc_loc),periodicVertices,periodicEdges,periodicFaces);
 
-            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
-                                                                                     m_bndCondExpansions,
-                                                                                     m_bndConditions,
-                                                                                     periodicVertices,
-                                                                                     periodicEdges,
-                                                                                     periodicFaces);
-        
-        m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-        m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+
+        ContField3D::ContField3D(const ContField3D &In):
+                DisContField3D(In),
+                m_locToGloMap(In.m_locToGloMap),
+                m_contNcoeffs(In.m_contNcoeffs),
+                m_contCoeffs(m_contNcoeffs,0.0),
+                m_globalMat(In.m_globalMat),
+                m_globalLinSys(In.m_globalLinSys)
+        {
         }
 
-        ContField3D::ContField3D(const LibUtilities::BasisKey &Ba,
-                                 const LibUtilities::BasisKey &Bb,
-                                 const LibUtilities::BasisKey &Bc,
-                                 SpatialDomains::MeshGraph3D &graph3D,
-                                 SpatialDomains::BoundaryConditions &bcs, 
-                                 const std::string variable,
-                                 const LibUtilities::PointsType TetNb,
-                                 const GlobalSysSolnType solnType):
-            DisContField3D(graph3D,solnType,false),
-            m_bndCondExpansions(),
-            m_bndConditions()
-        {
-            GenerateBoundaryConditionExpansion(graph3D,bcs,variable);
-            EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph3D);
-            
-            map<int,int> periodicFaces;
-            map<int,int> periodicEdges;
-            map<int,int> periodicVertices;
-            GetPeriodicFaces(graph3D,bcs,variable,periodicVertices,periodicEdges,periodicFaces);
 
-            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
-                                                                                     m_bndCondExpansions,
-                                                                                     m_bndConditions,
-                                                                                     periodicVertices,
-                                                                                     periodicEdges,
-                                                                                     periodicFaces);       
-            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
-        }
-*/
         ContField3D::~ContField3D()
         {
         }
 
 
-        void ContField3D::FwdTrans(const Array<OneD, const NekDouble> &inarray,
+        /**
+         * Given the coefficients of an expansion, this function evaluates the
+         * spectral/hp expansion \f$u^{\delta}(\boldsymbol{x})\f$ at the
+         * quadrature points \f$\boldsymbol{x}_i\f$. This operation is
+         * evaluated locally by the function ExpList#BwdTrans.
+         *
+         * The coefficients of the expansion should be contained in the variable
+         * #m_coeffs of the ExpList object \a In. The resulting physical values
+         * at the quadrature points \f$u^{\delta}(\boldsymbol{x}_i)\f$ are
+         * stored in the array #m_phys.
+         *
+         * @param   In          An ExpList, containing the local coefficients
+         *                      \f$\hat{u}_n^e\f$ in its array #m_coeffs.
+         */
+        void ContField3D::v_BwdTrans(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                bool  UseContCoeffs)
+        {
+            if(UseContCoeffs)
+            {
+                bool doGlobalOp = m_globalOptParam->DoGlobalMatOp(
+                                                        StdRegions::eBwdTrans);
+
+                if(doGlobalOp)
+                {
+                    GlobalMatrixKey gkey(StdRegions::eBwdTrans,m_locToGloMap);
+                    GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
+                    mat->Multiply(inarray,outarray);
+                }
+                else
+                {
+                    Array<OneD, NekDouble> wsp(m_ncoeffs);
+                    GlobalToLocal(inarray,wsp);
+                    BwdTrans_IterPerExp(wsp,outarray);
+                }
+            }
+            else
+            {
+                BwdTrans_IterPerExp(inarray,outarray);
+            }
+        }
+
+
+        /**
+         * The operation is evaluated locally (i.e. with respect to all local
+         * expansion modes) by the function ExpList#IProductWRTBase. The inner
+         * product with respect to the global expansion modes is than obtained
+         * by a global assembly operation.
+         *
+         * The values of the function \f$f(\boldsymbol{x})\f$ evaluated at the
+         * quadrature points \f$\boldsymbol{x}_i\f$ should be contained in the
+         * variable #m_phys of the ExpList object \a in. The result is stored
+         * in the array #m_contCoeffs.
+         *
+         * @param   In          An ExpList, containing the discrete evaluation
+         *                      of \f$f(\boldsymbol{x})\f$ at the quadrature
+         *                      points in its array #m_phys.
+         */
+        void ContField3D::v_IProductWRTBase(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD, NekDouble> &outarray,
+                                bool  UseContCoeffs)
+        {
+            if(UseContCoeffs)
+            {
+                bool doGlobalOp = m_globalOptParam->DoGlobalMatOp(
+                                                StdRegions::eIProductWRTBase);
+
+                if(doGlobalOp)
+                {
+                    GlobalMatrixKey gkey(StdRegions::eIProductWRTBase,
+                                         m_locToGloMap);
+                    GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
+                    mat->Multiply(inarray,outarray);
+                }
+                else
+                {
+                    Array<OneD, NekDouble> wsp(m_ncoeffs);
+                    IProductWRTBase_IterPerExp(inarray,wsp);
+                    Assemble(wsp,outarray);
+                }
+            }
+            else
+            {
+                IProductWRTBase_IterPerExp(inarray,outarray);
+            }
+        }
+
+
+        void ContField3D::v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                          Array<OneD,       NekDouble> &outarray,
                                    bool  UseContCoeffs)
-        {            
+        {
             // Inner product of forcing
             Array<OneD,NekDouble> wsp(m_contNcoeffs);  
             IProductWRTBase(inarray,wsp,true);
-            
+        
             // Solve the system
             GlobalLinSysKey key(StdRegions::eMass,
                                 m_locToGloMap,
@@ -188,7 +271,8 @@ namespace Nektar
             }
         }
 
-        void ContField3D::MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray,
+
+        void ContField3D::v_MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray,
                                                         Array<OneD,       NekDouble> &outarray,
                                                   bool  UseContCoeffs)
                                                   
@@ -229,6 +313,7 @@ namespace Nektar
                 GlobalToLocal(globaltmp,outarray);
             }
         }
+
 
         void ContField3D::GenerateDirBndCondForcing(const GlobalLinSysKey &key, 
                                                     Array<OneD, NekDouble> &inout, 
@@ -300,6 +385,37 @@ namespace Nektar
 
             return glo_matrix;
         }
+
+        /**
+         * Returns the global matrix associated with the given GlobalMatrixKey.
+         * If the global matrix has not yet been constructed on this field, 
+         * it is first constructed using GenGlobalMatrix().
+         * @param   mkey        Global matrix key.
+         * @returns Assocated global matrix.
+         */
+        GlobalMatrixSharedPtr ContField3D::GetGlobalMatrix(
+                                const GlobalMatrixKey &mkey)
+        {
+            ASSERTL1(mkey.LocToGloMapIsDefined(),
+                     "To use method must have a LocalToGlobalBaseMap "
+                     "attached to key");
+
+            GlobalMatrixSharedPtr glo_matrix;
+            GlobalMatrixMap::iterator matrixIter = m_globalMat->find(mkey);
+
+            if(matrixIter == m_globalMat->end())
+            {
+                glo_matrix = GenGlobalMatrix(mkey,m_locToGloMap);
+                (*m_globalMat)[mkey] = glo_matrix;
+            }
+            else
+            {
+                glo_matrix = matrixIter->second;
+            }
+
+            return glo_matrix;
+        }
+
 
         void ContField3D::v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,

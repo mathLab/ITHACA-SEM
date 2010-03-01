@@ -57,6 +57,10 @@ namespace Nektar
             DisContField2D();
 
             DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
+                           const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
+                           bool SetUpJustDG = true);
+
+            DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
                            SpatialDomains::BoundaryConditions &bcs, 
                            const int bc_loc = 0,
                            const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,

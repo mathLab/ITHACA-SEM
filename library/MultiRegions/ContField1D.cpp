@@ -98,6 +98,39 @@ namespace Nektar
          * the spectral/hp element expansion, this constructor fills the list
          * of local expansions #m_exp with the proper expansions, calculates
          * the total number of quadrature points \f$\boldsymbol{x}_i\f$ and
+         * local expansion coefficients \f$\hat{u}^e_n\f$ and allocates memory
+         * for the arrays #m_coeffs and #m_phys. Furthermore, it constructs the
+         * mapping array (contained in #m_locToGloMap) for the transformation
+         * between local elemental level and global level, it calculates the
+         * total number global expansion coefficients \f$\hat{u}_n\f$ and
+         * allocates memory for the array #m_contCoeffs.
+         *
+         * @param   graph1D     A mesh, containing information about the domain
+         *                      and the spectral/hp element expansion.  
+         * @param   solnType    Type of global system to use.
+         */
+        ContField1D::ContField1D(SpatialDomains::MeshGraph1D &graph1D,
+                                 const GlobalSysSolnType solnType):
+            DisContField1D(graph1D,solnType,false),
+            m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
+        {
+            ApplyGeomInfo(graph1D);
+            
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
+                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType);
+
+
+            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+        }
+
+
+        /**
+         * Given a mesh \a graph1D, containing information about the domain and
+         * the spectral/hp element expansion, this constructor fills the list
+         * of local expansions #m_exp with the proper expansions, calculates
+         * the total number of quadrature points \f$\boldsymbol{x}_i\f$ and
          * local expansion coefficients \f$\hat{u}^e_n\f$ and allocates
          * memory for the arrays #m_coeffs and #m_phys. Furthermore, it
          * constructs the mapping array (contained in #m_locToGloMap) for the

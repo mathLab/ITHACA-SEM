@@ -61,6 +61,11 @@ namespace Nektar
             /// The default constructor.
             ContField2D();
 
+            /// Construct a global continuous field based on an input mesh.
+            ContField2D(SpatialDomains::MeshGraph2D &graph2D,
+                        const GlobalSysSolnType solnType
+                                                = eDirectMultiLevelStaticCond);
+
             /// Construct a global continuous field based on an input mesh with
             /// boundary conditions.
             ContField2D(SpatialDomains::MeshGraph2D &graph2D,
@@ -76,11 +81,6 @@ namespace Nektar
                         SpatialDomains::MeshGraph2D &graph2D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0);
-
-            /// Construct a global continuous field based on an input mesh.
-            ContField2D(SpatialDomains::MeshGraph2D &graph2D,
-                        const GlobalSysSolnType solnType
-                                                = eDirectMultiLevelStaticCond);
 
             /// This constructor sets up global continuous field based on an
             /// input mesh and boundary conditions.

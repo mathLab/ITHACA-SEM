@@ -316,8 +316,18 @@ namespace Nektar
             /// containing all local expansion coefficients.
             inline const Array<OneD, const NekDouble> &GetCoeffs() const;
 
-            ///
+            /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$
+            /// (implemented as #m_contCoeffs) containing all global expansion
+            /// coefficients.
             inline const Array<OneD, const NekDouble> &GetContCoeffs() const;
+
+            /// Put the coefficients from m_coeffs into m_contCoeffs using
+            /// local to global mapping
+            inline void LocalToGlobal(void);
+
+            /// Put the coefficients from m_contCoeffs into m_contCoeffs using
+            /// local to global mapping
+            inline void GlobalToLocal(void);
 
             /// Get the \a i th value  (coefficient) of #m_coeffs
             inline NekDouble GetCoeff(int i);
@@ -377,6 +387,14 @@ namespace Nektar
             /// \f$\boldsymbol{\hat{u}}_l\f$ (implemented as #m_coeffs)
             /// containing all local expansion coefficients.
             inline Array<OneD, NekDouble> &UpdateCoeffs();
+
+            /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$ 
+            /// (implemented as #m_contCoeffs) containing all global expansion 
+            /// coefficients in ContField 
+            inline Array<OneD, NekDouble> &UpdateContCoeffs()
+            {
+                return v_UpdateContCoeffs();
+            }
 
             /// This function returns (a reference to) the array
             /// \f$\boldsymbol{u}_l\f$ (implemented as #m_phys) containing the
@@ -632,7 +650,8 @@ namespace Nektar
                 const GlobalLinSysKey     &mkey,
                 const LocalToGlobalBaseMapSharedPtr &locToGloMap);
 
-            // functions associated with DisContField
+            // Virtual prototypes
+
             virtual const
                 Array<OneD,const boost::shared_ptr<ExpList1D> >
                 &v_GetBndCondExpansions(void);
@@ -709,9 +728,15 @@ namespace Nektar
                                    NekDouble tau);
 
             // wrapper functions about virtual functions
+            virtual Array<OneD, NekDouble> &v_UpdateContCoeffs();
+            
             virtual const
                 Array<OneD, const NekDouble> &v_GetContCoeffs() const;
-                    
+
+            virtual void v_LocalToGlobal();
+
+            virtual void v_GlobalToLocal();
+
             virtual void v_BwdTrans(
                                     const Array<OneD,const NekDouble> &inarray,
                                           Array<OneD,      NekDouble> &outarray,
@@ -1037,6 +1062,17 @@ namespace Nektar
             return v_GetContCoeffs();
         }
 
+        inline void ExpList::LocalToGlobal()
+        {
+            v_LocalToGlobal();
+        }
+
+        inline void ExpList::GlobalToLocal()
+        {
+            v_GlobalToLocal();
+        }
+
+
         /**
          * @param   i               The index of #m_coeffs to be returned
          * @return  The NekDouble held in #m_coeffs[i].
@@ -1275,6 +1311,12 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.88  2010/03/01 17:57:28  cantwell
+* Fixed 3D global matrix operations.
+* Fixed ProjectCont{1,2,3}D demos.
+* Fixed incorrectly placed ASSERT in boundary conditions.
+* Updated TimingGeneralMatrixOp3D to use contfield3d rather than explist3d.
+*
 * Revision 1.87  2010/01/27 13:19:13  cantwell
 * Added functions to write history/probe data during timestepping.
 *

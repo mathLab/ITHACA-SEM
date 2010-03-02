@@ -324,8 +324,8 @@ namespace Nektar
         {
             if(mkey.GetNvariableLaplacianCoefficients() == 0)
             {
-                // This implementation is only valid when there are no coefficients
-                // associated to the Laplacian operator
+                // This implementation is only valid when there are no
+                // coefficients associated to the Laplacian operator
                 if(m_metricinfo->IsUsingLaplMetrics())       
                 {  
                     int       nquad0  = m_base[0]->GetNumPoints();
@@ -1973,6 +1973,10 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.74  2010/01/10 16:53:44  cantwell
+ *    Support for embedded regular Quad and Tri in 3D coord system.
+ *    Cleaned up Helmholtz2D solver.
+ *
  *    Revision 1.73  2009/12/17 23:43:25  bnelson
  *    Fixed windows compiler warnings.
  *

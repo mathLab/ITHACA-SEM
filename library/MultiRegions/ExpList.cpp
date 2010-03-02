@@ -2214,7 +2214,6 @@ namespace Nektar
         // Virtual functions
         //
         
-        // functions associated with DisContField
         const Array<OneD,const boost::shared_ptr<ExpList1D> >
                                         &ExpList::v_GetBndCondExpansions()
         {
@@ -2353,12 +2352,31 @@ namespace Nektar
         }
 
         // wrapper functions about virtual functions
-        const Array<OneD, const NekDouble> &ExpList::v_GetContCoeffs()
-                                                                        const
+        Array<OneD, NekDouble> &ExpList::v_UpdateContCoeffs()
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
             return NullNekDouble1DArray;
+        }
+
+
+        const Array<OneD, const NekDouble> &ExpList::v_GetContCoeffs()  const
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            return NullNekDouble1DArray;
+        }
+
+        void ExpList::v_LocalToGlobal(void)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_GlobalToLocal(void)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
         }
 
 

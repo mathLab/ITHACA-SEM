@@ -745,6 +745,55 @@ namespace Nektar
         /**
          * 
          */
+        Array<OneD, NekDouble> &ContField2D::v_UpdateContCoeffs(void)
+        {
+            return ContField2D::UpdateContCoeffs();
+        };
+
+
+        
+        /**
+         * 
+         */
+        const Array<OneD, const NekDouble> &ContField2D::v_GetContCoeffs(void) const
+        {
+            return ContField2D::GetContCoeffs();
+        };
+
+
+        /**
+         * 
+         */
+        void  ContField2D::v_LocalToGlobal(void) 
+        {
+            return ContField2D::LocalToGlobal();
+        };
+
+
+        /**
+         * 
+         */
+        void  ContField2D::v_GlobalToLocal(void) 
+        {
+            return ContField2D::GlobalToLocal();
+        };
+
+
+        /**
+         * 
+         */
+        void ContField2D::v_BwdTrans(
+                                     const Array<OneD, const NekDouble> &inarray,
+                                     Array<OneD,       NekDouble> &outarray,
+                                     bool  UseContCoeffs)
+        {
+            BwdTrans(inarray,outarray,UseContCoeffs);
+        }
+
+
+        /**
+         * 
+         */
         void ContField2D::v_FwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
@@ -836,12 +885,12 @@ namespace Nektar
             int i,j;
             int bndcnt=m_locToGloMap->GetNumLocalDirBndCoeffs();
             for(i = m_numDirBndCondExpansions;
-                                    i < m_bndCondExpansions.num_elements(); ++i)
+                i < m_bndCondExpansions.num_elements(); ++i)
             {
                 for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                 {
                     wsp[m_locToGloMap
-                                ->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)]
+                        ->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)]
                         += (m_bndCondExpansions[i]->GetCoeffs())[j];
                 }
             }
@@ -852,6 +901,7 @@ namespace Nektar
 
             if(UseContCoeffs)
             {
+                Vmath::Zero(m_contNcoeffs,outarray,1);
                 GlobalSolve(key,wsp,outarray,dirForcing);
             }
             else

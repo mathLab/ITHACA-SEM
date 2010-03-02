@@ -244,7 +244,6 @@ namespace Nektar
             /// #m_contNcoeffs\f$=N_{\mathrm{dof}}\f$
             int                             m_contNcoeffs;
 
-
             /// The array of length #m_ncoeffs\f$=N_{\mathrm{dof}}\f$
             /// containing the global expansion coefficients.
             Array<OneD, NekDouble>          m_contCoeffs;
@@ -272,6 +271,24 @@ namespace Nektar
 
             /// Returns the linear system specified by the key \a mkey.
             GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
+
+            /// Template method virtual forwarded for UpdateContCoeffs()
+            virtual Array<OneD, NekDouble> &v_UpdateContCoeffs();
+            
+            /// Template method virtual forwarded for GetContCoeffs()
+            virtual const Array<OneD, const NekDouble> &v_GetContCoeffs() const;
+
+            /// Template method virtual forwarded for LocalToGlobal()
+            virtual void v_LocalToGlobal();
+
+            /// Template method virtual forwarded for GlobalToLocal()
+            virtual void v_GlobalToLocal();
+
+            /// Template method virtual forwarder for FwdTrans().
+            virtual void v_BwdTrans(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                bool  UseContCoeffs);
 
             /// Template method virtual forwarder for FwdTrans().
             virtual void v_FwdTrans(

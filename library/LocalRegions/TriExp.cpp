@@ -255,7 +255,7 @@ namespace Nektar
                     StdExpansion2D::PhysTensorDeriv(wsp0,wsp1,wsp2);
                     
                     // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
-                    // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
+                    // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g1 * du_dxi1 + g2 * du_dxi2
                     // where g0, g1 and g2 are the metric terms set up in the GeomFactors class
                     // especially for this purpose
                     Vmath::Vvtvvtp(nqtot,&metric[0][0],1,&wsp1[0],1,&metric[1][0],1,&wsp2[0],1,&wsp0[0],1);
@@ -311,6 +311,8 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
                     // substep 1: calculate the metric terms of the collapsed coordinate 
                     // transformation
+                    Vmath::Fill(wspsize,1.0,wsp6,1);
+                    Vmath::Fill(wspsize,1.0,wsp7,1);
                     for(i = 0; i < nquad1; i++)
                     {
                         Blas::Dscal(nquad0,2.0/(1-z1[i]),&wsp6[0]+i*nquad0,1);
@@ -1934,6 +1936,10 @@ namespace Nektar
 
 /** 
  *    $Log: TriExp.cpp,v $
+ *    Revision 1.68  2010/01/10 16:53:44  cantwell
+ *    Support for embedded regular Quad and Tri in 3D coord system.
+ *    Cleaned up Helmholtz2D solver.
+ *
  *    Revision 1.67  2009/12/17 23:43:25  bnelson
  *    Fixed windows compiler warnings.
  *

@@ -43,22 +43,38 @@
 
 using namespace Nektar;
 
-
 int main(int argc, char *argv[])
 {
+#ifdef TIMING
+    timeval timer1, timer2;
+    NekDouble time1, time2;
+    NekDouble exeTime;
+#endif
     
-    if(argc != 2)
+    if(argc != 2 && (argc != 4))
     {
-        cout << "\n \t Usage: IncNavierStokes  input.xml \n" << endl;
+        cerr << "\n \t Usage: IncNavierStokes  input.xml [GlobalOptimizationFile ElementalOptimizationFile] \n" << endl;
         exit(1);
     }
 
     string fileNameString(argv[1]);
+    string globoptfile;
 
     //----------------------------------------------------------------
     // Read the mesh and construct container class
-    VelocityCorrectionScheme dom(fileNameString);
-
+    if(argc == 2)
+    {
+        globoptfile = NekNullString;
+    }
+    else
+    {
+        string eloptfile  (argv[3]);
+        NekOptimize::LoadElementalOptimizationParameters(eloptfile);
+        
+        globoptfile = argv[2];
+    }
+    
+    VelocityCorrectionScheme dom(fileNameString,globoptfile);
     dom.Summary(cout);
     
     switch(dom.GetEquationType())
@@ -72,8 +88,19 @@ int main(int argc, char *argv[])
             // Set initial condition using time t=0
             dom.SetInitialConditions(0.0);
 
+#ifdef TIMING
+            dom.AdvanceInTime(1);
+            gettimeofday(&timer1, NULL);
+#endif
             // Integrate from start time to end time
             dom.AdvanceInTime(nsteps);
+#ifdef TIMING
+            gettimeofday(&timer2, NULL);
+            time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
+            time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
+            exeTime = (time2-time1)/1000000.0;
+            cout << "Execution Time: " << exeTime << endl;
+#endif
             break;
         }
     case eNoEquationType:
@@ -85,22 +112,12 @@ int main(int argc, char *argv[])
     dom.Output();
     
     // Evaluate L2 Error
-    //cout << "Error:" << endl;
-    //for(int i = 0; i < dom.GetNvariables(); ++i)
-    //{
-    //    cout << "\t"<< dom.GetVariable(i) << ": "
-    //         << dom.LinfError(i) << " (Linf), "
-    //         << dom.L2Error(i) << " (L2) " << endl;
-    //}
-	
-	// Evaluate L2 Error
-	cout << endl;
-	for(int i = 0; i < dom.GetNvariables(); ++i)
-	{
-		cout << "L2 Error (variable " << dom.GetVariable(i) << ") : " << dom.L2Error(i) << endl;
-	}
-	
-	
+    cout << endl;
+    for(int i = 0; i < dom.GetNvariables(); ++i)
+    {
+        cout << "L2 Error (variable " << dom.GetVariable(i) << ") : " << dom.L2Error(i,true) << endl;
+    }
+		
 }
 
 /**

@@ -58,8 +58,8 @@ namespace Nektar
      * \param
      */
 
-    IncNavierStokes::IncNavierStokes(string &fileNameString):
-        ADRBase(fileNameString,false,true),
+    IncNavierStokes::IncNavierStokes(string &fileNameString, string &globoptfile):
+        ADRBase(fileNameString,false,true,globoptfile),
         m_infosteps(10)
     {
         int i,j;
@@ -229,19 +229,19 @@ namespace Nektar
 			
 			for(int n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
 			{	
-			  if(m_fields[i]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "TimeDependent")
-			  {
+                            if(m_fields[i]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "TimeDependent")
+                            {
 				m_timeDepBcFlag = true;
-			  }
+                            }
 			}
 			
 		    if(m_timeDepBcFlag)	
-			{
-			   m_fields[i]->EvaluateBoundaryConditions(time);
-			}
+                    {
+                        m_fields[i]->EvaluateBoundaryConditions(time);
+                    }
 		}
 	}
-	
+    
 
     // case insensitive string comparison from web
     int nocase_cmp(const string & s1, const string& s2) 
@@ -277,6 +277,9 @@ namespace Nektar
 
 /**
 * $Log: IncNavierStokes.cpp,v $
+* Revision 1.3  2010/01/28 15:16:03  abolis
+* Time-Dependent boundary conditions
+*
 * Revision 1.2  2009/09/06 22:31:15  sherwin
 * First working version of Navier-Stokes solver and input files
 *

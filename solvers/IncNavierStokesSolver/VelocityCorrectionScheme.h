@@ -67,7 +67,7 @@ namespace Nektar
          * 
          *
          */
-        VelocityCorrectionScheme(string &fileStringName);
+        VelocityCorrectionScheme(string &fileStringName, string globoptfile = "NoGlobalOpts");
 
         void Summary(std::ostream &out);
 
@@ -136,5 +136,8 @@ namespace Nektar
 #endif //VELOCITY_CORRECTION_SCHEME_H
 
 /**
-* $Log:  $
+* $Log: VelocityCorrectionScheme.h,v $
+* Revision 1.1  2009/09/06 22:31:16  sherwin
+* First working version of Navier-Stokes solver and input files
+*
 **/

@@ -39,6 +39,14 @@
 #include <MultiRegions/DisContField2D.h>
 #include <Auxiliary/ADRBase.h>
 
+//#define TIMING
+
+#ifdef TIMING
+#include <time.h>
+#include <sys/time.h>
+#endif
+
+
 namespace Nektar
 {     
 
@@ -97,7 +105,7 @@ namespace Nektar
          * 
          *
          */
-        IncNavierStokes(string &fileStringName);
+        IncNavierStokes(string &fileStringName, string &globoptfile = NekNullString);
 
         EquationType GetEquationType(void)
         {
@@ -160,6 +168,9 @@ namespace Nektar
 
 /**
 * $Log: IncNavierStokes.h,v $
+* Revision 1.2  2010/01/28 15:17:05  abolis
+* Time-Dependent boundary conditions
+*
 * Revision 1.1  2009/09/06 22:31:15  sherwin
 * First working version of Navier-Stokes solver and input files
 *

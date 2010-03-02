@@ -55,13 +55,12 @@ namespace Nektar
         {
 
         public:
-
-            /** \brief Constructor using BasisKey class for quadrature
-                points and order definition */
-            TetExp(const LibUtilities::BasisKey &Ba,
-                   const LibUtilities::BasisKey &Bb,
-                   const LibUtilities::BasisKey &Bc,
-                   const SpatialDomains::TetGeomSharedPtr &geom);
+            /// Constructor using BasisKey class for quadrature points and 
+            /// order definition.
+            TetExp( const LibUtilities::BasisKey &Ba,
+                            const LibUtilities::BasisKey &Bb,
+                            const LibUtilities::BasisKey &Bc,
+                            const SpatialDomains::TetGeomSharedPtr &geom);
 
             /// Copy Constructor
             TetExp(const TetExp &T);
@@ -69,211 +68,104 @@ namespace Nektar
             /// Destructor
             ~TetExp();
 
-            void GetCoords(Array<OneD,NekDouble> &coords_0,
-                           Array<OneD,NekDouble> &coords_1,
-                           Array<OneD,NekDouble> &coords_2);
+        protected:
+            /// Calculate the inner product of inarray with respect to the 
+            /// basis B=m_base0*m_base1*m_base2 and put into outarray:
+            virtual void v_IProductWRTBase(
+                            const Array<OneD, const NekDouble>& inarray,
+                            Array<OneD, NekDouble> & outarray);
 
-            void GetCoord(const Array<OneD, const NekDouble> &Lcoords, Array<OneD,NekDouble> &coords);
+            /// Forward transform from physical quadrature space stored in 
+            /// \a inarray and evaluate the expansion coefficients and store 
+            /// in \a (this)->_coeffs  */
+            virtual void v_FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray);
+
 
             //----------------------------
             // Integration Methods
             //----------------------------
+            /// Integrate the physical point list \a inarray over region
+            NekDouble v_Integral(const Array<OneD, const NekDouble> &inarray);
 
-            /// \brief Integrate the physical point list \a inarray over region
-            NekDouble Integral(const Array<OneD, const NekDouble> &inarray);
-
-            /** \brief Forward transform from physical quadrature space
-                stored in \a inarray and evaluate the expansion coefficients and
-                store in \a (this)->_coeffs  */
-            void FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray);
 
             //-----------------------------
             // Differentiation Methods
             //-----------------------------
+            /// Differentiate \a inarray in the three coordinate directions.
+            virtual void v_PhysDeriv(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD, NekDouble> &out_d0,
+                            Array<OneD, NekDouble> &out_d1,
+                            Array<OneD, NekDouble> &out_d2);
 
-            void PhysDeriv(const Array<OneD, const NekDouble> &inarray,
-                           Array<OneD, NekDouble> &out_d0,
-                           Array<OneD, NekDouble> &out_d1,
-                           Array<OneD, NekDouble> &out_d2);
+            virtual NekDouble v_PhysEvaluate(
+                            const Array<OneD, const NekDouble> &coords);
 
+            /// Get the x,y,z coordinates of each quadrature point.
+            virtual void v_GetCoords(Array<OneD,NekDouble> &coords_0,
+                            Array<OneD,NekDouble> &coords_1,
+                            Array<OneD,NekDouble> &coords_2);
 
-            /// Return Shape of region, using  ShapeType enum list. i.e. Tetrahedron
-            StdRegions::ExpansionType DetExpansionType() const
-            {
-                return StdRegions::eTetrahedron;
-            }
+            virtual void v_GetCoord(
+                            const Array<OneD, const NekDouble> &Lcoords, 
+                            Array<OneD,NekDouble> &coords);
 
-            const SpatialDomains::GeometrySharedPtr GetGeom() const
-            {
-                return m_geom;
-            }
+            virtual void v_WriteToFile( std::ofstream &outfile, 
+                            OutputFormat format, 
+                            const bool dumpVar = true, 
+                            std::string var = "v");
 
-            const SpatialDomains::Geometry3DSharedPtr& GetGeom3D() const
-            {
-                return m_geom;
-            }
+            virtual const SpatialDomains::GeometrySharedPtr v_GetGeom() const;
 
-            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
+            virtual const SpatialDomains::Geometry3DSharedPtr& v_GetGeom3D() 
+                                                                        const;
 
-
-        protected:
-            /**
-                \brief Calculate the inner product of inarray with respect to
-                the basis B=m_base0*m_base1*m_base2 and put into outarray:
-
-                \f$ \begin{array}{rcl} I_{pqr} = (\phi_{pqr}, u)_{\delta} & = &
-                \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \sum_{k=0}^{nq_2}
-                \psi_{p}^{a} (\eta_{1i}) \psi_{pq}^{b} (\eta_{2j}) \psi_{pqr}^{c} (\eta_{3k})
-                w_i w_j w_k u(\eta_{1,i} \eta_{2,j} \eta_{3,k})
-                J_{i,j,k}\\ & = & \sum_{i=0}^{nq_0} \psi_p^a(\eta_{1,i})
-                \sum_{j=0}^{nq_1} \psi_{pq}^b(\eta_{2,j}) \sum_{k=0}^{nq_2} \psi_{pqr}^c u(\eta_{1i},\eta_{2j},\eta_{3k})
-                J_{i,j,k} \end{array} \f$ \n
-
-                where
-                \f$ \phi_{pqr} (\xi_1 , \xi_2 , \xi_3) = \psi_p^a (\eta_1) \psi_{pq}^b (\eta_2) \psi_{pqr}^c (\eta_3) \f$
-
-                which can be implemented as \n
-                \f$f_{pqr} (\xi_{3k}) = \sum_{k=0}^{nq_3} \psi_{pqr}^c u(\eta_{1i},\eta_{2j},\eta_{3k})
-                J_{i,j,k} = {\bf B_3 U}   \f$ \n
-                \f$ g_{pq} (\xi_{3k}) = \sum_{j=0}^{nq_1} \psi_{pq}^b (\xi_{2j}) f_{pqr} (\xi_{3k})  = {\bf B_2 F}  \f$ \n
-                \f$ (\phi_{pqr}, u)_{\delta} = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k})  = {\bf B_1 G} \f$
-            **/
-            void IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
-                                 Array<OneD, NekDouble> & outarray);
-
-            DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
-            DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
-            DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
-            DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
+            DNekMatSharedPtr GenMatrix(
+                            const StdRegions::StdMatrixKey &mkey);
+                            
+            DNekMatSharedPtr CreateStdMatrix(
+                            const StdRegions::StdMatrixKey &mkey);
+                            
+            DNekScalMatSharedPtr  CreateMatrix(
+                            const MatrixKey &mkey);
+                            
+            DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(
+                            const MatrixKey &mkey);
 
 
         private:
-        SpatialDomains::Geometry3DSharedPtr m_geom;
+            SpatialDomains::Geometry3DSharedPtr m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
 
-        LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
+            LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
             TetExp();
 
-            virtual StdRegions::ExpansionType v_DetExpansionType() const
-            {
-                return DetExpansionType();
-            }
+            /// Return Shape of region, using  ShapeType enum list.
+            virtual StdRegions::ExpansionType v_DetExpansionType() const;
 
-            virtual const SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const
-            {
-                return m_metricinfo;
-            }
+            virtual const SpatialDomains::GeomFactorsSharedPtr& 
+                                                        v_GetMetricInfo() const;
 
-            virtual const SpatialDomains::GeometrySharedPtr v_GetGeom() const
-            {
-                return GetGeom();
-            }
+            virtual int v_GetCoordim();
 
-            virtual const SpatialDomains::Geometry3DSharedPtr& v_GetGeom3D() const
-            {
-                return GetGeom3D();
-            }
+            virtual NekDouble v_Linf(const Array<OneD, const NekDouble> &sol);
 
-            virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
-                                     Array<OneD, NekDouble> &coords_1,
-                                     Array<OneD, NekDouble> &coords_2)
-            {
-                GetCoords(coords_0, coords_1, coords_2);
-            }
+            virtual NekDouble v_Linf();
 
-            virtual void v_GetCoord(const Array<OneD, const NekDouble> &lcoord,
-                                    Array<OneD, NekDouble> &coord)
-            {
-                GetCoord(lcoord, coord);
-            }
+            virtual NekDouble v_L2(const Array<OneD, const NekDouble> &sol);
 
-            virtual int v_GetCoordim()
-            {
-                return m_geom->GetCoordim();
-            }
+            virtual NekDouble v_L2();
 
-            virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
-                                     Array<OneD, NekDouble> &out_d0,
-                                     Array<OneD, NekDouble> &out_d1,
-                                     Array<OneD, NekDouble> &out_d2)
-            {
-                PhysDeriv(inarray, out_d0, out_d1, out_d2);
-            }
+            virtual DNekMatSharedPtr v_CreateStdMatrix(
+                            const StdRegions::StdMatrixKey &mkey);
 
-            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")
-            {
-                WriteToFile(outfile,format,dumpVar,var);
-            }
+            virtual DNekScalMatSharedPtr& v_GetLocMatrix(
+                            const MatrixKey &mkey);
 
-            /** \brief Virtual call to integrate the physical point list \a inarray
-                over region (see SegExp::Integral) */
-            virtual NekDouble v_Integral(const Array<OneD, const NekDouble> &inarray )
-            {
-                return Integral(inarray);
-            }
-
-            /** \brief Virtual call to TriExp::IProduct_WRT_B */
-            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
-            {
-                IProductWRTBase(inarray,outarray);
-            }
-
-            virtual void v_IProductWRTDerivBase (const int dir,
-                                                 const Array<OneD, const NekDouble> &inarray,
-                                                 Array<OneD, NekDouble> &outarray)
-            {
-                IProductWRTDerivBase(dir,inarray,outarray);
-            }
-
-            /// Virtual call to SegExp::FwdTrans
-            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
-                                    Array<OneD, NekDouble> &outarray)
-            {
-                FwdTrans(inarray, outarray);
-            }
-
-            /// Virtual call to TetExp::Evaluate
-            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords);
-
-            virtual NekDouble v_Linf(const Array<OneD, const NekDouble> &sol)
-            {
-                return Linf(sol);
-            }
-
-            virtual NekDouble v_Linf()
-            {
-                return Linf();
-            }
-
-            virtual NekDouble v_L2(const Array<OneD, const NekDouble> &sol)
-            {
-                return StdExpansion::L2(sol);
-            }
-
-
-            virtual NekDouble v_L2()
-            {
-                return StdExpansion::L2();
-            }
-
-            virtual DNekMatSharedPtr v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
-            {
-                return CreateStdMatrix(mkey);
-            }
-
-            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const MatrixKey &mkey)
-            {
-                return m_matrixManager[mkey];
-            }
-
-            virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const MatrixKey &mkey)
-            {
-                return m_staticCondMatrixManager[mkey];
-            }
-
-
+            virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(
+                            const MatrixKey &mkey);
         };
 
         // type defines for use of TetExp in a boost vector
@@ -288,6 +180,23 @@ namespace Nektar
 
 /**
  *    $Log: TetExp.h,v $
+ *    Revision 1.24  2010/02/26 13:52:45  cantwell
+ *    Tested and fixed where necessary Hex/Tet projection and differentiation in
+ *      StdRegions, and LocalRegions for regular and deformed (where applicable).
+ *    Added SpatialData and SpatialParameters classes for managing spatiall-varying
+ *      data.
+ *    Added TimingGeneralMatrixOp3D for timing operations on 3D geometries along
+ *      with some associated input meshes.
+ *    Added 3D std and loc projection demos for tet and hex.
+ *    Added 3D std and loc regression tests for tet and hex.
+ *    Fixed bugs in regression tests in relation to reading OK files.
+ *    Extended Elemental and Global optimisation parameters for 3D expansions.
+ *    Added GNUPlot output format option.
+ *    Updated ADR2DManifoldSolver to use spatially varying data.
+ *    Added Barkley model to ADR2DManifoldSolver.
+ *    Added 3D support to FldToVtk and XmlToVtk.
+ *    Renamed History.{h,cpp} to HistoryPoints.{h,cpp}
+ *
  *    Revision 1.23  2009/12/15 18:09:02  cantwell
  *    Split GeomFactors into 1D, 2D and 3D
  *    Added generation of tangential basis into GeomFactors

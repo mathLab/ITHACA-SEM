@@ -72,46 +72,120 @@ namespace Nektar
         {
         } 
 
+
         TetExp::~TetExp()
         {
         }
 
 
-        //----------------------------
-        // Integration Methods
-        //----------------------------
+        /**
+         * \f$ \begin{array}{rcl} I_{pqr} = (\phi_{pqr}, u)_{\delta} 
+         *   & = & \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \sum_{k=0}^{nq_2}
+         *     \psi_{p}^{a} (\eta_{1i}) \psi_{pq}^{b} (\eta_{2j}) \psi_{pqr}^{c}
+         *     (\eta_{3k}) w_i w_j w_k u(\eta_{1,i} \eta_{2,j} \eta_{3,k})
+         * J_{i,j,k}\\ & = & \sum_{i=0}^{nq_0} \psi_p^a(\eta_{1,i})
+         *   \sum_{j=0}^{nq_1} \psi_{pq}^b(\eta_{2,j}) \sum_{k=0}^{nq_2} 
+         *   \psi_{pqr}^c u(\eta_{1i},\eta_{2j},\eta_{3k}) J_{i,j,k} 
+         * \end{array} \f$ \n
+         * where
+         * \f$ \phi_{pqr} (\xi_1 , \xi_2 , \xi_3) 
+         *   = \psi_p^a (\eta_1) \psi_{pq}^b (\eta_2) \psi_{pqr}^c (\eta_3) \f$
+         * which can be implemented as \n
+         * \f$f_{pqr} (\xi_{3k}) 
+         *   = \sum_{k=0}^{nq_3} \psi_{pqr}^c u(\eta_{1i},\eta_{2j},\eta_{3k})
+         * J_{i,j,k} = {\bf B_3 U}   \f$ \n
+         * \f$ g_{pq} (\xi_{3k}) 
+         *   = \sum_{j=0}^{nq_1} \psi_{pq}^b (\xi_{2j}) f_{pqr} (\xi_{3k})  
+         *   = {\bf B_2 F}  \f$ \n
+         * \f$ (\phi_{pqr}, u)_{\delta} 
+         *   = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k})  
+         *   = {\bf B_1 G} \f$
+         */
+        void TetExp::v_IProductWRTBase(
+                            const Array<OneD, const NekDouble>& inarray, 
+                            Array<OneD, NekDouble> & outarray)
+        {
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    nquad2 = m_base[2]->GetNumPoints();
+            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
+            Array<OneD,NekDouble> tmp(nquad0*nquad1*nquad2);
 
-        /** \brief Integrate the physical point list \a inarray over region
-            and return the value
+            // multiply inarray with Jacobian
+            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {
+                Vmath::Vmul(nquad0*nquad1*nquad2,&jac[0],1,
+                            (NekDouble*)&inarray[0],1,&tmp[0],1);
+            }
+            else
+            {
+                Vmath::Smul(nquad0*nquad1*nquad2,jac[0],
+                            (NekDouble*)&inarray[0],1,&tmp[0],1);
+            }
 
-            Inputs:\n
+            StdTetExp::v_IProductWRTBase(tmp,outarray);
+        }
 
-            - \a inarray: definition of function to be returned at quadrature point
-            of expansion.
 
-            Outputs:\n
+        /**
+         * @param   inarray     Array of physical quadrature points to be 
+         *                      transformed.
+         * @param   outarray    Array of coefficients to update.
+         */       
+        void TetExp::v_FwdTrans( const Array<OneD, const NekDouble> & inarray,
+                            Array<OneD,NekDouble> &outarray)
+        {
+            if((m_base[0]->Collocation())&&(m_base[1]->Collocation())&&(m_base[2]->Collocation()))
+            {
+                Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&m_coeffs[0],1);
+            }
+            else
+            {
+                IProductWRTBase(inarray,outarray);
 
-            - returns \f$\int^1_{-1}\int^1_{-1} \int^1_{-1} u(\eta_1, \eta_2, \eta_3) J[i,j,k] d
-            \eta_1 d \eta_2 d \eta_3 \f$ where \f$inarray[i,j,k] = u(\eta_{1i},\eta_{2j},\eta_{3k})
-            \f$ and \f$ J[i,j,k] \f$ is the Jacobian evaluated at the quadrature point.
-        */
-        NekDouble TetExp::Integral(const Array<OneD, const NekDouble> &inarray)
+                // get Mass matrix inverse
+                MatrixKey             masskey(StdRegions::eInvMass,
+                                              DetExpansionType(),*this);
+                DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
+
+                // copy inarray in case inarray == outarray
+                DNekVec in (m_ncoeffs,outarray);
+                DNekVec out(m_ncoeffs,outarray,eWrapper);
+
+                out = (*matsys)*in;
+            }
+        }
+
+
+        /**
+         * @param   inarray     Definition of function to be returned at 
+         *                      quadrature point of expansion.
+         * @returns \f$\int^1_{-1}\int^1_{-1} \int^1_{-1} 
+         *   u(\eta_1, \eta_2, \eta_3) J[i,j,k] d \eta_1 d \eta_2 d \eta_3 \f$ 
+         * where \f$inarray[i,j,k] = u(\eta_{1i},\eta_{2j},\eta_{3k})
+         * \f$ and \f$ J[i,j,k] \f$ is the Jacobian evaluated at the quadrature
+         * point.
+         */
+        NekDouble TetExp::v_Integral(
+                            const Array<OneD, const NekDouble> &inarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nquad2 = m_base[2]->GetNumPoints();
             Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             NekDouble retrunVal;
-            Array<OneD,NekDouble> tmp   = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
+            Array<OneD,NekDouble> tmp(nquad0*nquad1*nquad2);
 
             // multiply inarray with Jacobian
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                Vmath::Vmul(nquad0*nquad1*nquad2,&jac[0],1,(NekDouble*)&inarray[0],1, &tmp[0],1);
+                Vmath::Vmul(nquad0*nquad1*nquad2,&jac[0],1,
+                            (NekDouble*)&inarray[0],1, &tmp[0],1);
             }
             else
             {
-                Vmath::Smul(nquad0*nquad1*nquad2,(NekDouble) jac[0], (NekDouble*)&inarray[0],1,&tmp[0],1);
+                Vmath::Smul(nquad0*nquad1*nquad2,(NekDouble) jac[0],
+                            (NekDouble*)&inarray[0],1,&tmp[0],1);
             }
 
             // call StdTetExp version;
@@ -120,36 +194,15 @@ namespace Nektar
             return retrunVal; 
         }
 
-        void TetExp::IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
-                                     Array<OneD, NekDouble> & outarray)
-        {
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int    nquad2 = m_base[2]->GetNumPoints();
-            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
-            Array<OneD,NekDouble> tmp = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-
-            // multiply inarray with Jacobian
-            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-            {
-                Vmath::Vmul(nquad0*nquad1*nquad2,&jac[0],1,(NekDouble*)&inarray[0],1,&tmp[0],1);
-            }
-            else
-            {
-                Vmath::Smul(nquad0*nquad1*nquad2,jac[0],(NekDouble*)&inarray[0],1,&tmp[0],1);
-            }
-
-            StdTetExp::v_IProductWRTBase(tmp,outarray);
-        }
-
-        ///////////////////////////////
-        /// Differentiation Methods
-        ///////////////////////////////
         
-        /** 
-            \brief Calculate the deritive of the physical points 
-        **/
-        void TetExp::PhysDeriv(const Array<OneD, const NekDouble> & inarray,
+        /**
+         * @param   inarray     Input array of values at quadrature points to
+         *                      be differentiated.
+         * @param   out_d0      Derivative in first coordinate direction.
+         * @param   out_d1      Derivative in second coordinate direction.
+         * @param   out_d2      Derivative in third coordinate direction.
+         */
+        void TetExp::v_PhysDeriv(const Array<OneD, const NekDouble> & inarray,
                                Array<OneD,NekDouble> &out_d0,
                                Array<OneD,NekDouble> &out_d1,
                                Array<OneD,NekDouble> &out_d2)
@@ -213,44 +266,22 @@ namespace Nektar
         }
 
 
-        /** \brief Forward transform from physical quadrature space
-            stored in \a inarray and evaluate the expansion coefficients and
-            store in \a (this)->m_coeffs  
-            
-            Inputs:\n
-            
-            - \a inarray: array of physical quadrature points to be transformed
-            
-            Outputs:\n
-            
-            - \a (this)->m_coeffs: updated array of expansion coefficients.             
-        */
-        
-        void TetExp::FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray)
+        /**
+         * @param   coord       Physical space coordinate
+         * @returns Evaluation of expansion at given coordinate.
+         */
+        NekDouble TetExp::v_PhysEvaluate(
+                            const Array<OneD, const NekDouble> &coord)
         {
-            if((m_base[0]->Collocation())&&(m_base[1]->Collocation())&&(m_base[2]->Collocation()))
-            {
-                Vmath::Vcopy(GetNcoeffs(),&inarray[0],1,&m_coeffs[0],1);
-            }
-            else
-            {
-                IProductWRTBase(inarray,outarray);
-
-                // get Mass matrix inverse
-                MatrixKey             masskey(StdRegions::eInvMass,
-                                              DetExpansionType(),*this);
-                DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
-
-                // copy inarray in case inarray == outarray
-                DNekVec in (m_ncoeffs,outarray);
-                DNekVec out(m_ncoeffs,outarray,eWrapper);
-
-                out = (*matsys)*in;
-            }
+            Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(3);
+            
+            ASSERTL0(m_geom,"m_geom not defined");
+            m_geom->GetLocCoords(coord,Lcoord);
+            return StdTetExp::v_PhysEvaluate(Lcoord);
         }
 
 
-        void TetExp::GetCoords(Array<OneD,NekDouble> &coords_0,
+        void TetExp::v_GetCoords(Array<OneD,NekDouble> &coords_0,
                                Array<OneD,NekDouble> &coords_1,
                                Array<OneD,NekDouble> &coords_2)
         {
@@ -333,7 +364,7 @@ namespace Nektar
         }
 
         // get the coordinates "coords" at the local coordinates "Lcoords"
-        void TetExp::GetCoord(const Array<OneD, const NekDouble> &Lcoords, Array<OneD,NekDouble> &coords)
+        void TetExp::v_GetCoord(const Array<OneD, const NekDouble> &Lcoords, Array<OneD,NekDouble> &coords)
         {
             int  i;
 
@@ -350,7 +381,8 @@ namespace Nektar
             }
         }
 
-        void TetExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
+
+        void TetExp::v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
         {
             int i,j,k;
             int nquad0 = m_base[0]->GetNumPoints();
@@ -423,15 +455,17 @@ namespace Nektar
                 ASSERTL0(false, "Output routine not implemented for requested type of output");
             }
         }
-      
-        NekDouble TetExp::v_PhysEvaluate(const Array<OneD, const NekDouble> &coord)
+
+
+        const SpatialDomains::GeometrySharedPtr TetExp::v_GetGeom() const
         {
-            Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(3);
-            
-            ASSERTL0(m_geom,"m_geom not defined");
-            m_geom->GetLocCoords(coord,Lcoord);
-            return StdTetExp::v_PhysEvaluate(Lcoord);
-            //return StdExpansion3D::v_PhysEvaluate(Lcoord);
+            return m_geom;
+        }
+
+
+        const SpatialDomains::Geometry3DSharedPtr& TetExp::v_GetGeom3D() const
+        {
+            return m_geom;
         }
 
 
@@ -466,6 +500,7 @@ namespace Nektar
             
             return returnval;            
         }
+
 
         DNekScalMatSharedPtr TetExp::CreateMatrix(const MatrixKey &mkey)
         {
@@ -690,14 +725,79 @@ namespace Nektar
             return returnval;
         }
 
+        /// Return Shape of region, using  ShapeType enum list.
+        StdRegions::ExpansionType TetExp::v_DetExpansionType() const
+        {
+            return StdRegions::eTetrahedron;
+        }
 
+        const SpatialDomains::GeomFactorsSharedPtr& TetExp::v_GetMetricInfo() const
+        {
+            return m_metricinfo;
+        }
 
-  
+        int TetExp::v_GetCoordim()
+        {
+            return m_geom->GetCoordim();
+        }
+
+        NekDouble TetExp::v_Linf(const Array<OneD, const NekDouble> &sol)
+        {
+            return Linf(sol);
+        }
+
+        NekDouble TetExp::v_Linf()
+        {
+            return Linf();
+        }
+
+        NekDouble TetExp::v_L2(const Array<OneD, const NekDouble> &sol)
+        {
+            return StdExpansion::L2(sol);
+        }
+
+        NekDouble TetExp::v_L2()
+        {
+            return StdExpansion::L2();
+        }
+
+        DNekMatSharedPtr TetExp::v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
+        {
+            return CreateStdMatrix(mkey);
+        }
+
+        DNekScalMatSharedPtr& TetExp::v_GetLocMatrix(const MatrixKey &mkey)
+        {
+            return m_matrixManager[mkey];
+        }
+
+        DNekScalBlkMatSharedPtr& TetExp::v_GetLocStaticCondMatrix(const MatrixKey &mkey)
+        {
+            return m_staticCondMatrixManager[mkey];
+        }
+
     }//end of namespace
 }//end of namespace
 
 /** 
  *    $Log: TetExp.cpp,v $
+ *    Revision 1.23  2010/02/26 13:52:45  cantwell
+ *    Tested and fixed where necessary Hex/Tet projection and differentiation in
+ *      StdRegions, and LocalRegions for regular and deformed (where applicable).
+ *    Added SpatialData and SpatialParameters classes for managing spatiall-varying
+ *      data.
+ *    Added TimingGeneralMatrixOp3D for timing operations on 3D geometries along
+ *      with some associated input meshes.
+ *    Added 3D std and loc projection demos for tet and hex.
+ *    Added 3D std and loc regression tests for tet and hex.
+ *    Fixed bugs in regression tests in relation to reading OK files.
+ *    Extended Elemental and Global optimisation parameters for 3D expansions.
+ *    Added GNUPlot output format option.
+ *    Updated ADR2DManifoldSolver to use spatially varying data.
+ *    Added Barkley model to ADR2DManifoldSolver.
+ *    Added 3D support to FldToVtk and XmlToVtk.
+ *    Renamed History.{h,cpp} to HistoryPoints.{h,cpp}
+ *
  *    Revision 1.22  2009/12/15 18:09:02  cantwell
  *    Split GeomFactors into 1D, 2D and 3D
  *    Added generation of tangential basis into GeomFactors

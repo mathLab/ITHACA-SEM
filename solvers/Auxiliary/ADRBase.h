@@ -49,6 +49,8 @@
 
 namespace Nektar
 {
+    static std::string NekNullString;
+    
     /// Base class for the development of solvers.
     class ADRBase
     {
@@ -60,11 +62,12 @@ namespace Nektar
         /// Constructor.
         ADRBase(string &fileStringName,
                 bool UseInputFileForProjectionType = false,
-                bool UseContinuousField = false);
+                bool UseContinuousField = false,
+                string &globoptfile = NekNullString);
 
         /// Initialise dependent variable fields.
         void SetADRBase(SpatialDomains::MeshGraphSharedPtr &graph,
-                        int nvariables);
+                        int nvariables, string &globoptfile = NekNullString);
 
         /// Initialise the data in the dependent fields.
         void SetInitialConditions(NekDouble initialtime = 0.0,
@@ -85,7 +88,13 @@ namespace Nektar
 
         /// Compute the L2 error between fields and a given exact solution.
         NekDouble L2Error(int field, 
-                const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
+                          const Array<OneD,NekDouble> &exactsoln, bool Normalised = false);
+
+        /// Compute the L2 error of the fields
+        NekDouble L2Error(int field, bool Normalised = false)
+        {
+            L2Error(field,NullNekDouble1DArray,Normalised);
+        }
 
         /// Compute the L_inf error between fields and a given exact solution.
         NekDouble LinfError(int field, 
@@ -469,6 +478,23 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.h,v $
+* Revision 1.25  2010/02/26 13:52:47  cantwell
+* Tested and fixed where necessary Hex/Tet projection and differentiation in
+*   StdRegions, and LocalRegions for regular and deformed (where applicable).
+* Added SpatialData and SpatialParameters classes for managing spatiall-varying
+*   data.
+* Added TimingGeneralMatrixOp3D for timing operations on 3D geometries along
+*   with some associated input meshes.
+* Added 3D std and loc projection demos for tet and hex.
+* Added 3D std and loc regression tests for tet and hex.
+* Fixed bugs in regression tests in relation to reading OK files.
+* Extended Elemental and Global optimisation parameters for 3D expansions.
+* Added GNUPlot output format option.
+* Updated ADR2DManifoldSolver to use spatially varying data.
+* Added Barkley model to ADR2DManifoldSolver.
+* Added 3D support to FldToVtk and XmlToVtk.
+* Renamed History.{h,cpp} to HistoryPoints.{h,cpp}
+*
 * Revision 1.24  2010/02/02 13:53:26  cantwell
 * Moved reading in of history data to separate SpatialDomains class.
 * Updated AlievPanfilov demo to move history specification.

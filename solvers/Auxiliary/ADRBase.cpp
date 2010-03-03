@@ -68,7 +68,7 @@ namespace Nektar
      * @param   UseContinuoutField              Default: false.
      */
     ADRBase::ADRBase(string &fileNameString, bool UseInputFileForProjectionType,
-                     bool UseContinuousField)
+                     bool UseContinuousField, string &globoptfile)
     {
         SpatialDomains::MeshGraph graph;
         m_filename = fileNameString;
@@ -137,7 +137,7 @@ namespace Nektar
             }
         }
 
-        SetADRBase(m_graph,m_boundaryConditions->GetNumVariables());
+        SetADRBase(m_graph,m_boundaryConditions->GetNumVariables(),globoptfile);
     }
 
 
@@ -151,7 +151,7 @@ namespace Nektar
      * @param   nvariables      Number of dependent variables.
      */
     void ADRBase::SetADRBase(SpatialDomains::MeshGraphSharedPtr &mesh,
-               int nvariables)
+                             int nvariables,  string &globoptfile)
     {
         int i;
 
@@ -197,6 +197,11 @@ namespace Nektar
                             MemoryManager<MultiRegions::ContField2D>
                                     ::AllocateSharedPtr(*mesh2D,
                                         *m_boundaryConditions,i);
+
+                    if(globoptfile != NekNullString)
+                    {
+                        firstfield->ReadGlobalOptimizationParameters(globoptfile);
+                    }
 
                     m_fields[0] = firstfield;
                     for(i = 1 ; i < m_fields.num_elements(); i++)
@@ -518,8 +523,11 @@ namespace Nektar
      * @returns                 Error in the L2-norm.
      */
     NekDouble ADRBase::L2Error(int field,
-                               const Array<OneD, NekDouble> &exactsoln)
+                               const Array<OneD, NekDouble> &exactsoln,
+                               bool Normalised)
     {
+        NekDouble L2error = -1.0;
+
         if(m_fields[field]->GetPhysState() == false)
         {
             m_fields[field]->BwdTrans(m_fields[field]->GetCoeffs(),
@@ -528,7 +536,7 @@ namespace Nektar
 
         if(exactsoln.num_elements())
         {
-            return m_fields[field]->L2(exactsoln);
+            L2error = m_fields[field]->L2(exactsoln);
         }
         else
         {
@@ -536,8 +544,19 @@ namespace Nektar
 
             EvaluateExactSolution(field,exactsoln,m_time);
 
-            return m_fields[field]->L2(exactsoln);
+            L2error = m_fields[field]->L2(exactsoln);
         }
+
+        if(Normalised == true)
+        {
+            Array<OneD, NekDouble> one(m_fields[field]->GetNpoints(),1.0);
+
+            NekDouble Vol = m_fields[field]->PhysIntegral(one);
+
+            L2error = sqrt(L2error*L2error/Vol);
+        }
+
+        return L2error;
     }
 
 
@@ -1329,6 +1348,23 @@ namespace Nektar
 
 /**
 * $Log: ADRBase.cpp,v $
+* Revision 1.27  2010/02/26 13:52:47  cantwell
+* Tested and fixed where necessary Hex/Tet projection and differentiation in
+*   StdRegions, and LocalRegions for regular and deformed (where applicable).
+* Added SpatialData and SpatialParameters classes for managing spatiall-varying
+*   data.
+* Added TimingGeneralMatrixOp3D for timing operations on 3D geometries along
+*   with some associated input meshes.
+* Added 3D std and loc projection demos for tet and hex.
+* Added 3D std and loc regression tests for tet and hex.
+* Fixed bugs in regression tests in relation to reading OK files.
+* Extended Elemental and Global optimisation parameters for 3D expansions.
+* Added GNUPlot output format option.
+* Updated ADR2DManifoldSolver to use spatially varying data.
+* Added Barkley model to ADR2DManifoldSolver.
+* Added 3D support to FldToVtk and XmlToVtk.
+* Renamed History.{h,cpp} to HistoryPoints.{h,cpp}
+*
 * Revision 1.26  2010/02/02 13:53:26  cantwell
 * Moved reading in of history data to separate SpatialDomains class.
 * Updated AlievPanfilov demo to move history specification.

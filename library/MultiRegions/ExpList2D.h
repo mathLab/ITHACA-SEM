@@ -126,9 +126,6 @@ namespace Nektar
             void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
 
         private:
-            /// Flag to indicate if general expansions are being used.
-            bool m_UseGenExp;
-            
             /// Set up the normals on each expansion.
             virtual void v_SetUpPhysNormals(
                                 const StdRegions::StdExpansionVector &locexp);
@@ -144,6 +141,17 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.h,v $
+* Revision 1.24  2009/12/15 18:09:03  cantwell
+* Split GeomFactors into 1D, 2D and 3D
+* Added generation of tangential basis into GeomFactors
+* Updated ADR2DManifold solver to use GeomFactors for tangents
+* Added <GEOMINFO> XML session section support in MeshGraph
+* Fixed const-correctness in VmathArray
+* Cleaned up LocalRegions code to generate GeomFactors
+* Removed GenSegExp
+* Temporary fix to SubStructuredGraph
+* Documentation for GlobalLinSys and GlobalMatrix classes
+*
 * Revision 1.23  2009/11/25 14:51:29  pvos
 * Updates for added Timings directory
 *

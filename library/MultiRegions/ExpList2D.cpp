@@ -64,8 +64,7 @@ namespace Nektar
          *
          */
         ExpList2D::ExpList2D():
-            ExpList(),
-            m_UseGenExp(false)
+            ExpList()
         {
         }
 
@@ -82,8 +81,7 @@ namespace Nektar
          * @param   In          ExpList2D object to copy.
          */
         ExpList2D::ExpList2D(const ExpList2D &In):
-            ExpList(In),
-            m_UseGenExp(In.m_UseGenExp)
+            ExpList(In)
         {
         }
 
@@ -102,8 +100,7 @@ namespace Nektar
          */
         ExpList2D::ExpList2D(SpatialDomains::MeshGraph2D &graph2D,
                                 bool UseGenExp):
-            ExpList(),
-            m_UseGenExp(UseGenExp)
+            ExpList()
         {
             int i,elmtid=0;
             LocalRegions::TriExpSharedPtr      tri;
@@ -139,35 +136,17 @@ namespace Nektar
                                                      TriBa.GetPointsKey());
 
                         TriNb = LibUtilities::eNodalTriElec;
-//                        if (m_UseGenExp)
-//                        {
-//                            Ntri = MemoryManager<LocalRegions::GenNodalTriExp>
-//                                        ::AllocateSharedPtr(newBa,TriBb,TriNb,
-//                                                            TriangleGeom);
-//                        }
-//                        else
-//                        {
-                            Ntri = MemoryManager<LocalRegions::NodalTriExp>
+                        Ntri = MemoryManager<LocalRegions::NodalTriExp>
                                         ::AllocateSharedPtr(newBa,TriBb,TriNb,
                                                             TriangleGeom);
-//                        }
                         Ntri->SetElmtId(elmtid++);
                         (*m_exp).push_back(Ntri);
                     }
                     else
                     {
-//                        if (m_UseGenExp)
-//                        {
-//                            tri = MemoryManager<LocalRegions::GenTriExp>
-//                                        ::AllocateSharedPtr(TriBa,TriBb,
-//                                                            TriangleGeom);
-//                        }
-//                        else
-//                        {
-                            tri = MemoryManager<LocalRegions::TriExp>
+                        tri = MemoryManager<LocalRegions::TriExp>
                                         ::AllocateSharedPtr(TriBa,TriBb,
                                                             TriangleGeom);
-//                        }
                         tri->SetElmtId(elmtid++);
                         (*m_exp).push_back(tri);
                     }
@@ -187,17 +166,9 @@ namespace Nektar
                     LibUtilities::BasisKey QuadBb 
                                         = expansions[i]->m_BasisKeyVector[1];
 
-//                    if (m_UseGenExp)
-//                    {
-//                        quad = MemoryManager<LocalRegions::GenQuadExp>
-//                                        ::AllocateSharedPtr(QuadBa,QuadBb,
-//                                                            QuadrilateralGeom);
-//                    }
-//                    else {
-                        quad = MemoryManager<LocalRegions::QuadExp>
+                    quad = MemoryManager<LocalRegions::QuadExp>
                                         ::AllocateSharedPtr(QuadBa,QuadBb,
                                                             QuadrilateralGeom);
-//                    }
                     quad->SetElmtId(elmtid++);
                     (*m_exp).push_back(quad);
 
@@ -330,8 +301,7 @@ namespace Nektar
         ExpList2D::ExpList2D(   const SpatialDomains::CompositeVector &domain,
                                 SpatialDomains::MeshGraph3D &graph3D,
                                 bool UseGenExp):
-            ExpList(),
-            m_UseGenExp(UseGenExp)
+            ExpList()
         {
             int i,j,elmtid=0;
             int nel=0;
@@ -373,35 +343,17 @@ namespace Nektar
                         {
                             ASSERTL0(false,"This method needs sorting");
                             TriNb = LibUtilities::eNodalTriElec;
-//                            if (m_UseGenExp)
-//                            {
-//                                Ntri = MemoryManager<LocalRegions::GenNodalTriExp>
-//                                        ::AllocateSharedPtr(TriBa,TriBb,TriNb,
-//                                                            TriangleGeom);
-//                            }
-//                            else
-//                            {
-                                Ntri = MemoryManager<LocalRegions::NodalTriExp>
+                            Ntri = MemoryManager<LocalRegions::NodalTriExp>
                                         ::AllocateSharedPtr(TriBa,TriBb,TriNb,
                                                             TriangleGeom);
-//                            }
                             Ntri->SetElmtId(elmtid++);
                             (*m_exp).push_back(Ntri);
                         }
                         else
                         {
-//                            if (m_UseGenExp)
-//                            {
-//                                tri = MemoryManager<LocalRegions::GenTriExp>
-//                                        ::AllocateSharedPtr(TriBa,TriBb,
-//                                                            TriangleGeom);
-//                            }
-//                            else
-//                            {
-                                tri = MemoryManager<LocalRegions::TriExp>
+                            tri = MemoryManager<LocalRegions::TriExp>
                                         ::AllocateSharedPtr(TriBa,TriBb,
                                                             TriangleGeom);
-//                            }
                             tri->SetElmtId(elmtid++);
                             (*m_exp).push_back(tri);
                         }
@@ -422,18 +374,9 @@ namespace Nektar
                         LibUtilities::BasisKey QuadBb 
                                 = graph3D.GetFaceBasisKey(QuadrilateralGeom,0);
 
-//                        if (m_UseGenExp)
-//                        {
-//                            quad = MemoryManager<LocalRegions::GenQuadExp>
-//                                        ::AllocateSharedPtr(QuadBa,QuadBb,
-//                                                            QuadrilateralGeom);
-//                        }
-//                        else
-//                        {
-                            quad = MemoryManager<LocalRegions::QuadExp>
+                        quad = MemoryManager<LocalRegions::QuadExp>
                                         ::AllocateSharedPtr(QuadBa,QuadBb,
                                                             QuadrilateralGeom);
-//                        }
                         quad->SetElmtId(elmtid++);
                         (*m_exp).push_back(quad);
 
@@ -515,8 +458,7 @@ namespace Nektar
                     bool UseGenSegExp = true;
                     locExpList = MemoryManager<MultiRegions::ExpList1D>
                                         ::AllocateSharedPtr(*(bregions[i]),
-                                                            graph2D,
-                                                            UseGenSegExp);
+                                                            graph2D);
                     bndCondExpansions[cnt]  = locExpList;
                     bndConditions[cnt++]    = locBCond;
                 }
@@ -791,6 +733,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList2D.cpp,v $
+* Revision 1.36  2010/01/28 15:20:46  abolis
+* Time-Dependent boundary conditions
+*
 * Revision 1.35  2009/12/18 18:53:14  bnelson
 * Fixed windows compiler warnings.
 *

@@ -10276,7 +10276,7 @@
       <P> epsilon0 = 0.001                 </P>
       <P> epsilon1 = 0.002                 </P>
       <P> initialwavetype = -1             </P>
-      <P> UseDirDeriv = 1                  </P>
+      <P> UseDirDeriv = 0                  </P>
     </PARAMETERS>
 
     <SOLVERINFO>

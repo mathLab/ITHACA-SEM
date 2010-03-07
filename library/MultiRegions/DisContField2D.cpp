@@ -44,6 +44,7 @@ namespace Nektar
 
         DisContField2D::DisContField2D(void):
             ExpList2D(),
+            m_numDirBndCondExpansions(0),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -51,6 +52,7 @@ namespace Nektar
 
         DisContField2D::DisContField2D(const DisContField2D &In):
             ExpList2D(In),
+            m_numDirBndCondExpansions (In.m_numDirBndCondExpansions),
             m_bndCondExpansions   (In.m_bndCondExpansions),
             m_bndConditions       (In.m_bndConditions),
             m_globalBndMat        (In.m_globalBndMat),
@@ -68,29 +70,6 @@ namespace Nektar
             m_bndConditions()
         {
             ApplyGeomInfo(graph2D);
-                        
-            if(SetUpJustDG)
-            {
-                ASSERTL0(false, "Set up Trace space for no boundary conditions");
-                // Set up matrix map
-                m_globalBndMat = MemoryManager<GlobalLinSysMap>
-                                                    ::AllocateSharedPtr();
-//                map<int,int> periodicEdges;
-//                vector<map<int,int> >periodicVertices;
-//                GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),
-//                                 periodicVertices,periodicEdges);
-
-                // Set up Trace space
-/*                bool UseGenSegExp = true;
-                m_trace = MemoryManager<ExpList1D>
-                    ::AllocateSharedPtr(m_bndCondExpansions, m_bndConditions,
-                                *m_exp,graph2D, periodicEdges, UseGenSegExp);
-
-                m_traceMap = MemoryManager<LocalToGlobalDGMap>::
-                    AllocateSharedPtr(graph2D,m_trace,m_exp,solnType,
-                                      m_bndCondExpansions,m_bndConditions,
-                                      periodicEdges);
-*/            }
         }
 
         DisContField2D::DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
@@ -121,7 +100,7 @@ namespace Nektar
                 bool UseGenSegExp = true;
                 m_trace = MemoryManager<ExpList1D>
                     ::AllocateSharedPtr(m_bndCondExpansions, m_bndConditions,
-                                *m_exp,graph2D, periodicEdges, UseGenSegExp);
+                                *m_exp,graph2D, periodicEdges);
 
                 m_traceMap = MemoryManager<LocalToGlobalDGMap>::
                     AllocateSharedPtr(graph2D,m_trace,m_exp,solnType,
@@ -155,7 +134,7 @@ namespace Nektar
                 
                 // Set up Trace space
                 bool UseGenSegExp = true;
-                m_trace = MemoryManager<ExpList1D>::AllocateSharedPtr(m_bndCondExpansions,m_bndConditions,*m_exp,graph2D,periodicEdges, UseGenSegExp);
+                m_trace = MemoryManager<ExpList1D>::AllocateSharedPtr(m_bndCondExpansions,m_bndConditions,*m_exp,graph2D,periodicEdges);
                 
                 m_traceMap = MemoryManager<LocalToGlobalDGMap>::
                     AllocateSharedPtr(graph2D,m_trace,m_exp,solnType,

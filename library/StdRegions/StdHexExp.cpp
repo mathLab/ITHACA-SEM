@@ -388,6 +388,98 @@ namespace Nektar
             }
         }        
 
+        void StdHexExp::v_IProductWRTDerivBase(const int dir, 
+                const Array<OneD, const NekDouble>& inarray, 
+                Array<OneD, NekDouble> & outarray)
+        {
+            bool doMatOp = NekOptimize::ElementalOptimization<eStdHexExp, NekOptimize::eIProductWRTDerivBase, 3>::
+                DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes(),m_base[2]->GetNumModes());
+            
+            if(doMatOp)
+            {
+                StdHexExp::IProductWRTDerivBase_MatOp(dir,inarray,outarray);
+            }
+            else
+            {
+                StdHexExp::IProductWRTDerivBase_SumFac(dir,inarray,outarray);
+            }  
+        }
+
+
+        void StdHexExp::IProductWRTDerivBase_SumFac(const int dir, 
+                                                     const Array<OneD, const NekDouble>& inarray, 
+                                                     Array<OneD, NekDouble> &outarray)
+        {   
+            ASSERTL0((dir==0)||(dir==1)||(dir==2),"input dir is out of range");
+ 
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    nquad2 = m_base[2]->GetNumPoints();
+            int    order0 = m_base[0]->GetNumModes();
+            int    order1 = m_base[1]->GetNumModes();
+
+            Array<OneD, NekDouble> tmp(inarray.num_elements());
+            Array<OneD, NekDouble> wsp(nquad0*nquad1*(nquad2+order0) + order0*order1*nquad2);
+                            
+            // multiply by integration constants 
+            MultiplyByQuadratureMetric(inarray,tmp);
+            
+            switch (dir)
+            {
+                case 0:
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                                 m_base[1]->GetBdata(),
+                                                 m_base[2]->GetBdata(),
+                                                 tmp,outarray,wsp,
+                                                 false,true,true);
+                    break;
+                case 1:
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                                 m_base[1]->GetDbdata(),
+                                                 m_base[2]->GetBdata(),
+                                                 tmp,outarray,wsp,
+                                                 true,false,true);
+                    break;
+                case 2:
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                                 m_base[1]->GetBdata(),
+                                                 m_base[2]->GetDbdata(),
+                                                 tmp,outarray,wsp,
+                                                 true,true,false);
+                    break;
+            } 
+        }  
+        
+        void StdHexExp::IProductWRTDerivBase_MatOp(const int dir, 
+                                                    const Array<OneD, const NekDouble>& inarray, 
+                                                    Array<OneD, NekDouble> &outarray)
+        {
+            ASSERTL0((dir==0)||(dir==1)||(dir==2),"input dir is out of range");
+
+            int nq = GetTotPoints();
+            MatrixType mtype;
+
+            switch (dir)
+            {
+                case 0:
+                    mtype = eIProductWRTDerivBase0;
+                    break;
+                case 1:
+                    mtype = eIProductWRTDerivBase1;
+                    break;
+                case 2:
+                    mtype = eIProductWRTDerivBase2;
+                    break;
+            }
+            
+            StdMatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
+            DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);            
+ 
+            Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
+                        m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);            
+        }
+
+
         void StdHexExp::MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
                                                  Array<OneD, NekDouble> &outarray)
         {     
@@ -2000,6 +2092,44 @@ namespace Nektar
             PhysDeriv(inarray, out_d0, out_d1, out_d2);
         }
 
+        /**
+         * @param   dir         Direction in which to compute derivative.
+         *                      Valid values are 0, 1, 2.
+         * @param   inarray     Input array.
+         * @param   outarray    Output array.
+         */
+        void StdHexExp::v_PhysDeriv(const int dir,
+                               const Array<OneD, const NekDouble>& inarray,
+                                     Array<OneD,       NekDouble>& outarray)
+        {
+            switch(dir)
+            {
+            case 0:
+                {
+                    PhysDeriv(inarray, outarray, NullNekDouble1DArray,
+                              NullNekDouble1DArray);
+                }
+                break;
+            case 1:
+                {
+                    PhysDeriv(inarray, NullNekDouble1DArray, outarray,
+                              NullNekDouble1DArray);
+                }
+                break;
+            case 2:
+                {
+                    PhysDeriv(inarray, NullNekDouble1DArray,
+                              NullNekDouble1DArray, outarray);
+                }
+                break;
+            default:
+                {
+                    ASSERTL1(false,"input dir is out of range");
+                }
+                break;
+            }
+        }
+
         void StdHexExp::v_PhysDirectionalDeriv(
                                 const Array<OneD, const NekDouble>& inarray,
                                 const Array<OneD, const NekDouble>& direction,
@@ -2209,6 +2339,23 @@ namespace Nektar
 
 /**
  * $Log: StdHexExp.cpp,v $
+ * Revision 1.31  2010/02/26 13:52:46  cantwell
+ * Tested and fixed where necessary Hex/Tet projection and differentiation in
+ *   StdRegions, and LocalRegions for regular and deformed (where applicable).
+ * Added SpatialData and SpatialParameters classes for managing spatiall-varying
+ *   data.
+ * Added TimingGeneralMatrixOp3D for timing operations on 3D geometries along
+ *   with some associated input meshes.
+ * Added 3D std and loc projection demos for tet and hex.
+ * Added 3D std and loc regression tests for tet and hex.
+ * Fixed bugs in regression tests in relation to reading OK files.
+ * Extended Elemental and Global optimisation parameters for 3D expansions.
+ * Added GNUPlot output format option.
+ * Updated ADR2DManifoldSolver to use spatially varying data.
+ * Added Barkley model to ADR2DManifoldSolver.
+ * Added 3D support to FldToVtk and XmlToVtk.
+ * Renamed History.{h,cpp} to HistoryPoints.{h,cpp}
+ *
  * Revision 1.30  2009/12/18 00:26:54  bnelson
  * Fixed visual studio compiler warning.
  *

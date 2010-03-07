@@ -334,7 +334,23 @@ namespace Nektar
                     bool doCheckCollDir0,
                     bool doCheckCollDir1,
                     bool doCheckCollDir2);
-                                                                                             
+
+            /// Compute inner product with respect to derivative basis
+            virtual void v_IProductWRTDerivBase(const int dir, 
+                    const Array<OneD, const NekDouble>& inarray, 
+                    Array<OneD, NekDouble> & outarray);
+
+            /// Compute inner product with respect to derivative basis using
+            /// sum-factorisation technique.
+            void IProductWRTDerivBase_SumFac(const int dir, 
+                                             const Array<OneD, const NekDouble>& inarray, 
+                                             Array<OneD, NekDouble> & outarray);
+            /// Compute inner product with respect to derivative basis using
+            /// local matrix operation.            
+            void IProductWRTDerivBase_MatOp(const int dir, 
+                                            const Array<OneD, const NekDouble>& inarray, 
+                                            Array<OneD, NekDouble> & outarray);
+
             virtual NekDouble v_PhysEvaluate(Array<OneD,
                                 const NekDouble>& Lcoords);
 
@@ -403,6 +419,12 @@ namespace Nektar
                                 Array<OneD, NekDouble> &out_d0,
                                 Array<OneD, NekDouble> &out_d1,
                                 Array<OneD, NekDouble> &out_d2);
+            /// Calculate the derivative of the physical points in a single
+            /// direction.
+            virtual void v_PhysDeriv(const int dir, 
+                           const Array<OneD, const NekDouble>& inarray,
+                           Array<OneD, NekDouble> &outarray);
+      
             virtual void v_PhysDirectionalDeriv(
                                 const Array<OneD, const NekDouble>& inarray,
                                 const Array<OneD, const NekDouble>& direction,
@@ -439,6 +461,23 @@ namespace Nektar
 
 /**
  * $Log: StdHexExp.h,v $
+ * Revision 1.31  2010/02/26 13:52:46  cantwell
+ * Tested and fixed where necessary Hex/Tet projection and differentiation in
+ *   StdRegions, and LocalRegions for regular and deformed (where applicable).
+ * Added SpatialData and SpatialParameters classes for managing spatiall-varying
+ *   data.
+ * Added TimingGeneralMatrixOp3D for timing operations on 3D geometries along
+ *   with some associated input meshes.
+ * Added 3D std and loc projection demos for tet and hex.
+ * Added 3D std and loc regression tests for tet and hex.
+ * Fixed bugs in regression tests in relation to reading OK files.
+ * Extended Elemental and Global optimisation parameters for 3D expansions.
+ * Added GNUPlot output format option.
+ * Updated ADR2DManifoldSolver to use spatially varying data.
+ * Added Barkley model to ADR2DManifoldSolver.
+ * Added 3D support to FldToVtk and XmlToVtk.
+ * Renamed History.{h,cpp} to HistoryPoints.{h,cpp}
+ *
  * Revision 1.30  2009/12/15 18:09:02  cantwell
  * Split GeomFactors into 1D, 2D and 3D
  * Added generation of tangential basis into GeomFactors

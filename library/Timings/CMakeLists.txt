@@ -34,6 +34,14 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Scripts/do_TimingHDGHelmSolve2D
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Scripts/do_TimingHelmSolve2D       
     ${CMAKE_CURRENT_BINARY_DIR}/do_TimingHelmSolve2D COPYONLY)
 
+SET(TimingGeneralMatrixOp2DSource TimingGeneralMatrixOp2D.cpp)
+ADD_NEKTAR_EXECUTABLE(TimingGeneralMatrixOp2D TimingGeneralMatrixOp2DSource)
+TARGET_LINK_LIBRARIES(TimingGeneralMatrixOp2D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(TimingGeneralMatrixOp2D)
+SET_TARGET_PROPERTIES(TimingGeneralMatrixOp2D PROPERTIES COMPILE_FLAGS -DBASE_PATH="\\"${CMAKE_SOURCE_DIR}\\"")
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Scripts/do_TimingGeneralMatrixOp2D       
+    ${CMAKE_CURRENT_BINARY_DIR}/do_TimingGeneralMatrixOp2D COPYONLY)
 
 SET(TimingGeneralMatrixOp3DSource TimingGeneralMatrixOp3D.cpp)
 ADD_NEKTAR_EXECUTABLE(TimingGeneralMatrixOp3D TimingGeneralMatrixOp3DSource)
@@ -41,3 +49,6 @@ TARGET_LINK_LIBRARIES(TimingGeneralMatrixOp3D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(TimingGeneralMatrixOp3D)
 SET_TARGET_PROPERTIES(TimingGeneralMatrixOp3D PROPERTIES COMPILE_FLAGS -DBASE_PATH="\\"${CMAKE_SOURCE_DIR}\\"")
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Scripts/do_TimingGeneralMatrixOp3D   
+    ${CMAKE_CURRENT_BINARY_DIR}/do_TimingGeneralMatrixOp3D COPYONLY)
+    

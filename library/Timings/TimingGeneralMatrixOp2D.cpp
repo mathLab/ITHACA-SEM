@@ -3,7 +3,7 @@
 #include <sys/time.h>
 
 #include "boost/filesystem/path.hpp"
-#include <MultiRegions/ContField3D.h>
+#include <MultiRegions/ContField2D.h>
 
 #ifdef NEKTAR_USING_CHUD
 #include <CHUD/CHUD.h> 
@@ -13,14 +13,14 @@
 using namespace Nektar;
 
 NekDouble TimeMatrixOp(StdRegions::MatrixType &type, 
-                            MultiRegions::ContField3DSharedPtr &Exp,
-                            MultiRegions::ContField3DSharedPtr &Fce,
-                            int &NumCalls,
+                            MultiRegions::ContField2DSharedPtr &Exp,
+                            MultiRegions::ContField2DSharedPtr &Fce, 
+                            int &NumCalls, 
                             NekDouble lambda);
 
 int main(int argc, char *argv[])
 {
-    MultiRegions::ContField3DSharedPtr Exp,Fce,Sol;
+    MultiRegions::ContField2DSharedPtr Exp,Fce,Sol;
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce,sol; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
@@ -28,11 +28,11 @@ int main(int argc, char *argv[])
 
     if(argc != 6)
     {
-        fprintf(stderr,"Usage: TimingCGHelmSolve3D Type MeshSize NumModes OptimisationLevel OperatorToTest\n");
+        fprintf(stderr,"Usage: TimingCGHelmSolve2D Type MeshSize NumModes OptimisationLevel OperatorToTest\n");
         fprintf(stderr,"    where: - Type is one of the following:\n");
-        fprintf(stderr,"                  1: Regular  Hexahedrons \n");
-        fprintf(stderr,"                  2: Deformed Hexahedrons (may not be supported) \n");
-        fprintf(stderr,"                  3: Regular  Tetrahedrons \n");
+        fprintf(stderr,"                  1: Regular  Quadrilaterals \n");
+        fprintf(stderr,"                  2: Deformed Quadrilaterals (may not be supported) \n");
+        fprintf(stderr,"                  3: Regular  Triangles \n");
         fprintf(stderr,"    where: - MeshSize is 1/h \n");
         fprintf(stderr,"    where: - NumModes is the number of 1D modes of the expansion \n");
         fprintf(stderr,"    where: - OptimisationLevel is one of the following:\n");
@@ -68,33 +68,33 @@ int main(int argc, char *argv[])
     {
     case 1:
         {
-            MeshFileDirectory << "RegularHexMeshes";
-            MeshFileName << "UnitCube_RegularHexMesh_h_1_" << MeshSize << ".xml";
+            MeshFileDirectory << "RegularQuadMeshes";
+            MeshFileName << "UnitSquare_RegularQuadMesh_h_1_" << MeshSize << ".xml";
         }
         break;
     case 2:
         {
-            MeshFileDirectory << "DeformedHexMeshes";
-            MeshFileName << "UnitCube_DeformedHexMesh_h_1_" << MeshSize << ".xml";
+            MeshFileDirectory << "DeformedQuadMeshes";
+            MeshFileName << "UnitSquare_DeformedQuadMesh_h_1_" << MeshSize << ".xml";
         }
         break;
     case 3:
         {
-            MeshFileDirectory << "RegularTetMeshes";
-            MeshFileName << "UnitCube_RegularTetMesh_h_1_" << MeshSize << ".xml";
+            MeshFileDirectory << "RegularTriMeshes";
+            MeshFileName << "UnitSquare_RegularTriMesh_h_1_" << MeshSize << ".xml";
         }
         break;
     default:
         {
             cerr << "Type should be equal to one of the following values: "<< endl;
-            cerr << "  1: Regular Hexahedrons" << endl;
-            cerr << "  2: Deformed Hexahedrons" << endl;
-            cerr << "  3: Regular Tetrahedrons" << endl;
+            cerr << "  1: Regular Quadrilaterals" << endl;
+            cerr << "  2: Deformed Quadrilaterals" << endl;
+            cerr << "  3: Regular Triangles" << endl;
             exit(1);
         }
     }
 
-     BCfileName << "UnitCube_DirichletBoundaryConditions.xml";
+     BCfileName << "UnitSquare_DirichletBoundaryConditions.xml";
      ExpansionsFileName << "NektarExpansionsNummodes" << NumModes << ".xml";
 
      switch(optLevel)
@@ -175,38 +175,40 @@ int main(int argc, char *argv[])
     string GlobOptFile(GlobOptFilePath.file_string());
 
     //----------------------------------------------
-
     StdRegions::MatrixType type;
 
     switch (opToTest)
     {
         case 0:
             type = StdRegions::eBwdTrans;
+            cerr << "Testing BWDTRANS" << endl;
             break;
         case 1:
             type = StdRegions::eIProductWRTBase;
+            cerr << "Testing IPRODUCT" << endl;
             break;
         case 2:
             type = StdRegions::eMass;
+            cerr << "Testing MASS" << endl;
             break;
         case 3:
             type = StdRegions::eHelmholtz;
+            cerr << "Testing HELMHOLTZ" << endl;
             break;
         default:
             cout << "Operator " << opToTest << " not defined." << endl;
     }
 
-
     //----------------------------------------------
     // Read in mesh from input file
-    SpatialDomains::MeshGraph3D graph3D; 
-    graph3D.ReadGeometry(MeshFile);
-    graph3D.ReadExpansions(ExpansionsFile);
+    SpatialDomains::MeshGraph2D graph2D; 
+    graph2D.ReadGeometry(MeshFile);
+    graph2D.ReadExpansions(ExpansionsFile);
     //----------------------------------------------
 
     //----------------------------------------------
     // read the problem parameters from input file
-    SpatialDomains::BoundaryConditions bcs(&graph3D); 
+    SpatialDomains::BoundaryConditions bcs(&graph2D); 
     bcs.Read(BCfile);
     //----------------------------------------------
 
@@ -217,7 +219,7 @@ int main(int argc, char *argv[])
    
     //----------------------------------------------
     // Define Expansion 
-    Exp = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(graph3D, bcs);
+    Exp = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(graph2D, bcs);
     //----------------------------------------------
     int NumElements = Exp->GetExpSize();
 
@@ -262,7 +264,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Setup expansion containing the  forcing function
-    Fce = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(*Exp);
+    Fce = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(*Exp);
     Fce->SetPhys(fce);
     //----------------------------------------------
 
@@ -278,10 +280,11 @@ int main(int argc, char *argv[])
     {
         sol[i] = ex_sol->Evaluate(xc0[i],xc1[i],xc2[i]);
     }
-    Sol = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(*Exp);
+    Sol = MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(*Exp);
     Sol->SetPhys(sol);
     Sol->SetPhysState(true);   
     //----------------------------------------------
+
 
     NekDouble L2Error;
     NekDouble LinfError;   
@@ -311,6 +314,9 @@ int main(int argc, char *argv[])
         LinfError  = Exp->Linf(Fce->GetPhys()); 
     }
     
+
+    
+    
     //--------------------------------------------        
     // alternative error calculation
 /*    const LibUtilities::PointsKey PkeyT1(30,LibUtilities::eGaussLobattoLegendre);
@@ -323,8 +329,8 @@ int main(int argc, char *argv[])
     const LibUtilities::BasisKey  BkeyQ2(LibUtilities::eModified_A,NumModes,PkeyQ2);
     
     
-    MultiRegions::ExpList3DSharedPtr ErrorExp = 
-        MemoryManager<MultiRegions::ExpList3D>::AllocateSharedPtr(BkeyT1,BkeyT2,BkeyT3,BkeyQ1,BkeyQ2,BkeyQ3,graph3D);
+    MultiRegions::ExpList2DSharedPtr ErrorExp = 
+        MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(BkeyT1,BkeyT2,BkeyT3,BkeyQ1,BkeyQ2,BkeyQ3,graph3D);
     
     int ErrorCoordim = ErrorExp->GetCoordim(0);
     int ErrorNq      = ErrorExp->GetTotPoints();
@@ -370,7 +376,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------       
     NekDouble exeTime;
     int NumCalls;
-    
+
     exeTime = TimeMatrixOp(type, Exp, Fce, NumCalls, lambda);
     
     int nLocCoeffs     = Exp->GetNcoeffs();
@@ -416,9 +422,9 @@ int main(int argc, char *argv[])
 
 
 NekDouble TimeMatrixOp(StdRegions::MatrixType &type, 
-                            MultiRegions::ContField3DSharedPtr &Exp,
-                            MultiRegions::ContField3DSharedPtr &Fce,
-                            int &NumCalls,
+                            MultiRegions::ContField2DSharedPtr &Exp,
+                            MultiRegions::ContField2DSharedPtr &Fce,
+                            int &NumCalls, 
                             NekDouble lambda)
 {
         //----------------------------------------------

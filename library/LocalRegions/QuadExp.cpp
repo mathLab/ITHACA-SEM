@@ -937,41 +937,43 @@ namespace Nektar
                     }
                 }
 
-                Array<OneD, NekDouble> tmp0(m_ncoeffs);
-                Array<OneD, NekDouble> tmp1(m_ncoeffs);
-                
-                StdRegions::StdMatrixKey  stdmasskey(StdRegions::eMass,DetExpansionType(),*this);
-                MassMatrixOp(outarray,tmp0,stdmasskey);
-                IProductWRTBase(inarray,tmp1);
-                
-                Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
-                
-                // get Mass matrix inverse (only of interior DOF)
-                // use block (1,1) of the static condensed system
-                // note: this block alreay contains the inverse matrix
-                MatrixKey             masskey(StdRegions::eMass,DetExpansionType(),*this);
-                DNekScalMatSharedPtr  matsys = (m_staticCondMatrixManager[masskey])->GetBlock(1,1);
-
-                int nBoundaryDofs = NumBndryCoeffs();
-                int nInteriorDofs = m_ncoeffs - nBoundaryDofs; 
-
-                Array<OneD, NekDouble> rhs(nInteriorDofs);
-                Array<OneD, NekDouble> result(nInteriorDofs);
-
-                GetInteriorMap(mapArray);
-
-                for(i = 0; i < nInteriorDofs; i++)
-                {
-                    rhs[i] = tmp1[ mapArray[i] ];
-                }
-
-                Blas::Dgemv('N', nInteriorDofs, nInteriorDofs, matsys->Scale(), &((matsys->GetOwnedMatrix())->GetPtr())[0],
-                            nInteriorDofs,rhs.get(),1,0.0,result.get(),1);   
-
-                for(i = 0; i < nInteriorDofs; i++)
-                {
-                    outarray[ mapArray[i] ] = result[i];
-                }
+                if (m_ncoeffs > 4) {
+                    Array<OneD, NekDouble> tmp0(m_ncoeffs);
+                    Array<OneD, NekDouble> tmp1(m_ncoeffs);
+                    
+                    StdRegions::StdMatrixKey  stdmasskey(StdRegions::eMass,DetExpansionType(),*this);
+                    MassMatrixOp(outarray,tmp0,stdmasskey);
+                    IProductWRTBase(inarray,tmp1);
+                    
+                    Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
+                    
+                    // get Mass matrix inverse (only of interior DOF)
+                    // use block (1,1) of the static condensed system
+                    // note: this block alreay contains the inverse matrix
+                    MatrixKey             masskey(StdRegions::eMass,DetExpansionType(),*this);
+                    DNekScalMatSharedPtr  matsys = (m_staticCondMatrixManager[masskey])->GetBlock(1,1);
+    
+                    int nBoundaryDofs = NumBndryCoeffs();
+                    int nInteriorDofs = m_ncoeffs - nBoundaryDofs; 
+    
+                    Array<OneD, NekDouble> rhs(nInteriorDofs);
+                    Array<OneD, NekDouble> result(nInteriorDofs);
+    
+                    GetInteriorMap(mapArray);
+    
+                    for(i = 0; i < nInteriorDofs; i++)
+                    {
+                        rhs[i] = tmp1[ mapArray[i] ];
+                    }
+    
+                    Blas::Dgemv('N', nInteriorDofs, nInteriorDofs, matsys->Scale(), &((matsys->GetOwnedMatrix())->GetPtr())[0],
+                                nInteriorDofs,rhs.get(),1,0.0,result.get(),1);   
+    
+                    for(i = 0; i < nInteriorDofs; i++)
+                    {
+                        outarray[ mapArray[i] ] = result[i];
+                    }
+                }                
             }
 
         }        
@@ -1973,6 +1975,9 @@ namespace Nektar
 
 /** 
  *    $Log: QuadExp.cpp,v $
+ *    Revision 1.75  2010/03/02 23:50:23  sherwin
+ *    Updates related to making IncNavierStokesSolver able to use ContCoeffs
+ *
  *    Revision 1.74  2010/01/10 16:53:44  cantwell
  *    Support for embedded regular Quad and Tri in 3D coord system.
  *    Cleaned up Helmholtz2D solver.

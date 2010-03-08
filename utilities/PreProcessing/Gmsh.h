@@ -132,6 +132,7 @@ namespace Utilities
     void SortEdgeToVertex(vector<TwoDElement> & elements, vector<Edge> & edges);
     void SortFaceToVertex(vector<ThreeDElement> & elements, vector<Face> & faces);
     void SortFaceToEdge(vector<Face> &faces, vector<Edge> &edges);
+    void RenumberTwoDElementsFromFaces(vector<TwoDElement> & elements, vector<Face> & faces);
     void OrientTets(vector<ThreeDElement> &elements, vector<Vertex> &vertices);
     void SortZeroDElements(vector<ZeroDElement> & points,const vector<Vertex> & vertices);
     void SortOneDElements(vector<OneDElement> &segments, const vector<Edge>& edges);

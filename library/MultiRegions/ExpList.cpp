@@ -1695,7 +1695,7 @@ namespace Nektar
                 for(i= 1; i < GetExpSize(); ++i)
                 {
                     (*m_exp)[i]->SetPhys(phys+cnt);
-                    (*m_exp)[i]->WriteToFile(out,eTecplot,false,var);
+                    (*m_exp)[i]->WriteToFile(out,eGnuplot,false,var);
                     cnt  += (*m_exp)[i]->GetTotPoints();
                 }
             }

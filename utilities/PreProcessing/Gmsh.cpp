@@ -202,6 +202,7 @@ namespace Utilities
         // Fill the faces vector from threeDElements.face
         SortFaceToVertex(threeDElements,faces);
         SortFaceToEdge(faces, edges);
+        RenumberTwoDElementsFromFaces(twoDElements, faces);
         // Correct faces id of twoDElements from faces
         //SortTwoDElements(twoDElements,faces);
         SortThreeDComposites(threeDElements, composites, nBoundComposites, expDim);
@@ -403,7 +404,7 @@ namespace Utilities
                         vert.push_back(elements[i].vert[face_ids[j][k]]);
                     }
                     faceid = GetFace(vert,faces,elm_type);
-                    elements[i].face.push_back(faceid);    
+                    elements[i].face.push_back(faceid);
                 }            
             }
             // Tet
@@ -454,6 +455,24 @@ namespace Utilities
         cout << "...done sorting FaceToEdge relations" << endl;
     }
     
+    void RenumberTwoDElementsFromFaces(vector<TwoDElement> & elements, vector<Face> & faces)
+    {
+        for (int i = 0; i < elements.size(); ++i)
+        {
+            for (int j = 0; j < faces.size(); ++j)
+            {
+                vector<int> x = elements[i].vert;
+                vector<int> y = faces[j].vert;
+                sort(x.begin(), x.end());
+                sort(y.begin(), y.end());
+                if (x == y)
+                {
+                    elements[i].id = faces[j].id;
+                    break;
+                }
+            }
+        }
+    }
     
     // Get the correct edge id's from the edge struct
     void SortZeroDElements(vector<ZeroDElement> & points,const vector<Vertex> & vertices)

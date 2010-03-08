@@ -359,31 +359,25 @@ namespace Nektar
             {
                 int i;
                 
-                ASSERTL1(wsp.num_elements() >= nquad0*nquad1*(nquad2+nmodes0) 
-                                                + nmodes0*nmodes1*nquad2,
-                            "Insufficient workspace size");
+                ASSERTL1(wsp.num_elements() >= nmodes0*nquad2*(nquad1+nmodes1),
+                         "Insufficient workspace size");
                 
-                Array<OneD, NekDouble> tmp = wsp;
-                Array<OneD, NekDouble> tmp0 = wsp+nquad0*nquad1*nquad2;
-                Array<OneD, NekDouble> tmp1 = tmp0+nquad0*nquad1*nmodes0;
-    
-                const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
-                const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
-                const Array<OneD, const NekDouble>& w2 = m_base[2]->GetW();
+                Array<OneD, NekDouble> tmp0 = wsp;
+                Array<OneD, NekDouble> tmp1 = wsp + nmodes0*nquad1*nquad2;
     
                 Blas::Dgemm('T', 'N', nquad1*nquad2, nmodes0, nquad0,
-                            1.0, inarray.get(), nquad0,
-                            base0.get(), nquad0,
-                            0.0, tmp0.get(), nquad1*nquad2);
+                            1.0, inarray.get(),  nquad0,
+                                 base0.get(),    nquad0,
+                            0.0, tmp0.get(),     nquad1*nquad2);
 
                 Blas::Dgemm('T', 'N', nquad2*nmodes0, nmodes1, nquad1,
-                            1.0, tmp0.get(), nquad1,
-                            base1.get(), nquad1,
-                            0.0, tmp1.get(), nquad2*nmodes0);
+                            1.0, tmp0.get(),     nquad1,
+                                 base1.get(),    nquad1,
+                            0.0, tmp1.get(),     nquad2*nmodes0);
 
                 Blas::Dgemm('T', 'N', nmodes0*nmodes1, nmodes2, nquad2,
-                            1.0, tmp1.get(), nquad2,
-                            base2.get(), nquad2,
+                            1.0, tmp1.get(),     nquad2,
+                                 base2.get(),    nquad2,
                             0.0, outarray.get(), nmodes0*nmodes1);
             }
         }        
@@ -412,18 +406,25 @@ namespace Nektar
         {   
             ASSERTL0((dir==0)||(dir==1)||(dir==2),"input dir is out of range");
  
-            int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nquad2 = m_base[2]->GetNumPoints();
             int    order0 = m_base[0]->GetNumModes();
             int    order1 = m_base[1]->GetNumModes();
 
-            Array<OneD, NekDouble> tmp(inarray.num_elements());
-            Array<OneD, NekDouble> wsp(nquad0*nquad1*(nquad2+order0) + order0*order1*nquad2);
+            // If outarray > inarray then no need for temporary storage.
+            Array<OneD, NekDouble> tmp = outarray;
+            if (outarray.num_elements() < inarray.num_elements())
+            {
+                tmp = Array<OneD, NekDouble>(inarray.num_elements());
+            }
+            
+            // Need workspace for sumfackernel though
+            Array<OneD, NekDouble> wsp(order0*nquad2*(nquad1+order1));
                             
             // multiply by integration constants 
             MultiplyByQuadratureMetric(inarray,tmp);
             
+            // perform sum-factorisation
             switch (dir)
             {
                 case 0:
@@ -2339,6 +2340,9 @@ namespace Nektar
 
 /**
  * $Log: StdHexExp.cpp,v $
+ * Revision 1.32  2010/03/07 14:45:22  cantwell
+ * Added support for solving Helmholtz on Hexes
+ *
  * Revision 1.31  2010/02/26 13:52:46  cantwell
  * Tested and fixed where necessary Hex/Tet projection and differentiation in
  *   StdRegions, and LocalRegions for regular and deformed (where applicable).

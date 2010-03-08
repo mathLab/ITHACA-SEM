@@ -41,8 +41,15 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        /**
+         * @class DisContField1D
+         * This class augments the list of local expansions inherited from
+         * ExpList1D with boundary conditions. Inter-element boundaries are
+         * handled using an discontinuous Galerkin scheme.
+         */
 
-        DisContField2D::DisContField2D(void):
+
+        DisContField2D::DisContField2D():
             ExpList2D(),
             m_numDirBndCondExpansions(0),
             m_bndCondExpansions(),
@@ -50,6 +57,10 @@ namespace Nektar
         {
         }
 
+    
+        /**
+         * @param   In          Existing DisContField2D object to copy.
+         */
         DisContField2D::DisContField2D(const DisContField2D &In):
             ExpList2D(In),
             m_numDirBndCondExpansions (In.m_numDirBndCondExpansions),
@@ -61,6 +72,13 @@ namespace Nektar
         {
         }
 
+
+        /**
+         * @param   graph2D     A mesh, containing information about the domain
+         *                      and the spectral/hp element expansions.
+         * @param   solnType    Type of global system to use.
+         * @param   SetUpJustDG True if field is a DG field.
+         */
         DisContField2D::DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
                                        const GlobalSysSolnType solnType,
                                        bool SetUpJustDG):
@@ -72,6 +90,20 @@ namespace Nektar
             ApplyGeomInfo(graph2D);
         }
 
+
+        /**
+         * An expansion list for the boundary expansions is generated first for
+         * the field. These are subsequently evaluated for time zero. The trace
+         * map is then constructed.
+         * @param   graph2D     A mesh, containing information about the domain
+         *                      and the spectral/hp element expansions.
+         * @param   bcs         Information about the enforced boundary
+         *                      conditions.
+         * @param   bc_loc      The index of the session variable associated
+         *                      with the boundary conditions to enforce.
+         * @param   solnType    Type of global system to use.
+         * @param   SetUpJustDG True if field is a DG field.
+         */
         DisContField2D::DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
                                        SpatialDomains::BoundaryConditions &bcs,
                                        const int bc_loc,
@@ -109,6 +141,19 @@ namespace Nektar
             }
         }
 
+
+        /**
+         * An expansion list for the boundary expansions is generated first for
+         * the field. These are subsequently evaluated for time zero. The trace
+         * map is then constructed.
+         * @param   graph2D     A mesh, containing information about the domain
+         *                      and the spectral/hp element expansions.
+         * @param   bcs         Information about the enforced boundary
+         *                      conditions.
+         * @param   variable    The session variable associated with the
+         *                      boundary conditions to enforce.
+         * @param   solnType    Type of global system to use.
+         */
         DisContField2D::DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
                                        SpatialDomains::BoundaryConditions &bcs,
                                        const std::string variable,
@@ -141,15 +186,38 @@ namespace Nektar
                                       m_bndCondExpansions,m_bndConditions, periodicEdges);
             }
         }
+        
+        
+        DisContField2D::~DisContField2D()
+        {
+        }
 
 
-        void DisContField2D::GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D,
-                                                                SpatialDomains::BoundaryConditions &bcs, 
-                                                                const std::string variable)
+        /**
+         * According to their boundary region, the separate segmental boundary 
+         * expansions are bundled together in an object of the class 
+         * MultiRegions#ExpList1D. 
+         * The list of expansions of the Dirichlet boundary regions are listed 
+         * first in the array #m_bndCondExpansions.
+         *
+         * @param   graph2D     A mesh, containing information about the domain 
+         *                      and the spectral/hp element expansion.
+         * @param   bcs         An entity containing information about the 
+         *                      boundaries and boundary conditions.
+         * @param   variable    An optional parameter to indicate for which 
+         *                      variable the boundary conditions should be 
+         *                      discretised.
+         */ 
+        void DisContField2D::GenerateBoundaryConditionExpansion(
+                            SpatialDomains::MeshGraph2D &graph2D,
+                            SpatialDomains::BoundaryConditions &bcs, 
+                            const std::string variable)
         {
             int i,cnt  = 0;
-            SpatialDomains::BoundaryRegionCollection    &bregions = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions = bcs.GetBoundaryConditions();   
+            SpatialDomains::BoundaryRegionCollection    &bregions 
+                                                = bcs.GetBoundaryRegions();
+            SpatialDomains::BoundaryConditionCollection &bconditions 
+                                                = bcs.GetBoundaryConditions();   
 
             int nbnd = bregions.size();
 
@@ -168,10 +236,15 @@ namespace Nektar
             }
             bool UseGenSegExp = true;
             m_numDirBndCondExpansions = cnt2;
-            m_bndCondExpansions  = Array<OneD,MultiRegions::ExpList1DSharedPtr>(cnt);
-            m_bndConditions      = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
             
-            SetBoundaryConditionExpansion(graph2D,bcs,variable,m_bndCondExpansions,m_bndConditions);
+            m_bndCondExpansions  
+                    = Array<OneD,MultiRegions::ExpList1DSharedPtr>(cnt);
+                    
+            m_bndConditions      
+                    = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
+            
+            SetBoundaryConditionExpansion(graph2D, bcs, variable,
+                                          m_bndCondExpansions, m_bndConditions);
 
             // Set up normals on Neumann boundary conditions 
             for(i = 0; i < m_bndConditions.num_elements(); ++i)
@@ -183,19 +256,20 @@ namespace Nektar
                 }
             }
         }
-        
-        DisContField2D::~DisContField2D()
-        {
-        }
 
-        GlobalLinSysSharedPtr DisContField2D::GetGlobalBndLinSys(const GlobalLinSysKey &mkey) 
+
+        GlobalLinSysSharedPtr DisContField2D::GetGlobalBndLinSys(
+                            const GlobalLinSysKey &mkey) 
         {
             ASSERTL0(mkey.GetMatrixType() == StdRegions::eHybridDGHelmBndLam,
                      "Routine currently only tested for HybridDGHelmholtz");
             ASSERTL1(mkey.GetGlobalSysSolnType()!=eDirectFullMatrix,
-                     "Full matrix global systems are not supported for HDG expansions");
-            ASSERTL1(mkey.GetGlobalSysSolnType()==m_traceMap->GetGlobalSysSolnType(),
-                     "The local to global map is not set up for the requested solution type");
+                     "Full matrix global systems are not supported for HDG "
+                     "expansions");
+            ASSERTL1(mkey.GetGlobalSysSolnType()
+                            == m_traceMap->GetGlobalSysSolnType(),
+                     "The local to global map is not set up for the requested "
+                     "solution type");
 
             GlobalLinSysSharedPtr glo_matrix;
             GlobalLinSysMap::iterator matrixIter = m_globalBndMat->find(mkey);
@@ -213,19 +287,58 @@ namespace Nektar
             return glo_matrix;
         }
 
-        // Construct the two trace vectors of the inner and outer
-        // trace solution from the field contained in m_phys, where
-        // the Weak dirichlet boundary conditions are listed in the
-        // outer part of the vecotr
+
+        /**
+         * A wrapper call using m_phys as the source field.
+         * @param   Fwd         A NekDouble array.
+         * @param   Bwd         A NekDouble array.
+         */
         void DisContField2D::GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd, 
-                                                Array<OneD,NekDouble> &Bwd)
+                            Array<OneD,NekDouble> &Bwd)
         {
             GetFwdBwdTracePhys(m_phys,Fwd,Bwd);
         }
 
-        void DisContField2D::GetFwdBwdTracePhys(const Array<OneD,const NekDouble>  &field, 
-                                                Array<OneD,NekDouble> &Fwd, 
-                                                Array<OneD,NekDouble> &Bwd)
+
+        /**
+         * Construct the two trace vectors of the inner and outer trace 
+         * solution from the field contained in m_phys, where the Weak 
+         * Dirichlet boundary conditions are listed in the outer part of the 
+         * vector. This is a wrapper call.
+         *
+         * An element unique edge is defined to be #eForwards if
+         * the edge is oriented in a counter clockwise sense
+         * within the element. Conversley it is defined to be
+         * #eBackwards if the elemet edge is orientated in a
+         * clockwise sense. Therefore along two intersecting edges
+         * one edge is always forwards and the adjacent edge is
+         * backwards. We define a unique normal between two
+         * adjacent edges as running from the #eFowards edge to the
+         * #eBackward edge. 
+         *
+         * This method collects/interpolates the edge data from
+         * the 2D array \a field which contains information over a
+         * collection of 2D shapes and puts this edge data into
+         * the arrays of trace data \a Bwd or \a Fwd depending on
+         * the orientation of the local edge within an element.
+         *
+         * If an edge is aligned along a boundary we use the
+         * method GetBndExpAdjacentOrient() method to determine if
+         * an adjacent boundary edge is orientated in a forwards
+         * or backwards sense. This method returns an enum
+         * #AdjacentTraceOrientation which in 2D has entires of
+         * #eAdjacentEdgeIsForwards and #eAdjacentEdgeIsBackwards.
+         *
+         * @param   field       This is a NekDouble array which contains the 2D
+         *                      data from which we wish to extract the backward 
+         *                      and forward orientated trace/edge arrays.
+         * @param   Fwd         A NekDouble array
+         * @param   Bwd         A NekDouble array
+         */ 
+        void DisContField2D::GetFwdBwdTracePhys(
+                            const Array<OneD,const NekDouble>  &field, 
+                            Array<OneD,NekDouble> &Fwd, 
+                            Array<OneD,NekDouble> &Bwd)
         {
             // Loop over elements and collect forward expansion
             int nexp = GetExpSize();
@@ -335,17 +448,21 @@ namespace Nektar
             }
             
         }
+       
         
-        void DisContField2D::ExtractTracePhys(Array<OneD,NekDouble> &outarray)
-        {       
-
-            ASSERTL1(m_physState == true,
-                     "local physical space is not true ");
-
-            ExtractTracePhys(m_phys, outarray);
-        }
-
-        void DisContField2D::ExtractTracePhys(const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+        /**
+         * It assumes the field is C0 continuous so that
+         * it can overwrite the edge data when visited by the two
+         * adjacent elements.
+         *
+         * @param   inarray     A NekDouble array which contains the 2D data 
+         *                      from which we wish to extract the edge data 
+         * @param   outarray    A NekDouble array which contains the edge 
+         *                      information
+         */ 
+        void DisContField2D::ExtractTracePhys(
+                            const Array<OneD, const NekDouble> &inarray, 
+                            Array<OneD,NekDouble> &outarray)
         {
             // Loop over elemente and collect forward expansion
             int nexp = GetExpSize();
@@ -372,8 +489,14 @@ namespace Nektar
                 }
             }
         }
+           
             
-        /// Note this routine changes m_trace->m_coeffs space; 
+        /**
+         * @param   Fx          ???
+         * @param   Fy          ???
+         * @param   outarray    ???
+         * @note this routine changes m_trace->m_coeffs space;
+         */ 
         void DisContField2D::AddTraceIntegral(const Array<OneD, const NekDouble> &Fx, 
                                               const Array<OneD, const NekDouble> &Fy, 
                                               Array<OneD, NekDouble> &outarray)
@@ -388,18 +511,27 @@ namespace Nektar
                 offset = GetCoeff_Offset(n);
                 for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
                 {
-                    t_offset = GetTrace()->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
+                    t_offset = GetTrace()->GetPhys_Offset(
+                                                elmtToTrace[n][e]->GetElmtId());
 
                     (*m_exp)[n]->AddEdgeNormBoundaryInt(e,elmtToTrace[n][e],
                                                         Fx + t_offset,
                                                         Fy + t_offset,
-                                                        e_outarray = outarray+offset);
+                                                        e_outarray 
+                                                            = outarray+offset);
                 }    
             }
         }
 
-        /// Note this routine changes m_trace->m_coeffs space; 
-        void DisContField2D::AddTraceIntegral(const Array<OneD, const NekDouble> &Fn, Array<OneD, NekDouble> &outarray)
+
+        /**
+         * @param   Fn          ???
+         * @param   outarray    ???
+         * @note this routine changes m_trace->m_coeffs space;
+         */ 
+        void DisContField2D::AddTraceIntegral(
+                            const Array<OneD, const NekDouble> &Fn, 
+                            Array<OneD, NekDouble> &outarray)
         {
             int e,n,offset, t_offset;
             Array<OneD, NekDouble> e_outarray;
@@ -420,8 +552,11 @@ namespace Nektar
             }
         }
 
-        // Set up a list of element ids and edge ids the link to the
-        // boundary conditions
+
+        /**
+         * Set up a list of element ids and edge ids the link to the boundary 
+         * conditions.
+         */
         void DisContField2D::GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, Array<OneD,int> &EdgeID)
         {
             map<int, int> EdgeGID;
@@ -481,7 +616,12 @@ namespace Nektar
             ASSERTL1(cnt == nbcs,"Failed to visit all boundary condtiions");
         }
 
-        /// Note this routine changes m_trace->m_coeffs space; 
+
+        /**
+         * @param   Fwd         ???
+         * @param   Bwd         ???
+         * @note this routine changes m_trace->m_coeffs space;
+         */ 
         void DisContField2D::AddTraceBiIntegral(const Array<OneD, const NekDouble> &Fwd, 
                                                 const Array<OneD, const NekDouble> &Bwd, 
                                                 Array<OneD, NekDouble> &outarray)
@@ -505,19 +645,18 @@ namespace Nektar
                 }    
             }
         }
-    
-        /** Calculate the L2 error of the Q_dir derivative using the
-            consistent DG evaluation of Q_dir. The soln provided is of
-            the primative variation at the quadrature points and the
-            derivative is compared to the discrete derivative at these
-            points which is likely to be undesireable unless using a
-            much higher number of quadrature points than the
-            polynomial order used to evaluate Q_dir
-         */ 
-           
-       NekDouble DisContField2D::L2_DGDeriv(const int dir, 
+
+
+        /** 
+         * The soln provided is of the primative variation at the quadrature 
+         * points and the derivative is compared to the discrete derivative at 
+         * these points which is likely to be undesireable unless using a much 
+         * higher number of quadrature points than the polynomial order used to 
+         * evaluate Q_dir
+         */
+        NekDouble DisContField2D::L2_DGDeriv(const int dir, 
                                            const Array<OneD, const NekDouble> &soln)
-      {
+        {
         
           int    i,e,ncoeff_edge,cnt = 0;
           Array<OneD, const NekDouble> tmp_coeffs;
@@ -558,6 +697,90 @@ namespace Nektar
           
           return L2();
       }
+
+
+        ExpList1DSharedPtr &DisContField2D::v_GetTrace()
+        {
+            return GetTrace();
+        }
+
+        LocalToGlobalDGMapSharedPtr &DisContField2D::v_GetTraceMap()
+        {
+            return GetTraceMap();
+        }
+
+        void DisContField2D::v_AddTraceIntegral(
+                            const Array<OneD, const NekDouble> &Fx, 
+                            const Array<OneD, const NekDouble> &Fy, 
+                            Array<OneD, NekDouble> &outarray)
+        {
+            AddTraceIntegral(Fx,Fy,outarray);
+        }
+
+        void DisContField2D::v_AddTraceIntegral(
+                            const Array<OneD, const NekDouble> &Fn, 
+                            Array<OneD, NekDouble> &outarray)
+        {
+            AddTraceIntegral(Fn,outarray);
+        }
+
+        void DisContField2D::v_AddTraceBiIntegral(
+                            const Array<OneD, const NekDouble> &Fwd, 
+                            const Array<OneD, const NekDouble> &Bwd, 
+                            Array<OneD, NekDouble> &outarray)
+        {
+            AddTraceBiIntegral(Fwd,Bwd,outarray);
+        }
+
+        void DisContField2D::v_GetFwdBwdTracePhys( Array<OneD,NekDouble> &Fwd, 
+                            Array<OneD,NekDouble> &Bwd)
+        {
+            GetFwdBwdTracePhys(Fwd,Bwd);
+        }
+
+        void DisContField2D::v_GetFwdBwdTracePhys(
+                            const Array<OneD,const NekDouble>  &field, 
+                            Array<OneD,NekDouble> &Fwd, 
+                            Array<OneD,NekDouble> &Bwd)
+        {
+            GetFwdBwdTracePhys(field, Fwd,Bwd);
+        }
+
+        void DisContField2D::v_ExtractTracePhys(Array<OneD,NekDouble> &outarray)
+        {
+            ExtractTracePhys(outarray);
+        }
+        
+        void DisContField2D::v_ExtractTracePhys(
+                            const Array<OneD, const NekDouble> &inarray, 
+                            Array<OneD, NekDouble> &outarray)
+        {
+            ExtractTracePhys(inarray,outarray);
+        }
+
+        const Array<OneD,const MultiRegions::ExpList1DSharedPtr> & 
+                                        DisContField2D::v_GetBndCondExpansions()
+        {
+            return GetBndCondExpansions();
+        }
+
+        const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& 
+                                        DisContField2D::v_GetBndConditions()
+        {
+            return GetBndConditions();
+        }
+
+        void DisContField2D::v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, 
+                        Array<OneD,int> &EdgeID)
+        {
+            GetBoundaryToElmtMap(ElmtID,EdgeID);
+        }
+
+        void DisContField2D::v_EvaluateBoundaryConditions(
+                            const NekDouble time)
+        {
+            EvaluateBoundaryConditions(time);
+        }
 
         void DisContField2D::v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,

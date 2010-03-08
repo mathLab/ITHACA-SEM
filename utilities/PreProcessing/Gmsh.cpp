@@ -181,7 +181,7 @@ namespace Utilities
     {
     case 1:
       SortZeroDElements(zeroDElements,vertices);
-      SortOneDComposites(oneDElements, zeroDElements, composites, nBoundComposites);
+      SortOneDComposites(oneDElements, composites, nBoundComposites, expDim);
       break;
     case 2:
       // Fill the edges vectors from twoDElements.edge
@@ -193,7 +193,8 @@ namespace Utilities
       SortOneDElements(oneDElements,edges);
 
       // Set elements composite
-      SortTwoDComposites(twoDElements, oneDElements, composites, nBoundComposites);
+      SortTwoDComposites(twoDElements, composites, nBoundComposites, expDim);
+      SortOneDComposites(oneDElements, composites, nBoundComposites, expDim);
       break;
     case 3:
       {
@@ -203,8 +204,9 @@ namespace Utilities
         SortFaceToEdge(faces, edges);
         // Correct faces id of twoDElements from faces
         //SortTwoDElements(twoDElements,faces);
-        
-        SortThreeDComposites(threeDElements, twoDElements, composites, nBoundComposites);
+        SortThreeDComposites(threeDElements, composites, nBoundComposites, expDim);
+        SortTwoDComposites(twoDElements, composites, nBoundComposites, expDim);
+        SortOneDComposites(oneDElements, composites, nBoundComposites, expDim);
       }
       break;
     default:
@@ -501,87 +503,114 @@ namespace Utilities
 
     }
 
-
-
-    void SortTwoDComposites(const vector<TwoDElement> & elements, const vector<OneDElement> & edges,
-                vector<Composite> & composites, int num_composites)
+    void SortOneDComposites(const vector<OneDElement> & elements,
+                vector<Composite> & composites, int num_composites, int dim)
     {
-      int i;
+        int i,j;
+        int nSeg  = 0;
+        int oneDcomp = 0;
 
-      // set elements composite
-      // for these composites we do not store
-      // the individual element ids (as the composites
-      // still will be defined from 0 to nElm-1), we just store the
-      // total number of tris or quads
-      int nTri  = 0;
-      int nQuad = 0;
-      int twoDcomp = 0;
-      for (int i = 0; i < elements.size(); ++i)
-    {
-      if ( (elements[i].type == 2) || (elements[i].type == 9) )
-        nTri++;
-      if (elements[i].type == 3)
-        nQuad++;
-    }
-
-      if (nTri != 0)
-    {
-      list<int> eid;
-      eid.push_back(nTri-1); // -1 since start from 0
-      composites.push_back(Composite(twoDcomp,2,eid));
-      twoDcomp++;
-    }
-      if (nQuad != 0)
-    {
-      list<int> eid;
-      eid.push_back(nQuad-1); // -1 since start from 0
-      composites.push_back(Composite(twoDcomp,3,eid));
-      twoDcomp++;
-    }
-
-      int comp;
-
-      // Initialize edge composite
-      for (i = twoDcomp; i < num_composites+twoDcomp; ++i)
-    {
-      list<int> eid;
-      composites.push_back(Composite(i,0,eid));
-    }
-
-      // Boundary comp are stored as physical entities and are stored in elements.tags[0]
-      // should be numbered from 1 to num_composites (zero mean not included in composite)
-      for (i = 0; i < edges.size(); ++i)
-    {
-      comp = edges[i].tags[0];
-      if (comp != 0)
-        {
-          // need to sort
-          switch(edges[i].type)
-        {
-        case 1:
-        case 8:
-          {
-            composites[comp-1+twoDcomp].eid.push_back(edges[i].id);
-            composites[comp-1+twoDcomp].type = edges[i].type;
-          }
-          break;
+        // If our mesh is of dimension one, assemble the entire domain.
+        if (dim == 1) {
+            // set elements composite
+            // for these composites we do not store
+            // the individual element ids (as the composites
+            // still will be defined from 0 to nElm-1), we just store the
+            // total number of tris or quads
+            for (int i = 0; i < elements.size(); ++i)
+            {
+                if ( (elements[i].type == 1))
+                    nSeg++;
+            }
+    
+            if (nSeg != 0)
+            {
+                list<int> eid;
+                eid.push_back(nSeg-1); // -1 since start from 0
+                composites.push_back(Composite(oneDcomp,1,eid));
+                oneDcomp++;
+            }
         }
+        // Otherwise we have, for example, a boundary on a 2D mesh
+        else {
+            for (i = 0; i < elements.size(); ++i) {
+                bool found = false;
+                for (j = 0; j < composites.size(); ++j) {
+                    if (composites[j].id == elements[i].tags[0]) {
+                        composites[j].eid.push_back(elements[i].id);
+                        found = true;
+                    }
+                }
+                list<int> eid;
+                eid.push_back(elements[i].id);
+                if (!found) {
+                    composites.push_back(Composite(elements[i].tags[0],1,eid));
+                }
+            }
         }
+        cout << "...done sorting 1D composites" << endl;
     }
 
-      // sort the eid list
-      // composites must be increasing numbers...
-      for (i = 0; i < num_composites+twoDcomp; ++i)
+
+    void SortTwoDComposites(const vector<TwoDElement> & elements,
+                vector<Composite> & composites, int num_composites, int dim)
     {
-      composites[i].eid.sort();
+        int i,j;
+        int nTri  = 0;
+        int nQuad = 0;
+        int twoDcomp = 0;
+
+        if (dim == 2) {
+            // set elements composite
+            // for these composites we do not store
+            // the individual element ids (as the composites
+            // still will be defined from 0 to nElm-1), we just store the
+            // total number of tris or quads
+            for (int i = 0; i < elements.size(); ++i)
+            {
+                if ( (elements[i].type == 2) || (elements[i].type == 9) )
+                    nTri++;
+                if (elements[i].type == 3)
+                    nQuad++;
+            }
+    
+            if (nTri != 0)
+            {
+                list<int> eid;
+                eid.push_back(nTri-1); // -1 since start from 0
+                composites.push_back(Composite(twoDcomp,2,eid));
+                twoDcomp++;
+            }
+            if (nQuad != 0)
+            {
+                list<int> eid;
+                eid.push_back(nQuad-1); // -1 since start from 0
+                composites.push_back(Composite(twoDcomp,3,eid));
+                twoDcomp++;
+            }
+        }
+        else {
+            for (i = 0; i < elements.size(); ++i) {
+                bool found = false;
+                for (j = 0; j < composites.size(); ++j) {
+                    if (composites[j].id == elements[i].tags[0]) {
+                        composites[j].eid.push_back(elements[i].id);
+                        found = true;
+                    }
+                }
+                list<int> eid;
+                eid.push_back(elements[i].id);
+                if (!found) {
+                    composites.push_back(Composite(elements[i].tags[0],2,eid));
+                }
+            }
+        }
+        cout << "...done sorting 2D composites" << endl;
     }
 
-      cout << "...done sorting composites" << endl;
 
-    }
-
-    void SortThreeDComposites(const vector<ThreeDElement> & elements, const vector<TwoDElement> & faces,
-                vector<Composite> & composites, int num_composites)
+    void SortThreeDComposites(const vector<ThreeDElement> & elements,
+                vector<Composite> & composites, int num_composites, int dim)
     {
         int i;
 
@@ -615,99 +644,7 @@ namespace Utilities
             composites.push_back(Composite(threeDcomp,5,eid));
             threeDcomp++;
         }
-/*
-        int comp;
-
-        // Initialize edge composite
-        for (i = threeDcomp; i < num_composites+threeDcomp; ++i)
-        {
-            list<int> eid;
-            composites.push_back(Composite(i,0,eid));
-        }
-
-        // Boundary comp are stored as physical entities and are stored in elements.tags[0]
-        // should be numbered from 1 to num_composites (zero mean not included in composite)
-        for (i = 0; i < edges.size(); ++i)
-        {
-            comp = edges[i].tags[0];
-            if (comp != 0)
-            {
-                // need to sort
-                switch(edges[i].type)
-                {
-                    case 1:
-                    case 8:
-                    {
-                        composites[comp-1+twoDcomp].eid.push_back(edges[i].id);
-                        composites[comp-1+twoDcomp].type = edges[i].type;
-                    }
-                    break;
-                }
-            }
-        }
-
-        // sort the eid list
-        // composites must be increasing numbers...
-        for (i = 0; i < num_composites+twoDcomp; ++i)
-        {
-            composites[i].eid.sort();
-        }
-*/        cout << "...done sorting composites" << endl;
-    }
-
-    void SortOneDComposites(const vector<OneDElement> & elements, const vector<ZeroDElement> & points,
-              vector<Composite> & composites, int num_composites)
-    {
-      int i;
-
-      // set elements composite
-      // for these composites we do not store
-      // the individual element ids (as the composites
-      // still will start from 0), we just store the
-      // total number of tris or quads
-      int nSeg  = elements.size();
-      list<int> eid;
-      eid.push_back(nSeg-1); // -1 since start from 0
-      composites.push_back(Composite(0,1,eid));
-
-      int comp;
-
-      // Initialize edge composite
-      for (i = 1; i < num_composites+1; ++i)
-    {
-      list<int> eid;
-      composites.push_back(Composite(i,0,eid));
-    }
-
-      // Boundary comp are stored as physical entities and are stored in elements.tag[0]
-      // should be numbered from 1 to num_composites (zero mean not included in composite)
-      for (i = 0; i < points.size(); ++i)
-    {
-      comp = points[i].tags[0];
-      if (comp != 0)
-        {
-          // need to sort
-          switch(points[i].type)
-        {
-        case 15:
-          {
-            composites[comp].eid.push_back(points[i].id);
-            composites[comp].type = points[i].type;
-          }
-          break;
-        }
-        }
-    }
-
-      // sort the eid list
-      // composites must be increasing numbers...
-      for (i = 0; i < num_composites+1; ++i)
-    {
-      composites[i].eid.sort();
-    }
-
-      cout << "...done sorting composites" << endl;
-
+        cout << "...done sorting 3D composites" << endl;
     }
 
 
@@ -1021,7 +958,7 @@ namespace Utilities
             for (it = compList.begin(); it != compList.end(); ++it){
                 st  << *it;
                 if ( *it == compList.back())
-                    st << "]";
+                    st << "] ";
                 else
                     st << ",";
             }
@@ -1062,12 +999,12 @@ namespace Utilities
                     case 5: st_start << " H[0-"; break;   // Hexahedron
                     case 6: st_start << " R[0-"; break;   // Prism
                     case 7: st_start << " Y[0-"; break;   // Pyramid
-                    case 15:st_start << " V["; break;   // Points -> Vertex
+                    case 15:st_start << " V["; break;     // Points -> Vertex
                 }
 
                 comp_tag->SetAttribute("ID", composites[i].id);
-                comp_tag->LinkEndChild( new TiXmlText(st_start.str()) );
-                comp_tag->LinkEndChild( new TiXmlText(st.str()) );
+                comp_tag->LinkEndChild( new TiXmlText(st_start.str() 
+                                                                + st.str()) );
                 verTag->LinkEndChild(comp_tag);
             }
         }
@@ -1079,60 +1016,6 @@ namespace Utilities
         domain->LinkEndChild( new TiXmlText( " C[0] " ));
         geomTag->LinkEndChild( domain );
 
-        TiXmlElement * exp = new TiXmlElement( "EXPANSIONS" );
-        TiXmlElement * exp_tag = new TiXmlElement( "E" );
-        exp_tag->SetAttribute("COMPOSITE", "C[0]");
-        exp_tag->SetAttribute("NUMMODES", 7);
-        exp_tag->SetAttribute("TYPE", "MODIFIED");
-        exp->LinkEndChild( exp_tag );
-        root->LinkEndChild( exp );
-/*
-        TiXmlElement * conds = new TiXmlElement( "CONDITIONS" );
-        root->LinkEndChild( conds );
-
-        comment = new TiXmlComment();
-        comment->SetValue( "Removed redundancy since we can specify any lefel of granularity in the ExpansionTypes section below");
-        conds->LinkEndChild( comment );
-
-        TiXmlElement* par = new TiXmlElement( "PARAMETERS" );
-        par->LinkEndChild( new TiXmlText( "Set the parameters here..." ));
-        conds->LinkEndChild( par );
-
-        comment = new TiXmlComment();
-        comment->SetValue( "One of these for each dimension.  These are the vector components, say, s = (u, v); comprised of two components in this example for a 3D dimension.");
-        conds->LinkEndChild( comment );
-
-        TiXmlElement* var = new TiXmlElement( "VARIABLES" );
-        var->LinkEndChild( new TiXmlText( "Set the variables here..." ));
-        conds->LinkEndChild( var );
-
-        comment = new TiXmlComment();
-        comment->SetValue( "These composites must be defined in the geometry file.");
-        conds->LinkEndChild( comment );
-
-        TiXmlElement* bregion = new TiXmlElement( "BOUNDARYREGIONS" );
-        bregion->LinkEndChild( new TiXmlText( "Set the boundary region here..." ));
-        conds->LinkEndChild( bregion );
-
-        TiXmlElement* bcond = new TiXmlElement( "BOUNDARYCONDITIONS" );
-        conds->LinkEndChild( bcond );
-
-        comment = new TiXmlComment();
-        comment->SetValue( "The region numbers below correspond to the regions specified in the Boundary Region definition above.");
-        conds->LinkEndChild( comment );
-
-        TiXmlElement* region = new TiXmlElement( "REGION" );
-        region->LinkEndChild( new TiXmlText( "Set the boundary region here..." ));
-        bcond->LinkEndChild(region);
-
-        TiXmlElement* forcing = new TiXmlElement( "FORCING" );
-        forcing->LinkEndChild( new TiXmlText( "Set the forcing function here..." ));
-        conds->LinkEndChild( forcing );
-
-        TiXmlElement* exact = new TiXmlElement( "EXACTSOLUTION" );
-        exact->LinkEndChild( new TiXmlText( "Set the exact solution here..." ));
-        conds->LinkEndChild( exact );
-*/
         doc.SaveFile(outfile );
     } // end of function WriteToXMLFile
 

@@ -135,12 +135,14 @@ namespace Utilities
     void OrientTets(vector<ThreeDElement> &elements, vector<Vertex> &vertices);
     void SortZeroDElements(vector<ZeroDElement> & points,const vector<Vertex> & vertices);
     void SortOneDElements(vector<OneDElement> &segments, const vector<Edge>& edges);
-    void SortTwoDComposites(const vector<TwoDElement> & elements, const vector<OneDElement> & edges, 
-			    vector<Composite> & composites, int ncomposites);
-    void SortThreeDComposites(const vector<ThreeDElement> & elements, const vector<TwoDElement> & faces,
-                vector<Composite> & composites, int num_composites);
-    void SortOneDComposites(const vector<OneDElement> & elements, const vector<ZeroDElement> & points, 
-			    vector<Composite> & composites, int ncomposites);
+    void SortOneDComposites(const vector<OneDElement> & elements, 
+                vector<Composite> & composites, int ncomposites, int dim);
+    void SortTwoDComposites(const vector<TwoDElement> & elements, 
+			    vector<Composite> & composites, int ncomposites, int dim);
+    void SortThreeDComposites(const vector<ThreeDElement> & elements,
+                vector<Composite> & composites, int num_composites, int dim);
+//    void SortOneDComposites(const vector<OneDElement> & elements, const vector<ZeroDElement> & points, 
+//			    vector<Composite> & composites, int ncomposites);
     int  GetNnodes(int GmshEntity);
     int  GetEdge(vector<int> &vert, vector<Edge>& edges, int elm_type);  
     int  GetFace(vector<int> &vert, vector<Face>& faces, int elm_type);  

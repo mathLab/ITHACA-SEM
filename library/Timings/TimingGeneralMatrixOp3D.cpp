@@ -441,13 +441,9 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
     {
         Exp->IProductWRTBase(Exp->GetPhys(), Exp->UpdateCoeffs(), true);
     }
-    else if (type == StdRegions::eHelmholtz)
-    {
-        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), lambda, true);
-    }
     else
     {
-        MultiRegions::GlobalMatrixKey key(type, Exp->GetLocalToGlobalMap());
+        MultiRegions::GlobalMatrixKey key(type, lambda, Exp->GetLocalToGlobalMap());
         Exp->GeneralMatrixOp (key, Exp->GetCoeffs(),Exp->UpdatePhys(), true);
     }
     gettimeofday(&timer2, NULL);
@@ -486,16 +482,9 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
             Exp->IProductWRTBase (Exp->GetPhys(),Exp->UpdateCoeffs(), true);
         }
     }
-    else if (type == StdRegions::eHelmholtz)
-    {
-        for(i = 0; i < NumCalls; ++i)
-        {
-            Exp->HelmSolve (Fce->GetPhys(),Exp->UpdateCoeffs(), lambda, true);
-        }
-    }
     else
     {
-        MultiRegions::GlobalMatrixKey key(type, Exp->GetLocalToGlobalMap());
+        MultiRegions::GlobalMatrixKey key(type, lambda, Exp->GetLocalToGlobalMap());
         for(i = 0; i < NumCalls; ++i)
         {
             Exp->GeneralMatrixOp (key, Exp->GetCoeffs(),Exp->UpdatePhys(), true);

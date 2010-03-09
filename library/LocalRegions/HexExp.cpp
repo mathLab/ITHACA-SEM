@@ -797,14 +797,216 @@ namespace Nektar
         }
 
 
+        void HexExp::GeneralMatrixOp_MatOp(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey)
+        {
+            int nConsts = mkey.GetNconstants();
+            DNekScalMatSharedPtr   mat;
+            
+            switch(nConsts)
+            {
+            case 0:
+                {
+                    mat = GetLocMatrix(mkey.GetMatrixType()); 
+                }
+                break;
+            case 1:
+                {
+                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0)); 
+                }
+                break;
+            case 2:
+                {
+                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0),mkey.GetConstant(1)); 
+                }
+                break;
+                
+            default:
+                {
+                    NEKERROR(ErrorUtil::efatal, "Unknown number of constants");
+                }
+                break;
+            }
+            
+            if(inarray.get() == outarray.get())
+            {
+                Array<OneD,NekDouble> tmp(m_ncoeffs);
+                Vmath::Vcopy(m_ncoeffs,inarray.get(),1,tmp.get(),1);
+                
+                Blas::Dgemv('N',m_ncoeffs,m_ncoeffs,mat->Scale(),(mat->GetOwnedMatrix())->GetPtr().get(),
+                            m_ncoeffs, tmp.get(), 1, 0.0, outarray.get(), 1);
+            }
+            else
+            {                
+                Blas::Dgemv('N',m_ncoeffs,m_ncoeffs,mat->Scale(),(mat->GetOwnedMatrix())->GetPtr().get(),
+                            m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
+            }
+        }
+        
+        void HexExp::v_MassMatrixOp(
+                            const Array<OneD, const NekDouble> &inarray, 
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey)
+        {
+            bool doMatOp = NekOptimize::ElementalOptimization<
+                            StdRegions::eHexExp, NekOptimize::eMassMatrixOp, 3>
+                                ::DoMatOp(  m_base[0]->GetNumModes(),
+                                            m_base[1]->GetNumModes(),
+                                            m_base[2]->GetNumModes());
+            
+            if(doMatOp)
+            {
+                HexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
+            }
+            else
+            {
+                StdExpansion::MassMatrixOp_MatFree(inarray,outarray,mkey);
+            }
+        }
+
+        void HexExp::v_LaplacianMatrixOp(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey)
+        {
+            bool doMatOp = NekOptimize::ElementalOptimization<
+                        StdRegions::eHexExp, NekOptimize::eLaplacianMatrixOp, 3>
+                            ::DoMatOp(  m_base[0]->GetNumModes(),
+                                        m_base[1]->GetNumModes(),
+                                        m_base[2]->GetNumModes());
+            
+            if(doMatOp)
+            {
+                HexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
+            }
+            else
+            {
+                HexExp::v_LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
+            }
+
+        }
+
+        void HexExp::v_LaplacianMatrixOp(const int k1, const int k2, 
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey)
+        {
+            bool doMatOp = NekOptimize::ElementalOptimization<
+                    StdRegions::eHexExp, NekOptimize::eLaplacianMatrixIJOp, 3>
+                            ::DoMatOp(  m_base[0]->GetNumModes(),
+                                        m_base[1]->GetNumModes(),
+                                        m_base[2]->GetNumModes());
+            
+            if(doMatOp)
+            {
+                HexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
+            }
+            else
+            {
+                StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,
+                                                        mkey);
+            }
+        }
+
+        void HexExp::v_WeakDerivMatrixOp(const int i,
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey)
+        {
+            bool doMatOp = NekOptimize::ElementalOptimization<
+                        StdRegions::eHexExp, NekOptimize::eWeakDerivMatrixOp, 3>
+                            ::DoMatOp(  m_base[0]->GetNumModes(),
+                                        m_base[1]->GetNumModes(),
+                                        m_base[2]->GetNumModes());
+            
+            if(doMatOp)
+            {
+                HexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
+            }
+            else
+            {
+                StdExpansion::WeakDerivMatrixOp_MatFree(i,inarray,outarray,
+                                                        mkey);
+            }
+        }
+        
+        void HexExp::v_WeakDirectionalDerivMatrixOp(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey)
+        {
+            bool doMatOp = NekOptimize::ElementalOptimization<
+                        StdRegions::eHexExp, NekOptimize::eWeakDerivMatrixOp, 3>
+                            ::DoMatOp(  m_base[0]->GetNumModes(),
+                                        m_base[1]->GetNumModes(),
+                                        m_base[2]->GetNumModes());
+            
+            if(doMatOp)
+            {
+                HexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
+            }
+            else
+            {
+                StdExpansion::WeakDirectionalDerivMatrixOp_MatFree(inarray,
+                                                                outarray,mkey);
+            }
+        }
+        
+        void HexExp::v_MassLevelCurvatureMatrixOp(
+                            const Array<OneD, const NekDouble> &inarray, 
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey)
+        {
+            bool doMatOp = NekOptimize::ElementalOptimization<
+                        StdRegions::eHexExp, NekOptimize::eMassMatrixOp, 3>
+                            ::DoMatOp(  m_base[0]->GetNumModes(),
+                                        m_base[1]->GetNumModes(),
+                                        m_base[2]->GetNumModes());
+            
+            if(doMatOp)
+            {
+                HexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
+            }
+            else
+            {
+                StdExpansion::MassLevelCurvatureMatrixOp_MatFree(inarray,
+                                                                outarray,mkey);
+            }
+        }
+
+        void HexExp::v_HelmholtzMatrixOp(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey)
+        {
+            bool doMatOp = NekOptimize::ElementalOptimization<
+                        StdRegions::eHexExp, NekOptimize::eHelmholtzMatrixOp, 3>
+                            ::DoMatOp(  m_base[0]->GetNumModes(),
+                                        m_base[1]->GetNumModes(),
+                                        m_base[2]->GetNumModes());
+            
+            if(doMatOp)
+            {
+                HexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
+            }
+            else
+            {
+                HexExp::v_HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
+            }
+        }
+
+        
         /**
          * @param   inarray     Input coefficients.
          * @param   output      Output coefficients.
          * @param   mkey        Matrix key 
          */
-        void HexExp::v_LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
-                                                Array<OneD,NekDouble> &outarray,
-                                                const StdRegions::StdMatrixKey &mkey)
+        void HexExp::v_LaplacianMatrixOp_MatFree(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey)
         {
             if(mkey.GetNvariableLaplacianCoefficients() == 0)
             {
@@ -813,7 +1015,7 @@ namespace Nektar
                 if(m_metricinfo->IsUsingLaplMetrics())       
                 {
                     ASSERTL0(false,"Finish implementing HexExp for Lap metrics");
-                    int       nquad0  = m_base[0]->GetNumPoints();
+/*                    int       nquad0  = m_base[0]->GetNumPoints();
                     int       nquad1  = m_base[1]->GetNumPoints();
                     int       nquad2  = m_base[2]->GetNumPoints();
                     int       nqtot   = nquad0*nquad1*nquad2; 
@@ -877,7 +1079,7 @@ namespace Nektar
                     // outarray = outarray + wsp1
                     //          = L * u_hat
                     Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);      
-                }
+*/                }
                 else
                 {
                     int       nquad0  = m_base[0]->GetNumPoints();
@@ -1001,6 +1203,217 @@ namespace Nektar
             else
             {
                 StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
+            }
+        }
+
+
+        void HexExp::v_HelmholtzMatrixOp_MatFree(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey)
+        {
+            if(m_metricinfo->IsUsingLaplMetrics())       
+            {
+                ASSERTL0(false,"Finish implementing HexExp Helmholtz for Lapl Metrics");
+/*                int       nquad0  = m_base[0]->GetNumPoints();
+                int       nquad1  = m_base[1]->GetNumPoints();
+                int       nqtot   = nquad0*nquad1; 
+                int       nmodes0 = m_base[0]->GetNumModes();
+                int       nmodes1 = m_base[1]->GetNumModes();
+                int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
+                NekDouble lambda  = mkey.GetConstant(0);
+                
+                const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
+                const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
+                const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
+                const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
+                const Array<TwoD, const NekDouble>& metric = m_metricinfo->GetLaplacianMetrics(); 
+                
+                // Allocate temporary storage
+                Array<OneD,NekDouble> wsp0(4*wspsize);
+                Array<OneD,NekDouble> wsp1(wsp0+wspsize);
+                Array<OneD,NekDouble> wsp2(wsp0+2*wspsize);
+                Array<OneD,NekDouble> wsp3(wsp0+3*wspsize);
+                
+                if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
+                {  
+                    // MASS MATRIX OPERATION
+                    // The following is being calculated:
+                    // wsp0     = B   * u_hat = u
+                    // wsp1     = W   * wsp0
+                    // outarray = B^T * wsp1  = B^T * W * B * u_hat = M * u_hat 
+                    BwdTrans_SumFacKernel       (base0,base1,inarray,wsp0,    wsp1,true,true);
+                    MultiplyByQuadratureMetric  (wsp0,wsp2);
+                    IProductWRTBase_SumFacKernel(base0,base1,wsp2,   outarray,wsp1,true,true);
+                    
+                    // LAPLACIAN MATRIX OPERATION
+                    // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
+                    // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
+                    StdExpansion2D::PhysTensorDeriv(wsp0,wsp1,wsp2);
+                }
+                else
+                {
+                    // specialised implementation for the classical spectral element method
+                    StdExpansion2D::PhysTensorDeriv(inarray,wsp1,wsp2);
+                    MultiplyByQuadratureMetric(inarray,outarray);
+                }
+                
+                // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
+                // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g1 * du_dxi1 + g2 * du_dxi2
+                // where g0, g1 and g2 are the metric terms set up in the GeomFactors class
+                // especially for this purpose
+                if(!m_metricinfo->LaplacianMetricIsZero(1))
+                {
+                    Vmath::Vvtvvtp(nqtot,&metric[0][0],1,&wsp1[0],1,&metric[1][0],1,&wsp2[0],1,&wsp0[0],1);
+                    Vmath::Vvtvvtp(nqtot,&metric[1][0],1,&wsp1[0],1,&metric[2][0],1,&wsp2[0],1,&wsp2[0],1);
+                }
+                else
+                {
+                    // special implementation in case g1 = 0 (which should hold for undistorted quads)
+                    // wsp0 = k = g0 * wsp1 = g0 * du_dxi1
+                    // wsp2 = l = g2 * wsp2 = g2 * du_dxi2           
+                    Vmath::Vmul(nqtot,&metric[0][0],1,&wsp1[0],1,&wsp0[0],1);
+                    Vmath::Vmul(nqtot,&metric[2][0],1,&wsp2[0],1,&wsp2[0],1);
+                }
+                
+                // wsp1 = m = (D_xi1 * B)^T * k 
+                // wsp0 = n = (D_xi2 * B)^T * l 
+                IProductWRTBase_SumFacKernel(dbase0,base1,wsp0,wsp1,wsp3,false,true);
+                IProductWRTBase_SumFacKernel(base0,dbase1,wsp2,wsp0,wsp3,true,false);
+                
+                // outarray = lambda * outarray + (wsp0 + wsp1)
+                //          = (lambda * M + L ) * u_hat
+                Vmath::Vstvpp(m_ncoeffs,lambda,&outarray[0],1,&wsp1[0],1,&wsp0[0],1,&outarray[0],1);
+*/            }
+            else
+            {
+                int       nquad0  = m_base[0]->GetNumPoints();
+                int       nquad1  = m_base[1]->GetNumPoints();
+                int       nquad2  = m_base[2]->GetNumPoints();
+                int       nqtot   = nquad0*nquad1*nquad2; 
+                int       nmodes0 = m_base[0]->GetNumModes();
+                int       nmodes1 = m_base[1]->GetNumModes();
+                int       nmodes2 = m_base[2]->GetNumModes();
+
+                int wspsize = max(nquad0*nmodes2*(nmodes1+nquad1),
+                                        nquad0*nquad1*(nquad2+nmodes0)
+                                            + nmodes0*nmodes1*nquad2);
+
+                NekDouble lambda  = mkey.GetConstant(0);
+                
+                const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
+                const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
+                const Array<OneD, const NekDouble>& base2  = m_base[2]->GetBdata();
+                const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
+                const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
+                const Array<OneD, const NekDouble>& dbase2 = m_base[2]->GetDbdata();
+                                
+                // Allocate temporary storage
+                Array<OneD,NekDouble> alloc(10*nqtot,0.0);
+                Array<OneD,NekDouble> wsp0(alloc);        // After BwdTrans
+                Array<OneD,NekDouble> wsp1(alloc+  nqtot);// TensorDeriv 1
+                Array<OneD,NekDouble> wsp2(alloc+2*nqtot);// TensorDeriv 2
+                Array<OneD,NekDouble> wsp3(alloc+3*nqtot);// TensorDeriv 3
+                Array<OneD,NekDouble> wsp4(alloc+4*nqtot);// g0
+                Array<OneD,NekDouble> wsp5(alloc+5*nqtot);// g1
+                Array<OneD,NekDouble> wsp6(alloc+6*nqtot);// g2
+                Array<OneD,NekDouble> wsp7(alloc+7*nqtot);// g3
+                Array<OneD,NekDouble> wsp8(alloc+8*nqtot);// g4
+                Array<OneD,NekDouble> wsp9(alloc+9*nqtot);// g5
+
+                Array<OneD,NekDouble> wsp(wspsize,0.0);
+
+                if(!(m_base[0]->Collocation() && m_base[1]->Collocation()
+                        && m_base[2]->Collocation()))
+                {  
+                    // MASS MATRIX OPERATION
+                    // The following is being calculated:
+                    // wsp0     = B   * u_hat = u
+                    // wsp1     = W   * wsp0
+                    // outarray = B^T * wsp1  = B^T * W * B * u_hat = M * u_hat 
+                    BwdTrans_SumFacKernel       (base0,base1,base2,inarray,wsp0,wsp,true,true,true);
+                    MultiplyByQuadratureMetric  (wsp0,wsp2);
+                    IProductWRTBase_SumFacKernel(base0,base1,base2,wsp2,outarray,wsp,true,true,true);
+                    
+                    // LAPLACIAN MATRIX OPERATION
+                    // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
+                    // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
+                    StdExpansion3D::PhysTensorDeriv(wsp0,wsp1,wsp2,wsp3);
+                }
+                else
+                {
+                    // specialised implementation for the classical spectral element method
+                    StdExpansion3D::PhysTensorDeriv(inarray,wsp1,wsp2,wsp3);
+                    MultiplyByQuadratureMetric(inarray,outarray);
+                }
+                
+                // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
+                // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
+                // where g0, g1 and g2 are the metric terms set up in the GeomFactors class
+                // especially for this purpose
+                const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+                
+                if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                {
+                    // Compute geometric factor composites
+                    // wsp3 = g0*g0 + g3*g3 + g6*g6 
+                    Vmath::Vvtvvtp(nqtot,&gmat[0][0],1,&gmat[0][0],1,&gmat[3][0],1,&gmat[3][0],1,&wsp4[0],1);
+                    Vmath::Vvtvp  (nqtot,&gmat[6][0],1,&gmat[6][0],1,&wsp4[0],1,&wsp4[0],1);
+                    // wsp4 = g1*g1 + g4*g4 + g7*g7;
+                    Vmath::Vvtvvtp(nqtot,&gmat[1][0],1,&gmat[1][0],1,&gmat[4][0],1,&gmat[4][0],1,&wsp5[0],1);
+                    Vmath::Vvtvp  (nqtot,&gmat[7][0],1,&gmat[7][0],1,&wsp5[0],1,&wsp5[0],1);
+                    // wsp5 = g2*g2 + g5*g5 + g8*g8; 
+                    Vmath::Vvtvvtp(nqtot,&gmat[2][0],1,&gmat[2][0],1,&gmat[5][0],1,&gmat[5][0],1,&wsp6[0],1);
+                    Vmath::Vvtvp  (nqtot,&gmat[8][0],1,&gmat[8][0],1,&wsp6[0],1,&wsp6[0],1);
+                    // wsp6 = g0*g1 + g3*g4 + g6*g7
+                    Vmath::Vvtvvtp(nqtot,&gmat[0][0],1,&gmat[1][0],1,&gmat[3][0],1,&gmat[4][0],1,&wsp7[0],1);
+                    Vmath::Vvtvp  (nqtot,&gmat[6][0],1,&gmat[7][0],1,&wsp7[0],1,&wsp7[0],1);
+                    // wsp7 = g0*g2 + g3*g5 + g6*g8
+                    Vmath::Vvtvvtp(nqtot,&gmat[0][0],1,&gmat[2][0],1,&gmat[3][0],1,&gmat[5][0],1,&wsp8[0],1);
+                    Vmath::Vvtvp  (nqtot,&gmat[6][0],1,&gmat[8][0],1,&wsp8[0],1,&wsp8[0],1);
+                    // wsp8 = g1*g2 + g4*g5 + g7*g8
+                    Vmath::Vvtvvtp(nqtot,&gmat[1][0],1,&gmat[2][0],1,&gmat[4][0],1,&gmat[5][0],1,&wsp9[0],1);
+                    Vmath::Vvtvp  (nqtot,&gmat[7][0],1,&gmat[8][0],1,&wsp9[0],1,&wsp9[0],1);
+                   
+                    // Multiply wsp1,2,3 by the appropriate factor composites
+                    Vmath::Vvtvvtp(nqtot,&wsp4[0],1,&wsp1[0],1,&wsp7[0],1,&wsp2[0],1,&wsp4[0],1);
+                    Vmath::Vvtvp  (nqtot,&wsp8[0],1,&wsp3[0],1,&wsp4[0],1,&wsp4[0],1);
+                    Vmath::Vvtvvtp(nqtot,&wsp5[0],1,&wsp2[0],1,&wsp7[0],1,&wsp1[0],1,&wsp5[0],1);
+                    Vmath::Vvtvp  (nqtot,&wsp9[0],1,&wsp3[0],1,&wsp5[0],1,&wsp5[0],1);
+                    Vmath::Vvtvvtp(nqtot,&wsp6[0],1,&wsp3[0],1,&wsp8[0],1,&wsp1[0],1,&wsp6[0],1);
+                    Vmath::Vvtvp  (nqtot,&wsp9[0],1,&wsp2[0],1,&wsp6[0],1,&wsp6[0],1);
+                }
+                else
+                {
+                    NekDouble g0 = gmat[0][0]*gmat[0][0] + gmat[3][0]*gmat[3][0] + gmat[6][0]*gmat[6][0];
+                    NekDouble g1 = gmat[1][0]*gmat[1][0] + gmat[4][0]*gmat[4][0] + gmat[7][0]*gmat[7][0];
+                    NekDouble g2 = gmat[2][0]*gmat[2][0] + gmat[5][0]*gmat[5][0] + gmat[8][0]*gmat[8][0];
+                    NekDouble g3 = gmat[0][0]*gmat[1][0] + gmat[3][0]*gmat[4][0] + gmat[6][0]*gmat[7][0];
+                    NekDouble g4 = gmat[0][0]*gmat[2][0] + gmat[3][0]*gmat[5][0] + gmat[6][0]*gmat[8][0];
+                    NekDouble g5 = gmat[1][0]*gmat[2][0] + gmat[4][0]*gmat[5][0] + gmat[7][0]*gmat[8][0];
+                    
+                    Vmath::Svtsvtp(nqtot,g0,&wsp1[0],1,g3,&wsp2[0],1,&wsp4[0],1);
+                    Vmath::Svtvp  (nqtot,g4,&wsp3[0],1,&wsp4[0],1,&wsp4[0],1);
+                    Vmath::Svtsvtp(nqtot,g1,&wsp2[0],1,g3,&wsp1[0],1,&wsp5[0],1);
+                    Vmath::Svtvp  (nqtot,g5,&wsp3[0],1,&wsp5[0],1,&wsp5[0],1);
+                    Vmath::Svtsvtp(nqtot,g2,&wsp3[0],1,g4,&wsp1[0],1,&wsp6[0],1);
+                    Vmath::Svtvp  (nqtot,g5,&wsp2[0],1,&wsp6[0],1,&wsp6[0],1);
+                }
+                
+                MultiplyByQuadratureMetric(wsp4,wsp4);
+                MultiplyByQuadratureMetric(wsp5,wsp5);
+                MultiplyByQuadratureMetric(wsp6,wsp6);
+
+                // outarray = m = (D_xi1 * B)^T * k 
+                // wsp1     = n = (D_xi2 * B)^T * l 
+                IProductWRTBase_SumFacKernel(dbase0,base1,base2,wsp4,wsp1,wsp,false,true,true);
+                IProductWRTBase_SumFacKernel(base0,dbase1,base2,wsp5,wsp2,wsp,true,false,true);
+                IProductWRTBase_SumFacKernel(base0,base1,dbase2,wsp6,wsp3,wsp,true,true,false);
+
+                // outarray = lambda * outarray + (wsp0 + wsp1)
+                //          = (lambda * M + L ) * u_hat
+                Vmath::Vadd(m_ncoeffs,wsp1.get(),1,wsp2.get(),1,wsp0.get(),1);
+                Vmath::Vstvpp(m_ncoeffs,lambda,&outarray[0],1,&wsp0[0],1,&wsp3[0],1,&outarray[0],1);
             }
         }
 
@@ -1475,6 +1888,9 @@ namespace Nektar
 
 /**
  *    $Log: HexExp.cpp,v $
+ *    Revision 1.29  2010/03/07 14:45:22  cantwell
+ *    Added support for solving Helmholtz on Hexes
+ *
  *    Revision 1.28  2010/02/26 13:52:45  cantwell
  *    Tested and fixed where necessary Hex/Tet projection and differentiation in
  *      StdRegions, and LocalRegions for regular and deformed (where applicable).

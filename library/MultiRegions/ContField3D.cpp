@@ -467,6 +467,7 @@ namespace Nektar
 
             if(UseContCoeffs)
             {
+                Vmath::Zero(m_contNcoeffs,outarray,1);
                 GlobalSolve(key,wsp,outarray,dirForcing);
             }
             else

@@ -79,12 +79,6 @@ namespace Nektar
                 return eHexahedron;
             }
 
-            /// Evaluate the solution at a given coordinate.
-//            NekDouble PhysEvaluate(Array<OneD, const NekDouble>& coords)
-//            {
-//                return  StdExpansion3D::PhysEvaluate(coords);
-//            }
-
 
             //-----------------------------------
             // Helpers
@@ -354,6 +348,42 @@ namespace Nektar
             virtual NekDouble v_PhysEvaluate(Array<OneD,
                                 const NekDouble>& Lcoords);
 
+            virtual void v_MassMatrixOp(
+                            const Array<OneD, const NekDouble> &inarray, 
+                            Array<OneD,NekDouble> &outarray,
+                            const StdMatrixKey &mkey);
+
+            virtual void v_LaplacianMatrixOp(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdMatrixKey &mkey);
+
+            virtual void v_LaplacianMatrixOp(const int k1, const int k2, 
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdMatrixKey &mkey);
+
+            virtual void v_WeakDerivMatrixOp(const int i,
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdMatrixKey &mkey);
+            
+            virtual void v_HelmholtzMatrixOp(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdMatrixKey &mkey);
+            
+            virtual void v_LaplacianMatrixOp_MatFree(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdMatrixKey &mkey);
+            
+            virtual void v_HelmholtzMatrixOp_MatFree(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdMatrixKey &mkey);
+
+
         private:
             virtual void v_BwdTrans_SumFac(
                     const Array<OneD, const NekDouble>& inarray,
@@ -371,6 +401,11 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
 
+            void GeneralMatrixOp_MatOp(const Array<OneD, const NekDouble> &inarray,
+                                       Array<OneD,NekDouble> &outarray,
+                                       const StdMatrixKey &mkey);    
+
+                                                    
             //---------------------------
             // Helper functions
             //---------------------------
@@ -461,6 +496,9 @@ namespace Nektar
 
 /**
  * $Log: StdHexExp.h,v $
+ * Revision 1.32  2010/03/07 14:45:22  cantwell
+ * Added support for solving Helmholtz on Hexes
+ *
  * Revision 1.31  2010/02/26 13:52:46  cantwell
  * Tested and fixed where necessary Hex/Tet projection and differentiation in
  *   StdRegions, and LocalRegions for regular and deformed (where applicable).

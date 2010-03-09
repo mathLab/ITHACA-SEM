@@ -175,10 +175,54 @@ namespace Nektar
             virtual NekDouble v_Integral( 
                             const Array<OneD, const NekDouble> &inarray );
 
-            void v_LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
-                                                 Array<OneD,NekDouble> &outarray,
-                                                 const StdRegions::StdMatrixKey &mkey);
+            //------------------------------
+            //    Operator Implementations
+            //------------------------------
+            virtual void v_MassMatrixOp(
+                            const Array<OneD, const NekDouble> &inarray, 
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey);
 
+            virtual void v_LaplacianMatrixOp(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey);
+
+            virtual void v_LaplacianMatrixOp(const int k1, const int k2, 
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey);
+
+            virtual void v_WeakDerivMatrixOp(const int i,
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey);
+            
+            virtual void v_WeakDirectionalDerivMatrixOp(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey);
+            
+            virtual void v_MassLevelCurvatureMatrixOp(
+                            const Array<OneD, const NekDouble> &inarray, 
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey);
+
+            virtual void v_HelmholtzMatrixOp(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey);
+            
+            virtual void v_LaplacianMatrixOp_MatFree(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey);
+            
+            virtual void v_HelmholtzMatrixOp_MatFree(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey);
+                            
         private:
             SpatialDomains::Geometry3DSharedPtr   m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
@@ -188,6 +232,11 @@ namespace Nektar
 
             HexExp();
 
+            void GeneralMatrixOp_MatOp(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey); 
+            
 
             /// Return Shape of region, using  ShapeType enum list. i.e. Hexahedron
             virtual StdRegions::ExpansionType v_DetExpansionType() const
@@ -240,8 +289,45 @@ namespace Nektar
             {
                 return m_matrixManager[mkey];
             }
+
         
-            virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const MatrixKey &mkey)
+            virtual DNekScalMatSharedPtr& v_GetLocMatrix(
+                            const StdRegions::MatrixType mtype, 
+                            NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
+                            NekDouble tau = NekConstants::kNekUnsetDouble)
+            {
+                MatrixKey mkey( mtype,DetExpansionType(),*this,lambdaval,tau );
+                return m_matrixManager[mkey];
+            }
+
+            virtual DNekScalMatSharedPtr& v_GetLocMatrix(
+                            const StdRegions::MatrixType mtype,
+                            const Array<OneD, NekDouble> &dir1Forcing,
+                            int matrixid = 0,
+                            NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
+                            NekDouble tau = NekConstants::kNekUnsetDouble)
+            {
+                MatrixKey mkey( mtype,DetExpansionType(),*this,lambdaval,tau,
+                                dir1Forcing,matrixid );
+                return m_matrixManager[mkey];
+            }
+
+            virtual DNekScalMatSharedPtr& v_GetLocMatrix(
+                            const StdRegions::MatrixType mtype,
+                            const Array<OneD, Array<OneD, NekDouble> >& 
+                                                                    dirForcing,
+                            int matrixid = 0,
+                            NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
+                            NekDouble tau = NekConstants::kNekUnsetDouble)
+            {
+                MatrixKey mkey( mtype,DetExpansionType(),*this,lambdaval,tau,
+                                dirForcing,matrixid );
+                return m_matrixManager[mkey];
+            }
+
+
+            virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(
+                            const MatrixKey &mkey)
             {
                 return m_staticCondMatrixManager[mkey];
             }
@@ -265,6 +351,9 @@ namespace Nektar
 
 /** 
  *    $Log: HexExp.h,v $
+ *    Revision 1.30  2010/03/07 14:45:22  cantwell
+ *    Added support for solving Helmholtz on Hexes
+ *
  *    Revision 1.29  2010/02/26 13:52:45  cantwell
  *    Tested and fixed where necessary Hex/Tet projection and differentiation in
  *      StdRegions, and LocalRegions for regular and deformed (where applicable).

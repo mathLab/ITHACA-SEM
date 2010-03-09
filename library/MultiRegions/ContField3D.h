@@ -129,6 +129,15 @@ namespace Nektar
                 return  m_locToGloMap;
             } 
 
+            /// Calculates the result of the multiplication of a global
+            /// matrix of type specified by \a mkey with a vector given by \a
+            /// inarray.
+            inline void GeneralMatrixOp(
+                                const GlobalMatrixKey             &gkey,
+                                const Array<OneD,const NekDouble> &inarray,
+                                      Array<OneD,      NekDouble> &outarray,
+                                bool  UseContCoeffs = false);
+
         protected:
             LocalToGlobalC0ContMapSharedPtr m_locToGloMap;
             int                             m_contNcoeffs;
@@ -233,6 +242,52 @@ namespace Nektar
             return m_contNcoeffs;
         }
 
+        /**
+         * This is equivalent to the operation:
+         * \f[\boldsymbol{M\hat{u}}_g\f]
+         * where \f$\boldsymbol{M}\f$ is the global matrix of type specified by
+         * \a mkey. After scattering the global array \a inarray to local
+         * level, this operation is evaluated locally by the function
+         * ExpList#GeneralMatrixOp. The global result is then obtained by a
+         * global assembly procedure.
+         *
+         * @param   mkey        This key uniquely defines the type matrix
+         *                      required for the operation.
+         * @param   inarray     The vector \f$\boldsymbol{\hat{u}}_g\f$ of size
+         *                      \f$N_{\mathrm{dof}}\f$.
+         * @param   outarray    The resulting vector of size
+         *                      \f$N_{\mathrm{dof}}\f$.
+         */
+        inline void ContField3D::GeneralMatrixOp(
+                                const GlobalMatrixKey             &gkey,
+                                const Array<OneD,const NekDouble> &inarray,
+                                      Array<OneD,      NekDouble> &outarray,
+                                bool  UseContCoeffs)
+        {
+            if(UseContCoeffs)
+            {
+                bool doGlobalOp = m_globalOptParam->DoGlobalMatOp(
+                                                        gkey.GetMatrixType());
+
+                if(doGlobalOp)
+                {
+                    GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
+                    mat->Multiply(inarray,outarray);
+                }
+                else
+                {
+                    Array<OneD,NekDouble> tmp1(2*m_ncoeffs);
+                    Array<OneD,NekDouble> tmp2(tmp1+m_ncoeffs);
+                    GlobalToLocal(inarray,tmp1);
+                    GeneralMatrixOp_IterPerExp(gkey,tmp1,tmp2);
+                    Assemble(tmp2,outarray);
+                }
+            }
+            else
+            {
+                GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
+            }
+        }
 
     } //end of namespace
 } //end of namespace

@@ -91,18 +91,18 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Helmholtz solution taking physical forcing
-    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), lambda);
+    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), lambda, true);
     //----------------------------------------------
 
     //----------------------------------------------
     // Backward Transform Solution to get solved values at
-    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
+    Exp->BwdTrans(Exp->GetContCoeffs(), Exp->UpdatePhys(), true);
     //----------------------------------------------
 
     //----------------------------------------------
     // Write solution
     ofstream outfile("HelmholtzFile3D.pos");
-    Exp->WriteToFile(outfile,eGmsh);
+    Exp->WriteToFile(outfile,eGnuplot);
     //----------------------------------------------
 
     //----------------------------------------------

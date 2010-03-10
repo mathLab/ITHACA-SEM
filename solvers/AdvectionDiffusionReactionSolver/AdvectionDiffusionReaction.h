@@ -56,7 +56,7 @@ namespace Nektar
         eUnsteadyAdvection,
         eUnsteadyInviscidBurger,
         eUnsteadyDiffusion,
-        eUnsteadyDiffusionReaction,
+        eUnsteadyAdvectionDiffusion,
         eEquationTypeSize
     };
 
@@ -74,7 +74,7 @@ namespace Nektar
         "UnsteadyAdvection",
         "UnsteadyInviscidBurger",
         "UnsteadyDiffusion",
-        "UnsteadyDiffusionReaction",
+        "UnsteadyAdvectionDiffusion",
     };
 
     /// Solver for Advection-Diffusion-Reaction problems
@@ -193,6 +193,8 @@ namespace Nektar
 
 
     protected:
+        NekDouble m_epsilon;      // scalar diffusivity constant
+        NekDouble m_wavefreq;     // frequency of the initial wave
 
     private: 
         int          m_infosteps;    ///< dump info to stdout at steps time
@@ -257,6 +259,18 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.h,v $
+* Revision 1.13  2009/11/02 19:15:43  cantwell
+* Moved ContField1D to inherit from DisContField1D.
+* Moved ContField3D to inherit from DisContField3D.
+* Incorporated GenExpList1D functionality into ExpList1D.
+* Tidied up and added documentation to various classes.
+* Moved Namespace documentation and introductions to separate files along with
+* doxygen configuration.
+* Added option to use system ZLIB library instead of libboost_zlib on UNIX.
+* Added extra search paths to FindMetis.cmake and FindNektar++.cmake.
+* Updated Linux compiling instructions.
+* Updated regDemo to use Helmholtz2D-g when built as debug.
+*
 * Revision 1.12  2009/07/23 05:32:28  sehunchun
 * Implicit and Explicit diffusion debugging
 *

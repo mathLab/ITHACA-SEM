@@ -118,14 +118,16 @@ int main(int argc, char *argv[])
             else
             {
                 // Choose the method of deriving forcing functions
-                ode.DefineImplicitSolve       (&AdvectionDiffusionReaction::ODEhelmSolve,&dom);		
+                ode.DefineImplicitSolve   (&AdvectionDiffusionReaction::ODEhelmSolve,&dom);	
+                ode.DefineOdeRhs          (&AdvectionDiffusionReaction::ODEeReaction,&dom);	
                 
                 // General Linear Time Integration
                 dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);
             }
         }
         break; 
-    case eUnsteadyDiffusionReaction:
+
+    case eUnsteadyAdvectionDiffusion:
         {
             if(dom.GetExplicitReaction()) // Explicit Reaction
             {
@@ -133,7 +135,7 @@ int main(int argc, char *argv[])
                 {
                     // Choose the method of deriving forcing functions
                     ode.DefineImplicitSolve (&AdvectionDiffusionReaction::ODEhelmSolve,&dom);	
-                    ode.DefineOdeRhs        (&AdvectionDiffusionReaction::ODEeReaction,&dom);	
+                    ode.DefineOdeRhs        (&AdvectionDiffusionReaction::ODErhs,&dom);	
                     
                     // General Linear Time Integration
                     dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);

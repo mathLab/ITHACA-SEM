@@ -89,6 +89,24 @@ namespace Nektar
 
         int i;
 
+        if(m_boundaryConditions->CheckForParameter("epsilon") == true)
+        {
+            m_epsilon = m_boundaryConditions->GetParameter("epsilon");
+        }
+        else
+        {
+            m_epsilon  = 0;
+        }
+
+        if(m_boundaryConditions->CheckForParameter("wavefreq") == true)
+        {
+            m_wavefreq = m_boundaryConditions->GetParameter("wavefreq");
+        }
+        else
+        {
+            m_wavefreq  = 0.0;
+        }
+
         // Set up equation type enum using kEquationTypeStr
         std::string typeStr = m_boundaryConditions->GetSolverInfo("EQTYPE");
 
@@ -103,6 +121,14 @@ namespace Nektar
 
         ASSERTL0(i != (int) eEquationTypeSize, "Invalid expansion type.");
 
+        // Velocity vectors
+        m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+        
+        for(int i = 0; i < m_spacedim; ++i)
+        {
+            m_velocity[i] = Array<OneD, NekDouble> (GetNpoints(),0.0);
+        }
+
         // Equation specific Setups
         switch(m_equationType)
         {
@@ -111,12 +137,6 @@ namespace Nektar
         case ePoisson:
             break;
         case eSteadyAdvection:
-            m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-
-            for(int i = 0; i < m_spacedim; ++i)
-            {
-                m_velocity[i] = Array<OneD, NekDouble> (GetNpoints());
-            }
 
             EvaluateAdvectionVelocity();
             break;
@@ -142,7 +162,7 @@ namespace Nektar
         case eUnsteadyDiffusion:
             m_timeIntMethod = LibUtilities::eClassicalRungeKutta4;
             goto UnsteadySetup;
-        case eUnsteadyDiffusionReaction:
+        case eUnsteadyAdvectionDiffusion:
             m_timeIntMethod = LibUtilities::eIMEXdirk_3_4_3;
             goto UnsteadySetup;
             break;
@@ -206,7 +226,7 @@ namespace Nektar
                     // Reset default for implicit diffusion
                     if(m_equationType == eUnsteadyDiffusion)
                     {
-                        m_timeIntMethod = LibUtilities::eDIRKOrder3;
+                        m_timeIntMethod = LibUtilities::eIMEXdirk_3_4_3;
                     }
                 }
                 else
@@ -313,6 +333,8 @@ namespace Nektar
         int nvariables = inarray.num_elements();
         int ncoeffs    = inarray[0].num_elements();
 
+        Array<OneD, Array<OneD, NekDouble> > Forcing(1);
+
         switch(m_projectionType)
         {
             case eDiscontinuousGalerkin:
@@ -323,6 +345,7 @@ namespace Nektar
                     case eAdvection:
 #else
                     case eUnsteadyAdvection:
+		    case eUnsteadyAdvectionDiffusion:
                     case eUnsteadyInviscidBurger:
 #endif
                     {
@@ -334,6 +357,14 @@ namespace Nektar
                                                                 outarray[i]);
                             Vmath::Neg(ncoeffs,outarray[i],1);
                         }
+
+                        if(m_wavefreq>0)
+                        {
+                            Forcing[0] = Array<OneD, NekDouble> (ncoeffs);
+                            ODEeReaction(outarray,Forcing,time);
+                            Vmath::Vadd(ncoeffs, Forcing[0], 1, outarray[0], 1, outarray[0], 1);
+                        }
+
                         break;
                     }
 
@@ -354,6 +385,13 @@ namespace Nektar
                                                                 outarray[i]);
                         }
 
+                        if(m_wavefreq>0)
+                        {
+                            Forcing[0] = Array<OneD, NekDouble> (ncoeffs);
+                            ODEeReaction(outarray,Forcing,time);
+                            Vmath::Vadd(ncoeffs, Forcing[0], 1, outarray[0], 1, outarray[0], 1);
+                        }
+
                         break;
                     }
                 }
@@ -367,6 +405,7 @@ namespace Nektar
                     case eAdvection:
 #else
                     case eUnsteadyAdvection:
+		    case eUnsteadyAdvectionDiffusion:
 #endif
                     {
                         SetBoundaryConditions(time);
@@ -401,20 +440,37 @@ namespace Nektar
     /**
      *
      */
-    void AdvectionDiffusionReaction::ODEeReaction(const Array<OneD,
-                        const Array<OneD, NekDouble> >&inarray,
+    void AdvectionDiffusionReaction::ODEeReaction(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                         Array<OneD, Array<OneD, NekDouble> >&outarray,
                         const NekDouble time)
     {
         int i,k;
         int nvariables = inarray.num_elements();
         int ncoeffs    = inarray[0].num_elements();
-        const NekDouble coeff = 3.14159265*3.14159265;
 
-        for (i = 0; i < nvariables; ++i)
-        {
-            Vmath::Smul(ncoeffs, coeff, inarray[i], 1, outarray[i], 1);
-        }
+	// PI*PI*exp(-1.0*PI*PI*FinTime)*sin(PI*x)*sin(PI*y)
+        int nq = m_fields[0]->GetNpoints();
+
+        Array<OneD,NekDouble> x0(nq);
+        Array<OneD,NekDouble> x1(nq);
+        Array<OneD,NekDouble> x2(nq);
+
+        // get the coordinates (assuming all fields have the same
+        // discretisation)
+        m_fields[0]->GetCoords(x0,x1,x2);
+
+	Array<OneD, NekDouble> physfield(nq,0.0);
+        NekDouble kx, ky;
+	for (i=0; i<nq; ++i)
+	  {
+              kx = m_wavefreq*x0[i];
+              ky = m_wavefreq*x1[i];
+
+              physfield[i] = (2.0*m_epsilon*m_wavefreq*m_wavefreq - 1.0)*exp(-1.0*time)*sin(kx)*sin(ky) 
+                  + m_wavefreq*exp(-1.0*time)*( m_velocity[0][i]*cos(kx)*sin(ky) + m_velocity[1][i]*sin(kx)*cos(ky) );
+	  }
+
+        m_fields[0]->FwdTrans(physfield, outarray[0]);
     }
 
 
@@ -486,6 +542,8 @@ namespace Nektar
         int nvariables = inarray.num_elements();
         int ncoeffs    = inarray[0].num_elements();
 
+        Array<OneD, Array<OneD, NekDouble> > Forcing(1);
+
         // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
         // inarray = input: \hat{rhs} -> output: \hat{Y}
         // outarray = output: nabla^2 \hat{Y}
@@ -498,7 +556,7 @@ namespace Nektar
             // Multiply by inverse of mass matrix
             if(m_projectionType==eGalerkin)
             {
-        //  m_fields[i]->MultiplyByInvMassMatrix(inarray[i],outarray[i],false);
+                m_fields[i]->MultiplyByInvMassMatrix(inarray[i],outarray[i],false);
             }
 
             // Multiply rhs[i] with -1.0/gamma/timestep
@@ -512,7 +570,7 @@ namespace Nektar
                                                     m_fields[i]->UpdatePhys());
             // m_fields[i]->SetPhysState(true);
 
-            NekDouble kappa = 1.0/lambda;
+            NekDouble kappa = 1.0/lambda/m_epsilon;
 
             // Solve a system of equations with Helmholtz solver
             m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),
@@ -525,8 +583,8 @@ namespace Nektar
             // Multiply back by mass matrix
             if(m_projectionType==eGalerkin)
             {
-                // m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(keyi,
-                //                                  outarray[i],outarray[i]);
+                m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,
+                                                                    outarray[i],outarray[i]);
             }
         }
     }
@@ -743,6 +801,7 @@ namespace Nektar
 #else
       case eUnsteadyAdvection:
       case eUnsteadyDiffusion:
+      case eUnsteadyAdvectionDiffusion:
 #endif
     {
       ASSERTL1(flux.num_elements() == m_velocity.num_elements(),"Dimension of flux array and velocity array do not match");
@@ -780,6 +839,7 @@ namespace Nektar
 #else
       case eUnsteadyAdvection:
       case eUnsteadyDiffusion:
+      case eUnsteadyAdvectionDiffusion:
 #endif
     {
       ASSERTL1(flux.num_elements() == m_velocity.num_elements(),"Dimension of flux array and velocity array do not match");
@@ -817,6 +877,7 @@ namespace Nektar
     switch(m_equationType)
       {
       case eUnsteadyAdvection:
+      case eUnsteadyAdvectionDiffusion:
         {
 
           // Get Edge Velocity - Could be stored if time independent
@@ -883,6 +944,7 @@ namespace Nektar
     switch(m_equationType)
       {
       case eUnsteadyAdvection:
+      case eUnsteadyAdvectionDiffusion:
         {
 
           // Get Edge Velocity - Could be stored if time independent
@@ -943,7 +1005,7 @@ namespace Nektar
                 //  edge::eForward, if V*n<0 <=> V*n_F<0, pick uflux = uBwd
                 //  edge::eBackward, if V*n<0 <=> V*n_B>=0, pick uflux = uBwd
 
-        m_fields[i]->GetTrace()->Upwind(m_traceNormals[j],Fwd,Bwd,fluxtemp);  
+                m_fields[i]->GetTrace()->Upwind(m_traceNormals[j],Fwd,Bwd,fluxtemp);  
     
                 // Imposing weak boundary condition with flux
                 // if Vn >= 0, uflux = uBwd at Neumann, i.e.,
@@ -1173,6 +1235,8 @@ namespace Nektar
   {   
     cout << "=======================================================================" << endl;
     cout << "\tEquation Type   : "<< kEquationTypeStr[m_equationType] << endl;
+    out << "\tepsilon          : " << m_epsilon << endl;
+    out << "\twavefreq       : " << m_wavefreq << endl;
     ADRBase::SessionSummary(out);
     switch(m_equationType)
       {
@@ -1195,7 +1259,6 @@ namespace Nektar
         out << "\tAdvection Advancement   : Implicit" <<endl;
           }
     out << "\tTime Integration Method : " << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod] << endl;
-    
     ADRBase::TimeParamSummary(out);
     break;
       case eUnsteadyDiffusion:
@@ -1210,7 +1273,7 @@ namespace Nektar
           out << "\tTime Integration Method : " << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod] << endl;
           ADRBase::TimeParamSummary(out);
           break;
-      case eUnsteadyDiffusionReaction:
+      case eUnsteadyAdvectionDiffusion:
           if(m_explicitDiffusion)
           {
             out << "\tDiffusion Advancement   : Explicit" <<endl;
@@ -1221,11 +1284,11 @@ namespace Nektar
           }
           if(m_explicitReaction)
           {
-              out << "\t\tReaction Advancement    : Explicit" <<endl;
+              out << "\tReaction Advancement    : Explicit" <<endl;
           }
           else
           {
-              out << "\t\tReaction Advancement    : Implicit" <<endl;
+              out << "\tReaction Advancement    : Implicit" <<endl;
           }
           out << "\tTime Integration Method : " << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod] << endl;
           ADRBase::TimeParamSummary(out);
@@ -1239,6 +1302,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.23  2009/11/20 11:11:58  cbiotto
+* Fixing the Neumann boundary condition.
+*
 * Revision 1.22  2009/11/02 19:15:43  cantwell
 * Moved ContField1D to inherit from DisContField1D.
 * Moved ContField3D to inherit from DisContField3D.

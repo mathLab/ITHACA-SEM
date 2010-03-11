@@ -466,8 +466,17 @@ namespace Nektar
               kx = m_wavefreq*x0[i];
               ky = m_wavefreq*x1[i];
 
-              physfield[i] = (2.0*m_epsilon*m_wavefreq*m_wavefreq - 1.0)*exp(-1.0*time)*sin(kx)*sin(ky) 
-                  + m_wavefreq*exp(-1.0*time)*( m_velocity[0][i]*cos(kx)*sin(ky) + m_velocity[1][i]*sin(kx)*cos(ky) );
+	    if(m_fields[0]->GetBndConditions()[0]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+            {
+                physfield[i] = (2.0*m_epsilon*m_wavefreq*m_wavefreq - 1.0)*exp(-1.0*time)*sin(kx)*sin(ky) 
+                    + m_wavefreq*exp(-1.0*time)*( m_velocity[0][i]*cos(kx)*sin(ky) + m_velocity[1][i]*sin(kx)*cos(ky) );
+            }
+            
+            else
+            {
+                physfield[i] = (2.0*m_epsilon*m_wavefreq*m_wavefreq - 1.0)*exp(-1.0*time)*cos(kx)*cos(ky) 
+                    - m_wavefreq*exp(-1.0*time)*( m_velocity[0][i]*sin(kx)*cos(ky) + m_velocity[1][i]*cos(kx)*sin(ky) );
+            }
 	  }
 
         m_fields[0]->FwdTrans(physfield, outarray[0]);
@@ -556,7 +565,7 @@ namespace Nektar
             // Multiply by inverse of mass matrix
             if(m_projectionType==eGalerkin)
             {
-                m_fields[i]->MultiplyByInvMassMatrix(inarray[i],outarray[i],false);
+                //   m_fields[i]->MultiplyByInvMassMatrix(inarray[i],outarray[i],false);
             }
 
             // Multiply rhs[i] with -1.0/gamma/timestep
@@ -583,8 +592,8 @@ namespace Nektar
             // Multiply back by mass matrix
             if(m_projectionType==eGalerkin)
             {
-                m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,
-                                                                    outarray[i],outarray[i]);
+                //   m_fields[i]->MultiRegions::ExpList::GeneralMatrixOp(key,
+                //                                                  outarray[i],outarray[i]);
             }
         }
     }
@@ -1162,7 +1171,6 @@ namespace Nektar
 	      }
 	  }
       }
-
   }
   
   // Diffusion: Imposing weak boundary condition for q with flux 
@@ -1302,6 +1310,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.24  2010/03/10 23:40:25  sehunchun
+* Add UnsteadyAdvectionDiffusion and new variables, m_epsilon and m_wavefreq
+*
 * Revision 1.23  2009/11/20 11:11:58  cbiotto
 * Fixing the Neumann boundary condition.
 *

@@ -83,7 +83,7 @@
     </EXACTSOLUTION>
     
     <INITIALCONDITIONS>
-      <F VAR="u" VALUE="sin(wavefreq*x)*cos(wavefreq*y)" />
+      <F VAR="u" VALUE="cos(wavefreq*x)*cos(wavefreq*y)" />
     </INITIALCONDITIONS>
 -->
 
@@ -162,9 +162,9 @@
     </PARAMETERS>
 
     <SOLVERINFO>
-      <I PROPERTY="EQType" VALUE="UnsteadyDiffusion"/>
+      <I PROPERTY="EQType" VALUE="UnsteadyAdvectionDiffusion"/>
       <I PROPERTY="Projection" VALUE="DisContinuous"/>
-      <I PROPERTY="DiffusionAdvancement" VALUE="Explicit"/>
+      <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
     </SOLVERINFO> 
 
     <VARIABLES>

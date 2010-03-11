@@ -161,6 +161,10 @@ namespace Nektar
             break;
         case eUnsteadyDiffusion:
             m_timeIntMethod = LibUtilities::eClassicalRungeKutta4;
+            if(fabs(m_epsilon)<0.000000001)
+            {
+                m_epsilon = 1.0;
+            }
             goto UnsteadySetup;
         case eUnsteadyAdvectionDiffusion:
             m_timeIntMethod = LibUtilities::eIMEXdirk_3_4_3;
@@ -226,7 +230,15 @@ namespace Nektar
                     // Reset default for implicit diffusion
                     if(m_equationType == eUnsteadyDiffusion)
                     {
-                        m_timeIntMethod = LibUtilities::eIMEXdirk_3_4_3;
+                        if(m_wavefreq>0)
+                        {
+                            m_timeIntMethod = LibUtilities::eIMEXdirk_3_4_3;
+                        }
+
+                        else
+                        {
+                            m_timeIntMethod = LibUtilities::eDIRKOrder3;
+                        }
                     }
                 }
                 else
@@ -1310,6 +1322,9 @@ namespace Nektar
 
 /**
 * $Log: AdvectionDiffusionReaction.cpp,v $
+* Revision 1.25  2010/03/11 15:31:29  sehunchun
+* Changes for Neumann boundary test problems
+*
 * Revision 1.24  2010/03/10 23:40:25  sehunchun
 * Add UnsteadyAdvectionDiffusion and new variables, m_epsilon and m_wavefreq
 *

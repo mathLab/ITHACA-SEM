@@ -70,6 +70,21 @@
     <F LHS="Vx" VALUE="1.0" />
     <F LHS="Vy" VALUE="1.0" />
     </USERDEFINEDEQNS>
+
+(5) Homogeneous Neumann boundary condition
+    <BOUNDARYCONDITIONS>
+      <REGION REF="0">
+        <N VAR="u" VALUE="0" />
+      </REGION>
+    </BOUNDARYCONDITIONS>
+
+    <EXACTSOLUTION>
+      <F VAR="u" VALUE="exp(-1.0*FinTime)*cos(wavefreq*x)*cos(wavefreq*y)" />
+    </EXACTSOLUTION>
+    
+    <INITIALCONDITIONS>
+      <F VAR="u" VALUE="sin(wavefreq*x)*cos(wavefreq*y)" />
+    </INITIALCONDITIONS>
 -->
 
 <NEKTAR>
@@ -143,13 +158,13 @@
       <P> IO_CheckSteps  = 1000              </P>
       <P> IO_InfoSteps   = 1000               </P>
       <P> wavefreq = 2*PI     </P>
-      <P> epsilon = 0.0   </P>
+      <P> epsilon = 1.0   </P>
     </PARAMETERS>
 
     <SOLVERINFO>
-      <I PROPERTY="EQType" VALUE="UnsteadyAdvection"/>
+      <I PROPERTY="EQType" VALUE="UnsteadyDiffusion"/>
       <I PROPERTY="Projection" VALUE="DisContinuous"/>
-      <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
+      <I PROPERTY="DiffusionAdvancement" VALUE="Explicit"/>
     </SOLVERINFO> 
 
     <VARIABLES>
@@ -167,8 +182,8 @@
     </BOUNDARYCONDITIONS>
 
     <USERDEFINEDEQNS>
-      <F LHS="Vx" VALUE="1.0" />
-      <F LHS="Vy" VALUE="1.0" />
+      <F LHS="Vx" VALUE="0.0" />
+      <F LHS="Vy" VALUE="0.0" />
     </USERDEFINEDEQNS>   
     
     <EXACTSOLUTION>

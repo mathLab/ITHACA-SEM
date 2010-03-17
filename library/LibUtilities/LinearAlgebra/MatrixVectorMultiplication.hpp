@@ -437,29 +437,20 @@ namespace Nektar
         unsigned int curWrapperRow = 0;
         for(unsigned int blockRow = 0; blockRow < numberOfBlockRows; ++blockRow)
         {
-            unsigned int rowsInBlock = lhs.GetNumberOfRowsInBlockRow(blockRow);
 
             if( blockRow != 0 )
             {
                 curResultRow += lhs.GetNumberOfRowsInBlockRow(blockRow-1);
             }
 
-            if( rowsInBlock == 0 )
-            {
-                continue;
-            }
-
-            double* resultWrapper = result_ptr + curResultRow;
-            
             unsigned int blockColumn = blockRow;
-
             if( blockColumn != 0 )
             {
                 curWrapperRow += lhs.GetNumberOfColumnsInBlockColumn(blockColumn-1);
             }
 
-            const LhsInnerMatrixType* block = lhs.GetBlockPtr(blockRow, blockColumn);
-            if( !block )
+            unsigned int rowsInBlock = lhs.GetNumberOfRowsInBlockRow(blockRow);
+            if( rowsInBlock == 0 )
             {
                 continue;
             }
@@ -470,6 +461,13 @@ namespace Nektar
                 continue;
             }
 
+            const LhsInnerMatrixType* block = lhs.GetBlockPtr(blockRow, blockColumn);
+            if( !block )
+            {
+                continue;
+            }
+
+            double* resultWrapper = result_ptr + curResultRow;            
             const double* rhsWrapper = rhs_ptr + curWrapperRow;
             NekMultiply(resultWrapper, *block, rhsWrapper);
             //resultWrapper = (*block)*rhsWrapper;
@@ -487,40 +485,37 @@ namespace Nektar
         unsigned int curWrapperRow = 0;
         for(unsigned int blockRow = 0; blockRow < numberOfBlockRows; ++blockRow)
         {
-            unsigned int rowsInBlock = lhs.GetNumberOfRowsInBlockRow(blockRow);
 
             if( blockRow != 0 )
             {
                 curResultRow += lhs.GetNumberOfRowsInBlockRow(blockRow-1);
             }
 
-            if( rowsInBlock == 0 )
-            {
-                continue;
-            }
-
-            NekVector<DataType, VariableSizedVector, space> resultWrapper(rowsInBlock, result.GetPtr() + curResultRow, eWrapper);
-            
             unsigned int blockColumn = blockRow;
-
             if( blockColumn != 0 )
             {
                 curWrapperRow += lhs.GetNumberOfColumnsInBlockColumn(blockColumn-1);
             }
 
-            //const boost::shared_ptr<const LhsInnerMatrixType>& block = lhs.GetBlock(blockRow, blockColumn);
-            const LhsInnerMatrixType* block = lhs.GetBlockPtr(blockRow, blockColumn);
-            if( !block )
+            unsigned int rowsInBlock = lhs.GetNumberOfRowsInBlockRow(blockRow);
+            if( rowsInBlock == 0 )
             {
                 continue;
             }
-
+            
             unsigned int columnsInBlock = lhs.GetNumberOfColumnsInBlockColumn(blockColumn);
             if( columnsInBlock == 0 )
             {
                 continue;
             }
 
+            const LhsInnerMatrixType* block = lhs.GetBlockPtr(blockRow, blockColumn);
+            if( !block )
+            {
+                continue;
+            }
+
+            NekVector<DataType, VariableSizedVector, space> resultWrapper(rowsInBlock, result.GetPtr() + curResultRow, eWrapper);
             NekVector<const DataType, VariableSizedVector, space> rhsWrapper(columnsInBlock, rhs.GetPtr() + curWrapperRow, eWrapper);
             resultWrapper = (*block)*rhsWrapper;
         }

@@ -221,8 +221,8 @@
     
     <!-- V - vertex, S - Segment, E - edge, F - face -->
     <COMPOSITE>
-      <C ID="0"> T[0-21] </C>
-      <C ID="1"> Q[0-25] </C>
+      <C ID="0"> Q[22-47] </C>
+      <C ID="1"> T[0-21] </C>
       <C ID="2"> E[0-1] </C>
       <C ID="3"> E[2-5] </C>
       <C ID="4"> E[45] </C>

@@ -75,7 +75,7 @@ namespace Nektar
             ApplyGeomInfo(graph3D);
             
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType);
+                ::AllocateSharedPtr(m_ncoeffs,*this,solnType);
 
 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
@@ -100,7 +100,8 @@ namespace Nektar
             map<int,int> periodicVertices;
             GetPeriodicFaces(graph3D,bcs,bcs.GetVariable(bc_loc),periodicVertices,periodicEdges,periodicFaces);
 
-            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*this,
+                                                                                     solnType,
                                                                                      m_bndCondExpansions,
                                                                                      m_bndConditions,
                                                                                      periodicVertices,
@@ -129,12 +130,13 @@ namespace Nektar
             map<int,int> periodicVertices;
             GetPeriodicFaces(graph3D,bcs,variable,periodicVertices,periodicEdges,periodicFaces);
 
-            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
-                                                                                    m_bndCondExpansions,
-                                                                                    m_bndConditions,
-                                                                                    periodicVertices,
-                                                                                    periodicEdges,
-                                                                                    periodicFaces); 
+            m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*this,
+                                                                                     solnType,
+                                                                                     m_bndCondExpansions,
+                                                                                     m_bndConditions,
+                                                                                     periodicVertices,
+                                                                                     periodicEdges,
+                                                                                     periodicFaces); 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
@@ -467,7 +469,6 @@ namespace Nektar
 
             if(UseContCoeffs)
             {
-                Vmath::Zero(m_contNcoeffs,outarray,1);
                 GlobalSolve(key,wsp,outarray,dirForcing);
             }
             else

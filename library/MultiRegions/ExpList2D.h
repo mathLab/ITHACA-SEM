@@ -126,6 +126,14 @@ namespace Nektar
             void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
 
         private:
+            /// Flag to indicate if general expansions are being used.
+            bool m_UseGenExp;
+
+            /// Definition of the total number of degrees of freedom and
+            /// quadrature points. Sets up the storage for \a m_coeff and \a
+            ///  m_phys.
+            void SetCoeffPhys(void);
+
             /// Set up the normals on each expansion.
             virtual void v_SetUpPhysNormals(
                                 const StdRegions::StdExpansionVector &locexp);

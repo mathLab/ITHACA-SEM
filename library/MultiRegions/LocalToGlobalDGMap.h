@@ -55,14 +55,14 @@ namespace Nektar
             ~LocalToGlobalDGMap();
 
             LocalToGlobalDGMap( const SpatialDomains::MeshGraph1D &graph1D,
-                                const boost::shared_ptr<StdRegions::StdExpansionVector> &exp1D,
+                                const ExpList &locExp,
                                 const GlobalSysSolnType solnType, 
                                 const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndConstraint,
                                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond);
             
             LocalToGlobalDGMap(SpatialDomains::MeshGraph2D &graph2D, 
                                const ExpList1DSharedPtr &trace, 
-                               const boost::shared_ptr<StdRegions::StdExpansionVector> &exp2D, 
+                               const ExpList &locExp,
                                const GlobalSysSolnType solnType, 
                                const Array<OneD, MultiRegions::ExpList1DSharedPtr> &bndContraint, 
                                const Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndCond,
@@ -112,6 +112,9 @@ namespace Nektar
 
 
 /** $Log: LocalToGlobalDGMap.h,v $
+/** Revision 1.6  2009/11/20 10:47:54  cbiotto
+/** Update for creating boundary to global trace map
+/**
 /** Revision 1.5  2009/11/02 19:15:43  cantwell
 /** Moved ContField1D to inherit from DisContField1D.
 /** Moved ContField3D to inherit from DisContField3D.

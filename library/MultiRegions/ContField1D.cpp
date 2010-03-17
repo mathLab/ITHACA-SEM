@@ -118,7 +118,7 @@ namespace Nektar
             ApplyGeomInfo(graph1D);
             
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType);
+                ::AllocateSharedPtr(m_ncoeffs,*this,solnType);
 
 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
@@ -169,7 +169,7 @@ namespace Nektar
                                                     periodicVertices);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                                    ::AllocateSharedPtr(m_ncoeffs,*m_exp,
+                                    ::AllocateSharedPtr(m_ncoeffs,*this,
                                                         solnType,
                                                         m_bndCondExpansions,
                                                         m_bndConditions,
@@ -221,7 +221,8 @@ namespace Nektar
             GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
+                                ::AllocateSharedPtr(m_ncoeffs,*this,
+                                                    solnType,
                                                     m_bndCondExpansions,
                                                     m_bndConditions,
                                                     periodicVertices);
@@ -279,7 +280,8 @@ namespace Nektar
                                 periodicVertices);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
+                                ::AllocateSharedPtr(m_ncoeffs,*this,
+                                                    solnType,
                                                     m_bndCondExpansions,
                                                     m_bndConditions,
                                                     periodicVertices);
@@ -338,7 +340,8 @@ namespace Nektar
             GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
+                                ::AllocateSharedPtr(m_ncoeffs,*this,
+                                                    solnType,
                                                     m_bndCondExpansions,
                                                     m_bndConditions,
                                                     periodicVertices);

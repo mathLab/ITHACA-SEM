@@ -117,8 +117,7 @@ namespace Nektar
             ApplyGeomInfo(graph2D);
             
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType);
-
+                ::AllocateSharedPtr(m_ncoeffs,*this,solnType);
 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
@@ -163,11 +162,10 @@ namespace Nektar
                              periodicVertices,periodicEdges);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
-                                                    m_bndCondExpansions,
-                                                    m_bndConditions,
-                                                    periodicVertices,
-                                                    periodicEdges);
+                ::AllocateSharedPtr(m_ncoeffs,*this,
+                                    solnType, m_bndCondExpansions,
+                                    m_bndConditions, periodicVertices,
+                                    periodicEdges);
 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
@@ -221,11 +219,11 @@ namespace Nektar
                 GlobalSysSolnType solnType
                                     = In.m_locToGloMap->GetGlobalSysSolnType();
                 m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
-                                                    m_bndCondExpansions,
-                                                    m_bndConditions,
-                                                    periodicVertices,
-                                                    periodicEdges);
+                    ::AllocateSharedPtr(m_ncoeffs,*this, solnType,
+                                        m_bndCondExpansions,
+                                        m_bndConditions,
+                                        periodicVertices,
+                                        periodicEdges);
             }
             else
             {
@@ -276,11 +274,12 @@ namespace Nektar
                              periodicEdges);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                                ::AllocateSharedPtr(m_ncoeffs,*m_exp,solnType,
-                                                    m_bndCondExpansions,
-                                                    m_bndConditions,
-                                                    periodicVertices,
-                                                    periodicEdges);
+                ::AllocateSharedPtr(m_ncoeffs,*this,
+                                    solnType,
+                                    m_bndCondExpansions,
+                                    m_bndConditions,
+                                    periodicVertices,
+                                    periodicEdges);
 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
@@ -850,13 +849,15 @@ namespace Nektar
          * function #GlobalSolve. It is assumed #m_contCoeff contains an
          * initial estimate for the solution.
          *
-         * The values of the function \f$f(\boldsymbol{x})\f$ evaluated at the
-         * quadrature points \f$\boldsymbol{x}_i\f$ should be contained in the
-         * variable #m_phys of the ExpList object \a Sin. The resulting global
-         * coefficients \f$\boldsymbol{\hat{u}}_g\f$ are stored in the array
-         * #m_contCoeffs.
+         * The values of the function \f$f(\boldsymbol{x})\f$
+         * evaluated at the quadrature points \f$\boldsymbol{x}_i\f$
+         * should be contained in the variable #m_phys of the ExpList
+         * object \a inarray. The resulting global coefficients
+         * \f$\boldsymbol{\hat{u}}_g\f$ are stored in the array
+         * #m_contCoeffs or #m_coeffs depending on whether
+         * \a UseContCoeffs is true or false
          *
-         * @param   Sin         An ExpList, containing the discrete evaluation
+         * @param   inarray     An ExpList, containing the discrete evaluation
          *                      of the forcing function \f$f(\boldsymbol{x})\f$
          *                      at the quadrature points in its array #m_phys.
          * @param   lambda      The parameter \f$\lambda\f$ of the Helmholtz

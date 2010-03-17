@@ -61,12 +61,12 @@ namespace Nektar
             LocalToGlobalC0ContMap(); 
             
             LocalToGlobalC0ContMap(const int numLocalCoeffs, 
-                                   const StdRegions::StdExpansionVector &locExpVector,
+                                   const ExpList &locExp,
                                    const GlobalSysSolnType solnType);
 
             // Constructor for the 1D expansion mappings
             LocalToGlobalC0ContMap(const int numLocalCoeffs, 
-                                   const StdRegions::StdExpansionVector &locExpVector,
+                                   const ExpList &locExp,
                                    const GlobalSysSolnType solnType, 
                                    const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp,
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
@@ -74,7 +74,7 @@ namespace Nektar
 
             // Constructor for the 2D expansion mappings
             LocalToGlobalC0ContMap(const int numLocalCoeffs, 
-                                   const StdRegions::StdExpansionVector &locExpVector,
+                                   const ExpList &locExp,
                                    const GlobalSysSolnType solnType, 
                                    const Array<OneD, const ExpList1DSharedPtr> &bndCondExp,
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
@@ -83,7 +83,7 @@ namespace Nektar
 
             // Constructor for the 3D expansion mappings
             LocalToGlobalC0ContMap(const int numLocalCoeffs, 
-                                   const StdRegions::StdExpansionVector &locExpVector,
+                                   const ExpList &locExp,
                                    const GlobalSysSolnType solnType, 
                                    const Array<OneD, const ExpList2DSharedPtr> &bndCondExp,
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
@@ -189,7 +189,7 @@ namespace Nektar
  
         private:
             void SetUp1DExpansionC0ContMap(const int numLocalCoeffs, 
-                                           const StdRegions::StdExpansionVector &locExpVector,
+                                           const ExpList &locExp,
                                            const GlobalSysSolnType solnType, 
                                            const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp = 
                                                LocalRegions::NullPointExpSharedPtrArray,
@@ -198,7 +198,7 @@ namespace Nektar
                                            const map<int,int>& periodicVerticesId = NullIntIntMap);
             
             void SetUp2DExpansionC0ContMap(const int numLocalCoeffs, 
-                                           const StdRegions::StdExpansionVector &locExpVector,
+                                           const ExpList &locExp,
                                            const GlobalSysSolnType solnType, 
                                            const Array<OneD, const MultiRegions::ExpList1DSharedPtr> &bndCondExp = 
                                                NullExpList1DSharedPtrArray,
@@ -208,7 +208,7 @@ namespace Nektar
                                            const map<int,int>& periodicEdgesId = NullIntIntMap);
 
             void SetUp3DExpansionC0ContMap(const int numLocalCoeffs, 
-                                           const StdRegions::StdExpansionVector &locExpVector,
+                                           const ExpList &locExp,
                                            const GlobalSysSolnType solnType, 
                                            const Array<OneD, const ExpList2DSharedPtr> &bndCondExp = 
                                                NullExpList2DSharedPtrArray,
@@ -229,6 +229,9 @@ namespace Nektar
 
 /**
 * $Log: LocalToGlobalC0ContMap.h,v $
+* Revision 1.9  2009/10/30 14:02:55  pvos
+* Multi-level static condensation updates
+*
 * Revision 1.8  2009/05/10 23:17:12  sherwin
 * Updated mainly to handle doubly periodic meshes which required modification to vertex handling from a numbering perspective
 *

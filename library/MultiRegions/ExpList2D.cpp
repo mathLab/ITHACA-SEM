@@ -64,7 +64,8 @@ namespace Nektar
          *
          */
         ExpList2D::ExpList2D():
-            ExpList()
+            ExpList(),
+            m_UseGenExp(false)
         {
         }
 
@@ -81,7 +82,8 @@ namespace Nektar
          * @param   In          ExpList2D object to copy.
          */
         ExpList2D::ExpList2D(const ExpList2D &In):
-            ExpList(In)
+            ExpList(In),
+            m_UseGenExp(In.m_UseGenExp)
         {
         }
 
@@ -100,7 +102,8 @@ namespace Nektar
          */
         ExpList2D::ExpList2D(SpatialDomains::MeshGraph2D &graph2D,
                                 bool UseGenExp):
-            ExpList()
+            ExpList(),
+            m_UseGenExp(UseGenExp)
         {
             int i,elmtid=0;
             LocalRegions::TriExpSharedPtr      tri;
@@ -111,9 +114,6 @@ namespace Nektar
 
             const SpatialDomains::ExpansionVector &expansions
                                         = graph2D.GetExpansions();
-
-            m_coeff_offset = Array<OneD,int>(expansions.size());
-            m_phys_offset = Array<OneD,int>(expansions.size());
 
             for(i = 0; i < expansions.size(); ++i)
             {
@@ -137,22 +137,19 @@ namespace Nektar
 
                         TriNb = LibUtilities::eNodalTriElec;
                         Ntri = MemoryManager<LocalRegions::NodalTriExp>
-                                        ::AllocateSharedPtr(newBa,TriBb,TriNb,
-                                                            TriangleGeom);
+                            ::AllocateSharedPtr(newBa,TriBb,TriNb,
+                                                TriangleGeom);
                         Ntri->SetElmtId(elmtid++);
                         (*m_exp).push_back(Ntri);
                     }
                     else
                     {
                         tri = MemoryManager<LocalRegions::TriExp>
-                                        ::AllocateSharedPtr(TriBa,TriBb,
-                                                            TriangleGeom);
+                            ::AllocateSharedPtr(TriBa,TriBb,
+                                                TriangleGeom);
                         tri->SetElmtId(elmtid++);
                         (*m_exp).push_back(tri);
                     }
-
-                    m_coeff_offset[i] = m_ncoeffs;
-                    m_phys_offset[i] = m_npoints;
                     m_ncoeffs += (TriBa.GetNumModes()*(TriBa.GetNumModes()+1))/2
                                     + TriBa.GetNumModes()*(TriBb.GetNumModes()
                                     -TriBa.GetNumModes());
@@ -167,13 +164,11 @@ namespace Nektar
                                         = expansions[i]->m_BasisKeyVector[1];
 
                     quad = MemoryManager<LocalRegions::QuadExp>
-                                        ::AllocateSharedPtr(QuadBa,QuadBb,
-                                                            QuadrilateralGeom);
+                        ::AllocateSharedPtr(QuadBa,QuadBb,
+                                            QuadrilateralGeom);
                     quad->SetElmtId(elmtid++);
                     (*m_exp).push_back(quad);
 
-                    m_coeff_offset[i] = m_ncoeffs;
-                    m_phys_offset[i] = m_npoints;
                     m_ncoeffs += QuadBa.GetNumModes()*QuadBb.GetNumModes();
                     m_npoints += QuadBa.GetNumPoints()*QuadBb.GetNumPoints();
                 }
@@ -184,8 +179,9 @@ namespace Nektar
                 }
 
             }
-            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-            m_phys   = Array<OneD, NekDouble>(m_npoints);
+
+            // Set up m_coeffs, m_phys and offset arrays. 
+            SetCoeffPhys();
         }
 
 
@@ -235,9 +231,6 @@ namespace Nektar
              m_transState = eNotSet; 
              m_physState  = false;
              
-             m_coeff_offset = Array<OneD,int>(expansions.size());
-             m_phys_offset = Array<OneD,int>(expansions.size());
- 
              for(i = 0; i < expansions.size(); ++i)
              {
                  SpatialDomains::TriGeomSharedPtr TriangleGeom;
@@ -258,8 +251,6 @@ namespace Nektar
                          (*m_exp).push_back(tri);
                      }
                       
-                     m_coeff_offset[i] = m_ncoeffs;
-                     m_phys_offset[i] = m_npoints;
                      m_ncoeffs += (TriBa.GetNumModes()*(TriBa.GetNumModes()+1))/2 
                          + TriBa.GetNumModes()*(TriBb.GetNumModes()-TriBa.GetNumModes());
                      m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
@@ -270,8 +261,6 @@ namespace Nektar
                      quad->SetElmtId(elmtid++);
                      (*m_exp).push_back(quad);
  
-                     m_coeff_offset[i] = m_ncoeffs;
-                     m_phys_offset[i] = m_npoints;
                      m_ncoeffs += QuadBa.GetNumModes()*QuadBb.GetNumModes();
                      m_npoints += QuadBa.GetNumPoints()*QuadBb.GetNumPoints();
                  }
@@ -282,8 +271,8 @@ namespace Nektar
                  
              }
              
-             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-             m_phys   = Array<OneD, NekDouble>(m_npoints);
+            // Set up m_coeffs, m_phys and offset arrays. 
+             SetCoeffPhys();
          }
 
 
@@ -301,11 +290,11 @@ namespace Nektar
         ExpList2D::ExpList2D(   const SpatialDomains::CompositeVector &domain,
                                 SpatialDomains::MeshGraph3D &graph3D,
                                 bool UseGenExp):
-            ExpList()
+            ExpList(),
+            m_UseGenExp(UseGenExp)
         {
             int i,j,elmtid=0;
-            int nel=0;
-            int cnt = 0;
+            int nel = 0;
 
             SpatialDomains::Composite comp;
             SpatialDomains::TriGeomSharedPtr TriangleGeom;
@@ -320,9 +309,6 @@ namespace Nektar
             {
                 nel += (domain[i])->size();
             }
-
-            m_coeff_offset = Array<OneD,int>(nel,0);
-            m_phys_offset  = Array<OneD,int>(nel,0);
 
             for(i = 0; i < domain.size(); ++i)
             {
@@ -343,23 +329,22 @@ namespace Nektar
                         {
                             ASSERTL0(false,"This method needs sorting");
                             TriNb = LibUtilities::eNodalTriElec;
+
                             Ntri = MemoryManager<LocalRegions::NodalTriExp>
-                                        ::AllocateSharedPtr(TriBa,TriBb,TriNb,
-                                                            TriangleGeom);
+                                ::AllocateSharedPtr(TriBa,TriBb,TriNb,
+                                                    TriangleGeom);
                             Ntri->SetElmtId(elmtid++);
                             (*m_exp).push_back(Ntri);
                         }
                         else
                         {
                             tri = MemoryManager<LocalRegions::TriExp>
-                                        ::AllocateSharedPtr(TriBa,TriBb,
-                                                            TriangleGeom);
+                                ::AllocateSharedPtr(TriBa,TriBb,
+                                                    TriangleGeom);
                             tri->SetElmtId(elmtid++);
                             (*m_exp).push_back(tri);
                         }
 
-                        m_coeff_offset[cnt] = m_ncoeffs;
-                        m_phys_offset[cnt++] = m_npoints;
                         m_ncoeffs 
                             += (TriBa.GetNumModes()*(TriBa.GetNumModes()+1))/2
                                 + TriBa.GetNumModes()*(TriBb.GetNumModes()
@@ -375,13 +360,11 @@ namespace Nektar
                                 = graph3D.GetFaceBasisKey(QuadrilateralGeom,0);
 
                         quad = MemoryManager<LocalRegions::QuadExp>
-                                        ::AllocateSharedPtr(QuadBa,QuadBb,
-                                                            QuadrilateralGeom);
+                            ::AllocateSharedPtr(QuadBa,QuadBb,
+                                                QuadrilateralGeom);
                         quad->SetElmtId(elmtid++);
                         (*m_exp).push_back(quad);
 
-                        m_coeff_offset[cnt] = m_ncoeffs;
-                        m_phys_offset[cnt++] = m_npoints;
                         m_ncoeffs += QuadBa.GetNumModes()*QuadBb.GetNumModes();
                         m_npoints += QuadBa.GetNumPoints()
                                         * QuadBb.GetNumPoints();
@@ -394,11 +377,61 @@ namespace Nektar
                 }
 
             }
-            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-            m_phys   = Array<OneD, NekDouble>(m_npoints);
-
+            // Set up m_coeffs, m_phys and offset arrays. 
+            SetCoeffPhys();
         }
 
+
+        /**
+         * Set up the storage for the concatenated list of
+         * coefficients and physical evaluations at the quadrature
+         * points. Each expansion (local element) is processed in turn
+         * to determine the number of coefficients and physical data
+         * points it contributes to the domain. Three arrays,
+         * #m_coeff_offset, #m_phys_offset and #m_offset_elmt_id, are
+         * also initialised and updated to store the data offsets of
+         * each element in the #m_coeffs and #m_phys arrays, and the
+         * element id that each consecutive block is associated
+         * respectively.
+         */
+        void ExpList2D::SetCoeffPhys()
+        {
+            int i;
+
+            // Set up offset information and array sizes
+            m_coeff_offset   = Array<OneD,int>(m_exp->size());
+            m_phys_offset    = Array<OneD,int>(m_exp->size());
+            m_offset_elmt_id = Array<OneD,int>(m_exp->size());
+
+            m_ncoeffs = m_npoints = 0;
+
+            int cnt = 0;
+            for(i = 0; i < m_exp->size(); ++i)
+            {
+                if((*m_exp)[i]->DetExpansionType() == StdRegions::eTriangle)
+                {
+                    m_coeff_offset[i]   = m_ncoeffs;
+                    m_phys_offset [i]   = m_npoints;
+                    m_offset_elmt_id[cnt++] = i;
+                    m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
+                    m_npoints += (*m_exp)[i]->GetTotPoints();
+                }
+            }
+
+            for(i = 0; i < m_exp->size(); ++i)
+            {
+                if((*m_exp)[i]->DetExpansionType() == StdRegions::eQuadrilateral)
+                {
+                    m_coeff_offset[i]   = m_ncoeffs;
+                    m_phys_offset [i]   = m_npoints;
+                    m_offset_elmt_id[cnt++] = i;
+                    m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
+                    m_npoints += (*m_exp)[i]->GetTotPoints();
+                }
+            }
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+            m_phys   = Array<OneD, NekDouble>(m_npoints);
+        }
 
         /**
          * @param   graph2D     A mesh containing information about the domain
@@ -458,7 +491,8 @@ namespace Nektar
                     bool UseGenSegExp = true;
                     locExpList = MemoryManager<MultiRegions::ExpList1D>
                                         ::AllocateSharedPtr(*(bregions[i]),
-                                                            graph2D);
+                                                            graph2D,
+                                                            UseGenSegExp);
                     bndCondExpansions[cnt]  = locExpList;
                     bndConditions[cnt++]    = locBCond;
                 }
@@ -727,6 +761,7 @@ namespace Nektar
         {
             SetUpPhysNormals(locexp);
         }
+
 
     } //end of namespace
 } //end of namespace

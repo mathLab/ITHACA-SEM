@@ -101,6 +101,11 @@ namespace Nektar
                         map<int,int>& periodicFaces);
 
         private:
+            /// Definition of the total number of degrees of freedom and
+            /// quadrature points. Sets up the storage for \a m_coeff and \a
+            ///  m_phys.
+            void SetCoeffPhys(void);
+
 /*            LocalRegions::HexExpVector    m_hex;
             LocalRegions::PrismExpVector  m_prism;
             LocalRegions::PyrExpVector    m_pyr;

@@ -52,24 +52,24 @@ namespace Nektar
 
 
         LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(const int numLocalCoeffs, 
-                                                       const StdRegions::StdExpansionVector &locExpVector,
+                                                       const ExpList &locExp, 
                                                        const GlobalSysSolnType solnType)
         {
-            switch(locExpVector[0]->GetShapeDimension())
+            switch(locExp.GetExp(0)->GetShapeDimension())
             {
             case 1:
                 {
-                    SetUp1DExpansionC0ContMap(numLocalCoeffs, locExpVector, solnType);
+                    SetUp1DExpansionC0ContMap(numLocalCoeffs, locExp, solnType);
                 }
                 break;
             case 2:
                 {
-                    SetUp2DExpansionC0ContMap(numLocalCoeffs, locExpVector, solnType);
+                    SetUp2DExpansionC0ContMap(numLocalCoeffs, locExp, solnType);
                 }
                 break;
             case 3:
                 {
-                    SetUp3DExpansionC0ContMap(numLocalCoeffs, locExpVector, solnType);
+                    SetUp3DExpansionC0ContMap(numLocalCoeffs, locExp,  solnType);
                 }
                 break;
             default:
@@ -83,14 +83,14 @@ namespace Nektar
         }
 
         LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(const int numLocalCoeffs, 
-                                                       const StdRegions::StdExpansionVector &locExpVector,
+                                                       const ExpList &locExp,
                                                        const GlobalSysSolnType solnType, 
                                                        const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp,
                                                        const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                                        const map<int,int>& periodicVerticesId)
         {
             SetUp1DExpansionC0ContMap(numLocalCoeffs, 
-                                      locExpVector, 
+                                      locExp,
                                       solnType, 
                                       bndCondExp, 
                                       bndConditions, 
@@ -101,7 +101,7 @@ namespace Nektar
         }
 
         LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(const int numLocalCoeffs, 
-                                                       const StdRegions::StdExpansionVector &locExpVector,
+                                                       const ExpList &locExp,
                                                        const GlobalSysSolnType solnType, 
                                                        const Array<OneD, const ExpList1DSharedPtr> &bndCondExp,
                                                        const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
@@ -109,7 +109,7 @@ namespace Nektar
                                                        const map<int,int>& periodicEdgesId)
         {
             SetUp2DExpansionC0ContMap(numLocalCoeffs, 
-                                      locExpVector, 
+                                      locExp, 
                                       solnType, 
                                       bndCondExp, 
                                       bndConditions, 
@@ -121,7 +121,7 @@ namespace Nektar
         }
 
         LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(const int numLocalCoeffs, 
-                                                       const StdRegions::StdExpansionVector &locExpVector,
+                                                       const ExpList &locExp,
                                                        const GlobalSysSolnType solnType, 
                                                        const Array<OneD, const ExpList2DSharedPtr> &bndCondExp,
                                                        const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
@@ -130,7 +130,7 @@ namespace Nektar
                                                        const map<int,int>& periodicFacesId)
         {
             SetUp3DExpansionC0ContMap(numLocalCoeffs, 
-                                      locExpVector, 
+                                      locExp, 
                                       solnType, 
                                       bndCondExp, 
                                       bndConditions, 
@@ -147,7 +147,7 @@ namespace Nektar
         }
             
         void LocalToGlobalC0ContMap::SetUp1DExpansionC0ContMap(const int numLocalCoeffs, 
-                                                               const StdRegions::StdExpansionVector &locExpVector,
+                                                               const ExpList &locExp,
                                                                const GlobalSysSolnType solnType, 
                                                                const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp,
                                                                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
@@ -160,6 +160,8 @@ namespace Nektar
             int graphVertId = 0;
             int globalId;
 
+            const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
+            
             LocalRegions::SegExpSharedPtr locSegExp;
 
             int nbnd = bndCondExp.num_elements();
@@ -177,8 +179,8 @@ namespace Nektar
             m_numLocalIntCoeffsPerPatch      = Array<OneD, unsigned int>(m_numPatches);
             for(i = 0; i < m_numPatches; ++i)
             { 
-                m_numLocalBndCoeffsPerPatch[i] = (unsigned int) locExpVector[i]->NumBndryCoeffs();
-                m_numLocalIntCoeffsPerPatch[i] = (unsigned int) locExpVector[i]->GetNcoeffs() - locExpVector[i]->NumBndryCoeffs();
+                m_numLocalBndCoeffsPerPatch[i] = (unsigned int) locExpVector[locExp.GetOffset_Elmt_Id(i)]->NumBndryCoeffs();
+                m_numLocalIntCoeffsPerPatch[i] = (unsigned int) locExpVector[locExp.GetOffset_Elmt_Id(i)]->GetNcoeffs() - locExpVector[locExp.GetOffset_Elmt_Id(i)]->NumBndryCoeffs();
             }
 
             // The only unique identifiers of the vertices of the mesh are the
@@ -236,6 +238,7 @@ namespace Nektar
             // STEP 4: Set up simple map based on vertex and edge id's
             for(i = 0; i < locExpVector.size(); ++i)
             {
+                cnt = locExp.GetCoeff_Offset(i);
                 if(locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(locExpVector[i]))
                 {
                     for(j = 0; j < locSegExp->GetNverts(); ++j) 
@@ -249,7 +252,6 @@ namespace Nektar
                         m_localToGlobalMap[cnt+locSegExp->GetVertexMap(j)] = 
                             vertReorderedGraphVertId[meshVertId];
                     }
-                    cnt  += locSegExp->GetNcoeffs();
                 }
                 else
                 {
@@ -284,7 +286,7 @@ namespace Nektar
         }
 
         void LocalToGlobalC0ContMap::SetUp2DExpansionC0ContMap(const int numLocalCoeffs, 
-                                                               const StdRegions::StdExpansionVector &locExpVector,
+                                                               const ExpList &locExp,
                                                                const GlobalSysSolnType solnType, 
                                                                const Array<OneD, const MultiRegions::ExpList1DSharedPtr> &bndCondExp,
                                                                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
@@ -292,7 +294,7 @@ namespace Nektar
                                                                const map<int,int>& periodicEdgesId)
         {
             int i,j,k;
-            int cnt = 0;
+            int cnt = 0,offset=0;
             int bndEdgeCnt;
             int meshVertId, meshVertId2;
             int meshEdgeId, meshEdgeId2;
@@ -310,6 +312,8 @@ namespace Nektar
             Array<OneD, unsigned int>           edgeInteriorMap;  
             Array<OneD, int>                    edgeInteriorSign;  
 
+            const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
+
             m_signChange = false;
             // The only unique identifiers of the vertices and edges
             // of the mesh are the vertex id and the mesh id (stored
@@ -322,7 +326,7 @@ namespace Nektar
             // can for example be: minimum bandwith or minimum fill-in
             // of the resulting global system matrix)
             //
-            // That's why the vertices annd egdes will be
+            // That's why the vertices and egdes will be
             // rearranged. Currently, this is done in the following
             // way: The vertices and edges of the mesh are considered
             // as vertices of a graph (in a computer science
@@ -372,12 +376,11 @@ namespace Nektar
 
             // STEP 2: Now order all other vertices and edges in the graph       
             // We will use a boost graph object to store this graph
-
             // the first template parameter (=OutEdgeList) is
             // chosen to be of type std::set as in the set up of
             // the adjacency, a similar edge might be created
             // multiple times.  And to prevent the definition of
-            // parallell edges, we use std::set (=boost::setS)
+            // parallel edges, we use std::set (=boost::setS)
             // rather than std::vector (=boost::vecS)
             typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
             typedef boost::graph_traits<BoostGraph>::vertex_descriptor BoostVertex;
@@ -510,7 +513,7 @@ namespace Nektar
             // List all other vertices and edges
             for(i = 0; i < locExpVector.size(); ++i)
             { 
-                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[i]))
+                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[locExp.GetOffset_Elmt_Id(i)]))
                 {
                     m_numLocalBndCoeffs += locExpansion->NumBndryCoeffs();
                             
@@ -615,6 +618,7 @@ namespace Nektar
                 }
             }
 
+
             // Now the graph has been set-up reorder it 
             BottomUpSubStructuredGraphSharedPtr bottomUpGraph;
             int nGraphVerts = tempGraphVertId;
@@ -653,7 +657,9 @@ namespace Nektar
                 }        
             }  
                     
-            // Fill the vertReorderedGraphVertId and edgeReorderedGraphVertId with the optimal ordering from boost
+            // Fill the vertReorderedGraphVertId and
+            // edgeReorderedGraphVertId with the optimal ordering from
+            // boost
             for(mapIt = vertTempGraphVertId.begin(); mapIt != vertTempGraphVertId.end(); mapIt++)
             {
                 vertReorderedGraphVertId[mapIt->first] = iperm[mapIt->second] + graphVertId; 
@@ -663,19 +669,22 @@ namespace Nektar
                 edgeReorderedGraphVertId[mapIt->first] = iperm[mapIt->second] + graphVertId; 
             }  
 
-            // Set up an array wich contains the offset information of the different
-            // graph vertices. This basically means to identify to how many global degrees
-            // of freedom the individual graph vertices correspond. Obviously, the graph vertices
-            // corresponding to the mesh-vertices account for a single global DOF. However, the 
-            // graph vertices corresponding to the element edges correspond to N-2 global DOF
-            // where N is equal to the number of boundary modes on this edge
+            // Set up an array which contains the offset information of
+            // the different graph vertices. This basically means to
+            // identify to how many global degrees of freedom the
+            // individual graph vertices correspond. Obviously, the
+            // graph vertices corresponding to the mesh-vertices
+            // account for a single global DOF. However, the graph
+            // vertices corresponding to the element edges correspond
+            // to N-2 global DOF where N is equal to the number of
+            // boundary modes on this edge
             Array<OneD, int> graphVertOffset(vertReorderedGraphVertId.size()+
                                              edgeReorderedGraphVertId.size()+1);
             graphVertOffset[0] = 0;
             
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[i]);
+                locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[locExp.GetOffset_Elmt_Id(i)]);
                 for(j = 0; j < locExpansion->GetNedges(); ++j)
                 {  
                     nEdgeCoeffs = locExpansion->GetEdgeNcoeffs(j);
@@ -722,8 +731,8 @@ namespace Nektar
             m_numLocalIntCoeffsPerPatch = Array<OneD, unsigned int>(m_numPatches);
             for(i = 0; i < m_numPatches; ++i)
             { 
-                m_numLocalBndCoeffsPerPatch[i] = (unsigned int) locExpVector[i]->NumBndryCoeffs();
-                m_numLocalIntCoeffsPerPatch[i] = (unsigned int) locExpVector[i]->GetNcoeffs() - locExpVector[i]->NumBndryCoeffs();
+                m_numLocalBndCoeffsPerPatch[i] = (unsigned int) locExpVector[locExp.GetOffset_Elmt_Id(i)]->NumBndryCoeffs();
+                m_numLocalIntCoeffsPerPatch[i] = (unsigned int) locExpVector[locExp.GetOffset_Elmt_Id(i)]->GetNcoeffs() - locExpVector[locExp.GetOffset_Elmt_Id(i)]->NumBndryCoeffs();
             }
 
             // Now, all ingredients are ready to set up the actual local to global mapping
@@ -733,6 +742,8 @@ namespace Nektar
             {
                 locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[i]);
                 
+                cnt = locExp.GetCoeff_Offset(i);
+
                 // Loop over all edges (and vertices) of element i
                 for(j = 0; j < locExpansion->GetNedges(); ++j)
                 {
@@ -763,17 +774,18 @@ namespace Nektar
                         }
                     }                       
                 }                
-                cnt += locExpVector[i]->GetNcoeffs();            
+                cnt += locExpVector[locExp.GetOffset_Elmt_Id(i)]->GetNcoeffs();
             }
 
             // Set up the mapping for the boundary conditions
-            cnt = 0;
+            offset = cnt = 0;
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); j++)
                 {
                     bndSegExp  = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j));
                 
+                    cnt = offset + bndCondExp[i]->GetCoeff_Offset(j);
                     for(k = 0; k < 2; k++)
                     {
                         meshVertId = (bndSegExp->GetGeom1D())->GetVid(k);
@@ -792,8 +804,8 @@ namespace Nektar
                             bndEdgeCnt++;
                         }
                     }
-                    cnt += bndSegExp->GetNcoeffs();
                 }
+                offset += bndCondExp[i]->GetNcoeffs();
             }
     
             globalId = Vmath::Vmax(m_numLocalCoeffs,&m_localToGlobalMap[0],1)+1;
@@ -830,10 +842,8 @@ namespace Nektar
             }
         }
 
-
-
         void LocalToGlobalC0ContMap::SetUp3DExpansionC0ContMap(const int numLocalCoeffs, 
-                                                               const StdRegions::StdExpansionVector &locExpVector,
+                                                               const ExpList &locExp,
                                                                const GlobalSysSolnType solnType, 
                                                                const Array<OneD, const ExpList2DSharedPtr> &bndCondExp,
                                                                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
@@ -842,7 +852,7 @@ namespace Nektar
                                                                const map<int,int>& periodicFacesId)
         {
             int i,j,k,l;
-            int cnt = 0;
+            int cnt = 0,cnt1=0;
             int intDofCnt;
             int meshVertId;
             int meshVertId2;
@@ -866,6 +876,8 @@ namespace Nektar
             Array<OneD, int>                    edgeInteriorSign;   
             Array<OneD, unsigned int>           faceInteriorMap;  
             Array<OneD, int>                    faceInteriorSign;  
+
+            const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
 
             m_signChange = false;
 
@@ -920,7 +932,7 @@ namespace Nektar
                                 vertReorderedGraphVertId[meshVertId] = graphVertId++;
                             }
                         }
-
+                        
                         for(k = 0; k < bndCondFaceExp->GetNedges(); k++)
                         {
                             meshEdgeId = (bndCondFaceExp->GetGeom2D())->GetEid(k);
@@ -937,9 +949,10 @@ namespace Nektar
             m_numLocalDirBndCoeffs = nLocDirBndCondDofs;
             firstNonDirGraphVertId = graphVertId;
 
-            // STEP 2: Now order all other vertices and edges in the graph
-            // Possibility 3: Do not use any optomisation at all. Just list the edges and verices in the
-            // order they appear when looping over all the elements in the domain
+            // STEP 2: Now order all other vertices and edges in the
+            // graph Possibility 3: Do not use any optomisation at
+            // all. Just list the edges and verices in the order they
+            // appear when looping over all the elements in the domain
          
             m_numLocalBndCoeffs = 0;
             
@@ -1031,7 +1044,7 @@ namespace Nektar
             // List all other vertices and edges and faces
             for(i = 0; i < locExpVector.size(); ++i)
             { 
-                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(locExpVector[i]))
+                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(locExpVector[locExp.GetOffset_Elmt_Id(i)]))
                 {
                     for(j = 0; j < locExpansion->GetNverts(); ++j)
                     {   
@@ -1079,7 +1092,7 @@ namespace Nektar
 
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(locExpVector[i]);
+                locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(locExpVector[locExp.GetOffset_Elmt_Id(i)]);
 
                 for(j = 0; j < locExpansion->GetNverts(); ++j)
                 {  
@@ -1136,8 +1149,8 @@ namespace Nektar
             m_numLocalIntCoeffsPerPatch = Array<OneD, unsigned int>(m_numPatches);
             for(i = 0; i < m_numPatches; ++i)
             { 
-                m_numLocalBndCoeffsPerPatch[i] = (unsigned int) locExpVector[i]->NumBndryCoeffs();
-                m_numLocalIntCoeffsPerPatch[i] = (unsigned int) locExpVector[i]->GetNcoeffs() - locExpVector[i]->NumBndryCoeffs();
+                m_numLocalBndCoeffsPerPatch[i] = (unsigned int) locExpVector[locExp.GetOffset_Elmt_Id(i)]->NumBndryCoeffs();
+                m_numLocalIntCoeffsPerPatch[i] = (unsigned int) locExpVector[locExp.GetOffset_Elmt_Id(i)]->GetNcoeffs() - locExpVector[locExp.GetOffset_Elmt_Id(i)]->NumBndryCoeffs();
             }
 
             // Now, all ingredients are ready to set up the actual local to global mapping
@@ -1146,14 +1159,14 @@ namespace Nektar
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(locExpVector[i]);
-                
+                cnt = locExp.GetCoeff_Offset(i);
                 for(j = 0; j < locExpansion->GetNverts(); ++j)
                 {
                     meshVertId          = (locExpansion->GetGeom3D())->GetVid(j);
 
                     // Set the global DOF for vertex j of element i
                     m_localToGlobalMap[cnt+locExpansion->GetVertexMap(j)] = 
-                        graphVertOffset[vertReorderedGraphVertId[meshVertId]];                      
+                        graphVertOffset[vertReorderedGraphVertId[meshVertId]]; 
                 }      
 
                 for(j = 0; j < locExpansion->GetNedges(); ++j)
@@ -1204,22 +1217,21 @@ namespace Nektar
                         } 
                     }                    
                 }   
-              
-                cnt += locExpVector[i]->GetNcoeffs();            
             }
 
             // Set up the mapping for the boundary conditions
             cnt = 0;
+            int offset = 0;
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); j++)
                 {
                     bndCondFaceExp  = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(bndCondExp[i]->GetExp(j));
+                    cnt = offset + bndCondExp[i]->GetCoeff_Offset(j);
                     for(k = 0; k < bndCondFaceExp->GetNverts(); k++)
                     {
                         meshVertId = (bndCondFaceExp->GetGeom2D())->GetVid(k);
-                        m_bndCondCoeffsToGlobalCoeffsMap[cnt+bndCondFaceExp->GetVertexMap(k)] = 
-                            graphVertOffset[vertReorderedGraphVertId[meshVertId]];
+                        m_bndCondCoeffsToGlobalCoeffsMap[cnt+bndCondFaceExp->GetVertexMap(k)] = graphVertOffset[vertReorderedGraphVertId[meshVertId]];
                     }
 
                     for(k = 0; k < bndCondFaceExp->GetNedges(); k++)
@@ -1257,8 +1269,8 @@ namespace Nektar
                             intDofCnt++;
                         }
                     }
-                    cnt += bndCondFaceExp->GetNcoeffs();
                 }
+                offset += bndCondExp[i]->GetNcoeffs();
             }
     
             globalId = Vmath::Vmax(m_numLocalCoeffs,&m_localToGlobalMap[0],1)+1;
@@ -1339,6 +1351,12 @@ namespace Nektar
 
 /**
  * $Log: LocalToGlobalC0ContMap.cpp,v $
+ * Revision 1.14  2010/03/01 17:57:28  cantwell
+ * Fixed 3D global matrix operations.
+ * Fixed ProjectCont{1,2,3}D demos.
+ * Fixed incorrectly placed ASSERT in boundary conditions.
+ * Updated TimingGeneralMatrixOp3D to use contfield3d rather than explist3d.
+ *
  * Revision 1.13  2009/11/02 11:19:44  pvos
  * Fixed a bug for reordering a graph without edges
  *

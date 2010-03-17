@@ -362,9 +362,12 @@ namespace Nektar
             /// This function returns the number of elements in the expansion.
             inline int GetExpSize(void);
 
+            /// This function returns the vector of elements in the expansion.
+            inline const boost::shared_ptr<StdRegions::StdExpansionVector> GetExp() const;
+
             /// This function returns (a shared pointer to) the local elemental
             /// expansion of the \f$n^{\mathrm{th}}\f$ element.
-            inline StdRegions::StdExpansionSharedPtr& GetExp(int n);
+            inline StdRegions::StdExpansionSharedPtr& GetExp(int n) const;
 
             /// This function returns (a shared pointer to) the local elemental
             /// expansion containing the arbitrary point given by \a gloCoord.
@@ -377,11 +380,16 @@ namespace Nektar
 
             /// Get the start offset position for a global list of #m_coeffs
             /// correspoinding to element n.
-            inline int GetCoeff_Offset(int n);
+            inline const int GetCoeff_Offset(int n) const;
 
             /// Get the start offset position for a global list of m_phys
             /// correspoinding to element n.
-            inline int GetPhys_Offset(int n);
+            inline const int GetPhys_Offset(int n) const;
+
+
+            /// Get the element id associated with the n th
+            /// consecutive block of data in  #m_phys and #m_coeffs
+            inline const int GetOffset_Elmt_Id(int n) const;
 
             /// This function returns (a reference to) the array
             /// \f$\boldsymbol{\hat{u}}_l\f$ (implemented as #m_coeffs)
@@ -505,11 +513,6 @@ namespace Nektar
                 const GlobalLinSysKey &mkey,
                 const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
 
-            /// Definition of the total number of degrees of freedom and
-            /// quadrature points. Sets up the storage for \a m_coeff and \a
-            ///  m_phys.
-            void SetCoeffPhys(void);
-
             /// The total number of local degrees of freedom. #m_ncoeffs
             /// \f$=N_{\mathrm{eof}}=\sum_{e=1}^{{N_{\mathrm{el}}}}N^{e}_l\f$
             int m_ncoeffs;
@@ -594,6 +597,14 @@ namespace Nektar
 
             /// Offset of elemental data into the array #m_phys
             Array<OneD, int>  m_phys_offset;
+
+            /// Array containing the element id #m_offset_elmt_id[n]
+            /// that the n^th consecutive block of data in #m_coeffs
+            /// and #m_phys is associated, i.e. for an array of
+            /// constant expansion size and single shape elements
+            /// m_phys[n*m_npoints] is the data related to
+            /// m_exp[m_offset_elmt_id[n]];
+            Array<OneD, int>  m_offset_elmt_id;
 
             NekOptimize::GlobalOptParamSharedPtr m_globalOptParam;
 
@@ -1113,21 +1124,31 @@ namespace Nektar
             return (*m_exp).size();
         }
 
+
         /**
          * @param   n               The index of the element concerned.
          *
          * @return  (A shared pointer to) the local expansion of the
          *          \f$n^{\mathrm{th}}\f$ element.
          */
-        inline StdRegions::StdExpansionSharedPtr& ExpList::GetExp(int n)
+        inline StdRegions::StdExpansionSharedPtr& ExpList::GetExp(int n) const
         {
             return (*m_exp)[n];
         }
 
         /**
+         * @return  (A const shared pointer to) the local expansion vector #m_exp
+         */
+        inline const boost::shared_ptr<StdRegions::StdExpansionVector> ExpList::GetExp(void) const
+        {
+            return m_exp;
+        }
+
+
+        /**
          *
          */
-        inline int ExpList::GetCoeff_Offset(int n)
+        inline const int ExpList::GetCoeff_Offset(int n) const
         {
             return m_coeff_offset[n];
         }
@@ -1135,9 +1156,17 @@ namespace Nektar
         /**
          *
          */
-        inline int ExpList::GetPhys_Offset(int n)
+        inline const int ExpList::GetPhys_Offset(int n) const 
         {
             return m_phys_offset[n];
+        }
+
+        /**
+         *
+         */
+        inline const int ExpList::GetOffset_Elmt_Id(int n) const
+        {
+            return m_offset_elmt_id[n];
         }
 
         /**
@@ -1311,6 +1340,9 @@ namespace Nektar
 
 /**
 * $Log: ExpList.h,v $
+* Revision 1.89  2010/03/02 23:50:23  sherwin
+* Updates related to making IncNavierStokesSolver able to use ContCoeffs
+*
 * Revision 1.88  2010/03/01 17:57:28  cantwell
 * Fixed 3D global matrix operations.
 * Fixed ProjectCont{1,2,3}D demos.

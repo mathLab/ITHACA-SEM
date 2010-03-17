@@ -130,7 +130,7 @@ namespace Nektar
             //GenerateFieldBnd1D(bcs,bcs.GetVariable(bc_loc));
 
             m_traceMap = MemoryManager<LocalToGlobalDGMap>
-                                        ::AllocateSharedPtr(graph1D,m_exp,
+                                        ::AllocateSharedPtr(graph1D,*this,
                                                             solnType,
                                                             m_bndCondExpansions,
                                                             m_bndConditions);
@@ -173,7 +173,7 @@ namespace Nektar
             //GenerateFieldBnd1D(bcs,variable);
 
             m_traceMap = MemoryManager<LocalToGlobalDGMap>::
-                AllocateSharedPtr(graph1D,m_exp,solnType,
+                AllocateSharedPtr(graph1D,*this,solnType,
                                   m_bndCondExpansions,m_bndConditions);
 
             m_trace = Array<OneD,NekDouble>(m_traceMap->GetNumLocalBndCoeffs());
@@ -408,7 +408,7 @@ namespace Nektar
                     const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
                           NekDouble tau)
         {
-            int i,n,cnt,cnt1,nbndry;
+            int i,n,cnt,nbndry;
             int nexp = GetExpSize();
             Array<OneD,NekDouble> f(m_ncoeffs);
             DNekVec F(m_ncoeffs,f,eWrapper);
@@ -445,21 +445,20 @@ namespace Nektar
             // Evaluate Trace Forcing
             //----------------------------------
             // Determing <u_lam,f> terms using HDGLamToU matrix
-            for(cnt1 = cnt = n = 0; n < nexp; ++n)
+            for(cnt = n = 0; n < nexp; ++n)
             {
                 nbndry = (*m_exp)[n]->NumDGBndryCoeffs();
 
                 e_ncoeffs = (*m_exp)[n]->GetNcoeffs();
-                e_f       = f+cnt;
-                e_l       = loc_lambda + cnt1;
+                e_f       = f+m_coeff_offset[n];
+                e_l       = loc_lambda + cnt;
 
                 // use outarray as tmp space
                 DNekVec     Floc    (nbndry, e_l, eWrapper);
                 DNekVec     ElmtFce (e_ncoeffs, e_f, eWrapper);
                 Floc = Transpose(*(HDGLamToU->GetBlock(n,n)))*ElmtFce;
 
-                cnt  += e_ncoeffs;
-                cnt1 += nbndry;
+                cnt += nbndry;
             }
 
             // Assemble into global operator

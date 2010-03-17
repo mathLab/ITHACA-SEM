@@ -70,6 +70,9 @@ namespace Nektar
             m_npoints(0),
             m_coeffs(),
             m_phys(),
+            m_coeff_offset(), 
+            m_phys_offset(),   
+            m_offset_elmt_id(),  
             m_transState(eNotSet),
             m_physState(false),
             m_exp(MemoryManager<StdRegions::StdExpansionVector>
@@ -93,43 +96,12 @@ namespace Nektar
             m_transState(eNotSet),
             m_physState(false),
             m_exp(in.m_exp),
-            m_coeff_offset(in.m_coeff_offset), // Need to check if we need these
-            m_phys_offset(in.m_phys_offset),   // or at least use shared pointer
+            m_coeff_offset(in.m_coeff_offset), 
+            m_phys_offset(in.m_phys_offset),   
+            m_offset_elmt_id(in.m_offset_elmt_id),  
             m_globalOptParam(in.m_globalOptParam),
             m_blockMat(in.m_blockMat)
         {
-        }
-
-
-        /**
-         * Set up the storage for the concatenated list of coefficients and
-         * physical evaluations at the quadrature points. Each expansion (local
-         * element) is processed in turn to determine the number of coefficients
-         * and physical data points it contributes to the domain. A second pair
-         * of arrays, #m_coeff_offset and #m_phys_offset, are also initialised
-         * and updated to store the data offsets of each element in the
-         * #m_coeffs and #m_phys arrays, respectively.
-         */
-        void ExpList::SetCoeffPhys()
-        {
-            int i;
-
-            // Set up offset information and array sizes
-            m_coeff_offset = Array<OneD,int>(m_exp->size());
-            m_phys_offset  = Array<OneD,int>(m_exp->size());
-
-            m_ncoeffs = m_npoints = 0;
-
-            for(i = 0; i < m_exp->size(); ++i)
-            {
-                m_coeff_offset[i] = m_ncoeffs;
-                m_phys_offset [i] = m_npoints;
-                m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
-                m_npoints += (*m_exp)[i]->GetNumPoints(0);
-            }
-
-            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-            m_phys   = Array<OneD, NekDouble>(m_npoints);
         }
 
 
@@ -139,15 +111,14 @@ namespace Nektar
          */
         void ExpList::PutCoeffsInToElmtExp()
         {
-            int i, order_e;
-            int cnt = 0;
+            int i;
+            int order_e;
 
             for(i = 0; i < (*m_exp).size(); ++i)
             {
                 order_e = (*m_exp)[i]->GetNcoeffs();
-                Vmath::Vcopy(order_e,&m_coeffs[cnt], 1,
+                Vmath::Vcopy(order_e,&m_coeffs[m_coeff_offset[i]], 1,
                                          &((*m_exp)[i]->UpdateCoeffs())[0],1);
-                cnt += order_e;
             }
         }
 
@@ -175,15 +146,14 @@ namespace Nektar
          */
         void ExpList::PutElmtExpInToCoeffs(void)
         {
-            int i, order_e;
-            int cnt = 0;
+            int i;
+            int order_e;
 
             for(i = 0; i < (*m_exp).size(); ++i)
             {
                 order_e = (*m_exp)[i]->GetNcoeffs();
                 Vmath::Vcopy(order_e, &((*m_exp)[i]->UpdateCoeffs())[0],1,
-                             &m_coeffs[cnt],1);
-                cnt += order_e;
+                             &m_coeffs[m_coeff_offset[i]],1);
             }
         }
 
@@ -224,15 +194,14 @@ namespace Nektar
          */
         void ExpList::PutPhysInToElmtExp(Array<OneD,const NekDouble> &in)
         {
-            int i, npoints_e;
-            int cnt = 0;
+            int i;
+            int npoints_e;
 
             for(i = 0; i < (*m_exp).size(); ++i)
             {
                 npoints_e = (*m_exp)[i]->GetTotPoints();
-                Vmath::Vcopy(npoints_e, &in[cnt],1, 
+                Vmath::Vcopy(npoints_e, &in[m_phys_offset[i]],1, 
                                         &((*m_exp)[i]->UpdatePhys())[0],1);
-                cnt += npoints_e;
             }
         }
 
@@ -244,15 +213,14 @@ namespace Nektar
          */
         void ExpList::PutElmtExpInToPhys(Array<OneD,NekDouble> &out)
         {
-            int i, npoints_e;
-            int cnt = 0;
+            int i;
+            int npoints_e;
 
             for(i = 0; i < (*m_exp).size(); ++i)
             {
                 npoints_e = (*m_exp)[i]->GetTotPoints();
                 Vmath::Vcopy(npoints_e, &((*m_exp)[i]->GetPhys())[0],1,
-                             &out[cnt],1);
-                cnt += npoints_e;
+                             &out[m_phys_offset[i]],1);
             }
         }
 
@@ -323,13 +291,11 @@ namespace Nektar
                                 const Array<OneD, const NekDouble> &inarray)
         {
             int       i;
-            int       cnt = 0;
             NekDouble sum = 0.0;
 
             for(i = 0; i < GetExpSize(); ++i)
             {
-                sum += (*m_exp)[i]->Integral(inarray + cnt);
-                cnt += (*m_exp)[i]->GetTotPoints();
+                sum += (*m_exp)[i]->Integral(inarray + m_phys_offset[i]);
             }
 
             return sum;
@@ -389,17 +355,13 @@ namespace Nektar
             else
             {
                 int    i;
-                int    cnt  = 0;
-                int    cnt1 = 0;
 
                 Array<OneD,NekDouble> e_outarray;
 
                 for(i = 0; i < GetExpSize(); ++i)
                 {
-                    (*m_exp)[i]->IProductWRTBase(inarray+cnt,
-                                                 e_outarray = outarray+cnt1);
-                    cnt  += (*m_exp)[i]->GetTotPoints();
-                    cnt1 += (*m_exp)[i]->GetNcoeffs();
+                    (*m_exp)[i]->IProductWRTBase(inarray+m_phys_offset[i],
+                                   e_outarray = outarray+m_coeff_offset[i]);
                 }
                 m_transState = eLocal;
             }
@@ -424,17 +386,13 @@ namespace Nektar
                                       Array<OneD, NekDouble> &outarray)
         {
             int    i;
-            int    cnt  = 0;
-            int    cnt1 = 0;
 
             Array<OneD,NekDouble> e_outarray;
 
             for(i = 0; i < GetExpSize(); ++i)
             {
-                (*m_exp)[i]->IProductWRTDerivBase(dir,inarray+cnt,
-                                             e_outarray = outarray+cnt1);
-                cnt  += (*m_exp)[i]->GetTotPoints();
-                cnt1 += (*m_exp)[i]->GetNcoeffs();
+                (*m_exp)[i]->IProductWRTDerivBase(dir,inarray+m_phys_offset[i],
+                                     e_outarray = outarray+m_coeff_offset[i]);
             }
             m_transState = eLocal;
         }
@@ -478,7 +436,6 @@ namespace Nektar
                                 Array<OneD, NekDouble> &out_d1,
                                 Array<OneD, NekDouble> &out_d2)
         {
-            int  cnt = 0;
             int  i;
             Array<OneD, NekDouble> e_out_d0;
             Array<OneD, NekDouble> e_out_d1;
@@ -486,19 +443,17 @@ namespace Nektar
 
             for(i= 0; i < GetExpSize(); ++i)
             {
-                e_out_d0 = out_d0 + cnt;
+                e_out_d0 = out_d0 + m_phys_offset[i];
                 if(out_d1.num_elements())
                 {
-                    e_out_d1 = out_d1 + cnt;
+                    e_out_d1 = out_d1 + m_phys_offset[i];
                 }
 
                 if(out_d2.num_elements())
                 {
-                    e_out_d2 = out_d2 + cnt;
+                    e_out_d2 = out_d2 + m_phys_offset[i];
                 }
-
-                (*m_exp)[i]->PhysDeriv(inarray+cnt,e_out_d0,e_out_d1,e_out_d2);
-                cnt  += (*m_exp)[i]->GetTotPoints();
+                (*m_exp)[i]->PhysDeriv(inarray+m_phys_offset[i],e_out_d0,e_out_d1,e_out_d2);
             }
         }
 
@@ -506,15 +461,13 @@ namespace Nektar
                                 const Array<OneD, const NekDouble> &inarray,
                                 Array<OneD, NekDouble> &out_d)
         {
-            int  cnt = 0;
             int  i;
             Array<OneD, NekDouble> e_out_d;
 
             for(i= 0; i < GetExpSize(); ++i)
             {
-                e_out_d = out_d + cnt;
-                (*m_exp)[i]->PhysDeriv(dir, inarray+cnt, e_out_d);
-                cnt  += (*m_exp)[i]->GetTotPoints();
+                e_out_d = out_d + m_phys_offset[i];
+                (*m_exp)[i]->PhysDeriv(dir, inarray+m_phys_offset[i], e_out_d);
             }
         }
 
@@ -581,18 +534,14 @@ namespace Nektar
                                 const Array<OneD, const NekDouble>& inarray,
                                       Array<OneD, NekDouble> &outarray)
         {
-            int cnt  = 0;
-            int cnt1 = 0;
             int i;
 
             Array<OneD,NekDouble> e_outarray;
 
             for(i= 0; i < GetExpSize(); ++i)
             {
-                (*m_exp)[i]->FwdTrans_BndConstrained(inarray+cnt,
-                                      e_outarray = outarray+cnt1);
-                cnt  += (*m_exp)[i]->GetTotPoints();
-                cnt1 += (*m_exp)[i]->GetNcoeffs();
+                (*m_exp)[i]->FwdTrans_BndConstrained(inarray+m_phys_offset[i],
+                                      e_outarray = outarray+m_coeff_offset[i]);
             }
         }
 
@@ -631,8 +580,8 @@ namespace Nektar
                     // set up an array of integers for block matrix construction
                     for(i = 0; i < n_exp; ++i)
                     {
-                        nrows[i] = (*m_exp)[i]->GetTotPoints();
-                        ncols[i] = (*m_exp)[i]->GetNcoeffs();
+                        nrows[i] = (*m_exp)[m_offset_elmt_id[i]]->GetTotPoints();
+                        ncols[i] = (*m_exp)[m_offset_elmt_id[i]]->GetNcoeffs();
                     }
                 }
                 break;
@@ -641,8 +590,8 @@ namespace Nektar
                     // set up an array of integers for block matrix construction
                     for(i = 0; i < n_exp; ++i)
                     {
-                        nrows[i] = (*m_exp)[i]->GetNcoeffs();
-                        ncols[i] = (*m_exp)[i]->GetTotPoints();
+                        nrows[i] = (*m_exp)[m_offset_elmt_id[i]]->GetNcoeffs();
+                        ncols[i] = (*m_exp)[m_offset_elmt_id[i]]->GetTotPoints();
                     }
                 }
                 break;
@@ -655,8 +604,8 @@ namespace Nektar
                     // set up an array of integers for block matrix construction
                     for(i = 0; i < n_exp; ++i)
                     {
-                        nrows[i] = (*m_exp)[i]->GetNcoeffs();
-                        ncols[i] = (*m_exp)[i]->GetNcoeffs();
+                        nrows[i] = (*m_exp)[m_offset_elmt_id[i]]->GetNcoeffs();
+                        ncols[i] = (*m_exp)[m_offset_elmt_id[i]]->GetNcoeffs();
                     }
                 }
                 break;
@@ -665,8 +614,8 @@ namespace Nektar
                     // set up an array of integers for block matrix construction
                     for(i = 0; i < n_exp; ++i)
                     {
-                        nrows[i] = (*m_exp)[i]->GetNcoeffs();
-                        ncols[i] = (*m_exp)[i]->NumDGBndryCoeffs();
+                        nrows[i] = (*m_exp)[m_offset_elmt_id[i]]->GetNcoeffs();
+                        ncols[i] = (*m_exp)[m_offset_elmt_id[i]]->NumDGBndryCoeffs();
                     }
                 }
                 break;
@@ -688,7 +637,7 @@ namespace Nektar
 
             for(i = cnt1 = matrixid = 0; i < n_exp; ++i)
             {
-                totnq = GetCoordim(i)*( (*m_exp)[i]->GetTotPoints() );
+                totnq = GetCoordim(i)*( (*m_exp)[m_offset_elmt_id[i]]->GetTotPoints() );
                 
                 if(nvarcoeffs>0)
                 {
@@ -719,13 +668,13 @@ namespace Nektar
 
 
                 LocalRegions::MatrixKey matkey(gkey.GetMatrixType(),
-                                               (*m_exp)[i]->DetExpansionType(),
-                                               *(*m_exp)[i],
+                                               (*m_exp)[m_offset_elmt_id[i]]->DetExpansionType(),
+                                               *(*m_exp)[m_offset_elmt_id[i]],
                                                Constants,
                                                varcoeffs,
                                                matrixid);
                 
-                loc_mat = (*m_exp)[i]->GetLocMatrix(matkey);
+                loc_mat = (*m_exp)[m_offset_elmt_id[i]]->GetLocMatrix(matkey);
                 BlkMatrix->SetBlock(i,i,loc_mat);
             }
 
@@ -762,8 +711,6 @@ namespace Nektar
             else
             {
                 int  i,j;
-                int  cnt  = 0;
-                int  cnt1 = 0;
                 Array<OneD,NekDouble>      e_outarray;
 
                 int nvarcoeffs = gkey.GetNvariableCoefficients();
@@ -775,9 +722,8 @@ namespace Nektar
                     {
                         for(j = 0; j < nvarcoeffs; j++)
                         {
-                            varcoeffs[j] = gkey.GetVariableCoefficient(j) + cnt1;
+                            varcoeffs[j] = gkey.GetVariableCoefficient(j) + m_phys_offset[i];
                         }
-                        cnt1  += (*m_exp)[i]->GetTotPoints();
                     }
 
                     StdRegions::StdMatrixKey mkey(gkey.GetMatrixType(),
@@ -785,11 +731,9 @@ namespace Nektar
                                                 *((*m_exp)[i]),
                                                   gkey.GetConstants(),varcoeffs);
 
-                    (*m_exp)[i]->GeneralMatrixOp(inarray + cnt,
-                                                 e_outarray = outarray+cnt,
-                                                 mkey);
-
-                    cnt   += (*m_exp)[i]->GetNcoeffs();
+                    (*m_exp)[i]->GeneralMatrixOp(inarray + m_coeff_offset[i],
+                                     e_outarray = outarray+m_coeff_offset[i],
+                                                mkey);
                 }
             }
         }
@@ -806,7 +750,7 @@ namespace Nektar
                             const GlobalMatrixKey &mkey,
                             const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
         {
-            int i,j,n,gid1,gid2,cntdim1,cntdim2,cnt1;
+            int i,j,n,gid1,gid2,cntdim1,cntdim2;
             NekDouble sign1,sign2,matrixid;
             DNekScalMatSharedPtr loc_mat;
 
@@ -864,7 +808,7 @@ namespace Nektar
             Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
 
             // fill global matrix
-            for(n = cntdim1 = cntdim2 = cnt1 = matrixid = 0; n < (*m_exp).size(); ++n)
+            for(n = cntdim1 = cntdim2 = matrixid = 0; n < (*m_exp).size(); ++n)
             {
                 if(nvarcoeffs>0)
                 {
@@ -873,20 +817,19 @@ namespace Nektar
                         
                         ASSERTL0(false,"method not set up for non-Dirichlet conditions");
 
-                        varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
+                        varcoeffs[j] = mkey.GetVariableCoefficient(j) + m_phys_offset[j];
                     }
-                    cnt1  += (*m_exp)[n]->GetTotPoints();
                     matrixid++;
                 }
 
                 LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
-                                               (*m_exp)[n]->DetExpansionType(),
-                                               *(*m_exp)[n],
+                                               (*m_exp)[m_offset_elmt_id[n]]->DetExpansionType(),
+                                               *(*m_exp)[m_offset_elmt_id[n]],
                                                mkey.GetConstants(),
                                                varcoeffs,
                                                matrixid);
 
-                loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);
+                loc_mat = (*m_exp)[m_offset_elmt_id[n]]->GetLocMatrix(matkey);
                 loc_rows = loc_mat->GetRows();
                 loc_cols = loc_mat->GetColumns();
 
@@ -979,20 +922,22 @@ namespace Nektar
             Array<OneD, unsigned int> nCoeffsPerElmt(n_exp);
             for(j = 0; j < n_exp; j++)
             {
-                nCoeffsPerElmt[j] = (*m_exp)[j]->GetNcoeffs();
+                nCoeffsPerElmt[j] = (*m_exp)[m_offset_elmt_id[j]]->GetNcoeffs();
             }
 
             MatrixStorage blkmatStorage = eDIAGONAL;
             DNekScalBlkMatSharedPtr A = MemoryManager<DNekScalBlkMat>::
                 AllocateSharedPtr(nCoeffsPerElmt,nCoeffsPerElmt,blkmatStorage);
-
+            
             DNekScalMatSharedPtr loc_mat; 
-
+            
+            int nel;
             int nvarcoeffs = mkey.GetNvariableCoefficients();
             Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
             
             for(n = cnt1 = 0; n < n_exp; ++n)
             {
+                nel = m_offset_elmt_id[n];
                 if(nvarcoeffs>0)
                 {
                     ASSERTL0(false,"method not set up for non-Dirichlet conditions");
@@ -1006,12 +951,12 @@ namespace Nektar
                 }
 
                 LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
-                                               (*m_exp)[n]->DetExpansionType(),
-                                               *(*m_exp)[n],
+                                               (*m_exp)[nel]->DetExpansionType(),
+                                               *(*m_exp)[nel],
                                                mkey.GetConstants(),
                                                varcoeffs);
                 
-                loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);  
+                loc_mat = (*m_exp)[nel]->GetLocMatrix(matkey);  
 
                 A->SetBlock(n,n,loc_mat);
             }
@@ -1022,7 +967,7 @@ namespace Nektar
 
         DNekMatSharedPtr ExpList::GenGlobalMatrixFull(const GlobalLinSysKey &mkey, const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
         {
-            int i,j,n,gid1,gid2,loc_lda,cnt,cnt1;
+            int i,j,n,gid1,gid2,loc_lda;
             NekDouble sign1,sign2,value;
             DNekScalMatSharedPtr loc_mat;
 
@@ -1065,7 +1010,7 @@ namespace Nektar
             }             
 
             // fill global symmetric matrix
-            for(n = cnt = cnt1 = 0; n < (*m_exp).size(); ++n)
+            for(n = 0; n < (*m_exp).size(); ++n)
             {
                 if(nvarcoeffs>0)
                 {
@@ -1073,9 +1018,8 @@ namespace Nektar
 
                         for(j = 0; j < nvarcoeffs; j++)
                         {
-                            varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
+                            varcoeffs[j] = mkey.GetVariableCoefficient(j) + m_phys_offset[n];
                         }
-                        cnt1  += (*m_exp)[n]->GetTotPoints();
                 }
 
                 LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
@@ -1089,14 +1033,14 @@ namespace Nektar
 
                 for(i = 0; i < loc_lda; ++i)
                 {
-                    gid1 = locToGloMap->GetLocalToGlobalMap(cnt + i) - NumDirBCs;
-                    sign1 =  locToGloMap->GetLocalToGlobalSign(cnt + i);
+                    gid1 = locToGloMap->GetLocalToGlobalMap(m_coeff_offset[n] + i) - NumDirBCs;
+                    sign1 =  locToGloMap->GetLocalToGlobalSign(m_coeff_offset[n] + i);
                     if(gid1 >= 0)
                     {
                         for(j = 0; j < loc_lda; ++j)
                         {
-                            gid2 = locToGloMap->GetLocalToGlobalMap(cnt + j) - NumDirBCs;
-                            sign2 = locToGloMap->GetLocalToGlobalSign(cnt + j);
+                            gid2 = locToGloMap->GetLocalToGlobalMap(m_coeff_offset[n] + j) - NumDirBCs;
+                            sign2 = locToGloMap->GetLocalToGlobalSign(m_coeff_offset[n] + j);
                             if(gid2 >= 0)
                             {
                                 // When global matrix is symmetric,
@@ -1112,18 +1056,7 @@ namespace Nektar
                         }
                     }
                 }
-                cnt   += (*m_exp)[n]->GetNcoeffs();
             }
-
-//             for(i = NumDirBCs; i < NumDirBCs+NumRobinBCs; ++i)
-//             {
-//                 // Find a way to deal with second parameter of the Robin BC
-//                 NekDouble b=1.0;
-//                 (*Gmat)((locToGloMap->GetBndCondGlobalID())[i]-NumDirBCs,
-//                         (locToGloMap->GetBndCondGlobalID())[i]-NumDirBCs)
-//                     -= mkey.GetScaleFactor() * b;
-//             }
-
 
             return Gmat;
         }
@@ -1250,15 +1183,16 @@ namespace Nektar
             DNekScalBlkMatSharedPtr loc_mat;
             DNekScalMatSharedPtr tmp_mat; 
 
+            int eid;
             int nvarcoeffs = mkey.GetNvariableCoefficients();
             Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
 
             for(n = cnt1 = 0; n < n_exp; ++n)
             {
+                eid = m_offset_elmt_id[n];
                 if(nvarcoeffs>0)
                 {
                     ASSERTL0(false,"method not set up for non-Dirichlet conditions");
-
                     for(j = 0; j < nvarcoeffs; j++)
                     {
                         varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
@@ -1267,12 +1201,12 @@ namespace Nektar
                 }
 
                 LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
-                                               (*m_exp)[n]->DetExpansionType(),
-                                               *(*m_exp)[n],
+                                               (*m_exp)[eid]->DetExpansionType(),
+                                               *(*m_exp)[eid],
                                                mkey.GetConstants(),
                                                varcoeffs);
 
-                loc_mat = (*m_exp)[n]->GetLocStaticCondMatrix(matkey);
+                loc_mat = (*m_exp)[eid]->GetLocStaticCondMatrix(matkey);
 
                 SchurCompl->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,0));
                 BinvD     ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,1));
@@ -1373,11 +1307,13 @@ namespace Nektar
 
             DNekScalMatSharedPtr loc_mat;
 
+            int eid;
             int totnq, nvarcoeffs = mkey.GetNvariableCoefficients();
             Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
             for(n = cnt1 = matrixid = 0; n < n_exp; ++n)
             {
-                 totnq = GetCoordim(n)*( (*m_exp)[n]->GetTotPoints() );
+                eid = m_offset_elmt_id[n];
+                totnq = GetCoordim(eid)*( (*m_exp)[eid]->GetTotPoints() );
                 if(nvarcoeffs>0)
                 {
                     // When two varcoeffs in a specific order            
@@ -1394,7 +1330,7 @@ namespace Nektar
                 int Nconstants = mkey.GetNconstants();
                 if(Nconstants>2)
                 {
-                    factor1 = mkey.GetConstant(n);
+                    factor1 = mkey.GetConstant(eid);
                     factor2 = mkey.GetConstant(Nconstants-1);
                 }
 
@@ -1404,18 +1340,20 @@ namespace Nektar
                     factor2 = mkey.GetConstant(1);
                 }
 
+#if 0
                 LocalRegions::MatrixKey Umatkey(linsystype, 
-                                                (*m_exp)[n]->DetExpansionType(),
-                                                *((*m_exp)[n]), factor1,factor2,varcoeffs,matrixid);
+                                                (*m_exp)[eid]->DetExpansionType(),
+                                                *((*m_exp)[eid]), factor1,factor2,varcoeffs,matrixid);
 
-                DNekScalMat &BndSys = *((*m_exp)[n]->GetLocMatrix(Umatkey)); 
+                DNekScalMat &BndSys = *((*m_exp)[eid]->GetLocMatrix(Umatkey)); 
+#endif
 
-               LocalRegions::MatrixKey matkey(linsystype,
-                                               (*m_exp)[n]->DetExpansionType(),
-                                               *(*m_exp)[n],factor1,factor2,varcoeffs,matrixid);
+                LocalRegions::MatrixKey matkey(linsystype,
+                                               (*m_exp)[eid]->DetExpansionType(),
+                                               *(*m_exp)[eid],factor1,factor2,varcoeffs,matrixid);
 
-                loc_mat = (*m_exp)[n]->GetLocMatrix(matkey);    
-
+                loc_mat = (*m_exp)[eid]->GetLocMatrix(matkey);    
+                
                 SchurCompl->SetBlock(n,n,loc_mat);              
             }
            
@@ -1455,16 +1393,12 @@ namespace Nektar
             else
             {
                 int  i;
-                int  cnt  = 0;
-                int  cnt1 = 0;
                 Array<OneD,NekDouble> e_outarray;
 
                 for(i= 0; i < GetExpSize(); ++i)
                 {
-                    (*m_exp)[i]->BwdTrans(inarray + cnt,
-                                          e_outarray = outarray+cnt1);
-                    cnt   += (*m_exp)[i]->GetNcoeffs();
-                    cnt1  += (*m_exp)[i]->GetTotPoints();
+                    (*m_exp)[i]->BwdTrans(inarray + m_coeff_offset[i],
+                                          e_outarray = outarray+m_phys_offset[i]);
                 }
             }
         }
@@ -1510,7 +1444,7 @@ namespace Nektar
                                 Array<OneD, NekDouble> &coord_1,
                                 Array<OneD, NekDouble> &coord_2)
         {
-            int    i, cnt = 0;
+            int    i;
             Array<OneD, NekDouble> e_coord_0;
             Array<OneD, NekDouble> e_coord_1;
             Array<OneD, NekDouble> e_coord_2;
@@ -1520,9 +1454,8 @@ namespace Nektar
             case 1:
                 for(i= 0; i < GetExpSize(); ++i)
                 {
-                    e_coord_0 = coord_0 + cnt;
+                    e_coord_0 = coord_0 + m_phys_offset[i];
                     (*m_exp)[i]->GetCoords(e_coord_0);
-                    cnt  += (*m_exp)[i]->GetTotPoints();
                 }
                 break;
             case 2:
@@ -1531,10 +1464,9 @@ namespace Nektar
 
                 for(i= 0; i < GetExpSize(); ++i)
                 {
-                    e_coord_0 = coord_0 + cnt;
-                    e_coord_1 = coord_1 + cnt;
+                    e_coord_0 = coord_0 + m_phys_offset[i];
+                    e_coord_1 = coord_1 + m_phys_offset[i];
                     (*m_exp)[i]->GetCoords(e_coord_0,e_coord_1);
-                    cnt  += (*m_exp)[i]->GetTotPoints();
                 }
                 break;
             case 3:
@@ -1545,12 +1477,10 @@ namespace Nektar
 
                 for(i= 0; i < GetExpSize(); ++i)
                 {
-                    e_coord_0 = coord_0 + cnt;
-                    e_coord_1 = coord_1 + cnt;
-                    e_coord_2 = coord_2 + cnt;
-
+                    e_coord_0 = coord_0 + m_phys_offset[i];
+                    e_coord_1 = coord_1 + m_phys_offset[i];
+                    e_coord_2 = coord_2 + m_phys_offset[i];
                     (*m_exp)[i]->GetCoords(e_coord_0,e_coord_1,e_coord_2);
-                    cnt  += (*m_exp)[i]->GetTotPoints();
                 }
                 break;
             }
@@ -1563,14 +1493,13 @@ namespace Nektar
         void ExpList::GetSurfaceNormal(Array<OneD, NekDouble> &SurfaceNormal,
                                 const int k)
         {
-            int i, cnt=0;
+            int i;
             Array<OneD, NekDouble> e_SN;
 
             for(i = 0; i < GetExpSize(); ++i)
             {
-                e_SN = SurfaceNormal + cnt;
+                e_SN = SurfaceNormal + m_phys_offset[i];
                 (*m_exp)[i]->GetSurfaceNormal(e_SN, k);
-                cnt += (*m_exp)[i]->GetTotPoints();
             }
         }
 
@@ -1657,7 +1586,7 @@ namespace Nektar
         {
             if(format==eTecplot)
             {
-                int i,cnt = 0;
+                int i;
 
                 Array<OneD, const NekDouble> phys = m_phys;
 
@@ -1666,20 +1595,18 @@ namespace Nektar
                     BwdTrans(m_coeffs,m_phys);
                 }
 
-                (*m_exp)[0]->SetPhys(phys);
+                (*m_exp)[0]->SetPhys(phys+m_phys_offset[0]);
                 (*m_exp)[0]->WriteToFile(out,eTecplot,true,var);
-                cnt  += (*m_exp)[0]->GetTotPoints();
 
                 for(i= 1; i < GetExpSize(); ++i)
                 {
-                    (*m_exp)[i]->SetPhys(phys+cnt);
+                    (*m_exp)[i]->SetPhys(phys+m_phys_offset[i]);
                     (*m_exp)[i]->WriteToFile(out,eTecplot,false,var);
-                    cnt  += (*m_exp)[i]->GetTotPoints();
                 }
             }
             else if(format==eGnuplot)
             {
-                int i,cnt = 0;
+                int i;
 
                 Array<OneD, const NekDouble> phys = m_phys;
 
@@ -1688,15 +1615,13 @@ namespace Nektar
                     BwdTrans(m_coeffs,m_phys);
                 }
 
-                (*m_exp)[0]->SetPhys(phys);
+                (*m_exp)[0]->SetPhys(phys+m_phys_offset[0]);
                 (*m_exp)[0]->WriteToFile(out,eGnuplot,true,var);
-                cnt  += (*m_exp)[0]->GetTotPoints();
 
                 for(i= 1; i < GetExpSize(); ++i)
                 {
-                    (*m_exp)[i]->SetPhys(phys+cnt);
-                    (*m_exp)[i]->WriteToFile(out,eGnuplot,false,var);
-                    cnt  += (*m_exp)[i]->GetTotPoints();
+                    (*m_exp)[i]->SetPhys(phys+m_phys_offset[i]);
+                    (*m_exp)[i]->WriteToFile(out,eTecplot,false,var);
                 }
             }
             else if(format==eGmsh)
@@ -1879,12 +1804,7 @@ namespace Nektar
          */
         void ExpList::WriteTecplotField(std::ofstream &outfile, int expansion)
         {
-            int cnt = 0;
-            for(int i= 0; i < expansion; ++i)
-            {
-                cnt  += (*m_exp)[i]->GetTotPoints();
-            }
-            (*m_exp)[expansion]->SetPhys(m_phys+cnt);
+            (*m_exp)[expansion]->SetPhys(m_phys+m_phys_offset[expansion]);
             (*m_exp)[expansion]->WriteTecplotField(outfile);
         }
 
@@ -1916,12 +1836,7 @@ namespace Nektar
         void ExpList::WriteVtkPieceData(std::ofstream &outfile, int expansion,
                                         std::string var)
         {
-            int cnt = 0;
-            for (int i = 0; i < expansion; ++i)
-            {
-                cnt += (*m_exp)[i]->GetTotPoints();
-            }
-            (*m_exp)[expansion]->SetPhys(m_phys + cnt);
+            (*m_exp)[expansion]->SetPhys(m_phys + m_phys_offset[expansion]);
             (*m_exp)[expansion]->WriteVtkPieceData(outfile, var);
         }
 
@@ -1929,21 +1844,19 @@ namespace Nektar
         {
             if(format==eTecplot)
             {
-                int i,npts,cnt = 0;
+                int i,npts;
                 Array<OneD, NekDouble> phys = m_phys;
 
                 npts = (*m_exp)[0]->GetTotPoints();
                 (*m_exp)[0]->ReadFromFile(in,eTecplot,true);
-                Vmath::Vcopy(npts,&(*m_exp)[0]->GetPhys()[0],1,&phys[cnt],1);
-                cnt  += npts;
+                Vmath::Vcopy(npts,&(*m_exp)[0]->GetPhys()[0],1,&phys[m_phys_offset[0]],1);
 
                 for(i= 1; i < GetExpSize(); ++i)
                 {
                     npts = (*m_exp)[i]->GetTotPoints();
                     (*m_exp)[i]->ReadFromFile(in,eTecplot,false);
                     Vmath::Vcopy(npts,&((*m_exp)[i]->GetPhys())[0],1,
-                                 &phys[cnt],1);
-                    cnt  += npts;
+                                 &phys[m_phys_offset[i]],1);
                 }
                 FwdTrans(m_phys,m_coeffs);
             }
@@ -1975,14 +1888,13 @@ namespace Nektar
         NekDouble  ExpList::Linf(const Array<OneD, const NekDouble> &soln)
         {
             NekDouble err = 0.0;
-            int       i,cnt = 0;
+            int       i;
 
             for(i= 0; i < GetExpSize(); ++i)
             {
                 // set up physical solution in local element
-                (*m_exp)[i]->SetPhys(m_phys+cnt);
-                err  = std::max(err,(*m_exp)[i]->Linf(soln + cnt));
-                cnt  += (*m_exp)[i]->GetTotPoints();
+                (*m_exp)[i]->SetPhys(m_phys+m_phys_offset[i]);
+                err  = std::max(err,(*m_exp)[i]->Linf(soln + m_phys_offset[i]));
             }
 
             return err;
@@ -2008,15 +1920,14 @@ namespace Nektar
         {
 
             NekDouble err = 0.0,errl2;
-            int    i,cnt = 0;
+            int    i;
 
             for(i= 0; i < GetExpSize(); ++i)
             {
                 // set up physical solution in local element
-                (*m_exp)[i]->SetPhys(m_phys+cnt);
-                errl2 = (*m_exp)[i]->L2(soln+cnt);
+                (*m_exp)[i]->SetPhys(m_phys+m_phys_offset[i]);
+                errl2 = (*m_exp)[i]->L2(soln+m_phys_offset[i]);
                 err += errl2*errl2;
-                cnt  += (*m_exp)[i]->GetTotPoints();
             }
 
             return sqrt(err);
@@ -2044,15 +1955,14 @@ namespace Nektar
         {
 
             NekDouble err = 0.0,errl2;
-            int    i,cnt = 0;
+            int    i;
 
             for(i= 0; i < GetExpSize(); ++i)
             {
                 // set up physical solution in local element
-                (*m_exp)[i]->SetPhys(m_phys+cnt);
+                (*m_exp)[i]->SetPhys(m_phys+m_phys_offset[i]);
                 errl2 = (*m_exp)[i]->L2();
                 err += errl2*errl2;
-                cnt  += (*m_exp)[i]->GetTotPoints();
             }
 
             return sqrt(err);
@@ -2079,15 +1989,14 @@ namespace Nektar
         {
 
             NekDouble err = 0.0,errh1;
-            int    i,cnt = 0;
+            int    i;
 
             for(i= 0; i < GetExpSize(); ++i)
             {
                 // set up physical solution in local element
-                (*m_exp)[i]->SetPhys(m_phys+cnt);
-                errh1 =  (*m_exp)[i]->H1(soln+cnt);
+                (*m_exp)[i]->SetPhys(m_phys+m_phys_offset[i]);
+                errh1 =  (*m_exp)[i]->H1(soln+m_phys_offset[i]);
                 err  += errh1*errh1;
-                cnt  += (*m_exp)[i]->GetTotPoints();
             }
 
             return sqrt(err);
@@ -2159,6 +2068,7 @@ namespace Nektar
                     }
                 }
 
+
                 if(elementIDs.size() > 0)
                 {
                     SpatialDomains::FieldDefinitionsSharedPtr fielddef  = MemoryManager<SpatialDomains::FieldDefinitions>::AllocateSharedPtr(shape, elementIDs, basis, UniOrder, numModes,fields);
@@ -2173,9 +2083,18 @@ namespace Nektar
         //fielddef->m_ElementIDs onto fielddata
         void ExpList::AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
         {
-            for(int i = 0; i < fielddef->m_ElementIDs.size(); ++i)
+            int i;
+            // Determine mapping from element ids to location in 
+            // expansion list
+            map<int, int> ElmtID_to_ExpID;
+            for(i = 0; i < (*m_exp).size(); ++i)
             {
-                int eid = fielddef->m_ElementIDs[i];
+                ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
+            }
+            
+            for(i = 0; i < fielddef->m_ElementIDs.size(); ++i)
+            {
+                int eid     = ElmtID_to_ExpID[fielddef->m_ElementIDs[i]];
                 int datalen = (*m_exp)[eid]->GetNcoeffs();
                 fielddata.insert(fielddata.end(),&m_coeffs[m_coeff_offset[eid]],&m_coeffs[m_coeff_offset[eid]]+datalen);
             }
@@ -2184,7 +2103,6 @@ namespace Nektar
         //Extract the data in fielddata into the m_coeff list
         void ExpList::ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field)
         {
-            int cnt = 0;
             int i;
             int offset = 0;
             int datalen = fielddata.size()/fielddef->m_Fields.size();
@@ -2201,12 +2119,20 @@ namespace Nektar
 
             ASSERTL0(i!= fielddef->m_Fields.size(),"Field not found in data file");
 
-            for(int i = 0; i < fielddef->m_ElementIDs.size(); ++i)
+            // Determine mapping from element ids to location in 
+            // expansion list
+            map<int, int> ElmtID_to_ExpID;
+            for(i = 0; i < (*m_exp).size(); ++i)
             {
-                int eid = fielddef->m_ElementIDs[i];
+                ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
+            }            
+
+            for(i = 0; i < fielddef->m_ElementIDs.size(); ++i)
+            {
+                int eid = ElmtID_to_ExpID[fielddef->m_ElementIDs[i]];
                 int datalen = (*m_exp)[eid]->GetNcoeffs();
-                Vmath::Vcopy(datalen,&fielddata[offset + cnt],1,&m_coeffs[m_coeff_offset[eid]],1);
-                cnt += datalen;
+                Vmath::Vcopy(datalen,&fielddata[offset],1,&m_coeffs[m_coeff_offset[eid]],1);
+                offset += datalen;
             }
         }
 

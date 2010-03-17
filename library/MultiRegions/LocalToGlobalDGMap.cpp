@@ -56,7 +56,7 @@ namespace Nektar
         }
 
         LocalToGlobalDGMap::LocalToGlobalDGMap( const SpatialDomains::MeshGraph1D &graph1D,
-                                                const boost::shared_ptr<StdRegions::StdExpansionVector> &exp1D,
+                                                const ExpList &locExp,
                                                 const GlobalSysSolnType solnType,
                                                 const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp,
                                                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond)
@@ -68,6 +68,8 @@ namespace Nektar
             // set up Local to Continuous mapping 
             Array<OneD,unsigned int> vmap;
             LocalRegions::SegExpSharedPtr locSegExp;
+
+            const boost::shared_ptr<StdRegions::StdExpansionVector> exp1D = locExp.GetExp(); 
             
             m_numGlobalBndCoeffs  = exp1D->size()+1;
             m_numGlobalCoeffs = m_numGlobalBndCoeffs;
@@ -118,7 +120,7 @@ namespace Nektar
                             MeshVertToLocalVert[vid] = gid++;
                         }   
                         
-                        m_localToGlobalBndMap[cnt + j] = 
+                        m_localToGlobalBndMap[cnt+j] = 
                             MeshVertToLocalVert.find(vid)->second;
                     }    
                     cnt += locSegExp->NumBndryCoeffs();
@@ -153,21 +155,25 @@ namespace Nektar
 
         LocalToGlobalDGMap::LocalToGlobalDGMap(SpatialDomains::MeshGraph2D &graph2D, 
                                                const ExpList1DSharedPtr &trace, 
-                                               const boost::shared_ptr<StdRegions::StdExpansionVector> &exp2D, 
+                                               const ExpList &locExp,
                                                const GlobalSysSolnType solnType, 
                                                const Array<OneD, MultiRegions::ExpList1DSharedPtr> &bndCondExp,
                                                const Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndCond, 
                                                const map<int,int> &periodicEdges)
         {
-            int i,j,k,cnt,id, id1, order_e,gid;
+
+
+            int i,j,k,cnt,eid, id, id1, order_e,gid;
             int ntrace_exp = trace->GetExpSize();
-            int nel        = exp2D->size();
             int nbnd = bndCondExp.num_elements();
             LocalRegions::SegExpSharedPtr  locSegExp,locSegExp1;
             LocalRegions::QuadExpSharedPtr locQuadExp;
             LocalRegions::TriExpSharedPtr  locTriExp;
             SpatialDomains::Geometry1DSharedPtr SegGeom;
             
+            const boost::shared_ptr<StdRegions::StdExpansionVector> exp2D = locExp.GetExp(); 
+            int nel        = exp2D->size();
+
             map<int, int> MeshEdgeId;
 
             m_signChange = true;
@@ -271,7 +277,7 @@ namespace Nektar
             m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD,int >(cnt);
             m_bndExpAdjacentOrient = Array<OneD, AdjacentTraceOrientation > (cnt);
             m_numLocalDirBndCoeffs = 0;
-            m_numDirichletBndPhys   = 0;
+            m_numDirichletBndPhys  = 0;
 
             cnt = 0;
             for(i = 0; i < bndCondExp.num_elements(); ++i)
@@ -336,8 +342,9 @@ namespace Nektar
             int nbndry = 0;
             for(i = 0; i < nel; ++i) // count number of elements in array
             {
-                nbndry += (*exp2D)[i]->NumDGBndryCoeffs();
-                m_numLocalBndCoeffsPerPatch[i] = (unsigned int) (*exp2D)[i]->NumDGBndryCoeffs();
+                eid = locExp.GetOffset_Elmt_Id(i);
+                nbndry += (*exp2D)[eid]->NumDGBndryCoeffs();
+                m_numLocalBndCoeffsPerPatch[i] = (unsigned int) (*exp2D)[eid]->NumDGBndryCoeffs();
                 m_numLocalIntCoeffsPerPatch[i] = (unsigned int) 0;
             }
 
@@ -384,11 +391,12 @@ namespace Nektar
             // Set up boost Graph
             for(i = 0; i < nel; ++i)
             {
-                nbndry += (*exp2D)[i]->NumDGBndryCoeffs();
+                eid = locExp.GetOffset_Elmt_Id(i);
+                nbndry += (*exp2D)[eid]->NumDGBndryCoeffs();
                 
-                for(j = 0; j < (*exp2D)[i]->GetNedges(); ++j)
+                for(j = 0; j < (*exp2D)[eid]->GetNedges(); ++j)
                 {   
-                    locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(m_elmtToTrace[i][j]);
+                    locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(m_elmtToTrace[eid][j]);
                     SegGeom = locSegExp->GetGeom1D();
                     
                     // Add edge to boost graph for non-Dirichlet Boundary 
@@ -396,9 +404,9 @@ namespace Nektar
                     trace_id = MeshEdgeId.find(id)->second;
                     if(trace->GetCoeff_Offset(trace_id) >= m_numLocalDirBndCoeffs) 
                     {
-                        for(k = j+1; k < (*exp2D)[i]->GetNedges(); ++k)
+                        for(k = j+1; k < (*exp2D)[eid]->GetNedges(); ++k)
                         {   
-                            locSegExp1 = boost::dynamic_pointer_cast<LocalRegions::SegExp>(m_elmtToTrace[i][k]);
+                            locSegExp1 = boost::dynamic_pointer_cast<LocalRegions::SegExp>(m_elmtToTrace[eid][k]);
                             SegGeom = locSegExp1->GetGeom1D();
                             
                             id1  = SegGeom->GetEid();
@@ -464,20 +472,24 @@ namespace Nektar
             nbndry = cnt = 0;
             for(i = 0; i < nel; ++i)
             {
-                nbndry += (*exp2D)[i]->NumDGBndryCoeffs();
+                // order list according to m_offset_elmt_id details in
+                // Exp2D so that triangules are listed first and then
+                // quads
+                eid = locExp.GetOffset_Elmt_Id(i);
+                nbndry += (*exp2D)[eid]->NumDGBndryCoeffs();
 
-                for(j = 0; j < (*exp2D)[i]->GetNedges(); ++j)
+                for(j = 0; j < (*exp2D)[eid]->GetNedges(); ++j)
                 {   
-                    locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(m_elmtToTrace[i][j]);
+                    locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(m_elmtToTrace[eid][j]);
                     SegGeom = locSegExp->GetGeom1D();
                     
                     id  = SegGeom->GetEid();
                     gid = TraceElmtGid[MeshEdgeId.find(id)->second];
                     
                     //Peter order_e = locSegExp->GetNcoeffs();
-		    order_e = (*exp2D)[i]->GetEdgeNcoeffs(j);
+		    order_e = (*exp2D)[eid]->GetEdgeNcoeffs(j);
                     
-                    if((*exp2D)[i]->GetEorient(j) == StdRegions::eForwards)
+                    if((*exp2D)[eid]->GetEorient(j) == StdRegions::eForwards)
                     {
                         for(k = 0; k < order_e; ++k)
                         {
@@ -549,9 +561,9 @@ namespace Nektar
 		      // aligned with the geometry just use forward
 		      // defintiion for gid's
 		      for(k = 0; k < order_e; ++k)
-                        {
-			  m_bndCondCoeffsToGlobalCoeffsMap[cnt++] = gid + k;
-                        }
+                      {
+                          m_bndCondCoeffsToGlobalCoeffsMap[cnt++] = gid + k;
+                      }
                     }
                 }
             }
@@ -573,21 +585,18 @@ namespace Nektar
 	    cnt = 0;
 	    m_bndCondTraceToGlobalTraceMap = Array<OneD, int >(nbndexp);
 	    for(i = 0; i < bndCondExp.num_elements(); ++i)
-	      {
+            {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
-		  {
+                {
                     if(locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j)))
-		      {
+                    {
                         SegGeom = locSegExp->GetGeom1D();
                         id = SegGeom->GetEid();
 			
 			m_bndCondTraceToGlobalTraceMap[cnt++] = MeshEdgeId.find(id)->second; 
-		      }
-		  }
-	      }
-            
-
-
+                    }
+                }
+            }
         }
         
     }

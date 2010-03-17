@@ -36,4 +36,5 @@ ADD_NEKTAR_EXECUTABLE(HDGHelmholtz2D HDGHelmholtz2DSource)
 TARGET_LINK_LIBRARIES(HDGHelmholtz2D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(HDGHelmholtz2D)
 
-SUBDIRS(ExtraDemos)
+# Uncomment next line to compile demos in subdirectory
+#SUBDIRS(ExtraDemos)

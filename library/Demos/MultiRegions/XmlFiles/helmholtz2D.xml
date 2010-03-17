@@ -1,14 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<!-- 2D mesh and boundary conditions for Helmholtz demos.
-     Mesh comprises of both quad and tri elements in a 2D coordinate system.
-     -->
-
 <NEKTAR>
   <!-- Embed a 1-dimensional object in a 2-dimensional space -->
   <!-- DIM <= SPACE -->
-  <!-- This provides a method of optimizing code for a 1-D curve embedded in 
-       3-space. -->
+  <!-- This provides a method of optimizing code for a 1-D curve embedded in 3-space. -->
   <GEOMETRY DIM="2" SPACE="2">
     
     <!-- Definitions that can be used below in this file. -->
@@ -19,6 +14,7 @@
     </DEF>
     
     <VERTEX>
+      <!-- Always must have four values per entry. -->      
       <V ID="0">   -1.000000000000000   3.500000000000000     0.0 </V>
       <V ID="1">   -1.000000000000000   0.500000000000000     0.0 </V>
       <V ID="2">   -1.000000000000000   2.500000000000000     0.0 </V>
@@ -169,12 +165,9 @@
       <E ID="95"> 10 19 </E>
     </EDGE>
     
-    <!-- Q - quads, T - triangles, S - segments, E - tet, P - pyramid, 
-         R - prism, H - hex -->
-    <!-- Only certain element types are appropriate for the given dimension 
-         (dim on mesh) -->
-    <!-- Can also use faces to define 3-D elements.  Specify with F[1] for 
-         face 1, for example. -->
+    <!-- Q - quads, T - triangles, S - segments, E - tet, P - pyramid, R - prism, H - hex -->
+    <!-- Only certain element types are appropriate for the given dimension (dim on mesh) -->
+    <!-- Can also use faces to define 3-D elements.  Specify with F[1] for face 1, for example. -->
     <ELEMENT>
       <T ID="0"> 6 7 16 </T>
       <T ID="1"> 0 8 7 </T>
@@ -228,8 +221,8 @@
     
     <!-- V - vertex, S - Segment, E - edge, F - face -->
     <COMPOSITE>
-      <C ID="0"> T[0-21] </C>
-      <C ID="1"> Q[0-25] </C>
+      <C ID="0"> Q[22-47] </C>
+      <C ID="1"> T[0-21] </C>
       <C ID="2"> E[0-1] </C>
       <C ID="3"> E[2-5] </C>
       <C ID="4"> E[45] </C>
@@ -248,19 +241,17 @@
       <C ID="17"> E[20] </C>
       <C ID="18"> E[6] </C>
     </COMPOSITE>
-
-    <!-- Composites which make up the domain -->
+    
     <DOMAIN> C[0-1] </DOMAIN>
   </GEOMETRY>
 
-  <!-- Define expansions on elemental composites -->
   <EXPANSIONS>
     <E COMPOSITE="C[0]" NUMMODES="7" TYPE="MODIFIED" />
     <E COMPOSITE="C[1]" NUMMODES="7" TYPE="MODIFIED" />
   </EXPANSIONS>
 
-  <!-- Define problem boundary conditions -->
   <CONDITIONS>
+    
     <!-- Removed redundancy since we can specify any level of granularity
          in the ExpansionTypes section below.-->
     <PARAMETERS>
@@ -350,13 +341,11 @@
         <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
     </REGION>    
     </BOUNDARYCONDITIONS>
-
-    <!-- Forcing term for Helmholtz equation -->
+    
     <FORCING>
       <F VAR="u" VALUE="-(Lambda + 2*PI*PI)*sin(PI*x)*sin(PI*y)" />
     </FORCING>
-
-    <!-- Exact solution for assessing accuracy of solution -->
+  
     <EXACTSOLUTION>
       <F VAR ="u" VALUE="sin(PI*x)*sin(PI*y)" />
     </EXACTSOLUTION>
@@ -438,5 +427,6 @@
     </HelmholtzMatrixOp>
 
   </GLOBALOPTIMIZATIONPARAMETERS>
+  
   
 </NEKTAR>

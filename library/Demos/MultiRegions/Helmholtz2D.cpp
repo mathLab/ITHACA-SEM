@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     if( (argc != 2) && (argc != 4) )
     {
         fprintf(stderr,"Usage: Helmholtz2D meshfile "
-                    " [GlobalOptimizationFile] [ElementalOptimizationFile]\n");
+                    " [GlobalOptimizationFile ElementalOptimizationFile]\n");
         exit(1);
     }
 
@@ -70,8 +70,19 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Define Expansion
+    int bc_val = 0;
+    // Use this definition in the constructor below if you want a
+    // standard static condensation solver. Note default is mulit level. 
+    MultiRegions::GlobalSysSolnType staticcond = MultiRegions::eDirectStaticCond;
+    // Use this definition in the constructor below if you want a
+    // full direct matrix  solver. Note default is mulit level. 
+    MultiRegions::GlobalSysSolnType fulldirect = MultiRegions::eDirectFullMatrix;
+    // Use this definition in the constructor below if you want a
+    // multi level static condensation inversion. 
+    MultiRegions::GlobalSysSolnType multilevel = MultiRegions::eDirectMultiLevelStaticCond;
+
     Exp = MemoryManager<MultiRegions::ContField2D>::
-        AllocateSharedPtr(graph2D,bcs);
+        AllocateSharedPtr(graph2D,bcs,bc_val,multilevel);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -135,12 +146,12 @@ int main(int argc, char *argv[])
     Timing("Helmholtz Solve ..");
 
 #ifdef TIMING
-    for(i = 0; i < 100; ++i)
+    for(i = 0; i < 1000; ++i)
     {
         Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), lambda, true);
     }
 
-    Timing("100 Helmholtz Solves:... ");
+    Timing("1000 Helmholtz Solves:... ");
 #endif
 
     //----------------------------------------------
@@ -150,7 +161,7 @@ int main(int argc, char *argv[])
 
     //-----------------------------------------------
     // Write solution to file
-    string   out(strtok(argv[argc-1],"."));
+    string   out(strtok(argv[1],"."));
     string   endfile(".fld");
     out += endfile;
     std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef 

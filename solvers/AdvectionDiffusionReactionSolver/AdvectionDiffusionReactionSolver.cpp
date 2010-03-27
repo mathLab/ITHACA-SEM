@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
             {
                 // Choose the method of deriving forcing functions
                 ode.DefineImplicitSolve   (&AdvectionDiffusionReaction::ODEhelmSolve,&dom);	
-                ode.DefineOdeRhs          (&AdvectionDiffusionReaction::ODEeReaction,&dom);	
+                //  ode.DefineOdeRhs          (&AdvectionDiffusionReaction::ODEeReaction,&dom);	
                 
                 // General Linear Time Integration
                 dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);
@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
     // Evaluate L2 Error
     for(int i = 0; i < dom.GetNvariables(); ++i)
     {
-        cout << "L2 Error (variable "<< dom.GetVariable(i) <<"): " << dom.L2Error(i) << endl;
+        cout << "Variable " <<  dom.GetVariable(i)  << ": L2 Error = " << dom.L2Error(i) << ", Linf Error = " << dom.LinfError(i) << endl;
     }
 }
 

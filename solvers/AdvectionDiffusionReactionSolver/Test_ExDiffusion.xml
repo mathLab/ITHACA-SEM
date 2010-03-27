@@ -47,10 +47,12 @@
     </ELEMENT>
     
     <!-- V - vertex, S - Segment, E - edge, F - face -->
+    <!-- V - vertex, S - Segment, E - edge, F - face -->
     <COMPOSITE>
       <C ID="0"> T[0-3] </C>
       <C ID="1"> Q[0-1] </C>
-      <C ID="2"> E[0,1,2,4,7,9,10,11] </C>
+      <C ID="2"> E[2,7,4,9] </C>
+      <C ID="3"> E[0,1,10,11] </C>
     </COMPOSITE>
 
     <DOMAIN> C[0-1] </DOMAIN>
@@ -65,11 +67,13 @@
   <CONDITIONS>
 
     <PARAMETERS>
-      <P> TimeStep   = 0.000001 </P>
-      <P> NumSteps      = 500  </P>
-      <P> FinTime    = TimeStep*NumSteps </P>
-      <P> IO_CheckSteps = 100   </P>
-      <P> IO_InfoSteps  = 100 </P>
+      <P> TimeStep       = 0.000001          </P>
+      <P> NumSteps       = 5000              </P>
+      <P> FinTime        = TimeStep*NumSteps </P>
+      <P> IO_CheckSteps  = 1000              </P>
+      <P> IO_InfoSteps   = 1000              </P>
+      <P> wavefreq       = PI                </P>
+      <P> epsilon        = 1.0               </P>
     </PARAMETERS>
 
     <SOLVERINFO>
@@ -84,20 +88,24 @@
 
     <BOUNDARYREGIONS>
       <B ID="0"> C[2] </B>
+      <B ID="1"> C[3] </B>
     </BOUNDARYREGIONS>
 
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
-	 <D VAR="u" VALUE="0.0" />
+        <D VAR="u" VALUE="0" />
+      </REGION>
+      <REGION REF="1">
+        <D VAR="u" VALUE="0" />
       </REGION>
     </BOUNDARYCONDITIONS>
-    
+
     <EXACTSOLUTION>
-      <F VAR="u" VALUE="exp(-2.0*PI*PI*FinTime)*sin(PI*x)*sin(PI*y)" />
+      <F VAR="u" VALUE="exp(sin(wavefreq*FinTime))*sin(wavefreq*x)*sin(wavefreq*y)" />
     </EXACTSOLUTION>
     
     <INITIALCONDITIONS>
-      <F VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+      <F VAR="u" VALUE="sin(wavefreq*x)*sin(wavefreq*y)" />
     </INITIALCONDITIONS>
     
   </CONDITIONS>

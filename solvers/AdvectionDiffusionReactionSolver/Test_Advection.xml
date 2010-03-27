@@ -50,7 +50,8 @@
     <COMPOSITE>
       <C ID="0"> T[0-3] </C>
       <C ID="1"> Q[0-1] </C>
-      <C ID="2"> E[0,1,2,4,7,9,10,11] </C>
+      <C ID="2"> E[2,7,4,9] </C>
+      <C ID="3"> E[0,1,10,11] </C>
     </COMPOSITE>
 
     <DOMAIN> C[0-1] </DOMAIN>
@@ -70,38 +71,43 @@
       <P> FinTime        = TimeStep*NumSteps </P>
       <P> IO_CheckSteps  = 1000              </P>
       <P> IO_InfoSteps   = 1000               </P>
+      <P> wavefreq = PI                      </P>
     </PARAMETERS>
 
     <SOLVERINFO>
-      <I PROPERTY="EQType" VALUE="UnsteadyAdvection"/>
+      <I PROPERTY="EQTYPE" VALUE="UnsteadyAdvection" />
       <I PROPERTY="Projection" VALUE="DisContinuous"/>
     </SOLVERINFO> 
 
-<VARIABLES>
+    <VARIABLES>
       <V ID="0"> u </V> 
     </VARIABLES>
 
     <BOUNDARYREGIONS>
       <B ID="0"> C[2] </B>
+      <B ID="1"> C[3] </B>
     </BOUNDARYREGIONS>
 
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
         <D VAR="u" VALUE="0" />
       </REGION>
+      <REGION REF="1">
+        <D VAR="u" VALUE="0" />
+      </REGION>
     </BOUNDARYCONDITIONS>
 
     <USERDEFINEDEQNS>
-      <F LHS="Vx" VALUE="2*PI*y" />
-      <F LHS="Vy" VALUE="-2*PI*x" />
-    </USERDEFINEDEQNS>   
-    
+      <F LHS="Vx" VALUE="1.0" />
+      <F LHS="Vy" VALUE="1.0" />
+    </USERDEFINEDEQNS>  
+     
     <EXACTSOLUTION>
-      <F VAR="u" VALUE="exp(-(((x*cos(2*PI*FinTime) + y*sin(2*PI*FinTime)+0.5)*(x*cos(2*PI*FinTime) + y*sin(2*PI*FinTime)+0.5))+((y*cos(2*PI*FinTime) - x*sin(2*PI*FinTime))*(y*cos(2*PI*FinTime) - x*sin(2*PI*FinTime))))/(2.0*(1.0/8.0)*(1.0/8.0)))" />
+      <F VAR="u" VALUE="exp(sin(wavefreq*FinTime))*sin(wavefreq*x)*sin(wavefreq*y)" />
     </EXACTSOLUTION>
     
     <INITIALCONDITIONS>
-      <F VAR="u" VALUE="exp(-(((x+0.5)*(x+0.5))+(y*y))/(2.0*(1.0/8.0)*(1.0/8.0)))" />
+      <F VAR="u" VALUE="sin(wavefreq*x)*sin(wavefreq*y)" />
     </INITIALCONDITIONS>
     
   </CONDITIONS>

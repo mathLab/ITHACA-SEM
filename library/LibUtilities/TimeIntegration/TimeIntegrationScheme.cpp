@@ -476,6 +476,47 @@ namespace Nektar
                     m_timeLevelOffset[0] = 0;
                 }
                 break;
+
+            case eIMEXdirk_2_3_2:
+                {
+                    m_numsteps  = 1;
+                    m_numstages = 3;
+
+                    m_A = Array<OneD, Array<TwoD,NekDouble> >(2);
+                    m_B = Array<OneD, Array<TwoD,NekDouble> >(2);
+
+                    m_A[0] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[0] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
+                    m_A[1] = Array<TwoD,NekDouble>(m_numstages,m_numstages,0.0);
+                    m_B[1] = Array<TwoD,NekDouble>(m_numsteps, m_numstages,0.0);
+                    m_U    = Array<TwoD,NekDouble>(m_numstages,m_numsteps, 1.0);
+                    m_V    = Array<TwoD,NekDouble>(m_numsteps, m_numsteps, 1.0);
+
+                    NekDouble lambda = (2.0-sqrt(2.0))/2.0;
+                    NekDouble delta = -2.0*sqrt(2.0)/3.0;
+
+                    m_A[0][1][1] = lambda;
+                    m_A[0][2][1] = 1.0 - lambda;
+                    m_A[0][2][2] = lambda;
+
+                    m_B[0][0][1] = 1.0 - lambda;
+                    m_B[0][0][2] = lambda;
+
+                    m_A[1][1][0] = lambda;
+                    m_A[1][2][0] = delta;
+                    m_A[1][2][1] = 1.0 - delta;
+
+                    m_B[1][0][1] = 1.0 - lambda;
+                    m_B[1][0][2] = lambda;
+
+                    m_schemeType = eIMEX;
+                    m_numMultiStepValues = 1;
+                    m_numMultiStepDerivs = 0;
+                    m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0;
+                }
+                break;
+
             case eIMEXdirk_3_4_3:
                 {
                     m_numsteps  = 1;
@@ -954,8 +995,8 @@ namespace Nektar
                             }
                         }
                     }          
-                    T = A(i,0)*timestep;
-                    
+                        T = A(i,0)*timestep;
+                        
                     for( j = 1; j < i; j++ )
                     {
                         for(k = 0; k < nvar; k++)
@@ -968,24 +1009,30 @@ namespace Nektar
                                              tmp[k],1,tmp[k],1);
                             }
                         }          
+                        
                         T += A(i,j)*timestep;
                     }
                     
                     // 2: the imported multi-step solution of the previous time level
-                    for( j = 0; j < m_numsteps; j++)
-                    {
-                        for(k = 0; k < nvar; k++)
+                        for( j = 0; j < m_numsteps; j++)
                         {
-                            Vmath::Svtvp(npoints,U(i,j),y_old[j][k],1,
-                                         tmp[k],1,tmp[k],1);
-                        }
-                        T += U(i,j)*t_old[j];
-                    } 
+                            for(k = 0; k < nvar; k++)
+                            {
+                                Vmath::Svtvp(npoints,U(i,j),y_old[j][k],1,
+                                             tmp[k],1,tmp[k],1);
+                            }
+                            T += U(i,j)*t_old[j];
+                        } 
                 }
-            			
+      
                 // Calculate the stage derivative based upon the stage value
                 if(type == eDiagonallyImplicit)
                 {
+                    T=t_old[0];
+                    for(int j=0; j<=i; ++j)
+                    {
+                        T += A(i,j)*timestep;
+                    }
                     op.DoImplicitSolve(tmp, Y, T, A(i,i)*timestep);
 					
                     for(k = 0; k < nvar; k++)
@@ -996,7 +1043,12 @@ namespace Nektar
                 }
                 else if(type == eIMEX)
                 { 
-				
+                    T=t_old[0];
+                    for(int j=0; j<=i; ++j)
+                    {
+                        T += A(i,j)*timestep;
+                    }	
+	
                   if(fabs(A(i,i)) > NekConstants::kNekZeroTol)
                   {
                        op.DoImplicitSolve(tmp, Y, T, A(i,i)*timestep);
@@ -1008,7 +1060,7 @@ namespace Nektar
                         }
                     }
                     
-                    op.DoOdeRhs(Y, F_IMEX[i], T);
+                  op.DoOdeRhs(Y, F_IMEX[i], T);
                 }
                 else //( type == eExplicit)
                 {
@@ -1084,8 +1136,7 @@ namespace Nektar
                         }
                     }
                     t_new[i] += B(i,j)*timestep;                    
-                }
-				
+                }			
                 
                 // 2: the imported multi-step solution of the previous time level
                 for( j = 0; j < m_numsteps; j++ )

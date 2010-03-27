@@ -82,6 +82,7 @@ namespace Nektar
             eMidpoint,                        //!< midpoint method
             eDIRKOrder2,                      //!< Diagonally Implicit Runge Kutta scheme of order 3
             eDIRKOrder3,                      //!< Diagonally Implicit Runge Kutta scheme of order 3
+            eIMEXdirk_2_3_2,                  //!< L-stable, three stage, third order IMEX DIRK(3,4,3)
             eIMEXdirk_3_4_3,                  //!< L-stable, three stage, third order IMEX DIRK(3,4,3)
             SIZE_TimeIntegrationMethod        //!< Length of enum list
         };
@@ -101,7 +102,8 @@ namespace Nektar
             "IMEXOrder3",
             "Midpoint",                       
             "DIRKOrder2",                     
-            "DIRKOrder3",                     
+            "DIRKOrder3",    
+            "IMEXdirk_2_3_2",                                
             "IMEXdirk_3_4_3"                
         };
 

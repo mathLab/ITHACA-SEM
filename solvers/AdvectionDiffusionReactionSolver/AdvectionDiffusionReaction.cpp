@@ -165,6 +165,7 @@ namespace Nektar
             EvaluateAdvectionVelocity();
 
             m_timeIntMethod = LibUtilities::eIMEXdirk_3_4_3;
+
             goto UnsteadySetup;
             break;
 
@@ -359,6 +360,8 @@ namespace Nektar
 #endif
                     {
 
+                        // cout << "time = " << time << endl;
+
                        SetBoundaryConditions(time);
                         WeakDGAdvection(inarray, outarray);
                         for(i = 0; i < nvariables; ++i)
@@ -480,9 +483,8 @@ namespace Nektar
 
               // F(x,y,t) = du/dt + V \cdot \nabla u - \varepsilon \nabla^2 u 
               physfield[i] = (2.0*m_epsilon*m_wavefreq*m_wavefreq + m_wavefreq*cos(kt))*exp(sin(kt))*sin(kx)*sin(ky) 
-                   + m_wavefreq*exp(sin(kt))*( m_velocity[0][i]*cos(kx)*sin(ky) + m_velocity[1][i]*sin(kx)*cos(ky) );
+                  + m_wavefreq*exp(sin(kt))*( m_velocity[0][i]*cos(kx)*sin(ky) + m_velocity[1][i]*sin(kx)*cos(ky) );
 	  }
-
           m_fields[0]->FwdTrans(physfield, outarray[0]);
     }
 

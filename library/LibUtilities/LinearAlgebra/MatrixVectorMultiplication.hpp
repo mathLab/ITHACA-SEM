@@ -433,6 +433,8 @@ namespace Nektar
         double* result_ptr = result.GetRawPtr();
         const double* rhs_ptr = rhs.GetRawPtr();
         
+        std::fill(result.begin(), result.end(), 0.0);
+        
         unsigned int curResultRow = 0;
         unsigned int curWrapperRow = 0;
         for(unsigned int blockRow = 0; blockRow < numberOfBlockRows; ++blockRow)

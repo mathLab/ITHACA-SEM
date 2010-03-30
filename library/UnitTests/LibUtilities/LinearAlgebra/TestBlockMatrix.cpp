@@ -912,6 +912,59 @@ namespace Nektar
             BOOST_CHECK_EQUAL(expected_result, result);
         }
 
+        BOOST_AUTO_TEST_CASE(TestDiagonalBlockMatrixMultiplicationWith0SizeBlocks)
+        {
+            typedef NekMatrix<double> InnerType;
+            typedef NekMatrix<InnerType, BlockMatrixTag> BlockType;
+
+            double m_22_buf[] = {1, 2, 3, 4, 5, 6, 7, 8};
+
+            boost::shared_ptr<InnerType> m22(new InnerType(1, 8, m_22_buf));
+
+            unsigned int rowCounts[] = {0, 0, 1};
+            unsigned int colCounts[] = {6, 6, 8};
+
+            BlockType b(3, 3, rowCounts, colCounts, eDIAGONAL);
+            b.SetBlock(2, 2, m22);
+
+            double rhs_buf[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8};
+            NekVector<double> rhs(20, rhs_buf);
+
+            NekVector<double> result = b*rhs;
+
+            double expected_buf[] = {1*1 + 2*2 + 3*3 + 4*4 + 5*5 + 6*6 + 7*7 + 8*8};
+            NekVector<double> expected_result(1, expected_buf);
+
+            BOOST_CHECK_EQUAL(expected_result, result);
+
+        }
+        
+        BOOST_AUTO_TEST_CASE(TestBlockMatrixMultiplicationWith0SizeBlocks)
+        {
+            typedef NekMatrix<double> InnerType;
+            typedef NekMatrix<InnerType, BlockMatrixTag> BlockType;
+
+            double m_22_buf[] = {1, 2, 3, 4, 5, 6, 7, 8};
+
+            boost::shared_ptr<InnerType> m22(new InnerType(1, 8, m_22_buf));
+
+            unsigned int rowCounts[] = {0, 0, 1};
+            unsigned int colCounts[] = {6, 6, 8};
+
+            BlockType b(3, 3, rowCounts, colCounts, eFULL);
+            b.SetBlock(2, 2, m22);
+
+            double rhs_buf[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8};
+            NekVector<double> rhs(20, rhs_buf);
+
+            NekVector<double> result = b*rhs;
+
+            double expected_buf[] = {1*1 + 2*2 + 3*3 + 4*4 + 5*5 + 6*6 + 7*7 + 8*8};
+            NekVector<double> expected_result(1, expected_buf);
+
+            BOOST_CHECK_EQUAL(expected_result, result);
+
+        }
 
         class Test
         {

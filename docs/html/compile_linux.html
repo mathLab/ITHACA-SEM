@@ -271,7 +271,9 @@
               In <em>ThirdParty/</em>, extract the zlib-1.2.3.tar.bz2 archive with &quot;tar -xjvf zlib-1.2.3.tar.bz2&quot; (no quotes). This will create <em>zlib-1.2.3/</em>.
               <ol>
                 <li>
-                  You must set the ZLIB_SOURCE and NO_BZIP2 environment variables in order to tell Boost (step 7) to use zlib and not bzip2. Be sure not to restart your shell after you set the environment variables and before you compile boost in step 7.
+                  You must set the ZLIB_SOURCE and NO_BZIP2 environment variables in order to tell 
+                  Boost (step 7) to use zlib and not bzip2. Be sure not to restart your shell after 
+                  you set the environment variables and before you compile boost in step 7.
                   <ul>
                     <li>
                       Bash or KSH Shells<br />
@@ -279,7 +281,8 @@
                     </li>
                     <li>
                       CSH or Tcsh Shells<br />
-                      Type &quot;setenv ZLIB_SOURCE ../../../../zlib-1.2.3&quot; and &quot;setenv NO_BZIP2 0&quot; (no quotes).
+                      Type &quot;setenv ZLIB_SOURCE ../../../../zlib-1.2.3&quot; and 
+                      &quot;setenv NO_BZIP2 0&quot; (no quotes).
                     </li>
                   </ul>
                 </li>
@@ -300,10 +303,12 @@
               Next, extract and compile the correct libraries for <em>Boost</em>.
               <ol>
                 <li>
-                  In <em>ThirdParty/</em>, extract the boost_1_35_0.tar.bz2 archive with &quot;tar -xjvf boost_1_35_0.tar.bz2&quot; (no quotes). This will create <em>boost_1_35_0/</em>.
+                  In <em>ThirdParty/</em>, extract the boost_1_40_0.tar.bz2 archive with 
+                  &quot;tar -xjvf boost_1_40_0.tar.bz2&quot; (no quotes). This will create <em>boost_1_40_0/</em>.
+                  
                 </li>
                 <li>
-                  Change to the <em>boost_1_35_0/</em> directory, and type
+                  Change to the <em>boost_1_40_0/</em> directory, and type
                   &quot;../boost-jam-3.1.16/bin.*/bjam --prefix=../boost
                   --build-type=complete --with-thread --with-iostreams
                   --with-test --with-date_time --with-filesystem --with-system
@@ -311,6 +316,14 @@
                   <ol>
                     <li>The &quot;--with-libraries&quot; compiles Boost with only the libraries required by Nektar++. This is just meant to save time. You can leave the flag off and it will compile all the libraries, if you wish.</li>
                   </ol>
+                </li>
+                <li>
+                    If you will be using Nektar++ as a component in an application that requires shared 
+                    libraries and you are using a 64 bit linux, you will need to compile the boost libraries
+                    with the -fPIC flag.  To do this, add the following to the command line in the 
+                    previous step.
+                    <p>
+                    cxxflags=-fPIC cflags=-fPIC linkflags=-fPIC
                 </li>
               </li>
           </ol>

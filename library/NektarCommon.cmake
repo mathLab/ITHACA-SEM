@@ -63,10 +63,6 @@ IF( NEKTAR_USE_CHUD_FRAMEWORK )
     ADD_DEFINITIONS(-DNEKTAR_USING_CHUD)	
 ENDIF( NEKTAR_USE_CHUD_FRAMEWORK )
 
-#IF( NEKTAR_USE_ATLAS )
-#    INCLUDE( FindAtlas )
-#ENDIF( NEKTAR_USE_ATLAS )
-
 IF( NEKTAR_USE_ACML )
     INCLUDE (FindACML)
 ENDIF( NEKTAR_USE_ACML )
@@ -85,12 +81,6 @@ IF( NEKTAR_USE_MKL )
     SET(NEKTAR_USING_MKL TRUE)
     ADD_DEFINITIONS(-DNEKTAR_USING_LAPACK -DNEKTAR_USING_BLAS)	
 ENDIF( NEKTAR_USE_MKL )
-
-#IF( NEKTAR_USE_ATLAS )
-#    SET(NEKTAR_USING_BLAS TRUE)
-#    SET(NEKTAR_USING_ATLAS TRUE)
-#    ADD_DEFINITIONS(-DNEKTAR_USING_LAPACK -DNEKTAR_USING_BLAS)	
-#ENDIF( NEKTAR_USE_ATLAS )
 
 IF( NEKTAR_USE_ACML )
     SET(NEKTAR_USING_BLAS TRUE)
@@ -132,13 +122,6 @@ MACRO(SET_LAPACK_LINK_LIBRARIES name)
 	        INSTALL(FILES ${WIN32_LAPACK_DLL} ${WIN32_BLAS_DLL}
 	            DESTINATION ${NEKTAR_BIN_DIR})
         ENDIF( NEKTAR_USE_WIN32_LAPACK )
-
-#	IF( USE_ATLAS AND ATLAS_FOUND )
-#        	TARGET_LINK_LIBRARIES(${name}
-#            		${ATLAS_LAPACK}
-#            		${ATLAS_CBLAS}
-#            		${ATLAS} )
-#	ENDIF( USE_ATLAS AND ATLAS_FOUND )
 
         IF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
                  TARGET_LINK_LIBRARIES(${name} ${NATIVE_LAPACK} ${NATIVE_BLAS})
@@ -217,23 +200,14 @@ MACRO(ADD_NEKTAR_EXECUTABLE name sources)
     SET_COMMON_PROPERTIES(${name})
     
     IF( NEKTAR_USE_MKL AND MKL_FOUND )
-    #        MESSAGE("Using MKL")
             TARGET_LINK_LIBRARIES(${name}
                 ${MKL_LAPACK}
                 optimized ${MKL} debug ${MKL}
                 ${MKL_GUIDE}
     
-    #optimized mkl_ia32 debug mkl_ia32
-    #            optimized mkl debug mkl
-    #            optimized vml debug vml
-    #            optimized guide debug guide
             )
     ENDIF( NEKTAR_USE_MKL AND MKL_FOUND )
-    
-    IF( NEKTAR_USE_ACML AND ACML_FOUND )
-        #TARGET_LINK_LIBRARIES(${name} ${ACML} gfortran )
-    ENDIF( NEKTAR_USE_ACML AND ACML_FOUND )
-    
+        
 
     TARGET_LINK_LIBRARIES(${name}
         optimized LibUtilities debug LibUtilities-g

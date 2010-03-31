@@ -635,7 +635,6 @@ namespace Nektar
                       {0,3,7,4} ,
                       {4,5,6,7} }; 
 
-                NekDouble dx1,dx2,dy1,dy2,dz1,dz2;
                 for(f = 0; f < kNfaces; f++)
                 {
                     // This condition ensures each angle is a right-angle.

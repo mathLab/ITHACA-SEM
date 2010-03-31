@@ -61,7 +61,6 @@ namespace Nektar
             int nRightIntDofs = sepTree[offset+3];
             int nBndDofs      = sepTree[offset+4];
 
-            int idx;
             bool daughtersConstructed[2] = {false,false};
             
             if( (offset + 5) < sepTree.num_elements() )

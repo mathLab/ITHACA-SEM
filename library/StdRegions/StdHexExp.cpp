@@ -356,9 +356,7 @@ namespace Nektar
                 Vmath::Vcopy(m_ncoeffs,inarray.get(),1,outarray.get(),1);
             }
             else
-            {
-                int i;
-                
+            {               
                 ASSERTL1(wsp.num_elements() >= nmodes0*nquad2*(nquad1+nmodes1),
                          "Insufficient workspace size");
                 
@@ -484,7 +482,7 @@ namespace Nektar
         void StdHexExp::MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
                                                  Array<OneD, NekDouble> &outarray)
         {     
-            int    i,j,k;
+            int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nquad2 = m_base[2]->GetNumPoints();

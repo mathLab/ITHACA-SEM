@@ -165,8 +165,6 @@ namespace Nektar
             ASSERTL1(mDeriv[0][0].num_elements() == nquad,
                      "Number of quadrature points do not match");
 
-            NekDouble fac0,fac1;
-
             // If regular or moving geometry.
             if(( mType == eRegular)||
                ( mType == eMovingRegular))

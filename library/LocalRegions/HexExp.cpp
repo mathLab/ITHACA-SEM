@@ -717,7 +717,6 @@ namespace Nektar
             }
             else if(format==eGnuplot)
             {
-                int i, j;
                 int nquad0 = m_base[0]->GetNumPoints();
                 int nquad1 = m_base[1]->GetNumPoints();
                 int nquad2 = m_base[2]->GetNumPoints();

@@ -193,7 +193,10 @@
             <a name ="Setting_up_GCC" ></a>Setting up GCC
           </h3>
           <p align="left">
-          In order to compile Nektar++, you must have a newer version of GCC installed. GCC 4.1 and newer will work, but 4.2 or newer is recommended because the ATLAS (a BLAS implementation) website says 4.2 results in better performance. Below I will give instructions on how to check the GCC version number, and installing a new version if it is too old.
+          In order to compile Nektar++, you must have a newer version of GCC installed. GCC 4.1 
+          and newer will work, but 4.2 or newer is recommended. 
+          Below I will give instructions on how to check the GCC version number, 
+          and installing a new version if it is too old.
         </p>
           <ol>
             <li>
@@ -369,15 +372,6 @@
           lapack, usually located in /usr/lib.
 	    </li>
             <li>
-              Automatically Tuned Linear Algebra Software (ATLAS)
-              <ul>
-                <li>This  is an open-source version of BLAS that can be tuned to the specific system it is installed on. Performance isn't as great as the implementations (below) for a specific hardware platform, but there is a large improvement over the generic Netlib libraries.</li>
-                <li>
-                  URL: <a href="http://math-atlas.sourceforge.net/" target="_blank">http://math-atlas.sourceforge.net/</a>
-                </li>
-              </ul>
-            </li>
-            <li>
               AMD Core Math Library (ACML)
               <ul>
                 <li>This is a BLAS implementation that allows for optimal use of AMD Opteron processors.</li>
@@ -385,16 +379,6 @@
                 <li>If you are using ACML 4.0 and GCC 4.2 or higher, then you must use the OpenMP version (it doesn't matter if you use shared or static libraries). This problem has been resolved in ACML 4.1.0.</li>
                 <li>
                   URL: <a href="http://developer.amd.com/tools/acml/Pages/default.aspx" target="_blank">http://developer.amd.com/tools/acml/Pages/default.aspx</a>
-                </li>
-              </ul>
-            </li>
-            <li>
-              Intel Math Kernel Library
-              (MKL)
-              <ul>
-                <li>This BLAS implementation that provides optimized support for Pentium and Itanium CPUs.</li>
-                <li>
-                  URL: <a href="http://www.intel.com/cd/software/products/asmo-na/eng/307757.htm" target="_blank">http://www.intel.com/cd/software/products/asmo-na/eng/307757.htm</a>
                 </li>
               </ul>
             </li>
@@ -461,12 +445,11 @@
                   </ul>
                 </li>
                 <li>
-                  <strong>USE_ACML / USE_ATLAS / USE_MKL</strong>
+                  <strong>USE_ACML</strong>
                   <ul>
                     <li>
-                      These are the three BLAS implementations that can be used. Determine which implementation you have installed, and set the appropriate variable to <em>
-                        <strong>ON</strong>
-                      </em>.
+                      Set this value to <strong>ON</strong> if you wish to use the AMD ACML library for 
+                      blas and lapack support.
                     </li>
                     <li>At the end of all the questions, you might be prompted for the path to the BLAS and LAPACK libraries from the package you installed, if CMake couldn't find them in the default search paths. Therefore, it might be useful to have this information handy.</li>
                     <li>Note if the variable is asking for a library path (path to a *.so file), or a directory path. Don't enter a directory path if it is expecting a library.</li>
@@ -478,7 +461,7 @@
                     <li>
                       Set this value to <em>
                         <strong>ON</strong>
-                      </em> if you are using the system provided blas and lapack libraries and neither of the previously mentioned implementations.
+                      </em> if you are using the system provided blas and lapack libraries.
                     </li>
                   </ul>
                 </li>

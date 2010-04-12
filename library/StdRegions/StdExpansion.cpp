@@ -51,16 +51,16 @@ namespace Nektar
         /** define list of number of faces corresponding to each ShapeType */
         const int g_shapenfaces[SIZE_ExpansionType] = {0,0,0,0,4,5,5,6};
 
-        StdExpansion::StdExpansion(void): 
+        StdExpansion::StdExpansion(void):
             m_elmt_id(0),
             m_numbases(0),
-            m_ncoeffs(0)           
+            m_ncoeffs(0)
         {
         }
 
         StdExpansion::StdExpansion(const int numcoeffs, const int numbases,
-            const LibUtilities::BasisKey &Ba, 
-            const LibUtilities::BasisKey &Bb, 
+            const LibUtilities::BasisKey &Ba,
+            const LibUtilities::BasisKey &Bb,
             const LibUtilities::BasisKey &Bc):
             m_elmt_id(0),
             m_numbases(numbases),
@@ -99,7 +99,7 @@ namespace Nektar
             {
                 m_stdMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoExpansionType,*this),
                                    boost::bind(&StdExpansion::CreateStdMatrix, this, _1));
-                m_stdStaticCondMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoExpansionType,*this),  
+                m_stdStaticCondMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoExpansionType,*this),
                                    boost::bind(&StdExpansion::CreateStdStaticCondMatrix, this, _1));
             }
 
@@ -116,7 +116,7 @@ namespace Nektar
             m_stdMatrixManager(std::string("StdExpansion")),
             m_stdStaticCondMatrixManager(std::string("StdExpansionStaticCondMat"))
         {
-            //CopyArray(T.m_base, m_base); 
+            //CopyArray(T.m_base, m_base);
             CopyArray(T.m_coeffs, m_coeffs);
             CopyArray(T.m_phys, m_phys);
 
@@ -127,7 +127,7 @@ namespace Nektar
                 m_stdStaticCondMatrixManager.RegisterCreator(StdMatrixKey((MatrixType) i,eNoExpansionType,*this), boost::bind(&StdExpansion::CreateStdStaticCondMatrix, this, _1));
             }
         }
-        
+
         StdExpansion::~StdExpansion()
         {
         }
@@ -145,11 +145,11 @@ namespace Nektar
             return  val;
         }
 
-        DNekBlkMatSharedPtr StdExpansion::CreateStdStaticCondMatrix(const StdMatrixKey &mkey) 
+        DNekBlkMatSharedPtr StdExpansion::CreateStdStaticCondMatrix(const StdMatrixKey &mkey)
         {
             DNekBlkMatSharedPtr returnval;
             MatrixType mtype = mkey.GetMatrixType();
-            
+
             DNekMatSharedPtr&  mat = GetStdMatrix(mkey);
             int nbdry = NumBndryCoeffs(); // also checks to see if this is a boundary interior decomposed expansion
             int nint = m_ncoeffs - nbdry;
@@ -157,7 +157,7 @@ namespace Nektar
             DNekMatSharedPtr B = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nint);
             DNekMatSharedPtr C = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nbdry);
             DNekMatSharedPtr D = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nint);
-            
+
             int i,j;
 
             Array<OneD,unsigned int> bmap(nbdry);
@@ -171,27 +171,27 @@ namespace Nektar
                 {
                     (*A)(i,j) = (*mat)(bmap[i],bmap[j]);
                 }
-                
+
                 for(j = 0; j < nint; ++j)
                 {
                     (*B)(i,j) = (*mat)(bmap[i],imap[j]);
                 }
             }
-            
+
             for(i = 0; i < nint; ++i)
             {
                 for(j = 0; j < nbdry; ++j)
                 {
                     (*C)(i,j) = (*mat)(imap[i],bmap[j]);
                 }
-                
+
                 for(j = 0; j < nint; ++j)
                 {
                     (*D)(i,j) = (*mat)(imap[i],imap[j]);
                 }
             }
-            
-            // Calculate static condensed system 
+
+            // Calculate static condensed system
             if(nint)
             {
                 D->Invert();
@@ -203,19 +203,19 @@ namespace Nektar
             Array<OneD, unsigned int> exp_size(2);
             exp_size[0] = nbdry;
             exp_size[1] = nint;
-            returnval = MemoryManager<DNekBlkMat>::AllocateSharedPtr(exp_size,exp_size); 
-            
+            returnval = MemoryManager<DNekBlkMat>::AllocateSharedPtr(exp_size,exp_size);
+
             returnval->SetBlock(0,0,A);
             returnval->SetBlock(0,1,B);
             returnval->SetBlock(1,0,C);
             returnval->SetBlock(1,1,D);
-            
+
             return returnval;
         }
 
         NekDouble StdExpansion::Linf()
         {
-            return Vmath::Vamax(GetTotPoints(), m_phys, 1);    
+            return Vmath::Vamax(GetTotPoints(), m_phys, 1);
         }
 
         NekDouble StdExpansion::L2(const Array<OneD, const NekDouble>& sol)
@@ -228,7 +228,7 @@ namespace Nektar
             Vmath::Vmul(ntot, wsp, 1, wsp, 1, wsp, 1);
 
             val = v_Integral(wsp);
-            
+
             // if val too small, sqrt returns nan.
             if (fabs(val) < NekConstants::kNekZeroTol)
             {
@@ -254,7 +254,7 @@ namespace Nektar
 
         NekDouble StdExpansion::H1(const Array<OneD, const NekDouble>& sol)
         {
-            int         i; 
+            int         i;
             NekDouble  val;
             int     ntot = GetTotPoints();
             int     coordim = v_GetCoordim();
@@ -321,108 +321,108 @@ namespace Nektar
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(*tmpmat); //Populate standard mass matrix.
                     returnval->Invert();
                 }
-                break;                    
+                break;
             case eBwdTrans:
                 {
                     int nq = GetTotPoints();
                     Array<OneD, NekDouble> tmpin(m_ncoeffs);
                     Array<OneD, NekDouble> tmpout(nq);
-                    
-                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,m_ncoeffs);     
-                    
+
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,m_ncoeffs);
+
                     for(int i=0; i<m_ncoeffs; ++i)
-                    {  
+                    {
                         Vmath::Zero(m_ncoeffs, tmpin, 1);
                         tmpin[i] = 1.0;
-                        
-                        BwdTrans_SumFac(tmpin,tmpout); 
- 
+
+                        BwdTrans_SumFac(tmpin,tmpout);
+
                         Vmath::Vcopy(nq,tmpout.get(),1,
-                                     returnval->GetRawPtr()+i*nq,1); 
+                                     returnval->GetRawPtr()+i*nq,1);
                     }
                 }
-                break;      
+                break;
             case eIProductWRTBase:
                 {
                     int nq = GetTotPoints();
                     Array<OneD, NekDouble> tmpin(nq);
                     Array<OneD, NekDouble> tmpout(m_ncoeffs);
-                    
-                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,nq);            
-                    
+
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,nq);
+
                     for(i=0; i < nq; ++i)
                     {
                         Vmath::Zero(nq, tmpin, 1);
                         tmpin[i] = 1.0;
-                        
+
                         IProductWRTBase_SumFac(tmpin,tmpout);
-                        
+
                         Vmath::Vcopy(m_ncoeffs,tmpout.get(),1,
                                      returnval->GetRawPtr()+i*m_ncoeffs,1);
                     }
                 }
-                break;    
+                break;
             case eIProductWRTDerivBase0:
                 {
                     int nq = GetTotPoints();
                     Array<OneD, NekDouble> tmpin(nq);
                     Array<OneD, NekDouble> tmpout(m_ncoeffs);
-                    
-                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,m_ncoeffs);            
-                    
+
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,m_ncoeffs);
+
                     for(i=0; i < nq; ++i)
                     {
                         Vmath::Zero(nq, tmpin, 1);
                         tmpin[i] = 1.0;
-                        
+
                         IProductWRTDerivBase_SumFac(0,tmpin,tmpout);
-                        
+
                         Vmath::Vcopy(m_ncoeffs,tmpout.get(),1,
                                      returnval->GetRawPtr()+i*m_ncoeffs,1);
                     }
                 }
-                break;   
+                break;
             case eIProductWRTDerivBase1:
                 {
                     int nq = GetTotPoints();
                     Array<OneD, NekDouble> tmpin(nq);
                     Array<OneD, NekDouble> tmpout(m_ncoeffs);
-                    
-                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,m_ncoeffs);            
-                    
+
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,m_ncoeffs);
+
                     for(i=0; i < nq; ++i)
                     {
                         Vmath::Zero(nq, tmpin, 1);
                         tmpin[i] = 1.0;
-                        
+
                         IProductWRTDerivBase_SumFac(1,tmpin,tmpout);
-                        
+
                         Vmath::Vcopy(m_ncoeffs,tmpout.get(),1,
                                      returnval->GetRawPtr()+i*m_ncoeffs,1);
                     }
                 }
-                break;  
+                break;
             case eIProductWRTDerivBase2:
                 {
                     int nq = GetTotPoints();
                     Array<OneD, NekDouble> tmpin(nq);
                     Array<OneD, NekDouble> tmpout(m_ncoeffs);
-                    
-                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,m_ncoeffs);            
-                  
+
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nq,m_ncoeffs);
+
                     for(i=0; i < nq; ++i)
                     {
                         Vmath::Zero(nq, tmpin, 1);
                         tmpin[i] = 1.0;
-                        
+
                         IProductWRTDerivBase_SumFac(2,tmpin,tmpout);
-                        
+
                         Vmath::Vcopy(m_ncoeffs,tmpout.get(),1,
                                      returnval->GetRawPtr()+i*m_ncoeffs,1);
                     }
                 }
-                break;                                   
-            case eMass: 
+                break;
+            case eMass:
             case eHelmholtz:
             case eLaplacian:
             case eLaplacian00:
@@ -435,20 +435,20 @@ namespace Nektar
             case eWeakDeriv1:
             case eWeakDeriv2:
             case eWeakDirectionalDeriv:
-            case eMassLevelCurvature: 
+            case eMassLevelCurvature:
             case eLinearAdvection:
                 {
                     Array<OneD, NekDouble> tmp(m_ncoeffs);
-                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);            
-                    DNekMat &Mat = *returnval; 
-                    
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
+                    DNekMat &Mat = *returnval;
+
                     for(i=0; i < m_ncoeffs; ++i)
                     {
                         Vmath::Zero(m_ncoeffs, tmp, 1);
                         tmp[i] = 1.0;
-                        
+
                         GeneralMatrixOp_MatFree(tmp,tmp,mkey);
-                        
+
                         Vmath::Vcopy(m_ncoeffs,&tmp[0],1,
                                      &(Mat.GetPtr())[0]+i*m_ncoeffs,1);
                     }
@@ -460,7 +460,7 @@ namespace Nektar
                 }
                 break;
             }
-            
+
             return returnval;
         }
 
@@ -595,7 +595,7 @@ namespace Nektar
                 break;
             }
         }
-            
+
         void StdExpansion::MassMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                       Array<OneD,NekDouble> &outarray,
                                                       const StdMatrixKey &mkey)
@@ -603,28 +603,28 @@ namespace Nektar
             int nq = GetTotPoints();
             Array<OneD, NekDouble> tmp(nq);
 
-            v_BwdTrans(inarray,tmp);       
+            v_BwdTrans(inarray,tmp);
 
         if(mkey.GetNvariableCoefficients() > 0)
           {
              Vmath::Vmul(nq, mkey.GetVariableCoefficient(), 1, tmp, 1, tmp, 1);
           }
-     
+
             v_IProductWRTBase(tmp, outarray);
         }
-        
-        void StdExpansion::LaplacianMatrixOp_MatFree(const int k1, const int k2, 
+
+        void StdExpansion::LaplacianMatrixOp_MatFree(const int k1, const int k2,
                                                            const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
                                                            const StdMatrixKey &mkey)
-        {                
+        {
             ASSERTL1(k1 >= 0 && k1 < ExpansionTypeDimMap[v_DetExpansionType()],"invalid first  argument");
             ASSERTL1(k2 >= 0 && k2 < ExpansionTypeDimMap[v_DetExpansionType()],"invalid second argument");
-            
+
             int nq = GetTotPoints();
             Array<OneD, NekDouble> tmp(nq);
             Array<OneD, NekDouble> dtmp(nq);
-            
+
             v_BwdTrans(inarray,tmp);
             v_PhysDeriv(k2,tmp,dtmp);
             if(mkey.GetNvariableLaplacianCoefficients() > 0)
@@ -633,7 +633,7 @@ namespace Nektar
             }
             v_IProductWRTDerivBase(k1, dtmp, outarray);
         }
-                
+
         void StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(const Array<OneD, const NekDouble> &inarray,
                                                                        Array<OneD,NekDouble> &outarray,
                                                                        const StdMatrixKey &mkey)
@@ -652,13 +652,13 @@ namespace Nektar
                     if(mkey.GetNvariableLaplacianCoefficients() == 0)
                     {
                         Array<OneD, NekDouble> store(m_ncoeffs);
-                        
+
                         StdMatrixKey mkey00(eLaplacian00,etype,*this);
                         StdMatrixKey mkey11(eLaplacian11,etype,*this);
                         LaplacianMatrixOp(0,0,inarray,store,mkey00);
                         LaplacianMatrixOp(1,1,inarray,outarray,mkey11);
-                        
-                        Vmath::Vadd(m_ncoeffs, store , 1, outarray, 1, outarray, 1);                    
+
+                        Vmath::Vadd(m_ncoeffs, store , 1, outarray, 1, outarray, 1);
                     }
                     else
                     {
@@ -678,14 +678,14 @@ namespace Nektar
                             for(j = 0; j < dim; j++)
                             {
                                 mkeyij = MemoryManager<StdMatrixKey>::AllocateSharedPtr(mtype[i][j],etype,*this,mkey.GetConstants(), mkey.Get2DVariableLaplacianCoefficient(i,j));
-                                
-                                LaplacianMatrixOp(i,j,inarray,store,*mkeyij);       
-                                Vmath::Vadd(m_ncoeffs, store, 1, store2, 1, store2, 1); 
+
+                                LaplacianMatrixOp(i,j,inarray,store,*mkeyij);
+                                Vmath::Vadd(m_ncoeffs, store, 1, store2, 1, store2, 1);
                             }
                         }
                         Vmath::Vcopy(m_ncoeffs,store2.get(),1,outarray.get(),1);
                     }
-                }                
+                }
                 break;
             case 3:
                 {
@@ -693,14 +693,14 @@ namespace Nektar
                     {
                         Array<OneD, NekDouble> store0(m_ncoeffs);
                         Array<OneD, NekDouble> store1(m_ncoeffs);
-                        
+
                         StdMatrixKey mkey00(eLaplacian00,etype,*this);
                         StdMatrixKey mkey11(eLaplacian11,etype,*this);
                         StdMatrixKey mkey22(eLaplacian22,etype,*this);
                         LaplacianMatrixOp(0,0,inarray,store0,mkey00);
                         LaplacianMatrixOp(1,1,inarray,store1,mkey11);
                         LaplacianMatrixOp(2,2,inarray,outarray,mkey22);
-                        
+
                         Vmath::Vadd(m_ncoeffs, store0, 1, outarray, 1, outarray, 1);
                         Vmath::Vadd(m_ncoeffs, store1, 1, outarray, 1, outarray, 1);
                     }
@@ -725,8 +725,8 @@ namespace Nektar
                             {
                                 mkeyij = MemoryManager<StdMatrixKey>::AllocateSharedPtr(mtype[i][j],etype,*this,mkey.GetConstants(),
                                                                                         mkey.Get3DVariableLaplacianCoefficient(i,j));
-                                LaplacianMatrixOp(i,j,inarray,store,*mkeyij);          
-                                Vmath::Vadd(m_ncoeffs, store, 1, store2, 1, store2, 1); 
+                                LaplacianMatrixOp(i,j,inarray,store,*mkeyij);
+                                Vmath::Vadd(m_ncoeffs, store, 1, store2, 1, store2, 1);
                             }
                         }
                         Vmath::Vcopy(m_ncoeffs,store2.get(),1,outarray.get(),1);
@@ -738,14 +738,14 @@ namespace Nektar
                 break;
             }
         }
-        
+
         void StdExpansion::WeakDerivMatrixOp_MatFree(const int k1,
                                                            const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
                                                            const StdMatrixKey &mkey)
         {
             // ASSERTL1(k1 >= 0 && k1 < ExpansionTypeDimMap[v_DetExpansionType()],"invalid first  argument");
-            
+
             Array<OneD, NekDouble> tmp(GetTotPoints());
             int nq = GetTotPoints();
 
@@ -756,14 +756,14 @@ namespace Nektar
             {
                 Vmath::Vmul(nq, &(mkey.GetVariableCoefficient(0))[0], 1, &tmp[0], 1, &tmp[0], 1);
             }
-            
+
             v_IProductWRTBase(tmp, outarray);
         }
 
         void StdExpansion::WeakDirectionalDerivMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                                 Array<OneD,NekDouble> &outarray,
                                                                 const StdMatrixKey &mkey)
-        {           
+        {
             int dim = 3;
             int nq = GetTotPoints();
             int varsize = ((mkey.GetVariableCoefficient(0)).num_elements())/dim;
@@ -797,26 +797,26 @@ namespace Nektar
           Array<OneD, NekDouble> tmp(nqtot), tan(nqtot), dtan0(nqtot), dtan1(nqtot), weight(nqtot,0.0);
 
           int gmatnumber = (mkey.GetVariableCoefficient(1)).num_elements();
-          
-          v_BwdTrans(inarray,tmp);       
+
+          v_BwdTrans(inarray,tmp);
 
           // weight = \grad \cdot tanvec
           for(int k=0; k<dim; ++k)
       {
         Vmath::Vcopy(nqtot,&(mkey.GetVariableCoefficient(0))[k*nqtot],1,&tan[0],1);
-              
+
               // For Regular mesh ...
               if(gmatnumber==1)
               {
                   // D_{/xi} and D_{/eta}
                   v_PhysDeriv(0,tan,dtan0);
                   v_PhysDeriv(1,tan,dtan1);
-                  
+
                   // d v / d x_i = (d \xi / d x_i)*( d v / d \xi ) + (d \eta / d x_i)*( d v / d \eta )
                   Vmath::Svtvp(nqtot,(mkey.GetVariableCoefficient(2*k+1))[0],&dtan0[0],1,&weight[0],1,&weight[0],1);
                   Vmath::Svtvp(nqtot,(mkey.GetVariableCoefficient(2*k+2))[0],&dtan1[0],1,&weight[0],1,&weight[0],1);
               }
-              
+
               // For Curved mesh ...
               else if(gmatnumber==nqtot)
               {
@@ -830,8 +830,8 @@ namespace Nektar
                   ASSERTL1( ((gmatnumber=1) || (gmatnumber==nqtot) ), "Gmat is not in a right size");
               }
       }
-          
-          Vmath::Vmul(nqtot, &weight[0], 1, &tmp[0], 1, &tmp[0], 1);    
+
+          Vmath::Vmul(nqtot, &weight[0], 1, &tmp[0], 1, &tmp[0], 1);
           v_IProductWRTBase(tmp, outarray);
       }
 
@@ -842,7 +842,7 @@ namespace Nektar
 
             int i;
             int ndir = mkey.GetNconstants(); // assume num.r consts corresponds to directions
-            
+
             const Array<OneD, NekDouble> adv = mkey.GetConstants();
             int   totpts = GetTotPoints();
             Array<OneD, NekDouble> tmp(3*totpts);
@@ -861,7 +861,7 @@ namespace Nektar
                 v_PhysDeriv(i,tmp,tmp_deriv);
                 Vmath::Svtvp(totpts,adv[i],tmp_deriv,1,tmp_adv,1,tmp_adv,1);
             }
-            
+
             v_IProductWRTBase(tmp_adv, outarray);
         }
 
@@ -877,19 +877,19 @@ namespace Nektar
 
             MassMatrixOp(inarray,tmp,mkeymass);
             LaplacianMatrixOp(inarray,outarray,mkeylap);
-            
+
             Blas::Daxpy(m_ncoeffs, lambda, tmp, 1, outarray, 1);
         }
-        
-        void StdExpansion::BwdTrans_MatOp(const Array<OneD, const NekDouble>& inarray, 
+
+        void StdExpansion::BwdTrans_MatOp(const Array<OneD, const NekDouble>& inarray,
                                           Array<OneD, NekDouble> &outarray)
         {
             int nq = GetTotPoints();
             StdMatrixKey      bwdtransmatkey(eBwdTrans,DetExpansionType(),*this);
             DNekMatSharedPtr& bwdtransmat = GetStdMatrix(bwdtransmatkey);
-           
+
             Blas::Dgemv('N',nq,m_ncoeffs,1.0,bwdtransmat->GetPtr().get(),
-                        nq, inarray.get(), 1, 0.0, outarray.get(), 1);            
+                        nq, inarray.get(), 1, 0.0, outarray.get(), 1);
         }
 
         //   I/O routine
@@ -910,13 +910,13 @@ namespace Nektar
 
     int nquad0 = GetNumPoints(0);
     int nquad1 = GetNumPoints(1);
-    
+
     Array<OneD,NekDouble> coords[3];
-        
+
     coords[0] = Array<OneD,NekDouble>(nquad0*nquad1);
     coords[1] = Array<OneD,NekDouble>(nquad0*nquad1);
     coords[2] = Array<OneD,NekDouble>(nquad0*nquad1);
-        
+
     GetCoords(coords[0],coords[1],coords[2]);
 
     outfile << "Zone, I=" << nquad0 << ", J=" << nquad1 <<", F=Block" << std::endl;
@@ -937,7 +937,7 @@ namespace Nektar
         int i;
 
         int nquad0 = GetNumPoints(0);
-        int nquad1 = GetNumPoints(1);   
+        int nquad1 = GetNumPoints(1);
 
         // printing the fields of that zone
         for(i = 0; i < nquad0*nquad1; ++i)
@@ -945,7 +945,7 @@ namespace Nektar
             outfile << m_phys[i] << " ";
         }
         outfile << std::endl;
-    
+
     }
 
         /**
@@ -971,12 +971,12 @@ namespace Nektar
             int nquad2 = GetNumPoints(2);
 
             // printing the fields of that zone
-            outfile << "        <DataArray type=\"Float32\" Name=\"" 
+            outfile << "        <DataArray type=\"Float32\" Name=\""
                     << var << "\">" << endl;
             outfile << "          ";
             for(i = 0; i < nquad0*nquad1*nquad2; ++i)
             {
-                outfile << m_phys[i] << " ";
+                outfile << (fabs(m_phys[i]) < NekConstants::kNekZeroTol ? 0 : m_phys[i]) << " ";
             }
             outfile << endl;
             outfile << "        </DataArray>" << endl;
@@ -989,27 +989,27 @@ namespace Nektar
                 v_SetUpPhysNormals(exp2d,edge);
             }
 
-            void StdExpansion::AddEdgeNormBoundaryInt(const int edge, 
+            void StdExpansion::AddEdgeNormBoundaryInt(const int edge,
                                                 boost::shared_ptr<StdExpansion1D>  &EdgeExp,
-                                                const Array<OneD, const NekDouble> &Fx,  
-                                                const Array<OneD, const NekDouble> &Fy,  
+                                                const Array<OneD, const NekDouble> &Fx,
+                                                const Array<OneD, const NekDouble> &Fy,
                                                 Array<OneD, NekDouble> &outarray)
             {
                 v_AddEdgeNormBoundaryInt(edge,EdgeExp,Fx,Fy,outarray);
             }
 
-            void StdExpansion::AddEdgeNormBoundaryInt(const int edge, 
+            void StdExpansion::AddEdgeNormBoundaryInt(const int edge,
                                                 boost::shared_ptr<StdExpansion1D>  &EdgeExp,
-                                                const Array<OneD, const NekDouble> &Fn,  
+                                                const Array<OneD, const NekDouble> &Fn,
                                                 Array<OneD, NekDouble> &outarray)
             {
                 v_AddEdgeNormBoundaryInt(edge,EdgeExp,Fn,outarray);
             }
 
-            void StdExpansion::AddEdgeNormBoundaryBiInt(const int edge, 
+            void StdExpansion::AddEdgeNormBoundaryBiInt(const int edge,
                                                 boost::shared_ptr<StdExpansion1D>  &EdgeExp,
-                                                const Array<OneD, const NekDouble> &Fwd,  
-                                                const Array<OneD, const NekDouble> &Bwd,  
+                                                const Array<OneD, const NekDouble> &Fwd,
+                                                const Array<OneD, const NekDouble> &Bwd,
                                                 Array<OneD, NekDouble> &outarray)
             {
                 v_AddEdgeNormBoundaryBiInt(edge,EdgeExp,Fwd,Bwd,outarray);
@@ -1034,11 +1034,11 @@ namespace Nektar
                 return NullDNekScalMatSharedPtr;
             }
 
-            
+
             const Array<OneD, const NekDouble>& StdExpansion::v_GetPhysNormals(void)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
-                return NullNekDouble1DArray; 
+                return NullNekDouble1DArray;
             }
 
 
@@ -1051,12 +1051,12 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
             }
-            
+
             void StdExpansion::v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray, bool NegateNorm)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
             }
-            
+
             DNekScalBlkMatSharedPtr& StdExpansion::v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
@@ -1067,45 +1067,45 @@ namespace Nektar
             StdRegions::FaceOrientation StdExpansion::v_GetFaceorient(int face)
 
             {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for three-dimensional  LocalRegions");  
-                return eDir1FwdDir1_Dir2FwdDir2;              
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for three-dimensional  LocalRegions");
+                return eDir1FwdDir1_Dir2FwdDir2;
             }
 
             StdRegions::EdgeOrientation StdExpansion::v_GetEorient(int edge)
             {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");  
-                return eForwards;              
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");
+                return eForwards;
             }
 
 
             StdRegions::EdgeOrientation StdExpansion::v_GetCartesianEorient(int edge)
             {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");  
-                return eForwards;              
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");
+                return eForwards;
             }
 
 
-            void StdExpansion::v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
+            void StdExpansion::v_AddHDGHelmholtzTraceTerms(const NekDouble tau,
                                                      const Array<OneD, const NekDouble> &inarray,
                                                      Array<OneD,NekDouble> &outarray)
-            { 
+            {
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
 
 
-            void StdExpansion::v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
+            void StdExpansion::v_AddHDGHelmholtzTraceTerms(const NekDouble tau,
                                                      const Array<OneD, const NekDouble> &inarray,
-                                                     Array<OneD, boost::shared_ptr< StdExpansion1D > > &edgeExp, 
+                                                     Array<OneD, boost::shared_ptr< StdExpansion1D > > &edgeExp,
                                                      Array<OneD,NekDouble> &outarray)
-            { 
+            {
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
             }
 
-            
+
             void StdExpansion::v_AddEdgeNormBoundaryInt(const int edge,
                                                   boost::shared_ptr<StdExpansion1D> &EdgeExp,
-                                                  const Array<OneD, const NekDouble> &Fx,  
-                                                  const Array<OneD, const NekDouble> &Fy,  
+                                                  const Array<OneD, const NekDouble> &Fx,
+                                                  const Array<OneD, const NekDouble> &Fy,
                                                   Array<OneD, NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
@@ -1113,7 +1113,7 @@ namespace Nektar
 
              void StdExpansion::v_AddEdgeNormBoundaryInt(const int edge,
                                                   boost::shared_ptr<StdExpansion1D> &EdgeExp,
-                                                  const Array<OneD, const NekDouble> &Fn,  
+                                                  const Array<OneD, const NekDouble> &Fn,
                                                   Array<OneD, NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
@@ -1121,13 +1121,13 @@ namespace Nektar
 
             void StdExpansion::v_AddEdgeNormBoundaryBiInt(const int edge,
                                                     boost::shared_ptr<StdExpansion1D> &EdgeExp,
-                                                    const Array<OneD, const NekDouble> &Fwd,  
-                                                    const Array<OneD, const NekDouble> &Bwd,  
+                                                    const Array<OneD, const NekDouble> &Fwd,
+                                                    const Array<OneD, const NekDouble> &Bwd,
                                                     Array<OneD, NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "v_AddEdgeNormBoundaryBiInt is not defined for this shape");
             }
- 
+
            void StdExpansion::v_AddNormTraceInt(const int dir,
                                            Array<OneD, const NekDouble> &inarray,
                                            Array<OneD,NekDouble> &outarray)
@@ -1148,18 +1148,18 @@ namespace Nektar
             }
 
 
-            int StdExpansion::v_NumBndryCoeffs() const 
+            int StdExpansion::v_NumBndryCoeffs() const
             {
                 ASSERTL0(false, "This function is needs defining for this shape");
                 return 0;
             }
-            
-            int StdExpansion::v_NumDGBndryCoeffs() const 
+
+            int StdExpansion::v_NumDGBndryCoeffs() const
             {
                 ASSERTL0(false, "This function is needs defining for this shape");
                 return 0;
             }
-            
+
             int StdExpansion::v_GetEdgeNcoeffs(const int i) const
             {
                 ASSERTL0(false, "This function is not valid or not defined");
@@ -1171,7 +1171,7 @@ namespace Nektar
                 ASSERTL0(false, "This function is not valid or not defined");
                 return 0;
             }
-                        
+
             int StdExpansion::v_DetCartesianDirOfEdge(const int edge)
             {
                 ASSERTL0(false, "This function is not valid or not defined");
@@ -1189,7 +1189,7 @@ namespace Nektar
             {
                 ASSERTL0(false, "This function is not valid or not defined");
                 return 0;
-            }    
+            }
 
             int StdExpansion::v_GetFaceIntNcoeffs(const int i) const
             {
@@ -1203,7 +1203,7 @@ namespace Nektar
 
                 return LibUtilities::eNoBasisType;
             }
-        
+
             ExpansionType StdExpansion::v_DetExpansionType() const
             {
                 ASSERTL0(false, "This expansion does not have a shape type defined");
@@ -1216,23 +1216,23 @@ namespace Nektar
                 return 0;
             }
 
-            bool StdExpansion::v_IsBoundaryInteriorExpansion() 
+            bool StdExpansion::v_IsBoundaryInteriorExpansion()
             {
                 ASSERTL0(false,"This function has not been defined for this expansion");
                 return false;
             }
 
-            void  StdExpansion::v_IProductWRTDerivBase (const int dir, 
-                                                   const Array<OneD, const NekDouble>& inarray, 
+            void  StdExpansion::v_IProductWRTDerivBase (const int dir,
+                                                   const Array<OneD, const NekDouble>& inarray,
                                                    Array<OneD, NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This method has not been defined");
             }
 
-            void StdExpansion::v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
+            void StdExpansion::v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray,
                                                    Array<OneD, NekDouble> &outarray)
             {
-                NEKERROR(ErrorUtil::efatal, "This method has not been defined");                
+                NEKERROR(ErrorUtil::efatal, "This method has not been defined");
             }
 
 
@@ -1244,9 +1244,9 @@ namespace Nektar
             }
 
 
-            void StdExpansion::v_DGDeriv(const int dir, 
+            void StdExpansion::v_DGDeriv(const int dir,
                                          const Array<OneD, const NekDouble>& inarray,
-                                         Array<OneD, boost::shared_ptr< StdExpansion1D > > &EdgeExp, 
+                                         Array<OneD, boost::shared_ptr< StdExpansion1D > > &EdgeExp,
                                          Array<OneD, NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for "
@@ -1262,7 +1262,7 @@ namespace Nektar
                          "local expansions");
             }
 
-            void StdExpansion::v_PhysDeriv(const int dir, 
+            void StdExpansion::v_PhysDeriv(const int dir,
                                      const Array<OneD, const NekDouble>& inarray,
                                      Array<OneD, NekDouble> &out_d0)
 
@@ -1285,21 +1285,21 @@ namespace Nektar
                                          Array<OneD, NekDouble> &out_d3)
             {
                 NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
-            } 
+            }
 
-            void   StdExpansion::v_StdPhysDeriv (const int dir, 
-                                           const Array<OneD, const NekDouble>& inarray, 
+            void   StdExpansion::v_StdPhysDeriv (const int dir,
+                                           const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray)
-            {  
-                NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");            
-            } 
+            {
+                NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
+            }
 
             NekDouble StdExpansion::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
             {
                 NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
                 return 0;
             }
-            
+
 
             void StdExpansion::v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
             {
@@ -1307,7 +1307,7 @@ namespace Nektar
                          "been defined for this shape");
             }
 
-            DNekMatSharedPtr StdExpansion::v_GenMatrix(const StdMatrixKey &mkey)  
+            DNekMatSharedPtr StdExpansion::v_GenMatrix(const StdMatrixKey &mkey)
             {
                 NEKERROR(ErrorUtil::efatal, "This function has not "
                          "been defined for this element");
@@ -1322,7 +1322,7 @@ namespace Nektar
                 DNekMatSharedPtr returnval;
                 return returnval;
             }
-            
+
             void StdExpansion::v_GetCoords(Array<OneD, NekDouble> &coords_0,
                                      Array<OneD, NekDouble> &coords_1,
                                      Array<OneD, NekDouble> &coords_2)
@@ -1330,7 +1330,7 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
             }
 
-            void StdExpansion::v_GetCoord(const Array<OneD, const NekDouble>& Lcoord, 
+            void StdExpansion::v_GetCoord(const Array<OneD, const NekDouble>& Lcoord,
                                     Array<OneD, NekDouble> &coord)
             {
                 NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
@@ -1338,7 +1338,7 @@ namespace Nektar
 
             int StdExpansion::v_GetCoordim(void)
             {
-                NEKERROR(ErrorUtil::efatal, "Write method");        
+                NEKERROR(ErrorUtil::efatal, "Write method");
                 return -1;
             }
 
@@ -1363,13 +1363,13 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
                 return 0;
             }
- 
+
             void StdExpansion::v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
                                               Array<OneD, unsigned int> &maparray,
                                               Array<OneD, int> &signarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
-            }   
+            }
 
             void StdExpansion::v_GetFaceInteriorMap(const int fid, const FaceOrientation faceOrient,
                                               Array<OneD, unsigned int> &maparray,
@@ -1397,7 +1397,7 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
-        
+
 
             void StdExpansion::v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion1D>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
@@ -1409,7 +1409,7 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
                 return boost::shared_ptr<StdExpansion1D>();
             }
-        
+
 
             void StdExpansion::v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
             {
@@ -1423,65 +1423,65 @@ namespace Nektar
 
             void StdExpansion::v_WriteVtkPieceHeader(std::ofstream &outfile)
             {
-                NEKERROR(ErrorUtil::efatal, 
-                         "Write VTK: This dimension is not implemented yet.");    
+                NEKERROR(ErrorUtil::efatal,
+                         "Write VTK: This dimension is not implemented yet.");
             }
-            
-            const  boost::shared_ptr<SpatialDomains::GeomFactors>& StdExpansion::v_GetMetricInfo() const 
+
+            const  boost::shared_ptr<SpatialDomains::GeomFactors>& StdExpansion::v_GetMetricInfo() const
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
                 return SpatialDomains::NullGeomFactorsSharedPtr;
 
             }
-            
-            const boost::shared_ptr<SpatialDomains::Geometry> StdExpansion::v_GetGeom() const 
+
+            const boost::shared_ptr<SpatialDomains::Geometry> StdExpansion::v_GetGeom() const
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
 
                 return SpatialDomains::NullGeometrySharedPtr;
             }
-            
-            const boost::shared_ptr<SpatialDomains::Geometry1D>& StdExpansion::v_GetGeom1D() const 
+
+            const boost::shared_ptr<SpatialDomains::Geometry1D>& StdExpansion::v_GetGeom1D() const
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
 
                 return SpatialDomains::NullGeometry1DSharedPtr;
             }
-        
-            const boost::shared_ptr<SpatialDomains::Geometry2D>& StdExpansion::v_GetGeom2D() const 
+
+            const boost::shared_ptr<SpatialDomains::Geometry2D>& StdExpansion::v_GetGeom2D() const
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
 
                 return SpatialDomains::NullGeometry2DSharedPtr;
             }
-        
-            const boost::shared_ptr<SpatialDomains::Geometry3D>& StdExpansion::v_GetGeom3D() const 
+
+            const boost::shared_ptr<SpatialDomains::Geometry3D>& StdExpansion::v_GetGeom3D() const
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
 
                 return SpatialDomains::NullGeometry3DSharedPtr;
             }
-                            
+
             void StdExpansion::v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
-            
-            void StdExpansion::v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
+
+            void StdExpansion::v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
                                                   Array<OneD, NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
-            }            
-            
+            }
+
             void StdExpansion::v_IProductWRTDerivBase_SumFac(const int dir,
-                                                       const Array<OneD, const NekDouble>& inarray, 
+                                                       const Array<OneD, const NekDouble>& inarray,
                                                        Array<OneD, NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
-            void StdExpansion::v_MassMatrixOp(const Array<OneD, const NekDouble> &inarray, 
+            void StdExpansion::v_MassMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                         Array<OneD,NekDouble> &outarray,
                                         const StdMatrixKey &mkey)
             {
@@ -1499,7 +1499,7 @@ namespace Nektar
                 LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
             }
 
-            void StdExpansion::v_LaplacianMatrixOp(const int k1, const int k2, 
+            void StdExpansion::v_LaplacianMatrixOp(const int k1, const int k2,
                                              const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray,
                                              const StdMatrixKey &mkey)
@@ -1530,7 +1530,7 @@ namespace Nektar
 
             }
 
-        void StdExpansion::v_MassLevelCurvatureMatrixOp(const Array<OneD, const NekDouble> &inarray, 
+        void StdExpansion::v_MassLevelCurvatureMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                                         Array<OneD,NekDouble> &outarray,
                                                         const StdMatrixKey &mkey)
         {
@@ -1539,7 +1539,7 @@ namespace Nektar
             MassLevelCurvatureMatrixOp_MatFree(inarray,outarray,mkey);
         }
 
-            void StdExpansion::v_LinearAdvectionMatrixOp(const Array<OneD, 
+            void StdExpansion::v_LinearAdvectionMatrixOp(const Array<OneD,
                                                    const NekDouble> &inarray,
                                                    Array<OneD,NekDouble> &outarray,
                                                    const StdMatrixKey &mkey)
@@ -1549,7 +1549,7 @@ namespace Nektar
                 LinearAdvectionMatrixOp_MatFree(inarray,outarray,mkey);
 
             }
-            
+
             void StdExpansion::v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray,
                                              const StdMatrixKey &mkey)
@@ -1567,7 +1567,7 @@ namespace Nektar
                 // below will be called
                 LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
             }
-            
+
             void StdExpansion::v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
                                                            const StdMatrixKey &mkey)

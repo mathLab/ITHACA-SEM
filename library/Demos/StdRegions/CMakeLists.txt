@@ -1,6 +1,7 @@
 SET(LinkLibraries 
     optimized StdRegions debug StdRegions-g
     optimized LibUtilities debug LibUtilities-g
+    optimized tinyxml debug tinyxml
 )
 	  
 SET(StdProject1DSource  StdProject1D.cpp)

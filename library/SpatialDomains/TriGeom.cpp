@@ -7,7 +7,7 @@
 //  The MIT License
 //
 //  Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
-//  Department of Aeronautics, Imperial College London (UK), and Scientific 
+//  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
 //  License for the specific language governing rights and limitations under
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:  
+//  Description:
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -55,7 +55,7 @@ namespace Nektar
                   LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha1Beta0));
 
             m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(coordim);
-                
+
             m_fid = id;
 
             for(int i = 0; i < m_coordim; ++i)
@@ -65,15 +65,15 @@ namespace Nektar
 
         }
 
-        TriGeom::TriGeom(const int id, 
-                         const VertexComponentSharedPtr verts[], 
-                         const SegGeomSharedPtr edges[], 
+        TriGeom::TriGeom(const int id,
+                         const VertexComponentSharedPtr verts[],
+                         const SegGeomSharedPtr edges[],
                          const StdRegions::EdgeOrientation eorient[]):
             Geometry2D(verts[0]->GetCoordim()),
             m_fid(id)
         {
             m_GeomShapeType = eTriangle;
-            
+
             /// Copy the vert shared pointers.
             m_verts.insert(m_verts.begin(), verts, verts+TriGeom::kNverts);
 
@@ -89,7 +89,7 @@ namespace Nektar
             ASSERTL0(m_coordim > 1,
                 "Cannot call function with dim == 1");
             int order0  = edges[0]->GetBasis(0,0)->GetNumModes();
-            int points0 = edges[0]->GetBasis(0,0)->GetNumPoints(); 
+            int points0 = edges[0]->GetBasis(0,0)->GetNumPoints();
 
             int order1  = max(order0,max(edges[1]->GetBasis(0,0)->GetNumModes(),
                                   edges[2]->GetBasis(0,0)->GetNumModes()));
@@ -111,13 +111,13 @@ namespace Nektar
             }
         }
 
-        TriGeom::TriGeom(const int id, const SegGeomSharedPtr edges[], 
+        TriGeom::TriGeom(const int id, const SegGeomSharedPtr edges[],
                          const StdRegions::EdgeOrientation eorient[]):
             Geometry2D(edges[0]->GetVertex(0)->GetCoordim()),
             m_fid(id)
         {
             m_GeomShapeType = eTriangle;
-            
+
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+TriGeom::kNedges);
 
@@ -132,7 +132,7 @@ namespace Nektar
                     m_verts.push_back(edges[j]->GetVertex(1));
                 }
             }
-            
+
             for (int j=0; j<kNedges; ++j)
             {
                 m_eorient[j] = eorient[j];
@@ -142,9 +142,9 @@ namespace Nektar
             ASSERTL0(m_coordim > 1,"Cannot call function with dim == 1");
 
             int order0  = edges[0]->GetBasis(0,0)->GetNumModes();
-            int points0 = edges[0]->GetBasis(0,0)->GetNumPoints(); 
-            
-            int order1  = max(order0, 
+            int points0 = edges[0]->GetBasis(0,0)->GetNumPoints();
+
+            int order1  = max(order0,
                               max(edges[1]->GetBasis(0,0)->GetNumModes(),
                                   edges[2]->GetBasis(0,0)->GetNumModes()));
             int points1 = max(points0,
@@ -156,9 +156,9 @@ namespace Nektar
                                             LibUtilities::PointsKey(points0,LibUtilities::eGaussLobattoLegendre));
             const LibUtilities::BasisKey B1(LibUtilities::eModified_B, order1,
                                             LibUtilities::PointsKey(points1,LibUtilities::eGaussRadauMAlpha1Beta0));
-            
+
             m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
-            
+
             for(int i = 0; i < m_coordim; ++i)
             {
                 m_xmap[i] = MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(B0,B1);
@@ -169,16 +169,16 @@ namespace Nektar
         {
             // From Geomtry
             m_GeomShapeType = in.m_GeomShapeType;
-            
+
             // From TriFaceComponent
             m_fid = in.m_fid;
             m_ownverts = in.m_ownverts;
             std::list<CompToElmt>::const_iterator def;
             for(def = in.m_elmtmap.begin(); def != in.m_elmtmap.end(); def++)
             {
-                m_elmtmap.push_back(*def);    
+                m_elmtmap.push_back(*def);
             }
-            
+
             // From TriGeom
             m_verts = in.m_verts;
             m_edges = in.m_edges;
@@ -188,16 +188,16 @@ namespace Nektar
             }
             m_owndata = in.m_owndata;
         }
-        
+
         TriGeom::~TriGeom()
         {
         }
-        
+
         // Set up GeoFac for this geometry using Coord quadrature distribution
         void TriGeom::GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
             GeomType Gtype = eRegular;
-            
+
             FillGeom();
 
             // check to see if expansions are linear
@@ -241,7 +241,7 @@ namespace Nektar
         physical coordinate in direction i **/
 
 
-        NekDouble TriGeom::GetCoord(const int i, 
+        NekDouble TriGeom::GetCoord(const int i,
                                     const Array<OneD, const NekDouble> &Lcoord)
         {
             ASSERTL1(m_state == ePtsFilled,
@@ -250,8 +250,8 @@ namespace Nektar
             return m_xmap[i]->PhysEvaluate(Lcoord);
         }
 
-        /** \brief put all quadrature information into edge structure 
-        and backward transform 
+        /** \brief put all quadrature information into edge structure
+        and backward transform
 
         Note verts and edges are listed according to anticlockwise
         convention but points in _coeffs have to be in array format from
@@ -282,19 +282,19 @@ namespace Nektar
                     {
                         for(k = 0; k < nEdgeCoeffs; k++)
                         {
-                            (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] 
+                            (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ]
                                 = signArray[k]*
                                 ((*m_edges[i])[j]->GetCoeffs())[k];
                         }
                     }
                 }
-                
+
                 for(i = 0; i < m_coordim; ++i)
                 {
                     m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(),
                                         m_xmap[i]->UpdatePhys());
                 }
-                
+
                 m_state = ePtsFilled;
             }
         }
@@ -303,12 +303,12 @@ namespace Nektar
         {
             FillGeom();
 
-            // calculate local coordinate for coord 
+            // calculate local coordinate for coord
             if(GetGtype() == eRegular)
             { // can assume it is right angled rectangle
                 VertexComponent dv1, dv2, norm, orth1, orth2;
                 VertexComponent *xin;
-                
+
                 switch(m_coordim)
                 {
                 case 2:
@@ -348,16 +348,16 @@ namespace Nektar
                                                                const TriGeom &face2)
        {
             StdRegions::FaceOrientation returnval = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
+            ASSERTL0(false,"this function is not yet implemented.");
+             // TODO : implement
+//             eDir1FwdDir1_Dir2BwdDir2
+//             eDir1BwdDir1_Dir2FwdDir2
+//             eDir1BwdDir1_Dir2BwdDir2
+//             eDir1FwdDir2_Dir2FwdDir1
+//             eDir1FwdDir2_Dir2BwdDir1
+//             eDir1BwdDir2_Dir2FwdDir1
+//             eDir1BwdDir2_Dir2BwdDir1
 
-             // TODO : implement 
-//             eDir1FwdDir1_Dir2BwdDir2 
-//             eDir1BwdDir1_Dir2FwdDir2 
-//             eDir1BwdDir1_Dir2BwdDir2 
-//             eDir1FwdDir2_Dir2FwdDir1 
-//             eDir1FwdDir2_Dir2BwdDir1 
-//             eDir1BwdDir2_Dir2FwdDir1 
-//             eDir1BwdDir2_Dir2BwdDir1 
-   
             return returnval;
         }
 
@@ -366,7 +366,7 @@ namespace Nektar
         {
             ASSERTL1(gloCoord.num_elements() >= 2,
                  "Two dimensional geometry expects at least two coordinates.");
-                 
+
             Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);
             GetLocCoords(gloCoord, stdCoord);
             if (stdCoord[0] >= -1 && stdCoord[1] >= -1

@@ -651,9 +651,9 @@ namespace Nektar
                     nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(i);
                     for(j = 0 ; j < m_coordim; j++)
                     {
+                    	const Array<OneD, const NekDouble> & coeffs = (*m_faces[i])[j]->GetCoeffs();
                         for(k = 0; k < nFaceCoeffs; k++)
                         {
-                             const Array<OneD, const NekDouble> & coeffs = (*m_faces[i])[j]->GetCoeffs(); //TODO fix this
                              double v = signArray[k]* coeffs[k];
                              (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = v;
                         }

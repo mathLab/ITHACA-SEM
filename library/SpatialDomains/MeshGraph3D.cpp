@@ -7,7 +7,7 @@
 //  The MIT License
 //
 //  Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
-//  Department of Aeronautics, Imperial College London (UK), and Scientific 
+//  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
 //  License for the specific language governing rights and limitations under
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:  
+//  Description:
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -55,7 +55,7 @@ namespace Nektar
             TiXmlDocument doc(infilename);
             bool loadOkay = doc.LoadFile();
 
-            ASSERTL0(loadOkay, (std::string("Unable to load file: ") + 
+            ASSERTL0(loadOkay, (std::string("Unable to load file: ") +
                                 infilename).c_str());
 
             ReadGeometry(doc);
@@ -221,17 +221,17 @@ namespace Nektar
                         ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read face data for TRIANGLE: ") + elementStr).c_str());
 
                         /// Create a TriGeom to hold the new definition.
-                        SegGeomSharedPtr edges[TriGeom::kNedges] = 
+                        SegGeomSharedPtr edges[TriGeom::kNedges] =
                         {
                             GetSegGeom(edge1),
                             GetSegGeom(edge2),
                             GetSegGeom(edge3)
                         };
 
-                        StdRegions::EdgeOrientation edgeorient[TriGeom::kNedges] = 
+                        StdRegions::EdgeOrientation edgeorient[TriGeom::kNedges] =
                         {
                             SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
-                            SegGeom::GetEdgeOrientation(*edges[1], *edges[2]), 
+                            SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
                             SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
                         };
 
@@ -262,7 +262,7 @@ namespace Nektar
                         ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read face data for QUAD: ") + elementStr).c_str());
 
                         /// Create a QuadGeom to hold the new definition.
-                        SegGeomSharedPtr edges[QuadGeom::kNedges] = 
+                        SegGeomSharedPtr edges[QuadGeom::kNedges] =
                         {GetSegGeom(edge1),GetSegGeom(edge2),
                          GetSegGeom(edge3),GetSegGeom(edge4)};
 
@@ -391,10 +391,10 @@ namespace Nektar
                         ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
                         ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
 
-                        StdRegions::FaceOrientation faceorient[kNfaces] = 
+                        StdRegions::FaceOrientation faceorient[kNfaces] =
                         {
                             //TriGeom::GetFaceOrientation(*faces[0], *faces[1]),
-                            //TriGeom::GetFaceOrientation(*faces[1], *faces[2]), 
+                            //TriGeom::GetFaceOrientation(*faces[1], *faces[2]),
                             //TriGeom::GetFaceOrientation(*faces[2], *faces[3])
                             //TriGeom::GetFaceOrientation(*faces[3], *faces[0])
                         };
@@ -456,10 +456,10 @@ namespace Nektar
                         ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
                         ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
 
-                        StdRegions::FaceOrientation faceorient[kNfaces] = 
+                        StdRegions::FaceOrientation faceorient[kNfaces] =
                         {
                             //TriGeom::GetFaceOrientation(*faces[0], *faces[1]),
-                            //TriGeom::GetFaceOrientation(*faces[1], *faces[2]), 
+                            //TriGeom::GetFaceOrientation(*faces[1], *faces[2]),
                             //TriGeom::GetFaceOrientation(*faces[2], *faces[3])
                             //TriGeom::GetFaceOrientation(*faces[3], *faces[0])
                         };
@@ -521,10 +521,10 @@ namespace Nektar
                         ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
                         ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
 
-                        StdRegions::FaceOrientation faceorient[kNfaces] = 
+                        StdRegions::FaceOrientation faceorient[kNfaces] =
                         {
                             //TriGeom::GetFaceOrientation(*faces[0], *faces[1]),
-                            //TriGeom::GetFaceOrientation(*faces[1], *faces[2]), 
+                            //TriGeom::GetFaceOrientation(*faces[1], *faces[2]),
                             //TriGeom::GetFaceOrientation(*faces[2], *faces[3])
                             //TriGeom::GetFaceOrientation(*faces[3], *faces[0])
                         };
@@ -586,10 +586,10 @@ namespace Nektar
                         ASSERTL0(Ntfaces == kNtfaces, errorstring.str().c_str());
                         ASSERTL0(Nqfaces == kNqfaces, errorstring.str().c_str());
 
-                        StdRegions::FaceOrientation faceorient[kNfaces] = 
+                        StdRegions::FaceOrientation faceorient[kNfaces] =
                         {
                             //TriGeom::GetFaceOrientation(*faces[0], *faces[1]),
-                            //TriGeom::GetFaceOrientation(*faces[1], *faces[2]), 
+                            //TriGeom::GetFaceOrientation(*faces[1], *faces[2]),
                             //TriGeom::GetFaceOrientation(*faces[2], *faces[3])
                             //TriGeom::GetFaceOrientation(*faces[3], *faces[0])
                         };
@@ -782,7 +782,7 @@ namespace Nektar
                 bool validSequence = (prevToken.empty() || (typeMap[type] == typeMap[prevType]));
 
                 ASSERTL0(validSequence, (std::string("Invalid combination of composite items: ")
-                    + type + " and " + prevType + ".").c_str()); 
+                    + type + " and " + prevType + ".").c_str());
 
                 switch(type)
                 {
@@ -977,7 +977,7 @@ namespace Nektar
 
                     if (tetGeomShPtr || hexGeomShPtr || prismGeomShPtr || pyrGeomShPtr)
                     {
-                        int faceNum;                        
+                        int faceNum;
                         if (tetGeomShPtr)
                         {
                             if ((faceNum = tetGeomShPtr->WhichFace(face)) > -1)
@@ -1019,35 +1019,26 @@ namespace Nektar
                             }
                         }
                     }
-                }         
+                }
             }
 
- 
+
             return returnval;
         }
 
         LibUtilities::BasisKey MeshGraph3D:: GetFaceBasisKey(Geometry2DSharedPtr face, const int flag)
         {
             ElementFaceVectorSharedPtr elements = GetElementsFromFace(face);
-            // Perhaps, a check should be done here to ensure that in case 
+            // Perhaps, a check should be done here to ensure that in case
             // elements->size!=1, all elements to which the edge belongs have the same type
             // and order of expansion such that no confusion can arise.
             ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Element);
 
-            ASSERTL0((*elements)[0]->m_Element->GetGeomShapeType() == eHexahedron,
-                     "This routine is not yet defined for this shape.");
-            ASSERTL0( (expansion->m_BasisKeyVector[0] == expansion->m_BasisKeyVector[1]) && 
-                      (expansion->m_BasisKeyVector[0] == expansion->m_BasisKeyVector[2]) &&
-                      (expansion->m_BasisKeyVector[1] == expansion->m_BasisKeyVector[2]),
-                      "This routine is not yet defined for anisotropic expansions");
+            int nummodes = (int) expansion->m_BasisKeyVector[0].GetNumModes();
 
-            return expansion->m_BasisKeyVector[0];
-#if 0 
-            int nummodes = (int) expansion->m_NumModesEqn.Evaluate();
-            
-            switch(expansion->m_ExpansionType)
+            switch(expansion->m_BasisKeyVector[0].GetBasisType())
             {
-            case eModified:
+            case LibUtilities::eModified_A:
                 {
                     switch (flag)
                     {
@@ -1059,7 +1050,8 @@ namespace Nektar
                         break;
                     case 1:
                         {
-                            const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
+                        	const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussLobattoLegendre);
+                            //const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
                             return LibUtilities::BasisKey(LibUtilities::eModified_B,nummodes,pkey);
                         }
                         break;
@@ -1069,7 +1061,7 @@ namespace Nektar
                     }
                 }
                 break;
-            case eGLL_Lagrange:
+            case LibUtilities::eGLL_Lagrange:
                 {
                     TriGeomSharedPtr triangle = boost::dynamic_pointer_cast<TriGeom>(face);
                     QuadGeomSharedPtr quadrilateral = boost::dynamic_pointer_cast<QuadGeom>(face);
@@ -1103,10 +1095,10 @@ namespace Nektar
                     else
                     {
                         ASSERTL0(false,"dynamic cast to a proper Geometry2D failed");
-                    }  
+                    }
                 }
                 break;
-            case eOrthogonal:
+            case LibUtilities::eOrtho_A:
                 {
                     switch (flag)
                     {
@@ -1127,19 +1119,19 @@ namespace Nektar
                         break;
                         }
                 }
-                break;              
-            case eGLL_Lagrange_SEM:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussLobattoLegendre);
-                    return LibUtilities::BasisKey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
-                }
-                break;     
+                break;
+//            case eGLL_Lagrange_SEM:
+//                {
+//                    const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussLobattoLegendre);
+//                    return LibUtilities::BasisKey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
+//                }
+//                break;
             default:
                 ASSERTL0(false,"expansion type unknown");
                 return LibUtilities::NullBasisKey; // Keep things happy by returning a value.
                 break;
-            }            
-#endif
+            }
+//#endif
         }
 
 
@@ -1149,6 +1141,23 @@ namespace Nektar
 
 //
 // $Log: MeshGraph3D.cpp,v $
+// Revision 1.15  2010/02/26 13:52:45  cantwell
+// Tested and fixed where necessary Hex/Tet projection and differentiation in
+//   StdRegions, and LocalRegions for regular and deformed (where applicable).
+// Added SpatialData and SpatialParameters classes for managing spatiall-varying
+//   data.
+// Added TimingGeneralMatrixOp3D for timing operations on 3D geometries along
+//   with some associated input meshes.
+// Added 3D std and loc projection demos for tet and hex.
+// Added 3D std and loc regression tests for tet and hex.
+// Fixed bugs in regression tests in relation to reading OK files.
+// Extended Elemental and Global optimisation parameters for 3D expansions.
+// Added GNUPlot output format option.
+// Updated ADR2DManifoldSolver to use spatially varying data.
+// Added Barkley model to ADR2DManifoldSolver.
+// Added 3D support to FldToVtk and XmlToVtk.
+// Renamed History.{h,cpp} to HistoryPoints.{h,cpp}
+//
 // Revision 1.14  2009/05/01 13:23:21  pvos
 // Fixed various bugs
 //

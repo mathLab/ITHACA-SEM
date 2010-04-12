@@ -45,6 +45,10 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Define Expansion
+//    int bc_loc=0;
+//    MultiRegions::GlobalSysSolnType solType = MultiRegions::eDirectFullMatrix;
+//    Exp = MemoryManager<MultiRegions::ContField3D>
+//                    ::AllocateSharedPtr(graph3D,bcs,bc_loc,solType);
     Exp = MemoryManager<MultiRegions::ContField3D>
                     ::AllocateSharedPtr(graph3D,bcs);
     //----------------------------------------------
@@ -100,15 +104,9 @@ int main(int argc, char *argv[])
     //----------------------------------------------
 
     //----------------------------------------------
-    // Write solution
-    ofstream outfile("HelmholtzFile3D.pos");
-    Exp->WriteToFile(outfile,eGnuplot);
-    //----------------------------------------------
-
-    //----------------------------------------------
     // See if there is an exact solution, if so
     // evaluate and plot errors
-    SpatialDomains::ConstExactSolutionShPtr ex_sol 
+    SpatialDomains::ConstExactSolutionShPtr ex_sol
                                 = bcs.GetExactSolution(bcs.GetVariable(0));
 
     if(ex_sol)
@@ -131,6 +129,24 @@ int main(int argc, char *argv[])
         //--------------------------------------------
     }
     //----------------------------------------------
+
+    //-----------------------------------------------
+    // Write solution to file
+    string   out(strtok(argv[1],"."));
+    string   endfile(".fld");
+    out += endfile;
+    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+                                                = Exp->GetFieldDefinitions();
+    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+
+    Exp->GlobalToLocal(Exp->GetContCoeffs(),Exp->UpdateCoeffs());
+    for(i = 0; i < FieldDef.size(); ++i)
+    {
+        FieldDef[i]->m_Fields.push_back("u");
+        Exp->AppendFieldData(FieldDef[i], FieldData[i]);
+    }
+    graph3D.Write(out, FieldDef, FieldData);
+    //-----------------------------------------------
 
     return 0;
 }

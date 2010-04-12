@@ -460,8 +460,57 @@ namespace Nektar
               }
           }
           break;
+        case eTetrahedron:
+          {
+            for(k = 0; k < m_tetgeoms.size();++k)
+              {
+            if(m_tetgeoms[k]->GetGlobalID() == fielddef[i]->m_ElementIDs[j])
+              {
+                geom = m_tetgeoms[k];
+                break;
+              }
+              }
+            ASSERTL0(k != m_tetgeoms.size(),"Failed to find geometry with same global id");
+            for(int b = 0; b < 2; ++b)
+              {
+            const LibUtilities::PointsKey pkey(nmodes[cnt+b],pointstype[i][b]);
+            LibUtilities::BasisKey bkey(basis[b],nmodes[cnt+b],pkey);
+            bkeyvec.push_back(bkey);
+              }
+
+            if(!UniOrder)
+              {
+            cnt += 2;
+              }
+          }
+          break;
+        case eHexahedron:
+          {
+            for(k = 0; k < m_quadgeoms.size();++k)
+              {
+            if(m_hexgeoms[k]->GetGlobalID() == fielddef[i]->m_ElementIDs[j])
+              {
+                geom = m_hexgeoms[k];
+                break;
+              }
+              }
+            ASSERTL0(k != m_hexgeoms.size(),"Failed to find geometry with same global id");
+
+            for(int b = 0; b < 2; ++b)
+              {
+            const LibUtilities::PointsKey pkey(nmodes[cnt+b],pointstype[i][b]);
+            LibUtilities::BasisKey bkey(basis[b],nmodes[cnt+b],pkey);
+            bkeyvec.push_back(bkey);
+              }
+
+            if(!UniOrder)
+              {
+            cnt += 2;
+              }
+          }
+          break;
         default:
-          ASSERTL0(false,"Need to set up for 3D Expansions");
+          ASSERTL0(false,"Need to set up for pyramid and prism 3D Expansions");
           break;
         }
           m_ExpansionVector[id]->m_GeomShPtr = geom;
@@ -673,11 +722,13 @@ namespace Nektar
         LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
         returnval.push_back(bkey);
 
-        const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
+        const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussLobattoLegendre);
+        //const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
         LibUtilities::BasisKey bkey1(LibUtilities::eModified_B,order,pkey1);
         returnval.push_back(bkey1);
 
-        const LibUtilities::PointsKey pkey2(order,LibUtilities::eGaussRadauMAlpha2Beta0);
+        const LibUtilities::PointsKey pkey2(order,LibUtilities::eGaussLobattoLegendre);
+        //const LibUtilities::PointsKey pkey2(order,LibUtilities::eGaussRadauMAlpha2Beta0);
         LibUtilities::BasisKey bkey2(LibUtilities::eModified_C,order,pkey2);
         returnval.push_back(bkey2);
           }
@@ -1039,7 +1090,7 @@ namespace Nektar
             }
             else
             {
-                ASSERTL0(false,"Expansion type not defined");   
+                ASSERTL0(false,"Expansion type not defined");
             }
         }
     }
@@ -1049,10 +1100,10 @@ namespace Nektar
      * For each element of the shape given by \a shape, replace the current
      * BasisKeyVector describing the expansion in each dimension, with the one
      * provided by \a keys.
-     * 
+     *
      * @TODO: Allow selection of elements through a CompositeVector, as well as
      * by type.
-     * 
+     *
      * @param   shape           The shape of elements to be changed.
      * @param   keys            The new basis vector to apply to those elements.
      */
@@ -1066,7 +1117,7 @@ namespace Nektar
             {
                 (*elemIter)->m_BasisKeyVector = keys;
             }
-        }        
+        }
     }
 
     /**
@@ -1618,162 +1669,180 @@ namespace Nektar
       return datasize;
     }
 
-    void MeshGraph::Write(const std::string                            &outFile,
-              std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-              std::vector<std::vector<double> >      &fielddata)
+    void MeshGraph::Write(const std::string &outFile, std::vector<
+    		FieldDefinitionsSharedPtr> &fielddefs,
+    		std::vector<std::vector<double> > &fielddata)
     {
-      ASSERTL1(fielddefs.size() == fielddata.size(),"Length of fielddefs and fielddata incompatible");
+    	ASSERTL1(fielddefs.size() == fielddata.size(),
+    			"Length of fielddefs and fielddata incompatible");
 
-      TiXmlDocument doc;
-      TiXmlDeclaration * decl = new TiXmlDeclaration( "1.0", "utf-8", "");
-      doc.LinkEndChild( decl );
+    	TiXmlDocument doc;
+    	TiXmlDeclaration * decl = new TiXmlDeclaration("1.0", "utf-8", "");
+    	doc.LinkEndChild(decl);
 
-      cout << "Writing outfile: " << outFile << endl;
+    	cout << "Writing outfile: " << outFile << endl;
 
-      TiXmlElement * root = new TiXmlElement( "NEKTAR" );
-      doc.LinkEndChild( root );
+    	TiXmlElement * root = new TiXmlElement("NEKTAR");
+    	doc.LinkEndChild(root);
 
-      for(int f = 0; f < fielddefs.size(); ++f)
-    {
+    	for (int f = 0; f < fielddefs.size(); ++f)
+    	{
 
-      ASSERTL1(fielddata[f].size() > 0, "Fielddata vector must contain at least one value.");
+    		ASSERTL1(fielddata[f].size() > 0,
+    				"Fielddata vector must contain at least one value.");
 
-      int datasize = CheckFieldDefinition(fielddefs[f]);
-      ASSERTL1(fielddata[f].size() == fielddefs[f]->m_Fields.size()*datasize, "Invalid size of fielddata vector.");
+    		int datasize = CheckFieldDefinition(fielddefs[f]);
+    		ASSERTL1(fielddata[f].size() == fielddefs[f]->m_Fields.size()
+    				* datasize, "Invalid size of fielddata vector.");
 
-      //---------------------------------------------
-      // Write ELEMENTS
-      TiXmlElement * elemTag = new TiXmlElement( "ELEMENTS" );
-      root->LinkEndChild( elemTag );
+    		//---------------------------------------------
+    		// Write ELEMENTS
+    		TiXmlElement * elemTag = new TiXmlElement("ELEMENTS");
+    		root->LinkEndChild(elemTag);
 
-      // Write FIELDS
-      std::string fieldsString;
-      {
-        std::stringstream fieldsStringStream;
-        bool first = true;
-        for (std::vector<int>::size_type i = 0; i < fielddefs[f]->m_Fields.size(); i++)
-          {
-        if (!first) fieldsStringStream << ",";
-        fieldsStringStream << fielddefs[f]->m_Fields[i];
-        first = false;
-          }
-        fieldsString = fieldsStringStream.str();
-      }
-      elemTag->SetAttribute("FIELDS", fieldsString);
+    		// Write FIELDS
+    		std::string fieldsString;
+    		{
+    			std::stringstream fieldsStringStream;
+    			bool first = true;
+    			for (std::vector<int>::size_type i = 0; i
+    			< fielddefs[f]->m_Fields.size(); i++)
+    			{
+    				if (!first)
+    					fieldsStringStream << ",";
+    				fieldsStringStream << fielddefs[f]->m_Fields[i];
+    				first = false;
+    			}
+    			fieldsString = fieldsStringStream.str();
+    		}
+    		elemTag->SetAttribute("FIELDS", fieldsString);
 
-      // Write SHAPE
-      std::string   shapeString;
-      {
-        std::stringstream shapeStringStream;
-        shapeStringStream << GeomShapeTypeMap[fielddefs[f]->m_ShapeType];
-        shapeString = shapeStringStream.str();
-      }
-      elemTag->SetAttribute("SHAPE", shapeString);
+    		// Write SHAPE
+    		std::string shapeString;
+    		{
+    			std::stringstream shapeStringStream;
+    			shapeStringStream << GeomShapeTypeMap[fielddefs[f]->m_ShapeType];
+    			shapeString = shapeStringStream.str();
+    		}
+    		elemTag->SetAttribute("SHAPE", shapeString);
 
-      // Write BASIS
-      std::string basisString;
-      {
-        std::stringstream basisStringStream;
-        bool first = true;
-        for (std::vector<LibUtilities::BasisType>::size_type i = 0; i < fielddefs[f]->m_Basis.size(); i++)
-          {
-        if (!first) basisStringStream << ",";
-        basisStringStream << LibUtilities::BasisTypeMap[fielddefs[f]->m_Basis[i]];
-        first = false;
-          }
-        basisString = basisStringStream.str();
-      }
-      elemTag->SetAttribute("BASIS", basisString);
+    		// Write BASIS
+    		std::string basisString;
+    		{
+    			std::stringstream basisStringStream;
+    			bool first = true;
+    			for (std::vector<LibUtilities::BasisType>::size_type i = 0; i
+    			< fielddefs[f]->m_Basis.size(); i++)
+    			{
+    				if (!first)
+    					basisStringStream << ",";
+    				basisStringStream
+    				<< LibUtilities::BasisTypeMap[fielddefs[f]->m_Basis[i]];
+    				first = false;
+    			}
+    			basisString = basisStringStream.str();
+    		}
+    		elemTag->SetAttribute("BASIS", basisString);
 
-      // Write NUMMODESPERDIR
-      std::string numModesString;
-      {
-        std::stringstream numModesStringStream;
+    		// Write NUMMODESPERDIR
+    		std::string numModesString;
+    		{
+    			std::stringstream numModesStringStream;
 
-        if(fielddefs[f]->m_UniOrder)
-          {
-        numModesStringStream << "UNIORDER:";
-        // Just dump single definition
-        bool first = true;
-        for (std::vector<int>::size_type i = 0; i < fielddefs[f]->m_Basis.size(); i++)
-          {
-            if (!first) numModesStringStream << ",";
-            numModesStringStream << fielddefs[f]->m_NumModes[i];
-            first = false;
-          }
-          }
-        else
-          {
-        numModesStringStream << "MIXORDER:";
-        bool first = true;
-        for (std::vector<int>::size_type i = 0; i < fielddefs[f]->m_NumModes.size(); i++)
-          {
-            if (!first) numModesStringStream << ",";
-            numModesStringStream << fielddefs[f]->m_NumModes[i];
-            first = false;
-          }
-          }
+    			if (fielddefs[f]->m_UniOrder)
+    			{
+    				numModesStringStream << "UNIORDER:";
+    				// Just dump single definition
+    				bool first = true;
+    				for (std::vector<int>::size_type i = 0; i
+    				< fielddefs[f]->m_Basis.size(); i++)
+    				{
+    					if (!first)
+    						numModesStringStream << ",";
+    					numModesStringStream << fielddefs[f]->m_NumModes[i];
+    					first = false;
+    				}
+    			}
+    			else
+    			{
+    				numModesStringStream << "MIXORDER:";
+    				bool first = true;
+    				for (std::vector<int>::size_type i = 0; i
+    				< fielddefs[f]->m_NumModes.size(); i++)
+    				{
+    					if (!first)
+    						numModesStringStream << ",";
+    					numModesStringStream << fielddefs[f]->m_NumModes[i];
+    					first = false;
+    				}
+    			}
 
-        numModesString = numModesStringStream.str();
-      }
-      elemTag->SetAttribute("NUMMODESPERDIR", numModesString);
+    			numModesString = numModesStringStream.str();
+    		}
+    		elemTag->SetAttribute("NUMMODESPERDIR", numModesString);
 
-      //Write ID
-      // Should ideally look at ways of compressing this stream
-      // if just sequential;
-      std::string   idString;
-      {
-        std::stringstream idStringStream;
-        bool first = true;
-        for (std::vector<Geometry>::size_type i = 0; i < fielddefs[f]->m_ElementIDs.size(); i++)
-          {
-        if (!first) idStringStream << ",";
-        idStringStream << fielddefs[f]->m_ElementIDs[i];
-        first = false;
-          }
-        idString = idStringStream.str();
-      }
-      elemTag->SetAttribute("ID", idString);
+    		//Write ID
+    		// Should ideally look at ways of compressing this stream
+    		// if just sequential;
+    		std::string idString;
+    		{
+    			std::stringstream idStringStream;
+    			bool first = true;
+    			for (std::vector<Geometry>::size_type i = 0; i
+    			< fielddefs[f]->m_ElementIDs.size(); i++)
+    			{
+    				if (!first)
+    					idStringStream << ",";
+    				idStringStream << fielddefs[f]->m_ElementIDs[i];
+    				first = false;
+    			}
+    			idString = idStringStream.str();
+    		}
+    		elemTag->SetAttribute("ID", idString);
 
-      // Write binary data
-      std::string compressedDataString;
-      {
-        // Serialize the fielddata vector to the stringstream.
-        std::stringstream archiveStringStream(std::string((char*)&fielddata[f][0], sizeof(fielddata[f][0])/sizeof(char)*fielddata[f].size()));
+    		// Write binary data
+    		std::string compressedDataString;
+    		{
+    			// Serialize the fielddata vector to the stringstream.
+    			std::stringstream archiveStringStream(std::string(
+    					(char*) &fielddata[f][0], sizeof(fielddata[f][0])
+    					/ sizeof(char) * fielddata[f].size()));
 
-        // Compress the serialized data.
-        std::stringstream compressedData;
-        {
-          boost::iostreams::filtering_streambuf<boost::iostreams::input> out;
-          out.push(boost::iostreams::zlib_compressor());
-          out.push(archiveStringStream);
-          boost::iostreams::copy(out, compressedData);
-        }
+    			// Compress the serialized data.
+    			std::stringstream compressedData;
+    			{
+    				boost::iostreams::filtering_streambuf<boost::iostreams::input>
+    				out;
+    				out.push(boost::iostreams::zlib_compressor());
+    				out.push(archiveStringStream);
+    				boost::iostreams::copy(out, compressedData);
+    			}
 
-        // If the string length is not divisible by 3,
-        // pad it. There is a bug in transform_width
-        // that will make it reference past the end
-        // and crash.
-        switch (compressedData.str().length() % 3)
-          {
-          case 1:
-        compressedData << '\0';
-          case 2:
-        compressedData << '\0';
-        break;
-          }
-        compressedDataString = compressedData.str();
-      }
+    			// If the string length is not divisible by 3,
+    			// pad it. There is a bug in transform_width
+    			// that will make it reference past the end
+    			// and crash.
+    			switch (compressedData.str().length() % 3)
+    			{
+    			case 1:
+    				compressedData << '\0';
+    			case 2:
+    				compressedData << '\0';
+    				break;
+    			}
+    			compressedDataString = compressedData.str();
+    		}
 
-      // Convert from binary to base64.
-      typedef boost::archive::iterators::base64_from_binary<
-      boost::archive::iterators::transform_width<
-      std::string::const_iterator, 6, 8> > base64_t;
-      std::string base64string(base64_t(compressedDataString.begin()), base64_t(compressedDataString.end()));
-      elemTag->LinkEndChild(new TiXmlText(base64string));
+    		// Convert from binary to base64.
+    		typedef boost::archive::iterators::base64_from_binary<
+    		boost::archive::iterators::transform_width<
+    		std::string::const_iterator, 6, 8> > base64_t;
+    		std::string base64string(base64_t(compressedDataString.begin()),
+    				base64_t(compressedDataString.end()));
+    		elemTag->LinkEndChild(new TiXmlText(base64string));
 
-    }
-      doc.SaveFile(outFile);
+    	}
+    	doc.SaveFile(outFile);
     }
 
     // Allow global id string
@@ -2056,7 +2125,6 @@ namespace Nektar
 
           // Deserialize the array.
           double* readFieldData = (double*) elementDecompressedData.str().c_str();
-
           std::vector<double> elementFieldData(readFieldData, readFieldData + elementDecompressedData.str().length() * sizeof(*elementDecompressedData.str().c_str()) / sizeof(double));
           fielddata.push_back(elementFieldData);
 

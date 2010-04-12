@@ -12,14 +12,14 @@ namespace Utilities
   namespace Gmsh
   {
 
-    void ParseGmshFile(const char* inFile, const char* outfile)
-    {
+  void ParseGmshFile(const char* inFile, const char* outfile)
+  {
       string line;
-      int nVertices        = 0;
-      int nEntities        = 0;
+      int nVertices = 0;
+      int nEntities = 0;
       int nBoundComposites = 0;
-      int expDim           = 3;
-      int spaceDim   = 2;
+      int expDim = 3;
+      int spaceDim = 2;
       int elm_type = 0;
 
       vector<Vertex> vertices;
@@ -31,194 +31,200 @@ namespace Utilities
       vector<ThreeDElement> threeDElements;
       vector<Composite> composites;
 
-
       //---------------------------------------------
       // Read the *.msh file and fill the
       // nodes and geometric enteties structures
 
       fstream mshFile(inFile);
 
-      if(!mshFile.is_open())
-    {
-      ERROR("Unable to find msh file");
-    }
+      if (!mshFile.is_open())
+      {
+          ERROR("Unable to find msh file");
+      }
       else
-    {
-      cout <<"Start reading gmsh..." << endl;
-      while(!mshFile.eof())
-        {
-          getline(mshFile, line);
-          stringstream s(line);
-          string word;
-          s >> word;
-
-          if(word == "$Nodes")
-        {
-          getline(mshFile, line);
-          stringstream s(line);
-          s >> nVertices;
-          int id=0;
-          for(int i=0; i<nVertices; ++i)
-            {
+      {
+          cout << "Start reading gmsh..." << endl;
+          while (!mshFile.eof())
+          {
               getline(mshFile, line);
-              stringstream st(line);
-              double x=0, y=0, z=0;
-              st >> id >> x >> y >> z;
+              stringstream s(line);
+              string word;
+              s >> word;
 
-              if((z*z)>0.000001)
-            {
-              spaceDim = 3;
-            }
-              id -= 1; // counter starts at 0
-              vertices.push_back( Vertex(id, x, y, z) );
-            }
-        }
-          else if(word == "$Elements")
-        {
-          int zeroDid=0, oneDid=0, twoDid=0, threeDid=0;
-          getline(mshFile, line);
-          stringstream s(line);
-          s >> nEntities;
-          for(int i=0; i<nEntities; ++i)
-            {
-              getline(mshFile, line);
-              stringstream st(line);
-              int id=0, num_tag=0, num_nodes=0;
-
-              st >> id >> elm_type >> num_tag;
-              id -= 1; // counter starts at 0
-
-              // curved edge
-              if(elm_type==8)
-            {
-              num_nodes = 3;
-            }
-
-              // curved triangular or quadratic
-              else if(elm_type==9)
-            {
-              num_nodes = 6;
-            }
-
-              else
-            {
-              num_nodes = GetNnodes(elm_type);
-            }
-
-              vector<int> tags;
-              for(int j=0; j<num_tag; ++j)
-            {
-              int tag=0;
-              st >> tag;
-              tags.push_back(tag);
-
-              // physical entities (used to define boundary entities)
-              // are stored in tags[0]
-              nBoundComposites = max(nBoundComposites,tags[0]);
-            }
-
-              vector<int> edgeList;
-              vector<int> nodeList;
-              vector<int> faceList;
-              for(int k=0; k<num_nodes; ++k)
-            {
-              int node = 0;
-              st >> node;
-              node -= 1; // counter starts at 0
-              nodeList.push_back(node);
-            }
-
-              switch(elm_type)
-            {
-            case 15:
-              zeroDElements.push_back( ZeroDElement(zeroDid++,elm_type, tags, nodeList) );
-              break;
-            case 1:
-            case 8:
-              oneDElements.push_back( OneDElement(oneDid++,elm_type, tags, nodeList) );
-              break;
-            case 2:
-            case 3:
-            case 9:
-              twoDElements.push_back( TwoDElement(twoDid++,elm_type, tags, nodeList, edgeList) );
-              break;
-            case 4:
-            case 5:
-              threeDElements.push_back( ThreeDElement(threeDid++, elm_type, tags, nodeList, faceList) );
-              break;
-            default:
+              if (word == "$Nodes")
               {
-                ERROR("Gmsh element type not yet supported");
+                  getline(mshFile, line);
+                  stringstream s(line);
+                  s >> nVertices;
+                  int id = 0;
+                  for (int i = 0; i < nVertices; ++i)
+                  {
+                      getline(mshFile, line);
+                      stringstream st(line);
+                      double x = 0, y = 0, z = 0;
+                      st >> id >> x >> y >> z;
+
+                      if ((z * z) > 0.000001)
+                      {
+                          spaceDim = 3;
+                      }
+                      id -= 1; // counter starts at 0
+                      vertices.push_back(Vertex(id, x, y, z));
+                  }
               }
-            }
-            }
+              else if (word == "$Elements")
+              {
+                  int zeroDid = 0, oneDid = 0, twoDid = 0, threeDid = 0;
+                  getline(mshFile, line);
+                  stringstream s(line);
+                  s >> nEntities;
+                  for (int i = 0; i < nEntities; ++i)
+                  {
+                      getline(mshFile, line);
+                      stringstream st(line);
+                      int id = 0, num_tag = 0, num_nodes = 0;
 
-          // find out what expansion dimension
-          if (threeDElements.empty() && twoDElements.empty() && oneDElements.empty())
-            {
-               ERROR("Illegal expansion dimension");
-             }
-          else if (threeDElements.empty() && twoDElements.empty())
-            expDim = 1;
-          else if (threeDElements.empty())
-            expDim = 2;
-          else
-            expDim = 3;
+                      st >> id >> elm_type >> num_tag;
+                      id -= 1; // counter starts at 0
 
+                      // curved edge
+                      if (elm_type == 8)
+                      {
+                          num_nodes = 3;
+                      }
 
-          cout << "Expansion dimension is " << expDim << endl;
-          cout << "Read " << nVertices << " vertices" << endl;
-          cout << "Read " << nEntities << " geometric entities" << endl;
-          cout << "Read " << nBoundComposites << " boundary entities"  << endl;
-        }
+                      // curved triangular or quadratic
+                      else if (elm_type == 9)
+                      {
+                          num_nodes = 6;
+                      }
 
-        }
-      mshFile.close();
-      //---------------------------------------------
-    }
+                      else
+                      {
+                          num_nodes = GetNnodes(elm_type);
+                      }
 
-      switch(expDim)
-    {
-    case 1:
-      SortZeroDElements(zeroDElements,vertices);
-      SortOneDComposites(oneDElements, composites, nBoundComposites, expDim);
-      break;
-    case 2:
-      // Fill the edges vectors from twoDElements.edge
-      // When twoDElements are triangles, twoDElements.vert has three components.
-      // With two vertices we find edge id and update it to edges.
-      SortEdgeToVertex(twoDElements,edges);
+                      vector<int> tags;
+                      for (int j = 0; j < num_tag; ++j)
+                      {
+                          int tag = 0;
+                          st >> tag;
+                          tags.push_back(tag);
 
-      // Correct edges id of oneDElements from edges
-      SortOneDElements(oneDElements,edges);
+                          // physical entities (used to define boundary entities)
+                          // are stored in tags[0]
+                          nBoundComposites = max(nBoundComposites, tags[0]);
+                      }
 
-      // Set elements composite
-      SortTwoDComposites(twoDElements, composites, nBoundComposites, expDim);
-      SortOneDComposites(oneDElements, composites, nBoundComposites, expDim);
-      break;
-    case 3:
+                      vector<int> edgeList;
+                      vector<int> nodeList;
+                      vector<int> faceList;
+                      for (int k = 0; k < num_nodes; ++k)
+                      {
+                          int node = 0;
+                          st >> node;
+                          node -= 1; // counter starts at 0
+                          nodeList.push_back(node);
+                      }
+
+                      switch (elm_type)
+                      {
+                      case 15:
+                          zeroDElements.push_back(ZeroDElement(zeroDid++,
+                                  elm_type, tags, nodeList));
+                          break;
+                      case 1:
+                      case 8:
+                          oneDElements.push_back(OneDElement(oneDid++, elm_type,
+                                  tags, nodeList));
+                          break;
+                      case 2:
+                      case 3:
+                      case 9:
+                          twoDElements.push_back(TwoDElement(twoDid++, elm_type,
+                                  tags, nodeList, edgeList));
+                          break;
+                      case 4:
+                      case 5:
+                          threeDElements.push_back(ThreeDElement(threeDid++,
+                                  elm_type, tags, nodeList, faceList));
+                          break;
+                      default:
+                      {
+                          ERROR("Gmsh element type not yet supported");
+                      }
+                      }
+                  }
+
+                  // find out what expansion dimension
+                  if (threeDElements.empty() && twoDElements.empty()
+                          && oneDElements.empty())
+                  {
+                      ERROR("Illegal expansion dimension");
+                  }
+                  else if (threeDElements.empty() && twoDElements.empty())
+                      expDim = 1;
+                  else if (threeDElements.empty())
+                      expDim = 2;
+                  else
+                      expDim = 3;
+
+                  cout << "Expansion dimension is " << expDim << endl;
+                  cout << "Read " << nVertices << " vertices" << endl;
+                  cout << "Read " << nEntities << " geometric entities" << endl;
+                  cout << "Read " << nBoundComposites << " boundary entities"
+                          << endl;
+              }
+
+          }
+          mshFile.close();
+          //---------------------------------------------
+      }
+
+      switch (expDim)
       {
-        OrientTets(threeDElements, vertices);
-        // Fill the faces vector from threeDElements.face
-        SortFaceToVertex(threeDElements,faces);
-        SortFaceToEdge(faces, edges);
-        RenumberTwoDElementsFromFaces(twoDElements, faces);
-        // Correct faces id of twoDElements from faces
-        //SortTwoDElements(twoDElements,faces);
-        SortThreeDComposites(threeDElements, composites, nBoundComposites, expDim);
-        SortTwoDComposites(twoDElements, composites, nBoundComposites, expDim);
-        SortOneDComposites(oneDElements, composites, nBoundComposites, expDim);
+      case 1:
+          SortZeroDElements(zeroDElements, vertices);
+          SortOneDComposites(oneDElements, composites, nBoundComposites, expDim);
+          break;
+      case 2:
+          // Fill the edges vectors from twoDElements.edge
+          // When twoDElements are triangles, twoDElements.vert has three components.
+          // With two vertices we find edge id and update it to edges.
+          SortEdgeToVertex(twoDElements, edges);
+
+          // Correct edges id of oneDElements from edges
+          SortOneDElements(oneDElements, edges);
+
+          // Set elements composite
+          SortTwoDComposites(twoDElements, composites, nBoundComposites, expDim);
+          SortOneDComposites(oneDElements, composites, nBoundComposites, expDim);
+          break;
+      case 3:
+      {
+          OrientTets(threeDElements, vertices);
+          // Fill the faces vector from threeDElements.face
+          SortFaceToVertex(threeDElements, faces);
+          SortFaceToEdge(faces, edges);
+          RenumberTwoDElementsFromFaces(twoDElements, faces);
+          // Correct faces id of twoDElements from faces
+          //SortTwoDElements(twoDElements,faces);
+          SortThreeDComposites(threeDElements, composites, nBoundComposites,
+                  expDim);
+          SortTwoDComposites(twoDElements, composites, nBoundComposites, expDim);
+          SortOneDComposites(oneDElements, composites, nBoundComposites, expDim);
       }
       break;
-    default:
+      default:
       {
-        ERROR("illegal expansion dimension");
+          ERROR("illegal expansion dimension");
       }
-    }
+      }
 
-      WriteToXMLFile(outfile, expDim, spaceDim, vertices, edges, faces, oneDElements, twoDElements, threeDElements, composites, elm_type);
+      WriteToXMLFile(outfile, expDim, spaceDim, vertices, edges, faces,
+              oneDElements, twoDElements, threeDElements, composites, elm_type);
 
-    }
+  }
 
 
     // note: this function is only working for 2nodes edges.
@@ -256,7 +262,7 @@ namespace Utilities
     {
         int i, j;
         int size = faces.size();
-        
+
         // Check if face vertices match an existing face
         for(i = 0; i < size; i++)
         {
@@ -351,36 +357,51 @@ namespace Utilities
         {
             // Don't do anything for Hex's
             if (elements[i].type != 4) continue;
-            
+
             // Order vertices with lowest global vertex at top degenerate point
             // Place second lowest global vertex at base degenerate point
-            vector<int> everts = elements[i].vert;
             sort(elements[i].vert.begin(), elements[i].vert.end());
             reverse(elements[i].vert.begin(), elements[i].vert.end());
-            
+
             // Check orientation of tet and order remaining two points
-            double ax, ay, az, vol;
+            double ax, ay, az, vol, vax, vay, vaz, vbx, vby, vbz, vcx, vcy, vcz;
             vector<Vertex> v;
             v.push_back(vertices[elements[i].vert[0]]);
             v.push_back(vertices[elements[i].vert[1]]);
             v.push_back(vertices[elements[i].vert[2]]);
             v.push_back(vertices[elements[i].vert[3]]);
             // Compute cross produc (b x c)
-            ax = (v[1].y-v[3].y)*(v[2].z-v[3].z) - (v[1].z-v[3].z)*(v[2].y-v[3].y);
-            ay = (v[2].x-v[3].x)*(v[1].z-v[3].z) - (v[1].x-v[3].x)*(v[2].z-v[3].z);
-            az = (v[1].x-v[3].x)*(v[2].y-v[3].y) - (v[2].x-v[3].x)*(v[1].y-v[3].y);
-            // Compute signed volume: 1/6 * (a . (b x c))
-            vol = 1.0/6.0*(ax*(v[0].x-v[3].x) + ay*(v[0].y-v[3].y) + az*(v[0].z-v[3].z));
-            // If negative volume, reverse order to correctly orientate tet.
-            if (vol < 0)
+//            ax = (v[1].y-v[3].y)*(v[2].z-v[3].z) - (v[1].z-v[3].z)*(v[2].y-v[3].y);
+//            ay = (v[2].x-v[3].x)*(v[1].z-v[3].z) - (v[1].x-v[3].x)*(v[2].z-v[3].z);
+//            az = (v[1].x-v[3].x)*(v[2].y-v[3].y) - (v[2].x-v[3].x)*(v[1].y-v[3].y);
+//            // Compute signed volume: 1/6 * (a . (b x c))
+//            vol = 1.0/6.0*(ax*(v[0].x-v[3].x) + ay*(v[0].y-v[3].y) + az*(v[0].z-v[3].z));
+            // Compute cross produc (b x c)
+            vax = v[0].x-v[2].x;
+            vay = v[0].y-v[2].y;
+            vaz = v[0].z-v[2].z;
+            vbx = v[1].x-v[2].x;
+            vby = v[1].y-v[2].y;
+            vbz = v[1].z-v[2].z;
+            vcx = v[3].x-v[2].x;
+            vcy = v[3].y-v[2].y;
+            vcz = v[3].z-v[2].z;
+            ax = vay*vbz - vaz*vby;
+            ay = vaz*vbx - vbz*vax;
+            az = vax*vby - vbx*vay;
+            double dot = (ax*vcx + ay*vcy + az*vcz);
+
+            // If negative, reverse order of non-degenerate points to correctly
+            // orientate tet.
+            if (dot < 0)
             {
-                swap(elements[i].vert[2], elements[i].vert[3]);
-                swap(v[2], v[3]);
+                swap(elements[i].vert[0], elements[i].vert[1]);
+                swap(v[0], v[1]);
             }
         }
         cout << "...done orientating 3D elements" << endl;
     }
-    
+
     void SortFaceToVertex(vector<ThreeDElement> & elements, vector<Face> & faces)
     {
         int i, j, k, elm_type;
@@ -405,7 +426,7 @@ namespace Utilities
                     }
                     faceid = GetFace(vert,faces,elm_type);
                     elements[i].face.push_back(faceid);
-                }            
+                }
             }
             // Tet
             else if (elm_type == 4)
@@ -431,12 +452,12 @@ namespace Utilities
         }
         cout << "...done sorting FaceToVertex relations" << endl;
     }
-    
+
     void SortFaceToEdge(vector<Face> &faces, vector<Edge> &edges)
     {
         int i, j, elm_type;
         int size = faces.size();
-        
+
         for (i = 0; i < size; ++i)
         {
             int fsize = faces[i].vert.size();
@@ -454,7 +475,7 @@ namespace Utilities
         }
         cout << "...done sorting FaceToEdge relations" << endl;
     }
-    
+
     void RenumberTwoDElementsFromFaces(vector<TwoDElement> & elements, vector<Face> & faces)
     {
         for (int i = 0; i < elements.size(); ++i)
@@ -473,7 +494,7 @@ namespace Utilities
             }
         }
     }
-    
+
     // Get the correct edge id's from the edge struct
     void SortZeroDElements(vector<ZeroDElement> & points,const vector<Vertex> & vertices)
     {
@@ -541,7 +562,7 @@ namespace Utilities
                 if ( (elements[i].type == 1))
                     nSeg++;
             }
-    
+
             if (nSeg != 0)
             {
                 list<int> eid;
@@ -592,7 +613,7 @@ namespace Utilities
                 if (elements[i].type == 3)
                     nQuad++;
             }
-    
+
             if (nTri != 0)
             {
                 list<int> eid;
@@ -713,7 +734,7 @@ namespace Utilities
 
         for( int i = 0; i < nodes.size(); ++i ) {
             stringstream s;
-            s << scientific << setprecision(3) <<  nodes[i].x << " " 
+            s << scientific << setprecision(3) <<  nodes[i].x << " "
               << nodes[i].y << " " << nodes[i].z;
             TiXmlElement * v = new TiXmlElement( "V" );
             v->SetAttribute("ID",nodes[i].id);
@@ -816,7 +837,7 @@ namespace Utilities
             case 1:
             {
                 for(int i=0; i<oneDElements.size(); ++i){
-                    if ( (oneDElements[i].type == 1) 
+                    if ( (oneDElements[i].type == 1)
                             || (oneDElements[i].type == 8) ){ // 1 denotes Seg
 
                         stringstream st;
@@ -939,8 +960,8 @@ namespace Utilities
 
                 for (int k = 0; k < edges[i].vert.size(); ++k) {
                     int nodeid = edges[i].vert[order[k]];
-                    s << scientific << setprecision(3) << "     " 
-                      <<  nodes[nodeid].x << "  " << nodes[nodeid].y 
+                    s << scientific << setprecision(3) << "     "
+                      <<  nodes[nodeid].x << "  " << nodes[nodeid].y
                       << "  " << nodes[nodeid].z << "  ";
                 }
 
@@ -1022,7 +1043,7 @@ namespace Utilities
                 }
 
                 comp_tag->SetAttribute("ID", composites[i].id);
-                comp_tag->LinkEndChild( new TiXmlText(st_start.str() 
+                comp_tag->LinkEndChild( new TiXmlText(st_start.str()
                                                                 + st.str()) );
                 verTag->LinkEndChild(comp_tag);
             }

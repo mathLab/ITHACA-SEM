@@ -55,7 +55,7 @@ namespace Nektar
         {
 
         public:
-            /// Constructor using BasisKey class for quadrature points and 
+            /// Constructor using BasisKey class for quadrature points and
             /// order definition.
             TetExp( const LibUtilities::BasisKey &Ba,
                             const LibUtilities::BasisKey &Bb,
@@ -69,14 +69,14 @@ namespace Nektar
             ~TetExp();
 
         protected:
-            /// Calculate the inner product of inarray with respect to the 
+            /// Calculate the inner product of inarray with respect to the
             /// basis B=m_base0*m_base1*m_base2 and put into outarray:
             virtual void v_IProductWRTBase(
                             const Array<OneD, const NekDouble>& inarray,
                             Array<OneD, NekDouble> & outarray);
 
-            /// Forward transform from physical quadrature space stored in 
-            /// \a inarray and evaluate the expansion coefficients and store 
+            /// Forward transform from physical quadrature space stored in
+            /// \a inarray and evaluate the expansion coefficients and store
             /// in \a (this)->_coeffs  */
             virtual void v_FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray);
 
@@ -107,31 +107,35 @@ namespace Nektar
                             Array<OneD,NekDouble> &coords_2);
 
             virtual void v_GetCoord(
-                            const Array<OneD, const NekDouble> &Lcoords, 
+                            const Array<OneD, const NekDouble> &Lcoords,
                             Array<OneD,NekDouble> &coords);
 
-            virtual void v_WriteToFile( std::ofstream &outfile, 
-                            OutputFormat format, 
-                            const bool dumpVar = true, 
+            virtual void v_WriteToFile( std::ofstream &outfile,
+                            OutputFormat format,
+                            const bool dumpVar = true,
                             std::string var = "v");
 
             virtual const SpatialDomains::GeometrySharedPtr v_GetGeom() const;
 
-            virtual const SpatialDomains::Geometry3DSharedPtr& v_GetGeom3D() 
+            virtual const SpatialDomains::Geometry3DSharedPtr& v_GetGeom3D()
                                                                         const;
 
             DNekMatSharedPtr GenMatrix(
                             const StdRegions::StdMatrixKey &mkey);
-                            
+
             DNekMatSharedPtr CreateStdMatrix(
                             const StdRegions::StdMatrixKey &mkey);
-                            
+
             DNekScalMatSharedPtr  CreateMatrix(
                             const MatrixKey &mkey);
-                            
+
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(
                             const MatrixKey &mkey);
 
+            virtual void v_LaplacianMatrixOp_MatFree(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey);
 
         private:
             SpatialDomains::Geometry3DSharedPtr m_geom;
@@ -142,10 +146,14 @@ namespace Nektar
 
             TetExp();
 
+            void MultiplyByQuadratureMetric(
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray);
+
             /// Return Shape of region, using  ShapeType enum list.
             virtual StdRegions::ExpansionType v_DetExpansionType() const;
 
-            virtual const SpatialDomains::GeomFactorsSharedPtr& 
+            virtual const SpatialDomains::GeomFactorsSharedPtr&
                                                         v_GetMetricInfo() const;
 
             virtual int v_GetCoordim();

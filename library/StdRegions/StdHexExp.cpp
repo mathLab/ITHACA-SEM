@@ -90,12 +90,12 @@ namespace Nektar
         }
 
         /**
-         * 
+         *
          */
         void StdHexExp::v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                          Array<OneD, NekDouble> &outarray)
         {
-            Array<OneD, NekDouble> wsp(m_base[0]->GetNumPoints()* 
+            Array<OneD, NekDouble> wsp(m_base[0]->GetNumPoints()*
                                        m_base[2]->GetNumModes()*
                                        (m_base[1]->GetNumModes() + m_base[1]->GetNumPoints())); // FIX THIS
 
@@ -116,14 +116,14 @@ namespace Nektar
          * @param   doCheckCollDir0     Check for collocation of basis.
          * @param   doCheckCollDir1     Check for collocation of basis.
          * @param   doCheckCollDir2     Check for collocation of basis.
-         * @todo    Account for some directions being collocated. See 
-         *          StdQuadExp as an example.             
+         * @todo    Account for some directions being collocated. See
+         *          StdQuadExp as an example.
          */
         void StdHexExp::BwdTrans_SumFacKernel(
-                    const Array<OneD, const NekDouble>& base0, 
+                    const Array<OneD, const NekDouble>& base0,
                     const Array<OneD, const NekDouble>& base1,
                     const Array<OneD, const NekDouble>& base2,
-                    const Array<OneD, const NekDouble>& inarray, 
+                    const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray,
                           Array<OneD, NekDouble> &wsp,
                     bool doCheckCollDir0,
@@ -136,7 +136,7 @@ namespace Nektar
             int  nmodes0 = m_base[0]->GetNumModes();
             int  nmodes1 = m_base[1]->GetNumModes();
             int  nmodes2 = m_base[2]->GetNumModes();
-            
+
             // Check if using collocation, if requested.
             bool colldir0 = doCheckCollDir0?(m_base[0]->Collocation()):false;
             bool colldir1 = doCheckCollDir1?(m_base[1]->Collocation()):false;
@@ -157,20 +157,20 @@ namespace Nektar
                 // Assign second half of workspace for 2nd DGEMM operation.
                 Array<OneD, NekDouble> wsp2 = wsp + nquad0*nmodes1*nmodes2;
 
-                // BwdTrans in each direction using DGEMM                
-                Blas::Dgemm('T','T', nmodes1*nmodes2, nquad0, nmodes0, 
-                            1.0, &inarray[0],   nmodes0, 
-                                 base0.get(),   nquad0, 
+                // BwdTrans in each direction using DGEMM
+                Blas::Dgemm('T','T', nmodes1*nmodes2, nquad0, nmodes0,
+                            1.0, &inarray[0],   nmodes0,
+                                 base0.get(),   nquad0,
                             0.0, &wsp[0],       nmodes1*nmodes2);
-                Blas::Dgemm('T','T', nquad0*nmodes2,  nquad1, nmodes1, 
-                            1.0, &wsp[0],       nmodes1, 
-                                 base1.get(),   nquad1, 
+                Blas::Dgemm('T','T', nquad0*nmodes2,  nquad1, nmodes1,
+                            1.0, &wsp[0],       nmodes1,
+                                 base1.get(),   nquad1,
                             0.0, &wsp2[0],      nquad0*nmodes2);
-                Blas::Dgemm('T','T', nquad0*nquad1,   nquad2, nmodes2, 
-                            1.0, &wsp2[0],      nmodes2, 
-                                 base2.get(),   nquad2, 
+                Blas::Dgemm('T','T', nquad0*nquad1,   nquad2, nmodes2,
+                            1.0, &wsp2[0],      nmodes2,
+                                 base2.get(),   nquad2,
                             0.0, &outarray[0],  nquad0*nquad1);
-            } 
+            }
         }
 
 
@@ -267,14 +267,14 @@ namespace Nektar
                     int coll_check)
         {
             if(m_base[0]->Collocation() && m_base[1]->Collocation())
-            {  
+            {
                 MultiplyByQuadratureMetric(inarray,outarray);
             }
             else
             {
                 bool doMatOp = NekOptimize::ElementalOptimization<eStdHexExp, NekOptimize::eIProductWRTBase, 3>::
                     DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes(),m_base[2]->GetNumModes());
-                
+
                 if(doMatOp)
                 {
                     StdHexExp::v_IProductWRTBase_MatOp(inarray,outarray);
@@ -282,7 +282,7 @@ namespace Nektar
                 else
                 {
                     StdHexExp::v_IProductWRTBase_SumFac(inarray,outarray);
-                }  
+                }
             }
         }
 
@@ -290,13 +290,13 @@ namespace Nektar
         /**
          * Implementation of the local matrix inner product operation.
          */
-        void StdHexExp::v_IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray, 
+        void StdHexExp::v_IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray,
                                                Array<OneD, NekDouble> &outarray)
         {
             int nq = GetTotPoints();
             StdMatrixKey      iprodmatkey(eIProductWRTBase,DetExpansionType(),*this);
-            DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);            
-            
+            DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);
+
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
                         m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
         }
@@ -313,10 +313,10 @@ namespace Nektar
             int    nquad2 = m_base[2]->GetNumPoints();
             int    order0 = m_base[0]->GetNumModes();
             int    order1 = m_base[1]->GetNumModes();
-            
+
             Array<OneD, NekDouble> tmp(inarray.num_elements());
             Array<OneD, NekDouble> wsp(nquad0*nquad1*(nquad2+order0) + order0*order1*nquad2);
-            
+
             MultiplyByQuadratureMetric(inarray,tmp);
 
             StdHexExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
@@ -330,10 +330,10 @@ namespace Nektar
          * Implementation of the sum-factorisation inner product operation.
          * @todo    Implement cases where only some directions are collocated.
          */
-        void StdHexExp::IProductWRTBase_SumFacKernel(const Array<OneD, const NekDouble>& base0, 
+        void StdHexExp::IProductWRTBase_SumFacKernel(const Array<OneD, const NekDouble>& base0,
                                                      const Array<OneD, const NekDouble>& base1,
                                                      const Array<OneD, const NekDouble>& base2,
-                                                     const Array<OneD, const NekDouble>& inarray, 
+                                                     const Array<OneD, const NekDouble>& inarray,
                                                      Array<OneD, NekDouble> &outarray,
                                                      Array<OneD, NekDouble> &wsp,
                                                      bool doCheckCollDir0,
@@ -350,7 +350,7 @@ namespace Nektar
             bool colldir0 = doCheckCollDir0?(m_base[0]->Collocation()):false;
             bool colldir1 = doCheckCollDir1?(m_base[1]->Collocation()):false;
             bool colldir2 = doCheckCollDir2?(m_base[2]->Collocation()):false;
-                            
+
             if(colldir0 && colldir1 && colldir2)
             {
                 Vmath::Vcopy(m_ncoeffs,inarray.get(),1,outarray.get(),1);
@@ -359,10 +359,10 @@ namespace Nektar
             {               
                 ASSERTL1(wsp.num_elements() >= nmodes0*nquad2*(nquad1+nmodes1),
                          "Insufficient workspace size");
-                
+
                 Array<OneD, NekDouble> tmp0 = wsp;
                 Array<OneD, NekDouble> tmp1 = wsp + nmodes0*nquad1*nquad2;
-    
+
                 Blas::Dgemm('T', 'N', nquad1*nquad2, nmodes0, nquad0,
                             1.0, inarray.get(),  nquad0,
                                  base0.get(),    nquad0,
@@ -378,15 +378,15 @@ namespace Nektar
                                  base2.get(),    nquad2,
                             0.0, outarray.get(), nmodes0*nmodes1);
             }
-        }        
+        }
 
-        void StdHexExp::v_IProductWRTDerivBase(const int dir, 
-                const Array<OneD, const NekDouble>& inarray, 
+        void StdHexExp::v_IProductWRTDerivBase(const int dir,
+                const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble> & outarray)
         {
             bool doMatOp = NekOptimize::ElementalOptimization<eStdHexExp, NekOptimize::eIProductWRTDerivBase, 3>::
                 DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes(),m_base[2]->GetNumModes());
-            
+
             if(doMatOp)
             {
                 StdHexExp::IProductWRTDerivBase_MatOp(dir,inarray,outarray);
@@ -394,16 +394,16 @@ namespace Nektar
             else
             {
                 StdHexExp::IProductWRTDerivBase_SumFac(dir,inarray,outarray);
-            }  
+            }
         }
 
 
-        void StdHexExp::IProductWRTDerivBase_SumFac(const int dir, 
-                                                     const Array<OneD, const NekDouble>& inarray, 
+        void StdHexExp::IProductWRTDerivBase_SumFac(const int dir,
+                                                     const Array<OneD, const NekDouble>& inarray,
                                                      Array<OneD, NekDouble> &outarray)
-        {   
+        {
             ASSERTL0((dir==0)||(dir==1)||(dir==2),"input dir is out of range");
- 
+
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nquad2 = m_base[2]->GetNumPoints();
             int    order0 = m_base[0]->GetNumModes();
@@ -415,13 +415,13 @@ namespace Nektar
             {
                 tmp = Array<OneD, NekDouble>(inarray.num_elements());
             }
-            
+
             // Need workspace for sumfackernel though
             Array<OneD, NekDouble> wsp(order0*nquad2*(nquad1+order1));
-                            
-            // multiply by integration constants 
+
+            // multiply by integration constants
             MultiplyByQuadratureMetric(inarray,tmp);
-            
+
             // perform sum-factorisation
             switch (dir)
             {
@@ -446,11 +446,11 @@ namespace Nektar
                                                  tmp,outarray,wsp,
                                                  true,true,false);
                     break;
-            } 
-        }  
-        
-        void StdHexExp::IProductWRTDerivBase_MatOp(const int dir, 
-                                                    const Array<OneD, const NekDouble>& inarray, 
+            }
+        }
+
+        void StdHexExp::IProductWRTDerivBase_MatOp(const int dir,
+                                                    const Array<OneD, const NekDouble>& inarray,
                                                     Array<OneD, NekDouble> &outarray)
         {
             ASSERTL0((dir==0)||(dir==1)||(dir==2),"input dir is out of range");
@@ -470,18 +470,18 @@ namespace Nektar
                     mtype = eIProductWRTDerivBase2;
                     break;
             }
-            
+
             StdMatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
-            DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);            
- 
+            DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);
+
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
-                        m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);            
+                        m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
         }
 
 
         void StdHexExp::MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
                                                  Array<OneD, NekDouble> &outarray)
-        {     
+        {
             int    i;
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -510,7 +510,7 @@ namespace Nektar
                             outarray.get()+i*nquad0*nquad1, 1);
             }
 /*
-            // multiply by integration constants 
+            // multiply by integration constants
             // w0
             for(j = 0; j < nquad1; ++j)
             {
@@ -520,7 +520,7 @@ namespace Nektar
                             w0.get(),1,outarray.get()+(j+k*nquad1)*nquad0,1);
                 }
             }
-                
+
             // w1
             for(i = 0; i < nquad0; ++i)
             {
@@ -890,7 +890,7 @@ namespace Nektar
                         outfile << endl;
                     }
                     outfile << endl;
-                }                
+                }
             }
             else
             {
@@ -949,25 +949,25 @@ namespace Nektar
                             const StdMatrixKey &mkey)
         {
             DNekMatSharedPtr& mat = m_stdMatrixManager[mkey];
-            
+
             if(inarray.get() == outarray.get())
             {
                 Array<OneD,NekDouble> tmp(m_ncoeffs);
                 Vmath::Vcopy(m_ncoeffs,inarray.get(),1,tmp.get(),1);
-                
+
                 Blas::Dgemv('N', m_ncoeffs, m_ncoeffs, 1.0, mat->GetPtr().get(),
-                            m_ncoeffs, tmp.get(), 1, 0.0, outarray.get(), 1); 
+                            m_ncoeffs, tmp.get(), 1, 0.0, outarray.get(), 1);
             }
             else
             {
                 Blas::Dgemv('N', m_ncoeffs, m_ncoeffs, 1.0, mat->GetPtr().get(),
-                            m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1); 
+                            m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
             }
         }
 
         // Virtual functions
         void StdHexExp::v_MassMatrixOp(
-                            const Array<OneD, const NekDouble> &inarray, 
+                            const Array<OneD, const NekDouble> &inarray,
                             Array<OneD,NekDouble> &outarray,
                             const StdMatrixKey &mkey)
         {
@@ -976,7 +976,7 @@ namespace Nektar
                                     ::DoMatOp(  m_base[0]->GetNumModes(),
                                                 m_base[1]->GetNumModes(),
                                                 m_base[2]->GetNumModes());
-            
+
             if(doMatOp)
             {
                 StdHexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
@@ -985,7 +985,7 @@ namespace Nektar
             {
                 StdExpansion::MassMatrixOp_MatFree(inarray,outarray,mkey);
             }
-            
+
         }
 
         void StdHexExp::v_LaplacianMatrixOp(
@@ -998,7 +998,7 @@ namespace Nektar
                                     ::DoMatOp(  m_base[0]->GetNumModes(),
                                                 m_base[1]->GetNumModes(),
                                                 m_base[2]->GetNumModes());
-            
+
             if(doMatOp)
             {
                 StdHexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
@@ -1007,10 +1007,10 @@ namespace Nektar
             {
                 StdHexExp::v_LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
             }
-            
+
         }
 
-        void StdHexExp::v_LaplacianMatrixOp(const int k1, const int k2, 
+        void StdHexExp::v_LaplacianMatrixOp(const int k1, const int k2,
                             const Array<OneD, const NekDouble> &inarray,
                             Array<OneD,NekDouble> &outarray,
                             const StdMatrixKey &mkey)
@@ -1020,7 +1020,7 @@ namespace Nektar
                                     ::DoMatOp(  m_base[0]->GetNumModes(),
                                                 m_base[1]->GetNumModes(),
                                                 m_base[2]->GetNumModes());
-            
+
             if(doMatOp)
             {
                 StdHexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
@@ -1030,7 +1030,7 @@ namespace Nektar
                 StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,
                                                         mkey);
             }
-            
+
         }
 
         void StdHexExp::v_WeakDerivMatrixOp(const int i,
@@ -1043,7 +1043,7 @@ namespace Nektar
                                     ::DoMatOp(  m_base[0]->GetNumModes(),
                                                 m_base[1]->GetNumModes(),
                                                 m_base[2]->GetNumModes());
-            
+
             if(doMatOp)
             {
                 StdHexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
@@ -1054,7 +1054,7 @@ namespace Nektar
                                                         mkey);
             }
         }
-        
+
         void StdHexExp::v_HelmholtzMatrixOp(
                             const Array<OneD, const NekDouble> &inarray,
                             Array<OneD,NekDouble> &outarray,
@@ -1065,7 +1065,7 @@ namespace Nektar
                                     ::DoMatOp(  m_base[0]->GetNumModes(),
                                                 m_base[1]->GetNumModes(),
                                                 m_base[2]->GetNumModes());
-            
+
             if(doMatOp)
             {
                 StdHexExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
@@ -1075,7 +1075,7 @@ namespace Nektar
                 StdHexExp::v_HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
             }
         }
-        
+
         void StdHexExp::v_LaplacianMatrixOp_MatFree(
                             const Array<OneD, const NekDouble> &inarray,
                             Array<OneD,NekDouble> &outarray,
@@ -1088,25 +1088,25 @@ namespace Nektar
                 // associated to the Laplacian operator
                 int       nquad0  = m_base[0]->GetNumPoints();
                 int       nquad1  = m_base[1]->GetNumPoints();
-                int       nqtot   = nquad0*nquad1; 
+                int       nqtot   = nquad0*nquad1;
                 int       nmodes0 = m_base[0]->GetNumModes();
                 int       nmodes1 = m_base[1]->GetNumModes();
                 int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
-                
+
                 const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
                 const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
                 const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
                 const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
-                
+
                 // Allocate temporary storage
                 Array<OneD,NekDouble> wsp0(3*wspsize);
                 Array<OneD,NekDouble> wsp1(wsp0+wspsize);
                 Array<OneD,NekDouble> wsp2(wsp0+2*wspsize);
-                
+
                 if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
-                {  
+                {
                     // LAPLACIAN MATRIX OPERATION
-                    // wsp0 = u       = B   * u_hat 
+                    // wsp0 = u       = B   * u_hat
                     // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
                     // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
                     BwdTrans_SumFacKernel(base0,base1,inarray,wsp0,wsp1,true,true);
@@ -1114,29 +1114,29 @@ namespace Nektar
                 }
                 else
                 {
-                    StdExpansion2D::PhysTensorDeriv(inarray,wsp1,wsp2);                    
+                    StdExpansion2D::PhysTensorDeriv(inarray,wsp1,wsp2);
                 }
-                
+
                 // wsp1 = k = wsp1 * w0 * w1
                 // wsp2 = l = wsp2 * w0 * w1
                 MultiplyByQuadratureMetric(wsp1,wsp1);
                 MultiplyByQuadratureMetric(wsp2,wsp2);
-                
-                // outarray = m = (D_xi1 * B)^T * k 
-                // wsp1     = n = (D_xi2 * B)^T * l 
+
+                // outarray = m = (D_xi1 * B)^T * k
+                // wsp1     = n = (D_xi2 * B)^T * l
                 IProductWRTBase_SumFacKernel(dbase0,base1,wsp1,outarray,wsp0,false,true);
                 IProductWRTBase_SumFacKernel(base0,dbase1,wsp2,wsp1,    wsp0,true,false);
-                
+
                 // outarray = outarray + wsp1
                 //          = L * u_hat
-                Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);     
+                Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);
             }
             else
             {
                 StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
             }*/
         }
-        
+
         void StdHexExp::v_HelmholtzMatrixOp_MatFree(
                             const Array<OneD, const NekDouble> &inarray,
                             Array<OneD,NekDouble> &outarray,
@@ -1145,12 +1145,12 @@ namespace Nektar
             ASSERTL0(false,"StdHexExp::v_HelmholtzMatrixOp_MatFree needs fixing");
 /*            int       nquad0  = m_base[0]->GetNumPoints();
             int       nquad1  = m_base[1]->GetNumPoints();
-            int       nqtot   = nquad0*nquad1; 
+            int       nqtot   = nquad0*nquad1;
             int       nmodes0 = m_base[0]->GetNumModes();
             int       nmodes1 = m_base[1]->GetNumModes();
             int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
             NekDouble lambda  = mkey.GetConstant(0);
-                                
+
             const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
             const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
             const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
@@ -1163,16 +1163,16 @@ namespace Nektar
             Array<OneD,NekDouble> wsp3(wsp0+3*wspsize);
 
             if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
-            {  
+            {
                 // MASS MATRIX OPERATION
                 // The following is being calculated:
                 // wsp0     = B   * u_hat = u
                 // wsp1     = W   * wsp0
-                // outarray = B^T * wsp1  = B^T * W * B * u_hat = M * u_hat 
+                // outarray = B^T * wsp1  = B^T * W * B * u_hat = M * u_hat
                 BwdTrans_SumFacKernel       (base0,base1,inarray,wsp0,    wsp1,true,true);
                 MultiplyByQuadratureMetric  (wsp0,wsp2);
                 IProductWRTBase_SumFacKernel(base0,base1,wsp2,   outarray,wsp1,true,true);
-                
+
                 // LAPLACIAN MATRIX OPERATION
                 // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
                 // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
@@ -1184,14 +1184,14 @@ namespace Nektar
                 StdExpansion2D::PhysTensorDeriv(inarray,wsp1,wsp2);
                 MultiplyByQuadratureMetric(inarray,outarray);
             }
-            
+
             // wsp1 = k = wsp1 * w0 * w1
             // wsp2 = l = wsp2 * w0 * w1
             MultiplyByQuadratureMetric(wsp1,wsp1);
             MultiplyByQuadratureMetric(wsp2,wsp2);
-            
-            // wsp1 = m = (D_xi1 * B)^T * k 
-            // wsp0 = n = (D_xi2 * B)^T * l 
+
+            // wsp1 = m = (D_xi1 * B)^T * k
+            // wsp0 = n = (D_xi2 * B)^T * l
             IProductWRTBase_SumFacKernel(dbase0,base1,wsp1,wsp0,wsp3,false,true);
             IProductWRTBase_SumFacKernel(base0,dbase1,wsp2,wsp1,wsp3,true,false);
 
@@ -1772,7 +1772,8 @@ namespace Nektar
 
 
         /**
-         *
+         * Generate mapping describing which elemental modes lie on the
+         * interior of a given face. Accounts for face orientation.
          */
         void StdHexExp::v_GetFaceInteriorMap(const int fid,
                                 const FaceOrientation faceOrient,
@@ -1819,6 +1820,8 @@ namespace Nektar
             int nummodesA;
             int nummodesB;
 
+            // Determine the number of modes in face directions A & B based
+            // on the face index given.
             switch(fid)
             {
             case 0:
@@ -1846,6 +1849,8 @@ namespace Nektar
             int i,j;
             Array<OneD, int> arrayindx(nFaceIntCoeffs);
 
+            // Create a mapping array to account for transposition of the
+            // coordinates due to face orientation.
             for(i = 0; i < (nummodesB-2); i++)
             {
                 for(j = 0; j < (nummodesA-2); j++)
@@ -1870,17 +1875,18 @@ namespace Nektar
             Array<OneD, int> sign1(nummodes[1], 1);
             Array<OneD, int> sign2(nummodes[2], 1);
 
-
+			// Set the upper and lower bounds, and increment for the faces
+            // involving the first coordinate direction.
             switch(fid)
             {
-            case 0:
+            case 0:	// bottom face
                 {
                     IdxRange[2][0] = 0;
                     IdxRange[2][1] = 1;
                     Incr[2] = 1;
                 }
                 break;
-            case 5:
+            case 5: // top face
                 {
                     if( bType[2] == LibUtilities::eGLL_Lagrange)
                     {
@@ -1897,7 +1903,7 @@ namespace Nektar
 
                 }
                 break;
-            default:
+            default: // all other faces
                 {
                     if( bType[2] == LibUtilities::eGLL_Lagrange)
                     {
@@ -1932,6 +1938,8 @@ namespace Nektar
                 }
             }
 
+			// Set the upper and lower bounds, and increment for the faces
+            // involving the second coordinate direction.
             switch(fid)
             {
             case 1:
@@ -2437,10 +2445,10 @@ namespace Nektar
 
             if(m_base[0]->Collocation() && m_base[1]->Collocation()
                     && m_base[2]->Collocation())
-            {  
-                Vmath::Vcopy(m_base[0]->GetNumPoints() 
+            {
+                Vmath::Vcopy(m_base[0]->GetNumPoints()
                                 * m_base[1]->GetNumPoints()
-                                * m_base[2]->GetNumPoints(), 
+                                * m_base[2]->GetNumPoints(),
                              inarray, 1, outarray, 1);
             }
             else
@@ -2458,7 +2466,7 @@ namespace Nektar
                 else
                 {
                     StdHexExp::BwdTrans_SumFac(inarray,outarray);
-                }  
+                }
             }
 /*
 #if 1

@@ -153,7 +153,7 @@ namespace Nektar
         }
 
         // Method used to generate appropriate basis
-             /* The following expansions are generated depending on the
+             /** The following expansions are generated depending on the
              * enum type defined in \a m_basisKey.m_basistype:
              *
              * NOTE: This definition does not follow the order in the

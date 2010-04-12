@@ -55,8 +55,8 @@ namespace Nektar
          * = \left[ \begin{array}{c} \boldsymbol{y_1}\\ \boldsymbol{y_2}
          * \end{array}\right],
          * @f]
-         * where @f$\boldsymbol{D}@f$ and 
-         * @f$(\boldsymbol{A-BD^{-1}C})@f$ are invertible, store and assemble 
+         * where @f$\boldsymbol{D}@f$ and
+         * @f$(\boldsymbol{A-BD^{-1}C})@f$ are invertible, store and assemble
          * a static condensation system, according to a given local to global
          * mapping. #m_linSys is constructed by AssembleSchurComplement().
          * @param   mKey        Associated matrix key.
@@ -274,7 +274,7 @@ namespace Nektar
             int nDirBndDofs        = locToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
             int nLocBndDofs        = locToGloMap->GetNumLocalBndCoeffs();
-            int nIntDofs           = locToGloMap->GetNumGlobalCoeffs() 
+            int nIntDofs           = locToGloMap->GetNumGlobalCoeffs()
                                                                 - nGlobBndDofs;
 
             Array<OneD, NekDouble> F(nGlobDofs);
@@ -298,7 +298,7 @@ namespace Nektar
             NekVector<NekDouble> V_LocBnd(nLocBndDofs,0.0);
             NekVector<NekDouble> V_LocBndTmp1(nLocBndDofs,0.0);
             NekVector<NekDouble> V_LocBndTmp2(nLocBndDofs,0.0);
-            
+
             NekVector<NekDouble> V_GlobHomBndTmp(nGlobHomBndDofs,0.0);
 
             if(nGlobHomBndDofs)
@@ -451,7 +451,7 @@ namespace Nektar
                     {
                         for(j = 0; j < loc_lda; ++j)
                         {
-                            gid2 = locToGloMap->GetLocalToGlobalMap(cnt + j) 
+                            gid2 = locToGloMap->GetLocalToGlobalMap(cnt + j)
                                                                     - NumDirBCs;
                             sign2 = locToGloMap->GetLocalToGlobalSign(cnt + j);
                             if(gid2 >= 0)
@@ -462,7 +462,7 @@ namespace Nektar
                                 // entries to be entered twice
                                 if((matStorage == eFULL)||(gid2 >= gid1))
                                 {
-                                    value = Gmat->GetValue(gid1,gid2) 
+                                    value = Gmat->GetValue(gid1,gid2)
                                                 + sign1*sign2*(*loc_mat)(i,j);
                                     Gmat->SetValue(gid1,gid2,value);
                                 }
@@ -482,7 +482,7 @@ namespace Nektar
 
 
         /**
-         * Assemble the schur complement matrix from the block matrices stored 
+         * Assemble the schur complement matrix from the block matrices stored
          * in #m_blkMatrices and the given local to global mapping information.
          * @param   locToGloMap Local to global mapping information.
          */
@@ -512,11 +512,17 @@ namespace Nektar
                 {
                     if( (2*(bwidth+1)) < rows)
                     {
+                        try {
                         matStorage = ePOSITIVE_DEFINITE_SYMMETRIC_BANDED;
                         Gmat = MemoryManager<DNekMat>
                                         ::AllocateSharedPtr(rows, cols, zero,
                                                             matStorage,
                                                             bwidth, bwidth);
+                        }
+                        catch (...) {
+                        	NEKERROR(ErrorUtil::efatal,
+                        			"Insufficient memory for GlobalLinSys.");
+                        }
                     }
                     else
                     {
@@ -757,7 +763,7 @@ namespace Nektar
 
 
         /**
-         * 
+         *
          */
         void GlobalLinSys::ConstructCondensedBlockMatrices(
                         const DNekScalBlkMatSharedPtr        schurComplOld,

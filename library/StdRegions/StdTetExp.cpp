@@ -318,8 +318,8 @@ namespace Nektar
         /**
          * @note 'r' (base[2]) runs fastest in this element
          *
-         * \f$ u^{\delta} (\xi_{1i}, \xi_{2j}, \xi_{3k}) 
-         *  =  \sum_{m(pqr)} \hat u_{pqr} 
+         * \f$ u^{\delta} (\xi_{1i}, \xi_{2j}, \xi_{3k})
+         *  =  \sum_{m(pqr)} \hat u_{pqr}
          *          \phi_{pqr} (\xi_{1i}, \xi_{2j}, \xi_{3k})\f$
          *
          * Backward transformation is three dimensional tensorial expansion
@@ -353,10 +353,10 @@ namespace Nektar
 
             if(m_base[0]->Collocation() && m_base[1]->Collocation()
                     && m_base[2]->Collocation())
-            {  
-                Vmath::Vcopy(m_base[0]->GetNumPoints() 
+            {
+                Vmath::Vcopy(m_base[0]->GetNumPoints()
                                 * m_base[1]->GetNumPoints()
-                                * m_base[2]->GetNumPoints(), 
+                                * m_base[2]->GetNumPoints(),
                              inarray, 1, outarray, 1);
             }
             else
@@ -371,17 +371,55 @@ namespace Nektar
                 else
                 {
                     StdTetExp::v_BwdTrans_SumFac(inarray,outarray);
-                }  
+                }
             }
         }
 
-        
+
         /**
          * Sum-factorisation implementation of the BwdTrans operation.
          */
         void StdTetExp::v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                  Array<OneD, NekDouble> &outarray)
         {
+            Array<OneD, NekDouble> wsp(m_base[2]->GetNumPoints()*
+                                       m_base[0]->GetNumModes()*
+                                       ((m_base[1]->GetNumModes()+1)/2 + m_base[1]->GetNumPoints()));
+            //Array<OneD, NekDouble > tmp(nquad2*order0*(order1+1)/2);
+            //Array<OneD, NekDouble > tmp1(nquad2*nquad1*order0);
+
+            BwdTrans_SumFacKernel(m_base[0]->GetBdata(),
+                                  m_base[1]->GetBdata(),
+                                  m_base[2]->GetBdata(),
+                                  inarray,outarray,wsp,true,true,true);
+        }
+
+
+        /**
+         * @param   base0       x-dirn basis matrix
+         * @param   base1       y-dirn basis matrix
+         * @param   base2       z-dirn basis matrix
+         * @param   inarray     Input vector of modes.
+         * @param   outarray    Output vector of physical space data.
+         * @param   wsp         Workspace of size Q_x*P_z*(P_y+Q_y)
+         * @param   doCheckCollDir0     Check for collocation of basis.
+         * @param   doCheckCollDir1     Check for collocation of basis.
+         * @param   doCheckCollDir2     Check for collocation of basis.
+         * @todo    Account for some directions being collocated. See
+         *          StdQuadExp as an example.
+         */
+        void StdTetExp::BwdTrans_SumFacKernel(
+                    const Array<OneD, const NekDouble>& base0,
+                    const Array<OneD, const NekDouble>& base1,
+                    const Array<OneD, const NekDouble>& base2,
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray,
+                          Array<OneD, NekDouble> &wsp,
+                    bool doCheckCollDir0,
+                    bool doCheckCollDir1,
+                    bool doCheckCollDir2)
+        {
+
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
             int  nquad2 = m_base[2]->GetNumPoints();
@@ -390,10 +428,8 @@ namespace Nektar
             int  order1 = m_base[1]->GetNumModes();
             int  order2 = m_base[2]->GetNumModes();
 
-            Array<OneD, const NekDouble> base0 = m_base[0]->GetBdata();
-            Array<OneD, const NekDouble> base1 = m_base[1]->GetBdata();
-            Array<OneD, const NekDouble> base2 = m_base[2]->GetBdata();
-
+            //Array<OneD, NekDouble > tmp  = wsp;
+//            Array<OneD, NekDouble > tmp1 = tmp + nquad2*order0*(order1+1)/2;
             Array<OneD, NekDouble > tmp(nquad2*order0*(order1+1)/2);
             Array<OneD, NekDouble > tmp1(nquad2*nquad1*order0);
 
@@ -462,6 +498,7 @@ namespace Nektar
             Blas::Dgemm('N','T', nquad0,nquad1*nquad2,order0,1.0,
                         base0.get(),nquad0, &tmp1[0], nquad1*nquad2,
                         0.0, &outarray[0], nquad0);
+
         }
 
 
@@ -531,7 +568,7 @@ namespace Nektar
             {
                 bool doMatOp = NekOptimize::ElementalOptimization<eStdTetExp, NekOptimize::eIProductWRTBase, 3>::
                     DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes(),m_base[2]->GetNumModes());
-                
+
                 if(doMatOp)
                 {
                     StdTetExp::v_IProductWRTBase_MatOp(inarray,outarray);
@@ -539,7 +576,7 @@ namespace Nektar
                 else
                 {
                     StdTetExp::v_IProductWRTBase_SumFac(inarray,outarray);
-                }  
+                }
             }
 
         }
@@ -551,13 +588,13 @@ namespace Nektar
         {
             int nq = GetTotPoints();
             StdMatrixKey      iprodmatkey(eIProductWRTBase,DetExpansionType(),*this);
-            DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);            
-            
+            DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);
+
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
                         m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
 
         }
-        
+
 
         /**
          * @param   inarray     Function evaluated at physical collocation
@@ -578,24 +615,24 @@ namespace Nektar
             int  order2 = m_base[2]->GetNumModes();
 
             Array<OneD, NekDouble > tmp (nquad0*nquad1*nquad2);
-            Array<OneD, NekDouble > wsp (nquad1*nquad2*order0 
+            Array<OneD, NekDouble > wsp (nquad1*nquad2*order0
                                             + nquad2*order0*(order1+1)/2);
-            
+
             MultiplyByQuadratureMetric(inarray, tmp);
-            
+
             StdTetExp::IProductWRTBase_SumFacKernel(
                     m_base[0]->GetBdata(),
                     m_base[1]->GetBdata(),
                     m_base[2]->GetBdata(),
                     tmp, outarray, wsp, true, true, true);
         }
-        
-        
+
+
         void StdTetExp::IProductWRTBase_SumFacKernel (
-                    const Array<OneD, const NekDouble>& base0, 
+                    const Array<OneD, const NekDouble>& base0,
                     const Array<OneD, const NekDouble>& base1,
                     const Array<OneD, const NekDouble>& base2,
-                    const Array<OneD, const NekDouble>& inarray, 
+                    const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray,
                           Array<OneD, NekDouble> &wsp,
                           bool doCheckCollDir0,
@@ -678,12 +715,122 @@ namespace Nektar
         }
 
 
+        void StdTetExp::v_IProductWRTDerivBase(const int dir,
+                const Array<OneD, const NekDouble>& inarray,
+                Array<OneD, NekDouble> & outarray)
+        {
+            bool doMatOp = NekOptimize::ElementalOptimization<eStdTetExp, NekOptimize::eIProductWRTDerivBase, 3>::
+                DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes(),m_base[2]->GetNumModes());
+
+            if(doMatOp)
+            {
+                StdTetExp::v_IProductWRTDerivBase_MatOp(dir,inarray,outarray);
+            }
+            else
+            {
+                StdTetExp::v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
+            }
+        }
+
+
+        void StdTetExp::v_IProductWRTDerivBase_MatOp (const int dir,
+                                const Array<OneD, const NekDouble>& inarray,
+                                      Array<OneD, NekDouble> & outarray)
+        {
+            ASSERTL0((dir==0)||(dir==1)||(dir==2),"input dir is out of range");
+
+            int nq = GetTotPoints();
+            MatrixType mtype;
+
+            switch (dir)
+            {
+                case 0:
+                    mtype = eIProductWRTDerivBase0;
+                    break;
+                case 1:
+                    mtype = eIProductWRTDerivBase1;
+                    break;
+                case 2:
+                    mtype = eIProductWRTDerivBase2;
+                    break;
+            }
+
+            StdMatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
+            DNekMatSharedPtr& iprodmat = GetStdMatrix(iprodmatkey);
+
+            Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
+                        m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
+        }
+
+
+        /**
+         * @param   inarray     Function evaluated at physical collocation
+         *                      points.
+         * @param   outarray    Inner product with respect to each basis
+         *                      function over the element.
+         */
+        void StdTetExp::v_IProductWRTDerivBase_SumFac (const int dir,
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> & outarray)
+        {
+            int  nquad0 = m_base[0]->GetNumPoints();
+            int  nquad1 = m_base[1]->GetNumPoints();
+            int  nquad2 = m_base[2]->GetNumPoints();
+
+            int  order0 = m_base[0]->GetNumModes();
+            int  order1 = m_base[1]->GetNumModes();
+            int  order2 = m_base[2]->GetNumModes();
+
+//            Array<OneD, NekDouble > tmp (nquad0*nquad1*nquad2);
+//            Array<OneD, NekDouble > wsp (nquad1*nquad2*order0
+//                                            + nquad2*order0*(order1+1)/2);
+            // If outarray > inarray then no need for temporary storage.
+            Array<OneD, NekDouble> tmp = outarray;
+            if (outarray.num_elements() < inarray.num_elements())
+            {
+                tmp = Array<OneD, NekDouble>(inarray.num_elements());
+            }
+
+            // Need workspace for sumfackernel though
+            Array<OneD, NekDouble> wsp(order0*nquad2*(nquad1+order1));
+
+            MultiplyByQuadratureMetric(inarray, tmp);
+
+            // perform sum-factorisation
+            switch (dir)
+            {
+                case 0:
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                                 m_base[1]->GetBdata(),
+                                                 m_base[2]->GetBdata(),
+                                                 tmp,outarray,wsp,
+                                                 false,true,true);
+                    break;
+                case 1:
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                                 m_base[1]->GetDbdata(),
+                                                 m_base[2]->GetBdata(),
+                                                 tmp,outarray,wsp,
+                                                 true,false,true);
+                    break;
+                case 2:
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                                 m_base[1]->GetBdata(),
+                                                 m_base[2]->GetDbdata(),
+                                                 tmp,outarray,wsp,
+                                                 true,true,false);
+                    break;
+            }
+
+        }
+
+
         void StdTetExp::MultiplyByQuadratureMetric(
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray)
         {
             int i, j;
-            
+
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
             int  nquad2 = m_base[2]->GetNumPoints();
@@ -751,8 +898,8 @@ namespace Nektar
                 break;
             }
         }
-        
-        
+
+
         void StdTetExp::FillMode(
                             const int mode, Array<OneD, NekDouble> &outarray)
         {
@@ -854,79 +1001,638 @@ namespace Nektar
         \end{Bmatrix}\f$
 
         **/
-        // PhysDerivative implementation based on Spen's book page 152.
-        void StdTetExp::PhysDeriv(const Array<OneD, const NekDouble>& u_physical,
-                                  Array<OneD, NekDouble> &out_dxi1,
-                                  Array<OneD, NekDouble> &out_dxi2,
-                                  Array<OneD, NekDouble> &out_dxi3 )
-        {
-
-            int    Qx = m_base[0]->GetNumPoints();
-            int    Qy = m_base[1]->GetNumPoints();
-            int    Qz = m_base[2]->GetNumPoints();
-
-            // Compute the physical derivative
-            Array<OneD, NekDouble> out_dEta1(Qx*Qy*Qz,0.0), out_dEta2(Qx*Qy*Qz,0.0), out_dEta3(Qx*Qy*Qz,0.0);
-            PhysTensorDeriv(u_physical, out_dEta1, out_dEta2, out_dEta3);
-
-            Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
-            eta_x = m_base[0]->GetZ();
-            eta_y = m_base[1]->GetZ();
-            eta_z = m_base[2]->GetZ();
-
-
-            for(int k=0, n=0; k<Qz; ++k)
-                for(int j=0; j<Qy; ++j){
-                    for(int i=0; i<Qx; ++i, ++n){
-                        {
-                            out_dxi1[n] = 4.0 / ((1.0 - eta_y[j])*(1.0 - eta_z[k]))*out_dEta1[n];
-                            out_dxi2[n] = 2.0*(1.0 + eta_x[i]) / ((1.0-eta_y[j])*(1.0 - eta_z[k]))*out_dEta1[n]  +  2.0/(1.0 - eta_z[k])*out_dEta2[n];
-                            out_dxi3[n] = 2.0*(1.0 + eta_x[i]) / ((1.0 - eta_y[j])*(1.0 - eta_z[k]))*out_dEta1[n] + (1.0 + eta_y[j]) / (1.0 - eta_z[k])*out_dEta2[n] + out_dEta3[n];
-
-                            //cout << "eta_x["<<i<<"] = " <<  eta_x[i] << ",  eta_y["<<j<<"] = " << eta_y[j] << ", eta_z["<<k<<"] = " <<eta_z[k] << endl;
-                            //cout << "out_dEta1["<<n<<"] = " << out_dEta1[n] << ",  out_dEta2["<<n<<"] = " << out_dEta2[n] << ", out_dEta3["<<n<<"] = " <<out_dEta3[n] << endl;
-                            //cout << "out_dxi1["<<n<<"] = " << out_dxi1[n] << ",  out_dxi2["<<n<<"] = " << out_dxi2[n] << ", out_dxi3["<<n<<"] = " << out_dxi3[n] << endl;
-
-                        }
-                    }
-                }
-        }
 
 
         ///////////////////////////////
         /// Evaluation Methods
         ///////////////////////////////
 
-
-
-        void StdTetExp::GetCoords( Array<OneD, NekDouble> & xi_x, Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z)
+        NekDouble StdTetExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& xi)
         {
-            Array<OneD, const NekDouble> eta_x = m_base[0]->GetZ();
-            Array<OneD, const NekDouble> eta_y = m_base[1]->GetZ();
-            Array<OneD, const NekDouble> eta_z = m_base[2]->GetZ();
-            int Qx = GetNumPoints(0);
-            int Qy = GetNumPoints(1);
-            int Qz = GetNumPoints(2);
+            ASSERTL0(xi[0] + xi[1] + xi[2] + 1 <= NekConstants::kNekZeroTol,
+                     "Coordinate outside bounds of tetrahedron.");
+            ASSERTL0((xi[0] + 1 + NekConstants::kNekZeroTol >= 0)
+                        || (xi[1] + 1 + NekConstants::kNekZeroTol >= 0)
+                        || (xi[2] + 1 + NekConstants::kNekZeroTol >= 0),
+                     "Coordinate outside bounds of tetrahedron.");
 
-            // Convert collapsed coordinates into cartesian coordinates: eta --> xi
-            for( int k = 0; k < Qz; ++k ) {
-                for( int j = 0; j < Qy; ++j ) {
-                    for( int i = 0; i < Qx; ++i ) {
-                        int s = i + Qx*(j + Qy*k);
-                        xi_x[s] = (eta_x[i] + 1.0) * (1.0 - eta_y[j]) * (1.0 - eta_z[k]) / 4  -  1.0;
-                        xi_y[s] = (eta_y[j] + 1.0) * (1.0 - eta_z[k]) / 2  -  1.0;
-                        xi_z[s] = eta_z[k];
+            Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
+
+            if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)
+            {
+                // Very top point of the tetrahedron
+                eta[0] = -1.0;
+                eta[1] = -1.0;
+                eta[2] = xi[2];
+            }
+            else
+            {
+                if( fabs(xi[1]-1.0) <  NekConstants::kNekZeroTol )
+                {
+                    // Distant diagonal edge shared by all eta_x
+                    // coordinate planes: the xi_y == -xi_z line
+                    eta[0] = -1.0;
+                }
+                else if (fabs(xi[1] + xi[2]) < NekConstants::kNekZeroTol)
+                {
+                    eta[0] = -1.0;
+                }
+                else
+                {
+                    eta[0] = 2.0*(1.0+xi[0])/(-xi[1]-xi[2]) - 1.0;
+                }
+                eta[1] = 2.0*(1.0+xi[1])/(1.0-xi[2]) - 1.0;
+                eta[2] = xi[2];
+            }
+
+            ASSERTL0((eta[0] + NekConstants::kNekZeroTol >= -1)
+                        || (eta[1] + NekConstants::kNekZeroTol >= -1)
+                        || (eta[2] + NekConstants::kNekZeroTol >= -1),
+                     "Eta Coordinate outside bounds of tetrahedron.");
+            ASSERTL0((eta[0] - NekConstants::kNekZeroTol <= 1)
+                        || (eta[1] - NekConstants::kNekZeroTol <= 1)
+                        || (eta[2] - NekConstants::kNekZeroTol <= 1),
+                     "Eta Coordinate outside bounds of tetrahedron.");
+
+            return  StdExpansion3D::v_PhysEvaluate(eta);
+        }
+
+
+        bool StdTetExp::v_IsBoundaryInteriorExpansion()
+        {
+            bool returnval = false;
+
+            if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
+            {
+                if(m_base[1]->GetBasisType() == LibUtilities::eModified_B)
+                {
+                    if(m_base[2]->GetBasisType() == LibUtilities::eModified_C)
+                    {
+                        returnval = true;
                     }
                 }
+            }
+
+            return returnval;
+        }
+
+        int StdTetExp::v_GetNverts() const
+        {
+            return 4;
+        }
+
+        int StdTetExp::v_GetNedges() const
+        {
+            return 6;
+        }
+
+        int StdTetExp::v_GetNfaces() const
+        {
+            return 4;
+        }
+
+        int StdTetExp::v_NumBndryCoeffs() const
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_B ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_C ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+
+            int P = m_base[0]->GetNumModes();
+            int Q = m_base[1]->GetNumModes();
+            int R = m_base[2]->GetNumModes();
+
+            int p_hat, k;
+            // All modes in the first layer are boundary modes
+            int tot = P*(P+1)/2 + (Q-P)*P;
+            // Loop over each plane in the stack
+            for (int i = 1; i < R - 1; ++i)
+            {
+                p_hat = min(P, R-i);
+                k = min(Q-P, max(0, Q-i-1));
+                // First two columns and bottom row are boundary modes
+                tot += (p_hat + k) + (p_hat + k - 1) + p_hat - 2;
+            }
+
+            // Add on top vertex mode
+            return tot + 1;
+        }
+
+
+        int StdTetExp::v_GetFaceIntNcoeffs(const int i) const
+        {
+            ASSERTL2((i >= 0) && (i <= 3), "face id is out of range");
+            int Pi = m_base[0]->GetNumModes() - 2;
+            int Qi = m_base[1]->GetNumModes() - 2;
+            int Ri = m_base[2]->GetNumModes() - 2;
+
+            if((i == 0))
+            {
+                return Pi * (2*Qi - Pi - 1) / 2;
+            }
+            else if((i == 1))
+            {
+                return Pi * (2*Ri - Pi - 1) / 2;
+            }
+            else
+            {
+                return Qi * (2*Ri - Qi - 1) / 2;
+            }
+        }
+
+        ExpansionType StdTetExp::v_DetExpansionType() const
+        {
+            return DetExpansionType();
+        }
+
+
+        // BEGIN ///
+
+        int StdTetExp::v_GetEdgeNcoeffs(const int i) const
+        {
+            ASSERTL2((i >= 0) && (i <= 5), "edge id is out of range");
+            int P = m_base[0]->GetNumModes();
+            int Q = m_base[1]->GetNumModes();
+            int R = m_base[2]->GetNumModes();
+
+            if (i == 0)
+            {
+                return P;
+            }
+            else if((i==1)||(i==2))
+            {
+                return Q;
+            } else
+            {
+                return R;
+            }
+        }
+
+        int StdTetExp::v_GetFaceNcoeffs(const int i) const
+        {
+            ASSERTL2((i >= 0) && (i <= 3), "face id is out of range");
+            int nFaceCoeffs = 0;
+            int nummodesA, nummodesB, P, Q;
+            if (i == 0)
+            {
+                nummodesA = GetBasisNumModes(0);
+                nummodesB = GetBasisNumModes(1);
+            }
+            else if ((i == 1) || (i == 2))
+            {
+                nummodesA = GetBasisNumModes(0);
+                nummodesB = GetBasisNumModes(2);
+            }
+            else
+            {
+                nummodesA = GetBasisNumModes(1);
+                nummodesB = GetBasisNumModes(2);
+            }
+            P = nummodesA - 1;
+            Q = nummodesB - 1;
+            nFaceCoeffs = Q+1 + (P*(1 + 2*Q - P))/2;
+            return nFaceCoeffs;
+        }
+
+
+        /**
+         * List of all boundary modes in the the expansion.
+         */
+        void StdTetExp::v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
+        {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_B ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_C ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+
+            int P = m_base[0]->GetNumModes();
+            int Q = m_base[1]->GetNumModes();
+            int R = m_base[2]->GetNumModes();
+
+            int p_hat, k;
+
+            // All modes in the first and second layer are boundary modes
+            int cnt = P*(P+1)/2 + (Q-P)*P;
+            p_hat = min(P, R-1);
+            k = min(Q-P, max(0, Q-1));
+			cnt += p_hat*(p_hat+1)/2 - k*P;
+
+            int cnt2 = 0;
+            int idx = 0;
+            for (int i = 0; i < cnt; ++i)
+            {
+                outarray[idx++] = i;
+            }
+
+            // Loop over each of the remaining planes in the stack
+            for (int i = 2; i < R - 1; ++i)
+            {
+                p_hat = min(P, R-i);
+                k = min(Q-P, max(0, Q-i-1));
+                cnt2 = p_hat + k;
+
+                // First column are boundary modes
+                for (int j = 0; j < cnt2; ++j)
+                {
+                    outarray[idx++] = cnt + j;
+                }
+
+                // Bottom row is boundary
+                for (int j = 0; j < p_hat - 1; ++j)
+                {
+                    outarray[idx++] = cnt + cnt2;
+                    cnt2 += (p_hat+k)-1-j;
+                }
+                cnt += p_hat*(p_hat+1)/2 - k*P;
+            }
+
+            // Top item is also boundary mode (in edge 3)
+            if (R > 2) {
+            	outarray[idx++] = cnt;
             }
         }
 
 
-        void StdTetExp::GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
-                                            Array<OneD, unsigned int> &maparray,
-                                            Array<OneD, int>& signarray)
+        /**
+         * List of all interior modes in the expansion.
+         */
+        void StdTetExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
         {
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_B ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_C ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
 
+            int P = m_base[0]->GetNumModes();
+            int Q = m_base[1]->GetNumModes();
+            int R = m_base[2]->GetNumModes();
+
+            int p_hat, k;
+            int cnt2 = 0;
+            int idx = 0;
+
+            // All modes in the first and second layer are boundary modes
+            int cnt = P*(P+1)/2 + (Q-P)*P;
+            p_hat = min(P, R-1);
+            k = min(Q-P, max(0, Q-1));
+			cnt += p_hat*(p_hat+1)/2 - k*P;
+
+            // Loop over each plane in the stack
+            for (int i = 0; i < R - 3; ++i)
+            {
+                p_hat = min(P, R-i-2);
+                k = min(Q-P, max(0, Q-i-2));
+                cnt2 = p_hat + k;
+                // Bottom row is boundary
+                for (int j = 0; j < p_hat - 1; ++j)
+                {
+                    for (int m = 0; m < p_hat + k - j - 2; ++m)
+                    {
+                        outarray[idx++] = cnt + cnt2 + 1 + m;
+                    }
+                    // skip to next column
+                    cnt2 += (p_hat+k)-1-j;
+                }
+                cnt += p_hat*(p_hat+1)/2 - k*P;
+            }
+        }
+
+
+        /**
+         * For a given local vertex ID, returns the mode number of the
+         * expansion corresponding to the linear mode at that vertex.
+         */
+        int StdTetExp::v_GetVertexMap(const int localVertexId)
+        {
+            ASSERTL0((GetEdgeBasisType(localVertexId)==LibUtilities::eModified_A)||
+                     (GetEdgeBasisType(localVertexId)==LibUtilities::eModified_B)||
+                     (GetEdgeBasisType(localVertexId)==LibUtilities::eModified_C),
+                     "Mapping not defined for this type of basis");
+
+            int localDOF;
+            int P = m_base[0]->GetNumModes();
+            int Q = m_base[1]->GetNumModes();
+            switch(localVertexId)
+            {
+            case 0:
+                {
+                    localDOF = 0;
+                }
+                break;
+            case 1:
+                {
+                    localDOF = Q;
+                }
+                break;
+            case 2:
+                {
+                    localDOF = 1;
+                }
+                break;
+            case 3:
+                {
+                    localDOF = P*(2*Q-P+1)/2;
+                }
+                break;
+            default:
+                ASSERTL0(false,"Vertex ID must be between 0 and 3");
+                break;
+            }
+
+            return localDOF;
+        }
+
+
+        /**
+         * Maps interior modes of an edge to the elemental modes.
+         */
+        void StdTetExp::v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+                                          Array<OneD, unsigned int> &maparray,
+                                          Array<OneD, int> &signarray)
+        {
+            int i, cnt, p_hat, k;
+            const int P = m_base[0]->GetNumModes();
+            const int Q = m_base[1]->GetNumModes();
+            const int R = m_base[2]->GetNumModes();
+
+            const int nEdgeIntCoeffs = v_GetEdgeNcoeffs(eid)-2;
+
+            if(maparray.num_elements() != nEdgeIntCoeffs)
+            {
+                maparray = Array<OneD, unsigned int>(nEdgeIntCoeffs);
+            }
+            else
+            {
+            	fill( maparray.get(), maparray.get() + nEdgeIntCoeffs, 0);
+            }
+
+            if(signarray.num_elements() != nEdgeIntCoeffs)
+            {
+                signarray = Array<OneD, int>(nEdgeIntCoeffs,1);
+            }
+            else
+            {
+                fill( signarray.get() , signarray.get()+nEdgeIntCoeffs, 1 );
+            }
+
+            switch (eid)
+            {
+                case 0:
+                    cnt = 2*Q-1;
+                    for (i = 0; i < P-2; ++i)
+                    {
+                        maparray[i] = cnt;
+                        cnt += Q-2-i;
+                    }
+                    if(edgeOrient==eBackwards)
+                    {
+                        for(i = 1; i < nEdgeIntCoeffs; i+=2)
+                        {
+                            signarray[i] = -1;
+                        }
+                    }
+                    break;
+                case 1:
+                    for (i = 0; i < Q-2; ++i)
+                    {
+                        maparray[i] = Q+1+i;
+                    }
+                    if(edgeOrient==eBackwards)
+                    {
+                        for(i = 1; i < nEdgeIntCoeffs; i+=2)
+                        {
+                            signarray[i] = -1;
+                        }
+                    }
+                    break;
+                case 2:
+                    for (i = 0; i < Q-2; ++i)
+                    {
+                        maparray[i] = 2+i;
+                    }
+                    if(edgeOrient==eBackwards)
+                    {
+                        for(i = 1; i < nEdgeIntCoeffs; i+=2)
+                        {
+                        	signarray[i] = -1;
+                        }
+                    }
+                    break;
+                case 3:
+                    // Skip bottom layer
+                    cnt =  P*(P+1)/2 - (Q-P)*P;
+                    // Skip second layer
+                    p_hat = min(P, R-1);
+                    k = min(Q-P, max(0, Q-1));
+                    cnt +=  p_hat*(p_hat+1)/2 - k*P;
+                    // Now populate array using remaining layers
+                    for (i = 0; i < R-2; ++i)
+                    {
+                        p_hat = min(P, R-i-2);
+                        k = min(Q-P, max(0, Q-i-2));
+                        maparray[i] = cnt;
+                        cnt += p_hat*(p_hat+1)/2 - k*P;
+                    }
+                    if(edgeOrient==eBackwards)
+                    {
+                        for(i = 1; i < nEdgeIntCoeffs; i+=2)
+                        {
+                            signarray[i] = -1;
+                        }
+                    }
+                    break;
+                case 4: // OK
+                    // Skip bottom layer
+                    cnt = P*(P+1)/2 - (Q-P)*P;
+                    // Skip first column of second layer
+                    p_hat = min(P, R-1);
+                    k = min(Q-P, max(0, Q-1));
+                    cnt += p_hat + k;
+                    for (i = 0; i < p_hat - 1; ++i)
+                    {
+                        maparray[i] = cnt;
+                        // skip to next column
+                        cnt += p_hat + k - i - 1;
+                    }
+                    if(edgeOrient==eForwards)
+                    {
+                        for(i = 1; i < nEdgeIntCoeffs; i+=2)
+                        {
+                            signarray[i] = -1;
+                        }
+                    }
+                    break;
+                case 5:
+                    // Skip bottom layer
+                    cnt = P*(P+1)/2 - (Q-P)*P;
+                    // Skip bottom left corner
+                    for (i = 0; i < R-2; ++i)
+                    {
+                        maparray[i] = ++cnt;
+                    }
+                    if(edgeOrient==eForwards)
+                    {
+                        for(i = 1; i < nEdgeIntCoeffs; i+=2)
+                        {
+                            signarray[i] = -1;
+                        }
+                    }
+                    break;
+                default:
+                    ASSERTL0(false, "Edge not defined.");
+                    break;
+            }
+        }
+
+        void StdTetExp::v_GetFaceInteriorMap(const int fid, const FaceOrientation faceOrient,
+                                          Array<OneD, unsigned int> &maparray,
+                                          Array<OneD, int> &signarray)
+        {
+            int i, j, cnt, cnt2, idx, p_hat, k;
+            const int P = m_base[0]->GetNumModes();
+            const int Q = m_base[1]->GetNumModes();
+            const int R = m_base[2]->GetNumModes();
+
+            const int nFaceIntCoeffs = v_GetFaceIntNcoeffs(fid);
+
+            if(maparray.num_elements() != nFaceIntCoeffs)
+            {
+                maparray = Array<OneD, unsigned int>(nFaceIntCoeffs);
+            }
+
+            if(signarray.num_elements() != nFaceIntCoeffs)
+            {
+                signarray = Array<OneD, int>(nFaceIntCoeffs,1);
+            }
+            else
+            {
+                fill( signarray.get() , signarray.get()+nFaceIntCoeffs, 1 );
+            }
+
+            switch (fid)
+            {
+                case 0:
+                	idx = 0;
+                	for (i = 2; i < R-1; ++i)
+                	{
+                		for (j = 1; j < R-i; ++j)
+                		{
+                        	if ((int)faceOrient == 2)
+                        	{
+                        		signarray[idx] = (i%2 ? 1 : -1);
+                        	}
+                            maparray[idx++] = GetMode(i,j,0);
+                		}
+                	}
+                    break;
+                case 1:
+                	idx = 0;
+                	for (i = 1; i < R-2; ++i)
+                	{
+                		for (k = 2; k < R-i; ++k)
+                		{
+                			if ((int)faceOrient == 2)
+                			{
+                				signarray[idx] = (i%2 ? 1: -1);
+                			}
+                			maparray[idx++] = GetMode(i,0,k);
+                		}
+                	}
+                    break;
+                case 2:
+                	idx = 0;
+                	for (j = 1; j < R-2; ++j)
+                	{
+                		for (i = 1; i < R-1-j; ++i)
+                		{
+                			if ((int)faceOrient == 0)
+                			{
+                				signarray[idx] = (i%2 ? 1: -1);
+                			}
+                			maparray[idx++] = GetMode(i,j,1);
+                		}
+                	}
+                    break;
+                case 3:
+                	idx = 0;
+                	for (j = 1; j < R-2; ++j)
+                	{
+                		for (k = 2; k < R-j; ++k)
+                		{
+                			if ((int)faceOrient == 2)
+                			{
+                				signarray[idx] = (j%2 ? 1: -1);
+                			}
+                			maparray[idx++] = GetMode(0,j,k);
+                		}
+                	}
+                    break;
+                default:
+                    ASSERTL0(false, "Face interior map not available.");
+            }
+        }
+
+
+        /**
+         * Compute the mode number in the expansion for a particular
+         * tensorial combination.
+         */
+        int StdTetExp::GetMode(const int I, const int J, const int K)
+        {
+            const int P = m_base[0]->GetNumModes();
+            const int Q = m_base[1]->GetNumModes();
+            const int R = m_base[2]->GetNumModes();
+
+        	int i,j,k,p_hat,k_hat;
+        	int cnt = 0;
+
+        	// Skip up the stacks (K)
+        	for (k = 0; k < K; ++k)
+        	{
+        		p_hat = min(P,R-k);
+        		k_hat = min(Q-P, max(0, Q-k));
+				cnt += p_hat*(p_hat+1)/2 - k_hat*P;
+        	}
+
+        	// Skip across the columns (I)
+    		p_hat = min(P,R-K);
+    		k_hat = min(Q-P, max(0, Q-K));
+        	for (i = 0; i < I; ++i)
+        	{
+        		cnt += p_hat + k_hat - i;
+        	}
+
+        	// Skip up the columns (J)
+        	cnt += J;
+
+        	// Return the final mode number
+        	return cnt;
+        }
+
+
+        /**
+         * Maps Expansion2D modes of a 2D face to the corresponding expansion
+         * modes.
+         */
+        void StdTetExp::v_GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
+                                           Array<OneD, unsigned int> &maparray,
+                                           Array<OneD, int>& signarray)
+        {
             int i,j;
             const int nummodes0 = m_base[0]->GetNumModes();
             const int nummodes1 = m_base[1]->GetNumModes();
@@ -949,10 +1655,6 @@ namespace Nektar
             else if (fid == 1)
             {
                 nummodesA = nummodes0;
-                nummodesB = nummodes2;
-            }
-            else if (fid == 2) {
-                nummodesA = nummodes1;
                 nummodesB = nummodes2;
             }
             else
@@ -981,7 +1683,7 @@ namespace Nektar
 
             // A mapping array to account for reversal of modes.
             Array<OneD, int> arrayindex(nFaceCoeffs,-1);
-            
+
             int limit = 0;      // Inner loop index limit
             int offsetA = 0;    // Element Offset in B direction
             int offsetB = 0;    // Element Offset in A direction
@@ -993,6 +1695,29 @@ namespace Nektar
             int n1 = 0;         // Computed depth in face orthogonal dirn in
                                 //   fast face coordinate
 
+            // Set up face mapping to account for face orientation.
+            if (faceOrient < 4)
+            {
+            	arrayindex[0] = 0;
+            	arrayindex[1] = 1;
+            	arrayindex[2] = 2;
+            	if (faceOrient == 2)
+            	{
+            		swap (arrayindex[0], arrayindex[2]);
+            	}
+            }
+            else
+            {
+            	ASSERTL0(false, "Face transposition not valid.");
+            	arrayindex[0] = 0;
+            	arrayindex[1] = 2;
+            	arrayindex[2] = 1;
+            	if (faceOrient == 5)
+            	{
+            		swap (arrayindex[0], arrayindex[1]);
+            	}
+            }
+/*
             // Create array indexing the modes at a face level. This handles
             // face orientation.
             if (faceOrient < 4) // Not transposed
@@ -1010,10 +1735,11 @@ namespace Nektar
             }
             else // Transposed
             {
+            	cout << "Transposed" << endl;
                 for(int a = 0; a < nummodesA; ++a)
                 {
                     limit = (a > nummodesA - nummodesB) ? nummodesA - a : nummodesB;
-                    jumpA = limit;                    
+                    jumpA = limit;
                     for(int b = 0; b < nummodesB - a; ++b)
                     {
                         arrayindex[b + offsetA] = b + offsetA;
@@ -1025,9 +1751,10 @@ namespace Nektar
             // Check the arrayindex was created properly and all entries filled.
             for (int i = 0; i < arrayindex.num_elements(); ++i)
             {
+            	cout << "Arrayindex " << i << ": " << arrayindex[i] << endl;
                 ASSERTL0(arrayindex[i] != -1, "arrayindex is not set up properly.");
             }
-            
+
             // Reset counters
             limit = 0;
             offsetA = 0;
@@ -1043,11 +1770,11 @@ namespace Nektar
 
             // Base triangle
             case 0:
-                for(int b = 0; b < nummodesB; ++b) 
+                for(int b = 0; b < nummodesB; ++b)
                 {
                     limit    = (b > nummodesB - nummodesA) ? nummodesB - b : nummodesA;
                     jumpB    = limit;
-                    for(int a = 0; a < limit; ++a) 
+                    for(int a = 0; a < limit; ++a)
                     {
                         maparray[ arrayindex[a + cnt] ] = a + offsetB;
                     }
@@ -1058,12 +1785,12 @@ namespace Nektar
 
             // Front triangle
             case 1:
-                for(int b = 0; b < nummodesB; ++b) 
+                for(int b = 0; b < nummodesB; ++b)
                 {
                     n0       = (b > nummodesB - nummodes1) ? nummodesB - b : nummodes1;
                     limit    = (b > nummodesB - nummodesA) ? nummodesB - b : nummodesA;
-                    
-                    for(int a = 0; a < limit; ++a) 
+
+                    for(int a = 0; a < limit; ++a)
                     {
                         maparray[ arrayindex[a + cnt] ] = a + offsetB;
                     }
@@ -1075,12 +1802,12 @@ namespace Nektar
 
             // Slanted triangle
             case 2:
-                for(int b = 0; b < nummodesB; ++b) 
+                for(int b = 0; b < nummodesB; ++b)
                 {
                     n0       = (b > nummodesB - nummodes0) ? nummodesB - b : nummodes0;
                     limit    = (b > nummodesB - nummodesA) ? nummodesB - b : nummodesA;
                     offsetA  = -1;
-                    for(int a = 0; a < limit; ++a) 
+                    for(int a = 0; a < limit; ++a)
                     {
                         n1       = (a > limit - n0) ? limit - a : n0;
                         offsetA += n1;
@@ -1094,12 +1821,12 @@ namespace Nektar
 
             // Rear triangle
             case 3:
-                for(int b = 0; b < nummodesB; ++b) 
+                for(int b = 0; b < nummodesB; ++b)
                 {
                     n0       = (b > nummodesB - nummodes0) ? nummodesB - b : nummodes0;
                     limit    = (b > nummodesB - nummodesA) ? nummodesB - b : nummodesA;
                     offsetA  = 0;
-                    for(int a = 0; a < limit; ++a) 
+                    for(int a = 0; a < limit; ++a)
                     {
                         maparray[ arrayindex[a + cnt] ] = offsetB + offsetA;
                         n1       = (a > limit - n0) ? limit - a : n0;
@@ -1111,13 +1838,39 @@ namespace Nektar
                 }
                 break;
             }
+*/
 
+            ASSERTL0(nummodesA == 2, "Not set up for nummodes != 2");
+            switch (fid) {
+            case 0:
+            	maparray[arrayindex[0]] = 0;
+            	maparray[arrayindex[1]] = 1;
+            	maparray[arrayindex[2]] = 2;
+            	break;
+            case 1:
+            	maparray[arrayindex[0]] = 0;
+            	maparray[arrayindex[1]] = 3;
+            	maparray[arrayindex[2]] = 2;
+            	break;
+            case 2:
+            	maparray[arrayindex[0]] = 2;
+            	maparray[arrayindex[1]] = 3;
+            	maparray[arrayindex[2]] = 1;
+            	break;
+            case 3:
+            	maparray[arrayindex[0]] = 0;
+            	maparray[arrayindex[1]] = 3;
+            	maparray[arrayindex[2]] = 1;
+            	break;
+            }
             // Finally set up sign arrays.
-            /// @todo   Correctly set up sign arrays.
-            if( (faceOrient==1) || (faceOrient==3) ||
+			// Re-orientate where second direction is reversed
+            // is this even possible for tet?
+/*            if( (faceOrient==1) || (faceOrient==3) ||
                 (faceOrient==6) || (faceOrient==7) )
             {
-
+            	ASSERTL0(false, "Reversal of modes in second direction not set up.");
+				// If not transposed => 1 or 3
                 if(faceOrient<4)
                 {
                     for(i = 3; i < nummodesB; i+=2)
@@ -1131,10 +1884,11 @@ namespace Nektar
 
                     for(i = 0; i < nummodesA; i++)
                     {
-                        //swap( maparray[i] , maparray[i+nummodesA] );
-                        //swap( signarray[i] , signarray[i+nummodesA] );
+                        swap( maparray[i] , maparray[i+nummodesA] );
+                        swap( signarray[i] , signarray[i+nummodesA] );
                     }
                 }
+                // transposed => 6 or 7
                 else
                 {
                     for(i = 0; i < nummodesB; i++)
@@ -1148,15 +1902,21 @@ namespace Nektar
 
                     for(i = 0; i < nummodesB; i++)
                     {
-                        //swap( maparray[i] , maparray[i+nummodesB] );
-                        //swap( signarray[i] , signarray[i+nummodesB] );
+                        swap( maparray[i] , maparray[i+nummodesB] );
+                        swap( signarray[i] , signarray[i+nummodesB] );
                     }
                 }
             }
-
+*/
+			if (nummodesA > 2) {
+				ASSERTL0(false, "Need to fix for higher mode orders");
+			}
+/*
+            // Reorientate where first direction is reversed
             if( (faceOrient==2) || (faceOrient==3) ||
                 (faceOrient==5) || (faceOrient==7) )
             {
+            	// Not transposed => 2 or 3
                 if(faceOrient<4)
                 {
                     for(i = 0; i < nummodesB; i++)
@@ -1168,11 +1928,11 @@ namespace Nektar
                         }
                     }
 
-                    for(i = 0; i < nummodesB; i++)
-                    {
-                        //swap( maparray[i*nummodesA] , maparray[i*nummodesA+1] );
-                        //swap( signarray[i*nummodesA] , signarray[i*nummodesA+1] );
-                    }
+                    //for(i = 0; i < nummodesB-2; i++)
+                    //{
+                    //    swap( maparray[i+2] , maparray[nummodesB+i+1] );
+                    //    swap( signarray[i+2] , signarray[nummodesB+i+1] );
+                    //}
                 }
                 else
                 {
@@ -1185,18 +1945,182 @@ namespace Nektar
                         }
                     }
 
-                    for(i = 0; i < nummodesA; i++)
-                    {
-                        //swap( maparray[i*nummodesB] , maparray[i*nummodesB+1] );
-                        //swap( signarray[i*nummodesB] , signarray[i*nummodesB+1] );
+                    //for(i = 0; i < nummodesA; i++)
+                    //{
+                    //    swap( maparray[i*nummodesB] , maparray[i*nummodesB+1] );
+                    //    swap( signarray[i*nummodesB] , signarray[i*nummodesB+1] );
+                    //}
+                }
+            }*/
+        }
+
+        DNekMatSharedPtr StdTetExp::v_GenMatrix(const StdMatrixKey &mkey)
+        {
+            return GenMatrix(mkey);
+        }
+
+        DNekMatSharedPtr StdTetExp::v_CreateStdMatrix(const StdMatrixKey &mkey)
+        {
+            return GenMatrix(mkey);
+        }
+
+        LibUtilities::BasisType StdTetExp::v_GetEdgeBasisType(const int i) const
+        {
+            ASSERTL2((i >= 0) && (i <= 5), "edge id is out of range");
+
+            if (i == 0)
+            {
+                return GetBasisType(0);
+            }
+            else if((i==1)||(i==2))
+            {
+                return GetBasisType(1);
+            }
+            else
+            {
+                return GetBasisType(2);
+            }
+        }
+
+        void StdTetExp::v_GetCoords( Array<OneD, NekDouble> &xi_x,
+                                  Array<OneD, NekDouble> &xi_y,
+                                  Array<OneD, NekDouble> &xi_z)
+        {
+            Array<OneD, const NekDouble> eta_x = m_base[0]->GetZ();
+            Array<OneD, const NekDouble> eta_y = m_base[1]->GetZ();
+            Array<OneD, const NekDouble> eta_z = m_base[2]->GetZ();
+            int Qx = GetNumPoints(0);
+            int Qy = GetNumPoints(1);
+            int Qz = GetNumPoints(2);
+
+            // Convert collapsed coordinates into cartesian coordinates: eta --> xi
+            for( int k = 0; k < Qz; ++k ) {
+                for( int j = 0; j < Qy; ++j ) {
+                    for( int i = 0; i < Qx; ++i ) {
+                        int s = i + Qx*(j + Qy*k);
+                        xi_x[s] = (eta_x[i] + 1.0) * (1.0 - eta_y[j]) * (1.0 - eta_z[k]) / 4  -  1.0;
+                        xi_y[s] = (eta_y[j] + 1.0) * (1.0 - eta_z[k]) / 2  -  1.0;
+                        xi_z[s] = eta_z[k];
                     }
                 }
             }
+        }
 
+        NekDouble StdTetExp::v_Integral(const Array<OneD, const NekDouble>& inarray )
+        {
+            return Integral(inarray);
         }
 
 
-        void StdTetExp::WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
+        void StdTetExp::v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
+        {
+            FillMode(mode, outarray);
+        }
+
+
+        // PhysDerivative implementation based on Spen's book page 152.
+        void StdTetExp::v_PhysDeriv(const Array<OneD, const NekDouble>& inarray,
+                                 Array<OneD, NekDouble> &out_dxi1,
+                                 Array<OneD, NekDouble> &out_dxi2,
+                                 Array<OneD, NekDouble> &out_dxi3 )
+        {
+            int    Qx = m_base[0]->GetNumPoints();
+            int    Qy = m_base[1]->GetNumPoints();
+            int    Qz = m_base[2]->GetNumPoints();
+
+            // Compute the physical derivative
+            Array<OneD, NekDouble> out_dEta1(Qx*Qy*Qz,0.0);
+            Array<OneD, NekDouble> out_dEta2(Qx*Qy*Qz,0.0);
+            Array<OneD, NekDouble> out_dEta3(Qx*Qy*Qz,0.0);
+            PhysTensorDeriv(inarray, out_dEta1, out_dEta2, out_dEta3);
+
+            Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
+            eta_x = m_base[0]->GetZ();
+            eta_y = m_base[1]->GetZ();
+            eta_z = m_base[2]->GetZ();
+
+            for(int k=0, n=0; k<Qz; ++k) {
+                for(int j=0; j<Qy; ++j){
+                    for(int i=0; i<Qx; ++i, ++n){
+                        {
+                            if (out_dxi1.num_elements() > 0)
+                            {
+                                out_dxi1[n] = 4.0 / ((1.0 - eta_y[j])*(1.0 - eta_z[k]))*out_dEta1[n];
+                            }
+                            if (out_dxi2.num_elements() > 0)
+                            {
+                                out_dxi2[n] = 2.0*(1.0 + eta_x[i]) / ((1.0-eta_y[j])*(1.0 - eta_z[k]))*out_dEta1[n]  +  2.0/(1.0 - eta_z[k])*out_dEta2[n];
+                            }
+                            if (out_dxi3.num_elements() > 0)
+                            {
+                                out_dxi3[n] = 2.0*(1.0 + eta_x[i]) / ((1.0 - eta_y[j])*(1.0 - eta_z[k]))*out_dEta1[n] + (1.0 + eta_y[j]) / (1.0 - eta_z[k])*out_dEta2[n] + out_dEta3[n];
+                            }
+//							cout << "inarray["<<n<<"] = " << inarray[n] << endl;
+//                            cout << "eta_x["<<i<<"] = " <<  eta_x[i] << ",  eta_y["<<j<<"] = " << eta_y[j] << ", eta_z["<<k<<"] = " <<eta_z[k] << endl;
+//                            cout << "out_dEta1["<<n<<"] = " << out_dEta1[n] << ",  out_dEta2["<<n<<"] = " << out_dEta2[n] << ", out_dEta3["<<n<<"] = " <<out_dEta3[n] << endl;
+//                            cout << "out_dxi1["<<n<<"] = " << out_dxi1[n] << ",  out_dxi2["<<n<<"] = " << out_dxi2[n] << ", out_dxi3["<<n<<"] = " << out_dxi3[n] << endl;
+//cout << endl;
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
+         * @param   dir         Direction in which to compute derivative.
+         *                      Valid values are 0, 1, 2.
+         * @param   inarray     Input array.
+         * @param   outarray    Output array.
+         */
+        void StdTetExp::v_PhysDeriv(const int dir,
+                               const Array<OneD, const NekDouble>& inarray,
+                                     Array<OneD,       NekDouble>& outarray)
+        {
+            switch(dir)
+            {
+            case 0:
+                {
+                    v_PhysDeriv(inarray, outarray, NullNekDouble1DArray,
+                              NullNekDouble1DArray);
+                }
+                break;
+            case 1:
+                {
+                    v_PhysDeriv(inarray, NullNekDouble1DArray, outarray,
+                              NullNekDouble1DArray);
+                }
+                break;
+            case 2:
+                {
+                    v_PhysDeriv(inarray, NullNekDouble1DArray,
+                              NullNekDouble1DArray, outarray);
+                }
+                break;
+            default:
+                {
+                    ASSERTL1(false,"input dir is out of range");
+                }
+                break;
+            }
+        }
+
+
+        void StdTetExp::v_PhysDirectionalDeriv(const Array<OneD, const NekDouble>& inarray,
+                                            const Array<OneD, const NekDouble>& direction,
+                                            Array<OneD, NekDouble> &outarray)
+        {
+            ASSERTL0(false,"This method is not defined or valid for this class type");
+        }
+
+        void StdTetExp::v_StdPhysDeriv(const Array<OneD, const NekDouble>& inarray,
+                                    Array<OneD, NekDouble> &out_d0,
+                                    Array<OneD, NekDouble> &out_d1,
+                                    Array<OneD, NekDouble> &out_d2)
+        {
+            v_PhysDeriv(inarray, out_d0, out_d1, out_d2);
+        }
+
+        void StdTetExp::v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
         {
             if(format==eTecplot)
             {
@@ -1234,9 +2158,7 @@ namespace Nektar
             }
         }
 
-
-        //   I/O routine
-        void StdTetExp::WriteCoeffsToFile(std::ofstream &outfile)
+        void StdTetExp::v_WriteCoeffsToFile(std::ofstream &outfile)
         {
             int  order0 = m_base[0]->GetNumModes();
             int  order1 = m_base[1]->GetNumModes();
@@ -1277,66 +2199,28 @@ namespace Nektar
             }
             outfile << "]" ;
         }
-
-
-        NekDouble StdTetExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& xi)
-        {
-            ASSERTL0(xi[0] + xi[1] + xi[2] + 1 <= NekConstants::kNekZeroTol,
-                     "Coordinate outside bounds of tetrahedron.");
-            ASSERTL0((xi[0] + 1 + NekConstants::kNekZeroTol >= 0) 
-                        || (xi[1] + 1 + NekConstants::kNekZeroTol >= 0) 
-                        || (xi[2] + 1 + NekConstants::kNekZeroTol >= 0),
-                     "Coordinate outside bounds of tetrahedron.")
-                              
-            Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
-
-            if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)
-            {
-                // Very top point of the tetrahedron
-                eta[0] = -1.0;
-                eta[1] = -1.0;
-                eta[2] = xi[2];
-            }
-            else
-            {
-                if( fabs(xi[1]-1.0) <  NekConstants::kNekZeroTol )
-                {
-                    // Distant diagonal edge shared by all eta_x
-                    // coordinate planes: the xi_y == -xi_z line
-                    eta[0] = -1.0;
-                }
-                else if (fabs(xi[1] + xi[2]) < NekConstants::kNekZeroTol)
-                {
-                    eta[0] = -1.0;
-                }
-                else
-                {
-                    eta[0] = 2.0*(1.0+xi[0])/(-xi[1]-xi[2]) - 1.0;
-                }
-                eta[1] = 2.0*(1.0+xi[1])/(1.0-xi[2]) - 1.0;
-                eta[2] = xi[2];
-            }
-
-            ASSERTL0((eta[0] + NekConstants::kNekZeroTol >= -1)
-                        || (eta[1] + NekConstants::kNekZeroTol >= -1)
-                        || (eta[2] + NekConstants::kNekZeroTol >= -1),
-                     "Eta Coordinate outside bounds of tetrahedron.");
-            ASSERTL0((eta[0] - NekConstants::kNekZeroTol <= 1)
-                        || (eta[1] - NekConstants::kNekZeroTol <= 1)
-                        || (eta[2] - NekConstants::kNekZeroTol <= 1),
-                     "Eta Coordinate outside bounds of tetrahedron.");
-            
-            return  StdExpansion3D::v_PhysEvaluate(eta);
-        }
-
-
-
-
     }//end namespace
 }//end namespace
 
 /**
  * $Log: StdTetExp.cpp,v $
+ * Revision 1.28  2010/02/26 13:52:46  cantwell
+ * Tested and fixed where necessary Hex/Tet projection and differentiation in
+ *   StdRegions, and LocalRegions for regular and deformed (where applicable).
+ * Added SpatialData and SpatialParameters classes for managing spatiall-varying
+ *   data.
+ * Added TimingGeneralMatrixOp3D for timing operations on 3D geometries along
+ *   with some associated input meshes.
+ * Added 3D std and loc projection demos for tet and hex.
+ * Added 3D std and loc regression tests for tet and hex.
+ * Fixed bugs in regression tests in relation to reading OK files.
+ * Extended Elemental and Global optimisation parameters for 3D expansions.
+ * Added GNUPlot output format option.
+ * Updated ADR2DManifoldSolver to use spatially varying data.
+ * Added Barkley model to ADR2DManifoldSolver.
+ * Added 3D support to FldToVtk and XmlToVtk.
+ * Renamed History.{h,cpp} to HistoryPoints.{h,cpp}
+ *
  * Revision 1.27  2009/12/15 18:09:02  cantwell
  * Split GeomFactors into 1D, 2D and 3D
  * Added generation of tangential basis into GeomFactors

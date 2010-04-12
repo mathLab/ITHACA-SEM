@@ -126,7 +126,7 @@ namespace Nektar
 
             }
 
-            SetCoeffPhys(); 
+            SetCoeffPhys();
         }
 */
 
@@ -151,6 +151,9 @@ namespace Nektar
 
             const SpatialDomains::ExpansionVector &expansions
                                         = graph3D.GetExpansions();
+
+            m_coeff_offset = Array<OneD,int>(expansions.size());
+            m_phys_offset = Array<OneD,int>(expansions.size());
 
             for(int i = 0; i < expansions.size(); ++i)
             {
@@ -182,6 +185,8 @@ namespace Nektar
                         (*m_exp).push_back(tet);
                     }
 
+                    m_coeff_offset[i] = m_ncoeffs;
+                    m_phys_offset[i] = m_npoints;
                     m_ncoeffs += StdRegions::StdTetData
                             ::getNumberOfCoefficients(TetBa.GetNumModes(),
                                                       TetBb.GetNumModes(),
@@ -205,6 +210,8 @@ namespace Nektar
                                                             PrismBc,PrismGeom);
                     (*m_exp).push_back(prism);
 
+                    m_coeff_offset[i] = m_ncoeffs;
+                    m_phys_offset[i] = m_npoints;
                     m_ncoeffs += StdRegions::StdPrismData
                             ::getNumberOfCoefficients(PrismBa.GetNumModes(),
                                                       PrismBb.GetNumModes(),
@@ -228,6 +235,8 @@ namespace Nektar
                                                             PyrGeom);
                     (*m_exp).push_back(pyramid);
 
+                    m_coeff_offset[i] = m_ncoeffs;
+                    m_phys_offset[i] = m_npoints;
                     m_ncoeffs += StdRegions::StdPyrData
                             ::getNumberOfCoefficients(PyrBa.GetNumModes(),
                                                       PyrBb.GetNumModes(),
@@ -238,7 +247,7 @@ namespace Nektar
                 }
                 else if(HexGeom = boost::dynamic_pointer_cast<
                         SpatialDomains::HexGeom>(expansions[i]->m_GeomShPtr))
-                { 
+                {
                     LibUtilities::BasisKey HexBa
                                         = expansions[i]->m_BasisKeyVector[0];
                     LibUtilities::BasisKey HexBb
@@ -251,6 +260,8 @@ namespace Nektar
                                                             HexGeom);
                     (*m_exp).push_back(hex);
 
+                    m_coeff_offset[i] = m_ncoeffs;
+                    m_phys_offset[i] = m_npoints;
                     m_ncoeffs += HexBa.GetNumModes() * HexBb.GetNumModes()
                                                      * HexBc.GetNumModes();
                     m_npoints += HexBa.GetNumPoints() * HexBb.GetNumPoints()

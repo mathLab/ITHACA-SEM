@@ -426,7 +426,7 @@ namespace Nektar
             
             static unsigned int GetNumberOfElementsInBlock(unsigned int block, unsigned int totalBlocks, const Array<OneD, unsigned int>& sizes)
             {
-                ASSERTL2(blcok < totalBlocks, std::string("Block Element ") + boost::lexical_cast<std::string>(block) + 
+                ASSERTL2(block < totalBlocks, std::string("Block Element ") + boost::lexical_cast<std::string>(block) + 
                     std::string(" requested in a matrix with a maximum of ") + boost::lexical_cast<std::string>(totalBlocks) +
                     std::string(" blocks."));
                 if( block == 0 )

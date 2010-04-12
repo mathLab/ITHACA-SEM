@@ -158,8 +158,8 @@ namespace Nektar
                            -d2[0][0]*(d1[1][0]*d3[2][0] - d3[1][0]*d1[2][0])
                            +d3[0][0]*(d1[1][0]*d2[2][0] - d2[1][0]*d1[2][0]);
 
-                ASSERTL1(fabs(m_jac[0]) > 0, "3D Regular Jacobian is not positive");
-                
+                ASSERTL1(m_jac[0] > 0, "3D Regular Jacobian is not positive");
+
                 // Spen's book page 160
                 m_gmat[0][0] =  (d2[1][0]*d3[2][0] - d3[1][0]*d2[2][0])/m_jac[0];  // d xi_1/d x_1
                 m_gmat[1][0] = -(d1[1][0]*d3[2][0] - d3[1][0]*d1[2][0])/m_jac[0];  // d xi_2/d x_1
@@ -177,7 +177,7 @@ namespace Nektar
                 m_gmat = Array<TwoD, NekDouble>(3*mCoordDim,nqtot,0.0);
 
                 // Derivatives of the form: dj[i] = dx_(i+1)/dxi_j
-                
+
                 // Spencers book page 160
                 // g[0] = d xi_1/d x_1
                 Vmath::Vmul (nqtot,&d3[1][0],1,&d2[2][0],1,&m_gmat[0][0],1);
@@ -299,7 +299,7 @@ namespace Nektar
             case StdRegions::ePyramid:
                 {
                     ASSERTL0(false, "SetUpQuadratureWeights: Need to implement quadrature weights for this shape.");
-                    
+
                     for(i = 0; i < nquad1; ++i)
                     {
                         Vmath::Vmul(nquad0,m_weightedjac.get()+i*nquad0,1,

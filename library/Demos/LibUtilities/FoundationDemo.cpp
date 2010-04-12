@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <iosfwd>
 #include <cmath>
+#include <cstdio>
 #include <limits>
 
 using namespace std;

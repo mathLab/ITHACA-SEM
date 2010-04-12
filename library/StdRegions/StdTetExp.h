@@ -104,24 +104,6 @@ namespace Nektar
                 return eTetrahedron;
             }
 
-            virtual bool v_IsBoundaryInteriorExpansion()
-            {
-                bool returnval = false;
-
-                if(m_base[0]->GetBasisType() == LibUtilities::eModified_A)
-                {
-                    if(m_base[1]->GetBasisType() == LibUtilities::eModified_B)
-                    {
-                        if(m_base[2]->GetBasisType() == LibUtilities::eModified_C)
-                        {
-                            returnval = true;
-                        }
-                    }
-                }
-
-                return returnval;
-            }
-
             void TripleTensorProduct(
                                 const Array<OneD, const NekDouble>& fx,
                                 const Array<OneD, const NekDouble>& gy,
@@ -148,23 +130,6 @@ namespace Nektar
             void FillMode(const int mode, Array<OneD, NekDouble> &outarray);
 
 
-            ///////////////////////////////////
-            // Differentiation Methods
-            //////////////////////////////////
-
-            void PhysDeriv(const Array<OneD, const NekDouble>& inarray,
-                           Array<OneD, NekDouble> &out_d0,
-                           Array<OneD, NekDouble> &out_d1,
-                           Array<OneD, NekDouble> &out_d2);
-
-            void StdPhysDeriv(const Array<OneD, const NekDouble>& inarray,
-                              Array<OneD, NekDouble> &out_d0,
-                              Array<OneD, NekDouble> &out_d1,
-                              Array<OneD, NekDouble> &out_d2)
-            {
-                PhysDeriv(inarray, out_d0, out_d1, out_d2);
-            }
-
             /// Backward tranform for tetrahedral elements
 //            void BwdTrans(const Array<OneD, const NekDouble>& inarray,
 //                          Array<OneD, NekDouble> &outarray);
@@ -178,56 +143,6 @@ namespace Nektar
             /** \brief Single Point Evaluation */
             NekDouble PhysEvaluate3D(const Array<OneD, const NekDouble>& coords);
 
-            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
-            void WriteCoeffsToFile(std::ofstream &outfile);
-            void GetCoords(Array<OneD, NekDouble> &coords_0,
-                           Array<OneD, NekDouble> &coords_1, Array<OneD, NekDouble> &coords_2);
-
-            void GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
-                                     Array<OneD, unsigned int> &maparray,
-                                     Array<OneD, int>& signarray);
-
-
-            // int GetBasisNumModes   (const int dir)
-            int GetFaceNcoeffs(const int i) const
-            {
-                ASSERTL2((i >= 0) && (i <= 3), "face id is out of range");
-/*                if((i == 0))
-                {
-                    return GetBasisNumModes(0)*GetBasisNumModes(1);
-                }
-                else if((i == 1) || (i == 2))
-                {
-                    return GetBasisNumModes(0)*GetBasisNumModes(2);
-                }
-                else
-                {
-                    return GetBasisNumModes(1)*GetBasisNumModes(2);
-                }
-*/
-                int nFaceCoeffs = 0;
-                int nummodesA, nummodesB, P, Q;
-                if (i == 0)
-                {
-                    nummodesA = GetBasisNumModes(0);
-                    nummodesB = GetBasisNumModes(1);
-                }
-                else if ((i == 1) || (i == 2))
-                {
-                    nummodesA = GetBasisNumModes(0);
-                    nummodesB = GetBasisNumModes(2);
-                }
-                else
-                {
-                    nummodesA = GetBasisNumModes(1);
-                    nummodesB = GetBasisNumModes(2);
-                }
-                P = nummodesA - 1;
-                Q = nummodesB - 1;
-                nFaceCoeffs = Q+1 + (P*(1 + 2*Q - P))/2;
-                return nFaceCoeffs;
-            }
-
 
             //----------------------------------
             // Generate Matrix Routine
@@ -238,47 +153,23 @@ namespace Nektar
                 return StdExpansion::CreateGeneralMatrix(mkey);
             }
 
-            int GetEdgeNcoeffs(const int i) const
-            {
-                ASSERTL2((i >= 0) && (i <= 5), "edge id is out of range");
-
-                if (i == 0)
-                {
-                    return GetBasisNumModes(0);
-                }
-                else if((i==1)||(i==2))
-                {
-                    return GetBasisNumModes(1);
-                } else
-                {
-                    return GetBasisNumModes(2);
-                }
-
-            }
-
-            LibUtilities::BasisType GetEdgeBasisType(const int i) const
-            {
-                ASSERTL2((i >= 0) && (i <= 5), "edge id is out of range");
-
-                if (i == 0)
-                {
-                    return GetBasisType(0);
-                }
-                else if((i==1)||(i==2))
-                {
-                    return GetBasisType(1);
-                }
-                else
-                {
-                    return GetBasisType(2);
-                }
-            }
-
         protected:
 
             /// Compute backward transform of modes to quadrature points.
             virtual void v_BwdTrans(const Array<OneD, const NekDouble>& inarray,
                                     Array<OneD, NekDouble> &outarray );
+
+            /// Performs the sum factorisation form of the BwdTrans operation.
+            void BwdTrans_SumFacKernel(
+                    const Array<OneD, const NekDouble>& base0,
+                    const Array<OneD, const NekDouble>& base1,
+                    const Array<OneD, const NekDouble>& base2,
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray,
+                          Array<OneD, NekDouble> &wsp,
+                    bool doCheckCollDir0,
+                    bool doCheckCollDir1,
+                    bool doCheckCollDir2);
 
             /// Perform forward transform of quadrature data to coefficients.
             virtual void v_FwdTrans(const Array<OneD, const NekDouble>& inarray,
@@ -293,18 +184,57 @@ namespace Nektar
 
             /// Fundamental Tet sum-factorisation implementation of IProduct.
             void IProductWRTBase_SumFacKernel (
-                    const Array<OneD, const NekDouble>& base0, 
+                    const Array<OneD, const NekDouble>& base0,
                     const Array<OneD, const NekDouble>& base1,
                     const Array<OneD, const NekDouble>& base2,
-                    const Array<OneD, const NekDouble>& inarray, 
+                    const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray,
                           Array<OneD, NekDouble> &wsp,
                     bool doCheckCollDir0,
                     bool doCheckCollDir1,
                     bool doCheckCollDir2);
 
-            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords);
+            /// Compute inner product with respect to derivative basis
+            virtual void v_IProductWRTDerivBase(const int dir,
+                    const Array<OneD, const NekDouble>& inarray,
+                    Array<OneD, NekDouble> & outarray);
 
+            /// Compute inner product with respect to derivative basis using
+            /// sum-factorisation technique.
+            virtual void v_IProductWRTDerivBase_SumFac(const int dir,
+                                             const Array<OneD, const NekDouble>& inarray,
+                                             Array<OneD, NekDouble> & outarray);
+            /// Compute inner product with respect to derivative basis using
+            /// local matrix operation.
+            virtual void v_IProductWRTDerivBase_MatOp(const int dir,
+                                            const Array<OneD, const NekDouble>& inarray,
+                                            Array<OneD, NekDouble> & outarray);
+
+
+            virtual void v_PhysDeriv(
+                            const Array<OneD, const NekDouble>& inarray,
+                            Array<OneD, NekDouble> &out_dx,
+                            Array<OneD, NekDouble> &out_dy,
+                            Array<OneD, NekDouble> &out_dz );
+
+            /// Calculate the derivative of the physical points in a single
+            /// direction.
+            virtual void v_PhysDeriv(const int dir,
+                           const Array<OneD, const NekDouble>& inarray,
+                           Array<OneD, NekDouble> &outarray);
+
+            virtual void v_PhysDirectionalDeriv(
+                            const Array<OneD, const NekDouble>& inarray,
+                            const Array<OneD, const NekDouble>& direction,
+                            Array<OneD, NekDouble> &outarray);
+
+            virtual void v_StdPhysDeriv(
+                            const Array<OneD, const NekDouble>& inarray,
+                            Array<OneD, NekDouble> &out_d0,
+                            Array<OneD, NekDouble> &out_d1,
+                            Array<OneD, NekDouble> &out_d2);
+
+            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords);
 
         private:
             virtual void v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
@@ -322,134 +252,73 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
 
+            /// The type of expansion.
+            virtual ExpansionType v_DetExpansionType() const;
 
+            virtual bool v_IsBoundaryInteriorExpansion();
 
-            virtual int v_GetNverts() const
-            {
-                return 4;
-            }
+            /// Number of vertices in a tetrahedron.
+            virtual int  v_GetNverts() const;
 
-            virtual int v_GetNedges() const
-            {
-                return 6;
-            }
+            /// Number of edges in a tetrahedron.
+            virtual int  v_GetNedges() const;
 
-            virtual int v_GetNfaces() const
-            {
-                return 4;
-            }
+            /// Number of faces in a tetrahedron.
+            virtual int  v_GetNfaces() const;
 
-            virtual ExpansionType v_DetExpansionType() const
-            {
-                return DetExpansionType();
-            }
+            /// Number of boundary coefficients in this tetrahedron.
+            virtual int  v_NumBndryCoeffs() const;
 
+            /// Number of coefficients on a given face.
+            virtual int  v_GetFaceNcoeffs(const int i) const;
 
-            // BEGIN ///
+            /// Number of coefficients interior to a given face.
+            virtual int  v_GetFaceIntNcoeffs(const int i) const;
 
-            virtual int v_GetEdgeNcoeffs(const int i) const
-            {
-                return GetEdgeNcoeffs(i);
-            }
-            virtual int v_GetFaceNcoeffs(const int i) const
-            {
-                return GetFaceNcoeffs(i);
-            }
-            virtual void v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
-            {
-                GetBoundaryMap(outarray);
-            }
+            /// Number of coefficients in a given edge.
+            virtual int  v_GetEdgeNcoeffs(const int i) const;
 
-            virtual void v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
-            {
-                GetInteriorMap(outarray);
-            }
+            virtual void v_GetBoundaryMap(Array<OneD, unsigned int>& outarray);
 
-            virtual int v_GetVertexMap(const int localVertexId)
-            {
-                return GetVertexMap(localVertexId);
-            }
+            virtual void v_GetInteriorMap(Array<OneD, unsigned int>& outarray);
 
-            virtual void v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+            virtual int  v_GetVertexMap(const int localVertexId);
+
+            virtual void v_GetEdgeInteriorMap(
+                            const int eid, const EdgeOrientation edgeOrient,
+                            Array<OneD, unsigned int> &maparray,
+                            Array<OneD, int> &signarray);
+
+            virtual void v_GetFaceInteriorMap(const int fid, const FaceOrientation faceOrient,
                                               Array<OneD, unsigned int> &maparray,
-                                              Array<OneD, int> &signarray)
-            {
-                GetEdgeInteriorMap(eid,edgeOrient,maparray,signarray);
-            }
+                                              Array<OneD, int> &signarray);
 
-            virtual void v_GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
-                                               Array<OneD, unsigned int> &maparray,
-                                               Array<OneD, int>& signarray)
-            {
-                GetFaceToElementMap(fid,faceOrient,maparray,signarray);
-            }
+            virtual void v_GetFaceToElementMap(const int fid,
+                            const FaceOrientation faceOrient,
+                            Array<OneD, unsigned int> &maparray,
+                            Array<OneD, int>& signarray);
 
-            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey)
-            {
-                return GenMatrix(mkey);
-            }
+            int GetMode(const int i, const int j, const int k);
 
-            virtual DNekMatSharedPtr v_CreateStdMatrix(const StdMatrixKey &mkey)
-            {
-                return GenMatrix(mkey);
-            }
+            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey);
 
-            virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const
-            {
-                return GetEdgeBasisType(i);
-            }
+            virtual DNekMatSharedPtr v_CreateStdMatrix(const StdMatrixKey &mkey);
+
+            virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const;
 
             virtual void v_GetCoords( Array<OneD, NekDouble> &coords_x,
-                                      Array<OneD, NekDouble> &coords_y,
-                                      Array<OneD, NekDouble> &coords_z)
-            {
-                GetCoords(coords_x, coords_y, coords_z);
-            }
+                            Array<OneD, NekDouble> &coords_y,
+                            Array<OneD, NekDouble> &coords_z);
 
-            virtual NekDouble v_Integral(const Array<OneD, const NekDouble>& inarray )
-            {
-                return Integral(inarray);
-            }
+            virtual NekDouble v_Integral(
+                            const Array<OneD, const NekDouble>& inarray );
 
+            virtual void v_FillMode(
+                            const int mode, Array<OneD, NekDouble> &outarray);
 
-            virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
-            {
-                FillMode(mode, outarray);
-            }
+            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
 
-            virtual void v_PhysDeriv(const Array<OneD, const NekDouble>& inarray,
-                                     Array<OneD, NekDouble> &out_dx,
-                                     Array<OneD, NekDouble> &out_dy,
-                                     Array<OneD, NekDouble> &out_dz )
-            {
-
-                PhysDeriv( inarray, out_dx, out_dy, out_dz );
-            }
-
-           virtual void v_PhysDirectionalDeriv(const Array<OneD, const NekDouble>& inarray,
-                                                const Array<OneD, const NekDouble>& direction,
-                                                Array<OneD, NekDouble> &outarray)
-            {
-                ASSERTL0(false,"This method is not defined or valid for this class type");
-            }
-
-            virtual void v_StdPhysDeriv(const Array<OneD, const NekDouble>& inarray, 
-                                        Array<OneD, NekDouble> &out_d0,
-                                        Array<OneD, NekDouble> &out_d1,
-                                        Array<OneD, NekDouble> &out_d2)
-            {
-                StdPhysDeriv(inarray, out_d0, out_d1, out_d2);
-            }
-
-            virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")
-            {
-                WriteToFile(outfile,format,dumpVar,var);
-            }
-
-            virtual void v_WriteCoeffsToFile(std::ofstream &outfile)
-            {
-                WriteCoeffsToFile(outfile);
-            }
+            virtual void v_WriteCoeffsToFile(std::ofstream &outfile);
 
         };
 
@@ -462,6 +331,23 @@ namespace Nektar
 
 /**
  * $Log: StdTetExp.h,v $
+ * Revision 1.30  2010/02/26 13:52:46  cantwell
+ * Tested and fixed where necessary Hex/Tet projection and differentiation in
+ *   StdRegions, and LocalRegions for regular and deformed (where applicable).
+ * Added SpatialData and SpatialParameters classes for managing spatiall-varying
+ *   data.
+ * Added TimingGeneralMatrixOp3D for timing operations on 3D geometries along
+ *   with some associated input meshes.
+ * Added 3D std and loc projection demos for tet and hex.
+ * Added 3D std and loc regression tests for tet and hex.
+ * Fixed bugs in regression tests in relation to reading OK files.
+ * Extended Elemental and Global optimisation parameters for 3D expansions.
+ * Added GNUPlot output format option.
+ * Updated ADR2DManifoldSolver to use spatially varying data.
+ * Added Barkley model to ADR2DManifoldSolver.
+ * Added 3D support to FldToVtk and XmlToVtk.
+ * Renamed History.{h,cpp} to HistoryPoints.{h,cpp}
+ *
  * Revision 1.29  2009/12/15 18:09:02  cantwell
  * Split GeomFactors into 1D, 2D and 3D
  * Added generation of tangential basis into GeomFactors

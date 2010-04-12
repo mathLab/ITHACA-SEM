@@ -6,13 +6,13 @@
 #include <MultiRegions/ContField3D.h>
 
 #ifdef NEKTAR_USING_CHUD
-#include <CHUD/CHUD.h>
+#include <CHUD/CHUD.h> 
 //#define SHARK
-#endif
+#endif 
 
 using namespace Nektar;
 
-NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
+NekDouble TimeMatrixOp(StdRegions::MatrixType &type, 
                             MultiRegions::ContField3DSharedPtr &Exp,
                             MultiRegions::ContField3DSharedPtr &Fce,
                             int &NumCalls,
@@ -22,8 +22,8 @@ int main(int argc, char *argv[])
 {
     MultiRegions::ContField3DSharedPtr Exp,Fce,Sol;
     int     i, nq,  coordim;
-    Array<OneD,NekDouble>  fce,sol;
-    Array<OneD,NekDouble>  xc0,xc1,xc2;
+    Array<OneD,NekDouble>  fce,sol; 
+    Array<OneD,NekDouble>  xc0,xc1,xc2; 
     NekDouble  lambda;
 
     if(argc != 6)
@@ -106,25 +106,25 @@ int main(int argc, char *argv[])
          break;
      case 1:
          {
-             boost::filesystem::path ElOptFilePath = basePath /
-                 boost::filesystem::path("Timings") /
+             boost::filesystem::path ElOptFilePath = basePath / 
+                 boost::filesystem::path("Timings") / 
                  boost::filesystem::path("InputFiles") /
                  boost::filesystem::path("Optimisation") /
                  boost::filesystem::path("DoElementalMatOp.xml");
              NekOptimize::LoadElementalOptimizationParameters(ElOptFilePath.file_string());
-
+             
              GlobOptFileName << "NoGlobalMat.xml";
          }
         break;
     case 2:
         {
-            boost::filesystem::path ElOptFilePath = basePath /
-                boost::filesystem::path("Timings") /
+            boost::filesystem::path ElOptFilePath = basePath / 
+                boost::filesystem::path("Timings") / 
                 boost::filesystem::path("InputFiles") /
                 boost::filesystem::path("Optimisation") /
                 boost::filesystem::path("DoElementalMatOp.xml");
             NekOptimize::LoadElementalOptimizationParameters(ElOptFilePath.file_string());
-
+            
             GlobOptFileName << "DoBlockMat.xml";
         }
         break;
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
         break;
     case 4:
         {
-            ASSERTL0(false,"Optimisation level not set up");
+            ASSERTL0(false,"Optimisation level not set up");            
         }
         break;
     default:
@@ -145,30 +145,30 @@ int main(int argc, char *argv[])
     }
 
 
-    boost::filesystem::path MeshFilePath = basePath /
-        boost::filesystem::path("Timings") /
+    boost::filesystem::path MeshFilePath = basePath / 
+        boost::filesystem::path("Timings") / 
         boost::filesystem::path("InputFiles") /
         boost::filesystem::path("Geometry") /
-        boost::filesystem::path(MeshFileDirectory.str()) /
+        boost::filesystem::path(MeshFileDirectory.str()) /  
         boost::filesystem::path(MeshFileName.str());
     string MeshFile(MeshFilePath.file_string());
 
-    boost::filesystem::path BCfilePath = basePath /
-        boost::filesystem::path("Timings") /
+    boost::filesystem::path BCfilePath = basePath / 
+        boost::filesystem::path("Timings") / 
         boost::filesystem::path("InputFiles") /
         boost::filesystem::path("Conditions") /
         boost::filesystem::path(BCfileName.str());
     string BCfile(BCfilePath.file_string());
 
-    boost::filesystem::path ExpansionsFilePath = basePath /
-        boost::filesystem::path("Timings") /
+    boost::filesystem::path ExpansionsFilePath = basePath / 
+        boost::filesystem::path("Timings") / 
         boost::filesystem::path("InputFiles") /
         boost::filesystem::path("Expansions") /
         boost::filesystem::path(ExpansionsFileName.str());
     string ExpansionsFile(ExpansionsFilePath.file_string());
 
-    boost::filesystem::path GlobOptFilePath = basePath /
-        boost::filesystem::path("Timings") /
+    boost::filesystem::path GlobOptFilePath = basePath / 
+        boost::filesystem::path("Timings") / 
         boost::filesystem::path("InputFiles") /
         boost::filesystem::path("Optimisation") /
         boost::filesystem::path(GlobOptFileName.str());
@@ -199,14 +199,14 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    SpatialDomains::MeshGraph3D graph3D;
+    SpatialDomains::MeshGraph3D graph3D; 
     graph3D.ReadGeometry(MeshFile);
     graph3D.ReadExpansions(ExpansionsFile);
     //----------------------------------------------
 
     //----------------------------------------------
     // read the problem parameters from input file
-    SpatialDomains::BoundaryConditions bcs(&graph3D);
+    SpatialDomains::BoundaryConditions bcs(&graph3D); 
     bcs.Read(BCfile);
     //----------------------------------------------
 
@@ -214,15 +214,10 @@ int main(int argc, char *argv[])
     // Print summary of solution details
     lambda = bcs.GetParameter("Lambda");
     //----------------------------------------------
-
+   
     //----------------------------------------------
-    // Define Expansion
-    int bc_loc=0;
-    //MultiRegions::GlobalSysSolnType solType = MultiRegions::eDirectFullMatrix;
-    MultiRegions::GlobalSysSolnType solType = MultiRegions::eDirectStaticCond;
-    Exp = MemoryManager<MultiRegions::ContField3D>
-                    ::AllocateSharedPtr(graph3D,bcs,bc_loc,solType);
-//    Exp = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(graph3D, bcs);
+    // Define Expansion 
+    Exp = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(graph3D, bcs);
     //----------------------------------------------
     int NumElements = Exp->GetExpSize();
 
@@ -230,16 +225,16 @@ int main(int argc, char *argv[])
     // load global optimisation parameters
     Exp->ReadGlobalOptimizationParameters(GlobOptFile);
     //----------------------------------------------
-
+    
     //----------------------------------------------
     // Set up coordinates of mesh for Forcing function evaluation
     coordim = Exp->GetCoordim(0);
     nq      = Exp->GetTotPoints();
-
+    
     xc0 = Array<OneD,NekDouble>(nq,0.0);
     xc1 = Array<OneD,NekDouble>(nq,0.0);
     xc2 = Array<OneD,NekDouble>(nq,0.0);
-
+    
     switch(coordim)
     {
     case 1:
@@ -253,11 +248,11 @@ int main(int argc, char *argv[])
         break;
     }
     //----------------------------------------------
-
+    
     //----------------------------------------------
-    // Define forcing function for first variable defined in file
+    // Define forcing function for first variable defined in file 
     fce = Array<OneD,NekDouble>(nq);
-    SpatialDomains::ConstForcingFunctionShPtr ffunc
+    SpatialDomains::ConstForcingFunctionShPtr ffunc 
         = bcs.GetForcingFunction(bcs.GetVariable(0));
     for(i = 0; i < nq; ++i)
     {
@@ -272,12 +267,12 @@ int main(int argc, char *argv[])
     //----------------------------------------------
 
     //----------------------------------------------
-    // See if there is an exact solution, if so
+    // See if there is an exact solution, if so 
     // evaluate and plot errors
     SpatialDomains::ConstExactSolutionShPtr ex_sol =
         bcs.GetExactSolution(bcs.GetVariable(0));
     //----------------------------------------------
-    // evaluate exact solution
+    // evaluate exact solution 
     sol = Array<OneD,NekDouble>(nq);
     for(i = 0; i < nq; ++i)
     {
@@ -285,15 +280,15 @@ int main(int argc, char *argv[])
     }
     Sol = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(*Exp);
     Sol->SetPhys(sol);
-    Sol->SetPhysState(true);
+    Sol->SetPhysState(true);   
     //----------------------------------------------
 
     NekDouble L2Error;
-    NekDouble LinfError;
+    NekDouble LinfError;   
     if (type == StdRegions::eHelmholtz)
     {
         //----------------------------------------------
-        // Helmholtz solution taking physical forcing
+        // Helmholtz solution taking physical forcing 
         Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(),lambda,true);
         // GeneralMatrixOp does not impose boundary conditions.
         //  MultiRegions::GlobalMatrixKey key(type, lambda, Exp->GetLocalToGlobalMap());
@@ -301,25 +296,25 @@ int main(int argc, char *argv[])
         //----------------------------------------------
 
         //----------------------------------------------
-        // Backward Transform Solution to get solved values at
+        // Backward Transform Solution to get solved values at 
         Exp->BwdTrans(Exp->GetContCoeffs(), Exp->UpdatePhys(), true);
         //----------------------------------------------
         L2Error    = Exp->L2  (Sol->GetPhys());
-        LinfError  = Exp->Linf(Sol->GetPhys());
+        LinfError  = Exp->Linf(Sol->GetPhys()); 
     }
     else
     {
         Exp->FwdTrans(Sol->GetPhys(), Exp->UpdateContCoeffs(), true);
-
+        
         //----------------------------------------------
-        // Backward Transform Solution to get solved values at
+        // Backward Transform Solution to get solved values at 
         Exp->BwdTrans(Exp->GetContCoeffs(), Exp->UpdatePhys(), true);
         //----------------------------------------------
         L2Error    = Exp->L2  (Sol->GetPhys());
-        LinfError  = Exp->Linf(Sol->GetPhys());
+        LinfError  = Exp->Linf(Sol->GetPhys()); 
     }
-
-    //--------------------------------------------
+    
+    //--------------------------------------------        
     // alternative error calculation
 /*    const LibUtilities::PointsKey PkeyT1(30,LibUtilities::eGaussLobattoLegendre);
     const LibUtilities::PointsKey PkeyT2(30,LibUtilities::eGaussRadauMAlpha1Beta0);
@@ -329,18 +324,18 @@ int main(int argc, char *argv[])
     const LibUtilities::BasisKey  BkeyT2(LibUtilities::eModified_B,NumModes,PkeyT2);
     const LibUtilities::BasisKey  BkeyQ1(LibUtilities::eModified_A,NumModes,PkeyQ1);
     const LibUtilities::BasisKey  BkeyQ2(LibUtilities::eModified_A,NumModes,PkeyQ2);
-
-
-    MultiRegions::ExpList3DSharedPtr ErrorExp =
+    
+    
+    MultiRegions::ExpList3DSharedPtr ErrorExp = 
         MemoryManager<MultiRegions::ExpList3D>::AllocateSharedPtr(BkeyT1,BkeyT2,BkeyT3,BkeyQ1,BkeyQ2,BkeyQ3,graph3D);
-
+    
     int ErrorCoordim = ErrorExp->GetCoordim(0);
     int ErrorNq      = ErrorExp->GetTotPoints();
-
+    
     Array<OneD,NekDouble> ErrorXc0(ErrorNq,0.0);
     Array<OneD,NekDouble> ErrorXc1(ErrorNq,0.0);
     Array<OneD,NekDouble> ErrorXc2(ErrorNq,0.0);
-
+    
     switch(ErrorCoordim)
     {
     case 1:
@@ -353,34 +348,34 @@ int main(int argc, char *argv[])
         ErrorExp->GetCoords(ErrorXc0,ErrorXc1,ErrorXc2);
         break;
     }
-
-
-    // evaluate exact solution
+    
+    
+    // evaluate exact solution 
     Array<OneD,NekDouble> ErrorSol(ErrorNq);
     for(i = 0; i < ErrorNq; ++i)
     {
         ErrorSol[i] = ex_sol->Evaluate(ErrorXc0[i],ErrorXc1[i],ErrorXc2[i]);
     }
-
+    
     // calcualte spectral/hp approximation on the quad points of this new
     // expansion basis
     Exp->GlobalToLocal(Exp->GetContCoeffs(),ErrorExp->UpdateCoeffs());
     ErrorExp->BwdTrans_IterPerExp(ErrorExp->GetCoeffs(),ErrorExp->UpdatePhys());
-
+    
     NekDouble L2ErrorBis    = ErrorExp->L2  (ErrorSol);
-    NekDouble LinfErrorBis  = ErrorExp->Linf(ErrorSol);
+    NekDouble LinfErrorBis  = ErrorExp->Linf(ErrorSol); 
 */
-    //--------------------------------------------
+    //--------------------------------------------     
 #if 0
     cout << "L infinity error: " << LinfErrorBis << endl;
     cout << "L 2 error:        " << L2ErrorBis   << endl;
-#endif
-    //----------------------------------------------
+#endif 
+    //----------------------------------------------       
     NekDouble exeTime;
     int NumCalls;
-
+    
     exeTime = TimeMatrixOp(type, Exp, Fce, NumCalls, lambda);
-
+    
     int nLocCoeffs     = Exp->GetNcoeffs();
     int nGlobCoeffs    = Exp->GetContNcoeffs();
     int nLocBndCoeffs  = Exp->GetLocalToGlobalMap()->GetNumLocalBndCoeffs();
@@ -418,7 +413,7 @@ int main(int argc, char *argv[])
 }
 
 
-NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
+NekDouble TimeMatrixOp(StdRegions::MatrixType &type, 
                             MultiRegions::ContField3DSharedPtr &Exp,
                             MultiRegions::ContField3DSharedPtr &Fce,
                             int &NumCalls,
@@ -431,7 +426,7 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
     NekDouble time1, time2;
     NekDouble exeTime;
 
-    // We first do a single run in order to estimate the number of calls
+    // We first do a single run in order to estimate the number of calls 
     // we are going to make
     gettimeofday(&timer1, NULL);
     //Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(),lambda,true);
@@ -465,7 +460,7 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
 
     chudInitialize();
     chudSetErrorLogFile(stderr);
-    chudUmarkPID(getpid(), TRUE);
+    chudUmarkPID(getpid(), TRUE);   
     chudAcquireRemoteAccess();
     chudStartRemotePerfMonitor("TimingCGHelmSolve2D");
 #endif

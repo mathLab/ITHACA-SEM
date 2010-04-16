@@ -471,5 +471,25 @@ namespace Nektar
             }
         }
 
+        int ContField3D::GetGlobalMatrixNnz(const GlobalMatrixKey &gkey)
+        {
+            ASSERTL1(gkey.LocToGloMapIsDefined(),
+                     "To use method must have a LocalToGlobalBaseMap "
+                     "attached to key");
+
+            GlobalMatrixMap::iterator matrixIter = m_globalMat->find(gkey);
+
+            if(matrixIter == m_globalMat->end())
+            {
+                return 0;
+            }
+            else
+            {
+                return matrixIter->second->GetMatrix()->GetNumNonZeroEntries();
+            }
+
+            return 0;
+        }
+
   } //end of namespace
 } //end of namespace

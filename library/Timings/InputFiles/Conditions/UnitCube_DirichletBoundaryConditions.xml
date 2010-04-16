@@ -11,32 +11,12 @@
     </VARIABLES>
 
         <BOUNDARYREGIONS>
-            <B ID="0"> C[1] </B>
-            <B ID="1"> C[2] </B>
-            <B ID="2"> C[3] </B>
-            <B ID="3"> C[4] </B>
-            <B ID="4"> C[5] </B>
-            <B ID="5"> C[6] </B>
+            <B ID="0"> C[1-6] </B>
         </BOUNDARYREGIONS>
 
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
-                <D VAR="u" VALUE="0.0" />
-            </REGION>
-            <REGION REF="1">
-                <D VAR="u" VALUE="0.0" />
-            </REGION>
-            <REGION REF="2">
-                <D VAR="u" VALUE="sin(PI/2*y)*sin(PI/2*z)" />
-            </REGION>
-            <REGION REF="3">
-                <D VAR="u" VALUE="sin(PI/2*x)*sin(PI/2*z)" />
-            </REGION>
-            <REGION REF="4">
-                <D VAR="u" VALUE="0.0" />
-            </REGION>
-            <REGION REF="5">
-                <D VAR="u" VALUE="sin(PI/2*x)*sin(PI/2*y)" />
+                <D VAR="u" VALUE="sin(PI/2*x)*sin(PI/2*y)*sin(PI/2*z)" />
             </REGION>
         </BOUNDARYCONDITIONS>
 

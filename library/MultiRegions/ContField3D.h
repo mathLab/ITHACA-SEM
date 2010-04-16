@@ -61,12 +61,12 @@ namespace Nektar
                                                 = eDirectMultiLevelStaticCond);
 
             ContField3D(SpatialDomains::MeshGraph3D &graph3D,
-                        SpatialDomains::BoundaryConditions &bcs, 
+                        SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0,
                         const GlobalSysSolnType solnType = eDirectStaticCond);
 
             ContField3D(SpatialDomains::MeshGraph3D &graph3D,
-                        SpatialDomains::BoundaryConditions &bcs, 
+                        SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable,
                         const GlobalSysSolnType solnType = eDirectStaticCond);
 
@@ -76,18 +76,18 @@ namespace Nektar
 
             /**
              * \brief This function return the boundary conditions expansion.
-             */ 
+             */
             inline const Array<OneD,const MultiRegions::ExpList2DSharedPtr>&GetBndCondExp()
             {
                 return m_bndCondExpansions;
             }
-            
-            void GenerateDirBndCondForcing(const GlobalLinSysKey &key, 
-                                                        Array<OneD, NekDouble> &inout, 
+
+            void GenerateDirBndCondForcing(const GlobalLinSysKey &key,
+                                                        Array<OneD, NekDouble> &inout,
                                                         Array<OneD, NekDouble> &outarray);
 
-            /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$ 
-            /// (implemented as #m_contCoeffs) containing all global expansion 
+            /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$
+            /// (implemented as #m_contCoeffs) containing all global expansion
             /// coefficients.
             inline Array<OneD, NekDouble> &UpdateContCoeffs();
 
@@ -108,12 +108,12 @@ namespace Nektar
             {
                 m_locToGloMap->GlobalToLocal(inarray, outarray);
             }
-            
+
             inline void LocalToGlobal()
             {
                 m_locToGloMap->LocalToGlobal(m_coeffs, m_contCoeffs);
-            }        
-        
+            }
+
             inline void Assemble()
             {
                 m_locToGloMap->Assemble(m_coeffs, m_contCoeffs);
@@ -127,7 +127,9 @@ namespace Nektar
             inline const LocalToGlobalC0ContMapSharedPtr& GetLocalToGlobalMap() const
             {
                 return  m_locToGloMap;
-            } 
+            }
+
+            int GetGlobalMatrixNnz(const GlobalMatrixKey &gkey);
 
         protected:
             LocalToGlobalC0ContMapSharedPtr m_locToGloMap;
@@ -170,12 +172,12 @@ namespace Nektar
             GlobalMatrixSharedPtr GetGlobalMatrix(const GlobalMatrixKey &mkey);
 
 
-            void GlobalSolve(const GlobalLinSysKey &key, 
-                             const Array<OneD, const  NekDouble> &rhs, 
+            void GlobalSolve(const GlobalLinSysKey &key,
+                             const Array<OneD, const  NekDouble> &rhs,
                              Array<OneD, NekDouble> &inout,
                              const Array<OneD, const NekDouble> &dirForcing = NullNekDouble1DArray);
-          
-            virtual void v_MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray, 
+
+            virtual void v_MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray,
                                                          Array<OneD,       NekDouble> &outarray,
                                                    bool  UseContCoeffs);
 
@@ -185,7 +187,7 @@ namespace Nektar
                           NekDouble lambda,
                     const Array<OneD, const NekDouble> &varLambda,
                     const Array<OneD, const Array<OneD, NekDouble> > &varCoeff);
-            
+
             virtual void v_HelmSolveCG(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,

@@ -51,4 +51,14 @@ SET_TARGET_PROPERTIES(TimingGeneralMatrixOp3D PROPERTIES COMPILE_FLAGS -DBASE_PA
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Scripts/do_TimingGeneralMatrixOp3D   
     ${CMAKE_CURRENT_BINARY_DIR}/do_TimingGeneralMatrixOp3D COPYONLY)
+
+SET(TimingCGGeneralMatrixOp3DSource TimingCGGeneralMatrixOp3D.cpp)
+ADD_NEKTAR_EXECUTABLE(TimingCGGeneralMatrixOp3D TimingCGGeneralMatrixOp3DSource)
+TARGET_LINK_LIBRARIES(TimingCGGeneralMatrixOp3D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(TimingCGGeneralMatrixOp3D)
+SET_TARGET_PROPERTIES(TimingCGGeneralMatrixOp3D PROPERTIES COMPILE_FLAGS -DBASE_PATH="\\"${CMAKE_SOURCE_DIR}\\"")
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Scripts/do_TimingCGGeneralMatrixOp3D
+    ${CMAKE_CURRENT_BINARY_DIR}/do_TimingCGGeneralMatrixOp3D COPYONLY)
+
     

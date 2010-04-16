@@ -63,7 +63,7 @@ namespace Nektar
          * allocates memory for the array #m_contCoeffs.
          *
          * @param   graph3D     A mesh, containing information about the domain
-         *                      and the spectral/hp element expansion.  
+         *                      and the spectral/hp element expansion.
          * @param   solnType    Type of global system to use.
          */
         ContField3D::ContField3D(SpatialDomains::MeshGraph3D &graph3D,
@@ -73,7 +73,7 @@ namespace Nektar
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             ApplyGeomInfo(graph3D);
-            
+
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
                 ::AllocateSharedPtr(m_ncoeffs,*this,solnType);
 
@@ -84,17 +84,13 @@ namespace Nektar
 
 
         ContField3D::ContField3D(SpatialDomains::MeshGraph3D &graph3D,
-                                 SpatialDomains::BoundaryConditions &bcs, 
+                                 SpatialDomains::BoundaryConditions &bcs,
                                  const int bc_loc,
                                  const GlobalSysSolnType solnType):
                 DisContField3D(graph3D,bcs,bc_loc,solnType,false),
                 m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
                 m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            GenerateBoundaryConditionExpansion(graph3D,bcs,bcs.GetVariable(bc_loc));
-            EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph3D);
-            
             map<int,int> periodicFaces;
             map<int,int> periodicEdges;
             map<int,int> periodicVertices;
@@ -106,7 +102,7 @@ namespace Nektar
                                                                                      m_bndConditions,
                                                                                      periodicVertices,
                                                                                      periodicEdges,
-                                                                                     periodicFaces); 
+                                                                                     periodicFaces);
 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
@@ -114,17 +110,13 @@ namespace Nektar
 
 
         ContField3D::ContField3D(SpatialDomains::MeshGraph3D &graph3D,
-                                 SpatialDomains::BoundaryConditions &bcs, 
+                                 SpatialDomains::BoundaryConditions &bcs,
                                  const std::string variable,
                                  const GlobalSysSolnType solnType):
                 DisContField3D(graph3D,bcs,variable,solnType,false),
                 m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
                 m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            GenerateBoundaryConditionExpansion(graph3D, bcs, variable);
-            EvaluateBoundaryConditions();
-            ApplyGeomInfo(graph3D);
-            
             map<int,int> periodicFaces;
             map<int,int> periodicEdges;
             map<int,int> periodicVertices;
@@ -136,7 +128,7 @@ namespace Nektar
                                                                                      m_bndConditions,
                                                                                      periodicVertices,
                                                                                      periodicEdges,
-                                                                                     periodicFaces); 
+                                                                                     periodicFaces);
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
@@ -253,9 +245,9 @@ namespace Nektar
                                    bool  UseContCoeffs)
         {
             // Inner product of forcing
-            Array<OneD,NekDouble> wsp(m_contNcoeffs);  
+            Array<OneD,NekDouble> wsp(m_contNcoeffs);
             IProductWRTBase(inarray,wsp,true);
-        
+
             // Solve the system
             GlobalLinSysKey key(StdRegions::eMass,
                                 m_locToGloMap,
@@ -277,17 +269,17 @@ namespace Nektar
         void ContField3D::v_MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray,
                                                         Array<OneD,       NekDouble> &outarray,
                                                   bool  UseContCoeffs)
-                                                  
+
         {
             GlobalLinSysKey key(StdRegions::eMass,
                                 m_locToGloMap,
                                 m_locToGloMap->GetGlobalSysSolnType());
-            
+
             if(UseContCoeffs)
             {
                 if(inarray.data() == outarray.data())
                 {
-                    Array<OneD, NekDouble> tmp(m_contNcoeffs,0.0);   
+                    Array<OneD, NekDouble> tmp(m_contNcoeffs,0.0);
                     Vmath::Vcopy(m_contNcoeffs,inarray,1,tmp,1);
                     GlobalSolve(key,tmp,outarray);
                 }
@@ -302,7 +294,7 @@ namespace Nektar
 
                 if(inarray.data() == outarray.data())
                 {
-                    Array<OneD,NekDouble> tmp(inarray.num_elements()); 
+                    Array<OneD,NekDouble> tmp(inarray.num_elements());
                     Vmath::Vcopy(inarray.num_elements(),inarray,1,tmp,1);
                     Assemble(tmp,outarray);
                 }
@@ -310,17 +302,17 @@ namespace Nektar
                 {
                     Assemble(inarray,outarray);
                 }
-                    
+
                 GlobalSolve(key,outarray,globaltmp);
                 GlobalToLocal(globaltmp,outarray);
             }
         }
 
 
-        void ContField3D::GenerateDirBndCondForcing(const GlobalLinSysKey &key, 
-                                                    Array<OneD, NekDouble> &inout, 
+        void ContField3D::GenerateDirBndCondForcing(const GlobalLinSysKey &key,
+                                                    Array<OneD, NekDouble> &inout,
                                                     Array<OneD, NekDouble> &outarray)
-        {       
+        {
             int bndcnt=0;
             const Array<OneD,const int>& map  = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
             NekDouble sign;
@@ -333,14 +325,14 @@ namespace Nektar
                     sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
                     inout[map[bndcnt++]] = sign * coeffs[j];
                 }
-            }            
-            GeneralMatrixOp(*(key.GetGlobalMatrixKey()),inout,outarray,true);   
+            }
+            GeneralMatrixOp(*(key.GetGlobalMatrixKey()),inout,outarray,true);
         }
 
 
-        // Note inout contains initial guess and final output. 
-        void ContField3D::GlobalSolve(const GlobalLinSysKey &key, 
-                                      const Array<OneD, const NekDouble>& rhs, 
+        // Note inout contains initial guess and final output.
+        void ContField3D::GlobalSolve(const GlobalLinSysKey &key,
+                                      const Array<OneD, const NekDouble>& rhs,
                                             Array<OneD,       NekDouble>& inout,
                                       const Array<OneD, const NekDouble>& dirForcing)
         {
@@ -349,7 +341,7 @@ namespace Nektar
             int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
 
             // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE
-            //         IN THE SOLUTION ARRAY       
+            //         IN THE SOLUTION ARRAY
             const Array<OneD,const int>& map  = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
             NekDouble sign;
             for(i = 0; i < m_numDirBndCondExpansions; ++i)
@@ -360,7 +352,7 @@ namespace Nektar
                     sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
                     inout[map[bndcnt++]] = sign * coeffs[j];
                 }
-            }    
+            }
 
             // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
             if(m_contNcoeffs - NumDirBcs > 0)
@@ -390,7 +382,7 @@ namespace Nektar
 
         /**
          * Returns the global matrix associated with the given GlobalMatrixKey.
-         * If the global matrix has not yet been constructed on this field, 
+         * If the global matrix has not yet been constructed on this field,
          * it is first constructed using GenGlobalMatrix().
          * @param   mkey        Global matrix key.
          * @returns Assocated global matrix.
@@ -430,8 +422,8 @@ namespace Nektar
                               false, NullNekDouble1DArray);
         }
 
-        // Solve the helmholtz problem assuming that m_contCoeff vector 
-        // contains an intial estimate for solution            
+        // Solve the helmholtz problem assuming that m_contCoeff vector
+        // contains an intial estimate for solution
         void ContField3D::v_HelmSolveCG(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
@@ -442,13 +434,13 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &dirForcing)
         {
             // Inner product of forcing
-            Array<OneD,NekDouble> wsp(m_contNcoeffs);  
-            IProductWRTBase(inarray,wsp,true);       
+            Array<OneD,NekDouble> wsp(m_contNcoeffs);
+            IProductWRTBase(inarray,wsp,true);
             // Note -1.0 term necessary to invert forcing function to
             // be consistent with matrix definition
             Vmath::Neg(m_contNcoeffs, wsp, 1);
 
-            // Forcing function with weak boundary conditions 
+            // Forcing function with weak boundary conditions
             int i,j;
             int bndcnt=m_locToGloMap->GetNumLocalDirBndCoeffs();
             NekDouble sign;
@@ -457,7 +449,7 @@ namespace Nektar
                 for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
                 {
                     sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
-                    wsp[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)] +=  
+                    wsp[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)] +=
                         sign * (m_bndCondExpansions[i]->GetCoeffs())[j];
                 }
             }
@@ -476,8 +468,8 @@ namespace Nektar
                 Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
                 GlobalSolve(key,wsp,tmp,dirForcing);
                 GlobalToLocal(tmp,outarray);
-            }            
-        }    
+            }
+        }
 
   } //end of namespace
 } //end of namespace

@@ -966,15 +966,13 @@ namespace Nektar
                                                std::string var)
         {
             int i;
-            int nquad0 = GetNumPoints(0);
-            int nquad1 = GetNumPoints(1);
-            int nquad2 = GetNumPoints(2);
+            int nq = GetTotPoints();
 
             // printing the fields of that zone
             outfile << "        <DataArray type=\"Float32\" Name=\""
                     << var << "\">" << endl;
             outfile << "          ";
-            for(i = 0; i < nquad0*nquad1*nquad2; ++i)
+            for(i = 0; i < nq; ++i)
             {
                 outfile << (fabs(m_phys[i]) < NekConstants::kNekZeroTol ? 0 : m_phys[i]) << " ";
             }

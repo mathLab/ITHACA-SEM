@@ -370,12 +370,7 @@ namespace Utilities
             v.push_back(vertices[elements[i].vert[1]]);
             v.push_back(vertices[elements[i].vert[2]]);
             v.push_back(vertices[elements[i].vert[3]]);
-            // Compute cross produc (b x c)
-//            ax = (v[1].y-v[3].y)*(v[2].z-v[3].z) - (v[1].z-v[3].z)*(v[2].y-v[3].y);
-//            ay = (v[2].x-v[3].x)*(v[1].z-v[3].z) - (v[1].x-v[3].x)*(v[2].z-v[3].z);
-//            az = (v[1].x-v[3].x)*(v[2].y-v[3].y) - (v[2].x-v[3].x)*(v[1].y-v[3].y);
-//            // Compute signed volume: 1/6 * (a . (b x c))
-//            vol = 1.0/6.0*(ax*(v[0].x-v[3].x) + ay*(v[0].y-v[3].y) + az*(v[0].z-v[3].z));
+
             // Compute cross produc (b x c)
             vax = v[0].x-v[2].x;
             vay = v[0].y-v[2].y;

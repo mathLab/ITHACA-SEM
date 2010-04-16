@@ -34,26 +34,11 @@ int main(int argc, char *argv[])
     //----------------------------------------------
 
     //----------------------------------------------
-    // Set up Expansion information
-    vector< vector<LibUtilities::PointsType> > pointstype;
-    for(i = 0; i < fielddef.size(); ++i)
-    {
-        vector<LibUtilities::PointsType> ptype;
-        for(j = 0; j < 3; ++j)
-        {
-            ptype.push_back(LibUtilities::ePolyEvenlySpaced);
-        }
-        pointstype.push_back(ptype);
-    }
-    graphShPt->SetExpansions(fielddef,pointstype);
-    //----------------------------------------------
-
-
-    //----------------------------------------------
     // Define Expansion
     int expdim  = graphShPt->GetMeshDimension();
     int nfields = fielddef[0]->m_Fields.size();
-    Array<OneD, MultiRegions::ExpListSharedPtr> Exp(nfields);
+    int addfields = 1;
+    Array<OneD, MultiRegions::ExpListSharedPtr> Exp(nfields + addfields);
 
     switch(expdim)
     {
@@ -71,7 +56,7 @@ int main(int argc, char *argv[])
             Exp1D = MemoryManager<MultiRegions::ExpList1D>
                                                     ::AllocateSharedPtr(*mesh);
             Exp[0] = Exp1D;
-            for(i = 1; i < nfields; ++i)
+            for(i = 1; i < nfields + addfields; ++i)
             {
                 Exp[i] = MemoryManager<MultiRegions::ExpList1D>
                                                     ::AllocateSharedPtr(*Exp1D);
@@ -93,7 +78,7 @@ int main(int argc, char *argv[])
                                                     ::AllocateSharedPtr(*mesh);
             Exp[0] =  Exp2D;
 
-            for(i = 1; i < nfields; ++i)
+            for(i = 1; i < nfields + addfields; ++i)
             {
                 Exp[i] = MemoryManager<MultiRegions::ExpList2D>
                                                     ::AllocateSharedPtr(*Exp2D);
@@ -115,7 +100,7 @@ int main(int argc, char *argv[])
                                                     ::AllocateSharedPtr(*mesh);
             Exp[0] =  Exp3D;
 
-            for(i = 1; i < nfields; ++i)
+            for(i = 1; i < nfields + addfields; ++i)
             {
                 Exp[i] = MemoryManager<MultiRegions::ExpList3D>
                                                     ::AllocateSharedPtr(*Exp3D);
@@ -143,25 +128,54 @@ int main(int argc, char *argv[])
     //----------------------------------------------
 
     //----------------------------------------------
-    // Write solution
-    string   outname(strtok(argv[argc-1],"."));
-    outname += ".vtu";
-    ofstream outfile(outname.c_str());
-
-    Exp[0]->WriteVtkHeader(outfile);
-    // For each field write out field data for each expansion.
-    for(i = 0; i < Exp[0]->GetExpSize(); ++i)
+    // Compute gradients of fields and compute reentricity
+    ASSERTL0(nfields == 2, "Need two fields (u,v) to add reentricity");
+    int nq = Exp[0]->GetNpoints();
+    Array<OneD, NekDouble> grad_u[2], grad_v[2];
+    Array<OneD, NekDouble> mag_cross(nq);
+    for (i = 0; i < 2; ++i)
     {
-        Exp[0]->WriteVtkPieceHeader(outfile,i);
-        // For this expansion, write out each field.
-        for(j = 0; j < Exp.num_elements(); ++j)
-        {
-            Exp[j]->WriteVtkPieceData(outfile,i, fielddef[0]->m_Fields[j]);
-        }
-        Exp[0]->WriteVtkPieceFooter(outfile,i);
+    	grad_u[i] = Array<OneD,NekDouble>(nq);
+    	grad_v[i] = Array<OneD,NekDouble>(nq);
     }
-    Exp[0]->WriteVtkFooter(outfile);
-    //----------------------------------------------
+    Exp[0]->PhysDeriv(Exp[0]->GetPhys(), grad_u[0], grad_u[1]);
+    Exp[1]->PhysDeriv(Exp[1]->GetPhys(), grad_v[0], grad_v[1]);
+
+    // Compute cross product magnitude
+    for (i = 0; i < nq; ++i)
+    {
+    	mag_cross[i] = grad_u[0][i] * grad_v[1][i] - grad_u[1][i] * grad_v[0][i];
+    }
+    Exp[nfields]->FwdTrans(mag_cross, Exp[nfields]->UpdateCoeffs());
+
+
+    //-----------------------------------------------
+    // Write solution to file with additional computed fields
+    string   fldfilename(argv[2]);
+    string   out = fldfilename.substr(0, fldfilename.find_last_of("."));
+    string   endfile("_add.fld");
+    out += endfile;
+    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+                                                = Exp[0]->GetFieldDefinitions();
+    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+
+    for(j = 0; j < nfields + addfields; ++j)
+    {
+		for(i = 0; i < FieldDef.size(); ++i)
+		{
+			if (j >= nfields)
+			{
+				FieldDef[i]->m_Fields.push_back("w");
+			}
+			else
+			{
+				FieldDef[i]->m_Fields.push_back(fielddef[i]->m_Fields[j]);
+			}
+			Exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
+		}
+    }
+    graph.Write(out, FieldDef, FieldData);
+    //-----------------------------------------------
 
     return 0;
 }

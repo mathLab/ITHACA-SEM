@@ -1029,6 +1029,8 @@ namespace Nektar
         LibUtilities::BasisKey MeshGraph3D:: GetFaceBasisKey(Geometry2DSharedPtr face, const int flag)
         {
             ElementFaceVectorSharedPtr elements = GetElementsFromFace(face);
+            ASSERTL0(elements->size() > 0, "No elements for the given face."
+            		" Check all elements belong to the domain composite.");
             // Perhaps, a check should be done here to ensure that in case
             // elements->size!=1, all elements to which the edge belongs have the same type
             // and order of expansion such that no confusion can arise.
@@ -1050,8 +1052,8 @@ namespace Nektar
                         break;
                     case 1:
                         {
-                        	const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussLobattoLegendre);
-                            //const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
+                        	//const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                            const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
                             return LibUtilities::BasisKey(LibUtilities::eModified_B,nummodes,pkey);
                         }
                         break;

@@ -773,55 +773,146 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> & outarray)
         {
-            int  nquad0 = m_base[0]->GetNumPoints();
-            int  nquad1 = m_base[1]->GetNumPoints();
-            int  nquad2 = m_base[2]->GetNumPoints();
+            int    i;
+            int    nquad0  = m_base[0]->GetNumPoints();
+            int    nquad1  = m_base[1]->GetNumPoints();
+            int    nquad2  = m_base[2]->GetNumPoints();
+            int    nqtot   = nquad0*nquad1*nquad2;
+            int    nmodes0 = m_base[0]->GetNumModes();
+            int    nmodes1 = m_base[1]->GetNumModes();
+            int    wspsize = nquad0 + nquad1 + nquad2 + max(nqtot,m_ncoeffs)
+						+ nquad1*nquad2*nmodes0 + nquad2*nmodes0*(nmodes1+1)/2;
 
-            int  order0 = m_base[0]->GetNumModes();
-            int  order1 = m_base[1]->GetNumModes();
-            int  order2 = m_base[2]->GetNumModes();
+            Array<OneD, NekDouble> gfac0(wspsize);
+            Array<OneD, NekDouble> gfac1(gfac0 + nquad0);
+            Array<OneD, NekDouble> gfac2(gfac1 + nquad1);
+            Array<OneD, NekDouble> tmp0 (gfac2 + nquad2);
+            Array<OneD, NekDouble> wsp(tmp0 + max(nqtot,m_ncoeffs));
 
-//            Array<OneD, NekDouble > tmp (nquad0*nquad1*nquad2);
-//            Array<OneD, NekDouble > wsp (nquad1*nquad2*order0
-//                                            + nquad2*order0*(order1+1)/2);
-            // If outarray > inarray then no need for temporary storage.
-            Array<OneD, NekDouble> tmp = outarray;
-            if (outarray.num_elements() < inarray.num_elements())
+            const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
+            const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
+            const Array<OneD, const NekDouble>& z2 = m_base[2]->GetZ();
+
+            // set up geometric factor: (1+z0)/2
+            for(i = 0; i < nquad0; ++i)
             {
-                tmp = Array<OneD, NekDouble>(inarray.num_elements());
+                gfac0[i] = 0.5*(1+z0[i]);
             }
 
-            // Need workspace for sumfackernel though
-            Array<OneD, NekDouble> wsp(order0*nquad2*(nquad1+order1));
-
-            MultiplyByQuadratureMetric(inarray, tmp);
-
-            // perform sum-factorisation
-            switch (dir)
+            // set up geometric factor: 2/(1-z1)
+            for(i = 0; i < nquad1; ++i)
             {
-                case 0:
+                gfac1[i] = 2.0/(1-z1[i]);
+            }
+
+            // Set up geometric factor: 2/(1-z2)
+            for(i = 0; i < nquad2; ++i)
+            {
+            	gfac2[i] = 2.0/(1-z2[i]);
+            }
+
+            // Derivative in first direction is always scaled as follows
+            for(i = 0; i < nquad1*nquad2; ++i)
+            {
+                Vmath::Smul(nquad0,gfac1[i%nquad1],&inarray[0]+i*nquad0,1,&tmp0[0]+i*nquad0,1);
+            }
+            for(i = 0; i < nquad2; ++i)
+            {
+                Vmath::Smul(nquad0*nquad1,gfac2[i],&tmp0[0]+i*nquad0*nquad1,1,&tmp0[0]+i*nquad0*nquad1,1);
+            }
+
+            MultiplyByQuadratureMetric(tmp0,tmp0);
+
+            switch(dir)
+            {
+            case 0:
+                {
                     IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
                                                  m_base[1]->GetBdata(),
                                                  m_base[2]->GetBdata(),
-                                                 tmp,outarray,wsp,
-                                                 false,true,true);
-                    break;
-                case 1:
+                                                 tmp0,outarray,wsp,
+                                                 false, true, true);
+                }
+                break;
+            case 1:
+                {
+                    Array<OneD, NekDouble> tmp3(m_ncoeffs);
+
+                    for(i = 0; i < nquad1*nquad2; ++i)
+                    {
+                        Vmath::Vmul(nquad0,&gfac0[0],1,&tmp0[0]+i*nquad0,1,&tmp0[0]+i*nquad0,1);
+                    }
+
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                                 m_base[1]->GetBdata(),
+                                                 m_base[2]->GetBdata(),
+                                                 tmp0,tmp3,wsp,
+                                                 false, true, true);
+
+                    for(i = 0; i < nquad2; ++i)
+                    {
+                        Vmath::Smul(nquad0*nquad1,gfac2[i],&inarray[0]+i*nquad0*nquad1,1,&tmp0[0]+i*nquad0*nquad1,1);
+                    }
+                    MultiplyByQuadratureMetric(tmp0,tmp0);
                     IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
                                                  m_base[1]->GetDbdata(),
                                                  m_base[2]->GetBdata(),
-                                                 tmp,outarray,wsp,
-                                                 true,false,true);
-                    break;
-                case 2:
+                                                 tmp0,outarray,wsp,
+                                                 true, false, true);
+                    Vmath::Vadd(m_ncoeffs,&tmp3[0],1,&outarray[0],1,&outarray[0],1);
+                }
+                break;
+            case 2:
+				{
+                    Array<OneD, NekDouble> tmp3(m_ncoeffs);
+                    Array<OneD, NekDouble> tmp4(m_ncoeffs);
+                    for(i = 0; i < nquad1; ++i)
+                    {
+                        gfac1[i] = (1+z1[i])/2;
+                    }
+
+                    for(i = 0; i < nquad1*nquad2; ++i)
+                    {
+                        Vmath::Vmul(nquad0,&gfac0[0],1,&tmp0[0]+i*nquad0,1,&tmp0[0]+i*nquad0,1);
+                    }
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
+                                                 m_base[1]->GetBdata(),
+                                                 m_base[2]->GetBdata(),
+                                                 tmp0,tmp3,wsp,
+                                                 false, true, true);
+
+                    for(i = 0; i < nquad2; ++i)
+                    {
+                        Vmath::Smul(nquad0*nquad1,gfac2[i],&inarray[0]+i*nquad0*nquad1,1,&tmp0[0]+i*nquad0*nquad1,1);
+                    }
+                    for(i = 0; i < nquad1*nquad2; ++i)
+                    {
+                        Vmath::Smul(nquad0,gfac1[i%nquad1],&tmp0[0]+i*nquad0,1,&tmp0[0]+i*nquad0,1);
+                    }
+                    MultiplyByQuadratureMetric(tmp0,tmp0);
+                    IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                                 m_base[1]->GetDbdata(),
+                                                 m_base[2]->GetBdata(),
+                                                 tmp0,tmp4,wsp,
+                                                 true, false, true);
+
+                    MultiplyByQuadratureMetric(inarray,tmp0);
                     IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
                                                  m_base[1]->GetBdata(),
                                                  m_base[2]->GetDbdata(),
-                                                 tmp,outarray,wsp,
-                                                 true,true,false);
-                    break;
-            }
+                                                 tmp0,outarray,wsp,
+                                                 true, true, false);
 
+                    Vmath::Vadd(m_ncoeffs,&tmp3[0],1,&outarray[0],1,&outarray[0],1);
+                    Vmath::Vadd(m_ncoeffs,&tmp4[0],1,&outarray[0],1,&outarray[0],1);
+				}
+                break;
+            default:
+                {
+                    ASSERTL1(dir >= 0 &&dir < 3,"input dir is out of range");
+                }
+                break;
+            }
         }
 
 
@@ -982,6 +1073,7 @@ namespace Nektar
             }
 
         }
+
 
 
 
@@ -1219,46 +1311,35 @@ namespace Nektar
             int Q = m_base[1]->GetNumModes();
             int R = m_base[2]->GetNumModes();
 
-            int p_hat, k;
-
-            // All modes in the first and second layer are boundary modes
-            int cnt = P*(P+1)/2 + (Q-P)*P;
-            p_hat = min(P, R-1);
-            k = min(Q-P, max(0, Q-1));
-			cnt += p_hat*(p_hat+1)/2 - k*P;
-
-            int cnt2 = 0;
+            int i,j,k;
             int idx = 0;
-            for (int i = 0; i < cnt; ++i)
+
+            for (i = 0; i < P; ++i)
             {
-                outarray[idx++] = i;
-            }
-
-            // Loop over each of the remaining planes in the stack
-            for (int i = 2; i < R - 1; ++i)
-            {
-                p_hat = min(P, R-i);
-                k = min(Q-P, max(0, Q-i-1));
-                cnt2 = p_hat + k;
-
-                // First column are boundary modes
-                for (int j = 0; j < cnt2; ++j)
-                {
-                    outarray[idx++] = cnt + j;
-                }
-
-                // Bottom row is boundary
-                for (int j = 0; j < p_hat - 1; ++j)
-                {
-                    outarray[idx++] = cnt + cnt2;
-                    cnt2 += (p_hat+k)-1-j;
-                }
-                cnt += p_hat*(p_hat+1)/2 - k*P;
-            }
-
-            // Top item is also boundary mode (in edge 3)
-            if (R > 2) {
-            	outarray[idx++] = cnt;
+            	// First two Q-R planes are entirely boundary modes
+            	if (i < 2)
+            	{
+					for (j = 0; j < Q-i; j++)
+					{
+						for (k = 0; k < R-i-j; ++k)
+						{
+							outarray[idx++] = GetMode(i,j,k);
+						}
+					}
+            	}
+            	// Remaining Q-R planes contain boundary modes on bottom and
+            	// left edge.
+            	else
+            	{
+            		for (k = 0; k < R-i; ++k)
+            		{
+            			outarray[idx++] = GetMode(i,0,k);
+            		}
+            		for (j = 1; j < Q-i; ++j)
+            		{
+            			outarray[idx++] = GetMode(i,j,0);
+            		}
+            	}
             }
         }
 
@@ -1282,33 +1363,16 @@ namespace Nektar
             int Q = m_base[1]->GetNumModes();
             int R = m_base[2]->GetNumModes();
 
-            int p_hat, k;
-            int cnt2 = 0;
             int idx = 0;
-
-            // All modes in the first and second layer are boundary modes
-            int cnt = P*(P+1)/2 + (Q-P)*P;
-            p_hat = min(P, R-1);
-            k = min(Q-P, max(0, Q-1));
-			cnt += p_hat*(p_hat+1)/2 - k*P;
-
-            // Loop over each plane in the stack
-            for (int i = 0; i < R - 3; ++i)
+            for (int i = 2; i < P-2; ++i)
             {
-                p_hat = min(P, R-i-2);
-                k = min(Q-P, max(0, Q-i-2));
-                cnt2 = p_hat + k;
-                // Bottom row is boundary
-                for (int j = 0; j < p_hat - 1; ++j)
-                {
-                    for (int m = 0; m < p_hat + k - j - 2; ++m)
-                    {
-                        outarray[idx++] = cnt + cnt2 + 1 + m;
-                    }
-                    // skip to next column
-                    cnt2 += (p_hat+k)-1-j;
-                }
-                cnt += p_hat*(p_hat+1)/2 - k*P;
+            	for (int j = 1; j < Q-i-1; ++j)
+            	{
+            		for (int k = 1; k < R-i-j; ++k)
+            		{
+            			outarray[idx++] = GetMode(i,j,k);
+            		}
+            	}
             }
         }
 
@@ -1325,35 +1389,32 @@ namespace Nektar
                      "Mapping not defined for this type of basis");
 
             int localDOF;
-            int P = m_base[0]->GetNumModes();
-            int Q = m_base[1]->GetNumModes();
             switch(localVertexId)
             {
             case 0:
                 {
-                    localDOF = 0;
+                    localDOF = GetMode(0,0,0);
                 }
                 break;
             case 1:
                 {
-                    localDOF = Q;
+                    localDOF = GetMode(1,0,0);
                 }
                 break;
             case 2:
                 {
-                    localDOF = 1;
+                    localDOF = GetMode(0,1,0);
                 }
                 break;
             case 3:
                 {
-                    localDOF = P*(2*Q-P+1)/2;
+                    localDOF = GetMode(0,0,1);
                 }
                 break;
             default:
                 ASSERTL0(false,"Vertex ID must be between 0 and 3");
                 break;
             }
-
             return localDOF;
         }
 
@@ -1393,11 +1454,9 @@ namespace Nektar
             switch (eid)
             {
                 case 0:
-                    cnt = 2*Q-1;
                     for (i = 0; i < P-2; ++i)
                     {
-                        maparray[i] = cnt;
-                        cnt += Q-2-i;
+                        maparray[i] = GetMode(i+2, 0, 0);
                     }
                     if(edgeOrient==eBackwards)
                     {
@@ -1410,7 +1469,7 @@ namespace Nektar
                 case 1:
                     for (i = 0; i < Q-2; ++i)
                     {
-                        maparray[i] = Q+1+i;
+                        maparray[i] = GetMode(1, i+1, 0);
                     }
                     if(edgeOrient==eBackwards)
                     {
@@ -1423,30 +1482,20 @@ namespace Nektar
                 case 2:
                     for (i = 0; i < Q-2; ++i)
                     {
-                        maparray[i] = 2+i;
+                        maparray[i] = GetMode(0, i+2, 0);
                     }
                     if(edgeOrient==eBackwards)
                     {
-                        for(i = 1; i < nEdgeIntCoeffs; i+=2)
+                    	for(i = 1; i < nEdgeIntCoeffs; i+=2)
                         {
                         	signarray[i] = -1;
                         }
                     }
                     break;
                 case 3:
-                    // Skip bottom layer
-                    cnt =  P*(P+1)/2 - (Q-P)*P;
-                    // Skip second layer
-                    p_hat = min(P, R-1);
-                    k = min(Q-P, max(0, Q-1));
-                    cnt +=  p_hat*(p_hat+1)/2 - k*P;
-                    // Now populate array using remaining layers
                     for (i = 0; i < R-2; ++i)
                     {
-                        p_hat = min(P, R-i-2);
-                        k = min(Q-P, max(0, Q-i-2));
-                        maparray[i] = cnt;
-                        cnt += p_hat*(p_hat+1)/2 - k*P;
+                    	maparray[i] = GetMode(0, 0, i+2);
                     }
                     if(edgeOrient==eBackwards)
                     {
@@ -1456,20 +1505,12 @@ namespace Nektar
                         }
                     }
                     break;
-                case 4: // OK
-                    // Skip bottom layer
-                    cnt = P*(P+1)/2 - (Q-P)*P;
-                    // Skip first column of second layer
-                    p_hat = min(P, R-1);
-                    k = min(Q-P, max(0, Q-1));
-                    cnt += p_hat + k;
-                    for (i = 0; i < p_hat - 1; ++i)
+                case 4:
+                    for (i = 0; i < R - 2; ++i)
                     {
-                        maparray[i] = cnt;
-                        // skip to next column
-                        cnt += p_hat + k - i - 1;
+                    	maparray[i] = GetMode(1, 0, i+1);
                     }
-                    if(edgeOrient==eForwards)
+                    if(edgeOrient==eBackwards)
                     {
                         for(i = 1; i < nEdgeIntCoeffs; i+=2)
                         {
@@ -1478,14 +1519,11 @@ namespace Nektar
                     }
                     break;
                 case 5:
-                    // Skip bottom layer
-                    cnt = P*(P+1)/2 - (Q-P)*P;
-                    // Skip bottom left corner
                     for (i = 0; i < R-2; ++i)
                     {
-                        maparray[i] = ++cnt;
+                    	maparray[i] = GetMode(0, 1, i+1);
                     }
-                    if(edgeOrient==eForwards)
+                    if(edgeOrient==eBackwards)
                     {
                         for(i = 1; i < nEdgeIntCoeffs; i+=2)
                         {
@@ -1528,13 +1566,13 @@ namespace Nektar
             {
                 case 0:
                 	idx = 0;
-                	for (i = 2; i < R-1; ++i)
+                	for (i = 2; i < P-1; ++i)
                 	{
-                		for (j = 1; j < R-i; ++j)
+                		for (j = 1; j < Q-i; ++j)
                 		{
                         	if ((int)faceOrient == 2)
                         	{
-                        		signarray[idx] = (i%2 ? 1 : -1);
+                        		signarray[idx] = (i%2 ? -1 : 1);
                         	}
                             maparray[idx++] = GetMode(i,j,0);
                 		}
@@ -1542,13 +1580,13 @@ namespace Nektar
                     break;
                 case 1:
                 	idx = 0;
-                	for (i = 1; i < R-2; ++i)
+                	for (i = 2; i < P; ++i)
                 	{
-                		for (k = 2; k < R-i; ++k)
+                		for (k = 1; k < R-i; ++k)
                 		{
                 			if ((int)faceOrient == 2)
                 			{
-                				signarray[idx] = (i%2 ? 1: -1);
+                				signarray[idx] = (i%2 ? -1: 1);
                 			}
                 			maparray[idx++] = GetMode(i,0,k);
                 		}
@@ -1556,27 +1594,27 @@ namespace Nektar
                     break;
                 case 2:
                 	idx = 0;
-                	for (j = 1; j < R-2; ++j)
+                	for (j = 1; j < Q-2; ++j)
                 	{
-                		for (i = 1; i < R-1-j; ++i)
+                		for (k = 1; k < R-1-j; ++k)
                 		{
-                			if ((int)faceOrient == 0)
+                			if ((int)faceOrient == 2)
                 			{
-                				signarray[idx] = (i%2 ? 1: -1);
+                				signarray[idx] = ((j+1)%2 ? -1: 1);
                 			}
-                			maparray[idx++] = GetMode(i,j,1);
+                			maparray[idx++] = GetMode(1,j,k);
                 		}
                 	}
                     break;
                 case 3:
                 	idx = 0;
-                	for (j = 1; j < R-2; ++j)
+                	for (j = 2; j < Q-1; ++j)
                 	{
-                		for (k = 2; k < R-j; ++k)
+                		for (k = 1; k < R-j; ++k)
                 		{
                 			if ((int)faceOrient == 2)
                 			{
-                				signarray[idx] = (j%2 ? 1: -1);
+                				signarray[idx] = (j%2 ? -1: 1);
                 			}
                 			maparray[idx++] = GetMode(0,j,k);
                 		}
@@ -1598,27 +1636,27 @@ namespace Nektar
             const int Q = m_base[1]->GetNumModes();
             const int R = m_base[2]->GetNumModes();
 
-        	int i,j,k,p_hat,k_hat;
+        	int i,j,k,q_hat,k_hat;
         	int cnt = 0;
 
-        	// Skip up the stacks (K)
-        	for (k = 0; k < K; ++k)
-        	{
-        		p_hat = min(P,R-k);
-        		k_hat = min(Q-P, max(0, Q-k));
-				cnt += p_hat*(p_hat+1)/2 - k_hat*P;
-        	}
-
-        	// Skip across the columns (I)
-    		p_hat = min(P,R-K);
-    		k_hat = min(Q-P, max(0, Q-K));
+        	// Skip along the stacks (K)
         	for (i = 0; i < I; ++i)
         	{
-        		cnt += p_hat + k_hat - i;
+        		q_hat = min(Q,P-i);
+        		k_hat = min(R-Q, max(0, R-i));
+				cnt += q_hat*(q_hat+1)/2 - k_hat*Q;
         	}
 
-        	// Skip up the columns (J)
-        	cnt += J;
+        	// Skip across the columns (J)
+    		q_hat = min(Q,P-I);
+    		k_hat = min(R-Q, max(0, R-I));
+        	for (j = 0; j < J; ++j)
+        	{
+        		cnt += q_hat + k_hat - j;
+        	}
+
+        	// Skip up the columns (K)
+        	cnt += K;
 
         	// Return the final mode number
         	return cnt;
@@ -1643,8 +1681,12 @@ namespace Nektar
             const LibUtilities::BasisType bType1 = GetEdgeBasisType(1);
             const LibUtilities::BasisType bType2 = GetEdgeBasisType(3);
 
-            ASSERTL1( (bType0==LibUtilities::eModified_A) && (bType1==LibUtilities::eModified_B)&& (bType2==LibUtilities::eModified_C),
-                      "Method only implemented for Modified_A BasisType (x direction), Modified_B BasisType (y direction), and Modified_C BasisType(z direction)");
+            ASSERTL1( (bType0 == LibUtilities::eModified_A)
+						&& (bType1 == LibUtilities::eModified_B)
+						&& (bType2 == LibUtilities::eModified_C),
+                      "Method only implemented for Modified_A BasisType (x "
+					  "direction), Modified_B BasisType (y direction), and "
+					  "Modified_C BasisType(z direction)");
 
             int nFaceCoeffs = 0;
             if (fid == 0)
@@ -1695,28 +1737,18 @@ namespace Nektar
             int n1 = 0;         // Computed depth in face orthogonal dirn in
                                 //   fast face coordinate
 
+            if (faceOrient > 4)
+            {
+            	ASSERTL0(false, "Face Coordinate transposition not valid.");
+            }
             // Set up face mapping to account for face orientation.
-            if (faceOrient < 4)
-            {
-            	arrayindex[0] = 0;
-            	arrayindex[1] = 1;
-            	arrayindex[2] = 2;
-            	if (faceOrient == 2)
-            	{
-            		swap (arrayindex[0], arrayindex[2]);
-            	}
-            }
-            else
-            {
-            	ASSERTL0(false, "Face transposition not valid.");
-            	arrayindex[0] = 0;
-            	arrayindex[1] = 2;
-            	arrayindex[2] = 1;
-            	if (faceOrient == 5)
-            	{
-            		swap (arrayindex[0], arrayindex[1]);
-            	}
-            }
+			arrayindex[0] = 0;
+			arrayindex[1] = 1;
+			arrayindex[2] = 2;
+			if (faceOrient == 2)
+			{
+				swap (arrayindex[0], arrayindex[2]);
+			}
 /*
             // Create array indexing the modes at a face level. This handles
             // face orientation.
@@ -1840,27 +1872,27 @@ namespace Nektar
             }
 */
 
-            ASSERTL0(nummodesA == 2, "Not set up for nummodes != 2");
+            ASSERTL0(nummodesA == 2, "Not set up for deformed case (nummodes > 2)");
             switch (fid) {
             case 0:
             	maparray[arrayindex[0]] = 0;
-            	maparray[arrayindex[1]] = 1;
-            	maparray[arrayindex[2]] = 2;
+            	maparray[arrayindex[1]] = 2;
+            	maparray[arrayindex[2]] = 3;
             	break;
             case 1:
             	maparray[arrayindex[0]] = 0;
-            	maparray[arrayindex[1]] = 3;
-            	maparray[arrayindex[2]] = 2;
+            	maparray[arrayindex[1]] = 1;
+            	maparray[arrayindex[2]] = 3;
             	break;
             case 2:
-            	maparray[arrayindex[0]] = 2;
-            	maparray[arrayindex[1]] = 3;
-            	maparray[arrayindex[2]] = 1;
+            	maparray[arrayindex[0]] = 3;
+            	maparray[arrayindex[1]] = 1;
+            	maparray[arrayindex[2]] = 2;
             	break;
             case 3:
             	maparray[arrayindex[0]] = 0;
-            	maparray[arrayindex[1]] = 3;
-            	maparray[arrayindex[2]] = 1;
+            	maparray[arrayindex[1]] = 1;
+            	maparray[arrayindex[2]] = 2;
             	break;
             }
             // Finally set up sign arrays.
@@ -1908,9 +1940,6 @@ namespace Nektar
                 }
             }
 */
-			if (nummodesA > 2) {
-				ASSERTL0(false, "Need to fix for higher mode orders");
-			}
 /*
             // Reorientate where first direction is reversed
             if( (faceOrient==2) || (faceOrient==3) ||

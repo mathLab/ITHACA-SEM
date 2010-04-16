@@ -471,7 +471,7 @@ namespace Nektar
               }
               }
             ASSERTL0(k != m_tetgeoms.size(),"Failed to find geometry with same global id");
-            for(int b = 0; b < 2; ++b)
+            for(int b = 0; b < 3; ++b)
               {
             const LibUtilities::PointsKey pkey(nmodes[cnt+b],pointstype[i][b]);
             LibUtilities::BasisKey bkey(basis[b],nmodes[cnt+b],pkey);
@@ -496,7 +496,7 @@ namespace Nektar
               }
             ASSERTL0(k != m_hexgeoms.size(),"Failed to find geometry with same global id");
 
-            for(int b = 0; b < 2; ++b)
+            for(int b = 0; b < 3; ++b)
               {
             const LibUtilities::PointsKey pkey(nmodes[cnt+b],pointstype[i][b]);
             LibUtilities::BasisKey bkey(basis[b],nmodes[cnt+b],pkey);
@@ -722,13 +722,11 @@ namespace Nektar
         LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
         returnval.push_back(bkey);
 
-        const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussLobattoLegendre);
-        //const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
+        const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
         LibUtilities::BasisKey bkey1(LibUtilities::eModified_B,order,pkey1);
         returnval.push_back(bkey1);
 
-        const LibUtilities::PointsKey pkey2(order,LibUtilities::eGaussLobattoLegendre);
-        //const LibUtilities::PointsKey pkey2(order,LibUtilities::eGaussRadauMAlpha2Beta0);
+        const LibUtilities::PointsKey pkey2(order,LibUtilities::eGaussRadauMAlpha2Beta0);
         LibUtilities::BasisKey bkey2(LibUtilities::eModified_C,order,pkey2);
         returnval.push_back(bkey2);
           }

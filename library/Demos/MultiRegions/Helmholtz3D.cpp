@@ -5,6 +5,7 @@
 
 using namespace Nektar;
 
+
 int main(int argc, char *argv[])
 {
     MultiRegions::ContField3DSharedPtr Exp, Fce;
@@ -45,10 +46,6 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Define Expansion
-//    int bc_loc=0;
-//    MultiRegions::GlobalSysSolnType solType = MultiRegions::eDirectFullMatrix;
-//    Exp = MemoryManager<MultiRegions::ContField3D>
-//                    ::AllocateSharedPtr(graph3D,bcs,bc_loc,solType);
     Exp = MemoryManager<MultiRegions::ContField3D>
                     ::AllocateSharedPtr(graph3D,bcs);
     //----------------------------------------------

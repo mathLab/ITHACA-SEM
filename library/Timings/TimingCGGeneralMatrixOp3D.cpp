@@ -445,8 +445,9 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
     }
     else
     {
+    	Exp->FwdTrans(Fce->GetPhys(), Exp->UpdateCoeffs());
         MultiRegions::GlobalMatrixKey key(type, lambda, Exp->GetLocalToGlobalMap());
-        Exp->GeneralMatrixOp (key, Exp->GetContCoeffs(),Exp->UpdatePhys(), true);
+        Exp->GeneralMatrixOp (key, Exp->GetCoeffs(),Exp->UpdatePhys());
     }
     gettimeofday(&timer2, NULL);
     time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
@@ -489,7 +490,7 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
         MultiRegions::GlobalMatrixKey key(type, lambda, Exp->GetLocalToGlobalMap());
         for(i = 0; i < NumCalls; ++i)
         {
-            Exp->GeneralMatrixOp (key, Exp->GetContCoeffs(),Exp->UpdatePhys(), true);
+            Exp->GeneralMatrixOp (key, Exp->GetCoeffs(),Exp->UpdatePhys());
         }
     }
     gettimeofday(&timer2, NULL);

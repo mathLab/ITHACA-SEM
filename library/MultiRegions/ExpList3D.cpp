@@ -152,9 +152,6 @@ namespace Nektar
             const SpatialDomains::ExpansionVector &expansions
                                         = graph3D.GetExpansions();
 
-            m_coeff_offset = Array<OneD,int>(expansions.size());
-            m_phys_offset = Array<OneD,int>(expansions.size());
-
             for(int i = 0; i < expansions.size(); ++i)
             {
                 SpatialDomains::TetGeomSharedPtr TetGeom;
@@ -184,16 +181,6 @@ namespace Nektar
                                                             TetGeom);
                         (*m_exp).push_back(tet);
                     }
-
-                    m_coeff_offset[i] = m_ncoeffs;
-                    m_phys_offset[i] = m_npoints;
-                    m_ncoeffs += StdRegions::StdTetData
-                            ::getNumberOfCoefficients(TetBa.GetNumModes(),
-                                                      TetBb.GetNumModes(),
-                                                      TetBc.GetNumModes());
-
-                    m_npoints += TetBa.GetNumPoints() * TetBb.GetNumPoints()
-                                                      * TetBc.GetNumPoints();
                 }
                 else if(PrismGeom = boost::dynamic_pointer_cast<
                         SpatialDomains::PrismGeom>(expansions[i]->m_GeomShPtr))
@@ -209,16 +196,6 @@ namespace Nektar
                                         ::AllocateSharedPtr(PrismBa,PrismBb,
                                                             PrismBc,PrismGeom);
                     (*m_exp).push_back(prism);
-
-                    m_coeff_offset[i] = m_ncoeffs;
-                    m_phys_offset[i] = m_npoints;
-                    m_ncoeffs += StdRegions::StdPrismData
-                            ::getNumberOfCoefficients(PrismBa.GetNumModes(),
-                                                      PrismBb.GetNumModes(),
-                                                      PrismBc.GetNumModes());
-
-                    m_npoints += PrismBa.GetNumPoints()*PrismBb.GetNumPoints()
-                                                       *PrismBc.GetNumPoints();
                 }
                 else if(PyrGeom = boost::dynamic_pointer_cast<
                         SpatialDomains::PyrGeom>(expansions[i]->m_GeomShPtr))
@@ -234,16 +211,6 @@ namespace Nektar
                                         ::AllocateSharedPtr(PyrBa,PyrBb,PyrBc,
                                                             PyrGeom);
                     (*m_exp).push_back(pyramid);
-
-                    m_coeff_offset[i] = m_ncoeffs;
-                    m_phys_offset[i] = m_npoints;
-                    m_ncoeffs += StdRegions::StdPyrData
-                            ::getNumberOfCoefficients(PyrBa.GetNumModes(),
-                                                      PyrBb.GetNumModes(),
-                                                      PyrBc.GetNumModes());
-
-                    m_npoints += PyrBa.GetNumPoints() * PyrBb.GetNumPoints()
-                                                      * PyrBc.GetNumPoints();
                 }
                 else if(HexGeom = boost::dynamic_pointer_cast<
                         SpatialDomains::HexGeom>(expansions[i]->m_GeomShPtr))
@@ -259,13 +226,6 @@ namespace Nektar
                                         ::AllocateSharedPtr(HexBa,HexBb,HexBc,
                                                             HexGeom);
                     (*m_exp).push_back(hex);
-
-                    m_coeff_offset[i] = m_ncoeffs;
-                    m_phys_offset[i] = m_npoints;
-                    m_ncoeffs += HexBa.GetNumModes() * HexBb.GetNumModes()
-                                                     * HexBc.GetNumModes();
-                    m_npoints += HexBa.GetNumPoints() * HexBb.GetNumPoints()
-                                                      * HexBc.GetNumPoints();
                 }
                 else
                 {

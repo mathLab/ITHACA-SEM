@@ -132,6 +132,26 @@ namespace Nektar
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(
                             const MatrixKey &mkey);
 
+            virtual void v_HelmholtzMatrixOp(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey);
+
+            virtual void v_HelmholtzMatrixOp_MatFree(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey);
+
+            virtual void v_LaplacianMatrixOp(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey);
+
+            virtual void v_LaplacianMatrixOp(const int k1, const int k2,
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey);
+
             virtual void v_LaplacianMatrixOp_MatFree(
                             const Array<OneD, const NekDouble> &inarray,
                             Array<OneD,NekDouble> &outarray,
@@ -145,6 +165,11 @@ namespace Nektar
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
             TetExp();
+
+            void GeneralMatrixOp_MatOp(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey);
 
             void MultiplyByQuadratureMetric(
                     const Array<OneD, const NekDouble>& inarray,

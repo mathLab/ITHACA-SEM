@@ -458,6 +458,7 @@ namespace Nektar
                 ASSERTL0(validSequence, (std::string("Invalid combination of composite items: ")
                     + type + " and " + prevType + ".").c_str()); 
 
+
                 switch(type)
                 {
                 case 'E':   // Edge
@@ -477,22 +478,73 @@ namespace Nektar
                     break;
 
                 case 'T':   // Triangle
+#if 1
+                    {
+                        // Set up inverse maps of tris which takes global id 
+                        // back to local storage in m_trigeoms;
+                        map<int, int> tri_id_map; 
+                        for(int i = 0; i < m_trigeoms.size(); ++i)
+                        {
+                            tri_id_map[m_trigeoms[i]->GetGlobalID()] = i;
+                        }
+                        
+                        for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                        {
+                            if (tri_id_map.count(*seqIter) == 0 )
+                            {
+                                char errStr[16] = "";
+                                ::sprintf(errStr, "%d", *seqIter);
+                                NEKERROR(ErrorUtil::ewarning, (std::string("Unknown triangle index: ") + errStr).c_str());
+                            }
+                            else
+                            {
+                                m_MeshCompositeVector.back()->push_back(m_trigeoms[tri_id_map.find(*seqIter)->second]);
+                            }
+                        }
+                    }
+#else
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
                         if (*seqIter >= m_trigeoms.size())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *seqIter);
-                            NEKERROR(ErrorUtil::ewarning, (std::string("Unknown triangle index: ") + errStr).c_str());
+                            NEKERROR(ErrorUtil::ewarning, (std::string("Unknown triangle index: ") + errStr+std::string(" in Composite section")).c_str());
                         }
                         else
                         {
                             m_MeshCompositeVector.back()->push_back(m_trigeoms[*seqIter]);
                         }
                     }
+#endif
                     break;
 
                 case 'Q':   // Quad
+#if 1
+                    {
+                        // Set up inverse maps of tris which takes global id 
+                        // back to local storage in m_trigeoms;
+                        map<int, int> quad_id_map; 
+                        for(int i = 0; i < m_quadgeoms.size(); ++i)
+                        {
+                            quad_id_map[m_quadgeoms[i]->GetGlobalID()] = i;
+                        }
+                        
+                        for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                        {
+                            if (quad_id_map.count(*seqIter) == 0)
+                            {
+                                char errStr[16] = "";
+                                ::sprintf(errStr, "%d", *seqIter);
+                                NEKERROR(ErrorUtil::ewarning, (std::string("Unknown quad index: ") + errStr +std::string(" in Composite section")).c_str());
+                            }
+                            else
+                            {
+                                m_MeshCompositeVector.back()->push_back(m_quadgeoms[quad_id_map.find(*seqIter)->second]);
+                            }
+                        }
+                    }
+#else
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
                         if (*seqIter >= m_quadgeoms.size())
@@ -506,6 +558,7 @@ namespace Nektar
                             m_MeshCompositeVector.back()->push_back(m_quadgeoms[*seqIter]);
                         }
                     }
+#endif
                     break;
 
                 case 'V':   // Vertex
@@ -720,6 +773,9 @@ namespace Nektar
 
 //
 // $Log: MeshGraph2D.cpp,v $
+// Revision 1.41  2009/12/17 02:08:04  bnelson
+// Fixed visual studio compiler warning.
+//
 // Revision 1.40  2009/10/22 17:41:47  cbiotto
 // Update for variable order expansion
 //

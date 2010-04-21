@@ -230,7 +230,7 @@ namespace Nektar
             val = v_Integral(wsp);
 
             // if val too small, sqrt returns nan.
-            if (fabs(val) < NekConstants::kNekZeroTol*NekConstants::kNekZeroTol)
+            if (fabs(val) < NekConstants::kNekSqrtTol*NekConstants::kNekSqrtTol)
             {
                 return 0.0;
             }

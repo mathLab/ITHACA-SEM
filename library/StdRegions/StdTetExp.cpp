@@ -382,11 +382,16 @@ namespace Nektar
         void StdTetExp::v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                  Array<OneD, NekDouble> &outarray)
         {
-            Array<OneD, NekDouble> wsp(m_base[2]->GetNumPoints()*
-                                       m_base[0]->GetNumModes()*
-                                       ((m_base[1]->GetNumModes()+1)/2 + m_base[1]->GetNumPoints()));
-            //Array<OneD, NekDouble > tmp(nquad2*order0*(order1+1)/2);
-            //Array<OneD, NekDouble > tmp1(nquad2*nquad1*order0);
+            int  nquad0 = m_base[0]->GetNumPoints();
+            int  nquad1 = m_base[1]->GetNumPoints();
+            int  nquad2 = m_base[2]->GetNumPoints();
+
+            int  order0 = m_base[0]->GetNumModes();
+            int  order1 = m_base[1]->GetNumModes();
+            int  order2 = m_base[2]->GetNumModes();
+
+            Array<OneD, NekDouble> wsp(nquad2*order0*(order1+1)/2
+										+ nquad2*nquad1*order0);
 
             BwdTrans_SumFacKernel(m_base[0]->GetBdata(),
                                   m_base[1]->GetBdata(),
@@ -428,10 +433,11 @@ namespace Nektar
             int  order1 = m_base[1]->GetNumModes();
             int  order2 = m_base[2]->GetNumModes();
 
-            //Array<OneD, NekDouble > tmp  = wsp;
-//            Array<OneD, NekDouble > tmp1 = tmp + nquad2*order0*(order1+1)/2;
-            Array<OneD, NekDouble > tmp(nquad2*order0*(order1+1)/2);
-            Array<OneD, NekDouble > tmp1(nquad2*nquad1*order0);
+            Array<OneD, NekDouble > tmp  = wsp;
+            Array<OneD, NekDouble > tmp1 = tmp + nquad2*order0*(order1+1)/2;
+
+            //Array<OneD, NekDouble > tmp(nquad2*order0*(order1+1)/2);
+            //Array<OneD, NekDouble > tmp1(nquad2*nquad1*order0);
 
             int i,j, mode,mode1, cnt;
 

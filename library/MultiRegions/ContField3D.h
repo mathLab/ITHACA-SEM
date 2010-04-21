@@ -197,6 +197,12 @@ namespace Nektar
                           bool UseContCoeffs,
                     const Array<OneD, const NekDouble> &dirForcing);
 
+            virtual void v_GeneralMatrixOp(
+                                    const GlobalMatrixKey             &gkey,
+                                    const Array<OneD,const NekDouble> &inarray,
+                                          Array<OneD,      NekDouble> &outarray,
+                                    bool  UseContCoeffs);
+
         };
         typedef boost::shared_ptr<ContField3D>      ContField3DSharedPtr;
 

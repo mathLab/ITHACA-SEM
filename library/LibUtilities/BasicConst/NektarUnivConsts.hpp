@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Universal constants in the Nektar Library 
+// Description: Universal constants in the Nektar Library
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -47,8 +47,9 @@ namespace Nektar
         static const NekDouble kGeomFactorsTol = 1.0e-8;
         static const NekDouble kNekZeroTol = 1.0e-12;
         static const NekDouble kGeomRightAngleTol = 1e-14;
+        static const NekDouble kNekSqrtTol = 1.0e-16;
     }
-} //end of namespace 
+} //end of namespace
 
 #endif
 

@@ -471,6 +471,37 @@ namespace Nektar
             }
         }
 
+        void ContField3D::v_GeneralMatrixOp(
+                                const GlobalMatrixKey             &gkey,
+                                const Array<OneD,const NekDouble> &inarray,
+                                      Array<OneD,      NekDouble> &outarray,
+                                bool  UseContCoeffs)
+        {
+            if(UseContCoeffs)
+            {
+                bool doGlobalOp = m_globalOptParam->DoGlobalMatOp(
+                                                        gkey.GetMatrixType());
+
+                if(doGlobalOp)
+                {
+                    GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
+                    mat->Multiply(inarray,outarray);
+                }
+                else
+                {
+                    Array<OneD,NekDouble> tmp1(2*m_ncoeffs);
+                    Array<OneD,NekDouble> tmp2(tmp1+m_ncoeffs);
+                    GlobalToLocal(inarray,tmp1);
+                    GeneralMatrixOp_IterPerExp(gkey,tmp1,tmp2);
+                    Assemble(tmp2,outarray);
+                }
+            }
+            else
+            {
+                GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
+            }
+        }
+
         int ContField3D::GetGlobalMatrixNnz(const GlobalMatrixKey &gkey)
         {
             ASSERTL1(gkey.LocToGloMapIsDefined(),

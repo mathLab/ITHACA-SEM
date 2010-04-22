@@ -63,12 +63,12 @@ namespace Nektar
             ContField3D(SpatialDomains::MeshGraph3D &graph3D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0,
-                        const GlobalSysSolnType solnType = eDirectStaticCond);
+                        const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond);
 
             ContField3D(SpatialDomains::MeshGraph3D &graph3D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable,
-                        const GlobalSysSolnType solnType = eDirectStaticCond);
+                        const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond);
 
             ContField3D(const ContField3D &In);
 

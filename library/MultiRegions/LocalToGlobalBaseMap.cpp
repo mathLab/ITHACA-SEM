@@ -40,13 +40,27 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        /**
+         * @class LocalToGlobalBaseMap
+         * This class acts as a base class for constructing mappings between
+         * local, global and boundary degrees of freedom. It holds the storage
+         * for the maps and provides the accessors needed to retrieve them.
+         *
+         * There are two derived classes: LocalToGlobalC0ContMap and
+         * LocalToGlobalDGMap. These perform the actual construction of the
+         * maps within their specific contexts.
+         */
 
-        inline int RoundNekDoubleToInt(NekDouble x)
+
+        /// Rounds a double precision number to an integer.
+        int RoundNekDoubleToInt(NekDouble x)
         {
             return int(x > 0.0 ? x + 0.5 : x - 0.5);
         }
 
-        inline void RoundNekDoubleToInt(const Array<OneD,const NekDouble> inarray, Array<OneD,int> outarray)
+
+        /// Rounds an array of double precision numbers to integers.
+        void RoundNekDoubleToInt(const Array<OneD,const NekDouble> inarray, Array<OneD,int> outarray)
         {
             int size = inarray.num_elements();
             ASSERTL1(outarray.num_elements()>=size,"Array sizes not compatible");
@@ -59,7 +73,11 @@ namespace Nektar
             }
         }
 
-        LocalToGlobalBaseMap::LocalToGlobalBaseMap(void):
+
+        /**
+         * Initialises an empty mapping.
+         */
+        LocalToGlobalBaseMap::LocalToGlobalBaseMap():
             m_numLocalBndCoeffs(0),
             m_numGlobalBndCoeffs(0),
             m_numLocalDirBndCoeffs(0),
@@ -68,8 +86,13 @@ namespace Nektar
         {
         }
 
-        LocalToGlobalBaseMap::LocalToGlobalBaseMap(LocalToGlobalBaseMap* oldLevelMap, 
-                                                   const BottomUpSubStructuredGraphSharedPtr& multiLevelGraph)
+
+        /**
+         *
+         */
+        LocalToGlobalBaseMap::LocalToGlobalBaseMap(
+                    LocalToGlobalBaseMap* oldLevelMap,
+                    const BottomUpSubStructuredGraphSharedPtr& multiLevelGraph)
         {
             int i;
             int j;
@@ -87,7 +110,7 @@ namespace Nektar
             int staticCondLevelOld       = oldLevelMap->GetStaticCondLevel();
             int numPatchesOld            = oldLevelMap->GetNumPatches();
             GlobalSysSolnType solnTypeOld = oldLevelMap->GetGlobalSysSolnType();
-            const Array<OneD, const unsigned int>& numLocalBndCoeffsPerPatchOld = oldLevelMap->GetNumLocalBndCoeffsPerPatch(); 
+            const Array<OneD, const unsigned int>& numLocalBndCoeffsPerPatchOld = oldLevelMap->GetNumLocalBndCoeffsPerPatch();
             //--------------------------------------------------------------
 
             //--------------------------------------------------------------
@@ -103,16 +126,16 @@ namespace Nektar
             Array<OneD, NekDouble> locPatchMask_NekDouble(numLocalBndCoeffsOld,-3.0);
             Array<OneD, int>       locPatchMask          (numLocalBndCoeffsOld);
 
-            // Fill the array globPatchMask as follows: 
+            // Fill the array globPatchMask as follows:
             // - The first part (i.e. the glob bnd dofs) is filled with the value -1
-            // - The second part (i.e. the glob interior dofs) is numbered 
+            // - The second part (i.e. the glob interior dofs) is numbered
             //   according to the patch it belongs to (i.e. dofs in first
             //   block all are numbered 0, the second block numbered are 1, etc...)
             multiLevelGraph->MaskPatches(newLevel,globHomPatchMask);
             // Map from Global Dofs to Local Dofs
             // As a result, we know for each local dof whether
             // it is mapped to the boundary of the next level, or to which
-            // patch. Based upon this, we can than later associate every patch 
+            // patch. Based upon this, we can than later associate every patch
             // of the current level with a patch in the next level.
             oldLevelMap->GlobalToLocalBndWithoutSign(globPatchMask,locPatchMask_NekDouble);
             // Convert the result to an array of integers rather than doubles
@@ -142,15 +165,15 @@ namespace Nektar
             {
                 // For every patch at the current level, the mask array locPatchMask
                 // should be filled with
-                // - the same (positive) number for each entry 
+                // - the same (positive) number for each entry
                 //   (which will correspond to the patch at the next level it belongs to)
                 // - the same (positive) number for each entry, except some entries that are -1
                 //   (the enties correspond to -1, will be mapped to the local boundary of the
-                //    next level patch given by the positive number) 
+                //    next level patch given by the positive number)
                 // - -1 for all entries. In this case, we will make an additional patch only
                 //   consisting of boundaries at the next level
                 minval = *min_element(&locPatchMask[cnt],&locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);
-                maxval = *max_element(&locPatchMask[cnt],&locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);            
+                maxval = *max_element(&locPatchMask[cnt],&locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);
                 ASSERTL0((minval==maxval)||(minval==-1),"These values should never be the same");
 
                 if(maxval == -1)
@@ -163,7 +186,7 @@ namespace Nektar
                 {
                     curPatch = maxval;
                 }
-            
+
                 for(j = 0; j < numLocalBndCoeffsPerPatchOld[i]; j++ )
                 {
                     ASSERTL0((locPatchMask[cnt]==maxval)||(locPatchMask[cnt]==minval),
@@ -178,8 +201,8 @@ namespace Nektar
 
             // Count how many local dofs of the old level are mapped
             // to the local boundary dofs of the new level
-            m_numLocalBndCoeffs  = 0;     
-            m_numPatches         = numLocalBndCoeffsPerPatchNew.size();      
+            m_numLocalBndCoeffs  = 0;
+            m_numPatches         = numLocalBndCoeffsPerPatchNew.size();
             m_numLocalBndCoeffsPerPatch = Array<OneD, unsigned int>(m_numPatches);
             m_numLocalIntCoeffsPerPatch = Array<OneD, unsigned int>(m_numPatches,0u);
             for(int i = 0; i < m_numPatches; i++)
@@ -192,16 +215,16 @@ namespace Nektar
             // Also initialise some more data members
             m_solnType              = solnTypeOld;
             ASSERTL1(m_solnType==eDirectMultiLevelStaticCond,
-                     "This method should only be called for in case of multi-level static condensation.")
+                     "This method should only be called for in case of multi-level static condensation.");
             m_staticCondLevel       = newLevel;
-            m_signChange            = signChangeOld;  
-            m_numLocalDirBndCoeffs  = numLocalDirBndCoeffsOld;  
-            m_numGlobalDirBndCoeffs = numGlobalDirBndCoeffsOld;  
+            m_signChange            = signChangeOld;
+            m_numLocalDirBndCoeffs  = numLocalDirBndCoeffsOld;
+            m_numGlobalDirBndCoeffs = numGlobalDirBndCoeffsOld;
             m_numGlobalBndCoeffs    = multiLevelGraph->GetInteriorOffset(newLevel) +
                 m_numGlobalDirBndCoeffs;
             m_numGlobalCoeffs       = multiLevelGraph->GetNumGlobalDofs(newLevel) +
                 m_numGlobalDirBndCoeffs;
-            m_localToGlobalBndMap   = Array<OneD,int>(m_numLocalBndCoeffs); 
+            m_localToGlobalBndMap   = Array<OneD,int>(m_numLocalBndCoeffs);
             if(m_signChange)
             {
                 m_localToGlobalBndSign    = Array<OneD,NekDouble>(m_numLocalBndCoeffs);
@@ -225,7 +248,7 @@ namespace Nektar
             for(i = cnt = 0; i < numPatchesOld; i++)
             {
                 minval = *min_element(&locPatchMask[cnt],&locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);
-                maxval = *max_element(&locPatchMask[cnt],&locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);            
+                maxval = *max_element(&locPatchMask[cnt],&locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);
                 ASSERTL0((minval==maxval)||(minval==-1),"These values should never be the same");
 
                 if(maxval == -1)
@@ -237,7 +260,7 @@ namespace Nektar
                 {
                     curPatch = maxval;
                 }
-            
+
                 for(j = 0; j < numLocalBndCoeffsPerPatchOld[i]; j++ )
                 {
                     ASSERTL0((locPatchMask[cnt]==maxval)||(locPatchMask[cnt]==minval),
@@ -270,7 +293,7 @@ namespace Nektar
                         blockid = oldLevelMap->GetLocalToGlobalBndMap(cnt)-
                             m_numGlobalDirBndCoeffs - multiLevelGraph->GetInteriorOffset(newLevel,curPatch);
                         isBndDof = false;
-                    }   
+                    }
 
                     sign = isBndDof?1.0:sign;
                     m_patchMapFromPrevLevel[cnt] =  MemoryManager<PatchMap>::
@@ -296,20 +319,21 @@ namespace Nektar
         {
         }
 
-        // ----------------------------------------------------------------
-        // Calculation of the bandwith ---- The bandwidth here
-        // calculated corresponds to what is referred to as
-        // half-bandwidth.  If the elements of the matrix are
-        // designated as a_ij, it corresponds to the maximum value of
-        // |i-j| for non-zero a_ij.  As a result, the value also
-        // corresponds to the number of sub or superdiagonals.
-        //
-        // The bandwith can be calculated elementally as it
-        // corresponds to the maximal elemental bandwith (i.e. the
-        // maximal difference in global DOF index for every element)
-        //
-        // We here calculate the bandwith of the global
-        // boundary system (as used for static condensation) 
+
+        /**
+         * The bandwidth calculated corresponds to what is referred to as
+         * half-bandwidth.  If the elements of the matrix are designated as
+         * a_ij, it corresponds to the maximum value of |i-j| for non-zero
+         * a_ij.  As a result, the value also corresponds to the number of
+         * sub- or super-diagonals.
+         *
+         * The bandwith can be calculated elementally as it corresponds to the
+         * maximal elemental bandwith (i.e. the maximal difference in global
+         * DOF index for every element).
+         *
+         * We here calculate the bandwith of the global boundary system (as
+         * used for static condensation).
+         */
         void LocalToGlobalBaseMap::CalculateBndSystemBandWidth()
         {
             int i,j;
@@ -331,7 +355,7 @@ namespace Nektar
                         {
                             maxId = m_localToGlobalBndMap[cnt+j];
                         }
-                        
+
                         if(m_localToGlobalBndMap[cnt+j] < minId)
                         {
                             minId = m_localToGlobalBndMap[cnt+j];

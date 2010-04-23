@@ -46,14 +46,34 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(void)
+        /**
+         * @class LocalToGlobalC0ContMap
+         * Mappings are created for three possible global solution types:
+         *  - Direct full matrix
+         *  - Direct static condensation
+         *  - Direct multi-level static condensation
+         * In the latter case, mappings are created recursively for the
+         * different levels of static condensation.
+         *
+         * These mappings are used by GlobalLinSys to generate the global
+         * system.
+         */
+
+        /**
+         *
+         */
+        LocalToGlobalC0ContMap::LocalToGlobalC0ContMap()
         {
         }
 
 
-        LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(const int numLocalCoeffs,
-                                                       const ExpList &locExp,
-                                                       const GlobalSysSolnType solnType)
+        /**
+         *
+         */
+        LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(
+                    const int numLocalCoeffs,
+                    const ExpList &locExp,
+                    const GlobalSysSolnType solnType)
         {
             switch(locExp.GetExp(0)->GetShapeDimension())
             {
@@ -82,12 +102,19 @@ namespace Nektar
             CalculateFullSystemBandWidth();
         }
 
-        LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(const int numLocalCoeffs,
-                                                       const ExpList &locExp,
-                                                       const GlobalSysSolnType solnType,
-                                                       const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp,
-                                                       const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
-                                                       const map<int,int>& periodicVerticesId)
+
+        /**
+         *
+         */
+        LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(
+                const int numLocalCoeffs,
+                const ExpList &locExp,
+                const GlobalSysSolnType solnType,
+                const Array<OneD, const LocalRegions::PointExpSharedPtr>
+                                                                &bndCondExp,
+                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
+                                                                &bndConditions,
+                const map<int,int>& periodicVerticesId)
         {
             SetUp1DExpansionC0ContMap(numLocalCoeffs,
                                       locExp,
@@ -100,13 +127,19 @@ namespace Nektar
             CalculateFullSystemBandWidth();
         }
 
-        LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(const int numLocalCoeffs,
-                                                       const ExpList &locExp,
-                                                       const GlobalSysSolnType solnType,
-                                                       const Array<OneD, const ExpList1DSharedPtr> &bndCondExp,
-                                                       const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
-                                                       const vector<map<int,int> >& periodicVerticesId,
-                                                       const map<int,int>& periodicEdgesId)
+
+        /**
+         *
+         */
+        LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(
+                const int numLocalCoeffs,
+                const ExpList &locExp,
+                const GlobalSysSolnType solnType,
+                const Array<OneD, const ExpList1DSharedPtr> &bndCondExp,
+                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
+                                                                &bndConditions,
+                const vector<map<int,int> >& periodicVerticesId,
+                const map<int,int>& periodicEdgesId)
         {
             SetUp2DExpansionC0ContMap(numLocalCoeffs,
                                       locExp,
@@ -120,14 +153,20 @@ namespace Nektar
             CalculateFullSystemBandWidth();
         }
 
-        LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(const int numLocalCoeffs,
-                                                       const ExpList &locExp,
-                                                       const GlobalSysSolnType solnType,
-                                                       const Array<OneD, const ExpList2DSharedPtr> &bndCondExp,
-                                                       const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
-                                                       const map<int,int>& periodicVerticesId,
-                                                       const map<int,int>& periodicEdgesId,
-                                                       const map<int,int>& periodicFacesId)
+
+        /**
+         *
+         */
+        LocalToGlobalC0ContMap::LocalToGlobalC0ContMap(
+                const int numLocalCoeffs,
+                const ExpList &locExp,
+                const GlobalSysSolnType solnType,
+                const Array<OneD, const ExpList2DSharedPtr> &bndCondExp,
+                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
+                                                                &bndConditions,
+                const map<int,int>& periodicVerticesId,
+                const map<int,int>& periodicEdgesId,
+                const map<int,int>& periodicFacesId)
         {
             SetUp3DExpansionC0ContMap(numLocalCoeffs,
                                       locExp,
@@ -142,16 +181,41 @@ namespace Nektar
             CalculateFullSystemBandWidth();
         }
 
-        LocalToGlobalC0ContMap::~LocalToGlobalC0ContMap(void)
+
+        /**
+         *
+         */
+        LocalToGlobalC0ContMap::~LocalToGlobalC0ContMap()
         {
         }
 
-        void LocalToGlobalC0ContMap::SetUp1DExpansionC0ContMap(const int numLocalCoeffs,
-                                                               const ExpList &locExp,
-                                                               const GlobalSysSolnType solnType,
-                                                               const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp,
-                                                               const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
-                                                               const map<int,int>& periodicVerticesId)
+
+        /**
+         * Construction of the local->global map is achieved in several stages.
+         * A mesh vertex renumbering is constructed as follows
+         *  - Domain Dirichlet boundaries are numbered first.
+         *  - Domain periodic boundaries are numbered next and given
+         *    consistent global indices.
+         *  - Remaining vertices are ordered last.
+         * This mesh vertex renumbering is then used to generate the first
+         * part of the local to global mapping of the degrees of freedom. The
+         * remainder of the map consists of the element-interior degrees of
+         * freedom. This leads to the block-diagonal submatrix as each
+         * element-interior mode is globally orthogonal to modes in all other
+         * elements.
+         *
+         * The boundary condition mapping is generated from the same vertex
+         * renumbering.
+         */
+        void LocalToGlobalC0ContMap::SetUp1DExpansionC0ContMap(
+                const int numLocalCoeffs,
+                const ExpList &locExp,
+                const GlobalSysSolnType solnType,
+                const Array<OneD, const LocalRegions::PointExpSharedPtr>
+                                                                &bndCondExp,
+                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
+                                                                &bndConditions,
+                const map<int,int>& periodicVerticesId)
         {
             int i,j;
             int cnt = 0;
@@ -285,13 +349,55 @@ namespace Nektar
             m_numGlobalCoeffs = globalId;
         }
 
-        void LocalToGlobalC0ContMap::SetUp2DExpansionC0ContMap(const int numLocalCoeffs,
-                                                               const ExpList &locExp,
-                                                               const GlobalSysSolnType solnType,
-                                                               const Array<OneD, const MultiRegions::ExpList1DSharedPtr> &bndCondExp,
-                                                               const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
-                                                               const vector<map<int,int> >& periodicVerticesId,
-                                                               const map<int,int>& periodicEdgesId)
+
+        /**
+         * Construction of the local->global map is achieved in several stages.
+         * A mesh vertex and mesh edge renumbering is constructed
+         * in #vertReorderedGraphVertId and #edgeReorderedGraphVertId
+         *
+         * The only unique identifiers of the vertices and edges of the mesh
+         * are the vertex id and the mesh id (stored in their corresponding
+         * Geometry object).  However, setting up a global numbering based on
+         * these id's will not lead to a suitable or optimal numbering. Mainly
+         * because:
+         *  - we want the Dirichlet DOF's to be listed first
+         *  - we want an optimal global numbering of the remaining DOF's
+         *    (strategy still need to be defined but can for example be:
+         *    minimum bandwith or minimum fill-in of the resulting global
+         *    system matrix)
+         *
+         * That's why the vertices and egdes will be rearranged. This is done
+         * in the following way: The vertices and edges of the mesh are
+         * considered as vertices of a graph (in a computer science way)
+         * (equivalently, they can also be considered as boundary degrees of
+         * freedom, whereby all boundary modes of a single edge are considered
+         * as a single DOF). We then will use algorithms to reorder these
+         * graph-vertices (or boundary DOF's).
+         *
+         * We will use a boost graph object to store this graph the first
+         * template parameter (=OutEdgeList) is chosen to be of type std::set
+         * as in the set up of the adjacency, a similar edge might be created
+         * multiple times.  And to prevent the definition of parallel edges,
+         * we use std::set (=boost::setS) rather than std::vector
+         * (=boost::vecS).
+         *
+         * Two different containers are used to store the graph vertex id's of
+         * the different mesh vertices and edges. They are implemented as a STL
+         * map such that the graph vertex id can later be retrieved by the
+         * unique mesh vertex or edge id's which serve as the key of the map.
+         *
+         * Therefore, the algorithm proceeds as follows:
+         */
+        void LocalToGlobalC0ContMap::SetUp2DExpansionC0ContMap(
+                const int numLocalCoeffs,
+                const ExpList &locExp,
+                const GlobalSysSolnType solnType,
+                const Array<OneD, const MultiRegions::ExpList1DSharedPtr>
+                                                                &bndCondExp,
+                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
+                                                                &bndConditions,
+                const vector<map<int,int> >& periodicVerticesId,
+                const map<int,int>& periodicEdgesId)
         {
             int i,j,k;
             int cnt = 0,offset=0;
@@ -315,39 +421,15 @@ namespace Nektar
             const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
 
             m_signChange = false;
-            // The only unique identifiers of the vertices and edges
-            // of the mesh are the vertex id and the mesh id (stored
-            // in their corresponding Geometry object).  However,
-            // setting up a global numbering based on these id's will
-            // not lead to a suitable or optimal numbering. Mainly
-            // because: - we want the Dirichlet DOF's to be listed
-            // first - we want an optimal global numbering of the
-            // remaining DOF's (strategy still need to be defined but
-            // can for example be: minimum bandwith or minimum fill-in
-            // of the resulting global system matrix)
-            //
-            // That's why the vertices and egdes will be
-            // rearranged. Currently, this is done in the following
-            // way: The vertices and edges of the mesh are considered
-            // as vertices of a graph (in a computer science
-            // way)(equivalently, they can also be considered as
-            // boundary degrees of freedom, whereby all boundary modes
-            // of a single edge are considered as a single DOF). We
-            // then will use algorithms to reorder these
-            // graph-vertices (or boundary DOF's).
-            //
-            // Two different containers are used to store the graph
-            // vertex id's of the different mesh vertices and
-            // edges. They are implemented as a STL map such that the
-            // graph vertex id can later be retrieved by the unique
-            // mesh vertex or edge id's which serve as the key of the
-            // map.
+
             map<int,int> vertReorderedGraphVertId;
             map<int,int> edgeReorderedGraphVertId;
             map<int,int>::iterator mapIt;
             map<int,int>::const_iterator mapConstIt;
 
-            // STEP 1: Order the Dirichlet vertices and edges first
+            /**
+             * STEP 1: Order the Dirichlet vertices and edges first
+             */
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); j++)
@@ -374,14 +456,11 @@ namespace Nektar
             m_numLocalDirBndCoeffs = nLocDirBndCondDofs;
             firstNonDirGraphVertId = graphVertId;
 
-            // STEP 2: Now order all other vertices and edges in the graph
-            // We will use a boost graph object to store this graph
-            // the first template parameter (=OutEdgeList) is
-            // chosen to be of type std::set as in the set up of
-            // the adjacency, a similar edge might be created
-            // multiple times.  And to prevent the definition of
-            // parallel edges, we use std::set (=boost::setS)
-            // rather than std::vector (=boost::vecS)
+            /**
+             * STEP 2: Now order all other vertices and edges in the graph and
+             * create a temporary numbering of domain-interior vertices and
+             * edges.
+             */
             typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
             typedef boost::graph_traits<BoostGraph>::vertex_descriptor BoostVertex;
             BoostGraph boostGraphObj;
@@ -397,20 +476,8 @@ namespace Nektar
             Array<OneD, int>       localEdges;
 
             m_numLocalBndCoeffs = 0;
-            // First we are going to set up a temporary ordering
-            // of the mesh vertices and edges in the graph. We
-            // will then later use boost::cuthill_mckee_ordering
-            // (reverse Cuthill-McKee algorithm) to minimize the
-            // bandwidth.
-            //
-            // List the (non-dirichlet) vertices and edges of the
-            // mesh as the vertices of the temporary graph.  Also
-            // define the adjancency between the different
-            // vertices of the graph.
 
-            // List the periodic vertices and edges next.  This
-            // allows to give corresponding DOF's the same global
-            // ID a) periodic vertices
+            /// - Periodic vertices
             for(k = 0; k < periodicVerticesId.size(); ++k)
             {
                 for(mapConstIt = periodicVerticesId[k].begin(); mapConstIt != periodicVerticesId[k].end(); mapConstIt++)
@@ -418,10 +485,6 @@ namespace Nektar
                     meshVertId  = mapConstIt->first;
                     meshVertId2 = mapConstIt->second;
 
-
-                    // Not entirely sure why we need to have
-                    // vertReorderedGraphVertId and
-                    // vertTempGraphVertId
                     if(vertReorderedGraphVertId.count(meshVertId) == 0)
                     {
 
@@ -492,7 +555,7 @@ namespace Nektar
                 }
             }
 
-            // b) periodic edges
+            /// - Periodic edges
             for(mapConstIt = periodicEdgesId.begin(); mapConstIt != periodicEdgesId.end(); mapConstIt++)
             {
                 meshEdgeId  = mapConstIt->first;
@@ -510,7 +573,7 @@ namespace Nektar
                 }
             }
 
-            // List all other vertices and edges
+            /// - All other vertices and edges
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[locExp.GetOffset_Elmt_Id(i)]))
@@ -619,7 +682,9 @@ namespace Nektar
             }
 
 
-            // Now the graph has been set-up reorder it
+            /**
+             * STEP 3: Reorder graph for optimisation.
+             */
             BottomUpSubStructuredGraphSharedPtr bottomUpGraph;
             int nGraphVerts = tempGraphVertId;
             Array<OneD, int> perm(nGraphVerts);
@@ -657,9 +722,11 @@ namespace Nektar
                 }
             }
 
-            // Fill the vertReorderedGraphVertId and
-            // edgeReorderedGraphVertId with the optimal ordering from
-            // boost
+
+            /**
+             * STEP 4: Fill the #vertReorderedGraphVertId and
+             * #edgeReorderedGraphVertId with the optimal ordering from boost.
+             */
             for(mapIt = vertTempGraphVertId.begin(); mapIt != vertTempGraphVertId.end(); mapIt++)
             {
                 vertReorderedGraphVertId[mapIt->first] = iperm[mapIt->second] + graphVertId;
@@ -669,15 +736,18 @@ namespace Nektar
                 edgeReorderedGraphVertId[mapIt->first] = iperm[mapIt->second] + graphVertId;
             }
 
-            // Set up an array which contains the offset information of
-            // the different graph vertices. This basically means to
-            // identify to how many global degrees of freedom the
-            // individual graph vertices correspond. Obviously, the
-            // graph vertices corresponding to the mesh-vertices
-            // account for a single global DOF. However, the graph
-            // vertices corresponding to the element edges correspond
-            // to N-2 global DOF where N is equal to the number of
-            // boundary modes on this edge
+
+            /**
+             * STEP 5: Set up an array which contains the offset information of
+             * the different graph vertices.
+             *
+             * This basically means to identify to how many global degrees of
+             * freedom the individual graph vertices correspond. Obviously,
+             * the graph vertices corresponding to the mesh-vertices account
+             * for a single global DOF. However, the graph vertices
+             * corresponding to the element edges correspond to N-2 global DOF
+             * where N is equal to the number of boundary modes on this edge.
+             */
             Array<OneD, int> graphVertOffset(vertReorderedGraphVertId.size()+
                                              edgeReorderedGraphVertId.size()+1);
             graphVertOffset[0] = 0;
@@ -735,7 +805,16 @@ namespace Nektar
                 m_numLocalIntCoeffsPerPatch[i] = (unsigned int) locExpVector[locExp.GetOffset_Elmt_Id(i)]->GetNcoeffs() - locExpVector[locExp.GetOffset_Elmt_Id(i)]->NumBndryCoeffs();
             }
 
-            // Now, all ingredients are ready to set up the actual local to global mapping
+
+            /**
+             * STEP 6: Now, all ingredients are ready to set up the actual
+             * local to global mapping.
+             *
+             * The remainder of the map consists of the element-interior
+             * degrees of freedom. This leads to the block-diagonal submatrix
+             * as each element-interior mode is globally orthogonal to modes
+             * in all other elements.
+             */
             cnt = 0;
             // Loop over all the elements in the domain
             for(i = 0; i < locExpVector.size(); ++i)
@@ -811,8 +890,12 @@ namespace Nektar
             globalId = Vmath::Vmax(m_numLocalCoeffs,&m_localToGlobalMap[0],1)+1;
             m_numGlobalBndCoeffs = globalId;
 
+
+            /**
+             * STEP 7: The boundary condition mapping is generated from the
+             * same vertex renumbering.
+             */
             cnt=0;
-            // Setup interior mapping and the boundary map
             for(i = 0; i < m_numLocalCoeffs; ++i)
             {
                 if(m_localToGlobalMap[i] == -1)
@@ -842,6 +925,46 @@ namespace Nektar
             }
         }
 
+
+        /**
+         * Construction of the local->global map is achieved in several stages.
+         * A mesh vertex, mesh edge and mesh face renumbering is constructed
+         * in #vertReorderedGraphVertId, #edgeReorderedGraphVertId and
+         * #faceReorderedGraphVertId
+         *
+         * The only unique identifiers of the vertices, edges and faces of the
+         * mesh are the vertex id and the mesh id (stored in their corresponding
+         * Geometry object).  However, setting up a global numbering based on
+         * these id's will not lead to a suitable or optimal numbering. Mainly
+         * because:
+         *  - we want the Dirichlet DOF's to be listed first
+         *  - we want an optimal global numbering of the remaining DOF's
+         *    (strategy still need to be defined but can for example be:
+         *    minimum bandwith or minimum fill-in of the resulting global
+         *    system matrix)
+         *
+         * That's why the vertices, edges and faces will be rearranged. This is
+         * done in the following way: The vertices, edges and faces of the mesh
+         * are considered as vertices of a graph (in a computer science way)
+         * (equivalently, they can also be considered as boundary degrees of
+         * freedom, whereby all boundary modes of a single edge are considered
+         * as a single DOF). We then will use algorithms to reorder these
+         * graph-vertices (or boundary DOF's).
+         *
+         * We will use a boost graph object to store this graph the first
+         * template parameter (=OutEdgeList) is chosen to be of type std::set
+         * as in the set up of the adjacency, a similar edge might be created
+         * multiple times.  And to prevent the definition of parallel edges,
+         * we use std::set (=boost::setS) rather than std::vector
+         * (=boost::vecS).
+         *
+         * Two different containers are used to store the graph vertex id's of
+         * the different mesh vertices and edges. They are implemented as a STL
+         * map such that the graph vertex id can later be retrieved by the
+         * unique mesh vertex or edge id's which serve as the key of the map.
+         *
+         * Therefore, the algorithm proceeds as follows:
+         */
         void LocalToGlobalC0ContMap::SetUp3DExpansionC0ContMap(const int numLocalCoeffs,
                                                                const ExpList &locExp,
                                                                const GlobalSysSolnType solnType,
@@ -881,40 +1004,15 @@ namespace Nektar
 
             m_signChange = false;
 
-            // The only unique identifiers of the vertices and edges
-            // of the mesh are the vertex id and the mesh id (stored
-            // in their corresponding Geometry object).  However,
-            // setting up a global numbering based on these id's will
-            // not lead to a suitable or optimal numbering. Mainly
-            // because: - we want the Dirichlet DOF's to be listed
-            // first - we want an optimal global numbering of the
-            // remaining DOF's (strategy still need to be defined but
-            // can for example be: minimum bandwith or minimum fill-in
-            // of the resulting global system matrix)
-            //
-            // That's why the vertices annd egdes will be
-            // rearranged. Currently, this is done in the following
-            // way: The vertices and edges of the mesh are considered
-            // as vertices of a graph (in a computer science
-            // way)(equivalently, they can also be considered as
-            // boundary degrees of freedom, whereby all boundary modes
-            // of a single edge are considered as a single DOF). We
-            // then will use algorithms to reorder these
-            // graph-vertices (or boundary DOF's).
-            //
-            // Two different containers are used to store the graph
-            // vertex id's of the different mesh vertices and
-            // edges. They are implemented as a STL map such that the
-            // graph vertex id can later be retrieved by the unique
-            // mesh vertex or edge id's which serve as the key of the
-            // map.
             map<int,int> vertReorderedGraphVertId;
             map<int,int> edgeReorderedGraphVertId;
             map<int,int> faceReorderedGraphVertId;
             map<int,int>::iterator mapIt;
             map<int,int>::const_iterator mapConstIt;
 
-            // STEP 1: Order the Dirichlet vertices and edges first
+            /**
+             * STEP 1: Order the Dirichlet vertices and edges first
+             */
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); j++)
@@ -949,10 +1047,12 @@ namespace Nektar
             m_numLocalDirBndCoeffs = nLocDirBndCondDofs;
             firstNonDirGraphVertId = graphVertId;
 
-            // STEP 2: Now order all other vertices and edges in the
-            // graph Possibility 3: Do not use any optomisation at
-            // all. Just list the edges and verices in the order they
-            // appear when looping over all the elements in the domain
+
+            /**
+             * STEP 2: Now order all other vertices and edges in the graph and
+             * create a temporary numbering of domain-interior vertices and
+             * edges.
+             */
             typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
             typedef boost::graph_traits<BoostGraph>::vertex_descriptor BoostVertex;
             BoostGraph boostGraphObj;
@@ -974,10 +1074,7 @@ namespace Nektar
 
             m_numLocalBndCoeffs = 0;
 
-            // List the periodic vertices and edges next.
-            // This allows to give corresponding DOF's the same
-            // global ID
-            // a) periodic vertices
+            /// - Periodic vertices
             for(mapConstIt = periodicVerticesId.begin(); mapConstIt != periodicVerticesId.end(); mapConstIt++)
             {
                 meshVertId  = mapConstIt->first;
@@ -1052,7 +1149,7 @@ namespace Nektar
                 }
             }
 
-            // b) periodic edges
+            /// - Periodic edges
             for(mapConstIt = periodicEdgesId.begin(); mapConstIt != periodicEdgesId.end(); mapConstIt++)
             {
                 meshEdgeId  = mapConstIt->first;
@@ -1109,9 +1206,6 @@ namespace Nektar
                                 }
                             }
                         }
-
-                        //edgeReorderedGraphVertId[meshEdgeId]  = graphVertId;
-                        //edgeReorderedGraphVertId[meshEdgeId2] = graphVertId++;
                     }
                     else
                     {
@@ -1132,7 +1226,7 @@ namespace Nektar
                 }
             }
 
-            // b) periodic faces
+            /// - Periodic faces
             for(mapConstIt = periodicFacesId.begin(); mapConstIt != periodicFacesId.end(); mapConstIt++)
             {
                 meshFaceId  = mapConstIt->first;
@@ -1150,7 +1244,7 @@ namespace Nektar
                 }
             }
 
-            // List all other vertices and edges and faces
+            /// - All other vertices and edges
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(locExpVector[locExp.GetOffset_Elmt_Id(i)]))
@@ -1342,7 +1436,10 @@ namespace Nektar
                 }
             }
 
-            // Now the graph has been set-up reorder it
+
+            /**
+             * STEP 3: Reorder graph for optimisation.
+             */
             BottomUpSubStructuredGraphSharedPtr bottomUpGraph;
             int nGraphVerts = tempGraphVertId;
             Array<OneD, int> perm(nGraphVerts);
@@ -1380,9 +1477,11 @@ namespace Nektar
                 }
             }
 
-            // Fill the vertReorderedGraphVertId and
-            // edgeReorderedGraphVertId with the optimal ordering from
-            // boost
+
+            /**
+             * STEP 4: Fill the #vertReorderedGraphVertId and
+             * #edgeReorderedGraphVertId with the optimal ordering from boost.
+             */
             for(mapIt = vertTempGraphVertId.begin(); mapIt != vertTempGraphVertId.end(); mapIt++)
             {
                 vertReorderedGraphVertId[mapIt->first] = iperm[mapIt->second] + graphVertId;
@@ -1397,12 +1496,17 @@ namespace Nektar
             }
 
 
-            // Set up an array wich contains the offset information of the different
-            // graph vertices. This basically means to identify to how many global degrees
-            // of freedom the individual graph vertices correspond. Obviously, the graph vertices
-            // corresponding to the mesh-vertices account for a single global DOF. However, the
-            // graph vertices corresponding to the element edges correspond to N-2 global DOF
-            // where N is equal to the number of boundary modes on this edge
+            /**
+             * STEP 5: Set up an array which contains the offset information of
+             * the different graph vertices.
+             *
+             * This basically means to identify to how many global degrees of
+             * freedom the individual graph vertices correspond. Obviously,
+             * the graph vertices corresponding to the mesh-vertices account
+             * for a single global DOF. However, the graph vertices
+             * corresponding to the element edges correspond to N-2 global DOF
+             * where N is equal to the number of boundary modes on this edge.
+             */
             Array<OneD, int> graphVertOffset(vertReorderedGraphVertId.size()+
                                              edgeReorderedGraphVertId.size()+
                                              faceReorderedGraphVertId.size()+1);
@@ -1471,7 +1575,16 @@ namespace Nektar
                 m_numLocalIntCoeffsPerPatch[i] = (unsigned int) locExpVector[locExp.GetOffset_Elmt_Id(i)]->GetNcoeffs() - locExpVector[locExp.GetOffset_Elmt_Id(i)]->NumBndryCoeffs();
             }
 
-            // Now, all ingredients are ready to set up the actual local to global mapping
+
+            /**
+             * STEP 6: Now, all ingredients are ready to set up the actual
+             * local to global mapping.
+             *
+             * The remainder of the map consists of the element-interior
+             * degrees of freedom. This leads to the block-diagonal submatrix
+             * as each element-interior mode is globally orthogonal to modes
+             * in all other elements.
+             */
             cnt = 0;
             // Loop over all the elements in the domain
             for(i = 0; i < locExpVector.size(); ++i)
@@ -1594,8 +1707,12 @@ namespace Nektar
             globalId = Vmath::Vmax(m_numLocalCoeffs,&m_localToGlobalMap[0],1)+1;
             m_numGlobalBndCoeffs = globalId;
 
+
+            /**
+             * STEP 7: The boundary condition mapping is generated from the
+             * same vertex renumbering.
+             */
             cnt=0;
-            // Setup interior mapping and the boundary map
             for(i = 0; i < m_numLocalCoeffs; ++i)
             {
                 if(m_localToGlobalMap[i] == -1)
@@ -1625,20 +1742,20 @@ namespace Nektar
             }
         }
 
-        // ----------------------------------------------------------------
-        // Calculation of the bandwith ---- The bandwidth here
-        // calculated corresponds to what is referred to as
-        // half-bandwidth.  If the elements of the matrix are
-        // designated as a_ij, it corresponds to the maximum value of
-        // |i-j| for non-zero a_ij.  As a result, the value also
-        // corresponds to the number of sub or superdiagonals.
-        //
-        // The bandwith can be calculated elementally as it
-        // corresponds to the maximal elemental bandwith (i.e. the
-        // maximal difference in global DOF index for every element)
-        //
-        // we here caluclate the bandwith of
-        // the full global system
+
+        /**
+         * The bandwidth calculated here corresponds to what is referred to as
+         * half-bandwidth.  If the elements of the matrix are designated as
+         * a_ij, it corresponds to the maximum value of |i-j| for non-zero
+         * a_ij.  As a result, the value also corresponds to the number of
+         * sub- or super-diagonals.
+         *
+         * The bandwith can be calculated elementally as it corresponds to the
+         * maximal elemental bandwith (i.e. the maximal difference in global
+         * DOF index for every element).
+         *
+         * We caluclate here the bandwith of the full global system.
+         */
         void LocalToGlobalC0ContMap::CalculateFullSystemBandWidth()
         {
             int i,j;

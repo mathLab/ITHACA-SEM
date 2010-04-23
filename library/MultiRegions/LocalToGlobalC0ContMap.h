@@ -53,175 +53,228 @@ namespace Nektar
 
         const static map<int,int> NullIntIntMap;
         const static vector<map<int,int> > NullVecIntIntMap;
-        
-    class LocalToGlobalC0ContMap: public LocalToGlobalBaseMap
-        {
-        public:            
 
-            LocalToGlobalC0ContMap(); 
-            
-            LocalToGlobalC0ContMap(const int numLocalCoeffs, 
+        /// Constructs mappings for the C0 continuous Galerkin formulation.
+        class LocalToGlobalC0ContMap: public LocalToGlobalBaseMap
+        {
+        public:
+            /// Default constructor.
+            LocalToGlobalC0ContMap();
+
+            /// General constructor for expansions of all dimensions without
+            /// boundary conditions.
+            LocalToGlobalC0ContMap(const int numLocalCoeffs,
                                    const ExpList &locExp,
                                    const GlobalSysSolnType solnType);
 
-            // Constructor for the 1D expansion mappings
-            LocalToGlobalC0ContMap(const int numLocalCoeffs, 
+            /// Constructor for the 1D expansion mappings with boundary
+            /// conditions.
+            LocalToGlobalC0ContMap(const int numLocalCoeffs,
                                    const ExpList &locExp,
-                                   const GlobalSysSolnType solnType, 
+                                   const GlobalSysSolnType solnType,
                                    const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp,
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                    const map<int,int>& periodicVerticesId);
 
-            // Constructor for the 2D expansion mappings
-            LocalToGlobalC0ContMap(const int numLocalCoeffs, 
+            /// Constructor for the 2D expansion mappings with boundary
+            /// conditions.
+            LocalToGlobalC0ContMap(const int numLocalCoeffs,
                                    const ExpList &locExp,
-                                   const GlobalSysSolnType solnType, 
+                                   const GlobalSysSolnType solnType,
                                    const Array<OneD, const ExpList1DSharedPtr> &bndCondExp,
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                    const vector<map<int,int> >& periodicVerticesId,
                                    const map<int,int>& periodicEdgesId);
 
-            // Constructor for the 3D expansion mappings
-            LocalToGlobalC0ContMap(const int numLocalCoeffs, 
+            /// Constructor for the 3D expansion mappings with boundary
+            /// conditions.
+            LocalToGlobalC0ContMap(const int numLocalCoeffs,
                                    const ExpList &locExp,
-                                   const GlobalSysSolnType solnType, 
+                                   const GlobalSysSolnType solnType,
                                    const Array<OneD, const ExpList2DSharedPtr> &bndCondExp,
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                    const map<int,int>& periodicVerticesId,
                                    const map<int,int>& periodicEdgesId,
                                    const map<int,int>& periodicFacesId);
-            
-            ~LocalToGlobalC0ContMap(); 
-                
-            int GetLocalToGlobalMap(const int i) const
-            {
-                return m_localToGlobalMap[i];
-            }
-            
-            inline const Array<OneD,const int>&  GetLocalToGlobalMap(void)
-            {
-                return m_localToGlobalMap;
-            }
 
-            NekDouble GetLocalToGlobalSign(const int i) const
-            {
-                if(m_signChange)
-                {
-                    return m_localToGlobalSign[i];
-                }
-                else
-                {
-                    return 1.0;
-                }
-            }
-            
-            inline const void LocalToGlobal(const Array<OneD, const NekDouble>& loc, 
-                                      Array<OneD, NekDouble>& global) const
-            {
-                if(m_signChange)
-                {
-                    Vmath::Scatr(m_numLocalCoeffs, m_localToGlobalSign.get(), loc.get(), m_localToGlobalMap.get(), global.get());
-                }
-                else
-                {                
-                    Vmath::Scatr(m_numLocalCoeffs, loc.get(), m_localToGlobalMap.get(), global.get());
-                }
-            }
+            /// Destructor.
+            ~LocalToGlobalC0ContMap();
 
-            inline const void LocalToGlobal(const NekVector<const NekDouble>& loc, 
-                                                  NekVector<      NekDouble>& global) const
-            {
-                LocalToGlobal(loc.GetPtr(),global.GetPtr());
-            }
-            
-            inline const void GlobalToLocal(const Array<OneD, const NekDouble>& global, 
-                                      Array<OneD, NekDouble>& loc) const
-            {
-                if(m_signChange)
-                {
-                    Vmath::Gathr(m_numLocalCoeffs, m_localToGlobalSign.get(), global.get(), m_localToGlobalMap.get(), loc.get());
-                }
-                else
-                {
-                    Vmath::Gathr(m_numLocalCoeffs, global.get(), m_localToGlobalMap.get(), loc.get());
-                }
-            }
-            
-            inline const void GlobalToLocal(const NekVector<const NekDouble>& global, 
-                                                  NekVector<      NekDouble>& loc) const
-            {
-                GlobalToLocal(global.GetPtr(),loc.GetPtr());
-            }
+            inline int GetLocalToGlobalMap(const int i) const;
 
-            inline const void Assemble(const Array<OneD, const NekDouble> &loc, 
-                                 Array<OneD, NekDouble> &global) const
-            {
-                ASSERTL1(loc.get() != global.get(),"Local and Global Arrays cannot be the same");
+            inline const Array<OneD,const int>&  GetLocalToGlobalMap();
 
-                Vmath::Zero(m_numGlobalCoeffs, global.get(), 1);
-                
-                if(m_signChange)
-                {
-                    Vmath::Assmb(m_numLocalCoeffs, m_localToGlobalSign.get(), loc.get(), m_localToGlobalMap.get(), global.get());
-                }
-                else
-                {
-                    Vmath::Assmb(m_numLocalCoeffs, loc.get(), m_localToGlobalMap.get(), global.get());
-                }
-            } 
+            inline NekDouble GetLocalToGlobalSign(const int i) const;
 
-            inline const void Assemble(const NekVector<const NekDouble>& loc, 
-                                             NekVector<      NekDouble>& global) const
-            {
-                Assemble(loc.GetPtr(),global.GetPtr());
-            }
+            inline const void LocalToGlobal(
+                    const Array<OneD, const NekDouble>& loc,
+                          Array<OneD,       NekDouble>& global) const;
 
-            inline int GetFullSystemBandWidth() const
-            {
-                return m_fullSystemBandWidth;
-            }
+            inline const void LocalToGlobal(
+                    const NekVector<const NekDouble>& loc,
+                          NekVector<      NekDouble>& global) const;
+
+            inline const void GlobalToLocal(
+                    const Array<OneD, const NekDouble>& global,
+                          Array<OneD,       NekDouble>& loc) const;
+
+            inline const void GlobalToLocal(
+                    const NekVector<const NekDouble>& global,
+                          NekVector<      NekDouble>& loc) const;
+
+            inline const void Assemble(
+                    const Array<OneD, const NekDouble> &loc,
+                          Array<OneD,       NekDouble> &global) const;
+
+            inline const void Assemble(
+                    const NekVector<const NekDouble>& loc,
+                          NekVector<      NekDouble>& global) const;
+
+            inline int GetFullSystemBandWidth() const;
 
         protected:
-            Array<OneD,int> m_localToGlobalMap;  //< integer map of local coeffs to global space 
-            Array<OneD,NekDouble> m_localToGlobalSign; //< integer sign of local coeffs to global space 
-
+            /// Integer map of local coeffs to global space
+            Array<OneD,int> m_localToGlobalMap;
+            /// Integer sign of local coeffs to global space
+            Array<OneD,NekDouble> m_localToGlobalSign;
+            /// Bandwith of the full matrix system (no static condensation).
             int m_fullSystemBandWidth;
- 
+
         private:
-            void SetUp1DExpansionC0ContMap(const int numLocalCoeffs, 
+            /// Construct mappings for a one-dimensional expansion.
+            void SetUp1DExpansionC0ContMap(const int numLocalCoeffs,
                                            const ExpList &locExp,
-                                           const GlobalSysSolnType solnType, 
-                                           const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp = 
+                                           const GlobalSysSolnType solnType,
+                                           const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp =
                                                LocalRegions::NullPointExpSharedPtrArray,
-                                           const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions = 
+                                           const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions =
                                                SpatialDomains::NullBoundaryConditionShPtrArray,
                                            const map<int,int>& periodicVerticesId = NullIntIntMap);
-            
-            void SetUp2DExpansionC0ContMap(const int numLocalCoeffs, 
+
+            /// Construct mappings for a two-dimensional expansion.
+            void SetUp2DExpansionC0ContMap(const int numLocalCoeffs,
                                            const ExpList &locExp,
-                                           const GlobalSysSolnType solnType, 
-                                           const Array<OneD, const MultiRegions::ExpList1DSharedPtr> &bndCondExp = 
+                                           const GlobalSysSolnType solnType,
+                                           const Array<OneD, const MultiRegions::ExpList1DSharedPtr> &bndCondExp =
                                                NullExpList1DSharedPtrArray,
-                                           const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions = 
+                                           const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions =
                                                SpatialDomains::NullBoundaryConditionShPtrArray,
                                            const vector<map<int,int> >& periodicVerticesId = NullVecIntIntMap,
                                            const map<int,int>& periodicEdgesId = NullIntIntMap);
 
-            void SetUp3DExpansionC0ContMap(const int numLocalCoeffs, 
+            /// Construct mappings for a three-dimensional expansion.
+            void SetUp3DExpansionC0ContMap(const int numLocalCoeffs,
                                            const ExpList &locExp,
-                                           const GlobalSysSolnType solnType, 
-                                           const Array<OneD, const ExpList2DSharedPtr> &bndCondExp = 
+                                           const GlobalSysSolnType solnType,
+                                           const Array<OneD, const ExpList2DSharedPtr> &bndCondExp =
                                                NullExpList2DSharedPtrArray,
-                                           const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions = 
+                                           const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions =
                                                SpatialDomains::NullBoundaryConditionShPtrArray,
                                            const map<int,int>& periodicVerticesId = NullIntIntMap,
                                            const map<int,int>& periodicEdgesId = NullIntIntMap,
                                            const map<int,int>& periodicFacesId = NullIntIntMap);
 
+            /// Calculate the bandwith of the full matrix system.
             void CalculateFullSystemBandWidth();
         };
         typedef boost::shared_ptr<LocalToGlobalC0ContMap>  LocalToGlobalC0ContMapSharedPtr;
-        
+
+        int LocalToGlobalC0ContMap::GetLocalToGlobalMap(const int i) const
+        {
+            return m_localToGlobalMap[i];
+        }
+
+        inline const Array<OneD,const int>&
+                    LocalToGlobalC0ContMap::GetLocalToGlobalMap(void)
+        {
+            return m_localToGlobalMap;
+        }
+
+        inline NekDouble LocalToGlobalC0ContMap::GetLocalToGlobalSign(
+                    const int i) const
+        {
+            if(m_signChange)
+            {
+                return m_localToGlobalSign[i];
+            }
+            else
+            {
+                return 1.0;
+            }
+        }
+
+        inline const void LocalToGlobalC0ContMap::LocalToGlobal(
+                    const Array<OneD, const NekDouble>& loc,
+                          Array<OneD,       NekDouble>& global) const
+        {
+            if(m_signChange)
+            {
+                Vmath::Scatr(m_numLocalCoeffs, m_localToGlobalSign.get(), loc.get(), m_localToGlobalMap.get(), global.get());
+            }
+            else
+            {
+                Vmath::Scatr(m_numLocalCoeffs, loc.get(), m_localToGlobalMap.get(), global.get());
+            }
+        }
+
+        inline const void LocalToGlobalC0ContMap::LocalToGlobal(
+                    const NekVector<const NekDouble>& loc,
+                          NekVector<      NekDouble>& global) const
+        {
+            LocalToGlobal(loc.GetPtr(),global.GetPtr());
+        }
+
+        inline const void LocalToGlobalC0ContMap::GlobalToLocal(
+                    const Array<OneD, const NekDouble>& global,
+                          Array<OneD,       NekDouble>& loc) const
+        {
+            if(m_signChange)
+            {
+                Vmath::Gathr(m_numLocalCoeffs, m_localToGlobalSign.get(), global.get(), m_localToGlobalMap.get(), loc.get());
+            }
+            else
+            {
+                Vmath::Gathr(m_numLocalCoeffs, global.get(), m_localToGlobalMap.get(), loc.get());
+            }
+        }
+
+        inline const void LocalToGlobalC0ContMap::GlobalToLocal(
+                    const NekVector<const NekDouble>& global,
+                          NekVector<      NekDouble>& loc) const
+        {
+            GlobalToLocal(global.GetPtr(),loc.GetPtr());
+        }
+
+        inline const void LocalToGlobalC0ContMap::Assemble(
+                    const Array<OneD, const NekDouble> &loc,
+                          Array<OneD,       NekDouble> &global) const
+        {
+            ASSERTL1(loc.get() != global.get(),"Local and Global Arrays cannot be the same");
+
+            Vmath::Zero(m_numGlobalCoeffs, global.get(), 1);
+
+            if(m_signChange)
+            {
+                Vmath::Assmb(m_numLocalCoeffs, m_localToGlobalSign.get(), loc.get(), m_localToGlobalMap.get(), global.get());
+            }
+            else
+            {
+                Vmath::Assmb(m_numLocalCoeffs, loc.get(), m_localToGlobalMap.get(), global.get());
+            }
+        }
+
+        inline const void LocalToGlobalC0ContMap::Assemble(
+                    const NekVector<const NekDouble>& loc,
+                          NekVector<      NekDouble>& global) const
+        {
+            Assemble(loc.GetPtr(),global.GetPtr());
+        }
+
+        inline int LocalToGlobalC0ContMap::GetFullSystemBandWidth() const
+        {
+            return m_fullSystemBandWidth;
+        }
+
     } // end of namespace
 } // end of namespace
 

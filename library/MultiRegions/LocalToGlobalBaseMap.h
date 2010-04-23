@@ -49,368 +49,545 @@ namespace Nektar
         typedef boost::shared_ptr<LocalToGlobalBaseMap>  LocalToGlobalBaseMapSharedPtr;
         static LocalToGlobalBaseMapSharedPtr NullLocalToGlobalBaseMapSharedPtr;
 
+        /// Base class for constructing local to global mapping of degrees of
+        /// freedom.
         class LocalToGlobalBaseMap
         {
         public:
-            LocalToGlobalBaseMap(); 
+        	/// Default constructor.
+            LocalToGlobalBaseMap();
+            /// Constructor for next level in multi-level static condensation.
+            LocalToGlobalBaseMap(LocalToGlobalBaseMap* oldLevelMap,
+                    const BottomUpSubStructuredGraphSharedPtr& multiLevelGraph);
+            /// Destructor.
+            virtual ~LocalToGlobalBaseMap();
 
-            LocalToGlobalBaseMap(LocalToGlobalBaseMap* oldLevelMap, 
-                                 const BottomUpSubStructuredGraphSharedPtr& multiLevelGraph);
-            
-            virtual ~LocalToGlobalBaseMap(); 
-                
-            int GetLocalToGlobalBndMap(const int i) const
-            {
-                return m_localToGlobalBndMap[i];
-            }
-            
-            inline const Array<OneD,const int>&  GetLocalToGlobalBndMap(void)
-            {
-                return m_localToGlobalBndMap;
-            }
+            /// Retrieve the global index of a given local boundary mode.
+            inline int GetLocalToGlobalBndMap(const int i) const;
+            /// Retrieve the global indices of the local boundary modes.
+            inline const Array<OneD,const int>&  GetLocalToGlobalBndMap();
+            /// Returns true if using a modal expansion requiring a change of
+            /// sign of some modes.
+            inline bool GetSignChange();
+            /// Retrieve the sign change of a given local boundary mode.
+            inline NekDouble GetLocalToGlobalBndSign(const int i) const;
+            /// Retrieve the sign change for all local boundary modes.
+            inline Array<OneD, const NekDouble> GetLocalToGlobalBndSign() const;
+            /// Retrieves the global index corresponding to a boundary expansion
+            /// mode.
+            inline int GetBndCondCoeffsToGlobalCoeffsMap(const int i);
+            /// Retrieves the global indices corresponding to the boundary
+            /// expansion modes.
+            inline const Array<OneD,const int>&
+                    GetBndCondCoeffsToGlobalCoeffsMap();
+            /// Returns the modal sign associated with a given boundary
+            /// expansion mode.
+            inline NekDouble GetBndCondCoeffsToGlobalCoeffsSign(const int i);
 
-            bool GetSignChange()
-            {
-                return m_signChange;
-            }
+            /// Returns the global index of the boundary trace giving the
+            /// index on the boundary  expansion
+            inline int GetBndCondTraceToGlobalTraceMap(const int i);
 
-            Array<OneD, const NekDouble> GetLocalToGlobalBndSign(void) const
-            {
-                return m_localToGlobalBndSign;
-            }
+            /// Returns the number of global Dirichlet boundary coefficients.
+            inline int GetNumGlobalDirBndCoeffs() const;
+            /// Returns the number of local Dirichlet boundary coefficients.
+            inline int GetNumLocalDirBndCoeffs() const;
+            /// Returns the total number of global boundary coefficients.
+            inline int GetNumGlobalBndCoeffs() const;
+            /// Returns the total number of local boundary coefficients.
+            inline int GetNumLocalBndCoeffs() const;
+            /// Returns the total number of local coefficients.
+            inline int GetNumLocalCoeffs() const;
+            /// Returns the total number of global coefficients.
+            inline int GetNumGlobalCoeffs() const;
 
-            NekDouble GetLocalToGlobalBndSign(const int i) const
-            {
-                if(m_signChange)
-                {
-                    return m_localToGlobalBndSign[i];
-                }
-                else
-                {
-                    return 1.0;
-                }
-            }
-            
-            inline int GetBndCondCoeffsToGlobalCoeffsMap(const int i)
-            {
-                return m_bndCondCoeffsToGlobalCoeffsMap[i];
-            }
+            ///
+            inline void GlobalToLocalBnd(
+                    const NekVector<const NekDouble>& global,
+                    NekVector<NekDouble>& loc,
+                    int offset);
 
-	    /**
-             * \brief It returns the global index of the boundary trace giving the 
-	     * index on the boundary  expansion
-             */ 
-	    inline int GetBndCondTraceToGlobalTraceMap(const int i)
-            {
-                return m_bndCondTraceToGlobalTraceMap[i];
-            }
-            
-            inline NekDouble GetBndCondCoeffsToGlobalCoeffsSign(const int i)
-            {
-                if(m_signChange)
-                {
-                    return m_bndCondCoeffsToGlobalCoeffsSign[i];
-                }
-                else
-                {
-                    return 1.0;
-                }
-            }
-                        
-            inline const Array<OneD,const int>& GetBndCondCoeffsToGlobalCoeffsMap(void)
-            {
-                return m_bndCondCoeffsToGlobalCoeffsMap;
-            }
 
-            inline int GetNumGlobalDirBndCoeffs() const
-            {
-                return m_numGlobalDirBndCoeffs;
-            }
+            inline void GlobalToLocalBnd(
+                    const NekVector<const NekDouble>& global,
+                    NekVector<NekDouble>& loc);
 
-            inline int GetNumLocalDirBndCoeffs() const
-            {
-                return m_numLocalDirBndCoeffs;
-            }
+            inline void GlobalToLocalBnd(
+                    const Array<OneD, const NekDouble>& global,
+                    Array<OneD,NekDouble>& loc,
+                    int offset);
 
-            inline int GetNumLocalBndCoeffs() const
-            {
-                return m_numLocalBndCoeffs;
-            }
+            inline void GlobalToLocalBnd(
+                    const Array<OneD, const NekDouble>& global,
+                    Array<OneD,NekDouble>& loc);
 
-            inline int GetNumGlobalBndCoeffs() const
-            {
-                return m_numGlobalBndCoeffs;
-            }
+            inline void AssembleBnd(const NekVector<const NekDouble>& loc,
+                    NekVector<NekDouble>& global, int offset);
 
-            inline int GetNumLocalCoeffs() const
-            {
-                return m_numLocalCoeffs;
-            }
+            inline void AssembleBnd(const NekVector<const NekDouble>& loc,
+                    NekVector<NekDouble>& global);
 
-            inline int GetNumGlobalCoeffs() const
-            {
-                return m_numGlobalCoeffs;
-            }
+            inline void AssembleBnd(const Array<OneD,const NekDouble>& loc,
+                    Array<OneD, NekDouble>& global, int offset);
 
-            inline void GlobalToLocalBnd(const NekVector<const NekDouble>& global, NekVector<NekDouble>& loc, int offset)
-            {
-                ASSERTL1(loc.GetDimension() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-                ASSERTL1(global.GetDimension() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
-                
-                // offset input data by length "offset" for Dirichlet boundary conditions.
-                Array<OneD,NekDouble> tmp(global.GetDimension()+offset,0.0);
-                Vmath::Vcopy(global.GetDimension(), global.GetRawPtr(), 1, tmp.get() + offset, 1);
+            inline void AssembleBnd(const Array<OneD, const NekDouble>& loc,
+                    Array<OneD, NekDouble>& global);
 
-                if(m_signChange)
-                {
-                    Vmath::Gathr(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), tmp.get(), m_localToGlobalBndMap.get(), loc.GetRawPtr());
-                }
-                else
-                {
-                    Vmath::Gathr(m_numLocalBndCoeffs, tmp.get(), m_localToGlobalBndMap.get(), loc.GetRawPtr());
-                }
-            }     
-
-            inline void GlobalToLocalBnd(const NekVector<const NekDouble>& global, 
-                                         NekVector<NekDouble>& loc)
-            {
-                ASSERTL1(loc.GetDimension() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-                ASSERTL1(global.GetDimension() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
-
-                if(m_signChange)
-                {
-                    Vmath::Gathr(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), global.GetRawPtr(), m_localToGlobalBndMap.get(), loc.GetRawPtr());
-                }
-                else
-                {
-                    Vmath::Gathr(m_numLocalBndCoeffs, global.GetRawPtr(), m_localToGlobalBndMap.get(), loc.GetRawPtr());
-                }
-            } 
-
-            inline void GlobalToLocalBnd(const Array<OneD, const NekDouble>& global, 
-                                         Array<OneD,NekDouble>& loc, int offset)
-            {
-                ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-                ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
-                
-                // offset input data by length "offset" for Dirichlet boundary conditions.
-                Array<OneD,NekDouble> tmp(m_numGlobalBndCoeffs,0.0);
-                Vmath::Vcopy(m_numGlobalBndCoeffs-offset, global.get(), 1, tmp.get() + offset, 1);
-
-                if(m_signChange)
-                {
-                    Vmath::Gathr(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), tmp.get(), m_localToGlobalBndMap.get(), loc.get());
-                }
-                else
-                {
-                    Vmath::Gathr(m_numLocalBndCoeffs, tmp.get(), m_localToGlobalBndMap.get(), loc.get());
-                }
-            }     
-
-            inline void GlobalToLocalBnd(const Array<OneD, const NekDouble>& global, 
-                                         Array<OneD,NekDouble>& loc)
-            {
-                ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-                ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
-                
-                if(m_signChange)
-                { 
-                    Vmath::Gathr(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), global.get(), m_localToGlobalBndMap.get(), loc.get()); 
-                }
-                else
-                {
-                    Vmath::Gathr(m_numLocalBndCoeffs, global.get(), m_localToGlobalBndMap.get(), loc.get()); 
-                }
-            } 
-            
-            inline void AssembleBnd(const NekVector<const NekDouble>& loc, 
-                                    NekVector<NekDouble>& global, int offset)
-            {
-                ASSERTL1(loc.GetDimension() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-                ASSERTL1(global.GetDimension() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
-                Array<OneD,NekDouble> tmp(global.GetDimension()+offset,0.0);
-
-                if(m_signChange)
-                {
-                    Vmath::Assmb(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), loc.GetRawPtr(), m_localToGlobalBndMap.get(), tmp.get());
-                }
-                else
-                {                
-                    Vmath::Assmb(m_numLocalBndCoeffs,loc.GetRawPtr(), m_localToGlobalBndMap.get(), tmp.get());
-                }
-                Vmath::Vcopy(global.GetDimension(), tmp.get() + offset, 1, global.GetRawPtr(), 1);
-            }   
-            
-            inline void AssembleBnd(const NekVector<const NekDouble>& loc, 
-                                    NekVector<NekDouble>& global)
-            {
-                ASSERTL1(loc.GetDimension() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-                ASSERTL1(global.GetDimension() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
-
-                Vmath::Zero(m_numGlobalBndCoeffs, global.GetRawPtr(), 1);
-
-                if(m_signChange)
-                {
-                    Vmath::Assmb(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), loc.GetRawPtr(), m_localToGlobalBndMap.get(), global.GetRawPtr());
-                }
-                else
-                {                
-                    Vmath::Assmb(m_numLocalBndCoeffs,loc.GetRawPtr(), m_localToGlobalBndMap.get(), global.GetRawPtr());
-                }
-            }    
-
-            inline void AssembleBnd(const Array<OneD,const NekDouble>& loc, 
-                                    Array<OneD, NekDouble>& global, int offset)
-            {
-                ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local array is not of correct dimension");
-                ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs-offset,"Global array is not of correct dimension");
-                Array<OneD,NekDouble> tmp(m_numGlobalBndCoeffs,0.0);
-
-                if(m_signChange)
-                {
-                    Vmath::Assmb(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(),loc.get(), m_localToGlobalBndMap.get(), tmp.get());
-                }
-                else
-                {                
-                    Vmath::Assmb(m_numLocalBndCoeffs,loc.get(), m_localToGlobalBndMap.get(), tmp.get());
-                }
-                Vmath::Vcopy(m_numGlobalBndCoeffs-offset, tmp.get() + offset, 1, global.get(), 1);
-            }   
-            
-            inline void AssembleBnd(const Array<OneD, const NekDouble>& loc, 
-                                    Array<OneD, NekDouble>& global)
-            {
-                ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-                ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
-
-                Vmath::Zero(m_numGlobalBndCoeffs, global.get(), 1);
-
-                if(m_signChange)
-                {
-                    Vmath::Assmb(m_numLocalBndCoeffs,m_localToGlobalBndSign.get(), 
-                                 loc.get(), m_localToGlobalBndMap.get(), global.get());
-                }
-                else
-                {                
-                    Vmath::Assmb(m_numLocalBndCoeffs,loc.get(), m_localToGlobalBndMap.get(), global.get());
-                }
-            }   
-
-            inline int GetBndSystemBandWidth() const
-            {
-                return m_bndSystemBandWidth;
-            }
-
-            inline int GetStaticCondLevel() const
-            {
-                return m_staticCondLevel;
-            }
-
-            inline int GetNumPatches() const
-            {
-                return m_numPatches;
-            }   
-      
-            inline const Array<OneD,const unsigned int>& GetNumLocalBndCoeffsPerPatch(void)
-            {
-                return m_numLocalBndCoeffsPerPatch;
-            }  
-      
-            inline const Array<OneD,const unsigned int>& GetNumLocalIntCoeffsPerPatch(void)
-            {
-                return m_numLocalIntCoeffsPerPatch;
-            }
-
-            inline const LocalToGlobalBaseMapSharedPtr GetNextLevelLocalToGlobalMap() const
-            {
-                return  m_nextLevelLocalToGlobalMap;
-            }
-
-            inline const PatchMapSharedPtr& GetPatchMapFromPrevLevel(const int i) const
-            {
-                return m_patchMapFromPrevLevel[i];
-            }
-
-            inline bool AtLastLevel() const
-            {
-                return !( (bool) m_nextLevelLocalToGlobalMap.get() );
-            }
-
-            inline const GlobalSysSolnType  GetGlobalSysSolnType() const
-            {
-                return m_solnType; 
-            }
+            /// Returns the bandwidth of the boundary system.
+            inline int GetBndSystemBandWidth() const;
+            /// Returns the level of static condensation for this map.
+            inline int GetStaticCondLevel() const;
+            /// Returns the number of patches in this static condensation level.
+            inline int GetNumPatches() const;
+            /// Returns the number of local boundary coefficients in each patch.
+            inline const Array<OneD,const unsigned int>&
+                    GetNumLocalBndCoeffsPerPatch();
+            /// Returns the number of local interior coefficients in each patch.
+            inline const Array<OneD,const unsigned int>&
+                    GetNumLocalIntCoeffsPerPatch();
+            /// Returns the local to global mapping for the next level in the
+            /// multi-level static condensation.
+            inline const LocalToGlobalBaseMapSharedPtr
+                    GetNextLevelLocalToGlobalMap() const;
+            /// Returns the patch map from the previous level of the multi-level
+            /// static condensation.
+            inline const PatchMapSharedPtr&
+                    GetPatchMapFromPrevLevel(const int i) const;
+            /// Returns true if this is the last level in the multi-level
+            /// static condensation.
+            inline bool AtLastLevel() const;
+            /// Returns the method of solving global systems.
+            inline const GlobalSysSolnType  GetGlobalSysSolnType() const;
 
         protected:
-            // ---- Data members ----
-            int m_numLocalBndCoeffs;     //< number of local Bnd coefficients
-            int m_numGlobalBndCoeffs;    //< Total number of global boundary coefficients
-            int m_numLocalDirBndCoeffs;  //< Number of Local Dirichlet Boundary Coefficient
-            int m_numGlobalDirBndCoeffs; //< Number of Global Dirichlet Boundary Coefficient
+            /// Number of local boundary coefficients
+            int m_numLocalBndCoeffs;
+            /// Total number of global boundary coefficients
+            int m_numGlobalBndCoeffs;
+            /// Number of Local Dirichlet Boundary Coefficients
+            int m_numLocalDirBndCoeffs;
+            /// Number of Global Dirichlet Boundary Coefficients
+            int m_numGlobalDirBndCoeffs;
 
-            // Both data members below correspond to the number of total coefficients
-            // - for CG
-            //   This correpsonds to the total of bnd + int dofs
-            // - for DG
-            //   This corresponds to the number of bnd dofs 
-            //   This means that
-            //    m_numLocalCoeffs  = m_numLocalBndCoeffs
-            //    m_numGlobalCoeffs = m_numGlobalBndCoeffs
-            //   This way, we can consider the trace-system solve as
-            //   a satically condensed solve without interior dofs
-            //   This allows us to use the same global system solver for both
-            //   cases.
-            int m_numLocalCoeffs;      //< number of local coefficients
-            int m_numGlobalCoeffs;     //< Total number of global coefficients
+            /// Total number of local coefficients
+            /** This corresponds to the number of total number of coefficients
+             *  - For CG this correpsonds to the total of bnd + int DOFs
+             *  - For DG this corresponds to the number of bnd DOFs.
+             *    This means that #m_numLocalCoeffs = #m_numLocalBndCoeffs
+             *    This way, we can consider the trace-system solve as a
+             *    statically condensed solve without interior DOFs. This allows
+             *    us to use the same global system solver for both cases.
+             */
+            int m_numLocalCoeffs;
 
+            /// Total number of global coefficients
+            /** This corresponds to the number of total number of coefficients
+             *  - For CG this correpsonds to the total of bnd + int DOFs.
+             *  - For DG this corresponds to the number of bnd DOFs.
+             *    This means that #m_numGlobalCoeffs = #m_numGlobalBndCoeffs
+             *    This way, we can consider the trace-system solve as a
+             *    statically condensed solve without interior DOFs. This allows
+             *    us to use the same global system solver for both cases.
+             */
+            int m_numGlobalCoeffs;
+
+            /// Flag indicating if modes require sign reversal.
             bool m_signChange;
-            Array<OneD,int>       m_localToGlobalBndMap;  //< integer map of local boundary coeffs to global space 
-            Array<OneD,NekDouble> m_localToGlobalBndSign; //< integer sign of local boundary coeffs to global space 
- 
-            Array<OneD,int>       m_bndCondCoeffsToGlobalCoeffsMap;  //< integer map of bnd cond coeffs to global coefficients
-            Array<OneD,NekDouble> m_bndCondCoeffsToGlobalCoeffsSign; //< integer map of bnd cond coeffs to global coefficients
-	    Array<OneD,int>       m_bndCondTraceToGlobalTraceMap;  //< integer map of bnd cond trace number to global trace number
 
-            GlobalSysSolnType m_solnType; //< The solution type of the global system
-            int m_bndSystemBandWidth;     //< the bandwith of the global bnd system
+            /// Integer map of local boundary coeffs to global space
+            Array<OneD,int>       m_localToGlobalBndMap;
+            /// Integer sign of local boundary coeffs to global space
+            Array<OneD,NekDouble> m_localToGlobalBndSign;
+            /// Integer map of bnd cond coeffs to global coefficients
+            Array<OneD,int>       m_bndCondCoeffsToGlobalCoeffsMap;
+            /// Integer map of bnd cond coeffs to global coefficients
+            Array<OneD,NekDouble> m_bndCondCoeffsToGlobalCoeffsSign;
+            /// Integer map of bnd cond trace number to global trace number
+            Array<OneD,int>       m_bndCondTraceToGlobalTraceMap;
 
-            // The data below are introduced to allow a multilevel static condensation implementation
-            int m_staticCondLevel;  //< The level of recursion
-            int m_numPatches;       //< the number of patches (~elements) in the current level
-            Array<OneD, unsigned int> m_numLocalBndCoeffsPerPatch; //< the number of bnd dofs per patch
-            Array<OneD, unsigned int> m_numLocalIntCoeffsPerPatch; //< the number of int dofs per patch
+            /// The solution type of the global system
+            GlobalSysSolnType m_solnType;
+            /// The bandwith of the global bnd system
+            int m_bndSystemBandWidth;
 
-            Array<OneD, PatchMapSharedPtr> m_patchMapFromPrevLevel; //< map from the patches of the previous level
-                                                                    //< to the patches of the current level
+            /// The level of recursion in the case of multi-level static
+            /// condensation.
+            int m_staticCondLevel;
+            /// The number of patches (~elements) in the current level
+            int m_numPatches;
+            /// The number of bnd dofs per patch
+            Array<OneD, unsigned int> m_numLocalBndCoeffsPerPatch;
+            /// The number of int dofs per patch
+            Array<OneD, unsigned int> m_numLocalIntCoeffsPerPatch;
+            /// Map from the patches of the previous level to the patches of
+            /// the current level
+            Array<OneD, PatchMapSharedPtr> m_patchMapFromPrevLevel;
+            /// The local to global mapping of the next level of recursion
+            LocalToGlobalBaseMapSharedPtr m_nextLevelLocalToGlobalMap;
 
-            LocalToGlobalBaseMapSharedPtr m_nextLevelLocalToGlobalMap; //< The local to global mapping of 
-                                                                       //< the next level of recursion
-
-            // ---- End Data members ----
-
+            /// Calculates the bandwidth of the boundary system.
             void CalculateBndSystemBandWidth();
 
-            inline void GlobalToLocalBndWithoutSign(const Array<OneD, const NekDouble>& global, 
-                                                    Array<OneD,NekDouble>& loc)
-            {
-                ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
-                ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
-                
-                Vmath::Gathr(m_numLocalBndCoeffs, global.get(), m_localToGlobalBndMap.get(), loc.get()); 
-            } 
-            
+            inline void GlobalToLocalBndWithoutSign(
+                    const Array<OneD, const NekDouble>& global,
+                    Array<OneD,NekDouble>& loc);
 
         private:
-        }; 
 
-        
+        };
+
+
+        inline int LocalToGlobalBaseMap::GetLocalToGlobalBndMap(const int i)
+                                                                        const
+        {
+            return m_localToGlobalBndMap[i];
+        }
+
+
+        inline const Array<OneD,const int>&
+                    LocalToGlobalBaseMap::GetLocalToGlobalBndMap(void)
+        {
+            return m_localToGlobalBndMap;
+        }
+
+
+        inline bool LocalToGlobalBaseMap::GetSignChange()
+        {
+            return m_signChange;
+        }
+
+
+        inline Array<OneD, const NekDouble>
+                    LocalToGlobalBaseMap::GetLocalToGlobalBndSign(void) const
+        {
+            return m_localToGlobalBndSign;
+        }
+
+
+        inline NekDouble LocalToGlobalBaseMap::GetLocalToGlobalBndSign(
+                    const int i) const
+        {
+            if(m_signChange)
+            {
+                return m_localToGlobalBndSign[i];
+            }
+            else
+            {
+                return 1.0;
+            }
+        }
+
+
+        inline int LocalToGlobalBaseMap::GetBndCondCoeffsToGlobalCoeffsMap(
+                    const int i)
+        {
+            return m_bndCondCoeffsToGlobalCoeffsMap[i];
+        }
+
+
+        inline int LocalToGlobalBaseMap::GetBndCondTraceToGlobalTraceMap(
+                    const int i)
+        {
+            return m_bndCondTraceToGlobalTraceMap[i];
+        }
+
+
+        inline NekDouble
+                    LocalToGlobalBaseMap::GetBndCondCoeffsToGlobalCoeffsSign(
+                    const int i)
+        {
+            if(m_signChange)
+            {
+                return m_bndCondCoeffsToGlobalCoeffsSign[i];
+            }
+            else
+            {
+                return 1.0;
+            }
+        }
+
+
+        inline const Array<OneD,const int>&
+                    LocalToGlobalBaseMap::GetBndCondCoeffsToGlobalCoeffsMap()
+        {
+            return m_bndCondCoeffsToGlobalCoeffsMap;
+        }
+
+
+        inline int LocalToGlobalBaseMap::GetNumGlobalDirBndCoeffs() const
+        {
+            return m_numGlobalDirBndCoeffs;
+        }
+
+
+        inline int LocalToGlobalBaseMap::GetNumLocalDirBndCoeffs() const
+        {
+            return m_numLocalDirBndCoeffs;
+        }
+
+
+        inline int LocalToGlobalBaseMap::GetNumLocalBndCoeffs() const
+        {
+            return m_numLocalBndCoeffs;
+        }
+
+
+        inline int LocalToGlobalBaseMap::GetNumGlobalBndCoeffs() const
+        {
+            return m_numGlobalBndCoeffs;
+        }
+
+
+        inline int LocalToGlobalBaseMap::GetNumLocalCoeffs() const
+        {
+            return m_numLocalCoeffs;
+        }
+
+
+        inline int LocalToGlobalBaseMap::GetNumGlobalCoeffs() const
+        {
+            return m_numGlobalCoeffs;
+        }
+
+
+        inline void LocalToGlobalBaseMap::GlobalToLocalBnd(
+                    const NekVector<const NekDouble>& global,
+                    NekVector<NekDouble>& loc,
+                    int offset)
+        {
+            ASSERTL1(loc.GetDimension() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.GetDimension() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
+
+            // offset input data by length "offset" for Dirichlet boundary conditions.
+            Array<OneD,NekDouble> tmp(global.GetDimension()+offset,0.0);
+            Vmath::Vcopy(global.GetDimension(), global.GetRawPtr(), 1, tmp.get() + offset, 1);
+
+            if(m_signChange)
+            {
+                Vmath::Gathr(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), tmp.get(), m_localToGlobalBndMap.get(), loc.GetRawPtr());
+            }
+            else
+            {
+                Vmath::Gathr(m_numLocalBndCoeffs, tmp.get(), m_localToGlobalBndMap.get(), loc.GetRawPtr());
+            }
+        }
+
+
+        inline void LocalToGlobalBaseMap::GlobalToLocalBnd(
+                    const NekVector<const NekDouble>& global,
+                    NekVector<NekDouble>& loc)
+        {
+            ASSERTL1(loc.GetDimension() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.GetDimension() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
+
+            if(m_signChange)
+            {
+                Vmath::Gathr(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), global.GetRawPtr(), m_localToGlobalBndMap.get(), loc.GetRawPtr());
+            }
+            else
+            {
+                Vmath::Gathr(m_numLocalBndCoeffs, global.GetRawPtr(), m_localToGlobalBndMap.get(), loc.GetRawPtr());
+            }
+        }
+
+
+        inline void LocalToGlobalBaseMap::GlobalToLocalBnd(
+                    const Array<OneD, const NekDouble>& global,
+                    Array<OneD,NekDouble>& loc, int offset)
+        {
+            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
+
+            // offset input data by length "offset" for Dirichlet boundary conditions.
+            Array<OneD,NekDouble> tmp(m_numGlobalBndCoeffs,0.0);
+            Vmath::Vcopy(m_numGlobalBndCoeffs-offset, global.get(), 1, tmp.get() + offset, 1);
+
+            if(m_signChange)
+            {
+                Vmath::Gathr(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), tmp.get(), m_localToGlobalBndMap.get(), loc.get());
+            }
+            else
+            {
+                Vmath::Gathr(m_numLocalBndCoeffs, tmp.get(), m_localToGlobalBndMap.get(), loc.get());
+            }
+        }
+
+
+        inline void LocalToGlobalBaseMap::GlobalToLocalBnd(
+                    const Array<OneD, const NekDouble>& global,
+                    Array<OneD,NekDouble>& loc)
+        {
+            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
+
+            if(m_signChange)
+            {
+                Vmath::Gathr(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), global.get(), m_localToGlobalBndMap.get(), loc.get());
+            }
+            else
+            {
+                Vmath::Gathr(m_numLocalBndCoeffs, global.get(), m_localToGlobalBndMap.get(), loc.get());
+            }
+        }
+
+
+        inline void LocalToGlobalBaseMap::AssembleBnd(
+                    const NekVector<const NekDouble>& loc,
+                    NekVector<NekDouble>& global, int offset)
+        {
+            ASSERTL1(loc.GetDimension() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.GetDimension() >= m_numGlobalBndCoeffs-offset,"Global vector is not of correct dimension");
+            Array<OneD,NekDouble> tmp(global.GetDimension()+offset,0.0);
+
+            if(m_signChange)
+            {
+                Vmath::Assmb(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), loc.GetRawPtr(), m_localToGlobalBndMap.get(), tmp.get());
+            }
+            else
+            {
+                Vmath::Assmb(m_numLocalBndCoeffs,loc.GetRawPtr(), m_localToGlobalBndMap.get(), tmp.get());
+            }
+            Vmath::Vcopy(global.GetDimension(), tmp.get() + offset, 1, global.GetRawPtr(), 1);
+        }
+
+
+        inline void LocalToGlobalBaseMap::AssembleBnd(
+                    const NekVector<const NekDouble>& loc,
+                    NekVector<NekDouble>& global)
+        {
+            ASSERTL1(loc.GetDimension() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.GetDimension() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
+
+            Vmath::Zero(m_numGlobalBndCoeffs, global.GetRawPtr(), 1);
+
+            if(m_signChange)
+            {
+                Vmath::Assmb(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), loc.GetRawPtr(), m_localToGlobalBndMap.get(), global.GetRawPtr());
+            }
+            else
+            {
+                Vmath::Assmb(m_numLocalBndCoeffs,loc.GetRawPtr(), m_localToGlobalBndMap.get(), global.GetRawPtr());
+            }
+        }
+
+
+        inline void LocalToGlobalBaseMap::AssembleBnd(
+                    const Array<OneD,const NekDouble>& loc,
+                    Array<OneD, NekDouble>& global, int offset)
+        {
+            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local array is not of correct dimension");
+            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs-offset,"Global array is not of correct dimension");
+            Array<OneD,NekDouble> tmp(m_numGlobalBndCoeffs,0.0);
+
+            if(m_signChange)
+            {
+                Vmath::Assmb(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(),loc.get(), m_localToGlobalBndMap.get(), tmp.get());
+            }
+            else
+            {
+                Vmath::Assmb(m_numLocalBndCoeffs,loc.get(), m_localToGlobalBndMap.get(), tmp.get());
+            }
+            Vmath::Vcopy(m_numGlobalBndCoeffs-offset, tmp.get() + offset, 1, global.get(), 1);
+        }
+
+
+        inline void LocalToGlobalBaseMap::AssembleBnd(
+                    const Array<OneD, const NekDouble>& loc,
+                    Array<OneD, NekDouble>& global)
+        {
+            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
+
+            Vmath::Zero(m_numGlobalBndCoeffs, global.get(), 1);
+
+            if(m_signChange)
+            {
+                Vmath::Assmb(m_numLocalBndCoeffs,m_localToGlobalBndSign.get(),
+                             loc.get(), m_localToGlobalBndMap.get(), global.get());
+            }
+            else
+            {
+                Vmath::Assmb(m_numLocalBndCoeffs,loc.get(), m_localToGlobalBndMap.get(), global.get());
+            }
+        }
+
+
+        inline int LocalToGlobalBaseMap::GetBndSystemBandWidth() const
+        {
+            return m_bndSystemBandWidth;
+        }
+
+
+        inline int LocalToGlobalBaseMap::GetStaticCondLevel() const
+        {
+            return m_staticCondLevel;
+        }
+
+
+        inline int LocalToGlobalBaseMap::GetNumPatches() const
+        {
+            return m_numPatches;
+        }
+
+
+        inline const Array<OneD,const unsigned int>&
+                    LocalToGlobalBaseMap::GetNumLocalBndCoeffsPerPatch()
+        {
+            return m_numLocalBndCoeffsPerPatch;
+        }
+
+
+        inline const Array<OneD,const unsigned int>&
+                    LocalToGlobalBaseMap::GetNumLocalIntCoeffsPerPatch()
+        {
+            return m_numLocalIntCoeffsPerPatch;
+        }
+
+
+        inline const LocalToGlobalBaseMapSharedPtr
+                    LocalToGlobalBaseMap::GetNextLevelLocalToGlobalMap() const
+        {
+            return  m_nextLevelLocalToGlobalMap;
+        }
+
+
+        inline const PatchMapSharedPtr&
+                    LocalToGlobalBaseMap::GetPatchMapFromPrevLevel(const int i)
+                                                                        const
+        {
+            return m_patchMapFromPrevLevel[i];
+        }
+
+
+        inline bool LocalToGlobalBaseMap::AtLastLevel() const
+        {
+            return !( (bool) m_nextLevelLocalToGlobalMap.get() );
+        }
+
+
+        inline const GlobalSysSolnType
+                    LocalToGlobalBaseMap::GetGlobalSysSolnType() const
+        {
+            return m_solnType;
+        }
+
+
+        inline void LocalToGlobalBaseMap::GlobalToLocalBndWithoutSign(
+                    const Array<OneD, const NekDouble>& global,
+                    Array<OneD,NekDouble>& loc)
+        {
+            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
+
+            Vmath::Gathr(m_numLocalBndCoeffs, global.get(), m_localToGlobalBndMap.get(), loc.get());
+        }
     } // end of namespace
 } // end of namespace
 
 #endif //LOC2GLOMAP_H
 
 
-/** 
+/**
  $Log: LocalToGlobalBaseMap.h,v $
  Revision 1.16  2009/10/30 14:02:55  pvos
  Multi-level static condensation updates

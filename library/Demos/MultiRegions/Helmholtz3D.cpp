@@ -15,9 +15,9 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     NekDouble  lambda;
 
-    if(argc != 3)
+    if(argc != 2)
     {
-        fprintf(stderr,"Usage: Helmholtz3D  meshfile boundaryfile\n");
+        fprintf(stderr,"Usage: Helmholtz3D  meshfile\n");
         exit(1);
     }
 
@@ -31,9 +31,8 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // read the problem parameters from input file
-    string bcfile(argv[2]);
     SpatialDomains::BoundaryConditions bcs(&graph3D);
-    bcs.Read(bcfile);
+    bcs.Read(meshfile);
     //----------------------------------------------
 
     //----------------------------------------------

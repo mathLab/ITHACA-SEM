@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Run a series of tests on MultiRegions Demos 
+// Description: Run a series of tests on MultiRegions Demos
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include "../../Auxiliary/RegressBase.h"
@@ -46,8 +46,8 @@ void MakeOkFile(std::string demo, std::string input, std::string info);
 #define Execute($1,$2,$3)  RunL2RegressionTest($1,$2,$3)
 #endif
 
-int main(int argc, char* argv[]) 
-{ 
+int main(int argc, char* argv[])
+{
     // 1D Demos
     Execute("Helmholtz1D", "helmholtz1D_8modes.xml","CG Helmholtz1D  modes=8");
     Execute("HDGHelmholtz1D", "helmholtz1D_8modes.xml","HDG Helmholtz1D  modes=8");
@@ -55,6 +55,10 @@ int main(int argc, char* argv[])
     // 2D Demos
     Execute("Helmholtz2D", "helmholtz2D_7modes.xml","CG Helmholtz2D  modes=7");
     Execute("HDGHelmholtz2D", "helmholtz2D_7modes.xml","HDG Helmholtz2D  modes=7");
+
+    // 3D Demos
+    Execute("Helmholtz3D", "helmholtz3D_hex.xml","CG Helmholtz3D hex");
+    Execute("Helmholtz3D", "helmholtz3D_tet.xml","CG Helmholtz3D tets");
 
     return 0;
 }
@@ -77,7 +81,7 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
     if(fail = Test.TestL2()) // test failed
     {
         std::cout <<" status: FAILED" << std::endl;
-        std::cout << "===========================================================\n";   
+        std::cout << "===========================================================\n";
         // Explain cause of error if available
         Test.PrintTestError(fail);
         std::cout << "===========================================================\n";
@@ -85,8 +89,8 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
     else
     {
         std:: cout <<" status: PASSED" << std::endl;
-    }            
-    
+    }
+
     std::string cleanup = "rm -f *.xml *.fld";
     system(cleanup.c_str());
 };
@@ -99,7 +103,7 @@ void MakeOkFile(std::string Demo, std::string input, std::string info)
 
 
     // Copy input file to current location
-    std::string syscommand = "cp ../../../Demos/MultiRegions/InputFiles/"+input +" .";
+    std::string syscommand = std::string("cp ") + REG_PATH + "Demos/MultiRegions/InputFiles/"+input +" .";
     int status = system(syscommand.c_str());
     if(status)
     {
@@ -111,12 +115,12 @@ void MakeOkFile(std::string Demo, std::string input, std::string info)
     {
         std::cout << "Failed to make OK file\n";
         // Explain cause of error if available
-        std::cout << "===========================================================\n";   
+        std::cout << "===========================================================\n";
         Test.PrintTestError(fail);
-        std::cout << "===========================================================\n";    
+        std::cout << "===========================================================\n";
 }
 }
 
 
 
-	
+

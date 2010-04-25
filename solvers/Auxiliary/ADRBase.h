@@ -93,7 +93,7 @@ namespace Nektar
         /// Compute the L2 error of the fields
         NekDouble L2Error(int field, bool Normalised = false)
         {
-            L2Error(field,NullNekDouble1DArray,Normalised);
+            return L2Error(field,NullNekDouble1DArray,Normalised);
         }
 
         /// Compute the L_inf error between fields and a given exact solution.

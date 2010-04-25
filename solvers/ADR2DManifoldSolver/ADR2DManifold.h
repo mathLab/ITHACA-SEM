@@ -357,13 +357,13 @@ namespace Nektar
         virtual NekDouble v_AdvectionSphere(const NekDouble x0j, const NekDouble x1j,
                                             const NekDouble x2j, const NekDouble time)
         {
-            AdvectionSphere(x0j,x1j,x2j,time);
+            return AdvectionSphere(x0j,x1j,x2j,time);
         }
 
         virtual NekDouble v_Morphogenesis(const int field, const NekDouble x0j, const NekDouble x1j,
                                           const NekDouble x2j, const NekDouble time)
         {
-            Morphogenesis(field, x0j, x1j, x2j, time);
+            return Morphogenesis(field, x0j, x1j, x2j, time);
         }
 
     };

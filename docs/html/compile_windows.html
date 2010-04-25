@@ -265,7 +265,7 @@
       <li>Fill in the &quot;Where is the source code:&quot; field at the top of CMake. This is the path to the <em>Nektar++\library\</em> directory. For example, <em>C:\Nektar++\library</em>.</li>
       <li>Fill in the &quot;Where to build the binaries:&quot; field at the top of CMake. This is the path that the Visual Studio solution files will be written to and is the path to <em>Nektar++\builds\</em> directory. For example, <em>C:\Nektar++\builds</em>.</li>
       <li>Click the &quot;Configure&quot; button at the bottom of the program. It will ask for the platform to generate the files for. Select <em>Visual Studio 9 2008</em>. Press <em>OK</em>. CMake will now search for the paths to the ThirdParty files that were setup in the previous section. It should find all of the library and include paths automatically.</li>
-      <li> You must now change some of the CMake settings:<ul><li><strong>EXECUTABLE_OUTPUT_PATH</strong>
+      <li> You must now change some of the CMake settings:<ul><li><strong>CMAKE_INSTALL_PREFIX</strong>
                 <ul>
                   <li>This is the path where Visual Studio will put the *.exe executable files after they are compiled. This can be any directory you please.</li>
                 </ul>

@@ -11,6 +11,11 @@ PROJECT(SOLVERS)
 # won't need to modify this.
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR} ${CMAKE_MODULE_PATH})
 
+IF( NOT(CMAKE_INSTALL_PREFIX_SET) )
+	SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dist CACHE FILEPATH "Install Path" FORCE)
+ENDIF()
+SET(CMAKE_INSTALL_PREFIX_SET ON CACHE INTERNAL "")
+
 # Look for Nektar++ in the standard location (Nektar++/builds) 
 # Users can modify this directly in CMake if they used a non-standard location.
 SET(Nektar++_DIR "${CMAKE_SOURCE_DIR}/../builds/dist" CACHE PATH "")
@@ -31,6 +36,10 @@ MACRO(ADD_SOLVER_EXECUTABLE name source)
 
     ADD_EXECUTABLE(${name} ${source} ${ARGN})
 
+    SET_TARGET_PROPERTIES(${name} PROPERTIES DEBUG_POSTFIX -g)
+    SET_TARGET_PROPERTIES(${name} PROPERTIES MINSIZEREL_POSTFIX -ms)
+    SET_TARGET_PROPERTIES(${name} PROPERTIES RELWITHDEBINFO_POSTFIX -rg)
+
     IF( NEKTAR++_FOUND )
         # TODO - If your executable needs to link to any other libraries,  
         # add them here.
@@ -45,17 +54,10 @@ MACRO(ADD_SOLVER_EXECUTABLE name source)
         SET_LAPACK_LINK_LIBRARIES(${name})
 
     ENDIF( NEKTAR++_FOUND )
+
+    INSTALL(TARGETS ${name} RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+
 ENDMACRO(ADD_SOLVER_EXECUTABLE name source)
-
-MACRO(SET_COMMON_PROPERTIES name)
-
-    SET_TARGET_PROPERTIES(${name} PROPERTIES DEBUG_POSTFIX -g)
-    SET_TARGET_PROPERTIES(${name} PROPERTIES MINSIZEREL_POSTFIX -ms)
-    SET_TARGET_PROPERTIES(${name} PROPERTIES RELWITHDEBINFO_POSTFIX -rg)
-
-
-ENDMACRO(SET_COMMON_PROPERTIES name)
-
 
 SUBDIRS(AdvectionDiffusionReactionSolver ShallowWaterSolver
     IncNavierStokesSolver EulerSolver ADR2DManifoldSolver FitzHughNagumoSolver)

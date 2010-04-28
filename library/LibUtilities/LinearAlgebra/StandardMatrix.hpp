@@ -68,7 +68,20 @@ namespace Nektar
                 {
                     public:
                         typedef T value_type;
-                        typedef std::input_iterator_tag iterator_category;
+
+                        template<typename Z>
+                        struct TagType
+                        {
+                            typedef std::forward_iterator_tag type;
+                        };
+
+                        template<typename Z>
+                        struct TagType<const Z>
+                        {
+                            typedef std::input_iterator_tag type;
+                        };
+
+                        typedef typename TagType<T>::type iterator_category;
                         typedef unsigned int difference_type;
                         typedef typename boost::call_traits<value_type>::reference reference;
                         typedef typename boost::call_traits<value_type>::const_reference const_reference;
@@ -1296,6 +1309,7 @@ namespace Nektar
             Array<OneD, DataType> m_tempSpace;
     };
     
+
     template<typename DataType>
     DataType NekMatrix<DataType, StandardMatrixTag>::Proxy::defaultReturnValue;
             
@@ -1312,6 +1326,5 @@ namespace Nektar
     
 
 }
-
 
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_STANDARD_MATRIX_HPP

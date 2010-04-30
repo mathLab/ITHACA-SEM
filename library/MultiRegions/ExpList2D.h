@@ -70,25 +70,23 @@ namespace Nektar
             ExpList2D(  const ExpList2D &In);
 
             /// Sets up a list of local expansions based on an input mesh.
-            ExpList2D(  SpatialDomains::MeshGraph2D &graph2D,
-                        bool UseGenExp = false);
+            ExpList2D(  SpatialDomains::MeshGraph2D &graph2D);
 
             /// Sets up a list of local expansions based on an input mesh
             /// and separately defined basiskeys
-            ExpList2D(const LibUtilities::BasisKey &TriBa, 
-                      const LibUtilities::BasisKey &TriBb, 
-                      const LibUtilities::BasisKey &QuadBa, 
-                      const LibUtilities::BasisKey &QuadBb, 
+            ExpList2D(const LibUtilities::BasisKey &TriBa,
+                      const LibUtilities::BasisKey &TriBb,
+                      const LibUtilities::BasisKey &QuadBa,
+                      const LibUtilities::BasisKey &QuadBb,
                       const SpatialDomains::MeshGraph2D &graph2D,
-                      const LibUtilities::PointsType 
+                      const LibUtilities::PointsType
                       TriNb = LibUtilities::SIZE_PointsType);
-            
+
 
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField3D and ContField3D.
             ExpList2D(  const SpatialDomains::CompositeVector &domain,
-                        SpatialDomains::MeshGraph3D &graph3D,
-                        bool UseGenExp = false);
+                        SpatialDomains::MeshGraph3D &graph3D);
 
             /// Destructor.
             ~ExpList2D();
@@ -126,9 +124,6 @@ namespace Nektar
             void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
 
         private:
-            /// Flag to indicate if general expansions are being used.
-            bool m_UseGenExp;
-
             /// Definition of the total number of degrees of freedom and
             /// quadrature points. Sets up the storage for \a m_coeff and \a
             ///  m_phys.

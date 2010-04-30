@@ -216,7 +216,11 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Define Expansion
-    Exp = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(graph3D, bcs);
+    int bc_loc = 0;
+    MultiRegions::GlobalSysSolnType s = MultiRegions::eDirectMultiLevelStaticCond;
+    //MultiRegions::GlobalSysSolnType s = MultiRegions::eDirectStaticCond;
+    //MultiRegions::GlobalSysSolnType s = MultiRegions::eDirectFullMatrix;
+    Exp = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(graph3D, bcs, bc_loc, s);
     //----------------------------------------------
     int NumElements = Exp->GetExpSize();
 

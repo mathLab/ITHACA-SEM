@@ -34,11 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LocalRegions/TriExp.h>
-//#include <LocalRegions/GenTriExp.h>
 #include <LocalRegions/QuadExp.h>
-//#include <LocalRegions/GenQuadExp.h>
 #include <LocalRegions/NodalTriExp.h>
-//#include <LocalRegions/GenNodalTriExp.h>
 
 #include <MultiRegions/ExpList2D.h>
 
@@ -64,8 +61,7 @@ namespace Nektar
          *
          */
         ExpList2D::ExpList2D():
-            ExpList(),
-            m_UseGenExp(false)
+            ExpList()
         {
         }
 
@@ -82,8 +78,7 @@ namespace Nektar
          * @param   In          ExpList2D object to copy.
          */
         ExpList2D::ExpList2D(const ExpList2D &In):
-            ExpList(In),
-            m_UseGenExp(In.m_UseGenExp)
+            ExpList(In)
         {
         }
 
@@ -100,10 +95,8 @@ namespace Nektar
          * @param   graph2D     A mesh, containing information about the domain
          *                      and the spectral/hp element expansion.
          */
-        ExpList2D::ExpList2D(SpatialDomains::MeshGraph2D &graph2D,
-                                bool UseGenExp):
-            ExpList(),
-            m_UseGenExp(UseGenExp)
+        ExpList2D::ExpList2D(SpatialDomains::MeshGraph2D &graph2D):
+            ExpList()
         {
             int i,elmtid=0;
             LocalRegions::TriExpSharedPtr      tri;
@@ -132,7 +125,7 @@ namespace Nektar
                     if(TriBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
                     {
                         LibUtilities::BasisKey newBa(LibUtilities::eOrtho_A,
-                                                     TriBa.GetNumModes(), 
+                                                     TriBa.GetNumModes(),
                                                      TriBa.GetPointsKey());
 
                         TriNb = LibUtilities::eNodalTriElec;
@@ -158,9 +151,9 @@ namespace Nektar
                 else if(QuadrilateralGeom = boost::dynamic_pointer_cast<
                         SpatialDomains::QuadGeom>(expansions[i]->m_GeomShPtr))
                 {
-                    LibUtilities::BasisKey QuadBa 
+                    LibUtilities::BasisKey QuadBa
                                         = expansions[i]->m_BasisKeyVector[0];
-                    LibUtilities::BasisKey QuadBb 
+                    LibUtilities::BasisKey QuadBb
                                         = expansions[i]->m_BasisKeyVector[1];
 
                     quad = MemoryManager<LocalRegions::QuadExp>
@@ -180,7 +173,7 @@ namespace Nektar
 
             }
 
-            // Set up m_coeffs, m_phys and offset arrays. 
+            // Set up m_coeffs, m_phys and offset arrays.
             SetCoeffPhys();
         }
 
@@ -194,26 +187,26 @@ namespace Nektar
          * \f$\hat{u}^e_n\f$ and allocates memory for the arrays #m_coeffs
          * and #m_phys.
          *
-         * @param   TriBa       A BasisKey, containing the definition of the   
-         *                      basis in the first coordinate direction for 
+         * @param   TriBa       A BasisKey, containing the definition of the
+         *                      basis in the first coordinate direction for
          *                      triangular elements
-         * @param   TriBb       A BasisKey, containing the definition of the   
-         *                      basis in the second coordinate direction for 
+         * @param   TriBb       A BasisKey, containing the definition of the
+         *                      basis in the second coordinate direction for
          *                      triangular elements
-         * @param   QuadBa      A BasisKey, containing the definition of the   
-         *                      basis in the first coordinate direction for 
+         * @param   QuadBa      A BasisKey, containing the definition of the
+         *                      basis in the first coordinate direction for
          *                      quadrilateral elements
-         * @param   QuadBb      A BasisKey, containing the definition of the   
-         *                      basis in the second coordinate direction for 
+         * @param   QuadBb      A BasisKey, containing the definition of the
+         *                      basis in the second coordinate direction for
          *                      quadrilateral elements
          * @param   graph2D     A mesh, containing information about the domain
          *                      and the spectral/hp element expansion.
          * @param   TriNb       The PointsType of possible nodal points
          */
-         ExpList2D::ExpList2D(const LibUtilities::BasisKey &TriBa, 
-                              const LibUtilities::BasisKey &TriBb, 
-                              const LibUtilities::BasisKey &QuadBa, 
-                              const LibUtilities::BasisKey &QuadBb, 
+         ExpList2D::ExpList2D(const LibUtilities::BasisKey &TriBa,
+                              const LibUtilities::BasisKey &TriBb,
+                              const LibUtilities::BasisKey &QuadBa,
+                              const LibUtilities::BasisKey &QuadBb,
                               const SpatialDomains::MeshGraph2D &graph2D,
                               const LibUtilities::PointsType TriNb):
              ExpList()
@@ -223,19 +216,19 @@ namespace Nektar
              LocalRegions::NodalTriExpSharedPtr Ntri;
              LocalRegions::QuadExpSharedPtr quad;
              SpatialDomains::Composite comp;
- 
+
              const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
              m_ncoeffs = 0;
              m_npoints = 0;
-             
-             m_transState = eNotSet; 
+
+             m_transState = eNotSet;
              m_physState  = false;
-             
+
              for(i = 0; i < expansions.size(); ++i)
              {
                  SpatialDomains::TriGeomSharedPtr TriangleGeom;
                  SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
-                 
+
                  if(TriangleGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(expansions[i]->m_GeomShPtr))
                  {
                      if(TriNb < LibUtilities::SIZE_PointsType)
@@ -250,8 +243,8 @@ namespace Nektar
                          tri->SetElmtId(elmtid++);
                          (*m_exp).push_back(tri);
                      }
-                      
-                     m_ncoeffs += (TriBa.GetNumModes()*(TriBa.GetNumModes()+1))/2 
+
+                     m_ncoeffs += (TriBa.GetNumModes()*(TriBa.GetNumModes()+1))/2
                          + TriBa.GetNumModes()*(TriBb.GetNumModes()-TriBa.GetNumModes());
                      m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
                  }
@@ -260,18 +253,18 @@ namespace Nektar
                      quad = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(QuadBa,QuadBb,QuadrilateralGeom);
                      quad->SetElmtId(elmtid++);
                      (*m_exp).push_back(quad);
- 
+
                      m_ncoeffs += QuadBa.GetNumModes()*QuadBb.GetNumModes();
                      m_npoints += QuadBa.GetNumPoints()*QuadBb.GetNumPoints();
                  }
                  else
                  {
                      ASSERTL0(false,"dynamic cast to a proper Geometry2D failed");
-                 }  
-                 
+                 }
+
              }
-             
-            // Set up m_coeffs, m_phys and offset arrays. 
+
+            // Set up m_coeffs, m_phys and offset arrays.
              SetCoeffPhys();
          }
 
@@ -288,10 +281,8 @@ namespace Nektar
          *                      and the spectral/hp element expansions.
          */
         ExpList2D::ExpList2D(   const SpatialDomains::CompositeVector &domain,
-                                SpatialDomains::MeshGraph3D &graph3D,
-                                bool UseGenExp):
-            ExpList(),
-            m_UseGenExp(UseGenExp)
+                                SpatialDomains::MeshGraph3D &graph3D):
+            ExpList()
         {
             int i,j,elmtid=0;
             int nel = 0;
@@ -319,9 +310,9 @@ namespace Nektar
                     if(TriangleGeom = boost::dynamic_pointer_cast<
                                         SpatialDomains::TriGeom>((*comp)[j]))
                     {
-                        LibUtilities::BasisKey TriBa 
+                        LibUtilities::BasisKey TriBa
                                     = graph3D.GetFaceBasisKey(TriangleGeom,0);
-                        LibUtilities::BasisKey TriBb 
+                        LibUtilities::BasisKey TriBb
                                     = graph3D.GetFaceBasisKey(TriangleGeom,1);
 
                         if((graph3D.GetExpansions())[0]->m_BasisKeyVector[0]
@@ -345,7 +336,7 @@ namespace Nektar
                             (*m_exp).push_back(tri);
                         }
 
-                        m_ncoeffs 
+                        m_ncoeffs
                             += (TriBa.GetNumModes()*(TriBa.GetNumModes()+1))/2
                                 + TriBa.GetNumModes()*(TriBb.GetNumModes()
                                 -TriBa.GetNumModes());
@@ -354,9 +345,9 @@ namespace Nektar
                     else if(QuadrilateralGeom = boost::dynamic_pointer_cast<
                                         SpatialDomains::QuadGeom>((*comp)[j]))
                     {
-                        LibUtilities::BasisKey QuadBa 
+                        LibUtilities::BasisKey QuadBa
                                 = graph3D.GetFaceBasisKey(QuadrilateralGeom,0);
-                        LibUtilities::BasisKey QuadBb 
+                        LibUtilities::BasisKey QuadBb
                                 = graph3D.GetFaceBasisKey(QuadrilateralGeom,0);
 
                         quad = MemoryManager<LocalRegions::QuadExp>
@@ -377,7 +368,7 @@ namespace Nektar
                 }
 
             }
-            // Set up m_coeffs, m_phys and offset arrays. 
+            // Set up m_coeffs, m_phys and offset arrays.
             SetCoeffPhys();
         }
 
@@ -456,9 +447,9 @@ namespace Nektar
             int i;
             int cnt  = 0;
 
-            SpatialDomains::BoundaryRegionCollection &bregions 
+            SpatialDomains::BoundaryRegionCollection &bregions
                                         = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions 
+            SpatialDomains::BoundaryConditionCollection &bconditions
                                         = bcs.GetBoundaryConditions();
 
             MultiRegions::ExpList1DSharedPtr       locExpList;
@@ -471,7 +462,7 @@ namespace Nektar
             for(i = 0; i < nbnd; ++i)
             {
                 locBCond = (*(bconditions[i]))[variable];
-                if(locBCond->GetBoundaryConditionType() 
+                if(locBCond->GetBoundaryConditionType()
                                         == SpatialDomains::eDirichlet)
                 {
                     locExpList = MemoryManager<MultiRegions::ExpList1D>
@@ -485,20 +476,18 @@ namespace Nektar
             for(i = 0; i < nbnd; ++i)
             {
                 locBCond = (*(bconditions[i]))[variable];
-                if(locBCond->GetBoundaryConditionType() 
+                if(locBCond->GetBoundaryConditionType()
                                         == SpatialDomains::eNeumann)
                 {
-                    bool UseGenSegExp = true;
                     locExpList = MemoryManager<MultiRegions::ExpList1D>
                                         ::AllocateSharedPtr(*(bregions[i]),
-                                                            graph2D,
-                                                            UseGenSegExp);
+                                                            graph2D);
                     bndCondExpansions[cnt]  = locExpList;
                     bndConditions[cnt++]    = locBCond;
                 }
-                else if((locBCond->GetBoundaryConditionType() 
-                                        != SpatialDomains::eDirichlet) 
-                        && (locBCond->GetBoundaryConditionType() 
+                else if((locBCond->GetBoundaryConditionType()
+                                        != SpatialDomains::eDirichlet)
+                        && (locBCond->GetBoundaryConditionType()
                                         != SpatialDomains::ePeriodic))
                 {
                     ASSERTL0(false,"This type of BC not implemented yet");
@@ -524,7 +513,7 @@ namespace Nektar
             int i,j;
             int npoints;
             int nbnd = bndCondExpansions.num_elements();
-			
+
             MultiRegions::ExpList1DSharedPtr locExpList;
 
             for(i = 0; i < nbnd; ++i)
@@ -539,12 +528,12 @@ namespace Nektar
 
                 locExpList->GetCoords(x0,x1,x2);
 
-                if(bndConditions[i]->GetBoundaryConditionType() 
+                if(bndConditions[i]->GetBoundaryConditionType()
                                         == SpatialDomains::eDirichlet)
                 {
                     for(j = 0; j < npoints; j++)
                     {
-                        (locExpList->UpdatePhys())[j] 
+                        (locExpList->UpdatePhys())[j]
                             = (boost::static_pointer_cast<
                                     SpatialDomains::DirichletBoundaryCondition
                                 >(bndConditions[i])->m_DirichletCondition
@@ -554,12 +543,12 @@ namespace Nektar
                     locExpList->FwdTrans_BndConstrained(locExpList->GetPhys(),
                                         locExpList->UpdateCoeffs());
                 }
-                else if(bndConditions[i]->GetBoundaryConditionType() 
+                else if(bndConditions[i]->GetBoundaryConditionType()
                                         == SpatialDomains::eNeumann)
                 {
                     for(j = 0; j < npoints; j++)
                     {
-                        (locExpList->UpdatePhys())[j] 
+                        (locExpList->UpdatePhys())[j]
                                 = (boost::static_pointer_cast<
                                         SpatialDomains::NeumannBoundaryCondition
                                     >(bndConditions[i])->m_NeumannCondition
@@ -598,9 +587,9 @@ namespace Nektar
         {
             int i,j,k;
 
-            SpatialDomains::BoundaryRegionCollection &bregions 
+            SpatialDomains::BoundaryRegionCollection &bregions
                                         = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions 
+            SpatialDomains::BoundaryConditionCollection &bconditions
                                         = bcs.GetBoundaryConditions();
 
             int region1ID;
@@ -631,7 +620,7 @@ namespace Nektar
             for(i = 0; i < nbnd; ++i)
             {
                 locBCond = (*(bconditions[i]))[variable];
-                if(locBCond->GetBoundaryConditionType() 
+                if(locBCond->GetBoundaryConditionType()
                                         == SpatialDomains::ePeriodic)
                 {
                     region1ID = i;
@@ -641,7 +630,7 @@ namespace Nektar
 
                     if(doneBndRegions.count(region1ID)==0)
                     {
-                        ASSERTL0(bregions[region1ID]->size() 
+                        ASSERTL0(bregions[region1ID]->size()
                                         == bregions[region2ID]->size(),
                                  "Size of the 2 periodic boundary regions "
                                  "should be equal");
@@ -660,10 +649,10 @@ namespace Nektar
 
                             for(k = 0; k < comp1->size(); k++)
                             {
-                                if(!(segmentGeom1 
+                                if(!(segmentGeom1
                                         = boost::dynamic_pointer_cast<
                                           SpatialDomains::SegGeom>((*comp1)[k]))
-                                    || !(segmentGeom2 
+                                    || !(segmentGeom2
                                         = boost::dynamic_pointer_cast<
                                           SpatialDomains::SegGeom>((*comp2)[k]))
                                     )
@@ -673,9 +662,9 @@ namespace Nektar
                                 }
 
                                 // Extract the periodic edges
-                                periodicEdges[segmentGeom1->GetEid()] 
+                                periodicEdges[segmentGeom1->GetEid()]
                                         = segmentGeom2->GetEid();
-                                periodicEdges[segmentGeom2->GetEid()] 
+                                periodicEdges[segmentGeom2->GetEid()]
                                         = segmentGeom1->GetEid();
 
                                 // Extract the periodic vertices
@@ -704,16 +693,16 @@ namespace Nektar
 
                                 if(orient1!=orient2)
                                 {
-                                    periodicVertices[segmentGeom1->GetVid(0)] 
+                                    periodicVertices[segmentGeom1->GetVid(0)]
                                         = segmentGeom2->GetVid(0);
-                                    periodicVertices[segmentGeom1->GetVid(1)] 
+                                    periodicVertices[segmentGeom1->GetVid(1)]
                                         = segmentGeom2->GetVid(1);
                                 }
                                 else
                                 {
-                                    periodicVertices[segmentGeom1->GetVid(0)] 
+                                    periodicVertices[segmentGeom1->GetVid(0)]
                                         = segmentGeom2->GetVid(1);
-                                    periodicVertices[segmentGeom1->GetVid(1)] 
+                                    periodicVertices[segmentGeom1->GetVid(1)]
                                         = segmentGeom2->GetVid(0);
                                 }
                             }
@@ -739,7 +728,7 @@ namespace Nektar
         {
 
         }
-        
+
         /**
          * For each local element, copy the normals stored in the element list
          * into the array \a normals.
@@ -752,7 +741,7 @@ namespace Nektar
         {
 
         }
-        
+
         /**
          *
          */

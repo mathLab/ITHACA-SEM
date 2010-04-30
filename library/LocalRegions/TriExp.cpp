@@ -1854,6 +1854,12 @@ namespace Nektar
 
         StdRegions::StdExpansion1DSharedPtr TriExp::GetEdgeExp(int edge, bool SetUpNormals)
         {
+            if (m_edgeExp.size() > 0)
+            {
+                return m_edgeExp[edge];
+            }
+ASSERTL0(false,"Cannot find trace space expansion for this edge.");
+
             SegExpSharedPtr returnval;
             SpatialDomains::Geometry1DSharedPtr edg = m_geom->GetEdge(edge);
 

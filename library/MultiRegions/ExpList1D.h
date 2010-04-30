@@ -77,19 +77,16 @@ namespace Nektar
 
             /// Construct an ExpList1D from a given graph.
             ExpList1D(const LibUtilities::BasisKey &Ba,
-                      const SpatialDomains::MeshGraph1D &graph1D,
-                      bool UseGenSegExp = false);
+                      const SpatialDomains::MeshGraph1D &graph1D);
 
             /// This constructor sets up a list of local expansions based on an
             /// input mesh.
-            ExpList1D(SpatialDomains::MeshGraph1D &graph1D,
-                      bool UseGenSegExp = false);
+            ExpList1D(SpatialDomains::MeshGraph1D &graph1D);
 
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField2D and ContField2D.
             ExpList1D(const SpatialDomains::CompositeVector &domain,
-                      SpatialDomains::MeshGraph2D &graph2D,
-                      bool UseGenSegExp = false);
+                      SpatialDomains::MeshGraph2D &graph2D);
 
             /// Specialised constructor for trace expansions.
             ExpList1D(const Array<OneD,const ExpList1DSharedPtr> &bndConstraint,
@@ -97,8 +94,7 @@ namespace Nektar
                                             ::BoundaryConditionShPtr>  &bndCond,
                       const StdRegions::StdExpansionVector &locexp,
                       SpatialDomains::MeshGraph2D &graph2D,
-                      const map<int,int> &periodicEdges,
-                      bool UseGenSegExp = false);
+                      const map<int,int> &periodicEdges);
 
             /// Destructor.
             ~ExpList1D();
@@ -169,14 +165,8 @@ namespace Nektar
             void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
 
         protected:
-            /// Flag to indicate if GenSegExp's are being used.
-            bool m_UseGenSegExp;
 
         private:
-//            virtual void GetTangents(
-//                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &tangents);
-                
-
             /// Definition of the total number of degrees of freedom and
             /// quadrature points. Sets up the storage for \a m_coeff and \a
             ///  m_phys.

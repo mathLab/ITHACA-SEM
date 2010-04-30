@@ -59,10 +59,10 @@ namespace Nektar
         public:
             /// Constructor for static condensation solutions.
             GlobalLinSys(const GlobalLinSysKey &mkey,
-                         const DNekScalBlkMatSharedPtr SchurCompl,
-                         const DNekScalBlkMatSharedPtr BinvD,
-                         const DNekScalBlkMatSharedPtr invDC,
-                         const DNekScalBlkMatSharedPtr invD,
+                         DNekScalBlkMatSharedPtr& SchurCompl,
+                         const DNekScalBlkMatSharedPtr& BinvD,
+                         const DNekScalBlkMatSharedPtr& C,
+                         const DNekScalBlkMatSharedPtr& invD,
                          const LocalToGlobalBaseMapSharedPtr &locToGloMap);
 
             /// Constructor for full direct matrix solve.
@@ -119,11 +119,15 @@ namespace Nektar
                         const Array<OneD, const NekDouble>   &in,
                               Array<OneD,       NekDouble>   &out,
                         const LocalToGlobalBaseMapSharedPtr  &locToGloMap,
-                        const Array<OneD, const NekDouble>   &dirForcing 
+                        const Array<OneD, const NekDouble>   &dirForcing
                                                         = NullNekDouble1DArray);
 
             /// Assemble the Schur complement matrix.
             void AssembleSchurComplement(
+                    DNekScalBlkMatSharedPtr& SchurCompl,
+                    const DNekScalBlkMatSharedPtr& BinvD,
+                    const DNekScalBlkMatSharedPtr& C,
+                    const DNekScalBlkMatSharedPtr& invD,
                         const LocalToGlobalBaseMapSharedPtr& locToGloMap);
 
             /// Assemble the full matrix.
@@ -138,6 +142,10 @@ namespace Nektar
 
             ///
             void ConstructNextLevelCondensedSystem(
+                    DNekScalBlkMatSharedPtr& SchurCompl,
+                    const DNekScalBlkMatSharedPtr& BinvD,
+                    const DNekScalBlkMatSharedPtr& C,
+                    const DNekScalBlkMatSharedPtr& invD,
                         const LocalToGlobalBaseMapSharedPtr& locToGloMap);
         };
 

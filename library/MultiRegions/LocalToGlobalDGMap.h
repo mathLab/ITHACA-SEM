@@ -44,67 +44,86 @@
 
 namespace Nektar
 {
-    namespace MultiRegions 
+    namespace MultiRegions
     {
-
+        ///
         class LocalToGlobalDGMap: public LocalToGlobalBaseMap
         {
         public:
+            /// Default constructor.
             LocalToGlobalDGMap();
+            /// Constructor for trace map for one-dimensional expansion.
+            LocalToGlobalDGMap( const SpatialDomains::MeshGraph1D &graph1D,
+                const ExpList &locExp,
+                const GlobalSysSolnType solnType,
+                const Array<OneD, const LocalRegions::PointExpSharedPtr>
+                                                                &bndConstraint,
+                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
+                                                                &bndCond);
+            /// Constructor for trace map for two-dimensional expansion.
+            LocalToGlobalDGMap(SpatialDomains::MeshGraph2D &graph2D,
+                const ExpList1DSharedPtr &trace,
+                const ExpList &locExp,
+                const GlobalSysSolnType solnType,
+                const Array<OneD, MultiRegions::ExpList1DSharedPtr>
+                                                                &bndContraint,
+                const Array<OneD, SpatialDomains::BoundaryConditionShPtr>
+                                                                &bndCond,
+                const map<int,int> &periodicEdges);
 
+            /// Destructor.
             ~LocalToGlobalDGMap();
 
-            LocalToGlobalDGMap( const SpatialDomains::MeshGraph1D &graph1D,
-                                const ExpList &locExp,
-                                const GlobalSysSolnType solnType, 
-                                const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndConstraint,
-                                const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond);
-            
-            LocalToGlobalDGMap(SpatialDomains::MeshGraph2D &graph2D, 
-                               const ExpList1DSharedPtr &trace, 
-                               const ExpList &locExp,
-                               const GlobalSysSolnType solnType, 
-                               const Array<OneD, MultiRegions::ExpList1DSharedPtr> &bndContraint, 
-                               const Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndCond,
-                               const map<int,int> &periodicEdges);
-            
-	    /**
-             * \brief Return the number of boundary segments on which
-             * Dirichlet boundary conditions are imposed
-             */
-            int GetNumDirichletBndPhys()
-            {
-                return m_numDirichletBndPhys;
-            }
+            /// Return the number of boundary segments on which Dirichlet
+            /// boundary conditions are imposed.
+            inline int GetNumDirichletBndPhys();
 
-            Array<OneD, StdRegions::StdExpansion1DSharedPtr> GetElmtToTrace(const int i)
-            {
-                ASSERTL1(i >= 0 && i < m_elmtToTrace.num_elements(),
-                         "i is out of range");
-                return m_elmtToTrace[i];
-            }
+            inline Array<OneD, StdRegions::StdExpansion1DSharedPtr>
+                    GetElmtToTrace(const int i);
 
-            Array<OneD, Array< OneD, StdRegions::StdExpansion1DSharedPtr> > GetElmtToTrace()
-            {
-                return m_elmtToTrace;
-            }
-            
-            AdjacentTraceOrientation GetBndExpAdjacentOrient(const int i)
-            {
-                return m_bndExpAdjacentOrient[i];
-            }
-            
+            inline Array<OneD,Array<OneD,StdRegions::StdExpansion1DSharedPtr> >
+                    GetElmtToTrace();
+
+            inline AdjacentTraceOrientation
+                    GetBndExpAdjacentOrient(const int i);
+
         protected:
 
         private:
-            int m_numDirichletBndPhys;  //< Number of physical dirichlet boundary values in trace
-            Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr> > m_elmtToTrace;  //< list of edge expansions for a given element 
-            
+            /// Number of physical dirichlet boundary values in trace
+            int m_numDirichletBndPhys;
+            /// list of edge expansions for a given element
+            Array<OneD, Array<OneD, StdRegions::StdExpansion1DSharedPtr> > m_elmtToTrace;
+
             Array<OneD, AdjacentTraceOrientation > m_bndExpAdjacentOrient;
         };
-        
+
         typedef boost::shared_ptr<LocalToGlobalDGMap>  LocalToGlobalDGMapSharedPtr;
-        
+
+        inline int LocalToGlobalDGMap::GetNumDirichletBndPhys()
+        {
+            return m_numDirichletBndPhys;
+        }
+
+        inline Array<OneD, StdRegions::StdExpansion1DSharedPtr>
+                    LocalToGlobalDGMap::GetElmtToTrace(const int i)
+        {
+            ASSERTL1(i >= 0 && i < m_elmtToTrace.num_elements(),
+                     "i is out of range");
+            return m_elmtToTrace[i];
+        }
+
+        inline Array<OneD, Array< OneD, StdRegions::StdExpansion1DSharedPtr> >
+                    LocalToGlobalDGMap::GetElmtToTrace()
+        {
+            return m_elmtToTrace;
+        }
+
+        inline AdjacentTraceOrientation
+                    LocalToGlobalDGMap::GetBndExpAdjacentOrient(const int i)
+        {
+            return m_bndExpAdjacentOrient[i];
+        }
     } // end of namespace
 } // end of namespace
 

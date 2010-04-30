@@ -68,10 +68,10 @@ namespace Nektar
          */
         GlobalLinSys::GlobalLinSys(
                         const GlobalLinSysKey &mkey,
-                        const DNekScalBlkMatSharedPtr SchurCompl,
-                        const DNekScalBlkMatSharedPtr BinvD,
-                        const DNekScalBlkMatSharedPtr C,
-                        const DNekScalBlkMatSharedPtr invD,
+                        DNekScalBlkMatSharedPtr& SchurCompl,
+                        const DNekScalBlkMatSharedPtr& BinvD,
+                        const DNekScalBlkMatSharedPtr& C,
+                        const DNekScalBlkMatSharedPtr& invD,
                         const LocalToGlobalBaseMapSharedPtr &locToGloMap):
             m_linSysKey(mkey),
             m_linSys(),
@@ -86,18 +86,13 @@ namespace Nektar
                      "The local to global map is not set up for the requested "
                      "solution type");
 
-            m_blkMatrices[0] = SchurCompl;
-            m_blkMatrices[1] = BinvD;
-            m_blkMatrices[2] = C;
-            m_blkMatrices[3] = invD;
-
             if(locToGloMap->AtLastLevel())
             {
-                AssembleSchurComplement(locToGloMap);
+                AssembleSchurComplement(SchurCompl,BinvD,C,invD,locToGloMap);
             }
             else
             {
-                ConstructNextLevelCondensedSystem(
+                ConstructNextLevelCondensedSystem(SchurCompl,BinvD,C,invD,
                                 locToGloMap->GetNextLevelLocalToGlobalMap());
             }
 
@@ -296,8 +291,6 @@ namespace Nektar
                                               eWrapper);
             NekVector<NekDouble> V_Int(nIntDofs,out+nGlobBndDofs,eWrapper);
             NekVector<NekDouble> V_LocBnd(nLocBndDofs,0.0);
-            NekVector<NekDouble> V_LocBndTmp1(nLocBndDofs,0.0);
-            NekVector<NekDouble> V_LocBndTmp2(nLocBndDofs,0.0);
 
             NekVector<NekDouble> V_GlobHomBndTmp(nGlobHomBndDofs,0.0);
 
@@ -314,9 +307,7 @@ namespace Nektar
                         DNekScalBlkMat &BinvD      = *m_blkMatrices[1];
                         DNekScalBlkMat &SchurCompl = *m_blkMatrices[0];
                         locToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
-                        V_LocBndTmp1 = BinvD*F_Int;
-                        V_LocBndTmp2 = SchurCompl*V_LocBnd;
-                        V_LocBnd = V_LocBndTmp1 + V_LocBndTmp2;
+                        V_LocBnd = BinvD*F_Int + SchurCompl*V_LocBnd;
                     }
                     else if((nDirBndDofs) && (!dirForcCalculated)
                                           && (atLastLevel))
@@ -487,12 +478,23 @@ namespace Nektar
          * @param   locToGloMap Local to global mapping information.
          */
         void GlobalLinSys::AssembleSchurComplement(
+                DNekScalBlkMatSharedPtr& SchurCompl,
+                const DNekScalBlkMatSharedPtr& BinvD,
+                const DNekScalBlkMatSharedPtr& C,
+                const DNekScalBlkMatSharedPtr& invD,
                         const LocalToGlobalBaseMapSharedPtr &locToGloMap)
         {
             int i,j,n,cnt,gid1,gid2;
             NekDouble sign1,sign2,value;
+
+
             int nBndDofs  = locToGloMap->GetNumGlobalBndCoeffs();
             int NumDirBCs = locToGloMap->GetNumGlobalDirBndCoeffs();
+
+            m_blkMatrices[0] = SchurCompl;
+            m_blkMatrices[1] = BinvD;
+            m_blkMatrices[2] = C;
+            m_blkMatrices[3] = invD;
 
             unsigned int rows = nBndDofs - NumDirBCs;
             unsigned int cols = nBndDofs - NumDirBCs;
@@ -543,9 +545,9 @@ namespace Nektar
             // fill global matrix
             DNekScalMatSharedPtr loc_mat;
             int loc_lda;
-            for(n = cnt = 0; n < m_blkMatrices[0]->GetNumberOfBlockRows(); ++n)
+            for(n = cnt = 0; n < SchurCompl->GetNumberOfBlockRows(); ++n)
             {
-                loc_mat = m_blkMatrices[0]->GetBlock(n,n);
+                loc_mat = SchurCompl->GetBlock(n,n);
                 loc_lda = loc_mat->GetRows();
 
                 // Set up  Matrix;
@@ -595,167 +597,196 @@ namespace Nektar
          *
          */
         void GlobalLinSys::ConstructNextLevelCondensedSystem(
+                DNekScalBlkMatSharedPtr& SchurCompl,
+                const DNekScalBlkMatSharedPtr& BinvD,
+                const DNekScalBlkMatSharedPtr& C,
+                const DNekScalBlkMatSharedPtr& invD,
                         const LocalToGlobalBaseMapSharedPtr& locToGloMap)
         {
             int i,j,n,cnt;
             NekDouble one  = 1.0;
             NekDouble zero = 0.0;
-
-
-            const Array<OneD,const unsigned int>& nBndDofsPerPatch = locToGloMap->GetNumLocalBndCoeffsPerPatch();
-            const Array<OneD,const unsigned int>& nIntDofsPerPatch = locToGloMap->GetNumLocalIntCoeffsPerPatch();
-
-            // STEP 1:
-            // Based upon the schur complement of the the current level we will
-            // substructure this matrix in the form
-            //      --     --
-            //      | A   B |
-            //      | C   D |
-            //      --     --
-            // All matrices A,B,C and D are (diagonal) blockmatrices. However,
-            // as a start we will use an array of DNekMatrices as it is too hard
-            // to change the individual entries of a DNekScalBlkMatSharedPtr.
-
-            // In addition, we will also try to ensure that the memory of the
-            // blockmatrices will be contiguous. This will probably enhance
-            // the efficiency
-            // - Calculate the total number of entries in the blockmatrices
-            int nPatches  = locToGloMap->GetNumPatches();
-            int nEntriesA = 0; int nEntriesB = 0;
-            int nEntriesC = 0; int nEntriesD = 0;
-            int nTotEntries;
-            for(int i = 0; i < nPatches; i++)
-            {
-                nEntriesA += nBndDofsPerPatch[i]*nBndDofsPerPatch[i];
-                nEntriesB += nBndDofsPerPatch[i]*nIntDofsPerPatch[i];
-                nEntriesC += nIntDofsPerPatch[i]*nBndDofsPerPatch[i];
-                nEntriesD += nIntDofsPerPatch[i]*nIntDofsPerPatch[i];
-            }
-            nTotEntries = nEntriesA + nEntriesB + nEntriesC + nEntriesD;
-            // Initialise an array which will allocate the necessary memory to store
-            // the matrices
-            Array<OneD, NekDouble> matstorage(nTotEntries,0.0);
-
-            // Now create the DNekMatrices and link them to the memory allocated above
-            Array<OneD, DNekMatSharedPtr> substructeredMat[4] = {Array<OneD, DNekMatSharedPtr>(nPatches),  //Matrix A
-                                                                 Array<OneD, DNekMatSharedPtr>(nPatches),  //Matrix B
-                                                                 Array<OneD, DNekMatSharedPtr>(nPatches),  //Matrix C
-                                                                 Array<OneD, DNekMatSharedPtr>(nPatches)}; //Matrix D
-
-            Array<OneD, NekDouble> tmparray;
-            PointerWrapper wType = eWrapper;
-            int cntA = 0;
-            int cntB = nEntriesA;
-            int cntC = nEntriesA+nEntriesB;
-            int cntD = nEntriesA+nEntriesB+nEntriesC;
-            for(i = 0; i < nPatches; i++)
-            {
-                // Matrix A
-                tmparray = matstorage+cntA;
-                substructeredMat[0][i] = MemoryManager<DNekMat>::AllocateSharedPtr(nBndDofsPerPatch[i],
-                                                                                   nBndDofsPerPatch[i],
-                                                                                   tmparray,wType);
-                // Matrix B
-                tmparray = matstorage+cntB;
-                substructeredMat[1][i] = MemoryManager<DNekMat>::AllocateSharedPtr(nBndDofsPerPatch[i],
-                                                                                   nIntDofsPerPatch[i],
-                                                                                   tmparray,wType);
-                // Matrix C
-                tmparray = matstorage+cntC;
-                substructeredMat[2][i] = MemoryManager<DNekMat>::AllocateSharedPtr(nIntDofsPerPatch[i],
-                                                                                   nBndDofsPerPatch[i],
-                                                                                   tmparray,wType);
-                // Matrix D
-                tmparray = matstorage+cntD;
-                substructeredMat[3][i] = MemoryManager<DNekMat>::AllocateSharedPtr(nIntDofsPerPatch[i],
-                                                                                   nIntDofsPerPatch[i],
-                                                                                   tmparray,wType);
-
-                cntA += nBndDofsPerPatch[i]*nBndDofsPerPatch[i];
-                cntB += nBndDofsPerPatch[i]*nIntDofsPerPatch[i];
-                cntC += nIntDofsPerPatch[i]*nBndDofsPerPatch[i];
-                cntD += nIntDofsPerPatch[i]*nIntDofsPerPatch[i];
-            }
-
-            // Then, project SchurComplement onto
-            // the substructured matrices of the next level
-            DNekScalMatSharedPtr schurComplSubMat;
-            int       schurComplSubMatnRows;
-            int       patchId_i ,patchId_j;
-            int       dofId_i   ,dofId_j;
-            bool      isBndDof_i,isBndDof_j;
-            NekDouble sign_i    ,sign_j;
-            NekDouble value;
-            int       ABCorD;
-            for(n = cnt = 0; n < m_blkMatrices[0]->GetNumberOfBlockRows(); ++n)
-            {
-                schurComplSubMat      = m_blkMatrices[0]->GetBlock(n,n);
-                schurComplSubMatnRows = schurComplSubMat->GetRows();
-
-                // Set up  Matrix;
-                for(i = 0; i < schurComplSubMatnRows; ++i)
-                {
-                    patchId_i  = locToGloMap->GetPatchMapFromPrevLevel(cnt+i)->GetPatchId();
-                    dofId_i    = locToGloMap->GetPatchMapFromPrevLevel(cnt+i)->GetDofId();
-                    isBndDof_i = locToGloMap->GetPatchMapFromPrevLevel(cnt+i)->IsBndDof();
-                    sign_i     = locToGloMap->GetPatchMapFromPrevLevel(cnt+i)->GetSign();
-
-                    for(j = 0; j < schurComplSubMatnRows; ++j)
-                    {
-                        patchId_j  = locToGloMap->GetPatchMapFromPrevLevel(cnt+j)->GetPatchId();
-                        dofId_j    = locToGloMap->GetPatchMapFromPrevLevel(cnt+j)->GetDofId();
-                        isBndDof_j = locToGloMap->GetPatchMapFromPrevLevel(cnt+j)->IsBndDof();
-                        sign_j     = locToGloMap->GetPatchMapFromPrevLevel(cnt+j)->GetSign();
-
-                        ASSERTL0(patchId_i==patchId_j,"These values should be equal");
-
-                        ABCorD = 2*(isBndDof_i?0:1)+(isBndDof_j?0:1);
-                        value = substructeredMat[ABCorD][patchId_i]->GetValue(dofId_i,dofId_j) +
-                            sign_i*sign_j*(*schurComplSubMat)(i,j);
-
-                        substructeredMat[ABCorD][patchId_i]->SetValue(dofId_i,dofId_j,value);
-                    }
-                }
-                cnt += schurComplSubMatnRows;
-            }
-
-            // STEP 2: condense the system
-            // This can be done elementally (i.e. patch per patch)
-            for(i = 0; i < nPatches; i++)
-            {
-                if(nIntDofsPerPatch[i])
-                {
-                    // 1. D -> InvD
-                    substructeredMat[3][i]->Invert();
-                    // 2. B -> BInvD
-                    (*substructeredMat[1][i]) = (*substructeredMat[1][i])*(*substructeredMat[3][i]);
-                    // 3. A -> A - BInvD*C (= schurcomplement)
-                    (*substructeredMat[0][i]) = (*substructeredMat[0][i]) -
-                        (*substructeredMat[1][i])*(*substructeredMat[2][i]);
-                }
-            }
-
-            // STEP 3: fill the blockmatrices
-            // however, do note that we first have to convert them to
-            // a DNekScalMat in order to be compatible with the first
-            // level of static condensation
             DNekScalBlkMatSharedPtr blkMatrices[4];
 
-            MatrixStorage blkmatStorage = eDIAGONAL;
-            blkMatrices[0] = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nBndDofsPerPatch,nBndDofsPerPatch,blkmatStorage);
-            blkMatrices[1] = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nBndDofsPerPatch,nIntDofsPerPatch,blkmatStorage);
-            blkMatrices[2] = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nIntDofsPerPatch,nBndDofsPerPatch,blkmatStorage);
-            blkMatrices[3] = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nIntDofsPerPatch,nIntDofsPerPatch,blkmatStorage);
+            // The Schur complement matrix need only be retained at the last
+            // level. Save the other matrices at this level though.
+            m_blkMatrices[1] = BinvD;
+            m_blkMatrices[2] = C;
+            m_blkMatrices[3] = invD;
 
-            DNekScalMatSharedPtr tmpscalmat;
-            for(i = 0; i < nPatches; i++)
+            // Create temporary matrices within an inner-local scope to ensure
+            // any references to the intermediate storage is lost before
+            // the recursive step, rather than at the end of the routine.
+            // This allows the schur complement matrix from this level to be
+            // disposed of in the next level after use without being retained
+            // due to lingering shared pointers.
             {
-                for(j = 0; j < 4; j++)
+
+                const Array<OneD,const unsigned int>& nBndDofsPerPatch = locToGloMap->GetNumLocalBndCoeffsPerPatch();
+                const Array<OneD,const unsigned int>& nIntDofsPerPatch = locToGloMap->GetNumLocalIntCoeffsPerPatch();
+
+                // STEP 1:
+                // Based upon the schur complement of the the current level we will
+                // substructure this matrix in the form
+                //      --     --
+                //      | A   B |
+                //      | C   D |
+                //      --     --
+                // All matrices A,B,C and D are (diagonal) blockmatrices. However,
+                // as a start we will use an array of DNekMatrices as it is too hard
+                // to change the individual entries of a DNekScalBlkMatSharedPtr.
+
+                // In addition, we will also try to ensure that the memory of the
+                // blockmatrices will be contiguous. This will probably enhance
+                // the efficiency
+                // - Calculate the total number of entries in the blockmatrices
+                int nPatches  = locToGloMap->GetNumPatches();
+                int nEntriesA = 0; int nEntriesB = 0;
+                int nEntriesC = 0; int nEntriesD = 0;
+                int nTotEntries;
+                for(i = 0; i < nPatches; i++)
                 {
-                    tmpscalmat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,substructeredMat[j][i]);
-                    blkMatrices[j]->SetBlock(i,i,tmpscalmat);
+                    nEntriesA += nBndDofsPerPatch[i]*nBndDofsPerPatch[i];
+                    nEntriesB += nBndDofsPerPatch[i]*nIntDofsPerPatch[i];
+                    nEntriesC += nIntDofsPerPatch[i]*nBndDofsPerPatch[i];
+                    nEntriesD += nIntDofsPerPatch[i]*nIntDofsPerPatch[i];
+                }
+
+                // Now create the DNekMatrices and link them to the memory allocated above
+                Array<OneD, DNekMatSharedPtr> substructeredMat[4] = {Array<OneD, DNekMatSharedPtr>(nPatches),  //Matrix A
+                                                                     Array<OneD, DNekMatSharedPtr>(nPatches),  //Matrix B
+                                                                     Array<OneD, DNekMatSharedPtr>(nPatches),  //Matrix C
+                                                                     Array<OneD, DNekMatSharedPtr>(nPatches)}; //Matrix D
+
+                // Initialise storage for the matrices. We do this separately
+                // for each matrix so the matrices may be independently
+                // deallocated when no longer required.
+                Array<OneD, NekDouble> storageA(nEntriesA,0.0);
+                Array<OneD, NekDouble> storageB(nEntriesB,0.0);
+                Array<OneD, NekDouble> storageC(nEntriesC,0.0);
+                Array<OneD, NekDouble> storageD(nEntriesD,0.0);
+
+                Array<OneD, NekDouble> tmparray;
+                PointerWrapper wType = eWrapper;
+                int cntA = 0;
+                int cntB = 0;
+                int cntC = 0;
+                int cntD = 0;
+
+                for(i = 0; i < nPatches; i++)
+                {
+                    // Matrix A
+                    tmparray = storageA+cntA;
+                    substructeredMat[0][i] = MemoryManager<DNekMat>::AllocateSharedPtr(nBndDofsPerPatch[i],
+                                                                                       nBndDofsPerPatch[i],
+                                                                                       tmparray,wType);
+                    // Matrix B
+                    tmparray = storageB+cntB;
+                    substructeredMat[1][i] = MemoryManager<DNekMat>::AllocateSharedPtr(nBndDofsPerPatch[i],
+                                                                                       nIntDofsPerPatch[i],
+                                                                                       tmparray,wType);
+                    // Matrix C
+                    tmparray = storageC+cntC;
+                    substructeredMat[2][i] = MemoryManager<DNekMat>::AllocateSharedPtr(nIntDofsPerPatch[i],
+                                                                                       nBndDofsPerPatch[i],
+                                                                                       tmparray,wType);
+                    // Matrix D
+                    tmparray = storageD+cntD;
+                    substructeredMat[3][i] = MemoryManager<DNekMat>::AllocateSharedPtr(nIntDofsPerPatch[i],
+                                                                                       nIntDofsPerPatch[i],
+                                                                                       tmparray,wType);
+
+                    cntA += nBndDofsPerPatch[i]*nBndDofsPerPatch[i];
+                    cntB += nBndDofsPerPatch[i]*nIntDofsPerPatch[i];
+                    cntC += nIntDofsPerPatch[i]*nBndDofsPerPatch[i];
+                    cntD += nIntDofsPerPatch[i]*nIntDofsPerPatch[i];
+                }
+
+                // Then, project SchurComplement onto
+                // the substructured matrices of the next level
+                DNekScalMatSharedPtr schurComplSubMat;
+                int       schurComplSubMatnRows;
+                int       patchId_i ,patchId_j;
+                int       dofId_i   ,dofId_j;
+                bool      isBndDof_i,isBndDof_j;
+                NekDouble sign_i    ,sign_j;
+                NekDouble value;
+                int       ABCorD;
+                for(n = cnt = 0; n < SchurCompl->GetNumberOfBlockRows(); ++n)
+                {
+                    schurComplSubMat      = SchurCompl->GetBlock(n,n);
+                    schurComplSubMatnRows = schurComplSubMat->GetRows();
+
+                    // Set up  Matrix;
+                    for(i = 0; i < schurComplSubMatnRows; ++i)
+                    {
+                        patchId_i  = locToGloMap->GetPatchMapFromPrevLevel(cnt+i)->GetPatchId();
+                        dofId_i    = locToGloMap->GetPatchMapFromPrevLevel(cnt+i)->GetDofId();
+                        isBndDof_i = locToGloMap->GetPatchMapFromPrevLevel(cnt+i)->IsBndDof();
+                        sign_i     = locToGloMap->GetPatchMapFromPrevLevel(cnt+i)->GetSign();
+
+                        for(j = 0; j < schurComplSubMatnRows; ++j)
+                        {
+                            patchId_j  = locToGloMap->GetPatchMapFromPrevLevel(cnt+j)->GetPatchId();
+                            dofId_j    = locToGloMap->GetPatchMapFromPrevLevel(cnt+j)->GetDofId();
+                            isBndDof_j = locToGloMap->GetPatchMapFromPrevLevel(cnt+j)->IsBndDof();
+                            sign_j     = locToGloMap->GetPatchMapFromPrevLevel(cnt+j)->GetSign();
+
+                            ASSERTL0(patchId_i==patchId_j,"These values should be equal");
+
+                            ABCorD = 2*(isBndDof_i?0:1)+(isBndDof_j?0:1);
+                            value = substructeredMat[ABCorD][patchId_i]->GetValue(dofId_i,dofId_j) +
+                                sign_i*sign_j*(*schurComplSubMat)(i,j);
+
+                            substructeredMat[ABCorD][patchId_i]->SetValue(dofId_i,dofId_j,value);
+                        }
+                    }
+                    cnt += schurComplSubMatnRows;
+                }
+
+                // STEP 2: condense the system
+                // This can be done elementally (i.e. patch per patch)
+                for(i = 0; i < nPatches; i++)
+                {
+                    if(nIntDofsPerPatch[i])
+                    {
+                        // 1. D -> InvD
+                        substructeredMat[3][i]->Invert();
+                        // 2. B -> BInvD
+                        (*substructeredMat[1][i]) = (*substructeredMat[1][i])*(*substructeredMat[3][i]);
+                        // 3. A -> A - BInvD*C (= schurcomplement)
+                        (*substructeredMat[0][i]) = (*substructeredMat[0][i]) -
+                            (*substructeredMat[1][i])*(*substructeredMat[2][i]);
+                    }
+                }
+
+                // STEP 3: fill the blockmatrices
+                // however, do note that we first have to convert them to
+                // a DNekScalMat in order to be compatible with the first
+                // level of static condensation
+
+                MatrixStorage blkmatStorage = eDIAGONAL;
+                blkMatrices[0] = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nBndDofsPerPatch,nBndDofsPerPatch,blkmatStorage);
+                blkMatrices[1] = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nBndDofsPerPatch,nIntDofsPerPatch,blkmatStorage);
+                blkMatrices[2] = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nIntDofsPerPatch,nBndDofsPerPatch,blkmatStorage);
+                blkMatrices[3] = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nIntDofsPerPatch,nIntDofsPerPatch,blkmatStorage);
+
+                DNekScalMatSharedPtr tmpscalmat;
+                for(i = 0; i < nPatches; i++)
+                {
+                    for(j = 0; j < 4; j++)
+                    {
+                        tmpscalmat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,substructeredMat[j][i]);
+                        blkMatrices[j]->SetBlock(i,i,tmpscalmat);
+                    }
                 }
             }
+
+            // We've finished with the Schur complement matrix passed to this
+            // level, so return the memory to the system.
+            // (Is there a better way to do this?)
+            DNekScalBlkMatSharedPtr nullptr;
+            SchurCompl = nullptr;
 
             m_recursiveSchurCompl = MemoryManager<GlobalLinSys>::
                 AllocateSharedPtr(m_linSysKey,blkMatrices[0],blkMatrices[1],blkMatrices[2],blkMatrices[3],locToGloMap);

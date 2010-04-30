@@ -66,8 +66,7 @@ namespace Nektar
          * constructor.
          */
         ExpList1D::ExpList1D():
-            ExpList(),
-            m_UseGenSegExp(false)
+            ExpList()
         {
         }
 
@@ -76,8 +75,7 @@ namespace Nektar
          * Creates an identical copy of another ExpList1D object.
          */
         ExpList1D::ExpList1D(const ExpList1D &In):
-            ExpList(In),
-            m_UseGenSegExp(In.m_UseGenSegExp)
+            ExpList(In)
         {
         }
 
@@ -96,14 +94,10 @@ namespace Nektar
          * @param   Ba          BasisKey describing quadrature points and
          *                      number of modes.
          * @param   graph1D     Domain and expansion definitions.
-         * @param   UseGenSegExp If true, create general segment expansions
-         *                      instead of just normal segment expansions.
          */
         ExpList1D::ExpList1D(const LibUtilities::BasisKey &Ba,
-                             const SpatialDomains::MeshGraph1D &graph1D,
-                             bool UseGenSegExp):
-            ExpList(),
-            m_UseGenSegExp(UseGenSegExp)
+                             const SpatialDomains::MeshGraph1D &graph1D):
+            ExpList()
         {
             int i, id=0;
             LocalRegions::SegExpSharedPtr seg;
@@ -120,16 +114,8 @@ namespace Nektar
                             ::dynamic_pointer_cast<SpatialDomains::SegGeom>(
                                                 expansions[i]->m_GeomShPtr))
                 {
-                    // Use a general segment expansion with normal and binormal?
-                    if (UseGenSegExp)
-                    {
-                        seg = MemoryManager<LocalRegions::SegExp>
+                    seg = MemoryManager<LocalRegions::SegExp>
                                             ::AllocateSharedPtr(Ba,SegmentGeom);
-                    }
-                    else {
-                        seg = MemoryManager<LocalRegions::SegExp>
-                                            ::AllocateSharedPtr(Ba,SegmentGeom);
-                    }
                     seg->SetElmtId(id++);
                     (*m_exp).push_back(seg);
                 }
@@ -164,10 +150,8 @@ namespace Nektar
          * @param   UseGenSegExp If true, create general segment expansions
          *                      instead of just normal segment expansions.
          */
-        ExpList1D::ExpList1D(SpatialDomains::MeshGraph1D &graph1D,
-                             bool UseGenSegExp):
-            ExpList(),
-            m_UseGenSegExp(UseGenSegExp)
+        ExpList1D::ExpList1D(SpatialDomains::MeshGraph1D &graph1D):
+            ExpList()
         {
             int i,id=0;
             LocalRegions::SegExpSharedPtr seg;
@@ -188,16 +172,9 @@ namespace Nektar
                             ::dynamic_pointer_cast<SpatialDomains::SegGeom>(
                                                 expansions[i]->m_GeomShPtr))
                 {
-                    // Switch depending on if using general segment expansions.
-                    if (UseGenSegExp)
-                    {
-                        seg = MemoryManager<LocalRegions::SegExp>
+                    seg = MemoryManager<LocalRegions::SegExp>
                                         ::AllocateSharedPtr(bkey, SegmentGeom);
-                    }
-                    else {
-                        seg = MemoryManager<LocalRegions::SegExp>
-                                        ::AllocateSharedPtr(bkey, SegmentGeom);
-                    }
+
                     // Assign next ID
                     seg->SetElmtId(id++);
 
@@ -229,10 +206,8 @@ namespace Nektar
          *                      instead of just normal segment expansions.
          */
         ExpList1D::ExpList1D(const SpatialDomains::CompositeVector &domain,
-                             SpatialDomains::MeshGraph2D &graph2D,
-                             bool UseGenSegExp):
-            ExpList(),
-            m_UseGenSegExp(UseGenSegExp)
+                             SpatialDomains::MeshGraph2D &graph2D):
+            ExpList()
         {
             int i,j,cnt,id=0;
             SpatialDomains::Composite comp;
@@ -256,17 +231,8 @@ namespace Nektar
                         LibUtilities::BasisKey bkey
                                         = graph2D.GetEdgeBasisKey(SegmentGeom);
 
-                        // Use general expansions?
-                        if (UseGenSegExp)
-                        {
-                            seg = MemoryManager<LocalRegions::SegExp>
+                        seg = MemoryManager<LocalRegions::SegExp>
                                         ::AllocateSharedPtr(bkey, SegmentGeom);
-                        }
-                        else
-                        {
-                            seg = MemoryManager<LocalRegions::SegExp>
-                                        ::AllocateSharedPtr(bkey, SegmentGeom);
-                        }
 
                         // Add the segment to the expansion list.
                         seg->SetElmtId(id++);
@@ -307,10 +273,8 @@ namespace Nektar
                                            ::BoundaryConditionShPtr>  &bndCond,
                     const StdRegions::StdExpansionVector &locexp,
                     SpatialDomains::MeshGraph2D &graph2D,
-                    const map<int,int> &periodicEdges,
-                    bool UseGenSegExp):
-            ExpList(),
-            m_UseGenSegExp(UseGenSegExp)
+                    const map<int,int> &periodicEdges):
+            ExpList()
         {
             int i,j,cnt,id, elmtid=0;
             map<int,int> EdgeDone;
@@ -333,18 +297,9 @@ namespace Nektar
                                     ->GetExp(j)->GetBasis(0)->GetBasisKey();
                         SegGeom = bndConstraint[i]->GetExp(j)->GetGeom1D();
 
-                        if (UseGenSegExp)
-                        {
-                            Seg = MemoryManager<LocalRegions::SegExp>
+                        Seg = MemoryManager<LocalRegions::SegExp>
                                             ::AllocateSharedPtr(bkey, SegGeom);
-                            EdgeDone[SegGeom->GetEid()] = elmtid;
-                        }
-                        else
-                        {
-                            Seg = MemoryManager<LocalRegions::SegExp>
-                                            ::AllocateSharedPtr(bkey, SegGeom);
-                            EdgeDone[SegGeom->GetEid()] = 1;
-                        }
+                        EdgeDone[SegGeom->GetEid()] = elmtid;
 
                         Seg->SetElmtId(elmtid++);
                         (*m_exp).push_back(Seg);
@@ -366,23 +321,13 @@ namespace Nektar
                         LibUtilities::BasisKey EdgeBkey
                                     = locexp[i]->DetEdgeBasisKey(j);
 
-                        if (UseGenSegExp)
-                        {
-                            Seg = MemoryManager<LocalRegions::SegExp>
+                        Seg = MemoryManager<LocalRegions::SegExp>
                                         ::AllocateSharedPtr(EdgeBkey, SegGeom);
-                            EdgeDone[id] = elmtid;
+                        EdgeDone[id] = elmtid;
 
-                            if (periodicEdges.count(id) > 0)
-                            {
-                                EdgeDone[periodicEdges.find(id)->second]
-                                        = elmtid;
-                            }
-                        }
-                        else
+                        if (periodicEdges.count(id) > 0)
                         {
-                            Seg = MemoryManager<LocalRegions::SegExp>
-                                        ::AllocateSharedPtr(EdgeBkey, SegGeom);
-                            EdgeDone[id] = 1;
+                            EdgeDone[periodicEdges.find(id)->second] = elmtid;
                         }
 
                         Seg->SetElmtId(elmtid++);
@@ -390,37 +335,35 @@ namespace Nektar
                     }
                     else // variable modes/points
                     {
-                        if (UseGenSegExp) {
-                            LibUtilities::BasisKey EdgeBkey
-                                    = locexp[i]->DetEdgeBasisKey(j);
+                        LibUtilities::BasisKey EdgeBkey
+                                = locexp[i]->DetEdgeBasisKey(j);
 
-                            if((*m_exp)[EdgeDone[id]]->GetNumPoints(0)
-                                    >= EdgeBkey.GetNumPoints()
-                                && (*m_exp)[EdgeDone[id]]->GetBasisNumModes(0)
-                                    >= EdgeBkey.GetNumModes())
-                            {
-                            }
-                            else if((*m_exp)[EdgeDone[id]]->GetNumPoints(0)
-                                    <= EdgeBkey.GetNumPoints()
-                                && (*m_exp)[EdgeDone[id]]->GetBasisNumModes(0)
-                                    <= EdgeBkey.GetNumModes())
-                            {
-                                Seg = MemoryManager<LocalRegions::SegExp>
-                                        ::AllocateSharedPtr(EdgeBkey, SegGeom);
-                                Seg->SetElmtId(EdgeDone[id]);
-                                (*m_exp)[EdgeDone[id]] = Seg;
-                                NormalSet.erase(id);
-                            }
-                            else
-                            {
-                                ASSERTL0(false,
-                                    "inappropriate number of points/modes (max "
-                                    "num of points is not set with max order)")
-                            }
+                        if((*m_exp)[EdgeDone[id]]->GetNumPoints(0)
+                                >= EdgeBkey.GetNumPoints()
+                            && (*m_exp)[EdgeDone[id]]->GetBasisNumModes(0)
+                                >= EdgeBkey.GetNumModes())
+                        {
+                        }
+                        else if((*m_exp)[EdgeDone[id]]->GetNumPoints(0)
+                                <= EdgeBkey.GetNumPoints()
+                            && (*m_exp)[EdgeDone[id]]->GetBasisNumModes(0)
+                                <= EdgeBkey.GetNumModes())
+                        {
+                            Seg = MemoryManager<LocalRegions::SegExp>
+                                    ::AllocateSharedPtr(EdgeBkey, SegGeom);
+                            Seg->SetElmtId(EdgeDone[id]);
+                            (*m_exp)[EdgeDone[id]] = Seg;
+                            NormalSet.erase(id);
+                        }
+                        else
+                        {
+                            ASSERTL0(false,
+                                "inappropriate number of points/modes (max "
+                                "num of points is not set with max order)");
                         }
                     }
 
-                    if (UseGenSegExp && NormalSet.count(id) == 0)
+                    if (NormalSet.count(id) == 0)
                     {
                         Seg = boost::dynamic_pointer_cast
                                     <LocalRegions::SegExp>(
@@ -919,8 +862,6 @@ namespace Nektar
         void ExpList1D::SetUpPhysNormals(
                                 const StdRegions::StdExpansionVector &locexp)
         {
-            ASSERTL0(m_UseGenSegExp, "Must use GenSegExp to use normals.");
-
             map<int, int> EdgeGID;
             int i,cnt,n,id;
 
@@ -965,8 +906,6 @@ namespace Nektar
                               Array<OneD, NekDouble> &Upwind,
                         int direction)
         {
-            ASSERTL0(m_UseGenSegExp, "Must use GenSegExp to use normals.");
-
             int i,j,k,e_npoints,offset;
             Array<OneD,NekDouble> normals;
             NekDouble Vn;
@@ -1031,8 +970,6 @@ namespace Nektar
                                   Array<OneD, NekDouble> &Upwind,
                                   int direction)
         {
-            ASSERTL0(m_UseGenSegExp, "Must use GenSegExp to use normals.");
-
             int i,j,e_npoints,offset;
             Array<OneD,NekDouble> normals;
 
@@ -1073,8 +1010,6 @@ namespace Nektar
         void ExpList1D::GetNormals(
                                 Array<OneD, Array<OneD, NekDouble> > &normals)
         {
-            ASSERTL0(m_UseGenSegExp, "Must use GenSegExp to use normals.");
-
             int i,j,k,e_npoints,offset;
             Array<OneD,Array<OneD,NekDouble> > locnormals;
 
@@ -1135,7 +1070,7 @@ namespace Nektar
                     offset = m_phys_offset[i];
                     for (k = 0; k < coordim; ++k)
                     {
-                        Vmath::Vcopy(e_npoints, &(loctangent[k][0]), 1, 
+                        Vmath::Vcopy(e_npoints, &(loctangent[k][0]), 1,
                                                 &(tangents[j][k][offset]), 1);
                     }
                 }
@@ -1151,7 +1086,7 @@ namespace Nektar
                         normals[k][offset+j] = locnormals[k][j];
                     }
                 }*/
-            
+
 //        }
 
         /**

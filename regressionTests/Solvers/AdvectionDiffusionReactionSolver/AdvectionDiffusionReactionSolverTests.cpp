@@ -49,27 +49,28 @@ void MakeOkFile(std::string demo, std::string input, std::string info);
 int main(int argc, char* argv[]) 
 { 
     //Test Advection
-	Execute("AdvectionDiffusionReactionSolver","Test_Advection_m3.xml","Testing Advection modes=3");
-	Execute("AdvectionDiffusionReactionSolver","Test_Advection_m8.xml","Testing Advection modes=8");
-	
-	//Test Explicit Diffusion
-	Execute("AdvectionDiffusionReactionSolver","Test_ExDiffusion_m3.xml","Testing Explicit Diffusion modes=3");
-	Execute("AdvectionDiffusionReactionSolver","Test_ExDiffusion_m8.xml","Testing Explicit Diffusion modes=8");
-	
-	//Test Diffusion Reaction
-	Execute("AdvectionDiffusionReactionSolver","Test_DiffusionReaction_m3.xml","Testing Diffusion Reaction modes=3");
-	Execute("AdvectionDiffusionReactionSolver","Test_DiffusionReaction_m8.xml","Testing Diffusion Reaction modes=8");
-	
+    Execute("AdvectionDiffusionReactionSolver","Test_Advection_m3.xml","Testing Advection modes=3");
+    Execute("AdvectionDiffusionReactionSolver","Test_Advection_m8.xml","Testing Advection modes=8");
+    
+    //Test Explicit Diffusion
+    Execute("AdvectionDiffusionReactionSolver","Test_ExDiffusion_m3.xml","Testing Explicit Diffusion modes=3");
+    Execute("AdvectionDiffusionReactionSolver","Test_ExDiffusion_m8.xml","Testing Explicit Diffusion modes=8");
+    
+    //Test Diffusion Reaction
+    Execute("AdvectionDiffusionReactionSolver","Test_DiffusionReaction_m3.xml","Testing Diffusion Reaction modes=3");
+    Execute("AdvectionDiffusionReactionSolver","Test_DiffusionReaction_m8.xml","Testing Diffusion Reaction modes=8");
+    
     return 0;
 }
 
 void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
 {
-    RegressBase Test("../solvers/builds/AdvectionDiffusionReactionSolver/",Demo,input,"Solvers/AdvectionDiffusionReactionSolver/OkFiles/");
+    std::string NektarSolverDir =std::string("") +  NEKTAR_SOLVER_DIR + "AdvectionDiffusionReactionSolver/";
+    RegressBase Test(NektarSolverDir.c_str(),Demo,input,"Solvers/AdvectionDiffusionReactionSolver/OkFiles/");
     int fail;
 
     // Copy input file to current location
-    std::string syscommand = "cp ../../../Solvers/AdvectionDiffusionReactionSolver/InputFiles/"+input +" .";
+    std::string syscommand = std::string("cp ") + REG_PATH + "Solvers/AdvectionDiffusionReactionSolver/InputFiles/"+input +" .";
     int status = system(syscommand.c_str());
     if(status)
     {
@@ -97,13 +98,12 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
 
 void MakeOkFile(std::string Demo, std::string input, std::string info)
 {
-
-    RegressBase Test("../solvers/builds/AdvectionDiffusionReactionSolver/",Demo,input,"Solvers/AdvectionDiffusionReactionSolver/OkFiles/");
+    RegressBase Test(NEKTAR_BIN_DIR,Demo,input,"Solvers/AdvectionDiffusionReactionSolver/OkFiles/");
     int fail;
 
 
     // Copy input file to current location
-    std::string syscommand = "cp ../../../Solvers/AdvectionDiffusionReactionSolver/InputFiles/"+input +" .";
+    std::string syscommand = std::string("cp ") + REG_PATH + "Solvers/AdvectionDiffusionReactionSolver/InputFiles/"+input +" .";
     int status = system(syscommand.c_str());
     if(status)
     {

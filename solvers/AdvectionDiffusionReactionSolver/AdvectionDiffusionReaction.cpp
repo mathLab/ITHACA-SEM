@@ -86,7 +86,7 @@ namespace Nektar
             m_explicitDiffusion(true),
             m_explicitReaction(true)
     {
-
+        
         int i;
 
         if(m_boundaryConditions->CheckForParameter("epsilon") == true)
@@ -134,7 +134,9 @@ namespace Nektar
         {
         case eHelmholtz:
         case eLaplace:
+        case eSteadyDiffusion:
         case ePoisson:
+        case eSteadyDiffusionReaction:
             break;
         case eSteadyAdvection:
 
@@ -351,13 +353,9 @@ namespace Nektar
             {
                 switch(m_equationType)
                 {
-#ifdef OLDENUM
-                    case eAdvection:
-#else
                     case eUnsteadyAdvection:
 		    case eUnsteadyAdvectionDiffusion:
                     case eUnsteadyInviscidBurger:
-#endif
                     {
 
                         // cout << "time = " << time << endl;
@@ -380,12 +378,7 @@ namespace Nektar
 
                         break;
                     }
-
-#ifdef OLDENUM
-                    case eDiffusion:
-#else
                     case eUnsteadyDiffusion:
-#endif
                     {
                         // BoundaryConditions are imposed weakly at the
                         // Diffusion operator
@@ -414,12 +407,8 @@ namespace Nektar
             {
                 switch(m_equationType)
                 {
-#ifdef OLDENUM
-                    case eAdvection:
-#else
                     case eUnsteadyAdvection:
 		    case eUnsteadyAdvectionDiffusion:
-#endif
                     {
                         SetBoundaryConditions(time);
                         Array<OneD, NekDouble> physfield(GetNpoints());
@@ -814,13 +803,9 @@ namespace Nektar
 
       switch(m_equationType)
       {
-#ifdef OLDENUM
-      case eAdvection:
-#else
       case eUnsteadyAdvection:
       case eUnsteadyDiffusion:
       case eUnsteadyAdvectionDiffusion:
-#endif
     {
       ASSERTL1(flux.num_elements() == m_velocity.num_elements(),"Dimension of flux array and velocity array do not match");
       
@@ -852,13 +837,9 @@ namespace Nektar
   {
     switch(m_equationType)
       {
-#ifdef OLDENUM
-      case eAdvection:
-#else
       case eUnsteadyAdvection:
       case eUnsteadyDiffusion:
       case eUnsteadyAdvectionDiffusion:
-#endif
     {
       ASSERTL1(flux.num_elements() == m_velocity.num_elements(),"Dimension of flux array and velocity array do not match");
       
@@ -1252,7 +1233,6 @@ namespace Nektar
   {   
     cout << "=======================================================================" << endl;
     cout << "\tEquation Type   : "<< kEquationTypeStr[m_equationType] << endl;
-    out << "\twavefreq       : " << m_wavefreq << endl;
     ADRBase::SessionSummary(out);
     switch(m_equationType)
       {

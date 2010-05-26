@@ -62,13 +62,16 @@ namespace Nektar
             /// Copy constructor.
             ExpList3D(const ExpList3D &In);
 
-/*          ExpList3D(const LibUtilities::BasisKey &Ba,
-                  const LibUtilities::BasisKey &Bb,
-                  const LibUtilities::BasisKey &Bc,
+          ExpList3D(const LibUtilities::BasisKey &TBa,
+                  const LibUtilities::BasisKey &TBb,
+                  const LibUtilities::BasisKey &TBc,
+                  const LibUtilities::BasisKey &HBa,
+                  const LibUtilities::BasisKey &HBb,
+                  const LibUtilities::BasisKey &HBc,
                   const SpatialDomains::MeshGraph3D &graph3D,
                   const LibUtilities::PointsType
                   TetNb = LibUtilities::SIZE_PointsType);
-*/
+
             /// Sets up a list of local expansions based on an input mesh.
             ExpList3D(SpatialDomains::MeshGraph3D &graph3D);
 

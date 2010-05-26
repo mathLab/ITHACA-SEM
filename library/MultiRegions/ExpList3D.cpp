@@ -52,10 +52,13 @@ namespace Nektar
         {
         }
 
-/*
-        ExpList3D::ExpList3D(const LibUtilities::BasisKey &Ba,
-                             const LibUtilities::BasisKey &Bb,
-                             const LibUtilities::BasisKey &Bc,
+
+        ExpList3D::ExpList3D(const LibUtilities::BasisKey &TBa,
+                             const LibUtilities::BasisKey &TBb,
+                             const LibUtilities::BasisKey &TBc,
+                             const LibUtilities::BasisKey &HBa,
+                             const LibUtilities::BasisKey &HBb,
+                             const LibUtilities::BasisKey &HBc,
                              const SpatialDomains::MeshGraph3D &graph3D,
                              const LibUtilities::PointsType TetNb):
             ExpList()
@@ -85,15 +88,15 @@ namespace Nektar
                     }
                     else
                     {
-                        tet = MemoryManager<LocalRegions::TetExp>::AllocateSharedPtr(Ba,Bb,Bc,TetGeom);
+                        tet = MemoryManager<LocalRegions::TetExp>::AllocateSharedPtr(TBa,TBb,TBc,TetGeom);
                         (*m_exp).push_back(tet);
                     }
 
-                    m_ncoeffs += StdRegions::StdTetData::getNumberOfCoefficients(Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes());
+                    m_ncoeffs += StdRegions::StdTetData::getNumberOfCoefficients(TBa.GetNumModes(), TBb.GetNumModes(), TBc.GetNumModes());
 
-                       m_npoints += Ba.GetNumPoints()*Bb.GetNumPoints()*Bc.GetNumPoints();
+                       m_npoints += TBa.GetNumPoints()*TBb.GetNumPoints()*TBc.GetNumPoints();
                 }
-                else if(PrismGeom = boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(expansions[i]->m_GeomShPtr)) // Prism
+/*                else if(PrismGeom = boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(expansions[i]->m_GeomShPtr)) // Prism
                 {
                       prism = MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(Ba,Bb,Bc,PrismGeom);
                       (*m_exp).push_back(prism);
@@ -111,13 +114,13 @@ namespace Nektar
                       m_npoints +=  Ba.GetNumPoints()*Bb.GetNumPoints()*Bc.GetNumPoints();
 
                 }
-                else if(HexGeom = boost::dynamic_pointer_cast<SpatialDomains::HexGeom>(expansions[i]->m_GeomShPtr)) // Hexahedron
+*/                else if(HexGeom = boost::dynamic_pointer_cast<SpatialDomains::HexGeom>(expansions[i]->m_GeomShPtr)) // Hexahedron
                 {
-                    hex = MemoryManager<LocalRegions::HexExp>::AllocateSharedPtr(Ba,Bb,Bc, HexGeom);
+                    hex = MemoryManager<LocalRegions::HexExp>::AllocateSharedPtr(HBa,HBb,HBc, HexGeom);
                     (*m_exp).push_back(hex);
 
-                    m_ncoeffs += Ba.GetNumModes()*Bb.GetNumModes()*Bc.GetNumModes();
-                    m_npoints += Ba.GetNumPoints()*Bb.GetNumPoints()*Bc.GetNumPoints();
+                    m_ncoeffs += HBa.GetNumModes()*HBb.GetNumModes()*HBc.GetNumModes();
+                    m_npoints += HBa.GetNumPoints()*HBb.GetNumPoints()*HBc.GetNumPoints();
                 }
                 else
                 {
@@ -128,7 +131,7 @@ namespace Nektar
 
             SetCoeffPhys();
         }
-*/
+
 
         /**
          * Given a mesh \a graph3D, containing information about the domain and

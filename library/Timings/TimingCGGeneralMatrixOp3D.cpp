@@ -316,7 +316,7 @@ int main(int argc, char *argv[])
         L2Error    = Exp->L2  (Sol->GetPhys());
         LinfError  = Exp->Linf(Sol->GetPhys());
     }
-/*
+
     //--------------------------------------------
     // alternative error calculation
     const LibUtilities::PointsKey PkeyT1(30,LibUtilities::eGaussLobattoLegendre);
@@ -377,7 +377,7 @@ int main(int argc, char *argv[])
     cout << "L infinity error: " << LinfErrorBis << endl;
     cout << "L 2 error:        " << L2ErrorBis   << endl;
 #endif
-*/
+
     //----------------------------------------------
     NekDouble exeTime;
     int NumCalls;
@@ -403,9 +403,9 @@ int main(int argc, char *argv[])
     outfile << setw(10) << fixed << noshowpoint << ((NekDouble) (exeTime/((NekDouble)NumCalls))) << " ";
     outfile.precision(7);
     outfile << setw(15) << scientific << noshowpoint << L2Error << " ";
-    outfile << setw(15) << scientific << noshowpoint << "- "; // << L2ErrorBis << " ";
+    outfile << setw(15) << scientific << noshowpoint << L2ErrorBis << " ";
     outfile << setw(15) << scientific << noshowpoint << LinfError << " ";
-    outfile << setw(15) << scientific << noshowpoint << "- ";// << LinfErrorBis << " ";
+    outfile << setw(15) << scientific << noshowpoint << LinfErrorBis << " ";
     outfile << setw(10) << nLocCoeffs  << " ";
     outfile << setw(10) << nGlobCoeffs << " ";
     outfile << setw(10) << nLocBndCoeffs  << " ";

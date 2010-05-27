@@ -47,6 +47,8 @@
 #define DEMO_L2ERROR_STR "L 2 error"
 #define DEMO_LINF_ERROR_STR "L infinity error"
 
+#define SOLVER_L2ERROR_STR "L 2 error"
+
 #define REGRESS_DOUBLE_TOL 1e-9
 
 //header of class RegressBase

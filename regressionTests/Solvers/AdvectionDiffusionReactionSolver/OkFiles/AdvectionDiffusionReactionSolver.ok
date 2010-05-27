@@ -1,20 +1,6 @@
 AdvectionDiffusionReactionSolver
 ==========================================
-Test_Advection_m3.xml
-L2 Error (variable u): 0.0526349
-----------------------------------------
-Test_Advection_m8.xml
-L2 Error (variable u): 0.0425327
-----------------------------------------
-Test_ExDiffusion_m3.xml
-L2 Error (variable u): 0.0925298
-----------------------------------------
-Test_ExDiffusion_m8.xml
-L2 Error (variable u): 0.00026242
-----------------------------------------
-Test_DiffusionReaction_m3.xml
-L2 Error (variable u): 0.196384
-----------------------------------------
-Test_DiffusionReaction_m8.xml
-L2 Error (variable u): 2.26202e-06
+Test_Helmholtz2D_modal.xml
+L 2 error (variable u): 0.00888036
+L inf error (variable u): 0.0101781
 ----------------------------------------

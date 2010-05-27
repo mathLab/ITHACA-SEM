@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File MultiRegionsDemoTests.cpp
+// File AdvectionDiffusionReactionSolverTests.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -48,17 +48,20 @@ void MakeOkFile(std::string demo, std::string input, std::string info);
 
 int main(int argc, char* argv[]) 
 { 
-    //Test Advection
-    Execute("AdvectionDiffusionReactionSolver","Test_Advection_m3.xml","Testing Advection modes=3");
-    Execute("AdvectionDiffusionReactionSolver","Test_Advection_m8.xml","Testing Advection modes=8");
+    // //Test Steady Diffusion Advection
+     Execute("AdvectionDiffusionReactionSolver","Test_Helmholtz2D_modal.xml","Testing Helmholtz/Steady Diffusion Reaction Modes=7");
+
+    // //Test Advection
+    // Execute("AdvectionDiffusionReactionSolver","Test_Advection_m3.xml","Testing Advection modes=3");
+    // Execute("AdvectionDiffusionReactionSolver","Test_Advection_m8.xml","Testing Advection modes=8");
     
-    //Test Explicit Diffusion
-    Execute("AdvectionDiffusionReactionSolver","Test_ExDiffusion_m3.xml","Testing Explicit Diffusion modes=3");
-    Execute("AdvectionDiffusionReactionSolver","Test_ExDiffusion_m8.xml","Testing Explicit Diffusion modes=8");
+    // //Test Explicit Diffusion
+    // Execute("AdvectionDiffusionReactionSolver","Test_ExDiffusion_m3.xml","Testing Explicit Diffusion modes=3");
+    // Execute("AdvectionDiffusionReactionSolver","Test_ExDiffusion_m8.xml","Testing Explicit Diffusion modes=8");
     
-    //Test Diffusion Reaction
-    Execute("AdvectionDiffusionReactionSolver","Test_DiffusionReaction_m3.xml","Testing Diffusion Reaction modes=3");
-    Execute("AdvectionDiffusionReactionSolver","Test_DiffusionReaction_m8.xml","Testing Diffusion Reaction modes=8");
+    // //Test Diffusion Reaction
+    // Execute("AdvectionDiffusionReactionSolver","Test_DiffusionReaction_m3.xml","Testing Diffusion Reaction modes=3");
+    // Execute("AdvectionDiffusionReactionSolver","Test_DiffusionReaction_m8.xml","Testing Diffusion Reaction modes=8");
     
     return 0;
 }
@@ -98,9 +101,9 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
 
 void MakeOkFile(std::string Demo, std::string input, std::string info)
 {
-    RegressBase Test(NEKTAR_BIN_DIR,Demo,input,"Solvers/AdvectionDiffusionReactionSolver/OkFiles/");
+    std::string NektarSolverDir =std::string("") +  NEKTAR_SOLVER_DIR + "AdvectionDiffusionReactionSolver/";
+    RegressBase Test(NektarSolverDir,Demo,input,"Solvers/AdvectionDiffusionReactionSolver/OkFiles/");
     int fail;
-
 
     // Copy input file to current location
     std::string syscommand = std::string("cp ") + REG_PATH + "Solvers/AdvectionDiffusionReactionSolver/InputFiles/"+input +" .";

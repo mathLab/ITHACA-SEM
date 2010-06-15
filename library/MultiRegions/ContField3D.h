@@ -58,33 +58,47 @@ namespace Nektar
             /// Construct a global continuous field based on an input mesh.
             ContField3D(SpatialDomains::MeshGraph3D &graph3D,
                         const GlobalSysSolnType solnType
-                                                = eDirectMultiLevelStaticCond);
+                                            = eDirectMultiLevelStaticCond);
 
             ContField3D(SpatialDomains::MeshGraph3D &graph3D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0,
-                        const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond);
+                        const GlobalSysSolnType solnType
+                                            = eDirectMultiLevelStaticCond);
+
+            /// Construct a global continuous field with solution type based on
+            /// another field but using a separate input mesh and boundary
+            /// conditions.
+            ContField3D(const ContField3D &In,
+                        SpatialDomains::MeshGraph3D &graph3D,
+                        SpatialDomains::BoundaryConditions &bcs,
+                        const int bc_loc = 0,
+                        const GlobalSysSolnType solnType
+                                            = eDirectMultiLevelStaticCond);
 
             ContField3D(SpatialDomains::MeshGraph3D &graph3D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable,
-                        const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond);
+                        const GlobalSysSolnType solnType
+                                            = eDirectMultiLevelStaticCond);
 
             ContField3D(const ContField3D &In);
 
             ~ContField3D();
 
-            /**
-             * \brief This function return the boundary conditions expansion.
-             */
-            inline const Array<OneD,const MultiRegions::ExpList2DSharedPtr>&GetBndCondExp()
-            {
-                return m_bndCondExpansions;
-            }
+            /// Determines if another ContField2D shares the same boundary
+            /// conditions as this field.
+            bool SameTypeOfBoundaryConditions(const ContField3D &In);
 
-            void GenerateDirBndCondForcing(const GlobalLinSysKey &key,
-                                                        Array<OneD, NekDouble> &inout,
-                                                        Array<OneD, NekDouble> &outarray);
+
+            /// This function return the boundary conditions expansion.
+            inline const Array<OneD,const MultiRegions::ExpList2DSharedPtr>
+                    &GetBndCondExp();
+
+            void GenerateDirBndCondForcing(
+                    const GlobalLinSysKey &key,
+                    Array<OneD, NekDouble> &inout,
+                    Array<OneD, NekDouble> &outarray);
 
             /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$
             /// (implemented as #m_contCoeffs) containing all global expansion
@@ -100,36 +114,25 @@ namespace Nektar
             /// \f$N_{\mathrm{dof}}\f$.
             inline int GetContNcoeffs();
 
-            inline void GlobalToLocal()
-            {
-                m_locToGloMap->GlobalToLocal(m_contCoeffs, m_coeffs);
-            }
-            inline void GlobalToLocal(const Array<OneD, const NekDouble>        &inarray, Array<OneD,NekDouble> &outarray)
-            {
-                m_locToGloMap->GlobalToLocal(inarray, outarray);
-            }
+            inline void GlobalToLocal();
 
-            inline void LocalToGlobal()
-            {
-                m_locToGloMap->LocalToGlobal(m_coeffs, m_contCoeffs);
-            }
+            inline void GlobalToLocal(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,NekDouble> &outarray);
 
-            inline void Assemble()
-            {
-                m_locToGloMap->Assemble(m_coeffs, m_contCoeffs);
-            }
+            inline void LocalToGlobal();
 
-            inline void Assemble(const Array<OneD, const NekDouble> &inarray,   Array<OneD,NekDouble> &outarray)
-            {
-                m_locToGloMap->Assemble(inarray, outarray);
-            }
+            inline void Assemble();
 
-            inline const LocalToGlobalC0ContMapSharedPtr& GetLocalToGlobalMap() const
-            {
-                return  m_locToGloMap;
-            }
+            inline void Assemble(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,NekDouble> &outarray);
+
+            inline const LocalToGlobalC0ContMapSharedPtr& GetLocalToGlobalMap()
+                                                                        const;
 
             int GetGlobalMatrixNnz(const GlobalMatrixKey &gkey);
+
 
         protected:
             LocalToGlobalC0ContMapSharedPtr m_locToGloMap;
@@ -149,21 +152,22 @@ namespace Nektar
             /// Performs the backward transformation of the spectral/hp
             /// element expansion.
             virtual void v_BwdTrans(
-                            const Array<OneD, const NekDouble> &inarray,
-                                  Array<OneD,       NekDouble> &outarray,
-                                  bool  UseContCoeffs = false);
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          bool UseContCoeffs = false);
 
             /// Calculates the inner product of a function
             /// \f$f(\boldsymbol{x})\f$ with respect to all <em>global</em>
             /// expansion modes \f$\phi_n^e(\boldsymbol{x})\f$.
             virtual void v_IProductWRTBase(
-                            const Array<OneD, const NekDouble> &inarray,
-                                  Array<OneD, NekDouble> &outarray,
-                                  bool  UseContCoeffs = false);
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          bool  UseContCoeffs = false);
 
-            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
-                                          Array<OneD,       NekDouble> &outarray,
-                                    bool  UseContCoeffs);
+            virtual void v_FwdTrans(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          bool  UseContCoeffs);
 
         private:
             GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
@@ -173,13 +177,15 @@ namespace Nektar
 
 
             void GlobalSolve(const GlobalLinSysKey &key,
-                             const Array<OneD, const  NekDouble> &rhs,
-                             Array<OneD, NekDouble> &inout,
-                             const Array<OneD, const NekDouble> &dirForcing = NullNekDouble1DArray);
+                    const Array<OneD, const NekDouble> &rhs,
+                          Array<OneD,       NekDouble> &inout,
+                    const Array<OneD, const NekDouble> &dirForcing
+                                                     = NullNekDouble1DArray);
 
-            virtual void v_MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray,
-                                                         Array<OneD,       NekDouble> &outarray,
-                                                   bool  UseContCoeffs);
+            virtual void v_MultiplyByInvMassMatrix(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray,
+                          bool  UseContCoeffs);
 
             virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
@@ -198,13 +204,19 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &dirForcing);
 
             virtual void v_GeneralMatrixOp(
-                                    const GlobalMatrixKey             &gkey,
-                                    const Array<OneD,const NekDouble> &inarray,
-                                          Array<OneD,      NekDouble> &outarray,
-                                    bool  UseContCoeffs);
+                    const GlobalMatrixKey             &gkey,
+                    const Array<OneD,const NekDouble> &inarray,
+                          Array<OneD,      NekDouble> &outarray,
+                          bool  UseContCoeffs);
 
         };
         typedef boost::shared_ptr<ContField3D>      ContField3DSharedPtr;
+
+        inline const Array<OneD,const MultiRegions::ExpList2DSharedPtr>
+                &ContField3D::GetBndCondExp()
+        {
+            return m_bndCondExpansions;
+        }
 
         /**
          * If one wants to get hold of the underlying data without modifying
@@ -241,6 +253,40 @@ namespace Nektar
             return m_contNcoeffs;
         }
 
+        inline void ContField3D::GlobalToLocal()
+        {
+            m_locToGloMap->GlobalToLocal(m_contCoeffs, m_coeffs);
+        }
+
+        inline void ContField3D::GlobalToLocal(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,NekDouble> &outarray)
+        {
+            m_locToGloMap->GlobalToLocal(inarray, outarray);
+        }
+
+        inline void ContField3D::LocalToGlobal()
+        {
+            m_locToGloMap->LocalToGlobal(m_coeffs, m_contCoeffs);
+        }
+
+        inline void ContField3D::Assemble()
+        {
+            m_locToGloMap->Assemble(m_coeffs, m_contCoeffs);
+        }
+
+        inline void ContField3D::Assemble(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray)
+        {
+            m_locToGloMap->Assemble(inarray, outarray);
+        }
+
+        inline const LocalToGlobalC0ContMapSharedPtr&
+                ContField3D::GetLocalToGlobalMap() const
+        {
+            return  m_locToGloMap;
+        }
 
     } //end of namespace
 } //end of namespace

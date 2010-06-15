@@ -64,7 +64,7 @@ namespace Nektar
             DisContField3D(SpatialDomains::MeshGraph3D &graph3D,
                            const GlobalSysSolnType solnType = eDirectStaticCond,
                            bool SetUpJustDG = true);
-            
+
             /// Constructs a global discontinuous field based on an input mesh
             /// with boundary conditions.
             DisContField3D(SpatialDomains::MeshGraph3D &graph3D,
@@ -72,7 +72,7 @@ namespace Nektar
                            const int bc_loc,
                            const GlobalSysSolnType solnType = eDirectStaticCond,
                            bool SetUpJustDG = true);
-                           
+
             /// Constructs a global discontinuous field based on an input mesh
             /// with boundary conditions.
             DisContField3D(SpatialDomains::MeshGraph3D &graph3D,
@@ -80,51 +80,42 @@ namespace Nektar
                            const std::string variable,
                            const GlobalSysSolnType solnType = eDirectStaticCond,
                            bool SetUpJustDG = true);
-                           
+
             /// Constructs a global discontinuous field based on an input mesh.
 /*            DisContField3D(SpatialDomains::MeshGraph3D &graph3D,
                           SpatialDomains::BoundaryConditions &bcs,
                           const GlobalSysSolnType solnType = eDirectStaticCond,
                           const bool constructMap = true);
-*/                          
+*/
+
             /// Constructs a global discontinuous field based on another
             /// discontinuous field.
             DisContField3D(const DisContField3D &In);
-            
+
             /// Destructor.
             ~DisContField3D();
 
-            void EvaluateBoundaryConditions(const NekDouble time = 0.0)
-            {
-                ExpList3D::EvaluateBoundaryConditions(time,m_bndCondExpansions,m_bndConditions);
-            }
+            inline const
+                    Array<OneD,const MultiRegions::ExpList2DSharedPtr>&
+                    GetBndCondExpansions();
 
-            inline const Array<OneD,const MultiRegions::ExpList2DSharedPtr>& GetBndCondExpansions()
-            {
-                return m_bndCondExpansions;
-            }
-            
-            inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& GetBndConditions()
-            {
-                return m_bndConditions;
-            }
-            
+            inline const
+                    Array<OneD,const SpatialDomains::BoundaryConditionShPtr>&
+                    GetBndConditions();
+
             /// \brief Set up a list of element ids and edge ids the link to the
             /// boundary conditions
-            void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, 
-                                      Array<OneD,int> &EdgeID);
+            void GetBoundaryToElmtMap(
+                    Array<OneD, int> &ElmtID,
+                    Array<OneD, int> &EdgeID);
 
         protected:
-            /**
-             * \brief The number of boundary segments on which
-             * Dirichlet boundary conditions are imposed
-             */ 
+            /// The number of boundary segments on which Dirichlet boundary
+            /// conditions are imposed.
             int m_numDirBndCondExpansions;
 
+            /// An object which contains the discretised boundary conditions.
             /**
-             * \brief An object which contains the discretised
-             * boundary conditions.
-             *
              * It is an array of size equal to the number of boundary
              * regions and consists of entries of the type
              * MultiRegions#ExpList1D. Every entry corresponds to the
@@ -132,45 +123,61 @@ namespace Nektar
              * boundary region.  The values of the boundary conditions
              * are stored as the coefficients of the one-dimensional
              * expansion.
-             */ 
+             */
             Array<OneD,MultiRegions::ExpList2DSharedPtr>       m_bndCondExpansions;
 
-            /**
-             * \brief An array which contains the information about
-             * the boundary condition on the different boundary
-             * regions.
-             */ 
+            /// An array which contains the information about the boundary
+            /// condition on the different boundary regions.
             Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
 
-            /**
-             * \brief This function discretises the boundary conditions by setting up
-             * a list of one-dimensional boundary expansions.    
-             *
-             * According to their boundary region, the separate segmental boundary 
-             * expansions are bundled together in an object of the class 
-             * MultiRegions#ExpList1D. 
-             * The list of expansions of the Dirichlet boundary regions are listed 
-             * first in the array #m_bndCondExpansions.
-             *
-             * \param graph2D A mesh, containing information about the domain and 
-             * the spectral/hp element expansion.
-             * \param bcs An entity containing information about the boundaries and 
-             * boundary conditions.
-             * \param variable An optional parameter to indicate for which variable 
-             * the boundary conditions should be discretised.
-             */ 
+            /// This function discretises the boundary conditions by setting up
+            /// a list of one-dimensional boundary expansions.
             void GenerateBoundaryConditionExpansion(
-                    SpatialDomains::MeshGraph3D &graph3D, 
-                    SpatialDomains::BoundaryConditions &bcs, 
+                    SpatialDomains::MeshGraph3D &graph3D,
+                    SpatialDomains::BoundaryConditions &bcs,
                     const std::string variable);
-        
+
+            /// Populates the list of boundary condition expansions.
+            void SetBoundaryConditionExpansion(
+                    SpatialDomains::MeshGraph3D &graph3D,
+                    SpatialDomains::BoundaryConditions &bcs,
+                    const std::string variable,
+                    Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
+                    Array<OneD, SpatialDomains::BoundaryConditionShPtr>
+                                                                &bndConditions);
+
+            /// Evaluates boundary conditions.
+            void EvaluateBoundaryConditions(
+                    const NekDouble time = 0.0);
+
+
         private:
             GlobalLinSysMapShPtr                                m_globalBndMat;
             ExpList1DSharedPtr                                  m_trace;
-            LocalToGlobalDGMapSharedPtr                         m_traceMap;        
+            LocalToGlobalDGMapSharedPtr                         m_traceMap;
+
+            virtual void v_EvaluateBoundaryConditions(
+                    const NekDouble time = 0.0);
+
+            virtual const
+                    Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
+                    &v_GetBndConditions();
+
         };
 
         typedef boost::shared_ptr<DisContField3D>   DisContField3DSharedPtr;
+
+        inline const Array<OneD,const MultiRegions::ExpList2DSharedPtr>&
+                    DisContField3D::GetBndCondExpansions()
+        {
+            return m_bndCondExpansions;
+        }
+
+        inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>&
+                    DisContField3D::GetBndConditions()
+        {
+            return m_bndConditions;
+        }
 
     } //end of namespace
 } //end of namespace

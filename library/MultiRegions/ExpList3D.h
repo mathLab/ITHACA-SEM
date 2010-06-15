@@ -79,22 +79,6 @@ namespace Nektar
             ~ExpList3D();
 
         protected:
-            /// Populates the list of boundary condition expansions.
-            void SetBoundaryConditionExpansion(
-                        SpatialDomains::MeshGraph3D &graph3D,
-                        SpatialDomains::BoundaryConditions &bcs,
-                        const std::string variable,
-                        Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
-                        Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                                                                &bndConditions);
-
-            /// Evaluates boundary conditions.
-            void EvaluateBoundaryConditions(
-                        const NekDouble time,
-                        Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
-                        Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                                                                &bndConditions);
-
             /// Generates a map of periodic faces in the mesh.
             void GetPeriodicFaces(SpatialDomains::MeshGraph3D &graph3D,
                         SpatialDomains::BoundaryConditions &bcs,

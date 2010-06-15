@@ -792,7 +792,6 @@ namespace Nektar
           int nqtot = GetTotPoints();
           int matrixid = mkey.GetMatrixID();
 
-          int dim = 3 ;
           NekDouble checkweight=0.0;
           Array<OneD, NekDouble> tmp(nqtot), tan(nqtot), dtan0(nqtot), dtan1(nqtot), weight(nqtot,0.0);
 
@@ -801,9 +800,10 @@ namespace Nektar
           v_BwdTrans(inarray,tmp);
 
           // weight = \grad \cdot tanvec
-          for(int k=0; k<dim; ++k)
-      {
-        Vmath::Vcopy(nqtot,&(mkey.GetVariableCoefficient(0))[k*nqtot],1,&tan[0],1);
+          for(int k = 0; k < GetCoordim(); ++k)
+          {
+              Vmath::Vcopy(nqtot, &(mkey.GetVariableCoefficient(0))[k*nqtot],
+                              1, &tan[0], 1);
 
               // For Regular mesh ...
               if(gmatnumber==1)
@@ -829,7 +829,7 @@ namespace Nektar
               {
                   ASSERTL1( ((gmatnumber=1) || (gmatnumber==nqtot) ), "Gmat is not in a right size");
               }
-      }
+          }
 
           Vmath::Vmul(nqtot, &weight[0], 1, &tmp[0], 1, &tmp[0], 1);
           v_IProductWRTBase(tmp, outarray);

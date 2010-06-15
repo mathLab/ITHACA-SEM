@@ -109,6 +109,64 @@ namespace Nektar
         }
 
 
+        /**
+         * Given a mesh \a graph2D, containing information about the domain and
+         * the spectral/hp element expansion, this constructor fills the list
+         * of local expansions #m_exp with the proper expansions, calculates
+         * the total number of quadrature points \f$\boldsymbol{x}_i\f$ and
+         * local expansion coefficients \f$\hat{u}^e_n\f$ and allocates memory
+         * for the arrays #m_coeffs and #m_phys. Furthermore, it constructs the
+         * mapping array (contained in #m_locToGloMap) for the transformation
+         * between local elemental level and global level, it calculates the
+         * total number global expansion coefficients \f$\hat{u}_n\f$ and
+         * allocates memory for the array #m_contCoeffs. The constructor also
+         * discretises the boundary conditions, specified by the argument \a
+         * bcs, by expressing them in terms of the coefficient of the expansion
+         * on the boundary.
+         *
+         * @param   In          Existing ContField2D object used to provide the
+         *                      local to global mapping information and
+         *                      global solution type.
+         * @param   graph2D     A mesh, containing information about the domain
+         *                      and the spectral/hp element expansion.
+         * @param   bcs         The boundary conditions.
+         * @param   bc_loc
+         */
+        ContField3D::ContField3D(const ContField3D &In,
+                                 SpatialDomains::MeshGraph3D &graph3D,
+                                 SpatialDomains::BoundaryConditions &bcs,
+                                 const int bc_loc,
+                                 const GlobalSysSolnType solnType):
+            DisContField3D(In),
+            m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
+        {
+            if(!SameTypeOfBoundaryConditions(In))
+            {
+                map<int,int> periodicFaces;
+                map<int,int> periodicEdges;
+                map<int,int> periodicVertices;
+                GetPeriodicFaces(graph3D,bcs,bcs.GetVariable(bc_loc),periodicVertices,periodicEdges,periodicFaces);
+
+                m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>::AllocateSharedPtr(m_ncoeffs,*this,
+                                                                                         solnType,
+                                                                                         m_bndCondExpansions,
+                                                                                         m_bndConditions,
+                                                                                         periodicVertices,
+                                                                                         periodicEdges,
+                                                                                         periodicFaces);
+
+            }
+            else
+            {
+                m_locToGloMap = In.m_locToGloMap;
+            }
+
+            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+        }
+
+
         ContField3D::ContField3D(SpatialDomains::MeshGraph3D &graph3D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const std::string variable,
@@ -148,6 +206,39 @@ namespace Nektar
         ContField3D::~ContField3D()
         {
         }
+
+
+        /**
+         * For each boundary region, checks that the types and number of
+         * boundary expansions in that region match.
+         * @param   In          ContField2D to compare with.
+         * @returns True if boundary conditions match.
+         */
+        bool ContField3D::SameTypeOfBoundaryConditions(const ContField3D &In)
+        {
+            int i;
+            bool returnval = true;
+
+            for(i = 0; i < m_bndConditions.num_elements(); ++i)
+            {
+
+                // check to see if boundary condition type is the same
+                // and there are the same number of boundary
+                // conditions in the boundary definition.
+                if((m_bndConditions[i]->GetBoundaryConditionType()
+                    != In.m_bndConditions[i]->GetBoundaryConditionType())||
+                   (m_bndCondExpansions[i]->GetExpSize()
+                                    != In.m_bndCondExpansions[i]->GetExpSize()))
+                {
+                    returnval = false;
+                    break;
+                }
+            }
+
+            return returnval;
+        }
+
+
 
 
         /**
@@ -344,7 +435,8 @@ namespace Nektar
             //         IN THE SOLUTION ARRAY
             const Array<OneD,const int>& map  = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
             NekDouble sign;
-            for(i = 0; i < m_numDirBndCondExpansions; ++i)
+
+            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 const Array<OneD,const NekDouble>& coeffs = m_bndCondExpansions[i]->GetCoeffs();
                 for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)

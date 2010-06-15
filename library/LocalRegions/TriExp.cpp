@@ -1858,45 +1858,7 @@ namespace Nektar
             {
                 return m_edgeExp[edge];
             }
-ASSERTL0(false,"Cannot find trace space expansion for this edge.");
-
-            SegExpSharedPtr returnval;
-            SpatialDomains::Geometry1DSharedPtr edg = m_geom->GetEdge(edge);
-
-            returnval = MemoryManager<SegExp>::AllocateSharedPtr(DetEdgeBasisKey(edge),edg);
-
-            if (SetUpNormals)
-            {
-                returnval->GetMetricInfo()->ComputeNormals(m_geom, edge, returnval->GetBasis(0)->GetPointsKey());
-            }
-/*
-            if(SetUpNormals)
-            {
-                int i;
-                int coordim = GetCoordim();
-                int npoints = returnval->GetNumPoints(0);
-                StdRegions::EdgeOrientation edgedir = GetEorient(edge);
-
-                Array<OneD,NekDouble> phys_normals = m_metricinfo->GenNormals2D(StdRegions::eTriangle,edge,returnval->GetBasis(0)->GetPointsKey());
-
-                if(edgedir == StdRegions::eBackwards)
-                {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        for(i = 0; i < coordim; ++i)
-                        {
-                            Vmath::Reverse(npoints,&phys_normals[i*npoints],1,
-                                           &phys_normals[i*npoints],1);
-                        }
-                    }
-
-                    Vmath::Neg(coordim*npoints,phys_normals,1);
-                }
-
-                returnval->SetPhysNormals(phys_normals);
-            }
-*/
-            return returnval;
+            ASSERTL0(false,"Cannot find trace space expansion for this edge.");
         }
 
         void TriExp::GetEdgePhysVals(const int edge, const StdRegions::StdExpansion1DSharedPtr &EdgeExp,

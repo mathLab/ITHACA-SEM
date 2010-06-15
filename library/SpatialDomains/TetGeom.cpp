@@ -713,6 +713,23 @@ namespace Nektar
 
        }
 
+       bool TetGeom::v_ContainsPoint(
+               const Array<OneD, const NekDouble> &gloCoord)
+       {
+           ASSERTL1(gloCoord.num_elements() == 3,
+                    "Three dimensional geometry expects three coordinates.");
+
+           Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);
+           GetLocCoords(gloCoord, stdCoord);
+           cout << stdCoord[0]<< "," << stdCoord[1] << "," << stdCoord[2] << endl;
+           if (stdCoord[0] >= -1 && stdCoord[1] >= -1
+               && stdCoord[2] >= -1
+               && stdCoord[0] + stdCoord[1] + stdCoord[2] <= -1)
+           {
+               return true;
+           }
+           return false;
+       }
 
 
 

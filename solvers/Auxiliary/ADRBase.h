@@ -43,6 +43,7 @@
 
 #include <MultiRegions/ContField1D.h>
 #include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField3D.h>
 
 #include <MultiRegions/DisContField1D.h>
 #include <MultiRegions/DisContField2D.h>
@@ -50,7 +51,7 @@
 namespace Nektar
 {
     static std::string NekNullString;
-    
+
     /// Base class for the development of solvers.
     class ADRBase
     {
@@ -87,7 +88,7 @@ namespace Nektar
                         Array<OneD, Array<OneD, NekDouble> > &outfield);
 
         /// Compute the L2 error between fields and a given exact solution.
-        NekDouble L2Error(int field, 
+        NekDouble L2Error(int field,
                           const Array<OneD,NekDouble> &exactsoln, bool Normalised = false);
 
         /// Compute the L2 error of the fields
@@ -97,7 +98,7 @@ namespace Nektar
         }
 
         /// Compute the L_inf error between fields and a given exact solution.
-        NekDouble LinfError(int field, 
+        NekDouble LinfError(int field,
                 const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
 
         /// Compute the inner product \f$ (\nabla \phi \cdot F) \f$.
@@ -128,7 +129,7 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >& InField,
                 Array<OneD, Array<OneD, NekDouble> >& OutField,
                 bool NumericalFluxIncludesNormal = true,
-                bool InFieldIsInPhysSpace = false, 
+                bool InFieldIsInPhysSpace = false,
                 int nvariables = 0);
 
         /// Calculate weak DG Diffusion in the LDG form.
@@ -159,10 +160,10 @@ namespace Nektar
 
         /// Builds map of which element holds each history point.
         void ScanForHistoryPoints();
-        
+
         /// Probe each history point and write to file.
         void WriteHistoryData (std::ostream &out);
-        
+
         /// Write out a full summary.
         void Summary          (std::ostream &out);
 
@@ -352,9 +353,9 @@ namespace Nektar
 
         std::list<std::pair<SpatialDomains::VertexComponentSharedPtr, int> >
                                                     m_historyList;
-        
+
         SpatialDomains::SpatialParametersSharedPtr  m_spatialParameters;
-        
+
         std::string m_filename;     ///< Filename
         std::string m_sessionName;   ///< Name of the sessions
         NekDouble m_time;            ///< Continous time
@@ -386,7 +387,7 @@ namespace Nektar
 
         /// Check for and load an integer parameter
         void LoadParameter(std::string name, int &var, int def = 0);
-        
+
         /// Check for and load a double precision parameter
         void LoadParameter(std::string name, NekDouble &var, NekDouble def= 0.0);
 
@@ -460,7 +461,7 @@ namespace Nektar
         }
 
         virtual NekDouble v_Morphogenesis(const int field, const NekDouble x0j,
-                            const NekDouble x1j, const NekDouble x2j, 
+                            const NekDouble x1j, const NekDouble x2j,
                             const NekDouble time)
         {
             ASSERTL0(false, "v_Morphogenesis: This function is not valid "

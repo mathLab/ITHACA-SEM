@@ -72,7 +72,7 @@ namespace Nektar
     {
         SpatialDomains::MeshGraph graph;
         m_filename = fileNameString;
-        
+
         // Read the geometry and the expansion information
         m_graph = graph.Read(fileNameString);
 
@@ -86,7 +86,7 @@ namespace Nektar
         m_historyPoints = MemoryManager<SpatialDomains::History>
                                         ::AllocateSharedPtr(meshptr);
         m_historyPoints->Read(fileNameString);
-        
+
         // Set space dimension for use in class
         m_spacedim = m_graph->GetSpaceDimension();
 
@@ -213,7 +213,35 @@ namespace Nektar
                     break;
                 }
                 case 3:
-                    ASSERTL0(false,"3 D not set up");
+                {
+                    SpatialDomains::MeshGraph3DSharedPtr mesh3D;
+
+                    if(!(mesh3D = boost::dynamic_pointer_cast<
+                                    SpatialDomains::MeshGraph3D>(mesh)))
+                    {
+                        ASSERTL0(false,"Dynamics cast failed");
+                    }
+
+                    i = 0;
+                    MultiRegions::ContField3DSharedPtr firstfield =
+                            MemoryManager<MultiRegions::ContField3D>
+                                    ::AllocateSharedPtr(*mesh3D,
+                                        *m_boundaryConditions,i);
+
+                    if(globoptfile != NekNullString)
+                    {
+                        firstfield->ReadGlobalOptimizationParameters(globoptfile);
+                    }
+
+                    m_fields[0] = firstfield;
+                    for(i = 1 ; i < m_fields.num_elements(); i++)
+                    {
+                        m_fields[i] = MemoryManager<MultiRegions::ContField3D>
+                                        ::AllocateSharedPtr(*firstfield,
+                                            *mesh3D,*m_boundaryConditions,i);
+                    }
+                    break;
+                }
                 default:
                     ASSERTL0(false,"Expansion dimension not recognised");
                     break;
@@ -336,17 +364,17 @@ namespace Nektar
 	  {
 	    m_fintime = 0;
 	  }
-      
+
       // Read in spatial data
       int nq = m_fields[0]->GetNpoints();
       m_spatialParameters = MemoryManager<SpatialDomains::SpatialParameters>
                                         ::AllocateSharedPtr(nq);
       m_spatialParameters->Read(m_filename);
-      
+
       Array<OneD, NekDouble> x(nq), y(nq), z(nq);
       m_fields[0]->GetCoords(x,y,z);
       m_spatialParameters->EvaluateParameters(x,y,z);
-      
+
       ScanForHistoryPoints();
     }
 
@@ -414,7 +442,6 @@ namespace Nektar
                      <<": " << ifunc->GetEquation() << endl;
             }
         }
-
         if(dumpInitialConditions)
         {
             // dump initial conditions to file
@@ -1010,7 +1037,7 @@ namespace Nektar
                 WeakAdvectionGreensDivergenceForm(fluxvector, OutField[i]);
             }
 
-            // Evaulate  <\phi, \hat{F}\cdot n> - OutField[i] 
+            // Evaulate  <\phi, \hat{F}\cdot n> - OutField[i]
             Vmath::Neg(ncoeffs,OutField[i],1);
             m_fields[i]->AddTraceIntegral(flux[0][i], OutField[i]);
             m_fields[i]->SetPhysState(false);
@@ -1086,7 +1113,7 @@ namespace Nektar
         {
             for(int i = 0; i < FieldDef.size(); ++i)
             {
-                bool flag = FieldDef[i]->m_Fields[j] 
+                bool flag = FieldDef[i]->m_Fields[j]
                                     == m_boundaryConditions->GetVariable(j);
                 ASSERTL1(flag, (std::string("Order of ") + infile
                             + std::string(" data and that defined in "
@@ -1160,7 +1187,7 @@ namespace Nektar
     sprintf(chkout, "%d", n);
     std::string outname = m_sessionName + "_" + name + "_" + chkout + ".dat";
     ofstream outfile(outname.c_str());
-    
+
     // put inarray in m_phys
     if (IsInPhysicalSpace == false)
       {
@@ -1169,9 +1196,9 @@ namespace Nektar
 	    m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
 	  }
       }
-    
+
     m_fields[0]->WriteTecplotHeader(outfile,var);
-    
+
     for(int i = 0; i < m_fields[0]->GetExpSize(); ++i)
       {
 	m_fields[0]->WriteTecplotZone(outfile,i);
@@ -1183,7 +1210,7 @@ namespace Nektar
   }
 
     /**
-     * 
+     *
      */
     void ADRBase::ScanForHistoryPoints()
     {
@@ -1192,47 +1219,63 @@ namespace Nektar
         for (int i = 0; i < m_historyPoints->GetNumHistoryPoints(); ++i) {
             SpatialDomains::VertexComponentSharedPtr vtx = m_historyPoints->GetHistoryPoint(i);
             vtx->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
-            
+
             int eId = m_fields[0]->GetExpIndex(gloCoord);
-            
+
             m_historyList.push_back(
                 std::pair<SpatialDomains::VertexComponentSharedPtr, int>(vtx, eId));
         }
     }
-    
+
     /**
-     * 
-     */ 
+     * @todo Efficiency improvement required. PutPhysInToElmtExp needs to be
+     * called only once per field.
+     */
     void ADRBase::WriteHistoryData (std::ostream &out)
     {
+        int numPoints = m_historyList.size();
+        int numFields = m_fields.num_elements();
+
+        vector<NekDouble> data(numPoints*numFields);
+        int k;
+        Array<OneD, NekDouble> gloCoord(3,0.0);
+        std::list<pair<SpatialDomains::VertexComponentSharedPtr, int> >::iterator x;
+
+        // Pull out data values field by field
         for (int j = 0; j < m_fields.num_elements(); ++j)
         {
             m_fields[j]->BwdTrans(m_fields[j]->GetCoeffs(),m_fields[j]->UpdatePhys());
             m_fields[j]->PutPhysInToElmtExp();
+            for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); ++x, ++k)
+            {
+                (*x).first->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
+                data[k*numFields+j] = m_fields[j]->GetExp((*x).second)->PhysEvaluate(gloCoord);
+            }
         }
-        
-        Array<OneD, NekDouble> gloCoord(3,0.0);
-        std::list<pair<SpatialDomains::VertexComponentSharedPtr, int> >::iterator x;
-        for (x = m_historyList.begin(); x != m_historyList.end(); ++x)
+
+        // Write data values point by point
+        for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); ++x, ++k)
         {
             (*x).first->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
             out.width(8);
             out << m_time;
-            out.width(8); 
+            out.width(8);
             out << gloCoord[0];
             out.width(8);
             out << gloCoord[1];
             out.width(8);
             out << gloCoord[2];
-            for (int j = 0; j < m_fields.num_elements(); ++j)
+            for (int j = 0; j < numFields; ++j)
             {
+                //m_fields[j]->PutPhysInToElmtExp();
                 out.width(14);
-                out << m_fields[j]->GetExp((*x).second)->PhysEvaluate(gloCoord);
+                //out << m_fields[j]->GetExp((*x).second)->PhysEvaluate(gloCoord);
+                out << data[k*numFields+j];
             }
             out << endl;
         }
     }
-        
+
 
     /**
      * Write out a summary of the session and timestepping to the given output
@@ -1256,7 +1299,7 @@ namespace Nektar
         out << "\tSession Name    : " << m_sessionName << endl;
         out << "\tExpansion Dim.  : " << m_expdim << endl;
         out << "\tSpatial   Dim.  : " << m_spacedim << endl;
-        out << "\tMax Exp. Order  : " << m_fields[0]->EvalBasisNumModesMax() 
+        out << "\tMax Exp. Order  : " << m_fields[0]->EvalBasisNumModesMax()
                                       << endl;
         if(m_projectionType == eGalerkin)
         {
@@ -1277,7 +1320,8 @@ namespace Nektar
     {
         out << "\tTime Step       : " << m_timestep << endl;
         out << "\tNo. of Steps    : " << m_steps << endl;
-        out << "\tCheckpoints     : " << m_checksteps <<" steps" <<endl;
+        out << "\tCheckpoints     : " << m_checksteps << " steps" << endl;
+//        out << "\tInformation     : " << m_infosteps << " steps" << endl;
     }
 
 
@@ -1291,7 +1335,7 @@ namespace Nektar
     {
         //if (s1.size() < s2.size()) return -1;
         //if (s1.size() > s2.size()) return 1;
-        
+
         string::const_iterator it1=s1.begin();
         string::const_iterator it2=s2.begin();
 

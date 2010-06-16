@@ -10,3 +10,13 @@ L infinity error: 0.0101781
 L 2 error:        0.00888036
 H 1 error:        0.0961435
 ----------------------------------------
+helmholtz2D_7nodes.xml
+L infinity error: 0.00302271
+L 2 error:        0.00194795
+H 1 error:        0.0311903
+----------------------------------------
+helmholtz2D_7modes_AllBCs.xml
+L infinity error: 0.0101781
+L 2 error:        0.00888037
+H 1 error:        0.0961436
+----------------------------------------

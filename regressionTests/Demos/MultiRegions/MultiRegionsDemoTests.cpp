@@ -50,11 +50,21 @@ int main(int argc, char* argv[])
 {
     // 1D Demos
     Execute("Helmholtz1D", "helmholtz1D_8modes.xml","CG Helmholtz1D  modes=8");
+    Execute("Helmholtz1D", "helmholtz1D_8modes_RBC.xml","CG Helmholtz1D  modes=8 with Robin BC");
     Execute("HDGHelmholtz1D", "helmholtz1D_8modes.xml","HDG Helmholtz1D  modes=8");
+    Execute("HDGHelmholtz1D", "helmholtz1D_8modes_RBC.xml","HDG Helmholtz1D  modes=8 with Robin BC");
+
 
     // 2D Demos
     Execute("Helmholtz2D", "helmholtz2D_7modes.xml","CG Helmholtz2D  modes=7");
+    Execute("Helmholtz2D", "helmholtz2D_7nodes.xml","CG Helmholtz2D  num nodes=7");
+    Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs.xml","CG Helmholtz2D  modes=7 All BCs,  MultiLevel Static Condensation");
+    Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs.xml","CG Helmholtz2D  modes=7 All BCs, Static Condensation");
+    Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs.xml","CG Helmholtz2D  modes=7 All BCs, Full Matrix");
+
     Execute("HDGHelmholtz2D", "helmholtz2D_7modes.xml","HDG Helmholtz2D  modes=7");
+    Execute("HDGHelmholtz2D", "helmholtz2D_7modes_AllBCs.xml","HDG Helmholtz2D  modes=7 All BCs,  MultiLevel Static Condensation");
+
 
     // 3D Demos
     Execute("Helmholtz3D", "helmholtz3D_hex.xml","CG Helmholtz3D hex");

@@ -4,3 +4,7 @@ helmholtz1D_8modes.xml
 L infinity error: 1.28659e-05
 L 2 error:        1.11262e-05
 ----------------------------------------
+helmholtz1D_8modes_RBC.xml
+L infinity error: 1.28659e-05
+L 2 error:        1.11262e-05
+----------------------------------------

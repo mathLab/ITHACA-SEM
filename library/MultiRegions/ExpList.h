@@ -42,12 +42,12 @@
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <MultiRegions/GlobalLinSysKey.h>
-#include <MultiRegions/GlobalOptimizationParameters.h>
 
 #include <LocalRegions/MatrixKey.h>
 #include <SpatialDomains/SegGeom.h>
 
 #include <SpatialDomains/MeshGraph.h>
+#include <MultiRegions/GlobalOptimizationParameters.h>
 
 namespace Nektar
 {
@@ -497,9 +497,6 @@ namespace Nektar
                         std::vector<NekDouble> &fielddata,
                         std::string &field);
 
-            /// load global optimisation parameters
-            inline void ReadGlobalOptimizationParameters(
-                                const std::string &infilename);
 
             inline void SetUpPhysNormals(
                                 const StdRegions::StdExpansionVector &locexp);
@@ -507,6 +504,17 @@ namespace Nektar
             inline void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                 Array<OneD,int> &EdgeID);
 
+            /// load global optimisation parameters
+            void ReadGlobalOptimizationParameters(
+                                   const std::string &infilename)
+            {
+                v_ReadGlobalOptimizationParameters(infilename);
+            }
+
+            map<int, RobinBCInfoSharedPtr> GetRobinBCInfo()
+            {
+                return v_GetRobinBCInfo();
+            }
         protected:
 
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(
@@ -776,6 +784,9 @@ namespace Nektar
                                     Array<OneD, int> &ElmtID,
                                     Array<OneD,int> &EdgeID);
 
+            virtual void v_ReadGlobalOptimizationParameters(
+                                const std::string &infilename);
+
         private:
             virtual const
                 Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
@@ -783,6 +794,8 @@ namespace Nektar
 
             virtual void v_EvaluateBoundaryConditions(
                                     const NekDouble time = 0.0);
+
+            virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo(void);
 
         };
 
@@ -1273,7 +1286,6 @@ namespace Nektar
             v_EvaluateBoundaryConditions(time);
         }
 
-
         // Routines for continous matrix solution
         /**
          * This operation is equivalent to the evaluation of
@@ -1313,14 +1325,6 @@ namespace Nektar
         }
 
 
-        // load global optimisation parameters
-        inline void ExpList::ReadGlobalOptimizationParameters(
-                                const std::string &infilename)
-        {
-            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                                            ::AllocateSharedPtr(infilename);
-        }
-
         inline void ExpList::SetUpPhysNormals(
                                 const StdRegions::StdExpansionVector &locexp)
         {
@@ -1332,6 +1336,7 @@ namespace Nektar
         {
             v_GetBoundaryToElmtMap(ElmtID,EdgeID);
         }
+
 
   } //end of namespace
 } //end of namespace

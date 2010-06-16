@@ -54,6 +54,62 @@ namespace Nektar
             
             return returnval;
         }
+#if 0 //needs m_faceMap to be defined and setupin Expansion3D similar to 2D case
+        void Expansion3D::AddRobinMassMatrix(const int face, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
+        {
+            int i,j;
+            int id1,id2;
+            int order_e = m_faceExp[face]->GetNcoeffs();                    
+            // Checks to see if this is a boundary interior
+            // decomposed expansion - Routine not appropriate otherwise
+            int nbndry = v_NumBndryCoeffs(); 
+
+            Array<OneD,unsigned int> map;
+            Array<OneD,int> sign;
+            
+            LocalRegions::MatrixKey mkey(StdRegions::eMass,StdRegions::eSegment, *m_edgeExp[edge], primCoeffs);
+            DNekScalMat &edgemat = *m_edgeExp[edge]->GetLocMatrix(mkey);
+
+            v_GetEdgeToElementMap(edge,v_GetEorient(edge),map,sign);
+            
+            // Need to reset mapping to boundary rather than 
+            // elemental mapping
+            if(IsBoundaryMatrix == true) 
+            {
+
+                Array<OneD,unsigned int> bmap(nbndry);
+                v_GetBoundaryMap(bmap);
+                
+                for(i = 0; i < order_e; ++i)
+                {
+                    for(j = 0; j < nbndry; ++j)
+                    {
+                        if(map[i] == bmap[j])
+                        {
+                            map[i] = j;
+                            break;
+                        }
+                    }
+                    ASSERTL1(j != nbndry,"Did not find number in map");
+                }
+            }
+
+            for(i = 0; i < order_e; ++i)
+            {
+                id1 = map[i];
+                for(j = 0; j < order_e; ++j)
+                {
+                    id2 = map[j];
+                    (*inoutmat)(id1,id2) +=  edgemat(i,j)*sign[i]*sign[j];
+                }
+            }
+        }
+
+        void Expansion3D::v_AddRobinMassMatrix(const int faceid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
+        {
+            AddRobinMassMatrix(edgeid,primCoeffs,inoutmat);
+        }
+#endif
 
     } //end of namespace
 } //end of namespace

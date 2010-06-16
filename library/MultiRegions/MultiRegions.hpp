@@ -88,6 +88,27 @@ namespace Nektar
         typedef std::vector<SpatialDomains::BoundaryConditionType>  BndTypesVector;
         typedef std::vector<SpatialDomains::BoundaryConditionType>::iterator BndTypesVectorIter;
 
+
+        // structure to hold information about robin boundary conditions
+
+        struct RobinBCInfo
+        {
+            RobinBCInfo(const int id, const Array<OneD, const NekDouble > &primCoeffs):
+                m_robinID(id),
+                m_robinPrimitiveCoeffs(primCoeffs)
+            {
+            }
+
+            virtual ~RobinBCInfo()
+            {};
+
+            int m_robinID; /// id of which edge/face is robin condition
+            Array< OneD, const NekDouble > m_robinPrimitiveCoeffs; 
+            boost::shared_ptr<RobinBCInfo> next;
+        };
+
+        typedef boost::shared_ptr<RobinBCInfo> RobinBCInfoSharedPtr;
+        
     }// end of namespace
 }// end of namespace
 

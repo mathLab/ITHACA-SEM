@@ -222,152 +222,115 @@ namespace Nektar
             SetBoundaryConditionExpansion(graph3D,bcs,variable,m_bndCondExpansions,m_bndConditions);
         }
 
-
-
-        /**
-         * @param   graph3D     A mesh containing information about the domain
-         *                      and the spectral/hp element expansions.
-         * @param   bcs         Information about the boundary conditions.
-         * @param   variable    Specifies the field.
-         * @param   bndCondExpansions   Array of ExpList2D objects each
-         *                      containing a 2D spectral/hp element expansion
-         *                      on a single boundary region.
-         * @param   bndConditions   Array of BoundaryCondition objects which
-         *                      contain information about the boundary
-         *                      conditions on the different boundary regions.
-         */
-        void DisContField3D::SetBoundaryConditionExpansion(
-                        SpatialDomains::MeshGraph3D &graph3D,
-                        SpatialDomains::BoundaryConditions &bcs,
-                        const std::string variable,
-                        Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
-                        Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                                                                &bndConditions)
+        // Set up a list of element ids and edge ids that link to the
+        // boundary conditions
+        void DisContField3D::GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, Array<OneD,int> &FaceID)
         {
-            int i;
-            int cnt  = 0;
+            map<int, int> FaceGID;
+            int i,n,id;
+            int bid,cnt,Fid;
+            int nbcs = 0;
 
-            SpatialDomains::BoundaryRegionCollection &bregions
-                                        = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions
-                                        = bcs.GetBoundaryConditions();
-
-            MultiRegions::ExpList2DSharedPtr       locExpList;
-            SpatialDomains::BoundaryConditionShPtr locBCond;
-
-            int nbnd = bregions.size();
-
-            cnt=0;
-            // list Dirichlet boundaries first
-            for(i = 0; i < nbnd; ++i)
+            for(i = 0; i < m_bndConditions.num_elements(); ++i)
             {
-                locBCond = (*(bconditions[i]))[variable];
-                if(locBCond->GetBoundaryConditionType()
-                                        == SpatialDomains::eDirichlet)
-                {
-                    locExpList = MemoryManager<MultiRegions::ExpList2D>
-                                        ::AllocateSharedPtr(*(bregions[i]),
-                                                            graph3D);
-                    bndCondExpansions[cnt]  = locExpList;
-                    bndConditions[cnt++]    = locBCond;
-                } // end if Dirichlet
+                nbcs += m_bndCondExpansions[i]->GetExpSize();
             }
-            // then, list the other (non-periodic) boundaries
-            for(i = 0; i < nbnd; ++i)
+
+            // make sure arrays are of sufficient length
+            if(ElmtID.num_elements() != nbcs)
             {
-                locBCond = (*(bconditions[i]))[variable];
-                if(locBCond->GetBoundaryConditionType()
-                                        == SpatialDomains::eNeumann)
+                ElmtID = Array<OneD, int>(nbcs,-1);
+            }
+            else
+            {
+                fill(ElmtID.get(), ElmtID.get()+nbcs, -1);
+            }
+
+            if(FaceID.num_elements() != nbcs)
+            {
+                FaceID = Array<OneD, int>(nbcs);
+            }
+
+            // setup map of all global ids along boundary
+            for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            {
+                for(i = 0; i < m_bndCondExpansions[n]->GetExpSize(); ++i)
                 {
-                    locExpList = MemoryManager<MultiRegions::ExpList2D>
-                                        ::AllocateSharedPtr(*(bregions[i]),
-                                                            graph3D);
-                    bndCondExpansions[cnt]  = locExpList;
-                    bndConditions[cnt++]    = locBCond;
-                }
-                else if((locBCond->GetBoundaryConditionType()
-                            != SpatialDomains::eDirichlet)
-                        && (locBCond->GetBoundaryConditionType()
-                            != SpatialDomains::ePeriodic))
-                {
-                    ASSERTL0(false,"This type of BC not implemented yet");
+                    Fid =  m_bndCondExpansions[n]->GetExp(i)->GetGeom2D()->GetFid();
+                    FaceGID[Fid] = cnt++;
                 }
             }
-        }
 
 
-        /**
-         * @param   time        The time at which the boundary conditions
-         *                      should be evaluated.
-         * @param   bndCondExpansions   List of boundary conditions.
-         * @param   bndConditions   Information about the boundary conditions.
-         */
-        void DisContField3D::EvaluateBoundaryConditions(const NekDouble time)
-        {
-            int i,j;
-            int npoints;
-            int nbnd = m_bndCondExpansions.num_elements();
-            MultiRegions::ExpList2DSharedPtr locExpList;
-
-            for(i = 0; i < nbnd; ++i)
+            // Loop over elements and find edges that match;
+            for(cnt = n = 0; n < GetExpSize(); ++n)
             {
-                locExpList = m_bndCondExpansions[i];
-                npoints = locExpList->GetNpoints();
-
-                Array<OneD,NekDouble> x0(npoints,0.0);
-                Array<OneD,NekDouble> x1(npoints,0.0);
-                Array<OneD,NekDouble> x2(npoints,0.0);
-
-                locExpList->GetCoords(x0,x1,x2);
-
-                if(m_bndConditions[i]->GetBoundaryConditionType()
-                                        == SpatialDomains::eDirichlet)
+                for(i = 0; i < (*m_exp)[n]->GetNfaces(); ++i)
                 {
-                    for(j = 0; j < npoints; j++)
+                    id = (*m_exp)[n]->GetGeom3D()->GetFid(i);
+
+                    if(FaceGID.count(id) > 0)
                     {
-                        (locExpList->UpdatePhys())[j]
-                            = (boost::static_pointer_cast<SpatialDomains
-                                ::DirichletBoundaryCondition>(m_bndConditions[i])
-                                    ->m_DirichletCondition)
-                                        .Evaluate(x0[j],x1[j],x2[j],time);
+                        bid = FaceGID.find(id)->second;
+                        ASSERTL1(ElmtID[bid] == -1,"Face already set");
+                        ElmtID[bid] = n;
+                        FaceID[bid] = i;
+                        cnt ++;
                     }
-
-                    locExpList->FwdTrans_BndConstrained(locExpList->GetPhys(),
-                                                    locExpList->UpdateCoeffs());
-                }
-                else if(m_bndConditions[i]->GetBoundaryConditionType()
-                                        == SpatialDomains::eNeumann)
-                {
-                    for(j = 0; j < npoints; j++)
-                    {
-                        (locExpList->UpdatePhys())[j]
-                            = (boost::static_pointer_cast<SpatialDomains
-                                ::NeumannBoundaryCondition>(m_bndConditions[i])
-                                    ->m_NeumannCondition)
-                                        .Evaluate(x0[j],x1[j],x2[j],time);
-                    }
-
-                    locExpList->IProductWRTBase(locExpList->GetPhys(),
-                                                locExpList->UpdateCoeffs());
-                }
-                else
-                {
-                    ASSERTL0(false,"This type of BC not implemented yet");
                 }
             }
+
+            ASSERTL1(cnt == nbcs,"Failed to visit all boundary condtiions");
         }
-
-
-        void DisContField3D::v_EvaluateBoundaryConditions(const NekDouble time)
+        
+        /** 
+         * Search through the edge expansions and identify which ones
+         * have Robin/Mixed type boundary conditions. If find a Robin
+         * boundary then store the edge id of the boundary condition
+         * and the array of points of the physical space boundary
+         * condition which are hold the boundary condition primitive
+         * variable coefficient at the quatrature points
+         *
+         * \return std map containing the robin boundary condition
+         * info using a key of the element id 
+         *
+         * There is a next member to allow for more than one Robin
+         * boundary condition per element
+         */
+        map<int, RobinBCInfoSharedPtr> DisContField3D::GetRobinBCInfo(void)
         {
-            EvaluateBoundaryConditions(time);
-        }
+            int i,cnt;
+            map<int, RobinBCInfoSharedPtr> returnval;
+            Array<OneD, int> ElmtID,FaceID;
+            GetBoundaryToElmtMap(ElmtID,FaceID);
+            
+            for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            {
+                MultiRegions::ExpList2DSharedPtr locExpList;
 
+                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
+                {
+                    int e,elmtid;
+                    Array<OneD, NekDouble> Array_tmp;
 
-        const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
-                                        &DisContField3D::v_GetBndConditions()
-        {
-            return m_bndConditions;
+                    locExpList = m_bndCondExpansions[i];
+                    
+                    for(e = 0; e < locExpList->GetExpSize(); ++e)
+                    {
+                        RobinBCInfoSharedPtr rInfo = MemoryManager<RobinBCInfo>::AllocateSharedPtr(FaceID[cnt+e],Array_tmp = locExpList->GetPhys() + locExpList->GetPhys_Offset(e));
+                        elmtid = ElmtID[cnt+e];
+                        // make link list if necessary
+                        if(returnval.count(elmtid) != 0) 
+                        {
+                            rInfo->next = returnval.find(elmtid)->second;
+                        }
+                        returnval[elmtid] = rInfo;
+                    }
+                }
+                cnt += m_bndCondExpansions[i]->GetExpSize();
+            }
+            
+            return returnval; 
         }
 
     } // end of namespace

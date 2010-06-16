@@ -70,22 +70,25 @@ namespace Nektar
             }
 
             BoundaryConditionBase(BoundaryConditionType type, Equation userDefined):
-                m_BoundaryConditionType(type), m_userDefined(userDefined)
+                m_BoundaryConditionType(type),  m_userDefined(userDefined)
             {
             }
 
-            virtual ~BoundaryConditionBase(){};
+            virtual ~BoundaryConditionBase()
+            {};
 
             BoundaryConditionType GetBoundaryConditionType() const
             {
                 return m_BoundaryConditionType;
             }
 
-            void SetUserDefined(Equation equation){
+            void SetUserDefined(Equation equation)
+            {
                 m_userDefined = equation;
             }
             
-            Equation GetUserDefined() const{
+            Equation GetUserDefined() const
+            {
                 return m_userDefined;
             }
 
@@ -98,12 +101,12 @@ namespace Nektar
 
         struct DirichletBoundaryCondition : public BoundaryConditionBase
         {
-
-            DirichletBoundaryCondition(const std::string &eqn, const std::string &userDefined = std::string("NoUserDefined")):
-                BoundaryConditionBase(eDirichlet, userDefined),
+            
+             DirichletBoundaryCondition(const std::string &eqn, const std::string &userDefined = std::string("NoUserDefined")):
+            BoundaryConditionBase(eDirichlet, userDefined),
                 m_DirichletCondition(eqn)
-            {
-            }
+                {
+                }
             
             Equation m_DirichletCondition;
         };
@@ -123,13 +126,13 @@ namespace Nektar
         {
             RobinBoundaryCondition( const std::string &a, const std::string &b, const std::string &userDefined = std::string("NoUserDefined")):
                 BoundaryConditionBase(eRobin, userDefined),
-                m_a(a), m_b(b)
+                m_RobinFunction(a), m_RobinPrimitiveCoeff(b)
             {
             }
-
-            // u = a(x,y,z) + b(x,y,z)*\frac{\partial{u}}{\partial{n}}
-            Equation m_a;
-            Equation m_b;
+                // \frac{\partial {u}}{\partial{n}} +
+                // m_RobinPrimativeCoeff(x,y,z)*u = m_RobinFunction(x,y,z)
+                Equation m_RobinFunction;
+                Equation m_RobinPrimitiveCoeff;
         };
         
 

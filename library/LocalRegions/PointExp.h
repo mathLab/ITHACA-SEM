@@ -51,14 +51,49 @@ namespace Nektar
         PointExp(const SpatialDomains::VertexComponentSharedPtr &m_geom);
         ~PointExp(void);
 
-            inline NekDouble GetValue(void)
+            inline const Array<OneD, const NekDouble>& GetCoeffs(void) const
             {
-                return m_value;
+                return m_coeffs;
             }
 
-            inline void  SetValue(const NekDouble &value)
+            inline NekDouble  GetCoeffs(int i) const
             {
-                m_value = value;
+                ASSERTL1(i == 0,"index out of range");
+
+                return m_coeffs[i];
+            }
+
+
+            inline NekDouble  GetCoeff(int i) const
+            {
+                ASSERTL1(i == 0,"index out of range");
+
+                return m_coeffs[i];
+            }
+
+            inline Array<OneD, NekDouble>& UpdateCoeffs(void)
+            {
+                return(m_coeffs);
+            }
+
+            inline void  SetCoeff(const NekDouble value)
+            {
+                m_coeffs[0] = value;
+            }
+
+            inline const Array<OneD, const NekDouble>& GetPhys(void) const
+            {
+                return m_phys;
+            }
+  
+            inline Array<OneD, NekDouble>& UpdatePhys(void) 
+            {
+                return(m_phys);
+            }
+
+            inline void  SetPhys(const NekDouble value)
+            {
+                m_phys[0] = value;
             }
 
             inline void GetCoords(NekDouble &x, NekDouble &y, NekDouble &z)
@@ -70,16 +105,22 @@ namespace Nektar
             {
                 m_geom->GetCoords(coords);
             }
+            
+            inline const SpatialDomains::VertexComponentSharedPtr &GetGeom(void) const
+            {
+                return m_geom;
+            }
 
             inline const SpatialDomains::VertexComponentSharedPtr &GetVertex(void) const
             {
                 return m_geom;
             }
     protected:
-            NekDouble      m_value; //!< Array containing expansion coefficients
-        SpatialDomains::VertexComponentSharedPtr m_geom;
+            Array<OneD, NekDouble > m_coeffs; //!< Array containing expansion coefficients
+            Array<OneD, NekDouble > m_phys; //!< Array containing physical point which is likely to be the same as the coefficient but is defined for consistency (It is also used in Robin boundary conditions) 
+            SpatialDomains::VertexComponentSharedPtr m_geom;
     private:
-
+        
     };
 
     // type defines for use of PointExp in a boost vector

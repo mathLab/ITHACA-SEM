@@ -469,7 +469,7 @@ namespace Nektar
             for(i = 0; i < m_numDirBndCondExpansions; ++i)
             {
                 id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(i);
-                m_trace[id] = m_bndCondExpansions[i]->GetValue();
+                m_trace[id] = m_bndCondExpansions[i]->GetCoeff(0);
             }
 
             //Add weak boundary condition to trace forcing
@@ -477,7 +477,7 @@ namespace Nektar
                                     i < m_bndCondExpansions.num_elements(); ++i)
             {
                 id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(i);
-                BndRhs[id] += m_bndCondExpansions[i]->GetValue();
+                BndRhs[id] += m_bndCondExpansions[i]->GetCoeff(0);
             }
 
             //----------------------------------
@@ -535,5 +535,108 @@ namespace Nektar
             ExpList1D::EvaluateBoundaryConditions(time,m_bndCondExpansions,
                                                   m_bndConditions);
         }
+
+
+
+        // Set up a list of element ids and edge ids that link to the
+        // boundary conditions
+        void DisContField1D::GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, Array<OneD,int> &VertID)
+        {
+            map<int, int> VertGID;
+            int i,n,id;
+            int bid,cnt,Vid;
+            int nbcs = m_bndConditions.num_elements();
+
+            // make sure arrays are of sufficient length
+            if(ElmtID.num_elements() != nbcs)
+            {
+                ElmtID = Array<OneD, int>(nbcs,-1);
+            }
+            else
+            {
+                fill(ElmtID.get(), ElmtID.get()+nbcs, -1);
+            }
+
+            if(VertID.num_elements() != nbcs)
+            {
+                VertID = Array<OneD, int>(nbcs);
+            }
+
+            // setup map of all global ids along boundary
+            for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            {
+                Vid =  m_bndCondExpansions[n]->GetGeom()->GetVid();
+                VertGID[Vid] = cnt++;
+            }
+
+            // Loop over elements and find verts that match;
+            for(cnt = n = 0; n < GetExpSize(); ++n)
+            {
+                for(i = 0; i < (*m_exp)[n]->GetNverts(); ++i)
+                {
+                    id = (*m_exp)[n]->GetGeom()->GetVid(i);
+
+                    if(VertGID.count(id) > 0)
+                    {
+                        bid = VertGID.find(id)->second;
+                        ASSERTL1(ElmtID[bid] == -1,"Edge already set");
+                        ElmtID[bid] = n;
+                        VertID[bid] = i;
+                        cnt ++;
+                    }
+                }
+            }
+
+            ASSERTL1(cnt == nbcs,"Failed to visit all boundary condtiions");
+        }
+
+        /** 
+         * Search through the edge expansions and identify which ones
+         * have Robin/Mixed type boundary conditions. If find a Robin
+         * boundary then store the edge id of the boundary condition
+         * and the array of points of the physical space boundary
+         * condition which are hold the boundary condition primitive
+         * variable coefficient at the quatrature points
+         *
+         * \return std map containing the robin boundary condition
+         * info using a key of the element id 
+         *
+         * There is a next member to allow for more than one Robin
+         * boundary condition per element
+         */
+        map<int, RobinBCInfoSharedPtr> DisContField1D::GetRobinBCInfo(void)
+        {
+            int i,cnt;
+            map<int, RobinBCInfoSharedPtr> returnval;
+            Array<OneD, int> ElmtID,VertID;
+            GetBoundaryToElmtMap(ElmtID,VertID);
+            
+            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            {
+                LocalRegions::PointExpSharedPtr locExpList;
+
+                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
+                {
+                    int e,elmtid;
+                    Array<OneD, NekDouble> Array_tmp;
+
+                    locExpList = m_bndCondExpansions[i];
+                    
+                    RobinBCInfoSharedPtr rInfo = MemoryManager<RobinBCInfo>::AllocateSharedPtr(VertID[i],Array_tmp = locExpList->GetPhys());
+
+                    elmtid = ElmtID[i];
+                    // make link list if necessary (not likely in
+                    // 1D but needed in 2D & 3D)
+                    if(returnval.count(elmtid) != 0) 
+                    {
+                        rInfo->next = returnval.find(elmtid)->second;
+                    }
+                    returnval[elmtid] = rInfo;
+                }
+            }
+            
+            return returnval; 
+        }
+
     } // end of namespace
 } //end of namespace

@@ -140,6 +140,11 @@ namespace Nektar
                 }
 
                 // Wrappers around virtual Functions
+                inline int GetVid(int i) const
+                {
+                    return v_GetVid(i);
+                }
+
                 inline int GetNumVerts() const
                 {
                     return v_GetNumVerts();
@@ -193,6 +198,14 @@ namespace Nektar
                     NEKERROR(ErrorUtil::efatal,
                         "This function is only valid for shape type geometries");
                 }
+
+                virtual int v_GetVid(int i) const
+                {
+                    NEKERROR(ErrorUtil::efatal,
+                             "This function is only valid for expansion type geometries");
+                    return 0;
+                }
+            
 
                 virtual int v_GetNumVerts() const 
                 {

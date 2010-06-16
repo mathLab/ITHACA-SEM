@@ -260,6 +260,12 @@ namespace Nektar
                 return NullNekDouble1DArray;
             }
 
+            virtual int v_GetVertexMap(int vert)
+            {
+                return StdSegExp::GetVertexMap(vert);
+            }
+
+
             virtual const SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const
             {
                 return GetMetricInfo();
@@ -545,6 +551,12 @@ namespace Nektar
                                                      Array<OneD,NekDouble> &outarray)
             {
                 Expansion1D::AddHDGHelmholtzTraceTerms(tau,inarray,outarray);
+            }
+
+
+            virtual void v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
+            {
+                Expansion1D::AddRobinMassMatrix(edgeid,primCoeffs, inoutmat);
             }
 
 

@@ -221,15 +221,6 @@ namespace Nektar
             GlobalLinSysMapShPtr            m_globalLinSys;
 
         private:
-            /// Discretised boundary. Array of size equal to the number of
-            /// boundary regions and consists of entries of the type
-            /// LocalRegions#PointExp.
-            Array<OneD,LocalRegions::PointExpSharedPtr> m_bndCondExpansions;
-
-            /// An array which contains the information about the boundary
-            /// condition on the different boundary regions.
-            Array<OneD,SpatialDomains::BoundaryConditionShPtr>  m_bndConditions;
-
             /// Returns the linear system specified by \a mkey.
             GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
 

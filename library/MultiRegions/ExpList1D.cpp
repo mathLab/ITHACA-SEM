@@ -125,6 +125,11 @@ namespace Nektar
                 }
             }
 
+            // Setup Default optimisation information. 
+            int nel = GetExpSize();
+            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
+                ::AllocateSharedPtr(nel);
+
             // Allocate storage for data and populate element offset lists.
             SetCoeffPhys();
         }
@@ -187,6 +192,11 @@ namespace Nektar
                 }
             }
 
+            // Setup Default optimisation information. 
+            int nel = GetExpSize();
+            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
+                ::AllocateSharedPtr(nel);
+
             // Allocate storage for data and populate element offset lists.
             SetCoeffPhys();
         }
@@ -245,6 +255,11 @@ namespace Nektar
                 }
 
             }
+
+            // Setup Default optimisation information. 
+            int nel = GetExpSize();
+            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
+                ::AllocateSharedPtr(nel);
 
             // Allocate storage for data and populate element offset lists.
             SetCoeffPhys();
@@ -376,6 +391,11 @@ namespace Nektar
                 }
             }
 
+            // Setup Default optimisation information. 
+            int nel = GetExpSize();
+            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
+                ::AllocateSharedPtr(nel);
+
             // Set up offset information and array sizes
             SetCoeffPhys();
 
@@ -496,37 +516,40 @@ namespace Nektar
             for(i = 0; i < nbnd; ++i)
             {
                 locBCond = (*(bconditions[i]))[variable];
-                if(locBCond->GetBoundaryConditionType()
-                        == SpatialDomains::eNeumann)
+
+                switch(locBCond->GetBoundaryConditionType())
                 {
-                    for(j = 0; j < bregions[i]->size(); j++)
+                case SpatialDomains::eNeumann:
+                case SpatialDomains::eRobin:
                     {
-                        for(k = 0; k < ((*bregions[i])[j])->size(); k++)
+                        for(j = 0; j < bregions[i]->size(); j++)
                         {
-                            if(vert = boost::dynamic_pointer_cast
-                                    <SpatialDomains::VertexComponent>(
+                            for(k = 0; k < ((*bregions[i])[j])->size(); k++)
+                            {
+                                if(vert = boost::dynamic_pointer_cast
+                                   <SpatialDomains::VertexComponent>(
                                         (*(*bregions[i])[j])[k]))
-                            {
-                                locPointExp
-                                    = MemoryManager<LocalRegions::PointExp>
-                                                ::AllocateSharedPtr(vert);
-                                bndCondExpansions[cnt]  = locPointExp;
-                                bndConditions[cnt++]    = locBCond;
-                            }
-                            else
-                            {
-                                ASSERTL0(false,
-                                         "dynamic cast to a vertex failed");
+                                {
+                                    locPointExp
+                                        = MemoryManager<LocalRegions::PointExp>
+                                        ::AllocateSharedPtr(vert);
+                                    bndCondExpansions[cnt]  = locPointExp;
+                                    bndConditions[cnt++]    = locBCond;
+                                }
+                                else
+                                {
+                                    ASSERTL0(false,
+                                             "dynamic cast to a vertex failed");
+                                }
                             }
                         }
                     }
-                }
-                else if((locBCond->GetBoundaryConditionType()
-                            != SpatialDomains::eDirichlet) &&
-                        (locBCond->GetBoundaryConditionType()
-                            != SpatialDomains::ePeriodic))
-                {
+                case SpatialDomains::eDirichlet: // do nothing for these types
+                case SpatialDomains::ePeriodic:
+                    break;
+                default:
                     ASSERTL0(false,"This type of BC not implemented yet");
+                    break;
                 }
             }
         }
@@ -656,7 +679,7 @@ namespace Nektar
                 if(bndConditions[i]->GetBoundaryConditionType()
                         == SpatialDomains::eDirichlet)
                 {
-                    bndCondExpansions[i]->SetValue(
+                    bndCondExpansions[i]->SetCoeff(
                             (boost::static_pointer_cast<SpatialDomains
                              ::DirichletBoundaryCondition>(bndConditions[i])
                              ->m_DirichletCondition).Evaluate(x0,x1,x2,time));
@@ -664,10 +687,24 @@ namespace Nektar
                 else if(bndConditions[i]->GetBoundaryConditionType()
                         == SpatialDomains::eNeumann)
                 {
-                    bndCondExpansions[i]->SetValue(
+                    bndCondExpansions[i]->SetCoeff(
                             (boost::static_pointer_cast<SpatialDomains
                              ::NeumannBoundaryCondition>(bndConditions[i])
                              ->m_NeumannCondition).Evaluate(x0,x1,x2,time));
+                }
+                else if(bndConditions[i]->GetBoundaryConditionType()
+                        == SpatialDomains::eRobin)
+                {
+                    bndCondExpansions[i]->SetCoeff(
+                            (boost::static_pointer_cast<SpatialDomains
+                             ::RobinBoundaryCondition>(bndConditions[i])
+                             ->m_RobinFunction).Evaluate(x0,x1,x2,time));
+
+                    bndCondExpansions[i]->SetPhys(
+                            (boost::static_pointer_cast<SpatialDomains
+                             ::RobinBoundaryCondition>(bndConditions[i])
+                             ->m_RobinPrimitiveCoeff).Evaluate(x0,x1,x2,time));
+
                 }
                 else
                 {

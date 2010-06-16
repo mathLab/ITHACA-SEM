@@ -451,6 +451,11 @@ namespace Nektar
                 StdTriExp::GetEdgeToElementMap(eid,edgeOrient,maparray,signarray);
             }
 
+            virtual void v_GetBoundaryMap(Array<OneD, unsigned int> &maparray)
+            {
+                StdTriExp::GetBoundaryMap(maparray);
+            }
+            
 
             virtual const SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const
             {
@@ -615,21 +620,19 @@ namespace Nektar
 
             virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
 							                             const Array<OneD, NekDouble> &dir1Forcing,
-                                                         int matrixid = 0,
                                                          NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
                                                          NekDouble tau = NekConstants::kNekUnsetDouble)
             {
-	            MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau,dir1Forcing,matrixid);
+	            MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau,dir1Forcing);
 		        return m_matrixManager[mkey];
             }
 
             virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
-                                                         const Array<OneD, Array<OneD, NekDouble> >& dirForcing,
-                                                         int matrixid = 0,
+                                                         const Array<OneD, Array<OneD, const NekDouble> >& varcoeffs,
                                                          NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
                                                          NekDouble tau = NekConstants::kNekUnsetDouble)
             {
-	            MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau,dirForcing,matrixid);
+                MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau,varcoeffs);
                 return m_matrixManager[mkey];
             }
         
@@ -651,13 +654,18 @@ namespace Nektar
             virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
                                                      const Array<OneD, const NekDouble> &inarray,
                                                      Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
-						     const Array<OneD, Array<OneD, NekDouble> > &dirForcing, 
-                                                     Array <OneD,NekDouble > &outarray,
-                                                     const int matrixid)
+						     const Array<OneD, Array<OneD, const NekDouble> > &dirForcing, 
+                                                     Array <OneD,NekDouble > &outarray)
             {
-                Expansion2D::AddHDGHelmholtzTraceTerms(tau,inarray,EdgeExp,dirForcing,outarray,matrixid);
+                Expansion2D::AddHDGHelmholtzTraceTerms(tau,inarray,EdgeExp,dirForcing,outarray);
             }
             
+            
+            virtual void v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
+            {
+                Expansion2D::AddRobinMassMatrix(edgeid,primCoeffs,inoutmat);
+            }
+
             virtual void v_DGDeriv(const int dir, 
                                    const Array<OneD, const NekDouble>&incoeffs,
                                    Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,

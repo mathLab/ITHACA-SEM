@@ -71,8 +71,7 @@ namespace Nektar
 		      StdRegions::StdExpansion &stdExpansion,
 		      NekDouble    scalefactor,
 		      NekDouble    constant, 
-		      const Array<OneD,NekDouble>& varcoeffs,
-                      const int matrixid = NekConstants::kNekUnsetDouble,
+		      const Array<OneD,const NekDouble>& varcoeffs,
                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
 	    MatrixKey(StdRegions::MatrixType matrixType,
@@ -80,9 +79,8 @@ namespace Nektar
 		      StdRegions::StdExpansion &stdExpansion,
 		      NekDouble    scalefactor,
 		      NekDouble    constant, 
-		      const Array<OneD,NekDouble>& varcoeffs1,
-		      const Array<OneD,NekDouble>& varcoeffs2,
-                      const int matrixid = NekConstants::kNekUnsetDouble,
+		      const Array<OneD,const NekDouble>& varcoeffs1,
+		      const Array<OneD,const NekDouble>& varcoeffs2,
                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
 	    MatrixKey(StdRegions::MatrixType matrixType,
@@ -90,30 +88,26 @@ namespace Nektar
 		      StdRegions::StdExpansion &stdExpansion,
 		      NekDouble    scalefactor,
 		      NekDouble    constant, 
-		      const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                      const int matrixid = NekConstants::kNekUnsetDouble,
+		      const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
             MatrixKey(const StdRegions::MatrixType matrixType, 
                       const StdRegions::ExpansionType expansionType, 
                       const StdRegions::StdExpansion &stdExpansion,
-                      const Array<OneD,NekDouble>& varcoeffs,
-                      const int matrixid = NekConstants::kNekUnsetDouble,
+                      const Array<OneD,const NekDouble>& varcoeffs,
                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
             MatrixKey(const StdRegions::MatrixType matrixType, 
                       const StdRegions::ExpansionType expansionType, 
                       const StdRegions::StdExpansion &stdExpansion,
-                      const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                      const int matrixid = NekConstants::kNekUnsetDouble,
+                      const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
             
             MatrixKey(const StdRegions::MatrixType matrixType, 
                       const StdRegions::ExpansionType expansionType, 
                       const StdRegions::StdExpansion &stdExpansion,
                       const Array<OneD, NekDouble>& constants,
-                      const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                      const int matrixid = NekConstants::kNekUnsetDouble,
+                      const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
             virtual ~MatrixKey()
@@ -186,27 +180,27 @@ namespace Nektar
                 return m_stdMatKey->GetNvariableLaplacianCoefficients();
             }
 
-            inline const Array<OneD,NekDouble>& GetVariableCoefficient() const
+            inline const Array<OneD,const NekDouble>& GetVariableCoefficient() const
             {             
                 return m_stdMatKey->GetVariableCoefficient();
             }
 
-            inline const Array<OneD,NekDouble>& GetVariableCoefficient(int i) const
+            inline const Array<OneD,const NekDouble>& GetVariableCoefficient(int i) const
             {             
                 return m_stdMatKey->GetVariableCoefficient(i);
             }
 
-            inline const Array<OneD,NekDouble>& GetVariableLaplacianCoefficient() const
+            inline const Array<OneD,const NekDouble>& GetVariableLaplacianCoefficient() const
             {             
                 return m_stdMatKey->GetVariableLaplacianCoefficient();
             }
 
-            inline const Array<OneD,NekDouble>& Get2DVariableLaplacianCoefficient(int i, int j) const
+            inline const Array<OneD,const NekDouble>& Get2DVariableLaplacianCoefficient(int i, int j) const
             {  
                 return m_stdMatKey->Get2DVariableLaplacianCoefficient(i,j);    
             }
 
-            inline const Array<OneD,NekDouble>& Get3DVariableLaplacianCoefficient(int i, int j) const
+            inline const Array<OneD,const NekDouble>& Get3DVariableLaplacianCoefficient(int i, int j) const
             {
                 return m_stdMatKey->Get3DVariableLaplacianCoefficient(i,j);
             }

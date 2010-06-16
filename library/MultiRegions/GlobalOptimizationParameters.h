@@ -46,35 +46,52 @@ namespace Nektar
         class GlobalOptParam
         {
         public:
-            /// Use default values.
-            GlobalOptParam();
-
+            /// Default constructor requires nel be given 
+            GlobalOptParam(const int nel);
+            
             /// Read optimisation parameters from a given file.
-            GlobalOptParam(const std::string& fileName);
+            GlobalOptParam(const std::string& fileName, const int dim, Array<OneD, const int> &NumShapeElements);
 
             /// For a given matrix type, determines if the operation should
             /// be done globally.
             // inline
             const bool DoGlobalMatOp(const StdRegions::MatrixType i) const;
+            
 
             /// For a given matrix type, determines if the operation should be
-            /// done
+            /// done with a block matrix
             // inline
-            const bool DoBlockMatOp(const StdRegions::MatrixType i) const;
+            inline const Array<OneD, const bool>  &DoBlockMatOp(const StdRegions::MatrixType i) const;
+            
+            inline const Array<OneD, const StdRegions::ExpansionType>  &GetShapeList() const;
+            inline const Array<OneD, const int>  &GetShapeNumElements() const; 
 
         private:
+            /// Default constructor should not be called
+            GlobalOptParam() {};
+
             /// Flags indicating if different matrices should be evaluated
             /// globally.
             Array<OneD,bool> m_doGlobalMatOp;
 
-            /// Flags indicating if different matrices should be evaluated
-            /// in block form.
-            Array<OneD,bool> m_doBlockMatOp;
+            /// Array of Flags of first dimension of the number of
+            /// shapes within the space dimension, indicating if
+            /// different matrices should be evaluated using a block
+            /// matrix
+            Array<OneD, Array<OneD,bool> > m_doBlockMatOp; 
+
+            /// A list ExpansionTypes inidcating the order in which
+            /// shapes are listed to call the appropriate key for the
+            /// block matrices.
+            Array<OneD, StdRegions::ExpansionType> m_shapeList;
+
+            /// A list of  number of elements contained within each shape type
+            Array<OneD, const int> m_shapeNumElements;
         };
 
         /// Pointer to a GlobalOptParam object.
         typedef  boost::shared_ptr<GlobalOptParam> GlobalOptParamSharedPtr;
-
+        
         /// Pointer to an empty GlobalOptParam object.
         static   GlobalOptParamSharedPtr NullGlobalOptParamSharedPtr;
 
@@ -85,8 +102,7 @@ namespace Nektar
          * @param   i           Type of matrix.
          * @returns True if this type of matrix should be evaluated globally.
          */
-        inline const bool GlobalOptParam::DoGlobalMatOp(
-                                const StdRegions::MatrixType i) const
+        inline const bool GlobalOptParam::DoGlobalMatOp(const StdRegions::MatrixType i) const
         {
             ElementalOptimizationOperationType type;
             switch(i)
@@ -125,7 +141,6 @@ namespace Nektar
             return m_doGlobalMatOp[type];
         }
 
-
         /**
          * Determines the elemental optimisation type enum, given the
          * MatrixType and returns the corresponding entry in the table.
@@ -133,8 +148,7 @@ namespace Nektar
          * @returns True if this type of matrix should be evaluated in block
          *          form.
          */
-        inline const bool GlobalOptParam::DoBlockMatOp(
-                                const StdRegions::MatrixType i) const
+        inline  const Array<OneD, const bool> &GlobalOptParam::DoBlockMatOp(const StdRegions::MatrixType i) const
         {
             ElementalOptimizationOperationType type;
             switch(i)
@@ -170,8 +184,20 @@ namespace Nektar
                                    " of matrix");
                 }
             }
+
             return m_doBlockMatOp[type];
         }
+
+        inline const Array<OneD, const int>  &GlobalOptParam::GetShapeNumElements() const
+        {
+            return m_shapeNumElements;
+        }
+
+        inline const Array<OneD, const StdRegions::ExpansionType>  &GlobalOptParam::GetShapeList() const
+        {
+            return m_shapeList;
+        }
+
 
 
     } // end of namespace

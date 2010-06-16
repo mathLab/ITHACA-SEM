@@ -132,6 +132,9 @@ namespace Nektar
             /// Set up the normals on each expansion.
             virtual void v_SetUpPhysNormals(
                                 const StdRegions::StdExpansionVector &locexp);
+
+            virtual void v_ReadGlobalOptimizationParameters(
+                                const std::string &infilename);
         };
 
         /// Empty ExpList2D object.

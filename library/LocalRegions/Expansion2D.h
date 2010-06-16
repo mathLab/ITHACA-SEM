@@ -77,9 +77,8 @@ namespace Nektar
             void AddHDGHelmholtzTraceTerms(const NekDouble tau,
                                            const Array<OneD, const NekDouble> &inarray,
                                            Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
-                                           const Array<OneD, Array<OneD, NekDouble> > &dirForcing,
-                                           Array<OneD,NekDouble> &outarray,
-                                           const int matrixid = 0);
+                                           const Array<OneD, Array<OneD, const NekDouble> > &dirForcing,
+                                           Array<OneD,NekDouble> &outarray);
 
             void Getnormalindir(const int edge,
                                 StdRegions::StdExpansion1DSharedPtr &EdgeExp_e,
@@ -116,14 +115,15 @@ namespace Nektar
             void AddHDGHelmholtzEdgeTerms(const NekDouble tau,
                                           const int edge,
                                           Array <OneD, StdRegions::StdExpansion1DSharedPtr > &EdgeExp,
-                                          const Array<OneD, Array<OneD, NekDouble> > &dirForcing,
-                                          Array <OneD,NekDouble > &outarray,
-                                          const int matrixid = 0);
+                                          const Array<OneD, Array<OneD, const NekDouble> > &dirForcing,
+                                          Array <OneD,NekDouble > &outarray);
 
             void AddEdgeBoundaryInt(const int edge,
                                     const StdRegions::StdExpansion1DSharedPtr &EdgeExp,
                                     Array <OneD,NekDouble > &outarray);
 
+            void AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeefs, DNekMatSharedPtr &inoutmat);
+            
             void DGDeriv(int dir,
                          const Array<OneD, const NekDouble>&incoeffs,
                          Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
@@ -146,6 +146,11 @@ namespace Nektar
             }
 
             virtual void v_GetEdgeToElementMap(const int eid, const StdRegions::EdgeOrientation edgeOrient, Array<OneD, unsigned int> &maparray, Array<OneD, int> &signarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            }
+
+            virtual void v_GetBoundaryMap(Array<OneD, unsigned int> &maparray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
@@ -180,6 +185,8 @@ namespace Nektar
                 ASSERTL0(false,"Function only currently valid for 2D Local expansions");
                 return StdRegions::StdExpansion1DSharedPtr();
             }
+
+            virtual void v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat);
 
             virtual void v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {

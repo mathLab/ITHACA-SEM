@@ -1227,7 +1227,7 @@ namespace Nektar
 // Fixed visual studio compiler warning.
 //
 // Revision 1.64  2009/12/15 18:09:02  cantwell
-// Split GeomFactors into 1D, 2D and 3D
+// Split GeomFactors into 1D, 2D and 3D 
 // Added generation of tangential basis into GeomFactors
 // Updated ADR2DManifold solver to use GeomFactors for tangents
 // Added <GEOMINFO> XML session section support in MeshGraph

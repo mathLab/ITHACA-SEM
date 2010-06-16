@@ -237,6 +237,11 @@ namespace Nektar
 
             }
 
+            // Setup Default optimisation information. 
+            int nel = GetExpSize();
+            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
+                ::AllocateSharedPtr(nel);
+
             SetCoeffPhys();
         }
 
@@ -275,6 +280,162 @@ namespace Nektar
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
             m_phys   = Array<OneD, NekDouble>(m_npoints);
         }
+
+        /**
+         * @param   graph3D     A mesh containing information about the domain
+         *                      and the spectral/hp element expansions.
+         * @param   bcs         Information about the boundary conditions.
+         * @param   variable    Specifies the field.
+         * @param   bndCondExpansions   Array of ExpList2D objects each
+         *                      containing a 2D spectral/hp element expansion
+         *                      on a single boundary region.
+         * @param   bndConditions   Array of BoundaryCondition objects which
+         *                      contain information about the boundary
+         *                      conditions on the different boundary regions.
+         */
+        void ExpList3D::SetBoundaryConditionExpansion(
+                        SpatialDomains::MeshGraph3D &graph3D,
+                        SpatialDomains::BoundaryConditions &bcs,
+                        const std::string variable,
+                        Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
+                        Array<OneD, SpatialDomains::BoundaryConditionShPtr>
+                                                                &bndConditions)
+        {
+            int i;
+            int cnt  = 0;
+
+            SpatialDomains::BoundaryRegionCollection &bregions
+                                        = bcs.GetBoundaryRegions();
+            SpatialDomains::BoundaryConditionCollection &bconditions
+                                        = bcs.GetBoundaryConditions();
+
+            MultiRegions::ExpList2DSharedPtr       locExpList;
+            SpatialDomains::BoundaryConditionShPtr locBCond;
+
+            int nbnd = bregions.size();
+
+            cnt=0;
+            // list Dirichlet boundaries first
+            for(i = 0; i < nbnd; ++i)
+            {
+                locBCond = (*(bconditions[i]))[variable];
+                if(locBCond->GetBoundaryConditionType()
+                                        == SpatialDomains::eDirichlet)
+                {
+                    locExpList = MemoryManager<MultiRegions::ExpList2D>
+                                        ::AllocateSharedPtr(*(bregions[i]),
+                                                            graph3D);
+                    bndCondExpansions[cnt]  = locExpList;
+                    bndConditions[cnt++]    = locBCond;
+                } // end if Dirichlet
+            }
+            // then, list the other (non-periodic) boundaries
+            for(i = 0; i < nbnd; ++i)
+            {
+                locBCond = (*(bconditions[i]))[variable];
+
+                switch(locBCond->GetBoundaryConditionType())
+                {
+                case SpatialDomains::eNeumann:
+                case SpatialDomains::eRobin:
+                    {
+                        locExpList = MemoryManager<MultiRegions::ExpList2D>
+                            ::AllocateSharedPtr(*(bregions[i]),
+                                                graph3D);
+                        bndCondExpansions[cnt]  = locExpList;
+                        bndConditions[cnt++]    = locBCond;
+                    }
+                    break;
+                case SpatialDomains::eDirichlet: // do nothing for these types
+                case SpatialDomains::ePeriodic:
+                    break;
+                default:
+                    ASSERTL0(false,"This type of BC not implemented yet");
+                    break;
+                }
+            }
+        }
+
+
+        /**
+         * @param   time        The time at which the boundary conditions
+         *                      should be evaluated.
+         * @param   bndCondExpansions   List of boundary conditions.
+         * @param   bndConditions   Information about the boundary conditions.
+         */
+        void ExpList3D::EvaluateBoundaryConditions(
+                        const NekDouble time,
+                        Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
+                        Array<OneD, SpatialDomains::BoundaryConditionShPtr>
+                                                                &bndConditions)
+        {
+            int i,j;
+            int npoints;
+            int nbnd = bndCondExpansions.num_elements();
+            MultiRegions::ExpList2DSharedPtr locExpList;
+
+            for(i = 0; i < nbnd; ++i)
+            {
+                locExpList = bndCondExpansions[i];
+                npoints = locExpList->GetNpoints();
+
+                Array<OneD,NekDouble> x0(npoints,0.0);
+                Array<OneD,NekDouble> x1(npoints,0.0);
+                Array<OneD,NekDouble> x2(npoints,0.0);
+
+                locExpList->GetCoords(x0,x1,x2);
+
+                if(bndConditions[i]->GetBoundaryConditionType()
+                                        == SpatialDomains::eDirichlet)
+                {
+                    for(j = 0; j < npoints; j++)
+                    {
+                        (locExpList->UpdatePhys())[j]
+                            = (boost::static_pointer_cast<SpatialDomains
+                                ::DirichletBoundaryCondition>(bndConditions[i])
+                                    ->m_DirichletCondition)
+                                        .Evaluate(x0[j],x1[j],x2[j],time);
+                    }
+
+                    locExpList->FwdTrans_BndConstrained(locExpList->GetPhys(),
+                                                    locExpList->UpdateCoeffs());
+                }
+                else if(bndConditions[i]->GetBoundaryConditionType()
+                                        == SpatialDomains::eNeumann)
+                {
+                    for(j = 0; j < npoints; j++)
+                    {
+                        (locExpList->UpdatePhys())[j]
+                            = (boost::static_pointer_cast<SpatialDomains
+                                ::NeumannBoundaryCondition>(bndConditions[i])
+                                    ->m_NeumannCondition)
+                                        .Evaluate(x0[j],x1[j],x2[j],time);
+                    }
+
+                    locExpList->IProductWRTBase(locExpList->GetPhys(),
+                                                locExpList->UpdateCoeffs());
+                }
+                else if(bndConditions[i]->GetBoundaryConditionType()
+                                        == SpatialDomains::eRobin)
+                {
+                    for(j = 0; j < npoints; j++)
+                    {
+                        (locExpList->UpdatePhys())[j]
+                            = (boost::static_pointer_cast<SpatialDomains
+                               ::RobinBoundaryCondition>(bndConditions[i])
+                               ->m_RobinFunction).Evaluate(x0[j],x1[j],x2[j],time);
+                    }
+
+                    locExpList->IProductWRTBase(locExpList->GetPhys(),
+                                                locExpList->UpdateCoeffs());
+                }
+                else
+                {
+                    ASSERTL0(false,"This type of BC not implemented yet");
+                }
+            }
+        }
+
 
         /**
          * @param   graph3D     A mesh containing information about the domain

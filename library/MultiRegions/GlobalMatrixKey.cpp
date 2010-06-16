@@ -40,11 +40,27 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        // Register Mass Matrix creator.
+        // Register Global Matrix creator.
+        // Register Global Matrix creator.
+        GlobalMatrixKey::GlobalMatrixKey(
+                        const StdRegions::MatrixType matrixType,
+                        const StdRegions::ExpansionType expType,
+                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
+            m_matrixType(matrixType),
+            m_expansionType(expType),
+            m_locToGloMap(locToGloMap),
+            m_nconstants(0),
+            m_constant(m_nconstants),
+            m_nvariablecoefficients(0),
+            m_variablecoefficient(m_nvariablecoefficients)
+        {
+        }
+
         GlobalMatrixKey::GlobalMatrixKey(
                         const StdRegions::MatrixType matrixType,
                         const LocalToGlobalBaseMapSharedPtr &locToGloMap):
             m_matrixType(matrixType),
+            m_expansionType(StdRegions::eNoExpansionType),
             m_locToGloMap(locToGloMap),
             m_nconstants(0),
             m_constant(m_nconstants),
@@ -58,6 +74,7 @@ namespace Nektar
                         const NekDouble factor,
                         const LocalToGlobalBaseMapSharedPtr &locToGloMap):
             m_matrixType(matrixType),
+            m_expansionType(StdRegions::eNoExpansionType),
             m_locToGloMap(locToGloMap),
             m_nconstants(1),
             m_constant(m_nconstants),
@@ -73,6 +90,7 @@ namespace Nektar
                         const NekDouble factor2,
                         const LocalToGlobalBaseMapSharedPtr &locToGloMap):
             m_matrixType(matrixType),
+            m_expansionType(StdRegions::eNoExpansionType),
             m_locToGloMap(locToGloMap),
             m_nconstants(2),
             m_constant(m_nconstants),
@@ -88,6 +106,7 @@ namespace Nektar
                         const Array<OneD,NekDouble>& varcoeffs,
                         const LocalToGlobalBaseMapSharedPtr &locToGloMap):
             m_matrixType(matrixType),
+            m_expansionType(StdRegions::eNoExpansionType),
             m_locToGloMap(locToGloMap),
             m_nconstants(0),
             m_constant(m_nconstants),
@@ -115,6 +134,7 @@ namespace Nektar
                         const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
                         const LocalToGlobalBaseMapSharedPtr &locToGloMap):
             m_matrixType(matrixType),
+            m_expansionType(StdRegions::eNoExpansionType),
             m_locToGloMap(locToGloMap),
             m_nconstants(1),
             m_constant(m_nconstants),
@@ -131,6 +151,7 @@ namespace Nektar
                         const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
                         const LocalToGlobalBaseMapSharedPtr &locToGloMap):
             m_matrixType(matrixType),
+            m_expansionType(StdRegions::eNoExpansionType),
             m_locToGloMap(locToGloMap),
             m_nconstants(2),
             m_constant(m_nconstants),
@@ -148,6 +169,7 @@ namespace Nektar
                         const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
                         const LocalToGlobalBaseMapSharedPtr &locToGloMap):
             m_matrixType(matrixType),
+            m_expansionType(StdRegions::eNoExpansionType),
             m_locToGloMap(locToGloMap),
             m_nconstants(factor1.num_elements()+1),
             m_constant(m_nconstants),
@@ -164,12 +186,12 @@ namespace Nektar
 
         GlobalMatrixKey::GlobalMatrixKey(const GlobalMatrixKey &key):
             m_matrixType(key.m_matrixType),
+            m_expansionType(key.m_expansionType),
             m_locToGloMap(key.m_locToGloMap),
             m_nconstants(key.m_nconstants),
             m_constant(key.m_constant),
             m_nvariablecoefficients(key.m_nvariablecoefficients),
             m_variablecoefficient(key.m_variablecoefficient)
-
         {
         }
 
@@ -189,6 +211,18 @@ namespace Nektar
                 return false;
             }
 
+
+            if(lhs.m_expansionType < rhs.m_expansionType)
+            {
+                return true;
+            }
+            
+
+            if(lhs.m_expansionType > rhs.m_expansionType)
+            {
+                return false;
+            }
+            
             if(lhs.m_nconstants < rhs.m_nconstants)
             {
                 return true;

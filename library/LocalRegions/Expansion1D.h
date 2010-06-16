@@ -59,6 +59,8 @@ namespace Nektar
                                  Array<OneD, const NekDouble> &inarray,
                                  Array<OneD,NekDouble> &outarray);
 
+            void AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeefs, DNekMatSharedPtr &inoutmat);
+
             protected:
             DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
             
@@ -78,6 +80,14 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
             
+            virtual void v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat);
+
+            virtual int v_GetVertexMap(int vert)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+                return -1;
+            }
+
 
             virtual int v_GetCoordim(void)
             {

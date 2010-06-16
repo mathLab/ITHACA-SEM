@@ -86,9 +86,7 @@ namespace Nektar
             DisContField1D(),
             m_locToGloMap(),
             m_contNcoeffs(0),
-            m_contCoeffs(),
-            m_bndCondExpansions(),
-            m_bndConditions()
+            m_contCoeffs()
         {
         }
 
@@ -155,25 +153,23 @@ namespace Nektar
             m_locToGloMap(),
             m_contNcoeffs(0),
             m_contCoeffs(),
-            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr()),
-            m_bndCondExpansions(),
-            m_bndConditions()
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             GenerateBoundaryConditionExpansion(graph1D,bcs,
-                                                    bcs.GetVariable(bc_loc));
+                                               bcs.GetVariable(bc_loc));
             EvaluateBoundaryConditions();
             ApplyGeomInfo(graph1D);
             
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,bcs.GetVariable(bc_loc),
-                                                    periodicVertices);
+                                periodicVertices);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                                    ::AllocateSharedPtr(m_ncoeffs,*this,
-                                                        solnType,
-                                                        m_bndCondExpansions,
-                                                        m_bndConditions,
-                                                        periodicVertices);
+                ::AllocateSharedPtr(m_ncoeffs,*this,
+                                    solnType,
+                                    m_bndCondExpansions,
+                                    m_bndConditions,
+                                    periodicVertices);
 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
@@ -209,9 +205,7 @@ namespace Nektar
             m_locToGloMap(),
             m_contNcoeffs(0),
             m_contCoeffs(),
-            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr()),
-            m_bndCondExpansions(),
-            m_bndConditions()
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
             EvaluateBoundaryConditions();
@@ -221,14 +215,14 @@ namespace Nektar
             GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                                ::AllocateSharedPtr(m_ncoeffs,*this,
-                                                    solnType,
-                                                    m_bndCondExpansions,
-                                                    m_bndConditions,
-                                                    periodicVertices);
+                ::AllocateSharedPtr(m_ncoeffs,*this,
+                                    solnType,
+                                    m_bndCondExpansions,
+                                    m_bndConditions,
+                                    periodicVertices);
 
-             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
+            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
         /**
@@ -266,9 +260,7 @@ namespace Nektar
             m_locToGloMap(),
             m_contNcoeffs(0),
             m_contCoeffs(),
-            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr()),
-            m_bndCondExpansions(),
-            m_bndConditions()
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             GenerateBoundaryConditionExpansion(graph1D,bcs,
                                                bcs.GetVariable(bc_loc));
@@ -280,11 +272,11 @@ namespace Nektar
                                 periodicVertices);
 
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
-                                ::AllocateSharedPtr(m_ncoeffs,*this,
-                                                    solnType,
-                                                    m_bndCondExpansions,
-                                                    m_bndConditions,
-                                                    periodicVertices);
+                ::AllocateSharedPtr(m_ncoeffs,*this,
+                                    solnType,
+                                    m_bndCondExpansions,
+                                    m_bndConditions,
+                                    periodicVertices);
 
             m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
             m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
@@ -328,9 +320,7 @@ namespace Nektar
             m_locToGloMap(),
             m_contNcoeffs(0),
             m_contCoeffs(),
-            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr()),
-            m_bndCondExpansions(),
-            m_bndConditions()
+            m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
             EvaluateBoundaryConditions();
@@ -361,9 +351,7 @@ namespace Nektar
             m_locToGloMap(In.m_locToGloMap),
             m_contNcoeffs(In.m_contNcoeffs),
             m_contCoeffs(m_contNcoeffs,0.0),
-            m_globalLinSys(In.m_globalLinSys),
-            m_bndCondExpansions(In.m_bndCondExpansions),
-            m_bndConditions(In.m_bndConditions)
+            m_globalLinSys(In.m_globalLinSys)
         {
         }
 
@@ -607,7 +595,7 @@ namespace Nektar
             //         IN THE SOLUTION ARRAY
             for(int i = 0; i < NumDirBcs; ++i)
             {
-                inout[i] = m_bndCondExpansions[i]->GetValue();
+                inout[i] = m_bndCondExpansions[i]->GetCoeff(0);
             }
 
             // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
@@ -795,9 +783,9 @@ namespace Nektar
             {
                 wsp[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(
                                                                 i + NumDirBcs)]
-                    += m_bndCondExpansions[i+NumDirBcs]->GetValue();
+                    += m_bndCondExpansions[i+NumDirBcs]->GetCoeff(0);
             }
-
+            
             // Solve the system
             GlobalLinSysKey key(StdRegions::eHelmholtz,
                                 m_locToGloMap,lambda,

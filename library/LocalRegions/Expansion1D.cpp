@@ -383,6 +383,56 @@ namespace Nektar
             }
         }
 
+        void Expansion1D::AddRobinMassMatrix(const int vert, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
+        {
+            ASSERTL0(v_IsBoundaryInteriorExpansion(),"Robin boundary conditions are only implemented for boundary-interior expanisons"); 
+            ASSERTL1(inoutmat->GetRows() == inoutmat->GetColumns(),
+                     "Assuming that input matrix was square");
+
+            // Get local Element mapping for vertex point
+             NekDouble  map = v_GetVertexMap(vert);
+
+            // Now need to identify a map which takes the local edge
+            // mass matrix to the matrix stored in inoutmat;
+            // This can currently be deduced from the size of the matrix       
+            // - if inoutmat.m_rows() == v_NCoeffs() it is a full
+            //   matrix system
+            // - if inoutmat.m_rows() == v_NumBndCoeffs() it is a
+            //  boundary CG system
+             
+             int rows = inoutmat->GetRows();
+             
+             if (rows == v_GetNcoeffs())
+             {
+                 // no need to do anything
+             }
+             else if(rows == v_NumBndryCoeffs())  // same as NumDGBndryCoeffs()
+             {
+                 int i;
+                 Array<OneD,unsigned int> bmap;
+                 v_GetBoundaryMap(bmap);
+                 
+                 for(i = 0; i < 2; ++i)
+                 {
+                     if(map == bmap[i])
+                     {
+                         map = i;
+                         break;
+                     }
+                 }
+                 ASSERTL1(i != 2,"Did not find number in map");
+             }
+             
+             // assumes end points have unit magnitude
+             (*inoutmat)(map,map) +=  primCoeffs[0];
+        }
+
+        void Expansion1D::v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
+        {
+            AddRobinMassMatrix(edgeid,primCoeffs,inoutmat);
+        }
+
+
     } //end of namespace
 } //end of namespace
 

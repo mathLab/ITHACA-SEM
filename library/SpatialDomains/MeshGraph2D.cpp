@@ -1,5 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
-//
+//////////////////////////////////////////////////////////////////////////////////
 //  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/MeshGraph2D.cpp,v $
 //
 //  For more information, please see: http://www.nektar.info/
@@ -196,98 +195,97 @@ namespace Nektar
 
             TiXmlElement *element = field->FirstChildElement();
 
-            while (element)
-            {
-                std::string elementType(element->ValueStr());
-
-                ASSERTL0(elementType == "Q" || elementType == "T",
-                    (std::string("Unknown 2D element type: ") + elementType).c_str());
-
-                /// These should be ordered.
-                nextElementNumber++;
-
-                /// Read id attribute.
-                int indx;
-                int err = element->QueryIntAttribute("ID", &indx);
-                ASSERTL0(err == TIXML_SUCCESS, "Unable to read element attribute ID.");
-                ASSERTL0(indx == nextElementNumber, "Element IDs must begin with zero and be sequential.");
-
-                /// Read text element description.
-                TiXmlNode* elementChild = element->FirstChild();
-                std::string elementStr;
-                while(elementChild)
+                while (element)
                 {
-                    if (elementChild->Type() == TiXmlNode::TEXT)
+                    std::string elementType(element->ValueStr());
+
+                    ASSERTL0(elementType == "Q" || elementType == "T",
+                             (std::string("Unknown 2D element type: ") + elementType).c_str());
+
+                    /// These should be ordered.
+                    nextElementNumber++;
+
+                    /// Read id attribute.
+                    int indx;
+                    int err = element->QueryIntAttribute("ID", &indx);
+                    ASSERTL0(err == TIXML_SUCCESS, "Unable to read element attribute ID.");
+                    ASSERTL0(indx == nextElementNumber, "Element IDs must begin with zero and be sequential.");
+
+                    /// Read text element description.
+                    TiXmlNode* elementChild = element->FirstChild();
+                    std::string elementStr;
+                    while(elementChild)
                     {
-                        elementStr += elementChild->ToText()->ValueStr();
+                        if (elementChild->Type() == TiXmlNode::TEXT)
+                        {
+                            elementStr += elementChild->ToText()->ValueStr();
+                        }
+                        elementChild = elementChild->NextSibling();
                     }
-                    elementChild = elementChild->NextSibling();
-                }
 
-                ASSERTL0(!elementStr.empty(), "Unable to read element description body.");
+                    ASSERTL0(!elementStr.empty(), "Unable to read element description body.");
 
-                /// Parse out the element components corresponding to type of element.
-                if (elementType == "T")
-                {
-                    // Read three edge numbers
-                    int edge1, edge2, edge3;
-                    std::istringstream elementDataStrm(elementStr.c_str());
-
-                    try
+                    /// Parse out the element components corresponding to type of element.
+                    if (elementType == "T")
                     {
-                        elementDataStrm >> edge1;
-                        elementDataStrm >> edge2;
-                        elementDataStrm >> edge3;
+                        // Read three edge numbers
+                        int edge1, edge2, edge3;
+                        std::istringstream elementDataStrm(elementStr.c_str());
 
-                        ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for TRIANGLE: ") + elementStr).c_str());
+                        try
+                        {
+                            elementDataStrm >> edge1;
+                            elementDataStrm >> edge2;
+                            elementDataStrm >> edge3;
 
-                        /// Create a TriGeom to hold the new definition.
-                        SegGeomSharedPtr edges[TriGeom::kNedges] = 
+                            ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for TRIANGLE: ") + elementStr).c_str());
+
+                            /// Create a TriGeom to hold the new definition.
+                            SegGeomSharedPtr edges[TriGeom::kNedges] = 
                         {
                             GetSegGeom(edge1),
                             GetSegGeom(edge2),
                             GetSegGeom(edge3)
                         };
 
-                        StdRegions::EdgeOrientation edgeorient[TriGeom::kNedges] = 
+                            StdRegions::EdgeOrientation edgeorient[TriGeom::kNedges] = 
                         {
                             SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
                             SegGeom::GetEdgeOrientation(*edges[1], *edges[2]), 
                             SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
                         };
 
-                        TriGeomSharedPtr trigeom(MemoryManager<TriGeom>::AllocateSharedPtr(indx,edges,edgeorient));
-                        trigeom->SetGlobalID(indx);
+                            TriGeomSharedPtr trigeom(MemoryManager<TriGeom>::AllocateSharedPtr(indx,edges,edgeorient));
+                            trigeom->SetGlobalID(indx);
 
-                        m_trigeoms.push_back(trigeom);
+                            m_trigeoms.push_back(trigeom);
+                        }
+                        catch(...)
+                        {
+                            NEKERROR(ErrorUtil::efatal, (std::string("Unable to read element data for TRIANGLE: ") + elementStr).c_str());
+                        }
                     }
-                    catch(...)
+                    else if (elementType == "Q")
                     {
-                        NEKERROR(ErrorUtil::efatal,
-                            (std::string("Unable to read element data for TRIANGLE: ") + elementStr).c_str());
-                    }
-                }
-                else if (elementType == "Q")
-                {
-                    // Read four edge numbers
-                    int edge1, edge2, edge3, edge4;
-                    std::istringstream elementDataStrm(elementStr.c_str());
+                        // Read four edge numbers
+                        int edge1, edge2, edge3, edge4;
+                        std::istringstream elementDataStrm(elementStr.c_str());
 
-                    try
-                    {
-                        elementDataStrm >> edge1;
-                        elementDataStrm >> edge2;
-                        elementDataStrm >> edge3;
-                        elementDataStrm >> edge4;
+                        try
+                        {
+                            elementDataStrm >> edge1;
+                            elementDataStrm >> edge2;
+                            elementDataStrm >> edge3;
+                            elementDataStrm >> edge4;
 
-                        ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for QUAD: ") + elementStr).c_str());
+                            ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for QUAD: ") + elementStr).c_str());
 
-                        /// Create a QuadGeom to hold the new definition.
-                        SegGeomSharedPtr edges[QuadGeom::kNedges] = 
+                            /// Create a QuadGeom to hold the new definition.
+                            SegGeomSharedPtr edges[QuadGeom::kNedges] = 
                         {GetSegGeom(edge1),GetSegGeom(edge2),
                          GetSegGeom(edge3),GetSegGeom(edge4)};
 
-                        StdRegions::EdgeOrientation edgeorient[QuadGeom::kNedges] =
+                            StdRegions::EdgeOrientation edgeorient[QuadGeom::kNedges] =
                         {
                             SegGeom::GetEdgeOrientation(*edges[0], *edges[1]),
                             SegGeom::GetEdgeOrientation(*edges[1], *edges[2]),
@@ -295,128 +293,128 @@ namespace Nektar
                             SegGeom::GetEdgeOrientation(*edges[3], *edges[0])
                         };
 
-                        //QuadGeomSharedPtr quadgeom(new QuadGeom(edges, edgeorient));
-                        QuadGeomSharedPtr quadgeom  = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient);
-                        quadgeom->SetGlobalID(indx);
-                        
-                        m_quadgeoms.push_back(quadgeom);
+                            //QuadGeomSharedPtr quadgeom(new QuadGeom(edges, edgeorient));
+                            QuadGeomSharedPtr quadgeom  = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient);
+                            quadgeom->SetGlobalID(indx);
+                       
+                            m_quadgeoms.push_back(quadgeom);
 
+                        }
+                        catch(...)
+                        {
+                            NEKERROR(ErrorUtil::efatal,(std::string("Unable to read element data for QUAD: ") + elementStr).c_str());
+                        }
                     }
-                    catch(...)
-                    {
-                        NEKERROR(ErrorUtil::efatal,(std::string("Unable to read element data for QUAD: ") + elementStr).c_str());
-                    }
+
+                    /// Keep looking
+                    element = element->NextSiblingElement();
                 }
-
-                /// Keep looking
-                element = element->NextSiblingElement();
-            }
         }
 
         void MeshGraph2D::ReadComposites(TiXmlDocument &doc)
         {
             TiXmlHandle docHandle(&doc);
-
-            /// We know we have it since we made it this far.
-            TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
-            TiXmlElement* field = NULL;
-
-            ASSERTL0(mesh, "Unable to find GEOMETRY tag in file.");
-
-            /// Look for elements in ELEMENT block.
-            field = mesh->FirstChildElement("COMPOSITE");
-
-            ASSERTL0(field, "Unable to find COMPOSITE tag in file.");
-
-            int nextCompositeNumber = -1;
-
-            /// All elements are of the form: "<C ID = "N"> ... </C>".
-
-            /// Read the ID field first.
-            TiXmlElement *composite = field->FirstChildElement("C");
-
-            while (composite)
-            {
-                nextCompositeNumber++;
-
-                int indx;
-                int err = composite->QueryIntAttribute("ID", &indx);
-                ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
-                ASSERTL0(indx == nextCompositeNumber, "Composite IDs must begin with zero and be sequential.");
-
-                TiXmlNode* compositeChild = composite->FirstChild();
-                // This is primarily to skip comments that may be present.
-                // Comments appear as nodes just like elements.
-                // We are specifically looking for text in the body
-                // of the definition.
-                while(compositeChild && compositeChild->Type() != TiXmlNode::TEXT)
-                {
-                    compositeChild = compositeChild->NextSibling();
-                }
-
-                ASSERTL0(compositeChild, "Unable to read composite definition body.");
-                std::string compositeStr = compositeChild->ToText()->ValueStr();
-
-                /// Parse out the element components corresponding to type of element.
-
-                std::istringstream compositeDataStrm(compositeStr.c_str());
-
-                try
-                {
-                    bool first = true;
-                    std::string prevCompositeElementStr;
-
-                    while (!compositeDataStrm.fail())
-                    {
-                        std::string compositeElementStr;
-                        compositeDataStrm >> compositeElementStr;
-
-                        if (!compositeDataStrm.fail())
-                        {
-                            if (first)
-                            {
-                                first = false;
-
-                                Composite curVector(MemoryManager<GeometryVector>::AllocateSharedPtr());
-                                m_MeshCompositeVector.push_back(curVector);
-                            }
-
-                            if (compositeElementStr.length() > 0)
-                            {
-                                ResolveGeomRef(prevCompositeElementStr, compositeElementStr);
-                            }
-                            prevCompositeElementStr = compositeElementStr;
-                        }
-                    }
-                }
-                catch(...)
-                {
-                    NEKERROR(ErrorUtil::efatal,
-                        (std::string("Unable to read COMPOSITE data for composite: ") + compositeStr).c_str());
-                }
-
-                /// Keep looking
-                composite = composite->NextSiblingElement("C");
-            }
-        }
-
-
+                
+                /// We know we have it since we made it this far.
+                TiXmlElement* mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
+                    TiXmlElement* field = NULL;
+                        
+                        ASSERTL0(mesh, "Unable to find GEOMETRY tag in file.");
+                            
+                            /// Look for elements in ELEMENT block.
+                            field = mesh->FirstChildElement("COMPOSITE");
+                                
+                                ASSERTL0(field, "Unable to find COMPOSITE tag in file.");
+                                    
+                                    int nextCompositeNumber = -1;
+                                        
+                                        /// All elements are of the form: "<C ID = "N"> ... </C>".
+                                        
+                                        /// Read the ID field first.
+                                        TiXmlElement *composite = field->FirstChildElement("C");
+                                            
+                                            while (composite)
+                                            {
+                                                nextCompositeNumber++;
+                                                    
+                                                    int indx;
+                                                        int err = composite->QueryIntAttribute("ID", &indx);
+                                                            ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
+                                                                ASSERTL0(indx == nextCompositeNumber, "Composite IDs must begin with zero and be sequential.");
+                                                                    
+                                                                    TiXmlNode* compositeChild = composite->FirstChild();
+                                                                        // This is primarily to skip comments that may be present.
+                                                                        // Comments appear as nodes just like elements.
+                                                                        // We are specifically looking for text in the body
+                                                                        // of the definition.
+                                                                        while(compositeChild && compositeChild->Type() != TiXmlNode::TEXT)
+                                                                        {
+                                                                            compositeChild = compositeChild->NextSibling();
+                                                                                }
+                                                                            
+                                                                            ASSERTL0(compositeChild, "Unable to read composite definition body.");
+                                                                                std::string compositeStr = compositeChild->ToText()->ValueStr();
+                                                                                    
+                                                                                    /// Parse out the element components corresponding to type of element.
+                                                                                    
+                                                                                    std::istringstream compositeDataStrm(compositeStr.c_str());
+                                                                                        
+                                                                                        try
+                                                                                        {
+                                                                                            bool first = true;
+                                                                                                std::string prevCompositeElementStr;
+                                                                                                    
+                                                                                                    while (!compositeDataStrm.fail())
+                                                                                                    {
+                                                                                                        std::string compositeElementStr;
+                                                                                                            compositeDataStrm >> compositeElementStr;
+                                                                                                                
+                                                                                                                if (!compositeDataStrm.fail())
+                                                                                                                {
+                                                                                                                    if (first)
+                                                                                                                    {
+                                                                                                                        first = false;
+                                                                                                                            
+                                                                                                                            Composite curVector(MemoryManager<GeometryVector>::AllocateSharedPtr());
+                                                                                                                                m_MeshCompositeVector.push_back(curVector);
+                                                                                                                                    }
+                                                                                                                        
+                                                                                                                        if (compositeElementStr.length() > 0)
+                                                                                                                        {
+                                                                                                                            ResolveGeomRef(prevCompositeElementStr, compositeElementStr);
+                                                                                                                                }
+                                                                                                                            prevCompositeElementStr = compositeElementStr;
+                                                                                                                                }
+                                                                                                                    }
+                                                                                                        }
+                                                                                        catch(...)
+                                                                                        {
+                                                                                            NEKERROR(ErrorUtil::efatal,
+                                                                                                     (std::string("Unable to read COMPOSITE data for composite: ") + compositeStr).c_str());
+                                                                                                }
+                                                                                            
+                                                                                            /// Keep looking
+                                                                                            composite = composite->NextSiblingElement("C");
+                                                                                                }
+                                                }
+        
+        
         SegGeomSharedPtr MeshGraph2D::GetSegGeom(int eID)
         {
             SegGeomSharedPtr returnval;
-
-            if (eID >= 0 && eID < int(m_seggeoms.size()))
-            {
-                returnval = m_seggeoms[eID];
-            }
-
-            return returnval;
-        };
-
-
+                
+                if (eID >= 0 && eID < int(m_seggeoms.size()))
+                {
+                    returnval = m_seggeoms[eID];
+                        }
+                    
+                    return returnval;
+                        };
+        
+        
         // Take the string that is the composite reference and find the
         // pointer to the Geometry object corresponding to it.
-
+        
         // The only allowable combinations of previous and current items
         // are V (0D); E (1D); and T and Q (2D).  Only elements of the same
         // dimension are allowed to be grouped.
@@ -425,161 +423,161 @@ namespace Nektar
             try
             {
                 std::istringstream tokenStream(token);
-                std::istringstream prevTokenStream(prevToken);
-
-                char type;
-                char prevType;
-
-                tokenStream >> type;
-
-                std::string::size_type indxBeg = token.find_first_of('[') + 1;
-                std::string::size_type indxEnd = token.find_last_of(']') - 1;
-
-                ASSERTL0(indxBeg <= indxEnd, (std::string("Error reading index definition:") + token).c_str());
-
-                std::string indxStr = token.substr(indxBeg, indxEnd - indxBeg + 1);
-
-                std::vector<unsigned int> seqVector;
-                std::vector<unsigned int>::iterator seqIter;
-
-                bool err = ParseUtils::GenerateSeqVector(indxStr.c_str(), seqVector);
-
-                ASSERTL0(err, (std::string("Error reading composite elements: ") + indxStr).c_str());
-
-                prevTokenStream >> prevType;
-
-                // All composites must be of the same dimension.
-                bool validSequence = (prevToken.empty() ||         // No previous, then current is just fine.
-                    (type == 'V' && prevType == 'V') ||
-                    (type == 'E' && prevType == 'E') ||
-                    ((type == 'T' || type == 'Q') &&
-                    (prevType == 'T' || prevType == 'Q')));
-
-                ASSERTL0(validSequence, (std::string("Invalid combination of composite items: ")
-                    + type + " and " + prevType + ".").c_str()); 
-
-
-                switch(type)
-                {
-                case 'E':   // Edge
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
-                    {
-                        if (*seqIter >= m_seggeoms.size())
-                        {
-                            char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
-                            NEKERROR(ErrorUtil::ewarning, (std::string("Unknown edge index: ") + errStr).c_str());
-                        }
-                        else
-                        {
-                            m_MeshCompositeVector.back()->push_back(m_seggeoms[*seqIter]);
-                        }
-                    }
-                    break;
-
-                case 'T':   // Triangle
-#if 1
-                    {
-                        // Set up inverse maps of tris which takes global id 
-                        // back to local storage in m_trigeoms;
-                        map<int, int> tri_id_map; 
-                        for(int i = 0; i < m_trigeoms.size(); ++i)
-                        {
-                            tri_id_map[m_trigeoms[i]->GetGlobalID()] = i;
-                        }
+                    std::istringstream prevTokenStream(prevToken);
                         
-                        for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
-                        {
-                            if (tri_id_map.count(*seqIter) == 0 )
-                            {
-                                char errStr[16] = "";
-                                ::sprintf(errStr, "%d", *seqIter);
-                                NEKERROR(ErrorUtil::ewarning, (std::string("Unknown triangle index: ") + errStr).c_str());
-                            }
-                            else
-                            {
-                                m_MeshCompositeVector.back()->push_back(m_trigeoms[tri_id_map.find(*seqIter)->second]);
-                            }
-                        }
-                    }
-#else
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
-                    {
-                        if (*seqIter >= m_trigeoms.size())
-                        {
-                            char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
-                            NEKERROR(ErrorUtil::ewarning, (std::string("Unknown triangle index: ") + errStr+std::string(" in Composite section")).c_str());
-                        }
-                        else
-                        {
-                            m_MeshCompositeVector.back()->push_back(m_trigeoms[*seqIter]);
-                        }
-                    }
-#endif
-                    break;
-
-                case 'Q':   // Quad
+                        char type;
+                            char prevType;
+                                
+                                tokenStream >> type;
+                                    
+                                    std::string::size_type indxBeg = token.find_first_of('[') + 1;
+                                        std::string::size_type indxEnd = token.find_last_of(']') - 1;
+                                            
+                                            ASSERTL0(indxBeg <= indxEnd, (std::string("Error reading index definition:") + token).c_str());
+                                                
+                                                std::string indxStr = token.substr(indxBeg, indxEnd - indxBeg + 1);
+                                                    
+                                                    std::vector<unsigned int> seqVector;
+                                                        std::vector<unsigned int>::iterator seqIter;
+                                                            
+                                                            bool err = ParseUtils::GenerateSeqVector(indxStr.c_str(), seqVector);
+                                                                
+                                                                ASSERTL0(err, (std::string("Error reading composite elements: ") + indxStr).c_str());
+                                                                    
+                                                                    prevTokenStream >> prevType;
+                                                                        
+                                                                        // All composites must be of the same dimension.
+                                                                        bool validSequence = (prevToken.empty() ||         // No previous, then current is just fine.
+                                                                                              (type == 'V' && prevType == 'V') ||
+                                                                                              (type == 'E' && prevType == 'E') ||
+                                                                                              ((type == 'T' || type == 'Q') &&
+                                                                                               (prevType == 'T' || prevType == 'Q')));
+                                                                            
+                                                                            ASSERTL0(validSequence, (std::string("Invalid combination of composite items: ")
+                                                                                                     + type + " and " + prevType + ".").c_str()); 
+                                                                                
+                                                                                
+                                                                                switch(type)
+                                                                                {
+                                                                                case 'E':   // Edge
+                                                                                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                                                                                    {
+                                                                                        if (*seqIter >= m_seggeoms.size())
+                                                                                        {
+                                                                                            char errStr[16] = "";
+                                                                                                ::sprintf(errStr, "%d", *seqIter);
+                                                                                                      NEKERROR(ErrorUtil::ewarning, (std::string("Unknown edge index: ") + errStr).c_str());
+                                                                                                          }
+                                                                                        else
+                                                                                        {
+                                                                                            m_MeshCompositeVector.back()->push_back(m_seggeoms[*seqIter]);
+                                                                                                }
+                                                                                            }
+                                                                                        break;
+                                                                                            
+                                                                                case 'T':   // Triangle
 #if 1
-                    {
-                        // Set up inverse maps of tris which takes global id 
-                        // back to local storage in m_trigeoms;
-                        map<int, int> quad_id_map; 
-                        for(int i = 0; i < m_quadgeoms.size(); ++i)
-                        {
-                            quad_id_map[m_quadgeoms[i]->GetGlobalID()] = i;
-                        }
-                        
-                        for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
-                        {
-                            if (quad_id_map.count(*seqIter) == 0)
-                            {
-                                char errStr[16] = "";
-                                ::sprintf(errStr, "%d", *seqIter);
-                                NEKERROR(ErrorUtil::ewarning, (std::string("Unknown quad index: ") + errStr +std::string(" in Composite section")).c_str());
-                            }
-                            else
-                            {
-                                m_MeshCompositeVector.back()->push_back(m_quadgeoms[quad_id_map.find(*seqIter)->second]);
-                            }
-                        }
-                    }
+                                                                                    {
+                                                                                        // Set up inverse maps of tris which takes global id 
+                                                                                        // back to local storage in m_trigeoms;
+                                                                                        map<int, int> tri_id_map; 
+                                                                                            for(int i = 0; i < m_trigeoms.size(); ++i)
+                                                                                            {
+                                                                                                tri_id_map[m_trigeoms[i]->GetGlobalID()] = i;
+                                                                                                    }
+                                                                                                
+                                                                                                for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                                                                                                {
+                                                                                                    if (tri_id_map.count(*seqIter) == 0 )
+                                                                                                    {
+                                                                                                        char errStr[16] = "";
+                                                                                                            ::sprintf(errStr, "%d", *seqIter);
+                                                                                                                  NEKERROR(ErrorUtil::ewarning, (std::string("Unknown triangle index: ") + errStr).c_str());
+                                                                                                                      }
+                                                                                                    else
+                                                                                                    {
+                                                                                                        m_MeshCompositeVector.back()->push_back(m_trigeoms[tri_id_map.find(*seqIter)->second]);
+                                                                                                            }
+                                                                                                        }
+                                                                                                    }
 #else
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
-                    {
-                        if (*seqIter >= m_quadgeoms.size())
-                        {
-                            char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
-                            NEKERROR(ErrorUtil::ewarning, (std::string("Unknown quad index: ") + errStr).c_str());
-                        }
-                        else
-                        {
-                            m_MeshCompositeVector.back()->push_back(m_quadgeoms[*seqIter]);
-                        }
-                    }
+                                                                                        for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                                                                                        {
+                                                                                            if (*seqIter >= m_trigeoms.size())
+                                                                                            {
+                                                                                                char errStr[16] = "";
+                                                                                                ::sprintf(errStr, "%d", *seqIter);
+                                                                                                NEKERROR(ErrorUtil::ewarning, (std::string("Unknown triangle index: ") + errStr+std::string(" in Composite section")).c_str());
+                                                                                            }
+                                                                                            else
+                                                                                            {
+                                                                                                m_MeshCompositeVector.back()->push_back(m_trigeoms[*seqIter]);
+                                                                                            }
+                                                                                        }
 #endif
-                    break;
+                                                                                        break;
 
-                case 'V':   // Vertex
-                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
-                    {
-                        if (*seqIter >= m_vertset.size())
-                        {
-                            char errStr[16] = "";
-                            ::sprintf(errStr, "%d", *seqIter);
-                            NEKERROR(ErrorUtil::ewarning, (std::string("Unknown vertex index: ") + errStr).c_str());
-                        }
-                        else
-                        {
-                            m_MeshCompositeVector.back()->push_back(m_vertset[*seqIter]);
-                        }
-                    }
-                    break;
+                                                                                case 'Q':   // Quad
+#if 1
+                                                                                    {
+                                                                                        // Set up inverse maps of tris which takes global id 
+                                                                                        // back to local storage in m_trigeoms;
+                                                                                        map<int, int> quad_id_map; 
+                                                                                        for(int i = 0; i < m_quadgeoms.size(); ++i)
+                                                                                        {
+                                                                                            quad_id_map[m_quadgeoms[i]->GetGlobalID()] = i;
+                                                                                        }
+                        
+                                                                                        for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                                                                                        {
+                                                                                            if (quad_id_map.count(*seqIter) == 0)
+                                                                                            {
+                                                                                                char errStr[16] = "";
+                                                                                                ::sprintf(errStr, "%d", *seqIter);
+                                                                                                NEKERROR(ErrorUtil::ewarning, (std::string("Unknown quad index: ") + errStr +std::string(" in Composite section")).c_str());
+                                                                                            }
+                                                                                            else
+                                                                                            {
+                                                                                                m_MeshCompositeVector.back()->push_back(m_quadgeoms[quad_id_map.find(*seqIter)->second]);
+                                                                                            }
+                                                                                        }
+                                                                                    }
+#else
+                                                                                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                                                                                    {
+                                                                                        if (*seqIter >= m_quadgeoms.size())
+                                                                                        {
+                                                                                            char errStr[16] = "";
+                                                                                            ::sprintf(errStr, "%d", *seqIter);
+                                                                                            NEKERROR(ErrorUtil::ewarning, (std::string("Unknown quad index: ") + errStr).c_str());
+                                                                                        }
+                                                                                        else
+                                                                                        {
+                                                                                            m_MeshCompositeVector.back()->push_back(m_quadgeoms[*seqIter]);
+                                                                                        }
+                                                                                    }
+#endif
+                                                                                    break;
 
-                default:
-                    NEKERROR(ErrorUtil::efatal, (std::string("Unrecognized composite token: ") + token).c_str());
-                }
+                                                                                case 'V':   // Vertex
+                                                                                    for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
+                                                                                    {
+                                                                                        if (*seqIter >= m_vertset.size())
+                                                                                        {
+                                                                                            char errStr[16] = "";
+                                                                                            ::sprintf(errStr, "%d", *seqIter);
+                                                                                            NEKERROR(ErrorUtil::ewarning, (std::string("Unknown vertex index: ") + errStr).c_str());
+                                                                                        }
+                                                                                        else
+                                                                                        {
+                                                                                            m_MeshCompositeVector.back()->push_back(m_vertset[*seqIter]);
+                                                                                        }
+                                                                                    }
+                                                                                    break;
+
+                                                                                default:
+                                                                                    NEKERROR(ErrorUtil::efatal, (std::string("Unrecognized composite token: ") + token).c_str());
+                                                                                }
             }
             catch(...)
             {
@@ -626,7 +624,7 @@ namespace Nektar
 
                     if (triGeomShPtr || quadGeomShPtr)
                     {
-                        int edgeNum;                        
+                        int edgeNum;
                         if (triGeomShPtr)
                         {
                             if ((edgeNum = triGeomShPtr->WhichEdge(edge)) > -1)
@@ -648,49 +646,49 @@ namespace Nektar
                             }
                         }
                     }
-                }         
+                } 
             }
+            
+                //for(triIter = m_trigeoms.begin(); triIter != m_trigeoms.end(); ++triIter)
+        //{
+                //    int edgeNum;
+                //    if ((edgeNum = (*triIter)->WhichEdge(edge)) > -1)
+        //    {
+                //        elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
+                //        elementEdge->m_Element = *triIter;
+                //        elementEdge->m_EdgeIndx = edgeNum;
+                //        returnval->push_back(elementEdge);
+                //    }
+                //}
 
-            //for(triIter = m_trigeoms.begin(); triIter != m_trigeoms.end(); ++triIter)
-            //{
-            //    int edgeNum;
-            //    if ((edgeNum = (*triIter)->WhichEdge(edge)) > -1)
-            //    {
-            //        elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
-            //        elementEdge->m_Element = *triIter;
-            //        elementEdge->m_EdgeIndx = edgeNum;
-            //        returnval->push_back(elementEdge);
-            //    }
-            //}
+                //QuadGeomVector::iterator quadIter;
 
-            //QuadGeomVector::iterator quadIter;
+                //for(quadIter = m_quadgeoms.begin(); quadIter != m_quadgeoms.end(); ++quadIter)
+        //{
+                //    int edgeNum;
+                //    if ((edgeNum = (*quadIter)->WhichEdge(edge)) > -1)
+        //    {
+                //        elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
+                //        elementEdge->m_Element = *quadIter;
+                //        elementEdge->m_EdgeIndx = edgeNum;
+                //        returnval->push_back(elementEdge);
+                //    }
+                //}
 
-            //for(quadIter = m_quadgeoms.begin(); quadIter != m_quadgeoms.end(); ++quadIter)
-            //{
-            //    int edgeNum;
-            //    if ((edgeNum = (*quadIter)->WhichEdge(edge)) > -1)
-            //    {
-            //        elementEdge = MemoryManager<ElementEdge>::AllocateSharedPtr();
-            //        elementEdge->m_Element = *quadIter;
-            //        elementEdge->m_EdgeIndx = edgeNum;
-            //        returnval->push_back(elementEdge);
-            //    }
-            //}
-
-            return returnval;
+                return returnval;
         }
 
         LibUtilities::BasisKey MeshGraph2D::GetEdgeBasisKey(SegGeomSharedPtr edge)
         {
             ElementEdgeVectorSharedPtr elements = GetElementsFromEdge(edge);
-            // Perhaps, a check should be done here to ensure that in case 
-            // elements->size!=1, all elements to which the edge belongs have the same type
-            // and order of expansion such that no confusion can arise.
+            // Perhaps, a check should be done here to ensure that
+            // in case elements->size!=1, all elements to which
+            // the edge belongs have the same type and order of
+            // expansion such that no confusion can arise.
             ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Element);
             
-
             int edge_id = (*elements)[0]->m_EdgeIndx;
-
+            
             if((*elements)[0]->m_Element->GetGeomShapeType() == eTriangle)
             {
                 edge_id = (edge_id)? 1:0;
@@ -699,74 +697,125 @@ namespace Nektar
             {
                 edge_id = edge_id%2;
             }
-
+                
             int nummodes  = expansion->m_BasisKeyVector[edge_id].GetNumModes();
             int numpoints = expansion->m_BasisKeyVector[edge_id].GetNumPoints();
             
-	        if((*elements)[0]->m_Element->GetGeomShapeType() == eTriangle)
-	        {
-		        // Use edge 0 to define basis of order relevant to edge 
+            if((*elements)[0]->m_Element->GetGeomShapeType() == eTriangle)
+            {
+                // Use edge 0 to define basis of order relevant to edge 
                 switch(expansion->m_BasisKeyVector[edge_id].GetBasisType())
-		        {
-		            case LibUtilities::eModified_B:
+                {
+                case LibUtilities::eGLL_Lagrange:
                     {
-		                switch(expansion->m_BasisKeyVector[edge_id].GetPointsType())
+                        switch(expansion->m_BasisKeyVector[edge_id].GetPointsType())
                         {
-                            case LibUtilities::eGaussRadauMAlpha1Beta0:
-			                {                            
-			                    const LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
-			                    return LibUtilities::BasisKey(expansion->m_BasisKeyVector[0].GetBasisType(),nummodes,pkey);
-			                }
-			                break;
-
-			                default:
-			                ASSERTL0(false,"Unexpected points distribution");
-
-                            // It doesn't matter what we return here since the ASSERT will stop execution.
-                            // Just return something to prevent warnings messages.
+                        case LibUtilities::eGaussLobattoLegendre:
+                            {                            
+                                const  LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
+                                return LibUtilities::BasisKey(expansion->m_BasisKeyVector[0].GetBasisType(),nummodes,pkey);
+                            }
+                            break;
+                            
+                        default:
+                            ASSERTL0(false,"Unexpected points distribution");
+                            
+                            // It doesn't matter what we return
+                            // here since the ASSERT will stop
+                            // execution.  Just return something
+                            // to prevent warnings messages.
+                            const  LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
+                            return LibUtilities::BasisKey(expansion->m_BasisKeyVector[0].GetBasisType(),nummodes,pkey);
+                            break;
+                        }
+                    }
+                    break; 
+                case LibUtilities::eOrtho_B: // Assume this is called from nodal triangular basis 
+                    {
+                        switch(expansion->m_BasisKeyVector[edge_id].GetPointsType())
+                        {
+                        case LibUtilities::eGaussRadauMAlpha1Beta0:
+                            {                            
+                                const  LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
+                                return LibUtilities::BasisKey(LibUtilities::eGLL_Lagrange,nummodes,pkey);
+                            }
+                            break;
+                            
+                        default:
+                            ASSERTL0(false,"Unexpected points distribution");
+                            
+                            // It doesn't matter what we return
+                            // here since the ASSERT will stop
+                            // execution.  Just return something
+                            // to prevent warnings messages.
                             const LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
                             return LibUtilities::BasisKey(expansion->m_BasisKeyVector[0].GetBasisType(),nummodes,pkey);
-			                break;
-			            }
-		            }
-		            break;
-
-		            case LibUtilities::eModified_A:
+                            break;
+                        }
+                    }
+                    break; 
+                case LibUtilities::eModified_B:
                     {
-		                switch(expansion->m_BasisKeyVector[edge_id].GetPointsType())
+                        switch(expansion->m_BasisKeyVector[edge_id].GetPointsType())
                         {
-                            case LibUtilities::eGaussLobattoLegendre:
-			                {                            
-			                    const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
-			                    return LibUtilities::BasisKey(expansion->m_BasisKeyVector[0].GetBasisType(),nummodes,pkey);
-			                }
-			                break;
-
-			                default:
-			                ASSERTL0(false,"Unexpected points distribution");
-                            // It doesn't matter what we return here since the ASSERT will stop execution.
-                            // Just return something to prevent warnings messages.
+                        case LibUtilities::eGaussRadauMAlpha1Beta0:
+                            {                            
+                                const LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
+                                return LibUtilities::BasisKey(expansion->m_BasisKeyVector[0].GetBasisType(),nummodes,pkey);
+                            }
+                            break;
+                            
+                        default:
+                            ASSERTL0(false,"Unexpected points distribution");
+                            
+                            // It doesn't matter what we return
+                            // here since the ASSERT will stop
+                            // execution.  Just return something
+                            // to prevent warnings messages.
                             const LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
                             return LibUtilities::BasisKey(expansion->m_BasisKeyVector[0].GetBasisType(),nummodes,pkey);
-			                break;
-			            }
-		            }
-		            break;
+                            break;
+                        }
+                    }
+                    break; 
+                case LibUtilities::eModified_A:
+                    {
+                        switch(expansion->m_BasisKeyVector[edge_id].GetPointsType())
+                        {
+                        case LibUtilities::eGaussLobattoLegendre:
+                        {                            
+                            const LibUtilities::PointsKey pkey(numpoints,LibUtilities::eGaussLobattoLegendre);
+                            return LibUtilities::BasisKey(expansion->m_BasisKeyVector[0].GetBasisType(),nummodes,pkey);
+                        }
+                        break;
+                        default:
+                            ASSERTL0(false,"Unexpected points distribution");
+                            // It doesn't matter what we return here
+                            // since the ASSERT will stop execution.
+                            // Just return something to prevent
+                            // warnings messages.
+                            const LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
+                            return LibUtilities::BasisKey(expansion->m_BasisKeyVector[0].GetBasisType(),nummodes,pkey);
+                            break;
+                        }
+                    }
+                    break;
 
-		            default:
-		            ASSERTL0(false,"Unexpected basis distribution");
-                    // It doesn't matter what we return here since the ASSERT will stop execution.
-                    // Just return something to prevent warnings messages.
+                default:
+                    ASSERTL0(false,"Unexpected basis distribution");
+                    // It doesn't matter what we return here since the
+                    // ASSERT will stop execution.  Just return
+                    // something to prevent warnings messages.
                     const LibUtilities::PointsKey pkey(numpoints+1,LibUtilities::eGaussLobattoLegendre);
                     return LibUtilities::BasisKey(expansion->m_BasisKeyVector[0].GetBasisType(),nummodes,pkey);
-		        }
-	        }
-	        else
-	        {
-		        // Quadrilateral
-		        const LibUtilities::PointsKey pkey(numpoints,expansion->m_BasisKeyVector[edge_id].GetPointsType());
-		        return LibUtilities::BasisKey(expansion->m_BasisKeyVector[edge_id].GetBasisType(),nummodes,pkey);
-	        }
+                }
+            }
+            else
+            {
+                // Quadrilateral
+                const LibUtilities::PointsKey pkey(numpoints,expansion->m_BasisKeyVector[edge_id].GetPointsType());
+                return LibUtilities::BasisKey(expansion->m_BasisKeyVector[edge_id].GetBasisType(),nummodes,pkey);
+            }
         }
     }; //end of namespace
 }; //end of namespace
@@ -849,7 +898,7 @@ namespace Nektar
 // Changed id format and propagated from 1d to 2d.
 //
 // Revision 1.16  2007/06/10 02:27:11  jfrazier
-// Another checkin with an incremental completion of the boundary conditions reader.
+// Another checkin with an incremental completion of the boundary conditions reader
 //
 // Revision 1.15  2007/06/07 23:55:24  jfrazier
 // Intermediate revisions to add parsing for boundary conditions file.

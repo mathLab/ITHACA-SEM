@@ -327,7 +327,7 @@ namespace Nektar
         }
         }
       else
-        ASSERTL0(false,"Need to set up for not Modified basis");
+        ASSERTL0(false,"Need to set up for non Modified basis");
       //    break;
       // default:
       //    ASSERTL0(false,"Need to set up for not eModified basis");
@@ -865,7 +865,7 @@ namespace Nektar
         }
         break;
           default:
-        ASSERTL0(false,"Expansion not defined in switch  for this shape");
+              ASSERTL0(false,"Expansion not defined in switch  for this shape");
         break;
           }
       }

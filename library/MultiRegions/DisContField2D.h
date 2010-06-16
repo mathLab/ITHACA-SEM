@@ -236,6 +236,11 @@ namespace Nektar
 
             NekDouble L2_DGDeriv(const int dir, 
                                  const Array<OneD, const NekDouble> &soln);
+
+            /// \brief Set up an stl map containing the information
+            /// for a robin aboundary condition in the location of the
+            /// element id
+            map<int, RobinBCInfoSharedPtr> GetRobinBCInfo(void);
         protected:
             /**
              * \brief The number of boundary segments on which
@@ -283,14 +288,14 @@ namespace Nektar
              */ 
             void GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D, SpatialDomains::BoundaryConditions &bcs, const std::string variable);
 
-            virtual void v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, 
+            virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID, 
                                                 Array<OneD,int> &EdgeID)
             {
                 GetBoundaryToElmtMap(ElmtID,EdgeID);
             }
         private:
             GlobalLinSysMapShPtr                               m_globalBndMat;
-            ExpList1DSharedPtr                              m_trace;
+            ExpList1DSharedPtr                                 m_trace;
             LocalToGlobalDGMapSharedPtr                        m_traceMap;
 
 
@@ -363,6 +368,11 @@ namespace Nektar
                 EvaluateBoundaryConditions(time);
             }
 
+            virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo()
+            {
+                return GetRobinBCInfo();
+            }
+
             virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
@@ -377,6 +387,7 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &varLambda,
                     const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
                           NekDouble tau);
+
         };
 
         typedef boost::shared_ptr<DisContField2D>   DisContField2DSharedPtr;

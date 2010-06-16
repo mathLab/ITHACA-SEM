@@ -479,7 +479,7 @@ namespace Nektar
                             }
                         }
                     }
-                    else if (conditionType == "R")
+                    else if (conditionType == "R") // Read du/dn +  PRIMCOEFF u = VALUE
                     {
                         if (attrData.empty())
                         {
@@ -493,8 +493,9 @@ namespace Nektar
                         }
                         else
                         {
-                            // Use the iterator from above, which must point to the variable.
-                            // Read the A and B attributes.
+                            // Use the iterator from above, which must
+                            // point to the variable.  Read the A and
+                            // B attributes.
                             attr = attr->Next();
 
                             if (attr)
@@ -517,25 +518,25 @@ namespace Nektar
 
                                     userDefined = attrData1;
 
-                                 } else if(attrName1 == "A"){
+                                 } else if(attrName1 == "VALUE"){
 
-                                    ASSERTL0(attrName1 == "A", (std::string("Unknown attribute: ") + attrName1).c_str());
+                                    ASSERTL0(attrName1 == "VALUE", (std::string("Unknown attribute: ") + attrName1).c_str());
 
                                     attrData1 = attr->Value();
-                                    ASSERTL0(!attrData1.empty(), "A attributes must have associated values.");
+                                    ASSERTL0(!attrData1.empty(), "VALUE attributes must have associated values.");
 
                                     SubstituteFunction(attrData1);
 
                                     equation1 = attrData1;
 
                                     attr = attr->Next();
-                                    ASSERTL0(attr, "Unable to read B attribute.");
+                                    ASSERTL0(attr, "Unable to read PRIMCOEFF attribute.");
                                 
                                     attrName1= attr->Name();
-                                    ASSERTL0(attrName1 == "B", (std::string("Unknown attribute: ") + attrName1).c_str());
+                                    ASSERTL0(attrName1 == "PRIMCOEFF", (std::string("Unknown attribute: ") + attrName1).c_str());
 
                                     attrData1 = attr->Value();
-                                    ASSERTL0(!attrData1.empty(), "B attributes must have associated values.");
+                                    ASSERTL0(!attrData1.empty(), "PRIMCOEFF attributes must have associated values.");
 
                                     SubstituteFunction(attrData1);
 

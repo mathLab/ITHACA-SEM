@@ -172,7 +172,7 @@ namespace Nektar
                 break;
             case eAdamsBashforthOrder2:
                 {
-                    m_numsteps = 2;
+                    m_numsteps  = 2;
                     m_numstages = 1;
 
                     m_A = Array<OneD, Array<TwoD,NekDouble> >(1);

@@ -220,8 +220,8 @@ namespace Nektar
         }
 
         void TriExp::LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
-                                                      Array<OneD,NekDouble> &outarray,
-                                                      const StdRegions::StdMatrixKey &mkey)
+                                               Array<OneD,NekDouble> &outarray,
+                                               const StdRegions::StdMatrixKey &mkey)
         {
             if(mkey.GetNvariableLaplacianCoefficients() == 0)
             {
@@ -410,8 +410,8 @@ namespace Nektar
         }
 
         void TriExp::HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
-                                                      Array<OneD,NekDouble> &outarray,
-                                                      const StdRegions::StdMatrixKey &mkey)
+                                               Array<OneD,NekDouble> &outarray,
+                                               const StdRegions::StdMatrixKey &mkey)
         {
             if(m_metricinfo->IsUsingLaplMetrics())
             {
@@ -607,7 +607,7 @@ namespace Nektar
         }
 
         void TriExp::IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
-                                             Array<OneD, NekDouble> &outarray)
+                                            Array<OneD, NekDouble> &outarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -744,7 +744,7 @@ namespace Nektar
         ///////////////////////////////
 
         /**
-            \brief Calculate the deritive of the physical points
+           \brief Calculate the deritive of the physical points
         **/
         void TriExp::PhysDeriv(const Array<OneD, const NekDouble> & inarray,
                                Array<OneD,NekDouble> &out_d0,
@@ -855,6 +855,7 @@ namespace Nektar
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 Array<OneD, Array<OneD, NekDouble> > tangmat(2);
+
 
                 // D^v_xi = v_x*d_xi/dx + v_y*d_xi/dy + v_z*d_xi/dz
                 // D^v_eta = v_x*d_eta/dx + v_y*d_eta/dy + v_z*d_eta/dz
@@ -974,41 +975,41 @@ namespace Nektar
             }
 
             if (m_ncoeffs > 6) {
-				Array<OneD, NekDouble> tmp0(m_ncoeffs);
-				Array<OneD, NekDouble> tmp1(m_ncoeffs);
+                Array<OneD, NekDouble> tmp0(m_ncoeffs);
+                Array<OneD, NekDouble> tmp1(m_ncoeffs);
 
-				StdRegions::StdMatrixKey  stdmasskey(StdRegions::eMass,DetExpansionType(),*this);
-				MassMatrixOp(outarray,tmp0,stdmasskey);
-				IProductWRTBase(inarray,tmp1);
+                StdRegions::StdMatrixKey  stdmasskey(StdRegions::eMass,DetExpansionType(),*this);
+                MassMatrixOp(outarray,tmp0,stdmasskey);
+                IProductWRTBase(inarray,tmp1);
 
-				Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
+                Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
 
-				// get Mass matrix inverse (only of interior DOF)
-				// use block (1,1) of the static condensed system
-				// note: this block alreay contains the inverse matrix
-				MatrixKey             masskey(StdRegions::eMass,DetExpansionType(),*this);
-				DNekScalMatSharedPtr  matsys = (m_staticCondMatrixManager[masskey])->GetBlock(1,1);
+                // get Mass matrix inverse (only of interior DOF)
+                // use block (1,1) of the static condensed system
+                // note: this block alreay contains the inverse matrix
+                MatrixKey             masskey(StdRegions::eMass,DetExpansionType(),*this);
+                DNekScalMatSharedPtr  matsys = (m_staticCondMatrixManager[masskey])->GetBlock(1,1);
 
-				int nBoundaryDofs = NumBndryCoeffs();
-				int nInteriorDofs = m_ncoeffs - nBoundaryDofs;
+                int nBoundaryDofs = NumBndryCoeffs();
+                int nInteriorDofs = m_ncoeffs - nBoundaryDofs;
 
-				Array<OneD, NekDouble> rhs(nInteriorDofs);
-				Array<OneD, NekDouble> result(nInteriorDofs);
+                Array<OneD, NekDouble> rhs(nInteriorDofs);
+                Array<OneD, NekDouble> result(nInteriorDofs);
 
-				GetInteriorMap(mapArray);
+                GetInteriorMap(mapArray);
 
-				for(i = 0; i < nInteriorDofs; i++)
-				{
-					rhs[i] = tmp1[ mapArray[i] ];
-				}
+                for(i = 0; i < nInteriorDofs; i++)
+                {
+                    rhs[i] = tmp1[ mapArray[i] ];
+                }
 
-				Blas::Dgemv('N', nInteriorDofs, nInteriorDofs, matsys->Scale(), &((matsys->GetOwnedMatrix())->GetPtr())[0],
-							nInteriorDofs,rhs.get(),1,0.0,result.get(),1);
+                Blas::Dgemv('N', nInteriorDofs, nInteriorDofs, matsys->Scale(), &((matsys->GetOwnedMatrix())->GetPtr())[0],
+                            nInteriorDofs,rhs.get(),1,0.0,result.get(),1);
 
-				for(i = 0; i < nInteriorDofs; i++)
-				{
-					outarray[ mapArray[i] ] = result[i];
-				}
+                for(i = 0; i < nInteriorDofs; i++)
+                {
+                    outarray[ mapArray[i] ] = result[i];
+                }
             }
         }
 
@@ -1069,7 +1070,7 @@ namespace Nektar
                 else // LibUtilities::Interpolate to Expansion point distribution
                 {
                     LibUtilities::Interp2D(CBasis0->GetPointsKey(), CBasis1->GetPointsKey(), &(m_geom->UpdatePhys(1))[0],
-                             m_base[0]->GetPointsKey(),m_base[1]->GetPointsKey(),&coords_1[0]);
+                                           m_base[0]->GetPointsKey(),m_base[1]->GetPointsKey(),&coords_1[0]);
                 }
             case 1:
                 ASSERTL0(coords_0.num_elements(),
@@ -1088,7 +1089,7 @@ namespace Nektar
                 else // Interpolate to Expansion point distribution
                 {
                     LibUtilities::Interp2D(CBasis0->GetPointsKey(), CBasis1->GetPointsKey(), &(m_geom->UpdatePhys(0))[0],
-                             m_base[0]->GetPointsKey(),m_base[1]->GetPointsKey(),&coords_0[0]);
+                                           m_base[0]->GetPointsKey(),m_base[1]->GetPointsKey(),&coords_0[0]);
                 }
                 break;
             default:
@@ -1472,7 +1473,6 @@ namespace Nektar
                 break;
             case StdRegions::eWeakDirectionalDeriv:
                 {
-                    int matrixid = mkey.GetMatrixID();
                     int dim = m_geom->GetCoordim();
                     int nqtot   = (m_base[0]->GetNumPoints())*(m_base[1]->GetNumPoints());
                     int nvarcoeffs = mkey.GetNvariableCoefficients();
@@ -1486,7 +1486,8 @@ namespace Nektar
 
                         DNekMatSharedPtr WeakDirectionalDeriv = GenMatrix(*mkey.GetStdMatKey());
 
-                        Array<OneD, Array<OneD, NekDouble> > Weight(1+2*dim);
+                        Array<OneD, Array<OneD, const NekDouble> > Weight(1+2*dim);
+                        Array<OneD, NekDouble> Weight_wk;
 
                         // Store tangential basis in Weighted[0-dim]
                         Weight[0] = mkey.GetVariableCoefficient(0);
@@ -1494,11 +1495,12 @@ namespace Nektar
                         // Store gmat info in Weight[dim+1]
                         for (int k=0; k < 2*dim; ++k)
                         {
-                            Weight[k+1] = Array<OneD, NekDouble>(nqtot);
-                            Vmath::Vcopy(nqtot, &gmat[k][0], 1, &Weight[k+1][0], 1);
+                            Weight_wk = Array<OneD, NekDouble>(nqtot);
+                            Vmath::Vcopy(nqtot, &gmat[k][0], 1, &Weight_wk[0], 1);
+                            Weight[k+1] = Weight_wk;
                         }
 
-                        StdRegions::StdMatrixKey  stdmasskey(StdRegions::eMassLevelCurvature,DetExpansionType(),*this,Weight,matrixid);
+                        StdRegions::StdMatrixKey  stdmasskey(StdRegions::eMassLevelCurvature,DetExpansionType(),*this,Weight);
                         DNekMatSharedPtr MassLevelCurvaturemat = GenMatrix(stdmasskey);
 
                         (*WeakDirectionalDeriv) = (*WeakDirectionalDeriv) + (*MassLevelCurvaturemat);
@@ -1507,27 +1509,32 @@ namespace Nektar
                     }
                     else
                     {
-                        Array<OneD, Array<OneD, NekDouble> > Cxi(1);
-                        Array<OneD, Array<OneD, NekDouble> > Ceta(1);
+                        Array<OneD, Array<OneD, const NekDouble> > Cxi(1);
+                        Array<OneD, Array<OneD, const NekDouble> > Ceta(1);
 
                         // Directional Forcing is applied
-                        Cxi[0] = Array<OneD, NekDouble> (nqtot,0.0);
-                        Ceta[0] = Array<OneD, NekDouble> (nqtot,0.0);
+                        Array<OneD, NekDouble> Cxi_wk,  Ceta_wk;
+                        Cxi_wk  = Array<OneD, NekDouble> (nqtot,0.0);
+                        Ceta_wk = Array<OneD, NekDouble> (nqtot,0.0);
+
 
                         // Cxi = tan_{xi_x} * d \xi/dx + tan_{xi_y} * d \xi/dy + tan_{xi_z} * d \xi/dz
                         // Ceta = tan_{eta_x} * d \eta/dx + tan_{xi_y} * d \xi/dy + tan_{xi_z} * d \xi/dz
                         for (int k=0; k<dim; ++k)
                         {
                             Vmath::Svtvp(nqtot,gmat[2*k][0],&(mkey.GetVariableCoefficient(0))[k*nqtot],1,
-                                         &Cxi[0][0],1,&Cxi[0][0],1);
+                                         &Cxi_wk[0],1,&Cxi_wk[0],1);
                             Vmath::Svtvp(nqtot,gmat[2*k+1][0],&(mkey.GetVariableCoefficient(0))[k*nqtot],1,
-                                         &Ceta[0][0],1,&Ceta[0][0],1);
+                                         &Ceta_wk[0],1,&Ceta_wk[0],1);
                         }
 
+                        Cxi[0]  = Cxi_wk;
+                        Ceta[0] = Ceta_wk;
+ 
                         // derivxi = Cxi * ( B * D_{\xi} *B^T )
                         // deriveta = Ceta * ( B * D_{\eta} * B^T )
-                        MatrixKey derivxikey(StdRegions::eWeakDeriv0, mkey.GetExpansionType(), *this, Cxi, matrixid);
-                        MatrixKey derivetakey(StdRegions::eWeakDeriv1, mkey.GetExpansionType(), *this, Ceta, matrixid+10000);
+                        MatrixKey derivxikey(StdRegions::eWeakDeriv0, mkey.GetExpansionType(), *this, Cxi);
+                        MatrixKey derivetakey(StdRegions::eWeakDeriv1, mkey.GetExpansionType(), *this, Ceta);
 
                         DNekMat &derivxi = *GetStdMatrix(*derivxikey.GetStdMatKey());
                         DNekMat &deriveta = *GetStdMatrix(*derivetakey.GetStdMatKey());
@@ -1541,7 +1548,8 @@ namespace Nektar
                         (*WeakDirectionalDeriv) = derivxi + deriveta;
 
                         // Add Weighted Mass with (\grad \cdot u )
-                        Array<OneD, Array<OneD, NekDouble> > Weight(1+2*dim);
+                        Array<OneD, Array<OneD, const NekDouble> > Weight(1+2*dim);
+                        Array<OneD, NekDouble> Weight_wk;
 
                         // Store tangential basis in Weighted[0-dim]
                         Weight[0] = mkey.GetVariableCoefficient(0);
@@ -1549,11 +1557,12 @@ namespace Nektar
                         // Store gmat info in Weight[dim+1]
                         for (int k=0; k < 2*dim; ++k)
                         {
-                            Weight[k+1] = Array<OneD, NekDouble>(gmat[k].num_elements());
-                            Weight[k+1][0] = gmat[k][0];
+                            Weight_wk = Array<OneD, NekDouble>(gmat[k].num_elements());
+                            Weight_wk[0] = gmat[k][0];
+                            Weight[k+1] = Weight_wk;
                         }
 
-                        StdRegions::StdMatrixKey  stdmasskey(StdRegions::eMassLevelCurvature,DetExpansionType(),*this,Weight,matrixid);
+                        StdRegions::StdMatrixKey  stdmasskey(StdRegions::eMassLevelCurvature,DetExpansionType(),*this,Weight);
                         DNekMatSharedPtr MassLevelCurvaturemat = GetStdMatrix(stdmasskey);
 
                         (*WeakDirectionalDeriv) = (*WeakDirectionalDeriv) + (*MassLevelCurvaturemat);
@@ -1700,7 +1709,7 @@ namespace Nektar
                     NekDouble one = 1.0;
 
                     int nvarcoeffs = mkey.GetNvariableCoefficients();
-                    Array<OneD, Array<OneD,NekDouble> > varcoeffs(nvarcoeffs);
+                    Array<OneD, Array<OneD,const NekDouble> > varcoeffs(nvarcoeffs);
 
                     if(nvarcoeffs>0)
                     {
@@ -1714,8 +1723,7 @@ namespace Nektar
                                                   DetExpansionType(),*this,
                                                   mkey.GetConstant(0),
                                                   mkey.GetConstant(1),
-                                                  varcoeffs,
-                                                  mkey.GetMatrixID());
+                                                  varcoeffs);
 
                     DNekMatSharedPtr mat = GenMatrix(hkey);
 

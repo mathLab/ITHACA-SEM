@@ -1070,6 +1070,11 @@ namespace Nektar
                 v_StdPhysDeriv(dir,inarray,outarray);
             }       
 
+            void AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
+            {
+                v_AddRobinMassMatrix(edgeid,primCoeffs,inoutmat);
+            }
+
             void DGDeriv(const int dir, 
                          const Array<OneD, const NekDouble>& inarray,
                          Array<OneD, boost::shared_ptr< StdExpansion1D > > &EdgeExp, 
@@ -1448,6 +1453,8 @@ namespace Nektar
             virtual void   v_StdPhysDeriv (const int dir, 
                                            const Array<OneD, const NekDouble>& inarray, 
                                            Array<OneD, NekDouble> &outarray);
+
+            virtual void v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat);
 
             virtual void v_DGDeriv(const int dir, 
                                    const Array<OneD, const NekDouble>& inarray,

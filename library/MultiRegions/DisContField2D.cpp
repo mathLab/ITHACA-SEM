@@ -157,7 +157,36 @@ namespace Nektar
                     AllocateSharedPtr(graph2D,m_trace,*this,solnType,
                                       m_bndCondExpansions,m_bndConditions,
                                       periodicEdges);
-
+                
+            }
+            else
+            { 
+                // set elmt edges to point to robin bc edges if required. 
+                int i,cnt;
+                Array<OneD, int> ElmtID,EdgeID;
+                GetBoundaryToElmtMap(ElmtID,EdgeID);
+                
+                for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+                {
+                    MultiRegions::ExpList1DSharedPtr locExpList;
+                    
+                    if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
+                    {
+                        int e;                    
+                        locExpList = m_bndCondExpansions[i];
+                        
+                        for(e = 0; e < locExpList->GetExpSize(); ++e)
+                        {
+                            LocalRegions::Expansion2DSharedPtr exp2d
+                                = boost::dynamic_pointer_cast<LocalRegions::Expansion2D>((*m_exp)[ElmtID[cnt+e]]);
+                            StdRegions::StdExpansion1DSharedPtr exp1d
+                                = boost::dynamic_pointer_cast<StdRegions::StdExpansion1D>(locExpList->GetExp(e));
+                            
+                            exp2d->SetEdgeExp(EdgeID[cnt+e],exp1d);
+                        }
+                    }
+                    cnt += m_bndCondExpansions[i]->GetExpSize();
+                }
             }
         }
 
@@ -224,11 +253,11 @@ namespace Nektar
 
             SetBoundaryConditionExpansion(graph2D,bcs,variable,m_bndCondExpansions,m_bndConditions);
 
-            // Set up normals on Neumann boundary conditions
+            // Set up normals on non-Dirichlet boundary conditions
             for(i = 0; i < m_bndConditions.num_elements(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType()
-                   == SpatialDomains::eNeumann)
+                   != SpatialDomains::eDirichlet)
                 {
                     m_bndCondExpansions[i]->SetUpPhysNormals(*m_exp);
                 }
@@ -355,7 +384,7 @@ namespace Nektar
 
                     cnt +=e;
                 }
-                else if(m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eNeumann)
+                else if((m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eNeumann)||(m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eRobin))
                 {
                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
@@ -471,7 +500,7 @@ namespace Nektar
             }
         }
 
-        // Set up a list of element ids and edge ids the link to the
+        // Set up a list of element ids and edge ids that link to the
         // boundary conditions
         void DisContField2D::GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, Array<OneD,int> &EdgeID)
         {
@@ -492,7 +521,7 @@ namespace Nektar
             }
             else
             {
-                fill(EdgeID.get(), EdgeID.get()+nbcs, -1);
+                fill(ElmtID.get(), ElmtID.get()+nbcs, -1);
             }
 
             if(EdgeID.num_elements() != nbcs)
@@ -705,7 +734,7 @@ namespace Nektar
             {
                 for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                 {
-                    id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
+                    id   = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(cnt++);
                     BndRhs[id] += m_bndCondExpansions[i]->GetCoeffs()[j];
                 }
             }
@@ -736,6 +765,57 @@ namespace Nektar
 
             //  out =  u_f + u_lam = (*InvHDGHelm)*f + (LamtoU)*Lam
             out = (*InvHDGHelm)*F + (*HDGLamToU)*LocLambda;
+        }
+        
+        /** 
+         * Search through the edge expansions and identify which ones
+         * have Robin/Mixed type boundary conditions. If find a Robin
+         * boundary then store the edge id of the boundary condition
+         * and the array of points of the physical space boundary
+         * condition which are hold the boundary condition primitive
+         * variable coefficient at the quatrature points
+         *
+         * \return std map containing the robin boundary condition
+         * info using a key of the element id 
+         *
+         * There is a next member to allow for more than one Robin
+         * boundary condition per element
+         */
+
+        map<int, RobinBCInfoSharedPtr> DisContField2D::GetRobinBCInfo(void)
+        {
+            int i,cnt;
+            map<int, RobinBCInfoSharedPtr> returnval;
+            Array<OneD, int> ElmtID,EdgeID;
+            GetBoundaryToElmtMap(ElmtID,EdgeID);
+            
+            for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            {
+                MultiRegions::ExpList1DSharedPtr locExpList;
+
+                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
+                {
+                    int e,elmtid;
+                    Array<OneD, NekDouble> Array_tmp;
+
+                    locExpList = m_bndCondExpansions[i];
+                    
+                    for(e = 0; e < locExpList->GetExpSize(); ++e)
+                    {
+                        RobinBCInfoSharedPtr rInfo = MemoryManager<RobinBCInfo>::AllocateSharedPtr(EdgeID[cnt+e],Array_tmp = locExpList->GetPhys() + locExpList->GetPhys_Offset(e));
+                        elmtid = ElmtID[cnt+e];
+                        // make link list if necessary
+                        if(returnval.count(elmtid) != 0) 
+                        {
+                            rInfo->next = returnval.find(elmtid)->second;
+                        }
+                        returnval[elmtid] = rInfo;
+                    }
+                }
+                cnt += m_bndCondExpansions[i]->GetExpSize();
+            }
+            
+            return returnval; 
         }
     } // end of namespace
 } //end of namespace

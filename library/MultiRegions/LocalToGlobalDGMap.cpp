@@ -99,7 +99,7 @@ namespace Nektar
             gid = 0;
             for(i = 0; i < nbnd; i++)
             {
-                if(bndCond[i]->GetBoundaryConditionType() ==SpatialDomains::eDirichlet)
+                if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
                     m_numDirichletBndPhys++;
                     vid = ((bndCondExp[i])->GetVertex())->GetVid();
@@ -283,7 +283,9 @@ namespace Nektar
                 cnt += bndCondExp[i]->GetExpSize();
             }
 
+#if OLDMAP
             m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD,int >(cnt);
+#endif
             m_bndExpAdjacentOrient = Array<OneD, AdjacentTraceOrientation > (cnt);
             m_numLocalDirBndCoeffs = 0;
             m_numDirichletBndPhys  = 0;

@@ -160,12 +160,14 @@ namespace Nektar
                 ArrayInitializationPolicy<DataType>::Initialize(m_data + 1, m_capacity);
             }
             
-            /// \brief Creates a 1D array with each element initialized to an initial value.
+             /// \brief Creates a 1D array with each element
+             /// initialized to an initial value.
             /// \param dim1Size The array's size.
             /// \param initValue Each element's initial value.
             ///
-            /// If DataType is a fundamental type (double, int, etc.), then the initial value 
-            /// is copied directly into each element.  Otherwise, the DataType's copy constructor
+            /// If DataType is a fundamental type (double, int, etc.),
+            /// then the initial value is copied directly into each
+            /// element.  Otherwise, the DataType's copy constructor
             /// is used to initialize each element.
             Array(unsigned int dim1Size, const DataType& initValue) :
                 m_size(dim1Size),
@@ -197,12 +199,14 @@ namespace Nektar
             }
             
             /// \brief Creates a 1D array that references rhs.
-            /// \param dim1Size The size of the array.  This is useful when you want this array 
-            ///                 to reference a subset of the elements in rhs.
+            /// \param dim1Size The size of the array.  This is useful
+            ///                 when you want this array to reference
+            ///                 a subset of the elements in rhs.
             ///
-            /// This constructor creates an array that references rhs.  Any changes to rhs will
-            /// be reflected in this array.  The memory for the array will only be deallocated 
-            /// when both rhs and this array have gone out of scope.
+            /// This constructor creates an array that references rhs.
+            /// Any changes to rhs will be reflected in this array.
+            /// The memory for the array will only be deallocated when
+            /// both rhs and this array have gone out of scope.
             Array(unsigned int dim1Size, const Array<OneD, const DataType>& rhs) :
                 m_size(dim1Size),
                 m_capacity(rhs.m_capacity),
@@ -307,7 +311,9 @@ namespace Nektar
             
             /// \brief Creates an array with a specified offset.
             ///
-            /// The return value will reference the same array as lhs, but with an offset.
+            /// The return value will reference the same array as lhs,
+            /// but with an offset.
+            ///
             /// For example, in the following:
             /// \code
             /// Array<OneD, const double> result = anArray + 10;
@@ -330,22 +336,22 @@ namespace Nektar
             
 
         private:
-//            struct DestroyArray
-//            {
-//                DestroyArray(unsigned int elements) :
-//                    m_elements(elements) {}
-//                    
-//                void operator()(DataType* p)
-//                {
-//                    ArrayDestructionPolicy<DataType>::Destroy(p, m_elements);
-//                    MemoryManager<DataType>::RawDeallocate(p, m_elements);
-//                }
-//                unsigned int m_elements;
-//            };
-//            
-            //boost::shared_ptr<DataType> 
-            //NekPtr<DataType>
-            void
+        //            struct DestroyArray
+        //            {
+        //                DestroyArray(unsigned int elements) :
+        //                    m_elements(elements) {}
+        //                    
+        //                void operator()(DataType* p)
+        //                {
+        //                    ArrayDestructionPolicy<DataType>::Destroy(p, m_elements);
+        //                    MemoryManager<DataType>::RawDeallocate(p, m_elements);
+        //                }
+        //                unsigned int m_elements;
+        //            };
+        //            
+        // boost::shared_ptr<DataType> 
+        // NekPtr<DataType>
+        void
             CreateStorage(unsigned int size)
             {
                 DataType* storage = MemoryManager<DataType>::RawAllocate(size+1);

@@ -1242,6 +1242,12 @@ namespace Nektar
             }
 
 
+        void StdExpansion::v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                         "specific element types");
+            }
+
             void StdExpansion::v_DGDeriv(const int dir,
                                          const Array<OneD, const NekDouble>& inarray,
                                          Array<OneD, boost::shared_ptr< StdExpansion1D > > &EdgeExp,

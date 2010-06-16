@@ -54,23 +54,47 @@ namespace Nektar
         /**
          * No global optimisation parameters present.
          */
-        GlobalOptParam::GlobalOptParam():
+        GlobalOptParam::GlobalOptParam(const int nel):
             m_doGlobalMatOp(SIZE_OptimizeOperationType,false),
-            m_doBlockMatOp(SIZE_OptimizeOperationType,false)
+            m_shapeList(1,StdRegions::eNoExpansionType),
+            m_shapeNumElements(1,nel)
         {
+            Array<OneD, bool> set_false(1,false);
+            m_doBlockMatOp = Array<OneD, Array<OneD, bool > > (SIZE_OptimizeOperationType,set_false);
         }
-
 
         /**
          * Read global optimisation parameters from a file and set up flags.
          * @param   fileName    File to read parameters from.
          */
-        GlobalOptParam::GlobalOptParam(const std::string& fileName):
-            m_doGlobalMatOp(SIZE_OptimizeOperationType,false),
-            m_doBlockMatOp(SIZE_OptimizeOperationType,false)
+        GlobalOptParam::GlobalOptParam(const std::string& fileName, const int dim,
+                                         Array<OneD, const int> &NumShapeElements):
+            m_doGlobalMatOp(SIZE_OptimizeOperationType,false)
         {
+            int i;
             TiXmlDocument doc(fileName);
             bool loadOkay = doc.LoadFile();
+
+            m_shapeNumElements = NumShapeElements;
+            ASSERTL1(NumShapeElements.num_elements() == dim,"Size of NumShapeElements does not match dimension of expansion");
+            
+            // Dim=2 setup. Could probably put a dimenion flag on input
+            if(dim == 2)
+            {
+                m_shapeList = Array<OneD, StdRegions::ExpansionType>(2);
+                m_shapeList[0] = StdRegions::eTriangle;
+                m_shapeList[1] = StdRegions::eQuadrilateral;
+                
+                m_doBlockMatOp = Array<OneD, Array<OneD,bool> > (SIZE_OptimizeOperationType);
+                for(i = 0; i < SIZE_OptimizeOperationType; ++i)
+                {
+                    m_doBlockMatOp[i] = Array<OneD, bool> (2,false);
+                }
+            }
+            else
+            {
+                ASSERTL0(false,"Needs setting up for dimension 1 and 3");
+            }   
 
             ASSERTL0(loadOkay, (std::string("Unable to load file: ") +
                                 fileName).c_str());
@@ -117,20 +141,29 @@ namespace Nektar
                     {
                         int value;
                         int err;
-
-                        err = arrayElement->QueryIntAttribute("VALUE", &value);
+                        
+                        err = arrayElement->QueryIntAttribute("TRI", &value);
                         ASSERTL0(err == TIXML_SUCCESS, (
                            std::string("Unable to read DO_BLOCK_MAT_OP "
-                                       "attribute VALUE for ")
+                                       "attribute TRI for ")
                          + std::string(ElementalOptimizationOperationTypeMap[n])
-                         + std::string(".")
-                        ));
+                         + std::string(".")));
 
-                        m_doBlockMatOp[n] = (bool) value;
+                        m_doBlockMatOp[n][0] = (bool) value;
+
+                        err = arrayElement->QueryIntAttribute("QUAD", &value);
+                        ASSERTL0(err == TIXML_SUCCESS, (
+                           std::string("Unable to read DO_BLOCK_MAT_OP "
+                                       "attribute QUAD for ")
+                         + std::string(ElementalOptimizationOperationTypeMap[n])
+                         + std::string(".")));
+                        
+                        m_doBlockMatOp[n][1] = (bool) value;
                     }
                 }
             }
         }
-
+    
+   
     } // end of namespace
 } // end of namespace

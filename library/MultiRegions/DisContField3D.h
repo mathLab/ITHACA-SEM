@@ -105,9 +105,8 @@ namespace Nektar
 
             /// \brief Set up a list of element ids and edge ids the link to the
             /// boundary conditions
-            void GetBoundaryToElmtMap(
-                    Array<OneD, int> &ElmtID,
-                    Array<OneD, int> &EdgeID);
+            void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, 
+                                      Array<OneD,int> &FaceID);
 
         protected:
             /// The number of boundary segments on which Dirichlet boundary
@@ -151,9 +150,19 @@ namespace Nektar
                     const NekDouble time = 0.0);
 
 
+            virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID, 
+                                                Array<OneD,int> &FaceID)
+            {
+                GetBoundaryToElmtMap(ElmtID,FaceID);
+            }
+
+            /// \brief Set up an stl map containing the information
+            /// for a robin aboundary condition in the location of the
+            /// element id
+            map<int, RobinBCInfoSharedPtr> GetRobinBCInfo(void);
         private:
             GlobalLinSysMapShPtr                                m_globalBndMat;
-            ExpList1DSharedPtr                                  m_trace;
+            ExpList2DSharedPtr                                  m_trace;
             LocalToGlobalDGMapSharedPtr                         m_traceMap;
 
             virtual void v_EvaluateBoundaryConditions(
@@ -163,6 +172,11 @@ namespace Nektar
                     Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
                     &v_GetBndConditions();
 
+
+            virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo()
+            {
+                return GetRobinBCInfo();
+            }
         };
 
         typedef boost::shared_ptr<DisContField3D>   DisContField3DSharedPtr;

@@ -109,8 +109,7 @@ namespace Nektar
             }
 
             virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, 
-                                                         const Array<OneD, Array<OneD, NekDouble> >& dirForcing,
-                                                         int element = 0,
+                                                         const Array<OneD, Array<OneD, const NekDouble> >& dirForcing,
                                                          NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
                                                          NekDouble tau = NekConstants::kNekUnsetDouble)
             {
@@ -120,7 +119,6 @@ namespace Nektar
 
             virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, 
                                                          const Array<OneD, NekDouble>& dirForcing,
-                                                         int element = 0,
                                                          NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
                                                          NekDouble tau = NekConstants::kNekUnsetDouble)
             {

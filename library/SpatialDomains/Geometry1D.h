@@ -97,11 +97,6 @@ namespace Nektar
                 return v_GetCoord(i,Lcoord);
             }
 
-            inline int GetVid(int i) const
-            {
-                return v_GetVid(i);
-            }
-
             void FillGeom()
             {
                 v_FillGeom();

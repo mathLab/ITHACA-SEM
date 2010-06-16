@@ -49,6 +49,12 @@ namespace Nektar
         public:
             /// Matrix without any parameters.
             GlobalMatrixKey(const StdRegions::MatrixType matrixType,
+                            const StdRegions::ExpansionType expType,
+                            const LocalToGlobalBaseMapSharedPtr &locToGloMap
+                                        = NullLocalToGlobalBaseMapSharedPtr);
+
+            /// Matrix without any parameters.
+            GlobalMatrixKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap
                                         = NullLocalToGlobalBaseMapSharedPtr);
 
@@ -113,6 +119,8 @@ namespace Nektar
 
             /// Return the matrix type.
             const StdRegions::MatrixType GetMatrixType() const;
+            /// Return the expansion type associated with key
+            const StdRegions::ExpansionType GetExpansionType()  const;
             /// Returns true if a local to global map is defined.
             const bool LocToGloMapIsDefined() const;
             /// Returns the number of constants defined for this matrix.
@@ -135,6 +143,10 @@ namespace Nektar
 
             /// Stores the matrix type based on the enum StdRegions::MatrixType.
             StdRegions::MatrixType m_matrixType;
+            
+            /// Stores the expansion/shape type that the matrix is to
+            /// be based on
+            StdRegions::ExpansionType m_expansionType;
 
             /// The number of real parameters for the matrix.
             int                   m_nconstants;
@@ -163,6 +175,12 @@ namespace Nektar
                         GlobalMatrixKey::GetMatrixType() const
         {
             return m_matrixType;
+        }
+
+        inline const StdRegions::ExpansionType
+                        GlobalMatrixKey::GetExpansionType() const
+        {
+            return m_expansionType;
         }
 
         inline const bool GlobalMatrixKey::LocToGloMapIsDefined(void) const

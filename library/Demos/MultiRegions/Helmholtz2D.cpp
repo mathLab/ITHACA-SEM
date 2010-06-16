@@ -16,6 +16,8 @@ using namespace Nektar;
  /* Nothing */
 #endif
 
+int NoCaseStringCompare(const string & s1, const string& s2);
+
 int main(int argc, char *argv[])
 {
     MultiRegions::ContField2DSharedPtr Exp,Fce;
@@ -24,13 +26,45 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     NekDouble  lambda;
     NekDouble   st, cps = (double)CLOCKS_PER_SEC;
+    // default solution type multilevel statis condensation
+    MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
 
-    if( (argc != 2) && (argc != 4) )
+    if( (argc != 2) && (argc != 3) && (argc != 4))
     {
-        fprintf(stderr,"Usage: Helmholtz2D meshfile "
-                    " [GlobalOptimizationFile ElementalOptimizationFile]\n");
+        fprintf(stderr,"Usage: Helmholtz2D meshfile [SysSolnType]   or   \n");
+        fprintf(stderr,"Usage: Helmholtz2D meshfile [SysSolnType]"
+                " [GlobalOptimizationFile ElementalOptimizationFile]\n");
         exit(1);
     }
+
+    //----------------------------------------------
+    // Load the solver type so we can test full solve, static
+    // condensation and the default multi-level statis condensation.
+    if( argc == 3 )
+    {
+        if(!NoCaseStringCompare(argv[2],"MultiLevelStaticCond"))
+        {
+            SolnType = MultiRegions::eDirectMultiLevelStaticCond; 
+            cout << "Solution Type: MultiLevel Static Condensation" << endl;
+        }
+        else if(!NoCaseStringCompare(argv[2],"StaticCond"))
+        {
+            SolnType = MultiRegions::eDirectStaticCond; 
+            cout << "Solution Type: Static Condensation" << endl;
+        }
+        else if(!NoCaseStringCompare(argv[2],"FullMatrix"))
+        {
+            SolnType = MultiRegions::eDirectFullMatrix; 
+            cout << "Solution Type: Full Matrix" << endl;
+        }
+        else
+        {
+            cerr << "SolnType not recognised" <<endl;
+            exit(1);
+        }
+
+    }
+    //----------------------------------------------
 
     //----------------------------------------------
     // Load the ELEMENTAL optimization parameters if they
@@ -62,7 +96,7 @@ int main(int argc, char *argv[])
     lambda = bcs.GetParameter("Lambda");
     const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
     LibUtilities::BasisKey bkey0 = expansions[0]->m_BasisKeyVector[0];
-    cout << "Solving 2D Helmholtz:"  << endl;
+    cout << "Solving 2D Helmholtz: "  << endl;
     cout << "         Lambda     : " << lambda << endl;
     cout << "         No. modes  : " << bkey0.GetNumModes() << endl;
     cout << endl;
@@ -71,18 +105,8 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define Expansion
     int bc_val = 0;
-    // Use this definition in the constructor below if you want a
-    // standard static condensation solver. Note default is mulit level. 
-    MultiRegions::GlobalSysSolnType staticcond = MultiRegions::eDirectStaticCond;
-    // Use this definition in the constructor below if you want a
-    // full direct matrix  solver. Note default is mulit level. 
-    MultiRegions::GlobalSysSolnType fulldirect = MultiRegions::eDirectFullMatrix;
-    // Use this definition in the constructor below if you want a
-    // multi level static condensation inversion. 
-    MultiRegions::GlobalSysSolnType multilevel = MultiRegions::eDirectMultiLevelStaticCond;
-
     Exp = MemoryManager<MultiRegions::ContField2D>::
-        AllocateSharedPtr(graph2D,bcs,bc_val,multilevel);
+        AllocateSharedPtr(graph2D,bcs,bc_val,SolnType);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -210,3 +234,41 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+
+
+/**
+ * Performs a case-insensitive string comparison (from web).
+ * @param   s1          First string to compare.
+ * @param   s2          Second string to compare.
+ * @returns             0 if the strings match.
+ */
+int NoCaseStringCompare(const string & s1, const string& s2)
+{
+    string::const_iterator it1=s1.begin();
+    string::const_iterator it2=s2.begin();
+    
+    //stop when either string's end has been reached
+    while ( (it1!=s1.end()) && (it2!=s2.end()) )
+    {
+        if(::toupper(*it1) != ::toupper(*it2)) //letters differ?
+        {
+            // return -1 to indicate smaller than, 1 otherwise
+            return (::toupper(*it1)  < ::toupper(*it2)) ? -1 : 1;
+        }
+        
+        //proceed to the next character in each string
+        ++it1;
+        ++it2;
+    }
+    
+    size_t size1=s1.size();
+    size_t size2=s2.size();// cache lengths
+    
+    //return -1,0 or 1 according to strings' lengths
+    if (size1==size2)
+    {
+        return 0;
+    }
+    
+    return (size1 < size2) ? -1 : 1;
+}

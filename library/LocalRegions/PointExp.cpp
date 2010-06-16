@@ -41,7 +41,8 @@ namespace Nektar
     {
 
         PointExp::PointExp(const SpatialDomains::VertexComponentSharedPtr &m_geom):
-            m_value(0),
+            m_coeffs(1,0.0),
+            m_phys(1,0.0),
             m_geom(m_geom)
         {
         }

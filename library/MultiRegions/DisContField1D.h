@@ -95,9 +95,19 @@ namespace Nektar
             inline const Array<OneD,const LocalRegions::PointExpSharedPtr>&
                                                         GetBndCondExpansions();
 
+            void GetBoundaryToElmtMap(Array<OneD,int> &ElmtID, Array<OneD,int> &VertID);
+
+            /// \brief Set up an stl map containing the information
+            /// for a robin aboundary condition in the location of the
+            /// element id
+            map<int, RobinBCInfoSharedPtr> GetRobinBCInfo(void);
         protected:
 
-        private:
+            virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID, 
+                                                Array<OneD,int> &EdgeID)
+            {
+                GetBoundaryToElmtMap(ElmtID,EdgeID);
+            }
             /// The number of boundary segments on which Dirichlet boundary
             /// conditions are imposed.
             int m_numDirBndCondExpansions;
@@ -113,6 +123,8 @@ namespace Nektar
             /// An array which contains the information about the boundary
             /// condition on the different boundary regions.
             Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
+
+        private:
 
             /// Global boundary matrix.
             GlobalLinSysMapShPtr                               m_globalBndMat;
@@ -132,6 +144,11 @@ namespace Nektar
             void GenerateFieldBnd1D(
                     SpatialDomains::BoundaryConditions &bcs,
                     const std::string variable);
+
+            virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo()
+            {
+                return GetRobinBCInfo();
+            }
 
             /// Solve the Helmholtz equation.
             virtual void v_HelmSolve(

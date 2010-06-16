@@ -89,8 +89,7 @@ namespace Nektar
                              StdRegions::StdExpansion &stdExpansion,
                              NekDouble    scalefactor,
                              NekDouble    constant, 
-                             const Array<OneD, NekDouble>& varcoeffs,
-                             const int matrixid,
+                             const Array<OneD, const NekDouble>& varcoeffs,
                              LibUtilities::PointsType nodalType)
         {
 	  if(varcoeffs.num_elements()>0)
@@ -101,7 +100,6 @@ namespace Nektar
 											scalefactor,
 											constant,
 											varcoeffs,
-											matrixid,
 											nodalType);
 	    }
 	  
@@ -123,13 +121,12 @@ namespace Nektar
                              StdRegions::StdExpansion &stdExpansion,
                              NekDouble    scalefactor,
                              NekDouble    constant, 
-                             const Array<OneD, NekDouble>& varcoeffs1,
-                             const Array<OneD, NekDouble>& varcoeffs2,
-                             const int matrixid,
+                             const Array<OneD, const NekDouble>& varcoeffs1,
+                             const Array<OneD, const NekDouble>& varcoeffs2,
                              LibUtilities::PointsType nodalType)
         {
 
-	  Array<OneD, Array<OneD, NekDouble> > varcoeffs(2);
+	  Array<OneD, Array<OneD, const NekDouble> > varcoeffs(2);
 	  varcoeffs[0] = varcoeffs1;
 	  varcoeffs[1] = varcoeffs2;
 
@@ -139,7 +136,6 @@ namespace Nektar
 										    scalefactor,
 										    constant,
 										    varcoeffs,
-										    matrixid,
 										    nodalType);
 
 	  m_metricinfo  = stdExpansion.GetMetricInfo(); 
@@ -150,8 +146,7 @@ namespace Nektar
                              StdRegions::StdExpansion &stdExpansion,
                              NekDouble    scalefactor,
                              NekDouble    constant, 
-                             const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                             const int matrixid,
+                             const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
                              LibUtilities::PointsType nodalType)
         {
             m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,
@@ -160,7 +155,6 @@ namespace Nektar
                                                                                       scalefactor,
                                                                                       constant,
                                                                                       varcoeffs,
-                                                                                      matrixid,
                                                                                       nodalType);
 
             m_metricinfo  = stdExpansion.GetMetricInfo(); 
@@ -169,15 +163,13 @@ namespace Nektar
         MatrixKey::MatrixKey(const StdRegions::MatrixType matrixType, 
                              const StdRegions::ExpansionType expansionType, 
                              const StdRegions::StdExpansion &stdExpansion,
-                             const Array<OneD,NekDouble>& varcoeffs,
-                             const int matrixid,
+                             const Array<OneD,const NekDouble>& varcoeffs,
                              LibUtilities::PointsType nodalType)
         {
             m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,
                                                                                       expansionType,
                                                                                       stdExpansion,
                                                                                       varcoeffs,
-                                                                                      matrixid,
                                                                                       nodalType);
 
             m_metricinfo  = stdExpansion.GetMetricInfo(); 
@@ -186,15 +178,13 @@ namespace Nektar
         MatrixKey::MatrixKey(const StdRegions::MatrixType matrixType, 
                              const StdRegions::ExpansionType expansionType, 
                              const StdRegions::StdExpansion &stdExpansion,
-                             const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                             const int matrixid,
+                             const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
                              LibUtilities::PointsType nodalType)
         {
             m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,
                                                                                       expansionType,
                                                                                       stdExpansion,
                                                                                       varcoeffs,
-                                                                                      matrixid,
                                                                                       nodalType);
 
             m_metricinfo  = stdExpansion.GetMetricInfo(); 
@@ -204,8 +194,7 @@ namespace Nektar
                              const StdRegions::ExpansionType expansionType, 
                              const StdRegions::StdExpansion &stdExpansion,
                              const Array<OneD, NekDouble>& constants,
-                             const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                             const int matrixid,
+                             const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
                              LibUtilities::PointsType nodalType)
         {
             m_stdMatKey =  MemoryManager<StdRegions::StdMatrixKey>::AllocateSharedPtr(matrixType,
@@ -213,7 +202,6 @@ namespace Nektar
                                                                                       stdExpansion,
                                                                                       constants,
                                                                                       varcoeffs,
-                                                                                      matrixid,
                                                                                       nodalType);
 
             m_metricinfo  = stdExpansion.GetMetricInfo(); 

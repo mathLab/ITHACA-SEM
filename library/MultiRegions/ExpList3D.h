@@ -75,6 +75,19 @@ namespace Nektar
             /// Sets up a list of local expansions based on an input mesh.
             ExpList3D(SpatialDomains::MeshGraph3D &graph3D);
 
+            void EvaluateBoundaryConditions(
+                                            const NekDouble time,
+                                            Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
+                                            Array<OneD, SpatialDomains::BoundaryConditionShPtr>
+                                            &bndConditions);
+            void SetBoundaryConditionExpansion(
+                                               SpatialDomains::MeshGraph3D &graph3D,
+                                               SpatialDomains::BoundaryConditions &bcs,
+                                               const std::string variable,
+                                               Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
+                                               Array<OneD, SpatialDomains::BoundaryConditionShPtr>
+                                               &bndConditions);
+
             /// Destructor.
             ~ExpList3D();
 

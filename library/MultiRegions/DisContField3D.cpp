@@ -282,8 +282,8 @@ namespace Nektar
 
             ASSERTL1(cnt == nbcs,"Failed to visit all boundary condtiions");
         }
-        
-        /** 
+
+        /**
          * Search through the edge expansions and identify which ones
          * have Robin/Mixed type boundary conditions. If find a Robin
          * boundary then store the edge id of the boundary condition
@@ -292,7 +292,7 @@ namespace Nektar
          * variable coefficient at the quatrature points
          *
          * \return std map containing the robin boundary condition
-         * info using a key of the element id 
+         * info using a key of the element id
          *
          * There is a next member to allow for more than one Robin
          * boundary condition per element
@@ -303,7 +303,7 @@ namespace Nektar
             map<int, RobinBCInfoSharedPtr> returnval;
             Array<OneD, int> ElmtID,FaceID;
             GetBoundaryToElmtMap(ElmtID,FaceID);
-            
+
             for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 MultiRegions::ExpList2DSharedPtr locExpList;
@@ -314,13 +314,13 @@ namespace Nektar
                     Array<OneD, NekDouble> Array_tmp;
 
                     locExpList = m_bndCondExpansions[i];
-                    
+
                     for(e = 0; e < locExpList->GetExpSize(); ++e)
                     {
                         RobinBCInfoSharedPtr rInfo = MemoryManager<RobinBCInfo>::AllocateSharedPtr(FaceID[cnt+e],Array_tmp = locExpList->GetPhys() + locExpList->GetPhys_Offset(e));
                         elmtid = ElmtID[cnt+e];
                         // make link list if necessary
-                        if(returnval.count(elmtid) != 0) 
+                        if(returnval.count(elmtid) != 0)
                         {
                             rInfo->next = returnval.find(elmtid)->second;
                         }
@@ -329,8 +329,14 @@ namespace Nektar
                 }
                 cnt += m_bndCondExpansions[i]->GetExpSize();
             }
-            
-            return returnval; 
+
+            return returnval;
+        }
+
+        void DisContField3D::v_EvaluateBoundaryConditions(
+                const NekDouble time)
+        {
+            EvaluateBoundaryConditions(time);
         }
 
     } // end of namespace

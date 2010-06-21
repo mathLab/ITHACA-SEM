@@ -35,7 +35,7 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <cmath> 
+#include <cmath>
 
 #include <AdvectionDiffusionReactionSolver/AdvectionDiffusionReaction.h>
 
@@ -45,19 +45,19 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    
+
     ASSERTL0(argc == 2,"\n \t Usage: AdvectionDiffusionReactionSolver  meshfile \n");
 
     string fileNameString(argv[1]);
     time_t starttime, endtime;
     NekDouble CPUtime;
-    
-    time(&starttime);    
+
+    time(&starttime);
 
     //----------------------------------------------------------------
     // Read the mesh and construct container class
     AdvectionDiffusionReaction dom(fileNameString);
-    
+
     // Time integration function object for unsteady equations
     LibUtilities::TimeIntegrationSchemeOperators ode;
 
@@ -65,36 +65,35 @@ int main(int argc, char *argv[])
     NekDouble lambda = 0.0;
 
     dom.Summary(cout);
-    
+
     dom.ZeroPhysFields(); // Zero phys field so that following switch is consistent
-    
+
     // if not steady state equation set up initial conditions
-    if(!dom.IsSteadyStateEquation()) 
+    if(!dom.IsSteadyStateEquation())
     {
-        // Set up the initial conditions 
+        // Set up the initial conditions
         dom.SetInitialConditions();
     }
 
-    // eSteadyAdvection???    
+    // eSteadyAdvection???
     switch(dom.GetEquationType())
     {
-    case eHelmholtz: case eSteadyDiffusionReaction:
-        lambda = dom.GetParameter("Lambda");
-    case ePoisson: case eSteadyDiffusion: // lambda is zero 
-        dom.SetPhysForcingFunctions(dom.UpdateFields());        
-    case eLaplace:                        // forcing function is zero
-        // Solve the appropriate Helmholtz problem 
-        dom.SolveHelmholtz(lambda);
-        break;
-    
-    case eUnsteadyAdvection:
-    case eUnsteadyInviscidBurger:
+        case eHelmholtz: case eSteadyDiffusionReaction:
+            lambda = dom.GetParameter("Lambda");
+        case ePoisson: case eSteadyDiffusion: // lambda is zero
+            dom.SetPhysForcingFunctions(dom.UpdateFields());
+        case eLaplace:                        // forcing function is zero
+            // Solve the appropriate Helmholtz problem
+            dom.SolveHelmholtz(lambda);
+            break;
+        case eUnsteadyAdvection:
+        case eUnsteadyInviscidBurger:
         {
             if(dom.GetExplicitAdvection())
             {
                 // Choose the method of deriving forcing functions
                 ode.DefineOdeRhs    (&AdvectionDiffusionReaction::ODErhs,&dom);
-                
+
                 // General Linear Time Integration
                 dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);
             }
@@ -102,41 +101,39 @@ int main(int argc, char *argv[])
             {
                 ASSERTL0(false,"Implicit unsteady Advection Equation is not set up");
             }
+            break;
         }
-        break;
-	
-    case eUnsteadyDiffusion:
+        case eUnsteadyDiffusion:
         {
             if(dom.GetExplicitDiffusion())
             {
                 // Choose the method of deriving forcing functions
-                ode.DefineOdeRhs       (&AdvectionDiffusionReaction::ODErhs,&dom);	
-                
+                ode.DefineOdeRhs       (&AdvectionDiffusionReaction::ODErhs,&dom);
+
                 // General Linear Time Integration
                 dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);
             }
             else
             {
                 // Choose the method of deriving forcing functions
-                ode.DefineImplicitSolve   (&AdvectionDiffusionReaction::ODEhelmSolve,&dom);	
-                //  ode.DefineOdeRhs          (&AdvectionDiffusionReaction::ODEeReaction,&dom);	
-                
+                ode.DefineImplicitSolve   (&AdvectionDiffusionReaction::ODEhelmSolve,&dom);
+                //  ode.DefineOdeRhs          (&AdvectionDiffusionReaction::ODEeReaction,&dom);
+
                 // General Linear Time Integration
                 dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);
             }
+            break;
         }
-        break; 
-
-    case eUnsteadyAdvectionDiffusion:
+        case eUnsteadyAdvectionDiffusion:
         {
             if(dom.GetExplicitReaction()) // Explicit Reaction
             {
                 if(dom.GetExplicitDiffusion() == false) // Implicit Diffusion
                 {
                     // Choose the method of deriving forcing functions
-                    ode.DefineImplicitSolve (&AdvectionDiffusionReaction::ODEhelmSolve,&dom);	
-                    ode.DefineOdeRhs        (&AdvectionDiffusionReaction::ODErhs,&dom);	
-                    
+                    ode.DefineImplicitSolve (&AdvectionDiffusionReaction::ODEhelmSolve,&dom);
+                    ode.DefineOdeRhs        (&AdvectionDiffusionReaction::ODErhs,&dom);
+
                     // General Linear Time Integration
                     dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);
                 }
@@ -149,12 +146,32 @@ int main(int argc, char *argv[])
             {
                 ASSERTL0(false,"Implicit Reaction schemes not set up");
             }
+            break;
         }
+        case eAlievPanfilov:
+        {
+            if(dom.GetExplicitDiffusion())
+            {
+                // Choose the method of deriving forcing functions
+                ode.DefineOdeRhs (&AdvectionDiffusionReaction::ODErhs,&dom);
 
-        break;
-    case eNoEquationType:
-    default:
-        ASSERTL0(false,"Unknown or undefined equation type");
+                // General Linear Time Integration
+                dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);
+            }
+            else
+            {
+                // Choose the method of deriving forcing functions
+                ode.DefineImplicitSolve       (&AdvectionDiffusionReaction::ODEhelmSolve,dom);
+                ode.DefineOdeRhs              (&AdvectionDiffusionReaction::ODErhs,dom);
+
+                // General Linear Time Integration
+                dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);
+            }
+            break;
+        }
+        case eNoEquationType:
+        default:
+            ASSERTL0(false,"Unknown or undefined equation type");
     }
 
     time(&endtime);

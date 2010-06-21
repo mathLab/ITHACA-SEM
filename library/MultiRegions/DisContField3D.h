@@ -105,7 +105,7 @@ namespace Nektar
 
             /// \brief Set up a list of element ids and edge ids the link to the
             /// boundary conditions
-            void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, 
+            void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                       Array<OneD,int> &FaceID);
 
         protected:
@@ -137,20 +137,20 @@ namespace Nektar
                     const std::string variable);
 
             /// Populates the list of boundary condition expansions.
-            void SetBoundaryConditionExpansion(
-                    SpatialDomains::MeshGraph3D &graph3D,
-                    SpatialDomains::BoundaryConditions &bcs,
-                    const std::string variable,
-                    Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
-                    Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                                                                &bndConditions);
+//            void SetBoundaryConditionExpansion(
+//                    SpatialDomains::MeshGraph3D &graph3D,
+//                    SpatialDomains::BoundaryConditions &bcs,
+//                    const std::string variable,
+//                    Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
+//                    Array<OneD, SpatialDomains::BoundaryConditionShPtr>
+//                                                                &bndConditions);
 
             /// Evaluates boundary conditions.
-            void EvaluateBoundaryConditions(
+            inline void EvaluateBoundaryConditions(
                     const NekDouble time = 0.0);
 
 
-            virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID, 
+            virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID,
                                                 Array<OneD,int> &FaceID)
             {
                 GetBoundaryToElmtMap(ElmtID,FaceID);
@@ -168,10 +168,10 @@ namespace Nektar
             virtual void v_EvaluateBoundaryConditions(
                     const NekDouble time = 0.0);
 
-            virtual const
-                    Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
-                    &v_GetBndConditions();
-
+            virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions()
+            {
+                return m_bndConditions;
+            }
 
             virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo()
             {
@@ -185,6 +185,41 @@ namespace Nektar
                     DisContField3D::GetBndCondExpansions()
         {
             return m_bndCondExpansions;
+        }
+
+        /**
+         * \brief This function evaluates the boundary conditions at a certain
+         * time-level.
+         *
+         * Based on the boundary condition \f$g(\boldsymbol{x},t)\f$ evaluated
+         * at a given time-level \a t, this function transforms the boundary
+         * conditions onto the coefficients of the (one-dimensional) boundary
+         * expansion. Depending on the type of boundary conditions, these
+         * expansion coefficients are calculated in different ways:
+         * - <b>Dirichlet boundary conditions</b><BR>
+         *   In order to ensure global \f$C^0\f$ continuity of the spectral/hp
+         *   approximation, the Dirichlet boundary conditions are projected onto
+         *   the boundary expansion by means of a modified \f$C^0\f$ continuous
+         *   Galerkin projection. This projection can be viewed as a collocation
+         *   projection at the vertices, followed by an \f$L^2\f$ projection on
+         *   the interior modes of the edges. The resulting coefficients
+         *   \f$\boldsymbol{\hat{u}}^{\mathcal{D}}\f$ will be stored for the
+         *   boundary expansion.
+         * - <b>Neumann boundary conditions</b>
+         *   In the discrete Galerkin formulation of the problem to be solved,
+         *   the Neumann boundary conditions appear as the set of surface
+         *   integrals: \f[\boldsymbol{\hat{g}}=\int_{\Gamma}
+         *   \phi^e_n(\boldsymbol{x})g(\boldsymbol{x})d(\boldsymbol{x})\quad
+         *   \forall n \f]
+         *   As a result, it are the coefficients \f$\boldsymbol{\hat{g}}\f$
+         *   that will be stored in the boundary expansion
+         *
+         * \param time The time at which the boundary conditions should be
+         * evaluated
+         */
+        inline void DisContField3D::EvaluateBoundaryConditions(const NekDouble time)
+        {
+            ExpList3D::EvaluateBoundaryConditions(time,m_bndCondExpansions,m_bndConditions);
         }
 
         inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>&

@@ -186,7 +186,8 @@ int main(int argc, char *argv[])
     // Evaluate L2 Error
     for(int i = 0; i < dom.GetNvariables(); ++i)
     {
-        cout << "Variable " <<  dom.GetVariable(i)  << ": L2 Error = " << dom.L2Error(i) << ", Linf Error = " << dom.LinfError(i) << endl;
+        cout << "Variable " <<  dom.GetVariable(i)  << ": L 2 error = " << dom.L2Error(i) << endl;
+        cout << "Variable " <<  dom.GetVariable(i)  << ": L infinity error = " << dom.LinfError(i) << endl;
     }
 }
 

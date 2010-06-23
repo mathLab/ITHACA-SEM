@@ -721,7 +721,7 @@ namespace Nektar
 
            Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);
            GetLocCoords(gloCoord, stdCoord);
-           cout << stdCoord[0]<< "," << stdCoord[1] << "," << stdCoord[2] << endl;
+
            if (stdCoord[0] >= -1 && stdCoord[1] >= -1
                && stdCoord[2] >= -1
                && stdCoord[0] + stdCoord[1] + stdCoord[2] <= -1)

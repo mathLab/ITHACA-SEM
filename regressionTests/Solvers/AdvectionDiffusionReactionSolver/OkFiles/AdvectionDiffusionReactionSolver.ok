@@ -1,6 +1,6 @@
 AdvectionDiffusionReactionSolver
 ==========================================
 Test_Helmholtz2D_modal.xml
-L 2 error (variable u): 0.00888036
-L inf error (variable u): 0.0101781
+Variable u: L 2 error = 0.00888036
+Variable u: L infinity error = 0.0101781
 ----------------------------------------

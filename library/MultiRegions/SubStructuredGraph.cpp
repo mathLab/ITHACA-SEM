@@ -521,7 +521,7 @@ namespace Nektar
             // erase the blocks that do not have any vertices
             m_IntBlocks.erase(remove_if(m_IntBlocks.begin(), m_IntBlocks.end(), SubGraphWithoutVerts), m_IntBlocks.end());
             // remove the current level if there are no interior blocks
-            if(m_IntBlocks.size() == 0)
+            if(m_IntBlocks.size() == 0 && m_daughterGraph.get())
             {
                 m_IntBlocks     = m_daughterGraph->GetInteriorBlocks();
                 m_daughterGraph = m_daughterGraph->GetDaughterGraph();

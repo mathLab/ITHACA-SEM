@@ -171,6 +171,12 @@ namespace Nektar
             }
             goto UnsteadySetup;
             break;
+		case eUnsteadyLinearAdvectionDiffusion:
+			
+			m_timeIntMethod = LibUtilities::eIMEXOrder1;
+			
+			goto UnsteadySetup;
+			break;
         UnsteadySetup:
         {
             std::string Implicit = "Implicit";
@@ -269,6 +275,41 @@ namespace Nektar
             {
                 m_explicitReaction = true;
             }
+			
+			//check for the coefficiets of the UnsteadyLinearAdvectionDiffusion problem
+			//looking for the diffusion coefficient and the 2 convection coefficients
+			if (m_equationType == eUnsteadyLinearAdvectionDiffusion)
+			{
+				//--------------------------------------------------------------
+				if(m_boundaryConditions->CheckForParameter("DiffCoeff") == true)
+				{
+					m_Dcoeff =  m_boundaryConditions->GetParameter("DiffCoeff");
+				}
+				else
+				{
+					ASSERTL0(false, "Undefined diffusion coefficient for UnsteadyLinearAdvectionDiffusion problem.");
+				}
+				//--------------------------------------------------------------
+				if(m_boundaryConditions->CheckForParameter("AdvCoeffx") == true)
+				{
+					m_Acoeffx =  m_boundaryConditions->GetParameter("AdvCoeffx");
+				}
+				else
+				{
+					ASSERTL0(false, "Undefined convection coefficient (x direction)for UnsteadyLinearAdvectionDiffusion problem."); 
+				}
+				//--------------------------------------------------------------
+				if(m_boundaryConditions->CheckForParameter("AdvCoeffy") == true)
+				{
+					m_Acoeffy =  m_boundaryConditions->GetParameter("AdvCoeffy");
+				}
+				else 
+				{
+					ASSERTL0(false, "Undefined convection coefficient (y direction)for UnsteadyLinearAdvectionDiffusion problem.");
+				}
+				//--------------------------------------------------------------
+			}
+			
 
             // check to see if time stepping has been reset
             if(m_boundaryConditions->SolverInfoExists("TIMEINTEGRATIONMETHOD"))
@@ -332,6 +373,76 @@ namespace Nektar
         }
     }
 
+	// Evaluates the linear advection term -N(u)= -alpha_x*(du/dx) - alpha_y*(du/dy).
+	// Used in the UnsteadyAdvectionDiffusion.
+	// Set up just for 2D Galerkin.
+	// inarray containes the fields to be convected: u (or u,v,...)
+	// outarray contains -N(u) (or -N(u),-N(v),....)
+	// Could be probably reacasted as a particular case of ADRBase::AdvectionNonConservativeForm 
+	void AdvectionDiffusionReaction::ODEeLinearAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+														 Array<OneD, Array<OneD, NekDouble> > &outarray,
+														 const NekDouble time)
+	{
+		switch(m_spacedim)
+		{
+			case 1:
+			{
+				ASSERTL0(false,"1D problem not implemented.");
+			}
+			case 2:
+			{
+				switch(m_projectionType)
+				{
+				    case eDiscontinuousGalerkin:
+			        {
+						ASSERTL0(false,"Discontinuous Galerkin not implemented for this problem");
+			        }
+			        case eGalerkin:
+			        {
+						//internal variables declaration
+						int numfields = m_fields.num_elements();
+						int nqtot     = m_fields[0]->GetNpoints();
+						int ncoeffs   = m_fields[0]->GetNcoeffs();
+						
+						//memory allocation for vectors which will contain
+						//the gradient in physical space and the tmp to allow
+						//passages between physical and coefficient space
+						Array<OneD, NekDouble> grad0,grad1,tmp;
+						grad0 = Array<OneD, NekDouble> (nqtot);
+						grad1 = Array<OneD, NekDouble> (nqtot);
+						tmp   = Array<OneD, NekDouble> (nqtot);
+						
+						SetBoundaryConditions(time);
+						
+						for(int i=0 ; i < numfields ; i++)
+						{
+							//conversion to physical space
+							m_fields[i]->BwdTrans_IterPerExp(inarray[i],tmp);
+							
+							//derivates calculation
+							m_fields[i]->PhysDeriv(tmp,grad0,grad1);
+							
+							//linear advection
+							Vmath::Smul(nqtot,m_Acoeffx,grad0,1,grad0,1);
+							Vmath::Smul(nqtot,m_Acoeffy,grad1,1,grad1,1);
+							
+							//sum of the 2 advection terms
+							Vmath::Vadd(nqtot,grad0,1,grad1,1,tmp,1);
+							
+							//sign change to obtain -N(u)
+							Vmath::Neg(nqtot,tmp,1);
+							
+							//back to coefficient space to be consistent
+							m_fields[i]->FwdTrans_IterPerExp(tmp,outarray[i]);
+						}
+					}
+						break;
+				}
+			}
+				break;
+		}
+		
+	}
 
     /**
      *
@@ -628,6 +739,57 @@ namespace Nektar
         }
     }
 
+	// Function which solve the Helmoholtz problem.
+	// inarray  == field in coefficient space.
+	// outarray == field in coefficient space.
+	// Used in the UnsteadyLinearAdvectionDiffusion problem.
+	// Could be joined to the AdvectionDiffusionReaction::ODEhelmSolve
+	void AdvectionDiffusionReaction::ODEeSolveHelmholtz(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+														Array<OneD, Array<OneD, NekDouble> > &outarray, 
+														const NekDouble time, 
+														const NekDouble aii_Dt)
+	{
+		//internal variables declaration
+	    int numfields = m_fields.num_elements();
+		int phystot   = m_fields[0]->GetTotPoints();
+        int ncoeffs   = m_fields[0]->GetNcoeffs();
+		
+		//coefficients of the helmholts equation: (V^2 u) + (lambda*u) = (kappa*f) = F
+		NekDouble  lambda = 1.0/aii_Dt/m_Dcoeff;
+		NekDouble  kappa  = -1.0/m_timestep/m_Dcoeff;
+		
+		//memory allocation for the forcing term (it is in physical space)
+		Array<OneD, Array< OneD, NekDouble> > F(numfields);
+		F[0] = Array<OneD, NekDouble> (numfields*phystot);
+        for(int n = 1; n < numfields; ++n)
+        {
+			F[n] = F[n-1] + phystot;
+        }
+		
+		
+		//setting time dependent bc
+		SetBoundaryConditions(time);
+		
+		//setting the forcing terms and solving the Helmholtz problem
+		//for each field
+		for(int i=0; i < numfields; i++)
+		{
+			
+			//Transform to physical space for the forcing term 
+			m_fields[i]->BwdTrans_IterPerExp(inarray[i],F[i]);
+			
+			//calculating the forcing term in physica, space
+		    Vmath::Smul(phystot,kappa,F[i],1,F[i],1);
+			
+			//solving the Helmholtz problem 
+			//the solution in coefficient space is stored inside the proper memory location in m_field
+			m_fields[i]->HelmSolve(F[i],m_fields[i]->UpdateCoeffs(),lambda);
+			
+			//Assigment of the solution to the outarray for time-integration
+			outarray[i] = m_fields[i]->GetCoeffs();
+		}
+	}
+	
 
     /**
      *
@@ -767,6 +929,7 @@ namespace Nektar
             case LibUtilities::eBackwardEuler:
             case LibUtilities::eForwardEuler:
             case LibUtilities::eClassicalRungeKutta4:
+			case LibUtilities::eIMEXOrder1:
             {
                 numMultiSteps = 1;
 
@@ -796,6 +959,48 @@ namespace Nektar
                 u = IntScheme[1]->InitializeScheme(m_timestep,fields,m_time,ode);
                 break;
             }
+			case LibUtilities::eIMEXOrder2:
+            {
+                numMultiSteps = 2;
+				
+                IntScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr>(numMultiSteps);
+				
+                // Used in the first time step to initalize the scheme
+				
+				LibUtilities::TimeIntegrationSchemeKey IntKey0(LibUtilities::eIMEXOrder1);
+				
+                // Used for all other time steps 
+                LibUtilities::TimeIntegrationSchemeKey IntKey1(IntMethod); 
+                IntScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
+                IntScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
+				
+                // Initialise the scheme for the actual time integration scheme
+                u = IntScheme[1]->InitializeScheme(m_timestep,fields,m_time,ode);
+				break;
+            }
+				
+			case LibUtilities::eIMEXOrder3:
+            {
+                numMultiSteps = 3;
+				
+                IntScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr>(numMultiSteps);
+				
+                // Used in the first time step to initalize the scheme
+				
+				LibUtilities::TimeIntegrationSchemeKey IntKey0(LibUtilities::eIMEXOrder1);
+				LibUtilities::TimeIntegrationSchemeKey IntKey1(LibUtilities::eIMEXOrder2);
+				
+                // Used for all other time steps 
+                LibUtilities::TimeIntegrationSchemeKey IntKey2(IntMethod); 
+                IntScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
+                IntScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
+				IntScheme[2] = LibUtilities::TimeIntegrationSchemeManager()[IntKey2];
+				
+                // Initialise the scheme for the actual time integration scheme
+                u = IntScheme[2]->InitializeScheme(m_timestep,fields,m_time,ode);
+				break;
+            }
+				
             default:
             {
                 ASSERTL0(false,"populate switch statement for integration scheme");

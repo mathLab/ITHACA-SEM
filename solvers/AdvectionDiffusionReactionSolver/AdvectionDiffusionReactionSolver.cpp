@@ -168,7 +168,18 @@ int main(int argc, char *argv[])
                 dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);
             }
             break;
+			
         }
+		case eUnsteadyLinearAdvectionDiffusion:
+        {
+		  //define the implicit/expicit part of the method
+		  ode.DefineImplicitSolve (&AdvectionDiffusionReaction::ODEeSolveHelmholtz,&dom);	
+		  ode.DefineOdeRhs        (&AdvectionDiffusionReaction::ODEeLinearAdvection,&dom);	
+			
+		  // General Linear Time Integration
+		  dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);
+		}
+		break;
         case eNoEquationType:
         default:
             ASSERTL0(false,"Unknown or undefined equation type");

@@ -61,16 +61,10 @@ ADD_NEKTAR_EXECUTABLE(ProjectCont2D ProjectCont2DSource)
 TARGET_LINK_LIBRARIES(ProjectCont2D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(ProjectCont2D) 
 
-
-SET(AdvectionSource  Advection.cpp)
-ADD_NEKTAR_EXECUTABLE(Advection AdvectionSource)
-TARGET_LINK_LIBRARIES(Advection ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(Advection)
-
-SET(LinearAdvectionCont2DSource  LinearAdvection2D.cpp)
-ADD_NEKTAR_EXECUTABLE(LinearAdvection2D LinearAdvectionCont2DSource)
-TARGET_LINK_LIBRARIES(LinearAdvection2D ${LinkLibraries})
-SET_LAPACK_LINK_LIBRARIES(LinearAdvection2D)
+SET(SteadyLinearAdvectionReactionCont2DSource  SteadyLinearAdvectionReaction2D.cpp)
+ADD_NEKTAR_EXECUTABLE(SteadyLinearAdvectionReaction2D SteadyLinearAdvectionReactionCont2DSource)
+TARGET_LINK_LIBRARIES(SteadyLinearAdvectionReaction2D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(SteadyLinearAdvectionReaction2D)
 
 SET(EigValsLinearAdvectionCont2DSource  EigValsLinearAdvection2D.cpp)
 ADD_NEKTAR_EXECUTABLE(EigValsLinearAdvection2D EigValsLinearAdvectionCont2DSource)

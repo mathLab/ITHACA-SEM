@@ -36,5 +36,10 @@ ADD_NEKTAR_EXECUTABLE(HDGHelmholtz2D HDGHelmholtz2DSource)
 TARGET_LINK_LIBRARIES(HDGHelmholtz2D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(HDGHelmholtz2D)
 
+SET(SteadyAdvectionDiffusionReactionCont2DSource  SteadyAdvectionDiffusionReaction2D.cpp)
+ADD_NEKTAR_EXECUTABLE(SteadyAdvectionDiffusionReaction2D SteadyAdvectionDiffusionReactionCont2DSource)
+TARGET_LINK_LIBRARIES(SteadyAdvectionDiffusionReaction2D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(SteadyAdvectionDiffusionReaction2D)
+
 # Uncomment next line to compile demos in subdirectory
 #SUBDIRS(ExtraDemos)

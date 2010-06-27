@@ -15,24 +15,58 @@ using namespace Nektar;
  /* Nothing */
 #endif
 
+int NoCaseStringCompare(const string & s1, const string& s2);
+
 int main(int argc, char *argv[])
 {
     MultiRegions::ContField2DSharedPtr Exp,Fce;
     int     i, nq,  coordim;
     Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
+    NekDouble  lambda;
     NekDouble  ax,ay;
     NekDouble   st, cps = (double)CLOCKS_PER_SEC;
+    // default solution type multilevel statis condensation
+    MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
 
-    if(argc != 3)
+    if((argc != 2)&&(argc != 3))
     {
-        fprintf(stderr,"Usage: LinearAdvection2D  meshfile boundaryfile\n");
+        fprintf(stderr,"Usage: SteadyLinearAdvectionReaction2D  meshfile [SysSolnType]\n");
         exit(1);
     }
 
     //----------------------------------------------
+    // Load the solver type so we can test full solve, static
+    // condensation and the default multi-level statis condensation.
+    if( argc == 3 )
+    {
+        if(!NoCaseStringCompare(argv[2],"MultiLevelStaticCond"))
+        {
+            SolnType = MultiRegions::eDirectMultiLevelStaticCond; 
+            cout << "Solution Type: MultiLevel Static Condensation" << endl;
+        }
+        else if(!NoCaseStringCompare(argv[2],"StaticCond"))
+        {
+            SolnType = MultiRegions::eDirectStaticCond; 
+            cout << "Solution Type: Static Condensation" << endl;
+        }
+        else if(!NoCaseStringCompare(argv[2],"FullMatrix"))
+        {
+            SolnType = MultiRegions::eDirectFullMatrix; 
+            cout << "Solution Type: Full Matrix" << endl;
+        }
+        else
+        {
+            cerr << "SolnType not recognised" <<endl;
+            exit(1);
+        }
+
+    }
+    //----------------------------------------------
+
+    //----------------------------------------------
     // Read in mesh from input file
-    string meshfile(argv[argc-2]);
+    string meshfile(argv[1]);
     SpatialDomains::MeshGraph2D graph2D; 
 
     graph2D.ReadGeometry(meshfile);
@@ -41,9 +75,8 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // read the problem parameters from input file
-    string bcfile(argv[argc-1]);
     SpatialDomains::BoundaryConditions bcs(&graph2D); 
-    bcs.Read(bcfile);
+    bcs.Read(meshfile);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -54,21 +87,24 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Print summary of solution details
+    lambda = bcs.GetParameter("Lambda");
+    cout << "            Lambda         : " << lambda << endl;
     const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
     LibUtilities::BasisKey bkey0 = expansions[0]->m_BasisKeyVector[0];
     LibUtilities::BasisKey bkey1 = expansions[0]->m_BasisKeyVector[01];
-    cout << "Solving 2D LinearAdvection :"  << endl; 
+    cout << "Solving Steady 2D LinearAdvection :"  << endl; 
     cout << "            Advection_x    : " << ax << endl; 
     cout << "            Advection_y    : " << ay << endl; 
-    cout << "            Expansion      : (" << SpatialDomains::kExpansionTypeStr[bkey0.GetBasisType()] <<","<< SpatialDomains::kExpansionTypeStr[bkey1.GetBasisType()]  << ")" << endl;
+    cout << "            Expansion      : (" << LibUtilities::BasisTypeMap[bkey0.GetBasisType()] <<","<< LibUtilities::BasisTypeMap[bkey1.GetBasisType()]  << ")" << endl;
     cout << "            No. modes      : " << bkey0.GetNumModes() << endl;
     cout << endl;
     //----------------------------------------------
    
     //----------------------------------------------
     // Define Expansion 
+    int bc_val = 0;
     Exp = MemoryManager<MultiRegions::ContField2D>::
-        AllocateSharedPtr(graph2D,bcs);
+        AllocateSharedPtr(graph2D,bcs,bc_val,SolnType);
     //----------------------------------------------
 
     Timing("Read files and define exp ..");
@@ -94,6 +130,10 @@ int main(int argc, char *argv[])
         Exp->GetCoords(xc0,xc1,xc2);
         break;
     }
+
+    Array<OneD, Array< OneD, NekDouble> > Vel(2);
+    Vel[0] = Array<OneD, NekDouble> (nq,ax);
+    Vel[1] = Array<OneD, NekDouble> (nq,ay);
     //----------------------------------------------
     
     //----------------------------------------------
@@ -116,13 +156,13 @@ int main(int argc, char *argv[])
   
     //----------------------------------------------
     // Helmholtz solution taking physical forcing 
-    Exp->LinearAdvectionSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), ax, ay);
+    Exp->LinearAdvectionReactionSolve(Vel, Fce->GetPhys(), Exp->UpdateContCoeffs(), lambda, true);
     //----------------------------------------------
     Timing("Linear Advection Solve ..");
     
     //----------------------------------------------
     // Backward Transform Solution to get solved values 
-    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
+    Exp->BwdTrans(Exp->GetContCoeffs(), Exp->UpdatePhys(), true);
     //----------------------------------------------
     
     //----------------------------------------------
@@ -166,3 +206,40 @@ int main(int argc, char *argv[])
         return 0;
 }
 
+
+/**
+ * Performs a case-insensitive string comparison (from web).
+ * @param   s1          First string to compare.
+ * @param   s2          Second string to compare.
+ * @returns             0 if the strings match.
+ */
+int NoCaseStringCompare(const string & s1, const string& s2)
+{
+    string::const_iterator it1=s1.begin();
+    string::const_iterator it2=s2.begin();
+    
+    //stop when either string's end has been reached
+    while ( (it1!=s1.end()) && (it2!=s2.end()) )
+    {
+        if(::toupper(*it1) != ::toupper(*it2)) //letters differ?
+        {
+            // return -1 to indicate smaller than, 1 otherwise
+            return (::toupper(*it1)  < ::toupper(*it2)) ? -1 : 1;
+        }
+        
+        //proceed to the next character in each string
+        ++it1;
+        ++it2;
+    }
+    
+    size_t size1=s1.size();
+    size_t size2=s2.size();// cache lengths
+    
+    //return -1,0 or 1 according to strings' lengths
+    if (size1==size2)
+    {
+        return 0;
+    }
+    
+    return (size1 < size2) ? -1 : 1;
+}

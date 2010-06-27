@@ -231,10 +231,10 @@ namespace Nektar
 		}
             }
 
-            inline const Array<OneD,const NekDouble>& GetVariableCoefficient() const
+            inline const Array<OneD,Array<OneD, const NekDouble> >& GetVariableCoefficient() const
             {
                 ASSERTL1(m_nvariablecoefficients > 0,"No coeffcients have been defined");                
-                return m_variablecoefficient[0];
+                return m_variablecoefficient;
             }
 
             inline const Array<OneD,const NekDouble>& GetVariableLaplacianCoefficient() const

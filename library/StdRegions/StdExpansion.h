@@ -1014,11 +1014,12 @@ namespace Nektar
                 v_MassLevelCurvatureMatrixOp(inarray,outarray,mkey);
             }
 
-            void LinearAdvectionMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                   Array<OneD,NekDouble> &outarray,
-                                   const StdMatrixKey &mkey)
+            void LinearAdvectionDiffusionReactionMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                                 Array<OneD,NekDouble> &outarray,
+                                                          const StdMatrixKey &mkey,
+                                                          bool addDiffusionTerm = true)
             {
-                v_LinearAdvectionMatrixOp(inarray,outarray,mkey);
+                v_LinearAdvectionDiffusionReactionMatrixOp(inarray,outarray,mkey,addDiffusionTerm);
             }
 
             void HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
@@ -1370,9 +1371,10 @@ namespace Nektar
                                                     Array<OneD,NekDouble> &outarray,
                                                     const StdMatrixKey &mkey);
             
-            void LinearAdvectionMatrixOp_MatFree( const Array<OneD, const NekDouble> &inarray,
-                                                  Array<OneD,NekDouble> &outarray,
-                                                  const StdMatrixKey &mkey);
+            void LinearAdvectionDiffusionReactionMatrixOp_MatFree( const Array<OneD, const NekDouble> &inarray,
+                                                                   Array<OneD,NekDouble> &outarray,
+                                                                   const StdMatrixKey &mkey,
+                                                                   bool addDiffusionTerm = true);
 
             void HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                  Array<OneD,NekDouble> &outarray,
@@ -1561,10 +1563,11 @@ namespace Nektar
                                                         Array<OneD,NekDouble> &outarray,
                                                         const StdMatrixKey &mkey);
 
-            virtual void v_LinearAdvectionMatrixOp(const Array<OneD, 
-                                                   const NekDouble> &inarray,
-                                                   Array<OneD,NekDouble> &outarray,
-                                                   const StdMatrixKey &mkey);
+            virtual void v_LinearAdvectionDiffusionReactionMatrixOp(const Array<OneD, 
+                                                                    const NekDouble> &inarray,
+                                                                    Array<OneD,NekDouble> &outarray,
+                                                                    const StdMatrixKey &mkey,
+                                                                    bool addDiffusionTerm=true);
             
             virtual void v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray,

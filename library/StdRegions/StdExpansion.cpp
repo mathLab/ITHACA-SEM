@@ -436,7 +436,8 @@ namespace Nektar
             case eWeakDeriv2:
             case eWeakDirectionalDeriv:
             case eMassLevelCurvature:
-            case eLinearAdvection:
+            case eLinearAdvectionReaction:
+            case eLinearAdvectionDiffusionReaction:
                 {
                     Array<OneD, NekDouble> tmp(m_ncoeffs);
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
@@ -488,8 +489,11 @@ namespace Nektar
             case eMassLevelCurvature:
                 MassLevelCurvatureMatrixOp(inarray,outarray,mkey);
                 break;
-            case eLinearAdvection:
-                LinearAdvectionMatrixOp(inarray,outarray,mkey);
+            case eLinearAdvectionReaction:
+                LinearAdvectionDiffusionReactionMatrixOp(inarray,outarray,mkey,false);
+                break;
+            case eLinearAdvectionDiffusionReaction:
+                LinearAdvectionDiffusionReactionMatrixOp(inarray,outarray,mkey);
                 break;
             case eLaplacian:
                 LaplacianMatrixOp(inarray,outarray,mkey);
@@ -554,8 +558,11 @@ namespace Nektar
             case eMassLevelCurvature:
                 MassLevelCurvatureMatrixOp_MatFree(inarray,outarray,mkey);
                 break;
-            case eLinearAdvection:
-                LinearAdvectionMatrixOp_MatFree(inarray,outarray,mkey);
+            case eLinearAdvectionReaction:
+                LinearAdvectionDiffusionReactionMatrixOp_MatFree(inarray,outarray,mkey,false);
+                break;
+            case eLinearAdvectionDiffusionReaction:
+                LinearAdvectionDiffusionReactionMatrixOp_MatFree(inarray,outarray,mkey);
                 break;
             case eLaplacian:
                 LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
@@ -605,14 +612,14 @@ namespace Nektar
 
             v_BwdTrans(inarray,tmp);
 
-        if(mkey.GetNvariableCoefficients() > 0)
-          {
-             Vmath::Vmul(nq, mkey.GetVariableCoefficient(), 1, tmp, 1, tmp, 1);
-          }
-
+            if(mkey.GetNvariableCoefficients() > 0)
+            {
+                Vmath::Vmul(nq, mkey.GetVariableCoefficient(0), 1, tmp, 1, tmp, 1);
+            }
+            
             v_IProductWRTBase(tmp, outarray);
         }
-
+        
         void StdExpansion::LaplacianMatrixOp_MatFree(const int k1, const int k2,
                                                            const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
@@ -835,16 +842,18 @@ namespace Nektar
           v_IProductWRTBase(tmp, outarray);
       }
 
-        void StdExpansion::LinearAdvectionMatrixOp_MatFree( const Array<OneD, const NekDouble> &inarray,
-                                                           Array<OneD,NekDouble> &outarray,
-                                                           const StdMatrixKey &mkey)
+        void StdExpansion::LinearAdvectionDiffusionReactionMatrixOp_MatFree( const Array<OneD, const NekDouble> &inarray,
+                                                                             Array<OneD,NekDouble> &outarray,
+                                                                             const StdMatrixKey &mkey,
+                                                                             bool addDiffusionTerm)
         {
 
             int i;
-            int ndir = mkey.GetNconstants(); // assume num.r consts corresponds to directions
+            int ndir = mkey.GetNvariableCoefficients(); // assume num.r consts corresponds to directions
+            ASSERTL0(ndir,"Must define at least one advection velocity");
 
-            const Array<OneD, NekDouble> adv = mkey.GetConstants();
-            int   totpts = GetTotPoints();
+            NekDouble   lambda = mkey.GetConstant(0);
+            int         totpts = GetTotPoints();
             Array<OneD, NekDouble> tmp(3*totpts);
             Array<OneD, NekDouble> tmp_deriv = tmp + totpts;
             Array<OneD, NekDouble> tmp_adv   = tmp_deriv + totpts;
@@ -854,15 +863,35 @@ namespace Nektar
 
             v_BwdTrans(inarray,tmp);
 
-            //calculate a dx + b dy + ..
+            //calculate u dx + v dy + ..
             Vmath::Zero(totpts,tmp_adv,1);
             for(i = 0; i < ndir; ++i)
             {
                 v_PhysDeriv(i,tmp,tmp_deriv);
-                Vmath::Svtvp(totpts,adv[i],tmp_deriv,1,tmp_adv,1,tmp_adv,1);
+                Vmath::Vvtvp(totpts,mkey.GetVariableCoefficient(i),1,tmp_deriv,1,tmp_adv,1,tmp_adv,1);
+            }
+            
+            if(lambda) // add -lambda*u
+            {
+                Vmath::Svtvp(totpts,-lambda,tmp,1,tmp_adv,1,tmp_adv,1);
             }
 
-            v_IProductWRTBase(tmp_adv, outarray);
+
+            if(addDiffusionTerm)
+            {
+                Array<OneD, NekDouble> lap(m_ncoeffs);
+                StdMatrixKey mkeylap(eLaplacian,DetExpansionType(),*this);
+                LaplacianMatrixOp(inarray,lap,mkeylap);
+
+                v_IProductWRTBase(tmp_adv, outarray);
+                // (grad u, grad v) - u.grad v + lambda*u
+                Vmath::Vsub(m_ncoeffs,lap,1,outarray,1,outarray,1);                
+            }
+            else
+            {
+                v_IProductWRTBase(tmp_adv, outarray);
+            }
+
         }
 
 
@@ -1543,16 +1572,16 @@ namespace Nektar
             MassLevelCurvatureMatrixOp_MatFree(inarray,outarray,mkey);
         }
 
-            void StdExpansion::v_LinearAdvectionMatrixOp(const Array<OneD,
-                                                   const NekDouble> &inarray,
-                                                   Array<OneD,NekDouble> &outarray,
-                                                   const StdMatrixKey &mkey)
-            {
-                // If this function is not reimplemented on shape level, the function
-                // below will be called
-                LinearAdvectionMatrixOp_MatFree(inarray,outarray,mkey);
-
-            }
+        void StdExpansion::v_LinearAdvectionDiffusionReactionMatrixOp(const Array<OneD,
+                                                                      const NekDouble> &inarray,
+                                                                      Array<OneD,NekDouble> &outarray,
+                                                                      const StdMatrixKey &mkey, bool addDiffusionTerm)
+        {
+            // If this function is not reimplemented on shape level, the function
+            // below will be called
+            LinearAdvectionDiffusionReactionMatrixOp_MatFree(inarray,outarray,mkey,addDiffusionTerm);
+            
+        }
 
             void StdExpansion::v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray,

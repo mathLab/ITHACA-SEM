@@ -180,7 +180,7 @@ namespace Nektar
                 return m_stdMatKey->GetNvariableLaplacianCoefficients();
             }
 
-            inline const Array<OneD,const NekDouble>& GetVariableCoefficient() const
+            inline const Array<OneD, Array<OneD, const NekDouble> >& GetVariableCoefficient() const
             {             
                 return m_stdMatKey->GetVariableCoefficient();
             }

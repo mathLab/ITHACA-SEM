@@ -1388,7 +1388,8 @@ namespace Nektar
             {
             case StdRegions::eMass:
                 {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    if((m_metricinfo->GetGtype() == SpatialDomains::eDeformed)||
+                       (mkey.GetNvariableCoefficients()))
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
@@ -1757,30 +1758,27 @@ namespace Nektar
             int nblks = 2;
             returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks,nblks,exp_size,exp_size); //Really need a constructor which takes Arrays
             NekDouble factor = 1.0;
-
+            
             switch(mkey.GetMatrixType())
             {
-                case StdRegions::eLaplacian:
-                case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
-
-                    // use Deformed case for both regular and deformed geometries
+                // this can only use stdregions statically condensed system for mass matrix 
+            case StdRegions::eMass: 
+                if((m_metricinfo->GetGtype() == SpatialDomains::eDeformed)||(mkey.GetNvariableCoefficients()))
+                {
                     factor = 1.0;
                     goto UseLocRegionsMatrix;
-                    break;
-                default:
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        factor = 1.0;
-                        goto UseLocRegionsMatrix;
-                    }
-                    else
-                    {
-                        factor = 1.0;
-                        goto UseLocRegionsMatrix;
-                    }
-                    break;
-
-                UseStdRegionsMatrix:
+                }
+                else
+                {
+                    factor = (m_metricinfo->GetJac())[0];
+                    goto UseStdRegionsMatrix;
+                }
+                break;
+            default:     // use Deformed case for both regular and deformed geometries
+                factor = 1.0;
+                goto UseLocRegionsMatrix;
+                break;
+            UseStdRegionsMatrix:
                 {
                     NekDouble            invfactor = 1.0/factor;
                     NekDouble            one = 1.0;

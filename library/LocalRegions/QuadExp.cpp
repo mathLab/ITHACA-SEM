@@ -1347,15 +1347,16 @@ namespace Nektar
             {
             case StdRegions::eMass:
                 {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    if((m_metricinfo->GetGtype() == SpatialDomains::eDeformed)||
+                       (mkey.GetNvariableCoefficients()))
                     {
-                        NekDouble one = 1.0;
+                        NekDouble        one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                     }
                     else
                     {
-                        NekDouble jac = (m_metricinfo->GetJac())[0];
+                        NekDouble        jac = (m_metricinfo->GetJac())[0];
                         DNekMatSharedPtr mat = GetStdMatrix(*mkey.GetStdMatKey());
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,mat);
                     }
@@ -1363,7 +1364,8 @@ namespace Nektar
                 break;
             case StdRegions::eInvMass:
                 {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    if((m_metricinfo->GetGtype() == SpatialDomains::eDeformed)||
+                       (mkey.GetNvariableCoefficients()))
                     {
                         NekDouble one = 1.0;
                         StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetExpansionType(),
@@ -1385,7 +1387,8 @@ namespace Nektar
             case StdRegions::eWeakDeriv1:
             case StdRegions::eWeakDeriv2:
                 {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    if((m_metricinfo->GetGtype() == SpatialDomains::eDeformed)||
+                       (mkey.GetNvariableCoefficients()))
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(*mkey.GetStdMatKey());
@@ -1424,7 +1427,6 @@ namespace Nektar
 
                         DNekMatSharedPtr WeakDeriv = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
                         (*WeakDeriv) = gmat[2*dir][0]*deriv0 + gmat[2*dir+1][0]*deriv1;
-
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,WeakDeriv);
                     }
                 }
@@ -1441,9 +1443,7 @@ namespace Nektar
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         NekDouble one = 1.0;
-
                         DNekMatSharedPtr WeakDirectionalDeriv = GenMatrix(*mkey.GetStdMatKey());
-
                         Array<OneD, Array<OneD, const NekDouble> > Weight(1+2*dim);
                         Array<OneD, NekDouble> tmp;
 
@@ -1485,7 +1485,7 @@ namespace Nektar
                         }
 
                         // Assign value to const NekDouble array for input to key
-                        Cxi[0] = Cxi_wk;
+                        Cxi[0]  = Cxi_wk;
                         Ceta[0] = Ceta_wk;
 
                         // derivxi = Cxi * ( B * D_{\xi} *B^T )
@@ -1514,7 +1514,6 @@ namespace Nektar
                         // Store gmat info in Weight[dim+1]
                         for (int k=0; k < 2*dim; ++k)
                         {
-
                             Weight_wk = Array<OneD, NekDouble>(gmat[k].num_elements());
                             // assign constant value to Weight_wk
                             Weight_wk[0] = gmat[k][0];
@@ -1835,25 +1834,22 @@ namespace Nektar
 
             switch(mkey.GetMatrixType())
             {
-            case StdRegions::eLaplacian:
-            case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
-
-                // use Deformed case for both regular and deformed geometries
-                factor = 1.0;
-                goto UseLocRegionsMatrix;
-                break;
-            default:
-                if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                // this can only use stdregions statically condensed system for mass matrix 
+            case StdRegions::eMass:
+                if((m_metricinfo->GetGtype() == SpatialDomains::eDeformed)||(mkey.GetNvariableCoefficients()))
                 {
                     factor = 1.0;
                     goto UseLocRegionsMatrix;
                 }
                 else
                 {
-                    DNekScalMatSharedPtr& mat = GetLocMatrix(mkey);
-                    factor = mat->Scale();
+                    factor = (m_metricinfo->GetJac())[0];
                     goto UseStdRegionsMatrix;
                 }
+                break;
+            default: // use Deformed case for both regular and deformed geometries
+                factor = 1.0;
+                goto UseLocRegionsMatrix;
                 break;
             UseStdRegionsMatrix:
                 {

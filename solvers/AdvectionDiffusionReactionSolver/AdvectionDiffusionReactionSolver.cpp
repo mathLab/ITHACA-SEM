@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
     dom.Summary(cout);
 
     dom.ZeroPhysFields(); // Zero phys field so that following switch is consistent
-
+    
     // if not steady state equation set up initial conditions
     if(!dom.IsSteadyStateEquation())
     {
@@ -75,19 +75,34 @@ int main(int argc, char *argv[])
         dom.SetInitialConditions();
     }
 
-    // eSteadyAdvection???
     switch(dom.GetEquationType())
     {
-        case eHelmholtz: case eSteadyDiffusionReaction:
-            lambda = dom.GetParameter("Lambda");
-        case ePoisson: case eSteadyDiffusion: // lambda is zero
-            dom.SetPhysForcingFunctions(dom.UpdateFields());
-        case eLaplace:                        // forcing function is zero
-            // Solve the appropriate Helmholtz problem
-            dom.SolveHelmholtz(lambda);
-            break;
-        case eUnsteadyAdvection:
-        case eUnsteadyInviscidBurger:
+    case eHelmholtz: 
+    case eSteadyDiffusionReaction:
+        lambda = dom.GetParameter("Lambda");
+    case ePoisson: // lambda is zero 
+    case eSteadyDiffusion: 
+        dom.SetPhysForcingFunctions(dom.UpdateFields());        
+    case eLaplace:                        // forcing function is zero
+        // Solve the appropriate Helmholtz problem 
+        dom.SolveHelmholtz(lambda);
+        break;
+    
+    case eSteadyAdvectionDiffusionReaction:
+        lambda = dom.GetParameter("Lambda");
+        dom.SetPhysForcingFunctions(dom.UpdateFields());        
+    case eSteadyAdvectionDiffusion:
+        dom.SetPhysForcingFunctions(dom.UpdateFields()); // Allow for forcing
+        dom.SolveLinearAdvectionDiffusionReaction(lambda);
+        break;
+    case eSteadyAdvectionReaction:
+        lambda = dom.GetParameter("Lambda");
+        dom.SetPhysForcingFunctions(dom.UpdateFields()); // Allow for forcing
+        dom.SolveLinearAdvectionReaction(lambda);
+        break;
+        
+    case eUnsteadyAdvection:
+    case eUnsteadyInviscidBurger:
         {
             if(dom.GetExplicitAdvection())
             {
@@ -197,8 +212,8 @@ int main(int argc, char *argv[])
     // Evaluate L2 Error
     for(int i = 0; i < dom.GetNvariables(); ++i)
     {
-        cout << "Variable " <<  dom.GetVariable(i)  << ": L 2 error = " << dom.L2Error(i) << endl;
-        cout << "Variable " <<  dom.GetVariable(i)  << ": L infinity error = " << dom.LinfError(i) << endl;
+        cout << "L 2 error (variable " << dom.GetVariable(i)  << "): " << dom.L2Error(i) << endl;
+        cout << "L inf error (variable " << dom.GetVariable(i)  << "): " << dom.LinfError(i) << endl;
     }
 }
 

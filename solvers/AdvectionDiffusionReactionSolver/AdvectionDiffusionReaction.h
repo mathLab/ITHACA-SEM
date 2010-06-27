@@ -49,7 +49,9 @@ namespace Nektar
         eLaplace,
         ePoisson,
         eHelmholtz,
-        eSteadyAdvection,
+        eSteadyAdvectionReaction,
+        eSteadyAdvectionDiffusion,
+        eSteadyAdvectionDiffusionReaction,
         eSteadyDiffusion,
         eSteadyDiffusionReaction,
         eUnsteadyAdvection,
@@ -61,14 +63,16 @@ namespace Nektar
         eEquationTypeSize,
     };
 
-    // Keep this consistent with the enums in EquationType.
+    // Keep this consistent with qthe enums in EquationType.
     const std::string kEquationTypeStr[] =
     {
         "NoType",
         "Laplace",
         "Poisson",
         "Helmholtz",
-        "SteadyAdvection",
+        "SteadyAdvectionReaction",
+        "SteadyAdvectionDiffusion",
+        "SteadyAdvectionDiffusionReaction",
         "SteadyDiffusion",
         "SteadyDiffusionReaction",
         "UnsteadyAdvection",
@@ -200,6 +204,10 @@ namespace Nektar
 								const NekDouble time, 
 								const NekDouble aii_Dt);
 
+        void SolveLinearAdvectionDiffusionReaction(NekDouble lambda);
+
+        void SolveLinearAdvectionReaction(NekDouble lambda);
+        
         void Summary(std::ostream &out);
 
 
@@ -234,8 +242,8 @@ namespace Nektar
 
         void EvaluateAdvectionVelocity();
 
-    void SetBoundaryConditions(NekDouble time);
-
+        void SetBoundaryConditions(NekDouble time); 
+        
         virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux)
         {
             GetFluxVector(i,physfield,flux);

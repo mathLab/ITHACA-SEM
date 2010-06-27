@@ -45,12 +45,16 @@ namespace Nektar
      * - Laplace equation: \f$ \nabla^2 u=0 \f$
      * - Poisson equation: \f$ \nabla^2 u=f \f$
      * - Helmholtz equation: \f$ \nabla^2 u + k^2u = 0 \f$
-     * - Steady Advection equation:
-     *   \f$ c \cdot \nabla u = 0\f$
+     * - Steady Advection Reaction equation:
+     *   \f$ c \cdot \nabla u -lambda u = f(x)\f$     
+     * - SteadyAdvectionDiffusion: 
+     *   \f$ c \cdot \nabla u -\nabla \cdot (\nabla u)  = f(x)\f$     
+     * - SteadyAdvectionDiffusionReaction: 
+     *   \f$ c \cdot \nabla u -\nabla \cdot (\nabla u)  -lambda u = f(x)\f$     
      * - Steady Diffusion equation:
-     *   \f$ -\nabla \cdot (k\nabla u) = f(x)\f$
+     *   \f$ -\nabla \cdot (\nabla u) = f(x)\f$
      * - Steady Diffusion-Reaction equation:
-     *   \f$ -\nabla \cdot (k\nabla u) = f(u,x)\f$
+     *   \f$ -\nabla \cdot (\nabla u) = f(u,x)\f$
      * - Unsteady Advection equation:
      *   \f$ d_t u + c \cdot \nabla u = 0\f$
      * - Unsteady Inviscid Burger equation:
@@ -58,7 +62,7 @@ namespace Nektar
      * - Unsteady Diffusion equation:
      *   \f$ d_t u -\nabla \cdot (k\nabla u) = f(x)\f$
      * - Unsteady Diffusion-Reaction equation:
-     *   \f$ d_t u -\nabla \cdot (k\nabla u) = f(u,x)\f$
+     *   \f$ d_t u -\nabla \cdot (\nabla u) = f(u,x)\f$
      */
 
     /**
@@ -130,8 +134,8 @@ namespace Nektar
         case ePoisson:
         case eSteadyDiffusionReaction:
             break;
-        case eSteadyAdvection:
-
+        case eSteadyAdvectionDiffusion: 
+        case eSteadyAdvectionDiffusionReaction:
             EvaluateAdvectionVelocity();
             break;
 
@@ -846,7 +850,7 @@ namespace Nektar
 
     /**
      * Solve the Helmholtz problem
-     * \f[ \nabla^2 \boldsymbol{u} + \lambda \boldsymbol{u} = \boldsymbol{f} \f]
+     * \f[ -\nabla^2 \boldsymbol{u} - \lambda \boldsymbol{u} = \boldsymbol{f} \f]
      * for constant \f$\lambda\f$ and forcing term \f$\boldsymbol{f}\f$. This
      * is achieved by solving the separate Helmholtz problems for each
      * dependent variable. After solving, the result is in transformed space.
@@ -862,6 +866,56 @@ namespace Nektar
             m_fields[i]->SetPhysState(false);
         }
     }
+
+
+
+    /**
+     * Solve the AdvectionDiffusionReaction problem \f[ -\nabla^2
+     * \boldsymbol{u} + \boldsymbol{V}\cdot\nabla\boldsymbol{u} -
+     * \lambda \boldsymbol{u} = \boldsymbol{f} \f] for constant
+     * \f$\lambda\f$, specified velocity \f$\boldsymbol{V}\f$ and
+     * forcing term \f$\boldsymbol{f}\f$. This is achieved by solving
+     * the separate problems for each dependent variable. After
+     * solving, the result is in transformed space.
+     *
+     * @param lambda Parameter.
+     */
+    void AdvectionDiffusionReaction::SolveLinearAdvectionDiffusionReaction(NekDouble lambda)
+    {
+        for(int i = 0; i < m_fields.num_elements(); ++i)
+        {
+            m_fields[i]->LinearAdvectionDiffusionReactionSolve(m_velocity, 
+                                                         m_fields[i]->GetPhys(),
+                                                         m_fields[i]->UpdateCoeffs(),
+                                                         lambda);
+            m_fields[i]->SetPhysState(false);
+        }
+    }
+
+
+    /**
+     * Solve the steady Advection problem \f[
+     * \boldsymbol{V}\cdot\nabla\boldsymbol{u} - \lambda
+     * \boldsymbol{u} = \boldsymbol{f} \f] for specified velocity
+     * \f$\boldsymbol{V}\f$ and forcing term 
+     * \f$\boldsymbol{f}\f$. This is achieved by solving the separate
+     * problems for each dependent variable. After solving, the
+     * result is in transformed space.
+     *
+     * @param lambda Parameter.
+     */
+    void AdvectionDiffusionReaction::SolveLinearAdvectionReaction(NekDouble lambda)
+    {
+        for(int i = 0; i < m_fields.num_elements(); ++i)
+        {
+            m_fields[i]->LinearAdvectionReactionSolve(m_velocity, 
+                                                      m_fields[i]->GetPhys(),
+                                                      m_fields[i]->UpdateCoeffs(),
+                                                      lambda);
+            m_fields[i]->SetPhysState(false);
+        }
+    }
+
 
     // For Continuous Galerkin projections with time-dependent dirichlet boundary conditions,
     // the time integration can be done as follows:

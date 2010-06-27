@@ -63,9 +63,8 @@ namespace Nektar
          */
         GlobalLinSysKey::GlobalLinSysKey(
                         const StdRegions::MatrixType matrixType,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
-                        const GlobalSysSolnType solnType):
-            m_solnType(solnType),
+                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
+            m_solnType(locToGloMap->GetGlobalSysSolnType()),
             m_globMatKey(MemoryManager<GlobalMatrixKey>
                                     ::AllocateSharedPtr(matrixType,locToGloMap))
         {
@@ -83,11 +82,10 @@ namespace Nektar
         GlobalLinSysKey::GlobalLinSysKey(
                         const StdRegions::MatrixType matrixType,
                         const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap, 
-                        const GlobalSysSolnType solnType):
-            m_solnType(solnType),
+                        const LocalToGlobalBaseMapSharedPtr &locToGloMap):
+            m_solnType(locToGloMap->GetGlobalSysSolnType()),
             m_globMatKey(MemoryManager<GlobalMatrixKey>
-                        ::AllocateSharedPtr(matrixType,varcoeffs,locToGloMap))
+                         ::AllocateSharedPtr(matrixType,varcoeffs,locToGloMap))
         {
         } 
 
@@ -103,9 +101,8 @@ namespace Nektar
         GlobalLinSysKey::GlobalLinSysKey(
                         const StdRegions::MatrixType matrixType,
                         const LocalToGlobalBaseMapSharedPtr &locToGloMap,
-                        const NekDouble factor,
-                        const GlobalSysSolnType solnType):
-            m_solnType(solnType),
+                        const NekDouble factor):
+            m_solnType(locToGloMap->GetGlobalSysSolnType()),
             m_globMatKey(MemoryManager<GlobalMatrixKey>
                             ::AllocateSharedPtr(matrixType,factor,locToGloMap))
         {
@@ -125,9 +122,8 @@ namespace Nektar
                         const StdRegions::MatrixType matrixType,
                         const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                         const NekDouble factor1,
-                        const NekDouble factor2,
-                        const GlobalSysSolnType solnType):
-            m_solnType(solnType),
+                        const NekDouble factor2):
+            m_solnType(locToGloMap->GetGlobalSysSolnType()),
             m_globMatKey(MemoryManager<GlobalMatrixKey>
                             ::AllocateSharedPtr(matrixType,factor1,factor2,
                                                 locToGloMap))
@@ -148,9 +144,8 @@ namespace Nektar
                         const StdRegions::MatrixType matrixType,
                         const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                         const NekDouble factor,
-                        const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                        const GlobalSysSolnType solnType):
-            m_solnType(solnType),
+                        const Array<OneD, Array<OneD, NekDouble> >& varcoeffs):
+            m_solnType(locToGloMap->GetGlobalSysSolnType()),
             m_globMatKey(MemoryManager<GlobalMatrixKey>
                             ::AllocateSharedPtr(matrixType,factor,varcoeffs,
                                                 locToGloMap))
@@ -173,9 +168,8 @@ namespace Nektar
                         const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                         const NekDouble factor1,
                         const NekDouble factor2, 
-                        const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                        const GlobalSysSolnType solnType):
-            m_solnType(solnType),
+                        const Array<OneD, Array<OneD,NekDouble> >& varcoeffs):
+            m_solnType(locToGloMap->GetGlobalSysSolnType()),
             m_globMatKey(MemoryManager<GlobalMatrixKey>
                             ::AllocateSharedPtr(matrixType,factor1,factor2,
                                                 varcoeffs,locToGloMap))
@@ -195,9 +189,8 @@ namespace Nektar
                         const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                         const Array<OneD, NekDouble> &factor1,
                         const NekDouble factor2, 
-                        const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
-                        const GlobalSysSolnType solnType):
-            m_solnType(solnType),
+                        const Array<OneD, Array<OneD,NekDouble> >& varcoeffs):
+            m_solnType(locToGloMap->GetGlobalSysSolnType()),
             m_globMatKey(MemoryManager<GlobalMatrixKey>
                             ::AllocateSharedPtr(matrixType,factor1,factor2,
                                                 varcoeffs,locToGloMap))

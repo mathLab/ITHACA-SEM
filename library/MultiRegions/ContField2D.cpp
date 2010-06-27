@@ -515,47 +515,7 @@ namespace Nektar
 
             // Solve the system
             GlobalLinSysKey key(StdRegions::eLaplacian,m_locToGloMap,time,
-                                variablecoeffs,
-                                m_locToGloMap->GetGlobalSysSolnType());
-
-            if(UseContCoeffs)
-            {
-                GlobalSolve(key,wsp,outarray,dirForcing);
-            }
-            else
-            {
-                Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
-                GlobalSolve(key,wsp,tmp,dirForcing);
-                GlobalToLocal(tmp,outarray);
-            }
-        }
-
-
-        /**
-         * First compute the inner product of forcing function with respect to
-         * base, and then solve the system with the linear advection operator.
-         * @param   inarray     Forcing function.
-         * @param   outarray    Result.
-         * @param   ax          Advection parameter, x.
-         * @param   ay          Advection parameter, y.
-         * @param   UseContCoeffs   Use continuous coefficients.
-         * @param   dirForcing  Dirichlet Forcing.
-         */
-        void ContField2D::LinearAdvectionSolve(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                NekDouble ax, NekDouble ay,
-                                bool        UseContCoeffs,
-                                const Array<OneD, const NekDouble>& dirForcing)
-        {
-            // Inner product of forcing
-            Array<OneD,NekDouble> wsp(m_contNcoeffs);
-            IProductWRTBase(inarray,wsp,true);
-
-
-            // Solve the system
-            GlobalLinSysKey key(StdRegions::eLinearAdvection,m_locToGloMap,
-                                ax,ay,eDirectFullMatrix);
+                                variablecoeffs);
 
             if(UseContCoeffs)
             {
@@ -587,8 +547,14 @@ namespace Nektar
                                               Array<OneD, NekDouble> &Evecs)
         {
             // Solve the system
-            GlobalLinSysKey key(StdRegions::eLinearAdvection,m_locToGloMap,
-                                ax,ay,eDirectFullMatrix);
+            Array<OneD, Array<OneD, NekDouble> > vel(2);
+            Array<OneD, NekDouble> vel_x(m_npoints,ax);
+            Array<OneD, NekDouble> vel_y(m_npoints,ay);
+            vel[0] = vel_x;
+            vel[1] = vel_y;
+
+            GlobalLinSysKey key(StdRegions::eLinearAdvectionReaction,m_locToGloMap,
+                                0.0,vel);
 
             DNekMatSharedPtr   Gmat = GenGlobalMatrixFull(key,m_locToGloMap);
             Gmat->EigenSolve(Real,Imag,Evecs);
@@ -897,8 +863,7 @@ namespace Nektar
             }
 
             // Solve the system
-            GlobalLinSysKey key(StdRegions::eHelmholtz,m_locToGloMap,lambda,
-                                m_locToGloMap->GetGlobalSysSolnType());
+            GlobalLinSysKey key(StdRegions::eHelmholtz,m_locToGloMap,lambda);
 
             if(UseContCoeffs)
             {
@@ -911,6 +876,98 @@ namespace Nektar
                 GlobalSolve(key,wsp,tmp,dirForcing);
                 GlobalToLocal(tmp,outarray);
             }            
+        }
+
+
+        /**
+         * First compute the inner product of forcing function with respect to
+         * base, and then solve the system with the linear advection operator.
+         * @param   velocity    Array of advection velocities in physical space
+         * @param   inarray     Forcing function.
+         * @param   outarray    Result.
+         * @param   lambda      reaction coefficient
+         * @param   UseContCoeffs   Use continuous coefficients.
+         * @param   dirForcing  Dirichlet Forcing.
+         */
+
+        // could combine this with HelmholtzCG. 
+        void ContField2D::v_LinearAdvectionDiffusionReactionSolve(const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+                                                       const Array<OneD, const NekDouble> &inarray,
+                                                       Array<OneD, NekDouble> &outarray,
+                                                       const NekDouble lambda,
+                                                       bool        UseContCoeffs,
+                                                       const Array<OneD, const NekDouble>& dirForcing)
+        {
+            // Inner product of forcing
+            Array<OneD,NekDouble> wsp(m_contNcoeffs);
+            IProductWRTBase(inarray,wsp,true);
+            // Note -1.0 term necessary to invert forcing function to
+            // be consistent with matrix definition
+            Vmath::Neg(m_contNcoeffs, wsp, 1);
+
+            // Forcing function with weak boundary conditions
+            int i,j;
+            int bndcnt=m_locToGloMap->GetNumLocalDirBndCoeffs();
+            for(i = m_numDirBndCondExpansions;
+                i < m_bndCondExpansions.num_elements(); ++i)
+            {
+                for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
+                {
+                    wsp[m_locToGloMap
+                        ->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)]
+                        += (m_bndCondExpansions[i]->GetCoeffs())[j];
+                }
+            }
+
+            // Solve the system
+            GlobalLinSysKey key(StdRegions::eLinearAdvectionDiffusionReaction,m_locToGloMap,lambda,velocity);
+            
+            if(UseContCoeffs)
+            {
+                GlobalSolve(key,wsp,outarray,dirForcing);
+            }
+            else
+            {
+                Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
+                GlobalSolve(key,wsp,tmp,dirForcing);
+                GlobalToLocal(tmp,outarray);
+            }
+        }
+
+        /**
+         * First compute the inner product of forcing function with respect to
+         * base, and then solve the system with the linear advection operator.
+         * @param   velocity    Array of advection velocities in physical space
+         * @param   inarray     Forcing function.
+         * @param   outarray    Result.
+         * @param   lambda      reaction coefficient
+         * @param   UseContCoeffs   Use continuous coefficients.
+         * @param   dirForcing  Dirichlet Forcing.
+         */
+        void ContField2D::v_LinearAdvectionReactionSolve(const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+                                                       const Array<OneD, const NekDouble> &inarray,
+                                                       Array<OneD, NekDouble> &outarray,
+                                                       const NekDouble lambda,
+                                                       bool        UseContCoeffs,
+                                                       const Array<OneD, const NekDouble>& dirForcing)
+        {
+            // Inner product of forcing
+            Array<OneD,NekDouble> wsp(m_contNcoeffs);
+            IProductWRTBase(inarray,wsp,true);
+
+            // Solve the system
+            GlobalLinSysKey key(StdRegions::eLinearAdvectionReaction,m_locToGloMap,lambda,velocity);
+            
+            if(UseContCoeffs)
+            {
+                GlobalSolve(key,wsp,outarray,dirForcing);
+            }
+            else
+            {
+                Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
+                GlobalSolve(key,wsp,tmp,dirForcing);
+                GlobalToLocal(tmp,outarray);
+            }
         }
         
         

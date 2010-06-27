@@ -75,11 +75,19 @@ namespace Nektar
             /// Sets up a list of local expansions based on an input mesh.
             ExpList3D(SpatialDomains::MeshGraph3D &graph3D);
 
+
+            /// Destructor.
+            ~ExpList3D();
+
+        protected:
+            /// Evaluates boundary conditions.
             void EvaluateBoundaryConditions(
                                             const NekDouble time,
                                             Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
                                             Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                                             &bndConditions);
+
+            /// Populates the list of boundary condition expansions.
             void SetBoundaryConditionExpansion(
                                                SpatialDomains::MeshGraph3D &graph3D,
                                                SpatialDomains::BoundaryConditions &bcs,
@@ -88,17 +96,13 @@ namespace Nektar
                                                Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                                                &bndConditions);
 
-            /// Destructor.
-            ~ExpList3D();
-
-        protected:
             /// Generates a map of periodic faces in the mesh.
             void GetPeriodicFaces(SpatialDomains::MeshGraph3D &graph3D,
-                        SpatialDomains::BoundaryConditions &bcs,
-                        const std::string variable,
-                        map<int,int>& periodicVertices,
-                        map<int,int>& periodicEdges,
-                        map<int,int>& periodicFaces);
+                                  SpatialDomains::BoundaryConditions &bcs,
+                                  const std::string variable,
+                                  map<int,int>& periodicVertices,
+                                  map<int,int>& periodicEdges,
+                                  map<int,int>& periodicFaces);
 
         private:
             /// Definition of the total number of degrees of freedom and

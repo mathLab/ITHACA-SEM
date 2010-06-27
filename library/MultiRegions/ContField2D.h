@@ -192,16 +192,7 @@ namespace Nektar
                               NekDouble time = 0.0,
                               bool UseContCoeffs = false);
 
-            // Solve the linear advection problem assuming that m_contCoeff
-            // vector contains an intial estimate for solution
-            void LinearAdvectionSolve(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                      NekDouble ax,     NekDouble ay,
-                                      bool        UseContCoeffs = false,
-                                      const Array<OneD, const NekDouble>&
-                                            dirForcing = NullNekDouble1DArray);
-
+            
             /// Compute the eigenvalues of the linear advection operator.
             void LinearAdvectionEigs(const NekDouble ax,
                                      const NekDouble ay,
@@ -322,6 +313,26 @@ namespace Nektar
                     const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
                           bool UseContCoeffs,
                     const Array<OneD, const NekDouble> &dirForcing);
+
+            // Solve the linear advection problem assuming that m_contCoeff
+            // vector contains an intial estimate for solution
+            virtual void v_LinearAdvectionDiffusionReactionSolve(const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+                                              const Array<OneD, const NekDouble> &inarray,
+                                              Array<OneD, NekDouble> &outarray,
+                                              const NekDouble lambda,
+                                              bool  UseContCoeffs = false,
+                                              const Array<OneD, const NekDouble>&
+                                              dirForcing = NullNekDouble1DArray);
+
+            // Solve the linear advection problem assuming that m_contCoeff
+            // vector contains an intial estimate for solution
+            void v_LinearAdvectionReactionSolve(const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+                                              const Array<OneD, const NekDouble> &inarray,
+                                              Array<OneD, NekDouble> &outarray,
+                                              const NekDouble lambda,
+                                              bool  UseContCoeffs = false,
+                                              const Array<OneD, const NekDouble>&
+                                              dirForcing = NullNekDouble1DArray);
 
             /// Template method virtual forwarder for GetBndConditions().
             virtual const Array<OneD,const SpatialDomains
@@ -555,7 +566,7 @@ namespace Nektar
         {
             m_locToGloMap->Assemble(inarray,outarray);
         }
-
+        
 
         inline const LocalToGlobalC0ContMapSharedPtr&
                                         ContField2D::GetLocalToGlobalMap() const

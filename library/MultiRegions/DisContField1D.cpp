@@ -486,8 +486,7 @@ namespace Nektar
             if(GloBndDofs - NumDirBCs > 0)
             {
                 GlobalLinSysKey       key(StdRegions::eHybridDGHelmBndLam,
-                                          m_traceMap,lambda,tau,
-                                          m_traceMap->GetGlobalSysSolnType());
+                                          m_traceMap,lambda,tau);
                 GlobalLinSysSharedPtr LinSys = GetGlobalBndLinSys(key);
                 LinSys->Solve(BndRhs,m_trace,m_traceMap);
             }

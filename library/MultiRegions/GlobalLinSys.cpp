@@ -411,9 +411,10 @@ namespace Nektar
                     }
                 }
                 break;
-            case StdRegions::eLinearAdvection:
+            case StdRegions::eLinearAdvectionReaction:
+            case StdRegions::eLinearAdvectionDiffusionReaction:
                 {
-                    matStorage = eFULL;
+                    matStorage = eFULL; 
                     Gmat = MemoryManager<DNekMat>
                                         ::AllocateSharedPtr(rows, cols, zero,
                                                             matStorage);
@@ -515,15 +516,15 @@ namespace Nektar
                     if( (2*(bwidth+1)) < rows)
                     {
                         try {
-                        matStorage = ePOSITIVE_DEFINITE_SYMMETRIC_BANDED;
-                        Gmat = MemoryManager<DNekMat>
-                                        ::AllocateSharedPtr(rows, cols, zero,
-                                                            matStorage,
-                                                            bwidth, bwidth);
+                            matStorage = ePOSITIVE_DEFINITE_SYMMETRIC_BANDED;
+                            Gmat = MemoryManager<DNekMat>
+                                ::AllocateSharedPtr(rows, cols, zero,
+                                                    matStorage,
+                                                    bwidth, bwidth);
                         }
                         catch (...) {
-                        	NEKERROR(ErrorUtil::efatal,
-                        			"Insufficient memory for GlobalLinSys.");
+                            NEKERROR(ErrorUtil::efatal,
+                                     "Insufficient memory for GlobalLinSys.");
                         }
                     }
                     else
@@ -535,10 +536,22 @@ namespace Nektar
                     }
                 }
                 break;
+            case StdRegions::eLinearAdvectionReaction:
+            case StdRegions::eLinearAdvectionDiffusionReaction:
+                {
+                    // Current inversion techniques do not seem to
+                    // allow banded matrices to be used as a linear
+                    // system
+                    matStorage = eFULL; 
+                    Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows, cols, zero,
+                                                                     matStorage);
+
+                }
+                break;
             default:
                 {
                     NEKERROR(ErrorUtil::efatal, "Add MatrixType to switch "
-                                                "statement");
+                             "statement");
                 }
             }
 

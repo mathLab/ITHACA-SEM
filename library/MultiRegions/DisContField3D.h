@@ -150,12 +150,6 @@ namespace Nektar
                     const NekDouble time = 0.0);
 
 
-            virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID,
-                                                Array<OneD,int> &FaceID)
-            {
-                GetBoundaryToElmtMap(ElmtID,FaceID);
-            }
-
             /// \brief Set up an stl map containing the information
             /// for a robin aboundary condition in the location of the
             /// element id
@@ -167,26 +161,30 @@ namespace Nektar
 
             virtual void v_EvaluateBoundaryConditions(
                     const NekDouble time = 0.0);
+            
 
             virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& v_GetBndConditions()
             {
                 return m_bndConditions;
             }
 
+            virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID, 
+                                                Array<OneD,int> &FaceID);
+            
             virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo()
             {
                 return GetRobinBCInfo();
             }
         };
-
+        
         typedef boost::shared_ptr<DisContField3D>   DisContField3DSharedPtr;
 
         inline const Array<OneD,const MultiRegions::ExpList2DSharedPtr>&
-                    DisContField3D::GetBndCondExpansions()
+            DisContField3D::GetBndCondExpansions()
         {
             return m_bndCondExpansions;
         }
-
+        
         /**
          * \brief This function evaluates the boundary conditions at a certain
          * time-level.
@@ -223,11 +221,11 @@ namespace Nektar
         }
 
         inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>&
-                    DisContField3D::GetBndConditions()
+            DisContField3D::GetBndConditions()
         {
             return m_bndConditions;
         }
-
+        
     } //end of namespace
 } //end of namespace
 

@@ -242,6 +242,27 @@ namespace Nektar
                     const Array<OneD, const Array<OneD, NekDouble> > &varCoeff 
                                                 = NullNekDoubleArrayofArray);
 
+            /// Solve Advection Diffusion Reaction 
+            inline void LinearAdvectionDiffusionReactionSolve(
+                       const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+                       const Array<OneD, const NekDouble> &inarray,
+                       Array<OneD, NekDouble> &outarray,
+                       const NekDouble lambda,
+                       bool  UseContCoeffs = false,
+                       const Array<OneD, const NekDouble>&
+                       dirForcing = NullNekDouble1DArray);
+
+
+            /// Solve Advection Diffusion Reaction 
+            inline void LinearAdvectionReactionSolve(
+                       const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+                       const Array<OneD, const NekDouble> &inarray,
+                       Array<OneD, NekDouble> &outarray,
+                       const NekDouble lambda,
+                       bool  UseContCoeffs = false,
+                       const Array<OneD, const NekDouble>&
+                       dirForcing = NullNekDouble1DArray);
+
             ///
             void FwdTrans_BndConstrained(
                     const Array<OneD, const NekDouble> &inarray,
@@ -746,6 +767,24 @@ namespace Nektar
                                    const Array<OneD, NekDouble> &lambda,
                                    NekDouble tau);
 
+            virtual void v_LinearAdvectionDiffusionReactionSolve(
+                       const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+                       const Array<OneD, const NekDouble> &inarray,
+                       Array<OneD, NekDouble> &outarray,
+                       const NekDouble lambda,
+                       bool  UseContCoeffs = false,
+                       const Array<OneD, const NekDouble>&
+                       dirForcing = NullNekDouble1DArray);
+
+            virtual void v_LinearAdvectionReactionSolve(
+                       const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+                       const Array<OneD, const NekDouble> &inarray,
+                       Array<OneD, NekDouble> &outarray,
+                       const NekDouble lambda,
+                       bool  UseContCoeffs = false,
+                       const Array<OneD, const NekDouble>&
+                       dirForcing = NullNekDouble1DArray);
+
             // wrapper functions about virtual functions
             virtual Array<OneD, NekDouble> &v_UpdateContCoeffs();
             
@@ -1023,6 +1062,31 @@ namespace Nektar
             // HelmSolve(inarray, outarray, lambda, tau, Lambda);
             // HelmSolve(inarray, outarray, lambda, tau, Lambda, varcoeff);
             v_HelmSolveDG(inarray, outarray, lambda, Sigma, varcoeff, tau);
+        }
+
+        /**
+         * 
+         */
+        inline void ExpList::LinearAdvectionDiffusionReactionSolve(
+                       const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+                       const Array<OneD, const NekDouble> &inarray,
+                       Array<OneD, NekDouble> &outarray,
+                       const NekDouble lambda,
+                       bool  UseContCoeffs,
+                       const Array<OneD, const NekDouble>&  dirForcing)
+        {
+            v_LinearAdvectionDiffusionReactionSolve(velocity,inarray, outarray, lambda, UseContCoeffs,dirForcing);
+        }
+
+        inline void ExpList::LinearAdvectionReactionSolve(
+                       const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+                       const Array<OneD, const NekDouble> &inarray,
+                       Array<OneD, NekDouble> &outarray,
+                       const NekDouble lambda,
+                       bool  UseContCoeffs,
+                       const Array<OneD, const NekDouble>&  dirForcing)
+        {
+            v_LinearAdvectionReactionSolve(velocity,inarray, outarray, lambda, UseContCoeffs,dirForcing);
         }
 
         /**

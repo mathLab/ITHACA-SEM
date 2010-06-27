@@ -299,7 +299,7 @@ namespace Nektar
                         const std::string variable,
                         Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
                         Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                                                                &bndConditions)
+                        &bndConditions)
         {
             int i;
             int cnt  = 0;

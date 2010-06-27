@@ -665,15 +665,19 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                                 ::AllocateSharedPtr(nrows,ncols,blkmatStorage);
 
             int totnq, nvarcoeffs = gkey.GetNvariableCoefficients();
-            Array<OneD, Array<OneD,const NekDouble> > varcoeffs(nvarcoeffs);
             Array<OneD, NekDouble> varcoeffs_wk;
 
             for(i = cnt1 = 0; i < n_exp; ++i)
             {
                 totnq = GetCoordim(i)*( (*m_exp)[elmt_id.find(i)->second]->GetTotPoints() );
+
+                // need to be initialised with zero size for non variable coefficient case
+                Array<OneD, Array<OneD,const NekDouble> > varcoeffs;
                 
                 if(nvarcoeffs>0)
                 {
+                    varcoeffs = Array<OneD, Array<OneD,const NekDouble> > (nvarcoeffs);
+
                     // When two varcoeffs in a specific order               
                     for(j = 0; j < nvarcoeffs; j++)
                     {
@@ -754,13 +758,17 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                     int  i,j;
                     
                     int nvarcoeffs = gkey.GetNvariableCoefficients();
-                    Array<OneD, Array<OneD, const NekDouble> > varcoeffs(nvarcoeffs);
                     
                     for(i= 0; i < num_elmts[n]; ++i)
                     {
+                        // need to be initialised with zero size for non variable coefficient case
+                        Array<OneD, Array<OneD,const NekDouble> > varcoeffs;
+
                         eid = m_offset_elmt_id[cnt++];
                         if(nvarcoeffs>0)
                         {
+                            varcoeffs = Array<OneD, Array<OneD,const NekDouble> > (nvarcoeffs);
+
                             for(j = 0; j < nvarcoeffs; j++)
                             {
                                 varcoeffs[j] = gkey.GetVariableCoefficient(j) + m_phys_offset[eid];
@@ -847,18 +855,19 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
             pair<int,int> coord;
 
             int nvarcoeffs = mkey.GetNvariableCoefficients();
-            Array<OneD, Array<OneD,const NekDouble> > varcoeffs(nvarcoeffs);
 
             // fill global matrix
             for(n = cntdim1 = cntdim2 = 0; n < (*m_exp).size(); ++n)
             {
+                // need to be initialised with zero size for non variable coefficient case
+                Array<OneD, Array<OneD,const NekDouble> > varcoeffs;
+
                 if(nvarcoeffs>0)
                 {
+                    varcoeffs = Array<OneD, Array<OneD,const NekDouble> > (nvarcoeffs);
+
                     for(j = 0; j < nvarcoeffs; j++)
                     {
-                        
-                        ASSERTL0(false,"method not set up for non-Dirichlet conditions");
-
                         varcoeffs[j] = mkey.GetVariableCoefficient(j) + m_phys_offset[j];
                     }
                 }
@@ -975,17 +984,19 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
             
             int nel;
             int nvarcoeffs = mkey.GetNvariableCoefficients();
-            Array<OneD, Array<OneD,const NekDouble> > varcoeffs(nvarcoeffs);
             
             map<int, RobinBCInfoSharedPtr> RobinBCInfo = GetRobinBCInfo();
             
             for(n = cnt1 = 0; n < n_exp; ++n)
             {
                 nel = m_offset_elmt_id[n];
+
+                // need to be initialised with zero size for non variable coefficient case
+                Array<OneD, Array<OneD,const NekDouble> > varcoeffs;
+
                 if(nvarcoeffs>0)
                 {
-                    ASSERTL0(false,"method not set up for non-Dirichlet conditions");
-
+                    varcoeffs = Array<OneD, Array<OneD,const NekDouble> >(nvarcoeffs);
                     for(j = 0; j < nvarcoeffs; j++)
                     {
                         varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
@@ -1048,7 +1059,6 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
             int bwidth = locToGloMap->GetFullSystemBandWidth();
 
             int nvarcoeffs = mkey.GetNvariableCoefficients();
-            Array<OneD, Array<OneD,const NekDouble> > varcoeffs(nvarcoeffs);
             MatrixStorage matStorage;
 
             map<int, RobinBCInfoSharedPtr> RobinBCInfo = GetRobinBCInfo();
@@ -1080,9 +1090,13 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
             // fill global symmetric matrix
             for(n = 0; n < (*m_exp).size(); ++n)
             {
+
+                // need to be initialised with zero size for non variable coefficient case
+                Array<OneD, Array<OneD,const NekDouble> > varcoeffs;
+
                 if(nvarcoeffs>0)
                 {
-                    ASSERTL0(false,"method not set up for non-Dirichlet conditions");
+                    varcoeffs = Array<OneD, Array<OneD,const NekDouble> > (nvarcoeffs);
 
                     for(j = 0; j < nvarcoeffs; j++)
                     {
@@ -1249,8 +1263,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
          * @return  (A shared pointer to) the statically condensed global
          *          linear system.
          */
-        GlobalLinSysSharedPtr ExpList::GenGlobalLinSysStaticCond(
-                                                                 const GlobalLinSysKey &mkey,
+        GlobalLinSysSharedPtr ExpList::GenGlobalLinSysStaticCond(const GlobalLinSysKey &mkey,
                                                                  const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
         {
             int n,j;
@@ -1277,16 +1290,21 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
 
             int eid;
             int nvarcoeffs = mkey.GetNvariableCoefficients();
-            Array<OneD, Array<OneD,const NekDouble> > varcoeffs(nvarcoeffs);
 
             map<int, RobinBCInfoSharedPtr> RobinBCInfo = GetRobinBCInfo();
 
             for(n = cnt1 = 0; n < n_exp; ++n)
             {
                 eid = m_offset_elmt_id[n];
+
+                // need to be initialised with zero size for non variable coefficient case
+                Array<OneD, Array<OneD,const NekDouble> > varcoeffs;
+
+                // set up elemental coefficient if necessary
                 if(nvarcoeffs>0)
                 {
-                    ASSERTL0(false,"method not set up for non-Dirichlet conditions");
+                    varcoeffs = Array<OneD, Array<OneD,const NekDouble> > (nvarcoeffs);
+
                     for(j = 0; j < nvarcoeffs; j++)
                     {
                         varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
@@ -1299,7 +1317,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                                                *(*m_exp)[eid],
                                                mkey.GetConstants(),
                                                varcoeffs);
-
+                
                 loc_mat = (*m_exp)[eid]->GetLocStaticCondMatrix(matkey);
 
                 if(RobinBCInfo.count(eid) != 0) // add robin mass matrix
@@ -1431,15 +1449,21 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
 
             int eid;
             int totnq, nvarcoeffs = mkey.GetNvariableCoefficients();
-            Array<OneD, Array<OneD,const NekDouble> > varcoeffs(nvarcoeffs);
-            Array<OneD, NekDouble> varcoeffs_wk;
 
             for(n = cnt1 = 0; n < n_exp; ++n)
             {
                 eid = m_offset_elmt_id[n];
                 totnq = GetCoordim(eid)*( (*m_exp)[eid]->GetTotPoints() );
+
+
+                // need to be initialised with zero size for non variable coefficient case
+                Array<OneD, Array<OneD,const NekDouble> > varcoeffs;
+                Array<OneD, NekDouble> varcoeffs_wk;
+
                 if(nvarcoeffs>0)
                 {
+                    varcoeffs = Array<OneD, Array<OneD,const NekDouble> > (nvarcoeffs);
+
                     // When two varcoeffs in a specific order            
                     for(j = 0; j < nvarcoeffs; j++)
                     {
@@ -2428,6 +2452,33 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
+
+
+        void ExpList::v_LinearAdvectionDiffusionReactionSolve(
+                       const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+                       const Array<OneD, const NekDouble> &inarray,
+                       Array<OneD, NekDouble> &outarray,
+                       const NekDouble lambda,
+                       bool  UseContCoeffs,
+                       const Array<OneD, const NekDouble>&  dirForcing)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_LinearAdvectionReactionSolve(
+                       const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+                       const Array<OneD, const NekDouble> &inarray,
+                       Array<OneD, NekDouble> &outarray,
+                       const NekDouble lambda,
+                       bool  UseContCoeffs,
+                       const Array<OneD, const NekDouble>&  dirForcing)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
+
 
         // wrapper functions about virtual functions
         Array<OneD, NekDouble> &ExpList::v_UpdateContCoeffs()

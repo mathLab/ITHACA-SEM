@@ -49,45 +49,38 @@ namespace Nektar
         public:
             /// Linear system with no parameters.
             GlobalLinSysKey(const StdRegions::MatrixType matrixType,
-                            const LocalToGlobalBaseMapSharedPtr &locToGloMap,
-                            const GlobalSysSolnType solnType);
+                            const LocalToGlobalBaseMapSharedPtr &locToGloMap);
             /// Linear system with variable coefficients
             GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const Array<OneD,Array<OneD,NekDouble> >& varcoeffs,
-                            const LocalToGlobalBaseMapSharedPtr &locToGloMap,
-                            const GlobalSysSolnType solnType);
+                            const LocalToGlobalBaseMapSharedPtr &locToGloMap);
             /// Linear system with a single real factor.
             GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap,
-                            const NekDouble factor,
-                            const GlobalSysSolnType solnType);
+                            const NekDouble factor);
             /// Linear system with two real factors.
             GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                             const NekDouble factor1,
-                            const NekDouble factor2,
-                            const GlobalSysSolnType solnType);
+                            const NekDouble factor2);
             /// Linear system with a real factor and variable coefficients.
             GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                             const NekDouble factor,
-                            const Array<OneD,Array<OneD,NekDouble> >& varcoeffs,
-                            const GlobalSysSolnType solnType);
+                            const Array<OneD,Array<OneD,NekDouble> >& varcoeffs);
             /// Linear system with two real factors and variable coefficients.
             GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                             const NekDouble factor1,
                             const NekDouble factor2, 
-                            const Array<OneD,Array<OneD,NekDouble> >& varcoeffs,
-                            const GlobalSysSolnType solnType);
-            /// Linear system with an array of real factors, a second real
+                            const Array<OneD,Array<OneD,NekDouble> >& varcoeffs);
+             /// Linear system with an array of real factors, a second real
             /// factor and variable coefficients.
             GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                             const Array<OneD,NekDouble> &factor1,
                             const NekDouble factor2, 
-                            const Array<OneD,Array<OneD,NekDouble> >& varcoeffs,
-                            const GlobalSysSolnType solnType);
+                            const Array<OneD,Array<OneD,NekDouble> >& varcoeffs);
             /// Copy constructor.
             GlobalLinSysKey(const GlobalLinSysKey &key);
             /// Destructor.

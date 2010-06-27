@@ -91,6 +91,11 @@ namespace Nektar
             bool SameTypeOfBoundaryConditions(const ContField3D &In);
 
 
+            inline const Array<OneD,const MultiRegions::ExpList2DSharedPtr>& GetBndCondExpansions()
+            {
+                return m_bndCondExpansions;
+            }
+            
             /// This function return the boundary conditions expansion.
             inline const Array<OneD,const MultiRegions::ExpList2DSharedPtr>
                     &GetBndCondExp();
@@ -208,6 +213,7 @@ namespace Nektar
                     const Array<OneD,const NekDouble> &inarray,
                           Array<OneD,      NekDouble> &outarray,
                           bool  UseContCoeffs);
+
 
         };
         typedef boost::shared_ptr<ContField3D>      ContField3DSharedPtr;

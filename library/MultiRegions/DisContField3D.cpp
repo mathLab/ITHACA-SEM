@@ -222,6 +222,7 @@ namespace Nektar
             SetBoundaryConditionExpansion(graph3D,bcs,variable,m_bndCondExpansions,m_bndConditions);
         }
 
+        
         // Set up a list of element ids and edge ids that link to the
         // boundary conditions
         void DisContField3D::GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, Array<OneD,int> &FaceID)
@@ -332,6 +333,14 @@ namespace Nektar
 
             return returnval;
         }
+
+        
+        void DisContField3D::v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID, 
+                                                    Array<OneD,int> &FaceID)
+        {
+            GetBoundaryToElmtMap(ElmtID,FaceID);
+        }
+
 
         void DisContField3D::v_EvaluateBoundaryConditions(
                 const NekDouble time)

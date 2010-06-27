@@ -51,6 +51,8 @@ int main(int argc, char* argv[])
     // //Test Steady Diffusion Advection
      Execute("AdvectionDiffusionReactionSolver","Test_Helmholtz2D_modal.xml","Testing Helmholtz/Steady Diffusion Reaction Modes=7");
 
+     Execute("AdvectionDiffusionReactionSolver","Test_SteadyAdvDiffReact2D_modal.xml","Testing Steady Advection Diffusion Reaction Modes=9");
+
     // //Test Advection
     // Execute("AdvectionDiffusionReactionSolver","Test_Advection_m3.xml","Testing Advection modes=3");
     // Execute("AdvectionDiffusionReactionSolver","Test_Advection_m8.xml","Testing Advection modes=8");

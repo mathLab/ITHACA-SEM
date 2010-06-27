@@ -61,9 +61,9 @@ int main(int argc, char* argv[])
     Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs.xml","CG Helmholtz2D  modes=7 All BCs,  MultiLevel Static Condensation");
     Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs.xml","CG Helmholtz2D  modes=7 All BCs, Static Condensation");
     Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs.xml","CG Helmholtz2D  modes=7 All BCs, Full Matrix");
-
     Execute("HDGHelmholtz2D", "helmholtz2D_7modes.xml","HDG Helmholtz2D  modes=7");
     Execute("HDGHelmholtz2D", "helmholtz2D_7modes_AllBCs.xml","HDG Helmholtz2D  modes=7 All BCs,  MultiLevel Static Condensation");
+    Execute("SteadyAdvectionDiffusionReaction2D", "linearadvdiffreact2D_7modes.xml","Steady Advection Diffusion Reaction 2D  modes=7");
 
 
     // 3D Demos

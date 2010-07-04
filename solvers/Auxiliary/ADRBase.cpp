@@ -67,25 +67,25 @@ namespace Nektar
      * @param   UseInputFileForProjectionType   Default: false.
      * @param   UseContinuoutField              Default: false.
      */
-    ADRBase::ADRBase(string &fileNameString, bool UseInputFileForProjectionType,
+    ADRBase::ADRBase(const string &fileNameString, bool UseInputFileForProjectionType,
                      bool UseContinuousField, string &globoptfile)
     {
         SpatialDomains::MeshGraph graph;
         m_filename = fileNameString;
 
         // Read the geometry and the expansion information
-        m_graph = graph.Read(fileNameString);
+        m_graph = graph.Read(m_filename);
 
         // Also read and store the boundary conditions
         SpatialDomains::MeshGraph *meshptr = m_graph.get();
         m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
                                         ::AllocateSharedPtr(meshptr);
-        m_boundaryConditions->Read(fileNameString);
+        m_boundaryConditions->Read(m_filename);
 
         // Read and store history point data
         m_historyPoints = MemoryManager<SpatialDomains::History>
                                         ::AllocateSharedPtr(meshptr);
-        m_historyPoints->Read(fileNameString);
+        m_historyPoints->Read(m_filename);
 
         // Set space dimension for use in class
         m_spacedim = m_graph->GetSpaceDimension();

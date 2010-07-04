@@ -61,7 +61,7 @@ namespace Nektar
         ADRBase();
 
         /// Constructor.
-        ADRBase(string &fileStringName,
+        ADRBase(const string &fileStringName,
                 bool UseInputFileForProjectionType = false,
                 bool UseContinuousField = false,
                 string &globoptfile = NekNullString);

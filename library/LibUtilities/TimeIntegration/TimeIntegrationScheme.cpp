@@ -1049,7 +1049,7 @@ namespace Nektar
 					{
 					    for(int j=0; j<=i; ++j)
 						{
-							T += U(i,j)*timestep;
+							T += A(i,j)*timestep;
 						}
 					}
 					else 

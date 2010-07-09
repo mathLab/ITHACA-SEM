@@ -58,7 +58,6 @@ namespace Nektar
         eUnsteadyInviscidBurger,
         eUnsteadyDiffusion,
         eUnsteadyAdvectionDiffusion,
-        eAlievPanfilov,
 		eUnsteadyLinearAdvectionDiffusion,
         eEquationTypeSize,
     };
@@ -79,7 +78,6 @@ namespace Nektar
         "UnsteadyInviscidBurger",
         "UnsteadyDiffusion",
         "UnsteadyAdvectionDiffusion",
-        "AlievPanfilov",
 		"UnsteadyLinearAdvectionDiffusion",
     };
 
@@ -194,33 +192,26 @@ namespace Nektar
                    LibUtilities::TimeIntegrationSchemeOperators ode);
 
         void SolveHelmholtz(NekDouble lambda);
-		
-		void ODEeLinearAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+
+		void ODEeLinearAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
 								 Array<OneD, Array<OneD, NekDouble> > &outarray,
 								 const NekDouble time);
-		
-		void ODEeSolveHelmholtz(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
-								Array<OneD, Array<OneD, NekDouble> > &outarray, 
-								const NekDouble time, 
+
+		void ODEeSolveHelmholtz(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+								Array<OneD, Array<OneD, NekDouble> > &outarray,
+								const NekDouble time,
 								const NekDouble aii_Dt);
 
         void SolveLinearAdvectionDiffusionReaction(NekDouble lambda);
 
         void SolveLinearAdvectionReaction(NekDouble lambda);
-        
+
         void Summary(std::ostream &out);
 
 
     protected:
         NekDouble m_epsilon;      // scalar diffusivity constant
-        NekDouble m_beta;
         NekDouble m_wavefreq;     // frequency of the initial wave
-        NekDouble m_duration;
-        NekDouble mA;
-        NekDouble mK;
-        NekDouble mMu1;
-        NekDouble mMu2;
-        NekDouble mEps;
 
     private:
         int          m_infosteps;    ///< dump info to stdout at steps time
@@ -229,7 +220,7 @@ namespace Nektar
         bool m_explicitAdvection;  ///< Flag to identify explicit Advection
         bool m_explicitDiffusion;  ///< Flag to identify explicit Diffusion
         bool m_explicitReaction;   ///< Flag to identify explicit Reaction
-		
+
 		NekDouble    m_Dcoeff;            ///< Diffusion coefficient (nu_x = nu_y) for UnsteadyLinearAdvectionDiffusion
 		NekDouble    m_Acoeffx;           ///< Advection coefficient (alpha_x) for UnsteadyLinearAdvectionDiffusion
 		NekDouble    m_Acoeffy;           ///< Advection coefficient (alpha_y) for UnsteadyLinearAdvectionDiffusion
@@ -242,8 +233,8 @@ namespace Nektar
 
         void EvaluateAdvectionVelocity();
 
-        void SetBoundaryConditions(NekDouble time); 
-        
+        void SetBoundaryConditions(NekDouble time);
+
         virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux)
         {
             GetFluxVector(i,physfield,flux);

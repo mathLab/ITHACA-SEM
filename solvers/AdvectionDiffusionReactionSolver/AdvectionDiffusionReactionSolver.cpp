@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
     dom.Summary(cout);
 
     dom.ZeroPhysFields(); // Zero phys field so that following switch is consistent
-    
+
     // if not steady state equation set up initial conditions
     if(!dom.IsSteadyStateEquation())
     {
@@ -77,20 +77,20 @@ int main(int argc, char *argv[])
 
     switch(dom.GetEquationType())
     {
-    case eHelmholtz: 
+    case eHelmholtz:
     case eSteadyDiffusionReaction:
         lambda = dom.GetParameter("Lambda");
-    case ePoisson: // lambda is zero 
-    case eSteadyDiffusion: 
-        dom.SetPhysForcingFunctions(dom.UpdateFields());        
+    case ePoisson: // lambda is zero
+    case eSteadyDiffusion:
+        dom.SetPhysForcingFunctions(dom.UpdateFields());
     case eLaplace:                        // forcing function is zero
-        // Solve the appropriate Helmholtz problem 
+        // Solve the appropriate Helmholtz problem
         dom.SolveHelmholtz(lambda);
         break;
-    
+
     case eSteadyAdvectionDiffusionReaction:
         lambda = dom.GetParameter("Lambda");
-        dom.SetPhysForcingFunctions(dom.UpdateFields());        
+        dom.SetPhysForcingFunctions(dom.UpdateFields());
     case eSteadyAdvectionDiffusion:
         dom.SetPhysForcingFunctions(dom.UpdateFields()); // Allow for forcing
         dom.SolveLinearAdvectionDiffusionReaction(lambda);
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
         dom.SetPhysForcingFunctions(dom.UpdateFields()); // Allow for forcing
         dom.SolveLinearAdvectionReaction(lambda);
         break;
-        
+
     case eUnsteadyAdvection:
     case eUnsteadyInviscidBurger:
         {
@@ -163,34 +163,12 @@ int main(int argc, char *argv[])
             }
             break;
         }
-        case eAlievPanfilov:
-        {
-            if(dom.GetExplicitDiffusion())
-            {
-                // Choose the method of deriving forcing functions
-                ode.DefineOdeRhs (&AdvectionDiffusionReaction::ODErhs,&dom);
-
-                // General Linear Time Integration
-                dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);
-            }
-            else
-            {
-                // Choose the method of deriving forcing functions
-                ode.DefineImplicitSolve       (&AdvectionDiffusionReaction::ODEhelmSolve,dom);
-                ode.DefineOdeRhs              (&AdvectionDiffusionReaction::ODErhs,dom);
-
-                // General Linear Time Integration
-                dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);
-            }
-            break;
-			
-        }
 		case eUnsteadyLinearAdvectionDiffusion:
         {
 		  //define the implicit/expicit part of the method
-		  ode.DefineImplicitSolve (&AdvectionDiffusionReaction::ODEeSolveHelmholtz,&dom);	
-		  ode.DefineOdeRhs        (&AdvectionDiffusionReaction::ODEeLinearAdvection,&dom);	
-			
+		  ode.DefineImplicitSolve (&AdvectionDiffusionReaction::ODEeSolveHelmholtz,&dom);
+		  ode.DefineOdeRhs        (&AdvectionDiffusionReaction::ODEeLinearAdvection,&dom);
+
 		  // General Linear Time Integration
 		  dom.GeneralTimeIntegration(nsteps, dom.GetTimeIntMethod(), ode);
 		}

@@ -285,7 +285,7 @@ NekDouble Hex_sol(NekDouble x, NekDouble y, NekDouble z,
                   LibUtilities::BasisType btype1,
                   LibUtilities::BasisType btype2,
                   LibUtilities::BasisType btype3 ) {
-    int i,j,k,l,m;
+    int i,j,k;
     NekDouble sol = 0.0;
 
     int Nx = (btype1 == LibUtilities::eFourier ? order1/2 : order1);

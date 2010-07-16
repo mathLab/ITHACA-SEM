@@ -413,7 +413,7 @@ namespace Nektar
                 GetInteriorMap(outarray);
             }
 
-            virtual int v_GetVertexMap(const int localVertexId)
+            virtual int v_GetVertexMap(int localVertexId)
             {
                 return GetVertexMap(localVertexId);
             }

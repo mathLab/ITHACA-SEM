@@ -44,12 +44,12 @@ static double  pow_loc(const double val, const int i)
 /// This routine projects a polynomial or trigonmetric functions which
 /// has energy in all modes of the expansions and reports and error
 int main(int argc, char *argv[]){
-    int           i,j;
-    const         NekDouble *z1,*z2,*w;
+    int           i;
+    
     int           order1,order2,order3, nq1,nq2,nq3;
     PointsType    Qtype1,Qtype2,Qtype3;
     BasisType     btype1,btype2,btype3;
-    PointsType    NodalType;
+
     ExpansionType regionshape;
     StdExpansion* E;
     Array<OneD, NekDouble> sol;

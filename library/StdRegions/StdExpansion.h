@@ -1487,7 +1487,7 @@ namespace Nektar
 
             virtual void v_GetInteriorMap(Array<OneD, unsigned int>& outarray);
 
-            virtual int v_GetVertexMap(const int localVertexId);
+            virtual int v_GetVertexMap(int localVertexId);
  
             virtual void v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
                                               Array<OneD, unsigned int> &maparray,

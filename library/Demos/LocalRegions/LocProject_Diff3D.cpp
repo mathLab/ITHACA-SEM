@@ -55,12 +55,12 @@ static double  pow_loc(const double val, const int i)
 /// This routine projects a polynomial or trigonmetric functions which
 /// has energy in all mdoes of the expansions and reports and error
 int main(int argc, char *argv[]){
-    int           i,j;
-    const         NekDouble *z1,*z2,*w;
+    int           i;
+    
     int           order1,order2,order3, nq1,nq2,nq3;
     LibUtilities::PointsType    Qtype1,Qtype2,Qtype3;
     LibUtilities::BasisType     btype1,btype2,btype3;
-    LibUtilities::PointsType     NodalType;
+
     StdRegions::ExpansionType    regionshape;
     StdRegions::StdExpansion *E;
     Array<OneD, NekDouble> x, y, z, sol, dx, dy, dz;
@@ -325,7 +325,7 @@ NekDouble Hex_sol(NekDouble x, NekDouble y, NekDouble z,
            LibUtilities::BasisType btype2,
            LibUtilities::BasisType btype3)
 {
-    int i,j,k,l,m;
+    int i,j,k;
     NekDouble sol = 0.0;
 
     int  Nx = (btype1 == LibUtilities::eFourier ? order1/2 : order1);
@@ -381,7 +381,7 @@ NekDouble Hex_Dsol(NekDouble x, NekDouble y, NekDouble z,
            LibUtilities::BasisType btype2,
            LibUtilities::BasisType btype3)
 {
-    int i,j,k,l,m;
+    int i,j,k;
     NekDouble sol = 0.0;
 
     int  Nx = (btype1 == LibUtilities::eFourier ? order1/2 : order1);

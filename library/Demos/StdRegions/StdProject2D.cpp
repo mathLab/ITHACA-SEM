@@ -21,8 +21,8 @@ NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2,
 // has energy in all mdoes of the expansions and reports and error
 
 int main(int argc, char *argv[]){
-  int           i,j;
-  const         NekDouble *z1,*z2,*w;
+  int           i;
+  
   int           order1,order2, nq1,nq2;
   LibUtilities::PointsType    Qtype1,Qtype2;
   LibUtilities::BasisType     btype1,btype2;

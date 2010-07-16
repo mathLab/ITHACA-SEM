@@ -15,10 +15,10 @@ static double solutionfourier(double x, int order, double a, double b);
 
 int main(int argc, char *argv[])
 {
-    int i,j;
+    int i;
     int order, nq;
     Array<OneD, const NekDouble> z,w;
-    NekDouble L2_err;
+
     NekDouble x[2];
     LibUtilities::PointsType Qtype;
     LibUtilities::BasisType  btype;

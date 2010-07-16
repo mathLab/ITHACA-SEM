@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     NekDouble  lambda;
-    NekDouble   st, cps = (double)CLOCKS_PER_SEC;
+    NekDouble    cps = (double)CLOCKS_PER_SEC;
 
     if(argc != 2)
     {

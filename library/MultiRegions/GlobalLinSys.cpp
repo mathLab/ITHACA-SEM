@@ -656,7 +656,7 @@ namespace Nektar
                 int nPatches  = locToGloMap->GetNumPatches();
                 int nEntriesA = 0; int nEntriesB = 0;
                 int nEntriesC = 0; int nEntriesD = 0;
-                int nTotEntries;
+
                 for(i = 0; i < nPatches; i++)
                 {
                     nEntriesA += nBndDofsPerPatch[i]*nBndDofsPerPatch[i];

@@ -28,8 +28,8 @@ static double  pow_loc(const double val, const int i)
 
 int main(int argc, char *argv[])
 {
-  int           i,j,k,l;
-  const         double *z1,*z2,*w;
+  int           i;
+  
   int           order1,order2, nq1,nq2;
   LibUtilities::PointsType    Qtype1,Qtype2;
   LibUtilities::BasisType     btype1,btype2;

@@ -1432,7 +1432,7 @@ namespace Nektar
                                           Array<OneD, unsigned int> &maparray,
                                           Array<OneD, int> &signarray)
         {
-            int i, cnt, p_hat, k;
+            int i;
             const int P = m_base[0]->GetNumModes();
             const int Q = m_base[1]->GetNumModes();
             const int R = m_base[2]->GetNumModes();
@@ -1547,7 +1547,7 @@ namespace Nektar
                                           Array<OneD, unsigned int> &maparray,
                                           Array<OneD, int> &signarray)
         {
-            int i, j, cnt, cnt2, idx, p_hat, k;
+            int i, j, idx, k;
             const int P = m_base[0]->GetNumModes();
             const int Q = m_base[1]->GetNumModes();
             const int R = m_base[2]->GetNumModes();
@@ -1642,7 +1642,7 @@ namespace Nektar
             const int Q = m_base[1]->GetNumModes();
             const int R = m_base[2]->GetNumModes();
 
-        	int i,j,k,q_hat,k_hat;
+        	int i,j,q_hat,k_hat;
         	int cnt = 0;
 
         	// Skip along the stacks (K)
@@ -1677,7 +1677,6 @@ namespace Nektar
                                            Array<OneD, unsigned int> &maparray,
                                            Array<OneD, int>& signarray)
         {
-            int i,j;
             const int nummodes0 = m_base[0]->GetNumModes();
             const int nummodes1 = m_base[1]->GetNumModes();
             const int nummodes2 = m_base[2]->GetNumModes();

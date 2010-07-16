@@ -605,7 +605,7 @@ namespace Nektar
          */
         map<int, RobinBCInfoSharedPtr> DisContField1D::GetRobinBCInfo(void)
         {
-            int i,cnt;
+            int i;
             map<int, RobinBCInfoSharedPtr> returnval;
             Array<OneD, int> ElmtID,VertID;
             GetBoundaryToElmtMap(ElmtID,VertID);
@@ -616,7 +616,7 @@ namespace Nektar
 
                 if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
                 {
-                    int e,elmtid;
+                    int elmtid;
                     Array<OneD, NekDouble> Array_tmp;
 
                     locExpList = m_bndCondExpansions[i];

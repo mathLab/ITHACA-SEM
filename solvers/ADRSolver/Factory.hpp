@@ -57,60 +57,61 @@
  *              ::CreateInstance("[derivedclass]",Param1,Param2)
  * \endcode
  */
-template < typename tKey,				// reference tag (e.g. string, int)
-		   typename tBase,				// base class
-		   typename tParam1,            // First parameter type
-		   typename tParam2,
-		   typename tPredicator = std::less<tKey> >
-class Factory {
-	public:
-		/// Constructor
-		Factory() {}
-		/// Destructor
-		~Factory() {}
-
-		typedef boost::shared_ptr<tBase> tBaseSharedPtr;
-		/// typedef for the creator function, return of type base class.
-    	typedef tBaseSharedPtr (*CreatorFunction) (tParam1, tParam2);
-		/// Shorthand for our map
-	    typedef std::map<tKey, CreatorFunction, tPredicator> TMapFactory;
-		/// typename for our maps iterator
-		typedef typename TMapFactory::iterator TMapFactoryIterator;
-
-		/// Create an instance of the class referred to by \c idKey
-	    static tBaseSharedPtr CreateInstance(tKey idKey, tParam1 x, tParam2 y) {
-			TMapFactoryIterator it = getMapFactory()->find(idKey);
-	        if (it != getMapFactory()->end()) {
-	            if (it->second) {
-	                try
-	                {
-	                    return it->second(x, y);
-	                }
-	                catch (const std::string& s)
-	                {
-	                    std::cout << "ERROR Creating module: " << s << std::endl;
-	                    abort();
-	                }
-    	        }
-        	}
-        	std::cout << "No such class: " << idKey << std::endl;
-			throw -1;
-    	}
-
-		/// Register a class with the factory
-		static tKey RegisterCreatorFunction(tKey idKey,
-											CreatorFunction classCreator) {
-		    getMapFactory()->insert(std::pair<tKey,CreatorFunction>
-													(idKey, classCreator));
-        	return idKey;
-		}
-
-	protected:
-		/// Static function to return the map, ensures it is created first.
-	    static TMapFactory * getMapFactory() {
-	        static TMapFactory mMapFactory;
-	        return &mMapFactory;
-	    }
+template < typename tKey,	       	// reference tag (e.g. string, int)
+           typename tBase,	       	// base class
+           typename tParam1,            // First parameter type
+           typename tParam2,
+           typename tPredicator = std::less<tKey> >
+class Factory 
+{
+public:
+    /// Constructor
+    Factory() {}
+    /// Destructor
+    ~Factory() {}
+    
+    typedef boost::shared_ptr<tBase> tBaseSharedPtr;
+    /// typedef for the creator function, return of type base class.
+    typedef tBaseSharedPtr (*CreatorFunction) (tParam1);
+    /// Shorthand for our map
+    typedef std::map<tKey, CreatorFunction, tPredicator> TMapFactory;
+    /// typename for our maps iterator
+    typedef typename TMapFactory::iterator TMapFactoryIterator;
+    
+    /// Create an instance of the class referred to by \c idKey
+    static tBaseSharedPtr CreateInstance(tKey idKey, tParam1 x) {
+        TMapFactoryIterator it = getMapFactory()->find(idKey);
+        if (it != getMapFactory()->end()) {
+            if (it->second) {
+                try
+                {
+                    return it->second(x);
+                }
+                catch (const std::string& s)
+                {
+                    std::cout << "ERROR Creating module: " << s << std::endl;
+                    abort();
+                }
+            }
+        }
+        std::cout << "No such class: " << idKey << std::endl;
+        throw -1;
+    }
+    
+    /// Register a class with the factory
+    static tKey RegisterCreatorFunction(tKey idKey,
+                                        CreatorFunction classCreator) {
+        getMapFactory()->insert(std::pair<tKey,CreatorFunction>
+                                (idKey, classCreator));
+        return idKey;
+    }
+    
+protected:
+    /// Static function to return the map, ensures it is created first.
+    static TMapFactory * getMapFactory() {
+        static TMapFactory mMapFactory;
+        return &mMapFactory;
+    }
 };
 
 /**

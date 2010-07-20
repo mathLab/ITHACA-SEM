@@ -37,17 +37,19 @@
 #include <cstdlib>
 #include <cmath>
 
-//#include <ADRSolver/ADR.h>
 #include <ADRSolver/EquationSystem.h>
 #include <ADRSolver/SessionReader.h>
-#include <ADRSolver/EquationSystems/AlievPanfilov.h>
 using namespace Nektar;
 
 
 int main(int argc, char *argv[])
 {
 
-    ASSERTL0(argc == 2,"\n \t Usage: ADRSolver  sessionfile \n");
+    if(argc != 2)
+    {
+        cout << "\n \t Usage: ADRSolver  sessionfile \n" << endl;
+        exit(1);
+    }
 
     string filename(argv[1]);
     time_t starttime, endtime;
@@ -55,9 +57,6 @@ int main(int argc, char *argv[])
 
     SessionReaderSharedPtr session;
     EquationSystemSharedPtr equ;
-
-    // Time integration function object for unsteady equations
-    LibUtilities::TimeIntegrationSchemeOperators ode;
 
     time(&starttime);
 
@@ -68,27 +67,16 @@ int main(int argc, char *argv[])
     // Create specific equation as specified in the session file.
     try
     {
-        equ = EquationSystemFactory::CreateInstance(
-                session->getSolverInfo("EQTYPE"), session, ode);
-        equ->doInitialise();
+        equ = EquationSystemFactory::CreateInstance( session->GetSolverInfo("EQTYPE"), session);
     }
     catch (int e)
     {
-        ASSERTL0(e == -1, "No such class defined.");
+        ASSERTL0(e == -1, "No such solver class defined.");
     }
 
-    equ->printSummary(cout);
+    equ->PrintSummary(cout);
 
-    // Solve steady-state equations or perform time integration.
-    if (equ->isSteady())
-    {
-        equ->doSolveHelmholtz();
-    }
-    else
-    {
-        equ->SetInitialConditions();
-        equ->GeneralTimeIntegration(equ->GetSteps(), equ->getTimeIntMethod(), ode);
-    }
+    equ->DoSolve();
 
     time(&endtime);
     CPUtime = (1.0/60.0/60.0)*difftime(endtime,starttime);
@@ -100,10 +88,11 @@ int main(int argc, char *argv[])
     cout << "Total Computation Time = " << CPUtime << " hr." << endl;
 
     // Evaluate L2 Error
+    // note that format is important for regression tests. 
     for(int i = 0; i < equ->GetNvariables(); ++i)
     {
-        cout << "Variable " <<  equ->GetVariable(i)  << ": L 2 error = " << equ->L2Error(i) << endl;
-        cout << "Variable " <<  equ->GetVariable(i)  << ": L infinity error = " << equ->LinfError(i) << endl;
+        cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i) << endl;
+        cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i) << endl;
     }
 }
 

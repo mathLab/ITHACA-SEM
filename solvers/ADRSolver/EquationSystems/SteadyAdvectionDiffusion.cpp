@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Laplace.cpp
+// File SteadAdvectionDiffusion.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,40 +29,69 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Laplace solve routines 
+// Description: Steady Advection Diffusion solve routines 
 //
 ///////////////////////////////////////////////////////////////////////////////
-
-#include <ADRSolver/EquationSystems/Laplace.h>
+#include <ADRSolver/EquationSystems/SteadyAdvectionDiffusion.h>
 
 namespace Nektar
 {
-    string Laplace::className = EquationSystemFactory::RegisterCreatorFunction("Laplace", Laplace::create);
+    string SteadyAdvectionDiffusion::className = EquationSystemFactory::RegisterCreatorFunction("SteadyAdvectionDiffusion", SteadyAdvectionDiffusion::create);
 
-    Laplace::Laplace(SessionReaderSharedPtr& pSession)
+    /**
+     * @class SteadyAdvectionDiffusion
+     * This is a solver class for solving the  problems.
+     * - SteadyAdvectionDiffusion:
+     *   \f$ c \cdot \nabla u -\nabla \cdot (\nabla u)  = f(x)\f$
+     */
+
+    SteadyAdvectionDiffusion::SteadyAdvectionDiffusion(SessionReaderSharedPtr& pSession)
         : EquationSystem(pSession),
           m_lambda(0.0)
     {
+        // Define forcing function. 
+        SetPhysForcingFunctions(m_fields);
+
+        // Define Velocity fields
+        m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim); 
+        int nq = m_fields[0]->GetNpoints();
+        std::string velStr[3] = {"Vx","Vy","Vz"};
+
+        for(int i = 0; i < m_spacedim; ++i)
+        {
+            m_velocity[i] = Array<OneD, NekDouble> (nq,0.0);
+
+            SpatialDomains::ConstUserDefinedEqnShPtr ifunc
+                = m_boundaryConditions->GetUserDefinedEqn(velStr[i]);
+            
+            EvaluateFunction(m_velocity[i],ifunc);
+        }
 
     }
 
-    Laplace::~Laplace()
+    SteadyAdvectionDiffusion::~SteadyAdvectionDiffusion()
     {
 
     }
 
-    void Laplace::v_PrintSummary(std::ostream &out)
+    void SteadyAdvectionDiffusion::v_PrintSummary(std::ostream &out)
     {
         out << "\tLambda          : " << m_lambda << endl;
+        for (int i = 0; i < m_fields.num_elements(); ++i)
+        {
+            out << "\tForcing func [" << i << "]: " << m_boundaryConditions->GetForcingFunction(i)->GetEquation() << endl;
+        }
     }
 
-    void Laplace::v_DoSolve()
+
+    void SteadyAdvectionDiffusion::v_DoSolve()
     {
         for(int i = 0; i < m_fields.num_elements(); ++i)
         {
-            m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),
-                                   m_fields[i]->UpdateCoeffs(),
-                                   m_lambda);
+            m_fields[i]->LinearAdvectionDiffusionReactionSolve(m_velocity,
+                                                               m_fields[i]->GetPhys(),
+                                                               m_fields[i]->UpdateCoeffs(),
+                                                               m_lambda);
             m_fields[i]->SetPhysState(false);
         }
     }

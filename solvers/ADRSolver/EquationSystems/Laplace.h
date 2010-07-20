@@ -9,23 +9,22 @@ namespace Nektar
     {
     public:
         /// Creates an instance of this class
-        static EquationSystemSharedPtr create(SessionReaderSharedPtr& pSession,
-                LibUtilities::TimeIntegrationSchemeOperators& pOde) {
-            return MemoryManager<Laplace>::AllocateSharedPtr(pSession, pOde);
+        static EquationSystemSharedPtr create(SessionReaderSharedPtr& pSession) 
+        {
+            return MemoryManager<Laplace>::AllocateSharedPtr(pSession);
         }
+        
         /// Name of class
         static std::string className;
 
-        Laplace(SessionReaderSharedPtr& pSession,
-                LibUtilities::TimeIntegrationSchemeOperators& pOde);
+        Laplace(SessionReaderSharedPtr& pSession);
         virtual ~Laplace();
 
     protected:
-        NekDouble mLambda;
+        NekDouble m_lambda;
 
-        virtual void v_printSummary(std::ostream &out);
-        virtual void v_doSolveHelmholtz();
-        virtual bool v_isSteady();
+        virtual void v_PrintSummary(std::ostream &out);
+        virtual void v_DoSolve();
     };
 }
 

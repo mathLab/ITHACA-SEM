@@ -1,4 +1,38 @@
-// Use the stl version, primarily for string.
+///////////////////////////////////////////////////////////////////////////////
+//
+// File SessionReader.cpp
+//
+// For more information, please see: http://www.nektar.info
+//
+// The MIT License
+//
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
+//
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+// Description: Session reader 
+//
+///////////////////////////////////////////////////////////////////////////////
+
 #ifndef TIXML_USE_STL
 #define TIXML_USE_STL
 #endif
@@ -15,16 +49,16 @@ namespace Nektar
 {
 
     SessionReader::SessionReader(std::string& pFilename)
-        : mFilename(pFilename)
+        : m_filename(pFilename)
     {
-        mXmlDoc = new TiXmlDocument(pFilename);
-        ASSERTL0(mXmlDoc, "Failed to create XML document object.");
+        m_xmlDoc = new TiXmlDocument(pFilename);
+        ASSERTL0(m_xmlDoc, "Failed to create XML document object.");
 
-        bool loadOkay = mXmlDoc->LoadFile();
+        bool loadOkay = m_xmlDoc->LoadFile();
         ASSERTL0(loadOkay, (std::string("Unable to load file: ") +
             pFilename).c_str());
 
-        TiXmlHandle docHandle(mXmlDoc);
+        TiXmlHandle docHandle(m_xmlDoc);
 
         TiXmlNode* n = NULL;
         TiXmlElement* e = NULL;
@@ -39,10 +73,10 @@ namespace Nektar
 
     SessionReader::SessionReader(const SessionReader& pSrc)
     {
-        mFilename = pSrc.mFilename;
-        mXmlDoc   = pSrc.mXmlDoc;
-        mSolverInfo = pSrc.mSolverInfo;
-        mParameters = pSrc.mParameters;
+        m_filename = pSrc.m_filename;
+        m_xmlDoc   = pSrc.m_xmlDoc;
+        m_solverInfo = pSrc.m_solverInfo;
+        m_parameters = pSrc.m_parameters;
     }
 
     SessionReader::~SessionReader()
@@ -50,35 +84,35 @@ namespace Nektar
 
     }
 
-    const std::string& SessionReader::getFilename()
+    const std::string& SessionReader::GetFilename()
     {
-        return mFilename;
+        return m_filename;
     }
 
-    const std::string& SessionReader::getSolverInfo(const std::string &pProperty)
+    const std::string& SessionReader::GetSolverInfo(const std::string &pProperty)
     {
-        SolverInfoMap::iterator slvIter = mSolverInfo.find(pProperty);
+        SolverInfoMap::iterator slvIter = m_solverInfo.find(pProperty);
 
-        ASSERTL1(slvIter != mSolverInfo.end(),
+        ASSERTL1(slvIter != m_solverInfo.end(),
             (std::string("Unable to find requested property: ") + pProperty).c_str());
 
         return slvIter->second;
     }
 
-    NekDouble SessionReader::getParameter(std::string pName)
+    NekDouble SessionReader::GetParameter(std::string pName)
     {
-        ParameterMap::iterator paramMapIter = mParameters.find(pName);
+        ParameterMap::iterator paramMapIter = m_parameters.find(pName);
 
-        ASSERTL0(paramMapIter != mParameters.end(),
+        ASSERTL0(paramMapIter != m_parameters.end(),
             (std::string("Unable to find requested parameter: ") + pName).c_str());
 
         return paramMapIter->second;
     }
 
-    void SessionReader::loadParameter(const std::string pName, int &pVar, int pDefault)
+    void SessionReader::LoadParameter(const std::string pName, int &pVar, int pDefault)
     {
-        ParameterMap::iterator paramMapIter = mParameters.find(pName);
-        if(paramMapIter != mParameters.end())
+        ParameterMap::iterator paramMapIter = m_parameters.find(pName);
+        if(paramMapIter != m_parameters.end())
         {
             pVar = paramMapIter->second;
         }
@@ -88,10 +122,10 @@ namespace Nektar
         }
     }
 
-    void SessionReader::loadParameter(const std::string pName, NekDouble& pVar, const NekDouble pDefault)
+    void SessionReader::LoadParameter(const std::string pName, NekDouble& pVar, const NekDouble pDefault)
     {
-        ParameterMap::iterator paramMapIter = mParameters.find(pName);
-        if(paramMapIter != mParameters.end())
+        ParameterMap::iterator paramMapIter = m_parameters.find(pName);
+        if(paramMapIter != m_parameters.end())
         {
             pVar = paramMapIter->second;
         }
@@ -101,16 +135,16 @@ namespace Nektar
         }
     }
 
-    bool SessionReader::definesParameter(const std::string pName)
+    bool SessionReader::DefinesParameter(const std::string pName)
     {
-        ParameterMap::iterator paramMapIter = mParameters.find(pName);
-        return (paramMapIter != mParameters.end());
+        ParameterMap::iterator paramMapIter = m_parameters.find(pName);
+        return (paramMapIter != m_parameters.end());
     }
 
-    void SessionReader::loadSolverInfo(const std::string pName, std::string& pVar, const std::string pDefault)
+    void SessionReader::LoadSolverInfo(const std::string pName, std::string& pVar, const std::string pDefault)
     {
-        SolverInfoMap::iterator solverInfoMapIter = mSolverInfo.find(pName);
-        if(solverInfoMapIter != mSolverInfo.end())
+        SolverInfoMap::iterator solverInfoMapIter = m_solverInfo.find(pName);
+        if(solverInfoMapIter != m_solverInfo.end())
         {
             pVar = solverInfoMapIter->second;
         }
@@ -120,10 +154,10 @@ namespace Nektar
         }
     }
 
-    void SessionReader::matchSolverInfo(const std::string pName, const std::string pTrueVal, bool& pVar, const bool pDefault)
+    void SessionReader::MatchSolverInfo(const std::string pName, const std::string pTrueVal, bool& pVar, const bool pDefault)
     {
-        SolverInfoMap::iterator solverInfoMapIter = mSolverInfo.find(pName);
-        if(solverInfoMapIter != mSolverInfo.end())
+        SolverInfoMap::iterator solverInfoMapIter = m_solverInfo.find(pName);
+        if(solverInfoMapIter != m_solverInfo.end())
         {
             pVar = (NoCaseStringCompare(solverInfoMapIter->second, pTrueVal) == 0);
         }
@@ -133,10 +167,10 @@ namespace Nektar
         }
     }
 
-    bool SessionReader::definesSolverInfo(const std::string pName)
+    bool SessionReader::DefinesSolverInfo(const std::string pName)
     {
-        SolverInfoMap::iterator solverInfoMapIter = mSolverInfo.find(pName);
-        return (solverInfoMapIter != mSolverInfo.end());
+        SolverInfoMap::iterator solverInfoMapIter = m_solverInfo.find(pName);
+        return (solverInfoMapIter != m_solverInfo.end());
     }
 
     void SessionReader::ReadSolverInfo(TiXmlElement *conditions)
@@ -157,14 +191,14 @@ namespace Nektar
                 std::string solverValue    = solverInfo->Attribute("VALUE");
                 ASSERTL0(!solverValue.empty(),"Unable to find VALUE string");
 
-                SolverInfoMap::iterator solverInfoIter = mSolverInfo.find(solverProperty);
+                SolverInfoMap::iterator solverInfoIter = m_solverInfo.find(solverProperty);
 
-                ASSERTL0(solverInfoIter == mSolverInfo.end(),
+                ASSERTL0(solverInfoIter == m_solverInfo.end(),
                          (std::string("SolverInfo value: ") + solverProperty
                           + std::string(" already specified.")).c_str());
 
                 // Set Variable
-                mSolverInfo[solverProperty] = solverValue;
+                m_solverInfo[solverProperty] = solverValue;
                 solverInfo = solverInfo->NextSiblingElement("I");
             }
         }
@@ -214,7 +248,7 @@ namespace Nektar
                         NekDouble value=0.0;
                         expEvaluator.DefineFunction("", rhs);
                         value =  expEvaluator.Evaluate();
-                        mParameters[lhs] = value;
+                        m_parameters[lhs] = value;
                         expEvaluator.SetParameter(lhs, value);
                     }
                 }

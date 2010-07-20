@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File UnsteadyAdvection.h
+// File UnsteadySolve.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,49 +33,32 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_UNSTEADYADVECTION_H
-#define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_UNSTEADYADVECTION_H
+#ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_UNSTEADYSOLVE_H
+#define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_UNSTEADYSOLVE_H
 
-#include <ADRSolver/EquationSystems/UnsteadySolve.h>
+#include <ADRSolver/EquationSystem.h>
 
 namespace Nektar
 {
-    class UnsteadyAdvection : public UnsteadySolve
+    class UnsteadySolve : public EquationSystem
     {
     public:
-        /// Creates an instance of this class
-        static EquationSystemSharedPtr create(SessionReaderSharedPtr& pSession) {
-            return MemoryManager<UnsteadyAdvection>::AllocateSharedPtr(pSession);
+        /// Creates an instance of this class - Not sure this is needed 
+        static EquationSystemSharedPtr create(SessionReaderSharedPtr& pSession) 
+        {
+            return MemoryManager<UnsteadySolve>::AllocateSharedPtr(pSession);
         }
-        /// Name of class
-        static std::string className;
 
-        UnsteadyAdvection(SessionReaderSharedPtr& pSession);
-        virtual ~UnsteadyAdvection();
+        UnsteadySolve(SessionReaderSharedPtr& pSession);
+        virtual ~UnsteadySolve();
 
     protected:
-        bool                                    m_explicitAdvection;
+        int          m_infosteps;    ///< dump info to stdout at steps time
+        LibUtilities::TimeIntegrationMethod          m_timeIntMethod;
+        LibUtilities::TimeIntegrationSchemeOperators m_ode;
 
-        Array<OneD, Array<OneD, NekDouble> > m_velocity;
-
-        void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-                      Array<OneD,  Array<OneD, NekDouble> > &outarray,
-                      const NekDouble time);
-
-        void DoOdeProjection(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-                          Array<OneD,  Array<OneD, NekDouble> > &outarray,
-                          const NekDouble time);
-
-        // DG Advection routines
-        virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux);
-
-        virtual void v_GetFluxVector(const int i, const int j, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux);
-
-        virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numflux);
-
-        // Print Summary
+        virtual void v_DoSolve();
         virtual void v_PrintSummary(std::ostream &out);
-    private:
 
     };
 }

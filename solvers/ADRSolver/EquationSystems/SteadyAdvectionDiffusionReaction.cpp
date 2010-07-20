@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Poisson.cpp
+// File SteadAdvectionDiffusionReaction.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,33 +29,34 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Poisson solve routines 
+// Description: Steady Advection Diffusion Reaction solve routines 
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <ADRSolver/EquationSystems/Poisson.h>
+#include <ADRSolver/EquationSystems/SteadyAdvectionDiffusionReaction.h>
 
 namespace Nektar
 {
-    string Poisson::className1 = EquationSystemFactory::RegisterCreatorFunction("Poisson", Poisson::create);
-    string Poisson::className2 = EquationSystemFactory::RegisterCreatorFunction("SteadyDiffusion", Poisson::create);
+    string SteadyAdvectionDiffusionReaction::className = EquationSystemFactory::RegisterCreatorFunction("SteadyAdvectionDiffusionReaction", SteadyAdvectionDiffusionReaction::create);
 
-    Poisson::Poisson(SessionReaderSharedPtr& pSession)
-        : Laplace(pSession)
-    {
-        SetPhysForcingFunctions(m_fields);
-    }
 
-    Poisson::~Poisson()
+    SteadyAdvectionDiffusionReaction::SteadyAdvectionDiffusionReaction(SessionReaderSharedPtr& pSession)
+        : SteadyAdvectionDiffusion(pSession)
     {
 
-    }
-
-    void Poisson::v_PrintSummary(std::ostream &out)
-    {
-        Laplace::v_PrintSummary(out);
-        for (int i = 0; i < m_fields.num_elements(); ++i)
+        if (pSession->DefinesParameter("Lambda"))
         {
-            out << "\tForcing func [" << i << "]: " << m_boundaryConditions->GetForcingFunction(i)->GetEquation() << endl;
+            m_lambda = pSession->GetParameter("Lambda");
         }
+
+    }
+
+    SteadyAdvectionDiffusionReaction::~SteadyAdvectionDiffusionReaction()
+    {
+    }
+
+
+    void SteadyAdvectionDiffusionReaction::v_PrintSummary(std::ostream &out)
+    {
+        SteadyAdvectionDiffusion::v_PrintSummary(out);
     }
 }

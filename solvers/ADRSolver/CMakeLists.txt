@@ -1,15 +1,14 @@
 SET(ADRSolverSource 
        ./ADRSolver.cpp 
        ./EquationSystem.cpp
-       ./EquationSystems/Laplace.cpp
-       ./EquationSystems/Poisson.cpp
-       ./EquationSystems/Helmholtz.cpp
-       ./EquationSystems/UnsteadyDiffusion.cpp
-       ./EquationSystems/UnsteadyAdvection.cpp
-       ./EquationSystems/UnsteadyAdvectionDiffusion.cpp
-       ./EquationSystems/UnsteadyInviscidBurger.cpp
-       ./EquationSystems/AlievPanfilov.cpp
        ./SessionReader.cpp
+       ./EquationSystems/Laplace.cpp
+       ./EquationSystems/Poisson.cpp       
+       ./EquationSystems/Helmholtz.cpp
+       ./EquationSystems/SteadyAdvectionDiffusion.cpp
+       ./EquationSystems/SteadyAdvectionDiffusionReaction.cpp
+       ./EquationSystems/UnsteadySolve.cpp
+       ./EquationSystems/UnsteadyAdvection.cpp
        ../Auxiliary/ADRBase.cpp)
 
 ADD_SOLVER_EXECUTABLE(ADRSolver 

@@ -1,3 +1,37 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// File SessionReader.h
+//
+// For more information, please see: http://www.nektar.info
+//
+// The MIT License
+//
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
+//
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+// Description: 
+//
+///////////////////////////////////////////////////////////////////////////////
 #ifndef NEKTAR_SOLVERS_ADRSOLVER_SESSIONREADER_H
 #define NEKTAR_SOLVERS_ADRSOLVER_SESSIONREADER_H
 
@@ -22,27 +56,27 @@ namespace Nektar
         SessionReader(const SessionReader& pSrc);
         ~SessionReader();
 
-        const std::string& getFilename();
-        const std::string& getSolverInfo(const std::string &pProperty);
+        const std::string& GetFilename();
+        const std::string& GetSolverInfo(const std::string &pProperty);
 
-        NekDouble getParameter(std::string pName);
+        NekDouble GetParameter(std::string pName);
 
         /// Check for and load an integer parameter
         /// Check for and load a double precision parameter
-        void loadParameter(const std::string name, int &var, int def = 0);
-        void loadParameter(const std::string name, NekDouble& var, const NekDouble def= 0.0);
-        bool definesParameter(const std::string name);
+        void LoadParameter(const std::string name, int &var, int def = 0);
+        void LoadParameter(const std::string name, NekDouble& var, const NekDouble def= 0.0);
+        bool DefinesParameter(const std::string name);
 
-        void loadSolverInfo(const std::string name, std::string& var, const std::string def = "");
-        void matchSolverInfo(const std::string name, const std::string trueval, bool& var, const bool def = false);
-        bool definesSolverInfo(const std::string name);
+        void LoadSolverInfo(const std::string name, std::string& var, const std::string def = "");
+        void MatchSolverInfo(const std::string name, const std::string trueval, bool& var, const bool def = false);
+        bool DefinesSolverInfo(const std::string name);
 
     private:
-        std::string                 mFilename;
-        TiXmlDocument*              mXmlDoc;
+        std::string                 m_filename;
+        TiXmlDocument*              m_xmlDoc;
 
-        SolverInfoMap               mSolverInfo;
-        ParameterMap                mParameters;
+        SolverInfoMap               m_solverInfo;
+        ParameterMap                m_parameters;
 
         void ReadParameters(TiXmlElement *conditions);
         void ReadSolverInfo(TiXmlElement *conditions);
@@ -56,3 +90,4 @@ namespace Nektar
 }
 
 #endif
+

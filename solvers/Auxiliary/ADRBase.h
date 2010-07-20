@@ -268,6 +268,8 @@ namespace Nektar
 
         void ZeroPhysFields(void);
 
+        void FwdTransFields(void);
+
         /// Type of Galerkin projection.
         enum ProjectionType
         {
@@ -356,7 +358,7 @@ namespace Nektar
 
         SpatialDomains::SpatialParametersSharedPtr  m_spatialParameters;
 
-        std::string m_filename;     ///< Filename
+        std::string m_filename;      ///< Filename
         std::string m_sessionName;   ///< Name of the sessions
         NekDouble m_time;            ///< Continous time
 	NekDouble m_fintime;         ///< time to be taken during the simulation

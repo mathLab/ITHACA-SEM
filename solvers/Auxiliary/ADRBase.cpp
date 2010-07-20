@@ -390,6 +390,17 @@ namespace Nektar
         }
     }
 
+    /**
+     * FwdTrans the m_fields members
+     */
+    void ADRBase::FwdTransFields(void)
+    {
+        for(int i = 0; i < m_fields.num_elements(); i++)
+        {
+            m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+            m_fields[i]->SetPhysState(false);
+        }
+    }
 
     /**
      * Set the physical fields based on a restart file, or a function
@@ -723,12 +734,11 @@ namespace Nektar
         // check to see if wk space is defined
         if (wk.num_elements())
         {
-            grad0 = Array<OneD, NekDouble> (ndim*nPointsTot);
-
+            grad0 = wk;
         }
         else
         {
-            grad0 = wk;
+            grad0 = Array<OneD, NekDouble> (ndim*nPointsTot);
         }
 
         // Evaluate V\cdot Grad(u)
@@ -738,14 +748,12 @@ namespace Nektar
             m_fields[0]->PhysDeriv(u,grad0);
             Vmath::Vmul(nPointsTot,grad0,1,V[0],1,outarray,1);
             break;
-
         case 2:
             grad1 = grad0 + nPointsTot;
             m_fields[0]->PhysDeriv(u,grad0,grad1);
             Vmath::Vmul (nPointsTot,grad0,1,V[0],1,outarray,1);
             Vmath::Vvtvp(nPointsTot,grad1,1,V[1],1,outarray,1,outarray,1);
             break;
-
         case 3:
             grad1 = grad0 + nPointsTot;
             grad2 = grad1 + nPointsTot;
@@ -759,7 +767,6 @@ namespace Nektar
             ASSERTL0(false,"dimension unknown");
         }
     }
-
 
     /*
      * Calculate weak DG advection in the form

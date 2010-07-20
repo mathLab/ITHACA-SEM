@@ -1,0 +1,65 @@
+erase
+
+data Error_1st_TimeBC
+lines 2 100
+read{ steps1 1 err1 2}
+
+set dt1 = 0.75/steps1
+set ln_err1 = lg(err1)
+set ln_dt1 = lg(dt1)
+
+data Error_2nd_TimeBC
+lines 2 100
+read{ steps2 1 err2 2}
+
+set dt2 = 0.75/steps2
+set ln_err2 = lg(err2)
+set ln_dt2 = lg(dt2)
+
+data Error_4th_TimeBC
+lines 2 100
+read{ steps4 1 err4 2}
+
+set dt4 = 0.75/steps4
+set ln_err4 = lg(err4)
+set ln_dt4 = lg(dt4)
+
+notation -4 4 -4 4 
+limits -4 -1 -9 1 
+box 1 2 3 3 
+expand 1.5
+xlabel \Delta t
+ylabel L_2 error
+expand 1.0
+
+con ln_dt1 ln_err1
+relocate -2.5 -2 
+draw -3 -2.5
+draw -2.5 -2.5
+draw  -2.5 -2
+
+con ln_dt2 ln_err2
+relocate -2.5 -3.7
+draw -3 -4.7
+draw -2.5 -4.7
+draw -2.5 -3.7
+
+con ln_dt4 ln_err4
+relocate -1.4 -4.1
+draw -1.9 -6.1
+draw -1.4 -6.1
+draw -1.4 -4.1
+
+expand 1.5
+ptype 3 0 
+points ln_dt1 ln_err1
+ptype 4 0 
+points ln_dt2 ln_err2
+ptype 10 0 
+points ln_dt4 ln_err4
+
+set s = {100 40 30}
+set r = <'RK4' 'AB2' 'EF'>
+stable 0.1 0.8 s r 1.5
+expand 1.0
+

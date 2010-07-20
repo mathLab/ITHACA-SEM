@@ -1,0 +1,52 @@
+#!/bin/sh
+
+# First order Time integration loop
+IntScheme=ForwardEuler
+sed -i.tmp "s/\"TimeIntegrationMethod\".*/\"TimeIntegrationMethod\"  VALUE=\"$IntScheme\"\/>/" Test_Advection_m8_DG.xml
+sed -i.tmp "s/NUMMODES.*/NUMMODES=\"12\" TYPE=\"MODIFIED\" \/>/" Test_Advection_m8_DG.xml
+
+echo "L 2 error" > Error_1st_TimeBC
+for steps in 100 200 500 1000 2000 5000
+do
+sed -i.tmp "70 s/NumSteps.*/NumSteps       = $steps              <\/P>/" Test_Advection_m8_DG.xml
+~/Nektar++/solvers/builds/ADRSolver/ADRSolver-g Test_Advection_m8_DG.xml | grep "L 2" > tmp
+err=`awk 'BEGIN{}; {ERR=$6}; END{print ERR}' tmp`
+echo "$steps     $err" >> Error_1st_TimeBC
+done
+
+
+# Second order Time integration loop
+IntScheme=AdamsBashforthOrder2
+sed -i.tmp "s/\"TimeIntegrationMethod\".*/\"TimeIntegrationMethod\"  VALUE=\"$IntScheme\"\/>/" Test_Advection_m8_DG.xml
+sed -i.tmp "s/NUMMODES.*/NUMMODES=\"12\" TYPE=\"MODIFIED\" \/>/" Test_Advection_m8_DG.xml
+
+echo "L 2 error" > Error_2nd_TimeBC
+for steps in 100 200 500 1000 2000 
+do
+sed -i.tmp "70 s/NumSteps.*/NumSteps       = $steps              <\/P>/" Test_Advection_m8_DG.xml
+~/Nektar++/solvers/builds/ADRSolver/ADRSolver-g Test_Advection_m8_DG.xml | grep "L 2" > tmp
+err=`awk 'BEGIN{}; {ERR=$6}; END{print ERR}' tmp`
+echo "$steps     $err" >> Error_2nd_TImeBC
+done
+
+# RK 4 Time integration loop
+IntScheme=ClassicalRungeKutta4
+sed -i.tmp "s/\"TimeIntegrationMethod\".*/\"TimeIntegrationMethod\"  VALUE=\"$IntScheme\"\/>/" Test_Advection_m8_DG.xml
+echo "L 2 error" > Error_4th_TimeBC
+
+#Do 20 steps at lower order
+sed -i.tmp "70 s/NumSteps.*/NumSteps       = 20              <\/P>/" Test_Advection_m8_DG.xml
+~/Nektar++/solvers/builds/ADRSolver/ADRSolver-g Test_Advection_m8_DG.xml | grep "L 2" > tmp
+err=`awk 'BEGIN{}; {ERR=$6}; END{print ERR}' tmp`
+echo "20     $err" >> Error_4th_TImeBC
+
+
+sed -i.tmp "s/NUMMODES.*/NUMMODES=\"14\" TYPE=\"MODIFIED\" \/>/" Test_Advection_m8_DG.xml
+for steps in 50 100 200 500 1000 2000
+do
+sed -i.tmp "70 s/NumSteps.*/NumSteps       = $steps              <\/P>/" Test_Advection_m8_DG.xml
+~/Nektar++/solvers/builds/ADRSolver/ADRSolver-g Test_Advection_m8_DG.xml | grep "L 2" > tmp
+err=`awk 'BEGIN{}; {ERR=$6}; END{print ERR}' tmp`
+echo "$steps     $err" >> Error_4th_TImeBC
+done
+

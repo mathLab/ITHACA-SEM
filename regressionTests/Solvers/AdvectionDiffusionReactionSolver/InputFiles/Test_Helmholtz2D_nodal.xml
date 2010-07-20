@@ -231,15 +231,23 @@
       <C ID="7"> E[79] </C>
       <C ID="8"> E[88] </C>
       <C ID="9"> E[94-95] </C>
-      <C ID="10"> E[84,75,69,62,51,40,30,20,6] </C>
+      <C ID="10"> E[84] </C>
+      <C ID="11"> E[75] </C>
+      <C ID="12"> E[69] </C>
+      <C ID="13"> E[62] </C>
+      <C ID="14"> E[51] </C>
+      <C ID="15"> E[40] </C>
+      <C ID="16"> E[30] </C>
+      <C ID="17"> E[20] </C>
+      <C ID="18"> E[6] </C>
     </COMPOSITE>
     
     <DOMAIN> C[0-1] </DOMAIN>
   </GEOMETRY>
 
   <EXPANSIONS>
-    <E COMPOSITE="C[0]" NUMMODES="7" TYPE="MODIFIED" />
-    <E COMPOSITE="C[1]" NUMMODES="7" TYPE="MODIFIED" />
+    <E COMPOSITE="C[0]" NUMMODES="7" TYPE="GLL_LAGRANGE_SEM" />
+    <E COMPOSITE="C[1]" NUMMODES="7" TYPE="GLL_LAGRANGE" />
   </EXPANSIONS>
 
   <CONDITIONS>
@@ -273,6 +281,14 @@
       <B ID="6"> C[8] </B>
       <B ID="7"> C[9] </B>
       <B ID="8"> C[10] </B>
+      <B ID="9"> C[11] </B>
+      <B ID="10"> C[12] </B>
+      <B ID="11"> C[13] </B>
+      <B ID="12"> C[14] </B>
+      <B ID="13"> C[15] </B>
+      <B ID="14"> C[16] </B>
+      <B ID="15"> C[17] </B>
+      <B ID="16"> C[18] </B>  
     </BOUNDARYREGIONS>
     
     <!--The region numbers below correspond to the regions specified in the
@@ -282,7 +298,7 @@
         <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
       </REGION>
       <REGION REF="1">
-        <R VAR="u" VALUE="sin(PI*x)*sin(PI*y)-PI*sin(PI*x)*cos(PI*y)" PRIMCOEFF="1"/>
+        <N VAR="u" VALUE="-PI*sin(PI*x)*cos(PI*y)" />
       </REGION>
       <REGION REF="2">
         <N VAR="u" VALUE="(5/sqrt(61))*PI*cos(PI*x)*sin(PI*y)-(6/sqrt(61))*PI*sin(PI*x)*cos(PI*y)" />
@@ -300,11 +316,35 @@
         <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
       </REGION>
       <REGION REF="7">
-        <R VAR="u" VALUE="sin(PI*x)*sin(PI*y) + (5/sqrt(61))*PI*cos(PI*x)*sin(PI*y)+(6/sqrt(61))*PI*sin(PI*x)*cos(PI*y)" PRIMCOEFF="1" />
+        <N VAR="u" VALUE="(5/sqrt(61))*PI*cos(PI*x)*sin(PI*y)+(6/sqrt(61))*PI*sin(PI*x)*cos(PI*y)" />
       </REGION>
       <REGION REF="8">
         <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
       </REGION>
+      <REGION REF="9">
+        <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+      </REGION>
+      <REGION REF="10">
+        <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+      </REGION>
+      <REGION REF="11">
+        <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+      </REGION>
+      <REGION REF="12">
+        <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+      </REGION>
+      <REGION REF="13">
+        <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+      </REGION>
+      <REGION REF="14">
+        <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+      </REGION>
+      <REGION REF="15">
+        <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+      </REGION>
+      <REGION REF="16">
+        <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+    </REGION>    
     </BOUNDARYCONDITIONS>
     
     <FORCING>

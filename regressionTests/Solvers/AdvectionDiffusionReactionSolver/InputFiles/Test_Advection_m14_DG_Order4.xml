@@ -50,7 +50,8 @@
     <COMPOSITE>
       <C ID="0"> T[0-3] </C>
       <C ID="1"> Q[4-5] </C>
-      <C ID="2"> E[0,1,2,4,7,9,10,11] </C>
+      <C ID="2"> E[0,1,2,7] </C>
+      <C ID="3"> E[4,9,10,11] </C>
     </COMPOSITE>
 
     <DOMAIN> C[0-1] </DOMAIN>
@@ -58,50 +59,57 @@
   </GEOMETRY>
   
   <EXPANSIONS>
-    <E COMPOSITE="C[0]" NUMMODES="3" TYPE="MODIFIED" />
-    <E COMPOSITE="C[1]" NUMMODES="3" TYPE="MODIFIED" />
+    <E COMPOSITE="C[0]" NUMMODES="14" TYPE="MODIFIED" />
+    <E COMPOSITE="C[1]" NUMMODES="14" TYPE="MODIFIED" />
   </EXPANSIONS>
 
   <CONDITIONS>
 
     <PARAMETERS>
-      <P> TimeStep       = 0.0001            </P>
-      <P> NumSteps       = 5000              </P>
-      <P> FinTime        = TimeStep*NumSteps </P>
-      <P> IO_CheckSteps  = 1000              </P>
-      <P> IO_InfoSteps   = 1000               </P>
+      <P> FinTime        = 0.75             </P>
+      <P> NumSteps       = 500              </P>
+      <P> TimeStep       = FinTime/NumSteps </P>
+      <P> IO_CheckSteps  = NumSteps         </P>
+      <P> IO_InfoSteps   = 1000              </P>
+      <P> advx           = 1                 </P>
+      <P> advy           = 1                 </P>
     </PARAMETERS>
 
     <SOLVERINFO>
-      <I PROPERTY="EQType" VALUE="UnsteadyAdvection"/>
-      <I PROPERTY="Projection" VALUE="DisContinuous"/>
+      <I PROPERTY="EQTYPE" VALUE="UnsteadyAdvection"/>
+      <I PROPERTY="Projection" VALUE="DisContinuous"/>    
+      <I PROPERTY="TimeIntegrationMethod"  VALUE="ClassicalRungeKutta4"/>
     </SOLVERINFO> 
 
-<VARIABLES>
+    <VARIABLES>
       <V ID="0"> u </V> 
     </VARIABLES>
 
     <BOUNDARYREGIONS>
       <B ID="0"> C[2] </B>
+      <B ID="1"> C[3] </B>
     </BOUNDARYREGIONS>
 
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
-        <D VAR="u" VALUE="0" />
+        <D VAR="u" USERDEFINEDTYPE="TimeDependent"  VALUE="sin(PI*(x-advx*t))*cos(PI*(y-advy*t))" />
+      </REGION>
+      <REGION REF="1">
+        <N VAR="u"  VALUE="0" />
       </REGION>
     </BOUNDARYCONDITIONS>
 
     <USERDEFINEDEQNS>
-      <F LHS="Vx" VALUE="2*PI*y" />
-      <F LHS="Vy" VALUE="-2*PI*x" />
+      <F LHS="Vx" VALUE="1"  />
+      <F LHS="Vy" VALUE="1" />
     </USERDEFINEDEQNS>   
     
     <EXACTSOLUTION>
-      <F VAR="u" VALUE="exp(-(((x*cos(2*PI*FinTime) + y*sin(2*PI*FinTime)+0.5)*(x*cos(2*PI*FinTime) + y*sin(2*PI*FinTime)+0.5))+((y*cos(2*PI*FinTime) - x*sin(2*PI*FinTime))*(y*cos(2*PI*FinTime) - x*sin(2*PI*FinTime))))/(2.0*(1.0/8.0)*(1.0/8.0)))" />
+      <F VAR="u" VALUE="sin(PI*(x-advx*t))*cos(PI*(y-advy*t))" />
     </EXACTSOLUTION>
     
     <INITIALCONDITIONS>
-      <F VAR="u" VALUE="exp(-(((x+0.5)*(x+0.5))+(y*y))/(2.0*(1.0/8.0)*(1.0/8.0)))" />
+      <F VAR="u" VALUE="sin(PI*x)*cos(PI*y)" />
     </INITIALCONDITIONS>
     
   </CONDITIONS>

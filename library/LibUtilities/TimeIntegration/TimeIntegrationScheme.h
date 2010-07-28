@@ -73,6 +73,7 @@ namespace Nektar
             eAdamsBashforthOrder2,            //!< Adams-Bashforth Forward multi-step scheme of order 2
             eAdamsMoultonOrder1,              //!< Adams-Moulton Forward multi-step scheme of order 1
             eAdamsMoultonOrder2,              //!< Adams-Moulton Forward multi-step scheme of order 2
+			eBDFImplicitOrder2,               //!< BDF multi-step scheme of order 2 (implicit)
             eClassicalRungeKutta4,            //!< Runge-Kutta multi-stage scheme
             eForwardEuler,                    //!< Forward euler scheme
             eBackwardEuler,                   //!< Backward euler scheme
@@ -93,7 +94,8 @@ namespace Nektar
             "AdamsBashforthOrder1",            
             "AdamsBashforthOrder2",          
             "AdamsMoultonOrder1",           
-            "AdamsMoultonOrder2",     
+            "AdamsMoultonOrder2",
+			"BDFImplicitOrder2",
             "ClassicalRungeKutta4",           
             "ForwardEuler",                    
             "BackwardEuler",                  
@@ -125,11 +127,13 @@ namespace Nektar
             "Implicit"
         };
 
-        // =====================================================================
+        // =========================================================================
 
-        // =====================================================================
+
+
+        // =========================================================================
         // ==== DEFINITION OF THE CLASS TimeIntegrationSchemeOperators
-        // =====================================================================
+        // =========================================================================
         class TimeIntegrationSchemeOperators
         {
         public:
@@ -146,7 +150,7 @@ namespace Nektar
             typedef Array<OneD, FunctorType2> FunctorType2Array;
             
             TimeIntegrationSchemeOperators(void):
-            m_functors1(4),
+            m_functors1(3),
             m_functors2(1)
             {
             }
@@ -170,17 +174,10 @@ namespace Nektar
             }
 
             template<typename FuncPointerT, typename ObjectPointerT> 
-                void DefineProjection(FuncPointerT func, ObjectPointerT obj)
-            {
-                m_functors1[3] =  boost::bind(func, obj, _1, _2, _3);
-            }
-
-            template<typename FuncPointerT, typename ObjectPointerT> 
                 void DefineImplicitSolve(FuncPointerT func, ObjectPointerT obj)
             {
                 m_functors2[0] =  boost::bind(func, obj, _1, _2, _3, _4);
             }
-
             
             inline void DoOdeRhs(InArrayType     &inarray, 
                                  OutArrayType    &outarray, 
@@ -205,14 +202,6 @@ namespace Nektar
                 ASSERTL1(!(m_functors1[2].empty()),"OdeImplictRhs should be defined for this time integration scheme");
                 m_functors1[2](inarray,outarray,time);
             }
-
-            inline void DoProjection(InArrayType     &inarray, 
-                                     OutArrayType    &outarray, 
-                                     const NekDouble time) const
-            {
-                ASSERTL1(!(m_functors1[3].empty()),"Projection operation should be defined for this time integration scheme");
-                m_functors1[3](inarray,outarray,time);
-            }
             
             inline void DoImplicitSolve(InArrayType     &inarray, 
                                         OutArrayType    &outarray, 
@@ -222,7 +211,6 @@ namespace Nektar
                 ASSERTL1(!(m_functors2[0].empty()),"ImplicitSolve should be defined for this time integration scheme");
                 m_functors2[0](inarray,outarray,time,lambda);
             }
-
 
         protected:
             FunctorType1Array m_functors1;
@@ -310,25 +298,24 @@ namespace Nektar
         bool operator<(const TimeIntegrationSchemeKey &lhs, const TimeIntegrationSchemeKey &rhs);
         std::ostream& operator<<(std::ostream& os, const TimeIntegrationSchemeKey& rhs);
 
-        // =====================================================================
+        // =========================================================================
 
 
-        // =====================================================================
+        // =========================================================================
         // ==== DEFINITION OF THE FUNCTION TimeIntegrationSolution
-        // =====================================================================
+        // =========================================================================
         // This is the interface the user can use to get hold of the different
-        // time integration schemes. It returns you the NekManager 
-        // singleton which manages all the time integration schemes...
-        //
+        // time integration schemes. It returns you the NekManager singleton which
+        // manages all the time integration schemes...
         typedef NekManager<TimeIntegrationSchemeKey, 
                            TimeIntegrationScheme, 
                            TimeIntegrationSchemeKey::opLess> TimeIntegrationSchemeManagerT;
         TimeIntegrationSchemeManagerT &TimeIntegrationSchemeManager(void);
-        // =====================================================================
+        // =========================================================================
 
-        // =====================================================================
+        // =========================================================================
         // ==== DEFINITION OF THE CLASS TimeIntegrationScheme
-        // =====================================================================
+        // =========================================================================
         class TimeIntegrationScheme
         {
         public:
@@ -414,25 +401,20 @@ namespace Nektar
             }
 
             /**
-             * \brief This function initialises the time integration
-             * scheme
+             * \brief This function initialises the time integration scheme
              *
-             * Given the solution at the initial time level
-             * \f$\boldsymbol{y}(t_0)\f$, this function generates the
-             * vectors \f$\boldsymbol{y}^{[n]}\f$ and \f$t^{[n]}\f$
-             * needed to evaluate the time integration scheme
-             * formulated as a General Linear Method. These vectors
-             * are embedded in an object of the class
-             * TimeIntegrationSolution. This class is the abstraction
-             * of the input and output vectors of the General Linear
-             * Method.
+             * Given the solution at the initial time level \f$\boldsymbol{y}(t_0)\f$, this function
+             * generates the vectors \f$\boldsymbol{y}^{[n]}\f$ and \f$t^{[n]}\f$
+             * needed to evaluate the time integration scheme formulated 
+             * as a General Linear Method. These vectors are embedded in an object of the
+             * class TimeIntegrationSolution. This class is the abstraction of the
+             * input and output vectors of the General Linear Method.
              *
-             * For single-step methods, this function is trivial as it
-             * just wraps a TimeIntegrationSolution object around the
-             * given initial values and initial time.  However, for
-             * multistep methods, actual time stepping is being done
-             * to evaluate the necessary parameters at multiple time
-             * levels needed to start the actual integration.
+             * For single-step methods, this function is trivial as it just wraps a
+             * TimeIntegrationSolution object around the given initial values and initial time.
+             * However, for multistep methods, actual time stepping is being done
+             * to evaluate the necessary parameters at multiple time levels needed to start
+             * the actual integration.
              *
              * \param timestep The size of the timestep, i.e. \f$\Delta t\f$.
              * \param time on input: the initial time, i.e. \f$t_0\f$.
@@ -745,7 +727,7 @@ namespace Nektar
             {
                 int nMultiStepVals = m_scheme->GetNmultiStepValues();
                 const Array<OneD, const unsigned int>& offsetvec = GetTimeLevelOffset();
-
+				
                 for(int i = 0; i < nMultiStepVals; i++)
                 {
                     if( timeLevelOffset == offsetvec[i] )

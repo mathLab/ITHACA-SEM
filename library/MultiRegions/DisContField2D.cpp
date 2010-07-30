@@ -49,8 +49,8 @@ namespace Nektar
         {
         }
 
-        DisContField2D::DisContField2D(const DisContField2D &In):
-            ExpList2D(In),
+        DisContField2D::DisContField2D(const DisContField2D &In, bool DeclareCoeffPhysArrays):
+            ExpList2D(In,DeclareCoeffPhysArrays),
             m_bndCondExpansions   (In.m_bndCondExpansions),
             m_bndConditions       (In.m_bndConditions),
             m_globalBndMat        (In.m_globalBndMat),

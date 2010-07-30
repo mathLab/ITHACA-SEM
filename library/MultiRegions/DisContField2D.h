@@ -72,7 +72,7 @@ namespace Nektar
                            const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
                            bool SetUpJustDG = true);
 
-            DisContField2D(const DisContField2D &In);
+            DisContField2D(const DisContField2D &In, bool DeclareCoeffPhysArrays = true);
 
             ~DisContField2D();
             

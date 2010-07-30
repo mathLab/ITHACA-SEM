@@ -67,10 +67,12 @@ namespace Nektar
             ExpList2D();
 
             /// Copy constructor.
-            ExpList2D(  const ExpList2D &In);
+            ExpList2D(  const ExpList2D &In,
+                        bool DeclareCoeffPhysArrays = true);
 
             /// Sets up a list of local expansions based on an input mesh.
-            ExpList2D(  SpatialDomains::MeshGraph2D &graph2D);
+            ExpList2D(SpatialDomains::MeshGraph2D &graph2D, 
+                      bool DelcareCoeffPhysArrays = true);
 
             /// Sets up a list of local expansions based on an input mesh
             /// and separately defined basiskeys
@@ -125,9 +127,8 @@ namespace Nektar
 
         private:
             /// Definition of the total number of degrees of freedom and
-            /// quadrature points. Sets up the storage for \a m_coeff and \a
-            ///  m_phys.
-            void SetCoeffPhys(void);
+            /// quadrature points and offsets to access datax
+            void SetCoeffPhysOffsets(void);
 
             /// Set up the normals on each expansion.
             virtual void v_SetUpPhysNormals(

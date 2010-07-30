@@ -86,11 +86,9 @@ namespace Nektar
          * Copies an existing expansion list.
          * @param   in              Source expansion list.
          */
-        ExpList::ExpList(const ExpList &in):
+        ExpList::ExpList(const ExpList &in, bool DeclareCoeffPhysArrays):
             m_ncoeffs(in.m_ncoeffs),
             m_npoints(in.m_npoints),
-            m_coeffs(m_ncoeffs),
-            m_phys(m_npoints),
             m_transState(eNotSet),
             m_physState(false),
             m_exp(in.m_exp),
@@ -100,6 +98,11 @@ namespace Nektar
             m_globalOptParam(in.m_globalOptParam),
             m_blockMat(in.m_blockMat)
         {
+            if(DeclareCoeffPhysArrays)
+            {
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+                m_phys   = Array<OneD, NekDouble>(m_npoints);
+            }
         }
 
 
@@ -1605,62 +1608,6 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
             }
         }
 
-        /**
-         * The operation is evaluated locally by the elemental
-         * function StdRegions#StdExpansion#GetCoords.
-         *
-         * @param   coord_0         After calculation, the \f$x_1\f$ coordinate
-         *                          will be stored in this array.
-         * @param   coord_1         After calculation, the \f$x_2\f$ coordinate
-         *                          will be stored in this array.
-         * @param   coord_2         After calculation, the \f$x_3\f$ coordinate
-         *                          will be stored in this array.
-         */
-        void ExpList::GetCoords(Array<OneD, NekDouble> &coord_0,
-                                Array<OneD, NekDouble> &coord_1,
-                                Array<OneD, NekDouble> &coord_2)
-        {
-            int    i;
-            Array<OneD, NekDouble> e_coord_0;
-            Array<OneD, NekDouble> e_coord_1;
-            Array<OneD, NekDouble> e_coord_2;
-
-            switch(GetExp(0)->GetCoordim())
-            {
-            case 1:
-                for(i= 0; i < GetExpSize(); ++i)
-                {
-                    e_coord_0 = coord_0 + m_phys_offset[i];
-                    (*m_exp)[i]->GetCoords(e_coord_0);
-                }
-                break;
-            case 2:
-                ASSERTL0(coord_1.num_elements() != 0,
-                         "output coord_1 is not defined");
-
-                for(i= 0; i < GetExpSize(); ++i)
-                {
-                    e_coord_0 = coord_0 + m_phys_offset[i];
-                    e_coord_1 = coord_1 + m_phys_offset[i];
-                    (*m_exp)[i]->GetCoords(e_coord_0,e_coord_1);
-                }
-                break;
-            case 3:
-                ASSERTL0(coord_1.num_elements() != 0,
-                         "output coord_1 is not defined");
-                ASSERTL0(coord_2.num_elements() != 0,
-                         "output coord_2 is not defined");
-
-                for(i= 0; i < GetExpSize(); ++i)
-                {
-                    e_coord_0 = coord_0 + m_phys_offset[i];
-                    e_coord_1 = coord_1 + m_phys_offset[i];
-                    e_coord_2 = coord_2 + m_phys_offset[i];
-                    (*m_exp)[i]->GetCoords(e_coord_0,e_coord_1,e_coord_2);
-                }
-                break;
-            }
-        }
 
         /**
          * The operation is evaluated locally by the elemental
@@ -2540,6 +2487,63 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                                 bool  UseContCoeffs)
         {
             GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
+        }
+
+        /**
+         * The operation is evaluated locally by the elemental
+         * function StdRegions#StdExpansion#GetCoords.
+         *
+         * @param   coord_0         After calculation, the \f$x_1\f$ coordinate
+         *                          will be stored in this array.
+         * @param   coord_1         After calculation, the \f$x_2\f$ coordinate
+         *                          will be stored in this array.
+         * @param   coord_2         After calculation, the \f$x_3\f$ coordinate
+         *                          will be stored in this array.
+         */
+        void ExpList::v_GetCoords(Array<OneD, NekDouble> &coord_0,
+                                  Array<OneD, NekDouble> &coord_1,
+                                  Array<OneD, NekDouble> &coord_2)
+        {
+            int    i;
+            Array<OneD, NekDouble> e_coord_0;
+            Array<OneD, NekDouble> e_coord_1;
+            Array<OneD, NekDouble> e_coord_2;
+
+            switch(GetExp(0)->GetCoordim())
+            {
+            case 1:
+                for(i= 0; i < GetExpSize(); ++i)
+                {
+                    e_coord_0 = coord_0 + m_phys_offset[i];
+                    (*m_exp)[i]->GetCoords(e_coord_0);
+                }
+                break;
+            case 2:
+                ASSERTL0(coord_1.num_elements() != 0,
+                         "output coord_1 is not defined");
+
+                for(i= 0; i < GetExpSize(); ++i)
+                {
+                    e_coord_0 = coord_0 + m_phys_offset[i];
+                    e_coord_1 = coord_1 + m_phys_offset[i];
+                    (*m_exp)[i]->GetCoords(e_coord_0,e_coord_1);
+                }
+                break;
+            case 3:
+                ASSERTL0(coord_1.num_elements() != 0,
+                         "output coord_1 is not defined");
+                ASSERTL0(coord_2.num_elements() != 0,
+                         "output coord_2 is not defined");
+
+                for(i= 0; i < GetExpSize(); ++i)
+                {
+                    e_coord_0 = coord_0 + m_phys_offset[i];
+                    e_coord_1 = coord_1 + m_phys_offset[i];
+                    e_coord_2 = coord_2 + m_phys_offset[i];
+                    (*m_exp)[i]->GetCoords(e_coord_0,e_coord_1,e_coord_2);
+                }
+                break;
+            }
         }
 
         void ExpList::v_SetUpPhysNormals(

@@ -288,16 +288,21 @@ namespace Nektar
 
         /**
          * Initialises the object as a copy of an existing ContField2D object.
-         * @param   In          Existing ContField2D object.
+         * @param   In                       Existing ContField2D object.
+         * @param DeclareCoeffPhysArrays     bool to declare if \a m_phys
+         * and \a m_coeffs should be declared. Default is true
          */
-        ContField2D::ContField2D(const ContField2D &In):
-            DisContField2D(In),
+        ContField2D::ContField2D(const ContField2D &In, bool DeclareCoeffPhysArrays):
+            DisContField2D(In,DeclareCoeffPhysArrays),
             m_locToGloMap(In.m_locToGloMap),
             m_contNcoeffs(In.m_contNcoeffs),
-            m_contCoeffs(m_contNcoeffs,0.0),
             m_globalMat(In.m_globalMat),
             m_globalLinSys(In.m_globalLinSys)
-        {
+        { 
+            if(DeclareCoeffPhysArrays)
+            {
+                m_contCoeffs = Array<OneD, NekDouble> (m_contNcoeffs,0.0);
+            }
         }
 
 

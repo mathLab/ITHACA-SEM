@@ -91,7 +91,7 @@ namespace Nektar
                                                 = eDirectMultiLevelStaticCond);
 
             /// The copy constructor.
-            ContField2D(const ContField2D &In);
+            ContField2D(const ContField2D &In, bool DeclareCoeffPhysArrays = true);
 
             /// The default destructor.
             ~ContField2D();

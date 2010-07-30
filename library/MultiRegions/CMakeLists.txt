@@ -8,6 +8,7 @@ DisContField3D.cpp
 ExpList1D.cpp
 ExpList2D.cpp
 ExpList3D.cpp
+ExpList3DHomogeneous1D.cpp
 ExpList.cpp
 GlobalLinSys.cpp
 GlobalLinSysKey.cpp
@@ -30,6 +31,7 @@ DisContField3D.h
 ExpList1D.h
 ExpList2D.h
 ExpList3D.h
+ExpList3DHomogeneous1D.h
 ExpList.h
 GlobalLinSys.h
 GlobalLinSysKey.h

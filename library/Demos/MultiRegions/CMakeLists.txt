@@ -26,6 +26,11 @@ ADD_NEKTAR_EXECUTABLE(Helmholtz3D HelmholtzCont3DSource)
 TARGET_LINK_LIBRARIES(Helmholtz3D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(Helmholtz3D)
 
+SET(Helmholtz3DHomo1DSource  Helmholtz3DHomo1D.cpp)
+ADD_NEKTAR_EXECUTABLE(Helmholtz3DHomo1D Helmholtz3DHomo1DSource)
+TARGET_LINK_LIBRARIES(Helmholtz3DHomo1D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(Helmholtz3DHomo1D)
+
 SET(HDGHelmholtz1DSource  HDGHelmholtz1D.cpp)
 ADD_NEKTAR_EXECUTABLE(HDGHelmholtz1D HDGHelmholtz1DSource)
 TARGET_LINK_LIBRARIES(HDGHelmholtz1D ${LinkLibraries})

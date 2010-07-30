@@ -133,14 +133,14 @@ int main(int argc, char *argv[])
 
     switch(coordim)
     {
-    case 1:
-        Exp->GetCoords(xc0);
-        break;
     case 2:
         Exp->GetCoords(xc0,xc1);
         break;
     case 3:
         Exp->GetCoords(xc0,xc1,xc2);
+        break;
+    default:
+        ASSERTL0(false,"Coordim not valid");
         break;
     }
     //----------------------------------------------

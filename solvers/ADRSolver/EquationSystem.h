@@ -29,14 +29,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 
+// Description: Base class for individual solvers.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEM_H
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEM_H
 
-#include <ADRSolver/Factory.hpp>
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <ADRSolver/SessionReader.h>
 #include <Auxiliary/ADRBase.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
@@ -47,35 +47,54 @@ namespace Nektar
 {
     class EquationSystem;
 
+    /// A shared pointer to an EquationSystem object
     typedef boost::shared_ptr<EquationSystem> EquationSystemSharedPtr;
-    typedef Factory< std::string, EquationSystem, SessionReaderSharedPtr&,
-        LibUtilities::TimeIntegrationSchemeOperators&> EquationSystemFactory;
-    
+    /// Datatype of the NekFactory used to instantiate classes derived from
+    /// the EquationSystem class.
+    typedef LibUtilities::NekFactory< std::string, EquationSystem,
+        SessionReaderSharedPtr&> EquationSystemFactory;
+
+    /// A base class for describing how to solve specific equations.
     class EquationSystem : public ADRBase
     {
     public:
+        /// Destructor
         virtual ~EquationSystem();
-        
+
+        /// Perform any initialisation necessary before solving the problem.
         void DoInitialise();
-        void PrintSummary(std::ostream &out);
-        void SetPhysForcingFunction();
+
+        /// Solve the problem.
         void DoSolve();
 
+        /// Print a summary of parameters and solver characteristics.
+        void PrintSummary(std::ostream &out);
 
     protected:
-        EquationSystem(SessionReaderSharedPtr& pSession);
-
-        void EvaluateFunction(Array<OneD, NekDouble>& pArray,
-                SpatialDomains::ConstUserDefinedEqnShPtr pEqn);
-        void SetBoundaryConditions(NekDouble time);
-
-        virtual void v_PrintSummary(std::ostream &out);
-
-        virtual void v_DoSolve();
-
+        /// The session reader
         SessionReaderSharedPtr                  m_session;
 
+        /// Initialises EquationSystem class members.
+        EquationSystem(SessionReaderSharedPtr& pSession);
+
+        /// Evaluates a function as specified in the session file.
+        void EvaluateFunction(Array<OneD, NekDouble>& pArray,
+                SpatialDomains::ConstUserDefinedEqnShPtr pEqn);
+
+        /// Evaluates the boundary conditions at the given time.
+        void SetBoundaryConditions(NekDouble time);
+
+        /// Virtual function for initialisation implementation.
+        virtual void v_DoInitialise();
+
+        /// Virtual function for solve implementation.
+        virtual void v_DoSolve();
+
+        /// Virtual function for printing summary information.
+        virtual void v_PrintSummary(std::ostream &out);
+
     private:
+
     };
 }
 

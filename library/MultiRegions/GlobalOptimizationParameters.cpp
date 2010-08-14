@@ -72,29 +72,39 @@ namespace Nektar
             m_doGlobalMatOp(SIZE_OptimizeOperationType,false)
         {
             int i;
+            int numShapes = 0;
             TiXmlDocument doc(fileName);
             bool loadOkay = doc.LoadFile();
 
             m_shapeNumElements = NumShapeElements;
-            ASSERTL1(NumShapeElements.num_elements() == dim,"Size of NumShapeElements does not match dimension of expansion");
-            
-            // Dim=2 setup. Could probably put a dimenion flag on input
-            if(dim == 2)
+
+            switch (dim)
             {
-                m_shapeList = Array<OneD, StdRegions::ExpansionType>(2);
+            case 1:
+                numShapes = 1;
+                ASSERTL0(false,"Needs setting up for dimension 1");
+                break;
+            case 2:
+                numShapes = 2;
+                m_shapeList = Array<OneD, StdRegions::ExpansionType>(numShapes);
                 m_shapeList[0] = StdRegions::eTriangle;
                 m_shapeList[1] = StdRegions::eQuadrilateral;
-                
-                m_doBlockMatOp = Array<OneD, Array<OneD,bool> > (SIZE_OptimizeOperationType);
-                for(i = 0; i < SIZE_OptimizeOperationType; ++i)
-                {
-                    m_doBlockMatOp[i] = Array<OneD, bool> (2,false);
-                }
+                break;
+            case 3:
+                numShapes = 4;
+                m_shapeList = Array<OneD, StdRegions::ExpansionType>(numShapes);
+                m_shapeList[0] = StdRegions::eTetrahedron;
+                m_shapeList[1] = StdRegions::ePyramid;
+                m_shapeList[2] = StdRegions::ePrism;
+                m_shapeList[3] = StdRegions::eHexahedron;
+                break;
             }
-            else
+
+            m_doBlockMatOp = Array<OneD, Array<OneD,bool> > (SIZE_OptimizeOperationType);
+            for(i = 0; i < SIZE_OptimizeOperationType; ++i)
             {
-                ASSERTL0(false,"Needs setting up for dimension 1 and 3");
-            }   
+                m_doBlockMatOp[i] = Array<OneD, bool> (numShapes,false);
+            }
 
             ASSERTL0(loadOkay, (std::string("Unable to load file: ") +
                                 fileName).c_str());
@@ -141,29 +151,76 @@ namespace Nektar
                     {
                         int value;
                         int err;
-                        
-                        err = arrayElement->QueryIntAttribute("TRI", &value);
-                        ASSERTL0(err == TIXML_SUCCESS, (
-                           std::string("Unable to read DO_BLOCK_MAT_OP "
-                                       "attribute TRI for ")
-                         + std::string(ElementalOptimizationOperationTypeMap[n])
-                         + std::string(".")));
 
-                        m_doBlockMatOp[n][0] = (bool) value;
+                        switch (dim)
+                        {
+                        case 1:
+                            break;
+                        case 2:
+                            err = arrayElement->QueryIntAttribute("TRI", &value);
+                            ASSERTL0(err == TIXML_SUCCESS, (
+                               std::string("Unable to read DO_BLOCK_MAT_OP "
+                                           "attribute TRI for ")
+                             + std::string(ElementalOptimizationOperationTypeMap[n])
+                             + std::string(".")));
 
-                        err = arrayElement->QueryIntAttribute("QUAD", &value);
-                        ASSERTL0(err == TIXML_SUCCESS, (
-                           std::string("Unable to read DO_BLOCK_MAT_OP "
-                                       "attribute QUAD for ")
-                         + std::string(ElementalOptimizationOperationTypeMap[n])
-                         + std::string(".")));
-                        
-                        m_doBlockMatOp[n][1] = (bool) value;
+                            m_doBlockMatOp[n][0] = (bool) value;
+
+                            err = arrayElement->QueryIntAttribute("QUAD", &value);
+                            ASSERTL0(err == TIXML_SUCCESS, (
+                               std::string("Unable to read DO_BLOCK_MAT_OP "
+                                           "attribute QUAD for ")
+                             + std::string(ElementalOptimizationOperationTypeMap[n])
+                             + std::string(".")));
+
+                            m_doBlockMatOp[n][1] = (bool) value;
+                            break;
+                        case 3:
+                            err = arrayElement->QueryIntAttribute("TET", &value);
+                            ASSERTL0(err == TIXML_SUCCESS, (
+                               std::string("Unable to read DO_BLOCK_MAT_OP "
+                                           "attribute TET for ")
+                             + std::string(ElementalOptimizationOperationTypeMap[n])
+                             + std::string(".")));
+
+                            m_doBlockMatOp[n][0] = (bool) value;
+
+                            err = arrayElement->QueryIntAttribute("PYR", &value);
+                            ASSERTL0(err == TIXML_SUCCESS, (
+                               std::string("Unable to read DO_BLOCK_MAT_OP "
+                                           "attribute PYR for ")
+                             + std::string(ElementalOptimizationOperationTypeMap[n])
+                             + std::string(".")));
+
+                            m_doBlockMatOp[n][1] = (bool) value;
+
+                            err = arrayElement->QueryIntAttribute("PRISM", &value);
+                            ASSERTL0(err == TIXML_SUCCESS, (
+                               std::string("Unable to read DO_BLOCK_MAT_OP "
+                                           "attribute PRISM for ")
+                             + std::string(ElementalOptimizationOperationTypeMap[n])
+                             + std::string(".")));
+
+                            m_doBlockMatOp[n][0] = (bool) value;
+
+                            err = arrayElement->QueryIntAttribute("HEX", &value);
+                            ASSERTL0(err == TIXML_SUCCESS, (
+                               std::string("Unable to read DO_BLOCK_MAT_OP "
+                                           "attribute HEX for ")
+                             + std::string(ElementalOptimizationOperationTypeMap[n])
+                             + std::string(".")));
+
+                            m_doBlockMatOp[n][1] = (bool) value;
+                            break;
+
+                            break;
+
+                        }
                     }
                 }
             }
         }
-    
-   
+
+
     } // end of namespace
 } // end of namespace

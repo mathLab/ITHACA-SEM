@@ -1,5 +1,6 @@
 /**
- * \mainpage The Nektar++ library
+ * @mainpage The Nektar++ library
+ *
  * Nektar++ is an open source software
  * library currently being developed and designed to provide a toolbox
  * of data structures and algorithms which implement the spectral/hp
@@ -14,7 +15,7 @@
  *
  * The structure of the Nektar++ library, a collection of different
  * sublibraries, is based upon the typical structure of a global
- * spectral/hp approximation, which is characterized by: 
+ * spectral/hp approximation, which is characterized by:
  * - <b>The elemental decomposition of the problem</b><BR> As for all finite
  *   element methods, the computational domain is partitioned into a
  *   mesh of many small subdomains or elements. Analogously, the
@@ -23,8 +24,8 @@
  *   representation enables the treatment of operations on a local
  *   elemental basis rather than on global level. This not only
  *   simplifies the formulation but also allows many operations to be
- *   performed more efficiently.  
- * - <b>The introduction of a standard region</b><BR> 
+ *   performed more efficiently.
+ * - <b>The introduction of a standard region</b><BR>
  *   The introduction of a standard region allows the
  *   expansion basis to be defined just once, that is only on the
  *   standard region. All other elements then can be considered as the
@@ -44,24 +45,35 @@
  * objects, can be encapsulated in an efficient object-oriented C++
  * implementation.
  *
- * Five different sublibraries, employing this characteristic pattern,
- * are provided in the full Nektar++ library:
- * - the standard elemental region sublibrary (Nektar#StdRegions)
- * - the parametric mapping sublibrary (Nektar#SpatialDomains)
- * - the local elemental region sublibrary (Nektar#LocalRegions)
- * - the global region sublibrary (Nektar#MultiRegions)
- * - the supporting utilities sublibrary (Nektar#LibUtilities)
- *
- * These libraries can be used as ingredients for the driving
- * application, for example, a Navier-Stokes solver. This conceptual
+ * This conceptual
  * approach of the software leads to a high user-flexibility,
  * including the selection of the preferred expansion basis, its
  * polynomial order and the preferred numerical quadrature.
- * Currently, the different libraries are in their last stage of
- * development.
  *
- * Code should be written in accordance to the 
- * \ref pageCodeStandard "coding standard".
- * 
+ * @section sectionMainContents Contents
+ *
+ * @subsection subsectionMainContentFormulation Formulation
+ * - @subpage pageConnectivity
+ *
+ * @subsection subsectionMainContentLibraries Sublibraries
+ * - @subpage pageStdRegions (Nektar#StdRegions)
+ * - @subpage pageSpatialDomains (Nektar#SpatialDomains)
+ * - @subpage pageLocalRegions (Nektar#LocalRegions)
+ * - @subpage pageMultiRegions (Nektar#MultiRegions)
+ * - @subpage pageLibUtilities (Nektar#LibUtilities)
+ *
+ * @subsection subsectionMainContentSolvers Applications
+ * - @subpage pageGeneralLinearMethods
+ * - @subpage pageExampleSolvers (including the @ref pageADRSolver)
+ *
+ * @subsection subsectionMainContentDevelopment Development
+ * - @subpage pageCodeStandard
+ * - @subpage todo
+ * - @subpage deprecated
+ *
+ * @subsection subsectionMainContentAppendix Appendix
+ * - @subpage pageOptimisation
+ * - @subpage pagePolylib
+ *
  * The website of the Nektar++ project can be found on: http://www.nektar.info
  */

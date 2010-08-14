@@ -3,19 +3,19 @@
   <GLOBALOPTIMIZATIONPARAMETERS>
 
     <BwdTrans>
-      <DO_BLOCK_MAT_OP   VALUE="1" />
+      <DO_BLOCK_MAT_OP   TRI="1" QUAD="1" TET="1" PYR="1" PRISM="1" HEX="1" />
     </BwdTrans>
     
     <IProductWRTBase>
-      <DO_BLOCK_MAT_OP   VALUE="1" />
+      <DO_BLOCK_MAT_OP   TRI="1" QUAD="1" TET="1" PYR="1" PRISM="1" HEX="1" />
     </IProductWRTBase>
     
     <HelmholtzMatrixOp>
-      <DO_BLOCK_MAT_OP   VALUE="1" />
+      <DO_BLOCK_MAT_OP   TRI="1" QUAD="1" TET="1" PYR="1" PRISM="1" HEX="1" />
     </HelmholtzMatrixOp>
     
     <MassMatrixOp>
-      <DO_BLOCK_MAT_OP   VALUE="1" />
+      <DO_BLOCK_MAT_OP   TRI="1" QUAD="1" TET="1" PYR="1" PRISM="1" HEX="1" />
     </MassMatrixOp>
     
   </GLOBALOPTIMIZATIONPARAMETERS>

@@ -672,7 +672,7 @@ namespace Nektar
        {
             FillGeom();
 
-            // calculate local coordinate for coord
+            // calculate local coordinates (eta) for coord
             if(GetGtype() == eRegular)
             {   // Based on Spen's book, page 99
 
@@ -713,18 +713,25 @@ namespace Nektar
 
        }
 
+
+       /**
+        * Determines if a point specified in global coordinates is located
+        * within this tetrahedral geometry.
+        */
        bool TetGeom::v_ContainsPoint(
                const Array<OneD, const NekDouble> &gloCoord)
        {
+           // Validation checks
            ASSERTL1(gloCoord.num_elements() == 3,
                     "Three dimensional geometry expects three coordinates.");
 
-           Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);
-           GetLocCoords(gloCoord, stdCoord);
+           // Convert to the local (eta) coordinates.
+           Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
+           GetLocCoords(gloCoord, locCoord);
 
-           if (stdCoord[0] >= -1 && stdCoord[1] >= -1
-               && stdCoord[2] >= -1
-               && stdCoord[0] + stdCoord[1] + stdCoord[2] <= -1)
+           // Check local coordinate is within [-1,1]^3 bounds.
+           if (locCoord[0] >= -1 && locCoord[1] >= -1  && locCoord[2] >= -1
+               && locCoord[0] <= 1 && locCoord[1] <= 1 && locCoord[2] <= 1)
            {
                return true;
            }

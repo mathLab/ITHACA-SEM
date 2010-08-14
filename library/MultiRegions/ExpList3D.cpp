@@ -128,6 +128,11 @@ namespace Nektar
 
             }
 
+            // Setup Default optimisation information.
+            int nel = GetExpSize();
+            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
+                ::AllocateSharedPtr(nel);
+
             SetCoeffPhys();
         }
 
@@ -237,7 +242,7 @@ namespace Nektar
 
             }
 
-            // Setup Default optimisation information. 
+            // Setup Default optimisation information.
             int nel = GetExpSize();
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
@@ -582,6 +587,25 @@ namespace Nektar
             }
         } // end of GetPeriodicEdge()
 
+        void ExpList3D::v_ReadGlobalOptimizationParameters(const std::string &infilename)
+        {
+            Array<OneD, int> NumShape(4,0);
+
+            for(int i = 0; i < GetExpSize(); ++i)
+            {
+                switch ((*m_exp)[i]->DetExpansionType())
+                {
+                case StdRegions::eTetrahedron:  NumShape[0]++; break;
+                case StdRegions::ePyramid:      NumShape[1]++; break;
+                case StdRegions::ePrism:        NumShape[2]++; break;
+                case StdRegions::eHexahedron:   NumShape[3]++; break;
+                }
+            }
+
+            int three = 3;
+            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
+                ::AllocateSharedPtr(infilename,three,NumShape);
+        }
 
   } //end of namespace
 } //end of namespace

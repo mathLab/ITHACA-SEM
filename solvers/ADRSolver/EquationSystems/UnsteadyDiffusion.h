@@ -1,41 +1,43 @@
 #ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_UNSTEADYDIFFUSION_H
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_UNSTEADYDIFFUSION_H
 
-#include <ADRSolver/EquationSystem.h>
+#include <ADRSolver/EquationSystems/UnsteadySystem.h>
 
 namespace Nektar
 {
-    class UnsteadyDiffusion : public EquationSystem
+    class UnsteadyDiffusion : public UnsteadySystem
     {
     public:
         /// Creates an instance of this class
-        static EquationSystemSharedPtr create(SessionReaderSharedPtr& pSession,
-                LibUtilities::TimeIntegrationSchemeOperators& pOde) {
-            return MemoryManager<UnsteadyDiffusion>::AllocateSharedPtr(pSession, pOde);
+        static EquationSystemSharedPtr create(SessionReaderSharedPtr& pSession) {
+            return MemoryManager<UnsteadyDiffusion>::AllocateSharedPtr(pSession);
         }
         /// Name of class
         static std::string className;
 
-        UnsteadyDiffusion(SessionReaderSharedPtr& pSession,
-                LibUtilities::TimeIntegrationSchemeOperators& pOde);
+        UnsteadyDiffusion(SessionReaderSharedPtr& pSession);
+
         virtual ~UnsteadyDiffusion();
 
     protected:
-        virtual void v_doOdeRhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
+        void DoOdeRhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                           Array<OneD,        Array<OneD, NekDouble> >&outarray,
                     const NekDouble time);
 
-        virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux);
-        virtual void v_GetFluxVector(const int i, const int j, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux);
+
+        void DoOdeProjection(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
+                          Array<OneD,  Array<OneD, NekDouble> > &outarray,
+                          const NekDouble time);
+
+        virtual void DoImplicitSolve(const Array<OneD, const Array<OneD,      NekDouble> >&inarray,
+                      Array<OneD, Array<OneD, NekDouble> >&outarray,
+                      NekDouble time,
+                      NekDouble lambda);
+
 
     private:
-        NekDouble mWaveFreq;
-        Array<OneD, Array<OneD, NekDouble> > mVelocity;
-
-        void doReaction(
-                    const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                          Array<OneD, Array<OneD, NekDouble> >&outarray,
-                    const NekDouble time);
+        NekDouble m_waveFreq;
+        NekDouble m_epsilon;
     };
 }
 

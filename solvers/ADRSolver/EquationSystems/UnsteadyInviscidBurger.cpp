@@ -6,17 +6,15 @@ namespace Nektar
 {
     string UnsteadyInviscidBurger::className = EquationSystemFactory::RegisterCreatorFunction("UnsteadyInviscidBurger", UnsteadyInviscidBurger::create);
 
-    UnsteadyInviscidBurger::UnsteadyInviscidBurger(SessionReaderSharedPtr& pSession,
-            LibUtilities::TimeIntegrationSchemeOperators& pOde)
-        : EquationSystem(pSession, pOde)
+    UnsteadyInviscidBurger::UnsteadyInviscidBurger(SessionReaderSharedPtr& pSession)
+        : UnsteadySystem(pSession)
     {
-        pSession->loadParameter("wavefreq",   mWaveFreq, 0.0);
+        pSession->LoadParameter("wavefreq",   m_waveFreq, 0.0);
 
-        mTimeIntMethod = LibUtilities::eClassicalRungeKutta4;
-
-        if (mExplicitAdvection)
+        if (m_explicitAdvection)
         {
-            pOde.DefineOdeRhs        (&UnsteadyInviscidBurger::doOdeRhs,        this);
+            m_ode.DefineOdeRhs        (&UnsteadyInviscidBurger::DoOdeRhs,        this);
+            m_ode.DefineProjection (&UnsteadyInviscidBurger::DoOdeProjection, this);
         }
         else
         {
@@ -29,95 +27,97 @@ namespace Nektar
 
     }
 
-    void UnsteadyInviscidBurger::v_doOdeRhs(
+    void UnsteadyInviscidBurger::DoOdeRhs(
             const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                   Array<OneD,        Array<OneD, NekDouble> >&outarray,
             const NekDouble time)
     {
         int i;
         int nvariables = inarray.num_elements();
-        int ncoeffs    = inarray[0].num_elements();
+        int npoints = GetNpoints();
 
         switch (m_projectionType)
         {
             case eDiscontinuousGalerkin:
             {
-                Array<OneD, Array<OneD, NekDouble> > Forcing(1);
+                int ncoeffs    = GetNcoeffs();
+                Array<OneD, Array<OneD, NekDouble> > WeakAdv(nvariables);
 
-                setBoundaryConditions(time);
-                WeakDGAdvection(inarray, outarray);
-                for(i = 0; i < nvariables; ++i)
+                WeakAdv[0] = Array<OneD, NekDouble>(ncoeffs*nvariables);
+                for(i = 1; i < nvariables; ++i)
                 {
-                    m_fields[i]->MultiplyByElmtInvMass(outarray[i],
-                                                       outarray[i]);
-                    Vmath::Neg(ncoeffs,outarray[i],1);
+                    WeakAdv[i] = WeakAdv[i-1] + ncoeffs;
                 }
 
-                if(mWaveFreq>0)
+                //SetBoundaryConditions(time);
+                WeakDGAdvection(inarray, WeakAdv, true, true);
+
+                for(i = 0; i < nvariables; ++i)
                 {
-                    Forcing[0] = Array<OneD, NekDouble> (ncoeffs);
-                    doReaction(outarray,Forcing,time);
-                    Vmath::Vadd(ncoeffs, Forcing[0], 1, outarray[0], 1, outarray[0], 1);
+                    m_fields[i]->MultiplyByElmtInvMass(WeakAdv[i],
+                                                       WeakAdv[i]);
+                    m_fields[i]->BwdTrans(WeakAdv[i],outarray[i]);
+                    Vmath::Neg(npoints,outarray[i],1);
                 }
                 break;
             }
             case eGalerkin:
             {
-                setBoundaryConditions(time);
-                Array<OneD, NekDouble> physfield(GetNpoints());
-
+                // Calculate -V\cdot Grad(u);
                 for(i = 0; i < nvariables; ++i)
                 {
-                    m_fields[i]->MultiplyByInvMassMatrix(inarray[i],
-                                                    outarray[i], false);
-                    // Calculate -(\phi, V\cdot Grad(u))
-                    m_fields[i]->BwdTrans_IterPerExp(outarray[i],
-                                                        physfield);
-
-                    WeakAdvectionNonConservativeForm(mVelocity,
-                                                physfield, outarray[i]);
-
-                    Vmath::Neg(ncoeffs,outarray[i],1);
+                    AdvectionNonConservativeForm(m_velocity,
+                                                 inarray[i],
+                                                 outarray[i]);
+                    Vmath::Neg(npoints,outarray[i],1);
                 }
                 break;
             }
         }
     }
 
-    void UnsteadyInviscidBurger::doReaction(
-            const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                  Array<OneD, Array<OneD, NekDouble> >&outarray,
-            const NekDouble time)
+    /**
+     *
+     */
+    void UnsteadyInviscidBurger::DoOdeProjection(const Array<OneD,
+                                            const Array<OneD, NekDouble> >&inarray,
+                                            Array<OneD,       Array<OneD, NekDouble> >&outarray,
+                                            const NekDouble time)
     {
-        int i,k;
+        int i;
         int nvariables = inarray.num_elements();
-        int ncoeffs    = inarray[0].num_elements();
+        SetBoundaryConditions(time);
 
-        // PI*PI*exp(-1.0*PI*PI*FinTime)*sin(PI*x)*sin(PI*y)
-        int nq = m_fields[0]->GetNpoints();
-
-        Array<OneD,NekDouble> x0(nq);
-        Array<OneD,NekDouble> x1(nq);
-        Array<OneD,NekDouble> x2(nq);
-
-        // get the coordinates (assuming all fields have the same
-        // discretisation)
-        m_fields[0]->GetCoords(x0,x1,x2);
-
-        Array<OneD, NekDouble> physfield(nq);
-
-        NekDouble kt, kx, ky;
-        for (i=0; i<nq; ++i)
+        switch(m_projectionType)
         {
-              kt = mWaveFreq*time;
-              kx = mWaveFreq*x0[i];
-              ky = mWaveFreq*x1[i];
+        case eDiscontinuousGalerkin:
+            {
+                // Just copy over array
+                int npoints = GetNpoints();
 
-              // F(x,y,t) = du/dt + V \cdot \nabla u - \varepsilon \nabla^2 u
-              physfield[i] = (2.0*mEpsilon*mWaveFreq*mWaveFreq + mWaveFreq*cos(kt))*exp(sin(kt))*sin(kx)*sin(ky);
+                for(i = 0; i < nvariables; ++i)
+                {
+                    Vmath::Vcopy(npoints,inarray[i],1,outarray[i],1);
+                }
+            }
+            break;
+        case eGalerkin:
+            {
+                Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
+
+                for(i = 0; i < nvariables; ++i)
+                {
+                    m_fields[i]->FwdTrans(inarray[i],coeffs,false);
+                    m_fields[i]->BwdTrans_IterPerExp(coeffs,outarray[i]);
+                }
+                break;
+            }
+        default:
+            ASSERTL0(false,"Unknown projection scheme");
+            break;
         }
-        m_fields[0]->FwdTrans(physfield, outarray[0]);
     }
+
 
     void UnsteadyInviscidBurger::v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield,
                            Array<OneD, Array<OneD, NekDouble> > &flux)

@@ -75,7 +75,11 @@ int main(int argc, char* argv[])
     Execute("ADRSolver","Test_Advection_m12_DG_Order1.xml","Testing 2D unsteady DG advection, order 1, modes=12");
     Execute("ADRSolver","Test_Advection_m12_DG_Order2.xml","Testing 2D unsteady DG advection, order 2, modes=12");
     Execute("ADRSolver","Test_Advection_m14_DG_Order4.xml","Testing 2D unsteady DG advection, order 4, modes=14");
-    
+    Execute("ADRSolver","Test_ImDiffusion_m6.xml","Testing 2D unsteady DG implicit diffusion, order 3, modes=6");
+    Execute("ADRSolver","Test_ImDiffusion_m12.xml","Testing 2D unsteady DG implicit diffusion, order 3, modes=12");
+    Execute("ADRSolver","Test_ExDiffusion_m3.xml","Testing 2D unsteady DG explicit diffusion, order 4, modes=3");
+    Execute("ADRSolver","Test_ExDiffusion_m8.xml","Testing 2D unsteady DG explicit diffusion, order 4, modes=8");
+
     return 0;
 }
 

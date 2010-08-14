@@ -7,8 +7,12 @@ SET(ADRSolverSource
        ./EquationSystems/Helmholtz.cpp
        ./EquationSystems/SteadyAdvectionDiffusion.cpp
        ./EquationSystems/SteadyAdvectionDiffusionReaction.cpp
-       ./EquationSystems/UnsteadySolve.cpp
+       ./EquationSystems/UnsteadySystem.cpp
        ./EquationSystems/UnsteadyAdvection.cpp
+       ./EquationSystems/UnsteadyDiffusion.cpp
+       ./EquationSystems/UnsteadyAdvectionDiffusion.cpp
+       ./EquationSystems/UnsteadyInviscidBurger.cpp
+       ./EquationSystems/AlievPanfilov.cpp
        ../Auxiliary/ADRBase.cpp)
 
 ADD_SOLVER_EXECUTABLE(ADRSolver 

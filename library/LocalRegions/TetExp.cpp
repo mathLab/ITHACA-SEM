@@ -407,11 +407,15 @@ namespace Nektar
         NekDouble TetExp::v_PhysEvaluate(
                             const Array<OneD, const NekDouble> &coord)
         {
+            ASSERTL0(m_geom,"m_geom not defined");
+
             Array<OneD,NekDouble> Lcoord = Array<OneD,NekDouble>(3);
 
-            ASSERTL0(m_geom,"m_geom not defined");
+            // Get the local (eta) coordinates of the point
             m_geom->GetLocCoords(coord,Lcoord);
-            return StdTetExp::v_PhysEvaluate(Lcoord);
+
+            // Evaluate point in local (eta) coordinates.
+            return StdExpansion3D::v_PhysEvaluate(Lcoord);
         }
 
 

@@ -70,9 +70,9 @@ namespace Nektar
             m_npoints(0),
             m_coeffs(),
             m_phys(),
-            m_coeff_offset(), 
-            m_phys_offset(),   
-            m_offset_elmt_id(),  
+            m_coeff_offset(),
+            m_phys_offset(),
+            m_offset_elmt_id(),
             m_transState(eNotSet),
             m_physState(false),
             m_exp(MemoryManager<StdRegions::StdExpansionVector>
@@ -92,9 +92,9 @@ namespace Nektar
             m_transState(eNotSet),
             m_physState(false),
             m_exp(in.m_exp),
-            m_coeff_offset(in.m_coeff_offset), 
-            m_phys_offset(in.m_phys_offset),   
-            m_offset_elmt_id(in.m_offset_elmt_id),  
+            m_coeff_offset(in.m_coeff_offset),
+            m_phys_offset(in.m_phys_offset),
+            m_offset_elmt_id(in.m_offset_elmt_id),
             m_globalOptParam(in.m_globalOptParam),
             m_blockMat(in.m_blockMat)
         {
@@ -201,7 +201,7 @@ namespace Nektar
             for(i = 0; i < (*m_exp).size(); ++i)
             {
                 npoints_e = (*m_exp)[i]->GetTotPoints();
-                Vmath::Vcopy(npoints_e, &in[m_phys_offset[i]],1, 
+                Vmath::Vcopy(npoints_e, &in[m_phys_offset[i]],1,
                                         &((*m_exp)[i]->UpdatePhys())[0],1);
             }
         }
@@ -359,12 +359,12 @@ namespace Nektar
             {
                 if(doBlockMatOp[n])
                 {
-                    GlobalMatrixKey mkey(StdRegions::eIProductWRTBase, 
+                    GlobalMatrixKey mkey(StdRegions::eIProductWRTBase,
                                          shape[n]);
                     eid = m_offset_elmt_id[cnt];
                     MultiplyByBlockMatrix(mkey,inarray + m_phys_offset[eid],
                                   tmp_outarray = outarray + m_coeff_offset[eid]);
-                    cnt += num_elmts[n]; 
+                    cnt += num_elmts[n];
                 }
                 else
                 {
@@ -584,12 +584,12 @@ namespace Nektar
             DNekScalBlkMatSharedPtr BlkMatrix;
             map<int,int> elmt_id;
             StdRegions::ExpansionType ExpType = gkey.GetExpansionType();
-            
+
             if(ExpType != StdRegions::eNoExpansionType)
             {
                 for(i = 0 ; i < GetExpSize(); ++i)
                 {
-                    if((*m_exp)[m_offset_elmt_id[i]]->DetExpansionType() 
+                    if((*m_exp)[m_offset_elmt_id[i]]->DetExpansionType()
                        == ExpType)
                     {
                         elmt_id[n_exp++] = m_offset_elmt_id[i];
@@ -615,7 +615,7 @@ namespace Nektar
                     // set up an array of integers for block matrix construction
                     for(i = 0; i < n_exp; ++i)
                     {
-nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
+                        nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                         ncols[i] = (*m_exp)[elmt_id.find(i)->second]->GetNcoeffs();
                     }
                 }
@@ -657,7 +657,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
 
             default:
                 {
-                    NEKERROR(ErrorUtil::efatal, 
+                    NEKERROR(ErrorUtil::efatal,
                              "Global Matrix creation not defined for this type "
                              "of matrix");
                 }
@@ -676,19 +676,19 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
 
                 // need to be initialised with zero size for non variable coefficient case
                 Array<OneD, Array<OneD,const NekDouble> > varcoeffs;
-                
+
                 if(nvarcoeffs>0)
                 {
                     varcoeffs = Array<OneD, Array<OneD,const NekDouble> > (nvarcoeffs);
 
-                    // When two varcoeffs in a specific order               
+                    // When two varcoeffs in a specific order
                     for(j = 0; j < nvarcoeffs; j++)
                     {
                         varcoeffs_wk = Array<OneD, NekDouble>(totnq,0.0);
                         Vmath::Vcopy(totnq, &(gkey.GetVariableCoefficient(j))[cnt1], 1, &varcoeffs_wk[0],1);
                         varcoeffs[j] = varcoeffs_wk;
                     }
-                    
+
                     cnt1  += totnq;
                 }
 
@@ -712,7 +712,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                                                *(*m_exp)[elmt_id.find(i)->second],
                                                Constants,
                                                varcoeffs );
-                
+
                 loc_mat = (*m_exp)[elmt_id.find(i)->second]->GetLocMatrix(matkey);
                 BlkMatrix->SetBlock(i,i,loc_mat);
             }
@@ -759,9 +759,9 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                 else
                 {
                     int  i,j;
-                    
+
                     int nvarcoeffs = gkey.GetNvariableCoefficients();
-                    
+
                     for(i= 0; i < num_elmts[n]; ++i)
                     {
                         // need to be initialised with zero size for non variable coefficient case
@@ -777,13 +777,13 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                                 varcoeffs[j] = gkey.GetVariableCoefficient(j) + m_phys_offset[eid];
                             }
                         }
-                        
+
                         StdRegions::StdMatrixKey mkey(gkey.GetMatrixType(),
-                                                      
+
                                                       (*m_exp)[eid]->DetExpansionType(),
                                                       *((*m_exp)[eid]),
                                                       gkey.GetConstants(),varcoeffs);
-                        
+
                         (*m_exp)[eid]->GeneralMatrixOp(inarray + m_coeff_offset[eid],
                                                        tmp_outarray = outarray+m_coeff_offset[eid],
                                                        mkey);
@@ -848,7 +848,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                 break;
             default:
                 {
-                    NEKERROR(ErrorUtil::efatal, 
+                    NEKERROR(ErrorUtil::efatal,
                              "Global Matrix creation not defined for this type "
                              "of matrix");
                 }
@@ -874,14 +874,14 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                         varcoeffs[j] = mkey.GetVariableCoefficient(j) + m_phys_offset[j];
                     }
                 }
-                
-                
+
+
                 LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
                                                (*m_exp)[m_offset_elmt_id[n]]->DetExpansionType(),
                                                *(*m_exp)[m_offset_elmt_id[n]],
                                                mkey.GetConstants(),
                                                varcoeffs);
-                
+
                 loc_mat = (*m_exp)[m_offset_elmt_id[n]]->GetLocMatrix(matkey);
 
                 loc_rows = loc_mat->GetRows();
@@ -982,14 +982,14 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
             MatrixStorage blkmatStorage = eDIAGONAL;
             DNekScalBlkMatSharedPtr A = MemoryManager<DNekScalBlkMat>::
                 AllocateSharedPtr(nCoeffsPerElmt,nCoeffsPerElmt,blkmatStorage);
-            
-            DNekScalMatSharedPtr loc_mat; 
-            
+
+            DNekScalMatSharedPtr loc_mat;
+
             int nel;
             int nvarcoeffs = mkey.GetNvariableCoefficients();
-            
+
             map<int, RobinBCInfoSharedPtr> RobinBCInfo = GetRobinBCInfo();
-            
+
             for(n = cnt1 = 0; n < n_exp; ++n)
             {
                 nel = m_offset_elmt_id[n];
@@ -1013,14 +1013,14 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                                                *(*m_exp)[nel],
                                                mkey.GetConstants(),
                                                varcoeffs);
-                
-                loc_mat = (*m_exp)[nel]->GetLocMatrix(matkey);  
+
+                loc_mat = (*m_exp)[nel]->GetLocMatrix(matkey);
 
                 if(RobinBCInfo.count(nel) != 0) // add robin mass matrix
                 {
                     RobinBCInfoSharedPtr rBC;
 
-                    // declare local matrix from scaled matrix. 
+                    // declare local matrix from scaled matrix.
                     int rows = loc_mat->GetRows();
                     int cols = loc_mat->GetColumns();
                     const NekDouble *dat = loc_mat->GetRawPtr();
@@ -1032,12 +1032,12 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                     {
                         (*m_exp)[nel]->AddRobinMassMatrix(rBC->m_robinID,rBC->m_robinPrimitiveCoeffs,new_mat);
                     }
-                    
+
                     NekDouble one = 1.0;
-                    // redeclare loc_mat to point to new_mat plus the scalar. 
+                    // redeclare loc_mat to point to new_mat plus the scalar.
                     loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,new_mat);
                 }
-                
+
                 A->SetBlock(n,n,loc_mat);
             }
 
@@ -1086,9 +1086,9 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
             default: // Assume general matrix - currently only set up for full invert
                 {
                     matStorage = eFULL;
-                    Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero,matStorage);            
-                }       
-            }             
+                    Gmat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,zero,matStorage);
+                }
+            }
 
             // fill global symmetric matrix
             for(n = 0; n < (*m_exp).size(); ++n)
@@ -1120,7 +1120,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                 {
                     RobinBCInfoSharedPtr rBC;
 
-                    // declare local matrix from scaled matrix. 
+                    // declare local matrix from scaled matrix.
                     int rows = loc_mat->GetRows();
                     int cols = loc_mat->GetColumns();
                     const NekDouble *dat = loc_mat->GetRawPtr();
@@ -1132,9 +1132,9 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                     {
                         (*m_exp)[n]->AddRobinMassMatrix(rBC->m_robinID,rBC->m_robinPrimitiveCoeffs,new_mat);
                     }
-                    
+
                     NekDouble one = 1.0;
-                    // redeclare loc_mat to point to new_mat plus the scalar. 
+                    // redeclare loc_mat to point to new_mat plus the scalar.
                     loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,new_mat);
                 }
 
@@ -1289,7 +1289,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
             invD       = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nint_size , nint_size , blkmatStorage);
 
             DNekScalBlkMatSharedPtr loc_mat;
-            DNekScalMatSharedPtr    tmp_mat; 
+            DNekScalMatSharedPtr    tmp_mat;
 
             int eid;
             int nvarcoeffs = mkey.GetNvariableCoefficients();
@@ -1320,7 +1320,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                                                *(*m_exp)[eid],
                                                mkey.GetConstants(),
                                                varcoeffs);
-                
+
                 loc_mat = (*m_exp)[eid]->GetLocStaticCondMatrix(matkey);
 
                 if(RobinBCInfo.count(eid) != 0) // add robin mass matrix
@@ -1329,7 +1329,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
 
                     tmp_mat = loc_mat->GetBlock(0,0);
 
-                    // declare local matrix from scaled matrix. 
+                    // declare local matrix from scaled matrix.
                     int rows = tmp_mat->GetRows();
                     int cols = tmp_mat->GetColumns();
                     const NekDouble *dat = tmp_mat->GetRawPtr();
@@ -1341,9 +1341,9 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                     {
                         (*m_exp)[eid]->AddRobinMassMatrix(rBC->m_robinID,rBC->m_robinPrimitiveCoeffs,new_mat);
                     }
-                    
+
                     NekDouble one = 1.0;
-                    // redeclare loc_mat to point to new_mat plus the scalar. 
+                    // redeclare loc_mat to point to new_mat plus the scalar.
                     tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,new_mat);
                     loc_mat->SetBlock(0,0,tmp_mat);
                 }
@@ -1389,7 +1389,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                     returnlinsys = GenGlobalLinSysFullDirect(mkey, locToGloMap);
                 }
                 break;
-            case eDirectStaticCond:  
+            case eDirectStaticCond:
                 {
                     ASSERTL1(locToGloMap->GetGlobalSysSolnType()==eDirectStaticCond,
                              "The local to global map is not set up for this solution type");
@@ -1400,7 +1400,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                 {
                     ASSERTL1(locToGloMap->GetGlobalSysSolnType()==eDirectMultiLevelStaticCond,
                              "The local to global map is not set up for this solution type");
-                    returnlinsys = GenGlobalLinSysStaticCond(mkey, locToGloMap);                    
+                    returnlinsys = GenGlobalLinSysStaticCond(mkey, locToGloMap);
                 }
                 break;
             default:
@@ -1423,7 +1423,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
             ASSERTL1(mkey.GetGlobalSysSolnType()==locToGloMap->GetGlobalSysSolnType(),
                      "The local to global map is not set up for the requested solution type");
 
-            // We will set up this matrix as a statically condensed system 
+            // We will set up this matrix as a statically condensed system
             // where the interior blocks are zero
             int n,j;
             int cnt1;
@@ -1436,7 +1436,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
             int n_exp = GetExpSize();
             const Array<OneD,const unsigned int>& nbdry_size = locToGloMap->GetNumLocalBndCoeffsPerPatch();
             const Array<OneD,const unsigned int>& nint_size  = locToGloMap->GetNumLocalIntCoeffsPerPatch();
-            
+
             DNekScalBlkMatSharedPtr BinvD;
             DNekScalBlkMatSharedPtr invD;
             DNekScalBlkMatSharedPtr C;
@@ -1467,14 +1467,14 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                 {
                     varcoeffs = Array<OneD, Array<OneD,const NekDouble> > (nvarcoeffs);
 
-                    // When two varcoeffs in a specific order            
+                    // When two varcoeffs in a specific order
                     for(j = 0; j < nvarcoeffs; j++)
                     {
                         varcoeffs_wk = Array<OneD, NekDouble>(totnq,0.0);
                         Vmath::Vcopy(totnq, &(mkey.GetVariableCoefficient(j))[cnt1], 1, &varcoeffs_wk[0],1);
                         varcoeffs[j] = varcoeffs_wk;
                     }
-                    
+
                     cnt1  += totnq;
                 }
 
@@ -1496,13 +1496,13 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                                                (*m_exp)[eid]->DetExpansionType(),
                                                *(*m_exp)[eid],factor1,factor2,varcoeffs);
 
-                loc_mat = (*m_exp)[eid]->GetLocMatrix(matkey);    
-                
+                loc_mat = (*m_exp)[eid]->GetLocMatrix(matkey);
+
                 if(RobinBCInfo.count(eid) != 0) // add robin mass matrix
                 {
                     RobinBCInfoSharedPtr rBC;
-                    
-                    // declare local matrix from scaled matrix. 
+
+                    // declare local matrix from scaled matrix.
                     int rows = loc_mat->GetRows();
                     int cols = loc_mat->GetColumns();
                     const NekDouble *dat = loc_mat->GetRawPtr();
@@ -1514,15 +1514,15 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                     {
                         (*m_exp)[eid]->AddRobinMassMatrix(rBC->m_robinID,rBC->m_robinPrimitiveCoeffs,new_mat);
                     }
-                    
+
                     NekDouble one = 1.0;
-                    // redeclare loc_mat to point to new_mat plus the scalar. 
+                    // redeclare loc_mat to point to new_mat plus the scalar.
                     loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,new_mat);
                 }
 
-                SchurCompl->SetBlock(n,n,loc_mat);              
+                SchurCompl->SetBlock(n,n,loc_mat);
             }
-           
+
             return MemoryManager<GlobalLinSys>::AllocateSharedPtr(mkey,SchurCompl,BinvD,C,invD,locToGloMap);
         }
 
@@ -1566,7 +1566,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                     eid = m_offset_elmt_id[cnt];
                     MultiplyByBlockMatrix(mkey,inarray + m_coeff_offset[eid],
                                           tmp_outarray = outarray + m_phys_offset[eid]);
-                    cnt += num_elmts[n]; 
+                    cnt += num_elmts[n];
                 }
                 else
                 {
@@ -1598,7 +1598,6 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
         int ExpList::GetExpIndex(
                     const Array<OneD, const NekDouble> &gloCoord)
         {
-            Array<OneD, NekDouble> stdCoord(GetCoordim(0),0.0);
             for (int i = 0; i < GetExpSize(); ++i)
             {
                 if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoord))
@@ -1606,6 +1605,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                     return i;
                 }
             }
+            ASSERTL0(false, "Cannot find element for this point.");
         }
 
 
@@ -1647,7 +1647,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                 // Get the number of points and normals for this expansion.
                 e_npoints  = (*m_exp)[i]->GetTotPoints();
                 offset = m_phys_offset[i];
-                
+
                 for (j = 0; j < tangents.num_elements(); ++j)
                 {
                     loctangent = (*m_exp)[i]->GetMetricInfo()->GetTangent(j);
@@ -1655,15 +1655,15 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
 
                     for (k = 0; k < coordim; ++k)
                     {
-                        Vmath::Vcopy(e_npoints, &(loctangent[k][0]), 1, 
+                        Vmath::Vcopy(e_npoints, &(loctangent[k][0]), 1,
                                                 &(tangents[j][k][offset]), 1);
                     }
                 }
             }
-            
+
         }
-        
-        
+
+
         /**
          * Configures geometric info, such as tangent direction, on each
          * expansion.
@@ -1673,7 +1673,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
         {
             std::string dir = "TangentX";
             Array<OneD,NekDouble> coords(2);
-            
+
             // Retrieve geometric info from session.
             if(graph.CheckForGeomInfo("TangentDir"))
             {
@@ -1682,11 +1682,11 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
             if (graph.CheckForGeomInfo("TangentCentreX")
                     && graph.CheckForGeomInfo("TangentCentreY"))
             {
-                
+
                 coords[0] = atof(graph.GetGeomInfo("TangentCentreX").c_str());
                 coords[1] = atof(graph.GetGeomInfo("TangentCentreY").c_str());
             }
-            
+
             // Apply geometric info to each expansion.
             for (int i = 0; i < m_exp->size(); ++i)
             {
@@ -1694,8 +1694,8 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
                 (*m_exp)[i]->GetMetricInfo()->SetTangentCircularCentre(coords);
             }
         }
-        
-        
+
+
         /**
          * The coordinates of the quadrature points, together with
          * the content of the array #m_phys, are written to the
@@ -1890,7 +1890,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
          * @param   outfile Output file name.
          * @param   var                 variables names
          */
-        void ExpList::WriteTecplotHeader(std::ofstream &outfile, 
+        void ExpList::WriteTecplotHeader(std::ofstream &outfile,
                         std::string var)
         {
 
@@ -2207,14 +2207,14 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
         void ExpList::AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
         {
             int i;
-            // Determine mapping from element ids to location in 
+            // Determine mapping from element ids to location in
             // expansion list
             map<int, int> ElmtID_to_ExpID;
             for(i = 0; i < (*m_exp).size(); ++i)
             {
                 ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
             }
-            
+
             for(i = 0; i < fielddef->m_ElementIDs.size(); ++i)
             {
                 int eid     = ElmtID_to_ExpID[fielddef->m_ElementIDs[i]];
@@ -2242,13 +2242,13 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
 
             ASSERTL0(i!= fielddef->m_Fields.size(),"Field not found in data file");
 
-            // Determine mapping from element ids to location in 
+            // Determine mapping from element ids to location in
             // expansion list
             map<int, int> ElmtID_to_ExpID;
             for(i = 0; i < (*m_exp).size(); ++i)
             {
                 ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
-            }            
+            }
 
             for(i = 0; i < fielddef->m_ElementIDs.size(); ++i)
             {
@@ -2262,7 +2262,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
         //
         // Virtual functions
         //
-        
+
         const Array<OneD,const boost::shared_ptr<ExpList1D> >
                                         &ExpList::v_GetBndCondExpansions()
         {
@@ -2364,7 +2364,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
             // For ContFieldX classes, -> ContFieldX::v_HelmSolveCG
             // For DisContFieldX classes, -> DisContFieldX::v_HelmSolveDG
         }
-        
+
         void ExpList::v_HelmSolveCG(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
@@ -2388,7 +2388,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
         {
             ASSERTL0(false, "HelmSolveDG not implemented.");
             // Only implemented in DisContFieldX classes
-        }            
+        }
 
         void ExpList::v_HelmSolve(const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,       NekDouble> &outarray,
@@ -2402,7 +2402,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
 
 
         void ExpList::v_LinearAdvectionDiffusionReactionSolve(
-                       const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+                       const Array<OneD, Array<OneD, NekDouble> > &velocity,
                        const Array<OneD, const NekDouble> &inarray,
                        Array<OneD, NekDouble> &outarray,
                        const NekDouble lambda,
@@ -2414,7 +2414,7 @@ nrows[i] = (*m_exp)[elmt_id.find(i)->second]->GetTotPoints();
         }
 
         void ExpList::v_LinearAdvectionReactionSolve(
-                       const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+                       const Array<OneD, Array<OneD, NekDouble> > &velocity,
                        const Array<OneD, const NekDouble> &inarray,
                        Array<OneD, NekDouble> &outarray,
                        const NekDouble lambda,

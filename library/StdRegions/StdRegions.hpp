@@ -61,15 +61,11 @@
 
 namespace Nektar
 {
-    /** \brief The namespace associated with the the StdRegions library 
+    /** \brief The namespace associated with the the StdRegions library
      * (\ref pageStdRegions "StdRegions introduction")
      */
     namespace StdRegions
     {
-        /** \page pageStdRegions The StdRegions library
-         *
-         */
-
         enum ElementType
         {
             eStdSegExp,
@@ -93,8 +89,8 @@ namespace Nektar
             SIZE_ElementType
         };
 
-        const char* const ElementTypeMap[] = 
-        { 
+        const char* const ElementTypeMap[] =
+        {
             "StdSegExp",
             "SegExp",
             "StdQuadExp",
@@ -112,7 +108,7 @@ namespace Nektar
             "PrismExp",
             "PyrExp",
             "TetExp",
-            "NodalTetExp",           
+            "NodalTetExp",
         };
 
         enum MatrixType
@@ -154,7 +150,7 @@ namespace Nektar
             SIZE_MatrixType
         };
 
-        const char* const MatrixTypeMap[] = 
+        const char* const MatrixTypeMap[] =
     {
             "Mass",
             "InvMass",
@@ -176,7 +172,7 @@ namespace Nektar
             "LinearAdvectionReaction",
             "LinearAdvectionDiffusionReaction",
             "NBasisTrans",
-            "InvNBasisTrans", 
+            "InvNBasisTrans",
             "BwdTrans",
             "IProductWRTBase",
             "IProductWRTDerivBase0",
@@ -205,9 +201,9 @@ namespace Nektar
             eHexahedron,
             SIZE_ExpansionType
         };
-    
 
-        const char* const ExpansionTypeMap[] = 
+
+        const char* const ExpansionTypeMap[] =
         {
             "NoExpansionType",
             "Segment",
@@ -218,7 +214,7 @@ namespace Nektar
             "Prism",
             "Hexahedron"
         };
-    
+
 
 
 
@@ -241,7 +237,7 @@ namespace Nektar
             eBackwards
         };
 
-        const char* const EdgeOrientationMap[] = 
+        const char* const EdgeOrientationMap[] =
         {
             "Forwards",
             "Backwards"
@@ -259,7 +255,7 @@ namespace Nektar
             eDir1BwdDir2_Dir2BwdDir1
         };
 
-        const char* const FaceOrientationMap[] = 
+        const char* const FaceOrientationMap[] =
         {
             "Dir1FwdDir1_Dir2FwdDir2",
             "Dir1FwdDir1_Dir2BwdDir2",
@@ -268,7 +264,7 @@ namespace Nektar
             "Dir1FwdDir2_Dir2FwdDir1",
             "Dir1FwdDir2_Dir2BwdDir1",
             "Dir1BwdDir2_Dir2FwdDir1",
-            "Dir1BwdDir2_Dir2BwdDir1"          
+            "Dir1BwdDir2_Dir2BwdDir1"
         };
 
         // Defines a "fast find"

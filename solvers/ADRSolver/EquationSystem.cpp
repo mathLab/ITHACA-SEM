@@ -40,6 +40,25 @@ using std::string;
 
 namespace Nektar
 {
+    /**
+     * @class EquationSystem
+     *
+     * This class is a base class for all solver implementations. It provides
+     * the underlying generic functionality and interface for solving equations.
+     *
+     * To solve a steady-state equation, create a derived class from this class
+     * and reimplement the virtual functions to provide custom implementation
+     * for the problem.
+     *
+     * To solve unsteady problems, derive from the UnsteadySystem class instead
+     * which provides general time integration.
+     */
+
+    /**
+     * This constructor is protected as the objects of this class are never
+     * instantiated directly.
+     * @param   pSession        The session reader holding problem parameters.
+     */
     EquationSystem::EquationSystem(SessionReaderSharedPtr& pSession)
         : ADRBase(pSession->GetFilename(), true),
           m_session(pSession)
@@ -47,11 +66,46 @@ namespace Nektar
         ZeroPhysFields();
     }
 
+
+    /**
+     *
+     */
     EquationSystem::~EquationSystem()
     {
 
     }
 
+
+    /**
+     * This allows initialisation of the solver which cannot be completed
+     * during object construction (such as setting of initial conditions).
+     *
+     * Public interface routine to virtual function implementation.
+     */
+    void EquationSystem::DoInitialise()
+    {
+        v_DoInitialise();
+    }
+
+
+    /**
+     * Performs the actual solve.
+     *
+     * Public interface routine to virtual function implementation.
+     */
+    void EquationSystem::DoSolve()
+    {
+        v_DoSolve();
+    }
+
+
+    /**
+     * Prints a summary of variables and problem parameters.
+     *
+     * Public interface routine to virtual function implementation.
+     *
+     * @param   out             The ostream object to write to.
+     */
     void EquationSystem::PrintSummary(std::ostream &out)
     {
         out << "=======================================================================" << endl;
@@ -63,18 +117,15 @@ namespace Nektar
         out << "=======================================================================" << endl;
     }
 
-    void EquationSystem::SetPhysForcingFunction()
-    {
-        SetPhysForcingFunctions(m_fields);
-    }
 
-    void EquationSystem::DoSolve()
-    {
-        v_DoSolve();
-    }
-
+    /**
+     * Evaluates a physical function at each quadrature point in the domain.
+     *
+     * @param   pArray          The array into which to write the values.
+     * @param   pEqn            The equation to evaluate.
+     */
     void EquationSystem::EvaluateFunction(Array<OneD, NekDouble>& pArray,
-                              SpatialDomains::ConstUserDefinedEqnShPtr pEqn) 
+                              SpatialDomains::ConstUserDefinedEqnShPtr pEqn)
     {
         int nq = m_fields[0]->GetNpoints();
 
@@ -98,6 +149,12 @@ namespace Nektar
     }
 
 
+    /**
+     * If boundary conditions are time-dependent, they will be evaluated at the
+     * time specified.
+     *
+     * @param   time            The time at which to evaluate the BCs
+     */
     void EquationSystem::SetBoundaryConditions(NekDouble time)
     {
       int nvariables = m_fields.num_elements();
@@ -108,15 +165,30 @@ namespace Nektar
     }
 
 
-    // Virtual functions
-    void EquationSystem::v_PrintSummary(std::ostream &out)
+    /**
+     * By default, nothing needs initialising at the EquationSystem level.
+     */
+    void EquationSystem::v_DoInitialise()
     {
+
     }
 
 
+    /**
+     *
+     */
     void EquationSystem::v_DoSolve()
     {
-        ASSERTL0(false, "SolveHelmholtz not defined for this equation.");
+        ASSERTL0(false, "Solve not defined for this equation.");
     }
-    
+
+
+    /**
+     * By default, there are no further parameters to display.
+     */
+    void EquationSystem::v_PrintSummary(std::ostream &out)
+    {
+
+    }
+
 }

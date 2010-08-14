@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Advection Diffusion Reaction solver
+// Description: Advection Diffusion Reaction framework solver
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -41,10 +41,8 @@
 #include <ADRSolver/SessionReader.h>
 using namespace Nektar;
 
-
 int main(int argc, char *argv[])
 {
-
     if(argc != 2)
     {
         cout << "\n \t Usage: ADRSolver  sessionfile \n" << endl;
@@ -58,44 +56,46 @@ int main(int argc, char *argv[])
     SessionReaderSharedPtr session;
     EquationSystemSharedPtr equ;
 
+    // Record start time.
     time(&starttime);
 
     // Create session reader.
-
     session = MemoryManager<SessionReader>::AllocateSharedPtr(filename);
 
-    // Create specific equation as specified in the session file.
+    // Create instance of module to solve the equation specified in the session.
     try
     {
-        equ = EquationSystemFactory::CreateInstance( session->GetSolverInfo("EQTYPE"), session);
+        equ = EquationSystemFactory::CreateInstance(
+                                    session->GetSolverInfo("EQTYPE"), session);
     }
     catch (int e)
     {
         ASSERTL0(e == -1, "No such solver class defined.");
     }
 
+    // Print a summary of solver and problem parameters and initialise the
+    // solver.
     equ->PrintSummary(cout);
+    equ->DoInitialise();
 
+    // Solve the problem.
     equ->DoSolve();
 
+    // Record end time.
     time(&endtime);
     CPUtime = (1.0/60.0/60.0)*difftime(endtime,starttime);
 
-    // Write  output to .fld file
+    // Write output to .fld file
     equ->Output();
 
+    // Evaluate and output computation time and solution accuracy.
+    // The specific format of the error output is essential for the
+    // regression tests to work.
     cout << "-------------------------------------------" << endl;
     cout << "Total Computation Time = " << CPUtime << " hr." << endl;
-
-    // Evaluate L2 Error
-    // note that format is important for regression tests. 
     for(int i = 0; i < equ->GetNvariables(); ++i)
     {
         cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i) << endl;
         cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i) << endl;
     }
 }
-
-/**
-* $Log $
-**/

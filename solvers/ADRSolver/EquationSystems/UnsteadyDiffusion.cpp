@@ -6,29 +6,20 @@ namespace Nektar
 {
     string UnsteadyDiffusion::className = EquationSystemFactory::RegisterCreatorFunction("UnsteadyDiffusion", UnsteadyDiffusion::create);
 
-    UnsteadyDiffusion::UnsteadyDiffusion(SessionReaderSharedPtr& pSession,
-            LibUtilities::TimeIntegrationSchemeOperators& pOde)
-        : EquationSystem(pSession, pOde)
+    UnsteadyDiffusion::UnsteadyDiffusion(SessionReaderSharedPtr& pSession)
+        : UnsteadySystem(pSession)
     {
-        pSession->loadParameter("wavefreq",   mWaveFreq, 0.0);
+        pSession->LoadParameter("wavefreq",   m_waveFreq, 0.0);
+        pSession->LoadParameter("epsilon",    m_epsilon,  0.0);
 
-        mTimeIntMethod = LibUtilities::eClassicalRungeKutta4;
-
-        if (mExplicitDiffusion)
+        if (m_explicitDiffusion)
         {
-            pOde.DefineOdeRhs        (&UnsteadyDiffusion::doOdeRhs,        this);
+            m_ode.DefineOdeRhs        (&UnsteadyDiffusion::DoOdeRhs,        this);
+            m_ode.DefineProjection    (&UnsteadyDiffusion::DoOdeProjection, this);
         }
         else
         {
-            if(mWaveFreq>1000)
-            {
-                mTimeIntMethod = LibUtilities::eIMEXdirk_3_4_3;
-            }
-            else
-            {
-                mTimeIntMethod = LibUtilities::eDIRKOrder3;
-            }
-            pOde.DefineImplicitSolve (&UnsteadyDiffusion::doImplicitSolve, this);
+            m_ode.DefineImplicitSolve (&UnsteadyDiffusion::DoImplicitSolve, this);
         }
     }
 
@@ -37,96 +28,119 @@ namespace Nektar
 
     }
 
-    void UnsteadyDiffusion::v_doOdeRhs(
+    void UnsteadyDiffusion::DoOdeRhs(
             const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                   Array<OneD,        Array<OneD, NekDouble> >&outarray,
             const NekDouble time)
     {
         int i;
         int nvariables = inarray.num_elements();
-        int ncoeffs    = inarray[0].num_elements();
+        int npoints = GetNpoints();
 
-        Array<OneD, Array<OneD, NekDouble> > Forcing(1);
-
-        // BoundaryConditions are imposed weakly at the
-        // Diffusion operator
-
-        WeakDGDiffusion(inarray,outarray);
-
-        for(int i = 0; i < nvariables; ++i)
+        switch (m_projectionType)
         {
-            m_fields[i]->MultiplyByElmtInvMass(outarray[i],
-                                                outarray[i]);
-        }
+        case eDiscontinuousGalerkin:
+            {
+                int ncoeffs    = inarray[0].num_elements();
+                Array<OneD, Array<OneD, NekDouble> > WeakAdv(nvariables);
 
-        if(mWaveFreq>0)
-        {
-            Forcing[0] = Array<OneD, NekDouble> (ncoeffs);
-            doReaction(outarray,Forcing,time);
-            Vmath::Vadd(ncoeffs, Forcing[0], 1, outarray[0], 1, outarray[0], 1);
+                WeakAdv[0] = Array<OneD, NekDouble>(ncoeffs*nvariables);
+                for(i = 1; i < nvariables; ++i)
+                {
+                    WeakAdv[i] = WeakAdv[i-1] + ncoeffs;
+                }
+
+                WeakDGDiffusion(inarray, WeakAdv,true,true);
+
+                for(i = 0; i < nvariables; ++i)
+                {
+                    m_fields[i]->MultiplyByElmtInvMass(WeakAdv[i],
+                                                       WeakAdv[i]);
+                    m_fields[i]->BwdTrans(WeakAdv[i],outarray[i]);
+                }
+
+                break;
+            }
+        case eGalerkin:
+            {
+                ASSERTL0(false, "Explicit Galerkin diffusion not set up.");
+            }
         }
     }
 
-    void UnsteadyDiffusion::doReaction(
+    void UnsteadyDiffusion::DoImplicitSolve(
             const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                   Array<OneD, Array<OneD, NekDouble> >&outarray,
-            const NekDouble time)
+            const NekDouble time,
+            const NekDouble lambda)
     {
-        int i,k;
         int nvariables = inarray.num_elements();
-        int ncoeffs    = inarray[0].num_elements();
-
-        // PI*PI*exp(-1.0*PI*PI*FinTime)*sin(PI*x)*sin(PI*y)
         int nq = m_fields[0]->GetNpoints();
 
-        Array<OneD,NekDouble> x0(nq);
-        Array<OneD,NekDouble> x1(nq);
-        Array<OneD,NekDouble> x2(nq);
-
-        // get the coordinates (assuming all fields have the same
-        // discretisation)
-        m_fields[0]->GetCoords(x0,x1,x2);
-
-        Array<OneD, NekDouble> physfield(nq);
-
-        NekDouble kt, kx, ky;
-        for (i=0; i<nq; ++i)
+        // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
+        // inarray = input: \hat{rhs} -> output: \hat{Y}
+        // outarray = output: nabla^2 \hat{Y}
+        // where \hat = modal coeffs
+        for (int i = 0; i < nvariables; ++i)
         {
-              kt = mWaveFreq*time;
-              kx = mWaveFreq*x0[i];
-              ky = mWaveFreq*x1[i];
+            // Multiply 1.0/timestep/lambda
+            Vmath::Smul(nq, -1.0/lambda/m_epsilon, inarray[i], 1, m_fields[i]->UpdatePhys(), 1);
 
-              // F(x,y,t) = du/dt + V \cdot \nabla u - \varepsilon \nabla^2 u
-              physfield[i] = (2.0*mEpsilon*mWaveFreq*mWaveFreq + mWaveFreq*cos(kt))*exp(sin(kt))*sin(kx)*sin(ky);
+            NekDouble kappa = 1.0/lambda/m_epsilon;
+
+            // Solve a system of equations with Helmholtz solver
+            m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),
+                                            m_fields[i]->UpdateCoeffs(),kappa);
+            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
+            m_fields[i]->SetPhysState(false);
+
+            // The solution is Y[i]
+            outarray[i] = m_fields[i]->GetPhys();
         }
-        m_fields[0]->FwdTrans(physfield, outarray[0]);
     }
 
-    void UnsteadyDiffusion::v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield,
-                           Array<OneD, Array<OneD, NekDouble> > &flux)
+
+    /**
+     *
+     */
+    void UnsteadyDiffusion::DoOdeProjection(const Array<OneD,
+                                            const Array<OneD, NekDouble> >&inarray,
+                                            Array<OneD,       Array<OneD, NekDouble> >&outarray,
+                                            const NekDouble time)
     {
-        ASSERTL1(flux.num_elements() == mVelocity.num_elements(),"Dimension of flux array and velocity array do not match");
+        int i;
+        int nvariables = inarray.num_elements();
+        SetBoundaryConditions(time);
 
-        for(int j = 0; j < flux.num_elements(); ++j)
-          {
-            Vmath::Vmul(GetNpoints(),physfield[i],1,
-                mVelocity[j],1,flux[j],1);
-          }
+        switch(m_projectionType)
+        {
+        case eDiscontinuousGalerkin:
+            {
+                // Just copy over array
+                int npoints = GetNpoints();
+
+                for(i = 0; i < nvariables; ++i)
+                {
+                    Vmath::Vcopy(npoints,inarray[i],1,outarray[i],1);
+                }
+            }
+            break;
+        case eGalerkin:
+            {
+                Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
+
+                for(i = 0; i < nvariables; ++i)
+                {
+                    m_fields[i]->FwdTrans(inarray[i],coeffs,false);
+                    m_fields[i]->BwdTrans_IterPerExp(coeffs,outarray[i]);
+                }
+                break;
+            }
+        default:
+            ASSERTL0(false,"Unknown projection scheme");
+            break;
+        }
     }
-
-   // Evaulate flux = m_fields*ivel for i th component of Vu for direction j
-    void UnsteadyDiffusion::v_GetFluxVector(const int i, const int j, Array<OneD, Array<OneD, NekDouble> > &physfield,
-                           Array<OneD, Array<OneD, NekDouble> > &flux)
-    {
-        ASSERTL1(flux.num_elements() == mVelocity.num_elements(),"Dimension of flux array and velocity array do not match");
-
-        for(int k = 0; k < flux.num_elements(); ++k)
-          {
-            Vmath::Zero(GetNpoints(),flux[k],1);
-          }
-        Vmath::Vcopy(GetNpoints(),physfield[i],1,flux[j],1);
-    }
-
 
 
 }

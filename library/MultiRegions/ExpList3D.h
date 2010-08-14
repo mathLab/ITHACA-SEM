@@ -115,6 +115,10 @@ namespace Nektar
             LocalRegions::PyrExpVector    m_pyr;
             LocalRegions::TetExpVector    m_tet;
 */
+
+            virtual void v_ReadGlobalOptimizationParameters(
+                                const std::string &infilename);
+
         };
 
         /// Shared pointer to an ExpList3D object.

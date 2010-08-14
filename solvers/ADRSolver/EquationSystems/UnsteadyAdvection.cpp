@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Unsteady Advection  solve 
+// Description: Unsteady Advection  solve
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -39,16 +39,13 @@
 
 namespace Nektar
 {
-    string UnsteadyAdvection::className = EquationSystemFactory::RegisterCreatorFunction("UnsteadyAdvection", UnsteadyAdvection::create);
+    string UnsteadyAdvection::className = EquationSystemFactory::RegisterCreatorFunction("UnsteadyAdvection", UnsteadyAdvection::create, "Unsteady Advection equation.");
 
     UnsteadyAdvection::UnsteadyAdvection(SessionReaderSharedPtr& pSession)
-        : UnsteadySolve(pSession)
+        : UnsteadySystem(pSession)
     {
-        
-        pSession->MatchSolverInfo("ADVECTIONADVANCEMENT","Explicit",m_explicitAdvection,true); 
-
         // Define Velocity fields
-        m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim); 
+        m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
         int nq = m_fields[0]->GetNpoints();
         std::string velStr[3] = {"Vx","Vy","Vz"};
 
@@ -58,14 +55,14 @@ namespace Nektar
 
             SpatialDomains::ConstUserDefinedEqnShPtr ifunc
                 = m_boundaryConditions->GetUserDefinedEqn(velStr[i]);
-            
+
             EvaluateFunction(m_velocity[i],ifunc);
         }
 
         if (m_explicitAdvection)
         {
             m_ode.DefineOdeRhs        (&UnsteadyAdvection::DoOdeRhs,        this);
-            m_ode.DefineProjection    (&UnsteadyAdvection::DoOdeProjection, this);
+            m_ode.DefineProjection (&UnsteadyAdvection::DoOdeProjection, this);
         }
         else
         {
@@ -86,7 +83,7 @@ namespace Nektar
         int i;
         int nvariables = inarray.num_elements();
         int npoints = GetNpoints();
-                
+
         switch (m_projectionType)
         {
         case eDiscontinuousGalerkin:
@@ -94,7 +91,7 @@ namespace Nektar
                 int ncoeffs    = inarray[0].num_elements();
                 Array<OneD, Array<OneD, NekDouble> > WeakAdv(nvariables);
 
-                WeakAdv[0] = Array<OneD, NekDouble>(ncoeffs*nvariables);         
+                WeakAdv[0] = Array<OneD, NekDouble>(ncoeffs*nvariables);
                 for(i = 1; i < nvariables; ++i)
                 {
                     WeakAdv[i] = WeakAdv[i-1] + ncoeffs;
@@ -109,16 +106,16 @@ namespace Nektar
                     m_fields[i]->BwdTrans(WeakAdv[i],outarray[i]);
                     Vmath::Neg(npoints,outarray[i],1);
                 }
-                
+
                 break;
             }
             case eGalerkin:
-            {        
+            {
                 // Calculate -V\cdot Grad(u);
                 for(i = 0; i < nvariables; ++i)
                 {
                     AdvectionNonConservativeForm(m_velocity,
-                                                 inarray[i], 
+                                                 inarray[i],
                                                  outarray[i]);
                     Vmath::Neg(npoints,outarray[i],1);
                 }
@@ -126,7 +123,7 @@ namespace Nektar
             }
         }
     }
-    
+
 
 
     /**
@@ -147,7 +144,7 @@ namespace Nektar
             {
                 // Just copy over array
                 int npoints = GetNpoints();
-                
+
                 for(i = 0; i < nvariables; ++i)
                 {
                     Vmath::Vcopy(npoints,inarray[i],1,outarray[i],1);
@@ -157,7 +154,7 @@ namespace Nektar
         case eGalerkin:
             {
                 Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
-                
+
                 for(i = 0; i < nvariables; ++i)
                 {
                     m_fields[i]->FwdTrans(inarray[i],coeffs,false);
@@ -178,23 +175,10 @@ namespace Nektar
         ASSERTL1(flux.num_elements() == m_velocity.num_elements(),"Dimension of flux array and velocity array do not match");
 
         for(int j = 0; j < flux.num_elements(); ++j)
-          {
+        {
             Vmath::Vmul(GetNpoints(),physfield[i],1,
                 m_velocity[j],1,flux[j],1);
-          }
-    }
-
-   // Evaulate flux = m_fields*ivel for i th component of Vu for direction j
-    void UnsteadyAdvection::v_GetFluxVector(const int i, const int j, Array<OneD, Array<OneD, NekDouble> > &physfield,
-                           Array<OneD, Array<OneD, NekDouble> > &flux)
-    {
-        ASSERTL1(flux.num_elements() == m_velocity.num_elements(),"Dimension of flux array and velocity array do not match");
-
-        for(int k = 0; k < flux.num_elements(); ++k)
-          {
-            Vmath::Zero(GetNpoints(),flux[k],1);
-          }
-        Vmath::Vcopy(GetNpoints(),physfield[i],1,flux[j],1);
+        }
     }
 
     void UnsteadyAdvection::v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numflux)
@@ -227,8 +211,7 @@ namespace Nektar
 
     void UnsteadyAdvection::v_PrintSummary(std::ostream &out)
     {
-        out << "\tAdvection       : " << (m_explicitAdvection ? "explicit" : "implicit") << endl;
-        out << "\tIntegration Type: " << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod] << endl;
+        UnsteadySystem::v_PrintSummary(out);
     }
 
 

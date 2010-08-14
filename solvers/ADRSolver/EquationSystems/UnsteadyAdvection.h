@@ -36,11 +36,11 @@
 #ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_UNSTEADYADVECTION_H
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_UNSTEADYADVECTION_H
 
-#include <ADRSolver/EquationSystems/UnsteadySolve.h>
+#include <ADRSolver/EquationSystems/UnsteadySystem.h>
 
 namespace Nektar
 {
-    class UnsteadyAdvection : public UnsteadySolve
+    class UnsteadyAdvection : public UnsteadySystem
     {
     public:
         /// Creates an instance of this class
@@ -51,11 +51,10 @@ namespace Nektar
         static std::string className;
 
         UnsteadyAdvection(SessionReaderSharedPtr& pSession);
+
         virtual ~UnsteadyAdvection();
 
     protected:
-        bool                                    m_explicitAdvection;
-
         Array<OneD, Array<OneD, NekDouble> > m_velocity;
 
         void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
@@ -68,8 +67,6 @@ namespace Nektar
 
         // DG Advection routines
         virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux);
-
-        virtual void v_GetFluxVector(const int i, const int j, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux);
 
         virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numflux);
 

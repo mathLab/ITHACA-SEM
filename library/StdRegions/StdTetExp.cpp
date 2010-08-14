@@ -1107,11 +1107,10 @@ namespace Nektar
 
         NekDouble StdTetExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& xi)
         {
-            ASSERTL0(xi[0] + xi[1] + xi[2] + 1 <= NekConstants::kNekZeroTol,
+            // Validation checks
+            ASSERTL0(xi[0] + xi[1] + xi[2] <= -1,
                      "Coordinate outside bounds of tetrahedron.");
-            ASSERTL0((xi[0] + 1 + NekConstants::kNekZeroTol >= 0)
-                        || (xi[1] + 1 + NekConstants::kNekZeroTol >= 0)
-                        || (xi[2] + 1 + NekConstants::kNekZeroTol >= 0),
+            ASSERTL0(xi[0] >= -1 && xi[1] >= -1 && xi[2] >= -1,
                      "Coordinate outside bounds of tetrahedron.");
 
             Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);

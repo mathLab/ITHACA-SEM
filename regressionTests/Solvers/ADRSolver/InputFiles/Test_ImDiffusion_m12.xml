@@ -50,7 +50,8 @@
     <COMPOSITE>
       <C ID="0"> T[0-3] </C>
       <C ID="1"> Q[4-5] </C>
-      <C ID="2"> E[0,1,2,4,7,9,10,11] </C>
+      <C ID="2"> E[2,7,4,9] </C>
+      <C ID="3"> E[0,1,10,11] </C>
     </COMPOSITE>
 
     <DOMAIN> C[0-1] </DOMAIN>
@@ -58,25 +59,27 @@
   </GEOMETRY>
   
   <EXPANSIONS>
-    <E COMPOSITE="C[0]" NUMMODES="3" TYPE="MODIFIED" />
-    <E COMPOSITE="C[1]" NUMMODES="3" TYPE="MODIFIED" />
+    <E COMPOSITE="C[0]" NUMMODES="12" TYPE="MODIFIED" />
+    <E COMPOSITE="C[1]" NUMMODES="12" TYPE="MODIFIED" />
   </EXPANSIONS>
 
   <CONDITIONS>
 
     <PARAMETERS>
-      <P> TimeStep   = 0.000001 </P>
-      <P> NumSteps      = 500  </P>
-      <P> FinTime    = TimeStep*NumSteps </P>
-      <P> IO_CheckSteps = 100   </P>
-      <P> IO_InfoSteps  = 100 </P>
+      <P> TimeStep       = 0.0001            </P>
+      <P> NumSteps       = 200              </P>
+      <P> FinTime        = TimeStep*NumSteps </P>
+      <P> IO_CheckSteps  = 200              </P>
+      <P> IO_InfoSteps   = 200              </P>
+      <P> wavefreq       = PI                </P>
+      <P> epsilon        = 1.0               </P>
     </PARAMETERS>
 
     <SOLVERINFO>
       <I PROPERTY="EQTYPE" VALUE="UnsteadyDiffusion" />
       <I PROPERTY="Projection" VALUE="DisContinuous"/>
-      <I PROPERTY="DiffusionAdvancement" VALUE="Explicit"/>
-      <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
+      <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
+      <I PROPERTY="TimeIntegrationMethod" VALUE="DIRKOrder3" />
     </SOLVERINFO> 
 
     <VARIABLES>
@@ -85,20 +88,24 @@
 
     <BOUNDARYREGIONS>
       <B ID="0"> C[2] </B>
+      <B ID="1"> C[3] </B>
     </BOUNDARYREGIONS>
 
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
-	 <D VAR="u" VALUE="0.0" />
+        <D VAR="u" VALUE="0" />
+      </REGION>
+      <REGION REF="1">
+        <N VAR="u" VALUE="0" />
       </REGION>
     </BOUNDARYCONDITIONS>
-    
+
     <EXACTSOLUTION>
-      <F VAR="u" VALUE="exp(-2.0*PI*PI*FinTime)*sin(PI*x)*sin(PI*y)" />
+      <F VAR="u" VALUE="exp(-2.0*wavefreq*wavefreq*FinTime)*sin(wavefreq*x)*cos(wavefreq*y)" />
     </EXACTSOLUTION>
     
     <INITIALCONDITIONS>
-      <F VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+      <F VAR="u" VALUE="sin(wavefreq*x)*cos(wavefreq*y)" />
     </INITIALCONDITIONS>
     
   </CONDITIONS>

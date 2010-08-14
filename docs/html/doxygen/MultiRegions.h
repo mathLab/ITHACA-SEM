@@ -12,7 +12,7 @@ namespace MultiRegions {
  * @ref pageMultiRegions "MultiRegions introduction".
  *
  *
- * @page pageMultiRegions The %MultiRegions Library
+ * @page pageMultiRegions %MultiRegions subibrary
  * In the MultiRegions library, all classes and routines are related to
  * the process of assembling a global spectral/hp expansion out of local
  * elemental contributions are bundled together. The most important entities
@@ -40,7 +40,7 @@ namespace MultiRegions {
  * problem.
  *
  * <b>A multi-elemental discontinuous global expansion.</b><BR>
- * The expansions are represented by the classes 
+ * The expansions are represented by the classes
  * DisContField1D, DisContField2D and DisContField3D. Objects of these classes
  * should be used when solving partial differential equations using a
  * discontinuous Galerkin approach. These classes enforce a coupling between

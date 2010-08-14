@@ -6,30 +6,34 @@ namespace Nektar
 {
     string UnsteadyAdvectionDiffusion::className = EquationSystemFactory::RegisterCreatorFunction("UnsteadyAdvectionDiffusion", UnsteadyAdvectionDiffusion::create);
 
-    UnsteadyAdvectionDiffusion::UnsteadyAdvectionDiffusion(SessionReaderSharedPtr& pSession,
-            LibUtilities::TimeIntegrationSchemeOperators& pOde)
-        : EquationSystem(pSession, pOde)
+    UnsteadyAdvectionDiffusion::UnsteadyAdvectionDiffusion(SessionReaderSharedPtr& pSession)
+        : UnsteadySystem(pSession)
     {
-        pSession->loadParameter("wavefreq",   mWaveFreq, 0.0);
+        pSession->LoadParameter("wavefreq",   m_waveFreq, 0.0);
+        pSession->LoadParameter("epsilon",    m_epsilon,  0.0);
 
-        mTimeIntMethod = LibUtilities::eIMEXdirk_3_4_3;
-
-        mVelocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+        // Define Velocity fields
+        m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+        int nq = m_fields[0]->GetNpoints();
         std::string velStr[3] = {"Vx","Vy","Vz"};
 
-        for (int i = 0; i < m_spacedim; ++i)
+        for(int i = 0; i < m_spacedim; ++i)
         {
+            m_velocity[i] = Array<OneD, NekDouble> (nq,0.0);
+
             SpatialDomains::ConstUserDefinedEqnShPtr ifunc
-                    = m_boundaryConditions->GetUserDefinedEqn(velStr[i]);
-            evaluateFunction(mVelocity[i], ifunc);
+                = m_boundaryConditions->GetUserDefinedEqn(velStr[i]);
+
+            EvaluateFunction(m_velocity[i],ifunc);
         }
 
-        if (mExplicitReaction)
+        if (m_explicitAdvection)
         {
-            if (!mExplicitDiffusion)
+            if (!m_explicitDiffusion)
             {
-                pOde.DefineImplicitSolve (&UnsteadyAdvectionDiffusion::doImplicitSolve, this);
-                pOde.DefineOdeRhs        (&UnsteadyAdvectionDiffusion::doOdeRhs,        this);
+                m_ode.DefineImplicitSolve (&UnsteadyAdvectionDiffusion::DoImplicitSolve, this);
+                m_ode.DefineOdeRhs        (&UnsteadyAdvectionDiffusion::DoOdeRhs,        this);
+                m_ode.DefineProjection    (&UnsteadyAdvectionDiffusion::DoOdeProjection, this);
             }
             else
             {
@@ -47,98 +51,130 @@ namespace Nektar
 
     }
 
-    void UnsteadyAdvectionDiffusion::v_doOdeRhs(
+    void UnsteadyAdvectionDiffusion::DoOdeRhs(
             const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                   Array<OneD,        Array<OneD, NekDouble> >&outarray,
             const NekDouble time)
     {
         int i;
         int nvariables = inarray.num_elements();
-        int ncoeffs    = inarray[0].num_elements();
+        int npoints = GetNpoints();
 
         switch (m_projectionType)
         {
-            case eDiscontinuousGalerkin:
+        case eDiscontinuousGalerkin:
             {
-                Array<OneD, Array<OneD, NekDouble> > Forcing(1);
+                int ncoeffs    = GetNcoeffs();
+                Array<OneD, Array<OneD, NekDouble> > WeakAdv(nvariables);
 
-                setBoundaryConditions(time);
-                WeakDGAdvection(inarray, outarray);
+                WeakAdv[0] = Array<OneD, NekDouble>(ncoeffs*nvariables);
+                for(i = 1; i < nvariables; ++i)
+                {
+                    WeakAdv[i] = WeakAdv[i-1] + ncoeffs;
+                }
+
+                WeakDGAdvection(inarray, WeakAdv,true,true);
+
                 for(i = 0; i < nvariables; ++i)
                 {
-                    m_fields[i]->MultiplyByElmtInvMass(outarray[i],
-                                                       outarray[i]);
-                    Vmath::Neg(ncoeffs,outarray[i],1);
+                    m_fields[i]->MultiplyByElmtInvMass(WeakAdv[i],
+                                                       WeakAdv[i]);
+                    m_fields[i]->BwdTrans(WeakAdv[i],outarray[i]);
+                    Vmath::Neg(npoints,outarray[i],1);
                 }
 
-                if(mWaveFreq>0)
-                {
-                    Forcing[0] = Array<OneD, NekDouble> (ncoeffs);
-                    doReaction(outarray,Forcing,time);
-                    Vmath::Vadd(ncoeffs, Forcing[0], 1, outarray[0], 1, outarray[0], 1);
-                }
                 break;
             }
             case eGalerkin:
             {
-                setBoundaryConditions(time);
-                Array<OneD, NekDouble> physfield(GetNpoints());
-
+                // Calculate -V\cdot Grad(u);
                 for(i = 0; i < nvariables; ++i)
                 {
-                    m_fields[i]->MultiplyByInvMassMatrix(inarray[i],
-                                                    outarray[i], false);
-                    // Calculate -(\phi, V\cdot Grad(u))
-                    m_fields[i]->BwdTrans_IterPerExp(outarray[i],
-                                                        physfield);
-
-                    WeakAdvectionNonConservativeForm(mVelocity,
-                                                physfield, outarray[i]);
-
-                    Vmath::Neg(ncoeffs,outarray[i],1);
+                    AdvectionNonConservativeForm(m_velocity,
+                                                 inarray[i],
+                                                 outarray[i]);
+                    Vmath::Neg(npoints,outarray[i],1);
                 }
                 break;
             }
         }
     }
 
-    void UnsteadyAdvectionDiffusion::doReaction(
+    void UnsteadyAdvectionDiffusion::DoImplicitSolve(
             const Array<OneD, const Array<OneD, NekDouble> >&inarray,
                   Array<OneD, Array<OneD, NekDouble> >&outarray,
-            const NekDouble time)
+            const NekDouble time,
+            const NekDouble lambda)
     {
-
-        int i,k;
         int nvariables = inarray.num_elements();
-        int ncoeffs    = inarray[0].num_elements();
-
-        // PI*PI*exp(-1.0*PI*PI*FinTime)*sin(PI*x)*sin(PI*y)
         int nq = m_fields[0]->GetNpoints();
 
-        Array<OneD,NekDouble> x0(nq);
-        Array<OneD,NekDouble> x1(nq);
-        Array<OneD,NekDouble> x2(nq);
-
-        // get the coordinates (assuming all fields have the same
-        // discretisation)
-        m_fields[0]->GetCoords(x0,x1,x2);
-
-        Array<OneD, NekDouble> physfield(nq);
-
-        NekDouble kt, kx, ky;
-        for (i=0; i<nq; ++i)
+        // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
+        // inarray = input: \hat{rhs} -> output: \hat{Y}
+        // outarray = output: nabla^2 \hat{Y}
+        // where \hat = modal coeffs
+        for (int i = 0; i < nvariables; ++i)
         {
-              kt = mWaveFreq*time;
-              kx = mWaveFreq*x0[i];
-              ky = mWaveFreq*x1[i];
+            // Multiply 1.0/timestep/lambda
+            Vmath::Smul(nq, -1.0/lambda/m_epsilon, inarray[i], 1, m_fields[i]->UpdatePhys(), 1);
 
-              // F(x,y,t) = du/dt + V \cdot \nabla u - \varepsilon \nabla^2 u
-              physfield[i] = (2.0*mEpsilon*mWaveFreq*mWaveFreq + mWaveFreq*cos(kt))*exp(sin(kt))*sin(kx)*sin(ky)
-                  + mWaveFreq*exp(sin(kt))*( mVelocity[0][i]*cos(kx)*sin(ky) + mVelocity[1][i]*sin(kx)*cos(ky) );
+            NekDouble kappa = 1.0/lambda/m_epsilon;
+
+            // Solve a system of equations with Helmholtz solver
+            m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),
+                                            m_fields[i]->UpdateCoeffs(),kappa);
+            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
+            m_fields[i]->SetPhysState(false);
+
+            // The solution is Y[i]
+            outarray[i] = m_fields[i]->GetPhys();
         }
-        m_fields[0]->FwdTrans(physfield, outarray[0]);
-
     }
+
+
+    /**
+     *
+     */
+    void UnsteadyAdvectionDiffusion::DoOdeProjection(const Array<OneD,
+                                            const Array<OneD, NekDouble> >&inarray,
+                                            Array<OneD,       Array<OneD, NekDouble> >&outarray,
+                                            const NekDouble time)
+    {
+        int i;
+        int nvariables = inarray.num_elements();
+        SetBoundaryConditions(time);
+
+        switch(m_projectionType)
+        {
+        case eDiscontinuousGalerkin:
+            {
+                // Just copy over array
+                int npoints = GetNpoints();
+
+                for(i = 0; i < nvariables; ++i)
+                {
+                    Vmath::Vcopy(npoints,inarray[i],1,outarray[i],1);
+                }
+            }
+            break;
+        case eGalerkin:
+            {
+                Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
+
+                for(i = 0; i < nvariables; ++i)
+                {
+                    m_fields[i]->FwdTrans(inarray[i],coeffs,false);
+                    m_fields[i]->BwdTrans_IterPerExp(coeffs,outarray[i]);
+                }
+                break;
+            }
+        default:
+            ASSERTL0(false,"Unknown projection scheme");
+            break;
+        }
+    }
+
+
 
     void UnsteadyAdvectionDiffusion::v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield,
                            Array<OneD, Array<OneD, NekDouble> > &flux)
@@ -148,22 +184,10 @@ namespace Nektar
         for(int j = 0; j < flux.num_elements(); ++j)
           {
             Vmath::Vmul(GetNpoints(),physfield[i],1,
-                mVelocity[j],1,flux[j],1);
+                m_velocity[j],1,flux[j],1);
           }
     }
 
-   // Evaulate flux = m_fields*ivel for i th component of Vu for direction j
-    void UnsteadyAdvectionDiffusion::v_GetFluxVector(const int i, const int j, Array<OneD, Array<OneD, NekDouble> > &physfield,
-                           Array<OneD, Array<OneD, NekDouble> > &flux)
-    {
-        ASSERTL1(flux.num_elements() == mVelocity.num_elements(),"Dimension of flux array and velocity array do not match");
-
-        for(int k = 0; k < flux.num_elements(); ++k)
-          {
-            Vmath::Zero(GetNpoints(),flux[k],1);
-          }
-        Vmath::Vcopy(GetNpoints(),physfield[i],1,flux[j],1);
-    }
 
     void UnsteadyAdvectionDiffusion::v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numflux)
     {
@@ -179,7 +203,7 @@ namespace Nektar
         // Get Edge Velocity - Could be stored if time independent
         for(i = 0; i < nvel; ++i)
         {
-            m_fields[0]->ExtractTracePhys(mVelocity[i], Fwd);
+            m_fields[0]->ExtractTracePhys(m_velocity[i], Fwd);
             Vmath::Vvtvp(nTraceNumPoints,m_traceNormals[i],1,Fwd,1,Vn,1,Vn,1);
         }
 
@@ -193,10 +217,9 @@ namespace Nektar
         }
     }
 
-    void UnsteadyAdvectionDiffusion::v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
-                                 Array<OneD, Array<OneD, NekDouble> > &numfluxX,
-                                 Array<OneD, Array<OneD, NekDouble> > &numfluxY )
+
+    void UnsteadyAdvectionDiffusion::v_PrintSummary(std::ostream &out)
     {
-        ASSERTL0(false, "Not implemented");
+        UnsteadySystem::v_PrintSummary(out);
     }
 }

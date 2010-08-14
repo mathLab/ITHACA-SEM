@@ -12,7 +12,7 @@ namespace LocalRegions {
  * @ref pageLocalRegions "LocalRegions introduction".
  *
  *
- * @page pageLocalRegions The %LocalRegions library
+ * @page pageLocalRegions %LocalRegions sublibrary
  * This provides extensions of the spectral element formulation into the world.
  * It provides spatially local forms of the reference space expansions through
  * a one-to-one linear mapping from a standard straight-sided region to the
@@ -21,7 +21,7 @@ namespace LocalRegions {
  * @section secLocalRegionsLocalMappings Local Mappings
  * <b>Linear Mappings</b><BR>
  * In one dimension this has the form
- * \f[ x = \chi(\xi) = \frac{1-\xi}{2}x_{e-1} + \frac{1+\xi}{2}x_e 
+ * \f[ x = \chi(\xi) = \frac{1-\xi}{2}x_{e-1} + \frac{1+\xi}{2}x_e
  *  \quad \xi \Omega^e.\f]
  * In two dimensions, for a quadrilateral, each coordinate is given by
  * \f[ x_i = \chi(\xi_1,\xi_2) = x_i^A\frac{1-\xi_1}{2}\frac{1-\xi_2}{2}

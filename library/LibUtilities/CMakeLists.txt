@@ -113,6 +113,7 @@ SET(BasicUtils
     ./BasicUtils/ErrorUtil.cpp
     ./BasicUtils/mojo.hpp
     ./BasicUtils/NekManager.hpp
+    ./BasicUtils/NekFactory.hpp
     ./BasicUtils/NekPtr.hpp
     ./BasicUtils/OperatorGenerators.hpp
     ./BasicUtils/RawType.hpp

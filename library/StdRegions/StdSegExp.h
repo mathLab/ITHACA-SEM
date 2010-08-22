@@ -320,12 +320,21 @@ namespace Nektar
                 IProductWRTBase(inarray,outarray);
             } 
 
+
+            virtual void v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
+                                           Array<OneD, NekDouble> &outarray)
+            {
+                IProductWRTBase(inarray,outarray);
+            } 
+
             virtual void v_IProductWRTDerivBase (const int dir, 
                                                  const Array<OneD, const NekDouble> &inarray, 
                                                  Array<OneD, NekDouble> &outarray)
             {
                 IProductWRTDerivBase(dir,inarray,outarray);
             }
+
+
 
             virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
             {
@@ -385,6 +394,12 @@ namespace Nektar
 
             /** \brief Virtual call to StdSegExp::BwdTrans */
             virtual void v_BwdTrans(const Array<OneD, const NekDouble>& inarray, 
+                                    Array<OneD, NekDouble> &outarray)
+            {
+                BwdTrans(inarray, outarray);
+            }
+
+            virtual void v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray, 
                                     Array<OneD, NekDouble> &outarray)
             {
                 BwdTrans(inarray, outarray);

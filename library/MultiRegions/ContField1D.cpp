@@ -810,7 +810,8 @@ namespace Nektar
         }
 
 
-        void ContField1D::v_EvaluateBoundaryConditions(const NekDouble time)
+        void ContField1D::v_EvaluateBoundaryConditions(const NekDouble time,
+                                                       const NekDouble x2_in)
         {
             EvaluateBoundaryConditions(time);
         }

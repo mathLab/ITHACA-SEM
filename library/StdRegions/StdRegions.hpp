@@ -147,6 +147,7 @@ namespace Nektar
             eHybridDGLamToQ1,
             eHybridDGLamToQ2,
             eHybridDGLamToU,
+            eFwdTrans,
             SIZE_MatrixType
         };
 

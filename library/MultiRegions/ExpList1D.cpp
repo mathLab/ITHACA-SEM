@@ -74,11 +74,11 @@ namespace Nektar
         /**
          * Creates an identical copy of another ExpList1D object.
          */
-        ExpList1D::ExpList1D(const ExpList1D &In):
-            ExpList(In)
+        ExpList1D::ExpList1D(const ExpList1D &In, bool DeclareCoeffPhysArrays):
+            ExpList(In,DeclareCoeffPhysArrays)
         {
         }
-
+        
 
         /**
          * After initialising the data inherited through MultiRegions#ExpList,
@@ -131,7 +131,10 @@ namespace Nektar
                 ::AllocateSharedPtr(nel);
 
             // Allocate storage for data and populate element offset lists.
-            SetCoeffPhys();
+            SetCoeffPhysOffsets();
+
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+            m_phys   = Array<OneD, NekDouble>(m_npoints);
         }
 
 
@@ -155,7 +158,7 @@ namespace Nektar
          * @param   UseGenSegExp If true, create general segment expansions
          *                      instead of just normal segment expansions.
          */
-        ExpList1D::ExpList1D(SpatialDomains::MeshGraph1D &graph1D):
+        ExpList1D::ExpList1D(SpatialDomains::MeshGraph1D &graph1D, bool DeclareCoeffPhysArrays):
             ExpList()
         {
             int i,id=0;
@@ -197,8 +200,16 @@ namespace Nektar
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
 
-            // Allocate storage for data and populate element offset lists.
-            SetCoeffPhys();
+            // set up offset arrays. 
+            SetCoeffPhysOffsets();
+
+            if(DeclareCoeffPhysArrays)
+            {
+                // Set up m_coeffs, m_phys. 
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+                m_phys   = Array<OneD, NekDouble>(m_npoints);
+            }
+                
         }
 
 
@@ -216,7 +227,8 @@ namespace Nektar
          *                      instead of just normal segment expansions.
          */
         ExpList1D::ExpList1D(const SpatialDomains::CompositeVector &domain,
-                             SpatialDomains::MeshGraph2D &graph2D):
+                             SpatialDomains::MeshGraph2D &graph2D,
+                             bool DeclareCoeffPhysArrays):
             ExpList()
         {
             int i,j,cnt,id=0;
@@ -262,7 +274,14 @@ namespace Nektar
                 ::AllocateSharedPtr(nel);
 
             // Allocate storage for data and populate element offset lists.
-            SetCoeffPhys();
+            SetCoeffPhysOffsets();
+
+            // Set up m_coeffs, m_phys. 
+            if(DeclareCoeffPhysArrays)
+            {
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+                m_phys   = Array<OneD, NekDouble>(m_npoints);
+            }
         }
 
 
@@ -288,7 +307,8 @@ namespace Nektar
                                            ::BoundaryConditionShPtr>  &bndCond,
                     const StdRegions::StdExpansionVector &locexp,
                     SpatialDomains::MeshGraph2D &graph2D,
-                    const map<int,int> &periodicEdges):
+                    const map<int,int> &periodicEdges,
+                    bool DeclareCoeffPhysArrays):
             ExpList()
         {
             int i,j,cnt,id, elmtid=0;
@@ -397,15 +417,19 @@ namespace Nektar
                 ::AllocateSharedPtr(nel);
 
             // Set up offset information and array sizes
-            SetCoeffPhys();
+            SetCoeffPhysOffsets();
 
+            // Set up m_coeffs, m_phys. 
+            if(DeclareCoeffPhysArrays)
+            {
+                m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+                m_phys   = Array<OneD, NekDouble>(m_npoints);
+            }
         }
 
         /**
-         * Set up the storage for the concatenated list of
-         * coefficients and physical evaluations at the quadrature
-         * points. Each expansion (local element) is processed in turn
-         * to determine the number of coefficients and physical data
+         * Each expansion (local element) is processed in turn to
+         * determine the number of coefficients and physical data
          * points it contributes to the domain. Three arrays,
          * #m_coeff_offset, #m_phys_offset and #m_offset_elmt_id, are
          * also initialised and updated to store the data offsets of
@@ -413,7 +437,7 @@ namespace Nektar
          * element id that each consecutive block is associated
          * respectively.
          */
-        void ExpList1D::SetCoeffPhys()
+        void ExpList1D::SetCoeffPhysOffsets()
         {
             int i;
 
@@ -432,9 +456,6 @@ namespace Nektar
                 m_ncoeffs += (*m_exp)[i]->GetNcoeffs();
                 m_npoints += (*m_exp)[i]->GetTotPoints();
             }
-
-            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-            m_phys   = Array<OneD, NekDouble>(m_npoints);
         }
 
         /**

@@ -546,6 +546,12 @@ namespace Nektar
                 BwdTrans(inarray,outarray);
             }
 
+            virtual void v_BwdTrans_SumFac(const Array<OneD, const NekDouble> &inarray,
+                                           Array<OneD, NekDouble> &outarray)
+            {
+                BwdTrans(inarray,outarray);
+            }
+
             virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau,
                                                      const Array<OneD, const NekDouble> &inarray,
                                                      Array<OneD,NekDouble> &outarray)

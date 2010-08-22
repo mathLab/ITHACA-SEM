@@ -163,7 +163,6 @@ namespace Nektar
             m_globalBndMat        (In.m_globalBndMat),
             m_trace               (In.m_trace),
             m_traceMap            (In.m_traceMap)
-
         {
         }
 

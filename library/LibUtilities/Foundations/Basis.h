@@ -264,14 +264,14 @@ namespace Nektar
                 return m_points->GetW();
             }
 
-            inline void GetZW(  Array<OneD, const NekDouble> &z,
-                                Array<OneD, const NekDouble> &w) const
+            inline void GetZW(Array<OneD, const NekDouble> &z,
+                              Array<OneD, const NekDouble> &w) const
             {
                 m_points->GetZW(z,w);
             }
 
             inline const  boost::shared_ptr<NekMatrix<NekDouble> > & GetD(
-                                Direction dir = xDir) const
+                              Direction dir = xDir) const
             {
                 return m_points->GetD(dir);
             }
@@ -358,7 +358,8 @@ namespace Nektar
         typedef std::vector< BasisSharedPtr >::iterator BasisVectorIter;
 
         static BasisSharedPtr NullBasisSharedPtr;
-
+        static Array<OneD, BasisSharedPtr> NullBasisSharedPtr1DArray;
+        
     } // end of namespace LibUtilities
 } // end of namespace Nektar
 

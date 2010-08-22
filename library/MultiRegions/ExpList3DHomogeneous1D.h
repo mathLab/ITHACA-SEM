@@ -29,16 +29,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: A 2D field which is homogeneous in 1 direction and so
+// Description: A 3D field which is homogeneous in 1 direction and so
 // uses much of the functionality from a ExpList2D and its daughters
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef FIELD3DHOMO1D_H
-#define FIELD3DHOMO1D_H
+#ifndef EXPLIST3DHOMO1D_H
+#define EXPLIST3DHOMO1D_H
 
 #include <vector>
 #include <MultiRegions/MultiRegions.hpp>
+#include <MultiRegions/ExpListHomogeneous1D.h>
 #include <MultiRegions/ExpList2D.h>
 #include <SpatialDomains/MeshGraph2D.h>
 
@@ -46,6 +47,7 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+
         // Forward declaration for typedefs
         class ExpList3DHomogeneous1D;
 
@@ -58,51 +60,70 @@ namespace Nektar
 
         /// Abstraction of a two-dimensional multi-elemental expansion which
         /// is merely a collection of local expansions.
-        class ExpList3DHomogeneous1D: public ExpList
+        class ExpList3DHomogeneous1D: public ExpListHomogeneous1D
         {
         public:
             /// Default constructor.
             ExpList3DHomogeneous1D();
 
+            ExpList3DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
+                                   const NekDouble lhom);
+
             /// Sets up a list of local expansions based on an input mesh.
-            ExpList3DHomogeneous1D(const int nzplanes,  const NekDouble lz, 
+            ExpList3DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
+                                   const NekDouble lhom, 
                                    SpatialDomains::MeshGraph2D &graph2D);
 
             /// Copy constructor.
-            ExpList3DHomogeneous1D(const ExpList3DHomogeneous1D &In);
+            ExpList3DHomogeneous1D(const ExpList3DHomogeneous1D &In,
+                                   bool DeclarePlanesSetCoeffPhys = true);
 
             /// Destructor.
             ~ExpList3DHomogeneous1D();
 
-        protected:
+            /// This function calculates the coordinates of all the elemental
+            /// quadrature points \f$\boldsymbol{x}_i\f$.
+            inline void GetCoords(Array<OneD, NekDouble> &coord_0,
+                                  Array<OneD, NekDouble> &coord_1 = NullNekDouble1DArray,
+                                  Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
 
+            void GetCoords(const int eid,
+                           Array<OneD, NekDouble> &xc0,
+                           Array<OneD, NekDouble> &xc1,
+                           Array<OneD, NekDouble> &xc2);
+        protected:
+            
             /// Definition of the total number of degrees of freedom and
             /// quadrature points. Sets up the storage for \a m_coeff and \a
             ///  m_phys.
-            void      SetCoeffPhys(void);
-
-            int       m_nzplanes; ///< Number of planes of data in expansion in z-direction
-            NekDouble m_lz;       ///< Width of homogeneous direction
-            Array<OneD, ExpList2DSharedPtr> m_planes; 
+            void             SetCoeffPhys(void);
 
             //  virtual functions
-            virtual void v_FwdTrans(const Array<OneD,const NekDouble> &inarray,
-                                    Array<OneD,      NekDouble> &outarray,
-                                    bool  UseContCoeffs);
-
             virtual void v_GetCoords(Array<OneD, NekDouble> &coord_0,
                                      Array<OneD, NekDouble> &coord_1,
                                      Array<OneD, NekDouble> &coord_2);
 
-        private:
 
+            virtual void v_WriteTecplotZone(std::ofstream &outfile, 
+                                            int expansion);
+            virtual NekDouble v_L2(void);
+            virtual NekDouble v_L2(const Array<OneD, const NekDouble> &soln);
+
+        private:
         };
         
-
+        inline void ExpList3DHomogeneous1D::GetCoords(Array<OneD, NekDouble> &coord_0,
+                                                      Array<OneD, NekDouble> &coord_1,
+                                                      Array<OneD, NekDouble> &coord_2)
+            
+        {
+            v_GetCoords(coord_0,coord_1,coord_2);
+        }
+            
     } //end of namespace
 } //end of namespace
 
-#endif//FIELD3DHOMO1D_H
+#endif//EXPLIST3DHOMO1D_H
 
 /**
 * $Log: v $

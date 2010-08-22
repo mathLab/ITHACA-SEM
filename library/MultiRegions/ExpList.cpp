@@ -294,7 +294,7 @@ namespace Nektar
             int       i;
             NekDouble sum = 0.0;
 
-            for(i = 0; i < GetExpSize(); ++i)
+            for(i = 0; i < (*m_exp).size(); ++i)
             {
                 sum += (*m_exp)[i]->Integral(inarray + m_phys_offset[i]);
             }
@@ -320,7 +320,7 @@ namespace Nektar
             const DNekScalBlkMatSharedPtr& blockmat = GetBlockMatrix(gkey);
             int nrows = blockmat->GetRows();
             int ncols = blockmat->GetColumns();
-
+            
             // Create NekVectors from the given data arrays
             NekVector<const NekDouble> in (ncols,inarray, eWrapper);
             NekVector<      NekDouble> out(nrows,outarray,eWrapper);
@@ -401,7 +401,7 @@ namespace Nektar
 
             Array<OneD,NekDouble> e_outarray;
 
-            for(i = 0; i < GetExpSize(); ++i)
+            for(i = 0; i < (*m_exp).size(); ++i)
             {
                 (*m_exp)[i]->IProductWRTDerivBase(dir,inarray+m_phys_offset[i],
                                      e_outarray = outarray+m_coeff_offset[i]);
@@ -453,7 +453,7 @@ namespace Nektar
             Array<OneD, NekDouble> e_out_d1;
             Array<OneD, NekDouble> e_out_d2;
 
-            for(i= 0; i < GetExpSize(); ++i)
+            for(i= 0; i < (*m_exp).size(); ++i)
             {
                 e_out_d0 = out_d0 + m_phys_offset[i];
                 if(out_d1.num_elements())
@@ -476,7 +476,7 @@ namespace Nektar
             int  i;
             Array<OneD, NekDouble> e_out_d;
 
-            for(i= 0; i < GetExpSize(); ++i)
+            for(i= 0; i < (*m_exp).size(); ++i)
             {
                 e_out_d = out_d + m_phys_offset[i];
                 (*m_exp)[i]->PhysDeriv(dir, inarray+m_phys_offset[i], e_out_d);
@@ -550,7 +550,7 @@ namespace Nektar
 
             Array<OneD,NekDouble> e_outarray;
 
-            for(i= 0; i < GetExpSize(); ++i)
+            for(i= 0; i < (*m_exp).size(); ++i)
             {
                 (*m_exp)[i]->FwdTrans_BndConstrained(inarray+m_phys_offset[i],
                                       e_outarray = outarray+m_coeff_offset[i]);
@@ -587,7 +587,7 @@ namespace Nektar
 
             if(ExpType != StdRegions::eNoExpansionType)
             {
-                for(i = 0 ; i < GetExpSize(); ++i)
+                for(i = 0 ; i < (*m_exp).size(); ++i)
                 {
                     if((*m_exp)[m_offset_elmt_id[i]]->DetExpansionType()
                        == ExpType)
@@ -598,7 +598,7 @@ namespace Nektar
             }
             else
             {
-                n_exp = GetExpSize();
+                n_exp = (*m_exp).size();
                 for(i = 0; i < n_exp; ++i)
                 {
                     elmt_id[i] = m_offset_elmt_id[i];
@@ -972,7 +972,7 @@ namespace Nektar
         {
             int n,j;
             int cnt1;
-            int n_exp = GetExpSize();
+            int n_exp = (*m_exp).size();
             Array<OneD, unsigned int> nCoeffsPerElmt(n_exp);
             for(j = 0; j < n_exp; j++)
             {
@@ -1273,7 +1273,7 @@ namespace Nektar
             int cnt1;
 
             // Setup Block Matrix systems
-            int n_exp = GetExpSize();
+            int n_exp = (*m_exp).size();
             const Array<OneD,const unsigned int>& nbdry_size = locToGloMap->GetNumLocalBndCoeffsPerPatch();
             const Array<OneD,const unsigned int>& nint_size  = locToGloMap->GetNumLocalIntCoeffsPerPatch();
 
@@ -1433,7 +1433,7 @@ namespace Nektar
             map<int, RobinBCInfoSharedPtr> RobinBCInfo = GetRobinBCInfo();
 
             // Setup Block Matrix systems
-            int n_exp = GetExpSize();
+            int n_exp = (*m_exp).size();
             const Array<OneD,const unsigned int>& nbdry_size = locToGloMap->GetNumLocalBndCoeffsPerPatch();
             const Array<OneD,const unsigned int>& nint_size  = locToGloMap->GetNumLocalIntCoeffsPerPatch();
 
@@ -1477,7 +1477,7 @@ namespace Nektar
 
                     cnt1  += totnq;
                 }
-
+                
                 int Nconstants = mkey.GetNconstants();
 
                 if(Nconstants>2)
@@ -1586,7 +1586,7 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &gloCoord)
         {
             Array<OneD, NekDouble> stdCoord(GetCoordim(0),0.0);
-            for (int i = 0; i < GetExpSize(); ++i)
+            for (int i = 0; i < (*m_exp).size(); ++i)
             {
                 if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoord))
                 {
@@ -1598,7 +1598,7 @@ namespace Nektar
         int ExpList::GetExpIndex(
                     const Array<OneD, const NekDouble> &gloCoord)
         {
-            for (int i = 0; i < GetExpSize(); ++i)
+            for (int i = 0; i < (*m_exp).size(); ++i)
             {
                 if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoord))
                 {
@@ -1619,7 +1619,7 @@ namespace Nektar
             int i;
             Array<OneD, NekDouble> e_SN;
 
-            for(i = 0; i < GetExpSize(); ++i)
+            for(i = 0; i < (*m_exp).size(); ++i)
             {
                 e_SN = SurfaceNormal + m_phys_offset[i];
                 (*m_exp)[i]->GetSurfaceNormal(e_SN, k);
@@ -1721,7 +1721,7 @@ namespace Nektar
                 (*m_exp)[0]->SetPhys(phys+m_phys_offset[0]);
                 (*m_exp)[0]->WriteToFile(out,eTecplot,true,var);
 
-                for(i= 1; i < GetExpSize(); ++i)
+                for(i= 1; i < (*m_exp).size(); ++i)
                 {
                     (*m_exp)[i]->SetPhys(phys+m_phys_offset[i]);
                     (*m_exp)[i]->WriteToFile(out,eTecplot,false,var);
@@ -1741,7 +1741,7 @@ namespace Nektar
                 (*m_exp)[0]->SetPhys(phys+m_phys_offset[0]);
                 (*m_exp)[0]->WriteToFile(out,eGnuplot,true,var);
 
-                for(i= 1; i < GetExpSize(); ++i)
+                for(i= 1; i < (*m_exp).size(); ++i)
                 {
                     (*m_exp)[i]->SetPhys(phys+m_phys_offset[i]);
                     (*m_exp)[i]->WriteToFile(out,eTecplot,false,var);
@@ -1773,7 +1773,7 @@ namespace Nektar
                 PutCoeffsInToElmtExp();
                 bool dumpNewView = true;
                 bool closeView = false;
-                for(i= 0; i < GetExpSize(); ++i)
+                for(i= 0; i < (*m_exp).size(); ++i)
                 {
                     if(nElementalCoeffs != (*m_exp)[i]->GetBasisNumModes(0))
                     {
@@ -1794,7 +1794,7 @@ namespace Nektar
                             dumpNewView = false;
                         }
                     }
-                    if(i<GetExpSize()-1)
+                    if(i<(*m_exp).size()-1)
                     {
                         if ( ((*m_exp)[i]->DetExpansionType())
                                         !=((*m_exp)[i+1]->DetExpansionType()) )
@@ -1890,7 +1890,7 @@ namespace Nektar
          * @param   outfile Output file name.
          * @param   var                 variables names
          */
-        void ExpList::WriteTecplotHeader(std::ofstream &outfile,
+        void ExpList::v_WriteTecplotHeader(std::ofstream &outfile, 
                         std::string var)
         {
 
@@ -1914,18 +1914,17 @@ namespace Nektar
          * @param   outfile    Output file name.
          * @param   expansion  Expansion that is considered
          */
-        void ExpList::WriteTecplotZone(std::ofstream &outfile, int expansion)
+        void ExpList::v_WriteTecplotZone(std::ofstream &outfile, int expansion)
         {
             (*m_exp)[expansion]->WriteTecplotZone(outfile);
         }
-
 
         /**
          * Write Tecplot Files Field
          * @param   outfile    Output file name.
          * @param   expansion  Expansion that is considered
          */
-        void ExpList::WriteTecplotField(std::ofstream &outfile, int expansion)
+        void ExpList::v_WriteTecplotField(std::ofstream &outfile, int expansion)
         {
             (*m_exp)[expansion]->SetPhys(m_phys+m_phys_offset[expansion]);
             (*m_exp)[expansion]->WriteTecplotField(outfile);
@@ -1974,7 +1973,7 @@ namespace Nektar
                 (*m_exp)[0]->ReadFromFile(in,eTecplot,true);
                 Vmath::Vcopy(npts,&(*m_exp)[0]->GetPhys()[0],1,&phys[m_phys_offset[0]],1);
 
-                for(i= 1; i < GetExpSize(); ++i)
+                for(i= 1; i < (*m_exp).size(); ++i)
                 {
                     npts = (*m_exp)[i]->GetTotPoints();
                     (*m_exp)[i]->ReadFromFile(in,eTecplot,false);
@@ -2013,7 +2012,7 @@ namespace Nektar
             NekDouble err = 0.0;
             int       i;
 
-            for(i= 0; i < GetExpSize(); ++i)
+            for(i= 0; i < (*m_exp).size(); ++i)
             {
                 // set up physical solution in local element
                 (*m_exp)[i]->SetPhys(m_phys+m_phys_offset[i]);
@@ -2039,13 +2038,13 @@ namespace Nektar
          *                          quadrature points in its array #m_phys.
          * @return  The \f$L_2\f$ error of the approximation.
          */
-        NekDouble ExpList::L2(const Array<OneD, const NekDouble> &soln)
+        NekDouble ExpList::v_L2(const Array<OneD, const NekDouble> &soln)
         {
 
             NekDouble err = 0.0,errl2;
             int    i;
 
-            for(i= 0; i < GetExpSize(); ++i)
+            for(i= 0; i < (*m_exp).size(); ++i)
             {
                 // set up physical solution in local element
                 (*m_exp)[i]->SetPhys(m_phys+m_phys_offset[i]);
@@ -2074,13 +2073,13 @@ namespace Nektar
          *                          quadrature points.
          * @return  The \f$L_2\f$ error of the approximation.
          */
-        NekDouble ExpList::L2(void)
+        NekDouble ExpList::v_L2(void)
         {
 
             NekDouble err = 0.0,errl2;
             int    i;
 
-            for(i= 0; i < GetExpSize(); ++i)
+            for(i= 0; i < (*m_exp).size(); ++i)
             {
                 // set up physical solution in local element
                 (*m_exp)[i]->SetPhys(m_phys+m_phys_offset[i]);
@@ -2114,7 +2113,7 @@ namespace Nektar
             NekDouble err = 0.0,errh1;
             int    i;
 
-            for(i= 0; i < GetExpSize(); ++i)
+            for(i= 0; i < (*m_exp).size(); ++i)
             {
                 // set up physical solution in local element
                 (*m_exp)[i]->SetPhys(m_phys+m_phys_offset[i]);
@@ -2125,13 +2124,13 @@ namespace Nektar
             return sqrt(err);
         }
 
-        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> ExpList::GetFieldDefinitions(void)
+        void  ExpList::GeneralGetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef, int NumHomoDir, Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis, std::vector<NekDouble> &HomoLen)
         {
-
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> returnval;
-
             int startenum, endenum, s;
-
+            
+            ASSERTL1(NumHomoDir == HomoBasis.num_elements(),"Homogeneous basis is not the same length as NumHomoDir");
+            ASSERTL1(NumHomoDir == HomoLen.size(),"Homogeneous length vector is not the same length as NumHomDir");
+            
             // count number of shapes
             switch((*m_exp)[0]->GetShapeDimension())
             {
@@ -2159,6 +2158,7 @@ namespace Nektar
 
                 bool first    = true;
                 bool UniOrder = true;
+                int n;
 
                 for(int i = 0; i < (*m_exp).size(); ++i)
                 {
@@ -2173,12 +2173,20 @@ namespace Nektar
                                 basis.push_back((*m_exp)[i]->GetBasis(j)->GetBasisType());
                                 numModes.push_back((*m_exp)[i]->GetBasis(j)->GetNumModes());
                             }
+
+                            // add homogeneous direction details if defined
+                            for(n = 0 ; n < NumHomoDir; ++n)
+                            {
+                                basis.push_back(HomoBasis[n]->GetBasisType());
+                                numModes.push_back(HomoBasis[n]->GetNumModes());
+                            }
+
                             first = false;
                         }
                         else
                         {
-                            ASSERTL0((*m_exp)[i]->GetBasis(0)->GetBasisType() == basis[0],"Routine is not yet set up for multiple basese definitions");
-
+                            ASSERTL0((*m_exp)[i]->GetBasis(0)->GetBasisType() == basis[0],"Routine is not set up for multiple bases definitions");
+                            
                             for(int j = 0; j < (*m_exp)[i]->GetNumBases(); ++j)
                             {
                                 numModes.push_back((*m_exp)[i]->GetBasis(j)->GetNumModes());
@@ -2187,6 +2195,11 @@ namespace Nektar
                                     UniOrder = false;
                                 }
                             }
+                            // add homogeneous direction details if defined
+                            for(n = 0 ; n < NumHomoDir; ++n)
+                            {
+                                numModes.push_back(HomoBasis[n]->GetNumModes());
+                            }
                         }
                     }
                 }
@@ -2194,17 +2207,45 @@ namespace Nektar
 
                 if(elementIDs.size() > 0)
                 {
-                    SpatialDomains::FieldDefinitionsSharedPtr fielddef  = MemoryManager<SpatialDomains::FieldDefinitions>::AllocateSharedPtr(shape, elementIDs, basis, UniOrder, numModes,fields);
-                    returnval.push_back(fielddef);
+                    SpatialDomains::FieldDefinitionsSharedPtr fdef  = MemoryManager<SpatialDomains::FieldDefinitions>::AllocateSharedPtr(shape, elementIDs, basis, UniOrder, numModes,fields, NumHomoDir, HomoLen);
+                    fielddef.push_back(fdef);
                 }
             }
+        }
 
+        //
+        // Virtual functions
+        //
+        int ExpList::v_GetContNcoeffs() const
+        {
+
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            return 0;
+        }
+
+
+        void ExpList::v_SetContCoeffsArray(Array<OneD, NekDouble> &inarray)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+            
+        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> ExpList::v_GetFieldDefinitions()
+        {
+            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> returnval;            
+            v_GetFieldDefinitions(returnval);
             return returnval;
+        }
+        
+        void  ExpList::v_GetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef)
+        {
+            GeneralGetFieldDefinitions(fielddef);
         }
 
         //Append the element data listed in elements
         //fielddef->m_ElementIDs onto fielddata
-        void ExpList::AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
+        void ExpList::v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
         {
             int i;
             // Determine mapping from element ids to location in
@@ -2224,7 +2265,7 @@ namespace Nektar
         }
 
         //Extract the data in fielddata into the m_coeff list
-        void ExpList::ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field)
+        void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field)
         {
             int i;
             int offset = 0;
@@ -2259,16 +2300,20 @@ namespace Nektar
             }
         }
 
-        //
-        // Virtual functions
-        //
-
         const Array<OneD,const boost::shared_ptr<ExpList1D> >
                                         &ExpList::v_GetBndCondExpansions()
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
             static Array<OneD,const boost::shared_ptr<ExpList1D> > result;
+            return result;
+        }
+
+        boost::shared_ptr<ExpList1D>  &ExpList::v_UpdateBndCondExpansion(int i)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            static boost::shared_ptr<ExpList1D> result;
             return result;
         }
 
@@ -2512,7 +2557,7 @@ namespace Nektar
             switch(GetExp(0)->GetCoordim())
             {
             case 1:
-                for(i= 0; i < GetExpSize(); ++i)
+                for(i= 0; i < (*m_exp).size(); ++i)
                 {
                     e_coord_0 = coord_0 + m_phys_offset[i];
                     (*m_exp)[i]->GetCoords(e_coord_0);
@@ -2522,7 +2567,7 @@ namespace Nektar
                 ASSERTL0(coord_1.num_elements() != 0,
                          "output coord_1 is not defined");
 
-                for(i= 0; i < GetExpSize(); ++i)
+                for(i= 0; i < (*m_exp).size(); ++i)
                 {
                     e_coord_0 = coord_0 + m_phys_offset[i];
                     e_coord_1 = coord_1 + m_phys_offset[i];
@@ -2535,7 +2580,7 @@ namespace Nektar
                 ASSERTL0(coord_2.num_elements() != 0,
                          "output coord_2 is not defined");
 
-                for(i= 0; i < GetExpSize(); ++i)
+                for(i= 0; i < (*m_exp).size(); ++i)
                 {
                     e_coord_0 = coord_0 + m_phys_offset[i];
                     e_coord_1 = coord_1 + m_phys_offset[i];
@@ -2576,7 +2621,16 @@ namespace Nektar
             return result;
         }
 
-        void ExpList::v_EvaluateBoundaryConditions(const NekDouble time)
+        Array<OneD,SpatialDomains::BoundaryConditionShPtr> &ExpList::v_UpdateBndConditions()
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            static Array<OneD,SpatialDomains::BoundaryConditionShPtr>
+                                                                        result;
+            return result;
+        }
+
+        void ExpList::v_EvaluateBoundaryConditions(const NekDouble time, const NekDouble x2_in)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");

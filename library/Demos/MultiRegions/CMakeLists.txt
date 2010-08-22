@@ -21,6 +21,11 @@ ADD_NEKTAR_EXECUTABLE(Helmholtz2D HelmholtzCont2DSource)
 TARGET_LINK_LIBRARIES(Helmholtz2D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(Helmholtz2D)
 
+SET(Helmholtz2DHomo1DSource  Helmholtz2DHomo1D.cpp)
+ADD_NEKTAR_EXECUTABLE(Helmholtz2DHomo1D Helmholtz2DHomo1DSource)
+TARGET_LINK_LIBRARIES(Helmholtz2DHomo1D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(Helmholtz2DHomo1D)
+
 SET(HelmholtzCont3DSource  Helmholtz3D.cpp)
 ADD_NEKTAR_EXECUTABLE(Helmholtz3D HelmholtzCont3DSource)
 TARGET_LINK_LIBRARIES(Helmholtz3D ${LinkLibraries})
@@ -40,6 +45,11 @@ SET(HDGHelmholtz2DSource  HDGHelmholtz2D.cpp)
 ADD_NEKTAR_EXECUTABLE(HDGHelmholtz2D HDGHelmholtz2DSource)
 TARGET_LINK_LIBRARIES(HDGHelmholtz2D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(HDGHelmholtz2D)
+
+SET(HDGHelmholtz3DHomo1DSource  HDGHelmholtz3DHomo1D.cpp)
+ADD_NEKTAR_EXECUTABLE(HDGHelmholtz3DHomo1D HDGHelmholtz3DHomo1DSource)
+TARGET_LINK_LIBRARIES(HDGHelmholtz3DHomo1D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(HDGHelmholtz3DHomo1D)
 
 SET(SteadyAdvectionDiffusionReactionCont2DSource  SteadyAdvectionDiffusionReaction2D.cpp)
 ADD_NEKTAR_EXECUTABLE(SteadyAdvectionDiffusionReaction2D SteadyAdvectionDiffusionReactionCont2DSource)

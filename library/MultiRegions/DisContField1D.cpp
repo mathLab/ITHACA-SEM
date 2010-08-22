@@ -529,7 +529,8 @@ namespace Nektar
          *                      should be evaluated
          */
         void DisContField1D::v_EvaluateBoundaryConditions(
-                        const NekDouble time)
+                                                          const NekDouble time,
+                                                          const NekDouble x2_in)
         {
             ExpList1D::EvaluateBoundaryConditions(time,m_bndCondExpansions,
                                                   m_bndConditions);

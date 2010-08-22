@@ -72,7 +72,8 @@ namespace Nektar
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0,
                         const GlobalSysSolnType solnType
-                                                = eDirectMultiLevelStaticCond);
+                        = eDirectMultiLevelStaticCond,
+                        bool DeclareCoeffPhysArrays = true);
 
             /// Construct a global continuous field with solution type based on
             /// another field but using a separate input mesh and boundary 
@@ -80,7 +81,8 @@ namespace Nektar
             ContField2D(const ContField2D &In,
                         SpatialDomains::MeshGraph2D &graph2D,
                         SpatialDomains::BoundaryConditions &bcs,
-                        const int bc_loc = 0);
+                        const int bc_loc = 0,
+                        bool DeclareCoeffPhysArrays = true);
 
             /// This constructor sets up global continuous field based on an
             /// input mesh and boundary conditions.
@@ -88,19 +90,13 @@ namespace Nektar
                         SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable,
                         const GlobalSysSolnType solnType
-                                                = eDirectMultiLevelStaticCond);
-
+                        = eDirectMultiLevelStaticCond);
+            
             /// The copy constructor.
             ContField2D(const ContField2D &In, bool DeclareCoeffPhysArrays = true);
 
             /// The default destructor.
             ~ContField2D();
-
-
-            /// Determines if another ContField2D shares the same boundary
-            /// conditions as this field.
-            bool SameTypeOfBoundaryConditions(const ContField2D &In);
-
 
             /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$ 
             /// (implemented as #m_contCoeffs) containing all global expansion 
@@ -201,9 +197,6 @@ namespace Nektar
                                      Array<OneD, NekDouble> &Evecs
                                                         = NullNekDouble1DArray);
 
-            /// Evaluates the boundary conditions at a certain time-level.
-            inline void EvaluateBoundaryConditions(const NekDouble time = 0.0);
-
             /// Returns the boundary conditions expansion.
             inline const Array<OneD,const MultiRegions::ExpList1DSharedPtr>&
                                                         GetBndCondExpansions();
@@ -263,6 +256,10 @@ namespace Nektar
             /// Returns the linear system specified by the key \a mkey.
             GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
 
+            virtual int v_GetContNcoeffs() const;
+
+            virtual void v_SetContCoeffsArray(Array<OneD, NekDouble> &inarray);
+
             /// Template method virtual forwarded for UpdateContCoeffs()
             virtual Array<OneD, NekDouble> &v_UpdateContCoeffs();
             
@@ -311,7 +308,7 @@ namespace Nektar
                           NekDouble lambda,
                     const Array<OneD, const NekDouble> &varLambda,
                     const Array<OneD, const Array<OneD, NekDouble> > &varCoeff,
-                          bool UseContCoeffs,
+                    bool UseContCoeffs,
                     const Array<OneD, const NekDouble> &dirForcing);
 
             // Solve the linear advection problem assuming that m_contCoeff
@@ -341,7 +338,7 @@ namespace Nektar
             /// Template method virtual forwarder for 
             /// EvaluateBoundaryConditions().
             virtual void v_EvaluateBoundaryConditions(
-                                const NekDouble time = 0.0);
+                                                      const NekDouble time = 0.0, const NekDouble x2_in = NekConstants::kNekUnsetDouble);
         };
 
         typedef boost::shared_ptr<ContField2D>      ContField2DSharedPtr;
@@ -661,41 +658,6 @@ namespace Nektar
             {
                 BwdTrans_IterPerExp(inarray,outarray);
             }
-        }
-
-
-        /**
-         * Based on the boundary condition \f$g(\boldsymbol{x},t)\f$ evaluated
-         * at a given time-level \a t, this function transforms the boundary
-         * conditions onto the coefficients of the (one-dimensional) boundary
-         * expansion. Depending on the type of boundary conditions, these
-         * expansion coefficients are calculated in different ways:
-         * - <b>Dirichlet boundary conditions</b><BR>
-         *   In order to ensure global \f$C^0\f$ continuity of the spectral/hp
-         *   approximation, the Dirichlet boundary conditions are projected onto
-         *   the boundary expansion by means of a modified \f$C^0\f$ continuous
-         *   Galerkin projection. This projection can be viewed as a collocation
-         *   projection at the vertices, followed by an \f$L^2\f$ projection on
-         *   the interior modes of the edges. The resulting coefficients
-         *   \f$\boldsymbol{\hat{u}}^{\mathcal{D}}\f$ will be stored for the
-         *   boundary expansion.
-         * - <b>Neumann boundary conditions</b>
-         *   In the discrete Galerkin formulation of the problem to be solved,
-         *   the Neumann boundary conditions appear as the set of surface
-         *   integrals: \f[\boldsymbol{\hat{g}}=\int_{\Gamma}
-         *   \phi^e_n(\boldsymbol{x})g(\boldsymbol{x})d(\boldsymbol{x})\quad
-         *   \forall n \f]
-         *   As a result, it are the coefficients \f$\boldsymbol{\hat{g}}\f$
-         *   that will be stored in the boundary expansion
-         *
-         * @param   time        The time at which the boundary conditions
-         *                      should be evaluated
-         */
-        inline void ContField2D::EvaluateBoundaryConditions(
-                                const NekDouble time)
-        {
-            ExpList2D::EvaluateBoundaryConditions(time,m_bndCondExpansions,
-                                                  m_bndConditions);
         }
 
         inline const Array<OneD,const MultiRegions::ExpList1DSharedPtr>&

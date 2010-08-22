@@ -75,3 +75,6 @@ ADD_NEKTAR_EXECUTABLE(StdPyrExp_Diff3D StdPyrExp_Diff3DSource)
 TARGET_LINK_LIBRARIES(StdPyrExp_Diff3D ${LinkLibraries})     
 SET_LAPACK_LINK_LIBRARIES(StdPyrExp_Diff3D)
     
+
+# Uncomment next line to compile demos in subdirectory
+SUBDIRS(ExtraDemos)

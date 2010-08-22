@@ -535,14 +535,15 @@ namespace Nektar
                         const NekDouble time,
                         Array<OneD, ExpList1DSharedPtr> &bndCondExpansions,
                         Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                                                                &bndConditions)
+                        &bndConditions,
+                        NekDouble x2_in)
         {
             int i,j;
             int npoints;
             int nbnd = bndCondExpansions.num_elements();
-
+            
             MultiRegions::ExpList1DSharedPtr locExpList;
-
+            
             for(i = 0; i < nbnd; ++i)
             {
                 if(time == 0.0 || bndConditions[i]->GetUserDefined().GetEquation()=="TimeDependent")
@@ -553,7 +554,15 @@ namespace Nektar
                     Array<OneD,NekDouble> x1(npoints,0.0);
                     Array<OneD,NekDouble> x2(npoints,0.0);
                     
-                    locExpList->GetCoords(x0,x1,x2);
+                    if(x2_in == NekConstants::kNekUnsetDouble) //homogeneous input case for x2
+                    {
+                        locExpList->GetCoords(x0,x1,x2);
+                    }
+                    else
+                    {
+                        locExpList->GetCoords(x0,x1,x2);
+                        Vmath::Fill(npoints,x2_in,x2,1);
+                    }
                     
                     if(bndConditions[i]->GetBoundaryConditionType()
                        == SpatialDomains::eDirichlet)

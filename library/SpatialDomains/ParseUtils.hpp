@@ -56,7 +56,7 @@ namespace Nektar
     class ParseUtils
     {
     public:
-        static bool ParseRealAssignment(const char *const str, std::string &symbol, double &value)
+        static bool ParseRealAssignment(const char *const str, std::string &symbol, NekDouble &value)
         {
             SymbolFunctor symbolFunctor(&symbol);
             ValueFunctor valueFunctor(&value);
@@ -105,8 +105,23 @@ namespace Nektar
 
                 space_p).full;
         }
+
+        static bool GenerateOrderedVector(const char *const str, vector<NekDouble> &vec)
+        {
+            // Functors used to parse the sequence.
+            fctor4 functor4(&vec);
+            
+            return parse(str,
+                         //  Begin grammar
+                         (
+                          real_p[functor4] >> *(',' >> real_p[functor4])
+                          )
+                         ,
+                         //  End grammar
+                         space_p).full;
+        }
         
-		static bool GenerateOrderedStringVector(const char *const str, vector<std::string> &vec)
+        static bool GenerateOrderedStringVector(const char *const str, vector<std::string> &vec)
         {
             // Functors used to parse the sequence.
             fctor3 functor3(&vec);
@@ -142,18 +157,18 @@ namespace Nektar
 
         struct ValueFunctor
         {
-            ValueFunctor(double *value):
+            ValueFunctor(NekDouble *value):
                 m_value(value)
             {
             }
             
-            void operator()(double val) const
+            void operator()(NekDouble val) const
             {
                 *m_value = val;
             }
 
         private:
-            double *m_value;
+            NekDouble *m_value;
         };
 
         struct fctor1
@@ -210,7 +225,7 @@ namespace Nektar
 
         struct fctor3
         {
-			fctor3(vector<std::string> *vec):
+            fctor3(vector<std::string> *vec):
             m_vector(vec)
             {
             }
@@ -223,6 +238,37 @@ namespace Nektar
         private:
             vector<std::string> *m_vector;
         };
+
+        // Probably should template fctor1 if that is possible? 
+        struct fctor4
+        {
+            fctor4(vector<NekDouble> *vec):
+                m_vector(vec)
+            {
+            }
+
+            void operator()(NekDouble n) const
+            {
+                if (!m_vector->empty())
+                {
+                    unsigned int prevElem = m_vector->back();
+
+                    if (n > prevElem)
+                    {
+                        m_vector->push_back(n);
+                    }
+                }
+                else
+                {
+                    m_vector->push_back(n);
+                }
+            }
+
+        private:
+            vector<NekDouble> *m_vector;
+            fctor4();
+        };
+
     };
 }
 

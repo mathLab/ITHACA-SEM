@@ -73,20 +73,22 @@ namespace Nektar
             ExpList1D();
 
             /// The copy constructor.
-            ExpList1D(const ExpList1D &In);
-
+            ExpList1D(const ExpList1D &In, bool DeclareCoeffPhysArrays = true);
+            
             /// Construct an ExpList1D from a given graph.
             ExpList1D(const LibUtilities::BasisKey &Ba,
                       const SpatialDomains::MeshGraph1D &graph1D);
-
+            
             /// This constructor sets up a list of local expansions based on an
             /// input mesh.
-            ExpList1D(SpatialDomains::MeshGraph1D &graph1D);
+            ExpList1D(SpatialDomains::MeshGraph1D &graph1D, 
+                      bool DeclareCoeffPhysArrays = true);
 
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField2D and ContField2D.
             ExpList1D(const SpatialDomains::CompositeVector &domain,
-                      SpatialDomains::MeshGraph2D &graph2D);
+                      SpatialDomains::MeshGraph2D &graph2D,
+                      bool DeclareCoeffPhysArrays = true);
 
             /// Specialised constructor for trace expansions.
             ExpList1D(const Array<OneD,const ExpList1DSharedPtr> &bndConstraint,
@@ -94,7 +96,8 @@ namespace Nektar
                                             ::BoundaryConditionShPtr>  &bndCond,
                       const StdRegions::StdExpansionVector &locexp,
                       SpatialDomains::MeshGraph2D &graph2D,
-                      const map<int,int> &periodicEdges);
+                      const map<int,int> &periodicEdges,
+                      bool DeclareCoeffPhysArrays = true);
 
             /// Destructor.
             ~ExpList1D();
@@ -170,7 +173,7 @@ namespace Nektar
             /// Definition of the total number of degrees of freedom and
             /// quadrature points. Sets up the storage for \a m_coeff and \a
             ///  m_phys.
-            void SetCoeffPhys(void);
+            void SetCoeffPhysOffsets(void);
 
             /// Set up the normals on each expansion.
             virtual void v_SetUpPhysNormals(

@@ -60,20 +60,30 @@ namespace Nektar
                            const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
                            bool SetUpJustDG = true);
 
+            DisContField2D(const DisContField2D &In,
+                           SpatialDomains::MeshGraph2D &graph2D,
+                           SpatialDomains::BoundaryConditions &bcs,
+                           const int bc_loc = 0,
+                           bool SetUpJustDG = false,
+                           bool DeclareCoeffPhysArrays = true);
+            
             DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
                            SpatialDomains::BoundaryConditions &bcs, 
                            const int bc_loc = 0,
                            const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
-                           bool SetUpJustDG = true);
+                           bool SetUpJustDG = true,
+                           bool DeclareCoeffPhysArrays = true);
 
             DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
                            SpatialDomains::BoundaryConditions &bcs, 
                            const std::string variable,
                            const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
-                           bool SetUpJustDG = true);
-
+                           bool SetUpJustDG = true,
+                           bool DeclareCoeffPhysArrays = true);
+            
+            
             DisContField2D(const DisContField2D &In, bool DeclareCoeffPhysArrays = true);
-
+            
             ~DisContField2D();
             
             inline ExpList1DSharedPtr &GetTrace(void)
@@ -81,11 +91,14 @@ namespace Nektar
                 return m_trace;
             }
 	    
-	        inline LocalToGlobalDGMapSharedPtr &GetTraceMap(void)
+            inline LocalToGlobalDGMapSharedPtr &GetTraceMap(void)
             {
                 return m_traceMap;
             }
-
+            
+            /// Determines if another ContField2D shares the same boundary
+            /// conditions as this field.
+            bool SameTypeOfBoundaryConditions(const DisContField2D &In);
 
             /**
              * \brief This function evaluates the boundary conditions at a certain 
@@ -117,9 +130,9 @@ namespace Nektar
              * \param time The time at which the boundary conditions should be 
              * evaluated
              */ 
-            void EvaluateBoundaryConditions(const NekDouble time = 0.0)
+            void EvaluateBoundaryConditions(const NekDouble time = 0.0, const NekDouble x2_in = NekConstants::kNekUnsetDouble)
             {
-                ExpList2D::EvaluateBoundaryConditions(time,m_bndCondExpansions,m_bndConditions);
+                ExpList2D::EvaluateBoundaryConditions(time,m_bndCondExpansions,m_bndConditions,x2_in);
             }
 
             GlobalLinSysSharedPtr GetGlobalBndLinSys(const GlobalLinSysKey &mkey);
@@ -223,12 +236,13 @@ namespace Nektar
             {
                 return m_bndCondExpansions;
             }
-            
+
             inline const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>& GetBndConditions()
             {
                 return m_bndConditions;
             }
             
+
             /// \brief Set up a list of element ids and edge ids the link to the
             /// boundary conditions
             void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, 
@@ -286,13 +300,17 @@ namespace Nektar
              * \param variable An optional parameter to indicate for which variable 
              * the boundary conditions should be discretised.
              */ 
-            void GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D, SpatialDomains::BoundaryConditions &bcs, const std::string variable);
+            void GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D, 
+                                                    SpatialDomains::BoundaryConditions &bcs, 
+                                                    const std::string variable,
+                                                    bool DeclareCoeffPhysArrays = true);
 
             virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID, 
                                                 Array<OneD,int> &EdgeID)
             {
                 GetBoundaryToElmtMap(ElmtID,EdgeID);
             }
+
         private:
             GlobalLinSysMapShPtr                               m_globalBndMat;
             ExpList1DSharedPtr                                 m_trace;
@@ -363,9 +381,20 @@ namespace Nektar
                 return GetBndConditions();
             }
 
-            virtual void v_EvaluateBoundaryConditions(const NekDouble time = 0.0)
+            inline MultiRegions::ExpList1DSharedPtr &v_UpdateBndCondExpansion(int i)
             {
-                EvaluateBoundaryConditions(time);
+                return m_bndCondExpansions[i];
+            }
+            
+            inline Array<OneD, SpatialDomains::BoundaryConditionShPtr> &v_UpdateBndConditions()
+            {
+                return m_bndConditions;
+            }
+
+
+            virtual void v_EvaluateBoundaryConditions(const NekDouble time = 0.0, const NekDouble x2_in = NekConstants::kNekUnsetDouble)
+            {
+                EvaluateBoundaryConditions(time,x2_in);
             }
 
             virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo()

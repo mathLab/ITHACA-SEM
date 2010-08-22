@@ -149,8 +149,9 @@ namespace Nektar
         ContField2D::ContField2D(SpatialDomains::MeshGraph2D &graph2D,
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const int bc_loc,
-                                 const GlobalSysSolnType solnType):
-            DisContField2D(graph2D,bcs,bc_loc,solnType,false),
+                                 const GlobalSysSolnType solnType, 
+                                 bool DeclareCoeffPhysArrays):
+            DisContField2D(graph2D,bcs,bc_loc,solnType,false,DeclareCoeffPhysArrays),
             m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
@@ -198,15 +199,13 @@ namespace Nektar
         ContField2D::ContField2D(const ContField2D &In,
                                  SpatialDomains::MeshGraph2D &graph2D,
                                  SpatialDomains::BoundaryConditions &bcs,
-                                 const int bc_loc):
-            DisContField2D(In),
+                                 const int bc_loc,
+                                 bool DeclareCoeffPhysArrays):
+            DisContField2D(In,graph2D,bcs,bc_loc,false,DeclareCoeffPhysArrays),
             m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
-            // Set up boundary conditions for this variable.
-            GenerateBoundaryConditionExpansion(graph2D,bcs,
-                                                bcs.GetVariable(bc_loc));
-            EvaluateBoundaryConditions();
+
             ApplyGeomInfo(graph2D);
             
             if(!SameTypeOfBoundaryConditions(In))
@@ -311,37 +310,6 @@ namespace Nektar
          */
         ContField2D::~ContField2D()
         {
-        }
-
-
-        /**
-         * For each boundary region, checks that the types and number of 
-         * boundary expansions in that region match.
-         * @param   In          ContField2D to compare with.
-         * @returns True if boundary conditions match.
-         */
-        bool ContField2D::SameTypeOfBoundaryConditions(const ContField2D &In)
-        {
-            int i;
-            bool returnval = true;
-
-            for(i = 0; i < m_bndConditions.num_elements(); ++i)
-            {
-
-                // check to see if boundary condition type is the same
-                // and there are the same number of boundary
-                // conditions in the boundary definition.
-                if((m_bndConditions[i]->GetBoundaryConditionType()
-                    != In.m_bndConditions[i]->GetBoundaryConditionType())||
-                   (m_bndCondExpansions[i]->GetExpSize()
-                                    != In.m_bndCondExpansions[i]->GetExpSize()))
-                {
-                    returnval = false;
-                    break;
-                }
-            }
-
-            return returnval;
         }
 
 
@@ -712,6 +680,11 @@ namespace Nektar
         }
 
 
+        int ContField2D::v_GetContNcoeffs() const
+        {
+            return m_contNcoeffs;
+        }
+
         /**
          * 
          */
@@ -719,6 +692,15 @@ namespace Nektar
         {
             return ContField2D::UpdateContCoeffs();
         };
+
+
+        /**
+         * 
+         */
+        void ContField2D::v_SetContCoeffsArray(Array<OneD, NekDouble> &inarray)
+        {
+            m_contCoeffs = inarray;
+        }
 
 
         
@@ -990,9 +972,9 @@ namespace Nektar
          * 
          */
         void ContField2D::v_EvaluateBoundaryConditions(
-                                const NekDouble time)
+                                                       const NekDouble time, const NekDouble x2_in)
         {
-            EvaluateBoundaryConditions(time);
+            EvaluateBoundaryConditions(time, x2_in);
         }
 
     } // end of namespace

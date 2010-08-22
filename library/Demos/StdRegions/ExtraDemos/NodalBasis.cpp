@@ -1,63 +1,81 @@
 #include <cstdio>
 #include <cstdlib>
+#include <math.h>
+
 #include "StdRegions/StdExpansion2D.h"
 #include "StdRegions/StdNodalTriExp.h"
-#include "StdRegions/NodalBasisManager.h"
 
 #include "StdRegions/StdRegions.hpp"
+#include "LibUtilities/Foundations/Foundations.hpp"
 
 using namespace Nektar;
 using namespace StdRegions; 
-using namespace  std;
+using namespace std;
 
-
-// compile using Builds/Demos/StdRegions -> make DEBUG=1
-// PROG=NodalBasis //Gosse: I don't think "PROG=" has to be there
+#include "StdRegions/StdNodalTriExp.h"
 
 // This routine projects a polynomial or trigonmetric functions which 
 // has energy in all mdoes of the expansions and report an error.
 
 int main(int argc, char *argv[])
 {
-  int i,j;
-  int order;
-  NodalBasisType btype;
-  NodalBasisManager B;
-  
+    int i,j;
+    int order;
+    int npts; 
+    
+    LibUtilities::PointsType    Qtype1,Qtype2;
+    LibUtilities::BasisType     btype1,btype2;
+    LibUtilities::PointsType     NodalType;
+    StdRegions::StdNodalTriExp *E;
+    Array<OneD, const NekDouble> r,s;
 
-  if(argc != 3)
-  {
-    fprintf(stderr,"Usage: NodalBasis Type order\n");
-
-    fprintf(stderr,"Where type is an integer value which "
-        "dictates the basis as:\n");
-    fprintf(stderr,"\t NodalTriElec    = 0\n");
-    fprintf(stderr,"\t NodalTriFekete  = 1\n");
-    fprintf(stderr,"\t NodalTetElec    = 2\n");
-    exit(1);
-  }
-  
-  btype =   (NodalBasisType) atoi(argv[1]);
-  order =   atoi(argv[2]);
- 
-  int npts;
-  const double *x,*y,*z;
-  
-  //----------------------------------------------
-  // Output 1D basis using only basis information. 
-
-  fprintf(stdout,"VARIABLES = x y\n");
-
-  for(i = 2; i <= order; ++i)
-  {
-    npts = B.GetNodePoints(btype,i,x,y,z);
-  
-    fprintf(stdout,"ZONE T = \"Order %d\" I=%d\n",i,npts);
-
-    for(j = 0; j < npts; ++j)
+    if(argc != 3)
     {
-      fprintf(stdout, "%9.6lf %9.6lf \n",x[j],y[j]);
+        fprintf(stderr,"Usage: NodalBasis Type order\n");
+        
+        fprintf(stderr,"Where type is an integer value which "
+                "dictates the basis as:\n");
+        fprintf(stderr,"\t NodalTriElec    = 0\n");
+        fprintf(stderr,"\t NodalTriFekete  = 1\n");
+        exit(1);
     }
-  }
-  //-----------------------------------------------
+    
+    btype1 = LibUtilities::eOrtho_A;
+    btype2 = LibUtilities::eOrtho_B;
+    Qtype1 = LibUtilities::eGaussLobattoLegendre; 
+    Qtype2 = LibUtilities::eGaussLobattoLegendre; 
+    
+    switch(atoi(argv[argc-2]))
+    {
+    case 0:
+        NodalType = LibUtilities::eNodalTriElec;
+        break;
+    case 1:
+        NodalType = LibUtilities::eNodalTriFekete;
+        break;
+    }
+
+    order =   atoi(argv[argc-1]);
+    ASSERTL0(order > 1,"Order must be larger than 1");
+
+    const LibUtilities::PointsKey Pkey1(order+1,Qtype1);
+    const LibUtilities::PointsKey Pkey2(order+1,Qtype2);
+    const LibUtilities::BasisKey  Bkey1(btype1,order,Pkey1);
+    const LibUtilities::BasisKey  Bkey2(btype2,order,Pkey2);
+
+    E = new StdRegions::StdNodalTriExp(Bkey1,Bkey2,NodalType);
+    
+    E->GetNodalPoints(r,s);
+
+    //----------------------------------------------
+    // Output 1D basis using only basis information. 
+    npts = order*(order+1)/2;
+    fprintf(stdout,"VARIABLES = x y\n");
+    fprintf(stdout,"ZONE T = \"Order %d\" I=%d\n",order,npts);
+    
+    for(i = 0; i  < npts; ++i)
+    {
+        fprintf(stdout, "%16.14lf %16.14lf \n",r[i],s[i]);
+    }
+    //-----------------------------------------------
 }

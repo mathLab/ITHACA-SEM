@@ -263,7 +263,7 @@ namespace Nektar
 
 
             virtual void v_EvaluateBoundaryConditions(
-                                            const NekDouble time = 0.0);
+                                                      const NekDouble time = 0.0, const NekDouble x2_in = NekConstants::kNekUnsetDouble);
 
             virtual const Array<OneD, const NekDouble> &v_GetContCoeffs() const;
 

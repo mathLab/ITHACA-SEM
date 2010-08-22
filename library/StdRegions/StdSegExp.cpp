@@ -113,16 +113,35 @@ namespace Nektar
         DNekMatSharedPtr StdSegExp::GenMatrix(const StdMatrixKey &mkey) 
         {
             DNekMatSharedPtr Mat;
-            Mat = StdExpansion::CreateGeneralMatrix(mkey);
-            
-            switch(mkey.GetMatrixType())
+            MatrixType mattype;
+
+            switch(mattype = mkey.GetMatrixType())
             {
-            case eMass:
-                // For Fourier basis set the imaginary component of mean mode
-                // to have a unit diagonal component in mass matrix 
-                if(m_base[0]->GetBasisType() == LibUtilities::eFourier)
+            case eFwdTrans:
                 {
-                    (*Mat)(1,1) = 1.0;
+                    Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
+                    StdMatrixKey iprodkey(eIProductWRTBase,DetExpansionType(),*this);
+                    DNekMat &Iprod = *GetStdMatrix(iprodkey);
+                    StdMatrixKey imasskey(eInvMass,DetExpansionType(),*this);
+                    DNekMat &Imass = *GetStdMatrix(imasskey);
+                    
+                    (*Mat) = Imass*Iprod;
+                }
+                break;
+            default:
+                {                
+                    Mat = StdExpansion::CreateGeneralMatrix(mkey);
+                    
+                    if(mattype ==  eMass)
+                    {
+                        // For Fourier basis set the imaginary component
+                        // of mean mode to have a unit diagonal component
+                        // in mass matrix
+                        if(m_base[0]->GetBasisType() == LibUtilities::eFourier)
+                        {
+                            (*Mat)(1,1) = 1.0;
+                        }
+                    }
                 }
                 break;
             }

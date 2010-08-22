@@ -173,7 +173,7 @@ namespace Nektar
 
             /// Evaluate all boundary conditions at a given time..
             virtual void v_EvaluateBoundaryConditions(
-                    const NekDouble time = 0.0);
+                                                      const NekDouble time = 0.0, const NekDouble x2_in = NekConstants::kNekUnsetDouble);
         };
 
         typedef boost::shared_ptr<DisContField1D>   DisContField1DSharedPtr;

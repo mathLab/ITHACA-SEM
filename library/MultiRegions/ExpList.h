@@ -110,8 +110,11 @@ namespace Nektar
             /// \f$N_{\mathrm{eof}}=\sum_{e=1}^{{N_{\mathrm{el}}}}N^{e}_m\f$.
             inline int GetNcoeffs(void) const;
 
-            // Returns the total number of local degrees of freedom for element eid
+            // Returns the total number of local degrees of freedom
+            // for element eid
             int GetNcoeffs(const int eid) const;
+
+            inline int GetContNcoeffs(void) const;
 
             /// Evaulates the maximum number of modes in the elemental basis
             /// order over all elements
@@ -175,7 +178,7 @@ namespace Nektar
             ///
             inline void IProductWRTBase(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
+                                Array<OneD,       NekDouble> &outarray,
                                 bool  UseContCoeffs = false);
 
             /// This function calculates the inner product of a function
@@ -308,10 +311,20 @@ namespace Nektar
                              std::string var = "v");
 
             void WriteTecplotHeader(std::ofstream &outfile,
-                                    std::string var = "v");
+                                    std::string var = "v")
+            {
+                v_WriteTecplotHeader(outfile,var);
+            }
 
-            void WriteTecplotZone(std::ofstream &outfile, int expansion);
-            void WriteTecplotField(std::ofstream &outfile, int expansion);
+            void WriteTecplotZone(std::ofstream &outfile, int expansion)
+            {
+                v_WriteTecplotZone(outfile,expansion);
+            }
+
+            void WriteTecplotField(std::ofstream &outfile, int expansion)
+            {
+                v_WriteTecplotField(outfile,expansion);
+            }
 
             void WriteVtkHeader(std::ofstream &outfile);
             void WriteVtkFooter(std::ofstream &outfile);
@@ -336,6 +349,9 @@ namespace Nektar
 
             /// Set the  #m_coeffs array to inarray
             inline void SetCoeffsArray(Array<OneD, NekDouble> &inarray);
+
+            /// Set the  #m_contCoeffs array to inarray
+            inline void SetContCoeffsArray(Array<OneD, NekDouble> &inarray);
 
             /// This function returns (a reference to) the array
             /// \f$\boldsymbol{\hat{u}}_l\f$ (implemented as #m_coeffs)
@@ -375,11 +391,17 @@ namespace Nektar
             /// This function calculates the \f$L_2\f$ error with
             /// respect to soln of the global
             /// spectral/hp element approximation.
-            NekDouble L2 (const Array<OneD, const NekDouble> &soln);
+            NekDouble L2 (const Array<OneD, const NekDouble> &soln)
+            {
+                v_L2(soln);
+            }
 
             /// This function calculates the \f$L_2\f$ measure of the global
             /// spectral/hp element approximation.
-            NekDouble L2 (void);
+            NekDouble L2 (void)
+            {
+                v_L2();
+            }
 
             /// Calculates the \f$H^1\f$ error of the global spectral/hp
             /// element approximation.
@@ -387,6 +409,14 @@ namespace Nektar
 
             /// This function returns the number of elements in the expansion.
             inline int GetExpSize(void);
+
+            /// This function returns the number of elements in the
+            /// expansion which may be different for a homogeoenous extended
+            /// expansionp.
+            inline int GetNumElmts(void)
+            {
+                return v_GetNumElmts();
+            }
 
             /// This function returns the vector of elements in the expansion.
             inline const boost::shared_ptr<StdRegions::StdExpansionVector> GetExp() const;
@@ -453,6 +483,8 @@ namespace Nektar
             inline const Array<OneD, const  boost::shared_ptr<ExpList1D> >
                 &GetBndCondExpansions();
 
+            inline boost::shared_ptr<ExpList1D> &UpdateBndCondExpansion(int i);
+
             inline boost::shared_ptr<ExpList1D> &GetTrace();
 
             inline boost::shared_ptr<LocalToGlobalDGMap> &GetTraceMap(void);
@@ -489,46 +521,30 @@ namespace Nektar
             inline const Array<OneD, const SpatialDomains
                 ::BoundaryConditionShPtr>& GetBndConditions();
 
-            inline void EvaluateBoundaryConditions(const NekDouble time = 0.0);
+            inline Array<OneD, SpatialDomains::BoundaryConditionShPtr>& UpdateBndConditions();
+
+            inline void EvaluateBoundaryConditions(const NekDouble time = 0.0, const NekDouble = NekConstants::kNekUnsetDouble);
 
 
             // Routines for continous matrix solution
             /// This function calculates the result of the multiplication of a
             /// matrix of type specified by \a mkey with a vector given by \a
             /// inarray.
-            inline void GeneralMatrixOp(
-                                        const GlobalMatrixKey             &gkey,
+            inline void GeneralMatrixOp(const GlobalMatrixKey             &gkey,
                                         const Array<OneD,const NekDouble> &inarray,
                                         Array<OneD,      NekDouble> &outarray,
                                         bool  UseContCoeffs = false);
 
-            void GeneralMatrixOp_IterPerExp(
-                                            const GlobalMatrixKey             &gkey,
-                                            const Array<OneD,const NekDouble> &inarray,
-                                            Array<OneD,      NekDouble> &outarray);
+            void GeneralMatrixOp_IterPerExp( const GlobalMatrixKey      &gkey,
+                                             const Array<OneD,const NekDouble> &inarray,
+                                             Array<OneD,      NekDouble> &outarray);
 
-
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr>
-                GetFieldDefinitions(void);
-
-            /// Append the element data listed in elements
-            /// fielddef->m_ElementIDs onto fielddata
-            void AppendFieldData(
-                                 SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
-                                 std::vector<NekDouble> &fielddata);
-
-            /// Extract the data in fielddata into the m_coeff list
-            void ExtractDataToCoeffs(
-                                     SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
-                                     std::vector<NekDouble> &fielddata,
-                                     std::string &field);
-
-
-            inline void SetUpPhysNormals(
-                                         const StdRegions::StdExpansionVector &locexp);
+            inline void SetUpPhysNormals(const StdRegions::StdExpansionVector &locexp);
 
             inline void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                              Array<OneD,int> &EdgeID);
+
+            void  GeneralGetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef, int NumHomoDir = 0, Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis = LibUtilities::NullBasisSharedPtr1DArray, std::vector<NekDouble> &HomoLen = SpatialDomains::NullNekDoubleVector);
 
             /// load global optimisation parameters
             void ReadGlobalOptimizationParameters(
@@ -546,6 +562,39 @@ namespace Nektar
             {
                 return v_GetRobinBCInfo();
             }
+
+            std::vector<SpatialDomains::FieldDefinitionsSharedPtr>
+                GetFieldDefinitions()
+            {
+                return v_GetFieldDefinitions();
+            }
+
+
+            void GetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef)
+            {
+                v_GetFieldDefinitions(fielddef);
+            }
+
+
+
+            /// Append the element data listed in elements
+            /// fielddef->m_ElementIDs onto fielddata
+            void AppendFieldData(
+                                 SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
+                                 std::vector<NekDouble> &fielddata)
+            {
+                v_AppendFieldData(fielddef,fielddata);
+            }
+            
+            /// Extract the data in fielddata into the m_coeff list
+            void ExtractDataToCoeffs(
+                                     SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
+                                     std::vector<NekDouble> &fielddata,
+                                     std::string &field)
+            {
+                v_ExtractDataToCoeffs(fielddef,fielddata,field);
+            }
+            
         protected:
 
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(
@@ -701,10 +750,17 @@ namespace Nektar
                                                                const LocalToGlobalBaseMapSharedPtr &locToGloMap);
 
             // Virtual prototypes
+            
+            virtual int v_GetNumElmts(void)
+            {
+                return (*m_exp).size(); 
+            }
 
             virtual const
                 Array<OneD,const boost::shared_ptr<ExpList1D> >
                 &v_GetBndCondExpansions(void);
+
+            virtual boost::shared_ptr<ExpList1D> &v_UpdateBndCondExpansion(int i);
 
             virtual boost::shared_ptr<ExpList1D> &v_GetTrace();
 
@@ -841,15 +897,43 @@ namespace Nektar
             virtual void v_ReadGlobalOptimizationParameters(
                                                             const std::string &infilename);
 
+            virtual std::vector<SpatialDomains::FieldDefinitionsSharedPtr>
+                v_GetFieldDefinitions(void);
+
+            virtual void  v_GetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef);
+
+
+            virtual void v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata);
+
+            virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field);
+
+            virtual void v_WriteTecplotHeader(std::ofstream &outfile,
+                                            std::string var = "v");
+            virtual void v_WriteTecplotZone(std::ofstream &outfile, 
+                                            int expansion);
+            virtual void v_WriteTecplotField(std::ofstream &outfile,
+                                             int expansion);
+
+            virtual NekDouble v_L2(void);
+            virtual NekDouble v_L2(const Array<OneD, const NekDouble> &soln);
+            
+            virtual void v_SetContCoeffsArray(Array<OneD, NekDouble> &inarray);
+
         private:
+            virtual int v_GetContNcoeffs() const;
+
             virtual const
                 Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
                 &v_GetBndConditions();
 
+            virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>
+                &v_UpdateBndConditions();
+
             virtual void v_EvaluateBoundaryConditions(
-                                                      const NekDouble time = 0.0);
+                                                      const NekDouble time = 0.0, const NekDouble x2_in = NekConstants::kNekUnsetDouble);
 
             virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo(void);
+
 
         };
 
@@ -873,6 +957,11 @@ namespace Nektar
         inline int ExpList::GetNcoeffs(const int eid) const
         {
             return (*m_exp)[eid]->GetNcoeffs();
+        }
+
+        inline int ExpList::GetContNcoeffs() const
+        {
+            return v_GetContNcoeffs();
         }
 
         /**
@@ -1169,6 +1258,11 @@ namespace Nektar
             m_coeffs = inarray;
         }
 
+        inline void ExpList::SetContCoeffsArray(Array<OneD, NekDouble> &inarray)
+        {
+            v_SetContCoeffsArray(inarray);
+        }
+
         /**
          * As the function returns a constant reference to a
          * <em>const Array</em>, it is not possible to modify the
@@ -1316,6 +1410,11 @@ namespace Nektar
             return v_GetBndCondExpansions();
         }
 
+        inline boost::shared_ptr<ExpList1D>  &ExpList::UpdateBndCondExpansion(int i)
+        {
+            return v_UpdateBndCondExpansion(i);
+        }
+
 
         inline boost::shared_ptr<ExpList1D> &ExpList::GetTrace()
         {
@@ -1383,9 +1482,17 @@ namespace Nektar
             return v_GetBndConditions();
         }
 
-        inline void ExpList::EvaluateBoundaryConditions(const NekDouble time)
+
+        inline Array<OneD, SpatialDomains::BoundaryConditionShPtr>
+            &ExpList::UpdateBndConditions()
         {
-            v_EvaluateBoundaryConditions(time);
+            return v_UpdateBndConditions();
+        }
+
+        inline void ExpList::EvaluateBoundaryConditions(const NekDouble time, 
+                                                        const NekDouble x2_in)
+        {
+            v_EvaluateBoundaryConditions(time,x2_in);
         }
 
         // Routines for continous matrix solution

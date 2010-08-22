@@ -931,51 +931,59 @@ namespace Nektar
             }
         }
 
-     void StdExpansion::WriteTecplotZone(std::ofstream &outfile)
-      {
-    int i,j;
-
-    int coordim  = GetCoordim();
-
-    int nquad0 = GetNumPoints(0);
-    int nquad1 = GetNumPoints(1);
-
-    Array<OneD,NekDouble> coords[3];
-
-    coords[0] = Array<OneD,NekDouble>(nquad0*nquad1);
-    coords[1] = Array<OneD,NekDouble>(nquad0*nquad1);
-    coords[2] = Array<OneD,NekDouble>(nquad0*nquad1);
-
-    GetCoords(coords[0],coords[1],coords[2]);
-
-    outfile << "Zone, I=" << nquad0 << ", J=" << nquad1 <<", F=Block" << std::endl;
-
-    for(j = 0; j < coordim; ++j)
-      {
-        for(i = 0; i < nquad0*nquad1; ++i)
-          {
-        outfile << coords[j][i] << " ";
-          }
-        outfile << std::endl;
-      }
-
-      }
-
-    void StdExpansion::WriteTecplotField(std::ofstream &outfile)
-    {
-        int i;
-
-        int nquad0 = GetNumPoints(0);
-        int nquad1 = GetNumPoints(1);
-
-        // printing the fields of that zone
-        for(i = 0; i < nquad0*nquad1; ++i)
+        void StdExpansion::WriteTecplotZone(std::ofstream &outfile)
         {
-            outfile << m_phys[i] << " ";
-        }
-        outfile << std::endl;
+            int i,j;
+            
+            int coordim   = GetCoordim();
+            int totpoints = GetTotPoints();
 
-    }
+            Array<OneD,NekDouble> coords[3];
+            
+            coords[0] = Array<OneD,NekDouble>(totpoints);
+            coords[1] = Array<OneD,NekDouble>(totpoints);
+            coords[2] = Array<OneD,NekDouble>(totpoints);
+            
+            GetCoords(coords[0],coords[1],coords[2]);
+          
+            switch(DetExpansionType())
+            {
+            case eSegment:
+                outfile << "Zone, I=" << GetNumPoints(0) << ", F=Block" << std::endl;
+                break;
+            case eTriangle: case eQuadrilateral:
+                
+                outfile << "Zone, I=" << GetNumPoints(0) << ", J=" << GetNumPoints(1) <<", F=Block" << std::endl;
+                break;
+            case eTetrahedron: case ePrism: case ePyramid: case eHexahedron:
+                outfile << "Zone, I=" << GetNumPoints(0) << ", J=" << GetNumPoints(1) << ", K="<< GetNumPoints(2) << ", F=Block" << std::endl;
+                break;
+            }
+            
+            for(j = 0; j < coordim; ++j)
+            {
+                for(i = 0; i < totpoints; ++i)
+                {
+                    outfile << coords[j][i] << " ";
+                }
+                outfile << std::endl;
+            }
+            
+        }
+        
+        void StdExpansion::WriteTecplotField(std::ofstream &outfile)
+        {
+            int i;
+            
+            int totpoints = GetTotPoints();
+            
+            // printing the fields of that zone
+            for(i = 0; i < totpoints; ++i)
+            {
+                outfile << m_phys[i] << " ";
+            }
+            outfile << std::endl;
+        }
 
         /**
          * @param   outfile     Stream to write VTK data to.

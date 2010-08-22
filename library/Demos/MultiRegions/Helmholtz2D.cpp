@@ -272,3 +272,4 @@ int NoCaseStringCompare(const string & s1, const string& s2)
     
     return (size1 < size2) ? -1 : 1;
 }
+    

@@ -125,30 +125,34 @@ namespace Nektar
         typedef std::vector<ExpansionShPtr>  ExpansionVector;
         typedef std::vector<ExpansionShPtr>::iterator ExpansionVectorIter;
 
-
+        static std::vector<NekDouble> NullNekDoubleVector;
         static std::vector<LibUtilities::PointsType> NullPointsTypeVector;
         static std::vector<unsigned int> NullUnsignedIntVector;
 
         struct FieldDefinitions
         {
-            FieldDefinitions(SpatialDomains::GeomShapeType shapeType,
-                             std::vector<unsigned int> &elementIDs,
-                             // vector[2]
-                             std::vector<LibUtilities::BasisType> &basis,
-                             bool uniOrder,
-                             // UniOrder = vector[dimension] - MixOrder
-                             //          = vector[element*dimension]
-                             std::vector<unsigned int> &numModes,
-                             std::vector<std::string>  &fields,
-                             std::vector<LibUtilities::PointsType> &points
-                                                        = NullPointsTypeVector,
-                             bool pointsDef = false,
-                             std::vector<unsigned int> &numPoints
-                                                        = NullUnsignedIntVector,
-                             bool numPointsDef = false) :
-                m_ShapeType(shapeType),
+        FieldDefinitions(SpatialDomains::GeomShapeType shapeType,
+                         std::vector<unsigned int> &elementIDs,// vector[2]
+                         std::vector<LibUtilities::BasisType> &basis,
+                         bool uniOrder,
+                         // UniOrder = vector[dimension] - MixOrder
+                         //          = vector[element*dimension]
+                         std::vector<unsigned int> &numModes,
+                         std::vector<std::string>  &fields,
+                         int NumHomoDir = 0,
+                         std::vector<NekDouble> &HomoLengths = 
+                         NullNekDoubleVector, 
+                         std::vector<LibUtilities::PointsType> &points = 
+                         NullPointsTypeVector,
+                         bool pointsDef = false,
+                         std::vector<unsigned int> &numPoints = 
+                         NullUnsignedIntVector,
+                         bool numPointsDef = false):
+            m_ShapeType(shapeType),
                 m_ElementIDs(elementIDs),
                 m_Basis(basis),
+                m_NumHomogeneousDir(NumHomoDir),
+                m_HomogeneousLengths(HomoLengths),
                 m_Points(points),
                 m_PointsDef(pointsDef),
                 m_UniOrder(uniOrder),
@@ -158,10 +162,12 @@ namespace Nektar
                 m_Fields(fields)
             {
             }
-
+            
             SpatialDomains::GeomShapeType         m_ShapeType;
             std::vector<unsigned int>             m_ElementIDs;
             std::vector<LibUtilities::BasisType>  m_Basis;
+            int                                   m_NumHomogeneousDir;
+            std::vector<NekDouble>                m_HomogeneousLengths;
             /// Define the type of points per direction.
             std::vector<LibUtilities::PointsType> m_Points;
             bool                                  m_PointsDef;
@@ -175,7 +181,7 @@ namespace Nektar
             bool                                  m_NumPointsDef;
             std::vector<std::string>              m_Fields;
         };
-
+        
         typedef boost::shared_ptr<FieldDefinitions> FieldDefinitionsSharedPtr;
 
         typedef std::map<std::string, std::string> GeomInfoMap;

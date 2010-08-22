@@ -108,8 +108,9 @@ namespace Nektar
                         const NekDouble time,
                         Array<OneD, ExpList1DSharedPtr> &bndCondExpansions,
                         Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                                                                &bndConditions);
-
+                        &bndConditions,
+                        const NekDouble x2_in = NekConstants::kNekUnsetDouble);
+            
             /// Generates a map of periodic edges in the mesh.
             void GetPeriodicEdges(
                         SpatialDomains::MeshGraph2D &graph2D,

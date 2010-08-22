@@ -77,4 +77,4 @@ SET_LAPACK_LINK_LIBRARIES(StdPyrExp_Diff3D)
     
 
 # Uncomment next line to compile demos in subdirectory
-SUBDIRS(ExtraDemos)
+#SUBDIRS(ExtraDemos)

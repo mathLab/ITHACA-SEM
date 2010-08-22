@@ -70,6 +70,12 @@ int main(int argc, char* argv[])
     Execute("Helmholtz3D", "helmholtz3D_hex.xml","CG Helmholtz3D hex");
     Execute("Helmholtz3D", "helmholtz3D_tet.xml","CG Helmholtz3D tets");
 
+    // 3D Demos Homogeneous1D
+    
+    Execute("Helmholtz3DHomo1D", "helmholtz3D_homo1D_7modes_8nz.xml","CG Helmholtz3D Homogeneous 1D");
+    Execute("HDGHelmholtz3DHomo1D", "helmholtz3D_homo1D_7modes_8nz.xml","HDG Helmholtz3D Homogeneous 1D");
+    
+
     return 0;
 }
 

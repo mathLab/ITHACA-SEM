@@ -393,14 +393,14 @@ namespace Nektar
             /// spectral/hp element approximation.
             NekDouble L2 (const Array<OneD, const NekDouble> &soln)
             {
-                v_L2(soln);
+                return v_L2(soln);
             }
 
             /// This function calculates the \f$L_2\f$ measure of the global
             /// spectral/hp element approximation.
             NekDouble L2 (void)
             {
-                v_L2();
+                return v_L2();
             }
 
             /// Calculates the \f$H^1\f$ error of the global spectral/hp

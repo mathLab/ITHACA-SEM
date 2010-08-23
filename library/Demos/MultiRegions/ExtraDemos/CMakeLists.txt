@@ -75,3 +75,13 @@ SET(PostProcessingSource  PostProcessing.cpp)
 ADD_NEKTAR_EXECUTABLE(PostProcessing PostProcessingSource)
 TARGET_LINK_LIBRARIES(PostProcessing ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(PostProcessing)
+
+SET(TimingCGHelmSolve2DSource  TimingCGHelmSolve2D.cpp)
+ADD_NEKTAR_EXECUTABLE(TimingCGHelmSolve2D TimingCGHelmSolve2DSource)
+TARGET_LINK_LIBRARIES(TimingCGHelmSolve2D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(TimingCGHelmSolve2D)
+
+SET(TimingHDGHelmSolve2DSource  TimingHDGHelmSolve2D.cpp)
+ADD_NEKTAR_EXECUTABLE(TimingHDGHelmSolve2D TimingHDGHelmSolve2DSource)
+TARGET_LINK_LIBRARIES(TimingHDGHelmSolve2D ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(TimingHDGHelmSolve2D)

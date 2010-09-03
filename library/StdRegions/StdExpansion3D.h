@@ -53,16 +53,16 @@ namespace Nektar
 
         public:
             StdExpansion3D();
-            StdExpansion3D(int numcoeffs, const LibUtilities::BasisKey &Ba, 
+            StdExpansion3D(int numcoeffs, const LibUtilities::BasisKey &Ba,
                            const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc);
             StdExpansion3D(const StdExpansion3D &T);
             ~StdExpansion3D();
 
             // Differentiation
 
-            /** \brief Calculate the 3D derivative in the local 
-             *  tensor/collapsed coordinate at the physical points 
-             *    
+            /** \brief Calculate the 3D derivative in the local
+             *  tensor/collapsed coordinate at the physical points
+             *
              *    This function is independent of the expansion basis and can
              *    therefore be defined for all tensor product distribution of
              *    quadrature points in a generic manner.  The key operations are:
@@ -72,16 +72,16 @@ namespace Nektar
              *    - \f$ \frac{d}{d\eta_3} \rightarrow {\bf D_2 u } \f$
              *
              *  \param inarray array of physical points to be differentiated
-             *  \param  outarray_d1 the resulting array of derivative in the 
+             *  \param  outarray_d1 the resulting array of derivative in the
              *  \f$\eta_1\f$ direction will be stored in outarray_d1 as output
              *  of the function
-             *  \param outarray_d2 the resulting array of derivative in the 
-             *  \f$\eta_2\f$ direction will be stored in outarray_d2 as output 
+             *  \param outarray_d2 the resulting array of derivative in the
+             *  \f$\eta_2\f$ direction will be stored in outarray_d2 as output
              *  of the function
-             *  \param outarray_d3 the resulting array of derivative in the 
-             *  \f$\eta_3\f$ direction will be stored in outarray_d3 as output 
+             *  \param outarray_d3 the resulting array of derivative in the
+             *  \f$\eta_3\f$ direction will be stored in outarray_d3 as output
              *  of the function
-             *         
+             *
              *  Recall that:
              *  \f$
              *  \hspace{1cm} \begin{array}{llll}
@@ -96,7 +96,7 @@ namespace Nektar
              *  & \eta_1 = \frac{2(1+\xi_1)}{-\xi_2 -\xi_3}-1, \eta_2 = \frac{2(1+\xi_2)}{1 - \xi_3}-1, \eta_3 = \xi_3 \\
              *  \end{array} \f$
              */
-            void PhysTensorDeriv(const Array<OneD, const NekDouble> &inarray, 
+            void PhysTensorDeriv(const Array<OneD, const NekDouble> &inarray,
                                  Array<OneD, NekDouble> &outarray_d1,
                                  Array<OneD, NekDouble> &outarray_d2,
                                  Array<OneD, NekDouble> &outarray_d3);
@@ -105,22 +105,22 @@ namespace Nektar
             /** \brief This function evaluates the expansion at a single
              *  (arbitrary) point of the domain
              *
-             *  This function is a wrapper around the virtual function 
+             *  This function is a wrapper around the virtual function
              *  \a v_PhysEvaluate()
              *
              *  Based on the value of the expansion at the quadrature points,
-             *  this function calculates the value of the expansion at an 
-             *  arbitrary single points (with coordinates \f$ \mathbf{x_c}\f$ 
+             *  this function calculates the value of the expansion at an
+             *  arbitrary single points (with coordinates \f$ \mathbf{x_c}\f$
              *  given by the pointer \a coords). This operation, equivalent to
-             *  \f[ u(\mathbf{x_c})  = \sum_p \phi_p(\mathbf{x_c}) \hat{u}_p \f] 
+             *  \f[ u(\mathbf{x_c})  = \sum_p \phi_p(\mathbf{x_c}) \hat{u}_p \f]
              *  is evaluated using Lagrangian interpolants through the quadrature
              *  points:
              *  \f[ u(\mathbf{x_c}) = \sum_p h_p(\mathbf{x_c}) u_p\f]
              *
-             *  This function requires that the physical value array 
-             *  \f$\mathbf{u}\f$ (implemented as the attribute #m_phys) 
+             *  This function requires that the physical value array
+             *  \f$\mathbf{u}\f$ (implemented as the attribute #m_phys)
              *  is set.
-             * 
+             *
              *  \param coords the coordinates of the single point
              *  \return returns the value of the expansion at the single point
              */
@@ -128,7 +128,7 @@ namespace Nektar
             {
                 return v_PhysEvaluate(coords);
             }
-        
+
         protected:
 
             virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords);
@@ -142,11 +142,8 @@ namespace Nektar
 
             virtual int v_GetCoordim(void)
             {
-                return 3; 
+                return 3;
             }
-
-            /// Writes VTK geometry information for this expansion.
-            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile);
         };
     } //end of namespace
 } //end of namespace

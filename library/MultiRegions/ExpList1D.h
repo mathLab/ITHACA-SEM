@@ -74,14 +74,14 @@ namespace Nektar
 
             /// The copy constructor.
             ExpList1D(const ExpList1D &In, bool DeclareCoeffPhysArrays = true);
-            
+
             /// Construct an ExpList1D from a given graph.
             ExpList1D(const LibUtilities::BasisKey &Ba,
                       const SpatialDomains::MeshGraph1D &graph1D);
-            
+
             /// This constructor sets up a list of local expansions based on an
             /// input mesh.
-            ExpList1D(SpatialDomains::MeshGraph1D &graph1D, 
+            ExpList1D(SpatialDomains::MeshGraph1D &graph1D,
                       bool DeclareCoeffPhysArrays = true);
 
             /// Specialised constructor for Neumann boundary conditions in
@@ -178,6 +178,9 @@ namespace Nektar
             /// Set up the normals on each expansion.
             virtual void v_SetUpPhysNormals(
                                 const StdRegions::StdExpansionVector &locexp);
+
+            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
+
         };
 
         /// Empty ExpList1D object.

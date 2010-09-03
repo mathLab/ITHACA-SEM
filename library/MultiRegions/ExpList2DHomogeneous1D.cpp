@@ -34,7 +34,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <MultiRegions/ExpList2Dhomogeneous1D.h>
+#include <MultiRegions/ExpList2DHomogeneous1D.h>
 
 namespace Nektar
 {
@@ -48,7 +48,7 @@ namespace Nektar
 
         // Constructor for ExpList2DHomogeneous1D to act as a Explist2D field
         ExpList2DHomogeneous1D::ExpList2DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
-                                                       const NekDouble lhom, 
+                                                       const NekDouble lhom,
                                                        boost::shared_ptr<StdRegions::StdExpansionVector> &exp,
                                                        Array<OneD, ExpList1DSharedPtr> &planes):
             ExpListHomogeneous1D(HomoBasis,lhom)
@@ -63,27 +63,27 @@ namespace Nektar
             {
                 m_planes[n] = planes[n];
             }
-            
-            // Setup Default optimisation information. 
+
+            // Setup Default optimisation information.
             nel = GetExpSize();
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
-            
+
             SetCoeffPhys();
         }
 
         // Constructor for ExpList2DHomogeneous1D to act as a Explist2D field
         ExpList2DHomogeneous1D::ExpList2DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
-                                                       const NekDouble lhom, 
+                                                       const NekDouble lhom,
                                                        SpatialDomains::MeshGraph1D &graph1D):
             ExpListHomogeneous1D(HomoBasis,lhom)
         {
             int n,j,nel;
-            bool False = false; 
+            bool False = false;
             ExpList1DSharedPtr plane_zero;
 
-            // note that nzplanes can be larger than nzmodes 
-            m_planes[0] = plane_zero = MemoryManager<ExpList1D>::AllocateSharedPtr(graph1D, False); 
+            // note that nzplanes can be larger than nzmodes
+            m_planes[0] = plane_zero = MemoryManager<ExpList1D>::AllocateSharedPtr(graph1D, False);
 
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
             nel = m_planes[0]->GetExpSize();
@@ -100,9 +100,9 @@ namespace Nektar
                 {
                     (*m_exp).push_back((*m_exp)[j]);
                 }
-            }            
+            }
 
-            // Setup Default optimisation information. 
+            // Setup Default optimisation information.
             nel = GetExpSize();
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
@@ -118,7 +118,7 @@ namespace Nektar
             ExpListHomogeneous1D(In)
         {
             bool False = false;
-            
+
             ExpList1DSharedPtr zero_plane = boost::dynamic_pointer_cast<ExpList1D> (In.m_planes[0]);
 
             for(int n = 0; n < m_planes.num_elements(); ++n)
@@ -147,7 +147,7 @@ namespace Nektar
             // Set total coefficients and points
             m_ncoeffs = ncoeffs_per_plane*nzplanes;
             m_npoints = npoints_per_plane*nzplanes;
-            
+
             m_coeffs = Array<OneD, NekDouble> (m_ncoeffs);
             m_phys   = Array<OneD, NekDouble> (m_npoints);
 
@@ -170,7 +170,7 @@ namespace Nektar
                 }
             }
         }
-        
+
         void ExpList2DHomogeneous1D::GetCoords(const int eid,
                                                Array<OneD, NekDouble> &xc0,
                                                Array<OneD, NekDouble> &xc1,
@@ -181,7 +181,7 @@ namespace Nektar
             NekDouble val,dz;
             int nyplanes = m_planes.num_elements();
             int npoints  = GetTotPoints(eid);
-            
+
             switch(coordim = GetCoordim(0))
             {
             case 1:
@@ -201,15 +201,15 @@ namespace Nektar
             default:
                 ASSERTL0(false,"Cannot have coordim being three dimensions in a homogeneous field");
                 break;
-            }  
-   
-            // Fill homogeneous-direction 
+            }
+
+            // Fill homogeneous-direction
             Array<OneD, const NekDouble> pts =  m_homogeneousBasis->GetZ();
             Array<OneD, NekDouble> z(nyplanes);
-            
+
             Vmath::Smul(nyplanes,m_lhom/2.0,pts,1,z,1);
             Vmath::Sadd(nyplanes,m_lhom/2.0,z,1,z,1);
-            
+
             for(n = 0; n < nyplanes; ++n)
             {
                 Vmath::Fill(npoints,z[n],tmp_xc = xhom + npoints*n,1);
@@ -235,12 +235,12 @@ namespace Nektar
          * @param coord_1 After calculation, the \f$x_2\f$ coordinate
          *                          will be stored in this array.  This
          *                          coordinate might be  evaluated using the
-         *                          predefined value \a m_lhom 
+         *                          predefined value \a m_lhom
          *
          * @param coord_2 After calculation, the \f$x_3\f$ coordinate
          *                          will be stored in this array. This
          *                          coordinate is evaluated using the
-         *                          predefined value \a m_lhom 
+         *                          predefined value \a m_lhom
          */
         void ExpList2DHomogeneous1D::v_GetCoords(Array<OneD, NekDouble> &xc0,
                                                  Array<OneD, NekDouble> &xc1,
@@ -251,9 +251,9 @@ namespace Nektar
             NekDouble val,dz;
             int nyplanes = m_planes.num_elements();
             int npoints = m_planes[0]->GetTotPoints();
-            
+
             m_planes[0]->GetCoords(xc0,xc1);
-            
+
             if((coordim = GetCoordim(0)) == 1)
             {
                 xhom = xc1;
@@ -263,13 +263,13 @@ namespace Nektar
                 xhom = xc2;
             }
 
-            // Fill z-direction 
+            // Fill z-direction
             Array<OneD, const NekDouble> pts =  m_homogeneousBasis->GetZ();
             Array<OneD, NekDouble> z(nyplanes);
-            
+
             Vmath::Smul(nyplanes,m_lhom/2.0,pts,1,z,1);
             Vmath::Sadd(nyplanes,m_lhom/2.0,z,1,z,1);
-            
+
             for(n = 0; n < nyplanes; ++n)
             {
                 Vmath::Fill(npoints,z[n],tmp_xc = xhom + npoints*n,1);
@@ -281,10 +281,10 @@ namespace Nektar
                         Vmath::Vcopy(npoints,xc1,1,tmp_xc = xc1+npoints*n,1);
                     }
                 }
-            }            
+            }
         }
-        
-        
+
+
         /**
          * Write Tecplot Files Zone
          * @param   outfile    Output file name.
@@ -296,13 +296,13 @@ namespace Nektar
 
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nquad1 = m_homogeneousBasis->GetNumPoints();
-            
+
             Array<OneD,NekDouble> coords[3];
-            
+
             coords[0] = Array<OneD,NekDouble>(3*nquad0*nquad1);
             coords[1] = coords[0] + nquad0*nquad1;
             coords[2] = coords[1] + nquad0*nquad1;
-            
+
             GetCoords(expansion,coords[0],coords[1],coords[2]);
 
             outfile << "Zone, I=" << nquad0 << ", J=" << nquad1
@@ -317,6 +317,76 @@ namespace Nektar
                 outfile << std::endl;
             }
         }
+
+
+        void ExpList2DHomogeneous1D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+        {
+            int i,j;
+            int coordim  = (*m_exp)[expansion]->GetCoordim();
+            int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
+            int nquad1 = m_homogeneousBasis->GetNumPoints();
+            int ntot = nquad0*nquad1;
+            int ntotminus = (nquad0-1)*(nquad1-1);
+
+            Array<OneD,NekDouble> coords[3];
+            coords[0] = Array<OneD,NekDouble>(ntot);
+            coords[1] = Array<OneD,NekDouble>(ntot);
+            coords[2] = Array<OneD,NekDouble>(ntot);
+            GetCoords(expansion,coords[0],coords[1],coords[2]);
+
+            outfile << "    <Piece NumberOfPoints=\""
+                    << ntot << "\" NumberOfCells=\""
+                    << ntotminus << "\">" << endl;
+            outfile << "      <Points>" << endl;
+            outfile << "        <DataArray type=\"Float32\" "
+                    << "NumberOfComponents=\"3\" format=\"ascii\">" << endl;
+            outfile << "          ";
+            for (i = 0; i < ntot; ++i)
+            {
+                for (j = 0; j < 3; ++j)
+                {
+                    outfile << coords[j][i] << " ";
+                }
+                outfile << endl;
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "      </Points>" << endl;
+            outfile << "      <Cells>" << endl;
+            outfile << "        <DataArray type=\"Int32\" "
+                    << "Name=\"connectivity\" format=\"ascii\">" << endl;
+            for (i = 0; i < nquad0-1; ++i)
+            {
+                for (j = 0; j < nquad1-1; ++j)
+                {
+                    outfile << j*nquad0 + i << " "
+                            << j*nquad0 + i + 1 << " "
+                            << (j+1)*nquad0 + i + 1 << " "
+                            << (j+1)*nquad0 + i << endl;
+                }
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "        <DataArray type=\"Int32\" "
+                    << "Name=\"offsets\" format=\"ascii\">" << endl;
+            for (i = 0; i < ntotminus; ++i)
+            {
+                outfile << i*4+4 << " ";
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "        <DataArray type=\"UInt8\" "
+                    << "Name=\"types\" format=\"ascii\">" << endl;
+            for (i = 0; i < ntotminus; ++i)
+            {
+                outfile << "9 ";
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "      </Cells>" << endl;
+            outfile << "      <PointData>" << endl;
+        }
+
 
     } //end of namespace
 } //end of namespace

@@ -616,10 +616,10 @@ namespace Nektar
             {
                 Vmath::Vmul(nq, mkey.GetVariableCoefficient(0), 1, tmp, 1, tmp, 1);
             }
-            
+
             v_IProductWRTBase(tmp, outarray);
         }
-        
+
         void StdExpansion::LaplacianMatrixOp_MatFree(const int k1, const int k2,
                                                            const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
@@ -870,7 +870,7 @@ namespace Nektar
                 v_PhysDeriv(i,tmp,tmp_deriv);
                 Vmath::Vvtvp(totpts,mkey.GetVariableCoefficient(i),1,tmp_deriv,1,tmp_adv,1,tmp_adv,1);
             }
-            
+
             if(lambda) // add -lambda*u
             {
                 Vmath::Svtvp(totpts,-lambda,tmp,1,tmp_adv,1,tmp_adv,1);
@@ -885,7 +885,7 @@ namespace Nektar
 
                 v_IProductWRTBase(tmp_adv, outarray);
                 // (grad u, grad v) - u.grad v + lambda*u
-                Vmath::Vsub(m_ncoeffs,lap,1,outarray,1,outarray,1);                
+                Vmath::Vsub(m_ncoeffs,lap,1,outarray,1,outarray,1);
             }
             else
             {
@@ -934,32 +934,32 @@ namespace Nektar
         void StdExpansion::WriteTecplotZone(std::ofstream &outfile)
         {
             int i,j;
-            
+
             int coordim   = GetCoordim();
             int totpoints = GetTotPoints();
 
             Array<OneD,NekDouble> coords[3];
-            
+
             coords[0] = Array<OneD,NekDouble>(totpoints);
             coords[1] = Array<OneD,NekDouble>(totpoints);
             coords[2] = Array<OneD,NekDouble>(totpoints);
-            
+
             GetCoords(coords[0],coords[1],coords[2]);
-          
+
             switch(DetExpansionType())
             {
             case eSegment:
                 outfile << "Zone, I=" << GetNumPoints(0) << ", F=Block" << std::endl;
                 break;
             case eTriangle: case eQuadrilateral:
-                
+
                 outfile << "Zone, I=" << GetNumPoints(0) << ", J=" << GetNumPoints(1) <<", F=Block" << std::endl;
                 break;
             case eTetrahedron: case ePrism: case ePyramid: case eHexahedron:
                 outfile << "Zone, I=" << GetNumPoints(0) << ", J=" << GetNumPoints(1) << ", K="<< GetNumPoints(2) << ", F=Block" << std::endl;
                 break;
             }
-            
+
             for(j = 0; j < coordim; ++j)
             {
                 for(i = 0; i < totpoints; ++i)
@@ -968,53 +968,21 @@ namespace Nektar
                 }
                 outfile << std::endl;
             }
-            
+
         }
-        
+
         void StdExpansion::WriteTecplotField(std::ofstream &outfile)
         {
             int i;
-            
+
             int totpoints = GetTotPoints();
-            
+
             // printing the fields of that zone
             for(i = 0; i < totpoints; ++i)
             {
                 outfile << m_phys[i] << " ";
             }
             outfile << std::endl;
-        }
-
-        /**
-         * @param   outfile     Stream to write VTK data to.
-         */
-        void StdExpansion::WriteVtkPieceFooter(std::ofstream &outfile)
-        {
-            outfile << "      </PointData>" << endl;
-            outfile << "    </Piece>" << endl;
-        }
-
-
-        /**
-         * @param   outfile     Stream to write VTK data to.
-         * @param   var         Variable name associated with this data.
-         */
-        void StdExpansion::WriteVtkPieceData  (std::ofstream &outfile,
-                                               std::string var)
-        {
-            int i;
-            int nq = GetTotPoints();
-
-            // printing the fields of that zone
-            outfile << "        <DataArray type=\"Float32\" Name=\""
-                    << var << "\">" << endl;
-            outfile << "          ";
-            for(i = 0; i < nq; ++i)
-            {
-                outfile << (fabs(m_phys[i]) < NekConstants::kNekZeroTol ? 0 : m_phys[i]) << " ";
-            }
-            outfile << endl;
-            outfile << "        </DataArray>" << endl;
         }
 
 
@@ -1462,12 +1430,6 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "ReadFromFile: Write method");
             }
 
-            void StdExpansion::v_WriteVtkPieceHeader(std::ofstream &outfile)
-            {
-                NEKERROR(ErrorUtil::efatal,
-                         "Write VTK: This dimension is not implemented yet.");
-            }
-
             const  boost::shared_ptr<SpatialDomains::GeomFactors>& StdExpansion::v_GetMetricInfo() const
             {
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
@@ -1588,7 +1550,7 @@ namespace Nektar
             // If this function is not reimplemented on shape level, the function
             // below will be called
             LinearAdvectionDiffusionReactionMatrixOp_MatFree(inarray,outarray,mkey,addDiffusionTerm);
-            
+
         }
 
             void StdExpansion::v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,

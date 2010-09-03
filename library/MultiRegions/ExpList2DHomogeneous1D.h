@@ -68,9 +68,9 @@ namespace Nektar
 
             /// Sets up a list of local expansions based on an input mesh.
             ExpList2DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
-                                   const NekDouble lz, 
+                                   const NekDouble lz,
                                    SpatialDomains::MeshGraph1D &graph1D);
-            
+
             ExpList2DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
                                    const NekDouble lhom,
                                    boost::shared_ptr<StdRegions::StdExpansionVector> &exp,
@@ -93,7 +93,7 @@ namespace Nektar
                            Array<OneD, NekDouble> &xc1,
                            Array<OneD, NekDouble> &xc2);
         protected:
-            
+
             /// Definition of the total number of degrees of freedom and
             /// quadrature points. Sets up the storage for \a m_coeff and \a
             ///  m_phys.
@@ -105,20 +105,23 @@ namespace Nektar
                                      Array<OneD, NekDouble> &coord_1,
                                      Array<OneD, NekDouble> &coord_2);
 
-            virtual void v_WriteTecplotZone(std::ofstream &outfile, 
+            virtual void v_WriteTecplotZone(std::ofstream &outfile,
                                             int expansion);
+
+
+            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
 
         private:
         };
-        
+
         inline void ExpList2DHomogeneous1D::GetCoords(Array<OneD, NekDouble> &coord_0,
                                                       Array<OneD, NekDouble> &coord_1,
                                                       Array<OneD, NekDouble> &coord_2)
-            
+
         {
             v_GetCoords(coord_0,coord_1,coord_2);
         }
-            
+
     } //end of namespace
 } //end of namespace
 

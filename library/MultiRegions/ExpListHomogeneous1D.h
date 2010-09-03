@@ -87,23 +87,23 @@ namespace Nektar
             ~ExpListHomogeneous1D();
 
             void Homogeneous1DTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool IsForwards, bool UseContCoeffs = false);
-            
+
             inline void Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
 
             inline void Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
 
             void ShuffleIntoHomogeneous1DClosePacked(
-                              const Array<OneD, const NekDouble> &inarray, 
+                              const Array<OneD, const NekDouble> &inarray,
                               Array<OneD, NekDouble> &outarray,
                               bool UseNumModes = false);
-            
+
             void UnshuffleFromHomogeneous1DClosePacked(
-                              const Array<OneD, const NekDouble> &inarray, 
+                              const Array<OneD, const NekDouble> &inarray,
                               Array<OneD, NekDouble> &outarray,
                               bool UseNumModes = false);
 
         protected:
-            
+
             /// Definition of the total number of degrees of freedom and
             /// quadrature points. Sets up the storage for \a m_coeff and \a
             ///  m_phys.
@@ -115,11 +115,11 @@ namespace Nektar
             DNekBlkMatSharedPtr GenHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, bool UseContCoeffs = false) const;
 
             DNekBlkMatSharedPtr GetHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, bool UseContCoeffs = false) const;
-            
+
             //  virtual functions
             virtual int v_GetNumElmts(void)
             {
-                return m_planes[0]->GetExpSize(); 
+                return m_planes[0]->GetExpSize();
             }
 
             virtual void v_FwdTrans(const Array<OneD,const NekDouble> &inarray,
@@ -136,7 +136,7 @@ namespace Nektar
                 v_GetFieldDefinitions(void);
 
             virtual void v_GetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef);
-            
+
             virtual void v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata);
 
             virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field);
@@ -147,6 +147,9 @@ namespace Nektar
             virtual void v_WriteTecplotField(std::ofstream &outfile,
                                              int expansion);
 
+            virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
+                                        std::string var);
+
         private:
         };
 
@@ -155,7 +158,7 @@ namespace Nektar
             // Forwards trans
             Homogeneous1DTrans(inarray,outarray,true, UseContCoeffs);
         }
-        
+
         inline void ExpListHomogeneous1D::Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
         {
             // Backwards trans

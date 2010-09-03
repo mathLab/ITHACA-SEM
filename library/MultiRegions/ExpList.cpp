@@ -320,7 +320,7 @@ namespace Nektar
             const DNekScalBlkMatSharedPtr& blockmat = GetBlockMatrix(gkey);
             int nrows = blockmat->GetRows();
             int ncols = blockmat->GetColumns();
-            
+
             // Create NekVectors from the given data arrays
             NekVector<const NekDouble> in (ncols,inarray, eWrapper);
             NekVector<      NekDouble> out(nrows,outarray,eWrapper);
@@ -1477,7 +1477,7 @@ namespace Nektar
 
                     cnt1  += totnq;
                 }
-                
+
                 int Nconstants = mkey.GetNconstants();
 
                 if(Nconstants>2)
@@ -1890,7 +1890,7 @@ namespace Nektar
          * @param   outfile Output file name.
          * @param   var                 variables names
          */
-        void ExpList::v_WriteTecplotHeader(std::ofstream &outfile, 
+        void ExpList::v_WriteTecplotHeader(std::ofstream &outfile,
                         std::string var)
         {
 
@@ -1945,21 +1945,34 @@ namespace Nektar
             outfile << "</VTKFile>" << endl;
         }
 
-        void ExpList::WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+        void ExpList::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
         {
-            (*m_exp)[expansion]->WriteVtkPieceHeader(outfile);
+            ASSERTL0(false, "Routine not implemented for this expansion.");
         }
 
         void ExpList::WriteVtkPieceFooter(std::ofstream &outfile, int expansion)
         {
-            (*m_exp)[expansion]->WriteVtkPieceFooter(outfile);
+            outfile << "      </PointData>" << endl;
+            outfile << "    </Piece>" << endl;
         }
 
-        void ExpList::WriteVtkPieceData(std::ofstream &outfile, int expansion,
+        void ExpList::v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
                                         std::string var)
         {
-            (*m_exp)[expansion]->SetPhys(m_phys + m_phys_offset[expansion]);
-            (*m_exp)[expansion]->WriteVtkPieceData(outfile, var);
+            int i;
+            int nq = (*m_exp)[expansion]->GetTotPoints();
+
+            // printing the fields of that zone
+            outfile << "        <DataArray type=\"Float32\" Name=\""
+                    << var << "\">" << endl;
+            outfile << "          ";
+            const Array<OneD, NekDouble> phys = m_phys + m_phys_offset[expansion];
+            for(i = 0; i < nq; ++i)
+            {
+                outfile << (fabs(phys[i]) < NekConstants::kNekZeroTol ? 0 : phys[i]) << " ";
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
         }
 
         void ExpList::ReadFromFile(std::ifstream &in, OutputFormat format)
@@ -2127,10 +2140,10 @@ namespace Nektar
         void  ExpList::GeneralGetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef, int NumHomoDir, Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis, std::vector<NekDouble> &HomoLen)
         {
             int startenum, endenum, s;
-            
+
             ASSERTL1(NumHomoDir == HomoBasis.num_elements(),"Homogeneous basis is not the same length as NumHomoDir");
             ASSERTL1(NumHomoDir == HomoLen.size(),"Homogeneous length vector is not the same length as NumHomDir");
-            
+
             // count number of shapes
             switch((*m_exp)[0]->GetShapeDimension())
             {
@@ -2186,7 +2199,7 @@ namespace Nektar
                         else
                         {
                             ASSERTL0((*m_exp)[i]->GetBasis(0)->GetBasisType() == basis[0],"Routine is not set up for multiple bases definitions");
-                            
+
                             for(int j = 0; j < (*m_exp)[i]->GetNumBases(); ++j)
                             {
                                 numModes.push_back((*m_exp)[i]->GetBasis(j)->GetNumModes());
@@ -2230,14 +2243,14 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
-            
+
         std::vector<SpatialDomains::FieldDefinitionsSharedPtr> ExpList::v_GetFieldDefinitions()
         {
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> returnval;            
+            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> returnval;
             v_GetFieldDefinitions(returnval);
             return returnval;
         }
-        
+
         void  ExpList::v_GetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef)
         {
             GeneralGetFieldDefinitions(fielddef);

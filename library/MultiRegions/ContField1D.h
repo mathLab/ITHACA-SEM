@@ -44,7 +44,7 @@
 
 #include <LocalRegions/PointExp.h>
 #include <SpatialDomains/MeshGraph1D.h>
-#include <SpatialDomains/BoundaryConditions.h>
+#include <SpatialDomains/Conditions.h>
 
 
 namespace Nektar
@@ -343,7 +343,7 @@ namespace Nektar
         }
 
         /**
-         * As the function returns a constant reference to a 
+         * As the function returns a constant reference to a
          * <em>const Array</em>, it is not possible to modify the underlying
          * data of the array #m_contCoeffs. In order to do so, use the function
          * #UpdateContCoeffs instead.
@@ -366,13 +366,13 @@ namespace Nektar
          * \> \> continue \\
          * \> continue
          * \f}
-         * where \a map\f$[e][i]\f$ is the mapping array and 
+         * where \a map\f$[e][i]\f$ is the mapping array and
          * \a sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
          * correct modal connectivity between the different elements (both
          * these arrays are contained in the data member #m_locToGloMap). This
          * operation is equivalent to the scatter operation
          * \f$\boldsymbol{\hat{u}}_l=\mathcal{A}\boldsymbol{\hat{u}}_g\f$, where
-         * \f$\mathcal{A}\f$ is the 
+         * \f$\mathcal{A}\f$ is the
          * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
          *
          * @note The array #m_contCoeffs should be filled with the global
@@ -428,13 +428,13 @@ namespace Nektar
          * \> \> continue\\
          * \> continue
          * \f}
-         * where \a map\f$[e][i]\f$ is the mapping array and \a 
+         * where \a map\f$[e][i]\f$ is the mapping array and \a
          * sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
          * correct modal connectivity between the different elements (both
          * these arrays are contained in the data member #m_locToGloMap). This
          * operation is equivalent to the gather operation
          * \f$\boldsymbol{\hat{u}}_g=\mathcal{A}^{-1}\boldsymbol{\hat{u}}_l\f$,
-         * where \f$\mathcal{A}\f$ is the 
+         * where \f$\mathcal{A}\f$ is the
          * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
          *
          * @note    The array #m_coeffs should be filled with the local
@@ -494,7 +494,7 @@ namespace Nektar
          * these arrays are contained in the data member #m_locToGloMap). This
          * operation is equivalent to the gather operation
          * \f$\boldsymbol{\hat{u}}_g=\mathcal{A}^{T}\boldsymbol{\hat{u}}_l\f$,
-         * where \f$\mathcal{A}\f$ is the 
+         * where \f$\mathcal{A}\f$ is the
          * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
          *
          * @param   inarray     An array of size \f$N_\mathrm{eof}\f$

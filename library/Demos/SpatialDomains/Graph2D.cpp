@@ -4,13 +4,13 @@
 #include <vector>
 #include <string>
 #include <SpatialDomains/MeshGraph2D.h>
-#include <SpatialDomains/BoundaryConditions.h>
+#include <SpatialDomains/Conditions.h>
 
 #include <boost/shared_ptr.hpp>
 
 
 using namespace Nektar;
-using namespace SpatialDomains; 
+using namespace SpatialDomains;
 using namespace std;
 
 // compile using Builds/Demos/SpatialDomains -> make DEBUG=1 Graph1D
@@ -34,14 +34,14 @@ int main(int argc, char *argv[]){
 
 #else
     string in("C:/Data/PhD/Research/dev/Nektar++/library/Demos/SpatialDomains/meshdef2D.xml");
-    string bcfile("c:/Data/PhD/Research/dev/Nektar++/library/Demos/SpatialDomains/BC1.xml");    
+    string bcfile("c:/Data/PhD/Research/dev/Nektar++/library/Demos/SpatialDomains/BC1.xml");
 #endif
 
 #endif
 
     MeshGraph2D graph2D;
     BoundaryConditions bcs(&graph2D);
- 
+
     graph2D.ReadGeometry(in);
     graph2D.ReadCurves(in);
     graph2D.ReadExpansions(in);
@@ -83,6 +83,6 @@ int main(int argc, char *argv[]){
     {
         cout << err << endl;
     }
-    
+
     return 0;
 }

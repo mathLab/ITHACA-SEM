@@ -41,7 +41,7 @@
 #include <MultiRegions/ExpList1D.h>
 #include <LocalRegions/PointExp.h>
 #include <SpatialDomains/MeshGraph1D.h>
-#include <SpatialDomains/BoundaryConditions.h>
+#include <SpatialDomains/Conditions.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/LocalToGlobalDGMap.h>
 
@@ -103,7 +103,7 @@ namespace Nektar
             map<int, RobinBCInfoSharedPtr> GetRobinBCInfo(void);
         protected:
 
-            virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID, 
+            virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID,
                                                 Array<OneD,int> &EdgeID)
             {
                 GetBoundaryToElmtMap(ElmtID,EdgeID);

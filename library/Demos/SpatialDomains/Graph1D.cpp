@@ -1,8 +1,8 @@
 #include <cstdio>
 #include <cstdlib>
-#include <iostream> 
+#include <iostream>
 #include <SpatialDomains/MeshGraph1D.h>
-#include <SpatialDomains/BoundaryConditions.h>
+#include <SpatialDomains/Conditions.h>
 
 #include <iostream>
 #include <vector>
@@ -11,7 +11,7 @@
 #include <boost/shared_ptr.hpp>
 
 using namespace Nektar;
-using namespace SpatialDomains; 
+using namespace SpatialDomains;
 using namespace std;
 
 // compile using Builds/Demos/SpatialDomains -> make DEBUG=1 Graph1D

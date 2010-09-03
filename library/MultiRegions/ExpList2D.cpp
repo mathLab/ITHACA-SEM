@@ -173,18 +173,18 @@ namespace Nektar
 
             }
 
-            // Setup Default optimisation information. 
+            // Setup Default optimisation information.
             int nel = GetExpSize();
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
 
 
-            // set up offset arrays. 
+            // set up offset arrays.
             SetCoeffPhysOffsets();
 
             if(DeclareCoeffPhysArrays)
             {
-                // Set up m_coeffs, m_phys. 
+                // Set up m_coeffs, m_phys.
                 m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
                 m_phys   = Array<OneD, NekDouble>(m_npoints);
              }
@@ -277,12 +277,12 @@ namespace Nektar
 
               }
 
-              // Setup Default optimisation information. 
+              // Setup Default optimisation information.
               int nel = GetExpSize();
               m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                   ::AllocateSharedPtr(nel);
 
-             // Set up m_coeffs, m_phys and offset arrays. 
+             // Set up m_coeffs, m_phys and offset arrays.
              SetCoeffPhysOffsets();
              m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
              m_phys   = Array<OneD, NekDouble>(m_npoints);
@@ -389,12 +389,12 @@ namespace Nektar
 
              }
 
-             // Setup Default optimisation information. 
+             // Setup Default optimisation information.
              nel = GetExpSize();
              m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                  ::AllocateSharedPtr(nel);
 
-             // Set up m_coeffs, m_phys and offset arrays. 
+             // Set up m_coeffs, m_phys and offset arrays.
             SetCoeffPhysOffsets();
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
             m_phys   = Array<OneD, NekDouble>(m_npoints);
@@ -541,9 +541,9 @@ namespace Nektar
             int i,j;
             int npoints;
             int nbnd = bndCondExpansions.num_elements();
-            
+
             MultiRegions::ExpList1DSharedPtr locExpList;
-            
+
             for(i = 0; i < nbnd; ++i)
             {
                 if(time == 0.0 || bndConditions[i]->GetUserDefined().GetEquation()=="TimeDependent")
@@ -553,7 +553,7 @@ namespace Nektar
                     Array<OneD,NekDouble> x0(npoints,0.0);
                     Array<OneD,NekDouble> x1(npoints,0.0);
                     Array<OneD,NekDouble> x2(npoints,0.0);
-                    
+
                     if(x2_in == NekConstants::kNekUnsetDouble) //homogeneous input case for x2
                     {
                         locExpList->GetCoords(x0,x1,x2);
@@ -563,7 +563,7 @@ namespace Nektar
                         locExpList->GetCoords(x0,x1,x2);
                         Vmath::Fill(npoints,x2_in,x2,1);
                     }
-                    
+
                     if(bndConditions[i]->GetBoundaryConditionType()
                        == SpatialDomains::eDirichlet)
                     {
@@ -575,7 +575,7 @@ namespace Nektar
                                    >(bndConditions[i])->m_DirichletCondition
                                    ).Evaluate(x0[j],x1[j],x2[j],time);
                         }
-                        
+
                         locExpList->FwdTrans_BndConstrained(locExpList->GetPhys(),
                                         locExpList->UpdateCoeffs());
                     }
@@ -590,7 +590,7 @@ namespace Nektar
                                    >(bndConditions[i])->m_NeumannCondition
                                    ).Evaluate(x0[j],x1[j],x2[j],time);
                         }
-                        
+
                         locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                     locExpList->UpdateCoeffs());
                     }
@@ -604,11 +604,11 @@ namespace Nektar
                                    SpatialDomains::RobinBoundaryCondition
                                    >(bndConditions[i])->m_RobinFunction).Evaluate(x0[j],x1[j],x2[j],time);
                         }
-                        
+
                         locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                     locExpList->UpdateCoeffs());
 
-                        // put primitive coefficient into the physical space storage 
+                        // put primitive coefficient into the physical space storage
                         for(j = 0; j < npoints; j++)
                         {
                             (locExpList->UpdatePhys())[j]
@@ -814,7 +814,7 @@ namespace Nektar
         void ExpList2D::v_ReadGlobalOptimizationParameters(const std::string &infilename)
         {
             Array<OneD, int> NumShape(2,0);
-            
+
             for(int i = 0; i < GetExpSize(); ++i)
             {
                 if((*m_exp)[i]->DetExpansionType() == StdRegions::eTriangle)
@@ -826,10 +826,78 @@ namespace Nektar
                     NumShape[1] += 1;
                 }
             }
-            
+
             int two = 2;
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(infilename,two,NumShape);
+        }
+
+        void ExpList2D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+        {
+            int i,j;
+            int coordim  = (*m_exp)[expansion]->GetCoordim();
+            int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
+            int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);
+            int ntot = nquad0*nquad1;
+            int ntotminus = (nquad0-1)*(nquad1-1);
+
+            Array<OneD,NekDouble> coords[3];
+            coords[0] = Array<OneD,NekDouble>(ntot);
+            coords[1] = Array<OneD,NekDouble>(ntot);
+            coords[2] = Array<OneD,NekDouble>(ntot);
+            (*m_exp)[expansion]->GetCoords(coords[0],coords[1],coords[2]);
+
+            outfile << "    <Piece NumberOfPoints=\""
+                    << ntot << "\" NumberOfCells=\""
+                    << ntotminus << "\">" << endl;
+            outfile << "      <Points>" << endl;
+            outfile << "        <DataArray type=\"Float32\" "
+                    << "NumberOfComponents=\"3\" format=\"ascii\">" << endl;
+            outfile << "          ";
+            for (i = 0; i < ntot; ++i)
+            {
+                for (j = 0; j < 3; ++j)
+                {
+                    outfile << coords[j][i] << " ";
+                }
+                outfile << endl;
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "      </Points>" << endl;
+            outfile << "      <Cells>" << endl;
+            outfile << "        <DataArray type=\"Int32\" "
+                    << "Name=\"connectivity\" format=\"ascii\">" << endl;
+            for (i = 0; i < nquad0-1; ++i)
+            {
+                for (j = 0; j < nquad1-1; ++j)
+                {
+                    outfile << j*nquad0 + i << " "
+                            << j*nquad0 + i + 1 << " "
+                            << (j+1)*nquad0 + i + 1 << " "
+                            << (j+1)*nquad0 + i << endl;
+                }
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "        <DataArray type=\"Int32\" "
+                    << "Name=\"offsets\" format=\"ascii\">" << endl;
+            for (i = 0; i < ntotminus; ++i)
+            {
+                outfile << i*4+4 << " ";
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "        <DataArray type=\"UInt8\" "
+                    << "Name=\"types\" format=\"ascii\">" << endl;
+            for (i = 0; i < ntotminus; ++i)
+            {
+                outfile << "9 ";
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "      </Cells>" << endl;
+            outfile << "      <PointData>" << endl;
         }
 
     } //end of namespace

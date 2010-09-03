@@ -37,7 +37,7 @@
 #include <SpatialDomains/pchSpatialDomains.h>
 
 #include <SpatialDomains/Equation.h>
-#include <SpatialDomains/BoundaryConditions.h>
+#include <SpatialDomains/Conditions.h>
 #include <SpatialDomains/ParseUtils.hpp>
 #include <cctype>
 #include <algorithm>
@@ -63,9 +63,9 @@ namespace Nektar
             TiXmlDocument doc(infilename);
             bool loadOkay = doc.LoadFile();
 
-            ASSERTL0(loadOkay, (std::string("Unable to load file: ") + 
+            ASSERTL0(loadOkay, (std::string("Unable to load file: ") +
                 infilename).c_str());
-            
+
             Read(doc);
         }
 
@@ -88,15 +88,15 @@ namespace Nektar
             ReadSolverInfo(conditions);
 
             ReadParameters(conditions);
-            
+
             ReadFunctions(conditions);
 
             ReadVariables(conditions);
-            
+
             if(boundaryRegions)
             {
                 ReadBoundaryRegions(conditions);
-                
+
                 ReadBoundaryConditions(conditions);
             }
 
@@ -380,11 +380,11 @@ namespace Nektar
                                 std::string equation, userDefined;
 
                                 while(attr) {
-                                
+
                                     attrName = attr->Name();
-                                    
+
                                     if (attrName=="USERDEFINEDTYPE") {
-                                        
+
                                         // Do stuff for the user defined attribute
                                         attrData = attr->Value();
                                         ASSERTL0(!attrData.empty(), "USERDEFINEDTYPE attribute must have associated value.");
@@ -397,17 +397,17 @@ namespace Nektar
                                      else if(attrName=="VALUE")
                                      {
                                         ASSERTL0(attrName == "VALUE", (std::string("Unknown attribute: ") + attrName).c_str());
-                                        
+
                                         attrData = attr->Value();
                                         ASSERTL0(!attrData.empty(), "VALUE attribute must be specified.");
 
                                         SubstituteFunction(attrData);
-                                        
-                                        equation = attrData;                                        
+
+                                        equation = attrData;
                                       }
                                       attr = attr->Next();
                                     }
-                                                                        
+
                                     BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr(equation, userDefined));
                                     (*boundaryConditions)[*iter]  = neumannCondition;
                             }
@@ -439,23 +439,23 @@ namespace Nektar
                             if (attr)
                             {
                                 std::string equation, userDefined;
-                                
+
                                 while(attr) {
-                                
+
                                    attrName = attr->Name();
 
                                     if (attrName=="USERDEFINEDTYPE") {
-                                        
+
                                         // Do stuff for the user defined attribute
                                         attrData = attr->Value();
                                         ASSERTL0(!attrData.empty(), "USERDEFINEDTYPE attribute must have associated value.");
 
                                         SubstituteFunction(attrData);
-                                        
+
                                         userDefined = attrData;
                                     }
                                     else if(attrName=="VALUE")
-                                    {                                        
+                                    {
                                         ASSERTL0(attrName == "VALUE", (std::string("Unknown attribute: ") + attrName).c_str());
 
                                         attrData = attr->Value();
@@ -507,9 +507,9 @@ namespace Nektar
                                 while(attr){
 
                                 attrName1 = attr->Name();
-                               
+
                                 if (attrName1=="USERDEFINEDTYPE") {
-                                
+
                                     // Do stuff for the user defined attribute
                                     attrData1 = attr->Value();
                                     ASSERTL0(!attrData1.empty(), "USERDEFINEDTYPE attribute must have associated value.");
@@ -531,7 +531,7 @@ namespace Nektar
 
                                     attr = attr->Next();
                                     ASSERTL0(attr, "Unable to read PRIMCOEFF attribute.");
-                                
+
                                     attrName1= attr->Name();
                                     ASSERTL0(attrName1 == "PRIMCOEFF", (std::string("Unknown attribute: ") + attrName1).c_str());
 
@@ -546,7 +546,7 @@ namespace Nektar
                                  attr = attr->Next();
 
                                 }
-                                
+
                                 BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr(equation1, equation2, userDefined));
                                 (*boundaryConditions)[*iter]  = robinCondition;
                             }
@@ -576,13 +576,13 @@ namespace Nektar
                                 int beg = attrData.find_first_of("[");
                                 int end = attrData.find_first_of("]");
                                 std::string periodicBndRegionIndexStr = attrData.substr(beg+1,end-beg-1);
-                                ASSERTL0(beg < end, (std::string("Error reading periodic boundary region definition for boundary region: ") 
+                                ASSERTL0(beg < end, (std::string("Error reading periodic boundary region definition for boundary region: ")
                                                       + boundaryRegionIDStrm.str()).c_str());
 
                                 vector<unsigned int> periodicBndRegionIndex;
                                 bool parseGood = ParseUtils::GenerateSeqVector(periodicBndRegionIndexStr.c_str(), periodicBndRegionIndex);
 
-                                ASSERTL0(parseGood && (periodicBndRegionIndex.size()==1), (std::string("Unable to read periodic boundary condition for boundary region: ") 
+                                ASSERTL0(parseGood && (periodicBndRegionIndex.size()==1), (std::string("Unable to read periodic boundary condition for boundary region: ")
                                                                               + boundaryRegionIDStrm.str()).c_str());
 
                                 BoundaryConditionShPtr periodicCondition(MemoryManager<PeriodicBoundaryCondition>::AllocateSharedPtr(periodicBndRegionIndex[0]));
@@ -616,7 +616,7 @@ namespace Nektar
                                 int beg = attrData.find_first_of("[");
                                 int end = attrData.find_first_of("]");
                                 std::string periodicBndRegionIndexStr = attrData.substr(beg+1,end-beg-1);
-                                ASSERTL0(beg < end, (std::string("Error reading periodic boundary region definition for boundary region: ") 
+                                ASSERTL0(beg < end, (std::string("Error reading periodic boundary region definition for boundary region: ")
                                                      + boundaryRegionIDStrm.str()).c_str());
 
                                 vector<unsigned int> periodicBndRegionIndex;
@@ -646,7 +646,7 @@ namespace Nektar
             }
        }
 
-      
+
         void BoundaryConditions::ReadForcingFunctions(TiXmlElement *conditions)
         {
             TiXmlElement *forcingFunctionsElement = conditions->FirstChildElement("FORCING");
@@ -715,7 +715,7 @@ namespace Nektar
                 ExactSolutionShPtr exactSolutionShPtr(MemoryManager<ExactSolution>::AllocateSharedPtr("0"));
                 m_ExactSolution[*varIter] = exactSolutionShPtr;
             }
-            
+
             if (exactSolutionElement)
             {
                 TiXmlElement *exactSolution = exactSolutionElement->FirstChildElement("F");
@@ -725,10 +725,10 @@ namespace Nektar
                 {
                     std::string variableStr = exactSolution->Attribute("VAR");
                     ASSERTL0(!variableStr.empty(), "The variable must be specified for the exact solution.");
-                    
+
                     std::string fcnStr = exactSolution->Attribute("VALUE");
                     ASSERTL0(!fcnStr.empty(), (std::string("The exact solution function must be specified for variable: ") + variableStr).c_str());
-                    
+
                     /// Check the RHS against the functions defined in
                     /// m_Functions.  If the name on the RHS is found
                     /// in the function map, then use the function
@@ -759,23 +759,23 @@ namespace Nektar
             if (solverInfoElement)
             {
                 TiXmlElement *solverInfo = solverInfoElement->FirstChildElement("I");
-                
+
                 while (solverInfo)
                 {
                     std::string solverProperty = solverInfo->Attribute("PROPERTY");
                     // make sure that solver property is capitalised
                     transform(solverProperty.begin(), solverProperty.end(), solverProperty.begin(), (int(*)(int))std::toupper);
                     ASSERTL0(!solverProperty.empty(), "Unable to find PROPERTY value.");
-                    
+
                     std::string solverValue    = solverInfo->Attribute("VALUE");
                     ASSERTL0(!solverValue.empty(),"Unable to find VALUE string");
 
                     SolverInfoMap::iterator solverInfoIter = m_SolverInfo.find(solverProperty);
-                    
+
                     ASSERTL0(solverInfoIter == m_SolverInfo.end(),
                              (std::string("SolverInfo value: ") + solverProperty
                               + std::string(" already specified.")).c_str());
-                    
+
                     // Set Variable
                     m_SolverInfo[solverProperty] = solverValue;
                     solverInfo = solverInfo->NextSiblingElement("I");
@@ -791,12 +791,12 @@ namespace Nektar
             if (userDefinedEqnElement)
             {
                 TiXmlElement *userDefinedEqn = userDefinedEqnElement->FirstChildElement("F");
-                
+
                 while (userDefinedEqn)
                 {
                     std::string lhsString = userDefinedEqn->Attribute("LHS");
                     ASSERTL0(!lhsString.empty(), "Unable to find LHS value.");
-                    
+
                     std::string fcnString = userDefinedEqn->Attribute("VALUE");
                     ASSERTL0(!fcnString.empty(),"Unable to find eqn value");
 
@@ -806,13 +806,13 @@ namespace Nektar
                     /// contained in the function map in place of the
                     /// RHS.
                     SubstituteFunction(fcnString);
-                    
+
                     UserDefinedEqnMap::iterator userDefinedEqnIter = m_UserDefinedEqn.find(lhsString);
 
                     ASSERTL0(userDefinedEqnIter == m_UserDefinedEqn.end(),
                              (std::string("UserDefinedEqn value: ") + lhsString
                               + std::string(" already specified.")).c_str());
-                    
+
                     // Set Variable
                     UserDefinedEqnShPtr userDefinedEqnShPtr(MemoryManager<UserDefinedEqn>::AllocateSharedPtr(fcnString));
                     m_UserDefinedEqn[lhsString] = userDefinedEqnShPtr;
@@ -850,18 +850,18 @@ namespace Nektar
                     {
                         std::string variableStr = initialCondition->Attribute("VAR");
                         ASSERTL0(!variableStr.empty(), "The variable must be specified for the initial solution.");
-                        
+
                         std::string fcnStr = initialCondition->Attribute("VALUE");
                         ASSERTL0(!fcnStr.empty(),
                                  (std::string("The initial condition function must be specified for variable: ") + variableStr).c_str());
-                        
+
                         /// Check the RHS against the functions defined in
                         /// m_Functions.  If the name on the RHS is found
                         /// in the function map, then use the function
                         /// contained in the function map in place of the
                         /// RHS.
                         SubstituteFunction(fcnStr);
-                        
+
                         InitialConditionsMap::iterator initialConditionFcnsIter = m_InitialConditions.find(variableStr);
 
                         if (initialConditionFcnsIter != m_InitialConditions.end())
@@ -879,9 +879,9 @@ namespace Nektar
                         std::string restartStr = "RESTART";
                         std::string fileStr = initialCondition->Attribute("FILE");
                         ASSERTL0(!fileStr.empty(), "A file  must be specified for the restart initial solution.");
-                        
+
                         InitialConditionShPtr initialConditionShPtr(MemoryManager<InitialCondition>::AllocateSharedPtr("00.0"));
-                        
+
                         m_InitialConditions[restartStr] = initialConditionShPtr;
                         m_InitialConditions[restartStr]->SetEquation(fileStr);
                     }
@@ -894,7 +894,7 @@ namespace Nektar
                 }
             }
         }
-        
+
         bool BoundaryConditions::CheckForParameter(const std::string &parmName)
         {
             bool returnval;
@@ -912,7 +912,7 @@ namespace Nektar
 
             return returnval;
         }
-        
+
         NekDouble BoundaryConditions::GetParameter(const std::string &parmName)
         {
             ParamMap::iterator paramMapIter = m_Parameters.find(parmName);
@@ -955,7 +955,7 @@ namespace Nektar
             {
                 returnval = false;
             }
-            
+
             return returnval;
         }
 
@@ -1005,7 +1005,7 @@ namespace Nektar
         ConstForcingFunctionShPtr BoundaryConditions::GetForcingFunction(const std::string &var) const
         {
             ConstForcingFunctionShPtr returnval;
-            
+
             // Check that var is defined in forcing function list.
             ForcingFunctionsMap::const_iterator ffIter = m_ForcingFunctions.find(var);
 
@@ -1036,7 +1036,7 @@ namespace Nektar
         bool BoundaryConditions::ExactSolutionExists(int indx) const
         {
             bool returnval = false;
-     
+
             // Check that var is defined in forcing function list.
             ExactSolutionMap::const_iterator exSolnIter = m_ExactSolution.find(m_Variables[indx]);
 
@@ -1068,7 +1068,7 @@ namespace Nektar
         ConstExactSolutionShPtr BoundaryConditions::GetExactSolution(const std::string &var) const
         {
             ConstExactSolutionShPtr returnval;
-            
+
             // Check that var is defined in forcing function list.
             ExactSolutionMap::const_iterator exSolnIter = m_ExactSolution.find(var);
 
@@ -1089,10 +1089,10 @@ namespace Nektar
         bool BoundaryConditions::UserDefinedEqnExists(const std::string &var) const
         {
             bool returnval = false;
-            
+
             // Check that var is defined in forcing function list.
             UserDefinedEqnMap::const_iterator userDefIter = m_UserDefinedEqn.find(var);
-            
+
             if(userDefIter != m_UserDefinedEqn.end())
             {
                 returnval = true;
@@ -1122,10 +1122,10 @@ namespace Nektar
         ConstUserDefinedEqnShPtr BoundaryConditions::GetUserDefinedEqn(const std::string &var) const
         {
             ConstUserDefinedEqnShPtr returnval;
-            
+
             // Check that var is defined in forcing function list.
             UserDefinedEqnMap::const_iterator userDefIter = m_UserDefinedEqn.find(var);
-            
+
             if(userDefIter != m_UserDefinedEqn.end())
             {
                 returnval = userDefIter->second;
@@ -1143,7 +1143,7 @@ namespace Nektar
         bool BoundaryConditions::InitialConditionExists(int indx) const
         {
             bool returnval = false;
-     
+
             // Check that var is defined in forcing function list.
             InitialConditionsMap::const_iterator ffIter = m_InitialConditions.find(m_Variables[indx]);
 
@@ -1176,7 +1176,7 @@ namespace Nektar
         ConstInitialConditionShPtr BoundaryConditions::GetInitialCondition(const string &var) const
         {
             ConstInitialConditionShPtr returnval;
-            
+
             // Check that var is defined in forcing function list.
             InitialConditionsMap::const_iterator ffIter = m_InitialConditions.find(var);
 
@@ -1199,7 +1199,7 @@ namespace Nektar
         bool BoundaryConditions::FoundInitialCondition(const std::string &var)
         {
             bool returnval = false;
-            
+
             // Check that var is defined in forcing function list.
             InitialConditionsMap::const_iterator ffIter = m_InitialConditions.find(var);
 

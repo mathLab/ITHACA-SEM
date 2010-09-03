@@ -50,8 +50,8 @@
     <COMPOSITE>
       <C ID="0"> T[0-3] </C>
       <C ID="1"> Q[4-5] </C>
-      <C ID="2"> E[2,7,4,9] </C>
-      <C ID="3"> E[0,1,10,11] </C>
+      <C ID="2"> E[0,1,2,7] </C>
+      <C ID="3"> E[4,9,10,11] </C>
     </COMPOSITE>
 
     <DOMAIN> C[0-1] </DOMAIN>
@@ -59,26 +59,26 @@
   </GEOMETRY>
   
   <EXPANSIONS>
-    <E COMPOSITE="C[0]" NUMMODES="11" TYPE="MODIFIED" />
-    <E COMPOSITE="C[1]" NUMMODES="11" TYPE="MODIFIED" />
+    <E COMPOSITE="C[0]" NUMMODES="14" TYPE="MODIFIED" />
+    <E COMPOSITE="C[1]" NUMMODES="14" TYPE="MODIFIED" />
   </EXPANSIONS>
 
   <CONDITIONS>
 
     <PARAMETERS>
-      <P> TimeStep       = 0.0001            </P>
-      <P> NumSteps       = 5000              </P>
-      <P> FinTime        = TimeStep*NumSteps </P>
-      <P> IO_CheckSteps  = 1000              </P>
+      <P> FinTime        = 0.75             </P>
+      <P> NumSteps       = 500              </P>
+      <P> TimeStep       = FinTime/NumSteps </P>
+      <P> IO_CheckSteps  = NumSteps         </P>
       <P> IO_InfoSteps   = 1000              </P>
-      <P> wavefreq       = PI                </P>
-      <P> epsilon        = 1.0               </P>
+      <P> advx           = 1                 </P>
+      <P> advy           = 1                 </P>
     </PARAMETERS>
 
     <SOLVERINFO>
-      <I PROPERTY="EQTYPE" VALUE="UnsteadyDiffusion" />
-      <I PROPERTY="Projection" VALUE="DisContinuous"/>
-      <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
+      <I PROPERTY="EQTYPE" VALUE="UnsteadyAdvection"/>
+      <I PROPERTY="Projection" VALUE="Continuous"/>    
+      <I PROPERTY="TimeIntegrationMethod"  VALUE="ClassicalRungeKutta4"/>
     </SOLVERINFO> 
 
     <VARIABLES>
@@ -92,19 +92,24 @@
 
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
-        <D VAR="u" VALUE="0" />
+        <D VAR="u" USERDEFINEDTYPE="TimeDependent"  VALUE="sin(PI*(x-advx*t))*cos(PI*(y-advy*t))" />
       </REGION>
       <REGION REF="1">
-        <N VAR="u" VALUE="0" />
+        <N VAR="u"  VALUE="0" />
       </REGION>
     </BOUNDARYCONDITIONS>
 
+    <USERDEFINEDEQNS>
+      <F LHS="Vx" VALUE="1"  />
+      <F LHS="Vy" VALUE="1" />
+    </USERDEFINEDEQNS>   
+    
     <EXACTSOLUTION>
-      <F VAR="u" VALUE="exp(-2.0*wavefreq*wavefreq*FinTime)*sin(wavefreq*x)*cos(wavefreq*y)" />
+      <F VAR="u" VALUE="sin(PI*(x-advx*t))*cos(PI*(y-advy*t))" />
     </EXACTSOLUTION>
     
     <INITIALCONDITIONS>
-      <F VAR="u" VALUE="sin(wavefreq*x)*cos(wavefreq*y)" />
+      <F VAR="u" VALUE="sin(PI*x)*cos(PI*y)" />
     </INITIALCONDITIONS>
     
   </CONDITIONS>

@@ -12,8 +12,8 @@ using namespace Nektar;
 int main(int argc, char *argv[])
 {
     int     i, j, nq,  coordim;
-    Array<OneD,NekDouble>  fce; 
-    Array<OneD,NekDouble>  xc0,xc1,xc2; 
+    Array<OneD,NekDouble>  fce;
+    Array<OneD,NekDouble>  xc0,xc1,xc2;
 
     if(argc != 3)
     {
@@ -28,12 +28,12 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Read in mesh from input file
     string meshfile(argv[argc-2]);
-    SpatialDomains::MeshGraph graph; 
+    SpatialDomains::MeshGraph graph;
     SpatialDomains::MeshGraphSharedPtr graphShPt = graph.Read(meshfile);
     //----------------------------------------------
-    
+
     //----------------------------------------------
-    // Import field file. 
+    // Import field file.
     string fieldfile(argv[argc-1]);
     vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     // Set up Expansion information
     vector< vector<LibUtilities::PointsType> > pointstype;
     for(i = 0; i < fielddef.size(); ++i)
-    {       
+    {
         vector<LibUtilities::PointsType> ptype;
         for(j = 0; j < 2; ++j)
         {
@@ -56,8 +56,8 @@ int main(int argc, char *argv[])
     //----------------------------------------------
 
 
-    //----------------------------------------------        
-    // Define Expansion 
+    //----------------------------------------------
+    // Define Expansion
     int expdim   = graphShPt->GetMeshDimension();
     int nfields = fielddef[0]->m_Fields.size();
     Array<OneD, MultiRegions::ExpListSharedPtr> Exp(nfields);
@@ -67,13 +67,13 @@ int main(int argc, char *argv[])
     case 1:
         {
             SpatialDomains::MeshGraph1DSharedPtr mesh;
-            
+
             if(!(mesh = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph1D>(graphShPt)))
             {
                 ASSERTL0(false,"Dynamics cast failed");
             }
 
-            ASSERTL0(fielddef[0]->m_NumHomogeneousDir != 2,"NumHomogeneousDir is not set up for 2");
+            ASSERTL0(fielddef[0]->m_NumHomogeneousDir <= 1,"NumHomogeneousDir is only set up for 1");
 
             if(fielddef[0]->m_NumHomogeneousDir == 1)
             {
@@ -81,15 +81,15 @@ int main(int argc, char *argv[])
 
                 // Define Homogeneous expansion
                 int nplanes = fielddef[0]->m_NumModes[1];
-                
+
                 // choose points to be at evenly spaced points at
                 const LibUtilities::PointsKey Pkey(nplanes+1,LibUtilities::ePolyEvenlySpaced);
                 const LibUtilities::BasisKey  Bkey(fielddef[0]->m_Basis[1],nplanes,Pkey);
-                NekDouble ly = fielddef[0]->m_HomogeneousLengths[0]; 
+                NekDouble ly = fielddef[0]->m_HomogeneousLengths[0];
 
                 Exp2DH1 = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::AllocateSharedPtr(Bkey,ly,*mesh);
                 Exp[0] = Exp2DH1;
-                
+
                 for(i = 1; i < nfields; ++i)
                 {
                     Exp[i] = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::AllocateSharedPtr(*Exp2DH1);
@@ -110,28 +110,30 @@ int main(int argc, char *argv[])
     case 2:
         {
             SpatialDomains::MeshGraph2DSharedPtr mesh;
-            
+
             if(!(mesh = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(graphShPt)))
             {
                 ASSERTL0(false,"Dynamics cast failed");
             }
-            
+
+            ASSERTL0(fielddef[0]->m_NumHomogeneousDir <= 1,"NumHomogeneousDir is only set up for 1");
+
             if(fielddef[0]->m_NumHomogeneousDir == 1)
             {
                 MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1;
 
                 // Define Homogeneous expansion
                 int nplanes = fielddef[0]->m_NumModes[2];
-                
+
                 // choose points to be at evenly spaced points at
                 // nplanes + 1 points
                 const LibUtilities::PointsKey Pkey(nplanes+1,LibUtilities::ePolyEvenlySpaced);
                 const LibUtilities::BasisKey  Bkey(fielddef[0]->m_Basis[2],nplanes,Pkey);
-                NekDouble lz = fielddef[0]->m_HomogeneousLengths[0]; 
+                NekDouble lz = fielddef[0]->m_HomogeneousLengths[0];
 
 Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(Bkey,lz,*mesh);
                 Exp[0] = Exp3DH1;
-                
+
                 for(i = 1; i < nfields; ++i)
                 {
                     Exp[i] = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(*Exp3DH1);
@@ -142,7 +144,7 @@ Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr
                 MultiRegions::ExpList2DSharedPtr Exp2D;
                 Exp2D = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(*mesh);
                 Exp[0] =  Exp2D;
-                
+
                 for(i = 1; i < nfields; ++i)
                 {
                     Exp[i] = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(*Exp2D);
@@ -157,25 +159,25 @@ Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr
         ASSERTL0(false,"Expansion dimension not recognised");
         break;
     }
-    //----------------------------------------------  
-    
     //----------------------------------------------
-    // Copy data to file 
+
+    //----------------------------------------------
+    // Copy data to file
     for(j = 0; j < nfields; ++j)
     {
         for(int i = 0; i < fielddata.size(); ++i)
         {
             Exp[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_Fields[j]);
         }
-        Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());    
+        Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
     }
     //----------------------------------------------
-    
+
     //----------------------------------------------
     // Write solution  depending on #define
 #ifdef TECPLOT
     std::string var = "";
-    
+
     for(int j = 0; j < Exp.num_elements(); ++j)
     {
 	var = var + ", " + fielddef[0]->m_Fields[j];
@@ -200,9 +202,9 @@ Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr
     for(i = 0; i < nfields; ++i)
     {
         string   outfile(strtok(argv[argc-1],"."));
-        outfile += "_" + fielddef[0]->m_Fields[i] + ".pos"; 
+        outfile += "_" + fielddef[0]->m_Fields[i] + ".pos";
         ofstream outstrm(outfile.c_str());
-        
+
         Exp[i]->WriteToFile(outstrm,eGmsh);
         outstrm.close();
     }

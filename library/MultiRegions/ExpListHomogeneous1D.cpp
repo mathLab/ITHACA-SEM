@@ -29,11 +29,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: An ExpList which is homogeneous in 1-direction 
+// Description: An ExpList which is homogeneous in 1-direction
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <MultiRegions/ExpListhomogeneous1D.h>
+#include <MultiRegions/ExpListHomogeneous1D.h>
 
 namespace Nektar
 {
@@ -58,7 +58,7 @@ namespace Nektar
             m_homogeneousBasis = LibUtilities::BasisManager()[HomoBasis];
 
             int nzplanes = m_homogeneousBasis->GetNumPoints();
-            
+
             m_planes = Array<OneD,ExpListSharedPtr>(nzplanes);
         }
 
@@ -90,7 +90,7 @@ namespace Nektar
 
             for(int n = 0; n < nplanes; ++n)
             {
-                m_planes[n]->FwdTrans(inarray+cnt, tmparray = outarray + cnt1, 
+                m_planes[n]->FwdTrans(inarray+cnt, tmparray = outarray + cnt1,
                                       UseContCoeffs);
                 cnt   += m_planes[n]->GetTotPoints();
 
@@ -112,7 +112,7 @@ namespace Nektar
             int cnt = 0, cnt1 = 0;
             Array<OneD, NekDouble> tmparray;
             int nplanes = m_planes.num_elements();
-            
+
             for(int n = 0; n < nplanes; ++n)
             {
                 m_planes[n]->BwdTrans(inarray+cnt, tmparray = outarray + cnt1,
@@ -137,7 +137,7 @@ namespace Nektar
             int cnt = 0, cnt1 = 0;
             Array<OneD, NekDouble> tmparray;
             int nplanes = m_planes.num_elements();
-            
+
             for(int n = 0; n < nplanes; ++n)
             {
                 m_planes[n]->IProductWRTBase(inarray+cnt, tmparray = outarray + cnt1,UseContCoeffs);
@@ -153,7 +153,7 @@ namespace Nektar
                 cnt1   += m_planes[n]->GetTotPoints();
             }
         }
-        
+
         void ExpListHomogeneous1D::Homogeneous1DTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool IsForwards, bool UseContCoeffs)
         {
             DNekBlkMatSharedPtr blkmat;
@@ -183,31 +183,31 @@ namespace Nektar
 
             int nrows = blkmat->GetRows();
             int ncols = blkmat->GetColumns();
-            
+
             Array<OneD, NekDouble> sortedinarray(ncols);
             Array<OneD, NekDouble> sortedoutarray(nrows);
 
-            
+
             ShuffleIntoHomogeneous1DClosePacked(inarray,sortedinarray,!IsForwards);
-            
+
             // Create NekVectors from the given data arrays
             NekVector<const NekDouble> in (ncols,sortedinarray,eWrapper);
             NekVector<      NekDouble> out(nrows,sortedoutarray,eWrapper);
-            
+
             // Perform matrix-vector multiply.
             out = (*blkmat)*in;
-            
+
             UnshuffleFromHomogeneous1DClosePacked(sortedoutarray,outarray,IsForwards);
         }
 
         void ExpListHomogeneous1D::ShuffleIntoHomogeneous1DClosePacked(
-                              const Array<OneD, const NekDouble> &inarray, 
+                              const Array<OneD, const NekDouble> &inarray,
                               Array<OneD, NekDouble> &outarray,
                               bool UseNumModes)
         {
             int i, pts_per_plane;
             int n = inarray.num_elements();
-            int packed_len; 
+            int packed_len;
 
             pts_per_plane = n/m_planes.num_elements();
 
@@ -221,7 +221,7 @@ namespace Nektar
             }
 
             ASSERTL1(&inarray[0] != &outarray[0],"Inarray and outarray cannot be the same");
-            
+
             for(i = 0; i < packed_len; ++i)
             {
                 Vmath::Vcopy(pts_per_plane,&(inarray[i*pts_per_plane]),1,
@@ -230,13 +230,13 @@ namespace Nektar
         }
 
         void ExpListHomogeneous1D::UnshuffleFromHomogeneous1DClosePacked(
-                              const Array<OneD, const NekDouble> &inarray, 
+                              const Array<OneD, const NekDouble> &inarray,
                               Array<OneD, NekDouble> &outarray,
                               bool UseNumModes)
         {
             int i,pts_per_plane;
             int n = inarray.num_elements();
-            int packed_len; 
+            int packed_len;
 
             // use length of inarray to determine data storage type
             // (i.e.modal or physical).
@@ -261,13 +261,13 @@ namespace Nektar
             }
         }
 
-        DNekBlkMatSharedPtr ExpListHomogeneous1D::GetHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, bool UseContCoeffs) const 
+        DNekBlkMatSharedPtr ExpListHomogeneous1D::GetHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, bool UseContCoeffs) const
         {
             Homo1DBlockMatrixMap::iterator matrixIter = m_homogeneous1DBlockMat->find(mattype);
 
             if(matrixIter == m_homogeneous1DBlockMat->end())
             {
-                return ((*m_homogeneous1DBlockMat)[mattype] = 
+                return ((*m_homogeneous1DBlockMat)[mattype] =
                         GenHomogeneous1DBlockMatrix(mattype,UseContCoeffs));
             }
             else
@@ -276,15 +276,15 @@ namespace Nektar
             }
         }
 
-        
+
         DNekBlkMatSharedPtr ExpListHomogeneous1D::GenHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, bool UseContCoeffs) const
-        {      
+        {
             int i;
             int n_exp = 0;
             DNekMatSharedPtr    loc_mat;
             DNekBlkMatSharedPtr BlkMatrix;
-            
-            if((mattype == eForwardsCoeffSpace)  
+
+            if((mattype == eForwardsCoeffSpace)
                ||(mattype == eBackwardsCoeffSpace)) // will operate on m_coeffs
             {
                 if(UseContCoeffs)
@@ -300,7 +300,7 @@ namespace Nektar
             {
                 n_exp = m_planes[0]->GetTotPoints(); // will operatore on m_phys
             }
-            
+
             Array<OneD,unsigned int> nrows(n_exp);
             Array<OneD,unsigned int> ncols(n_exp);
 
@@ -318,9 +318,9 @@ namespace Nektar
             MatrixStorage blkmatStorage = eDIAGONAL;
             BlkMatrix = MemoryManager<DNekBlkMat>
                 ::AllocateSharedPtr(nrows,ncols,blkmatStorage);
-            
+
             StdRegions::StdSegExp StdSeg(m_homogeneousBasis->GetBasisKey());
-            
+
             if((mattype == eForwardsCoeffSpace)||(mattype == eForwardsPhysSpace))
             {
                 StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,
@@ -337,35 +337,35 @@ namespace Nektar
 
                 loc_mat = StdSeg.GetStdMatrix(matkey);
             }
-            
-            // set up array of block matrices. 
+
+            // set up array of block matrices.
             for(i = 0; i < n_exp; ++i)
             {
                 BlkMatrix->SetBlock(i,i,loc_mat);
             }
-            
+
             return BlkMatrix;
         }
 
         std::vector<SpatialDomains::FieldDefinitionsSharedPtr> ExpListHomogeneous1D::v_GetFieldDefinitions()
         {
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> returnval;            
-            // Set up Homogeneous length details. 
+            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> returnval;
+            // Set up Homogeneous length details.
             Array<OneD,LibUtilities::BasisSharedPtr> HomoBasis(1,m_homogeneousBasis);
             std::vector<NekDouble> HomoLen;
             HomoLen.push_back(m_lhom);
-            
+
             m_planes[0]->GeneralGetFieldDefinitions(returnval, 1, HomoBasis, HomoLen);
             return returnval;
         }
 
         void  ExpListHomogeneous1D::v_GetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef)
         {
-            // Set up Homogeneous length details. 
+            // Set up Homogeneous length details.
             Array<OneD,LibUtilities::BasisSharedPtr> HomoBasis(1,m_homogeneousBasis);
             std::vector<NekDouble> HomoLen;
             HomoLen.push_back(m_lhom);
-            
+
              // enforce NumHomoDir == 1 by direct call
             m_planes[0]->GeneralGetFieldDefinitions(fielddef,1, HomoBasis,HomoLen);
         }
@@ -377,14 +377,14 @@ namespace Nektar
             int nzmodes = m_homogeneousBasis->GetNumModes();
             int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();
 
-            // Determine mapping from element ids to location in 
+            // Determine mapping from element ids to location in
             // expansion list
             map<int, int> ElmtID_to_ExpID;
             for(i = 0; i < m_planes[0]->GetExpSize(); ++i)
             {
                 ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
             }
-            
+
             for(i = 0; i < fielddef->m_ElementIDs.size(); ++i)
             {
                 int eid     = ElmtID_to_ExpID[fielddef->m_ElementIDs[i]];
@@ -418,13 +418,13 @@ namespace Nektar
 
             ASSERTL0(i!= fielddef->m_Fields.size(),"Field not found in data file");
 
-            // Determine mapping from element ids to location in 
+            // Determine mapping from element ids to location in
             // expansion list
             map<int, int> ElmtID_to_ExpID;
             for(i = 0; i < m_planes[0]->GetExpSize(); ++i)
             {
                 ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
-            }            
+            }
 
             for(i = 0; i < fielddef->m_ElementIDs.size(); ++i)
             {
@@ -438,7 +438,7 @@ namespace Nektar
             }
         }
 
- 
+
         /**
          * Write Tecplot Files Header
          * @param   outfile Output file name.
@@ -468,10 +468,33 @@ namespace Nektar
 
             for(int n = 0; n < m_planes.num_elements(); ++n)
             {
-                (*m_exp)[expansion]->SetPhys(m_phys+m_phys_offset[expansion]+ 
+                (*m_exp)[expansion]->SetPhys(m_phys+m_phys_offset[expansion]+
                                              n*npoints_per_plane);
                 (*m_exp)[expansion]->WriteTecplotField(outfile);
             }
+        }
+
+        void ExpListHomogeneous1D::v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
+                                        std::string var)
+        {
+            int i;
+            int nq = (*m_exp)[expansion]->GetTotPoints();
+            int npoints_per_plane = m_planes[0]->GetTotPoints();
+
+            // printing the fields of that zone
+            outfile << "        <DataArray type=\"Float32\" Name=\""
+                    << var << "\">" << endl;
+            outfile << "          ";
+            for (int n = 0; n < m_planes.num_elements(); ++n)
+            {
+                const Array<OneD, NekDouble> phys = m_phys + m_phys_offset[expansion] + n*npoints_per_plane;
+                for(i = 0; i < nq; ++i)
+                {
+                    outfile << (fabs(phys[i]) < NekConstants::kNekZeroTol ? 0 : phys[i]) << " ";
+                }
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
         }
 
 

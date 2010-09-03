@@ -44,7 +44,7 @@
 #include <MultiRegions/LocalToGlobalDGMap.h>
 #include <LocalRegions/SegExp.h>
 #include <SpatialDomains/MeshGraph2D.h>
-#include <SpatialDomains/BoundaryConditions.h>
+#include <SpatialDomains/Conditions.h>
 #include <SpatialDomains/SegGeom.h>
 
 namespace Nektar
@@ -66,77 +66,77 @@ namespace Nektar
                            const int bc_loc = 0,
                            bool SetUpJustDG = false,
                            bool DeclareCoeffPhysArrays = true);
-            
+
             DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
-                           SpatialDomains::BoundaryConditions &bcs, 
+                           SpatialDomains::BoundaryConditions &bcs,
                            const int bc_loc = 0,
                            const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
                            bool SetUpJustDG = true,
                            bool DeclareCoeffPhysArrays = true);
 
             DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
-                           SpatialDomains::BoundaryConditions &bcs, 
+                           SpatialDomains::BoundaryConditions &bcs,
                            const std::string variable,
                            const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
                            bool SetUpJustDG = true,
                            bool DeclareCoeffPhysArrays = true);
-            
-            
+
+
             DisContField2D(const DisContField2D &In, bool DeclareCoeffPhysArrays = true);
-            
+
             ~DisContField2D();
-            
+
             inline ExpList1DSharedPtr &GetTrace(void)
             {
                 return m_trace;
             }
-	    
+
             inline LocalToGlobalDGMapSharedPtr &GetTraceMap(void)
             {
                 return m_traceMap;
             }
-            
+
             /// Determines if another ContField2D shares the same boundary
             /// conditions as this field.
             bool SameTypeOfBoundaryConditions(const DisContField2D &In);
 
             /**
-             * \brief This function evaluates the boundary conditions at a certain 
+             * \brief This function evaluates the boundary conditions at a certain
              * time-level.
              *
              * Based on the boundary condition \f$g(\boldsymbol{x},t)\f$ evaluated
-             * at a given time-level \a t, this function transforms the boundary 
-             * conditions onto the coefficients of the (one-dimensional) boundary 
+             * at a given time-level \a t, this function transforms the boundary
+             * conditions onto the coefficients of the (one-dimensional) boundary
              * expansion. Depending on the type of boundary conditions, these
              * expansion coefficients are calculated in different ways:
              * - <b>Dirichlet boundary conditions</b><BR>
-             *   In order to ensure global \f$C^0\f$ continuity of the spectral/hp 
-             *   approximation, the Dirichlet boundary conditions are projected onto 
-             *   the boundary expansion by means of a modified \f$C^0\f$ continuous  
+             *   In order to ensure global \f$C^0\f$ continuity of the spectral/hp
+             *   approximation, the Dirichlet boundary conditions are projected onto
+             *   the boundary expansion by means of a modified \f$C^0\f$ continuous
              *   Galerkin projection. This projection can be viewed as a collocation
-             *   projection at the vertices, followed by an \f$L^2\f$ projection on 
-             *   the interior modes of the edges. The resulting coefficients 
-             *   \f$\boldsymbol{\hat{u}}^{\mathcal{D}}\f$ will be stored for the 
+             *   projection at the vertices, followed by an \f$L^2\f$ projection on
+             *   the interior modes of the edges. The resulting coefficients
+             *   \f$\boldsymbol{\hat{u}}^{\mathcal{D}}\f$ will be stored for the
              *   boundary expansion.
              * - <b>Neumann boundary conditions</b>
-             *   In the discrete Galerkin formulation of the problem to be solved, 
-             *   the Neumann boundary conditions appear as the set of surface 
+             *   In the discrete Galerkin formulation of the problem to be solved,
+             *   the Neumann boundary conditions appear as the set of surface
              *   integrals: \f[\boldsymbol{\hat{g}}=\int_{\Gamma}
              *   \phi^e_n(\boldsymbol{x})g(\boldsymbol{x})d(\boldsymbol{x})\quad
              *   \forall n \f]
-             *   As a result, it are the coefficients \f$\boldsymbol{\hat{g}}\f$ 
+             *   As a result, it are the coefficients \f$\boldsymbol{\hat{g}}\f$
              *   that will be stored in the boundary expansion
              *
-             * \param time The time at which the boundary conditions should be 
+             * \param time The time at which the boundary conditions should be
              * evaluated
-             */ 
+             */
             void EvaluateBoundaryConditions(const NekDouble time = 0.0, const NekDouble x2_in = NekConstants::kNekUnsetDouble)
             {
                 ExpList2D::EvaluateBoundaryConditions(time,m_bndCondExpansions,m_bndConditions,x2_in);
             }
 
             GlobalLinSysSharedPtr GetGlobalBndLinSys(const GlobalLinSysKey &mkey);
-        
+
             /**
              * \brief This method extracts the "forward" and
              * "backward" trace data from the array #m_phys and puts
@@ -149,9 +149,9 @@ namespace Nektar
              * forward orientated trace/edge arrays.
              *
              * \return Updates  a NekDouble array \a Fwd and \a Bwd
-             */ 
+             */
 
-            void GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd, 
+            void GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd,
                                     Array<OneD,NekDouble> &Bwd);
 
             /**
@@ -167,7 +167,7 @@ namespace Nektar
              * one edge is always forwards and the adjacent edge is
              * backwards. We define a unique normal between two
              * adjacent edges as running from the #eFowards edge to the
-             * #eBackward edge. 
+             * #eBackward edge.
              *
              * This method collects/interpolates the edge data from
              * the 2D array \a field which contains information over a
@@ -187,9 +187,9 @@ namespace Nektar
              * forward orientated trace/edge arrays.
              *
              * \return Updates  a NekDouble array \a Fwd and \a Bwd
-             */ 
-            void GetFwdBwdTracePhys(const Array<OneD,const NekDouble>  &field, 
-                                    Array<OneD,NekDouble> &Fwd, 
+             */
+            void GetFwdBwdTracePhys(const Array<OneD,const NekDouble>  &field,
+                                    Array<OneD,NekDouble> &Fwd,
                                     Array<OneD,NekDouble> &Bwd);
 
             void ExtractTracePhys()
@@ -199,37 +199,37 @@ namespace Nektar
 
 
             void ExtractTracePhys(Array<OneD,NekDouble> &outarray);
-            
+
 
             /**
              * \brief This method extracts the trace (edges in 2D)
              * from the field \a inarray and puts the values in \a
-             * outarray. 
+             * outarray.
 
              * It assumes the field is C0 continuous so that
              * it can overwrite the edge data when visited by the two
              * adjacent elements.
              *
              * \param inarray is a NekDouble array which contains the 2D
-             * data from which we wish to extract the edge data 
+             * data from which we wish to extract the edge data
              *
              * \return Updates a NekDouble array \a outarray which
              * contains the edge information
-             */ 
-            void ExtractTracePhys(const Array<OneD, const NekDouble> &inarray, 
-                                  Array<OneD, NekDouble> &outarray);
-            
-
-            void AddTraceIntegral(const Array<OneD, const NekDouble> &Fx, 
-                                  const Array<OneD, const NekDouble> &Fy, 
+             */
+            void ExtractTracePhys(const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD, NekDouble> &outarray);
 
-            
-            void AddTraceIntegral(const Array<OneD, const NekDouble> &Fn, 
+
+            void AddTraceIntegral(const Array<OneD, const NekDouble> &Fx,
+                                  const Array<OneD, const NekDouble> &Fy,
                                   Array<OneD, NekDouble> &outarray);
 
-            void AddTraceBiIntegral(const Array<OneD, const NekDouble> &Fwd, 
-                                    const Array<OneD, const NekDouble> &Bwd, 
+
+            void AddTraceIntegral(const Array<OneD, const NekDouble> &Fn,
+                                  Array<OneD, NekDouble> &outarray);
+
+            void AddTraceBiIntegral(const Array<OneD, const NekDouble> &Fwd,
+                                    const Array<OneD, const NekDouble> &Bwd,
                                     Array<OneD, NekDouble> &outarray);
 
             inline const Array<OneD,const MultiRegions::ExpList1DSharedPtr>& GetBndCondExpansions()
@@ -241,14 +241,14 @@ namespace Nektar
             {
                 return m_bndConditions;
             }
-            
+
 
             /// \brief Set up a list of element ids and edge ids the link to the
             /// boundary conditions
-            void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID, 
+            void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                       Array<OneD,int> &EdgeID);
 
-            NekDouble L2_DGDeriv(const int dir, 
+            NekDouble L2_DGDeriv(const int dir,
                                  const Array<OneD, const NekDouble> &soln);
 
             /// \brief Set up an stl map containing the information
@@ -259,7 +259,7 @@ namespace Nektar
             /**
              * \brief The number of boundary segments on which
              * Dirichlet boundary conditions are imposed
-             */ 
+             */
             int m_numDirBndCondExpansions;
 
             /**
@@ -273,39 +273,39 @@ namespace Nektar
              * boundary region.  The values of the boundary conditions
              * are stored as the coefficients of the one-dimensional
              * expansion.
-             */ 
+             */
             Array<OneD,MultiRegions::ExpList1DSharedPtr>       m_bndCondExpansions;
 
             /**
              * \brief An array which contains the information about
              * the boundary condition on the different boundary
              * regions.
-             */ 
+             */
             Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
 
             /**
              * \brief This function discretises the boundary conditions by setting up
-             * a list of one-dimensional boundary expansions.    
+             * a list of one-dimensional boundary expansions.
              *
-             * According to their boundary region, the separate segmental boundary 
-             * expansions are bundled together in an object of the class 
-             * MultiRegions#ExpList1D. 
-             * The list of expansions of the Dirichlet boundary regions are listed 
+             * According to their boundary region, the separate segmental boundary
+             * expansions are bundled together in an object of the class
+             * MultiRegions#ExpList1D.
+             * The list of expansions of the Dirichlet boundary regions are listed
              * first in the array #m_bndCondExpansions.
              *
-             * \param graph2D A mesh, containing information about the domain and 
+             * \param graph2D A mesh, containing information about the domain and
              * the spectral/hp element expansion.
-             * \param bcs An entity containing information about the boundaries and 
+             * \param bcs An entity containing information about the boundaries and
              * boundary conditions.
-             * \param variable An optional parameter to indicate for which variable 
+             * \param variable An optional parameter to indicate for which variable
              * the boundary conditions should be discretised.
-             */ 
-            void GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D, 
-                                                    SpatialDomains::BoundaryConditions &bcs, 
+             */
+            void GenerateBoundaryConditionExpansion(SpatialDomains::MeshGraph2D &graph2D,
+                                                    SpatialDomains::BoundaryConditions &bcs,
                                                     const std::string variable,
                                                     bool DeclareCoeffPhysArrays = true);
 
-            virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID, 
+            virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID,
                                                 Array<OneD,int> &EdgeID)
             {
                 GetBoundaryToElmtMap(ElmtID,EdgeID);
@@ -328,34 +328,34 @@ namespace Nektar
                 return GetTraceMap();
             }
 
-            virtual void v_AddTraceIntegral(const Array<OneD, const NekDouble> &Fx, 
-                                          const Array<OneD, const NekDouble> &Fy, 
+            virtual void v_AddTraceIntegral(const Array<OneD, const NekDouble> &Fx,
+                                          const Array<OneD, const NekDouble> &Fy,
                                           Array<OneD, NekDouble> &outarray)
             {
                 AddTraceIntegral(Fx,Fy,outarray);
             }
 
-            virtual void v_AddTraceIntegral(const Array<OneD, const NekDouble> &Fn, 
+            virtual void v_AddTraceIntegral(const Array<OneD, const NekDouble> &Fn,
                                           Array<OneD, NekDouble> &outarray)
             {
                 AddTraceIntegral(Fn,outarray);
             }
 
-            virtual void v_AddTraceBiIntegral(const Array<OneD, const NekDouble> &Fwd, 
-                                          const Array<OneD, const NekDouble> &Bwd, 
+            virtual void v_AddTraceBiIntegral(const Array<OneD, const NekDouble> &Fwd,
+                                          const Array<OneD, const NekDouble> &Bwd,
                                           Array<OneD, NekDouble> &outarray)
             {
                 AddTraceBiIntegral(Fwd,Bwd,outarray);
             }
 
-            virtual void v_GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd, 
+            virtual void v_GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd,
                                               Array<OneD,NekDouble> &Bwd)
             {
                 GetFwdBwdTracePhys(Fwd,Bwd);
             }
 
-            virtual void v_GetFwdBwdTracePhys(const Array<OneD,const NekDouble>  &field, 
-                                              Array<OneD,NekDouble> &Fwd, 
+            virtual void v_GetFwdBwdTracePhys(const Array<OneD,const NekDouble>  &field,
+                                              Array<OneD,NekDouble> &Fwd,
                                               Array<OneD,NekDouble> &Bwd)
             {
                 GetFwdBwdTracePhys(field, Fwd,Bwd);
@@ -365,7 +365,7 @@ namespace Nektar
             {
                 ExtractTracePhys(outarray);
             }
-            
+
             virtual void v_ExtractTracePhys(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
             {
                 ExtractTracePhys(inarray,outarray);
@@ -385,7 +385,7 @@ namespace Nektar
             {
                 return m_bndCondExpansions[i];
             }
-            
+
             inline Array<OneD, SpatialDomains::BoundaryConditionShPtr> &v_UpdateBndConditions()
             {
                 return m_bndConditions;
@@ -408,7 +408,7 @@ namespace Nektar
                           NekDouble lambda,
                     const Array<OneD, const NekDouble> &varLambda,
                     const Array<OneD, const Array<OneD, NekDouble> > &varCoeff);
-            
+
             virtual void v_HelmSolveDG(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,

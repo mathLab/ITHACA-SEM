@@ -59,24 +59,27 @@
   </GEOMETRY>
   
   <EXPANSIONS>
-    <E COMPOSITE="C[0]" NUMMODES="11" TYPE="MODIFIED" />
-    <E COMPOSITE="C[1]" NUMMODES="11" TYPE="MODIFIED" />
+    <E COMPOSITE="C[0]" NUMMODES="12" TYPE="MODIFIED" />
+    <E COMPOSITE="C[1]" NUMMODES="12" TYPE="MODIFIED" />
   </EXPANSIONS>
 
   <CONDITIONS>
 
     <PARAMETERS>
       <P> TimeStep       = 0.0001            </P>
-      <P> NumSteps       = 5000              </P>
+      <P> NumSteps       = 200              </P>
       <P> FinTime        = TimeStep*NumSteps </P>
-      <P> IO_CheckSteps  = 1000              </P>
-      <P> IO_InfoSteps   = 1000               </P>
-      <P> wavefreq = PI                      </P>
+      <P> IO_CheckSteps  = 200              </P>
+      <P> IO_InfoSteps   = 200              </P>
+      <P> wavefreq       = PI                </P>
+      <P> epsilon        = 1.0               </P>
     </PARAMETERS>
 
     <SOLVERINFO>
-      <I PROPERTY="EQTYPE" VALUE="UnsteadyAdvection" />
+      <I PROPERTY="EQTYPE" VALUE="UnsteadyDiffusion" />
       <I PROPERTY="Projection" VALUE="DisContinuous"/>
+      <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
+      <I PROPERTY="TimeIntegrationMethod" VALUE="DIRKOrder3" />
     </SOLVERINFO> 
 
     <VARIABLES>
@@ -93,21 +96,16 @@
         <D VAR="u" VALUE="0" />
       </REGION>
       <REGION REF="1">
-        <D VAR="u" VALUE="0" />
+        <N VAR="u" VALUE="0" />
       </REGION>
     </BOUNDARYCONDITIONS>
 
-    <USERDEFINEDEQNS>
-      <F LHS="Vx" VALUE="1.0" />
-      <F LHS="Vy" VALUE="1.0" />
-    </USERDEFINEDEQNS>  
-     
     <EXACTSOLUTION>
-      <F VAR="u" VALUE="exp(sin(wavefreq*FinTime))*sin(wavefreq*x)*sin(wavefreq*y)" />
+      <F VAR="u" VALUE="exp(-2.0*wavefreq*wavefreq*FinTime)*sin(wavefreq*x)*cos(wavefreq*y)" />
     </EXACTSOLUTION>
     
     <INITIALCONDITIONS>
-      <F VAR="u" VALUE="sin(wavefreq*x)*sin(wavefreq*y)" />
+      <F VAR="u" VALUE="sin(wavefreq*x)*cos(wavefreq*y)" />
     </INITIALCONDITIONS>
     
   </CONDITIONS>

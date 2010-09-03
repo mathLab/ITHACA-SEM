@@ -4,19 +4,19 @@
 #include <vector>
 #include <string>
 #include <SpatialDomains/MeshGraph3D.h>
-#include <SpatialDomains/BoundaryConditions.h>
+#include <SpatialDomains/Conditions.h>
 
 #include <boost/shared_ptr.hpp>
 
 
 using namespace Nektar;
-using namespace SpatialDomains; 
+using namespace SpatialDomains;
 using namespace std;
 
 // compile using Builds/Demos/SpatialDomains -> make DEBUG=1 Graph1D
 
 int main(int argc, char *argv[]){
-// 
+//
 //     if(argc != 2){
 //      cerr << "usage: Graph3D file" << endl;
 //      exit(1);
@@ -34,14 +34,14 @@ int main(int argc, char *argv[]){
 
 #else
     string in("C:/Data/PhD/Research/dev/Nektar++/library/Demos/SpatialDomains/meshdef3D.xml");
-    string bcfile("c:/Data/PhD/Research/dev/Nektar++/library/Demos/SpatialDomains/BC1.xml");    
+    string bcfile("c:/Data/PhD/Research/dev/Nektar++/library/Demos/SpatialDomains/BC1.xml");
 #endif
 
 #endif
 
     MeshGraph3D graph3D;
     BoundaryConditions bcs(&graph3D);
- 
+
     graph3D.ReadGeometry(in);
     graph3D.ReadExpansions(in);
     bcs.Read(bcfile);
@@ -82,6 +82,6 @@ int main(int argc, char *argv[]){
     {
         cout << err << endl;
     }
-    
+
     return 0;
 }

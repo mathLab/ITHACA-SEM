@@ -78,7 +78,7 @@ namespace Nektar
             ExpList(In,DeclareCoeffPhysArrays)
         {
         }
-        
+
 
         /**
          * After initialising the data inherited through MultiRegions#ExpList,
@@ -125,7 +125,7 @@ namespace Nektar
                 }
             }
 
-            // Setup Default optimisation information. 
+            // Setup Default optimisation information.
             int nel = GetExpSize();
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
@@ -195,21 +195,21 @@ namespace Nektar
                 }
             }
 
-            // Setup Default optimisation information. 
+            // Setup Default optimisation information.
             int nel = GetExpSize();
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
 
-            // set up offset arrays. 
+            // set up offset arrays.
             SetCoeffPhysOffsets();
 
             if(DeclareCoeffPhysArrays)
             {
-                // Set up m_coeffs, m_phys. 
+                // Set up m_coeffs, m_phys.
                 m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
                 m_phys   = Array<OneD, NekDouble>(m_npoints);
             }
-                
+
         }
 
 
@@ -268,7 +268,7 @@ namespace Nektar
 
             }
 
-            // Setup Default optimisation information. 
+            // Setup Default optimisation information.
             int nel = GetExpSize();
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
@@ -276,7 +276,7 @@ namespace Nektar
             // Allocate storage for data and populate element offset lists.
             SetCoeffPhysOffsets();
 
-            // Set up m_coeffs, m_phys. 
+            // Set up m_coeffs, m_phys.
             if(DeclareCoeffPhysArrays)
             {
                 m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
@@ -411,7 +411,7 @@ namespace Nektar
                 }
             }
 
-            // Setup Default optimisation information. 
+            // Setup Default optimisation information.
             int nel = GetExpSize();
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
                 ::AllocateSharedPtr(nel);
@@ -419,7 +419,7 @@ namespace Nektar
             // Set up offset information and array sizes
             SetCoeffPhysOffsets();
 
-            // Set up m_coeffs, m_phys. 
+            // Set up m_coeffs, m_phys.
             if(DeclareCoeffPhysArrays)
             {
                 m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
@@ -1156,6 +1156,74 @@ namespace Nektar
             SetUpPhysNormals(locexp);
         }
 
+        /**
+         * Writes out the header for a <PIECE> VTK XML segment describing the
+         * geometric information which comprises this element. This includes
+         * vertex coordinates for each quadrature point, vertex connectivity
+         * information, cell types and cell offset data.
+         *
+         * @param   outfile     Output stream to write data to.
+         */
+        void ExpList1D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+        {
+            int i,j;
+            int coordim  = (*m_exp)[expansion]->GetCoordim();
+            int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
+            int ntot = nquad0;
+            int ntotminus = (nquad0-1);
+
+            Array<OneD,NekDouble> coords[3];
+            coords[0] = Array<OneD,NekDouble>(ntot);
+            coords[1] = Array<OneD,NekDouble>(ntot);
+            coords[2] = Array<OneD,NekDouble>(ntot);
+            (*m_exp)[expansion]->GetCoords(coords[0],coords[1],coords[2]);
+
+            outfile << "    <Piece NumberOfPoints=\""
+                    << ntot << "\" NumberOfCells=\""
+                    << ntotminus << "\">" << endl;
+            outfile << "      <Points>" << endl;
+            outfile << "        <DataArray type=\"Float32\" "
+                    << "NumberOfComponents=\"3\" format=\"ascii\">" << endl;
+            outfile << "          ";
+            for (i = 0; i < ntot; ++i)
+            {
+                for (j = 0; j < 3; ++j)
+                {
+                    outfile << coords[j][i] << " ";
+                }
+                outfile << endl;
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "      </Points>" << endl;
+            outfile << "      <Cells>" << endl;
+            outfile << "        <DataArray type=\"Int32\" "
+                    << "Name=\"connectivity\" format=\"ascii\">" << endl;
+            for (i = 0; i < nquad0-1; ++i)
+            {
+                outfile << i << " " << i+1 << endl;
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "        <DataArray type=\"Int32\" "
+                    << "Name=\"offsets\" format=\"ascii\">" << endl;
+            for (i = 0; i < ntotminus; ++i)
+            {
+                outfile << i*2+2 << " ";
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "        <DataArray type=\"UInt8\" "
+                    << "Name=\"types\" format=\"ascii\">" << endl;
+            for (i = 0; i < ntotminus; ++i)
+            {
+                outfile << "3 ";
+            }
+            outfile << endl;
+            outfile << "        </DataArray>" << endl;
+            outfile << "      </Cells>" << endl;
+            outfile << "      <PointData>" << endl;
+        }
 
     } //end of namespace
 } //end of namespace

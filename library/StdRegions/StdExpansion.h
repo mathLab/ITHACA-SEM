@@ -54,7 +54,7 @@ namespace Nektar
         class StdExpansion1D;
 
         /** \brief The base class for all shapes
-         *   
+         *
          *  This is the lowest level basic class for all shapes and so
          *  contains the definition of common data and common routine to all
          *  elements
@@ -67,8 +67,8 @@ namespace Nektar
             StdExpansion();
 
             /** \brief Constructor */
-            StdExpansion(const int numcoeffs, const int numbases, 
-                         const LibUtilities::BasisKey &Ba, 
+            StdExpansion(const int numcoeffs, const int numbases,
+                         const LibUtilities::BasisKey &Ba,
                          const LibUtilities::BasisKey &Bb = LibUtilities::NullBasisKey,
                          const LibUtilities::BasisKey &Bc = LibUtilities::NullBasisKey);
 
@@ -80,15 +80,15 @@ namespace Nektar
             /** \brief Destructor */
             virtual ~StdExpansion();
 
-        
+
             /** \brief This function returns a pointer to the coefficient array
-             *  \f$ \mathbf{\hat{u}}\f$ 
+             *  \f$ \mathbf{\hat{u}}\f$
              *
-             *  The coefficient array \f$ \mathbf{\hat{u}}\f$ corresponds to the 
+             *  The coefficient array \f$ \mathbf{\hat{u}}\f$ corresponds to the
              *  class attribute #m_coeffs (which is in coefficient space)
              *
-             *  \return returns a pointer to the coefficient array 
-             *  \f$ \mathbf{\hat{u}}\f$ 
+             *  \return returns a pointer to the coefficient array
+             *  \f$ \mathbf{\hat{u}}\f$
              */
             inline const Array<OneD, const NekDouble>& GetCoeffs(void) const
             {
@@ -96,14 +96,14 @@ namespace Nektar
             }
 
 
-            /** \brief This function returns a NekDouble to the coefficient 
-             *  \f$ \mathbf{\hat{u}}[i]\f$ 
+            /** \brief This function returns a NekDouble to the coefficient
+             *  \f$ \mathbf{\hat{u}}[i]\f$
              *
              *  The coefficient \f$ \mathbf{\hat{u}}[i]\f$ corresponds
              *  to the #i th entry of the class attribute #m_coeffs
              *
-             *  \return returns a NekDouble of the coefficient 
-             *  \f$ \mathbf{\hat{u}}[i]\f$ 
+             *  \return returns a NekDouble of the coefficient
+             *  \f$ \mathbf{\hat{u}}[i]\f$
              */
             inline NekDouble  GetCoeffs(int i) const
             {
@@ -113,14 +113,14 @@ namespace Nektar
             }
 
 
-            /** \brief This function returns a NekDouble to the coefficient 
-             *  \f$ \mathbf{\hat{u}}[i]\f$ 
+            /** \brief This function returns a NekDouble to the coefficient
+             *  \f$ \mathbf{\hat{u}}[i]\f$
              *
              *  The coefficient \f$ \mathbf{\hat{u}}[i]\f$ corresponds
              *  to the #i th entry of the class attribute #m_coeffs
              *
-             *  \return returns a NekDouble of the coefficient 
-             *  \f$ \mathbf{\hat{u}}[i]\f$ 
+             *  \return returns a NekDouble of the coefficient
+             *  \f$ \mathbf{\hat{u}}[i]\f$
              */
             inline NekDouble  GetCoeff(int i) const
             {
@@ -132,12 +132,12 @@ namespace Nektar
             /** \brief This function returns a pointer to the array
              *  \f$\mathbf{u}\f$ (which is in physical space)
              *
-             *  The array \f$ \mathbf{u}\f$ corresponds to the 
+             *  The array \f$ \mathbf{u}\f$ corresponds to the
              *  class attribute #m_phys and contains the values of a function
-             *  evaluates at the quadrature points, 
+             *  evaluates at the quadrature points,
              *  i.e. \f$\mathbf{u}[m]=u(\mathbf{\xi}_m)\f$
              *
-             *  \return returns a pointer to the array \f$\mathbf{u}\f$ 
+             *  \return returns a pointer to the array \f$\mathbf{u}\f$
              */
             inline const Array<OneD, const NekDouble>& GetPhys(void) const
             {
@@ -146,13 +146,13 @@ namespace Nektar
 
 
             /** \brief This function returns a pointer to the coefficient array
-             *  \f$ \mathbf{\hat{u}}\f$ 
+             *  \f$ \mathbf{\hat{u}}\f$
              *
-             *  The coefficient array \f$ \mathbf{\hat{u}}\f$ corresponds to the 
+             *  The coefficient array \f$ \mathbf{\hat{u}}\f$ corresponds to the
              *  class attribute #m_coeffs (which is in coefficient space)
              *
-             *  \return returns a pointer to the coefficient array 
-             *  \f$ \mathbf{\hat{u}}\f$ 
+             *  \return returns a pointer to the coefficient array
+             *  \f$ \mathbf{\hat{u}}\f$
              */
             inline Array<OneD, NekDouble>& UpdateCoeffs(void)
             {
@@ -162,24 +162,24 @@ namespace Nektar
             /** \brief This function returns a pointer to the array
              *  \f$\mathbf{u}\f$ (which is in physical space)
              *
-             *  The array \f$ \mathbf{u}\f$ corresponds to the 
+             *  The array \f$ \mathbf{u}\f$ corresponds to the
              *  class attribute #m_phys and contains the values of a function
-             *  evaluates at the quadrature points, 
+             *  evaluates at the quadrature points,
              *  i.e. \f$\mathbf{u}[m]=u(\mathbf{\xi}_m)\f$
              *
-             *  \return returns a pointer to the array \f$\mathbf{u}\f$ 
+             *  \return returns a pointer to the array \f$\mathbf{u}\f$
              */
-            inline Array<OneD, NekDouble>& UpdatePhys(void) 
+            inline Array<OneD, NekDouble>& UpdatePhys(void)
             {
                 return(m_phys);
             }
 
             // Standard Expansion Routines Applicable Regardless of Region
 
-            /** \brief This function returns the number of 1D bases used in 
-             *  the expansion 
+            /** \brief This function returns the number of 1D bases used in
+             *  the expansion
              *
-             *  \return returns the number of 1D bases used in the expansion, 
+             *  \return returns the number of 1D bases used in the expansion,
              *  which is equal to number dimension of the expansion
              */
             inline int GetNumBases() const
@@ -187,9 +187,9 @@ namespace Nektar
                 return m_numbases;
             }
 
-            /** \brief This function gets the shared point to basis 
-             *  
-             *  \return returns the shared pointer to the bases  
+            /** \brief This function gets the shared point to basis
+             *
+             *  \return returns the shared pointer to the bases
              */
             inline const Array<OneD, const LibUtilities::BasisSharedPtr>& GetBase() const
             {
@@ -198,7 +198,7 @@ namespace Nektar
 
             /** \brief This function gets the shared point to basis in
              *  the \a dir direction
-             *  
+             *
              *  \return returns the shared pointer to the basis in
              *  directin \a dir
              */
@@ -208,24 +208,24 @@ namespace Nektar
                 return(m_base[dir]);
             }
 
-            /** \brief This function returns the total number of coefficients 
-             *  used in the expansion 
-             *  
-             *  \return returns the total number of coefficients (which is 
+            /** \brief This function returns the total number of coefficients
+             *  used in the expansion
+             *
+             *  \return returns the total number of coefficients (which is
              *  equivalent to the total number of modes) used in the expansion
              */
-            inline int GetNcoeffs(void) const 
+            inline int GetNcoeffs(void) const
             {
                 return(m_ncoeffs);
             }
 
-            /** \brief This function sets the coefficient array 
-             *  \f$ \mathbf{\hat{u}}\f$ (implemented as the class attribute 
+            /** \brief This function sets the coefficient array
+             *  \f$ \mathbf{\hat{u}}\f$ (implemented as the class attribute
              *  #m_coeffs) to the values given by \a coeffs
              *
              *  Using this function actually determines the entire expansion
              *
-             *  \param coeffs the array of values to which #m_coeffs should 
+             *  \param coeffs the array of values to which #m_coeffs should
              *  be set
              */
             inline void SetCoeffs(const Array<OneD, const NekDouble>& coeffs)
@@ -233,7 +233,7 @@ namespace Nektar
                 Vmath::Vcopy(m_ncoeffs, coeffs.get(), 1, m_coeffs.get(), 1);
             }
 
-            /** \brief This function sets the i th coefficient  
+            /** \brief This function sets the i th coefficient
              *  \f$ \mathbf{\hat{u}}[i]\f$ to the value given by \a coeff
              *
              *  #m_coeffs[i] will be set to the  value given by \a coeff
@@ -245,10 +245,10 @@ namespace Nektar
             {
                 m_coeffs[i] = coeff;
             }
-        
+
             /** \brief This function returns the total number of quadrature
-             *  points used in the element 
-             *  
+             *  points used in the element
+             *
              *  \return returns the total number of quadrature points
              */
             inline  int GetTotPoints() const
@@ -264,13 +264,13 @@ namespace Nektar
                 return  nqtot;
             }
 
-            /** \brief This function sets the array 
-             *  \f$ \mathbf{u}\f$ (implemented as the class attribute 
+            /** \brief This function sets the array
+             *  \f$ \mathbf{u}\f$ (implemented as the class attribute
              *  #m_phys) to the values given by \a phys
              *
              *  Using this function corresponds to storing a function \f$u\f$
              *  (evaluated at the quadrature points) in the class attribute
-             *  #m_phys 
+             *  #m_phys
              *
              *  \param phys the array of values to which #m_phys should be set
              */
@@ -283,11 +283,11 @@ namespace Nektar
 
             /** \brief This function returns the type of basis used in the \a dir
              *  direction
-             *  
-             *  The different types of bases implemented in the code are defined 
+             *
+             *  The different types of bases implemented in the code are defined
              *  in the LibUtilities::BasisType enumeration list. As a result, the
              *  function will return one of the types of this enumeration list.
-             *  
+             *
              *  \param dir the direction
              *  \return returns the type of basis used in the \a dir direction
              */
@@ -297,11 +297,11 @@ namespace Nektar
                 return(m_base[dir]->GetBasisType());
             }
 
-            /** \brief This function returns the number of expansion modes 
+            /** \brief This function returns the number of expansion modes
              *  in the \a dir direction
-             *  
+             *
              *  \param dir the direction
-             *  \return returns the number of expansion modes in the \a dir 
+             *  \return returns the number of expansion modes in the \a dir
              *  direction
              */
             inline int GetBasisNumModes(const int dir) const
@@ -313,7 +313,7 @@ namespace Nektar
 
             /** \brief This function returns the maximum number of
              *  expansion modes over all local directions
-             *  
+             *
              *  \return returns the maximum number of expansion modes
              *  over all local directions
              */
@@ -330,32 +330,32 @@ namespace Nektar
                 return returnval;
             }
 
-            /** \brief This function returns the type of quadrature points used 
+            /** \brief This function returns the type of quadrature points used
              *  in the \a dir direction
-             *  
+             *
              *  The different types of quadrature points implemented in the code
-             *  are defined in the LibUtilities::PointsType enumeration list. 
-             *  As a result, the function will return one of the types of this 
+             *  are defined in the LibUtilities::PointsType enumeration list.
+             *  As a result, the function will return one of the types of this
              *  enumeration list.
-             *  
+             *
              *  \param dir the direction
              *  \return returns the type of quadrature points  used in the \a dir
              *  direction
              */
-            inline LibUtilities::PointsType GetPointsType(const int dir)  const 
+            inline LibUtilities::PointsType GetPointsType(const int dir)  const
             {
                 ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
                 return(m_base[dir]->GetPointsType());
             }
 
-            /** \brief This function returns the number of quadrature points 
+            /** \brief This function returns the number of quadrature points
              *  in the \a dir direction
-             *  
+             *
              *  \param dir the direction
-             *  \return returns the number of quadrature points in the \a dir 
+             *  \return returns the number of quadrature points in the \a dir
              *  direction
              */
-            inline int GetNumPoints(const int dir) const 
+            inline int GetNumPoints(const int dir) const
             {
                 ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
                 return(m_base[dir]->GetNumPoints());
@@ -366,13 +366,13 @@ namespace Nektar
              *
              *  \param dir the direction
              *  \return returns a pointer to the array containing
-             *  the quadrature points in \a dir direction 
+             *  the quadrature points in \a dir direction
              */
             inline const Array<OneD, const NekDouble>& GetPoints(const int dir) const
             {
                 return m_base[dir]->GetZ();
             }
-        
+
 
             NekDouble operator[] (const int i) const
             {
@@ -390,12 +390,12 @@ namespace Nektar
 
             // Wrappers around virtual Functions
 
-            /** \brief This function returns the number of vertices of the 
+            /** \brief This function returns the number of vertices of the
              *  expansion domain
-             *  
-             *  This function is a wrapper around the virtual function 
-             *  \a v_GetNverts() 
-             * 
+             *
+             *  This function is a wrapper around the virtual function
+             *  \a v_GetNverts()
+             *
              *  \return returns the number of vertices of the expansion domain
              */
             int GetNverts() const
@@ -403,12 +403,12 @@ namespace Nektar
                 return v_GetNverts();
             }
 
-            /** \brief This function returns the number of edges of the 
+            /** \brief This function returns the number of edges of the
              *  expansion domain
-             *  
-             *  This function is a wrapper around the virtual function 
-             *  \a v_GetNedges() 
-             * 
+             *
+             *  This function is a wrapper around the virtual function
+             *  \a v_GetNedges()
+             *
              *  \return returns the number of edges of the expansion domain
              */
             int GetNedges() const
@@ -417,11 +417,11 @@ namespace Nektar
             }
 
             /** \brief This function returns the number of expansion coefficients
-             *  belonging to the \a i-th edge  
-             *  
-             *  This function is a wrapper around the virtual function 
-             *  \a v_GetEdgeNcoeffs() 
-             * 
+             *  belonging to the \a i-th edge
+             *
+             *  This function is a wrapper around the virtual function
+             *  \a v_GetEdgeNcoeffs()
+             *
              *  \param i specifies which edge
              *  \return returns the number of expansion coefficients belonging to
              *  the \a i-th edge
@@ -433,11 +433,11 @@ namespace Nektar
 
 
             /** \brief This function returns the number of quadrature points
-             *  belonging to the \a i-th edge  
-             *  
-             *  This function is a wrapper around the virtual function 
-             *  \a v_GetEdgeNumPoints() 
-             * 
+             *  belonging to the \a i-th edge
+             *
+             *  This function is a wrapper around the virtual function
+             *  \a v_GetEdgeNumPoints()
+             *
              *  \param i specifies which edge
              *  \return returns the number of expansion coefficients belonging to
              *  the \a i-th edge
@@ -448,7 +448,7 @@ namespace Nektar
             }
 
 
-            int DetCartesianDirOfEdge(const int edge) 
+            int DetCartesianDirOfEdge(const int edge)
             {
                 return v_DetCartesianDirOfEdge(edge);
             }
@@ -459,11 +459,11 @@ namespace Nektar
             }
 
             /** \brief This function returns the number of expansion coefficients
-             *  belonging to the \a i-th face  
-             *  
-             *  This function is a wrapper around the virtual function 
+             *  belonging to the \a i-th face
+             *
+             *  This function is a wrapper around the virtual function
              *  \a v_GetFaceNcoeffs()
-             * 
+             *
              *  \param i specifies which face
              *  \return returns the number of expansion coefficients belonging to
              *  the \a i-th face
@@ -477,7 +477,7 @@ namespace Nektar
             {
                 return v_GetFaceIntNcoeffs(i);
             }
-        
+
             int NumBndryCoeffs(void)  const
             {
                 return v_NumBndryCoeffs();
@@ -489,15 +489,15 @@ namespace Nektar
             }
 
             /** \brief This function returns the type of expansion basis on the
-             *  \a i-th edge  
-             *  
-             *  This function is a wrapper around the virtual function 
-             *  \a v_GetEdgeBasisType() 
+             *  \a i-th edge
              *
-             *  The different types of bases implemented in the code are defined 
+             *  This function is a wrapper around the virtual function
+             *  \a v_GetEdgeBasisType()
+             *
+             *  The different types of bases implemented in the code are defined
              *  in the LibUtilities::BasisType enumeration list. As a result, the
              *  function will return one of the types of this enumeration list.
-             * 
+             *
              *  \param i specifies which edge
              *  \return returns the expansion basis on the \a i-th edge
              */
@@ -507,30 +507,30 @@ namespace Nektar
             }
 
 
-            /** \brief This function returns the number of faces of the 
+            /** \brief This function returns the number of faces of the
              *  expansion domain
-             *  
-             *  This function is a wrapper around the virtual function 
-             *  \a v_GetNFaces() 
-             * 
+             *
+             *  This function is a wrapper around the virtual function
+             *  \a v_GetNFaces()
+             *
              *  \return returns the number of faces of the expansion domain
              */
             int GetNfaces() const
             {
                 return v_GetNfaces();
             }
-        
-            /** \brief This function returns the shape of the expansion domain 
-             *  
-             *  This function is a wrapper around the virtual function 
-             *  \a v_DetShapeType() 
+
+            /** \brief This function returns the shape of the expansion domain
              *
-             *  The different shape types implemented in the code are defined 
+             *  This function is a wrapper around the virtual function
+             *  \a v_DetShapeType()
+             *
+             *  The different shape types implemented in the code are defined
              *  in the ::ShapeType enumeration list. As a result, the
              *  function will return one of the types of this enumeration list.
-             *  
+             *
              *  \return returns the shape of the expansion domain
-             */        
+             */
             ExpansionType DetExpansionType() const
             {
                 return v_DetExpansionType();
@@ -541,27 +541,27 @@ namespace Nektar
                 return v_GetShapeDimension();
             }
 
-            bool IsBoundaryInteriorExpansion() 
+            bool IsBoundaryInteriorExpansion()
             {
                 return v_IsBoundaryInteriorExpansion();
             }
 
 
-            /** \brief This function performs the Backward transformation from 
+            /** \brief This function performs the Backward transformation from
              *  coefficient space to physical space
              *
-             *  This function is a wrapper around the virtual function 
-             *  \a v_BwdTrans() 
+             *  This function is a wrapper around the virtual function
+             *  \a v_BwdTrans()
              *
              *  Based on the expansion coefficients, this function evaluates the
-             *  expansion at the quadrature points. This is equivalent to the 
+             *  expansion at the quadrature points. This is equivalent to the
              *  operation \f[ u(\xi_{1i}) =
-             *  \sum_{p=0}^{P-1} \hat{u}_p \phi_p(\xi_{1i}) \f] which can be 
-             *  evaluated as \f$ {\bf u} = {\bf B}^T {\bf \hat{u}} \f$ with 
+             *  \sum_{p=0}^{P-1} \hat{u}_p \phi_p(\xi_{1i}) \f] which can be
+             *  evaluated as \f$ {\bf u} = {\bf B}^T {\bf \hat{u}} \f$ with
              *  \f${\bf B}[i][j] = \phi_i(\xi_{j})\f$
              *
-             *  This function requires that the coefficient array 
-             *  \f$\mathbf{\hat{u}}\f$ provided as \a inarray. 
+             *  This function requires that the coefficient array
+             *  \f$\mathbf{\hat{u}}\f$ provided as \a inarray.
              *
              *  The resulting array
              *  \f$\mathbf{u}[m]=u(\mathbf{\xi}_m)\f$ containing the
@@ -577,68 +577,68 @@ namespace Nektar
              *  at the quadrature points (output of the function)
              */
 
-            void  BwdTrans (const Array<OneD, const NekDouble>& inarray, 
+            void  BwdTrans (const Array<OneD, const NekDouble>& inarray,
                             Array<OneD, NekDouble> &outarray)
             {
                 v_BwdTrans (inarray, outarray);
             }
-        
-            /** \brief This function performs the Forward transformation from 
+
+            /** \brief This function performs the Forward transformation from
              *  physical space to coefficient space
              *
-             *  This function is a wrapper around the virtual function 
-             *  \a v_FwdTrans() 
+             *  This function is a wrapper around the virtual function
+             *  \a v_FwdTrans()
              *
-             *  Given a function evaluated at the quadrature points, this 
-             *  function calculates the expansion coefficients such that the 
+             *  Given a function evaluated at the quadrature points, this
+             *  function calculates the expansion coefficients such that the
              *  resulting expansion approximates the original function.
              *
-             *  The calculation of the expansion coefficients is done using a 
+             *  The calculation of the expansion coefficients is done using a
              *  Galerkin projection. This is equivalent to the operation:
              *  \f[ \mathbf{\hat{u}} = \mathbf{M}^{-1} \mathbf{I}\f]
              *  where
              *  - \f$\mathbf{M}[p][q]= \int\phi_p(\mathbf{\xi})\phi_q(
              *  \mathbf{\xi}) d\mathbf{\xi}\f$ is the Mass matrix
-             *  - \f$\mathbf{I}[p] = \int\phi_p(\mathbf{\xi}) u(\mathbf{\xi})    
+             *  - \f$\mathbf{I}[p] = \int\phi_p(\mathbf{\xi}) u(\mathbf{\xi})
              *  d\mathbf{\xi}\f$
              *
-             *  This function takes the array \a inarray as the values of the 
-             *  function evaluated at the quadrature points 
+             *  This function takes the array \a inarray as the values of the
+             *  function evaluated at the quadrature points
              *  (i.e. \f$\mathbf{u}\f$),
-             *  and stores the resulting coefficients \f$\mathbf{\hat{u}}\f$  
+             *  and stores the resulting coefficients \f$\mathbf{\hat{u}}\f$
              *  in the \a outarray
-             *  
+             *
              *  \param inarray array of the function discretely evaluated at the
              *  quadrature points
              *
-             *  \param outarray array of the function coefficieints 
+             *  \param outarray array of the function coefficieints
              */
-            void  FwdTrans (const Array<OneD, const NekDouble>& inarray, 
+            void  FwdTrans (const Array<OneD, const NekDouble>& inarray,
                             Array<OneD, NekDouble> &outarray)
             {
                 v_FwdTrans(inarray,outarray);
-            } 
+            }
 
-            void FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
+            void FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray,
                                          Array<OneD, NekDouble> &outarray)
             {
                 v_FwdTrans_BndConstrained(inarray,outarray);
             }
 
-            /** \brief This function integrates the specified function over the 
-             *  domain 
+            /** \brief This function integrates the specified function over the
+             *  domain
              *
-             *  This function is a wrapper around the virtual function 
+             *  This function is a wrapper around the virtual function
              *  \a v_Integral()
              *
              *  Based on the values of the function evaluated at the quadrature
              *  points (which are stored in \a inarray), this function calculates
-             *  the integral of this function over the domain.  This is 
+             *  the integral of this function over the domain.  This is
              *  equivalent to the numerical evaluation of the operation
              *  \f[ I=\int u(\mathbf{\xi})d \mathbf{\xi}\f]
              *
              *  \param inarray values of the function to be integrated evaluated
-             *  at the quadrature points (i.e. 
+             *  at the quadrature points (i.e.
              *  \a inarray[m]=\f$u(\mathbf{\xi}_m)\f$)
              *  \return returns the value of the calculated integral
              */
@@ -647,55 +647,55 @@ namespace Nektar
                 return v_Integral(inarray);
             }
 
-            /** \brief This function fills the array \a outarray with the 
-             *  \a mode-th mode of the expansion 
+            /** \brief This function fills the array \a outarray with the
+             *  \a mode-th mode of the expansion
              *
-             *  This function is a wrapper around the virtual function 
+             *  This function is a wrapper around the virtual function
              *  \a v_FillMode()
              *
              *  The requested mode is evaluated at the quadrature points
              *
              *  \param mode the mode that should be filled
              *  \param outarray contains the values of the \a mode-th mode of the
-             *  expansion evaluated at the quadrature points (output of the 
+             *  expansion evaluated at the quadrature points (output of the
              *  function)
              */
             void FillMode(const int mode, Array<OneD, NekDouble> &outarray)
             {
                 v_FillMode(mode, outarray);
             }
-        
-            /** \brief this function calculates the inner product of a given 
+
+            /** \brief this function calculates the inner product of a given
              *  function \a f with the different modes of the expansion
-             *  
-             *  This function is a wrapper around the virtual function 
+             *
+             *  This function is a wrapper around the virtual function
              *  \a v_IProductWRTBase()
-             * 
-             *  This is equivalent to the numerical evaluation of 
+             *
+             *  This is equivalent to the numerical evaluation of
              *  \f[ I[p] = \int \phi_p(\mathbf{x}) f(\mathbf{x}) d\mathbf{x}\f]
              *
-             *  \param inarray contains the values of the function \a f 
+             *  \param inarray contains the values of the function \a f
              *  evaluated at the quadrature points
              *  \param outarray contains the values of the inner product of \a f
-             *  with the different modes, i.e. \f$ outarray[p] = I[p]\f$ 
-             *  (output of the function) 
+             *  with the different modes, i.e. \f$ outarray[p] = I[p]\f$
+             *  (output of the function)
              */
-            void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
+            void IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
                                  Array<OneD, NekDouble> &outarray)
             {
                 v_IProductWRTBase(inarray, outarray);
             }
 
-            void   IProductWRTDerivBase(const int dir, 
-                                        const Array<OneD, const NekDouble>& inarray, 
+            void   IProductWRTDerivBase(const int dir,
+                                        const Array<OneD, const NekDouble>& inarray,
                                         Array<OneD, NekDouble> &outarray)
             {
                 v_IProductWRTDerivBase(dir,inarray, outarray);
             }
-        
+
             /// \brief Get the element id of this expansion when used
             /// in a list by returning value of #m_elmt_id
-            inline int GetElmtId() 
+            inline int GetElmtId()
             {
                 return m_elmt_id;
             }
@@ -703,7 +703,7 @@ namespace Nektar
 
             /// \brief Set the element id of this expansion when used
             /// in a list by returning value of #m_elmt_id
-            inline void SetElmtId(const int id) 
+            inline void SetElmtId(const int id)
             {
                 m_elmt_id = id;
             }
@@ -711,7 +711,7 @@ namespace Nektar
             /** \brief this function returns the physical coordinates of the
              *  quadrature points of the expansion
              *
-             *  This function is a wrapper around the virtual function 
+             *  This function is a wrapper around the virtual function
              *  \a v_GetCoords()
              *
              *  \param coords an array containing the coordinates of the
@@ -723,19 +723,19 @@ namespace Nektar
             {
                 v_GetCoords(coords_1,coords_2,coords_3);
             }
-            
-            /** \brief given the coordinates of a point of the element in the 
-             *  local collapsed coordinate system, this function calculates the 
+
+            /** \brief given the coordinates of a point of the element in the
+             *  local collapsed coordinate system, this function calculates the
              *  physical coordinates of the point
              *
-             *  This function is a wrapper around the virtual function 
-             *  \a v_GetCoord()         
+             *  This function is a wrapper around the virtual function
+             *  \a v_GetCoord()
              *
-             *  \param Lcoords the coordinates in the local collapsed 
+             *  \param Lcoords the coordinates in the local collapsed
              *  coordinate system
              *  \param coords the physical coordinates (output of the function)
              */
-            void GetCoord(const Array<OneD, const NekDouble>& Lcoord, 
+            void GetCoord(const Array<OneD, const NekDouble>& Lcoord,
                           Array<OneD, NekDouble> &coord)
             {
                 v_GetCoord(Lcoord, coord);
@@ -743,7 +743,7 @@ namespace Nektar
 
             /** \brief this function returns surface normal vector of a manifold
              *
-             *  This function is a wrapper around the virtual function 
+             *  This function is a wrapper around the virtual function
              *  \a v_GetSurfaceNormal()
              */
             void GetSurfaceNormal(Array<OneD, NekDouble> &SurfaceNormal,
@@ -751,17 +751,17 @@ namespace Nektar
             {
                 v_GetSurfaceNormal(SurfaceNormal, k);
             }
-        
+
             /** \brief this function writes the solution to the file \a outfile
              *
-             *  This function is a wrapper around the virtual function 
+             *  This function is a wrapper around the virtual function
              *  \a v_WriteToFile()
              *
-             *  The expansion evaluated at the quadrature points (stored as 
-             *  #m_phys), together with 
-             *  the coordinates of the quadrature points, are written to the 
+             *  The expansion evaluated at the quadrature points (stored as
+             *  #m_phys), together with
+             *  the coordinates of the quadrature points, are written to the
              *  file \a outfile
-             *  
+             *
              *  \param outfile the file to which the solution is written
              */
             void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")
@@ -773,40 +773,29 @@ namespace Nektar
 
             void WriteTecplotField(std::ofstream &outfile);
 
-            /// Writes VTK geometry information for this expansion.
-            void WriteVtkPieceHeader(std::ofstream &outfile) {
-                v_WriteVtkPieceHeader(outfile);
-            }
-            
-            /// Writes terminating tags for VTK geometry information.
-            void WriteVtkPieceFooter(std::ofstream &outfile);
-            
-            /// Writes values at quadrature points.
-            void WriteVtkPieceData  (std::ofstream &outfile, std::string var);
-                
             void ReadFromFile(std::ifstream &in, OutputFormat format, const bool dumpVar = true)
             {
                 v_ReadFromFile(in,format,dumpVar);
             }
 
-            inline DNekMatSharedPtr& GetStdMatrix(const StdMatrixKey &mkey) 
+            inline DNekMatSharedPtr& GetStdMatrix(const StdMatrixKey &mkey)
             {
                 return m_stdMatrixManager[mkey];
             }
-        
-            inline DNekBlkMatSharedPtr& GetStdStaticCondMatrix(const StdMatrixKey &mkey) 
+
+            inline DNekBlkMatSharedPtr& GetStdStaticCondMatrix(const StdMatrixKey &mkey)
             {
                 return m_stdStaticCondMatrixManager[mkey];
             }
-        
-            DNekScalMatSharedPtr& GetLocMatrix(const MatrixType mtype, 
-                                               NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
+
+            DNekScalMatSharedPtr& GetLocMatrix(const MatrixType mtype,
+                                               NekDouble lambdaval = NekConstants::kNekUnsetDouble,
                                                NekDouble tau = NekConstants::kNekUnsetDouble)
             {
                 return v_GetLocMatrix(mtype,lambdaval,tau);
             }
-            
-        
+
+
             DNekScalMatSharedPtr& GetLocMatrix(const LocalRegions::MatrixKey &mkey)
             {
                 return v_GetLocMatrix(mkey);
@@ -826,7 +815,7 @@ namespace Nektar
 
             virtual void SetUpPhysNormals(const boost::shared_ptr<StdExpansion>  &exp2d, const int edge);
 
-            
+
             void NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray, bool NegateNorm = false)
             {
                 v_NormVectorIProductWRTBase(Fx,Fy,outarray,NegateNorm);
@@ -853,38 +842,38 @@ namespace Nektar
                 return v_GetCartesianEorient(edge);
             }
 
-            void AddHDGHelmholtzTraceTerms(const NekDouble tau, 
+            void AddHDGHelmholtzTraceTerms(const NekDouble tau,
                                            const Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,NekDouble> &outarray)                
+                                           Array<OneD,NekDouble> &outarray)
             {
                 v_AddHDGHelmholtzTraceTerms(tau,inarray, outarray);
             }
 
-            void AddHDGHelmholtzTraceTerms(const NekDouble tau, 
+            void AddHDGHelmholtzTraceTerms(const NekDouble tau,
                                            const Array<OneD, const NekDouble> &inarray,
                                            Array<OneD,boost::shared_ptr<StdExpansion1D> > &EdgeExp,
-                                           Array<OneD,NekDouble> &outarray)                
+                                           Array<OneD,NekDouble> &outarray)
             {
                 v_AddHDGHelmholtzTraceTerms(tau,inarray,EdgeExp, outarray);
             }
 
             // virtual functions related to LocalRegions
 
-            virtual void AddEdgeNormBoundaryInt(const int edge, 
+            virtual void AddEdgeNormBoundaryInt(const int edge,
                                                 boost::shared_ptr<StdExpansion1D>  &EdgeExp,
-                                                const Array<OneD, const NekDouble> &Fx,  
-                                                const Array<OneD, const NekDouble> &Fy,  
+                                                const Array<OneD, const NekDouble> &Fx,
+                                                const Array<OneD, const NekDouble> &Fy,
                                                 Array<OneD, NekDouble> &outarray);
 
-            virtual void AddEdgeNormBoundaryInt(const int edge, 
+            virtual void AddEdgeNormBoundaryInt(const int edge,
                                                 boost::shared_ptr<StdExpansion1D>  &EdgeExp,
-                                                const Array<OneD, const NekDouble> &Fn,  
+                                                const Array<OneD, const NekDouble> &Fn,
                                                 Array<OneD, NekDouble> &outarray);
 
-            virtual void AddEdgeNormBoundaryBiInt(const int edge, 
+            virtual void AddEdgeNormBoundaryBiInt(const int edge,
                                                 boost::shared_ptr<StdExpansion1D>  &EdgeExp,
-                                                const Array<OneD, const NekDouble> &Fwd,  
-                                                const Array<OneD, const NekDouble> &Bwd,  
+                                                const Array<OneD, const NekDouble> &Fwd,
+                                                const Array<OneD, const NekDouble> &Bwd,
                                                 Array<OneD, NekDouble> &outarray);
 
             virtual void AddNormTraceInt(const int dir,
@@ -894,7 +883,7 @@ namespace Nektar
 
             int GetCoordim()
             {
-                return v_GetCoordim(); 
+                return v_GetCoordim();
             }
 
             void GetBoundaryMap(Array<OneD, unsigned int> &outarray)
@@ -906,18 +895,18 @@ namespace Nektar
             {
                 v_GetInteriorMap(outarray);
             }
-            
+
             int GetVertexMap(const int localVertexId)
             {
                 return v_GetVertexMap(localVertexId);
             }
- 
+
             void GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
                                     Array<OneD, unsigned int> &maparray,
                                     Array<OneD, int> &signarray)
             {
                 v_GetEdgeInteriorMap(eid,edgeOrient,maparray,signarray);
-            }   
+            }
 
             void GetFaceInteriorMap(const int fid, const FaceOrientation faceOrient,
                                     Array<OneD, unsigned int> &maparray,
@@ -939,7 +928,7 @@ namespace Nektar
             {
                 v_GetFaceToElementMap(fid,faceOrient,maparray,signarray);
             }
-            
+
             void GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 v_GetEdgePhysVals(edge,inarray,outarray);
@@ -949,7 +938,7 @@ namespace Nektar
             {
                 v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
             }
-        
+
         boost::shared_ptr<StdExpansion1D> GetEdgeExp(int edge, bool SetUpNormals=true)
             {
           return v_GetEdgeExp(edge,SetUpNormals);
@@ -957,10 +946,10 @@ namespace Nektar
 
             // Matrix Routines
 
-            /** \brief this function generates the mass matrix 
+            /** \brief this function generates the mass matrix
              *  \f$\mathbf{M}[i][j] =
              *  \int \phi_i(\mathbf{x}) \phi_j(\mathbf{x}) d\mathbf{x}\f$
-             * 
+             *
              *  \return returns the mass matrix
              */
 
@@ -970,13 +959,13 @@ namespace Nektar
                                  Array<OneD,NekDouble> &outarray,
                                  const StdMatrixKey &mkey);
 
-            void MassMatrixOp(const Array<OneD, const NekDouble> &inarray, 
+            void MassMatrixOp(const Array<OneD, const NekDouble> &inarray,
                               Array<OneD,NekDouble> &outarray,
                               const StdMatrixKey &mkey)
             {
                 v_MassMatrixOp(inarray,outarray,mkey);
             }
-        
+
             void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
                                    const StdMatrixKey &mkey)
@@ -984,7 +973,7 @@ namespace Nektar
                 v_LaplacianMatrixOp(inarray,outarray,mkey);
             }
 
-            void LaplacianMatrixOp(const int k1, const int k2, 
+            void LaplacianMatrixOp(const int k1, const int k2,
                                    const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
                                    const StdMatrixKey &mkey)
@@ -1007,7 +996,7 @@ namespace Nektar
                 v_WeakDirectionalDerivMatrixOp(inarray,outarray,mkey);
             }
 
-            void MassLevelCurvatureMatrixOp(const Array<OneD, const NekDouble> &inarray, 
+            void MassLevelCurvatureMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                             Array<OneD,NekDouble> &outarray,
                                             const StdMatrixKey &mkey)
             {
@@ -1042,7 +1031,7 @@ namespace Nektar
                 v_PhysDeriv (inarray, out_d0, out_d1, out_d2);
             }
 
-            void PhysDeriv(const int dir, 
+            void PhysDeriv(const int dir,
                            const Array<OneD, const NekDouble>& inarray,
                            Array<OneD, NekDouble> &outarray)
             {
@@ -1056,29 +1045,29 @@ namespace Nektar
                 v_PhysDirectionalDeriv (inarray, direction, outarray);
             }
 
-            void StdPhysDeriv(const Array<OneD, const NekDouble>& inarray, 
+            void StdPhysDeriv(const Array<OneD, const NekDouble>& inarray,
                               Array<OneD, NekDouble> &out_d0,
                               Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
                               Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
             {
                 v_StdPhysDeriv(inarray, out_d0, out_d1, out_d2);
-            }   
+            }
 
-            void StdPhysDeriv (const int dir, 
-                               const Array<OneD, const NekDouble>& inarray, 
+            void StdPhysDeriv (const int dir,
+                               const Array<OneD, const NekDouble>& inarray,
                                Array<OneD, NekDouble> &outarray)
-            {    
+            {
                 v_StdPhysDeriv(dir,inarray,outarray);
-            }       
+            }
 
             void AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
             {
                 v_AddRobinMassMatrix(edgeid,primCoeffs,inoutmat);
             }
 
-            void DGDeriv(const int dir, 
+            void DGDeriv(const int dir,
                          const Array<OneD, const NekDouble>& inarray,
-                         Array<OneD, boost::shared_ptr< StdExpansion1D > > &EdgeExp, 
+                         Array<OneD, boost::shared_ptr< StdExpansion1D > > &EdgeExp,
                          Array<OneD, NekDouble> &outarray)
             {
                 v_DGDeriv (dir, inarray, EdgeExp, outarray);
@@ -1088,22 +1077,22 @@ namespace Nektar
             /** \brief This function evaluates the expansion at a single
              *  (arbitrary) point of the domain
              *
-             *  This function is a wrapper around the virtual function 
+             *  This function is a wrapper around the virtual function
              *  \a v_PhysEvaluate()
              *
              *  Based on the value of the expansion at the quadrature points,
-             *  this function calculates the value of the expansion at an 
-             *  arbitrary single points (with coordinates \f$ \mathbf{x_c}\f$ 
+             *  this function calculates the value of the expansion at an
+             *  arbitrary single points (with coordinates \f$ \mathbf{x_c}\f$
              *  given by the pointer \a coords). This operation, equivalent to
-             *  \f[ u(\mathbf{x_c})  = \sum_p \phi_p(\mathbf{x_c}) \hat{u}_p \f] 
+             *  \f[ u(\mathbf{x_c})  = \sum_p \phi_p(\mathbf{x_c}) \hat{u}_p \f]
              *  is evaluated using Lagrangian interpolants through the quadrature
              *  points:
              *  \f[ u(\mathbf{x_c}) = \sum_p h_p(\mathbf{x_c}) u_p\f]
              *
-             *  This function requires that the physical value array 
-             *  \f$\mathbf{u}\f$ (implemented as the attribute #m_phys) 
+             *  This function requires that the physical value array
+             *  \f$\mathbf{u}\f$ (implemented as the attribute #m_phys)
              *  is set.
-             * 
+             *
              *  \param coords the coordinates of the single point
              *  \return returns the value of the expansion at the single point
              */
@@ -1111,7 +1100,7 @@ namespace Nektar
             {
                 return v_PhysEvaluate(coords);
             }
-            
+
             const boost::shared_ptr<SpatialDomains::GeomFactors>& GetMetricInfo(void) const
             {
                 return v_GetMetricInfo();
@@ -1121,7 +1110,7 @@ namespace Nektar
             {
                 return v_GetGeom();
             }
-            
+
             const boost::shared_ptr<SpatialDomains::Geometry1D>& GetGeom1D(void) const
             {
                 return v_GetGeom1D();
@@ -1140,15 +1129,15 @@ namespace Nektar
             virtual DNekScalMatSharedPtr& v_GetLocMatrix(const LocalRegions::MatrixKey &mkey);
 
             virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, NekDouble lambdaval, NekDouble tau);
-            
+
             virtual const Array<OneD, const NekDouble>& v_GetPhysNormals(void);
 
             virtual void v_SetPhysNormals(Array<OneD, const NekDouble> &normal);
 
             virtual void v_SetUpPhysNormals(const boost::shared_ptr<StdExpansion> &exp2d, const int edge);
-            
+
             virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray, bool NegateNorm = false);
-            
+
             virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey);
 
             virtual StdRegions::FaceOrientation v_GetFaceorient(int face);
@@ -1157,51 +1146,51 @@ namespace Nektar
 
             virtual StdRegions::EdgeOrientation v_GetCartesianEorient(int edge);
 
-            virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
+            virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau,
                                                      const Array<OneD, const NekDouble> &inarray,
                                                      Array<OneD,NekDouble> &outarray);
 
-            virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
+            virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau,
                                                      const Array<OneD, const NekDouble> &inarray,
-                                                     Array<OneD, boost::shared_ptr< StdExpansion1D > > &edgeExp, 
+                                                     Array<OneD, boost::shared_ptr< StdExpansion1D > > &edgeExp,
                                                      Array<OneD,NekDouble> &outarray);
-            
+
             virtual void v_AddEdgeNormBoundaryInt(const int edge,
                                                   boost::shared_ptr<StdExpansion1D> &EdgeExp,
-                                                  const Array<OneD, const NekDouble> &Fx,  
-                                                  const Array<OneD, const NekDouble> &Fy,  
+                                                  const Array<OneD, const NekDouble> &Fx,
+                                                  const Array<OneD, const NekDouble> &Fy,
                                                   Array<OneD, NekDouble> &outarray);
 
              virtual void v_AddEdgeNormBoundaryInt(const int edge,
                                                   boost::shared_ptr<StdExpansion1D> &EdgeExp,
-                                                  const Array<OneD, const NekDouble> &Fn,  
+                                                  const Array<OneD, const NekDouble> &Fn,
                                                   Array<OneD, NekDouble> &outarray);
 
             virtual void v_AddEdgeNormBoundaryBiInt(const int edge,
                                                     boost::shared_ptr<StdExpansion1D> &EdgeExp,
-                                                    const Array<OneD, const NekDouble> &Fwd,  
-                                                    const Array<OneD, const NekDouble> &Bwd,  
+                                                    const Array<OneD, const NekDouble> &Fwd,
+                                                    const Array<OneD, const NekDouble> &Bwd,
                                                     Array<OneD, NekDouble> &outarray);
- 
+
            virtual void v_AddNormTraceInt(const int dir,
                                            Array<OneD, const NekDouble> &inarray,
                                            Array<OneD,NekDouble> &outarray);
 
             /** \brief Function to evaluate the discrete \f$ L_\infty\f$
              *  error \f$ |\epsilon|_\infty = \max |u - u_{exact}|\f$ where \f$
-             *    u_{exact}\f$ is given by the array \a sol. 
+             *    u_{exact}\f$ is given by the array \a sol.
              *
              *    This function takes the physical value space array \a m_phys as
              *  approximate solution
              *
              *  \param sol array of solution function  at physical quadrature
              *  points
-             *  \return returns the \f$ L_\infty \f$ error as a NekDouble. 
+             *  \return returns the \f$ L_\infty \f$ error as a NekDouble.
              */
             NekDouble Linf(const Array<OneD, const NekDouble>& sol);
 
             /** \brief Function to evaluate the discrete \f$ L_\infty \f$ norm of
-             *  the function defined at the physical points \a (this)->m_phys. 
+             *  the function defined at the physical points \a (this)->m_phys.
              *
              *    This function takes the physical value space array \a m_phys as
              *  discrete function to be evaluated
@@ -1212,7 +1201,7 @@ namespace Nektar
 
             /** \brief Function to evaluate the discrete \f$ L_2\f$ error,
              *  \f$ | \epsilon |_{2} = \left [ \int^1_{-1} [u - u_{exact}]^2
-             *  dx \right]^{1/2} d\xi_1 \f$ where \f$ u_{exact}\f$ is given by 
+             *  dx \right]^{1/2} d\xi_1 \f$ where \f$ u_{exact}\f$ is given by
              *  the array \a sol.
              *
              *    This function takes the physical value space array \a m_phys as
@@ -1220,7 +1209,7 @@ namespace Nektar
              *
              *  \param sol array of solution function  at physical quadrature
              *  points
-             *  \return returns the \f$ L_2 \f$ error as a double. 
+             *  \return returns the \f$ L_2 \f$ error as a double.
              */
             NekDouble L2(const Array<OneD, const NekDouble>& sol);
 
@@ -1245,7 +1234,7 @@ namespace Nektar
              *
              *  \param sol array of solution function  at physical quadrature
              *  points
-             *  \return returns the \f$ H_1 \f$ error as a double. 
+             *  \return returns the \f$ H_1 \f$ error as a double.
              */
             NekDouble H1(const Array<OneD, const NekDouble>& sol);
 
@@ -1266,9 +1255,9 @@ namespace Nektar
         protected:
 
 
-            int   m_elmt_id;  ///< id of element when used in a list. 
+            int   m_elmt_id;  ///< id of element when used in a list.
             int   m_numbases;                                 /**< Number of 1D basis defined in expansion */
-            Array<OneD, LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */            
+            Array<OneD, LibUtilities::BasisSharedPtr> m_base; /**< Bases needed for the expansion */
             int  m_ncoeffs;                                   /**< Total number of coefficients used in the expansion */
             Array<OneD, NekDouble> m_coeffs;                  /**< Array containing expansion coefficients */
             Array<OneD, NekDouble> m_phys;                    /**< Array containing expansion evaluated at the quad points */
@@ -1279,12 +1268,12 @@ namespace Nektar
             {
                 return m_stdMatrixManager.AlreadyCreated(mkey);
             }
-         
+
             bool StdStaticCondMatManagerAlreadyCreated(const StdMatrixKey &mkey)
             {
                 return m_stdStaticCondMatrixManager.AlreadyCreated(mkey);
             }
-         
+
             DNekMatSharedPtr CreateStdMatrix(const StdMatrixKey &mkey)
             {
                 return v_CreateStdMatrix(mkey);
@@ -1293,55 +1282,55 @@ namespace Nektar
             /** \brief Create the static condensation of a matrix when
                 using a boundary interior decomposition
 
-                If a matrix system can be represented by 
+                If a matrix system can be represented by
                 \f$ Mat = \left [ \begin{array}{cc}
-                A & B \\ 
+                A & B \\
                 C & D \end{array} \right ] \f$
                 This routine creates a matrix containing the statically
                 condense system of the form
                 \f$ Mat = \left [ \begin{array}{cc}
-                A - B D^{-1} C & B D^{-1} \\ 
+                A - B D^{-1} C & B D^{-1} \\
                 D^{-1} C       & D^{-1} \end{array} \right ] \f$
             **/
             DNekBlkMatSharedPtr CreateStdStaticCondMatrix(const StdMatrixKey &mkey);
 
             void BwdTrans_MatOp(const Array<OneD, const NekDouble>& inarray,
                                 Array<OneD, NekDouble> &outarray);
-            
+
             void BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                  Array<OneD, NekDouble> &outarray)
             {
                 v_BwdTrans_SumFac(inarray,outarray);
             }
-            
-            void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
+
+            void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
                                         Array<OneD, NekDouble> &outarray)
             {
                 v_IProductWRTBase_SumFac(inarray,outarray);
-            }            
-            
+            }
+
             void IProductWRTDerivBase_SumFac(const int dir,
-                                             const Array<OneD, const NekDouble>& inarray, 
+                                             const Array<OneD, const NekDouble>& inarray,
                                              Array<OneD, NekDouble> &outarray)
             {
                 v_IProductWRTDerivBase_SumFac(dir,inarray,outarray);
-            }    
-            
+            }
+
             // The term _MatFree denotes that the action of the MatrixOperation
             // is done withouth actually using the matrix (which then needs to be stored/calculated).
-            // Although this does not strictly mean that no matrix operations are involved in the 
+            // Although this does not strictly mean that no matrix operations are involved in the
             // evaluation of the operation, we use this term in the same context used as in the following
             // paper:
-            // R. C. Kirby, M. G. Knepley, A. Logg, and L. R. Scott, 
+            // R. C. Kirby, M. G. Knepley, A. Logg, and L. R. Scott,
             // "Optimizing the evaluation of finite element matrices," SISC 27:741-758 (2005)
             void GeneralMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                Array<OneD,NekDouble> &outarray,
                                                const StdMatrixKey &mkey);
 
-            void MassMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray, 
+            void MassMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                             Array<OneD,NekDouble> &outarray,
                                             const StdMatrixKey &mkey);
-            
+
             void LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                  Array<OneD,NekDouble> &outarray,
                                                  const StdMatrixKey &mkey)
@@ -1352,12 +1341,12 @@ namespace Nektar
             void LaplacianMatrixOp_MatFree_GenericImpl(const Array<OneD, const NekDouble> &inarray,
                                                              Array<OneD,NekDouble> &outarray,
                                                              const StdMatrixKey &mkey);
-            
-            void LaplacianMatrixOp_MatFree(const int k1, const int k2, 
+
+            void LaplacianMatrixOp_MatFree(const int k1, const int k2,
                                                  const Array<OneD, const NekDouble> &inarray,
                                                  Array<OneD,NekDouble> &outarray,
                                                  const StdMatrixKey &mkey);
-            
+
             void WeakDerivMatrixOp_MatFree(const int i,
                                                  const Array<OneD, const NekDouble> &inarray,
                                                  Array<OneD,NekDouble> &outarray,
@@ -1370,7 +1359,7 @@ namespace Nektar
             void MassLevelCurvatureMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                     Array<OneD,NekDouble> &outarray,
                                                     const StdMatrixKey &mkey);
-            
+
             void LinearAdvectionDiffusionReactionMatrixOp_MatFree( const Array<OneD, const NekDouble> &inarray,
                                                                    Array<OneD,NekDouble> &outarray,
                                                                    const StdMatrixKey &mkey,
@@ -1394,14 +1383,14 @@ namespace Nektar
 
             virtual int v_GetNfaces() const;
 
-            virtual int v_NumBndryCoeffs() const; 
-            
-            virtual int v_NumDGBndryCoeffs() const; 
-            
+            virtual int v_NumBndryCoeffs() const;
+
+            virtual int v_NumDGBndryCoeffs() const;
+
             virtual int v_GetEdgeNcoeffs(const int i) const;
 
             virtual int v_GetEdgeNumPoints(const int i) const;
-                        
+
             virtual int v_DetCartesianDirOfEdge(const int edge);
 
             virtual const LibUtilities::BasisKey v_DetEdgeBasisKey(const int i) const;
@@ -1411,25 +1400,25 @@ namespace Nektar
             virtual int v_GetFaceIntNcoeffs(const int i) const;
 
             virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const;
-        
+
             virtual ExpansionType v_DetExpansionType() const;
 
             virtual int v_GetShapeDimension() const;
 
-            virtual bool  v_IsBoundaryInteriorExpansion(); 
+            virtual bool  v_IsBoundaryInteriorExpansion();
 
-            virtual void   v_BwdTrans   (const Array<OneD, const NekDouble>& inarray, 
+            virtual void   v_BwdTrans   (const Array<OneD, const NekDouble>& inarray,
                                          Array<OneD, NekDouble> &outarray) = 0;
-            virtual void   v_FwdTrans   (const Array<OneD, const NekDouble>& inarray, 
+            virtual void   v_FwdTrans   (const Array<OneD, const NekDouble>& inarray,
                                          Array<OneD, NekDouble> &outarray) = 0;
-            virtual void  v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
-                                           Array<OneD, NekDouble> &outarray) = 0;   
+            virtual void  v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
+                                           Array<OneD, NekDouble> &outarray) = 0;
 
-            virtual void  v_IProductWRTDerivBase (const int dir, 
-                                                   const Array<OneD, const NekDouble>& inarray, 
+            virtual void  v_IProductWRTDerivBase (const int dir,
+                                                   const Array<OneD, const NekDouble>& inarray,
                                                    Array<OneD, NekDouble> &outarray);
 
-            virtual void v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
+            virtual void v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray,
                                                    Array<OneD, NekDouble> &outarray);
 
             virtual NekDouble v_Integral(const Array<OneD, const NekDouble>& inarray );
@@ -1439,7 +1428,7 @@ namespace Nektar
                                         Array<OneD, NekDouble> &out_d2,
                                         Array<OneD, NekDouble> &out_d3);
 
-            virtual void v_PhysDeriv(const int dir, 
+            virtual void v_PhysDeriv(const int dir,
                                      const Array<OneD, const NekDouble>& inarray,
                                      Array<OneD, NekDouble> &out_d0);
 
@@ -1452,30 +1441,30 @@ namespace Nektar
                                          Array<OneD, NekDouble> &out_d2,
                                          Array<OneD, NekDouble> &out_d3);
 
-            virtual void   v_StdPhysDeriv (const int dir, 
-                                           const Array<OneD, const NekDouble>& inarray, 
+            virtual void   v_StdPhysDeriv (const int dir,
+                                           const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray);
 
             virtual void v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat);
 
-            virtual void v_DGDeriv(const int dir, 
+            virtual void v_DGDeriv(const int dir,
                                    const Array<OneD, const NekDouble>& inarray,
-                                   Array<OneD, boost::shared_ptr< StdExpansion1D > > &EdgeExp, 
+                                   Array<OneD, boost::shared_ptr< StdExpansion1D > > &EdgeExp,
                                    Array<OneD, NekDouble> &outarray);
 
             virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords);
 
             virtual void v_FillMode(const int mode, Array<OneD, NekDouble> &outarray);
 
-            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey);  
+            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey);
 
             virtual DNekMatSharedPtr v_CreateStdMatrix(const StdMatrixKey &mkey);
-            
+
             virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
                                      Array<OneD, NekDouble> &coords_1,
                                      Array<OneD, NekDouble> &coords_2);
 
-            virtual void v_GetCoord(const Array<OneD, const NekDouble>& Lcoord, 
+            virtual void v_GetCoord(const Array<OneD, const NekDouble>& Lcoord,
                                     Array<OneD, NekDouble> &coord);
 
             virtual int v_GetCoordim(void);
@@ -1488,7 +1477,7 @@ namespace Nektar
             virtual void v_GetInteriorMap(Array<OneD, unsigned int>& outarray);
 
             virtual int v_GetVertexMap(int localVertexId);
- 
+
             virtual void v_GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
                                               Array<OneD, unsigned int> &maparray,
                                               Array<OneD, int> &signarray);
@@ -1515,29 +1504,27 @@ namespace Nektar
 
             virtual void v_ReadFromFile(std::ifstream &infile, OutputFormat format, const bool dumpVar = true);
 
-            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile);
-            
-            virtual const  boost::shared_ptr<SpatialDomains::GeomFactors>& v_GetMetricInfo() const; 
-            
-            virtual const boost::shared_ptr<SpatialDomains::Geometry> v_GetGeom() const; 
-            
-            virtual const boost::shared_ptr<SpatialDomains::Geometry1D>& v_GetGeom1D() const; 
-        
-            virtual const boost::shared_ptr<SpatialDomains::Geometry2D>& v_GetGeom2D() const; 
-        
-            virtual const boost::shared_ptr<SpatialDomains::Geometry3D>& v_GetGeom3D() const; 
-                            
+            virtual const  boost::shared_ptr<SpatialDomains::GeomFactors>& v_GetMetricInfo() const;
+
+            virtual const boost::shared_ptr<SpatialDomains::Geometry> v_GetGeom() const;
+
+            virtual const boost::shared_ptr<SpatialDomains::Geometry1D>& v_GetGeom1D() const;
+
+            virtual const boost::shared_ptr<SpatialDomains::Geometry2D>& v_GetGeom2D() const;
+
+            virtual const boost::shared_ptr<SpatialDomains::Geometry3D>& v_GetGeom3D() const;
+
             virtual void v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray);
-            
-            virtual void v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
+
+            virtual void v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
                                                   Array<OneD, NekDouble> &outarray);
-            
+
             virtual void v_IProductWRTDerivBase_SumFac(const int dir,
-                                                       const Array<OneD, const NekDouble>& inarray, 
+                                                       const Array<OneD, const NekDouble>& inarray,
                                                        Array<OneD, NekDouble> &outarray);
 
-            virtual void v_MassMatrixOp(const Array<OneD, const NekDouble> &inarray, 
+            virtual void v_MassMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                         Array<OneD,NekDouble> &outarray,
                                         const StdMatrixKey &mkey);
 
@@ -1545,7 +1532,7 @@ namespace Nektar
                                              Array<OneD,NekDouble> &outarray,
                                              const StdMatrixKey &mkey);
 
-            virtual void v_LaplacianMatrixOp(const int k1, const int k2, 
+            virtual void v_LaplacianMatrixOp(const int k1, const int k2,
                                              const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray,
                                              const StdMatrixKey &mkey);
@@ -1563,12 +1550,12 @@ namespace Nektar
                                                         Array<OneD,NekDouble> &outarray,
                                                         const StdMatrixKey &mkey);
 
-            virtual void v_LinearAdvectionDiffusionReactionMatrixOp(const Array<OneD, 
+            virtual void v_LinearAdvectionDiffusionReactionMatrixOp(const Array<OneD,
                                                                     const NekDouble> &inarray,
                                                                     Array<OneD,NekDouble> &outarray,
                                                                     const StdMatrixKey &mkey,
                                                                     bool addDiffusionTerm=true);
-            
+
             virtual void v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray,
                                              const StdMatrixKey &mkey);
@@ -1576,15 +1563,15 @@ namespace Nektar
             virtual void v_LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
                                                            const StdMatrixKey &mkey);
-            
+
             virtual void v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
                                                            const StdMatrixKey &mkey);
 #endif
-            
+
         };
 
-    
+
         typedef boost::shared_ptr<StdExpansion> StdExpansionSharedPtr;
         typedef std::vector< StdExpansionSharedPtr > StdExpansionVector;
         typedef std::vector< StdExpansionSharedPtr >::iterator StdExpansionVectorIter;

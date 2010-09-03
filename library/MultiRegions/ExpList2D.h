@@ -42,7 +42,7 @@
 #include <MultiRegions/ExpList1D.h>
 #include <SpatialDomains/MeshGraph2D.h>
 #include <SpatialDomains/MeshGraph3D.h>
-#include <SpatialDomains/BoundaryConditions.h>
+#include <SpatialDomains/Conditions.h>
 
 namespace Nektar
 {
@@ -71,7 +71,7 @@ namespace Nektar
                         bool DeclareCoeffPhysArrays = true);
 
             /// Sets up a list of local expansions based on an input mesh.
-            ExpList2D(SpatialDomains::MeshGraph2D &graph2D, 
+            ExpList2D(SpatialDomains::MeshGraph2D &graph2D,
                       bool DelcareCoeffPhysArrays = true);
 
             /// Sets up a list of local expansions based on an input mesh
@@ -110,7 +110,7 @@ namespace Nektar
                         Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                         &bndConditions,
                         const NekDouble x2_in = NekConstants::kNekUnsetDouble);
-            
+
             /// Generates a map of periodic edges in the mesh.
             void GetPeriodicEdges(
                         SpatialDomains::MeshGraph2D &graph2D,
@@ -137,6 +137,9 @@ namespace Nektar
 
             virtual void v_ReadGlobalOptimizationParameters(
                                 const std::string &infilename);
+
+            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
+
         };
 
         /// Empty ExpList2D object.

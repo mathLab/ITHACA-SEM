@@ -50,7 +50,7 @@ namespace Nektar
         {
         }
 
-        StdExpansion2D::StdExpansion2D(int numcoeffs, 
+        StdExpansion2D::StdExpansion2D(int numcoeffs,
                        const LibUtilities::BasisKey &Ba,
                                        const LibUtilities::BasisKey &Bb):
         StdExpansion(numcoeffs,2, Ba, Bb)
@@ -70,12 +70,12 @@ namespace Nektar
         // Differentiation Methods
         //----------------------------
         void StdExpansion2D::PhysTensorDeriv(const Array<OneD, const NekDouble>& inarray,
-                         Array<OneD, NekDouble> &outarray_d0, 
+                         Array<OneD, NekDouble> &outarray_d0,
                          Array<OneD, NekDouble> &outarray_d1)
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
-            
+
             if (outarray_d0.num_elements() > 0) // calculate du/dx_0
             {
                 DNekMatSharedPtr D0 = m_base[0]->GetD();
@@ -102,12 +102,12 @@ namespace Nektar
                 {
                     Array<OneD, NekDouble> wsp(nquad0 * nquad1);
                     Vmath::Vcopy(nquad0 * nquad1,inarray.get(),1,wsp.get(),1);
-                    Blas:: Dgemm('N', 'T', nquad0, nquad1, nquad1, 1.0, &wsp[0], nquad0,                    
+                    Blas:: Dgemm('N', 'T', nquad0, nquad1, nquad1, 1.0, &wsp[0], nquad0,
                                  &(D1->GetPtr())[0], nquad1, 0.0, &outarray_d1[0], nquad0);
                 }
                 else
                 {
-                    Blas:: Dgemm('N', 'T', nquad0, nquad1, nquad1, 1.0, &inarray[0], nquad0,                    
+                    Blas:: Dgemm('N', 'T', nquad0, nquad1, nquad1, 1.0, &inarray[0], nquad0,
                                  &(D1->GetPtr())[0], nquad1, 0.0, &outarray_d1[0], nquad0);
                 }
             }
@@ -131,7 +131,7 @@ namespace Nektar
             // interpolate first coordinate direction
             for (i = 0; i < nq1;++i)
             {
-                wsp1[i] = Blas::Ddot(nq0, &(I->GetPtr())[0], 1, 
+                wsp1[i] = Blas::Ddot(nq0, &(I->GetPtr())[0], 1,
                                      &m_phys[i * nq0], 1);
             }
 
@@ -146,7 +146,7 @@ namespace Nektar
         // Integration Methods
         //////////////////////////////
 
-        NekDouble StdExpansion2D::Integral(const Array<OneD, const NekDouble>& inarray, 
+        NekDouble StdExpansion2D::Integral(const Array<OneD, const NekDouble>& inarray,
                        const Array<OneD, const NekDouble>& w0,
                        const Array<OneD, const NekDouble>& w1)
         {
@@ -171,82 +171,6 @@ namespace Nektar
             Int = Vmath::Vsum(nquad0 * nquad1, tmp, 1);
 
             return Int;
-        }
-
-        /**
-         * Writes out the header for a <PIECE> VTK XML segment describing the
-         * geometric information which comprises this element. This includes
-         * vertex coordinates for each quadrature point, vertex connectivity
-         * information, cell types and cell offset data.
-         * 
-         * @param   outfile     Output stream to write data to.
-         */
-        void StdExpansion2D::v_WriteVtkPieceHeader(std::ofstream &outfile)
-        {
-            int i,j;
-            int coordim  = GetCoordim();
-            int nquad0 = GetNumPoints(0);
-            int nquad1 = GetNumPoints(1);
-            int ntot = nquad0*nquad1;
-            int ntotminus = (nquad0-1)*(nquad1-1);
-            
-            Array<OneD,NekDouble> coords[3];
-            coords[0] = Array<OneD,NekDouble>(ntot);
-            coords[1] = Array<OneD,NekDouble>(ntot);
-            coords[2] = Array<OneD,NekDouble>(ntot);
-            GetCoords(coords[0],coords[1],coords[2]);
-
-            outfile << "    <Piece NumberOfPoints=\""
-                    << ntot << "\" NumberOfCells=\""
-                    << ntotminus << "\">" << endl;
-            outfile << "      <Points>" << endl;
-            outfile << "        <DataArray type=\"Float32\" "
-                    << "NumberOfComponents=\"3\" format=\"ascii\">" << endl;
-            outfile << "          ";
-            for (i = 0; i < ntot; ++i)
-            {
-                for (j = 0; j < 3; ++j)
-                {
-                    outfile << coords[j][i] << " ";
-                }
-                outfile << endl;
-            }
-            outfile << endl;
-            outfile << "        </DataArray>" << endl;
-            outfile << "      </Points>" << endl;
-            outfile << "      <Cells>" << endl;
-            outfile << "        <DataArray type=\"Int32\" "
-                    << "Name=\"connectivity\" format=\"ascii\">" << endl;
-            for (i = 0; i < nquad0-1; ++i)
-            {
-                for (j = 0; j < nquad1-1; ++j)
-                {
-                    outfile << j*nquad0 + i << " "
-                            << j*nquad0 + i + 1 << " "
-                            << (j+1)*nquad0 + i + 1 << " "
-                            << (j+1)*nquad0 + i << endl;
-                }
-            }
-            outfile << endl;
-            outfile << "        </DataArray>" << endl;
-            outfile << "        <DataArray type=\"Int32\" "
-                    << "Name=\"offsets\" format=\"ascii\">" << endl;
-            for (i = 0; i < ntotminus; ++i)
-            {
-                outfile << i*4+4 << " ";
-            }
-            outfile << endl;
-            outfile << "        </DataArray>" << endl;
-            outfile << "        <DataArray type=\"UInt8\" "
-                    << "Name=\"types\" format=\"ascii\">" << endl;
-            for (i = 0; i < ntotminus; ++i)
-            {
-                outfile << "9 ";
-            }
-            outfile << endl;
-            outfile << "        </DataArray>" << endl;
-            outfile << "      </Cells>" << endl;
-            outfile << "      <PointData>" << endl;
         }
 
     } //end namespace

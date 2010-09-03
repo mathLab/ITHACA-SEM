@@ -45,7 +45,7 @@
 #include <LocalRegions/PyrExp.h>
 #include <LocalRegions/TetExp.h>
 #include <SpatialDomains/MeshGraph3D.h>
-#include <SpatialDomains/BoundaryConditions.h>
+#include <SpatialDomains/Conditions.h>
 
 namespace Nektar
 {
@@ -118,6 +118,8 @@ namespace Nektar
 
             virtual void v_ReadGlobalOptimizationParameters(
                                 const std::string &infilename);
+
+            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
 
         };
 

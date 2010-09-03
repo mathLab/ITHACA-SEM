@@ -58,7 +58,7 @@ namespace Nektar
             // Generic operations in different element
 
             /** \brief Calculate the 2D derivative in the local
-             *  tensor/collapsed coordinate at the physical points 
+             *  tensor/collapsed coordinate at the physical points
              *
              *  This function is independent of the expansion basis and can
              *  therefore be defined for all tensor product distribution of
@@ -68,57 +68,57 @@ namespace Nektar
              *  - \f$ \frac{d}{d\eta_2} \rightarrow {\bf D_1 u } \f$
              *
              *  \param inarray array of physical points to be differentiated
-             *  \param  outarray_d0 the resulting array of derivative in the 
+             *  \param  outarray_d0 the resulting array of derivative in the
              *  \f$\eta_1\f$ direction will be stored in outarray_d0 as output
              *  of the function
-             *  \param outarray_d1 the resulting array of derivative in the 
-             *  \f$\eta_2\f$ direction will be stored in outarray_d1 as output 
+             *  \param outarray_d1 the resulting array of derivative in the
+             *  \f$\eta_2\f$ direction will be stored in outarray_d1 as output
              *  of the function
              *
-             *  Recall that: 
+             *  Recall that:
              *  \f$
              *  \hspace{1cm} \begin{array}{llll}
              *  \mbox{Shape}    & \mbox{Cartesian coordinate range} &
-             *  \mbox{Collapsed coord.}      & 
+             *  \mbox{Collapsed coord.}      &
              *  \mbox{Collapsed coordinate definition}\\
-             *  \mbox{Quadrilateral}  & -1 \leq \xi_1,\xi_2 \leq  1   
-             *  & -1 \leq \eta_1,\eta_2 \leq 1 
+             *  \mbox{Quadrilateral}  & -1 \leq \xi_1,\xi_2 \leq  1
+             *  & -1 \leq \eta_1,\eta_2 \leq 1
              *  & \eta_1 = \xi_1, \eta_2 = \xi_2\\
-             *  \mbox{Triangle}  & -1 \leq \xi_1,\xi_2; \xi_1+\xi_2 \leq  0   
-             *  & -1 \leq \eta_1,\eta_2 \leq 1  
+             *  \mbox{Triangle}  & -1 \leq \xi_1,\xi_2; \xi_1+\xi_2 \leq  0
+             *  & -1 \leq \eta_1,\eta_2 \leq 1
              *  & \eta_1 = \frac{2(1+\xi_1)}{(1-\xi_2)}-1, \eta_2 = \xi_2 \\
              *  \end{array} \f$
              */
             void PhysTensorDeriv(const Array<OneD, const NekDouble>& inarray,
                                  Array<OneD, NekDouble> &outarray_d0,
                                  Array<OneD, NekDouble> &outarray_d1);
-            
+
             /** \brief This function evaluates the expansion at a single
              *  (arbitrary) point of the domain
              *
-             *  This function is a wrapper around the virtual function 
+             *  This function is a wrapper around the virtual function
              *  \a v_PhysEvaluate()
              *
              *  Based on the value of the expansion at the quadrature points,
-             *  this function calculates the value of the expansion at an 
-             *  arbitrary single points (with coordinates \f$ \mathbf{x_c}\f$ 
+             *  this function calculates the value of the expansion at an
+             *  arbitrary single points (with coordinates \f$ \mathbf{x_c}\f$
              *  given by the pointer \a coords). This operation, equivalent to
-             *  \f[ u(\mathbf{x_c})  = \sum_p \phi_p(\mathbf{x_c}) \hat{u}_p \f] 
+             *  \f[ u(\mathbf{x_c})  = \sum_p \phi_p(\mathbf{x_c}) \hat{u}_p \f]
              *  is evaluated using Lagrangian interpolants through the quadrature
              *  points:
              *  \f[ u(\mathbf{x_c}) = \sum_p h_p(\mathbf{x_c}) u_p\f]
              *
-             *  This function requires that the physical value array 
-             *  \f$\mathbf{u}\f$ (implemented as the attribute #m_phys) 
+             *  This function requires that the physical value array
+             *  \f$\mathbf{u}\f$ (implemented as the attribute #m_phys)
              *  is set.
-             * 
+             *
              *  \param coords the coordinates of the single point
              *  \return returns the value of the expansion at the single point
              */
             NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords);
 
-            NekDouble Integral(const Array<OneD, const NekDouble>& inarray, 
-                               const Array<OneD, const NekDouble>& w0, 
+            NekDouble Integral(const Array<OneD, const NekDouble>& inarray,
+                               const Array<OneD, const NekDouble>& w0,
                                const Array<OneD, const NekDouble>& w1);
 
 
@@ -143,14 +143,11 @@ namespace Nektar
             {
                 return 2;
             }
-         
+
             virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
             {
                 return PhysEvaluate(coords);
             }
-
-            /// Writes VTK geometry information for this expansion.
-            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile);
         };
 
         typedef boost::shared_ptr<StdExpansion2D> StdExpansion2DSharedPtr;

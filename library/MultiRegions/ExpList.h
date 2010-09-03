@@ -219,38 +219,38 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
                           NekDouble lambda = 0.0,
-                    const Array<OneD, const NekDouble> &varLambda 
+                    const Array<OneD, const NekDouble> &varLambda
                                                 = NullNekDouble1DArray,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff 
+                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff
                                                 = NullNekDoubleArrayofArray);
-            
+
             /// Solve helmholtz problem (continuous case parameters).
             inline void HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
                           NekDouble lambda,
                           bool UseContCoeffs,
-                    const Array<OneD, const NekDouble> &dirForcing 
+                    const Array<OneD, const NekDouble> &dirForcing
                                                 = NullNekDouble1DArray,
-                    const Array<OneD, const NekDouble> &varLambda 
+                    const Array<OneD, const NekDouble> &varLambda
                                                 = NullNekDouble1DArray,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff 
+                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff
                                                 = NullNekDoubleArrayofArray);
-            
+
             /// Solve helmholtz problem (discontinuous case parameters).
             inline void HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
                           NekDouble lambda,
                           NekDouble tau,
-                    const Array<OneD, const NekDouble> &varLambda 
+                    const Array<OneD, const NekDouble> &varLambda
                                                 = NullNekDouble1DArray,
-                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff 
+                    const Array<OneD, const Array<OneD, NekDouble> > &varCoeff
                                                 = NullNekDoubleArrayofArray);
 
-            /// Solve Advection Diffusion Reaction 
+            /// Solve Advection Diffusion Reaction
             inline void LinearAdvectionDiffusionReactionSolve(
-                       const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+                       const Array<OneD, Array<OneD, NekDouble> > &velocity,
                        const Array<OneD, const NekDouble> &inarray,
                        Array<OneD, NekDouble> &outarray,
                        const NekDouble lambda,
@@ -259,9 +259,9 @@ namespace Nektar
                        dirForcing = NullNekDouble1DArray);
 
 
-            /// Solve Advection Diffusion Reaction 
+            /// Solve Advection Diffusion Reaction
             inline void LinearAdvectionReactionSolve(
-                       const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+                       const Array<OneD, Array<OneD, NekDouble> > &velocity,
                        const Array<OneD, const NekDouble> &inarray,
                        Array<OneD, NekDouble> &outarray,
                        const NekDouble lambda,
@@ -328,10 +328,19 @@ namespace Nektar
 
             void WriteVtkHeader(std::ofstream &outfile);
             void WriteVtkFooter(std::ofstream &outfile);
-            void WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
+
+            void WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
+            {
+                v_WriteVtkPieceHeader(outfile, expansion);
+            }
+
             void WriteVtkPieceFooter(std::ofstream &outfile, int expansion);
+
             void WriteVtkPieceData  (std::ofstream &outfile, int expansion,
-                                     std::string var = "v");
+                                     std::string var = "v")
+            {
+                v_WriteVtkPieceData(outfile, expansion, var);
+            }
 
             void ReadFromFile(std::ifstream &in,
                               OutputFormat format = eTecplot);
@@ -452,9 +461,9 @@ namespace Nektar
             /// containing all local expansion coefficients.
             inline Array<OneD, NekDouble> &UpdateCoeffs();
 
-            /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$ 
-            /// (implemented as #m_contCoeffs) containing all global expansion 
-            /// coefficients in ContField 
+            /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$
+            /// (implemented as #m_contCoeffs) containing all global expansion
+            /// coefficients in ContField
             inline Array<OneD, NekDouble> &UpdateContCoeffs()
             {
                 return v_UpdateContCoeffs();
@@ -585,7 +594,7 @@ namespace Nektar
             {
                 v_AppendFieldData(fielddef,fielddata);
             }
-            
+
             /// Extract the data in fielddata into the m_coeff list
             void ExtractDataToCoeffs(
                                      SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
@@ -594,7 +603,7 @@ namespace Nektar
             {
                 v_ExtractDataToCoeffs(fielddef,fielddata,field);
             }
-            
+
         protected:
 
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(
@@ -750,10 +759,10 @@ namespace Nektar
                                                                const LocalToGlobalBaseMapSharedPtr &locToGloMap);
 
             // Virtual prototypes
-            
+
             virtual int v_GetNumElmts(void)
             {
-                return (*m_exp).size(); 
+                return (*m_exp).size();
             }
 
             virtual const
@@ -801,14 +810,14 @@ namespace Nektar
                                                    const Array<OneD,const NekDouble> &inarray,
                                                    Array<OneD,      NekDouble> &outarray,
                                                    bool  UseContCoeffs);
-                                    
+
             virtual void v_HelmSolve(
                                      const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD,       NekDouble> &outarray,
                                      NekDouble lambda,
                                      const Array<OneD, const NekDouble> &Sigma,
                                      const Array<OneD, const Array<OneD, NekDouble> > &varcoeff);
-            
+
             virtual void v_HelmSolveCG(
                                        const Array<OneD, const NekDouble> &inarray,
                                        Array<OneD,       NekDouble> &outarray,
@@ -824,7 +833,7 @@ namespace Nektar
                                        NekDouble lambda,
                                        const Array<OneD, const NekDouble> &Sigma,
                                        const Array<OneD, const Array<OneD, NekDouble> > &varcoeff,
-                                       NekDouble tau);      
+                                       NekDouble tau);
 
             virtual void v_HelmSolve(
                                      const Array<OneD, const NekDouble> &inarray,
@@ -834,7 +843,7 @@ namespace Nektar
                                      NekDouble tau);
 
             virtual void v_LinearAdvectionDiffusionReactionSolve(
-                                                                 const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+                                                                 const Array<OneD, Array<OneD, NekDouble> > &velocity,
                                                                  const Array<OneD, const NekDouble> &inarray,
                                                                  Array<OneD, NekDouble> &outarray,
                                                                  const NekDouble lambda,
@@ -843,7 +852,7 @@ namespace Nektar
                                                                  dirForcing = NullNekDouble1DArray);
 
             virtual void v_LinearAdvectionReactionSolve(
-                                                        const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+                                                        const Array<OneD, Array<OneD, NekDouble> > &velocity,
                                                         const Array<OneD, const NekDouble> &inarray,
                                                         Array<OneD, NekDouble> &outarray,
                                                         const NekDouble lambda,
@@ -853,7 +862,7 @@ namespace Nektar
 
             // wrapper functions about virtual functions
             virtual Array<OneD, NekDouble> &v_UpdateContCoeffs();
-            
+
             virtual const
                 Array<OneD, const NekDouble> &v_GetContCoeffs() const;
 
@@ -909,14 +918,18 @@ namespace Nektar
 
             virtual void v_WriteTecplotHeader(std::ofstream &outfile,
                                             std::string var = "v");
-            virtual void v_WriteTecplotZone(std::ofstream &outfile, 
+            virtual void v_WriteTecplotZone(std::ofstream &outfile,
                                             int expansion);
             virtual void v_WriteTecplotField(std::ofstream &outfile,
                                              int expansion);
 
+            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
+            virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
+                                        std::string var);
+
             virtual NekDouble v_L2(void);
             virtual NekDouble v_L2(const Array<OneD, const NekDouble> &soln);
-            
+
             virtual void v_SetContCoeffsArray(Array<OneD, NekDouble> &inarray);
 
         private:
@@ -993,7 +1006,7 @@ namespace Nektar
 
             for(i= 0; i < (*m_exp).size(); ++i)
             {
-                returnval[i] 
+                returnval[i]
                     = max(returnval[i],(*m_exp)[i]->EvalBasisNumModesMax());
             }
 
@@ -1059,7 +1072,7 @@ namespace Nektar
 
         inline void ExpList::SetPhysArray(Array<OneD, NekDouble> &inarray)
         {
-            m_phys = inarray; 
+            m_phys = inarray;
         }
 
 
@@ -1116,7 +1129,7 @@ namespace Nektar
         }
 
         /**
-         * 
+         *
          */
         inline void ExpList::HelmSolve(
                                        const Array<OneD, const NekDouble> &inarray,
@@ -1133,9 +1146,9 @@ namespace Nektar
             // v_HelmSolve -> v_HelmSolveCG or v_HelmSolveDG in derived classes
         }
 
-        
+
         /**
-         * 
+         *
          */
         inline void ExpList::HelmSolve(
                                        const Array<OneD, const NekDouble> &inarray,
@@ -1148,17 +1161,17 @@ namespace Nektar
         {
             // HelmSolve(inarray, outarray, lambda, useContCoeff);
             // HelmSolve(inarray, outarray, lambda, useContCoeff, dirForcing);
-            // HelmSolve(inarray, outarray, lambda, useContCoeff, dirForcing, 
+            // HelmSolve(inarray, outarray, lambda, useContCoeff, dirForcing,
             //                                              Lambda);
-            // HelmSolve(inarray, outarray, lambda, useContCoeff, dirForcing, 
+            // HelmSolve(inarray, outarray, lambda, useContCoeff, dirForcing,
             //                                              Lambda, varcoeff);
-            v_HelmSolveCG(inarray, outarray, lambda, Sigma, varcoeff, 
+            v_HelmSolveCG(inarray, outarray, lambda, Sigma, varcoeff,
                           UseContCoeffs, dirForcing);
         }
-        
+
 
         /**
-         * 
+         *
          */
         inline void ExpList::HelmSolve(
                                        const Array<OneD, const NekDouble> &inarray,
@@ -1175,10 +1188,10 @@ namespace Nektar
         }
 
         /**
-         * 
+         *
          */
         inline void ExpList::LinearAdvectionDiffusionReactionSolve(
-                                                                   const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+                                                                   const Array<OneD, Array<OneD, NekDouble> > &velocity,
                                                                    const Array<OneD, const NekDouble> &inarray,
                                                                    Array<OneD, NekDouble> &outarray,
                                                                    const NekDouble lambda,
@@ -1189,7 +1202,7 @@ namespace Nektar
         }
 
         inline void ExpList::LinearAdvectionReactionSolve(
-                                                          const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+                                                          const Array<OneD, Array<OneD, NekDouble> > &velocity,
                                                           const Array<OneD, const NekDouble> &inarray,
                                                           Array<OneD, NekDouble> &outarray,
                                                           const NekDouble lambda,
@@ -1365,7 +1378,7 @@ namespace Nektar
         /**
          *
          */
-        inline const int ExpList::GetPhys_Offset(int n) const 
+        inline const int ExpList::GetPhys_Offset(int n) const
         {
             return m_phys_offset[n];
         }
@@ -1489,7 +1502,7 @@ namespace Nektar
             return v_UpdateBndConditions();
         }
 
-        inline void ExpList::EvaluateBoundaryConditions(const NekDouble time, 
+        inline void ExpList::EvaluateBoundaryConditions(const NekDouble time,
                                                         const NekDouble x2_in)
         {
             v_EvaluateBoundaryConditions(time,x2_in);

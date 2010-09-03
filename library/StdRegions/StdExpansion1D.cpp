@@ -28,7 +28,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
 // Description: Daughter of StdExpansion. This class contains routine
 // which are common to 1d expansion. Typically this inolves physiocal
 // space operations.
@@ -41,11 +41,11 @@ namespace Nektar
 {
     namespace StdRegions
     {
-    
+
     StdExpansion1D::StdExpansion1D()
     {
     }
-    
+
     StdExpansion1D::StdExpansion1D(int numcoeffs, const LibUtilities::BasisKey &Ba):
         StdExpansion(numcoeffs,1,Ba)
     {
@@ -58,22 +58,22 @@ namespace Nektar
     StdExpansion1D::~StdExpansion1D()
     {
     }
-    
-  
+
+
     //----------------------------
     // Differentiation Methods
     //-----------------------------
-    
-    void StdExpansion1D::PhysTensorDeriv(const Array<OneD, const NekDouble>& inarray, 
+
+    void StdExpansion1D::PhysTensorDeriv(const Array<OneD, const NekDouble>& inarray,
                          Array<OneD, NekDouble>& outarray)
     {
         int nquad = GetTotPoints();
         DNekMatSharedPtr D = m_base[0]->GetD();
 
 #ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
-        
+
         if( inarray.data() == outarray.data())
-        { 
+        {
             Array<OneD, NekDouble> wsp(nquad);
             CopyArray(inarray, wsp);
             Blas::Dgemv('N',nquad,nquad,1.0,&(D->GetPtr())[0],nquad,
@@ -88,107 +88,39 @@ namespace Nektar
 #else //NEKTAR_USING_DIRECT_BLAS_CALLS
 
         NekVector<NekDouble> out(nquad,outarray,eWrapper);
-        
+
         if(inarray.data() == outarray.data()) // copy intput array
         {
-            NekVector<const NekDouble> in(nquad,inarray,eCopy);  
+            NekVector<const NekDouble> in(nquad,inarray,eCopy);
             out = (*D)*in;
         }
         else
         {
-            NekVector<const NekDouble> in (nquad,inarray,eWrapper); 
+            NekVector<const NekDouble> in (nquad,inarray,eWrapper);
             out = (*D)*in;
         }
-        
-#endif //NEKTAR_USING_DIRECT_BLAS_CALLS    
+
+#endif //NEKTAR_USING_DIRECT_BLAS_CALLS
     }
-    
+
     NekDouble StdExpansion1D::PhysEvaluate(const Array<OneD, const NekDouble>& Lcoord)
     {
         int    nquad = GetTotPoints();
         NekDouble  val;
         DNekMatSharedPtr I = m_base[0]->GetI(Lcoord);
-        
+
         ASSERTL2(Lcoord[0] < -1,"Lcoord[0] < -1");
         ASSERTL2(Lcoord[0] >  1,"Lcoord[0] >  1");
 
         val = Blas::Ddot(nquad, I->GetPtr(), 1, m_phys, 1);
-        
-        return val;    
+
+        return val;
     }
 
-        /**
-         * Writes out the header for a <PIECE> VTK XML segment describing the
-         * geometric information which comprises this element. This includes
-         * vertex coordinates for each quadrature point, vertex connectivity
-         * information, cell types and cell offset data.
-         * 
-         * @param   outfile     Output stream to write data to.
-         */
-        void StdExpansion1D::v_WriteVtkPieceHeader(std::ofstream &outfile)
-        {
-            int i,j;
-            int coordim  = GetCoordim();
-            int nquad0 = GetNumPoints(0);
-            int ntot = nquad0;
-            int ntotminus = (nquad0-1);
-            
-            Array<OneD,NekDouble> coords[3];
-            coords[0] = Array<OneD,NekDouble>(ntot);
-            coords[1] = Array<OneD,NekDouble>(ntot);
-            coords[2] = Array<OneD,NekDouble>(ntot);
-            GetCoords(coords[0],coords[1],coords[2]);
-
-            outfile << "    <Piece NumberOfPoints=\""
-                    << ntot << "\" NumberOfCells=\""
-                    << ntotminus << "\">" << endl;
-            outfile << "      <Points>" << endl;
-            outfile << "        <DataArray type=\"Float32\" "
-                    << "NumberOfComponents=\"3\" format=\"ascii\">" << endl;
-            outfile << "          ";
-            for (i = 0; i < ntot; ++i)
-            {
-                for (j = 0; j < 3; ++j)
-                {
-                    outfile << coords[j][i] << " ";
-                }
-                outfile << endl;
-            }
-            outfile << endl;
-            outfile << "        </DataArray>" << endl;
-            outfile << "      </Points>" << endl;
-            outfile << "      <Cells>" << endl;
-            outfile << "        <DataArray type=\"Int32\" "
-                    << "Name=\"connectivity\" format=\"ascii\">" << endl;
-            for (i = 0; i < nquad0-1; ++i)
-            {
-                outfile << i << " " << i+1 << endl;
-            }
-            outfile << endl;
-            outfile << "        </DataArray>" << endl;
-            outfile << "        <DataArray type=\"Int32\" "
-                    << "Name=\"offsets\" format=\"ascii\">" << endl;
-            for (i = 0; i < ntotminus; ++i)
-            {
-                outfile << i*2+2 << " ";
-            }
-            outfile << endl;
-            outfile << "        </DataArray>" << endl;
-            outfile << "        <DataArray type=\"UInt8\" "
-                    << "Name=\"types\" format=\"ascii\">" << endl;
-            for (i = 0; i < ntotminus; ++i)
-            {
-                outfile << "3 ";
-            }
-            outfile << endl;
-            outfile << "        </DataArray>" << endl;
-            outfile << "      </Cells>" << endl;
-            outfile << "      <PointData>" << endl;
-        }    
     }//end namespace
 }//end namespace
 
-/** 
+/**
  * $Log: StdExpansion1D.cpp,v $
  * Revision 1.28  2008/08/20 09:14:57  sherwin
  * In TensorDeriv replaced comparison of arrays with comparison of stored pointer
@@ -292,5 +224,5 @@ namespace Nektar
  *
  * Updates and compiling checks upto StdExpansions1D
  *
- **/ 
+ **/
 

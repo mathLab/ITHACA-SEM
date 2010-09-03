@@ -37,7 +37,7 @@
 #define NEKTAR_LIBS_MULTIREGIONS_CONTFIELD2D_H
 
 #include <SpatialDomains/MeshGraph2D.h>
-#include <SpatialDomains/BoundaryConditions.h>
+#include <SpatialDomains/Conditions.h>
 
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/DisContField2D.h>
@@ -76,7 +76,7 @@ namespace Nektar
                         bool DeclareCoeffPhysArrays = true);
 
             /// Construct a global continuous field with solution type based on
-            /// another field but using a separate input mesh and boundary 
+            /// another field but using a separate input mesh and boundary
             /// conditions.
             ContField2D(const ContField2D &In,
                         SpatialDomains::MeshGraph2D &graph2D,
@@ -91,15 +91,15 @@ namespace Nektar
                         const std::string variable,
                         const GlobalSysSolnType solnType
                         = eDirectMultiLevelStaticCond);
-            
+
             /// The copy constructor.
             ContField2D(const ContField2D &In, bool DeclareCoeffPhysArrays = true);
 
             /// The default destructor.
             ~ContField2D();
 
-            /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$ 
-            /// (implemented as #m_contCoeffs) containing all global expansion 
+            /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$
+            /// (implemented as #m_contCoeffs) containing all global expansion
             /// coefficients.
             inline Array<OneD, NekDouble> &UpdateContCoeffs();
 
@@ -145,7 +145,7 @@ namespace Nektar
                                   Array<OneD,NekDouble> &outarray) const;
 
             /// Returns the map from local to global level.
-            inline const LocalToGlobalC0ContMapSharedPtr& GetLocalToGlobalMap() 
+            inline const LocalToGlobalC0ContMapSharedPtr& GetLocalToGlobalMap()
                                                                         const;
 
 
@@ -188,7 +188,7 @@ namespace Nektar
                               NekDouble time = 0.0,
                               bool UseContCoeffs = false);
 
-            
+
             /// Compute the eigenvalues of the linear advection operator.
             void LinearAdvectionEigs(const NekDouble ax,
                                      const NekDouble ay,
@@ -262,7 +262,7 @@ namespace Nektar
 
             /// Template method virtual forwarded for UpdateContCoeffs()
             virtual Array<OneD, NekDouble> &v_UpdateContCoeffs();
-            
+
             /// Template method virtual forwarded for GetContCoeffs()
             virtual const Array<OneD, const NekDouble> &v_GetContCoeffs() const;
 
@@ -298,7 +298,7 @@ namespace Nektar
                           NekDouble lambda,
                     const Array<OneD, const NekDouble> &varLambda,
                     const Array<OneD, const Array<OneD, NekDouble> > &varCoeff);
-            
+
             /// Solves the two-dimensional Helmholtz equation, subject to the
             /// boundary conditions specified (Continuous Galerkin specific
             /// version).
@@ -313,7 +313,7 @@ namespace Nektar
 
             // Solve the linear advection problem assuming that m_contCoeff
             // vector contains an intial estimate for solution
-            virtual void v_LinearAdvectionDiffusionReactionSolve(const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+            virtual void v_LinearAdvectionDiffusionReactionSolve(const Array<OneD, Array<OneD, NekDouble> > &velocity,
                                               const Array<OneD, const NekDouble> &inarray,
                                               Array<OneD, NekDouble> &outarray,
                                               const NekDouble lambda,
@@ -323,7 +323,7 @@ namespace Nektar
 
             // Solve the linear advection problem assuming that m_contCoeff
             // vector contains an intial estimate for solution
-            void v_LinearAdvectionReactionSolve(const Array<OneD, Array<OneD, NekDouble> > &velocity, 
+            void v_LinearAdvectionReactionSolve(const Array<OneD, Array<OneD, NekDouble> > &velocity,
                                               const Array<OneD, const NekDouble> &inarray,
                                               Array<OneD, NekDouble> &outarray,
                                               const NekDouble lambda,
@@ -335,7 +335,7 @@ namespace Nektar
             virtual const Array<OneD,const SpatialDomains
                                 ::BoundaryConditionShPtr>& v_GetBndConditions();
 
-            /// Template method virtual forwarder for 
+            /// Template method virtual forwarder for
             /// EvaluateBoundaryConditions().
             virtual void v_EvaluateBoundaryConditions(
                                                       const NekDouble time = 0.0, const NekDouble x2_in = NekConstants::kNekUnsetDouble);
@@ -423,8 +423,8 @@ namespace Nektar
          * correct modal connectivity between the different elements (both
          * these arrays are contained in the data member #m_locToGloMap). This
          * operation is equivalent to the scatter operation
-         * \f$\boldsymbol{\hat{u}}_l=\mathcal{A}\boldsymbol{\hat{u}}_g\f$, 
-         * where \f$\mathcal{A}\f$ is the 
+         * \f$\boldsymbol{\hat{u}}_l=\mathcal{A}\boldsymbol{\hat{u}}_g\f$,
+         * where \f$\mathcal{A}\f$ is the
          * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
          *
          * @param   outarray    The resulting local degrees of freedom
@@ -453,8 +453,8 @@ namespace Nektar
          * correct modal connectivity between the different elements (both
          * these arrays are contained in the data member #m_locToGloMap). This
          * operation is equivalent to the scatter operation
-         * \f$\boldsymbol{\hat{u}}_l=\mathcal{A}\boldsymbol{\hat{u}}_g\f$, 
-         * where \f$\mathcal{A}\f$ is the 
+         * \f$\boldsymbol{\hat{u}}_l=\mathcal{A}\boldsymbol{\hat{u}}_g\f$,
+         * where \f$\mathcal{A}\f$ is the
          * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
          *
          * @param   inarray     An array of size \f$N_\mathrm{dof}\f$
@@ -487,7 +487,7 @@ namespace Nektar
          * these arrays are contained in the data member #m_locToGloMap). This
          * operation is equivalent to the gather operation
          * \f$\boldsymbol{\hat{u}}_g=\mathcal{A}^{-1}\boldsymbol{\hat{u}}_l\f$,
-         * where \f$\mathcal{A}\f$ is the 
+         * where \f$\mathcal{A}\f$ is the
          * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
          *
          * @note    The array #m_coeffs should be filled with the local
@@ -517,7 +517,7 @@ namespace Nektar
          * these arrays are contained in the data member #m_locToGloMap). This
          * operation is equivalent to the gather operation
          * \f$\boldsymbol{\hat{u}}_g=\mathcal{A}^{T}\boldsymbol{\hat{u}}_l\f$,
-         * where \f$\mathcal{A}\f$ is the 
+         * where \f$\mathcal{A}\f$ is the
          * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
          *
          * @note    The array #m_coeffs should be filled with the local
@@ -563,7 +563,7 @@ namespace Nektar
         {
             m_locToGloMap->Assemble(inarray,outarray);
         }
-        
+
 
         inline const LocalToGlobalC0ContMapSharedPtr&
                                         ContField2D::GetLocalToGlobalMap() const

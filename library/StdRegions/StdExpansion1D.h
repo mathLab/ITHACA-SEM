@@ -48,7 +48,7 @@ namespace Nektar
 
         class StdExpansion1D: public StdExpansion
         {
-            
+
         public:
 
             StdExpansion1D();
@@ -66,7 +66,7 @@ namespace Nektar
             *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array
             *  \a outarray as output of the function
             */
-            void PhysTensorDeriv(const Array<OneD, const NekDouble>& inarray, 
+            void PhysTensorDeriv(const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble>& outarray);
 
 
@@ -96,7 +96,7 @@ namespace Nektar
 
             virtual int v_GetCoordim(void)
             {
-                return 1; 
+                return 1;
             }
 
             virtual int v_GetShapeDimension() const
@@ -115,14 +115,11 @@ namespace Nektar
             {
                 ASSERTL0(false,"method only valid in local regions 1D classes");
             }
-            
+
             virtual void v_SetCoeffsToOrientation(StdRegions::EdgeOrientation dir)
             {
                 ASSERTL0(false,"method only valid in local regions 1D classes");
             }
-
-            /// Writes VTK geometry information for this expansion.
-            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile);
         };
 
         typedef boost::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;

@@ -37,20 +37,20 @@
 #define MULTIREGIONS_H
 
 #include <vector>
-#include <SpatialDomains/BoundaryConditions.h>
+#include <SpatialDomains/Conditions.h>
 
 
 namespace Nektar
-{ 
+{
     namespace MultiRegions
     {
 
         enum TransState
         {
-            eNotSet,      ///< No transformed state set 
+            eNotSet,      ///< No transformed state set
             eLocal,       ///< Local  Modal space array contains "true" expansion values
             eContinuous,  ///< Continuous Modal space array contains "true" expansion values
-            eLocalCont,   ///< Both local and continuous space array contains "true" Expansion values 
+            eLocalCont,   ///< Both local and continuous space array contains "true" Expansion values
         };
 
         // Orientation of adjacent edge for use with boundary
@@ -60,7 +60,7 @@ namespace Nektar
             eAdjacentEdgeIsForwards,
             eAdjacentEdgeIsBackwards
         };
-        
+
         enum GlobalSysSolnType
         {
             eNoSolnType,    ///< No Solution type specified
@@ -68,9 +68,9 @@ namespace Nektar
             eDirectStaticCond,
             eDirectMultiLevelStaticCond
         };
-        
-        
-        const char* const GlobalSysSolnTypeMap[] = 
+
+
+        const char* const GlobalSysSolnTypeMap[] =
             {
             "No Solution Type",
             "Direct Solve: Full Matrix",
@@ -78,7 +78,7 @@ namespace Nektar
             "Direct Solve: Multi-Level Static Condensation"
         };
 
-        
+
         typedef std::vector<SpatialDomains::BoundaryConditionType>  BndTypesVector;
         typedef std::vector<SpatialDomains::BoundaryConditionType>::iterator BndTypesVectorIter;
 
@@ -97,12 +97,12 @@ namespace Nektar
             {};
 
             int m_robinID; /// id of which edge/face is robin condition
-            Array< OneD, const NekDouble > m_robinPrimitiveCoeffs; 
+            Array< OneD, const NekDouble > m_robinPrimitiveCoeffs;
             boost::shared_ptr<RobinBCInfo> next;
         };
 
         typedef boost::shared_ptr<RobinBCInfo> RobinBCInfoSharedPtr;
-        
+
     }// end of namespace
 }// end of namespace
 

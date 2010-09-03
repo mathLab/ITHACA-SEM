@@ -59,6 +59,5 @@ MACRO(ADD_SOLVER_EXECUTABLE name source)
 
 ENDMACRO(ADD_SOLVER_EXECUTABLE name source)
 
-SUBDIRS(AdvectionDiffusionReactionSolver ShallowWaterSolver
-    IncNavierStokesSolver EulerSolver ADR2DManifoldSolver FitzHughNagumoSolver
-    ADRSolver)
+SUBDIRS(ADRSolver ShallowWaterSolver
+    IncNavierStokesSolver EulerSolver ADR2DManifoldSolver FitzHughNagumoSolver)

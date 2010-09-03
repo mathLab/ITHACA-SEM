@@ -44,7 +44,7 @@
 #include <MultiRegions/GlobalLinSys.h>
 
 #include <SpatialDomains/MeshGraph3D.h>
-#include <SpatialDomains/BoundaryConditions.h>
+#include <SpatialDomains/Conditions.h>
 
 namespace Nektar
 {
@@ -95,7 +95,7 @@ namespace Nektar
             {
                 return m_bndCondExpansions;
             }
-            
+
             /// This function return the boundary conditions expansion.
             inline const Array<OneD,const MultiRegions::ExpList2DSharedPtr>
                     &GetBndCondExp();

@@ -36,6 +36,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <boost/filesystem.hpp>
 
 void RunL2RegressionTest(std::string demo, std::string input, std::string info);
 void MakeOkFile(std::string demo, std::string input, std::string info);
@@ -44,6 +45,12 @@ void MakeOkFile(std::string demo, std::string input, std::string info);
 #define Execute($1,$2,$3)  MakeOkFile($1,$2,$3)
 #else
 #define Execute($1,$2,$3)  RunL2RegressionTest($1,$2,$3)
+#endif
+
+#ifdef _WINDOWS
+#define COPY_COMMAND "copy "
+#else
+#define COPY_COMMAND "cp "
 #endif
 
 int main(int argc, char* argv[]) 
@@ -65,11 +72,13 @@ int main(int argc, char* argv[])
 
 void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
 {
-    RegressBase Test("../solvers/builds/IncNavierStokesSolver/",Demo,input,"Solvers/IncNavierStokesSolver/OkFiles/");
+	std::string NektarSolverDir =std::string("") +  NEKTAR_SOLVER_DIR + "/dist/bin/";
+    RegressBase Test(NektarSolverDir.c_str(),Demo,input,"Solvers/IncNavierStokesSolver/OkFiles/");
     int fail;
 
     // Copy input file to current location
-    std::string syscommand = "cp ../../../Solvers/IncNavierStokesSolver/InputFiles/"+input +" .";
+	boost::filesystem::path filePath("../../../Solvers/IncNavierStokesSolver/InputFiles/" + input);
+    std::string syscommand = std::string(COPY_COMMAND) + filePath.file_string() + " .";
     int status = system(syscommand.c_str());
     if(status)
     {
@@ -91,19 +100,25 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
         std:: cout <<" status: PASSED" << std::endl;
     }            
     
+#ifdef _WINDOWS
+	std::string cleanup = "del /Q *.xml *.fld";
+#else
     std::string cleanup = "rm -f *.xml *.fld";
+#endif
+
     system(cleanup.c_str());
 };
 
 void MakeOkFile(std::string Demo, std::string input, std::string info)
 {
-
-    RegressBase Test("../solvers/builds/IncNavierStokesSolver/",Demo,input,"Solvers/IncNavierStokesSolver/OkFiles/");
+	std::string NektarSolverDir =std::string("") +  NEKTAR_SOLVER_DIR + "/dist/bin/";
+    RegressBase Test(NektarSolverDir.c_str(),Demo,input,"Solvers/IncNavierStokesSolver/OkFiles/");
     int fail;
 
 
     // Copy input file to current location
-    std::string syscommand = "cp ../../../Solvers/IncNavierStokesSolver/InputFiles/"+input +" .";
+	boost::filesystem::path filePath("../../../Solvers/IncNavierStokesSolver/InputFiles/"+input);
+	std::string syscommand = std::string(COPY_COMMAND) + filePath.file_string() + " .";
     int status = system(syscommand.c_str());
     if(status)
     {

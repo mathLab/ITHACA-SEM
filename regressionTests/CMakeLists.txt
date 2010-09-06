@@ -1,8 +1,23 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(REGRESSION)
 
+SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dist CACHE FILEPATH "" FORCE)
+
+# Look for Nektar++ in the standard location (Nektar++/builds) 
+# This will work no matter where the regression build is.
+SET(Nektar++_DIR "${CMAKE_SOURCE_DIR}/../builds/dist" CACHE PATH "")
+
+FIND_PACKAGE(Nektar++ REQUIRED)
+ADD_DEFINITIONS(-DNEKTAR_BIN_DIR="${NEKTAR++_BIN_DIR}/")
+
 MACRO(ADD_REGRESSION_EXECUTABLE name source)
     ADD_EXECUTABLE(${name} ${source} ${ARGN})
+    TARGET_LINK_LIBRARIES(${name} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
+
+	INSTALL(TARGETS ${name} RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin OPTIONAL
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib OPTIONAL
+        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib OPTIONAL)
+
 ENDMACRO(ADD_REGRESSION_EXECUTABLE name source)
 
 SUBDIRS(Demos Solvers)
@@ -19,12 +34,6 @@ ENDIF(WIN32)
 
 ADD_DEFINITIONS(-DREG_PATH="${CMAKE_SOURCE_DIR}/")
 
-# Look for Nektar++ in the standard location (Nektar++/builds) 
-# This will work no matter where the regression build is.
-SET(Nektar++_DIR "${CMAKE_SOURCE_DIR}/../builds/dist" CACHE PATH "")
-
-FIND_PACKAGE(Nektar++ REQUIRED)
-ADD_DEFINITIONS(-DNEKTAR_BIN_DIR="${NEKTAR++_BIN_DIR}/")
 
 SET(SOLVER_DIR "${CMAKE_SOURCE_DIR}/../solvers/builds" CACHE PATH "")
 

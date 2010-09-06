@@ -64,7 +64,7 @@ RegressBase::RegressBase(std::string relative_demo_path, std::string demo_name, 
     m_progPath+=relative_demo_path;
     if(USR_WIN_32)
     {
-        m_progPath=m_progPath+"Release/";
+        //m_progPath=m_progPath+"Release/";
     }
     m_okPath.assign(REG_PATH);
     m_okPath+=relative_okfile_path;

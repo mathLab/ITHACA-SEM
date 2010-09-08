@@ -87,7 +87,13 @@ int main(int argc, char* argv[])
     Execute("ADRSolver","Test_ImDiffusion_m12.xml","Testing 2D unsteady DG implicit diffusion, order 3, modes=12");
     Execute("ADRSolver","Test_ExDiffusion_m3.xml","Testing 2D unsteady DG explicit diffusion, order 4, modes=3");
     Execute("ADRSolver","Test_ExDiffusion_m8.xml","Testing 2D unsteady DG explicit diffusion, order 4, modes=8");
-
+	
+	// //Test Unsteady Advection-Diffusion
+	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_Order1_001.xml","Testing 2D unsteady advection-diffusion, IMEXOrder1, modes=9, dt=0.001");
+	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_Order1_0001.xml","Testing 2D unsteady advection-diffusion, IMEXOrder1, modes=9, dt=0.0001");
+    Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_Order2_001.xml","Testing 2D unsteady advection-diffusion, IMEXOrder2, modes=9, dt=0.001");
+	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_Order2_0001.xml","Testing 2D unsteady advection-diffusion, IMEXOrder2, modes=9, dt=0.0001");
+	
     return 0;
 }
 

@@ -28,10 +28,6 @@ namespace Nektar
                       NekDouble time,
                       NekDouble lambda);
 
-        void DoOdeProjection(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-                          Array<OneD,  Array<OneD, NekDouble> > &outarray,
-                          const NekDouble time);
-
         virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux);
 
         virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numflux);

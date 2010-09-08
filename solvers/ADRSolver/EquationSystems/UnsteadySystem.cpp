@@ -290,7 +290,10 @@ namespace Nektar
         EquationSystem::v_PrintSummary(out);
         out << "\tAdvection       : " << (m_explicitAdvection ? "explicit" : "implicit") << endl;
         out << "\tDiffusion       : " << (m_explicitDiffusion ? "explicit" : "implicit") << endl;
-        out << "\tReaction        : " << (m_explicitReaction  ? "explicit" : "implicit") << endl;
+		if (m_session->GetSolverInfo("EQTYPE")== "SteadyAdvectionDiffusionReaction")
+		{
+          out << "\tReaction        : " << (m_explicitReaction  ? "explicit" : "implicit") << endl;
+		}
         out << "\tIntegration Type: " << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod] << endl;
         out << "\tTime Step       : " << m_timestep << endl;
         out << "\tNo. of Steps    : " << m_steps << endl;

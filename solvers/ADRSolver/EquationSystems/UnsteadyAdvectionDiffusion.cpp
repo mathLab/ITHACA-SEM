@@ -27,24 +27,10 @@ namespace Nektar
             EvaluateFunction(m_velocity[i],ifunc);
         }
 
-        if (m_explicitAdvection)
-        {
-            if (!m_explicitDiffusion)
-            {
-                m_ode.DefineImplicitSolve (&UnsteadyAdvectionDiffusion::DoImplicitSolve, this);
-                m_ode.DefineOdeRhs        (&UnsteadyAdvectionDiffusion::DoOdeRhs,        this);
-                m_ode.DefineProjection    (&UnsteadyAdvectionDiffusion::DoOdeProjection, this);
-            }
-            else
-            {
-                ASSERTL0(false, "Explicit diffusion with explicit reaction option not set up.");
-            }
-        }
-        else
-        {
-            ASSERTL0(false, "Implicit reaction schemes not set up.");
-        }
-    }
+		m_ode.DefineImplicitSolve (&UnsteadyAdvectionDiffusion::DoImplicitSolve, this);
+		m_ode.DefineOdeRhs        (&UnsteadyAdvectionDiffusion::DoOdeRhs,        this);
+	}
+	
 
     UnsteadyAdvectionDiffusion::~UnsteadyAdvectionDiffusion()
     {
@@ -108,6 +94,15 @@ namespace Nektar
     {
         int nvariables = inarray.num_elements();
         int nq = m_fields[0]->GetNpoints();
+		
+		NekDouble kappa = 1.0/lambda/m_epsilon;
+		
+		Array<OneD, Array< OneD, NekDouble> > F(nvariables);
+		F[0] = Array<OneD, NekDouble> (nq*nvariables);
+        for(int n = 1; n < nvariables; ++n)
+        {
+            F[n] = F[n-1] + nq;
+        }
 
         // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
         // inarray = input: \hat{rhs} -> output: \hat{Y}
@@ -116,65 +111,19 @@ namespace Nektar
         for (int i = 0; i < nvariables; ++i)
         {
             // Multiply 1.0/timestep/lambda
-            Vmath::Smul(nq, -1.0/lambda/m_epsilon, inarray[i], 1, m_fields[i]->UpdatePhys(), 1);
-
-            NekDouble kappa = 1.0/lambda/m_epsilon;
-
+            Vmath::Smul(nq, -kappa, inarray[i], 1, F[i], 1);
+		}
+            
+	    //Setting boundary conditions
+		SetBoundaryConditions(time);
+	    
+		for (int i = 0; i < nvariables; ++i)
+		{
             // Solve a system of equations with Helmholtz solver
-            m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),
-                                            m_fields[i]->UpdateCoeffs(),kappa);
-            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
-            m_fields[i]->SetPhysState(false);
-
-            // The solution is Y[i]
-            outarray[i] = m_fields[i]->GetPhys();
+            m_fields[i]->HelmSolve(F[i],m_fields[i]->UpdateCoeffs(),kappa);
+            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
         }
     }
-
-
-    /**
-     *
-     */
-    void UnsteadyAdvectionDiffusion::DoOdeProjection(const Array<OneD,
-                                            const Array<OneD, NekDouble> >&inarray,
-                                            Array<OneD,       Array<OneD, NekDouble> >&outarray,
-                                            const NekDouble time)
-    {
-        int i;
-        int nvariables = inarray.num_elements();
-        SetBoundaryConditions(time);
-
-        switch(m_projectionType)
-        {
-        case eDiscontinuousGalerkin:
-            {
-                // Just copy over array
-                int npoints = GetNpoints();
-
-                for(i = 0; i < nvariables; ++i)
-                {
-                    Vmath::Vcopy(npoints,inarray[i],1,outarray[i],1);
-                }
-            }
-            break;
-        case eGalerkin:
-            {
-                Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
-
-                for(i = 0; i < nvariables; ++i)
-                {
-                    m_fields[i]->FwdTrans(inarray[i],coeffs,false);
-                    m_fields[i]->BwdTrans_IterPerExp(coeffs,outarray[i]);
-                }
-                break;
-            }
-        default:
-            ASSERTL0(false,"Unknown projection scheme");
-            break;
-        }
-    }
-
-
 
     void UnsteadyAdvectionDiffusion::v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield,
                            Array<OneD, Array<OneD, NekDouble> > &flux)

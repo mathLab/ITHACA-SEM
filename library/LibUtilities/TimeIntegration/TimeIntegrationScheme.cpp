@@ -1191,7 +1191,10 @@ namespace Nektar
                                      y_new[i][k],1);
                     }
                 }
-					t_new[i] = B(i,0)*timestep;      
+				if(m_numstages != 1 || type != eIMEX)
+				{
+					t_new[i] = B(i,0)*timestep;
+				}
                 
 				
                 for(j = 1; j < m_numstages; j++)
@@ -1208,7 +1211,10 @@ namespace Nektar
                                          y_new[i][k],1);
                         }
                     }
-					t_new[i] += B(i,j)*timestep; 
+				    if(m_numstages != 1 || type != eIMEX)
+				    {
+					  t_new[i] += B(i,j)*timestep; 
+				    }
                 }			
                 
                 // 2: the imported multi-step solution of the previous
@@ -1220,7 +1226,10 @@ namespace Nektar
                         Vmath::Svtvp(npoints,V(i,j),y_old[j][k],1,
                                      y_new[i][k],1,y_new[i][k],1);
                     }
-					t_new[i] += V(i,j)*t_old[j];
+					if(m_numstages != 1 || type != eIMEX)
+					{
+					  t_new[i] += V(i,j)*t_old[j];
+					}
 
                 }
             }

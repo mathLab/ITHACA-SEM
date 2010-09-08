@@ -21,8 +21,8 @@ L 2 error (variable u): 9.55749e-05
 L inf error (variable u): 9.27095e-05
 ----------------------------------------
 Test_Advection_m14_Order4.xml
-L 2 error (variable u): 8.3871e-09
-L inf error (variable u): 5.32492e-08
+L 2 error (variable u): 8.38709e-09
+L inf error (variable u): 5.3248e-08
 ----------------------------------------
 Test_Helmholtz2D_modal_DG.xml
 L 2 error (variable u): 0.011251
@@ -37,7 +37,7 @@ L 2 error (variable u): 9.18608e-05
 L inf error (variable u): 9.63598e-05
 ----------------------------------------
 Test_Advection_m14_DG_Order4.xml
-L 2 error (variable u): 3.88023e-09
+L 2 error (variable u): 3.88032e-09
 L inf error (variable u): 6.24598e-08
 ----------------------------------------
 Test_Helmholtz1D_8modes.xml
@@ -61,8 +61,8 @@ L 2 error (variable u): 3.62709e-05
 L inf error (variable u): 2.4442e-05
 ----------------------------------------
 Test_Advection1D_m14_Order4.xml
-L 2 error (variable u): 8.16909e-11
-L inf error (variable u): 3.0237e-10
+L 2 error (variable u): 8.17268e-11
+L inf error (variable u): 3.02663e-10
 ----------------------------------------
 Test_ImDiffusion_m6.xml
 L 2 error (variable u): 0.00424554
@@ -79,4 +79,20 @@ L inf error (variable u): 0.0195377
 Test_ExDiffusion_m8.xml
 L 2 error (variable u): 0.000337147
 L inf error (variable u): 0.00279079
+----------------------------------------
+Test_UnsteadyAdvectionDiffusion_Order1_001.xml
+L 2 error (variable u): 0.00135233
+L inf error (variable u): 0.00275937
+----------------------------------------
+Test_UnsteadyAdvectionDiffusion_Order1_0001.xml
+L 2 error (variable u): 0.000135563
+L inf error (variable u): 0.000276572
+----------------------------------------
+Test_UnsteadyAdvectionDiffusion_Order2_001.xml
+L 2 error (variable u): 1.54706e-06
+L inf error (variable u): 3.63423e-06
+----------------------------------------
+Test_UnsteadyAdvectionDiffusion_Order2_0001.xml
+L 2 error (variable u): 1.5458e-08
+L inf error (variable u): 3.64252e-08
 ----------------------------------------

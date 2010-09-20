@@ -328,6 +328,14 @@ namespace Nektar
                 return GenMatrix(mkey);
             }
 
+            virtual int  v_CalcNumberOfCoefficients(const std::vector<unsigned int> &nummodes, int &modes_offset)
+            {
+                int nmodes = StdRegions::StdPrismData::getNumberOfCoefficients(nummodes[modes_offset],nummodes[modes_offset+1],nummodes[modes_offset+2]);
+                modes_offset += 3;
+                
+                return nmodes;
+            }
+
             virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const
             {
                 return GetEdgeBasisType(i);

@@ -138,6 +138,14 @@ namespace Nektar
 
             }
 
+            virtual int  v_CalcNumberOfCoefficients(const std::vector<unsigned int> &nummodes, int &modes_offset)
+            {
+                int nmodes = StdRegions::StdPyrData::getNumberOfCoefficients(nummodes[modes_offset],nummodes[modes_offset+1],nummodes[modes_offset+2]);
+                modes_offset += 3;
+                
+                return nmodes;
+            }
+            
             const LibUtilities::BasisType GetEdgeBasisType(const int i) const
             {
                 ASSERTL2((i >= 0)&&(i <= 7),"edge id is out of range");

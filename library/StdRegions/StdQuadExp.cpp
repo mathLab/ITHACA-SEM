@@ -1292,6 +1292,7 @@ namespace Nektar
                 Vmath::Fill(nq0,z1[i],&coords_1[0] + i*nq0,1);
             }
         }
+
     } //end namespace            
 }//end namespace
 

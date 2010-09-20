@@ -255,6 +255,9 @@ namespace Nektar
             /// for a robin aboundary condition in the location of the
             /// element id
             map<int, RobinBCInfoSharedPtr> GetRobinBCInfo(void);
+
+            void EvaluateHDGPostProcessing(Array<OneD, NekDouble> &outarray);
+
         protected:
             /**
              * \brief The number of boundary segments on which

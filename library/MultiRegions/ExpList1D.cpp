@@ -331,7 +331,7 @@ namespace Nektar
                         LibUtilities::BasisKey bkey = bndConstraint[i]
                                     ->GetExp(j)->GetBasis(0)->GetBasisKey();
                         SegGeom = bndConstraint[i]->GetExp(j)->GetGeom1D();
-
+                        
                         Seg = MemoryManager<LocalRegions::SegExp>
                                             ::AllocateSharedPtr(bkey, SegGeom);
                         EdgeDone[SegGeom->GetEid()] = elmtid;

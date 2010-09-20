@@ -125,6 +125,7 @@ namespace Nektar
             eLaplacian20,
             eLaplacian21,
             eLaplacian22,
+            eInvLaplacianWithUnityMean,
             eWeakDeriv0,
             eWeakDeriv1,
             eWeakDeriv2,

@@ -52,10 +52,12 @@ namespace Nektar
         }
         
         SegGeom::SegGeom(int id, const int coordim):
-            Geometry1D(coordim), m_xmap(coordim)
+            Geometry1D(coordim),
+            m_xmap(coordim)
         {
             const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
                                            LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+            m_GeomShapeType = eSegment;
             m_eid = id;
             
             for(int i = 0; i < m_coordim; ++i)
@@ -68,6 +70,7 @@ namespace Nektar
                          const VertexComponentSharedPtr vertex[]): 
             Geometry1D(coordim)
         {
+            m_GeomShapeType = eSegment;
             m_eid   = id;
             m_state = eNotFilled;
             
@@ -93,6 +96,7 @@ namespace Nektar
                          const CurveSharedPtr &curve): 
             Geometry1D(coordim)
         {
+            m_GeomShapeType = eSegment;
             m_eid = id;
             m_state = eNotFilled;
 

@@ -1620,6 +1620,26 @@ namespace Nektar
                     }
                 }
                 break;
+            case StdRegions::eInvLaplacianWithUnityMean:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey lapkey(StdRegions::eLaplacian,mkey.GetExpansionType(), *this);
+                    DNekMatSharedPtr lmat = GenMatrix(*lapkey.GetStdMatKey());
+
+                    // replace first column with inner product wrt 1                    
+                    int nq = GetTotPoints();
+                    Array<OneD, NekDouble> tmp(nq);
+                    Array<OneD, NekDouble> outarray(m_ncoeffs);
+                    Vmath::Fill(nq,one,tmp,1);
+                    v_IProductWRTBase(tmp, outarray);
+
+                    Vmath::Vcopy(m_ncoeffs,&outarray[0],1,
+                                 &(lmat->GetPtr())[0],m_ncoeffs);
+                    
+                    lmat->Invert();
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,lmat); //Populate  matrix.
+                }
+                break;
             case StdRegions::eHelmholtz:
                 {
                     NekDouble factor = mkey.GetConstant(0);
@@ -1905,6 +1925,45 @@ namespace Nektar
                                &outarray[0],1);
             }
 
+        }
+
+        // Unpack data from input file assuming it comes from the same expansion type
+        void TriExp::v_ExtractDataToCoeffs(const std::vector<NekDouble> &data, 
+                                            const int offset, 
+                                            const std::vector<unsigned int > &nummodes, 
+                                            const int nmode_offset,
+                                            Array<OneD, NekDouble> &coeffs)
+        {
+            int data_order0 = nummodes[nmode_offset];
+            int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);
+
+            int data_order1 = nummodes[nmode_offset+1];
+            int order1      = m_base[1]->GetNumModes();
+            int fillorder1  = min(order1,data_order1);
+            
+            switch(m_base[0]->GetBasisType())
+            { 
+            case LibUtilities::eModified_A:
+                {
+                    int i;
+                    int cnt  = 0;
+                    int cnt1 = 0;
+
+                    ASSERTL1(m_base[1]->GetBasisType() == LibUtilities::eModified_B,
+                             "Extraction routine not set up for this basis");
+                    
+                    Vmath::Zero(m_ncoeffs,coeffs,1);
+                    for(i = 0; i < fillorder0; ++i)
+                    {
+                        Vmath::Vcopy(fillorder1-i,&data[offset+cnt],1,&coeffs[cnt1],1);
+                        cnt  += data_order1-i;
+                        cnt1 += order1-i;
+                    }
+                }
+                break;
+            default:
+                ASSERTL0(false,"basis is either not set up or not hierarchicial");
+            }
         }
 
     }//end of namespace

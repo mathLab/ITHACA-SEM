@@ -1218,6 +1218,28 @@ namespace Nektar
             }
 */        }
 
+        // Unpack data from input file assuming it comes from the same expansion type
+        void SegExp::v_ExtractDataToCoeffs(const std::vector<NekDouble> &data, 
+                                           const int offset, 
+                                           const std::vector<unsigned int > &nummodes, 
+                                           const int nmode_offset,
+                                           Array<OneD, NekDouble> &coeffs)
+        {
+            switch(m_base[0]->GetBasisType())
+            { 
+            case LibUtilities::eModified_A:
+                {
+                    int fillorder = min((int) nummodes[nmode_offset],m_ncoeffs);
+                    
+                    Vmath::Zero(m_ncoeffs,coeffs,1);
+                    Vmath::Vcopy(fillorder,&data[offset],1,&coeffs[0],1);
+                }
+                break;
+            default:
+                ASSERTL0(false,"basis is either not set up or not hierarchicial");
+            }
+        }
+
 
     } // end of namespace    
 }//end of namespace

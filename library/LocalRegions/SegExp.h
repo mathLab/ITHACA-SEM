@@ -500,6 +500,12 @@ namespace Nektar
             {
                 HelmholtzMatrixOp(inarray,outarray,lambda);
             }
+            
+            virtual void v_ExtractDataToCoeffs(const std::vector<NekDouble> &data, 
+                                               const int offset, 
+                                               const std::vector<unsigned int > &nummodes, 
+                                               const int nmode_offset,
+                                               Array<OneD, NekDouble> &coeffs);
 
 
         private:

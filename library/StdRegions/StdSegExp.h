@@ -291,6 +291,14 @@ namespace Nektar
                 return DetExpansionType();
             }
 
+            virtual int v_CalcNumberOfCoefficients(const std::vector<unsigned int> &nummodes, int &modes_offset)
+            {
+                int nmodes = nummodes[modes_offset];
+                modes_offset += 1;
+                
+                return nmodes;
+            }
+
 
             virtual bool v_IsBoundaryInteriorExpansion()
             {

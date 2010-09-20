@@ -800,6 +800,12 @@ namespace Nektar
                 HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
             }
             
+            virtual void v_ExtractDataToCoeffs(const std::vector<NekDouble> &data, 
+                                               const int offset, 
+                                               const std::vector<unsigned int > &nummodes, 
+                                               const int nmode_offset,
+                                               Array<OneD, NekDouble> &coeffs);
+
         };
         
         // type defines for use of TriExp in a boost vector

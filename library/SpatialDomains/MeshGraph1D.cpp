@@ -135,7 +135,7 @@ namespace Nektar
                     VertexComponentSharedPtr v1 = GetVertex(vertex1);
                     VertexComponentSharedPtr v2 = GetVertex(vertex2);
                     SegGeomSharedPtr seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, v1,v2);
-					seg->SetGlobalID(indx);
+                    seg->SetGlobalID(indx);
                     m_seggeoms.push_back(seg);                        
                 }
                 catch(...)

@@ -38,6 +38,7 @@
 #define NEKTAR_LIB_STDREGIONS_STANDARDEXPANSION_H
 
 #include <fstream>
+#include <vector> 
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/SpatialDomainsDeclarations.hpp>
@@ -857,6 +858,22 @@ namespace Nektar
                 v_AddHDGHelmholtzTraceTerms(tau,inarray,EdgeExp, outarray);
             }
 
+            
+            int CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset)
+            {
+                return v_CalcNumberOfCoefficients(nummodes,modes_offset);
+            }
+
+            void ExtractDataToCoeffs(const std::vector<NekDouble> &data, 
+                                     const int offset, 
+                                     const std::vector<unsigned int > &nummodes, 
+                                     const int nmodes_offset,
+                                     Array<OneD, NekDouble> &coeffs)
+
+            {
+                v_ExtractDataToCoeffs(data,offset,nummodes,nmodes_offset,coeffs);
+            }
+
             // virtual functions related to LocalRegions
 
             virtual void AddEdgeNormBoundaryInt(const int edge,
@@ -1136,6 +1153,14 @@ namespace Nektar
 
             virtual void v_SetUpPhysNormals(const boost::shared_ptr<StdExpansion> &exp2d, const int edge);
 
+            virtual int v_CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset);
+            
+            virtual  void v_ExtractDataToCoeffs(const std::vector<NekDouble> &data, 
+                                                const int offset, 
+                                                const std::vector<unsigned int > &nummodes, 
+                                                const int nmode_offset,
+                                                Array<OneD, NekDouble> &coeffs);
+
             virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray, bool NegateNorm = false);
 
             virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey);
@@ -1143,7 +1168,7 @@ namespace Nektar
             virtual StdRegions::FaceOrientation v_GetFaceorient(int face);
 
             virtual StdRegions::EdgeOrientation v_GetEorient(int edge);
-
+            
             virtual StdRegions::EdgeOrientation v_GetCartesianEorient(int edge);
 
             virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau,

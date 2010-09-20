@@ -1427,31 +1427,31 @@ namespace Nektar
       bool error = false;
 
       if (whichComposite >= 0 && whichComposite < int(m_MeshCompositeVector.size()))
-        {
-      if (whichItem >= 0 && whichItem < int(m_MeshCompositeVector[whichComposite]->size()))
-            {
-          returnval = m_MeshCompositeVector[whichComposite]->at(whichItem);
-            }
+      {
+          if (whichItem >= 0 && whichItem < int(m_MeshCompositeVector[whichComposite]->size()))
+          {
+              returnval = m_MeshCompositeVector[whichComposite]->at(whichItem);
+          }
+          else
+          {
+              error = true;
+          }
+      }
       else
-            {
+      {
           error = true;
-            }
-        }
-      else
-        {
-      error = true;
-        }
-
+      }
+      
       if (error)
-        {
-      std::ostringstream errStream;
-      errStream << "Unable to access composite item [" << whichComposite << "][" << whichItem << "].";
-
-      std::string testStr = errStream.str();
-
-      NEKERROR(ErrorUtil::efatal, testStr.c_str());
-        }
-
+      {
+          std::ostringstream errStream;
+          errStream << "Unable to access composite item [" << whichComposite << "][" << whichItem << "].";
+          
+          std::string testStr = errStream.str();
+          
+          NEKERROR(ErrorUtil::efatal, testStr.c_str());
+      }
+      
       return returnval;
     }
 
@@ -2141,7 +2141,7 @@ namespace Nektar
                   std::vector<std::string> Fields;
                   valid = ParseUtils::GenerateOrderedStringVector(fieldsString.c_str(), Fields);
                   ASSERTL0(valid, "Unable to correctly parse the number of fields.");
-                  // Need to find out why cannot put in last argument. 
+
                   SpatialDomains::FieldDefinitionsSharedPtr fielddef  = MemoryManager<SpatialDomains::FieldDefinitions>::AllocateSharedPtr(shape, elementIds, basis, UniOrder, numModes, Fields, numHomoDir, homoLengths, points, pointDef, numPoints, numPointDef);
                   int datasize = CheckFieldDefinition(fielddef);
                   

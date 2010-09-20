@@ -258,8 +258,10 @@ int main(int argc, char *argv[])
     //--------------------------------------------        
     // alternative error calculation
     NekDouble L2ErrorBis;
+    NekDouble L2ErrorPostProc;
     NekDouble H1ErrorBis;
     NekDouble LinfErrorBis; 
+    NekDouble LinfErrorPostProc; 
     NekDouble Q0L2ErrorBis;
     NekDouble Q1L2ErrorBis;
 
@@ -272,6 +274,16 @@ int main(int argc, char *argv[])
 
         LibUtilities::BasisKeyVector  BkeyT;
         LibUtilities::BasisKeyVector  BkeyQ;
+#ifdef NMODESP1_Err
+        BkeyT.push_back(LibUtilities::BasisKey(LibUtilities::eModified_A,
+                                               NumModes+1, PkeyT1));
+        BkeyT.push_back(LibUtilities::BasisKey(LibUtilities::eModified_B,
+                                               NumModes+1, PkeyT2));
+        BkeyQ.push_back(LibUtilities::BasisKey(LibUtilities::eModified_A,
+                                               NumModes+1, PkeyQ1));
+        BkeyQ.push_back(LibUtilities::BasisKey(LibUtilities::eModified_A,
+                                               NumModes+1, PkeyQ2));
+#else
         BkeyT.push_back(LibUtilities::BasisKey(LibUtilities::eModified_A,
                                                NumModes, PkeyT1));
         BkeyT.push_back(LibUtilities::BasisKey(LibUtilities::eModified_B,
@@ -280,6 +292,7 @@ int main(int argc, char *argv[])
                                                NumModes, PkeyQ1));
         BkeyQ.push_back(LibUtilities::BasisKey(LibUtilities::eModified_A,
                                                NumModes, PkeyQ2));
+#endif
 
         graph2D.SetBasisKey(SpatialDomains::eTriangle, BkeyT);
         graph2D.SetBasisKey(SpatialDomains::eQuadrilateral, BkeyQ);
@@ -317,12 +330,54 @@ int main(int argc, char *argv[])
         
         // calcualte spectral/hp approximation on the quad points of this new
         // expansion basis
-        ErrorExp->BwdTrans_IterPerExp(Exp->GetCoeffs(),ErrorExp->UpdatePhys());
+#define NMODESP1_Err
+#ifdef NMODESP1_Err
+        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef 
+            = Exp->GetFieldDefinitions();
+        std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+        std::string fieldstr = "u";
         
+        for(i = 0; i < FieldDef.size(); ++i)
+        {
+            FieldDef[i]->m_Fields.push_back(fieldstr);
+            Exp->AppendFieldData(FieldDef[i], FieldData[i]);
+            ErrorExp->ExtractDataToCoeffs(FieldDef[i],FieldData[i],fieldstr);
+        }
+        
+        // Interpolotation trace 
+        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> TraceDef 
+            = Exp->GetTrace()->GetFieldDefinitions();
+        std::vector<std::vector<NekDouble> > TraceData(FieldDef.size());
+        for(i = 0; i < TraceDef.size(); ++i)
+        {
+            TraceDef[i]->m_Fields.push_back(fieldstr);
+            Exp->GetTrace()->AppendFieldData(TraceDef[i], TraceData[i]);
+            ErrorExp->GetTrace()->ExtractDataToCoeffs(TraceDef[i],TraceData[i],fieldstr);
+        }
+        
+        ErrorExp->BwdTrans_IterPerExp(ErrorExp->GetCoeffs(),ErrorExp->UpdatePhys());
+
         L2ErrorBis    = ErrorExp->L2  (ErrorSol);
         H1ErrorBis    = ErrorExp->H1  (ErrorSol);
         LinfErrorBis  = ErrorExp->Linf(ErrorSol); 
 
+        Array<OneD,NekDouble> Deriv(ErrorNq);
+        ErrorExp->PhysDeriv(0,ErrorSol,Deriv);
+        Q0L2ErrorBis  = ErrorExp->L2_DGDeriv(0,Deriv);
+        ErrorExp->PhysDeriv(1,ErrorSol,Deriv);
+        Q1L2ErrorBis  = ErrorExp->L2_DGDeriv(1,Deriv);
+
+        ErrorExp->EvaluateHDGPostProcessing(ErrorExp->UpdateCoeffs());
+        ErrorExp->BwdTrans_IterPerExp(ErrorExp->GetCoeffs(),ErrorExp->UpdatePhys());
+        L2ErrorPostProc    = ErrorExp->L2  (ErrorSol);
+        LinfErrorPostProc  = ErrorExp->Linf(ErrorSol); 
+#else
+        ErrorExp->BwdTrans_IterPerExp(Exp->GetCoeffs(),ErrorExp->UpdatePhys());
+
+        L2ErrorBis    = ErrorExp->L2  (ErrorSol);
+        H1ErrorBis    = ErrorExp->H1  (ErrorSol);
+        LinfErrorBis  = ErrorExp->Linf(ErrorSol); 
+        
         // Copy coefficients and trace space for Q error evaluation
         Vmath::Vcopy(ErrorExp->GetNcoeffs(),Exp->GetCoeffs(),1,ErrorExp->UpdateCoeffs(),1);
         Vmath::Vcopy(ErrorExp->GetTrace()->GetNcoeffs(),Exp->GetTrace()->GetCoeffs(),1,ErrorExp->GetTrace()->UpdateCoeffs(),1);
@@ -332,6 +387,8 @@ int main(int argc, char *argv[])
         Q0L2ErrorBis  = ErrorExp->L2_DGDeriv(0,Deriv);
         ErrorExp->PhysDeriv(1,ErrorSol,Deriv);
         Q1L2ErrorBis  = ErrorExp->L2_DGDeriv(1,Deriv);
+#endif
+
     }
     else
     {
@@ -418,6 +475,8 @@ int main(int argc, char *argv[])
     outfile << setw(15) << scientific << noshowpoint << H1ErrorBis << " ";
     outfile << setw(15) << scientific << noshowpoint << Q0L2ErrorBis << " ";
     outfile << setw(15) << scientific << noshowpoint << Q1L2ErrorBis << " ";
+    outfile << setw(15) << scientific << noshowpoint << L2ErrorPostProc << " ";
+    outfile << setw(15) << scientific << noshowpoint << LinfErrorPostProc << " ";
     outfile << setw(10) << nLocCoeffs  << " ";
     outfile << setw(10) << nGlobCoeffs << " ";
     outfile << setw(10) << nLocBndCoeffs  << " ";

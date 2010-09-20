@@ -1235,6 +1235,14 @@ namespace Nektar
             return GetFaceIntNcoeffs(i);
         }
 
+        int StdHexExp::v_CalcNumberOfCoefficients(const std::vector<unsigned int> &nummodes, int &modes_offset)
+        {
+            int nmodes = nummodes[modes_offset]*nummodes[modes_offset+1]*nummodes[modes_offset+2];
+            modes_offset += 3;
+            
+            return nmodes;
+        }
+
 
         /**
          * @param   outarray    Storage for computed map.

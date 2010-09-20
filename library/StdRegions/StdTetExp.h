@@ -278,6 +278,8 @@ namespace Nektar
             /// Number of coefficients in a given edge.
             virtual int  v_GetEdgeNcoeffs(const int i) const;
 
+            virtual int  v_CalcNumberOfCoefficients(const std::vector<unsigned int> &nummodes, int &modes_offset);
+
             virtual void v_GetBoundaryMap(Array<OneD, unsigned int>& outarray);
 
             virtual void v_GetInteriorMap(Array<OneD, unsigned int>& outarray);

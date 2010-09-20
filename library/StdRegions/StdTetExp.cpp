@@ -1297,6 +1297,15 @@ namespace Nektar
         }
 
 
+        int StdTetExp::v_CalcNumberOfCoefficients(const std::vector<unsigned int> &nummodes, int &modes_offset)
+        {
+            int nmodes = StdRegions::StdTetData::getNumberOfCoefficients(nummodes[modes_offset],nummodes[modes_offset+1],nummodes[modes_offset+2]);
+            modes_offset += 3;
+            
+            return nmodes;
+        }
+
+
         /**
          * List of all boundary modes in the the expansion.
          */

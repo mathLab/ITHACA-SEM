@@ -85,3 +85,8 @@ SET(TimingHDGHelmSolve2DSource  TimingHDGHelmSolve2D.cpp)
 ADD_NEKTAR_EXECUTABLE(TimingHDGHelmSolve2D TimingHDGHelmSolve2DSource)
 TARGET_LINK_LIBRARIES(TimingHDGHelmSolve2D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(TimingHDGHelmSolve2D)
+
+SET(TimingHDGHelmSolve2DPP1Source  TimingHDGHelmSolve2DPP1.cpp)
+ADD_NEKTAR_EXECUTABLE(TimingHDGHelmSolve2DPP1 TimingHDGHelmSolve2DPP1Source)
+TARGET_LINK_LIBRARIES(TimingHDGHelmSolve2DPP1 ${LinkLibraries})
+SET_LAPACK_LINK_LIBRARIES(TimingHDGHelmSolve2DPP1)

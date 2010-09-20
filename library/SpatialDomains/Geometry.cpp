@@ -46,7 +46,7 @@ namespace Nektar
             m_coordim(0), 
             m_state(eNotFilled),
             m_GeomShapeType(eNoGeomShapeType),
-			m_GlobalID(-1)
+            m_GlobalID(-1)
         {
         }
 
@@ -54,7 +54,7 @@ namespace Nektar
             m_coordim(coordim),
             m_state(eNotFilled),
             m_GeomShapeType(eNoGeomShapeType),
-			m_GlobalID(-1)
+            m_GlobalID(-1)
         {
         }
 

@@ -829,7 +829,7 @@ namespace Nektar
                   edge_lambda = edge_lambda + ncoeff_edge;
               }
 
-              (*m_exp)[eid]->DGDeriv(dir,tmp_coeffs = m_coeffs+cnt,
+              (*m_exp)[eid]->DGDeriv(dir,tmp_coeffs = m_coeffs+m_coeff_offset[eid],
                                      elmtToTrace[eid],
                                      out_tmp = out_d+cnt);
               cnt  += (*m_exp)[eid]->GetNcoeffs();
@@ -1015,5 +1015,88 @@ namespace Nektar
             
             return returnval; 
         }
+
+        //Taking the solution (assumed to be one order lower) in
+        //physical space in inarray, postprocess at the current
+        //polynomial order by solving:
+        //
+        // (\Grad w, \Grad u*) = (\Grad w, m_coeffs);
+        // <1,\Grad u*> = <1,\Grad m_coeffs> 
+        //
+        
+        void  DisContField2D::EvaluateHDGPostProcessing(Array<OneD, NekDouble> &outarray)
+        {
+            
+            int    i,cnt,e,ncoeff_edge;
+            Array<OneD, NekDouble> force, out_tmp,qrhs;
+            Array<OneD, Array< OneD, StdRegions::StdExpansion1DSharedPtr> > elmtToTrace = m_traceMap->GetElmtToTrace();
+            
+            StdRegions::EdgeOrientation edgedir;
+
+            int     eid,nq_elmt, nm_elmt;
+            int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
+            Array<OneD, NekDouble> loc_lambda(LocBndCoeffs), edge_lambda, tmp_coeffs;
+            m_traceMap->GlobalToLocalBnd(m_trace->GetCoeffs(),loc_lambda);
+            
+            edge_lambda = loc_lambda;
+            
+            // Calculate Q using standard DG formulation.
+            for(i =cnt = 0; i < GetExpSize(); ++i)
+            {
+                eid = m_offset_elmt_id[i];
+                
+                nq_elmt = (*m_exp)[eid]->GetTotPoints();
+                nm_elmt = (*m_exp)[eid]->GetNcoeffs();
+                qrhs  = Array<OneD, NekDouble>(nq_elmt);
+                force = Array<OneD, NekDouble>(2*nm_elmt);
+                out_tmp = force + nm_elmt;
+                
+                
+                // Probably a better way of setting up lambda than this.
+                // Note cannot use PutCoeffsInToElmts since lambda space
+                // is mapped during the solve.
+                for(e = 0; e < (*m_exp)[eid]->GetNedges(); ++e)
+                {
+                    edgedir = (*m_exp)[eid]->GetEorient(e);
+                    
+                    ncoeff_edge = elmtToTrace[eid][e]->GetNcoeffs();
+                    elmtToTrace[eid][e]->SetCoeffsToOrientation(edgedir,edge_lambda,edge_lambda);
+                    Vmath::Vcopy(ncoeff_edge,edge_lambda,1,
+                                 elmtToTrace[eid][e]->UpdateCoeffs(),1);
+                    edge_lambda = edge_lambda + ncoeff_edge;
+                }
+                
+                // (d/dx w, d/dx q_0) 
+                (*m_exp)[eid]->DGDeriv(0,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
+                                       elmtToTrace[eid],
+                                       out_tmp);
+                (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
+                (*m_exp)[eid]->IProductWRTDerivBase(0,qrhs,force);
+                
+                // + (d/dy w, d/dy q_1) 
+                (*m_exp)[eid]->DGDeriv(1,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
+                                       elmtToTrace[eid],
+                                       out_tmp);
+                (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
+                (*m_exp)[eid]->IProductWRTDerivBase(1,qrhs,out_tmp);
+                
+                Vmath::Vadd(nm_elmt,force,1,out_tmp,1,force,1);
+                
+                // determine force[0] = (1,u)
+                (*m_exp)[eid]->BwdTrans(tmp_coeffs = m_coeffs + m_coeff_offset[eid],qrhs);
+                force[0] = (*m_exp)[eid]->Integral(qrhs);
+                
+                // multiply by inverse Laplacian matrix
+                // get matrix inverse
+                LocalRegions::MatrixKey  lapkey(StdRegions::eInvLaplacianWithUnityMean,  (*m_exp)[eid]->DetExpansionType(),  *(*m_exp)[eid]);
+                DNekScalMatSharedPtr lapsys = (*m_exp)[eid]->GetLocMatrix(lapkey);
+                
+                NekVector<NekDouble> in(nm_elmt,force,eWrapper);
+                NekVector<NekDouble> out(nm_elmt,tmp_coeffs = outarray + m_coeff_offset[eid],eWrapper);
+                
+                out = (*lapsys)*in;
+            }
+        }
+        
     } // end of namespace
 } //end of namespace

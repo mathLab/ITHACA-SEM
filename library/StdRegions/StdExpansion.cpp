@@ -318,7 +318,7 @@ namespace Nektar
                     StdMatrixKey tmpkey(eNBasisTrans,mkey.GetExpansionType(),mkey.GetBase(),
                         mkey.GetNcoeffs(),mkey.GetNodalPointsType());
                     DNekMatSharedPtr& tmpmat = GetStdMatrix(tmpkey);
-                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(*tmpmat); //Populate standard mass matrix.
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(*tmpmat); //Populate  matrix.
                     returnval->Invert();
                 }
                 break;
@@ -986,7 +986,7 @@ namespace Nektar
         }
 
 
-// VIRTUAL INLINE FUNCTIONS FROM HEADER FILE
+        // VIRTUAL INLINE FUNCTIONS FROM HEADER FILE
             void StdExpansion::SetUpPhysNormals(const boost::shared_ptr<StdExpansion>  &exp2d, const int edge)
             {
                 v_SetUpPhysNormals(exp2d,edge);
@@ -1054,6 +1054,23 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
             }
+
+        int StdExpansion::v_CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset)
+            {
+                NEKERROR(ErrorUtil::efatal, "This function is not defined for this class");
+                return 0;
+            }
+            
+        void StdExpansion::v_ExtractDataToCoeffs(const std::vector<NekDouble> &data, 
+                                   const int offset, 
+                                   const std::vector<unsigned int > &nummodes, 
+                                   const int nmode_offset,
+                                   Array<OneD, NekDouble> &coeffs)
+        {
+                NEKERROR(ErrorUtil::efatal, "This function is not defined for this class");
+        }
+
+
 
             void StdExpansion::v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray, bool NegateNorm)
             {

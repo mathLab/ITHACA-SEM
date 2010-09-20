@@ -620,6 +620,14 @@ namespace Nektar
                 return DetCartesianDirOfEdge(edge);
             }
 
+            virtual int v_CalcNumberOfCoefficients(const std::vector<unsigned int> &nummodes, int &modes_offset)
+            {
+                int nmodes = nummodes[modes_offset]*nummodes[modes_offset+1];
+                modes_offset += 2;
+                
+                return nmodes;
+            }
+
 
             virtual const LibUtilities::BasisKey v_DetEdgeBasisKey(const int i) const
             {

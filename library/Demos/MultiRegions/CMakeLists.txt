@@ -57,4 +57,4 @@ TARGET_LINK_LIBRARIES(SteadyAdvectionDiffusionReaction2D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(SteadyAdvectionDiffusionReaction2D)
 
 # Uncomment next line to compile demos in subdirectory
-#SUBDIRS(ExtraDemos)
+SUBDIRS(ExtraDemos)

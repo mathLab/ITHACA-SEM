@@ -80,6 +80,7 @@ namespace Nektar
             }
 
 
+
             //-----------------------------------
             // Helpers
             //-----------------------------------
@@ -416,6 +417,7 @@ namespace Nektar
             virtual int  v_NumBndryCoeffs() const;
             virtual int  v_GetFaceNcoeffs(const int i) const;
             virtual int  v_GetFaceIntNcoeffs(const int i) const;
+            virtual int  v_CalcNumberOfCoefficients(const std::vector<unsigned int> &nummodes, int &modes_offset);
 
             //--------------------------
             // Mappings

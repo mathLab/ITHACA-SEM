@@ -162,7 +162,7 @@ namespace Nektar
                                std::string("Unable to read DO_BLOCK_MAT_OP "
                                            "attribute TRI for ")
                              + std::string(ElementalOptimizationOperationTypeMap[n])
-                             + std::string(".")));
+                               + std::string(".")));
 
                             m_doBlockMatOp[n][0] = (bool) value;
 

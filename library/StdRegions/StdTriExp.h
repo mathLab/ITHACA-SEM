@@ -50,7 +50,7 @@ namespace Nektar
         {
             inline int getNumberOfCoefficients(int Na, int Nb)
             {
-	      ASSERTL0(Na <=  Nb, "order in 'a' direction is higher than order in 'b' direction");
+                ASSERTL0(Na <=  Nb, "order in 'a' direction is higher than order in 'b' direction");
                 return Na*(Na+1)/2 + Na*(Nb-Na);
             }
         }
@@ -610,6 +610,14 @@ namespace Nektar
                 return DetCartesianDirOfEdge(edge);
             }
 
+            virtual int v_CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset)
+            {
+                int nmodes = StdRegions::StdTriData::getNumberOfCoefficients(nummodes[modes_offset],nummodes[modes_offset+1]);
+                modes_offset += 2;
+                
+                return nmodes;
+            }
+            
             virtual const LibUtilities::BasisKey v_DetEdgeBasisKey(const int i) const
             {
                 return DetEdgeBasisKey(i);

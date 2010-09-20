@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
     // Print summary of solution details
     lambda = bcs.GetParameter("Lambda");
     const SpatialDomains::CompositeVector domain = (graph1D.GetDomain());
-    cout << "Solving 1D Helmholtz:"  << endl; 
+    cout << "Solving 1D Helmholtz: "  << endl; 
     cout << "         Lambda     : " << lambda << endl; 
     //----------------------------------------------
    
@@ -102,8 +102,18 @@ int main(int argc, char *argv[])
     
     //----------------------------------------------
     // Write solution 
-    ofstream outfile("HelmholtzFile1D.dat");
-    Exp->WriteToFile(outfile);
+    string   out(strtok(argv[1],"."));
+    string   endfile(".fld");
+    out += endfile;
+    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef 
+        = Exp->GetFieldDefinitions();
+    std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+    for(i = 0; i < FieldDef.size(); ++i)
+    {
+        FieldDef[i]->m_Fields.push_back("u");
+        Exp->AppendFieldData(FieldDef[i], FieldData[i]);
+    }
+    graph1D.Write(out, FieldDef, FieldData);
     //----------------------------------------------
     
     //----------------------------------------------

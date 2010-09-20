@@ -2,7 +2,7 @@
 #include <cstdlib>
 
 #include <MultiRegions/ContField1D.h>
-#include <SpatialDomains/BoundaryConditions.h>
+#include <SpatialDomains/Conditions.h>
 
 using namespace Nektar;
 

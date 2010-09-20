@@ -49,7 +49,7 @@ namespace Nektar
         class Geometry2D;
         class Geometry3D;
         class GeomFactors;
-        
+
         static boost::shared_ptr<GeomFactors> NullGeomFactorsSharedPtr; 
         static boost::shared_ptr<Geometry>    NullGeometrySharedPtr;
         static boost::shared_ptr<Geometry1D>  NullGeometry1DSharedPtr;

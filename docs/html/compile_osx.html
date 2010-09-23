@@ -14,70 +14,7 @@
     
   <title>Nektar++ - OS X Compile Instructions</title>
 <!-- InstanceEndEditable -->
-  <style type="text/css">
-    <!--
-	html {
-	  min-height: 101%; // force a scrollbar to always appear
-	}
-    body {
-      font: 100% Verdana, Arial, Helvetica, sans-serif;
-      background: #FFFFFF;
-      margin: 0;
-	  padding: 0;
-	  text-align: center;
-	  color: #000000;
-    }
-    .twoColHybLt #container {
-	  //max-width: 90em;
-	  max-width: 60em;
-	  width: 99%;
-      background: #FFFFFF;
-      margin: 0 auto;
-      text-align: left;
-    }
-    .twoColHybLt #sidebar1 {
-	float: left;
-	width: 13.7em;
-	background: #EBEBEB;
-	border: 1px solid #000000;
-	padding-top: 15px;
-	padding-right: 0;
-	padding-bottom: 15px;
-	padding-left: 0;
-    }
-    .twoColHybLt #sidebar1 h3, .twoColHybLt #sidebar1 p {
-      margin-left: 10px;
-      margin-right: 10px;
-    }
-    .twoColHybLt #mainContent {
-	margin-top: 0;
-	margin-right: 20px;
-	margin-bottom: 0;
-	margin-left: 14.5em;
-    }
-    .fltrt {
-      float: right;
-      margin-left: 8px;
-    }
-    .fltlft {
-      float: left;
-      margin-right: 8px;
-    }
-    .clearfloat {
-      clear:both;
-      height:0;
-      font-size: 1px;
-      line-height: 0px;
-    }
-    img {
-      border:0;
-    }
-	h1,h2,h3 {
-	  margin-bottom: 0;
-	}
-    -->
-    </style><!-- InstanceBeginEditable name="CSS_Style" -->
-    
+<link rel="stylesheet" href="style.css">
   <style type="text/css">
 <!--
 #menu_CompileOSX {
@@ -189,9 +126,13 @@ name with a forward slash.</p>
 
           <li>Put the <em>ThirdParty/</em> directory in <em>Nektar++/</em>. (This will mean <em>library/</em> and <em>ThirdParty/</em> are both sub-directories of the original <em>Nektar++/</em>.)</li>
 
-          <li>At the terminal in <em>ThirdParty/</em>, extract the tinyxml_2_4_3.zip archive with "unzip tinyxml_2_4_3.zip" (without the quotes). This will create <em>tinyxml/</em>. </li>
+          <li>At the terminal in <em>ThirdParty/</em>, extract the tinyxml_2_4_3.zip archive with 
+<div class="code"><pre>unzip tinyxml_2_4_3.zip</pre></div>
+This will create <em>tinyxml/</em>. </li>
 
-          <li>Extract the loki-0.1.3.tar.bz2 archive with "tar -xjvf loki-0.1.3.tar.bz2" (again, without the quotes). This will create <em>loki-0.1.3/</em>.
+          <li>Extract the loki-0.1.3.tar.bz2 archive with 
+<div class="code"><pre>tar -xjvf loki-0.1.3.tar.bz2</pre></div>
+This will create <em>loki-0.1.3/</em>.
            
 
           </li>
@@ -201,18 +142,22 @@ generator system. It can be used to generate the correct GCC Makefiles.
 We must now build the CMake executable.
     <ol>
 
-              <li>In <em>ThirdParty/</em>, extract the CMake.tar.bz2 archive with "tar -xjvf CMake.tar.bz2" (no quotes).</li>
+              <li>In <em>ThirdParty/</em>, extract the CMake.tar.bz2 archive with 
+<div class="code"><pre>tar -xjvf CMake.tar.bz2</pre></div></li>
 
               <li>Change to the <em>CMake/</em> directory, and type
-"./configure" (without the quotes). After configuration is complete,
-type "make" (again, without the quotes).</li>
+<div class="code"><pre>./configure</pre></div> 
+After configuration is complete,
+type <div class="code"><pre>make</pre></div></li>
 
             
     </ol>
 
           </li>
 
-          <li>In <em>ThirdParty/</em>, extract the zlib-1.2.3.tar.bz2 archive with "tar -xjvf zlib-1.2.3.tar.bz2" (no quotes). This will create <em>zlib-1.2.3/</em>.
+          <li>In <em>ThirdParty/</em>, extract the zlib-1.2.3.tar.bz2 archive with 
+<div class="code"><pre>tar -xjvf zlib-1.2.3.tar.bz2</pre></div>
+This will create <em>zlib-1.2.3/</em>.
             
     <ol>
 
@@ -222,13 +167,13 @@ type "make" (again, without the quotes).</li>
 
                       <li>Bash or KSH Shells<br>
 
-                        Type "export ZLIB_SOURCE=../../../../zlib-1.2.3" and <br>
-	  "export NO_BZIP2=0" (no quotes).</li>
+                        Type 
+<div class="code"><pre>export ZLIB_SOURCE=../../../../zlib-1.2.3<br>export NO_BZIP2=0</pre></div></li>
 
                     <li>CSH or Tcsh Shells<br>
 
-                      Type "setenv ZLIB_SOURCE ../../../../zlib-1.2.3" and <br>
-	  "setenv NO_BZIP2 0" (no quotes).</li>
+                      Type 
+<div class="code"><pre>setenv ZLIB_SOURCE ../../../../zlib-1.2.3<br>setenv NO_BZIP2 0</pre></div></li>
 
                   
         </ul>
@@ -244,9 +189,12 @@ type "make" (again, without the quotes).</li>
             
     <ol>
 
-              <li>In <em>ThirdParty/</em>, extract the boost-jam-3.1.17.tgz archive with "tar -xzvf boost-jam-3.1.17.tgz" (no quotes). This will create <em>boost-jam-3.1.17/</em>.</li>
+              <li>In <em>ThirdParty/</em>, extract the boost-jam-3.1.17.tgz archive with 
+<div class="code"><pre>tar -xzvf boost-jam-3.1.17.tgz</pre></div>
+This will create <em>boost-jam-3.1.17/</em>.</li>
 
-              <li>Change to the <em>boost-jam-3.1.17/</em> directory and type "./build.sh" (no quotes), to build the bjam executable</li>
+              <li>Change to the <em>boost-jam-3.1.17/</em> directory and type 
+<div class="code"><pre>./build.sh</pre></div> to build the bjam executable</li>
 
             
     </ol>
@@ -257,17 +205,17 @@ type "make" (again, without the quotes).</li>
             
     <ol>
 
-                <li>In <em>ThirdParty/</em>, extract the boost_1_40_0.tar.bz2 archive with "tar -xjvf boost_1_40_0.tar.bz2" (no quotes). This will create <em>boost_1_40_0/</em>.</li>
+                <li>In <em>ThirdParty/</em>, extract the boost_1_40_0.tar.bz2 archive with 
+<div class="code"><pre>tar -xjvf boost_1_40_0.tar.bz2</pre></div>
+This will create <em>boost_1_40_0/</em>.</li>
 
               <li>Change to the <em>boost_1_40_0/</em> directory, and
-type "../boost-jam-3.1.17/bin.macosxx86/bjam --prefix=../boost
---build-type=complete --with-thread --with-iostreams --with-test
---with-date_time --with-filesystem --with-system --layout=versioned
---toolset=darwin install" (without the quotes). This will place the
+type
+<div class="code"><pre>../boost-jam-3.1.17/bin.macosxx86/bjam --prefix=../boost --build-type=complete --with-thread --with-iostreams --with-test --with-date_time --with-filesystem --with-system --layout=versioned --toolset=darwin install</pre></div>
+This will place the
 compiled libraries and include files in the correct
 path. (<em>Note:</em> that for a 64 bit operating system, such as Mac
-OSX 10.6, it may be necessary to use
-"../boost-jam-3.1.17/bin.macosxx86_64/bjam" instead of
+OSX 10.6, it may be necessary to use "../boost-jam-3.1.17/bin.macosxx86_64/bjam" instead of
 "../boost-jam-3.1.17/bin.macosxx86/bjam")
         <ol>
 
@@ -291,8 +239,9 @@ wish</li>
                   <ol>
                     
                     <li>In <em>ThirdParty/</em>, extract the
-                      spblastk0.9b.tar.bz2 archive with "tar -xjvf spblastk0.9b.tar.bz2"
-                      (without the quotes). This will create the directory <em>spblastk0.9b/</em>.</li>
+                      spblastk0.9b.tar.bz2 archive with 
+		      <div class="code"><pre>tar -xjvf spblastk0.9b.tar.bz2</pre></div>
+                      This will create the directory <em>spblastk0.9b/</em>.</li>
                     
                     <li>Change to the directory <em>spblastk0.9b/build/</em></li>
                     
@@ -301,9 +250,9 @@ wish</li>
                     
                     <ol>
                       
-		      <li>Generate the makefiles using the command "../../CMake/bin/cmake ../"</li>
+		      <li>Generate the makefiles using the command <div class="code"><pre>../../CMake/bin/cmake ../</pre></div></li>
                       
-		      <li>Build and install the library by typing "make install" </li>
+		      <li>Build and install the library by typing <div class="code"><pre>make install</pre></div></li>
                       
                       
                     </ol>
@@ -325,7 +274,7 @@ wish</li>
                   <ol>
                     
                     <li>
-                      In <em>ThirdParty/</em>, extract the modmetis-4.0.tar.bz2 archive with &quot;tar -xjvf  modmetis-4.0.tar.bz2&quot; (without the quotes). This will create the directory <em>modmetis-4.0/</em>.
+                      In <em>ThirdParty/</em>, extract the modmetis-4.0.tar.bz2 archive with <div class="code"><pre>tar -xjvf  modmetis-4.0.tar.bz2</pre></div> This will create the directory <em>modmetis-4.0/</em>.
                     </li>
                     
                     <li>
@@ -337,9 +286,9 @@ wish</li>
                     
                     <ol>
                       
-		      <li>Generate the makefiles using the command "../../CMake/bin/cmake ../"</li>
+		      <li>Generate the makefiles using the command <div class="code"><pre>../../CMake/bin/cmake ../</pre></div></li>
                       
-		      <li>Build and install the library by typing "make install" </li>
+		      <li>Build and install the library by typing <div class="code"><pre>make install</pre></div> </li>
                       
                       
                     </ol>
@@ -374,7 +323,7 @@ the project files that Xcode requires.</p>
                   
         <ul>
 
-                      <li>Type in "../ThirdParty/CMake/bin/cmake -i ../library/" (without the quotes).
+                      <li>Type in <div class="code"><pre>../ThirdParty/CMake/bin/cmake -i ../library/</pre></div>
                         
             <ul>
 
@@ -396,7 +345,7 @@ the project files that Xcode requires.</p>
                 
         <ul>
 
-                      <li>Type in "../ThirdParty/CMake/bin/cmake -i -G Xcode ../library/" (without the quotes).
+                      <li>Type in <div class="code"><pre>../ThirdParty/CMake/bin/cmake -i -G Xcode ../library/</pre></div>
                         
             <ul>
 
@@ -481,12 +430,12 @@ open <em>Nektar++.xcodeproj/</em> now, and skip the GCC instructions below.</p>
         
 <ol>
 
-          <li>To compile the project, simply type "make" (no quotes) from the project directory (i.e. <em>Nektar++/builds/</em>).
+          <li>To compile the project, simply type <div class="code"><pre>make</pre></div> from the project directory (i.e. <em>Nektar++/builds/</em>).
             
     <ul>
 
                 <li>If you have multiple processors/cores, it might be
-beneficial to use "make -j &lt;num_procs/cores&gt;". The "-j" options
+beneficial to use <div class="code"><pre>make -j &lt;num_procs/cores&gt;</pre></div> The "-j" options
 starts that many jobs, so all of the processors will be utilized, and
 it will compile faster</li>
 
@@ -496,7 +445,7 @@ it will compile faster</li>
           </li>
 
         <!--  <li>The executable files will be located in the path you specified in the CMake utility.</li> -->
-  <li>Type "make install" (no quotes) to put all of the compiled
+  <li>Type <div class="code"><pre>make install</pre></div> to put all of the compiled
 libraries into a dist directory that can then be used by the solvers
 and utilities</li>
 
@@ -522,7 +471,7 @@ the project files that Xcode requires.</p>
       <li>GCC Makefiles
                   
         <ul>
-          <li>Type in "../../ThirdParty/CMake/bin/cmake -i ../" (without the quotes). 
+          <li>Type in <div class="code"><pre>../../ThirdParty/CMake/bin/cmake -i ../</pre></div>
                         
             <ul>
               <li>The "-i" indicates that you want to use the wizard mode.</li>
@@ -536,7 +485,7 @@ the project files that Xcode requires.</p>
       <li>Xcode Project Files
                 
         <ul>
-          <li>Type in "../../ThirdParty/CMake/bin/cmake -i -G Xcode ../" (without the quotes).
+          <li>Type in <div class="code"><pre>../../ThirdParty/CMake/bin/cmake -i -G Xcode ../</pre></div>
                         
             <ul>
               <li>The "-i" indicates that you want to use the wizard mode.</li>
@@ -577,7 +526,8 @@ to get full optimizations.</li>
       </li> -->
     </ul>
   </li>
-  <li>Now you have generated the Makefiles, you can compile the solvers by entering "make" from the command line in the directory <em>Nektar++/solvers/builds/</em>. If you chose to compile the solvers with Xcode, open the project "SOLVERS.xcodeproj". 
+  <li>Now you have generated the Makefiles, you can compile the solvers by entering 
+<div class="code"><pre>make</pre></div> from the command line in the directory <em>Nektar++/solvers/builds/</em>. If you chose to compile the solvers with Xcode, open the project "SOLVERS.xcodeproj". 
     </span></li>
 </ol>
 To compile the utilities you follow an identical set of instructions but replace solvers in the above text with utilities.
@@ -599,7 +549,7 @@ the project files that Xcode requires.</p>
       <li>GCC Makefiles
                   
         <ul>
-          <li>Type in "../../ThirdParty/CMake/bin/cmake -i ../" (without the quotes). 
+          <li>Type in <div class="code"><pre>../../ThirdParty/CMake/bin/cmake -i ../</pre></div>
                         
             <ul>
               <li>The "-i" indicates that you want to use the wizard mode.</li>
@@ -613,7 +563,7 @@ the project files that Xcode requires.</p>
       <li>Xcode Project Files
                 
         <ul>
-          <li>Type in "../../ThirdParty/CMake/bin/cmake -i -G Xcode ../" (without the quotes).
+          <li>Type in <div class="code"><pre>../../ThirdParty/CMake/bin/cmake -i -G Xcode ../</pre></div>
                         
             <ul>
               <li>The "-i" indicates that you want to use the wizard mode.</li>
@@ -646,7 +596,8 @@ to get full optimizations.</li>
         </li>
     </ul>
   </li>
-  <li>Now you have generated the Makefiles, you can compile the regression tests by typing "make" from the command line in any of the sub-directories of the current build location. For example to compile the regression tests for <em> Demos/StdRegions</em>, move to this directory and type "make". This will generate an executable called <em>StdRegionsDemoTest</em>. Executing this file will run a series of demos located in the <em>Nektar++/library/Demos/StdRegions</em> directory and check them against known solutions for these demos. 
+  <li>Now you have generated the Makefiles, you can compile the regression tests by typing 
+<div class="code"><pre>make</pre></div> from the command line in any of the sub-directories of the current build location. For example to compile the regression tests for <em> Demos/StdRegions</em>, move to this directory and type <div class="code"><pre>make</pre></div> This will generate an executable called <em>StdRegionsDemoTest</em>. Executing this file will run a series of demos located in the <em>Nektar++/library/Demos/StdRegions</em> directory and check them against known solutions for these demos. 
     </span></li>
   <li> If you are modifying the regression tests by adding or removing tests you can generate a new master ".ok" file by answering  <strong>No</strong> to the <em> "Would you like to see advanced options?"</em> in step 2 and setting the variable <em>REGRESSION_MAKE_OK_FILES_EXEC</em> to <em>ON</em>. This will, for example, generate the executable <em>StdRegionsDemoMakeOKFile</em> which when executed will execute a series of demos and make the updated .ok files. 
    </span></li>

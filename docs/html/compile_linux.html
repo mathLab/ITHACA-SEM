@@ -6,70 +6,10 @@
     <link rel="shortcut icon" href="images/favicon.ico" >
       <!-- InstanceBeginEditable name="doctitle" -->
       <title>Nektar++ - Linux Compile Instructions</title>
-      <!-- InstanceEndEditable --><style type="text/css">
-        <!--
-	html {
-	  min-height: 101%; // force a scrollbar to always appear
-	}
-    body {
-      font: 100% Verdana, Arial, Helvetica, sans-serif;
-      background: #FFFFFF;
-      margin: 0;
-	  padding: 0;
-	  text-align: center;
-	  color: #000000;
-    }
-    .twoColHybLt #container {
-	  //max-width: 90em;
-	  max-width: 60em;
-	  width: 99%;
-      background: #FFFFFF;
-      margin: 0 auto;
-      text-align: left;
-    }
-    .twoColHybLt #sidebar1 {
-	float: left;
-	width: 13.7em;
-	background: #EBEBEB;
-	border: 1px solid #000000;
-	padding-top: 15px;
-	padding-right: 0;
-	padding-bottom: 15px;
-	padding-left: 0;
-    }
-    .twoColHybLt #sidebar1 h3, .twoColHybLt #sidebar1 p {
-      margin-left: 10px;
-      margin-right: 10px;
-    }
-    .twoColHybLt #mainContent {
-	margin-top: 0;
-	margin-right: 20px;
-	margin-bottom: 0;
-	margin-left: 14.5em;
-    }
-    .fltrt {
-      float: right;
-      margin-left: 8px;
-    }
-    .fltlft {
-      float: left;
-      margin-right: 8px;
-    }
-    .clearfloat {
-      clear:both;
-      height:0;
-      font-size: 1px;
-      line-height: 0px;
-    }
-    img {
-      border:0;
-    }
-	h1,h2,h3 {
-	  margin-bottom: 0;
-	}
-    -->
-      </style>
-      <!-- InstanceBeginEditable name="CSS_Style" --><style type="text/css">
+      <!-- InstanceEndEditable -->
+<link rel="stylesheet" href="style.css">
+      <!-- InstanceBeginEditable name="CSS_Style" -->
+<style type="text/css">
         <!--
 #menu_CompileLinux {
 	font-weight: bold;
@@ -120,6 +60,7 @@
         </p>
         <p>
         <p><a href="regression_tests.html" id="menu_RegressionTests">Regression Tests</a></p>
+        <p>
           <a href="usage.html" id="menu_Usage">Usage</a>
         </p>
         <p>
@@ -200,7 +141,8 @@
         </p>
           <ol>
             <li>
-              At the terminal, type &quot;gcc -v&quot; (without the quotes).
+              At the terminal, type 
+              <div class="code"><pre>gcc -v</pre></div>
               If the last line says the version number is 4.1 or newer, skip to the next section; otherwise you may continue to read.
             </li>
             <li>You may either ask your system administrator to perform this upgrade for you (recommended), or install GCC in to your local account. If you choose the first option, wait for the new installation and then continue to the next section.</li>
@@ -209,21 +151,17 @@
             </li>
             <li>
               Go to <a href="http://gcc.gnu.org/install/" target="_blank">http://gcc.gnu.org/install/</a> and follow the instructions to install GCC. It is too complicated and error prone to cover everything here. Install at least the C and Fortran (for BLAS) compiles. Once &quot;gcc -v&quot; outputs a version later than 4.1, you can continue to the next section.
-              <ul>
-                <li>
+             <br>
                   The general setup instructions are as follows. However, there might be dependencies that need to be installed.
-                  <ol>
-                    <li>tar -xvjf &lt;filename&gt;.tar.bz2</li>
-                    <li>cd &lt;new_gcc_directory&gt;</li>
-                    <li>mkdir MyObj; cd MyObj</li>
-                    <li>../configure --prefix=&lt;install_path&gt; --enable-languages=c,fortran</li>
-                    <li>make</li>
-                    <li>make install</li>
-                    <li>Set your path: &quot;setenv PATH &lt;install_path&gt;:$PATH&quot; for (T)CSH and &quot;export PATH=&lt;install_path&gt;:$PATH&quot; for BASH. It may be useful to add this to your login script.</li>
-                  </ol>
+                  <div class="code" align="left"><pre>tar -xvjf &lt;filename&gt;.tar.bz2 <br />cd &lt;new_gcc_directory&gt; <br />mkdir MyObj<br />cd MyObj <br />../configure --prefix=&lt;install_path&gt; --enable-languages=c,fortran <br />make <br />make install </pre></div> 
+                  Set your path: 
+		  <ul><li> for (T)CSH Shells
+		  <div class="code"><pre>setenv PATH &lt;install_path&gt;:$PATH</pre></div>
+		  </li>
+		 <li> for BASH Shells<div class="code"><pre>export PATH=&lt;install_path&gt;:$PATH</pre></div>
+		 </li>
+</ul>It may be useful to add this to your login script.
                 </li>
-              </ul>
-            </li>
           </ol>
           <h3 align="left">
             <a name="Organizing_the_ThirdParty_Source_Files"></a> Organizing the ThirdParty Source Files
@@ -245,30 +183,41 @@
               Put the <em>ThirdParty/</em> directory in <em>Nektar++/</em>. (This will mean <em>library/</em> and <em>ThirdParty/</em> are both sub-directories of the original <em>Nektar++/</em>.)
             </li>
             <li>
-              At the terminal in <em>ThirdParty/</em>, extract the tinyxml_2_4_3.zip archive with &quot;unzip tinyxml_2_4_3.zip&quot; (without the quotes). This will create <em>tinyxml/</em>.
+              At the terminal in <em>ThirdParty/</em>, extract the tinyxml_2_4_3.zip archive with 
+              <div class="code"><pre>unzip tinyxml_2_4_3.zip</pre></div>
+              This will create <em>tinyxml/</em>.
             </li>
             <li>
-              Extract the loki-0.1.3.tar.bz2 archive with &quot;tar -xjvf loki-0.1.3.tar.bz2&quot; (again, without the quotes). This will create <em>loki-0.1.3/</em>.
-
+              Extract the loki-0.1.3.tar.bz2 archive with 
+              <div class="code"><pre>tar -xjvf loki-0.1.3.tar.bz2</pre></div>
+              This will create <em>loki-0.1.3/</em>.
             </li>
             <li>
               CMake is an open-source, cross-platform make file generator system. It can be used to generate the correct GCC Makefiles. We must now build the CMake executable.
               <ol>
                 <li>
-                  In <em>ThirdParty/</em>, extract the CMake.tar.bz2 archive with &quot;tar -xjvf CMake.tar.bz2&quot; (no quotes).
+                  In <em>ThirdParty/</em>, extract the CMake.tar.bz2 archive with 
+                  <div class="code"><pre>tar -xjvf CMake.tar.bz2 </pre></div>
                 </li>
                 <ul>
                   <li>
-                    If you are using 64 bit Linux, extract the cmake_cvs.tar archive instead with "tar -xjvf cmake_cvs.tar.bz2". This will create the <em>cmake_cvs/</em> directory.
+                    If you are using 64 bit Linux, extract the cmake_cvs.tar archive instead with
+                    <div class="code"><pre>tar -xjvf cmake_cvs.tar.bz2 </pre></div>
+                    This will create the <em>cmake_cvs/</em> directory.
                   </li>
                 </ul>
                 <li>
-                  Change to the <em>CMake/</em> (or <em>cmake_cvs/CMake/</em> in case of 64 bit linux) directory, and type &quot;./configure&quot; (without the quotes). After configuration is complete, type &quot;make&quot; (again, without the quotes).
+                  Change to the <em>CMake/</em> (or <em>cmake_cvs/CMake/</em> in case of 64 bit Linux) directory, and type 
+                  <div class="code"><pre>./configure </pre></div>
+                  After configuration is complete, type 
+                  <div class="code"><pre>make </pre></div>
                 </li>
               </ol>
             </li>
             <li>
-              In <em>ThirdParty/</em>, extract the zlib-1.2.3.tar.bz2 archive with &quot;tar -xjvf zlib-1.2.3.tar.bz2&quot; (no quotes). This will create <em>zlib-1.2.3/</em>.
+              In <em>ThirdParty/</em>, extract the zlib-1.2.3.tar.bz2 archive with 
+              <div class="code"><pre>tar -xjvf zlib-1.2.3.tar.bz2 </pre></div>
+              This will create <em>zlib-1.2.3/</em>.
               <ol>
                 <li>
                   You must set the ZLIB_SOURCE and NO_BZIP2 environment variables in order to tell 
@@ -277,12 +226,13 @@
                   <ul>
                     <li>
                       Bash or KSH Shells<br />
-                      Type &quot;export ZLIB_SOURCE=../../../../zlib-1.2.3&quot; and &quot;export NO_BZIP2=0&quot; (no quotes).
+                      Type               
+                      <div class="code"><pre>export ZLIB_SOURCE=../../../../zlib-1.2.3<br />export NO_BZIP2=0</pre></div>
                     </li>
                     <li>
                       CSH or Tcsh Shells<br />
-                      Type &quot;setenv ZLIB_SOURCE ../../../../zlib-1.2.3&quot; and 
-                      &quot;setenv NO_BZIP2 0&quot; (no quotes).
+                      Type 
+                      <div class="code"><pre>setenv ZLIB_SOURCE ../../../../zlib-1.2.3 <br />setenv NO_BZIP2 0 </pre></div>
                     </li>
                   </ul>
                 </li>
@@ -292,10 +242,14 @@
               The next step is to compile bjam, which will allow for the building and installation of Boost.
               <ol>
                 <li>
-                  In <em>ThirdParty/</em>, extract the boost-jam-3.1.16.tgz archive with &quot;tar -xzvf boost-jam-3.1.16.tgz&quot; (no quotes). This will create <em>boost-jam-3.1.16/</em>.
+                  In <em>ThirdParty/</em>, extract the boost-jam-3.1.16.tgz archive with 
+                  <div class="code"><pre>tar -xzvf boost-jam-3.1.16.tgz</pre></div>
+                  This will create <em>boost-jam-3.1.16/</em>.
                 </li>
                 <li>
-                  Change to the <em>boost-jam-3.1.16/</em> directory and type &quot;./build.sh&quot; (no quotes), to build the bjam executable.
+                  Change to the <em>boost-jam-3.1.16/</em> directory and type 
+                  <div class="code"><pre>./build.sh </pre></div>
+                  to build the bjam executable.
                 </li>
               </ol>
             </li>
@@ -304,26 +258,25 @@
               <ol>
                 <li>
                   In <em>ThirdParty/</em>, extract the boost_1_40_0.tar.bz2 archive with 
-                  &quot;tar -xjvf boost_1_40_0.tar.bz2&quot; (no quotes). This will create <em>boost_1_40_0/</em>.
+                  <div class="code"><pre>tar -xjvf boost_1_40_0.tar.bz2</pre></div>
+                  This will create <em>boost_1_40_0/</em>.
                   
                 </li>
                 <li>
                   Change to the <em>boost_1_40_0/</em> directory, and type
-                  &quot;../boost-jam-3.1.16/bin.*/bjam --prefix=../boost
-                  --build-type=complete --with-thread --with-iostreams
-                  --with-test --with-date_time --with-filesystem --with-system
-                  --layout=versioned --toolset=gcc install&quot; (without the quotes). This will place the compiled libraries and include files in the correct path.
+                  <div class="code"><pre>../boost-jam-3.1.16/bin.*/bjam --prefix=../boost --build-type=complete --with-thread --with-iostreams --with-test --with-date_time --with-filesystem --with-system --layout=versioned --toolset=gcc install</pre></div>
+                  This will place the compiled libraries and include files in the correct path.
                   <ol>
                     <li>The &quot;--with-libraries&quot; compiles Boost with only the libraries required by Nektar++. This is just meant to save time. You can leave the flag off and it will compile all the libraries, if you wish.</li>
                   </ol>
                 </li>
                 <li>
                     If you will be using Nektar++ as a component in an application that requires shared 
-                    libraries and you are using a 64 bit linux, you will need to compile the boost libraries
+                    libraries and you are using a 64 bit Linux, you will need to compile the boost libraries
                     with the -fPIC flag.  To do this, add the following to the command line in the 
                     previous step.
                     <p>
-                    cxxflags=-fPIC cflags=-fPIC linkflags=-fPIC
+                    <div class="code"><pre>cxxflags=-fPIC cflags=-fPIC linkflags=-fPIC</pre></div>
                 </li>
               </li>
           </ol>
@@ -334,7 +287,9 @@
             The following step is to extract and compile the sparse matrix library developed by <em>NIST</em>. (For more information about this library, see <a href="http://math.nist.gov/spblas/original.html" target="_blank">http://math.nist.gov/spblas/original.html</a>)
             <ol>
               <li>
-                In <em>ThirdParty/</em>, extract the spblastk0.9b.tar.bz2 archive with &quot;tar -xjvf spblastk0.9b.tar.bz2&quot; (without the quotes). This will create the directory <em>spblastk0.9b/</em>.
+                In <em>ThirdParty/</em>, extract the spblastk0.9b.tar.bz2 archive with 
+                <div class="code"><pre>tar -xjvf spblastk0.9b.tar.bz2</pre></div>
+                This will create the directory <em>spblastk0.9b/</em>.
               </li>
               <li>
                 Change to the directory <em>spblastk0.9b/build/</em>
@@ -343,8 +298,14 @@
                 Compile the library using the previously installed <em>CMake</em>
               </li>
               <ol>
-                <li>Generate the makefiles using the command &quot;../../CMake/bin/cmake ../&quot; (or "../../cmake_cvs/CMake/bin/cmake ../" for 64 bit Linux) (no quotes).</li>
-                <li>Build the library by typing &quot;make install&quot; </li>
+                <li>Generate the makefiles using the command
+                <div class="code"><pre>../../CMake/bin/cmake ../</pre></div>
+                or for 64 bit Linux:
+                <div class="code"><pre>../../cmake_cvs/CMake/bin/cmake ../</pre></div> 
+                </li>
+                <li>Build the library by typing
+                <div class="code"><pre>make install</pre></div>
+                </li>
               </ol>
             </li>
           </ol>
@@ -360,7 +321,9 @@
                                                                       target="_blank">here</a>)
             <ol>
               <li>
-                In <em>ThirdParty/</em>, extract the modmetis-4.0.tar.bz2 archive with &quot;tar -xjvf  modmetis-4.0.tar.bz2&quot; (without the quotes). This will create the directory <em>modmetis-4.0/</em>.
+                In <em>ThirdParty/</em>, extract the modmetis-4.0.tar.bz2 archive with 
+                <div class="code"><pre>tar -xjvf  modmetis-4.0.tar.bz2</pre></div>
+                This will create the directory <em>modmetis-4.0/</em>.
               </li>
               <li>
                 Change to the directory <em>modmetis-4.0/build/</em>
@@ -369,8 +332,14 @@
                 Compile the library using the previously installed <em>CMake</em>
               </li>
               <ol>
-                <li>Generate the makefiles using the command &quot;../../CMake/bin/cmake ../&quot; (or "../../cmake_cvs/CMake/bin/cmake ../" for 64 bit Linux) (no quotes).</li>
-                <li>Build the library by typing &quot;make install&quot; </li>
+                <li>Generate the makefiles using the command
+                <div class="code"><pre>../../CMake/bin/cmake ../</pre></div>
+                or for 64 bit Linux:
+                <div class="code"><pre>../../cmake_cvs/CMake/bin/cmake ../</pre></div>
+                </li>
+                <li>Build the library by typing 
+                <div class="code"><pre>make install</pre></div>
+                </li>
               </ol>
             </li>
 
@@ -381,7 +350,7 @@
           <p>One of four different versions of BLAS is required for Nektar++. If you do not have at least one of these BLAS implementations installed, please contact your system administrator and ask them to do so.</p>
           <ul>
 	    <li>
-	    System supplied.  Most linux distributions come with blas and
+	    System supplied.  Most Linux distributions come with blas and
           lapack, usually located in /usr/lib.
 	    </li>
             <li>
@@ -411,7 +380,10 @@
                   GCC Makefiles
                   <ul>
                     <li>
-                      Type in "../ThirdParty/CMake/bin/cmake -i ../library/" (or  ../ThirdParty/cmake_cvs/CMake/bin/cmake -i ../library/ for 64 bit linux) (without the quotes).
+                      Type in 
+                      <div class="code"><pre>../ThirdParty/CMake/bin/cmake -i ../library/</pre></div>
+                      or for 64 bit Linux:
+                      <div class="code"><pre>../ThirdParty/cmake_cvs/CMake/bin/cmake -i ../library/</pre></div> 
                       <ul>
                         <li>The &quot;-i&quot; indicates that you want to use the wizard mode.</li>
                       </ul>
@@ -425,7 +397,10 @@
                   KDevelop Project Files
                   <ul>
                     <li>
-                      Type in "../ThirdParty/CMake/bin/cmake -i -G KDevelop3 ../library/" (or ../ThirdParty/cmake_cvs/CMake/bin/cmake -i -G KDevelop3 ../library/ for 64 bit linux )(without the quotes).
+                      Type in 
+                      <div class="code"><pre>../ThirdParty/CMake/bin/cmake -i -G KDevelop3 ../library/</pre></div>
+                      or for 64 bit Linux:
+                      <div class="code"><pre>../ThirdParty/cmake_cvs/CMake/bin/cmake -i -G KDevelop3 ../library/</pre></div> 
                       <ul>
                         <li>The &quot;-i&quot; indicates that you want to use the wizard mode.</li>
                       </ul>
@@ -495,12 +470,18 @@
           <p>Now that CMake generated the appropriate Makefiles, it can  be compiled with GCC. If you chose to generate a KDevelop project, you can open the Nektar++.kdevelop file now, and skip the GCC instructions below.</p>
           <ol>
             <li>
-              To compile the project, simply type &quot;make&quot; (no quotes) from the project directory (i.e. <em>Nektar++/builds/</em>).
+              To compile the project, simply type 
+              <div class="code"><pre>make</pre></div>
+              from the project directory (i.e. <em>Nektar++/builds/</em>).
               <ul>
-                <li>If you have multiple processors/cores, it might be beneficial to use &quot;make -j &lt;num_procs/cores&gt;&quot;. The &quot;-j&quot; options starts that many jobs, so all of the processors will be utilized, and it will compile faster</li>
+                <li>If you have multiple processors/cores, it might be beneficial to use 
+                <div class="code"><pre>make -j &lt;num_procs/cores&gt</pre></div>
+                The &quot;-j&quot; options starts that many jobs, so all of the processors will be utilized, and it will compile faster</li>
               </ul>
             </li>
-            <li>Type "make install" (no quotes) to put all of the compiled libraries into a dist directory that can then be used by the solvers and utilities.</li>
+            <li>Type 
+            <div class="code"><pre>make install</pre></div>
+            to put all of the compiled libraries into a dist directory that can then be used by the solvers and utilities.</li>
             <li>The executable files will be located in the path you specified in the CMake utility.</li>
           </ol>
 
@@ -529,7 +510,10 @@
 
               <ul>
                 <li>
-                  Type in "../../ThirdParty/CMake/bin/cmake -i ../" (or ../../ThirdParty/cmake_cvs/CMake/bin/cmake -i ../  for 64 bit Linux) (without the quotes).
+                  Type in 
+                  <div class="code"><pre>../../ThirdParty/CMake/bin/cmake -i ../</pre></div>
+                  or for 64 bit Linux
+                  <div class="code"><pre>../../ThirdParty/cmake_cvs/CMake/bin/cmake -i ../</pre></div>
                 </li>
 
                 <ul>
@@ -550,7 +534,10 @@
 
               <ul>
                 <li>
-                  Type in "../../ThirdParty/CMake/bin/cmake -i -G KDevelop3 ../" (or  ../../ThirdParty/cmake_cvs/CMake/bin/cmake -i -G KDevelop3 ../  for 64 bit linux) (without the quotes).
+                  Type in 
+                  <div class="code"><pre>../../ThirdParty/CMake/bin/cmake -i -G KDevelop3 ../</pre></div>
+                  or for 64 bit Linux:
+                  <div class="code"><pre>../../ThirdParty/cmake_cvs/CMake/bin/cmake -i -G KDevelop3 ../</pre></div> 
 
                   <ul>
                     <li>The "-i" indicates that you want to use the wizard mode.</li>
@@ -596,7 +583,9 @@
             </ul>
             </li>
             <li>
-              Now you have generated the Makefiles, you can compile the solvers by entering "make" from the command line in the directory <em>Nektar++/solvers/builds/</em>. If you chose to compile the solvers with KDevelop, open the project "Nektar++.kdevelop" .
+              Now you have generated the Makefiles, you can compile the solvers by entering 
+              <div class="code"><pre>make</pre></div>
+              from the command line in the directory <em>Nektar++/solvers/builds/</em>. If you chose to compile the solvers with KDevelop, open the project "Nektar++.kdevelop" .
 
             </ol>
           To compile the utilities you follow an identical set of instructions but replace solvers in the above text with utilities.

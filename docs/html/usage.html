@@ -6,69 +6,7 @@
     <!-- InstanceBeginEditable name="doctitle" -->
 <title>Nektar++ - Usage</title>
 <!-- InstanceEndEditable -->
-    <style type="text/css">
-    <!--
-	html {
-	  min-height: 101%; // force a scrollbar to always appear
-	}
-    body {
-      font: 100% Verdana, Arial, Helvetica, sans-serif;
-      background: #FFFFFF;
-      margin: 0;
-	  padding: 0;
-	  text-align: center;
-	  color: #000000;
-    }
-    .twoColHybLt #container {
-	  //max-width: 90em;
-	  max-width: 60em;
-	  width: 99%;
-      background: #FFFFFF;
-      margin: 0 auto;
-      text-align: left;
-    }
-    .twoColHybLt #sidebar1 {
-	float: left;
-	width: 13.7em;
-	background: #EBEBEB;
-	border: 1px solid #000000;
-	padding-top: 15px;
-	padding-right: 0;
-	padding-bottom: 15px;
-	padding-left: 0;
-    }
-    .twoColHybLt #sidebar1 h3, .twoColHybLt #sidebar1 p {
-      margin-left: 10px;
-      margin-right: 10px;
-    }
-    .twoColHybLt #mainContent {
-	margin-top: 0;
-	margin-right: 20px;
-	margin-bottom: 0;
-	margin-left: 14.5em;
-    }
-    .fltrt {
-      float: right;
-      margin-left: 8px;
-    }
-    .fltlft {
-      float: left;
-      margin-right: 8px;
-    }
-    .clearfloat {
-      clear:both;
-      height:0;
-      font-size: 1px;
-      line-height: 0px;
-    }
-    img {
-      border:0;
-    }
-	h1,h2,h3 {
-	  margin-bottom: 0;
-	}
-    -->
-    </style>
+   <link rel="stylesheet" href="style.css">
     <!-- InstanceBeginEditable name="CSS_Style" -->
 <style type="text/css">
 <!--
@@ -100,7 +38,13 @@
 	<p><a href="pre-processing.html" id="menu_PreProcessing">Pre-processing</a></p>
         <p><a href="post-processing.html" id="menu_PostProcessing">Post-processing</a></p>
         <p><a href="regression_tests.html" id="menu_RegressionTests">Regression Tests</a></p>
-	<p><a href="usage.html" id="menu_Usage">Usage</a></p>
+	<p><a href="usage.html" id="menu_Usage">Usage</a>
+  <!--        <br/>
+          &nbsp;&nbsp;&nbsp;<a href="usage_demo_helmholtz2D.html" id="menu_UsageHelmholtz2D">Helmholtz 2D</a><br/>
+          &nbsp;&nbsp;&nbsp;<a href="usage_solver_ADR.html" id="menu_UsageADR">Advection Diffusion Reaction</a><br/>
+          &nbsp;&nbsp;&nbsp;<a href="usage_solver_IncNavierStokes.html" id="menu_UsageIncNavierStokes">Incompressible Navier-Stokes</a><br/>
+-->
+        </p>
         <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
         <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
         <p><a href="license.html" id="menu_License">License</a></p>
@@ -132,6 +76,7 @@ All other demo codes can be run in a similar fashion.
 
 </li>
 <li><h3>Demonstration at solver level</h3>
+<h4>Advection-Diffusion-Reaction Solver</h4>
 <p> The source codes of the Advection-Diffusion-Reaction solver are located in the directory <em>Nektar++/solvers/AdvectionDiffusionReaction</em> and when compiled at <em>Nektar++/solvers/buildsDebug</em>, the executables will be placed in the directory <em>Nektar++/solvers/buildsDebug/AdvectionDiffusionReaction</em></p>
 <p>
 <ul>
@@ -140,7 +85,8 @@ All other demo codes can be run in a similar fashion.
 </p>
 </p>
 </li>
-
+<h4>Incompressible Navier-Stokes Solver</h4>
+The source code of the Navier-Stokes solver can be found in <em>Nektar++/solvers/IncNavierStokesSolver</em> and when compiled the executable will be placed in the directory <em>Nektar++/solvers/builds/IncNavierStokesSolver</em>. The <code>*.xml</code> files found in <em>Nektar++/solvers/IncNavierStokesSolver</em> are input files for the solver. Information on how to run these examples and details on the solvers usage can be found <a href="usage_solver_IncNavierStokes.html"> here</a>.
 </ul>
 
 

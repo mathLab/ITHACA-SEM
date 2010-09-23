@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="iso-8859-1" ?> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">  
+<html xmlns="http://www.w3.org/1999/xhtml"><!-- InstanceBegin template="/Templates/Main.dwt" codeOutsideHTMLIsLocked="false" -->
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <link rel="shortcut icon" href="images/favicon.ico" >
+    <!-- InstanceBeginEditable name="doctitle" -->
+<title>Nektar++ - Usage</title>
+<!-- InstanceEndEditable -->
+   <link rel="stylesheet" href="style.css">
+    <!-- InstanceBeginEditable name="CSS_Style" -->
+<style type="text/css">
+<!--
+#menu_Usage {file:///home/bessie/workspace/NektarJuly2010/Nektardoc/docs/html/usage_solver_IncNavierStokes.html
+	font-weight: bold;
+}
+-->
+</style>
+<!-- InstanceEndEditable -->
+    <!--[if IE]>
+    <style type="text/css"> 
+      .twoColHybLt #sidebar1 { padding-top: 30px; margin-top: 20px; }
+      .twoColHybLt #mainContent { zoom: 1; padding-top: 15px; }
+    </style>
+    <![endif]-->
+    <!-- InstanceParam name="LibraryMenu" type="boolean" value="false" -->
+    <!-- InstanceParam name="CompileMenu" type="boolean" value="false" -->
+  </head>
+  <body class="twoColHybLt">
+    <div id="container">
+      <div id="sidebar1">
+        <h3 style="text-align: center;"><a href="index.html" id="menu_Nektar"><img src="images/nektar.png" alt="Nektar++" width="155" height="38" /></a></h3>
+
+
+        <p><a href="downloads.html" id="menu_Downloads">Downloads</a></p>
+        <p><a href="compile.html" id="menu_Compile">Compile Instructions</a></p>
+        <p><a href="library.html" id="menu_Library">Library Overview</a></p>
+        <p><a href="team.html" id="menu_Team">Team Members</a></p>
+	<p><a href="pre-processing.html" id="menu_PreProcessing">Pre-processing</a></p>
+        <p><a href="post-processing.html" id="menu_PostProcessing">Post-processing</a></p>
+        <p><a href="regression_tests.html" id="menu_RegressionTests">Regression Tests</a></p>
+	<p><a href="usage.html" id="menu_Usage">Usage</a></p>
+        <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
+        <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
+        <p><a href="license.html" id="menu_License">License</a></p>
+        <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
+        <p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
+
+        <p style="font-size:9px;">Last Revision:<br/>$Date: 2009/05/02 16:49:13 $</p>
+      </div>
+      <div id="mainContent">
+ <h1>Usage: Incompressible Navier-Stokes Solver</h1>
+<p>
+Here, we will demonstrate how to run a first example with the incompressible Navier-Stokes solver and
+briefly explain the options of the solver specified in the input file.
+The explanations will be based on the example file <code>QuadMesh.xml</code> that can be found in
+<code>Nektar++/solvers/IncNavierStokesSolver</code>. <br />
+Briefly, the Navier-Stokes solver computes the solution of the Navier-Stokes equation in two space dimensions in terms of the primitive variables velocity
+ <span class="latexfontbold">v</span> <span class="latexfontitalic">=(u,v)</span> and pressure <span class="latexfontitalic">p</span> for a fluid with kinematic viscosity <img src="images/IncNavierStokesDoc9x.png" width="10" height="9" />
+<center>
+<p>
+<img src="images/IncNavierStokesDoc0x.png" width="274" height="63" alt="Navier-Stokes Equation"/>
+</p>
+</center>
+subject to appropriate initial and boundary conditions. For example, a typical set of boundary conditions would be given by
+<center>
+<p>
+<img src="images/IncNavierStokesDoc1x.png" width="312" height="95" />
+</p>
+</center>
+where <span class="latexfontbold">n</span> is the unit outward normal vector on the boundary. 
+For simplicity, we assume that the density of the fluid is <span class="latexfontitalic">&rho;=1</span>.
+</p>
+<h2>How to get started</h2>
+<h3>Compiling the code</h3>
+<p>
+Follow the <a href="compile.html" id="menu_Compile">compile instructions</a> and build the Nektar++ library, the solvers and the utilities. 
+</p>
+<h3>Running a first example</h3>
+<p>
+The folder <code>Nektar++/solvers/IncNavierStokesSolver</code> contains several <code>*.xml</code> files. 
+These are input files for the Navier-Stokes solver specifying the geometry (i.e. the mesh and 
+the spectal/hp expansion), the parameters and boundary conditions. 
+Further details on the structure of the input file can be found <a href="usage_solver_IncNavierStokes.html#inputfileoptions">below</a>. 
+<br /> 
+Now, lets try to run the <code>QuadMesh.xml</code> example that can be found in 
+<code>Nektar++/solvers/IncNavierStokesSolver</code>:
+<ol>
+<li> Copy the input file, <code>QuadMesh.xml</code> to the directory where the solver is compiled, e.g. 
+<code>Nektar++/solvers/IncNavierStokesSolver/build/IncNavierStokesSolver</code>.
+</li>
+<li>Run the code by typing
+<div class="code"><pre>./IncNavierStokesSolver QuadMesh.xml</pre></div>
+</li>
+</ol>
+The solution should now have been written to the file <code>QuadMesh.fld</code>. 
+This file is formatted in the Nektar++ output format (see <a href="post-processing.html">here</a>).<br />
+To visualise the solution, we can convert the fld-file into Vtk, Gmsh or Tecplot file formats using 
+the Post-processing tools in <code>Nektar++/utilities/builds/PostProcessing/</code>. 
+Here, we will demonstrate how to convert the <code>fld</code>-file into Vtk-file format. 
+The <a href="http://www.vtk.org/">Visualization Toolkit (VTK)</a> is an open-source visualisation library for 3D computer graphics. 
+There is a wide range of open source GUIs available for VTK, e.g. <a href="http://www.paraview.org/">paraview</a>.
+We convert the <code>fld</code>-file into Vtk-file format by typing 
+<div class="code"><pre>../../../utilities/builds/PostProcessing/FldToVtk QuadMesh.xml QuadMesh.fld</pre></div>
+(Make sure you are still at the directory <code>Nektar++/solvers/IncNavierStokesSolver/build/IncNavierStokesSolver</code>.)
+This should have been created the file <code>QuadMesh.vtu</code> in the current directory. 
+The <code>*.vtu</code> files can now be opened with paraview, for example. 
+<center>
+<img src="images/QuadMeshu.png" width="285" height="236" />
+</center>
+<h2 id="inputfileoptions">Input file options</h2>
+<h3>Description of the mesh</h3>
+<p>
+The mesh is described between the XML tags
+<div class="source"><pre>
+&lt;GEOMETRY&gt;
+... 
+&lt;/GEOMETRY&gt;
+</pre></div>
+which contains a list of the vertices, edges and elements. 
+This mesh information can be generated using Gmsh an open-source finite element mesh generator which 
+can be downloaded at <a href="http://geuz.org/gmsh/" />http://geuz.org/gmsh/</a>. 
+<!--and converted to the Nektar input file format using the Pre-processing tool.
+Meshconvert in <code>Nektar++/utilities/builds/PreProcessing/</code>. -->
+Further details about creating a mesh can be found in the <a href="pre-processing.html">Pre-processing</a> section.
+</p>
+</p>
+<h3>Description of the spectral/hp expansion</h3>
+<p>
+Between the XML tags 
+<div class="source"><pre>
+&lt;EXPANSIONS&gt;
+...
+&lt;/EXPANSIONS&gt;
+</pre></div>
+the spectral/hp expansion used to represent the solution is specified. For example
+<div class="sourceexample"><pre>
+&lt;EXPANSIONS&gt;
+  &lt;E COMPOSITE="C[0]" NUMMODES="3" TYPE="MODIFIED" /&gt;
+&lt;/EXPANSIONS&gt;
+</pre></div>
+<code class="source">NUMMODES</code> specifies the number of expansion modes and <code class="source">TYPE</code> defines the type of basis functions. <br />
+<!-- For meshes consisting of quadrilateral and/or triangular elements, the most suitable expansion basis to choose, 
+is the modified semi-orthogonal expansion basis, which can be chosen by setting . -->
+<code class="source">TYPE="MODIFIED"</code> will choose the modified semi-orthogonal expansion basis, which was first discussed by Dubiner [2], to approximate the variables. 
+Details on this expansion basis can be found in Chapter 3.2.3 in the book of Karniadakis and Sherwin [1]. 
+<!-- GLL_LAGRANGE for quadrilateral meshes -->
+<!-- Lets assume we are looking for the solution u(x,t) of a differential equation. Further,
+it is assumed that the solution u(x,t) can be accurately represented by the approximate solution of the form 
+NUMMODES= P+1 -->
+<h3>Description of parameters, solver information and boundary conditions</h3>
+<p>In between the XML tags 
+<div class="source"><pre>
+&lt;CONDITIONS&gt;
+...
+&lt;/CONDITIONS&gt;
+</pre></div>
+all the necessary information for a specific solver is given. 
+</p> 
+<h4>Solver information</h4>
+The solver information is given in between the XML tags 
+<div class="source"><pre>
+<font color="gray">&lt;CONDITIONS&gt;</font>
+    &lt;SOLVERINFO&gt;
+    ...
+    &lt;/SOLVERINFO&gt;
+<font color="gray">...
+&lt;/CONDITIONS&gt;</font>
+</pre></div>
+For the incompressible Navier-Stokes solver, we specify for example 
+<div class="sourceexample"><pre>
+&lt;SOLVERINFO&gt;      
+      &lt;I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/&gt;
+      &lt;I PROPERTY="AdvectionForm" VALUE="Convective"/&gt;
+      &lt;I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/&gt;
+&lt;/SOLVERINFO&gt;
+</pre></div>
+Here, <code class="source">EQTYPE</code> specifies the equation to be solved. We set it to the <code class="source">VALUE="UnsteadyNavierStokes"</code>, i.e. we want to solve the equation 
+<center>
+<p>
+<img src="images/IncNavierStokesDoc2x.png" width="274" height="63" alt="Navier-Stokes Equation"/>
+</p>
+</center>
+<!-- Options are UnsteadyStokes and UnsteadyNavierStokes. -->
+Furthermore, we set the <code class="source">AdvectionForm</code> to <code class="source">Convective</code>, i.e. we compute the advection term as 
+<img src="images/IncNavierStokesDoc3x.png" width="71" height="15" />.
+<!-- The advection form is only needed in case of the UnsteadyNavierStokes equation. 
+for the advection term Convective or NonConservative -->
+<br>
+<!-- The <code class="source">TimeIntegrationMethod</code> specifies the scheme used to solve the Navier-Stokes equations in time. -->
+The incompressible Navier-Stokes equations are solved in time using a <strong>velocity correction splitting scheme</strong> combined 
+with <strong>stiffly-stable time integration</strong>. Briefly, the time integration scheme consists of the following steps: 
+<center>
+<p>
+<img src="images/IncNavierStokesDoc4x.png" width="381" height="198" />
+</p>
+</center>
+<p>
+where <span class="latexfontitalic">J</span> is the integration order and <span class="latexfont">&gamma;&#8320;</span>, <span class="latexfont">&alpha;<sub>q</sub></span> and <span class="latexfont">&beta;<sub>q</sub></span> are the stiffly stable time integration coefficients given in the table below. 
+<center>
+<table class="border" rules="rows" frame="border" >
+  <caption class="border">Table: Stiffly stable splitting scheme coefficients </caption>
+  <colgroup>
+    <col width="10%" />
+    <col width="30%" />
+    <col width="30%" />
+    <col width="30%" />
+  </colgroup>
+  <thead>
+    <tr>
+      <th class="border"></th>
+      <th>1st order </th>
+      <th>2nd order</th>
+      <th>3rd order</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="border"><span class="latexfont">&gamma;&#8320;</span></td>
+      <td>1</td>
+      <td>3/2</td>
+      <td>11/6</td>
+    </tr>
+    <tr>
+      <td class="border"><span class="latexfont">&alpha;&#8320;</span></td>
+      <td>1</td>
+      <td>2</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td class="border"><span class="latexfont">&alpha;&#8321;</span></td>
+      <td>0</td>
+      <td>-1/2</td>
+      <td>-3/2</td>
+    </tr>
+    <tr>
+      <td class="border"><span class="latexfont">&alpha;&#8322;</span></td>
+      <td>0</td>
+      <td>0</td>
+      <td>1/3</td>
+    </tr>
+    <tr>
+      <td class="border"><span class="latexfont">&beta;&#8320;</span></td>
+      <td>1</td>
+      <td>2</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td class="border"><span class="latexfont">&beta;&#8321;</span></td>
+      <td>0</td>
+      <td>-1</td>
+      <td>-3</td>
+    </tr>
+    <tr>
+      <td class="border"><span class="latexfont">&beta;&#8322;</span></td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+</center>
+The splitting scheme decouples the velocity field <span class="latexfontbold">v</span> from the pressure 
+<span class="latexfontitalic">p</span>. It treats the advection term explicitely and the pressure and the diffusion term implicitely.
+For details on the velocity correction scheme and the stiffly stable time integrators see Chapter 8.3.2.5 and 8.3.2.6 in the book of Karniadakis and Sherwin [1]. 
+We can choose between the first-order, the second-order or the third-order scheme by setting <code class="source">TimeIntegrationMethod</code> to <code class="source">
+IMEXOrder1,
+IMEXOrder2</code> or
+<code class="source">
+IMEXOrder3</code>.
+</p>
+</p>
+<h4>Parameters</h4>
+<p>
+Between the XML tags 
+<div class="source"><pre>
+<font color="gray">&lt;CONDITIONS&gt;</font>
+    &lt;PARAMETERS&gt;
+    ...
+    &lt;/PARAMETERS&gt;
+<font color="gray">...
+&lt;/CONDITIONS&gt;</font>
+</pre></div>
+the parameters of the equation and the time integration scheme as well as output options are specified.
+For example
+<div class="sourceexample"><pre>&lt;PARAMETERS&gt;
+   &lt;P&gt; TimeStep      = 0.001 &lt;/P&gt;
+   &lt;P&gt; NumSteps      = 100   &lt;/P&gt;
+   &lt;P&gt; IO_CheckSteps = 10    &lt;/P&gt;
+   &lt;P&gt; IO_InfoSteps  = 10    &lt;/P&gt;
+   &lt;P&gt; Kinvis        = 1.0   &lt;/P&gt;
+&lt;/PARAMETERS&gt;
+</pre></div>
+The only material property we have to specify for the incompressible Navier-Stokes equation is the kinematic viscosity, which is set by assigning a floating point number to <code class="source">Kinvis</code>. <br /> 
+The parameter <code class="source">TimeStep</code> defines <span class="latexfont">&Delta;t</span> in the time integration scheme and <code class="source">NumSteps</code> is the total number of steps the time integration 
+scheme will perform. That means the physical endtime will be <code>TimeStep*NumSteps</code>. <br />
+<code class="source">IO_CheckSteps</code> specifies the number of time steps that will be performed between writing the solution to output files. These output files are named <code>&lt;INPUTFILENAME&gt;_&lt;NUMBER&gt;.chk</code>. They can be converted into Vtk, Tecplot or Gmsh file formats using the same Post-Processing tools as for the <code>fld</code>-files. The conversion tools can be found in <code>Nektar++/utilities/builds/PostProcessing/</code>.<br />
+<code class="source">IO_InfoSteps</code> specifies the number of time steps between displaying information on the console.
+</p>
+<h4>Boundary and initial conditions</h4> 
+Before any other conditions for the solver can be set, we need to specify the variables used in the Navier-Stokes solver by 
+including the lines
+<div class="sourceexample"><pre>
+&lt;VARIABLES&gt;
+  &lt;V ID="0"&gt; u &lt;/V&gt; 
+  &lt;V ID="1"&gt; v &lt;/V&gt; 
+  &lt;V ID="2"&gt; p &lt;/V&gt; 
+&lt;/VARIABLES&gt;
+</pre></div>
+<p>
+To specify boundary conditions, we first need to identify the different boundary regions defining one region for each boundary type, e.g. one for the inflow boundary, one for walls and one for the outflow boundary with
+<div class="sourceexample"><pre>
+&lt;BOUNDARYREGIONS&gt;
+  &lt;B ID="0"&gt; C[1] &lt;/B&gt;
+  &lt;B ID="1"&gt; C[2] &lt;/B&gt;
+  &lt;B ID="2"&gt; C[3] &lt;/B&gt;
+&lt;/BOUNDARYREGIONS&gt; 
+</pre></div>
+where <code class="source">C[X]</code> are the composites, which consist of a number of edges, defined in the 
+<code class="source">&lt;GEOMETRY&gt; ... &lt;/GEOMETRY&gt;</code> section of the input file.<br />
+Now, we can specify the boundary conditions between the XML tags 
+<div class="source"><pre>
+<font color="gray">&lt;CONDITIONS&gt;</font>
+    &lt;BOUNDARYCONDITIONS&gt;
+    ...
+    &lt;/BOUNDARYCONDITIONS&gt;
+<font color="gray">...
+&lt;/CONDITIONS&gt;</font>
+</pre></div>
+For example
+ <div class="sourceexample"><pre>&lt;BOUNDARYCONDITIONS&gt;
+  &lt;REGION REF="0"&gt;
+    &lt;D VAR="u" VALUE="0" /&gt;
+    &lt;D VAR="v" VALUE="0" /&gt;
+    &lt;N VAR="p" USERDEFINEDTYPE="H" VALUE="0"/&gt;  
+  &lt;/REGION&gt;
+  &lt;REGION REF="1"&gt;
+    &lt;D VAR="u" VALUE="y*(1-y)" /&gt;
+    &lt;D VAR="v" VALUE="0" /&gt;
+    &lt;N VAR="p" USERDEFINEDTYPE="H" VALUE="0"/&gt;  
+  &lt;/REGION&gt;
+  &lt;REGION REF="2"&gt;
+    &lt;N VAR="u" VALUE="0" /&gt;
+    &lt;N VAR="v" VALUE="0" /&gt;
+    &lt;D VAR="p" VALUE="0" /&gt;
+  &lt;/REGION>&gt;
+&lt;/BOUNDARYCONDITIONS&gt;
+</pre></div>
+In this example, Region 0 shows typical boundary conditions for walls, Region 1 for inlet boundaries and Region 2 for outlet boundaries. <br />
+The XML tags <code class="source">D</code> and <code class="source">N</code>  identify the boundary condition to be of <strong>Dirichlet</strong> or <strong>Neumann</strong> type, respectively. 
+For example, <code class="source">D VAR="u" VALUE="0"</code> means set <span class="latexfontitalic">u=0</span> and <code class="source">N VAR="u" VALUE="0"</code> means set <img src="images/IncNavierStokesDoc7x.png" width="92" height="21" />.<br />
+Furthermore, the boundary condition  <code class="source">D VAR="u" VALUE="y*(1-y)"</code> sets a parabolic inflow profile and <code class="source">N VAR="p" USERDEFINEDTYPE="H" VALUE="0"</code> specifies high-order boundary conditions for the pressure of the form 
+<center>
+<p>
+<img src="images/IncNavierStokesDoc5x.png" width="455" height="62" />
+</p>
+</center>
+where <span class="latexfontitalic">J</span> is the integration order, <span class="latexfont">&beta;<sub>q</sub></span> are the stiffly stable time integration coefficients given in the table above and <span class="latexfontbold">n</span> is the unit outward normal vector on the boundary.
+<p>
+The initial conditions are defined between the XML tags 
+<div class="source"><pre>
+<font color="gray">&lt;CONDITIONS&gt;</font>
+    &lt;INITIALCONDITIONS&gt;
+    ...
+    &lt;/INITIALCONDITIONS&gt;
+<font color="gray">...
+&lt;/CONDITIONS&gt;</font>
+</pre></div>
+For example for Poiseuille flow 
+<div class="sourceexample"><pre>
+&lt;INITIALCONDITIONS&gt;
+    &lt;F VAR="u" VALUE="y*(1-y)" /&gt;
+    &lt;F VAR="v" VALUE="0" /&gt;
+    &lt;F VAR="p" VALUE="0" /&gt;
+&lt;/INITIALCONDITIONS&gt;
+</pre></div>
+This initialises <span class="latexfontitalic">u</span> with a parabolic profile and <span class="latexfontitalic">v</span> and <span class="latexfontitalic">p</span> with zero in the whole domain. </p>
+<p>
+To compare the numerical solution with an analytical solution, the analytical solution can be specified in between the XML tags
+<div class="source"><pre>
+<font color="gray">&lt;CONDITIONS&gt;</font>
+    &lt;EXACTSOLUTION&gt;
+    ...
+    &lt;/EXACTSOLUTION&gt;
+<font color="gray">...
+&lt;/CONDITIONS&gt;</font>
+</pre></div>
+For example for Poiseuille flow in a channel with length 1 
+<div class="sourceexample"><pre>
+&lt;EXACTSOLUTION&gt;
+    &lt;F VAR="u" VALUE="y*(1-y)" /&gt;
+    &lt;F VAR="v" VALUE="0" /&gt;
+    &lt;F VAR="p" VALUE="-2*Kinvis*(x-1)" /&gt;
+&lt;/EXACTSOLUTION&gt;
+</pre></div>
+The solver will evaluate the L2-Error between the solution and the given exact solution at the end of the computation. 
+</p>
+<p>
+That concludes the brief introduction into the usage of the incompressible Navier-Stokes solver.
+Further details can be found in the doxygen documentation of Nektar++ (see <a href="compile_documentation.html">documentation compile instructions</a>) and in the book of Karniadakis and Sherwin [1].
+</p>
+<p>
+[1] G.E. Karniadakis and S.J. Sherwin: <i>Spectral/hp Element Methods for Computational Fluid Dynamics</i>, Oxford Science Publications, 2005<br />
+[2] M. Dubiner: <i>Spectral methods on triangles and other domains</i>, J. Sci. Comp., 6, 345-390, 1991 
+</p>
+    </div>
+
+
+  </body>
+<!-- InstanceEnd --></html>

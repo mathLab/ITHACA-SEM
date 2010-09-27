@@ -202,8 +202,8 @@ namespace Nektar
                 IntScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr>(numMultiSteps);
 
                 // Used in the first time step to initalize the scheme
-                LibUtilities::TimeIntegrationSchemeKey IntKey0(LibUtilities::eIMEXOrder1);
-                LibUtilities::TimeIntegrationSchemeKey IntKey1(LibUtilities::eIMEXOrder2);
+                LibUtilities::TimeIntegrationSchemeKey IntKey0(LibUtilities::eIMEXdirk_3_4_3);
+                LibUtilities::TimeIntegrationSchemeKey IntKey1(LibUtilities::eIMEXdirk_3_4_3);
 
                 // Used for all other time steps
                 LibUtilities::TimeIntegrationSchemeKey IntKey2(m_timeIntMethod);

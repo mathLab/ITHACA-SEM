@@ -225,20 +225,13 @@ namespace Nektar
 		
 		for (int i = 0; i < nvariables; ++i)
 		{
-			bool m_timeDepBcFlag = false;
-			
 			for(int n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
 			{	
-                            if(m_fields[i]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "TimeDependent")
-                            {
-				m_timeDepBcFlag = true;
-                            }
+			   if(m_fields[i]->GetBndConditions()[n]->GetUserDefined().GetEquation() == "TimeDependent")
+			   {
+				  m_fields[i]->EvaluateBoundaryConditions(time);
+			   }
 			}
-			
-		    if(m_timeDepBcFlag)	
-                    {
-                        m_fields[i]->EvaluateBoundaryConditions(time);
-                    }
 		}
 	}
     

@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <IncNavierStokesSolver/VelocityCorrectionScheme.h>
-#define UseContCoeffs
+//#define UseContCoeffs
 
 namespace Nektar
 {
@@ -108,9 +108,9 @@ namespace Nektar
             {
                 m_intSteps = 3;
                 m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
-                LibUtilities::TimeIntegrationSchemeKey       IntKey0(LibUtilities::eIMEXOrder1);
+                LibUtilities::TimeIntegrationSchemeKey       IntKey0(LibUtilities::eIMEXdirk_3_4_3);
                 m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
-                LibUtilities::TimeIntegrationSchemeKey       IntKey1(LibUtilities::eIMEXOrder2);
+                LibUtilities::TimeIntegrationSchemeKey       IntKey1(LibUtilities::eIMEXdirk_3_4_3);
                 m_integrationScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
                 LibUtilities::TimeIntegrationSchemeKey       IntKey2(intMethod);
                 m_integrationScheme[2] = LibUtilities::TimeIntegrationSchemeManager()[IntKey2];
@@ -209,6 +209,9 @@ namespace Nektar
             F[n] = F[n-1] + phystot;
         }
 		
+		SetBoundaryConditions(time);
+		
+		
 #ifdef TIMING
         gettimeofday(&timer1, NULL);
         time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
@@ -266,7 +269,7 @@ namespace Nektar
         ViscSlvTime += (time1-time2)/1000000.0;
 #endif
         //Updating time dipendent boundary conditions
-        SetBoundaryConditions(time);
+        //SetBoundaryConditions(time);
 #ifdef TIMING
         gettimeofday(&timer2, NULL);
         time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);

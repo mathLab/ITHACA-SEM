@@ -385,9 +385,9 @@ namespace Nektar
                 ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
             }
 
-            for(i = 0; i < fielddef->m_ElementIDs.size(); ++i)
+            for(i = 0; i < fielddef->m_elementIDs.size(); ++i)
             {
-                int eid     = ElmtID_to_ExpID[fielddef->m_ElementIDs[i]];
+                int eid     = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
                 int datalen = (*m_exp)[eid]->GetNcoeffs();
 
                 for(n = 0; n < nzmodes; ++n)
@@ -403,20 +403,20 @@ namespace Nektar
             int i,n;
             int offset = 0;
             int nzmodes = m_homogeneousBasis->GetNumModes();
-            int datalen = fielddata.size()/fielddef->m_Fields.size();
+            int datalen = fielddata.size()/fielddef->m_fields.size();
             int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();
 
             // Find data location according to field definition
-            for(i = 0; i < fielddef->m_Fields.size(); ++i)
+            for(i = 0; i < fielddef->m_fields.size(); ++i)
             {
-                if(fielddef->m_Fields[i] == field)
+                if(fielddef->m_fields[i] == field)
                 {
                     break;
                 }
                 offset += datalen;
             }
 
-            ASSERTL0(i!= fielddef->m_Fields.size(),"Field not found in data file");
+            ASSERTL0(i!= fielddef->m_fields.size(),"Field not found in data file");
 
             // Determine mapping from element ids to location in
             // expansion list
@@ -426,9 +426,9 @@ namespace Nektar
                 ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
             }
 
-            for(i = 0; i < fielddef->m_ElementIDs.size(); ++i)
+            for(i = 0; i < fielddef->m_elementIDs.size(); ++i)
             {
-                int eid = ElmtID_to_ExpID[fielddef->m_ElementIDs[i]];
+                int eid = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
                 int datalen = (*m_exp)[eid]->GetNcoeffs();
                 for(n = 0; n < nzmodes; ++n)
                 {

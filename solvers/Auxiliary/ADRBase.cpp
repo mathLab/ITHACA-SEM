@@ -1092,7 +1092,7 @@ namespace Nektar
             for(int i = 0; i < FieldDef.size(); ++i)
             {
                 // Could do a search here to find correct variable
-                FieldDef[i]->m_Fields.push_back(
+                FieldDef[i]->m_fields.push_back(
                                     m_boundaryConditions->GetVariable(j));
                 m_fields[j]->AppendFieldData(FieldDef[i], FieldData[i]);
             }
@@ -1120,14 +1120,14 @@ namespace Nektar
         {
             for(int i = 0; i < FieldDef.size(); ++i)
             {
-                bool flag = FieldDef[i]->m_Fields[j]
+                bool flag = FieldDef[i]->m_fields[j]
                                     == m_boundaryConditions->GetVariable(j);
                 ASSERTL1(flag, (std::string("Order of ") + infile
                             + std::string(" data and that defined in "
                                     "m_boundaryconditions differs")).c_str());
 
                 m_fields[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
-                                                 FieldDef[i]->m_Fields[j]);
+                                                 FieldDef[i]->m_fields[j]);
             }
             m_fields[j]->BwdTrans(m_fields[j]->GetCoeffs(),
                                   m_fields[j]->UpdatePhys());

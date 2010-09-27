@@ -55,7 +55,7 @@ namespace Nektar
         typedef std::vector< HexGeomSharedPtr >::iterator HexGeomVectorIter;
 
     class HexGeom: public Geometry3D
-        { 
+        {
         public:
             HexGeom();
             HexGeom(const QuadGeomSharedPtr faces[]);
@@ -83,7 +83,7 @@ namespace Nektar
 
             inline void SetOwnData()
             {
-               m_owndata = true;
+               m_ownData = true;
             }
 
             inline const Geometry2DSharedPtr GetFace(int i) const
@@ -92,7 +92,7 @@ namespace Nektar
                 return m_faces[i];
             }
 
-            inline int GetEid(int i) const 
+            inline int GetEid(int i) const
             {
                 ASSERTL2((i >=0) && (i <= 11),"Edge id must be between 0 and 11");
                 return m_edges[i]->GetEid();
@@ -116,7 +116,7 @@ namespace Nektar
                 return m_eorient[i];
             }
 
-            inline int GetCoordDim() const 
+            inline int GetCoordDim() const
             {
                 return m_coordim;
             }
@@ -176,29 +176,29 @@ namespace Nektar
             }
 
 
-            static const int kNverts = 8;
-            static const int kNedges = 12;
-            static const int kNqfaces = 6;
-            static const int kNtfaces = 0;
-            static const int kNfaces = kNqfaces + kNtfaces;
+            static const int                    kNverts = 8;
+            static const int                    kNedges = 12;
+            static const int                    kNqfaces = 6;
+            static const int                    kNtfaces = 0;
+            static const int                    kNfaces = kNqfaces + kNtfaces;
 
        protected:
 
-            VertexComponentVector           m_verts;
-            SegGeomVector                   m_edges;
-            QuadGeomVector                  m_faces;
-            StdRegions::EdgeOrientation     m_eorient[kNedges];
-            StdRegions::FaceOrientation     m_forient[kNfaces];
+            VertexComponentVector               m_verts;
+            SegGeomVector                       m_edges;
+            QuadGeomVector                      m_faces;
+            StdRegions::EdgeOrientation         m_eorient[kNedges];
+            StdRegions::FaceOrientation         m_forient[kNfaces];
 
-            int m_eid;
-            bool m_ownverts;
-            std::list<CompToElmt> m_elmtmap;
+            int                                 m_eid;
+            bool                                m_ownVerts;
+            std::list<CompToElmt>               m_elmtMap;
 
             void GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
-        
+
         private:
 
-            bool m_owndata;
+            bool                                m_ownData;
 
             void SetUpLocalEdges();
             void SetUpLocalVertices();
@@ -215,7 +215,7 @@ namespace Nektar
             {
                return GetFace(i);
             }
-            
+
             virtual const Geometry1DSharedPtr v_GetEdge(int i) const
             {
                 return GetEdge(i);
@@ -250,7 +250,7 @@ namespace Nektar
             {
                 GetLocCoords(coords,Lcoords);
             }
-            
+
             virtual void v_AddElmtConnected(int gvo_id, int locid)
             {
                 AddElmtConnected(gvo_id,locid);
@@ -265,8 +265,8 @@ namespace Nektar
             {
                 return IsElmtConnected(gvo_id,locid);
             }
-            
-            virtual int v_GetEid(int i) const 
+
+            virtual int v_GetEid(int i) const
             {
                 return GetEid(i);
             }
@@ -286,7 +286,7 @@ namespace Nektar
                 return GetFaceorient(i);
             }
 
-            virtual int v_GetCoordDim() const 
+            virtual int v_GetCoordDim() const
             {
                 return GetCoordDim();
             }
@@ -310,7 +310,7 @@ namespace Nektar
             {
                 return kNverts;
             }
-            
+
             virtual int v_GetNumEdges() const
             {
                 return kNedges;

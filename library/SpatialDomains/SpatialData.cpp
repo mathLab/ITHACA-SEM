@@ -58,10 +58,10 @@ namespace Nektar
          * @param   nq          Number of data points in the domain.
          */
         SpatialParameters::SpatialParameters(const int nq) :
-                mNq(nq),
-                mSD(),
-                mSDConstDef(),
-                mSDAnalyticDef()
+                m_nq(nq),
+                m_spatialMap(),
+                m_constMap(),
+                m_analyticMap()
         {
         }
 
@@ -72,15 +72,15 @@ namespace Nektar
          * @param   src         Existing set of parameters to copy.
          */
         SpatialParameters::SpatialParameters(const SpatialParameters& src) :
-                mNq(src.mNq),
-                mSD(),
-                mSDConstDef(src.mSDConstDef),
-                mSDAnalyticDef(src.mSDAnalyticDef)
+                m_nq(src.m_nq),
+                m_spatialMap(),
+                m_constMap(src.m_constMap),
+                m_analyticMap(src.m_analyticMap)
         {
             SpatialDataMap::const_iterator x;
-            for (x = src.mSD.begin(); x != src.mSD.end(); ++x)
+            for (x = src.m_spatialMap.begin(); x != src.m_spatialMap.end(); ++x)
             {
-                mSD[x->first] = MemoryManager<SpatialData>
+                m_spatialMap[x->first] = MemoryManager<SpatialData>
                                         ::AllocateSharedPtr(*(x->second));
             }
         }
@@ -158,7 +158,7 @@ namespace Nektar
                          (std::string("Constant for var: ") + variableStr
                                 + std::string(" must be specified.")).c_str());
 
-                mSDConstDef[variableStr] = atof(fcnStr.c_str());
+                m_constMap[variableStr] = atof(fcnStr.c_str());
 
                 element = element->NextSiblingElement("C");
             }
@@ -187,7 +187,7 @@ namespace Nektar
                          (std::string("Function for var: ") + variableStr
                                 + std::string(" must be specified.")).c_str());
 
-                mSDAnalyticDef[variableStr] = fcnStr;
+                m_analyticMap[variableStr] = fcnStr;
 
                 element = element->NextSiblingElement("A");
             }
@@ -211,29 +211,29 @@ namespace Nektar
             // First process constant-valued parameters. For this we simply
             // fill the spatial data region with the constant.
             std::map<std::string, NekDouble>::iterator p;
-            for (p = mSDConstDef.begin(); p != mSDConstDef.end(); p++)
+            for (p = m_constMap.begin(); p != m_constMap.end(); p++)
             {
                 SpatialDataSharedPtr fn(MemoryManager<SpatialData>
-                                                    ::AllocateSharedPtr(mNq));
-                Vmath::Fill(mNq, p->second, fn->UpdatePhys(), 1);
+                                                    ::AllocateSharedPtr(m_nq));
+                Vmath::Fill(m_nq, p->second, fn->UpdatePhys(), 1);
 
-                mSD[p->first] = fn;
+                m_spatialMap[p->first] = fn;
             }
 
             // Now process analytic-valued function parameters. For this we
             // evaluate the supplied equation at each quadrature point.
             std::map<std::string, std::string>::iterator q;
-            for (q = mSDAnalyticDef.begin(); q != mSDAnalyticDef.end(); q++)
+            for (q = m_analyticMap.begin(); q != m_analyticMap.end(); q++)
             {
                 SpatialDataSharedPtr fn(MemoryManager<SpatialData>
-                                                    ::AllocateSharedPtr(mNq));
+                                                    ::AllocateSharedPtr(m_nq));
                 Equation E(q->second);
-                for (int i = 0; i < mNq; ++i)
+                for (int i = 0; i < m_nq; ++i)
                 {
                     fn->UpdatePhys()[i] = E.Evaluate(x[i], y[i], z[i], 0.0);
                 }
 
-                mSD[q->first] = fn;
+                m_spatialMap[q->first] = fn;
             }
         }
     }

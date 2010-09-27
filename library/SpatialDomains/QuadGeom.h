@@ -52,9 +52,9 @@ namespace Nektar
         typedef boost::shared_ptr<QuadGeom> QuadGeomSharedPtr;
         typedef std::vector< QuadGeomSharedPtr > QuadGeomVector;
         typedef std::vector< QuadGeomSharedPtr >::iterator QuadGeomVectorIter;
-    
+
         class QuadGeom: public Geometry2D
-        {        
+        {
         public:
             QuadGeom();
             QuadGeom(int id, const int coordim);
@@ -67,12 +67,12 @@ namespace Nektar
 			int  NumElmtConnected() const;
 			bool IsElmtConnected(int gvo_id, int locid) const;
 
-			inline int GetFid() const 
+			inline int GetFid() const
 			{
 				return m_fid;
 			}
 
-			inline int GetCoordDim() const 
+			inline int GetCoordDim() const
 			{
 				return m_coordim;
 			}
@@ -81,7 +81,7 @@ namespace Nektar
 			{
 				return m_xmap[i]->GetBasis(j);
 			}
-                        
+
                         inline const LibUtilities::BasisSharedPtr GetEdgeBasis(const int i, const int j)
                         {
                             ASSERTL1(j <= 3,"edge is out of range");
@@ -104,7 +104,7 @@ namespace Nektar
 
             inline void SetOwnData()
             {
-                m_owndata = true; 
+                m_ownData = true;
             }
 
             void FillGeom();
@@ -122,13 +122,13 @@ namespace Nektar
                 ASSERTL2((i >=0) && (i <= 3),"Verted id must be between 0 and 3");
                 return m_verts[i]->GetVid();
             }
-            
+
             inline const VertexComponentSharedPtr GetVertex(const int i) const
             {
                 ASSERTL2((i >=0) && (i <= 3),"Vertex id must be between 0 and 3");
                 return m_verts[i];
             }
-            
+
             inline const Geometry1DSharedPtr GetEdge(const int i) const
             {
                 ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
@@ -138,14 +138,14 @@ namespace Nektar
             inline StdRegions::EdgeOrientation GetEorient(const int i) const
             {
                 ASSERTL2((i >=0) && (i <= 3),"Edge id must be between 0 and 3");
-                return m_eorient[i];            
+                return m_eorient[i];
             }
 
             /// \brief Get the orientation of face1.
             ///
             static StdRegions::FaceOrientation GetFaceOrientation(const QuadGeom &face1,
                                                                   const QuadGeom &face2);
-                                                                      
+
 
             inline StdRegions::EdgeOrientation GetCartesianEorient(const int i) const
             {
@@ -162,12 +162,12 @@ namespace Nektar
                     }
                     else
                     {
-                        return StdRegions::eForwards; 
+                        return StdRegions::eForwards;
                     }
                 }
             }
 
-            /// \brief Return the edge number of the given edge, or -1, if 
+            /// \brief Return the edge number of the given edge, or -1, if
             /// not an edge of this element.
             int WhichEdge(SegGeomSharedPtr edge)
             {
@@ -189,21 +189,22 @@ namespace Nektar
             }
 
 
-            static const int kNverts = 4;
-            static const int kNedges = 4;
+            static const int                    kNverts = 4;
+            static const int                    kNedges = 4;
 
         protected:
-            VertexComponentVector           m_verts;
-            SegGeomVector                   m_edges;
-            StdRegions::EdgeOrientation     m_eorient[kNedges];
-            int                             m_fid;
-            bool                            m_ownverts;
-            std::list<CompToElmt>           m_elmtmap;
+            VertexComponentVector               m_verts;
+            SegGeomVector                       m_edges;
+            StdRegions::EdgeOrientation         m_eorient[kNedges];
+            int                                 m_fid;
+            bool                                m_ownVerts;
+            std::list<CompToElmt>               m_elmtMap;
 
             void GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
 
         private:
-            bool m_owndata;   ///< Boolean indicating whether object owns the data
+            /// Boolean indicating whether object owns the data
+            bool                                m_ownData;
 
 			virtual void v_AddElmtConnected(int gvo_id, int locid)
 			{
@@ -219,13 +220,13 @@ namespace Nektar
 			{
 				return IsElmtConnected(gvo_id,locid);
 			}
-            
-			virtual int v_GetFid() const 
+
+			virtual int v_GetFid() const
 			{
 				return GetFid();
 			}
 
-			virtual int v_GetCoordDim() const 
+			virtual int v_GetCoordDim() const
 			{
 				return GetCoordDim();
 			}
@@ -263,33 +264,33 @@ namespace Nektar
             virtual void v_FillGeom()
             {
                 FillGeom();
-            }            
-            
+            }
+
             virtual void v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
             {
                 GetLocCoords(coords,Lcoords);
             }
-            
+
             virtual int v_GetEid(int i) const
             {
                 return GetEid(i);
             }
-            
+
             virtual int v_GetVid(int i) const
             {
                 return GetVid(i);
             }
-            
+
             virtual const VertexComponentSharedPtr v_GetVertex(int i) const
             {
                 return GetVertex(i);
             }
-            
+
             virtual const Geometry1DSharedPtr v_GetEdge(int i) const
             {
                 return GetEdge(i);
             }
-            
+
             virtual StdRegions::EdgeOrientation v_GetEorient(const int i) const
             {
                 return GetEorient(i);
@@ -299,7 +300,7 @@ namespace Nektar
             {
                 return GetCartesianEorient(i);
             }
-            
+
             virtual int v_WhichEdge(SegGeomSharedPtr edge)
             {
                 return WhichEdge(edge);
@@ -309,7 +310,7 @@ namespace Nektar
             {
                 return kNverts;
             }
-                
+
             virtual int v_GetNumEdges() const
             {
                 return kNedges;

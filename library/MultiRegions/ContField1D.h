@@ -118,11 +118,6 @@ namespace Nektar
                                       Array<OneD,       NekDouble> &outarray,
                                 bool  UseContCoeffs = false);
 
-            /// Evaluates the boundary conditions at a certain time-level.
-            // inline
-            void EvaluateBoundaryConditions(const NekDouble time = 0.0);
-
-
             /// Return the boundary conditions expansion.
             // inline
             const Array<OneD,const LocalRegions::PointExpSharedPtr>&
@@ -261,10 +256,6 @@ namespace Nektar
             virtual const Array<OneD,const SpatialDomains
                                 ::BoundaryConditionShPtr>& v_GetBndConditions();
 
-
-            virtual void v_EvaluateBoundaryConditions(
-                                                      const NekDouble time = 0.0, const NekDouble x2_in = NekConstants::kNekUnsetDouble);
-
             virtual const Array<OneD, const NekDouble> &v_GetContCoeffs() const;
 
             virtual void v_BwdTrans(
@@ -283,31 +274,10 @@ namespace Nektar
                                       Array<OneD,      NekDouble> &outarray,
                                 bool  UseContCoeffs);
 
-            /// Discretises the boundary by setting up a list of point
-            /// expansions.
-            void GenerateBoundaryConditionExpansion(
-                            const SpatialDomains::MeshGraph1D &graph1D,
-                            SpatialDomains::BoundaryConditions &bcs,
-                            const std::string variable);
         };
         typedef boost::shared_ptr<ContField1D>      ContField1DSharedPtr;
 
         // Inline implementations follow
-
-        /**
-         * Based on the expression \f$g(x,t)\f$ for the boundary
-         * conditions, this function evaluates the boundary conditions for
-         * all boundaries at time-level \a t.
-         *
-         * @param   time        The time at which the boundary conditions
-         *                      should be evaluated.
-         */
-        inline void ContField1D::EvaluateBoundaryConditions(
-                                const NekDouble time)
-        {
-            ExpList1D::EvaluateBoundaryConditions(time,m_bndCondExpansions,
-                                                  m_bndConditions);
-        };
 
         inline const Array<OneD,const LocalRegions::PointExpSharedPtr>&
                                 ContField1D::GetBndCondExpansions()

@@ -171,7 +171,7 @@ namespace Nektar
 
             inline void SetOwnData()
             {
-                m_owndata = true;
+                m_ownData = true;
             }
 
             inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j)
@@ -186,28 +186,27 @@ namespace Nektar
 
             NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
 
-            static const int kNverts = 4;
-            static const int kNedges = 6;
-            static const int kNqfaces = 0;
-            static const int kNtfaces = 4;
-            static const int kNfaces = kNqfaces + kNtfaces;
+            static const int                    kNverts = 4;
+            static const int                    kNedges = 6;
+            static const int                    kNqfaces = 0;
+            static const int                    kNtfaces = 4;
+            static const int                    kNfaces = kNqfaces + kNtfaces;
 
         protected:
-            VertexComponentVector           m_verts;
-            SegGeomVector                   m_edges;
-            TriGeomVector                   m_faces;
-            StdRegions::EdgeOrientation     m_eorient[kNedges];
-            StdRegions::FaceOrientation     m_forient[kNfaces];
-
-            int m_eid;
-            bool m_ownverts;
-            std::list<CompToElmt> m_elmtmap;
+            VertexComponentVector               m_verts;
+            SegGeomVector                       m_edges;
+            TriGeomVector                       m_faces;
+            StdRegions::EdgeOrientation         m_eorient[kNedges];
+            StdRegions::FaceOrientation         m_forient[kNfaces];
+            int                                 m_eid;
+            bool                                m_ownVerts;
+            std::list<CompToElmt>               m_elmtMap;
 
             Array<OneD, StdRegions::StdExpansion3DSharedPtr> m_xmap;
             void GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
 
         private:
-            bool m_owndata;
+            bool                                m_ownData;
 
             void SetUpLocalEdges();
             void SetUpLocalVertices();

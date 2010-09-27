@@ -58,13 +58,13 @@ namespace Nektar
                                  const int coordim,
                                  const bool UseQuadMet,
                                  const bool UseLaplMet):
-            mType(gtype),
-            mExpDim(expdim),
-            mCoordDim(coordim),
-            mCoords(Array<OneD, StdRegions::StdExpansionSharedPtr>(mCoordDim)),
-            mIsUsingQuadMetrics(UseQuadMet),
-            mIsUsingLaplMetrics(UseLaplMet),
-            mPointsKey(expdim)
+            m_type(gtype),
+            m_expDim(expdim),
+            m_coordDim(coordim),
+            m_coords(Array<OneD, StdRegions::StdExpansionSharedPtr>(m_coordDim)),
+            m_isUsingQuadMetrics(UseQuadMet),
+            m_isUsingLaplMetrics(UseLaplMet),
+            m_pointsKey(expdim)
         {
         }
 
@@ -73,13 +73,13 @@ namespace Nektar
          * Copies an existing GeomFactors object.
          */
         GeomFactors::GeomFactors(const GeomFactors &S) :
-            mType(S.mType),
-            mExpDim(S.mExpDim),
-            mCoordDim(S.mCoordDim),
-            mCoords(S.mCoords),
-            mIsUsingQuadMetrics(S.mIsUsingQuadMetrics),
-            mIsUsingLaplMetrics(S.mIsUsingLaplMetrics),
-            mPointsKey(S.mPointsKey)
+            m_type(S.m_type),
+            m_expDim(S.m_expDim),
+            m_coordDim(S.m_coordDim),
+            m_coords(S.m_coords),
+            m_isUsingQuadMetrics(S.m_isUsingQuadMetrics),
+            m_isUsingLaplMetrics(S.m_isUsingLaplMetrics),
+            m_pointsKey(S.m_pointsKey)
         {
         }
 
@@ -96,7 +96,7 @@ namespace Nektar
          * Given a set of vectors, supplied as an array of components,
          * normalise each vector individually.
          * @param   array       Array of vector components, \a array[i][j] with
-         *                      @f$1\leq i\leq mCoordDim@f$ and
+         *                      @f$1\leq i\leq m_coordDim@f$ and
          *                      @f$0 \leq j \leq n@f$ with @f$n@f$ the number
          *                      of vectors.
          */
@@ -247,34 +247,34 @@ namespace Nektar
          */
         bool operator==(const GeomFactors &lhs, const GeomFactors &rhs)
         {
-            if(!(lhs.mType == rhs.mType))
+            if(!(lhs.m_type == rhs.m_type))
             {
                 return false;
             }
 
-            if(!(lhs.mExpDim == rhs.mExpDim))
+            if(!(lhs.m_expDim == rhs.m_expDim))
             {
                 return false;
             }
 
-            if(!(lhs.mCoordDim == rhs.mCoordDim))
+            if(!(lhs.m_coordDim == rhs.m_coordDim))
             {
                 return false;
             }
 
-            if(!(lhs.mIsUsingQuadMetrics == rhs.mIsUsingQuadMetrics))
+            if(!(lhs.m_isUsingQuadMetrics == rhs.m_isUsingQuadMetrics))
             {
                 return false;
             }
 
-            if(!(lhs.mIsUsingLaplMetrics == rhs.mIsUsingLaplMetrics))
+            if(!(lhs.m_isUsingLaplMetrics == rhs.m_isUsingLaplMetrics))
             {
                 return false;
             }
 
-            for(int i = 0; i < lhs.mExpDim; i++)
+            for(int i = 0; i < lhs.m_expDim; i++)
             {
-                if(!(lhs.mPointsKey[i] == rhs.mPointsKey[i]))
+                if(!(lhs.m_pointsKey[i] == rhs.m_pointsKey[i]))
                 {
                     return false;
                 }

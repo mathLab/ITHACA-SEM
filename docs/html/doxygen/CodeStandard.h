@@ -32,12 +32,13 @@
  * - Inline functions should be declared within the class declaration but
  *   defined outside the class declaration at the bottom of the header file.
  *   <b>Note:</b><tt>virtual</tt> and <tt>inline</tt> are mutually exclusive in
- *   almost all circumstances.
+ *   almost all circumstances. Virtual functions should therefore be
+ *   implemented in the .cpp file.
  *
  * \section secCodeStandardNaming Naming Conventions
  * Keep variable and function names meaningful but concise. 
- * - All member variables prefixed with m and use CamelCase. e.g. mMemVar. 
- * - All function names using CamelCase
+ * - All member variables prefixed with m_ and use camelCase. e.g. m_memVar. 
+ * - All function names using CamelCase. e.g. ReadBoundaryRegions.
  *
  * \section secCodeStandardDocumentation Documentation
  * - Briefs for classes, functions and types in header files using /// notation.

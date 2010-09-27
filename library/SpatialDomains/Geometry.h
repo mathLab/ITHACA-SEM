@@ -64,9 +64,9 @@ namespace Nektar
             eHexahedron,
             SIZE_GeomShapeType
         };
-    
 
-        const char* const GeomShapeTypeMap[] = 
+
+        const char* const GeomShapeTypeMap[] =
         {
             "NoGeomShapeType",
             "Segment",
@@ -92,23 +92,23 @@ namespace Nektar
 
                 virtual ~Geometry();
 
-                
+
                 inline GeomType GetGtype()
                 {
-                    return m_geomfactors->GetGtype();
+                    return m_geomFactors->GetGtype();
                 }
 
                 inline const Array<OneD, const NekDouble> &GetJac()
                 {
-                    return m_geomfactors->GetJac();
+                    return m_geomFactors->GetJac();
                 }
 
                 inline const Array<TwoD, const NekDouble>& GetGmat()
                 {
-                    return m_geomfactors->GetGmat();
+                    return m_geomFactors->GetGmat();
                 }
 
-                inline const int GetCoordim() const 
+                inline const int GetCoordim() const
                 {
                     return m_coordim;
                 }
@@ -116,27 +116,27 @@ namespace Nektar
                 inline GeomFactorsSharedPtr GetGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
                 {
                     GenGeomFactors(tbasis);
-                    return ValidateRegGeomFactor(m_geomfactors);
+                    return ValidateRegGeomFactor(m_geomFactors);
                 }
 
                 inline GeomFactorsSharedPtr GetMetricInfo()
                 {
-                    return m_geomfactors;
+                    return m_geomFactors;
                 }
 
                 inline GeomShapeType GetGeomShapeType(void)
                 {
-                    return m_GeomShapeType;
+                    return m_geomShapeType;
                 }
-                
+
                 inline int GetGlobalID(void)
                 {
-                    return m_GlobalID;
+                    return m_globalID;
                 }
-                
+
                 void SetGlobalID(int globalid)
                 {
-                    m_GlobalID = globalid;
+                    m_globalID = globalid;
                 }
 
                 // Wrappers around virtual Functions
@@ -165,18 +165,18 @@ namespace Nektar
                 {
                     return v_ContainsPoint(gloCoord);
                 }
-                        
+
             protected:
 
                 static GeomFactorsSharedPtr ValidateRegGeomFactor(GeomFactorsSharedPtr geomFactor);
 
                 int                  m_coordim;     // coordinate dimension
-                GeomFactorsSharedPtr m_geomfactors;
+                GeomFactorsSharedPtr m_geomFactors;
                 GeomState            m_state;       // enum identifier to determine if quad points are filled
-                static GeomFactorsVector m_RegGeomFactorsManager;
+                static GeomFactorsVector m_regGeomFactorsManager;
 
-                GeomShapeType m_GeomShapeType;
-                int           m_GlobalID;
+                GeomShapeType m_geomShapeType;
+                int           m_globalID;
 
                 void GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
                 {
@@ -184,8 +184,8 @@ namespace Nektar
                 }
 
         private:
-                GeomType m_GeomType;
-                
+                GeomType m_geomType;
+
                 virtual int v_GetEid(int i) const
                 {
                     NEKERROR(ErrorUtil::efatal,
@@ -205,9 +205,9 @@ namespace Nektar
                              "This function is only valid for expansion type geometries");
                     return 0;
                 }
-            
 
-                virtual int v_GetNumVerts() const 
+
+                virtual int v_GetNumVerts() const
                 {
                     NEKERROR(ErrorUtil::efatal,
                         "This function is only valid for shape type geometries");
@@ -219,7 +219,7 @@ namespace Nektar
                     NEKERROR(ErrorUtil::efatal,
                         "This function is only valid for shape type geometries");
                     return 0;
-                }                
+                }
 
 
                 virtual int v_GetShapeDim() const

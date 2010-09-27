@@ -46,15 +46,9 @@
 #include <LibUtilities/Foundations/InterpCoeff.h>
 
 namespace Nektar
-{    
-    /** \brief The namespace associated with the the SpatialDomains library 
-     * (\ref pageSpatialDomains "SpatialDomains introduction")
-     */
+{
     namespace SpatialDomains
-    {     
-        /** \page pageSpatialDomains The SpatialDomains library
-         * 
-         */
+    {
         enum GeomType
         {
             eNoGeomType,

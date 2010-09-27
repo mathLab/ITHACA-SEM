@@ -104,7 +104,7 @@ namespace Nektar
          * allocates memory for the array #m_contCoeffs.
          *
          * @param   graph1D     A mesh, containing information about the domain
-         *                      and the spectral/hp element expansion.  
+         *                      and the spectral/hp element expansion.
          * @param   solnType    Type of global system to use.
          */
         ContField1D::ContField1D(SpatialDomains::MeshGraph1D &graph1D,
@@ -114,7 +114,7 @@ namespace Nektar
             m_globalLinSys(MemoryManager<GlobalLinSysMap>::AllocateSharedPtr())
         {
             ApplyGeomInfo(graph1D);
-            
+
             m_locToGloMap = MemoryManager<LocalToGlobalC0ContMap>
                 ::AllocateSharedPtr(m_ncoeffs,*this,solnType);
 
@@ -149,7 +149,7 @@ namespace Nektar
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const int bc_loc,
                                  const GlobalSysSolnType solnType):
-            DisContField1D(graph1D,solnType,false),
+            DisContField1D(graph1D,bcs,bc_loc,solnType),
             m_locToGloMap(),
             m_contNcoeffs(0),
             m_contCoeffs(),
@@ -159,7 +159,7 @@ namespace Nektar
                                                bcs.GetVariable(bc_loc));
             EvaluateBoundaryConditions();
             ApplyGeomInfo(graph1D);
-            
+
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,bcs.GetVariable(bc_loc),
                                 periodicVertices);
@@ -201,7 +201,7 @@ namespace Nektar
                                  SpatialDomains::BoundaryConditions &bcs,
                                  const std::string variable,
                                  const GlobalSysSolnType solnType):
-            DisContField1D(graph1D,solnType,false),
+            DisContField1D(graph1D,bcs,variable,solnType),
             m_locToGloMap(),
             m_contNcoeffs(0),
             m_contCoeffs(),
@@ -210,7 +210,7 @@ namespace Nektar
             GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
             EvaluateBoundaryConditions();
             ApplyGeomInfo(graph1D);
-            
+
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
 
@@ -266,7 +266,7 @@ namespace Nektar
                                                bcs.GetVariable(bc_loc));
             EvaluateBoundaryConditions();
             ApplyGeomInfo(graph1D);
-            
+
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,bcs.GetVariable(bc_loc),
                                 periodicVertices);
@@ -325,7 +325,7 @@ namespace Nektar
             GenerateBoundaryConditionExpansion(graph1D,bcs,variable);
             EvaluateBoundaryConditions();
             ApplyGeomInfo(graph1D);
-            
+
             map<int,int> periodicVertices;
             GetPeriodicVertices(graph1D,bcs,variable,periodicVertices);
 
@@ -362,57 +362,6 @@ namespace Nektar
          */
         ContField1D::~ContField1D()
         {
-        }
-
-
-        /**
-         * The point expansions of the Dirichlet boundary regions are listed
-         * first in the array #m_bndCondExpansions.
-         *
-         * @param   graph1D     A mesh, containing information about the
-         *                      domain and the spectral/hp element expansion.
-         * @param   bcs         An entity containing information about the
-         *                      boundaries and boundary conditions.
-         * @param   variable    An optional parameter to indicate for which
-         *                      variable the boundary conditions should be
-         *                      discretised.
-         */
-        void ContField1D::GenerateBoundaryConditionExpansion(
-                                const SpatialDomains::MeshGraph1D &graph1D,
-                                SpatialDomains::BoundaryConditions &bcs,
-                                const std::string variable)
-        {
-            int i,j;
-            int cnt  = 0;
-
-            SpatialDomains::BoundaryRegionCollection &bregions
-                                            = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions
-                                            = bcs.GetBoundaryConditions();
-
-            int nbnd = bregions.size();
-
-            // count the number of non-periodic boundary points
-            for(i = 0; i < nbnd; ++i)
-            {
-                if( ((*(bconditions[i]))[variable])->GetBoundaryConditionType()
-                            != SpatialDomains::ePeriodic )
-                {
-                    for(j = 0; j < bregions[i]->size(); j++)
-                    {
-                        cnt += (*bregions[i])[j]->size();
-                    }
-                }
-            }
-
-            m_bndCondExpansions
-                    = Array<OneD,LocalRegions::PointExpSharedPtr>(cnt);
-            m_bndConditions
-                    = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
-
-            SetBoundaryConditionExpansion(graph1D,bcs,variable,
-                                          m_bndCondExpansions,
-                                          m_bndConditions);
         }
 
 
@@ -461,8 +410,8 @@ namespace Nektar
 
         /**
          * Given the coefficients of an expansion, this function evaluates the
-         * spectral/hp expansion \f$u^{\delta}(x)\f$ at the quadrature 
-         * points \f$x_i\f$. This operation is evaluated locally by the 
+         * spectral/hp expansion \f$u^{\delta}(x)\f$ at the quadrature
+         * points \f$x_i\f$. This operation is evaluated locally by the
          * function ExpList#BwdTrans.
          *
          * The coefficients of the expansion should be contained in the
@@ -759,7 +708,7 @@ namespace Nektar
          * @param   varcoeff    Variable diffusivity coefficients.
          * @param   UseContCoeffs   Default: false
          * @param   dirForcing  Dirichlet Forcing.
-         */        
+         */
         void ContField1D::v_HelmSolveCG(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
@@ -785,7 +734,7 @@ namespace Nektar
                                                                 i + NumDirBcs)]
                     += m_bndCondExpansions[i+NumDirBcs]->GetCoeff(0);
             }
-            
+
             // Solve the system
             GlobalLinSysKey key(StdRegions::eHelmholtz,
                                 m_locToGloMap,lambda,
@@ -807,13 +756,6 @@ namespace Nektar
                                 ContField1D::v_GetBndConditions()
         {
             return GetBndConditions();
-        }
-
-
-        void ContField1D::v_EvaluateBoundaryConditions(const NekDouble time,
-                                                       const NekDouble x2_in)
-        {
-            EvaluateBoundaryConditions(time);
         }
 
         const Array<OneD, const NekDouble> &ContField1D::v_GetContCoeffs() const

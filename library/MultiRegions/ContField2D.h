@@ -334,11 +334,6 @@ namespace Nektar
             /// Template method virtual forwarder for GetBndConditions().
             virtual const Array<OneD,const SpatialDomains
                                 ::BoundaryConditionShPtr>& v_GetBndConditions();
-
-            /// Template method virtual forwarder for
-            /// EvaluateBoundaryConditions().
-            virtual void v_EvaluateBoundaryConditions(
-                                                      const NekDouble time = 0.0, const NekDouble x2_in = NekConstants::kNekUnsetDouble);
         };
 
         typedef boost::shared_ptr<ContField2D>      ContField2DSharedPtr;

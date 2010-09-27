@@ -106,9 +106,9 @@ namespace Nektar
                      "SetUpLaplacianMetrics is true");
 
             // Copy shared pointers.
-            for (int i = 0; i < mCoordDim; ++i)
+            for (int i = 0; i < m_coordDim; ++i)
             {
-                mCoords[i] = Coords[i];
+                m_coords[i] = Coords[i];
             }
 
             StdRegions::ExpansionType shape = Coords[0]->DetExpansionType();
@@ -133,24 +133,24 @@ namespace Nektar
 
             // Set the pointskey equal to the pointskey as defined
             // in 'tbasis'
-            mPointsKey[0] = pkey0_tbasis;
-            mPointsKey[1] = pkey1_tbasis;
+            m_pointsKey[0] = pkey0_tbasis;
+            m_pointsKey[1] = pkey1_tbasis;
 
             // setup temp storage
             Array<OneD, Array<OneD,NekDouble> > d1_map   (coordim);
             Array<OneD, Array<OneD,NekDouble> > d2_map   (coordim);
 
-            mDeriv = Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
-            mDeriv[0] = Array<OneD, Array<OneD,NekDouble> >(mCoordDim);
-            mDeriv[1] = Array<OneD, Array<OneD,NekDouble> >(mCoordDim);
+            m_deriv = Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
+            m_deriv[0] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
+            m_deriv[1] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
 
             // Calculate local derivatives
             for(int i = 0; i < coordim; ++i)
             {
                 d1_map[i]    = Array<OneD,NekDouble>(nqtot_map);
                 d2_map[i]    = Array<OneD,NekDouble>(nqtot_map);
-                mDeriv[0][i] = Array<OneD,NekDouble>(nqtot_tbasis);
-                mDeriv[1][i] = Array<OneD,NekDouble>(nqtot_tbasis);
+                m_deriv[0][i] = Array<OneD,NekDouble>(nqtot_tbasis);
+                m_deriv[1][i] = Array<OneD,NekDouble>(nqtot_tbasis);
 
                 // Transform from coefficient space to physical space
                 Coords[i]->BwdTrans(Coords[i]->GetCoeffs(),
@@ -168,15 +168,15 @@ namespace Nektar
                 if( (pkey0_map == pkey0_tbasis) &&
                     (pkey1_map == pkey1_tbasis) )
                 {
-                    mDeriv[0][i] = d1_map[i];
-                    mDeriv[1][i] = d2_map[i];
+                    m_deriv[0][i] = d1_map[i];
+                    m_deriv[1][i] = d2_map[i];
                 }
                 else
                 {
                     LibUtilities::Interp2D(pkey0_map, pkey1_map, d1_map[i],
-                                    pkey0_tbasis, pkey1_tbasis, mDeriv[0][i]);
+                                    pkey0_tbasis, pkey1_tbasis, m_deriv[0][i]);
                     LibUtilities::Interp2D(pkey0_map, pkey1_map, d2_map[i],
-                                    pkey0_tbasis, pkey1_tbasis, mDeriv[1][i]);
+                                    pkey0_tbasis, pkey1_tbasis, m_deriv[1][i]);
                 }
             }
 
@@ -229,44 +229,44 @@ namespace Nektar
         {
             // Check the number of derivative dimensions matches the coordinate
             // space.
-            ASSERTL1(mDeriv[0].num_elements()==mCoordDim,
+            ASSERTL1(m_deriv[0].num_elements()==m_coordDim,
                      "The dimension of array d1 does not match the coordinate "
                      "dimension");
-            ASSERTL1(mDeriv[1].num_elements()==mCoordDim,
+            ASSERTL1(m_deriv[1].num_elements()==m_coordDim,
                      "The dimension of array d2 does not match the coordinate "
                      "dimension");
 
-            int nqtot = mPointsKey[0].GetNumPoints() *
-                        mPointsKey[1].GetNumPoints();
+            int nqtot = m_pointsKey[0].GetNumPoints() *
+                        m_pointsKey[1].GetNumPoints();
 
             // Check each derivative combination has the correct sized storage
             // for all quadrature points.
             for (int i = 0; i < 2; ++i)
             {
-                for (int j = 0; j < mCoordDim; ++j)
+                for (int j = 0; j < m_coordDim; ++j)
                 {
-                    ASSERTL1(mDeriv[i][j].num_elements() == nqtot,
+                    ASSERTL1(m_deriv[i][j].num_elements() == nqtot,
                              "Number of quadrature points do not match");
                 }
             }
 
             // Proceed differently depending on whether the geometry is
             // regular or deformed.
-            if((mType == eRegular)||(mType == eMovingRegular))
+            if((m_type == eRegular)||(m_type == eMovingRegular))
             {
                 // Jacobian is constant across the element.
                 m_jac     = Array<OneD, NekDouble>(1,0.0);
-                
+
                 // Number of entries corresponds to twice the coordinate
                 // dimension. Entries are constant across element so second
                 // dimension is 1.
-                m_gmat    = Array<TwoD, NekDouble>(2*mCoordDim,1,0.0);
+                m_gmat    = Array<TwoD, NekDouble>(2*m_coordDim,1,0.0);
 
-                if(mCoordDim == 2) // assume g = [0,0,1]
+                if(m_coordDim == 2) // assume g = [0,0,1]
                 {
                     // Compute Jacobian
-                    m_jac[0] = mDeriv[0][0][0]*mDeriv[1][1][0] 
-                                            - mDeriv[1][0][0]*mDeriv[0][1][0];
+                    m_jac[0] = m_deriv[0][0][0]*m_deriv[1][1][0]
+                                            - m_deriv[1][0][0]*m_deriv[0][1][0];
 
                     ASSERTL1(m_jac[0] > 0,
                              "2D Regular Jacobian is not positive");
@@ -274,33 +274,33 @@ namespace Nektar
                     // Spencer's book page 160
                     // Compute derivatives of standard coordinate with respect
                     // to local coordinates.
-                    m_gmat[0][0] =  mDeriv[1][1][0]/m_jac[0]; // d xi_1/d x_1
-                    m_gmat[1][0] = -mDeriv[0][1][0]/m_jac[0]; // d xi_2/d x_1
-                    m_gmat[2][0] = -mDeriv[1][0][0]/m_jac[0]; // d xi_1/d x_2
-                    m_gmat[3][0] =  mDeriv[0][0][0]/m_jac[0]; // d xi_2/d x_2
+                    m_gmat[0][0] =  m_deriv[1][1][0]/m_jac[0]; // d xi_1/d x_1
+                    m_gmat[1][0] = -m_deriv[0][1][0]/m_jac[0]; // d xi_2/d x_1
+                    m_gmat[2][0] = -m_deriv[1][0][0]/m_jac[0]; // d xi_1/d x_2
+                    m_gmat[3][0] =  m_deriv[0][0][0]/m_jac[0]; // d xi_2/d x_2
                 }
                 else
                 {
                     NekDouble g[3];
-                    g[0] = mDeriv[0][1][0]*mDeriv[1][2][0] - mDeriv[0][2][0]*mDeriv[1][1][0];
-                    g[1] = mDeriv[0][2][0]*mDeriv[1][0][0] - mDeriv[0][0][0]*mDeriv[1][2][0];
-                    g[2] = mDeriv[0][0][0]*mDeriv[1][1][0] - mDeriv[0][1][0]*mDeriv[1][0][0];
+                    g[0] = m_deriv[0][1][0]*m_deriv[1][2][0] - m_deriv[0][2][0]*m_deriv[1][1][0];
+                    g[1] = m_deriv[0][2][0]*m_deriv[1][0][0] - m_deriv[0][0][0]*m_deriv[1][2][0];
+                    g[2] = m_deriv[0][0][0]*m_deriv[1][1][0] - m_deriv[0][1][0]*m_deriv[1][0][0];
 
                     m_jac[0] = g[0]*g[0]+g[1]*g[1]+g[2]*g[2];
                     ASSERTL1(m_jac[0] > 0, "Regular Jacobian is not positive");
 
                     // d xi_1/d x_1
-                    m_gmat[0][0] =  (mDeriv[1][1][0]*g[2] - mDeriv[1][2][0]*g[1])/m_jac[0];
+                    m_gmat[0][0] =  (m_deriv[1][1][0]*g[2] - m_deriv[1][2][0]*g[1])/m_jac[0];
                     // d xi_2/d x_1
-                    m_gmat[1][0] = -(mDeriv[0][1][0]*g[2] - mDeriv[0][2][0]*g[1])/m_jac[0];
+                    m_gmat[1][0] = -(m_deriv[0][1][0]*g[2] - m_deriv[0][2][0]*g[1])/m_jac[0];
                     // d_xi_1/d x_2
-                    m_gmat[2][0] = -(mDeriv[1][0][0]*g[2] - mDeriv[1][2][0]*g[0])/m_jac[0];
+                    m_gmat[2][0] = -(m_deriv[1][0][0]*g[2] - m_deriv[1][2][0]*g[0])/m_jac[0];
                     // d_xi_2/d x_2
-                    m_gmat[3][0] =  (mDeriv[0][0][0]*g[2] - mDeriv[0][2][0]*g[0])/m_jac[0];
+                    m_gmat[3][0] =  (m_deriv[0][0][0]*g[2] - m_deriv[0][2][0]*g[0])/m_jac[0];
                     // d_xi_1/d x_3
-                    m_gmat[4][0] =  (mDeriv[1][0][0]*g[1] - mDeriv[1][1][0]*g[0])/m_jac[0];
+                    m_gmat[4][0] =  (m_deriv[1][0][0]*g[1] - m_deriv[1][1][0]*g[0])/m_jac[0];
                     // d xi_2/d x_3
-                    m_gmat[5][0] = -(mDeriv[0][0][0]*g[1] - mDeriv[0][1][0]*g[0])/m_jac[0];
+                    m_gmat[5][0] = -(m_deriv[0][0][0]*g[1] - m_deriv[0][1][0]*g[0])/m_jac[0];
 
                     m_jac[0] = sqrt(m_jac[0]);
                 }
@@ -308,29 +308,29 @@ namespace Nektar
             else
             {
                 m_jac  = Array<OneD, NekDouble>(nqtot,0.0);
-                m_gmat = Array<TwoD, NekDouble>(2*mCoordDim,nqtot,0.0);
+                m_gmat = Array<TwoD, NekDouble>(2*m_coordDim,nqtot,0.0);
 
-                if(mCoordDim == 2) // assume g = [0,0,1]
+                if(m_coordDim == 2) // assume g = [0,0,1]
                 {
                     // set up Jacobian
-                    Vmath::Vmul (nqtot, &mDeriv[1][0][0], 1, &mDeriv[0][1][0], 1,
+                    Vmath::Vmul (nqtot, &m_deriv[1][0][0], 1, &m_deriv[0][1][0], 1,
                                  &m_jac[0], 1);
-                    Vmath::Vvtvm(nqtot, &mDeriv[0][0][0], 1, &mDeriv[1][1][0], 1,
+                    Vmath::Vvtvm(nqtot, &m_deriv[0][0][0], 1, &m_deriv[1][1][0], 1,
                                  &m_jac[0], 1, &m_jac[0], 1);
 
                     ASSERTL1(Vmath::Vmin(nqtot,&m_jac[0],1) > 0,
                              "2D Deformed Jacobian is not positive");
 
                     // d xi_1/d x_1
-                    Vmath::Vdiv(nqtot,&mDeriv[1][1][0],1,&m_jac[0],1,&m_gmat[0][0],1);
-                    Vmath::Vdiv(nqtot,&mDeriv[0][1][0],1,&m_jac[0],1,&m_gmat[1][0],1);
+                    Vmath::Vdiv(nqtot,&m_deriv[1][1][0],1,&m_jac[0],1,&m_gmat[0][0],1);
+                    Vmath::Vdiv(nqtot,&m_deriv[0][1][0],1,&m_jac[0],1,&m_gmat[1][0],1);
                     // d xi_2/d x_1
                     Vmath::Neg(nqtot,&m_gmat[1][0],1);
-                    Vmath::Vdiv(nqtot,&mDeriv[1][0][0],1,&m_jac[0],1,&m_gmat[2][0],1);
+                    Vmath::Vdiv(nqtot,&m_deriv[1][0][0],1,&m_jac[0],1,&m_gmat[2][0],1);
                     // d xi_1/d x_2
                     Vmath::Neg(nqtot,&m_gmat[2][0],1);
                     // d xi_2/d x_2
-                    Vmath::Vdiv(nqtot,&mDeriv[0][0][0],1,&m_jac[0],1,&m_gmat[3][0],1);
+                    Vmath::Vdiv(nqtot,&m_deriv[0][0][0],1,&m_jac[0],1,&m_gmat[3][0],1);
                 }
                 else
                 {
@@ -339,16 +339,16 @@ namespace Nektar
                                                   Array<OneD, NekDouble>(nqtot)
                                                   };
                     // g[0]
-                    Vmath::Vmul (nqtot, &mDeriv[0][2][0], 1, &mDeriv[1][1][0], 1, &g[0][0],1);
-                    Vmath::Vvtvm(nqtot, &mDeriv[0][1][0], 1, &mDeriv[1][2][0], 1, &g[0][0],1,
+                    Vmath::Vmul (nqtot, &m_deriv[0][2][0], 1, &m_deriv[1][1][0], 1, &g[0][0],1);
+                    Vmath::Vvtvm(nqtot, &m_deriv[0][1][0], 1, &m_deriv[1][2][0], 1, &g[0][0],1,
                                  &g[0][0],1);
                     //g[1]
-                    Vmath::Vmul (nqtot, &mDeriv[0][0][0], 1, &mDeriv[1][2][0], 1, &g[1][0],1);
-                    Vmath::Vvtvm(nqtot, &mDeriv[0][2][0], 1, &mDeriv[1][0][0], 1, &g[1][0],1,
+                    Vmath::Vmul (nqtot, &m_deriv[0][0][0], 1, &m_deriv[1][2][0], 1, &g[1][0],1);
+                    Vmath::Vvtvm(nqtot, &m_deriv[0][2][0], 1, &m_deriv[1][0][0], 1, &g[1][0],1,
                                  &g[1][0],1);
                     //g[2]
-                    Vmath::Vmul (nqtot, &mDeriv[0][1][0], 1, &mDeriv[1][0][0], 1, &g[2][0],1);
-                    Vmath::Vvtvm(nqtot, &mDeriv[0][0][0], 1, &mDeriv[1][1][0], 1, &g[2][0],1,
+                    Vmath::Vmul (nqtot, &m_deriv[0][1][0], 1, &m_deriv[1][0][0], 1, &g[2][0],1);
+                    Vmath::Vvtvm(nqtot, &m_deriv[0][0][0], 1, &m_deriv[1][1][0], 1, &g[2][0],1,
                                  &g[2][0],1);
 
                     // J_3D
@@ -359,33 +359,33 @@ namespace Nektar
                                  &m_jac[0],1);
 
                     // d xi_1/d x_1
-                    Vmath::Vmul (nqtot,&mDeriv[1][2][0],1,&g[1][0],1,&m_gmat[0][0],1);
-                    Vmath::Vvtvm(nqtot,&mDeriv[1][1][0],1,&g[2][0],1,&m_gmat[0][0],1,&m_gmat[0][0],1);
+                    Vmath::Vmul (nqtot,&m_deriv[1][2][0],1,&g[1][0],1,&m_gmat[0][0],1);
+                    Vmath::Vvtvm(nqtot,&m_deriv[1][1][0],1,&g[2][0],1,&m_gmat[0][0],1,&m_gmat[0][0],1);
                     Vmath::Vdiv(nqtot,&m_gmat[0][0],1,&m_jac[0],1,&m_gmat[0][0],1);
 
                     // d xi_2/d x_1
-                    Vmath::Vmul (nqtot,&mDeriv[0][1][0],1,&g[2][0],1,&m_gmat[1][0],1);
-                    Vmath::Vvtvm(nqtot,&mDeriv[0][2][0],1,&g[1][0],1,&m_gmat[1][0],1,&m_gmat[1][0],1);
+                    Vmath::Vmul (nqtot,&m_deriv[0][1][0],1,&g[2][0],1,&m_gmat[1][0],1);
+                    Vmath::Vvtvm(nqtot,&m_deriv[0][2][0],1,&g[1][0],1,&m_gmat[1][0],1,&m_gmat[1][0],1);
                     Vmath::Vdiv(nqtot,&m_gmat[1][0],1,&m_jac[0],1,&m_gmat[1][0],1);
 
                     // d xi_1/d x_2
-                    Vmath::Vmul (nqtot,&mDeriv[1][0][0],1,&g[2][0],1,&m_gmat[2][0],1);
-                    Vmath::Vvtvm(nqtot,&mDeriv[1][2][0],1,&g[0][0],1,&m_gmat[2][0],1,&m_gmat[2][0],1);
+                    Vmath::Vmul (nqtot,&m_deriv[1][0][0],1,&g[2][0],1,&m_gmat[2][0],1);
+                    Vmath::Vvtvm(nqtot,&m_deriv[1][2][0],1,&g[0][0],1,&m_gmat[2][0],1,&m_gmat[2][0],1);
                     Vmath::Vdiv(nqtot,&m_gmat[2][0],1,&m_jac[0],1,&m_gmat[2][0],1);
 
                     // d xi_2/d x_2
-                    Vmath::Vmul (nqtot,&mDeriv[0][2][0],1,&g[0][0],1,&m_gmat[3][0],1);
-                    Vmath::Vvtvm(nqtot,&mDeriv[0][0][0],1,&g[2][0],1,&m_gmat[3][0],1,&m_gmat[3][0],1);
+                    Vmath::Vmul (nqtot,&m_deriv[0][2][0],1,&g[0][0],1,&m_gmat[3][0],1);
+                    Vmath::Vvtvm(nqtot,&m_deriv[0][0][0],1,&g[2][0],1,&m_gmat[3][0],1,&m_gmat[3][0],1);
                     Vmath::Vdiv(nqtot,&m_gmat[3][0],1,&m_jac[0],1,&m_gmat[3][0],1);
 
                     // d xi_1/d x_3
-                    Vmath::Vmul (nqtot,&mDeriv[1][1][0],1,&g[0][0],1,&m_gmat[4][0],1);
-                    Vmath::Vvtvm(nqtot,&mDeriv[1][0][0],1,&g[1][0],1,&m_gmat[4][0],1,&m_gmat[4][0],1);
+                    Vmath::Vmul (nqtot,&m_deriv[1][1][0],1,&g[0][0],1,&m_gmat[4][0],1);
+                    Vmath::Vvtvm(nqtot,&m_deriv[1][0][0],1,&g[1][0],1,&m_gmat[4][0],1,&m_gmat[4][0],1);
                     Vmath::Vdiv(nqtot,&m_gmat[4][0],1,&m_jac[0],1,&m_gmat[4][0],1);
 
                     // d xi_2/d x_3
-                    Vmath::Vmul (nqtot,&mDeriv[0][0][0],1,&g[1][0],1,&m_gmat[5][0],1);
-                    Vmath::Vvtvm(nqtot,&mDeriv[0][1][0],1,&g[0][0],1,&m_gmat[5][0],1,&m_gmat[5][0],1);
+                    Vmath::Vmul (nqtot,&m_deriv[0][0][0],1,&g[1][0],1,&m_gmat[5][0],1);
+                    Vmath::Vvtvm(nqtot,&m_deriv[0][1][0],1,&g[0][0],1,&m_gmat[5][0],1,&m_gmat[5][0],1);
                     Vmath::Vdiv(nqtot,&m_gmat[5][0],1,&m_jac[0],1,&m_gmat[5][0],1);
 
                     // J = sqrt(J_3D)
@@ -408,17 +408,17 @@ namespace Nektar
         void GeomFactors2D::ComputePrincipleDirection(
                         Array<OneD,Array<OneD,NekDouble> > &output)
         {
-            int nq = mPointsKey[0].GetNumPoints() *
-                        mPointsKey[1].GetNumPoints();
+            int nq = m_pointsKey[0].GetNumPoints() *
+                        m_pointsKey[1].GetNumPoints();
 
-            output = Array<OneD,Array<OneD,NekDouble> >(mCoordDim);
-            for (int i = 0; i < mCoordDim; ++i)
+            output = Array<OneD,Array<OneD,NekDouble> >(m_coordDim);
+            for (int i = 0; i < m_coordDim; ++i)
             {
                 output[i] = Array<OneD, NekDouble> (nq, 0.0);
             }
 
             // Construction of Connection
-            switch(mTangentDir)
+            switch(m_tangentDir)
             {
                 // projection to x-axis
                 case eTangentX:
@@ -442,34 +442,34 @@ namespace Nektar
                     Array<OneD,NekDouble> x0(nq);
                     Array<OneD,NekDouble> x1(nq);
                     Array<OneD,NekDouble> x2(nq);
-                    
-                    // mCoords are StdExpansions which store the mapping
+
+                    // m_coords are StdExpansions which store the mapping
                     // between the std element and the local element. Bwd
                     // transforming the std element minimum basis gives a
                     // minimum physical basis for geometry. Need to then
                     // interpolate this up to the quadrature basis.
                     LibUtilities::Interp2D(
-                                    mCoords[0]->GetBasis(0)->GetPointsKey(), 
-                                    mCoords[0]->GetBasis(1)->GetPointsKey(), 
-                                    mCoords[0]->GetPhys(),
-                                    mPointsKey[0], mPointsKey[1], x0);
+                                    m_coords[0]->GetBasis(0)->GetPointsKey(),
+                                    m_coords[0]->GetBasis(1)->GetPointsKey(),
+                                    m_coords[0]->GetPhys(),
+                                    m_pointsKey[0], m_pointsKey[1], x0);
                     LibUtilities::Interp2D(
-                                    mCoords[0]->GetBasis(0)->GetPointsKey(), 
-                                    mCoords[0]->GetBasis(1)->GetPointsKey(),
-                                    mCoords[1]->GetPhys(),
-                                    mPointsKey[0], mPointsKey[1], x1);
+                                    m_coords[0]->GetBasis(0)->GetPointsKey(),
+                                    m_coords[0]->GetBasis(1)->GetPointsKey(),
+                                    m_coords[1]->GetPhys(),
+                                    m_pointsKey[0], m_pointsKey[1], x1);
                     LibUtilities::Interp2D(
-                                    mCoords[0]->GetBasis(0)->GetPointsKey(), 
-                                    mCoords[0]->GetBasis(1)->GetPointsKey(),
-                                    mCoords[2]->GetPhys(),
-                                    mPointsKey[0], mPointsKey[1], x2);
+                                    m_coords[0]->GetBasis(0)->GetPointsKey(),
+                                    m_coords[0]->GetBasis(1)->GetPointsKey(),
+                                    m_coords[2]->GetPhys(),
+                                    m_pointsKey[0], m_pointsKey[1], x2);
 
                     // circular around the center of the domain
                     NekDouble radius, xc=0.0, yc=0.0, xdis, ydis;
 
-                    if (mTangentDirCentre.num_elements() == 2) {
-                        xc = mTangentDirCentre[0];
-                        yc = mTangentDirCentre[1];
+                    if (m_tangentDirCentre.num_elements() == 2) {
+                        xc = m_tangentDirCentre[0];
+                        yc = m_tangentDirCentre[1];
                     }
 
                     for (int i = 0; i < nq; i++)
@@ -496,45 +496,45 @@ namespace Nektar
         void GeomFactors2D::v_ComputeSurfaceNormals()
         {
             // Number of dimensions.
-            int coordim = mDeriv[0].num_elements();
+            int coordim = m_deriv[0].num_elements();
             // Total number of points in the element.
-            int nqtot = mDeriv[0][0].num_elements();
+            int nqtot = m_deriv[0][0].num_elements();
 
             // Allocate temporary storage.
             Array<OneD, NekDouble> temp(nqtot,0.0);
 
             // Initialization of storage for normals
-            mNormal = Array<OneD, Array<OneD, NekDouble> >(mCoordDim);
-            for (int i = 0; i < mCoordDim; ++i)
+            m_normal = Array<OneD, Array<OneD, NekDouble> >(m_coordDim);
+            for (int i = 0; i < m_coordDim; ++i)
             {
-                mNormal[i] = Array<OneD,NekDouble>(nqtot);
+                m_normal[i] = Array<OneD,NekDouble>(nqtot);
             }
 
             // Derive Geometric Normal vectors by cross product of two
             // tangential basis vectors.
-            Vmath::Vmul (nqtot, mDeriv[0][2],     1,
-                                mDeriv[1][1],     1,
+            Vmath::Vmul (nqtot, m_deriv[0][2],     1,
+                                m_deriv[1][1],     1,
                                 temp,             1);
-            Vmath::Vvtvm(nqtot, mDeriv[0][1],     1,
-                                mDeriv[1][2],     1,
+            Vmath::Vvtvm(nqtot, m_deriv[0][1],     1,
+                                m_deriv[1][2],     1,
                                 temp,             1,
-                                mNormal[0],          1);
+                                m_normal[0],          1);
 
-            Vmath::Vmul (nqtot, mDeriv[0][0],     1,
-                                mDeriv[1][2],     1,
+            Vmath::Vmul (nqtot, m_deriv[0][0],     1,
+                                m_deriv[1][2],     1,
                                 temp,           1);
-            Vmath::Vvtvm(nqtot, mDeriv[0][2],     1,
-                                mDeriv[1][0],     1,
+            Vmath::Vvtvm(nqtot, m_deriv[0][2],     1,
+                                m_deriv[1][0],     1,
                                 temp,           1,
-                                mNormal[1],    1);
+                                m_normal[1],    1);
 
-            Vmath::Vmul (nqtot, mDeriv[0][1],     1,
-                                mDeriv[1][0],     1,
+            Vmath::Vmul (nqtot, m_deriv[0][1],     1,
+                                m_deriv[1][0],     1,
                                 temp,           1);
-            Vmath::Vvtvm(nqtot, mDeriv[0][0],     1,
-                                mDeriv[1][1],     1,
+            Vmath::Vvtvm(nqtot, m_deriv[0][0],     1,
+                                m_deriv[1][1],     1,
                                 temp,           1,
-                                mNormal[2],  1);
+                                m_normal[2],  1);
 
             // Reset temp array
             temp = Array<OneD, NekDouble>(nqtot,0.0);
@@ -542,8 +542,8 @@ namespace Nektar
             // Normalization of Surface Normal
             for (int i = 0; i < coordim; ++i)
             {
-                Vmath::Vvtvp(nqtot, mNormal[i],  1,
-                                    mNormal[i],  1,
+                Vmath::Vvtvp(nqtot, m_normal[i],  1,
+                                    m_normal[i],  1,
                                     temp,           1,
                                     temp,           1);
             }
@@ -551,9 +551,9 @@ namespace Nektar
 
             for (int i = 0; i < coordim; ++i)
             {
-                Vmath::Vdiv(nqtot,  mNormal[i],  1,
+                Vmath::Vdiv(nqtot,  m_normal[i],  1,
                                     temp,           1,
-                                    mNormal[i],  1);
+                                    m_normal[i],  1);
             }
         }
 
@@ -573,33 +573,33 @@ namespace Nektar
                             Array<OneD, Array<OneD, NekDouble> > &returnval) const
         {
             int i;
-            StdRegions::ExpansionType shape = mCoords[0]->DetExpansionType();
+            StdRegions::ExpansionType shape = m_coords[0]->DetExpansionType();
             int nqe = to_key.GetNumPoints();
 
             // Regular geometry case
-            if((mType == eRegular)||(mType == eMovingRegular))
+            if((m_type == eRegular)||(m_type == eMovingRegular))
             {
                 NekDouble fac;
                 // Set up normals
-                switch(mCoords[0]->DetExpansionType())
+                switch(m_coords[0]->DetExpansionType())
                 {
                 case StdRegions::eTriangle:
                     switch(edge)
                     {
                     case 0:
-                        for(i = 0; i < mCoordDim; ++i)
+                        for(i = 0; i < m_coordDim; ++i)
                         {
                             Vmath::Fill(nqe,-m_gmat[2*i+1][0],returnval[i],1);
                         }
                         break;
                     case 1:
-                        for(i = 0; i < mCoordDim; ++i)
+                        for(i = 0; i < m_coordDim; ++i)
                         {
                             Vmath::Fill(nqe,m_gmat[2*i+1][0] + m_gmat[2*i][0],returnval[i],1);
                         }
                             break;
                     case 2:
-                        for(i = 0; i < mCoordDim; ++i)
+                        for(i = 0; i < m_coordDim; ++i)
                         {
                             Vmath::Fill(nqe,-m_gmat[2*i][0],returnval[i],1);
                         }
@@ -612,25 +612,25 @@ namespace Nektar
                     switch(edge)
                     {
                     case 0:
-                        for(i = 0; i < mCoordDim; ++i)
+                        for(i = 0; i < m_coordDim; ++i)
                         {
                             Vmath::Fill(nqe,-m_gmat[2*i+1][0],returnval[i],1);
                         }
                         break;
                     case 1:
-                        for(i = 0; i < mCoordDim; ++i)
+                        for(i = 0; i < m_coordDim; ++i)
                         {
                             Vmath::Fill(nqe,m_gmat[2*i][0],returnval[i],1);
                         }
                         break;
                     case 2:
-                        for(i = 0; i < mCoordDim; ++i)
+                        for(i = 0; i < m_coordDim; ++i)
                         {
                             Vmath::Fill(nqe,m_gmat[2*i+1][0],returnval[i],1);
                         }
                         break;
                     case 3:
-                        for(i = 0; i < mCoordDim; ++i)
+                        for(i = 0; i < m_coordDim; ++i)
                         {
                             Vmath::Fill(nqe,-m_gmat[2*i][0],returnval[i],1);
                         }
@@ -643,12 +643,12 @@ namespace Nektar
 
                 // normalise
                 fac = 0.0;
-                for(i =0 ; i < mCoordDim; ++i)
+                for(i =0 ; i < m_coordDim; ++i)
                 {
                     fac += returnval[i][0]*returnval[i][0];
                 }
                 fac = 1.0/sqrt(fac);
-                for (i = 0; i < mCoordDim; ++i)
+                for (i = 0; i < m_coordDim; ++i)
                 {
                     Vmath::Smul(nqe,fac,returnval[i],1,returnval[i],1);
                 }
@@ -657,13 +657,13 @@ namespace Nektar
             {
                 int j;
 
-                int nquad0 = mPointsKey[0].GetNumPoints();
-                int nquad1 = mPointsKey[1].GetNumPoints();
+                int nquad0 = m_pointsKey[0].GetNumPoints();
+                int nquad1 = m_pointsKey[1].GetNumPoints();
 
                 LibUtilities::PointsKey from_key;
 
-                Array<OneD,NekDouble> normals(mCoordDim*max(nquad0,nquad1),0.0);
-                Array<OneD,NekDouble> jac    (mCoordDim*max(nquad0,nquad1),0.0);
+                Array<OneD,NekDouble> normals(m_coordDim*max(nquad0,nquad1),0.0);
+                Array<OneD,NekDouble> jac    (m_coordDim*max(nquad0,nquad1),0.0);
 
                 // Extract Jacobian along edges and recover local
                 // derivates (dx/dr) for polynomial interpolation by
@@ -678,34 +678,34 @@ namespace Nektar
                             for(j = 0; j < nquad0; ++j)
                             {
                                 jac[j] = m_jac[j];
-                                for(i = 0; i < mCoordDim; ++i)
+                                for(i = 0; i < m_coordDim; ++i)
                                 {
                                     normals[i*nquad0+j] = -m_gmat[2*i+1][j]*jac[j];
                                 }
                             }
-                            from_key = mPointsKey[0];
+                            from_key = m_pointsKey[0];
                             break;
                         case 1:
                             for(j = 0; j < nquad1; ++j)
                             {
                                 jac[j] = m_jac[nquad0*j+nquad0-1];
-                                for(i = 0; i < mCoordDim; ++i)
+                                for(i = 0; i < m_coordDim; ++i)
                                 {
                                     normals[i*nquad1+j] = (m_gmat[2*i][nquad0*j + nquad0-1] +  m_gmat[2*i+1][nquad0*j + nquad0-1])*jac[j];
                                 }
                             }
-                            from_key = mPointsKey[1];
+                            from_key = m_pointsKey[1];
                             break;
                         case 2:
                             for(j = 0; j < nquad1; ++j)
                             {
                                 jac[j] = m_jac[nquad0*j];
-                                for(i = 0; i < mCoordDim; ++i)
+                                for(i = 0; i < m_coordDim; ++i)
                                 {
                                     normals[i*nquad1+j] = -m_gmat[2*i][nquad0*j]*jac[j];
                                 }
                             }
-                            from_key = mPointsKey[1];
+                            from_key = m_pointsKey[1];
                             break;
                         default:
                             ASSERTL0(false,"edge is out of range (edge < 3)");
@@ -721,45 +721,45 @@ namespace Nektar
                             for(j = 0; j < nquad0; ++j)
                             {
                                 jac[j] = m_jac[j];
-                                for(i = 0; i < mCoordDim; ++i)
+                                for(i = 0; i < m_coordDim; ++i)
                                 {
                                    normals[i*nquad0+j] = -m_gmat[2*i+1][j]*jac[j];
                                 }
                            }
-                            from_key = mPointsKey[0];
+                            from_key = m_pointsKey[0];
                             break;
                         case 1:
                             for(j = 0; j < nquad1; ++j)
                             {
                                 jac[j] = m_jac[nquad0*j+nquad0-1];
-                                for(i = 0; i < mCoordDim; ++i)
+                                for(i = 0; i < m_coordDim; ++i)
                                 {
                                     normals[i*nquad1+j]  = m_gmat[2*i][nquad0*j + nquad0-1]*jac[j];
                                 }
                             }
-                            from_key = mPointsKey[1];
+                            from_key = m_pointsKey[1];
                             break;
                         case 2:
                             for(j = 0; j < nquad0; ++j)
                             {
                                 jac[j] = m_jac[nquad0*(nquad1-1)+j];
-                                for(i = 0; i < mCoordDim; ++i)
+                                for(i = 0; i < m_coordDim; ++i)
                                 {
                                     normals[i*nquad0+j] = (m_gmat[2*i+1][nquad0*(nquad1-1)+j])*jac[j];
                                 }
                             }
-                            from_key = mPointsKey[0];
+                            from_key = m_pointsKey[0];
                             break;
                         case 3:
                             for(j = 0; j < nquad1; ++j)
                             {
                                 jac[j] = m_jac[nquad0*j];
-                                for(i = 0; i < mCoordDim; ++i)
+                                for(i = 0; i < m_coordDim; ++i)
                                 {
                                     normals[i*nquad1+j] = -m_gmat[2*i][nquad0*j]*jac[j];
                                 }
                             }
-                            from_key = mPointsKey[1];
+                            from_key = m_pointsKey[1];
                             break;
                         default:
                             ASSERTL0(false,"edge is out of range (edge < 3)");
@@ -779,7 +779,7 @@ namespace Nektar
                 Vmath::Sdiv(nq,1.0,&work[0],1,&work[0],1);
 
                 // interpolate
-                for(i = 0; i < mCoordDim; ++i)
+                for(i = 0; i < m_coordDim; ++i)
                 {
                     LibUtilities::Interp1D(from_key,&normals[i*nq],to_key,&returnval[i][0]);
                     Vmath::Vmul(nqe,work,1,returnval[i],1,returnval[i],1);
@@ -787,7 +787,7 @@ namespace Nektar
 
                 //normalise normal vectors
                 Vmath::Zero(nqe,work,1);
-                for(i = 0; i < mCoordDim; ++i)
+                for(i = 0; i < m_coordDim; ++i)
                 {
                     Vmath::Vvtvp(nqe,returnval[i],1, returnval[i],1,work,1,work,1);
                 }
@@ -795,7 +795,7 @@ namespace Nektar
                 Vmath::Vsqrt(nqe,work,1,work,1);
                 Vmath::Sdiv(nqe,1.0,work,1,work,1);
 
-                for(i = 0; i < mCoordDim; ++i)
+                for(i = 0; i < m_coordDim; ++i)
                 {
                     Vmath::Vmul(nqe,returnval[i],1,work,1,returnval[i],1);
                 }
@@ -804,7 +804,7 @@ namespace Nektar
                 // anticlockwise direction if edge >=2
                 if(edge >= 2)
                 {
-                    for(i = 0; i < mCoordDim; ++i)
+                    for(i = 0; i < m_coordDim; ++i)
                     {
                         Vmath::Reverse(nqe,returnval[i],1, returnval[i],1);
                     }
@@ -825,44 +825,44 @@ namespace Nektar
         void GeomFactors2D::v_ComputeTangents()
         {
             int i, j, k;
-            int nq = mPointsKey[0].GetNumPoints() *
-                        mPointsKey[1].GetNumPoints();
+            int nq = m_pointsKey[0].GetNumPoints() *
+                        m_pointsKey[1].GetNumPoints();
 
-            if (mNormal.num_elements() == 0) {
+            if (m_normal.num_elements() == 0) {
                 v_ComputeSurfaceNormals();
             }
 
-            if(mTangentDir==eLOCAL)
-            {  
+            if(m_tangentDir==eLOCAL)
+            {
                 // Allocate temporary and tangent storage.
                 Array<OneD, NekDouble> temp(nq, 0.0);
-                mTangents  =  Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
+                m_tangents  =  Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
                 for (i = 0; i < 2; ++i)
                 {
-                    mTangents[i] = Array<OneD, Array<OneD, NekDouble> >(mCoordDim);
-                    for (k = 0; k < mCoordDim; ++k)
+                    m_tangents[i] = Array<OneD, Array<OneD, NekDouble> >(m_coordDim);
+                    for (k = 0; k < m_coordDim; ++k)
                     {
-                        mTangents[i][k] = Array<OneD, NekDouble>(nq, 0.0);
+                        m_tangents[i][k] = Array<OneD, NekDouble>(nq, 0.0);
                     }
                 }
-                
-                for (i = 0; i < mCoordDim; ++i)
+
+                for (i = 0; i < m_coordDim; ++i)
                 {
                     for(j =0; j < 2; ++j)
                     {
-                        Vmath::Vcopy(nq, mDeriv[0][i], 1, mTangents[0][i], 1);
+                        Vmath::Vcopy(nq, m_deriv[0][i], 1, m_tangents[0][i], 1);
                     }
                 }
 
                 // Normalise first tangent vectors.
-                VectorNormalise(mTangents[0]);
-                
+                VectorNormalise(m_tangents[0]);
+
                 // The second set of tangential vectors is obtained by cross-
                 // producting the surface normal with the first tangential vectors.
-                VectorCrossProd(mTangents[0], mNormal, mTangents[1]);
-                
+                VectorCrossProd(m_tangents[0], m_normal, m_tangents[1]);
+
                 // Normalise second tangent vectors.
-                VectorNormalise(mTangents[1]);
+                VectorNormalise(m_tangents[1]);
             }
 
             else
@@ -870,16 +870,16 @@ namespace Nektar
                 // Get a principle direction for the expansion.
                 Array<OneD, Array<OneD,NekDouble> > PrincipleDir;
                 ComputePrincipleDirection(PrincipleDir);
-                
+
                 // Allocate temporary and tangent storage.
                 Array<OneD, NekDouble> temp(nq, 0.0);
-                mTangents  =  Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
+                m_tangents  =  Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
                 for (i = 0; i < 2; ++i)
                 {
-                    mTangents[i] = Array<OneD, Array<OneD, NekDouble> >(mCoordDim);
-                    for (k = 0; k < mCoordDim; ++k)
+                    m_tangents[i] = Array<OneD, Array<OneD, NekDouble> >(m_coordDim);
+                    for (k = 0; k < m_coordDim; ++k)
                     {
-                        mTangents[i][k] = Array<OneD, NekDouble>(nq, 0.0);
+                        m_tangents[i][k] = Array<OneD, NekDouble>(nq, 0.0);
                     }
                 }
 
@@ -888,33 +888,33 @@ namespace Nektar
                 // v2 = Principaldirection, which should be orthogornalised to u2
                 // inner12 = < u1, v2 >, norm2 = < u1, u1 > = 1 by default
                 // ipro = - < u1, v2 > / < u1, u1 >
-                for (i = 0; i < mCoordDim; ++i)
+                for (i = 0; i < m_coordDim; ++i)
                 {
-                    Vmath::Vvtvp(nq, mNormal[i],        1,
+                    Vmath::Vvtvp(nq, m_normal[i],        1,
                                  PrincipleDir[i],   1,
                                  temp,              1,
                                  temp,              1);
                 }
                 Vmath::Neg(nq, temp, 1);
-                
+
                 // u2 = v2 - < u1 , v2 > ( u1 / < u1, u1 > )
-                for (i = 0; i < mCoordDim; ++i)
+                for (i = 0; i < m_coordDim; ++i)
                 {
                     Vmath::Vvtvp(nq, temp,              1,
-                                 mNormal[i],        1,
+                                 m_normal[i],        1,
                                  PrincipleDir[i],   1,
-                                 mTangents[0][i],   1);
+                                 m_tangents[0][i],   1);
                 }
-                
+
                 // Normalise first tangent vectors.
-                VectorNormalise(mTangents[0]);
-                
+                VectorNormalise(m_tangents[0]);
+
                 // The second set of tangential vectors is obtained by cross-
                 // producting the surface normal with the first tangential vectors.
-                VectorCrossProd(mTangents[0], mNormal, mTangents[1]);
-                
+                VectorCrossProd(m_tangents[0], m_normal, m_tangents[1]);
+
                 // Normalise second tangent vectors.
-                VectorNormalise(mTangents[1]);
+                VectorNormalise(m_tangents[1]);
             }
         }
 
@@ -925,19 +925,19 @@ namespace Nektar
         void GeomFactors2D::v_SetUpQuadratureMetrics(StdRegions::ExpansionType shape,
                                                    const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
-            ASSERTL1(tbasis.num_elements() == mExpDim,"Inappropriate dimension of tbasis");
+            ASSERTL1(tbasis.num_elements() == m_expDim,"Inappropriate dimension of tbasis");
 
             int i;
-            int nquad0 = mPointsKey[0].GetNumPoints();
-            int nquad1 = mPointsKey[1].GetNumPoints();
+            int nquad0 = m_pointsKey[0].GetNumPoints();
+            int nquad1 = m_pointsKey[1].GetNumPoints();
             int nqtot  = nquad0*nquad1;
 
             m_weightedjac           = Array<OneD, NekDouble>(nqtot);
-            mIsUsingQuadMetrics = true;
+            m_isUsingQuadMetrics = true;
 
             // Fill the array m_weighted jac with the values
             // of the (already computed) jacobian (=m_jac)
-            if((mType == eRegular)||(mType == eMovingRegular))
+            if((m_type == eRegular)||(m_type == eMovingRegular))
             {
                 Vmath::Fill(nqtot,m_jac[0],m_weightedjac.get(),1);
             }
@@ -1013,19 +1013,19 @@ namespace Nektar
         void GeomFactors2D::v_SetUpLaplacianMetrics(StdRegions::ExpansionType shape,
                                                   const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
-            ASSERTL1(tbasis.num_elements() == mExpDim,"Inappropriate dimension of tbasis");
-            ASSERTL1((mCoordDim == 2)||(mCoordDim <= 3),
+            ASSERTL1(tbasis.num_elements() == m_expDim,"Inappropriate dimension of tbasis");
+            ASSERTL1((m_coordDim == 2)||(m_coordDim <= 3),
                      "The coordinate dimension should be equal to two or three"
                      "for two-dimensional elements");
 
             int i;
-            int nquad0 = mPointsKey[0].GetNumPoints();
-            int nquad1 = mPointsKey[1].GetNumPoints();
+            int nquad0 = m_pointsKey[0].GetNumPoints();
+            int nquad1 = m_pointsKey[1].GetNumPoints();
             int nqtot  = nquad0*nquad1;
 
             m_laplacianmetrics      = Array<TwoD, NekDouble>(3,nqtot);
             m_laplacianMetricIsZero = Array<OneD, bool>(3, false);
-            mIsUsingLaplMetrics  = true;
+            m_isUsingLaplMetrics  = true;
 
             // Get hold of the quadrature weights
             const Array<OneD, const NekDouble>& w0 = tbasis[0]->GetW();
@@ -1035,14 +1035,14 @@ namespace Nektar
             {
             case StdRegions::eQuadrilateral:
                 {
-                    if(( mType == eRegular)||
-                       ( mType == eMovingRegular))
+                    if(( m_type == eRegular)||
+                       ( m_type == eMovingRegular))
                     {
                         NekDouble g0 = m_gmat[0][0]*m_gmat[0][0] + m_gmat[2][0]*m_gmat[2][0];
                         NekDouble g1 = m_gmat[0][0]*m_gmat[1][0] + m_gmat[2][0]*m_gmat[3][0];
                         NekDouble g2 = m_gmat[1][0]*m_gmat[1][0] + m_gmat[3][0]*m_gmat[3][0];
 
-                        if(mCoordDim == 3)
+                        if(m_coordDim == 3)
                         {
                             g0 += m_gmat[4][0]*m_gmat[4][0];
                             g1 += m_gmat[4][0]*m_gmat[5][0];
@@ -1069,7 +1069,7 @@ namespace Nektar
                         Vmath::Vmul (nqtot,&m_gmat[1][0],1,&m_gmat[1][0],1,&m_laplacianmetrics[2][0],1);
                         Vmath::Vvtvp(nqtot,&m_gmat[3][0],1,&m_gmat[3][0],1,&m_laplacianmetrics[2][0],1,&m_laplacianmetrics[2][0],1);
 
-                        if(mCoordDim == 3)
+                        if(m_coordDim == 3)
                         {
                             Vmath::Vvtvp(nqtot,&m_gmat[4][0],1,&m_gmat[4][0],1,&m_laplacianmetrics[0][0],1,&m_laplacianmetrics[0][0],1);
                             Vmath::Vvtvp(nqtot,&m_gmat[4][0],1,&m_gmat[5][0],1,&m_laplacianmetrics[1][0],1,&m_laplacianmetrics[1][0],1);
@@ -1102,8 +1102,8 @@ namespace Nektar
 
                     Array<OneD, NekDouble> tmp(nqtot);
 
-                    if(( mType == eRegular)||
-                       ( mType == eMovingRegular))
+                    if(( m_type == eRegular)||
+                       ( m_type == eMovingRegular))
                     {
                         Vmath::Smul (nqtot,m_gmat[0][0],&dEta_dXi[0][0],1,&tmp[0],1);
                         Vmath::Svtvp(nqtot,m_gmat[1][0],&dEta_dXi[1][0],1,&tmp[0],1,&tmp[0],1);
@@ -1118,7 +1118,7 @@ namespace Nektar
                         Vmath::Vvtvp(nqtot,&tmp[0],1,   &tmp[0],1,&m_laplacianmetrics[0][0],1,&m_laplacianmetrics[0][0],1);
                         Vmath::Svtvp(nqtot,m_gmat[3][0],&tmp[0],1,&m_laplacianmetrics[1][0],1,&m_laplacianmetrics[1][0],1);
 
-                        if(mCoordDim == 3)
+                        if(m_coordDim == 3)
                         {
                             Vmath::Smul (nqtot,m_gmat[4][0],&dEta_dXi[0][0],1,&tmp[0],1);
                             Vmath::Svtvp(nqtot,m_gmat[5][0],&dEta_dXi[1][0],1,&tmp[0],1,&tmp[0],1);
@@ -1128,7 +1128,7 @@ namespace Nektar
                         }
 
                         NekDouble g2 = m_gmat[1][0]*m_gmat[1][0] + m_gmat[3][0]*m_gmat[3][0];
-                        if(mCoordDim == 3)
+                        if(m_coordDim == 3)
                         {
                             g2 += m_gmat[5][0]*m_gmat[5][0];
                         }
@@ -1153,7 +1153,7 @@ namespace Nektar
                         Vmath::Vvtvp(nqtot,&m_gmat[3][0],1,&tmp[0],      1,&m_laplacianmetrics[1][0],1,&m_laplacianmetrics[1][0],1);
                         Vmath::Vvtvp(nqtot,&m_gmat[3][0],1,&m_gmat[3][0],1,&m_laplacianmetrics[2][0],1,&m_laplacianmetrics[2][0],1);
 
-                        if(mCoordDim == 3)
+                        if(m_coordDim == 3)
                         {
                             Vmath::Vmul (nqtot,&m_gmat[4][0],1,&dEta_dXi[0][0],1,&tmp[0],1);
                             Vmath::Vvtvp(nqtot,&m_gmat[5][0],1,&dEta_dXi[1][0],1,&tmp[0],1,&tmp[0],1);

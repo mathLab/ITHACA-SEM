@@ -75,12 +75,12 @@ namespace Nektar
                 int NumElmtConnected() const;
                 bool IsElmtConnected(int gvoId, int locId) const;
 
-                inline int GetEid() const 
+                inline int GetEid() const
                 {
                     return m_eid;
                 }
 
-                inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j) 
+                inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j)
                 {
                     return m_xmap[i]->GetBasis(j);
                 }
@@ -121,7 +121,7 @@ namespace Nektar
                 }
 
                 NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
-                        
+
                 /// \brief Get the orientation of edge1.
                 ///
                 /// Since both edges are passed, it does
@@ -137,9 +137,9 @@ namespace Nektar
 
                 inline void SetOwnData()
                 {
-                    m_owndata = true; 
+                    m_ownData = true;
                 }
-                
+
                 void    FillGeom ();
 
                 StdRegions::ExpansionType DetExpansionType() const
@@ -153,54 +153,55 @@ namespace Nektar
                 void WriteToFile(std::ofstream &outfile, const int dumpVar);
 
             protected:
-                int m_eid;
-                std::list<CompToElmt> m_elmtmap;
+                int                             m_eid;
+                std::list<CompToElmt>           m_elmtMap;
                 Array<OneD, StdRegions::StdExpansion1DSharedPtr> m_xmap;
 
-                static const int kNverts = 2;
-                static const int kNedges = 1;
+                static const int                kNverts = 2;
+                static const int                kNedges = 1;
                 SpatialDomains::VertexComponentSharedPtr m_verts[kNverts];
 
                 void GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
 
             private:
-                bool m_owndata;   ///< Boolean indicating whether object owns the data
-            
+                /// Boolean indicating whether object owns the data
+                bool                            m_ownData;
+
                 virtual void v_AddElmtConnected(int gvo_id, int locid)
-                {      
+                {
                     AddElmtConnected(gvo_id, locid);
                 }
-                
+
                 virtual int v_NumElmtConnected() const
                 {
                     return NumElmtConnected();
                 }
-                
+
                 virtual bool v_IsElmtConnected(int gvo_id, int locid) const
                 {
                     return IsElmtConnected(gvo_id, locid);
                 }
-                
-                virtual int v_GetEid() const 
+
+                virtual int v_GetEid() const
                 {
                     return GetEid();
                 }
-                
+
                 virtual const LibUtilities::BasisSharedPtr v_GetBasis(const int i, const int j)
-                {  
+                {
                     return GetBasis(i,j);
                 }
-                
+
                 virtual const StdRegions::StdExpansion1DSharedPtr &v_GetXmap(const int i)
                 {
                     return GetXmap(i);
                 }
-                
+
                 virtual Array<OneD,NekDouble> &v_UpdatePhys(const int i)
                 {
                     return UpdatePhys(i);
                 }
-                
+
                 virtual VertexComponentSharedPtr v_GetVertex(const int i) const
                 {
                     return GetVertex(i);
@@ -220,12 +221,12 @@ namespace Nektar
                 {
                     return GetVid(i);
                 }
-                
+
                 virtual void v_FillGeom()
                 {
                     FillGeom();
                 }
-                
+
                 virtual StdRegions::ExpansionType v_DetExpansionType() const
                 {
                     return DetExpansionType();
@@ -235,32 +236,32 @@ namespace Nektar
                 {
                     return GetCoord(i,Lcoord);
                 }
-                
+
                 virtual void v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
                 {
                     GetLocCoords(coords,Lcoords);
-                }            
-                
-                
+                }
+
+
                 virtual void v_WriteToFile(std::ofstream &outfile, const int dumpVar)
                 {
                     WriteToFile(outfile, dumpVar);
                 }
 
-                virtual int v_GetNumVerts() const 
+                virtual int v_GetNumVerts() const
                 {
                     return kNverts;
-                }                
-                
+                }
+
                 virtual int v_GetNumEdges() const
                 {
                     return kNedges;
-                }                
+                }
 
                 virtual bool v_ContainsPoint(
                         const Array<OneD, const NekDouble> &gloCoord);
         };
-        
+
         // shorthand for boost pointer
         typedef boost::shared_ptr<SegGeom> SegGeomSharedPtr;
         typedef std::vector< SegGeomSharedPtr > SegGeomVector;

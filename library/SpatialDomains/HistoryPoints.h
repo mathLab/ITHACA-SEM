@@ -57,20 +57,20 @@ namespace Nektar
                 History(const MeshGraph *meshGraph);
                 void Read(std::string &infilename);
                 void Read(TiXmlDocument &doc);
-        
+
                 int GetNumHistoryPoints() const;
                 VertexComponentSharedPtr GetHistoryPoint(int idx) const;
-                
+
             protected:
                 void ReadHistoryPoints(TiXmlElement *history);
-            
+
             private:
-                VertexComponentVector       m_HistoryPoints;
+                VertexComponentVector       m_historyPoints;
 
                 /// The mesh graph to use for referencing geometry info.
-                const MeshGraph *m_MeshGraph;            
+                const MeshGraph *m_meshGraph;
         };
-        
+
         typedef boost::shared_ptr<History> HistorySharedPtr;
     }
 }

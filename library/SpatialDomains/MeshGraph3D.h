@@ -71,74 +71,74 @@ namespace Nektar
 
             inline const TriGeomVector &GetTrigeoms(void) const
             {
-                return m_trigeoms;
+                return m_triGeoms;
             }
 
             inline const QuadGeomVector &GetQuadgeoms(void) const
             {
-                return m_quadgeoms;
+                return m_quadGeoms;
             }
 
             void GenXGeoFac();
 
-            inline const int GetNseggeoms() const 
+            inline const int GetNseggeoms() const
             {
-                return int(m_seggeoms.size());
+                return int(m_segGeoms.size());
             }
 
-            inline const int GetVidFromElmt(StdRegions::ExpansionType expansion, 
-                const int vert, const int elmt) const 
+            inline const int GetVidFromElmt(StdRegions::ExpansionType expansion,
+                const int vert, const int elmt) const
             {
                 if(expansion == StdRegions::eTriangle)
                 {
-                    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
+                    ASSERTL2((elmt >=0)&&(elmt < m_triGeoms.size()),
                         "eid is out of range");
 
-                    return m_trigeoms[elmt]->GetVid(vert);
+                    return m_triGeoms[elmt]->GetVid(vert);
                 }
                 else
                 {
-                    ASSERTL2((elmt >=0)&&(elmt < m_quadgeoms.size()),
+                    ASSERTL2((elmt >=0)&&(elmt < m_quadGeoms.size()),
                         "eid is out of range");
 
-                    return m_quadgeoms[elmt]->GetVid(vert);
+                    return m_quadGeoms[elmt]->GetVid(vert);
                 }
             }
 
-            inline const int GetEidFromElmt(StdRegions::ExpansionType expansion, 
+            inline const int GetEidFromElmt(StdRegions::ExpansionType expansion,
                 const int edge, const int elmt) const
             {
                 if(expansion == StdRegions::eTriangle)
                 {
-                    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
+                    ASSERTL2((elmt >=0)&&(elmt < m_triGeoms.size()),
                         "eid is out of range");
 
-                    return m_trigeoms[elmt]->GetEid(edge);
+                    return m_triGeoms[elmt]->GetEid(edge);
                 }
                 else
                 {
-                    ASSERTL2((elmt >=0)&&(elmt < m_quadgeoms.size()),
+                    ASSERTL2((elmt >=0)&&(elmt < m_quadGeoms.size()),
                         "eid is out of range");
 
-                    return m_quadgeoms[elmt]->GetEid(edge);
+                    return m_quadGeoms[elmt]->GetEid(edge);
                 }
             }
 
-            inline const StdRegions::EdgeOrientation GetEorientFromElmt(StdRegions::ExpansionType expansion,const int edge, const int elmt) const 
+            inline const StdRegions::EdgeOrientation GetEorientFromElmt(StdRegions::ExpansionType expansion,const int edge, const int elmt) const
             {
                 if(expansion == StdRegions::eTriangle)
                 {
-                    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
+                    ASSERTL2((elmt >=0)&&(elmt < m_triGeoms.size()),
                         "eid is out of range");
 
-                    return m_trigeoms[elmt]->GetEorient(edge);
+                    return m_triGeoms[elmt]->GetEorient(edge);
                 }
                 else
                 {
-                    ASSERTL2((elmt >=0)&&(elmt < m_quadgeoms.size()),
+                    ASSERTL2((elmt >=0)&&(elmt < m_quadGeoms.size()),
                         "eid is out of range");
 
-                    return m_quadgeoms[elmt]->GetEorient(edge);
+                    return m_quadGeoms[elmt]->GetEorient(edge);
                 }
             }
 
@@ -149,17 +149,17 @@ namespace Nektar
 
                 if(expansion == StdRegions::eTriangle)
                 {
-                    ASSERTL2((elmt >=0)&&(elmt < m_trigeoms.size()),
+                    ASSERTL2((elmt >=0)&&(elmt < m_triGeoms.size()),
                         "eid is out of range");
 
-                    returnval = m_trigeoms[elmt]->GetEorient(edge);
+                    returnval = m_triGeoms[elmt]->GetEorient(edge);
                 }
                 else
                 {
-                    ASSERTL2((elmt >=0)&&(elmt < m_quadgeoms.size()),
+                    ASSERTL2((elmt >=0)&&(elmt < m_quadGeoms.size()),
                         "eid is out of range");
 
-                    returnval =  m_quadgeoms[elmt]->GetEorient(edge);
+                    returnval =  m_quadGeoms[elmt]->GetEorient(edge);
                 }
 
                 // swap orientation if on edge 2 & 3 (if quad)
@@ -171,7 +171,7 @@ namespace Nektar
                     }
                     else
                     {
-                        returnval = StdRegions::eForwards; 
+                        returnval = StdRegions::eForwards;
                     }
                 }
                 return returnval;
@@ -179,7 +179,7 @@ namespace Nektar
 
             int GetNumComposites(void)
             {
-                return int(m_MeshCompositeVector.size());
+                return int(m_meshCompositeVector.size());
             }
 
             int GetNumCompositeItems(int whichComposite)
@@ -188,7 +188,7 @@ namespace Nektar
 
                 try
                 {
-                    returnval = int(m_MeshCompositeVector[whichComposite]->size());
+                    returnval = int(m_meshCompositeVector[whichComposite]->size());
                 }
                 catch(...)
                 {

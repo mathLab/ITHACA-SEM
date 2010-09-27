@@ -60,9 +60,9 @@ namespace Nektar
 
             // Set the pointskey equal to the pointskey as defined
             // in 'tbasis'
-            mPointsKey[0] = pkey0_tbasis;
-            mPointsKey[1] = pkey1_tbasis;
-            mPointsKey[2] = pkey2_tbasis;
+            m_pointsKey[0] = pkey0_tbasis;
+            m_pointsKey[1] = pkey1_tbasis;
+            m_pointsKey[2] = pkey2_tbasis;
 
             // setup temp storage
             Array<OneD, Array<OneD,NekDouble> > d1_map   (coordim);
@@ -134,25 +134,25 @@ namespace Nektar
                         const Array<OneD, Array<OneD, NekDouble> > d2,
                         const Array<OneD, Array<OneD, NekDouble> > d3)
         {
-            ASSERTL1(d1.num_elements()==mCoordDim,"The dimension of array d1 does not"
+            ASSERTL1(d1.num_elements()==m_coordDim,"The dimension of array d1 does not"
                      "match the coordinate dimension");
-            ASSERTL1(d2.num_elements()==mCoordDim,"The dimension of array d2 does not"
+            ASSERTL1(d2.num_elements()==m_coordDim,"The dimension of array d2 does not"
                      "match the coordinate dimension");
-            ASSERTL1(d3.num_elements()==mCoordDim,"The dimension of array d3 does not"
+            ASSERTL1(d3.num_elements()==m_coordDim,"The dimension of array d3 does not"
                      "match the coordinate dimension");
 
-            int nqtot = mPointsKey[0].GetNumPoints() *
-                        mPointsKey[1].GetNumPoints() *
-                        mPointsKey[2].GetNumPoints();
+            int nqtot = m_pointsKey[0].GetNumPoints() *
+                        m_pointsKey[1].GetNumPoints() *
+                        m_pointsKey[2].GetNumPoints();
 
             ASSERTL1(d1[0].num_elements() == nqtot,"Number of quadrature points do not match");
             ASSERTL1(d2[0].num_elements() == nqtot,"Number of quadrature points do not match");
             ASSERTL1(d3[0].num_elements() == nqtot,"Number of quadrature points do not match");
 
-            if((mType == eRegular)||(mType == eMovingRegular))
+            if((m_type == eRegular)||(m_type == eMovingRegular))
             {
                 m_jac     = Array<OneD, NekDouble>(1,0.0);
-                m_gmat    = Array<TwoD, NekDouble>(3*mCoordDim,1,0.0);
+                m_gmat    = Array<TwoD, NekDouble>(3*m_coordDim,1,0.0);
 
                 m_jac[0] =  d1[0][0]*(d2[1][0]*d3[2][0] - d3[1][0]*d2[2][0])
                            -d2[0][0]*(d1[1][0]*d3[2][0] - d3[1][0]*d1[2][0])
@@ -174,7 +174,7 @@ namespace Nektar
             else // Deformed case
             {
                 m_jac  = Array<OneD, NekDouble>(nqtot,0.0);
-                m_gmat = Array<TwoD, NekDouble>(3*mCoordDim,nqtot,0.0);
+                m_gmat = Array<TwoD, NekDouble>(3*m_coordDim,nqtot,0.0);
 
                 // Derivatives of the form: dj[i] = dx_(i+1)/dxi_j
 
@@ -234,20 +234,20 @@ namespace Nektar
         void GeomFactors3D::v_SetUpQuadratureMetrics(StdRegions::ExpansionType shape,
                                                    const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
-            ASSERTL1(tbasis.num_elements() == mExpDim,"Inappropriate dimension of tbasis");
+            ASSERTL1(tbasis.num_elements() == m_expDim,"Inappropriate dimension of tbasis");
 
             int i,j,k;
-            int nquad0 = mPointsKey[0].GetNumPoints();
-            int nquad1 = mPointsKey[1].GetNumPoints();
-            int nquad2 = mPointsKey[2].GetNumPoints();
+            int nquad0 = m_pointsKey[0].GetNumPoints();
+            int nquad1 = m_pointsKey[1].GetNumPoints();
+            int nquad2 = m_pointsKey[2].GetNumPoints();
             int nqtot  = nquad0*nquad1*nquad2;
 
             m_weightedjac           = Array<OneD, NekDouble>(nqtot);
-            mIsUsingQuadMetrics = true;
+            m_isUsingQuadMetrics = true;
 
             // Fill the array m_weighted jac with the values
             // of the (already computed) jacobian (=m_jac)
-            if((mType == eRegular)||(mType == eMovingRegular))
+            if((m_type == eRegular)||(m_type == eMovingRegular))
             {
                 Vmath::Fill(nqtot,m_jac[0],m_weightedjac.get(),1);
             }

@@ -7,7 +7,7 @@
 //  The MIT License
 //
 //  Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
-//  Department of Aeronautics, Imperial College London (UK), and Scientific 
+//  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
 //  License for the specific language governing rights and limitations under
@@ -43,34 +43,34 @@ namespace Nektar
     namespace SpatialDomains
     {
         Geometry::Geometry():
-            m_coordim(0), 
+            m_coordim(0),
             m_state(eNotFilled),
-            m_GeomShapeType(eNoGeomShapeType),
-            m_GlobalID(-1)
+            m_geomShapeType(eNoGeomShapeType),
+            m_globalID(-1)
         {
         }
 
         Geometry::Geometry(const int coordim):
             m_coordim(coordim),
             m_state(eNotFilled),
-            m_GeomShapeType(eNoGeomShapeType),
-            m_GlobalID(-1)
+            m_geomShapeType(eNoGeomShapeType),
+            m_globalID(-1)
         {
         }
 
         Geometry::~Geometry()
         {
         }
-        
-        GeomFactorsVector Geometry::m_RegGeomFactorsManager;
+
+        GeomFactorsVector Geometry::m_regGeomFactorsManager;
         GeomFactorsSharedPtr Geometry::ValidateRegGeomFactor(GeomFactorsSharedPtr geomFactor)
         {
             GeomFactorsSharedPtr returnval = geomFactor;
             bool found = false;
             if (geomFactor->GetGtype() == eRegular)
             {
-                for (GeomFactorsVectorIter iter = m_RegGeomFactorsManager.begin();
-                    iter != m_RegGeomFactorsManager.end();
+                for (GeomFactorsVectorIter iter = m_regGeomFactorsManager.begin();
+                    iter != m_regGeomFactorsManager.end();
                     ++iter)
                 {
                     if (**iter == *geomFactor)
@@ -83,7 +83,7 @@ namespace Nektar
 
                 if (!found)
                 {
-                    m_RegGeomFactorsManager.push_back(geomFactor);
+                    m_regGeomFactorsManager.push_back(geomFactor);
                     returnval = geomFactor;
                 }
             }
@@ -97,7 +97,7 @@ namespace Nektar
 //
 // $Log: Geometry.cpp,v $
 // Revision 1.11  2008/05/29 19:00:55  delisi
-// Constructors initialize m_GlobalID to -1.
+// Constructors initialize m_globalID to -1.
 //
 // Revision 1.10  2008/05/28 21:52:27  jfrazier
 // Added GeomShapeType initialization for the different shapes.

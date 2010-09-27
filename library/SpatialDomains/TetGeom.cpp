@@ -47,13 +47,13 @@ namespace Nektar
 
         TetGeom::TetGeom()
         {
-            m_GeomShapeType = eTetrahedron;
+            m_geomShapeType = eTetrahedron;
         }
 
         TetGeom::TetGeom(const TriGeomSharedPtr faces[]):
                  Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
         {
-            m_GeomShapeType = eTetrahedron;
+            m_geomShapeType = eTetrahedron;
 
             /// Copy the face shared pointers
             m_faces.insert(m_faces.begin(), faces, faces+TetGeom::kNfaces);
@@ -82,7 +82,7 @@ namespace Nektar
 
         TetGeom::TetGeom (const TriGeomSharedPtr faces[], const StdRegions::FaceOrientation forient[])
         {
-            m_GeomShapeType = eTetrahedron;
+            m_geomShapeType = eTetrahedron;
 
             /// Copy the face shared pointers
             m_faces.insert(m_faces.begin(), faces, faces+TetGeom::kNfaces);
@@ -100,7 +100,7 @@ namespace Nektar
                           const TriGeomSharedPtr faces[], const StdRegions::EdgeOrientation eorient[],
                           const StdRegions::FaceOrientation forient[])
          {
-			m_GeomShapeType = eTetrahedron;
+			m_geomShapeType = eTetrahedron;
 
             /// Copy the vert shared pointers.
             m_verts.insert(m_verts.begin(), verts, verts+TetGeom::kNverts);
@@ -127,7 +127,7 @@ namespace Nektar
 
         TetGeom::TetGeom(const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[])
         {
-            m_GeomShapeType = eTetrahedron;
+            m_geomShapeType = eTetrahedron;
 
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+TetGeom::kNedges);
@@ -570,13 +570,13 @@ namespace Nektar
         void TetGeom::AddElmtConnected(int gvo_id, int locid)
         {
             CompToElmt ee(gvo_id,locid);
-            m_elmtmap.push_back(ee);
+            m_elmtMap.push_back(ee);
         }
 
 
         int TetGeom::NumElmtConnected() const
         {
-            return int(m_elmtmap.size());
+            return int(m_elmtMap.size());
         }
 
 
@@ -585,10 +585,10 @@ namespace Nektar
             std::list<CompToElmt>::const_iterator def;
             CompToElmt ee(gvo_id,locid);
 
-            def = find(m_elmtmap.begin(),m_elmtmap.end(),ee);
+            def = find(m_elmtMap.begin(),m_elmtMap.end(),ee);
 
             // Found the element connectivity object in the list
-            return (def != m_elmtmap.end());
+            return (def != m_elmtMap.end());
         }
 
         /** given local collapsed coordinate Lcoord return the value of
@@ -621,7 +621,7 @@ namespace Nektar
                     Gtype = eDeformed;
                 }
             }
-            m_geomfactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
+            m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
         }
 
           /** \brief put all quadrature information into edge structure

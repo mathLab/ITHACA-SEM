@@ -2275,9 +2275,9 @@ namespace Nektar
                 ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
             }
 
-            for(i = 0; i < fielddef->m_ElementIDs.size(); ++i)
+            for(i = 0; i < fielddef->m_elementIDs.size(); ++i)
             {
-                int eid     = ElmtID_to_ExpID[fielddef->m_ElementIDs[i]];
+                int eid     = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
                 int datalen = (*m_exp)[eid]->GetNcoeffs();
                 fielddata.insert(fielddata.end(),&m_coeffs[m_coeff_offset[eid]],&m_coeffs[m_coeff_offset[eid]]+datalen);
             }
@@ -2288,19 +2288,19 @@ namespace Nektar
         {
             int i;
             int offset = 0;
-            int datalen = fielddata.size()/fielddef->m_Fields.size();
+            int datalen = fielddata.size()/fielddef->m_fields.size();
 
             // Find data location according to field definition
-            for(i = 0; i < fielddef->m_Fields.size(); ++i)
+            for(i = 0; i < fielddef->m_fields.size(); ++i)
             {
-                if(fielddef->m_Fields[i] == field)
+                if(fielddef->m_fields[i] == field)
                 {
                     break;
                 }
                 offset += datalen;
             }
 
-            ASSERTL0(i!= fielddef->m_Fields.size(),"Field not found in data file");
+            ASSERTL0(i!= fielddef->m_fields.size(),"Field not found in data file");
 
             // Determine mapping from element ids to location in
             // expansion list
@@ -2313,11 +2313,11 @@ namespace Nektar
             int modes_offset = 0;
             Array<OneD, NekDouble> coeff_tmp;
 
-            for(i = 0; i < fielddef->m_ElementIDs.size(); ++i)
+            for(i = 0; i < fielddef->m_elementIDs.size(); ++i)
             {
-                int eid = ElmtID_to_ExpID[fielddef->m_ElementIDs[i]];
-                int datalen = (*m_exp)[eid]->CalcNumberOfCoefficients(fielddef->m_NumModes,modes_offset);
-                if(fielddef->m_UniOrder == true) // reset modes_offset to zero
+                int eid = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
+                int datalen = (*m_exp)[eid]->CalcNumberOfCoefficients(fielddef->m_numModes,modes_offset);
+                if(fielddef->m_uniOrder == true) // reset modes_offset to zero
                 {
                     modes_offset = 0;
                 }
@@ -2328,7 +2328,7 @@ namespace Nektar
                 }
                 else // unpack data to new order
                 {
-                    (*m_exp)[eid]->ExtractDataToCoeffs(fielddata, offset, fielddef->m_NumModes,modes_offset,coeff_tmp = m_coeffs + m_coeff_offset[eid]);
+                    (*m_exp)[eid]->ExtractDataToCoeffs(fielddata, offset, fielddef->m_numModes,modes_offset,coeff_tmp = m_coeffs + m_coeff_offset[eid]);
                 }
                 offset += datalen;
             }

@@ -7,7 +7,7 @@
 //  The MIT License
 //
 //  Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
-//  Department of Aeronautics, Imperial College London (UK), and Scientific 
+//  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
 //  License for the specific language governing rights and limitations under
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:  
+//  Description:
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,7 +41,7 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        VertexComponent::VertexComponent(const int coordim, const int vid, 
+        VertexComponent::VertexComponent(const int coordim, const int vid,
             double x, double y, double z)
         {
             m_coordim = coordim;
@@ -62,21 +62,21 @@ namespace Nektar
             m_coordim = T.m_coordim;
 
             std::list<CompToElmt>::const_iterator def;
-            for(def = T.m_elmtmap.begin(); def != T.m_elmtmap.end(); def++)
+            for(def = T.m_elmtMap.begin(); def != T.m_elmtMap.end(); def++)
             {
-                m_elmtmap.push_back(*def);    
+                m_elmtMap.push_back(*def);
             }
         }
 
         void VertexComponent::AddElmtConnected(int gvo_id, int locid)
         {
             CompToElmt ee(gvo_id,locid);
-            m_elmtmap.push_back(ee);
+            m_elmtMap.push_back(ee);
         }
 
         int VertexComponent::NumElmtConnected() const
         {
-            return int(m_elmtmap.size());
+            return int(m_elmtMap.size());
         }
 
         bool VertexComponent::IsElmtConnected(int gvo_id, int locid) const
@@ -85,10 +85,10 @@ namespace Nektar
             std::list<CompToElmt>::const_iterator def;
             CompToElmt ee(gvo_id,locid);
 
-            def = find(m_elmtmap.begin(),m_elmtmap.end(),ee);
+            def = find(m_elmtMap.begin(),m_elmtMap.end(),ee);
 
             // Found the element connectivity object in the list
-            if(def != m_elmtmap.end())
+            if(def != m_elmtMap.end())
             {
                 return(true);
             }
@@ -101,35 +101,35 @@ namespace Nektar
             {
             case 3:
                 z = (*this)(2);
-            case 2: 
+            case 2:
                 y = (*this)(1);
             case 1:
                 x = (*this)(0);
                 break;
             }
         }
-        
+
         void VertexComponent::GetCoords(Array<OneD,NekDouble> &coords)
         {
             switch(m_coordim)
             {
             case 3:
                 coords[2] = (*this)(2);
-            case 2: 
+            case 2:
                 coords[1] = (*this)(1);
             case 1:
                 coords[0] = (*this)(0);
                 break;
             }
         }
-        
+
 
         void VertexComponent::UpdatePosition(double x, double y, double z)
         {
             (*this)(0) = x;
             (*this)(1) = y;
             (*this)(2) = z;
-        }  
+        }
 
         // _this = a + b
         void VertexComponent::Add(VertexComponent& a,VertexComponent& b)
@@ -149,22 +149,22 @@ namespace Nektar
             m_coordim = std::max(a.GetCoordim(),b.GetCoordim());
         }
 
-        // _this = a x b 
+        // _this = a x b
         void VertexComponent::Mult(VertexComponent& a,VertexComponent& b)
         {
             (*this)(0) = a[1]*b[2] - a[2]*b[1];
             (*this)(1) = a[2]*b[0] - a[0]*b[2];
             (*this)(2) = a[0]*b[1] - a[1]*b[0];
-            m_coordim = 3; 
+            m_coordim = 3;
         }
 
-        // _output = this.a 
+        // _output = this.a
         NekDouble VertexComponent::dist(VertexComponent& a)
         {
             return sqrt((x()-a.x())*(x()-a.x()) + (y()-a.y())*(y()-a.y()) + (z()-a.z())*(z()-a.z()));
         }
 
-        // _output = this.a 
+        // _output = this.a
         NekDouble VertexComponent::dot(VertexComponent& a)
         {
             return (x()*a.x() + y()*a.y() + z()*a.z());
@@ -204,7 +204,7 @@ namespace Nektar
 
         bool operator  == (const CompToElmt &x, const CompToElmt &y)
         {
-            return (x.m_id == y.m_id) || (x.m_locid == y.m_locid);
+            return (x.m_id == y.m_id) || (x.m_locId == y.m_locId);
         }
 
         bool operator  != (const CompToElmt &x, const CompToElmt &y)

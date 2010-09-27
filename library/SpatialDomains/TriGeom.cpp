@@ -43,7 +43,7 @@ namespace Nektar
     {
         TriGeom::TriGeom()
         {
-            m_GeomShapeType = eTriangle;
+            m_geomShapeType = eTriangle;
         }
 
         TriGeom::TriGeom(int id, const int coordim):
@@ -72,7 +72,7 @@ namespace Nektar
             Geometry2D(verts[0]->GetCoordim()),
             m_fid(id)
         {
-            m_GeomShapeType = eTriangle;
+            m_geomShapeType = eTriangle;
 
             /// Copy the vert shared pointers.
             m_verts.insert(m_verts.begin(), verts, verts+TriGeom::kNverts);
@@ -116,7 +116,7 @@ namespace Nektar
             Geometry2D(edges[0]->GetVertex(0)->GetCoordim()),
             m_fid(id)
         {
-            m_GeomShapeType = eTriangle;
+            m_geomShapeType = eTriangle;
 
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+TriGeom::kNedges);
@@ -168,15 +168,15 @@ namespace Nektar
         TriGeom::TriGeom(const TriGeom &in)
         {
             // From Geomtry
-            m_GeomShapeType = in.m_GeomShapeType;
+            m_geomShapeType = in.m_geomShapeType;
 
             // From TriFaceComponent
             m_fid = in.m_fid;
-            m_ownverts = in.m_ownverts;
+            m_ownVerts = in.m_ownVerts;
             std::list<CompToElmt>::const_iterator def;
-            for(def = in.m_elmtmap.begin(); def != in.m_elmtmap.end(); def++)
+            for(def = in.m_elmtMap.begin(); def != in.m_elmtMap.end(); def++)
             {
-                m_elmtmap.push_back(*def);
+                m_elmtMap.push_back(*def);
             }
 
             // From TriGeom
@@ -186,7 +186,7 @@ namespace Nektar
             {
                 m_eorient[i] = in.m_eorient[i];
             }
-            m_owndata = in.m_owndata;
+            m_ownData = in.m_ownData;
         }
 
         TriGeom::~TriGeom()
@@ -210,19 +210,19 @@ namespace Nektar
                 }
             }
 
-            m_geomfactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
+            m_geomFactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
         }
 
         void TriGeom::AddElmtConnected(int gvo_id, int locid)
         {
             CompToElmt ee(gvo_id,locid);
-            m_elmtmap.push_back(ee);
+            m_elmtMap.push_back(ee);
         }
 
 
         int TriGeom::NumElmtConnected() const
         {
-            return int(m_elmtmap.size());
+            return int(m_elmtMap.size());
         }
 
 
@@ -231,10 +231,10 @@ namespace Nektar
             std::list<CompToElmt>::const_iterator def;
             CompToElmt ee(gvo_id,locid);
 
-            def = find(m_elmtmap.begin(),m_elmtmap.end(),ee);
+            def = find(m_elmtMap.begin(),m_elmtMap.end(),ee);
 
             // Found the element connectivity object in the list
-            return (def != m_elmtmap.end());
+            return (def != m_elmtMap.end());
         }
 
         /** given local collapsed coordinate Lcoord return the value of

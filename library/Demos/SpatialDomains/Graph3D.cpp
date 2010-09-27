@@ -66,7 +66,7 @@ int main(int argc, char *argv[]){
         if (bcShPtr->GetBoundaryConditionType() == eDirichlet)
         {
             DirichletBCShPtr dirichletBCShPtr = boost::static_pointer_cast<DirichletBoundaryCondition>(bcShPtr);
-            val = dirichletBCShPtr->m_DirichletCondition.Evaluate(1.5);
+            val = dirichletBCShPtr->m_dirichletCondition.Evaluate(1.5);
         }
 
         std::string fcn1 = bcs.GetFunction("F1");

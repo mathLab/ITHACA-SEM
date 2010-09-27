@@ -83,10 +83,6 @@ namespace Nektar
             /// Destructor.
             ~DisContField1D();
 
-            /// This function evaluates the boundary conditions at a certain
-            /// time-level.
-            inline void EvaluateBoundaryConditions(const NekDouble time = 0.0);
-
             /// For a given key, returns the associated global linear system.
             GlobalLinSysSharedPtr GetGlobalBndLinSys(
                     const GlobalLinSysKey &mkey);
@@ -102,12 +98,6 @@ namespace Nektar
             /// element id
             map<int, RobinBCInfoSharedPtr> GetRobinBCInfo(void);
         protected:
-
-            virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID,
-                                                Array<OneD,int> &EdgeID)
-            {
-                GetBoundaryToElmtMap(ElmtID,EdgeID);
-            }
             /// The number of boundary segments on which Dirichlet boundary
             /// conditions are imposed.
             int m_numDirBndCondExpansions;
@@ -124,6 +114,25 @@ namespace Nektar
             /// condition on the different boundary regions.
             Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
 
+            /// Discretises the boundary conditions.
+            void GenerateBoundaryConditionExpansion(
+                    const SpatialDomains::MeshGraph1D &graph1D,
+                    SpatialDomains::BoundaryConditions &bcs,
+                    const std::string variable);
+
+            /// Generate a associative map of periodic vertices in a mesh.
+            void GetPeriodicVertices(
+                                const SpatialDomains::MeshGraph1D &graph1D,
+                                      SpatialDomains::BoundaryConditions &bcs,
+                                const std::string variable,
+                                      map<int,int>& periodicVertices);
+
+            virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID,
+                                                Array<OneD,int> &EdgeID)
+            {
+                GetBoundaryToElmtMap(ElmtID,EdgeID);
+            }
+
         private:
 
             /// Global boundary matrix.
@@ -135,11 +144,15 @@ namespace Nektar
             /// Local to global DG mapping for trace space.
             LocalToGlobalDGMapSharedPtr                        m_traceMap;
 
-            /// Discretises the boundary conditions.
-            void GenerateBoundaryConditionExpansion(
-                    const SpatialDomains::MeshGraph1D &graph1D,
-                    SpatialDomains::BoundaryConditions &bcs,
-                    const std::string variable);
+            /// Populates the list of boundary condition expansions.
+            void SetBoundaryConditionExpansion(
+                                const SpatialDomains::MeshGraph1D &graph1D,
+                                      SpatialDomains::BoundaryConditions &bcs,
+                                const std::string variable,
+                                Array<OneD, LocalRegions::PointExpSharedPtr>
+                                                            &bndCondExpansions,
+                                Array<OneD, SpatialDomains
+                                    ::BoundaryConditionShPtr> &bndConditions);
 
             void GenerateFieldBnd1D(
                     SpatialDomains::BoundaryConditions &bcs,
@@ -173,25 +186,11 @@ namespace Nektar
 
             /// Evaluate all boundary conditions at a given time..
             virtual void v_EvaluateBoundaryConditions(
-                                                      const NekDouble time = 0.0, const NekDouble x2_in = NekConstants::kNekUnsetDouble);
+                    const NekDouble time = 0.0,
+                    const NekDouble x2_in = NekConstants::kNekUnsetDouble);
         };
 
         typedef boost::shared_ptr<DisContField1D>   DisContField1DSharedPtr;
-
-        /**
-         * Based on the expression \f$g(x,t)\f$ for the boundary conditions,
-         * this function evaluates the boundary conditions for all boundaries
-         * at time-level \a t.
-         *
-         * @param   time        The time at which the boundary conditions
-         *                      should be evaluated
-         */
-        inline void DisContField1D::EvaluateBoundaryConditions(
-                        const NekDouble time)
-        {
-            ExpList1D::EvaluateBoundaryConditions(time,m_bndCondExpansions,
-                                                  m_bndConditions);
-        };
 
         inline const Array<OneD,const LocalRegions::PointExpSharedPtr>&
                                         DisContField1D::GetBndCondExpansions()

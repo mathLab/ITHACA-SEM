@@ -7,7 +7,7 @@
 //  The MIT License
 //
 //  Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
-//  Department of Aeronautics, Imperial College London (UK), and Scientific 
+//  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
 //  License for the specific language governing rights and limitations under
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:  
+//  Description:
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -42,10 +42,10 @@ namespace Nektar
     namespace SpatialDomains
     {
         /// Default constructor
-        
+
         QuadGeom::QuadGeom()
         {
-            m_GeomShapeType = eQuadrilateral;
+            m_geomShapeType = eQuadrilateral;
         }
 
         QuadGeom::QuadGeom(int id, const int coordim):
@@ -56,24 +56,24 @@ namespace Nektar
             LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
 
             m_xmap = Array<OneD, StdRegions::StdExpansion2DSharedPtr>(m_coordim);
-            
+
             m_fid = id;
 
             for(int i = 0; i < m_coordim; ++i)
             {
-                m_xmap[i] = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B,B);  
+                m_xmap[i] = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B,B);
             }
 
         }
 
-        QuadGeom::QuadGeom(const int id, 
-                           const VertexComponentSharedPtr verts[], 
-                           const SegGeomSharedPtr edges[], 
+        QuadGeom::QuadGeom(const int id,
+                           const VertexComponentSharedPtr verts[],
+                           const SegGeomSharedPtr edges[],
                            const StdRegions::EdgeOrientation eorient[]):
             Geometry2D(verts[0]->GetCoordim()),
             m_fid(id)
         {
-            m_GeomShapeType = eQuadrilateral;
+            m_geomShapeType = eQuadrilateral;
 
             /// Copy the vert shared pointers.
             m_verts.insert(m_verts.begin(), verts, verts+QuadGeom::kNverts);
@@ -109,23 +109,23 @@ namespace Nektar
 
             for(int i = 0; i < m_coordim; ++i)
             {
-                m_xmap[i] = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B0,B1);  
+                m_xmap[i] = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B0,B1);
             }
         }
-    
-        QuadGeom::QuadGeom(const int id, 
-                           const SegGeomSharedPtr edges[], 
+
+        QuadGeom::QuadGeom(const int id,
+                           const SegGeomSharedPtr edges[],
                            const StdRegions::EdgeOrientation eorient[]):
             Geometry2D(edges[0]->GetVertex(0)->GetCoordim()),
             m_fid(id)
         {
             int j;
-            
-            m_GeomShapeType = eQuadrilateral;
-            
+
+            m_geomShapeType = eQuadrilateral;
+
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+QuadGeom::kNedges);
-            
+
             for(j=0; j <kNedges; ++j)
             {
                 if(eorient[j] == StdRegions::eForwards)
@@ -137,7 +137,7 @@ namespace Nektar
                     m_verts.push_back(edges[j]->GetVertex(1));
                 }
             }
-            
+
             for (j=0; j<kNedges; ++j)
             {
                 m_eorient[j] = eorient[j];
@@ -165,22 +165,22 @@ namespace Nektar
 
             for(int i = 0; i < m_coordim; ++i)
             {
-                m_xmap[i] = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B0,B1);  
+                m_xmap[i] = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(B0,B1);
             }
         }
 
         QuadGeom::QuadGeom(const QuadGeom &in)
         {
             // From Geometry
-            m_GeomShapeType = in.m_GeomShapeType;
-            
+            m_geomShapeType = in.m_geomShapeType;
+
             // From QuadFaceComponent
             m_fid = in.m_fid;
-			m_ownverts = in.m_ownverts;
+			m_ownVerts = in.m_ownVerts;
 			std::list<CompToElmt>::const_iterator def;
-            for(def = in.m_elmtmap.begin(); def != in.m_elmtmap.end(); def++)
+            for(def = in.m_elmtMap.begin(); def != in.m_elmtMap.end(); def++)
             {
-                m_elmtmap.push_back(*def);
+                m_elmtMap.push_back(*def);
             }
 
 			// From QuadGeom
@@ -190,7 +190,7 @@ namespace Nektar
             {
                 m_eorient[i] = in.m_eorient[i];
             }
-            m_owndata = in.m_owndata;
+            m_ownData = in.m_ownData;
         }
 
         QuadGeom::~QuadGeom()
@@ -200,12 +200,12 @@ namespace Nektar
         void QuadGeom::AddElmtConnected(int gvo_id, int locid)
         {
             CompToElmt ee(gvo_id,locid);
-            m_elmtmap.push_back(ee);
+            m_elmtMap.push_back(ee);
         }
 
         int QuadGeom::NumElmtConnected() const
         {
-            return int(m_elmtmap.size());
+            return int(m_elmtMap.size());
         }
 
         bool QuadGeom::IsElmtConnected(int gvo_id, int locid) const
@@ -213,10 +213,10 @@ namespace Nektar
             std::list<CompToElmt>::const_iterator def;
             CompToElmt ee(gvo_id,locid);
 
-            def = find(m_elmtmap.begin(),m_elmtmap.end(),ee);
+            def = find(m_elmtMap.begin(),m_elmtMap.end(),ee);
 
             // Found the element connectivity object in the list
-            if(def != m_elmtmap.end())
+            if(def != m_elmtMap.end())
             {
                 return(true);
             }
@@ -224,7 +224,7 @@ namespace Nektar
             return(false);
         }
 
-        NekDouble QuadGeom::GetCoord(const int i, 
+        NekDouble QuadGeom::GetCoord(const int i,
                                   const Array<OneD, const NekDouble> &Lcoord)
         {
             ASSERTL1(m_state == ePtsFilled,
@@ -256,12 +256,12 @@ namespace Nektar
                 }
             }
 
-            // For linear expansions, the mapping from standard to local 
+            // For linear expansions, the mapping from standard to local
             // element is given by the relation:
-            // x_i = 0.25 * [ ( x_i^A + x_i^B + x_i^C + x_i^D)       + 
-            //                (-x_i^A + x_i^B + x_i^C - x_i^D)*xi_1  + 
-            //                (-x_i^A - x_i^B + x_i^C + x_i^D)*xi_2  + 
-            //                ( x_i^A - x_i^B + x_i^C - x_i^D)*xi_1*xi_2 ] 
+            // x_i = 0.25 * [ ( x_i^A + x_i^B + x_i^C + x_i^D)       +
+            //                (-x_i^A + x_i^B + x_i^C - x_i^D)*xi_1  +
+            //                (-x_i^A - x_i^B + x_i^C + x_i^D)*xi_2  +
+            //                ( x_i^A - x_i^B + x_i^C - x_i^D)*xi_1*xi_2 ]
             //
             // The jacobian of the transformation and the metric terms dxi_i/dx_j,
             // involve only terms of the form dx_i/dxi_j (both for coordim == 2 or 3).
@@ -282,7 +282,7 @@ namespace Nektar
             {
                 for(i = 0; i < m_coordim; i++)
                 {
-                    if( fabs( (*m_verts[0])(i) - (*m_verts[1])(i) + 
+                    if( fabs( (*m_verts[0])(i) - (*m_verts[1])(i) +
                               (*m_verts[2])(i) - (*m_verts[3])(i) ) > NekConstants::kNekZeroTol )
                     {
                         Gtype = eDeformed;
@@ -291,11 +291,11 @@ namespace Nektar
                 }
             }
 
-            m_geomfactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
+            m_geomFactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
         }
 
-        /** \brief put all quadrature information into edge structure 
-        and backward transform 
+        /** \brief put all quadrature information into edge structure
+        and backward transform
 
         Note verts and edges are listed according to anticlockwise
         convention but points in _coeffs have to be in array format from
@@ -304,7 +304,7 @@ namespace Nektar
         */
 
         void QuadGeom::FillGeom()
-        {            
+        {
             // check to see if geometry structure is already filled
             if(m_state != ePtsFilled)
             {
@@ -321,35 +321,35 @@ namespace Nektar
                                                    mapArray,signArray);
 
                     nEdgeCoeffs = (*m_edges[i])[0]->GetNcoeffs();
-                    
+
                     for(j = 0 ; j < m_coordim; j++)
                     {
                         for(k = 0; k < nEdgeCoeffs; k++)
                         {
-                            (m_xmap[j]->UpdateCoeffs())[mapArray[k]] 
+                            (m_xmap[j]->UpdateCoeffs())[mapArray[k]]
                                 = signArray[k]*((*m_edges[i])[j]->GetCoeffs())[k];
                         }
                     }
                 }
-                
+
                 for(i = 0; i < m_coordim; ++i)
                 {
                     m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(),
                                         m_xmap[i]->UpdatePhys());
                 }
-                
+
                 m_state = ePtsFilled;
             }
         }
-        
+
         void QuadGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords,
                                     Array<OneD,NekDouble> &Lcoords)
         {
             int i;
-            
+
             FillGeom();
 
-            // calculate local coordinate for coord 
+            // calculate local coordinate for coord
             if(GetGtype() == eRegular)
             { // can assume it is right angled rectangle
                 NekDouble len0 = 0.0 ;
@@ -369,12 +369,12 @@ namespace Nektar
                     pts = m_xmap[i]->GetPhys();
 
                     // use projection to side 1 to determine xi_1 coordinate based on length
-                    len0 += (pts[nq0-1]-pts[0])*(pts[nq0-1]-pts[0]);    
+                    len0 += (pts[nq0-1]-pts[0])*(pts[nq0-1]-pts[0]);
                     xi0  += (coords[i] -pts[0])*(pts[nq0-1]-pts[0]);
 
                     // use projection to side 4 to determine xi_2 coordinate based on length
-                    len1 += (pts[nq0*(nq1-1)]-pts[0])*(pts[nq0*(nq1-1)]-pts[0]); 
-                    xi1  += (coords[i] -pts[0])*(pts[nq0*(nq1-1)]-pts[0]);    
+                    len1 += (pts[nq0*(nq1-1)]-pts[0])*(pts[nq0*(nq1-1)]-pts[0]);
+                    xi1  += (coords[i] -pts[0])*(pts[nq0*(nq1-1)]-pts[0]);
                 }
 
                 Lcoords[0] =  2*xi0/len0-1.0;
@@ -394,15 +394,15 @@ namespace Nektar
        {
             StdRegions::FaceOrientation returnval = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
 
-             // TODO : implement 
-//             eDir1FwdDir1_Dir2BwdDir2 
-//             eDir1BwdDir1_Dir2FwdDir2 
-//             eDir1BwdDir1_Dir2BwdDir2 
-//             eDir1FwdDir2_Dir2FwdDir1 
-//             eDir1FwdDir2_Dir2BwdDir1 
-//             eDir1BwdDir2_Dir2FwdDir1 
-//             eDir1BwdDir2_Dir2BwdDir1 
-   
+             // TODO : implement
+//             eDir1FwdDir1_Dir2BwdDir2
+//             eDir1BwdDir1_Dir2FwdDir2
+//             eDir1BwdDir1_Dir2BwdDir2
+//             eDir1FwdDir2_Dir2FwdDir1
+//             eDir1FwdDir2_Dir2BwdDir1
+//             eDir1BwdDir2_Dir2FwdDir1
+//             eDir1BwdDir2_Dir2BwdDir1
+
             return returnval;
         }
 
@@ -411,7 +411,7 @@ namespace Nektar
         {
             ASSERTL1(gloCoord.num_elements() >= 2,
                  "Two dimensional geometry expects at least two coordinates.");
-                 
+
             Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);
             GetLocCoords(gloCoord, stdCoord);
             if (stdCoord[0] >= -1 && stdCoord[1] >= -1

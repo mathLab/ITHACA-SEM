@@ -94,31 +94,6 @@ namespace Nektar
             ~ExpList2D();
 
         protected:
-            /// Populates the list of boundary condition expansions.
-            void SetBoundaryConditionExpansion(
-                        SpatialDomains::MeshGraph2D &graph2D,
-                        SpatialDomains::BoundaryConditions &bcs,
-                        const std::string variable,
-                        Array<OneD, ExpList1DSharedPtr> &bndCondExpansions,
-                        Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                                                                &bndConditions);
-
-            /// Evaluates boundary conditions.
-            void EvaluateBoundaryConditions(
-                        const NekDouble time,
-                        Array<OneD, ExpList1DSharedPtr> &bndCondExpansions,
-                        Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                        &bndConditions,
-                        const NekDouble x2_in = NekConstants::kNekUnsetDouble);
-
-            /// Generates a map of periodic edges in the mesh.
-            void GetPeriodicEdges(
-                        SpatialDomains::MeshGraph2D &graph2D,
-                        SpatialDomains::BoundaryConditions &bcs,
-                        const std::string variable,
-                        vector<map<int,int> > & periodicVertices,
-                        map<int,int>& periodicEdges);
-
             /// Set up the normals on each expansion.
             void SetUpPhysNormals(
                         const StdRegions::StdExpansionVector &locexp);

@@ -62,15 +62,15 @@ namespace Nektar
             /// Copy constructor.
             ExpList3D(const ExpList3D &In);
 
-          ExpList3D(const LibUtilities::BasisKey &TBa,
-                  const LibUtilities::BasisKey &TBb,
-                  const LibUtilities::BasisKey &TBc,
-                  const LibUtilities::BasisKey &HBa,
-                  const LibUtilities::BasisKey &HBb,
-                  const LibUtilities::BasisKey &HBc,
-                  const SpatialDomains::MeshGraph3D &graph3D,
-                  const LibUtilities::PointsType
-                  TetNb = LibUtilities::SIZE_PointsType);
+            ExpList3D(  const LibUtilities::BasisKey &TBa,
+                        const LibUtilities::BasisKey &TBb,
+                        const LibUtilities::BasisKey &TBc,
+                        const LibUtilities::BasisKey &HBa,
+                        const LibUtilities::BasisKey &HBb,
+                        const LibUtilities::BasisKey &HBc,
+                        const SpatialDomains::MeshGraph3D &graph3D,
+                        const LibUtilities::PointsType TetNb
+                                            = LibUtilities::SIZE_PointsType);
 
             /// Sets up a list of local expansions based on an input mesh.
             ExpList3D(SpatialDomains::MeshGraph3D &graph3D);
@@ -80,29 +80,6 @@ namespace Nektar
             ~ExpList3D();
 
         protected:
-            /// Evaluates boundary conditions.
-            void EvaluateBoundaryConditions(
-                                            const NekDouble time,
-                                            Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
-                                            Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                                            &bndConditions);
-
-            /// Populates the list of boundary condition expansions.
-            void SetBoundaryConditionExpansion(
-                                               SpatialDomains::MeshGraph3D &graph3D,
-                                               SpatialDomains::BoundaryConditions &bcs,
-                                               const std::string variable,
-                                               Array<OneD, ExpList2DSharedPtr> &bndCondExpansions,
-                                               Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                                               &bndConditions);
-
-            /// Generates a map of periodic faces in the mesh.
-            void GetPeriodicFaces(SpatialDomains::MeshGraph3D &graph3D,
-                                  SpatialDomains::BoundaryConditions &bcs,
-                                  const std::string variable,
-                                  map<int,int>& periodicVertices,
-                                  map<int,int>& periodicEdges,
-                                  map<int,int>& periodicFaces);
 
         private:
             /// Definition of the total number of degrees of freedom and

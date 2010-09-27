@@ -114,12 +114,12 @@ namespace Nektar
                 SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
 
                 if(TriangleGeom = boost::dynamic_pointer_cast<SpatialDomains
-                                        ::TriGeom>(expansions[i]->m_GeomShPtr))
+                                        ::TriGeom>(expansions[i]->m_geomShPtr))
                 {
                     LibUtilities::BasisKey TriBa
-                                        = expansions[i]->m_BasisKeyVector[0];
+                                        = expansions[i]->m_basisKeyVector[0];
                     LibUtilities::BasisKey TriBb
-                                        = expansions[i]->m_BasisKeyVector[1];
+                                        = expansions[i]->m_basisKeyVector[1];
 
                     // This is not elegantly implemented needs re-thinking.
                     if(TriBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
@@ -149,12 +149,12 @@ namespace Nektar
                     m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
                 }
                 else if(QuadrilateralGeom = boost::dynamic_pointer_cast<
-                        SpatialDomains::QuadGeom>(expansions[i]->m_GeomShPtr))
+                        SpatialDomains::QuadGeom>(expansions[i]->m_geomShPtr))
                 {
                     LibUtilities::BasisKey QuadBa
-                                        = expansions[i]->m_BasisKeyVector[0];
+                                        = expansions[i]->m_basisKeyVector[0];
                     LibUtilities::BasisKey QuadBb
-                                        = expansions[i]->m_BasisKeyVector[1];
+                                        = expansions[i]->m_basisKeyVector[1];
 
                     quad = MemoryManager<LocalRegions::QuadExp>
                         ::AllocateSharedPtr(QuadBa,QuadBb,
@@ -242,7 +242,7 @@ namespace Nektar
                   SpatialDomains::TriGeomSharedPtr TriangleGeom;
                   SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
 
-                  if(TriangleGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(expansions[i]->m_GeomShPtr))
+                  if(TriangleGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(expansions[i]->m_geomShPtr))
                   {
                       if(TriNb < LibUtilities::SIZE_PointsType)
                       {
@@ -261,7 +261,7 @@ namespace Nektar
                           + TriBa.GetNumModes()*(TriBb.GetNumModes()-TriBa.GetNumModes());
                       m_npoints += TriBa.GetNumPoints()*TriBb.GetNumPoints();
                   }
-                  else if(QuadrilateralGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(expansions[i]->m_GeomShPtr))
+                  else if(QuadrilateralGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(expansions[i]->m_geomShPtr))
                   {
                       quad = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(QuadBa,QuadBb,QuadrilateralGeom);
                       quad->SetElmtId(elmtid++);
@@ -335,7 +335,7 @@ namespace Nektar
                          LibUtilities::BasisKey TriBb
                                      = graph3D.GetFaceBasisKey(TriangleGeom,1);
 
-                         if((graph3D.GetExpansions())[0]->m_BasisKeyVector[0]
+                         if((graph3D.GetExpansions())[0]->m_basisKeyVector[0]
                                  .GetBasisType() == LibUtilities::eGLL_Lagrange)
                          {
                              ASSERTL0(false,"This method needs sorting");
@@ -448,335 +448,6 @@ namespace Nektar
             }
         }
 
-        /**
-         * @param   graph2D     A mesh containing information about the domain
-         *                      and the spectral/hp element expansions.
-         * @param   bcs         Information about the boundary conditions.
-         * @param   variable    Specifies the field.
-         * @param   bndCondExpansions   Array of ExpList1D objects each
-         *                      containing a 1D spectral/hp element expansion
-         *                      on a single boundary region.
-         * @param   bncCondition    Array of BoundaryCondition objects which
-         *                      contain information about the boundary
-         *                      conditions on the different boundary regions.
-         */
-        void ExpList2D::SetBoundaryConditionExpansion(
-                        SpatialDomains::MeshGraph2D &graph2D,
-                        SpatialDomains::BoundaryConditions &bcs,
-                        const std::string variable,
-                        Array<OneD, ExpList1DSharedPtr> &bndCondExpansions,
-                        Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                                                                &bndConditions)
-        {
-            int i;
-            int cnt  = 0;
-
-            SpatialDomains::BoundaryRegionCollection &bregions
-                                        = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions
-                                        = bcs.GetBoundaryConditions();
-
-            MultiRegions::ExpList1DSharedPtr       locExpList;
-            SpatialDomains::BoundaryConditionShPtr locBCond;
-
-            int nbnd = bregions.size();
-
-            cnt=0;
-            // list Dirichlet boundaries first
-            for(i = 0; i < nbnd; ++i)
-            {
-                locBCond = (*(bconditions[i]))[variable];
-                if(locBCond->GetBoundaryConditionType()
-                                        == SpatialDomains::eDirichlet)
-                {
-                    locExpList = MemoryManager<MultiRegions::ExpList1D>
-                                        ::AllocateSharedPtr(*(bregions[i]),
-                                                            graph2D);
-                    bndCondExpansions[cnt]  = locExpList;
-                    bndConditions[cnt++]    = locBCond;
-                } // end if Dirichlet
-            }
-            // then, list the other (non-periodic) boundaries
-            for(i = 0; i < nbnd; ++i)
-            {
-                locBCond = (*(bconditions[i]))[variable];
-                switch(locBCond->GetBoundaryConditionType())
-                {
-                case SpatialDomains::eNeumann:
-                case SpatialDomains::eRobin:
-                    {
-                        locExpList = MemoryManager<MultiRegions::ExpList1D>
-                            ::AllocateSharedPtr(*(bregions[i]),
-                                                graph2D);
-                        bndCondExpansions[cnt]  = locExpList;
-                        bndConditions[cnt++]    = locBCond;
-                    }
-                    break;
-                case SpatialDomains::eDirichlet: // do nothing for these types
-                case SpatialDomains::ePeriodic:
-                    break;
-                default:
-                    ASSERTL0(false,"This type of BC not implemented yet");
-                    break;
-                }
-            }
-        }
-
-
-        /**
-         * Evaluates the boundary condition expansions, \a bndCondExpansions,
-         * given the information provided by \a bndConditions.
-         * @param   time        The time at which the boundary conditions
-         *                      should be evaluated.
-         * @param   bndCondExpansions   List of boundary conditions.
-         * @param   bndConditions   Information about the boundary conditions.
-         */
-        void ExpList2D::EvaluateBoundaryConditions(
-                        const NekDouble time,
-                        Array<OneD, ExpList1DSharedPtr> &bndCondExpansions,
-                        Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                        &bndConditions,
-                        NekDouble x2_in)
-        {
-            int i,j;
-            int npoints;
-            int nbnd = bndCondExpansions.num_elements();
-
-            MultiRegions::ExpList1DSharedPtr locExpList;
-
-            for(i = 0; i < nbnd; ++i)
-            {
-                if(time == 0.0 || bndConditions[i]->GetUserDefined().GetEquation()=="TimeDependent")
-                {
-                    locExpList = bndCondExpansions[i];
-                    npoints = locExpList->GetNpoints();
-                    Array<OneD,NekDouble> x0(npoints,0.0);
-                    Array<OneD,NekDouble> x1(npoints,0.0);
-                    Array<OneD,NekDouble> x2(npoints,0.0);
-
-                    if(x2_in == NekConstants::kNekUnsetDouble) //homogeneous input case for x2
-                    {
-                        locExpList->GetCoords(x0,x1,x2);
-                    }
-                    else
-                    {
-                        locExpList->GetCoords(x0,x1,x2);
-                        Vmath::Fill(npoints,x2_in,x2,1);
-                    }
-
-                    if(bndConditions[i]->GetBoundaryConditionType()
-                       == SpatialDomains::eDirichlet)
-                    {
-                        for(j = 0; j < npoints; j++)
-                        {
-                            (locExpList->UpdatePhys())[j]
-                                = (boost::static_pointer_cast<
-                                   SpatialDomains::DirichletBoundaryCondition
-                                   >(bndConditions[i])->m_DirichletCondition
-                                   ).Evaluate(x0[j],x1[j],x2[j],time);
-                        }
-
-                        locExpList->FwdTrans_BndConstrained(locExpList->GetPhys(),
-                                        locExpList->UpdateCoeffs());
-                    }
-                    else if(bndConditions[i]->GetBoundaryConditionType()
-                            == SpatialDomains::eNeumann)
-                    {
-                        for(j = 0; j < npoints; j++)
-                        {
-                            (locExpList->UpdatePhys())[j]
-                                = (boost::static_pointer_cast<
-                                   SpatialDomains::NeumannBoundaryCondition
-                                   >(bndConditions[i])->m_NeumannCondition
-                                   ).Evaluate(x0[j],x1[j],x2[j],time);
-                        }
-
-                        locExpList->IProductWRTBase(locExpList->GetPhys(),
-                                                    locExpList->UpdateCoeffs());
-                    }
-                    else if(bndConditions[i]->GetBoundaryConditionType()
-                            == SpatialDomains::eRobin)
-                    {
-                        for(j = 0; j < npoints; j++)
-                        {
-                            (locExpList->UpdatePhys())[j]
-                                = (boost::static_pointer_cast<
-                                   SpatialDomains::RobinBoundaryCondition
-                                   >(bndConditions[i])->m_RobinFunction).Evaluate(x0[j],x1[j],x2[j],time);
-                        }
-
-                        locExpList->IProductWRTBase(locExpList->GetPhys(),
-                                                    locExpList->UpdateCoeffs());
-
-                        // put primitive coefficient into the physical space storage
-                        for(j = 0; j < npoints; j++)
-                        {
-                            (locExpList->UpdatePhys())[j]
-                                = (boost::static_pointer_cast<
-                                   SpatialDomains::RobinBoundaryCondition
-                                   >(bndConditions[i])->m_RobinPrimitiveCoeff).Evaluate(x0[j],x1[j],x2[j],time);
-                        }
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"This type of BC not implemented yet");
-                    }
-                }
-            }
-        }
-
-
-        /**
-         * @param   graph2D     A mesh containing information about the domain
-         *                      and the spectral/hp element expansion.
-         * @param   bcs         Information about the boundary conditions.
-         * @param   variable    Specifies the field.
-         * @param   periodicVerts   Vector of Maps into which the list of
-         *                      periodic vertices is placed, one map for each
-         *                      boundary region.
-         * @param   periodicEdges   Map into which the list of periodic
-         *                      edges is placed.
-         */
-        void ExpList2D::GetPeriodicEdges(
-                        SpatialDomains::MeshGraph2D &graph2D,
-                        SpatialDomains::BoundaryConditions &bcs,
-                        const std::string variable,
-                        vector<map<int,int> >& periodicVerts,
-                        map<int,int>& periodicEdges)
-        {
-            int i,j,k;
-
-            SpatialDomains::BoundaryRegionCollection &bregions
-                                        = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions
-                                        = bcs.GetBoundaryConditions();
-
-            int region1ID;
-            int region2ID;
-
-            SpatialDomains::Composite comp1;
-            SpatialDomains::Composite comp2;
-
-            SpatialDomains::SegGeomSharedPtr segmentGeom1;
-            SpatialDomains::SegGeomSharedPtr segmentGeom2;
-
-            SpatialDomains::ElementEdgeVectorSharedPtr element1;
-            SpatialDomains::ElementEdgeVectorSharedPtr element2;
-
-            StdRegions::EdgeOrientation orient1;
-            StdRegions::EdgeOrientation orient2;
-
-            SpatialDomains::BoundaryConditionShPtr locBCond;
-
-
-
-            // This std::map is a check so that the periodic pairs
-            // are not treated twice
-            map<int, int> doneBndRegions;
-
-            int nbnd = bregions.size();
-
-            for(i = 0; i < nbnd; ++i)
-            {
-                locBCond = (*(bconditions[i]))[variable];
-                if(locBCond->GetBoundaryConditionType()
-                                        == SpatialDomains::ePeriodic)
-                {
-                    region1ID = i;
-                    region2ID = (boost::static_pointer_cast<
-                                    SpatialDomains::PeriodicBoundaryCondition
-                                    >(locBCond))->m_ConnectedBoundaryRegion;
-
-                    if(doneBndRegions.count(region1ID)==0)
-                    {
-                        ASSERTL0(bregions[region1ID]->size()
-                                        == bregions[region2ID]->size(),
-                                 "Size of the 2 periodic boundary regions "
-                                 "should be equal");
-
-
-                        map<int,int> periodicVertices;
-
-                        for(j = 0; j < bregions[region1ID]->size(); j++)
-                        {
-                            comp1 = (*(bregions[region1ID]))[j];
-                            comp2 = (*(bregions[region2ID]))[j];
-
-                            ASSERTL0(comp1->size() == comp2->size(),
-                                     "Size of the 2 periodic composites should "
-                                     "be equal");
-
-                            for(k = 0; k < comp1->size(); k++)
-                            {
-                                if(!(segmentGeom1
-                                        = boost::dynamic_pointer_cast<
-                                          SpatialDomains::SegGeom>((*comp1)[k]))
-                                    || !(segmentGeom2
-                                        = boost::dynamic_pointer_cast<
-                                          SpatialDomains::SegGeom>((*comp2)[k]))
-                                    )
-                                {
-                                    ASSERTL0(false,"dynamic cast to a SegGeom "
-                                                   "failed");
-                                }
-
-                                // Extract the periodic edges
-                                periodicEdges[segmentGeom1->GetEid()]
-                                        = segmentGeom2->GetEid();
-                                periodicEdges[segmentGeom2->GetEid()]
-                                        = segmentGeom1->GetEid();
-
-                                // Extract the periodic vertices
-                                element1 = graph2D
-                                            .GetElementsFromEdge(segmentGeom1);
-                                element2 = graph2D
-                                            .GetElementsFromEdge(segmentGeom2);
-
-                                ASSERTL0(element1->size()==1,
-                                         "The periodic boundaries belong to "
-                                         "more than one element of the mesh");
-                                ASSERTL0(element2->size()==1,
-                                         "The periodic boundaries belong to "
-                                         "more than one element of the mesh");
-
-                                orient1 = (boost::dynamic_pointer_cast<
-                                            SpatialDomains::Geometry2D>(
-                                                (*element1)[0]->m_Element)
-                                          )->GetEorient((*element1)[0]
-                                                        ->m_EdgeIndx);
-                                orient2 = (boost::dynamic_pointer_cast<
-                                            SpatialDomains::Geometry2D>(
-                                                (*element2)[0]->m_Element)
-                                          )->GetEorient((*element2)[0]
-                                                        ->m_EdgeIndx);
-
-                                if(orient1!=orient2)
-                                {
-                                    periodicVertices[segmentGeom1->GetVid(0)]
-                                        = segmentGeom2->GetVid(0);
-                                    periodicVertices[segmentGeom1->GetVid(1)]
-                                        = segmentGeom2->GetVid(1);
-                                }
-                                else
-                                {
-                                    periodicVertices[segmentGeom1->GetVid(0)]
-                                        = segmentGeom2->GetVid(1);
-                                    periodicVertices[segmentGeom1->GetVid(1)]
-                                        = segmentGeom2->GetVid(0);
-                                }
-                            }
-                        }
-                        periodicVerts.push_back(periodicVertices);
-                    }
-                    else
-                    {
-                        ASSERTL0(doneBndRegions[region1ID]==region2ID,
-                                 "Boundary regions are not mutually periodic");
-                    }
-                    doneBndRegions[region2ID] = region1ID;
-                }
-            }
-        }
 
         /**
          * Sets up the normals on all edges of expansions in the domain.

@@ -1,13 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/Domain.cpp,v $
+//  File: Domain.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
 //  The MIT License
 //
 //  Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
-//  Department of Aeronautics, Imperial College London (UK), and Scientific 
+//  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
 //  License for the specific language governing rights and limitations under
@@ -29,10 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:  
-//
+//  Description:
 //
 ////////////////////////////////////////////////////////////////////////////////
+#include <string>
+#include <sstream>
+
 #include "pchSpatialDomains.h"
 
 #include <SpatialDomains/Domain.h>
@@ -43,15 +45,13 @@
 #endif
 
 #include <tinyxml/tinyxml.h>
-#include <string>
-#include <strstream>
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
         Domain::Domain(MeshGraph *meshGraph):
-            m_MeshGraph(meshGraph)
+            m_meshGraph(meshGraph)
         {
         }
 
@@ -135,12 +135,12 @@ namespace Nektar
 
                         for (int i=indx1; i<=indx2; ++i)
                         {
-                            Composite composite = m_MeshGraph->GetComposite(i);
-                            m_Domain.push_back(composite);
+                            Composite composite = m_meshGraph->GetComposite(i);
+                            m_domain.push_back(composite);
                         }
                     }
                 }
-            } 
+            }
 
             boundary = master->FirstChildElement("BOUNDARY");
             ASSERTL0(boundary, "Unable to find BOUNDARY tag in file.");
@@ -168,7 +168,7 @@ namespace Nektar
 
                 BoundarySharedPtr boundary(new BoundaryEntry);
                 boundary->m_BoundaryType = BoundaryType(indx - BoundaryTypeNameMap);
-                m_Boundaries.push_back(boundary);
+                m_boundaries.push_back(boundary);
 
                 // May have multiple composites defined.
                 if(boundaryStrm)
@@ -216,13 +216,13 @@ namespace Nektar
 
                             for (int i=indx1; i<=indx2; ++i)
                             {
-                                Composite composite = m_MeshGraph->GetComposite(i);
+                                Composite composite = m_meshGraph->GetComposite(i);
                                 boundary->m_BoundaryComposites.push_back(composite);
                             }
                         }
                     }
                 }
-                
+
                 bc = bc->NextSiblingElement();
             }
         }

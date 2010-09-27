@@ -150,11 +150,11 @@ namespace Nektar
 
             /// Set tangent orientation
             inline void SetTangentOrientation(std::string conn);
-            
+
             /// Set tangent circular orientation centre.
             inline void SetTangentCircularCentre(
                             Array<OneD,NekDouble> &centre);
-                            
+
             /// Returns the normal vectors evaluated at each quadrature point.
             inline const Array<OneD, const Array<OneD, NekDouble> >
                                                             &GetNormal() const;
@@ -184,22 +184,22 @@ namespace Nektar
 
         protected:
             /// Type of geometry (e.g. eRegular, eDeformed, eMovingRegular).
-            GeomType mType;
+            GeomType m_type;
             /// Dimension of expansion.
-            int mExpDim;
+            int m_expDim;
             /// Dimension of coordinate system.
-            int mCoordDim;
+            int m_coordDim;
             /// Stores information about the expansion.
-            Array<OneD, StdRegions::StdExpansionSharedPtr> mCoords;
+            Array<OneD, StdRegions::StdExpansionSharedPtr> m_coords;
             /// Use Quadrature metrics
-            bool mIsUsingQuadMetrics;
+            bool m_isUsingQuadMetrics;
             /// Use Laplacian metrics
-            bool mIsUsingLaplMetrics;
+            bool m_isUsingLaplMetrics;
             /// Principle tangent direction.
-            enum GeomTangents mTangentDir;
+            enum GeomTangents m_tangentDir;
             /// Principle tangent circular dir coords
-            Array<OneD,NekDouble> mTangentDirCentre;
-            
+            Array<OneD,NekDouble> m_tangentDirCentre;
+
             /// Jacobian. If geometry is regular, or moving regular, this is
             /// just an array of one element - the value of the Jacobian across
             /// the whole element. If deformed, the array has the size of the
@@ -223,20 +223,20 @@ namespace Nektar
 
             /// Array of size coordim which stores a key describing the
             /// location of the quadrature points in each dimension.
-            Array<OneD,LibUtilities::PointsKey> mPointsKey;
+            Array<OneD,LibUtilities::PointsKey> m_pointsKey;
 
-            /// Array of derivatives of size (mExpDim)x(mCoordim)x(nq)
-            Array<OneD,Array<OneD,Array<OneD,NekDouble> > > mDeriv;
+            /// Array of derivatives of size (m_expDim)x(mCoordim)x(nq)
+            Array<OneD,Array<OneD,Array<OneD,NekDouble> > > m_deriv;
 
-            /// Array of size (mCoordDim-1)x(mCoordDim x nq).
-            Array<OneD, Array<OneD, Array<OneD,NekDouble> > > mTangents;
+            /// Array of size (m_coordDim-1)x(m_coordDim x nq).
+            Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tangents;
 
             /// Array of size (coordim)x(nquad) which holds the components of
             /// the normal vector at each quadrature point. The array is
-            /// populated as \a mCoordDim consecutive blocks of size equal to
+            /// populated as \a m_coordDim consecutive blocks of size equal to
             /// the number of quadrature points. Each block holds a component
             /// of the normal vectors.
-            Array<OneD, Array<OneD,NekDouble> > mNormal;
+            Array<OneD, Array<OneD,NekDouble> > m_normal;
 
             /// Instance for a specific expansion/coordinate dimension without
             /// the generation of any factors. This constructor is protected
@@ -287,7 +287,7 @@ namespace Nektar
         /// Return the type of geometry.
         inline GeomType GeomFactors::GetGtype()
         {
-            return mType;
+            return m_type;
         }
 
         /// Return the Jacobian
@@ -305,19 +305,19 @@ namespace Nektar
         /// Return the number of dimensions of the coordinate system.
         inline int GeomFactors::GetCoordim() const
         {
-            return mCoordDim;
+            return m_coordDim;
         }
 
         /// Flag indicating if quadrature metrics are in use.
         inline bool GeomFactors::IsUsingQuadMetrics() const
         {
-            return mIsUsingQuadMetrics;
+            return m_isUsingQuadMetrics;
         }
 
         /// Flag indicating if Laplacian metrics are in use.
         inline bool GeomFactors::IsUsingLaplMetrics() const
         {
-            return mIsUsingLaplMetrics;
+            return m_isUsingLaplMetrics;
         }
 
         /// Set up quadrature metrics
@@ -342,7 +342,7 @@ namespace Nektar
         inline const Array<OneD, const NekDouble>
                                     &GeomFactors::GetQuadratureMetrics() const
         {
-            ASSERTL0(mIsUsingQuadMetrics,
+            ASSERTL0(m_isUsingQuadMetrics,
                      "This metric has not been set up for this type of "
                      "expansion");
             return m_weightedjac;
@@ -352,7 +352,7 @@ namespace Nektar
         inline const Array<TwoD, const NekDouble>
                                     &GeomFactors::GetLaplacianMetrics() const
         {
-            ASSERTL0(mIsUsingLaplMetrics,
+            ASSERTL0(m_isUsingLaplMetrics,
                      "This metric has not been set up for this type of "
                      "expansion");
             return m_laplacianmetrics;
@@ -361,7 +361,7 @@ namespace Nektar
         /// Indicates if the Laplacian metric with index \a indx is zero.
         inline bool GeomFactors::LaplacianMetricIsZero(const int indx) const
         {
-            ASSERTL0(mIsUsingLaplMetrics,
+            ASSERTL0(m_isUsingLaplMetrics,
                      "This metric has not been set up for this type of "
                      "expansion");
             return m_laplacianMetricIsZero[indx];
@@ -388,11 +388,11 @@ namespace Nektar
         /// Set tangent orientation
         inline void GeomFactors::SetTangentOrientation(std::string conn)
         {
-            if (conn == "TangentX")         mTangentDir = eTangentX;
-            if (conn == "TangentY")         mTangentDir = eTangentY;
-            if (conn == "TangentZ")         mTangentDir = eTangentZ;
-            if (conn == "TangentCircular")  mTangentDir = eTangentCircular;
-            if (conn == "LOCAL")            mTangentDir = eLOCAL;
+            if (conn == "TangentX")         m_tangentDir = eTangentX;
+            if (conn == "TangentY")         m_tangentDir = eTangentY;
+            if (conn == "TangentZ")         m_tangentDir = eTangentZ;
+            if (conn == "TangentCircular")  m_tangentDir = eTangentCircular;
+            if (conn == "LOCAL")            m_tangentDir = eLOCAL;
         }
 
         /**
@@ -402,26 +402,26 @@ namespace Nektar
         inline void GeomFactors::SetTangentCircularCentre(
                     Array<OneD,NekDouble> &centre)
         {
-            mTangentDirCentre = centre;
+            m_tangentDirCentre = centre;
         }
-        
+
         /// Returns the normal vectors evaluated at each quadrature point.
         inline const Array<OneD, const Array<OneD, NekDouble> >
                                                 &GeomFactors::GetNormal() const
         {
-            return mNormal;
+            return m_normal;
         }
 
         /// Returns a single tangent vector.
         inline const Array<OneD, const Array<OneD, NekDouble> >
                                                 &GeomFactors::GetTangent(int i)
         {
-            ASSERTL0(i < mExpDim,
+            ASSERTL0(i < m_expDim,
                      "Index must be less than expansion dimension.");
-            if (mTangents.num_elements() == 0) {
+            if (m_tangents.num_elements() == 0) {
                 v_ComputeTangents();
             }
-            return mTangents[i];
+            return m_tangents[i];
         }
 
         /// Set the G-matrix data.
@@ -430,7 +430,7 @@ namespace Nektar
                         const int nq, const int expdim,
                         const int coordim)
         {
-            m_gmat = Array<TwoD,NekDouble>(mExpDim * mCoordDim, nq,
+            m_gmat = Array<TwoD,NekDouble>(m_expDim * m_coordDim, nq,
                                            ndata.data());
         }
 

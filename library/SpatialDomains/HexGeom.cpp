@@ -7,7 +7,7 @@
 //  The MIT License
 //
 //  Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
-//  Department of Aeronautics, Imperial College London (UK), and Scientific 
+//  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
 //  License for the specific language governing rights and limitations under
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:  
+//  Description:
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,18 +41,18 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-       
+
         HexGeom::HexGeom()
         {
-            m_GeomShapeType = eHexahedron;
+            m_geomShapeType = eHexahedron;
         }
 
-        
+
         HexGeom::HexGeom(const QuadGeomSharedPtr faces[]):
             Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
         {
-            m_GeomShapeType = eHexahedron;
-            
+            m_geomShapeType = eHexahedron;
+
             /// Copy the face shared pointers
             m_faces.insert(m_faces.begin(), faces, faces+HexGeom::kNfaces);
 
@@ -63,20 +63,20 @@ namespace Nektar
 
             const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
                                            LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
-            
+
             m_xmap = Array<OneD, StdRegions::StdExpansion3DSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
             {
-                m_xmap[i] = MemoryManager<StdRegions::StdHexExp>::AllocateSharedPtr(B,B,B);  
+                m_xmap[i] = MemoryManager<StdRegions::StdHexExp>::AllocateSharedPtr(B,B,B);
             }
         }
 
         HexGeom::HexGeom(const QuadGeomSharedPtr faces[], const Array<OneD, StdRegions::StdExpansion3DSharedPtr> & xMap) :
             Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
         {
-            m_GeomShapeType = eHexahedron;
-            
+            m_geomShapeType = eHexahedron;
+
             /// Copy the face shared pointers
             m_faces.insert(m_faces.begin(), faces, faces + HexGeom::kNfaces);
 
@@ -85,14 +85,14 @@ namespace Nektar
             SetUpEdgeOrientation();
             SetUpFaceOrientation();
 
-            
+
             ASSERTL2(xMap.num_elements() == 3,"m_xmap needs an array of size matching m_coordim.");
-            
+
             m_xmap = Array<OneD, StdRegions::StdExpansion3DSharedPtr>(m_coordim);
-            
+
             for(int i = 0; i < xMap.num_elements(); ++i)
             {
-                m_xmap[i] = xMap[i];  
+                m_xmap[i] = xMap[i];
             }
         }
 
@@ -126,7 +126,7 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 if( check < 1 )
                 {
                     std::ostringstream errstrm;
@@ -140,9 +140,9 @@ namespace Nektar
                     errstrm << "Connected faces share more than one egde. Faces ";
                     errstrm << (m_faces[0])->GetFid() << ", " << (m_faces[f])->GetFid();
                     ASSERTL0(false, errstrm.str());
-                }                
-            }           
-            
+                }
+            }
+
             // Then, set up the 4 vertical edges
             check = 0;
             for(i = 0; i < 4; i++)
@@ -186,7 +186,7 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 if( check < 1 )
                 {
                     std::ostringstream errstrm;
@@ -200,9 +200,9 @@ namespace Nektar
                     errstrm << "Connected faces share more than one egde. Faces ";
                     errstrm << (m_faces[f])->GetFid() << ", " << (m_faces[f+1])->GetFid();
                     ASSERTL0(false, errstrm.str());
-                }                
+                }
             }
-            
+
             // Finally, set up the 4 top vertices
             for(f = 1; f < 5 ; f++)
             {
@@ -219,7 +219,7 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 if( check < 1 )
                 {
                     std::ostringstream errstrm;
@@ -238,15 +238,15 @@ namespace Nektar
         }
 
         void HexGeom::SetUpLocalVertices()
-        {            
+        {
             // Set up the first 2 vertices (i.e. vertex 0,1)
-            if( ( m_edges[0]->GetVid(0) == m_edges[1]->GetVid(0) ) || 
+            if( ( m_edges[0]->GetVid(0) == m_edges[1]->GetVid(0) ) ||
                 ( m_edges[0]->GetVid(0) == m_edges[1]->GetVid(1) ) )
             {
                 m_verts.push_back(m_edges[0]->GetVertex(1));
                 m_verts.push_back(m_edges[0]->GetVertex(0));
             }
-            else if( ( m_edges[0]->GetVid(1) == m_edges[1]->GetVid(0) ) || 
+            else if( ( m_edges[0]->GetVid(1) == m_edges[1]->GetVid(0) ) ||
                      ( m_edges[0]->GetVid(1) == m_edges[1]->GetVid(1) ) )
             {
                 m_verts.push_back(m_edges[0]->GetVertex(0));
@@ -281,15 +281,15 @@ namespace Nektar
                 }
             }
 
-            // set up top vertices  
+            // set up top vertices
             // First, set up vertices 4,5
-            if( ( m_edges[8]->GetVid(0) == m_edges[9]->GetVid(0) ) || 
+            if( ( m_edges[8]->GetVid(0) == m_edges[9]->GetVid(0) ) ||
                 ( m_edges[8]->GetVid(0) == m_edges[9]->GetVid(1) ) )
             {
                 m_verts.push_back(m_edges[8]->GetVertex(1));
                 m_verts.push_back(m_edges[8]->GetVertex(0));
             }
-            else if( ( m_edges[8]->GetVid(1) == m_edges[9]->GetVid(0) ) || 
+            else if( ( m_edges[8]->GetVid(1) == m_edges[9]->GetVid(0) ) ||
                      ( m_edges[8]->GetVid(1) == m_edges[9]->GetVid(1) ) )
             {
                 m_verts.push_back(m_edges[8]->GetVertex(0));
@@ -330,10 +330,10 @@ namespace Nektar
 
             // These arrays represent the vector of the A and B
             // coordinate of the local elemental coordinate system
-            // where A corresponds with the coordinate direction xi_i 
+            // where A corresponds with the coordinate direction xi_i
             // with the lowest index i (for that particular face)
             // Coordinate 'B' then corresponds to the other local
-            // coordinate (i.e. with the highest index) 
+            // coordinate (i.e. with the highest index)
             Array<OneD,NekDouble> elementAaxis(m_coordim);
             Array<OneD,NekDouble> elementBaxis(m_coordim);
 
@@ -345,7 +345,7 @@ namespace Nektar
             Array<OneD,NekDouble> faceBaxis(m_coordim);
 
             // This is the base vertex of the face (i.e. the Geometry2D)
-            // This corresponds to thevertex with local ID 0 of the 
+            // This corresponds to thevertex with local ID 0 of the
             // Geometry2D
             unsigned int baseVertex;
 
@@ -359,20 +359,20 @@ namespace Nektar
             // for every face. For every face, they are ordered in such
             // a way that the implementation below allows a unified approach
             // for all faces.
-            const unsigned int faceVerts[kNfaces][QuadGeom::kNverts] = 
+            const unsigned int faceVerts[kNfaces][QuadGeom::kNverts] =
                 { {0,1,2,3} ,
-                  {0,1,5,4} , 
-                  {1,2,6,5} , 
+                  {0,1,5,4} ,
+                  {1,2,6,5} ,
                   {3,2,6,7} ,
                   {0,3,7,4} ,
-                  {4,5,6,7} }; 
-            
+                  {4,5,6,7} };
+
             NekDouble dotproduct1 = 0.0;
             NekDouble dotproduct2 = 0.0;
 
             unsigned int orientation;
 
-            // Loop over all the faces to set up the orientation 
+            // Loop over all the faces to set up the orientation
             for(f = 0; f < kNqfaces + kNtfaces; f++)
             {
                 // initialisation
@@ -380,11 +380,11 @@ namespace Nektar
                 elementBaxis_length = 0.0;
                 faceAaxis_length = 0.0;
                 faceBaxis_length = 0.0;
-                
+
                 dotproduct1 = 0.0;
                 dotproduct2 = 0.0;
 
-                baseVertex = m_faces[f]->GetVid(0);                
+                baseVertex = m_faces[f]->GetVid(0);
 
                 // We are going to construct the vectors representing the A and B axis
                 // of every face. These vectors will be constructed as a vector-representation
@@ -395,53 +395,53 @@ namespace Nektar
                 if( baseVertex == m_verts[ faceVerts[f][0] ]->GetVid() )
                 {
                     for(i = 0; i < m_coordim; i++)
-                    {                    
+                    {
                         elementAaxis[i] = (*m_verts[ faceVerts[f][1] ])[i] - (*m_verts[ faceVerts[f][0] ])[i];
                         elementBaxis[i] = (*m_verts[ faceVerts[f][3] ])[i] - (*m_verts[ faceVerts[f][0] ])[i];
-                    }                
+                    }
                 }
                 else if( baseVertex == m_verts[ faceVerts[f][1] ]->GetVid() )
                 {
                     for(i = 0; i < m_coordim; i++)
-                    {                    
+                    {
                         elementAaxis[i] = (*m_verts[ faceVerts[f][1] ])[i] - (*m_verts[ faceVerts[f][0] ])[i];
                         elementBaxis[i] = (*m_verts[ faceVerts[f][2] ])[i] - (*m_verts[ faceVerts[f][1] ])[i];
-                    }                
+                    }
                 }
                 else if( baseVertex == m_verts[ faceVerts[f][2] ]->GetVid() )
                 {
                     for(i = 0; i < m_coordim; i++)
-                    {                    
+                    {
                         elementAaxis[i] = (*m_verts[ faceVerts[f][2] ])[i] - (*m_verts[ faceVerts[f][3] ])[i];
                         elementBaxis[i] = (*m_verts[ faceVerts[f][2] ])[i] - (*m_verts[ faceVerts[f][1] ])[i];
-                    }                
+                    }
                 }
                 else if( baseVertex == m_verts[ faceVerts[f][3] ]->GetVid() )
                 {
                     for(i = 0; i < m_coordim; i++)
-                    {                    
+                    {
                         elementAaxis[i] = (*m_verts[ faceVerts[f][2] ])[i] - (*m_verts[ faceVerts[f][3] ])[i];
                         elementBaxis[i] = (*m_verts[ faceVerts[f][3] ])[i] - (*m_verts[ faceVerts[f][0] ])[i];
-                    }                
+                    }
                 }
                 else
                 {
                     ASSERTL0(false, "Could not find matching vertex for the face");
                 }
-                
-                // Now, construct the edge-vectors of the local coordinates of 
+
+                // Now, construct the edge-vectors of the local coordinates of
                 // the Geometry2D-representation of the face
                 for(i = 0; i < m_coordim; i++)
-                { 
+                {
                     faceAaxis[i] = (*m_faces[f]->GetVertex(1))[i] - (*m_faces[f]->GetVertex(0))[i];
                     faceBaxis[i] = (*m_faces[f]->GetVertex(3))[i] - (*m_faces[f]->GetVertex(0))[i];
-                
+
                     elementAaxis_length += pow(elementAaxis[i],2);
                     elementBaxis_length += pow(elementBaxis[i],2);
                     faceAaxis_length += pow(faceAaxis[i],2);
                     faceBaxis_length += pow(faceBaxis[i],2);
                 }
-            
+
                 elementAaxis_length = sqrt(elementAaxis_length);
                 elementBaxis_length = sqrt(elementBaxis_length);
                 faceAaxis_length = sqrt(faceAaxis_length);
@@ -455,7 +455,7 @@ namespace Nektar
                 }
 
                 orientation = 0;
-                // if the innerproduct is equal to the (absolute value of the ) products of the lengths 
+                // if the innerproduct is equal to the (absolute value of the ) products of the lengths
                 // of both vectors, then, the coordinate systems will NOT be transposed
                 if( fabs(elementAaxis_length*faceAaxis_length - fabs(dotproduct1)) < NekConstants::kNekZeroTol )
                 {
@@ -473,7 +473,7 @@ namespace Nektar
                     }
 
                     // check that both these axis are indeed parallel
-                    ASSERTL1(fabs(elementBaxis_length*faceBaxis_length - fabs(dotproduct2)) < 
+                    ASSERTL1(fabs(elementBaxis_length*faceBaxis_length - fabs(dotproduct2)) <
                              NekConstants::kNekZeroTol,
                              "These vectors should be parallel");
 
@@ -496,12 +496,12 @@ namespace Nektar
                     {
                         dotproduct1 += elementAaxis[i]*faceBaxis[i];
                     }
-                    
+
                     // check that both these axis are indeed parallel
-                    ASSERTL1(fabs(elementAaxis_length*faceBaxis_length - fabs(dotproduct1)) < 
+                    ASSERTL1(fabs(elementAaxis_length*faceBaxis_length - fabs(dotproduct1)) <
                              NekConstants::kNekZeroTol,
                              "These vectors should be parallel");
- 
+
                     // if the result is negative, both axis point in reverse
                     // directions
                     if(dotproduct1 < 0.0)
@@ -517,7 +517,7 @@ namespace Nektar
                     }
 
                     // check that both these axis are indeed parallel
-                    ASSERTL1(fabs(elementBaxis_length*faceAaxis_length - fabs(dotproduct2)) < 
+                    ASSERTL1(fabs(elementBaxis_length*faceAaxis_length - fabs(dotproduct2)) <
                              NekConstants::kNekZeroTol,
                              "These vectors should be parallel");
 
@@ -536,9 +536,9 @@ namespace Nektar
         {
 
             // This 2D array holds the local id's of all the vertices
-            // for every edge. For every edge, they are ordered to what we 
+            // for every edge. For every edge, they are ordered to what we
             // define as being Forwards
-            const unsigned int edgeVerts[kNedges][2] = 
+            const unsigned int edgeVerts[kNedges][2] =
                 { {0,1} ,
                   {1,2} ,
                   {2,3} ,
@@ -550,8 +550,8 @@ namespace Nektar
                   {4,5} ,
                   {5,6} ,
                   {6,7} ,
-                  {7,4} }; 
-            
+                  {7,4} };
+
             int i;
             for(i = 0; i < kNedges; i++)
             {
@@ -573,12 +573,12 @@ namespace Nektar
         void HexGeom::AddElmtConnected(int gvo_id, int locid)
         {
             CompToElmt ee(gvo_id,locid);
-            m_elmtmap.push_back(ee);
+            m_elmtMap.push_back(ee);
         }
 
         int HexGeom::NumElmtConnected() const
         {
-            return int(m_elmtmap.size());
+            return int(m_elmtMap.size());
         }
 
         bool HexGeom::IsElmtConnected(int gvo_id, int locid) const
@@ -586,17 +586,17 @@ namespace Nektar
             std::list<CompToElmt>::const_iterator def;
             CompToElmt ee(gvo_id,locid);
 
-            def = find(m_elmtmap.begin(),m_elmtmap.end(),ee);
+            def = find(m_elmtMap.begin(),m_elmtMap.end(),ee);
 
             // Found the element connectivity object in the list
-            return (def != m_elmtmap.end());
+            return (def != m_elmtMap.end());
         }
 
         /** given local collapsed coordinate Lcoord return the value of
             physical coordinate in direction i **/
 
 
-        NekDouble HexGeom::GetCoord(const int i, 
+        NekDouble HexGeom::GetCoord(const int i,
                                     const Array<OneD, const NekDouble> &Lcoord)
         {
             ASSERTL1(m_state == ePtsFilled,
@@ -607,7 +607,7 @@ namespace Nektar
 
         // Set up GeoFac for this geometry using Coord quadrature distribution
         void HexGeom::GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
-        {  
+        {
             int i,f;
             GeomType Gtype = eRegular;
 
@@ -627,13 +627,13 @@ namespace Nektar
             // check to see if all angles are 90 degrees
             if(Gtype == eRegular)
             {
-                const unsigned int faceVerts[kNfaces][QuadGeom::kNverts] = 
+                const unsigned int faceVerts[kNfaces][QuadGeom::kNverts] =
                     { {0,1,2,3} ,
-                      {0,1,5,4} , 
-                      {1,2,6,5} , 
+                      {0,1,5,4} ,
+                      {1,2,6,5} ,
                       {3,2,6,7} ,
                       {0,3,7,4} ,
-                      {4,5,6,7} }; 
+                      {4,5,6,7} };
 
                 for(f = 0; f < kNfaces; f++)
                 {
@@ -644,23 +644,23 @@ namespace Nektar
                         dx1 = m_verts[ faceVerts[f][i+1] ]->x() - m_verts[ faceVerts[f][i] ]->x();
                         dy1 = m_verts[ faceVerts[f][i+1] ]->y() - m_verts[ faceVerts[f][i] ]->y();
                         dz1 = m_verts[ faceVerts[f][i+1] ]->z() - m_verts[ faceVerts[f][i] ]->z();
-                        
+
                         dx2 = m_verts[ faceVerts[f][((i+3)%4)] ]->x() - m_verts[ faceVerts[f][i] ]->x();
                         dy2 = m_verts[ faceVerts[f][((i+3)%4)] ]->y() - m_verts[ faceVerts[f][i] ]->y();
                         dz2 = m_verts[ faceVerts[f][((i+3)%4)] ]->z() - m_verts[ faceVerts[f][i] ]->z();
-                        
+
                         if(fabs(dx1*dx2 + dy1*dy2 + dz1*dz2) > sqrt((dx1*dx1 + dy1*dy1 + dz1*dz1)*(dx2*dx2 + dy2*dy2 + dz2*dz2))
                            * NekConstants::kGeomRightAngleTol)
                         {
                             Gtype = eDeformed;
                             break;
-                        }                        
+                        }
                     }
 */
                     // Ensure each face is a parallelogram? Check this.
                     for(i = 0; i < m_coordim; i++)
                     {
-                        if( fabs( (*m_verts[ faceVerts[f][0] ])(i) - (*m_verts[ faceVerts[f][1] ])(i) + 
+                        if( fabs( (*m_verts[ faceVerts[f][0] ])(i) - (*m_verts[ faceVerts[f][1] ])(i) +
                                 (*m_verts[ faceVerts[f][2] ])(i) - (*m_verts[ faceVerts[f][3] ])(i) ) > NekConstants::kNekZeroTol )
                         {
                             Gtype = eDeformed;
@@ -673,13 +673,13 @@ namespace Nektar
                     }
                 }
             }
-//Gtype = eDeformed;            
-            m_geomfactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
+//Gtype = eDeformed;
+            m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
         }
 
 
-        /** \brief put all quadrature information into edge structure 
-            and backward transform 
+        /** \brief put all quadrature information into edge structure
+            and backward transform
 
             Note verts, edges, and faces are listed according to anticlockwise
             convention but points in _coeffs have to be in array format from
@@ -692,7 +692,7 @@ namespace Nektar
             if(m_state != ePtsFilled)
             {
                 int i,j,k;
-                int nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(0); 
+                int nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(0);
 
                 Array<OneD, unsigned int> mapArray (nFaceCoeffs);
                 Array<OneD, int>    signArray(nFaceCoeffs);
@@ -700,8 +700,8 @@ namespace Nektar
                 for(i = 0; i < kNfaces; i++)
                 {
                     m_faces[i]->FillGeom();
-                    m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray); 
-                    
+                    m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray);
+
                     nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(i);
 
                     for(j = 0 ; j < m_coordim; j++)
@@ -711,28 +711,28 @@ namespace Nektar
                             const Array<OneD, const NekDouble> & coeffs = (*m_faces[i])[j]->GetCoeffs();
                             double v = signArray[k]* coeffs[k];
                             (m_xmap[j]->UpdateCoeffs())[ mapArray[k] ] = v;
-                            
+
                         }
                     }
                 }
-                
+
                 for(i = 0; i < m_coordim; ++i)
                 {
                     m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(), m_xmap[i]->UpdatePhys());
                 }
-                
+
                 m_state = ePtsFilled;
             }
 
         }
-        
+
         void HexGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
         {
             int i;
-            
+
             FillGeom();
 
-            // calculate local coordinate for coord 
+            // calculate local coordinate for coord
             if(GetGtype() == eRegular)
             {   // Based on Spen's book, page 99
                 NekDouble len0 = 0.0 ;
@@ -751,20 +751,20 @@ namespace Nektar
                     nq0 = m_xmap[i]->GetNumPoints(0);
                     nq1 = m_xmap[i]->GetNumPoints(1);
                     nq2 = m_xmap[i]->GetNumPoints(2);
-                    
+
                     pts = m_xmap[i]->GetPhys();
 
                     // use projection to side 1 to determine xi_1 coordinate based on length
-                    len0 += (pts[nq0-1]-pts[0])*(pts[nq0-1]-pts[0]);    
+                    len0 += (pts[nq0-1]-pts[0])*(pts[nq0-1]-pts[0]);
                     xi0  += (coords[i] -pts[0])*(pts[nq0-1]-pts[0]);
 
                     // use projection to side 4 to determine xi_2 coordinate based on length
-                    len1 += (pts[nq0*(nq1-1)]-pts[0])*(pts[nq0*(nq1-1)]-pts[0]); 
-                    xi1  += (coords[i] -pts[0])*(pts[nq0*(nq1-1)]-pts[0]);    
+                    len1 += (pts[nq0*(nq1-1)]-pts[0])*(pts[nq0*(nq1-1)]-pts[0]);
+                    xi1  += (coords[i] -pts[0])*(pts[nq0*(nq1-1)]-pts[0]);
 
                     // use projection to side 4 to determine xi_2 coordinate based on length
-                    len2 += (pts[nq0*nq1*(nq2-1)]-pts[0])*(pts[nq0*nq1*(nq2-1)]-pts[0]); 
-                    xi2  += (coords[i] -pts[0])*(pts[nq0*nq1*(nq2-1)]-pts[0]);    
+                    len2 += (pts[nq0*nq1*(nq2-1)]-pts[0])*(pts[nq0*nq1*(nq2-1)]-pts[0]);
+                    xi2  += (coords[i] -pts[0])*(pts[nq0*nq1*(nq2-1)]-pts[0]);
                 }
 
                 Lcoords[0] =  2*xi0/len0-1.0;
@@ -783,7 +783,7 @@ namespace Nektar
         {
             ASSERTL1(gloCoord.num_elements() == 3,
                      "Three dimensional geometry expects three coordinates.");
-                     
+
             Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);
             GetLocCoords(gloCoord, stdCoord);
             if (stdCoord[0] >= -1 && stdCoord[0] <= 1

@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
     Exp->GlobalToLocal(Exp->GetContCoeffs(),Exp->UpdateCoeffs());
     for(i = 0; i < FieldDef.size(); ++i)
     {
-        FieldDef[i]->m_Fields.push_back("u");
+        FieldDef[i]->m_fields.push_back("u");
         Exp->AppendFieldData(FieldDef[i], FieldData[i]);
     }
     graph3D.Write(out, FieldDef, FieldData);

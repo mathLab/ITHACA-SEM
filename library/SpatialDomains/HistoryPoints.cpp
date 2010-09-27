@@ -42,18 +42,18 @@ namespace Nektar
     namespace SpatialDomains
     {
         History::History(const MeshGraph *meshGraph) :
-            m_MeshGraph(meshGraph)
-        {    
+            m_meshGraph(meshGraph)
+        {
         }
-        
+
         void History::Read(std::string &infilename)
         {
             TiXmlDocument doc(infilename);
             bool loadOkay = doc.LoadFile();
 
-            ASSERTL0(loadOkay, (std::string("Unable to load file: ") + 
+            ASSERTL0(loadOkay, (std::string("Unable to load file: ") +
                 infilename).c_str());
-            
+
             Read(doc);
         }
 
@@ -78,31 +78,31 @@ namespace Nektar
             if (!history) return;
 
             TiXmlElement *vertex = history->FirstChildElement("H");
-        
+
             int indx;
             int nextVertexNumber = -1;
-        
+
             while (vertex)
             {
                 nextVertexNumber++;
-        
+
                 TiXmlAttribute *vertexAttr = vertex->FirstAttribute();
                 std::string attrName(vertexAttr->Name());
-        
-                ASSERTL0(attrName == "ID", 
-                         (std::string("Unknown attribute name: ") 
+
+                ASSERTL0(attrName == "ID",
+                         (std::string("Unknown attribute name: ")
                                                         + attrName).c_str());
-        
+
                 int err = vertexAttr->QueryIntValue(&indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read attribute ID.");
-                ASSERTL0(indx == nextVertexNumber, 
+                ASSERTL0(indx == nextVertexNumber,
                          "Vertex IDs must begin with zero and be sequential.");
-        
+
                 // Now read body of vertex
                 std::string vertexBodyStr;
-        
+
                 TiXmlNode *vertexBody = vertex->FirstChild();
-        
+
                 while (vertexBody)
                 {
                     // Accumulate all non-comment body data.
@@ -111,34 +111,34 @@ namespace Nektar
                         vertexBodyStr += vertexBody->ToText()->Value();
                         vertexBodyStr += " ";
                     }
-        
+
                     vertexBody = vertexBody->NextSibling();
                 }
-        
-                ASSERTL0(!vertexBodyStr.empty(), 
+
+                ASSERTL0(!vertexBodyStr.empty(),
                          "Vertex definitions must contain vertex data.");
-        
+
                 // Get vertex data from the data string.
                 double xval, yval, zval;
                 std::istringstream vertexDataStrm(vertexBodyStr.c_str());
-                int dim = m_MeshGraph->GetSpaceDimension();
-              
+                int dim = m_meshGraph->GetSpaceDimension();
+
                 try
                 {
                     while(!vertexDataStrm.fail())
                     {
                         vertexDataStrm >> xval >> yval >> zval;
-        
+
                         // Need to check it here because we may not be good after the read
                         // indicating that there was nothing to read.
                         if (!vertexDataStrm.fail())
                         {
                             VertexComponentSharedPtr vert(
                                         MemoryManager<VertexComponent>
-                                                ::AllocateSharedPtr(dim, indx, 
-                                                                    xval, yval, 
+                                                ::AllocateSharedPtr(dim, indx,
+                                                                    xval, yval,
                                                                     zval));
-                            m_HistoryPoints.push_back(vert);
+                            m_historyPoints.push_back(vert);
                         }
                     }
                 }
@@ -146,20 +146,20 @@ namespace Nektar
                 {
                     ASSERTL0(false, "Unable to read HISTORY data.");
                 }
-        
+
                 vertex = vertex->NextSiblingElement("H");
             }
         }
 
         int History::GetNumHistoryPoints() const
         {
-            return m_HistoryPoints.size();
+            return m_historyPoints.size();
         }
-        
-        VertexComponentSharedPtr History::GetHistoryPoint(int idx) 
+
+        VertexComponentSharedPtr History::GetHistoryPoint(int idx)
                                                                         const
         {
-            return m_HistoryPoints.at(idx);
+            return m_historyPoints.at(idx);
         }
 
 

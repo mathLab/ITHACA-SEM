@@ -65,17 +65,17 @@ namespace Nektar
                 void AddElmtConnected(int gvo_id, int locid);
                 int  NumElmtConnected() const;
                 bool IsElmtConnected(int gvo_id, int locid) const;
-                
-                inline int GetFid() const 
+
+                inline int GetFid() const
                 {
                     return m_fid;
                 }
-                
-                inline int GetCoordDim() const 
+
+                inline int GetCoordDim() const
                 {
                     return m_coordim;
                 }
-                
+
                 inline const LibUtilities::BasisSharedPtr GetBasis(const int i, const int j)
                 {
                     return m_xmap[i]->GetBasis(j);
@@ -93,21 +93,21 @@ namespace Nektar
                         return m_xmap[i]->GetBasis(1);
                     }
                 }
-                
+
                 inline Array<OneD,NekDouble> &UpdatePhys(const int i)
                 {
                     return m_xmap[i]->UpdatePhys();
                 }
-                
+
                 NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
-                
+
                 inline void SetOwnData()
                 {
-                    m_owndata = true; 
+                    m_ownData = true;
                 }
 
                 void FillGeom();
-    
+
                 void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
 
                 inline int GetEid(int i) const
@@ -121,7 +121,7 @@ namespace Nektar
                     ASSERTL2((i >=0) && (i <= 2),"Vertex id must be between 0 and 2");
                     return m_verts[i]->GetVid();
                 }
-            
+
                 inline const VertexComponentSharedPtr GetVertex(const int i) const
                 {
                     ASSERTL2((i >=0) && (i <= 2),"Vertex id must be between 0 and 2");
@@ -155,18 +155,18 @@ namespace Nektar
                         }
                         else
                         {
-                            return StdRegions::eForwards; 
+                            return StdRegions::eForwards;
                         }
                     }
                 }
-                
+
 
                 /// \brief Get the orientation of face1.
                 ///
                 static StdRegions::FaceOrientation GetFaceOrientation(const TriGeom &face1,
                                                                       const TriGeom &face2);
-                                                                      
-                /// \brief Return the edge number of the given edge, or -1, if 
+
+                /// \brief Return the edge number of the given edge, or -1, if
                 /// not an edge of this element.
                 int WhichEdge(SegGeomSharedPtr edge)
                 {
@@ -187,46 +187,47 @@ namespace Nektar
                     return returnval;
                 }
 
-                static const int kNedges = 3;
-                static const int kNverts = 3;
+                static const int                kNedges = 3;
+                static const int                kNverts = 3;
 
             protected:
                 VertexComponentVector           m_verts;
                 SegGeomVector                   m_edges;
                 StdRegions::EdgeOrientation     m_eorient [kNedges];
-                int				m_fid;
-                bool				m_ownverts;
-                std::list<CompToElmt>		m_elmtmap;
-                
+                int				                m_fid;
+                bool				            m_ownVerts;
+                std::list<CompToElmt>		    m_elmtMap;
+
                 void GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
+
             private:
-                bool m_owndata;
+                bool                            m_ownData;
 
                 virtual void v_AddElmtConnected(int gvo_id, int locid)
                 {
                     AddElmtConnected(gvo_id,locid);
                 }
-                
+
                 virtual int  v_NumElmtConnected() const
                 {
                     return NumElmtConnected();
                 }
-                
+
                 virtual bool v_IsElmtConnected(int gvo_id, int locid) const
                 {
                     return IsElmtConnected(gvo_id,locid);
                 }
-	        
-                virtual int v_GetFid() const 
+
+                virtual int v_GetFid() const
                 {
                     return GetFid();
                 }
-                
-                virtual int v_GetCoordDim() const 
+
+                virtual int v_GetCoordDim() const
                 {
                     return GetCoordDim();
                 }
-                
+
                 virtual const LibUtilities::BasisSharedPtr v_GetBasis(const int i, const int j)
                 {
                     return GetBasis(i,j);
@@ -236,17 +237,17 @@ namespace Nektar
                 {
                     return GetEdgeBasis(i,j);
                 }
-                
+
                 virtual Array<OneD,NekDouble> &v_UpdatePhys(const int i)
                 {
                     return UpdatePhys(i);
 				}
-                
+
                 virtual NekDouble v_GetCoord(const int i, const Array<OneD,const NekDouble> &Lcoord)
                 {
                     return GetCoord(i,Lcoord);
                 }
-                
+
                 virtual void v_GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
                 {
                     GenGeomFactors(tbasis);
@@ -260,38 +261,38 @@ namespace Nektar
                 virtual void v_FillGeom()
                 {
                     FillGeom();
-                }            
-                
+                }
+
                 virtual void v_GetLocCoords(const Array<OneD,const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
                 {
                     GetLocCoords(coords,Lcoords);
                 }
-                
+
                 virtual int v_GetEid(int i) const
                 {
                     return GetEid(i);
                 }
-                
+
                 virtual int v_GetVid(int i) const
                 {
                     return GetVid(i);
                 }
-            
+
                 virtual const VertexComponentSharedPtr v_GetVertex(int i) const
                 {
                     return GetVertex(i);
                 }
-                
+
                 virtual const Geometry1DSharedPtr v_GetEdge(int i) const
                 {
                     return GetEdge(i);
                 }
-                
+
                 virtual StdRegions::EdgeOrientation v_GetEorient(const int i) const
                 {
                     return GetEorient(i);
                 }
-                
+
                 virtual StdRegions::EdgeOrientation v_GetCartesianEorient(const int i) const
                 {
                     return GetCartesianEorient(i);
@@ -302,11 +303,11 @@ namespace Nektar
                     return WhichEdge(edge);
                 }
 
-                virtual int v_GetNumVerts() const 
+                virtual int v_GetNumVerts() const
                 {
                     return kNverts;
-                }                
-                
+                }
+
                 virtual int v_GetNumEdges() const
                 {
                     return kNedges;

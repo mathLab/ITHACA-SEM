@@ -51,9 +51,9 @@ namespace Nektar
                      "SetUpQuadratureMetrics should be true if "
                      "SetUpLaplacianMetrics is true");
 
-            for (int i = 0; i < mCoordDim; ++i)
+            for (int i = 0; i < m_coordDim; ++i)
             {
-                mCoords[i] = Coords[i];
+                m_coords[i] = Coords[i];
             }
 
             // Get the shape of the expansion
@@ -72,19 +72,19 @@ namespace Nektar
 
             // Set the pointskey equal to the pointskey as defined
             // in 'tbasis'
-            mPointsKey[0] = pkey_tbasis;
+            m_pointsKey[0] = pkey_tbasis;
 
             // setup temp storage
             Array<OneD, Array<OneD,NekDouble> > der_map   (coordim);
 
-            mDeriv = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(1);
-            mDeriv[0] = Array<OneD, Array<OneD, NekDouble> >(mCoordDim);
+            m_deriv = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(1);
+            m_deriv[0] = Array<OneD, Array<OneD, NekDouble> >(m_coordDim);
 
             // Calculate local derivatives
             for(int i = 0; i < coordim; ++i)
             {
                 der_map[i]    = Array<OneD,NekDouble>(nquad_map);
-                mDeriv[0][i]  = Array<OneD,NekDouble>(nquad_tbasis);
+                m_deriv[0][i]  = Array<OneD,NekDouble>(nquad_tbasis);
 
                 // Transform from coefficient space to physical space
                 Coords[i]->BwdTrans(Coords[i]->GetCoeffs(),
@@ -99,12 +99,12 @@ namespace Nektar
                 //   ('tbasis')
                 if( pkey_map == pkey_tbasis )
                 {
-                    mDeriv[0][i] = der_map[i];
+                    m_deriv[0][i] = der_map[i];
                 }
                 else
                 {
                     LibUtilities::Interp1D(pkey_map, der_map[i], pkey_tbasis,
-                                           mDeriv[0][i]);
+                                           m_deriv[0][i]);
                 }
             }
 
@@ -157,30 +157,30 @@ namespace Nektar
          */
         void GeomFactors1D::SetUpJacGmat1D()
         {
-            ASSERTL1(mDeriv[0].num_elements()==mCoordDim,
-                     "The dimension of array mDeriv does not match the "
+            ASSERTL1(m_deriv[0].num_elements()==m_coordDim,
+                     "The dimension of array m_deriv does not match the "
                      "coordinate dimension");
             int i;
-            int nquad = mPointsKey[0].GetNumPoints();
-            ASSERTL1(mDeriv[0][0].num_elements() == nquad,
+            int nquad = m_pointsKey[0].GetNumPoints();
+            ASSERTL1(m_deriv[0][0].num_elements() == nquad,
                      "Number of quadrature points do not match");
 
             // If regular or moving geometry.
-            if(( mType == eRegular)||
-               ( mType == eMovingRegular))
+            if(( m_type == eRegular)||
+               ( m_type == eMovingRegular))
             {
                 // Allocate storage.
                 m_jac     = Array<OneD, NekDouble>(1,0.0);
-                m_gmat    = Array<TwoD, NekDouble>(mCoordDim,1,0.0);
+                m_gmat    = Array<TwoD, NekDouble>(m_coordDim,1,0.0);
 
                 // Loop over each dimension in the coordinate system.
-                for(i = 0; i < mCoordDim; ++i)
+                for(i = 0; i < m_coordDim; ++i)
                 {
                     // i-th component of normal = 1/derivative_i.
-                    m_gmat[i][0] = (fabs(mDeriv[0][i][0])
-                            > NekConstants::kNekZeroTol) ? 1.0/mDeriv[0][i][0]: 0.0;
+                    m_gmat[i][0] = (fabs(m_deriv[0][i][0])
+                            > NekConstants::kNekZeroTol) ? 1.0/m_deriv[0][i][0]: 0.0;
                     // i-th component contribution to Jacobian.
-                    m_jac[0]    += mDeriv[0][i][0]*mDeriv[0][i][0];
+                    m_jac[0]    += m_deriv[0][i][0]*m_deriv[0][i][0];
                 }
                 // take square root
                 m_jac[0] = sqrt(m_jac[0]);
@@ -189,18 +189,18 @@ namespace Nektar
             else
             {
                 m_jac     = Array<OneD, NekDouble>(nquad,0.0);
-                m_gmat    = Array<TwoD, NekDouble>(mCoordDim,nquad);
+                m_gmat    = Array<TwoD, NekDouble>(m_coordDim,nquad);
 
                 // invert local derivative for gmat;
-                for(i = 0; i < mCoordDim; ++i)
+                for(i = 0; i < m_coordDim; ++i)
                 {
                     for(int j = 0; j < nquad; ++j)
                     {
-                        m_gmat[i][j] = (fabs(mDeriv[0][i][j])
-                            > NekConstants::kNekZeroTol) ? 1.0/mDeriv[0][i][j] : 0.0;
+                        m_gmat[i][j] = (fabs(m_deriv[0][i][j])
+                            > NekConstants::kNekZeroTol) ? 1.0/m_deriv[0][i][j] : 0.0;
                     }
                     // compute jacobian for this dimension.
-                    Vmath::Vvtvp(nquad,mDeriv[0][i],1,mDeriv[0][i],1,m_jac,1,m_jac,1);
+                    Vmath::Vvtvp(nquad,m_deriv[0][i],1,m_deriv[0][i],1,m_jac,1,m_jac,1);
                 }
                 Vmath::Vsqrt(nquad,m_jac,1,m_jac,1);
             }
@@ -236,22 +236,22 @@ namespace Nektar
 
             // Retrieve the GeomFactors object describing the shape geometry
             // and generate the normals to the edge.
-            mNormal = Array<OneD, Array<OneD, NekDouble> >(mCoordDim);
-            for (k = 0; k < mCoordDim; ++k)
+            m_normal = Array<OneD, Array<OneD, NekDouble> >(m_coordDim);
+            for (k = 0; k < m_coordDim; ++k)
             {
-                mNormal[k] = Array<OneD, NekDouble>(nq);
+                m_normal[k] = Array<OneD, NekDouble>(nq);
             }
-            gf->ComputeEdgeNormals(edge, to_key, mNormal);
+            gf->ComputeEdgeNormals(edge, to_key, m_normal);
 
             if(g->GetEorient(edge) == StdRegions::eBackwards)
             {
-                for(k = 0; k < mCoordDim; ++k)
+                for(k = 0; k < m_coordDim; ++k)
                 {
                     if(gf->GetGtype() == SpatialDomains::eDeformed)
                     {
-                        Vmath::Reverse(nq, mNormal[k], 1, mNormal[k],1);
+                        Vmath::Reverse(nq, m_normal[k], 1, m_normal[k],1);
                     }
-                    Vmath::Neg(nq,mNormal[k],1);
+                    Vmath::Neg(nq,m_normal[k],1);
                 }
             }
         }

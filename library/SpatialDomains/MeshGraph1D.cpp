@@ -7,7 +7,7 @@
 //  The MIT License
 //
 //  Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
-//  Department of Aeronautics, Imperial College London (UK), and Scientific 
+//  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
 //  License for the specific language governing rights and limitations under
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:  
+//  Description:
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -131,12 +131,12 @@ namespace Nektar
                     elementDataStrm >> vertex2;
 
                     ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for SEGMENT: ") + elementStr).c_str());
-                    
+
                     VertexComponentSharedPtr v1 = GetVertex(vertex1);
                     VertexComponentSharedPtr v2 = GetVertex(vertex2);
                     SegGeomSharedPtr seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, v1,v2);
                     seg->SetGlobalID(indx);
-                    m_seggeoms.push_back(seg);                        
+                    m_segGeoms.push_back(seg);
                 }
                 catch(...)
                 {
@@ -217,7 +217,7 @@ namespace Nektar
                                 first = false;
 
                                 Composite curVector = MemoryManager<std::vector<GeometrySharedPtr> >::AllocateSharedPtr();
-                                m_MeshCompositeVector.push_back(curVector);
+                                m_meshCompositeVector.push_back(curVector);
                             }
 
                             if (compositeElementStr.length() > 0)
@@ -233,7 +233,7 @@ namespace Nektar
                     NEKERROR(ErrorUtil::efatal,
                         (std::string("Unable to read COMPOSITE data for composite: ") + compositeStr).c_str());
                 }
-                
+
                 /// Keep looking for additional composite definitions.
                 node = node->NextSiblingElement("C");
             }
@@ -281,14 +281,14 @@ namespace Nektar
                     (type == 'S' && prevType == 'S'));
 
                 ASSERTL0(validSequence, (std::string("Invalid combination of composite items: ")
-                    + type + " and " + prevType + ".").c_str()); 
+                    + type + " and " + prevType + ".").c_str());
 
                 switch(type)
                 {
                 case 'V':   // Vertex
                     for (SeqVectorType::iterator iter=seqVector.begin(); iter!=seqVector.end(); ++iter)
                     {
-                        if (*iter >= m_vertset.size())
+                        if (*iter >= m_vertSet.size())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *iter);
@@ -296,7 +296,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_MeshCompositeVector.back()->push_back(m_vertset[*iter]);
+                            m_meshCompositeVector.back()->push_back(m_vertSet[*iter]);
                         }
                     }
                     break;
@@ -304,7 +304,7 @@ namespace Nektar
                 case 'S':   // Segment
                     for (SeqVectorType::iterator iter=seqVector.begin(); iter!=seqVector.end(); ++iter)
                     {
-                        if (*iter >= m_seggeoms.size())
+                        if (*iter >= m_segGeoms.size())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *iter);
@@ -312,7 +312,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_MeshCompositeVector.back()->push_back(m_seggeoms[*iter]);
+                            m_meshCompositeVector.back()->push_back(m_segGeoms[*iter]);
                         }
                     }
                     break;

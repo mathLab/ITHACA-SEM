@@ -102,32 +102,6 @@ namespace Nektar
             /// Destructor.
             ~ExpList1D();
 
-            /// Populates the list of boundary condition expansions.
-            void SetBoundaryConditionExpansion(
-                                const SpatialDomains::MeshGraph1D &graph1D,
-                                      SpatialDomains::BoundaryConditions &bcs,
-                                const std::string variable,
-                                Array<OneD, LocalRegions::PointExpSharedPtr>
-                                                            &bndCondExpansions,
-                                Array<OneD, SpatialDomains
-                                    ::BoundaryConditionShPtr> &bndConditions);
-
-            /// Generate a associative map of periodic vertices in a mesh.
-            void GetPeriodicVertices(
-                                const SpatialDomains::MeshGraph1D &graph1D,
-                                      SpatialDomains::BoundaryConditions &bcs,
-                                const std::string variable,
-                                      map<int,int>& periodicVertices);
-
-            // Evaluates boundary conditions.
-            void EvaluateBoundaryConditions(
-                                const NekDouble time,
-                                Array<OneD, LocalRegions::PointExpSharedPtr>
-                                                            &bndCondExpansions,
-                                Array<OneD, SpatialDomains
-                                    ::BoundaryConditionShPtr> &bndConditions);
-
-
             /// Performs the post-processing on a specified element.
             void PostProcess(   LibUtilities::KernelSharedPtr kernel,
                                 Array<OneD,NekDouble> &inarray,

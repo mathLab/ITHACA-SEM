@@ -141,9 +141,9 @@ namespace Nektar
                         if (!edgeDataStrm.fail())
                         {
                             VertexComponentSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
-                            SegGeomSharedPtr edge(MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_MeshDimension, vertices));
+                            SegGeomSharedPtr edge(MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_meshDimension, vertices));
 
-                            m_seggeoms.push_back(edge);
+                            m_segGeoms.push_back(edge);
                         }
                     }
                 }
@@ -238,7 +238,7 @@ namespace Nektar
                         TriGeomSharedPtr trigeom(MemoryManager<TriGeom>::AllocateSharedPtr(indx, edges, edgeorient));
                         trigeom->SetGlobalID(indx);
 
-                        m_trigeoms.push_back(trigeom);
+                        m_triGeoms.push_back(trigeom);
                     }
                     catch(...)
                     {
@@ -277,7 +277,7 @@ namespace Nektar
                         QuadGeomSharedPtr quadgeom(MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient));
                         quadgeom->SetGlobalID(indx);
 
-                        m_quadgeoms.push_back(quadgeom);
+                        m_quadGeoms.push_back(quadgeom);
 
                     }
                     catch(...)
@@ -402,7 +402,7 @@ namespace Nektar
                         TetGeomSharedPtr tetgeom(MemoryManager<TetGeom>::AllocateSharedPtr(tfaces));
                         tetgeom->SetGlobalID(indx);
 
-                        m_tetgeoms.push_back(tetgeom);
+                        m_tetGeoms.push_back(tetgeom);
                     }
                     catch(...)
                     {
@@ -467,7 +467,7 @@ namespace Nektar
                         PyrGeomSharedPtr pyrgeom(MemoryManager<PyrGeom>::AllocateSharedPtr(tfaces, qfaces, faceorient));
                         pyrgeom->SetGlobalID(indx);
 
-                        m_pyrgeoms.push_back(pyrgeom);
+                        m_pyrGeoms.push_back(pyrgeom);
                     }
                     catch(...)
                     {
@@ -532,7 +532,7 @@ namespace Nektar
                         PrismGeomSharedPtr prismgeom(MemoryManager<PrismGeom>::AllocateSharedPtr(tfaces, qfaces, faceorient));
                         prismgeom->SetGlobalID(indx);
 
-                        m_prismgeoms.push_back(prismgeom);
+                        m_prismGeoms.push_back(prismgeom);
                     }
                     catch(...)
                     {
@@ -598,7 +598,7 @@ namespace Nektar
                         HexGeomSharedPtr hexgeom(MemoryManager<HexGeom>::AllocateSharedPtr(qfaces));
                         hexgeom->SetGlobalID(indx);
 
-                        m_hexgeoms.push_back(hexgeom);
+                        m_hexGeoms.push_back(hexgeom);
                     }
                     catch(...)
                     {
@@ -677,7 +677,7 @@ namespace Nektar
                                 first = false;
 
                                 Composite curVector(MemoryManager<GeometryVector>::AllocateSharedPtr());
-                                m_MeshCompositeVector.push_back(curVector);
+                                m_meshCompositeVector.push_back(curVector);
                             }
 
                             if (compositeElementStr.length() > 0)
@@ -704,9 +704,9 @@ namespace Nektar
         {
             SegGeomSharedPtr returnval;
 
-            if (eID >= 0 && eID < int(m_seggeoms.size()))
+            if (eID >= 0 && eID < int(m_segGeoms.size()))
             {
-                returnval = m_seggeoms[eID];
+                returnval = m_segGeoms[eID];
             }
 
             return returnval;
@@ -714,7 +714,7 @@ namespace Nektar
 
         Geometry2DSharedPtr MeshGraph3D::GetGeometry2D(int gID)
         {
-            for (TriGeomVectorIter iter = m_trigeoms.begin(); iter != m_trigeoms.end(); iter++)
+            for (TriGeomVectorIter iter = m_triGeoms.begin(); iter != m_triGeoms.end(); iter++)
             {
                 if ((*iter)->GetGlobalID() == gID)
                 {
@@ -722,7 +722,7 @@ namespace Nektar
                 }
             }
 
-            for (QuadGeomVectorIter iter = m_quadgeoms.begin(); iter != m_quadgeoms.end(); iter++)
+            for (QuadGeomVectorIter iter = m_quadGeoms.begin(); iter != m_quadGeoms.end(); iter++)
             {
                 if ((*iter)->GetGlobalID() == gID)
                 {
@@ -789,7 +789,7 @@ namespace Nektar
                 case 'V':   // Vertex
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
-                        if (*seqIter >= m_vertset.size())
+                        if (*seqIter >= m_vertSet.size())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *seqIter);
@@ -797,7 +797,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_MeshCompositeVector.back()->push_back(m_vertset[*seqIter]);
+                            m_meshCompositeVector.back()->push_back(m_vertSet[*seqIter]);
                         }
                     }
                     break;
@@ -805,7 +805,7 @@ namespace Nektar
                 case 'E':   // Edge
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
-                        if (*seqIter >= m_seggeoms.size())
+                        if (*seqIter >= m_segGeoms.size())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *seqIter);
@@ -813,7 +813,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_MeshCompositeVector.back()->push_back(m_seggeoms[*seqIter]);
+                            m_meshCompositeVector.back()->push_back(m_segGeoms[*seqIter]);
                         }
                     }
                     break;
@@ -830,7 +830,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_MeshCompositeVector.back()->push_back(face);
+                            m_meshCompositeVector.back()->push_back(face);
                         }
                     }
                     break;
@@ -838,7 +838,7 @@ namespace Nektar
                 case 'T':   // Triangle
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
-                        if (*seqIter >= m_trigeoms.size())
+                        if (*seqIter >= m_triGeoms.size())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *seqIter);
@@ -846,7 +846,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_MeshCompositeVector.back()->push_back(m_trigeoms[*seqIter]);
+                            m_meshCompositeVector.back()->push_back(m_triGeoms[*seqIter]);
                         }
                     }
                     break;
@@ -854,7 +854,7 @@ namespace Nektar
                 case 'Q':   // Quad
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
-                        if (*seqIter >= m_quadgeoms.size())
+                        if (*seqIter >= m_quadGeoms.size())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *seqIter);
@@ -862,7 +862,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_MeshCompositeVector.back()->push_back(m_quadgeoms[*seqIter]);
+                            m_meshCompositeVector.back()->push_back(m_quadGeoms[*seqIter]);
                         }
                     }
                     break;
@@ -871,7 +871,7 @@ namespace Nektar
                 case 'A':
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
-                        if (*seqIter >= m_tetgeoms.size())
+                        if (*seqIter >= m_tetGeoms.size())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *seqIter);
@@ -879,7 +879,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_MeshCompositeVector.back()->push_back(m_tetgeoms[*seqIter]);
+                            m_meshCompositeVector.back()->push_back(m_tetGeoms[*seqIter]);
                         }
                     }
                     break;
@@ -888,7 +888,7 @@ namespace Nektar
                 case 'P':
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
-                        if (*seqIter >= m_pyrgeoms.size())
+                        if (*seqIter >= m_pyrGeoms.size())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *seqIter);
@@ -896,7 +896,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_MeshCompositeVector.back()->push_back(m_pyrgeoms[*seqIter]);
+                            m_meshCompositeVector.back()->push_back(m_pyrGeoms[*seqIter]);
                         }
                     }
                     break;
@@ -905,7 +905,7 @@ namespace Nektar
                 case 'R':
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
-                        if (*seqIter >= m_prismgeoms.size())
+                        if (*seqIter >= m_prismGeoms.size())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *seqIter);
@@ -913,7 +913,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_MeshCompositeVector.back()->push_back(m_prismgeoms[*seqIter]);
+                            m_meshCompositeVector.back()->push_back(m_prismGeoms[*seqIter]);
                         }
                     }
                     break;
@@ -922,7 +922,7 @@ namespace Nektar
                 case 'H':
                     for (seqIter = seqVector.begin(); seqIter != seqVector.end(); ++seqIter)
                     {
-                        if (*seqIter >= m_hexgeoms.size())
+                        if (*seqIter >= m_hexGeoms.size())
                         {
                             char errStr[16] = "";
                             ::sprintf(errStr, "%d", *seqIter);
@@ -930,7 +930,7 @@ namespace Nektar
                         }
                         else
                         {
-                            m_MeshCompositeVector.back()->push_back(m_hexgeoms[*seqIter]);
+                            m_meshCompositeVector.back()->push_back(m_hexGeoms[*seqIter]);
                         }
                     }
                     break;
@@ -966,7 +966,7 @@ namespace Nektar
 
             GeometryVectorIter geomIter;
 
-            for (compIter = m_Domain.begin(); compIter != m_Domain.end(); ++compIter)
+            for (compIter = m_domain.begin(); compIter != m_domain.end(); ++compIter)
             {
                 for (geomIter = (*compIter)->begin(); geomIter != (*compIter)->end(); ++geomIter)
                 {
@@ -1036,9 +1036,9 @@ namespace Nektar
             // and order of expansion such that no confusion can arise.
             ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Element);
 
-            int nummodes = (int) expansion->m_BasisKeyVector[0].GetNumModes();
+            int nummodes = (int) expansion->m_basisKeyVector[0].GetNumModes();
 
-            switch(expansion->m_BasisKeyVector[0].GetBasisType())
+            switch(expansion->m_basisKeyVector[0].GetBasisType())
             {
             case LibUtilities::eModified_A:
                 {

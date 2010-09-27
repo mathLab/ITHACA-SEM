@@ -93,8 +93,8 @@ namespace Nektar
 */            }
         }
 
-        // Copy type constructor which declares new boundary conditions 
-        // and re-uses mapping info and trace space if possible 
+        // Copy type constructor which declares new boundary conditions
+        // and re-uses mapping info and trace space if possible
         DisContField2D::DisContField2D(const DisContField2D &In,
                                        SpatialDomains::MeshGraph2D &graph2D,
                                        SpatialDomains::BoundaryConditions &bcs,
@@ -122,12 +122,12 @@ namespace Nektar
                     vector<map<int,int> >periodicVertices;
                     GetPeriodicEdges(graph2D,bcs,bcs.GetVariable(bc_loc),
                                      periodicVertices,periodicEdges);
-                    
+
                     // Set up Trace space
                     m_trace = MemoryManager<ExpList1D>
                         ::AllocateSharedPtr(m_bndCondExpansions, m_bndConditions,
                                             *m_exp,graph2D, periodicEdges);
-                    
+
                     // Scatter trace segments to 2D elements. For each
                     // element, we find the trace segment associated
                     // to each edge. The element then retains a
@@ -150,14 +150,14 @@ namespace Nektar
                                         = boost::dynamic_pointer_cast<LocalRegions::Expansion2D>((*m_exp)[i]);
                                     StdRegions::StdExpansion1DSharedPtr exp1d
                                         = boost::dynamic_pointer_cast<StdRegions::StdExpansion1D>(m_trace->GetExp(k));
-                                    
+
                                     exp2d->SetEdgeExp(j,exp1d);
                                     break;
                                 }
                             }
                         }
                     }
-                    
+
                     // Finally set up the trace map between element edges and
                     // trace segment expansions.
                     GlobalSysSolnType solnType
@@ -166,31 +166,31 @@ namespace Nektar
                         AllocateSharedPtr(graph2D,m_trace,*this,solnType,
                                           m_bndCondExpansions,m_bndConditions,
                                           periodicEdges);
-                    
+
                 }
                 else
-                { 
-                    // set elmt edges to point to robin bc edges if required. 
+                {
+                    // set elmt edges to point to robin bc edges if required.
                     int i,cnt;
                     Array<OneD, int> ElmtID,EdgeID;
                     GetBoundaryToElmtMap(ElmtID,EdgeID);
-                    
+
                     for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
                     {
                         MultiRegions::ExpList1DSharedPtr locExpList;
-                        
+
                         if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
                         {
-                            int e;                    
+                            int e;
                             locExpList = m_bndCondExpansions[i];
-                            
+
                             for(e = 0; e < locExpList->GetExpSize(); ++e)
                             {
                                 LocalRegions::Expansion2DSharedPtr exp2d
                                     = boost::dynamic_pointer_cast<LocalRegions::Expansion2D>((*m_exp)[ElmtID[cnt+e]]);
                                 StdRegions::StdExpansion1DSharedPtr exp1d
                                     = boost::dynamic_pointer_cast<StdRegions::StdExpansion1D>(locExpList->GetExp(e));
-                                
+
                                 exp2d->SetEdgeExp(EdgeID[cnt+e],exp1d);
                             }
                         }
@@ -211,7 +211,7 @@ namespace Nektar
 
 
         /**
-         * For each boundary region, checks that the types and number of 
+         * For each boundary region, checks that the types and number of
          * boundary expansions in that region match.
          * @param   In          ContField2D to compare with.
          * @returns True if boundary conditions match.
@@ -252,7 +252,7 @@ namespace Nektar
             m_bndConditions()
         {
             GenerateBoundaryConditionExpansion(graph2D,bcs,
-                                               bcs.GetVariable(bc_loc), 
+                                               bcs.GetVariable(bc_loc),
                                                DeclareCoeffPhysArrays);
             if(DeclareCoeffPhysArrays == true)
             {
@@ -310,31 +310,31 @@ namespace Nektar
                     AllocateSharedPtr(graph2D,m_trace,*this,solnType,
                                       m_bndCondExpansions,m_bndConditions,
                                       periodicEdges);
-                
+
             }
             else
-            { 
-                // set elmt edges to point to robin bc edges if required. 
+            {
+                // set elmt edges to point to robin bc edges if required.
                 int i,cnt;
                 Array<OneD, int> ElmtID,EdgeID;
                 GetBoundaryToElmtMap(ElmtID,EdgeID);
-                
+
                 for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
                 {
                     MultiRegions::ExpList1DSharedPtr locExpList;
-                    
+
                     if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
                     {
-                        int e;                    
+                        int e;
                         locExpList = m_bndCondExpansions[i];
-                        
+
                         for(e = 0; e < locExpList->GetExpSize(); ++e)
                         {
                             LocalRegions::Expansion2DSharedPtr exp2d
                                 = boost::dynamic_pointer_cast<LocalRegions::Expansion2D>((*m_exp)[ElmtID[cnt+e]]);
                             StdRegions::StdExpansion1DSharedPtr exp1d
                                 = boost::dynamic_pointer_cast<StdRegions::StdExpansion1D>(locExpList->GetExp(e));
-                            
+
                             exp2d->SetEdgeExp(EdgeID[cnt+e],exp1d);
                         }
                     }
@@ -437,7 +437,7 @@ namespace Nektar
                     {
                         locExpList = MemoryManager<MultiRegions::ExpList1D>
                             ::AllocateSharedPtr(*(bregions[i]),
-                                                graph2D, 
+                                                graph2D,
                                                 DeclareCoeffPhysArrays);
                         m_bndCondExpansions[cnt]  = locExpList;
                         m_bndConditions[cnt++]    = locBCond;
@@ -462,6 +462,234 @@ namespace Nektar
                 }
             }
         }
+
+        /**
+         * @param   graph2D     A mesh containing information about the domain
+         *                      and the spectral/hp element expansions.
+         * @param   bcs         Information about the boundary conditions.
+         * @param   variable    Specifies the field.
+         * @param   bndCondExpansions   Array of ExpList1D objects each
+         *                      containing a 1D spectral/hp element expansion
+         *                      on a single boundary region.
+         * @param   bncCondition    Array of BoundaryCondition objects which
+         *                      contain information about the boundary
+         *                      conditions on the different boundary regions.
+         */
+        void DisContField2D::SetBoundaryConditionExpansion(
+                        SpatialDomains::MeshGraph2D &graph2D,
+                        SpatialDomains::BoundaryConditions &bcs,
+                        const std::string variable,
+                        Array<OneD, ExpList1DSharedPtr> &bndCondExpansions,
+                        Array<OneD, SpatialDomains::BoundaryConditionShPtr>
+                                                                &bndConditions)
+        {
+            int i;
+            int cnt  = 0;
+
+            SpatialDomains::BoundaryRegionCollection &bregions
+                                        = bcs.GetBoundaryRegions();
+            SpatialDomains::BoundaryConditionCollection &bconditions
+                                        = bcs.GetBoundaryConditions();
+
+            MultiRegions::ExpList1DSharedPtr       locExpList;
+            SpatialDomains::BoundaryConditionShPtr locBCond;
+
+            int nbnd = bregions.size();
+
+            cnt=0;
+            // list Dirichlet boundaries first
+            for(i = 0; i < nbnd; ++i)
+            {
+                locBCond = (*(bconditions[i]))[variable];
+                if(locBCond->GetBoundaryConditionType()
+                                        == SpatialDomains::eDirichlet)
+                {
+                    locExpList = MemoryManager<MultiRegions::ExpList1D>
+                                        ::AllocateSharedPtr(*(bregions[i]),
+                                                            graph2D);
+                    bndCondExpansions[cnt]  = locExpList;
+                    bndConditions[cnt++]    = locBCond;
+                } // end if Dirichlet
+            }
+            // then, list the other (non-periodic) boundaries
+            for(i = 0; i < nbnd; ++i)
+            {
+                locBCond = (*(bconditions[i]))[variable];
+                switch(locBCond->GetBoundaryConditionType())
+                {
+                case SpatialDomains::eNeumann:
+                case SpatialDomains::eRobin:
+                    {
+                        locExpList = MemoryManager<MultiRegions::ExpList1D>
+                            ::AllocateSharedPtr(*(bregions[i]),
+                                                graph2D);
+                        bndCondExpansions[cnt]  = locExpList;
+                        bndConditions[cnt++]    = locBCond;
+                    }
+                    break;
+                case SpatialDomains::eDirichlet: // do nothing for these types
+                case SpatialDomains::ePeriodic:
+                    break;
+                default:
+                    ASSERTL0(false,"This type of BC not implemented yet");
+                    break;
+                }
+            }
+        }
+
+
+        /**
+         * @param   graph2D     A mesh containing information about the domain
+         *                      and the spectral/hp element expansion.
+         * @param   bcs         Information about the boundary conditions.
+         * @param   variable    Specifies the field.
+         * @param   periodicVerts   Vector of Maps into which the list of
+         *                      periodic vertices is placed, one map for each
+         *                      boundary region.
+         * @param   periodicEdges   Map into which the list of periodic
+         *                      edges is placed.
+         */
+        void DisContField2D::GetPeriodicEdges(
+                        SpatialDomains::MeshGraph2D &graph2D,
+                        SpatialDomains::BoundaryConditions &bcs,
+                        const std::string variable,
+                        vector<map<int,int> >& periodicVerts,
+                        map<int,int>& periodicEdges)
+        {
+            int i,j,k;
+
+            SpatialDomains::BoundaryRegionCollection &bregions
+                                        = bcs.GetBoundaryRegions();
+            SpatialDomains::BoundaryConditionCollection &bconditions
+                                        = bcs.GetBoundaryConditions();
+
+            int region1ID;
+            int region2ID;
+
+            SpatialDomains::Composite comp1;
+            SpatialDomains::Composite comp2;
+
+            SpatialDomains::SegGeomSharedPtr segmentGeom1;
+            SpatialDomains::SegGeomSharedPtr segmentGeom2;
+
+            SpatialDomains::ElementEdgeVectorSharedPtr element1;
+            SpatialDomains::ElementEdgeVectorSharedPtr element2;
+
+            StdRegions::EdgeOrientation orient1;
+            StdRegions::EdgeOrientation orient2;
+
+            SpatialDomains::BoundaryConditionShPtr locBCond;
+
+
+
+            // This std::map is a check so that the periodic pairs
+            // are not treated twice
+            map<int, int> doneBndRegions;
+
+            int nbnd = bregions.size();
+
+            for(i = 0; i < nbnd; ++i)
+            {
+                locBCond = (*(bconditions[i]))[variable];
+                if(locBCond->GetBoundaryConditionType()
+                                        == SpatialDomains::ePeriodic)
+                {
+                    region1ID = i;
+                    region2ID = (boost::static_pointer_cast<
+                                    SpatialDomains::PeriodicBoundaryCondition
+                                    >(locBCond))->m_connectedBoundaryRegion;
+
+                    if(doneBndRegions.count(region1ID)==0)
+                    {
+                        ASSERTL0(bregions[region1ID]->size()
+                                        == bregions[region2ID]->size(),
+                                 "Size of the 2 periodic boundary regions "
+                                 "should be equal");
+
+
+                        map<int,int> periodicVertices;
+
+                        for(j = 0; j < bregions[region1ID]->size(); j++)
+                        {
+                            comp1 = (*(bregions[region1ID]))[j];
+                            comp2 = (*(bregions[region2ID]))[j];
+
+                            ASSERTL0(comp1->size() == comp2->size(),
+                                     "Size of the 2 periodic composites should "
+                                     "be equal");
+
+                            for(k = 0; k < comp1->size(); k++)
+                            {
+                                if(!(segmentGeom1
+                                        = boost::dynamic_pointer_cast<
+                                          SpatialDomains::SegGeom>((*comp1)[k]))
+                                    || !(segmentGeom2
+                                        = boost::dynamic_pointer_cast<
+                                          SpatialDomains::SegGeom>((*comp2)[k]))
+                                    )
+                                {
+                                    ASSERTL0(false,"dynamic cast to a SegGeom "
+                                                   "failed");
+                                }
+
+                                // Extract the periodic edges
+                                periodicEdges[segmentGeom1->GetEid()]
+                                        = segmentGeom2->GetEid();
+                                periodicEdges[segmentGeom2->GetEid()]
+                                        = segmentGeom1->GetEid();
+
+                                // Extract the periodic vertices
+                                element1 = graph2D
+                                            .GetElementsFromEdge(segmentGeom1);
+                                element2 = graph2D
+                                            .GetElementsFromEdge(segmentGeom2);
+
+                                ASSERTL0(element1->size()==1,
+                                         "The periodic boundaries belong to "
+                                         "more than one element of the mesh");
+                                ASSERTL0(element2->size()==1,
+                                         "The periodic boundaries belong to "
+                                         "more than one element of the mesh");
+
+                                orient1 = (boost::dynamic_pointer_cast<
+                                            SpatialDomains::Geometry2D>(
+                                                (*element1)[0]->m_Element)
+                                          )->GetEorient((*element1)[0]
+                                                        ->m_EdgeIndx);
+                                orient2 = (boost::dynamic_pointer_cast<
+                                            SpatialDomains::Geometry2D>(
+                                                (*element2)[0]->m_Element)
+                                          )->GetEorient((*element2)[0]
+                                                        ->m_EdgeIndx);
+
+                                if(orient1!=orient2)
+                                {
+                                    periodicVertices[segmentGeom1->GetVid(0)]
+                                        = segmentGeom2->GetVid(0);
+                                    periodicVertices[segmentGeom1->GetVid(1)]
+                                        = segmentGeom2->GetVid(1);
+                                }
+                                else
+                                {
+                                    periodicVertices[segmentGeom1->GetVid(0)]
+                                        = segmentGeom2->GetVid(1);
+                                    periodicVertices[segmentGeom1->GetVid(1)]
+                                        = segmentGeom2->GetVid(0);
+                                }
+                            }
+                        }
+                        periodicVerts.push_back(periodicVertices);
+                    }
+                    else
+                    {
+                        ASSERTL0(doneBndRegions[region1ID]==region2ID,
+                                 "Boundary regions are not mutually periodic");
+                    }
+                    doneBndRegions[region2ID] = region1ID;
+                }
+            }
+        }
+
 
         DisContField2D::~DisContField2D()
         {
@@ -945,7 +1173,7 @@ namespace Nektar
             {
                 GlobalLinSysKey       key(StdRegions::eHybridDGHelmBndLam,
                                           m_traceMap,lambda,tau,
-                                          varCoeff);                           
+                                          varCoeff);
                 GlobalLinSysSharedPtr LinSys = GetGlobalBndLinSys(key);
                 LinSys->Solve(BndRhs,BndSol,m_traceMap);
             }
@@ -964,8 +1192,8 @@ namespace Nektar
             //  out =  u_f + u_lam = (*InvHDGHelm)*f + (LamtoU)*Lam
             out = (*InvHDGHelm)*F + (*HDGLamToU)*LocLambda;
         }
-        
-        /** 
+
+        /**
          * Search through the edge expansions and identify which ones
          * have Robin/Mixed type boundary conditions. If find a Robin
          * boundary then store the edge id of the boundary condition
@@ -974,7 +1202,7 @@ namespace Nektar
          * variable coefficient at the quatrature points
          *
          * \return std map containing the robin boundary condition
-         * info using a key of the element id 
+         * info using a key of the element id
          *
          * There is a next member to allow for more than one Robin
          * boundary condition per element
@@ -986,7 +1214,7 @@ namespace Nektar
             map<int, RobinBCInfoSharedPtr> returnval;
             Array<OneD, int> ElmtID,EdgeID;
             GetBoundaryToElmtMap(ElmtID,EdgeID);
-            
+
             for(cnt = i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 MultiRegions::ExpList1DSharedPtr locExpList;
@@ -997,13 +1225,13 @@ namespace Nektar
                     Array<OneD, NekDouble> Array_tmp;
 
                     locExpList = m_bndCondExpansions[i];
-                    
+
                     for(e = 0; e < locExpList->GetExpSize(); ++e)
                     {
                         RobinBCInfoSharedPtr rInfo = MemoryManager<RobinBCInfo>::AllocateSharedPtr(EdgeID[cnt+e],Array_tmp = locExpList->GetPhys() + locExpList->GetPhys_Offset(e));
                         elmtid = ElmtID[cnt+e];
                         // make link list if necessary
-                        if(returnval.count(elmtid) != 0) 
+                        if(returnval.count(elmtid) != 0)
                         {
                             rInfo->next = returnval.find(elmtid)->second;
                         }
@@ -1012,8 +1240,8 @@ namespace Nektar
                 }
                 cnt += m_bndCondExpansions[i]->GetExpSize();
             }
-            
-            return returnval; 
+
+            return returnval;
         }
 
         //Taking the solution (assumed to be one order lower) in
@@ -1021,82 +1249,183 @@ namespace Nektar
         //polynomial order by solving:
         //
         // (\Grad w, \Grad u*) = (\Grad w, m_coeffs);
-        // <1,\Grad u*> = <1,\Grad m_coeffs> 
+        // <1,\Grad u*> = <1,\Grad m_coeffs>
         //
-        
+
         void  DisContField2D::EvaluateHDGPostProcessing(Array<OneD, NekDouble> &outarray)
         {
-            
+
             int    i,cnt,e,ncoeff_edge;
             Array<OneD, NekDouble> force, out_tmp,qrhs;
             Array<OneD, Array< OneD, StdRegions::StdExpansion1DSharedPtr> > elmtToTrace = m_traceMap->GetElmtToTrace();
-            
+
             StdRegions::EdgeOrientation edgedir;
 
             int     eid,nq_elmt, nm_elmt;
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
             Array<OneD, NekDouble> loc_lambda(LocBndCoeffs), edge_lambda, tmp_coeffs;
             m_traceMap->GlobalToLocalBnd(m_trace->GetCoeffs(),loc_lambda);
-            
+
             edge_lambda = loc_lambda;
-            
+
             // Calculate Q using standard DG formulation.
             for(i =cnt = 0; i < GetExpSize(); ++i)
             {
                 eid = m_offset_elmt_id[i];
-                
+
                 nq_elmt = (*m_exp)[eid]->GetTotPoints();
                 nm_elmt = (*m_exp)[eid]->GetNcoeffs();
                 qrhs  = Array<OneD, NekDouble>(nq_elmt);
                 force = Array<OneD, NekDouble>(2*nm_elmt);
                 out_tmp = force + nm_elmt;
-                
-                
+
+
                 // Probably a better way of setting up lambda than this.
                 // Note cannot use PutCoeffsInToElmts since lambda space
                 // is mapped during the solve.
                 for(e = 0; e < (*m_exp)[eid]->GetNedges(); ++e)
                 {
                     edgedir = (*m_exp)[eid]->GetEorient(e);
-                    
+
                     ncoeff_edge = elmtToTrace[eid][e]->GetNcoeffs();
                     elmtToTrace[eid][e]->SetCoeffsToOrientation(edgedir,edge_lambda,edge_lambda);
                     Vmath::Vcopy(ncoeff_edge,edge_lambda,1,
                                  elmtToTrace[eid][e]->UpdateCoeffs(),1);
                     edge_lambda = edge_lambda + ncoeff_edge;
                 }
-                
-                // (d/dx w, d/dx q_0) 
+
+                // (d/dx w, d/dx q_0)
                 (*m_exp)[eid]->DGDeriv(0,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
                                        elmtToTrace[eid],
                                        out_tmp);
                 (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
                 (*m_exp)[eid]->IProductWRTDerivBase(0,qrhs,force);
-                
-                // + (d/dy w, d/dy q_1) 
+
+                // + (d/dy w, d/dy q_1)
                 (*m_exp)[eid]->DGDeriv(1,tmp_coeffs = m_coeffs + m_coeff_offset[eid],
                                        elmtToTrace[eid],
                                        out_tmp);
                 (*m_exp)[eid]->BwdTrans(out_tmp,qrhs);
                 (*m_exp)[eid]->IProductWRTDerivBase(1,qrhs,out_tmp);
-                
+
                 Vmath::Vadd(nm_elmt,force,1,out_tmp,1,force,1);
-                
+
                 // determine force[0] = (1,u)
                 (*m_exp)[eid]->BwdTrans(tmp_coeffs = m_coeffs + m_coeff_offset[eid],qrhs);
                 force[0] = (*m_exp)[eid]->Integral(qrhs);
-                
+
                 // multiply by inverse Laplacian matrix
                 // get matrix inverse
                 LocalRegions::MatrixKey  lapkey(StdRegions::eInvLaplacianWithUnityMean,  (*m_exp)[eid]->DetExpansionType(),  *(*m_exp)[eid]);
                 DNekScalMatSharedPtr lapsys = (*m_exp)[eid]->GetLocMatrix(lapkey);
-                
+
                 NekVector<NekDouble> in(nm_elmt,force,eWrapper);
                 NekVector<NekDouble> out(nm_elmt,tmp_coeffs = outarray + m_coeff_offset[eid],eWrapper);
-                
+
                 out = (*lapsys)*in;
             }
         }
-        
+
+
+        /**
+         * Evaluates the boundary condition expansions, \a bndCondExpansions,
+         * given the information provided by \a bndConditions.
+         * @param   time        The time at which the boundary conditions
+         *                      should be evaluated.
+         * @param   bndCondExpansions   List of boundary conditions.
+         * @param   bndConditions   Information about the boundary conditions.
+         */
+        void DisContField2D::v_EvaluateBoundaryConditions(
+                        const NekDouble time,
+                        const NekDouble x2_in)
+        {
+            int i,j;
+            int npoints;
+            int nbnd = m_bndCondExpansions.num_elements();
+
+            MultiRegions::ExpList1DSharedPtr locExpList;
+
+            for(i = 0; i < nbnd; ++i)
+            {
+                if(time == 0.0 || m_bndConditions[i]->GetUserDefined().GetEquation()=="TimeDependent")
+                {
+                    locExpList = m_bndCondExpansions[i];
+                    npoints = locExpList->GetNpoints();
+                    Array<OneD,NekDouble> x0(npoints,0.0);
+                    Array<OneD,NekDouble> x1(npoints,0.0);
+                    Array<OneD,NekDouble> x2(npoints,0.0);
+
+                    if(x2_in == NekConstants::kNekUnsetDouble) //homogeneous input case for x2
+                    {
+                        locExpList->GetCoords(x0,x1,x2);
+                    }
+                    else
+                    {
+                        locExpList->GetCoords(x0,x1,x2);
+                        Vmath::Fill(npoints,x2_in,x2,1);
+                    }
+
+                    if(m_bndConditions[i]->GetBoundaryConditionType()
+                       == SpatialDomains::eDirichlet)
+                    {
+                        for(j = 0; j < npoints; j++)
+                        {
+                            (locExpList->UpdatePhys())[j]
+                                = (boost::static_pointer_cast<
+                                   SpatialDomains::DirichletBoundaryCondition
+                                   >(m_bndConditions[i])->m_dirichletCondition
+                                   ).Evaluate(x0[j],x1[j],x2[j],time);
+                        }
+
+                        locExpList->FwdTrans_BndConstrained(locExpList->GetPhys(),
+                                        locExpList->UpdateCoeffs());
+                    }
+                    else if(m_bndConditions[i]->GetBoundaryConditionType()
+                            == SpatialDomains::eNeumann)
+                    {
+                        for(j = 0; j < npoints; j++)
+                        {
+                            (locExpList->UpdatePhys())[j]
+                                = (boost::static_pointer_cast<
+                                   SpatialDomains::NeumannBoundaryCondition
+                                   >(m_bndConditions[i])->m_neumannCondition
+                                   ).Evaluate(x0[j],x1[j],x2[j],time);
+                        }
+
+                        locExpList->IProductWRTBase(locExpList->GetPhys(),
+                                                    locExpList->UpdateCoeffs());
+                    }
+                    else if(m_bndConditions[i]->GetBoundaryConditionType()
+                            == SpatialDomains::eRobin)
+                    {
+                        for(j = 0; j < npoints; j++)
+                        {
+                            (locExpList->UpdatePhys())[j]
+                                = (boost::static_pointer_cast<
+                                   SpatialDomains::RobinBoundaryCondition
+                                   >(m_bndConditions[i])->m_robinFunction).Evaluate(x0[j],x1[j],x2[j],time);
+                        }
+
+                        locExpList->IProductWRTBase(locExpList->GetPhys(),
+                                                    locExpList->UpdateCoeffs());
+
+                        // put primitive coefficient into the physical space storage
+                        for(j = 0; j < npoints; j++)
+                        {
+                            (locExpList->UpdatePhys())[j]
+                                = (boost::static_pointer_cast<
+                                   SpatialDomains::RobinBoundaryCondition
+                                   >(m_bndConditions[i])->m_robinPrimitiveCoeff).Evaluate(x0[j],x1[j],x2[j],time);
+                        }
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"This type of BC not implemented yet");
+                    }
+                }
+            }
+        }
+
+
     } // end of namespace
 } //end of namespace

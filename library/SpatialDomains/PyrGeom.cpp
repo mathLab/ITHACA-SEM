@@ -7,7 +7,7 @@
 //  The MIT License
 //
 //  Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
-//  Department of Aeronautics, Imperial College London (UK), and Scientific 
+//  Department of Aeronautics, Imperial College London (UK), and Scientific
 //  Computing and Imaging Institute, University of Utah (USA).
 //
 //  License for the specific language governing rights and limitations under
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:  
+//  Description:
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -44,14 +44,14 @@ namespace Nektar
 
         PyrGeom::PyrGeom()
         {
-            m_GeomShapeType = ePyramid;
+            m_geomShapeType = ePyramid;
         }
 
         PyrGeom::PyrGeom(const Geometry2DSharedPtr faces[]):
                  Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
         {
-            m_GeomShapeType = ePyramid;
-            
+            m_geomShapeType = ePyramid;
+
             /// Copy the face shared pointers
             m_faces.insert(m_faces.begin(), faces, faces+PyrGeom::kNfaces);
 
@@ -66,7 +66,7 @@ namespace Nektar
                                            LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
             const LibUtilities::BasisKey C(LibUtilities::eModified_C, 2,
                                            LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha2Beta0));
-            
+
             m_xmap = Array<OneD, StdRegions::StdExpansion3DSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
@@ -74,19 +74,19 @@ namespace Nektar
                 m_xmap[i] = MemoryManager<StdRegions::StdPyrExp>::AllocateSharedPtr(A,A,C);
             }
         }
-    
+
 
         PyrGeom::PyrGeom(const TriGeomSharedPtr tfaces[], const QuadGeomSharedPtr qfaces[],
                          const StdRegions::FaceOrientation forient[])
         {
-            m_GeomShapeType = ePyramid;
+            m_geomShapeType = ePyramid;
 
             /// Copy the triangle face shared pointers
             m_tfaces.insert(m_tfaces.begin(), tfaces, tfaces+PyrGeom::kNfaces);
-            
+
             /// Copy the quad face shared pointers
             m_qfaces.insert(m_qfaces.begin(), qfaces, qfaces+PyrGeom::kNfaces);
-           
+
             for (int j=0; j<kNfaces; ++j)
             {
                m_forient[j] = forient[j];
@@ -100,8 +100,8 @@ namespace Nektar
                          const TriGeomSharedPtr tfaces[], const QuadGeomSharedPtr qfaces[],
                          const StdRegions::EdgeOrientation eorient[],const StdRegions::FaceOrientation forient[])
          {
-            m_GeomShapeType = ePyramid;
- 
+            m_geomShapeType = ePyramid;
+
             /// Copy the vert shared pointers.
             m_verts.insert(m_verts.begin(), verts, verts+PyrGeom::kNverts);
 
@@ -113,7 +113,7 @@ namespace Nektar
 
             /// Copy the triangle face shared pointers
             m_tfaces.insert(m_tfaces.begin(), tfaces, tfaces+PyrGeom::kNfaces);
-            
+
             for (int i=0; i<kNedges; ++i)
             {
                 m_eorient[i] = eorient[i];
@@ -130,11 +130,11 @@ namespace Nektar
 
         PyrGeom::PyrGeom(const Geometry2DSharedPtr faces[], const StdRegions::FaceOrientation forient[])
         {
-            m_GeomShapeType = ePyramid;
+            m_geomShapeType = ePyramid;
 
             /// Copy the face shared pointers
             m_faces.insert(m_faces.begin(), faces, faces+PyrGeom::kNfaces);
-           
+
             for (int j=0; j<kNfaces; ++j)
             {
                m_forient[j] = forient[j];
@@ -149,7 +149,7 @@ namespace Nektar
         }
 
         void PyrGeom::SetUpLocalEdges(){
-        
+
             // find edge 0
             int i,j;
             unsigned int check;
@@ -173,7 +173,7 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 if( check < 1 )
                 {
                     std::ostringstream errstrm;
@@ -187,9 +187,9 @@ namespace Nektar
                     errstrm << "Connected faces share more than one egde. Faces ";
                     errstrm << (m_faces[0])->GetFid() << ", " << (m_faces[faceConnected])->GetFid();
                     ASSERTL0(false, errstrm.str());
-                }                
-            }           
-            
+                }
+            }
+
             // Then, set up the 4 vertical edges
             check = 0;
             for(i = 0; i < 4; i++) //Set up the vertical edge :face(1) and face(4)
@@ -234,7 +234,7 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 if( check < 1 )
                 {
                     std::ostringstream errstrm;
@@ -248,23 +248,23 @@ namespace Nektar
                     errstrm << "Connected faces share more than one egde. Faces ";
                     errstrm << (m_faces[faceConnected])->GetFid() << ", " << (m_faces[faceConnected+1])->GetFid();
                     ASSERTL0(false, errstrm.str());
-                }                
+                }
             }
 
         };
 
-        
+
         void PyrGeom::SetUpLocalVertices(){
 
-        
+
             // Set up the first 2 vertices (i.e. vertex 0,1)
-            if( ( m_edges[0]->GetVid(0) == m_edges[1]->GetVid(0) ) || 
+            if( ( m_edges[0]->GetVid(0) == m_edges[1]->GetVid(0) ) ||
                 ( m_edges[0]->GetVid(0) == m_edges[1]->GetVid(1) ) )
             {
                 m_verts.push_back(m_edges[0]->GetVertex(1));
                 m_verts.push_back(m_edges[0]->GetVertex(0));
             }
-            else if( ( m_edges[0]->GetVid(1) == m_edges[1]->GetVid(0) ) || 
+            else if( ( m_edges[0]->GetVid(1) == m_edges[1]->GetVid(0) ) ||
                      ( m_edges[0]->GetVid(1) == m_edges[1]->GetVid(1) ) )
             {
                 m_verts.push_back(m_edges[0]->GetVertex(0));
@@ -298,18 +298,18 @@ namespace Nektar
                 }
             }
 
-            // set up top vertices  
+            // set up top vertices
             // First, set up top vertice 4 TODO
 
 
-  
+
         };
         void PyrGeom::SetUpEdgeOrientation(){
-        
+
             // This 2D array holds the local id's of all the vertices
-            // for every edge. For every edge, they are ordered to what we 
+            // for every edge. For every edge, they are ordered to what we
             // define as being Forwards
-            const unsigned int edgeVerts[kNedges][2] = 
+            const unsigned int edgeVerts[kNedges][2] =
                 { {0,1} ,
                   {1,2} ,
                   {2,3} ,
@@ -319,7 +319,7 @@ namespace Nektar
                   {2,4} ,
                   {3,4} };
 
-            
+
             int i;
             for(i = 0; i < kNedges; i++)
             {
@@ -339,7 +339,7 @@ namespace Nektar
 
 
         };
-        
+
         void PyrGeom::SetUpFaceOrientation(){
 
 
@@ -347,10 +347,10 @@ namespace Nektar
 
             // These arrays represent the vector of the A and B
             // coordinate of the local elemental coordinate system
-            // where A corresponds with the coordinate direction xi_i 
+            // where A corresponds with the coordinate direction xi_i
             // with the lowest index i (for that particular face)
             // Coordinate 'B' then corresponds to the other local
-            // coordinate (i.e. with the highest index) 
+            // coordinate (i.e. with the highest index)
             Array<OneD,NekDouble> elementAaxis(m_coordim);
             Array<OneD,NekDouble> elementBaxis(m_coordim);
 
@@ -362,7 +362,7 @@ namespace Nektar
             Array<OneD,NekDouble> faceBaxis(m_coordim);
 
             // This is the base vertex of the face (i.e. the Geometry2D)
-            // This corresponds to thevertex with local ID 0 of the 
+            // This corresponds to thevertex with local ID 0 of the
             // Geometry2D
             unsigned int baseVertex;
 
@@ -388,7 +388,7 @@ namespace Nektar
 
             unsigned int orientation;
 
-            // Loop over all the faces to set up the orientation 
+            // Loop over all the faces to set up the orientation
             for(f = 0; f < kNqfaces + kNtfaces; f++)
             {
                 // initialisation
@@ -396,11 +396,11 @@ namespace Nektar
                 elementBaxis_length = 0.0;
                 faceAaxis_length = 0.0;
                 faceBaxis_length = 0.0;
-                
+
                 dotproduct1 = 0.0;
                 dotproduct2 = 0.0;
 
-                baseVertex = m_faces[f]->GetVid(0);                
+                baseVertex = m_faces[f]->GetVid(0);
 
                 // We are going to construct the vectors representing the A and B axis
                 // of every face. These vectors will be constructed as a vector-representation
@@ -413,53 +413,53 @@ namespace Nektar
                 if( baseVertex == m_verts[ faceVerts[f][0] ]->GetVid() )
                 {
                     for(i = 0; i < m_coordim; i++)
-                    {                    
+                    {
                         elementAaxis[i] = (*m_verts[ faceVerts[f][1] ])[i] - (*m_verts[ faceVerts[f][0] ])[i];
                         elementBaxis[i] = (*m_verts[ faceVerts[f][3] ])[i] - (*m_verts[ faceVerts[f][0] ])[i];
-                    }                
+                    }
                 }
                 else if( baseVertex == m_verts[ faceVerts[f][1] ]->GetVid() )
                 {
                     for(i = 0; i < m_coordim; i++)
-                    {                    
+                    {
                         elementAaxis[i] = (*m_verts[ faceVerts[f][1] ])[i] - (*m_verts[ faceVerts[f][0] ])[i];
                         elementBaxis[i] = (*m_verts[ faceVerts[f][2] ])[i] - (*m_verts[ faceVerts[f][1] ])[i];
-                    }                
+                    }
                 }
                 else if( baseVertex == m_verts[ faceVerts[f][2] ]->GetVid() )
                 {
                     for(i = 0; i < m_coordim; i++)
-                    {                    
+                    {
                         elementAaxis[i] = (*m_verts[ faceVerts[f][2] ])[i] - (*m_verts[ faceVerts[f][3] ])[i];
                         elementBaxis[i] = (*m_verts[ faceVerts[f][2] ])[i] - (*m_verts[ faceVerts[f][1] ])[i];
-                    }                
+                    }
                 }
                 else if( baseVertex == m_verts[ faceVerts[f][3] ]->GetVid() )
                 {
                     for(i = 0; i < m_coordim; i++)
-                    {                    
+                    {
                         elementAaxis[i] = (*m_verts[ faceVerts[f][2] ])[i] - (*m_verts[ faceVerts[f][3] ])[i];
                         elementBaxis[i] = (*m_verts[ faceVerts[f][3] ])[i] - (*m_verts[ faceVerts[f][0] ])[i];
-                    }                
+                    }
                 }
                 else
                 {
                     ASSERTL0(false, "Could not find matching vertex for the face");
                 }
-                
-                // Now, construct the edge-vectors of the local coordinates of 
+
+                // Now, construct the edge-vectors of the local coordinates of
                 // the Geometry2D-representation of the face
                 for(i = 0; i < m_coordim; i++)
-                { 
+                {
                     faceAaxis[i] = (*m_faces[f]->GetVertex(1))[i] - (*m_faces[f]->GetVertex(0))[i];
                     faceBaxis[i] = (*m_faces[f]->GetVertex(3))[i] - (*m_faces[f]->GetVertex(0))[i];
-                
+
                     elementAaxis_length += pow(elementAaxis[i],2);
                     elementBaxis_length += pow(elementBaxis[i],2);
                     faceAaxis_length += pow(faceAaxis[i],2);
                     faceBaxis_length += pow(faceBaxis[i],2);
                 }
-            
+
                 elementAaxis_length = sqrt(elementAaxis_length);
                 elementBaxis_length = sqrt(elementBaxis_length);
                 faceAaxis_length = sqrt(faceAaxis_length);
@@ -473,7 +473,7 @@ namespace Nektar
                 }
 
                 orientation = 0;
-                // if the innerproduct is equal to the (absolute value of the ) products of the lengths 
+                // if the innerproduct is equal to the (absolute value of the ) products of the lengths
                 // of both vectors, then, the coordinate systems will NOT be transposed
                 if( fabs(elementAaxis_length*faceAaxis_length - fabs(dotproduct1)) < NekConstants::kNekZeroTol )
                 {
@@ -491,7 +491,7 @@ namespace Nektar
                     }
 
                     // check that both these axis are indeed parallel
-                    ASSERTL1(fabs(elementBaxis_length*faceBaxis_length - fabs(dotproduct2)) < 
+                    ASSERTL1(fabs(elementBaxis_length*faceBaxis_length - fabs(dotproduct2)) <
                              NekConstants::kNekZeroTol,
                              "These vectors should be parallel");
 
@@ -514,12 +514,12 @@ namespace Nektar
                     {
                         dotproduct1 += elementAaxis[i]*faceBaxis[i];
                     }
-                    
+
                     // check that both these axis are indeed parallel
-                    ASSERTL1(fabs(elementAaxis_length*faceBaxis_length - fabs(dotproduct1)) < 
+                    ASSERTL1(fabs(elementAaxis_length*faceBaxis_length - fabs(dotproduct1)) <
                              NekConstants::kNekZeroTol,
                              "These vectors should be parallel");
- 
+
                     // if the result is negative, both axis point in reverse
                     // directions
                     if(dotproduct1 < 0.0)
@@ -535,7 +535,7 @@ namespace Nektar
                     }
 
                     // check that both these axis are indeed parallel
-                    ASSERTL1(fabs(elementBaxis_length*faceAaxis_length - fabs(dotproduct2)) < 
+                    ASSERTL1(fabs(elementBaxis_length*faceAaxis_length - fabs(dotproduct2)) <
                              NekConstants::kNekZeroTol,
                              "These vectors should be parallel");
 
@@ -551,7 +551,7 @@ namespace Nektar
 
 
         };
-        
+
         void PyrGeom::AddElmtConnected(int gvo_id, int locid)
         {
             CompToElmt ee(gvo_id,locid);
@@ -613,7 +613,7 @@ namespace Nektar
             if(Gtype == eRegular){
                 if(GSType == eQuadrilateral)
                 {
-                    const unsigned int faceVerts[kNqfaces][QuadGeom::kNverts] = 
+                    const unsigned int faceVerts[kNqfaces][QuadGeom::kNverts] =
                         { {0,1,2,3} };
                     int f;
                     NekDouble dx1,dx2,dy1,dy2;
@@ -623,10 +623,10 @@ namespace Nektar
                         {
                             dx1 = m_verts[ faceVerts[f][i+1] ]->x() - m_verts[ faceVerts[f][i] ]->x();
                             dy1 = m_verts[ faceVerts[f][i+1] ]->y() - m_verts[ faceVerts[f][i] ]->y();
-                            
+
                             dx2 = m_verts[ faceVerts[f][((i+3)%4)] ]->x() - m_verts[ faceVerts[f][i] ]->x();
                             dy2 = m_verts[ faceVerts[f][((i+3)%4)] ]->y() - m_verts[ faceVerts[f][i] ]->y();
-                            
+
                             if(fabs(dx1*dx2 + dy1*dy2) > sqrt((dx1*dx1+dy1*dy1)*(dx2*dx2+dy2*dy2))
                                * NekConstants::kGeomRightAngleTol)
                             {
@@ -645,12 +645,12 @@ namespace Nektar
                  }
               }
 
-            m_geomfactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
+            m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
         }
 
 
         /** \brief put all quadrature information into edge structure
-        and backward transform 
+        and backward transform
 
         Note verts, edges, and faces are listed according to anticlockwise
         convention but points in _coeffs have to be in array format from
@@ -663,7 +663,7 @@ namespace Nektar
             if(m_state != ePtsFilled)
             {
                 int i,j,k;
-                int nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(0); 
+                int nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(0);
 
                 Array<OneD, unsigned int> mapArray (nFaceCoeffs);
                 Array<OneD, int>    signArray(nFaceCoeffs);
@@ -671,8 +671,8 @@ namespace Nektar
                 for(i = 0; i < kNfaces; i++)
                 {
                     m_faces[i]->FillGeom();
-                    m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray); 
-                    
+                    m_xmap[0]->GetFaceToElementMap(i,m_forient[i],mapArray,signArray);
+
                     nFaceCoeffs = m_xmap[0]->GetFaceNcoeffs(i);
 
                     for(j = 0 ; j < m_coordim; j++)
@@ -686,22 +686,22 @@ namespace Nektar
                         }
                     }
                 }
-                
+
                 for(i = 0; i < m_coordim; ++i)
                 {
                     m_xmap[i]->BwdTrans(m_xmap[i]->GetCoeffs(), m_xmap[i]->UpdatePhys());
                 }
-                
+
                 m_state = ePtsFilled;
             }
 
 		}
 
         void PyrGeom::GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
-        {           
+        {
             FillGeom();
 
-            // calculate local coordinate for coord 
+            // calculate local coordinate for coord
             if(GetGtype() == eRegular)
             {   // Based on Spen's book, page 99
 
@@ -729,9 +729,9 @@ namespace Nektar
                 NekDouble v1 = er0.dot(cp3040) / V; // volume1 = {(er0)dot(e30)x(e40)}/6
                 NekDouble v2 = er0.dot(cp4010) / V; // volume2 = {(er0)dot(e40)x(e10)}/6
                 NekDouble beta  = v1 * scaleFactor;
-                NekDouble gamma = v2 * scaleFactor; 
+                NekDouble gamma = v2 * scaleFactor;
                 NekDouble delta = er0.dot(cp1030) / V; // volume3 = {(er0)dot(e10)x(e30)}/4
-                
+
 
                 // Make Pyramid bigger
                 Lcoords[0] = 2.0*beta  - 1.0;

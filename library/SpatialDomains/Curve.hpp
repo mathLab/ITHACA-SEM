@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: $
+//  File:  Curve.hpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -31,7 +31,6 @@
 //
 //  Description:
 //
-//
 ////////////////////////////////////////////////////////////////////////////////
 #ifndef NEKTAR_SPATIALDOMAINS_CURVE_H
 #define NEKTAR_SPATIALDOMAINS_CURVE_H
@@ -46,12 +45,12 @@ namespace Nektar
         {
             Curve(int curveID, LibUtilities::PointsType type):
                 m_curveID(curveID),m_ptype(type){};
-            
-            int          m_curveID; // ID or edge or face which is curved 
+
+            int          m_curveID; // ID or edge or face which is curved
             LibUtilities::PointsType   m_ptype;
             std::vector<VertexComponentSharedPtr> m_points;
         };
-        
+
         typedef boost::shared_ptr<Curve> CurveSharedPtr;
         typedef std::vector<CurveSharedPtr> CurveVector;
         typedef boost::shared_ptr<CurveVector> CurveVectorSharedPtr;

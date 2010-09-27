@@ -54,16 +54,16 @@ namespace Nektar
 
             CompToElmt(int id, int locid):
               m_id(id),
-                  m_locid(locid)
+                  m_locId(locid)
               {
                   m_id = id;
-                  m_locid = locid;
+                  m_locId = locid;
               }
 
               ~CompToElmt()
               {
                   m_id = -1;
-                  m_locid = -1;
+                  m_locId = -1;
               }
 
               inline int GetId()
@@ -76,7 +76,7 @@ namespace Nektar
 
         protected:
             int m_id;
-            int m_locid;
+            int m_locId;
 
         private:
 
@@ -133,15 +133,15 @@ namespace Nektar
             protected:
                 int m_vid;
                 int m_coordim;
-                std::list<CompToElmt> m_elmtmap;
-                
+                std::list<CompToElmt> m_elmtMap;
+
             private:
 
                 virtual int v_GetVid(void)
                 {
                     return GetVid();
                 }
-                
+
         };
 
         // -----------------------------------------------------------------------

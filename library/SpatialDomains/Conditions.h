@@ -65,12 +65,12 @@ namespace Nektar
         struct BoundaryConditionBase
         {
             BoundaryConditionBase(BoundaryConditionType type):
-                m_BoundaryConditionType(type)
+                m_boundaryConditionType(type)
             {
             }
 
             BoundaryConditionBase(BoundaryConditionType type, Equation userDefined):
-                m_BoundaryConditionType(type),  m_userDefined(userDefined)
+                m_boundaryConditionType(type),  m_userDefined(userDefined)
             {
             }
 
@@ -79,14 +79,14 @@ namespace Nektar
 
             BoundaryConditionType GetBoundaryConditionType() const
             {
-                return m_BoundaryConditionType;
+                return m_boundaryConditionType;
             }
 
             void SetUserDefined(Equation equation)
             {
                 m_userDefined = equation;
             }
-            
+
             Equation GetUserDefined() const
             {
                 return m_userDefined;
@@ -94,57 +94,57 @@ namespace Nektar
 
 
         protected:
-            BoundaryConditionType m_BoundaryConditionType;
+            BoundaryConditionType m_boundaryConditionType;
             Equation m_userDefined;
         };
 
 
         struct DirichletBoundaryCondition : public BoundaryConditionBase
         {
-            
+
              DirichletBoundaryCondition(const std::string &eqn, const std::string &userDefined = std::string("NoUserDefined")):
             BoundaryConditionBase(eDirichlet, userDefined),
-                m_DirichletCondition(eqn)
+                m_dirichletCondition(eqn)
                 {
                 }
-            
-            Equation m_DirichletCondition;
+
+            Equation m_dirichletCondition;
         };
 
         struct NeumannBoundaryCondition : public BoundaryConditionBase
         {
             NeumannBoundaryCondition(const std::string &eqn, const std::string &userDefined = std::string("NoUserDefined")):
                 BoundaryConditionBase(eNeumann, userDefined),
-                m_NeumannCondition(eqn)
+                m_neumannCondition(eqn)
             {
             }
 
-            Equation m_NeumannCondition;
+            Equation m_neumannCondition;
         };
 
         struct RobinBoundaryCondition : public BoundaryConditionBase
         {
             RobinBoundaryCondition( const std::string &a, const std::string &b, const std::string &userDefined = std::string("NoUserDefined")):
                 BoundaryConditionBase(eRobin, userDefined),
-                m_RobinFunction(a), m_RobinPrimitiveCoeff(b)
+                m_robinFunction(a), m_robinPrimitiveCoeff(b)
             {
             }
                 // \frac{\partial {u}}{\partial{n}} +
-                // m_RobinPrimativeCoeff(x,y,z)*u = m_RobinFunction(x,y,z)
-                Equation m_RobinFunction;
-                Equation m_RobinPrimitiveCoeff;
+                // m_robinPrimativeCoeff(x,y,z)*u = m_robinFunction(x,y,z)
+                Equation m_robinFunction;
+                Equation m_robinPrimitiveCoeff;
         };
-        
+
 
         struct PeriodicBoundaryCondition : public BoundaryConditionBase
         {
             PeriodicBoundaryCondition(const unsigned int n):
                 BoundaryConditionBase(ePeriodic),
-                m_ConnectedBoundaryRegion(n)
+                m_connectedBoundaryRegion(n)
             {
             }
-             
-            unsigned int m_ConnectedBoundaryRegion;
+
+            unsigned int m_connectedBoundaryRegion;
         };
 
         typedef std::map<std::string, NekDouble> ParamMap;
@@ -196,18 +196,18 @@ namespace Nektar
 
             void Read(std::string &infilename);
             void Read(TiXmlDocument &doc);
-            
+
             bool   CheckForParameter(const std::string &paramName);
             static NekDouble GetParameter(const std::string &parmName);
 
-            BoundaryRegionCollection &GetBoundaryRegions(void) 
+            BoundaryRegionCollection &GetBoundaryRegions(void)
             {
-                return m_BoundaryRegions;
+                return m_boundaryRegions;
             }
 
             BoundaryConditionCollection &GetBoundaryConditions(void)
             {
-                return m_BoundaryConditions;
+                return m_boundaryConditions;
             }
 
             /// Get forcing function based on the index of the variable.
@@ -225,7 +225,7 @@ namespace Nektar
             bool UserDefinedEqnExists(const std::string &var) const;
             ConstUserDefinedEqnShPtr GetUserDefinedEqn(int indx) const;
             ConstUserDefinedEqnShPtr GetUserDefinedEqn(const std::string &var) const;
-            
+
             /// Get initial condition function based on the index of the variable.
             /// The index is the order in which the variable was
             /// defined.
@@ -234,23 +234,23 @@ namespace Nektar
 
             /// Get initial condition function based on name of variable.
             ConstInitialConditionShPtr GetInitialCondition(const std::string &var) const;
-            /// Check to see if initial condition exists in list. 
+            /// Check to see if initial condition exists in list.
             bool FoundInitialCondition(const std::string &var);
-            
+
             const std::string &GetVariable(unsigned int indx)
             {
-                ASSERTL0(0 <= indx && indx < m_Variables.size(),"Variable index is out of range");
-                return m_Variables[indx];
+                ASSERTL0(0 <= indx && indx < m_variables.size(),"Variable index is out of range");
+                return m_variables[indx];
             }
 
-            inline int GetNumVariables() const 
+            inline int GetNumVariables() const
             {
-                return m_Variables.size();
+                return m_variables.size();
             }
 
             static const ParamMap &GetParameters(void)
             {
-                return m_Parameters;
+                return m_parameters;
             }
 
             const std::string &GetSolverInfo(const std::string &lhs);
@@ -278,28 +278,28 @@ namespace Nektar
             void ReadUserDefinedEqn(TiXmlElement *functions);
 
             // Containers to hold conditions and associated data
-            static ParamMap m_Parameters;
-            FunctionMap     m_Functions;
-            Variable        m_Variables;
-            BoundaryRegionCollection    m_BoundaryRegions;
-            BoundaryConditionCollection m_BoundaryConditions;
-            ForcingFunctionsMap         m_ForcingFunctions;
-            InitialConditionsMap        m_InitialConditions;
-            ExactSolutionMap            m_ExactSolution;
-            UserDefinedEqnMap           m_UserDefinedEqn;
+            static ParamMap m_parameters;
+            FunctionMap     m_functions;
+            Variable        m_variables;
+            BoundaryRegionCollection    m_boundaryRegions;
+            BoundaryConditionCollection m_boundaryConditions;
+            ForcingFunctionsMap         m_forcingFunctions;
+            InitialConditionsMap        m_initialConditions;
+            ExactSolutionMap            m_exactSolution;
+            UserDefinedEqnMap           m_userDefinedEqn;
 
-            SolverInfoMap               m_SolverInfo; //< Solver Information 
+            SolverInfoMap               m_solverInfo; //< Solver Information
 
             /// The mesh graph to use for referencing geometry info.
-            const MeshGraph *m_MeshGraph;
+            const MeshGraph *m_meshGraph;
 
         private:
             BoundaryConditions();
         };
-        
+
         typedef boost::shared_ptr<BoundaryConditions> BoundaryConditionsSharedPtr;
     }
 }
 
 #endif //NEKTAR_SPATIALDOMAINS_BOUNDARYCONDITIONS_H
-    
+

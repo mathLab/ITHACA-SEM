@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Run a series of tests on the ADR Solver 
+// Description: Run a series of tests on the ADR Solver
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include "../../Auxiliary/RegressBase.h"
@@ -54,8 +54,8 @@ void MakeOkFile(std::string demo, std::string input, std::string info);
 #define COPY_COMMAND "cp "
 #endif
 
-int main(int argc, char* argv[]) 
-{ 
+int main(int argc, char* argv[])
+{
     // //Test Steady Diffusion Advection
     Execute("ADRSolver","Test_Helmholtz1D_8modes.xml","Testing 1D Helmholtz/Steady Diffusion Reaction Modes=8");
 
@@ -69,7 +69,11 @@ int main(int argc, char* argv[])
 
     Execute("ADRSolver","Test_Helmholtz2D_nodal.xml","Testing 2D Helmholtz/Steady Diffusion Reaction Modes=7");
 
-    // Test Steady Advection Diffusion Reaction 
+    Execute("ADRSolver","Test_Helmholtz3D_modal.xml","Testing 3D Helmholtz/Steady Diffusion Reaction Modes=7");
+
+    Execute("ADRSolver","Test_Helmholtz3D_nodal.xml","Testing 3D Helmholtz/Steady Diffusion Reaction Modes=7");
+
+    // Test Steady Advection Diffusion Reaction
     Execute("ADRSolver","Test_SteadyAdvDiffReact2D_modal.xml","Testing 2D Steady Advection Diffusion Reaction Modes=9");
 
     // //Test Advection
@@ -87,13 +91,13 @@ int main(int argc, char* argv[])
     Execute("ADRSolver","Test_ImDiffusion_m12.xml","Testing 2D unsteady DG implicit diffusion, order 3, modes=12");
     Execute("ADRSolver","Test_ExDiffusion_m3.xml","Testing 2D unsteady DG explicit diffusion, order 4, modes=3");
     Execute("ADRSolver","Test_ExDiffusion_m8.xml","Testing 2D unsteady DG explicit diffusion, order 4, modes=8");
-	
+
 	// //Test Unsteady Advection-Diffusion
 	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_Order1_001.xml","Testing 2D unsteady advection-diffusion, IMEXOrder1, modes=9, dt=0.001");
 	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_Order1_0001.xml","Testing 2D unsteady advection-diffusion, IMEXOrder1, modes=9, dt=0.0001");
     Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_Order2_001.xml","Testing 2D unsteady advection-diffusion, IMEXOrder2, modes=9, dt=0.001");
 	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_Order2_0001.xml","Testing 2D unsteady advection-diffusion, IMEXOrder2, modes=9, dt=0.0001");
-	
+
     return 0;
 }
 
@@ -118,7 +122,7 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
     if(fail = Test.TestL2()) // test failed
     {
         std::cout <<" status: FAILED" << std::endl;
-        std::cout << "===========================================================\n";   
+        std::cout << "===========================================================\n";
         // Explain cause of error if available
         Test.PrintTestError(fail);
         std::cout << "===========================================================\n";
@@ -126,8 +130,8 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
     else
     {
         std:: cout <<" status: PASSED" << std::endl;
-    }            
-    
+    }
+
 #ifdef _WINDOWS
 	std::string cleanup = "del /Q *.xml *.fld";
 #else
@@ -156,12 +160,12 @@ void MakeOkFile(std::string Demo, std::string input, std::string info)
     {
         std::cout << "Failed to make OK file\n";
         // Explain cause of error if available
-        std::cout << "===========================================================\n";   
+        std::cout << "===========================================================\n";
         Test.PrintTestError(fail);
-        std::cout << "===========================================================\n";    
+        std::cout << "===========================================================\n";
 }
 }
 
 
 
-	
+

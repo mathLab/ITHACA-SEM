@@ -112,7 +112,7 @@ namespace Nektar
             {
                 if(SegmentGeom = boost
                             ::dynamic_pointer_cast<SpatialDomains::SegGeom>(
-                                                expansions[i]->m_GeomShPtr))
+                                                expansions[i]->m_geomShPtr))
                 {
                     seg = MemoryManager<LocalRegions::SegExp>
                                             ::AllocateSharedPtr(Ba,SegmentGeom);
@@ -174,11 +174,11 @@ namespace Nektar
             {
                 // Retrieve basis key from expansion
                 LibUtilities::BasisKey bkey
-                                        = expansions[i]->m_BasisKeyVector[0];
+                                        = expansions[i]->m_basisKeyVector[0];
 
                 if(SegmentGeom = boost
                             ::dynamic_pointer_cast<SpatialDomains::SegGeom>(
-                                                expansions[i]->m_GeomShPtr))
+                                                expansions[i]->m_geomShPtr))
                 {
                     seg = MemoryManager<LocalRegions::SegExp>
                                         ::AllocateSharedPtr(bkey, SegmentGeom);
@@ -331,7 +331,7 @@ namespace Nektar
                         LibUtilities::BasisKey bkey = bndConstraint[i]
                                     ->GetExp(j)->GetBasis(0)->GetBasisKey();
                         SegGeom = bndConstraint[i]->GetExp(j)->GetGeom1D();
-                        
+
                         Seg = MemoryManager<LocalRegions::SegExp>
                                             ::AllocateSharedPtr(bkey, SegGeom);
                         EdgeDone[SegGeom->GetEid()] = elmtid;
@@ -464,276 +464,6 @@ namespace Nektar
         ExpList1D::~ExpList1D()
         {
         }
-
-
-        /**
-         * @param   graph1D     A mesh containing information about the domain
-         *                      and the Spectral/hp element expansion.
-         * @param   bcs         Information about the boundary conditions.
-         * @param   variable    Specifies the field.
-         * @param   bndCondExpansions   Array of ExpList1D objects each
-         *                      containing a 1D spectral/hp element expansion
-         *                      on a single boundary region.
-         * @param   bncConditions   Array of BoundaryCondition objects which
-         *                      contain information about the boundary
-         *                      conditions on the different boundary regions.
-         */
-        void ExpList1D::SetBoundaryConditionExpansion(
-                                const SpatialDomains::MeshGraph1D &graph1D,
-                                      SpatialDomains::BoundaryConditions &bcs,
-                                const std::string variable,
-                                Array<OneD, LocalRegions::PointExpSharedPtr>
-                                                            &bndCondExpansions,
-                                Array<OneD, SpatialDomains
-                                    ::BoundaryConditionShPtr> &bndConditions)
-        {
-            int i,j,k;
-            int cnt  = 0;
-
-            SpatialDomains::BoundaryRegionCollection &bregions
-                                                = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions
-                                                = bcs.GetBoundaryConditions();
-
-            LocalRegions::PointExpSharedPtr          locPointExp;
-            SpatialDomains::BoundaryConditionShPtr   locBCond;
-            SpatialDomains::VertexComponentSharedPtr vert;
-
-            int nbnd = bregions.size();
-
-            cnt=0;
-            // list Dirichlet boundaries first
-            for(i = 0; i < nbnd; ++i)
-            {
-                locBCond = (*(bconditions[i]))[variable];
-                if(locBCond->GetBoundaryConditionType()
-                        == SpatialDomains::eDirichlet)
-                {
-                    for(j = 0; j < bregions[i]->size(); j++)
-                    {
-                        for(k = 0; k < ((*bregions[i])[j])->size(); k++)
-                        {
-                            if(vert = boost::dynamic_pointer_cast
-                                    <SpatialDomains::VertexComponent>(
-                                        (*(*bregions[i])[j])[k]))
-                            {
-                                locPointExp
-                                    = MemoryManager<LocalRegions::PointExp>
-                                                ::AllocateSharedPtr(vert);
-                                bndCondExpansions[cnt]  = locPointExp;
-                                bndConditions[cnt++]    = locBCond;
-                            }
-                            else
-                            {
-                                ASSERTL0(false,
-                                         "dynamic cast to a vertex failed");
-                            }
-                        }
-                    }
-                }
-            } // end if Dirichlet
-
-            // then, list the other (non-periodic) boundaries
-            for(i = 0; i < nbnd; ++i)
-            {
-                locBCond = (*(bconditions[i]))[variable];
-
-                switch(locBCond->GetBoundaryConditionType())
-                {
-                case SpatialDomains::eNeumann:
-                case SpatialDomains::eRobin:
-                    {
-                        for(j = 0; j < bregions[i]->size(); j++)
-                        {
-                            for(k = 0; k < ((*bregions[i])[j])->size(); k++)
-                            {
-                                if(vert = boost::dynamic_pointer_cast
-                                   <SpatialDomains::VertexComponent>(
-                                        (*(*bregions[i])[j])[k]))
-                                {
-                                    locPointExp
-                                        = MemoryManager<LocalRegions::PointExp>
-                                        ::AllocateSharedPtr(vert);
-                                    bndCondExpansions[cnt]  = locPointExp;
-                                    bndConditions[cnt++]    = locBCond;
-                                }
-                                else
-                                {
-                                    ASSERTL0(false,
-                                             "dynamic cast to a vertex failed");
-                                }
-                            }
-                        }
-                    }
-                case SpatialDomains::eDirichlet: // do nothing for these types
-                case SpatialDomains::ePeriodic:
-                    break;
-                default:
-                    ASSERTL0(false,"This type of BC not implemented yet");
-                    break;
-                }
-            }
-        }
-
-
-        /**
-         * @param   graph1D     A mesh containing information about the domain
-         *                      and the spectral/hp element expansion.
-         * @param   bcs         Information about the boundary conditions.
-         * @param   variable    Specifies the field.
-         * @param   periodicVertices    Map into which the list of periodic
-         *                      vertices is placed.
-         */
-        void ExpList1D::GetPeriodicVertices(
-                                const SpatialDomains::MeshGraph1D &graph1D,
-                                      SpatialDomains::BoundaryConditions &bcs,
-                                const std::string variable,
-                                      map<int,int>& periodicVertices)
-        {
-
-            int i,j,k;
-
-            SpatialDomains::BoundaryRegionCollection &bregions
-                    = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions
-                    = bcs.GetBoundaryConditions();
-
-            int region1ID;
-            int region2ID;
-
-            SpatialDomains::Composite comp1;
-            SpatialDomains::Composite comp2;
-
-            SpatialDomains::VertexComponentSharedPtr vert1;
-            SpatialDomains::VertexComponentSharedPtr vert2;
-
-            SpatialDomains::BoundaryConditionShPtr locBCond;
-
-            // This std::map is a check so that the periodic pairs
-            // are not treated twice
-            map<int, int> doneBndRegions;
-
-            int nbnd = bregions.size();
-
-            for(i = 0; i < nbnd; ++i)
-            {
-                locBCond = (*(bconditions[i]))[variable];
-                if(locBCond->GetBoundaryConditionType()
-                        == SpatialDomains::ePeriodic)
-                {
-                    region1ID = i;
-                    region2ID = (boost::static_pointer_cast<SpatialDomains::
-                                    PeriodicBoundaryCondition>(locBCond))
-                                        ->m_ConnectedBoundaryRegion;
-
-                    if(doneBndRegions.count(region1ID)==0)
-                    {
-                        ASSERTL0(bregions[region1ID]->size()
-                                    == bregions[region2ID]->size(),
-                                 "Size of the 2 periodic boundary regions "
-                                 "should be equal");
-
-                        for(j = 0; j < bregions[region1ID]->size(); j++)
-                        {
-                            comp1 = (*(bregions[region1ID]))[j];
-                            comp2 = (*(bregions[region2ID]))[j];
-
-                            ASSERTL0(comp1->size() == comp2->size(),
-                                     "Size of the 2 periodic composites should "
-                                     "be equal");
-
-                            for(k = 0; k < comp1->size(); k++)
-                            {
-                                if(!(vert1 = boost::dynamic_pointer_cast
-                                        <SpatialDomains::VertexComponent>(
-                                            (*comp1)[k]))||
-                                   !(vert2 = boost::dynamic_pointer_cast
-                                        <SpatialDomains::VertexComponent>(
-                                            (*comp2)[k])))
-                                {
-                                    ASSERTL0(false,"dynamic cast to a "
-                                                   "VertexComponent failed");
-                                }
-
-                                // Extract the periodic vertices
-                                periodicVertices[vert1->GetVid()]
-                                    = vert2->GetVid();
-                            }
-                        }
-                    }
-                    else
-                    {
-                        ASSERTL0(doneBndRegions[region1ID]==region2ID,
-                                 "Boundary regions are not mutually periodic");
-                    }
-                    doneBndRegions[region2ID] = region1ID;
-                }
-            }
-        }
-
-
-        /**
-         * Evaluates the boundary condition expansions, \a bndCondExpansions,
-         * given the information provided by \a bndConditions.
-         * @param   time        The time at which the boundary conditions
-         *                      should be evaluated.
-         * @param   bndCondExpansions   List of boundary expansions.
-         * @param   bndConditions   Information about the boundary conditions.
-         */
-        void ExpList1D::EvaluateBoundaryConditions(
-                                const NekDouble time,
-                                Array<OneD, LocalRegions::PointExpSharedPtr>
-                                                            &bndCondExpansions,
-                                Array<OneD, SpatialDomains
-                                    ::BoundaryConditionShPtr> &bndConditions)
-        {
-            int i;
-
-            NekDouble x0;
-            NekDouble x1;
-            NekDouble x2;
-
-            for(i = 0; i < bndCondExpansions.num_elements(); ++i)
-            {
-                bndCondExpansions[i]->GetCoords(x0,x1,x2);
-
-                if(bndConditions[i]->GetBoundaryConditionType()
-                        == SpatialDomains::eDirichlet)
-                {
-                    bndCondExpansions[i]->SetCoeff(
-                            (boost::static_pointer_cast<SpatialDomains
-                             ::DirichletBoundaryCondition>(bndConditions[i])
-                             ->m_DirichletCondition).Evaluate(x0,x1,x2,time));
-                }
-                else if(bndConditions[i]->GetBoundaryConditionType()
-                        == SpatialDomains::eNeumann)
-                {
-                    bndCondExpansions[i]->SetCoeff(
-                            (boost::static_pointer_cast<SpatialDomains
-                             ::NeumannBoundaryCondition>(bndConditions[i])
-                             ->m_NeumannCondition).Evaluate(x0,x1,x2,time));
-                }
-                else if(bndConditions[i]->GetBoundaryConditionType()
-                        == SpatialDomains::eRobin)
-                {
-                    bndCondExpansions[i]->SetCoeff(
-                            (boost::static_pointer_cast<SpatialDomains
-                             ::RobinBoundaryCondition>(bndConditions[i])
-                             ->m_RobinFunction).Evaluate(x0,x1,x2,time));
-
-                    bndCondExpansions[i]->SetPhys(
-                            (boost::static_pointer_cast<SpatialDomains
-                             ::RobinBoundaryCondition>(bndConditions[i])
-                             ->m_RobinPrimitiveCoeff).Evaluate(x0,x1,x2,time));
-
-                }
-                else
-                {
-                    ASSERTL0(false,"This type of BC not implemented yet");
-                }
-            }
-        }
-
 
         /**
          * To perform post-processing on the entire domain use \a elmtId = 0.

@@ -47,10 +47,10 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        ParamMap BoundaryConditions::m_Parameters;
+        ParamMap BoundaryConditions::m_parameters;
 
         BoundaryConditions::BoundaryConditions(const MeshGraph *meshGraph):
-            m_MeshGraph(meshGraph)
+            m_meshGraph(meshGraph)
         {
         }
 
@@ -152,7 +152,7 @@ namespace Nektar
                             NekDouble value=0.0;
                             expEvaluator.DefineFunction("", rhs);
                             value =  expEvaluator.Evaluate();
-                            m_Parameters[lhs] = value;
+                            m_parameters[lhs] = value;
                             expEvaluator.SetParameter(lhs, value);
                         }
                     }
@@ -161,7 +161,7 @@ namespace Nektar
                 }
 
                 // Set ourselves up for evaluation later.
-                Equation::SetConstParameters(m_Parameters);
+                Equation::SetConstParameters(m_parameters);
             }
         }
 
@@ -181,11 +181,11 @@ namespace Nektar
                     std::string fcnString = function->Attribute("VALUE");
                     ASSERTL0(!fcnString.empty(), "Unable to find function value.");
 
-                    FunctionMap::iterator fcnIter = m_Functions.find(lhsString);
-                    ASSERTL0(fcnIter == m_Functions.end(),
+                    FunctionMap::iterator fcnIter = m_functions.find(lhsString);
+                    ASSERTL0(fcnIter == m_functions.end(),
                         (std::string("Function value: ") + lhsString + std::string("already specified.")).c_str());
 
-                    m_Functions[lhsString] = fcnString;
+                    m_functions[lhsString] = fcnString;
                     function = function->NextSiblingElement("F");
                 }
             }
@@ -233,7 +233,7 @@ namespace Nektar
                     std::istringstream variableStrm(variableName);
 
                     variableStrm >> variableName;
-                    m_Variables.push_back(variableName);
+                    m_variables.push_back(variableName);
 
                     variableElement = variableElement->NextSiblingElement("V");
                 }
@@ -291,9 +291,9 @@ namespace Nektar
                 {
                     // Extract the composites from the string and return them in a list.
                     BoundaryRegionShPtr boundaryRegion(MemoryManager<BoundaryRegion>::AllocateSharedPtr());
-                    m_MeshGraph->GetCompositeList(indxStr, *boundaryRegion);
+                    m_meshGraph->GetCompositeList(indxStr, *boundaryRegion);
 
-                    m_BoundaryRegions.push_back(boundaryRegion);
+                    m_boundaryRegions.push_back(boundaryRegion);
                 }
 
                 boundaryRegionsElement = boundaryRegionsElement->NextSiblingElement("B");
@@ -324,17 +324,17 @@ namespace Nektar
                 std::string boundaryRegionIDStr;
                 std::ostringstream boundaryRegionIDStrm(boundaryRegionIDStr);
                 boundaryRegionIDStrm << boundaryRegionID;
-                ASSERTL0(boundaryRegionID < m_BoundaryRegions.size(),
+                ASSERTL0(boundaryRegionID < m_boundaryRegions.size(),
                 (std::string("Boundary region ID not found: ") + boundaryRegionIDStr).c_str());
 
                 //// Need to also make sure that we only specify a region ID once.  Since they
                 //// must be specified in order we can just check to see if that index exists.
                 //// It should be the next one in the container.
-                //ASSERTL0(boundaryRegionID == m_BoundaryConditions.size(),
+                //ASSERTL0(boundaryRegionID == m_boundaryConditions.size(),
                 //    (std::string("Next boundary condition must be ID: ") + boundaryRegionIDStr).c_str());
 
                 // Here is the boundary region.
-                // m_BoundaryRegions[boundaryRegionID];
+                // m_boundaryRegions[boundaryRegionID];
 
                 TiXmlElement *conditionElement = regionElement->FirstChildElement();
 
@@ -354,8 +354,8 @@ namespace Nektar
 
                     if (!attrData.empty())
                     {
-                        iter = std::find(m_Variables.begin(), m_Variables.end(), attrData);
-                        ASSERTL0(iter != m_Variables.end(), (std::string("Cannot find variable: ") + attrData).c_str());
+                        iter = std::find(m_variables.begin(), m_variables.end(), attrData);
+                        ASSERTL0(iter != m_variables.end(), (std::string("Cannot find variable: ") + attrData).c_str());
                     }
 
                     if (conditionType == "N")
@@ -363,8 +363,8 @@ namespace Nektar
                         if (attrData.empty())
                         {
                             // All variables are Neumann and are set to zero.
-                            for (Variable::iterator varIter = m_Variables.begin();
-                                varIter != m_Variables.end(); ++varIter)
+                            for (Variable::iterator varIter = m_variables.begin();
+                                varIter != m_variables.end(); ++varIter)
                             {
                                 BoundaryConditionShPtr neumannCondition(MemoryManager<NeumannBoundaryCondition>::AllocateSharedPtr("00.0"));
                                 (*boundaryConditions)[*varIter]  = neumannCondition;
@@ -424,8 +424,8 @@ namespace Nektar
                         if (attrData.empty())
                         {
                             // All variables are Dirichlet and are set to zero.
-                            for (Variable::iterator varIter = m_Variables.begin();
-                                varIter != m_Variables.end(); ++varIter)
+                            for (Variable::iterator varIter = m_variables.begin();
+                                varIter != m_variables.end(); ++varIter)
                             {
                                 BoundaryConditionShPtr dirichletCondition(MemoryManager<DirichletBoundaryCondition>::AllocateSharedPtr("0"));
                                 (*boundaryConditions)[*varIter] = dirichletCondition;
@@ -484,8 +484,8 @@ namespace Nektar
                         if (attrData.empty())
                         {
                             // All variables are Robin and are set to zero.
-                            for (Variable::iterator varIter = m_Variables.begin();
-                                varIter != m_Variables.end(); ++varIter)
+                            for (Variable::iterator varIter = m_variables.begin();
+                                varIter != m_variables.end(); ++varIter)
                             {
                                 BoundaryConditionShPtr robinCondition(MemoryManager<RobinBoundaryCondition>::AllocateSharedPtr("0", "0"));
                                 (*boundaryConditions)[*varIter] = robinCondition;
@@ -587,8 +587,8 @@ namespace Nektar
 
                                 BoundaryConditionShPtr periodicCondition(MemoryManager<PeriodicBoundaryCondition>::AllocateSharedPtr(periodicBndRegionIndex[0]));
 
-                                for (Variable::iterator varIter = m_Variables.begin();
-                                     varIter != m_Variables.end(); ++varIter)
+                                for (Variable::iterator varIter = m_variables.begin();
+                                     varIter != m_variables.end(); ++varIter)
                                 {
                                     (*boundaryConditions)[*varIter] = periodicCondition;
                                 }
@@ -641,7 +641,7 @@ namespace Nektar
                     conditionElement = conditionElement->NextSiblingElement();
                 }
 
-                m_BoundaryConditions[boundaryRegionID] = boundaryConditions;
+                m_boundaryConditions[boundaryRegionID] = boundaryConditions;
                 regionElement = regionElement->NextSiblingElement("REGION");
             }
        }
@@ -660,11 +660,11 @@ namespace Nektar
                 // not all variables have to have functions specified.
                 // For those that are missing it is assumed they are
                 // "0".
-                for (Variable::iterator varIter = m_Variables.begin();
-                    varIter != m_Variables.end(); ++varIter)
+                for (Variable::iterator varIter = m_variables.begin();
+                    varIter != m_variables.end(); ++varIter)
                 {
                     ForcingFunctionShPtr forcingFunctionShPtr(MemoryManager<ForcingFunction>::AllocateSharedPtr("0"));
-                    m_ForcingFunctions[*varIter] = forcingFunctionShPtr;
+                    m_forcingFunctions[*varIter] = forcingFunctionShPtr;
                 }
 
                 while (forcingFunction)
@@ -677,17 +677,17 @@ namespace Nektar
                         (std::string("Forcing function for var: ") + variableStr + std::string(" must be specified.")).c_str());
 
                     /// Check the RHS against the functions defined in
-                    /// m_Functions.  If the name on the RHS is found
+                    /// m_functions.  If the name on the RHS is found
                     /// in the function map, then use the function
                     /// contained in the function map in place of the
                     /// RHS.
                     SubstituteFunction(fcnStr);
 
-                    ForcingFunctionsMap::iterator forcingFcnsIter = m_ForcingFunctions.find(variableStr);
+                    ForcingFunctionsMap::iterator forcingFcnsIter = m_forcingFunctions.find(variableStr);
 
-                    if (forcingFcnsIter != m_ForcingFunctions.end())
+                    if (forcingFcnsIter != m_forcingFunctions.end())
                     {
-                        m_ForcingFunctions[variableStr]->SetEquation(fcnStr);
+                        m_forcingFunctions[variableStr]->SetEquation(fcnStr);
                     }
                     else
                     {
@@ -709,11 +709,11 @@ namespace Nektar
             // they only have to be partially specified.  That is, not
             // all variables have to have functions specified.  For
             // those that are missing it is assumed they are "0".
-            for (Variable::iterator varIter = m_Variables.begin();
-                 varIter != m_Variables.end(); ++varIter)
+            for (Variable::iterator varIter = m_variables.begin();
+                 varIter != m_variables.end(); ++varIter)
             {
                 ExactSolutionShPtr exactSolutionShPtr(MemoryManager<ExactSolution>::AllocateSharedPtr("0"));
-                m_ExactSolution[*varIter] = exactSolutionShPtr;
+                m_exactSolution[*varIter] = exactSolutionShPtr;
             }
 
             if (exactSolutionElement)
@@ -730,17 +730,17 @@ namespace Nektar
                     ASSERTL0(!fcnStr.empty(), (std::string("The exact solution function must be specified for variable: ") + variableStr).c_str());
 
                     /// Check the RHS against the functions defined in
-                    /// m_Functions.  If the name on the RHS is found
+                    /// m_functions.  If the name on the RHS is found
                     /// in the function map, then use the function
                     /// contained in the function map in place of the
                     /// RHS.
                     SubstituteFunction(fcnStr);
 
-                    ExactSolutionMap::iterator exactSolutionIter = m_ExactSolution.find(variableStr);
+                    ExactSolutionMap::iterator exactSolutionIter = m_exactSolution.find(variableStr);
 
-                    if (exactSolutionIter != m_ExactSolution.end())
+                    if (exactSolutionIter != m_exactSolution.end())
                     {
-                        m_ExactSolution[variableStr]->SetEquation(fcnStr);
+                        m_exactSolution[variableStr]->SetEquation(fcnStr);
                     }
                     else
                     {
@@ -770,14 +770,14 @@ namespace Nektar
                     std::string solverValue    = solverInfo->Attribute("VALUE");
                     ASSERTL0(!solverValue.empty(),"Unable to find VALUE string");
 
-                    SolverInfoMap::iterator solverInfoIter = m_SolverInfo.find(solverProperty);
+                    SolverInfoMap::iterator solverInfoIter = m_solverInfo.find(solverProperty);
 
-                    ASSERTL0(solverInfoIter == m_SolverInfo.end(),
+                    ASSERTL0(solverInfoIter == m_solverInfo.end(),
                              (std::string("SolverInfo value: ") + solverProperty
                               + std::string(" already specified.")).c_str());
 
                     // Set Variable
-                    m_SolverInfo[solverProperty] = solverValue;
+                    m_solverInfo[solverProperty] = solverValue;
                     solverInfo = solverInfo->NextSiblingElement("I");
                 }
             }
@@ -801,21 +801,21 @@ namespace Nektar
                     ASSERTL0(!fcnString.empty(),"Unable to find eqn value");
 
                     /// Check the RHS against the functions defined in
-                    /// m_Functions.  If the name on the RHS is found
+                    /// m_functions.  If the name on the RHS is found
                     /// in the function map, then use the function
                     /// contained in the function map in place of the
                     /// RHS.
                     SubstituteFunction(fcnString);
 
-                    UserDefinedEqnMap::iterator userDefinedEqnIter = m_UserDefinedEqn.find(lhsString);
+                    UserDefinedEqnMap::iterator userDefinedEqnIter = m_userDefinedEqn.find(lhsString);
 
-                    ASSERTL0(userDefinedEqnIter == m_UserDefinedEqn.end(),
+                    ASSERTL0(userDefinedEqnIter == m_userDefinedEqn.end(),
                              (std::string("UserDefinedEqn value: ") + lhsString
                               + std::string(" already specified.")).c_str());
 
                     // Set Variable
                     UserDefinedEqnShPtr userDefinedEqnShPtr(MemoryManager<UserDefinedEqn>::AllocateSharedPtr(fcnString));
-                    m_UserDefinedEqn[lhsString] = userDefinedEqnShPtr;
+                    m_userDefinedEqn[lhsString] = userDefinedEqnShPtr;
                     userDefinedEqn = userDefinedEqn->NextSiblingElement("F");
                 }
             }
@@ -835,11 +835,11 @@ namespace Nektar
                 // not all variables have to have functions specified.
                 // For those that are missing it is assumed they are
                 // "0".
-                for (Variable::iterator varIter = m_Variables.begin();
-                    varIter != m_Variables.end(); ++varIter)
+                for (Variable::iterator varIter = m_variables.begin();
+                    varIter != m_variables.end(); ++varIter)
                 {
                     InitialConditionShPtr initialConditionShPtr(MemoryManager<InitialCondition>::AllocateSharedPtr("00.0"));
-                    m_InitialConditions[*varIter] = initialConditionShPtr;
+                    m_initialConditions[*varIter] = initialConditionShPtr;
                 }
 
                 while (initialCondition)
@@ -856,17 +856,17 @@ namespace Nektar
                                  (std::string("The initial condition function must be specified for variable: ") + variableStr).c_str());
 
                         /// Check the RHS against the functions defined in
-                        /// m_Functions.  If the name on the RHS is found
+                        /// m_functions.  If the name on the RHS is found
                         /// in the function map, then use the function
                         /// contained in the function map in place of the
                         /// RHS.
                         SubstituteFunction(fcnStr);
 
-                        InitialConditionsMap::iterator initialConditionFcnsIter = m_InitialConditions.find(variableStr);
+                        InitialConditionsMap::iterator initialConditionFcnsIter = m_initialConditions.find(variableStr);
 
-                        if (initialConditionFcnsIter != m_InitialConditions.end())
+                        if (initialConditionFcnsIter != m_initialConditions.end())
                         {
-                            m_InitialConditions[variableStr]->SetEquation(fcnStr);
+                            m_initialConditions[variableStr]->SetEquation(fcnStr);
                         }
                         else
                         {
@@ -882,8 +882,8 @@ namespace Nektar
 
                         InitialConditionShPtr initialConditionShPtr(MemoryManager<InitialCondition>::AllocateSharedPtr("00.0"));
 
-                        m_InitialConditions[restartStr] = initialConditionShPtr;
-                        m_InitialConditions[restartStr]->SetEquation(fileStr);
+                        m_initialConditions[restartStr] = initialConditionShPtr;
+                        m_initialConditions[restartStr]->SetEquation(fileStr);
                     }
                     else
                     {
@@ -899,9 +899,9 @@ namespace Nektar
         {
             bool returnval;
 
-            ParamMap::iterator paramMapIter = m_Parameters.find(parmName);
+            ParamMap::iterator paramMapIter = m_parameters.find(parmName);
 
-            if(paramMapIter == m_Parameters.end())
+            if(paramMapIter == m_parameters.end())
             {
                 returnval = false;
             }
@@ -915,9 +915,9 @@ namespace Nektar
 
         NekDouble BoundaryConditions::GetParameter(const std::string &parmName)
         {
-            ParamMap::iterator paramMapIter = m_Parameters.find(parmName);
+            ParamMap::iterator paramMapIter = m_parameters.find(parmName);
 
-            ASSERTL0(paramMapIter != m_Parameters.end(),
+            ASSERTL0(paramMapIter != m_parameters.end(),
                 (std::string("Unable to find requested parameter: ") + parmName).c_str());
 
             return paramMapIter->second;
@@ -926,9 +926,9 @@ namespace Nektar
 
         const std::string &BoundaryConditions::GetFunction(const std::string &lhs)
         {
-            FunctionMap::iterator fcnIter = m_Functions.find(lhs);
+            FunctionMap::iterator fcnIter = m_functions.find(lhs);
 
-            ASSERTL1(fcnIter != m_Functions.end(),
+            ASSERTL1(fcnIter != m_functions.end(),
                 (std::string("Unable to find requested function: ") + lhs).c_str());
 
             return fcnIter->second;
@@ -936,9 +936,9 @@ namespace Nektar
 
         const std::string &BoundaryConditions::GetSolverInfo(const std::string &property)
         {
-            SolverInfoMap::iterator slvIter = m_SolverInfo.find(property);
+            SolverInfoMap::iterator slvIter = m_solverInfo.find(property);
 
-            ASSERTL1(slvIter != m_SolverInfo.end(),
+            ASSERTL1(slvIter != m_solverInfo.end(),
                 (std::string("Unable to find requested property: ") + property).c_str());
 
             return slvIter->second;
@@ -949,9 +949,9 @@ namespace Nektar
         {
 
             bool returnval = true;
-            SolverInfoMap::iterator slvIter = m_SolverInfo.find(property);
+            SolverInfoMap::iterator slvIter = m_solverInfo.find(property);
 
-            if(slvIter == m_SolverInfo.end())
+            if(slvIter == m_solverInfo.end())
             {
                 returnval = false;
             }
@@ -962,9 +962,9 @@ namespace Nektar
 
         Equation BoundaryConditions::GetFunctionAsEquation(const std::string &lhs)
         {
-            FunctionMap::iterator fcnIter = m_Functions.find(lhs);
+            FunctionMap::iterator fcnIter = m_functions.find(lhs);
 
-            ASSERTL1(fcnIter != m_Functions.end(),
+            ASSERTL1(fcnIter != m_functions.end(),
                 (std::string("Unable to find requested function: ") + lhs).c_str());
 
             return Equation(fcnIter->second);
@@ -973,10 +973,10 @@ namespace Nektar
 
         bool BoundaryConditions::SubstituteFunction(std::string &str)
         {
-            FunctionMap::iterator fcnIter = m_Functions.find(str);
+            FunctionMap::iterator fcnIter = m_functions.find(str);
             bool returnval = false;
 
-            if (fcnIter != m_Functions.end())
+            if (fcnIter != m_functions.end())
             {
                 str = fcnIter->second;
                 returnval = true;
@@ -989,7 +989,7 @@ namespace Nektar
         {
             ConstForcingFunctionShPtr returnval;
 
-            if (indx >= m_Variables.size() || indx < 0)
+            if (indx >= m_variables.size() || indx < 0)
             {
                 string errStr;
                 std::ostringstream strStream(errStr);
@@ -999,7 +999,7 @@ namespace Nektar
                     (std::string("Unable to find variable corresponding to index (ForcingFunction): ") + errStr).c_str());
             }
 
-            return GetForcingFunction(m_Variables[indx]);
+            return GetForcingFunction(m_variables[indx]);
         }
 
         ConstForcingFunctionShPtr BoundaryConditions::GetForcingFunction(const std::string &var) const
@@ -1007,10 +1007,10 @@ namespace Nektar
             ConstForcingFunctionShPtr returnval;
 
             // Check that var is defined in forcing function list.
-            ForcingFunctionsMap::const_iterator ffIter = m_ForcingFunctions.find(var);
+            ForcingFunctionsMap::const_iterator ffIter = m_forcingFunctions.find(var);
 
             bool found = false;
-            if( ffIter != m_ForcingFunctions.end() )
+            if( ffIter != m_forcingFunctions.end() )
             {
                 returnval = ffIter->second;
                 found = true;
@@ -1038,9 +1038,9 @@ namespace Nektar
             bool returnval = false;
 
             // Check that var is defined in forcing function list.
-            ExactSolutionMap::const_iterator exSolnIter = m_ExactSolution.find(m_Variables[indx]);
+            ExactSolutionMap::const_iterator exSolnIter = m_exactSolution.find(m_variables[indx]);
 
-            if(exSolnIter != m_ExactSolution.end())
+            if(exSolnIter != m_exactSolution.end())
             {
                 returnval = true;
             }
@@ -1052,7 +1052,7 @@ namespace Nektar
         {
             ConstExactSolutionShPtr returnval;
 
-            if (indx >= m_Variables.size() || indx < 0)
+            if (indx >= m_variables.size() || indx < 0)
             {
                 string errStr;
                 std::ostringstream strStream(errStr);
@@ -1062,7 +1062,7 @@ namespace Nektar
                     (std::string("Unable to find variable corresponding to index (ExactSolution): ") + errStr).c_str());
             }
 
-            return GetExactSolution(m_Variables[indx]);
+            return GetExactSolution(m_variables[indx]);
         }
 
         ConstExactSolutionShPtr BoundaryConditions::GetExactSolution(const std::string &var) const
@@ -1070,9 +1070,9 @@ namespace Nektar
             ConstExactSolutionShPtr returnval;
 
             // Check that var is defined in forcing function list.
-            ExactSolutionMap::const_iterator exSolnIter = m_ExactSolution.find(var);
+            ExactSolutionMap::const_iterator exSolnIter = m_exactSolution.find(var);
 
-            if(exSolnIter != m_ExactSolution.end())
+            if(exSolnIter != m_exactSolution.end())
             {
                 returnval = exSolnIter->second;
             }
@@ -1091,9 +1091,9 @@ namespace Nektar
             bool returnval = false;
 
             // Check that var is defined in forcing function list.
-            UserDefinedEqnMap::const_iterator userDefIter = m_UserDefinedEqn.find(var);
+            UserDefinedEqnMap::const_iterator userDefIter = m_userDefinedEqn.find(var);
 
-            if(userDefIter != m_UserDefinedEqn.end())
+            if(userDefIter != m_userDefinedEqn.end())
             {
                 returnval = true;
             }
@@ -1106,7 +1106,7 @@ namespace Nektar
         {
             ConstUserDefinedEqnShPtr returnval;
 
-            if (indx >= m_Variables.size() || indx < 0)
+            if (indx >= m_variables.size() || indx < 0)
             {
                 string errStr;
                 std::ostringstream strStream(errStr);
@@ -1116,7 +1116,7 @@ namespace Nektar
                     (std::string("Unable to find variable corresponding to index (UserDefineEqn): ") + errStr).c_str());
             }
 
-            return GetUserDefinedEqn(m_Variables[indx]);
+            return GetUserDefinedEqn(m_variables[indx]);
         }
 
         ConstUserDefinedEqnShPtr BoundaryConditions::GetUserDefinedEqn(const std::string &var) const
@@ -1124,9 +1124,9 @@ namespace Nektar
             ConstUserDefinedEqnShPtr returnval;
 
             // Check that var is defined in forcing function list.
-            UserDefinedEqnMap::const_iterator userDefIter = m_UserDefinedEqn.find(var);
+            UserDefinedEqnMap::const_iterator userDefIter = m_userDefinedEqn.find(var);
 
-            if(userDefIter != m_UserDefinedEqn.end())
+            if(userDefIter != m_userDefinedEqn.end())
             {
                 returnval = userDefIter->second;
             }
@@ -1145,10 +1145,10 @@ namespace Nektar
             bool returnval = false;
 
             // Check that var is defined in forcing function list.
-            InitialConditionsMap::const_iterator ffIter = m_InitialConditions.find(m_Variables[indx]);
+            InitialConditionsMap::const_iterator ffIter = m_initialConditions.find(m_variables[indx]);
 
             bool found = false;
-            if( ffIter != m_InitialConditions.end() )
+            if( ffIter != m_initialConditions.end() )
             {
                 returnval = true;
             }
@@ -1160,7 +1160,7 @@ namespace Nektar
         {
             ConstInitialConditionShPtr returnval;
 
-            if (indx >= m_Variables.size() || indx < 0)
+            if (indx >= m_variables.size() || indx < 0)
             {
                 string errStr;
                 std::ostringstream strStream(errStr);
@@ -1170,7 +1170,7 @@ namespace Nektar
                     (std::string("Unable to find variable corresponding to index (InitialCondition): ") + errStr).c_str());
             }
 
-            return GetInitialCondition(m_Variables[indx]);
+            return GetInitialCondition(m_variables[indx]);
         }
 
         ConstInitialConditionShPtr BoundaryConditions::GetInitialCondition(const string &var) const
@@ -1178,10 +1178,10 @@ namespace Nektar
             ConstInitialConditionShPtr returnval;
 
             // Check that var is defined in forcing function list.
-            InitialConditionsMap::const_iterator ffIter = m_InitialConditions.find(var);
+            InitialConditionsMap::const_iterator ffIter = m_initialConditions.find(var);
 
             bool found = false;
-            if( ffIter != m_InitialConditions.end() )
+            if( ffIter != m_initialConditions.end() )
             {
                 returnval = ffIter->second;
                 found = true;
@@ -1201,9 +1201,9 @@ namespace Nektar
             bool returnval = false;
 
             // Check that var is defined in forcing function list.
-            InitialConditionsMap::const_iterator ffIter = m_InitialConditions.find(var);
+            InitialConditionsMap::const_iterator ffIter = m_initialConditions.find(var);
 
-            if( ffIter != m_InitialConditions.end() )
+            if( ffIter != m_initialConditions.end() )
             {
                 returnval = true;
             }

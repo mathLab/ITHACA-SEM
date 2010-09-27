@@ -65,22 +65,22 @@ namespace Nektar
 
             inline const SegGeomVector &GetSeggeoms(void) const
             {
-                return m_seggeoms;
+                return m_segGeoms;
             }
 
             inline const int GetVidFromElmt(const int vert, const int elmt) const
             {
-                ASSERTL2((elmt >=0)&&(elmt < m_seggeoms.size()),
+                ASSERTL2((elmt >=0)&&(elmt < m_segGeoms.size()),
                     "eid is out of range");
 
-                return m_seggeoms[elmt]->GetVid(vert);
+                return m_segGeoms[elmt]->GetVid(vert);
             }
 
         protected:
 
         private:
         };
-        
+
         typedef boost::shared_ptr<MeshGraph1D> MeshGraph1DSharedPtr;
 
     }; //end of namespace

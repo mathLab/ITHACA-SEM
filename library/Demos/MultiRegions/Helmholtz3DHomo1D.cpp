@@ -30,17 +30,17 @@ int main(int argc, char *argv[])
     {
         if(!NoCaseStringCompare(argv[2],"MultiLevelStaticCond"))
         {
-            SolnType = MultiRegions::eDirectMultiLevelStaticCond; 
+            SolnType = MultiRegions::eDirectMultiLevelStaticCond;
             cout << "Solution Type: MultiLevel Static Condensation" << endl;
         }
         else if(!NoCaseStringCompare(argv[2],"StaticCond"))
         {
-            SolnType = MultiRegions::eDirectStaticCond; 
+            SolnType = MultiRegions::eDirectStaticCond;
             cout << "Solution Type: Static Condensation" << endl;
         }
         else if(!NoCaseStringCompare(argv[2],"FullMatrix"))
         {
-            SolnType = MultiRegions::eDirectFullMatrix; 
+            SolnType = MultiRegions::eDirectFullMatrix;
             cout << "Solution Type: Full Matrix" << endl;
         }
         else
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
     // Print summary of solution details
     lambda = bcs.GetParameter("Lambda");
     const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
-    LibUtilities::BasisKey bkey0 = expansions[0]->m_BasisKeyVector[0];
+    LibUtilities::BasisKey bkey0 = expansions[0]->m_basisKeyVector[0];
     cout << "Solving 3D Helmholtz (Homogeneous in z-direction):"  << endl;
     cout << "         Lambda          : " << lambda << endl;
     cout << "         Lz              : " << lz << endl;
@@ -168,11 +168,11 @@ int main(int argc, char *argv[])
     Exp->GetFieldDefinitions(FieldDef);
 
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-    
+
     Exp->GlobalToLocal();
     for(i = 0; i < FieldDef.size(); ++i)
     {
-        FieldDef[i]->m_Fields.push_back("u");
+        FieldDef[i]->m_fields.push_back("u");
         Exp->AppendFieldData(FieldDef[i], FieldData[i]);
     }
 
@@ -193,7 +193,7 @@ int NoCaseStringCompare(const string & s1, const string& s2)
 {
     string::const_iterator it1=s1.begin();
     string::const_iterator it2=s2.begin();
-    
+
     //stop when either string's end has been reached
     while ( (it1!=s1.end()) && (it2!=s2.end()) )
     {
@@ -202,20 +202,20 @@ int NoCaseStringCompare(const string & s1, const string& s2)
             // return -1 to indicate smaller than, 1 otherwise
             return (::toupper(*it1)  < ::toupper(*it2)) ? -1 : 1;
         }
-        
+
         //proceed to the next character in each string
         ++it1;
         ++it2;
     }
-    
+
     size_t size1=s1.size();
     size_t size2=s2.size();// cache lengths
-    
+
     //return -1,0 or 1 according to strings' lengths
     if (size1==size2)
     {
         return 0;
     }
-    
+
     return (size1 < size2) ? -1 : 1;
 }

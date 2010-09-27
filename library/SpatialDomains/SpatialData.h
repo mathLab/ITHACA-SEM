@@ -82,7 +82,7 @@ namespace Nektar
         /// Vector of SpatialData pointers.
         typedef std::vector< SpatialDataSharedPtr > SpatialDataVector;
         /// Iterator for SpatialData vector.
-        typedef std::vector< SpatialDataSharedPtr >::iterator 
+        typedef std::vector< SpatialDataSharedPtr >::iterator
                                                     SpatialDataVectorIter;
         /// Mapping between name and SpatialData.
         typedef std::map< std::string, SpatialDataSharedPtr > SpatialDataMap;
@@ -116,16 +116,16 @@ namespace Nektar
 
             private:
                 /// Number of quadrature points in the domain.
-                int                                 mNq;
+                int                                 m_nq;
 
                 /// List of SpatialData
-                SpatialDataMap                      mSD;
+                SpatialDataMap                      m_spatialMap;
 
                 /// List of constant-valued parameter definitions.
-                std::map<std::string, NekDouble>    mSDConstDef;
+                std::map<std::string, NekDouble>    m_constMap;
 
                 /// List of analytic parameter definitions.
-                std::map<std::string, std::string>  mSDAnalyticDef;
+                std::map<std::string, std::string>  m_analyticMap;
 
                 /// Default constructor.
                 SpatialParameters();
@@ -152,13 +152,13 @@ namespace Nektar
 
         inline bool SpatialParameters::Exists(std::string name)
         {
-            return (mSD.find(name) != mSD.end());
+            return (m_spatialMap.find(name) != m_spatialMap.end());
         }
 
         inline SpatialDataSharedPtr& SpatialParameters::GetData(
                             std::string name)
         {
-            return mSD[name];
+            return m_spatialMap[name];
         }
     }
 }

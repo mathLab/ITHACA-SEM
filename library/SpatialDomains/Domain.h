@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/Domain.h,v $
+//  File: Domain.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -31,7 +31,6 @@
 //
 //  Description:
 //
-//
 ////////////////////////////////////////////////////////////////////////////////
 #ifndef NEKTAR_SPATIALDOMAINS_DOMAIN_H
 #define NEKTAR_SPATIALDOMAINS_DOMAIN_H
@@ -52,7 +51,7 @@ namespace Nektar
             eNeumann,
             eRobin,
             eCauchy,
-            
+
             eDummy,
             eBoundaryTypeLastElement = eDummy-1
         };
@@ -73,7 +72,7 @@ namespace Nektar
             BoundaryType m_BoundaryType;
             std::vector< Composite > m_BoundaryComposites;
         };
-    
+
         typedef boost::shared_ptr< BoundaryEntry > BoundarySharedPtr;
         typedef std::vector< BoundarySharedPtr > BoundaryVector;
         typedef std::vector< BoundarySharedPtr >::iterator BoundaryVectorIter;
@@ -82,9 +81,7 @@ namespace Nektar
 
         class Domain
         {
-
         public:
-
             // Must have a MeshGraph from which the composites
             // and associated items can be obtained.
             Domain(MeshGraph *meshGraph);
@@ -104,10 +101,10 @@ namespace Nektar
 
 
         protected:
-            std::string     m_FileName;
-            MeshGraph      *m_MeshGraph;
-            CompositeVector m_Domain;
-            BoundaryVector  m_Boundaries;
+            //std::string     m_filename;
+            MeshGraph      *m_meshGraph;
+            CompositeVector m_domain;
+            BoundaryVector  m_boundaries;
 
         private:
             Domain(){ NEKERROR(ErrorUtil::efatal, "Must provide a meshgraph to create a Domain."); };   // Don't call this.

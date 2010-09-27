@@ -50,7 +50,7 @@ namespace Nektar
             ~InterfaceComponent();
 
         protected:
-            std::list<CompToElmt> m_elmtmap;
+            std::list<CompToElmt> m_elmtMap;
 
         private:
         };

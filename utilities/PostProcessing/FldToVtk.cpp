@@ -222,8 +222,9 @@ int main(int argc, char *argv[])
         //string   outname(strtok(argv[n],"."));
         //outname += ".vtu";
         ofstream outfile(fname.c_str());
-
+        cout << "Writing file: " << fname;
         Exp[0]->WriteVtkHeader(outfile);
+        cout << ".";
         // For each field write out field data for each expansion.
         for(i = 0; i < Exp[0]->GetNumElmts(); ++i)
         {
@@ -234,8 +235,10 @@ int main(int argc, char *argv[])
                 Exp[j]->WriteVtkPieceData(outfile,i, fielddef[0]->m_fields[j]);
             }
             Exp[0]->WriteVtkPieceFooter(outfile,i);
+            cout << ".";
         }
         Exp[0]->WriteVtkFooter(outfile);
+        cout << "Done " << endl;
         //----------------------------------------------
     }
     return 0;

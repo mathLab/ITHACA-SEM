@@ -120,6 +120,7 @@ table.border {
   border-spacing: 8px 4px;
   border: 2px solid black;
 }
+table.image { margin-left: 2em }
 caption.border {
   margin: 0;
   padding: 1em 0;
@@ -128,6 +129,12 @@ font-size: 80%;
 }
 td.border{
   border-right: 2px solid black;
+}
+td.caption
+{
+  font-size: 80%;
+  font-family: Verdana, Arial, sans-serif;
+  text-align: center;
 }
 th.border{
   border-right: 2px solid black;

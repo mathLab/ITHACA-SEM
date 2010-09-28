@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define Expansion
     int expdim   = graphShPt->GetMeshDimension();
-    int nfields = fielddef[0]->m_Fields.size();
+    int nfields = fielddef[0]->m_fields.size();
     Array<OneD, MultiRegions::ExpListSharedPtr> Exp(nfields);
 
     switch(expdim)
@@ -73,19 +73,19 @@ int main(int argc, char *argv[])
                 ASSERTL0(false,"Dynamics cast failed");
             }
 
-            ASSERTL0(fielddef[0]->m_NumHomogeneousDir <= 1,"NumHomogeneousDir is only set up for 1");
+            ASSERTL0(fielddef[0]->m_numHomogeneousDir <= 1,"NumHomogeneousDir is only set up for 1");
 
-            if(fielddef[0]->m_NumHomogeneousDir == 1)
+            if(fielddef[0]->m_numHomogeneousDir == 1)
             {
                 MultiRegions::ExpList2DHomogeneous1DSharedPtr Exp2DH1;
 
                 // Define Homogeneous expansion
-                int nplanes = fielddef[0]->m_NumModes[1];
+                int nplanes = fielddef[0]->m_numModes[1];
 
                 // choose points to be at evenly spaced points at
                 const LibUtilities::PointsKey Pkey(nplanes+1,LibUtilities::ePolyEvenlySpaced);
-                const LibUtilities::BasisKey  Bkey(fielddef[0]->m_Basis[1],nplanes,Pkey);
-                NekDouble ly = fielddef[0]->m_HomogeneousLengths[0];
+                const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[1],nplanes,Pkey);
+                NekDouble ly = fielddef[0]->m_homogeneousLengths[0];
 
                 Exp2DH1 = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::AllocateSharedPtr(Bkey,ly,*mesh);
                 Exp[0] = Exp2DH1;
@@ -116,20 +116,20 @@ int main(int argc, char *argv[])
                 ASSERTL0(false,"Dynamics cast failed");
             }
 
-            ASSERTL0(fielddef[0]->m_NumHomogeneousDir <= 1,"NumHomogeneousDir is only set up for 1");
+            ASSERTL0(fielddef[0]->m_numHomogeneousDir <= 1,"NumHomogeneousDir is only set up for 1");
 
-            if(fielddef[0]->m_NumHomogeneousDir == 1)
+            if(fielddef[0]->m_numHomogeneousDir == 1)
             {
                 MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1;
 
                 // Define Homogeneous expansion
-                int nplanes = fielddef[0]->m_NumModes[2];
+                int nplanes = fielddef[0]->m_numModes[2];
 
                 // choose points to be at evenly spaced points at
                 // nplanes + 1 points
                 const LibUtilities::PointsKey Pkey(nplanes+1,LibUtilities::ePolyEvenlySpaced);
-                const LibUtilities::BasisKey  Bkey(fielddef[0]->m_Basis[2],nplanes,Pkey);
-                NekDouble lz = fielddef[0]->m_HomogeneousLengths[0];
+                const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[2],nplanes,Pkey);
+                NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
 
 Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(Bkey,lz,*mesh);
                 Exp[0] = Exp3DH1;
@@ -167,7 +167,7 @@ Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr
     {
         for(int i = 0; i < fielddata.size(); ++i)
         {
-            Exp[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_Fields[j]);
+            Exp[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j]);
         }
         Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
     }
@@ -180,7 +180,7 @@ Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr
 
     for(int j = 0; j < Exp.num_elements(); ++j)
     {
-	var = var + ", " + fielddef[0]->m_Fields[j];
+	var = var + ", " + fielddef[0]->m_fields[j];
       }
 
     string   outname(strtok(argv[argc-1],"."));
@@ -202,7 +202,7 @@ Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr
     for(i = 0; i < nfields; ++i)
     {
         string   outfile(strtok(argv[argc-1],"."));
-        outfile += "_" + fielddef[0]->m_Fields[i] + ".pos";
+        outfile += "_" + fielddef[0]->m_fields[i] + ".pos";
         ofstream outstrm(outfile.c_str());
 
         Exp[i]->WriteToFile(outstrm,eGmsh);

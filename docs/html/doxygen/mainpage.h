@@ -52,10 +52,10 @@
  *
  * @section sectionMainContents Contents
  *
- * @subsection subsectionMainContentFormulation Formulation
+ * @subsection subsectionMainContentBackground Background formulation
  * - @subpage pageConnectivity
  *
- * @subsection subsectionMainContentLibraries Sublibraries
+ * @subsection subsectionMainContentLibraries Libraries
  * - @subpage pageStdRegions (Nektar#StdRegions)
  * - @subpage pageSpatialDomains (Nektar#SpatialDomains)
  * - @subpage pageLocalRegions (Nektar#LocalRegions)
@@ -63,15 +63,15 @@
  * - @subpage pageLibUtilities (Nektar#LibUtilities)
  *
  * @subsection subsectionMainContentSolvers Applications
- * - @subpage pageGeneralLinearMethods
- * - @subpage pageExampleSolvers (including the @ref pageADRSolver)
+ * - @subpage pageXML
+ * - @subpage pageSolvers
  *
- * @subsection subsectionMainContentDevelopment Development
+ * @subsection subsectionMainContentDevelopment Development pages
  * - @subpage pageCodeStandard
  * - @subpage todo
  * - @subpage deprecated
  *
- * @subsection subsectionMainContentAppendix Appendix
+ * @subsection subsectionMainContentAppendix Appendices
  * - @subpage pageOptimisation
  * - @subpage pagePolylib
  *

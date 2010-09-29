@@ -65,7 +65,8 @@ namespace Nektar
      * file.
      * @param   fileNameString                  Session file name.
      * @param   UseInputFileForProjectionType   Default: false.
-     * @param   UseContinuoutField              Default: false.
+     * @param   UseContinuousField              Default: false.
+     * @param   globoptfile                     Global optimisations.
      */
     ADRBase::ADRBase(const string &fileNameString, bool UseInputFileForProjectionType,
                      bool UseContinuousField, string &globoptfile)
@@ -149,6 +150,7 @@ namespace Nektar
      * and the frequency of checkpoints.
      * @param   mesh            Session
      * @param   nvariables      Number of dependent variables.
+     * @param   globoptfile     Global optimisations.
      */
     void ADRBase::SetADRBase(SpatialDomains::MeshGraphSharedPtr &mesh,
                              int nvariables,  string &globoptfile)
@@ -558,6 +560,7 @@ namespace Nektar
      * Compute the error in the L2-norm
      * @param   field           The field to compare.
      * @param   exactsoln       The exact solution to compare with.
+     * @param   Normalised      Normalise L2-error.
      * @returns                 Error in the L2-norm.
      */
     NekDouble ADRBase::L2Error(int field,
@@ -633,7 +636,7 @@ namespace Nektar
      * integral), i.e. \f$ (\nabla \phi \cdot F) \f$ where for example
      * \f$ F=uV \f$.
      * @param   F           Fields.
-     * @param   outfield    Storage for result.
+     * @param   outarray    Storage for result.
      *
      * \note Assuming all fields are of the same expansion and order so that we
      * can use the parameters of m_fields[0].
@@ -661,7 +664,7 @@ namespace Nektar
      * Calculate Inner product of the divergence advection form
      * \f$(\phi, \nabla \cdot F)\f$, where for example \f$ F = uV \f$.
      * @param   F           Fields.
-     * @param   outfield    Storage for result.
+     * @param   outarray    Storage for result.
      */
     void ADRBase::WeakAdvectionDivergenceForm(
                 const Array<OneD, Array<OneD, NekDouble> > &F,
@@ -1182,7 +1185,6 @@ namespace Nektar
    * Write data to file in Tecplot format
    * @param   n                   Checkpoint index.
    * @param   name                Additional name (appended to session name).
-   * @param   var                 variables names
    * @param   IsInPhysicalSpace   Indicates if field data is in phys space.
    */
   void ADRBase::WriteTecplotFile(const int n, std::string name, bool IsInPhysicalSpace)

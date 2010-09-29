@@ -238,7 +238,7 @@ namespace Nektar
                 return AllocateSharedPtrD(DefaultCustomDeallocator());
             }
 
-            /// @define ALLOCATE_SHARED_PTR_METHOD_GENERATOR
+            /// @def ALLOCATE_SHARED_PTR_METHOD_GENERATOR
             /// @brief Generator for allocating shared pointers to objects with
             /// constructors having a variable number of parameters.
             ///

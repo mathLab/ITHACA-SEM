@@ -1,26 +1,121 @@
 namespace Nektar {
 /**
- * \page pageExampleSolvers Example Solvers
+ * \page pageSolvers Solvers
  *
  * A number of solvers are provided with the Nektar++ to demonstrate how to
  * use the toolkit to solve a number of common (as well as less-common)
  * problems. These include:
- * - AdvectionDiffusionReaction - a general solver framework for solving
- *   a number of linear PDE systems which are in this form using either a
- *   Continuous Galerkin or Discontinuous Galerkin approach.
+ * - @subpage pageADRSolver ADRSolver - a general solver for solving a number of linear PDE systems
+ *   which are in this form using either a Continuous Galerkin or Discontinuous
+ *   Galerkin approach.
  * - ADR2DManifold - solves mono-domain models such as the
  *   FitzHugh-Nagumo equations or the Aliev-Panfilov model on a 2D manifold
  *   embedded in 3-space.
  * - IncNavierStokes - An incompressible Navier-Stokes solver.
  *
- * A more general purpose modular solver is the ADRSolver. Details on how to
- * use the solver and implement a new module can be found
- * \subpage pageADRSolver here.
+ * All these solvers utilise a general timestepping scheme:
+ * - @subpage pageGeneralLinearMethods.
  */
 
+/**
+ * \page pageADRSolver ADRSolver
+ *
+ * This solves a range of problems using the spectral/hp discretisation and is
+ * a good starting point for using the library. A number of example session
+ * files are included in the \c solvers/ADRSolver/Examples directory.
+ *
+ * To run the solver provide an XML session file defining the problem to solve:
+ * @verbatim ./ADRSolver <session>.xml @endverbatim
+ *
+ * A range of solvers are already implemented in the framework:
+ * <table border>
+ * <tr>
+ * <td>MonodomainAlievPanfilov</td>
+ * <td>Phenomological model of canine cardiac electrophysiology.</td>
+ * </tr>
+ * <tr>
+ * <td>MonodomainFitzHughNagumo</td>
+ * <td>Phenomological model of nerve cell electrophysiology.</td>
+ * </tr>
+ * <tr><td>Helmholtz</td><td></td></tr>
+ * <tr><td>Laplace</td><td></td></tr>
+ * <tr><td>Poisson</td><td></td></tr>
+ * <tr><td>SteadyAdvectionDiffusion</td><td></td></tr>
+ * <tr><td>SteadyAdvectionDiffusionReaction</td><td></td></tr>
+ * <tr><td>SteadyDiffusion</td>
+ *     <td>Alias for Poisson</td></tr>
+ * <tr><td>SteadyDiffusionReaction</td>
+ *     <td>Alias for Helmholtz</td></tr>
+ * <tr><td>UnsteadyAdvection</td>
+ *     <td>Unsteady Advection equation.</td></tr>
+ * <tr><td>UnsteadyAdvectionDiffusion</td><td></td></tr>
+ * <tr><td>UnsteadyDiffusion</td><td></td></tr>
+ * <tr><td>UnsteadyInviscidBurger</td><td></td></tr>
+ * </table>
+ *
+ * \section sectionADRSolverAdvection Example: Advection Equation
+ *
+ * As an example, consider the advection equation
+ * \f[ \frac{\partial u}{\partial t} = \frac{\partial u}{\partial x} \f]
+ * on a 2D domain with mixed time-dependent boundary conditions.
+ * A corresponding session file is given in
+ * \c solvers/ADRSolver/Examples/Advection.xml.
+ * The file consists of three sections:
+ * - GEOMETRY: defining the mesh
+ * - EXPANSIONS: defining the polynomial basis to use on each mesh element
+ * - CONDITIONS: defining the parameters of the problem to solve
+ * General information on the XML file format used by Nektar++ can be found
+ * @ref pageXML here.
+ *
+ * A number of components of the \<CONDITIONS> section are of importance here.
+ * First, we set the \<PARAMETERS> for our time integration by setting the
+ * FinTime, NumSteps and TimeStep values.
+ * @code
+ *    <P> FinTime        = 0.75             </P>
+ *    <P> NumSteps       = 500              </P>
+ *    <P> TimeStep       = FinTime/NumSteps </P>
+ * @endcode
+ * The frequency of checkpoint files and status updates can be controlled
+ * through a further two parameters:
+ * @code
+ *    <P> IO_CheckSteps  = NumSteps         </P>
+ *    <P> IO_InfoSteps   = 1000             </P>
+ * @endcode
+ * The final two parameters indicate the advection velocity. Although these are
+ * not directly used by the solver, they are embedded in the boundary
+ * conditions defined later.
+ * @code
+ *    <P> advx           = 1                </P>
+ *    <P> advy           = 1                </P>
+ * @endcode
+ *
+ * The \<SOLVERINFO> section allows us to specify the solver, the type
+ * of projection (continuous or discontinuous) and the time integration scheme
+ * to use.
+ * @code
+ * <SOLVERINFO>
+ *    <I PROPERTY="EQTYPE" VALUE="UnsteadyAdvection"/>
+ *    <I PROPERTY="Projection" VALUE="Continuous"/>
+ *    <I PROPERTY="TimeIntegrationMethod"  VALUE="ClassicalRungeKutta4"/>
+ * </SOLVERINFO>
+ * @endcode
+ *
+ * For the advection equation we must specify the advection velocity for the
+ * solver. This is done in the \<USERDEFINEDEQNS> subsection:
+ * @code
+ * <USERDEFINEDEQNS>
+ *    <F LHS="Vx" VALUE="1"  />
+ *    <F LHS="Vy" VALUE="1" />
+ * </USERDEFINEDEQNS>
+ * @endcode
+ *
+ * \section sectionADRSolverNewModule Creating new modules
+ * Details on how to implement a new module can be found
+ * \subpage pageADRSolverImplement here.
+ */
 
 /**
- * \page pageADRSolver ADRSolver Framework
+ * \page pageADRSolverImplement ADRSolver Framework
  *
  * The ADRSolver provides a general-purpose framework for implementing solvers
  * for both \ref subsectionADRSolverModuleImplementationSteady steady-state

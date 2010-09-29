@@ -273,15 +273,6 @@ namespace Nektar
                                                     const std::string variable,
                                                     bool DeclareCoeffPhysArrays = true);
 
-            /// Populates the list of boundary condition expansions.
-            void SetBoundaryConditionExpansion(
-                        SpatialDomains::MeshGraph2D &graph2D,
-                        SpatialDomains::BoundaryConditions &bcs,
-                        const std::string variable,
-                        Array<OneD, ExpList1DSharedPtr> &bndCondExpansions,
-                        Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                                                                &bndConditions);
-
             /// Generates a map of periodic edges in the mesh.
             void GetPeriodicEdges(
                         SpatialDomains::MeshGraph2D &graph2D,

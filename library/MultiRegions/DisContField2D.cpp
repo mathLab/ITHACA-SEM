@@ -404,7 +404,7 @@ namespace Nektar
                     }
                 }
             }
-            bool UseGenSegExp = true;
+
             m_numDirBndCondExpansions = cnt2;
 
             m_bndCondExpansions  = Array<OneD,MultiRegions::ExpList1DSharedPtr>(cnt);
@@ -462,81 +462,6 @@ namespace Nektar
                 }
             }
         }
-
-        /**
-         * @param   graph2D     A mesh containing information about the domain
-         *                      and the spectral/hp element expansions.
-         * @param   bcs         Information about the boundary conditions.
-         * @param   variable    Specifies the field.
-         * @param   bndCondExpansions   Array of ExpList1D objects each
-         *                      containing a 1D spectral/hp element expansion
-         *                      on a single boundary region.
-         * @param   bncCondition    Array of BoundaryCondition objects which
-         *                      contain information about the boundary
-         *                      conditions on the different boundary regions.
-         */
-        void DisContField2D::SetBoundaryConditionExpansion(
-                        SpatialDomains::MeshGraph2D &graph2D,
-                        SpatialDomains::BoundaryConditions &bcs,
-                        const std::string variable,
-                        Array<OneD, ExpList1DSharedPtr> &bndCondExpansions,
-                        Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                                                                &bndConditions)
-        {
-            int i;
-            int cnt  = 0;
-
-            SpatialDomains::BoundaryRegionCollection &bregions
-                                        = bcs.GetBoundaryRegions();
-            SpatialDomains::BoundaryConditionCollection &bconditions
-                                        = bcs.GetBoundaryConditions();
-
-            MultiRegions::ExpList1DSharedPtr       locExpList;
-            SpatialDomains::BoundaryConditionShPtr locBCond;
-
-            int nbnd = bregions.size();
-
-            cnt=0;
-            // list Dirichlet boundaries first
-            for(i = 0; i < nbnd; ++i)
-            {
-                locBCond = (*(bconditions[i]))[variable];
-                if(locBCond->GetBoundaryConditionType()
-                                        == SpatialDomains::eDirichlet)
-                {
-                    locExpList = MemoryManager<MultiRegions::ExpList1D>
-                                        ::AllocateSharedPtr(*(bregions[i]),
-                                                            graph2D);
-                    bndCondExpansions[cnt]  = locExpList;
-                    bndConditions[cnt++]    = locBCond;
-                } // end if Dirichlet
-            }
-            // then, list the other (non-periodic) boundaries
-            for(i = 0; i < nbnd; ++i)
-            {
-                locBCond = (*(bconditions[i]))[variable];
-                switch(locBCond->GetBoundaryConditionType())
-                {
-                case SpatialDomains::eNeumann:
-                case SpatialDomains::eRobin:
-                    {
-                        locExpList = MemoryManager<MultiRegions::ExpList1D>
-                            ::AllocateSharedPtr(*(bregions[i]),
-                                                graph2D);
-                        bndCondExpansions[cnt]  = locExpList;
-                        bndConditions[cnt++]    = locBCond;
-                    }
-                    break;
-                case SpatialDomains::eDirichlet: // do nothing for these types
-                case SpatialDomains::ePeriodic:
-                    break;
-                default:
-                    ASSERTL0(false,"This type of BC not implemented yet");
-                    break;
-                }
-            }
-        }
-
 
         /**
          * @param   graph2D     A mesh containing information about the domain

@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 
+// Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -49,9 +49,9 @@ namespace Nektar
 			 * \brief The default constructor
 			 */
 			Kernel();
-			
+
 			Kernel(int order);
-			
+
 			/**
 			 * \brief The default destructor
 			 */
@@ -61,7 +61,7 @@ namespace Nektar
 			 * \brief This funciton updates the bspline to the appropriate order.
 			 */
 			void UpdateKernelBspline();
-			
+
 			/**
 			 * \brief This funciton updates the kernel coefficients.
 			 */
@@ -72,7 +72,7 @@ namespace Nektar
 			 * \param h represents the mesh spacing
 			 */
 			void UpdateKernelBreaks(double h);
-			
+
 			/**
 			 * \brief This funciton returns a 2D array representing the bspline
 			 *  of the appropriate order.
@@ -105,7 +105,7 @@ namespace Nektar
 			{
 				k_order = order;
 			}
-			
+
 			/**
 			 * \brief This funciton sets the k_ncoeffs variable
 			 */
@@ -147,8 +147,8 @@ namespace Nektar
 			}
 
 			/**
-			 * \brief This funciton moves the center of the kernel to the 
-			   \param value.
+			 * \brief This funciton moves the center of the kernel to the
+			   \param x_value.
 			   \param outarray is used to store the result
 			 */
 			void MoveKernelCenter(double x_value, Array<OneD,NekDouble> &outarray);
@@ -159,24 +159,24 @@ namespace Nektar
 			   \param h is the mesh spacing
 			   \param outarray contains the coordinate of the mesh breaks under the kernel support
 			 */
-			void FindMeshUnderKernel(Array<OneD,NekDouble> &inarray, double h, 
+			void FindMeshUnderKernel(Array<OneD,NekDouble> &inarray, double h,
 									 Array<OneD,NekDouble> &outarray);
 
 			/**
-			 * \brief This funciton evaluates the kernel at input values 
+			 * \brief This funciton evaluates the kernel at input values
 			   \param inarray.
 			   \param h is the mesh spacing.
 			   \param outarray contains the kernel values
 			 */
-			void EvaluateKernel(Array<OneD,NekDouble> inarray,double h, 
+			void EvaluateKernel(Array<OneD,NekDouble> inarray,double h,
 								Array<OneD,NekDouble> &outarray);
 
 			/**
-			 * \brief This funciton evaluates the bspline at input values 
-			   \param inarray.
-			   \param h is the mesh spacing.
-			   \param offset is 
-			   \param outarray contains the bspline values
+			 * \brief This function evaluates the bspline at input values
+			   \param inarray               input values.
+			   \param h                     the mesh spacing.
+			   \param offset
+			   \param outarray              contains the bspline values.
 			 */
 			void EvaluateBspline(Array<OneD,NekDouble> inarray, double h,
 								 double offset, Array<OneD,NekDouble> &outarray);
@@ -191,7 +191,7 @@ namespace Nektar
 
 		protected:
 
-			int k_order;						/**< bsplines are obtained by convolving the characteristic 
+			int k_order;						/**< bsplines are obtained by convolving the characteristic
 													 fucntion with itself (k_order - 1) times */
 			int k_ncoeffs;						/**< Represents the number of kernel coefficients */
 			int k_width;						/**< Represents the width of the kernel */
@@ -201,17 +201,17 @@ namespace Nektar
 			Array<OneD,NekDouble> k_breaks;     /**< 1D array representing the kernel breaks */
 
 			/**
-			 * \brief This funciton evaluates the piecewise bspline polynomial 
-			   \in interval \param interval at point \param x_value.
+			 * \brief This funciton evaluates the piecewise bspline polynomial
+			   \param interval \param interval at point \param x_value.
 			 */
-			double EvaluateBsplinePoly(double x_value,int interval); 
-			
+			double EvaluateBsplinePoly(double x_value,int interval);
+
 		private:
 
 		};
 
 		typedef boost::shared_ptr<Kernel>      KernelSharedPtr;
-	
+
 	}//end of namespace
 }// end of namespace
 

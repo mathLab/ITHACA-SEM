@@ -140,7 +140,7 @@ namespace Nektar
             /// \param dim1Size The size of the array.  This is useful
             ///                 when you want this array to reference
             ///                 a subset of the elements in rhs.
-            ///
+            /// \param rhs      Array to reference.
             /// This constructor creates an array that references rhs.
             /// Any changes to rhs will be reflected in this array.
             /// The memory for the array will only be deallocated when
@@ -464,7 +464,7 @@ namespace Nektar
 
     /// \brief 1D Array
     ///
-    /// \ref arrays
+    /// \ref pageNekArrays
     ///
     /// Misc notes.
     ///

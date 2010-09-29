@@ -1,28 +1,28 @@
-#ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_ALIEVPANFILOV_H
-#define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_ALIEVPANFILOV_H
+#ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_MONODOMAINALIEVPANFILOV_H
+#define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_MONODOMAINALIEVPANFILOV_H
 
-#include <ADRSolver/EquationSystems/UnsteadySystem.h>
+#include <ADRSolver/EquationSystems/Monodomain.h>
 
 namespace Nektar
 {
     /// A two-variable model for cardiac conduction.
-    class AlievPanfilov : public UnsteadySystem
+    class MonodomainAlievPanfilov : public Monodomain
     {
     public:
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(SessionReaderSharedPtr& pSession)
         {
-            return MemoryManager<AlievPanfilov>::AllocateSharedPtr(pSession);
+            return MemoryManager<MonodomainAlievPanfilov>::AllocateSharedPtr(pSession);
         }
 
         /// Name of class
         static std::string className;
 
         /// Constructor
-        AlievPanfilov(SessionReaderSharedPtr& pSession);
+        MonodomainAlievPanfilov(SessionReaderSharedPtr& pSession);
 
         /// Desctructor
-        virtual ~AlievPanfilov();
+        virtual ~MonodomainAlievPanfilov();
 
     protected:
         /// Computes the reaction terms \f$f(u,v)\f$ and \f$g(u,v)\f$.
@@ -30,13 +30,6 @@ namespace Nektar
                 const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                       Array<OneD,        Array<OneD, NekDouble> >&outarray,
                 const NekDouble time);
-
-        /// Solve for the diffusion term.
-        void DoImplicitSolve(
-                const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                      Array<OneD, Array<OneD, NekDouble> >&outarray,
-                      NekDouble time,
-                      NekDouble lambda);
 
         /// Prints a summary of the model parameters.
         virtual void v_PrintSummary(std::ostream &out);

@@ -36,14 +36,14 @@
  *   implemented in the .cpp file.
  *
  * \section secCodeStandardNaming Naming Conventions
- * Keep variable and function names meaningful but concise. 
- * - All member variables prefixed with m_ and use camelCase. e.g. m_memVar. 
+ * Keep variable and function names meaningful but concise.
+ * - All member variables prefixed with m_ and use camelCase. e.g. m_memVar.
  * - All function names using CamelCase. e.g. ReadBoundaryRegions.
  *
  * \section secCodeStandardDocumentation Documentation
  * - Briefs for classes, functions and types in header files using /// notation.
  * - Full documentation with implementation using /** ... *\/ notation.
- * - Use @ symbol for @class, @param, @returns, etc for ease of identification.
+ * - Use \@ symbol for \@class, \@param, \@returns, etc for ease of identification.
  * - Any separate documentation pages not directly associated with a portion of
  * the code should be in a separate file in /docs/html/doxygen.
  */

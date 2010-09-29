@@ -28,8 +28,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
-// Description: Basis definition 
+//
+// Description: Basis definition
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include <LibUtilities/LibUtilities.h>
@@ -47,7 +47,7 @@
 
 namespace Nektar
 {
-    namespace LibUtilities 
+    namespace LibUtilities
     {
 
         bool operator<(const BasisKey &lhs, const BasisKey &rhs)
@@ -55,11 +55,11 @@ namespace Nektar
             PointsKey lhsPointsKey = lhs.GetPointsKey();
             PointsKey rhsPointsKey = rhs.GetPointsKey();
 
-            if (lhsPointsKey  < rhsPointsKey) 
+            if (lhsPointsKey  < rhsPointsKey)
             {
                 return true;
             }
-            if (lhsPointsKey != rhsPointsKey) 
+            if (lhsPointsKey != rhsPointsKey)
             {
                 return false;
             }
@@ -68,7 +68,7 @@ namespace Nektar
             {
                 return true;
             }
-            if (lhs.m_nummodes > rhs.m_nummodes) 
+            if (lhs.m_nummodes > rhs.m_nummodes)
             {
                 return false;
             }
@@ -94,7 +94,7 @@ namespace Nektar
             return os;
         }
 
-        Basis::Basis(const BasisKey &bkey): 
+        Basis::Basis(const BasisKey &bkey):
             m_basisKey(bkey),
             m_points(PointsManager()[bkey.GetPointsKey()]),
             m_bdata(bkey.GetTotNumModes()*bkey.GetTotNumPoints()),
@@ -102,7 +102,7 @@ namespace Nektar
         {
 	  m_InterpManager.RegisterGlobalCreator(boost::bind(&Basis::CalculateInterpMatrix,this,_1));
         }
-        
+
         boost::shared_ptr<Basis> Basis::Create(const BasisKey &bkey)
         {
             boost::shared_ptr<Basis> returnval(new Basis(bkey));
@@ -120,7 +120,7 @@ namespace Nektar
         };
 
         /** \brief Calculate the interpolation Matrix for coefficient from
-        *  one base (m_basisKey) to another (tbasis0) 
+        *  one base (m_basisKey) to another (tbasis0)
         */
         boost::shared_ptr< NekMatrix<NekDouble> > Basis::CalculateInterpMatrix(const BasisKey &tbasis0)
         {
@@ -128,22 +128,22 @@ namespace Nektar
 	  const PointsKey pkey(dim,LibUtilities::eGaussLobattoLegendre);
 	  BasisKey fbkey(m_basisKey.GetBasisType(),dim,pkey);
 	  BasisKey tbkey(tbasis0.GetBasisType(),dim,pkey);
-	  
+
 	  // "Constructur" of the basis
-	  BasisSharedPtr fbasis = BasisManager()[fbkey]; 
+	  BasisSharedPtr fbasis = BasisManager()[fbkey];
 	  BasisSharedPtr tbasis = BasisManager()[tbkey];
-	  
+
 	  // Get B Matrices
 	  Array<OneD, NekDouble> fB_data = fbasis->GetBdata();
 	  Array<OneD, NekDouble> tB_data = tbasis->GetBdata();
-	  
+
 	  // Convert to a NekMatrix
 	  NekMatrix<NekDouble> fB(dim,dim,fB_data);
 	  NekMatrix<NekDouble> tB(dim,dim,tB_data);
-	  
+
 	  // Invert the "to" matrix: tu = tB^(-1)*fB fu = ftB fu
 	  tB.Invert();
-	  
+
 	  // Compute transformation matrix
 	  Array<OneD, NekDouble> zero1D(dim*dim,0.0);
 	  boost::shared_ptr< NekMatrix<NekDouble> > ftB(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(dim,dim,zero1D));
@@ -161,59 +161,59 @@ namespace Nektar
              * compact hierarchical pattern for implementation
              * purposes. The order of these modes dictates the
              * ordering of the expansion coefficients.
-             * 
-             * In the following m_numModes = P
-             * 
-             * \a eModified_A: 
              *
-             * m_bdata[i + j*m_numpoints] = 
+             * In the following m_numModes = P
+             *
+             * \a eModified_A:
+             *
+             * m_bdata[i + j*m_numpoints] =
              * \f$ \phi^a_i(z_j) = \left \{
-             * \begin{array}{ll} \left ( \frac{1-z_j}{2}\right ) & i = 0 \\ 
-             * \\ 
+             * \begin{array}{ll} \left ( \frac{1-z_j}{2}\right ) & i = 0 \\
+             * \\
              * \left ( \frac{1+z_j}{2}\right ) & i = 1 \\
              * \\
              * \left ( \frac{1-z_j}{2}\right )\left ( \frac{1+z_j}{2}\right )
-             *  P^{1,1}_{i-2}(z_j) & 2\leq i < P\\ 
-             *  \end{array} \right . \f$ 
-             * 
-             * \a eModified_B: 
+             *  P^{1,1}_{i-2}(z_j) & 2\leq i < P\\
+             *  \end{array} \right . \f$
+             *
+             * \a eModified_B:
              *
              * m_bdata[n(i,j) + k*m_numpoints] =
              * \f$ \phi^b_{ij}(z_k) = \left \{ \begin{array}{lll}
              * \phi^a_j(z_k) & i = 0, &   0\leq j < P  \\
              * \\
              * \left ( \frac{1-z_k}{2}\right )^{i}  & 1 \leq i < P,&   j = 0 \\
-             * \\                                                         
+             * \\
              * \left ( \frac{1-z_k}{2}\right )^{i} \left ( \frac{1+z_k}{2}\right )
              * P^{2i-1,1}_{j-1}(z_k) & 1 \leq i < P,\ &  1\leq j < P-i\ \\
              * \end{array}  \right . , \f$
-             * 
-             * where \f n(i,j) \f is a consecutive ordering of the
+             *
+             * where \f$ n(i,j) \f$ is a consecutive ordering of the
              * triangular indices \f$ 0 \leq i, i+j < P \f$ where \a j
-             * runs fastest. 
+             * runs fastest.
              *
              *
-             * \a eModified_C: 
+             * \a eModified_C:
              *
              * m_bdata[n(i,j,k) + l*m_numpoints] =
              * \f$ \phi^c_{ij,k}(z_l) = \phi^b_{i+j,k}(z_l) =
              *  \left \{ \begin{array}{llll}
              * \phi^b_{j,k}(z_l) & i = 0, &   0\leq j < P  &  0\leq k < P-j\\
              * \\
-             * \left ( \frac{1-z_l}{2}\right )^{i+j}  & 1\leq i < P,\ 
+             * \left ( \frac{1-z_l}{2}\right )^{i+j}  & 1\leq i < P,\
              * &  0\leq j <  P-i,\  & k = 0 \\
              * \\
-             * \left ( \frac{1-z_l}{2}\right )^{i+j} 
-             * \left ( \frac{1+z_l}{2}\right ) 
-             * P^{2i+2j-1,1}_{k-1}(z_k) & 1\leq i < P,&  0\leq j < P-i& 
+             * \left ( \frac{1-z_l}{2}\right )^{i+j}
+             * \left ( \frac{1+z_l}{2}\right )
+             * P^{2i+2j-1,1}_{k-1}(z_k) & 1\leq i < P,&  0\leq j < P-i&
              * 1\leq k < P-i-j \\
              * \\
              * \end{array}  \right . , \f$
-             * 
-             * where \f n(i,j,k) \f is a consecutive ordering of the
+             *
+             * where \f$ n(i,j,k) \f$ is a consecutive ordering of the
              * triangular indices \f$ 0 \leq i, i+j, i+j+k < P \f$ where \a k
              * runs fastest, then \a j and finally \a i.
-             * 
+             *
              */
         void Basis::GenBasis()
         {
@@ -234,11 +234,11 @@ namespace Nektar
 
             switch(GetBasisType())
             {
-            
+
             /** \brief Orthogonal basis A
-            
+
             \f$\tilde \psi_p^a (\eta_1) = L_p(\eta_1) = P_p^{0,0}(\eta_1)\f$
-            
+
            */
             case eOrtho_A:
             case eLegendre:
@@ -260,9 +260,9 @@ namespace Nektar
                 break;
 
             /** \brief Orthogonal basis B
-            
+
             \f$\tilde \psi_{pq}^b(\eta_2) = \left ( {1 - \eta_2} \over 2 \right)^p P_q^{2p+1,0}(\eta_2)\f$ \\
-            
+
            */
 
             // This is tilde psi_pq in Spen's book, page 105
@@ -270,58 +270,58 @@ namespace Nektar
             // 1) Eta_y values are the changing the fastest, then q and p.
             // 2) q index increases by the stride of numPoints.
             case eOrtho_B:
-                {                       
+                {
                      NekDouble *mode = m_bdata.data();
-            
-                     for( int p = 0; p < numModes; ++p ) 
+
+                     for( int p = 0; p < numModes; ++p )
                      {
-                         for( int q = 0; q < numModes - p; ++q,  mode += numPoints  ) 
+                         for( int q = 0; q < numModes - p; ++q,  mode += numPoints  )
                          {
                              Polylib::jacobfd(numPoints, z.data(), mode, NULL, q, 2*p + 1.0, 0.0);
-                             for( int j = 0; j < numPoints; ++j ) 
+                             for( int j = 0; j < numPoints; ++j )
                              {
                                  mode[j] *= sqrt(p+q+1.0)*pow(0.5*(1.0 - z[j]), p);
                              }
                          }
                      }
-                     
-                     // define derivative basis 
+
+                     // define derivative basis
                      Blas::Dgemm('n','n',numPoints,numModes*(numModes+1)/2,numPoints,1.0,D,numPoints,
                                   m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);
                 }
                 break;
 
             /** \brief Orthogonal basis C
-            
+
             \f$\tilde \psi_{pqr}^c = \left ( {1 - \eta_3} \over 2 \right)^{p+q} P_r^{2p+2q+2, 0}(\eta_3)\f$ \\
-            
-           */                
+
+           */
 
             // This is tilde psi_pqr in Spen's book, page 105
-            // The 4-dimensional array is laid out in memory such that 
+            // The 4-dimensional array is laid out in memory such that
             // 1) Eta_z values are the changing the fastest, then r, q, and finally p.
             // 2) r index increases by the stride of numPoints.
-            case eOrtho_C:  
+            case eOrtho_C:
                 {
                     int P = numModes - 1, Q = numModes - 1, R = numModes - 1;
                     NekDouble *mode = m_bdata.data();
-                    
-                    for( int p = 0; p <= P; ++p ) 
+
+                    for( int p = 0; p <= P; ++p )
                     {
-                        for( int q = 0; q <= Q - p; ++q ) 
+                        for( int q = 0; q <= Q - p; ++q )
                         {
-                            for( int r = 0; r <= R - p - q; ++r, mode += numPoints ) 
+                            for( int r = 0; r <= R - p - q; ++r, mode += numPoints )
                             {
                                 Polylib::jacobfd(numPoints, z.data(), mode, NULL, r, 2*p + 2*q + 2.0, 0.0);
-                                for( int k = 0; k < numPoints; ++k ) 
+                                for( int k = 0; k < numPoints; ++k )
                                 {
                                     // Note factor of 0.5 is part of normalisation
                                     mode[k] *= pow(0.5*(1.0 - z[k]), p+q);
 
                                     // finish normalisation
-                                    mode[k] *= sqrt(r+p+q+1.5); 
+                                    mode[k] *= sqrt(r+p+q+1.5);
                                 }
-                            } 
+                            }
                         }
                     }
 
@@ -357,7 +357,7 @@ namespace Nektar
                     }
                 }
 
-                // define derivative basis 
+                // define derivative basis
                 Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,
                     numPoints,m_bdata.data(),numPoints,0.0,m_dbdata.data(),
                     numPoints);
@@ -384,7 +384,7 @@ namespace Nektar
 
                     // bdata should be of size order*(order+1)/2*zorder
 
-                    // first fow 
+                    // first fow
                     for(i = 0; i < numPoints; ++i)
                     {
                         m_bdata[0*numPoints + i] = 0.5*(1-z[i]);
@@ -421,7 +421,7 @@ namespace Nektar
                         }
                     }
 
-                    // third and higher rows 
+                    // third and higher rows
                     one_m_z_pow = m_bdata.data();
                     one_p_z     = m_bdata.data()+numPoints;
 
@@ -452,7 +452,7 @@ namespace Nektar
                 }
                 break;
 
-                
+
             case eModified_C:
                 {
                     // Note the following packing deviates from the
@@ -482,7 +482,7 @@ namespace Nektar
                     BasisSharedPtr  ModB = BasisManager()[ModBKey];
 
                     Array<OneD, const NekDouble> ModB_data = ModB->GetBdata();
-                    
+
                     // Copy Modified_B basis into first
                     // (numModes*(numModes+1)/2)*numPoints entires of
                     // bdata.  This fills in the complete (r,p) face.
@@ -500,7 +500,7 @@ namespace Nektar
                         offset   += N;
                     }
 
-                    // set up derivative of basis. 
+                    // set up derivative of basis.
                     Blas::Dgemm('n','n',numPoints,
                                 numModes*(numModes+1)*(numModes+2)/6,
                                 numPoints,1.0,D,numPoints,
@@ -509,7 +509,7 @@ namespace Nektar
                 }
                 break;
 
-            case eGLL_Lagrange: 
+            case eGLL_Lagrange:
                 {
                     mode = m_bdata.data();
                     boost::shared_ptr< Points<NekDouble> > m_points = PointsManager()[PointsKey(numModes,eGaussLobattoLegendre)];
@@ -523,7 +523,7 @@ namespace Nektar
                         }
                     }
 
-                    // define derivative basis 
+                    // define derivative basis
                     Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,
                         numPoints, m_bdata.data(),numPoints,0.0,
                         m_dbdata.data(),numPoints);
@@ -537,9 +537,9 @@ namespace Nektar
                 for(i = 0; i < numPoints; ++i)
                 {
                     m_bdata[i] = 1.0;
-                    m_bdata[numPoints+i] = 0.0; 
+                    m_bdata[numPoints+i] = 0.0;
 
-                    m_dbdata[i] = m_dbdata[numPoints+i] = 0.0; 
+                    m_dbdata[i] = m_dbdata[numPoints+i] = 0.0;
                 }
 
                 for (p=1; p < numModes/2; ++p)
@@ -569,10 +569,10 @@ namespace Nektar
                         mode[i] *= scal;
                     }
 
-                    scal *= 4*(p+1)*(p+1)/(2*p+2)/(2*p+1);    
+                    scal *= 4*(p+1)*(p+1)/(2*p+2)/(2*p+1);
                 }
 
-                // define derivative basis 
+                // define derivative basis
                 Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,
                     numPoints, m_bdata.data(),numPoints,0.0,m_dbdata.data(),
                     numPoints);
@@ -583,18 +583,18 @@ namespace Nektar
                  int P = numModes - 1;
                  NekDouble *mode = m_bdata.data();
 
-                 for( int p = 0; p <= P; ++p, mode += numPoints ) 
+                 for( int p = 0; p <= P; ++p, mode += numPoints )
                  {
-                        for( int i = 0; i < numPoints; ++i ) 
+                        for( int i = 0; i < numPoints; ++i )
                         {
                             mode[i] = pow(z[i], p);
                         }
                  }
-                 
+
                     // define derivative basis
                     Blas::Dgemm('n','n',numPoints,numModes,numPoints,1.0,D,numPoints,
                                 m_bdata.data(),numPoints,0.0,m_dbdata.data(),numPoints);
-                }            
+                }
                 break;
 
             default:
@@ -606,7 +606,7 @@ namespace Nektar
         /** \brief Determine if polynomial basis can be eactly integrated
         *  with itself
         */
-        bool BasisKey::ExactIprodInt(void) const 
+        bool BasisKey::ExactIprodInt(void) const
         {
             bool returnval = false;
 
@@ -621,7 +621,7 @@ namespace Nektar
 	    case eGaussLobattoKronrodLegendre:
                 returnval = (GetNumPoints() >= GetNumModes());
                 break;
-                
+
             default:
                 break;
             }
@@ -632,7 +632,7 @@ namespace Nektar
         /** \brief Determine if basis has collocation property,
         *  i.e. GLL_Lagrange with Lobatto integration of appropriate order.
         */
-        bool BasisKey::Collocation() const 
+        bool BasisKey::Collocation() const
         {
             return ( m_basistype == eGLL_Lagrange &&
                 GetPointsType() == eGaussLobattoLegendre &&
@@ -683,7 +683,7 @@ namespace Nektar
     } // end of namespace stdregion
 } // end of namespace stdregion
 
-/** 
+/**
 * $Log: Basis.cpp,v $
 * Revision 1.39  2009/10/22 17:49:51  cbiotto
 * Adding CalculateInterpMatrix and updates for variable order expansion
@@ -834,5 +834,5 @@ Revision 1.8  2007/01/31 23:27:56  kirby
 *
 * Coding standard revisions so that libraries compile
 *
-**/ 
+**/
 

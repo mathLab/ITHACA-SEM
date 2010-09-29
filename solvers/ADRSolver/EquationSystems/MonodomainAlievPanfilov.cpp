@@ -1,11 +1,11 @@
 #include <iostream>
 
-#include <ADRSolver/EquationSystems/AlievPanfilov.h>
+#include <ADRSolver/EquationSystems/MonodomainAlievPanfilov.h>
 
 namespace Nektar
 {
     /**
-     * @class AlievPanfilov
+     * @class MonodomainAlievPanfilov
      *
      * The Aliev-Panfilov model of cardiac conduction is an improvement on the
      * FitzHugh-Nagumo model of conduction in squid axons which better
@@ -29,18 +29,19 @@ namespace Nektar
     /**
      * Registers the class with the Factory.
      */
-    string AlievPanfilov::className
+    string MonodomainAlievPanfilov::className
             = EquationSystemFactory::RegisterCreatorFunction(
-                    "AlievPanfilov",
-                    AlievPanfilov::create,
-                    "Model of cardiac electrophysiology.");
+                "AlievPanfilov",
+                MonodomainAlievPanfilov::create,
+                "Phenomological model of canine cardiac electrophysiology.");
 
 
     /**
      *
      */
-    AlievPanfilov::AlievPanfilov(SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession)
+    MonodomainAlievPanfilov::MonodomainAlievPanfilov(
+                                            SessionReaderSharedPtr& pSession)
+        : Monodomain(pSession)
     {
         int nq = m_fields[0]->GetNpoints();
         pSession->LoadParameter("k",          m_k,         0.0);
@@ -48,25 +49,20 @@ namespace Nektar
         pSession->LoadParameter("mu1",        m_mu1,       0.0);
         pSession->LoadParameter("mu2",        m_mu2,       0.0);
         pSession->LoadParameter("eps",        m_eps,       0.0);
-        pSession->LoadParameter("epsilon",    m_epsilon,   0.0);
 
         m_uu   = Array<OneD, NekDouble>(nq, 0.0);
         m_uuu  = Array<OneD, NekDouble>(nq, 0.0);
         m_tmp1 = Array<OneD, NekDouble>(nq, 0.0);
         m_tmp2 = Array<OneD, NekDouble>(nq, 0.0);
 
-        m_ode.DefineOdeRhs            (&AlievPanfilov::DoOdeRhs,        this);
-        if (!m_explicitDiffusion)
-        {
-            m_ode.DefineImplicitSolve (&AlievPanfilov::DoImplicitSolve, this);
-        }
+        m_ode.DefineOdeRhs(&MonodomainAlievPanfilov::DoOdeRhs, this);
     }
 
 
     /**
      *
      */
-    AlievPanfilov::~AlievPanfilov()
+    MonodomainAlievPanfilov::~MonodomainAlievPanfilov()
     {
 
     }
@@ -77,7 +73,7 @@ namespace Nektar
      * @param   outarray        Output array after addition of reaction terms.
      * @param   time            Current simulation time.
      */
-    void AlievPanfilov::DoOdeRhs(
+    void MonodomainAlievPanfilov::DoOdeRhs(
             const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                   Array<OneD,        Array<OneD, NekDouble> >&outarray,
             const NekDouble time)
@@ -186,60 +182,12 @@ namespace Nektar
 
 
     /**
-     * @param   inarray         Input array.
-     * @param   outarray        Output array.
-     * @param   time            Current simulation time.
-     * @param   lambda          Timestep.
-     */
-    void AlievPanfilov::DoImplicitSolve(
-            const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                  Array<OneD, Array<OneD, NekDouble> >&outarray,
-            const NekDouble time,
-            const NekDouble lambda)
-    {
-        int nvariables  = inarray.num_elements();
-        int ncoeffs     = inarray[0].num_elements();
-        int nq          = m_fields[0]->GetNpoints();
-        NekDouble kappa = 1.0/lambda/m_epsilon;
-
-        // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
-        // inarray = input: \hat{rhs} -> output: \hat{Y}
-        // outarray = output: nabla^2 \hat{Y}
-        // where \hat = modal coeffs
-        for (int i = 0; i < nvariables; ++i)
-        {
-            // Only apply diffusion to first variable.
-            if (i > 0) {
-                Vmath::Vcopy(nq, &inarray[i][0], 1, &outarray[i][0], 1);
-                continue;
-            }
-
-            // Multiply 1.0/timestep/lambda
-            Vmath::Smul(nq, -1.0/lambda/m_epsilon, inarray[i], 1,
-                                            m_fields[i]->UpdatePhys(), 1);
-
-            // Solve a system of equations with Helmholtz solver and transform
-            // back into physical space.
-            m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),
-                                   m_fields[i]->UpdateCoeffs(),kappa);
-
-            m_fields[i]->BwdTrans( m_fields[i]->GetCoeffs(),
-                                   m_fields[i]->UpdatePhys());
-            m_fields[i]->SetPhysState(true);
-
-            // Copy the solution vector (required as m_fields must be set).
-            outarray[i] = m_fields[i]->GetPhys();
-        }
-    }
-
-
-    /**
      *
      */
-    void AlievPanfilov::v_PrintSummary(std::ostream &out)
+    void MonodomainAlievPanfilov::v_PrintSummary(std::ostream &out)
     {
-        UnsteadySystem::v_PrintSummary(out);
-        out << "\tepsilon         : " << m_epsilon << endl;
+        Monodomain::v_PrintSummary(out);
+        out << "\tCell model      : Aliev-Panfilov" << endl;
         out << "\tk               : " << m_k << endl;
         out << "\ta               : " << m_a << endl;
         out << "\teps             : " << m_eps << endl;

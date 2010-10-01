@@ -53,6 +53,7 @@
  * @section sectionMainContents Contents
  *
  * @subsection subsectionMainContentBackground Background formulation
+ * - @subpage pageIntroduction
  * - @subpage pageConnectivity
  *
  * @subsection subsectionMainContentLibraries Libraries

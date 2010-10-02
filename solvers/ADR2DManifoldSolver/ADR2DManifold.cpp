@@ -2294,7 +2294,7 @@ namespace Nektar
 
          gamma_n = 0.5*( a_n + d_n );
 
-         temp.real() = ( a_n + d_n )*( a_n + d_n ) - 4.0*( a_n*d_n - m_b*m_c );
+         temp.real( ( a_n + d_n )*( a_n + d_n ) - 4.0*( a_n*d_n - m_b*m_c ));
          delta_n = 0.5*sqrt( temp );
 
          for (m = -n; m <=n; ++m)

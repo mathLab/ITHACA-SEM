@@ -16,7 +16,7 @@
  Discontinuous Galerkin formulation.
  
  There are at least two major challenges which arise in developing an
- efficient implementation of a \spectralhp element discretisation:
+ efficient implementation of a spectral/hp element discretisation:
  - implementing the mathematical structure of the technique in a
  digestible, generic and coherent manner, and
  - designing and implementing the numerical methods and data

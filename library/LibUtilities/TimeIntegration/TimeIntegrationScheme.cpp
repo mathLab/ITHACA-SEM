@@ -716,6 +716,10 @@ namespace Nektar
             
             int nvar    = solvector->GetFirstDim ();
             int npoints = solvector->GetSecondDim();
+			
+			static DoubleArray  y_n;
+			static NekDouble    t_n;
+			static DoubleArray  dtFy_n;
             
             if( (solvector->GetIntegrationScheme()).get() != this )
             {
@@ -768,8 +772,11 @@ namespace Nektar
                 for(n = 0; n < nCurSchemeVals; n++)
                 {
                     // Get the required value out of the master solution vector
-                    DoubleArray& y_n = solvector->GetValue    ( curTimeLevels[n] );
-                    NekDouble    t_n = solvector->GetValueTime( curTimeLevels[n] );
+                    //DoubleArray& y_n = solvector->GetValue    ( curTimeLevels[n] );
+                    //NekDouble    t_n = solvector->GetValueTime( curTimeLevels[n] );
+					
+					y_n = solvector->GetValue    ( curTimeLevels[n] );
+                    t_n = solvector->GetValueTime( curTimeLevels[n] );
 
                     // Set the required value in the input solution
                     // vector of the current scheme
@@ -779,7 +786,8 @@ namespace Nektar
                 {
                     // Get the required derivative out of the master
                     // solution vector
-                    DoubleArray& dtFy_n = solvector->GetDerivative    ( curTimeLevels[n] );
+                    //DoubleArray& dtFy_n = solvector->GetDerivative    ( curTimeLevels[n] );
+					dtFy_n = solvector->GetDerivative    ( curTimeLevels[n] );
 
                     // Set the required derivative in the input
                     // solution vector of the current scheme
@@ -831,8 +839,8 @@ namespace Nektar
                     int newDerivTimeLevel = masterTimeLevels[nMasterSchemeVals]; // contains the time level at which
                                                                                  // we want to know the derivative of the
                                                                                  // master scheme
-                    DoubleArray  y_n;
-                    NekDouble    t_n;
+                    //DoubleArray  y_n;
+                    //NekDouble    t_n;
                     // if the  time level correspond to 0, calculate the derivative based upon the solution value
                     // at the new time-level
                     if (newDerivTimeLevel == 0)
@@ -889,8 +897,10 @@ namespace Nektar
                 {
                     // Get the calculated value out of the output
                     // solution vector of the current scheme
-                    DoubleArray& y_n = solvector_out->GetValue    ( curTimeLevels[n] );
-                    NekDouble    t_n = solvector_out->GetValueTime( curTimeLevels[n] );
+                    //DoubleArray& y_n = solvector_out->GetValue    ( curTimeLevels[n] );
+                    //NekDouble    t_n = solvector_out->GetValueTime( curTimeLevels[n] );
+					y_n = solvector_out->GetValue    ( curTimeLevels[n] );
+                    t_n = solvector_out->GetValueTime( curTimeLevels[n] );
 
                     // Set the calculated value in the master solution vector
                     solvector->SetValue(curTimeLevels[n],y_n,t_n);
@@ -900,7 +910,8 @@ namespace Nektar
                 {
                     // Get the calculated derivative out of the output
                     // solution vector of the current scheme
-                    DoubleArray& dtFy_n = solvector_out->GetDerivative    ( curTimeLevels[n] );
+                    //DoubleArray& dtFy_n = solvector_out->GetDerivative    ( curTimeLevels[n] );
+					dtFy_n = solvector_out->GetDerivative    ( curTimeLevels[n] );
 
                     // Set the calculated derivative in the master
                     // solution vector
@@ -935,6 +946,8 @@ namespace Nektar
             unsigned int i,j,k;    
             unsigned int nvar      = GetFirstDim (y_old);
             unsigned int npoints   = GetSecondDim(y_old);
+			
+			static bool memory_setup = true;
             
             TimeIntegrationSchemeType type = GetIntegrationSchemeType();
        
@@ -947,59 +960,69 @@ namespace Nektar
             // - tmp corresponds to the explicit right hand side of
             //   each stage equation
             //   (for explicit schemes, this correspond to Y)
-            DoubleArray Y;        
-            DoubleArray tmp(nvar);        
-            TripleArray F  (m_numstages);  
-            TripleArray F_IMEX;  // Used to store the Explicit stage derivative of IMEX schemes
-                                 // The implicit part will be stored in F
-            NekDouble   T;
+			
+			static DoubleArray Y(nvar);        
+			static DoubleArray tmp(nvar);        
+			static TripleArray F  (m_numstages);
+			static TripleArray F_IMEX;  // Used to store the Explicit stage derivative of IMEX schemes
+                                        // The implicit part will be stored in F
+			static NekDouble   T;
             
-            // Allocate memory for the arrays Y and F and tmp The same
+			// Allocate memory for the arrays Y and F and tmp The same
             // storage will be used for every stage -> Y is a
             // DoubleArray
-            for(j = 0; j < nvar; j++)
-            {
-                tmp[j]   = Array<OneD, NekDouble>(npoints,0.0);
-            }
-
-            // The same storage will be used for every stage -> tmp is
-            // a DoubleArray
-            if(type == eExplicit)
-            {
-                Y = tmp;
-            }
-            else
-            {
-                Y = DoubleArray(nvar);
-                for(j = 0; j < nvar; j++)
-                {
+              
+			for(j = 0; j < nvar; j++)
+			{
+			  tmp[j]   = Array<OneD, NekDouble>(npoints,0.0);
+			}
+			
+			// The same storage will be used for every stage -> tmp is
+			// a DoubleArray
+			if(type == eExplicit)
+			{
+			  Y = tmp;
+			}
+			else
+			{
+			  if(memory_setup)
+			  {
+				for(j = 0; j < nvar; j++)
+				{
                     Y[j] =  Array<OneD, NekDouble>(npoints,0.0);
-                }
-            }
+				}
+			  }
+			}
 
-            // Different storage for every stage derivative as the data
-            // will be re-used to update the solution -> F is a TripleArray
-            for(i = 0; i < m_numstages; ++i)
-            {    
-                F[i]   = DoubleArray(nvar);
-                for(j = 0; j < nvar; j++)
-                {
+			// Different storage for every stage derivative as the data
+			// will be re-used to update the solution -> F is a TripleArray
+             
+			if(memory_setup)
+			{
+			   for(i = 0; i < m_numstages; ++i)
+               {    
+                  F[i]   = DoubleArray(nvar);
+                  for(j = 0; j < nvar; j++)
+                  {
                     F[i][j] = Array<OneD, NekDouble>(npoints,0.0);
-                }
-            }
+                  }
+			    }
 
-            if(type == eIMEX)
-            {
-                F_IMEX = TripleArray(m_numstages);
-                for(i = 0; i < m_numstages; ++i)
-                {   
+			   if(type == eIMEX)
+               {
+                  F_IMEX = TripleArray(m_numstages);
+                  for(i = 0; i < m_numstages; ++i)
+                  {   
                     F_IMEX[i]   = DoubleArray(nvar); 
                     for(j = 0; j < nvar; j++)
                     {
                         F_IMEX[i][j] =  Array<OneD, NekDouble>(npoints,0.0);
                     }      
-                }
-            }			
+				  }
+			   }
+			memory_setup = false;
+			}
+			
 			
             // The loop below calculates the stage values and derivatives
             for(i = 0; i < m_numstages; i++)
@@ -1017,7 +1040,7 @@ namespace Nektar
                     // The stage values Y are a linear combination of:
                     // 1: the stage derivatives
 					
-                    if( i == 0 )
+/*                    if( i == 0 )
                     {
 #if 1
                         // SJS Why is tmp memory being redefined here
@@ -1027,8 +1050,9 @@ namespace Nektar
                             tmp[k] = Array<OneD, NekDouble>(npoints,0.0);
                         }
 #endif
-                    }
-                    else
+                    }*/
+					
+                    if( i != 0 )
                     {
                         for(k = 0; k < nvar; k++)
                         {

@@ -12,7 +12,27 @@ namespace LocalRegions {
  * @ref pageLocalRegions "LocalRegions introduction".
  *
  *
- * @page pageLocalRegions %LocalRegions sublibrary
+ * @page pageLocalRegions LocalRegions sublibrary
+ *
+ * The LocalRegions library is designed to encompass all classes that
+ * encapsulate the elemental spectral/hp expansions in physical space,
+ * see also the figure below. It can be appreciated that such a local
+ * expansion essentially \a is \a a standard expansion that \a has \a a
+ * (in C++ parlance) additional coordinate transformation that maps the
+ * standard element to the local element. In an object-oriented context,
+ * these \a is-a and \a has-a relationships can be applied as
+ * follows: the classes in the LocalRegions library are derived from the
+ * \f\texttt{StdExpansion\f} class tree but they are supplied with an
+ * additional data member representing the geometry of the local
+ * element. Depending on the shape-specific class in the LocalRegions
+ * library, this additional data member is an object of the corresponding
+ * class in the @link Nektar#SpatialDomains#Geometry Geometry @endlink class structure.  This inheritance
+ * between the LocalRegions and StdRegions library also allows for a
+ * localised implementation that prevents code duplication. In order to
+ * e.g. evaluate the integral over a local element, the integrand can be
+ * multiplied by the Jacobian of the coordinate transformation, where
+ * after the evaluation is redirected to the StdRegions implementation.
+ 
  * This provides extensions of the spectral element formulation into the world.
  * It provides spatially local forms of the reference space expansions through
  * a one-to-one linear mapping from a standard straight-sided region to the
@@ -72,6 +92,9 @@ namespace LocalRegions {
  * - PointExp
  * - LinSys
  * - MatrixKey
+ 
+  * \image html LocalRegions.png
+ 
  */
 }
 }

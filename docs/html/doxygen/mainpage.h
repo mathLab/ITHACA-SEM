@@ -57,6 +57,7 @@
  * - @subpage pageConnectivity
  *
  * @subsection subsectionMainContentLibraries Libraries
+ * - @subpage pageStructure
  * - @subpage pageStdRegions (Nektar#StdRegions)
  * - @subpage pageSpatialDomains (Nektar#SpatialDomains)
  * - @subpage pageLocalRegions (Nektar#LocalRegions)

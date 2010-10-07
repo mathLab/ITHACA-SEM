@@ -12,7 +12,7 @@
     <!-- InstanceBeginEditable name="CSS_Style" -->
 <style type="text/css">
 <!--
-#menu_Usage {file:///home/bessie/workspace/NektarJuly2010/Nektardoc/docs/html/usage_solver_IncNavierStokes.html
+#menu_Usage {
 	font-weight: bold;
 }
 -->
@@ -417,6 +417,19 @@ Furthermore, the boundary condition  <code class="source">D VAR="u" VALUE="y*(1-
 </center>
 where <span class="latexfontitalic">J</span> is the integration order, <span class="latexfont">&beta;<sub>q</sub></span> are the stiffly stable time integration coefficients given in the table above and <span class="latexfontbold">n</span> is the unit outward normal vector on the boundary.
 <p>
+<p>
+Additionally, <strong>time-dependent</strong> boundary conditions can be specified in the input file by setting <code class="source">USERDEFINEDTYPE="TimeDependent"</code> in the boundary region. For example, see the  <code>Test_DecVortex_m3.xml</code> file in the folder  <code>Nektar++/regressionTests/Solvers/IncNavierStokesSolver/InputFiles/</code> describing a <a href="usage_solver_IncNavierStokes.html#taylordecv">Taylor Decaying Vortex.</a> The time-dependent dirichlet boundary conditions in this example are specified as follows
+ <div class="sourceexample"><pre>&lt;BOUNDARYCONDITIONS&gt;
+...
+  &lt;REGION REF="1"&gt;
+    &lt;D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)"/&gt;
+    &lt;D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)"/&gt;
+    &lt;D VAR="p" USERDEFINEDTYPE="TimeDependent" VALUE="-0.25*(cos(2*x)+cos(2*y))*exp(-4*t*Kinvis)"/&gt; 
+  &lt;/REGION&gt;
+&lt;/BOUNDARYCONDITIONS&gt;
+</pre></div>
+</p>
+<p>
 The initial conditions are defined between the XML tags 
 <div class="source"><pre>
 <font color="gray">&lt;CONDITIONS&gt;</font>
@@ -511,7 +524,7 @@ The analytical solution for the velocity and the pressure have been used to set 
 </table>
 </p>
 </center>
-<h3>Taylor Decaying Vortex</h3>
+<h3 id="taylordecv">Taylor Decaying Vortex</h3>
 <center>
 <p> 
 <img src="images/DecVort_u.png" width="234" height="201" />

@@ -791,6 +791,7 @@ namespace Nektar
         Dgemm(result, alpha, A, B, beta, C);
     }
 
+    #ifdef NEKTA_USE_EXPRESSION_TEMPLATES
     template<typename L, typename R, typename IndicesType, unsigned int index>
     struct BinaryBinaryEvaluateNodeOverride<L, AddOp, R, IndicesType, index,
         typename boost::enable_if
@@ -812,8 +813,8 @@ namespace Nektar
                 IsDgemmRightSide<R>::GetValues<IndicesType, index + L::TotalCount>::GetBeta(args),
                 IsDgemmRightSide<R>::GetValues<IndicesType, index + L::TotalCount>::GetC(args) );
         }
-    };
-
+    };  
+    #endif
 
     // TODO - This case also catches chained multipliation, which we don't want.
     // But we do want it to catch a*A*B.

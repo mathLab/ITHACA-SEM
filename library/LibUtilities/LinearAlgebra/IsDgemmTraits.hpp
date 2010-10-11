@@ -33,6 +33,8 @@
 #ifndef NEKTAR_LIB_UTILITIES_IS_DGEMM_TRAITS_HPP
 #define NEKTAR_LIB_UTILITIES_IS_DGEMM_TRAITS_HPP
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+
 #include <LibUtilities/LinearAlgebra/StandardMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/BlockMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/ScaledMatrix.hpp>
@@ -369,4 +371,5 @@ namespace Nektar
 
 }
 
+#endif
 #endif

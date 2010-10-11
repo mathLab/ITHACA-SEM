@@ -1,9 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: AssociativeTraits.hpp
-//
-// For more information, please see: http://www.nektar.info
-//
 // The MIT License
 //
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
@@ -29,387 +25,70 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description:
-//
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ASSOCIATIVE_TRAITS_HPP
-#define NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ASSOCIATIVE_TRAITS_HPP
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+#ifndef NEKTAR_EXPRESSION_TEMPLATES_ASSOCIATIVE_TRAITS_HPP
+#define NEKTAR_EXPRESSION_TEMPLATES_ASSOCIATIVE_TRAITS_HPP
 
-#include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
-#include <LibUtilities/ExpressionTemplates/BinaryExpressionPolicyFwd.hpp>
-#include <LibUtilities/ExpressionTemplates/ConstantExpression.hpp>
-#include <LibUtilities/ExpressionTemplates/BinaryExpressionEvaluatorFwd.hpp>
-
-#include <boost/utility/enable_if.hpp>
+#include "Operators.hpp"
 #include <boost/type_traits.hpp>
 
 namespace Nektar
-{  
-    template<typename LhsResultType,
-             template<typename, typename> class LhsOpType,
-             typename RhsLhsPolicyType,
-             template<typename, typename> class RhsOpType,
-             typename RhsRhsPolicyType>
-    struct ConstantBinaryCommonAssociativeTraits
+{
+
+    /// \brief A traits class to indicate if an expression is associative or not.
+    ///
+    /// Given an expression T1 Op1 (R Op2 X), if AssociativeTraits inherits from 
+    /// boost::true_type then this expression can be rewritten as 
+    /// (T1 Op1 R) Op2 X, otherwise it can't be rewritten.
+    ///
+    /// For example, the matrix expression M1 + (M2 + M3) can be rewritten as 
+    /// (M1 + M2) + M3.
+    template<typename T1, typename Op1, typename R, typename Op2>
+    struct AssociativeTraits : public boost::false_type
     {
-        typedef BinaryExpressionPolicy<ConstantExpressionPolicy<LhsResultType>, LhsOpType, RhsLhsPolicyType> LhsAsBinaryExpression;
-        typedef typename LhsAsBinaryExpression::ResultType LhsAsBinaryExpressionResultType;
-        typedef boost::true_type IsAssociative;
-        typedef boost::true_type IsLeftAssociative;
-        typedef boost::true_type IsRightAssociative;
     };
-    
-    template<typename LhsPolicy,
-             template <typename, typename> class Op, 
-             typename RhsPolicy>
-    struct AssociativeTraits 
+
+    /// \brief Specialization indicating multiplication is usually associative.
+    template<typename T1, typename T2>
+    struct AssociativeTraits<T1, MultiplyOp, T2, MultiplyOp> : public boost::true_type
     {
-        typedef typename LhsPolicy::ResultType LhsAsBinaryExpressionResultType;
-        typedef boost::false_type IsAssociative;
-        typedef boost::false_type OpEqualsAreDefined;
-        typedef boost::false_type IsLeftAssociative;
-        typedef boost::false_type IsRightAssociative;
     };
-    
-    template<typename LhsResultType,
-             typename RhsLhsPolicyType,
-             typename RhsRhsPolicyType>
-    struct AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, AddOp, BinaryExpressionPolicy<RhsLhsPolicyType, AddOp, RhsRhsPolicyType> > 
-        : public ConstantBinaryCommonAssociativeTraits<LhsResultType, AddOp, RhsLhsPolicyType, AddOp, RhsRhsPolicyType>
+
+    /// \brief Specialization indicating addition is usually associative.
+    template<typename T1, typename T2>
+    struct AssociativeTraits<T1, AddOp, T2, AddOp> : public boost::true_type
     {
-                
-        template<typename Lhs, typename Rhs, template <typename, typename> class ParentOpType = AddOp>
-        struct LhsOpType
-        {
-            typedef AddOp<Lhs, Rhs> type;
-        };
-        
-        template<typename Lhs, typename Rhs>
-        struct LhsOpType<Lhs, Rhs, SubtractOp>
-        {
-            typedef SubtractOp<Lhs, Rhs> type;
-        };
-        
-        template<typename Lhs, typename Rhs, template<typename, typename> class ParentOpType = AddOp>
-        struct RhsOpType
-        {
-            typedef AddOp<Lhs, Rhs> type;
-            
-        };
-        
-        template<typename Lhs, typename Rhs>
-        struct RhsOpType<Lhs, Rhs, SubtractOp>
-        {
-            typedef SubtractOp<Lhs, Rhs> type;
-            
-        };
-        
-        struct OpEqualsAreDefined : public boost::mpl::if_
-                                           <
-                                                boost::mpl::and_
-                                                <
-                                                    HasOpEqualTraits<LhsResultType, typename RhsLhsPolicyType::ResultType, AddOp>,
-                                                    HasOpEqualTraits<LhsResultType, typename RhsRhsPolicyType::ResultType, AddOp>
-                                                >,
-                                                boost::true_type,
-                                                boost::false_type
-                                           >::type
-        {
-        };
-        
-        static void EvaluateNewRhs(const Expression<RhsRhsPolicyType>& exp, Accumulator<typename RhsRhsPolicyType::ResultType>& accum)
-        {
-            exp.template Evaluate<AddOp>(accum);
-        }
     };
-    
-    template<typename LhsResultType,
-             typename RhsLhsPolicyType,
-             typename RhsRhsPolicyType>
-    struct AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, AddOp, BinaryExpressionPolicy<RhsLhsPolicyType, SubtractOp, RhsRhsPolicyType> > 
-            : public ConstantBinaryCommonAssociativeTraits<LhsResultType, AddOp, RhsLhsPolicyType, SubtractOp, RhsRhsPolicyType>
-    {
-        template<typename Lhs, typename Rhs, template <typename, typename> class ParentOpType = AddOp>
-        struct LhsOpType
-        {
-            typedef AddOp<Lhs, Rhs> type;
-        };
-        
-        template<typename Lhs, typename Rhs>
-        struct LhsOpType<Lhs, Rhs, SubtractOp>
-        {
-            typedef SubtractOp<Lhs, Rhs> type;
-        };
-        
-        template<typename Lhs, typename Rhs, template<typename, typename> class ParentOpType = AddOp>
-        struct RhsOpType
-        {
-            typedef SubtractOp<Lhs, Rhs> type;
-            
-        };
-        
-        template<typename Lhs, typename Rhs>
-        struct RhsOpType<Lhs, Rhs, SubtractOp>
-        {
-            typedef AddOp<Lhs, Rhs> type;
-            
-        };
-        
-        struct OpEqualsAreDefined : public boost::mpl::if_
-                                           <
-                                                boost::mpl::and_
-                                                <
-                                                    HasOpEqualTraits<LhsResultType, typename RhsLhsPolicyType::ResultType, AddOp>,
-                                                    HasOpEqualTraits<LhsResultType, typename RhsRhsPolicyType::ResultType, SubtractOp>
-                                                >,
-                                                boost::true_type,
-                                                boost::false_type
-                                           >::type
-        {
-        };
-        
-        static void EvaluateNewRhs(const Expression<RhsRhsPolicyType>& exp, Accumulator<typename RhsRhsPolicyType::ResultType>& accum)
-        {
-            exp.template Evaluate<SubtractOp>(accum);
-        }
-    };
-    
-    template<typename LhsResultType,
-             typename RhsLhsPolicyType,
-             typename RhsRhsPolicyType>
-    struct AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, SubtractOp, BinaryExpressionPolicy<RhsLhsPolicyType, AddOp, RhsRhsPolicyType> >
-            : public ConstantBinaryCommonAssociativeTraits<LhsResultType, SubtractOp, RhsLhsPolicyType, AddOp, RhsRhsPolicyType>
-    {
-        
-        template<typename Lhs, typename Rhs, template <typename, typename> class ParentOpType = AddOp>
-        struct LhsOpType
-        {
-            typedef SubtractOp<Lhs, Rhs> type;
-        };
-        
-        template<typename Lhs, typename Rhs>
-        struct LhsOpType<Lhs, Rhs, SubtractOp>
-        {
-            typedef AddOp<Lhs, Rhs> type;
-        };
 
 
-        template<typename Lhs, typename Rhs, template <typename, typename> class ParentOpType = AddOp>
-        struct RhsOpType
-        {
-            typedef SubtractOp<Lhs, Rhs> type;
-            
-        };
-        
-        template<typename Lhs, typename Rhs>
-        struct RhsOpType<Lhs, Rhs, SubtractOp>
-        {
-            typedef AddOp<Lhs, Rhs> type;
-            
-        };
-        
-        struct OpEqualsAreDefined : public boost::mpl::if_
-                                           <
-                                                boost::mpl::and_
-                                                <
-                                                    HasOpEqualTraits<LhsResultType, typename RhsLhsPolicyType::ResultType, SubtractOp>,
-                                                    HasOpEqualTraits<LhsResultType, typename RhsRhsPolicyType::ResultType, SubtractOp>
-                                                >,
-                                                boost::true_type,
-                                                boost::false_type
-                                           >::type
-        {
-        };
-        
-        static void EvaluateNewRhs(const Expression<RhsRhsPolicyType>& exp, Accumulator<typename RhsRhsPolicyType::ResultType>& accum)
-        {
-            exp.template Evaluate<SubtractOp>(accum);
-        }
-    };
-    
-    template<typename LhsResultType,
-             typename RhsLhsPolicyType,
-             typename RhsRhsPolicyType>
-    struct AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, SubtractOp, BinaryExpressionPolicy<RhsLhsPolicyType, SubtractOp, RhsRhsPolicyType> >
-            : public ConstantBinaryCommonAssociativeTraits<LhsResultType, SubtractOp, RhsLhsPolicyType, SubtractOp, RhsRhsPolicyType>
-    {
-        
-        template<typename Lhs, typename Rhs, template <typename, typename> class ParentOpType = AddOp>
-        struct LhsOpType
-        {
-            typedef SubtractOp<Lhs, Rhs> type;
-        };
-        
-        template<typename Lhs, typename Rhs>
-        struct LhsOpType<Lhs, Rhs, SubtractOp>
-        {
-            typedef AddOp<Lhs, Rhs> type;
-        };
+    template<typename NodeType>
+    struct TreeIsAssociative;// : public boost::false_type {};
 
+    template<typename L, typename RootOp, typename R1, typename ROp>
+    struct TreeIsAssociative<Node<L, RootOp, Node<R1, ROp, void> > > : public boost::true_type
+    {
+    };
 
-        template<typename Lhs, typename Rhs, template <typename, typename> class ParentOpType = AddOp>
-        struct RhsOpType
-        {
-            typedef AddOp<Lhs, Rhs> type;
-            
-        };
-        
-        template<typename Lhs, typename Rhs>
-        struct RhsOpType<Lhs, Rhs, SubtractOp>
-        {
-            typedef SubtractOp<Lhs, Rhs> type;
-            
-        };
-        
-        struct OpEqualsAreDefined : public boost::mpl::if_
-                                           <
-                                                boost::mpl::and_
-                                                <
-                                                    HasOpEqualTraits<LhsResultType, typename RhsLhsPolicyType::ResultType, SubtractOp>,
-                                                    HasOpEqualTraits<LhsResultType, typename RhsRhsPolicyType::ResultType, AddOp>
-                                                >,
-                                                boost::true_type,
-                                                boost::false_type
-                                           >::type
-        {
-        };
-        
-        static void EvaluateNewRhs(const Expression<RhsRhsPolicyType>& exp, Accumulator<typename RhsRhsPolicyType::ResultType>& accum)
-        {
-            exp.template Evaluate<SubtractOp>(accum);
-        }
-    };
-    
-    template<typename LhsResultType,
-             typename RhsLhsPolicyType,
-             typename RhsRhsPolicyType>
-    struct AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, MultiplyOp, BinaryExpressionPolicy<RhsLhsPolicyType, MultiplyOp, RhsRhsPolicyType> >
-        : public ConstantBinaryCommonAssociativeTraits<LhsResultType, MultiplyOp, RhsLhsPolicyType, MultiplyOp, RhsRhsPolicyType>
+    template<typename L, typename RootOp, typename R1>
+    struct TreeIsAssociative<Node<L, RootOp, Node<R1, void, void> > > : public boost::true_type
     {
-        
-        template<typename Lhs, typename Rhs>
-        struct RhsOpType
-        {
-            typedef MultiplyOp<Lhs, Rhs> type;
-        };
-        
-        struct OpEqualsAreDefined : public boost::mpl::if_
-                                           <
-                                                boost::mpl::and_
-                                                <
-                                                    HasOpEqualTraits<LhsResultType, typename RhsLhsPolicyType::ResultType, MultiplyOp>,
-                                                    HasOpEqualTraits<LhsResultType, typename RhsRhsPolicyType::ResultType, MultiplyOp>
-                                                >,
-                                                boost::true_type,
-                                                boost::false_type
-                                           >::type
-        {
-        };
-        
-        static void EvaluateNewRhs(const Expression<RhsRhsPolicyType>& exp, Accumulator<typename RhsRhsPolicyType::ResultType>& accum)
-        {
-            exp.template Evaluate<MultiplyOp>(accum);
-        }
     };
-    
-    template<typename LhsResultType,
-             typename RhsLhsPolicyType,
-             typename RhsRhsPolicyType>
-    struct AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, MultiplyOp, BinaryExpressionPolicy<RhsLhsPolicyType, DivideOp, RhsRhsPolicyType> >
-        : public ConstantBinaryCommonAssociativeTraits<LhsResultType, MultiplyOp, RhsLhsPolicyType, DivideOp, RhsRhsPolicyType>
+
+    template<typename L, typename RootOp, typename R1, typename ROp, typename R2>
+    struct TreeIsAssociative<Node<L, RootOp, Node<R1, ROp, R2> > > :
+        public boost::mpl::if_
+        <
+            boost::mpl::and_
+            <
+                AssociativeTraits<typename L::ResultType, RootOp, typename R1::ResultType, ROp>,
+                TreeIsAssociative<Node<R1, ROp, R2> >
+            >,
+            boost::true_type,
+            boost::false_type
+        >::type
     {
-        
-        template<typename Lhs, typename Rhs>
-        struct RhsOpType
-        {
-            typedef DivideOp<Lhs, Rhs> type;
-        };
-        
-        struct OpEqualsAreDefined : public boost::mpl::if_
-                                           <
-                                                boost::mpl::and_
-                                                <
-                                                    HasOpEqualTraits<LhsResultType, typename RhsLhsPolicyType::ResultType, MultiplyOp>,
-                                                    HasOpEqualTraits<LhsResultType, typename RhsRhsPolicyType::ResultType, MultiplyOp>
-                                                >,
-                                                boost::true_type,
-                                                boost::false_type
-                                           >::type
-        {
-        };
-        
-        static void EvaluateNewRhs(const Expression<RhsRhsPolicyType>& exp, Accumulator<typename RhsRhsPolicyType::ResultType>& accum)
-        {
-            exp.template Evaluate<DivideOp>(accum);
-        }
-    };
-    
-        template<typename LhsResultType,
-             typename RhsLhsPolicyType,
-             typename RhsRhsPolicyType>
-    struct AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, DivideOp, BinaryExpressionPolicy<RhsLhsPolicyType, MultiplyOp, RhsRhsPolicyType> >
-        : public ConstantBinaryCommonAssociativeTraits<LhsResultType, DivideOp, RhsLhsPolicyType, MultiplyOp, RhsRhsPolicyType>
-    {
-        
-        template<typename Lhs, typename Rhs>
-        struct RhsOpType
-        {
-            typedef DivideOp<Lhs, Rhs> type;
-        };
-        
-        struct OpEqualsAreDefined : public boost::mpl::if_
-                                           <
-                                                boost::mpl::and_
-                                                <
-                                                    HasOpEqualTraits<LhsResultType, typename RhsLhsPolicyType::ResultType, MultiplyOp>,
-                                                    HasOpEqualTraits<LhsResultType, typename RhsRhsPolicyType::ResultType, MultiplyOp>
-                                                >,
-                                                boost::true_type,
-                                                boost::false_type
-                                           >::type
-        {
-        };
-        
-        static void EvaluateNewRhs(const Expression<RhsRhsPolicyType>& exp, Accumulator<typename RhsRhsPolicyType::ResultType>& accum)
-        {
-            exp.template Evaluate<DivideOp>(accum);
-        }
-    };
-    
-    template<typename LhsResultType,
-             typename RhsLhsPolicyType,
-             typename RhsRhsPolicyType>
-    struct AssociativeTraits<ConstantExpressionPolicy<LhsResultType>, DivideOp, BinaryExpressionPolicy<RhsLhsPolicyType, DivideOp, RhsRhsPolicyType> >
-        : public ConstantBinaryCommonAssociativeTraits<LhsResultType, DivideOp, RhsLhsPolicyType, DivideOp, RhsRhsPolicyType>
-    {
-        
-        template<typename Lhs, typename Rhs>
-        struct RhsOpType
-        {
-            typedef MultiplyOp<Lhs, Rhs> type;
-        };
-        
-        struct OpEqualsAreDefined : public boost::mpl::if_
-                                           <
-                                                boost::mpl::and_
-                                                <
-                                                    HasOpEqualTraits<LhsResultType, typename RhsLhsPolicyType::ResultType, MultiplyOp>,
-                                                    HasOpEqualTraits<LhsResultType, typename RhsRhsPolicyType::ResultType, MultiplyOp>
-                                                >,
-                                                boost::true_type,
-                                                boost::false_type
-                                           >::type
-        {
-        };
-        
-        static void EvaluateNewRhs(const Expression<RhsRhsPolicyType>& exp, Accumulator<typename RhsRhsPolicyType::ResultType>& accum)
-        {
-            exp.template Evaluate<MultiplyOp>(accum);
-        }
     };
 }
 
-#endif // NEKTAR_USE_EXPRESSION_TEMPLATES
-#endif //NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_ASSOCIATIVE_TRAITS_HPP
+#endif //NEKTAR_EXPRESSION_TEMPLATES_ASSOCIATIVE_TRAITS_HPP

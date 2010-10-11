@@ -93,35 +93,6 @@
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/PolyEPoints.h>
 
-#include <LibUtilities/ExpressionTemplates/Accumulator.hpp>
-#include <LibUtilities/ExpressionTemplates/ArithmeticConcepts.hpp>
-#include <LibUtilities/ExpressionTemplates/ArithmeticTraits.hpp>
-#include <LibUtilities/ExpressionTemplates/AssignableTraits.hpp>
-#include <LibUtilities/ExpressionTemplates/AssociativeExpressionTraits.hpp>
-#include <LibUtilities/ExpressionTemplates/AssociativeTraits.hpp>
-#include <LibUtilities/ExpressionTemplates/BinaryExpression.hpp>
-#include <LibUtilities/ExpressionTemplates/BinaryExpressionEvaluator.hpp>
-#include <LibUtilities/ExpressionTemplates/BinaryExpressionEvaluatorFwd.hpp>
-#include <LibUtilities/ExpressionTemplates/BinaryExpressionOperators.hpp>
-#include <LibUtilities/ExpressionTemplates/BinaryExpressionPolicy.hpp>
-#include <LibUtilities/ExpressionTemplates/BinaryExpressionPolicyFwd.hpp>
-#include <LibUtilities/ExpressionTemplates/BinaryExpressionTraits.hpp>
-#include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
-#include <LibUtilities/ExpressionTemplates/CommutativeExpressionTraits.hpp>
-#include <LibUtilities/ExpressionTemplates/CommutativeTraits.hpp>
-#include <LibUtilities/ExpressionTemplates/ConstantExpression.hpp>
-#include <LibUtilities/ExpressionTemplates/ConstantExpressionTraits.hpp>
-#include <LibUtilities/ExpressionTemplates/Expression.hpp>
-#include <LibUtilities/ExpressionTemplates/ExpressionConcepts.hpp>
-#include <LibUtilities/ExpressionTemplates/ExpressionMetadata.hpp>
-#include <LibUtilities/ExpressionTemplates/ExpressionReturnType.hpp>
-//#include <LibUtilities/ExpressionTemplates/ExpressionTemplateConcepts.hpp>
-#include <LibUtilities/ExpressionTemplates/ExpressionTemplateOperators.hpp>
-#include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
-#include <LibUtilities/ExpressionTemplates/NegateOp.hpp>
-#include <LibUtilities/ExpressionTemplates/NullOp.hpp>
-#include <LibUtilities/ExpressionTemplates/UnaryExpression.hpp>
-#include <LibUtilities/ExpressionTemplates/UnaryExpressionTraits.hpp>
 
 #include <LibUtilities/BasicUtils/ArrayPolicies.hpp>
 #include <LibUtilities/BasicUtils/BoostUtil.hpp>

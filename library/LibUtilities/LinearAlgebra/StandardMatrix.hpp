@@ -39,11 +39,16 @@
 #include <LibUtilities/LinearAlgebra/MatrixBase.hpp>
 #include <LibUtilities/LinearAlgebra/PointerWrapper.h>
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
-#include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
+#include <ExpressionTemplates/ExpressionTemplates.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrixMetadata.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixFuncs.h>
+#include <LibUtilities/LinearAlgebra/MatrixSize.hpp>
+
 #include <LibUtilities/BasicUtils/Vmath.hpp>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
+
+#include <ExpressionTemplates/Node.hpp>
+#include <ExpressionTemplates/ExpressionEvaluator.hpp>
 
 namespace Nektar
 {
@@ -258,6 +263,23 @@ namespace Nektar
                 m_data = Array<OneD, DataType>(GetRequiredStorageSize());
             }
 
+            NekMatrix(unsigned int rows, unsigned int columns, 
+                      MatrixStorage policy,
+                      unsigned int subDiagonals,
+                      unsigned int superDiagonals,
+                      unsigned int capacity) :
+                BaseType(rows, columns),
+                m_data(),
+                m_wrapperType(eCopy),
+                m_storagePolicy(policy),
+                m_numberOfSuperDiagonals(superDiagonals),
+                m_numberOfSubDiagonals(subDiagonals)
+            {
+                unsigned int requiredStorage = this->GetRequiredStorageSize();
+                unsigned int actualSize = std::max(requiredStorage, capacity);
+                m_data = Array<OneD, DataType>(actualSize);
+            }
+            
             /// \brief Creates a rows by columns matrix.
             /// \brief rows The number of rows in the matrix.
             /// \brief columns The number of columns in the matrix.
@@ -369,28 +391,26 @@ namespace Nektar
 
             
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-                explicit NekMatrix(const NekMatrixMetadata& d) :
-                    BaseType(d.Rows, d.Columns),
-                    m_data(),
+                template<typename L, typename Op, typename R>
+                NekMatrix(const Node<L, Op, R>& rhs) :
+                    BaseType(0, 0),
                     m_wrapperType(eCopy),
                     m_storagePolicy(eFULL),
                     m_numberOfSuperDiagonals(std::numeric_limits<unsigned int>::max()),
                     m_numberOfSubDiagonals(std::numeric_limits<unsigned int>::max())
                 {
-                    m_data = Array<OneD, DataType>(d.RequiredStorageSize);
-                }
+                    boost::tuple<unsigned int, unsigned int, unsigned int> sizes  =
+                            MatrixSize<Node<L, Op, R>, typename Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
+                            
+                    unsigned int rows = sizes.get<0>();
+                    unsigned int columns = sizes.get<1>();
+                    unsigned int bufferCapacity = sizes.get<2>();
+                    
+                    m_data = Array<OneD, DataType>(bufferCapacity);
+                    this->Resize(rows, columns);
 
-                template<typename ExpressionPolicyType>
-                NekMatrix(const Expression<ExpressionPolicyType>& rhs) :
-                    BaseType(rhs.GetMetadata().Rows, rhs.GetMetadata().Columns),
-                    m_wrapperType(eCopy),
-                    m_storagePolicy(eFULL),
-                    m_numberOfSuperDiagonals(std::numeric_limits<unsigned int>::max()),
-                    m_numberOfSubDiagonals(std::numeric_limits<unsigned int>::max())
-                {
-                    BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<const DataType, StandardMatrixTag> > ));
-                    m_data = Array<OneD, DataType>(rhs.GetMetadata().RequiredStorageSize);
-                    rhs.Evaluate(*this);
+                    ExpressionEvaluator::Evaluate(rhs, *this);
+                    this->RemoveExcessCapacity();
                 }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
@@ -443,46 +463,46 @@ namespace Nektar
             }
             
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-                template<typename ExpressionPolicyType>
-                ThisType& operator=(const Expression<ExpressionPolicyType>& rhs)
-                {
-                    BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<const DataType, StandardMatrixTag> > ));
-                    
-                    if( rhs.ContainsReference(*this) )
-                    {
-                        ThisType temp = rhs;
-                        *this = temp;
-                    }
-                    else
-                    {
-                        m_storagePolicy = eFULL;
-                        m_numberOfSubDiagonals = std::numeric_limits<unsigned int>::max();
-                        m_numberOfSuperDiagonals = std::numeric_limits<unsigned int>::max();
-                        
-                        if( this->GetRows() != rhs.GetMetadata().Rows ||
-                            this->GetColumns() != rhs.GetMetadata().Columns )
-                        {
-                            Resize(rhs.GetMetadata().Rows, rhs.GetMetadata().Columns);
-                            ResizeDataArrayIfNeeded(rhs.GetMetadata());
-                        }
+                //template<typename ExpressionPolicyType>
+                //ThisType& operator=(const Expression<ExpressionPolicyType>& rhs)
+                //{
+                //    BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<const DataType, StandardMatrixTag> > ));
+                //    
+                //    if( rhs.ContainsReference(*this) )
+                //    {
+                //        ThisType temp = rhs;
+                //        *this = temp;
+                //    }
+                //    else
+                //    {
+                //        m_storagePolicy = eFULL;
+                //        m_numberOfSubDiagonals = std::numeric_limits<unsigned int>::max();
+                //        m_numberOfSuperDiagonals = std::numeric_limits<unsigned int>::max();
+                //        
+                //        if( this->GetRows() != rhs.GetMetadata().Rows ||
+                //            this->GetColumns() != rhs.GetMetadata().Columns )
+                //        {
+                //            Resize(rhs.GetMetadata().Rows, rhs.GetMetadata().Columns);
+                //            ResizeDataArrayIfNeeded(rhs.GetMetadata());
+                //        }
 
-                        this->SetTransposeFlag('N');
-                        Array<OneD, DataType> original = GetData();
-                        
-                        rhs.Evaluate(*this);
-                        
-                        if( m_wrapperType == eWrapper )
-                        {
-                            if( GetData().data() != original.data() )
-                            {
-                                this->SwapTempAndDataBuffers();
-                                std::copy(this->GetTempSpace().data(), this->GetTempSpace().data() + this->GetRequiredStorageSize(),
-                                    this->GetData().data());
-                            }
-                        }
-                    }
-                    return *this;
-                }
+                //        this->SetTransposeFlag('N');
+                //        Array<OneD, DataType> original = GetData();
+                //        
+                //        rhs.Evaluate(*this);
+                //        
+                //        if( m_wrapperType == eWrapper )
+                //        {
+                //            if( GetData().data() != original.data() )
+                //            {
+                //                this->SwapTempAndDataBuffers();
+                //                std::copy(this->GetTempSpace().data(), this->GetTempSpace().data() + this->GetRequiredStorageSize(),
+                //                    this->GetData().data());
+                //            }
+                //        }
+                //    }
+                //    return *this;
+                //}
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
             
             /// \brief Returns the element value at the given row and column.
@@ -789,17 +809,36 @@ namespace Nektar
             {
                     PerformCopyConstruction(rhs);
             }
-
+            
             Array<OneD, DataType>& GetData() { return m_data; }
+            
+            void RemoveExcessCapacity()
+            {
+                if( m_wrapperType == eCopy )
+                {
+                    unsigned int requiredStorageSize = GetRequiredStorageSize();
+                    if( m_data.num_elements() > requiredStorageSize )
+                    {
+                        Array<OneD, DataType> newArray(requiredStorageSize);
+                        CopyArrayN(m_data, newArray, requiredStorageSize);
+                        m_data = newArray;
+                    }
+                }
+                else if( m_wrapperType == eWrapper )
+                {
+                    ASSERTL0(true, "Can't call RemoveExcessCapacity on a wrapped matrix.");
+                }
+            }
+            
             void ResizeDataArrayIfNeeded(unsigned int requiredStorageSize)
             {
                 if( m_wrapperType == eCopy  )
                 {
-                    // If the current vector is a matrix, then regardless of the rhs type 
-                    // we just copy over the values, resizing if needed.
                     if( m_data.num_elements() < requiredStorageSize )
                     {
-                        m_data = Array<OneD, DataType>(requiredStorageSize);
+                        Array<OneD, DataType> newData(requiredStorageSize);
+                        std::copy(m_data.data(), m_data.data() + m_data.num_elements(), newData.data());
+                        m_data = newData;
                     }
                 }
                 else if( m_wrapperType == eWrapper )
@@ -816,10 +855,10 @@ namespace Nektar
                 ResizeDataArrayIfNeeded(requiredStorageSize);
             }
             
-            void ResizeDataArrayIfNeeded(const NekMatrixMetadata& data)
-            {
-                ResizeDataArrayIfNeeded(data.RequiredStorageSize);
-            }
+            //void ResizeDataArrayIfNeeded(const NekMatrixMetadata& data)
+            //{
+            //    ResizeDataArrayIfNeeded(data.RequiredStorageSize);
+            //}
 
             
         private:
@@ -929,6 +968,16 @@ namespace Nektar
 
             }
             
+            NekMatrix(unsigned int rows, unsigned int columns, 
+                      MatrixStorage policy,
+                      unsigned int subDiagonals,
+                      unsigned int superDiagonals,
+                      unsigned int capacity) :
+                BaseType(rows, columns, policy, subDiagonals, superDiagonals, capacity),
+                m_tempSpace()
+            {
+            }
+
             NekMatrix(const ThisType& rhs) :
                 BaseType(rhs),
                 m_tempSpace()
@@ -936,19 +985,25 @@ namespace Nektar
             }
             
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-                explicit NekMatrix(const NekMatrixMetadata& d) :
-                    BaseType(d),
+                template<typename L, typename Op, typename R>
+                NekMatrix(const Node<L, Op, R>& rhs) :
+                    BaseType(0, 0),
                     m_tempSpace()
                 {
-                }
+                    boost::tuple<unsigned int, unsigned int, unsigned int> sizes = 
+                        MatrixSize<Node<L, Op, R>, typename Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
+                    unsigned int rows = sizes.get<0>();
+                    unsigned int columns = sizes.get<1>();
+                    unsigned int bufferSize = sizes.get<2>();
 
-                template<typename ExpressionPolicyType>
-                NekMatrix(const Expression<ExpressionPolicyType>& rhs) :
-                    BaseType(rhs.GetMetadata()),
-                    m_tempSpace()
-                {
-                    BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, StandardMatrixTag> > ));
-                    rhs.Evaluate(*this);
+                    this->ResizeDataArrayIfNeeded(bufferSize);
+
+                    this->Resize(rows, columns);
+                    //this->GetData() = Array<OneD, DataType>(this());
+                    ExpressionEvaluator::Evaluate(rhs, *this);
+                    
+                    this->RemoveExcessCapacity();
+                    
                 }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
@@ -974,46 +1029,46 @@ namespace Nektar
             }
             
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-                template<typename ExpressionPolicyType>
-                ThisType& operator=(const Expression<ExpressionPolicyType>& rhs)
-                {
-                    BOOST_MPL_ASSERT(( 
-                        boost::mpl::or_
-                        <
-                            boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, StandardMatrixTag> >,
-                            boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<const DataType, StandardMatrixTag> >
-                        > ));
-                    if( rhs.ContainsReference(*this) )
-                    {
-                        ThisType temp = rhs;
-                        *this = temp;
-                    }
-                    else
-                    {
-                        if( this->GetRows() != rhs.GetMetadata().Rows ||
-                            this->GetColumns() != rhs.GetMetadata().Columns )
-                        {
-                            Resize(rhs.GetMetadata().Rows, rhs.GetMetadata().Columns);
-                            this->ResizeDataArrayIfNeeded(rhs.GetMetadata());
-                        }
+                //template<typename ExpressionPolicyType>
+                //ThisType& operator=(const Expression<ExpressionPolicyType>& rhs)
+                //{
+                //    BOOST_MPL_ASSERT(( 
+                //        boost::mpl::or_
+                //        <
+                //            boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, StandardMatrixTag> >,
+                //            boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<const DataType, StandardMatrixTag> >
+                //        > ));
+                //    if( rhs.ContainsReference(*this) )
+                //    {
+                //        ThisType temp = rhs;
+                //        *this = temp;
+                //    }
+                //    else
+                //    {
+                //        if( this->GetRows() != rhs.GetMetadata().Rows ||
+                //            this->GetColumns() != rhs.GetMetadata().Columns )
+                //        {
+                //            Resize(rhs.GetMetadata().Rows, rhs.GetMetadata().Columns);
+                //            this->ResizeDataArrayIfNeeded(rhs.GetMetadata());
+                //        }
 
-                        this->SetTransposeFlag('N');
-                        Array<OneD, DataType> original = this->GetData();
-                        
-                        rhs.Evaluate(*this);
-                        
-                        if( this->GetWrapperType() == eWrapper )
-                        {
-                            if( this->GetData().data() != original.data() )
-                            {
-                                this->SwapTempAndDataBuffers();
-                                std::copy(this->GetTempSpace().data(), this->GetTempSpace().data() + this->GetRequiredStorageSize(),
-                                    this->GetData().data());
-                            }
-                        }
-                    }
-                    return *this;
-                }
+                //        this->SetTransposeFlag('N');
+                //        Array<OneD, DataType> original = this->GetData();
+                //        
+                //        rhs.Evaluate(*this);
+                //        
+                //        if( this->GetWrapperType() == eWrapper )
+                //        {
+                //            if( this->GetData().data() != original.data() )
+                //            {
+                //                this->SwapTempAndDataBuffers();
+                //                std::copy(this->GetTempSpace().data(), this->GetTempSpace().data() + this->GetRequiredStorageSize(),
+                //                    this->GetData().data());
+                //            }
+                //        }
+                //    }
+                //    return *this;
+                //}
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
             void SetSize(unsigned int rows, unsigned int cols)
@@ -1324,7 +1379,36 @@ namespace Nektar
         return result;
     }
     
+    #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
 
+        template<typename DataType>
+        struct IsAlias<NekMatrix<DataType, StandardMatrixTag>, NekMatrix<DataType, StandardMatrixTag> >
+        {
+            static bool Apply(const NekMatrix<DataType, StandardMatrixTag>& lhs, const NekMatrix<DataType, StandardMatrixTag>& rhs)
+            {
+                return lhs.GetPtr().Overlaps(rhs.GetPtr());
+            }
+        };
+
+        template<typename DataType, typename NodeType, typename Indices, unsigned int StartIndex>
+        struct CreateFromTree<NekMatrix<DataType, StandardMatrixTag>, NodeType, Indices, StartIndex>
+        {
+            template<typename ArgVectorType>
+            static NekMatrix<DataType, StandardMatrixTag> Apply(const ArgVectorType& tree)
+            {
+                boost::tuple<unsigned int, unsigned int, unsigned int> sizes = 
+                    MatrixSize<NodeType, Indices, StartIndex>::GetRequiredSize(tree);
+
+                unsigned int rows = sizes.get<0>();
+                unsigned int columns = sizes.get<1>();
+                unsigned int bufferSize = sizes.get<2>();
+
+                return NekMatrix<DataType, StandardMatrixTag>(rows, columns,
+                     eFULL, std::numeric_limits<unsigned int>::max(),
+                     std::numeric_limits<unsigned int>::max(), bufferSize);
+            }
+        };
+    #endif
 }
 
 #endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_STANDARD_MATRIX_HPP

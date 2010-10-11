@@ -33,10 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-
+#define BOOST_AUTO_TEST_MAIN
+#define BOOST_TEST_MODULE ExpressionTemplateTests test
+#include <boost/test/auto_unit_test.hpp>
 #include <boost/test/included/unit_test_framework.hpp>
-//#include <LibUtilities/ExpressionTemplates/ArithmeticTraits.hpp>
-
-//int NekAdd(int lhs, int rhs);
-
-//typedef Nektar::AdditionTraits<int, int&>::ResultType ResultType;

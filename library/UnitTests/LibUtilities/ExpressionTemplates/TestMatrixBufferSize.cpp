@@ -60,6 +60,13 @@ namespace Nektar
                         19, 20, 21};
         double buf3[] = {1, 2, 3, 4, 5};
         
+        typedef NekMatrix<double> Matrix;
+        typedef Node<Matrix> MatrixNode;
+        typedef Node<MatrixNode, MultiplyOp, MatrixNode> LhsTree;
+        typedef MatrixNode RhsTree;
+        typedef Node<LhsTree, MultiplyOp, RhsTree> Expression;
+        typedef Expression::Indices Indices;
+        
         NekMatrix<double> m1(2, 3, buf1);
         NekMatrix<double> m2(3, 5, buf2);
         NekMatrix<double> tempResult = m1*m2;
@@ -74,13 +81,20 @@ namespace Nektar
         
         NekMatrix<double> m3(5, 1, buf3);
         
-        NekMatrix<double> result1 = tempResult*m3;
-        NekMatrix<double> result = m1*m2*m3;
+        Expression exp = m1*m2*m3;
+        
+        boost::tuple<unsigned int, unsigned int, unsigned int> sizes = 
+                MatrixSize<Expression, Indices, 0>::GetRequiredSize(exp.GetData());
+                
+        BOOST_CHECK_EQUAL(sizes.get<0>(), 2u);
+        BOOST_CHECK_EQUAL(sizes.get<1>(), 1u);
+        BOOST_CHECK_EQUAL(sizes.get<2>(), 10u);
+        
+        NekMatrix<double> result(exp);
         
         double result_buf[] = {1470, 3594};
         NekMatrix<double> expected_result(2, 1, result_buf);
         
-        BOOST_CHECK_EQUAL(expected_result, result1);
         BOOST_CHECK_EQUAL(expected_result, result);
     }
     

@@ -41,7 +41,6 @@
 
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorTypeTraits.hpp>
-#include <LibUtilities/ExpressionTemplates/Expression.hpp>
 
 namespace Nektar
 {
@@ -120,46 +119,46 @@ namespace Nektar
         return temp;
     }
 
-    template<typename DataType, typename dim, typename space>
-    void PlusEqual(NekVector<DataType, dim, space>& lhs, const NekVector<const DataType, dim, space>& rhs)
-    {
-        ASSERTL1(lhs.GetDimension() == rhs.GetDimension(), "Two vectors must have the same size in PlusEqual.")
-        DataType* lhs_buf = lhs.GetRawPtr();
-        const DataType* rhs_buf = rhs.GetRawPtr();
-        for(unsigned int i=0; i < lhs.GetDimension(); ++i)
-        {
-            lhs_buf[i] += rhs_buf[i];
-        }
-    }
+    //template<typename DataType, typename dim, typename space>
+    //void PlusEqual(NekVector<DataType, dim, space>& lhs, const NekVector<const DataType, dim, space>& rhs)
+    //{
+    //    ASSERTL1(lhs.GetDimension() == rhs.GetDimension(), "Two vectors must have the same size in PlusEqual.")
+    //    DataType* lhs_buf = lhs.GetRawPtr();
+    //    const DataType* rhs_buf = rhs.GetRawPtr();
+    //    for(unsigned int i=0; i < lhs.GetDimension(); ++i)
+    //    {
+    //        lhs_buf[i] += rhs_buf[i];
+    //    }
+    //}
 
-    template<typename DataType, typename dim, typename space>
-    void MinusEqual(NekVector<DataType, dim, space>& lhs, const NekVector<const DataType, dim, space>& rhs)
-    {
-        ASSERTL1(lhs.GetDimension() == rhs.GetDimension(), "Two vectors must have the same size in MinusEqual.");
-        
-        for(unsigned int i=0; i < lhs.GetDimension(); ++i)
-        {
-            lhs[i] -= rhs[i];
-        }
-    }
+    //template<typename DataType, typename dim, typename space>
+    //void MinusEqual(NekVector<DataType, dim, space>& lhs, const NekVector<const DataType, dim, space>& rhs)
+    //{
+    //    ASSERTL1(lhs.GetDimension() == rhs.GetDimension(), "Two vectors must have the same size in MinusEqual.");
+    //    
+    //    for(unsigned int i=0; i < lhs.GetDimension(); ++i)
+    //    {
+    //        lhs[i] -= rhs[i];
+    //    }
+    //}
 
-    template<typename DataType, typename dim, typename space>
-    void TimesEqual(NekVector<DataType, dim, space>& lhs, const DataType& rhs)
-    {
-        for(unsigned int i=0; i < lhs.GetDimension(); ++i)
-        {
-            lhs[i] *= rhs;
-        }
-    }
+    //template<typename DataType, typename dim, typename space>
+    //void TimesEqual(NekVector<DataType, dim, space>& lhs, const DataType& rhs)
+    //{
+    //    for(unsigned int i=0; i < lhs.GetDimension(); ++i)
+    //    {
+    //        lhs[i] *= rhs;
+    //    }
+    //}
 
-    template<typename DataType, typename dim, typename space>
-    void DivideEqual(NekVector<DataType, dim, space>& lhs, const DataType& rhs)
-    {
-        for(unsigned int i=0; i < lhs.GetDimension(); ++i)
-        {
-            lhs[i] /= rhs;
-        }
-    }
+    //template<typename DataType, typename dim, typename space>
+    //void DivideEqual(NekVector<DataType, dim, space>& lhs, const DataType& rhs)
+    //{
+    //    for(unsigned int i=0; i < lhs.GetDimension(); ++i)
+    //    {
+    //        lhs[i] /= rhs;
+    //    }
+    //}
 
     template<typename DataType, typename dim, typename space>
     DataType Magnitude(const NekVector<const DataType, dim, space>& v) 

@@ -24,8 +24,8 @@ LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 
 ADD_NEKTAR_EXECUTABLE(LibUtilitiesUnitTests UnitTestSources UnitTestHeaders)
 
-SET(PrecompiledHeaderName LibUtilitiesUnitTestsPrecompiledHeader.h)
-SETUP_PRECOMPILED_HEADERS(PrecompiledHeaderSources PrecompiledHeaderName)
+#SET(PrecompiledHeaderName LibUtilitiesUnitTestsPrecompiledHeader.h)
+#SETUP_PRECOMPILED_HEADERS(PrecompiledHeaderSources PrecompiledHeaderName)
 
 TARGET_LINK_LIBRARIES(LibUtilitiesUnitTests
     optimized LibUtilities debug LibUtilities-g
@@ -37,7 +37,4 @@ SET_LAPACK_LINK_LIBRARIES(LibUtilitiesUnitTests)
 
 
 SUBDIRS(LinearAlgebra)
-
-IF( NOT MSVC )
-    SUBDIRS(ExpressionTemplates)
-ENDIF()
+SUBDIRS(ExpressionTemplates)

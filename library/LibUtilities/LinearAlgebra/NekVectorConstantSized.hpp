@@ -41,7 +41,7 @@
 #include <LibUtilities/LinearAlgebra/NekVectorCommon.hpp>
 #include <LibUtilities/LinearAlgebra/PointerWrapper.h>
 
-#include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
+#include <ExpressionTemplates/ExpressionTemplates.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 
@@ -140,22 +140,28 @@ namespace Nektar
             }
             
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-            template<typename ExpressionPolicyType>
-            NekVector(const Expression<ExpressionPolicyType>& rhs) :
+            template<typename L, typename Op, typename R>
+            NekVector(const Node<L, Op, R>& rhs) :
                 m_impl()
             {
-                BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<const DataType, dim, space> > ));
-                rhs.Evaluate(*this);
+				#ifdef _DEBUG
+                boost::tuple<unsigned int, unsigned int, unsigned int> sizes = 
+                    MatrixSize<Node<L, Op, R>, typename Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
+				ASSERTL0(sizes.get<0>() == dim::Value, "Data sizes are not equal.");
+				#endif
+
+                /// TODO Make sure this works correctly with eWrapper
+                //BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<const DataType, VariableSizedVector, space> > ));
+                ExpressionEvaluator::Evaluate(rhs, *this);
             }
 #endif
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-            template<typename ExpressionPolicyType>
-            NekVector<DataType, dim, space>& operator=(const Expression<ExpressionPolicyType>& rhs)
+            template<typename L, typename Op, typename R>
+            NekVector<DataType, dim, space>& operator=(const Node<L, Op, R>& rhs)
             {
-                BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<const DataType, dim, space> > ));
-                rhs.Evaluate(*this);
-                return *this;
+				rhs.Evaluate(*this);
+				return *this;
             }
 #endif
             
@@ -330,25 +336,32 @@ namespace Nektar
             
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-            template<typename ExpressionPolicyType>
-            NekVector(const Expression<ExpressionPolicyType>& rhs) :
+            template<typename L, typename Op, typename R>
+            NekVector(const Node<L, Op, R>& rhs) :
                 BaseType()
             {
-                BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, dim, space> > ));
-                rhs.Evaluate(*this);
+				#ifdef _DEBUG
+                boost::tuple<unsigned int, unsigned int, unsigned int> sizes = 
+                    MatrixSize<Node<L, Op, R>, typename Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
+				ASSERTL0(sizes.get<0>() == dim::Value, "Data sizes are not equal.");
+				#endif
+
+                /// TODO Make sure this works correctly with eWrapper
+                //BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<const DataType, VariableSizedVector, space> > ));
+                ExpressionEvaluator::Evaluate(rhs, *this);
             }
 #endif
-            ~NekVector() {}
-            
+
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-            template<typename ExpressionPolicyType>
-            NekVector<DataType, dim, space>& operator=(const Expression<ExpressionPolicyType>& rhs)
+            template<typename L, typename Op, typename R>
+            NekVector<DataType, dim, space>& operator=(const Node<L, Op, R>& rhs)
             {
-                BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, dim, space> > ));
-                rhs.Evaluate(*this);
-                return *this;
+				rhs.Evaluate(*this);
+				return *this;
             }
 #endif
+            
+
 
             NekVector<DataType, dim, space>& operator=(const NekVector<const DataType, dim, space>& rhs)
             {
@@ -362,6 +375,7 @@ namespace Nektar
                 return *this;
             }
             
+			using BaseType::GetRawPtr;
             DataType* GetRawPtr()
             {
                 return this->GetImpl();
@@ -454,19 +468,19 @@ namespace Nektar
 
             NekVector<DataType, dim, space>& operator+=(const NekVector<DataType, dim, space>& rhs)
             {
-                PlusEqual(*this, rhs);
+                AddEqual(*this, rhs);
                 return *this;
             }
 
             NekVector<DataType, dim, space>& operator-=(const NekVector<DataType, dim, space>& rhs)
             {
-                MinusEqual(*this, rhs);
+                SubtractEqual(*this, rhs);
                 return *this;
             }
 
             NekVector<DataType, dim, space>& operator*=(typename boost::call_traits<DataType>::const_reference rhs)
             {
-                TimesEqual(*this, rhs);
+                MultiplyEqual(*this, rhs);
                 return *this;
             }
             

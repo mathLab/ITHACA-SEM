@@ -36,7 +36,7 @@
 #ifndef NEKTAR_LIB_UTILITIES_NEK_VECTOR_HPP
 #define NEKTAR_LIB_UTILITIES_NEK_VECTOR_HPP
 
-#include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
+#include <ExpressionTemplates/ExpressionTemplates.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/NekPoint.hpp>
 
@@ -44,6 +44,8 @@
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorConstantSized.hpp>
 #include <LibUtilities/LinearAlgebra/NekVectorVariableSized.hpp>
+
+#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 
 #include <functional>
 #include <algorithm>
@@ -56,49 +58,9 @@
 
 namespace Nektar
 {
-
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-     template<typename DataType, typename dim, typename space>
-     class ExpressionTraits<NekVector<DataType, dim, space> >
-     {
-         public:
-             typedef NekVectorMetadata MetadataType;
-     };
-#endif
-    
-    // Temporary only - at least until we determine expression templates are the way to go.
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES       
+           
     template<typename DataType, typename dim, typename space>
-    class ConstantExpressionTraits<NekVector<DataType, dim, space> >
-    {
-        public:
-            typedef NekVector<DataType, dim, space> result_type;
-            typedef NekVectorMetadata MetadataType;
-    };
-
-    template<typename DataType, typename dim, typename space, 
-             template<typename, typename> class OpType>
-    class BinaryExpressionMetadataTraits<NekVector<DataType, dim, space>,
-                                         NekVector<DataType, dim, space>,
-                                         OpType>
-    {
-        public:
-            typedef NekVectorMetadata MetadataType;
-    };
-    
-    template<typename LhsDataType, typename LhsStorageType,
-             typename DataType, typename dim, typename space>
-    class BinaryExpressionMetadataTraits<NekMatrix<LhsDataType, LhsStorageType>,
-                                         NekVector<DataType, dim, space>,
-                                         MultiplyOp>
-    {
-        public:
-            typedef NekVectorMetadata MetadataType;
-    };
-#endif
-        
-    template<typename DataType, typename dim, typename space>
-    void NekAdd(NekVector<DataType, dim, space>& result,
+    void Add(NekVector<DataType, dim, space>& result,
            const NekVector<const DataType, dim, space>& lhs,
            const NekVector<const DataType, dim, space>& rhs)
     {
@@ -112,7 +74,7 @@ namespace Nektar
     }
     
     template<typename DataType, typename dim, typename space>
-    void NekAddEqual(NekVector<DataType, dim, space>& result,
+    void AddEqual(NekVector<DataType, dim, space>& result,
            const NekVector<const DataType, dim, space>& rhs)
     {
         DataType* r_buf = result.GetRawPtr();
@@ -125,16 +87,16 @@ namespace Nektar
     }
     
     template<typename DataType, typename dim, typename space>
-    NekVector<DataType, dim, space> NekAdd(const NekVector<DataType, dim, space>& lhs, 
+    NekVector<DataType, dim, space> Add(const NekVector<DataType, dim, space>& lhs, 
                                            const NekVector<DataType, dim, space>& rhs)
     {
         NekVector<DataType, dim, space> result(lhs.GetDimension());
-        NekAdd(result, lhs, rhs);
+        Add(result, lhs, rhs);
         return result;
     }
     
     template<typename ResultDataType, typename InputDataType, typename dim, typename space>
-    void NekSubtract(NekVector<ResultDataType, dim, space>& result,
+    void Subtract(NekVector<ResultDataType, dim, space>& result,
            const NekVector<InputDataType, dim, space>& lhs,
            const NekVector<InputDataType, dim, space>& rhs)
     {
@@ -148,73 +110,170 @@ namespace Nektar
     }
     
     template<typename ResultDataType, typename InputDataType, typename dim, typename space>
-    void NekSubtractEqual(NekVector<ResultDataType, dim, space>& result,
+    void SubtractEqual(NekVector<ResultDataType, dim, space>& result,
            const NekVector<InputDataType, dim, space>& rhs)
     {
         ResultDataType* r_buf = result.GetRawPtr();
         typename boost::add_const<InputDataType>::type* rhs_buf = rhs.GetRawPtr();
         for(int i = 0; i < rhs.GetDimension(); ++i)
         {
-            //result[i] += rhs[i];
             r_buf[i] -= rhs_buf[i];
         }
     }
     
     template<typename DataType, typename dim, typename space>
     NekVector<typename boost::remove_const<DataType>::type, dim, space>
-    NekSubtract(const NekVector<DataType, dim, space>& lhs,
+    Subtract(const NekVector<DataType, dim, space>& lhs,
                 const NekVector<DataType, dim, space>& rhs)
     {
         NekVector<typename boost::remove_const<DataType>::type, dim, space> result(lhs.GetDimension());
-        NekSubtract(result, lhs, rhs);
+        Subtract(result, lhs, rhs);
         return result;
     }
 
 
-    template<typename DataType, typename dim, typename space>
-    NekVector<DataType, dim, space>
-    operator+(const NekVector<DataType, dim, space>& lhs, const NekVector<DataType, dim, space>& rhs)
+
+
+
+	template<typename ResultDataType, typename InputDataType, typename dim, typename space>
+    void Divide(NekVector<ResultDataType, dim, space>& result,
+           const NekVector<InputDataType, dim, space>& lhs,
+           const NekDouble& rhs)
     {
-        NekVector<DataType, dim, space> result(lhs);
-        result += rhs;
+        ResultDataType* r_buf = result.GetRawPtr();
+        typename boost::add_const<InputDataType>::type* lhs_buf = lhs.GetRawPtr();
+        
+        for(int i = 0; i < lhs.GetDimension(); ++i)
+        {
+            r_buf[i] = lhs_buf[i] / rhs;
+        }
+    }
+    
+    template<typename ResultDataType, typename dim, typename space>
+    void DivideEqual(NekVector<ResultDataType, dim, space>& result,
+           const NekDouble& rhs)
+    {
+        ResultDataType* r_buf = result.GetRawPtr();
+        for(int i = 0; i < result.GetDimension(); ++i)
+        {
+            r_buf[i] /= rhs;
+        }
+    }
+    
+    template<typename DataType, typename dim, typename space>
+    NekVector<typename boost::remove_const<DataType>::type, dim, space>
+    Divide(const NekVector<DataType, dim, space>& lhs,
+                const NekDouble& rhs)
+    {
+        NekVector<typename boost::remove_const<DataType>::type, dim, space> result(lhs.GetDimension());
+        Divide(result, lhs, rhs);
         return result;
     }
 
-    template<typename DataType, typename dim, typename space>
-    NekVector<DataType, dim, space>
-    operator-(const NekVector<DataType, dim, space>& lhs, const NekVector<DataType, dim, space>& rhs)
+
+	template<typename ResultDataType, typename InputDataType, typename dim, typename space>
+    void Multiply(NekVector<ResultDataType, dim, space>& result,
+           const NekVector<InputDataType, dim, space>& lhs,
+           const NekDouble& rhs)
     {
-        NekVector<DataType, dim, space> result(lhs);
-        result -= rhs;
+        ResultDataType* r_buf = result.GetRawPtr();
+        typename boost::add_const<InputDataType>::type* lhs_buf = lhs.GetRawPtr();
+        
+        for(int i = 0; i < lhs.GetDimension(); ++i)
+        {
+            r_buf[i] = lhs_buf[i] * rhs;
+        }
+    }
+    
+    template<typename ResultDataType, typename dim, typename space>
+    void MultiplyEqual(NekVector<ResultDataType, dim, space>& result,
+           const NekDouble& rhs)
+    {
+        ResultDataType* r_buf = result.GetRawPtr();
+        for(int i = 0; i < result.GetDimension(); ++i)
+        {
+            r_buf[i] *= rhs;
+        }
+    }
+    
+    template<typename DataType, typename dim, typename space>
+    NekVector<typename boost::remove_const<DataType>::type, dim, space>
+    Multiply(const NekVector<DataType, dim, space>& lhs,
+                const NekDouble& rhs)
+    {
+        NekVector<typename boost::remove_const<DataType>::type, dim, space> result(lhs.GetDimension());
+        Multiply(result, lhs, rhs);
         return result;
     }
 
-    template<typename DataType, typename dim, typename space>
-    NekVector<DataType, dim, space>
-    operator*(const NekVector<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::const_reference rhs)
+	template<typename ResultDataType, typename InputDataType, typename dim, typename space>
+    void Multiply(NekVector<ResultDataType, dim, space>& result,
+			const NekDouble& lhs,   
+			const NekVector<InputDataType, dim, space>& rhs)
     {
-        NekVector<DataType, dim, space> result(lhs);
-        result *= rhs;
-        return result;
+		Multiply(result, rhs, lhs);
+    }
+        
+    template<typename DataType, typename dim, typename space>
+    NekVector<typename boost::remove_const<DataType>::type, dim, space>
+	Multiply(const NekDouble& lhs,
+			 const NekVector<DataType, dim, space>& rhs)
+    {
+		return Multiply(rhs, lhs);
     }
 
-    template<typename DataType, typename dim, typename space>
-    NekVector<DataType, dim, space>
-    operator*(typename boost::call_traits<DataType>::const_reference lhs, const NekVector<DataType, dim, space>& rhs)
-    {
-        NekVector<DataType, dim, space> result(rhs);
-        result *= lhs;
-        return result;
-    }
+    GENERATE_MULTIPLICATION_OPERATOR(NekVector, 3, NekDouble, 0);
+    GENERATE_MULTIPLICATION_OPERATOR(NekDouble, 0, NekVector, 3);
+    
+    GENERATE_DIVISION_OPERATOR(NekVector, 3, NekDouble, 0);
+    GENERATE_ADDITION_OPERATOR(NekVector, 3, NekVector, 3);
+    GENERATE_SUBTRACTION_OPERATOR(NekVector, 3, NekVector, 3);
 
-    template<typename DataType, typename dim, typename space>
-    NekVector<DataType, dim, space>
-    operator/(const NekVector<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::const_reference rhs)
-    {
-        NekVector<DataType, dim, space> result(lhs);
-        result /= rhs;
-        return result;
-    }
+
+    //template<typename DataType, typename dim, typename space>
+    //NekVector<DataType, dim, space>
+    //operator+(const NekVector<DataType, dim, space>& lhs, const NekVector<DataType, dim, space>& rhs)
+    //{
+    //    NekVector<DataType, dim, space> result(lhs);
+    //    result += rhs;
+    //    return result;
+    //}
+
+    //template<typename DataType, typename dim, typename space>
+    //NekVector<DataType, dim, space>
+    //operator-(const NekVector<DataType, dim, space>& lhs, const NekVector<DataType, dim, space>& rhs)
+    //{
+    //    NekVector<DataType, dim, space> result(lhs);
+    //    result -= rhs;
+    //    return result;
+    //}
+
+    //template<typename DataType, typename dim, typename space>
+    //NekVector<DataType, dim, space>
+    //operator*(const NekVector<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::const_reference rhs)
+    //{
+    //    NekVector<DataType, dim, space> result(lhs);
+    //    result *= rhs;
+    //    return result;
+    //}
+
+    //template<typename DataType, typename dim, typename space>
+    //NekVector<DataType, dim, space>
+    //operator*(typename boost::call_traits<DataType>::const_reference lhs, const NekVector<DataType, dim, space>& rhs)
+    //{
+    //    NekVector<DataType, dim, space> result(rhs);
+    //    result *= lhs;
+    //    return result;
+    //}
+
+    //template<typename DataType, typename dim, typename space>
+    //NekVector<DataType, dim, space>
+    //operator/(const NekVector<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::const_reference rhs)
+    //{
+    //    NekVector<DataType, dim, space> result(lhs);
+    //    result /= rhs;
+    //    return result;
+    //}
 
 
     template<typename DataType, typename dim, typename space>

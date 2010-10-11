@@ -48,6 +48,27 @@
 
 namespace Nektar
 {
+    BOOST_AUTO_TEST_CASE(DgemmAlphaAB)
+    {
+        double a_buf[] = {1, 2, 3, 4};
+        double b_buf[] = {4, 5, 6, 7};
+        
+        boost::shared_ptr<NekMatrix<double> > ia(new NekMatrix<double>(2, 2, a_buf));
+        boost::shared_ptr<NekMatrix<double> > ib(new NekMatrix<double>(2, 2, b_buf));
+        
+        NekMatrix<double> result = 3.0*(*ia)*(*ib);
+        
+        double expected_result_buf[] = {57, 84, 81, 120};
+        NekMatrix<double> expected_result(2, 2, expected_result_buf);
+        BOOST_CHECK_EQUAL(expected_result, result);
+
+        NekMatrix<double> result1 = (*ia)*3.0*(*ib);
+        BOOST_CHECK_EQUAL(expected_result, result1);
+
+        NekMatrix<double> result2 = (*ia)*(*ib)*3.0;
+        BOOST_CHECK_EQUAL(expected_result, result2);
+    }
+
     BOOST_AUTO_TEST_CASE(TestABPlusbCStandard)
     {
         double abuf[] = {1, 2, 3, 4};
@@ -60,6 +81,13 @@ namespace Nektar
         NekMatrix<double> B(2, 2, bbuf);
         NekMatrix<double> C(2, 2, cbuf);
         
+        #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+        typedef Node<NekMatrix<double>, void, void> NodeType;
+        typedef Node<NodeType, MultiplyOp, NodeType> LhsType;
+        BOOST_MPL_ASSERT(( IsDgemmLeftSide<LhsType> ));
+        BOOST_MPL_ASSERT(( IsDgemmRightSide<NodeType> ));
+        #endif
+
         NekMatrix<double> result1 = A*B + C;
         double expected_result1_buf[] = {32, 44, 42, 58};
         NekMatrix<double> expected_result1(2,2, expected_result1_buf);

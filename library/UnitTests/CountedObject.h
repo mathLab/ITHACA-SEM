@@ -39,6 +39,9 @@
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 
+#include <ExpressionTemplates/Node.hpp>
+#include <ExpressionTemplates/ExpressionEvaluator.hpp>
+
 namespace Nektar
 {
     
@@ -75,6 +78,23 @@ namespace Nektar
                 value(rhs.value)
             {
                 ++numberCopied;
+            }
+
+            template<typename L, typename Op, typename R>
+            CountedObject(const Node<L, Op, R>& rhs) :
+                value(0)
+            {
+                ++numberOfExpressionConstructions;
+                ExpressionEvaluator::Evaluate(rhs, *this);
+            }
+
+            template<typename L, typename Op, typename R>
+            CountedObject<DerivedType> operator=(const Node<L, Op, R>& rhs)
+            {
+                ++numberOfExpressionAssignments;
+                value = 0;
+                ExpressionEvaluator::Evaluate(rhs, *this);
+                return *this;
             }
 
             virtual ~CountedObject()
@@ -116,6 +136,8 @@ namespace Nektar
                 numberOf1ParameterConstructions = 0;
                 numberOf2ParameterConstructions = 0;
                 numberOf3ParameterConstructions = 0;
+                numberOfExpressionConstructions = 0;
+                numberOfExpressionAssignments = 0;
             }
 
             static void Check(unsigned int expectedDefaultConstructed, unsigned int expectedConstructedFromInt,
@@ -143,6 +165,8 @@ namespace Nektar
             static unsigned int numberOf1ParameterConstructions;
             static unsigned int numberOf2ParameterConstructions;
             static unsigned int numberOf3ParameterConstructions;
+            static unsigned int numberOfExpressionConstructions;
+            static unsigned int numberOfExpressionAssignments;
     };
     
     template<typename T>
@@ -178,6 +202,12 @@ namespace Nektar
 
     template<typename DerivedType>
     unsigned int CountedObject<DerivedType>::numberOf3ParameterConstructions = 0;
+
+    template<typename DerivedType>
+    unsigned int CountedObject<DerivedType>::numberOfExpressionConstructions = 0;
+
+    template<typename DerivedType>
+    unsigned int CountedObject<DerivedType>::numberOfExpressionAssignments = 0;
 }
 
 #endif //NEKTAR_UNIT_TESTS_COUNTED_OBJECT_H

@@ -1,9 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: CommutativeTraits.hpp
-//
-// For more information, please see: http://www.nektar.info
-//
 // The MIT License
 //
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
@@ -29,32 +25,39 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description:
-//
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_COMMUTATIVE_TRAITS_HPP
-#define NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_COMMUTATIVE_TRAITS_HPP
-#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+#ifndef NEKTAR_EXPRESSION_TEMPLATES_COMMUTATIVE_TRAITS_HPP
+#define NEKTAR_EXPRESSION_TEMPLATES_COMMUTATIVE_TRAITS_HPP
 
-#include <LibUtilities/ExpressionTemplates/BinaryOperators.hpp>
-#include <LibUtilities/ExpressionTemplates/Expression.hpp>
+#include "Operators.hpp"
 #include <boost/type_traits.hpp>
 
 namespace Nektar
 {
-    template<typename FirstType,
-             template <typename, typename> class OpType,
-             typename SecondType>
-    struct IsCommutative : public boost::false_type {};
-    
-    template<typename FirstType, typename SecondType>
-    struct IsCommutative<FirstType, AddOp, SecondType> : public boost::true_type {};
-    
-    template<typename FirstType, typename SecondType>
-    struct IsCommutative<FirstType, MultiplyOp, SecondType> : public boost::true_type {};
-                                                                
+    template<typename L, typename Op, typename R>
+    struct CommutativeTraitsSpecialization : public boost::true_type
+    {
+    };
+
+    template<typename L, typename Op, typename R, typename enabled = void>
+    struct CommutativeTraits : public boost::false_type
+    {
+    };
+
+    template<typename R, typename T>
+    struct CommutativeTraits<R, AddOp, T> : public boost::true_type
+    {};
+
+    template<typename R, typename T>
+    struct CommutativeTraits<R, MultiplyOp, T> :
+        public boost::mpl::and_
+        <
+            boost::true_type,
+            CommutativeTraitsSpecialization<R, MultiplyOp, T>
+        >::type
+    {
+    };
 }
 
-#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
-#endif //NEKTAR_LIB_UTILITIES_EXPRESSION_TEMPLATES_COMMUTATIVE_TRAITS_HPP
+#endif //NEKTAR_EXPRESSION_TEMPLATES_COMMUTATIVE_TRAITS_HPP

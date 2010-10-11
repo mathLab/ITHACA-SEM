@@ -36,11 +36,6 @@
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_VARIABLE_SIZED_HPP
 #define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_NEK_VECTOR_VARIABLE_SIZED_HPP
 
-//#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-//#include <LibUtilities/LinearAlgebra/NekPoint.hpp>
-//#include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
-//#include <LibUtilities/LinearAlgebra/NekVectorMetadata.hpp>
-
 #include <LibUtilities/LinearAlgebra/PointerWrapper.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
@@ -49,25 +44,13 @@
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
 
-//#include <functional>
-//#include <algorithm>
-//#include <math.h>
-//
-//#include <boost/call_traits.hpp>
-//#include <boost/type_traits.hpp>
-//#include <boost/shared_array.hpp>
-
+#include <ExpressionTemplates/Node.hpp>
+#include <ExpressionTemplates/ExpressionEvaluator.hpp>
+#include <LibUtilities/LinearAlgebra/MatrixSize.hpp>
 
 namespace Nektar
 {
-//     template<typename MatrixDataType, typename DataType, typename StorageType, typename Type, unsigned int space>
-//     class BinaryExpressionTraits<NekMatrix<MatrixDataType, StorageType, Type>, NekVector<DataType, 0, space>, MultiplyOp>
-//     {
-//         public:
-//             typedef NekVector<DataType, 0, space> ResultType;
-//     };
-        
-    
+          
     template<typename DataType, typename space>
     class NekVector<const DataType, VariableSizedVector, space>
     {
@@ -225,24 +208,23 @@ namespace Nektar
                 }
             }
 
-            explicit NekVector(const NekVectorMetadata& m) :
-                m_size(m.Rows),
-                m_data(m.Rows),
-                m_wrapperType(eCopy)
-            {
-            }
-
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-            template<typename ExpressionPolicyType>
-            NekVector(const Expression<ExpressionPolicyType>& rhs) :
-                m_size(rhs.GetMetadata().Rows),
-                m_data(rhs.GetMetadata().Rows),
-                m_wrapperType(eCopy)
-            {
-                /// TODO Make sure this works correctly with eWrapper
-                BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<const DataType, VariableSizedVector, space> > ));
-                rhs.Evaluate(*this);
-            }
+                template<typename L, typename Op, typename R>
+                NekVector(const Node<L, Op, R>& rhs) :
+                    m_size(),
+                    m_data(),
+                    m_wrapperType(eCopy)
+                {
+                    boost::tuple<unsigned int, unsigned int, unsigned int> sizes = 
+                        MatrixSize<Node<L, Op, R>, typename Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
+                    m_size = sizes.get<0>();
+                    m_data = Array<OneD, DataType>(m_size);
+
+                    /// TODO Make sure this works correctly with eWrapper
+                    //BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<const DataType, VariableSizedVector, space> > ));
+                    ExpressionEvaluator::Evaluate(rhs, *this);
+
+                }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
             virtual ~NekVector() {}
@@ -373,6 +355,14 @@ namespace Nektar
             inline void SetSize(unsigned int s) { m_size = s; }
             inline void SetWrapperType(PointerWrapper p) { m_wrapperType = p; }
             inline void SetData(const Array<OneD, DataType>& newData) { m_data = newData; }
+            inline void Resize(unsigned int newSize)
+            {
+                if(m_data.num_elements() < newSize )
+                {
+                    m_data = Array<OneD, DataType>(newSize);
+                }
+                m_size = newSize;
+            }
             
         private:
             unsigned int m_size;
@@ -429,32 +419,31 @@ namespace Nektar
             NekVector(unsigned int size, const Array<OneD, DataType>& ptr, PointerWrapper h = eCopy) :
                 BaseType(size, ptr, h) {}
              
-            explicit NekVector(const NekVectorMetadata& m) :
-                BaseType(m)
-            {
-            }
 
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-            template<typename ExpressionPolicyType>
-            NekVector(const Expression<ExpressionPolicyType>& rhs) :
-                BaseType(rhs.GetMetadata()) 
-            {
-                /// TODO Make sure this works correctly with eWrapper
-                BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, VariableSizedVector, space> > ));
-                rhs.Evaluate(*this);
-            }
+                template<typename L, typename Op, typename R>
+                NekVector(const Node<L, Op, R>& rhs) :
+                    BaseType(0) 
+                {
+                    /// TODO Make sure this works correctly with eWrapper
+                    //BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, VariableSizedVector, space> > ));
+                    boost::tuple<unsigned int, unsigned int, unsigned int> sizes = 
+                        MatrixSize<Node<L, Op, R>, typename Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
+                    this->Resize(sizes.get<0>());
+                    ExpressionEvaluator::Evaluate(rhs, *this);
+                }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
                     
             virtual ~NekVector() {}
 
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-            template<typename ExpressionPolicyType>
-            NekVector<DataType, VariableSizedVector, space>& operator=(const Expression<ExpressionPolicyType>& rhs)
+            template<typename L, typename Op, typename R>
+            NekVector<DataType, VariableSizedVector, space>& operator=(const Node<L, Op, R>& rhs)
             {
-                /// TODO Make sure this works correctly with eWrapper.
-                BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, VariableSizedVector, space> > ));
-
-                unsigned int newRows = rhs.GetMetadata().Rows;
+                boost::tuple<unsigned int, unsigned int, unsigned int> sizes = 
+                        MatrixSize<Node<L, Op, R>, typename Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
+                unsigned int newRows = sizes.get<0>();
+                
                 this->SetSize(newRows);
                 if( this->GetWrapperType() == eCopy )
                 {
@@ -469,7 +458,7 @@ namespace Nektar
                              "Attempting to store too many elements in a wrapped vector.");
                 }
 
-                rhs.Evaluate(*this);
+                ExpressionEvaluator::Evaluate(rhs, *this);
                 return *this;            
             }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
@@ -596,15 +585,28 @@ namespace Nektar
     };    
     
     #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-    template<typename DataType, typename Dimension, typename Space>
-    struct CreateFromMetadata<NekVector<DataType, Dimension, Space> >
-    {
-        static NekVector<DataType, Dimension, Space> 
-        Apply(const NekVectorMetadata& d)
+        template<typename DataType, typename space>
+        struct IsAlias<NekVector<DataType, VariableSizedVector, space>, NekVector<DataType, VariableSizedVector, space> >
         {
-            return NekVector<DataType, Dimension, Space>((d));
-        }
-    };
+            static bool Apply(const NekVector<DataType, VariableSizedVector, space>& lhs, const NekVector<DataType, VariableSizedVector, space>& rhs)
+            {
+                return lhs.GetPtr().Overlaps(rhs.GetPtr());
+            }
+        };
+
+        template<typename DataType, typename space, typename NodeType, typename Indices, unsigned int StartIndex>
+        struct CreateFromTree<NekVector<DataType, VariableSizedVector, space>, NodeType, Indices, StartIndex>
+        {
+            template<typename ArgVectorType>
+            static NekVector<DataType, VariableSizedVector, space> Apply(const ArgVectorType& tree)
+            {
+                boost::tuple<unsigned int, unsigned int, unsigned int> sizes = 
+                    MatrixSize<NodeType, Indices, StartIndex>::GetRequiredSize(tree);
+
+                unsigned int rows = sizes.get<0>();
+                return NekVector<DataType, VariableSizedVector, space>(rows);
+            }
+        };
     #endif  
 }
 

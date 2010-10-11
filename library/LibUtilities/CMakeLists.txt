@@ -10,11 +10,13 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/BlasArray.hpp
     ./LinearAlgebra/BlockMatrix.hpp
     ./LinearAlgebra/CanGetRawPtr.hpp
+    ./LinearAlgebra/IsDgemmTraits.hpp
     ./LinearAlgebra/Lapack.hpp
     ./LinearAlgebra/MatrixBase.hpp
     ./LinearAlgebra/MatrixFuncs.h
     ./LinearAlgebra/MatrixOperations.cpp
     ./LinearAlgebra/MatrixOperations.hpp
+    ./LinearAlgebra/MatrixSize.hpp
     ./LinearAlgebra/MatrixStorageType.h
     ./LinearAlgebra/MatrixType.h
     ./LinearAlgebra/MatrixVectorMultiplication.hpp
@@ -68,39 +70,15 @@ SET(PolyLibHeaders
 )	
 
 SET(ExpressionTemplates
-    ./ExpressionTemplates/Accumulator.hpp
-    ./ExpressionTemplates/ArithmeticConcepts.hpp
-    ./ExpressionTemplates/ArithmeticTraits.hpp
-    ./ExpressionTemplates/AssignableTraits.hpp
-    ./ExpressionTemplates/AssociativeExpressionTraits.hpp
-    ./ExpressionTemplates/AssociativeTraits.hpp
-    ./ExpressionTemplates/BinaryExpression.hpp
-    ./ExpressionTemplates/BinaryExpressionEvaluator.hpp
-    ./ExpressionTemplates/BinaryExpressionEvaluator_BinaryConstant.hpp
-    ./ExpressionTemplates/BinaryExpressionEvaluator_BinaryBinary.hpp
-    ./ExpressionTemplates/BinaryExpressionEvaluatorFwd.hpp
-    ./ExpressionTemplates/BinaryExpressionOperators.hpp
-    ./ExpressionTemplates/BinaryExpressionPolicy.hpp
-    ./ExpressionTemplates/BinaryExpressionPolicyFwd.hpp
-    ./ExpressionTemplates/BinaryExpressionTraits.hpp
-    ./ExpressionTemplates/BinaryOperators.hpp
-    ./ExpressionTemplates/BinaryOperatorsFwd.hpp
-    ./ExpressionTemplates/CommutativeExpressionTraits.hpp
-    ./ExpressionTemplates/CommutativeTraits.hpp
-    ./ExpressionTemplates/ConstantExpression.hpp
-    ./ExpressionTemplates/ConstantExpressionTraits.hpp
-    ./ExpressionTemplates/Expression.hpp
-    ./ExpressionTemplates/ExpressionConcepts.hpp
-    ./ExpressionTemplates/ExpressionMetadata.hpp
-    ./ExpressionTemplates/ExpressionReturnType.hpp
-    ./ExpressionTemplates/ExpressionTemplateConcepts.hpp
-    ./ExpressionTemplates/ExpressionTemplateOperators.hpp
-    ./ExpressionTemplates/ExpressionTemplates.hpp
-    ./ExpressionTemplates/ExpressionTraits.hpp
-    ./ExpressionTemplates/NegateOp.hpp
-    ./ExpressionTemplates/NullOp.hpp
-    ./ExpressionTemplates/UnaryExpression.hpp
-    ./ExpressionTemplates/UnaryExpressionTraits.hpp
+    ../ExpressionTemplates/AssociativeTraits.hpp
+    ../ExpressionTemplates/AssociativeTransform.hpp
+    ../ExpressionTemplates/CommutativeTraits.hpp
+    ../ExpressionTemplates/CommutativeTransform.hpp
+    ../ExpressionTemplates/ExpressionEvaluator.hpp
+    ../ExpressionTemplates/ExpressionTemplates.hpp
+    ../ExpressionTemplates/Node.hpp
+    ../ExpressionTemplates/Operators.hpp
+    ../ExpressionTemplates/RemoveAllUnecessaryTemporaries.hpp
 )
 
 SET(BasicUtils
@@ -239,7 +217,7 @@ INSTALL(FILES ${LinearAlgebraHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtili
 INSTALL(FILES ${FoundationHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Foundations)
 INSTALL(FILES ${InterpreterHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Interpreter)
 INSTALL(FILES ${PolyLibHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Polylib)
-INSTALL(FILES ${ExpressionTemplates} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/ExpressionTemplates)
+INSTALL(FILES ${ExpressionTemplates} DESTINATION ${NEKTAR_INCLUDE_DIR}/ExpressionTemplates)
 INSTALL(FILES ${BasicUtils} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/BasicUtils)
 INSTALL(FILES ${Memory} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Memory)
 INSTALL(FILES ${KernelHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Kernel)

@@ -36,7 +36,7 @@
 #ifndef NEKTAR_LIB_UTILITIES_NEK_POINT_HPP
 #define NEKTAR_LIB_UTILITIES_NEK_POINT_HPP
 
-#include <LibUtilities/ExpressionTemplates/ExpressionTemplates.hpp>
+#include <ExpressionTemplates/ExpressionTemplates.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/Concepts.hpp>
 #include <LibUtilities/LinearAlgebra/Space.h>
@@ -114,12 +114,12 @@ namespace Nektar
             }
 
 #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-            template<typename ExpressionPolicyType>
-            NekPoint(const Expression<ExpressionPolicyType>& rhs)
-            {
-                BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
-                rhs.Evaluate(*this);
-            }
+            //template<typename ExpressionPolicyType>
+            //NekPoint(const Expression<ExpressionPolicyType>& rhs)
+            //{
+            //    BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
+            //    rhs.Evaluate(*this);
+            //}
 #endif
 
             NekPoint(const NekPoint<DataType, dim, space>& rhs)
@@ -135,13 +135,13 @@ namespace Nektar
             }
 
  #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-           template<typename ExpressionPolicyType>
-            NekPoint<DataType, dim, space>& operator=(const Expression<ExpressionPolicyType>& rhs)
-            {
-                BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
-                rhs.Evaluate(*this);
-                return *this;
-            }
+           //template<typename ExpressionPolicyType>
+           // NekPoint<DataType, dim, space>& operator=(const Expression<ExpressionPolicyType>& rhs)
+           // {
+           //     BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekPoint<DataType, dim, space> > ));
+           //     rhs.Evaluate(*this);
+           //     return *this;
+           // }
 #endif
             NekPoint<DataType, dim, space>& operator=(const NekPoint<DataType, dim, space>& rhs)
             {

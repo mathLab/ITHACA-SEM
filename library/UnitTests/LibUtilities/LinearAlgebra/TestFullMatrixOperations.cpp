@@ -248,6 +248,8 @@ namespace Nektar
                                             625, 926};
             NekMatrix<double> expected_result(2, 2, expected_result_buf);
 
+            NekMatrix<double> result1 = m1*m2*m3;
+            NekMatrix<double> result2 = m1*(m2*m3);
             BOOST_CHECK_EQUAL(expected_result, m1*m2*m3);
 
             BOOST_CHECK_EQUAL(expected_result, m1*(m2*m3));                                                    

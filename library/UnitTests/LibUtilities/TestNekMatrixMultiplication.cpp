@@ -47,16 +47,6 @@
 
 namespace Nektar
 {
-    class DoMultiplication
-    {
-        public:
-            template<typename LhsType, typename RhsType>
-            typename MultiplicationTraits<LhsType, RhsType>::ResultType 
-            operator()(const LhsType& lhs, const RhsType& rhs) const
-            {
-                return lhs - rhs;
-            }
-    };
 
     // Note - All tests should excercise both the blas and normal code.
     // The easiest way to do this is to perform one test with integers and 

@@ -313,7 +313,7 @@ namespace Nektar
     }
 
     template<typename DataType, typename LhsDataType, typename MatrixType>
-    void NekMultiply(DataType* result,
+    void Multiply(DataType* result,
                     const NekMatrix<LhsDataType, MatrixType>& lhs,
                     const DataType* rhs)
     {
@@ -347,7 +347,7 @@ namespace Nektar
     
     /// \brief Matrix vector multiplication for normal and scaled matrices.
     template<typename DataType, typename LhsDataType, typename MatrixType, typename dim, typename space>
-    void NekMultiply(NekVector<DataType, VariableSizedVector, space>& result,
+    void Multiply(NekVector<DataType, VariableSizedVector, space>& result,
                     const NekMatrix<LhsDataType, MatrixType>& lhs,
                     const NekVector<const DataType, dim, space>& rhs)
     {
@@ -356,7 +356,7 @@ namespace Nektar
             boost::lexical_cast<std::string>(lhs.GetColumns()) + 
             std::string(" and a right side vector with row count ") + 
             boost::lexical_cast<std::string>(rhs.GetRows()) + std::string(" can't be multiplied."));
-        NekMultiply(result.GetRawPtr(), lhs, rhs.GetRawPtr());
+        Multiply(result.GetRawPtr(), lhs, rhs.GetRawPtr());
     }
 
     template<typename DataType, typename LhsInnerMatrixType, typename dim, typename space>
@@ -415,7 +415,7 @@ namespace Nektar
                 }
 
                 const DataType* rhsWrapper = rhs_ptr + curWrapperRow;
-                NekMultiply(temp_ptr, *block, rhsWrapper);
+                Multiply(temp_ptr, *block, rhsWrapper);
                 for(unsigned int i = 0; i < rowsInBlock; ++i)
                 {
                     resultWrapper[i] += temp_ptr[i];
@@ -471,7 +471,7 @@ namespace Nektar
 
             double* resultWrapper = result_ptr + curResultRow;            
             const double* rhsWrapper = rhs_ptr + curWrapperRow;
-            NekMultiply(resultWrapper, *block, rhsWrapper);
+            Multiply(resultWrapper, *block, rhsWrapper);
             //resultWrapper = (*block)*rhsWrapper;
         }
     }
@@ -525,7 +525,7 @@ namespace Nektar
     
     /// \brief Matrix/Vector multiplicatin for block matrices.
     template<typename DataType, typename LhsInnerMatrixType, typename dim, typename space>
-    void NekMultiply(NekVector<DataType, VariableSizedVector, space>& result,
+    void Multiply(NekVector<DataType, VariableSizedVector, space>& result,
                      const NekMatrix<LhsInnerMatrixType, BlockMatrixTag>& lhs,
                      const NekVector<const DataType, dim, space>& rhs)
     {
@@ -542,7 +542,7 @@ namespace Nektar
 
 
    
-    /// We need two version of NekMultiply, one for constant sized vectors and one for 
+    /// We need two version of Multiply, one for constant sized vectors and one for 
     /// variable sized vectors because the constructors to initialize the vector to 0 are 
     /// different in each case.
     ///
@@ -550,21 +550,21 @@ namespace Nektar
     /// because the matrix dimensions are runtime only.
     template<typename DataType, typename LhsDataType, typename MatrixType, typename dim, typename space>
     NekVector<typename boost::remove_const<DataType>::type, VariableSizedVector, space> 
-    NekMultiply(const NekMatrix<LhsDataType, MatrixType>& lhs,
+    Multiply(const NekMatrix<LhsDataType, MatrixType>& lhs,
                 const NekVector<DataType, dim, space>& rhs)
     {
        NekVector<typename boost::remove_const<DataType>::type, VariableSizedVector, space> result(lhs.GetRows(), DataType(0));
-       NekMultiply(result, lhs, rhs);
+       Multiply(result, lhs, rhs);
        return result;
     }
 
     template<typename DataType, typename LhsDataType, typename MatrixType, typename space>
     NekVector<typename boost::remove_const<DataType>::type, VariableSizedVector, space> 
-    NekMultiply(const NekMatrix<LhsDataType, MatrixType>& lhs,
+    Multiply(const NekMatrix<LhsDataType, MatrixType>& lhs,
                 const NekVector<DataType, VariableSizedVector, space>& rhs)
     {
        NekVector<typename boost::remove_const<DataType>::type, VariableSizedVector, space> result(lhs.GetRows(), DataType(0));
-       NekMultiply(result, lhs, rhs);
+       Multiply(result, lhs, rhs);
        return result;
     }
 }

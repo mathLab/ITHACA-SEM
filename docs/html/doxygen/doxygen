@@ -79,11 +79,11 @@ FILE_VERSION_FILTER    =
 #---------------------------------------------------------------------------
 # configuration options related to warning and progress messages
 #---------------------------------------------------------------------------
-QUIET                  = YES
+QUIET                  = NO
 WARNINGS               = YES
 WARN_IF_UNDOCUMENTED   = YES
 WARN_IF_DOC_ERROR      = YES
-WARN_NO_PARAMDOC       = NO
+WARN_NO_PARAMDOC       = YES
 WARN_FORMAT            = "$file:$line: $text"
 WARN_LOGFILE           = 
 #---------------------------------------------------------------------------
@@ -95,7 +95,8 @@ INPUT                  = ./ \
                          ../../../library/SpatialDomains/ \
                          ../../../library/LocalRegions/ \
                          ../../../library/MultiRegions/ \
-                         ../../../solvers/
+                         ../../../solvers/ \
+                         ../../../utilities/
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          = *.c \
                          *.cc \
@@ -165,7 +166,7 @@ HTML_OUTPUT            = ../code
 HTML_FILE_EXTENSION    = .html
 HTML_HEADER            = 
 HTML_FOOTER            = 
-HTML_STYLESHEET        = 
+HTML_STYLESHEET        = doxygen.css
 HTML_ALIGN_MEMBERS     = YES
 GENERATE_HTMLHELP      = NO
 GENERATE_DOCSET        = NO
@@ -190,7 +191,7 @@ LATEX_CMD_NAME         = latex
 MAKEINDEX_CMD_NAME     = makeindex
 COMPACT_LATEX          = NO
 PAPER_TYPE             = a4wide
-EXTRA_PACKAGES         = amsmath, amsbsy
+EXTRA_PACKAGES         = amsmath amssymb
 LATEX_HEADER           = 
 PDF_HYPERLINKS         = YES
 USE_PDFLATEX           = YES
@@ -270,7 +271,7 @@ CALLER_GRAPH           = NO
 GRAPHICAL_HIERARCHY    = YES
 DIRECTORY_GRAPH        = YES
 DOT_IMAGE_FORMAT       = png
-DOT_PATH               = 
+DOT_PATH               =
 DOTFILE_DIRS           = 
 DOT_GRAPH_MAX_NODES    = 50
 MAX_DOT_GRAPH_DEPTH    = 1000

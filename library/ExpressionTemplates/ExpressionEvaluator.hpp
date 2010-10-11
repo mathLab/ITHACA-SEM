@@ -30,6 +30,8 @@
 #ifndef NEKTAR_EXPRESSION_TEMPLATES_EXPRESSION_EVALUATOR_HPP
 #define NEKTAR_EXPRESSION_TEMPLATES_EXPRESSION_EVALUATOR_HPP
 
+#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+
 #include "Node.hpp"
 #include "RemoveAllUnecessaryTemporaries.hpp"
 #include <boost/fusion/algorithm/iteration/accumulate.hpp>
@@ -274,7 +276,7 @@ namespace Nektar
 
             if( ContainsAlias(expression, accum) )
             {
-                Expression::ResultType temp = CreateFromTree<Expression::ResultType, OptimizedParseTree, TransformedIndices, 0>::Apply(expression.GetData());
+                typename Expression::ResultType temp = CreateFromTree<Expression::ResultType, OptimizedParseTree, TransformedIndices, 0>::Apply(expression.GetData());
                 EvaluateNode<OptimizedParseTree, TransformedIndices, 0>::Evaluate(temp, expression.GetData());
                 accum = temp;
             }
@@ -286,5 +288,6 @@ namespace Nektar
     };
 }
 
+#endif
 #endif //NEKTAR_EXPRESSION_TEMPLATES_EXPRESSION_EVALUATOR_HPP
 

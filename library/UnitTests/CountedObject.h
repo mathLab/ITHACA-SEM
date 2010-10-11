@@ -36,6 +36,7 @@
 #ifndef NEKTAR_UNIT_TESTS_COUNTED_OBJECT_H
 #define NEKTAR_UNIT_TESTS_COUNTED_OBJECT_H
 
+
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 
@@ -80,6 +81,7 @@ namespace Nektar
                 ++numberCopied;
             }
 
+            #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
             template<typename L, typename Op, typename R>
             CountedObject(const Node<L, Op, R>& rhs) :
                 value(0)
@@ -96,7 +98,8 @@ namespace Nektar
                 ExpressionEvaluator::Evaluate(rhs, *this);
                 return *this;
             }
-
+            #endif
+            
             virtual ~CountedObject()
             {
                 ++numberDestroyed;

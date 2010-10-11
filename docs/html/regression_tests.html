@@ -52,10 +52,11 @@
         <hr/>
         <!-- InstanceBeginEditable name="BodyText" -->
         <p>The current distribution of the code has been set up with a series
-of regression tests based around the <a href="usage.html">demos</a>  in the library. The source wrapper source code for these tests can be found under:
+of regression tests based around the <a href="usage.html">demos</a> and <a href="usage.html">solvers</a> in the library. The source wrapper source code for these tests can be found under:
 <ul>
 <li><em>Nektar/regressionTests/</em></li>
 <li><em>Nektar/library/Demos/</em></li>
+<li><em>Nektar/solvers/</em></li>
 </ul>
 </p>
 <p>
@@ -65,7 +66,7 @@ your machine.  Once Nektar++ and the regression tests have been
 compiled you can execute the regression tests in the following way:
 <ol>
  <li>Change directory to the Demo of solver that you wish to run regression tests on for example  <em>Nektar++/regressionTest/builds/Demos/StdRegions</em></li>
-<li>Execute the regresion test, for example <em>./StdRegionsDemosTest</em></li>
+<li>Execute the regression test, for example <em>./StdRegionsDemosTest</em></li>
 and you should see a series of test being run with output similar to: 
 <p> StdProject1D:  info = "Segment Ortho Basis, modes=6, quad=7"<br>
  status: PASSED</p>
@@ -77,6 +78,12 @@ status: PASSED</p>
 status: PASSED</p>
 <p> .......</p>
 </li>
+<li>The same can be done for solver you wish to run regression tests on for example  <em>Nektar++/regressionTest/builds/Solvers/ADRSolver</em></li>
+<li>Execute the regression test, for example <em>./ADRSolverTest</em></li>
+and you should see a series of test being run with output similar to:
+<p> ADRSolver:  info = "Testing 2D unsteady advection-diffusion, IMEXOrder2, modes=9, dt=0.0001"<br>
+ status: PASSED</p>
+<p> .......</p>
 </ol>
 
 

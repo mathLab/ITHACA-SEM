@@ -13,17 +13,17 @@
 using namespace Nektar;
 
 NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2);
-NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2, 
+NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2,
            LibUtilities::BasisType btype1, LibUtilities::BasisType btype2);
 
-// This routine projects a polynomial or trigonmetric functions which 
+// This routine projects a polynomial or trigonmetric functions which
 // has energy in all mdoes of the expansions and reports and error
 
-int main(int argc, char *argv[]) 
-{ 
+int main(int argc, char *argv[])
+{
 
   int           i;
-  
+
   int           order1,order2, nq1,nq2,NodalTri = 0;
   LibUtilities::PointsType    Qtype1,Qtype2;
   LibUtilities::BasisType     btype1,btype2;
@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     fprintf(stderr,"Usage: Project2D RegionShape Type1 Type2 order1 order2  nq1    nq2     x1,    y1,      x2,     y2,     x3,    y3 \n");
 
     fprintf(stderr,"Example : ./LocProject2D-g 2 4 5 3 3 4 4 .1 -.5 .6 .1 .3 .2 \n" );
-    
+
     fprintf(stderr,"Where RegionShape is an integer value which "
         "dictates the region shape:\n");
     fprintf(stderr,"\t Triangle      = 2\n");
@@ -56,11 +56,11 @@ int main(int argc, char *argv[])
     fprintf(stderr,"\t Modified_B = 5\n");
     fprintf(stderr,"\t Fourier    = 7\n");
     fprintf(stderr,"\t Lagrange   = 8\n");
-    fprintf(stderr,"\t Legendre   = 9\n"); 
+    fprintf(stderr,"\t Legendre   = 9\n");
     fprintf(stderr,"\t Chebyshev  = 10\n");
     fprintf(stderr,"\t Nodal tri (Electro) = 11\n");
     fprintf(stderr,"\t Nodal tri (Fekete)  = 12\n");
- 
+
     fprintf(stderr,"Note type = 3,6 are for three-dimensional basis\n");
 
     fprintf(stderr,"The last series of values are the coordinates\n");
@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 
   regionshape = (StdRegions::ExpansionType) atoi(argv[1]);
 
-  // Check to see if 2D region 
+  // Check to see if 2D region
   if((regionshape != StdRegions::eTriangle)&&(regionshape != StdRegions::eQuadrilateral))
   {
       NEKERROR(ErrorUtil::efatal,"This shape is not a 2D region");
@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
 
   if(btype1 != LibUtilities::eFourier)
   {
-      Qtype1 = LibUtilities::eGaussLobattoLegendre; 
+      Qtype1 = LibUtilities::eGaussLobattoLegendre;
   }
   else
   {
@@ -147,7 +147,13 @@ int main(int argc, char *argv[])
 
   if(btype2 != LibUtilities::eFourier)
   {
-      Qtype2 = LibUtilities::eGaussLobattoLegendre; 
+      if (regionshape == StdRegions::eTriangle) {
+          Qtype2 = LibUtilities::eGaussRadauMAlpha1Beta0;
+      }
+      else
+      {
+          Qtype2 = LibUtilities::eGaussLobattoLegendre;
+      }
   }
   else
   {
@@ -186,9 +192,9 @@ int main(int argc, char *argv[])
           edges[2] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(two,verts[2],verts[0]);
 
           StdRegions::EdgeOrientation eorient[3];
-          eorient[0] = edgeDir; 
-          eorient[1] = edgeDir; 
-          eorient[2] = edgeDir; 
+          eorient[0] = edgeDir;
+          eorient[1] = edgeDir;
+          eorient[2] = edgeDir;
 
           SpatialDomains::TriGeomSharedPtr geom = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(zero,verts,edges,eorient);
           geom->SetOwnData();
@@ -217,7 +223,7 @@ int main(int argc, char *argv[])
       {
           sol[i]  = Tri_sol(x[i],y[i],order1,order2);
       }
-      //----------------------------------------------    
+      //----------------------------------------------
 
       }
       break;
@@ -252,11 +258,11 @@ int main(int argc, char *argv[])
           edges[2] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(two,verts[2],verts[3]);
           edges[3] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(three,verts[3],verts[0]);
 
-          StdRegions::EdgeOrientation eorient[4];      
-          eorient[0] = edgeDir; 
-          eorient[1] = edgeDir; 
-          eorient[2] = edgeDir; 
-          eorient[3] = edgeDir; 
+          StdRegions::EdgeOrientation eorient[4];
+          eorient[0] = edgeDir;
+          eorient[1] = edgeDir;
+          eorient[2] = edgeDir;
+          eorient[3] = edgeDir;
 
           SpatialDomains::QuadGeomSharedPtr geom = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(zero,verts,edges,eorient);
           geom->SetOwnData();
@@ -285,27 +291,27 @@ int main(int argc, char *argv[])
   }
 
   //---------------------------------------------
-  // Project onto Expansion 
+  // Project onto Expansion
   E->FwdTrans(sol,E->UpdateCoeffs());
   //---------------------------------------------
 
   //-------------------------------------------
   // Backward Transform Solution to get projected values
   E->BwdTrans(E->GetCoeffs(),E->UpdatePhys());
-  //-------------------------------------------  
+  //-------------------------------------------
 
   //--------------------------------------------
-  // Write solution 
+  // Write solution
   ofstream outfile("ProjectFile2D.dat");
   E->WriteToFile(outfile,eTecplot);
   outfile.close();
   //-------------------------------------------
 
   //--------------------------------------------
-  // Calculate L_inf error 
+  // Calculate L_inf error
   cout << "L infinity error: " << E->Linf(sol) << endl;
   cout << "L 2 error:        " << E->L2  (sol) << endl;
-  //--------------------------------------------  
+  //--------------------------------------------
 
   //-------------------------------------------
   // Evaulate solution at x = y =0  and print error
@@ -315,7 +321,7 @@ int main(int argc, char *argv[])
 
   if(regionshape == StdRegions::eTriangle)
   {
-      sol[0] = Tri_sol(x[0],x[1],order1,order2); 
+      sol[0] = Tri_sol(x[0],x[1],order1,order2);
   }
   else
   {
@@ -345,7 +351,7 @@ NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2){
     return sol;
 }
 
-NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2, 
+NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2,
            LibUtilities::BasisType btype1,
            LibUtilities::BasisType btype2)
 {

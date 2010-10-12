@@ -9,20 +9,20 @@
 
 #include "StdRegions/StdRegions.hpp"
 #include "LibUtilities/Foundations/Foundations.hpp"
- 
+
 using namespace Nektar;
 
 NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2);
-NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2, 
+NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2,
            LibUtilities::BasisType btype1, LibUtilities::BasisType btype2);
 
 
-// This routine projects a polynomial or trigonmetric functions which 
+// This routine projects a polynomial or trigonmetric functions which
 // has energy in all mdoes of the expansions and reports and error
 
 int main(int argc, char *argv[]){
   int           i;
-  
+
   int           order1,order2, nq1,nq2;
   LibUtilities::PointsType    Qtype1,Qtype2;
   LibUtilities::BasisType     btype1,btype2;
@@ -30,7 +30,7 @@ int main(int argc, char *argv[]){
   StdRegions::ExpansionType    regionshape;
   StdRegions::StdExpansion *E;
   Array<OneD, NekDouble> sol;
-  
+
   if(argc != 8)
   {
       fprintf(stderr,"Usage: StdProject2D RegionShape Type1 Type2 order1 "
@@ -40,8 +40,8 @@ int main(int argc, char *argv[]){
         "dictates the region shape:\n");
     fprintf(stderr,"\t Triangle      = 2\n");
     fprintf(stderr,"\t Quadrilateral = 3\n");
-    
-    
+
+
     fprintf(stderr,"Where type is an integer value which "
         "dictates the basis as:\n");
 
@@ -51,7 +51,7 @@ int main(int argc, char *argv[]){
     fprintf(stderr,"\t Modified_B = 5\n");
     fprintf(stderr,"\t Fourier    = 7\n");
     fprintf(stderr,"\t Lagrange   = 8\n");
-    fprintf(stderr,"\t Legendre   = 9\n"); 
+    fprintf(stderr,"\t Legendre   = 9\n");
     fprintf(stderr,"\t Chebyshev  = 10\n");
     fprintf(stderr,"\t Nodal tri (Electro) = 11\n");
     fprintf(stderr,"\t Nodal tri (Fekete)  = 12\n");
@@ -60,18 +60,18 @@ int main(int argc, char *argv[]){
 
     exit(1);
   }
-  
+
   regionshape = (StdRegions::ExpansionType) atoi(argv[1]);
-  
-  // Check to see if 2D region 
+
+  // Check to see if 2D region
   if((regionshape != StdRegions::eTriangle)&&(regionshape != StdRegions::eQuadrilateral))
   {
     NEKERROR(ErrorUtil::efatal,"This shape is not a 2D region");
   }
-  
+
   int btype1_val = atoi(argv[2]);
   int btype2_val = atoi(argv[3]);
-  
+
   if(( btype1_val <= 10)&&( btype2_val <= 10))
   {
       btype1 =   (LibUtilities::BasisType) btype1_val;
@@ -81,7 +81,7 @@ int main(int argc, char *argv[]){
   {
       btype1 =   LibUtilities::eOrtho_A;
       btype2 =   LibUtilities::eOrtho_B;
-      
+
       if(btype1_val == 11)
       {
           NodalType = LibUtilities::eNodalTriElec;
@@ -102,7 +102,7 @@ int main(int argc, char *argv[]){
       NEKERROR(ErrorUtil::efatal,
                "Basis 1 cannot be of type Ortho_B or Modified_B");
       }
-      
+
       break;
   case StdRegions::eQuadrilateral:
       if((btype1 == LibUtilities::eOrtho_B)||(btype1 == LibUtilities::eOrtho_C)||
@@ -111,7 +111,7 @@ int main(int argc, char *argv[]){
       NEKERROR(ErrorUtil::efatal,
                "Basis 1 is for 2 or 3D expansions");
       }
-      
+
       if((btype2 == LibUtilities::eOrtho_B)||(btype2 == LibUtilities::eOrtho_C)||
      (btype2 == LibUtilities::eModified_B)||(btype2 == LibUtilities::eModified_C))
       {
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]){
       }
       break;
   }
-  
+
   order1 =   atoi(argv[4]);
   order2 =   atoi(argv[5]);
   nq1    =   atoi(argv[6]);
@@ -130,7 +130,7 @@ int main(int argc, char *argv[]){
 
   if(btype1 != LibUtilities::eFourier)
   {
-      Qtype1 = LibUtilities::eGaussLobattoLegendre; 
+      Qtype1 = LibUtilities::eGaussLobattoLegendre;
   }
   else
   {
@@ -139,17 +139,23 @@ int main(int argc, char *argv[]){
 
   if(btype2 != LibUtilities::eFourier)
   {
-      Qtype2 = LibUtilities::eGaussLobattoLegendre; 
+      if (regionshape == StdRegions::eTriangle) {
+          Qtype2 = LibUtilities::eGaussRadauMAlpha1Beta0;
+      }
+      else
+      {
+          Qtype2 = LibUtilities::eGaussLobattoLegendre;
+      }
   }
   else
   {
       Qtype2 = LibUtilities::eFourierEvenlySpaced;
   }
-  
+
 
   //-----------------------------------------------
   // Define a 2D expansion based on basis definition
-  
+
   switch(regionshape)
   {
   case StdRegions::eTriangle:
@@ -158,7 +164,7 @@ int main(int argc, char *argv[]){
           const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
           const LibUtilities::BasisKey  Bkey1(btype1,order1,Pkey1);
           const LibUtilities::BasisKey  Bkey2(btype2,order2,Pkey2);
-          
+
           if(btype1_val >= 10)
           {
               E = new StdRegions::StdNodalTriExp(Bkey1,Bkey2,NodalType);
@@ -167,7 +173,7 @@ int main(int argc, char *argv[]){
           {
               E = new StdRegions::StdTriExp(Bkey1,Bkey2);
           }
-          
+
       Array<OneD,NekDouble> x = Array<OneD,NekDouble>(nq1*nq2);
       Array<OneD,NekDouble> y = Array<OneD,NekDouble>(nq1*nq2);
       E->GetCoords(x,y);
@@ -181,7 +187,7 @@ int main(int argc, char *argv[]){
       //----------------------------------------------
       }
       break;
-      
+
   case StdRegions::eQuadrilateral:
       {
           const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
@@ -189,14 +195,14 @@ int main(int argc, char *argv[]){
           const LibUtilities::BasisKey Bkey1(btype1,order1,Pkey1);
           const LibUtilities::BasisKey Bkey2(btype2,order2,Pkey2);
           E = new StdRegions::StdQuadExp(Bkey1,Bkey2);
-          
+
           //----------------------------------------------
           // Define solution to be projected
-          
+
           Array<OneD, NekDouble> x = Array<OneD, NekDouble>(nq1*nq2);
           Array<OneD, NekDouble> y = Array<OneD, NekDouble>(nq1*nq2);
           E->GetCoords(x,y);
-          
+
           for(i = 0; i < nq1*nq2; ++i)
           {
               sol[i]  = Quad_sol(x[i],y[i],order1,order2,btype1,btype2);
@@ -205,19 +211,19 @@ int main(int argc, char *argv[]){
       }
       break;
   }
-  
+
   //---------------------------------------------
-  // Project onto Expansion 
+  // Project onto Expansion
   E->FwdTrans(sol,E->UpdateCoeffs());
   //---------------------------------------------
 
   //-------------------------------------------
   // Backward Transform Solution to get projected values
   E->BwdTrans(E->GetCoeffs(),E->UpdatePhys());
-  //-------------------------------------------  
+  //-------------------------------------------
 
   //--------------------------------------------
-  // Calculate L_inf error 
+  // Calculate L_inf error
   cout << "L infinity error: " << E->Linf(sol) << endl;
   cout << "L 2 error:        " << E->L2  (sol) << endl;
   //--------------------------------------------
@@ -227,27 +233,27 @@ int main(int argc, char *argv[]){
   Array<OneD, NekDouble> x = Array<OneD, NekDouble>(2);
   x[0] = 0;
   x[1] = -0.25;
-  
+
   if(regionshape == StdRegions::eTriangle)
   {
-      sol[0] = Tri_sol(x[0],x[1],order1,order2); 
+      sol[0] = Tri_sol(x[0],x[1],order1,order2);
   }
   else
   {
       sol[0] = Quad_sol(x[0],x[1],order1,order2,btype1,btype2);
   }
-  
+
   NekDouble nsol = E->PhysEvaluate(x);
   cout << "error at x = (" <<x[0] <<","<<x[1] <<"): " << nsol - sol[0] << endl;
   //-------------------------------------------
-  
+
   return 0;
 }
 
 NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2){
     int    l,k;
     NekDouble sol = 0;
-    
+
     for(k = 0; k < order1; ++k)
     {
     for(l = 0; l < order2-k; ++l)
@@ -255,17 +261,17 @@ NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2){
         sol += pow(x,k)*pow(y,l);
     }
     }
-    
+
     return sol;
 }
 
-NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2, 
+NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2,
            LibUtilities::BasisType btype1,
            LibUtilities::BasisType btype2)
-{   
+{
     int k,l;
     NekDouble sol = 0.0;
-    
+
     if(btype1 != LibUtilities::eFourier)
     {
     if(btype2 != LibUtilities::eFourier)
@@ -315,6 +321,6 @@ NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2,
         }
     }
     }
-    
+
     return sol;
 }

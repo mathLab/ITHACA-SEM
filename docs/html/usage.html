@@ -30,26 +30,17 @@
       <div id="sidebar1">
         <h3 style="text-align: center;"><a href="index.html" id="menu_Nektar"><img src="images/nektar.png" alt="Nektar++" width="155" height="38" /></a></h3>
 
-
-        <p><a href="downloads.html" id="menu_Downloads">Downloads</a></p>
-        <p><a href="compile.html" id="menu_Compile">Compile Instructions</a></p>
-        <p><a href="library.html" id="menu_Library">Library Overview</a></p>
-        <p><a href="team.html" id="menu_Team">Team Members</a></p>
-	<p><a href="pre-processing.html" id="menu_PreProcessing">Pre-processing</a></p>
-        <p><a href="post-processing.html" id="menu_PostProcessing">Post-processing</a></p>
-        <p><a href="regression_tests.html" id="menu_RegressionTests">Regression Tests</a></p>
-	<p><a href="usage.html" id="menu_Usage">Usage</a>
-  <!--        <br/>
-          &nbsp;&nbsp;&nbsp;<a href="usage_demo_helmholtz2D.html" id="menu_UsageHelmholtz2D">Helmholtz 2D</a><br/>
-          &nbsp;&nbsp;&nbsp;<a href="usage_solver_ADR.html" id="menu_UsageADR">Advection Diffusion Reaction</a><br/>
-          &nbsp;&nbsp;&nbsp;<a href="usage_solver_IncNavierStokes.html" id="menu_UsageIncNavierStokes">Incompressible Navier-Stokes</a><br/>
--->
-        </p>
-        <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
-        <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
-        <p><a href="license.html" id="menu_License">License</a></p>
-        <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
-        <p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
+<p><a href="downloads.html" id="menu_Downloads">Downloads</a></p>
+<p><a href="compile.html" id="menu_Compile">Compilation Instructions</a></p>
+<p><a href="usage.html" id="menu_Usage">Example Usage</a></p>
+<p><a href="educational_material.html" id="menu_EducationalMaterial">Educational
+Material</a></p>
+<p><a href="code/index.html" id="menu_Library">Documentation</a></p>
+<p><a href="team.html" id="menu_Team">Team Members</a></p>
+<p><a href="publications.html" id="menu_Publications">Publications</a></p>
+<p><a href="license.html" id="menu_License">License</a></p>
+<p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
+<p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
 
         <p style="font-size:9px;">Last Revision:<br/>$Date: 2009/05/02 16:49:13 $</p>
       </div>
@@ -72,24 +63,27 @@ This should provide a starting point to familiarize yourself with Nektar++ befor
 <p>
 All other demo codes can be run in a similar fashion.
 </p>
-
-
 </li>
+
 <li><h3>Demonstration at solver level</h3>
 <h4>Advection-Diffusion-Reaction Solver</h4>
 <p> The source codes of the Advection-Diffusion-Reaction solver are located in the directory <em>Nektar++/solvers/AdvectionDiffusionReaction</em> and when compiled at <em>Nektar++/solvers/buildsDebug</em>, the executables will be placed in the directory <em>Nektar++/solvers/buildsDebug/AdvectionDiffusionReaction</em></p>
-<p>
 <ul>
 <li><a href="usage_solver_ADR.html">Advection-Diffusion-Reaction 2D demo</a></li>
 </ul>
 </p>
-</p>
-</li>
+
 <h4>Incompressible Navier-Stokes Solver</h4>
 The source code of the Navier-Stokes solver can be found in <em>Nektar++/solvers/IncNavierStokesSolver</em> and when compiled the executable will be placed in the directory <em>Nektar++/solvers/builds/IncNavierStokesSolver</em>. The <code>*.xml</code> files found in <em>Nektar++/solvers/IncNavierStokesSolver</em> are input files for the solver. Information on how to run these examples and details on the solvers usage can be found <a href="usage_solver_IncNavierStokes.html"> here</a>.
+</li>
+
+<li><h3>Utilities</h3>
+A number of tools are included in the distribution for converting mesh files and solution files to and from the native Nektar++ XML format.
+<ul>
+<li><a href="usage_preprocessing.html">Pre-processing tools</a></li>
+<li><a href="usage_postprocessing.html">Post-processing tools</a></li>
 </ul>
-
-
+</li>
     <!-- InstanceEndEditable -->
         <p><br class="clearfloat" /></p>
       </div>

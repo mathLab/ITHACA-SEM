@@ -30,25 +30,25 @@
       <div id="sidebar1">
         <h3 style="text-align: center;"><a href="index.html" id="menu_Nektar"><img src="images/nektar.png" alt="Nektar++" width="155" height="38" /></a></h3>
 
-        <p><a href="downloads.html" id="menu_Downloads">Downloads</a></p>
-        <p><a href="compile.html" id="menu_Compile">Compile Instructions</a>
+<p><a href="downloads.html" id="menu_Downloads">Downloads</a></p>
+<p><a href="compile.html" id="menu_Compile">Compilation Instructions</a>
           <br/>
           &nbsp;&nbsp;&nbsp;<a href="compile_linux.html" id="menu_CompileLinux">Linux</a><br/>
           &nbsp;&nbsp;&nbsp;<a href="compile_windows.html" id="menu_CompileWindows">Windows</a><br/>
           &nbsp;&nbsp;&nbsp;<a href="compile_osx.html" id="menu_CompileOSX">Mac OS X</a><br/>
+          &nbsp;&nbsp;&nbsp;<a href="compile_unit_tests.html" id="menu_CompileUnitTests">Unit Tests</a><br/>
+          &nbsp;&nbsp;&nbsp;<a href="compile_regression_tests.html" id="menu_CompileRegressionTests">Regression Tests</a><br/>
           &nbsp;&nbsp;&nbsp;<a href="compile_documentation.html" id="menu_CompileDocumentation">Documentation</a><br/>
-	</p>
-        <p><a href="library.html" id="menu_Library">Library Overview</a></p>
-        <p><a href="team.html" id="menu_Team">Team Members</a></p>
-	<p><a href="pre-processing.html" id="menu_PreProcessing">Pre-processing</a></p>
-        <p><a href="post-processing.html" id="menu_PostProcessing">Post-processing</a></p>
-        <p><a href="regression_tests.html" id="menu_RegressionTests">Regression Tests</a></p>
-	<p><a href="usage.html" id="menu_Usage">Usage</a></p>
-        <p><a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)</p>
-        <p><a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a></p>
-        <p><a href="license.html" id="menu_License">License</a></p>
-        <p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
-        <p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
+    </p>
+<p><a href="usage.html" id="menu_Usage">Example Usage</a></p>
+<p><a href="educational_material.html" id="menu_EducationalMaterial">Educational
+Material</a></p>
+<p><a href="code/index.html" id="menu_Library">Documentation</a></p>
+<p><a href="team.html" id="menu_Team">Team Members</a></p>
+<p><a href="publications.html" id="menu_Publications">Publications</a></p>
+<p><a href="license.html" id="menu_License">License</a></p>
+<p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
+<p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
 
         <p style="font-size:9px;">Last Revision:<br/>$Date: 2009/11/25 14:48:10 $</p>
       </div>
@@ -96,10 +96,12 @@
                 </a>
               </h3>
             </li>
+              <li>
+                <h3><a href="#Compiling_Regression_Tests"><small>Compiling the Regression Tests</small></a></h3>
+            </li>
           </ul>
 
 
-          <hr>
     <!-- InstanceEndEditable -->
         <hr/>
         <!-- InstanceBeginEditable name="BodyText" -->
@@ -271,7 +273,7 @@ at the VS command prompt or by just double clicking on the <em>CMake</em> icon t
         </li>
           <li>Fill in the &quot;Where is the source code:&quot; field at the top of CMake. This is the path to the <em>Nektar++\solvers</em> directory. For example, <em>C:\Nektar++\solvers</em>
         </li>
-          <li>Fill in the "Where to build the binaries:" field at the top of CMake. This is the path that the Visual Studio solution files will be written to adn is the path to the <em>solvers\builds\</em> directory. For example, <em>C:\Nektar++\solvers\builds</em>.</li>
+          <li>Fill in the "Where to build the binaries:" field at the top of CMake. This is the path that the Visual Studio solution files will be written to and is the path to the <em>solvers\builds\</em> directory. For example, <em>C:\Nektar++\solvers\builds</em>.</li>
           <li>
             Click the &quot;Configure&quot; button at the bottom of the program. It will ask for the platform to generate the files for. Select <em>Visual Studio 9 2008</em>. Answer <em>OK</em>.It should find all of the library and include paths automatically.
           </li>
@@ -282,6 +284,26 @@ at the VS command prompt or by just double clicking on the <em>CMake</em> icon t
           <li>The executable files will be located in the path you specified in the CMake utility. </li>
          </ol>
             To compile the utilities you follow an identical set of instructions but replace solvers in the above text with utilities.
+
+<h3><a name="Compiling_Regression_Tests"></a>Compiling the Regression Tests</h3>
+<br>
+To compile the regression tests you first need to have
+compiled the Nektar++ library and Solvers </br>
+
+<p>Once again we use CMake to generate the solution files that Visual Studio requires.</p>
+
+<ol>
+    <li>Launch <em>CMake</em></li>
+    <li>Fill in the &quot;Where is the source code:&quot; field at the top of CMake. This is the path to the <em>Nektar++\regressionTests</em> directory. For example, <em>C:\Nektar++\regressionTests</em></li>
+    <li>Fill in the "Where to build the binaries:" field at the top of CMake. This is the path that the Visual Studio solution files will be written to and is the path to the <em>regressionTests\builds\</em> directory. For example, <em>C:\Nektar++\regressionTests\builds</em>.</li>
+    <li>Click the &quot;Configure&quot; button at the bottom of the program. It will ask for the platform to generate the files for. Select <em>Visual Studio 9 2008</em>. Answer <em>OK</em>.It should find all of the library and include paths automatically.</li>
+    <li>Set the <b>EXECUTABLE_OUTPUT_PATH</b>. This can be any directory you please.</li>
+    <li>Press the &quot;Configure&quot; button again. This time everything should be GRAY, meaning everything is set. Press the &quot;OK&quot; button, and the Visual Studio solution will be created.<br/>
+    <b>Note:</b> If you are modifying the regression tests by adding or removing tests you can generate a new master ".ok" file by setting the variable <em>REGRESSION_MAKE_OK_FILES_EXEC</em> to <em>ON</em>. This will, for example, generate the executable <em>StdRegionsDemoMakeOKFile</em> which when executed will execute a series of demos and make the updated .ok files.
+    <li>Open the solution file in Visual Studio. From the &quot;Build&quot; menu, select &quot;Configuration Manager...&quot;. For full optimizations, select &quot;Release&quot; from the &quot;Active solution configuration:&quot; menu. </li>
+    <li>To build the solution, select &quot;Build Solution&quot; from the &quot;Build&quot; menu.</li>
+    <li>The executable files will be located in the path you specified in the CMake utility. </li>
+</ol>
 
             <h3>
               <br>

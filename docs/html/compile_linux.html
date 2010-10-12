@@ -35,49 +35,25 @@
           </a>
         </h3>
 
-        <p>
-          <a href="downloads.html" id="menu_Downloads">Downloads</a>
-        </p>
-        <p>
-          <a href="compile.html" id="menu_Compile">Compile Instructions</a>
+<p><a href="downloads.html" id="menu_Downloads">Downloads</a></p>
+<p><a href="compile.html" id="menu_Compile">Compilation Instructions</a>
           <br/>
           &nbsp;&nbsp;&nbsp;<a href="compile_linux.html" id="menu_CompileLinux">Linux</a><br/>
           &nbsp;&nbsp;&nbsp;<a href="compile_windows.html" id="menu_CompileWindows">Windows</a><br/>
           &nbsp;&nbsp;&nbsp;<a href="compile_osx.html" id="menu_CompileOSX">Mac OS X</a><br/>
+          &nbsp;&nbsp;&nbsp;<a href="compile_unit_tests.html" id="menu_CompileUnitTests">Unit Tests</a><br/>
+          &nbsp;&nbsp;&nbsp;<a href="compile_regression_tests.html" id="menu_CompileRegressionTests">Regression Tests</a><br/>
           &nbsp;&nbsp;&nbsp;<a href="compile_documentation.html" id="menu_CompileDocumentation">Documentation</a><br/>
-        </p>
-        <p>
-          <a href="library.html" id="menu_Library">Library Overview</a>
-        </p>
-        <p>
-          <a href="team.html" id="menu_Team">Team Members</a>
-        </p>
-        <p>
-          <a href="pre-processing.html" id="menu_PreProcessing">Pre-processing</a>
-        </p>
-        <p>
-          <a href="post-processing.html" id="menu_PostProcessing">Post-processing</a>
-        </p>
-        <p>
-        <p><a href="regression_tests.html" id="menu_RegressionTests">Regression Tests</a></p>
-        <p>
-          <a href="usage.html" id="menu_Usage">Usage</a>
-        </p>
-        <p>
-          <a href="http://www.nektar.info/2nd_edition/" target="_blank" id="menu_Book2ndEd">Spectral/hp element methods for CFD</a> (Karniadakis and Sherwin)
-        </p>
-        <p>
-          <a href="educational_material.html" id="menu_EducationalMaterial">Educational Material</a>
-        </p>
-        <p>
-          <a href="license.html" id="menu_License">License</a>
-        </p>
-        <p>
-          <a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a>
-        </p>
-        <p>
-          <a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a>
-        </p>
+    </p>
+<p><a href="usage.html" id="menu_Usage">Example Usage</a></p>
+<p><a href="educational_material.html" id="menu_EducationalMaterial">Educational
+Material</a></p>
+<p><a href="code/index.html" id="menu_Library">Documentation</a></p>
+<p><a href="team.html" id="menu_Team">Team Members</a></p>
+<p><a href="publications.html" id="menu_Publications">Publications</a></p>
+<p><a href="license.html" id="menu_License">License</a></p>
+<p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
+<p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
 
         <p style="font-size:9px;">
           Last Revision:<br/>$Date: 2009/11/29 21:42:31 $
@@ -125,6 +101,9 @@
               </a>
             </h3>
           </li>
+           <li>
+                <h3><a href="#Compiling_Regression_Tests"><small>Compiling the Regression Tests</small></a></h3>
+            </li>
         </ul>
 
 
@@ -484,6 +463,32 @@
 	      Generate the project files in the same way you generated the project files for Nektar++.
             </ul>
 	  </ol>
+
+<h3><a name="Compiling_Regression_Tests"></a>Compiling the Regression Tests</h3>
+<br>
+To compile the regression tests you first need to have
+compiled the Nektar++ library and Solvers </br>
+
+<p>Once again we use CMake to generate the Makefiles that GCC requires</p>
+
+          <ol>
+            <li>
+              From the terminal, change to the build directory of the regressionTests, i.e. <em>Nektar++/regressionTests/builds</em> and run ccmake using <em>Nektar++/regressionTests</em> as the source directory.
+
+          <div class="code"><pre>ccmake ../</pre></div>
+
+          Generate the project files in the same way you generated the project files for Nektar++.
+            </ul>
+
+        <li>
+              From the terminal, change to the build directory of the regressionTests, i.e. <em>Nektar++/regressionTests/builds</em> and run ccmake using <em>Nektar++/regressionTests</em> as the source directory.
+
+          <div class="code"><pre>ccmake ../</pre></div>
+
+          Generate the project files in the same way you generated the project files for Nektar++.
+          <b>Note:</b> If you are modifying the regression tests by adding or removing tests you can generate a new master ".ok" file by answering  <strong>No</strong> to the <em> "Would you like to see advanced options?"</em> in step 2 and setting the variable <em>REGRESSION_MAKE_OK_FILES_EXEC</em> to <em>ON</em>. This will, for example, generate the executable <em>StdRegionsDemoMakeOKFile</em> which when executed will execute a series of demos and make the updated .ok files.
+            </ul>
+      </ol>
 
           <h3>
             <br>

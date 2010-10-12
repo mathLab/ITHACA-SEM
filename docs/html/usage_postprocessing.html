@@ -1,0 +1,116 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<!-- InstanceBegin template="/Templates/Main.dwt" codeOutsideHTMLIsLocked="false" -->
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+
+<link rel="shortcut icon" href="images/favicon.ico"><!-- InstanceBeginEditable name="doctitle" -->
+<title>Nektar++ - Post-processing</title>
+<!-- InstanceEndEditable -->
+<link rel="stylesheet" href="style.css"><!-- InstanceBeginEditable name="CSS_Style" -->
+<style type="text/css">
+<!--
+#menu_Usage {
+	font-weight: bold;
+}
+-->
+</style>
+<!-- InstanceEndEditable --><!--[if IE]>
+    <style type="text/css"> 
+      .twoColHybLt #sidebar1 { padding-top: 30px; margin-top: 20px; }
+      .twoColHybLt #mainContent { zoom: 1; padding-top: 15px; }
+    </style>
+    <![endif]--><!-- InstanceParam name="LibraryMenu" type="boolean" value="false" --><!-- InstanceParam name="CompileMenu" type="boolean" value="false" -->
+</head>
+
+
+<body class="twoColHybLt">
+
+
+<div id="container">
+
+<div id="sidebar1">
+
+<h3 style="text-align: center;"><a href="index.html"
+	id="menu_Nektar"><img src="images/nektar.png" alt="Nektar++"
+	height="38" width="155"></a></h3>
+
+<p><a href="downloads.html" id="menu_Downloads">Downloads</a></p>
+<p><a href="compile.html" id="menu_Compile">Compilation Instructions</a></p>
+<p><a href="usage.html" id="menu_Usage">Example Usage</a></p>
+<p><a href="educational_material.html" id="menu_EducationalMaterial">Educational
+Material</a></p>
+<p><a href="code/index.html" id="menu_Library">Documentation</a></p>
+<p><a href="team.html" id="menu_Team">Team Members</a></p>
+<p><a href="publications.html" id="menu_Publications">Publications</a></p>
+<p><a href="license.html" id="menu_License">License</a></p>
+<p><a href="acknowledgments.html" id="menu_Acknowledgments">Acknowledgments</a></p>
+<p><a href="mailto:nektar-inquiry@sci.utah.edu" id="menu_Contact">Contact</a></p>
+
+<p style="font-size: 9px;">Last Revision:<br> $Date: 2009/04/30
+15:16:46 $ 
+</p>
+
+</div>
+
+
+<div id="mainContent"><!-- InstanceBeginEditable name="Title" -->
+
+<h1>Post-processing</h1>
+
+<!-- InstanceEndEditable -->
+
+<hr><!-- InstanceBeginEditable name="BodyText" -->
+
+<h3>Nektar++ based post-processing</h3>
+<p>The current distribution of the code has a specific Nektar++
+output format. The solvers write the solution to <em>.fld </em> files in
+the Nektar++ output format.</p>
+<h3>External packages</h3>
+<p>To convert this output to other formats we have provided a number of
+utilities in the <em>Nektar++/utilities/PostProcessing</em> directory.</p>
+<ul>
+    <li><b>FldToVtk - VTK format</b><br/> <a
+        href="http://www.vtk.org/" target="_blank">VTK</a>
+    is an open format which is readable by almost any visualisation
+    software. It is available in two formats: legacy and XML. The Nektar++ 
+    library supports the newer XML ASCII format.<br/>
+    </li>
+    
+	<li><b>FldToGmsh - Gmsh format</b><br/> <a
+		href="http://www.geuz.org/gmsh/" target="_blank">Gmsh</a> is an
+	automatic three-dimensional finite element mesh generator with built-in
+	pre- and post-processing facilities. Its design goal is to provide a
+	simple meshing tool for academic problems with parametric input and
+	advanced visualization capabilities.<br/> As it has the capability
+	of visualising high-order data, it is particularly useful in
+	combination with the spectral/hp element method and Nektar++.<br/>
+	Gmsh is distributed freely under the terms of the GNU General Public
+	License and pre-compiled binaries for Windows, Linux and Mac OS X are
+	available from its website.<br/>
+	</li>
+
+	<li><b>FldToTecplot - Tecplot format</b><br/> <a
+		href="http://www.tecplot.com/" target="_blank">Tecplot</a> is a
+	Computational Fluid Dynamics (CFD) and numerical simulation software
+	package frequently used in post-processing simulation results. However
+	as opposed to Gmsh, it is not distributed freely. 
+	</li>
+
+
+</ul>
+
+
+<!-- InstanceEndEditable -->
+
+<p><br class="clearfloat">
+</p>
+</div>
+
+</div>
+
+<!-- InstanceEnd -->
+</body>
+</html>

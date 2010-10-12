@@ -56,7 +56,7 @@ static double  pow_loc(const double val, const int i)
 /// has energy in all mdoes of the expansions and reports and error
 int main(int argc, char *argv[]){
     int           i;
-    
+
     int           order1,order2,order3, nq1,nq2,nq3;
     LibUtilities::PointsType    Qtype1,Qtype2,Qtype3;
     LibUtilities::BasisType     btype1,btype2,btype3;
@@ -175,7 +175,13 @@ int main(int argc, char *argv[]){
 
     if(btype2 != LibUtilities::eFourier)
     {
-        Qtype2 = LibUtilities::eGaussLobattoLegendre;
+        if (regionshape == StdRegions::eTetrahedron) {
+            Qtype2 = LibUtilities::eGaussRadauMAlpha1Beta0;
+        }
+        else
+        {
+            Qtype2 = LibUtilities::eGaussLobattoLegendre;
+        }
     }
     else
     {
@@ -184,7 +190,13 @@ int main(int argc, char *argv[]){
 
     if(btype3 != LibUtilities::eFourier)
     {
-        Qtype3 = LibUtilities::eGaussLobattoLegendre;
+        if (regionshape == StdRegions::eTetrahedron) {
+            Qtype3 = LibUtilities::eGaussRadauMAlpha2Beta0;
+        }
+        else
+        {
+            Qtype3 = LibUtilities::eGaussLobattoLegendre;
+        }
     }
     else
     {

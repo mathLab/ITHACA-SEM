@@ -57,6 +57,9 @@
 	h1,h2,h3 {
 	  margin-bottom: 0;
 	}
+	li {
+	   margin-top: 0.5em;  
+	}
 div.code {
     font-family: "DejaVu Sans Mono", monospaced;
     font-size: 1em;

@@ -61,14 +61,27 @@ namespace Nektar
             SetUpEdgeOrientation();
             SetUpFaceOrientation();
 
-            const LibUtilities::BasisKey B(LibUtilities::eModified_A, 2,
+            int order0  = faces[0]->GetEdge(0)->GetBasis(0,0)->GetNumModes();
+            int points0 = faces[0]->GetEdge(0)->GetBasis(0,0)->GetNumPoints();
+            int order1  = faces[0]->GetEdge(1)->GetBasis(0,0)->GetNumModes();
+            int points1 = faces[0]->GetEdge(1)->GetBasis(0,0)->GetNumPoints();
+            int order2  = faces[1]->GetEdge(1)->GetBasis(0,0)->GetNumModes();
+            int points2 = faces[1]->GetEdge(1)->GetBasis(0,0)->GetNumPoints();
+
+            // BasisKey (const BasisType btype, const int nummodes, const PointsKey pkey)
+            //PointsKey (const int &numpoints, const PointsType &pointstype)
+            const LibUtilities::BasisKey A(LibUtilities::eModified_A, order0,
+                                           LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey B(LibUtilities::eModified_A, order1,
+                                           LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey C(LibUtilities::eModified_A, order2,
                                            LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
 
             m_xmap = Array<OneD, StdRegions::StdExpansion3DSharedPtr>(m_coordim);
 
             for(int i = 0; i < m_coordim; ++i)
             {
-                m_xmap[i] = MemoryManager<StdRegions::StdHexExp>::AllocateSharedPtr(B,B,B);
+                m_xmap[i] = MemoryManager<StdRegions::StdHexExp>::AllocateSharedPtr(A,B,C);
             }
         }
 

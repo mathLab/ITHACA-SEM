@@ -21,7 +21,7 @@ namespace Nektar
         /// Constructor
         MonodomainAlievPanfilov(SessionReaderSharedPtr& pSession);
 
-        /// Desctructor
+        /// Destructor
         virtual ~MonodomainAlievPanfilov();
 
     protected:

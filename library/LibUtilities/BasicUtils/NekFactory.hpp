@@ -33,27 +33,53 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+// Primary definition and generator for specialised object factories.
+#ifndef BOOST_PP_IS_ITERATING
 
 #ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_NEK_FACTORY_HPP
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_NEK_FACTORY_HPP
+
+    #include <boost/preprocessor/repetition.hpp>
+    #include <boost/preprocessor/arithmetic/sub.hpp>
+    #include <boost/preprocessor/punctuation/comma_if.hpp>
+    #include <boost/preprocessor/iteration/iterate.hpp>
 
 #include <boost/shared_ptr.hpp>
 
 #include <iostream>
 #include <map>
+    #include <string>
+
+    #ifndef MAX_PARAM
+    #define MAX_PARAM 3  // default maximum number of parameters to support
+    #endif
 
 namespace Nektar
 {
     namespace LibUtilities
     {
+            // For unused template parameters.
+            struct none {};
+
+            // Generate parameter typenames with default type of 'none'
+            #define FACTORY_print(z, n, data) BOOST_PP_CAT(data, n) = none
 
         /**
          * @class NekFactory
          * \brief Provides a generic Factory class.
          *
-         * Implements a generic class factory. To allow a class to be
-         * instantiated by the factory, the following are required in each
-         * class definition:
+             * Implements a generic object factory. Class-types which use a
+             * potentially arbitrary number of parameters may be used with
+             * specialised forms of the NekFactory. An upper
+             * limit on the number of parameters is imposed by the MAX_PARAM
+             * preprocessor definition in the NekFactory.hpp file. The
+             * specialisations are generated at compile type using Boost
+             * preprocessor by through repeated inclusion of the NekFactory.hpp
+             * file.
+             *
+             * To allow a class to be instantiated by the factory, the
+             * following are required in each class definition (in the case of
+             * a single parameter):
          * \code
          *   static [baseclass]* create([paramtype1] &P) {
          *      return new [derivedclass](P);
@@ -78,20 +104,21 @@ namespace Nektar
          *              ::CreateInstance("[derivedclass]",Param1);
          * \endcode
          */
-
         template < typename tKey,	       	// reference tag (e.g. string, int)
                    typename tBase,	       	// base class
-                   typename tParam1,        // First parameter type
-                   typename tDescription = std::string,
-                   typename tPredicator = std::less<tKey> >
+                       BOOST_PP_ENUM(MAX_PARAM, FACTORY_print, typename tParam) >
         class NekFactory
         {
         public:
+                /// Description datatype
+                typedef std::string tDescription;
+                /// Comparison predicator of key
+                typedef std::less<tKey> tPredicator;
             /// Shared pointer to an object of baseclass type.
             typedef boost::shared_ptr<tBase> tBaseSharedPtr;
             /// CreatorFunction type which takes parameter and returns base
             /// class shared pointer.
-            typedef tBaseSharedPtr (*CreatorFunction) (tParam1);
+                typedef tBaseSharedPtr (*CreatorFunction) (BOOST_PP_ENUM_PARAMS(MAX_PARAM, tParam));
 
             /// Define a struct to hold the information about a module.
             struct ModuleEntry
@@ -123,17 +150,9 @@ namespace Nektar
              * @param   x               Parameter to pass to class constructor.
              * @returns                 Base class pointer to new instance.
              */
-            static tBaseSharedPtr CreateInstance(tKey idKey, tParam1 x)
+                static tBaseSharedPtr CreateInstance(tKey idKey BOOST_PP_COMMA_IF(MAX_PARAM)
+                        BOOST_PP_ENUM_BINARY_PARAMS(MAX_PARAM, tParam, x))
             {
-                // Check we've not been given a blank key. If so, display an
-                // error and list the available modules.
-                if (idKey == "")
-                {
-                    std::cout << "ERROR no module name given." << std::endl;
-                    PrintAvailableClasses();
-                    abort();
-                }
-
                 // Now try and find the key in the map.
                 TMapFactoryIterator it = getMapFactory()->find(idKey);
 
@@ -145,7 +164,7 @@ namespace Nektar
                     {
                         try
                         {
-                            return it->second.m_func(x);
+                                return it->second.m_func(BOOST_PP_ENUM_PARAMS(MAX_PARAM, x));
                         }
                         catch (const std::string& s)
                         {
@@ -224,7 +243,113 @@ namespace Nektar
 
         };
 
+            #define BOOST_PP_ITERATION_LIMITS (0, MAX_PARAM-1)
+            #define BOOST_PP_FILENAME_1 "LibUtilities/BasicUtils/NekFactory.hpp"
+            #include BOOST_PP_ITERATE()
+
+            #endif
+
     }
 }
+    #undef FACTORY_print
+    #undef MAX_PARAM
+
+// Specialisations for the different numbers of parameters.
+#else
+    // Define the number of parameters
+    #define n BOOST_PP_ITERATION()
+    // Define macro for printing the non-required template parameters
+    #define FACTORY_print(z, n, data) data
+
+    template < typename tKey,
+               typename tBase BOOST_PP_COMMA_IF(n)
+               BOOST_PP_ENUM_PARAMS(n, typename tParam) >
+    class NekFactory< tKey, tBase,
+                BOOST_PP_ENUM_PARAMS(n, tParam)BOOST_PP_COMMA_IF(n)
+                BOOST_PP_ENUM(BOOST_PP_SUB(MAX_PARAM,n), FACTORY_print, none) >
+    {
+    public:
+        typedef std::string tDescription;
+        typedef std::less<tKey> tPredicator;
+        typedef boost::shared_ptr<tBase> tBaseSharedPtr;
+        typedef tBaseSharedPtr (*CreatorFunction) (BOOST_PP_ENUM_PARAMS(n, tParam));
+
+        struct ModuleEntry
+        {
+            ModuleEntry(CreatorFunction pFunc, const tDescription pDesc)
+                : m_func(pFunc),
+                  m_desc(pDesc)
+            {
+            }
+            CreatorFunction m_func;
+            tDescription m_desc;
+        };
+        typedef std::map<tKey, ModuleEntry, tPredicator> TMapFactory;
+        typedef typename TMapFactory::iterator TMapFactoryIterator;
+
+        static tBaseSharedPtr CreateInstance(tKey idKey BOOST_PP_COMMA_IF(n)
+                BOOST_PP_ENUM_BINARY_PARAMS(n, tParam, x))
+        {
+            TMapFactoryIterator it = getMapFactory()->find(idKey);
+            if (it != getMapFactory()->end())
+            {
+                if (it->second.m_func)
+                {
+                    try
+                    {
+                        return it->second.m_func(BOOST_PP_ENUM_PARAMS(n, x));
+                    }
+                    catch (const std::string& s)
+                    {
+                        std::cout << "ERROR Creating module: " << s << std::endl;
+                        abort();
+                    }
+                }
+            }
+            std::cout << "No such module: " << idKey << std::endl;
+            PrintAvailableClasses();
+            abort();
+        }
+
+        static tKey RegisterCreatorFunction(tKey idKey,
+                                            CreatorFunction classCreator,
+                                            tDescription pDesc = "") {
+            ModuleEntry e(classCreator, pDesc);
+            getMapFactory()->insert(std::pair<tKey,ModuleEntry>(idKey, e));
+            return idKey;
+        }
+
+        static void PrintAvailableClasses()
+        {
+            std::cout << std::endl << "Available classes: " << std::endl;
+            TMapFactoryIterator it;
+            for (it = getMapFactory()->begin(); it != getMapFactory()->end(); ++it)
+            {
+                std::cout << "  " << it->first;
+                if (it->second.m_desc != "")
+                {
+                    std::cout << ":" << std::endl << "    "
+                              << it->second.m_desc << std::endl;
+                }
+                else
+                {
+                    std::cout << std::endl;
+                }
+            }
+        }
+
+    protected:
+        static TMapFactory * getMapFactory() {
+            static TMapFactory mMapFactory;
+            return &mMapFactory;
+        }
+
+    private:
+        NekFactory() {}
+        ~NekFactory() {}
+    };
+    #undef n
+    #undef FACTORY_print
 
 #endif
+

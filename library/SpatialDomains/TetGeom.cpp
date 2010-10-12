@@ -63,13 +63,20 @@ namespace Nektar
             SetUpEdgeOrientation();
             SetUpFaceOrientation();
 
+            int order0  = faces[0]->GetEdge(0)->GetBasis(0,0)->GetNumModes();
+            int points0 = faces[0]->GetEdge(0)->GetBasis(0,0)->GetNumPoints();
+            int order1  = faces[0]->GetEdge(1)->GetBasis(0,0)->GetNumModes();
+            int points1 = faces[0]->GetEdge(1)->GetBasis(0,0)->GetNumPoints();
+            int order2  = faces[1]->GetEdge(1)->GetBasis(0,0)->GetNumModes();
+            int points2 = faces[1]->GetEdge(1)->GetBasis(0,0)->GetNumPoints();
+
             // BasisKey (const BasisType btype, const int nummodes, const PointsKey pkey)
             //PointsKey (const int &numpoints, const PointsType &pointstype)
-            const LibUtilities::BasisKey A(LibUtilities::eModified_A, 2,
+            const LibUtilities::BasisKey A(LibUtilities::eModified_A, order0,
                                            LibUtilities::PointsKey(3,LibUtilities::eGaussLobattoLegendre));
-            const LibUtilities::BasisKey B(LibUtilities::eModified_B, 2,
+            const LibUtilities::BasisKey B(LibUtilities::eModified_B, order1,
                                            LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha1Beta0));
-            const LibUtilities::BasisKey C(LibUtilities::eModified_C, 2,
+            const LibUtilities::BasisKey C(LibUtilities::eModified_C, order2,
                                            LibUtilities::PointsKey(3,LibUtilities::eGaussRadauMAlpha2Beta0));
 
             m_xmap = Array<OneD, StdRegions::StdExpansion3DSharedPtr>(m_coordim);

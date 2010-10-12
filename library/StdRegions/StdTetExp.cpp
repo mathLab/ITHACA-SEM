@@ -1688,7 +1688,8 @@ namespace Nektar
             const int nummodes0 = m_base[0]->GetNumModes();
             const int nummodes1 = m_base[1]->GetNumModes();
             const int nummodes2 = m_base[2]->GetNumModes();
-            int nummodesA, nummodesB, P, Q;
+
+            int nummodesA, nummodesB, P, Q, i, j, k, idx;
 
             const LibUtilities::BasisType bType0 = GetEdgeBasisType(0);
             const LibUtilities::BasisType bType1 = GetEdgeBasisType(1);
@@ -1717,9 +1718,10 @@ namespace Nektar
                 nummodesA = nummodes1;
                 nummodesB = nummodes2;
             }
-            P = nummodesA - 1;
-            Q = nummodesB - 1;
-            nFaceCoeffs = Q+1 + (P*(1 + 2*Q - P))/2;
+            P = nummodesA;
+            Q = nummodesB;
+
+            nFaceCoeffs = Q + ((P-1)*(1 + 2*(Q-1) - (P-1)))/2;
 
             // Allocate the map array and sign array; set sign array to ones (+)
             if(maparray.num_elements() != nFaceCoeffs)
@@ -1736,265 +1738,95 @@ namespace Nektar
                 fill( signarray.get() , signarray.get()+nFaceCoeffs, 1 );
             }
 
-            // A mapping array to account for reversal of modes.
-            Array<OneD, int> arrayindex(nFaceCoeffs,-1);
-
-            int limit = 0;      // Inner loop index limit
-            int offsetA = 0;    // Element Offset in B direction
-            int offsetB = 0;    // Element Offset in A direction
-            int jumpA = 0;      // Jump in the A direction
-            int jumpB = 0;      // Jump in the B direction
-            int cnt = 0;        // Face index offset
-            int n0 = 0;         // Computed depth in face orthogonal dirn in
-                                //   slow face coordinate
-            int n1 = 0;         // Computed depth in face orthogonal dirn in
-                                //   fast face coordinate
-
-            if (faceOrient > 4)
+            switch (fid)
             {
-            	ASSERTL0(false, "Face Coordinate transposition not valid.");
-            }
-            // Set up face mapping to account for face orientation.
-			arrayindex[0] = 0;
-			arrayindex[1] = 1;
-			arrayindex[2] = 2;
-			if (faceOrient == 2)
+                case 0:
+                    idx = 0;
+                    for (i = 0; i < P; ++i)
 			{
-				swap (arrayindex[0], arrayindex[2]);
-			}
-/*
-            // Create array indexing the modes at a face level. This handles
-            // face orientation.
-            if (faceOrient < 4) // Not transposed
+                        for (j = 0; j < Q-i; ++j)
             {
-                for(int b = 0; b < nummodesB; ++b)
+                            if ((int)faceOrient == 2 && i > 1)
                 {
-                    limit = (b > nummodesB - nummodesA) ? nummodesB - b : nummodesA;
-                    jumpB = limit;
-                    for(int a = 0; a < limit; ++a)
-                    {
-                        arrayindex[a + offsetB] = a + offsetB;
+                                signarray[idx] = (i%2 ? -1 : 1);
                     }
-                    offsetB += jumpB;
+                            maparray[idx++] = GetMode(i,j,0);
                 }
             }
-            else // Transposed
+                    break;
+                case 1:
+                    idx = 0;
+                    for (i = 0; i < P; ++i)
             {
-            	cout << "Transposed" << endl;
-                for(int a = 0; a < nummodesA; ++a)
+                        for (k = 0; k < Q-i; ++k)
                 {
-                    limit = (a > nummodesA - nummodesB) ? nummodesA - a : nummodesB;
-                    jumpA = limit;
-                    for(int b = 0; b < nummodesB - a; ++b)
+                            if ((int)faceOrient == 2 && i > 1)
                     {
-                        arrayindex[b + offsetA] = b + offsetA;
+                                signarray[idx] = (i%2 ? -1: 1);
                     }
-                    offsetA += jumpA;
+                            maparray[idx++] = GetMode(i,0,k);
                 }
             }
-
-            // Check the arrayindex was created properly and all entries filled.
-            for (int i = 0; i < arrayindex.num_elements(); ++i)
+                    break;
+                case 2:
+                    idx = 0;
+                    for (j = 0; j < P-1; ++j)
             {
-            	cout << "Arrayindex " << i << ": " << arrayindex[i] << endl;
-                ASSERTL0(arrayindex[i] != -1, "arrayindex is not set up properly.");
-            }
-
-            // Reset counters
-            limit = 0;
-            offsetA = 0;
-            offsetB = 0;
-            jumpB = 0;
-            cnt = 0;
-
-            // Now generate the indices of the modes at an element level.
-            // Each face is handled separately. The elemental mode index is
-            // computed for each face mode.
-            switch(fid)
+                        for (k = 0; k < Q-1-j; ++k)
             {
-
-            // Base triangle
-            case 0:
-                for(int b = 0; b < nummodesB; ++b)
+                            if ((int)faceOrient == 2 && j > 1)
                 {
-                    limit    = (b > nummodesB - nummodesA) ? nummodesB - b : nummodesA;
-                    jumpB    = limit;
-                    for(int a = 0; a < limit; ++a)
-                    {
-                        maparray[ arrayindex[a + cnt] ] = a + offsetB;
+                                signarray[idx] = ((j+1)%2 ? -1: 1);
                     }
-                    cnt     += limit;
-                    offsetB += jumpB;
+                            maparray[idx++] = GetMode(1,j,k);
+                            // Incorporate modes from zeroth plane where needed.
+                            if (j == 0 && k == 0) {
+                                maparray[idx++] = GetMode(0,0,1);
+                }
+                            if (j == 0 && k == Q-2) {
+                                for (int r = 0; r < Q-1; ++r) {
+                                    maparray[idx++] = GetMode(0,1,r);
+                    }
+                }
+                    }
                 }
                 break;
-
-            // Front triangle
-            case 1:
-                for(int b = 0; b < nummodesB; ++b)
-                {
-                    n0       = (b > nummodesB - nummodes1) ? nummodesB - b : nummodes1;
-                    limit    = (b > nummodesB - nummodesA) ? nummodesB - b : nummodesA;
-
-                    for(int a = 0; a < limit; ++a)
-                    {
-                        maparray[ arrayindex[a + cnt] ] = a + offsetB;
-                    }
-                    cnt     += limit;
-                    jumpB    = (limit * (1 + 2*n0 - limit)) / 2;
-                    offsetB += jumpB;
-                }
-                break;
-
-            // Slanted triangle
-            case 2:
-                for(int b = 0; b < nummodesB; ++b)
-                {
-                    n0       = (b > nummodesB - nummodes0) ? nummodesB - b : nummodes0;
-                    limit    = (b > nummodesB - nummodesA) ? nummodesB - b : nummodesA;
-                    offsetA  = -1;
-                    for(int a = 0; a < limit; ++a)
-                    {
-                        n1       = (a > limit - n0) ? limit - a : n0;
-                        offsetA += n1;
-                        maparray[ arrayindex[a + cnt] ] = offsetB + offsetA;
-                    }
-                    cnt     += limit;
-                    jumpB    = (n0 * (1 + 2*limit - n0)) / 2;
-                    offsetB += jumpB;
-                }
-                break;
-
-            // Rear triangle
             case 3:
-                for(int b = 0; b < nummodesB; ++b)
+                    idx = 0;
+                    for (j = 0; j < P; ++j)
                 {
-                    n0       = (b > nummodesB - nummodes0) ? nummodesB - b : nummodes0;
-                    limit    = (b > nummodesB - nummodesA) ? nummodesB - b : nummodesA;
-                    offsetA  = 0;
-                    for(int a = 0; a < limit; ++a)
+                        for (k = 0; k < Q-j; ++k)
                     {
-                        maparray[ arrayindex[a + cnt] ] = offsetB + offsetA;
-                        n1       = (a > limit - n0) ? limit - a : n0;
-                        offsetA += n1;
+                            if ((int)faceOrient == 2 && j > 1)
+                            {
+                                signarray[idx] = (j%2 ? -1: 1);
                     }
-                    cnt     += limit;
-                    jumpB    = (n0 * (1 + 2*limit - n0)) / 2;
-                    offsetB += jumpB;
+                            maparray[idx++] = GetMode(0,j,k);
                 }
-                break;
             }
+            	break;
+                default:
+                    ASSERTL0(false, "Element map not available.");
+            }
+
+            if ((int)faceOrient == 2)
+                    {
+                swap(maparray[0], maparray[Q]);
+                for (i = 1; i < Q-1; ++i)
+                {
+                    swap(maparray[i+1], maparray[Q+i]);
+                        }
+                    }
+/*
+            cout << "Map array output:" << endl;
+            for (i = 0; i < maparray.num_elements(); ++i)
+            {
+                cout << "maparray[" << i << "] = " << maparray[i]
+                     << "  signarray=" << signarray[i] << endl;
+                        }
 */
 
-            ASSERTL0(nummodesA == 2, "Not set up for deformed case (nummodes > 2)");
-            switch (fid) {
-            case 0:
-            	maparray[arrayindex[0]] = 0;
-            	maparray[arrayindex[1]] = 2;
-            	maparray[arrayindex[2]] = 3;
-            	break;
-            case 1:
-            	maparray[arrayindex[0]] = 0;
-            	maparray[arrayindex[1]] = 1;
-            	maparray[arrayindex[2]] = 3;
-            	break;
-            case 2:
-            	maparray[arrayindex[0]] = 3;
-            	maparray[arrayindex[1]] = 1;
-            	maparray[arrayindex[2]] = 2;
-            	break;
-            case 3:
-            	maparray[arrayindex[0]] = 0;
-            	maparray[arrayindex[1]] = 1;
-            	maparray[arrayindex[2]] = 2;
-            	break;
-            }
-            // Finally set up sign arrays.
-			// Re-orientate where second direction is reversed
-            // is this even possible for tet?
-/*            if( (faceOrient==1) || (faceOrient==3) ||
-                (faceOrient==6) || (faceOrient==7) )
-            {
-            	ASSERTL0(false, "Reversal of modes in second direction not set up.");
-				// If not transposed => 1 or 3
-                if(faceOrient<4)
-                {
-                    for(i = 3; i < nummodesB; i+=2)
-                    {
-                        for(j = 0; j < nummodesA; j++)
-                        {
-                            if( arrayindex[i*nummodesA+j] >= 0 )
-                                signarray[ arrayindex[i*nummodesA+j] ] *= -1;
-                        }
-                    }
-
-                    for(i = 0; i < nummodesA; i++)
-                    {
-                        swap( maparray[i] , maparray[i+nummodesA] );
-                        swap( signarray[i] , signarray[i+nummodesA] );
-                    }
                 }
-                // transposed => 6 or 7
-                else
-                {
-                    for(i = 0; i < nummodesB; i++)
-                    {
-                        for(j = 3; j < nummodesA; j+=2)
-                        {
-                            if( arrayindex[i*nummodesA+j] >= 0 )
-                                signarray[ arrayindex[i*nummodesA+j] ] *= -1;
-                        }
-                    }
-
-                    for(i = 0; i < nummodesB; i++)
-                    {
-                        swap( maparray[i] , maparray[i+nummodesB] );
-                        swap( signarray[i] , signarray[i+nummodesB] );
-                    }
-                }
-            }
-*/
-/*
-            // Reorientate where first direction is reversed
-            if( (faceOrient==2) || (faceOrient==3) ||
-                (faceOrient==5) || (faceOrient==7) )
-            {
-            	// Not transposed => 2 or 3
-                if(faceOrient<4)
-                {
-                    for(i = 0; i < nummodesB; i++)
-                    {
-                        for(j = 3; j < nummodesA; j+=2)
-                        {
-                            if( arrayindex[i*nummodesA+j] >= 0 )
-                                signarray[ arrayindex[i*nummodesA+j] ] *= -1;
-                        }
-                    }
-
-                    //for(i = 0; i < nummodesB-2; i++)
-                    //{
-                    //    swap( maparray[i+2] , maparray[nummodesB+i+1] );
-                    //    swap( signarray[i+2] , signarray[nummodesB+i+1] );
-                    //}
-                }
-                else
-                {
-                    for(i = 3; i < nummodesB; i+=2)
-                    {
-                        for(j = 0; j < nummodesA; j++)
-                        {
-                            if( arrayindex[i*nummodesA+j] >= 0 )
-                                signarray[ arrayindex[i*nummodesA+j] ] *= -1;
-                        }
-                    }
-
-                    //for(i = 0; i < nummodesA; i++)
-                    //{
-                    //    swap( maparray[i*nummodesB] , maparray[i*nummodesB+1] );
-                    //    swap( signarray[i*nummodesB] , signarray[i*nummodesB+1] );
-                    //}
-                }
-            }*/
-        }
 
         DNekMatSharedPtr StdTetExp::v_GenMatrix(const StdMatrixKey &mkey)
         {

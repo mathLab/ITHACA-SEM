@@ -1301,8 +1301,6 @@ namespace Nektar
 
       while(facelement)
         {
-      cout << "facelement = " << *facelement << endl;
-
       /// These should be ordered.
       nextFaceNumber++;
 
@@ -1315,9 +1313,8 @@ namespace Nektar
       ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute ID.");
       ASSERTL0(faceindx == nextFaceNumber, "Face IDs must begin with zero and be sequential.");
 
-
-      /// Read edge id attribute.
-      err = edgelement->QueryIntAttribute("FACEID", &faceid);
+          /// Read face id attribute.
+          err = facelement->QueryIntAttribute("FACEID", &faceid);
       ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute FACEID.");
 
       /// Read text face element description.
@@ -1339,7 +1336,6 @@ namespace Nektar
 
 
       /// Parse out the element components corresponding to type of element.
-
       if(face == "F")
             {
           std::string typeStr = facelement->Attribute("TYPE");
@@ -1359,10 +1355,8 @@ namespace Nektar
           s << numptsStr;
           s >> numPts;
 
-
           CurveSharedPtr curve(MemoryManager<Curve>::AllocateSharedPtr(faceid, type));
 
-          cout << "numPts = " << numPts << endl;
           ASSERTL0(numPts >= 3, "NUMPOINTS for face must be greater than 2");
 
           if(numPts == 3)
@@ -1385,19 +1379,14 @@ namespace Nektar
                         {
               VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_meshDimension, faceindx, xval, yval, zval));
               curve->m_points.push_back(vert);
-
                         }
-
-              cout << "xval = " << xval << "  yval = " << yval <<"  zval = " << zval << endl;
-              cout << endl;
-
                     }
                 }
           catch(...)
                 {
           NEKERROR(ErrorUtil::efatal,
-               (std::string("Unable to read curve data for FACE: ") + elementStr).c_str());
-
+                          (std::string("Unable to read curve data for FACE: ")
+                              + elementStr).c_str());
                 }
           m_curvedFaces.push_back(curve);
 
@@ -1405,7 +1394,6 @@ namespace Nektar
 
             } // end if-loop
         } // end while-loop
-
     } // end of ReadCurves()
 
 

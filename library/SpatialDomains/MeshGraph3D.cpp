@@ -76,6 +76,7 @@ namespace Nektar
 
             ASSERTL0(mesh, "Unable to find GEOMETRY tag in file.");
 
+            ReadCurves(doc);
             ReadEdges(doc);
             ReadFaces(doc);
             ReadElements(doc);
@@ -106,9 +107,16 @@ namespace Nektar
             /// edge list.  We cannot handle missing edge numbers as we could
             /// with missing element numbers due to the text block format.
             std::string edgeStr;
-            int indx;
+            int i,indx;
             int err = 0;
             int nextEdgeNumber = -1;
+
+            // Curved Edges
+            map<int, int> edge_curved;
+            for(i = 0; i < m_curvedEdges.size(); ++i)
+            {
+                edge_curved[m_curvedEdges[i]->m_curveID] = i;
+            }
 
             while(edge)
             {
@@ -141,7 +149,16 @@ namespace Nektar
                         if (!edgeDataStrm.fail())
                         {
                             VertexComponentSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
-                            SegGeomSharedPtr edge(MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_meshDimension, vertices));
+                            SegGeomSharedPtr edge;
+
+                            if (edge_curved.count(indx) == 0)
+                            {
+                                edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices);
+                            }
+                            else
+                            {
+                                edge = MemoryManager<SegGeom>::AllocateSharedPtr(indx, m_spaceDimension, vertices, m_curvedEdges[edge_curved.find(indx)->second]);
+                            }
 
                             m_segGeoms.push_back(edge);
                         }

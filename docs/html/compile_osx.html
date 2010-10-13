@@ -528,6 +528,9 @@ to get full optimizations.</li>
   <li>Now you have generated the Makefiles, you can compile the solvers by entering 
 <div class="code"><pre>make</pre></div> from the command line in the directory <em>Nektar++/solvers/builds/</em>. If you chose to compile the solvers with Xcode, open the project "SOLVERS.xcodeproj". 
     </span></li>
+     <li>The solvers need also installation to be properly used by the regression tests. You can do it by entering 
+<div class="code"><pre>make install</pre></div> from the command line in the directory <em>Nektar++/solvers/builds/</em>. It will create a new directory <em>Nektar++/solvers/builds/dist/bin/</em> where all the solvers executables are collected. 
+    </span></li>
 </ol>
 To compile the utilities you follow an identical set of instructions but replace solvers in the above text with utilities.
 

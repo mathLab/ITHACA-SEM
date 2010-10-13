@@ -36,18 +36,18 @@
 // Primary definition and generator for specialised object factories.
 #ifndef BOOST_PP_IS_ITERATING
 
-#ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_NEK_FACTORY_HPP
-#define NEKTAR_LIB_UTILITIES_BASIC_UTILS_NEK_FACTORY_HPP
+    #ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_NEK_FACTORY_HPP
+    #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_NEK_FACTORY_HPP
 
     #include <boost/preprocessor/repetition.hpp>
     #include <boost/preprocessor/arithmetic/sub.hpp>
     #include <boost/preprocessor/punctuation/comma_if.hpp>
     #include <boost/preprocessor/iteration/iterate.hpp>
 
-#include <boost/shared_ptr.hpp>
+    #include <boost/shared_ptr.hpp>
 
-#include <iostream>
-#include <map>
+    #include <iostream>
+    #include <map>
     #include <string>
 
     #ifndef MAX_PARAM
@@ -58,11 +58,11 @@ namespace Nektar
 {
     namespace LibUtilities
     {
-            // For unused template parameters.
-            struct none {};
+        // For unused template parameters.
+        struct none {};
 
-            // Generate parameter typenames with default type of 'none'
-            #define FACTORY_print(z, n, data) BOOST_PP_CAT(data, n) = none
+        // Generate parameter typenames with default type of 'none'
+        #define FACTORY_print(z, n, data) BOOST_PP_CAT(data, n) = none
 
         /**
          * @class NekFactory
@@ -243,15 +243,17 @@ namespace Nektar
 
         };
 
-            #define BOOST_PP_ITERATION_LIMITS (0, MAX_PARAM-1)
-            #define BOOST_PP_FILENAME_1 "LibUtilities/BasicUtils/NekFactory.hpp"
-            #include BOOST_PP_ITERATE()
+        #undef FACTORY_print
 
-            #endif
+        #define BOOST_PP_ITERATION_LIMITS (0, MAX_PARAM-1)
+        #define BOOST_PP_FILENAME_1 "LibUtilities/BasicUtils/NekFactory.hpp"
+        #include BOOST_PP_ITERATE()
+
+        #endif
 
     }
 }
-    #undef FACTORY_print
+
     #undef MAX_PARAM
 
 // Specialisations for the different numbers of parameters.

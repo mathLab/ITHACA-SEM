@@ -1086,8 +1086,10 @@ namespace Nektar
     void ADRBase::WriteFld(std::string &outname)
     {
     	for(int j = 0; j < m_fields.num_elements(); ++j){
-				m_fields[j]->SetPhysState(true);
-				m_fields[j]->FwdTrans(m_fields[j]->GetPhys(),m_fields[j]->UpdateCoeffs());
+			if (m_fields[j]->GetPhysState()==true)
+			{	
+			  m_fields[j]->FwdTrans(m_fields[j]->GetPhys(),m_fields[j]->UpdateCoeffs());
+			}
     	}
 
     	std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef

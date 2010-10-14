@@ -115,7 +115,8 @@ int main(int argc, char *argv[])
     cout << endl;
     for(int i = 0; i < dom.GetNvariables(); ++i)
     {
-        cout << "L2 Error (variable " << dom.GetVariable(i) << ") : " << dom.L2Error(i,true) << endl;
+        cout << "L 2 error (variable " << dom.GetVariable(i) << ") : " << dom.L2Error(i,true) << endl;
+		cout << "L inf error (variable " << dom.GetVariable(i) << ") : " << dom.LinfError(i) << endl;
     }
 		
 }

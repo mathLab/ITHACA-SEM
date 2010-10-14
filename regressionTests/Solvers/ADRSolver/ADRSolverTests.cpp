@@ -133,9 +133,9 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
     }
 
 #ifdef _WINDOWS
-	std::string cleanup = "del /Q *.xml *.fld";
+	std::string cleanup = "del /Q *.xml *.fld *.chk *.his";
 #else
-    std::string cleanup = "rm -f *.xml *.fld";
+    std::string cleanup = "rm -f *.xml *.fld *.chk *.his";
 #endif
     system(cleanup.c_str());
 };
@@ -163,7 +163,14 @@ void MakeOkFile(std::string Demo, std::string input, std::string info)
         std::cout << "===========================================================\n";
         Test.PrintTestError(fail);
         std::cout << "===========================================================\n";
-}
+	}
+#ifdef _WINDOWS
+	std::string cleanup = "del /Q *.xml *.fld *.chk *.his";
+#else
+    std::string cleanup = "rm -f *.xml *.fld *.chk *.his";
+#endif
+    system(cleanup.c_str());
+	
 }
 
 

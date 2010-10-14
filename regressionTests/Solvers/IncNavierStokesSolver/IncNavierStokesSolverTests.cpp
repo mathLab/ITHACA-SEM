@@ -64,8 +64,8 @@ int main(int argc, char* argv[])
 	Execute("IncNavierStokesSolver","Test_KovaFlow_m8.xml","Testing Kovasznay Flow modes=8");
 	
 	//Test Decaying Vortex
-	Execute("IncNavierStokesSolver","Test_DecVortex_m3.xml","Testing Decaying Vortex modes=3");
-	Execute("IncNavierStokesSolver","Test_DecVortex_m8.xml","Testing Decaying Vortex modes=8");
+	Execute("IncNavierStokesSolver","Test_TaylorVor_m3.xml","Testing Taylor Vortex modes=3");
+	Execute("IncNavierStokesSolver","Test_TaylorVor_m8.xml","Testing Taylor Vortex modes=8");
 	
     return 0;
 }
@@ -77,14 +77,31 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
     int fail;
 
     // Copy input file to current location
-	boost::filesystem::path filePath("../../../Solvers/IncNavierStokesSolver/InputFiles/" + input);
-    std::string syscommand = std::string(COPY_COMMAND) + filePath.file_string() + " .";
-    int status = system(syscommand.c_str());
+	input.erase(input.end()-3,input.end());
+	boost::filesystem::path filePath(std::string(REG_PATH) + "Solvers/IncNavierStokesSolver/InputFiles/" + input);
+    std::string syscommand = std::string(COPY_COMMAND) + filePath.file_string() + "xml .";
+	std::string syscommand2 = std::string(COPY_COMMAND) + filePath.file_string() + "rst .";
+	
+	int status = system(syscommand.c_str());
     if(status)
     {
         std::cerr << "Unable to copy file:" << input << " to current location" << std::endl;
         exit(2);
     }
+	
+	//Restart files just needed for the Kovasznay Flow so far
+	if(input=="Test_KovaFlow_m3." || input=="Test_KovaFlow_m8.")
+	{
+	   int status2 = system(syscommand2.c_str());
+		if(status2)
+		{
+			std::cerr << "Unable to copy file:" << input << " to current location" << std::endl;
+			exit(2);		
+		}
+		
+	}
+	
+	input = input+"xml";
 
     std::cout << Demo << ":  info = \"" << info <<"\""<<std::endl;
     if(fail = Test.TestL2()) // test failed
@@ -101,15 +118,15 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
     }            
     
 #ifdef _WINDOWS
-	std::string cleanup = "del /Q *.xml *.fld";
+	std::string cleanup = "del /Q *.xml *.fld *.chk *.rst";
 #else
-    std::string cleanup = "rm -f *.xml *.fld";
+    std::string cleanup = "rm -f *.xml *.fld *.chk *.rst";
 #endif
 
     system(cleanup.c_str());
 };
 
-void MakeOkFile(std::string Demo, std::string input, std::string info)
+void MakeOkFile(std::string Demo, std::string input,				std::string info)
 {
 	std::string NektarSolverDir =std::string("") +  NEKTAR_SOLVER_DIR + "/dist/bin/";
     RegressBase Test(NektarSolverDir.c_str(),Demo,input,"Solvers/IncNavierStokesSolver/OkFiles/");
@@ -117,14 +134,31 @@ void MakeOkFile(std::string Demo, std::string input, std::string info)
 
 
     // Copy input file to current location
-	boost::filesystem::path filePath("../../../Solvers/IncNavierStokesSolver/InputFiles/"+input);
-	std::string syscommand = std::string(COPY_COMMAND) + filePath.file_string() + " .";
-    int status = system(syscommand.c_str());
-    if(status)
+	input.erase(input.end()-3,input.end());
+	boost::filesystem::path filePath(std::string(REG_PATH) + "Solvers/IncNavierStokesSolver/InputFiles/" + input);
+	std::string syscommand1 = std::string(COPY_COMMAND) + filePath.file_string() + "xml .";
+	std::string syscommand2 = std::string(COPY_COMMAND) + filePath.file_string() + "rst .";
+	
+    int status1 = system(syscommand1.c_str());
+    if(status1)
     {
         std::cerr << "Unable to copy file:" << input << " to current location" << std::endl;
         exit(2);
     }
+	
+	//Restart files just needed for the Kovasznay Flow so far
+	if((input == "Test_KovaFlow_m3.") || (input == "Test_KovaFlow_m8."))
+	{
+		int status2 = system(syscommand2.c_str());
+		if(status2)
+		{
+			std::cerr << "Unable to copy file:" << input << " to current location" << std::endl;
+			exit(2);		
+		}
+		
+	}
+	
+	input = input+"xml";
 
     if(fail = Test.MakeOkFile())
     {
@@ -133,7 +167,14 @@ void MakeOkFile(std::string Demo, std::string input, std::string info)
         std::cout << "===========================================================\n";   
         Test.PrintTestError(fail);
         std::cout << "===========================================================\n";    
-}
+	}
+#ifdef _WINDOWS
+	std::string cleanup = "del /Q *.xml *.fld *.chk *.rst";
+#else
+    std::string cleanup = "rm -f *.xml *.fld *.chk *.rst";
+#endif
+	
+    system(cleanup.c_str());
 }
 
 

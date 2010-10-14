@@ -159,8 +159,8 @@ namespace Nektar
     {
         static const int rhsNodeIndex = index + LhsType::TotalCount;
         typedef typename LhsType::ResultType LhsResultType;
-        typedef EvaluateNodeWithTemporaryIfNeeded<RhsType, IndicesType, rhsNodeIndex> EvaluateNodeWithTemporaryIfNeeded;
-        typedef typename EvaluateNodeWithTemporaryIfNeeded::ResultType RhsTempType;    
+        typedef EvaluateNodeWithTemporaryIfNeeded<RhsType, IndicesType, rhsNodeIndex> EvaluateNodeWithTemporaryIfNeededType;
+        typedef typename EvaluateNodeWithTemporaryIfNeededType::ResultType RhsTempType;    
     
         typedef Node<LhsType, Op, RhsType> Expression;
         
@@ -176,7 +176,7 @@ namespace Nektar
             >::type* dummy = 0)
         {
             EvaluateNode<LhsType, IndicesType, index>::Evaluate(accumulator, args);
-            RhsTempType rhs = EvaluateNodeWithTemporaryIfNeeded::Evaluate(args);
+            RhsTempType rhs = EvaluateNodeWithTemporaryIfNeededType::Evaluate(args);
             Op::OpEqual(accumulator, rhs);
         }
         
@@ -193,7 +193,7 @@ namespace Nektar
         {
             LhsResultType temp = CreateFromTree<LhsResultType, LhsType, IndicesType, index>::Apply(args);
             EvaluateNode<LhsType, IndicesType, index>::Evaluate(temp, args);
-            RhsTempType rhs = EvaluateNodeWithTemporaryIfNeeded::Evaluate(args);
+            RhsTempType rhs = EvaluateNodeWithTemporaryIfNeededType::Evaluate(args);
             accumulator = Op::Op(temp, rhs);
         }
 
@@ -260,7 +260,7 @@ namespace Nektar
         template<typename Expression>
         static bool ContainsAlias(const Expression& expression, typename Expression::ResultType& accum)
         {
-            ContainsAliasAccumulator<Expression::ResultType> containsAliasAccumulator(accum);
+            ContainsAliasAccumulator<typename Expression::ResultType> containsAliasAccumulator(accum);
             int numAliases = boost::fusion::accumulate(expression.GetData(), 0, containsAliasAccumulator);
             return numAliases > 0;
         }
@@ -276,7 +276,7 @@ namespace Nektar
 
             if( ContainsAlias(expression, accum) )
             {
-                typename Expression::ResultType temp = CreateFromTree<Expression::ResultType, OptimizedParseTree, TransformedIndices, 0>::Apply(expression.GetData());
+                typename Expression::ResultType temp = CreateFromTree<typename Expression::ResultType, OptimizedParseTree, TransformedIndices, 0>::Apply(expression.GetData());
                 EvaluateNode<OptimizedParseTree, TransformedIndices, 0>::Evaluate(temp, expression.GetData());
                 accum = temp;
             }

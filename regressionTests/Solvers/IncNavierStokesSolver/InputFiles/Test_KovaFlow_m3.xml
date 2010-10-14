@@ -15,9 +15,9 @@
     
     <PARAMETERS>
       <P> TimeStep      = 0.001        </P>
-      <P> NumSteps      = 100000       </P>
-      <P> IO_CheckSteps = 100000       </P>
-      <P> IO_InfoSteps  = 100000       </P>
+      <P> NumSteps      = 100       </P>
+      <P> IO_CheckSteps = 100       </P>
+      <P> IO_InfoSteps  = 100       </P>
       <P> Kinvis        = 0.025        </P>
     </PARAMETERS>
 
@@ -52,9 +52,7 @@
     </BOUNDARYCONDITIONS>
     
     <INITIALCONDITIONS>
-      <F VAR="u" VALUE="0" />
-      <F VAR="v" VALUE="0" />
-      <F VAR="p" VALUE="0" />
+      <R FILE="Test_KovaFlow_m3.rst" />
    </INITIALCONDITIONS>
    
    <EXACTSOLUTION>

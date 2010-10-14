@@ -1,32 +1,56 @@
 IncNavierStokesSolver
 ==========================================
 Test_ChanFlow_m3.xml
-L2 Error (variable u) : 3.43365e-16
-L2 Error (variable v) : 1.07421e-16
-L2 Error (variable p) : 8.02347e-15
+
+L 2 error (variable u) : 4.10109e-16
+L inf error (variable u) : 3.9968e-15
+L 2 error (variable v) : 0
+L inf error (variable v) : 2.77645e-16
+L 2 error (variable p) : 7.08552e-15
+L inf error (variable p) : 5.81757e-14
 ----------------------------------------
 Test_ChanFlow_m8.xml
-L2 Error (variable u) : 5.8456e-16
-L2 Error (variable v) : 2.82882e-16
-L2 Error (variable p) : 1.23484e-14
+
+L 2 error (variable u) : 5.22576e-16
+L inf error (variable u) : 1.18516e-14
+L 2 error (variable v) : 1.93624e-16
+L inf error (variable v) : 8.1589e-16
+L 2 error (variable p) : 1.64561e-14
+L inf error (variable p) : 7.41629e-14
+----------------------------------------
+Test_TaylorVor_m3.xml
+
+L 2 error (variable u) : 0.00287367
+L inf error (variable u) : 0.0120533
+L 2 error (variable v) : 0.00306012
+L inf error (variable v) : 0.0105751
+L 2 error (variable p) : 0.00853517
+L inf error (variable p) : 0.0344792
+----------------------------------------
+Test_TaylorVor_m8.xml
+
+L 2 error (variable u) : 8.73306e-07
+L inf error (variable u) : 4.13097e-06
+L 2 error (variable v) : 6.88089e-07
+L inf error (variable v) : 1.95339e-06
+L 2 error (variable p) : 7.9134e-07
+L inf error (variable p) : 4.01139e-06
 ----------------------------------------
 Test_KovaFlow_m3.xml
-L2 Error (variable u) : 0.34362
-L2 Error (variable v) : 0.0255633
-L2 Error (variable p) : 0.34777
+
+L 2 error (variable u) : 0.198389
+L inf error (variable u) : 0.322039
+L 2 error (variable v) : 0.014759
+L inf error (variable v) : 0.0242454
+L 2 error (variable p) : 0.200785
+L inf error (variable p) : 0.51978
 ----------------------------------------
 Test_KovaFlow_m8.xml
-L2 Error (variable u) : 3.22913e-07
-L2 Error (variable v) : 1.68898e-06
-L2 Error (variable p) : 9.87816e-06
-----------------------------------------
-Test_DecVortex_m3.xml
-L2 Error (variable u) : 0.00955255
-L2 Error (variable v) : 0.00955568
-L2 Error (variable p) : 0.0259517
-----------------------------------------
-Test_DecVortex_m8.xml
-L2 Error (variable u) : 3.97856e-06
-L2 Error (variable v) : 2.56526e-06
-L2 Error (variable p) : 1.6336e-05
+
+L 2 error (variable u) : 1.86434e-07
+L inf error (variable u) : 4.31873e-07
+L 2 error (variable v) : 9.75131e-07
+L inf error (variable v) : 2.23918e-06
+L 2 error (variable p) : 5.70316e-06
+L inf error (variable p) : 3.4342e-05
 ----------------------------------------

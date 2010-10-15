@@ -53,41 +53,81 @@ void MakeOkFile(std::string demo, std::string input, std::string info);
 #define COPY_COMMAND "cp "
 #endif
 
+static int tests_total = 0;
+static int tests_passed = 0;
+static int tests_failed = 0;
+static bool verbose = false;
+static bool quiet = false;
+
 int main(int argc, char* argv[])
 {
+    if (argc > 2)
+    {
+        std::cout << "Usage: " << argv[0] << " [-v|-q]" << std::endl;
+        return -1;
+    }
+    if (argc == 2 && std::string(argv[1]) == "-v")
+    {
+        verbose = true;
+    }
+    if (argc == 2 && std::string(argv[1]) == "-q")
+    {
+        quiet = true;
+    }
     // 1D Demos
-    Execute("Helmholtz1D", "helmholtz1D_8modes.xml","CG Helmholtz1D  modes=8");
-    Execute("Helmholtz1D", "helmholtz1D_8modes_RBC.xml","CG Helmholtz1D  modes=8 with Robin BC");
-    Execute("HDGHelmholtz1D", "helmholtz1D_8modes.xml","HDG Helmholtz1D  modes=8");
-    Execute("HDGHelmholtz1D", "helmholtz1D_8modes_RBC.xml","HDG Helmholtz1D  modes=8 with Robin BC");
+    Execute("Helmholtz1D", "helmholtz1D_8modes.xml","CG Helmholtz1D  P=8");
 
+    Execute("Helmholtz1D", "helmholtz1D_8modes_RBC.xml","CG Helmholtz1D  P=8 with Robin BC");
+
+    Execute("HDGHelmholtz1D", "helmholtz1D_8modes.xml","HDG Helmholtz1D  P=8");
+
+    Execute("HDGHelmholtz1D", "helmholtz1D_8modes_RBC.xml","HDG Helmholtz1D  P=8 with Robin BC");
 
     // 2D Demos
-    Execute("Helmholtz2D", "helmholtz2D_7modes.xml","CG Helmholtz2D  modes=7");
-    Execute("Helmholtz2D", "helmholtz2D_7nodes.xml","CG Helmholtz2D  num nodes=7");
-    Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs.xml","CG Helmholtz2D  modes=7 All BCs,  MultiLevel Static Condensation");
-    Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs.xml","CG Helmholtz2D  modes=7 All BCs, Static Condensation");
-    Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs.xml","CG Helmholtz2D  modes=7 All BCs, Full Matrix");
-    Execute("HDGHelmholtz2D", "helmholtz2D_7modes.xml","HDG Helmholtz2D  modes=7");
-    Execute("HDGHelmholtz2D", "helmholtz2D_7modes_AllBCs.xml","HDG Helmholtz2D  modes=7 All BCs,  MultiLevel Static Condensation");
-    Execute("SteadyAdvectionDiffusionReaction2D", "linearadvdiffreact2D_7modes.xml","Steady Advection Diffusion Reaction 2D  modes=7");
+    Execute("Helmholtz2D", "helmholtz2D_7modes.xml","CG Helmholtz2D  P=7");
 
+    Execute("Helmholtz2D", "helmholtz2D_7nodes.xml","CG Helmholtz2D  P=7");
+
+    Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs.xml","CG Helmholtz2D  P=7 All BCs, ML Static Condensation");
+
+    Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs.xml","CG Helmholtz2D  P=7 All BCs, Static Condensation");
+
+    Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs.xml","CG Helmholtz2D  P=7 All BCs, Full Matrix");
+
+    Execute("HDGHelmholtz2D", "helmholtz2D_7modes.xml","HDG Helmholtz2D  P=7");
+
+    Execute("HDGHelmholtz2D", "helmholtz2D_7modes_AllBCs.xml","HDG Helmholtz2D  P=7 All BCs, ML Static Condensation");
+
+    Execute("SteadyAdvectionDiffusionReaction2D", "linearadvdiffreact2D_7modes.xml","Steady ADR 2D  P=7");
 
     // 3D Demos
-    Execute("Helmholtz3D", "helmholtz3D_hex.xml","CG Helmholtz3D hex");
-    Execute("Helmholtz3D", "helmholtz3D_tet.xml","CG Helmholtz3D tets");
+    Execute("Helmholtz3D", "helmholtz3D_hex.xml","CG Helmholtz3D Hex");
+
+    Execute("Helmholtz3D", "helmholtz3D_tet.xml","CG Helmholtz3D Tet");
 
     // 3D Demos Homogeneous1D
-    
     Execute("Helmholtz3DHomo1D", "helmholtz3D_homo1D_7modes_8nz.xml","CG Helmholtz3D Homogeneous 1D");
-    Execute("HDGHelmholtz3DHomo1D", "helmholtz3D_homo1D_7modes_8nz.xml","HDG Helmholtz3D Homogeneous 1D");
-    
 
-    return 0;
+    Execute("HDGHelmholtz3DHomo1D", "helmholtz3D_homo1D_7modes_8nz.xml","HDG Helmholtz3D Homogeneous 1D");
+
+    if (tests_failed && !quiet)
+    {
+        std::cout << "WARNING: " << tests_failed << " test(s) failed." << std::endl;
+    }
+    else if (verbose)
+    {
+        std::cout << "All tests passed successfully!" << std::endl;
+    }
+    return tests_failed;
 }
 
 void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
 {
+    tests_total++;
+    if (!quiet)
+    {
+        std::cout << "TESTING: " << Demo << std::flush;
+    }
     RegressBase Test(NEKTAR_BIN_DIR,Demo,input,"Demos/MultiRegions/OkFiles/");
     int fail;
 
@@ -101,19 +141,34 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
         exit(2);
     }
 
-    std::cout << Demo << ":  info = \"" << info <<"\""<<std::endl;
     if(fail = Test.TestL2()) // test failed
     {
-        std::cout <<" status: FAILED" << std::endl;
-        std::cout << "===========================================================\n";
-        // Explain cause of error if available
-        Test.PrintTestError(fail);
-        std::cout << "===========================================================\n";
+        if (!quiet)
+        {
+            std::cout << "\rFAILED: " << Demo << " " << input << " (" << info << ")" << std::endl;
+            std::cout << "===========================================================\n";
+            // Explain cause of error if available
+            Test.PrintTestError(fail);
+            std::cout << "===========================================================\n";
+        }
+        tests_failed++;
     }
     else
     {
-        std:: cout <<" status: PASSED" << std::endl;
+        if (verbose)
+        {
+            std::cout << "\rPASSED: " << Demo << " " << input << " (" << info << ")" << std::endl;
+        }
+        else if (quiet)
+        {
+            // print nothing
+        }
+        else {
+            std::cout << "\rPASSED: " << Demo << " (" << info << ")" << std::endl;
+        }
+        tests_passed++;
     }
+
 
 #ifdef _WINDOWS
 	std::string cleanup = "del /Q *.xml *.fld";
@@ -126,7 +181,7 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
 
 void MakeOkFile(std::string Demo, std::string input, std::string info)
 {
-
+    tests_total++;
     RegressBase Test(NEKTAR_BIN_DIR,Demo,input,"Demos/MultiRegions/OkFiles/");
     int fail;
 
@@ -148,7 +203,8 @@ void MakeOkFile(std::string Demo, std::string input, std::string info)
         std::cout << "===========================================================\n";
         Test.PrintTestError(fail);
         std::cout << "===========================================================\n";
-}
+        tests_failed++;
+    }
 }
 
 

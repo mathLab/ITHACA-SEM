@@ -1,2 +1,2 @@
-SUBDIRS(IncNavierStokesSolver AdvectionDiffusionReactionSolver ADRSolver)
+SUBDIRS(ADRSolver IncNavierStokesSolver)
 

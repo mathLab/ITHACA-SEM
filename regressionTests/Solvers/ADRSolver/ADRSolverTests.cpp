@@ -54,56 +54,99 @@ void MakeOkFile(std::string demo, std::string input, std::string info);
 #define COPY_COMMAND "cp "
 #endif
 
+static int tests_total = 0;
+static int tests_passed = 0;
+static int tests_failed = 0;
+static bool verbose = false;
+static bool quiet = false;
+
 int main(int argc, char* argv[])
 {
+    if (argc > 2)
+    {
+        std::cout << "Usage: " << argv[0] << " [-v|-q]" << std::endl;
+        return -1;
+    }
+    if (argc == 2 && std::string(argv[1]) == "-v")
+    {
+        verbose = true;
+    }
+    if (argc == 2 && std::string(argv[1]) == "-q")
+    {
+        quiet = true;
+    }
     // //Test Steady Diffusion Advection
-    Execute("ADRSolver","Test_Helmholtz1D_8modes.xml","Testing 1D Helmholtz/Steady Diffusion Reaction Modes=8");
+    Execute("ADRSolver","Test_Helmholtz1D_8modes.xml","1D Helmholtz/Steady Diffusion Reaction P=8");
 
-    Execute("ADRSolver","Test_Helmholtz1D_8modes_DG.xml","Testing 1D Helmholtz/Steady Diffusion Reaction (DG) Modes=8");
+    Execute("ADRSolver","Test_Helmholtz1D_8modes_DG.xml","1D Helmholtz/Steady Diffusion Reaction (DG) P=8");
 
-    Execute("ADRSolver","Test_Helmholtz1D_8nodes.xml","Testing 1D Helmholtz/Steady Diffusion Reaction Modes=8");
+    Execute("ADRSolver","Test_Helmholtz1D_8nodes.xml","1D Helmholtz/Steady Diffusion Reaction P=8");
 
-    Execute("ADRSolver","Test_Helmholtz2D_modal.xml","Testing 2D Helmholtz/Steady Diffusion Reaction Modes=7");
+    Execute("ADRSolver","Test_Helmholtz2D_modal.xml","2D Helmholtz/Steady Diffusion Reaction P=7");
 
-    Execute("ADRSolver","Test_Helmholtz2D_modal_DG.xml","Testing 2D Helmholtz/Steady Diffusion Reaction (DG) Modes=7");
+    Execute("ADRSolver","Test_Helmholtz2D_modal_DG.xml","2D Helmholtz/Steady Diffusion Reaction (DG) P=7");
 
-    Execute("ADRSolver","Test_Helmholtz2D_nodal.xml","Testing 2D Helmholtz/Steady Diffusion Reaction Modes=7");
+    Execute("ADRSolver","Test_Helmholtz2D_nodal.xml","2D Helmholtz/Steady Diffusion Reaction P=7");
 
-    Execute("ADRSolver","Test_Helmholtz3D_modal.xml","Testing 3D Helmholtz/Steady Diffusion Reaction Modes=7");
+    Execute("ADRSolver","Test_Helmholtz3D_modal.xml","3D Helmholtz/Steady Diffusion Reaction P=7");
 
-    Execute("ADRSolver","Test_Helmholtz3D_nodal.xml","Testing 3D Helmholtz/Steady Diffusion Reaction Modes=7");
+    Execute("ADRSolver","Test_Helmholtz3D_nodal.xml","3D Helmholtz/Steady Diffusion Reaction P=7");
 
     // Test Steady Advection Diffusion Reaction
-    Execute("ADRSolver","Test_SteadyAdvDiffReact2D_modal.xml","Testing 2D Steady Advection Diffusion Reaction Modes=9");
+    Execute("ADRSolver","Test_SteadyAdvDiffReact2D_modal.xml","2D Steady Advection Diffusion Reaction P=9");
 
-    // //Test Advection
-    Execute("ADRSolver","Test_Advection1D_m8_Order1.xml","Testing 1D unsteady advection, order 1, modes=8");
-    Execute("ADRSolver","Test_Advection1D_m12_Order2.xml","Testing 1D unsteady advection, order 2, modes=12");
-    Execute("ADRSolver","Test_Advection1D_m14_Order4.xml","Testing 1D unsteady advection, order 4, modes=14");
+    Execute("ADRSolver","Test_Advection1D_m8_Order1.xml","1D unsteady advection, order 1, P=8");
 
-    Execute("ADRSolver","Test_Advection_m12_Order1.xml","Testing 2D unsteady advection, order 1, modes=12");
-    Execute("ADRSolver","Test_Advection_m12_Order2.xml","Testing 2D unsteady advection, order 2, modes=12");
-    Execute("ADRSolver","Test_Advection_m14_Order4.xml","Testing 2D unsteady advection, order 4, modes=14");
-    Execute("ADRSolver","Test_Advection_m12_DG_Order1.xml","Testing 2D unsteady DG advection, order 1, modes=12");
-    Execute("ADRSolver","Test_Advection_m12_DG_Order2.xml","Testing 2D unsteady DG advection, order 2, modes=12");
-    Execute("ADRSolver","Test_Advection_m14_DG_Order4.xml","Testing 2D unsteady DG advection, order 4, modes=14");
-    Execute("ADRSolver","Test_ImDiffusion_m6.xml","Testing 2D unsteady DG implicit diffusion, order 3, modes=6");
-    Execute("ADRSolver","Test_ImDiffusion_m12.xml","Testing 2D unsteady DG implicit diffusion, order 3, modes=12");
-    Execute("ADRSolver","Test_ExDiffusion_m3.xml","Testing 2D unsteady DG explicit diffusion, order 4, modes=3");
-    Execute("ADRSolver","Test_ExDiffusion_m8.xml","Testing 2D unsteady DG explicit diffusion, order 4, modes=8");
+    Execute("ADRSolver","Test_Advection1D_m12_Order2.xml","1D unsteady advection, order 2, P=12");
 
-	// //Test Unsteady Advection-Diffusion
-	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_Order1_001.xml","Testing 2D unsteady advection-diffusion, IMEXOrder1, modes=9, dt=0.001");
-	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_Order1_0001.xml","Testing 2D unsteady advection-diffusion, IMEXOrder1, modes=9, dt=0.0001");
-    Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_Order2_001.xml","Testing 2D unsteady advection-diffusion, IMEXOrder2, modes=9, dt=0.001");
-	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_Order2_0001.xml","Testing 2D unsteady advection-diffusion, IMEXOrder2, modes=9, dt=0.0001");
+    Execute("ADRSolver","Test_Advection1D_m14_Order4.xml","1D unsteady advection, order 4, P=14");
 
-    return 0;
+    Execute("ADRSolver","Test_Advection_m12_Order1.xml","2D unsteady advection, order 1, P=12");
+
+    Execute("ADRSolver","Test_Advection_m12_Order2.xml","2D unsteady advection, order 2, P=12");
+
+    Execute("ADRSolver","Test_Advection_m14_Order4.xml","2D unsteady advection, order 4, P=14");
+
+    Execute("ADRSolver","Test_Advection_m12_DG_Order1.xml","2D unsteady DG advection, order 1, P=12");
+
+    Execute("ADRSolver","Test_Advection_m12_DG_Order2.xml","2D unsteady DG advection, order 2, P=12");
+
+    Execute("ADRSolver","Test_Advection_m14_DG_Order4.xml","2D unsteady DG advection, order 4, P=14");
+
+    Execute("ADRSolver","Test_ImDiffusion_m6.xml","2D unsteady DG implicit diffusion, order 3, P=6");
+
+    Execute("ADRSolver","Test_ImDiffusion_m12.xml","2D unsteady DG implicit diffusion, order 3, P=12");
+
+    Execute("ADRSolver","Test_ExDiffusion_m3.xml","2D unsteady DG explicit diffusion, order 4, P=3");
+
+    Execute("ADRSolver","Test_ExDiffusion_m8.xml","2D unsteady DG explicit diffusion, order 4, P=8");
+
+	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_Order1_001.xml","2D unsteady advection-diffusion, IMEXOrder1, P=9, dt=0.001");
+
+	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_Order1_0001.xml","2D unsteady advection-diffusion, IMEXOrder1, P=9, dt=0.0001");
+
+	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_Order2_001.xml","2D unsteady advection-diffusion, IMEXOrder2, P=9, dt=0.001");
+
+	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_Order2_0001.xml","2D unsteady advection-diffusion, IMEXOrder2, P=9, dt=0.0001");
+
+    if (tests_failed && !quiet)
+    {
+        std::cout << "WARNING: " << tests_failed << " test(s) failed." << std::endl;
+    }
+    else if (verbose)
+    {
+        std::cout << "All tests passed successfully!" << std::endl;
+    }
+    return tests_failed;
 }
 
 void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
 {
-    //std::string NektarSolverDir =std::string("") +  NEKTAR_SOLVER_DIR + "ADRSolver/";
+    tests_total++;
+    if (!quiet)
+    {
+        std::cout << "TESTING: " << Demo << std::flush;
+    }
 	std::string NektarSolverDir =std::string("") +  NEKTAR_SOLVER_DIR + "/dist/bin/";
     RegressBase Test(NektarSolverDir.c_str(),Demo,input,"Solvers/ADRSolver/OkFiles/");
     int fail;
@@ -118,18 +161,32 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
         exit(2);
     }
 
-    std::cout << Demo << ":  info = \"" << info <<"\""<<std::endl;
     if(fail = Test.TestL2()) // test failed
     {
-        std::cout <<" status: FAILED" << std::endl;
-        std::cout << "===========================================================\n";
-        // Explain cause of error if available
-        Test.PrintTestError(fail);
-        std::cout << "===========================================================\n";
+        if (!quiet)
+        {
+            std::cout << "\rFAILED: " << Demo << " " << input << " (" << info << ")" << std::endl;
+            std::cout << "===========================================================\n";
+            // Explain cause of error if available
+            Test.PrintTestError(fail);
+            std::cout << "===========================================================\n";
+        }
+        tests_failed++;
     }
     else
     {
-        std:: cout <<" status: PASSED" << std::endl;
+        if (verbose)
+        {
+            std::cout << "\rPASSED: " << Demo << " " << input << " (" << info << ")" << std::endl;
+        }
+        else if (quiet)
+        {
+            // print nothing
+        }
+        else {
+            std::cout << "\rPASSED: " << Demo << " (" << info << ")" << std::endl;
+        }
+        tests_passed++;
     }
 
 #ifdef _WINDOWS
@@ -142,6 +199,7 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
 
 void MakeOkFile(std::string Demo, std::string input, std::string info)
 {
+    tests_total++;
     std::string NektarSolverDir =std::string("") +  NEKTAR_SOLVER_DIR + "ADRSolver/";
     RegressBase Test(NektarSolverDir,Demo,input,"Solvers/ADRSolver/OkFiles/");
     int fail;
@@ -163,6 +221,7 @@ void MakeOkFile(std::string Demo, std::string input, std::string info)
         std::cout << "===========================================================\n";
         Test.PrintTestError(fail);
         std::cout << "===========================================================\n";
+        tests_failed++;
 	}
 #ifdef _WINDOWS
 	std::string cleanup = "del /Q *.xml *.fld *.chk *.his";
@@ -170,7 +229,7 @@ void MakeOkFile(std::string Demo, std::string input, std::string info)
     std::string cleanup = "rm -f *.xml *.fld *.chk *.his";
 #endif
     system(cleanup.c_str());
-	
+
 }
 
 

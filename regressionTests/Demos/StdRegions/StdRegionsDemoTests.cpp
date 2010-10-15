@@ -37,6 +37,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <string>
 
 void RunL2RegressionTest(std::string demo, std::string input, std::string info);
 void MakeOkFile(std::string demo, std::string input, std::string info);
@@ -47,111 +48,156 @@ void MakeOkFile(std::string demo, std::string input, std::string info);
 #define Execute($1,$2,$3)  RunL2RegressionTest($1,$2,$3)
 #endif
 
-int main(int argc, char* argv[]) 
-{ 
+static int tests_total = 0;
+static int tests_passed = 0;
+static int tests_failed = 0;
+static bool verbose = false;
+static bool quiet = false;
 
+int main(int argc, char* argv[])
+{
+    if (argc > 2)
+    {
+        std::cout << "Usage: " << argv[0] << " [-v|-q]" << std::endl;
+        return -1;
+    }
+    if (argc == 2 && std::string(argv[1]) == "-v")
+    {
+        verbose = true;
+    }
+    if (argc == 2 && std::string(argv[1]) == "-q")
+    {
+        quiet = true;
+    }
     // 1D Projection Tests
-    Execute("StdProject1D", "1 6 7","Segment Ortho Basis, modes=6, quad=7");
+    Execute("StdProject1D", "1 6 7","Seg Ortho. Basis, P=6, Q=7");
 
-    Execute("StdProject1D", "4 6 7","Segment Modified Basis, modes=6, quad=7");
+    Execute("StdProject1D", "4 6 7","Seg Mod. Basis, P=6, Q=7");
 
     // 1D Differentiation Projection Tests
-    Execute("StdProject_Diff1D", "1 6 7","Segment Ortho Basis, modes=6, quad=7");
+    Execute("StdProject_Diff1D", "1 6 7","Seg Ortho. Basis, P=6, Q=7");
 
-    Execute("StdProject_Diff1D", "4 6 7","Segment Modified Basis, modes=6, quad=7");
+    Execute("StdProject_Diff1D", "4 6 7","Seg Mod. Basis, P=6, Q=7");
 
     // 2D Projection Tests
-    Execute("StdProject2D", "2 1 2 6 6 7 7", "Triangular Ortho Basis, modes=6, quad=7");
+    Execute("StdProject2D", "2 1 2 6 6 7 7", "Tri Ortho. Basis, P=6, Q=7");
 
-    Execute("StdProject2D", "2 4 5 6 6 7 7", "Triangular Modified Basis modes=6, quad=7");
+    Execute("StdProject2D", "2 4 5 6 6 7 7", "Tri Mod. Basis P=6, Q=7");
 
-    Execute("StdProject2D", "2 11 11 6 6 7 7", "Triangular Nodal Basis modes=6, quad=7");
+    Execute("StdProject2D", "2 11 11 6 6 7 7", "Tri Nodal Basis P=6, Q=7");
 
-    Execute("StdProject2D", "3 1 1 6 6 7 7", "Quadrilateral Ortho Basis, modes=4, quad=5");
+    Execute("StdProject2D", "3 1 1 6 6 7 7", "Quad Ortho Basis, P=4, Q=5");
 
-    Execute("StdProject2D", "3 4 4 6 6 7 7", "Quadrilateral Modified Basis modes=6, quad=7");
+    Execute("StdProject2D", "3 4 4 6 6 7 7", "Quad Mod. Basis P=6, Q=7");
 
-    Execute("StdProject2D", "3 8 8 6 6 7 7", "Quadrilateral Nodal/Lagrange Basis modes=6, quad=7");
+    Execute("StdProject2D", "3 8 8 6 6 7 7", "Quad Lagrange Basis P=6, Q=7");
 
-    Execute("StdProject2D", "3 7 7 6 6 8 8 ", "Quadrilateral Fourier Basis modes=6, quad=8");
+    Execute("StdProject2D", "3 7 7 6 6 8 8 ", "Quad Fourier Basis P=6, Q=8");
 
 
     // 2D Differntiation and Projection Tests
-    Execute("StdProject_Diff2D", "2 1 2 6 6 7 7 ", "Triangular Ortho Basis, modes=6, quad=7");
+    Execute("StdProject_Diff2D", "2 1 2 6 6 7 7 ", "Tri Ortho Basis, P=6, Q=7");
 
-    Execute("StdProject_Diff2D", "2 4 5 6 6 7 7  ", "Triangular Modified Basis modes=6, quad=7");
+    Execute("StdProject_Diff2D", "2 4 5 6 6 7 7  ", "Tri Mod. Basis P=6, Q=7");
 
-    Execute("StdProject_Diff2D", "2 11 11 6 6 7 7  ", "Triangular Nodal Basis modes=6, quad=7");
+    Execute("StdProject_Diff2D", "2 11 11 6 6 7 7  ", "Tri Nodal Basis P=6, Q=7");
 
-    Execute("StdProject_Diff2D", "3 1 1 6 6 7 7 ", "Quadrilateral Ortho Basis, modes=6, quad=7");
+    Execute("StdProject_Diff2D", "3 1 1 6 6 7 7 ", "Quad Ortho Basis, P=6, Q=7");
 
-    Execute("StdProject_Diff2D", "3 4 4 6 6 7 7  ", "Quadrilateral Modified Basis modes=6, quad=7");
+    Execute("StdProject_Diff2D", "3 4 4 6 6 7 7  ", "Quad Modified Basis P=6, Q=7");
 
-    Execute("StdProject_Diff2D", "3 8 8 6 6 7 7  ", "Quadrilateral Nodal/Lagrange Basis modes=6, quad=7");
+    Execute("StdProject_Diff2D", "3 8 8 6 6 7 7  ", "Quad Lagrange Basis P=6, Q=7");
 
-    Execute("StdProject_Diff2D", "3 7 7 6 6 8 8 ", "Quadrilateral Fourier Basis modes=6, quad=8");
+    Execute("StdProject_Diff2D", "3 7 7 6 6 8 8 ", "Quad Fourier Basis P=6, Q=8");
 
 
     // 3D Projection Tests
-    Execute("StdProject3D", "4 1 2 3 6 6 6 7 7 7", "Tetrahedron Ortho Basis, modes=6, quad=7");
+    Execute("StdProject3D", "4 1 2 3 6 6 6 7 7 7", "Tet Ortho Basis, P=6, Q=7");
 
-    Execute("StdProject3D", "4 4 5 6 6 6 6 7 7 7", "Tetrahedron Modified Basis modes=6, quad=7");
+    Execute("StdProject3D", "4 4 5 6 6 6 6 7 7 7", "Tet Modified Basis P=6, Q=7");
 
-    Execute("StdProject3D", "7 1 1 1 6 6 6 7 7 7", "Hexahedral Ortho Basis, modes=4, quad=7");
+    Execute("StdProject3D", "7 1 1 1 6 6 6 7 7 7", "Hex Ortho Basis, P=4, Q=7");
 
-    Execute("StdProject3D", "7 4 4 4 6 6 6 7 7 7", "Hexahedral Modified Basis modes=6, quad=7");
+    Execute("StdProject3D", "7 4 4 4 6 6 6 7 7 7", "Hex Modified Basis P=6, Q=7");
 
     // Fourier not yet working
 //    Execute("StdProject3D", "7 7 7 7 6 6 6 8 8 8 ", "Hexahedral Fourier Basis modes=6, quad=8");
 
-    Execute("StdProject3D", "7 8 8 8 6 6 6 7 7 7", "Hexahedral Nodal/Lagrange Basis modes=6, quad=7");
+    Execute("StdProject3D", "7 8 8 8 6 6 6 7 7 7", "Hex Lagrange Basis P=6, Q=7");
 
-    Execute("StdProject3D", "7 9 9 9 6 6 6 7 7 7", "Hexahedral Legendre Basis modes=6, quad=7");
+    Execute("StdProject3D", "7 9 9 9 6 6 6 7 7 7", "Hex Legendre Basis P=6, Q=7");
 
-    Execute("StdProject3D", "7 10 10 10 6 6 6 7 7 7", "Hexahedral Chebyshev Basis modes=6, quad=7");
-    
-    
+    Execute("StdProject3D", "7 10 10 10 6 6 6 7 7 7", "Hex Chebyshev Basis P=6, Q=7");
+
+
     // 3D Differentiation and Projection Tests
-    Execute("StdProject_Diff3D", "4 1 2 3 6 6 6 7 7 7", "Tetrahedral Ortho Basis, modes=4, quad=7");
+    Execute("StdProject_Diff3D", "4 1 2 3 6 6 6 7 7 7", "Tet Ortho Basis, P=4, Q=7");
 
-    Execute("StdProject_Diff3D", "4 4 5 6 6 6 6 7 7 7", "Tetrahedral Modified Basis modes=6, quad=7");
+    Execute("StdProject_Diff3D", "4 4 5 6 6 6 6 7 7 7", "Tet Modified Basis P=6, Q=7");
 
-    Execute("StdProject_Diff3D", "7 1 1 1 6 6 6 7 7 7", "Hexahedral Ortho Basis, modes=4, quad=7");
+    Execute("StdProject_Diff3D", "7 1 1 1 6 6 6 7 7 7", "Hex Ortho Basis, P=4, Q=7");
 
-    Execute("StdProject_Diff3D", "7 4 4 4 6 6 6 7 7 7", "Hexahedral Modified Basis modes=6, quad=7");
+    Execute("StdProject_Diff3D", "7 4 4 4 6 6 6 7 7 7", "Hex Modified Basis P=6, Q=7");
 
-    Execute("StdProject_Diff3D", "7 8 8 8 6 6 6 7 7 7", "Hexahedral Nodal/Lagrange Basis modes=6, quad=7");
+    Execute("StdProject_Diff3D", "7 8 8 8 6 6 6 7 7 7", "Hex Lagrange Basis P=6, Q=7");
 
-    Execute("StdProject_Diff3D", "7 9 9 9 6 6 6 7 7 7", "Hexahedral Legendre Basis modes=6, quad=7");
+    Execute("StdProject_Diff3D", "7 9 9 9 6 6 6 7 7 7", "Hex Legendre Basis P=6, Q=7");
 
-    Execute("StdProject_Diff3D", "7 10 10 10 6 6 6 7 7 7", "Hexahedral Chebyshev Basis modes=6, quad=7");
-        
-    return 0;
+    Execute("StdProject_Diff3D", "7 10 10 10 6 6 6 7 7 7", "Hex Cheby. Basis P=6, Q=7");
+
+    if (tests_failed && !quiet)
+    {
+        std::cout << "WARNING: " << tests_failed << " test(s) failed." << std::endl;
+    }
+    else if (verbose)
+    {
+        std::cout << "All tests passed successfully!" << std::endl;
+    }
+    return tests_failed;
 }
 
 void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
 {
-    //RegressBase Test("../builds/Demos/StdRegions/",Demo,input,"Demos/StdRegions/OkFiles/");
+    tests_total++;
+    if (!quiet)
+    {
+        std::cout << "TESTING: " << Demo << std::flush;
+    }
     RegressBase Test(NEKTAR_BIN_DIR,Demo,input,"Demos/StdRegions/OkFiles/");
     int fail;
 
-    std::cout << Demo << ":  info = \"" << info <<"\""<<std::endl;
     if(fail = Test.TestL2()) // test failed
     {
-        std::cout <<" status: FAILED" << std::endl;
-        std::cout << "===========================================================\n";   
-        // Explain cause of error if available
-        Test.PrintTestError(fail);
-        std::cout << "===========================================================\n";
+        if (!quiet)
+        {
+            std::cout << "\rFAILED: " << Demo << " " << input << " (" << info << ")" << std::endl;
+            std::cout << "===========================================================\n";
+            // Explain cause of error if available
+            Test.PrintTestError(fail);
+            std::cout << "===========================================================\n";
+        }
+        tests_failed++;
     }
     else
     {
-        std:: cout <<" status: PASSED" << std::endl;
-    }            
+        if (verbose)
+        {
+            std::cout << "\rPASSED: " << Demo << " " << input << " (" << info << ")" << std::endl;
+        }
+        else if (quiet)
+        {
+            // print nothing
+        }
+        else {
+            std::cout << "\rPASSED: " << Demo << " (" << info << ")" << std::endl;
+        }
+        tests_passed++;
+    }
 };
 
 void MakeOkFile(std::string Demo, std::string input, std::string info)
 {
+    tests_total++;
     RegressBase Test(NEKTAR_BIN_DIR,Demo,input,"Demos/StdRegions/OkFiles/");
     int fail;
 
@@ -159,12 +205,13 @@ void MakeOkFile(std::string Demo, std::string input, std::string info)
     {
         std::cout << "Failed to make OK file\n";
         // Explain cause of error if available
-        std::cout << "===========================================================\n";   
+        std::cout << "===========================================================\n";
         Test.PrintTestError(fail);
-        std::cout << "===========================================================\n";    
+        std::cout << "===========================================================\n";
+        tests_failed++;
+    }
 }
-}
 
 
 
-	
+

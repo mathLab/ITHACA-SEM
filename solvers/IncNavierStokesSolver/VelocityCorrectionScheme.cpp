@@ -329,6 +329,17 @@ namespace Nektar
                 {
                     m_fields[i]->GlobalToLocal();
                 }
+
+                //updating physical space
+                for(i = 0; i < m_nConvectiveFields; ++i)
+                {
+                    m_fields[i]->SetPhys(fields[i]);
+                }
+
+                for(int j = 0; j < m_fields.num_elements(); ++j){
+        				m_fields[j]->SetPhysState(true);
+            	}
+
                 Checkpoint_Output(nchk++);
             }
         }
@@ -349,13 +360,17 @@ namespace Nektar
         cout <<"\t  Total: " << SetupTime + PBcTime + AdvTime + PresForceTime + PresSlvTime + ViscForceTime + ViscSlvTime + SetBCTime << endl;
 
 #endif
-		
         //updating physical space
         for(i = 0; i < m_nConvectiveFields; ++i)
         {
             m_fields[i]->SetPhys(fields[i]);
         }
 	
+        //updating coefficients
+        for(int j = 0; j < m_fields.num_elements(); ++j){
+				m_fields[j]->SetPhysState(true);
+    	}
+
     }
     
     void VelocityCorrectionScheme::EvaluatePressureBCs(const Array<OneD, const Array<OneD, NekDouble> >  &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N)

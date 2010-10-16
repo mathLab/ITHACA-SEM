@@ -368,7 +368,7 @@ Material</a></p>
 		  You will now see a collection of properties and values that will control how Nektar++ is built.
 		  <p>
 		  <br/>
-		  <img src="CcmakeLinux.png"/>
+		  <img src="images/CcmakeLinux.png"/>
               </ul>
             </li>
             <li>
@@ -448,19 +448,23 @@ Material</a></p>
 
           <ol>
             <li>
-              From the terminal, change to the build directory of the solvers, i.e. <em>Nektar++/u/builds</em> and run ccmake using <em>Nektar++/solvers</em> as the source directory.
+              From the terminal, change to the build directory of the solvers, i.e. <em>Nektar++/solvers/builds</em> and run ccmake using <em>Nektar++/solvers</em> as the source directory.
 
 	      <div class="code"><pre>ccmake ../</pre></div>
 
-	      Generate the project files in the same way you generated the project files for Nektar++.
+	      Generate the project files in the same way you generated them for the library and run
+	      <div class="code"><pre>make install</pre></div>
+	      to compile the solvers and install them in the <em>Nektar++/solvers/builds/dist</em> directory.
             </ul>
 
 	    <li>
-              From the terminal, change to the build directory of the solvers, i.e. <em>Nektar++/utilities/builds</em> and run ccmake using <em>Nektar++/utilities</em> as the source directory.
+              From the terminal, change to the build directory of the utilities, i.e. <em>Nektar++/utilities/builds</em> and run ccmake using <em>Nektar++/utilities</em> as the source directory.
 
 	      <div class="code"><pre>ccmake ../</pre></div>
 
-	      Generate the project files in the same way you generated the project files for Nektar++.
+	      Generate the project files in the same way you generated them for the library and run
+	      <div class="code"><pre>make install</pre></div>
+	      to compile the utilities and install them in the <em>Nektar++/utilities/builds/dist</em> directory.
             </ul>
 	  </ol>
 

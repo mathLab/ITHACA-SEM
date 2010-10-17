@@ -1,5 +1,7 @@
-namespace Nektar {
-namespace LocalRegions {
+namespace Nektar
+{
+namespace LocalRegions
+{
 /**
  * @namespace Nektar::LocalRegions
  * @brief The namespace associated with the the LocalRegions library
@@ -32,7 +34,7 @@ namespace LocalRegions {
  * e.g. evaluate the integral over a local element, the integrand can be
  * multiplied by the Jacobian of the coordinate transformation, where
  * after the evaluation is redirected to the StdRegions implementation.
- 
+
  * This provides extensions of the spectral element formulation into the world.
  * It provides spatially local forms of the reference space expansions through
  * a one-to-one linear mapping from a standard straight-sided region to the
@@ -92,9 +94,9 @@ namespace LocalRegions {
  * - PointExp
  * - LinSys
  * - MatrixKey
- 
+
   * \image html LocalRegions.png
- 
+
  */
 }
 }

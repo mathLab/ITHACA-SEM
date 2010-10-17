@@ -10,8 +10,9 @@ namespace MultiRegions {
  * fields employing continuous and discontinuous formulations with boundary
  * conditions. For more details see
  * @ref pageMultiRegions "MultiRegions introduction".
- *
- *
+ */
+
+/**
  * @page pageMultiRegions MultiRegions sublibrary
  * In the MultiRegions library, all classes and routines are related to
  * the process of assembling a global spectral/hp expansion out of local
@@ -119,7 +120,7 @@ namespace MultiRegions {
  *
  * More information about the implementation of connectivity between elements
  * in Nektar++ can be found \ref pageConnectivity "here".
- 
+
  * \image html MultiRegions.png
 **/
 }

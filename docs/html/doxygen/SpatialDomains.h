@@ -2,10 +2,20 @@ namespace Nektar
 {
 namespace SpatialDomains
 {
-/** \page pageSpatialDomains SpatialDomains library
- 
+/**
+ * @namespace Nektar::SpatialDomains
+ * @brief The namespace associated with the the SpatialDomains library.
+ * (@ref pageSpatialDomains "SpatialDomains Library").
+ *
+ * This namespace encompasses all those classes related to geometry of elements
+ * and the domain.
+ */
+
+/**
+ * @page pageSpatialDomains SpatialDomains library
+
  The most important family of classes in the SpatialDomains library is
- the Geometry family, as can also be seen in the figure below. 
+ the Geometry family, as can also be seen in the figure below.
  These classes are the representation of a
  (geometric) element in \a physical \a space}. It has been indicated
  before that every local element can be
@@ -29,7 +39,7 @@ namespace SpatialDomains
  according to the corresponding StdRegions class (e.g. for the
  QuadGeom class, it needs to be initialised as an
  @link Nektar#StdRegions#StdQuadExp StdQuadExp @endlink object).
- 
+
  * \image html SpatialDomains.png
 
 */

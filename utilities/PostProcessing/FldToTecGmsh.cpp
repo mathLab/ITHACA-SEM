@@ -4,6 +4,7 @@
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList2D.h>
+#include <MultiRegions/ExpList3D.h>
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 
@@ -153,7 +154,26 @@ Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr
         }
         break;
     case 3:
-        ASSERTL0(false,"3D not set up");
+        {
+            SpatialDomains::MeshGraph3DSharedPtr mesh;
+
+            if(!(mesh = boost::dynamic_pointer_cast<
+                                    SpatialDomains::MeshGraph3D>(graphShPt)))
+            {
+                ASSERTL0(false,"Dynamic cast failed");
+            }
+
+            MultiRegions::ExpList3DSharedPtr Exp3D;
+            Exp3D = MemoryManager<MultiRegions::ExpList3D>
+                                                    ::AllocateSharedPtr(*mesh);
+            Exp[0] =  Exp3D;
+
+            for(i = 1; i < nfields; ++i)
+            {
+                Exp[i] = MemoryManager<MultiRegions::ExpList3D>
+                                                    ::AllocateSharedPtr(*Exp3D);
+            }
+        }
         break;
     default:
         ASSERTL0(false,"Expansion dimension not recognised");

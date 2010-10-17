@@ -1,11 +1,15 @@
+namespace Nektar
+{
+namespace LibUtilities
+{
 /**
  * @namespace Nektar::LibUtilities
  * @brief The namespace associated with the the LibUtilities library
  * (@ref pageLibUtilities "LibUtilities introduction")
  *
  * @page pageLibUtilities LibUtilities sublibrary
- * This provides the underlying functionality for building a Spectral Element
- * formulation including linear algebra, polynomial routines and memory
+ * This contains the underlying building blocks for constructing a Spectral
+ * Element formulation including linear algebra, polynomial routines and memory
  * management.
  *
  * @section sectionLibUtilitiesContents Contents
@@ -82,3 +86,5 @@
  * const Array<OneD, const NekDouble>& moreEfficient = points->GetZ();
  * @endcode
  */
+}
+}

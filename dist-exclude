@@ -1,0 +1,26 @@
+make-distribution.sh
+distro-exclude.txt
+builds/*
+nektar++-*
+ThirdParty
+templates
+solvers/ADR2DManifoldSolver
+solvers/BoussinesqSolver
+solvers/EulerSolver
+solvers/FitzHughNagumoSolver
+solvers/ShallowWaterSolver
+docs/Coding\ Style\ Standard.doc
+docs/emacs
+docs/html/code
+docs/html/images
+docs/html/downloads
+docs/html/videos
+docs/html/Templates
+docs/html/*.html
+docs/html/*.php
+docs/html/*.css
+utilities/Mesh
+utilities/PreProcessing/EnsiteToXml.cpp
+utilities/PreProcessing/meshFiles
+utilities/PreProcessing/smeshFile
+utilities/PreProcessing/makeEllipsoidNektar.c

@@ -59,5 +59,13 @@ MACRO(ADD_SOLVER_EXECUTABLE name source)
 
 ENDMACRO(ADD_SOLVER_EXECUTABLE name source)
 
-SUBDIRS(ADRSolver ShallowWaterSolver
-    IncNavierStokesSolver EulerSolver ADR2DManifoldSolver FitzHughNagumoSolver)
+# Generate list of available solvers
+FILE(GLOB dir_list "*")
+LIST(REMOVE_ITEM dir_list "${CMAKE_SOURCE_DIR}/Auxiliary")
+LIST(REMOVE_ITEM dir_list "${CMAKE_SOURCE_DIR}/.svn")
+LIST(REMOVE_ITEM dir_list "${CMAKE_SOURCE_DIR}/builds")
+FOREACH(dir ${dir_list})
+    IF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)    
+        ADD_SUBDIRECTORY(${dir})
+    ENDIF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
+ENDFOREACH(dir ${dir_list})

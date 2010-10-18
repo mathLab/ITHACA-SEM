@@ -523,13 +523,17 @@ The analytical solution for the velocity and the pressure have been used to set 
 </p>
 </center>
 <h3 id="taylordecv">Taylor Decaying Vortex</h3>
-<center>
 <p> 
+<table class="image">
+<tr><center>
 <img src="images/DecVort_u.png" width="234" height="201" />
 <img src="images/DecVort_v.png" width="234" height="201" />
 <img src="images/DecVort_w.png" width="234" height="201" />
-</p>
 </center>
+</td></tr>
+<tr><td class="caption">Contour plots of the velocity component <span class="latexfontitalic">u</span> and <span class="latexfontitalic">v</span> and the vorticity.</td></td></tr>
+</table>
+</p>
 <p>
 To evaluate the time accuracy of the Navier-Stokes solver, we compute a Taylor decaying vortex described by the equations 
 <center>
@@ -547,7 +551,8 @@ To evaluate the time accuracy of the Navier-Stokes solver, we compute a Taylor d
 <img src="images/IncNavierStokesDoc30x.png" width="294" height="42" />
 </p>
 </center>
-in a square domain <img src="images/IncNavierStokesDoc26x.png" width="231" height="41" />. <br />
+in a square domain <img src="images/IncNavierStokesDoc26x.png" width="231" height="41" />. <br /> 
+The input file <code>Test_DecVortex_m3.xml</code> for this flow configuration can be found at <code>Nektar++/regressionTests/Solvers/IncNavierStokesSolver/InputFiles/</code>.<br />
 The figures above show the numerical results for the  velocity components and the vorticity using a 16 quadrilaterals mesh, an expansion order of <span class="latexfontitalic">P=11</span> and the third order time-integration scheme. The exact solution has been used to set Dirichlet boundary conditions on the edges. Using a time-step 
 <img src="images/IncNavierStokesDoc27x.png" width="94" height="15" />
 the L2-error obtained is 10<sup>-13</sup> for the velocity field and 10<sup>-12</sup> for the pressure. 
@@ -579,37 +584,28 @@ mesh consisting of 856 quadrilateral elements and a polynomial order P=4 after a
 <img src="images/vortexsheddingnewmesh.png" width="705" height="204" />
 <table class="image">
 <tr><td><img src="images/vortexsheddingnewvelu.png" width="585" height="87" /></td></tr>
-<tr><td class="caption">Velocity component <span class="latexfontitalic">u</span>.</td></tr>
+<tr><td class="caption">Contour plot of velocity component <span class="latexfontitalic">u</span>.</td></tr>
 </table>
 <table class="image">
 <tr><td><img src="images/vortexsheddingnewvelv.png" width="586" height="88" /></td></tr>
-<tr><td class="caption">Velocity component <span class="latexfontitalic">v</span>.</td></tr>
+<tr><td class="caption">Contour plot of velocity component <span class="latexfontitalic">v</span>.</td></tr>
 </table>
 </p>
 </center>
 We chose a kinematic viscosity of 0.01 and the first order time integration scheme with a timestep of 0.001. We can observe vortices that are shedding periodically from the cylinder. The vortex shedding behaviour can be observed nicely in the following two videos. <br />
 The first video shows the evolution of the velocity component <span class="latexfontitalic">u</span> and <span class="latexfontitalic">v</span> and the velocity vector length. <br />
-The second video shows a comparison of the vortex shedding behaviour for different Reynolds number. For a Reynolds number of 50 no vortex shedding is observed. The vortex shedding frequency increases with increasing Reynolds number. Click on the pictures or the links above the pictures to see the videos. <p>
-<a href="videos/vortexstreetuv.avi">
-Video of contour plots for the velocity component <span class="latexfontitalic">u</span> and <span class="latexfontitalic">v</span> and the velocity vector length:
-</a>
-<center>
-<p>
-<a href="videos/vortexstreetuv.avi">
-<img src="images/vortexre100.png" width="540" height="266" />
-</a>
+The second video shows a comparison of the vortex shedding behaviour for different Reynolds number. For a Reynolds number of 50 no vortex shedding is observed. The vortex shedding frequency increases with increasing Reynolds number.
+<p> 
+<table class="image">
+<tr><td><img src="videos/vortexstreetvelocitycomponentsoneperiodsmall.gif" width="541" height="267" /></td></tr>
+<tr><td class="caption">Video of contour plots for the velocity component <span class="latexfontitalic">u</span> and <span class="latexfontitalic">v</span> and the velocity vector length.</td></tr>
+</table>
 </p>
-</center>
-<a href="videos/vortexstreetdifferentre.avi">Video of contour plots for the velocity component <span class="latexfontitalic">u</span> for a range of Reynolds numbers:</a>
-<center>
-<p>
-<a href="videos/vortexstreetdifferentre.avi">
-<img src="images/VortexStreetRe.png" width="540" height="266"/>
-</a>
-</p>
-</center>
-</p>
-</center>
+<p> 
+<table class="image">
+<tr><td><img src="videos/vortexstreetreoneperiodsmall.gif" width="541" height="267" /></td></tr>
+<tr><td class="caption">Video of contour plots for the velocity component <span class="latexfontitalic">u</span> for a range of Reynolds numbers.</td></tr>
+</table>
 </p>
 <p>
 That concludes the brief introduction into the incompressible Navier-Stokes solver.

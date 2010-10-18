@@ -21,7 +21,7 @@ rm -rf $TARGET
 cd $BASE
 echo "Generating doxygen docs..."
 cd docs/html/doxygen
-#doxygen doxygen
+doxygen doxygen
 
 cd ../../../
 if [ -d $TARGET-web ]; then

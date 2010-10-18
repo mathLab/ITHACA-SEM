@@ -9,8 +9,9 @@ solvers/BoussinesqSolver
 solvers/EulerSolver
 solvers/FitzHughNagumoSolver
 solvers/ShallowWaterSolver
-docs/Coding\ Style\ Standard.doc
+docs/*.doc
 docs/emacs
+docs/.cvsignore
 docs/html/code
 docs/html/images
 docs/html/downloads
@@ -19,8 +20,4 @@ docs/html/Templates
 docs/html/*.html
 docs/html/*.php
 docs/html/*.css
-utilities/Mesh
-utilities/PreProcessing/EnsiteToXml.cpp
-utilities/PreProcessing/meshFiles
-utilities/PreProcessing/smeshFile
-utilities/PreProcessing/makeEllipsoidNektar.c
+utilities/PreProcessing/Extras

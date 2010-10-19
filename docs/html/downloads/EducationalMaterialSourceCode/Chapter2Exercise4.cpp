@@ -36,13 +36,15 @@ int main(int argc, char *argv[])
 		// Construct an object from the class ContExpList1D.
         // This is the class which represents a multi-elemental
         // This object can be constructed based on the input mesh
-        MultiRegions::ContExpList1DSharedPtr multiElementExp =
-            MemoryManager<MultiRegions::ContExpList1D>::AllocateSharedPtr(mesh);
+        MultiRegions::ExpList1DSharedPtr multiElementExp =
+            MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(mesh);
 
 		// Evaluate the forcing function at the quadrature points
         int nTotQuadPoints = multiElementExp->GetTotPoints();
         Array<OneD,NekDouble> x(nTotQuadPoints);
-        multiElementExp->GetCoords(x);
+		Array<OneD,NekDouble> y(nTotQuadPoints);
+		Array<OneD,NekDouble> z(nTotQuadPoints);
+        multiElementExp->GetCoords(x,y,z);
 
 		// Evaluate the forcing function
 		Array<OneD, NekDouble> forcingFunction(nTotQuadPoints);
@@ -53,8 +55,8 @@ int main(int argc, char *argv[])
 
 		// Store the forcing function as the physical values of an
         // object of the class ContExpList1D
-        MultiRegions::ContExpList1DSharedPtr forcingExp =
-            MemoryManager<MultiRegions::ContExpList1D>::AllocateSharedPtr(*multiElementExp);
+        MultiRegions::ExpList1DSharedPtr forcingExp =
+            MemoryManager<MultiRegions::ExpList1D>::AllocateSharedPtr(*multiElementExp);
         forcingExp->SetPhys(forcingFunction);
 
 		// Do the projection to obtain the coefficients of the expansion
@@ -112,7 +114,9 @@ int main(int argc, char *argv[])
 		// Evaluate the forcing function at the quadrature points
         int nTotQuadPoints = multiElementExp->GetTotPoints();
         Array<OneD,NekDouble> x(nTotQuadPoints);
-        multiElementExp->GetCoords(x);
+		Array<OneD,NekDouble> y(nTotQuadPoints);
+		Array<OneD,NekDouble> z(nTotQuadPoints);
+        multiElementExp->GetCoords(x,y,z);
 
 		Array<OneD, NekDouble> forcingFunction(nTotQuadPoints);
 

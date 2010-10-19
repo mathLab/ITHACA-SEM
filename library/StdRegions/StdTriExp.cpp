@@ -977,8 +977,9 @@ namespace Nektar
             {   
                 if(dumpVar)
                 {
-                    outfile<<"View.MaxRecursionLevel = 8;"<<endl;
+                    outfile<<"View.MaxRecursionLevel = 4;"<<endl;
                     outfile<<"View.TargetError = 0.00;"<<endl;
+                    outfile<<"View.AdaptVisualizationGrid = 1;"<<endl;
                     outfile<<"View \" \" {"<<endl;
                 }
                 

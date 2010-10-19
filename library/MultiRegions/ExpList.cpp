@@ -1756,9 +1756,10 @@ namespace Nektar
             else if(format==eGmsh)
             {
 
-                out<<"View.MaxRecursionLevel = 8;"<<endl;
+                out<<"View.MaxRecursionLevel = 4;"<<endl;
                 out<<"View.TargetError = 0.00;"<<endl;
-
+                out<<"View.AdaptVisualizationGrid = 1;"<<endl;
+                    
                 int i,j,k;
                 int nElementalCoeffs =  (*m_exp)[0]->GetBasisNumModes(0);
                 StdRegions::ExpansionType locShape

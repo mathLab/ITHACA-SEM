@@ -65,11 +65,28 @@ Material</a></p>
 	several executables in the bin directory that has the string "UnitTest" in their name.
 	To run the test, simply execute the desired executable from the command line.  If 
 	everything has compiled correctly, you will see the following output:
-        <p>
-	Running n test cases ...
-	<p>
+    <p>
+    <div class="code"><pre>
+    Running n test cases ...
+
 	*** No errors detected
+    </pre></div>
+	
 	<p>
+    <p>
+    <p>
+    <b>Note</b>
+    <p>
+    In Mac OS X systems some errors messages could appear, an example is:
+    <p>
+    <div class="code"><pre>
+    UnitTests-g(13232) malloc: *** error for object 0x3000100600f10: pointer being freed was not allocated
+    *** set a breakpoint in malloc_error_break to debug
+    </pre></div>
+    <p>
+    As long as they are after the <em>"*** No errors detected"<em> 
+    message, the libraries have been built correctly.
+    
 	
 
     

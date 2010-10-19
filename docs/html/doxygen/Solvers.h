@@ -29,6 +29,8 @@ namespace Nektar {
  *
  * A range of solvers are already implemented in the framework:
  * <table border>
+ * <tr><td>Helmholtz</td><td></td></tr>
+ * <tr><td>Laplace</td><td></td></tr>
  * <tr>
  * <td>MonodomainAlievPanfilov</td>
  * <td>Phenomological model of canine cardiac electrophysiology.</td>
@@ -37,8 +39,6 @@ namespace Nektar {
  * <td>MonodomainFitzHughNagumo</td>
  * <td>Phenomological model of nerve cell electrophysiology.</td>
  * </tr>
- * <tr><td>Helmholtz</td><td></td></tr>
- * <tr><td>Laplace</td><td></td></tr>
  * <tr><td>Poisson</td><td></td></tr>
  * <tr><td>SteadyAdvectionDiffusion</td><td></td></tr>
  * <tr><td>SteadyAdvectionDiffusionReaction</td><td></td></tr>

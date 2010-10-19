@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include <MultiRegions/ContExpList2D.h>
+#include <MultiRegions/ContField2D.h>
 
 using namespace Nektar;
 
@@ -33,12 +33,12 @@ int main(int argc, char *argv[])
             mesh.ReadGeometry(fileNameString);
             mesh.ReadExpansions(fileNameString);
 
-            // Construct an object from the class ContExpList2D.
+            // Construct an object from the class ContField2D.
             // This is the class which represents a multi-elemental
             // continuous spectral/hp expansion.
             // This object can be constructed based on the input mesh
-            MultiRegions::ContExpList2DSharedPtr multiElementExp =
-                MemoryManager<MultiRegions::ContExpList2D>::AllocateSharedPtr(mesh);
+            MultiRegions::ContField2DSharedPtr multiElementExp =
+                MemoryManager<MultiRegions::ContField2D>::AllocateSharedPtr(mesh);
 
             // During the construction of this object, the mapping arrays from
             // local to global numbering system have been set up. They are all
@@ -199,8 +199,8 @@ int main(int argc, char *argv[])
             // This is the class which represents a multi-elemental
             // continuous spectral/hp expansion.
             // This object can be constructed based on the input mesh
-            MultiRegions::ContExpList2DSharedPtr multiElementExp =
-                MemoryManager<MultiRegions::ContExpList2D>::AllocateSharedPtr(mesh);
+            MultiRegions::ExpList2DSharedPtr multiElementExp =
+                MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(mesh);
 
             // Evaluate the forcing function at the quadrature points
             int nTotQuadPoints = multiElementExp->GetTotPoints();
@@ -217,8 +217,8 @@ int main(int argc, char *argv[])
 
             // Store the forcing function as the physical values of an
             // object of the class ContExpList2D
-            MultiRegions::ContExpList2DSharedPtr forcingExp =
-                MemoryManager<MultiRegions::ContExpList2D>::AllocateSharedPtr(*multiElementExp);
+            MultiRegions::ExpList2DSharedPtr forcingExp =
+                MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(*multiElementExp);
             forcingExp->SetPhys(forcingFunction);
 
             // Do the projection to obtain the coefficients of the expansion

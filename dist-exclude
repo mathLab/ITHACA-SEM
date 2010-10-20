@@ -1,5 +1,5 @@
 distribute.sh
-dist-exclude.txt
+dist-exclude
 builds/*
 nektar++-*
 ThirdParty

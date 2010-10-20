@@ -75,16 +75,16 @@ int main(int argc, char* argv[])
         quiet = true;
     }
     //Test Channel Flow
-	Execute("IncNavierStokesSolver","Test_ChanFlow_m3.xml","Testing: Channel Flow P=3");
-	Execute("IncNavierStokesSolver","Test_ChanFlow_m8.xml","Testing: Channel Flow P=8");
+	Execute("IncNavierStokesSolver","Test_ChanFlow_m3.xml","Channel Flow P=3");
+	Execute("IncNavierStokesSolver","Test_ChanFlow_m8.xml","Channel Flow P=8");
 
 	//Test Kovasznay Flow
-	Execute("IncNavierStokesSolver","Test_KovaFlow_m3.xml","Testing: Kovasznay Flow P=3");
-	Execute("IncNavierStokesSolver","Test_KovaFlow_m8.xml","Testing: Kovasznay Flow P=8");
+	Execute("IncNavierStokesSolver","Test_KovaFlow_m3.xml","Kovasznay Flow P=3");
+	Execute("IncNavierStokesSolver","Test_KovaFlow_m8.xml","Kovasznay Flow P=8");
 
 	//Test Decaying Vortex
-	Execute("IncNavierStokesSolver","Test_TaylorVor_dt1.xml","Testing time-convergence: Taylor Vortex P=11 IMEXOrder2 dt=0.01");
-	Execute("IncNavierStokesSolver","Test_TaylorVor_dt2.xml","Testing time-convergence: Taylor Vortex P=11 IMEXOrder2 dt=0.001");
+	Execute("IncNavierStokesSolver","Test_TaylorVor_dt1.xml","Time-Convergence: Taylor Vortex P=11 IMEXOrder2 dt=0.01");
+	Execute("IncNavierStokesSolver","Test_TaylorVor_dt2.xml","Time-Convergence: Taylor Vortex P=11 IMEXOrder2 dt=0.001");
 
     if (tests_failed && !quiet)
     {

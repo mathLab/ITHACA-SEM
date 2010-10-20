@@ -61,6 +61,12 @@
 	    <p><a href="downloads/Nektar++1.0.tar.gz">Nektar++ Unix/Windows Code</a></p>
     	    <p><a href="downloads/ThirdParty1.0.tar.gz">Required Third Party Libraries</a></p>
 	  </li>
+	  <BR>
+	  <li>
+	    <h3 align="left">release 2.0 (Oct 2010) </h3>
+	    <p><a href="downloads/Nektar++-2.0.tar.gz">Nektar++ Unix/Windows Code</a></p>
+    	    <p><a href="downloads/ThirdParty-2.0.tar.gz">Required Third Party Libraries</a></p>
+	  </li>
 	</ul>
 
       </div>

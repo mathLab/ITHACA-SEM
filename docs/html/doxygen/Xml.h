@@ -220,13 +220,42 @@ namespace Nektar
  * enforce. These can be either
  * - \c D: Dirichlet
  * - \c N: Neumann
- * - \c R: Robin BC
+ * - \c R: Robin
+ * - \c P: Periodic
  *
  * Time-dependent boundary conditions may be specified through setting the
  * \c USERDEFINEDTYPE attribute. For example,
  * @code
  * <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="sin(PI*(x-t))" />
  * @endcode
+ 
+ Periodic boundary conditions have to be used as following:
+ @code
+ <BOUNDARYCONDITIONS>
+ <REGION REF="0">
+ <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
+ <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
+ <P VAR="p" VALUE=[2]/>
+ </REGION>
+ <REGION REF="1">
+ <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
+ <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
+ <N VAR="p" USERDEFINEDTYPE="H" VALUE="0.0"/>
+ </REGION>
+ <REGION REF="2">
+ <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
+ <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
+ <P VAR="p" VALUE=[0]/>
+ </REGION>
+ <REGION REF="3">
+ <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
+ <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
+ <D VAR="p" USERDEFINEDTYPE="TimeDependent" VALUE="-0.25*(cos(2*x)+cos(2*y))*exp(-4*t*Kinvis)"/>
+ </REGION>
+ </BOUNDARYCONDITIONS>
+ @endcode
+ where the boudary regions which are periodic are linked via their region identifier (Region 0 and Region 2).
+ 
  *
  * \subsection User-defined Equations
  * These define spatially-dependent analytic expressions for use in solvers.
@@ -249,6 +278,17 @@ namespace Nektar
  *     <F VAR="u" VALUE="sin(PI*x)*cos(PI*y)" />
  *   </INITIALCONDITIONS>
  * @endcode
+ Initial conditions can also be specified via a re-start file (typically named as FILENAME.rst).
+ A re-start file is basically a solution file (in other words an .fld renamed as .rst) where the solution is specified.
+ The expansion order used to generate the .rst file has to be the same as the one you intend to use for your simulation and
+ the file has to be located in the same directory where the .xml file and the the executable are.
+ An example is:
+ * @code
+ *   <INITIALCONDITIONS>
+ *     <R FILE="Test_KovaFlow_m3.rst" />
+ *   </INITIALCONDITIONS>
+ * @endcode
+ which uses a converged solution to initialise the flow, avoiding the long initial transient state.
  *
  */
 }

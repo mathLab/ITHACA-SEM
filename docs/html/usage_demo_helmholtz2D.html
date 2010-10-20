@@ -62,7 +62,7 @@ contains of the following three parts:
 <li>Description of the mesh<BR>
 This is contained between the XML tags <tt>&lt;GEOMETRY&gt;...&lt;/GEOMETRY&gt;</tt>.
 It lists the vertices, edges and elements that form the mesh.
-It is possible to generate this part of the input file based upon a mesh created by Gmsh (see also <a href="pre-processing.html">here</a>).
+It is possible to generate this part of the input file based upon a mesh created by Gmsh (see also <a href="usage_preprocessing.html">here</a>).
 <li>Description of the spectral/hp expansion<BR>
 Between the XML tags <tt>&lt;EXPANSIONS&gt;...&lt;/EXPANSIONS&gt;</tt>, the spectral/hp expansion you want to 
 use to represent the solution can be specified. It is possible to define the type of basis functions, the expansion order and the numerical quadrature rule.</li>
@@ -78,7 +78,7 @@ To run the code (i.e. solve the helmholtz problem), follow these steps
 <li>Run the code by entering "./Helmholtz2D helmholtz2D.xml helmholtz2D.xml". (If you have build the library in Debug mode, this should be "./Helmholtz2D-g helmholtz2D.xml helmholtz2D.xml")</li>
 </ul></li>
 <li><h3>Post-processing</h3><BR>
-The solution should now have been written to the file <em>helmholtz2D.fld</em>. This file is formatted in the Nektar++ output format (see also <a href="post-processing.html">here</a>). To visualize the solution in Gmsh, we first have to convert this file. This can be done in the following way:
+The solution should now have been written to the file <em>helmholtz2D.fld</em>. This file is formatted in the Nektar++ output format (see also <a href="usage_postprocessing.html">here</a>). To visualize the solution in Gmsh, we first have to convert this file. This can be done in the following way:
 <ul>
 <li>At the terminal, make sure you are still at the dirctory <em>Nektar++/builds/Demos/MultiRegions/</em></li>
 <li>Type "../../../utilities/builds/PostProcessing/FldToGmsh helmholtz2D.xml helmholtz2D.fld". (If you have build the utilities in Debug mode, this should be "../../../utilities/builds/PostProcessing/FldToGmsh-g helmholtz2D.xml helmholtz2D.fld")</li>

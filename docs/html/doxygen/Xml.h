@@ -58,21 +58,21 @@ namespace Nektar
  * when \c DIM=3. The \c CURVED section is only present if curved edges or
  * faces are present in the mesh.
  *
- * \subsection Vertices
+ * \subsection subsectionXmlGeometryVertices Vertices
  * Vertices have three coordinates. Each has a unique vertex ID. They are
  * defined in the file with a line of the form
  * @code
  * <V ID="0"> 0.0  0.0  0.0 </V>
  * @endcode
  *
- * \subsection Edges
+ * \subsection subsectionXmlGeometryEdges Edges
  * Edges are defined by two vertices. Each edge has a unique edge ID. They are
  * defined in the file with a line of the form
  * @code
  * <E ID="0"> 0 1 </E>
  * @endcode
  *
- * \subsection Faces
+ * \subsection subsectionXmlGeometryFaces Faces
  * Faces are defined by three or more edges. Each face has a unique face ID.
  * They are defined in the file with a line of the form
  * @code
@@ -82,7 +82,7 @@ namespace Nektar
  * The choice of tag specified (\c T or \c Q), and thus the number of edges
  * specified depends on the geometry of the face (triangle or quadrilateral).
  *
- * \subsection Element
+ * \subsection subsectionXmlGeometryElements Element
  * Elements define the top-level geometric entities in the mesh. Their
  * definition depends upon the dimension of the expansion. For two-dimensional
  * expansions, an element is defined by a sequence of three or four edges. For
@@ -102,7 +102,7 @@ namespace Nektar
  * - \c R: Prism
  * - \c H: Hexahedron
  *
- * \subsection Curved Edges and Faces
+ * \subsection subsectionXmlGeometryCurved Curved Edges and Faces
  * For mesh elements with curved edges and/or curved faces, a separate entry is
  * used to describe the control points for the curve. Each curve has a unique
  * curve ID and is associated with a predefined edge or face. The total number
@@ -116,7 +116,7 @@ namespace Nektar
  * </E>
  * @endcode
  *
- * \subsection Composites
+ * \subsection subsectionXmlGeometryComposites Composites
  * Composites define collections of elements, faces or edges. Each has a unique
  * composite ID associated with it. All components of a composite entry must be
  * of the same type. The syntax allows components to be listed individually or
@@ -126,7 +126,7 @@ namespace Nektar
  * <C ID="1"> E[68,69,70,71] </C>
  * @endcode
  *
- * \subsection Domain
+ * \subsection subsectionXmlGeometryDomain Domain
  * This tag specifies composites which describe the entire problem domain. It
  * has the form of
  * @code
@@ -146,7 +146,7 @@ namespace Nektar
  * which define the nature of the problem to be solved. These are enclosed in
  * the \c CONDITIONS tag.
  *
- * \subsection Parameters
+ * \subsection subsectionXmlConditionsParameters Parameters
  * Parameters may be required by a particular solver (for instance
  * time-integration parameters or solver-specific parameters), or arbitrary and
  * only used within the context of the session file (e.g. parameters in the
@@ -169,7 +169,7 @@ namespace Nektar
  * <P> FinTime  = NumSteps*TimeStep </P>
  * @endcode
  *
- * \subsection Solver Information
+ * \subsection subsectionXmlConditionsSolverInfo Solver Information
  * These specify properties to define the actions specific to solvers,
  * typically including the equation to solve, the projection type and the
  * method of time integration. The property/value pairs are specified as
@@ -182,7 +182,7 @@ namespace Nektar
  *   </SOLVERINFO>
  * @endcode
  *
- * \subsection Variables
+ * \subsection subsectionXmlConditionsVariables Variables
  * These define the number (and name) of solution variables. Each variable is
  * prescribed a unique ID. For example a two-dimensional flow simulation may
  * define the velocity variables \f$(u,v)\f$ using
@@ -193,7 +193,7 @@ namespace Nektar
  *   </VARIABLES>
  * @endcode
  *
- * \subsection Boundary Regions and Conditions
+ * \subsection subsectionXmlConditionsBoundary Boundary Regions and Conditions
  * Boundary conditions are defined by two XML elements. The first defines the
  * various boundary regions in the domain in terms of composite entities from
  * the \c GEOMETRY section of the file. Each boundary region has a
@@ -228,36 +228,41 @@ namespace Nektar
  * @code
  * <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="sin(PI*(x-t))" />
  * @endcode
- 
- Periodic boundary conditions have to be used as following:
- @code
- <BOUNDARYCONDITIONS>
- <REGION REF="0">
- <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
- <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
- <P VAR="p" VALUE=[2]/>
- </REGION>
- <REGION REF="1">
- <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
- <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
- <N VAR="p" USERDEFINEDTYPE="H" VALUE="0.0"/>
- </REGION>
- <REGION REF="2">
- <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
- <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
- <P VAR="p" VALUE=[0]/>
- </REGION>
- <REGION REF="3">
- <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
- <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
- <D VAR="p" USERDEFINEDTYPE="TimeDependent" VALUE="-0.25*(cos(2*x)+cos(2*y))*exp(-4*t*Kinvis)"/>
- </REGION>
- </BOUNDARYCONDITIONS>
- @endcode
- where the boudary regions which are periodic are linked via their region identifier (Region 0 and Region 2).
- 
  *
- * \subsection User-defined Equations
+ * Periodic boundary conditions reference the corresponding boundary region
+ * with which to enforce periodicity.
+ *
+ * The following example provides an example of three boundary conditions for a
+ * two-dimensional flow,
+ * @code
+ * <BOUNDARYCONDITIONS>
+ *   <REGION REF="0">
+ *     <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
+ *     <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
+ *     <P VAR="p" VALUE=[2]/>
+ *   </REGION>
+ *   <REGION REF="1">
+ *     <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
+ *     <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
+ *     <N VAR="p" USERDEFINEDTYPE="H" VALUE="0.0"/>
+ *   </REGION>
+ *   <REGION REF="2">
+ *     <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
+ *     <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
+ *     <P VAR="p" VALUE=[0]/>
+ *   </REGION>
+ *   <REGION REF="3">
+ *     <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
+ *     <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
+ *     <D VAR="p" USERDEFINEDTYPE="TimeDependent" VALUE="-0.25*(cos(2*x)+cos(2*y))*exp(-4*t*Kinvis)"/>
+ *   </REGION>
+ * </BOUNDARYCONDITIONS>
+ * @endcode
+ * where the boudary regions which are periodic are linked via their region
+ * identifier (Region 0 and Region 2).
+ *
+ *
+ * \subsection subsectionXmlConditionsUserDefined User-defined Equations
  * These define spatially-dependent analytic expressions for use in solvers.
  * For example,
  * @code
@@ -267,7 +272,7 @@ namespace Nektar
  *   </USERDEFINEDEQNS>
  * @endcode
  *
- * \subsection Analytic expressions
+ * \subsection subsectionXmlConditionsAnalytic Analytic expressions
  * Finally, initial conditions and analytic solutions may be specified for use
  * in, or comparison with, simulations.
  * @code

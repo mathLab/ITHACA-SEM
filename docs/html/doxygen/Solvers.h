@@ -8,9 +8,6 @@ namespace Nektar {
  * - @subpage pageADRSolver - a general solver for solving a number of linear PDE systems
  *   which are in this form using either a Continuous Galerkin or Discontinuous
  *   Galerkin approach.
- * - ADR2DManifold - solves mono-domain models such as the
- *   FitzHugh-Nagumo equations or the Aliev-Panfilov model on a 2D manifold
- *   embedded in 3-space.
  * - @subpage pageIncNavierStokesSolver - An incompressible Navier-Stokes solver.
  *
  * All these solvers utilise a general timestepping scheme:

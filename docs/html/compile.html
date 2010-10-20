@@ -4,7 +4,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <link rel="shortcut icon" href="images/favicon.ico" >
     <!-- InstanceBeginEditable name="doctitle" -->
-<title>Nektar++ - Compile Instructions</title>
+<title>Nektar++ - Compilation Instructions</title>
 <!-- InstanceEndEditable -->
  <link rel="stylesheet" href="style.css">
    <!-- InstanceBeginEditable name="CSS_Style" -->
@@ -54,15 +54,36 @@ Material</a></p>
       </div>
       <div id="mainContent">
         <!-- InstanceBeginEditable name="Title" -->
-        <h1>Compile Instructions</h1>
+        <h1>Compilation Instructions</h1>
 	<!-- InstanceEndEditable -->
         <hr/>
         <!-- InstanceBeginEditable name="BodyText" -->
-    <p><a href="compile_linux.html">Linux using GCC 4.1+</a></p>
-    <p><a href="compile_windows.html">Windows using Visual Studio 2008</a></p>
-    <p><a href="compile_osx.html">Mac OS X using GCC or Xcode</a></p>
-    <p><a href="compile_unit_tests.html">Running the Unit Tests</a></p>
+        Nektar++ is designed to be supported across a range of platforms and
+        architectures using the CMake build system. In addition to the Nektar++
+        code package, a number of third party applications and libraries may be
+        necessary to perform the build process. Instructions on configuring and
+        compiling the Nektar++ libraries on various platforms are given below.
+    <p><a href="compile_linux.html">Linux</a> (using GCC 4.1+)</p>
+    <p><a href="compile_windows.html">Windows</a> (using Visual Studio 2008)</p>
+    <p><a href="compile_osx.html">Mac OS X</a> (using GCC or Xcode)</p>
     <br>
+    <h2>Validating the build</h2>
+    To ensure the validity and resilience of the code, two test mechansims are
+    provided to allow the user to quickly establish the correctness of their
+    build. The <em>Unit Tests</em> test basic low-level operations, while the
+    <em>Regression Tests</em> check the accuracy of the spectral/hp element
+    formulation ranging from standard region projections up to full
+    incompressible Navier-Stokes solutions.
+    <p><a href="compile_unit_tests.html">Running the Unit Tests</a></p>
+    <p><a href="compile_regression_tests.html">Running the Regression Tests</a></p>
+    <br>
+    <h2>Documentation</h2>
+    The primary source of documentation for the Nektar++ library is generated
+    using <a href="www.doxygen.org">Doxygen</a>. This includes both high-level
+    operational details as well as low-level code functionality documentation.
+    Due to its size, it is not distributed in a pre-compiled state and so
+    instructions are provided on how the user may generate this documentation
+    after downloading the code package.
     <p><a href="compile_documentation.html">Generate <em> doxygen </em> documentation</a></p>
         <!-- InstanceEndEditable -->
         <p><br class="clearfloat" /></p>

@@ -60,8 +60,8 @@ Material</a></p>
         <p>The current distribution of the code has been set up with a series
 of regression tests based around the <a href="usage.html">demos</a> and <a href="usage.html">solvers</a> in the library. The source wrapper source code for these tests can be found under:
 <ul>
-<li><em>Nektar/regressionTests/</em></li>
-<li><em>Nektar/library/Demos/</em></li>
+<li><em>Nektar++/regressionTests/</em></li>
+<li><em>Nektar++/library/Demos/</em></li>
 </ul>
 </p>
 <p>
@@ -72,23 +72,47 @@ compiled you can execute the regression tests in the following way:
 <ol>
  <li>Change directory to the Demo of solver that you wish to run regression tests on for example  <em>Nektar++/regressionTest/builds/Demos/StdRegions</em></li>
 <li>Execute the regression test, for example <em>./StdRegionsDemosTest</em></li>
-and you should see a series of test being run with output similar to: 
-<p> StdProject1D:  info = "Segment Ortho Basis, modes=6, quad=7"<br>
- status: PASSED</p>
-<p>StdProject1D:  info = "Segment Modified Basis, modes=6, quad=7"<br>
- status: PASSED</p>
-<p>StdProject2D:  info = "Triangular Ortho Basis, modes=6, quad=7"<br>
-status: PASSED</p>
-<p>StdProject2D:  info = "Triangular Modified Basis modes=6, quad=7"<br>
-status: PASSED</p>
-<p> .......</p>
-</li>
+and you should see a series of test being run with output similar to:
+<p>
+<div class="code"><pre>
+..........
+..........
+PASSED: StdProject3D (Hex Ortho Basis, P=4, Q=7)
+PASSED: StdProject3D (Hex Modified Basis P=6, Q=7)
+PASSED: StdProject3D (Hex Lagrange Basis P=6, Q=7)
+PASSED: StdProject3D (Hex Legendre Basis P=6, Q=7)
+PASSED: StdProject3D (Hex Chebyshev Basis P=6, Q=7)
+PASSED: StdProject_Diff3D (Tet Ortho Basis, P=4, Q=7)
+PASSED: StdProject_Diff3D (Tet Modified Basis P=6, Q=7)
+PASSED: StdProject_Diff3D (Hex Ortho Basis, P=4, Q=7)
+PASSED: StdProject_Diff3D (Hex Modified Basis P=6, Q=7)
+PASSED: StdProject_Diff3D (Hex Lagrange Basis P=6, Q=7)
+PASSED: StdProject_Diff3D (Hex Legendre Basis P=6, Q=7)
+PASSED: StdProject_Diff3D (Hex Cheby. Basis P=6, Q=7)
+</pre></div>
+<p> 
+
 <li>The same can be done for the solver you wish to run regression tests on for example  <em>Nektar++/regressionTest/builds/Solvers/ADRSolver</em></li>
 <li>Execute the regression test, for example <em>./ADRSolverTest</em></li>
 and you should see a series of test being run with output similar to:
-<p> ADRSolver:  info = "Testing 2D unsteady advection-diffusion, IMEXOrder2, modes=9, dt=0.0001"<br>
- status: PASSED</p>
-<p> .......</p>
+<p>
+<div class="code"><pre>
+..........
+..........
+PASSED: ADRSolver (2D unsteady DG advection, order 1, P=12)
+PASSED: ADRSolver (2D unsteady DG advection, order 2, P=12)
+PASSED: ADRSolver (2D unsteady DG advection, order 4, P=14)
+PASSED: ADRSolver (2D unsteady DG implicit diffusion, order 3, P=6)
+PASSED: ADRSolver (2D unsteady DG implicit diffusion, order 3, P=12)
+PASSED: ADRSolver (2D unsteady DG explicit diffusion, order 4, P=3)
+PASSED: ADRSolver (2D unsteady DG explicit diffusion, order 4, P=8)
+PASSED: ADRSolver (2D unsteady advection-diffusion, IMEXOrder1, P=9, dt=0.001)
+PASSED: ADRSolver (2D unsteady advection-diffusion, IMEXOrder1, P=9, dt=0.0001)
+PASSED: ADRSolver (2D unsteady advection-diffusion, IMEXOrder2, P=9, dt=0.001)
+PASSED: ADRSolver (2D unsteady advection-diffusion, IMEXOrder2, P=9, dt=0.0001)
+</pre></div>
+<p> 
+
 </ol>
 
 

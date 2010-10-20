@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
     // Copy data to file 
     for(int i = 0; i < fielddata.size(); ++i)
     {
-        Exp->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_Fields[0]);
+        Exp->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[0]);
     }
     Exp->BwdTrans(Exp->GetCoeffs(),Exp->UpdatePhys());    
     //----------------------------------------------

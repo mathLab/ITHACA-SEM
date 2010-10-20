@@ -1,38 +1,70 @@
 #!/bin/bash
+# @author Chris Cantwell
+#
+# This script generates Nektar++ distributions, comprising of the following:
+# - A code distribution (nektar++-VERSION.tar.gz)
+# - A website package (nektar++-web-VERSION.tar.gz)
+# The file VERSION contains the version number of the generated release.
+# A working copy of the ThirdParty repository should be placed in a subdirectory
+# called ThirdParty, or sym-linked to such from elsewhere. If available, the
+# ThirdParty distribution will also be compiled and included in the web package.
+#
+# @requires rsync doxygen tar
 
 BASE=`dirname $0`
 cd $BASE
 
 TARGET=nektar++-`cat VERSION`
 
+# Make Web tree target
+if [ -d $TARGET-web ]; then
+    rm -rf $TARGET-web
+fi
+mkdir -p $TARGET-web
+mkdir -p $TARGET-web/downloads/
+
+# Make Code tree target
 if [ -d $TARGET ]; then
     rm -rf $TARGET
 fi
 mkdir -p $TARGET
 
-echo "Generating file list..."
+# Create code tree
+echo "Generating code tree..."
 rsync -avqH --cvs-exclude --exclude-from dist-exclude * $TARGET
 
-echo "Generating library distribution..."
+# Package code tree
+echo "Packaging code distribution..."
 tar -zc -f $TARGET.tar.gz $TARGET
 rm -rf $TARGET
 
+# Generate ThirdParty package if available
+if [ -d ThirdParty -o -h ThirdParty ]; then
+    if [ -f ThirdParty/distribute.sh ]; then
+        ThirdParty/distribute.sh
+        mv ThirdParty/ThirdParty-*.tar.gz $TARGET-web/downloads/
+    else
+        echo "ThirdParty directory exists, but without distribution script."
+    fi
+else
+    echo "ThirdParty not available. Please package separately."
+fi
+
 # Get documentation up to date
 cd $BASE
-echo "Generating doxygen docs..."
+echo "Generating doxygen docs...this may take a while..."
 cd docs/html/doxygen
-doxygen doxygen
+doxygen doxygen > /dev/null 2>&1
 
 cd ../../../
-if [ -d $TARGET-web ]; then
-    rm -rf $TARGET-web
-fi
-mkdir -p $TARGET-web
 
-echo "Generating website tree..."
+# Create web tree
+echo "Generating web tree..."
 rsync -avqH --cvs-exclude docs/html/* $TARGET-web
 cp $TARGET.tar.gz $TARGET-web/downloads/
 
-echo "Generating website tarball..."
+# Package web tree
+echo "Packaging web distribution..."
 tar -zc -f $TARGET-web.tar.gz $TARGET-web
 rm -rf $TARGET-web
+

@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Print summary of solution details
     const SpatialDomains::ExpansionVector &expansions = graph3D.GetExpansions();
-    LibUtilities::BasisKey bkey = expansions[0]->m_BasisKeyVector[0];
+    LibUtilities::BasisKey bkey = expansions[0]->m_basisKeyVector[0];
     int nmodes = bkey.GetNumModes();
     cout << "Solving 3D Local Projection"  << endl;
     cout << "    No. modes  : " << nmodes << endl;

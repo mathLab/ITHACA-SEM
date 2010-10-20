@@ -90,8 +90,8 @@ int main(int argc, char *argv[])
     lambda = bcs.GetParameter("Lambda");
     cout << "            Lambda         : " << lambda << endl;
     const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
-    LibUtilities::BasisKey bkey0 = expansions[0]->m_BasisKeyVector[0];
-    LibUtilities::BasisKey bkey1 = expansions[0]->m_BasisKeyVector[01];
+    LibUtilities::BasisKey bkey0 = expansions[0]->m_basisKeyVector[0];
+    LibUtilities::BasisKey bkey1 = expansions[0]->m_basisKeyVector[1];
     cout << "Solving Steady 2D LinearAdvection :"  << endl; 
     cout << "            Advection_x    : " << ax << endl; 
     cout << "            Advection_y    : " << ay << endl; 

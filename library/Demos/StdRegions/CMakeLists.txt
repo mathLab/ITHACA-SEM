@@ -75,6 +75,12 @@ ADD_NEKTAR_EXECUTABLE(StdPyrExp_Diff3D StdPyrExp_Diff3DSource)
 TARGET_LINK_LIBRARIES(StdPyrExp_Diff3D ${LinkLibraries})     
 SET_LAPACK_LINK_LIBRARIES(StdPyrExp_Diff3D)
     
+# Generate list of available subdirectories
+FILE(GLOB dir_list "*")
+LIST(REMOVE_ITEM dir_list "${CMAKE_SOURCE_DIR}/.svn")
+FOREACH(dir ${dir_list})
+    IF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
+        ADD_SUBDIRECTORY(${dir})
+    ENDIF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
+ENDFOREACH(dir ${dir_list})
 
-# Uncomment next line to compile demos in subdirectory
-#SUBDIRS(ExtraDemos)

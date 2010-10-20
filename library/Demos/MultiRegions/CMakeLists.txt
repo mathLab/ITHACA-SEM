@@ -56,5 +56,10 @@ ADD_NEKTAR_EXECUTABLE(SteadyAdvectionDiffusionReaction2D SteadyAdvectionDiffusio
 TARGET_LINK_LIBRARIES(SteadyAdvectionDiffusionReaction2D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(SteadyAdvectionDiffusionReaction2D)
 
-# Uncomment next line to compile demos in subdirectory
-#SUBDIRS(ExtraDemos)
+# Generate list of available subdirectories
+FILE(GLOB dir_list "*")
+FOREACH(dir ${dir_list})
+    IF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
+        ADD_SUBDIRECTORY(${dir})
+    ENDIF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
+ENDFOREACH(dir ${dir_list})

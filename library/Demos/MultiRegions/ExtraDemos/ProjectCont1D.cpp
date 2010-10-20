@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Print summary of solution details
     const SpatialDomains::ExpansionVector &expansions = graph1D.GetExpansions();
-    LibUtilities::BasisKey bkey0 = expansions[0]->m_BasisKeyVector[0];
+    LibUtilities::BasisKey bkey0 = expansions[0]->m_basisKeyVector[0];
     int nmodes = bkey0.GetNumModes(); 
     cout << "Solving 1D Continuous Projection"  << endl; 
     cout << "    Expansion  : (" << LibUtilities::BasisTypeMap[bkey0.GetBasisType()] <<")" << endl;

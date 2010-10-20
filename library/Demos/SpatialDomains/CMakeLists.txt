@@ -22,3 +22,11 @@ SET(SpatialDomains3DSource  Graph3D.cpp)
 ADD_NEKTAR_EXECUTABLE(Graph3D SpatialDomains3DSource)
 TARGET_LINK_LIBRARIES(Graph3D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(Graph3D)
+
+# Generate list of available subdirectories
+FILE(GLOB dir_list "*")
+FOREACH(dir ${dir_list})
+    IF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
+        ADD_SUBDIRECTORY(${dir})
+    ENDIF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
+ENDFOREACH(dir ${dir_list})

@@ -81,3 +81,10 @@ ADD_NEKTAR_EXECUTABLE(LocTetExpDemo_2 LocTetExpDemoSource)
 TARGET_LINK_LIBRARIES(LocTetExpDemo_2 ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(LocTetExpDemo_2)
 
+# Generate list of available subdirectories
+FILE(GLOB dir_list "*")
+FOREACH(dir ${dir_list})
+    IF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
+        ADD_SUBDIRECTORY(${dir})
+    ENDIF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
+ENDFOREACH(dir ${dir_list})

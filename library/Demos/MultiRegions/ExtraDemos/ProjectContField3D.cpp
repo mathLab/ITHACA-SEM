@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Print summary of solution details
     const SpatialDomains::ExpansionVector &expansions = graph3D.GetExpansions();
-    LibUtilities::BasisKey bkey = expansions[0]->m_BasisKeyVector[0];
+    LibUtilities::BasisKey bkey = expansions[0]->m_basisKeyVector[0];
     cout << "Solving 3D C0 continuous Projection (with boundary conditions)"  << endl; 
     cout << "    No. modes  : " << bkey.GetNumModes() << endl;
     cout << endl;

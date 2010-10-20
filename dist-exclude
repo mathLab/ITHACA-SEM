@@ -1,9 +1,11 @@
-make-distribution.sh
-distro-exclude.txt
+distribute.sh
+dist-exclude.txt
 builds/*
 nektar++-*
 ThirdParty
 templates
+library/Demos/StdRegions/ExtraDemos
+library/Demos/MultiRegions/ExtraDemos
 solvers/ADR2DManifoldSolver
 solvers/BoussinesqSolver
 solvers/EulerSolver

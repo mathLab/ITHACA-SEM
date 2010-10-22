@@ -1,2 +1,2 @@
-SUBDIRS(ADRSolver IncNavierStokesSolver)
+SUBDIRS(ADRSolver IncNavierStokesSolver ShallowWaterSolver)
 

@@ -1,0 +1,34 @@
+ShallowWaterSolver
+==========================================
+Test_StandingWave_DG_4Modes.xml
+L 2 error (variable eta): 2.22023e-06
+L inf error (variable eta): 8.19871e-06
+L 2 error (variable u): 5.24569e-06
+L inf error (variable u): 1.53915e-05
+L 2 error (variable v): 5.24569e-06
+L inf error (variable v): 1.53915e-05
+----------------------------------------
+Test_StandingWave_DG_8Modes.xml
+L 2 error (variable eta): 1.66047e-11
+L inf error (variable eta): 5.0495e-11
+L 2 error (variable u): 1.59717e-09
+L inf error (variable u): 2.27038e-09
+L 2 error (variable v): 1.59717e-09
+L inf error (variable v): 2.27038e-09
+----------------------------------------
+Test_StandingWave_CG_4Modes.xml
+L 2 error (variable eta): 3.06656e-05
+L inf error (variable eta): 0.000166246
+L 2 error (variable u): 1.48028e-05
+L inf error (variable u): 4.36258e-05
+L 2 error (variable v): 1.48028e-05
+L inf error (variable v): 4.36258e-05
+----------------------------------------
+Test_StandingWave_CG_8Modes.xml
+L 2 error (variable eta): 5.34555e-10
+L inf error (variable eta): 2.20909e-09
+L 2 error (variable u): 2.5526e-08
+L inf error (variable u): 3.77196e-08
+L 2 error (variable v): 2.5526e-08
+L inf error (variable v): 3.77196e-08
+----------------------------------------

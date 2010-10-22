@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File ADRSolverMakeOKFiles.cpp
+// File ShallowWaterSolverMakeOKFiles.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,8 +29,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Make OK files for ADRSolver Demos, This is a wrapper
-// file around ADRSolverTests.cpp with a #define
+// Description: Make OK files for ShallowWaterSolver tests, This is a wrapper
+// file around ShallowWaterSolverTests.cpp with a #define
 //
 ///////////////////////////////////////////////////////////////////////////////
 #define  MAKE_OK_FILE 

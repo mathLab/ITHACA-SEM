@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File ADRSolverTests.cpp
+// File ShallowWaterSolverTests.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Run a series of tests on the ADR Solver
+// Description: Run a series of tests on the ShallowWaterSolver
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include "../../Auxiliary/RegressBase.h"
@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
         quiet = true;
     }
    
-    // Test of linear SWE
+    // Test of linear SWE 
     Execute("ShallowWaterSolver","Test_StandingWave_DG_4Modes.xml","2D linearized SWE DG Averaged flux- Standing waves, P=3");
     Execute("ShallowWaterSolver","Test_StandingWave_DG_8Modes.xml","2D linearized SWE DG HLL flux - Standing waves, P=7");
     Execute("ShallowWaterSolver","Test_StandingWave_CG_4Modes.xml","2D linearized SWE CG  - Standing waves, P=3");

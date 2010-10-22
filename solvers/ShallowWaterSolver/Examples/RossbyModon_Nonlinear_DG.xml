@@ -262,22 +262,20 @@
   <CONDITIONS>
 
      <SOLVERINFO>
-      <I PROPERTY="EQType" VALUE="SWE"/>
+      <I PROPERTY="EQType" VALUE="NonlinearSWE"/>
       <I PROPERTY="Projection" VALUE="DisContinuous"/>
+      <I PROPERTY="TimeIntegrationMethod"  VALUE="ClassicalRungeKutta4"/>
+      <I PROPERTY="UpwindType"  VALUE="HLLC"/>
     </SOLVERINFO> 
 
 
     <PARAMETERS>
-      <P> NonLinear      = 1                 </P>
-      <P> Conservative   = 1                 </P>
       <P> TimeStep       = 0.04             </P>
       <P> NumSteps       = 1000             </P>
       <P> FinTime        = TimeStep*NumSteps </P>
       <P> IO_CheckSteps  = 100               </P>
       <P> IO_InfoSteps   = 100              </P>
       <P> Gravity        = 1.0               </P>
-      <P> Coriolis       = 1                 </P>
-      <P> Hmin           = 0.00001           </P>
     </PARAMETERS>
  
     <VARIABLES>

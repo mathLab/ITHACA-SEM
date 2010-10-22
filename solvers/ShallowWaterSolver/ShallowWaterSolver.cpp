@@ -29,96 +29,73 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Shallow Water solver
+// Description: Shallow Water Equations framework solver
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <cstdio>
 #include <cstdlib>
-#include <cmath> 
+#include <cmath>
 
-#include <ShallowWaterSolver/ShallowWaterEquations.h>
-
-
+#include <ADRSolver/EquationSystem.h>
+#include <ADRSolver/SessionReader.h>
 using namespace Nektar;
-
 
 int main(int argc, char *argv[])
 {
-    
-    ASSERTL0(argc == 2,"\n \t Usage: ShallowWaterSolver  meshfile \n");
+    if(argc != 2)
+    {
+        cout << "\n \t Usage: ShallowWaterSolver  sessionfile \n" << endl;
+        exit(1);
+    }
 
-    string fileNameString(argv[1]);
-    
-    //----------------------------------------
-    // Read the mesh and construct container class
-    
-    ShallowWaterEquations dom(fileNameString);
-    //----------------------------------------
+    string filename(argv[1]);
+    time_t starttime, endtime;
+    NekDouble CPUtime;
 
-    
-    //----------------------------------------
-    // print session info 
-    
-    dom.Summary(cout);
-    //----------------------------------------
+    SessionReaderSharedPtr session;
+    EquationSystemSharedPtr equ;
 
-    
-    //----------------------------------------   
-    dom.ZeroPhysFields(); 
-       
-    // Set up the intial conditions
-    dom.SetInitialConditions();
+    // Record start time.
+    time(&starttime);
 
-    // since I/O in primitive variables
-    if (dom.GetVariableType() == ShallowWaterEquations::eConservative)
-      {
-	dom.PrimitiveToConservative();
-      }
-    //----------------------------------------
+    // Create session reader.
+    session = MemoryManager<SessionReader>::AllocateSharedPtr(filename);
 
-    
-    //----------------------------------------
-    // Integrate from start time to end time
-    
-    int nsteps = dom.GetSteps();
+    // Create instance of module to solve the equation specified in the session.
+    try
+    {
+        equ = EquationSystemFactory::CreateInstance(
+                                    session->GetSolverInfo("EQTYPE"), session);
+    }
+    catch (int e)
+    {
+        ASSERTL0(e == -1, "No such solver class defined.");
+    }
 
-    // Create forcing function object
-    LibUtilities::TimeIntegrationSchemeOperators ode;
-    
-    // Choose time integration method
-    LibUtilities::TimeIntegrationMethod IntMethod = LibUtilities::eClassicalRungeKutta4;		
-    
-    // Choose the method of deriving forcing functions
-    ode.DefineOdeRhs       (&ShallowWaterEquations::ODErhs,&dom);		
-		
-    // General Linear Time Integration
-    dom.GeneralTimeIntegration(nsteps, IntMethod, ode);
-    //----------------------------------------
+    // Print a summary of solver and problem parameters and initialise the
+    // solver.
+    equ->PrintSummary(cout);
+    equ->DoInitialise();
+   
+    // Solve the problem.
+    equ->DoSolve();
 
+    // Record end time.
+    time(&endtime);
+    CPUtime = (1.0/60.0/60.0)*difftime(endtime,starttime);
 
-    //----------------------------------------
-    // Dump output
-     
-    // since I/O in primitive variables
-    if (dom.GetVariableType() == ShallowWaterEquations::eConservative)
-      {
-	dom.ConservativeToPrimitive();
-      }
-    
-    dom.Output();
-    //----------------------------------------
+    // Write output to .fld file
+    equ->Output();
 
-    
-    //----------------------------------------
-    // print error
-
-    cout << "L2 Error: " << dom.L2Error(0) << endl;
-    cout << "L2 Error: " << dom.L2Error(1) << endl;
-    cout << "L2 Error: " << dom.L2Error(2) << endl;
-    //---------------------------------------
+    // Evaluate and output computation time and solution accuracy.
+    // The specific format of the error output is essential for the
+    // regression tests to work.
+    cout << "-------------------------------------------" << endl;
+    cout << "Total Computation Time = " << CPUtime << " hr." << endl;
+    for(int i = 0; i < equ->GetNvariables(); ++i)
+    {
+      cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i,true) << endl;
+      cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i) << endl;
+    }
 }
-
-/**
-* $Log $
-**/

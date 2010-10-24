@@ -1206,7 +1206,7 @@ namespace Nektar
                 StdRegions::StdNodalTriExpSharedPtr EGmsh;
                 EGmsh = MemoryManager<StdRegions::StdNodalTriExp>::
                     AllocateSharedPtr(Bkey1Gmsh,Bkey2Gmsh,ptype);
-
+                
                 Array<OneD,NekDouble> xi1(EGmsh->GetNcoeffs());
                 Array<OneD,NekDouble> xi2(EGmsh->GetNcoeffs());
                 EGmsh->GetNodalPoints(xi1,xi2);

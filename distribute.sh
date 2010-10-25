@@ -36,7 +36,6 @@ rsync -avqH --cvs-exclude --exclude-from dist-exclude * $TARGET
 # Package code tree
 echo "Packaging code distribution..."
 tar -zc -f $TARGET.tar.gz $TARGET
-rm -rf $TARGET
 
 # Generate ThirdParty package if available
 if [ -d ThirdParty -o -h ThirdParty ]; then
@@ -50,21 +49,24 @@ else
     echo "ThirdParty not available. Please package separately."
 fi
 
-# Get documentation up to date
-cd $BASE
-echo "Generating doxygen docs...this may take a while..."
-cd docs/html/doxygen
+# Generate documentation for distributed code
+echo "Generating doxygen docs...this will take a while..."
+cd $TARGET/docs/html/doxygen
 doxygen doxygen > /dev/null 2>&1
 
-cd ../../../
+cd ../../../../
 
 # Create web tree
 echo "Generating web tree..."
-rsync -avqH --cvs-exclude docs/html/* $TARGET-web
-cp $TARGET.tar.gz $TARGET-web/downloads/
+rsync -avqH --cvs-exclude --exclude='code' docs/html/* $TARGET-web
+mv $TARGET/docs/html/code $TARGET-web/
+mv $TARGET.tar.gz $TARGET-web/downloads/
 
 # Package web tree
 echo "Packaging web distribution..."
 tar -zc -f $TARGET-web.tar.gz $TARGET-web
-rm -rf $TARGET-web
+mv $TARGET-web/downloads/$TARGET.tar.gz .
 
+# Clean up
+rm -rf $TARGET-web
+rm -rf $TARGET

@@ -10,7 +10,6 @@ solvers/ADR2DManifoldSolver
 solvers/BoussinesqSolver
 solvers/EulerSolver
 solvers/FitzHughNagumoSolver
-solvers/ShallowWaterSolver
 docs/*.doc
 docs/emacs
 docs/.cvsignore

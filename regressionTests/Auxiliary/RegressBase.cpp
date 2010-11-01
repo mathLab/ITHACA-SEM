@@ -530,11 +530,11 @@ int RegressBase::CheckFiles()
 std::string RegressBase::MakeCommand(void)
 {
     std::string prog="",mesh="",comm="";
-    prog=m_progPath+m_prog;
+    prog="\"" + m_progPath+m_prog;
 #if defined(NDEBUG) 
-    comm=prog+" "+m_input;
+    comm=prog+"\" "+m_input;
 #else
-    comm=prog+"-g "+m_input;
+    comm=prog+"-g\" "+m_input;
 #endif
     comm+=" > "+m_output;
     return comm;

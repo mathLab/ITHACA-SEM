@@ -1599,6 +1599,7 @@ namespace Nektar
                     return (*m_exp)[i];
                 }
             }
+            ASSERTL0(false, "Cannot find element for this point.");
         }
 
         int ExpList::GetExpIndex(

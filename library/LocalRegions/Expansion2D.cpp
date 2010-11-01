@@ -460,7 +460,7 @@ namespace Nektar
 
                     Array<OneD,unsigned int> emap;
                     Array<OneD,int> sign;
-                    StdRegions::EdgeOrientation edgedir;
+                    StdRegions::EdgeOrientation edgedir = StdRegions::eForwards;
                     StdRegions::StdExpansion1DSharedPtr EdgeExp;
 
                     int order_e, coordim = v_GetCoordim();

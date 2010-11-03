@@ -177,7 +177,7 @@ Material</a></p>
                <ol>
                 <li>
                   In <em>ThirdParty/</em>, extract the cmake-2.8.0.tar.gz archive with 
-                  <div class="code"><pre>tar -xjvf cmake-2.8.0.tar.gz </pre></div>
+                  <div class="code"><pre>tar -xzvf cmake-2.8.0.tar.gz </pre></div>
                 </li>
                 <li>
                   Change to the <em>cmake-2.8.0/</em> directory, and type 
@@ -487,7 +487,7 @@ compiled the Nektar++ library and Solvers </br>
           <div class="code"><pre>ccmake ../</pre></div>
 
           Generate the project files in the same way you generated the project files for Nektar++.
-          <b>Note:</b> If you are modifying the regression tests by adding or removing tests you can generate a new master ".ok" file by answering  <strong>No</strong> to the <em> "Would you like to see advanced options?"</em> in step 2 and setting the variable <em>REGRESSION_MAKE_OK_FILES_EXEC</em> to <em>ON</em>. This will, for example, generate the executable <em>StdRegionsDemoMakeOKFile</em> which when executed will execute a series of demos and make the updated .ok files.
+          <b>Note:</b> If you are modifying the regression tests by adding or removing tests you can generate a new master ".ok" file by answering  <strong>Yes</strong> to the <em> "Would you like to see advanced options?"</em> in step 2 and setting the variable <em>REGRESSION_MAKE_OK_FILES_EXEC</em> to <em>ON</em>. This will, for example, generate the executable <em>StdRegionsDemoMakeOKFile</em> which when executed will execute a series of demos and make the updated .ok files.
             </ul>
       </ol>
 

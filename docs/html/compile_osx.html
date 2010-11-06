@@ -135,10 +135,12 @@ This will create <em>loki-0.1.3/</em>.
           </li>
 
           <li>CMake is an open-source, cross-platform make file
-generator system. It can be used to generate the correct GCC Makefiles.
-We must now build the CMake executable.
-    <ol>
+generator system. We require version 2.8 or greater.  To check your currently installed version, type the following at the command line:
 
+	      <div class="code"><pre>ccmake --version</pre></div>
+
+	      If you do not have CMake installed, or the version is too old, then you can build it from source.
+               <ol>
               <li>In <em>ThirdParty/</em>, extract the cmake-2.8.0.tar.gz archive with 
 <div class="code"><pre>tar -xjvf cmake-2.8.0.tar.gz</pre></div></li>
 

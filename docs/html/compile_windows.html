@@ -63,7 +63,7 @@ Material</a></p>
             <li>
               <h3 align="left">
                 <small>
-                  <a href="#Setting_up_CMake_(2.6+_required)">Setting up CMake (2.6+ required)</a>
+                  <a href="#Setting_up_CMake_(2.8+_required)">Setting up CMake (2.8+ required)</a>
                 </small>
               </h3>
             </li>
@@ -105,10 +105,12 @@ Material</a></p>
         <hr/>
         <!-- InstanceBeginEditable name="BodyText" -->
     <h3 align="left">
-      <a name="Setting_up_CMake_(2.6+_required)"></a>Setting up CMake (2.6+ required)
+      <a name="Setting_up_CMake_(2.8+_required)"></a>Setting up CMake (2.8+ required)
     </h3>
             
-    <p align="left">CMake is an open-source, cross-platform make file generator system. It can be used to generate Visual Studio solutions, as well as make files for other compilers such as GCC. We will use it to create a Visual Studio solution for the Nektar project.</p>
+    <p align="left">CMake is an open-source, cross-platform make file generator system. It can be used to generate Visual Studio solutions, as well as make files for other compilers such as GCC. We will use it to create a Visual Studio solution for the Nektar project. To compile the code properly, make sure that <a href="http://www.microsoft.com/downloads/en/details.aspx?FamilyId=FBEE1648-7106-44A7-9649-6D9F6D58056E&amp;displaylang=en">Visual Studio 2008 Service Pack 1<span class="Apple-converted-space"> </span></a> is installed on the computer.</p>
+
+    
     <ol>
       <li>Go to the <a href="http://www.cmake.org/HTML/index.html" target="_blank">CMake Website</a> and download the Win32 Installer.</li>
       <li>Run the installer and click the <em>Next</em>, and then <em>I Agree</em>.</li>
@@ -129,8 +131,8 @@ Material</a></p>
         <ol>
           <li>Open the <em>Visual Studio 2008 Command Prompt </em> This is located in the <em>Microsoft Visual Studio 2008\Visual Studio Tools</em> folder in your "Start -> Programs" menu.
         </li>
-          <li>In <em>ThirdParty\</em>, extract the boost_1_35_0.tar.bz2 archive. This will create <em>boost_1_35_0\</em>.</li>
-          <li>With the <em>Visual Studio Command Prompt</em>, change to the <em>ThirdParty\boost_1_35_0\</em> directory.</li>
+          <li>In <em>ThirdParty\</em>, extract the boost_1_40_0.tar.bz2 archive. This will create <em>boost_1_40_0\</em>.</li>
+          <li>With the <em>Visual Studio Command Prompt</em>, change to the <em>ThirdParty\boost_1_40_0\</em> directory.</li>
           <li>Type the following 
 <div class="code"><pre>..\bjam-windows.exe --prefix=..\boost -s ZLIB_SOURCE=..\..\..\..\zlib-1.2.3 --build-type=complete --with-thread --with-iostreams --with-test --with-date_time --with-filesystem --with-system --toolset=msvc-9.0 install</pre></div>
  and press enter. This will compile the correct <em>Boost</em> libraries.
@@ -148,7 +150,7 @@ Material</a></p>
 at the VS command prompt or by just double clicking on the <em>CMake</em> icon that appears on your desktop after installation. 
           <ul>
             <li>If launching from the VS command prompt and it can't find the file give it the full path. If you installed it in the default path, try entering 
-<div class="code"><pre>"C:\Program Files\CMake 2.6\bin\CMakeSetup.exe"</pre></div> 
+<div class="code"><pre>"C:\Program Files\CMake 2.8\bin\CMakeSetup.exe"</pre></div> 
 (with the quotes).</li>
           </ul>
         </li>
@@ -180,7 +182,7 @@ at the VS command prompt or by just double clicking on the <em>CMake</em> icon t
 <div class="code"><pre>CMakeSetup.exe</pre></div> at the VS command prompt or by just double clicking on the <em>CMake</em> icon that appears on your desktop after installation. 
           <ul>
             <li>If launching from the VS command prompt and it can't find the file give it the full path. If you installed it in the default path, try entering 
-<div class="code"><pre>"C:\Program Files\CMake 2.6\bin\CMakeSetup.exe"</pre></div> (with the quotes).</li>
+<div class="code"><pre>"C:\Program Files\CMake 2.8\bin\CMakeSetup.exe"</pre></div> (with the quotes).</li>
           </ul>
         </li>
         <li>Fill in the "Where is the source code:" field at the top of the CMake. This is the path to the <em>ThirdParty\modmetis-4.0\</em> directory. For example, <em>C:\Nektar++\ThirdParty\modmetis-4.0</em>
@@ -208,7 +210,7 @@ at the VS command prompt or by just double clicking on the <em>CMake</em> icon t
 <div class="code"><pre>CMakeSetup.exe</pre></div> at the VS command prompt or by just double clicking on the <em>CMake</em> icon that appears on your desktop after installation.
       <ul>
         <li>If launching from the VS command prompt and it can't find the file give it the full path. If you installed it in the default path, try entering 
-<div class="code"><pre>"C:\Program Files\CMake 2.6\bin\CMakeSetup.exe"</pre></div> (with the quotes).</li>
+<div class="code"><pre>"C:\Program Files\CMake 2.8\bin\CMakeSetup.exe"</pre></div> (with the quotes).</li>
       </ul>
       </li>
       <li>Fill in the &quot;Where is the source code:&quot; field at the top of CMake. This is the path to the <em>Nektar++\library\</em> directory. For example, <em>C:\Nektar++\library</em>.</li>
@@ -243,10 +245,10 @@ at the VS command prompt or by just double clicking on the <em>CMake</em> icon t
             <li>Put the <em>Nektar++\ThirdParty\boost\lib\</em> and <em>Nektar++\ThirdParty\</em> directories in your PATH.</li>
             <li><em>Alternatively</em>, copy the following files into your Release executable output directory. (Or the ones with &quot;-gd&quot; in the name if you are using debug mode.)
               <ul>
-                <li><em>N</em><em>ektar++\ThirdParty\boost\lib\boost_thread-vc90-mt-1_35_0.dll</em></li>
-                <li><em>N</em><em>ektar++\ThirdParty\boost\lib\boost_filesystem-vc90-mt-1_35_0.dll</em></li>
-                <li><em>N</em><em>ektar++\ThirdParty\boost\lib\boost_iostreams-vc90-mt-1_35_0.dll</em></li>
-                <li><em>N</em><em>ektar++\ThirdParty\boost\lib\boost_zlib-vc90-mt-1_35_0.dll</em></li>
+                <li><em>N</em><em>ektar++\ThirdParty\boost\lib\boost_thread-vc90-mt-1_40_0.dll</em></li>
+                <li><em>N</em><em>ektar++\ThirdParty\boost\lib\boost_filesystem-vc90-mt-1_40_0.dll</em></li>
+                <li><em>N</em><em>ektar++\ThirdParty\boost\lib\boost_iostreams-vc90-mt-1_40_0.dll</em></li>
+                <li><em>N</em><em>ektar++\ThirdParty\boost\lib\boost_zlib-vc90-mt-1_40_0.dll</em></li>
                 <li><em>Nektar++\ThirdParty\lapack_win32.dll</em></li>
                 <li><em>Nektar++\ThirdParty\blas_win32.dll</em></li>
               </ul>

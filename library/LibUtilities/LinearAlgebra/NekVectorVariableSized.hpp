@@ -423,13 +423,13 @@ namespace Nektar
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
                 template<typename L, typename Op, typename R>
                 NekVector(const Node<L, Op, R>& rhs) :
-                    BaseType(0) 
+                    BaseType(MatrixSize<Node<L, Op, R>, typename Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData()).get<0>()) 
                 {
                     /// TODO Make sure this works correctly with eWrapper
                     //BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, VariableSizedVector, space> > ));
-                    boost::tuple<unsigned int, unsigned int, unsigned int> sizes = 
-                        MatrixSize<Node<L, Op, R>, typename Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
-                    this->Resize(sizes.get<0>());
+                    //boost::tuple<unsigned int, unsigned int, unsigned int> sizes = 
+                    //    MatrixSize<Node<L, Op, R>, typename Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
+                    //this->Resize(sizes.get<0>());
                     ExpressionEvaluator::Evaluate(rhs, *this);
                 }
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES

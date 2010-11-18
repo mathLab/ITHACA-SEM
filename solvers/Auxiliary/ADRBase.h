@@ -72,7 +72,10 @@ namespace Nektar
 
         /// Initialise the data in the dependent fields.
         void SetInitialConditions(NekDouble initialtime = 0.0,
-                                  bool dumpInitialConditions = true);
+                                  bool dumpInitialConditions = true)
+	{
+	  v_SetInitialConditions(initialtime,dumpInitialConditions);
+	}
 
         /// Populate given fields with the forcing function from session.
         void SetPhysForcingFunctions(
@@ -340,7 +343,7 @@ namespace Nektar
         {
             return v_Morphogenesis(field, x0j, x1j, x2j, time);
         }
-
+	
     protected:
         /// Array holding all dependent variables.
         Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
@@ -393,7 +396,11 @@ namespace Nektar
         /// Check for and load a double precision parameter
         void LoadParameter(std::string name, NekDouble &var, NekDouble def= 0.0);
 
+	virtual void v_SetInitialConditions(NekDouble initialtime = 0.0,
+					    bool dumpInitialConditions = true);
+
     private:
+
         virtual void v_GetFluxVector(const int i, Array<OneD,
                             Array<OneD, NekDouble> >&physfield,
                             Array<OneD, Array<OneD, NekDouble> >&flux)

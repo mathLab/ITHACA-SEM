@@ -53,26 +53,27 @@
   </GEOMETRY>
   
   <EXPANSIONS>
-    <E COMPOSITE="C[0]" NUMMODES="8" TYPE="MODIFIED" />
+    <E COMPOSITE="C[0]" NUMMODES="3" TYPE="MODIFIED" />
   </EXPANSIONS>
 
   <CONDITIONS>
 
     <PARAMETERS>
-      <P> TimeStep       = 0        </P>
-      <P> NumSteps       = 0        </P>
-      <P> FinTime        = 0.2      </P>
-      <P> IO_CheckSteps  = 1000     </P>
-      <P> IO_InfoSteps   = 1000     </P>
+      <P> TimeStep       = 0.00001   </P>
+      <P> NumSteps       = 0       </P>
+      <P> FinTime        = 0.38      </P>
+      <P> IO_CheckSteps  = 10000     </P>
+      <P> IO_InfoSteps   = 100     </P>
       <P> Gamma          = 1.4      </P>
       <P> IO_CheckTime   = 100      </P>
     </PARAMETERS>
 
     <SOLVERINFO>
-      <I PROPERTY="EQType" VALUE="eNoEquationType"/>
-      <I PROPERTY="Projection" VALUE="DisContinuous"/> 
-      <I PROPERTY="UpwindType" VALUE="Exact"/>
-      <I PROPERTY="ProblemType" VALUE="IsentropicVortex"/>
+      <I PROPERTY="EQType"                VALUE="EulerCFE"/>
+      <I PROPERTY="Projection"            VALUE="DisContinuous"/> 
+      <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
+      <I PROPERTY="UpwindType"            VALUE="Exact"/>
+      <I PROPERTY="ProblemType"           VALUE="IsentropicVortex"/>
     </SOLVERINFO>
 
     <VARIABLES>
@@ -88,26 +89,18 @@
 
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
-        <D VAR="rho"  VALUE="1" />
-	<D VAR="rhou" VALUE="1" />
-        <D VAR="rhov" VALUE="0" />
-        <D VAR="E"    VALUE="3" />
+        <D VAR="rho"  USERDEFINEDTYPE="IsentropicVortex" VALUE="0" />
+	<D VAR="rhou" USERDEFINEDTYPE="IsentropicVortex" VALUE="0" />
+        <D VAR="rhov" USERDEFINEDTYPE="IsentropicVortex" VALUE="0" />
+        <D VAR="E"    USERDEFINEDTYPE="IsentropicVortex" VALUE="0" />
       </REGION>
     </BOUNDARYCONDITIONS>
-
-    <FORCING>
-      <F VAR="rho" VALUE="cos(x)*cos(y)" />
-    </FORCING>   
-
-    <EXACTSOLUTION>
-      <F VAR="rho" VALUE="1" />
-    </EXACTSOLUTION>
     
     <INITIALCONDITIONS>
-      <F VAR="rho"  VALUE="1" />
-      <F VAR="rhou" VALUE="1" />
-      <F VAR="rhov" VALUE="1" />
-      <F VAR="E"    VALUE="1" />
+      <F VAR="rho"  VALUE="0" />
+      <F VAR="rhou" VALUE="0" />
+      <F VAR="rhov" VALUE="0" />
+      <F VAR="E"    VALUE="0" />
     </INITIALCONDITIONS>
     
   </CONDITIONS>

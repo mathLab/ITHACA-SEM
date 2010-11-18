@@ -410,8 +410,8 @@ namespace Nektar
      * @param   initialtime             Time at which to evaluate the function.
      * @param   dumpInitialConditions   Write the initial condition to file?
      */
-    void ADRBase::SetInitialConditions(NekDouble initialtime,
-                                       bool dumpInitialConditions)
+     void ADRBase::v_SetInitialConditions(NekDouble initialtime,
+					  bool dumpInitialConditions)
     {
         std::string restartstr = "RESTART";
 

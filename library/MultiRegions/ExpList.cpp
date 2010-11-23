@@ -1760,7 +1760,7 @@ namespace Nektar
                 out<<"View.MaxRecursionLevel = 4;"<<endl;
                 out<<"View.TargetError = 0.00;"<<endl;
                 out<<"View.AdaptVisualizationGrid = 1;"<<endl;
-                    
+
                 int i,j,k;
                 int nElementalCoeffs =  (*m_exp)[0]->GetBasisNumModes(0);
                 StdRegions::ExpansionType locShape
@@ -2632,6 +2632,13 @@ namespace Nektar
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
+        }
+
+        void ExpList::v_SetUpTangents()
+        {
+            for (int i = 0; i < (*m_exp).size(); ++i) {
+                (*m_exp)[i]->GetMetricInfo()->SetUpTangents();
+            }
         }
 
         void ExpList::v_GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,

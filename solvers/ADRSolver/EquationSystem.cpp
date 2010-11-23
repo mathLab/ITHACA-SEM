@@ -63,6 +63,14 @@ namespace Nektar
         : ADRBase(pSession->GetFilename(), true),
           m_session(pSession)
     {
+        // If a tangent vector policy is defined then the local tangent vectors
+        // on each element need to be generated.
+        if (pSession->DefinesGeometricInfo("TANGENTDIR"))
+        {
+            m_fields[0]->SetUpTangents();
+        }
+
+        // Zero all physical fields initially.
         ZeroPhysFields();
     }
 

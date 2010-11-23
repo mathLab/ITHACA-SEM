@@ -1,0 +1,177 @@
+\documentclass{article}
+\usepackage[a4paper,top=1cm,left=1cm,right=1cm,bottom=2cm]{geometry}
+\usepackage{bm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{tikz}
+\usetikzlibrary{positioning,shapes,shadows,arrows,matrix}
+
+\title{Nektar++: Incorporating iterative solvers}
+\author{C. D. Cantwell}
+\date{\today}
+
+\begin{document}
+\maketitle
+\input{classdiagram}
+
+\section{Specification}
+Implement the necessary framework of classes and interfaces to:
+\begin{itemize}
+  \item Implement the conjugate gradient method for solving global systems
+  iteratively.
+  \item Provide a unified interface for linking to other iterative
+  and/or parallel iterative solver libraries.
+  \item Encapsulate the underlying interaction with external libraries into a
+  common interface shared across the framework.
+  \item Ensure Nektar++ is not fixed-dependent on additional libraries (they
+  can be optionally enabled at CMake).
+\end{itemize}
+
+\section{Modifications to existing global solve}
+To minimise code dependencies it is proposed to restructure the
+\texttt{GlobalLinSys} class into a family of classes instantiated through a
+class factory. We maintain the \texttt{GlobalLinSys} class as a base class, providing
+virtual functions such as \texttt{solve()}. Additionally we provide,
+for example, the following derived classes which implement linear system solvers
+using various internal algorithms or external libraries (see Figure
+\ref{f:globallinsys}).
+\begin{itemize}
+    \item GlobalLinSysDirect - a full matrix, direct solve using LAPACK.
+    \item GlobalLinSysStaticCond - direct solve using substructuring
+    techniques to reduce storage requirements.
+    \item GlobalLinSysCG - implementation of a basic in-library conjugant
+    gradient solver.
+    \item GlobalLinSysPetSc - parallel iterative solver library interface.
+\end{itemize}
+The choice of solver to use will be selected using a \texttt{SOLVERINFO}
+session file option, \texttt{GLOBAL\_SOLVE\_METHOD}, and if the specified
+solver is unavailable the factory will inform the user by producing an error
+message. This will encapsulate and decouple all aspects related to a
+particular solve method and maintain clean code.
+
+Additional types of solves can be implemented to provide other iterative
+options. The encapsulation and code isolation allows the iterative algorithms
+to utilise the NekMatrix level objects in the case of an in-house iterative
+solver, or use non-native data types when utilising external libraries, as
+considered appropriate.
+
+\tikzset{my node/.code=\ifpgfmatrix\else\tikzset{matrix of nodes}\fi}
+
+\begin{figure}
+\begin{center}
+\begin{tikzpicture}[node distance=2cm]%[every node/.style={my node}] 
+    \node (GlobalLinSys) [class]
+    {
+        \textbf{GlobalLinSys}
+        \nodepart{second}{Base class}
+        \nodepart{third}{No dependencies}
+        %\nodepart{second}
+        %GlobalLinSys();\\virtual ~GlobalLinSys();\\virtual void solve();\\ 
+        %\nodepart{third}{
+        %    string className;
+        %}
+    };
+    \node (GlobalLinSysDirect)[class, below of=GlobalLinSys, xshift=5cm]
+    {
+        \textbf{GlobalLinSysDirect}
+        \nodepart{second}{Derived}
+        \nodepart{third}{No dependencies}
+    };
+    \node (GlobalLinSysStaticCond)[class, below of=GlobalLinSysDirect]
+    {
+        \textbf{GlobalLinSysStaticCond}
+        \nodepart{second}{Derived}
+        \nodepart{third}{No dependencies}
+    };
+    \node (GlobalLinSysCG)[class, below of=GlobalLinSysStaticCond]
+    {
+        \textbf{GlobalLinSysCG}
+        \nodepart{second}{Derived}
+        \nodepart{third}{No dependencies}
+    };
+    \node (GlobalLinSysPetSc)[class, below of=GlobalLinSysCG]
+    {
+        \textbf{GlobalLinSysPetSc}
+        \nodepart{second}{Derived}
+        \nodepart{third}{PetSc Library}
+    };
+    \draw[myarrow] (GlobalLinSys.south) |- (GlobalLinSysDirect.west);
+    \draw[myarrow] (GlobalLinSys.south) |- (GlobalLinSysStaticCond.west);
+    \draw[myarrow] (GlobalLinSys.south) |- (GlobalLinSysCG.west);
+    \draw[myarrow] (GlobalLinSys.south) |- (GlobalLinSysPetSc.west);
+\end{tikzpicture}
+\end{center}
+\caption{Class structure for GlobalLinSys.}
+\label{f:globallinsys}
+\end{figure}
+
+
+\subsection{Instantiation of GlobalLinSys objects}
+At present the GlobalLinSys class is instantiated in ExpList::GenGlobalLinSys.
+We propose to use the factory pattern to instantiate the required derived
+GlobalLinSys class. Possible issues here are:
+\begin{itemize}
+  \item Currently the global matrix system are assembled before they are
+  passed to the GlobalLinSys object. To resolve this one could:
+  \begin{itemize}
+    \item Pass the list of expansions to the GlobalLinSys object and
+    encapsulate the construction within there (recommended). Unfortunately,
+    this couples the GlobalLinSys class to the expansions and the underlying
+    structure, although maybe this isn't of too much concern.
+    \item Restructure the GlobalMatrix class in a similar way to the
+    GlobalLinSys class and generate the appropriate GlobalMatrix to pass to
+    the GlobalLinSys for solving. This would allow the use of arbitrary
+    matrices with the GlobalLinSys solvers.
+  \end{itemize}
+  \textbf{Note:} GenGlobalMatrixFull and GenLinSysFull appear to duplicate
+  significant portions of code. This may provide an opportunity to tidy things 
+  up.
+  \item In the current form, the static condensation GlobalLinSys class must
+  be changed to instead receive the 4 matrices in the form of a single block
+  matrix to remain constructor-compatible with the base class and Factory.
+\end{itemize}
+
+\section{Iterative Solvers}
+The framework will provide a number of options for iterative solvers, allowing
+the flexibility to utilise optimised external libraries and/or parallel
+implementations or use an in-built conjugant gradient solver. In all cases,
+each module in the framework will provide an implementation to solve a 
+matrix system:
+\begin{align}
+\bm{Ax}=\bm{b}
+\end{align}
+for known $\bm{b}$ and unknown $\bm{x}$.
+
+\subsection{Conjugant Gradient Method}
+The conjugate gradient algorithm proceeds as follows:
+\begin{algorithm}
+%\begin{algorithmic}
+$r_0 = Ax_0$ \\
+$z_0 = P^{-1}r_0$ \\
+$w_0 = z_0$ \\
+$j=0$ \\
+while not converged \\
+$\alpha_j = (r_j,z_j)/(Aw_j,w_j)$\\
+$x_{j+1} = x_j + \alpha_j w_j$\\
+$r_{j+1} = r_j - \alpha_j w_j$\\
+$z_{j+1} = P^{-1} r_{j+1}$\\
+$\beta_j = (r_{j+1},z_{j+1})/(r_j,z_j$\\
+$w_{j+1} = z_{j+1} + \beta_j w_j$\\
+continue
+%\end{algorithmic}
+\end{algorithm}
+
+
+\section{Dependency minimisation}
+We aim to minimise the number of additional dependencies introduced.
+\begin{itemize}
+  \item Interfaces for external libraries should be optionally compiled and
+  included through the use of CMake switches: e.g.
+  \texttt{NEKTAR\_SUPPORT\_PETSC}. The corresponding \texttt{GlobalLinSys}
+  derived class would only then be linked into the library.
+  \item Choice of iterative solver to use should be selectable at run-time
+  (use of Factory pattern and decoupled code).
+\end{itemize}
+\end{document}

@@ -53,7 +53,7 @@ namespace Nektar
 {
     namespace LocalRegions
     {
-        
+
         class TriExp: public StdRegions::StdTriExp, public Expansion2D
         {
 
@@ -72,9 +72,9 @@ namespace Nektar
             ~TriExp();
 
             void GetCoords(Array<OneD,NekDouble> &coords_1,
-                           Array<OneD,NekDouble> &coords_2, 
+                           Array<OneD,NekDouble> &coords_2,
                            Array<OneD,NekDouble> &coords_3 = NullNekDouble1DArray);
-            void GetCoord(const Array<OneD, const NekDouble>& Lcoords, 
+            void GetCoord(const Array<OneD, const NekDouble>& Lcoords,
                           Array<OneD,NekDouble> &coords);
 
             void GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal,
@@ -99,37 +99,37 @@ namespace Nektar
             /// \brief Integrate the physical point list \a inarray over region
             NekDouble Integral(const Array<OneD, const NekDouble> &inarray);
 
-            /** 
+            /**
                 \brief Calculate the inner product of inarray with respect to
                 the basis B=base0*base1 and put into outarray:
-            
-                \f$ 
+
+                \f$
                 \begin{array}{rcl}
                 I_{pq} = (\phi_q \phi_q, u) & = & \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1}
-                \phi_p(\xi_{0,i}) \phi_q(\xi_{1,j}) w^0_i w^1_j u(\xi_{0,i} \xi_{1,j}) 
+                \phi_p(\xi_{0,i}) \phi_q(\xi_{1,j}) w^0_i w^1_j u(\xi_{0,i} \xi_{1,j})
                 J_{i,j}\\
                 & = & \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i})
                 \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j}  J_{i,j}
                 \end{array}
-                \f$ 
-            
+                \f$
+
                 where
-            
+
                 \f$  \tilde{u}_{i,j} = w^0_i w^1_j u(\xi_{0,i},\xi_{1,j}) \f$
-            
+
                 which can be implemented as
-            
-                \f$  f_{qi} = \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j} = 
+
+                \f$  f_{qi} = \sum_{j=0}^{nq_1} \phi_q(\xi_{1,j}) \tilde{u}_{i,j} =
                 {\bf B_1 U}  \f$
-                \f$  I_{pq} = \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i}) f_{qi} = 
+                \f$  I_{pq} = \sum_{i=0}^{nq_0} \phi_p(\xi_{0,i}) f_{qi} =
                 {\bf B_0 F}  \f$
-            **/           
-            void IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
+            **/
+            void IProductWRTBase(const Array<OneD, const NekDouble>& inarray,
                                  Array<OneD, NekDouble> &outarray)
             {
                 bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eTriExp, NekOptimize::eIProductWRTBase>::
                     DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
+
                 if(doMatOp)
                 {
                     TriExp::IProductWRTBase_MatOp(inarray,outarray);
@@ -137,8 +137,8 @@ namespace Nektar
                 else
                 {
                     TriExp::IProductWRTBase_SumFac(inarray,outarray);
-                }  
-            }  
+                }
+            }
 
             void IProductWRTDerivBase(const int dir,
                                       const Array<OneD, const NekDouble>& inarray,
@@ -146,7 +146,7 @@ namespace Nektar
             {
                 bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eTriExp, NekOptimize::eIProductWRTDerivBase>::
                     DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
+
                 if(doMatOp)
                 {
                     TriExp::IProductWRTDerivBase_MatOp(dir,inarray,outarray);
@@ -154,7 +154,7 @@ namespace Nektar
                 else
                 {
                     TriExp::IProductWRTDerivBase_SumFac(dir,inarray,outarray);
-                }  
+                }
 
             }
 
@@ -162,18 +162,18 @@ namespace Nektar
             // Differentiation Methods
             //-----------------------------
 
-            void PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
+            void PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                            Array<OneD, NekDouble> &out_d0,
                            Array<OneD, NekDouble> &out_d1,
-                           Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);    
-        
-            void PhysDeriv(const int dir, 
+                           Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
+
+            void PhysDeriv(const int dir,
                            const Array<OneD, const NekDouble>& inarray,
                            Array<OneD, NekDouble> &outarray);
 
-            void PhysDirectionalDeriv(const Array<OneD, const NekDouble> &inarray, 
-                                      const Array<OneD, const NekDouble>& direction,
-                                      Array<OneD, NekDouble> &out);  
+            void PhysDirectionalDeriv(const Array<OneD, const NekDouble> &inarray,
+                                      const Array<OneD, const Array<OneD, NekDouble> >& direction,
+                                      Array<OneD, NekDouble> &out);
 
             //----------------------------
             // Evaluations Methods
@@ -182,50 +182,50 @@ namespace Nektar
             /** \brief Forward transform from physical quadrature space
                 stored in \a inarray and evaluate the expansion coefficients and
                 store in \a (this)->_coeffs  */
-            void FwdTrans(const Array<OneD, const NekDouble> &inarray, 
-                          Array<OneD, NekDouble> &outarray);        
+            void FwdTrans(const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD, NekDouble> &outarray);
 
-            void FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
+            void FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray,
                                          Array<OneD, NekDouble> &outarray);
             NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);
-        
+
             /** \brief Extract the physical values along edge \a edge
                 from \a inarray into \a outarray following the local
                 edge orientation and point distribution defined by
                 defined in \a EdgeExp.
-                
+
                 Note: this function will check to see if points
                 distribution along the Tri expansion \a edge is the
                 same as the local edge definition and if not
                 interpolate. If they are the same no interpolation
                 will be performed as can be seen in the functino
                 LibUtilities::Interp1D
-                
+
                 \param edge the edge id which is to be extracted
 
                 \param EdgeExp The Edge Expansion defining the
                 orientation and point distrubution points are to be
-                interpolated. 
+                interpolated.
 
                 \param inarray is the 2D physical point set from which
                 data is to be extracted.
 
                 \param outarray is the output data
             */
-            void GetEdgePhysVals(const int edge, 
-                                 const StdRegions::StdExpansion1DSharedPtr &EdgeExp, 
-                                 const Array<OneD, const NekDouble> &inarray, 
+            void GetEdgePhysVals(const int edge,
+                                 const StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+                                 const Array<OneD, const NekDouble> &inarray,
                                  Array<OneD,NekDouble> &outarray);
 
             StdRegions::StdExpansion1DSharedPtr GetEdgeExp(int edge, bool SetUpNormals=true);
 
-            void MassMatrixOp(const Array<OneD, const NekDouble> &inarray, 
+            void MassMatrixOp(const Array<OneD, const NekDouble> &inarray,
                               Array<OneD,NekDouble> &outarray,
                               const StdRegions::StdMatrixKey &mkey)
-            {              
+            {
                 bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eTriExp, NekOptimize::eMassMatrixOp>::
                     DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
+
                 if(doMatOp)
                 {
                     TriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
@@ -239,10 +239,10 @@ namespace Nektar
             void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
                                    const StdRegions::StdMatrixKey &mkey)
-            {           
+            {
                 bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eTriExp, NekOptimize::eLaplacianMatrixOp>::
                     DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
+
                 if(doMatOp)
                 {
                     TriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
@@ -253,14 +253,14 @@ namespace Nektar
                 }
             }
 
-            void LaplacianMatrixOp(const int k1, const int k2, 
+            void LaplacianMatrixOp(const int k1, const int k2,
                                    const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
                                    const StdRegions::StdMatrixKey &mkey)
-            {           
+            {
                 bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eTriExp, NekOptimize::eLaplacianMatrixIJOp>::
                     DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
+
                 if(doMatOp)
                 {
                     TriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
@@ -278,7 +278,7 @@ namespace Nektar
             {
                 bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eTriExp, NekOptimize::eWeakDerivMatrixOp>::
                     DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
+
                 if(doMatOp)
                 {
                     TriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
@@ -295,7 +295,7 @@ namespace Nektar
             {
                 bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eTriExp, NekOptimize::eWeakDerivMatrixOp>::
                     DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
+
                 if(doMatOp)
                 {
                     TriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
@@ -305,14 +305,14 @@ namespace Nektar
                     StdExpansion::WeakDirectionalDerivMatrixOp_MatFree(inarray,outarray,mkey);
                 }
             }
-            
+
             void MassLevelCurvatureMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                               Array<OneD,NekDouble> &outarray,
                                               const StdRegions::StdMatrixKey &mkey)
             {
                 bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eTriExp, NekOptimize::eMassMatrixOp>::
                     DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
+
                 if(doMatOp)
                 {
                     TriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
@@ -329,7 +329,7 @@ namespace Nektar
             {
                 bool doMatOp = NekOptimize::ElementalOptimization<StdRegions::eTriExp, NekOptimize::eHelmholtzMatrixOp>::
                     DoMatOp(m_base[0]->GetNumModes(),m_base[1]->GetNumModes());
-                
+
                 if(doMatOp)
                 {
                     TriExp::GeneralMatrixOp_MatOp(inarray,outarray,mkey);
@@ -338,7 +338,7 @@ namespace Nektar
                 {
                     TriExp::HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
                 }
-            }       
+            }
 
 
         protected:
@@ -349,29 +349,29 @@ namespace Nektar
 
             void MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
                                             Array<OneD, NekDouble> &outarray);
-            
-            void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
-                                        Array<OneD, NekDouble> &outarray);                
-            void IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray, 
+
+            void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
+                                        Array<OneD, NekDouble> &outarray);
+            void IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray,
                                        Array<OneD, NekDouble> &outarray);
 
-            void IProductWRTDerivBase_SumFac(const int dir, 
-                                             const Array<OneD, const NekDouble>& inarray, 
-                                             Array<OneD, NekDouble> & outarray);            
-            void IProductWRTDerivBase_MatOp(const int dir, 
-                                            const Array<OneD, const NekDouble>& inarray, 
-                                            Array<OneD, NekDouble> & outarray);   
-            
+            void IProductWRTDerivBase_SumFac(const int dir,
+                                             const Array<OneD, const NekDouble>& inarray,
+                                             Array<OneD, NekDouble> & outarray);
+            void IProductWRTDerivBase_MatOp(const int dir,
+                                            const Array<OneD, const NekDouble>& inarray,
+                                            Array<OneD, NekDouble> & outarray);
+
             void GeneralMatrixOp_MatOp(const Array<OneD, const NekDouble> &inarray,
                                        Array<OneD,NekDouble> &outarray,
-                                       const StdRegions::StdMatrixKey &mkey); 
-            
+                                       const StdRegions::StdMatrixKey &mkey);
+
             void LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                  Array<OneD,NekDouble> &outarray,
                                                  const StdRegions::StdMatrixKey &mkey);
             void HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                  Array<OneD,NekDouble> &outarray,
-                                                 const StdRegions::StdMatrixKey &mkey); 
+                                                 const StdRegions::StdMatrixKey &mkey);
 
         private:
             SpatialDomains::Geometry2DSharedPtr m_geom;
@@ -387,14 +387,14 @@ namespace Nektar
             {
                 return DetExpansionType();
             }
-	     
+
 	    virtual const LibUtilities::BasisSharedPtr& v_GetBasis(int dir) const
             {
 	      ASSERTL1(dir >= 0 &&dir <= 1,"input dir is out of range");
 	      return m_base[dir];
 	    }
 
-            virtual int v_GetNumPoints(const int dir) const 
+            virtual int v_GetNumPoints(const int dir) const
             {
                 return GetNumPoints(dir);
             }
@@ -417,7 +417,7 @@ namespace Nektar
                          "BasisType is not a boundary interior form");
 
                 return 3 + (GetBasisNumModes(0)-2) + 2*(GetBasisNumModes(1)-2);
-            } 
+            }
 
             virtual int v_NumDGBndryCoeffs() const
             {
@@ -427,7 +427,7 @@ namespace Nektar
                          "BasisType is not a boundary interior form");
 
                 return GetBasisNumModes(0) + 2*GetBasisNumModes(1);
-            } 
+            }
 
 
             virtual bool v_IsBoundaryInteriorExpansion()
@@ -445,7 +445,7 @@ namespace Nektar
                 return GetEdgeNumPoints(i);
             }
 
-            virtual void v_GetEdgeToElementMap(const int eid, const StdRegions::EdgeOrientation edgeOrient, 
+            virtual void v_GetEdgeToElementMap(const int eid, const StdRegions::EdgeOrientation edgeOrient,
                                                Array<OneD, unsigned int> &maparray, Array<OneD, int> &signarray)
             {
                 StdTriExp::GetEdgeToElementMap(eid,edgeOrient,maparray,signarray);
@@ -455,7 +455,7 @@ namespace Nektar
             {
                 StdTriExp::GetBoundaryMap(maparray);
             }
-            
+
 
             virtual const SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const
             {
@@ -480,7 +480,7 @@ namespace Nektar
                 GetCoords(coords_0, coords_1, coords_2);
             }
 
-            virtual void v_GetCoord(const Array<OneD, const NekDouble> &lcoord, 
+            virtual void v_GetCoord(const Array<OneD, const NekDouble> &lcoord,
                                     Array<OneD, NekDouble> &coord)
             {
                 GetCoord(lcoord, coord);
@@ -497,7 +497,7 @@ namespace Nektar
                 return m_geom->GetCoordim();
             }
 
-        
+
             virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v")
             {
                 WriteToFile(outfile,format,dumpVar,var);
@@ -523,8 +523,8 @@ namespace Nektar
             {
                 IProductWRTDerivBase(dir,inarray,outarray);
             }
-        
-            virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
+
+            virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD, NekDouble> &out_d0,
                                      Array<OneD, NekDouble> &out_d1,
                                      Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray)
@@ -532,7 +532,7 @@ namespace Nektar
                 PhysDeriv(inarray, out_d0, out_d1, out_d2);
             }
 
-            virtual void v_PhysDeriv(const int dir, 
+            virtual void v_PhysDeriv(const int dir,
                                      const Array<OneD, const NekDouble>& inarray,
                                      Array<OneD, NekDouble> &outarray)
             {
@@ -540,32 +540,32 @@ namespace Nektar
             }
 
             virtual void v_PhysDirectionalDeriv(const Array<OneD, const NekDouble>& inarray,
-                                                const Array<OneD, const NekDouble>& direction,
+                                                const Array<OneD, const Array<OneD, NekDouble> >& direction,
                                                 Array<OneD, NekDouble> &outarray)
             {
                 PhysDirectionalDeriv(inarray,direction,outarray);
             }
-        
+
             /// Virtual call to TriExp::FwdTrans
-            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray, 
+            virtual void v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                     Array<OneD, NekDouble> &outarray)
             {
                 FwdTrans(inarray,outarray);
             }
 
-            virtual void v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
+            virtual void v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray,
                                                    Array<OneD, NekDouble> &outarray)
             {
-                FwdTrans_BndConstrained(inarray, outarray); 
+                FwdTrans_BndConstrained(inarray, outarray);
             }
 
             /// Virtual call to TriExp::BwdTrans
-            virtual void v_BwdTrans(const Array<OneD, const NekDouble> &inarray, 
+            virtual void v_BwdTrans(const Array<OneD, const NekDouble> &inarray,
                                     Array<OneD, NekDouble> &outarray)
             {
                 BwdTrans(inarray,outarray);
             }
-        
+
             /// Virtual call to TriExp::Evaluate
             virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble> &coords)
             {
@@ -576,19 +576,19 @@ namespace Nektar
             {
                 return Linf(sol);
             }
-    
-        
+
+
             virtual NekDouble v_Linf()
             {
                 return Linf();
             }
-    
+
             virtual NekDouble v_L2(const Array<OneD, const NekDouble> &sol)
             {
                 return StdExpansion::L2(sol);
             }
 
-    
+
             virtual NekDouble v_L2()
             {
                 return StdExpansion::L2();
@@ -603,14 +603,14 @@ namespace Nektar
             {
                 return CreateStdMatrix(mkey);
             }
-        
+
             virtual DNekScalMatSharedPtr& v_GetLocMatrix(const MatrixKey &mkey)
             {
                 return m_matrixManager[mkey];
             }
 
-            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype, 
-                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
+            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
+                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble,
                                                          NekDouble tau = NekConstants::kNekUnsetDouble)
             {
                 MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau);
@@ -620,7 +620,7 @@ namespace Nektar
 
             virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
 							                             const Array<OneD, NekDouble> &dir1Forcing,
-                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
+                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble,
                                                          NekDouble tau = NekConstants::kNekUnsetDouble)
             {
 	            MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau,dir1Forcing);
@@ -629,17 +629,17 @@ namespace Nektar
 
             virtual DNekScalMatSharedPtr& v_GetLocMatrix(const StdRegions::MatrixType mtype,
                                                          const Array<OneD, Array<OneD, const NekDouble> >& varcoeffs,
-                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
+                                                         NekDouble lambdaval = NekConstants::kNekUnsetDouble,
                                                          NekDouble tau = NekConstants::kNekUnsetDouble)
             {
                 MatrixKey mkey(mtype,DetExpansionType(),*this,lambdaval,tau,varcoeffs);
                 return m_matrixManager[mkey];
             }
-        
+
             virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(const MatrixKey &mkey)
             {
                 return m_staticCondMatrixManager[mkey];
-            }    
+            }
 
             virtual StdRegions::EdgeOrientation v_GetEorient(int edge)
             {
@@ -651,22 +651,22 @@ namespace Nektar
                 return m_geom->GetCartesianEorient(edge);
             }
 
-            virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau, 
+            virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau,
                                                      const Array<OneD, const NekDouble> &inarray,
                                                      Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
-						     const Array<OneD, Array<OneD, const NekDouble> > &dirForcing, 
+						     const Array<OneD, Array<OneD, const NekDouble> > &dirForcing,
                                                      Array <OneD,NekDouble > &outarray)
             {
                 Expansion2D::AddHDGHelmholtzTraceTerms(tau,inarray,EdgeExp,dirForcing,outarray);
             }
-            
-            
+
+
             virtual void v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
             {
                 Expansion2D::AddRobinMassMatrix(edgeid,primCoeffs,inoutmat);
             }
 
-            virtual void v_DGDeriv(const int dir, 
+            virtual void v_DGDeriv(const int dir,
                                    const Array<OneD, const NekDouble>&incoeffs,
                                    Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                                    Array<OneD, NekDouble> &out_d)
@@ -679,69 +679,69 @@ namespace Nektar
                 return GetEdgeExp(edge,SetUpNormals);
             }
 
-            virtual void v_GetEdgePhysVals(const int edge, const StdRegions::StdExpansion1DSharedPtr &EdgeExp, 
-                                           const Array<OneD, const NekDouble> &inarray, 
+            virtual void v_GetEdgePhysVals(const int edge, const StdRegions::StdExpansion1DSharedPtr &EdgeExp,
+                                           const Array<OneD, const NekDouble> &inarray,
                                            Array<OneD,NekDouble> &outarray)
             {
                 GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
             }
 
-            
-            virtual void v_AddEdgeNormBoundaryInt(const int edge, 
+
+            virtual void v_AddEdgeNormBoundaryInt(const int edge,
                                                   StdRegions::StdExpansion1DSharedPtr &EdgeExp,
-                                                  const Array<OneD, const NekDouble> &Fx,  
-                                                  const Array<OneD, const NekDouble> &Fy,  
+                                                  const Array<OneD, const NekDouble> &Fx,
+                                                  const Array<OneD, const NekDouble> &Fy,
                                                   Array<OneD, NekDouble> &outarray)
             {
                 Expansion2D::AddEdgeNormBoundaryInt(edge,EdgeExp,Fx,Fy,outarray);
-                
+
             }
 
-            virtual void v_AddEdgeNormBoundaryBiInt(const int edge, 
+            virtual void v_AddEdgeNormBoundaryBiInt(const int edge,
                                                   StdRegions::StdExpansion1DSharedPtr &EdgeExp,
-                                                  const Array<OneD, const NekDouble> &Fwd,  
-                                                  const Array<OneD, const NekDouble> &Bwd,  
+                                                  const Array<OneD, const NekDouble> &Fwd,
+                                                  const Array<OneD, const NekDouble> &Bwd,
                                                   Array<OneD, NekDouble> &outarray)
             {
                 Expansion2D::AddEdgeNormBoundaryBiInt(edge,EdgeExp,Fwd,Bwd,outarray);
-                
+
             }
 
-            virtual void v_AddEdgeNormBoundaryInt(const int edge, 
+            virtual void v_AddEdgeNormBoundaryInt(const int edge,
                                                   StdRegions::StdExpansion1DSharedPtr &EdgeExp,
-                                                  const Array<OneD, const NekDouble> &Fn,  
+                                                  const Array<OneD, const NekDouble> &Fn,
                                                   Array<OneD, NekDouble> &outarray)
             {
                 Expansion2D::AddEdgeNormBoundaryInt(edge,EdgeExp,Fn,outarray);
-                
-            }  
-          
+
+            }
+
             virtual void v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray)
             {
                 BwdTrans_SumFac(inarray,outarray);
             }
-            
-            virtual void v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
+
+            virtual void v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
                                                   Array<OneD, NekDouble> &outarray)
             {
                 IProductWRTBase_SumFac(inarray,outarray);
-            }            
-            
+            }
+
             virtual void v_IProductWRTDerivBase_SumFac(const int dir,
-                                                       const Array<OneD, const NekDouble>& inarray, 
+                                                       const Array<OneD, const NekDouble>& inarray,
                                                        Array<OneD, NekDouble> &outarray)
             {
                 IProductWRTDerivBase_SumFac(dir,inarray,outarray);
             }
 
-            virtual void v_MassMatrixOp(const Array<OneD, const NekDouble> &inarray, 
+            virtual void v_MassMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                         Array<OneD,NekDouble> &outarray,
                                         const StdRegions::StdMatrixKey &mkey)
             {
                 MassMatrixOp(inarray,outarray,mkey);
-            }  
-            
+            }
+
             virtual void v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray,
                                              const StdRegions::StdMatrixKey &mkey)
@@ -749,7 +749,7 @@ namespace Nektar
                 LaplacianMatrixOp(inarray,outarray,mkey);
             }
 
-            virtual void v_LaplacianMatrixOp(const int k1, const int k2, 
+            virtual void v_LaplacianMatrixOp(const int k1, const int k2,
                                              const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray,
                                              const StdRegions::StdMatrixKey &mkey)
@@ -771,8 +771,8 @@ namespace Nektar
             {
                 WeakDirectionalDerivMatrixOp(inarray,outarray,mkey);
             }
-            
-            virtual void v_MassLevelCurvatureMatrixOp(const Array<OneD, const NekDouble> &inarray, 
+
+            virtual void v_MassLevelCurvatureMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                                       Array<OneD,NekDouble> &outarray,
                                                       const StdRegions::StdMatrixKey &mkey)
             {
@@ -784,30 +784,30 @@ namespace Nektar
                                              const StdRegions::StdMatrixKey &mkey)
             {
                 HelmholtzMatrixOp(inarray,outarray,mkey);
-            }  
-            
+            }
+
             virtual void v_LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
                                                            const StdRegions::StdMatrixKey &mkey)
             {
                 LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
             }
-            
+
             virtual void v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
                                                            const StdRegions::StdMatrixKey &mkey)
             {
                 HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
             }
-            
-            virtual void v_ExtractDataToCoeffs(const std::vector<NekDouble> &data, 
-                                               const int offset, 
-                                               const std::vector<unsigned int > &nummodes, 
+
+            virtual void v_ExtractDataToCoeffs(const std::vector<NekDouble> &data,
+                                               const int offset,
+                                               const std::vector<unsigned int > &nummodes,
                                                const int nmode_offset,
                                                Array<OneD, NekDouble> &coeffs);
 
         };
-        
+
         // type defines for use of TriExp in a boost vector
         typedef boost::shared_ptr<TriExp> TriExpSharedPtr;
         typedef std::vector< TriExpSharedPtr > TriExpVector;

@@ -751,57 +751,70 @@ namespace Nektar
                                Array<OneD,NekDouble> &out_d1,
                                Array<OneD,NekDouble> &out_d2)
         {
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int     nqtot = nquad0*nquad1;
-            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
-
-            Array<OneD,NekDouble> diff0(2*nqtot);
-            Array<OneD,NekDouble> diff1(diff0+nqtot);
-
-            StdTriExp::PhysDeriv(inarray, diff0, diff1);
-
-            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            if (m_metricinfo->IsUsingTangents())
             {
-                if(out_d0.num_elements())
-                {
-                    Vmath::Vmul  (nqtot,&gmat[0][0],1,&diff0[0],1, &out_d0[0], 1);
-                    Vmath::Vvtvp (nqtot,&gmat[1][0],1,&diff1[0],1, &out_d0[0], 1,
-                                  &out_d0[0],1);
-                }
-
-                if(out_d1.num_elements())
-                {
-                    Vmath::Vmul  (nqtot,&gmat[2][0],1,&diff0[0],1, &out_d1[0], 1);
-                    Vmath::Vvtvp (nqtot,&gmat[3][0],1,&diff1[0],1, &out_d1[0], 1,
-                                  &out_d1[0],1);
-                }
-
-                if(out_d2.num_elements())
-                {
-                    Vmath::Vmul  (nqtot,&gmat[4][0],1,&diff0[0],1, &out_d2[0], 1);
-                    Vmath::Vvtvp (nqtot,&gmat[5][0],1,&diff1[0],1, &out_d2[0], 1,
-                                  &out_d2[0],1);
-                }
+                cout << "Computing using tangent vectors" << endl;
+                //if (out_d0.num_elements())
+                //{
+                    PhysDirectionalDeriv(inarray, m_metricinfo->GetTangent(0), out_d0);
+                //}
+                    PhysDirectionalDeriv(inarray, m_metricinfo->GetTangent(1), out_d1);
             }
-            else // regular geometry
+            else
             {
-                if(out_d0.num_elements())
-                {
-                    Vmath::Smul (nqtot, gmat[0][0], diff0 , 1, out_d0, 1);
-                    Blas::Daxpy (nqtot, gmat[1][0], diff1 , 1, out_d0, 1);
-                }
+                //cout << "Computing using principle vectors" << endl;
+                int    nquad0 = m_base[0]->GetNumPoints();
+                int    nquad1 = m_base[1]->GetNumPoints();
+                int     nqtot = nquad0*nquad1;
+                const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
 
-                if(out_d1.num_elements())
-                {
-                    Vmath::Smul (nqtot, gmat[2][0], diff0, 1, out_d1, 1);
-                    Blas::Daxpy (nqtot, gmat[3][0], diff1, 1, out_d1, 1);
-                }
+                Array<OneD,NekDouble> diff0(2*nqtot);
+                Array<OneD,NekDouble> diff1(diff0+nqtot);
 
-                if(out_d2.num_elements())
+                StdTriExp::PhysDeriv(inarray, diff0, diff1);
+
+                if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                 {
-                    Vmath::Smul (nqtot, gmat[4][0], diff0, 1, out_d2, 1);
-                    Blas::Daxpy (nqtot, gmat[5][0], diff1, 1, out_d2, 1);
+                    if(out_d0.num_elements())
+                    {
+                        Vmath::Vmul  (nqtot,&gmat[0][0],1,&diff0[0],1, &out_d0[0], 1);
+                        Vmath::Vvtvp (nqtot,&gmat[1][0],1,&diff1[0],1, &out_d0[0], 1,
+                                      &out_d0[0],1);
+                    }
+
+                    if(out_d1.num_elements())
+                    {
+                        Vmath::Vmul  (nqtot,&gmat[2][0],1,&diff0[0],1, &out_d1[0], 1);
+                        Vmath::Vvtvp (nqtot,&gmat[3][0],1,&diff1[0],1, &out_d1[0], 1,
+                                      &out_d1[0],1);
+                    }
+
+                    if(out_d2.num_elements())
+                    {
+                        Vmath::Vmul  (nqtot,&gmat[4][0],1,&diff0[0],1, &out_d2[0], 1);
+                        Vmath::Vvtvp (nqtot,&gmat[5][0],1,&diff1[0],1, &out_d2[0], 1,
+                                      &out_d2[0],1);
+                    }
+                }
+                else // regular geometry
+                {
+                    if(out_d0.num_elements())
+                    {
+                        Vmath::Smul (nqtot, gmat[0][0], diff0 , 1, out_d0, 1);
+                        Blas::Daxpy (nqtot, gmat[1][0], diff1 , 1, out_d0, 1);
+                    }
+
+                    if(out_d1.num_elements())
+                    {
+                        Vmath::Smul (nqtot, gmat[2][0], diff0, 1, out_d1, 1);
+                        Blas::Daxpy (nqtot, gmat[3][0], diff1, 1, out_d1, 1);
+                    }
+
+                    if(out_d2.num_elements())
+                    {
+                        Vmath::Smul (nqtot, gmat[4][0], diff0, 1, out_d2, 1);
+                        Blas::Daxpy (nqtot, gmat[5][0], diff1, 1, out_d2, 1);
+                    }
                 }
             }
         }
@@ -837,9 +850,14 @@ namespace Nektar
 
         // Physical Derivation along direction vector
         void TriExp::PhysDirectionalDeriv(const Array<OneD, const NekDouble> & inarray,
-                                          const Array<OneD, const NekDouble>& direction,
+                                          const Array<OneD, const Array<OneD, NekDouble> >& direction,
                                           Array<OneD,NekDouble> &out)
         {
+            if(! out.num_elements())
+            {
+                return;
+            }
+
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nqtot = nquad0*nquad1;
@@ -864,17 +882,13 @@ namespace Nektar
                     tangmat[i] = Array<OneD, NekDouble>(nqtot,0.0);
                     for (int k=0; k<(m_geom->GetCoordim()); ++k)
                     {
-                        Vmath::Vvtvp(nqtot,&gmat[2*k+i][0],1,&direction[k*nqtot],1,&tangmat[i][0],1,&tangmat[i][0],1);
+                        Vmath::Vvtvp(nqtot,&gmat[2*k+i][0],1,&direction[k][0],1,&tangmat[i][0],1,&tangmat[i][0],1);
                     }
                 }
 
                 /// D_v = D^v_xi * du/d_xi + D^v_eta * du/d_eta
-                if(out.num_elements())
-                {
-                    Vmath::Vmul  (nqtot,&tangmat[0][0],1,&diff0[0],1, &out[0], 1);
-                    Vmath::Vvtvp (nqtot,&tangmat[1][0],1,&diff1[0],1, &out[0], 1, &out[0],1);
-                }
-
+                Vmath::Vmul  (nqtot,&tangmat[0][0],1,&diff0[0],1, &out[0], 1);
+                Vmath::Vvtvp (nqtot,&tangmat[1][0],1,&diff1[0],1, &out[0], 1, &out[0],1);
             }
             else
             {
@@ -1206,7 +1220,7 @@ namespace Nektar
                 StdRegions::StdNodalTriExpSharedPtr EGmsh;
                 EGmsh = MemoryManager<StdRegions::StdNodalTriExp>::
                     AllocateSharedPtr(Bkey1Gmsh,Bkey2Gmsh,ptype);
-                
+
                 Array<OneD,NekDouble> xi1(EGmsh->GetNcoeffs());
                 Array<OneD,NekDouble> xi2(EGmsh->GetNcoeffs());
                 EGmsh->GetNodalPoints(xi1,xi2);
@@ -1532,7 +1546,7 @@ namespace Nektar
 
                         Cxi[0]  = Cxi_wk;
                         Ceta[0] = Ceta_wk;
- 
+
                         // derivxi = Cxi * ( B * D_{\xi} *B^T )
                         // deriveta = Ceta * ( B * D_{\eta} * B^T )
                         MatrixKey derivxikey(StdRegions::eWeakDeriv0, mkey.GetExpansionType(), *this, Cxi);
@@ -1627,7 +1641,7 @@ namespace Nektar
                     MatrixKey lapkey(StdRegions::eLaplacian,mkey.GetExpansionType(), *this);
                     DNekMatSharedPtr lmat = GenMatrix(*lapkey.GetStdMatKey());
 
-                    // replace first column with inner product wrt 1                    
+                    // replace first column with inner product wrt 1
                     int nq = GetTotPoints();
                     Array<OneD, NekDouble> tmp(nq);
                     Array<OneD, NekDouble> outarray(m_ncoeffs);
@@ -1636,7 +1650,7 @@ namespace Nektar
 
                     Vmath::Vcopy(m_ncoeffs,&outarray[0],1,
                                  &(lmat->GetPtr())[0],m_ncoeffs);
-                    
+
                     lmat->Invert();
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,lmat); //Populate  matrix.
                 }
@@ -1779,11 +1793,11 @@ namespace Nektar
             int nblks = 2;
             returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks,nblks,exp_size,exp_size); //Really need a constructor which takes Arrays
             NekDouble factor = 1.0;
-            
+
             switch(mkey.GetMatrixType())
             {
-                // this can only use stdregions statically condensed system for mass matrix 
-            case StdRegions::eMass: 
+                // this can only use stdregions statically condensed system for mass matrix
+            case StdRegions::eMass:
                 if((m_metricinfo->GetGtype() == SpatialDomains::eDeformed)||(mkey.GetNvariableCoefficients()))
                 {
                     factor = 1.0;
@@ -1929,9 +1943,9 @@ namespace Nektar
         }
 
         // Unpack data from input file assuming it comes from the same expansion type
-        void TriExp::v_ExtractDataToCoeffs(const std::vector<NekDouble> &data, 
-                                            const int offset, 
-                                            const std::vector<unsigned int > &nummodes, 
+        void TriExp::v_ExtractDataToCoeffs(const std::vector<NekDouble> &data,
+                                            const int offset,
+                                            const std::vector<unsigned int > &nummodes,
                                             const int nmode_offset,
                                             Array<OneD, NekDouble> &coeffs)
         {
@@ -1941,9 +1955,9 @@ namespace Nektar
             int data_order1 = nummodes[nmode_offset+1];
             int order1      = m_base[1]->GetNumModes();
             int fillorder1  = min(order1,data_order1);
-            
+
             switch(m_base[0]->GetBasisType())
-            { 
+            {
             case LibUtilities::eModified_A:
                 {
                     int i;
@@ -1952,7 +1966,7 @@ namespace Nektar
 
                     ASSERTL1(m_base[1]->GetBasisType() == LibUtilities::eModified_B,
                              "Extraction routine not set up for this basis");
-                    
+
                     Vmath::Zero(m_ncoeffs,coeffs,1);
                     for(i = 0; i < fillorder0; ++i)
                     {

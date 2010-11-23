@@ -113,6 +113,9 @@ namespace Nektar
             /// Flag indicating if Laplacian metrics are in use.
             inline bool IsUsingLaplMetrics() const;
 
+            /// Flag indicating if Tangents have been computed.
+            inline bool IsUsingTangents() const;
+
             /// Set up quadrature metrics
             inline void SetUpQuadratureMetrics(
                         StdRegions::ExpansionType shape,
@@ -124,6 +127,9 @@ namespace Nektar
                         StdRegions::ExpansionType shape,
                         const Array<OneD, const LibUtilities::BasisSharedPtr>
                                                                        &tbasis);
+
+            /// Set up Tangents
+            inline void SetUpTangents();
 
             /// Retrieve the quadrature metrics.
             inline const Array<OneD, const NekDouble> &GetQuadratureMetrics()
@@ -320,6 +326,12 @@ namespace Nektar
             return m_isUsingLaplMetrics;
         }
 
+        /// Flag indicating if Tangents are in use.
+        inline bool GeomFactors::IsUsingTangents() const
+        {
+            return (m_tangents.num_elements() != 0);
+        }
+
         /// Set up quadrature metrics
         inline void GeomFactors::SetUpQuadratureMetrics(
                     StdRegions::ExpansionType shape,
@@ -336,6 +348,13 @@ namespace Nektar
                                                                     &tbasis)
         {
             v_SetUpLaplacianMetrics(shape, tbasis);
+        }
+
+        /// Set up Tangents
+        inline void GeomFactors::SetUpTangents()
+        {
+            cout << "GeomFactors: Setting up tangents" << endl;
+            v_ComputeTangents();
         }
 
         /// Retrieve the quadrature metrics.

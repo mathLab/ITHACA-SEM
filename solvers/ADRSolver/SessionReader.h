@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: 
+// Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef NEKTAR_SOLVERS_ADRSOLVER_SESSIONREADER_H
@@ -48,6 +48,7 @@ namespace Nektar
 {
     typedef std::map<std::string, std::string>  SolverInfoMap;
     typedef std::map<std::string, NekDouble>    ParameterMap;
+    typedef std::map<std::string, std::string>  GeometricInfoMap;
 
     class SessionReader
     {
@@ -71,15 +72,22 @@ namespace Nektar
         void MatchSolverInfo(const std::string name, const std::string trueval, bool& var, const bool def = false);
         bool DefinesSolverInfo(const std::string name);
 
+        void LoadGeometricInfo(const std::string name, std::string& var, const std::string def = "");
+        void LoadGeometricInfo(const std::string name, bool& var, const bool def = false);
+        void MatchGeometricInfo(const std::string name, const std::string trueval, bool& var, const bool def = false);
+        bool DefinesGeometricInfo(const std::string name);
+
     private:
         std::string                 m_filename;
         TiXmlDocument*              m_xmlDoc;
 
         SolverInfoMap               m_solverInfo;
         ParameterMap                m_parameters;
+        GeometricInfoMap            m_geometricInfo;
 
         void ReadParameters(TiXmlElement *conditions);
         void ReadSolverInfo(TiXmlElement *conditions);
+        void ReadGeometricInfo(TiXmlElement *geometry);
 
         /// Perform a case-insensitive string comparison.
         int NoCaseStringCompare(const std::string & s1, const std::string& s2);

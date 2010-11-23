@@ -13,8 +13,6 @@ SET(ADRSolverSource
        ./EquationSystems/UnsteadyAdvectionDiffusion.cpp
        ./EquationSystems/UnsteadyInviscidBurger.cpp
        ./EquationSystems/Monodomain.cpp
-       ./EquationSystems/MonodomainAlievPanfilov.cpp
-       ./EquationSystems/MonodomainFitzHughNagumo.cpp
        ../Auxiliary/ADRBase.cpp)
 
 ADD_SOLVER_EXECUTABLE(ADRSolver 

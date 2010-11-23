@@ -550,6 +550,8 @@ namespace Nektar
 
             inline void SetUpPhysNormals(const StdRegions::StdExpansionVector &locexp);
 
+            inline void SetUpTangents();
+
             inline void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                              Array<OneD,int> &EdgeID);
 
@@ -898,6 +900,8 @@ namespace Nektar
 
             virtual void v_SetUpPhysNormals(
                                             const StdRegions::StdExpansionVector &locexp);
+
+            virtual void v_SetUpTangents();
 
             virtual void v_GetBoundaryToElmtMap(
                                                 Array<OneD, int> &ElmtID,
@@ -1551,6 +1555,11 @@ namespace Nektar
                                 const StdRegions::StdExpansionVector &locexp)
         {
             v_SetUpPhysNormals(locexp);
+        }
+
+        inline void ExpList::SetUpTangents()
+        {
+            v_SetUpTangents();
         }
 
         inline void ExpList::GetBoundaryToElmtMap( Array<OneD, int> &ElmtID,

@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Session reader 
+// Description: Session reader
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -69,6 +69,10 @@ namespace Nektar
 
         ReadParameters(e);
         ReadSolverInfo(e);
+
+        e = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
+
+        ReadGeometricInfo(e);
     }
 
     SessionReader::SessionReader(const SessionReader& pSrc)
@@ -173,6 +177,65 @@ namespace Nektar
         return (solverInfoMapIter != m_solverInfo.end());
     }
 
+    void SessionReader::LoadGeometricInfo(const std::string pName,
+                            std::string& pVar, const std::string pDefault)
+    {
+        GeometricInfoMap::iterator geometricInfoMapIter = m_geometricInfo.find(pName);
+        if(geometricInfoMapIter != m_geometricInfo.end())
+        {
+            pVar = geometricInfoMapIter->second;
+        }
+        else
+        {
+            pVar  = pDefault;
+        }
+    }
+
+    void SessionReader::LoadGeometricInfo(const std::string pName, bool& pVar,
+                            const bool pDefault)
+    {
+        GeometricInfoMap::iterator geometricInfoMapIter = m_geometricInfo.find(pName);
+        if(geometricInfoMapIter != m_geometricInfo.end())
+        {
+            std::string s = geometricInfoMapIter->second;
+            if (s == "TRUE")
+            {
+                pVar = true;
+            }
+            else
+            {
+                pVar = false;
+            }
+        }
+        else
+        {
+            pVar  = pDefault;
+        }
+    }
+
+    void SessionReader::MatchGeometricInfo(const std::string pName,
+                            const std::string pTrueVal, bool& pVar,
+                            const bool pDefault)
+    {
+        GeometricInfoMap::iterator geometricInfoMapIter = m_geometricInfo.find(pName);
+        if(geometricInfoMapIter != m_geometricInfo.end())
+        {
+            pVar = (NoCaseStringCompare(geometricInfoMapIter->second, pTrueVal) == 0);
+        }
+        else
+        {
+            pVar  = pDefault;
+        }
+    }
+
+    bool SessionReader::DefinesGeometricInfo(const std::string pName)
+    {
+        std::string vName = pName;
+        transform(vName.begin(), vName.end(), vName.begin(), (int(*)(int))std::toupper);
+        GeometricInfoMap::iterator geometricInfoMapIter = m_geometricInfo.find(vName);
+        return (geometricInfoMapIter != m_geometricInfo.end());
+    }
+
     void SessionReader::ReadSolverInfo(TiXmlElement *conditions)
     {
         TiXmlElement *solverInfoElement = conditions->FirstChildElement("SOLVERINFO");
@@ -260,6 +323,38 @@ namespace Nektar
             //SpatialDomains::Equation::SetConstParameters(mParameters);
         }
     }
+
+    void SessionReader::ReadGeometricInfo(TiXmlElement *geometry)
+    {
+        TiXmlElement *geometricInfoElement = geometry->FirstChildElement("GEOMINFO");
+
+        if (geometricInfoElement)
+        {
+            TiXmlElement *geometricInfo = geometricInfoElement->FirstChildElement("I");
+
+            while (geometricInfo)
+            {
+                std::string geometricProperty = geometricInfo->Attribute("PROPERTY");
+                // make sure that geometric property is capitalised
+                transform(geometricProperty.begin(), geometricProperty.end(), geometricProperty.begin(), (int(*)(int))std::toupper);
+                ASSERTL0(!geometricProperty.empty(), "Unable to find PROPERTY value.");
+
+                std::string geometricValue    = geometricInfo->Attribute("VALUE");
+                ASSERTL0(!geometricValue.empty(),"Unable to find VALUE string");
+
+                GeometricInfoMap::iterator geometricInfoIter = m_geometricInfo.find(geometricProperty);
+
+                ASSERTL0(geometricInfoIter == m_geometricInfo.end(),
+                         (std::string("geometricInfo value: ") + geometricProperty
+                          + std::string(" already specified.")).c_str());
+
+                // Set Variable
+                m_geometricInfo[geometricProperty] = geometricValue;
+                geometricInfo = geometricInfo->NextSiblingElement("I");
+            }
+        }
+    }
+
 
     int SessionReader::NoCaseStringCompare(const std::string & s1, const std::string& s2)
     {

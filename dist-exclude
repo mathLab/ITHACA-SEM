@@ -11,6 +11,7 @@ solvers/BoussinesqSolver
 solvers/EulerSolver
 solvers/FitzHughNagumoSolver
 docs/*.doc
+docs/arch
 docs/emacs
 docs/.cvsignore
 docs/html/code

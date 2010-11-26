@@ -1029,46 +1029,52 @@ namespace Nektar
             }
             
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-                //template<typename ExpressionPolicyType>
-                //ThisType& operator=(const Expression<ExpressionPolicyType>& rhs)
-                //{
-                //    BOOST_MPL_ASSERT(( 
-                //        boost::mpl::or_
-                //        <
-                //            boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<DataType, StandardMatrixTag> >,
-                //            boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekMatrix<const DataType, StandardMatrixTag> >
-                //        > ));
-                //    if( rhs.ContainsReference(*this) )
-                //    {
-                //        ThisType temp = rhs;
-                //        *this = temp;
-                //    }
-                //    else
-                //    {
-                //        if( this->GetRows() != rhs.GetMetadata().Rows ||
-                //            this->GetColumns() != rhs.GetMetadata().Columns )
-                //        {
-                //            Resize(rhs.GetMetadata().Rows, rhs.GetMetadata().Columns);
-                //            this->ResizeDataArrayIfNeeded(rhs.GetMetadata());
-                //        }
+                template<typename L, typename Op, typename R>
+                ThisType& operator=(const Node<L, Op, R>& rhs)
+                {
+					if( this->GetWrapperType() == eWrapper || 
+                        ExpressionEvaluator::ContainsAlias(rhs, *this) )
+					{
+						// Assignment into a wrapped matrix can't change the matrix size (the matrix 
+						// can be wrapping a portion of a larger array that can't be resized).
+						// If the matrix is wrapped, we'll evaluate the expression into  temporary 
+						// and then assign the temporary, relying on the operator= for the error 
+						// checking relating to size.
 
-                //        this->SetTransposeFlag('N');
-                //        Array<OneD, DataType> original = this->GetData();
-                //        
-                //        rhs.Evaluate(*this);
-                //        
-                //        if( this->GetWrapperType() == eWrapper )
-                //        {
-                //            if( this->GetData().data() != original.data() )
-                //            {
-                //                this->SwapTempAndDataBuffers();
-                //                std::copy(this->GetTempSpace().data(), this->GetTempSpace().data() + this->GetRequiredStorageSize(),
-                //                    this->GetData().data());
-                //            }
-                //        }
-                //    }
-                //    return *this;
-                //}
+                        // If the expression is aliased, we need to do the same thing, as 
+                        // we can't change the size of the accumulator before evaluation.
+						ThisType temp(rhs);
+						*this = temp;
+					}
+					else
+					{
+                        // If the matrix is not wrapped, then we are free to resize as necessary.
+
+						boost::tuple<unsigned int, unsigned int, unsigned int> sizes = 
+                        MatrixSize<Node<L, Op, R>, typename Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData());
+						unsigned int rows = sizes.get<0>();
+						unsigned int columns = sizes.get<1>();
+						unsigned int bufferSize = sizes.get<2>();
+
+                        if( this->GetRows() != rows ||
+							this->GetColumns() != columns )
+						{
+							this->Resize(rows, columns);	
+						}
+
+                        // We don't resize the temp workspace since we don't know if we will 
+                        // need it.  It will be sized when needed during expression evaluation.
+                        this->ResizeDataArrayIfNeeded(bufferSize);
+
+                        this->SetTransposeFlag('N');
+
+                        ExpressionEvaluator::Evaluate(rhs, *this);
+                        this->RemoveExcessCapacity();
+					}
+
+                    return *this;        
+                }
+                    
             #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
             void SetSize(unsigned int rows, unsigned int cols)

@@ -394,6 +394,14 @@ namespace Nektar
         {
             return BinaryMatrixSizeEvaluator<L1, LOp, L2, Op, R1, ROp, R2, Indices, index>::GetRequiredSize(args);
         }
+        
+        template<typename ArgumentVectorType>
+        static unsigned int
+        GetRequiredRows(const ArgumentVectorType& args)
+        {
+            boost::tuple<unsigned int, unsigned int, unsigned int> values = GetRequiredSize(args);
+            return values.get<0>();
+        }
     };
 
 }

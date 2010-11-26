@@ -69,6 +69,7 @@
  * - @subpage pageSolvers
  *
  * @subsection subsectionMainContentDevelopment Development pages
+ * - @subpage pageRepositoryUsage
  * - @subpage pageCodeStandard
  * - @subpage todo
  * - @subpage deprecated

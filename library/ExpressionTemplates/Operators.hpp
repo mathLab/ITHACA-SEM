@@ -50,6 +50,11 @@ namespace Nektar
             AddEqual(accum, rhs);
         }
 
+        static void OpEqual(double& accum, const double& rhs)
+        {
+            accum += rhs;
+        }
+
         template<typename L, typename R>
         static typename ResultType<L, R>::type Op(const L& lhs, const R& rhs)
         {
@@ -77,6 +82,11 @@ namespace Nektar
         static void OpEqual(L& accum, const R& rhs)
         {
             MultiplyEqual(accum, rhs);
+        }
+
+        static void OpEqual(double& accum, const double& rhs)
+        {
+            accum *= rhs;
         }
 
         template<typename L, typename R>
@@ -107,6 +117,11 @@ namespace Nektar
             DivideEqual(accum, rhs);
         }
 
+        static void OpEqual(double& accum, const double& rhs)
+        {
+            accum /= rhs;
+        }
+
         template<typename L, typename R>
         static typename ResultType<L, R>::type Op(const L& lhs, const R& rhs)
         {
@@ -133,6 +148,11 @@ namespace Nektar
         static void OpEqual(L& accum, const R& rhs)
         {
             SubtractEqual(accum, rhs);
+        }
+
+        static void OpEqual(double& accum, const double& rhs)
+        {
+            accum -= rhs;
         }
 
         template<typename L, typename R>

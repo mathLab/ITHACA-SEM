@@ -81,7 +81,6 @@ namespace Nektar
         const DataType* rhs_buf = rhs.GetRawPtr();
         for(int i = 0; i < rhs.GetDimension(); ++i)
         {
-            //result[i] += rhs[i];
             r_buf[i] += rhs_buf[i];
         }
     }
@@ -230,52 +229,6 @@ namespace Nektar
     GENERATE_SUBTRACTION_OPERATOR(NekVector, 3, NekVector, 3);
 
 
-    //template<typename DataType, typename dim, typename space>
-    //NekVector<DataType, dim, space>
-    //operator+(const NekVector<DataType, dim, space>& lhs, const NekVector<DataType, dim, space>& rhs)
-    //{
-    //    NekVector<DataType, dim, space> result(lhs);
-    //    result += rhs;
-    //    return result;
-    //}
-
-    //template<typename DataType, typename dim, typename space>
-    //NekVector<DataType, dim, space>
-    //operator-(const NekVector<DataType, dim, space>& lhs, const NekVector<DataType, dim, space>& rhs)
-    //{
-    //    NekVector<DataType, dim, space> result(lhs);
-    //    result -= rhs;
-    //    return result;
-    //}
-
-    //template<typename DataType, typename dim, typename space>
-    //NekVector<DataType, dim, space>
-    //operator*(const NekVector<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::const_reference rhs)
-    //{
-    //    NekVector<DataType, dim, space> result(lhs);
-    //    result *= rhs;
-    //    return result;
-    //}
-
-    //template<typename DataType, typename dim, typename space>
-    //NekVector<DataType, dim, space>
-    //operator*(typename boost::call_traits<DataType>::const_reference lhs, const NekVector<DataType, dim, space>& rhs)
-    //{
-    //    NekVector<DataType, dim, space> result(rhs);
-    //    result *= lhs;
-    //    return result;
-    //}
-
-    //template<typename DataType, typename dim, typename space>
-    //NekVector<DataType, dim, space>
-    //operator/(const NekVector<DataType, dim, space>& lhs, typename boost::call_traits<DataType>::const_reference rhs)
-    //{
-    //    NekVector<DataType, dim, space> result(lhs);
-    //    result /= rhs;
-    //    return result;
-    //}
-
-
     template<typename DataType, typename dim, typename space>
     std::ostream& operator<<(std::ostream& os, const NekVector<DataType, dim, space>& rhs)
     {
@@ -342,178 +295,104 @@ namespace Nektar
         typedef NekVector<DataType, Dim, Space> type;
     };
         
-//     template<typename DataType, Nektar::NekMatrixForm lhsForm, MatrixBlockType BlockType, typename space, unsigned int dim>
-//     NekVector<DataType, dim, space> operator*(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs,
-//                                               const NekVector<DataType, dim, space>& rhs)
-//     {
-//         NekVector<DataType, dim, space> result(lhs.GetRows(), DataType(0));
-//         for(unsigned int i = 0; i < result.GetRows(); ++i)
-//         {
-//             for(unsigned int j = 0; j < lhs.GetColumns(); ++j)
-//             {
-//                 result[i] += lhs(i,j)*rhs(j);
-//             }
-//         }
-// 
-//         return result;
-//     }
 
-//#ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
-//    template<typename DataType, Nektar::NekMatrixForm lhsForm, MatrixBlockType BlockType, typename space, unsigned int dim>
-//    typename expt::BinaryExpressionType<NekMatrix<DataType, lhsForm, BlockType, space>, 
-//                                        expt::MultiplyOp,
-//                                        NekVector<DataType, dim, space> >::Type
-//    operator*(const NekMatrix<DataType, lhsForm, BlockType, space>& lhs,
-//              const NekVector<DataType, dim, space>& rhs)
-//    {
-//        return expt::CreateBinaryExpression<expt::MultiplyOp>(lhs, rhs);
-//    }
-//
-//    template<typename DataType, Nektar::NekMatrixForm lhsForm, MatrixBlockType BlockType, typename space, unsigned int dim>
-//    class MultiplicationTraits<Nektar::NekMatrix<DataType, lhsForm, BlockType, space>, 
-//                               Nektar::NekVector<DataType, dim, space> >
-//    {
-//        public:
-//            typedef Nektar::NekMatrix<DataType, lhsForm, BlockType, space> LhsType;
-//            typedef Nektar::NekVector<DataType, dim, space> RhsType;
-//            typedef Nektar::NekVectorMetadata MetadataType;
-//            typedef Nektar::NekVector<DataType, dim, space> result_type;
-//            static const bool HasOpEqual = false;
-//            static const bool HasOpLeftEqual = false;
-//            
-//            static void Multiply(result_type& result, const LhsType& lhs, const RhsType& rhs)
-//            {
-//                ASSERTL0(result.GetRows() == lhs.GetColumns(), "Dimension error in matrix/vector multiply");
-//#ifdef NEKTAR_USING_LAPACK
-//                int m = lhs.GetRows();
-//                int n = lhs.GetColumns();
-//                Blas::Dgemv('T', m, n, 1.0, lhs.GetPtr().get(),  m, rhs.GetPtr().get(),
-//                            1. 1.0, result.GetPtr().get(), 1);
-//#else
-//                for(unsigned int i = 0; i < result.GetRows(); ++i)
-//                {
-//                    result[i] = DataType(0);
-//                    for(unsigned int j = 0; j < result.GetColumns(); ++j)
-//                    {
-//                        result[i] += lhs(i,j)*rhs(j);
-//                    }
-//                }
-//#endif //NEKTAR_USING_LAPACK
-//            }
-//
-//    };
-////#endif //NEKTAR_USE_EXPRESSION_TEMPLATES
+    #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
+        // Override default expression handling for addition/subtraction of vectors.
+        // Optimal execution is obtained by loop unrolling.
+
+        template<typename NodeType, typename enabled = void>
+        struct NodeCanUnroll : public boost::false_type
+        {
+        };
+
+        template<typename Type>
+        struct NodeCanUnroll<Node<Type, void, void>,
+            typename boost::enable_if
+            <
+                IsVector<typename Node<Type, void, void>::ResultType>
+            >::type > : public boost::true_type
+        {
+        };
+        
+        template<typename LhsType, typename OpType, typename RhsType>
+        struct NodeCanUnroll<Node<LhsType, OpType, RhsType>, 
+            typename boost::enable_if
+            <
+                boost::mpl::and_
+                <
+                    IsVector<typename LhsType::ResultType>,
+                    IsVector<typename RhsType::ResultType>,
+                    NodeCanUnroll<LhsType>,
+                    NodeCanUnroll<RhsType>,
+                    boost::mpl::or_
+                    <
+                        boost::is_same<OpType, AddOp>,
+                        boost::is_same<OpType, SubtractOp>
+                    >
+                >
+            >::type >: public boost::true_type
+        {
+        };
+
+        template<typename NodeType, typename IndicesType, unsigned int index>
+        struct Accumulate;
+
+        template<typename LhsType, typename IndicesType, unsigned int index>
+        struct Accumulate<Node<LhsType, void, void>, IndicesType, index>
+        {
+            static const unsigned int MappedIndex = boost::mpl::at_c<IndicesType, index>::type::value;
+
+            template<typename ResultType, typename ArgumentVectorType>
+            static void Execute(ResultType& accumulator, const ArgumentVectorType& args, unsigned int i)
+            {
+                accumulator = boost::fusion::at_c<MappedIndex>(args)[i];
+            }
+        };
+
+        template<typename LhsType, typename Op, typename RhsType, typename IndicesType, unsigned int index>
+        struct Accumulate<Node<LhsType, Op, RhsType>, IndicesType, index>
+        {
+            static const int rhsNodeIndex = index + LhsType::TotalCount;
+
+            template<typename ResultType, typename ArgumentVectorType>
+            static void Execute(ResultType& accumulator, const ArgumentVectorType& args, unsigned int i)
+            {
+                Accumulate<LhsType, IndicesType, index>::Execute(accumulator, args, i);
+                ResultType rhs;
+                Accumulate<RhsType, IndicesType, rhsNodeIndex>::Execute(rhs, args, i);
+                Op::OpEqual(accumulator, rhs);
+            }
+        };
+
+        // Conditions
+        // Lhs and Rhs must result in a vector.
+        // Op must be Plus or Minus
+        // Must apply recursively.
+        template<typename LhsType, typename Op, typename RhsType, typename IndicesType, unsigned int index>
+        struct BinaryBinaryEvaluateNodeOverride<LhsType, Op, RhsType, IndicesType, index,
+            typename boost::enable_if
+            <
+                NodeCanUnroll<Node<LhsType, Op, RhsType> >
+            >::type
+         > : public boost::true_type 
+        {
+            template<typename ResultType, typename ArgumentVectorType>
+            static void Evaluate(ResultType& accumulator, const ArgumentVectorType& args)
+            {
+                static const int endIndex = index + LhsType::TotalCount + RhsType::TotalCount;
+                typedef typename ResultType::DataType DataType;
+                
+                for(int i = 0; i < accumulator.GetRows(); ++i)
+                {
+                    DataType result = 0;
+                    Accumulate<Node<LhsType, Op, RhsType>, IndicesType, index>::Execute(result, args, i);
+                    accumulator[i] = result;
+                }
+            }
+        };
+    #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
 
 }
 
 #endif // NEKTAR_LIB_UTILITIES_NEK_VECTOR_HPP
-
-/**
-    $Log: NekVector.hpp,v $
-    Revision 1.31  2008/10/12 19:49:28  bnelson
-    *** empty log message ***
-
-    Revision 1.30  2008/04/06 05:55:12  bnelson
-    Changed ConstArray to Array<const>
-
-    Revision 1.29  2008/03/28 01:42:32  bnelson
-    Updated constant sized vectors so they inherit from NekVector<const DataType> like the variable sized vectors.
-
-    Revision 1.28  2008/03/03 02:28:39  bnelson
-    Changed OneD, TwoD, and ThreeD to classes instead of enums to support type parameters in NekVector instead of unsigned int for the dimensions.
-
-    Added a new NekVector<const DataType> to allow wrapping of ConstArrays.
-
-    Revision 1.27  2008/01/25 05:46:07  bnelson
-    Changed NekVector::GetPtr to NekVector::GetRawPtr and added a new NekVector::GetPtr that returns an Array.  This makes the calls consistent with NekMatrix.
-
-    Revision 1.26  2008/01/20 06:13:11  bnelson
-    Fixed visual c++ errors.
-
-    Revision 1.25  2008/01/20 03:59:36  bnelson
-    Expression template updates.
-
-    Revision 1.24  2008/01/07 04:57:40  bnelson
-    Changed binary expressions so the OpType is listed second instead of third.
-
-    Revision 1.23  2007/12/04 04:55:23  bnelson
-    *** empty log message ***
-
-    Revision 1.22  2007/11/08 03:22:29  bnelson
-    Updated operator== so constant sized and variable sized vectors can be compared.
-
-    Revision 1.21  2007/10/28 18:29:21  bnelson
-    Temporarily enabled expression templates for vectors.
-
-    Revision 1.20  2007/08/24 18:13:48  bnelson
-    Removed various old matrix files.
-
-    Revision 1.19  2007/08/16 02:10:20  bnelson
-    *** empty log message ***
-
-    Revision 1.18  2007/06/10 23:42:16  bnelson
-    Matrix updates.
-
-    Revision 1.17  2007/04/05 05:12:45  bnelson
-    *** empty log message ***
-
-    Revision 1.16  2007/02/15 06:56:55  bnelson
-    *** empty log message ***
-
-    Revision 1.15  2007/02/04 00:15:41  bnelson
-    *** empty log message ***
-
-    Revision 1.14  2007/01/29 01:31:08  bnelson
-    *** empty log message ***
-
-    Revision 1.13  2007/01/23 03:12:50  jfrazier
-    Added more conditional compilation directives for expression templates.
-
-    Revision 1.12  2006/11/29 00:09:32  bnelson
-    Removed the LPNorm stub.
-
-    Revision 1.11  2006/11/20 03:38:44  bnelson
-    Added /= and /
-
-    Revision 1.10  2006/11/18 17:18:30  bnelson
-    Added L1, L2, and Infinity norms
-
-    Revision 1.9  2006/10/30 05:11:16  bnelson
-    Added preliminary linear system and block matrix support.
-
-    Revision 1.8  2006/10/02 01:16:14  bnelson
-    Started working on adding BLAS and LAPACK
-
-    Revision 1.7  2006/09/30 15:18:37  bnelson
-    no message
-
-    Revision 1.6  2006/09/21 01:00:38  bnelson
-    Fixed an expression template problem.
-
-    Revision 1.5  2006/09/14 02:06:16  bnelson
-    Fixed gcc compiler errors.
-
-    Revision 1.4  2006/08/25 01:22:01  bnelson
-    no message
-
-    Revision 1.3  2006/08/14 02:29:49  bnelson
-    Updated points, vectors, and matrix classes to work with ElVis.  Added a variety of methods to all of these classes.
-
-    Revision 1.2  2006/06/01 13:44:29  kirby
-    *** empty log message ***
-
-    Revision 1.1  2006/06/01 09:12:42  kirby
-    *** empty log message ***
-
-    Revision 1.2  2006/05/25 03:02:40  bnelson
-    Added Matrix/Vector multiplication.
-
-    Revision 1.1  2006/05/04 18:57:44  kirby
-    *** empty log message ***
-
-    Revision 1.1  2006/04/11 02:00:43  bnelson
-    Initial Revision
-
-
-**/
 

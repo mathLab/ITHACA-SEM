@@ -12,6 +12,7 @@ SET(Sources
     TestMatrixBlasOptimizations.cpp
     TestMatrixBufferSize.cpp 
     TestTraits.cpp
+    TestUnrolledVectors.cpp
     ../../util.cpp
 )
 

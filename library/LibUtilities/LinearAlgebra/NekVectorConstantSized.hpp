@@ -53,10 +53,12 @@ namespace Nektar
 {
 
 
-    template<typename DataType, typename dim, typename space>
-    class NekVector<const DataType, dim, space>
+    template<typename dataType, typename dim, typename space>
+    class NekVector<const dataType, dim, space>
     {
         public:
+            typedef dataType DataType;
+
             NekVector() :
                 m_impl()
             {

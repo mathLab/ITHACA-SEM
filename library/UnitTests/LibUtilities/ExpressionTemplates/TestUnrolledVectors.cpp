@@ -28,7 +28,6 @@
 // DEALINGS IN THE SOFTWARE.
 //
 ///////////////////////////////////////////////////////////////////////////////
-
 #ifndef NEKTAR_USE_EXPRESSION_TEMPLATES
 #define NEKTAR_USE_EXPRESSION_TEMPLATES
 #endif //NEKTAR_USE_EXPRESSION_TEMPLATES
@@ -37,69 +36,60 @@
 #include <boost/test/test_case_template.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/unit_test.hpp>
-#include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
-#include <UnitTests/CountedObject.h>
+
+#include <UnitTests/LibUtilities/ExpressionTemplates/CountedObjectExpression.h>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+#include <ExpressionTemplates/Node.hpp>
+#include <ExpressionTemplates/RemoveAllUnecessaryTemporaries.hpp>
+#include <boost/mpl/assert.hpp>
+#include <boost/type_traits.hpp>
+#include <LibUtilities/LinearAlgebra/MatrixSize.hpp>
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
 
 namespace Nektar
 {
-    // This test passes if it compiles.
-    BOOST_AUTO_TEST_CASE(TestAssociativeTree1)
+    namespace UnitTests
     {
-        typedef Node< Node<NekMatrix<double> >, AddOp, Node<NekMatrix<double> > > Exp1;
-        BOOST_MPL_ASSERT(( TreeIsAssociative<Exp1> ));
+        BOOST_AUTO_TEST_CASE(Test3VectorUnrolled)
+        {
+            typedef NekVector<NekDouble> Vector;
 
-        typedef Node< Node<NekMatrix<double> >, AddOp, Exp1> Exp2;
-        BOOST_MPL_ASSERT(( TreeIsAssociative<Exp2> ));
+            double buf1[] = {1.0, 2.0, 3.0, 4.0};
+            double buf2[] = {5.0, 6.0, 7.0, 8.0};
+            double buf3[] = {9.0, 10.0, 11.0, 12.0};
 
-        typedef Node< Node<NekMatrix<double> >, AddOp, Exp2> Exp3;
-        BOOST_MPL_ASSERT(( TreeIsAssociative<Exp3> ));
-    }
+            Vector v1(4, buf1);
+            Vector v2(4, buf2);
+            Vector v3(4, buf3);
 
-    BOOST_AUTO_TEST_CASE(TestAssociativeTree2)
-    {
-        typedef Node< Node<NekMatrix<double> >, MultiplyOp, Node<NekMatrix<double> > > Exp1;
-        BOOST_MPL_ASSERT(( TreeIsAssociative<Exp1> ));
+            Vector result = v1+v2+v3;
 
-        typedef Node< Node<NekMatrix<double> >, AddOp, Exp1> Exp2;
-        BOOST_MPL_ASSERT(( boost::mpl::not_<TreeIsAssociative<Exp2> > ));
+            double expectedResultBuf[] = {1.0 + 5.0 + 9.0,
+                2.0 + 6.0 + 10.0, 3.0 + 7.0 + 11.0, 4.0 + 8.0 + 12.0};
+            Vector expectedResult(4, expectedResultBuf);
+            
+            BOOST_CHECK_EQUAL(result, expectedResult);
+        }
 
-        typedef Node< Node<NekMatrix<double> >, AddOp, Exp2> Exp3;
-        BOOST_MPL_ASSERT(( boost::mpl::not_<TreeIsAssociative<Exp3> > ));
-    }
-    
-    BOOST_AUTO_TEST_CASE(TestVectorUnrolling)
-    {
-        typedef Node< NekVector<double> > ConstantNode;
-        BOOST_MPL_ASSERT(( NodeCanUnroll<ConstantNode> ));
+        BOOST_AUTO_TEST_CASE(Test3VectorUnrolledWithSubtraction)
+        {
+            typedef NekVector<NekDouble> Vector;
 
-        typedef Node< double > ConstantDoubleNode;
-        BOOST_MPL_ASSERT(( boost::mpl::not_<NodeCanUnroll<ConstantDoubleNode> > ));
+            double buf1[] = {1.0, 2.0, 3.0, 4.0};
+            double buf2[] = {5.0, 6.0, 7.0, 8.0};
+            double buf3[] = {9.0, 10.0, 11.0, 12.0};
 
-        typedef Node<ConstantNode, AddOp, ConstantNode> AddNode;
-        BOOST_MPL_ASSERT(( NodeCanUnroll<AddNode> ));
+            Vector v1(4, buf1);
+            Vector v2(4, buf2);
+            Vector v3(4, buf3);
 
-        typedef Node<ConstantNode, SubtractOp, ConstantNode> SubtractNode;
-        BOOST_MPL_ASSERT(( NodeCanUnroll<SubtractNode> ));
+            Vector result = v1+v2-v3;
 
-        typedef Node<AddNode, SubtractOp, AddNode> TwoLevelNode;
-        BOOST_MPL_ASSERT(( NodeCanUnroll<TwoLevelNode> ));
-
-        typedef Node<ConstantNode, MultiplyOp, ConstantNode> MultiplyNode;
-        BOOST_MPL_ASSERT(( boost::mpl::not_<NodeCanUnroll<MultiplyNode> > ));
+            double expectedResultBuf[] = {1.0 + 5.0 - 9.0,
+                2.0 + 6.0 - 10.0, 3.0 + 7.0 - 11.0, 4.0 + 8.0 - 12.0};
+            Vector expectedResult(4, expectedResultBuf);
+            
+            BOOST_CHECK_EQUAL(result, expectedResult);
+        }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

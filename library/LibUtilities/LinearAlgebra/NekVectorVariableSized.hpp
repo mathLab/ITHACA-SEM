@@ -51,10 +51,12 @@
 namespace Nektar
 {
           
-    template<typename DataType, typename space>
-    class NekVector<const DataType, VariableSizedVector, space>
+    template<typename dataType, typename space>
+    class NekVector<const dataType, VariableSizedVector, space>
     {
         public:
+            typedef dataType DataType;
+
             /// \brief Creates an empty vector.
             NekVector() :
                 m_size(0),

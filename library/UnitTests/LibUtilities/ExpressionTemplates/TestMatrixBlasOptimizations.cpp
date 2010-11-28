@@ -168,42 +168,5 @@ namespace Nektar
     //    BOOST_CHECK_EQUAL(expected_result, result);
     //}
 
-    BOOST_AUTO_TEST_CASE(TestABPlusbCStandardTimings)
-    {
-        unsigned int n = 100;
-        std::cout << "Running " << n << std::endl;
-        double beta = 7.0;
-        double alpha = 2.0;
-        
-        NekMatrix<double> A(n, n);
-        NekMatrix<double> B(n, n);
-        NekMatrix<double> C(n, n);
-        
-        for(int i = 0; i < n; ++i)
-        {
-            for(int j = 0; j < n; ++j)
-            {
-                A(i, j) = i*j;
-                B(i,j) = i*j;
-                C(i,j) = i*j;
-            }
-        }
-        int numTrials = 100;
-        int numIterations = 10;
-        double totalTime = 0.0;
-        for(int trial = 0; trial < numTrials; ++trial)
-        {
-            boost::timer timer;
-            for(int iter = 0; iter < numIterations; ++iter)
-            {
-                NekMatrix<double> result4 = alpha*A*B + beta*C;
-            }
-            double elapsed = timer.elapsed();
-            totalTime += elapsed;
-        }
-        std::cout << "Average trial time = " << totalTime/numTrials << std::endl;
-        std::cout << "Average function time = " << (totalTime/numTrials)/numIterations << std::endl;
-    }
-
 }
 

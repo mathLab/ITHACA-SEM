@@ -85,12 +85,16 @@ SET(Boost_USE_STATIC_LIBS ON)
 SET(Boost_USE_MULTITHREAD ON)
 SET(Boost_ADDITIONAL_VERSIONS "1.40" "1.40.0" "1.35.0" "1.35")
 
-
-SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost) 
-FIND_PACKAGE( Boost 1.40.0 REQUIRED COMPONENTS thread iostreams zlib date_time filesystem system)
-SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../../ThirdParty/boost)
-FIND_PACKAGE( Boost 1.40.0 REQUIRED thread iostreams zlib date_time filesystem system)
- 
+IF( NOT BOOST_ROOT )
+    #If the user has not set BOOST_ROOT, look in a couple common places first.
+    SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost) 
+    FIND_PACKAGE( Boost 1.40.0 REQUIRED COMPONENTS thread iostreams zlib date_time filesystem system)
+    SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../../ThirdParty/boost)
+    FIND_PACKAGE( Boost 1.40.0 REQUIRED thread iostreams zlib date_time filesystem system)
+ELSE()
+    FIND_PACKAGE( Boost 1.40.0 REQUIRED COMPONENTS thread iostreams zlib date_time filesystem system)
+ENDIF()
+     
 INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR} ${Boost_INCLUDE_DIRS} ${LOKI_INCLUDE_DIR} ${TINYXML_BASE})
 
 

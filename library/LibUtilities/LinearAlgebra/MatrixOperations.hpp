@@ -791,7 +791,7 @@ namespace Nektar
         Dgemm(result, alpha, A, B, beta, C);
     }
 
-    #ifdef NEKTA_USE_EXPRESSION_TEMPLATES
+    #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
     template<typename L, typename R, typename IndicesType, unsigned int index>
     struct BinaryBinaryEvaluateNodeOverride<L, AddOp, R, IndicesType, index,
         typename boost::enable_if

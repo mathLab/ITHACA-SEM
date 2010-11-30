@@ -48,44 +48,22 @@
 
 namespace Nektar
 {
-    //BOOST_AUTO_TEST_CASE(DgemmTest)
-    //{
-    //    double a_buf[] = {1, 2, 3, 4};
-    //    double b_buf[] = {4, 5, 6, 7};
-    //    double c_buf[] = {8, 9, 10, 11};
-    //    
-    //    NekMatrix<double> a(2, 2, a_buf);
-    //    NekMatrix<double> b(2, 2, b_buf);
-    //    NekMatrix<double> c(2, 2, c_buf);
-    //    
-    //    NekMatrix<double> result = a*b + c;
-    //    
-    //    
-    //    const Expression<BinaryExpressionPolicy
-    //                <
-    //                    ConstantExpressionPolicy<NekMatrix<double> >, 
-    //                    MultiplyOp, 
-    //                    ConstantExpressionPolicy<NekMatrix<double> >
-    //                > >& t1 = a*b;
-    //    
-    //    const Expression
-    //        <
-    //            BinaryExpressionPolicy
-    //            <
-    //                BinaryExpressionPolicy
-    //                <
-    //                    ConstantExpressionPolicy<NekMatrix<double> >,
-    //                    MultiplyOp,
-    //                    ConstantExpressionPolicy<NekMatrix<double> >
-    //                >,
-    //                AddOp,
-    //                ConstantExpressionPolicy<NekMatrix<double> >
-    //            >
-    //        >& t2 = a*b + c;
-    //    double expected_result_buf[] = {27, 37, 37, 51};
-    //    NekMatrix<double> expected_result(2, 2, expected_result_buf);
-    //    BOOST_CHECK_EQUAL(expected_result, result);
-    //}
+    BOOST_AUTO_TEST_CASE(DgemmTest)
+    {
+        double a_buf[] = {1, 2, 3, 4};
+        double b_buf[] = {4, 5, 6, 7};
+        double c_buf[] = {8, 9, 10, 11};
+        
+        NekMatrix<double> a(2, 2, a_buf);
+        NekMatrix<double> b(2, 2, b_buf);
+        NekMatrix<double> c(2, 2, c_buf);
+        
+        NekMatrix<double> result = a*b + c;
+        
+        double expected_result_buf[] = {27, 37, 37, 51};
+        NekMatrix<double> expected_result(2, 2, expected_result_buf);
+        BOOST_CHECK_EQUAL(expected_result, result);
+    }
     
 
 

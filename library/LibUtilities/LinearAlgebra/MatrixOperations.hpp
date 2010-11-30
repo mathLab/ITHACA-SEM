@@ -807,11 +807,11 @@ namespace Nektar
         static void Evaluate(ResultType& accumulator, const ArgumentVectorType& args)
         {
             Dgemm(accumulator, 
-                IsDgemmLeftSide<L>::GetValues<IndicesType, index>::GetAlpha(args),
-                IsDgemmLeftSide<L>::GetValues<IndicesType, index>::GetA(args),
-                IsDgemmLeftSide<L>::GetValues<IndicesType, index>::GetB(args),
-                IsDgemmRightSide<R>::GetValues<IndicesType, index + L::TotalCount>::GetBeta(args),
-                IsDgemmRightSide<R>::GetValues<IndicesType, index + L::TotalCount>::GetC(args) );
+                IsDgemmLeftSide<L>::template GetValues<IndicesType, index>::GetAlpha(args),
+                IsDgemmLeftSide<L>::template GetValues<IndicesType, index>::GetA(args),
+                IsDgemmLeftSide<L>::template GetValues<IndicesType, index>::GetB(args),
+                IsDgemmRightSide<R>::template GetValues<IndicesType, index + L::TotalCount>::GetBeta(args),
+                IsDgemmRightSide<R>::template GetValues<IndicesType, index + L::TotalCount>::GetC(args) );
         }
     };  
     #endif

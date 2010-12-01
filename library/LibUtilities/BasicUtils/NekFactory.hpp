@@ -249,10 +249,10 @@ namespace Nektar
         #define BOOST_PP_FILENAME_1 "LibUtilities/BasicUtils/NekFactory.hpp"
         #include BOOST_PP_ITERATE()
 
-        #endif
-
     }
 }
+
+    #endif
 
     #undef MAX_PARAM
 

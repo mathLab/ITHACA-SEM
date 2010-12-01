@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ConvertGmsh.h
+//  File: ConvertPly.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,12 +29,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: GMSH converter.
+//  Description: PLY converter.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_CONVERTGMSH
-#define UTILITIES_PREPROCESSING_MESHCONVERT_CONVERTGMSH
+#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_CONVERTPLY
+#define UTILITIES_PREPROCESSING_MESHCONVERT_CONVERTPLY
 
 #include "Convert.h"
 
@@ -43,19 +43,19 @@ namespace Nektar
     namespace Utilities
     {
         /// Converter for Gmsh files.
-        class ConvertGmsh : public Convert
+        class ConvertPly : public Convert
         {
         public:
             /// Creates an instance of this class
             static boost::shared_ptr<Convert> create() {
-                return MemoryManager<ConvertGmsh>::AllocateSharedPtr();
+                return MemoryManager<ConvertPly>::AllocateSharedPtr();
             }
             /// Name of class
             static std::string className;
 
-            ConvertGmsh();
-            ConvertGmsh(const ConvertGmsh& pSrc);
-            virtual ~ConvertGmsh();
+            ConvertPly();
+            ConvertPly(const ConvertPly& pSrc);
+            virtual ~ConvertPly();
 
             /// Reads the Gmsh file.
             virtual void ReadFile(const std::string pFilename);

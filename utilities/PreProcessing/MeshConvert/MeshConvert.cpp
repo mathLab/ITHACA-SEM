@@ -36,7 +36,7 @@
 #include <string>
 using namespace std;
 
-#include "ConvertGmsh.h"
+#include "Convert.h"
 using namespace Nektar::Utilities;
 
 int main(int argc, char* argv[]) {
@@ -47,10 +47,16 @@ int main(int argc, char* argv[]) {
         cout << "  [xml-output-file] - output file." << endl;
         return 1;
     }
-    Convert * G = new ConvertGmsh;
-    G->ReadFile(string(argv[1]));
+
+    string vFilename = argv[1];
+    int vDot = vFilename.find_last_of('.');
+    string ext = vFilename.substr(++vDot, vFilename.length() - vDot);
+
+    boost::shared_ptr<Convert> G = ConvertFactory::CreateInstance(ext);
+
+    G->ReadFile(vFilename);
     G->Process();
     G->WriteXmlFile(string(argv[2]));
-    delete G;
+
     return 0;
 }

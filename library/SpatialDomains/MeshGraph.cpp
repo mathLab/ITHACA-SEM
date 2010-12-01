@@ -2220,7 +2220,8 @@ namespace Nektar
                   }
 
                   // Deserialize the array.
-                  NekDouble* readFieldData = (NekDouble*) elementDecompressedData.str().c_str();
+                  std::string vData = elementDecompressedData.str();
+                  NekDouble* readFieldData = (NekDouble*) vData.c_str();
                   std::vector<NekDouble> elementFieldData(readFieldData, readFieldData + elementDecompressedData.str().length() * sizeof(*elementDecompressedData.str().c_str()) / sizeof(NekDouble));
                   fielddata.push_back(elementFieldData);
 

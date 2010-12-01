@@ -48,6 +48,9 @@
 #include <iomanip>
 #include <vector>
 
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
+
 #include "MeshElements.h"
 
 namespace Nektar
@@ -105,6 +108,9 @@ namespace Nektar
             /// Writes the <COMPOSITES> section of the XML file.
             void WriteXmlComposites(TiXmlElement * pRoot);
         };
+
+        typedef LibUtilities::NekFactory< std::string, Convert> ConvertFactory;
+
     }
 }
 #endif

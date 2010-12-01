@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ConvertGmsh.cpp
+//  File: ConvertPly.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: GMSH converter.
+//  Description: PLY converter.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -39,29 +39,29 @@
 using namespace std;
 
 #include "MeshElements.h"
-#include "ConvertGmsh.h"
+#include "ConvertPly.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
-        string ConvertGmsh::className = ConvertFactory::RegisterCreatorFunction("msh", ConvertGmsh::create);
+        string ConvertPly::className = ConvertFactory::RegisterCreatorFunction("ply", ConvertPly::create);
 
-        ConvertGmsh::ConvertGmsh()
+        ConvertPly::ConvertPly()
             : Convert()
         {
 
         }
 
 
-        ConvertGmsh::ConvertGmsh(const ConvertGmsh& pSrc)
+        ConvertPly::ConvertPly(const ConvertPly& pSrc)
             : Convert(pSrc)
         {
 
         }
 
 
-        ConvertGmsh::~ConvertGmsh()
+        ConvertPly::~ConvertPly()
         {
 
         }
@@ -77,7 +77,7 @@ namespace Nektar
          *
          * @param   pFilename           Filename of Gmsh file to read.
          */
-        void ConvertGmsh::ReadFile(const string pFilename)
+        void ConvertPly::ReadFile(const string pFilename)
         {
             m_expDim = 0;
             string line;
@@ -91,7 +91,7 @@ namespace Nektar
 
             if (!mshFile.is_open())
             {
-                cout << "Unable to find msh file" << endl;
+                cout << "Unable to find ply file" << endl;
                 mshFile.close();
                 return;
             }
@@ -103,20 +103,29 @@ namespace Nektar
                 stringstream s(line);
                 string word;
                 s >> word;
-
-                // Process nodes.
-                if (word == "$Nodes")
+                if (word == "element")
                 {
-                    getline(mshFile, line);
-                    stringstream s(line);
-                    s >> nVertices;
+                    s >> word;
+                    if (word == "vertex")
+                    {
+                        s >> nVertices;
+                    }
+                    else if (word == "face")
+                    {
+                        s >> nEntities;
+                    }
+                    continue;
+                }
+                else if (word == "end_header")
+                {
+                    // Read nodes
                     int id = 0;
                     for (int i = 0; i < nVertices; ++i)
                     {
                         getline(mshFile, line);
                         stringstream st(line);
                         double x = 0, y = 0, z = 0;
-                        st >> id >> x >> y >> z;
+                        st >> x >> y >> z;
 
                         if ((y * y) > 0.000001 && m_spaceDim != 3)
                         {
@@ -128,42 +137,30 @@ namespace Nektar
                         }
                         id -= 1; // counter starts at 0
                         m_node.push_back(boost::shared_ptr<Node>(new Node(id, x, y, z)));
+                        id++;
                     }
-                }
-                // Process elements
-                else if (word == "$Elements")
-                {
+
+                    // Read elements
                     int zeroDid = 0, oneDid = 0, twoDid = 0, threeDid = 0;
-                    getline(mshFile, line);
-                    stringstream s(line);
-                    s >> nEntities;
                     for (int i = 0; i < nEntities; ++i)
                     {
                         getline(mshFile, line);
                         stringstream st(line);
                         int id = 0, num_tag = 0, num_nodes = 0;
+                        elm_type = 2;
 
-                        st >> id >> elm_type >> num_tag;
-                        id -= 1; // counter starts at 0
-
-                        // Read element tags
+                        // Create element tags
                         vector<int> tags;
-                        for (int j = 0; j < num_tag; ++j)
-                        {
-                            int tag = 0;
-                            st >> tag;
-                            tags.push_back(tag);
-                        }
-                        tags.push_back(elm_type);
+                        tags.push_back(0); // composite
+                        tags.push_back(2); // element type
 
                         // Read element node list
+                        st >> id;
                         vector<NodeSharedPtr> nodeList;
-                        num_nodes = GetNnodes(elm_type);
-                        for (int k = 0; k < num_nodes; ++k)
+                        for (int k = 0; k < 3; ++k)
                         {
                             int node = 0;
                             st >> node;
-                            node -= 1; // counter starts at 0
                             nodeList.push_back(m_node[node]);
                         }
 
@@ -202,7 +199,7 @@ namespace Nektar
         /**
          *
          */
-        void ConvertGmsh::Process()
+        void ConvertPly::Process()
         {
             ProcessVertices();
             ProcessEdges();
@@ -217,7 +214,7 @@ namespace Nektar
          * unique list of vertices is then compiled in #m_vertex. Finally, the
          * vertices are enumerated.
          */
-        void ConvertGmsh::ProcessVertices()
+        void ConvertPly::ProcessVertices()
         {
             for (int i = 0; i < m_element.size(); ++i)
             {
@@ -253,7 +250,7 @@ namespace Nektar
          * such elements, we set its edgeLink to reference the corresponding
          * edge in #m_edge.
          */
-        void ConvertGmsh::ProcessEdges()
+        void ConvertPly::ProcessEdges()
         {
             if (m_expDim < 2) return;
 
@@ -327,7 +324,7 @@ namespace Nektar
          * #m_face. For such elements, we set its faceLink to reference the
          * corresponding face in #m_face.
          */
-        void ConvertGmsh::ProcessFaces()
+        void ConvertPly::ProcessFaces()
         {
             if (m_expDim < 3) return;
 
@@ -395,7 +392,7 @@ namespace Nektar
          * lower dimension and have ID set by a corresponding edgeLink or
          * faceLink (as set in #ProcessEdges or #ProcessFaces).
          */
-        void ConvertGmsh::ProcessElements()
+        void ConvertPly::ProcessElements()
         {
             int cnt = 0;
             for (int i = 0; i < m_element.size(); ++i)
@@ -414,7 +411,7 @@ namespace Nektar
          * generate the composite objects and populate them with a second scan
          * through the element list.
          */
-        void ConvertGmsh::ProcessComposites()
+        void ConvertPly::ProcessComposites()
         {
             int p = 0;
             vector<ElementSharedPtr>::iterator it;
@@ -475,7 +472,7 @@ namespace Nektar
         /**
          * This routine aids the reading of Gmsh files only.
          */
-        int ConvertGmsh::GetNnodes(int ConvertGmshEntity)
+        int ConvertPly::GetNnodes(int ConvertGmshEntity)
         {
             int nNodes;
 

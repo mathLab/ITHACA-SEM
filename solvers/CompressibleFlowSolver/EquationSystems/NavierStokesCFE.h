@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File EulerCFE.h
+// File NavierStokesCFE.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,12 +29,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Euler equations in conservative variables without artificial diffusion
+// Description: NavierStokes equations in conservative variable
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_EULERCFE_H
-#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_EULERCFE_H
+#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_NAVIERSTOKESCFE_H
+#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_NAVIERSTOKESCFE_H
 
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 
@@ -44,36 +44,32 @@ namespace Nektar
   enum ProblemType
   {           
     eGeneral,          ///< No problem defined - Default Inital data
-    eIsentropicVortex, ///< Isentropic Vortex
-    eRinglebFlow,      ///< Ringleb Flow
     SIZE_ProblemType   ///< Length of enum list
   };
   
   const char* const ProblemTypeMap[] =
     {
-      "General",
-      "IsentropicVortex",
-      "RinglebFlow"
+      "General"
     };
   
   /**
    * 
    * 
    **/
-  class EulerCFE : public CompressibleFlowSystem
+  class NavierStokesCFE : public CompressibleFlowSystem
   {
   public:
     /// Creates an instance of this class
     static EquationSystemSharedPtr create(SessionReaderSharedPtr& pSession) 
     {
-      return MemoryManager<EulerCFE>::AllocateSharedPtr(pSession);
+      return MemoryManager<NavierStokesCFE>::AllocateSharedPtr(pSession);
     }
     /// Name of class
     static std::string className;
     
-    EulerCFE(SessionReaderSharedPtr& pSession);
+    NavierStokesCFE(SessionReaderSharedPtr& pSession);
     
-    virtual ~EulerCFE();
+    virtual ~NavierStokesCFE();
 
     ///< problem type selector
     ProblemType                                     m_problemType;   
@@ -93,24 +89,10 @@ namespace Nektar
 
     virtual void v_SetInitialConditions(NekDouble initialtime = 0.0,
 					bool dumpInitialConditions = true);
-
-    virtual void v_EvaluateExactSolution(int field,
-    					 Array<OneD, NekDouble> &outfield,
-					 const NekDouble time=0.0);
     
     private:
 
     void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
-
-    // Isentropic Vortex Test Case
-    void SetIsenTropicVortex(NekDouble initialtime);
-    void SetBoundaryIsentropicVortex(int bcRegion, NekDouble time, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray);
-    void GetExactIsenTropicVortex(int field, Array<OneD, NekDouble> &outarray, NekDouble time);
-
-    // Ringleb Flow Test Case
-    void SetInitialRinglebFlow(void);
-    void SetBoundaryRinglebFlow(int bcRegion, NekDouble time, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray);
-    void GetExactRinglebFlow(int field, Array<OneD, NekDouble> &outarray);
     
   };
 }

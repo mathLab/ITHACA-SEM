@@ -187,7 +187,7 @@ namespace Nektar
      */
     void EquationSystem::v_DoSolve()
     {
-        ASSERTL0(false, "Solve not defined for this equation.");
+        ;
     }
 
 

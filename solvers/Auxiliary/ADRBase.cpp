@@ -496,7 +496,6 @@ namespace Nektar
         }
     }
 
-
     /**
      * Evaluates the exact solution provided in the session for a given
      * dependent variable.
@@ -504,28 +503,10 @@ namespace Nektar
      * @param   outfield            Storage for exact solution.
      * @param   time                The time at which to evaluate the solution.
      */
-    void ADRBase::EvaluateExactSolution(int field,
-                                        Array<OneD, NekDouble> &outfield,
-                                        const NekDouble time)
-    {
-        int nq = m_fields[field]->GetNpoints();
-        bool Readit = true;
-
-        Array<OneD,NekDouble> x0(nq);
-        Array<OneD,NekDouble> x1(nq);
-        Array<OneD,NekDouble> x2(nq);
-
-        // get the coordinates of the quad points
-        m_fields[field]->GetCoords(x0,x1,x2);
-
-        SpatialDomains::ConstExactSolutionShPtr ifunc
-                        = m_boundaryConditions->GetExactSolution(field);
-        for(int j = 0; j < nq; j++)
-        {
-            outfield[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],time);
-        }
+  void ADRBase::EvaluateExactSolution(int field, Array<OneD, NekDouble> &exactsoln, const NekDouble time)
+    { 
+      v_EvaluateExactSolution(field,exactsoln,time);
     }
-
 
     /**
      * Evaluates a user-defined expression for all dependent variables.
@@ -1327,7 +1308,6 @@ namespace Nektar
         }
     }
 
-
     /**
      * Write out a summary of the time parameters.
      * @param   out         Output stream to write to.
@@ -1404,6 +1384,36 @@ namespace Nektar
             var  = def;
         }
     }
+
+    /**
+     * Evaluates the exact solution provided in the session for a given
+     * dependent variable.
+     * @param   field               The index of the field to evaluate.
+     * @param   outfield            Storage for exact solution.
+     * @param   time                The time at which to evaluate the solution.
+     */
+    void ADRBase::v_EvaluateExactSolution(int field,
+					  Array<OneD, NekDouble> &outfield,
+					  const NekDouble time)
+    {
+        int nq = m_fields[field]->GetNpoints();
+        bool Readit = true;
+
+        Array<OneD,NekDouble> x0(nq);
+        Array<OneD,NekDouble> x1(nq);
+        Array<OneD,NekDouble> x2(nq);
+
+        // get the coordinates of the quad points
+        m_fields[field]->GetCoords(x0,x1,x2);
+
+        SpatialDomains::ConstExactSolutionShPtr ifunc
+                        = m_boundaryConditions->GetExactSolution(field);
+        for(int j = 0; j < nq; j++)
+        {
+            outfield[j] = ifunc->Evaluate(x0[j],x1[j],x2[j],time);
+        }
+    }
+
 } //end of namespace
 
 /**

@@ -83,7 +83,7 @@ namespace Nektar
 
         /// Populate given field with the exact solution from session.
         void EvaluateExactSolution(int field,
-                                   Array<OneD, NekDouble > &outfield,
+                                   Array<OneD, NekDouble > &exactsoln,
                                    const NekDouble time);
 
         /// Populate given fields with a user expression from session.
@@ -181,6 +181,12 @@ namespace Nektar
             return m_fields;
         }
 
+	/// Return final time
+	inline NekDouble GetFinalTime()
+	{
+	  return m_time;
+	}
+
         inline int GetNcoeffs(void)
         {
             return m_fields[0]->GetNcoeffs();
@@ -195,6 +201,11 @@ namespace Nektar
         {
             return m_graph->GetExpansions()[0]->m_basisKeyVector[0]
                                                         .GetNumModes();
+        }
+
+	inline const Array<OneD,int> GetNumExpModesPerExp(void)
+        {
+	  return m_fields[0]->EvalBasisNumModesMaxPerExp();
         }
 
         inline int GetNvariables(void)
@@ -398,6 +409,10 @@ namespace Nektar
 
 	virtual void v_SetInitialConditions(NekDouble initialtime = 0.0,
 					    bool dumpInitialConditions = true);
+
+        virtual void v_EvaluateExactSolution(int field,
+					     Array<OneD, NekDouble > &outfield,
+					     const NekDouble time = 0.0);
 
     private:
 

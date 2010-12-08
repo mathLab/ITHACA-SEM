@@ -41,12 +41,10 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
-        
         class Expansion3D: public Expansion
         {
-        public:
-            
-            DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
+            public:
+                DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
             
             protected:
             

@@ -72,6 +72,13 @@ namespace Nektar
             /// Destructor
             ~HexExp();
 
+            void GetCoords(Array<OneD,NekDouble> &coords_0,
+                Array<OneD,NekDouble> &coords_1,
+                Array<OneD,NekDouble> &coords_2);
+
+            void GetCoord(const Array<OneD, const NekDouble> &Lcoords, 
+                Array<OneD,NekDouble> &coords);
+
             /// Return the region shape using the enum-list of ShapeType
             StdRegions::ExpansionType DetExpansionType() const
             { 
@@ -154,12 +161,18 @@ namespace Nektar
             /// Retrieve the local coordinates of each quadrature point.
             virtual void v_GetCoords( Array<OneD,NekDouble> &coords_1,
                             Array<OneD,NekDouble> &coords_2, 
-                            Array<OneD,NekDouble> &coords_3);
+                            Array<OneD,NekDouble> &coords_3)
+            {
+                GetCoords(coords_1, coords_2, coords_3);
+            }
             
             /// Retrieves the physical coordinates of a given set of 
             /// reference coordinates.
             virtual void v_GetCoord(  const Array<OneD, const NekDouble> &Lcoords, 
-                            Array<OneD,NekDouble> &coords);
+                            Array<OneD,NekDouble> &coords)
+            {
+                GetCoord(Lcoords, coords);
+            }
       
             /// Writes out values at quadrature points to text file.
             virtual void v_WriteToFile( std::ofstream &outfile, 

@@ -536,7 +536,7 @@ namespace Nektar
          * @param   coords_1    Coordinate component in second direction.
          * @param   coords_2    Coordinate component in third direction.
          */
-        void HexExp::v_GetCoords( Array<OneD,NekDouble> &coords_0,
+        void HexExp::GetCoords( Array<OneD,NekDouble> &coords_0,
                             Array<OneD,NekDouble> &coords_1,
                             Array<OneD,NekDouble> &coords_2)
         {
@@ -649,7 +649,7 @@ namespace Nektar
          * @param   Lcoords     Local coordinates in reference space.
          * @param   coords      Corresponding coordinates in physical space.
          */
-        void HexExp::v_GetCoord(const Array<OneD, const NekDouble> &Lcoords,
+        void HexExp::GetCoord(const Array<OneD, const NekDouble> &Lcoords,
                             Array<OneD,NekDouble> &coords)
         {
             int  i;

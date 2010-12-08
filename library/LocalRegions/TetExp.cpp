@@ -419,7 +419,7 @@ namespace Nektar
         }
 
 
-        void TetExp::v_GetCoords(Array<OneD,NekDouble> &coords_0,
+        void TetExp::GetCoords(Array<OneD,NekDouble> &coords_0,
                                Array<OneD,NekDouble> &coords_1,
                                Array<OneD,NekDouble> &coords_2)
         {
@@ -502,7 +502,7 @@ namespace Nektar
         }
 
         // get the coordinates "coords" at the local coordinates "Lcoords"
-        void TetExp::v_GetCoord(const Array<OneD, const NekDouble> &Lcoords, Array<OneD,NekDouble> &coords)
+        void TetExp::GetCoord(const Array<OneD, const NekDouble> &Lcoords, Array<OneD,NekDouble> &coords)
         {
             int  i;
 

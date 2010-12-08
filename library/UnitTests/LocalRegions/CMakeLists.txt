@@ -17,6 +17,7 @@ TARGET_LINK_LIBRARIES(${ProjectName}
     LibUtilities
     StdRegions
     LocalRegions
+    SpatialDomains
     ${Boost_THREAD_LIBRARY}
 )
 

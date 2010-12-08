@@ -200,7 +200,7 @@ namespace Nektar
                 else if( check > 1)
                 {
                     std::ostringstream errstrm;
-                    errstrm << "Connected faces share more than one egde. Faces ";
+                    errstrm << "Connected faces share more than one edge. Faces ";
                     errstrm << (m_faces[0])->GetFid() << ", " << (m_faces[faceConnected])->GetFid();
                     ASSERTL0(false, errstrm.str());
                 }
@@ -230,7 +230,7 @@ namespace Nektar
             else if( check > 1)
             {
                 std::ostringstream errstrm;
-                errstrm << "Connected faces share more than one egde. Faces ";
+                errstrm << "Connected faces share more than one edge. Faces ";
                 errstrm << (m_faces[1])->GetFid() << ", " << (m_faces[3])->GetFid();
                 ASSERTL0(false, errstrm.str());
             }
@@ -261,7 +261,7 @@ namespace Nektar
                 else if( check > 1)
                 {
                     std::ostringstream errstrm;
-                    errstrm << "Connected faces share more than one egde. Faces ";
+                    errstrm << "Connected faces share more than one edge. Faces ";
                     errstrm << (m_faces[faceConnected])->GetFid() << ", " << (m_faces[faceConnected+1])->GetFid();
                     ASSERTL0(false, errstrm.str());
                 }

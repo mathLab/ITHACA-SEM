@@ -57,4 +57,4 @@ TARGET_LINK_LIBRARIES(UnitTests
 
 SET_LAPACK_LINK_LIBRARIES(UnitTests)
 
-SUBDIRS(LibUtilities)
+SUBDIRS(LibUtilities LocalRegions)

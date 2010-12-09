@@ -42,7 +42,7 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        MeshGraph3D::MeshGraph3D()
+        MeshGraph3D::MeshGraph3D() : MeshGraph(3,3)
         {
         }
 

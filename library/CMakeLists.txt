@@ -57,7 +57,7 @@ IF( APPLE )
     MARK_AS_ADVANCED(NEKTAR_USE_CHUD_FRAMEWORK)
 ENDIF(APPLE)
 IF( UNIX )
-  SET(NEKTAR_USE_SYSTEM_BLAS_LAPACK OFF CACHE BOOL "Use the system provided blas and lapack libraries")
+  SET(NEKTAR_USE_SYSTEM_BLAS_LAPACK ON CACHE BOOL "Use the system provided blas and lapack libraries")
 ENDIF(UNIX)
 
 # Turn on NEKTAR_USE_WIN32_LAPACK if we are in Windows and the libraries exist.

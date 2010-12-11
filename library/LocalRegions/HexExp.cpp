@@ -536,7 +536,7 @@ namespace Nektar
          * @param   coords_1    Coordinate component in second direction.
          * @param   coords_2    Coordinate component in third direction.
          */
-        void HexExp::GetCoords( Array<OneD,NekDouble> &coords_0,
+        void HexExp::v_GetCoords( Array<OneD,NekDouble> &coords_0,
                             Array<OneD,NekDouble> &coords_1,
                             Array<OneD,NekDouble> &coords_2)
         {
@@ -649,7 +649,7 @@ namespace Nektar
          * @param   Lcoords     Local coordinates in reference space.
          * @param   coords      Corresponding coordinates in physical space.
          */
-        void HexExp::GetCoord(const Array<OneD, const NekDouble> &Lcoords,
+        void HexExp::v_GetCoord(const Array<OneD, const NekDouble> &Lcoords,
                             Array<OneD,NekDouble> &coords)
         {
             int  i;
@@ -796,54 +796,6 @@ namespace Nektar
         }
 
 
-        void HexExp::GeneralMatrixOp_MatOp(
-                            const Array<OneD, const NekDouble> &inarray,
-                            Array<OneD,NekDouble> &outarray,
-                            const StdRegions::StdMatrixKey &mkey)
-        {
-            int nConsts = mkey.GetNconstants();
-            DNekScalMatSharedPtr   mat;
-            
-            switch(nConsts)
-            {
-            case 0:
-                {
-                    mat = GetLocMatrix(mkey.GetMatrixType()); 
-                }
-                break;
-            case 1:
-                {
-                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0)); 
-                }
-                break;
-            case 2:
-                {
-                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0),mkey.GetConstant(1)); 
-                }
-                break;
-                
-            default:
-                {
-                    NEKERROR(ErrorUtil::efatal, "Unknown number of constants");
-                }
-                break;
-            }
-            
-            if(inarray.get() == outarray.get())
-            {
-                Array<OneD,NekDouble> tmp(m_ncoeffs);
-                Vmath::Vcopy(m_ncoeffs,inarray.get(),1,tmp.get(),1);
-                
-                Blas::Dgemv('N',m_ncoeffs,m_ncoeffs,mat->Scale(),(mat->GetOwnedMatrix())->GetPtr().get(),
-                            m_ncoeffs, tmp.get(), 1, 0.0, outarray.get(), 1);
-            }
-            else
-            {                
-                Blas::Dgemv('N',m_ncoeffs,m_ncoeffs,mat->Scale(),(mat->GetOwnedMatrix())->GetPtr().get(),
-                            m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
-            }
-        }
-        
         void HexExp::v_MassMatrixOp(
                             const Array<OneD, const NekDouble> &inarray, 
                             Array<OneD,NekDouble> &outarray,
@@ -1417,7 +1369,98 @@ namespace Nektar
         }
 
 
-        DNekMatSharedPtr HexExp::CreateStdMatrix(
+        void HexExp::GeneralMatrixOp_MatOp(
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            const StdRegions::StdMatrixKey &mkey)
+        {
+            int nConsts = mkey.GetNconstants();
+            DNekScalMatSharedPtr   mat;
+
+            switch(nConsts)
+            {
+            case 0:
+                {
+                    mat = GetLocMatrix(mkey.GetMatrixType());
+                }
+                break;
+            case 1:
+                {
+                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0));
+                }
+                break;
+            case 2:
+                {
+                    mat = GetLocMatrix(mkey.GetMatrixType(),mkey.GetConstant(0),mkey.GetConstant(1));
+                }
+                break;
+
+            default:
+                {
+                    NEKERROR(ErrorUtil::efatal, "Unknown number of constants");
+                }
+                break;
+            }
+
+            if(inarray.get() == outarray.get())
+            {
+                Array<OneD,NekDouble> tmp(m_ncoeffs);
+                Vmath::Vcopy(m_ncoeffs,inarray.get(),1,tmp.get(),1);
+
+                Blas::Dgemv('N',m_ncoeffs,m_ncoeffs,mat->Scale(),(mat->GetOwnedMatrix())->GetPtr().get(),
+                            m_ncoeffs, tmp.get(), 1, 0.0, outarray.get(), 1);
+            }
+            else
+            {
+                Blas::Dgemv('N',m_ncoeffs,m_ncoeffs,mat->Scale(),(mat->GetOwnedMatrix())->GetPtr().get(),
+                            m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
+            }
+        }
+
+        /// Return the region shape using the enum-list of ShapeType
+        StdRegions::ExpansionType HexExp::v_DetExpansionType() const
+        {
+            return StdRegions::eHexahedron;
+        }
+
+        const SpatialDomains::GeomFactorsSharedPtr& HexExp::v_GetMetricInfo() const
+        {
+            return m_metricinfo;
+        }
+
+        /// Returns the HexGeom object associated with this expansion.
+        const SpatialDomains::GeometrySharedPtr HexExp::v_GetGeom() const
+        {
+            return m_geom;
+        }
+
+        /// Returns the HexGeom object associated with this expansion.
+        const SpatialDomains::Geometry3DSharedPtr& HexExp::v_GetGeom3D() const
+        {
+            return m_geom;
+        }
+
+        int HexExp::v_GetCoordim()
+        {
+            return m_geom->GetCoordim();
+        }
+
+        NekDouble HexExp::v_Linf()
+        {
+            return Linf();
+        }
+
+        NekDouble HexExp::v_L2(const Array<OneD, const NekDouble> &sol)
+        {
+            return StdExpansion::L2(sol);
+        }
+
+        NekDouble HexExp::v_L2()
+        {
+            return StdExpansion::L2();
+        }
+
+        DNekMatSharedPtr HexExp::v_CreateStdMatrix(
                             const StdRegions::StdMatrixKey &mkey)
         {
             LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
@@ -1430,46 +1473,49 @@ namespace Nektar
             return tmp->GetStdMatrix(mkey);
         }
 
-//         DNekMatSharedPtr HexExp::CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
-//         {
-//             // Need to check if matrix exists in stdMatrixManager.
-//             // If not then make a local expansion with standard metric info
-//             // and generate matrix. Otherwise direct call is OK.
-//             if(!StdMatManagerAlreadyCreated(mkey))
-//             {
-//                 LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
-//                 LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
-//                 LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
-//                 HexExpSharedPtr tmp = MemoryManager<HexExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
-//
-//                 return tmp->StdHexExp::GetStdMatrix(mkey); //TODO: infinity recursive recursion -- this is not working
-//             }
-//             else
-//             {
-//                 return StdHexExp::GetStdMatrix(mkey);
-//             }
-//         }
-/*
-        DNekBlkMatSharedPtr HexExp::CreateStdStaticCondMatrix(const StdRegions::StdMatrixKey &mkey)
+        DNekScalMatSharedPtr& HexExp::v_GetLocMatrix(const MatrixKey &mkey)
         {
-            // Need to check if matrix exists in stdMatrixManager.
-            // If not then make a local expansion with standard metric info
-            // and generate matrix. Otherwise direct call is OK.
-            if(!StdMatManagerAlreadyCreated(mkey))
-            {
-                LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
-                LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
-                LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
-                HexExpSharedPtr tmp = MemoryManager<HexExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
+            return m_matrixManager[mkey];
+        }
 
-                return tmp->StdHexExp::GetStdStaticCondMatrix(mkey);
-            }
-            else
-            {
-                return StdHexExp::GetStdStaticCondMatrix(mkey);
-            }
-        }*/
+        DNekScalMatSharedPtr& HexExp::v_GetLocMatrix(
+                        const StdRegions::MatrixType mtype,
+                        NekDouble lambdaval,
+                        NekDouble tau)
+        {
+            MatrixKey mkey( mtype,DetExpansionType(),*this,lambdaval,tau );
+            return m_matrixManager[mkey];
+        }
 
+        DNekScalMatSharedPtr& HexExp::v_GetLocMatrix(
+                        const StdRegions::MatrixType mtype,
+                        const Array<OneD, NekDouble> &dir1Forcing,
+                        NekDouble lambdaval,
+                        NekDouble tau)
+        {
+            MatrixKey mkey( mtype,DetExpansionType(),*this,lambdaval,tau,
+                            dir1Forcing);
+            return m_matrixManager[mkey];
+        }
+
+        DNekScalMatSharedPtr& HexExp::v_GetLocMatrix(
+                        const StdRegions::MatrixType mtype,
+                        const Array<OneD, Array<OneD, const NekDouble> >&
+                                                                dirForcing,
+                        NekDouble lambdaval,
+                        NekDouble tau)
+        {
+            MatrixKey mkey( mtype,DetExpansionType(),*this,lambdaval,tau,
+                            dirForcing);
+            return m_matrixManager[mkey];
+        }
+
+
+        DNekScalBlkMatSharedPtr& HexExp::v_GetLocStaticCondMatrix(
+                        const MatrixKey &mkey)
+        {
+            return m_staticCondMatrixManager[mkey];
+        }
 
         DNekMatSharedPtr HexExp::GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {

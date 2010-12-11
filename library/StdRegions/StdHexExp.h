@@ -72,110 +72,6 @@ namespace Nektar
             /// Destructor.
             ~StdHexExp();
 
-            /// Return shape of region, using  ShapeType enum list.
-            /// i.e. Hexahedron
-            ExpansionType DetExpansionType() const
-            {
-                return eHexahedron;
-            }
-
-
-
-            //-----------------------------------
-            // Helpers
-            //-----------------------------------
-            int NumBndryCoeffs() const
-            {
-                ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
-                         GetBasisType(0) == LibUtilities::eGLL_Lagrange,
-                         "BasisType is not a boundary interior form");
-                ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
-                         GetBasisType(1) == LibUtilities::eGLL_Lagrange,
-                         "BasisType is not a boundary interior form");
-                ASSERTL1(GetBasisType(2) == LibUtilities::eModified_A ||
-                         GetBasisType(2) == LibUtilities::eGLL_Lagrange,
-                         "BasisType is not a boundary interior form");
-
-                int nmodes0 = m_base[0]->GetNumModes();
-                int nmodes1 = m_base[1]->GetNumModes();
-                int nmodes2 = m_base[2]->GetNumModes();
-
-                return ( 2*( nmodes0*nmodes1 + nmodes0*nmodes2
-                            + nmodes1*nmodes2)
-                         - 4*( nmodes0 + nmodes1 + nmodes2 ) + 8 );
-            }
-
-            int GetFaceNcoeffs(const int i) const
-            {
-                ASSERTL2((i >= 0) && (i <= 5), "face id is out of range");
-                if((i == 0) || (i == 5))
-                {
-                    return GetBasisNumModes(0)*GetBasisNumModes(1);
-                }
-                else if((i == 1) || (i == 3))
-                {
-                    return GetBasisNumModes(0)*GetBasisNumModes(2);
-                }
-                else
-                {
-                    return GetBasisNumModes(1)*GetBasisNumModes(2);
-                }
-            }
-
-            int GetFaceIntNcoeffs(const int i) const
-            {
-                ASSERTL2((i >= 0) && (i <= 5), "face id is out of range");
-                if((i == 0) || (i == 5))
-                {
-                    return (GetBasisNumModes(0)-2)*(GetBasisNumModes(1)-2);
-                }
-                else if((i == 1) || (i == 3))
-                {
-                    return (GetBasisNumModes(0)-2)*(GetBasisNumModes(2)-2);
-                }
-                else
-                {
-                    return (GetBasisNumModes(1)-2)*(GetBasisNumModes(2)-2);
-                }
-            }
-
-            const int GetEdgeNcoeffs(const int i) const
-            {
-                ASSERTL2((i >= 0)&&(i <= 11),"edge id is out of range");
-
-                if((i == 0)||(i == 2)||(i == 8)||(i == 10))
-                {
-                    return  GetBasisNumModes(0);
-                }
-                else if((i == 1)||(i == 3)||(i == 9)||(i == 11))
-                {
-                    return  GetBasisNumModes(1);
-                }
-                else
-                {
-                    return GetBasisNumModes(2);
-                }
-
-            }
-
-            const LibUtilities::BasisType GetEdgeBasisType(const int i) const
-            {
-                ASSERTL2((i >= 0)&&(i <= 11),"edge id is out of range");
-
-                if((i == 0)||(i == 2)||(i==8)||(i==10))
-                {
-                    return  GetBasisType(0);
-                }
-                else if((i == 1)||(i == 3)||(i == 9)||(i == 11))
-                {
-                    return  GetBasisType(1);
-                }
-                else
-                {
-                    return GetBasisType(2);
-                }
-
-            }
 
             /// Fill outarray with mode \a mode of expansion
             void FillMode(const int mode, Array<OneD, NekDouble> &outarray);
@@ -222,11 +118,6 @@ namespace Nektar
                           Array<OneD, NekDouble> &out_d0,
                           Array<OneD, NekDouble> &out_d1,
                           Array<OneD, NekDouble> &out_d2);
-
-            void GetCoords(Array<OneD, NekDouble> &coords_0,
-                        Array<OneD, NekDouble> &coords_1,
-                        Array<OneD, NekDouble> &coords_2);
-
 
             void WriteToFile(std::ofstream &outfile,
                         OutputFormat format,

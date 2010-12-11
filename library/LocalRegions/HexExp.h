@@ -72,36 +72,8 @@ namespace Nektar
             /// Destructor
             ~HexExp();
 
-            void GetCoords(Array<OneD,NekDouble> &coords_0,
-                Array<OneD,NekDouble> &coords_1,
-                Array<OneD,NekDouble> &coords_2);
-
-            void GetCoord(const Array<OneD, const NekDouble> &Lcoords, 
-                Array<OneD,NekDouble> &coords);
-
-            /// Return the region shape using the enum-list of ShapeType
-            StdRegions::ExpansionType DetExpansionType() const
-            { 
-                return StdRegions::eHexahedron; 
-            }
-
-            /// Returns the HexGeom object associated with this expansion.
-            const SpatialDomains::GeometrySharedPtr GetGeom() const
-            {
-                return m_geom;
-            }
-
-            /// Returns the HexGeom object associated with this expansion.
-            const SpatialDomains::Geometry3DSharedPtr& GetGeom3D() const
-            {
-                return m_geom;
-            }
-
-
         protected:
             DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
-
-            DNekMatSharedPtr CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
             DNekScalMatSharedPtr  CreateMatrix(const MatrixKey &mkey);
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 
@@ -153,6 +125,11 @@ namespace Nektar
                             Array<OneD, NekDouble> &out_d1,
                             Array<OneD, NekDouble> &out_d2);  
             
+            /// Calculate the derivative of the physical points in a single
+            /// direction.
+            virtual void v_PhysDeriv(const int dir,
+                           const Array<OneD, const NekDouble>& inarray,
+                           Array<OneD, NekDouble> &outarray);
 
             /// Interpolate the solution at a given coordinates.
             virtual NekDouble v_PhysEvaluate(
@@ -161,18 +138,12 @@ namespace Nektar
             /// Retrieve the local coordinates of each quadrature point.
             virtual void v_GetCoords( Array<OneD,NekDouble> &coords_1,
                             Array<OneD,NekDouble> &coords_2, 
-                            Array<OneD,NekDouble> &coords_3)
-            {
-                GetCoords(coords_1, coords_2, coords_3);
-            }
+                            Array<OneD,NekDouble> &coords_3);
             
             /// Retrieves the physical coordinates of a given set of 
             /// reference coordinates.
             virtual void v_GetCoord(  const Array<OneD, const NekDouble> &Lcoords, 
-                            Array<OneD,NekDouble> &coords)
-            {
-                GetCoord(Lcoords, coords);
-            }
+                            Array<OneD,NekDouble> &coords);
       
             /// Writes out values at quadrature points to text file.
             virtual void v_WriteToFile( std::ofstream &outfile, 
@@ -252,102 +223,46 @@ namespace Nektar
             
 
             /// Return Shape of region, using  ShapeType enum list. i.e. Hexahedron
-            virtual StdRegions::ExpansionType v_DetExpansionType() const
-            {
-                return DetExpansionType();
-            }
+            virtual StdRegions::ExpansionType v_DetExpansionType() const;
     
-            virtual const SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const
-            {
-                return m_metricinfo;
-            }
+            virtual const SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
 
-            virtual const SpatialDomains::GeometrySharedPtr v_GetGeom() const
-            {
-                return GetGeom();
-            }
+            virtual const SpatialDomains::GeometrySharedPtr v_GetGeom() const;
 
-            virtual const SpatialDomains::Geometry3DSharedPtr& v_GetGeom3D() const
-            {
-                return GetGeom3D();
-            }
+            virtual const SpatialDomains::Geometry3DSharedPtr& v_GetGeom3D() const;
 
-            virtual  int v_GetCoordim()
-            {
-                return m_geom->GetCoordim();
-            }
+            virtual int v_GetCoordim();
 
-            virtual NekDouble v_Linf()
-            {
-                return Linf();
-            }
+            virtual NekDouble v_Linf();
     
-            virtual NekDouble v_L2(const Array<OneD, const NekDouble> &sol)
-            {
-                return StdExpansion::L2(sol);
-            }
-
+            virtual NekDouble v_L2(const Array<OneD, const NekDouble> &sol);
     
-            virtual NekDouble v_L2()
-            {
-                return StdExpansion::L2();
-            }
+            virtual NekDouble v_L2();
 
-            virtual DNekMatSharedPtr v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
-            {
-                return CreateStdMatrix(mkey);
-            }
+            virtual DNekMatSharedPtr v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey);
 
-            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const MatrixKey &mkey)
-            {
-                return m_matrixManager[mkey];
-            }
-
+            virtual DNekScalMatSharedPtr& v_GetLocMatrix(const MatrixKey &mkey);
         
             virtual DNekScalMatSharedPtr& v_GetLocMatrix(
                             const StdRegions::MatrixType mtype, 
                             NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
-                            NekDouble tau = NekConstants::kNekUnsetDouble)
-            {
-                MatrixKey mkey( mtype,DetExpansionType(),*this,lambdaval,tau );
-                return m_matrixManager[mkey];
-            }
+                            NekDouble tau = NekConstants::kNekUnsetDouble);
 
             virtual DNekScalMatSharedPtr& v_GetLocMatrix(
                             const StdRegions::MatrixType mtype,
                             const Array<OneD, NekDouble> &dir1Forcing,
                             NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
-                            NekDouble tau = NekConstants::kNekUnsetDouble)
-            {
-                MatrixKey mkey( mtype,DetExpansionType(),*this,lambdaval,tau,
-                                dir1Forcing);
-                return m_matrixManager[mkey];
-            }
+                            NekDouble tau = NekConstants::kNekUnsetDouble);
 
             virtual DNekScalMatSharedPtr& v_GetLocMatrix(
                             const StdRegions::MatrixType mtype,
                             const Array<OneD, Array<OneD, const NekDouble> >& 
                                                                     dirForcing,
                             NekDouble lambdaval = NekConstants::kNekUnsetDouble, 
-                            NekDouble tau = NekConstants::kNekUnsetDouble)
-            {
-                MatrixKey mkey( mtype,DetExpansionType(),*this,lambdaval,tau,
-                                dirForcing);
-                return m_matrixManager[mkey];
-            }
-
+                            NekDouble tau = NekConstants::kNekUnsetDouble);
 
             virtual DNekScalBlkMatSharedPtr& v_GetLocStaticCondMatrix(
-                            const MatrixKey &mkey)
-            {
-                return m_staticCondMatrixManager[mkey];
-            }
-
-            /// Calculate the derivative of the physical points in a single
-            /// direction.
-            virtual void v_PhysDeriv(const int dir, 
-                           const Array<OneD, const NekDouble>& inarray,
-                           Array<OneD, NekDouble> &outarray);
+                            const MatrixKey &mkey);
       
         };
 

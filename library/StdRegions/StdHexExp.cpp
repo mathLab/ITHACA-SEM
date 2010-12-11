@@ -802,32 +802,6 @@ namespace Nektar
             PhysTensorDeriv(inarray, out_d0, out_d1, out_d2);
         }
 
-        void StdHexExp::GetCoords( Array<OneD, NekDouble> & xi_x,
-                                Array<OneD, NekDouble> & xi_y,
-                                Array<OneD, NekDouble> & xi_z)
-        {
-            Array<OneD, const NekDouble> eta_x = m_base[0]->GetZ();
-            Array<OneD, const NekDouble> eta_y = m_base[1]->GetZ();
-            Array<OneD, const NekDouble> eta_z = m_base[2]->GetZ();
-            int Qx = GetNumPoints(0);
-            int Qy = GetNumPoints(1);
-            int Qz = GetNumPoints(2);
-
-            // Convert collapsed coordinates into cartesian coordinates:
-            // eta --> xi
-            for( int k = 0; k < Qz; ++k ) {
-                for( int j = 0; j < Qy; ++j ) {
-                    for( int i = 0; i < Qx; ++i ) {
-                        int s = i + Qx*(j + Qy*k);
-                        xi_x[s] = eta_x[i];
-                        xi_y[s] = eta_y[j];
-                        xi_z[s] = eta_z[k];
-
-                    }
-                }
-            }
-        }
-
 
         void StdHexExp::WriteToFile(std::ofstream &outfile,
                                 OutputFormat format,
@@ -1217,22 +1191,63 @@ namespace Nektar
 
         ExpansionType StdHexExp::v_DetExpansionType() const
         {
-            return DetExpansionType();
+            return eHexahedron;
         };
 
         int StdHexExp::v_NumBndryCoeffs() const
         {
-            return NumBndryCoeffs();
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+            ASSERTL1(GetBasisType(2) == LibUtilities::eModified_A ||
+                     GetBasisType(2) == LibUtilities::eGLL_Lagrange,
+                     "BasisType is not a boundary interior form");
+
+            int nmodes0 = m_base[0]->GetNumModes();
+            int nmodes1 = m_base[1]->GetNumModes();
+            int nmodes2 = m_base[2]->GetNumModes();
+
+            return ( 2*( nmodes0*nmodes1 + nmodes0*nmodes2
+                        + nmodes1*nmodes2)
+                     - 4*( nmodes0 + nmodes1 + nmodes2 ) + 8 );
         }
 
         int StdHexExp::v_GetFaceNcoeffs(const int i) const
         {
-            return GetFaceNcoeffs(i);
+            ASSERTL2((i >= 0) && (i <= 5), "face id is out of range");
+            if((i == 0) || (i == 5))
+            {
+                return GetBasisNumModes(0)*GetBasisNumModes(1);
+            }
+            else if((i == 1) || (i == 3))
+            {
+                return GetBasisNumModes(0)*GetBasisNumModes(2);
+            }
+            else
+            {
+                return GetBasisNumModes(1)*GetBasisNumModes(2);
+            }
         }
 
         int StdHexExp::v_GetFaceIntNcoeffs(const int i) const
         {
-            return GetFaceIntNcoeffs(i);
+            ASSERTL2((i >= 0) && (i <= 5), "face id is out of range");
+            if((i == 0) || (i == 5))
+            {
+                return (GetBasisNumModes(0)-2)*(GetBasisNumModes(1)-2);
+            }
+            else if((i == 1) || (i == 3))
+            {
+                return (GetBasisNumModes(0)-2)*(GetBasisNumModes(2)-2);
+            }
+            else
+            {
+                return (GetBasisNumModes(1)-2)*(GetBasisNumModes(2)-2);
+            }
+
         }
 
         int StdHexExp::v_CalcNumberOfCoefficients(const std::vector<unsigned int> &nummodes, int &modes_offset)
@@ -2332,15 +2347,48 @@ namespace Nektar
 
         LibUtilities::BasisType StdHexExp::v_GetEdgeBasisType(const int i) const
         {
-            return GetEdgeBasisType(i);
+            ASSERTL2((i >= 0)&&(i <= 11),"edge id is out of range");
+
+            if((i == 0)||(i == 2)||(i==8)||(i==10))
+            {
+                return  GetBasisType(0);
+            }
+            else if((i == 1)||(i == 3)||(i == 9)||(i == 11))
+            {
+                return  GetBasisType(1);
+            }
+            else
+            {
+                return GetBasisType(2);
+            }
         }
 
-        void StdHexExp::v_GetCoords(Array<OneD, NekDouble> &coords_x,
-                                 Array<OneD, NekDouble> &coords_y,
-                                 Array<OneD, NekDouble> &coords_z)
+        void StdHexExp::v_GetCoords( Array<OneD, NekDouble> & xi_x,
+                                Array<OneD, NekDouble> & xi_y,
+                                Array<OneD, NekDouble> & xi_z)
         {
-            GetCoords(coords_x, coords_y, coords_z);
+            Array<OneD, const NekDouble> eta_x = m_base[0]->GetZ();
+            Array<OneD, const NekDouble> eta_y = m_base[1]->GetZ();
+            Array<OneD, const NekDouble> eta_z = m_base[2]->GetZ();
+            int Qx = GetNumPoints(0);
+            int Qy = GetNumPoints(1);
+            int Qz = GetNumPoints(2);
+
+            // Convert collapsed coordinates into cartesian coordinates:
+            // eta --> xi
+            for( int k = 0; k < Qz; ++k ) {
+                for( int j = 0; j < Qy; ++j ) {
+                    for( int i = 0; i < Qx; ++i ) {
+                        int s = i + Qx*(j + Qy*k);
+                        xi_x[s] = eta_x[i];
+                        xi_y[s] = eta_y[j];
+                        xi_z[s] = eta_z[k];
+
+                    }
+                }
+            }
         }
+
 
         NekDouble StdHexExp::v_Integral(
                                 const Array<OneD, const NekDouble>& inarray )
@@ -2592,7 +2640,20 @@ namespace Nektar
 
         int StdHexExp::v_GetEdgeNcoeffs(const int i) const
         {
-            return GetEdgeNcoeffs(i);
+            ASSERTL2((i >= 0)&&(i <= 11),"edge id is out of range");
+
+            if((i == 0)||(i == 2)||(i == 8)||(i == 10))
+            {
+                return  GetBasisNumModes(0);
+            }
+            else if((i == 1)||(i == 3)||(i == 9)||(i == 11))
+            {
+                return  GetBasisNumModes(1);
+            }
+            else
+            {
+                return GetBasisNumModes(2);
+            }
         }
 
         void StdHexExp::v_WriteToFile(std::ofstream &outfile,

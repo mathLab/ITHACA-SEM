@@ -68,13 +68,6 @@ namespace Nektar
             /// Destructor
             ~TetExp();
 
-            void GetCoords(Array<OneD,NekDouble> &coords_0,
-                Array<OneD,NekDouble> &coords_1,
-                Array<OneD,NekDouble> &coords_2);
-
-            void GetCoord(const Array<OneD, const NekDouble> &Lcoords, 
-                Array<OneD,NekDouble> &coords);
-
         protected:
             /// Calculate the inner product of inarray with respect to the
             /// basis B=m_base0*m_base1*m_base2 and put into outarray:
@@ -111,17 +104,11 @@ namespace Nektar
             /// Get the x,y,z coordinates of each quadrature point.
             virtual void v_GetCoords(Array<OneD,NekDouble> &coords_0,
                             Array<OneD,NekDouble> &coords_1,
-                            Array<OneD,NekDouble> &coords_2)
-            {
-                GetCoords(coords_0, coords_1, coords_2);
-            }
+                            Array<OneD,NekDouble> &coords_2);
 
             virtual void v_GetCoord(
                             const Array<OneD, const NekDouble> &Lcoords,
-                            Array<OneD,NekDouble> &coords)
-            {
-                GetCoord(Lcoords, coords);
-            }
+                            Array<OneD,NekDouble> &coords);
 
             virtual void v_WriteToFile( std::ofstream &outfile,
                             OutputFormat format,
@@ -134,9 +121,6 @@ namespace Nektar
                                                                         const;
 
             DNekMatSharedPtr GenMatrix(
-                            const StdRegions::StdMatrixKey &mkey);
-
-            DNekMatSharedPtr CreateStdMatrix(
                             const StdRegions::StdMatrixKey &mkey);
 
             DNekScalMatSharedPtr  CreateMatrix(

@@ -419,7 +419,7 @@ namespace Nektar
         }
 
 
-        void TetExp::GetCoords(Array<OneD,NekDouble> &coords_0,
+        void TetExp::v_GetCoords(Array<OneD,NekDouble> &coords_0,
                                Array<OneD,NekDouble> &coords_1,
                                Array<OneD,NekDouble> &coords_2)
         {
@@ -501,8 +501,9 @@ namespace Nektar
             }
         }
 
+
         // get the coordinates "coords" at the local coordinates "Lcoords"
-        void TetExp::GetCoord(const Array<OneD, const NekDouble> &Lcoords, Array<OneD,NekDouble> &coords)
+        void TetExp::v_GetCoord(const Array<OneD, const NekDouble> &Lcoords, Array<OneD,NekDouble> &coords)
         {
             int  i;
 
@@ -1025,17 +1026,6 @@ namespace Nektar
         }
 
 
-        DNekMatSharedPtr TetExp::CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
-        {
-            LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
-            LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
-            LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
-            StdRegions::StdTetExpSharedPtr tmp = MemoryManager<StdTetExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
-
-            return tmp->GetStdMatrix(mkey);
-        }
-
-
         DNekMatSharedPtr TetExp::GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             DNekMatSharedPtr returnval;
@@ -1370,7 +1360,12 @@ namespace Nektar
 
         DNekMatSharedPtr TetExp::v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
         {
-            return CreateStdMatrix(mkey);
+            LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
+            LibUtilities::BasisKey bkey1 = m_base[1]->GetBasisKey();
+            LibUtilities::BasisKey bkey2 = m_base[2]->GetBasisKey();
+            StdRegions::StdTetExpSharedPtr tmp = MemoryManager<StdTetExp>::AllocateSharedPtr(bkey0, bkey1, bkey2);
+
+            return tmp->GetStdMatrix(mkey);
         }
 
         DNekScalMatSharedPtr& TetExp::v_GetLocMatrix(const MatrixKey &mkey)

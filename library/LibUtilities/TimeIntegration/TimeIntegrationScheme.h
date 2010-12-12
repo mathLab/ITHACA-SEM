@@ -451,7 +451,7 @@ namespace Nektar
             TimeIntegrationSolutionSharedPtr InitializeScheme(const NekDouble                      timestep,
                                                                     ConstDoubleArray               &y_0    ,
                                                               const NekDouble                      time    ,
-                                                              const TimeIntegrationSchemeOperators &op     ) const;
+                                                              const TimeIntegrationSchemeOperators &op     );
 
             /**
              * \brief Explicit integration of an ODE.
@@ -473,7 +473,7 @@ namespace Nektar
              */
             ConstDoubleArray& TimeIntegrate(const NekDouble                        timestep,          
                                                   TimeIntegrationSolutionSharedPtr &y      ,
-                                            const TimeIntegrationSchemeOperators   &op     ) const;
+                                            const TimeIntegrationSchemeOperators   &op     );
 
             inline const Array<OneD, const unsigned int>& GetTimeLevelOffset()
             {
@@ -511,7 +511,16 @@ namespace Nektar
             Array<TwoD,NekDouble>    m_V;
 
         private: 
-            
+            bool m_initialised;
+            int  nvar;
+            int  npoints;
+            DoubleArray Y;
+            DoubleArray tmp;
+            TripleArray F;
+            TripleArray F_IMEX;  // Used to store the Explicit stage derivative of IMEX schemes
+                                        // The implicit part will be stored in F
+            NekDouble   T;
+
             template <typename> friend class Nektar::MemoryManager;
             friend TimeIntegrationSchemeManagerT &TimeIntegrationSchemeManager(void);
 
@@ -541,7 +550,7 @@ namespace Nektar
                                      ConstSingleArray               &t_old  ,
                                      TripleArray                    &y_new  ,
                                      SingleArray                    &t_new  ,
-                               const TimeIntegrationSchemeOperators &op     ) const;
+                               const TimeIntegrationSchemeOperators &op     );
 
 
             inline int GetFirstDim(ConstTripleArray &y) const

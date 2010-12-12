@@ -145,7 +145,8 @@ namespace Nektar
         }
 
         TimeIntegrationScheme::TimeIntegrationScheme(const TimeIntegrationSchemeKey &key):
-            m_schemeKey(key)
+            m_schemeKey(key),
+            m_initialised(false)
         {
             switch(key.GetIntegrationMethod())
             {
@@ -669,7 +670,7 @@ namespace Nektar
         TimeIntegrationScheme::InitializeScheme(const NekDouble   timestep,
                                                 ConstDoubleArray  &y_0    ,
                                                 const NekDouble   time    ,
-                                                const TimeIntegrationSchemeOperators &op) const
+                                                const TimeIntegrationSchemeOperators &op)
         {
             // create a TimeIntegrationSolution object based upon the
             // initial value. Initialise all other multi-step values
@@ -709,18 +710,14 @@ namespace Nektar
         TimeIntegrationScheme::ConstDoubleArray& 
         TimeIntegrationScheme::TimeIntegrate(const NekDouble    timestep, 
                                              TimeIntegrationSolutionSharedPtr &solvector,
-                                             const TimeIntegrationSchemeOperators   &op) const
+                                             const TimeIntegrationSchemeOperators   &op)
         {
             ASSERTL1(!(GetIntegrationSchemeType() == eImplicit),
                      "Fully Implicit integration scheme cannot be handled by this routine.");
             
             int nvar    = solvector->GetFirstDim ();
             int npoints = solvector->GetSecondDim();
-			
-			static DoubleArray  y_n;
-			static NekDouble    t_n;
-			static DoubleArray  dtFy_n;
-            
+
             if( (solvector->GetIntegrationScheme()).get() != this )
             {
                 // This branch will be taken when the solution vector
@@ -751,6 +748,9 @@ namespace Nektar
                 // 1.1 Determine which information is required for the
                 // current scheme
                 int n;
+                DoubleArray  y_n;
+                NekDouble    t_n;
+                DoubleArray  dtFy_n;
                 unsigned int nCurSchemeVals  = m_numMultiStepValues; // number of required values of the current scheme
                 unsigned int nCurSchemeDers  = m_numMultiStepDerivs; // number of required derivs of the current scheme
                 unsigned int nCurSchemeSteps = m_numsteps;  // number of steps in the current scheme
@@ -939,90 +939,91 @@ namespace Nektar
                                                   ConstSingleArray   &t_old  ,
                                                   TripleArray        &y_new  ,
                                                   SingleArray        &t_new  ,
-                                                  const TimeIntegrationSchemeOperators &op) const
+                                                  const TimeIntegrationSchemeOperators &op)
         {
             ASSERTL1(CheckTimeIntegrateArguments(timestep,y_old,t_old,y_new,t_new,op), "Arguments not well defined");    
             
-            unsigned int i,j,k;    
-            unsigned int nvar      = GetFirstDim (y_old);
-            unsigned int npoints   = GetSecondDim(y_old);
-			
-			static bool memory_setup = true;
-            
+            unsigned int i,j,k;
             TimeIntegrationSchemeType type = GetIntegrationSchemeType();
+            NekDouble T;
+
+            // Check if storage has already been initialised.
+            // If so, we just zero the temporary storage.
+            if (m_initialised && nvar == GetFirstDim(y_old)
+                              && npoints == GetSecondDim(y_old))
+            {
+                for(j = 0; j < nvar; j++)
+                {
+                    Vmath::Zero(npoints, tmp[j], 1);
+                }
+            }
+            else
+            {
+                nvar = GetFirstDim(y_old);
+                npoints = GetSecondDim(y_old);
        
-            // First, we are going to calculate the various stage
-            // values and stage derivatives (this is the multi-stage
-            // part of the method)
-            // - Y   corresponds to the stage values
-            // - F   corresponds to the stage derivatives
-            // - T   corresponds to the time at the different stages
-            // - tmp corresponds to the explicit right hand side of
-            //   each stage equation
-            //   (for explicit schemes, this correspond to Y)
-			
-			static DoubleArray Y(nvar);        
-			static DoubleArray tmp(nvar);        
-			static TripleArray F  (m_numstages);
-			static TripleArray F_IMEX;  // Used to store the Explicit stage derivative of IMEX schemes
-                                        // The implicit part will be stored in F
-			static NekDouble   T;
-            
-			// Allocate memory for the arrays Y and F and tmp The same
-            // storage will be used for every stage -> Y is a
-            // DoubleArray
-              
-			for(j = 0; j < nvar; j++)
-			{
-			  tmp[j]   = Array<OneD, NekDouble>(npoints,0.0);
-			}
-			
-			// The same storage will be used for every stage -> tmp is
-			// a DoubleArray
-			if(type == eExplicit)
-			{
-			  Y = tmp;
-			}
-			else
-			{
-			  if(memory_setup)
-			  {
-				for(j = 0; j < nvar; j++)
-				{
-                    Y[j] =  Array<OneD, NekDouble>(npoints,0.0);
-				}
-			  }
-			}
+                // First, we are going to calculate the various stage
+                // values and stage derivatives (this is the multi-stage
+                // part of the method)
+                // - Y   corresponds to the stage values
+                // - F   corresponds to the stage derivatives
+                // - T   corresponds to the time at the different stages
+                // - tmp corresponds to the explicit right hand side of
+                //   each stage equation
+                //   (for explicit schemes, this correspond to Y)
 
-			// Different storage for every stage derivative as the data
-			// will be re-used to update the solution -> F is a TripleArray
-             
-			if(memory_setup)
-			{
-			   for(i = 0; i < m_numstages; ++i)
-               {    
-                  F[i]   = DoubleArray(nvar);
-                  for(j = 0; j < nvar; j++)
-                  {
-                    F[i][j] = Array<OneD, NekDouble>(npoints,0.0);
-                  }
-			    }
+                // Allocate memory for the arrays Y and F and tmp The same
+                // storage will be used for every stage -> Y is a
+                // DoubleArray
+                tmp = DoubleArray(nvar);
+                for(j = 0; j < nvar; j++)
+                {
+                    tmp[j]   = Array<OneD, NekDouble>(npoints,0.0);
+                }
 
-			   if(type == eIMEX)
-               {
-                  F_IMEX = TripleArray(m_numstages);
-                  for(i = 0; i < m_numstages; ++i)
-                  {   
-                    F_IMEX[i]   = DoubleArray(nvar); 
+                // The same storage will be used for every stage -> tmp is
+                // a DoubleArray
+                if(type == eExplicit)
+                {
+                    Y = tmp;
+                }
+                else
+                {
+                    Y = DoubleArray(nvar);
                     for(j = 0; j < nvar; j++)
                     {
-                        F_IMEX[i][j] =  Array<OneD, NekDouble>(npoints,0.0);
-                    }      
-				  }
-			   }
-			memory_setup = false;
-			}
-			
+                        Y[j] =  Array<OneD, NekDouble>(npoints,0.0);
+                    }
+                }
+
+                // Different storage for every stage derivative as the data
+                // will be re-used to update the solution -> F is a TripleArray
+                F = TripleArray(m_numstages);
+                for(i = 0; i < m_numstages; ++i)
+                {
+                    F[i]   = DoubleArray(nvar);
+                    for(j = 0; j < nvar; j++)
+                    {
+                        F[i][j] = Array<OneD, NekDouble>(npoints,0.0);
+                    }
+                }
+
+                if(type == eIMEX)
+                {
+                    F_IMEX = TripleArray(m_numstages);
+                    for(i = 0; i < m_numstages; ++i)
+                    {
+                        F_IMEX[i]   = DoubleArray(nvar);
+                        for(j = 0; j < nvar; j++)
+                        {
+                            F_IMEX[i][j] =  Array<OneD, NekDouble>(npoints,0.0);
+                        }
+                    }
+                }
+
+                // Finally, flag that we have initialised the memory.
+                m_initialised = true;
+            }
 			
             // The loop below calculates the stage values and derivatives
             for(i = 0; i < m_numstages; i++)

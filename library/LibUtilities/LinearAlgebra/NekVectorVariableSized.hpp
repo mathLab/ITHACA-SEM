@@ -425,7 +425,7 @@ namespace Nektar
             #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES
                 template<typename L, typename Op, typename R>
                 NekVector(const Node<L, Op, R>& rhs) :
-                BaseType(MatrixSize<Node<L, Op, R>, typename Node<L, Op, R>::Indices, 0>::GetRequiredSize(rhs.GetData()).get<0>()) 
+                BaseType(MatrixSize<Node<L, Op, R>, typename Node<L, Op, R>::Indices, 0>::GetRequiredRows(rhs.GetData())) 
                 {
                     /// TODO Make sure this works correctly with eWrapper
                     //BOOST_MPL_ASSERT(( boost::is_same<typename Expression<ExpressionPolicyType>::ResultType, NekVector<DataType, VariableSizedVector, space> > ));

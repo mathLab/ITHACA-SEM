@@ -47,7 +47,7 @@ namespace Nektar
     {
 
     class StdExpansion2D: public StdExpansion
-        {
+    {
         public:
             StdExpansion2D();
             StdExpansion2D(int numcoeffs, const LibUtilities::BasisKey &Ba,
@@ -148,7 +148,7 @@ namespace Nektar
             {
                 return PhysEvaluate(coords);
             }
-        };
+    };
 
         typedef boost::shared_ptr<StdExpansion2D> StdExpansion2DSharedPtr;
 

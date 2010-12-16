@@ -14,10 +14,10 @@ SET(ProjectName LocalRegionsUnitTests)
 ADD_NEKTAR_EXECUTABLE(${ProjectName} Sources Headers)
 
 TARGET_LINK_LIBRARIES(${ProjectName}
-    optimized LibUtilities debug LibUtilities-g
-    optimized StdRegions debug StdRegions-g
-    optimized LocalRegions debug LocalRegions-g
-    optimized SpatialDomains debug SpatialDomains-g
+    LibUtilities 
+    SpatialDomains
+    StdRegions 
+    LocalRegions 
     ${Boost_THREAD_LIBRARY}
 )
 

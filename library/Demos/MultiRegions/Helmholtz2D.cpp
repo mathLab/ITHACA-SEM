@@ -57,6 +57,11 @@ int main(int argc, char *argv[])
             SolnType = MultiRegions::eDirectFullMatrix;
             cout << "Solution Type: Full Matrix" << endl;
         }
+        else if(!NoCaseStringCompare(argv[2],"IterativeCG"))
+        {
+            SolnType = MultiRegions::eIterativeCG;
+            cout << "Solution Type: Iterative CG" << endl;
+        }
         else
         {
             cerr << "SolnType not recognised" <<endl;

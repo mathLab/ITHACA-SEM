@@ -66,7 +66,8 @@ namespace Nektar
             eNoSolnType,    ///< No Solution type specified
             eDirectFullMatrix,
             eDirectStaticCond,
-            eDirectMultiLevelStaticCond
+            eDirectMultiLevelStaticCond,
+            eIterativeCG
         };
 
 
@@ -75,7 +76,8 @@ namespace Nektar
             "No Solution Type",
             "Direct Solve: Full Matrix",
             "Direct Solve: Static Condensation",
-            "Direct Solve: Multi-Level Static Condensation"
+            "Direct Solve: Multi-Level Static Condensation",
+            "Iterative Solve: Conjugate Gradient"
         };
 
 

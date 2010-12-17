@@ -122,6 +122,7 @@ namespace Nektar
                     //boost::shared_ptr<IteratorInnerType> m_curBlock;
                     unsigned int m_curRow;
                     unsigned int m_curColumn;
+
             };
 
             typedef iterator_base<ThisType> iterator;
@@ -264,7 +265,15 @@ namespace Nektar
                 ASSERTL2(column < m_numberOfBlockColumns, std::string("Column ") + boost::lexical_cast<std::string>(column) +
                     std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
                     std::string(" columns"));
-                return m_data[CalculateBlockIndex(row, column)].get();
+                int x = CalculateBlockIndex(row,column);
+                if (x == -1)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return m_data[x].get();
+                }
             }
 
             boost::shared_ptr<const InnerType> GetBlock(unsigned int row, unsigned int column) const
@@ -275,7 +284,15 @@ namespace Nektar
                 ASSERTL2(column < m_numberOfBlockColumns, std::string("Column ") + boost::lexical_cast<std::string>(column) +
                     std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
                     std::string(" columns"));
-                return m_data[CalculateBlockIndex(row, column)];
+                int x = CalculateBlockIndex(row,column);
+                if (x < 0)
+                {
+                    return boost::shared_ptr<const InnerType>();
+                }
+                else
+                {
+                    return m_data[x];
+                }
             }
 
             boost::shared_ptr<InnerType>& GetBlock(unsigned int row, unsigned int column)
@@ -286,7 +303,15 @@ namespace Nektar
                 ASSERTL2(column < m_numberOfBlockColumns, std::string("Column ") + boost::lexical_cast<std::string>(column) +
                     std::string(" requested in a block matrix with a maximum of ") + boost::lexical_cast<std::string>(m_numberOfBlockColumns) +
                     std::string(" columns"));
-                return m_data[CalculateBlockIndex(row, column)];
+                int x = CalculateBlockIndex(row,column);
+                if (x == -1)
+                {
+                    return m_nullBlockPtr;
+                }
+                else
+                {
+                    return m_data[x];
+                }
             }
 
             void SetBlock(unsigned int row, unsigned int column, boost::shared_ptr<InnerType>& m)
@@ -488,6 +513,7 @@ namespace Nektar
 
             //Array<TwoD, boost::shared_ptr<InnerType> > m_data;
             Array<OneD, boost::shared_ptr<InnerType> > m_data;
+            boost::shared_ptr<InnerType> m_nullBlockPtr;
             Array<OneD, unsigned int> m_rowSizes;
             Array<OneD, unsigned int> m_columnSizes;
             unsigned int m_storageSize;

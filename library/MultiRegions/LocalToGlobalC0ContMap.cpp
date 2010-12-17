@@ -701,6 +701,7 @@ namespace Nektar
                 switch(solnType)
                 {
                 case eDirectFullMatrix:
+                case eIterativeCG:
                     {
                         NoReordering(boostGraphObj,perm,iperm);
                     }

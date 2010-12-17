@@ -36,6 +36,7 @@
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/LocalToGlobalC0ContMap.h>
 #include <MultiRegions/GlobalLinSys.h>
+#include <MultiRegions/LocalMatrixSystem.h>
 
 namespace Nektar
 {
@@ -939,115 +940,6 @@ namespace Nektar
         }
 
 
-        /**
-         * Consider a linear system
-         *   \f$\boldsymbol{M\hat{u}}_g=\boldsymbol{\hat{f}}\f$
-         * to be solved, where \f$\boldsymbol{M}\f$ is a matrix of type
-         * specified by \a mkey. This function assembles the global system
-         * matrix \f$\boldsymbol{M}\f$ out of the elemental submatrices
-         * \f$\boldsymbol{M}^e\f$. This is equivalent to:
-         * \f[ \boldsymbol{M}=\boldsymbol{\mathcal{A}}^T
-         * \underline{\boldsymbol{M}}^e\boldsymbol{\mathcal{A}}.\f]
-         * where the matrix \f$\boldsymbol{\mathcal{A}}\f$ is a sparse
-         * permutation matrix of size \f$N_{\mathrm{eof}}\times
-         * N_{\mathrm{dof}}\f$. However, due to the size and sparsity of the
-         * matrix \f$\boldsymbol{\mathcal{A}}\f$, it is more efficient to
-         * assemble the global matrix using the mapping array \a
-         * map\f$[e][i]\f$ contained in the input argument \a locToGloMap.
-         * The global assembly is then evaluated as:
-         * \f[ \boldsymbol{M}\left[\mathrm{\texttt{map}}[e][i]\right]
-         * \left[\mathrm{\texttt{map}}[e][j]\right]
-         *       =\mathrm{\texttt{sign}}[e][i]\cdot
-         * \mathrm{\texttt{sign}}[e][j] \cdot\boldsymbol{M}^e[i][j]\f]
-         * where the values \a sign\f$[e][i]\f$ ensure the correct connectivity.
-         *
-         * @param   mkey            A key which uniquely defines the global
-         *                          matrix to be constructed.
-         * @param   locToGloMap     Contains the mapping array and
-         *                          required information for the transformation
-         *                          from local to global degrees of freedom.
-         * @return  (A shared pointer to) the global linear system formed by
-         *          the global matrix \f$\boldsymbol{M}\f$.
-         */
-        GlobalLinSysSharedPtr ExpList::GenGlobalLinSysFullDirect(
-                                                                 const GlobalLinSysKey &mkey,
-                                                                 const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
-        {
-            int n,j;
-            int cnt1;
-            int n_exp = (*m_exp).size();
-            Array<OneD, unsigned int> nCoeffsPerElmt(n_exp);
-            for(j = 0; j < n_exp; j++)
-            {
-                nCoeffsPerElmt[j] = (*m_exp)[m_offset_elmt_id[j]]->GetNcoeffs();
-            }
-
-            MatrixStorage blkmatStorage = eDIAGONAL;
-            DNekScalBlkMatSharedPtr A = MemoryManager<DNekScalBlkMat>::
-                AllocateSharedPtr(nCoeffsPerElmt,nCoeffsPerElmt,blkmatStorage);
-
-            DNekScalMatSharedPtr loc_mat;
-
-            int nel;
-            int nvarcoeffs = mkey.GetNvariableCoefficients();
-
-            map<int, RobinBCInfoSharedPtr> RobinBCInfo = GetRobinBCInfo();
-
-            for(n = cnt1 = 0; n < n_exp; ++n)
-            {
-                nel = m_offset_elmt_id[n];
-
-                // need to be initialised with zero size for non variable coefficient case
-                Array<OneD, Array<OneD,const NekDouble> > varcoeffs;
-
-                if(nvarcoeffs>0)
-                {
-                    varcoeffs = Array<OneD, Array<OneD,const NekDouble> >(nvarcoeffs);
-                    for(j = 0; j < nvarcoeffs; j++)
-                    {
-                        varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
-                    }
-
-                    cnt1  +=  (*m_exp)[n]->GetTotPoints();
-                }
-
-                LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
-                                               (*m_exp)[nel]->DetExpansionType(),
-                                               *(*m_exp)[nel],
-                                               mkey.GetConstants(),
-                                               varcoeffs);
-
-                loc_mat = (*m_exp)[nel]->GetLocMatrix(matkey);
-
-                if(RobinBCInfo.count(nel) != 0) // add robin mass matrix
-                {
-                    RobinBCInfoSharedPtr rBC;
-
-                    // declare local matrix from scaled matrix.
-                    int rows = loc_mat->GetRows();
-                    int cols = loc_mat->GetColumns();
-                    const NekDouble *dat = loc_mat->GetRawPtr();
-                    DNekMatSharedPtr new_mat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,dat);
-                    Blas::Dscal(rows*cols,loc_mat->Scale(),new_mat->GetRawPtr(),1);
-
-                    // add local matrix contribution
-                    for(rBC = RobinBCInfo.find(nel)->second;rBC; rBC = rBC->next)
-                    {
-                        (*m_exp)[nel]->AddRobinMassMatrix(rBC->m_robinID,rBC->m_robinPrimitiveCoeffs,new_mat);
-                    }
-
-                    NekDouble one = 1.0;
-                    // redeclare loc_mat to point to new_mat plus the scalar.
-                    loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,new_mat);
-                }
-
-                A->SetBlock(n,n,loc_mat);
-            }
-
-            return MemoryManager<GlobalLinSys>::AllocateSharedPtr(mkey,A,locToGloMap);
-        }
-
-
         DNekMatSharedPtr ExpList::GenGlobalMatrixFull(const GlobalLinSysKey &mkey, const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
         {
             int i,j,n,gid1,gid2,loc_lda;
@@ -1175,194 +1067,6 @@ namespace Nektar
 
 
         /**
-         * Consider the linear system
-         * \f$\boldsymbol{M\hat{u}}_g=\boldsymbol{\hat{f}}\f$.
-         * Distinguishing between the boundary and interior components of
-         * \f$\boldsymbol{\hat{u}}_g\f$ and \f$\boldsymbol{\hat{f}}\f$ using
-         * \f$\boldsymbol{\hat{u}}_b\f$,\f$\boldsymbol{\hat{u}}_i\f$ and
-         * \f$\boldsymbol{\hat{f}}_b\f$,\f$\boldsymbol{\hat{f}}_i\f$
-         * respectively, this system can be split into its constituent parts as
-         * \f[\left[\begin{array}{cc}
-         * \boldsymbol{M}_b&\boldsymbol{M}_{c1}\\
-         * \boldsymbol{M}_{c2}&\boldsymbol{M}_i\\
-         * \end{array}\right]
-         * \left[\begin{array}{c}
-         * \boldsymbol{\hat{u}_b}\\
-         * \boldsymbol{\hat{u}_i}\\
-         * \end{array}\right]=
-         * \left[\begin{array}{c}
-         * \boldsymbol{\hat{f}_b}\\
-         * \boldsymbol{\hat{f}_i}\\
-         * \end{array}\right]\f]
-         * where \f$\boldsymbol{M}_b\f$ represents the components of
-         * \f$\boldsymbol{M}\f$ resulting from boundary-boundary mode
-         * interactions,
-         * \f$\boldsymbol{M}_{c1}\f$ and \f$\boldsymbol{M}_{c2}\f$ represent the
-         * components resulting from coupling between the boundary-interior
-         * modes, and \f$\boldsymbol{M}_i\f$ represents the components of
-         * \f$\boldsymbol{M}\f$ resulting from interior-interior mode
-         * interactions.
-         *
-         * The solution of the linear system can now be determined in two steps:
-         * \f{eqnarray*}
-         * \mathrm{step 1:}&\quad&(\boldsymbol{M}_b-\boldsymbol{M}_{c1}
-         * \boldsymbol{M}_i^{-1}\boldsymbol{M}_{c2}) \boldsymbol{\hat{u}_b} =
-         * \boldsymbol{\hat{f}}_b - \boldsymbol{M}_{c1}\boldsymbol{M}_i^{-1}
-         * \boldsymbol{\hat{f}}_i,\nonumber \\
-         * \mathrm{step 2:}&\quad&\boldsymbol{\hat{u}_i}=\boldsymbol{M}_i^{-1}
-         * \left( \boldsymbol{\hat{f}}_i
-         *      - \boldsymbol{M}_{c2}\boldsymbol{\hat{u}_b}
-         * \right). \nonumber \\ \f}
-         * As the inverse of \f$\boldsymbol{M}_i^{-1}\f$ is
-         * \f[ \boldsymbol{M}_i^{-1} = \left [\underline{\boldsymbol{M}^e_i}
-         * \right ]^{-1} = \underline{[\boldsymbol{M}^e_i]}^{-1} \f]
-         * and the following operations can be evaluated as,
-         * \f{eqnarray*}
-         * \boldsymbol{M}_{c1}\boldsymbol{M}_i^{-1}\boldsymbol{\hat{f}}_i &
-         * =& \boldsymbol{\mathcal{A}}_b^T \underline{\boldsymbol{M}^e_{c1}}
-         * \underline{[\boldsymbol{M}^e_i]}^{-1} \boldsymbol{\hat{f}}_i \\
-         * \boldsymbol{M}_{c2} \boldsymbol{\hat{u}_b} &=&
-         * \underline{\boldsymbol{M}^e_{c2}} \boldsymbol{\mathcal{A}}_b
-         * \boldsymbol{\hat{u}_b}.\f}
-         * where \f$\boldsymbol{\mathcal{A}}_b \f$ is the permutation matrix
-         * which scatters from global to local degrees of freedom, only the
-         * following four matrices should be constructed:
-         * - \f$\underline{[\boldsymbol{M}^e_i]}^{-1}\f$
-         * - \f$\underline{\boldsymbol{M}^e_{c1}}
-         *                          \underline{[\boldsymbol{M}^e_i]}^{-1}\f$
-         * - \f$\underline{\boldsymbol{M}^e_{c2}}\f$
-         * - The Schur complement: \f$\boldsymbol{M}_{\mathrm{Schur}}=
-         *   \quad\boldsymbol{M}_b-\boldsymbol{M}_{c1}\boldsymbol{M}_i^{-1}
-         *   \boldsymbol{M}_{c2}\f$
-         *
-         * The first three matrices are just a concatenation of the
-         * corresponding local matrices and they can be created as such. They
-         * also allow for an elemental evaluation of the operations concerned.
-         *
-         * The global Schur complement however should be assembled from the
-         * concatenation of the local elemental Schur complements, that is,
-         * \f[ \boldsymbol{M}_{\mathrm{Schur}}=\boldsymbol{M}_b
-         *          - \boldsymbol{M}_{c1}
-         * \boldsymbol{M}_i^{-1} \boldsymbol{M}_{c2} =
-         * \boldsymbol{\mathcal{A}}_b^T \left [\underline{\boldsymbol{M}^e_b -
-         * \boldsymbol{M}^e_{c1} [\boldsymbol{M}^e_i]^{-1}
-         * (\boldsymbol{M}^e_{c2})} \right ] \boldsymbol{\mathcal{A}}_b \f]
-         * and it is the only matrix operation that need to be evaluated on a
-         * global level when using static condensation.
-         * However, due to the size and sparsity of the matrix
-         * \f$\boldsymbol{\mathcal{A}}_b\f$, it is more efficient to assemble
-         * the global Schur matrix using the mapping array bmap\f$[e][i]\f$
-         * contained in the input argument \a locToGloMap. The global Schur
-         * complement is then constructed as:
-         * \f[\boldsymbol{M}_{\mathrm{Schur}}\left[\mathrm{\a bmap}[e][i]\right]
-         * \left[\mathrm{\a bmap}[e][j]\right]=\mathrm{\a bsign}[e][i]\cdot
-         * \mathrm{\a bsign}[e][j]
-         * \cdot\boldsymbol{M}^e_{\mathrm{Schur}}[i][j]\f]
-         * All four matrices are stored in the \a GlobalLinSys returned by this
-         * function.
-         *
-         * @param   mkey            A key which uniquely defines the global
-         *                          matrix to be constructed.
-         * @param   locToGloMap     Contains the mapping array and required
-         *                          information for the transformation from
-         *                          local to global degrees of freedom.
-         * @return  (A shared pointer to) the statically condensed global
-         *          linear system.
-         */
-        GlobalLinSysSharedPtr ExpList::GenGlobalLinSysStaticCond(const GlobalLinSysKey &mkey,
-                                                                 const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
-        {
-            int n,j;
-            int cnt1;
-
-            // Setup Block Matrix systems
-            int n_exp = (*m_exp).size();
-            const Array<OneD,const unsigned int>& nbdry_size = locToGloMap->GetNumLocalBndCoeffsPerPatch();
-            const Array<OneD,const unsigned int>& nint_size  = locToGloMap->GetNumLocalIntCoeffsPerPatch();
-
-            DNekScalBlkMatSharedPtr BinvD;
-            DNekScalBlkMatSharedPtr invD;
-            DNekScalBlkMatSharedPtr C;
-            DNekScalBlkMatSharedPtr SchurCompl;
-
-            MatrixStorage blkmatStorage = eDIAGONAL;
-            SchurCompl = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nbdry_size, nbdry_size, blkmatStorage);
-            BinvD      = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nbdry_size, nint_size , blkmatStorage);
-            C          = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nint_size , nbdry_size, blkmatStorage);
-            invD       = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nint_size , nint_size , blkmatStorage);
-
-            DNekScalBlkMatSharedPtr loc_mat;
-            DNekScalMatSharedPtr    tmp_mat;
-
-            int eid;
-            int nvarcoeffs = mkey.GetNvariableCoefficients();
-
-            map<int, RobinBCInfoSharedPtr> RobinBCInfo = GetRobinBCInfo();
-
-            for(n = cnt1 = 0; n < n_exp; ++n)
-            {
-                eid = m_offset_elmt_id[n];
-
-                // need to be initialised with zero size for non variable coefficient case
-                Array<OneD, Array<OneD,const NekDouble> > varcoeffs;
-
-                // set up elemental coefficient if necessary
-                if(nvarcoeffs>0)
-                {
-                    varcoeffs = Array<OneD, Array<OneD,const NekDouble> > (nvarcoeffs);
-
-                    for(j = 0; j < nvarcoeffs; j++)
-                    {
-                        varcoeffs[j] = mkey.GetVariableCoefficient(j) + cnt1;
-                    }
-                    cnt1  += (*m_exp)[n]->GetTotPoints();
-                }
-
-                LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
-                                               (*m_exp)[eid]->DetExpansionType(),
-                                               *(*m_exp)[eid],
-                                               mkey.GetConstants(),
-                                               varcoeffs);
-
-                loc_mat = (*m_exp)[eid]->GetLocStaticCondMatrix(matkey);
-
-                if(RobinBCInfo.count(eid) != 0) // add robin mass matrix
-                {
-                    RobinBCInfoSharedPtr rBC;
-
-                    tmp_mat = loc_mat->GetBlock(0,0);
-
-                    // declare local matrix from scaled matrix.
-                    int rows = tmp_mat->GetRows();
-                    int cols = tmp_mat->GetColumns();
-                    const NekDouble *dat = tmp_mat->GetRawPtr();
-                    DNekMatSharedPtr new_mat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,dat);
-                    Blas::Dscal(rows*cols,tmp_mat->Scale(),new_mat->GetRawPtr(),1);
-
-                    // add local matrix contribution
-                    for(rBC = RobinBCInfo.find(eid)->second;rBC; rBC = rBC->next)
-                    {
-                        (*m_exp)[eid]->AddRobinMassMatrix(rBC->m_robinID,rBC->m_robinPrimitiveCoeffs,new_mat);
-                    }
-
-                    NekDouble one = 1.0;
-                    // redeclare loc_mat to point to new_mat plus the scalar.
-                    tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,new_mat);
-                    loc_mat->SetBlock(0,0,tmp_mat);
-                }
-
-
-                SchurCompl->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,0));
-                BinvD     ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,1));
-                C         ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,0));
-                invD      ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,1));
-            }
-
-            return MemoryManager<GlobalLinSys>::AllocateSharedPtr(mkey,SchurCompl,BinvD,C,invD,locToGloMap);
-        }
-
-
-        /**
          * Consider a linear system
          * \f$\boldsymbol{M\hat{u}}_g=\boldsymbol{f}\f$ to be solved. Dependent
          * on the solution method, this function constructs
@@ -1389,21 +1093,34 @@ namespace Nektar
             {
             case eDirectFullMatrix:
                 {
-                    returnlinsys = GenGlobalLinSysFullDirect(mkey, locToGloMap);
+                    const map<int, RobinBCInfoSharedPtr> vRobinBCInfo = GetRobinBCInfo();
+                    LocalMatrixSystemSharedPtr lms = MemoryManager<LocalMatrixSystemFull>::AllocateSharedPtr(mkey,m_exp,locToGloMap,m_offset_elmt_id,vRobinBCInfo);
+                    returnlinsys = GlobalLinSysFactory::CreateInstance("DirectFull",mkey,lms,locToGloMap);
                 }
                 break;
             case eDirectStaticCond:
                 {
                     ASSERTL1(locToGloMap->GetGlobalSysSolnType()==eDirectStaticCond,
                              "The local to global map is not set up for this solution type");
-                    returnlinsys = GenGlobalLinSysStaticCond(mkey, locToGloMap);
+                    const map<int, RobinBCInfoSharedPtr> vRobinBCInfo = GetRobinBCInfo();
+                    LocalMatrixSystemSharedPtr lms = MemoryManager<LocalMatrixSystemStaticCond>::AllocateSharedPtr(mkey,m_exp,locToGloMap,m_offset_elmt_id,vRobinBCInfo);
+                    returnlinsys = GlobalLinSysFactory::CreateInstance("DirectStaticCond",mkey,lms,locToGloMap);
                 }
                 break;
             case eDirectMultiLevelStaticCond:
                 {
                     ASSERTL1(locToGloMap->GetGlobalSysSolnType()==eDirectMultiLevelStaticCond,
                              "The local to global map is not set up for this solution type");
-                    returnlinsys = GenGlobalLinSysStaticCond(mkey, locToGloMap);
+                    const map<int, RobinBCInfoSharedPtr> vRobinBCInfo = GetRobinBCInfo();
+                    LocalMatrixSystemSharedPtr lms = MemoryManager<LocalMatrixSystemStaticCond>::AllocateSharedPtr(mkey,m_exp,locToGloMap,m_offset_elmt_id,vRobinBCInfo);
+                    returnlinsys = GlobalLinSysFactory::CreateInstance("DirectStaticCond",mkey,lms,locToGloMap);
+                }
+                break;
+            case eIterativeCG:
+                {
+                    const map<int, RobinBCInfoSharedPtr> vRobinBCInfo = GetRobinBCInfo();
+                    LocalMatrixSystemSharedPtr lms = MemoryManager<LocalMatrixSystemFull>::AllocateSharedPtr(mkey,m_exp,locToGloMap,m_offset_elmt_id,vRobinBCInfo);
+                    returnlinsys = GlobalLinSysFactory::CreateInstance("IterativeCG",mkey,lms,locToGloMap);
                 }
                 break;
             default:
@@ -1418,115 +1135,9 @@ namespace Nektar
                                                           const GlobalLinSysKey     &mkey,
                                                           const LocalToGlobalBaseMapSharedPtr &locToGloMap)
         {
-            StdRegions::MatrixType linsystype = mkey.GetMatrixType();
-            ASSERTL0(linsystype == StdRegions::eHybridDGHelmBndLam,
-                     "Routine currently only tested for HybridDGHelmholtz");
-            ASSERTL1(mkey.GetGlobalSysSolnType()!=eDirectFullMatrix,
-                     "This BndLinSys cannot be constructed in case of a full matrix global solve");
-            ASSERTL1(mkey.GetGlobalSysSolnType()==locToGloMap->GetGlobalSysSolnType(),
-                     "The local to global map is not set up for the requested solution type");
-
-            // We will set up this matrix as a statically condensed system
-            // where the interior blocks are zero
-            int n,j;
-            int cnt1;
-
-            NekDouble factor1, factor2;
-
-            map<int, RobinBCInfoSharedPtr> RobinBCInfo = GetRobinBCInfo();
-
-            // Setup Block Matrix systems
-            int n_exp = (*m_exp).size();
-            const Array<OneD,const unsigned int>& nbdry_size = locToGloMap->GetNumLocalBndCoeffsPerPatch();
-            const Array<OneD,const unsigned int>& nint_size  = locToGloMap->GetNumLocalIntCoeffsPerPatch();
-
-            DNekScalBlkMatSharedPtr BinvD;
-            DNekScalBlkMatSharedPtr invD;
-            DNekScalBlkMatSharedPtr C;
-            DNekScalBlkMatSharedPtr SchurCompl;
-
-            MatrixStorage blkmatStorage = eDIAGONAL;
-            SchurCompl = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nbdry_size, nbdry_size, blkmatStorage);
-            BinvD      = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nbdry_size, nint_size , blkmatStorage);
-            C          = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nint_size , nbdry_size, blkmatStorage);
-            invD       = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nint_size , nint_size , blkmatStorage);
-
-            DNekScalMatSharedPtr loc_mat;
-
-            int eid;
-            int totnq, nvarcoeffs = mkey.GetNvariableCoefficients();
-
-            for(n = cnt1 = 0; n < n_exp; ++n)
-            {
-                eid = m_offset_elmt_id[n];
-                totnq = GetCoordim(eid)*( (*m_exp)[eid]->GetTotPoints() );
-
-
-                // need to be initialised with zero size for non variable coefficient case
-                Array<OneD, Array<OneD,const NekDouble> > varcoeffs;
-                Array<OneD, NekDouble> varcoeffs_wk;
-
-                if(nvarcoeffs>0)
-                {
-                    varcoeffs = Array<OneD, Array<OneD,const NekDouble> > (nvarcoeffs);
-
-                    // When two varcoeffs in a specific order
-                    for(j = 0; j < nvarcoeffs; j++)
-                    {
-                        varcoeffs_wk = Array<OneD, NekDouble>(totnq,0.0);
-                        Vmath::Vcopy(totnq, &(mkey.GetVariableCoefficient(j))[cnt1], 1, &varcoeffs_wk[0],1);
-                        varcoeffs[j] = varcoeffs_wk;
-                    }
-
-                    cnt1  += totnq;
-                }
-
-                int Nconstants = mkey.GetNconstants();
-
-                if(Nconstants>2)
-                {
-                    factor1 = mkey.GetConstant(eid);
-                    factor2 = mkey.GetConstant(Nconstants-1);
-                }
-
-                else
-                {
-                    factor1 = mkey.GetConstant(0);
-                    factor2 = mkey.GetConstant(1);
-                }
-
-                LocalRegions::MatrixKey matkey(linsystype,
-                                               (*m_exp)[eid]->DetExpansionType(),
-                                               *(*m_exp)[eid],factor1,factor2,varcoeffs);
-
-                loc_mat = (*m_exp)[eid]->GetLocMatrix(matkey);
-
-                if(RobinBCInfo.count(eid) != 0) // add robin mass matrix
-                {
-                    RobinBCInfoSharedPtr rBC;
-
-                    // declare local matrix from scaled matrix.
-                    int rows = loc_mat->GetRows();
-                    int cols = loc_mat->GetColumns();
-                    const NekDouble *dat = loc_mat->GetRawPtr();
-                    DNekMatSharedPtr new_mat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,dat);
-                    Blas::Dscal(rows*cols,loc_mat->Scale(),new_mat->GetRawPtr(),1);
-
-                    // add local matrix contribution
-                    for(rBC = RobinBCInfo.find(eid)->second;rBC; rBC = rBC->next)
-                    {
-                        (*m_exp)[eid]->AddRobinMassMatrix(rBC->m_robinID,rBC->m_robinPrimitiveCoeffs,new_mat);
-                    }
-
-                    NekDouble one = 1.0;
-                    // redeclare loc_mat to point to new_mat plus the scalar.
-                    loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,new_mat);
-                }
-
-                SchurCompl->SetBlock(n,n,loc_mat);
-            }
-
-            return MemoryManager<GlobalLinSys>::AllocateSharedPtr(mkey,SchurCompl,BinvD,C,invD,locToGloMap);
+            const map<int, RobinBCInfoSharedPtr> vRobinBCInfo = GetRobinBCInfo();
+            LocalMatrixSystemSharedPtr lms = MemoryManager<LocalMatrixSystemStaticCond>::AllocateSharedPtr(mkey,m_exp,locToGloMap,m_offset_elmt_id,vRobinBCInfo);
+            return GlobalLinSysFactory::CreateInstance("DirectStaticCond",mkey,lms,locToGloMap);
         }
 
 

@@ -252,8 +252,7 @@ namespace Nektar
     }
 }
 
-    #endif
-
+    #endif // end NEKTAR_LIB_UTILITIES_BASIC_UTILS_NEK_FACTORY_HPP
     #undef MAX_PARAM
 
 // Specialisations for the different numbers of parameters.

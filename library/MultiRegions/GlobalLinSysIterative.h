@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File GlobalLinSys.h
+// File GlobalLinSysIterative.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,61 +29,39 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: GlobalLinSys header
+// Description: GlobalLinSysIterative header
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYS_H
-#define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYS_H
+#ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSITERATIVE_H
+#define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSITERATIVE_H
 
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <MultiRegions/GlobalLinSysKey.h>
+#include <MultiRegions/GlobalLinSys.h>
+#include <MultiRegions/LocalMatrixSystem.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
         // Forward declarations
-        class LocalMatrixSystem;
-        class GlobalLinSys;
-
-        /// Pointer to a GlobalLinSys object.
-        typedef boost::shared_ptr<GlobalLinSys> GlobalLinSysSharedPtr;
-        /// Mapping between GlobalLinSys objects and their associated keys.
-        typedef map<GlobalLinSysKey,GlobalLinSysSharedPtr> GlobalLinSysMap;
-        /// Pointer to a GlobalLinSys/key map.
-        typedef boost::shared_ptr<GlobalLinSysMap> GlobalLinSysMapShPtr;
-
-        /// Datatype of the NekFactory used to instantiate classes derived from
-        /// the EquationSystem class.
-        typedef LibUtilities::NekFactory< std::string, GlobalLinSys, const GlobalLinSysKey&,
-                const boost::shared_ptr<LocalMatrixSystem>&,
-                const boost::shared_ptr<LocalToGlobalBaseMap>& > GlobalLinSysFactory;
+        class LocalToGlobalC0ContMap;
+        class ExpList;
 
         /// A global linear system.
-        class GlobalLinSys
+        class GlobalLinSysIterative : public GlobalLinSys
         {
         public:
             /// Constructor for full direct matrix solve.
-            GlobalLinSys(const GlobalLinSysKey &mkey,
+            GlobalLinSysIterative(const GlobalLinSysKey &mkey,
                          const boost::shared_ptr<LocalMatrixSystem> &pLocMatSys,
                          const boost::shared_ptr<LocalToGlobalBaseMap>
                                                                 &locToGloMap);
 
-            /// Returns the key associated with the system.
-            const GlobalLinSysKey &GetKey(void) const
-            {
-                return m_linSysKey;
-            }
-
-            /// Returns a pointer to the basic linear system object.
-            const boost::shared_ptr<LocalMatrixSystem> GetLocMatSys(void) const
-            {
-                return m_locMatSys;
-            }
+            virtual ~GlobalLinSysIterative();
 
             /// Solve the linear system for given input and output vectors.
             virtual void Solve( const Array<OneD,const NekDouble> &in,
-                              Array<OneD,      NekDouble> &out) = 0;
+                              Array<OneD,      NekDouble> &out);
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
@@ -91,15 +69,12 @@ namespace Nektar
                               Array<OneD,       NekDouble> &out,
                         const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                         const Array<OneD, const NekDouble> &dirForcing
-                                                = NullNekDouble1DArray) = 0;
+                                                        = NullNekDouble1DArray);
 
         protected:
-            /// Key associated with this linear system.
-            GlobalLinSysKey                         m_linSysKey;
-            /// Local Matrix System
-            boost::shared_ptr<LocalMatrixSystem>    m_locMatSys;
+
         };
-    } //end of namespace
-} //end of namespace
+    }
+}
 
 #endif

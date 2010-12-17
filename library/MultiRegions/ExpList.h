@@ -730,9 +730,9 @@ namespace Nektar
 
             /// This operation constructs the global linear system of type \a
             /// mkey.
-            boost::shared_ptr<GlobalLinSys>  GenGlobalLinSysFullDirect(
-                                                                       const GlobalLinSysKey &mkey,
-                                                                       const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
+//            boost::shared_ptr<GlobalLinSys>  GenGlobalLinSysFullDirect(
+//                                                                       const GlobalLinSysKey &mkey,
+//                                                                       const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
 
 
             void GlobalEigenSystem(const boost::shared_ptr<DNekMat> &Gmat,
@@ -744,9 +744,9 @@ namespace Nektar
             /// This function constructs the necessary global matrices
             /// required for solving the linear system of type \a mkey by
             /// static condensation.
-            boost::shared_ptr<GlobalLinSys>  GenGlobalLinSysStaticCond(
-                                                                       const GlobalLinSysKey &mkey,
-                                                                       const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
+//            boost::shared_ptr<GlobalLinSys>  GenGlobalLinSysStaticCond(
+//                                                                       const GlobalLinSysKey &mkey,
+//                                                                       const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
 
             /// This operation constructs the global linear system of type \a
             /// mkey.

@@ -40,6 +40,13 @@ TriExp.h
 
 SET(PrecompiledHeaderName LocalRegions/LocalRegions.h)
 ADD_NEKTAR_LIBRARY(LocalRegions ${NEKTAR_LIBRARY_TYPE} ${LOCAL_REGIONS_SOURCES} ${LOCAL_REGIONS_HEADERS})
+TARGET_LINK_LIBRARIES(LocalRegions
+        optimized LibUtilities   debug LibUtilities-g
+        optimized SpatialDomains debug SpatialDomains-g
+        optimized StdRegions     debug StdRegions-g
+        optimized tinyxml debug tinyxml
+	)
+
 SETUP_PRECOMPILED_HEADERS(LOCAL_REGIONS_SOURCES PrecompiledHeaderName)
 
 INSTALL(FILES ${LOCAL_REGIONS_HEADERS} DESTINATION ${NEKTAR_INCLUDE_DIR}/LocalRegions)

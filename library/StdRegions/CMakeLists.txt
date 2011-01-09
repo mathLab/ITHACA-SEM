@@ -43,6 +43,10 @@ OptimizationParametersAccess.h
 
 
 ADD_NEKTAR_LIBRARY(StdRegions ${NEKTAR_LIBRARY_TYPE} ${STD_REGIONS_SOURCES} ${STD_REGIONS_HEADERS})
+TARGET_LINK_LIBRARIES(StdRegions
+        optimized LibUtilities debug LibUtilities-g
+        optimized tinyxml debug tinyxml
+	)
 
 INSTALL(FILES ${STD_REGIONS_HEADERS} DESTINATION ${NEKTAR_INCLUDE_DIR}/StdRegions)
 

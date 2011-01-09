@@ -80,6 +80,11 @@ ${TINYXML_INCLUDE_DIR}/tinyxml.h
 
 
 ADD_NEKTAR_LIBRARY(SpatialDomains ${NEKTAR_LIBRARY_TYPE} ${SPATIAL_DOMAINS_SOURCES} ${SPATIAL_DOMAINS_HEADERS})
+TARGET_LINK_LIBRARIES(SpatialDomains
+        optimized LibUtilities debug LibUtilities-g
+        optimized StdRegions  debug StdRegions-g
+        optimized tinyxml debug tinyxml
+	)
 
 INSTALL(FILES ${SPATIAL_DOMAINS_HEADERS} DESTINATION ${NEKTAR_INCLUDE_DIR}/SpatialDomains)
 

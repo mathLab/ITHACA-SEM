@@ -66,6 +66,14 @@ SubStructuredGraph.h
 
 
 ADD_NEKTAR_LIBRARY(MultiRegions ${NEKTAR_LIBRARY_TYPE} ${MULTI_REGIONS_SOURCES} ${MULTI_REGIONS_HEADERS})
+TARGET_LINK_LIBRARIES(MultiRegions
+        optimized LibUtilities   debug LibUtilities-g
+        optimized SpatialDomains debug SpatialDomains-g
+        optimized LocalRegions   debug LocalRegions-g
+        optimized StdRegions     debug StdRegions-g
+        optimized tinyxml debug tinyxml
+	)
+
 
 INSTALL(FILES ${MULTI_REGIONS_HEADERS} DESTINATION ${NEKTAR_INCLUDE_DIR}/MultiRegions)
 

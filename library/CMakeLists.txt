@@ -29,7 +29,7 @@ ENDIF (${CMAKE_COMPILER_IS_GNUCXX})
 
 SET(NEKTAR_BUILD_DEMOS ON CACHE BOOL "Build Demo Projects")
 SET(NEKTAR_BUILD_UNIT_TESTS OFF CACHE BOOL "Build Unit Tests Projects")
-SET(NEKTAR_BUILD_SHARED OFF CACHE BOOL "Build Nektar++ as shared libraries")
+SET(NEKTAR_BUILD_SHARED ON CACHE BOOL "Build Nektar++ as shared libraries")
 SET(NEKTAR_BUILD_TIMINGS OFF CACHE BOOL "Build Timings directory")
 MARK_AS_ADVANCED(NEKTAR_BUILD_TIMINGS)
 
@@ -55,10 +55,11 @@ IF( APPLE )
     SET(NEKTAR_USE_ACCELERATE_FRAMEWORK ON CACHE BOOL "Use the Mac Accelerate Framework for BLAS and Lapack support." )
     SET(NEKTAR_USE_CHUD_FRAMEWORK OFF CACHE BOOL "Use the Mac CHUD Framework (for Shark support)." )
     MARK_AS_ADVANCED(NEKTAR_USE_CHUD_FRAMEWORK)
+ELSE(APPLE)
+        IF( UNIX )
+          SET(NEKTAR_USE_SYSTEM_BLAS_LAPACK ON CACHE BOOL "Use the system provided blas and lapack libraries")
+          ENDIF(UNIX)
 ENDIF(APPLE)
-IF( UNIX )
-  SET(NEKTAR_USE_SYSTEM_BLAS_LAPACK ON CACHE BOOL "Use the system provided blas and lapack libraries")
-ENDIF(UNIX)
 
 # Turn on NEKTAR_USE_WIN32_LAPACK if we are in Windows and the libraries exist.
 IF( WIN32 )
@@ -147,6 +148,7 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/NektarCommon.cmake
               ${CMAKE_SOURCE_DIR}/FindTinyXml.cmake
               DESTINATION ${CMAKE_INSTALL_PREFIX}) 
+
 
 INSTALL(EXPORT Nektar++Libraries DESTINATION lib)
 

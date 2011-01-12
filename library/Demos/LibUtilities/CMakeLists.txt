@@ -25,6 +25,9 @@ SET(NodalTetEvenlySpacedSources
 
 SET(NodalTetElecSources
 	NodalTetElecDemo.cpp)
+
+SET(TimeIntegrationDemoSources
+	TimeIntegrationDemo.cpp)
    
 
    		
@@ -52,5 +55,5 @@ SET_LAPACK_LINK_LIBRARIES(NodalTetEvenlySpacedDemo)
 ADD_NEKTAR_EXECUTABLE(NodalTetElecDemo NodalTetElecSources)
 SET_LAPACK_LINK_LIBRARIES(NodalTetElecDemo)
 
-
-
+ADD_NEKTAR_EXECUTABLE(TimeIntegrationDemo TimeIntegrationDemoSources)
+SET_LAPACK_LINK_LIBRARIES(TimeIntegrationDemo)

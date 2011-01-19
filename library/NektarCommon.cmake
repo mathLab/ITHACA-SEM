@@ -253,12 +253,15 @@ ENDMACRO(ADD_NEKTAR_EXECUTABLE name sources)
 
 MACRO(ADD_NEKTAR_LIBRARY name type)
     ADD_LIBRARY(${name} ${type} ${ARGN})
-    SET_LAPACK_LINK_LIBRARIES(${name})
-    TARGET_LINK_LIBRARIES( ${name}
-        ${Boost_THREAD_LIBRARY} 
-        ${Boost_IOSTREAMS_LIBRARY} 
-        ${Boost_ZLIB_LIBRARY} 
-        )
+
+    IF( APPLE )
+        SET_LAPACK_LINK_LIBRARIES(${name})
+        TARGET_LINK_LIBRARIES( ${name}
+            ${Boost_THREAD_LIBRARY} 
+            ${Boost_IOSTREAMS_LIBRARY} 
+            ${Boost_ZLIB_LIBRARY} 
+            )
+    ENDIF( APPLE )
 
     SET_COMMON_PROPERTIES(${name})
     

@@ -210,19 +210,20 @@ This will create <em>boost_1_40_0/</em>.</li>
 
               <li>Change to the <em>boost_1_40_0/</em> directory, and
 type
-<div class="code"><pre>../boost-jam-3.1.17/bin.macosxx86/bjam --prefix=../boost --build-type=complete --with-thread --with-iostreams --with-test --with-date_time --with-filesystem --with-system --layout=versioned --toolset=darwin install</pre></div>
-This will place the
-compiled libraries and include files in the correct
+<div class="code"><pre>../boost-jam-3.1.17/bin.macosxx86/bjam --prefix=../boost --build-type=complete --with-thread --with-iostreams --with-test --with-date_time --with-filesystem --with-system --layout=versioned --link=shared --toolset=darwin install</pre></div>
+This will generate both static and dynamic libraries and place them,
+along with the include files, in the correct
 path. (<em>Note:</em> that for a 64 bit operating system, such as Mac
 OSX 10.6, it may be necessary to use "../boost-jam-3.1.17/bin.macosxx86_64/bjam" instead of
-"../boost-jam-3.1.17/bin.macosxx86/bjam")
-        <ol>
-
+"../boost-jam-3.1.17/bin.macosxx86/bjam"). 
+      <ol>
                       <li>The "--with-*" compiles Boost with only the
 libraries required by Nektar++. This is just meant to save time. You
 can leave the flag off and it will compile all the libraries, if you
 wish</li>
 
+<li>To ensure the boost dynamic libraries are found at runtime, the enviromental variable DYLD_LIBRARY_PATH should be set:
+<div class="code"><pre>export DYLD_LIBRARY_PATH=$(HOME)/Nektar++/ThirdParty/boost/lib</pre></div><li>
                 
         </ol>
 
@@ -448,6 +449,8 @@ it will compile faster</li>
 libraries into a dist directory that can then be used by the solvers
 and utilities</li>
 
+<li>To ensure the Nektar++ dynamic libraries are found at runtime, the enviromental variable DYLD_LIBRARY_PATH should be updated as necessary:
+<div class="code"><pre>export DYLD_LIBRARY_PATH=$(HOME)/Nektar++/ThirdParty/boost/lib:$(HOME)/Nektar++/builds/dist/lib</pre></div><li>
         
 </ol>
 

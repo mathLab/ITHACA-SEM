@@ -295,6 +295,7 @@ namespace Nektar
                 /// to the curveDefinition.
                 SegGeomSharedPtr AddEdge(VertexComponentSharedPtr v0, VertexComponentSharedPtr v1,
                     CurveSharedPtr curveDefinition = CurveSharedPtr());
+                SegGeomSharedPtr GetEdge(unsigned int id) { return m_segGeoms[id]; }
 
                 TriGeomSharedPtr AddTriangle(SegGeomSharedPtr edges[], StdRegions::EdgeOrientation orient[]);
                 QuadGeomSharedPtr AddQuadrilateral(SegGeomSharedPtr edges[], StdRegions::EdgeOrientation orient[]);

@@ -13,7 +13,8 @@ IF( MSVC )
 	# Needed for M_PI to be visible in visual studio.
 	ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
 	
-	# Removes the warnings about unsafe methods such as strcpy, std::copy, memcmp, etc.
+	# Removes the warnings about unsafe methods such as strcpy, std::copy,
+    # memcmp, etc.
 	ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_DEPRECATE)
 ENDIF( )
 	
@@ -98,7 +99,8 @@ ENDIF( NEKTAR_USE_BLAS_LAPACK )
 MACRO(SET_LAPACK_LINK_LIBRARIES name)
     IF( NEKTAR_USE_BLAS_LAPACK )
         IF( NEKTAR_USE_MKL AND MKL_FOUND )
-            TARGET_LINK_LIBRARIES(${name} ${MKL_LAPACK} optimized ${MKL} debug ${MKL} ${MKL_GUIDE})
+            TARGET_LINK_LIBRARIES(${name} ${MKL_LAPACK} 
+                optimized ${MKL} debug ${MKL} ${MKL_GUIDE})
         ENDIF( NEKTAR_USE_MKL AND MKL_FOUND )
 
         IF( NEKTAR_USE_NIST_SPARSE_BLAS_TOOLKIT AND NIST_SPARSE_BLAS_FOUND )   
@@ -128,7 +130,8 @@ MACRO(SET_LAPACK_LINK_LIBRARIES name)
         ENDIF( NEKTAR_USE_SYSTEM_BLAS_LAPACK )
 
         IF( NEKTAR_USE_METIS )    
-            TARGET_LINK_LIBRARIES(${name} optimized ${METIS_LIB} debug ${METIS_LIB} )
+            TARGET_LINK_LIBRARIES(${name} 
+                optimized ${METIS_LIB} debug ${METIS_LIB} )
             ENDIF( NEKTAR_USE_METIS )
     ENDIF( NEKTAR_USE_BLAS_LAPACK )
 ENDMACRO(SET_LAPACK_LINK_LIBRARIES name)
@@ -141,12 +144,16 @@ MACRO(SET_COMMON_PROPERTIES name)
     SET_TARGET_PROPERTIES(${name} PROPERTIES RELWITHDEBINFO_POSTFIX -rg)
 
     IF( MSVC )
-        # Disable the warnings about duplicate copy/assignment methods (4521, 4522)
+        # Disable the warnings about duplicate copy/assignment methods 
+        #   (4521, 4522)
         # Disable the warning that arrays are default intialized (4351)	
-        # Disable "forcing value to bool 'true' or 'false' (performance warning)" warning (4800)
+        # Disable "forcing value to bool 'true' or 'false' (performance
+        #   warning)" warning (4800)
 
-        # /Za is necessary to prevent temporaries being bound to reference parameters.
-        SET_TARGET_PROPERTIES(${name} PROPERTIES COMPILE_FLAGS "/wd4521 /wd4522 /wd4351 /wd4018 /wd4800")
+        # /Za is necessary to prevent temporaries being bound to reference
+        #   parameters.
+        SET_TARGET_PROPERTIES(${name} 
+            PROPERTIES COMPILE_FLAGS "/wd4521 /wd4522 /wd4351 /wd4018 /wd4800")
     ENDIF(  )	
 
     SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DNEKTAR_DEBUG")
@@ -167,12 +174,6 @@ MACRO(SET_COMMON_PROPERTIES name)
         SET_TARGET_PROPERTIES(${name} PROPERTIES COMPILE_FLAGS "-fPIC")
     ENDIF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
 
-    IF( ${CMAKE_COMPILER_IS_GNUCXX} )
-        IF(NEKTAR_ENABLE_PROFILE)
-            #SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -finstrument-functions")
-        ENDIF(NEKTAR_ENABLE_PROFILE)
-    ENDIF( ${CMAKE_COMPILER_IS_GNUCXX} )
-
 ENDMACRO(SET_COMMON_PROPERTIES name)
 
 MACRO(SETUP_PRECOMPILED_HEADERS sourceFiles precompiledHeader)
@@ -181,10 +182,12 @@ MACRO(SETUP_PRECOMPILED_HEADERS sourceFiles precompiledHeader)
             # /Yu"stdafx.h" 
             #MESSAGE(${${precompiledHeader}})
     	    #MESSAGE(${${sourceFiles}})
-            SET_SOURCE_FILES_PROPERTIES(${${sourceFiles}} PROPERTIES COMPILE_FLAGS "/Yu\"${${precompiledHeader}}\"")
+            SET_SOURCE_FILES_PROPERTIES(${${sourceFiles}} 
+                PROPERTIES COMPILE_FLAGS "/Yu\"${${precompiledHeader}}\"")
             LIST(GET ${sourceFiles} 0 OUTVAR)
             #MESSAGE(${OUTVAR})
-            SET_SOURCE_FILES_PROPERTIES(${OUTVAR} PROPERTIES COMPILE_FLAGS "/Yc\"${${precompiledHeader}}\"")
+            SET_SOURCE_FILES_PROPERTIES(${OUTVAR} 
+                PROPERTIES COMPILE_FLAGS "/Yc\"${${precompiledHeader}}\"")
             
         ENDIF()	
     ENDIF()
@@ -240,13 +243,16 @@ MACRO(ADD_NEKTAR_EXECUTABLE name sources)
 	       SET(THE_LINK_FLAGS "")
 	ENDIF(NOT THE_LINK_FLAGS)
 
-        SET_TARGET_PROPERTIES(${name} PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} -pthread")
-        SET_TARGET_PROPERTIES(${name} PROPERTIES LINK_FLAGS "${THE_LINK_FLAGS} -pthread")
+        SET_TARGET_PROPERTIES(${name} 
+            PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} -pthread")
+        SET_TARGET_PROPERTIES(${name} 
+            PROPERTIES LINK_FLAGS "${THE_LINK_FLAGS} -pthread")
 	
     ENDIF( ${CMAKE_SYSTEM} MATCHES "Linux.*" )
 
     IF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
-        SET_TARGET_PROPERTIES(${name} PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup")
+        SET_TARGET_PROPERTIES(${name} 
+            PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup")
     ENDIF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
     
     INSTALL(TARGETS ${name} RUNTIME DESTINATION ${NEKTAR_BIN_DIR} OPTIONAL
@@ -263,27 +269,20 @@ MACRO(ADD_NEKTAR_LIBRARY name type)
     
     SET_COMMON_PROPERTIES(${name})
 
-    IF( APPLE )
-        SET_LAPACK_LINK_LIBRARIES(${name})
-        TARGET_LINK_LIBRARIES( ${name}
-            ${Boost_THREAD_LIBRARY} 
-            ${Boost_IOSTREAMS_LIBRARY} 
-            ${Boost_ZLIB_LIBRARY} 
-            )
-    ENDIF( APPLE )
-
     # Set properties for building shared libraries
     IF( ${type} STREQUAL "SHARED" )
         # Properties specific to Mac OSX
         IF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
-            SET_TARGET_PROPERTIES(${name} PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup")
+            # We allow undefined symbols to be looked up dynamically at runtime
+            # from the boost libraries linked by the executables.
+            SET_TARGET_PROPERTIES(${name} 
+                PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup")
         ENDIF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
     ENDIF( ${type} STREQUAL "SHARED" )
-#    INSTALL(TARGETS ${name} RUNTIME DESTINATION ${NEKTAR_BIN_DIR} OPTIONAL
-#		          ARCHIVE DESTINATION ${NEKTAR_LIB_DIR} OPTIONAL
-#			   LIBRARY DESTINATION ${NEKTAR_LIB_DIR} OPTIONAL)
 
-    INSTALL(TARGETS ${name} EXPORT Nektar++Libraries RUNTIME DESTINATION ${NEKTAR_BIN_DIR} OPTIONAL
-		          ARCHIVE DESTINATION ${NEKTAR_LIB_DIR} OPTIONAL
-			   LIBRARY DESTINATION ${NEKTAR_LIB_DIR} OPTIONAL) 
+    INSTALL(TARGETS ${name} EXPORT Nektar++Libraries 
+        RUNTIME DESTINATION ${NEKTAR_BIN_DIR} OPTIONAL
+		ARCHIVE DESTINATION ${NEKTAR_LIB_DIR} OPTIONAL
+		LIBRARY DESTINATION ${NEKTAR_LIB_DIR} OPTIONAL) 
+
 ENDMACRO(ADD_NEKTAR_LIBRARY name type)

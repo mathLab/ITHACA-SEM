@@ -71,7 +71,8 @@ namespace Nektar
             LocalToGlobalC0ContMapSharedPtr vLocToGloMap
                 = boost::dynamic_pointer_cast<LocalToGlobalC0ContMap>(pLocToGloMap);
 
-            ComputeDiagonalPreconditioner(vLocToGloMap);
+            //ComputeDiagonalPreconditionerSum(vLocToGloMap);
+            ComputeNullPreconditioner(vLocToGloMap);
         }
 
         GlobalLinSysIterativeCG::~GlobalLinSysIterativeCG()
@@ -111,7 +112,7 @@ namespace Nektar
             NekDouble alpha;
             NekDouble beta;
             DNekScalBlkMat &A = *m_locMatSys->GetLocalSystem()[0];
-            DNekMat &M = m_preconditioner;
+            DNekMat &M = m_preconditioner; // M inverse in algorithm
 
             // Initialise with zero as the initial guess.
             r = in;
@@ -128,12 +129,14 @@ namespace Nektar
                 m_locToGloMap->Assemble(local_tmp,tmp_g);
 
                 alpha = p.Dot(tmp);
-                alpha = r.Dot(r)/alpha;
+                alpha = z.Dot(r)/alpha;
                 out   = out + alpha*p;
                 r_new = r   - alpha*tmp;
 
+                cerr << "Iteration " << k << ", residual = "
+                     << r_new.L2Norm() << endl;
                 // Test if residual is small enough
-                if (r_new.L2Norm() < 1e-8)
+                if (r_new.L2Norm() < NekConstants::kNekIterativeTol)
                 {
                     break;
                 }
@@ -143,8 +146,10 @@ namespace Nektar
                 beta = r_new.Dot(z_new) / r.Dot(z);
                 p = z_new + beta*p;
                 r = r_new;
+                z = z_new;
                 k++;
             }
+            cerr << "Solved in " << k << " iterations." << endl;
         }
 
 
@@ -179,7 +184,7 @@ namespace Nektar
             int nDirDofs  = vLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobDofs = vLocToGloMap->GetNumGlobalCoeffs();
             int nLocDofs  = vLocToGloMap->GetNumLocalCoeffs();
-
+            
             if(nDirDofs)
             {
                 // calculate the Dirichlet forcing
@@ -219,6 +224,20 @@ namespace Nektar
             }
         }
 
+        void GlobalLinSysIterativeCG::ComputeNullPreconditioner(
+                const boost::shared_ptr<LocalToGlobalC0ContMap> &pLocToGloMap)
+        {
+            int nGlobal = pLocToGloMap->GetNumGlobalCoeffs();
+            int nDir    = pLocToGloMap->GetNumGlobalDirBndCoeffs();
+            int nInt = nGlobal - nDir;
+            m_preconditioner = DNekMat(nInt, nInt, eDIAGONAL);
+
+            for (unsigned int i = 0; i < nInt; ++i)
+            {
+                m_preconditioner.SetValue(i,i,1.0);
+            }
+        }
+
         void GlobalLinSysIterativeCG::ComputeDiagonalPreconditioner(
                 const boost::shared_ptr<LocalToGlobalC0ContMap> &pLocToGloMap)
         {
@@ -232,63 +251,73 @@ namespace Nektar
 
             Array<OneD, int> vMap = pLocToGloMap->GetLocalToGlobalMap();
 
-            NekVector<NekDouble> test_local(nLocal, 0.0);
-            for (unsigned int i = nDir; i < nGlobal; ++i)
+            for (unsigned int i = 0; i < nInt; ++i)
             {
                 NekVector<NekDouble> test(nGlobal, 0.0);
-                test[i] = 1.0;
+                NekVector<NekDouble> test_local(nLocal, 0.0);
+                test[i+nDir] = 1.0;
                 pLocToGloMap->GlobalToLocal(test, test_local);
                 test_local = Mat * test_local;
                 pLocToGloMap->Assemble(test_local, test);
-                m_preconditioner.SetValue(i-nDir,i-nDir,1.0/test[i]);
+                m_preconditioner.SetValue(i,i,1.0/test[i+nDir]);
             }
         }
 
         void GlobalLinSysIterativeCG::ComputeDiagonalPreconditionerSum(
                 const boost::shared_ptr<LocalToGlobalC0ContMap> &pLocToGloMap)
         {
-            // TODO: Some entries are being computed incorrectly.
-            // Need to fix this.
-            DNekScalBlkMat &Mat = *m_locMatSys->GetLocalSystem()[0];
-
+            int i,j,n,cnt,gid1,gid2;
+            NekDouble sign1,sign2,value;
             int nGlobal = pLocToGloMap->GetNumGlobalCoeffs();
-            int nLocal  = pLocToGloMap->GetNumLocalCoeffs();
             int nDir    = pLocToGloMap->GetNumGlobalDirBndCoeffs();
-            int nInt = nGlobal - nDir;
+            int nInt    = nGlobal - nDir;
+
+            NekDouble zero = 0.0;
+
+            // fill global matrix
+            DNekScalMatSharedPtr loc_mat;
+            DNekScalBlkMatSharedPtr vBlkMat = m_locMatSys->GetLocalSystem()[0];
+            Array<OneD, NekDouble> vOutput(nInt,0.0);
             m_preconditioner = DNekMat(nInt, nInt, eDIAGONAL);
 
-            Array<OneD, int> vMap = pLocToGloMap->GetLocalToGlobalMap();
-
-            // Alternative implementation through summing matrix entries.
-            Array<OneD, NekDouble> vOutput(nInt,0.0);
-            // Scan through the local to global map
-            for (unsigned int i = 0; i < nLocal; ++i)
+            int loc_lda;
+            for(n = cnt = 0; n < vBlkMat->GetNumberOfBlockRows(); ++n)
             {
-                // Retrieve the corresponding global ID and check if it's been
-                // evaluated already.
-                int vGlobalIdx = vMap[i];
-                if (vGlobalIdx < nDir)
-                {
-                    continue;
-                }
+                loc_mat = vBlkMat->GetBlock(n,n);
+                loc_lda = loc_mat->GetRows();
 
-                vOutput[vGlobalIdx-nDir] = 0.0;
-                // Scan across the corresponding row of the matrix summing
-                // those entries referenced by the local to global map.
-                for (unsigned int p = 0; p < nLocal; p++)
+                for(i = 0; i < loc_lda; ++i)
                 {
-                    if (vMap[p] == vGlobalIdx)
+                    gid1 = pLocToGloMap->GetLocalToGlobalMap(cnt + i) - nDir;
+                    sign1 =  pLocToGloMap->GetLocalToGlobalSign(cnt + i);
+                    if(gid1 >= 0)
                     {
-                        vOutput[vGlobalIdx-nDir] += Mat(i,p);
+                        for(j = 0; j < loc_lda; ++j)
+                        {
+                            gid2 = pLocToGloMap->GetLocalToGlobalMap(cnt + j)
+                                                                    - nDir;
+                            sign2 = pLocToGloMap->GetLocalToGlobalSign(cnt + j);
+                            if(gid2 == gid1)
+                            {
+                                // When global matrix is symmetric,
+                                // only add the value for the upper
+                                // triangular part in order to avoid
+                                // entries to be entered twice
+                                value = vOutput[gid1]
+                                            + sign1*sign2*(*loc_mat)(i,j);
+                                vOutput[gid1] = value;
+                            }
+                        }
                     }
                 }
+                cnt   += loc_lda;
             }
 
-            // Finally form the preconditioner
             for (unsigned int i = 0; i < nInt; ++i)
             {
                 m_preconditioner.SetValue(i,i,1.0/vOutput[i]);
             }
+
         }
     }
 }

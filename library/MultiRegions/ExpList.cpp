@@ -750,15 +750,17 @@ namespace Nektar
 
             Array<OneD,NekDouble> tmp_outarray;
             int cnt = 0,eid;
-
             for(int n = 0; n < num_elmts.num_elements(); ++n)
             {
                 if(doBlockMatOp[n])
                 {
-                    eid = m_offset_elmt_id[cnt];
-                    MultiplyByBlockMatrix(gkey,inarray + m_coeff_offset[eid],
-                                          tmp_outarray = outarray + m_coeff_offset[eid]);
-                    cnt += num_elmts[n];
+                    if (cnt < m_offset_elmt_id.num_elements())
+                    {
+                        eid = m_offset_elmt_id[cnt];
+                        MultiplyByBlockMatrix(gkey,inarray + m_coeff_offset[eid],
+                                              tmp_outarray = outarray + m_coeff_offset[eid]);
+                        cnt += num_elmts[n];
+                    }
                 }
                 else
                 {

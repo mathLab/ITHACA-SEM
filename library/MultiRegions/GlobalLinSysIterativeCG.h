@@ -85,6 +85,8 @@ namespace Nektar
             boost::shared_ptr<LocalToGlobalC0ContMap> m_locToGloMap;
             DNekMat m_preconditioner;
 
+            void ComputeNullPreconditioner(
+                const boost::shared_ptr<LocalToGlobalC0ContMap> &pLocToGloMap);
             void ComputeDiagonalPreconditioner(
                 const boost::shared_ptr<LocalToGlobalC0ContMap> &pLocToGloMap);
             void ComputeDiagonalPreconditionerSum(

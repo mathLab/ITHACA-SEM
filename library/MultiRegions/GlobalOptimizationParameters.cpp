@@ -201,7 +201,7 @@ namespace Nektar
                              + std::string(ElementalOptimizationOperationTypeMap[n])
                              + std::string(".")));
 
-                            m_doBlockMatOp[n][0] = (bool) value;
+                            m_doBlockMatOp[n][2] = (bool) value;
 
                             err = arrayElement->QueryIntAttribute("HEX", &value);
                             ASSERTL0(err == TIXML_SUCCESS, (
@@ -210,7 +210,7 @@ namespace Nektar
                              + std::string(ElementalOptimizationOperationTypeMap[n])
                              + std::string(".")));
 
-                            m_doBlockMatOp[n][1] = (bool) value;
+                            m_doBlockMatOp[n][3] = (bool) value;
                             break;
 
                             break;

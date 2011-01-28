@@ -245,6 +245,10 @@ MACRO(ADD_NEKTAR_EXECUTABLE name sources)
 	
     ENDIF( ${CMAKE_SYSTEM} MATCHES "Linux.*" )
 
+    IF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
+        SET_TARGET_PROPERTIES(${name} PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup")
+    ENDIF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
+    
     INSTALL(TARGETS ${name} RUNTIME DESTINATION ${NEKTAR_BIN_DIR} OPTIONAL
         ARCHIVE DESTINATION ${NEKTAR_LIB_DIR} OPTIONAL
         LIBRARY DESTINATION ${NEKTAR_LIB_DIR} OPTIONAL)
@@ -253,6 +257,11 @@ ENDMACRO(ADD_NEKTAR_EXECUTABLE name sources)
 
 MACRO(ADD_NEKTAR_LIBRARY name type)
     ADD_LIBRARY(${name} ${type} ${ARGN})
+    
+    # NIST Sparse BLAS only static, so link into Nektar libraries directly.
+    TARGET_LINK_LIBRARIES( ${name} ${NIST_SPARSE_BLAS})
+    
+    SET_COMMON_PROPERTIES(${name})
 
     IF( APPLE )
         SET_LAPACK_LINK_LIBRARIES(${name})
@@ -263,8 +272,13 @@ MACRO(ADD_NEKTAR_LIBRARY name type)
             )
     ENDIF( APPLE )
 
-    SET_COMMON_PROPERTIES(${name})
-    
+    # Set properties for building shared libraries
+    IF( ${type} STREQUAL "SHARED" )
+        # Properties specific to Mac OSX
+        IF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
+            SET_TARGET_PROPERTIES(${name} PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup")
+        ENDIF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
+    ENDIF( ${type} STREQUAL "SHARED" )
 #    INSTALL(TARGETS ${name} RUNTIME DESTINATION ${NEKTAR_BIN_DIR} OPTIONAL
 #		          ARCHIVE DESTINATION ${NEKTAR_LIB_DIR} OPTIONAL
 #			   LIBRARY DESTINATION ${NEKTAR_LIB_DIR} OPTIONAL)

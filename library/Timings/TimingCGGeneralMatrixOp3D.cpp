@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     NekDouble  lambda;
 
-    if(argc != 6)
+    if(argc != 7)
     {
         fprintf(stderr,"Usage: TimingCGHelmSolve3D Type MeshSize NumModes OptimisationLevel OperatorToTest\n");
         fprintf(stderr,"    where: - Type is one of the following:\n");
@@ -45,6 +45,11 @@ int main(int argc, char *argv[])
         fprintf(stderr,"                  0: BwdTrans \n");
         fprintf(stderr,"                  1: Inner Product \n");
         fprintf(stderr,"                  2: Mass Matrix \n");
+        fprintf(stderr,"                  3: Helmholtz \n");
+        fprintf(stderr,"    where: - Action is one of the following \n");
+        fprintf(stderr,"                  0: Compute timing and error \n");
+        fprintf(stderr,"                  1: Compute timing only \n");
+        fprintf(stderr,"                  2: Compute error only \n");
         exit(1);
     }
 
@@ -55,6 +60,7 @@ int main(int argc, char *argv[])
      int NumModes    = atoi(argv[3]);
      int optLevel    = atoi(argv[4]);
      int opToTest    = atoi(argv[5]);
+     int action      = atoi(argv[6]);
 
      //----------------------------------------------
      // Retrieve the necessary input files
@@ -217,7 +223,8 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define Expansion
     int bc_loc = 0;
-    MultiRegions::GlobalSysSolnType s = MultiRegions::eDirectMultiLevelStaticCond;
+    MultiRegions::GlobalSysSolnType s = MultiRegions::eIterativeCG;
+    //MultiRegions::GlobalSysSolnType s = MultiRegions::eDirectMultiLevelStaticCond;
     //MultiRegions::GlobalSysSolnType s = MultiRegions::eDirectStaticCond;
     //MultiRegions::GlobalSysSolnType s = MultiRegions::eDirectFullMatrix;
     Exp = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(graph3D, bcs, bc_loc, s);
@@ -269,120 +276,126 @@ int main(int argc, char *argv[])
     Fce->SetPhys(fce);
     //----------------------------------------------
 
-    //----------------------------------------------
-    // See if there is an exact solution, if so
-    // evaluate and plot errors
-    SpatialDomains::ConstExactSolutionShPtr ex_sol =
-        bcs.GetExactSolution(bcs.GetVariable(0));
-    //----------------------------------------------
-    // evaluate exact solution
-    sol = Array<OneD,NekDouble>(nq);
-    for(i = 0; i < nq; ++i)
-    {
-        sol[i] = ex_sol->Evaluate(xc0[i],xc1[i],xc2[i]);
-    }
-    Sol = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(*Exp);
-    Sol->SetPhys(sol);
-    Sol->SetPhysState(true);
-    //----------------------------------------------
-
     NekDouble L2Error;
     NekDouble LinfError;
-    if (type == StdRegions::eHelmholtz)
+    NekDouble L2ErrorBis;
+    NekDouble LinfErrorBis;
+    if (action == 0 || action == 2)
     {
         //----------------------------------------------
-        // Helmholtz solution taking physical forcing
-        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(),lambda,true);
-        // GeneralMatrixOp does not impose boundary conditions.
-        //  MultiRegions::GlobalMatrixKey key(type, lambda, Exp->GetLocalToGlobalMap());
-        //  Exp->GeneralMatrixOp (key, Fce->GetPhys(),Exp->UpdateContCoeffs(), true);
+        // See if there is an exact solution, if so
+        // evaluate and plot errors
+        SpatialDomains::ConstExactSolutionShPtr ex_sol =
+            bcs.GetExactSolution(bcs.GetVariable(0));
+        //----------------------------------------------
+        // evaluate exact solution
+        sol = Array<OneD,NekDouble>(nq);
+        for(i = 0; i < nq; ++i)
+        {
+            sol[i] = ex_sol->Evaluate(xc0[i],xc1[i],xc2[i]);
+        }
+        Sol = MemoryManager<MultiRegions::ContField3D>::AllocateSharedPtr(*Exp);
+        Sol->SetPhys(sol);
+        Sol->SetPhysState(true);
         //----------------------------------------------
 
-        //----------------------------------------------
-        // Backward Transform Solution to get solved values at
-        Exp->BwdTrans(Exp->GetContCoeffs(), Exp->UpdatePhys(), true);
-        //----------------------------------------------
-        L2Error    = Exp->L2  (Sol->GetPhys());
-        LinfError  = Exp->Linf(Sol->GetPhys());
+        if (type == StdRegions::eHelmholtz)
+        {
+            //----------------------------------------------
+            // Helmholtz solution taking physical forcing
+            Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(),lambda,true);
+            // GeneralMatrixOp does not impose boundary conditions.
+            //  MultiRegions::GlobalMatrixKey key(type, lambda, Exp-    >GetLocalToGlobalMap());
+            //  Exp->GeneralMatrixOp (key, Fce->GetPhys(),Exp-    >UpdateContCoeffs(), true);
+            //----------------------------------------------
+
+            //----------------------------------------------
+            // Backward Transform Solution to get solved values at
+            Exp->BwdTrans(Exp->GetContCoeffs(), Exp->UpdatePhys(), true);
+            //----------------------------------------------
+            L2Error    = Exp->L2  (Sol->GetPhys());
+            LinfError  = Exp->Linf(Sol->GetPhys());
+        }
+        else
+        {
+            Exp->FwdTrans(Sol->GetPhys(), Exp->UpdateContCoeffs(), true);
+    
+            //----------------------------------------------
+            // Backward Transform Solution to get solved values at
+            Exp->BwdTrans(Exp->GetContCoeffs(), Exp->UpdatePhys(), true);
+            //----------------------------------------------
+            L2Error    = Exp->L2  (Sol->GetPhys());
+            LinfError  = Exp->Linf(Sol->GetPhys());
+        }
+
+        //--------------------------------------------
+        // alternative error calculation
+        const LibUtilities::PointsKey PkeyT1(30,LibUtilities::    eGaussLobattoLegendre);
+        const LibUtilities::PointsKey PkeyT2(30,LibUtilities::eGaussRadauMAlpha1Beta0);
+        const LibUtilities::PointsKey PkeyT3(30,LibUtilities::eGaussRadauMAlpha2Beta0);
+        const LibUtilities::PointsKey PkeyQ1(30,LibUtilities::eGaussLobattoLegendre);
+        const LibUtilities::PointsKey PkeyQ2(30,LibUtilities::eGaussLobattoLegendre);
+        const LibUtilities::PointsKey PkeyQ3(30,LibUtilities::eGaussLobattoLegendre);
+        const LibUtilities::BasisKey  BkeyT1(LibUtilities::eModified_A,NumModes,PkeyT1);
+        const LibUtilities::BasisKey  BkeyT2(LibUtilities::eModified_B,NumModes,PkeyT2);
+        const LibUtilities::BasisKey  BkeyT3(LibUtilities::eModified_C,NumModes,PkeyT3);
+        const LibUtilities::BasisKey  BkeyQ1(LibUtilities::eModified_A,NumModes,PkeyQ1);
+        const LibUtilities::BasisKey  BkeyQ2(LibUtilities::eModified_A,NumModes,PkeyQ2);
+        const LibUtilities::BasisKey  BkeyQ3(LibUtilities::eModified_A,NumModes,PkeyQ3);
+
+
+        MultiRegions::ExpList3DSharedPtr ErrorExp =
+            MemoryManager<MultiRegions::ExpList3D>::AllocateSharedPtr(BkeyT1,BkeyT2,BkeyT3,BkeyQ1,BkeyQ2,BkeyQ3,graph3D);
+
+        int ErrorCoordim = ErrorExp->GetCoordim(0);
+        int ErrorNq      = ErrorExp->GetTotPoints();
+
+        Array<OneD,NekDouble> ErrorXc0(ErrorNq,0.0);
+        Array<OneD,NekDouble> ErrorXc1(ErrorNq,0.0);
+        Array<OneD,NekDouble> ErrorXc2(ErrorNq,0.0);
+
+        switch(ErrorCoordim)
+        {
+        case 1:
+            ErrorExp->GetCoords(ErrorXc0);
+            break;
+        case 2:
+            ErrorExp->GetCoords(ErrorXc0,ErrorXc1);
+            break;
+        case 3:
+            ErrorExp->GetCoords(ErrorXc0,ErrorXc1,ErrorXc2);
+            break;
+        }
+
+        // evaluate exact solution
+        Array<OneD,NekDouble> ErrorSol(ErrorNq);
+        for(i = 0; i < ErrorNq; ++i)
+        {
+            ErrorSol[i] = ex_sol->Evaluate(ErrorXc0[i],ErrorXc1[i],ErrorXc2[i]);
+        }
+
+        // calcualte spectral/hp approximation on the quad points of this new
+        // expansion basis
+        Exp->GlobalToLocal(Exp->GetContCoeffs(),ErrorExp->UpdateCoeffs());
+        ErrorExp->BwdTrans_IterPerExp(ErrorExp->GetCoeffs(),ErrorExp->UpdatePhys());
+
+        L2ErrorBis    = ErrorExp->L2  (ErrorSol);
+        LinfErrorBis  = ErrorExp->Linf(ErrorSol);
     }
     else
     {
-        Exp->FwdTrans(Sol->GetPhys(), Exp->UpdateContCoeffs(), true);
-
-        //----------------------------------------------
-        // Backward Transform Solution to get solved values at
-        Exp->BwdTrans(Exp->GetContCoeffs(), Exp->UpdatePhys(), true);
-        //----------------------------------------------
-        L2Error    = Exp->L2  (Sol->GetPhys());
-        LinfError  = Exp->Linf(Sol->GetPhys());
+        for (i = 0; i < Exp->GetContCoeffs().num_elements(); ++i)
+        {
+            Exp->UpdateContCoeffs()[i] = 1.0;
+        }
     }
 
-    //--------------------------------------------
-    // alternative error calculation
-    const LibUtilities::PointsKey PkeyT1(30,LibUtilities::eGaussLobattoLegendre);
-    const LibUtilities::PointsKey PkeyT2(30,LibUtilities::eGaussRadauMAlpha1Beta0);
-    const LibUtilities::PointsKey PkeyT3(30,LibUtilities::eGaussRadauMAlpha2Beta0);
-    const LibUtilities::PointsKey PkeyQ1(30,LibUtilities::eGaussLobattoLegendre);
-    const LibUtilities::PointsKey PkeyQ2(30,LibUtilities::eGaussLobattoLegendre);
-    const LibUtilities::PointsKey PkeyQ3(30,LibUtilities::eGaussLobattoLegendre);
-    const LibUtilities::BasisKey  BkeyT1(LibUtilities::eModified_A,NumModes,PkeyT1);
-    const LibUtilities::BasisKey  BkeyT2(LibUtilities::eModified_B,NumModes,PkeyT2);
-    const LibUtilities::BasisKey  BkeyT3(LibUtilities::eModified_C,NumModes,PkeyT3);
-    const LibUtilities::BasisKey  BkeyQ1(LibUtilities::eModified_A,NumModes,PkeyQ1);
-    const LibUtilities::BasisKey  BkeyQ2(LibUtilities::eModified_A,NumModes,PkeyQ2);
-    const LibUtilities::BasisKey  BkeyQ3(LibUtilities::eModified_A,NumModes,PkeyQ3);
-
-
-    MultiRegions::ExpList3DSharedPtr ErrorExp =
-        MemoryManager<MultiRegions::ExpList3D>::AllocateSharedPtr(BkeyT1,BkeyT2,BkeyT3,BkeyQ1,BkeyQ2,BkeyQ3,graph3D);
-
-    int ErrorCoordim = ErrorExp->GetCoordim(0);
-    int ErrorNq      = ErrorExp->GetTotPoints();
-
-    Array<OneD,NekDouble> ErrorXc0(ErrorNq,0.0);
-    Array<OneD,NekDouble> ErrorXc1(ErrorNq,0.0);
-    Array<OneD,NekDouble> ErrorXc2(ErrorNq,0.0);
-
-    switch(ErrorCoordim)
-    {
-    case 1:
-        ErrorExp->GetCoords(ErrorXc0);
-        break;
-    case 2:
-        ErrorExp->GetCoords(ErrorXc0,ErrorXc1);
-        break;
-    case 3:
-        ErrorExp->GetCoords(ErrorXc0,ErrorXc1,ErrorXc2);
-        break;
-    }
-
-
-    // evaluate exact solution
-    Array<OneD,NekDouble> ErrorSol(ErrorNq);
-    for(i = 0; i < ErrorNq; ++i)
-    {
-        ErrorSol[i] = ex_sol->Evaluate(ErrorXc0[i],ErrorXc1[i],ErrorXc2[i]);
-    }
-
-    // calcualte spectral/hp approximation on the quad points of this new
-    // expansion basis
-    Exp->GlobalToLocal(Exp->GetContCoeffs(),ErrorExp->UpdateCoeffs());
-    ErrorExp->BwdTrans_IterPerExp(ErrorExp->GetCoeffs(),ErrorExp->UpdatePhys());
-
-    NekDouble L2ErrorBis    = ErrorExp->L2  (ErrorSol);
-    NekDouble LinfErrorBis  = ErrorExp->Linf(ErrorSol);
-
-    //--------------------------------------------
-#if 0
-    cout << "L infinity error: " << LinfErrorBis << endl;
-    cout << "L 2 error:        " << L2ErrorBis   << endl;
-#endif
-
-    //----------------------------------------------
     NekDouble exeTime;
     int NumCalls;
-
-    exeTime = TimeMatrixOp(type, Exp, Fce, NumCalls, lambda);
+    if (action == 0 || action == 1)
+    {
+        exeTime = TimeMatrixOp(type, Exp, Fce, NumCalls, lambda);
+    }
 
     int nLocCoeffs     = Exp->GetNcoeffs();
     int nGlobCoeffs    = Exp->GetContNcoeffs();
@@ -398,14 +411,34 @@ int main(int argc, char *argv[])
     outfile << setw(10) << Type << " ";
     outfile << setw(10) << NumElements << " ";
     outfile << setw(10) << NumModes << " ";
-    outfile << setw(10) << NumCalls << " ";
-    outfile << setw(10) << fixed << noshowpoint << exeTime << " ";
-    outfile << setw(10) << fixed << noshowpoint << ((NekDouble) (exeTime/((NekDouble)NumCalls))) << " ";
+    if (action == 0 || action == 1)
+    {
+        outfile << setw(10) << NumCalls << " ";
+        outfile << setw(10) << fixed << noshowpoint << exeTime << " ";
+        outfile << setw(10) << fixed << noshowpoint 
+                << ((NekDouble) (exeTime/((NekDouble)NumCalls))) << " ";
+    }
+    else
+    {
+        outfile << setw(10) << "-" << " ";
+        outfile << setw(10) << fixed << noshowpoint << "-" << " ";
+        outfile << setw(10) << fixed << noshowpoint << "-" << " ";
+    }
     outfile.precision(7);
-    outfile << setw(15) << scientific << noshowpoint << L2Error << " ";
-    outfile << setw(15) << scientific << noshowpoint << L2ErrorBis << " ";
-    outfile << setw(15) << scientific << noshowpoint << LinfError << " ";
-    outfile << setw(15) << scientific << noshowpoint << LinfErrorBis << " ";
+    if (action == 0 || action == 2)
+    {
+        outfile << setw(15) << scientific << noshowpoint << L2Error << " ";
+        outfile << setw(15) << scientific << noshowpoint << L2ErrorBis << " ";
+        outfile << setw(15) << scientific << noshowpoint << LinfError << " ";
+        outfile << setw(15) << scientific << noshowpoint << LinfErrorBis << " ";
+    }
+    else
+    {
+        outfile << setw(15) << scientific << noshowpoint << "-" << " ";
+        outfile << setw(15) << scientific << noshowpoint << "-" << " ";
+        outfile << setw(15) << scientific << noshowpoint << "-" << " ";
+        outfile << setw(15) << scientific << noshowpoint << "-" << " ";
+    }
     outfile << setw(10) << nLocCoeffs  << " ";
     outfile << setw(10) << nGlobCoeffs << " ";
     outfile << setw(10) << nLocBndCoeffs  << " ";
@@ -433,6 +466,21 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
     timeval timer1, timer2;
     NekDouble time1, time2;
     NekDouble exeTime;
+
+    // Do a run to initialise everything (build matrices, etc)
+    if (type == StdRegions::eBwdTrans)
+    {
+        Exp->BwdTrans(Exp->GetContCoeffs(), Exp->UpdatePhys(), true);
+    }
+    else if (type == StdRegions::eIProductWRTBase)
+    {
+        Exp->IProductWRTBase(Fce->GetPhys(), Exp->UpdateContCoeffs(), true);
+    }
+    else
+    {
+        MultiRegions::GlobalMatrixKey key(type, lambda, Exp->GetLocalToGlobalMap());
+        Exp->GeneralMatrixOp (key, Exp->GetContCoeffs(),Exp->UpdatePhys(), true);
+    }
 
     // We first do a single run in order to estimate the number of calls
     // we are going to make
@@ -472,7 +520,6 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
     chudAcquireRemoteAccess();
     chudStartRemotePerfMonitor("TimingCGHelmSolve2D");
 #endif
-
     gettimeofday(&timer1, NULL);
     if (type == StdRegions::eBwdTrans)
     {
@@ -497,7 +544,6 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
         }
     }
     gettimeofday(&timer2, NULL);
-
 #ifdef SHARK
     chudStopRemotePerfMonitor();
     chudReleaseRemoteAccess();

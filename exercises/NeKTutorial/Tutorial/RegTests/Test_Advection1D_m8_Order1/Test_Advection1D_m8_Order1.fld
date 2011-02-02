@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <ELEMENTS FIELDS="u" SHAPE="Segment" BASIS="Modified_A" NUMMODESPERDIR="UNIORDER:8" ID="0,1,2,3,4">eJy7o2Mrq9D8Zn/z+qOS8mve2C+TPzX56Pff+zNW9XcIXX9n36F1KVuJZ4+9bBSL+6yMRfsNruVbnr6SuX9BYrPyTHtne5g+PaeJ+x4eeLZfU1n9VcDhf/a2v89McDR5uv/mxYSSEs4d+19pzl69vW6K/SWZWV5WUrH2CRttHN+32u6H6ZsUuJFH5sR7e82EnQnbLjMecH7yb0vqkh/2GiejK9TPn7L30/tw6yrvtv0hGndqnIzr9zfIquzdujPJHqbvoOespoNAc9i5jNhvz/9s/76PJXLq6wf7TTluuThvWb5/awu7WF1Bp71YP8vVvQYe9gy1Z9sTcvT3w/S5+e47z3Dwmf3EwFzDgl2sBz7x5Mx27X9hrzOHS/x39lH7E22npO61zd0/TeXixHLrwv0Kfwodozmd7QEoWJ9P</ELEMENTS>
+</NEKTAR>

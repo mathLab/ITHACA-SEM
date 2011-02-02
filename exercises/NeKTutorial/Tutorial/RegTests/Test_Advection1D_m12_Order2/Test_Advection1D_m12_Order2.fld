@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <ELEMENTS FIELDS="u" SHAPE="Segment" BASIS="Modified_A" NUMMODESPERDIR="UNIORDER:12" ID="0,1,2,3,4">eJy7pWMrq9D8Zv+WHzNt5Zvf2MvXbpyosv/3/lPz5zWXHH1nf6bK17A4frf9xvPLD77sXrT/3NJt8XsKU/f3u130LvFxsc9dYxr4Zvt/O+dNMx/kXr2zb4Wva5bqldP7Uhp/Fe2bu9UOZq7f7bRPfQue7V/p91Tz3Ix/9o+t2XoPiz3dn1sfvlfi4fb96QJZgTEhU+ynmXlMuyQbZ19l8sRu5TXD/TZ7fkjczP2yb/K3Q/wiMqftEjIyP04NXGBnUPpRd/v9Fftg5qasc2sxmf3e/lLH3PfXdzEemCE5rVe/8Ye9xK/vM3euOmXfuufvzvhPW/drL7w1597Buv0eKSuZiyYk2ufEHut0F1Gyj7nrcaux8v+++lYu++Mx2/c5/Jx4teP+FDuYudoG79eA7Jlx6XPdrJbP9n+Dg7nvXXqwv9ZDc6bo1OX7Nco2vAwO7bSft+C928pgd/ssJxs/z8mK+9mZZ5umbb2xr+ns6eQFZevsEr7tKZBUa9v3wy9gxzzpUjuYuZGFQZuBtP1niSP7d85mPbD444yIvdkv7MuC3v3+EnDUvkP2xSz5orn7zR9fi9faW7Cfbaf2ER4VB3tmb7UDq1i47etT3/zayH1l3//rn77qhs/cx8Bw6Xj1Zys7AI7mAJYA</ELEMENTS>
+</NEKTAR>

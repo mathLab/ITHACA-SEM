@@ -9,25 +9,25 @@
 \maketitle
 
 \noindent
-The aim of this tutorial is to lead the user through the \emph{Nektar++} fetaures. The starting point is to compile the whole libraries, the solvers and the utilities
-as explained on the website\footnote{www.nektar.info} . Once we are sure that everything is compiled we can run the regression tests to control that the software is producing the expected results and is working properly.\\
+The aim of this tutorial is to lead the user through the \emph{Nektar++} features. The starting point is to compile the libraries, the solvers and the utilities
+as explained on the website\footnote{www.nektar.info} . Once we are sure that everything is compiled we can run the regression tests to check that the software is producing the expected results and is working properly.\\
 
 \noindent
-In this document we will show how to create a 2D simple mesh using $Gmsh$ and how to convert the mesh file in a proper input for \emph{Nektar++}.
-Subsequently we will use this mesh to solve various problem:
+In this document we will show how to create a simple 2D mesh using $Gmsh$ and how to convert the mesh file into the proper input format for \emph{Nektar++}.
+Subsequently we will use this mesh to solve various problems:
 \begin{enumerate}
 \item the Helmholtz equation,
 \item the Unsteady Advection-Diffusion equation,
-\item and, in the end, the Incompressible Navier-Stokes equation. 
+\item and, in the end, the Incompressible Navier-Stokes equations. 
 \end{enumerate}
 
 \noindent
-This approach should help the user to understand how in \emph{Nektar++}  we can share what is the domain (mesh) where we want to solve some equations and
+This approach should help the user to understand how in \emph{Nektar++}  we can specify the domain (mesh) where we want to solve a set of equations and
 the equation itself.
 
 \noindent
 The last step of the tutorial is an example of a more complex fluid dynamics problem, the flow past a cylinder. The point of presenting this typical problem is to introduce some
-more advanced features like the definition of curved elements and the restart files. 
+more advanced features including the definition of curved elements and the restart files. 
 
 \section{Geometry and Mesh}
 
@@ -35,7 +35,7 @@ We start creating a very simple geometry. A square which we will mesh with 16 qu
 The square is of size $[-\pi/2,\pi/2]\times[-\pi/2,\pi/2]$.\\
 
 \noindent
-If you look into the folder \emph{exercices/NekTutorial/Tutorial/SquareMesh/Geometry/}  you can find the following files
+If you look into the folder \emph{NekTutorial/Tutorial/SquareMesh/Geometry/}  you can find the following files
 \begin{itemize}
 \item $Square.geo$
 \item $Square.msh$
@@ -43,8 +43,16 @@ If you look into the folder \emph{exercices/NekTutorial/Tutorial/SquareMesh/Geom
 \end{itemize}
 
 \noindent
-$Square.geo$ is the file containing the geometry and the instructions for $Gmsh$ to generate the mesh we want. $Square.msh$ is the output of $Gmsh$.
-$Square.xml$ is the input file for \emph{Nektar++} without any definitions about the equation we want to solve over the domain.\\
+$Square.geo$ is the file containing the geometry and the instructions for $Gmsh$ to generate the mesh. $Square.msh$ is the output of $Gmsh$.
+$Square.xml$ is the input file for \emph{Nektar++} without any definitions about the equation we want to solve over the domain.
+If you want, you can generate the $.msh$ file from the terminal as
+
+\vspace{5mm}
+\begin{algorithm2e}[H]
+gmsh -2 Square.geo
+\end{algorithm2e}
+\vspace{5mm}
+
 
 \noindent
 $Square.xml$ has been generated using the Preprocessing tools in the utilities folder.
@@ -80,7 +88,7 @@ u_{ex}(x,y)= \sin(\pi x)\sin(\pi y)
  \end{equation}
  
  \noindent
- Into the folder \emph{exercices/NekTutorial/Tutorial/SquareMesh/Helmholtz/} you can find the following files
+ Into the folder \emph{NekTutorial/Tutorial/SquareMesh/Helmholtz/} you can find the following files
  \begin{itemize}
  \item $Test\_HEL.xml$, which is the $.xml$ already prepared to use the geometry and solve the problem;
  \item $Test\_HEL.fld$, which is the solution obtained with \emph{Nektar++};
@@ -170,7 +178,7 @@ This executable will produce $Test\_HEL\_u.pos$ that can be loaded in $Gmsh$.
 \section{Unsteady Advection-Diffusion equation}
 
 Using the same mesh, we are going to solve now an Unsteady-Advection-Diffusion problem. As before for the Helmholtz problem, the files are located in
-\emph{exercices/NekTutorial/Tutorial/SquareMesh/UnsAdvDiffusion/}. Here you can find the same kind of files which has been presented for the Helmholtz problem.
+\emph{NekTutorial/Tutorial/SquareMesh/UnsAdvDiffusion/}. Here you can find the same kind of files which has been presented for the Helmholtz problem.
 
 The equation we are solving is
 \begin{equation}
@@ -220,9 +228,9 @@ USERDEFINEDEQNS\\
     \end{algorithm2e}
 \vspace{5mm}
 
-\section{Incompressible Navier-Stokes equation}
+\section{Incompressible Navier-Stokes equations}
 
-Again, using the same mesh, we can solve the Incompressible Navier-Stokes equation. In this case the executable in not the $ADRSolver$ anymore, but the $IncNavierStokesSolver$, which is located in the same folder of the previous one.\footnote{As for the ADRSolver we can have the Release and the Debug version.} All the files, as for the previous examples, are located in \emph{exercices/NekTutorial/Tutorial/SquareMesh/IncNavStokes/}.
+Again, using the same mesh, we can solve the Incompressible Navier-Stokes equations. In this case the executable in not the $ADRSolver$ anymore, but the $IncNavierStokesSolver$, which is located in the same folder of the previous one.\footnote{As for the ADRSolver we can have the Release and the Debug version.} All the files, as for the previous examples, are located in \emph{NekTutorial/Tutorial/SquareMesh/IncNavStokes/}.
 
 
 \noindent
@@ -251,7 +259,7 @@ p=-\frac{1}{4}\Bigl(\cos(2x)+\cos(2y)\Bigr)e^{-4t/Re}
 \end{equation}
 
 \noindent
-In this case we define 3 variables, the 2 velocity components and the pressure.
+In this case we define 3 variables: the 2 velocity components and the pressure.
 
 \begin{algorithm2e}[H]
     SOLVERINFO\\\
@@ -295,13 +303,13 @@ limits. The pressure boundary conditions are of Neumann type at the inflow and o
 value at the outflow has been set to zero (Dirichlet boundary  condition).\\
 
 \noindent
-In this case the solver is still the $IncNavierStokesSolver$ and all the files are stored in \emph{exercices/NekTutorial/Tutorial/VortexShedding/}.
+In this case the solver is still the $IncNavierStokesSolver$ and all the files are stored in \emph{NekTutorial/Tutorial/VortexShedding/}.
 In the $.xml$ file we can see how curved elements are defined in \emph{Nektar++} and how we can use a previous solution to initialise the flow.
 As a matter of fact a $.rst$ file is actually a $.fld$ file obtained with \emph{Nektar++} and used to set the flow. In this case we want to start from a converged solution to speed
 up the simulation.
 
 \section{Extra examples}
 
-In the folder \emph{exercices/NekTutorial/Tutorial/RegTests/}, you can find plenty of examples which are directly taken from the regression tests.
+In the folder \emph{NekTutorial/Tutorial/RegTests/}, you can find plenty of examples which are directly taken from the regression tests.
 
 \end{document}

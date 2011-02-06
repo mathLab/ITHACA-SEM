@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <NEKTAR>
+
     <!-- Embed a 3-dimensional object in a 3-dimensional space-->
     <!--DIM <= SPACE  this provides a method of optimizing code for a 3-D curve embedded in 3-d space.-->
     <GEOMETRY DIM="2" SPACE="2">
+
         <!-- Definitions that can be used below in this file. -->
         <VERTEX>
             <!-- Always must have four values per entry. -->
@@ -32,6 +34,7 @@
             <V ID="23">-7.854e-01 2.776e-12 0.000e+00</V>
             <V ID="24">-7.854e-01 -7.854e-01 0.000e+00</V>
         </VERTEX>
+
         <EDGE>
             <!--Edges are vertex pairs -->
             <E ID="0">    0  13   </E>
@@ -75,6 +78,7 @@
             <E ID="38">    6  2   </E>
             <E ID="39">    2  7   </E>
         </EDGE>
+
         <ELEMENT>
             <!-- P - points, Q -  quads, T - triangles, S - segments, A - tetrahedron, Y - pyramid, R - prism, H- hex.-->
             <!--Only certain element types are appropriate for the given dimension (dim on mesh)-->
@@ -96,14 +100,15 @@
             <Q ID="14">   35    36    37    27 </Q>
             <Q ID="15">   37    38    39    29 </Q>
         </ELEMENT>
+
         <!-- V - vertex, S - segment, E - edge, F - face -->
         <COMPOSITE>
             <C ID="0"> Q[0-15]</C>
             <C ID="1"> E[0,31,3,32,38,39,11,12,22,13,6,9,34,36,21,30]</C>
         </COMPOSITE>
         
- <DOMAIN> C[0] </DOMAIN>
-        
+        <DOMAIN> C[0] </DOMAIN>
+
     </GEOMETRY>
     
     <EXPANSIONS>
@@ -112,38 +117,38 @@
     
     <CONDITIONS>
     
-      <SOLVERINFO>
-        <I PROPERTY="EQTYPE" VALUE="Helmholtz" />
-        <I PROPERTY="Projection" VALUE="Continuous"/>
-      </SOLVERINFO>
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE" VALUE="Helmholtz" />
+            <I PROPERTY="Projection" VALUE="Continuous"/>
+        </SOLVERINFO>
 
-    <PARAMETERS>
-      <P> wavefreq       = PI                </P>
-      <P> Lambda        = 1.0               </P>
-    </PARAMETERS>
+        <PARAMETERS>
+            <P> wavefreq       = PI                </P>
+            <P> Lambda        = 1.0               </P>
+        </PARAMETERS>
         
-    <VARIABLES>
-      <V ID="0"> u </V> 
-    </VARIABLES>
+        <VARIABLES>
+            <V ID="0"> u </V> 
+        </VARIABLES>
     
-    <BOUNDARYREGIONS>
-      <B ID="0"> C[1] </B>
-    </BOUNDARYREGIONS>
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+        </BOUNDARYREGIONS>
     
-    <BOUNDARYCONDITIONS>
-         <REGION REF="0">
-            <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
-         </REGION>
-    </BOUNDARYCONDITIONS>
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
     
-    <FORCING>
-      <F VAR="u" VALUE="-(Lambda + 2*PI*PI)*sin(PI*x)*sin(PI*y)" />
-    </FORCING>
+        <FORCING>
+            <F VAR="u" VALUE="-(Lambda + 2*PI*PI)*sin(PI*x)*sin(PI*y)" />
+        </FORCING>
        
-    <EXACTSOLUTION>
-      <F VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
-    </EXACTSOLUTION>
+        <EXACTSOLUTION>
+            <F VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+        </EXACTSOLUTION>
 
-</CONDITIONS>
+    </CONDITIONS>
 
 </NEKTAR>

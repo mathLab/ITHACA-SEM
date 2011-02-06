@@ -259,6 +259,7 @@ namespace Nektar
                 for(i = 0; i < nvariables; ++i)
                 {
                     m_fields[i]->FwdTrans(fields[i],m_fields[i]->UpdateCoeffs());
+                    m_fields[i]->SetPhysState(false);
                 }
                 Checkpoint_Output(nchk++);
                 WriteHistoryData(hisFile);

@@ -30,6 +30,8 @@
 %    \usetheme{Marburg}
     \setbeamercovered{transparent}
 }
+\setbeamertemplate{navigation symbols}{}
+
 %\usepackage{beamerthemeshadow}
 %\usepackage{beamerthemesplit}
 % \AtBeginSubsection[] {
@@ -120,7 +122,7 @@
 \end{itemize}
 \bigskip
 \bigskip
-Useful prerequisites: C/C++
+Useful prerequisites: C/C++, basic use of terminal
 \end{minipage}
 \end{frame}
 
@@ -626,20 +628,19 @@ Run \texttt{Helmholtz2D}:
 \texttt{ADRSolver} provides a suite of solvers for a range of steady and
 unsteady problems.
 \begin{itemize}
-  \item \texttt{Nektar++/solvers/ADRSolver}
-  \item Additional session information needed:
+  \item Location: \texttt{Nektar++/solvers/ADRSolver}
+  \item Some solvers require additional session information,
   \begin{lstlisting}
 <SOLVERINFO>
  <I PROPERTY="EQTYPE" VALUE="UnsteadyAdvectionDiffusion" />
  <I PROPERTY="Projection" VALUE="Continuous"/>
  
  <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
- <I PROPERTY="AdvectionAdvancement" VALUE="Explicit"/>
  
  <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
 </SOLVERINFO>
   \end{lstlisting}
-  \item For unsteady problems, specify time integration parameters
+  \item For unsteady problems, specify time integration parameters,
   \begin{lstlisting}
 <P> TimeStep      = 0.00001              </P>
 <P> NumSteps      = 2000                 </P>
@@ -659,9 +660,12 @@ unsteady problems.
 \begin{minipage}[c][0.8\textheight][t]{\linewidth}
 \begin{columns}
 \begin{column}[l]{11.5cm}
+Example: Diffusion equation
+
+\bigskip
 Run \texttt{ADRSolver}:
 \begin{verbatim}
-./ADRSolver Test_HEL.xml
+./ADRSolver ImplicitDiffusion.xml
 \end{verbatim}
 \end{column}
 \end{columns}
@@ -675,7 +679,7 @@ Run \texttt{ADRSolver}:
 \begin{columns}
 \begin{column}[l]{11.5cm}
 \begin{itemize}
-  \item \texttt{Nektar++/solvers/IncNavierStokesSolver}
+  \item Location: \texttt{Nektar++/solvers/IncNavierStokesSolver}
   \item Support for high-order pressure and time-dependent boundary conditions
   \begin{lstlisting}
 <BOUNDARYCONDITIONS>
@@ -702,16 +706,16 @@ Run \texttt{ADRSolver}:
 \end{minipage}
 \end{frame}
 
-\begin{frame}[fragile]
-\frametitle{Hands-on Tutorial}
-\begin{minipage}[c][0.8\textheight][t]{\linewidth}
-\begin{columns}
-\begin{column}[l]{11.5cm}
-
-\end{column}
-\end{columns}
-\end{minipage}
-\end{frame}
+% \begin{frame}[fragile]
+% \frametitle{Hands-on Tutorial}
+% \begin{minipage}[c][0.8\textheight][t]{\linewidth}
+% \begin{columns}
+% \begin{column}[l]{11.5cm}
+% 
+% \end{column}
+% \end{columns}
+% \end{minipage}
+% \end{frame}
 
 
 \begin{frame}[fragile]

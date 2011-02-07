@@ -6698,14 +6698,9 @@
       </REGION>
     </BOUNDARYCONDITIONS>
 
-   <INITIALCONDITIONS>
-     <R FILE="VxShed.rst"/>
-   </INITIALCONDITIONS>
-
-    <EXACTSOLUTION>
-      <F VAR="u" VALUE="0" />
-      <F VAR="v" VALUE="0" />
-      <F VAR="p" VALUE="0" />
-    </EXACTSOLUTION>
+    <!-- TODO: Specify initial conditions -->
+    <INITIALCONDITIONS>
+        <R FILE="VxShed.rst"/>
+    </INITIALCONDITIONS>
   </CONDITIONS>
 </NEKTAR>

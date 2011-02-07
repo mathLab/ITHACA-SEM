@@ -118,8 +118,6 @@ The following files can be found in
  \begin{itemize}
  \item \texttt{Test\_HEL.xml} - the \nektar session file containing
  the geometry above and the necessary parameters to solve the Helmholtz problem;
- \item \texttt{Test\_HEL.fld} - solution $u$, obtained using \nektar;
- \item \texttt{Test\_HEL\_u.pos} - post-processed solution $u$ in \gmsh format.
  \end{itemize} 
 
 The \texttt{GEOMETRY} section defines the mesh from the previous section. The
@@ -129,7 +127,8 @@ expansion basis is applied to a geometry composite specified in the
 In this case, \texttt{C[0]} refers to the set of all elements. The \texttt{TYPE}
 specifies the choice of polynomial functions to use in the expansion.
 Alternatively, for example, one might choose \texttt{FOURIER} or
-\texttt{CHEBYSHEV}.
+\texttt{CHEBYSHEV}. \texttt{MODIFIED} refers to a basis of Legendre polynomials
+modified to enable boundary/interior decomposition.
 
 \begin{verbatim}
 <EXPANSIONS>
@@ -137,28 +136,34 @@ Alternatively, for example, one might choose \texttt{FOURIER} or
 </EXPANSIONS>
 \end{verbatim}
 
-If we examine \texttt{Test\_HEL.xml}, we can see how we can define the
+If we examine \texttt{Test\_HEL.xml}, we can see where we can define the
 conditions which define the particular problem to solve. These are all enclosed
-in a \texttt{CONDITIONS} section.
+in a \texttt{CONDITIONS} section. This section contains a number of things:
 
 \begin{enumerate}
-\item The equation type, the projection type (\texttt{Continuous} or
-\texttt{Discontinuous} Galerkin) and the parameters. Whilst the equation type
-and projection type are specified as attributes, the parameters are specified as
-name-value pairs. Parameters may be freely used either from within the solver
-(e.g. \texttt{Lambda}), or within other expressions, such as function defintions
-or other parameters defined subsequently.
+\item Solver information such as the equation type and the projection type
+(\texttt{Continuous} or \texttt{Discontinuous} Galerkin), along with problem
+parameters. Whilst solver properties are specified as quoted
+attributes and have the form
 \begin{verbatim}
-<SOLVERINFO>
-    <I PROPERTY="EQTYPE" VALUE="Helmholtz" />
-    <I PROPERTY="Projection" VALUE="Continuous" />
-</SOLVERINFO>
-
-<PARAMETERS>
-    <P> wavefreq       = PI  </P>
-    <P> Lambda         = 1.0 </P>
-</PARAMETERS>
+<I PROPERTY="[STRING]" VALUE="[STRING]" />
 \end{verbatim}
+the parameters are specified as name-value pairs:
+\begin{verbatim}
+<P> [KEY] = [VALUE] </P>
+\end{verbatim}
+Parameters may be freely used either from within the solver (e.g.
+\texttt{Lambda}), or within other expressions, such as function defintions or
+other parameters defined subsequently.
+
+\textbf{Todo}: Define two \texttt{SOLVERINFO} properties to set the
+\texttt{EQTYPE} to \texttt{Helmholtz} and the \texttt{Projection} property to
+\texttt{Continuous}. Then add two \texttt{PARAMETERS}, wavenumber $k=\pi$ and
+\texttt{Lambda} $=1.0$.
+
+\smallskip
+\textbf{Note: } $\pi$ is a known constant called \texttt{PI}.
+
 
 \item The declaration of the variable(s).  
 \begin{verbatim}
@@ -168,35 +173,47 @@ or other parameters defined subsequently.
 \end{verbatim}
 
 \item The specification of boundary regions in terms of composites defined in
-the geometry and the conditions applied on those boundaries. The \texttt{REF}
-attribute for a boundary condition region should correspond to the \texttt{ID}
-of the desired \texttt{BOUNDARYREGION}.
+the geometry and the conditions applied on those boundaries. Boundary regions
+have the form
 \begin{verbatim}
-<BOUNDARYREGIONS>
-    <B ID="0"> C[1] </B>
-</BOUNDARYREGIONS>
-
-<BOUNDARYCONDITIONS>
-    <REGION REF="0">
-        <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)">
-    </REGION>
-</BOUNDARYCONDITIONS>
+<B ID="[INDEX]"> [COMPOSITE-ID] </B>
 \end{verbatim}
 
-\item The definition of the forcing term and the exact solution,
+\textbf{Todo}: Define a boundary region with index 0 to be the composite
+corresponding to the boundary edges of the domain. 
+
+The boundary conditions enforced on a region take the following format for one
+or more variable names specified in the \texttt{VARIABLES} section. The
+\texttt{REF} attribute for a boundary condition region should correspond to the
+\texttt{ID} of the desired \texttt{BOUNDARYREGION}.
 \begin{verbatim}
-<FORCING>
-    <F VAR="u" VALUE="-(Lambda + 2*PI*PI)*sin(PI*x)*sin(PI*y)">
-</FORCING>
-       
-<EXACTSOLUTION>
-    <F VAR="u" VALUE="sin(PI*x)*sin(PI*y)">
-</EXACTSOLUTION>
+<REGION REF="[B-REGION-INDEX]">
+    <[TYPE] VAR="[VARIABLE]" VALUE="[EXPRESSION]">
+    ...
+</REGION>
 \end{verbatim}
+
+\textbf{Todo}: Specify appropriate Dirichlet boundary conditions for
+the Helmholtz problem for the variable $u$ on the boundary.
+
+\item The definition of the forcing term, $f$, and the exact solution. A forcing
+term has the form
+\begin{verbatim}
+<F VAR="[VARIABLE]" VALUE="[EXPRESSION]">
+\end{verbatim}
+
+\textbf{Todo}: Define the expression for $f$ in the Helmholtz equation above.
+Remember that the expression may contain names of \texttt{PARAMETERS},
+constants and basic mathematical functions.
+
+\textbf{Todo}: Define the section for the \texttt{EXACTSOLUTION} along with an
+expression for $u_{ex}$. The format is identical to that for specifying the
+forcing function.
+
 \end{enumerate}
 
 This completes the specification of the Helmholtz problem on the square mesh.
-It can then be solved using the executable \texttt{ADRSolver}
+It can then be solved using the \texttt{ADRSolver}
 \footnote{ADRSolver has been design to solve a range of problems in the form of
 an Advection-Diffusion-Reaction equation. Switching the EQTYPE flag to
 another value and providing the appropriate parameters it can solve, for
@@ -223,7 +240,7 @@ using the corresponding converter from the terminal. For example, to convert the
 \clearpage
 \section{Unsteady Advection-Diffusion equation}
 
-Using the same mesh, we will now solve an Unsteady-Advection-Diffusion
+Using the same mesh, we will now solve an unsteady diffusion
 problem. As for the Helmholtz problem, the files are located in the directory
 
 \texttt{NekTutorial/Tutorial/SquareMesh/UnsAdvDiffusion/}.
@@ -234,8 +251,8 @@ The equation we are solving is
     + V_Y \frac{\partial u}{\partial y} = \epsilon \nabla^2 u
 \end{equation}
 
-Setting $\epsilon = 1$ and $V_X=V_Y=0$ the exact solution is trivial
-and we can use it to set Dirichlet boundary condition on the edges.
+Setting $\epsilon = 1$ and $V_X=V_Y=0$ the exact solution is trivial.
+We can use it to set Dirichlet boundary condition on the edges.
 
 \begin{equation}
 u_{ex}= e^{-2\pi^2 t}\sin(\pi x)\cos(\pi y)
@@ -250,48 +267,46 @@ conditions and the time-integration parameters.
 \texttt{UnsteadyAdvectionDiffusion}, we add a number of additional properties to
 specify the approach used in advancing the diffusion and advection components of
 the problem. Furthermore, we specify the time-stepping scheme to use.
-\begin{verbatim}
-<SOLVERINFO>
-    <I PROPERTY="EQTYPE" VALUE="UnsteadyAdvectionDiffusion" />
-    <I PROPERTY="Projection" VALUE="Continuous" />
-    <I PROPERTY="DiffusionAdvancement" VALUE="Implicit" />
-    <I PROPERTY="AdvectionAdvancement" VALUE="Explicit" />
-    <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2" />
-</SOLVERINFO>
-\end{verbatim}
+
+\textbf{Todo}: Add a solver information section and set the equation type to be
+\texttt{UnsteadyAdvectionDiffusion}. Use a continuous Galerkin projection.
+
+\textbf{Todo}: Add additional \texttt{SOLVERINFO} properties to specify
+\begin{itemize}
+  \item \texttt{DiffusionAdvancement} as \texttt{Implicit},
+  \item \texttt{AdvectionAdvancement} as \texttt{Explicit},
+  \item the \texttt{TimeIntegrationMethod} to be \texttt{IMEXOrder2}. 
+\end{itemize}
 
 \item Two parameters must be specified for time integration: \texttt{TimeStep}
 and \texttt{NumSteps}. The \texttt{IO\_CheckSteps} and \texttt{IO\_InfoSteps}
-control the frequency of checkpoint files and status information.
-\begin{verbatim}
-<PARAMETERS>
-    <P> TimeStep       = 0.00001 </P>  
-    <P> NumSteps       = 2000    </P>                
-    <P> IO_CheckSteps  = 2000    </P>
-    <P> IO_InfoSteps   = 2000    </P>
-    <P> wavefreq       = PI      </P>                      
-    <P> epsilon        = 1.0     </P>
-</PARAMETERS>
-\end{verbatim}
+parameters control the frequency of checkpoint files and status information.
 
-\item An additional section specifies the advection velocity.
-\begin{verbatim}
-<USERDEFINEDEQNS>
-    <F LHS="Vx" VALUE="0.0" />
-    <F LHS="Vy" VALUE="0.0" />
-</USERDEFINEDEQNS>
-\end{verbatim}
+\textbf{Todo}: Use a timestep of 0.00001 and integrate for 2000 steps.
+Checkpoint the solution every 2000 steps and print information every 200 steps.
+
+
+\item The boundary conditions are now time-dependent. This is specified by an
+additional attribute \texttt{USERDEFINEDTYPE=``TimeDependent''}
+(double-quotes) after the \texttt{VAR} attribute.
+
+\textbf{Todo}: Specify appropriate boundary regions and conditions for the
+problem.
+
+\item An additional section specifies the advection velocity. In our case, we
+have set it to zero as we will solve only the diffusion problem.
 
 \item Finally, the initial conditions are specified in exactly the same way as
-the forcing function and exact solution from the Helmholtz problem.
-\begin{verbatim}
-<INITIALCONDITIONS>
-    <F VAR="u" VALUE="sin(wavefreq*x)*cos(wavefreq*y)" />
-</INITIALCONDITIONS>
-\end{verbatim}
+the forcing function and exact solution from the Helmholtz problem using a
+section named \texttt{INITIALCONDITIONS}
+
+\textbf{Todo}: Specify appropriate initial conditions and exact solutions to the
+problem.
+
 \end{itemize}
 
-As for the Helmholtz problem, we have included the expected output.
+\textbf{Todo}: Run the \texttt{ADRSolver} with your session file and ensure the
+error in the solution is appropriately small.
 
 
 \clearpage
@@ -302,7 +317,7 @@ equations. In this case the executable in not the \texttt{ADRSolver},
 but the \texttt{IncNavierStokesSolver}\footnote{As for the ADRSolver we can have the
 Release and the Debug version.}, which is still located in the same
 directory as \texttt{ADRSOlver}. All the files, as for the previous examples,
-are located in \texttt{NekTutorial/Tutorial/SquareMesh/IncNavStokes/}.
+are located in\\ \texttt{NekTutorial/Tutorial/SquareMesh/IncNavStokes/}.
 
 Considering an incompressible, isothermal flow with constant density
 and viscosity, the governing equations are the Navier-Stokes (NS) coupled to a
@@ -334,61 +349,50 @@ p=-\frac{1}{4}\Bigl(\cos(2x)+\cos(2y)\Bigr)e^{-4t/Re}
 \end{equation}
 
 In this case we define 3 variables: the 2 velocity components and the pressure.
+We also include an additional parameter to specify the kinematic viscosity.
 
-\begin{verbatim}
-<SOLVERINFO>
-    <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes" />
-    <I PROPERTY="AdvectionForm" VALUE="Convective" />
-    <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
-</SOLVERINFO>
-\end{verbatim}
-
-\begin{verbatim}
-<PARAMETERS>
-    <P> TimeStep      = 0.00001 </P>               
-    <P> NumSteps      = 1000    </P>                 
-    <P> IO_CheckSteps = 1000   </P>                  
-    <P> IO_InfoSteps  = 1000   </P>                 
-    <P> Kinvis        = 0.0001  </P>            
-</PARAMETERS>
-\end{verbatim}
-
-\begin{verbatim}
-<VARIABLES>
-    <V ID="0"> u </V>  
-    <V ID="1" v </V>
-    <V ID="2" p </V>
-</VARIABLES>
-\end{verbatim}
-
+\textbf{Todo}: Examine the template file and familiarise yourself with the
+additional aspects for using the Navier-Stokes solver. Try running it with the
+\texttt{IncNavierStokesSolver}.
 
 
 \subsection{Flow past a cylinder}
 Here a simulation of the two-dimensional flow past a circular cylinder in a free
 stream. This is an illustrative example of the use of \nektar framework
-to solve more complex fluid dynamics problems The solution, which highlights the
-vortex shedding, has been obtained using the $2^{nd}$ order stiffly stable
+to solve more complex fluid dynamics problems. The solution, which highlights
+the vortex shedding, has been obtained using the $2^{nd}$ order stiffly stable
 splitting scheme with $\Delta t = 0.001 s$ and $5^{th}$ order spectral/hp
 expansion on a mesh of $1500$ quadrilaterals. The cylinder has a diameter $D =
 0.4$ and the domain is defined by a rectangle $[-4\,,16] \times [-5\,,5]$.
-Boundary conditions for the velocity filed are of Dirichlet type at the inflow,
+Boundary conditions for the velocity field are of Dirichlet type at the inflow,
 where a constant velocity in $x$-direction is imposed ($u = 1$ and $v = 0$) and
 of Neumann type (homogeneous) at the outflow and on the upper and lower domain
 limits. The pressure boundary conditions are of Neumann type at the inflow and
 on the upper and lower domain limits ($\partial p/\partial n = 0$). The pressure
-value at the outflow has been set to zero (Dirichlet boundary  condition).\\
+value at the outflow has been pinned to zero (Dirichlet boundary  condition).\\
 
 In this case the solver is still the \texttt{IncNavierStokesSolver} and all
 the files are stored in
 
 \texttt{NekTutorial/Tutorial/VortexShedding/}.
 
-In the
-$.xml$ file we can see how curved elements are defined in \nektar and
-how we can use a previous solution to initialise the flow. As a matter of fact a
-$.rst$ file is actually a $.fld$ file obtained with \nektar and used to
-set the flow. In this case we want to start from a converged solution to speed
-up the simulation.
+In the $.xml$ file we can see how curved elements are defined in \nektar. Each
+curve references an edge and specifies the number of points and the type of
+point distribution used to prescribe the curve, along with the coordinates.
+
+Rather than providing an expression for each variable in the initial condition,
+we can instead read all the variables from an existing file. Such an initial
+condition takes the form:
+\begin{verbatim}
+<R FILE="[FILENAME]"/>
+\end{verbatim}
+
+\textbf{Todo}: Update the \texttt{VxShed.xml} file to read the initial condition
+from the file \texttt{VxShed.rst} 
+
+As a matter of fact a $.rst$ file is actually a $.fld$ file obtained with
+\nektar from a previous simulation on the same mesh. In this case we choose to
+start from a converged solution to speed up the simulation.
 
 \section{Extra examples}
 

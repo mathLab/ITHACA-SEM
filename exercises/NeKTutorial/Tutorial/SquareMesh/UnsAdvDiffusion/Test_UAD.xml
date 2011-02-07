@@ -102,7 +102,7 @@
             <C ID="1"> E[0,31,3,32,38,39,11,12,22,13,6,9,34,36,21,30]</C>
         </COMPOSITE>
         
- <DOMAIN> C[0] </DOMAIN>
+        <DOMAIN> C[0] </DOMAIN>
         
     </GEOMETRY>
     
@@ -111,20 +111,11 @@
     </EXPANSIONS>
     
     <CONDITIONS>
-    
-       <SOLVERINFO>
-        <I PROPERTY="EQTYPE" VALUE="UnsteadyAdvectionDiffusion" />
-        <I PROPERTY="Projection" VALUE="Continuous"/>
-        <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
-        <I PROPERTY="AdvectionAdvancement" VALUE="Explicit"/>
-        <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder2"/>
-      </SOLVERINFO>
+
+    <!-- TODO: Solver Information --> 
 
     <PARAMETERS>
-      <P> TimeStep      = 0.00001               </P>
-      <P> NumSteps      = 2000                 </P>
-      <P> IO_CheckSteps = 2000                 </P>
-      <P> IO_InfoSteps  = 2000                 </P>
+      <!-- TODO: Time integration parameters -->  
       <P> wavefreq = PI                        </P>
       <P> epsilon = 1.0                        </P>
     </PARAMETERS>
@@ -132,29 +123,15 @@
     <VARIABLES>
       <V ID="0"> u </V> 
     </VARIABLES>
+
+    <!-- TODO: Boundary regions and conditions --> 
     
-    <BOUNDARYREGIONS>
-      <B ID="0"> C[1] </B>
-    </BOUNDARYREGIONS>
-    
-    <BOUNDARYCONDITIONS>
-         <REGION REF="0">
-            <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="exp(-2.0*wavefreq*wavefreq*t)*sin(wavefreq*x)*cos(wavefreq*y)" />
-        </REGION>
-    </BOUNDARYCONDITIONS>
-    
-     <USERDEFINEDEQNS>
+    <USERDEFINEDEQNS>
        <F LHS="Vx" VALUE="0.0"  />
        <F LHS="Vy" VALUE="0.0" />
     </USERDEFINEDEQNS>
-    
-    <INITIALCONDITIONS>
-        <F VAR="u" VALUE="sin(wavefreq*x)*cos(wavefreq*y)" />
-    </INITIALCONDITIONS>
-   
-    <EXACTSOLUTION>
-      <F VAR="u" VALUE="exp(-2.0*wavefreq*wavefreq*t)*sin(wavefreq*x)*cos(wavefreq*y)" />
-    </EXACTSOLUTION>
+
+    <!-- TODO: Specify initial conditions and exact solution --> 
 
 </CONDITIONS>
 

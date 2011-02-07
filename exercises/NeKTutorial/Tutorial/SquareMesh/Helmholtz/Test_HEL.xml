@@ -118,13 +118,11 @@
     <CONDITIONS>
     
         <SOLVERINFO>
-            <I PROPERTY="EQTYPE" VALUE="Helmholtz" />
-            <I PROPERTY="Projection" VALUE="Continuous"/>
+            <!-- TODO: Solver information -->
         </SOLVERINFO>
 
         <PARAMETERS>
-            <P> wavefreq       = PI                </P>
-            <P> Lambda        = 1.0               </P>
+            <!-- TODO: Parameters -->
         </PARAMETERS>
         
         <VARIABLES>
@@ -132,22 +130,18 @@
         </VARIABLES>
     
         <BOUNDARYREGIONS>
-            <B ID="0"> C[1] </B>
+            <!-- TODO: Boundary regions -->
         </BOUNDARYREGIONS>
     
         <BOUNDARYCONDITIONS>
-            <REGION REF="0">
-                <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
-            </REGION>
+            <!-- TODO: Boundary conditions -->
         </BOUNDARYCONDITIONS>
     
         <FORCING>
-            <F VAR="u" VALUE="-(Lambda + 2*PI*PI)*sin(PI*x)*sin(PI*y)" />
+            <!-- TODO: Forcing function -->
         </FORCING>
        
-        <EXACTSOLUTION>
-            <F VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
-        </EXACTSOLUTION>
+        <!-- TODO: Exact solution -->
 
     </CONDITIONS>
 

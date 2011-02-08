@@ -7,7 +7,7 @@
 
         <!-- Definitions that can be used below in this file. -->
         <VERTEX>
-            <!-- Always must have four values per entry. -->
+            <!-- Always must have three values per entry. -->
             <V ID="0">1.571e+00 1.571e+00 0.000e+00</V>
             <V ID="1">-1.571e+00 1.571e+00 0.000e+00</V>
             <V ID="2">-1.571e+00 -1.571e+00 0.000e+00</V>
@@ -123,7 +123,7 @@
         </SOLVERINFO>
 
         <PARAMETERS>
-            <P> wavefreq       = PI                </P>
+            <P> k             = PI                </P>
             <P> Lambda        = 1.0               </P>
         </PARAMETERS>
         
@@ -137,16 +137,16 @@
     
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
-                <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+                <D VAR="u" VALUE="sin(k*x)*sin(k*y)" />
             </REGION>
         </BOUNDARYCONDITIONS>
     
         <FORCING>
-            <F VAR="u" VALUE="-(Lambda + 2*PI*PI)*sin(PI*x)*sin(PI*y)" />
+            <F VAR="u" VALUE="-(Lambda + 2*k*k)*sin(k*x)*sin(k*y)" />
         </FORCING>
        
         <EXACTSOLUTION>
-            <F VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+            <F VAR="u" VALUE="sin(k*x)*sin(k*y)" />
         </EXACTSOLUTION>
 
     </CONDITIONS>

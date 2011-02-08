@@ -20,6 +20,10 @@ the user has successfully compiled the libraries, the solvers and the utilities,
 as explained on the website\footnote{www.nektar.info}. A series of regression
 tests are included to check that the software is producing the expected results.
 Please ensure these all pass before continuing.
+
+\textbf{Note}: The example commands given assume the \nektar executables can be
+found in your shell path. If you have not set your path accordingly you will
+need to specify the full path to the \nektar executable.
 \bigskip
 
 In this first section we will create a simple 2D mesh using $Gmsh$ and
@@ -63,21 +67,20 @@ utilities.
 this stage.
 \end{itemize}
 
-If you have \gmsh installed, you can generate the \texttt{.msh} file yourself
-from the terminal using the command:
+If you have \gmsh installed, you can generate the \texttt{.msh} file yourself.
 
 \begin{verbatim}
-gmsh -2 Square.geo
+gmsh Square.geo
 \end{verbatim}
 
-or via the graphical user interface. However, we will not discuss the use of
+However, we will not discuss the use of
 \gmsh in this tutorial. \texttt{Square.xml} has been generated using the
 \texttt{MeshConvert} pre-processing tool in the \\
 \texttt{utilities/builds/PreProcessing/} directory. To generate the $.xml$ file
 from the \texttt{.msh} file, run the command
 
 \begin{verbatim}
-./MeshConvert Square.msh Square.xml
+MeshConvert Square.msh Square.xml
 \end{verbatim}
 
 Figure \ref{fig:Mesh} shows the resulting mesh on which we are going to
@@ -188,7 +191,7 @@ or more variable names specified in the \texttt{VARIABLES} section. The
 \texttt{ID} of the desired \texttt{BOUNDARYREGION}.
 \begin{verbatim}
 <REGION REF="[B-REGION-INDEX]">
-    <[TYPE] VAR="[VARIABLE]" VALUE="[EXPRESSION]">
+    <[TYPE] VAR="[VARIABLE]" VALUE="[EXPRESSION]"/>
     ...
 </REGION>
 \end{verbatim}
@@ -199,7 +202,7 @@ the Helmholtz problem for the variable $u$ on the boundary.
 \item The definition of the forcing term, $f$, and the exact solution. A forcing
 term has the form
 \begin{verbatim}
-<F VAR="[VARIABLE]" VALUE="[EXPRESSION]">
+<F VAR="[VARIABLE]" VALUE="[EXPRESSION]"/>
 \end{verbatim}
 
 \textbf{Todo}: Define the expression for $f$ in the Helmholtz equation above.
@@ -223,7 +226,7 @@ equations, etc.}. The executable is located in the folder
 mode, the executables will have the suffix \texttt{-g}.}
 
 \begin{verbatim}
-./ADRSolver Test_HEL.xml
+ADRSolver Test_HEL.xml
 \end{verbatim}
 
 To view the output in \gmsh use the post-processing
@@ -233,7 +236,7 @@ using the corresponding converter from the terminal. For example, to convert the
 \texttt{Test\_HEL.fld} to \gmsh format, use
 
 \begin{verbatim}
-./FldToGmsh Test_HEL.xml Test_HEL.fld
+FldToGmsh Test_HEL.xml Test_HEL.fld
 \end{verbatim} 
 
 

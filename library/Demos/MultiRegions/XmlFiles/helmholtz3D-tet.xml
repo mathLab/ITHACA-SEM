@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <NEKTAR>
-    <!-- Embed a 3-dimensional object in a 3-dimensional space-->
-    <!--DIM <= SPACE  this provides a method of optimizing code for a 3-D curve embedded in 3-d space.-->
+    <!-- Embed a 3-dimensional object in a 3-dimensional space
+         DIM <= SPACE
+         This provides a method of optimizing code for a 3-D curve embedded in
+         3-d space.-->
     <GEOMETRY DIM="3" SPACE="3">
-        <!-- Definitions that can be used below in this file. -->
         <VERTEX>
-            <!-- Always must have four values per entry. -->
+            <!-- Always must have three values per entry. -->
             <V ID="0">0.000e+00 0.000e+00 0.000e+00</V>
             <V ID="1">1.000e+00 0.000e+00 0.000e+00</V>
             <V ID="2">0.000e+00 1.000e+00 0.000e+00</V>
@@ -259,9 +260,11 @@
             <T ID="119">   95   42   96</T>
         </FACE>
         <ELEMENT>
-            <!-- P - points, Q -  quads, T - triangles, S - segments, A - tetrahedron, Y - pyramid, R - prism, H- hex.-->
-            <!--Only certain element types are appropriate for the given dimension (dim on mesh)-->
-            <!--Can also use faces to define 3-D elements.  Specify with F[1] for face 1, for example. -->
+            <!-- P - points, Q -  quads, T - triangles, S - segments, 
+                 A - tetrahedron, Y - pyramid, R - prism, H- hex.
+                 Only certain element types are appropriate for the given
+                 dimension (dim on mesh) Can also use faces to define 3-D
+                 elements.  Specify with F[1] for face 1, for example. -->
             <A ID="0">    0     1     2     3 </A>
             <A ID="1">    4     5     6     7 </A>
             <A ID="2">    7     1     8     9 </A>

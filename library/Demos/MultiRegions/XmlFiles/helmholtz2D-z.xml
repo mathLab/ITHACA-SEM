@@ -6,18 +6,11 @@
      -->
 
 <NEKTAR>
-  <!-- Embed a 1-dimensional object in a 2-dimensional space -->
-  <!-- DIM <= SPACE -->
-  <!-- This provides a method of optimizing code for a 1-D curve embedded in 
+  <!-- Embed a 1-dimensional object in a 2-dimensional space
+       DIM <= SPACE
+       This provides a method of optimizing code for a 1-D curve embedded in
        3-space. -->
   <GEOMETRY DIM="2" SPACE="3">
-    
-    <!-- Definitions that can be used below in this file. -->
-    <DEF>
-      <D> A = 1.0 </D>
-      <D> B = 2.0 </D>
-      <D> C = 3.0 </D>
-    </DEF>
     
     <VERTEX>
       <V ID="0">   0.0 -1.000000000000000   3.500000000000000    </V>
@@ -171,11 +164,10 @@
     </EDGE>
     
     <!-- Q - quads, T - triangles, S - segments, E - tet, P - pyramid, 
-         R - prism, H - hex -->
-    <!-- Only certain element types are appropriate for the given dimension 
-         (dim on mesh) -->
-    <!-- Can also use faces to define 3-D elements.  Specify with F[1] for 
-         face 1, for example. -->
+         R - prism, H - hex
+         Only certain element types are appropriate for the given dimension
+         (dim on mesh). Can also use faces to define 3-D elements.  Specify
+         with F[1] for face 1, for example. -->
     <ELEMENT>
       <T ID="0"> 6 7 16 </T>
       <T ID="1"> 0 8 7 </T>
@@ -260,10 +252,8 @@
     <E COMPOSITE="C[1]" NUMMODES="7" TYPE="MODIFIED" />
   </EXPANSIONS>
 
-  <!-- Define problem boundary conditions -->
   <CONDITIONS>
-    <!-- Removed redundancy since we can specify any level of granularity
-         in the ExpansionTypes section below.-->
+      
     <PARAMETERS>
       <P> Lambda    = 1 </P>
     </PARAMETERS>

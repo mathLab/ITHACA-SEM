@@ -50,6 +50,8 @@
     #include <map>
     #include <string>
 
+    #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+
     #ifndef MAX_PARAM
     #define MAX_PARAM 3  // default maximum number of parameters to support
     #endif
@@ -110,15 +112,15 @@ namespace Nektar
         class NekFactory
         {
         public:
-                /// Description datatype
-                typedef std::string tDescription;
-                /// Comparison predicator of key
-                typedef std::less<tKey> tPredicator;
+            /// Description datatype
+            typedef std::string tDescription;
+            /// Comparison predicator of key
+            typedef std::less<tKey> tPredicator;
             /// Shared pointer to an object of baseclass type.
             typedef boost::shared_ptr<tBase> tBaseSharedPtr;
             /// CreatorFunction type which takes parameter and returns base
             /// class shared pointer.
-                typedef tBaseSharedPtr (*CreatorFunction) (BOOST_PP_ENUM_PARAMS(MAX_PARAM, tParam));
+            typedef tBaseSharedPtr (*CreatorFunction) (BOOST_PP_ENUM_PARAMS(MAX_PARAM, tParam));
 
             /// Define a struct to hold the information about a module.
             struct ModuleEntry
@@ -150,7 +152,7 @@ namespace Nektar
              * @param   x               Parameter to pass to class constructor.
              * @returns                 Base class pointer to new instance.
              */
-                static tBaseSharedPtr CreateInstance(tKey idKey BOOST_PP_COMMA_IF(MAX_PARAM)
+            static tBaseSharedPtr CreateInstance(tKey idKey BOOST_PP_COMMA_IF(MAX_PARAM)
                         BOOST_PP_ENUM_BINARY_PARAMS(MAX_PARAM, tParam, x))
             {
                 // Now try and find the key in the map.
@@ -164,21 +166,23 @@ namespace Nektar
                     {
                         try
                         {
-                                return it->second.m_func(BOOST_PP_ENUM_PARAMS(MAX_PARAM, x));
+                            return it->second.m_func(BOOST_PP_ENUM_PARAMS(MAX_PARAM, x));
                         }
                         catch (const std::string& s)
                         {
-                            std::cout << "ERROR Creating module: " << s << std::endl;
-                            abort();
+                            std::stringstream errstr;
+                            errstr << "Unable to create module: " << idKey << "\n";
+                            errstr << s;
+                            ASSERTL0(false, errstr.str());
                         }
                     }
                 }
 
-                // If we get this far, the key does not exist, so display an
-                // error and print the list of available modules.
-                std::cout << "No such module: " << idKey << std::endl;
-                PrintAvailableClasses();
-                abort();
+                // If we get this far, the key doesn't exist, so throw an error.
+                std::stringstream errstr;
+                errstr << "No such module: " << idKey << std::endl;
+                PrintAvailableClasses(errstr);
+                ASSERTL0(false, errstr.str());
             }
 
 
@@ -206,23 +210,43 @@ namespace Nektar
             /**
              * @brief Prints the available classes to stdout.
              */
-            static void PrintAvailableClasses()
+            static void PrintAvailableClasses(std::ostream& pOut = std::cout)
             {
-                std::cout << std::endl << "Available classes: " << std::endl;
+                pOut << std::endl << "Available classes: " << std::endl;
                 TMapFactoryIterator it;
                 for (it = getMapFactory()->begin(); it != getMapFactory()->end(); ++it)
                 {
-                    std::cout << "  " << it->first;
+                    pOut << "  " << it->first;
                     if (it->second.m_desc != "")
                     {
-                        std::cout << ":" << std::endl << "    "
+                        pOut << ":" << std::endl << "    "
                                   << it->second.m_desc << std::endl;
                     }
                     else
                     {
-                        std::cout << std::endl;
+                        pOut << std::endl;
                     }
                 }
+            }
+
+
+            /**
+             * @brief Retrieves the key corresponding to a given description.
+             */
+            static tKey GetKey(tDescription pDesc)
+            {
+                TMapFactoryIterator it;
+                for (it = getMapFactory()->begin(); it != getMapFactory()->end(); ++it)
+                {
+                    if (it->second.m_desc == pDesc)
+                    {
+                        return it->first;
+                    }
+                }
+                std::string errstr = "Module '"
+                        + boost::lexical_cast<std::string>(pDesc)
+                        + "' is not known.";
+                ASSERTL0(false, errstr);
             }
 
         protected:
@@ -302,14 +326,17 @@ namespace Nektar
                     }
                     catch (const std::string& s)
                     {
-                        std::cout << "ERROR Creating module: " << s << std::endl;
-                        abort();
+                        std::stringstream errstr;
+                        errstr << "Unable to create module: " << idKey << "\n";
+                        errstr << s;
+                        ASSERTL0(false, errstr.str());
                     }
                 }
             }
-            std::cout << "No such module: " << idKey << std::endl;
-            PrintAvailableClasses();
-            abort();
+            std::stringstream errstr;
+            errstr << "No such module: " << idKey << std::endl;
+            PrintAvailableClasses(errstr);
+            ASSERTL0(false, errstr.str());
         }
 
         static tKey RegisterCreatorFunction(tKey idKey,
@@ -320,23 +347,39 @@ namespace Nektar
             return idKey;
         }
 
-        static void PrintAvailableClasses()
+        static void PrintAvailableClasses(std::ostream& pOut = std::cout)
         {
-            std::cout << std::endl << "Available classes: " << std::endl;
+            pOut << std::endl << "Available classes: " << std::endl;
             TMapFactoryIterator it;
             for (it = getMapFactory()->begin(); it != getMapFactory()->end(); ++it)
             {
-                std::cout << "  " << it->first;
+                pOut << "  " << it->first;
                 if (it->second.m_desc != "")
                 {
-                    std::cout << ":" << std::endl << "    "
+                    pOut << ":" << std::endl << "    "
                               << it->second.m_desc << std::endl;
                 }
                 else
                 {
-                    std::cout << std::endl;
+                    pOut << std::endl;
                 }
             }
+        }
+
+        static tKey GetKey(tDescription pDesc)
+        {
+            TMapFactoryIterator it;
+            for (it = getMapFactory()->begin(); it != getMapFactory()->end(); ++it)
+            {
+                if (it->second.m_desc == pDesc)
+                {
+                    return it->first;
+                }
+            }
+            std::string errstr = "Module '"
+                    + boost::lexical_cast<std::string>(pDesc)
+                    + "' is not known.";
+            ASSERTL0(false, errstr);
         }
 
     protected:

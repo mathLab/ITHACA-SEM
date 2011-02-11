@@ -184,6 +184,18 @@ namespace Nektar
             m_constant[m_nconstants-1] = factor2;
         }
 
+        GlobalMatrixKey::GlobalMatrixKey(const GlobalMatrixKey &key,
+                        const StdRegions::ExpansionType expType):
+            m_matrixType(key.m_matrixType),
+            m_expansionType(expType),
+            m_locToGloMap(key.m_locToGloMap),
+            m_nconstants(key.m_nconstants),
+            m_constant(key.m_constant),
+            m_nvariablecoefficients(key.m_nvariablecoefficients),
+            m_variablecoefficient(key.m_variablecoefficient)
+        {
+        }
+
         GlobalMatrixKey::GlobalMatrixKey(const GlobalMatrixKey &key):
             m_matrixType(key.m_matrixType),
             m_expansionType(key.m_expansionType),

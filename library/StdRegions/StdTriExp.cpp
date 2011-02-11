@@ -235,7 +235,7 @@ namespace Nektar
             Array<OneD, const NekDouble> base1 = m_base[1]->GetBdata();
             int   mode0;
 
-            ASSERTL2(mode >= m_ncoeffs, 
+            ASSERTL2(mode <= m_ncoeffs,
                      "calling argument mode is larger than total expansion order");
 
             m= order1;

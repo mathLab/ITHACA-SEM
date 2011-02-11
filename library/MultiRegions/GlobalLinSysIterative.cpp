@@ -47,11 +47,11 @@ namespace Nektar
          */
 
         /// Constructor for full direct matrix solve.
-        GlobalLinSysIterative::GlobalLinSysIterative(const GlobalLinSysKey &mkey,
-                     const boost::shared_ptr<LocalMatrixSystem> &pLocMatSys,
-                     const boost::shared_ptr<LocalToGlobalBaseMap>
-                                                            &locToGloMap)
-                : GlobalLinSys(mkey, pLocMatSys, locToGloMap)
+        GlobalLinSysIterative::GlobalLinSysIterative(
+                    const GlobalLinSysKey &pKey,
+                    const boost::shared_ptr<ExpList> &pExpList,
+                    const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap)
+                : GlobalLinSys(pKey, pExpList, pLocToGloMap)
         {
         }
 
@@ -60,17 +60,19 @@ namespace Nektar
         }
 
         /// Solve the linear system for given input and output vectors.
-        void GlobalLinSysIterative::Solve( const Array<OneD,const NekDouble> &in,
-                          Array<OneD,      NekDouble> &out)
+        void GlobalLinSysIterative::Solve(
+                    const Array<OneD, const NekDouble>  &in,
+                          Array<OneD,       NekDouble>  &out)
         {
         }
 
         /// Solve the linear system for given input and output vectors
         /// using a specified local to global map.
-        void GlobalLinSysIterative::Solve( const Array<OneD, const NekDouble> &in,
-                          Array<OneD,       NekDouble> &out,
-                    const LocalToGlobalBaseMapSharedPtr &locToGloMap,
-                    const Array<OneD, const NekDouble> &dirForcing)
+        void GlobalLinSysIterative::Solve(
+                    const Array<OneD, const NekDouble>  &in,
+                          Array<OneD,       NekDouble>  &out,
+                    const LocalToGlobalBaseMapSharedPtr &pLocToGloMap,
+                    const Array<OneD, const NekDouble>  &pDirForcing)
         {
         }
     }

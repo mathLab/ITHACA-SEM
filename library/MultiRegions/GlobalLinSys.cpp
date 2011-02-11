@@ -140,14 +140,183 @@ namespace Nektar
          * @param   locToGloMap Local to global mapping.
          */
         GlobalLinSys::GlobalLinSys(
-                        const GlobalLinSysKey &mkey,
-                        const boost::shared_ptr<LocalMatrixSystem> &pLocMatSys,
-                        const boost::shared_ptr<LocalToGlobalBaseMap> &locToGloMap):
-            m_linSysKey(mkey)
+                        const GlobalLinSysKey &pKey,
+                        const boost::shared_ptr<ExpList> &pExp,
+                        const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap):
+            m_linSysKey(pKey)
         {
 
         }
 
+
+        /**
+         * Retrieves a the block matrix from n'th expansion using the matrix
+         * key provided by the #m_linSysKey.
+         * @param   n           Number of the expansion.
+         * @returns             Block matrix for the specified expansion.
+         */
+        DNekScalMatSharedPtr GlobalLinSys::GetBlock(unsigned int n)
+        {
+            int cnt = 0;
+            int nel = m_expList->GetOffset_Elmt_Id(n);
+            DNekScalMatSharedPtr loc_mat;
+
+            StdRegions::StdExpansionSharedPtr vExp = m_expList->GetExp(nel);
+            const boost::shared_ptr<GlobalMatrixKey> vMatrixKey
+                                            = m_linSysKey.GetGlobalMatrixKey();
+
+            // need to be initialised with zero size for non variable
+            // coefficient case
+            Array<OneD, Array<OneD,const NekDouble> > vVarcoeffs;
+            int vNVCoeffs = vMatrixKey->GetNvariableCoefficients();
+
+            // retrieve variable coefficients
+            if(vNVCoeffs > 0)
+            {
+                cnt = m_expList->GetPhys_Offset(n);
+                vVarcoeffs
+                        = Array<OneD, Array<OneD, const NekDouble> >(vNVCoeffs);
+                for(int j = 0; j < vNVCoeffs; j++)
+                {
+                    vVarcoeffs[j] = vMatrixKey->GetVariableCoefficient(j) + cnt;
+                }
+            }
+
+            // if requesting the HybridDGHelmBndLam matrix, retrieve the two
+            // scalar constants
+            if (m_linSysKey.GetMatrixType() == StdRegions::eHybridDGHelmBndLam)
+            {
+                NekDouble vFactor1, vFactor2;
+                int Nconstants = vMatrixKey->GetNconstants();
+
+                if(Nconstants>2)
+                {
+                    vFactor1 = m_linSysKey.GetConstant(nel);
+                    vFactor2 = m_linSysKey.GetConstant(Nconstants-1);
+                }
+
+                else
+                {
+                    vFactor1 = m_linSysKey.GetConstant(0);
+                    vFactor2 = m_linSysKey.GetConstant(1);
+                }
+
+                LocalRegions::MatrixKey matkey(vMatrixKey->GetMatrixType(),
+                                               vExp->DetExpansionType(),
+                                               *vExp, vFactor1, vFactor2,
+                                               vVarcoeffs);
+                loc_mat = vExp->GetLocMatrix(matkey);
+            }
+            else
+            {
+                LocalRegions::MatrixKey matkey(vMatrixKey->GetMatrixType(),
+                                           vExp->DetExpansionType(),
+                                           *vExp, vMatrixKey->GetConstants(),
+                                           vVarcoeffs);
+                loc_mat = vExp->GetLocMatrix(matkey);
+            }
+
+            // retrieve robin boundary condition information and apply robin
+            // boundary conditions to the matrix.
+            const map<int, RobinBCInfoSharedPtr> vRobinBCInfo
+                                                = m_expList->GetRobinBCInfo();
+            if(vRobinBCInfo.count(nel) != 0) // add robin mass matrix
+            {
+                RobinBCInfoSharedPtr rBC;
+
+                // declare local matrix from scaled matrix.
+                int rows = loc_mat->GetRows();
+                int cols = loc_mat->GetColumns();
+                const NekDouble *dat = loc_mat->GetRawPtr();
+                DNekMatSharedPtr new_mat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,dat);
+                Blas::Dscal(rows*cols,loc_mat->Scale(),new_mat->GetRawPtr(),1);
+
+                // add local matrix contribution
+                for(rBC = vRobinBCInfo.find(nel)->second;rBC; rBC = rBC->next)
+                {
+                    vExp->AddRobinMassMatrix(rBC->m_robinID,rBC->m_robinPrimitiveCoeffs,new_mat);
+                }
+
+                NekDouble one = 1.0;
+                // redeclare loc_mat to point to new_mat plus the scalar.
+                loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,new_mat);
+            }
+
+            // finally return the matrix.
+            return loc_mat;
+        }
+
+
+        /**
+         * Retrieves a the static condensation block matrices from n'th
+         * expansion using the matrix key provided by the #m_linSysKey.
+         * @param   n           Number of the expansion
+         * @returns             2x2 Block matrix holding the static condensation
+         *                      matrices for the n'th expansion.
+         */
+        DNekScalBlkMatSharedPtr GlobalLinSys::GetStaticCondBlock(unsigned int n)
+        {
+            int cnt = 0;
+            int nel = m_expList->GetOffset_Elmt_Id(n);
+            DNekScalBlkMatSharedPtr loc_mat;
+            DNekScalMatSharedPtr    tmp_mat;
+
+            StdRegions::StdExpansionSharedPtr vExp = m_expList->GetExp(nel);
+            const boost::shared_ptr<GlobalMatrixKey> vMatrixKey
+                    = m_linSysKey.GetGlobalMatrixKey();
+
+            // need to be initialised with zero size for non variable coefficient case
+            Array<OneD, Array<OneD,const NekDouble> > vVarcoeffs;
+            int vNVCoeffs = m_linSysKey.GetNvariableCoefficients();
+
+            if(vNVCoeffs>0)
+            {
+                cnt = m_expList->GetPhys_Offset(n);
+                vVarcoeffs
+                        = Array<OneD, Array<OneD, const NekDouble> >(vNVCoeffs);
+                for(int j = 0; j < vNVCoeffs; j++)
+                {
+                    vVarcoeffs[j] = vMatrixKey->GetVariableCoefficient(j) + cnt;
+                }
+            }
+
+            LocalRegions::MatrixKey matkey( vMatrixKey->GetMatrixType(),
+                                            vExp->DetExpansionType(),
+                                            *vExp,
+                                            vMatrixKey->GetConstants(),
+                                            vVarcoeffs);
+
+            loc_mat = vExp->GetLocStaticCondMatrix(matkey);
+
+            const map<int, RobinBCInfoSharedPtr> vRobinBCInfo
+                    = m_expList->GetRobinBCInfo();
+            if(vRobinBCInfo.count(nel) != 0) // add robin mass matrix
+            {
+                RobinBCInfoSharedPtr rBC;
+
+                tmp_mat = loc_mat->GetBlock(0,0);
+
+                // declare local matrix from scaled matrix.
+                int rows = tmp_mat->GetRows();
+                int cols = tmp_mat->GetColumns();
+                const NekDouble *dat = tmp_mat->GetRawPtr();
+                DNekMatSharedPtr new_mat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,dat);
+                Blas::Dscal(rows*cols,tmp_mat->Scale(),new_mat->GetRawPtr(),1);
+
+                // add local matrix contribution
+                for(rBC = vRobinBCInfo.find(nel)->second;rBC; rBC = rBC->next)
+                {
+                    vExp->AddRobinMassMatrix(rBC->m_robinID,rBC->m_robinPrimitiveCoeffs,new_mat);
+                }
+
+                NekDouble one = 1.0;
+                // redeclare loc_mat to point to new_mat plus the scalar.
+                tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,new_mat);
+                loc_mat->SetBlock(0,0,tmp_mat);
+            }
+
+            return loc_mat;
+        }
     } //end of namespace
 } //end of namespace
 

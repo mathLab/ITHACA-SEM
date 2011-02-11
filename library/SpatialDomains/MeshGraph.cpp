@@ -533,9 +533,11 @@ namespace Nektar
           TiXmlDocument doc(infilename);
           bool loadOkay = doc.LoadFile();
 
-          std::string errstr = "Unable to load file: ";
-          errstr += infilename;
-          ASSERTL0(loadOkay, errstr.c_str());
+          std::stringstream errstr;
+          errstr << "Unable to load file: " << infilename << " (";
+          errstr << doc.ErrorDesc() << ", line " << doc.ErrorRow()
+                 << ", column " << doc.ErrorCol() << ")";
+          ASSERTL0(loadOkay, errstr.str());
 
           ReadGeometry(doc);
         }
@@ -772,9 +774,11 @@ namespace Nektar
           TiXmlDocument doc(infilename);
           bool loadOkay = doc.LoadFile();
 
-          std::string errstr = "Unable to load file: ";
-          errstr += infilename;
-          ASSERTL0(loadOkay, errstr.c_str());
+          std::stringstream errstr;
+          errstr << "Unable to load file: " << infilename << std::endl;
+          errstr << "Reason: " << doc.ErrorDesc() << std::endl;
+          errstr << "Position: Line " << doc.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
+          ASSERTL0(loadOkay, errstr.str());
 
           ReadExpansions(doc);
         }
@@ -1241,9 +1245,11 @@ namespace Nektar
           TiXmlDocument doc(infilename);
           bool loadOkay = doc.LoadFile();
 
-          std::string errstr = "Unable to load file: ";
-          errstr += infilename;
-          ASSERTL0(loadOkay, errstr.c_str());
+          std::stringstream errstr;
+          errstr << "Unable to load file: " << infilename << std::endl;
+          errstr << "Reason: " << doc.ErrorDesc() << std::endl;
+          errstr << "Position: Line " << doc.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
+          ASSERTL0(loadOkay, errstr.str());
 
           ReadGeometryInfo(doc);
         }
@@ -1514,9 +1520,11 @@ namespace Nektar
           TiXmlDocument doc(infilename);
           bool loadOkay = doc.LoadFile();
 
-          std::string errstr = "Unable to load file: ";
-          errstr += infilename;
-          ASSERTL0(loadOkay, errstr.c_str());
+          std::stringstream errstr;
+          errstr << "Unable to load file: " << infilename << std::endl;
+          errstr << "Reason: " << doc.ErrorDesc() << std::endl;
+          errstr << "Position: Line " << doc.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
+          ASSERTL0(loadOkay, errstr.str());
 
           ReadCurves(doc);
         }
@@ -2024,7 +2032,7 @@ namespace Nektar
           errstr << "Unable to load file: " << infilename << std::endl;
           errstr << "Reason: " << doc.ErrorDesc() << std::endl;
           errstr << "Position: Line " << doc.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
-          ASSERTL0(loadOkay, errstr.str().c_str());
+          ASSERTL0(loadOkay, errstr.str());
 
           ImportFieldDefs(doc, fielddefs, false);
           ImportFieldData(doc, fielddefs, fielddata);

@@ -166,6 +166,7 @@ namespace Nektar
             "Laplacian20",
             "Laplacian21",
             "Laplacian22",
+            "InvLaplacianWithUnityMean",
             "WeakDeriv0",
             "WeakDeriv1",
             "WeakDeriv2",
@@ -187,7 +188,8 @@ namespace Nektar
             "HybridDGLamToQ0",
             "HybridDGLamToQ1",
             "HybridDGLamToQ2",
-            "HybridDGLamToU"
+            "HybridDGLamToU",
+            "FwdTrans"
         };
 
         /** enum list of StdExpansion regions */

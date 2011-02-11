@@ -67,17 +67,18 @@ namespace Nektar
             eDirectFullMatrix,
             eDirectStaticCond,
             eDirectMultiLevelStaticCond,
-            eIterativeCG
+            eIterativeCG,
+            eSIZE_GlobalSysSolnType
         };
 
 
         const char* const GlobalSysSolnTypeMap[] =
             {
             "No Solution Type",
-            "Direct Solve: Full Matrix",
-            "Direct Solve: Static Condensation",
-            "Direct Solve: Multi-Level Static Condensation",
-            "Iterative Solve: Conjugate Gradient"
+            "DirectFull",
+            "DirectStaticCond",
+            "DirectStaticCond",
+            "IterativeCG"
         };
 
 

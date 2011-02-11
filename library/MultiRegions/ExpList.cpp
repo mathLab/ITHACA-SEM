@@ -36,7 +36,6 @@
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/LocalToGlobalC0ContMap.h>
 #include <MultiRegions/GlobalLinSys.h>
-#include <MultiRegions/LocalMatrixSystem.h>
 
 namespace Nektar
 {
@@ -696,25 +695,10 @@ namespace Nektar
                     cnt1  += totnq;
                 }
 
-                int Nconstants = gkey.GetNconstants();
-                Array<OneD, NekDouble> Constants(Nconstants);
-                if(Nconstants>2)
-                {
-                    Constants[0] = gkey.GetConstant(i);
-                    Constants[1] = gkey.GetConstant(Nconstants-1);
-                }
-
-                else if(Nconstants==2)
-                {
-                    Constants[0] = gkey.GetConstant(0);
-                    Constants[1] = gkey.GetConstant(1);
-                }
-
-
                 LocalRegions::MatrixKey matkey(gkey.GetMatrixType(),
                                                (*m_exp)[elmt_id.find(i)->second]->DetExpansionType(),
                                                *(*m_exp)[elmt_id.find(i)->second],
-                                               Constants,
+                                               gkey.GetConstants(),
                                                varcoeffs );
 
                 loc_mat = (*m_exp)[elmt_id.find(i)->second]->GetLocMatrix(matkey);
@@ -745,8 +729,9 @@ namespace Nektar
                                                  Array<OneD,      NekDouble> &outarray)
         {
             const Array<OneD, const bool>  doBlockMatOp
-                = m_globalOptParam->DoBlockMatOp(StdRegions::eIProductWRTBase);
-            const Array<OneD, const int> num_elmts = m_globalOptParam->GetShapeNumElements();
+                        = m_globalOptParam->DoBlockMatOp(gkey.GetMatrixType());
+            const Array<OneD, const int> num_elmts
+                        = m_globalOptParam->GetShapeNumElements();
 
             Array<OneD,NekDouble> tmp_outarray;
             int cnt = 0,eid;
@@ -754,10 +739,13 @@ namespace Nektar
             {
                 if(doBlockMatOp[n])
                 {
+                    const StdRegions::ExpansionType vType
+                                    = m_globalOptParam->GetShapeList()[n];
+                    const MultiRegions::GlobalMatrixKey vKey(gkey, vType);
                     if (cnt < m_offset_elmt_id.num_elements())
                     {
                         eid = m_offset_elmt_id[cnt];
-                        MultiplyByBlockMatrix(gkey,inarray + m_coeff_offset[eid],
+                        MultiplyByBlockMatrix(vKey,inarray + m_coeff_offset[eid],
                                               tmp_outarray = outarray + m_coeff_offset[eid]);
                         cnt += num_elmts[n];
                     }
@@ -785,7 +773,6 @@ namespace Nektar
                         }
 
                         StdRegions::StdMatrixKey mkey(gkey.GetMatrixType(),
-
                                                       (*m_exp)[eid]->DetExpansionType(),
                                                       *((*m_exp)[eid]),
                                                       gkey.GetConstants(),varcoeffs);
@@ -1086,60 +1073,32 @@ namespace Nektar
          *          required format.
          */
         GlobalLinSysSharedPtr ExpList::GenGlobalLinSys(
-                                                       const GlobalLinSysKey &mkey,
-                                                       const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
+                    const GlobalLinSysKey &mkey,
+                    const LocalToGlobalC0ContMapSharedPtr &locToGloMap)
         {
             GlobalLinSysSharedPtr returnlinsys;
+            boost::shared_ptr<ExpList> vExpList = GetSharedThisPtr();
 
-            switch(mkey.GetGlobalSysSolnType())
+            MultiRegions::GlobalSysSolnType vType = mkey.GetGlobalSysSolnType();
+
+            if (vType >= eSIZE_GlobalSysSolnType)
             {
-            case eDirectFullMatrix:
-                {
-                    const map<int, RobinBCInfoSharedPtr> vRobinBCInfo = GetRobinBCInfo();
-                    LocalMatrixSystemSharedPtr lms = MemoryManager<LocalMatrixSystemFull>::AllocateSharedPtr(mkey,m_exp,locToGloMap,m_offset_elmt_id,vRobinBCInfo);
-                    returnlinsys = GlobalLinSysFactory::CreateInstance("DirectFull",mkey,lms,locToGloMap);
-                }
-                break;
-            case eDirectStaticCond:
-                {
-                    ASSERTL1(locToGloMap->GetGlobalSysSolnType()==eDirectStaticCond,
-                             "The local to global map is not set up for this solution type");
-                    const map<int, RobinBCInfoSharedPtr> vRobinBCInfo = GetRobinBCInfo();
-                    LocalMatrixSystemSharedPtr lms = MemoryManager<LocalMatrixSystemStaticCond>::AllocateSharedPtr(mkey,m_exp,locToGloMap,m_offset_elmt_id,vRobinBCInfo);
-                    returnlinsys = GlobalLinSysFactory::CreateInstance("DirectStaticCond",mkey,lms,locToGloMap);
-                }
-                break;
-            case eDirectMultiLevelStaticCond:
-                {
-                    ASSERTL1(locToGloMap->GetGlobalSysSolnType()==eDirectMultiLevelStaticCond,
-                             "The local to global map is not set up for this solution type");
-                    const map<int, RobinBCInfoSharedPtr> vRobinBCInfo = GetRobinBCInfo();
-                    LocalMatrixSystemSharedPtr lms = MemoryManager<LocalMatrixSystemStaticCond>::AllocateSharedPtr(mkey,m_exp,locToGloMap,m_offset_elmt_id,vRobinBCInfo);
-                    returnlinsys = GlobalLinSysFactory::CreateInstance("DirectStaticCond",mkey,lms,locToGloMap);
-                }
-                break;
-            case eIterativeCG:
-                {
-                    const map<int, RobinBCInfoSharedPtr> vRobinBCInfo = GetRobinBCInfo();
-                    LocalMatrixSystemSharedPtr lms = MemoryManager<LocalMatrixSystemFull>::AllocateSharedPtr(mkey,m_exp,locToGloMap,m_offset_elmt_id,vRobinBCInfo);
-                    returnlinsys = GlobalLinSysFactory::CreateInstance("IterativeCG",mkey,lms,locToGloMap);
-                }
-                break;
-            default:
                 ASSERTL0(false,"Matrix solution type not defined");
-                break;
             }
+            std::string vSolnType = MultiRegions::GlobalSysSolnTypeMap[vType];
 
-            return returnlinsys;
+            return GlobalLinSysFactory::CreateInstance( vSolnType, mkey,
+                                                        vExpList,  locToGloMap);
         }
 
         GlobalLinSysSharedPtr ExpList::GenGlobalBndLinSys(
-                                                          const GlobalLinSysKey     &mkey,
-                                                          const LocalToGlobalBaseMapSharedPtr &locToGloMap)
+                    const GlobalLinSysKey     &mkey,
+                    const LocalToGlobalBaseMapSharedPtr &locToGloMap)
         {
-            const map<int, RobinBCInfoSharedPtr> vRobinBCInfo = GetRobinBCInfo();
-            LocalMatrixSystemSharedPtr lms = MemoryManager<LocalMatrixSystemStaticCond>::AllocateSharedPtr(mkey,m_exp,locToGloMap,m_offset_elmt_id,vRobinBCInfo);
-            return GlobalLinSysFactory::CreateInstance("DirectStaticCond",mkey,lms,locToGloMap);
+            boost::shared_ptr<ExpList> vExpList = GetSharedThisPtr();
+            const map<int,RobinBCInfoSharedPtr> vRobinBCInfo = GetRobinBCInfo();
+            return GlobalLinSysFactory::CreateInstance("DirectStaticCond",mkey,
+                                                        vExpList,locToGloMap);
         }
 
 

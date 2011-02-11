@@ -50,35 +50,40 @@ namespace Nektar
         {
         public:
             /// Creates an instance of this class
-            static GlobalLinSysSharedPtr create(const GlobalLinSysKey &pLinSysKey,
-                    const boost::shared_ptr<LocalMatrixSystem> &pLocMatSys,
+            static GlobalLinSysSharedPtr create(
+                    const GlobalLinSysKey &pLinSysKey,
+                    const boost::shared_ptr<ExpList> &pExpList,
                     const boost::shared_ptr<LocalToGlobalBaseMap>
                                                            &pLocToGloMap)
             {
-                return MemoryManager<GlobalLinSysIterativeCG>::AllocateSharedPtr(pLinSysKey, pLocMatSys, pLocToGloMap);
+                return MemoryManager<GlobalLinSysIterativeCG>
+                    ::AllocateSharedPtr(pLinSysKey, pExpList, pLocToGloMap);
             }
 
             /// Name of class
             static std::string className;
 
             /// Constructor for full direct matrix solve.
-            GlobalLinSysIterativeCG(const GlobalLinSysKey &pLinSysKey,
-                         const boost::shared_ptr<LocalMatrixSystem> &pLocMatSys,
-                         const boost::shared_ptr<LocalToGlobalBaseMap>
-                                                                &pLocToGloMap);
+            GlobalLinSysIterativeCG(
+                    const GlobalLinSysKey &pLinSysKey,
+                    const boost::shared_ptr<ExpList> &pExpList,
+                    const boost::shared_ptr<LocalToGlobalBaseMap>
+                                                           &pLocToGloMap);
 
             virtual ~GlobalLinSysIterativeCG();
 
             /// Solve the linear system for given input and output vectors.
-            virtual void Solve( const Array<OneD,const NekDouble> &in,
-                              Array<OneD,      NekDouble> &out);
+            virtual void Solve(
+                    const Array<OneD,const NekDouble> &in,
+                          Array<OneD,      NekDouble> &out);
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
-            virtual void Solve( const Array<OneD, const NekDouble> &in,
-                              Array<OneD,       NekDouble> &out,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
-                        const Array<OneD, const NekDouble> &dirForcing
+            virtual void Solve(
+                    const Array<OneD, const NekDouble> &in,
+                          Array<OneD,       NekDouble> &out,
+                    const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+                    const Array<OneD, const NekDouble> &dirForcing
                                                         = NullNekDouble1DArray);
 
         private:

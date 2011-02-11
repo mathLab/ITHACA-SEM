@@ -57,8 +57,11 @@ namespace Nektar
             TiXmlDocument doc(infilename);
 
             bool loadOkay = doc.LoadFile();
-
-            ASSERTL0(loadOkay, (std::string("Unable to load file:") + infilename + ".").c_str());
+            std::stringstream errstr;
+            errstr << "Unable to load file: " << infilename << "\n";
+            errstr << doc.ErrorDesc() << " (Line " << doc.ErrorRow()
+                   << ", Column " << doc.ErrorCol() << ")";
+            ASSERTL0(loadOkay, errstr.str());
 
             ReadGeometry(doc);
         }

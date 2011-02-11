@@ -1543,7 +1543,7 @@ namespace Nektar
             DNekScalMatSharedPtr returnval;
 
 
-            ASSERTL2(m_metricinfo->GetGtype() == SpatialDomains::eNoGeomType,
+            ASSERTL2(m_metricinfo->GetGtype() != SpatialDomains::eNoGeomType,
                      "Geometric information is not set up");
 
             switch(mkey.GetMatrixType())
@@ -1795,7 +1795,7 @@ namespace Nektar
         {
             DNekScalBlkMatSharedPtr returnval;
 
-            ASSERTL2(m_metricinfo->GetGtype() == SpatialDomains::eNoGeomType,"Geometric information is not set up");
+            ASSERTL2(m_metricinfo->GetGtype() != SpatialDomains::eNoGeomType,"Geometric information is not set up");
 
             // set up block matrix system
             int nbdry = NumBndryCoeffs();

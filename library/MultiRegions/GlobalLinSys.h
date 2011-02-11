@@ -43,7 +43,7 @@ namespace Nektar
     namespace MultiRegions
     {
         // Forward declarations
-        class LocalMatrixSystem;
+        class ExpList;
         class GlobalLinSys;
 
         /// Pointer to a GlobalLinSys object.
@@ -56,7 +56,7 @@ namespace Nektar
         /// Datatype of the NekFactory used to instantiate classes derived from
         /// the EquationSystem class.
         typedef LibUtilities::NekFactory< std::string, GlobalLinSys, const GlobalLinSysKey&,
-                const boost::shared_ptr<LocalMatrixSystem>&,
+                const boost::shared_ptr<ExpList>&,
                 const boost::shared_ptr<LocalToGlobalBaseMap>& > GlobalLinSysFactory;
 
         /// A global linear system.
@@ -65,7 +65,7 @@ namespace Nektar
         public:
             /// Constructor for full direct matrix solve.
             GlobalLinSys(const GlobalLinSysKey &mkey,
-                         const boost::shared_ptr<LocalMatrixSystem> &pLocMatSys,
+                         const boost::shared_ptr<ExpList> &pExp,
                          const boost::shared_ptr<LocalToGlobalBaseMap>
                                                                 &locToGloMap);
 
@@ -73,12 +73,6 @@ namespace Nektar
             const GlobalLinSysKey &GetKey(void) const
             {
                 return m_linSysKey;
-            }
-
-            /// Returns a pointer to the basic linear system object.
-            const boost::shared_ptr<LocalMatrixSystem> GetLocMatSys(void) const
-            {
-                return m_locMatSys;
             }
 
             /// Solve the linear system for given input and output vectors.
@@ -97,7 +91,10 @@ namespace Nektar
             /// Key associated with this linear system.
             GlobalLinSysKey                         m_linSysKey;
             /// Local Matrix System
-            boost::shared_ptr<LocalMatrixSystem>    m_locMatSys;
+            boost::shared_ptr<ExpList>              m_expList;
+
+            DNekScalMatSharedPtr GetBlock(unsigned int n);
+            DNekScalBlkMatSharedPtr GetStaticCondBlock(unsigned int n);
         };
     } //end of namespace
 } //end of namespace

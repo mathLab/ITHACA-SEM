@@ -297,7 +297,7 @@ namespace Nektar
 
             int GetEdgeNumPoints(const int i) const
             {
-                ASSERTL2((i > 0)&&(i < 2),"edge id is out of range");
+                ASSERTL2((i >= 0)&&(i <= 2),"edge id is out of range");
 
                 if(i == 0)
                 {

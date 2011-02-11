@@ -204,12 +204,12 @@ namespace Nektar
     NekDouble StdExpansion3D::v_PhysEvaluate(const Array<OneD, const NekDouble> &coords)
     {
         NekDouble  value;
-        ASSERTL2(coords[0] < -1,"coord[0] < -1");
-        ASSERTL2(coords[0] >  1,"coord[0] >  1");
-        ASSERTL2(coords[1] < -1,"coord[1] < -1");
-        ASSERTL2(coords[1] >  1,"coord[1] >  1");
-        ASSERTL2(coords[2] < -1,"coord[2] < -1");
-        ASSERTL2(coords[2] >  1,"coord[2] >  1");
+        ASSERTL2(coords[0] >= -1,"coord[0] < -1");
+        ASSERTL2(coords[0] <=  1,"coord[0] >  1");
+        ASSERTL2(coords[1] >= -1,"coord[1] < -1");
+        ASSERTL2(coords[1] <=  1,"coord[1] >  1");
+        ASSERTL2(coords[2] >= -1,"coord[2] < -1");
+        ASSERTL2(coords[2] <=  1,"coord[2] >  1");
 
         int Qx = m_base[0]->GetNumPoints();
         int Qy = m_base[1]->GetNumPoints();

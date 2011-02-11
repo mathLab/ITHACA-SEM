@@ -61,12 +61,14 @@ namespace ErrorUtil
 
         std::string baseMsg = std::string("Level ") + 
             boost::lexical_cast<std::string>(level) +  
-            std::string(" assertion violation\n") + 
+            std::string(" assertion violation\n") +
+#if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
             boost::lexical_cast<std::string>(routine) + 
             std::string("[") +  
             boost::lexical_cast<std::string>(lineNumber) + 
-            std::string("]:")  
-            + msg;
+            std::string("]\n") +
+#endif
+            msg;
             
         switch(type)
         {
@@ -77,7 +79,7 @@ namespace ErrorUtil
                 }
                 else
                 {
-                    std::cerr << "Fatal: " << baseMsg << std::endl;
+                    std::cerr << std::endl << "Fatal: " << baseMsg << std::endl;
                 }
                 throw NekError(baseMsg);
                 break;

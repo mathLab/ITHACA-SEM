@@ -23,7 +23,6 @@ GlobalLinSysIterative.cpp
 GlobalLinSysIterativeCG.cpp
 GlobalMatrix.cpp
 GlobalMatrixKey.cpp
-LocalMatrixSystem.cpp
 LocalToGlobalBaseMap.cpp
 LocalToGlobalDGMap.cpp
 LocalToGlobalC0ContMap.cpp
@@ -55,7 +54,6 @@ GlobalLinSysIterative.h
 GlobalLinSysIterativeCG.h
 GlobalMatrix.h
 GlobalMatrixKey.h
-LocalMatrixSystem.h
 LocalToGlobalBaseMap.h
 LocalToGlobalDGMap.h
 LocalToGlobalC0ContMap.h

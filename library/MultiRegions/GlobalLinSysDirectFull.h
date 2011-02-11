@@ -51,11 +51,11 @@ namespace Nektar
         public:
             /// Creates an instance of this class
             static GlobalLinSysSharedPtr create(const GlobalLinSysKey &pLinSysKey,
-                    const boost::shared_ptr<LocalMatrixSystem> &pLocMatSys,
+                    const boost::shared_ptr<ExpList> &pExpList,
                     const boost::shared_ptr<LocalToGlobalBaseMap>
                                                            &pLocToGloMap)
             {
-                return MemoryManager<GlobalLinSysDirectFull>::AllocateSharedPtr(pLinSysKey, pLocMatSys, pLocToGloMap);
+                return MemoryManager<GlobalLinSysDirectFull>::AllocateSharedPtr(pLinSysKey, pExpList, pLocToGloMap);
             }
 
             /// Name of class
@@ -63,7 +63,7 @@ namespace Nektar
 
             /// Constructor for full direct matrix solve.
             GlobalLinSysDirectFull(const GlobalLinSysKey &pLinSysKey,
-                         const boost::shared_ptr<LocalMatrixSystem> &pLocMatSys,
+                         const boost::shared_ptr<ExpList> &pExpList,
                          const boost::shared_ptr<LocalToGlobalBaseMap>
                                                                 &pLocToGloMap);
 

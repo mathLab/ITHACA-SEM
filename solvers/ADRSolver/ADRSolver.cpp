@@ -60,43 +60,45 @@ int main(int argc, char *argv[])
     // Record start time.
     time(&starttime);
 
-    // Create session reader.
-    session = MemoryManager<SessionReader>::AllocateSharedPtr(filename);
-
-    // Create instance of module to solve the equation specified in the session.
     try
     {
+        // Create session reader.
+        session = MemoryManager<SessionReader>::AllocateSharedPtr(filename);
+
+        // Create instance of module to solve the equation specified in the session.
         equ = EquationSystemFactory::CreateInstance(
                                     session->GetSolverInfo("EQTYPE"), session);
+
+        // Print a summary of solver and problem parameters and initialise the
+        // solver.
+        equ->PrintSummary(cout);
+        equ->DoInitialise();
+
+        // Solve the problem.
+        equ->DoSolve();
+
+        // Record end time.
+        time(&endtime);
+        CPUtime = (1.0/60.0/60.0)*difftime(endtime,starttime);
+
+        // Write output to .fld file
+        equ->Output();
+
+        // Evaluate and output computation time and solution accuracy.
+        // The specific format of the error output is essential for the
+        // regression tests to work.
+        cout << "-------------------------------------------" << endl;
+        cout << "Total Computation Time = " << CPUtime << " hr." << endl;
+        for(int i = 0; i < equ->GetNvariables(); ++i)
+        {
+            cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i) << endl;
+            cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i) << endl;
+        }
+
+        return 0;
     }
-    catch (int e)
+    catch (const std::runtime_error& e)
     {
-        ASSERTL0(e == -1, "No such solver class defined.");
-    }
-
-    // Print a summary of solver and problem parameters and initialise the
-    // solver.
-    equ->PrintSummary(cout);
-    equ->DoInitialise();
-
-    // Solve the problem.
-    equ->DoSolve();
-
-    // Record end time.
-    time(&endtime);
-    CPUtime = (1.0/60.0/60.0)*difftime(endtime,starttime);
-
-    // Write output to .fld file
-    equ->Output();
-
-    // Evaluate and output computation time and solution accuracy.
-    // The specific format of the error output is essential for the
-    // regression tests to work.
-    cout << "-------------------------------------------" << endl;
-    cout << "Total Computation Time = " << CPUtime << " hr." << endl;
-    for(int i = 0; i < equ->GetNvariables(); ++i)
-    {
-        cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i) << endl;
-        cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i) << endl;
+        return 1;
     }
 }

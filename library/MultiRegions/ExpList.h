@@ -48,6 +48,7 @@
 
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/GlobalOptimizationParameters.h>
+#include <boost/enable_shared_from_this.hpp>
 
 namespace Nektar
 {
@@ -68,7 +69,7 @@ namespace Nektar
         typedef boost::shared_ptr<BlockMatrixMap> BlockMatrixMapShPtr;
 
         /// Base class for all multi-elemental spectral/hp expansions.
-        class ExpList
+        class ExpList: public boost::enable_shared_from_this<ExpList>
         {
         public:
             /// The default constructor.
@@ -606,8 +607,13 @@ namespace Nektar
                 v_ExtractDataToCoeffs(fielddef,fielddata,field);
             }
 
-        protected:
+            /// Returns a shared pointer to the current object.
+            boost::shared_ptr<ExpList> GetSharedThisPtr()
+            {
+                return shared_from_this();
+            }
 
+        protected:
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(
                                                            const GlobalLinSysKey &mkey,
                                                            const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
@@ -728,25 +734,12 @@ namespace Nektar
                                                              const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
 
 
-            /// This operation constructs the global linear system of type \a
-            /// mkey.
-//            boost::shared_ptr<GlobalLinSys>  GenGlobalLinSysFullDirect(
-//                                                                       const GlobalLinSysKey &mkey,
-//                                                                       const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
-
-
             void GlobalEigenSystem(const boost::shared_ptr<DNekMat> &Gmat,
                                    Array<OneD, NekDouble> &EigValsReal,
                                    Array<OneD, NekDouble> &EigValsImag,
                                    Array<OneD, NekDouble> &EigVecs
                                    = NullNekDouble1DArray);
 
-            /// This function constructs the necessary global matrices
-            /// required for solving the linear system of type \a mkey by
-            /// static condensation.
-//            boost::shared_ptr<GlobalLinSys>  GenGlobalLinSysStaticCond(
-//                                                                       const GlobalLinSysKey &mkey,
-//                                                                       const boost::shared_ptr<LocalToGlobalC0ContMap> &locToGloMap);
 
             /// This operation constructs the global linear system of type \a
             /// mkey.

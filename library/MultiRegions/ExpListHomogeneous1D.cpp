@@ -53,8 +53,8 @@ namespace Nektar
             m_lhom(lhom),
             m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr())
         {
-            ASSERTL2(m_homogeneousBasis != LibUtilities::NullBasisKey,
-                     "Homogeneous Basis is not a null basis");
+            ASSERTL2(HomoBasis != LibUtilities::NullBasisKey,
+                     "Homogeneous Basis is a null basis");
             m_homogeneousBasis = LibUtilities::BasisManager()[HomoBasis];
 
             int nzplanes = m_homogeneousBasis->GetNumPoints();

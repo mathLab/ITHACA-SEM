@@ -123,10 +123,10 @@ namespace Nektar
 
             DNekMatSharedPtr I = m_base[0]->GetI(coords);;
 
-            ASSERTL2(coords[0] < -1, "coord[0] < -1");
-            ASSERTL2(coords[0] >  1, "coord[0] >  1");
-            ASSERTL2(coords[1] < -1, "coord[1] < -1");
-            ASSERTL2(coords[1] >  1, "coord[1] >  1");
+            ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol, "coord[0] < -1");
+            ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol, "coord[0] >  1");
+            ASSERTL2(coords[1] > -1 - NekConstants::kNekZeroTol, "coord[1] < -1");
+            ASSERTL2(coords[1] <  1 + NekConstants::kNekZeroTol, "coord[1] >  1");
 
             // interpolate first coordinate direction
             for (i = 0; i < nq1;++i)

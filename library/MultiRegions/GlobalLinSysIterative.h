@@ -37,7 +37,6 @@
 
 #include <MultiRegions/GlobalLinSysKey.h>
 #include <MultiRegions/GlobalLinSys.h>
-#include <MultiRegions/LocalMatrixSystem.h>
 
 namespace Nektar
 {
@@ -52,10 +51,10 @@ namespace Nektar
         {
         public:
             /// Constructor for full direct matrix solve.
-            GlobalLinSysIterative(const GlobalLinSysKey &mkey,
-                         const boost::shared_ptr<LocalMatrixSystem> &pLocMatSys,
+            GlobalLinSysIterative(const GlobalLinSysKey &pKey,
+                         const boost::shared_ptr<ExpList> &pExpList,
                          const boost::shared_ptr<LocalToGlobalBaseMap>
-                                                                &locToGloMap);
+                                                                &pLocToGloMap);
 
             virtual ~GlobalLinSysIterative();
 
@@ -67,8 +66,8 @@ namespace Nektar
             /// using a specified local to global map.
             virtual void Solve( const Array<OneD, const NekDouble> &in,
                               Array<OneD,       NekDouble> &out,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
-                        const Array<OneD, const NekDouble> &dirForcing
+                        const LocalToGlobalBaseMapSharedPtr &pLocToGloMap,
+                        const Array<OneD, const NekDouble> &pDirForcing
                                                         = NullNekDouble1DArray);
 
         protected:

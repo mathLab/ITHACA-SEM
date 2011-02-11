@@ -786,6 +786,9 @@ namespace Nektar
         DNekScalMatSharedPtr NodalTriExp::CreateMatrix(const MatrixKey &mkey)
         {
             DNekScalMatSharedPtr returnval;
+
+            ASSERTL2(m_metricinfo->GetGtype() != SpatialDomains::eNoGeomType,"Geometric information is not set up");
+
             StdRegions::MatrixType mtype = mkey.GetMatrixType();
 
             switch(mtype)
@@ -898,7 +901,7 @@ namespace Nektar
         {
             DNekScalBlkMatSharedPtr returnval;
 
-            ASSERTL2(m_metricinfo->GetGtype() == SpatialDomains::eNoGeomType,"Geometric information is not set up");
+            ASSERTL2(m_metricinfo->GetGtype() != SpatialDomains::eNoGeomType,"Geometric information is not set up");
 
             // set up block matrix system
             int nbdry = NumBndryCoeffs();

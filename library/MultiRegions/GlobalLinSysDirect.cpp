@@ -47,11 +47,11 @@ namespace Nektar
          */
 
         /// Constructor for full direct matrix solve.
-        GlobalLinSysDirect::GlobalLinSysDirect(const GlobalLinSysKey &mkey,
-                     const boost::shared_ptr<LocalMatrixSystem> &pLocMatSys,
+        GlobalLinSysDirect::GlobalLinSysDirect(const GlobalLinSysKey &pKey,
+                     const boost::shared_ptr<ExpList> &pExp,
                      const boost::shared_ptr<LocalToGlobalBaseMap>
-                                                            &locToGloMap)
-                : GlobalLinSys(mkey, pLocMatSys, locToGloMap)
+                                                            &pLocToGloMap)
+                : GlobalLinSys(pKey, pExp, pLocToGloMap)
         {
         }
 
@@ -72,8 +72,8 @@ namespace Nektar
         /// using a specified local to global map.
         void GlobalLinSysDirect::Solve( const Array<OneD, const NekDouble> &in,
                           Array<OneD,       NekDouble> &out,
-                    const LocalToGlobalBaseMapSharedPtr &locToGloMap,
-                    const Array<OneD, const NekDouble> &dirForcing)
+                    const LocalToGlobalBaseMapSharedPtr &pLocToGloMap,
+                    const Array<OneD, const NekDouble> &pDirForcing)
         {
             ASSERTL0(false, "Not implemented for this GlobalLinSys type.");
         }

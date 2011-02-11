@@ -107,6 +107,9 @@ namespace Nektar
                             const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap
                                         = NullLocalToGlobalBaseMapSharedPtr);
+            /// Copy constructor with change in expansion type
+            GlobalMatrixKey(const GlobalMatrixKey &key,
+                            const StdRegions::ExpansionType expType);
             /// Copy constructor.
             GlobalMatrixKey(const GlobalMatrixKey &key);
 

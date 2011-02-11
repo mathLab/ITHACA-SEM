@@ -37,7 +37,6 @@
 
 #include <MultiRegions/GlobalLinSysKey.h>
 #include <MultiRegions/GlobalLinSys.h>
-#include <MultiRegions/LocalMatrixSystem.h>
 
 namespace Nektar
 {
@@ -53,7 +52,7 @@ namespace Nektar
         public:
             /// Constructor for full direct matrix solve.
             GlobalLinSysDirect(const GlobalLinSysKey &mkey,
-                         const boost::shared_ptr<LocalMatrixSystem> &pLocMatSys,
+                         const boost::shared_ptr<ExpList> &pExp,
                          const boost::shared_ptr<LocalToGlobalBaseMap>
                                                                 &locToGloMap);
 

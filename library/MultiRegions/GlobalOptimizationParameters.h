@@ -80,7 +80,7 @@ namespace Nektar
             /// matrix
             Array<OneD, Array<OneD,bool> > m_doBlockMatOp; 
 
-            /// A list ExpansionTypes inidcating the order in which
+            /// A list ExpansionTypes indicating the order in which
             /// shapes are listed to call the appropriate key for the
             /// block matrices.
             Array<OneD, StdRegions::ExpansionType> m_shapeList;

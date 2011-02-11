@@ -76,20 +76,24 @@ namespace Nektar
 
 
         /// Constructor for full direct matrix solve.
-        GlobalLinSysDirectFull::GlobalLinSysDirectFull(const GlobalLinSysKey &pLinSysKey,
-                     const boost::shared_ptr<LocalMatrixSystem> &pLocMatSys,
-                     const boost::shared_ptr<LocalToGlobalBaseMap>
+        GlobalLinSysDirectFull::GlobalLinSysDirectFull(
+                    const GlobalLinSysKey &pLinSysKey,
+                    const boost::shared_ptr<ExpList> &pExp,
+                    const boost::shared_ptr<LocalToGlobalBaseMap>
                                                             &pLocToGloMap)
-                : GlobalLinSysDirect(pLinSysKey, pLocMatSys, pLocToGloMap)
+                : GlobalLinSysDirect(pLinSysKey, pExp, pLocToGloMap)
         {
 
             ASSERTL1(m_linSysKey.GetGlobalSysSolnType()==eDirectFullMatrix,
                      "This routine should only be used when using a Full Direct"
                      " matrix solve");
 
-            //m_blkMatrices[0] = Mat;
-            m_locMatSys = pLocMatSys;
-            AssembleFullMatrix(boost::dynamic_pointer_cast<LocalToGlobalC0ContMap>(pLocToGloMap));
+            m_expList = pExp;
+
+            LocalToGlobalC0ContMapSharedPtr vLocToGloMap
+                = boost::dynamic_pointer_cast<LocalToGlobalC0ContMap>(
+                                                                pLocToGloMap);
+            AssembleFullMatrix(vLocToGloMap);
         }
 
 
@@ -99,14 +103,18 @@ namespace Nektar
         }
 
 
-        void GlobalLinSysDirectFull::Solve( const Array<OneD, const NekDouble> &pInput,
-                          Array<OneD,       NekDouble> &pOutput,
+        /**
+         * Solve the linear system using a full global matrix system.
+         */
+        void GlobalLinSysDirectFull::Solve(
+                    const Array<OneD, const NekDouble>  &pInput,
+                          Array<OneD,       NekDouble>  &pOutput,
                     const LocalToGlobalBaseMapSharedPtr &pLocToGloMap,
-                    const Array<OneD, const NekDouble> &pDirForcing)
+                    const Array<OneD, const NekDouble>  &pDirForcing)
         {
             LocalToGlobalC0ContMapSharedPtr vLocToGloMap
-                = boost::dynamic_pointer_cast<LocalToGlobalC0ContMap>(pLocToGloMap);
-            DNekScalBlkMatSharedPtr vBlkMat = m_locMatSys->GetLocalSystem()[0];
+                = boost::dynamic_pointer_cast<LocalToGlobalC0ContMap>(
+                                                                pLocToGloMap);
 
             bool dirForcCalculated = (bool) pDirForcing.num_elements();
             int nDirDofs  = vLocToGloMap->GetNumGlobalDirBndCoeffs();
@@ -126,22 +134,20 @@ namespace Nektar
                 {
                     // Calculate the dirichlet forcing and substract it
                     // from the rhs
-                    DNekScalBlkMat &Mat = *vBlkMat;
-
                     int nLocDofs = vLocToGloMap->GetNumLocalCoeffs();
-                    NekVector<NekDouble> V_dir(nGlobDofs,pOutput,eWrapper);
-                    NekVector<NekDouble> V_glob(nGlobDofs,tmp,eWrapper);
-                    NekVector<NekDouble> V_loc(nLocDofs);
 
-                    vLocToGloMap->GlobalToLocal(V_dir,V_loc);
-                    V_loc = Mat*V_loc;
-                    vLocToGloMap->Assemble(V_loc,V_glob);
+                    m_expList->GeneralMatrixOp(
+                            *m_linSysKey.GetGlobalMatrixKey(),
+                            pOutput, tmp, true);
 
-                    Vmath::Vsub(nGlobDofs,pInput.get(),1,tmp.get(),1,tmp.get(),1);
+                    Vmath::Vsub( nGlobDofs, pInput.get(),1,
+                                            tmp.get(),   1,
+                                            tmp.get(),   1);
                 }
 
                 Array<OneD, NekDouble> offsetarray;
-                GlobalLinSysDirect::Solve(tmp+nDirDofs,offsetarray = pOutput+nDirDofs);
+                GlobalLinSysDirect::Solve(tmp + nDirDofs,
+                            offsetarray = pOutput + nDirDofs);
             }
             else
             {
@@ -213,12 +219,11 @@ namespace Nektar
 
             // fill global matrix
             DNekScalMatSharedPtr loc_mat;
-            DNekScalBlkMatSharedPtr vBlkMat = m_locMatSys->GetLocalSystem()[0];
 
             int loc_lda;
-            for(n = cnt = 0; n < vBlkMat->GetNumberOfBlockRows(); ++n)
+            for(n = cnt = 0; n < m_expList->GetNumElmts(); ++n)
             {
-                loc_mat = vBlkMat->GetBlock(n,n);
+                loc_mat = GetBlock(n);
                 loc_lda = loc_mat->GetRows();
 
                 for(i = 0; i < loc_lda; ++i)

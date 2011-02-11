@@ -43,6 +43,9 @@ namespace Nektar
         /**
          * @class GlobalLinSysIterativeCG
          *
+         * This class implements a conjugate gradient matrix solver.
+         * Preconditioning is implemented using a Jacobi (diagonal)
+         * preconditioner.
          */
 
         /**
@@ -55,26 +58,37 @@ namespace Nektar
                     "Iterative conjugate gradient solver.");
 
 
-        /// Constructor for full direct matrix solve.
-        GlobalLinSysIterativeCG::GlobalLinSysIterativeCG(const GlobalLinSysKey &pLinSysKey,
-                     const boost::shared_ptr<LocalMatrixSystem> &pLocMatSys,
-                     const boost::shared_ptr<LocalToGlobalBaseMap>
-                                                            &pLocToGloMap)
-                : GlobalLinSysIterative(pLinSysKey, pLocMatSys, pLocToGloMap)
+        /**
+         * Constructor for full direct matrix solve.
+         * @param   pKey        Key specifying matrix to solve.
+         * @param   pExp        Shared pointer to expansion list for applying
+         *                      matrix evaluations.
+         * @param   pLocToGloMap Local to global mapping.
+         */
+        GlobalLinSysIterativeCG::GlobalLinSysIterativeCG(
+                    const GlobalLinSysKey &pKey,
+                    const boost::shared_ptr<ExpList> &pExp,
+                    const boost::shared_ptr<LocalToGlobalBaseMap> &pLocToGloMap)
+                : GlobalLinSysIterative(pKey, pExp, pLocToGloMap)
         {
             ASSERTL1(m_linSysKey.GetGlobalSysSolnType()==eIterativeCG,
-                     "This routine should only be used when using an Iterative CG"
-                     " matrix solve");
-            m_locMatSys = pLocMatSys;
+                     "This routine should only be used when using an Iterative "
+                     "conjugate gradient matrix solve.");
+            m_expList = pExp;
 
             // Initialise diagonal preconditioner
             LocalToGlobalC0ContMapSharedPtr vLocToGloMap
-                = boost::dynamic_pointer_cast<LocalToGlobalC0ContMap>(pLocToGloMap);
+                = boost::dynamic_pointer_cast<LocalToGlobalC0ContMap>(
+                                                                pLocToGloMap);
 
             //ComputeDiagonalPreconditionerSum(vLocToGloMap);
             ComputeNullPreconditioner(vLocToGloMap);
         }
 
+
+        /**
+         *
+         */
         GlobalLinSysIterativeCG::~GlobalLinSysIterativeCG()
         {
 
@@ -88,7 +102,8 @@ namespace Nektar
          * @param       pInput      Input vector of non-Dirichlet DOFs.
          * @param       pOutput     Solution vector of non-Dirichlet DOFs.
          */
-        void GlobalLinSysIterativeCG::Solve( const Array<OneD,const NekDouble> &pInput,
+        void GlobalLinSysIterativeCG::Solve(
+                    const Array<OneD,const NekDouble> &pInput,
                           Array<OneD,      NekDouble> &pOutput)
         {
             int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
@@ -103,53 +118,60 @@ namespace Nektar
             NekVector<NekDouble> r_new(nNonDir);
             NekVector<NekDouble> z(nNonDir);
             NekVector<NekDouble> z_new(nNonDir);
-            NekVector<NekDouble> p_g(nGlobal,p_global,eWrapper);
-            NekVector<NekDouble> p(nNonDir,p_global + nDir, eWrapper);
+            NekVector<NekDouble> d_g(nGlobal,p_global,eWrapper);
+            NekVector<NekDouble> d(nNonDir,p_global + nDir, eWrapper);
             NekVector<NekDouble> tmp_g(nGlobal,tmp_global,eWrapper);
             NekVector<NekDouble> tmp(nNonDir,tmp_global + nDir,eWrapper);
             NekVector<NekDouble> local_tmp(nLocal);
             int k;
             NekDouble alpha;
             NekDouble beta;
-            DNekScalBlkMat &A = *m_locMatSys->GetLocalSystem()[0];
+            //DNekScalBlkMat &A = *m_locMatSys->GetLocalSystem()[0];
             DNekMat &M = m_preconditioner; // M inverse in algorithm
 
             // Initialise with zero as the initial guess.
             r = in;
             z = M * r;
-            p = r;
+            d = z;
             k = 0;
 
             // Continue until convergence
             while (true)
             {
-                // Perform matrix-vector operation in local space
-                m_locToGloMap->GlobalToLocal(p_g,local_tmp);
-                local_tmp = A*local_tmp;
-                m_locToGloMap->Assemble(local_tmp,tmp_g);
+                // Perform matrix-vector operation A*d_i
+                m_expList->GeneralMatrixOp(*m_linSysKey.GetGlobalMatrixKey(),
+                                            p_global, tmp_global, true);
 
-                alpha = p.Dot(tmp);
+                // compute step length
+                alpha = d.Dot(tmp);
                 alpha = z.Dot(r)/alpha;
-                out   = out + alpha*p;
+
+                // approximate solution
+                out   = out + alpha*d;
+
+                // compute residual
                 r_new = r   - alpha*tmp;
 
-                cerr << "Iteration " << k << ", residual = "
-                     << r_new.L2Norm() << endl;
                 // Test if residual is small enough
                 if (r_new.L2Norm() < NekConstants::kNekIterativeTol)
                 {
                     break;
                 }
 
-                // Update
+                // Apply preconditioner to new residual
                 z_new = M * r_new;
+
+                // Improvement achieved
                 beta = r_new.Dot(z_new) / r.Dot(z);
-                p = z_new + beta*p;
+
+                // Compute new search direction
+                d = z_new + beta*d;
+
+                // Next step
                 r = r_new;
                 z = z_new;
                 k++;
             }
-            cerr << "Solved in " << k << " iterations." << endl;
         }
 
 
@@ -171,20 +193,21 @@ namespace Nektar
          * @param           pLocToGloMap    Local to global mapping.
          * @param           pDirForcing Precalculated Dirichlet forcing.
          */
-        void GlobalLinSysIterativeCG::Solve( const Array<OneD, const NekDouble> &pInput,
-                          Array<OneD,       NekDouble> &pOutput,
+        void GlobalLinSysIterativeCG::Solve(
+                    const Array<OneD, const NekDouble>  &pInput,
+                          Array<OneD,       NekDouble>  &pOutput,
                     const LocalToGlobalBaseMapSharedPtr &pLocToGloMap,
-                    const Array<OneD, const NekDouble> &pDirForcing)
+                    const Array<OneD, const NekDouble>  &pDirForcing)
         {
             LocalToGlobalC0ContMapSharedPtr vLocToGloMap
-                = boost::dynamic_pointer_cast<LocalToGlobalC0ContMap>(pLocToGloMap);
+                = boost::dynamic_pointer_cast<LocalToGlobalC0ContMap>(
+                                                                pLocToGloMap);
             m_locToGloMap = vLocToGloMap;
 
             bool dirForcCalculated = (bool) pDirForcing.num_elements();
             int nDirDofs  = vLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobDofs = vLocToGloMap->GetNumGlobalCoeffs();
             int nLocDofs  = vLocToGloMap->GetNumLocalCoeffs();
-            
             if(nDirDofs)
             {
                 // calculate the Dirichlet forcing
@@ -201,21 +224,14 @@ namespace Nektar
                 {
                     // Calculate the dirichlet forcing B_b (== X_b) and
                     // substract it from the rhs
-                    DNekScalBlkMat &Mat = *m_locMatSys->GetLocalSystem()[0];
-                    Array<OneD, NekDouble> local_tmp(nLocDofs);
-                    NekVector<NekDouble> V_glob(nGlobDofs,global_tmp,eWrapper);
-                    NekVector<NekDouble> V_loc(nLocDofs,local_tmp,eWrapper);
-                    NekVector<NekDouble> V_out(nGlobDofs,pOutput,eWrapper);
-
-                    vLocToGloMap->GlobalToLocal(V_out,V_loc);
-                    V_loc = Mat*V_loc;
-                    vLocToGloMap->Assemble(V_loc,V_glob);
+                    m_expList->GeneralMatrixOp(
+                                    *m_linSysKey.GetGlobalMatrixKey(),
+                                    pOutput, global_tmp, true);
 
                     Vmath::Vsub(nGlobDofs,  pInput.get(), 1,
                                             global_tmp.get(), 1,
                                             global_tmp.get(), 1);
                 }
-
                 Solve(global_tmp+nDirDofs,offsetarray = pOutput+nDirDofs);
             }
             else
@@ -224,6 +240,12 @@ namespace Nektar
             }
         }
 
+
+        /**
+         * Populates preconditioner with the identity to apply no
+         * preconditioning.
+         * @param   pLocToGloMap    Local to Global mapping.
+         */
         void GlobalLinSysIterativeCG::ComputeNullPreconditioner(
                 const boost::shared_ptr<LocalToGlobalC0ContMap> &pLocToGloMap)
         {
@@ -238,11 +260,15 @@ namespace Nektar
             }
         }
 
+
+        /**
+         * Diagonal preconditioner computed by evaluating the local matrix
+         * acting on each basis vector (0,...,0,1,0,...,0). (deprecated)
+         * @param   pLocToGloMap    Local to global mapping.
+         */
         void GlobalLinSysIterativeCG::ComputeDiagonalPreconditioner(
                 const boost::shared_ptr<LocalToGlobalC0ContMap> &pLocToGloMap)
         {
-            DNekScalBlkMat &Mat = *m_locMatSys->GetLocalSystem()[0];
-
             int nGlobal = pLocToGloMap->GetNumGlobalCoeffs();
             int nLocal  = pLocToGloMap->GetNumLocalCoeffs();
             int nDir    = pLocToGloMap->GetNumGlobalDirBndCoeffs();
@@ -253,16 +279,22 @@ namespace Nektar
 
             for (unsigned int i = 0; i < nInt; ++i)
             {
-                NekVector<NekDouble> test(nGlobal, 0.0);
-                NekVector<NekDouble> test_local(nLocal, 0.0);
+                Array<OneD, NekDouble> test(nGlobal, 0.0);
+                Array<OneD, NekDouble> test_local(nLocal, 0.0);
                 test[i+nDir] = 1.0;
-                pLocToGloMap->GlobalToLocal(test, test_local);
-                test_local = Mat * test_local;
-                pLocToGloMap->Assemble(test_local, test);
+                m_expList->GeneralMatrixOp(*m_linSysKey.GetGlobalMatrixKey(),
+                                test, test, true);
+
                 m_preconditioner.SetValue(i,i,1.0/test[i+nDir]);
             }
         }
 
+
+        /**
+         * Diagonal preconditioner computed by summing the relevant elements of
+         * the local matrix system.
+         * @param   pLocToGloMap    Local to global mapping.
+         */
         void GlobalLinSysIterativeCG::ComputeDiagonalPreconditionerSum(
                 const boost::shared_ptr<LocalToGlobalC0ContMap> &pLocToGloMap)
         {
@@ -276,14 +308,14 @@ namespace Nektar
 
             // fill global matrix
             DNekScalMatSharedPtr loc_mat;
-            DNekScalBlkMatSharedPtr vBlkMat = m_locMatSys->GetLocalSystem()[0];
             Array<OneD, NekDouble> vOutput(nInt,0.0);
             m_preconditioner = DNekMat(nInt, nInt, eDIAGONAL);
 
             int loc_lda;
-            for(n = cnt = 0; n < vBlkMat->GetNumberOfBlockRows(); ++n)
+            for(n = cnt = 0; n < m_expList->GetNumElmts(); ++n)
             {
-                loc_mat = vBlkMat->GetBlock(n,n);
+                //loc_mat = vBlkMat->GetBlock(n,n);
+                loc_mat = GetBlock(n);
                 loc_lda = loc_mat->GetRows();
 
                 for(i = 0; i < loc_lda; ++i)
@@ -313,11 +345,11 @@ namespace Nektar
                 cnt   += loc_lda;
             }
 
+            // Populate preconditioner
             for (unsigned int i = 0; i < nInt; ++i)
             {
                 m_preconditioner.SetValue(i,i,1.0/vOutput[i]);
             }
-
         }
     }
 }

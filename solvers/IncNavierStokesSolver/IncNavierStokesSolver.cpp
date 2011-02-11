@@ -60,65 +60,73 @@ int main(int argc, char *argv[])
     string fileNameString(argv[1]);
     string globoptfile;
 
-    //----------------------------------------------------------------
-    // Read the mesh and construct container class
-    if(argc == 2)
+    try
     {
-        globoptfile = NekNullString;
-    }
-    else
-    {
-        string eloptfile  (argv[3]);
-        NekOptimize::LoadElementalOptimizationParameters(eloptfile);
+        //----------------------------------------------------------------
+        // Read the mesh and construct container class
+        if(argc == 2)
+        {
+            globoptfile = NekNullString;
+        }
+        else
+        {
+            string eloptfile  (argv[3]);
+            NekOptimize::LoadElementalOptimizationParameters(eloptfile);
+
+            globoptfile = argv[2];
+        }
+
+        VelocityCorrectionScheme dom(fileNameString,globoptfile);
+        dom.Summary(cout);
         
-        globoptfile = argv[2];
-    }
-    
-    VelocityCorrectionScheme dom(fileNameString,globoptfile);
-    dom.Summary(cout);
-    
-    switch(dom.GetEquationType())
-    {
-    case eUnsteadyStokes: 
-    case eUnsteadyNavierStokes:
-        {   
-            
-            int nsteps = dom.GetSteps();
-            
-            // Set initial condition using time t=0
-            dom.SetInitialConditions(0.0);
+        switch(dom.GetEquationType())
+        {
+        case eUnsteadyStokes:
+        case eUnsteadyNavierStokes:
+            {
+
+                int nsteps = dom.GetSteps();
+
+                // Set initial condition using time t=0
+                dom.SetInitialConditions(0.0);
 
 #ifdef TIMING
-            dom.AdvanceInTime(1);
-            gettimeofday(&timer1, NULL);
+                dom.AdvanceInTime(1);
+                gettimeofday(&timer1, NULL);
 #endif
-            // Integrate from start time to end time
-            dom.AdvanceInTime(nsteps);
+                // Integrate from start time to end time
+                dom.AdvanceInTime(nsteps);
 #ifdef TIMING
-            gettimeofday(&timer2, NULL);
-            time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
-            time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
-            exeTime = (time2-time1)/1000000.0;
-            cout << "Execution Time: " << exeTime << endl;
+                gettimeofday(&timer2, NULL);
+                time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
+                time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
+                exeTime = (time2-time1)/1000000.0;
+                cout << "Execution Time: " << exeTime << endl;
 #endif
-            break;
+                break;
+            }
+        case eNoEquationType:
+        default:
+            ASSERTL0(false,"Unknown or undefined equation type");
         }
-    case eNoEquationType:
-    default:
-        ASSERTL0(false,"Unknown or undefined equation type");
+
+        // Dump output
+        dom.Output();
+
+        // Evaluate L2 Error
+        cout << endl;
+        for(int i = 0; i < dom.GetNvariables(); ++i)
+        {
+            cout << "L 2 error (variable " << dom.GetVariable(i) << ") : " << dom.L2Error(i,true) << endl;
+            cout << "L inf error (variable " << dom.GetVariable(i) << ") : " << dom.LinfError(i) << endl;
+        }
+
+        return 0;
     }
-    
-    // Dump output
-    dom.Output();
-    
-    // Evaluate L2 Error
-    cout << endl;
-    for(int i = 0; i < dom.GetNvariables(); ++i)
+    catch (const std::runtime_error& e)
     {
-        cout << "L 2 error (variable " << dom.GetVariable(i) << ") : " << dom.L2Error(i,true) << endl;
-		cout << "L inf error (variable " << dom.GetVariable(i) << ") : " << dom.LinfError(i) << endl;
+        return 1;
     }
-		
 }
 
 /**

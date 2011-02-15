@@ -265,7 +265,7 @@ MACRO(ADD_NEKTAR_LIBRARY name type)
     ADD_LIBRARY(${name} ${type} ${ARGN})
     
     # NIST Sparse BLAS only static, so link into Nektar libraries directly.
-    TARGET_LINK_LIBRARIES( ${name} ${NIST_SPARSE_BLAS})
+    TARGET_LINK_LIBRARIES( ${name} ${NIST_SPARSE_BLAS} ${METIS_LIB})
     
     SET_COMMON_PROPERTIES(${name})
 

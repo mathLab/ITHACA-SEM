@@ -13,6 +13,7 @@ SET(ADRSolverSource
        ./EquationSystems/UnsteadyAdvectionDiffusion.cpp
        ./EquationSystems/UnsteadyInviscidBurger.cpp
        ./EquationSystems/Monodomain.cpp
+       ./EquationSystems/CFLtester.cpp
        ../Auxiliary/ADRBase.cpp)
 
 ADD_SOLVER_EXECUTABLE(ADRSolver 

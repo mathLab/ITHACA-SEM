@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# Testing Spatial Accuracy with small dt 
+#==========================================
+# 4 elements mesh
+echo "%L 2 error" > Mesh_4Quads
+for P in 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+do
+sed -i.tmp "s/NUMMODES.*/NUMMODES =\"$P\" TYPE=\"MODIFIED\" \/>/" CFL_4.xml
+
+../../builds/ADRSolver/ADRSolver-g CFL_4.xml | grep "L 2" > tmp
+err=`awk 'BEGIN{}; {ERR=$6}; END{print ERR}' tmp`
+echo "$P     $err" >> Mesh_4Quads
+done
+#==========================================
+# 16 elements mesh
+echo "%L 2 error" > Mesh_16Quads
+for P in 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+do
+sed -i.tmp "s/NUMMODES.*/NUMMODES =\"$P\" TYPE=\"MODIFIED\" \/>/" CFL_16.xml
+
+../../builds/ADRSolver/ADRSolver-g CFL_16.xml | grep "L 2" > tmp
+err=`awk 'BEGIN{}; {ERR=$6}; END{print ERR}' tmp`
+echo "$P     $err" >> Mesh_16Quads
+done
+#==========================================
+# 36 elements mesh
+echo "%L 2 error" > Mesh_36Quads
+for P in 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+do
+sed -i.tmp "s/NUMMODES.*/NUMMODES =\"$P\" TYPE=\"MODIFIED\" \/>/" CFL_36.xml
+
+../../builds/ADRSolver/ADRSolver-g CFL_36.xml | grep "L 2" > tmp
+err=`awk 'BEGIN{}; {ERR=$6}; END{print ERR}' tmp`
+echo "$P     $err" >> Mesh_36Quads
+done
+#==========================================
+# 64 elements mesh
+echo "%L 2 error" > Mesh_64Quads
+for P in 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+do
+sed -i.tmp "s/NUMMODES.*/NUMMODES =\"$P\" TYPE=\"MODIFIED\" \/>/" CFL_64.xml
+
+../../builds/ADRSolver/ADRSolver-g CFL_64.xml | grep "L 2" > tmp
+err=`awk 'BEGIN{}; {ERR=$6}; END{print ERR}' tmp`
+echo "$P     $err" >> Mesh_64Quads
+done
+
+
+

@@ -51,10 +51,10 @@ namespace Nektar
     {
 
 
-        const static map<int,int> NullIntIntMap;
+        static map<int,int> NullIntIntMap;
         const static vector<map<int,int> > NullVecIntIntMap;
 
-        /// Constructs mappings for the C0 continuous Galerkin formulation.
+        /// Constructs mappings for the C0 scalar continuous Galerkin formulation.
         class LocalToGlobalC0ContMap: public LocalToGlobalBaseMap
         {
         public:
@@ -86,6 +86,8 @@ namespace Nektar
                                    const vector<map<int,int> >& periodicVerticesId,
                                    const map<int,int>& periodicEdgesId);
 
+
+
             /// Constructor for the 3D expansion mappings with boundary
             /// conditions.
             LocalToGlobalC0ContMap(const int numLocalCoeffs,
@@ -99,6 +101,25 @@ namespace Nektar
 
             /// Destructor.
             ~LocalToGlobalC0ContMap();
+
+
+            /** Construct optimal ordering a two-dimensional expansion
+            /*  given a vector of boundary condition information
+            */
+            void SetUp2DGraphC0ContMap(
+                                       const ExpList  &locExp,
+                                       const GlobalSysSolnType solnType,
+                                       const Array<OneD, const MultiRegions::ExpList1DSharedPtr>  &bndCondExp,
+                                       const Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> >
+                                       &bndConditions,
+                                       const vector<map<int,int> >& periodicVerticesId,
+                                       const map<int,int>& periodicEdgesId,
+                                       map<int,int> &vertReorderedGraphVertId,
+                                       map<int,int> &edgeReorderedGraphVertId,
+                                       int          &firstNonDirGraphVertID,
+                                       BottomUpSubStructuredGraphSharedPtr &bottomUpGraph,
+                                       map<int,int> &interiorReorderedGraphVertId = NullIntIntMap);
+
 
             inline int GetLocalToGlobalMap(const int i) const;
 
@@ -141,7 +162,7 @@ namespace Nektar
             int m_fullSystemBandWidth;
 
         private:
-            /// Construct mappings for a one-dimensional expansion.
+            /// Construct mappings for a one-dimensional scalar expansion.
             void SetUp1DExpansionC0ContMap(const int numLocalCoeffs,
                                            const ExpList &locExp,
                                            const GlobalSysSolnType solnType,
@@ -151,7 +172,7 @@ namespace Nektar
                                                SpatialDomains::NullBoundaryConditionShPtrArray,
                                            const map<int,int>& periodicVerticesId = NullIntIntMap);
 
-            /// Construct mappings for a two-dimensional expansion.
+            /// Construct mappings for a two-dimensional scalar expansion.
             void SetUp2DExpansionC0ContMap(const int numLocalCoeffs,
                                            const ExpList &locExp,
                                            const GlobalSysSolnType solnType,
@@ -162,7 +183,7 @@ namespace Nektar
                                            const vector<map<int,int> >& periodicVerticesId = NullVecIntIntMap,
                                            const map<int,int>& periodicEdgesId = NullIntIntMap);
 
-            /// Construct mappings for a three-dimensional expansion.
+            /// Construct mappings for a three-dimensional scalar expansion.
             void SetUp3DExpansionC0ContMap(const int numLocalCoeffs,
                                            const ExpList &locExp,
                                            const GlobalSysSolnType solnType,

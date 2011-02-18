@@ -64,10 +64,35 @@ namespace Nektar
 
             TiXmlHandle docHandle(&doc);
             TiXmlElement* master    = docHandle.FirstChildElement("NEKTAR").Element();
+            ASSERTL0(master   , "Unable to find NEKTAR tag in file.");
+
             TiXmlElement* paramList = docHandle.FirstChildElement("NEKTAR").FirstChildElement("ELEMENTALOPTIMIZATIONPARAMETERS").Element();
 
-            ASSERTL0(master   , "Unable to find NEKTAR tag in file.");
-            ASSERTL0(paramList, "Unable to find ELEMENTALOPTIMIZATIONPARAMETERS tag in file.");
+            // If no elemental optimisations, we're done.
+            if (!paramList)
+            {
+                return;
+            }
+
+            // Check if there is a reference an external file and if so, load it
+            TiXmlElement* source
+                        = paramList->FirstChildElement("SOURCE");
+            if (source)
+            {
+                std::string sourceFile = source->Attribute("FILE");
+                loadOkay = doc.LoadFile(sourceFile);
+                ASSERTL0(loadOkay, (std::string("Unable to load file: ") +
+                                                sourceFile).c_str());
+                master = docHandle.FirstChildElement("NEKTAR").Element();
+                ASSERTL0(master   , "Unable to find NEKTAR tag in file.");
+
+                paramList = docHandle.FirstChildElement("NEKTAR")
+                                .FirstChildElement("ELEMENTALOPTIMIZATIONPARAMETERS")
+                                .Element();
+                ASSERTL0(paramList, std::string("Specified source file '"
+                        + sourceFile + "' is missing an "
+                        "ELEMENTALOPTIMIZATIONPARAMETERS tag.").c_str());
+            }
 
 #define OPTIMIZE2DELEMENTS (6, (StdRegions::eStdQuadExp,                \
                                 StdRegions::eStdTriExp,                 \

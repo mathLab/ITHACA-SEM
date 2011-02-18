@@ -200,10 +200,7 @@ namespace Nektar
                                     ::AllocateSharedPtr(*mesh2D,
                                         *m_boundaryConditions,i);
 
-                    if(globoptfile != NekNullString)
-                    {
-                        firstfield->ReadGlobalOptimizationParameters(globoptfile);
-                    }
+                    firstfield->ReadGlobalOptimizationParameters(m_filename);
 
                     m_fields[0] = firstfield;
                     for(i = 1 ; i < m_fields.num_elements(); i++)
@@ -230,10 +227,7 @@ namespace Nektar
                                     ::AllocateSharedPtr(*mesh3D,
                                         *m_boundaryConditions,i);
 
-                    if(globoptfile != NekNullString)
-                    {
-                        firstfield->ReadGlobalOptimizationParameters(globoptfile);
-                    }
+                    firstfield->ReadGlobalOptimizationParameters(m_filename);
 
                     m_fields[0] = firstfield;
                     for(i = 1 ; i < m_fields.num_elements(); i++)
@@ -325,6 +319,8 @@ namespace Nektar
             }
         }
 
+        NekOptimize::LoadElementalOptimizationParameters(m_filename);
+
         // Set Default Parameter
         if(m_boundaryConditions->CheckForParameter("Time") == true)
         {
@@ -358,26 +354,26 @@ namespace Nektar
             m_checksteps = m_steps;
         }
 
-	if(m_boundaryConditions->CheckForParameter("FinTime") == true)
-	  {
-	    m_fintime = m_boundaryConditions->GetParameter("FinTime");
-	  }
-	else
-	  {
-	    m_fintime = 0;
-	  }
+        if(m_boundaryConditions->CheckForParameter("FinTime") == true)
+        {
+            m_fintime = m_boundaryConditions->GetParameter("FinTime");
+        }
+        else
+        {
+            m_fintime = 0;
+        }
 
-      // Read in spatial data
-      int nq = m_fields[0]->GetNpoints();
-      m_spatialParameters = MemoryManager<SpatialDomains::SpatialParameters>
+        // Read in spatial data
+        int nq = m_fields[0]->GetNpoints();
+        m_spatialParameters = MemoryManager<SpatialDomains::SpatialParameters>
                                         ::AllocateSharedPtr(nq);
-      m_spatialParameters->Read(m_filename);
+        m_spatialParameters->Read(m_filename);
 
-      Array<OneD, NekDouble> x(nq), y(nq), z(nq);
-      m_fields[0]->GetCoords(x,y,z);
-      m_spatialParameters->EvaluateParameters(x,y,z);
+        Array<OneD, NekDouble> x(nq), y(nq), z(nq);
+        m_fields[0]->GetCoords(x,y,z);
+        m_spatialParameters->EvaluateParameters(x,y,z);
 
-      ScanForHistoryPoints();
+        ScanForHistoryPoints();
     }
 
 

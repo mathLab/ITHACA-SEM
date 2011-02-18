@@ -458,15 +458,15 @@
         <DOMAIN> C[0] </DOMAIN>
     </GEOMETRY>
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="8" TYPE="MODIFIED" />
+        <E COMPOSITE="C[0]" NUMMODES="10" TYPE="MODIFIED" />
     </EXPANSIONS>
     
     <CONDITIONS>
 
     <PARAMETERS>
       <P> FinTime        = 1.0              </P>
-      <P> NumSteps       = 5000              </P>
-      <P> TimeStep       = FinTime/NumSteps </P>
+      <P> TimeStep       = #DT#             </P>
+      <P> NumSteps       = FinTime/TimeStep </P>
       <P> IO_CheckSteps  = NumSteps         </P>
       <P> IO_InfoSteps   = 1000             </P>
     </PARAMETERS>

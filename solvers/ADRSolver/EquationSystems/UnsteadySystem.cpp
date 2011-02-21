@@ -89,6 +89,15 @@ namespace Nektar
 
         // Load generic input parameters
         pSession->LoadParameter("IO_InfoSteps", m_infosteps, 0);
+		
+		if(m_boundaryConditions->CheckForParameter("CFL") == true)
+		{
+			m_cfl =  m_boundaryConditions->GetParameter("CFL");
+		}
+		else
+		{
+			m_cfl = 0.0;
+		}
     }
 
 
@@ -136,7 +145,7 @@ namespace Nektar
         Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> IntScheme;
         LibUtilities::TimeIntegrationSolutionSharedPtr u;
         int numMultiSteps;
-
+		
         switch(m_timeIntMethod)
         {
         case LibUtilities::eIMEXdirk_2_3_2:
@@ -223,10 +232,44 @@ namespace Nektar
 
         std::string outname = m_session->GetFilename() + ".his";
         std::ofstream hisFile (outname.c_str());
-
+		
+		int n_elements = m_fields[0]->GetExpSize();
+		Array<OneD,NekDouble> CFL(n_elements,0.0);
+		const Array<OneD,int> ExpOrder = GetNumExpModesPerExp();
+		Array<OneD,NekDouble> SpectralStability = GetStabilityLimitVector(ExpOrder);
+		
+		NekDouble TimeStability;
+		
+		switch(m_timeIntMethod)
+		{
+			case LibUtilities::eForwardEuler:
+			case LibUtilities::eClassicalRungeKutta4:
+			{
+				TimeStability = 2.784*m_cfl;
+				Vmath::Sdiv(n_elements,TimeStability,SpectralStability,1,CFL,1);
+				break;
+			}
+			case LibUtilities::eAdamsBashforthOrder2:
+			{
+				TimeStability = m_cfl;
+				Vmath::Sdiv(n_elements,TimeStability,SpectralStability,1,CFL,1);
+				break;
+			}
+			default:
+			{
+				ASSERTL0(false,"No CFL control implementation for this time integration scheme");
+			}
+		}
+		
         // Perform integration in time.
-        for(n = 0; n < m_steps; ++n)
+        while(n < m_steps || m_time<m_fintime)
         {
+			// calculate the timestep if CFL condition is applicable
+			if(m_cfl>0.0)
+			{
+				m_timestep = GetTimeStep(ExpOrder, CFL, TimeStability);
+			}
+			
             // Integrate over timestep.
             if( n < numMultiSteps-1)
             {
@@ -239,13 +282,20 @@ namespace Nektar
                 fields = IntScheme[numMultiSteps-1]->TimeIntegrate(m_timestep,u,m_ode);
             }
 
-            // Increment time.
-            m_time += m_timestep;
+            
+			// Increment time.
+			if(m_time+m_timestep>m_fintime && m_fintime>0.0)
+			{
+				m_timestep = m_fintime - m_time;
+			}
+			
+			m_time += m_timestep;
+			
 
             // Write out status information.
             if(!((n+1)%m_infosteps))
             {
-                cout << "Steps: " << n+1 << "\t Time: " << m_time << "\t " << endl;
+                cout << "Steps: " << n+1 << "\t Time: " << m_time << "\t Time-step: " << m_timestep << "\t" << endl;
 //                cout << "\r" << setw(3) << int((NekDouble)n/m_steps*100) << "%:\t"
 //                     << setw(7) << "Steps: " << setw(6) << n+1
 //                     << setw(7) << "Time: "
@@ -265,6 +315,9 @@ namespace Nektar
                 WriteHistoryData(hisFile);
             }
         }
+		
+		// step advance
+		n++;
 
         // At the end of the time integration, store final solution.
         for(i = 0; i < nvariables; ++i)
@@ -594,4 +647,129 @@ namespace Nektar
             }
         }
     }
+	
+	/**
+	 *  This function calculate the proper time-step to keep the problem stable.
+	 *  It has been implemented to deal with an explict treatment of the advection term.
+	 *  In case of an explicit treatment of the diffusion term a re-implementation is required.
+	 *  The actual implementation can be found inside each equation class.
+	 *
+	 * @param ExpOrder          the expansion order we are using (P)
+	 * @param CFL               the CFL number we want to impose (<1)
+	 @ @param timeCFL           the stability coefficient, a combination of the spatial/temporal discretisation stability region
+	 */
+	NekDouble UnsteadySystem::GetTimeStep(const Array<OneD,int> ExpOrder, 
+										  const Array<OneD,NekDouble> CFL, 
+										  NekDouble timeCFL)
+	{
+		NekDouble TimeStep = v_GetTimeStep(ExpOrder, CFL, timeCFL);
+		
+		return TimeStep;
+	}
+	
+	/**
+	 * See GetTimeStep. 
+	 * This is the virtual fuction to redirect the implementation to the proper class.
+	 */
+	NekDouble UnsteadySystem::v_GetTimeStep(const Array<OneD,int> ExpOrder, 
+											const Array<OneD,NekDouble> CFL, NekDouble timeCFL)
+    {
+		ASSERTL0(false, "v_GetTimeStep is not implemented in the base class (UnsteadySystem). Check if your equation class has its own implementation");
+    }
+	
+	
+	/**
+	 *
+	 */
+	Array<OneD,NekDouble> UnsteadySystem::GetStdVelocity(const Array<OneD, Array<OneD,NekDouble> > inarray)
+	{
+		// Checking if the problem is 2D
+		ASSERTL0(m_expdim==2,"Method not implemented for 1D and 3D");
+		
+		int nTotQuadPoints  = GetTotPoints();
+		int n_element  = m_fields[0]->GetExpSize();       // number of element in the mesh
+		int npts = 0;
+		
+		// Getting the standard velocity vector on the 2D normal space
+		Array<OneD, Array<OneD, NekDouble> > stdVelocity(2);
+		
+		Array<OneD, NekDouble> stdV(n_element,0.0);
+		for (int i = 0; i < 2; ++i)
+		{
+			stdVelocity[i] = Array<OneD, NekDouble>(nTotQuadPoints);
+		}
+		
+		for(int el = 0; el < n_element; ++el)
+		{ 
+			Array<OneD, const NekDouble> jac  = m_fields[0]->GetExp(el)->GetGeom2D()->GetJac();
+			Array<TwoD, const NekDouble> gmat = m_fields[0]->GetExp(el)->GetGeom2D()->GetGmat();
+			
+			int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
+			
+			if(m_fields[0]->GetExp(el)->GetGeom2D()->GetGtype() == SpatialDomains::eDeformed)
+			{
+				// d xi/ dx = gmat = 1/J * d x/d xi
+				for(int i=0; i<n_points; i++)
+				{
+					stdVelocity[0][i] = gmat[0][i]*inarray[0][i] + gmat[2][i]*inarray[1][i];
+					stdVelocity[1][i] = gmat[1][i]*inarray[0][i] + gmat[3][i]*inarray[1][i];
+				}
+			}
+			else
+			{
+				for(int i=0; i<n_points; i++)
+				{
+					stdVelocity[0][i] = gmat[0][0]*inarray[0][i] + gmat[2][0]*inarray[1][i];
+					stdVelocity[1][i] = gmat[1][0]*inarray[0][i] + gmat[3][0]*inarray[1][i];
+				}
+			}
+			
+			NekDouble pntVelocity;
+			for(int i=0; i<n_points; i++)
+			{
+				pntVelocity = sqrt(stdVelocity[0][i]*stdVelocity[0][i] + stdVelocity[1][i]*stdVelocity[1][i]);
+				if(pntVelocity>stdV[el])
+				{
+					stdV[el] = pntVelocity;
+				}
+				
+			}
+		}
+		
+		return stdV;
+	}
+	
+	NekDouble UnsteadySystem::GetStabilityLimit(int n)
+	{
+		if(n>20)
+	    {
+		   ASSERTL0(false,"Illegal modes dimension for CFL calculation (P has to be less then 20)");
+		}
+		
+		NekDouble CFLDG[21] = {2,6,11.8424,19.1569,27.8419,37.8247,49.0518,61.4815,75.0797,89.8181,105.67,122.62,140.64,159.73,179.85,201.01,223.18,246.36,270.53,295.69,321.83}; //CFLDG 1D [0-20]
+		NekDouble CFLCG[2]  = {1.0,1.0};
+		NekDouble CFL;
+		
+		if (m_projectionType = eDiscontinuousGalerkin)
+		{
+			CFL = CFLDG[n];
+		}
+		else 
+		{
+			ASSERTL0(false,"Continuos Galerkin stability coefficients not introduced yet.");
+		}
+		
+		return CFL;
+	}
+	
+	Array<OneD,NekDouble> UnsteadySystem::GetStabilityLimitVector(const Array<OneD,int> &ExpOrder)
+	{
+		int i;
+		Array<OneD,NekDouble> returnval(m_fields[0]->GetExpSize(),0.0);
+		for(i =0; i<m_fields[0]->GetExpSize(); i++)
+		{
+			returnval[i] = GetStabilityLimit(ExpOrder[i]);
+		}
+		return returnval;
+	}
 }

@@ -76,6 +76,7 @@
       <P> TimeStep       = FinTime/NumSteps </P>
       <P> IO_CheckSteps  = NumSteps         </P>
       <P> IO_InfoSteps   = 1000             </P>
+       <P> CFL            = 0.9              </P>
     </PARAMETERS>
 
     <SOLVERINFO>

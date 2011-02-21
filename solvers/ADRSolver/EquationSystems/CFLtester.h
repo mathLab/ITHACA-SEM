@@ -53,9 +53,10 @@ namespace Nektar
         CFLtester(SessionReaderSharedPtr& pSession);
 
         virtual ~CFLtester();
-
+		
     protected:
-        Array<OneD, Array<OneD, NekDouble> > m_velocity;
+        
+		Array<OneD, Array<OneD, NekDouble> > m_velocity;
 
         void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
                       Array<OneD,  Array<OneD, NekDouble> > &outarray,
@@ -73,6 +74,9 @@ namespace Nektar
         // Print Summary
         virtual void v_PrintSummary(std::ostream &out);
     private:
+		
+		virtual NekDouble v_GetTimeStep(const Array<OneD,int> ExpOrder, 
+										const Array<OneD,NekDouble> CFL, NekDouble timeCFL);
 
     };
 }

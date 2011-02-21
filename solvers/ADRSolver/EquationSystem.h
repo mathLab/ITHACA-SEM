@@ -66,7 +66,7 @@ namespace Nektar
 
         /// Solve the problem.
         void DoSolve();
-
+		
         /// Print a summary of parameters and solver characteristics.
         void PrintSummary(std::ostream &out);
 
@@ -92,7 +92,7 @@ namespace Nektar
 
         /// Virtual function for printing summary information.
         virtual void v_PrintSummary(std::ostream &out);
-
+		
     private:
 
     };

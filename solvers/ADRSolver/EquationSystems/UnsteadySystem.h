@@ -46,7 +46,26 @@ namespace Nektar
     public:
         /// Destructor
         virtual ~UnsteadySystem();
-
+		
+		/// Calculate the larger time-step mantaining the problem stable (using CFL)
+		NekDouble GetTimeStep(const Array<OneD,int> ExpOrder, 
+							  const Array<OneD,NekDouble> CFL, 
+							  NekDouble timeCFL);
+		
+		/// CFL number
+		NekDouble m_cfl;
+		
+		// Mapping of the real convective field on the stadard element.
+		// This function gives back the convective filed in the standard element to calculate the stability
+		// region of the problem in a unique way.
+		Array<OneD,NekDouble> GetStdVelocity(const Array<OneD, Array<OneD,NekDouble> > inarray);
+		
+		/// Function to calculate the stability limit for DG/CG
+		NekDouble GetStabilityLimit(int n);
+		
+	    /// Function to calculate the stability limit for DG/CG (a vector of them)
+		Array<OneD,NekDouble> GetStabilityLimitVector(const Array<OneD,int> &ExpOrder);
+		
     protected:
         /// Number of time steps between outputting status information.
         int                                             m_infosteps;
@@ -102,6 +121,10 @@ namespace Nektar
         virtual void v_GetFluxVector(const int i, const int j,
                     Array<OneD, Array<OneD, NekDouble> > &physfield,
                     Array<OneD, Array<OneD, NekDouble> > &flux);
+		
+		/// Virtual function to get the time step
+		virtual NekDouble v_GetTimeStep(const Array<OneD,int> ExpOrder, 
+										const Array<OneD,NekDouble> CFL, NekDouble timeCFL);
 
     private:
         ///

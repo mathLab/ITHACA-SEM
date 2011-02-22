@@ -41,6 +41,11 @@
 
 namespace Nektar
 {
+	
+	timeval timer1, timer2;
+    NekDouble time1, time2;
+	
+    NekDouble IntegrationTime = 0.0;
     /**
      * @class UnsteadySystem
      *
@@ -261,9 +266,11 @@ namespace Nektar
 			}
 		}
 		
+		
         // Perform integration in time.
         while(n < m_steps || m_time<m_fintime)
         {
+			gettimeofday(&timer1, NULL);
 			// calculate the timestep if CFL condition is applicable
 			if(m_cfl>0.0)
 			{
@@ -291,9 +298,14 @@ namespace Nektar
 			
 			m_time += m_timestep;
 			
+			gettimeofday(&timer2, NULL);
+			time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
+			time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
+			IntegrationTime += (time2-time1)/1000000.0;
+			
 
             // Write out status information.
-            if(!((n+1)%m_infosteps))
+            if(!((n+1)%m_infosteps) || n==m_steps || m_time==m_fintime)
             {
                 cout << "Steps: " << n+1 << "\t Time: " << m_time << "\t Time-step: " << m_timestep << "\t" << endl;
 //                cout << "\r" << setw(3) << int((NekDouble)n/m_steps*100) << "%:\t"
@@ -304,7 +316,7 @@ namespace Nektar
             }
 
             // Write out checkpoint files.
-            if(n&&(!((n+1)%m_checksteps)))
+            if(n&&(!((n+1)%m_checksteps)) || (n==m_steps && m_steps!=0) || (m_time>=m_fintime && m_fintime>0.0))
             {
                 for(i = 0; i < nvariables; ++i)
                 {
@@ -314,11 +326,12 @@ namespace Nektar
                 Checkpoint_Output(nchk++);
                 WriteHistoryData(hisFile);
             }
+			// step advance
+			n++;
         }
+		cout <<"\nCFL number            : " << m_cfl << endl;
+		cout <<"Time-integration timing : " << IntegrationTime << " s" << endl << endl;
 		
-		// step advance
-		n++;
-
         // At the end of the time integration, store final solution.
         for(i = 0; i < nvariables; ++i)
         {

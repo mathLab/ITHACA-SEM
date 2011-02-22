@@ -37,9 +37,12 @@
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_UNSTEADYSYSTEM_H
 
 #include <ADRSolver/EquationSystem.h>
+#include <time.h>
+#include <sys/time.h>
 
 namespace Nektar
 {
+	
     /// Base class for unsteady solvers.
     class UnsteadySystem : public EquationSystem
     {

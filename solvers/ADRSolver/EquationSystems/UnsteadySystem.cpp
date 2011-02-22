@@ -241,12 +241,14 @@ namespace Nektar
 		int n_elements = m_fields[0]->GetExpSize();
 		Array<OneD,NekDouble> CFL(n_elements,0.0);
 		const Array<OneD,int> ExpOrder = GetNumExpModesPerExp();
-		Array<OneD,NekDouble> SpectralStability = GetStabilityLimitVector(ExpOrder);
-		
 		NekDouble TimeStability;
 		
-		switch(m_timeIntMethod)
+		if(m_cfl>0.0)
 		{
+		  Array<OneD,NekDouble> SpectralStability = GetStabilityLimitVector(ExpOrder);
+		
+		  switch(m_timeIntMethod)
+		  {
 			case LibUtilities::eForwardEuler:
 			case LibUtilities::eClassicalRungeKutta4:
 			{
@@ -264,79 +266,132 @@ namespace Nektar
 			{
 				ASSERTL0(false,"No CFL control implementation for this time integration scheme");
 			}
+		   } 
 		}
 		
-		
-        // Perform integration in time.
-        while(n < m_steps || m_time<m_fintime)
-        {
-			gettimeofday(&timer1, NULL);
-			// calculate the timestep if CFL condition is applicable
-			if(m_cfl>0.0)
+		/////time loop
+		if(m_cfl>0.0)
+		{
+			while(n < m_steps || m_time<m_fintime)
 			{
+				gettimeofday(&timer1, NULL);
+				// calculate the timestep if CFL condition is applicable
 				m_timestep = GetTimeStep(ExpOrder, CFL, TimeStability);
+				
+				
+				// Integrate over timestep.
+				if( n < numMultiSteps-1)
+				{
+					// Use initialisation schemes if time step is less than the
+					// number of steps in the scheme.
+					fields = IntScheme[n]->TimeIntegrate(m_timestep,u,m_ode);
+				}
+				else
+				{
+					fields = IntScheme[numMultiSteps-1]->TimeIntegrate(m_timestep,u,m_ode);
+				}
+				
+				
+				// Increment time.
+				if(m_time+m_timestep>m_fintime && m_fintime>0.0)
+				{
+					m_timestep = m_fintime - m_time;
+				}
+				
+				m_time += m_timestep;
+				
+				gettimeofday(&timer2, NULL);
+				time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
+				time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
+				IntegrationTime += (time2-time1)/1000000.0;
+				
+				
+				// Write out status information.
+				if(!((n+1)%m_infosteps) || n==m_steps || m_time==m_fintime)
+				{
+					cout << "Steps: " << n+1 << "\t Time: " << m_time << "\t Time-step: " << m_timestep << "\t" << endl;
+					//                cout << "\r" << setw(3) << int((NekDouble)n/m_steps*100) << "%:\t"
+					//                     << setw(7) << "Steps: " << setw(6) << n+1
+					//                     << setw(7) << "Time: "
+					//                     << setw(8) << fixed << setprecision(2) << m_time
+					//                     << "\t " << flush;
+				}
+				
+				// Write out checkpoint files.
+				if(n&&(!((n+1)%m_checksteps)) || (n==m_steps && m_steps!=0) || (m_time>=m_fintime && m_fintime>0.0))
+				{
+					for(i = 0; i < nvariables; ++i)
+					{
+						m_fields[i]->FwdTrans(fields[i],m_fields[i]->UpdateCoeffs());
+						m_fields[i]->SetPhysState(false);
+					}
+					Checkpoint_Output(nchk++);
+					WriteHistoryData(hisFile);
+				}
+				// step advance
+				n++;
 			}
+			cout <<"\nCFL number              : " << m_cfl << endl;
+			cout <<"Time-integration timing : " << IntegrationTime << " s" << endl << endl;
 			
-            // Integrate over timestep.
-            if( n < numMultiSteps-1)
-            {
-                // Use initialisation schemes if time step is less than the
-                // number of steps in the scheme.
-                fields = IntScheme[n]->TimeIntegrate(m_timestep,u,m_ode);
-            }
-            else
-            {
-                fields = IntScheme[numMultiSteps-1]->TimeIntegrate(m_timestep,u,m_ode);
-            }
-
-            
-			// Increment time.
-			if(m_time+m_timestep>m_fintime && m_fintime>0.0)
+			// At the end of the time integration, store final solution.
+			for(i = 0; i < nvariables; ++i)
 			{
-				m_timestep = m_fintime - m_time;
+				m_fields[i]->UpdatePhys() = fields[i];
+			}
+		}
+		
+		else
+		{
+			for(n = 0; n < m_steps; ++n)
+			{
+				
+				// Integrate over timestep.
+				if( n < numMultiSteps-1)
+				{
+					// Use initialisation schemes if time step is less than the
+					// number of steps in the scheme.
+					fields = IntScheme[n]->TimeIntegrate(m_timestep,u,m_ode);
+				}
+				else
+				{
+					fields = IntScheme[numMultiSteps-1]->TimeIntegrate(m_timestep,u,m_ode);
+				}
+				
+				m_time += m_timestep;
+				
+				// Write out status information.
+				if(!((n+1)%m_infosteps))
+				{
+					cout << "Steps: " << n+1 << "\t Time: " << m_time << "\t Time-step: " << m_timestep << "\t" << endl;
+					//                cout << "\r" << setw(3) << int((NekDouble)n/m_steps*100) << "%:\t"
+					//                     << setw(7) << "Steps: " << setw(6) << n+1
+					//                     << setw(7) << "Time: "
+					//                     << setw(8) << fixed << setprecision(2) << m_time
+					//                     << "\t " << flush;
+				}
+				
+				// Write out checkpoint files.
+				if(n&&(!((n+1)%m_checksteps)))
+				{
+					for(i = 0; i < nvariables; ++i)
+					{
+						m_fields[i]->FwdTrans(fields[i],m_fields[i]->UpdateCoeffs());
+						m_fields[i]->SetPhysState(false);
+					}
+					Checkpoint_Output(nchk++);
+					WriteHistoryData(hisFile);
+				}
+				// step advance
 			}
 			
-			m_time += m_timestep;
-			
-			gettimeofday(&timer2, NULL);
-			time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
-			time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
-			IntegrationTime += (time2-time1)/1000000.0;
-			
-
-            // Write out status information.
-            if(!((n+1)%m_infosteps) || n==m_steps || m_time==m_fintime)
-            {
-                cout << "Steps: " << n+1 << "\t Time: " << m_time << "\t Time-step: " << m_timestep << "\t" << endl;
-//                cout << "\r" << setw(3) << int((NekDouble)n/m_steps*100) << "%:\t"
-//                     << setw(7) << "Steps: " << setw(6) << n+1
-//                     << setw(7) << "Time: "
-//                     << setw(8) << fixed << setprecision(2) << m_time
-//                     << "\t " << flush;
-            }
-
-            // Write out checkpoint files.
-            if(n&&(!((n+1)%m_checksteps)) || (n==m_steps && m_steps!=0) || (m_time>=m_fintime && m_fintime>0.0))
-            {
-                for(i = 0; i < nvariables; ++i)
-                {
-                    m_fields[i]->FwdTrans(fields[i],m_fields[i]->UpdateCoeffs());
-                    m_fields[i]->SetPhysState(false);
-                }
-                Checkpoint_Output(nchk++);
-                WriteHistoryData(hisFile);
-            }
-			// step advance
-			n++;
-        }
-		cout <<"\nCFL number            : " << m_cfl << endl;
-		cout <<"Time-integration timing : " << IntegrationTime << " s" << endl << endl;
+			// At the end of the time integration, store final solution.
+			for(i = 0; i < nvariables; ++i)
+			{
+				m_fields[i]->UpdatePhys() = fields[i];
+			}
+	    }
 		
-        // At the end of the time integration, store final solution.
-        for(i = 0; i < nvariables; ++i)
-        {
-            m_fields[i]->UpdatePhys() = fields[i];
-        }
     }
 
 

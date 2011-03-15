@@ -221,8 +221,8 @@ namespace Nektar
 		int nTotQuadPoints  = GetTotPoints();
 		int n_element  = m_fields[0]->GetExpSize(); 
 		Array<OneD, NekDouble> tstep(n_element,0.0);
-		const NekDouble minLengthStdTri  = 0.7072*0.5;
-		const NekDouble minLengthStdQuad = 0.5;
+		const NekDouble minLengthStdTri  = 1.414213;
+		const NekDouble minLengthStdQuad = 2.0;
 		const NekDouble cLambda = 0.2; // Spencer book pag. 317
 		Array<OneD, NekDouble> stdVelocity(n_element,0.0);
 		stdVelocity = GetStdVelocity(m_velocity);
@@ -234,13 +234,15 @@ namespace Nektar
 			NekDouble Area = m_fields[0]->GetExp(el)->Integral(one2D);
 			if(boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_fields[0]->GetExp(el)))
 			{
+				//tstep[el] =  timeCFL/(stdVelocity[el]*cLambda*(ExpOrder[el]-1)*(ExpOrder[el]-1));
 				//tstep[el] =  timeCFL*minLengthStdTri/(stdVelocity[el]*cLambda*(ExpOrder[el]-1)*(ExpOrder[el]-1));
-				tstep[el] = CFL[el]*minLengthStdTri/(stdVelocity[el]);
+				tstep[el] = CFL[el]/(stdVelocity[el]);
 			}
 			else if(boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_fields[0]->GetExp(el)))
 			{ 
+				//tstep[el] =  timeCFL/(stdVelocity[el]*cLambda*(ExpOrder[el]-1)*(ExpOrder[el]-1));
 				//tstep[el] =  timeCFL*minLengthStdQuad/(stdVelocity[el]*cLambda*(ExpOrder[el]-1)*(ExpOrder[el]-1));
-				tstep[el] = CFL[el]*minLengthStdQuad/(stdVelocity[el]);
+				tstep[el] = CFL[el]/(stdVelocity[el]);
 			}
 		}
 		
@@ -248,6 +250,6 @@ namespace Nektar
 		
 		return TimeStep;
 	}
-
-
+	
+	
 }

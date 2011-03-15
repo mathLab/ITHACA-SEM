@@ -160,6 +160,7 @@ namespace Nektar
         case LibUtilities::eBackwardEuler:
         case LibUtilities::eForwardEuler:
         case LibUtilities::eClassicalRungeKutta4:
+		case LibUtilities::eAdamsBashforthOrder1:
         case LibUtilities::eIMEXOrder1:
             {
                 numMultiSteps = 1;
@@ -256,6 +257,14 @@ namespace Nektar
 				Vmath::Sdiv(n_elements,TimeStability,SpectralStability,1,CFL,1);
 				break;
 			}
+			
+			case LibUtilities::eAdamsBashforthOrder1:
+			{
+				TimeStability = 2*m_cfl;
+				Vmath::Sdiv(n_elements,TimeStability,SpectralStability,1,CFL,1);
+				break;
+			}
+				  
 			case LibUtilities::eAdamsBashforthOrder2:
 			{
 				TimeStability = m_cfl;

@@ -144,18 +144,19 @@
     <CONDITIONS>
 
     <PARAMETERS>
-      <P> FinTime        = 1.0              </P>
-      <P> NumSteps       = #DT#             </P>
-      <P> TimeStep       = FinTime/NumSteps </P>
-      <P> IO_CheckSteps  = NumSteps         </P>
-      <P> IO_InfoSteps   = 1000             </P>
-      <P> CFL            = #CFL#            </P>
+      <P> FinTime            = 1.0              </P>
+      <P> NumSteps           = #DT#             </P>
+      <P> TimeStep           = FinTime/NumSteps </P>
+      <P> IO_CheckSteps      = NumSteps         </P>
+      <P> IO_InfoSteps       = 1000             </P>
+      <P> CFL                = #CFL#            </P>
+      <P> NumQuadPointsError = #NQP#           </P>
     </PARAMETERS>
 
     <SOLVERINFO>
       <I PROPERTY="EQTYPE" VALUE="CFLtester"/>
       <I PROPERTY="Projection" VALUE="DisContinuous"/>    
-      <I PROPERTY="TimeIntegrationMethod"  VALUE="ClassicalRungeKutta4"/>
+      <I PROPERTY="TimeIntegrationMethod"  VALUE="#TimeScheme#"/>
     </SOLVERINFO> 
 
     <VARIABLES>

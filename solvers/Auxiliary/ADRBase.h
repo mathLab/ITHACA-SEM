@@ -103,6 +103,9 @@ namespace Nektar
         /// Compute the L_inf error between fields and a given exact solution.
         NekDouble LinfError(int field,
                 const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
+		
+		///Compute error (L2 and L_inf) over an larger set of quadrature points return [L2 Linf]
+		Array<OneD,NekDouble> ErrorExtraPoints(int field);
 
         /// Compute the inner product \f$ (\nabla \phi \cdot F) \f$.
         void WeakAdvectionGreensDivergenceForm(
@@ -354,6 +357,9 @@ namespace Nektar
         {
             return v_Morphogenesis(field, x0j, x1j, x2j, time);
         }
+		
+		/// Number of Quadrature points used to work out the error
+		int  m_NumQuadPointsError;
 	
     protected:
         /// Array holding all dependent variables.
@@ -366,7 +372,7 @@ namespace Nektar
         SpatialDomains::HistorySharedPtr            m_historyPoints;
         /// Pointer to graph defining mesh.
         SpatialDomains::MeshGraphSharedPtr          m_graph;
-
+		
         std::list<std::pair<SpatialDomains::VertexComponentSharedPtr, int> >
                                                     m_historyList;
 

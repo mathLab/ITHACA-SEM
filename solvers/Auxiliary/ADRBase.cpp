@@ -362,6 +362,15 @@ namespace Nektar
         {
             m_fintime = 0;
         }
+		
+		if(m_boundaryConditions->CheckForParameter("NumQuadPointsError") == true)
+        {
+             m_NumQuadPointsError = m_boundaryConditions->GetParameter("NumQuadPointsError");
+        }
+        else
+        {
+             m_NumQuadPointsError = 0;
+        }
 
         // Read in spatial data
         int nq = m_fields[0]->GetNpoints();
@@ -544,35 +553,46 @@ namespace Nektar
                                const Array<OneD, NekDouble> &exactsoln,
                                bool Normalised)
     {
-        NekDouble L2error = -1.0;
-
-        if(m_fields[field]->GetPhysState() == false)
-        {
-            m_fields[field]->BwdTrans(m_fields[field]->GetCoeffs(),
+		NekDouble L2error = -1.0;
+		
+		if(m_NumQuadPointsError == 0)
+		{
+			if(m_fields[field]->GetPhysState() == false)
+			{
+				m_fields[field]->BwdTrans(m_fields[field]->GetCoeffs(),
                                        m_fields[field]->UpdatePhys());
-        }
+			}
 
-        if(exactsoln.num_elements())
-        {
-            L2error = m_fields[field]->L2(exactsoln);
-        }
-        else
-        {
-            Array<OneD, NekDouble> exactsoln(m_fields[field]->GetNpoints());
+			if(exactsoln.num_elements())
+			{
+				L2error = m_fields[field]->L2(exactsoln);
+			}
+			else
+			{
+				Array<OneD, NekDouble> exactsoln(m_fields[field]->GetNpoints());
 
-            EvaluateExactSolution(field,exactsoln,m_time);
+				EvaluateExactSolution(field,exactsoln,m_time);
 
-            L2error = m_fields[field]->L2(exactsoln);
-        }
+				L2error = m_fields[field]->L2(exactsoln);
+			}
 
-        if(Normalised == true)
-        {
-            Array<OneD, NekDouble> one(m_fields[field]->GetNpoints(),1.0);
+			if(Normalised == true)
+			{
+				Array<OneD, NekDouble> one(m_fields[field]->GetNpoints(),1.0);
 
-            NekDouble Vol = m_fields[field]->PhysIntegral(one);
+				NekDouble Vol = m_fields[field]->PhysIntegral(one);
 
-            L2error = sqrt(L2error*L2error/Vol);
-        }
+				L2error = sqrt(L2error*L2error/Vol);
+			}
+		}
+		else 
+		{
+			Array<OneD,NekDouble> L2INF(2);
+			L2INF = ErrorExtraPoints(field);
+			L2error = L2INF[0];
+			
+		}
+
 
         return L2error;
     }
@@ -587,25 +607,104 @@ namespace Nektar
     NekDouble ADRBase::LinfError(int field,
                                  const Array<OneD, NekDouble> &exactsoln)
     {
-        if(m_fields[field]->GetPhysState() == false)
-        {
-            m_fields[field]->BwdTrans(m_fields[field]->GetCoeffs(),
+		NekDouble Linferror = -1.0;
+		
+		if(m_NumQuadPointsError == 0)
+		{
+			if(m_fields[field]->GetPhysState() == false)
+			{
+				m_fields[field]->BwdTrans(m_fields[field]->GetCoeffs(),
                                       m_fields[field]->UpdatePhys());
-        }
+			}
 
-        if(exactsoln.num_elements())
-        {
-            return m_fields[field]->Linf(exactsoln);
-        }
-        else
-        {
-            Array<OneD, NekDouble> exactsoln(m_fields[field]->GetNpoints());
+			if(exactsoln.num_elements())
+			{
+				Linferror = m_fields[field]->Linf(exactsoln);
+			}
+			else
+			{
+				Array<OneD, NekDouble> exactsoln(m_fields[field]->GetNpoints());
 
-            EvaluateExactSolution(field,exactsoln,m_time);
+				EvaluateExactSolution(field,exactsoln,m_time);
 
-            return m_fields[field]->Linf(exactsoln);
-        }
+				Linferror = m_fields[field]->Linf(exactsoln);
+			}
+		}
+		else 
+		{
+			Array<OneD,NekDouble> L2INF(2);
+			L2INF = ErrorExtraPoints(field);
+			Linferror = L2INF[1];
+		}
+		
+		return Linferror;
     }
+	
+	/**
+     * Compute the error in the L2-norm, L-inf for a larger number of Quadrature Points
+     * @param   field              The field to compare.
+     * @returns                    Error in the L2-norm and L-inf norm. 
+     */
+    Array<OneD,NekDouble> ADRBase::ErrorExtraPoints(int field)
+    {
+		SpatialDomains::MeshGraph2DSharedPtr mesh2D;
+		mesh2D = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(m_graph);
+		
+		int NumModes = GetNumExpModes();
+		
+		Array<OneD,NekDouble> L2INF(2);
+		
+		const LibUtilities::PointsKey PkeyT1(m_NumQuadPointsError,LibUtilities::eGaussLobattoLegendre);
+		const LibUtilities::PointsKey PkeyT2(m_NumQuadPointsError,LibUtilities::eGaussRadauMAlpha1Beta0);
+		const LibUtilities::PointsKey PkeyQ1(m_NumQuadPointsError,LibUtilities::eGaussLobattoLegendre);
+		const LibUtilities::PointsKey PkeyQ2(m_NumQuadPointsError,LibUtilities::eGaussLobattoLegendre);
+		const LibUtilities::BasisKey  BkeyT1(LibUtilities::eModified_A,NumModes,PkeyT1);
+		const LibUtilities::BasisKey  BkeyT2(LibUtilities::eModified_B,NumModes,PkeyT2);
+		const LibUtilities::BasisKey  BkeyQ1(LibUtilities::eModified_A,NumModes,PkeyQ1);
+		const LibUtilities::BasisKey  BkeyQ2(LibUtilities::eModified_A,NumModes,PkeyQ2);
+        
+		MultiRegions::ExpList2DSharedPtr ErrorExp = 
+        MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(BkeyT1,BkeyT2,BkeyQ1,BkeyQ2,*mesh2D);
+		
+		int ErrorCoordim = ErrorExp->GetCoordim(0);
+		int ErrorNq      = ErrorExp->GetTotPoints();
+		
+		Array<OneD,NekDouble> ErrorXc0(ErrorNq,0.0);
+		Array<OneD,NekDouble> ErrorXc1(ErrorNq,0.0);
+		Array<OneD,NekDouble> ErrorXc2(ErrorNq,0.0);
+		
+		switch(ErrorCoordim)
+		{
+			case 1:
+				ErrorExp->GetCoords(ErrorXc0);
+				break;
+			case 2:
+				ErrorExp->GetCoords(ErrorXc0,ErrorXc1);
+				break;
+			case 3:
+				ErrorExp->GetCoords(ErrorXc0,ErrorXc1,ErrorXc2);
+				break;
+		}
+		
+		SpatialDomains::ConstExactSolutionShPtr exSol = m_boundaryConditions->GetExactSolution(field);
+		// evaluate exact solution 
+		Array<OneD,NekDouble> ErrorSol(ErrorNq);
+		for(int i = 0; i < ErrorNq; ++i)
+		{
+			ErrorSol[i] = exSol->Evaluate(ErrorXc0[i],ErrorXc1[i],ErrorXc2[i],m_time);
+		}
+		
+		// calcualte spectral/hp approximation on the quad points of this new
+		// expansion basis
+		ErrorExp->BwdTrans_IterPerExp(m_fields[field]->GetCoeffs(),ErrorExp->UpdatePhys());
+		
+		L2INF[0]    = ErrorExp->L2  (ErrorSol);
+		L2INF[1]    = ErrorExp->Linf(ErrorSol);
+		
+        return L2INF;
+    }
+	
+	
 
 
     /**

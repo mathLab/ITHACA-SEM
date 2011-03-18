@@ -76,16 +76,16 @@
 
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
-        <D VAR="u"  VALUE="0.0" />
+        <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
       </REGION>
       <REGION REF="1">
-        <D VAR="u"  VALUE="0.0" />
+        <D VAR="u"  USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
       </REGION>
       <REGION REF="2">
-        <D VAR="u"  VALUE="0.0" />
+        <D VAR="u"  USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
       </REGION>
       <REGION REF="3">
-        <D VAR="u"  VALUE="0.0" />
+        <D VAR="u"  USERDEFINEDTYPE="TimeDependent" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
       </REGION>
     </BOUNDARYCONDITIONS>
 
@@ -95,11 +95,11 @@
     </USERDEFINEDEQNS>   
     
     <EXACTSOLUTION>
-      <F VAR="u" VALUE="exp(-32*(((x+0.5)*(x+0.5))+((y)*(y))))" />
+      <F VAR="u" VALUE="exp(-41*((x+(0.3*cos(2*PI*t)))*(x+(0.3*cos(2*PI*t)))+(y-(0.3*sin(2*PI*t)))*(y-(0.3*sin(2*PI*t)))))" />
     </EXACTSOLUTION>
     
     <INITIALCONDITIONS>
-      <F VAR="u" VALUE="exp(-32*(((x+0.5)*(x+0.5))+((y)*(y))))" />
+      <F VAR="u" VALUE="exp(-41*(((x+0.3)*(x+0.3))+((y)*(y))))" />
     </INITIALCONDITIONS>
     
   </CONDITIONS>

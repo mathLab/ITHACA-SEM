@@ -134,7 +134,15 @@ namespace Nektar
             m_fields[i]->SetPhysState(false);
             fields[i]  = m_fields[i]->UpdatePhys();
         }
-
+		
+		for(int i = 0; i < nvariables; i++)
+		{
+			NekDouble InitialError;
+			InitialError = L2Error(i);
+			cout << "\n\nInitial L2 Error = " << InitialError << endl << endl;
+		}
+		
+		
         // Declare an array of TimeIntegrationSchemes For multi-stage
         // methods, this array will have just one entry containing the
         // actual multi-stage method...
@@ -354,7 +362,7 @@ namespace Nektar
 		{
 			for(n = 0; n < m_steps; ++n)
 			{
-				
+				gettimeofday(&timer1, NULL);
 				// Integrate over timestep.
 				if( n < numMultiSteps-1)
 				{
@@ -368,6 +376,11 @@ namespace Nektar
 				}
 				
 				m_time += m_timestep;
+				
+				gettimeofday(&timer2, NULL);
+				time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
+				time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
+				IntegrationTime += (time2-time1)/1000000.0;
 				
 				// Write out status information.
 				if(!((n+1)%m_infosteps))
@@ -393,6 +406,9 @@ namespace Nektar
 				}
 				// step advance
 			}
+			
+			cout <<"\nCFL number              : " << m_cfl << endl;
+			cout <<"Time-integration timing : " << IntegrationTime << " s" << endl << endl;
 			
 			// At the end of the time integration, store final solution.
 			for(i = 0; i < nvariables; ++i)

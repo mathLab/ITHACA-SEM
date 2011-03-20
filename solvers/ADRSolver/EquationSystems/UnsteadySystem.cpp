@@ -135,14 +135,6 @@ namespace Nektar
             fields[i]  = m_fields[i]->UpdatePhys();
         }
 		
-		for(int i = 0; i < nvariables; i++)
-		{
-			NekDouble InitialError;
-			InitialError = L2Error(i);
-			cout << "\n\nInitial L2 Error = " << InitialError << endl << endl;
-		}
-		
-		
         // Declare an array of TimeIntegrationSchemes For multi-stage
         // methods, this array will have just one entry containing the
         // actual multi-stage method...

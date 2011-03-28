@@ -229,7 +229,7 @@ namespace Nektar
                 for(i = 0; i < loc_lda; ++i)
                 {
                     gid1 = pLocToGloMap->GetLocalToGlobalMap(cnt + i)-NumDirBCs;
-                    sign1 =  pLocToGloMap->GetLocalToGlobalSign(cnt + i);
+                    sign1 = pLocToGloMap->GetLocalToGlobalSign(cnt + i);
                     if(gid1 >= 0)
                     {
                         for(j = 0; j < loc_lda; ++j)

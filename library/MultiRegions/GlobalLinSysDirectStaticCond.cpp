@@ -98,9 +98,27 @@ namespace Nektar
             SetupTopLevel(pLocToGloMap);
 
             // Construct this level
-            Initialise(pLocToGloMap);
+            Initialise(pLocToGloMap,DetermineMatrixStorage(pLocToGloMap));
         }
 
+
+        GlobalLinSysDirectStaticCond::GlobalLinSysDirectStaticCond(
+                     const DNekScalBlkMatSharedPtr pSchurCompl,
+                     const DNekScalBlkMatSharedPtr pBinvD,
+                     const DNekScalBlkMatSharedPtr pC,
+                     const DNekScalBlkMatSharedPtr pInvD,
+                     const boost::shared_ptr<LocalToGlobalBaseMap>
+                     &pLocToGloMap)
+        {
+            m_schurCompl = pSchurCompl;
+            m_BinvD      = pBinvD;
+            m_C          = pC;
+            m_invD       = pInvD;
+
+            // Construct this level
+            Initialise(pLocToGloMap, eFULL);
+        }
+        
 
         /**
          *
@@ -121,7 +139,7 @@ namespace Nektar
                   m_invD       ( pInvD )
         {
             // Construct this level
-            Initialise(pLocToGloMap);
+            Initialise(pLocToGloMap,DetermineMatrixStorage(pLocToGloMap));
         }
 
 
@@ -189,7 +207,9 @@ namespace Nektar
                         DNekScalBlkMat &BinvD      = *m_BinvD;
                         DNekScalBlkMat &SchurCompl = *m_schurCompl;
                         pLocToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
+
                         V_LocBnd = BinvD*F_Int + SchurCompl*V_LocBnd;
+
                     }
                     else if((nDirBndDofs) && (!dirForcCalculated)
                                           && (atLastLevel))
@@ -257,11 +277,12 @@ namespace Nektar
          * @param   pLocToGloMap    Local to global mapping.
          */
         void GlobalLinSysDirectStaticCond::Initialise(
-                const boost::shared_ptr<LocalToGlobalBaseMap>& pLocToGloMap)
+           const boost::shared_ptr<LocalToGlobalBaseMap>& pLocToGloMap,
+           const MatrixStorage matStorage)
         {
             if(pLocToGloMap->AtLastLevel())
             {
-                AssembleSchurComplement(pLocToGloMap);
+                AssembleSchurComplement(pLocToGloMap,matStorage);
             }
             else
             {
@@ -310,7 +331,7 @@ namespace Nektar
                 else
                 {
                     DNekScalBlkMatSharedPtr loc_mat = GetStaticCondBlock(n);
-                    DNekScalMatSharedPtr tmp_mat;
+                    DNekScalMatSharedPtr    tmp_mat;
                     m_schurCompl->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,0));
                     m_BinvD     ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,1));
                     m_C         ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,0));
@@ -319,6 +340,51 @@ namespace Nektar
             }
         }
 
+        MatrixStorage GlobalLinSysDirectStaticCond::DetermineMatrixStorage(const LocalToGlobalBaseMapSharedPtr &pLocToGloMap)
+        {
+            int nBndDofs  = pLocToGloMap->GetNumGlobalBndCoeffs();
+            int NumDirBCs = pLocToGloMap->GetNumGlobalDirBndCoeffs();
+            unsigned int rows = nBndDofs - NumDirBCs;
+            int bwidth = pLocToGloMap->GetBndSystemBandWidth();
+
+            MatrixStorage matStorage;
+            
+            switch(m_linSysKey.GetMatrixType())
+            {
+                // case for all symmetric matices
+            case StdRegions::eMass:
+            case StdRegions::eLaplacian:
+            case StdRegions::eHelmholtz:
+            case StdRegions::eHybridDGHelmBndLam:
+                {
+                    if( (2*(bwidth+1)) < rows)
+                    {
+                        matStorage = ePOSITIVE_DEFINITE_SYMMETRIC_BANDED; 
+                    }
+                    else
+                    {
+                        matStorage = ePOSITIVE_DEFINITE_SYMMETRIC;
+                    }
+                }
+                break;
+            case StdRegions::eLinearAdvectionReaction:
+            case StdRegions::eLinearAdvectionDiffusionReaction:
+                {
+                    // Current inversion techniques do not seem to
+                    // allow banded matrices to be used as a linear
+                    // system
+                    matStorage = eFULL;
+                }
+                break;
+            default:
+                {
+                    NEKERROR(ErrorUtil::efatal, "Add MatrixType to switch "
+                             "statement");
+                }
+            }
+
+            return matStorage;
+        }
 
         /**
          * Assemble the schur complement matrix from the block matrices stored
@@ -326,7 +392,8 @@ namespace Nektar
          * @param   locToGloMap Local to global mapping information.
          */
         void GlobalLinSysDirectStaticCond::AssembleSchurComplement(
-                    const LocalToGlobalBaseMapSharedPtr &pLocToGloMap)
+                      const LocalToGlobalBaseMapSharedPtr &pLocToGloMap,
+                      MatrixStorage matStorage )
         {
             int i,j,n,cnt,gid1,gid2;
             NekDouble sign1,sign2,value;
@@ -345,58 +412,37 @@ namespace Nektar
 
             DNekMatSharedPtr Gmat;
             int bwidth = pLocToGloMap->GetBndSystemBandWidth();
-            MatrixStorage matStorage;
-
-            switch(m_linSysKey.GetMatrixType())
+         
+            switch(matStorage)
             {
-                // case for all symmetric matices
-            case StdRegions::eMass:
-            case StdRegions::eLaplacian:
-            case StdRegions::eHelmholtz:
-            case StdRegions::eHybridDGHelmBndLam:
+            case ePOSITIVE_DEFINITE_SYMMETRIC_BANDED:
                 {
-                    if( (2*(bwidth+1)) < rows)
-                    {
-                        try {
-                            matStorage = ePOSITIVE_DEFINITE_SYMMETRIC_BANDED;
-                            Gmat = MemoryManager<DNekMat>
-                                ::AllocateSharedPtr(rows, cols, zero,
-                                                    matStorage,
-                                                    bwidth, bwidth);
-                        }
-                        catch (...) {
-                            NEKERROR(ErrorUtil::efatal,
-                                     "Insufficient memory for GlobalLinSys.");
-                        }
-                    }
-                    else
-                    {
-                        matStorage = ePOSITIVE_DEFINITE_SYMMETRIC;
+                    try {
                         Gmat = MemoryManager<DNekMat>
-                                        ::AllocateSharedPtr(rows, cols, zero,
-                                                            matStorage);
+                            ::AllocateSharedPtr(rows, cols, zero,
+                                                matStorage,
+                                                bwidth, bwidth);
                     }
+                    catch (...) {
+                        NEKERROR(ErrorUtil::efatal,
+                                 "Insufficient memory for GlobalLinSys.");
+                    }
+
                 }
                 break;
-            case StdRegions::eLinearAdvectionReaction:
-            case StdRegions::eLinearAdvectionDiffusionReaction:
+            case ePOSITIVE_DEFINITE_SYMMETRIC:
+            case eFULL:
                 {
-                    // Current inversion techniques do not seem to
-                    // allow banded matrices to be used as a linear
-                    // system
-                    matStorage = eFULL;
                     Gmat = MemoryManager<DNekMat>
-                            ::AllocateSharedPtr(rows, cols, zero, matStorage);
-
+                        ::AllocateSharedPtr(rows, cols, zero, matStorage);
                 }
                 break;
             default:
                 {
-                    NEKERROR(ErrorUtil::efatal, "Add MatrixType to switch "
-                             "statement");
+                    NEKERROR(ErrorUtil::efatal, "Unknown matrix storage type of type not set up");
                 }
             }
-
+            
             // fill global matrix
             DNekScalMatSharedPtr loc_mat;
             int loc_lda;
@@ -608,7 +654,8 @@ namespace Nektar
                         // 1. D -> InvD
                         substructeredMat[3][i]->Invert();
                         // 2. B -> BInvD
-                        (*substructeredMat[1][i]) = (*substructeredMat[1][i])*(*substructeredMat[3][i]);
+                        (*substructeredMat[1][i]) = (*substructeredMat[1][i])*
+                            (*substructeredMat[3][i]);
                         // 3. A -> A - BInvD*C (= schurcomplement)
                         (*substructeredMat[0][i]) = (*substructeredMat[0][i]) -
                             (*substructeredMat[1][i])*(*substructeredMat[2][i]);

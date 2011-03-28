@@ -258,14 +258,17 @@ namespace Nektar
             // be: minimum bandwith or minimum fill-in of the
             // resulting global system matrix)
             //
-            // That's why the vertices be rearranged. Currently, this is done
-            // in the following way: The vertices of the mesh are considered as vertices
-            // of a graph. (We then will use algorithms to reorder these
-            // graph-vertices - although not implemented yet in 1D).
+            // That's why the vertices be rearranged. Currently, this
+            // is done in the following way: The vertices of the mesh
+            // are considered as vertices of a graph. (We then will
+            // use algorithms to reorder these graph-vertices -
+            // although not implemented yet in 1D).
             //
-            // A container is used to store the graph vertex id's of the different
-            // mesh vertices. This is implemented as a STL map such that the graph vertex id
-            // can later be retrieved by the unique mesh vertex id's which serve as the key of the map.
+            // A container is used to store the graph vertex id's of
+            // the different mesh vertices. This is implemented as a
+            // STL map such that the graph vertex id can later be
+            // retrieved by the unique mesh vertex id's which serve as
+            // the key of the map.
             map<int, int> vertReorderedGraphVertId;
             map<int,int>::const_iterator mapConstIt;
 
@@ -376,7 +379,7 @@ namespace Nektar
             int meshVertId, meshVertId2;
             int meshEdgeId, meshEdgeId2;
             int bndEdgeCnt;
-            int globalId;
+            int globalId, nGraphVerts;
             int nEdgeCoeffs;
             int nEdgeInteriorCoeffs;
             int firstNonDirGraphVertId;
@@ -397,6 +400,19 @@ namespace Nektar
             map<int,int> edgeReorderedGraphVertId;
             BottomUpSubStructuredGraphSharedPtr bottomUpGraph;
 
+            map<int,int> vertDofs;
+            map<int,int> edgeDofs;
+            
+            for(i = 0; i < locExpVector.size(); ++i)
+            {
+                for(j = 0; j < locExpVector[i]->GetNverts(); ++j)
+                {
+                    vertDofs[(locExpVector[i]->GetGeom2D())->GetVid(j)] = 1;
+                    edgeDofs[(locExpVector[i]->GetGeom2D())->GetEid(j)] = 
+                        locExpVector[i]->GetEdgeNcoeffs(j)-2;
+                }
+            }
+
             /**
              * STEP 1: Wrap boundary conditions in an array (since
              * routine is set up for multiple fields) and call the
@@ -404,10 +420,13 @@ namespace Nektar
              * values
              */
             Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> > bndConditionsVec(1,bndConditions);
-            SetUp2DGraphC0ContMap(locExp,solnType,bndCondExp,bndConditionsVec,
+            nGraphVerts = SetUp2DGraphC0ContMap(locExp,solnType,
+                                                bndCondExp,bndConditionsVec,
                                   periodicVerticesId,periodicEdgesId,
                                   vertReorderedGraphVertId,
+                                  vertDofs,
                                   edgeReorderedGraphVertId,
+                                  edgeDofs,
                                   firstNonDirGraphVertId,
                                   bottomUpGraph);
 
@@ -609,7 +628,7 @@ namespace Nektar
 
             // Set up the local to global map for the next level when using
             // multi-level static condensation
-            if( (solnType == eDirectMultiLevelStaticCond) )
+            if( (solnType == eDirectMultiLevelStaticCond && nGraphVerts) )
             {
                 if(m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
                 {
@@ -656,7 +675,7 @@ namespace Nektar
          * Therefore, the algorithm proceeds as follows:
          */
 
-        void LocalToGlobalC0ContMap::SetUp2DGraphC0ContMap(
+        int LocalToGlobalC0ContMap::SetUp2DGraphC0ContMap(
                 const ExpList  &locExp,
                 const GlobalSysSolnType solnType,
                 const Array<OneD, const ExpList1DSharedPtr> &bndCondExp,
@@ -664,10 +683,13 @@ namespace Nektar
                 const vector<map<int,int> >& periodicVerticesId,
                 const map<int,int>& periodicEdgesId,
                 map<int,int> &vertReorderedGraphVertId,
+                map<int,int> &vertDofs,
                 map<int,int> &edgeReorderedGraphVertId,
+                map<int,int> &edgeDofs,
                 int          &firstNonDirGraphVertId,
                 BottomUpSubStructuredGraphSharedPtr &bottomUpGraph,
-                map<int,int> &interiorReorderedGraphVertId)
+                map<int,int> &interiorReorderedGraphVertId,
+                map<int,int> &interiorDofs)
         {
             int i,j,k;
             int cnt = 0;
@@ -682,7 +704,7 @@ namespace Nektar
             map<int,int>::iterator mapIt;
             map<int,int>::const_iterator mapConstIt;
 
-            bool doInteriorMap = (interiorReorderedGraphVertId == NullIntIntMap)? false:true;
+            bool doInteriorMap = (interiorDofs == NullIntIntMap)? false:true;
             
             /**
              * STEP 1: Order the Dirichlet vertices and edges first
@@ -874,7 +896,7 @@ namespace Nektar
                                 vertTempGraphVertId[meshVertId] = tempGraphVertId++;
                             }
                             localVerts[vertCnt++] = vertTempGraphVertId[meshVertId];
-                            vwgts_map[ vertTempGraphVertId[meshVertId] ] = 1;
+                            vwgts_map[ vertTempGraphVertId[meshVertId] ] = vertDofs[meshVertId];
                         }
 
                         meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
@@ -887,7 +909,7 @@ namespace Nektar
                                 edgeTempGraphVertId[meshEdgeId] = tempGraphVertId++;
                             }
                             localEdges[edgeCnt++] = edgeTempGraphVertId[meshEdgeId];
-                            vwgts_map[ edgeTempGraphVertId[meshEdgeId] ] = nEdgeCoeffs - 2;
+                            vwgts_map[ edgeTempGraphVertId[meshEdgeId] ] = edgeDofs[meshEdgeId];
                         }
                     }
 
@@ -895,7 +917,7 @@ namespace Nektar
                     {
                         boost::add_vertex(boostGraphObj);
                         intTempGraphVertId[elmtid] = tempGraphVertId++;
-                        vwgts_map[ intTempGraphVertId[elmtid] ] = nVerts*(nEdgeCoeffs-1);
+                        vwgts_map[ intTempGraphVertId[elmtid] ] = interiorDofs[elmtid];
                     }
 
                     // Now loop over all local edges and vertices
@@ -932,7 +954,7 @@ namespace Nektar
 
                         if(doInteriorMap)
                         {
-                            boost::add_edge( (size_t) intTempGraphVertId[elmtid],localVerts[j],boostGraphObj);
+                            boost::add_edge( (size_t)  localVerts[j], (size_t) intTempGraphVertId[elmtid],boostGraphObj);
                         }
                     }
                     for(j = 0; j < nVerts; j++)
@@ -963,9 +985,33 @@ namespace Nektar
 
                         if(doInteriorMap)
                         {
-                            boost::add_edge( (size_t) intTempGraphVertId[elmtid],localEdges[j],boostGraphObj);
+                            boost::add_edge( (size_t) localEdges[j],  (size_t) intTempGraphVertId[elmtid], boostGraphObj);
                         }
                     }
+                    
+                    if(doInteriorMap)
+                    {
+                        for(j = 0; j < nVerts; j++)
+                        {
+                            if(localVerts[j]==-1)
+                            {
+                                break;
+                            }
+                            boost::add_edge( (size_t) intTempGraphVertId[elmtid], (size_t) localVerts[j], boostGraphObj);
+                        }
+                        
+                        for(j = 0; j < nVerts; j++)
+                        {
+                            if(localEdges[j]==-1)
+                            {
+                                break;
+                            }
+
+                            boost::add_edge( (size_t) intTempGraphVertId[elmtid], (size_t) localEdges[j], boostGraphObj);
+                        }
+                    }
+
+
                 }
                 else
                 {
@@ -1033,6 +1079,8 @@ namespace Nektar
                     interiorReorderedGraphVertId[mapIt->first] = iperm[mapIt->second] + graphVertId;
                 }
             }
+            
+            return nGraphVerts;
         }
 
 

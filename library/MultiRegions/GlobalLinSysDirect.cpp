@@ -46,6 +46,10 @@ namespace Nektar
          * Solves a linear system using direct methods.
          */
 
+        GlobalLinSysDirect::GlobalLinSysDirect(void)
+        {
+        }
+
         /// Constructor for full direct matrix solve.
         GlobalLinSysDirect::GlobalLinSysDirect(const GlobalLinSysKey &pKey,
                      const boost::shared_ptr<ExpList> &pExp,

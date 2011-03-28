@@ -1840,7 +1840,14 @@ namespace Nektar
         //fielddef->m_ElementIDs onto fielddata
         void ExpList::v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
         {
+            v_AppendFieldData(fielddef,fielddata,m_coeffs);
+        }
+        
+        void ExpList::v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs)
+        {
             int i;
+            // Determine mapping from element ids to location in
+            // expansion list
             // Determine mapping from element ids to location in
             // expansion list
             map<int, int> ElmtID_to_ExpID;
@@ -1853,12 +1860,18 @@ namespace Nektar
             {
                 int eid     = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
                 int datalen = (*m_exp)[eid]->GetNcoeffs();
-                fielddata.insert(fielddata.end(),&m_coeffs[m_coeff_offset[eid]],&m_coeffs[m_coeff_offset[eid]]+datalen);
+                fielddata.insert(fielddata.end(),&coeffs[m_coeff_offset[eid]],&coeffs[m_coeff_offset[eid]]+datalen);
             }
+
         }
 
         //Extract the data in fielddata into the m_coeff list
         void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field)
+        {
+            v_ExtractDataToCoeffs(fielddef,fielddata,field,m_coeffs);
+        }
+        
+        void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs)
         {
             int i;
             int offset = 0;
@@ -1898,11 +1911,11 @@ namespace Nektar
                 // copy data if of same length as expansion
                 if(datalen == (*m_exp)[eid]->GetNcoeffs())
                 {
-                    Vmath::Vcopy(datalen,&fielddata[offset],1,&m_coeffs[m_coeff_offset[eid]],1);
+                    Vmath::Vcopy(datalen,&fielddata[offset],1,&coeffs[m_coeff_offset[eid]],1);
                 }
                 else // unpack data to new order
                 {
-                    (*m_exp)[eid]->ExtractDataToCoeffs(fielddata, offset, fielddef->m_numModes,modes_offset,coeff_tmp = m_coeffs + m_coeff_offset[eid]);
+                    (*m_exp)[eid]->ExtractDataToCoeffs(fielddata, offset, fielddef->m_numModes,modes_offset,coeff_tmp = coeffs + m_coeff_offset[eid]);
                 }
                 offset += datalen;
             }
@@ -2259,6 +2272,15 @@ namespace Nektar
             return result;
         }
 
+        void ExpList::v_GetPeriodicEdges(SpatialDomains::MeshGraph2D &graph2D,
+                                         SpatialDomains::BoundaryConditions &bcs,
+                                         const std::string variable,
+                                         vector<map<int,int> > & periodicVertices,
+                                         map<int,int>& periodicEdges)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
     } //end of namespace
 } //end of namespace
 

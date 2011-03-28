@@ -130,7 +130,6 @@ namespace Nektar
          * function.
          */
 
-
         /**
          * Given a block matrix, construct a global matrix system according to
          * a local to global mapping. #m_linSys is constructed by

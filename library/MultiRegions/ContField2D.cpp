@@ -848,7 +848,7 @@ namespace Nektar
                         += (m_bndCondExpansions[i]->GetCoeffs())[j];
                 }
             }
-
+            
             // Solve the system
             GlobalLinSysKey key(StdRegions::eHelmholtz,m_locToGloMap,lambda);
 

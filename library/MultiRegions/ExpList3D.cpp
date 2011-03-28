@@ -251,6 +251,120 @@ namespace Nektar
         }
 
         /**
+         * Given an expansion vector \a expansions, containing
+         * information about the domain and the spectral/hp element
+         * expansion, this constructor fills the list of local
+         * expansions \texttt{m_exp} with the proper expansions,
+         * calculates the total number of quadrature points
+         * \f$\boldsymbol{x}_i\f$ and the local expansion coefficients
+         * \f$\hat{u}^e_n\f$ and allocates memory for the arrays
+         * #m_coeffs and #m_phys.
+         *
+         * @param expansions An expansion vector, containing
+         *                   information about the domain and the
+         *                   spectral/hp element expansion.
+         */
+        ExpList3D::ExpList3D(SpatialDomains::ExpansionVector &expansions):
+            ExpList()
+        {
+            LocalRegions::TetExpSharedPtr tet;
+            LocalRegions::HexExpSharedPtr hex;
+            LocalRegions::PrismExpSharedPtr prism;
+            LocalRegions::PyrExpSharedPtr pyramid;
+
+
+            for(int i = 0; i < expansions.size(); ++i)
+            {
+                SpatialDomains::TetGeomSharedPtr TetGeom;
+                SpatialDomains::HexGeomSharedPtr HexGeom;
+                SpatialDomains::PrismGeomSharedPtr PrismGeom;
+                SpatialDomains::PyrGeomSharedPtr PyrGeom;
+
+                if(TetGeom = boost::dynamic_pointer_cast<
+                        SpatialDomains::TetGeom>(expansions[i]->m_geomShPtr))
+                {
+                    LibUtilities::BasisKey TetBa
+                                        = expansions[i]->m_basisKeyVector[0];
+                    LibUtilities::BasisKey TetBb
+                                        = expansions[i]->m_basisKeyVector[1];
+                    LibUtilities::BasisKey TetBc
+                                        = expansions[i]->m_basisKeyVector[2];
+
+                    if(TetBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
+                    {
+                      ASSERTL0(false,"LocalRegions::NodalTetExp is not "
+                                     "implemented yet");
+                    }
+                    else
+                    {
+                        tet = MemoryManager<LocalRegions::TetExp>
+                                        ::AllocateSharedPtr(TetBa,TetBb,TetBc,
+                                                            TetGeom);
+                        (*m_exp).push_back(tet);
+                    }
+                }
+                else if(PrismGeom = boost::dynamic_pointer_cast<
+                        SpatialDomains::PrismGeom>(expansions[i]->m_geomShPtr))
+                {
+                    LibUtilities::BasisKey PrismBa
+                                        = expansions[i]->m_basisKeyVector[0];
+                    LibUtilities::BasisKey PrismBb
+                                        = expansions[i]->m_basisKeyVector[1];
+                    LibUtilities::BasisKey PrismBc
+                                        = expansions[i]->m_basisKeyVector[2];
+
+                    prism = MemoryManager<LocalRegions::PrismExp>
+                                        ::AllocateSharedPtr(PrismBa,PrismBb,
+                                                            PrismBc,PrismGeom);
+                    (*m_exp).push_back(prism);
+                }
+                else if(PyrGeom = boost::dynamic_pointer_cast<
+                        SpatialDomains::PyrGeom>(expansions[i]->m_geomShPtr))
+                {
+                    LibUtilities::BasisKey PyrBa
+                                        = expansions[i]->m_basisKeyVector[0];
+                    LibUtilities::BasisKey PyrBb
+                                        = expansions[i]->m_basisKeyVector[1];
+                    LibUtilities::BasisKey PyrBc
+                                        = expansions[i]->m_basisKeyVector[2];
+
+                    pyramid = MemoryManager<LocalRegions::PyrExp>
+                                        ::AllocateSharedPtr(PyrBa,PyrBb,PyrBc,
+                                                            PyrGeom);
+                    (*m_exp).push_back(pyramid);
+                }
+                else if(HexGeom = boost::dynamic_pointer_cast<
+                        SpatialDomains::HexGeom>(expansions[i]->m_geomShPtr))
+                {
+                    LibUtilities::BasisKey HexBa
+                                        = expansions[i]->m_basisKeyVector[0];
+                    LibUtilities::BasisKey HexBb
+                                        = expansions[i]->m_basisKeyVector[1];
+                    LibUtilities::BasisKey HexBc
+                                        = expansions[i]->m_basisKeyVector[2];
+
+                    hex = MemoryManager<LocalRegions::HexExp>
+                                        ::AllocateSharedPtr(HexBa,HexBb,HexBc,
+                                                            HexGeom);
+                    (*m_exp).push_back(hex);
+                }
+                else
+                {
+                    ASSERTL0(false,"dynamic cast to a proper Geometry3D "
+                                   "failed");
+                }
+
+            }
+
+            // Setup Default optimisation information.
+            int nel = GetExpSize();
+            m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
+                ::AllocateSharedPtr(nel);
+
+            SetCoeffPhys();
+        }
+
+        /**
          * Set up the storage for the concatenated list of
          * coefficients and physical evaluations at the quadrature
          * points. Each expansion (local element) is processed in turn

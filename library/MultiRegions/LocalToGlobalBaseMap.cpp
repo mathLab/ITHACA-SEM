@@ -87,7 +87,8 @@ namespace Nektar
         }
 
 
-        /**
+        /** Create a new level of mapping using the information in
+         *  multiLevelGraph and performing the following steps:
          *
          */
         LocalToGlobalBaseMap::LocalToGlobalBaseMap(
@@ -115,12 +116,15 @@ namespace Nektar
 
             //--------------------------------------------------------------
             int newLevel = staticCondLevelOld+1;
-            // STEP 1: we are going to setup a mask array
-            //         to determine to which patch of the new level
-            //         every patch of the current old belongs
-            // Therefore, set up following four arrays
-            // These arrays will be used to check which local dofs of
-            // the old level belong to which patch of the new level
+            /** - STEP 1: setup a mask array to determine to which patch
+             *          of the new level every patch of the current
+             *          level belongs.  To do so we make four arrays,
+             *          #gloPatchMask, #globHomPatchMask,
+             *          #locPatchMask_NekDouble and #locPatchMask.
+             *          These arrays are then used to check which local
+             *          dofs of the old level belong to which patch of
+             *          the new level
+             */
             Array<OneD, NekDouble> globPatchMask         (numGlobalBndCoeffsOld,-1.0);
             Array<OneD, NekDouble> globHomPatchMask      (globPatchMask+numGlobalDirBndCoeffsOld);
             Array<OneD, NekDouble> locPatchMask_NekDouble(numLocalBndCoeffsOld,-3.0);
@@ -141,11 +145,12 @@ namespace Nektar
             // Convert the result to an array of integers rather than doubles
             RoundNekDoubleToInt(locPatchMask_NekDouble,locPatchMask);
 
-            // STEP 2: We are going to calculate how many local bnd
-            // dofs of the old level belong to the boundaries of each
-            // patch at the new level. We need this information to set
-            // up the mapping between different levels.
-
+            /** - STEP 2: We calculate how many local bnd dofs of the
+             *  old level belong to the boundaries of each patch at
+             *  the new level. We need this information to set up the
+             *  mapping between different levels.
+             */
+            
             // Retrieve the number of patches at the next level
             int numPatchesWithIntNew = multiLevelGraph->GetNpatchesWithInterior(newLevel);
             int numPatchesNew        = numPatchesWithIntNew;
@@ -172,8 +177,10 @@ namespace Nektar
                 //    next level patch given by the positive number)
                 // - -1 for all entries. In this case, we will make an additional patch only
                 //   consisting of boundaries at the next level
-                minval = *min_element(&locPatchMask[cnt],&locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);
-                maxval = *max_element(&locPatchMask[cnt],&locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);
+                minval = *min_element(&locPatchMask[cnt],
+                                      &locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);
+                maxval = *max_element(&locPatchMask[cnt],
+                                      &locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);
                 ASSERTL0((minval==maxval)||(minval==-1),"These values should never be the same");
 
                 if(maxval == -1)
@@ -215,7 +222,8 @@ namespace Nektar
             // Also initialise some more data members
             m_solnType              = solnTypeOld;
             ASSERTL1(m_solnType==eDirectMultiLevelStaticCond,
-                     "This method should only be called for in case of multi-level static condensation.");
+                     "This method should only be called for in "
+                     "case of multi-level static condensation.");
             m_staticCondLevel       = newLevel;
             m_signChange            = signChangeOld;
             m_numLocalDirBndCoeffs  = numLocalDirBndCoeffsOld;

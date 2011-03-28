@@ -247,7 +247,7 @@ namespace Nektar
                                        const GlobalSysSolnType solnType,
                                        bool SetUpJustDG,
                                        bool DeclareCoeffPhysArrays):
-            ExpList2D(graph2D,DeclareCoeffPhysArrays),
+            ExpList2D(graph2D,DeclareCoeffPhysArrays,bcs.GetVariable(bc_loc)),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -350,7 +350,7 @@ namespace Nektar
                                        bool SetUpJustDG,
                                        bool DeclareCoeffPhysArrays):
 
-            ExpList2D(graph2D,DeclareCoeffPhysArrays),
+            ExpList2D(graph2D,DeclareCoeffPhysArrays,variable),
             m_bndCondExpansions(),
             m_bndConditions()
         {

@@ -1294,6 +1294,62 @@ namespace Nektar
             }
         }
 
+        void StdQuadExp::IProductWRTBase_SumFacKernel(const Array<OneD, const NekDouble>& base0, 
+                                                     const Array<OneD, const NekDouble>& base1,
+                                                     const Array<OneD, const NekDouble>& inarray,
+                                                     Array<OneD, NekDouble> &outarray,
+                                                     Array<OneD, NekDouble> &wsp,
+                                                     bool doCheckCollDir0,
+                                                     bool doCheckCollDir1)
+            {
+                int    nquad0 = m_base[0]->GetNumPoints();
+                int    nquad1 = m_base[1]->GetNumPoints();   
+                int    nmodes0 = m_base[0]->GetNumModes();
+                int    nmodes1 = m_base[1]->GetNumModes();
+
+                bool colldir0 = doCheckCollDir0?(m_base[0]->Collocation()):false;
+                bool colldir1 = doCheckCollDir1?(m_base[1]->Collocation()):false;
+                                
+                if(colldir0 && colldir1)
+                {
+                    Vmath::Vcopy(m_ncoeffs,inarray.get(),1,outarray.get(),1);
+                }
+                else if(colldir0)
+                {
+                    Blas::Dgemm('N', 'N',nmodes0,nmodes1, nquad1,1.0, inarray.get(),                            
+                                nmodes0, base1.get(), nquad1, 0.0,outarray.get(),nmodes0); 
+                }
+                else if(colldir1)
+                {
+                    Blas::Dgemm('T','N',nmodes0,nquad1,nquad0,1.0,base0.get(),               
+                                nquad0,inarray.get(),nquad0,0.0,outarray.get(),nmodes0);
+                }
+                else
+                { 
+                    ASSERTL1(wsp.num_elements()>=nquad1*nmodes0,"Workspace size is not sufficient");
+
+#if 0 
+                    Blas::Dgemm('T','N',nmodes0,nquad1,nquad0,1.0,base0.get(),               
+                                nquad0,inarray.get(),nquad0,0.0,wsp.get(),nmodes0);
+                    
+#else
+                    for(int i = 0; i < nmodes0; ++i)
+                    {
+                        for(int j = 0; j < nquad1; ++j)
+                        {
+                            wsp[j*nmodes0+i] = Blas::Ddot(nquad0,
+                                                          base0.get()+i*nquad0,1,
+                                                          inarray.get()+j*nquad0,1);
+                        }
+                    }
+#endif              
+                    Blas::Dgemm('N', 'N',nmodes0,nmodes1, nquad1,1.0, wsp.get(),                            
+                                nmodes0, base1.get(), nquad1, 0.0,outarray.get(),nmodes0); 
+                }
+            }        
+
+
+
     } //end namespace            
 }//end namespace
 

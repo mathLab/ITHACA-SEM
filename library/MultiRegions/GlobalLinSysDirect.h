@@ -50,6 +50,10 @@ namespace Nektar
         class GlobalLinSysDirect : public GlobalLinSys
         {
         public:
+            /// Default constructor
+            GlobalLinSysDirect(void);
+
+
             /// Constructor for full direct matrix solve.
             GlobalLinSysDirect(const GlobalLinSysKey &mkey,
                          const boost::shared_ptr<ExpList> &pExp,

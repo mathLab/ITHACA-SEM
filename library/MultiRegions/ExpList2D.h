@@ -72,7 +72,12 @@ namespace Nektar
 
             /// Sets up a list of local expansions based on an input mesh.
             ExpList2D(SpatialDomains::MeshGraph2D &graph2D,
-                      bool DelcareCoeffPhysArrays = true);
+                      bool DelcareCoeffPhysArrays = true, 
+                      const std::string var = "DefaultVar");
+
+            /// Sets up a list of local expansions based on an expansion vector
+            ExpList2D(const SpatialDomains::ExpansionVector &expansions,
+                      bool DeclareCoeffPhysArrays = true);
 
             /// Sets up a list of local expansions based on an input mesh
             /// and separately defined basiskeys

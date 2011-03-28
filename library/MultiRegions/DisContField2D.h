@@ -223,6 +223,13 @@ namespace Nektar
 
             void EvaluateHDGPostProcessing(Array<OneD, NekDouble> &outarray);
 
+            /// Generates a map of periodic edges in the mesh.
+            void GetPeriodicEdges(
+                        SpatialDomains::MeshGraph2D &graph2D,
+                        SpatialDomains::BoundaryConditions &bcs,
+                        const std::string variable,
+                        vector<map<int,int> > & periodicVertices,
+                        map<int,int>& periodicEdges);
         protected:
             /**
              * \brief The number of boundary segments on which
@@ -273,13 +280,6 @@ namespace Nektar
                                                     const std::string variable,
                                                     bool DeclareCoeffPhysArrays = true);
 
-            /// Generates a map of periodic edges in the mesh.
-            void GetPeriodicEdges(
-                        SpatialDomains::MeshGraph2D &graph2D,
-                        SpatialDomains::BoundaryConditions &bcs,
-                        const std::string variable,
-                        vector<map<int,int> > & periodicVertices,
-                        map<int,int>& periodicEdges);
 
             virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID,
                                                 Array<OneD,int> &EdgeID)
@@ -375,6 +375,15 @@ namespace Nektar
             virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo()
             {
                 return GetRobinBCInfo();
+            }
+
+            virtual void v_GetPeriodicEdges(SpatialDomains::MeshGraph2D &graph2D,
+                                            SpatialDomains::BoundaryConditions &bcs,
+                                            const std::string variable,
+                                            vector<map<int,int> > & periodicVertices,
+                                            map<int,int>& periodicEdges)
+            {
+                GetPeriodicEdges(graph2D,bcs,variable,periodicVertices,periodicEdges);
             }
 
             virtual void v_HelmSolve(

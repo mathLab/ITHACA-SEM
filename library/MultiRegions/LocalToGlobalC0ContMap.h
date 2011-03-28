@@ -41,7 +41,6 @@
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList2D.h>
 
-
 #include <LocalRegions/PointExp.h>
 #include <LocalRegions/SegExp.h>
 
@@ -106,7 +105,7 @@ namespace Nektar
             /** Construct optimal ordering a two-dimensional expansion
             /*  given a vector of boundary condition information
             */
-            void SetUp2DGraphC0ContMap(
+            int SetUp2DGraphC0ContMap(
                                        const ExpList  &locExp,
                                        const GlobalSysSolnType solnType,
                                        const Array<OneD, const MultiRegions::ExpList1DSharedPtr>  &bndCondExp,
@@ -115,17 +114,26 @@ namespace Nektar
                                        const vector<map<int,int> >& periodicVerticesId,
                                        const map<int,int>& periodicEdgesId,
                                        map<int,int> &vertReorderedGraphVertId,
+                                       map<int,int> &vertDofs,
                                        map<int,int> &edgeReorderedGraphVertId,
+                                       map<int,int> &edgeDofs,
                                        int          &firstNonDirGraphVertID,
                                        BottomUpSubStructuredGraphSharedPtr &bottomUpGraph,
-                                       map<int,int> &interiorReorderedGraphVertId = NullIntIntMap);
+                                       map<int,int> &interiorReorderedGraphVertId = NullIntIntMap,
+                                       map<int,int> &interiorDofs = NullIntIntMap);
 
 
             inline int GetLocalToGlobalMap(const int i) const;
 
             inline const Array<OneD,const int>&  GetLocalToGlobalMap();
 
+            inline void SetLocalToGlobalMap(Array<OneD, int> inarray);
+
             inline NekDouble GetLocalToGlobalSign(const int i) const;
+            
+            inline Array<OneD, const NekDouble > &GetLocalToGlobalSign();
+            
+            inline void SetLocalToGlobalSign(Array<OneD, NekDouble> inarray);
 
             inline const void LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
@@ -167,9 +175,9 @@ namespace Nektar
                                            const ExpList &locExp,
                                            const GlobalSysSolnType solnType,
                                            const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp =
-                                               LocalRegions::NullPointExpSharedPtrArray,
+                                           LocalRegions::NullPointExpSharedPtrArray,
                                            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions =
-                                               SpatialDomains::NullBoundaryConditionShPtrArray,
+                                           SpatialDomains::NullBoundaryConditionShPtrArray,
                                            const map<int,int>& periodicVerticesId = NullIntIntMap);
 
             /// Construct mappings for a two-dimensional scalar expansion.
@@ -197,6 +205,7 @@ namespace Nektar
 
             /// Calculate the bandwith of the full matrix system.
             void CalculateFullSystemBandWidth();
+
         };
         typedef boost::shared_ptr<LocalToGlobalC0ContMap>  LocalToGlobalC0ContMapSharedPtr;
 
@@ -211,6 +220,12 @@ namespace Nektar
             return m_localToGlobalMap;
         }
 
+        inline void LocalToGlobalC0ContMap::SetLocalToGlobalMap(Array<OneD, int> inarray)
+        {
+            m_localToGlobalMap = inarray;
+        }
+
+
         inline NekDouble LocalToGlobalC0ContMap::GetLocalToGlobalSign(
                     const int i) const
         {
@@ -222,6 +237,23 @@ namespace Nektar
             {
                 return 1.0;
             }
+        }
+
+        inline Array<OneD, const NekDouble> &LocalToGlobalC0ContMap::GetLocalToGlobalSign()
+        {
+            if(m_signChange)
+            {
+                return m_localToGlobalSign;
+            }
+            else
+            {
+                return NullNekDouble1DArray;
+            }
+        }
+
+        inline void LocalToGlobalC0ContMap::SetLocalToGlobalSign(Array<OneD,NekDouble> inarray)
+        {
+            m_localToGlobalSign = inarray;
         }
 
         inline const void LocalToGlobalC0ContMap::LocalToGlobal(

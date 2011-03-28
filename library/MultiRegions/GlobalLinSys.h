@@ -55,14 +55,20 @@ namespace Nektar
 
         /// Datatype of the NekFactory used to instantiate classes derived from
         /// the EquationSystem class.
-        typedef LibUtilities::NekFactory< std::string, GlobalLinSys, const GlobalLinSysKey&,
-                const boost::shared_ptr<ExpList>&,
-                const boost::shared_ptr<LocalToGlobalBaseMap>& > GlobalLinSysFactory;
+        typedef LibUtilities::NekFactory< std::string, GlobalLinSys, 
+            const GlobalLinSysKey&,
+            const boost::shared_ptr<ExpList>&,
+            const boost::shared_ptr<LocalToGlobalBaseMap>& > GlobalLinSysFactory;
 
         /// A global linear system.
         class GlobalLinSys
         {
         public:
+            /// Default constructor
+            GlobalLinSys(void)
+            {
+            }
+
             /// Constructor for full direct matrix solve.
             GlobalLinSys(const GlobalLinSysKey &mkey,
                          const boost::shared_ptr<ExpList> &pExp,

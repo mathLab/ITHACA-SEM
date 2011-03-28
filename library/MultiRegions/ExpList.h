@@ -47,6 +47,7 @@
 #include <SpatialDomains/SegGeom.h>
 
 #include <SpatialDomains/MeshGraph.h>
+#include <SpatialDomains/MeshGraph2D.h>
 #include <MultiRegions/GlobalOptimizationParameters.h>
 #include <boost/enable_shared_from_this.hpp>
 
@@ -575,6 +576,15 @@ namespace Nektar
                 return v_GetRobinBCInfo();
             }
 
+            void GetPeriodicEdges(SpatialDomains::MeshGraph2D &graph2D,
+                                  SpatialDomains::BoundaryConditions &bcs,
+                                  const std::string variable,
+                                  vector<map<int,int> > & periodicVertices,
+                                  map<int,int>& periodicEdges)
+            {
+                v_GetPeriodicEdges(graph2D,bcs,variable,periodicVertices,periodicEdges);
+            }
+
             std::vector<SpatialDomains::FieldDefinitionsSharedPtr>
                 GetFieldDefinitions()
             {
@@ -598,6 +608,17 @@ namespace Nektar
                 v_AppendFieldData(fielddef,fielddata);
             }
 
+            
+            /// Append the data in coeffs listed in elements
+            /// fielddef->m_ElementIDs onto fielddata
+            void AppendFieldData(
+                                 SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
+                                 std::vector<NekDouble> &fielddata,
+                                 Array<OneD, NekDouble> &coeffs)
+            {
+                v_AppendFieldData(fielddef,fielddata,coeffs);
+            }
+
             /// Extract the data in fielddata into the m_coeff list
             void ExtractDataToCoeffs(
                                      SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
@@ -605,6 +626,17 @@ namespace Nektar
                                      std::string &field)
             {
                 v_ExtractDataToCoeffs(fielddef,fielddata,field);
+            }
+
+
+            /// Extract the data in fielddata into the coeffs
+            void ExtractDataToCoeffs(
+                                     SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
+                                     std::vector<NekDouble> &fielddata,
+                                     std::string &field,
+                                     Array<OneD, NekDouble> &coeffs)
+            {
+                v_ExtractDataToCoeffs(fielddef,fielddata,field,coeffs);
             }
 
             /// Returns a shared pointer to the current object.
@@ -911,7 +943,12 @@ namespace Nektar
 
             virtual void v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata);
 
+            virtual void v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs);
+
             virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field);
+
+            virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field,
+                                               Array<OneD, NekDouble> &coeffs);
 
             virtual void v_WriteTecplotHeader(std::ofstream &outfile,
                                             std::string var = "v");
@@ -944,6 +981,12 @@ namespace Nektar
 
             virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo(void);
 
+
+            virtual void v_GetPeriodicEdges(SpatialDomains::MeshGraph2D &graph2D,
+                                            SpatialDomains::BoundaryConditions &bcs,
+                                            const std::string variable,
+                                            vector<map<int,int> > & periodicVertices,
+                                            map<int,int>& periodicEdges);
 
         };
 
@@ -1561,7 +1604,8 @@ namespace Nektar
             v_GetBoundaryToElmtMap(ElmtID,EdgeID);
         }
 
-
+        const static Array<OneD, ExpListSharedPtr> NullExpListSharedPtrArray;
+        
   } //end of namespace
 } //end of namespace
 

@@ -75,6 +75,8 @@ namespace Nektar
             /// Sets up a list of local expansions based on an input mesh.
             ExpList3D(SpatialDomains::MeshGraph3D &graph3D);
 
+            /// Sets up a list of local expansions based on an expansion vector
+            ExpList3D(SpatialDomains::ExpansionVector &expansions);
 
             /// Destructor.
             ~ExpList3D();

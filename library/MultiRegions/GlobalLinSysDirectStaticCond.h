@@ -87,6 +87,14 @@ namespace Nektar
                         const boost::shared_ptr<LocalToGlobalBaseMap>
                                                                 &locToGloMap);
 
+            GlobalLinSysDirectStaticCond(
+                        const DNekScalBlkMatSharedPtr pSchurCompl,
+                        const DNekScalBlkMatSharedPtr pBinvD,
+                        const DNekScalBlkMatSharedPtr pC,
+                        const DNekScalBlkMatSharedPtr pInvD,
+                        const boost::shared_ptr<LocalToGlobalBaseMap>
+                        &pLocToGloMap);
+
             virtual ~GlobalLinSysDirectStaticCond();
 
             /// Solve the linear system for given input and output vectors
@@ -110,7 +118,12 @@ namespace Nektar
 
             /// Initialise this object
             void Initialise(
-                    const boost::shared_ptr<LocalToGlobalBaseMap>& locToGloMap);
+                  const boost::shared_ptr<LocalToGlobalBaseMap>& locToGloMap,
+                  MatrixStorage matStorage);
+
+            /// Matrix Storage type for known matrices
+            MatrixStorage DetermineMatrixStorage(
+                   const boost::shared_ptr<LocalToGlobalBaseMap>& locToGloMap);
 
             /// Set up the storage for the Schur complement or the top level
             /// of the multi-level Schur complement.
@@ -119,7 +132,8 @@ namespace Nektar
 
             /// Assemble the Schur complement matrix.
             void AssembleSchurComplement(
-                    const boost::shared_ptr<LocalToGlobalBaseMap>& locToGloMap);
+                                         const boost::shared_ptr<LocalToGlobalBaseMap>& locToGloMap,
+                                         const MatrixStorage matStorage);
 
             ///
             void ConstructNextLevelCondensedSystem(

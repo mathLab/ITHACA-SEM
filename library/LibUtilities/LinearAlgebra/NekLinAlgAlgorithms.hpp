@@ -42,11 +42,13 @@
 
 namespace Nektar
 {
-    /// \brief Calculates the orthogonal, normalized vectros from linearly independent input.
-    /// \return A list of ortogonalized vectors corresponding to the input vectors.  If the size
-    ///         of the output doesn't match the size of the input then an error occurred.
-    /// This algorithm is taken from "Parallel Scientific Computing in C++ and MPI",
-    /// Karniadakis and Kirby, page 55.
+    /// \brief Calculates the orthogonal, normalized vectors from
+    /// linearly independent input.
+    /// \return A list of ortogonalized vectors corresponding to the
+    ///         input vectors.  If the size of the output doesn't
+    ///         match the size of the input then an error occurred.
+    /// This algorithm is taken from "Parallel Scientific Computing in
+    /// C++ and MPI", Karniadakis and Kirby, page 55.
     template<typename DataType, typename VectorDimension, typename space>
     std::vector<NekVector<DataType, VectorDimension, space> > 
     GramSchmidtOrthogonalization(const std::vector<NekVector<DataType, VectorDimension, space> >& x)
@@ -58,8 +60,9 @@ namespace Nektar
         unsigned int dim = x[0].GetDimension();
         std::vector<VectorType> q(x.size(), VectorType());
         
-        // This matrix holds the r_ij values.  Using the matrix object is a convenience
-        // since it provides a 2D access to a table of values.
+        // This matrix holds the r_ij values.  Using the matrix object
+        // is a convenience since it provides a 2D access to a table
+        // of values.
         MatrixType r(dim, dim);
         r(0,0) = x[0].L2Norm();
 

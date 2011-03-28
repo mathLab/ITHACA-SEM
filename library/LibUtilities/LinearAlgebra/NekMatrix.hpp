@@ -50,11 +50,16 @@ namespace Nektar
     template<typename DataType, typename FormType>
     std::ostream& operator<<(std::ostream& os, const NekMatrix<DataType, FormType>& rhs)
     {
+        int oswidth = 9;
+        int osprecision = 6;
+
         for(unsigned int i = 0; i < rhs.GetRows(); ++i)
         {
             os << "[";
             for(unsigned int j = 0; j < rhs.GetColumns(); ++j)
             {
+                os.width(oswidth);
+                os.precision(osprecision);
                 os << rhs(i,j);
                 if( j != rhs.GetColumns() - 1 )
                 {
@@ -69,6 +74,39 @@ namespace Nektar
         }
         return os;
     }
+
+    template<typename DataType, typename FormType>
+    std::ostream& operator>>(std::ostream& os, const NekMatrix<DataType, FormType>& rhs)
+    {
+        NekDouble tol = 1e-12;
+        os <<  "[" << std::endl;
+
+        for(unsigned int i = 0; i < rhs.GetRows(); ++i)
+        {
+            for(unsigned int j = 0; j < rhs.GetColumns(); ++j)
+            {
+                if((NekDouble)rhs(i,j) > tol)
+                {
+                    os << '+';
+                }
+                else if((NekDouble)rhs(i,j) < -tol)
+                {
+                    os << '*';
+                }
+                else
+                {
+                    os << '-';
+                }
+            }
+            if( i != rhs.GetRows()-1 )
+            {
+                os << std::endl;
+            }
+        }
+        os <<  "]" << std::endl;
+        return os;
+    }
+
 
     
     #ifdef NEKTAR_USE_EXPRESSION_TEMPLATES

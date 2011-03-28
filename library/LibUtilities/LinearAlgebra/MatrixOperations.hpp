@@ -156,9 +156,9 @@ namespace Nektar
         }
 
         Blas::Dgemm(lhs.GetTransposeFlag(), rhs.GetTransposeFlag(), M, N, K,
-            lhs.Scale()*rhs.Scale(), lhs.GetRawPtr(), LDA,
-            rhs.GetRawPtr(), LDB, 0.0,
-            result.GetRawPtr(), lhs.GetRows());
+                    lhs.Scale()*rhs.Scale(), lhs.GetRawPtr(), LDA,
+                    rhs.GetRawPtr(), LDB, 0.0,
+                    result.GetRawPtr(), result.GetRows());
     }
     
     template<typename ResultType, typename LhsDataType, typename RhsDataType,
@@ -412,7 +412,7 @@ namespace Nektar
     template<typename LhsDataType, typename LhsMatrixType, typename RhsDataType, typename RhsMatrixType>
     NekMatrix<typename NekMatrix<LhsDataType, LhsMatrixType>::NumberType, StandardMatrixTag> 
     Add(const NekMatrix<LhsDataType, LhsMatrixType>& lhs,
-           const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
+        const NekMatrix<RhsDataType, RhsMatrixType>& rhs)
     {
         typedef typename NekMatrix<LhsDataType, LhsMatrixType>::NumberType NumberType;
         NekMatrix<NumberType, StandardMatrixTag> result(lhs.GetRows(), lhs.GetColumns());
@@ -770,7 +770,7 @@ namespace Nektar
         Blas::Dgemm(A.GetTransposeFlag(), B.GetTransposeFlag(), M, N, K,
             A.Scale()*B.Scale()*alpha, A.GetRawPtr(), LDA,
             B.GetRawPtr(), LDB, beta*result.Scale(),
-            result.GetRawPtr(), M);
+                    result.GetRawPtr(), result.GetRows());
     }
 
     template<typename ADataType, typename BDataType, typename CDataType, 

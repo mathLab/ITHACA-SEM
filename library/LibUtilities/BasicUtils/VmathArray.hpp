@@ -222,7 +222,7 @@ using namespace Nektar;
         /************ Misc routine from Veclib (and extras)  ************/
         
         /// \brief Gather vector z[i] = x[y[i]]
-        template<class T>  void Gathr(int n, const Array<OneD,T> &x, const Array<OneD,int> &y,  Array<OneD,T> &z)
+        template<class T>  void Gathr(int n, const Array<OneD, const T> &x, const Array<OneD, const int> &y,  Array<OneD,T> &z)
         {
             
             ASSERTL1(n <= x.num_elements()+x.GetOffset(),"Array out of bounds");
@@ -234,7 +234,7 @@ using namespace Nektar;
         }
     
         /// \brief Scatter vector z[y[i]] = x[i]
-        template<class T>  void Scatr(int n, const Array<OneD,T> &x, const Array<OneD,int> &y,  Array<OneD,T> &z)
+        template<class T>  void Scatr(int n, const Array<OneD,const T> &x, const Array<OneD,const int> &y,  Array<OneD,T> &z)
         {
             ASSERTL1(n <= x.num_elements()+x.GetOffset(),"Array out of bounds");
             ASSERTL1(n <= y.num_elements()+y.GetOffset(),"Array out of bounds");

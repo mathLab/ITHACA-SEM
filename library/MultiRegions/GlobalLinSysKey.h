@@ -47,6 +47,10 @@ namespace Nektar
         class GlobalLinSysKey
         {
         public:
+            /// Default constructor.
+            GlobalLinSysKey()
+            {
+            }
             /// Linear system with no parameters.
             GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap);
@@ -113,8 +117,6 @@ namespace Nektar
                                             GetVariableCoefficients() const;
 
         protected:
-            /// Default constructor.
-            GlobalLinSysKey(); 
 
             /// Store the solution type associated with the linear system. This
             /// may be none, full matrix, static condensation or multi-level

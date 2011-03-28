@@ -125,6 +125,9 @@ namespace Nektar
         typedef std::vector<ExpansionShPtr>  ExpansionVector;
         typedef std::vector<ExpansionShPtr>::iterator ExpansionVectorIter;
 
+        typedef boost::shared_ptr<ExpansionVector> ExpansionVectorShPtr;
+        typedef std::map<std::string, ExpansionVectorShPtr> ExpansionVectorShPtrMap;
+
         static std::vector<NekDouble> NullNekDoubleVector;
         static std::vector<LibUtilities::PointsType> NullPointsTypeVector;
         static std::vector<unsigned int> NullUnsignedIntVector;
@@ -280,11 +283,18 @@ namespace Nektar
                     std::vector<SpatialDomains::FieldDefinitionsSharedPtr>
                     &fielddef);
 
+                /// This function sets the expansion #exp in map with entry #variable
+                inline void SetExpansions(const std::string variable, ExpansionVectorShPtr &exp);
+
+
                 /// Sets the basis key for all expansions of the given shape.
                 void SetBasisKey(SpatialDomains::GeomShapeType shape,
                     LibUtilities::BasisKeyVector &keys);
 
-                inline const ExpansionVector &GetExpansions(void) const;
+                inline const ExpansionVector &GetExpansions(void);
+
+                inline const ExpansionVector &GetExpansions(const std::string variable);
+                inline bool  SameExpansions(const std::string var1, const std::string var2);
 
                 inline const bool CheckForGeomInfo(std::string parameter);
 
@@ -305,7 +315,7 @@ namespace Nektar
                 PrismGeomSharedPtr AddPrism(TriGeomSharedPtr tfaces[PrismGeom::kNtfaces],
                     QuadGeomSharedPtr qfaces[PrismGeom::kNqfaces]);
                 HexGeomSharedPtr AddHexahedron(QuadGeomSharedPtr qfaces[HexGeom::kNqfaces]);
-                void AddExpansion(ExpansionShPtr expansion) { m_expansionVector.push_back(expansion); }
+                //void AddExpansion(ExpansionShPtr expansion) { m_expansionVector.push_back(expansion); } hopefully not needed 
                 const SegGeomVector& GetAllSegGeoms() const { return m_segGeoms; }
                 const TriGeomVector& GetAllTriGeoms() const { return m_triGeoms; }
                 const QuadGeomVector& GetAllQuadGeoms() const { return m_quadGeoms; }
@@ -335,9 +345,13 @@ namespace Nektar
 
                 CompositeVector         m_meshCompositeVector;
                 CompositeVector         m_domain;
-                ExpansionVector         m_expansionVector;
+
+                ExpansionVectorShPtrMap m_expansionVectorShPtrMap;
 
                 GeomInfoMap             m_geomInfo;
+
+                ExpansionVectorShPtr    SetUpExpansionVector(void);
+
         };
 
         typedef boost::shared_ptr<MeshGraph> MeshGraphSharedPtr;
@@ -386,8 +400,10 @@ namespace Nektar
             ExpansionVectorIter iter;
             ExpansionShPtr returnval;
 
-            for (iter = m_expansionVector.begin();
-                                    iter!=m_expansionVector.end(); ++iter)
+            ExpansionVectorShPtr expansionVector = m_expansionVectorShPtrMap.find("DefaultVar")->second;
+
+            for (iter = expansionVector->begin();
+                                    iter!=expansionVector->end(); ++iter)
             {
                 if ((*iter)->m_geomShPtr == geom)
                 {
@@ -398,9 +414,61 @@ namespace Nektar
             return returnval;
         }
 
-        inline const ExpansionVector &MeshGraph::GetExpansions(void) const
+        inline const ExpansionVector &MeshGraph::GetExpansions(void) 
         {
-            return m_expansionVector;
+            std::string defstr = "DefaultVar";
+            return GetExpansions(defstr);
+        }
+
+        inline const ExpansionVector &MeshGraph::GetExpansions(const std::string variable) 
+        {
+            ExpansionVectorShPtr returnval;
+
+            if(m_expansionVectorShPtrMap.count(variable))
+            {
+                returnval = m_expansionVectorShPtrMap.find(variable)->second;
+            }
+            else
+            {
+                if(m_expansionVectorShPtrMap.count("DefaultVar") == 0)
+                {
+                    NEKERROR(ErrorUtil::efatal, (std::string("Unable to find expansion vector definition for field: ")+variable).c_str());
+                }
+                returnval = m_expansionVectorShPtrMap.find("DefaultVar")->second;
+                m_expansionVectorShPtrMap[variable] = returnval;
+
+                NEKERROR(ErrorUtil::ewarning, (std::string("Using Default variable expansion definition for field: ")+variable).c_str());
+            }
+            
+            return *returnval;
+        }
+
+
+        void  MeshGraph::SetExpansions(const std::string variable, ExpansionVectorShPtr &exp) 
+        {
+
+            if(m_expansionVectorShPtrMap.count(variable) != 0)
+            {
+                ASSERTL0(false,(std::string("Expansion field is already set for variable ") + variable).c_str());
+            }
+            else
+            {
+                m_expansionVectorShPtrMap[variable] = exp;
+            }
+        }
+
+
+        inline bool MeshGraph::SameExpansions(const std::string var1, const std::string var2) 
+        {
+            ExpansionVectorShPtr expVec1 = m_expansionVectorShPtrMap.find(var1)->second;
+            ExpansionVectorShPtr expVec2 = m_expansionVectorShPtrMap.find(var2)->second;
+
+            if(expVec1.get() == expVec2.get())
+            {
+                return true; 
+            }
+
+            return false;
         }
 
         inline const bool MeshGraph::CheckForGeomInfo(std::string parameter)

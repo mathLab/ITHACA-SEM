@@ -78,7 +78,7 @@ namespace Nektar
             mesh = docHandle.FirstChildElement("NEKTAR").FirstChildElement("GEOMETRY").Element();
 
             ASSERTL0(mesh, "Unable to find GEOMETRY tag in file.");
-
+            
             ReadCurves(doc);
             ReadEdges(doc);
             ReadElements(doc);

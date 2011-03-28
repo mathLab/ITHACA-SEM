@@ -121,44 +121,58 @@ namespace Nektar
 
         void MeshGraph::SetExpansions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef)
         {
-            int i,j,k,cnt,id;
-            int num_elmts = 0;
+            int i,j,k,g,h,cnt,id;
             GeometrySharedPtr geom;
+            
+            ExpansionVectorShPtr expansionVector;
 
-            // Set up list of ExpansionVectors with dummy values
-            if(!m_expansionVector.size())
+            // Loop over fields and determine unique fields string and
+            // declare whole expansion list
+            for(i = 0; i < fielddef.size(); ++i)
             {
-                LibUtilities::BasisKeyVector def;
-
-                for(i = 0; i < fielddef.size(); ++i)
+                for(j = 0; j < fielddef[i]->m_fields.size(); ++j)
                 {
-                    num_elmts += fielddef[i]->m_elementIDs.size();
-
-                    for(j = 0; j < fielddef[i]->m_elementIDs.size(); ++j)
+                    std::string field = fielddef[i]->m_fields[j];
+                    if(m_expansionVectorShPtrMap.count(field) == 0)
                     {
-                        ExpansionShPtr tmpexp =
-                            MemoryManager<Expansion>::AllocateSharedPtr(geom, def);
-                        m_expansionVector.push_back(tmpexp);
+                        expansionVector = MemoryManager<ExpansionVector>::AllocateSharedPtr();
+                        m_expansionVectorShPtrMap[field] = expansionVector;
+                        
+                        // check to see if DefaultVar also not set and if so assign it to this expansion
+                        if(m_expansionVectorShPtrMap.count("DefaultVar") == 0)
+                        {
+                            m_expansionVectorShPtrMap["DefaultVar"] = expansionVector;
+                        }
+
+                        // loop over all elements and set expansion
+                        for(k = 0; k < fielddef.size(); ++k)
+                        {
+                            for(h = 0; h < fielddef[k]->m_fields.size(); ++h)
+                            {
+                                if(fielddef[k]->m_fields[h] == field)
+                                {
+                                    expansionVector = m_expansionVectorShPtrMap.find(field)->second;
+                                    LibUtilities::BasisKeyVector def;
+                                    
+                                    for(g = 0; g < fielddef[k]->m_elementIDs.size(); ++g)
+                                    {
+                                        ExpansionShPtr tmpexp =
+                                            MemoryManager<Expansion>::AllocateSharedPtr(geom, def);
+                                        expansionVector->push_back(tmpexp);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-            }
-            else
-            {
-
-                for(i = 0; i < fielddef.size(); ++i)
-                {
-                    num_elmts += fielddef[i]->m_elementIDs.size();
-                }
-
-                ASSERTL0(m_expansionVector.size() == num_elmts,"Existing graph size does not match new Expansion length");
-            }
-
-
+            }                    
+            
             // loop over all elements find the geometry shared ptr and
             // set up basiskey vector
             for(i = 0; i < fielddef.size(); ++i)
             {
                 cnt = 0;
+                std::vector<std::string>  fields = fielddef[i]->m_fields;
                 std::vector<unsigned int> nmodes = fielddef[i]->m_numModes;
                 std::vector<LibUtilities::BasisType> basis = fielddef[i]->m_basis;
                 bool pointDef = fielddef[i]->m_pointsDef;
@@ -177,6 +191,7 @@ namespace Nektar
                         LibUtilities::BasisTypeMap[basis[j]]=="Modified_B")
                         check++;
                 }
+
                 if(check==basis.size())
                 {
                     for(j = 0; j < fielddef[i]->m_elementIDs.size(); ++j)
@@ -184,7 +199,7 @@ namespace Nektar
 
                         LibUtilities::BasisKeyVector bkeyvec;
                         id = fielddef[i]->m_elementIDs[j];
-
+                        
                         switch(fielddef[i]->m_shapeType)
                         {
                         case eSegment:
@@ -328,56 +343,70 @@ namespace Nektar
                             break;
                         }
 
-                        m_expansionVector[id]->m_geomShPtr = geom;
-                        m_expansionVector[id]->m_basisKeyVector = bkeyvec;
+                        for(k = 0; k < fields.size(); ++k)
+                        {
+                            expansionVector = m_expansionVectorShPtrMap.find(fields[k])->second;
+                            (*expansionVector)[id]->m_geomShPtr = geom;
+                            (*expansionVector)[id]->m_basisKeyVector = bkeyvec;
+                        }
                     }
                 }
                 else
+                {
                     ASSERTL0(false,"Need to set up for non Modified basis");
-                //    break;
-                // default:
-                //    ASSERTL0(false,"Need to set up for not eModified basis");
-                //    break;
-                //  }
+                }
             }
         }
 
 
         void MeshGraph::SetExpansions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef, std::vector< std::vector<LibUtilities::PointsType> > &pointstype)
         {
-
-            int i,j,k,cnt,id;
-            int num_elmts = 0;
+            
+            int i,j,k,g,h,cnt,id;
             GeometrySharedPtr geom;
 
-            // Set up list of ExpansionVectors with dummy values
-            if(!m_expansionVector.size())
+            ExpansionVectorShPtr expansionVector;
+
+            // Loop over fields and determine unique fields string and
+            // declare whole expansion list
+            for(i = 0; i < fielddef.size(); ++i)
             {
-
-                LibUtilities::BasisKeyVector def;
-
-                for(i = 0; i < fielddef.size(); ++i)
+                for(j = 0; j < fielddef[i]->m_fields.size(); ++j)
                 {
-                    num_elmts += fielddef[i]->m_elementIDs.size();
-
-                    for(j = 0; j < fielddef[i]->m_elementIDs.size(); ++j)
+                    std::string field = fielddef[i]->m_fields[j];
+                    if(m_expansionVectorShPtrMap.count(field) == 0)
                     {
-                        ExpansionShPtr tmpexp =
-                            MemoryManager<Expansion>::AllocateSharedPtr(geom, def);
-                        m_expansionVector.push_back(tmpexp);
+                        expansionVector = MemoryManager<ExpansionVector>::AllocateSharedPtr();
+                        m_expansionVectorShPtrMap[field] = expansionVector;
+                        
+                        // check to see if DefaultVar also not set and if so assign it to this expansion
+                        if(m_expansionVectorShPtrMap.count("DefaultVar") == 0)
+                        {
+                            m_expansionVectorShPtrMap["DefaultVar"] = expansionVector;
+                        }
+
+                        // loop over all elements and set expansion
+                        for(k = 0; k < fielddef.size(); ++k)
+                        {
+                            for(h = 0; h < fielddef[k]->m_fields.size(); ++h)
+                            {
+                                if(fielddef[k]->m_fields[h] == field)
+                                {
+                                    expansionVector = m_expansionVectorShPtrMap.find(field)->second;
+                                    LibUtilities::BasisKeyVector def;
+                                    
+                                    for(g = 0; g < fielddef[k]->m_elementIDs.size(); ++g)
+                                    {
+                                        ExpansionShPtr tmpexp =
+                                            MemoryManager<Expansion>::AllocateSharedPtr(geom, def);
+                                        expansionVector->push_back(tmpexp);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-            }
-            else
-            {
-
-                for(i = 0; i < fielddef.size(); ++i)
-                {
-                    num_elmts += fielddef[i]->m_elementIDs.size();
-                }
-
-                ASSERTL0(m_expansionVector.size() == num_elmts,"Existing graph size does not match new Expansion length");
-            }
+            }                    
 
 
             // loop over all elements find the geometry shared ptr and
@@ -385,6 +414,7 @@ namespace Nektar
             for(i = 0; i < fielddef.size(); ++i)
             {
                 cnt = 0;
+                std::vector<std::string>  fields = fielddef[i]->m_fields;
                 std::vector<unsigned int> nmodes = fielddef[i]->m_numModes;
                 std::vector<LibUtilities::BasisType> basis = fielddef[i]->m_basis;
                 bool UniOrder =  fielddef[i]->m_uniOrder;
@@ -519,8 +549,13 @@ namespace Nektar
                         ASSERTL0(false,"Need to set up for pyramid and prism 3D Expansions");
                         break;
                     }
-                    m_expansionVector[id]->m_geomShPtr = geom;
-                    m_expansionVector[id]->m_basisKeyVector = bkeyvec;
+
+                        for(k = 0; k < fields.size(); ++k)
+                        {
+                            expansionVector = m_expansionVectorShPtrMap.find(fields[k])->second;
+                            (*expansionVector)[id]->m_geomShPtr = geom;
+                            (*expansionVector)[id]->m_basisKeyVector = bkeyvec;
+                        }
                 }
             }
 
@@ -787,212 +822,253 @@ namespace Nektar
                                      ExpansionType type,
                                      const int order)
         {
-          LibUtilities::BasisKeyVector returnval;
+            LibUtilities::BasisKeyVector returnval;
+            
+            GeomShapeType shape= in->GetGeomShapeType();
+            
+            switch(type)
+            {
+            case eModified:
+                switch (shape)
+                {
+                case eSegment:
+                    {
+                        const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
+                        returnval.push_back(bkey);
+                    }
+                    break;
+                case eQuadrilateral:
+                    {
+                        const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
+                        returnval.push_back(bkey);
+                        returnval.push_back(bkey);
+                    }
+                    break;
+                case eHexahedron:
+                    {
+                        const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
+                        returnval.push_back(bkey);
+                        returnval.push_back(bkey);
+                        returnval.push_back(bkey);
+                    }
+                    break;
+                case eTriangle:
+                    {
+                        const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
+                        returnval.push_back(bkey);
+                        
+                        const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
+                        LibUtilities::BasisKey bkey1(LibUtilities::eModified_B,order,pkey1);
+                        
+                        returnval.push_back(bkey1);
+                    }
+                    break;
+                case eTetrahedron:
+                    {
+                        const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
+                        returnval.push_back(bkey);
+                        
+                        const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
+                        LibUtilities::BasisKey bkey1(LibUtilities::eModified_B,order,pkey1);
+                        returnval.push_back(bkey1);
+                        
+                        const LibUtilities::PointsKey pkey2(order,LibUtilities::eGaussRadauMAlpha2Beta0);
+                        LibUtilities::BasisKey bkey2(LibUtilities::eModified_C,order,pkey2);
+                        returnval.push_back(bkey2);
+                    }
+                    break;
+                default:
+                    ASSERTL0(false,"Expansion not defined in switch  for this shape");
+                    break;
+                }
+                break;
+                
+            case eGLL_Lagrange:
+            {
+                
+                switch(shape)
+                {
+                case eSegment:
+                    {
+                        const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
+                        returnval.push_back(bkey);
+            }
+                    break;
+                case eQuadrilateral:
+                {
+                    const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
+                    returnval.push_back(bkey);
+                    returnval.push_back(bkey);
+                }
+                break;
+                case eTriangle: // define with corrects points key
+                    // and change to Ortho on
+                    // construction
+                {
 
-          GeomShapeType shape= in->GetGeomShapeType();
+                    const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
+                    
+                    returnval.push_back(bkey);
+                    
+                    const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
+                    LibUtilities::BasisKey bkey1(LibUtilities::eOrtho_B,order,pkey1);
+                    
+                    returnval.push_back(bkey1);
+                }
+                break;
+                default:
+                    ASSERTL0(false,"Expansion not defined in switch  for this shape");
+                    break;
+                }
+            }
+            break;
+            case eOrthogonal:
+                switch (shape)
+                {
+                case eSegment:
+                    {
+                        const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A,order,pkey);
+                        
+                        returnval.push_back(bkey);
+                    }
+                    break;
+                case eTriangle:
+                {
+                    const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A,order,pkey);
+                    
+                    returnval.push_back(bkey);
+                    
+                    const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
+                    LibUtilities::BasisKey bkey1(LibUtilities::eOrtho_B,order,pkey1);
+                    
+                    returnval.push_back(bkey1);
+                }
+                break;
+                case eQuadrilateral:
+                {
+                    const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A,order,pkey);
+                    
+                    returnval.push_back(bkey);
+                    returnval.push_back(bkey);
+                }
+                break;
+                case eTetrahedron:
+                {
+                    const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A,order,pkey);
+                    
+                    returnval.push_back(bkey);
+                    
+                    const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
+                    LibUtilities::BasisKey bkey1(LibUtilities::eOrtho_B,order,pkey1);
+                    
+                    returnval.push_back(bkey1);
+                    
+                    const LibUtilities::PointsKey pkey2(order,LibUtilities::eGaussRadauMAlpha2Beta0);
+                    LibUtilities::BasisKey bkey2(LibUtilities::eOrtho_C,order,pkey2);
+                }
+                break;
+                default:
+                    ASSERTL0(false,"Expansion not defined in switch  for this shape");
+                    break;
+                }
+                break;
+            case eGLL_Lagrange_SEM:
+            {
+                switch (shape)
+                {
+                case eSegment:
+                {
+                    const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
+                    
+                    returnval.push_back(bkey);
+                }
+                break;
+                case eQuadrilateral:
+                {
+                    const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
+                    
+                    returnval.push_back(bkey);
+                    returnval.push_back(bkey);
+                }
+                break;
+                case eHexahedron:
+                {
+                    const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
+                    
+                    returnval.push_back(bkey);
+                    returnval.push_back(bkey);
+                    returnval.push_back(bkey);
+                }
+                break;
+                default:
+                    ASSERTL0(false,"Expansion not defined in switch  for this shape");
+                    break;
+                }
+            }
+            break;
+            default:
+                break;
+            }
+            
+            return returnval;
+        }
 
-          switch(type)
+        ExpansionVectorShPtr MeshGraph::SetUpExpansionVector(void)
         {
-        case eModified:
-          switch (shape)
+            ExpansionVectorShPtr returnval; 
+            returnval = MemoryManager<ExpansionVector>::AllocateSharedPtr();
+            
+            // Need a vector of all elements and their associated
+            // expansion information.
+            const CompositeVector &domain = this->GetDomain();
+            CompositeVector::const_iterator compIter;
+            
+            for (compIter = domain.begin(); compIter != domain.end(); ++compIter)
             {
-            case eSegment:
-              {
-            const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-            LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
-            returnval.push_back(bkey);
-              }
-              break;
-            case eQuadrilateral:
-              {
-            const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-            LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
-            returnval.push_back(bkey);
-            returnval.push_back(bkey);
-              }
-              break;
-            case eHexahedron:
-              {
-            const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-            LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
-            returnval.push_back(bkey);
-            returnval.push_back(bkey);
-            returnval.push_back(bkey);
-              }
-              break;
-            case eTriangle:
-              {
-            const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-            LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
-            returnval.push_back(bkey);
-
-            const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
-            LibUtilities::BasisKey bkey1(LibUtilities::eModified_B,order,pkey1);
-
-            returnval.push_back(bkey1);
-              }
-              break;
-            case eTetrahedron:
-              {
-            const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-            LibUtilities::BasisKey bkey(LibUtilities::eModified_A,order,pkey);
-            returnval.push_back(bkey);
-
-            const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
-            LibUtilities::BasisKey bkey1(LibUtilities::eModified_B,order,pkey1);
-            returnval.push_back(bkey1);
-
-            const LibUtilities::PointsKey pkey2(order,LibUtilities::eGaussRadauMAlpha2Beta0);
-            LibUtilities::BasisKey bkey2(LibUtilities::eModified_C,order,pkey2);
-            returnval.push_back(bkey2);
-              }
-              break;
-            default:
-              ASSERTL0(false,"Expansion not defined in switch  for this shape");
-              break;
+                boost::shared_ptr<GeometryVector> geomVectorShPtr = *compIter;
+                GeometryVectorIter geomIter;
+                for (geomIter = geomVectorShPtr->begin(); geomIter != geomVectorShPtr->end(); ++geomIter)
+                {
+                    // Make sure we only have one instance of the
+                    // GeometrySharedPtr stored in the list.
+                    ExpansionVector::iterator elemIter;
+                    for (elemIter = returnval->begin(); elemIter != returnval->end(); ++elemIter)
+                    {
+                        if ((*elemIter)->m_geomShPtr == *geomIter)
+                        {
+                            break;
+                        }
+                    }
+                    
+                    // Not found in list.
+                    if (elemIter == returnval->end())
+                    {
+                        LibUtilities::BasisKeyVector def;
+                        ExpansionShPtr expansionElementShPtr =
+                            MemoryManager<Expansion>::AllocateSharedPtr(*geomIter, def);
+                        returnval->push_back(expansionElementShPtr);
+                    }
+                }
             }
-          break;
-
-        case eGLL_Lagrange:
-          {
-
-            switch(shape)
-              {
-              case eSegment:
-            {
-              const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-              LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
-              returnval.push_back(bkey);
-            }
-            break;
-              case eQuadrilateral:
-            {
-              const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-              LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
-              returnval.push_back(bkey);
-              returnval.push_back(bkey);
-            }
-            break;
-              case eTriangle: // define with corrects points key
-            // and change to Ortho on
-            // construction
-            {
-
-              const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-              LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
-
-              returnval.push_back(bkey);
-
-              const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
-              LibUtilities::BasisKey bkey1(LibUtilities::eOrtho_B,order,pkey1);
-
-              returnval.push_back(bkey1);
-            }
-            break;
-              default:
-            ASSERTL0(false,"Expansion not defined in switch  for this shape");
-            break;
-              }
-          }
-          break;
-        case eOrthogonal:
-          switch (shape)
-            {
-            case eSegment:
-              {
-            const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-            LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A,order,pkey);
-
-            returnval.push_back(bkey);
-              }
-              break;
-            case eTriangle:
-              {
-            const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-            LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A,order,pkey);
-
-            returnval.push_back(bkey);
-
-            const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
-            LibUtilities::BasisKey bkey1(LibUtilities::eOrtho_B,order,pkey1);
-
-            returnval.push_back(bkey1);
-              }
-              break;
-            case eQuadrilateral:
-              {
-            const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-            LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A,order,pkey);
-
-            returnval.push_back(bkey);
-            returnval.push_back(bkey);
-              }
-              break;
-            case eTetrahedron:
-              {
-            const LibUtilities::PointsKey pkey(order+1,LibUtilities::eGaussLobattoLegendre);
-            LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A,order,pkey);
-
-            returnval.push_back(bkey);
-
-            const LibUtilities::PointsKey pkey1(order,LibUtilities::eGaussRadauMAlpha1Beta0);
-            LibUtilities::BasisKey bkey1(LibUtilities::eOrtho_B,order,pkey1);
-
-            returnval.push_back(bkey1);
-
-            const LibUtilities::PointsKey pkey2(order,LibUtilities::eGaussRadauMAlpha2Beta0);
-            LibUtilities::BasisKey bkey2(LibUtilities::eOrtho_C,order,pkey2);
-              }
-              break;
-            default:
-              ASSERTL0(false,"Expansion not defined in switch  for this shape");
-              break;
-            }
-          break;
-        case eGLL_Lagrange_SEM:
-          {
-            switch (shape)
-              {
-              case eSegment:
-            {
-              const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussLobattoLegendre);
-              LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
-
-              returnval.push_back(bkey);
-            }
-            break;
-              case eQuadrilateral:
-            {
-              const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussLobattoLegendre);
-              LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
-
-              returnval.push_back(bkey);
-              returnval.push_back(bkey);
-            }
-            break;
-              case eHexahedron:
-            {
-              const LibUtilities::PointsKey pkey(order,LibUtilities::eGaussLobattoLegendre);
-              LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange,order,pkey);
-
-              returnval.push_back(bkey);
-              returnval.push_back(bkey);
-              returnval.push_back(bkey);
-            }
-            break;
-              default:
-                  ASSERTL0(false,"Expansion not defined in switch  for this shape");
-            break;
-              }
-          }
-          break;
-        default:
-          break;
+            
+            return returnval;
         }
-
-          return returnval;
-        }
-
+        
         // \brief Read the expansions given the XML document reference.
         void MeshGraph::ReadExpansions(TiXmlDocument &doc)
         {
@@ -1003,61 +1079,98 @@ namespace Nektar
             TiXmlElement *expansionTypes = master->FirstChildElement("EXPANSIONS");
             ASSERTL0(expansionTypes, "Unable to find EXPANSIONS tag in file.");
 
-            if (expansionTypes)
+            if(expansionTypes)
             {
                 // Find the Expansion type
                 TiXmlElement *expansion = expansionTypes->FirstChildElement();
-                std::string expType = expansion->Value();
-
+                std::string   expType   = expansion->Value();
+                
                 if(expType == "E")
                 {
-                    /// Expansiontypes will contain composite, nummodes, and
-                    /// expansiontype (eModified, or eOrthogonal)
-                    /// Or a full list of data of basistype, nummodes, piontstype, numpoints;
+                    int i;
+                    ExpansionVectorShPtr expansionVector;
+                        
+                    /// Expansiontypes will contain composite,
+                    /// nummodes, and expansiontype (eModified, or
+                    /// eOrthogonal) Or a full list of data of
+                    /// basistype, nummodes, pointstype, numpoints;
 
-                    // Need a vector of all elements and their associated
-                    // expansion information.
-                    const CompositeVector &domain = this->GetDomain();
-                    CompositeVector::const_iterator compIter;
-
-                    for (compIter = domain.begin(); compIter != domain.end(); ++compIter)
-                    {
-                        boost::shared_ptr<GeometryVector> geomVectorShPtr = *compIter;
-                        GeometryVectorIter geomIter;
-                        for (geomIter = geomVectorShPtr->begin(); geomIter != geomVectorShPtr->end(); ++geomIter)
-                        {
-                            // Make sure we only have one instance of the
-                            // GeometrySharedPtr stored in the list.
-                            ExpansionVector::iterator elemIter;
-                            for (elemIter = m_expansionVector.begin(); elemIter != m_expansionVector.end(); ++elemIter)
-                            {
-                                if ((*elemIter)->m_geomShPtr == *geomIter)
-                                {
-                                    break;
-                                }
-                            }
-
-                            // Not found in list.
-                            if (elemIter == m_expansionVector.end())
-                            {
-                                LibUtilities::BasisKeyVector def;
-                                ExpansionShPtr expansionElementShPtr =
-                                MemoryManager<Expansion>::AllocateSharedPtr(*geomIter, def);
-                                m_expansionVector.push_back(expansionElementShPtr);
-                            }
-                        }
-                    }
-
-                    // Clear the default linear expansion over the domain.
+                    /// Expansiontypes may also contain a list of
+                    /// fields that this expansion relates to. If this
+                    /// does not exist the variable is only set to
+                    /// "DefaultVar".
+ 
                     while (expansion)
                     {
+ 
+                        const char *fStr = expansion->Attribute("FIELDS");
+                        std::vector<std::string> fieldStrings; 
+                        
+                        if(fStr) // extract other fields. 
+                        {
+                            std::string fieldStr = fStr;
+                            bool  valid = ParseUtils::GenerateOrderedStringVector(fieldStr.c_str(),fieldStrings);
+                            ASSERTL0(valid,"Unable to correctly parse the field string in ExpansionTypes.");
+                        }
+                        
+                        // check to see if m_expasionVectorShPtrMap has
+                        // already been intiailised and if not intiailse
+                        // vector.
+                        if(m_expansionVectorShPtrMap.count("DefaultVar") == 0) // no previous definitions
+                        {
+                            expansionVector = SetUpExpansionVector();
+                            
+                            m_expansionVectorShPtrMap["DefaultVar"] = expansionVector;
+                            
+                            // make sure all fields in this search point
+                            // to same expansion vector;
+                            for(i = 0; i < fieldStrings.size(); ++i)
+                            {
+                                m_expansionVectorShPtrMap[fieldStrings[i]] = expansionVector;
+                            }
+                        }
+                        else // default variable is defined
+                        {
+                            
+                            if(fieldStrings.size()) // fields are defined
+                            {
+                                //see if field exists
+                                if(m_expansionVectorShPtrMap.count(fieldStrings[0]))
+                                {
+                                    expansionVector = m_expansionVectorShPtrMap.find(fieldStrings[0])->second;
+                                }
+                                else
+                                {
+                                    expansionVector = SetUpExpansionVector(); 
+                                    // make sure all fields in this search point
+                                    // to same expansion vector;
+                                    for(i = 0; i < fieldStrings.size(); ++i)
+                                    {
+                                        if(m_expansionVectorShPtrMap.count(fieldStrings[i]) == 0)
+                                        {
+                                            m_expansionVectorShPtrMap[fieldStrings[i]] = expansionVector;
+                                        }
+                                        else
+                                        {
+                                            ASSERTL0(false,"Expansion vector for this field is already  setup");
+                                        }
+                                    }
+                                }
+                            }
+                            else // use default variable list 
+                            {
+                                expansionVector = m_expansionVectorShPtrMap.find("DefaultVar")->second;
+                            }
+                            
+                        }
+                        
                         /// Mandatory components...optional are to follow later.
                         std::string compositeStr = expansion->Attribute("COMPOSITE");
                         ASSERTL0(compositeStr.length() > 3, "COMPOSITE must be specified in expansion definition");
                         int beg = compositeStr.find_first_of("[");
                         int end = compositeStr.find_first_of("]");
                         std::string compositeListStr = compositeStr.substr(beg+1,end-beg-1);
-
+                        
                         CompositeVector compositeVector;
                         GetCompositeList(compositeListStr, compositeVector);
 
@@ -1173,7 +1286,7 @@ namespace Nektar
                             for (geomVecIter = (*compVecIter)->begin(); geomVecIter != (*compVecIter)->end(); ++geomVecIter)
                             {
                                 ExpansionVectorIter expVecIter;
-                                for (expVecIter = m_expansionVector.begin(); expVecIter != m_expansionVector.end(); ++expVecIter)
+                                for (expVecIter = expansionVector->begin(); expVecIter != expansionVector->end(); ++expVecIter)
                                 {
                                     if (*geomVecIter == (*expVecIter)->m_geomShPtr)
                                     {
@@ -1209,11 +1322,12 @@ namespace Nektar
             }
         }
 
-
+#ifdef NOTNEEDED // SJS: Think this needs depracating
         /**
-         * For each element of the shape given by \a shape, replace the current
-         * BasisKeyVector describing the expansion in each dimension, with the one
-         * provided by \a keys.
+         * For each element of shape given by \a shape in field \a
+         * var, replace the current BasisKeyVector describing the
+         * expansion in each dimension, with the one provided by \a
+         * keys.
          *
          * @TODO: Allow selection of elements through a CompositeVector, as well as
          * by type.
@@ -1221,7 +1335,8 @@ namespace Nektar
          * @param   shape           The shape of elements to be changed.
          * @param   keys            The new basis vector to apply to those elements.
          */
-        void MeshGraph::SetBasisKey(SpatialDomains::GeomShapeType shape,
+        void MeshGraph::SetBasisKey(std::string var,
+                                    SpatialDomains::GeomShapeType shape,
                                     LibUtilities::BasisKeyVector &keys)
         {
             ExpansionVector::iterator elemIter;
@@ -1233,6 +1348,7 @@ namespace Nektar
                 }
             }
         }
+#endif
 
         /**
          * Read the geometry-related information from the given file. This

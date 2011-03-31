@@ -56,7 +56,7 @@ namespace Nektar
 
         bool loadOkay = m_xmlDoc->LoadFile();
         ASSERTL0(loadOkay, (std::string("Unable to load file: ") +
-            pFilename).c_str());
+                            pFilename).c_str());
 
         TiXmlHandle docHandle(m_xmlDoc);
 
@@ -97,8 +97,8 @@ namespace Nektar
     {
         SolverInfoMap::iterator slvIter = m_solverInfo.find(pProperty);
 
-        ASSERTL1(slvIter != m_solverInfo.end(),
-            (std::string("Unable to find requested property: ") + pProperty).c_str());
+        ASSERTL0(slvIter != m_solverInfo.end(),
+           (std::string("Unable to find requested property: ") + pProperty).c_str());
 
         return slvIter->second;
     }

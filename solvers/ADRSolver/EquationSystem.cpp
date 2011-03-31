@@ -90,7 +90,7 @@ namespace Nektar
      *
      * Public interface routine to virtual function implementation.
      */
-    void EquationSystem::DoInitialise()
+    void EquationSystem::DoInitialise(void)
     {
         v_DoInitialise();
     }
@@ -101,9 +101,15 @@ namespace Nektar
      *
      * Public interface routine to virtual function implementation.
      */
-    void EquationSystem::DoSolve()
+    void EquationSystem::DoSolve(void)
     {
         v_DoSolve();
+    }
+
+
+    void EquationSystem::Output(void)
+    {
+        v_Output();
     }
 
 
@@ -187,7 +193,7 @@ namespace Nektar
      */
     void EquationSystem::v_DoSolve()
     {
-        ;
+
     }
 
 
@@ -197,6 +203,14 @@ namespace Nektar
     void EquationSystem::v_PrintSummary(std::ostream &out)
     {
 
+    }
+
+    /** 
+     *
+     */
+    void EquationSystem::v_Output(void)
+    {
+        ADRBase::Output();
     }
 
 }

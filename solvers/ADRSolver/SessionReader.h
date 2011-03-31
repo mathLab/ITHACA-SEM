@@ -77,6 +77,7 @@ namespace Nektar
         void MatchGeometricInfo(const std::string name, const std::string trueval, bool& var, const bool def = false);
         bool DefinesGeometricInfo(const std::string name);
 
+        int NoCaseStringCompare(const std::string & s1, const std::string& s2);
     private:
         std::string                 m_filename;
         TiXmlDocument*              m_xmlDoc;
@@ -90,7 +91,6 @@ namespace Nektar
         void ReadGeometricInfo(TiXmlElement *geometry);
 
         /// Perform a case-insensitive string comparison.
-        int NoCaseStringCompare(const std::string & s1, const std::string& s2);
 
     };
 

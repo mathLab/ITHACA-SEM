@@ -62,13 +62,15 @@ namespace Nektar
         virtual ~EquationSystem();
 
         /// Perform any initialisation necessary before solving the problem.
-        void DoInitialise();
+        void DoInitialise(void);
 
         /// Solve the problem.
-        void DoSolve();
+        void DoSolve(void);
 		
         /// Print a summary of parameters and solver characteristics.
         void PrintSummary(std::ostream &out);
+
+        void Output(void);
 
     protected:
         /// The session reader
@@ -93,6 +95,9 @@ namespace Nektar
         /// Virtual function for printing summary information.
         virtual void v_PrintSummary(std::ostream &out);
 		
+        // Ouptut field information
+        virtual void v_Output(void);
+
     private:
 
     };

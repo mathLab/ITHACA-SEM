@@ -205,9 +205,18 @@ namespace Nektar
                     m_fields[0] = firstfield;
                     for(i = 1 ; i < m_fields.num_elements(); i++)
                     {
-                        m_fields[i] = MemoryManager<MultiRegions::ContField2D>
-                                        ::AllocateSharedPtr(*firstfield,
-                                            *mesh2D,*m_boundaryConditions,i);
+                        if(mesh2D->SameExpansions(m_boundaryConditions->GetVariable(0),
+                                                 m_boundaryConditions->GetVariable(i)))
+                        {
+                            m_fields[i] = MemoryManager<MultiRegions::ContField2D>
+                                ::AllocateSharedPtr(*firstfield,
+                                                    *mesh2D,*m_boundaryConditions,i);
+                        }
+                        else
+                        {
+                            m_fields[i] = MemoryManager<MultiRegions::ContField2D>
+                                ::AllocateSharedPtr(*mesh2D,*m_boundaryConditions,i);
+                        }
                     }
                     break;
                 }
@@ -375,7 +384,7 @@ namespace Nektar
         // Read in spatial data
         int nq = m_fields[0]->GetNpoints();
         m_spatialParameters = MemoryManager<SpatialDomains::SpatialParameters>
-                                        ::AllocateSharedPtr(nq);
+          ::AllocateSharedPtr(nq);
         m_spatialParameters->Read(m_filename);
 
         Array<OneD, NekDouble> x(nq), y(nq), z(nq);
@@ -416,7 +425,7 @@ namespace Nektar
      * @param   dumpInitialConditions   Write the initial condition to file?
      */
      void ADRBase::v_SetInitialConditions(NekDouble initialtime,
-					  bool dumpInitialConditions)
+                                          bool dumpInitialConditions)
     {
         std::string restartstr = "RESTART";
 
@@ -454,8 +463,8 @@ namespace Nektar
                             = ifunc->Evaluate(x0[j],x1[j],x2[j],initialtime);
                 }
                 m_fields[i]->SetPhysState(true);
-                m_fields[i]->FwdTrans(m_fields[i]->GetPhys(),
-                                      m_fields[i]->UpdateCoeffs());
+                m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
+                                                 m_fields[i]->UpdateCoeffs());
                 cout << "\tField "<< m_boundaryConditions->GetVariable(i)
                      <<": " << ifunc->GetEquation() << endl;
             }
@@ -1138,9 +1147,19 @@ namespace Nektar
     void ADRBase::Output()
     {
         std::string outname = m_sessionName + ".fld";
-        WriteFld(outname);
+        WriteFld(outname); 
     }
 
+
+    /**
+     * Write the field data to file. The file is named according to the session
+     * name with the extension .fld appended.
+     */
+    void ADRBase::Output(MultiRegions::ExpListSharedPtr &field, Array< OneD, Array<OneD, NekDouble> > &fieldcoeffs, Array<OneD, std::string> &variables)
+    {
+        std::string outname = m_sessionName + ".fld";
+        WriteFld(outname,field, fieldcoeffs, variables);
+    }
 
     /**
      * Write the n-th checkpoint file.
@@ -1154,6 +1173,18 @@ namespace Nektar
         WriteFld(outname);
     }
 
+    /**
+     * Write the n-th checkpoint file.
+     * @param   n           The index of the checkpoint file.
+     */
+    void ADRBase::Checkpoint_Output(const int n, MultiRegions::ExpListSharedPtr &field, Array< OneD, Array<OneD, NekDouble> > &fieldcoeffs, Array<OneD, std::string> &variables)
+    {
+        char chkout[16] = "";
+        sprintf(chkout, "%d", n);
+        std::string outname = m_sessionName +"_" + chkout + ".chk";
+        WriteFld(outname, field, fieldcoeffs, variables);
+    }
+
 
     /**
      * Writes the field data to a file with the given filename.
@@ -1161,26 +1192,45 @@ namespace Nektar
      */
     void ADRBase::WriteFld(std::string &outname)
     {
-    	for(int j = 0; j < m_fields.num_elements(); ++j){
-			if (m_fields[j]->GetPhysState()==true)
-			{	
-			  m_fields[j]->FwdTrans(m_fields[j]->GetPhys(),m_fields[j]->UpdateCoeffs());
-			}
-    	}
+        Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(m_fields.num_elements());
+        Array<OneD, std::string>  variables(m_fields.num_elements());
+        
+        for(int i = 0; i < m_fields.num_elements(); ++i)
+        {
+            if (m_fields[i]->GetPhysState()==true)
+            {	
+                m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
+            }
+            fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
+            variables[i] = m_boundaryConditions->GetVariable(i);
+        }
+        
+        WriteFld(outname, m_fields[0], fieldcoeffs, variables);
+    }
 
+
+    /**
+     * Writes the field data to a file with the given filename.
+     * @param   outname     Filename to write to.
+     * @param   field       ExpList on which data is based
+     * @param fieldcoeffs   An array of array of expansion coefficients
+     * @param  variables    An array of variable names
+     */
+    void ADRBase::WriteFld(std::string &outname, MultiRegions::ExpListSharedPtr &field, Array<OneD, Array<OneD, NekDouble> > &fieldcoeffs, Array<OneD, std::string> &variables)
+    {
+        
     	std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
-                = m_fields[0]->GetFieldDefinitions();
+            = field->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
         // copy Data into FieldData and set variable
-        for(int j = 0; j < m_fields.num_elements(); ++j)
+        for(int j = 0; j < fieldcoeffs.num_elements(); ++j)
         {
             for(int i = 0; i < FieldDef.size(); ++i)
             {
                 // Could do a search here to find correct variable
-                FieldDef[i]->m_fields.push_back(
-                                    m_boundaryConditions->GetVariable(j));
-                m_fields[j]->AppendFieldData(FieldDef[i], FieldData[i]);
+                FieldDef[i]->m_fields.push_back(variables[j]);
+                field->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs[j]);
             }
         }
 

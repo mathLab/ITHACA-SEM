@@ -147,12 +147,20 @@ namespace Nektar
 
         /// Write field to file.
         void Output();
+        /// Write field to file.
+        void Output(MultiRegions::ExpListSharedPtr &field, Array< OneD, Array<OneD, NekDouble> > &fieldcoeffs, Array<OneD, std::string> &variables);
+
 
         /// Write checkpoint file.
         void Checkpoint_Output(const int n);
-
+        /// Write checkpoint file.
+        void Checkpoint_Output(const int n, MultiRegions::ExpListSharedPtr &field, Array< OneD, Array<OneD, NekDouble> > &fieldcoeffs, Array<OneD, std::string> &variables);
+        
         /// Write field data to the given filename.
         void WriteFld(std::string &outname);
+
+        /// Write input fields to the given filename.
+        void WriteFld(std::string &outname, MultiRegions::ExpListSharedPtr &field, Array<OneD, Array<OneD, NekDouble> > &fieldcoeffs, Array<OneD, std::string> &variables);
 
         /// Input field data from the given file.
         void ImportFld(std::string &infile);

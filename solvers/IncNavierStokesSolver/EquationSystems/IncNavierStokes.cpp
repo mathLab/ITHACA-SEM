@@ -34,38 +34,28 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <IncNavierStokesSolver/IncNavierStokes.h>
+#include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
 #include <cstdio>
 #include <cstdlib>
 
 namespace Nektar
 {
-    /**
-     * Basic construnctor
-     */
-    IncNavierStokes::IncNavierStokes(void):
-        ADRBase(),
-        m_infosteps(100)
-    {     
-    }
     
-    int nocase_cmp(const string & s1, const string& s2);
-
     /**
      * Constructor. Creates ...
      *
      * \param 
      * \param
      */
-
-    IncNavierStokes::IncNavierStokes(string &fileNameString, string &globoptfile):
-        ADRBase(fileNameString,false,true,globoptfile),
+    
+    IncNavierStokes::IncNavierStokes(SessionReaderSharedPtr& pSession, string &globoptfile):
+        EquationSystem(pSession),
         m_infosteps(10)
     {
         int i,j;
         int numfields = m_fields.num_elements();
-		std::string velids[] = {"u","v","w"};
-
+        std::string velids[] = {"u","v","w"};
+                
         // Set up Velocity field to point to the first m_expdim of m_fields; 
         m_velocity = Array<OneD,int>(m_spacedim);
         
@@ -88,18 +78,12 @@ namespace Nektar
             }
         }
         
-        // Asuume all fields but last to be convected by velocity. 
-        m_nConvectiveFields = numfields-1;
-        
-        // Set m_pressure to point to last field of m_fields; 
-        ASSERTL0(!NoCaseStringCompare(m_boundaryConditions->GetVariable(numfields-1),"p"),"Require last field to be defined as p");
-        m_pressure = m_fields[numfields-1];
-
          // Set up equation type enum using kEquationTypeStr
-         const std::string typeStr = m_boundaryConditions->GetSolverInfo("EQTYPE");
          for(i = 0; i < (int) eEquationTypeSize; ++i)
          {
-             if(nocase_cmp(kEquationTypeStr[i],typeStr) == 0 )
+             bool match;
+             pSession->MatchSolverInfo("EQTYPE",kEquationTypeStr[i],match,false);
+             if(match)
              {
                  m_equationType = (EquationType)i; 
                  break;
@@ -108,17 +92,23 @@ namespace Nektar
          ASSERTL0(i != eEquationTypeSize,"EQTYPE not found in SOLVERINFO section");
 
          m_advectionForm = eNoAdvectionForm;
-
+         
+         // This probably should to into specific implementations 
          // Equation specific Setups 
          switch(m_equationType)
          {
+         case eSteadyStokes: 
+         case eSteadyOseen: 
+             break;
          case eUnsteadyNavierStokes:
              {
                  // Set up advection form
-                 const std::string advStr = m_boundaryConditions->GetSolverInfo("ADVECTIONFORM");
                  for(i = 0; i < (int) eAdvectionFormSize; ++i)
                  {
-                     if(nocase_cmp(kAdvectionFormStr[i],advStr) == 0 )
+                     bool match;
+                     pSession->MatchSolverInfo("ADVECTIONFORM",kAdvectionFormStr[i],match,false);
+                     
+                     if(match)
                      {
                          m_advectionForm = (AdvectionForm)i; 
                          break;
@@ -127,7 +117,7 @@ namespace Nektar
                  ASSERTL0(i != eAdvectionFormSize,"ADVECTIONFORM not found in SOLVERINFO section");
              }
          case eUnsteadyStokes:
-
+             
              if(m_boundaryConditions->CheckForParameter("IO_InfoSteps") == true)
              {
                  m_infosteps =  m_boundaryConditions->GetParameter("IO_InfoSteps");
@@ -136,7 +126,7 @@ namespace Nektar
              // check to see if any user defined boundary condition is
              // indeed implemented
              
-			for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+             for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
              {	
                  // Time Dependent Boundary Condition (if no user
                  // defined then this is empty)
@@ -164,10 +154,9 @@ namespace Nektar
         }
     }
 
-    void IncNavierStokes::Summary(std::ostream &out)
+    IncNavierStokes::~IncNavierStokes(void)
     {
-        SessionSummary(out);
-        TimeParamSummary(out);
+
     }
 
     // Evaluation -N(V) for all fields except pressure using m_velocity
@@ -210,7 +199,7 @@ namespace Nektar
                     Vmath::Neg(nqtot,outarray[i],1);
                 }
             }
-            break;
+            break; 
         default:
             ASSERTL0(false,"Advection form not known");
             break;
@@ -237,35 +226,6 @@ namespace Nektar
     
 
     // case insensitive string comparison from web
-    int nocase_cmp(const string & s1, const string& s2) 
-    {
-        string::const_iterator it1=s1.begin();
-        string::const_iterator it2=s2.begin();
-        
-        //stop when either string's end has been reached
-        while ( (it1!=s1.end()) && (it2!=s2.end()) ) 
-        { 
-            if(::toupper(*it1) != ::toupper(*it2)) //letters differ?
-            {
-                // return -1 to indicate smaller than, 1 otherwise
-                return (::toupper(*it1)  < ::toupper(*it2)) ? -1 : 1; 
-            }
-            //proceed to the next character in each string
-            ++it1;
-            ++it2;
-        }
-        size_t size1=s1.size(), size2=s2.size();// cache lengths
-
-        //return -1,0 or 1 according to strings' lengths
-        if (size1==size2) 
-        {
-            return 0;
-        }
-        return (size1 < size2) ? -1 : 1;
-    }
-	
-	
-    
 } //end of namespace
 
 /**

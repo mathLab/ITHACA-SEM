@@ -33,28 +33,12 @@
 // Navier Stokes equations
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <IncNavierStokesSolver/VelocityCorrectionScheme.h>
-//#define UseContCoeffs
+#include <IncNavierStokesSolver/EquationSystems/VelocityCorrectionScheme.h>
 
 namespace Nektar
 {
-    int nocase_cmp(const string & s1, const string& s2);
-
-#ifdef TIMING
-    timeval timer1, timer2;
-    NekDouble time1, time2;
-    NekDouble SetupTime = 0.0, PBcTime = 0.0, AdvTime = 0.0,
-        PresForceTime = 0.0, PresSlvTime = 0.0,
-        ViscForceTime  = 0.0, ViscSlvTime = 0.0, SetBCTime = 0.0;
-#endif
-
-    /**
-     * Basic construnctor
-     */
-    VelocityCorrectionScheme::VelocityCorrectionScheme(void):
-        IncNavierStokes()
-    {     
-    }
+    string VelocityCorrectionScheme::className = EquationSystemFactory::RegisterCreatorFunction("VelocityCorrectionScheme", VelocityCorrectionScheme::create);
+    
     
     /**
      * Constructor. Creates ...
@@ -62,11 +46,21 @@ namespace Nektar
      * \param 
      * \param
      */
-
-    VelocityCorrectionScheme::VelocityCorrectionScheme(string &fileNameString, 
-                                                       string glooptfile):
-        IncNavierStokes(fileNameString,glooptfile)
+    VelocityCorrectionScheme::VelocityCorrectionScheme(SessionReaderSharedPtr & pSession, string glooptfile):
+        IncNavierStokes(pSession, glooptfile)
     {
+        
+        // Set m_pressure to point to last field of m_fields; 
+        if(NoCaseStringCompare(m_boundaryConditions->GetVariable(m_fields.num_elements()-1),"p") == 0)
+        {
+            m_nConvectiveFields = m_fields.num_elements()-1;
+            m_pressure = m_fields[m_nConvectiveFields];
+        }
+        else
+        {
+            ASSERTL0(false,"Need to set up pressure field definition");
+        }
+
 
         LibUtilities::TimeIntegrationMethod intMethod;
         std::string TimeIntStr = m_boundaryConditions->GetSolverInfo("TIMEINTEGRATIONMETHOD");
@@ -154,13 +148,44 @@ namespace Nektar
 
     }
 
-
-    void VelocityCorrectionScheme::Summary(std::ostream &out)
+    VelocityCorrectionScheme::~VelocityCorrectionScheme(void)
     {
-        cout << "\nIncompressible Navier Stokes Solver" << endl;
-        cout <<  "\tType of scheme  : Velocity Correction" <<endl;
-        IncNavierStokes::Summary(out);
-        cout << "\tTime integration:" << LibUtilities::TimeIntegrationMethodMap[m_integrationScheme[m_intSteps-1]->GetIntegrationMethod()] << endl;
+        
+    }
+
+
+    void VelocityCorrectionScheme::v_PrintSummary(std::ostream &out)
+    {
+        cout <<  "\tSovler Type     : Velocity Correction" <<endl;
+        TimeParamSummary(out);
+        cout << "\tTime integ.     : " << LibUtilities::TimeIntegrationMethodMap[m_integrationScheme[m_intSteps-1]->GetIntegrationMethod()] << endl;
+    }
+
+
+    void VelocityCorrectionScheme::v_DoInitialise(void)
+    {
+
+    }
+
+    void VelocityCorrectionScheme::v_DoSolve(void)
+    {
+
+        switch(m_equationType)
+        {
+        case eUnsteadyStokes: 
+        case eUnsteadyNavierStokes:
+            {   
+                // Set initial condition using time t=0
+                SetInitialConditions(0.0);
+                
+                // Integrate from start time to end time
+                AdvanceInTime(m_steps);
+                break;
+            }
+        case eNoEquationType:
+        default:
+            ASSERTL0(false,"Unknown or undefined equation type for VelocityCorrectionScheme");
+        }
     }
 
     void VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
@@ -168,25 +193,10 @@ namespace Nektar
                                                                     const NekDouble time)
     {
         // evaluate convection terms
-#ifdef TIMING
-        gettimeofday(&timer1, NULL);
-#endif
         EvaluateAdvectionTerms(inarray,outarray);
-#ifdef TIMING
-        gettimeofday(&timer2, NULL);
-        time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
-        time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
-        AdvTime += (time2-time1)/1000000.0;
-#endif
 
         // Set pressure BCs
         EvaluatePressureBCs(inarray, outarray);
-#ifdef TIMING
-        gettimeofday(&timer1, NULL);
-        time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
-        time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
-        PBcTime += (time1-time2)/1000000.0;
-#endif
     }
 
     void VelocityCorrectionScheme::SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
@@ -194,9 +204,7 @@ namespace Nektar
                                                              const NekDouble time, 
                                                              const NekDouble aii_Dt)
     {
-#ifdef TIMING
-        gettimeofday(&timer2, NULL);
-#endif
+
         int i,n;
         int phystot = m_fields[0]->GetTotPoints();
         int ncoeffs = m_fields[0]->GetNcoeffs();
@@ -211,21 +219,8 @@ namespace Nektar
 		
 		SetBoundaryConditions(time);
 		
-		
-#ifdef TIMING
-        gettimeofday(&timer1, NULL);
-        time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
-        time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
-        SetupTime += (time1-time2)/1000000.0;
-#endif
         // Pressure Forcing = Divergence Velocity; 
         SetUpPressureForcing(inarray, F, aii_Dt);
-#ifdef TIMING
-        gettimeofday(&timer2, NULL);
-        time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
-        time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
-        PresForceTime += (time2-time1)/1000000.0;
-#endif
         
         // Solver Pressure Poisson Equation 
 #ifdef UseContCoeffs
@@ -234,21 +229,8 @@ namespace Nektar
         m_pressure->HelmSolve(F[0], m_pressure->UpdateCoeffs(),0.0);
 #endif
 
-#ifdef TIMING
-        gettimeofday(&timer1, NULL);
-        time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
-        time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
-        PresSlvTime += (time1-time2)/1000000.0;
-#endif
-        
         // Viscous Term forcing
         SetUpViscousForcing(inarray, F, aii_Dt);
-#ifdef TIMING
-        gettimeofday(&timer2, NULL);
-        time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
-        time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
-        ViscForceTime += (time2-time1)/1000000.0;
-#endif
     
         // Solve Helmholtz system and put in Physical space
         for(i = 0; i < m_nConvectiveFields; ++i)
@@ -262,20 +244,8 @@ namespace Nektar
 #endif
         }
 		
-#ifdef TIMING
-        gettimeofday(&timer1, NULL);
-        time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
-        time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
-        ViscSlvTime += (time1-time2)/1000000.0;
-#endif
         //Updating time dipendent boundary conditions
         //SetBoundaryConditions(time);
-#ifdef TIMING
-        gettimeofday(&timer2, NULL);
-        time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
-        time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
-        SetBCTime += (time2-time1)/1000000.0;
-#endif
     }
 
     void VelocityCorrectionScheme::AdvanceInTime(int nsteps)
@@ -301,14 +271,6 @@ namespace Nektar
                                                                                   m_time,
                                                                                   m_integrationOps);
 
-#ifdef TIMING
-        timeval timerorig1;
-        NekDouble exeTime;
-        gettimeofday(&timerorig1, NULL);
-        PBcTime = 0.0; AdvTime = 0.0;
-        PresForceTime = 0.0; PresSlvTime = 0.0;
-        ViscForceTime  = 0.0; ViscSlvTime = 0.0;
-#endif
         //Time advance
         for(n = 0; n < nsteps; ++n)
         {
@@ -343,23 +305,7 @@ namespace Nektar
                 Checkpoint_Output(nchk++);
             }
         }
-#ifdef TIMING
-        gettimeofday(&timer2, NULL);
-        time1 = timerorig1.tv_sec*1000000.0+(timerorig1.tv_usec);
-        time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
-        exeTime = (time2-time1)/1000000.0;
-        cout << "Integration Execution Time: " << exeTime << endl;
-        cout <<"\t  Setup       : " << SetupTime << endl;
-        cout <<"\t  Pressure BCs: " << PBcTime << endl;
-        cout <<"\t  Advection   : " << AdvTime << endl;
-        cout <<"\t  Pressure Fce: " << PresForceTime << endl;
-        cout <<"\t  Pressure Slv: " << PresSlvTime << endl;
-        cout <<"\t  Viscous  Fce: " << ViscForceTime << endl;
-        cout <<"\t  Viscous  Slv: " << ViscSlvTime << endl;
-        cout <<"\t  Set BC      : " << SetBCTime << endl;
-        cout <<"\t  Total: " << SetupTime + PBcTime + AdvTime + PresForceTime + PresSlvTime + ViscForceTime + ViscSlvTime + SetBCTime << endl;
 
-#endif
         //updating physical space
         for(i = 0; i < m_nConvectiveFields; ++i)
         {

@@ -112,6 +112,7 @@ int main(int argc, char *argv[])
         //----------------------------------------------
         // Define Expansion
         int bc_val = 0;
+        cout << "where is this code going\n";
         Exp = MemoryManager<MultiRegions::ContField2D>::
             AllocateSharedPtr(graph2D,bcs,bc_val,SolnType);
         //----------------------------------------------

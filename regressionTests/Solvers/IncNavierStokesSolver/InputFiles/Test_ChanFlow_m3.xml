@@ -3,11 +3,12 @@
 <NEKTAR>
 
   <EXPANSIONS>
-    <E COMPOSITE="C[0]" NUMMODES="3" TYPE="MODIFIED" />
+    <E COMPOSITE="C[0]" NUMMODES="3" FIELDS="u,v,p" TYPE="MODIFIED" />
   </EXPANSIONS>
 
   <CONDITIONS>
     <SOLVERINFO>
+      <I PROPERTY="SolverType"  VALUE="VelocityCorrectionScheme"/>
       <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
       <I PROPERTY="AdvectionForm" VALUE="Convective"/>
       <I PROPERTY="Projection" VALUE="Galerkin"/>

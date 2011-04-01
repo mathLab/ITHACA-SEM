@@ -327,7 +327,7 @@ namespace Nektar
                     break;
             }
         }
-
+        
         NekOptimize::LoadElementalOptimizationParameters(m_filename);
 
         // Set Default Parameter

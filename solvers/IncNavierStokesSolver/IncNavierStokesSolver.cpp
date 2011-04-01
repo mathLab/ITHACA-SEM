@@ -37,19 +37,13 @@
 #include <cstdlib>
 #include <cmath> 
 
-#include <IncNavierStokesSolver/IncNavierStokes.h>
-#include <IncNavierStokesSolver/VelocityCorrectionScheme.h>
-
+#include <ADRSolver/EquationSystem.h>
+#include <ADRSolver/SessionReader.h>
 
 using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-#ifdef TIMING
-    timeval timer1, timer2;
-    NekDouble time1, time2;
-    NekDouble exeTime;
-#endif
     
     if(argc != 2 && (argc != 4))
     {
@@ -59,76 +53,73 @@ int main(int argc, char *argv[])
 
     string fileNameString(argv[1]);
     string globoptfile;
+    time_t starttime, endtime;
+    NekDouble CPUtime;
 
+    //----------------------------------------------------------------
+    // Read the mesh and construct container class
+    if(argc == 2)
+    {
+        globoptfile = NekNullString;
+    }
+    else
+    {
+        string eloptfile  (argv[3]);
+        NekOptimize::LoadElementalOptimizationParameters(eloptfile);
+        
+        globoptfile = argv[2];
+    }
+
+    SessionReaderSharedPtr session;
+    EquationSystemSharedPtr equ;
+  
+    // Record start time.
+    time(&starttime);
+    
+    // Create session reader.
+    session = MemoryManager<SessionReader>::AllocateSharedPtr(fileNameString);
+    
+    // Create instance of module to solve the equation specified in the session.
     try
     {
-        //----------------------------------------------------------------
-        // Read the mesh and construct container class
-        if(argc == 2)
-        {
-            globoptfile = NekNullString;
-        }
-        else
-        {
-            string eloptfile  (argv[3]);
-            NekOptimize::LoadElementalOptimizationParameters(eloptfile);
-
-            globoptfile = argv[2];
-        }
-
-        VelocityCorrectionScheme dom(fileNameString,globoptfile);
-        dom.Summary(cout);
-        
-        switch(dom.GetEquationType())
-        {
-        case eUnsteadyStokes:
-        case eUnsteadyNavierStokes:
-            {
-
-                int nsteps = dom.GetSteps();
-
-                // Set initial condition using time t=0
-                dom.SetInitialConditions(0.0);
-
-#ifdef TIMING
-                dom.AdvanceInTime(1);
-                gettimeofday(&timer1, NULL);
-#endif
-                // Integrate from start time to end time
-                dom.AdvanceInTime(nsteps);
-#ifdef TIMING
-                gettimeofday(&timer2, NULL);
-                time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
-                time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
-                exeTime = (time2-time1)/1000000.0;
-                cout << "Execution Time: " << exeTime << endl;
-#endif
-                break;
-            }
-        case eNoEquationType:
-        default:
-            ASSERTL0(false,"Unknown or undefined equation type");
-        }
-
-        // Dump output
-        dom.Output();
-
-        // Evaluate L2 Error
-        cout << endl;
-        for(int i = 0; i < dom.GetNvariables(); ++i)
-        {
-            cout << "L 2 error (variable " << dom.GetVariable(i) << ") : " << dom.L2Error(i,true) << endl;
-            cout << "L inf error (variable " << dom.GetVariable(i) << ") : " << dom.LinfError(i) << endl;
-        }
-
-        return 0;
+        equ = EquationSystemFactory::CreateInstance(session->GetSolverInfo("SOLVERTYPE"), session);
     }
-    catch (const std::runtime_error& e)
+    catch (int e)
     {
-        return 1;
+        ASSERTL0(e == -1, "No such solver class defined.");
+    }
+
+    // Print a summary of solver and problem parameters and initialise
+    // the solver.
+    equ->PrintSummary(cout);
+    equ->DoInitialise();
+
+    // Solve the problem.
+    equ->DoSolve();
+
+    // Record end time.
+    time(&endtime);
+    CPUtime = (1.0/60.0/60.0)*difftime(endtime,starttime);
+ 
+    // Write output to .fld file
+    equ->Output();
+    
+    // Evaluate and output computation time and solution accuracy.
+    // The specific format of the error output is essential for the
+    // regression tests to work.
+    cout << "-------------------------------------------" << endl;
+    cout << "Total Computation Time = " << CPUtime << " hr." << endl;
+    for(int i = 0; i < equ->GetNvariables(); ++i)
+    {
+        // Get Exact solution
+        Array<OneD, NekDouble> exactsoln(equ->GetTotPoints(),0.0);
+        equ->EvaluateExactSolution(i,exactsoln,equ->GetFinalTime());
+        
+        cout << "L 2 error (variable " << equ->GetVariable(i)  << "): " << equ->L2Error(i,exactsoln) << endl;
+        cout << "L inf error (variable " << equ->GetVariable(i)  << "): " << equ->LinfError(i,exactsoln) << endl;
     }
 }
 
 /**
-* $Log $
+ * $Log $
 **/

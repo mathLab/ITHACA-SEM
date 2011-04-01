@@ -36,16 +36,7 @@
 #ifndef NEKTAR_SOLVERS_INCNAVIERSTOKES_H
 #define NEKTAR_SOLVERS_INCNAVIERSTOKES_H
 
-#include <MultiRegions/DisContField2D.h>
-#include <Auxiliary/ADRBase.h>
-
-//#define TIMING
-
-#ifdef TIMING
-#include <time.h>
-#include <sys/time.h>
-#endif
-
+#include <ADRSolver/EquationSystem.h>
 
 namespace Nektar
 {     
@@ -53,6 +44,8 @@ namespace Nektar
     enum EquationType
     {
         eNoEquationType,
+        eSteadyStokes,
+        eSteadyOseen,
         eUnsteadyStokes,
         eUnsteadyNavierStokes,
         eEquationTypeSize
@@ -62,6 +55,8 @@ namespace Nektar
     const std::string kEquationTypeStr[] = 
     {
         "NoType",
+        "SteadyStokes",
+        "SteadyOseen",
         "UnsteadyStokes",
         "UnsteadyNavierStokes"
     };
@@ -88,75 +83,75 @@ namespace Nektar
      *
      */
     
-    class IncNavierStokes: public ADRBase
+    class IncNavierStokes: public EquationSystem
     {
     public:           
 
-        /**
-         * Default constructor. 
-         * 
-         */ 
-        IncNavierStokes();
+        // Destructor
+        virtual ~IncNavierStokes();
 
+    protected: 
+        
+        /// Number of fields to be convected; 
+        int   m_nConvectiveFields;  
+
+        /// int which identifies which components of m_fields contains the velocity (u,v,w);
+        Array<OneD, int> m_velocity; 
+ 
+        /// Pointer to field holding pressure field
+        MultiRegions::ExpListSharedPtr m_pressure;  
+        
+        NekDouble     m_kinvis;        ///< Kinematic viscosity
+        int           m_infosteps;     ///< dump info to stdout at steps time
+        EquationType  m_equationType;  ///< equation type;
+        AdvectionForm m_advectionForm; ///< Form of advection terms. 
 
         /**
          * Constructor.
-         * \param 
-         * 
-         *
          */
-        IncNavierStokes(string &fileStringName, string &globoptfile = NekNullString);
+        IncNavierStokes(SessionReaderSharedPtr& pSession, string &globoptfile = NekNullString);
 
         EquationType GetEquationType(void)
         {
             return m_equationType;
         }
 
-
-        void VelocityCorrectionScheme(int nsteps);
-
-        void Summary(std::ostream &out);
-
-
-        // Wrapper functions in Velocity Correction Scheme
         void AdvanceInTime(int nsteps)
         {
             v_AdvanceInTime(nsteps);
         }
 
-        void EvaluateAdvectionTerms(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+        void EvaluateAdvectionTerms(const Array<OneD, 
+                                    const Array<OneD, NekDouble> > &inarray, 
                                     Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                     Array<OneD, NekDouble> &wk = NullNekDouble1DArray);
 		
-		//time dependent boundary conditions updating
-		
-		void SetBoundaryConditions(NekDouble time);
-		
-		
-    protected:
-
-        int   m_nConvectiveFields;  /// Number of fields to be convected; 
-
-        Array<OneD, int> m_velocity; ///< int which identifies which components of m_fields contains the velocity (u,v,w);
-
-        MultiRegions::ExpListSharedPtr m_pressure;  ///< Pointer to field holding pressure field
-
-        NekDouble     m_kinvis;                ///< Kinematic viscosity
-        int           m_infosteps;             ///< dump info to stdout at steps time
-		
-    private: 
-        EquationType  m_equationType;  ///< equation type;
-        AdvectionForm m_advectionForm; ///< Form of advection terms. 
-
-
-	//void SetBoundaryConditions(NekDouble time); 
-				   
+        //time dependent boundary conditions updating
+	
+        void SetBoundaryConditions(NekDouble time);
 
         // Virtual functions
+        virtual void v_PrintSummary(std::ostream &out)
+        {
+            ASSERTL0(false,"This method is not defined in this class");
+        }
+
+        virtual void v_DoInitialise(void)
+        {
+            ASSERTL0(false,"This method is not defined in this class");
+        }
+
+        virtual void v_DoSolve(void)
+        {
+            ASSERTL0(false,"This method is not defined in this class");
+        }
+
         virtual void v_AdvanceInTime(int nsteps)
         {
             ASSERTL0(false,"This method is not defined in this class");
         }
+
+    private: 
 
     };
     

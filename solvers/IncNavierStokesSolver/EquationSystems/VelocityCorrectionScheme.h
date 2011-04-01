@@ -36,7 +36,7 @@
 #ifndef NEKTAR_SOLVERS_VELOCITYCORRECTIONSCHEME_H
 #define NEKTAR_SOLVERS_VELOCITYCORRECTIONSCHEME_H
 
-#include<IncNavierStokesSolver/IncNavierStokes.h>
+#include<IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
 
 namespace Nektar
 {     
@@ -54,11 +54,12 @@ namespace Nektar
     {
     public:           
 
-        /**
-         * Default constructor. 
-         * 
-         */ 
-        VelocityCorrectionScheme();
+        /// Creates an instance of this class
+        static EquationSystemSharedPtr create(SessionReaderSharedPtr& pSession) {
+            return MemoryManager<VelocityCorrectionScheme>::AllocateSharedPtr(pSession);
+        }
+        /// Name of class
+        static std::string className;
 
 
         /**
@@ -67,10 +68,10 @@ namespace Nektar
          * 
          *
          */
-        VelocityCorrectionScheme(string &fileStringName, string globoptfile = "NoGlobalOpts");
-
-        void Summary(std::ostream &out);
-
+        VelocityCorrectionScheme(SessionReaderSharedPtr &pSession, string globoptfile = "NoGlobalOpts");
+        
+        virtual ~VelocityCorrectionScheme();
+        
         void AdvanceInTime(int nsteps);
         void AdvanceInTimeNew(int nsteps);
 
@@ -121,11 +122,22 @@ namespace Nektar
         void CalcPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N);
 
         // Virtual functions 
+        virtual void v_PrintSummary(std::ostream &out);
+
+        virtual void v_DoSolve(void);
+
+        virtual void v_DoInitialise(void);
+
         virtual void v_AdvanceInTime(int nsteps)
         {
             AdvanceInTime(nsteps);
         }
-        
+
+        virtual void v_Output(void)
+        {
+            ADRBase::Output();
+        }
+
     };
 
     

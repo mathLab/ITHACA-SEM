@@ -50,6 +50,7 @@ GlobalLinSys.h
 GlobalLinSysKey.h
 GlobalLinSysDirect.h
 GlobalLinSysDirectFull.h
+GlobalLinSysDirectStaticCond.h
 GlobalLinSysIterative.h
 GlobalLinSysIterativeCG.h
 GlobalMatrix.h

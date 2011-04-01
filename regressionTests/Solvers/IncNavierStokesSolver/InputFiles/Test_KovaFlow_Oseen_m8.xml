@@ -2,30 +2,24 @@
 <NEKTAR>
 
   <EXPANSIONS>
-    <E COMPOSITE="C[0]" NUMMODES="6" FIELDS="u,v,p" TYPE="MODIFIED" />
+    <E COMPOSITE="C[0]" NUMMODES="8" FIELDS="u,v" TYPE="MODIFIED" />
   </EXPANSIONS>
 
   <CONDITIONS>
     <SOLVERINFO>
-      <I PROPERTY="SolverType" VALUE="VelocityCorrectionScheme"/>
-      <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
-      <I PROPERTY="AdvectionForm" VALUE="Convective"/>
+      <I PROPERTY="SolverType" VALUE="CoupledLinearisedNS"/>
+      <I PROPERTY="EQTYPE" VALUE="SteadyOseen"/>
       <I PROPERTY="Projection" VALUE="Galerkin"/>
-      <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1"/>
     </SOLVERINFO>
     
     <PARAMETERS>
-      <P> TimeStep      = 0.001        </P>
-      <P> NumSteps      = 100       </P>
-      <P> IO_CheckSteps = 100       </P>
-      <P> IO_InfoSteps  = 100       </P>
-      <P> Kinvis        = 0.025        </P>
+      <P> Kinvis   = 0.025            </P>
+      <P> LAMBDA   = 0.9637405441957 </P>
     </PARAMETERS>
 
     <VARIABLES>
       <V ID="0"> u </V> 
       <V ID="1"> v </V> 
-      <V ID="2"> p </V> 
     </VARIABLES>
     
     <BOUNDARYREGIONS>
@@ -36,31 +30,34 @@
     
     <BOUNDARYCONDITIONS>
       <REGION REF="0">
-        <D VAR="u" VALUE="1-1.619099729265964*cos(2*PI*y)" />
-        <D VAR="v" VALUE="-0.248344108585656*sin(2*PI*y)" />
-        <N VAR="p" USERDEFINEDTYPE="H" VALUE="0"/>
+        <D VAR="u" VALUE="(1-exp(-LAMBDA*x)*cos(2*PI*y))" />
+        <D VAR="v" VALUE="(-LAMBDA/(2*PI))*exp(-LAMBDA*x)*sin(2*PI*y)" />
       </REGION>
       <REGION REF="1">
-        <D VAR="u" VALUE="1-0.381463333531742*cos(2*PI*y)" />
-        <D VAR="v" VALUE="-0.058510399212408*sin(2*PI*y)" />
-        <D VAR="p" VALUE="0.427242862585425"/>
+        <D VAR="u" VALUE="(1-exp(-LAMBDA*x)*cos(2*PI*y))" />
+        <D VAR="v" VALUE="(-LAMBDA/(2*PI))*exp(-LAMBDA*x)*sin(2*PI*y)" />
       </REGION>
       <REGION REF="2">
-        <N VAR="u" VALUE="0" />
-        <D VAR="v" VALUE="0" />
-        <N VAR="p" VALUE="0" />
+        <D VAR="u" VALUE="(1-exp(-LAMBDA*x)*cos(2*PI*y))" />
+        <D VAR="v" VALUE="(-LAMBDA/(2*PI))*exp(-LAMBDA*x)*sin(2*PI*y)" />
        </REGION>
     </BOUNDARYCONDITIONS>
     
     <INITIALCONDITIONS>
-      <R FILE="Test_KovaFlow_m8.rst"/>
+      <F VAR="u" VALUE="0" />
+     <F VAR="v" VALUE="0" />
    </INITIALCONDITIONS>
    
    <EXACTSOLUTION>
-      <F VAR="u" VALUE="(1-exp(-0.963740544195769*x)*cos(2*PI*y))" />
-      <F VAR="v" VALUE="(-0.963740544195769/(2*PI))*exp(-0.963740544195769*x)*sin(2*PI*y)" />
-      <F VAR="p" VALUE="0.5*(1-exp(-2*0.963740544195769*x))" />
+     <F VAR="u" VALUE="(1-exp(-LAMBDA*x)*cos(2*PI*y))" />
+      <F VAR="v" VALUE="(-LAMBDA/(2*PI))*exp(-LAMBDA*x)*sin(2*PI*y)" />
    </EXACTSOLUTION>
+   
+   <USERDEFINEDEQNS>
+     <F LHS="u" VALUE="(1-exp(-LAMBDA*x)*cos(2*PI*y))" />
+     <F LHS="v" VALUE="(-LAMBDA/(2*PI))*exp(-LAMBDA*x)*sin(2*PI*y)" />
+   </USERDEFINEDEQNS>
+  
 
 </CONDITIONS>
 

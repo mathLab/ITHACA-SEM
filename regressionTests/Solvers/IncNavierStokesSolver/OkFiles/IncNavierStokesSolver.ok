@@ -25,12 +25,12 @@ L 2 error (variable p): 0.34777
 L inf error (variable p): 0.51978
 ----------------------------------------
 Test_KovaFlow_m8.xml
-L 2 error (variable u): 3.22913e-07
-L inf error (variable u): 4.31873e-07
-L 2 error (variable v): 1.68898e-06
-L inf error (variable v): 2.23918e-06
-L 2 error (variable p): 9.87816e-06
-L inf error (variable p): 3.4342e-05
+L 2 error (variable u): 4.80099e-05
+L inf error (variable u): 6.81723e-05
+L 2 error (variable v): 0.00015799
+L inf error (variable v): 0.000191491
+L 2 error (variable p): 0.00158614
+L inf error (variable p): 0.00501239
 ----------------------------------------
 Test_TaylorVor_dt1.xml
 L 2 error (variable u): 5.92021e-06

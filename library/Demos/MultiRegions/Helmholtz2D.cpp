@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
         //----------------------------------------------
         // Print summary of solution details
         lambda = bcs.GetParameter("Lambda");
-        const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions();
+        const SpatialDomains::ExpansionVector &expansions = graph2D.GetExpansions(bcs.GetVariable(0));
         LibUtilities::BasisKey bkey0 = expansions[0]->m_basisKeyVector[0];
         cout << "Solving 2D Helmholtz: "  << endl;
         cout << "         Lambda     : " << lambda << endl;
@@ -112,7 +112,6 @@ int main(int argc, char *argv[])
         //----------------------------------------------
         // Define Expansion
         int bc_val = 0;
-        cout << "where is this code going\n";
         Exp = MemoryManager<MultiRegions::ContField2D>::
             AllocateSharedPtr(graph2D,bcs,bc_val,SolnType);
         //----------------------------------------------

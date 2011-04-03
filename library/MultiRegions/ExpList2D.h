@@ -85,7 +85,7 @@ namespace Nektar
                       const LibUtilities::BasisKey &TriBb,
                       const LibUtilities::BasisKey &QuadBa,
                       const LibUtilities::BasisKey &QuadBb,
-                      const SpatialDomains::MeshGraph2D &graph2D,
+                      SpatialDomains::MeshGraph2D &graph2D,
                       const LibUtilities::PointsType
                       TriNb = LibUtilities::SIZE_PointsType);
 

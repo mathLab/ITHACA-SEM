@@ -59,7 +59,7 @@ namespace Nektar
                              const LibUtilities::BasisKey &HBa,
                              const LibUtilities::BasisKey &HBb,
                              const LibUtilities::BasisKey &HBc,
-                             const SpatialDomains::MeshGraph3D &graph3D,
+                             SpatialDomains::MeshGraph3D &graph3D,
                              const LibUtilities::PointsType TetNb):
             ExpList()
         {

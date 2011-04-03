@@ -77,7 +77,7 @@ namespace Nektar
 
             /// Construct an ExpList1D from a given graph.
             ExpList1D(const LibUtilities::BasisKey &Ba,
-                      const SpatialDomains::MeshGraph1D &graph1D);
+                      SpatialDomains::MeshGraph1D &graph1D);
 
             /// This constructor sets up a list of local expansions based on an
             /// input mesh.

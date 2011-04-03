@@ -96,7 +96,7 @@ namespace Nektar
          * @param   graph1D     Domain and expansion definitions.
          */
         ExpList1D::ExpList1D(const LibUtilities::BasisKey &Ba,
-                             const SpatialDomains::MeshGraph1D &graph1D):
+                             SpatialDomains::MeshGraph1D &graph1D):
             ExpList()
         {
             int i, id=0;

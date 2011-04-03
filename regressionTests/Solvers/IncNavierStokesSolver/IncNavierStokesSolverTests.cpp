@@ -88,7 +88,8 @@ int main(int argc, char* argv[])
 
 
     //Test Coupled LinearnS Kovasznay Flow
-    Execute("IncNavierStokesSolver","Test_KovaFlow_m8.xml","Steady Oseen Kovasznay Flow P=8");
+    Execute("IncNavierStokesSolver","Test_KovaFlow_m8.xml","Steady Oseen Kovasznay Flow P=6");
+    Execute("IncNavierStokesSolver","Test_Kovas_Quad6_Tri4_mixedbcs.xml","Steady Oseen Kovasznay flow, mixed elements and bcs P=7");
 
     if (tests_failed && !quiet)
     {

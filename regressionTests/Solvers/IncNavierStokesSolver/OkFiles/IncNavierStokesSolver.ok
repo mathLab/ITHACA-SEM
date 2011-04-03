@@ -48,3 +48,9 @@ L inf error (variable v): 4.29405e-08
 L 2 error (variable p): 4.16795e-06
 L inf error (variable p): 2.29635e-06
 ----------------------------------------
+Test_Kovas_Quad6_Tri4_mixedbcs.xml
+L 2 error (variable u): 0.000529867
+L inf error (variable u): 0.00074911
+L 2 error (variable v): 0.000172531
+L inf error (variable v): 0.000353995
+----------------------------------------

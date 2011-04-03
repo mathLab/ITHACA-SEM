@@ -327,11 +327,15 @@ namespace Nektar
                 ASSERTL0(boundaryRegionID < m_boundaryRegions.size(),
                 (std::string("Boundary region ID not found: ") + boundaryRegionIDStr).c_str());
 
-                //// Need to also make sure that we only specify a region ID once.  Since they
-                //// must be specified in order we can just check to see if that index exists.
-                //// It should be the next one in the container.
-                //ASSERTL0(boundaryRegionID == m_boundaryConditions.size(),
-                //    (std::string("Next boundary condition must be ID: ") + boundaryRegionIDStr).c_str());
+                //// Need to also make sure that we only specify a
+                //// region ID once.  Since they must be specified in
+                //// order we can just check to see if that index
+                //// exists.  It should be the next one in the
+                //// container.
+                //ASSERTL0(boundaryRegionID ==
+                //    m_boundaryConditions.size(), (std::string("Next
+                //    boundary condition must be ID: ") +
+                //    boundaryRegionIDStr).c_str());
 
                 // Here is the boundary region.
                 // m_boundaryRegions[boundaryRegionID];
@@ -497,7 +501,7 @@ namespace Nektar
                             // point to the variable.  Read the A and
                             // B attributes.
                             attr = attr->Next();
-
+                            
                             if (attr)
                             {
                                 std::string attrName1, attrName2;

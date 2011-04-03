@@ -52,7 +52,6 @@ namespace Nektar
          */
         DisContField1D::DisContField1D():
             ExpList1D(),
-            m_numDirBndCondExpansions(0),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -71,7 +70,6 @@ namespace Nektar
                     const GlobalSysSolnType solnType,
                     const bool constructMap):
             ExpList1D(graph1D),
-            m_numDirBndCondExpansions(0),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -84,7 +82,6 @@ namespace Nektar
          */
         DisContField1D::DisContField1D(const DisContField1D &In):
             ExpList1D(In),
-            m_numDirBndCondExpansions(0),
             m_bndCondExpansions(In.m_bndCondExpansions),
             m_bndConditions(In.m_bndConditions),
             m_globalBndMat(In.m_globalBndMat),
@@ -111,7 +108,6 @@ namespace Nektar
                     const int bc_loc,
                     const GlobalSysSolnType solnType):
             ExpList1D(graph1D),
-            m_numDirBndCondExpansions(0),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -156,7 +152,6 @@ namespace Nektar
                     const std::string variable,
                     const GlobalSysSolnType solnType):
             ExpList1D(graph1D),
-            m_numDirBndCondExpansions(0),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -225,7 +220,6 @@ namespace Nektar
                 }
             }
 
-            m_numDirBndCondExpansions = cnt2;
 
             m_bndCondExpansions
                     = Array<OneD,LocalRegions::PointExpSharedPtr>(cnt);
@@ -672,18 +666,18 @@ namespace Nektar
 
             cnt = 0;
             // Copy Dirichlet boundary conditions into trace space
-            for(i = 0; i < m_numDirBndCondExpansions; ++i)
+            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(i);
-                m_trace[id] = m_bndCondExpansions[i]->GetCoeff(0);
-            }
-
-            //Add weak boundary condition to trace forcing
-            for(i = m_numDirBndCondExpansions;
-                                    i < m_bndCondExpansions.num_elements(); ++i)
-            {
-                id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(i);
-                BndRhs[id] += m_bndCondExpansions[i]->GetCoeff(0);
+                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                {
+                    id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(i);
+                    m_trace[id] = m_bndCondExpansions[i]->GetCoeff(0);
+                }
+                else
+                {
+                    id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(i);
+                    BndRhs[id] += m_bndCondExpansions[i]->GetCoeff(0);
+                }
             }
 
             //----------------------------------

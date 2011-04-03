@@ -29,7 +29,6 @@ namespace Nektar
                                         const GlobalSysSolnType solnType,
                                         bool SetUpJustDG) :
             ExpList3D(graph3D),
-            m_numDirBndCondExpansions(0),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -72,7 +71,6 @@ namespace Nektar
                                         const GlobalSysSolnType solnType,
                                         bool SetUpJustDG) :
             ExpList3D(graph3D),
-            m_numDirBndCondExpansions(0),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -117,7 +115,6 @@ namespace Nektar
                                         const GlobalSysSolnType solnType,
                                         bool SetUpJustDG) :
             ExpList3D(graph3D),
-            m_numDirBndCondExpansions(0),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -215,7 +212,6 @@ namespace Nektar
                 }
             }
 
-            m_numDirBndCondExpansions = cnt2;
             m_bndCondExpansions  = Array<OneD,MultiRegions::ExpList2DSharedPtr>(cnt1);
             m_bndConditions      = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt1);
 

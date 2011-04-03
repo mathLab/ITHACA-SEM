@@ -542,9 +542,13 @@ namespace Nektar
 
             // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE
             //         IN THE SOLUTION ARRAY
-            for(int i = 0; i < NumDirBcs; ++i)
+            for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                inout[i] = m_bndCondExpansions[i]->GetCoeff(0);
+                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                {
+                    inout[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(i)]
+                        = m_bndCondExpansions[i]->GetCoeff(0);
+                }
             }
 
             // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
@@ -662,7 +666,7 @@ namespace Nektar
 
         void ContField1D::v_MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
+                                Array<OneD,       NekDouble> &outarray,
                                 bool  UseContCoeffs)
         {
             MultiplyByInvMassMatrix(inarray,outarray,UseContCoeffs);
@@ -727,12 +731,13 @@ namespace Nektar
 
             // Forcing function with weak boundary conditions
             int i;
-            int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            for(i = 0; i < m_bndCondExpansions.num_elements()-NumDirBcs; ++i)
+            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                wsp[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(
-                                                                i + NumDirBcs)]
-                    += m_bndCondExpansions[i+NumDirBcs]->GetCoeff(0);
+                if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
+                {
+                    wsp[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(i)]
+                        += m_bndCondExpansions[i]->GetCoeff(0);
+                }
             }
 
             // Solve the system

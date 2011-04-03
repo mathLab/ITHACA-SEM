@@ -232,12 +232,6 @@ namespace Nektar
                         map<int,int>& periodicEdges);
         protected:
             /**
-             * \brief The number of boundary segments on which
-             * Dirichlet boundary conditions are imposed
-             */
-            int m_numDirBndCondExpansions;
-
-            /**
              * \brief An object which contains the discretised
              * boundary conditions.
              *

@@ -109,9 +109,6 @@ namespace Nektar
                                       Array<OneD,int> &FaceID);
 
         protected:
-            /// The number of boundary segments on which Dirichlet boundary
-            /// conditions are imposed.
-            int m_numDirBndCondExpansions;
 
             /// An object which contains the discretised boundary conditions.
             /**

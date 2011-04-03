@@ -408,18 +408,24 @@ namespace Nektar
             const Array<OneD,const int>& map  = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
             NekDouble sign;
 
-            for(int i = 0; i < m_numDirBndCondExpansions; ++i)
+            for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                const Array<OneD,const NekDouble>& coeffs = m_bndCondExpansions[i]->GetCoeffs();
-                for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
-                    sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
-                    inout[map[bndcnt++]] = sign * coeffs[j];
+                    const Array<OneD,const NekDouble>& coeffs = m_bndCondExpansions[i]->GetCoeffs();
+                    for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+                    {
+                        sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
+                        inout[map[bndcnt++]] = sign * coeffs[j];
+                    }
+                }
+                else
+                {
+                    bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
             }
             GeneralMatrixOp(*(key.GetGlobalMatrixKey()),inout,outarray,true);
         }
-
 
         // Note inout contains initial guess and final output.
         void ContField3D::GlobalSolve(const GlobalLinSysKey &key,
@@ -438,11 +444,18 @@ namespace Nektar
 
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                const Array<OneD,const NekDouble>& coeffs = m_bndCondExpansions[i]->GetCoeffs();
-                for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
-                    sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
-                    inout[map[bndcnt++]] = sign * coeffs[j];
+                    const Array<OneD,const NekDouble>& coeffs = m_bndCondExpansions[i]->GetCoeffs();
+                    for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+                    {
+                        sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
+                        inout[map[bndcnt++]] = sign * coeffs[j];
+                    }
+                }
+                else
+                {
+                    bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
             }
 
@@ -534,15 +547,22 @@ namespace Nektar
 
             // Forcing function with weak boundary conditions
             int i,j;
-            int bndcnt=m_locToGloMap->GetNumLocalDirBndCoeffs();
+            int bndcnt = 0;
             NekDouble sign;
-            for(i = m_numDirBndCondExpansions; i < m_bndCondExpansions.num_elements(); ++i)
+            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
+                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
-                    sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
-                    wsp[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)] +=
-                        sign * (m_bndCondExpansions[i]->GetCoeffs())[j];
+                    for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
+                    {
+                        sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
+                        wsp[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)] +=
+                            sign * (m_bndCondExpansions[i]->GetCoeffs())[j];
+                    }
+                }
+                else
+                {
+                    bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
             }
 

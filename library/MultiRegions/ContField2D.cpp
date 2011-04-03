@@ -474,18 +474,24 @@ namespace Nektar
 
             // Forcing function with weak boundary conditions
             int i,j;
-            int bndcnt=m_locToGloMap->GetNumLocalDirBndCoeffs();
-            for(i = m_numDirBndCondExpansions;
-                                    i < m_bndCondExpansions.num_elements(); ++i)
+            int bndcnt=0;
+            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
+                if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
                 {
-                    wsp[m_locToGloMap
-                                ->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)]
-                        += (m_bndCondExpansions[i]->GetCoeffs())[j];
+                    for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
+                    {
+                        wsp[m_locToGloMap
+                            ->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)]
+                            += (m_bndCondExpansions[i]->GetCoeffs())[j];
+                    }
+                }
+                else
+                {
+                    bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
             }
-
+       
             // Solve the system
             GlobalLinSysKey key(StdRegions::eLaplacian,m_locToGloMap,time,
                                 variablecoeffs);
@@ -599,15 +605,24 @@ namespace Nektar
             //         IN THE SOLUTION ARRAY
             const Array<OneD,const int>& map
                         = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
-            for(i = 0; i < m_numDirBndCondExpansions; ++i)
+
+            for(i = 0; i < m_bndConditions.num_elements(); ++i)
             {
-                const Array<OneD,const NekDouble>& coeffs
-                                        = m_bndCondExpansions[i]->GetCoeffs();
-                for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
-                    inout[map[bndcnt++]] = coeffs[j];
+                    const Array<OneD,const NekDouble>& coeffs
+                        = m_bndCondExpansions[i]->GetCoeffs();
+                    for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+                    {
+                        inout[map[bndcnt++]] = coeffs[j];
+                    }
+                }
+                else
+                {
+                    bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
             }
+
             // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
             if(m_contNcoeffs - NumDirBcs > 0)
             {
@@ -837,18 +852,24 @@ namespace Nektar
 
             // Forcing function with weak boundary conditions
             int i,j;
-            int bndcnt=m_locToGloMap->GetNumLocalDirBndCoeffs();
-            for(i = m_numDirBndCondExpansions;
-                i < m_bndCondExpansions.num_elements(); ++i)
+            int bndcnt=0;
+            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
+                if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
                 {
-                    wsp[m_locToGloMap
-                        ->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)]
-                        += (m_bndCondExpansions[i]->GetCoeffs())[j];
+                    for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
+                    {
+                        wsp[m_locToGloMap
+                            ->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)]
+                            += (m_bndCondExpansions[i]->GetCoeffs())[j];
+                    }
+                }
+                else
+                {
+                    bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
             }
-            
+       
             // Solve the system
             GlobalLinSysKey key(StdRegions::eHelmholtz,m_locToGloMap,lambda);
 
@@ -941,15 +962,21 @@ namespace Nektar
 
             // Forcing function with weak boundary conditions
             int i,j;
-            int bndcnt=m_locToGloMap->GetNumLocalDirBndCoeffs();
-            for(i = m_numDirBndCondExpansions;
-                i < m_bndCondExpansions.num_elements(); ++i)
+            int bndcnt=0;
+            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
+                if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
                 {
-                    wsp[m_locToGloMap
-                        ->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)]
-                        += (m_bndCondExpansions[i]->GetCoeffs())[j];
+                    for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
+                    {
+                        wsp[m_locToGloMap
+                            ->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)]
+                            += (m_bndCondExpansions[i]->GetCoeffs())[j];
+                    }
+                }
+                else
+                {
+                    bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
             }
 

@@ -63,12 +63,11 @@ namespace Nektar
         /// Constructor.
         ADRBase(const string &fileStringName,
                 bool UseInputFileForProjectionType = false,
-                bool UseContinuousField = false,
-                string &globoptfile = NekNullString);
+                bool UseContinuousField = false);
 
         /// Initialise dependent variable fields.
         void SetADRBase(SpatialDomains::MeshGraphSharedPtr &graph,
-                        int nvariables, string &globoptfile = NekNullString);
+                        int nvariables);
 
         /// Initialise the data in the dependent fields.
         void SetInitialConditions(NekDouble initialtime = 0.0,

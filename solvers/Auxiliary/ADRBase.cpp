@@ -66,10 +66,9 @@ namespace Nektar
      * @param   fileNameString                  Session file name.
      * @param   UseInputFileForProjectionType   Default: false.
      * @param   UseContinuousField              Default: false.
-     * @param   globoptfile                     Global optimisations.
      */
     ADRBase::ADRBase(const string &fileNameString, bool UseInputFileForProjectionType,
-                     bool UseContinuousField, string &globoptfile)
+                     bool UseContinuousField)
     {
         SpatialDomains::MeshGraph graph;
         m_filename = fileNameString;
@@ -138,7 +137,7 @@ namespace Nektar
             }
         }
 
-        SetADRBase(m_graph,m_boundaryConditions->GetNumVariables(),globoptfile);
+        SetADRBase(m_graph,m_boundaryConditions->GetNumVariables());
     }
 
 
@@ -153,7 +152,7 @@ namespace Nektar
      * @param   globoptfile     Global optimisations.
      */
     void ADRBase::SetADRBase(SpatialDomains::MeshGraphSharedPtr &mesh,
-                             int nvariables,  string &globoptfile)
+                             int nvariables)
     {
         int i;
 
@@ -237,7 +236,7 @@ namespace Nektar
                                         *m_boundaryConditions,i);
 
                     firstfield->ReadGlobalOptimizationParameters(m_filename);
-
+                    
                     m_fields[0] = firstfield;
                     for(i = 1 ; i < m_fields.num_elements(); i++)
                     {
@@ -372,7 +371,7 @@ namespace Nektar
             m_fintime = 0;
         }
 		
-		if(m_boundaryConditions->CheckForParameter("NumQuadPointsError") == true)
+        if(m_boundaryConditions->CheckForParameter("NumQuadPointsError") == true)
         {
              m_NumQuadPointsError = m_boundaryConditions->GetParameter("NumQuadPointsError");
         }

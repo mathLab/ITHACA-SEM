@@ -68,7 +68,7 @@ namespace Nektar
          * 
          *
          */
-        VelocityCorrectionScheme(SessionReaderSharedPtr &pSession, string globoptfile = "NoGlobalOpts");
+        VelocityCorrectionScheme(SessionReaderSharedPtr &pSession);
         
         virtual ~VelocityCorrectionScheme();
         

@@ -54,8 +54,7 @@ namespace Nektar
         static std::string className;
 
 
-        CoupledLinearNS(SessionReaderSharedPtr &pSesssion, 
-                        string globoptfile = "NoGlobalOpts");
+        CoupledLinearNS(SessionReaderSharedPtr &pSesssion);
 
         /**
          *  Generate the linearised Navier Stokes solver based on the

@@ -45,30 +45,18 @@ using namespace Nektar;
 int main(int argc, char *argv[])
 {
     
-    if(argc != 2 && (argc != 4))
+    if(argc != 2)
     {
-        cerr << "\n \t Usage: IncNavierStokes  input.xml [GlobalOptimizationFile ElementalOptimizationFile] \n" << endl;
+        cerr << "\n \t Usage: IncNavierStokes  input.xml \n" << endl;
         exit(1);
     }
 
     string fileNameString(argv[1]);
-    string globoptfile;
     time_t starttime, endtime;
     NekDouble CPUtime;
 
     //----------------------------------------------------------------
     // Read the mesh and construct container class
-    if(argc == 2)
-    {
-        globoptfile = NekNullString;
-    }
-    else
-    {
-        string eloptfile  (argv[3]);
-        NekOptimize::LoadElementalOptimizationParameters(eloptfile);
-        
-        globoptfile = argv[2];
-    }
 
     SessionReaderSharedPtr session;
     EquationSystemSharedPtr equ;

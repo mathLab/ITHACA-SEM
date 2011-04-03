@@ -109,7 +109,7 @@ namespace Nektar
         /**
          * Constructor.
          */
-        IncNavierStokes(SessionReaderSharedPtr& pSession, string &globoptfile = NekNullString);
+        IncNavierStokes(SessionReaderSharedPtr& pSession);
 
         EquationType GetEquationType(void)
         {

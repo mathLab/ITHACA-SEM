@@ -48,10 +48,8 @@ namespace Nektar
      * global mapping arrays and the basic memory definitions for
      * coupled matrix system
      */ 
-
-     
-    CoupledLinearNS::CoupledLinearNS(SessionReaderSharedPtr &pSession, string globaloptfile):
-        IncNavierStokes(pSession,globaloptfile)
+    CoupledLinearNS::CoupledLinearNS(SessionReaderSharedPtr &pSession):
+        IncNavierStokes(pSession)
     {
         int  n,i,j,k,eid;
         int  expdim = m_graph->GetMeshDimension();
@@ -1001,7 +999,6 @@ namespace Nektar
      * MultiRegion::LocalToGlobalC0BaseMap::SetUp2DExpansionC0ContMap
      * related to the Linearised Navier Stokes problem
      */
-#if 1
     void CoupledLinearNS::SetUp2DExpansionC0ContMap(const MultiRegions::GlobalSysSolnType solnType)
     {
 
@@ -1182,7 +1179,7 @@ namespace Nektar
                     if(bndConditionsVec[j][i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                     {
 
-                        //negate graph offsets which shoudl be Dirichlet conditions
+                        //negate graph offsets which should be Dirichlet conditions
                         for(k = 0; k < bndCondExp[i]->GetExpSize(); ++k)
                         {
                             // vertices with mix condition;
@@ -1201,7 +1198,7 @@ namespace Nektar
                             }
                             
                             // edges with mixed id; 
-                            bndCondExp[i]->GetExp(k)->GetGeom1D()->GetEid();
+                            id = bndCondExp[i]->GetExp(k)->GetGeom1D()->GetEid();
                             graphVertOffset[edgeReorderedGraphVertId[id]*nvel+j] *= -1; 
                         }
                     }
@@ -1213,7 +1210,7 @@ namespace Nektar
         // assemble accumulative list of full Dirichlet values. 
         for(i = 0; i < firstNonDirGraphVertId*nvel; ++i)
         {
-            diff = graphVertOffset[i]; 
+            diff = abs(graphVertOffset[i]); 
             graphVertOffset[i] = cnt; 
             cnt += diff;
         }
@@ -1253,13 +1250,6 @@ namespace Nektar
             }
         }
 
-        cout << "GraphVertOffset" << endl;
-        for(i = 0; i < graphVertOffset.num_elements(); ++i)
-        {
-            cout << graphVertOffset[i] << ", ";
-        }
-        cout << endl;
-        
         // Allocate the proper amount of space for the class-data and fill
         // information that is already known
         cnt = 0; 
@@ -1451,375 +1441,7 @@ namespace Nektar
             }
         }
     }
-#else
 
-    /** 
-     * This is an vector extension of
-     * MultiRegion::LocalToGlobalC0BaseMap::SetUp2DExpansionC0ContMap
-     * related to the Linearised Navier Stokes problem
-     */
-    void CoupledLinearNS::SetUp2DExpansionC0ContMap(const MultiRegions::GlobalSysSolnType solnType)
-    {
-
-        int i,j,k;
-        int cnt = 0,offset=0;
-        int meshVertId, meshVertId2;
-        int meshEdgeId, meshEdgeId2;
-        int bndEdgeCnt;
-        int globalId;
-        int nEdgeCoeffs;
-        int nEdgeInteriorCoeffs;
-        int firstNonDirGraphVertId;
-        int nLocBndCondDofs = 0;
-        int nLocDirBndCondDofs = 0;
-        StdRegions::StdExpansion2DSharedPtr locExpansion;
-        LocalRegions::SegExpSharedPtr       bndSegExp;
-        LibUtilities::BasisType             bType;
-        StdRegions::EdgeOrientation         edgeOrient;
-        Array<OneD, unsigned int>           edgeInteriorMap;
-        Array<OneD, int>                    edgeInteriorSign;
-        bool signChange = false;
-        int nvel = m_velocity.num_elements();
-        
-        const StdRegions::StdExpansionVector &locExpVector = *(m_fields[m_velocity[0]]->GetExp());
-        int eid;
-        int nel = locExpVector.size();
-
-        map<int,int> periodicEdges;
-        vector<map<int,int> > periodicVertices;
-        map<int,int> vertReorderedGraphVertId;
-        map<int,int> edgeReorderedGraphVertId;
-        map<int,int> interiorReorderedGraphVertId;
-        MultiRegions::BottomUpSubStructuredGraphSharedPtr bottomUpGraph;
-
-        int staticCondLevel = 0;
-
-        /**
-         * STEP 1: Wrap boundary conditions vector in an array
-         * (since routine is set up for multiple fields) and call
-         * the graph re-odering subroutine to obtain the reordered
-         * values
-         */
-
-        // Obtain any periodic information and allocate default mapping array
-        SpatialDomains::MeshGraph2DSharedPtr graph2D = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D> (m_graph);
-        m_fields[m_velocity[0]]->GetPeriodicEdges(*graph2D,*m_boundaryConditions,
-                                                  m_boundaryConditions->GetVariable(0),
-                                                  periodicVertices,periodicEdges);
-        
-        MultiRegions::LocalToGlobalC0ContMapSharedPtr locToGloMap;
-        m_locToGloMap = locToGloMap = MemoryManager<MultiRegions::LocalToGlobalC0ContMap>::AllocateSharedPtr(); 
-
-        const Array<OneD, const MultiRegions::ExpList1DSharedPtr> bndCondExp = m_fields[m_velocity[0]]->GetBndCondExpansions();
-        Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> > bndConditionsVec(nvel);
-        
-        for(i = 0; i < nvel; ++i)
-        {
-            bndConditionsVec[i] = m_fields[m_velocity[i]]->GetBndConditions();
-        }
-        
-        map<int,int> vertDofs;
-        map<int,int> edgeDofs;
-        map<int,int> interiorDofs;
-
-        for(i = 0; i < locExpVector.size(); ++i)
-        {
-            for(j = 0; j < locExpVector[i]->GetNverts(); ++j)
-            {
-                vertDofs[(locExpVector[i]->GetGeom2D())->GetVid(j)] = nvel;
-                edgeDofs[(locExpVector[i]->GetGeom2D())->GetEid(j)] = 
-                    nvel*(locExpVector[i]->GetEdgeNcoeffs(j)-2);
-                interiorDofs[i] = 1;
-            }
-        }
-
-
-        locToGloMap->SetUp2DGraphC0ContMap(*m_fields[m_velocity[0]],
-                                           solnType,
-                                           bndCondExp,
-                                           bndConditionsVec,
-                                           periodicVertices,
-                                           periodicEdges,
-                                           vertReorderedGraphVertId,
-                                           vertDofs,
-                                           edgeReorderedGraphVertId,
-                                           edgeDofs,
-                                           firstNonDirGraphVertId,
-                                           bottomUpGraph,
-                                           interiorReorderedGraphVertId,
-                                           interiorDofs);
-
-        
-        /**
-         * STEP 2: Count out the number of Dirichlet vertices and edges first
-         */
-        for(i = 0; i < bndCondExp.num_elements(); i++)
-        {
-            for(j = 0; j < bndCondExp[i]->GetExpSize(); j++)
-            {
-                bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j));
-                for(k = 0; k < nvel; ++k)
-                {
-                    if(bndConditionsVec[k][i]->GetBoundaryConditionType()==SpatialDomains::eDirichlet)
-                    {
-                        nLocDirBndCondDofs += bndSegExp->GetNcoeffs();
-                    }
-                    nLocBndCondDofs += bndSegExp->GetNcoeffs();
-                }
-            }
-        }
-        locToGloMap->SetNumLocalDirBndCoeffs(nLocDirBndCondDofs);
-
-        /**
-         * STEP 3: Set up an array which contains the offset information of
-         * the different graph vertices.
-         *
-         * This basically means to identify how many global degrees of
-         * freedom the individual graph vertices correspond. Obviously,
-         * the graph vertices corresponding to the mesh-vertices account
-         * for a single global DOF. However, the graph vertices
-         * corresponding to the element edges correspond to 2*(N-2) global DOF
-         * where N is equal to the number of boundary modes on this edge.
-         */
-        Array<OneD, int> graphVertOffset(vertReorderedGraphVertId.size()+
-                                         edgeReorderedGraphVertId.size()+
-                                         interiorReorderedGraphVertId.size()+ 1);
-        graphVertOffset[0] = 0;
-        
-        for(i = 0; i < nel; ++i)
-        {
-            eid = m_fields[m_velocity[0]]->GetOffset_Elmt_Id(i);
-            locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[eid]);
-            for(j = 0; j < locExpansion->GetNedges(); ++j)
-            {
-                nEdgeCoeffs = locExpansion->GetEdgeNcoeffs(j);
-                meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
-                meshVertId = (locExpansion->GetGeom2D())->GetVid(j);
-                graphVertOffset[edgeReorderedGraphVertId[meshEdgeId]+1] = nvel*(nEdgeCoeffs-2);
-                graphVertOffset[vertReorderedGraphVertId[meshVertId]+1] = nvel;
-                graphVertOffset[interiorReorderedGraphVertId[eid]+1] = 1;
-                                
-                bType = locExpansion->GetEdgeBasisType(j);
-                // need a sign vector for modal expansions if nEdgeCoeffs >=4
-                if( (nEdgeCoeffs >= 4)&&
-                    ( (bType == LibUtilities::eModified_A)||
-                      (bType == LibUtilities::eModified_B) ) )
-                {
-                    signChange = true;
-                }
-            }
-        }
-        
-        locToGloMap->SetSignChange(signChange);
-
-        for(i = 1; i < graphVertOffset.num_elements(); i++)
-        {
-            graphVertOffset[i] += graphVertOffset[i-1];
-        }
-        
-        cout << "GraphVertOffset" << endl;
-        for(i = 0; i < graphVertOffset.num_elements(); ++i)
-        {
-            cout << graphVertOffset[i] << ", ";
-        }
-        cout << endl;
-
-        // Allocate the proper amount of space for the class-data and fill
-        // information that is already known
-        cnt = 0; 
-        int numLocalBndCoeffs = 0;
-        int numLocalCoeffs = 0;
-        for(i = 0; i < nel; ++i)
-        {
-            numLocalBndCoeffs += nvel*locExpVector[i]->NumBndryCoeffs() + 1;
-        }
-        numLocalCoeffs = m_pressure->GetNcoeffs()-nel + numLocalBndCoeffs;
-        
-        locToGloMap->SetNumLocalCoeffs(numLocalCoeffs);
-        locToGloMap->SetNumLocalBndCoeffs(numLocalBndCoeffs);
-
-        // This currently only accounts for Dir Bnd Cond where all of
-        // the fields on a boundary are specified as Dirichlet
-        locToGloMap->SetNumGlobalDirBndCoeffs(graphVertOffset[firstNonDirGraphVertId]);
-        Array<OneD, int> localToGlobalMap(numLocalCoeffs,-1);
-        locToGloMap->SetLocalToGlobalMap(localToGlobalMap);
-        Array<OneD, int> localToGlobalBndMap(numLocalBndCoeffs,-1);
-        locToGloMap->SetLocalToGlobalBndMap(localToGlobalBndMap);
-        Array<OneD, int> bndCondCoeffsToGlobalCoeffsMap(nLocBndCondDofs,-1);
-        locToGloMap->SetBndCondCoeffsToGlobalCoeffsMap(bndCondCoeffsToGlobalCoeffsMap);
-    
-        Array<OneD, NekDouble> localToGlobalSign;
-        Array<OneD, NekDouble> localToGlobalBndSign;
-
-        // If required, set up the sign-vector
-        if(signChange)
-        {
-            localToGlobalSign = Array<OneD, NekDouble>(numLocalCoeffs,1.0);
-            localToGlobalBndSign = Array<OneD, NekDouble>(numLocalBndCoeffs,1.0);
-            locToGloMap->SetLocalToGlobalSign(localToGlobalSign);
-            locToGloMap->SetLocalToGlobalBndSign(localToGlobalBndSign);
-        }
-
-        locToGloMap->SetGlobalSysSolnType(solnType);
-        locToGloMap->SetStaticCondLevel(staticCondLevel);
-        locToGloMap->SetNumPatches(nel);
-        Array<OneD, unsigned int> numLocalBndCoeffsPerPatch(nel);
-        locToGloMap->SetNumLocalBndCoeffsPerPatch(numLocalBndCoeffsPerPatch);
-        Array<OneD, unsigned int> numLocalIntCoeffsPerPatch(nel);
-        locToGloMap->SetNumLocalIntCoeffsPerPatch(numLocalIntCoeffsPerPatch);
-
-        for(i = 0; i < nel; ++i)
-        {
-            numLocalBndCoeffsPerPatch[i] = (unsigned int) nvel*locExpVector[m_fields[m_velocity[0]]->GetOffset_Elmt_Id(i)]->NumBndryCoeffs() + 1;
-            numLocalIntCoeffsPerPatch[i] = (unsigned int) m_pressure->GetExp(m_pressure->GetOffset_Elmt_Id(i))->GetNcoeffs()-1;
-        }
-        
-        /**
-         * STEP 4: Now, all ingredients are ready to set up the actual
-         * local to global mapping.
-         *
-         * The remainder of the map consists of the element-interior
-         * degrees of freedom. This leads to the block-diagonal submatrix
-         * as each element-interior mode is globally orthogonal to modes
-         * in all other elements.
-         */
-        cnt = 0;
-        int nv,velnbndry;
-        Array<OneD, unsigned int> bmap;
-
-        // Loop over all the elements in the domain in shuffled
-        // ordering (element type consistency)
-        for(i = 0; i < nel; ++i)
-        {
-            eid = m_fields[m_velocity[0]]->GetOffset_Elmt_Id(i);
-            locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[eid]);
-
-            velnbndry = locExpansion->NumBndryCoeffs();
-
-            // require an inverse ordering of the bmap system to store
-            // local numbering system which takes matrix these
-            // matrices. Therefore get hold of elemental bmap and set
-            // up an inverse map
-            map<int,int> inv_bmap;
-            locExpansion->GetBoundaryMap(bmap);
-            for(j = 0; j < bmap.num_elements(); ++j)
-            {
-                inv_bmap[bmap[j]] = j;
-            }
-            
-            // Loop over all edges (and vertices) of element i
-            for(j = 0; j < locExpansion->GetNedges(); ++j)
-            {
-                nEdgeInteriorCoeffs = locExpansion->GetEdgeNcoeffs(j)-2;
-                edgeOrient          = (locExpansion->GetGeom2D())->GetEorient(j);
-                meshEdgeId          = (locExpansion->GetGeom2D())->GetEid(j);
-                meshVertId          = (locExpansion->GetGeom2D())->GetVid(j);
-                
-                locExpansion->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
-                // Set the global DOF for vertex j of element i
-                for(nv = 0; nv < nvel; ++nv)
-                {
-                    localToGlobalMap[cnt+nv*velnbndry+inv_bmap[locExpansion->GetVertexMap(j)]] =
-                        graphVertOffset[vertReorderedGraphVertId[meshVertId]] + nv;
-                    
-                    
-                    // Set the global DOF's for the interior modes of edge j
-                    for(k = 0; k < nEdgeInteriorCoeffs; ++k)
-                    {
-                        localToGlobalMap[cnt+nv*velnbndry+inv_bmap[edgeInteriorMap[k]]] =
-                            graphVertOffset[edgeReorderedGraphVertId[meshEdgeId]]+k + nv*nEdgeInteriorCoeffs;
-                    }
-                }
-                
-                localToGlobalMap[cnt + nvel*velnbndry] = graphVertOffset[interiorReorderedGraphVertId[eid]];
-                
-                // Fill the sign vector if required
-                if(signChange)
-                {
-                    for(nv = 0; nv < nvel; ++nv)
-                    {
-                        for(k = 0; k < nEdgeInteriorCoeffs; ++k)
-                        {
-                            localToGlobalSign[cnt+nv*velnbndry + inv_bmap[edgeInteriorMap[k]]] = (NekDouble) edgeInteriorSign[k];
-                        }
-                    }
-                }
-            }
-            cnt += velnbndry*nvel+ m_pressure->GetExp(eid)->GetNcoeffs();
-        }
-        
-
-        // Set up the mapping for the boundary conditions
-        offset = cnt = 0;
-        for(nv = 0; nv < nvel; ++nv)
-        {
-            for(i = 0; i < bndCondExp.num_elements(); i++)
-            {
-                for(j = 0; j < bndCondExp[i]->GetExpSize(); j++)
-                {
-                    bndSegExp  = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j));
-
-                    cnt = offset + bndCondExp[i]->GetCoeff_Offset(j);
-                    for(k = 0; k < 2; k++)
-                    {
-                        meshVertId = (bndSegExp->GetGeom1D())->GetVid(k);
-                        bndCondCoeffsToGlobalCoeffsMap[cnt+bndSegExp->GetVertexMap(k)] = graphVertOffset[vertReorderedGraphVertId[meshVertId]]+nv;
-                    }
-                    
-                    meshEdgeId = (bndSegExp->GetGeom1D())->GetEid();
-                    bndEdgeCnt = 0;
-                    nEdgeCoeffs = bndSegExp->GetNcoeffs();
-                    for(k = 0; k < nEdgeCoeffs; k++)
-                    {
-                        if(bndCondCoeffsToGlobalCoeffsMap[cnt+k] == -1)
-                        {
-                            bndCondCoeffsToGlobalCoeffsMap[cnt+k] =
-                                graphVertOffset[edgeReorderedGraphVertId[meshEdgeId]]+bndEdgeCnt + nv*(nEdgeCoeffs-2);
-                            bndEdgeCnt++;
-                        }
-                    }
-                }
-                offset += bndCondExp[i]->GetNcoeffs();
-            }
-        }
-        
-        globalId = Vmath::Vmax(numLocalCoeffs,&localToGlobalMap[0],1)+1;
-        locToGloMap->SetNumGlobalBndCoeffs(globalId);
-        
-        /**
-         * STEP 5: The boundary condition mapping is generated from the
-         * same vertex renumbering and fill in a unique interior map.
-         */
-        cnt=0;
-        for(i = 0; i < numLocalCoeffs; ++i)
-        {
-            if(localToGlobalMap[i] == -1)
-            {
-                localToGlobalMap[i] = globalId++;
-            }
-            else
-            {
-                if(signChange)
-                {
-                    localToGlobalBndSign[cnt]=localToGlobalSign[i];
-                }
-                localToGlobalBndMap[cnt++]=localToGlobalMap[i];
-            }
-        }
-        locToGloMap->SetNumGlobalCoeffs(globalId);
-        
-        // Set up the local to global map for the next level when using
-        // multi-level static condensation
-        if( (solnType == MultiRegions::eDirectMultiLevelStaticCond) )
-        {
-            if(staticCondLevel < (bottomUpGraph->GetNlevels()-1))
-            {
-                MultiRegions::LocalToGlobalBaseMap *locToGloPointer = m_locToGloMap.get();
-                locToGloMap->SetNextLevelLocalToGlobalMap(MemoryManager<MultiRegions::LocalToGlobalBaseMap>::AllocateSharedPtr(locToGloPointer,bottomUpGraph));
-            }
-        }
-    }
-#endif
     void CoupledLinearNS::v_Output(void)
     {
         

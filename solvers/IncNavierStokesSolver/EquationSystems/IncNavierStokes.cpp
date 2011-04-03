@@ -48,7 +48,7 @@ namespace Nektar
      * \param
      */
     
-    IncNavierStokes::IncNavierStokes(SessionReaderSharedPtr& pSession, string &globoptfile):
+    IncNavierStokes::IncNavierStokes(SessionReaderSharedPtr& pSession):
         EquationSystem(pSession),
         m_infosteps(10)
     {

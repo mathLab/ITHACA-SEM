@@ -46,8 +46,8 @@ namespace Nektar
      * \param 
      * \param
      */
-    VelocityCorrectionScheme::VelocityCorrectionScheme(SessionReaderSharedPtr & pSession, string glooptfile):
-        IncNavierStokes(pSession, glooptfile)
+    VelocityCorrectionScheme::VelocityCorrectionScheme(SessionReaderSharedPtr & pSession):
+        IncNavierStokes(pSession)
     {
         
         // Set m_pressure to point to last field of m_fields; 

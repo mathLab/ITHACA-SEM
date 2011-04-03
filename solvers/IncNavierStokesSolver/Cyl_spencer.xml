@@ -3198,6 +3198,7 @@
     <CONDITIONS>
 
     <SOLVERINFO>
+      <I PROPERTY="ProjectionType" VALUE="VelocityCorrectionScheme"/>
       <I PROPERTY="EQTYPE" VALUE="UnsteadyNavierStokes"/>
       <I PROPERTY="AdvectionForm" VALUE="Convective"/>
       <I PROPERTY="TimeIntegrationMethod" VALUE="ForwardEuler"/>

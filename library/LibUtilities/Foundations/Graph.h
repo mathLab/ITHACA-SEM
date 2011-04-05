@@ -37,6 +37,7 @@
 #define GRAPH_H
 
 #include <list>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace Nektar
 {
@@ -70,18 +71,18 @@ namespace Nektar
                 m_id = id;
             }
 
-            virtual ~GraphVertexObject();
+            LIB_UTILITIES_EXPORT virtual ~GraphVertexObject();
 
-            friend bool operator  == (const GraphVertexObject &x, 
+            LIB_UTILITIES_EXPORT friend bool operator  == (const GraphVertexObject &x, 
                 const GraphVertexObject &y);
-            friend bool operator  != (const GraphVertexObject &x, 
+            LIB_UTILITIES_EXPORT friend bool operator  != (const GraphVertexObject &x, 
                 const GraphVertexObject &y);
 
         protected:
             GraphVertexID m_id; //vertex object identifier
 
         private:
-            static GraphVertexID m_nextid;
+            LIB_UTILITIES_EXPORT static GraphVertexID m_nextid;
         }; 
 
         // ------------------------------------------------------------------------
@@ -101,8 +102,8 @@ namespace Nektar
         {
 
         public:
-            Graph();
-            ~Graph();
+            LIB_UTILITIES_EXPORT Graph();
+            LIB_UTILITIES_EXPORT ~Graph();
 
         protected:
             int m_curmaxvid;

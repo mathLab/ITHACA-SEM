@@ -35,7 +35,7 @@
 
 #ifndef EXPLIST2D_H
 #define EXPLIST2D_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <vector>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList.h>
@@ -64,24 +64,24 @@ namespace Nektar
         {
         public:
             /// Default constructor.
-            ExpList2D();
+            MULTI_REGIONS_EXPORT ExpList2D();
 
             /// Copy constructor.
-            ExpList2D(  const ExpList2D &In,
+            MULTI_REGIONS_EXPORT ExpList2D(  const ExpList2D &In,
                         bool DeclareCoeffPhysArrays = true);
 
             /// Sets up a list of local expansions based on an input mesh.
-            ExpList2D(SpatialDomains::MeshGraph2D &graph2D,
+            MULTI_REGIONS_EXPORT ExpList2D(SpatialDomains::MeshGraph2D &graph2D,
                       bool DelcareCoeffPhysArrays = true, 
                       const std::string var = "DefaultVar");
 
             /// Sets up a list of local expansions based on an expansion vector
-            ExpList2D(const SpatialDomains::ExpansionVector &expansions,
+            MULTI_REGIONS_EXPORT ExpList2D(const SpatialDomains::ExpansionVector &expansions,
                       bool DeclareCoeffPhysArrays = true);
 
             /// Sets up a list of local expansions based on an input mesh
             /// and separately defined basiskeys
-            ExpList2D(const LibUtilities::BasisKey &TriBa,
+            MULTI_REGIONS_EXPORT ExpList2D(const LibUtilities::BasisKey &TriBa,
                       const LibUtilities::BasisKey &TriBb,
                       const LibUtilities::BasisKey &QuadBa,
                       const LibUtilities::BasisKey &QuadBb,
@@ -92,11 +92,11 @@ namespace Nektar
 
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField3D and ContField3D.
-            ExpList2D(  const SpatialDomains::CompositeVector &domain,
+            MULTI_REGIONS_EXPORT ExpList2D(  const SpatialDomains::CompositeVector &domain,
                         SpatialDomains::MeshGraph3D &graph3D);
 
             /// Destructor.
-            ~ExpList2D();
+            MULTI_REGIONS_EXPORT ~ExpList2D();
 
         protected:
             /// Set up the normals on each expansion.

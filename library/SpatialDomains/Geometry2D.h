@@ -41,7 +41,7 @@
 
 #include <SpatialDomains/Geometry.h>
 #include <SpatialDomains/SegGeom.h>
-
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 namespace Nektar
 {
     namespace SpatialDomains
@@ -56,9 +56,9 @@ namespace Nektar
         class Geometry2D: public Geometry
         {       
         public:
-            Geometry2D();
-            Geometry2D(const int coordim);
-            ~Geometry2D();
+            SPATIAL_DOMAINS_EXPORT Geometry2D();
+            SPATIAL_DOMAINS_EXPORT Geometry2D(const int coordim);
+            SPATIAL_DOMAINS_EXPORT ~Geometry2D();
 
 
             StdRegions::StdExpansion2DSharedPtr GetXmap(const int i)

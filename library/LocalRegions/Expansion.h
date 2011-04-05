@@ -38,6 +38,7 @@
 #include <StdRegions/StdExpansion1D.h>
 #include <LocalRegions/LocalRegions.hpp>
 #include <LocalRegions/MatrixKey.h>
+#include <LocalRegions/LocalRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -47,7 +48,7 @@ namespace Nektar
         class Expansion
         {
             public:
-                Expansion(); // default constructor. 
+                LOCAL_REGIONS_EXPORT Expansion(); // default constructor. 
 
 
             protected:

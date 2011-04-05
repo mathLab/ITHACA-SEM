@@ -39,7 +39,7 @@
 #include <SpatialDomains/SpatialDomains.hpp>
 #include <SpatialDomains/Geometry.h>
 #include <SpatialDomains/MeshComponents.h>
-
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 namespace Nektar
 {
     namespace SpatialDomains
@@ -47,9 +47,9 @@ namespace Nektar
         class Geometry1D: public Geometry
         {
         public:
-            Geometry1D();
-            Geometry1D(const int coordim);
-            ~Geometry1D();
+            SPATIAL_DOMAINS_EXPORT Geometry1D();
+            SPATIAL_DOMAINS_EXPORT Geometry1D(const int coordim);
+            SPATIAL_DOMAINS_EXPORT ~Geometry1D();
 
             // Wrappers around virtual Functions (for the EdgeComponent class)
             void AddElmtConnected(int gvo_id, int locid)

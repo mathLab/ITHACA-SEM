@@ -45,10 +45,10 @@ namespace Nektar
     namespace LibUtilities 
     {
         typedef NekManager<PointsKey, Points<NekDouble>, PointsKey::opLess> PointsManagerT;
-        PointsManagerT &PointsManager(void);
+        LIB_UTILITIES_EXPORT PointsManagerT &PointsManager(void);
 
         typedef NekManager<BasisKey, Basis, BasisKey::opLess> BasisManagerT;
-        BasisManagerT &BasisManager(void);
+        LIB_UTILITIES_EXPORT BasisManagerT &BasisManager(void);
 
     } // end of namespace LibUtilities
 } // end of namespace Nektar

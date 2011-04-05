@@ -42,7 +42,7 @@
 #include <StdRegions/StdExpansion1D.h>
 #include <StdRegions/StdExpansion2D.h>
 #include <StdRegions/StdExpansion3D.h>
-
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 namespace Nektar
 {
     namespace SpatialDomains
@@ -52,7 +52,7 @@ namespace Nektar
         class GeomFactors2D;
         typedef boost::shared_ptr<Geometry> GeometrySharedPtr;
 
-        bool operator==(const GeomFactors &lhs, const GeomFactors &rhs);
+        SPATIAL_DOMAINS_EXPORT bool operator==(const GeomFactors &lhs, const GeomFactors &rhs);
 
         /// Pointer to a GeomFactors object.
         typedef boost::shared_ptr<GeomFactors>      GeomFactorsSharedPtr;
@@ -87,13 +87,13 @@ namespace Nektar
         {
         public:
 
-            friend bool operator==( const GeomFactors &lhs,
+            SPATIAL_DOMAINS_EXPORT friend bool operator==( const GeomFactors &lhs,
                                     const GeomFactors &rhs);
-            friend bool operator<(  const GeomFactors &lhs,
+            SPATIAL_DOMAINS_EXPORT friend bool operator<(  const GeomFactors &lhs,
                                     const GeomFactors &rhs);
 
             /// Destructor.
-            virtual ~GeomFactors();
+            SPATIAL_DOMAINS_EXPORT virtual ~GeomFactors();
 
             /// Return the type of geometry.
             inline GeomType GetGtype();
@@ -179,11 +179,11 @@ namespace Nektar
                         const Array<OneD, const NekDouble> &ndata);
 
             /// Normalises a set of vectors.
-            static void VectorNormalise(
+            SPATIAL_DOMAINS_EXPORT static void VectorNormalise(
                         Array<OneD, Array<OneD, NekDouble> > &array);
 
             /// Computes the cross-product between sets of vectors.
-            static void VectorCrossProd(
+            SPATIAL_DOMAINS_EXPORT static void VectorCrossProd(
                         const Array<OneD, const Array<OneD, NekDouble> > &in1,
                         const Array<OneD, const Array<OneD, NekDouble> > &in2,
                               Array<OneD, Array<OneD, NekDouble> > &out);

@@ -36,7 +36,7 @@
 #ifndef HEXEXP_H
 #define HEXEXP_H
 
-
+#include <LocalRegions/LocalRegionsDeclspec.h>
 #include <LocalRegions/LocalRegions.hpp>
 
 #include <StdRegions/StdHexExp.h>
@@ -61,16 +61,16 @@ namespace Nektar
     
             /// Constructor using BasisKey class for quadrature points and 
             /// order definition 
-            HexExp( const LibUtilities::BasisKey &Ba, 
+            LOCAL_REGIONS_EXPORT HexExp( const LibUtilities::BasisKey &Ba, 
                             const LibUtilities::BasisKey &Bb,
                             const LibUtilities::BasisKey &Bc, 
                             const SpatialDomains::HexGeomSharedPtr &geom);
 
             /// Copy Constructor
-            HexExp( const HexExp &T );
+            LOCAL_REGIONS_EXPORT HexExp( const HexExp &T );
 
             /// Destructor
-            ~HexExp();
+            LOCAL_REGIONS_EXPORT ~HexExp();
 
         protected:
             DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);

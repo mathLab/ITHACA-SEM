@@ -40,6 +40,7 @@
 
 #include <StdRegions/StdExpansion.h>
 #include <StdRegions/StdSegExp.h>
+#include <StdRegions/StdRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -49,11 +50,11 @@ namespace Nektar
     class StdExpansion2D: public StdExpansion
     {
         public:
-            StdExpansion2D();
-            StdExpansion2D(int numcoeffs, const LibUtilities::BasisKey &Ba,
+            STD_REGIONS_EXPORT StdExpansion2D();
+            STD_REGIONS_EXPORT StdExpansion2D(int numcoeffs, const LibUtilities::BasisKey &Ba,
                            const LibUtilities::BasisKey &Bb);
-            StdExpansion2D(const StdExpansion2D &T);
-            ~StdExpansion2D();
+            STD_REGIONS_EXPORT StdExpansion2D(const StdExpansion2D &T);
+            STD_REGIONS_EXPORT ~StdExpansion2D();
 
             // Generic operations in different element
 
@@ -89,7 +90,7 @@ namespace Nektar
              *  & \eta_1 = \frac{2(1+\xi_1)}{(1-\xi_2)}-1, \eta_2 = \xi_2 \\
              *  \end{array} \f$
              */
-            void PhysTensorDeriv(const Array<OneD, const NekDouble>& inarray,
+            STD_REGIONS_EXPORT void PhysTensorDeriv(const Array<OneD, const NekDouble>& inarray,
                                  Array<OneD, NekDouble> &outarray_d0,
                                  Array<OneD, NekDouble> &outarray_d1);
 
@@ -115,9 +116,9 @@ namespace Nektar
              *  \param coords the coordinates of the single point
              *  \return returns the value of the expansion at the single point
              */
-            NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords);
+            STD_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords);
 
-            NekDouble Integral(const Array<OneD, const NekDouble>& inarray,
+            STD_REGIONS_EXPORT NekDouble Integral(const Array<OneD, const NekDouble>& inarray,
                                const Array<OneD, const NekDouble>& w0,
                                const Array<OneD, const NekDouble>& w1);
 

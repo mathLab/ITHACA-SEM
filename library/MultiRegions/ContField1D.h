@@ -45,7 +45,7 @@
 #include <LocalRegions/PointExp.h>
 #include <SpatialDomains/MeshGraph1D.h>
 #include <SpatialDomains/Conditions.h>
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -58,29 +58,29 @@ namespace Nektar
         {
         public:
             /// Default constructor.
-            ContField1D();
+            MULTI_REGIONS_EXPORT ContField1D();
 
             /// Construct a global continuous field based on an input mesh.
-            ContField1D(SpatialDomains::MeshGraph1D &graph1D,
+            MULTI_REGIONS_EXPORT ContField1D(SpatialDomains::MeshGraph1D &graph1D,
                         const GlobalSysSolnType solnType
                                                 = eDirectMultiLevelStaticCond);
 
             /// Constructor.
-            ContField1D(SpatialDomains::MeshGraph1D &graph1D,
+            MULTI_REGIONS_EXPORT ContField1D(SpatialDomains::MeshGraph1D &graph1D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0,
                         const GlobalSysSolnType solnType = eDirectStaticCond);
 
             /// Set up global continuous field based on an input mesh and
             /// boundary conditions.
-            ContField1D(SpatialDomains::MeshGraph1D &graph1D,
+            MULTI_REGIONS_EXPORT ContField1D(SpatialDomains::MeshGraph1D &graph1D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable,
                         const GlobalSysSolnType solnType = eDirectStaticCond);
 
             /// Set up global continuous field based on an input mesh, basis
             /// key and boundary conditions.
-            ContField1D(const LibUtilities::BasisKey &Ba,
+            MULTI_REGIONS_EXPORT ContField1D(const LibUtilities::BasisKey &Ba,
                         SpatialDomains::MeshGraph1D &graph1D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0,
@@ -88,105 +88,105 @@ namespace Nektar
 
             /// Set up global continuous field based on an input mesh, basis
             /// key and boundary conditions.
-            ContField1D(const LibUtilities::BasisKey &Ba,
+            MULTI_REGIONS_EXPORT ContField1D(const LibUtilities::BasisKey &Ba,
                         SpatialDomains::MeshGraph1D &graph1D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable,
                         const GlobalSysSolnType solnType = eDirectStaticCond);
 
             /// Copy constructor.
-            ContField1D(const ContField1D &In);
+            MULTI_REGIONS_EXPORT ContField1D(const ContField1D &In);
 
             /// Destructor
-            ~ContField1D();
+            MULTI_REGIONS_EXPORT ~ContField1D();
 
             /// Perform global forward transformation of a function \f$f(x)\f$,
             //  subject to the boundary conditions specified.
-            void FwdTrans(      const Array<OneD, const NekDouble> &inarray,
+            MULTI_REGIONS_EXPORT void FwdTrans(      const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,      NekDouble> &outarray,
                                 bool  UseContCoeffs = false);
 
             /// This function performs the backward transformation of the
             /// spectral/hp element expansion.
-            void BwdTrans(      const Array<OneD, const NekDouble> &inarray,
+            MULTI_REGIONS_EXPORT void BwdTrans(      const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
                                 bool  UseContCoeffs = false);
 
             ///
-            void MultiplyByInvMassMatrix(
+            MULTI_REGIONS_EXPORT void MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
                                 bool  UseContCoeffs = false);
 
             /// Return the boundary conditions expansion.
             // inline
-            const Array<OneD,const LocalRegions::PointExpSharedPtr>&
+            MULTI_REGIONS_EXPORT const Array<OneD,const LocalRegions::PointExpSharedPtr>&
                                                      GetBndCondExpansions();
 
             // inline
-            const Array<OneD,const SpatialDomains
+            MULTI_REGIONS_EXPORT const Array<OneD,const SpatialDomains
                                 ::BoundaryConditionShPtr>& GetBndConditions();
 
             /// Returns the total number of global degrees of freedom
             /// \f$N_{\mathrm{dof}}\f$.
             // inline
-            int GetContNcoeffs();
+            MULTI_REGIONS_EXPORT int GetContNcoeffs();
 
             /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$
             /// (implemented as #m_contCoeffs) containing all global expansion
             /// coefficients.
             // inline
-            Array<OneD, NekDouble> &UpdateContCoeffs();
+            MULTI_REGIONS_EXPORT Array<OneD, NekDouble> &UpdateContCoeffs();
 
             /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$
             /// (implemented as #m_contCoeffs) containing all global expansion
             /// coefficients.
             // inline
-            const Array<OneD, const NekDouble> &GetContCoeffs() const;
+            MULTI_REGIONS_EXPORT const Array<OneD, const NekDouble> &GetContCoeffs() const;
 
             /// Scatters from the global coefficients
             /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
             /// \f$\boldsymbol{\hat{u}}_l\f$.
             // inline
-            void GlobalToLocal();
+            MULTI_REGIONS_EXPORT void GlobalToLocal();
 
             /// Scatters from the global coefficients
             /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
             /// \f$\boldsymbol{\hat{u}}_l\f$.
             // inline
-            void GlobalToLocal( const Array<OneD, const NekDouble> &inarray,
+            MULTI_REGIONS_EXPORT void GlobalToLocal( const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,NekDouble> &outarray);
 
             /// Gathers the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
             // inline
-            void LocalToGlobal();
+            MULTI_REGIONS_EXPORT void LocalToGlobal();
 
             /// Assembles the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
             // inline
-            void Assemble();
+            MULTI_REGIONS_EXPORT void Assemble();
 
             /// Assembles the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
             // inline
-            void Assemble(const Array<OneD, const NekDouble> &inarray,
+            MULTI_REGIONS_EXPORT void Assemble(const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,NekDouble> &outarray);
 
             /// Returns the map from local to global level.
             // inline
-            const LocalToGlobalC0ContMapSharedPtr& GetLocalToGlobalMap() const;
+            MULTI_REGIONS_EXPORT const LocalToGlobalC0ContMapSharedPtr& GetLocalToGlobalMap() const;
 
             /// Calculates the inner product of a function \f$f(x)\f$ with
             /// respect to all <em>global</em> expansion modes
             /// \f$\phi_n^e(x)\f$.
-            void IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
+            MULTI_REGIONS_EXPORT void IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD, NekDouble> &outarray,
                                 bool  UseContCoeffs = false);
 
             /// Calculates the result of the multiplication of a global matrix
             /// of type specified by \a mkey with a vector given by \a inarray.
-            void GeneralMatrixOp(const GlobalMatrixKey             &gkey,
+            MULTI_REGIONS_EXPORT void GeneralMatrixOp(const GlobalMatrixKey             &gkey,
                                 const Array<OneD,const NekDouble> &inarray,
                                       Array<OneD,      NekDouble> &outarray,
                                 bool  UseContCoeffs = false);

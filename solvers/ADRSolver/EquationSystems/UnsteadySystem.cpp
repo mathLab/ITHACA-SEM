@@ -37,12 +37,11 @@
 #include <iomanip>
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/BasicUtils/Timer.h>
 #include <ADRSolver/EquationSystems/UnsteadySystem.h>
 
 namespace Nektar
 {
-	
-	timeval timer1, timer2;
     NekDouble time1, time2;
 	
     NekDouble IntegrationTime = 0.0;
@@ -283,7 +282,9 @@ namespace Nektar
 		{
 			while(n < m_steps || m_time<m_fintime)
 			{
-				gettimeofday(&timer1, NULL);
+                Timer timer;
+                timer.Start();
+
 				// calculate the timestep if CFL condition is applicable
 				m_timestep = GetTimeStep(ExpOrder, CFL, TimeStability);
 				
@@ -309,10 +310,8 @@ namespace Nektar
 				
 				m_time += m_timestep;
 				
-				gettimeofday(&timer2, NULL);
-				time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
-				time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
-				IntegrationTime += (time2-time1)/1000000.0;
+                timer.Stop();
+				IntegrationTime += timer.TimePerTest(1);
 				
 				
 				// Write out status information.
@@ -354,7 +353,8 @@ namespace Nektar
 		{
 			for(n = 0; n < m_steps; ++n)
 			{
-				gettimeofday(&timer1, NULL);
+                Timer timer;
+                timer.Start();
 				// Integrate over timestep.
 				if( n < numMultiSteps-1)
 				{
@@ -369,10 +369,8 @@ namespace Nektar
 				
 				m_time += m_timestep;
 				
-				gettimeofday(&timer2, NULL);
-				time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
-				time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
-				IntegrationTime += (time2-time1)/1000000.0;
+                timer.Stop();
+                IntegrationTime += timer.TimePerTest(1);
 				
 				// Write out status information.
 				if(!((n+1)%m_infosteps))
@@ -760,6 +758,7 @@ namespace Nektar
 											const Array<OneD,NekDouble> CFL, NekDouble timeCFL)
     {
 		ASSERTL0(false, "v_GetTimeStep is not implemented in the base class (UnsteadySystem). Check if your equation class has its own implementation");
+        return 0.0;
     }
 	
 	

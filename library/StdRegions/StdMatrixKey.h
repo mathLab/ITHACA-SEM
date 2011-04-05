@@ -37,6 +37,7 @@
 #define STDMATRIXKEY_H
 
 #include <StdRegions/StdRegions.hpp>
+#include <StdRegions/StdRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -48,65 +49,65 @@ namespace Nektar
         class StdMatrixKey
         {
         public:
-            StdMatrixKey( const StdRegions::MatrixType matrixType, 
+            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
                           const StdRegions::ExpansionType expansionType, 
                           const StdRegions::StdExpansion &stdExpansion,
                           LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
-            StdMatrixKey( const StdRegions::MatrixType matrixType, 
+            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
                           const StdRegions::ExpansionType expansionType, 
                           const StdRegions::StdExpansion &stdExpansion,
                           const NekDouble const0,
                           LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
-            StdMatrixKey( const StdRegions::MatrixType matrixType, 
+            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
                           const StdRegions::ExpansionType expansionType, 
                           const StdRegions::StdExpansion &stdExpansion,
                           const Array<OneD, const NekDouble>& varcoeffs,
                           LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
-            StdMatrixKey( const StdRegions::MatrixType matrixType, 
+            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
                           const StdRegions::ExpansionType expansionType, 
                           const StdRegions::StdExpansion &stdExpansion,
                           const Array<OneD, Array<OneD, const NekDouble> >& varcoeffs,
                           LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
-            StdMatrixKey( const StdRegions::MatrixType matrixType, 
+            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
                           const StdRegions::ExpansionType expansionType, 
                           const StdRegions::StdExpansion &stdExpansion,
                           const NekDouble const0,
                           const Array<OneD, const NekDouble>& varcoeffs0,
                           LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
-            StdMatrixKey( const StdRegions::MatrixType matrixType, 
+            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
                           const StdRegions::ExpansionType expansionType, 
                           const StdRegions::StdExpansion &stdExpansion,
                           const NekDouble const0,
                           const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
                           LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
-            StdMatrixKey( const StdRegions::MatrixType matrixType, 
+            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
                           const StdRegions::ExpansionType expansionType, 
                           const StdRegions::StdExpansion &stdExpansion,
                           const Array<OneD, const NekDouble>& constants,
                           const Array<OneD, const NekDouble >& varcoeffs,
                           LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
-            StdMatrixKey( const StdRegions::MatrixType matrixType, 
+            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
                           const StdRegions::ExpansionType expansionType, 
                           const StdRegions::StdExpansion &stdExpansion,
                           const Array<OneD, const NekDouble>& constants,
                           const Array<OneD, Array<OneD, const NekDouble> >& varcoeffs,
                           LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
-            StdMatrixKey( const StdRegions::MatrixType matrixType, 
+            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
                           const StdRegions::ExpansionType expansionType, 
                           const StdRegions::StdExpansion &stdExpansion,
                           const NekDouble const0,
                           const NekDouble const1,
                           LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
-            StdMatrixKey( const StdRegions::MatrixType matrixType, 
+            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
                           const StdRegions::ExpansionType expansionType, 
                           const StdRegions::StdExpansion &stdExpansion,
                           const NekDouble const0,
@@ -114,7 +115,7 @@ namespace Nektar
                           const Array<OneD, const NekDouble>& varcoeffs,
                           LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
-            StdMatrixKey( const StdRegions::MatrixType matrixType, 
+            STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType, 
                           const StdRegions::ExpansionType expansionType, 
                           const StdRegions::StdExpansion &stdExpansion,
                           const NekDouble const0,
@@ -122,13 +123,13 @@ namespace Nektar
                           const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
                           LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
-            StdMatrixKey(const MatrixType matrixType, 
+            STD_REGIONS_EXPORT StdMatrixKey(const MatrixType matrixType, 
                          const ExpansionType expansionType,
                          const Array<OneD, const LibUtilities::BasisSharedPtr> &base,
                          const int ncoeffs,
                          LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
             
-            StdMatrixKey(const MatrixType matrixType, 
+            STD_REGIONS_EXPORT StdMatrixKey(const MatrixType matrixType, 
                          const ExpansionType expansionType,
                          const Array<OneD, const LibUtilities::BasisSharedPtr> &base,
                          const int ncoeffs,
@@ -136,7 +137,7 @@ namespace Nektar
                          LibUtilities::PointsType nodalType);
 
 
-            StdMatrixKey(const MatrixType matrixType, 
+            STD_REGIONS_EXPORT StdMatrixKey(const MatrixType matrixType, 
                          const ExpansionType expansionType,
                          const Array<OneD, const LibUtilities::BasisSharedPtr> &base,
                          const int ncoeffs,
@@ -145,7 +146,7 @@ namespace Nektar
                          LibUtilities::PointsType nodalType);
 
 
-            StdMatrixKey(const StdMatrixKey& rhs);
+            STD_REGIONS_EXPORT StdMatrixKey(const StdMatrixKey& rhs);
 
             virtual ~StdMatrixKey()
             {
@@ -154,12 +155,12 @@ namespace Nektar
             /// Used to lookup the create function in NekManager.
             struct opLess
             {
-                bool operator()(const StdMatrixKey &lhs, const StdMatrixKey &rhs) const;
+                STD_REGIONS_EXPORT bool operator()(const StdMatrixKey &lhs, const StdMatrixKey &rhs) const;
             };
 
             /// Used for finding value given the key in NekManager.
-            friend bool operator<(const StdMatrixKey &lhs, const StdMatrixKey &rhs);
-            friend bool opLess::operator()(const StdMatrixKey &lhs, const StdMatrixKey &rhs) const;
+            STD_REGIONS_EXPORT friend bool operator<(const StdMatrixKey &lhs, const StdMatrixKey &rhs);
+            STD_REGIONS_EXPORT friend bool opLess::operator()(const StdMatrixKey &lhs, const StdMatrixKey &rhs) const;
 
             MatrixType GetMatrixType() const
             {
@@ -282,7 +283,7 @@ namespace Nektar
             StdMatrixKey();
         };
 
-        std::ostream& operator<<(std::ostream& os, const StdMatrixKey& rhs);
+        STD_REGIONS_EXPORT std::ostream& operator<<(std::ostream& os, const StdMatrixKey& rhs);
 
         typedef  boost::shared_ptr<StdMatrixKey> StdMatrixKeySharedPtr;
 

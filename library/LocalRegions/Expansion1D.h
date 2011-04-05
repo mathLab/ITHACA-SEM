@@ -36,6 +36,7 @@
 #ifndef EXPANSION1D_H
 
 #include <LocalRegions/Expansion.h>
+#include <LocalRegions/LocalRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -47,19 +48,19 @@ namespace Nektar
         public:
             
 #if 0             
-            void AddHDGHelmholtzMatrixBoundaryTerms(const NekDouble tau, 
+            LOCAL_REGIONS_EXPORT void AddHDGHelmholtzMatrixBoundaryTerms(const NekDouble tau, 
                                               const Array<OneD, const NekDouble> &inarray,
                                               Array<OneD,NekDouble> &outarray);
 #endif
             
-            void AddHDGHelmholtzTraceTerms(const NekDouble tau, 
+            LOCAL_REGIONS_EXPORT void AddHDGHelmholtzTraceTerms(const NekDouble tau, 
                                            const Array<OneD, const NekDouble> &inarray,                                           Array<OneD,NekDouble> &outarray);
 
-            void AddNormTraceInt(const int dir, 
+            LOCAL_REGIONS_EXPORT void AddNormTraceInt(const int dir, 
                                  Array<OneD, const NekDouble> &inarray,
                                  Array<OneD,NekDouble> &outarray);
 
-            void AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeefs, DNekMatSharedPtr &inoutmat);
+            LOCAL_REGIONS_EXPORT void AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeefs, DNekMatSharedPtr &inoutmat);
 
             protected:
             DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);

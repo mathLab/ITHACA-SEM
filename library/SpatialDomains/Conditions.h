@@ -44,6 +44,7 @@
 #include <SpatialDomains/Equation.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <SpatialDomains/MeshGraph.h>
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 
 class TiXmlElement;
 class TiXmlDocument;
@@ -191,14 +192,14 @@ namespace Nektar
         class BoundaryConditions
         {
         public:
-            BoundaryConditions(const MeshGraph *meshGraph);
-            ~BoundaryConditions();
+            SPATIAL_DOMAINS_EXPORT BoundaryConditions(const MeshGraph *meshGraph);
+            SPATIAL_DOMAINS_EXPORT ~BoundaryConditions();
 
-            void Read(std::string &infilename);
-            void Read(TiXmlDocument &doc);
+            SPATIAL_DOMAINS_EXPORT void Read(const std::string& infilename);
+            SPATIAL_DOMAINS_EXPORT void Read(TiXmlDocument &doc);
 
-            bool   CheckForParameter(const std::string &paramName);
-            static NekDouble GetParameter(const std::string &parmName);
+            SPATIAL_DOMAINS_EXPORT bool   CheckForParameter(const std::string &paramName);
+            SPATIAL_DOMAINS_EXPORT static NekDouble GetParameter(const std::string &parmName);
 
             BoundaryRegionCollection &GetBoundaryRegions(void)
             {
@@ -213,29 +214,29 @@ namespace Nektar
             /// Get forcing function based on the index of the variable.
             /// The index is the order in which the variable was
             /// defined.
-            ConstForcingFunctionShPtr GetForcingFunction(int indx) const;
+            SPATIAL_DOMAINS_EXPORT ConstForcingFunctionShPtr GetForcingFunction(int indx) const;
 
             /// Get forcing function based on name of variable.
-            ConstForcingFunctionShPtr GetForcingFunction(const std::string &var) const;
+            SPATIAL_DOMAINS_EXPORT ConstForcingFunctionShPtr GetForcingFunction(const std::string &var) const;
 
-            bool ExactSolutionExists(int indx) const;
-            ConstExactSolutionShPtr GetExactSolution(int indx) const;
-            ConstExactSolutionShPtr GetExactSolution(const std::string &var) const;
+            SPATIAL_DOMAINS_EXPORT bool ExactSolutionExists(int indx) const;
+            SPATIAL_DOMAINS_EXPORT ConstExactSolutionShPtr GetExactSolution(int indx) const;
+            SPATIAL_DOMAINS_EXPORT ConstExactSolutionShPtr GetExactSolution(const std::string &var) const;
 
-            bool UserDefinedEqnExists(const std::string &var) const;
-            ConstUserDefinedEqnShPtr GetUserDefinedEqn(int indx) const;
-            ConstUserDefinedEqnShPtr GetUserDefinedEqn(const std::string &var) const;
+            SPATIAL_DOMAINS_EXPORT bool UserDefinedEqnExists(const std::string &var) const;
+            SPATIAL_DOMAINS_EXPORT ConstUserDefinedEqnShPtr GetUserDefinedEqn(int indx) const;
+            SPATIAL_DOMAINS_EXPORT ConstUserDefinedEqnShPtr GetUserDefinedEqn(const std::string &var) const;
 
             /// Get initial condition function based on the index of the variable.
             /// The index is the order in which the variable was
             /// defined.
-            bool InitialConditionExists(int indx) const;
-            ConstInitialConditionShPtr GetInitialCondition(int indx) const;
+            SPATIAL_DOMAINS_EXPORT bool InitialConditionExists(int indx) const;
+            SPATIAL_DOMAINS_EXPORT ConstInitialConditionShPtr GetInitialCondition(int indx) const;
 
             /// Get initial condition function based on name of variable.
-            ConstInitialConditionShPtr GetInitialCondition(const std::string &var) const;
+            SPATIAL_DOMAINS_EXPORT ConstInitialConditionShPtr GetInitialCondition(const std::string &var) const;
             /// Check to see if initial condition exists in list.
-            bool FoundInitialCondition(const std::string &var);
+            SPATIAL_DOMAINS_EXPORT bool FoundInitialCondition(const std::string &var);
 
             const std::string &GetVariable(unsigned int indx)
             {
@@ -253,17 +254,17 @@ namespace Nektar
                 return m_parameters;
             }
 
-            const std::string &GetSolverInfo(const std::string &lhs);
-            bool SolverInfoExists(const std::string &property);
+            SPATIAL_DOMAINS_EXPORT const std::string &GetSolverInfo(const std::string &lhs);
+            SPATIAL_DOMAINS_EXPORT bool SolverInfoExists(const std::string &property);
 
-            const std::string &GetFunction(const std::string &lhs);
-            Equation GetFunctionAsEquation(const std::string &lhs);
+            SPATIAL_DOMAINS_EXPORT const std::string &GetFunction(const std::string &lhs);
+            SPATIAL_DOMAINS_EXPORT Equation GetFunctionAsEquation(const std::string &lhs);
 
             /// Will look for the lhs equal to str and if found
             /// will return the function in str and return true.
             /// If not found it will return false and leave str
             /// as it was coming in.
-            bool SubstituteFunction(std::string &str);
+            SPATIAL_DOMAINS_EXPORT bool SubstituteFunction(std::string &str);
 
         protected:
             void ReadSolverInfo(TiXmlElement *functions);

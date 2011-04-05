@@ -55,12 +55,12 @@ namespace Nektar
                 {
                 }            
 
-                static boost::shared_ptr< PointsBaseType > Create(const PointsKey &key);
-                boost::shared_ptr< NekMatrix<NekDouble> > CreateMatrix(const PointsKey &pkey);
+                LIB_UTILITIES_EXPORT static boost::shared_ptr< PointsBaseType > Create(const PointsKey &key);
+                LIB_UTILITIES_EXPORT boost::shared_ptr< NekMatrix<NekDouble> > CreateMatrix(const PointsKey &pkey);
 
-                const MatrixSharedPtrType GetI(const PointsKey &pkey);
-                const MatrixSharedPtrType GetI(const Array<OneD, const NekDouble>& x);
-                const MatrixSharedPtrType GetI(unsigned int numpoints, const Array<OneD, const NekDouble>& x);
+                LIB_UTILITIES_EXPORT const MatrixSharedPtrType GetI(const PointsKey &pkey);
+                LIB_UTILITIES_EXPORT const MatrixSharedPtrType GetI(const Array<OneD, const NekDouble>& x);
+                LIB_UTILITIES_EXPORT const MatrixSharedPtrType GetI(unsigned int numpoints, const Array<OneD, const NekDouble>& x);
 
                 FourierPoints(const PointsKey &key):PointsBaseType(key)
                 {

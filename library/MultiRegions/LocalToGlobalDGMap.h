@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef MULTIREGIONS_LOCALTOGLOBALDGMAP_H
 #define MULTIREGIONS_LOCALTOGLOBALDGMAP_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/LocalToGlobalBaseMap.h>
 #include <SpatialDomains/MeshGraph2D.h>
@@ -51,9 +51,9 @@ namespace Nektar
         {
         public:
             /// Default constructor.
-            LocalToGlobalDGMap();
+            MULTI_REGIONS_EXPORT LocalToGlobalDGMap();
             /// Constructor for trace map for one-dimensional expansion.
-            LocalToGlobalDGMap( const SpatialDomains::MeshGraph1D &graph1D,
+            MULTI_REGIONS_EXPORT LocalToGlobalDGMap( const SpatialDomains::MeshGraph1D &graph1D,
                 const ExpList &locExp,
                 const GlobalSysSolnType solnType,
                 const Array<OneD, const LocalRegions::PointExpSharedPtr>
@@ -61,7 +61,7 @@ namespace Nektar
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndCond);
             /// Constructor for trace map for two-dimensional expansion.
-            LocalToGlobalDGMap(SpatialDomains::MeshGraph2D &graph2D,
+            MULTI_REGIONS_EXPORT LocalToGlobalDGMap(SpatialDomains::MeshGraph2D &graph2D,
                 const ExpList1DSharedPtr &trace,
                 const ExpList &locExp,
                 const GlobalSysSolnType solnType,
@@ -72,7 +72,7 @@ namespace Nektar
                 const map<int,int> &periodicEdges);
 
             /// Destructor.
-            ~LocalToGlobalDGMap();
+            MULTI_REGIONS_EXPORT ~LocalToGlobalDGMap();
 
             /// Return the number of boundary segments on which Dirichlet
             /// boundary conditions are imposed.

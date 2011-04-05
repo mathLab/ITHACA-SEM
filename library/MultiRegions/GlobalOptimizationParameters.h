@@ -35,7 +35,7 @@
 
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALOPTIMIZATIONPARAMETERS_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALOPTIMIZATIONPARAMETERS_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <StdRegions/ElementalOptimizationParameters.hpp>
 
 namespace Nektar
@@ -47,15 +47,15 @@ namespace Nektar
         {
         public:
             /// Default constructor requires nel be given 
-            GlobalOptParam(const int nel);
+            MULTI_REGIONS_EXPORT GlobalOptParam(const int nel);
             
             /// Read optimisation parameters from a given file.
-            GlobalOptParam(const std::string& fileName, const int dim, Array<OneD, const int> &NumShapeElements);
+            MULTI_REGIONS_EXPORT GlobalOptParam(const std::string& fileName, const int dim, Array<OneD, const int> &NumShapeElements);
 
             /// For a given matrix type, determines if the operation should
             /// be done globally.
             // inline
-            const bool DoGlobalMatOp(const StdRegions::MatrixType i) const;
+            MULTI_REGIONS_EXPORT const bool DoGlobalMatOp(const StdRegions::MatrixType i) const;
             
 
             /// For a given matrix type, determines if the operation should be

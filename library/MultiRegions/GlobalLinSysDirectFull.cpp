@@ -69,7 +69,7 @@ namespace Nektar
          * Registers the class with the Factory.
          */
         string GlobalLinSysDirectFull::className
-                = GlobalLinSysFactory::RegisterCreatorFunction(
+                = GetGlobalLinSysFactory().RegisterCreatorFunction(
                     "DirectFull",
                     GlobalLinSysDirectFull::create,
                     "Direct Full.");

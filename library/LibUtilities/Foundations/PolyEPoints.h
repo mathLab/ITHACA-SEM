@@ -42,6 +42,7 @@
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace Nektar
 {
@@ -56,11 +57,11 @@ namespace Nektar
             {
             }            
 
-            static boost::shared_ptr< PointsBaseType > Create(const PointsKey &key);
+            LIB_UTILITIES_EXPORT static boost::shared_ptr< PointsBaseType > Create(const PointsKey &key);
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey);
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const Array<OneD, const NekDouble>& x);
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const Array<OneD, const NekDouble>& x);
+            LIB_UTILITIES_EXPORT const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey);
+            LIB_UTILITIES_EXPORT const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const Array<OneD, const NekDouble>& x);
+            LIB_UTILITIES_EXPORT const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const Array<OneD, const NekDouble>& x);
 
             PolyEPoints(const PointsKey &key):PointsBaseType(key)
             {

@@ -39,7 +39,7 @@
 #include <string>
 #include <LibUtilities/Interpreter/ExpressionEvaluator.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 namespace Nektar
 {
     namespace SpatialDomains
@@ -86,7 +86,7 @@ namespace Nektar
 
         private:
             std::string m_eqn;
-            static LibUtilities::ExpressionEvaluator m_evaluator;
+            SPATIAL_DOMAINS_EXPORT static LibUtilities::ExpressionEvaluator m_evaluator;
         };
     }
 }

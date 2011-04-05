@@ -43,10 +43,11 @@
 #include <limits>
 #include <LibUtilities/LinearAlgebra/Lapack.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace Nektar
 {
-    struct BandedMatrixFuncs
+    struct LIB_UTILITIES_EXPORT BandedMatrixFuncs
     {                       
         /// \brief Calculates and returns the storage size required.
         ///
@@ -70,7 +71,7 @@ namespace Nektar
                 const unsigned int curRow, const unsigned int curColumn);
     };
     
-    struct FullMatrixFuncs
+    struct LIB_UTILITIES_EXPORT FullMatrixFuncs
     {
             
         static unsigned int GetRequiredStorageSize(unsigned int rows, unsigned int columns);
@@ -166,12 +167,12 @@ namespace Nektar
         }
     };
 
-    struct TriangularMatrixFuncs
+    struct LIB_UTILITIES_EXPORT TriangularMatrixFuncs
     {
         static unsigned int GetRequiredStorageSize(unsigned int rows, unsigned int columns);
     };
     
-    struct UpperTriangularMatrixFuncs : public TriangularMatrixFuncs
+    struct LIB_UTILITIES_EXPORT UpperTriangularMatrixFuncs : public TriangularMatrixFuncs
     {
         static unsigned int CalculateIndex(unsigned int curRow, unsigned int curColumn);
 
@@ -181,7 +182,7 @@ namespace Nektar
     };
     
     
-    struct LowerTriangularMatrixFuncs : public TriangularMatrixFuncs
+    struct LIB_UTILITIES_EXPORT LowerTriangularMatrixFuncs : public TriangularMatrixFuncs
     {                    
         static unsigned int CalculateIndex(unsigned int totalColumns, unsigned int curRow, unsigned int curColumn);
 
@@ -193,7 +194,7 @@ namespace Nektar
 
         /// \internal
     /// Symmetric matrices use upper triangular packed storage.
-    struct SymmetricMatrixFuncs : private TriangularMatrixFuncs
+    struct LIB_UTILITIES_EXPORT SymmetricMatrixFuncs : private TriangularMatrixFuncs
     {
         using TriangularMatrixFuncs::GetRequiredStorageSize;
         
@@ -204,7 +205,7 @@ namespace Nektar
                 const unsigned int curRow, const unsigned int curColumn);
     };
 
-    struct DiagonalMatrixFuncs
+    struct LIB_UTILITIES_EXPORT DiagonalMatrixFuncs
     {
         static boost::tuples::tuple<unsigned int, unsigned int> 
         Advance(const unsigned int totalRows, const unsigned int totalColumns,
@@ -227,23 +228,23 @@ namespace Nektar
     };
 
 
-    struct TriangularBandedMatrixFuncs
+    struct LIB_UTILITIES_EXPORT TriangularBandedMatrixFuncs
     {
         static unsigned int GetRequiredStorageSize(unsigned int rows, unsigned int columns,
                                                    unsigned int nSubSuperDiags);
     };
     
-    struct UpperTriangularBandedMatrixFuncs : public TriangularBandedMatrixFuncs
+    struct LIB_UTILITIES_EXPORT UpperTriangularBandedMatrixFuncs : public TriangularBandedMatrixFuncs
     {
     };
         
-    struct LowerTriangularBandedMatrixFuncs : public TriangularBandedMatrixFuncs
+    struct LIB_UTILITIES_EXPORT LowerTriangularBandedMatrixFuncs : public TriangularBandedMatrixFuncs
     {                    
     };
 
     /// \internal
     /// Symmetric banded matrices use upper triangular banded packed storage.
-    struct SymmetricBandedMatrixFuncs : private TriangularBandedMatrixFuncs
+    struct LIB_UTILITIES_EXPORT SymmetricBandedMatrixFuncs : private TriangularBandedMatrixFuncs
     {
         using TriangularBandedMatrixFuncs::GetRequiredStorageSize;
         

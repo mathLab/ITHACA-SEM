@@ -42,6 +42,7 @@
 #include <StdRegions/StdMatrix.h>
 
 #include <StdRegions/NodalBasisManager.h>
+#include <StdRegions/StdRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -54,16 +55,16 @@ namespace Nektar
   public:
 
     //Constructors
-    StdNodalTetExp(const BasisKey &Ba, const BasisKey &Bb, const Basis *Bc);
+                STD_REGIONS_EXPORT StdNodalTetExp(const BasisKey &Ba, const BasisKey &Bb, const Basis *Bc);
 
-    StdNodalTetExp(const BasisKey &Ba, const BasisKey &Bb, const Basis *Bc,
+                STD_REGIONS_EXPORT StdNodalTetExp(const BasisKey &Ba, const BasisKey &Bb, const Basis *Bc,
            double *coeffs, double *phys);
 
     /// Copy Constructor
-    StdNodalTetExp(StdNodalTetExp &T);
+                STD_REGIONS_EXPORT StdNodalTetExp(StdNodalTetExp &T);
 
     /// Destructor
-    ~StdNodalTetExp();
+                STD_REGIONS_EXPORT ~StdNodalTetExp();
 
     ExpansionType DetExpansionType()
     {
@@ -74,15 +75,15 @@ namespace Nektar
     // Integration Methods
     //////////////////////////////
 
-    double Integral(const double *inarray);
-    void IProductWRTBase(const double * inarray, double * outarray);
-    void FillMode(const int mode, double *outarray);
+                STD_REGIONS_EXPORT double Integral(const double *inarray);
+                STD_REGIONS_EXPORT void IProductWRTBase(const double * inarray, double * outarray);
+                STD_REGIONS_EXPORT void FillMode(const int mode, double *outarray);
 
-    void GenMassMatrix(double * outarray);
-    void GenLapMatrix(double * outarray);
+                STD_REGIONS_EXPORT void GenMassMatrix(double * outarray);
+                STD_REGIONS_EXPORT void GenLapMatrix(double * outarray);
 
-    StdMatContainer * GetMassMatrix();
-    StdMatContainer * GetLapMatrix();
+                STD_REGIONS_EXPORT StdMatContainer * GetMassMatrix();
+                STD_REGIONS_EXPORT StdMatContainer * GetLapMatrix();
 
     //-----------------------------
     // Differentiation Methods
@@ -92,11 +93,11 @@ namespace Nektar
     // Evaluations Methods
     //-----------------------------
 
-    void BwdTrans(double * outarray);
+                STD_REGIONS_EXPORT void BwdTrans(double * outarray);
 
-    void FwdTrans(const double * inarray);
+                STD_REGIONS_EXPORT void FwdTrans(const double * inarray);
 
-    double Evaluate(double x, double y, double z);
+                STD_REGIONS_EXPORT double Evaluate(double x, double y, double z);
 
   protected:
 

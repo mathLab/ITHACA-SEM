@@ -30,6 +30,7 @@ StdNodalTriExp.h
 StdPrismExp.h
 StdPyrExp.h
 StdQuadExp.h
+StdRegionsDeclspec.h
 StdSegExp.h
 StdTetExp.h
 StdTriExp.h
@@ -41,12 +42,16 @@ ElementalOptimizationParametersTraits.hpp
 OptimizationParametersAccess.h
 )
 
-
+ADD_DEFINITIONS(-DSTD_REGIONS_EXPORTS)
 ADD_NEKTAR_LIBRARY(StdRegions ${NEKTAR_LIBRARY_TYPE} ${STD_REGIONS_SOURCES} ${STD_REGIONS_HEADERS})
 TARGET_LINK_LIBRARIES(StdRegions
         optimized LibUtilities debug LibUtilities-g
         optimized tinyxml debug tinyxml
+        ${Boost_THREAD_LIBRARY}
+		${Boost_DATE_TIME_LIBRARY}
 	)
+
+SET_LAPACK_LINK_LIBRARIES(StdRegions)
 
 INSTALL(FILES ${STD_REGIONS_HEADERS} DESTINATION ${NEKTAR_INCLUDE_DIR}/StdRegions)
 

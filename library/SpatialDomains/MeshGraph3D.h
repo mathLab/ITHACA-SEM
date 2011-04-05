@@ -37,7 +37,7 @@
 #define NEKTAR_SPATIALDOMAINS_MESHGRAPH3D_H
 
 #include <SpatialDomains/MeshGraph.h>
-
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <list>
 
 namespace Nektar
@@ -56,14 +56,14 @@ namespace Nektar
         {
         public:
 
-            MeshGraph3D();
-            virtual ~MeshGraph3D();
+            SPATIAL_DOMAINS_EXPORT MeshGraph3D();
+            SPATIAL_DOMAINS_EXPORT virtual ~MeshGraph3D();
 
-            void ReadGeometry(std::string &infilename);
-            void ReadGeometry(TiXmlDocument &doc);
+            SPATIAL_DOMAINS_EXPORT void ReadGeometry(const std::string &infilename);
+            SPATIAL_DOMAINS_EXPORT void ReadGeometry(TiXmlDocument &doc);
 
-            SegGeomSharedPtr GetSegGeom(int eID);
-            Geometry2DSharedPtr GetGeometry2D(int gID);
+            SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr GetSegGeom(int eID);
+            SPATIAL_DOMAINS_EXPORT Geometry2DSharedPtr GetGeometry2D(int gID);
 
             inline const int GetCoordim(void){
                 return GetSpaceDimension();
@@ -79,7 +79,7 @@ namespace Nektar
                 return m_quadGeoms;
             }
 
-            void GenXGeoFac();
+            SPATIAL_DOMAINS_EXPORT void GenXGeoFac();
 
             inline const int GetNseggeoms() const
             {
@@ -201,10 +201,10 @@ namespace Nektar
             }
 
             /// \brief Return the elements (shared ptrs) that have this face.
-            ElementFaceVectorSharedPtr GetElementsFromFace(Geometry2DSharedPtr face);
+            SPATIAL_DOMAINS_EXPORT ElementFaceVectorSharedPtr GetElementsFromFace(Geometry2DSharedPtr face);
 
             /// \brief Return the BasisKey corresponding to a face of an element
-            LibUtilities::BasisKey GetFaceBasisKey(Geometry2DSharedPtr face, const int flag);
+            SPATIAL_DOMAINS_EXPORT LibUtilities::BasisKey GetFaceBasisKey(Geometry2DSharedPtr face, const int flag);
 
         protected:
             void ReadEdges    (TiXmlDocument &doc);

@@ -50,7 +50,7 @@
 #include <SpatialDomains/HexGeom.h>
 
 #include <SpatialDomains/Curve.hpp>
-
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 
 class TiXmlDocument;
 
@@ -194,28 +194,28 @@ namespace Nektar
         class MeshGraph
         {
             public:
-                MeshGraph();
-                MeshGraph(unsigned int meshDimension, unsigned int spaceDimension);
-                virtual ~MeshGraph();
+                SPATIAL_DOMAINS_EXPORT MeshGraph();
+                SPATIAL_DOMAINS_EXPORT MeshGraph(unsigned int meshDimension, unsigned int spaceDimension);
+                SPATIAL_DOMAINS_EXPORT virtual ~MeshGraph();
 
-                static boost::shared_ptr<MeshGraph> Read(
+                SPATIAL_DOMAINS_EXPORT static boost::shared_ptr<MeshGraph> Read(
                     const std::string& infilename);
 
-                virtual void ReadGeometry(const std::string& infilename);
-                virtual void ReadGeometry(TiXmlDocument &doc);
+                SPATIAL_DOMAINS_EXPORT virtual void ReadGeometry(const std::string& infilename);
+                SPATIAL_DOMAINS_EXPORT virtual void ReadGeometry(TiXmlDocument &doc);
 
                 void WriteGeometry(const std::string& fileName);
                 void WriteGeometry(TiXmlDocument& doc);
 
                 /// Read geometric information from a file.
-                void ReadGeometryInfo(const std::string &infilename);
+                SPATIAL_DOMAINS_EXPORT void ReadGeometryInfo(const std::string &infilename);
 
                 /// Read geometric information from an XML document.
-                void ReadGeometryInfo(TiXmlDocument &doc);
+                SPATIAL_DOMAINS_EXPORT void ReadGeometryInfo(TiXmlDocument &doc);
 
-                void ReadExpansions(const std::string &infilename);
+                SPATIAL_DOMAINS_EXPORT void ReadExpansions(const std::string &infilename);
 
-                void ReadExpansions(TiXmlDocument &doc);
+                SPATIAL_DOMAINS_EXPORT void ReadExpansions(TiXmlDocument &doc);
 
                 /// \brief Dimension of the mesh (can be a 1D curve in 3D space).
                 inline int GetMeshDimension(void) const;
@@ -228,49 +228,49 @@ namespace Nektar
                 inline const int GetNvertices() const;
                 
                 /// \brief Adds a vertex to the with the next available ID.
-                VertexComponentSharedPtr AddVertex(NekDouble x, NekDouble y, NekDouble z);
+                SPATIAL_DOMAINS_EXPORT VertexComponentSharedPtr AddVertex(NekDouble x, NekDouble y, NekDouble z);
 
-                int CheckFieldDefinition(
+                SPATIAL_DOMAINS_EXPORT int CheckFieldDefinition(
                     const FieldDefinitionsSharedPtr  &fielddefs);
 
-                void Write(const std::string &outFile,
+                SPATIAL_DOMAINS_EXPORT void Write(const std::string &outFile,
                     std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                     std::vector<std::vector<double> >      &fielddata);
 
                 /// This function imports the input xml file. It defines the fields
                 /// and their data.
-                void Import(const std::string& infilename,
+                SPATIAL_DOMAINS_EXPORT void Import(const std::string& infilename,
                     std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                     std::vector<std::vector<double> > &fielddata);
 
                 /// This function imports the definition of the fields.
-                void ImportFieldDefs(TiXmlDocument &doc,
+                SPATIAL_DOMAINS_EXPORT void ImportFieldDefs(TiXmlDocument &doc,
                     std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                     bool expChild);
 
                 /// This function imports the data fileds.
-                void ImportFieldData(TiXmlDocument &doc,
+                SPATIAL_DOMAINS_EXPORT void ImportFieldData(TiXmlDocument &doc,
                     const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
                     std::vector<std::vector<double> > &fielddata);
 
-                GeometrySharedPtr GetCompositeItem(int whichComposite,
+                SPATIAL_DOMAINS_EXPORT GeometrySharedPtr GetCompositeItem(int whichComposite,
                     int whichItem);
 
                 inline Composite GetComposite(int whichComposite) const;
 
                 inline const CompositeVector &GetDomain(void) const;
 
-                void ReadDomain(TiXmlDocument &doc);
-                void ReadCurves(TiXmlDocument &doc);
-                void ReadCurves(std::string &infilename);
-                void GetCompositeList(const std::string &compositeStr,
+                SPATIAL_DOMAINS_EXPORT void ReadDomain(TiXmlDocument &doc);
+                SPATIAL_DOMAINS_EXPORT void ReadCurves(TiXmlDocument &doc);
+                SPATIAL_DOMAINS_EXPORT void ReadCurves(std::string &infilename);
+                SPATIAL_DOMAINS_EXPORT void GetCompositeList(const std::string &compositeStr,
                     CompositeVector &compositeVector) const;
 
                 inline ExpansionShPtr GetExpansion(GeometrySharedPtr geom);
 
                 /// This function sets the expansion giving the definition of the
                 /// field and the quadrature points.
-                void SetExpansions(
+                SPATIAL_DOMAINS_EXPORT void SetExpansions(
                     std::vector<SpatialDomains::FieldDefinitionsSharedPtr>
                     &fielddef,
                     std::vector< std::vector<LibUtilities::PointsType> >
@@ -279,7 +279,7 @@ namespace Nektar
                 /// This function sets the expansion giving the definition of the
                 /// field. The quadrature points type and number is defined as
                 /// default.
-                void SetExpansions(
+                SPATIAL_DOMAINS_EXPORT void SetExpansions(
                     std::vector<SpatialDomains::FieldDefinitionsSharedPtr>
                     &fielddef);
 
@@ -288,7 +288,7 @@ namespace Nektar
 
 
                 /// Sets the basis key for all expansions of the given shape.
-                void SetBasisKey(SpatialDomains::GeomShapeType shape,
+                SPATIAL_DOMAINS_EXPORT void SetBasisKey(SpatialDomains::GeomShapeType shape,
                     LibUtilities::BasisKeyVector &keys);
 
                 inline const ExpansionVector &GetExpansions(void);
@@ -303,18 +303,18 @@ namespace Nektar
                 /// \brief Adds an edge between two points.  If curveDefinition is 
                 /// null, then the edge is straight, otherwise it is curved according 
                 /// to the curveDefinition.
-                SegGeomSharedPtr AddEdge(VertexComponentSharedPtr v0, VertexComponentSharedPtr v1,
+                SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr AddEdge(VertexComponentSharedPtr v0, VertexComponentSharedPtr v1,
                     CurveSharedPtr curveDefinition = CurveSharedPtr());
                 SegGeomSharedPtr GetEdge(unsigned int id) { return m_segGeoms[id]; }
 
-                TriGeomSharedPtr AddTriangle(SegGeomSharedPtr edges[], StdRegions::EdgeOrientation orient[]);
-                QuadGeomSharedPtr AddQuadrilateral(SegGeomSharedPtr edges[], StdRegions::EdgeOrientation orient[]);
-                TetGeomSharedPtr AddTetrahedron(TriGeomSharedPtr tfaces[TetGeom::kNtfaces]);
-                PyrGeomSharedPtr AddPyramid(TriGeomSharedPtr tfaces[PyrGeom::kNtfaces],
+                SPATIAL_DOMAINS_EXPORT TriGeomSharedPtr AddTriangle(SegGeomSharedPtr edges[], StdRegions::EdgeOrientation orient[]);
+                SPATIAL_DOMAINS_EXPORT QuadGeomSharedPtr AddQuadrilateral(SegGeomSharedPtr edges[], StdRegions::EdgeOrientation orient[]);
+                SPATIAL_DOMAINS_EXPORT TetGeomSharedPtr AddTetrahedron(TriGeomSharedPtr tfaces[TetGeom::kNtfaces]);
+                SPATIAL_DOMAINS_EXPORT PyrGeomSharedPtr AddPyramid(TriGeomSharedPtr tfaces[PyrGeom::kNtfaces],
                     QuadGeomSharedPtr qfaces[PyrGeom::kNqfaces]);
-                PrismGeomSharedPtr AddPrism(TriGeomSharedPtr tfaces[PrismGeom::kNtfaces],
+                SPATIAL_DOMAINS_EXPORT PrismGeomSharedPtr AddPrism(TriGeomSharedPtr tfaces[PrismGeom::kNtfaces],
                     QuadGeomSharedPtr qfaces[PrismGeom::kNqfaces]);
-                HexGeomSharedPtr AddHexahedron(QuadGeomSharedPtr qfaces[HexGeom::kNqfaces]);
+                SPATIAL_DOMAINS_EXPORT HexGeomSharedPtr AddHexahedron(QuadGeomSharedPtr qfaces[HexGeom::kNqfaces]);
                 //void AddExpansion(ExpansionShPtr expansion) { m_expansionVector.push_back(expansion); } hopefully not needed 
                 const SegGeomVector& GetAllSegGeoms() const { return m_segGeoms; }
                 const TriGeomVector& GetAllTriGeoms() const { return m_triGeoms; }

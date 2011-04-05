@@ -45,6 +45,7 @@
 #include <LocalRegions/MatrixKey.h>
 
 #include <LocalRegions/Expansion3D.h>
+#include <LocalRegions/LocalRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -58,22 +59,22 @@ namespace Nektar
 
             /** \brief Constructor using BasisKey class for quadrature points and order
                 definition */
-            PyrExp(const LibUtilities::BasisKey &Ba,
+            LOCAL_REGIONS_EXPORT PyrExp(const LibUtilities::BasisKey &Ba,
                    const LibUtilities::BasisKey &Bb,
                    const LibUtilities::BasisKey &Bc,
                    const SpatialDomains::PyrGeomSharedPtr &geom);
 
             /// Copy Constructor
-            PyrExp(const PyrExp &T);
+            LOCAL_REGIONS_EXPORT PyrExp(const PyrExp &T);
 
             /// Destructor
-            ~PyrExp();
+            LOCAL_REGIONS_EXPORT ~PyrExp();
 
-            void GetCoords(Array<OneD,NekDouble> &coords_0,
+            LOCAL_REGIONS_EXPORT void GetCoords(Array<OneD,NekDouble> &coords_0,
                            Array<OneD,NekDouble> &coords_1,
                            Array<OneD,NekDouble> &coords_2);
 
-            void GetCoord(const Array<OneD, const NekDouble> &Lcoords, 
+            LOCAL_REGIONS_EXPORT void GetCoord(const Array<OneD, const NekDouble> &Lcoords, 
                           Array<OneD,NekDouble> &coords);
 
             //----------------------------
@@ -81,7 +82,7 @@ namespace Nektar
             //----------------------------
 
             /// \brief Integrate the physical point list \a inarray over region
-            NekDouble Integral(const Array<OneD, const NekDouble> &inarray);    
+            LOCAL_REGIONS_EXPORT NekDouble Integral(const Array<OneD, const NekDouble> &inarray);    
 
             /** \brief  Inner product of \a inarray over region with respect to the
                 expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata() and return in \a outarray
@@ -102,14 +103,14 @@ namespace Nektar
                 IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata(),inarray,outarray);
             }
 
-            void FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray);
+            LOCAL_REGIONS_EXPORT void FwdTrans(const Array<OneD, const NekDouble> & inarray,Array<OneD,NekDouble> &outarray);
 
-            NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);
+            LOCAL_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);
 
             //-----------------------------
             // Differentiation Methods
             //-----------------------------
-            void PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
+            LOCAL_REGIONS_EXPORT void PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
                            Array<OneD, NekDouble> &out_d0,
                            Array<OneD, NekDouble> &out_d1,
                            Array<OneD, NekDouble> &out_d2);
@@ -130,7 +131,7 @@ namespace Nektar
                 return m_geom;
             }
 
-            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
+            LOCAL_REGIONS_EXPORT void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
 
         protected:
             /**

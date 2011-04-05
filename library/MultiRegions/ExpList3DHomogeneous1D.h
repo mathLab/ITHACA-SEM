@@ -36,7 +36,7 @@
 
 #ifndef EXPLIST3DHOMO1D_H
 #define EXPLIST3DHOMO1D_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <vector>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpListHomogeneous1D.h>
@@ -64,22 +64,22 @@ namespace Nektar
         {
         public:
             /// Default constructor.
-            ExpList3DHomogeneous1D();
+            MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D();
 
-            ExpList3DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
+            MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
                                    const NekDouble lhom);
 
             /// Sets up a list of local expansions based on an input mesh.
-            ExpList3DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
+            MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
                                    const NekDouble lhom,
                                    SpatialDomains::MeshGraph2D &graph2D);
 
             /// Copy constructor.
-            ExpList3DHomogeneous1D(const ExpList3DHomogeneous1D &In,
+            MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(const ExpList3DHomogeneous1D &In,
                                    bool DeclarePlanesSetCoeffPhys = true);
 
             /// Destructor.
-            ~ExpList3DHomogeneous1D();
+            MULTI_REGIONS_EXPORT ~ExpList3DHomogeneous1D();
 
             /// This function calculates the coordinates of all the elemental
             /// quadrature points \f$\boldsymbol{x}_i\f$.
@@ -87,7 +87,7 @@ namespace Nektar
                                   Array<OneD, NekDouble> &coord_1 = NullNekDouble1DArray,
                                   Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
 
-            void GetCoords(const int eid,
+            MULTI_REGIONS_EXPORT void GetCoords(const int eid,
                            Array<OneD, NekDouble> &xc0,
                            Array<OneD, NekDouble> &xc1,
                            Array<OneD, NekDouble> &xc2);

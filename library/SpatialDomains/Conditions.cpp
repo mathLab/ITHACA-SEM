@@ -58,7 +58,7 @@ namespace Nektar
         {
         }
 
-        void BoundaryConditions::Read(std::string &infilename)
+        void BoundaryConditions::Read(const std::string& infilename)
         {
             TiXmlDocument doc(infilename);
             bool loadOkay = doc.LoadFile();

@@ -46,6 +46,7 @@ namespace Nektar
          * Solves a linear system using direct methods.
          */
 
+
         GlobalLinSysDirect::GlobalLinSysDirect(void)
         {
         }

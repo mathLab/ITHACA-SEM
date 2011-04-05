@@ -43,7 +43,7 @@
 #include <SpatialDomains/QuadGeom.h>
 #include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/GeomFactors3D.h>
-
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 namespace Nektar
 {
     namespace SpatialDomains
@@ -57,22 +57,22 @@ namespace Nektar
         class PyrGeom: public LibUtilities::GraphVertexObject, public Geometry3D
         {
         public:
-            PyrGeom ();
-            PyrGeom(const Geometry2DSharedPtr faces[]);
-            PyrGeom (const TriGeomSharedPtr tfaces[], const QuadGeomSharedPtr qfaces[], const StdRegions::FaceOrientation forient[]);
+            SPATIAL_DOMAINS_EXPORT PyrGeom ();
+            SPATIAL_DOMAINS_EXPORT PyrGeom(const Geometry2DSharedPtr faces[]);
+            SPATIAL_DOMAINS_EXPORT PyrGeom (const TriGeomSharedPtr tfaces[], const QuadGeomSharedPtr qfaces[], const StdRegions::FaceOrientation forient[]);
             
-            PyrGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const TriGeomSharedPtr tfaces[],
+            SPATIAL_DOMAINS_EXPORT PyrGeom(const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const TriGeomSharedPtr tfaces[],
                     const QuadGeomSharedPtr qfaces[],const StdRegions::EdgeOrientation eorient[],
                     const StdRegions::FaceOrientation forient[]);
                     
-            PyrGeom(const Geometry2DSharedPtr faces[], const StdRegions::FaceOrientation forient[]);
-            ~PyrGeom();
+            SPATIAL_DOMAINS_EXPORT PyrGeom(const Geometry2DSharedPtr faces[], const StdRegions::FaceOrientation forient[]);
+            SPATIAL_DOMAINS_EXPORT ~PyrGeom();
 
-            void AddElmtConnected(int gvo_id, int locid);
-            int  NumElmtConnected() const;
-            bool IsElmtConnected(int gvo_id, int locid) const;
-			void FillGeom();
-			void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
+            SPATIAL_DOMAINS_EXPORT void AddElmtConnected(int gvo_id, int locid);
+            SPATIAL_DOMAINS_EXPORT int  NumElmtConnected() const;
+            SPATIAL_DOMAINS_EXPORT bool IsElmtConnected(int gvo_id, int locid) const;
+			SPATIAL_DOMAINS_EXPORT void FillGeom();
+			SPATIAL_DOMAINS_EXPORT void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
 
             inline int GetFid() const
             {
@@ -139,14 +139,14 @@ namespace Nektar
                 m_owndata = true; 
             }
 
-            NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
+            SPATIAL_DOMAINS_EXPORT NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
 
-            static const int kNverts  = 5;
-            static const int kNedges  = 8;
-            static const int kNqfaces = 1;
-            static const int kNtfaces = 4;
-            static const int kNfaces  = kNqfaces + kNtfaces;
-
+            SPATIAL_DOMAINS_EXPORT static const int kNverts  = 5;
+            SPATIAL_DOMAINS_EXPORT static const int kNedges  = 8;
+            SPATIAL_DOMAINS_EXPORT static const int kNqfaces = 1;
+            SPATIAL_DOMAINS_EXPORT static const int kNtfaces = 4;
+            SPATIAL_DOMAINS_EXPORT static const int kNfaces  = kNqfaces + kNtfaces;
+            SPATIAL_DOMAINS_EXPORT static const std::string XMLElementType;
         protected:
 
             VertexComponentVector           m_verts;

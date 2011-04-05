@@ -36,6 +36,7 @@
 #ifndef EXPANSION3D_H
 
 #include <LocalRegions/Expansion.h>
+#include <LocalRegions/LocalRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -44,7 +45,7 @@ namespace Nektar
         class Expansion3D: public Expansion
         {
             public:
-                DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
+                LOCAL_REGIONS_EXPORT DNekMatSharedPtr GenMatrix(const StdRegions::StdMatrixKey &mkey);
             
             protected:
             

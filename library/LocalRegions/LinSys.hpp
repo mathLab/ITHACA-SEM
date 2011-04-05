@@ -52,8 +52,7 @@ namespace Nektar
               StdRegions::StdExpansion &stdExpansion):
         MatrixKey(matrixType,expansionType,stdExpansion)
         {
-        };
-        ;
+                }
         
             virtual ~LinSysKey()
             {

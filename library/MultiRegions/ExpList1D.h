@@ -35,7 +35,7 @@
 
 #ifndef NEKTAR_LIB_MULTIREGIONS_EXPLIST1D_H
 #define NEKTAR_LIB_MULTIREGIONS_EXPLIST1D_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <vector>
 #include <fstream>
 
@@ -70,28 +70,28 @@ namespace Nektar
         {
         public:
             /// The default constructor.
-            ExpList1D();
+            MULTI_REGIONS_EXPORT ExpList1D();
 
             /// The copy constructor.
-            ExpList1D(const ExpList1D &In, bool DeclareCoeffPhysArrays = true);
+            MULTI_REGIONS_EXPORT ExpList1D(const ExpList1D &In, bool DeclareCoeffPhysArrays = true);
 
             /// Construct an ExpList1D from a given graph.
-            ExpList1D(const LibUtilities::BasisKey &Ba,
+            MULTI_REGIONS_EXPORT ExpList1D(const LibUtilities::BasisKey &Ba,
                       SpatialDomains::MeshGraph1D &graph1D);
 
             /// This constructor sets up a list of local expansions based on an
             /// input mesh.
-            ExpList1D(SpatialDomains::MeshGraph1D &graph1D,
+            MULTI_REGIONS_EXPORT ExpList1D(SpatialDomains::MeshGraph1D &graph1D,
                       bool DeclareCoeffPhysArrays = true);
 
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField2D and ContField2D.
-            ExpList1D(const SpatialDomains::CompositeVector &domain,
+            MULTI_REGIONS_EXPORT ExpList1D(const SpatialDomains::CompositeVector &domain,
                       SpatialDomains::MeshGraph2D &graph2D,
                       bool DeclareCoeffPhysArrays = true);
 
             /// Specialised constructor for trace expansions.
-            ExpList1D(const Array<OneD,const ExpList1DSharedPtr> &bndConstraint,
+            MULTI_REGIONS_EXPORT ExpList1D(const Array<OneD,const ExpList1DSharedPtr> &bndConstraint,
                       const Array<OneD,const SpatialDomains
                                             ::BoundaryConditionShPtr>  &bndCond,
                       const StdRegions::StdExpansionVector &locexp,
@@ -100,10 +100,10 @@ namespace Nektar
                       bool DeclareCoeffPhysArrays = true);
 
             /// Destructor.
-            ~ExpList1D();
+            MULTI_REGIONS_EXPORT ~ExpList1D();
 
             /// Performs the post-processing on a specified element.
-            void PostProcess(   LibUtilities::KernelSharedPtr kernel,
+            MULTI_REGIONS_EXPORT void PostProcess(   LibUtilities::KernelSharedPtr kernel,
                                 Array<OneD,NekDouble> &inarray,
                                 Array<OneD,NekDouble> &outarray,
                                 NekDouble h,
@@ -111,20 +111,20 @@ namespace Nektar
 
             /// Evaluates the global spectral/hp expansion at some arbitray set
             /// of points.
-            void PeriodicEval(  Array<OneD,NekDouble> &inarray1,
+            MULTI_REGIONS_EXPORT void PeriodicEval(  Array<OneD,NekDouble> &inarray1,
                                 Array<OneD,NekDouble> &inarray2,
                                 NekDouble h, int nmodes,
                                 Array<OneD,NekDouble> &outarray);
 
             /// Set up the normals on each expansion.
-            void SetUpPhysNormals(const StdRegions::StdExpansionVector &locexp);
+            MULTI_REGIONS_EXPORT void SetUpPhysNormals(const StdRegions::StdExpansionVector &locexp);
 
             // direction =  1: Upwind
             // direction = -1: Downwind
 
             /// Upwind the \a Fwd and \a Bwd states based on the velocity field
             /// given by \a Vec.
-            void Upwind(const Array<OneD, const Array<OneD, NekDouble> > &Vec,
+            MULTI_REGIONS_EXPORT void Upwind(const Array<OneD, const Array<OneD, NekDouble> > &Vec,
                         const Array<OneD, const NekDouble> &Fwd,
                         const Array<OneD, const NekDouble> &Bwd,
                         Array<OneD, NekDouble> &Upwind,
@@ -132,14 +132,14 @@ namespace Nektar
 
             /// Upwind the \a Fwd and \a Bwd states based on the one-
             /// dimensional normal velocity field given by \a Vn.
-            void Upwind(const Array<OneD, const NekDouble> &Vn,
+            MULTI_REGIONS_EXPORT void Upwind(const Array<OneD, const NekDouble> &Vn,
                         const Array<OneD, const NekDouble> &Fwd,
                         const Array<OneD, const NekDouble> &Bwd,
                         Array<OneD, NekDouble> &Upwind,
                         int direction=1);
 
             /// Populate \a normals with the normals of all expansions.
-            void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
+            MULTI_REGIONS_EXPORT void GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals);
 
         protected:
 

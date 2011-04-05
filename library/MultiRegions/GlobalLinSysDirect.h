@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSDIRECT_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSDIRECT_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/GlobalLinSysKey.h>
 #include <MultiRegions/GlobalLinSys.h>
 
@@ -49,34 +49,34 @@ namespace Nektar
         /// A global linear system.
         class GlobalLinSysDirect : public GlobalLinSys
         {
-        public:
-            /// Default constructor
-            GlobalLinSysDirect(void);
+		    public:
+                /// Default constructor
+                MULTI_REGIONS_EXPORT GlobalLinSysDirect(void);
 
+			    /// Constructor for full direct matrix solve.
+			    MULTI_REGIONS_EXPORT GlobalLinSysDirect(const GlobalLinSysKey &mkey,
+						     const boost::shared_ptr<ExpList> &pExp,
+						     const boost::shared_ptr<LocalToGlobalBaseMap>& locToGloMap);
 
-            /// Constructor for full direct matrix solve.
-            GlobalLinSysDirect(const GlobalLinSysKey &mkey,
-                         const boost::shared_ptr<ExpList> &pExp,
-                         const boost::shared_ptr<LocalToGlobalBaseMap>
-                                                                &locToGloMap);
+			    MULTI_REGIONS_EXPORT virtual ~GlobalLinSysDirect();
 
-            virtual ~GlobalLinSysDirect();
+			    /// Solve the linear system for given input and output vectors.
+			    MULTI_REGIONS_EXPORT virtual void Solve( const Array<OneD,const NekDouble> &in,
+							      Array<OneD, NekDouble> &out);
 
-            /// Solve the linear system for given input and output vectors.
-            virtual void Solve( const Array<OneD,const NekDouble> &in,
-                              Array<OneD,      NekDouble> &out);
+			    /// Solve the linear system for given input and output vectors
+			    /// using a specified local to global map.
+			    MULTI_REGIONS_EXPORT virtual void Solve( const Array<OneD, const NekDouble> &in,
+							Array<OneD, NekDouble> &out,
+						    const LocalToGlobalBaseMapSharedPtr &locToGloMap,
+						    const Array<OneD, const NekDouble> &dirForcing = NullNekDouble1DArray);
 
-            /// Solve the linear system for given input and output vectors
-            /// using a specified local to global map.
-            virtual void Solve( const Array<OneD, const NekDouble> &in,
-                              Array<OneD,       NekDouble> &out,
-                        const LocalToGlobalBaseMapSharedPtr &locToGloMap,
-                        const Array<OneD, const NekDouble> &dirForcing
-                                                        = NullNekDouble1DArray);
+		    protected:
+			    /// Basic linear system object.
+			    DNekLinSysSharedPtr m_linSys;
 
-        protected:
-            /// Basic linear system object.
-            DNekLinSysSharedPtr                 m_linSys;
+		    private:
+			    
         };
     }
 }

@@ -47,7 +47,7 @@ namespace Nektar
       // Coefficient Space Interpolation methods
         
       // 1D Interpolation
-      void InterpCoeff1D(const BasisKey &fbasis0, 
+      LIB_UTILITIES_EXPORT void InterpCoeff1D(const BasisKey &fbasis0, 
 			 const Array<OneD, const NekDouble>& from,  
 			 const BasisKey &tbasis0, 
 			 Array<OneD, NekDouble> &to);

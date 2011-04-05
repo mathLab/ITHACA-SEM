@@ -37,6 +37,7 @@
 
 #include <LocalRegions/Expansion.h>
 #include <LocalRegions/Expansion1D.h>
+#include <LocalRegions/LocalRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -47,40 +48,40 @@ namespace Nektar
         {
         public:
             // Hybridized DG routines
-            void AddEdgeNormBoundaryInt(const int edge,
+            LOCAL_REGIONS_EXPORT void AddEdgeNormBoundaryInt(const int edge,
                                         StdRegions::StdExpansion1DSharedPtr &EdgeExp,
                                         const Array<OneD, const NekDouble> &Fx,
                                         const Array<OneD, const NekDouble> &Fy,
                                         Array<OneD, NekDouble> &outarray);
 
 
-            void AddEdgeNormBoundaryInt(const int edge,
+            LOCAL_REGIONS_EXPORT void AddEdgeNormBoundaryInt(const int edge,
                                    StdRegions::StdExpansion1DSharedPtr &EdgeExp,
                                    const Array<OneD, const NekDouble> &Fn,
                                         Array<OneD, NekDouble> &outarray);
 
-            void AddEdgeNormBoundaryBiInt(const int edge,
+            LOCAL_REGIONS_EXPORT void AddEdgeNormBoundaryBiInt(const int edge,
                                           StdRegions::StdExpansion1DSharedPtr &EdgeExp,
                                           const Array<OneD, const NekDouble> &Fwd,
                                           const Array<OneD, const NekDouble> &Bwd,
                                           Array<OneD, NekDouble> &outarray);
 
-            void SetTraceToGeomOrientation(Array<OneD, StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
+            LOCAL_REGIONS_EXPORT void SetTraceToGeomOrientation(Array<OneD, StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                                            Array<OneD, NekDouble> &inout);
 
-            void AddNormTraceInt(const int dir,
+            LOCAL_REGIONS_EXPORT void AddNormTraceInt(const int dir,
                                  Array<OneD, const NekDouble> &inarray,
                                  Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                                  Array<OneD,NekDouble> &outarray,
                                  const Array<OneD, NekDouble> &directional = NullNekDouble1DArray );
 
-            void AddHDGHelmholtzTraceTerms(const NekDouble tau,
+            LOCAL_REGIONS_EXPORT void AddHDGHelmholtzTraceTerms(const NekDouble tau,
                                            const Array<OneD, const NekDouble> &inarray,
                                            Array<OneD,StdRegions::StdExpansion1DSharedPtr> &EdgeExp,
                                            const Array<OneD, Array<OneD, const NekDouble> > &dirForcing,
                                            Array<OneD,NekDouble> &outarray);
 
-            void Getnormalindir(const int edge,
+            LOCAL_REGIONS_EXPORT void Getnormalindir(const int edge,
                                 StdRegions::StdExpansion1DSharedPtr &EdgeExp_e,
                                 const Array<OneD, const Array<OneD, NekDouble> > &normals,
                                 const Array<OneD, const NekDouble> &directional,

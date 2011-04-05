@@ -37,7 +37,7 @@
 #define NEKTAR_SPATIALDOMAINS_MESHGRAPH2D_H
 
 #include <SpatialDomains/MeshGraph.h>
-
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 
 class TiXmlDocument;
 
@@ -54,13 +54,13 @@ namespace Nektar
 
         public:
 
-            MeshGraph2D();
-            virtual ~MeshGraph2D();
+            SPATIAL_DOMAINS_EXPORT MeshGraph2D();
+            SPATIAL_DOMAINS_EXPORT virtual ~MeshGraph2D();
 
-            void ReadGeometry(std::string &infilename);
-            void ReadGeometry(TiXmlDocument &doc);
+            SPATIAL_DOMAINS_EXPORT void ReadGeometry(std::string &infilename);
+            SPATIAL_DOMAINS_EXPORT void ReadGeometry(TiXmlDocument &doc);
 
-            SegGeomSharedPtr GetSegGeom(int eID);
+            SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr GetSegGeom(int eID);
 
             inline const int GetCoordim(void){
                 return GetSpaceDimension();
@@ -207,14 +207,14 @@ namespace Nektar
             /// \brief Return the elements (shared ptrs) that have this edge.
 
             //ElementEdgeVectorSharedPtr GetElementsFromEdge(SegGeomSharedPtr edge);
-            ElementEdgeVectorSharedPtr GetElementsFromEdge(SegGeomSharedPtr edge);
+            SPATIAL_DOMAINS_EXPORT ElementEdgeVectorSharedPtr GetElementsFromEdge(SegGeomSharedPtr edge);
 
-            ElementEdgeVectorSharedPtr GetElementsFromEdge(Geometry1DSharedPtr edge);
+            SPATIAL_DOMAINS_EXPORT ElementEdgeVectorSharedPtr GetElementsFromEdge(Geometry1DSharedPtr edge);
 
             /** \brief Return the BasisKey corresponding to an edge of an element
 	     *  If the expansion is a triangle the Modified_B direction is modified to be one-dimensional Modified_A,GaussLobattoLegendre.
 	     **/
-	    LibUtilities::BasisKey GetEdgeBasisKey(SegGeomSharedPtr edge);
+	        SPATIAL_DOMAINS_EXPORT LibUtilities::BasisKey GetEdgeBasisKey(SegGeomSharedPtr edge);
 
         protected:
             void ReadEdges    (TiXmlDocument &doc);

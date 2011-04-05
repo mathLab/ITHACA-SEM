@@ -8,6 +8,7 @@
 #ifndef _EXPRESSION_EVALUATOR_H
 #define _EXPRESSION_EVALUATOR_H
 
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <boost/version.hpp>
 
 #if( BOOST_VERSION / 100 % 1000 >= 36 )
@@ -57,10 +58,10 @@ namespace Nektar
         public:
 			/** Initializes the evaluator to a state where it is ready to accept input
 			    from the #DefineFunction function. **/
-	        ExpressionEvaluator(void);
+	        LIB_UTILITIES_EXPORT ExpressionEvaluator(void);
 
 	        /** Destroys the evaluator object and deletes all of the saves ASTs. **/
-	        ~ExpressionEvaluator(void);
+	        LIB_UTILITIES_EXPORT ~ExpressionEvaluator(void);
 
 	        /** This function allows one to define a function to evaluate. The first argument (vlist)
 	            is a list of variables (separated by spaces) that the second argument (function)
@@ -72,7 +73,7 @@ namespace Nektar
 	            note that if you have previously set a function to use a certain "vlist", and then
 	            you call DefineFunction again with the same function string but a different vlist string,
 	            it will use the old vlist string from the first declaration. **/
-	        void DefineFunction(std::string const& vlist, std::string const& function);
+	        LIB_UTILITIES_EXPORT void DefineFunction(std::string const& vlist, std::string const& function);
 
 	        /** Constants are evaluated and inserted into the function at the time it is parsed
 			    when calling the #DefineFunction function. After parsing, if a constant is
@@ -84,34 +85,34 @@ namespace Nektar
 				throw an exception stating which constants in the map had this issue. It will add
 				all of the constants it can and output the constants it couldn't add in the string
 				exception. **/
-	        void AddConstants(std::map<std::string, double> const& constants);
+	        LIB_UTILITIES_EXPORT void AddConstants(std::map<std::string, double> const& constants);
 
 			/** This function behaves in the same way as #AddConstants, but it only adds one
 				constant at a time. If the constant existed previously, an exception will be thrown
 				stating the fact. If it did not exist previously, it will be added to the global
 				constants and will be used the next time #DefineFunction is called. **/
-	        void AddConstant(std::string const& name, double value);
+	        LIB_UTILITIES_EXPORT void AddConstant(std::string const& name, double value);
 
 	        /** If a constant with the specified name exists, it returns the double value that the
 	            constant stores. If the constant doesn't exist, it throws an exception. **/
-	        double GetConstant(std::string const& name);
+	        LIB_UTILITIES_EXPORT double GetConstant(std::string const& name);
 
 	        /** Parameters are like constants, but they are inserted into the function at the time
 				#Evaluate is called instead of when the function is parsed. This function can
 				be called at any time, and it will take effect in the next call to #Evaluate.
 				This function will delete all of the parameters, and replace all of them with only
 				the ones in the map argument. **/
-	        void SetParameters(std::map<std::string, double> const& params);
+	        LIB_UTILITIES_EXPORT void SetParameters(std::map<std::string, double> const& params);
 
 			/** This function behaves in the same way as #SetParameters, but it only adds one
 				parameter and it does not delete the others. If the parameter existed previously,
 				it will be overridden and replaced with the new value. If it did not exist previously,
 				it will be added to the current parameters. **/
-	        void SetParameter(std::string const& name, double value);
+	        LIB_UTILITIES_EXPORT void SetParameter(std::string const& name, double value);
 
 	        /** If a parameter with the specified name exists, it returns the double value that the
 				parameter stores. If the parameter doesn't exist, it throws an exception. **/
-	        double GetParameter(std::string const& name);
+	        LIB_UTILITIES_EXPORT double GetParameter(std::string const& name);
 
 			/** This function evaluates the function defined from #DefineFunction.
 				The arguments to the function are the values that were defined in the
@@ -120,7 +121,7 @@ namespace Nektar
 				is not currently defined, behavior may be unpredictable since I do not
 				know how many arguments were passed in, so it will probably not be cleaned
 				up correctly. **/
-	        double Evaluate(double start = 0, ...);
+	        LIB_UTILITIES_EXPORT double Evaluate(double start = 0, ...);
 
 			/** This function evaluates the function defined from #DefineFunction. It accepts
 				a "vector<double> const*" argument for each of the variables given in the first
@@ -130,7 +131,7 @@ namespace Nektar
 				and then store the result in another vector. If the vectors aren't the same length,
 				an exception will be thrown.
 				For example: vlist = "x y", Function: "x+y", arg1={1,2}, arg2={5,10}, out={6,12} **/
-	        std::vector<double> Evaluate(std::vector<double> const* start, ...);
+	        LIB_UTILITIES_EXPORT std::vector<double> Evaluate(std::vector<double> const* start, ...);
 
         private:
 

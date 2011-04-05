@@ -58,13 +58,13 @@ namespace Nektar
             {
             }            
 
-            static boost::shared_ptr< Points<NekDouble> > Create(const PointsKey &pkey);
+            LIB_UTILITIES_EXPORT static boost::shared_ptr< Points<NekDouble> > Create(const PointsKey &pkey);
 
-            boost::shared_ptr< NekMatrix<NekDouble> > CreateMatrix(const PointsKey &pkey);
+            LIB_UTILITIES_EXPORT boost::shared_ptr< NekMatrix<NekDouble> > CreateMatrix(const PointsKey &pkey);
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey);
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const Array<OneD, const NekDouble>& x);
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const Array<OneD, const NekDouble>& x);
+            LIB_UTILITIES_EXPORT const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey);
+            LIB_UTILITIES_EXPORT const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const Array<OneD, const NekDouble>& x);
+            LIB_UTILITIES_EXPORT const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const Array<OneD, const NekDouble>& x);
 
             GaussPoints(const PointsKey &pkey):PointsBaseType(pkey)
             {

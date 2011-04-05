@@ -59,7 +59,7 @@ namespace Nektar
             // for all number.
             struct opLess
             {
-                bool operator()(const PointsKey &lhs, const PointsKey &rhs) const;
+                LIB_UTILITIES_EXPORT bool operator()(const PointsKey &lhs, const PointsKey &rhs) const;
             };
             
             /// Default constructor.
@@ -174,9 +174,9 @@ namespace Nektar
                 return totpoints;
             }
 
-            friend bool operator==(const PointsKey &lhs, const PointsKey &rhs);
-            friend bool operator<(const PointsKey &lhs, const PointsKey &rhs);
-            friend bool opLess::operator()(const PointsKey &lhs, const PointsKey &rhs) const;
+            LIB_UTILITIES_EXPORT friend bool operator==(const PointsKey &lhs, const PointsKey &rhs);
+            LIB_UTILITIES_EXPORT friend bool operator<(const PointsKey &lhs, const PointsKey &rhs);
+            LIB_UTILITIES_EXPORT friend bool opLess::operator()(const PointsKey &lhs, const PointsKey &rhs) const;
 
         protected:
             unsigned int m_numpoints;     //!< number of the points (as appropriately defined for PointsType)
@@ -187,9 +187,9 @@ namespace Nektar
 
         static const PointsKey NullPointsKey(0, eNoPointsType);
 
-        bool operator==(const PointsKey &lhs, const PointsKey &rhs);
-        bool operator<(const PointsKey &lhs, const PointsKey &rhs);
-        std::ostream& operator<<(std::ostream& os, const PointsKey& rhs);
+        LIB_UTILITIES_EXPORT bool operator==(const PointsKey &lhs, const PointsKey &rhs);
+        LIB_UTILITIES_EXPORT bool operator<(const PointsKey &lhs, const PointsKey &rhs);
+        LIB_UTILITIES_EXPORT std::ostream& operator<<(std::ostream& os, const PointsKey& rhs);
 
         /// Stores a set of points of datatype DataT, defined by a PointKey.
         template<typename DataT>

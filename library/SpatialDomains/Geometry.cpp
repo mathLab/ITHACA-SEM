@@ -91,6 +91,17 @@ namespace Nektar
             return returnval;
         }
 
+        bool SortByGlobalId(const boost::shared_ptr<Geometry>& lhs, 
+            const boost::shared_ptr<Geometry>& rhs)
+        {
+            return lhs->GetGlobalID() < rhs->GetGlobalID();
+        }
+
+        bool GlobalIdEquality(const boost::shared_ptr<Geometry>& lhs, 
+            const boost::shared_ptr<Geometry>& rhs)
+        {
+            return lhs->GetGlobalID() == rhs->GetGlobalID();
+        }
     }; //end of namespace
 }; //end of namespace
 

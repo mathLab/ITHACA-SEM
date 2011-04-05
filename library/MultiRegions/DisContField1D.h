@@ -36,7 +36,7 @@
 
 #ifndef NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD1D_H
 #define NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD1D_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList1D.h>
 #include <LocalRegions/PointExp.h>
@@ -56,47 +56,47 @@ namespace Nektar
         {
         public:
             /// Default constructor.
-            DisContField1D();
+            MULTI_REGIONS_EXPORT DisContField1D();
 
             /// Constructs a 1D discontinuous field based on a mesh.
-            DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
+            MULTI_REGIONS_EXPORT DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
                     const GlobalSysSolnType solnType = eDirectStaticCond,
                     const bool constructMap = true);
 
             /// Constructs a 1D discontinuous field based on a mesh and boundary
             /// conditions.
-            DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
+            MULTI_REGIONS_EXPORT DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
                     SpatialDomains::BoundaryConditions &bcs,
                     const int bc_loc = 0,
                     const GlobalSysSolnType solnType = eDirectStaticCond);
 
             /// Constructs a 1D discontinuous field based on a mesh and boundary
             /// conditions.
-            DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
+            MULTI_REGIONS_EXPORT DisContField1D(SpatialDomains::MeshGraph1D &graph1D,
                     SpatialDomains::BoundaryConditions &bcs,
                     const std::string variable,
                     const GlobalSysSolnType solnType = eDirectStaticCond);
 
             /// Constructs a 1D discontinuous field based on an existing field.
-            DisContField1D(const DisContField1D &In);
+            MULTI_REGIONS_EXPORT DisContField1D(const DisContField1D &In);
 
             /// Destructor.
-            ~DisContField1D();
+            MULTI_REGIONS_EXPORT ~DisContField1D();
 
             /// For a given key, returns the associated global linear system.
-            GlobalLinSysSharedPtr GetGlobalBndLinSys(
+            MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GetGlobalBndLinSys(
                     const GlobalLinSysKey &mkey);
 
             /// Retrieve the boundary condition expansions.
             inline const Array<OneD,const LocalRegions::PointExpSharedPtr>&
                                                         GetBndCondExpansions();
 
-            void GetBoundaryToElmtMap(Array<OneD,int> &ElmtID, Array<OneD,int> &VertID);
+            MULTI_REGIONS_EXPORT void GetBoundaryToElmtMap(Array<OneD,int> &ElmtID, Array<OneD,int> &VertID);
 
             /// \brief Set up an stl map containing the information
             /// for a robin aboundary condition in the location of the
             /// element id
-            map<int, RobinBCInfoSharedPtr> GetRobinBCInfo(void);
+            MULTI_REGIONS_EXPORT map<int, RobinBCInfoSharedPtr> GetRobinBCInfo(void);
         protected:
             /// The number of boundary segments on which Dirichlet boundary
             /// conditions are imposed.

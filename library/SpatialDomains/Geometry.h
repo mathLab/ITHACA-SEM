@@ -43,7 +43,7 @@
 #include <SpatialDomains/GeomFactors.h>
 
 #include<boost/shared_ptr.hpp>
-
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 namespace Nektar
 {
     namespace SpatialDomains
@@ -87,10 +87,10 @@ namespace Nektar
         class Geometry
         {
             public:
-                Geometry();
-                Geometry(int coordim);
+                SPATIAL_DOMAINS_EXPORT Geometry();
+                SPATIAL_DOMAINS_EXPORT Geometry(int coordim);
 
-                virtual ~Geometry();
+                SPATIAL_DOMAINS_EXPORT virtual ~Geometry();
 
 
                 inline GeomType GetGtype()
@@ -168,7 +168,7 @@ namespace Nektar
 
             protected:
 
-                static GeomFactorsSharedPtr ValidateRegGeomFactor(GeomFactorsSharedPtr geomFactor);
+                SPATIAL_DOMAINS_EXPORT static GeomFactorsSharedPtr ValidateRegGeomFactor(GeomFactorsSharedPtr geomFactor);
 
                 int                  m_coordim;     // coordinate dimension
                 GeomFactorsSharedPtr m_geomFactors;
@@ -237,6 +237,15 @@ namespace Nektar
                     return false;
                 }
         };
+
+        /// \brief Less than operator to sort Geometry objects by global id when sorting 
+        /// STL containers.
+       SPATIAL_DOMAINS_EXPORT  bool SortByGlobalId(const boost::shared_ptr<Geometry>& lhs, 
+            const boost::shared_ptr<Geometry>& rhs);
+
+       SPATIAL_DOMAINS_EXPORT  bool GlobalIdEquality(const boost::shared_ptr<Geometry>& lhs, 
+            const boost::shared_ptr<Geometry>& rhs);
+
     }; //end of namespace
 }; // end of namespace
 

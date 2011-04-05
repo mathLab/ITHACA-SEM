@@ -39,7 +39,7 @@
 #include <SpatialDomains/Geometry.h>
 #include <SpatialDomains/SpatialDomains.hpp>
 #include <LibUtilities/LinearAlgebra/NekPoint.hpp>
-
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <set>
 
 namespace Nektar
@@ -71,8 +71,8 @@ namespace Nektar
                   return m_id;
               }
 
-              friend bool operator  == (const CompToElmt &x, const CompToElmt &y);
-              friend bool operator  != (const CompToElmt &x, const CompToElmt &y);
+              SPATIAL_DOMAINS_EXPORT friend bool operator  == (const CompToElmt &x, const CompToElmt &y);
+              SPATIAL_DOMAINS_EXPORT friend bool operator  != (const CompToElmt &x, const CompToElmt &y);
 
         protected:
             int m_id;
@@ -87,18 +87,18 @@ namespace Nektar
         class VertexComponent: public Geometry, public NekPoint <double, ThreeD>
         {
             public:
-                VertexComponent(const int coordim, const int vid,
+                SPATIAL_DOMAINS_EXPORT VertexComponent(const int coordim, const int vid,
                     double x, double y, double z);
-                VertexComponent(){}
-                ~VertexComponent();
-                VertexComponent(const VertexComponent &T);
+                SPATIAL_DOMAINS_EXPORT VertexComponent(){}
+                SPATIAL_DOMAINS_EXPORT ~VertexComponent();
+                SPATIAL_DOMAINS_EXPORT VertexComponent(const VertexComponent &T);
 
-                void AddElmtConnected(int gvo_id, int locid);
-                int  NumElmtConnected() const;
-                bool IsElmtConnected(int gvo_id, int locid) const;
-                void GetCoords(double &x, double &y, double &z);
-                void GetCoords(Array<OneD,NekDouble> &coords);
-                void UpdatePosition(double x, double y, double z);
+                SPATIAL_DOMAINS_EXPORT void AddElmtConnected(int gvo_id, int locid);
+                SPATIAL_DOMAINS_EXPORT int  NumElmtConnected() const;
+                SPATIAL_DOMAINS_EXPORT bool IsElmtConnected(int gvo_id, int locid) const;
+                SPATIAL_DOMAINS_EXPORT void GetCoords(double &x, double &y, double &z);
+                SPATIAL_DOMAINS_EXPORT void GetCoords(Array<OneD,NekDouble> &coords);
+                SPATIAL_DOMAINS_EXPORT void UpdatePosition(double x, double y, double z);
 
 
                 inline int GetCoordim() const
@@ -117,18 +117,18 @@ namespace Nektar
                 }
 
                 // Math routines
-                void   Mult (VertexComponent& a, VertexComponent& b);
-                void   Add  (VertexComponent& a, VertexComponent& b);
-                void   Sub  (VertexComponent& a, VertexComponent& b);
-                NekDouble dist  (VertexComponent& a);
-                NekDouble dot   (VertexComponent& a);
+                SPATIAL_DOMAINS_EXPORT void   Mult (VertexComponent& a, VertexComponent& b);
+                SPATIAL_DOMAINS_EXPORT void   Add  (VertexComponent& a, VertexComponent& b);
+                SPATIAL_DOMAINS_EXPORT void   Sub  (VertexComponent& a, VertexComponent& b);
+                SPATIAL_DOMAINS_EXPORT NekDouble dist  (VertexComponent& a);
+                SPATIAL_DOMAINS_EXPORT NekDouble dot   (VertexComponent& a);
 
-                friend bool operator == (const VertexComponent &x, const VertexComponent &y);
-                friend bool operator == (const VertexComponent &x, const VertexComponent *y);
-                friend bool operator == (const VertexComponent *x, const VertexComponent &y);
-                friend bool operator != (const VertexComponent &x, const VertexComponent &y);
-                friend bool operator != (const VertexComponent &x, const VertexComponent *y);
-                friend bool operator != (const VertexComponent *x, const VertexComponent &y);
+                SPATIAL_DOMAINS_EXPORT friend bool operator == (const VertexComponent &x, const VertexComponent &y);
+                SPATIAL_DOMAINS_EXPORT friend bool operator == (const VertexComponent &x, const VertexComponent *y);
+                SPATIAL_DOMAINS_EXPORT friend bool operator == (const VertexComponent *x, const VertexComponent &y);
+                SPATIAL_DOMAINS_EXPORT friend bool operator != (const VertexComponent &x, const VertexComponent &y);
+                SPATIAL_DOMAINS_EXPORT friend bool operator != (const VertexComponent &x, const VertexComponent *y);
+                SPATIAL_DOMAINS_EXPORT friend bool operator != (const VertexComponent *x, const VertexComponent &y);
 
             protected:
                 int m_vid;

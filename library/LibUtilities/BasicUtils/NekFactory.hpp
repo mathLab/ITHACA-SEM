@@ -106,164 +106,147 @@ namespace Nektar
          *              ::CreateInstance("[derivedclass]",Param1);
          * \endcode
          */
-        template < typename tKey,	       	// reference tag (e.g. string, int)
-                   typename tBase,	       	// base class
-                       BOOST_PP_ENUM(MAX_PARAM, FACTORY_print, typename tParam) >
+        template <typename tKey,	       	// reference tag (e.g. string, int)
+                  typename tBase,	       	// base class
+                  BOOST_PP_ENUM(MAX_PARAM, FACTORY_print, typename tParam) >
         class NekFactory
         {
-        public:
-            /// Description datatype
-            typedef std::string tDescription;
-            /// Comparison predicator of key
-            typedef std::less<tKey> tPredicator;
-            /// Shared pointer to an object of baseclass type.
-            typedef boost::shared_ptr<tBase> tBaseSharedPtr;
-            /// CreatorFunction type which takes parameter and returns base
-            /// class shared pointer.
-            typedef tBaseSharedPtr (*CreatorFunction) (BOOST_PP_ENUM_PARAMS(MAX_PARAM, tParam));
+            public:
+                /// Description datatype
+                typedef std::string tDescription;
+                /// Comparison predicator of key
+                typedef std::less<tKey> tPredicator;
+                /// Shared pointer to an object of baseclass type.
+                typedef boost::shared_ptr<tBase> tBaseSharedPtr;
+                /// CreatorFunction type which takes parameter and returns base
+                /// class shared pointer.
+                typedef tBaseSharedPtr (*CreatorFunction) (BOOST_PP_ENUM_PARAMS(MAX_PARAM, tParam));
 
-            /// Define a struct to hold the information about a module.
-            struct ModuleEntry
-            {
-                ModuleEntry(CreatorFunction pFunc, const tDescription pDesc)
-                    : m_func(pFunc),
-                      m_desc(pDesc)
+                /// Define a struct to hold the information about a module.
+                struct ModuleEntry
                 {
-                }
-
-                /// Function used to create instance of class.
-                CreatorFunction m_func;
-                /// Description of class for use in listing available classes.
-                tDescription m_desc;
-            };
-
-            /// Factory map between key and module data.
-            typedef std::map<tKey, ModuleEntry, tPredicator> TMapFactory;
-            /// Iterator for factory map
-            typedef typename TMapFactory::iterator TMapFactoryIterator;
-
-
-            /**
-             * @brief Create an instance of the class referred to by \c idKey.
-             *
-             * Searches the factory's map for the given key and returns a shared
-             * base class pointer to a new instance of the associated class.
-             * @param   idKey           Key of class to create.
-             * @param   x               Parameter to pass to class constructor.
-             * @returns                 Base class pointer to new instance.
-             */
-            static tBaseSharedPtr CreateInstance(tKey idKey BOOST_PP_COMMA_IF(MAX_PARAM)
-                        BOOST_PP_ENUM_BINARY_PARAMS(MAX_PARAM, tParam, x))
-            {
-                // Now try and find the key in the map.
-                TMapFactoryIterator it = getMapFactory()->find(idKey);
-
-                // If successful, check the CreatorFunction is defined and
-                // create a new instance of the class.
-                if (it != getMapFactory()->end())
-                {
-                    if (it->second.m_func)
+                    ModuleEntry(CreatorFunction pFunc, const tDescription pDesc)
+                        : m_func(pFunc),
+                          m_desc(pDesc)
                     {
-                        try
+                    }
+
+                    /// Function used to create instance of class.
+                    CreatorFunction m_func;
+                    /// Description of class for use in listing available classes.
+                    tDescription m_desc;
+                };
+
+                /// Factory map between key and module data.
+                typedef std::map<tKey, ModuleEntry, tPredicator> TMapFactory;
+                /// Iterator for factory map
+                typedef typename TMapFactory::iterator TMapFactoryIterator;
+
+
+            public:
+                NekFactory() {}
+
+                /**
+                 * @brief Create an instance of the class referred to by \c idKey.
+                 *
+                 * Searches the factory's map for the given key and returns a shared
+                 * base class pointer to a new instance of the associated class.
+                 * @param   idKey           Key of class to create.
+                 * @param   x               Parameter to pass to class constructor.
+                 * @returns                 Base class pointer to new instance.
+                 */
+                tBaseSharedPtr CreateInstance(tKey idKey BOOST_PP_COMMA_IF(MAX_PARAM)
+                            BOOST_PP_ENUM_BINARY_PARAMS(MAX_PARAM, tParam, x))
+                {
+                    // Now try and find the key in the map.
+                    TMapFactoryIterator it = getMapFactory()->find(idKey);
+
+                    // If successful, check the CreatorFunction is defined and
+                    // create a new instance of the class.
+                    if (it != getMapFactory()->end())
+                    {
+                        if (it->second.m_func)
                         {
-                            return it->second.m_func(BOOST_PP_ENUM_PARAMS(MAX_PARAM, x));
+                            try
+                            {
+                                return it->second.m_func(BOOST_PP_ENUM_PARAMS(MAX_PARAM, x));
+                            }
+                            catch (const std::string& s)
+                            {
+                                std::stringstream errstr;
+                                errstr << "Unable to create module: " << idKey << "\n";
+                                errstr << s;
+                                ASSERTL0(false, errstr.str());
+                            }
                         }
-                        catch (const std::string& s)
+                    }
+
+                    // If we get this far, the key doesn't exist, so throw an error.
+                    std::stringstream errstr;
+                    errstr << "No such module: " << idKey << std::endl;
+                    PrintAvailableClasses(errstr);
+                    ASSERTL0(false, errstr.str());
+                }
+
+
+                /**
+                 * @brief Register a class with the factory.
+                 *
+                 * This function is called by each class in a static context (prior
+                 * to the execution of main()) and creates an entry for the class
+                 * in the factory's map.
+                 * @param   idKey           Key used to reference the class.
+                 * @param   classCreator    Function to call to create an instance
+                 *                          of this class.
+                 * @param   pDesc           Optional description of class.
+                 * @returns                 The given key \c idKey.
+                 */
+                tKey RegisterCreatorFunction(tKey idKey, CreatorFunction classCreator,
+                                             tDescription pDesc = "") 
+                {
+                    ModuleEntry e(classCreator, pDesc);
+                    getMapFactory()->insert(std::pair<tKey,ModuleEntry>(idKey, e));
+                    return idKey;
+                }
+
+
+                /**
+                 * @brief Prints the available classes to stdout.
+                 */
+                void PrintAvailableClasses(std::ostream& pOut = std::cout)
+                {
+                    pOut << std::endl << "Available classes: " << std::endl;
+                    TMapFactoryIterator it;
+                    for (it = getMapFactory()->begin(); it != getMapFactory()->end(); ++it)
+                    {
+                        pOut << "  " << it->first;
+                        if (it->second.m_desc != "")
                         {
-                            std::stringstream errstr;
-                            errstr << "Unable to create module: " << idKey << "\n";
-                            errstr << s;
-                            ASSERTL0(false, errstr.str());
+                            pOut << ":" << std::endl << "    "
+                                      << it->second.m_desc << std::endl;
+                        }
+                        else
+                        {
+                            pOut << std::endl;
                         }
                     }
                 }
 
-                // If we get this far, the key doesn't exist, so throw an error.
-                std::stringstream errstr;
-                errstr << "No such module: " << idKey << std::endl;
-                PrintAvailableClasses(errstr);
-                ASSERTL0(false, errstr.str());
-            }
-
-
-            /**
-             * @brief Register a class with the factory.
-             *
-             * This function is called by each class in a static context (prior
-             * to the execution of main()) and creates an entry for the class
-             * in the factory's map.
-             * @param   idKey           Key used to reference the class.
-             * @param   classCreator    Function to call to create an instance
-             *                          of this class.
-             * @param   pDesc           Optional description of class.
-             * @returns                 The given key \c idKey.
-             */
-            static tKey RegisterCreatorFunction(tKey idKey,
-                                                CreatorFunction classCreator,
-                                                tDescription pDesc = "") {
-                ModuleEntry e(classCreator, pDesc);
-                getMapFactory()->insert(std::pair<tKey,ModuleEntry>(idKey, e));
-                return idKey;
-            }
-
-
-            /**
-             * @brief Prints the available classes to stdout.
-             */
-            static void PrintAvailableClasses(std::ostream& pOut = std::cout)
-            {
-                pOut << std::endl << "Available classes: " << std::endl;
-                TMapFactoryIterator it;
-                for (it = getMapFactory()->begin(); it != getMapFactory()->end(); ++it)
+            protected:
+                /**
+                 * @brief Ensure the factory's map is created.
+                 * @returns                 The factory's map.
+                 */
+                TMapFactory* getMapFactory() 
                 {
-                    pOut << "  " << it->first;
-                    if (it->second.m_desc != "")
-                    {
-                        pOut << ":" << std::endl << "    "
-                                  << it->second.m_desc << std::endl;
-                    }
-                    else
-                    {
-                        pOut << std::endl;
-                    }
+                    return &mMapFactory;
                 }
-            }
 
+            private:
+                NekFactory(const NekFactory& rhs);
+                NekFactory& operator=(const NekFactory& rhs);
 
-            /**
-             * @brief Retrieves the key corresponding to a given description.
-             */
-            static tKey GetKey(tDescription pDesc)
-            {
-                TMapFactoryIterator it;
-                for (it = getMapFactory()->begin(); it != getMapFactory()->end(); ++it)
-                {
-                    if (it->second.m_desc == pDesc)
-                    {
-                        return it->first;
-                    }
-                }
-                std::string errstr = "Module '"
-                        + boost::lexical_cast<std::string>(pDesc)
-                        + "' is not known.";
-                ASSERTL0(false, errstr);
-            }
-
-        protected:
-            /**
-             * @brief Ensure the factory's map is created.
-             * @returns                 The factory's map.
-             */
-            static TMapFactory * getMapFactory() {
-                static TMapFactory mMapFactory;
-                return &mMapFactory;
-            }
-
-        private:
-            /// Constructor - we never explicitly instantiate this class
-            NekFactory() {}
-            /// Destructor
-            ~NekFactory() {}
+                TMapFactory mMapFactory;
 
         };
 

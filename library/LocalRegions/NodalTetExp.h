@@ -43,7 +43,7 @@
 #include <SpatialDomains/TetGeom.h>
 #include <SpatialDomains/GeomFactors.h>
 #include <LocalRegions/MatrixKey.h>
-
+#include <LocalRegions/LocalRegionsDeclspec.h>
 
 
 namespace Nektar
@@ -61,20 +61,20 @@ namespace Nektar
 //       }
      	/** \brief Constructor using BasisKey class for quadrature
         points and order definition */
-        NodalTetExp(const LibUtilities::BasisKey &Ba,
+        LOCAL_REGIONS_EXPORT NodalTetExp(const LibUtilities::BasisKey &Ba,
                     const LibUtilities::BasisKey &Bb,
 	            const LibUtilities::BasisKey &Bc,
                     const SpatialDomains::TetGeomSharedPtr &geom);
 
-        NodalTetExp(const LibUtilities::BasisKey &Ba,
+        LOCAL_REGIONS_EXPORT NodalTetExp(const LibUtilities::BasisKey &Ba,
 	            const LibUtilities::BasisKey &Bb,
 	            const LibUtilities::BasisKey &Bc);
 	    
       /// Copy Constructor
-      NodalTetExp(const NodalTetExp &T);
+          LOCAL_REGIONS_EXPORT NodalTetExp(const NodalTetExp &T);
 
       /// Destructor
-      ~NodalTetExp();
+          LOCAL_REGIONS_EXPORT ~NodalTetExp();
     
     protected:
 

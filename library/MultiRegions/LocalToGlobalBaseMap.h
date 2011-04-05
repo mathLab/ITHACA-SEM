@@ -35,7 +35,7 @@
 
 #ifndef MULTIREGIONS_LOCALTOGLOBALBASEMAP_H
 #define MULTIREGIONS_LOCALTOGLOBALBASEMAP_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/SubStructuredGraph.h>
 #include <vector>
@@ -55,12 +55,12 @@ namespace Nektar
         {
         public:
         	/// Default constructor.
-            LocalToGlobalBaseMap();
+            MULTI_REGIONS_EXPORT LocalToGlobalBaseMap();
             /// Constructor for next level in multi-level static condensation.
-            LocalToGlobalBaseMap(LocalToGlobalBaseMap* oldLevelMap,
+            MULTI_REGIONS_EXPORT LocalToGlobalBaseMap(LocalToGlobalBaseMap* oldLevelMap,
                     const BottomUpSubStructuredGraphSharedPtr& multiLevelGraph);
             /// Destructor.
-            virtual ~LocalToGlobalBaseMap();
+            MULTI_REGIONS_EXPORT virtual ~LocalToGlobalBaseMap();
 
             /// Retrieve the global index of a given local boundary mode.
             inline int GetLocalToGlobalBndMap(const int i) const;

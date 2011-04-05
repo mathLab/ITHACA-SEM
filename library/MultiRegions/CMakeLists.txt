@@ -59,10 +59,12 @@ LocalToGlobalBaseMap.h
 LocalToGlobalDGMap.h
 LocalToGlobalC0ContMap.h
 MultiRegions.hpp
+MultiRegionsDeclspec.h
 GlobalOptimizationParameters.h
 SubStructuredGraph.h
 )
 
+ADD_DEFINITIONS(-DMULTI_REGIONS_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(MultiRegions ${NEKTAR_LIBRARY_TYPE} ${MULTI_REGIONS_SOURCES} ${MULTI_REGIONS_HEADERS})
 TARGET_LINK_LIBRARIES(MultiRegions
@@ -71,8 +73,10 @@ TARGET_LINK_LIBRARIES(MultiRegions
         optimized LocalRegions   debug LocalRegions-g
         optimized StdRegions     debug StdRegions-g
         optimized tinyxml debug tinyxml
+        ${Boost_THREAD_LIBRARY}
+		${Boost_DATE_TIME_LIBRARY}
 	)
-
+SET_LAPACK_LINK_LIBRARIES(MultiRegions)
 
 INSTALL(FILES ${MULTI_REGIONS_HEADERS} DESTINATION ${NEKTAR_INCLUDE_DIR}/MultiRegions)
 

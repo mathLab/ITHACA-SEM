@@ -36,7 +36,7 @@
 
 #ifndef EXPLISTHOMO1D_H
 #define EXPLISTHOMO1D_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <vector>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList.h>
@@ -76,28 +76,28 @@ namespace Nektar
         {
         public:
             /// Default constructor.
-            ExpListHomogeneous1D();
+            MULTI_REGIONS_EXPORT ExpListHomogeneous1D();
 
-            ExpListHomogeneous1D(const LibUtilities::BasisKey &HomoBasis, const NekDouble lz);
+            MULTI_REGIONS_EXPORT ExpListHomogeneous1D(const LibUtilities::BasisKey &HomoBasis, const NekDouble lz);
 
             /// Copy constructor.
-            ExpListHomogeneous1D(const ExpListHomogeneous1D &In);
+            MULTI_REGIONS_EXPORT ExpListHomogeneous1D(const ExpListHomogeneous1D &In);
 
             /// Destructor.
-            ~ExpListHomogeneous1D();
+            MULTI_REGIONS_EXPORT ~ExpListHomogeneous1D();
 
-            void Homogeneous1DTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool IsForwards, bool UseContCoeffs = false);
+            MULTI_REGIONS_EXPORT void Homogeneous1DTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool IsForwards, bool UseContCoeffs = false);
 
             inline void Homogeneous1DFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
 
             inline void Homogeneous1DBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
 
-            void ShuffleIntoHomogeneous1DClosePacked(
+            MULTI_REGIONS_EXPORT void ShuffleIntoHomogeneous1DClosePacked(
                               const Array<OneD, const NekDouble> &inarray,
                               Array<OneD, NekDouble> &outarray,
                               bool UseNumModes = false);
 
-            void UnshuffleFromHomogeneous1DClosePacked(
+            MULTI_REGIONS_EXPORT void UnshuffleFromHomogeneous1DClosePacked(
                               const Array<OneD, const NekDouble> &inarray,
                               Array<OneD, NekDouble> &outarray,
                               bool UseNumModes = false);

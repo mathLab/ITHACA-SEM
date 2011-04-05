@@ -44,7 +44,7 @@
 #include <SpatialDomains/QuadGeom.h>
 #include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/MeshComponents.h>
-
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 namespace Nektar
 {
     namespace SpatialDomains
@@ -57,17 +57,17 @@ namespace Nektar
     class HexGeom: public Geometry3D
         {
         public:
-            HexGeom();
-            HexGeom(const QuadGeomSharedPtr faces[]);
-            HexGeom(const QuadGeomSharedPtr faces[], const Array<OneD, StdRegions::StdExpansion3DSharedPtr> & xMap);
+            SPATIAL_DOMAINS_EXPORT HexGeom();
+            SPATIAL_DOMAINS_EXPORT HexGeom(const QuadGeomSharedPtr faces[]);
+            SPATIAL_DOMAINS_EXPORT HexGeom(const QuadGeomSharedPtr faces[], const Array<OneD, StdRegions::StdExpansion3DSharedPtr> & xMap);
 
-            ~HexGeom();
+            SPATIAL_DOMAINS_EXPORT ~HexGeom();
 
-            void AddElmtConnected(int gvo_id, int locid);
-            int  NumElmtConnected() const;
-            bool IsElmtConnected(int gvo_id, int locid) const;
-			void FillGeom();
-            void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
+            SPATIAL_DOMAINS_EXPORT void AddElmtConnected(int gvo_id, int locid);
+            SPATIAL_DOMAINS_EXPORT int  NumElmtConnected() const;
+            SPATIAL_DOMAINS_EXPORT bool IsElmtConnected(int gvo_id, int locid) const;
+			SPATIAL_DOMAINS_EXPORT void FillGeom();
+            SPATIAL_DOMAINS_EXPORT void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
 
             inline int GetFid(int i) const
             {
@@ -131,7 +131,7 @@ namespace Nektar
                 return m_xmap[i]->UpdatePhys();
             }
 
-            NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
+            SPATIAL_DOMAINS_EXPORT NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
 
             /// \brief Return the face number of the given face, or -1, if
             /// not an face of this element.
@@ -156,7 +156,7 @@ namespace Nektar
 
             /// \brief Return the edge number of the given edge, or -1, if
             /// not an edge of this element.
-            int WhichEdge(SegGeomSharedPtr edge)
+            SPATIAL_DOMAINS_EXPORT int WhichEdge(SegGeomSharedPtr edge)
             {
                 int returnval = -1;
 
@@ -176,12 +176,12 @@ namespace Nektar
             }
 
 
-            static const int                    kNverts = 8;
-            static const int                    kNedges = 12;
-            static const int                    kNqfaces = 6;
-            static const int                    kNtfaces = 0;
-            static const int                    kNfaces = kNqfaces + kNtfaces;
-
+            SPATIAL_DOMAINS_EXPORT static const int                    kNverts = 8;
+            SPATIAL_DOMAINS_EXPORT static const int                    kNedges = 12;
+            SPATIAL_DOMAINS_EXPORT static const int                    kNqfaces = 6;
+            SPATIAL_DOMAINS_EXPORT static const int                    kNtfaces = 0;
+            SPATIAL_DOMAINS_EXPORT static const int                    kNfaces = kNqfaces + kNtfaces;
+            SPATIAL_DOMAINS_EXPORT static const std::string XMLElementType;
        protected:
 
             VertexComponentVector               m_verts;

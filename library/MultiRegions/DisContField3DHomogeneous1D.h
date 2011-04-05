@@ -37,7 +37,7 @@
 #ifndef NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD3DHOMO1D_H
 #define NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD3DHOMO1D_H
 
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/DisContField2D.h>
@@ -49,12 +49,12 @@ namespace Nektar
         class DisContField3DHomogeneous1D: public ExpList3DHomogeneous1D
         {
         public:
-            DisContField3DHomogeneous1D();
+            MULTI_REGIONS_EXPORT DisContField3DHomogeneous1D();
 
-            DisContField3DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
+            MULTI_REGIONS_EXPORT DisContField3DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
                                         const NekDouble lhom);
 
-            DisContField3DHomogeneous1D(
+            MULTI_REGIONS_EXPORT DisContField3DHomogeneous1D(
                            const LibUtilities::BasisKey &HomoBasis,
                            const NekDouble lhom,
                            SpatialDomains::MeshGraph2D &graph2D,
@@ -63,13 +63,13 @@ namespace Nektar
                            const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond);
 
             /// Copy constructor.
-            DisContField3DHomogeneous1D(const DisContField3DHomogeneous1D &In,
+            MULTI_REGIONS_EXPORT DisContField3DHomogeneous1D(const DisContField3DHomogeneous1D &In,
                                         bool DeclarePlanesSetCoeffPhys = true);
 
             /// Destructor. 
-            ~DisContField3DHomogeneous1D();
+            MULTI_REGIONS_EXPORT ~DisContField3DHomogeneous1D();
             
-            void SetupBoundaryConditions(const LibUtilities::BasisKey &HomoBasis, const NekDouble lhom, SpatialDomains::BoundaryConditions &bcs);
+            MULTI_REGIONS_EXPORT void SetupBoundaryConditions(const LibUtilities::BasisKey &HomoBasis, const NekDouble lhom, SpatialDomains::BoundaryConditions &bcs);
             /**
              * \brief This function evaluates the boundary conditions at a certain 
              * time-level.
@@ -100,7 +100,7 @@ namespace Nektar
              * \param time The time at which the boundary conditions should be 
              * evaluated
              */ 
-            void EvaluateBoundaryConditions(const NekDouble time = 0.0);
+            MULTI_REGIONS_EXPORT void EvaluateBoundaryConditions(const NekDouble time = 0.0);
             
         protected:
             /**

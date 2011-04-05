@@ -38,7 +38,7 @@
 #define NEKTAR_LIBUTILITIES_PARSEUTILS_HPP
 
 #include <boost/version.hpp>
-
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 #if( BOOST_VERSION / 100 % 1000 >= 36 )
 #include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_push_back_actor.hpp>

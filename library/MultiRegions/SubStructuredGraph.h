@@ -36,7 +36,7 @@
 
 #ifndef MULTIREGIONS_SUBSTRUCTUREDGRAPH_H
 #define MULTIREGIONS_SUBSTRUCTUREDGRAPH_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 
 #include <boost/config.hpp>
@@ -145,22 +145,22 @@ namespace Nektar
         class MultiLevelBisectedGraph
         {
         public:
-            MultiLevelBisectedGraph(const Array<OneD, const int> sepTree);
-            MultiLevelBisectedGraph(const int nBndDofs);
+            MULTI_REGIONS_EXPORT MultiLevelBisectedGraph(const Array<OneD, const int> sepTree);
+            MULTI_REGIONS_EXPORT MultiLevelBisectedGraph(const int nBndDofs);
 
-            int  GetTotDofs() const;
+            MULTI_REGIONS_EXPORT int  GetTotDofs() const;
 
-            void SetGlobalNumberingOffset();
+            MULTI_REGIONS_EXPORT void SetGlobalNumberingOffset();
 
-            void DumpNBndDofs(void) const;
+            MULTI_REGIONS_EXPORT void DumpNBndDofs(void) const;
 
-            void CollectLeaves(vector<SubGraphSharedPtr>& leaves) const;
+            MULTI_REGIONS_EXPORT void CollectLeaves(vector<SubGraphSharedPtr>& leaves) const;
 
-            inline int  GetNdaughterGraphs() const;
+            MULTI_REGIONS_EXPORT inline int  GetNdaughterGraphs() const;
 
-            int CutLeaves();
+            MULTI_REGIONS_EXPORT int CutLeaves();
 
-            int CutEmptyLeaves();
+            MULTI_REGIONS_EXPORT int CutEmptyLeaves();
 
             inline const SubGraphSharedPtr GetBndDofsGraph() const
             {
@@ -177,30 +177,30 @@ namespace Nektar
         class BottomUpSubStructuredGraph
         {
         public:
-            BottomUpSubStructuredGraph(const Array<OneD, const int> septree);
-            BottomUpSubStructuredGraph(const MultiLevelBisectedGraphSharedPtr& graph);
-            BottomUpSubStructuredGraph(const int nVerts);
+            MULTI_REGIONS_EXPORT BottomUpSubStructuredGraph(const Array<OneD, const int> septree);
+            MULTI_REGIONS_EXPORT BottomUpSubStructuredGraph(const MultiLevelBisectedGraphSharedPtr& graph);
+            MULTI_REGIONS_EXPORT BottomUpSubStructuredGraph(const int nVerts);
 
-            int GetTotDofs() const;
+            MULTI_REGIONS_EXPORT int GetTotDofs() const;
 
-            void UpdateBottomUpReordering(Array<OneD,       int>& perm, 
+            MULTI_REGIONS_EXPORT void UpdateBottomUpReordering(Array<OneD,       int>& perm, 
                                           Array<OneD,       int>& iperm) const;
 
-            void ExpandGraphWithVertexWeights(const Array<OneD, const int>& wgts);
+            MULTI_REGIONS_EXPORT void ExpandGraphWithVertexWeights(const Array<OneD, const int>& wgts);
 
-            void MaskPatches(const int leveltomask, Array<OneD, NekDouble>& maskarray) const;
+            MULTI_REGIONS_EXPORT void MaskPatches(const int leveltomask, Array<OneD, NekDouble>& maskarray) const;
             
-            int GetNpatchesWithInterior(const int whichlevel) const;
+            MULTI_REGIONS_EXPORT int GetNpatchesWithInterior(const int whichlevel) const;
 
-            void GetNintDofsPerPatch(const int whichlevel, Array<OneD, unsigned int>& outarray) const;
+            MULTI_REGIONS_EXPORT void GetNintDofsPerPatch(const int whichlevel, Array<OneD, unsigned int>& outarray) const;
             
-            int GetInteriorOffset(const int whichlevel, const int patch = 0) const;
+            MULTI_REGIONS_EXPORT int GetInteriorOffset(const int whichlevel, const int patch = 0) const;
 
-            int GetNumGlobalDofs(const int whichlevel) const;
+            MULTI_REGIONS_EXPORT int GetNumGlobalDofs(const int whichlevel) const;
 
-            int GetNlevels() const;
+            MULTI_REGIONS_EXPORT int GetNlevels() const;
 
-            void Dump() const;
+            MULTI_REGIONS_EXPORT void Dump() const;
 
         protected:
             vector<SubGraphSharedPtr> m_IntBlocks;
@@ -225,11 +225,11 @@ namespace Nektar
             typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
         }
 
-        void CuthillMckeeReordering(const BoostGraph& graph,
+        MULTI_REGIONS_EXPORT void CuthillMckeeReordering(const BoostGraph& graph,
                                     Array<OneD, int>& perm,
                                     Array<OneD, int>& iperm);
 
-        void MultiLevelBisectionReordering(const BoostGraph& graph,
+        MULTI_REGIONS_EXPORT void MultiLevelBisectionReordering(const BoostGraph& graph,
                                            const Array<OneD, const int>& vwgts,
                                            Array<OneD, int>& perm,
                                            Array<OneD, int>& iperm,
@@ -243,7 +243,7 @@ namespace Nektar
         // However, this optimal value will probably depend on the polynomial order
         // of the expansion and there is still room for optimisation here.
 
-        void NoReordering(const BoostGraph& graph,
+        MULTI_REGIONS_EXPORT void NoReordering(const BoostGraph& graph,
                           Array<OneD, int>& perm,
                           Array<OneD, int>& iperm);
 

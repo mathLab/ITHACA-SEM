@@ -39,6 +39,7 @@
 #define STDEXP3D_H
 
 #include <StdRegions/StdExpansion.h>
+#include <StdRegions/StdRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -52,11 +53,11 @@ namespace Nektar
         {
 
         public:
-            StdExpansion3D();
-            StdExpansion3D(int numcoeffs, const LibUtilities::BasisKey &Ba,
+            STD_REGIONS_EXPORT StdExpansion3D();
+            STD_REGIONS_EXPORT StdExpansion3D(int numcoeffs, const LibUtilities::BasisKey &Ba,
                            const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc);
-            StdExpansion3D(const StdExpansion3D &T);
-            ~StdExpansion3D();
+            STD_REGIONS_EXPORT StdExpansion3D(const StdExpansion3D &T);
+            STD_REGIONS_EXPORT ~StdExpansion3D();
 
             // Differentiation
 
@@ -96,7 +97,7 @@ namespace Nektar
              *  & \eta_1 = \frac{2(1+\xi_1)}{-\xi_2 -\xi_3}-1, \eta_2 = \frac{2(1+\xi_2)}{1 - \xi_3}-1, \eta_3 = \xi_3 \\
              *  \end{array} \f$
              */
-            void PhysTensorDeriv(const Array<OneD, const NekDouble> &inarray,
+            STD_REGIONS_EXPORT void PhysTensorDeriv(const Array<OneD, const NekDouble> &inarray,
                                  Array<OneD, NekDouble> &outarray_d1,
                                  Array<OneD, NekDouble> &outarray_d2,
                                  Array<OneD, NekDouble> &outarray_d3);
@@ -131,7 +132,7 @@ namespace Nektar
 
         protected:
 
-            virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords);
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords);
 
         private:
 

@@ -48,7 +48,7 @@
 #include <LibUtilities/Foundations/Basis.h>
 
 #include <SpatialDomains/Curve.hpp>
-
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 namespace Nektar
 {
     namespace SpatialDomains
@@ -57,23 +57,23 @@ namespace Nektar
         class SegGeom: public Geometry1D
         {
             public:
-                SegGeom();
+                SPATIAL_DOMAINS_EXPORT SegGeom();
 
-                SegGeom(int id, const int coordim);
+                SPATIAL_DOMAINS_EXPORT SegGeom(int id, const int coordim);
 
-                SegGeom(int id, const int coordim, const VertexComponentSharedPtr vertex[]);
+                SPATIAL_DOMAINS_EXPORT SegGeom(int id, const int coordim, const VertexComponentSharedPtr vertex[]);
 
-                SegGeom(int id, const int coordim, const VertexComponentSharedPtr vertex[], const CurveSharedPtr &curve);
+                SPATIAL_DOMAINS_EXPORT SegGeom(int id, const int coordim, const VertexComponentSharedPtr vertex[], const CurveSharedPtr &curve);
 
-                SegGeom(const int id, const VertexComponentSharedPtr vert1, const VertexComponentSharedPtr  vert2);
+                SPATIAL_DOMAINS_EXPORT SegGeom(const int id, const VertexComponentSharedPtr vert1, const VertexComponentSharedPtr  vert2);
 
-                SegGeom(const SegGeom &in);
+                SPATIAL_DOMAINS_EXPORT SegGeom(const SegGeom &in);
 
-                ~SegGeom();
+                SPATIAL_DOMAINS_EXPORT ~SegGeom();
 
-                void AddElmtConnected(int gvoId, int locId);
-                int NumElmtConnected() const;
-                bool IsElmtConnected(int gvoId, int locId) const;
+                SPATIAL_DOMAINS_EXPORT void AddElmtConnected(int gvoId, int locId);
+                SPATIAL_DOMAINS_EXPORT int NumElmtConnected() const;
+                SPATIAL_DOMAINS_EXPORT bool IsElmtConnected(int gvoId, int locId) const;
 
                 inline int GetEid() const
                 {
@@ -120,13 +120,13 @@ namespace Nektar
                     return m_xmap[0]; //should never be reached
                 }
 
-                NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
+                SPATIAL_DOMAINS_EXPORT NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
 
                 /// \brief Get the orientation of edge1.
                 ///
                 /// Since both edges are passed, it does
                 /// not need any information from the EdgeComponent instance.
-                static StdRegions::EdgeOrientation GetEdgeOrientation(const SegGeom &edge1,
+                SPATIAL_DOMAINS_EXPORT static StdRegions::EdgeOrientation GetEdgeOrientation(const SegGeom &edge1,
                     const SegGeom &edge2);
 
                 inline int GetVid(int i) const
@@ -140,17 +140,17 @@ namespace Nektar
                     m_ownData = true;
                 }
 
-                void    FillGeom ();
+                SPATIAL_DOMAINS_EXPORT void    FillGeom ();
 
                 StdRegions::ExpansionType DetExpansionType() const
                 {
                     return StdRegions::eSegment;
                 }
 
-                void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
+                SPATIAL_DOMAINS_EXPORT void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
 
 
-                void WriteToFile(std::ofstream &outfile, const int dumpVar);
+                SPATIAL_DOMAINS_EXPORT void WriteToFile(std::ofstream &outfile, const int dumpVar);
 
             protected:
                 int                             m_eid;

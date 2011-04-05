@@ -38,7 +38,7 @@
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion3D.h>
-
+#include <StdRegions/StdRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -50,56 +50,56 @@ namespace Nektar
 
         public:
             /// Default constructor.
-            StdHexExp();
+            STD_REGIONS_EXPORT StdHexExp();
 
             /// Constructor using BasisKey class for quadrature points and
             /// order definition.
-            StdHexExp(  const  LibUtilities::BasisKey &Ba,
+            STD_REGIONS_EXPORT StdHexExp(  const  LibUtilities::BasisKey &Ba,
                         const  LibUtilities::BasisKey &Bb,
                         const  LibUtilities::BasisKey &Bc);
 
             /// Constructor using BasisKey class for quadrature points and
             /// order definition where m_coeffs and m_phys are all set.
-            StdHexExp(  const  LibUtilities::BasisKey &Ba,
+            STD_REGIONS_EXPORT StdHexExp(  const  LibUtilities::BasisKey &Ba,
                         const  LibUtilities::BasisKey &Bb,
                         const  LibUtilities::BasisKey &Bc,
                         double *coeffs,
                         double *phys);
 
             /// Copy constructor.
-            StdHexExp(const StdHexExp &T);
+            STD_REGIONS_EXPORT StdHexExp(const StdHexExp &T);
 
             /// Destructor.
-            ~StdHexExp();
+            STD_REGIONS_EXPORT ~StdHexExp();
 
 
             /// Fill outarray with mode \a mode of expansion
-            void FillMode(const int mode, Array<OneD, NekDouble> &outarray);
+            STD_REGIONS_EXPORT void FillMode(const int mode, Array<OneD, NekDouble> &outarray);
 
 
             //-------------------------------
             // Integration Methods
             //-------------------------------
-            void TripleTensorProduct(const Array<OneD, const NekDouble>& fx,
+            STD_REGIONS_EXPORT void TripleTensorProduct(const Array<OneD, const NekDouble>& fx,
                                 const Array<OneD, const NekDouble>& gy,
                                 const Array<OneD, const NekDouble>& hz,
                                 const Array<OneD, const NekDouble>& inarray,
                                       Array<OneD, NekDouble> & outarray );
 
-            NekDouble TripleInnerProduct(
+            STD_REGIONS_EXPORT NekDouble TripleInnerProduct(
                                 const Array<OneD, const NekDouble>& fxyz,
                                 const Array<OneD, const NekDouble>& wx,
                                 const Array<OneD, const NekDouble>& wy,
                                 const Array<OneD, const NekDouble>& wz);
 
-            NekDouble Integral3D(const Array<OneD, const NekDouble>& inarray,
+            STD_REGIONS_EXPORT NekDouble Integral3D(const Array<OneD, const NekDouble>& inarray,
                                  const Array<OneD, const NekDouble>& wx,
                                  const Array<OneD, const NekDouble>& wy,
                                  const Array<OneD, const NekDouble>& wz);
 
             /// Integrate the physical point list \a inarray over hexahedral
             /// region and return the value
-            NekDouble Integral(const Array<OneD, const NekDouble>& inarray);
+            STD_REGIONS_EXPORT NekDouble Integral(const Array<OneD, const NekDouble>& inarray);
 
 
             //----------------------------
@@ -107,39 +107,39 @@ namespace Nektar
             //----------------------------
 
             /// Calculate the deritive of the physical points
-            void PhysDeriv(
+            STD_REGIONS_EXPORT void PhysDeriv(
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &out_d0,
                           Array<OneD, NekDouble> &out_d1,
                           Array<OneD, NekDouble> &out_d2);
 
-            void StdPhysDeriv(
+            STD_REGIONS_EXPORT void StdPhysDeriv(
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &out_d0,
                           Array<OneD, NekDouble> &out_d1,
                           Array<OneD, NekDouble> &out_d2);
 
-            void WriteToFile(std::ofstream &outfile,
+            STD_REGIONS_EXPORT void WriteToFile(std::ofstream &outfile,
                         OutputFormat format,
                         const bool dumpVar = true,
                         std::string var = "v");
 
-            void WriteCoeffsToFile(std::ofstream &outfile);
+            STD_REGIONS_EXPORT void WriteCoeffsToFile(std::ofstream &outfile);
 
             //----------------------------------
             // Local Matrix Routines
             //----------------------------------
-            DNekMatSharedPtr GenMassMatrix();
+            STD_REGIONS_EXPORT DNekMatSharedPtr GenMassMatrix();
 
-            DNekMatSharedPtr GenLaplacianMatrix();
+            STD_REGIONS_EXPORT DNekMatSharedPtr GenLaplacianMatrix();
 
-            DNekMatSharedPtr GenLaplacianMatrix(const int i, const int j);
+            STD_REGIONS_EXPORT DNekMatSharedPtr GenLaplacianMatrix(const int i, const int j);
 
-            DNekMatSharedPtr GenWeakDerivMatrix(const int i);
+            STD_REGIONS_EXPORT DNekMatSharedPtr GenWeakDerivMatrix(const int i);
 
-            DNekMatSharedPtr GenNBasisTransMatrix();
+            STD_REGIONS_EXPORT DNekMatSharedPtr GenNBasisTransMatrix();
 
-            DNekMatSharedPtr GenBwdTransMatrix();
+            STD_REGIONS_EXPORT DNekMatSharedPtr GenBwdTransMatrix();
 
 
             DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey)
@@ -151,12 +151,12 @@ namespace Nektar
             /// Backward transformation is evaluated at the quadrature points
             /// \f$ u^{\delta} (\xi_{1i}, \xi_{2j}, \xi_{3k}) = \sum_{m(pqr)}
             /// \hat u_{pqr} \phi_{pqr} (\xi_{1i}, \xi_{2j}, \xi_{3k})\f$
-            virtual void v_BwdTrans(
+            STD_REGIONS_EXPORT virtual void v_BwdTrans(
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
 
             /// Performs the sum factorisation form of the BwdTrans operation.
-            void BwdTrans_SumFacKernel(
+            STD_REGIONS_EXPORT void BwdTrans_SumFacKernel(
                     const Array<OneD, const NekDouble>& base0, 
                     const Array<OneD, const NekDouble>& base1,
                     const Array<OneD, const NekDouble>& base2,
@@ -170,7 +170,7 @@ namespace Nektar
             /// Forward transform from physical quadrature space stored in \a
             /// inarray and evaluate the expansion coefficients and store in
             /// #m_coeffs
-            virtual void v_FwdTrans(
+            STD_REGIONS_EXPORT virtual void v_FwdTrans(
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
 
@@ -186,13 +186,13 @@ namespace Nektar
              * - \a outarray: array of inner product with respect to each basis
              *   over region
              */
-            virtual void v_IProductWRTBase(
+            STD_REGIONS_EXPORT virtual void v_IProductWRTBase(
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
 
             /// Calculate the inner product of inarray with respect to the
             /// basis B = base0 * base1 * base2.
-            virtual void v_IProductWRTBase(
+            STD_REGIONS_EXPORT virtual void v_IProductWRTBase(
                     const Array<OneD, const NekDouble>& bx,
                     const Array<OneD, const NekDouble>& by,
                     const Array<OneD, const NekDouble>& bz,
@@ -210,7 +210,7 @@ namespace Nektar
             //    base1 == m_base[1]->GetBdata() --> set doCheckCollDir1 == true;
             //    base0 == m_base[0]->GetDbdata() --> set doCheckCollDir0 == false;
             //    base1 == m_base[1]->GetDbdata() --> set doCheckCollDir1 == false;
-            void IProductWRTBase_SumFacKernel(
+            STD_REGIONS_EXPORT void IProductWRTBase_SumFacKernel(
                     const Array<OneD, const NekDouble>& base0, 
                     const Array<OneD, const NekDouble>& base1,
                     const Array<OneD, const NekDouble>& base2,
@@ -222,78 +222,78 @@ namespace Nektar
                     bool doCheckCollDir2);
 
             /// Compute inner product with respect to derivative basis
-            virtual void v_IProductWRTDerivBase(const int dir, 
+            STD_REGIONS_EXPORT virtual void v_IProductWRTDerivBase(const int dir, 
                     const Array<OneD, const NekDouble>& inarray, 
                     Array<OneD, NekDouble> & outarray);
 
             /// Compute inner product with respect to derivative basis using
             /// sum-factorisation technique.
-            void IProductWRTDerivBase_SumFac(const int dir, 
+            STD_REGIONS_EXPORT void IProductWRTDerivBase_SumFac(const int dir, 
                                              const Array<OneD, const NekDouble>& inarray, 
                                              Array<OneD, NekDouble> & outarray);
             /// Compute inner product with respect to derivative basis using
             /// local matrix operation.            
-            void IProductWRTDerivBase_MatOp(const int dir, 
+            STD_REGIONS_EXPORT void IProductWRTDerivBase_MatOp(const int dir, 
                                             const Array<OneD, const NekDouble>& inarray, 
                                             Array<OneD, NekDouble> & outarray);
 
-            virtual NekDouble v_PhysEvaluate(Array<OneD,
+            STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(Array<OneD,
                                 const NekDouble>& Lcoords);
 
-            virtual void v_MassMatrixOp(
+            STD_REGIONS_EXPORT virtual void v_MassMatrixOp(
                             const Array<OneD, const NekDouble> &inarray, 
                             Array<OneD,NekDouble> &outarray,
                             const StdMatrixKey &mkey);
 
-            virtual void v_LaplacianMatrixOp(
+            STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(
                             const Array<OneD, const NekDouble> &inarray,
                             Array<OneD,NekDouble> &outarray,
                             const StdMatrixKey &mkey);
 
-            virtual void v_LaplacianMatrixOp(const int k1, const int k2, 
+            STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(const int k1, const int k2, 
                             const Array<OneD, const NekDouble> &inarray,
                             Array<OneD,NekDouble> &outarray,
                             const StdMatrixKey &mkey);
 
-            virtual void v_WeakDerivMatrixOp(const int i,
+            STD_REGIONS_EXPORT virtual void v_WeakDerivMatrixOp(const int i,
                             const Array<OneD, const NekDouble> &inarray,
                             Array<OneD,NekDouble> &outarray,
                             const StdMatrixKey &mkey);
             
-            virtual void v_HelmholtzMatrixOp(
+            STD_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp(
                             const Array<OneD, const NekDouble> &inarray,
                             Array<OneD,NekDouble> &outarray,
                             const StdMatrixKey &mkey);
             
-            virtual void v_LaplacianMatrixOp_MatFree(
+            STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp_MatFree(
                             const Array<OneD, const NekDouble> &inarray,
                             Array<OneD,NekDouble> &outarray,
                             const StdMatrixKey &mkey);
             
-            virtual void v_HelmholtzMatrixOp_MatFree(
+            STD_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp_MatFree(
                             const Array<OneD, const NekDouble> &inarray,
                             Array<OneD,NekDouble> &outarray,
                             const StdMatrixKey &mkey);
 
 
         private:
-            virtual void v_BwdTrans_SumFac(
+            STD_REGIONS_EXPORT virtual void v_BwdTrans_SumFac(
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
                           
-            virtual void v_IProductWRTBase_MatOp(
+            STD_REGIONS_EXPORT virtual void v_IProductWRTBase_MatOp(
                     const Array<OneD, const NekDouble>& inarray, 
                           Array<OneD, NekDouble> &outarray);
                           
-            virtual void v_IProductWRTBase_SumFac(
+            STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
                           
-            void MultiplyByQuadratureMetric(
+            STD_REGIONS_EXPORT void MultiplyByQuadratureMetric(
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
 
-            void GeneralMatrixOp_MatOp(const Array<OneD, const NekDouble> &inarray,
+            STD_REGIONS_EXPORT void GeneralMatrixOp_MatOp(const Array<OneD, const NekDouble> &inarray,
                                        Array<OneD,NekDouble> &outarray,
                                        const StdMatrixKey &mkey);    
 
@@ -301,74 +301,74 @@ namespace Nektar
             //---------------------------
             // Helper functions
             //---------------------------
-            virtual int  v_GetNverts() const;
-            virtual int  v_GetNedges() const;
-            virtual int  v_GetNfaces() const;
-            virtual ExpansionType v_DetExpansionType() const;
-            virtual int  v_NumBndryCoeffs() const;
-            virtual int  v_GetFaceNcoeffs(const int i) const;
-            virtual int  v_GetFaceIntNcoeffs(const int i) const;
-            virtual int  v_CalcNumberOfCoefficients(const std::vector<unsigned int> &nummodes, int &modes_offset);
+            STD_REGIONS_EXPORT virtual int  v_GetNverts() const;
+            STD_REGIONS_EXPORT virtual int  v_GetNedges() const;
+            STD_REGIONS_EXPORT virtual int  v_GetNfaces() const;
+            STD_REGIONS_EXPORT virtual ExpansionType v_DetExpansionType() const;
+            STD_REGIONS_EXPORT virtual int  v_NumBndryCoeffs() const;
+            STD_REGIONS_EXPORT virtual int  v_GetFaceNcoeffs(const int i) const;
+            STD_REGIONS_EXPORT virtual int  v_GetFaceIntNcoeffs(const int i) const;
+            STD_REGIONS_EXPORT virtual int  v_CalcNumberOfCoefficients(const std::vector<unsigned int> &nummodes, int &modes_offset);
 
             //--------------------------
             // Mappings
             //--------------------------
-            virtual void v_GetBoundaryMap(Array<OneD, unsigned int>& outarray);
-            virtual void v_GetInteriorMap(Array<OneD, unsigned int>& outarray);
-            virtual int  v_GetVertexMap(int localVertexId);
-            virtual void v_GetEdgeInteriorMap(const int eid,
+            STD_REGIONS_EXPORT virtual void v_GetBoundaryMap(Array<OneD, unsigned int>& outarray);
+            STD_REGIONS_EXPORT virtual void v_GetInteriorMap(Array<OneD, unsigned int>& outarray);
+            STD_REGIONS_EXPORT virtual int  v_GetVertexMap(int localVertexId);
+            STD_REGIONS_EXPORT virtual void v_GetEdgeInteriorMap(const int eid,
                                 const EdgeOrientation edgeOrient,
                                 Array<OneD, unsigned int> &maparray,
                                 Array<OneD, int> &signarray);
-            virtual void v_GetFaceInteriorMap(const int fid,
+            STD_REGIONS_EXPORT virtual void v_GetFaceInteriorMap(const int fid,
                                 const FaceOrientation faceOrient,
                                 Array<OneD, unsigned int> &maparray,
                                 Array<OneD, int>& signarray);
-            virtual void v_GetFaceToElementMap(const int fid,
+            STD_REGIONS_EXPORT virtual void v_GetFaceToElementMap(const int fid,
                                 const FaceOrientation faceOrient,
                                 Array<OneD, unsigned int> &maparray,
                                 Array<OneD, int>& signarray);
                                 
-            virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey);
-            virtual DNekMatSharedPtr v_CreateStdMatrix(
+            STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_GenMatrix(const StdMatrixKey &mkey);
+            STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_CreateStdMatrix(
                                 const StdMatrixKey &mkey);
-            virtual LibUtilities::BasisType v_GetEdgeBasisType(
+            STD_REGIONS_EXPORT virtual LibUtilities::BasisType v_GetEdgeBasisType(
                                 const int i) const;
-            virtual void v_GetCoords(Array<OneD, NekDouble> &coords_x,
+            STD_REGIONS_EXPORT virtual void v_GetCoords(Array<OneD, NekDouble> &coords_x,
                                      Array<OneD, NekDouble> &coords_y,
                                      Array<OneD, NekDouble> &coords_z);
-            virtual NekDouble v_Integral(const Array<OneD,
+            STD_REGIONS_EXPORT virtual NekDouble v_Integral(const Array<OneD,
                                 const NekDouble>& inarray );
                                 
-            virtual void v_FillMode(const int mode,
+            STD_REGIONS_EXPORT virtual void v_FillMode(const int mode,
                                 Array<OneD, NekDouble> &outarray);
-            virtual void v_PhysDeriv(const Array<OneD,
+            STD_REGIONS_EXPORT virtual void v_PhysDeriv(const Array<OneD,
                                 const NekDouble>& inarray,
                                 Array<OneD, NekDouble> &out_d0,
                                 Array<OneD, NekDouble> &out_d1,
                                 Array<OneD, NekDouble> &out_d2);
             /// Calculate the derivative of the physical points in a single
             /// direction.
-            virtual void v_PhysDeriv(const int dir, 
+            STD_REGIONS_EXPORT virtual void v_PhysDeriv(const int dir, 
                            const Array<OneD, const NekDouble>& inarray,
                            Array<OneD, NekDouble> &outarray);
       
-            virtual void v_PhysDirectionalDeriv(
+            STD_REGIONS_EXPORT virtual void v_PhysDirectionalDeriv(
                                 const Array<OneD, const NekDouble>& inarray,
                                 const Array<OneD, const NekDouble>& direction,
                                       Array<OneD, NekDouble> &outarray);
-            virtual void v_StdPhysDeriv(
+            STD_REGIONS_EXPORT virtual void v_StdPhysDeriv(
                                 const Array<OneD, const NekDouble>& inarray,
                                 Array<OneD, NekDouble> &out_d0,
                                 Array<OneD, NekDouble> &out_d1,
                                 Array<OneD, NekDouble> &out_d2);
 
-            virtual int  v_GetEdgeNcoeffs(const int i) const;
-            virtual void v_WriteToFile(std::ofstream &outfile,
+            STD_REGIONS_EXPORT virtual int  v_GetEdgeNcoeffs(const int i) const;
+            STD_REGIONS_EXPORT virtual void v_WriteToFile(std::ofstream &outfile,
                                 OutputFormat format,
                                 const bool dumpVar = true,
                                 std::string var = "v");
-            virtual void v_WriteCoeffsToFile(std::ofstream &outfile);
+            STD_REGIONS_EXPORT virtual void v_WriteCoeffsToFile(std::ofstream &outfile);
         };
 
         typedef boost::shared_ptr<StdHexExp> StdHexExpSharedPtr;

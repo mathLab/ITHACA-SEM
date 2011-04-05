@@ -42,7 +42,7 @@
 #include <SpatialDomains/GeomFactors2D.h>
 #include <SpatialDomains/Geometry2D.h>
 #include <SpatialDomains/MeshComponents.h>
-
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 
 namespace Nektar
 {
@@ -56,16 +56,16 @@ namespace Nektar
         class QuadGeom: public Geometry2D
         {
         public:
-            QuadGeom();
-            QuadGeom(int id, const int coordim);
-            QuadGeom(const int id, const VertexComponentSharedPtr verts[],  const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
-            QuadGeom(const int id, const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
-            QuadGeom(const QuadGeom &in);
-			~QuadGeom();
+            SPATIAL_DOMAINS_EXPORT QuadGeom();
+            SPATIAL_DOMAINS_EXPORT QuadGeom(int id, const int coordim);
+            SPATIAL_DOMAINS_EXPORT QuadGeom(const int id, const VertexComponentSharedPtr verts[],  const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+            SPATIAL_DOMAINS_EXPORT QuadGeom(const int id, const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+            SPATIAL_DOMAINS_EXPORT QuadGeom(const QuadGeom &in);
+			SPATIAL_DOMAINS_EXPORT ~QuadGeom();
 
-			void AddElmtConnected(int gvo_id, int locid);
-			int  NumElmtConnected() const;
-			bool IsElmtConnected(int gvo_id, int locid) const;
+			SPATIAL_DOMAINS_EXPORT void AddElmtConnected(int gvo_id, int locid);
+			SPATIAL_DOMAINS_EXPORT int  NumElmtConnected() const;
+			SPATIAL_DOMAINS_EXPORT bool IsElmtConnected(int gvo_id, int locid) const;
 
 			inline int GetFid() const
 			{
@@ -107,9 +107,9 @@ namespace Nektar
                 m_ownData = true;
             }
 
-            void FillGeom();
+            SPATIAL_DOMAINS_EXPORT void FillGeom();
 
-            void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
+            SPATIAL_DOMAINS_EXPORT void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
 
             inline int GetEid(int i) const
             {
@@ -143,7 +143,7 @@ namespace Nektar
 
             /// \brief Get the orientation of face1.
             ///
-            static StdRegions::FaceOrientation GetFaceOrientation(const QuadGeom &face1,
+            SPATIAL_DOMAINS_EXPORT static StdRegions::FaceOrientation GetFaceOrientation(const QuadGeom &face1,
                                                                   const QuadGeom &face2);
 
 
@@ -189,9 +189,9 @@ namespace Nektar
             }
 
 
-            static const int                    kNverts = 4;
-            static const int                    kNedges = 4;
-
+            SPATIAL_DOMAINS_EXPORT static const int                    kNverts = 4;
+            SPATIAL_DOMAINS_EXPORT static const int                    kNedges = 4;
+            SPATIAL_DOMAINS_EXPORT static const std::string XMLElementType;
         protected:
             VertexComponentVector               m_verts;
             SegGeomVector                       m_edges;

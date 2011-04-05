@@ -38,6 +38,7 @@
 
 #include <LocalRegions/LocalRegions.hpp>
 #include <SpatialDomains/MeshComponents.h>
+#include <LocalRegions/LocalRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -48,8 +49,8 @@ namespace Nektar
     {
         
     public:
-        PointExp(const SpatialDomains::VertexComponentSharedPtr &m_geom);
-        ~PointExp(void);
+            LOCAL_REGIONS_EXPORT PointExp(const SpatialDomains::VertexComponentSharedPtr &m_geom);
+            LOCAL_REGIONS_EXPORT ~PointExp(void);
 
             inline const Array<OneD, const NekDouble>& GetCoeffs(void) const
             {

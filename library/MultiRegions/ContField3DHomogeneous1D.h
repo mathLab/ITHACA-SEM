@@ -36,7 +36,7 @@
 
 #ifndef NEKTAR_LIBS_MULTIREGIONS_CONTFIELD3DHOMO1D_H
 #define NEKTAR_LIBS_MULTIREGIONS_CONTFIELD3DHOMO1D_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/DisContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField2D.h>
 
@@ -47,9 +47,9 @@ namespace Nektar
         class ContField3DHomogeneous1D: public DisContField3DHomogeneous1D
         {
         public:
-            ContField3DHomogeneous1D();
+            MULTI_REGIONS_EXPORT ContField3DHomogeneous1D();
 
-            ContField3DHomogeneous1D(
+            MULTI_REGIONS_EXPORT ContField3DHomogeneous1D(
                            const LibUtilities::BasisKey &HomoBasis,
                            const NekDouble lhom,
                            SpatialDomains::MeshGraph2D &graph2D,
@@ -58,10 +58,10 @@ namespace Nektar
                            const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond);
             
             /// Copy constructor.
-            ContField3DHomogeneous1D(const ContField3DHomogeneous1D &In);
+            MULTI_REGIONS_EXPORT ContField3DHomogeneous1D(const ContField3DHomogeneous1D &In);
 
             /// Destructor.
-            ~ContField3DHomogeneous1D();
+            MULTI_REGIONS_EXPORT ~ContField3DHomogeneous1D();
             
         protected:
 

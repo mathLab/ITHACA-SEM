@@ -52,7 +52,7 @@ namespace Nektar
          * Registers the class with the Factory.
          */
         string GlobalLinSysIterativeCG::className
-                = GlobalLinSysFactory::RegisterCreatorFunction(
+                = GetGlobalLinSysFactory().RegisterCreatorFunction(
                     "IterativeCG",
                     GlobalLinSysIterativeCG::create,
                     "Iterative conjugate gradient solver.");

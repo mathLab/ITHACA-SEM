@@ -3,7 +3,7 @@
 
 #include <SpatialDomains/GeomFactors.h>
 #include <StdRegions/StdExpansion3D.h>
-
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 namespace Nektar
 {
     namespace SpatialDomains
@@ -24,7 +24,7 @@ namespace Nektar
         public:
             /// One dimensional geometric factors based on one-, two- or three-
             /// dimensional coordinate description.
-            GeomFactors2D(const GeomType gtype,
+            SPATIAL_DOMAINS_EXPORT GeomFactors2D(const GeomType gtype,
                           const int coordim,
                           const Array<OneD, const StdRegions
                                             ::StdExpansion2DSharedPtr> &Coords,
@@ -34,10 +34,10 @@ namespace Nektar
                           const bool LaplMetrics  = false);
 
             /// Copy constructor.
-            GeomFactors2D(const GeomFactors2D& S);
+            SPATIAL_DOMAINS_EXPORT GeomFactors2D(const GeomFactors2D& S);
 
             /// Destructor.
-            virtual ~GeomFactors2D();
+            SPATIAL_DOMAINS_EXPORT virtual ~GeomFactors2D();
 
         private:
             /// Set up 1D Jacobian.

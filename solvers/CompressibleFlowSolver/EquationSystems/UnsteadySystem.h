@@ -133,18 +133,11 @@ namespace Nektar
 				 Array<OneD, Array<OneD, NekDouble> > &flux);
 
     virtual void v_SetInitialConditions(NekDouble initialtime = 0.0,
-					bool dumpInitialConditions = true)
-    {
-      ASSERTL0(false, "This function is not implemented for this equation.");
-    }
+					bool dumpInitialConditions = true) = 0;
 
     virtual NekDouble v_GetTimeStep(const Array<OneD, Array<OneD,NekDouble> > physarray, 
 			       const Array<OneD,int> ExpOrder, 
-			       const Array<OneD,NekDouble> CFLDG, NekDouble timeCFL)
-    {
-      ASSERTL0(false, "v_GetTimeStep: This function is not valid "
-                            "for the Base class");
-    }
+			       const Array<OneD,NekDouble> CFLDG, NekDouble timeCFL) = 0;
 
     virtual void v_EvaluateExactSolution(int field,
     					 Array<OneD, NekDouble> &outfield,

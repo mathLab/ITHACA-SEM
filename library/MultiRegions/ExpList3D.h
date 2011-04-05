@@ -35,7 +35,7 @@
 
 #ifndef EXPLIST3D_H
 #define EXPLIST3D_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <vector>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList2D.h>
@@ -57,12 +57,12 @@ namespace Nektar
         {
         public:
             /// Default constructor.
-            ExpList3D();
+            MULTI_REGIONS_EXPORT ExpList3D();
 
             /// Copy constructor.
-            ExpList3D(const ExpList3D &In);
+            MULTI_REGIONS_EXPORT ExpList3D(const ExpList3D &In);
 
-            ExpList3D(  const LibUtilities::BasisKey &TBa,
+            MULTI_REGIONS_EXPORT ExpList3D(  const LibUtilities::BasisKey &TBa,
                         const LibUtilities::BasisKey &TBb,
                         const LibUtilities::BasisKey &TBc,
                         const LibUtilities::BasisKey &HBa,
@@ -73,13 +73,13 @@ namespace Nektar
                                             = LibUtilities::SIZE_PointsType);
 
             /// Sets up a list of local expansions based on an input mesh.
-            ExpList3D(SpatialDomains::MeshGraph3D &graph3D);
+            MULTI_REGIONS_EXPORT ExpList3D(SpatialDomains::MeshGraph3D &graph3D);
 
             /// Sets up a list of local expansions based on an expansion vector
             ExpList3D(SpatialDomains::ExpansionVector &expansions);
 
             /// Destructor.
-            ~ExpList3D();
+            MULTI_REGIONS_EXPORT ~ExpList3D();
 
         protected:
 

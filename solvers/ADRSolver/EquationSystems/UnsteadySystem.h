@@ -38,7 +38,6 @@
 
 #include <ADRSolver/EquationSystem.h>
 #include <time.h>
-#include <sys/time.h>
 
 namespace Nektar
 {

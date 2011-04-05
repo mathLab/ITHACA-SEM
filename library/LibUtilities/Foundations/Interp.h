@@ -68,22 +68,22 @@ namespace Nektar
              *   at the quadrature points of \a tbasis0 (output of the function)
              */
         // 1D Interpolation
-        void Interp1D(const BasisKey &fbasis0, 
+        LIB_UTILITIES_EXPORT void Interp1D(const BasisKey &fbasis0, 
                       const Array<OneD, const NekDouble>& from,  
                       const BasisKey &tbasis0, 
                       Array<OneD, NekDouble> &to);
 
-        void Interp1D(const PointsKey &fpoints0, 
+        LIB_UTILITIES_EXPORT void Interp1D(const PointsKey &fpoints0, 
                       const Array<OneD, const NekDouble>& from,  
                       const PointsKey &tpoints0, 
                       Array<OneD, NekDouble> &to);
 
-        void Interp1D(const BasisKey &fbasis0, 
+        LIB_UTILITIES_EXPORT void Interp1D(const BasisKey &fbasis0, 
                       const NekDouble *from,  
                       const BasisKey &tbasis0, 
                       NekDouble *to);
 
-        void Interp1D(const PointsKey &fpoints0, 
+        LIB_UTILITIES_EXPORT void Interp1D(const PointsKey &fpoints0, 
                       const NekDouble *from,  
                       const PointsKey &tpoints0, 
                       NekDouble *to);
@@ -110,21 +110,21 @@ namespace Nektar
              *   at the quadrature points of \a tbasis0 (output of the function)
              */
         // 2D Interpolation
-        void Interp2D(const BasisKey &fbasis0, 
+        LIB_UTILITIES_EXPORT void Interp2D(const BasisKey &fbasis0, 
                       const BasisKey &fbasis1, 
                       const Array<OneD, const NekDouble>& from,  
                       const BasisKey &tbasis0,
                       const BasisKey &tbasis1,
                       Array<OneD, NekDouble> &to);
 
-        void Interp2D(const PointsKey &fpoints0, 
+        LIB_UTILITIES_EXPORT void Interp2D(const PointsKey &fpoints0, 
                       const PointsKey &fpoints1, 
                       const Array<OneD, const NekDouble>& from,  
                       const PointsKey &tpoints0,
                       const PointsKey &tpoints1,
                       Array<OneD, NekDouble> &to);
 
-        void Interp2D(const PointsKey &fpoints0, 
+        LIB_UTILITIES_EXPORT void Interp2D(const PointsKey &fpoints0, 
                       const PointsKey &fpoints1, 
                       const NekDouble *from,  
                       const PointsKey &tpoints0,
@@ -154,7 +154,7 @@ namespace Nektar
          *   at the quadrature points of \a tbasis0 (output of the function)
          */
         // 3D interpolation
-        void Interp3D(const BasisKey &fbasis0, 
+        LIB_UTILITIES_EXPORT void Interp3D(const BasisKey &fbasis0, 
                       const BasisKey &fbasis1, 
                       const BasisKey &fbasis2, 
                       const Array<OneD, const NekDouble>& from,  
@@ -164,7 +164,7 @@ namespace Nektar
                       Array<OneD, NekDouble> &to);
 
 
-        void Interp3D(const PointsKey &fpoints0, 
+        LIB_UTILITIES_EXPORT void Interp3D(const PointsKey &fpoints0, 
                       const PointsKey &fpoints1, 
                       const PointsKey &fpoints2, 
                       const Array<OneD, const NekDouble>& from,  
@@ -173,7 +173,7 @@ namespace Nektar
                       const PointsKey &tpoints2,
                       Array<OneD, NekDouble> &to);
 
-	void Interp3D(const PointsKey &fpoints0, 
+	    LIB_UTILITIES_EXPORT void Interp3D(const PointsKey &fpoints0, 
                       const PointsKey &fpoints1,
                       const PointsKey &fpoints2,  
                       const NekDouble *from,  

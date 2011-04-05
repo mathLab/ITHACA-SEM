@@ -2,7 +2,7 @@
 #define NEKTAR_SPATIALDOMAINS_GEOMFACTORS3D_H
 
 #include <SpatialDomains/GeomFactors.h>
-
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 namespace Nektar
 {
     namespace SpatialDomains
@@ -23,7 +23,7 @@ namespace Nektar
         public:
             /// One dimensional geometric factors based on one-, two- or three-
             /// dimensional coordinate description.
-            GeomFactors3D(const GeomType gtype,
+            SPATIAL_DOMAINS_EXPORT GeomFactors3D(const GeomType gtype,
                           const int coordim,
                           const Array<OneD, const StdRegions
                                             ::StdExpansion3DSharedPtr> &Coords,

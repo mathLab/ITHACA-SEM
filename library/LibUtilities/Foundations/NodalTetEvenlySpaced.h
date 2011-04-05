@@ -66,7 +66,7 @@ namespace Nektar
 
             }
             
-            static boost::shared_ptr<PointsBaseType> Create(const PointsKey &key);
+            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> Create(const PointsKey &key);
 
             const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey)
             {

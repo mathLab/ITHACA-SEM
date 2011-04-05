@@ -1,4 +1,7 @@
 #ifndef H_PLYLIB  
+
+#include <LibUtilities/LibUtilitiesDeclspec.h>
+
 /*
  *  LIBRARY ROUTINES FOR POLYNOMIAL CALCULUS AND INTERPOLATION
  */
@@ -109,50 +112,50 @@ namespace Polylib {
       -----------------------------------------------------------------------*/
 
     /* Points and weights */
-    void   zwgj    (double *, double *, const int , const double, const double);
-    void   zwgrjm  (double *, double *, const int , const double, const double);
-    void   zwgrjp  (double *, double *, const int , const double, const double);
-    void   zwglj   (double *, double *, const int , const double, const double);
-	void   zwgk    (double *, double *, const int , const double, const double);
-	void   zwrk    (double *, double *, const int , const double, const double);
-	void   zwlk    (double *, double *, const int , const double, const double);
-	void   JacZeros(const int, double *, double*, const double,const double);
+    LIB_UTILITIES_EXPORT void   zwgj    (double *, double *, const int , const double, const double);
+    LIB_UTILITIES_EXPORT void   zwgrjm  (double *, double *, const int , const double, const double);
+    LIB_UTILITIES_EXPORT void   zwgrjp  (double *, double *, const int , const double, const double);
+    LIB_UTILITIES_EXPORT void   zwglj   (double *, double *, const int , const double, const double);
+	LIB_UTILITIES_EXPORT void   zwgk    (double *, double *, const int , const double, const double);
+	LIB_UTILITIES_EXPORT void   zwrk    (double *, double *, const int , const double, const double);
+	LIB_UTILITIES_EXPORT void   zwlk    (double *, double *, const int , const double, const double);
+	LIB_UTILITIES_EXPORT void   JacZeros(const int, double *, double*, const double,const double);
 
 
     /* Derivative operators */
-    void   Dgj     (double *, const double *, const int, const double, 
+    LIB_UTILITIES_EXPORT void   Dgj     (double *, const double *, const int, const double, 
                     const double);
-    void   Dgrjm   (double *, const double *, const int, const double, 
+    LIB_UTILITIES_EXPORT void   Dgrjm   (double *, const double *, const int, const double, 
                     const double);
-    void   Dgrjp   (double *, const double *, const int, const double, 
+    LIB_UTILITIES_EXPORT void   Dgrjp   (double *, const double *, const int, const double, 
                     const double);
-    void   Dglj    (double *,const double *, const int, const double,
+    LIB_UTILITIES_EXPORT void   Dglj    (double *,const double *, const int, const double,
                     const double);
 
     /* Lagrangian interpolants */
-    double hgj     (const int, const double, const double *, const int, 
+    LIB_UTILITIES_EXPORT double hgj     (const int, const double, const double *, const int, 
                     const double, const double);
-    double hgrjm   (const int, const double, const double *, const int, 
+    LIB_UTILITIES_EXPORT double hgrjm   (const int, const double, const double *, const int, 
                     const double, const double);
-    double hgrjp   (const int, const double, const double *, const int, 
+    LIB_UTILITIES_EXPORT double hgrjp   (const int, const double, const double *, const int, 
                     const double, const double);
-    double hglj    (const int, const double, const double *, const int, 
+    LIB_UTILITIES_EXPORT double hglj    (const int, const double, const double *, const int, 
                     const double, const double);
 
     /* Interpolation operators */
-    void  Imgj  (double*, const double*, const double*, const int, const int, 
+    LIB_UTILITIES_EXPORT void  Imgj  (double*, const double*, const double*, const int, const int, 
                  const double, const double);
-    void  Imgrjm(double*, const double*, const double*, const int, const int,
+    LIB_UTILITIES_EXPORT void  Imgrjm(double*, const double*, const double*, const int, const int,
                  const double, const double);
-    void  Imgrjp(double*, const double*, const double*, const int, const int, 
+    LIB_UTILITIES_EXPORT void  Imgrjp(double*, const double*, const double*, const int, const int, 
                  const double, const double);
-    void  Imglj (double*, const double*, const double*, const int, const int, 
+    LIB_UTILITIES_EXPORT void  Imglj (double*, const double*, const double*, const int, const int, 
                  const double, const double);
 
     /* Polynomial functions */
-    void jacobfd (const int, const double *, double *, double *, const int , 
+    LIB_UTILITIES_EXPORT void jacobfd (const int, const double *, double *, double *, const int , 
                   const double, const double);
-    void jacobd  (const int, const double *, double *,  const int , 
+    LIB_UTILITIES_EXPORT void jacobd  (const int, const double *, double *,  const int , 
                   const double, const double);
 
 	

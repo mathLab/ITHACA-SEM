@@ -1087,7 +1087,7 @@ namespace Nektar
             }
             std::string vSolnType = MultiRegions::GlobalSysSolnTypeMap[vType];
 
-            return GlobalLinSysFactory::CreateInstance( vSolnType, mkey,
+            return GetGlobalLinSysFactory().CreateInstance( vSolnType, mkey,
                                                         vExpList,  locToGloMap);
         }
 
@@ -1097,7 +1097,7 @@ namespace Nektar
         {
             boost::shared_ptr<ExpList> vExpList = GetSharedThisPtr();
             const map<int,RobinBCInfoSharedPtr> vRobinBCInfo = GetRobinBCInfo();
-            return GlobalLinSysFactory::CreateInstance("DirectStaticCond",mkey,
+            return GetGlobalLinSysFactory().CreateInstance("DirectStaticCond",mkey,
                                                         vExpList,locToGloMap);
         }
 

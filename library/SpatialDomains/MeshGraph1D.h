@@ -40,7 +40,7 @@
 #include <SpatialDomains/SegGeom.h>
 
 #include <list>
-
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 namespace Nektar
 {
     namespace SpatialDomains
@@ -49,14 +49,14 @@ namespace Nektar
         {
         public:
 
-            MeshGraph1D();
-            virtual ~MeshGraph1D();
+            SPATIAL_DOMAINS_EXPORT MeshGraph1D();
+            SPATIAL_DOMAINS_EXPORT virtual ~MeshGraph1D();
 
-            void ReadGeometry(std::string &infilename);
-            void ReadGeometry(TiXmlDocument &doc);
-            void ReadElements(TiXmlDocument &doc);
-            void ReadComposites(TiXmlDocument &doc);
-            void ResolveGeomRef(const std::string &prevToken, const std::string &token);
+            SPATIAL_DOMAINS_EXPORT void ReadGeometry(std::string &infilename);
+            SPATIAL_DOMAINS_EXPORT void ReadGeometry(TiXmlDocument &doc);
+            SPATIAL_DOMAINS_EXPORT void ReadElements(TiXmlDocument &doc);
+            SPATIAL_DOMAINS_EXPORT void ReadComposites(TiXmlDocument &doc);
+            SPATIAL_DOMAINS_EXPORT void ResolveGeomRef(const std::string &prevToken, const std::string &token);
 
             inline const int GetCoordim(void)
             {

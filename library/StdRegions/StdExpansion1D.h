@@ -40,6 +40,7 @@
 #define STDEXP1D_H
 
 #include <StdRegions/StdExpansion.h>
+#include <StdRegions/StdRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -51,10 +52,10 @@ namespace Nektar
 
         public:
 
-            StdExpansion1D();
-            StdExpansion1D(int numcoeffs, const LibUtilities::BasisKey &Ba);
-            StdExpansion1D(const StdExpansion1D &T);
-            ~StdExpansion1D();
+            STD_REGIONS_EXPORT StdExpansion1D();
+            STD_REGIONS_EXPORT StdExpansion1D(int numcoeffs, const LibUtilities::BasisKey &Ba);
+            STD_REGIONS_EXPORT StdExpansion1D(const StdExpansion1D &T);
+            STD_REGIONS_EXPORT ~StdExpansion1D();
 
             /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
             *  physical quadrature points given by \a inarray and return in
@@ -66,7 +67,7 @@ namespace Nektar
             *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array
             *  \a outarray as output of the function
             */
-            void PhysTensorDeriv(const Array<OneD, const NekDouble>& inarray,
+            STD_REGIONS_EXPORT void PhysTensorDeriv(const Array<OneD, const NekDouble>& inarray,
                 Array<OneD, NekDouble>& outarray);
 
 
@@ -74,7 +75,7 @@ namespace Nektar
             *  to be in local collapsed coordinate format. The function is
             *  assumed to be in physical space
             */
-            NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords);
+            STD_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coords);
 
             void SetCoeffsToOrientation(StdRegions::EdgeOrientation dir)
             {

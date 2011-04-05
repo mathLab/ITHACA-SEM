@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYS_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYS_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <MultiRegions/GlobalLinSysKey.h>
 
@@ -59,6 +59,7 @@ namespace Nektar
             const GlobalLinSysKey&,
             const boost::shared_ptr<ExpList>&,
             const boost::shared_ptr<LocalToGlobalBaseMap>& > GlobalLinSysFactory;
+        GlobalLinSysFactory& GetGlobalLinSysFactory();
 
         /// A global linear system.
         class GlobalLinSys
@@ -82,12 +83,12 @@ namespace Nektar
             }
 
             /// Solve the linear system for given input and output vectors.
-            virtual void Solve( const Array<OneD,const NekDouble> &in,
+            MULTI_REGIONS_EXPORT virtual void Solve( const Array<OneD,const NekDouble> &in,
                               Array<OneD,      NekDouble> &out) = 0;
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
-            virtual void Solve( const Array<OneD, const NekDouble> &in,
+            MULTI_REGIONS_EXPORT virtual void Solve( const Array<OneD, const NekDouble> &in,
                               Array<OneD,       NekDouble> &out,
                         const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                         const Array<OneD, const NekDouble> &dirForcing
@@ -101,7 +102,11 @@ namespace Nektar
 
             DNekScalMatSharedPtr GetBlock(unsigned int n);
             DNekScalBlkMatSharedPtr GetStaticCondBlock(unsigned int n);
+        private:
+
         };
+
+
     } //end of namespace
 } //end of namespace
 

@@ -154,6 +154,9 @@ MACRO(SET_COMMON_PROPERTIES name)
         #   parameters.
         SET_TARGET_PROPERTIES(${name} 
             PROPERTIES COMPILE_FLAGS "/wd4521 /wd4522 /wd4351 /wd4018 /wd4800")
+
+		# Enable source level parallel builds.
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
     ENDIF(  )	
 
     SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DNEKTAR_DEBUG")

@@ -48,44 +48,44 @@ namespace Nektar
         {
         public:
             /// Matrix without any parameters.
-            GlobalMatrixKey(const StdRegions::MatrixType matrixType,
+            MULTI_REGIONS_EXPORT GlobalMatrixKey(const StdRegions::MatrixType matrixType,
                             const StdRegions::ExpansionType expType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap
                                         = NullLocalToGlobalBaseMapSharedPtr);
 
             /// Matrix without any parameters.
-            GlobalMatrixKey(const StdRegions::MatrixType matrixType,
+            MULTI_REGIONS_EXPORT GlobalMatrixKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap
                                         = NullLocalToGlobalBaseMapSharedPtr);
 
             /// Matrix with a single real parameter.
-            GlobalMatrixKey(const StdRegions::MatrixType matrixType,
+            MULTI_REGIONS_EXPORT GlobalMatrixKey(const StdRegions::MatrixType matrixType,
                             const NekDouble factor,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap
                                         = NullLocalToGlobalBaseMapSharedPtr);
 
             /// Matrix with two real parameters.
-            GlobalMatrixKey(const StdRegions::MatrixType matrixType,
+            MULTI_REGIONS_EXPORT GlobalMatrixKey(const StdRegions::MatrixType matrixType,
                             const NekDouble factor1,
                             const NekDouble factor2,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap
                                         = NullLocalToGlobalBaseMapSharedPtr);
 
             /// Matrix with a single variable coefficient parameter.
-            GlobalMatrixKey(const StdRegions::MatrixType matrixType,
+            MULTI_REGIONS_EXPORT GlobalMatrixKey(const StdRegions::MatrixType matrixType,
                             const Array<OneD,NekDouble>& varcoeffs,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap
                                         = NullLocalToGlobalBaseMapSharedPtr);
 
             /// Matrix with multiple variable coefficient parameters.
-            GlobalMatrixKey(const StdRegions::MatrixType matrixType,
+            MULTI_REGIONS_EXPORT GlobalMatrixKey(const StdRegions::MatrixType matrixType,
                             const Array<OneD,Array<OneD,NekDouble> >& varcoeffs,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap
                                         = NullLocalToGlobalBaseMapSharedPtr);
 
             /// Matrix with a single real parameter and multiple variable
             /// coefficient parameters.
-            GlobalMatrixKey(const StdRegions::MatrixType matrixType,
+            MULTI_REGIONS_EXPORT GlobalMatrixKey(const StdRegions::MatrixType matrixType,
                             const NekDouble factor,
                             const Array<OneD,Array<OneD,NekDouble> >& varcoeffs,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap
@@ -93,7 +93,7 @@ namespace Nektar
 
             /// Matrix with two real parameters and multiple variable
             /// coefficient parameters.
-            GlobalMatrixKey(const StdRegions::MatrixType matrixType,
+            MULTI_REGIONS_EXPORT GlobalMatrixKey(const StdRegions::MatrixType matrixType,
                             const NekDouble factor1,
                             const NekDouble factor2,
                             const Array<OneD,Array<OneD,NekDouble> >& varcoeffs,
@@ -101,7 +101,7 @@ namespace Nektar
                                         = NullLocalToGlobalBaseMapSharedPtr);
 
             // Matrix with one vector parameters and one real parameter and multiple variable coeffs.
-            GlobalMatrixKey(const StdRegions::MatrixType matrixType,
+            MULTI_REGIONS_EXPORT GlobalMatrixKey(const StdRegions::MatrixType matrixType,
                             const Array<OneD,NekDouble>& factor1,
                             const NekDouble factor2,
                             const Array<OneD, Array<OneD,NekDouble> >& varcoeffs,
@@ -111,33 +111,33 @@ namespace Nektar
             GlobalMatrixKey(const GlobalMatrixKey &key,
                             const StdRegions::ExpansionType expType);
             /// Copy constructor.
-            GlobalMatrixKey(const GlobalMatrixKey &key);
+            MULTI_REGIONS_EXPORT GlobalMatrixKey(const GlobalMatrixKey &key);
 
             /// Destructor
-            ~GlobalMatrixKey();
+            MULTI_REGIONS_EXPORT ~GlobalMatrixKey();
 
             /// Provides ordering of GlobalMatrixKey objects.
-            friend bool operator<(const GlobalMatrixKey &lhs,
+            MULTI_REGIONS_EXPORT friend bool operator<(const GlobalMatrixKey &lhs,
                                   const GlobalMatrixKey &rhs);
 
             /// Return the matrix type.
-            const StdRegions::MatrixType GetMatrixType() const;
+            MULTI_REGIONS_EXPORT const StdRegions::MatrixType GetMatrixType() const;
             /// Return the expansion type associated with key
-            const StdRegions::ExpansionType GetExpansionType()  const;
+            MULTI_REGIONS_EXPORT const StdRegions::ExpansionType GetExpansionType()  const;
             /// Returns true if a local to global map is defined.
-            const bool LocToGloMapIsDefined() const;
+            MULTI_REGIONS_EXPORT const bool LocToGloMapIsDefined() const;
             /// Returns the number of constants defined for this matrix.
-            int GetNconstants() const;
+            MULTI_REGIONS_EXPORT int GetNconstants() const;
             /// Returns the requested constant.
-            NekDouble GetConstant(int i) const;
+            MULTI_REGIONS_EXPORT NekDouble GetConstant(int i) const;
             /// Returns all the constants.
-            const Array<OneD,NekDouble>& GetConstants() const;
+            MULTI_REGIONS_EXPORT const Array<OneD,NekDouble>& GetConstants() const;
             /// Returns the number of variable coefficient fields.
-            int GetNvariableCoefficients() const;
+            MULTI_REGIONS_EXPORT int GetNvariableCoefficients() const;
             /// Returns the requested variable coefficient parameter.
-            const Array<OneD,NekDouble>& GetVariableCoefficient(int i) const;
+            MULTI_REGIONS_EXPORT const Array<OneD,NekDouble>& GetVariableCoefficient(int i) const;
             /// Returns all the variable coefficient parameters.
-            const Array<OneD, Array<OneD,NekDouble> >&
+            MULTI_REGIONS_EXPORT const Array<OneD, Array<OneD,NekDouble> >&
                                             GetVariableCoefficients() const;
 
         protected:
@@ -169,7 +169,7 @@ namespace Nektar
         };
 
         /// Writes statistics about the matrix key to an output stream.
-        std::ostream& operator<<(std::ostream& os, const GlobalMatrixKey& rhs);
+        MULTI_REGIONS_EXPORT std::ostream& operator<<(std::ostream& os, const GlobalMatrixKey& rhs);
 
         /// A pointer to a GlobalMatrixKey.
         typedef  boost::shared_ptr<GlobalMatrixKey> GlobalMatrixKeySharedPtr;

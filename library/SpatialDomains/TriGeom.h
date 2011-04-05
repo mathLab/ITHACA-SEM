@@ -38,7 +38,7 @@
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdTriExp.h>
-
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <SpatialDomains/GeomFactors2D.h>
 #include <SpatialDomains/Geometry2D.h>
 #include <SpatialDomains/MeshComponents.h>
@@ -55,16 +55,16 @@ namespace Nektar
         class TriGeom: public Geometry2D
         {
             public:
-                TriGeom();
-                TriGeom(int id, const int coordim);
-                TriGeom(const int id, const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
-                TriGeom(const int id, const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
-                TriGeom(const TriGeom &in);
-                ~TriGeom();
+                SPATIAL_DOMAINS_EXPORT TriGeom();
+                SPATIAL_DOMAINS_EXPORT TriGeom(int id, const int coordim);
+                SPATIAL_DOMAINS_EXPORT TriGeom(const int id, const VertexComponentSharedPtr verts[], const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+                SPATIAL_DOMAINS_EXPORT TriGeom(const int id, const SegGeomSharedPtr edges[], const StdRegions::EdgeOrientation eorient[]);
+                SPATIAL_DOMAINS_EXPORT TriGeom(const TriGeom &in);
+                SPATIAL_DOMAINS_EXPORT ~TriGeom();
 
-                void AddElmtConnected(int gvo_id, int locid);
-                int  NumElmtConnected() const;
-                bool IsElmtConnected(int gvo_id, int locid) const;
+                SPATIAL_DOMAINS_EXPORT void AddElmtConnected(int gvo_id, int locid);
+                SPATIAL_DOMAINS_EXPORT int  NumElmtConnected() const;
+                SPATIAL_DOMAINS_EXPORT bool IsElmtConnected(int gvo_id, int locid) const;
 
                 inline int GetFid() const
                 {
@@ -99,16 +99,16 @@ namespace Nektar
                     return m_xmap[i]->UpdatePhys();
                 }
 
-                NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
+                SPATIAL_DOMAINS_EXPORT NekDouble GetCoord(const int i, const Array<OneD, const NekDouble> &Lcoord);
 
                 inline void SetOwnData()
                 {
                     m_ownData = true;
                 }
 
-                void FillGeom();
+                SPATIAL_DOMAINS_EXPORT void FillGeom();
 
-                void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
+                SPATIAL_DOMAINS_EXPORT void GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords);
 
                 inline int GetEid(int i) const
                 {
@@ -163,7 +163,7 @@ namespace Nektar
 
                 /// \brief Get the orientation of face1.
                 ///
-                static StdRegions::FaceOrientation GetFaceOrientation(const TriGeom &face1,
+                SPATIAL_DOMAINS_EXPORT static StdRegions::FaceOrientation GetFaceOrientation(const TriGeom &face1,
                                                                       const TriGeom &face2);
 
                 /// \brief Return the edge number of the given edge, or -1, if
@@ -187,8 +187,8 @@ namespace Nektar
                     return returnval;
                 }
 
-                static const int                kNedges = 3;
-                static const int                kNverts = 3;
+                SPATIAL_DOMAINS_EXPORT static const int                kNedges = 3;
+                SPATIAL_DOMAINS_EXPORT static const int                kNverts = 3;
 
             protected:
                 VertexComponentVector           m_verts;

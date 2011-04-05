@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSIterativeCG_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSIterativeCG_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/GlobalLinSysIterative.h>
 
 namespace Nektar
@@ -61,25 +61,25 @@ namespace Nektar
             }
 
             /// Name of class
-            static std::string className;
+            MULTI_REGIONS_EXPORT static std::string className;
 
             /// Constructor for full direct matrix solve.
-            GlobalLinSysIterativeCG(
+            MULTI_REGIONS_EXPORT GlobalLinSysIterativeCG(
                     const GlobalLinSysKey &pLinSysKey,
                     const boost::shared_ptr<ExpList> &pExpList,
                     const boost::shared_ptr<LocalToGlobalBaseMap>
                                                            &pLocToGloMap);
 
-            virtual ~GlobalLinSysIterativeCG();
+            MULTI_REGIONS_EXPORT virtual ~GlobalLinSysIterativeCG();
 
             /// Solve the linear system for given input and output vectors.
-            virtual void Solve(
+            MULTI_REGIONS_EXPORT virtual void Solve(
                     const Array<OneD,const NekDouble> &in,
                           Array<OneD,      NekDouble> &out);
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
-            virtual void Solve(
+            MULTI_REGIONS_EXPORT virtual void Solve(
                     const Array<OneD, const NekDouble> &in,
                           Array<OneD,       NekDouble> &out,
                     const LocalToGlobalBaseMapSharedPtr &locToGloMap,

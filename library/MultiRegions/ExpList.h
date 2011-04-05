@@ -35,7 +35,7 @@
 
 #ifndef NEKTAR_LIBS_MULTIREGIONS_EXPLIST_H
 #define NEKTAR_LIBS_MULTIREGIONS_EXPLIST_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <StdRegions/StdExpansion.h>
 #include <MultiRegions/LocalToGlobalBaseMap.h>
@@ -74,39 +74,39 @@ namespace Nektar
         {
         public:
             /// The default constructor.
-            ExpList();
+            MULTI_REGIONS_EXPORT ExpList();
 
             /// The copy constructor.
-            ExpList(const ExpList &in, bool DeclareCoeffPhysArrays = true);
+            MULTI_REGIONS_EXPORT ExpList(const ExpList &in, bool DeclareCoeffPhysArrays = true);
 
             /// The default destructor.
-            virtual ~ExpList();
+            MULTI_REGIONS_EXPORT virtual ~ExpList();
 
             /// Copy coefficients from concatenated list to expansion list.
-            void PutCoeffsInToElmtExp(void);
+            MULTI_REGIONS_EXPORT void PutCoeffsInToElmtExp(void);
 
             /// Copy coefficients from expansion list to concatenated list.
-            void PutElmtExpInToCoeffs(void);
+            MULTI_REGIONS_EXPORT void PutElmtExpInToCoeffs(void);
 
             /// Copy one elements coefficients from the concatenated list
             /// to the expansion list.
-            void PutCoeffsInToElmtExp(int eid);
+            MULTI_REGIONS_EXPORT void PutCoeffsInToElmtExp(int eid);
 
             /// Copy one elements coefficients from the expansion list to
             /// the concatenated list.
-            void PutElmtExpInToCoeffs(int eid);
+            MULTI_REGIONS_EXPORT void PutElmtExpInToCoeffs(int eid);
 
             /// Copy physical data from \a m_phys to expansion list.
-            void PutPhysInToElmtExp(void);
+            MULTI_REGIONS_EXPORT void PutPhysInToElmtExp(void);
 
             /// Copy physical data from given array to expansion list.
-            void PutPhysInToElmtExp(Array<OneD, const NekDouble> &in);
+            MULTI_REGIONS_EXPORT void PutPhysInToElmtExp(Array<OneD, const NekDouble> &in);
 
             /// Copy expansion list physical data to given array.
-            void PutElmtExpInToPhys(Array<OneD,NekDouble> &out);
+            MULTI_REGIONS_EXPORT void PutElmtExpInToPhys(Array<OneD,NekDouble> &out);
 
             /// Copy expansion list physical data from one element to array.
-            void PutElmtExpInToPhys(int eid, Array<OneD,NekDouble> &out);
+            MULTI_REGIONS_EXPORT void PutElmtExpInToPhys(int eid, Array<OneD,NekDouble> &out);
 
             /// Returns the total number of local degrees of freedom
             /// \f$N_{\mathrm{eof}}=\sum_{e=1}^{{N_{\mathrm{el}}}}N^{e}_m\f$.
@@ -114,7 +114,7 @@ namespace Nektar
 
             // Returns the total number of local degrees of freedom
             // for element eid
-            int GetNcoeffs(const int eid) const;
+            MULTI_REGIONS_EXPORT int GetNcoeffs(const int eid) const;
 
             inline int GetContNcoeffs(void) const;
 
@@ -124,7 +124,7 @@ namespace Nektar
 
             /// Returns the vector of the number of modes in the elemental
             /// basis order over all elements.
-            const Array<OneD,int> EvalBasisNumModesMaxPerExp(void) const;
+            MULTI_REGIONS_EXPORT const Array<OneD,int> EvalBasisNumModesMaxPerExp(void) const;
 
             /// Returns the total number of quadrature points #m_npoints
             /// \f$=Q_{\mathrm{tot}}\f$.
@@ -164,16 +164,16 @@ namespace Nektar
 
             /// This function integrates a function \f$f(\boldsymbol{x})\f$
             /// over the domain consisting of all the elements of the expansion.
-            NekDouble PhysIntegral (void);
+            MULTI_REGIONS_EXPORT NekDouble PhysIntegral (void);
 
             /// This function integrates a function \f$f(\boldsymbol{x})\f$
             /// over the domain consisting of all the elements of the expansion.
-            NekDouble PhysIntegral(const Array<OneD, const NekDouble> &inarray);
+            MULTI_REGIONS_EXPORT NekDouble PhysIntegral(const Array<OneD, const NekDouble> &inarray);
 
             /// This function calculates the inner product of a function
             /// \f$f(\boldsymbol{x})\f$ with respect to all \emph{local}
             /// expansion modes \f$\phi_n^e(\boldsymbol{x})\f$.
-            void   IProductWRTBase_IterPerExp(
+            MULTI_REGIONS_EXPORT void   IProductWRTBase_IterPerExp(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray);
 
@@ -187,14 +187,14 @@ namespace Nektar
             /// \f$f(\boldsymbol{x})\f$ with respect to the derivative (in
             /// direction \param dir) of all \emph{local} expansion modes
             /// \f$\phi_n^e(\boldsymbol{x})\f$.
-            void   IProductWRTDerivBase(const int dir,
+            MULTI_REGIONS_EXPORT void   IProductWRTDerivBase(const int dir,
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray);
 
             /// This function elementally evaluates the forward transformation
             /// of a function \f$u(\boldsymbol{x})\f$ onto the global
             /// spectral/hp expansion.
-            void   FwdTrans_IterPerExp (
+            MULTI_REGIONS_EXPORT void   FwdTrans_IterPerExp (
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray);
 
@@ -206,7 +206,7 @@ namespace Nektar
 
             /// This function elementally mulplies the coefficient space of
             /// Sin my the elemental inverse of the mass matrix.
-            void  MultiplyByElmtInvMass (
+            MULTI_REGIONS_EXPORT void  MultiplyByElmtInvMass (
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray);
 
@@ -272,14 +272,14 @@ namespace Nektar
                        dirForcing = NullNekDouble1DArray);
 
             ///
-            void FwdTrans_BndConstrained(
+            MULTI_REGIONS_EXPORT void FwdTrans_BndConstrained(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray);
 
 
             /// This function elementally evaluates the backward transformation
             /// of the global spectral/hp element expansion.
-            void BwdTrans_IterPerExp (
+            MULTI_REGIONS_EXPORT void BwdTrans_IterPerExp (
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray);
 
@@ -296,19 +296,19 @@ namespace Nektar
 
             /// This function calculates Surface Normal vector of a smooth
             /// manifold.
-            void GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal,
+            MULTI_REGIONS_EXPORT void GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal,
                                   const int k);
 
             /// Populate tangents vector with tangents from each element.
-            void GetTangents(
+            MULTI_REGIONS_EXPORT void GetTangents(
                              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &tangents);
 
             /// Apply geometry information to each expansion.
-            void ApplyGeomInfo(SpatialDomains::MeshGraph &graph);
+            MULTI_REGIONS_EXPORT void ApplyGeomInfo(SpatialDomains::MeshGraph &graph);
 
             /// This function writes the spectral/hp element solution to the
             /// file \a out.
-            void WriteToFile(std::ofstream &out,
+            MULTI_REGIONS_EXPORT void WriteToFile(std::ofstream &out,
                              OutputFormat format = eTecplot,
                              std::string var = "v");
 
@@ -328,15 +328,15 @@ namespace Nektar
                 v_WriteTecplotField(outfile,expansion);
             }
 
-            void WriteVtkHeader(std::ofstream &outfile);
-            void WriteVtkFooter(std::ofstream &outfile);
+            MULTI_REGIONS_EXPORT void WriteVtkHeader(std::ofstream &outfile);
+            MULTI_REGIONS_EXPORT void WriteVtkFooter(std::ofstream &outfile);
 
             void WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
             {
                 v_WriteVtkPieceHeader(outfile, expansion);
             }
 
-            void WriteVtkPieceFooter(std::ofstream &outfile, int expansion);
+            MULTI_REGIONS_EXPORT void WriteVtkPieceFooter(std::ofstream &outfile, int expansion);
 
             void WriteVtkPieceData  (std::ofstream &outfile, int expansion,
                                      std::string var = "v")
@@ -344,13 +344,13 @@ namespace Nektar
                 v_WriteVtkPieceData(outfile, expansion, var);
             }
 
-            void ReadFromFile(std::ifstream &in,
+            MULTI_REGIONS_EXPORT void ReadFromFile(std::ifstream &in,
                               OutputFormat format = eTecplot);
 
             /// This function returns the dimension of the coordinates of the
             /// element \a eid.
             // inline
-            int GetCoordim(int eid);
+            MULTI_REGIONS_EXPORT int GetCoordim(int eid);
 
             /// Set the \a i th coefficiient in \a m_coeffs to value \a val
             inline void SetCoeff(int i, NekDouble val);
@@ -393,11 +393,11 @@ namespace Nektar
             /// function \f$u^{\delta}(\boldsymbol{x})\f$ evaluated at the
             /// quadrature points.
             // inline
-            const Array<OneD, const NekDouble> &GetPhys()  const;
+            MULTI_REGIONS_EXPORT const Array<OneD, const NekDouble> &GetPhys()  const;
 
             /// This function calculates the \f$L_\infty\f$ error of the global
             /// spectral/hp element approximation.
-            NekDouble Linf (const Array<OneD, const NekDouble> &soln);
+            MULTI_REGIONS_EXPORT NekDouble Linf (const Array<OneD, const NekDouble> &soln);
 
             /// This function calculates the \f$L_2\f$ error with
             /// respect to soln of the global
@@ -416,7 +416,7 @@ namespace Nektar
 
             /// Calculates the \f$H^1\f$ error of the global spectral/hp
             /// element approximation.
-            NekDouble H1 (const Array<OneD, const NekDouble> &soln);
+            MULTI_REGIONS_EXPORT NekDouble H1 (const Array<OneD, const NekDouble> &soln);
 
             /// This function returns the number of elements in the expansion.
             inline int GetExpSize(void);
@@ -438,12 +438,12 @@ namespace Nektar
 
             /// This function returns (a shared pointer to) the local elemental
             /// expansion containing the arbitrary point given by \a gloCoord.
-            StdRegions::StdExpansionSharedPtr& GetExp(
+            MULTI_REGIONS_EXPORT StdRegions::StdExpansionSharedPtr& GetExp(
                                                       const Array<OneD, const NekDouble> &gloCoord);
 
             /// This function returns the index of the local elemental
             /// expansion containing the arbitrary point given by \a gloCoord.
-            int GetExpIndex(const Array<OneD, const NekDouble> &gloCoord);
+            MULTI_REGIONS_EXPORT int GetExpIndex(const Array<OneD, const NekDouble> &gloCoord);
 
             /// Get the start offset position for a global list of #m_coeffs
             /// correspoinding to element n.
@@ -480,12 +480,12 @@ namespace Nektar
             /// This function discretely evaluates the derivative of a function
             /// \f$f(\boldsymbol{x})\f$ on the domain consisting of all
             /// elements of the expansion.
-            void PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+            MULTI_REGIONS_EXPORT void PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                            Array<OneD, NekDouble> &out_d0,
                            Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
                            Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
 
-            void PhysDeriv(const int dir,
+            MULTI_REGIONS_EXPORT void PhysDeriv(const int dir,
                            const Array<OneD, const NekDouble> &inarray,
                            Array<OneD, NekDouble> &out_d);
 
@@ -557,7 +557,7 @@ namespace Nektar
             inline void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                              Array<OneD,int> &EdgeID);
 
-            void  GeneralGetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef, int NumHomoDir = 0, Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis = LibUtilities::NullBasisSharedPtr1DArray, std::vector<NekDouble> &HomoLen = SpatialDomains::NullNekDoubleVector);
+            MULTI_REGIONS_EXPORT void  GeneralGetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef, int NumHomoDir = 0, Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis = LibUtilities::NullBasisSharedPtr1DArray, std::vector<NekDouble> &HomoLen = SpatialDomains::NullNekDoubleVector);
 
             /// load global optimisation parameters
             void ReadGlobalOptimizationParameters(

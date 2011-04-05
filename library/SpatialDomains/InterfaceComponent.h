@@ -38,7 +38,7 @@
 
 #include <SpatialDomains/SpatialDomains.hpp>
 #include <SpatialDomains/MeshComponents.h>
-
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 namespace Nektar
 {
     namespace SpatialDomains
@@ -46,8 +46,8 @@ namespace Nektar
         class InterfaceComponent: public LibUtilities::GraphVertexObject
         {
         public:
-            InterfaceComponent();
-            ~InterfaceComponent();
+            SPATIAL_DOMAINS_EXPORT InterfaceComponent();
+            SPATIAL_DOMAINS_EXPORT ~InterfaceComponent();
 
         protected:
             std::list<CompToElmt> m_elmtMap;

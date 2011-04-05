@@ -35,7 +35,7 @@
 
 #ifndef NEKTAR_LIBS_MULTIREGIONS_CONTFIELD2D_H
 #define NEKTAR_LIBS_MULTIREGIONS_CONTFIELD2D_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <SpatialDomains/MeshGraph2D.h>
 #include <SpatialDomains/Conditions.h>
 
@@ -59,16 +59,16 @@ namespace Nektar
         {
         public:
             /// The default constructor.
-            ContField2D();
+            MULTI_REGIONS_EXPORT ContField2D();
 
             /// Construct a global continuous field based on an input mesh.
-            ContField2D(SpatialDomains::MeshGraph2D &graph2D,
+            MULTI_REGIONS_EXPORT ContField2D(SpatialDomains::MeshGraph2D &graph2D,
                         const GlobalSysSolnType solnType
                                                 = eDirectMultiLevelStaticCond);
 
             /// Construct a global continuous field based on an input mesh with
             /// boundary conditions.
-            ContField2D(SpatialDomains::MeshGraph2D &graph2D,
+            MULTI_REGIONS_EXPORT ContField2D(SpatialDomains::MeshGraph2D &graph2D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0,
                         const GlobalSysSolnType solnType
@@ -78,7 +78,7 @@ namespace Nektar
             /// Construct a global continuous field with solution type based on
             /// another field but using a separate input mesh and boundary
             /// conditions.
-            ContField2D(const ContField2D &In,
+            MULTI_REGIONS_EXPORT ContField2D(const ContField2D &In,
                         SpatialDomains::MeshGraph2D &graph2D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0,
@@ -86,17 +86,17 @@ namespace Nektar
 
             /// This constructor sets up global continuous field based on an
             /// input mesh and boundary conditions.
-            ContField2D(SpatialDomains::MeshGraph2D &graph2D,
+            MULTI_REGIONS_EXPORT ContField2D(SpatialDomains::MeshGraph2D &graph2D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable,
                         const GlobalSysSolnType solnType
                         = eDirectMultiLevelStaticCond);
 
             /// The copy constructor.
-            ContField2D(const ContField2D &In, bool DeclareCoeffPhysArrays = true);
+            MULTI_REGIONS_EXPORT ContField2D(const ContField2D &In, bool DeclareCoeffPhysArrays = true);
 
             /// The default destructor.
-            ~ContField2D();
+            MULTI_REGIONS_EXPORT ~ContField2D();
 
             /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$
             /// (implemented as #m_contCoeffs) containing all global expansion
@@ -160,7 +160,7 @@ namespace Nektar
             /// Performs the global forward transformation of a function
             /// \f$f(\boldsymbol{x})\f$, subject to the boundary conditions
             /// specified.
-            void FwdTrans(const Array<OneD, const NekDouble> &inarray,
+            MULTI_REGIONS_EXPORT void FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                 Array<OneD,      NekDouble> &outarray,
                           bool  UseContCoeffs = false);
 
@@ -172,14 +172,14 @@ namespace Nektar
                                   bool  UseContCoeffs = false);
 
             /// Multiply a solution by the inverse mass matrix.
-            void MultiplyByInvMassMatrix(
+            MULTI_REGIONS_EXPORT void MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,  NekDouble> &outarray,
                                 bool  UseContCoeffs = false);
 
             /// Solves the two-dimensional Laplace equation, subject to the
             /// boundary conditions specified.
-            void LaplaceSolve(const Array<OneD, const NekDouble> &inarray,
+            MULTI_REGIONS_EXPORT void LaplaceSolve(const Array<OneD, const NekDouble> &inarray,
                                     Array<OneD,       NekDouble> &outarray,
                               const Array<OneD, const NekDouble> &dirForcing
                                                         = NullNekDouble1DArray,
@@ -190,7 +190,7 @@ namespace Nektar
 
 
             /// Compute the eigenvalues of the linear advection operator.
-            void LinearAdvectionEigs(const NekDouble ax,
+            MULTI_REGIONS_EXPORT void LinearAdvectionEigs(const NekDouble ax,
                                      const NekDouble ay,
                                      Array<OneD, NekDouble> &Real,
                                      Array<OneD, NekDouble> &Imag,
@@ -235,55 +235,55 @@ namespace Nektar
 
 
             /// Solves the linear system specified by the key \a key.
-            void GlobalSolve(const GlobalLinSysKey &key,
+            MULTI_REGIONS_EXPORT void GlobalSolve(const GlobalLinSysKey &key,
                              const Array<OneD, const  NekDouble> &rhs,
                                    Array<OneD,        NekDouble> &inout,
                              const Array<OneD, const NekDouble> &dirForcing
                                                         = NullNekDouble1DArray);
 
             /// Returns the global matrix specified by \a mkey.
-            GlobalMatrixSharedPtr GetGlobalMatrix(const GlobalMatrixKey &mkey);
+            MULTI_REGIONS_EXPORT GlobalMatrixSharedPtr GetGlobalMatrix(const GlobalMatrixKey &mkey);
 
             /// Returns the linear system specified by the key \a mkey.
-            GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
+            MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
 
-            virtual int v_GetContNcoeffs() const;
+            MULTI_REGIONS_EXPORT virtual int v_GetContNcoeffs() const;
 
-            virtual void v_SetContCoeffsArray(Array<OneD, NekDouble> &inarray);
+            MULTI_REGIONS_EXPORT virtual void v_SetContCoeffsArray(Array<OneD, NekDouble> &inarray);
 
             /// Template method virtual forwarded for UpdateContCoeffs()
-            virtual Array<OneD, NekDouble> &v_UpdateContCoeffs();
+            MULTI_REGIONS_EXPORT virtual Array<OneD, NekDouble> &v_UpdateContCoeffs();
 
             /// Template method virtual forwarded for GetContCoeffs()
-            virtual const Array<OneD, const NekDouble> &v_GetContCoeffs() const;
+            MULTI_REGIONS_EXPORT virtual const Array<OneD, const NekDouble> &v_GetContCoeffs() const;
 
             /// Template method virtual forwarded for LocalToGlobal()
-            virtual void v_LocalToGlobal();
+            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal();
 
             /// Template method virtual forwarded for GlobalToLocal()
-            virtual void v_GlobalToLocal();
+            MULTI_REGIONS_EXPORT virtual void v_GlobalToLocal();
 
             /// Template method virtual forwarder for FwdTrans().
-            virtual void v_BwdTrans(
+            MULTI_REGIONS_EXPORT virtual void v_BwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
                                 bool  UseContCoeffs);
 
             /// Template method virtual forwarder for FwdTrans().
-            virtual void v_FwdTrans(
+            MULTI_REGIONS_EXPORT virtual void v_FwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
                                 bool  UseContCoeffs);
 
             /// Template method virtual forwarder for MultiplyByInvMassMatrix().
-            virtual void v_MultiplyByInvMassMatrix(
+            MULTI_REGIONS_EXPORT virtual void v_MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
                                 bool  UseContCoeffs);
 
             /// Solves the two-dimensional Helmholtz equation, subject to the
             /// boundary conditions specified.
-            virtual void v_HelmSolve(
+            MULTI_REGIONS_EXPORT virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
                           NekDouble lambda,
@@ -293,7 +293,7 @@ namespace Nektar
             /// Solves the two-dimensional Helmholtz equation, subject to the
             /// boundary conditions specified (Continuous Galerkin specific
             /// version).
-            virtual void v_HelmSolveCG(
+            MULTI_REGIONS_EXPORT virtual void v_HelmSolveCG(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
                           NekDouble lambda,
@@ -313,7 +313,7 @@ namespace Nektar
 
             // Solve the linear advection problem assuming that m_contCoeff
             // vector contains an intial estimate for solution
-            virtual void v_LinearAdvectionDiffusionReactionSolve(const Array<OneD, Array<OneD, NekDouble> > &velocity,
+            MULTI_REGIONS_EXPORT virtual void v_LinearAdvectionDiffusionReactionSolve(const Array<OneD, Array<OneD, NekDouble> > &velocity,
                                               const Array<OneD, const NekDouble> &inarray,
                                               Array<OneD, NekDouble> &outarray,
                                               const NekDouble lambda,
@@ -323,7 +323,7 @@ namespace Nektar
 
             // Solve the linear advection problem assuming that m_contCoeff
             // vector contains an intial estimate for solution
-            void v_LinearAdvectionReactionSolve(const Array<OneD, Array<OneD, NekDouble> > &velocity,
+            MULTI_REGIONS_EXPORT void v_LinearAdvectionReactionSolve(const Array<OneD, Array<OneD, NekDouble> > &velocity,
                                               const Array<OneD, const NekDouble> &inarray,
                                               Array<OneD, NekDouble> &outarray,
                                               const NekDouble lambda,
@@ -332,7 +332,7 @@ namespace Nektar
                                               dirForcing = NullNekDouble1DArray);
 
             /// Template method virtual forwarder for GetBndConditions().
-            virtual const Array<OneD,const SpatialDomains
+            MULTI_REGIONS_EXPORT virtual const Array<OneD,const SpatialDomains
                                 ::BoundaryConditionShPtr>& v_GetBndConditions();
         };
 

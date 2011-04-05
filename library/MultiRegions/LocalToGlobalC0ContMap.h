@@ -35,7 +35,7 @@
 
 #ifndef MULTIREGIONS_LOCALTOGLOBALC0CONTMAP_H
 #define MULTIREGIONS_LOCALTOGLOBALC0CONTMAP_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/LocalToGlobalBaseMap.h>
 #include <MultiRegions/ExpList1D.h>
@@ -58,17 +58,17 @@ namespace Nektar
         {
         public:
             /// Default constructor.
-            LocalToGlobalC0ContMap();
+            MULTI_REGIONS_EXPORT LocalToGlobalC0ContMap();
 
             /// General constructor for expansions of all dimensions without
             /// boundary conditions.
-            LocalToGlobalC0ContMap(const int numLocalCoeffs,
+            MULTI_REGIONS_EXPORT LocalToGlobalC0ContMap(const int numLocalCoeffs,
                                    const ExpList &locExp,
                                    const GlobalSysSolnType solnType);
 
             /// Constructor for the 1D expansion mappings with boundary
             /// conditions.
-            LocalToGlobalC0ContMap(const int numLocalCoeffs,
+            MULTI_REGIONS_EXPORT LocalToGlobalC0ContMap(const int numLocalCoeffs,
                                    const ExpList &locExp,
                                    const GlobalSysSolnType solnType,
                                    const Array<OneD, const LocalRegions::PointExpSharedPtr> &bndCondExp,
@@ -77,7 +77,7 @@ namespace Nektar
 
             /// Constructor for the 2D expansion mappings with boundary
             /// conditions.
-            LocalToGlobalC0ContMap(const int numLocalCoeffs,
+            MULTI_REGIONS_EXPORT LocalToGlobalC0ContMap(const int numLocalCoeffs,
                                    const ExpList &locExp,
                                    const GlobalSysSolnType solnType,
                                    const Array<OneD, const ExpList1DSharedPtr> &bndCondExp,
@@ -89,7 +89,7 @@ namespace Nektar
 
             /// Constructor for the 3D expansion mappings with boundary
             /// conditions.
-            LocalToGlobalC0ContMap(const int numLocalCoeffs,
+            MULTI_REGIONS_EXPORT LocalToGlobalC0ContMap(const int numLocalCoeffs,
                                    const ExpList &locExp,
                                    const GlobalSysSolnType solnType,
                                    const Array<OneD, const ExpList2DSharedPtr> &bndCondExp,
@@ -99,13 +99,13 @@ namespace Nektar
                                    const map<int,int>& periodicFacesId);
 
             /// Destructor.
-            ~LocalToGlobalC0ContMap();
+            MULTI_REGIONS_EXPORT ~LocalToGlobalC0ContMap();
 
 
             /** Construct optimal ordering a two-dimensional expansion
             /*  given a vector of boundary condition information
             */
-            int SetUp2DGraphC0ContMap(
+            MULTI_REGIONS_EXPORT int SetUp2DGraphC0ContMap(
                                        const ExpList  &locExp,
                                        const GlobalSysSolnType solnType,
                                        const Array<OneD, const MultiRegions::ExpList1DSharedPtr>  &bndCondExp,

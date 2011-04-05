@@ -41,7 +41,7 @@
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <SpatialDomains/MeshGraph.h>
-
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 class TiXmlElement;
 class TiXmlDocument;
 
@@ -54,12 +54,12 @@ namespace Nektar
         class History
         {
             public:
-                History(const MeshGraph *meshGraph);
-                void Read(std::string &infilename);
-                void Read(TiXmlDocument &doc);
+                SPATIAL_DOMAINS_EXPORT History(const MeshGraph *meshGraph);
+                SPATIAL_DOMAINS_EXPORT void Read(std::string &infilename);
+                SPATIAL_DOMAINS_EXPORT void Read(TiXmlDocument &doc);
 
-                int GetNumHistoryPoints() const;
-                VertexComponentSharedPtr GetHistoryPoint(int idx) const;
+                SPATIAL_DOMAINS_EXPORT int GetNumHistoryPoints() const;
+                SPATIAL_DOMAINS_EXPORT VertexComponentSharedPtr GetHistoryPoint(int idx) const;
 
             protected:
                 void ReadHistoryPoints(TiXmlElement *history);

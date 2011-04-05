@@ -782,9 +782,9 @@ namespace Nektar
 		  }
 		
 		c  = sqrt(1.0-gamma_1_2*VV);
-		rho[j]  = pow(c,1.0/gamma_1_2) * exp(-1);
-		rhou[j] = rho[j] * V * cos(theta)* exp(-1);
-		rhov[j] = rho[j] * V * sin(theta)* exp(-1);
+		rho[j]  = pow(c,1.0/gamma_1_2) * exp(-1.0);
+		rhou[j] = rho[j] * V * cos(theta)* exp(-1.0);
+		rhov[j] = rho[j] * V * sin(theta)* exp(-1.0);
 		P  = (c*c)*rho[j]/gamma;
 		E[j]  = P/(gamma-1.0) + 0.5*(rhou[j]*rhou[j]/rho[j]+rhov[j]*rhov[j]/rho[j]);
 		

@@ -147,6 +147,13 @@ namespace Nektar
 
         }
 
+        GlobalLinSysFactory& GetGlobalLinSysFactory()
+        {
+            typedef Loki::SingletonHolder<GlobalLinSysFactory,
+                Loki::CreateUsingNew,
+                Loki::NoDestroy > Type;
+            return Type::Instance();
+        }
 
         /**
          * Retrieves a the block matrix from n'th expansion using the matrix

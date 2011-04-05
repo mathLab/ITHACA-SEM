@@ -36,7 +36,7 @@
 
 #ifndef NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD3D_H
 #define NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD3D_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList3D.h>
 #include <MultiRegions/ExpList1D.h>
@@ -58,16 +58,16 @@ namespace Nektar
         {
         public:
             /// Default constructor
-            DisContField3D();
+            MULTI_REGIONS_EXPORT DisContField3D();
 
             /// Constructs a global discontinuous field based on an input mesh.
-            DisContField3D(SpatialDomains::MeshGraph3D &graph3D,
+            MULTI_REGIONS_EXPORT DisContField3D(SpatialDomains::MeshGraph3D &graph3D,
                            const GlobalSysSolnType solnType = eDirectStaticCond,
                            bool SetUpJustDG = true);
 
             /// Constructs a global discontinuous field based on an input mesh
             /// with boundary conditions.
-            DisContField3D(SpatialDomains::MeshGraph3D &graph3D,
+            MULTI_REGIONS_EXPORT DisContField3D(SpatialDomains::MeshGraph3D &graph3D,
                            SpatialDomains::BoundaryConditions &bcs,
                            const int bc_loc,
                            const GlobalSysSolnType solnType = eDirectStaticCond,
@@ -75,7 +75,7 @@ namespace Nektar
 
             /// Constructs a global discontinuous field based on an input mesh
             /// with boundary conditions.
-            DisContField3D(SpatialDomains::MeshGraph3D &graph3D,
+            MULTI_REGIONS_EXPORT DisContField3D(SpatialDomains::MeshGraph3D &graph3D,
                            SpatialDomains::BoundaryConditions &bcs,
                            const std::string variable,
                            const GlobalSysSolnType solnType = eDirectStaticCond,
@@ -90,10 +90,10 @@ namespace Nektar
 
             /// Constructs a global discontinuous field based on another
             /// discontinuous field.
-            DisContField3D(const DisContField3D &In);
+            MULTI_REGIONS_EXPORT DisContField3D(const DisContField3D &In);
 
             /// Destructor.
-            ~DisContField3D();
+            MULTI_REGIONS_EXPORT ~DisContField3D();
 
             inline const
                     Array<OneD,const MultiRegions::ExpList2DSharedPtr>&
@@ -105,7 +105,7 @@ namespace Nektar
 
             /// \brief Set up a list of element ids and edge ids the link to the
             /// boundary conditions
-            void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
+            MULTI_REGIONS_EXPORT void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                       Array<OneD,int> &FaceID);
 
         protected:

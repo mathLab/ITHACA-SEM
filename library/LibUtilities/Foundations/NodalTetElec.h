@@ -58,7 +58,7 @@ namespace Nektar
              cout << "****************Nodal Tet Elec distructor called **************************" << endl;
             }
 
-            static boost::shared_ptr<PointsBaseType> Create(const PointsKey &key);
+            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> Create(const PointsKey &key);
 
 
             const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey)
@@ -78,7 +78,8 @@ namespace Nektar
             }
 
             const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const Array<OneD, const NekDouble>& xi,
-                                                                const Array<OneD, const NekDouble>& yi, const Array<OneD, const NekDouble>& zi){
+                                                                const Array<OneD, const NekDouble>& yi, const Array<OneD, const NekDouble>& zi)
+            {
                     
                 Array<OneD, NekDouble> interp(GetTotNumPoints()*numpoints);
                 CalculateInterpMatrix(xi, yi, zi, interp);

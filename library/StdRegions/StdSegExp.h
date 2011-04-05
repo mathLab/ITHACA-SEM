@@ -38,6 +38,7 @@
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion1D.h>
+#include <StdRegions/StdRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -48,7 +49,7 @@ namespace Nektar
         {
         public:
             /** \brief Default constructor */
-            StdSegExp();
+            STD_REGIONS_EXPORT StdSegExp();
 
             /** \brief Constructor using BasisKey class for quadrature points and 
              *  order definition
@@ -56,13 +57,13 @@ namespace Nektar
              *  \param Ba BasisKey class definition containing order and quadrature 
              *  points.
              */
-            StdSegExp(const LibUtilities::BasisKey &Ba);
+            STD_REGIONS_EXPORT StdSegExp(const LibUtilities::BasisKey &Ba);
 
             /** \brief Copy Constructor */
-            StdSegExp(const StdSegExp &T);
+            STD_REGIONS_EXPORT StdSegExp(const StdSegExp &T);
 
             /** \brief Destructor */
-            ~StdSegExp();
+            STD_REGIONS_EXPORT ~StdSegExp();
 
             /** \brief Return Shape of region, using  ShapeType enum list.
              *  i.e. Segment
@@ -102,7 +103,7 @@ namespace Nektar
              *  \return returns \f$\int^1_{-1} u(\xi_1)d \xi_1 \f$ where \f$inarray[i]
              *  = u(\xi_{1i}) \f$
              */
-            NekDouble Integral(const Array<OneD, const NekDouble>& inarray);
+            STD_REGIONS_EXPORT NekDouble Integral(const Array<OneD, const NekDouble>& inarray);
 
 
             /** \brief Inner product of \a inarray over region with respect to the
@@ -129,14 +130,14 @@ namespace Nektar
                 IProductWRTBase(m_base[0]->GetDbdata(),inarray,outarray,1);
             }
 
-            void FillMode(const int mode, 
+            STD_REGIONS_EXPORT void FillMode(const int mode, 
                           Array<OneD, NekDouble> &outarray);
 
             //----------------------------------
             // Generate Matrix Routine
             //----------------------------------
 
-            DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey);
+            STD_REGIONS_EXPORT DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey);
 
             //-----------------------------
             // Differentiation Methods
@@ -150,7 +151,7 @@ namespace Nektar
              *  \param  outarray the resulting array of the derivative \f$
              *  du/d_{\xi_1}|_{\xi_{1i}} \f$ will be stored in the array \a outarra 
              */
-            void PhysDeriv(const Array<OneD, const NekDouble>& inarray, 
+            STD_REGIONS_EXPORT void PhysDeriv(const Array<OneD, const NekDouble>& inarray, 
                            Array<OneD, NekDouble> &out_d0,
                            Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
                            Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);   
@@ -201,7 +202,7 @@ namespace Nektar
              *  \param outarray: the resulting array of the values of the function at 
              *  the physical quadrature points will be stored in the array \a outarray
              */
-            void BwdTrans(const Array<OneD, const NekDouble>& inarray, Array<OneD, NekDouble> & outarray);
+            STD_REGIONS_EXPORT void BwdTrans(const Array<OneD, const NekDouble>& inarray, Array<OneD, NekDouble> & outarray);
 
             /** \brief Forward transform from physical quadrature space stored in 
              *  \a inarray and evaluate the expansion coefficients and store in 
@@ -221,25 +222,25 @@ namespace Nektar
              *
              *  \param outarray: the coeffficients of the expansion 
              */ 
-            void FwdTrans(const Array<OneD, const NekDouble>& inarray, Array<OneD, NekDouble> &outarray);
+            STD_REGIONS_EXPORT void FwdTrans(const Array<OneD, const NekDouble>& inarray, Array<OneD, NekDouble> &outarray);
 
-            void FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
+            STD_REGIONS_EXPORT void FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray, 
                                          Array<OneD, NekDouble> &outarray);
 
-            void GetBoundaryMap(Array<OneD, unsigned int>& outarray);
+            STD_REGIONS_EXPORT void GetBoundaryMap(Array<OneD, unsigned int>& outarray);
 
-            void GetInteriorMap(Array<OneD, unsigned int>& outarray);
+            STD_REGIONS_EXPORT void GetInteriorMap(Array<OneD, unsigned int>& outarray);
 
-            int GetVertexMap(const int localVertexId);
+            STD_REGIONS_EXPORT int GetVertexMap(const int localVertexId);
 
-            void GetCoords(Array<OneD, NekDouble> &coords_1);
+            STD_REGIONS_EXPORT void GetCoords(Array<OneD, NekDouble> &coords_1);
 
-            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
+            STD_REGIONS_EXPORT void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
 
-            void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
+            STD_REGIONS_EXPORT void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray);
 
-            void HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
+            STD_REGIONS_EXPORT void HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
                                    const double lambda);
 
@@ -265,7 +266,7 @@ namespace Nektar
              *  each basis over region will be stored in the array \a outarray as
              *  output of the function
              */
-            void IProductWRTBase(const Array<OneD, const NekDouble>& base, 
+            STD_REGIONS_EXPORT void IProductWRTBase(const Array<OneD, const NekDouble>& base, 
                                  const Array<OneD, const NekDouble>& inarray,
                                  Array<OneD, NekDouble> &outarray, 
                                  int coll_check);

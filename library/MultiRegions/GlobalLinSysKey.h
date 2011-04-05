@@ -35,7 +35,7 @@
 
 #ifndef NEKTAR_LIBS_MULTIREGIONS_GLOBALLINSYSKEY_H
 #define NEKTAR_LIBS_MULTIREGIONS_GLOBALLINSYSKEY_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/GlobalMatrixKey.h>
 
@@ -48,50 +48,51 @@ namespace Nektar
         {
         public:
             /// Default constructor.
-            GlobalLinSysKey()
+            MULTI_REGIONS_EXPORT GlobalLinSysKey()
             {
             }
+
             /// Linear system with no parameters.
-            GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+            MULTI_REGIONS_EXPORT GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap);
             /// Linear system with variable coefficients
-            GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+            MULTI_REGIONS_EXPORT GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const Array<OneD,Array<OneD,NekDouble> >& varcoeffs,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap);
             /// Linear system with a single real factor.
-            GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+            MULTI_REGIONS_EXPORT GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                             const NekDouble factor);
             /// Linear system with two real factors.
-            GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+            MULTI_REGIONS_EXPORT GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                             const NekDouble factor1,
                             const NekDouble factor2);
             /// Linear system with a real factor and variable coefficients.
-            GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+            MULTI_REGIONS_EXPORT GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                             const NekDouble factor,
                             const Array<OneD,Array<OneD,NekDouble> >& varcoeffs);
             /// Linear system with two real factors and variable coefficients.
-            GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+            MULTI_REGIONS_EXPORT GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                             const NekDouble factor1,
                             const NekDouble factor2, 
                             const Array<OneD,Array<OneD,NekDouble> >& varcoeffs);
              /// Linear system with an array of real factors, a second real
             /// factor and variable coefficients.
-            GlobalLinSysKey(const StdRegions::MatrixType matrixType,
+            MULTI_REGIONS_EXPORT GlobalLinSysKey(const StdRegions::MatrixType matrixType,
                             const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                             const Array<OneD,NekDouble> &factor1,
                             const NekDouble factor2, 
                             const Array<OneD,Array<OneD,NekDouble> >& varcoeffs);
             /// Copy constructor.
-            GlobalLinSysKey(const GlobalLinSysKey &key);
+            MULTI_REGIONS_EXPORT GlobalLinSysKey(const GlobalLinSysKey &key);
             /// Destructor.
-            ~GlobalLinSysKey();
+            MULTI_REGIONS_EXPORT ~GlobalLinSysKey();
 
             /// Less-than operator for GlobalLinSysKey comparison.
-            friend bool operator<(const GlobalLinSysKey &lhs, 
+            MULTI_REGIONS_EXPORT friend bool operator<(const GlobalLinSysKey &lhs, 
                                   const GlobalLinSysKey &rhs);
             /// Return the associated global matrix key.
             inline const GlobalMatrixKeySharedPtr& GetGlobalMatrixKey() const;
@@ -117,7 +118,6 @@ namespace Nektar
                                             GetVariableCoefficients() const;
 
         protected:
-
             /// Store the solution type associated with the linear system. This
             /// may be none, full matrix, static condensation or multi-level
             /// static condensation.
@@ -131,7 +131,7 @@ namespace Nektar
         };
 
         /// Writes information about the object to a given stream.
-        std::ostream& operator<<(std::ostream& os, const GlobalLinSysKey& rhs);
+        MULTI_REGIONS_EXPORT std::ostream& operator<<(std::ostream& os, const GlobalLinSysKey& rhs);
 
         inline const GlobalMatrixKeySharedPtr& 
                                     GlobalLinSysKey::GetGlobalMatrixKey() const

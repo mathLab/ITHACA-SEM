@@ -148,8 +148,7 @@ namespace Nektar
             {
                 #ifdef NEKTAR_MEMORY_POOL_ENABLED
                     data->~DataType();
-                    MemPool::Type::Instance().Deallocate(data,
-                                                         sizeof(DataType));
+                    GetMemoryPool().Deallocate(data, sizeof(DataType));
                 #else //NEKTAR_MEMORY_POOL_ENABLED
                     delete data;
                 #endif //NEKTAR_MEMORY_POOL_ENABLED
@@ -167,7 +166,7 @@ namespace Nektar
                 /// via Deallocate.
                 static DataType* Allocate()
                 {
-                    DataType* result = static_cast<DataType*>(MemPool::Type::Instance().Allocate(sizeof(DataType)));
+                    DataType* result = static_cast<DataType*>(GetMemoryPool().Allocate(sizeof(DataType)));
 
                     if( result )
                     {
@@ -177,7 +176,7 @@ namespace Nektar
                         }
                         catch(...)
                         {
-                            MemPool::Type::Instance().Deallocate(result,
+                            GetMemoryPool().Deallocate(result,
                                                               sizeof(DataType));
                             throw;
                         }
@@ -189,7 +188,7 @@ namespace Nektar
                 template<BOOST_PP_ENUM_PARAMS(i, typename Arg)> \
                 static DataType* methodName(BOOST_PP_ENUM_BINARY_PARAMS(i, Arg, & arg)) \
                 { \
-                    DataType* result = static_cast<DataType*>(MemPool::Type::Instance().Allocate(sizeof(DataType))); \
+                    DataType* result = static_cast<DataType*>(GetMemoryPool().Allocate(sizeof(DataType))); \
                     \
                     if( result ) \
                     { \
@@ -199,7 +198,7 @@ namespace Nektar
                         } \
                         catch(...) \
                         { \
-                            MemPool::Type::Instance().Deallocate(result, sizeof(DataType)); \
+                            GetMemoryPool().Deallocate(result, sizeof(DataType)); \
                             throw; \
                         } \
                     } \
@@ -291,7 +290,7 @@ namespace Nektar
             static DataType* RawAllocate(unsigned int NumberOfElements)
             {
                 #ifdef NEKTAR_MEMORY_POOL_ENABLED
-                    return static_cast<DataType*>(MemPool::Type::Instance().Allocate(sizeof(DataType)*NumberOfElements));
+                    return static_cast<DataType*>(GetMemoryPool().Allocate(sizeof(DataType)*NumberOfElements));
                 #else //NEKTAR_MEMORY_POOL_ENABLED
                     return static_cast<DataType*>(::operator new(NumberOfElements * sizeof(DataType)));
                 #endif //NEKTAR_MEMORY_POOL_ENABLED
@@ -307,7 +306,7 @@ namespace Nektar
             static void RawDeallocate(DataType* array, unsigned int NumberOfElements)
             {
                 #ifdef NEKTAR_MEMORY_POOL_ENABLED
-                    MemPool::Type::Instance().Deallocate(array, sizeof(DataType)*NumberOfElements);
+                    GetMemoryPool().Deallocate(array, sizeof(DataType)*NumberOfElements);
                 #else //NEKTAR_MEMORY_POOL_ENABLED
                     ::operator delete(array);
                 #endif //NEKTAR_MEMORY_POOL_ENABLED

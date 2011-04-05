@@ -37,6 +37,7 @@
 
 #include <MultiRegions/GlobalLinSysKey.h>
 #include <MultiRegions/GlobalLinSysDirect.h>
+#include <MultiRegions/MultiRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -66,18 +67,18 @@ namespace Nektar
             }
 
             /// Name of class
-            static std::string className;
+            MULTI_REGIONS_EXPORT static std::string className;
 
 
             /// Constructor for full direct matrix solve.
-            GlobalLinSysDirectStaticCond(
+            MULTI_REGIONS_EXPORT GlobalLinSysDirectStaticCond(
                         const GlobalLinSysKey &mkey,
                         const boost::shared_ptr<ExpList> &pExpList,
                         const boost::shared_ptr<LocalToGlobalBaseMap>
                                                                 &locToGloMap);
 
             /// Constructor for full direct matrix solve.
-            GlobalLinSysDirectStaticCond(
+            MULTI_REGIONS_EXPORT GlobalLinSysDirectStaticCond(
                         const GlobalLinSysKey &mkey,
                         const boost::shared_ptr<ExpList> &pExpList,
                         const DNekScalBlkMatSharedPtr pSchurCompl,
@@ -87,7 +88,7 @@ namespace Nektar
                         const boost::shared_ptr<LocalToGlobalBaseMap>
                                                                 &locToGloMap);
 
-            GlobalLinSysDirectStaticCond(
+            MULTI_REGIONS_EXPORT GlobalLinSysDirectStaticCond(
                         const DNekScalBlkMatSharedPtr pSchurCompl,
                         const DNekScalBlkMatSharedPtr pBinvD,
                         const DNekScalBlkMatSharedPtr pC,
@@ -95,11 +96,11 @@ namespace Nektar
                         const boost::shared_ptr<LocalToGlobalBaseMap>
                         &pLocToGloMap);
 
-            virtual ~GlobalLinSysDirectStaticCond();
+            MULTI_REGIONS_EXPORT virtual ~GlobalLinSysDirectStaticCond();
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
-            virtual void Solve(
+            MULTI_REGIONS_EXPORT virtual void Solve(
                         const Array<OneD, const NekDouble>  &in,
                               Array<OneD,       NekDouble>  &out,
                         const LocalToGlobalBaseMapSharedPtr &locToGloMap,

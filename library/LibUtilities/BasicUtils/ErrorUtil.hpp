@@ -38,11 +38,12 @@
 #include <iostream>
 #include <stdexcept>
 #include <boost/lexical_cast.hpp>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace ErrorUtil
 {
-    void SetErrorStream(std::ostream& o);
-    bool HasCustomErrorStream();
+    LIB_UTILITIES_EXPORT void SetErrorStream(std::ostream& o);
+    LIB_UTILITIES_EXPORT bool HasCustomErrorStream();
 
     enum ErrType
     {
@@ -56,9 +57,9 @@ namespace ErrorUtil
             NekError(const std::string& message) : std::runtime_error(message) {}
     };
         
-    void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level);
-    void Error(ErrType type, const char *routine, int lineNumber, const std::string& msg, unsigned int level);
-    void Error(ErrType type, const char *routine, int lineNumber, const char *msg);
+    LIB_UTILITIES_EXPORT void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level);
+    LIB_UTILITIES_EXPORT void Error(ErrType type, const char *routine, int lineNumber, const std::string& msg, unsigned int level);
+    LIB_UTILITIES_EXPORT void Error(ErrType type, const char *routine, int lineNumber, const char *msg);
     
     
 } // end of namespace

@@ -48,6 +48,7 @@
 //#include <LocalRegions/GenSegExp.h>
 
 #include <LocalRegions/Expansion2D.h>
+#include <LocalRegions/LocalRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -61,23 +62,23 @@ namespace Nektar
 
             /** \brief Constructor using BasisKey class for quadrature
                 points and order definition */
-            TriExp(const LibUtilities::BasisKey &Ba,
+            LOCAL_REGIONS_EXPORT TriExp(const LibUtilities::BasisKey &Ba,
                    const LibUtilities::BasisKey &Bb,
                    const SpatialDomains::TriGeomSharedPtr &geom);
 
             /// Copy Constructor
-            TriExp(const TriExp &T);
+            LOCAL_REGIONS_EXPORT TriExp(const TriExp &T);
 
             /// Destructor
-            ~TriExp();
+            LOCAL_REGIONS_EXPORT ~TriExp();
 
-            void GetCoords(Array<OneD,NekDouble> &coords_1,
+            LOCAL_REGIONS_EXPORT void GetCoords(Array<OneD,NekDouble> &coords_1,
                            Array<OneD,NekDouble> &coords_2,
                            Array<OneD,NekDouble> &coords_3 = NullNekDouble1DArray);
-            void GetCoord(const Array<OneD, const NekDouble>& Lcoords,
+            LOCAL_REGIONS_EXPORT void GetCoord(const Array<OneD, const NekDouble>& Lcoords,
                           Array<OneD,NekDouble> &coords);
 
-            void GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal,
+            LOCAL_REGIONS_EXPORT void GetSurfaceNormal(Array<OneD,NekDouble> &SurfaceNormal,
                                   const int k);
 
             const SpatialDomains::GeometrySharedPtr GetGeom() const
@@ -90,14 +91,14 @@ namespace Nektar
                 return m_geom;
             }
 
-            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
+            LOCAL_REGIONS_EXPORT void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
 
             //----------------------------
             // Integration Methods
             //----------------------------
 
             /// \brief Integrate the physical point list \a inarray over region
-            NekDouble Integral(const Array<OneD, const NekDouble> &inarray);
+            LOCAL_REGIONS_EXPORT NekDouble Integral(const Array<OneD, const NekDouble> &inarray);
 
             /**
                 \brief Calculate the inner product of inarray with respect to
@@ -162,16 +163,16 @@ namespace Nektar
             // Differentiation Methods
             //-----------------------------
 
-            void PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+            LOCAL_REGIONS_EXPORT void PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                            Array<OneD, NekDouble> &out_d0,
                            Array<OneD, NekDouble> &out_d1,
                            Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
 
-            void PhysDeriv(const int dir,
+            LOCAL_REGIONS_EXPORT void PhysDeriv(const int dir,
                            const Array<OneD, const NekDouble>& inarray,
                            Array<OneD, NekDouble> &outarray);
 
-            void PhysDirectionalDeriv(const Array<OneD, const NekDouble> &inarray,
+            LOCAL_REGIONS_EXPORT void PhysDirectionalDeriv(const Array<OneD, const NekDouble> &inarray,
                                       const Array<OneD, const Array<OneD, NekDouble> >& direction,
                                       Array<OneD, NekDouble> &out);
 
@@ -182,12 +183,12 @@ namespace Nektar
             /** \brief Forward transform from physical quadrature space
                 stored in \a inarray and evaluate the expansion coefficients and
                 store in \a (this)->_coeffs  */
-            void FwdTrans(const Array<OneD, const NekDouble> &inarray,
+            LOCAL_REGIONS_EXPORT void FwdTrans(const Array<OneD, const NekDouble> &inarray,
                           Array<OneD, NekDouble> &outarray);
 
-            void FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray,
+            LOCAL_REGIONS_EXPORT void FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray,
                                          Array<OneD, NekDouble> &outarray);
-            NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);
+            LOCAL_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);
 
             /** \brief Extract the physical values along edge \a edge
                 from \a inarray into \a outarray following the local
@@ -212,12 +213,12 @@ namespace Nektar
 
                 \param outarray is the output data
             */
-            void GetEdgePhysVals(const int edge,
+            LOCAL_REGIONS_EXPORT void GetEdgePhysVals(const int edge,
                                  const StdRegions::StdExpansion1DSharedPtr &EdgeExp,
                                  const Array<OneD, const NekDouble> &inarray,
                                  Array<OneD,NekDouble> &outarray);
 
-            StdRegions::StdExpansion1DSharedPtr GetEdgeExp(int edge, bool SetUpNormals=true);
+            LOCAL_REGIONS_EXPORT StdRegions::StdExpansion1DSharedPtr GetEdgeExp(int edge, bool SetUpNormals=true);
 
             void MassMatrixOp(const Array<OneD, const NekDouble> &inarray,
                               Array<OneD,NekDouble> &outarray,

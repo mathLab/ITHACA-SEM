@@ -39,6 +39,7 @@
 #include <math.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace Nektar
 {
@@ -53,7 +54,7 @@ namespace Nektar
             // for all number.
             struct opLess
             {
-                bool operator()(const BasisKey &lhs, const BasisKey &rhs) const;
+                LIB_UTILITIES_EXPORT  bool operator()(const BasisKey &lhs, const BasisKey &rhs) const;
             };
 
             /// Constructor
@@ -161,10 +162,10 @@ namespace Nektar
             }
 
             /// Determine if basis has exact integration for inner product.
-            bool ExactIprodInt() const;
+            LIB_UTILITIES_EXPORT bool ExactIprodInt() const;
 
             /// Determine if basis has collocation properties.
-            bool  Collocation() const;
+            LIB_UTILITIES_EXPORT  bool  Collocation() const;
 
             //Overloaded Operators
             friend bool operator  == (const BasisKey& x, const BasisKey& y);
@@ -174,8 +175,8 @@ namespace Nektar
             friend bool operator  != (const BasisKey* x, const BasisKey& y);
             friend bool operator  != (const BasisKey& x, const BasisKey *y);
 
-            friend bool operator<(const BasisKey &lhs, const BasisKey &rhs);
-            friend bool opLess::operator()( const BasisKey &lhs,
+            LIB_UTILITIES_EXPORT friend bool operator<(const BasisKey &lhs, const BasisKey &rhs);
+            LIB_UTILITIES_EXPORT friend bool opLess::operator()( const BasisKey &lhs,
                                             const BasisKey &rhs) const;
 
         protected:
@@ -320,7 +321,7 @@ namespace Nektar
                 return m_basisKey;
             }
 
-            virtual void Initialize();
+            LIB_UTILITIES_EXPORT virtual void Initialize();
 
         protected:
             BasisKey            m_basisKey; ///< Basis specification.
@@ -348,10 +349,10 @@ namespace Nektar
             void GenBasis();
         };
 
-        bool operator<(const BasisKey &lhs, const BasisKey &rhs);
-        bool operator>(const BasisKey &lhs, const BasisKey &rhs);
+        LIB_UTILITIES_EXPORT bool operator<(const BasisKey &lhs, const BasisKey &rhs);
+        LIB_UTILITIES_EXPORT bool operator>(const BasisKey &lhs, const BasisKey &rhs);
 
-        std::ostream& operator<<(std::ostream& os, const BasisKey& rhs);
+        LIB_UTILITIES_EXPORT std::ostream& operator<<(std::ostream& os, const BasisKey& rhs);
 
         typedef boost::shared_ptr<Basis> BasisSharedPtr;
         typedef std::vector< BasisSharedPtr > BasisVector;

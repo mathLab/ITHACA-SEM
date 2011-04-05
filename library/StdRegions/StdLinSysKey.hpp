@@ -52,15 +52,13 @@ namespace Nektar
               StdExpansion &stdExpansion):
         StdMatrixKey(matrixType,expansionType,stdExpansion)
          {
-         };
-;
+            }
 
             StdLinSysKey( MatrixType matrixType, ExpansionType expansionType, 
               StdExpansion &stdExpansion, LibUtilities::PointsType Ntype):
         StdMatrixKey(matrixType,expansionType,stdExpansion,Ntype)
          {
-         };
-;
+            }
         
             virtual ~StdLinSysKey()
             {

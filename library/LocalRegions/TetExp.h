@@ -45,6 +45,7 @@
 #include <LocalRegions/MatrixKey.h>
 
 #include <LocalRegions/Expansion3D.h>
+#include <LocalRegions/LocalRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -57,16 +58,16 @@ namespace Nektar
         public:
             /// Constructor using BasisKey class for quadrature points and
             /// order definition.
-            TetExp( const LibUtilities::BasisKey &Ba,
+            LOCAL_REGIONS_EXPORT TetExp( const LibUtilities::BasisKey &Ba,
                             const LibUtilities::BasisKey &Bb,
                             const LibUtilities::BasisKey &Bc,
                             const SpatialDomains::TetGeomSharedPtr &geom);
 
             /// Copy Constructor
-            TetExp(const TetExp &T);
+            LOCAL_REGIONS_EXPORT TetExp(const TetExp &T);
 
             /// Destructor
-            ~TetExp();
+            LOCAL_REGIONS_EXPORT ~TetExp();
 
         protected:
             /// Calculate the inner product of inarray with respect to the

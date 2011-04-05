@@ -35,7 +35,7 @@
 
 #ifndef NEKTAR_LIBS_MULTIREGIONS_CONTFIELD3D_H
 #define NEKTAR_LIBS_MULTIREGIONS_CONTFIELD3D_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/DisContField3D.h>
 #include <MultiRegions/ExpList2D.h>
@@ -53,14 +53,14 @@ namespace Nektar
         class ContField3D: public DisContField3D
         {
         public:
-            ContField3D();
+            MULTI_REGIONS_EXPORT ContField3D();
 
             /// Construct a global continuous field based on an input mesh.
-            ContField3D(SpatialDomains::MeshGraph3D &graph3D,
+            MULTI_REGIONS_EXPORT ContField3D(SpatialDomains::MeshGraph3D &graph3D,
                         const GlobalSysSolnType solnType
                                             = eDirectMultiLevelStaticCond);
 
-            ContField3D(SpatialDomains::MeshGraph3D &graph3D,
+            MULTI_REGIONS_EXPORT ContField3D(SpatialDomains::MeshGraph3D &graph3D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0,
                         const GlobalSysSolnType solnType
@@ -69,26 +69,26 @@ namespace Nektar
             /// Construct a global continuous field with solution type based on
             /// another field but using a separate input mesh and boundary
             /// conditions.
-            ContField3D(const ContField3D &In,
+            MULTI_REGIONS_EXPORT ContField3D(const ContField3D &In,
                         SpatialDomains::MeshGraph3D &graph3D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const int bc_loc = 0,
                         const GlobalSysSolnType solnType
                                             = eDirectMultiLevelStaticCond);
 
-            ContField3D(SpatialDomains::MeshGraph3D &graph3D,
+            MULTI_REGIONS_EXPORT ContField3D(SpatialDomains::MeshGraph3D &graph3D,
                         SpatialDomains::BoundaryConditions &bcs,
                         const std::string variable,
                         const GlobalSysSolnType solnType
                                             = eDirectMultiLevelStaticCond);
 
-            ContField3D(const ContField3D &In);
+            MULTI_REGIONS_EXPORT ContField3D(const ContField3D &In);
 
-            ~ContField3D();
+            MULTI_REGIONS_EXPORT ~ContField3D();
 
             /// Determines if another ContField2D shares the same boundary
             /// conditions as this field.
-            bool SameTypeOfBoundaryConditions(const ContField3D &In);
+            MULTI_REGIONS_EXPORT bool SameTypeOfBoundaryConditions(const ContField3D &In);
 
 
             inline const Array<OneD,const MultiRegions::ExpList2DSharedPtr>& GetBndCondExpansions()
@@ -100,7 +100,7 @@ namespace Nektar
             inline const Array<OneD,const MultiRegions::ExpList2DSharedPtr>
                     &GetBndCondExp();
 
-            void GenerateDirBndCondForcing(
+            MULTI_REGIONS_EXPORT void GenerateDirBndCondForcing(
                     const GlobalLinSysKey &key,
                     Array<OneD, NekDouble> &inout,
                     Array<OneD, NekDouble> &outarray);
@@ -136,7 +136,7 @@ namespace Nektar
             inline const LocalToGlobalC0ContMapSharedPtr& GetLocalToGlobalMap()
                                                                         const;
 
-            int GetGlobalMatrixNnz(const GlobalMatrixKey &gkey);
+            MULTI_REGIONS_EXPORT int GetGlobalMatrixNnz(const GlobalMatrixKey &gkey);
 
 
         protected:

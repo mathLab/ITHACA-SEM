@@ -37,7 +37,7 @@
 #define NEKTAR_LIB_STDREGIONS_OPTIMIZATIONPARAMETERSACCESS_H
 
 #include <StdRegions/ElementalOptimizationParameters.hpp>
-
+#include <StdRegions/StdRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -109,30 +109,30 @@ namespace Nektar
 
         // This is the global function which can be used by the user to load all the
         // optimisation parameters based on an input file
-        void LoadElementalOptimizationParameters(const std::string& fileName);
+        STD_REGIONS_EXPORT void LoadElementalOptimizationParameters(const std::string& fileName);
 
         // This class is merely an interface which collects all the different
         // loading routines
         class LoadOptimizationParametersInterface
         {
         private:
-            friend void LoadElementalOptimizationParameters(const std::string& fileName);
+                STD_REGIONS_EXPORT friend void LoadElementalOptimizationParameters(const std::string& fileName);
 
-            static void LoadElemental2DOptimizationParameters(const std::string& fileName);
+                STD_REGIONS_EXPORT static void LoadElemental2DOptimizationParameters(const std::string& fileName);
         };
 
         // This is the global function which can be used by the user to dump all the
         // optimisation parameters to a stream
-        void DumpElementalOptimizationParameters(std::ostream &outfile);
+        STD_REGIONS_EXPORT void DumpElementalOptimizationParameters(std::ostream &outfile);
 
         // This class is merely an interface which collects all the different
         // dumping routines
         class DumpOptimizationParametersInterface
         {
         private:
-            friend void DumpElementalOptimizationParameters(std::ostream &outfile);
+                STD_REGIONS_EXPORT friend void DumpElementalOptimizationParameters(std::ostream &outfile);
 
-            static void DumpElemental2DOptimizationParameters(std::ostream &outfile);
+                STD_REGIONS_EXPORT static void DumpElemental2DOptimizationParameters(std::ostream &outfile);
         };
 
     } // end of namespace

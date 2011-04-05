@@ -38,7 +38,7 @@
 
 #include <string>
 #include <map>
-
+#include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 class TiXmlElement;
@@ -65,10 +65,10 @@ namespace Nektar
                 }
 
                 /// Returns a const reference to the data.
-                inline const Array<OneD, const NekDouble> &GetPhys()  const;
+                SPATIAL_DOMAINS_EXPORT inline const Array<OneD, const NekDouble> &GetPhys()  const;
 
                 /// Returns a non-const reference to the data.
-                inline Array<OneD, NekDouble> &UpdatePhys();
+                SPATIAL_DOMAINS_EXPORT inline Array<OneD, NekDouble> &UpdatePhys();
 
             private:
                 /// Default constructor.
@@ -93,26 +93,26 @@ namespace Nektar
         {
             public:
                 /// Define a new set of spatially-dependent parameters.
-                SpatialParameters(const int nq);
+                SPATIAL_DOMAINS_EXPORT SpatialParameters(const int nq);
                 /// Copies an existing set of spatially-dependent parameters.
-                SpatialParameters(const SpatialParameters& src);
+                SPATIAL_DOMAINS_EXPORT SpatialParameters(const SpatialParameters& src);
 
                 /// Reads the set of parameters from an XML file.
-                void Read(std::string &infilename);
+                SPATIAL_DOMAINS_EXPORT void Read(std::string &infilename);
                 /// Reads the set of parameters from an XML document object.
-                void Read(TiXmlDocument &doc);
+                SPATIAL_DOMAINS_EXPORT void Read(TiXmlDocument &doc);
 
                 /// Evaluate all the parameters at each quadrature point.
-                void EvaluateParameters(
+                SPATIAL_DOMAINS_EXPORT void EvaluateParameters(
                         const Array<OneD, const NekDouble> x,
                         const Array<OneD, const NekDouble> y,
                         const Array<OneD, const NekDouble> z);
 
                 /// Determine if a named parameter is defined.
-                inline bool Exists(std::string name);
+                SPATIAL_DOMAINS_EXPORT inline bool Exists(std::string name);
 
                 /// Retrieve a single spatially-dependent parameter by name.
-                inline SpatialDataSharedPtr& GetData(std::string name);
+                SPATIAL_DOMAINS_EXPORT inline SpatialDataSharedPtr& GetData(std::string name);
 
             private:
                 /// Number of quadrature points in the domain.

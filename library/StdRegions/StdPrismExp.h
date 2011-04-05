@@ -38,7 +38,7 @@
 #define NEKTAR_LIB_STDREGIONS_STDPRISMEXP_H
 
 #include <StdRegions/StdExpansion3D.h>
-
+#include <StdRegions/StdRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -68,25 +68,25 @@ namespace Nektar
         
         public:
         
-            StdPrismExp();
+            STD_REGIONS_EXPORT StdPrismExp();
         
             /** \brief Constructor using BasisKey class for quadrature
              *    points and order definition 
              */
-            StdPrismExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc);
+            STD_REGIONS_EXPORT StdPrismExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc);
         
             /** \brief Constructor using BasisKey class for quadrature
              *  points and order definition where m_coeffs and m_phys are all
              *    set. 
              */
-            StdPrismExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc,
+            STD_REGIONS_EXPORT StdPrismExp(const LibUtilities::BasisKey &Ba, const LibUtilities::BasisKey &Bb, const LibUtilities::BasisKey &Bc,
                         double *coeffs, double *phys);
         
             /** \brief Copy Constructor */
-            StdPrismExp(const StdPrismExp &T);
+            STD_REGIONS_EXPORT StdPrismExp(const StdPrismExp &T);
         
             /** \brief Destructor */
-            ~StdPrismExp();
+            STD_REGIONS_EXPORT ~StdPrismExp();
         
             /** \brief Return Shape of region, using  ShapeType enum list.
              *  i.e. Prism 
@@ -96,7 +96,7 @@ namespace Nektar
                 return ePrism;
             }
                                                 
-            void GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
+            STD_REGIONS_EXPORT void GetFaceToElementMap(const int fid, const FaceOrientation faceOrient,
                                      Array<OneD, unsigned int> &maparray,
                                      Array<OneD, int> &signarray);
                                     
@@ -156,11 +156,11 @@ namespace Nektar
 
             }
 
-            NekDouble Integral3D(const Array<OneD, const NekDouble>& inarray, 
+            STD_REGIONS_EXPORT NekDouble Integral3D(const Array<OneD, const NekDouble>& inarray, 
                                  const Array<OneD, const NekDouble>& wx,
                                  const Array<OneD, const NekDouble>& wy,
                                  const Array<OneD, const NekDouble>& wz);
-            NekDouble Integral(const Array<OneD, const NekDouble>& inarray);
+            STD_REGIONS_EXPORT NekDouble Integral(const Array<OneD, const NekDouble>& inarray);
         
             /** \brief  Inner product of \a inarray over region with respect to the 
                 expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata() and return in \a outarray 
@@ -182,7 +182,7 @@ namespace Nektar
                 IProductWRTBase(m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata(),inarray,outarray);
             }
 
-            void PhysDeriv(const Array<OneD, const NekDouble>& u_physical, 
+            STD_REGIONS_EXPORT void PhysDeriv(const Array<OneD, const NekDouble>& u_physical, 
                            Array<OneD, NekDouble> &out_dxi1, 
                            Array<OneD, NekDouble> &out_dxi2,
                            Array<OneD, NekDouble> &out_dxi3 );
@@ -199,17 +199,17 @@ namespace Nektar
              *
              *  \b Note: That 'r' (base[2]) runs fastest in this element
              */
-            void BwdTrans(const Array<OneD, const NekDouble>& inarray, 
+            STD_REGIONS_EXPORT void BwdTrans(const Array<OneD, const NekDouble>& inarray, 
                           Array<OneD, NekDouble> &outarray);
-            void FwdTrans( const Array<OneD, const NekDouble>& inarray,  Array<OneD, NekDouble> &outarray);
+            STD_REGIONS_EXPORT void FwdTrans( const Array<OneD, const NekDouble>& inarray,  Array<OneD, NekDouble> &outarray);
 
             /** \brief Single Point Evaluation */
-            NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& xi);
+            STD_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& xi);
          
-            void GetCoords( Array<OneD, NekDouble> & xi_x, Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z);
-            void FillMode(const int mode, Array<OneD, NekDouble> &outarray);        
-            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
-            void WriteCoeffsToFile(std::ofstream &outfile);
+            STD_REGIONS_EXPORT void GetCoords( Array<OneD, NekDouble> & xi_x, Array<OneD, NekDouble> & xi_y, Array<OneD, NekDouble> & xi_z);
+            STD_REGIONS_EXPORT void FillMode(const int mode, Array<OneD, NekDouble> &outarray);        
+            STD_REGIONS_EXPORT void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
+            STD_REGIONS_EXPORT void WriteCoeffsToFile(std::ofstream &outfile);
                        
             DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey)
             {
@@ -244,7 +244,7 @@ namespace Nektar
 
             **/
             // Interior prism implementation based on Spen's book page 119. and 608.  
-            void IProductWRTBase(const Array<OneD, const NekDouble>& bx, 
+            STD_REGIONS_EXPORT void IProductWRTBase(const Array<OneD, const NekDouble>& bx, 
                                  const Array<OneD, const NekDouble>& by, 
                                  const Array<OneD, const NekDouble>& bz, 
                                  const Array<OneD, const NekDouble>& inarray, 

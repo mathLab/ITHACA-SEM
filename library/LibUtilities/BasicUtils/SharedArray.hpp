@@ -244,8 +244,8 @@ namespace Nektar
 
             template<typename T1, typename T2>
             friend bool operator==(const Array<OneD, T1>&, const Array<OneD, T2>&);
-            friend bool operator==(const Array<OneD, NekDouble>&, const Array<OneD, NekDouble>&);
-            friend bool IsEqual(const Array<OneD, const NekDouble>&,const Array<OneD, const NekDouble>&,NekDouble);
+            LIB_UTILITIES_EXPORT friend bool operator==(const Array<OneD, NekDouble>&, const Array<OneD, NekDouble>&);
+            LIB_UTILITIES_EXPORT friend bool IsEqual(const Array<OneD, const NekDouble>&,const Array<OneD, const NekDouble>&,NekDouble);
 
             /// \brief Creates an array with a specified offset.
             ///
@@ -370,8 +370,8 @@ namespace Nektar
 
             template<typename T>
             friend bool operator==(const Array<TwoD, T>&, const Array<TwoD, T>&);
-            friend bool operator==(const Array<TwoD, NekDouble>&, const Array<TwoD, NekDouble>&);
-            friend bool IsEqual(const Array<TwoD, const NekDouble>&,const Array<TwoD, const NekDouble>&,NekDouble);
+            LIB_UTILITIES_EXPORT friend bool operator==(const Array<TwoD, NekDouble>&, const Array<TwoD, NekDouble>&);
+            LIB_UTILITIES_EXPORT friend bool IsEqual(const Array<TwoD, const NekDouble>&,const Array<TwoD, const NekDouble>&,NekDouble);
 
             const_iterator begin() const { return m_data->begin(); }
             const_iterator end() const { return m_data->end(); }
@@ -705,10 +705,10 @@ namespace Nektar
 
     };
 
-    bool IsEqual(const Array<OneD, const NekDouble>& lhs,
+    LIB_UTILITIES_EXPORT bool IsEqual(const Array<OneD, const NekDouble>& lhs,
                  const Array<OneD, const NekDouble>& rhs,
                  NekDouble tol = NekConstants::kNekZeroTol);
-    bool operator==(const Array<OneD, NekDouble>& lhs, const Array<OneD, NekDouble>& rhs);
+    LIB_UTILITIES_EXPORT bool operator==(const Array<OneD, NekDouble>& lhs, const Array<OneD, NekDouble>& rhs);
 
     template<typename T1, typename T2>
     bool operator==(const Array<OneD, T1>& lhs, const Array<OneD, T2>& rhs)
@@ -783,10 +783,10 @@ namespace Nektar
     static Array<OneD, NekDouble> NullNekDouble1DArray;
     static Array<OneD, Array<OneD, NekDouble> > NullNekDoubleArrayofArray;
 
-    bool IsEqual(const Array<TwoD, const NekDouble>& lhs,
+    LIB_UTILITIES_EXPORT bool IsEqual(const Array<TwoD, const NekDouble>& lhs,
                  const Array<TwoD, const NekDouble>& rhs,
                  NekDouble tol = NekConstants::kNekZeroTol);
-    bool operator==(const Array<TwoD, NekDouble>& lhs, const Array<TwoD, NekDouble>& rhs) ;
+    LIB_UTILITIES_EXPORT bool operator==(const Array<TwoD, NekDouble>& lhs, const Array<TwoD, NekDouble>& rhs) ;
 
     template<typename DataType>
     bool operator==(const Array<TwoD, DataType>& lhs, const Array<TwoD, DataType>& rhs)

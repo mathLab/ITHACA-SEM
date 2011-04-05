@@ -50,7 +50,7 @@ namespace Nektar
         {
         }
 
-        void MeshGraph3D::ReadGeometry(std::string &infilename)
+        void MeshGraph3D::ReadGeometry(const std::string &infilename)
         {
             TiXmlDocument doc(infilename);
             bool loadOkay = doc.LoadFile();

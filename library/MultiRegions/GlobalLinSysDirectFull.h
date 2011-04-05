@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSDIRECTFULL_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSDIRECTFULL_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/GlobalLinSysDirect.h>
 
 namespace Nektar
@@ -49,6 +49,7 @@ namespace Nektar
         class GlobalLinSysDirectFull : public GlobalLinSysDirect
         {
         public:
+
             /// Creates an instance of this class
             static GlobalLinSysSharedPtr create(const GlobalLinSysKey &pLinSysKey,
                     const boost::shared_ptr<ExpList> &pExpList,
@@ -59,19 +60,19 @@ namespace Nektar
             }
 
             /// Name of class
-            static std::string className;
+            MULTI_REGIONS_EXPORT static std::string className;
 
             /// Constructor for full direct matrix solve.
-            GlobalLinSysDirectFull(const GlobalLinSysKey &pLinSysKey,
+            MULTI_REGIONS_EXPORT GlobalLinSysDirectFull(const GlobalLinSysKey &pLinSysKey,
                          const boost::shared_ptr<ExpList> &pExpList,
                          const boost::shared_ptr<LocalToGlobalBaseMap>
                                                                 &pLocToGloMap);
 
-            virtual ~GlobalLinSysDirectFull();
+            MULTI_REGIONS_EXPORT virtual ~GlobalLinSysDirectFull();
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
-            virtual void Solve( const Array<OneD, const NekDouble> &in,
+            MULTI_REGIONS_EXPORT virtual void Solve( const Array<OneD, const NekDouble> &in,
                               Array<OneD,       NekDouble> &out,
                         const LocalToGlobalBaseMapSharedPtr &locToGloMap,
                         const Array<OneD, const NekDouble> &dirForcing

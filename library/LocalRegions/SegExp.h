@@ -46,6 +46,7 @@
 #include <LocalRegions/MatrixKey.h>
 
 #include <LocalRegions/Expansion1D.h>
+#include <LocalRegions/LocalRegionsDeclspec.h>
 
 #include <fstream>
 
@@ -60,14 +61,14 @@ namespace Nektar
         public:
             /// Constructor using BasisKey class for quadrature points and
             /// order definition.
-            SegExp(const LibUtilities::BasisKey &Ba,
+            LOCAL_REGIONS_EXPORT SegExp(const LibUtilities::BasisKey &Ba,
                    const SpatialDomains::Geometry1DSharedPtr &geom);
 
             /// Copy Constructor
-            SegExp(const SegExp &S);
+            LOCAL_REGIONS_EXPORT SegExp(const SegExp &S);
 
             /// Destructor
-            ~SegExp();
+            LOCAL_REGIONS_EXPORT ~SegExp();
 
             /// Return Shape of region, using  ShapeType enum list. i.e. Segment
             StdRegions::ExpansionType DetExpansionType() const
@@ -77,14 +78,14 @@ namespace Nektar
 
             /// Returns the locations of the quadrature points in up to
             /// three-dimensions.
-            void GetCoords(Array<OneD,NekDouble> &coords_1,
+            LOCAL_REGIONS_EXPORT void GetCoords(Array<OneD,NekDouble> &coords_1,
                            Array<OneD,NekDouble> &coords_2
                                         = NullNekDouble1DArray,
                            Array<OneD,NekDouble> &coords_3
                                         = NullNekDouble1DArray);
 
             ///
-            void GetCoord(const Array<OneD, const NekDouble>& Lcoords,
+            LOCAL_REGIONS_EXPORT void GetCoord(const Array<OneD, const NekDouble>& Lcoords,
                                 Array<OneD,NekDouble> &coords);
 
 
@@ -110,7 +111,7 @@ namespace Nektar
             }
 
             /// Writes out the physical space data to file.
-            void WriteToFile(std::ofstream &outfile, 
+            LOCAL_REGIONS_EXPORT void WriteToFile(std::ofstream &outfile, 
                             OutputFormat format, 
                             const bool dumpVar = true, 
                             std::string var = "v");
@@ -121,7 +122,7 @@ namespace Nektar
             //----------------------------
 
             /// \brief Integrate the physical point list \a inarray over region
-            NekDouble Integral(const Array<OneD, const NekDouble>& inarray);
+            LOCAL_REGIONS_EXPORT NekDouble Integral(const Array<OneD, const NekDouble>& inarray);
 
             /** \brief  Inner product of \a inarray over region with respect to
                 the expansion basis (this)->_Base[0] and return in \a outarray
@@ -144,7 +145,7 @@ namespace Nektar
                 IProductWRTBase(m_base[0]->GetBdata(),inarray,outarray,1);
             }
 
-            void IProductWRTDerivBase(const int dir,
+            LOCAL_REGIONS_EXPORT void IProductWRTDerivBase(const int dir,
                                       const Array<OneD, const NekDouble>& inarray,
                                       Array<OneD, NekDouble> & outarray);
 
@@ -156,12 +157,12 @@ namespace Nektar
             /** \brief Evaluate the derivative \f$ d/d{\xi_1} \f$ at the
                 physical quadrature points given by \a inarray and return in \a
                 outarray. */
-            void PhysDeriv(const Array<OneD, const NekDouble>& inarray,
+            LOCAL_REGIONS_EXPORT void PhysDeriv(const Array<OneD, const NekDouble>& inarray,
                            Array<OneD,NekDouble> &out_d0,
                            Array<OneD,NekDouble> &out_d1 = NullNekDouble1DArray,
                            Array<OneD,NekDouble> &out_d2 = NullNekDouble1DArray);
 
-            void PhysDeriv(const int dir,
+            LOCAL_REGIONS_EXPORT void PhysDeriv(const int dir,
                            const Array<OneD, const NekDouble>& inarray,
                            Array<OneD, NekDouble> &outarray);
 
@@ -169,35 +170,35 @@ namespace Nektar
             // Evaluations Methods
             //---------------------------
 
-            void SetCoeffsToOrientation(StdRegions::EdgeOrientation dir);
+            LOCAL_REGIONS_EXPORT void SetCoeffsToOrientation(StdRegions::EdgeOrientation dir);
 
-            void SetCoeffsToOrientation(StdRegions::EdgeOrientation dir,
+            LOCAL_REGIONS_EXPORT void SetCoeffsToOrientation(StdRegions::EdgeOrientation dir,
                                         Array<OneD, const NekDouble> &inarray,
                                         Array<OneD, NekDouble> &outarray);
 
-            void ReverseCoeffsAndSign(const Array<OneD,NekDouble> &inarray,
+            LOCAL_REGIONS_EXPORT void ReverseCoeffsAndSign(const Array<OneD,NekDouble> &inarray,
                                       Array<OneD,NekDouble> &outarray);
 
             /** \brief Inverse Matrix Product */
-            void MultiplyByElmtInvMass(
+            LOCAL_REGIONS_EXPORT void MultiplyByElmtInvMass(
                             const Array<OneD, const NekDouble>& inarray,
                                   Array<OneD,NekDouble> &outarray);
 
             /** \brief Forward transform from physical quadrature space
                 stored in \a inarray and evaluate the expansion coefficients and
                 store in \a (this)->_coeffs  */
-            void FwdTrans(const Array<OneD, const NekDouble>& inarray,
+            LOCAL_REGIONS_EXPORT void FwdTrans(const Array<OneD, const NekDouble>& inarray,
                           Array<OneD,NekDouble> &outarray);
 
-            void FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray,
+            LOCAL_REGIONS_EXPORT void FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray,
                                          Array<OneD, NekDouble> &outarray);
 
-            NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coord);
+            LOCAL_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble>& coord);
 
-            void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
+            LOCAL_REGIONS_EXPORT void LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray);
 
-            void HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
+            LOCAL_REGIONS_EXPORT void HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
                                    const double lambda);
 

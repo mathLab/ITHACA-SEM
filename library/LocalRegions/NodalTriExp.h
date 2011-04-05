@@ -43,6 +43,7 @@
 #include <SpatialDomains/GeomFactors2D.h>
 
 #include <LocalRegions/MatrixKey.h>
+#include <LocalRegions/LocalRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -54,22 +55,22 @@ namespace Nektar
         public:
             /** \brief Constructor using BasisKey class for quadrature
                 points and order definition */
-            NodalTriExp(const LibUtilities::BasisKey &Ba,
+            LOCAL_REGIONS_EXPORT NodalTriExp(const LibUtilities::BasisKey &Ba,
                         const LibUtilities::BasisKey &Bb,
                         const LibUtilities::PointsType Ntype,
                         const SpatialDomains::TriGeomSharedPtr &geom);
             
             /// Copy Constructor
-            NodalTriExp(const NodalTriExp &T); 
+            LOCAL_REGIONS_EXPORT NodalTriExp(const NodalTriExp &T); 
             
             /// Destructor
-            ~NodalTriExp();
+            LOCAL_REGIONS_EXPORT ~NodalTriExp();
         
             
-            void GetCoords(Array<OneD,NekDouble> &coords_1,
+            LOCAL_REGIONS_EXPORT void GetCoords(Array<OneD,NekDouble> &coords_1,
                            Array<OneD,NekDouble> &coords_2, 
                            Array<OneD,NekDouble> &coords_3 = NullNekDouble1DArray);
-            void GetCoord(const Array<OneD, const NekDouble>& Lcoords, 
+            LOCAL_REGIONS_EXPORT void GetCoord(const Array<OneD, const NekDouble>& Lcoords, 
                           Array<OneD,NekDouble> &coords);
 
             const SpatialDomains::GeometrySharedPtr GetGeom() const
@@ -82,14 +83,14 @@ namespace Nektar
                 return m_geom;
             }
 
-            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
+            LOCAL_REGIONS_EXPORT void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
             
             //----------------------------
             // Integration Methods
             //----------------------------
             
             /// \brief Integrate the physical point list \a inarray over region
-            NekDouble Integral(const Array<OneD, const NekDouble> &inarray);
+            LOCAL_REGIONS_EXPORT NekDouble Integral(const Array<OneD, const NekDouble> &inarray);
             
             /** \brief  Inner product of \a inarray over region with respect to the
                 expansion basis (this)->_Base[0] and return in \a outarray */
@@ -130,7 +131,7 @@ namespace Nektar
             // Differentiation Methods
             //-----------------------------
             
-            void PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
+            LOCAL_REGIONS_EXPORT void PhysDeriv(const Array<OneD, const NekDouble> &inarray, 
                            Array<OneD, NekDouble> &out_d0,
                            Array<OneD, NekDouble> &out_d1,
                            Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);  
@@ -142,10 +143,10 @@ namespace Nektar
             /** \brief Forward transform from physical quadrature space
                 stored in \a inarray and evaluate the expansion coefficients and
                 store in \a (this)->_coeffs  */
-            void FwdTrans(const Array<OneD, const NekDouble> &inarray, 
+            LOCAL_REGIONS_EXPORT void FwdTrans(const Array<OneD, const NekDouble> &inarray, 
                           Array<OneD, NekDouble> &outarray);
             
-            NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);
+            LOCAL_REGIONS_EXPORT NekDouble PhysEvaluate(const Array<OneD, const NekDouble> &coord);
 
             void MassMatrixOp(const Array<OneD, const NekDouble> &inarray, 
                               Array<OneD,NekDouble> &outarray,

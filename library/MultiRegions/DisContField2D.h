@@ -36,7 +36,7 @@
 
 #ifndef NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD2D_H
 #define NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD2D_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ExpList1D.h>
@@ -54,27 +54,27 @@ namespace Nektar
         class DisContField2D: public ExpList2D
         {
         public:
-            DisContField2D();
+            MULTI_REGIONS_EXPORT DisContField2D();
 
-            DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
+            MULTI_REGIONS_EXPORT DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
                            const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
                            bool SetUpJustDG = true);
 
-            DisContField2D(const DisContField2D &In,
+            MULTI_REGIONS_EXPORT DisContField2D(const DisContField2D &In,
                            SpatialDomains::MeshGraph2D &graph2D,
                            SpatialDomains::BoundaryConditions &bcs,
                            const int bc_loc = 0,
                            bool SetUpJustDG = false,
                            bool DeclareCoeffPhysArrays = true);
 
-            DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
+            MULTI_REGIONS_EXPORT DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
                            SpatialDomains::BoundaryConditions &bcs,
                            const int bc_loc = 0,
                            const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
                            bool SetUpJustDG = true,
                            bool DeclareCoeffPhysArrays = true);
 
-            DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
+            MULTI_REGIONS_EXPORT DisContField2D(SpatialDomains::MeshGraph2D &graph2D,
                            SpatialDomains::BoundaryConditions &bcs,
                            const std::string variable,
                            const GlobalSysSolnType solnType = eDirectMultiLevelStaticCond,
@@ -82,9 +82,9 @@ namespace Nektar
                            bool DeclareCoeffPhysArrays = true);
 
 
-            DisContField2D(const DisContField2D &In, bool DeclareCoeffPhysArrays = true);
+            MULTI_REGIONS_EXPORT DisContField2D(const DisContField2D &In, bool DeclareCoeffPhysArrays = true);
 
-            ~DisContField2D();
+            MULTI_REGIONS_EXPORT ~DisContField2D();
 
             inline ExpList1DSharedPtr &GetTrace(void)
             {
@@ -98,9 +98,9 @@ namespace Nektar
 
             /// Determines if another ContField2D shares the same boundary
             /// conditions as this field.
-            bool SameTypeOfBoundaryConditions(const DisContField2D &In);
+            MULTI_REGIONS_EXPORT bool SameTypeOfBoundaryConditions(const DisContField2D &In);
 
-            GlobalLinSysSharedPtr GetGlobalBndLinSys(const GlobalLinSysKey &mkey);
+            MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GetGlobalBndLinSys(const GlobalLinSysKey &mkey);
 
             /**
              * \brief This method extracts the "forward" and
@@ -116,7 +116,7 @@ namespace Nektar
              * \return Updates  a NekDouble array \a Fwd and \a Bwd
              */
 
-            void GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd,
+            MULTI_REGIONS_EXPORT void GetFwdBwdTracePhys(Array<OneD,NekDouble> &Fwd,
                                     Array<OneD,NekDouble> &Bwd);
 
             /**
@@ -153,7 +153,7 @@ namespace Nektar
              *
              * \return Updates  a NekDouble array \a Fwd and \a Bwd
              */
-            void GetFwdBwdTracePhys(const Array<OneD,const NekDouble>  &field,
+            MULTI_REGIONS_EXPORT void GetFwdBwdTracePhys(const Array<OneD,const NekDouble>  &field,
                                     Array<OneD,NekDouble> &Fwd,
                                     Array<OneD,NekDouble> &Bwd);
 
@@ -163,7 +163,7 @@ namespace Nektar
             }
 
 
-            void ExtractTracePhys(Array<OneD,NekDouble> &outarray);
+            MULTI_REGIONS_EXPORT void ExtractTracePhys(Array<OneD,NekDouble> &outarray);
 
 
             /**
@@ -181,19 +181,19 @@ namespace Nektar
              * \return Updates a NekDouble array \a outarray which
              * contains the edge information
              */
-            void ExtractTracePhys(const Array<OneD, const NekDouble> &inarray,
+            MULTI_REGIONS_EXPORT void ExtractTracePhys(const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD, NekDouble> &outarray);
 
 
-            void AddTraceIntegral(const Array<OneD, const NekDouble> &Fx,
+            MULTI_REGIONS_EXPORT void AddTraceIntegral(const Array<OneD, const NekDouble> &Fx,
                                   const Array<OneD, const NekDouble> &Fy,
                                   Array<OneD, NekDouble> &outarray);
 
 
-            void AddTraceIntegral(const Array<OneD, const NekDouble> &Fn,
+            MULTI_REGIONS_EXPORT void AddTraceIntegral(const Array<OneD, const NekDouble> &Fn,
                                   Array<OneD, NekDouble> &outarray);
 
-            void AddTraceBiIntegral(const Array<OneD, const NekDouble> &Fwd,
+            MULTI_REGIONS_EXPORT void AddTraceBiIntegral(const Array<OneD, const NekDouble> &Fwd,
                                     const Array<OneD, const NekDouble> &Bwd,
                                     Array<OneD, NekDouble> &outarray);
 
@@ -210,18 +210,18 @@ namespace Nektar
 
             /// \brief Set up a list of element ids and edge ids the link to the
             /// boundary conditions
-            void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
+            MULTI_REGIONS_EXPORT void GetBoundaryToElmtMap(Array<OneD, int> &ElmtID,
                                       Array<OneD,int> &EdgeID);
 
-            NekDouble L2_DGDeriv(const int dir,
+            MULTI_REGIONS_EXPORT NekDouble L2_DGDeriv(const int dir,
                                  const Array<OneD, const NekDouble> &soln);
 
             /// \brief Set up an stl map containing the information
             /// for a robin aboundary condition in the location of the
             /// element id
-            map<int, RobinBCInfoSharedPtr> GetRobinBCInfo(void);
+            MULTI_REGIONS_EXPORT map<int, RobinBCInfoSharedPtr> GetRobinBCInfo(void);
 
-            void EvaluateHDGPostProcessing(Array<OneD, NekDouble> &outarray);
+            MULTI_REGIONS_EXPORT void EvaluateHDGPostProcessing(Array<OneD, NekDouble> &outarray);
 
             /// Generates a map of periodic edges in the mesh.
             void GetPeriodicEdges(

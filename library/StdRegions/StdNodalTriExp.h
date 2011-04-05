@@ -41,6 +41,7 @@
 #include <StdRegions/StdExpansion2D.h>
 #include <StdRegions/StdTriExp.h>
 #include <StdRegions/LocalRegionsDeclarations.hpp>
+#include <StdRegions/StdRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -50,17 +51,17 @@ namespace Nektar
         {            
         public:            
             //Constructors
-            StdNodalTriExp(void);
+            STD_REGIONS_EXPORT StdNodalTriExp(void);
             
-            StdNodalTriExp(const LibUtilities::BasisKey &Ba, 
+            STD_REGIONS_EXPORT StdNodalTriExp(const LibUtilities::BasisKey &Ba, 
                            const LibUtilities::BasisKey &Bb,
                            const LibUtilities::PointsType Ntype);
             
             //Copy Constructor
-            StdNodalTriExp(const StdNodalTriExp &T);
+            STD_REGIONS_EXPORT StdNodalTriExp(const StdNodalTriExp &T);
 
             //Destructor
-            ~StdNodalTriExp();
+            STD_REGIONS_EXPORT ~StdNodalTriExp();
 
             ExpansionType DetExpansionType() const
             {
@@ -71,16 +72,16 @@ namespace Nektar
             /// Nodal basis specific routines
             ///////////////////////////
 
-            void NodalToModal();
-            void NodalToModal(const Array<OneD, const NekDouble>& inarray, 
+            STD_REGIONS_EXPORT void NodalToModal();
+            STD_REGIONS_EXPORT void NodalToModal(const Array<OneD, const NekDouble>& inarray, 
                               Array<OneD, NekDouble> &outarray);
 
-            void NodalToModalTranspose();
-            void NodalToModalTranspose(const Array<OneD, const NekDouble>& inarray, 
+            STD_REGIONS_EXPORT void NodalToModalTranspose();
+            STD_REGIONS_EXPORT void NodalToModalTranspose(const Array<OneD, const NekDouble>& inarray, 
                                        Array<OneD, NekDouble> &outarray);
 
-            void ModalToNodal();
-            void ModalToNodal(const Array<OneD, const NekDouble>& inarray, 
+            STD_REGIONS_EXPORT void ModalToNodal();
+            STD_REGIONS_EXPORT void ModalToNodal(const Array<OneD, const NekDouble>& inarray, 
                               Array<OneD, NekDouble> &outarray);
 
             void GetNodalPoints(Array<OneD, const NekDouble> &x, 
@@ -128,9 +129,9 @@ namespace Nektar
             /** \brief Fill outarray with nodal mode \a mode of expansion
              *   and put in m_phys
              */
-            void FillMode(const int mode, Array<OneD, NekDouble> &outarray);
+            STD_REGIONS_EXPORT void FillMode(const int mode, Array<OneD, NekDouble> &outarray);
             
-            void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
+            STD_REGIONS_EXPORT void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
             
             //-----------------------------
             // Evaluations Methods
@@ -152,12 +153,12 @@ namespace Nektar
                 }      
             }
 
-            void FwdTrans(const Array<OneD, const NekDouble>& inarray,
+            STD_REGIONS_EXPORT void FwdTrans(const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
 
-            void GetBoundaryMap(Array<OneD, unsigned int>& outarray);
+            STD_REGIONS_EXPORT void GetBoundaryMap(Array<OneD, unsigned int>& outarray);
 
-            void GetInteriorMap(Array<OneD, unsigned int>& outarray);
+            STD_REGIONS_EXPORT void GetInteriorMap(Array<OneD, unsigned int>& outarray);
 
             int GetVertexMap(const int localVertexId)
             {
@@ -166,11 +167,11 @@ namespace Nektar
                 return localVertexId;
             }
  
-            void GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
+            STD_REGIONS_EXPORT void GetEdgeInteriorMap(const int eid, const EdgeOrientation edgeOrient,
                                     Array<OneD, unsigned int> &maparray,
                                     Array<OneD, int> &signarray);
 
-            void GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
+            STD_REGIONS_EXPORT void GetEdgeToElementMap(const int eid, const EdgeOrientation edgeOrient,
                                      Array<OneD, unsigned int> &maparray,
                                      Array<OneD, int> &signarray);
 
@@ -295,9 +296,9 @@ namespace Nektar
                 NodalToModalTranspose(outarray,outarray);
             }
                         
-            DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey);
+            STD_REGIONS_EXPORT DNekMatSharedPtr GenMatrix(const StdMatrixKey &mkey);
             
-            DNekMatSharedPtr GenNBasisTransMatrix();
+            STD_REGIONS_EXPORT DNekMatSharedPtr GenNBasisTransMatrix();
             
         private:
             

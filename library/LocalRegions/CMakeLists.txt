@@ -25,6 +25,7 @@ HexExp.h
 LinSys.hpp
 LocalRegions.h
 LocalRegions.hpp
+LocalRegionsDeclspec.h
 MatrixKey.h
 NodalTetExp.h
 NodalTriExp.h
@@ -39,13 +40,19 @@ TriExp.h
 
 
 SET(PrecompiledHeaderName LocalRegions/LocalRegions.h)
+
+ADD_DEFINITIONS(-DLOCAL_REGIONS_EXPORTS)
+
 ADD_NEKTAR_LIBRARY(LocalRegions ${NEKTAR_LIBRARY_TYPE} ${LOCAL_REGIONS_SOURCES} ${LOCAL_REGIONS_HEADERS})
 TARGET_LINK_LIBRARIES(LocalRegions
         optimized LibUtilities   debug LibUtilities-g
         optimized SpatialDomains debug SpatialDomains-g
         optimized StdRegions     debug StdRegions-g
         optimized tinyxml debug tinyxml
+        ${Boost_THREAD_LIBRARY}
+		${Boost_DATE_TIME_LIBRARY}
 	)
+SET_LAPACK_LINK_LIBRARIES(LocalRegions)
 
 SETUP_PRECOMPILED_HEADERS(LOCAL_REGIONS_SOURCES PrecompiledHeaderName)
 

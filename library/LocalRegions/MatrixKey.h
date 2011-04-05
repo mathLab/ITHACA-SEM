@@ -39,6 +39,7 @@
 #include <LocalRegions/LocalRegions.hpp>
 #include <StdRegions/StdMatrixKey.h>
 #include <SpatialDomains/GeomFactors.h>
+#include <LocalRegions/LocalRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -48,25 +49,25 @@ namespace Nektar
         class MatrixKey
         {
         public:
-            MatrixKey(const StdRegions::MatrixType matrixType, 
+            LOCAL_REGIONS_EXPORT MatrixKey(const StdRegions::MatrixType matrixType, 
                       const StdRegions::ExpansionType expansionType, 
                       const StdRegions::StdExpansion &stdExpansion,
                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
-            MatrixKey( StdRegions::MatrixType matrixType, 
+            LOCAL_REGIONS_EXPORT MatrixKey( StdRegions::MatrixType matrixType, 
                        StdRegions::ExpansionType expansionType, 
                        StdRegions::StdExpansion &stdExpansion,
                        double scalefactor,
                        LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
-            MatrixKey( StdRegions::MatrixType matrixType, 
+            LOCAL_REGIONS_EXPORT MatrixKey( StdRegions::MatrixType matrixType, 
                        StdRegions::ExpansionType expansionType, 
                        StdRegions::StdExpansion &stdExpansion,
                        double scalefactor,
                        double constant,
                        LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
-	    MatrixKey(StdRegions::MatrixType matrixType,
+            LOCAL_REGIONS_EXPORT MatrixKey(StdRegions::MatrixType matrixType,
 		      StdRegions::ExpansionType expansionType,
 		      StdRegions::StdExpansion &stdExpansion,
 		      NekDouble    scalefactor,
@@ -74,7 +75,7 @@ namespace Nektar
 		      const Array<OneD,const NekDouble>& varcoeffs,
                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
-	    MatrixKey(StdRegions::MatrixType matrixType,
+            LOCAL_REGIONS_EXPORT MatrixKey(StdRegions::MatrixType matrixType,
 		      StdRegions::ExpansionType expansionType,
 		      StdRegions::StdExpansion &stdExpansion,
 		      NekDouble    scalefactor,
@@ -83,7 +84,7 @@ namespace Nektar
 		      const Array<OneD,const NekDouble>& varcoeffs2,
                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
-	    MatrixKey(StdRegions::MatrixType matrixType,
+            LOCAL_REGIONS_EXPORT MatrixKey(StdRegions::MatrixType matrixType,
 		      StdRegions::ExpansionType expansionType,
 		      StdRegions::StdExpansion &stdExpansion,
 		      NekDouble    scalefactor,
@@ -91,19 +92,19 @@ namespace Nektar
 		      const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
-            MatrixKey(const StdRegions::MatrixType matrixType, 
+            LOCAL_REGIONS_EXPORT MatrixKey(const StdRegions::MatrixType matrixType, 
                       const StdRegions::ExpansionType expansionType, 
                       const StdRegions::StdExpansion &stdExpansion,
                       const Array<OneD,const NekDouble>& varcoeffs,
                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
 
-            MatrixKey(const StdRegions::MatrixType matrixType, 
+            LOCAL_REGIONS_EXPORT MatrixKey(const StdRegions::MatrixType matrixType, 
                       const StdRegions::ExpansionType expansionType, 
                       const StdRegions::StdExpansion &stdExpansion,
                       const Array<OneD, Array<OneD,const NekDouble> >& varcoeffs,
                       LibUtilities::PointsType nodalType = LibUtilities::eNoPointsType);
             
-            MatrixKey(const StdRegions::MatrixType matrixType, 
+            LOCAL_REGIONS_EXPORT MatrixKey(const StdRegions::MatrixType matrixType, 
                       const StdRegions::ExpansionType expansionType, 
                       const StdRegions::StdExpansion &stdExpansion,
                       const Array<OneD, NekDouble>& constants,
@@ -117,12 +118,12 @@ namespace Nektar
             /// Used to lookup the create function in NekManager.
             struct opLess
             {
-                bool operator()(const MatrixKey &lhs, const MatrixKey &rhs) const;
+                LOCAL_REGIONS_EXPORT bool operator()(const MatrixKey &lhs, const MatrixKey &rhs) const;
             };
 
             /// Used for finding value given the key in NekManager.
-            friend bool operator<(const MatrixKey &lhs, const MatrixKey &rhs);
-            friend bool opLess::operator()(const MatrixKey &lhs, 
+            LOCAL_REGIONS_EXPORT friend bool operator<(const MatrixKey &lhs, const MatrixKey &rhs);
+            LOCAL_REGIONS_EXPORT friend bool opLess::operator()(const MatrixKey &lhs, 
                 const MatrixKey &rhs) const;
 
             StdRegions::MatrixType GetMatrixType() const
@@ -214,7 +215,7 @@ namespace Nektar
         private:
         };
 
-        std::ostream& operator<<(std::ostream& os, const MatrixKey& rhs);
+        LOCAL_REGIONS_EXPORT std::ostream& operator<<(std::ostream& os, const MatrixKey& rhs);
 
     } // end of namespace
 } // end of namespace

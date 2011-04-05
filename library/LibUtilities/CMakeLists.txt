@@ -94,14 +94,19 @@ SET(BasicUtils
     ./BasicUtils/NekFactory.hpp
     ./BasicUtils/NekPtr.hpp
     ./BasicUtils/OperatorGenerators.hpp
+    ./BasicUtils/Timer.h
+    ./BasicUtils/Timer.cpp
     ./BasicUtils/RawType.hpp
     ./BasicUtils/SharedArray.hpp
     ./BasicUtils/Vmath.hpp
     ./BasicUtils/VmathArray.hpp
     ./BasicUtils/Metis.hpp
+    ./BasicUtils/XmlUtil.h
+    ./BasicUtils/XmlUtil.cpp
 )
 
 SET(Memory
+	./Memory/ThreadSpecificPool.cpp	
 	./Memory/ThreadSpecificPool.hpp
 	./Memory/NekMemoryManager.hpp	
 	./Memory/DeleteNothing.hpp
@@ -159,6 +164,11 @@ SET(TimeIntegrationHeaders
 SET(TimeIntegrationSources
         ./TimeIntegration/TimeIntegrationScheme.cpp
 ) 
+
+SET(BaseHeaders
+	LibUtilitiesDeclspec.h
+)
+
 SOURCE_GROUP("Basic Const" FILES ${BasicConstHeaders})
 SOURCE_GROUP("Basic Utils" FILES ${BasicUtils})
 SOURCE_GROUP("Expression Templates" FILES ${ExpressionTemplates})
@@ -182,6 +192,7 @@ SOURCE_GROUP("Kernel Sources" FILES ${KernelSources})
 
 SOURCE_GROUP("TimeIntegration Headers" FILES ${TimeIntegrationHeaders})
 SOURCE_GROUP("TimeIntegration Sources" FILES ${TimeIntegrationSources})
+SOURCE_GROUP("Base" FILES ${BaseHeaders})
 
 SET(LibUtilityHeaders
 	${Memory}
@@ -195,6 +206,7 @@ SET(LibUtilityHeaders
 	${PrecompiledHeaders}
 	${KernelHeaders}
         ${TimeIntegrationHeaders}
+    ${BaseHeaders}
 )
 
 SET(LibUtilitySources
@@ -207,8 +219,14 @@ SET(LibUtilitySources
 )
 
 
+ADD_DEFINITIONS(-DLIB_UTILITIES_EXPORTS)
 ADD_NEKTAR_LIBRARY(LibUtilities ${NEKTAR_LIBRARY_TYPE} ${LibUtilitySources} ${LibUtilityHeaders})
 
+TARGET_LINK_LIBRARIES(LibUtilities
+	${Boost_THREAD_LIBRARY}
+	${Boost_DATE_TIME_LIBRARY}
+)
+SET_LAPACK_LINK_LIBRARIES(LibUtilities)
 SET(PrecompiledHeaderName LibUtilities/LibUtilities.h)
 SETUP_PRECOMPILED_HEADERS(LibUtilitySources PrecompiledHeaderName)
 
@@ -223,4 +241,4 @@ INSTALL(FILES ${BasicUtils} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Basic
 INSTALL(FILES ${Memory} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Memory)
 INSTALL(FILES ${KernelHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Kernel)
 INSTALL(FILES ${TimeIntegrationHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/TimeIntegration)
-
+INSTALL(FILES ${BaseHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities)

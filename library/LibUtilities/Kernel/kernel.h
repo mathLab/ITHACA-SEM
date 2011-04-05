@@ -37,6 +37,7 @@
 #define NEKTAR_LIB_UTILIITIES_KERNEL_KERNEL_H
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace Nektar
 {
@@ -48,9 +49,9 @@ namespace Nektar
 			/**
 			 * \brief The default constructor
 			 */
-			Kernel();
+			LIB_UTILITIES_EXPORT Kernel();
 
-			Kernel(int order);
+			LIB_UTILITIES_EXPORT Kernel(int order);
 
 			/**
 			 * \brief The default destructor
@@ -60,18 +61,18 @@ namespace Nektar
 			/**
 			 * \brief This funciton updates the bspline to the appropriate order.
 			 */
-			void UpdateKernelBspline();
+			LIB_UTILITIES_EXPORT void UpdateKernelBspline();
 
 			/**
 			 * \brief This funciton updates the kernel coefficients.
 			 */
-			void UpdateKernelCoeffs();
+			LIB_UTILITIES_EXPORT void UpdateKernelCoeffs();
 
 			/**
 			 * \brief This funciton updates the kernel breaks.
 			 * \param h represents the mesh spacing
 			 */
-			void UpdateKernelBreaks(double h);
+			LIB_UTILITIES_EXPORT void UpdateKernelBreaks(double h);
 
 			/**
 			 * \brief This funciton returns a 2D array representing the bspline
@@ -151,7 +152,7 @@ namespace Nektar
 			   \param x_value.
 			   \param outarray is used to store the result
 			 */
-			void MoveKernelCenter(double x_value, Array<OneD,NekDouble> &outarray);
+			LIB_UTILITIES_EXPORT void MoveKernelCenter(double x_value, Array<OneD,NekDouble> &outarray);
 
 			/**
 			 * \brief This funciton calculates the mesh breaks under the kernel support
@@ -159,7 +160,7 @@ namespace Nektar
 			   \param h is the mesh spacing
 			   \param outarray contains the coordinate of the mesh breaks under the kernel support
 			 */
-			void FindMeshUnderKernel(Array<OneD,NekDouble> &inarray, double h,
+			LIB_UTILITIES_EXPORT void FindMeshUnderKernel(Array<OneD,NekDouble> &inarray, double h,
 									 Array<OneD,NekDouble> &outarray);
 
 			/**
@@ -168,7 +169,7 @@ namespace Nektar
 			   \param h is the mesh spacing.
 			   \param outarray contains the kernel values
 			 */
-			void EvaluateKernel(Array<OneD,NekDouble> inarray,double h,
+			LIB_UTILITIES_EXPORT void EvaluateKernel(Array<OneD,NekDouble> inarray,double h,
 								Array<OneD,NekDouble> &outarray);
 
 			/**
@@ -178,7 +179,7 @@ namespace Nektar
 			   \param offset
 			   \param outarray              contains the bspline values.
 			 */
-			void EvaluateBspline(Array<OneD,NekDouble> inarray, double h,
+			LIB_UTILITIES_EXPORT void EvaluateBspline(Array<OneD,NekDouble> inarray, double h,
 								 double offset, Array<OneD,NekDouble> &outarray);
 
 
@@ -186,7 +187,7 @@ namespace Nektar
 			 * \brief This funciton performs the ordered merge of \param inarray1
 			 * and \param inarray2 and puts the result in \param outarray
 			 */
-			void Sort(Array<OneD,NekDouble> &inarray1, Array<OneD,NekDouble> &inarray2,
+			LIB_UTILITIES_EXPORT void Sort(Array<OneD,NekDouble> &inarray1, Array<OneD,NekDouble> &inarray2,
 					  Array<OneD,NekDouble> &outarray);
 
 		protected:

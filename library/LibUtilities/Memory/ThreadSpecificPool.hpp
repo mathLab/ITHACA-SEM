@@ -45,6 +45,7 @@
 #include <loki/Singleton.h>
 #include <map>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 
 #include <cstring>
 
@@ -141,9 +142,6 @@ namespace Nektar
     class MemPool
     {
         public:
-            typedef Loki::SingletonHolder<MemPool ,
-                Loki::CreateUsingNew,
-                Loki::NoDestroy > Type;
             typedef std::map<unsigned int, boost::shared_ptr<detail::ThreadSpecificPool> > PoolMapType;
             
         public:
@@ -231,6 +229,8 @@ namespace Nektar
             std::map<unsigned int, boost::shared_ptr<detail::ThreadSpecificPool> > m_pools;
             unsigned int m_upperBound;
     };
+
+    LIB_UTILITIES_EXPORT MemPool& GetMemoryPool();
 
 }
 

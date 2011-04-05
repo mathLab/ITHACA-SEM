@@ -113,6 +113,11 @@ namespace Nektar
 			       const Array<OneD,int> ExpOrder, 
 			       const Array<OneD,NekDouble> CFLDG, NekDouble timeCFL);
 
+    virtual void v_SetInitialConditions(NekDouble initialtime = 0.0,
+					bool dumpInitialConditions = true)
+    {
+    }
+
     void GetVelocityVector(const Array<OneD, Array<OneD, NekDouble> > &physfield,
 			   Array<OneD, Array<OneD, NekDouble> > &velocity);
     

@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALMATRIX_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALMATRIX_H
-
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 
 namespace Nektar
@@ -49,7 +49,7 @@ namespace Nektar
             typedef std::map< CoordType, NekDouble > COOMatType;
 
             /// Construct a new matrix.
-            GlobalMatrix(unsigned int rows,
+            MULTI_REGIONS_EXPORT GlobalMatrix(unsigned int rows,
                          unsigned int columns,
                          const COOMatType &cooMat);
 
@@ -60,7 +60,7 @@ namespace Nektar
             }
 
             /// Perform a matrix-vector multiply.
-            void Multiply(const Array<OneD,const NekDouble> &in,
+            MULTI_REGIONS_EXPORT void Multiply(const Array<OneD,const NekDouble> &in,
                                 Array<OneD,      NekDouble> &out);
 
         private:

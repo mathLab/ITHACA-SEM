@@ -51,6 +51,8 @@ namespace Nektar
         public:
             #ifdef _WIN32
                 typedef LARGE_INTEGER CounterType;
+            #elif  defined(__APPLE__)
+                typedef timeval CounterType;
             #else
                 typedef timespec CounterType;
             #endif

@@ -12,18 +12,15 @@ namespace Nektar
 
     Timer::~Timer()
     {
-        #ifdef _WIN32
-            QueryPerformanceFrequency(&m_resolution);
-        #else
-            clock_getres(CLOCK_REALTIME, &m_resolution);
-        #endif
     }
 
     void Timer::Start()
     {
         #ifdef _WIN32
             QueryPerformanceCounter(&m_start);
-        #else
+        #elif defined(__APPLE__)
+            gettimeofday(&m_start, 0);
+        #else 
             clock_gettime(CLOCK_REALTIME, &m_start);
         #endif
     }
@@ -32,7 +29,9 @@ namespace Nektar
     {
         #ifdef _WIN32
             QueryPerformanceCounter(&m_end);
-        #else
+        #elif defined(__APPLE__)
+            gettimeofday(&m_end, 0);
+        #else 
             clock_gettime(CLOCK_REALTIME, &m_end);
         #endif
     }
@@ -42,6 +41,19 @@ namespace Nektar
         #ifdef _WIN32
             CounterType result;
             result.QuadPart = m_end.QuadPart - m_start.QuadPart;
+            return result;
+        #elif defined(__APPLE__)
+            CounterType result = m_end;
+            
+            if( result.tv_usec < m_start.tv_usec) 
+            {
+                result.tv_sec -= 1;
+                result.tv_usec += 1000000;
+            }
+            
+            result.tv_sec -= m_start.tv_sec;
+            result.tv_usec -= m_start.tv_usec;
+            
             return result;
         #else
             CounterType result = m_end;
@@ -65,6 +77,11 @@ namespace Nektar
             CounterType frequency;
             QueryPerformanceFrequency(&frequency);
             return Elapsed().QuadPart/static_cast<double>(n) * 1.0/frequency.QuadPart;
+        #elif defined(__APPLE__)
+            CounterType elapsed = Elapsed();
+            double result = elapsed.tv_sec/static_cast<double>(n) +
+                ( elapsed.tv_usec/static_cast<double>(n) * 1.0e-6);
+            return result;
         #else
             CounterType elapsed = Elapsed();
             double result = elapsed.tv_sec/static_cast<double>(n) +

@@ -2090,6 +2090,23 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
+		
+		void ExpList::v_PhysDerivHomo(const Array<OneD, const NekDouble> &inarray,
+									  Array<OneD, NekDouble> &out_d0,
+									  Array<OneD, NekDouble> &out_d1, 
+									  Array<OneD, NekDouble> &out_d2, bool UseContCoeffs)
+		{
+			ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+		}
+		
+		void ExpList::v_PhysDerivHomo(const int dir,
+									  const Array<OneD, const NekDouble> &inarray,
+									  Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
+		{
+			ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+		}
 
 
 

@@ -293,6 +293,20 @@ namespace Nektar
             inline void GetCoords(Array<OneD, NekDouble> &coord_0,
                                   Array<OneD, NekDouble> &coord_1 = NullNekDouble1DArray,
                                   Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
+			
+			
+			/// This function calculates the 3 gradient's components of a variable.
+			/// The variable is supplied in physical space and the routine has been implemented
+			/// to work out the gradient in case of one ore more homogeneous directions.
+			/// The spatial derivate along homogenous directions is performaed in the wave-space.
+			inline void PhysDerivHomo(const Array<OneD, const NekDouble> &inarray,
+									  Array<OneD, NekDouble> &out_d0,
+									  Array<OneD, NekDouble> &out_d1, 
+									  Array<OneD, NekDouble> &out_d2, bool UseContCoeffs);
+			
+			inline void PhysDerivHomo(const int dir,
+                                      const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
 
             /// This function calculates Surface Normal vector of a smooth
             /// manifold.
@@ -923,6 +937,18 @@ namespace Nektar
                                      Array<OneD, NekDouble> &coord_1,
                                      Array<OneD, NekDouble> &coord_2                                                 = NullNekDouble1DArray);
 
+			
+			virtual void v_PhysDerivHomo(const Array<OneD, const NekDouble> &inarray,
+										 Array<OneD, NekDouble> &out_d0,
+										 Array<OneD, NekDouble> &out_d1, 
+										 Array<OneD, NekDouble> &out_d2, bool UseContCoeffs);
+			
+			
+			virtual void v_PhysDerivHomo(const int dir,
+                                         const Array<OneD, const NekDouble> &inarray,
+                                         Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
+			
+			
             virtual void v_SetUpPhysNormals(
                                             const StdRegions::StdExpansionVector &locexp);
 
@@ -1275,6 +1301,27 @@ namespace Nektar
             v_GetCoords(coord_0,coord_1,coord_2);
         }
 
+		/**
+		 *
+		 */
+		inline void ExpList::PhysDerivHomo(const Array<OneD, const NekDouble> &inarray,
+										   Array<OneD, NekDouble> &out_d0,
+										   Array<OneD, NekDouble> &out_d1, 
+										   Array<OneD, NekDouble> &out_d2, bool UseContCoeffs)
+		{
+			v_PhysDerivHomo(inarray,out_d0,out_d1,out_d2,UseContCoeffs);
+		}
+		
+		/**
+		 *
+		 */
+		inline void ExpList::PhysDerivHomo(const int dir,
+								           const Array<OneD, const NekDouble> &inarray,
+								           Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
+		{
+			v_PhysDerivHomo(dir,inarray,out_d,UseContCoeffs);
+		}
+		
         /**
          * @param   eid         The index of the element to be checked.
          * @return  The dimension of the coordinates of the specific element.

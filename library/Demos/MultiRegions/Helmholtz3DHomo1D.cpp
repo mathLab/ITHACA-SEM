@@ -71,10 +71,11 @@ int main(int argc, char *argv[])
     int bc_val = 0;
     int nplanes = 8;
     NekDouble lz     = bcs.GetParameter("Lz");
+	bool useFFT = false;
     const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::eFourierEvenlySpaced);
     const LibUtilities::BasisKey Bkey(LibUtilities::eFourier,nplanes,Pkey);
     Exp = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-        ::AllocateSharedPtr(Bkey,lz,graph2D,bcs,bc_val,SolnType);
+        ::AllocateSharedPtr(Bkey,lz,useFFT,graph2D,bcs,bc_val,SolnType);
     //----------------------------------------------
 
     //----------------------------------------------

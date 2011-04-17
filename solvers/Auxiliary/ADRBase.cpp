@@ -94,6 +94,62 @@ namespace Nektar
         m_sessionName = fileNameString;
         m_sessionName = m_sessionName.substr(0,
                                 m_sessionName.find_last_of("."));
+		
+		// Setting parameteres for homogenous problems
+		m_Homogeneous1D = false;
+		m_Homogeneous2D = false;
+		m_Homogeneous3D = false;
+		
+		m_HomoDirec = 0;
+		
+		if(m_boundaryConditions->CheckForParameter("HomModesZ"))
+		{
+			m_Homogeneous1D = true;
+			m_Homogeneous2D = false;
+			m_Homogeneous3D = false;
+		    m_npointsZ      = m_boundaryConditions->GetParameter("HomModesZ");
+			m_LhomZ         = m_boundaryConditions->GetParameter("LZ");
+			m_HomoDirec = 1;
+			m_spacedim = 3;
+		}
+		
+		if(m_boundaryConditions->CheckForParameter("HomModesX"))
+		{
+			if(m_boundaryConditions->CheckForParameter("HomModesZ"))
+			{
+				m_Homogeneous1D = false;
+				m_Homogeneous2D = true;
+				m_Homogeneous3D = false;
+				m_npointsX      = m_boundaryConditions->GetParameter("HomModesX");
+				m_LhomX         = m_boundaryConditions->GetParameter("LX");
+				m_HomoDirec = 2;
+				m_spacedim = 3;
+			}
+		}
+		
+		if(m_boundaryConditions->CheckForParameter("HomModesX"))
+		{
+			if(m_boundaryConditions->CheckForParameter("HomModesY")) 
+			{
+				if(m_boundaryConditions->CheckForParameter("HomModesZ"))
+				{
+					m_Homogeneous1D = false;
+					m_Homogeneous2D = false;
+					m_Homogeneous3D = true;
+					m_npointsY      = m_boundaryConditions->GetParameter("HomModesY");
+					m_LhomY         = m_boundaryConditions->GetParameter("LY");
+					m_HomoDirec = 3;
+					m_spacedim = 3;
+				}
+			}
+		}
+		
+		USE_FFT = false;
+		if(m_boundaryConditions->SolverInfoExists("USEFFT"))
+		{
+			USE_FFT = true;
+		}
+		
 
         // Options to determine type of projection from file or
         // directly from constructor
@@ -159,6 +215,11 @@ namespace Nektar
         m_fields   = Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);
         m_spacedim = mesh->GetSpaceDimension();
         m_expdim   = mesh->GetMeshDimension();
+		
+		if(m_Homogeneous1D + m_Homogeneous2D + m_Homogeneous3D)
+		{
+			m_spacedim = 3;
+		}
 
         // Continuous Galerkin projection
         if(m_projectionType == eGalerkin)
@@ -167,56 +228,80 @@ namespace Nektar
             {
                 case 1:
                 {
-                    SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-
-                    if( !(mesh1D = boost::dynamic_pointer_cast<
-                                    SpatialDomains::MeshGraph1D>(mesh)) )
-                    {
-                        ASSERTL0(false,"Dynamics cast failed");
-                    }
-
-                    for(i = 0 ; i < m_fields.num_elements(); i++)
-                    {
-                        m_fields[i] = MemoryManager<MultiRegions::ContField1D>
-                                            ::AllocateSharedPtr(*mesh1D,
+					if(m_Homogeneous2D)
+					{
+						ASSERTL0(false,"3D problems with 2 periodic directions not implemented yet");
+					}
+					else 
+					{
+						SpatialDomains::MeshGraph1DSharedPtr mesh1D;
+						
+						if( !(mesh1D = boost::dynamic_pointer_cast<
+							  SpatialDomains::MeshGraph1D>(mesh)) )
+						{
+							ASSERTL0(false,"Dynamics cast failed");
+						}
+						
+						for(i = 0 ; i < m_fields.num_elements(); i++)
+						{
+							m_fields[i] = MemoryManager<MultiRegions::ContField1D>
+							::AllocateSharedPtr(*mesh1D,
                                                 *m_boundaryConditions,i);
-                    }
+						}
+						
+					}
+					
                     break;
                 }
                 case 2:
                 {
-                    SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-
-                    if(!(mesh2D = boost::dynamic_pointer_cast<
-                                    SpatialDomains::MeshGraph2D>(mesh)))
-                    {
-                        ASSERTL0(false,"Dynamics cast failed");
-                    }
-
-                    i = 0;
-                    MultiRegions::ContField2DSharedPtr firstfield =
-                            MemoryManager<MultiRegions::ContField2D>
-                                    ::AllocateSharedPtr(*mesh2D,
-                                        *m_boundaryConditions,i);
-
-                    firstfield->ReadGlobalOptimizationParameters(m_filename);
-
-                    m_fields[0] = firstfield;
-                    for(i = 1 ; i < m_fields.num_elements(); i++)
-                    {
-                        if(mesh2D->SameExpansions(m_boundaryConditions->GetVariable(0),
-                                                 m_boundaryConditions->GetVariable(i)))
-                        {
-                            m_fields[i] = MemoryManager<MultiRegions::ContField2D>
-                                ::AllocateSharedPtr(*firstfield,
-                                                    *mesh2D,*m_boundaryConditions,i);
-                        }
-                        else
-                        {
-                            m_fields[i] = MemoryManager<MultiRegions::ContField2D>
-                                ::AllocateSharedPtr(*mesh2D,*m_boundaryConditions,i);
-                        }
-                    }
+					if(m_Homogeneous1D)
+					{
+						SpatialDomains::MeshGraph2DSharedPtr mesh2D;
+						MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
+						
+						if(!(mesh2D = boost::dynamic_pointer_cast<
+							 SpatialDomains::MeshGraph2D>(mesh)))
+						{
+							ASSERTL0(false,"Dynamics cast failed");
+						}
+						
+						const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
+						const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
+						
+						for(i = 0 ; i < m_fields.num_elements(); i++)
+						{
+							m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
+							::AllocateSharedPtr(BkeyZ,m_LhomZ,USE_FFT,*mesh2D,*m_boundaryConditions,i,SolnType);
+						}
+				    }
+				    else
+				    {
+						SpatialDomains::MeshGraph2DSharedPtr mesh2D;
+						
+						if(!(mesh2D = boost::dynamic_pointer_cast<
+							 SpatialDomains::MeshGraph2D>(mesh)))
+						{
+							ASSERTL0(false,"Dynamics cast failed");
+						}
+						
+						i = 0;
+						MultiRegions::ContField2DSharedPtr firstfield =
+						MemoryManager<MultiRegions::ContField2D>
+						::AllocateSharedPtr(*mesh2D,
+											*m_boundaryConditions,i);
+						
+						firstfield->ReadGlobalOptimizationParameters(m_filename);
+						
+						m_fields[0] = firstfield;
+						for(i = 1 ; i < m_fields.num_elements(); i++)
+						{
+							m_fields[i] = MemoryManager<MultiRegions::ContField2D>
+							::AllocateSharedPtr(*firstfield,
+												*mesh2D,*m_boundaryConditions,i);
+						}
+					}
+					
                     break;
                 }
                 case 3:
@@ -257,42 +342,85 @@ namespace Nektar
             {
                 case 1:
                 {
-                    SpatialDomains::MeshGraph1DSharedPtr mesh1D;
-
-                    if(!(mesh1D = boost::dynamic_pointer_cast<SpatialDomains
-                                        ::MeshGraph1D>(mesh)))
-                    {
-                        ASSERTL0(false,"Dynamics cast failed");
-                    }
-
-                    for(i = 0 ; i < m_fields.num_elements(); i++)
-                    {
-                        m_fields[i] = MemoryManager<MultiRegions
-                                ::DisContField1D>::AllocateSharedPtr(*mesh1D,
-                                                *m_boundaryConditions,i);
-                    }
+					if(m_Homogeneous2D)
+					{
+						ASSERTL0(false,"3D problems with 2 periodic directions not implemented yet");
+					}
+					else 
+					{
+						SpatialDomains::MeshGraph1DSharedPtr mesh1D;
+						
+						if(!(mesh1D = boost::dynamic_pointer_cast<SpatialDomains
+							 ::MeshGraph1D>(mesh)))
+						{
+							ASSERTL0(false,"Dynamics cast failed");
+						}
+						
+						for(i = 0 ; i < m_fields.num_elements(); i++)
+						{
+							m_fields[i] = MemoryManager<MultiRegions
+							::DisContField1D>::AllocateSharedPtr(*mesh1D,
+																 *m_boundaryConditions,i);
+						}
+					}
+					
+                    
                     break;
                 }
                 case 2:
                 {
-                    SpatialDomains::MeshGraph2DSharedPtr mesh2D;
-
-                    if(!(mesh2D = boost::dynamic_pointer_cast<SpatialDomains
-                                        ::MeshGraph2D>(mesh)))
-                    {
-                        ASSERTL0(false,"Dynamics cast failed");
-                    }
-
-                    for(i = 0 ; i < m_fields.num_elements(); i++)
-                    {
-                        m_fields[i] = MemoryManager<MultiRegions
-                                ::DisContField2D>::AllocateSharedPtr(*mesh2D,
-                                                *m_boundaryConditions,i);
-                    }
+					if(m_Homogeneous1D)
+					{
+						SpatialDomains::MeshGraph2DSharedPtr mesh2D;
+						MultiRegions::GlobalSysSolnType SolnType = MultiRegions::eDirectMultiLevelStaticCond;
+						
+						if(!(mesh2D = boost::dynamic_pointer_cast<
+							 SpatialDomains::MeshGraph2D>(mesh)))
+						{
+							ASSERTL0(false,"Dynamics cast failed");
+						}
+						
+						const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
+						const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
+						
+						for(i = 0 ; i < m_fields.num_elements(); i++)
+						{
+							m_fields[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous1D>
+							::AllocateSharedPtr(BkeyZ,m_LhomZ,USE_FFT,*mesh2D,*m_boundaryConditions,i,SolnType);
+						}
+				    }
+				    else
+				    {
+						SpatialDomains::MeshGraph2DSharedPtr mesh2D;
+						
+						if(!(mesh2D = boost::dynamic_pointer_cast<SpatialDomains
+							 ::MeshGraph2D>(mesh)))
+						{
+							ASSERTL0(false,"Dynamics cast failed");
+						}
+						
+						for(i = 0 ; i < m_fields.num_elements(); i++)
+						{
+							m_fields[i] = MemoryManager<MultiRegions
+							::DisContField2D>::AllocateSharedPtr(*mesh2D,
+																 *m_boundaryConditions,i);
+						}
+					}
+					
                     break;
                 }
                 case 3:
-                    ASSERTL0(false,"3 D not set up");
+				{
+					if(m_Homogeneous3D)
+					{
+					    ASSERTL0(false,"3D fully periodic problems not implemented yet");	
+					}
+					else
+					{
+						ASSERTL0(false,"3 D not set up");
+					}
+					break;
+				}
                 default:
                     ASSERTL0(false,"Expansion dimension not recognised");
                     break;
@@ -829,30 +957,42 @@ namespace Nektar
         }
 
         // Evaluate V\cdot Grad(u)
-        switch(ndim)
-        {
-        case 1:
-            m_fields[0]->PhysDeriv(u,grad0);
-            Vmath::Vmul(nPointsTot,grad0,1,V[0],1,outarray,1);
-            break;
-        case 2:
-            grad1 = grad0 + nPointsTot;
-            m_fields[0]->PhysDeriv(u,grad0,grad1);
-            Vmath::Vmul (nPointsTot,grad0,1,V[0],1,outarray,1);
-            Vmath::Vvtvp(nPointsTot,grad1,1,V[1],1,outarray,1,outarray,1);
-            break;
-        case 3:
-            grad1 = grad0 + nPointsTot;
+		if(m_Homogeneous1D + m_Homogeneous2D + m_Homogeneous3D)
+		{
+			grad1 = grad0 + nPointsTot;
             grad2 = grad1 + nPointsTot;
-            m_fields[0]->PhysDeriv(u,grad0,grad1,grad2);
+            m_fields[0]->PhysDerivHomo(u,grad0,grad1,grad2,true);
             Vmath::Vmul (nPointsTot,grad0,1,V[0],1,outarray,1);
             Vmath::Vvtvp(nPointsTot,grad1,1,V[1],1,outarray,1,outarray,1);
             Vmath::Vvtvp(nPointsTot,grad2,1,V[2],1,outarray,1,outarray,1);
-            break;
+		}
+		else
+		{	
+			switch(ndim)
+			{
+				case 1:
+					m_fields[0]->PhysDeriv(u,grad0);
+					Vmath::Vmul(nPointsTot,grad0,1,V[0],1,outarray,1);
+					break;
+				case 2:
+					grad1 = grad0 + nPointsTot;
+					m_fields[0]->PhysDeriv(u,grad0,grad1);
+					Vmath::Vmul (nPointsTot,grad0,1,V[0],1,outarray,1);
+					Vmath::Vvtvp(nPointsTot,grad1,1,V[1],1,outarray,1,outarray,1);
+					break;
+				case 3:
+					grad1 = grad0 + nPointsTot;
+					grad2 = grad1 + nPointsTot;
+					m_fields[0]->PhysDeriv(u,grad0,grad1,grad2);
+					Vmath::Vmul (nPointsTot,grad0,1,V[0],1,outarray,1);
+					Vmath::Vvtvp(nPointsTot,grad1,1,V[1],1,outarray,1,outarray,1);
+					Vmath::Vvtvp(nPointsTot,grad2,1,V[2],1,outarray,1,outarray,1);
+					break;
 
-        default:
-            ASSERTL0(false,"dimension unknown");
-        }
+				default:
+					ASSERTL0(false,"dimension unknown");
+			}
+		}
     }
 
     /*
@@ -1437,11 +1577,32 @@ namespace Nektar
     void ADRBase::SessionSummary(std::ostream &out)
     {
 
-        out << "\tSession Name    : " << m_sessionName << endl;
-        out << "\tExpansion Dim.  : " << m_expdim << endl;
-        out << "\tSpatial   Dim.  : " << m_spacedim << endl;
-        out << "\tMax Exp. Order  : " << m_fields[0]->EvalBasisNumModesMax()
-                                      << endl;
+        if(m_Homogeneous1D)
+		{
+			out << "\tQuasi-3D        : " << "Homogeneous in z-direction" << endl;
+			out << "\tSession Name    : " << m_sessionName << endl;
+			out << "\tExpansion Dim.  : " << m_expdim+1 << endl;
+			out << "\tSpatial   Dim.  : " << m_spacedim << endl;
+			out << "\t2D Exp. Order   : " << m_fields[0]->EvalBasisNumModesMax()<< endl;
+			out << "\tN.Hom. Modes    : " << m_npointsZ << endl;
+			out << "\tHom. length (LZ): " << m_LhomZ << endl;
+			if(USE_FFT)
+			{
+			  out << "\tUsing FFTW " << m_LhomZ << endl;
+			}
+			else 
+			{
+			  out << "\tUsing MVM " << m_LhomZ << endl;
+			}
+
+		}
+		else 
+		{
+			out << "\tSession Name    : " << m_sessionName << endl;
+			out << "\tExpansion Dim.  : " << m_expdim << endl;
+			out << "\tSpatial   Dim.  : " << m_spacedim << endl;
+			out << "\tMax Exp. Order  : " << m_fields[0]->EvalBasisNumModesMax()<< endl;
+        }
         if(m_projectionType == eGalerkin)
         {
             out << "\tProjection Type : Galerkin" <<endl;

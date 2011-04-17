@@ -48,6 +48,9 @@
 #include <MultiRegions/DisContField1D.h>
 #include <MultiRegions/DisContField2D.h>
 
+#include <MultiRegions/ContField3DHomogeneous1D.h>
+#include <MultiRegions/DisContField3DHomogeneous1D.h>
+
 namespace Nektar
 {
     static std::string NekNullString;
@@ -367,7 +370,25 @@ namespace Nektar
 		
 		/// Number of Quadrature points used to work out the error
 		int  m_NumQuadPointsError;
-	
+		
+		///Parameter for homogeneous expansions
+		
+		bool USE_FFT;                ///< flag to determine if use or not the FFT for transformations
+		
+		bool m_Homogeneous1D;        ///< flag to determine if there is  1 homegeneous direction
+		bool m_Homogeneous2D;        ///< flag to determine if there are 2 homegeneous directions
+		bool m_Homogeneous3D;        ///< flag to determine if there are 3 homedeneous directions
+		
+		NekDouble m_LhomX;           ///< physical length in X direction (if homogeneous) 
+		NekDouble m_LhomY;           ///< physical length in Y direction (if homogeneous)
+		NekDouble m_LhomZ;           ///< physical length in Z direction (if homogeneous)
+		
+		int m_npointsX;              ///< number of points in X direction (if homogeneous)
+		int m_npointsY;              ///< number of points in Y direction (if homogeneous)
+		int m_npointsZ;              ///< number of points in Z direction (if homogeneous)
+		
+		int m_HomoDirec;             ///< number of homogenous directions
+		
     protected:
         /// Array holding all dependent variables.
         Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;

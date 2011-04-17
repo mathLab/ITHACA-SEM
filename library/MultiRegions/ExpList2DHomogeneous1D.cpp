@@ -49,9 +49,10 @@ namespace Nektar
         // Constructor for ExpList2DHomogeneous1D to act as a Explist2D field
         ExpList2DHomogeneous1D::ExpList2DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
                                                        const NekDouble lhom,
+													   bool useFFT,
                                                        boost::shared_ptr<StdRegions::StdExpansionVector> &exp,
                                                        Array<OneD, ExpList1DSharedPtr> &planes):
-            ExpListHomogeneous1D(HomoBasis,lhom)
+            ExpListHomogeneous1D(HomoBasis,lhom,useFFT)
         {
             int n,nel;
 
@@ -75,8 +76,9 @@ namespace Nektar
         // Constructor for ExpList2DHomogeneous1D to act as a Explist2D field
         ExpList2DHomogeneous1D::ExpList2DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
                                                        const NekDouble lhom,
+													   bool useFFT,
                                                        SpatialDomains::MeshGraph1D &graph1D):
-            ExpListHomogeneous1D(HomoBasis,lhom)
+            ExpListHomogeneous1D(HomoBasis,lhom,useFFT)
         {
             int n,j,nel;
             bool False = false;

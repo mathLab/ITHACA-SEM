@@ -52,11 +52,12 @@ namespace Nektar
             MULTI_REGIONS_EXPORT DisContField3DHomogeneous1D();
 
             MULTI_REGIONS_EXPORT DisContField3DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
-                                        const NekDouble lhom);
+                                        const NekDouble lhom, bool useFFT);
 
             MULTI_REGIONS_EXPORT DisContField3DHomogeneous1D(
                            const LibUtilities::BasisKey &HomoBasis,
                            const NekDouble lhom,
+						   bool useFFT,
                            SpatialDomains::MeshGraph2D &graph2D,
                            SpatialDomains::BoundaryConditions &bcs, 
                            const int bc_loc = 0,

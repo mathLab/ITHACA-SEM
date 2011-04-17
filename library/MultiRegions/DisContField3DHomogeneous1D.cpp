@@ -50,8 +50,9 @@ namespace Nektar
         }
 
         DisContField3DHomogeneous1D::DisContField3DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
-                                                                 const NekDouble lhom):
-            ExpList3DHomogeneous1D(HomoBasis,lhom),
+                                                                 const NekDouble lhom,
+																 bool useFFT):
+            ExpList3DHomogeneous1D(HomoBasis,lhom,useFFT),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -79,11 +80,12 @@ namespace Nektar
         DisContField3DHomogeneous1D::DisContField3DHomogeneous1D(
                                        const LibUtilities::BasisKey &HomoBasis,
                                        const NekDouble lhom,
+									   bool useFFT,
                                        SpatialDomains::MeshGraph2D &graph2D,
                                        SpatialDomains::BoundaryConditions &bcs,
                                        const int bc_loc,
                                        const GlobalSysSolnType solnType):  
-            ExpList3DHomogeneous1D(HomoBasis,lhom),
+            ExpList3DHomogeneous1D(HomoBasis,lhom,useFFT),
             m_bndCondExpansions(),
             m_bndConditions()
         {
@@ -158,7 +160,7 @@ namespace Nektar
                     }
                 }
                 
-                m_bndCondExpansions[i] = MemoryManager<ExpList2DHomogeneous1D>::AllocateSharedPtr(HomoBasis,lhom,exp,PlanesBndCondExp);
+                m_bndCondExpansions[i] = MemoryManager<ExpList2DHomogeneous1D>::AllocateSharedPtr(HomoBasis,lhom,m_useFFT,exp,PlanesBndCondExp);
                 
             }
             

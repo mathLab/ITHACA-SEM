@@ -17,6 +17,10 @@ SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dist CACHE FILEPATH "" FORCE)
 
 SET(NEKTAR_USE_METIS ON CACHE BOOL "Use Metis routines for partitioning and reordering graphs.")
 MARK_AS_ADVANCED(NEKTAR_USE_METIS)
+
+SET(NEKTAR_USE_FFTW OFF CACHE BOOL "Use FFTW routines for performing the Fast Fourier Transform.")
+MARK_AS_ADVANCED(NEKTAR_USE_FFTW)
+
 SET(NEKTAR_USE_TINYXML_STL ON CACHE BOOL "Use STL with TinyXML library.")
 SET(NEKTAR_USE_DIRECT_BLAS_CALLS OFF CACHE BOOL "Use direct BLAS calls rather than NekMatrix calls in the StdRegions and LocalRegions sublibrary")
 SET(NEKTAR_FULL_DEBUG OFF CACHE BOOL "Enable Full Debugging.")
@@ -82,6 +86,10 @@ INCLUDE(NektarCommon)
 INCLUDE (FindLoki)
 INCLUDE (FindTinyXml)
 
+IF(NEKTAR_USE_FFTW) 
+    INCLUDE (FindFFTW)
+ENDIF(NEKTAR_USE_FFTW)
+
 IF( NOT WIN32 )
     SET(Boost_USE_STATIC_LIBS OFF)
 ELSE( NOT WIN32 )
@@ -103,7 +111,9 @@ ENDIF()
      
 INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR} ${Boost_INCLUDE_DIRS} ${LOKI_INCLUDE_DIR} ${TINYXML_BASE})
 
-
+IF(NEKTAR_USE_FFTW) 
+    INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIR})
+ENDIF(NEKTAR_USE_FFTW)
 
 IF( NEKTAR_USE_PRECOMPILED_HEADERS )
     ADD_DEFINITIONS(-DNEKTAR_USE_PRECOMPILED_HEADERS)
@@ -149,6 +159,7 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/FindNativeBlasLapack.cmake
               ${CMAKE_SOURCE_DIR}/FindMKL.cmake
               ${CMAKE_SOURCE_DIR}/FindMetis.cmake
+	      ${CMAKE_SOURCE_DIR}/FindFFTW.cmake
               ${CMAKE_SOURCE_DIR}/FindWin32Lapack.cmake
               ${CMAKE_SOURCE_DIR}/NektarCommon.cmake
               ${CMAKE_SOURCE_DIR}/FindTinyXml.cmake

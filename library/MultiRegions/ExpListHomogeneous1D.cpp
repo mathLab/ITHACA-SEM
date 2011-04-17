@@ -48,9 +48,10 @@ namespace Nektar
         {
         }
 
-        ExpListHomogeneous1D::ExpListHomogeneous1D(const LibUtilities::BasisKey &HomoBasis, const NekDouble lhom):
+        ExpListHomogeneous1D::ExpListHomogeneous1D(const LibUtilities::BasisKey &HomoBasis, const NekDouble lhom, bool useFFT):
             ExpList(),
             m_lhom(lhom),
+		    m_useFFT(useFFT),
             m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr())
         {
             ASSERTL2(HomoBasis != LibUtilities::NullBasisKey,
@@ -60,6 +61,11 @@ namespace Nektar
             int nzplanes = m_homogeneousBasis->GetNumPoints();
 
             m_planes = Array<OneD,ExpListSharedPtr>(nzplanes);
+
+			if(m_useFFT)
+			{
+				m_FFT = LibUtilities::NektarFFTFactory::CreateInstance("NekFFTW", nzplanes);
+			}
         }
 
 
@@ -156,48 +162,83 @@ namespace Nektar
 
         void ExpListHomogeneous1D::Homogeneous1DTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool IsForwards, bool UseContCoeffs)
         {
-            DNekBlkMatSharedPtr blkmat;
-
-            if(inarray.num_elements() == m_npoints) //transform phys space
-            {
-                if(IsForwards)
+            if(m_useFFT)
+			{
+				
+				int n = m_planes.num_elements();  //number of Fourier points in the Fourier direction
+				int s = inarray.num_elements();   //number of total points = n. of Fourier points * n. of points per plane
+				int p = s/n;                      //number of points per plane = n of Fourier transform required
+				
+				Array<OneD, NekDouble> fft_in(s);
+                Array<OneD, NekDouble> fft_out(s);
+				
+				ShuffleIntoHomogeneous1DClosePacked(inarray,fft_in,false);
+				
+				if(IsForwards)
+				{
+					for(int i=0;i<p;i++)
+					{
+						m_FFT->FFTFwdTrans(m_tmpIN = fft_in + i*n, m_tmpOUT = fft_out + i*n);
+					}
+					
+				}
+				else 
+				{
+					for(int i=0;i<p;i++)
+					{
+						m_FFT->FFTBwdTrans(m_tmpIN = fft_in + i*n, m_tmpOUT = fft_out + i*n);
+					}
+				}
+				
+				UnshuffleFromHomogeneous1DClosePacked(fft_out,outarray,false);
+				
+			}
+			else 
+			{
+				
+			    DNekBlkMatSharedPtr blkmat;
+				
+                if(inarray.num_elements() == m_npoints) //transform phys space
                 {
-                    blkmat = GetHomogeneous1DBlockMatrix(eForwardsPhysSpace);
+					if(IsForwards)
+					{
+						blkmat = GetHomogeneous1DBlockMatrix(eForwardsPhysSpace);
+					}
+					else
+					{
+						blkmat = GetHomogeneous1DBlockMatrix(eBackwardsPhysSpace);
+					}
                 }
-                else
+				else
                 {
-                    blkmat = GetHomogeneous1DBlockMatrix(eBackwardsPhysSpace);
+					if(IsForwards)
+					{
+						blkmat = GetHomogeneous1DBlockMatrix(eForwardsCoeffSpace,UseContCoeffs);
+					}
+					else
+					{
+						blkmat = GetHomogeneous1DBlockMatrix(eBackwardsCoeffSpace,UseContCoeffs);
+					}
                 }
-            }
-            else
-            {
-                if(IsForwards)
-                {
-                    blkmat = GetHomogeneous1DBlockMatrix(eForwardsCoeffSpace,UseContCoeffs);
-                }
-                else
-                {
-                    blkmat = GetHomogeneous1DBlockMatrix(eBackwardsCoeffSpace,UseContCoeffs);
-                }
-            }
-
-            int nrows = blkmat->GetRows();
-            int ncols = blkmat->GetColumns();
-
-            Array<OneD, NekDouble> sortedinarray(ncols);
-            Array<OneD, NekDouble> sortedoutarray(nrows);
-
-
-            ShuffleIntoHomogeneous1DClosePacked(inarray,sortedinarray,!IsForwards);
-
-            // Create NekVectors from the given data arrays
-            NekVector<const NekDouble> in (ncols,sortedinarray,eWrapper);
-            NekVector<      NekDouble> out(nrows,sortedoutarray,eWrapper);
-
-            // Perform matrix-vector multiply.
-            out = (*blkmat)*in;
-
-            UnshuffleFromHomogeneous1DClosePacked(sortedoutarray,outarray,IsForwards);
+				
+                int nrows = blkmat->GetRows();
+                int ncols = blkmat->GetColumns();
+				
+                Array<OneD, NekDouble> sortedinarray(ncols);
+                Array<OneD, NekDouble> sortedoutarray(nrows);
+				
+				
+                ShuffleIntoHomogeneous1DClosePacked(inarray,sortedinarray,!IsForwards);
+				
+                // Create NekVectors from the given data arrays
+                NekVector<const NekDouble> in (ncols,sortedinarray,eWrapper);
+                NekVector<      NekDouble> out(nrows,sortedoutarray,eWrapper);
+				
+                // Perform matrix-vector multiply.
+                out = (*blkmat)*in;
+				
+                UnshuffleFromHomogeneous1DClosePacked(sortedoutarray,outarray,IsForwards);
+			}
         }
 
         void ExpListHomogeneous1D::ShuffleIntoHomogeneous1DClosePacked(

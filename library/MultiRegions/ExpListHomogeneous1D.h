@@ -40,6 +40,7 @@
 #include <vector>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList.h>
+#include <LibUtilities/FFT/NektarFFT.h>
 
 namespace Nektar
 {
@@ -78,7 +79,7 @@ namespace Nektar
             /// Default constructor.
             MULTI_REGIONS_EXPORT ExpListHomogeneous1D();
 
-            MULTI_REGIONS_EXPORT ExpListHomogeneous1D(const LibUtilities::BasisKey &HomoBasis, const NekDouble lz);
+            MULTI_REGIONS_EXPORT ExpListHomogeneous1D(const LibUtilities::BasisKey &HomoBasis, const NekDouble lz, bool useFFT);
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpListHomogeneous1D(const ExpListHomogeneous1D &In);
@@ -101,6 +102,12 @@ namespace Nektar
                               const Array<OneD, const NekDouble> &inarray,
                               Array<OneD, NekDouble> &outarray,
                               bool UseNumModes = false);
+			
+			/// FFT variables
+			bool                                    m_useFFT;
+			LibUtilities::NektarFFTSharedPtr        m_FFT;
+			Array<OneD,NekDouble>                   m_tmpIN;
+			Array<OneD,NekDouble>                   m_tmpOUT;
 
         protected:
 

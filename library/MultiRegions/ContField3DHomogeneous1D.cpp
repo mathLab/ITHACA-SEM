@@ -68,11 +68,12 @@ namespace Nektar
         ContField3DHomogeneous1D::ContField3DHomogeneous1D(
                                        const LibUtilities::BasisKey &HomoBasis,
                                        const NekDouble lhom,
+									   bool useFFT,
                                        SpatialDomains::MeshGraph2D &graph2D,
                                        SpatialDomains::BoundaryConditions &bcs,
                                        const int bc_loc,
                                        const GlobalSysSolnType solnType):
-            DisContField3DHomogeneous1D(HomoBasis,lhom)
+            DisContField3DHomogeneous1D(HomoBasis,lhom,useFFT)
         {
             int i,j,n,nel;
             bool False = false;

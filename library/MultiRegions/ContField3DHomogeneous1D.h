@@ -52,6 +52,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ContField3DHomogeneous1D(
                            const LibUtilities::BasisKey &HomoBasis,
                            const NekDouble lhom,
+						   bool useFFT,
                            SpatialDomains::MeshGraph2D &graph2D,
                            SpatialDomains::BoundaryConditions &bcs, 
                            const int bc_loc = 0,

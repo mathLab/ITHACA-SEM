@@ -298,6 +298,42 @@ wish</li>
                   </ol>
                   
 	        </li>
+            <li>
+                In case you want to use the Quasi-3D approach in combination with the FFT algorithm, you also need
+                to compile the FFTW library. The use of the FFT algorithm is suggested in case of a large number of
+                degrees of freedom in the homogeneous direction (10 or more).
+                (For more information about the original FFTW library, see <a href="http://www.fftw.org" target="_blank">http://www.fftw.org</a>)
+    
+                By default the FFTW routines are not in use, you need to compile the FFTW library and switch it
+                on before to build up the Nektar++ library.
+                                                                                                           
+                <ol>
+                    
+                    <li>
+                      In <em>ThirdParty/</em>, extract the fftw-3.2.2.tar.gz archive with <div class="code"><pre>tar -xjvf  fftw-3.2.2.tar.gz</pre></div> This will create the directory <em>fftw-3.2.2/</em>.
+                    </li>
+                    
+                    <li>
+                      Change to the directory <em>fftw-3.2.2/</em>
+                    </li>
+                    
+                    <li>Compile the library using the previously installed <em>CMake</em></li>
+                    
+                    
+                    <ol>
+                      
+		      <li>Generate the makefiles using the command <div class="code"><pre>./configure --prefix=$PWD</pre></div></li>
+                      
+		      <li>Build and install the library by typing <div class="code"><pre>make install</pre></div> </li>
+                      
+                      
+                    </ol>
+                    
+                    
+                    
+                  </ol>
+            
+            
                 
                 
     </ol>

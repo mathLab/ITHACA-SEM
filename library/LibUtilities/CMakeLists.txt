@@ -165,6 +165,16 @@ SET(TimeIntegrationSources
         ./TimeIntegration/TimeIntegrationScheme.cpp
 ) 
 
+SET(FFTHeaders
+       ./FFT/NektarFFT.h
+       ./FFT/NekFFTW.h
+)	
+
+SET(FFTSources
+       ./FFT/NektarFFT.cpp
+       ./FFT/NekFFTW.cpp
+)
+
 SET(BaseHeaders
 	LibUtilitiesDeclspec.h
 )
@@ -192,6 +202,10 @@ SOURCE_GROUP("Kernel Sources" FILES ${KernelSources})
 
 SOURCE_GROUP("TimeIntegration Headers" FILES ${TimeIntegrationHeaders})
 SOURCE_GROUP("TimeIntegration Sources" FILES ${TimeIntegrationSources})
+
+SOURCE_GROUP("FFT Headers" FILES ${FFTHeaders})
+SOURCE_GROUP("FFT Sources" FILES ${FFTSources})  
+
 SOURCE_GROUP("Base" FILES ${BaseHeaders})
 
 SET(LibUtilityHeaders
@@ -206,7 +220,8 @@ SET(LibUtilityHeaders
 	${PrecompiledHeaders}
 	${KernelHeaders}
         ${TimeIntegrationHeaders}
-    ${BaseHeaders}
+        ${FFTHeaders}
+        ${BaseHeaders}
 )
 
 SET(LibUtilitySources
@@ -216,6 +231,7 @@ SET(LibUtilitySources
 	${InterpreterSources}
 	${KernelSources}
         ${TimeIntegrationSources}
+  	${FFTSources}
 )
 
 
@@ -242,3 +258,4 @@ INSTALL(FILES ${Memory} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Memory)
 INSTALL(FILES ${KernelHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/Kernel)
 INSTALL(FILES ${TimeIntegrationHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/TimeIntegration)
 INSTALL(FILES ${BaseHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities)
+INSTALL(FILES ${FFTHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/FFT)

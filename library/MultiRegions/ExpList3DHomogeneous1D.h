@@ -67,11 +67,13 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D();
 
             MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
-                                   const NekDouble lhom);
+                                   const NekDouble lhom,
+								   bool useFFT);
 
             /// Sets up a list of local expansions based on an input mesh.
             MULTI_REGIONS_EXPORT ExpList3DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
                                    const NekDouble lhom,
+								   bool useFFT,
                                    SpatialDomains::MeshGraph2D &graph2D);
 
             /// Copy constructor.
@@ -91,6 +93,17 @@ namespace Nektar
                            Array<OneD, NekDouble> &xc0,
                            Array<OneD, NekDouble> &xc1,
                            Array<OneD, NekDouble> &xc2);
+			
+			inline void PhysDerivHomo(const Array<OneD, const NekDouble> &inarray,
+									  Array<OneD, NekDouble> &out_d0,
+									  Array<OneD, NekDouble> &out_d1, 
+									  Array<OneD, NekDouble> &out_d2, bool UseContCoeffs);
+			
+			inline void PhysDerivHomo(const int dir,
+                                      const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
+			
+			
         protected:
 
             /// Definition of the total number of degrees of freedom and
@@ -102,6 +115,15 @@ namespace Nektar
             virtual void v_GetCoords(Array<OneD, NekDouble> &coord_0,
                                      Array<OneD, NekDouble> &coord_1,
                                      Array<OneD, NekDouble> &coord_2);
+			
+			virtual void v_PhysDerivHomo(const Array<OneD, const NekDouble> &inarray,
+										 Array<OneD, NekDouble> &out_d0,
+										 Array<OneD, NekDouble> &out_d1, 
+										 Array<OneD, NekDouble> &out_d2, bool UseContCoeffs);
+			
+			virtual void v_PhysDerivHomo(const int dir,
+										 const Array<OneD, const NekDouble> &inarray,
+										 Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
 
 
             virtual void v_WriteTecplotZone(std::ofstream &outfile,
@@ -123,6 +145,22 @@ namespace Nektar
         {
             v_GetCoords(coord_0,coord_1,coord_2);
         }
+		
+		inline void ExpList3DHomogeneous1D::PhysDerivHomo(const Array<OneD, const NekDouble> &inarray,
+														  Array<OneD, NekDouble> &out_d0,
+														  Array<OneD, NekDouble> &out_d1, 
+														  Array<OneD, NekDouble> &out_d2, bool UseContCoeffs)
+		
+        {
+            v_PhysDerivHomo(inarray,out_d0,out_d1,out_d2,UseContCoeffs);
+        }
+		
+		inline void ExpList3DHomogeneous1D::PhysDerivHomo(const int dir,
+								                          const Array<OneD, const NekDouble> &inarray,
+								                          Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
+		{
+			v_PhysDerivHomo(dir,inarray,out_d,UseContCoeffs);
+		}
 
     } //end of namespace
 } //end of namespace

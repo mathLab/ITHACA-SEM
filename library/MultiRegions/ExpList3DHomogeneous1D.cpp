@@ -47,16 +47,18 @@ namespace Nektar
         }
 
         ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
-                                                       const NekDouble lhom):
-            ExpListHomogeneous1D(HomoBasis,lhom)
+                                                       const NekDouble lhom,
+													   bool useFFT):
+            ExpListHomogeneous1D(HomoBasis,lhom,useFFT)
         {
         }
 
         // Constructor for ExpList3DHomogeneous1D to act as a Explist2D field
         ExpList3DHomogeneous1D::ExpList3DHomogeneous1D(const LibUtilities::BasisKey &HomoBasis,
                                                        const NekDouble lhom,
+													   bool useFFT,
                                                        SpatialDomains::MeshGraph2D &graph2D):
-            ExpListHomogeneous1D(HomoBasis,lhom)
+            ExpListHomogeneous1D(HomoBasis,lhom,useFFT)
         {
             int n,j,nel;
             bool False = false;
@@ -374,6 +376,103 @@ namespace Nektar
 
             return sqrt(err);
         }
+		
+		
+		void ExpList3DHomogeneous1D::v_PhysDerivHomo(const Array<OneD, const NekDouble> &inarray,
+													 Array<OneD, NekDouble> &out_d0,
+													 Array<OneD, NekDouble> &out_d1, 
+													 Array<OneD, NekDouble> &out_d2, bool UseContCoeffs)
+		
+		{
+			int nF_pts = m_planes.num_elements();  //number of Fourier points in the Fourier direction (nF_pts)
+			int nT_pts = inarray.num_elements();   //number of total points = n. of Fourier points * n. of points per plane (nT_pts)
+			int nP_pts = nT_pts/nF_pts;            //number of points per plane = n of Fourier transform required (nP_pts)
+			int nP_cfs;                            //number of coefficients per plane (nP_cfs)
+			NekDouble k;                           //wave number
+			
+			if(UseContCoeffs)
+			{
+				nP_cfs = m_planes[0]->GetContNcoeffs();
+			}
+			else
+			{
+				nP_cfs= m_planes[0]->GetNcoeffs();
+			}
+			
+			int nT_cfs = nP_cfs*nF_pts;                      //number of total coefficients (nT_cfs)
+			
+			Array<OneD, NekDouble> temparray(nT_cfs);
+			Array<OneD, NekDouble> tmp1;
+			Array<OneD, NekDouble> tmp2;
+			Array<OneD, NekDouble> tmp3;
+            
+			
+			for( int i=0 ; i<nF_pts ; i++ )
+			{
+				m_planes[i]->PhysDeriv( tmp1 = inarray + i*nP_pts ,tmp2 = out_d0 + i*nP_pts , tmp3 = out_d1 + i*nP_pts );
+			}
+			
+            v_FwdTrans(inarray,temparray,UseContCoeffs);
+			
+			for( int i=0 ; i<nF_pts/2 ; i++ )
+			{
+				k = i;
+				Vmath::Smul(2*nP_cfs,k,tmp1 = temparray + (i*2*nP_cfs),1,tmp2 = temparray + (i*2*nP_cfs),1);
+			}
+			
+			v_BwdTrans(temparray,out_d2,UseContCoeffs);
+			
+		}
+		
+		void ExpList3DHomogeneous1D::v_PhysDerivHomo(const int dir,
+													 const Array<OneD, const NekDouble> &inarray,
+													 Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
+		
+		{
+			int nF_pts = m_planes.num_elements();  //number of Fourier points in the Fourier direction (nF_pts)
+			int nT_pts = inarray.num_elements();   //number of total points = n. of Fourier points * n. of points per plane (nT_pts)
+			int nP_pts = nT_pts/nF_pts;            //number of points per plane = n of Fourier transform required (nP_pts)
+			int nP_cfs;                            //number of coefficients per plane (nP_cfs)
+			NekDouble k;                           //wave number
+			
+			if(UseContCoeffs)
+			{
+				nP_cfs = m_planes[0]->GetContNcoeffs();
+			}
+			else
+			{
+				nP_cfs= m_planes[0]->GetNcoeffs();
+			}
+			
+			int nT_cfs = nP_cfs*nF_pts;                      //number of total coefficients (nT_cfs)
+			
+			Array<OneD, NekDouble> temparray(nT_cfs);
+			Array<OneD, NekDouble> tmp1;
+			Array<OneD, NekDouble> tmp2;
+            
+			if (dir < 2)
+			{
+				for( int i=0 ; i<nF_pts ; i++ )
+				{
+					m_planes[i]->PhysDeriv(dir, tmp1 = inarray + i*nP_pts ,tmp2 = out_d + i*nP_pts);
+				}
+			}
+			else
+			{
+				
+                v_FwdTrans(inarray,temparray,UseContCoeffs);
+				
+			    for( int i=0 ; i<nF_pts/2 ; i++ )
+			    {
+					k = i;
+					Vmath::Smul(2*nP_cfs,k,tmp1 = temparray + (i*2*nP_cfs),1,tmp2 = temparray + (i*2*nP_cfs),1);
+				}
+				
+			    v_BwdTrans(temparray,out_d,UseContCoeffs);
+			}
+			
+		}
+		
 
     } //end of namespace
 } //end of namespace

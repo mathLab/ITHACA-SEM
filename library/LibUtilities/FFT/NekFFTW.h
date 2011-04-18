@@ -92,10 +92,8 @@ namespace Nektar
 			Array<OneD,NekDouble> phys;
 			Array<OneD,NekDouble> coef;
 
-#ifdef NEKTAR_USE_FFTW		
 			fftw_plan plan_backward;         // plan to execute a backward FFT in FFTW
 			fftw_plan plan_forward;          // plan to execute a forward FFT in FFTW
-#endif			
 			/**
 			 * Reshuffling routines to put the coefficients in Nektar++/FFTW format.
 			 * The routines take as an input the number of points N, the vector of coeffcients

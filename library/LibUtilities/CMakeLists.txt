@@ -167,13 +167,16 @@ SET(TimeIntegrationSources
 
 SET(FFTHeaders
        ./FFT/NektarFFT.h
-       ./FFT/NekFFTW.h
 )	
 
 SET(FFTSources
        ./FFT/NektarFFT.cpp
-       ./FFT/NekFFTW.cpp
 )
+
+IF(NEKTAR_USE_FFTW)
+    SET(FFTHeaders ${FFTHeaders} ./FFT/NekFFTW.h)
+    SET(FFTSources ${FFTSources} ./FFT/NekFFTW.cpp)
+ENDIF(NEKTAR_USE_FFTW)
 
 SET(BaseHeaders
 	LibUtilitiesDeclspec.h

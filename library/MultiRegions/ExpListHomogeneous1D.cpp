@@ -412,7 +412,7 @@ namespace Nektar
         }
 
 
-        void ExpListHomogeneous1D::v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
+        void ExpListHomogeneous1D::v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs)
         {
             int i,n;
             int nzmodes = m_homogeneousBasis->GetNumModes();
@@ -433,9 +433,14 @@ namespace Nektar
 
                 for(n = 0; n < nzmodes; ++n)
                 {
-                    fielddata.insert(fielddata.end(),&m_coeffs[m_coeff_offset[eid]+n*ncoeffs_per_plane],&m_coeffs[m_coeff_offset[eid]+n*ncoeffs_per_plane]+datalen);
+                    fielddata.insert(fielddata.end(),&coeffs[m_coeff_offset[eid]+n*ncoeffs_per_plane],&coeffs[m_coeff_offset[eid]+n*ncoeffs_per_plane]+datalen);
                 }
             }
+        }
+		
+		void ExpListHomogeneous1D::v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
+        {
+           v_AppendFieldData(fielddef,fielddata,m_coeffs);
         }
 
         //Extract the data in fielddata into the m_coeff list

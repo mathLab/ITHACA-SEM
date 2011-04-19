@@ -54,6 +54,7 @@ int main(int argc, char *argv[])
         pointstype.push_back(ptype);
     }
     graphShPt->SetExpansions(fielddef,pointstype);
+	bool useFFT = false;
     //----------------------------------------------
 
 
@@ -88,7 +89,7 @@ int main(int argc, char *argv[])
                 const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[1],nplanes,Pkey);
                 NekDouble ly = fielddef[0]->m_homogeneousLengths[0];
 
-                Exp2DH1 = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::AllocateSharedPtr(Bkey,ly,*mesh);
+                Exp2DH1 = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::AllocateSharedPtr(Bkey,ly,useFFT,*mesh);
                 Exp[0] = Exp2DH1;
 
                 for(i = 1; i < nfields; ++i)
@@ -132,7 +133,7 @@ int main(int argc, char *argv[])
                 const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[2],nplanes,Pkey);
                 NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
 
-Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(Bkey,lz,*mesh);
+Exp3DH1 = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(Bkey,lz,useFFT,*mesh);
                 Exp[0] = Exp3DH1;
 
                 for(i = 1; i < nfields; ++i)

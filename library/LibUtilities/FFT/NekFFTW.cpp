@@ -43,10 +43,7 @@ namespace Nektar
 		
 		NekFFTW::NekFFTW(int N):
 		NektarFFT(N)
-		//NekFFTW::NekFFTW(int N)
 		{
-			//m_N = N;
-			
 			phys = Array<OneD,NekDouble>(m_N);
 			coef = Array<OneD,NekDouble>(m_N);
 			
@@ -71,8 +68,7 @@ namespace Nektar
 		}
 		//=================================================================================
 		// Forward transformation
-		void NekFFTW::v_FFTFwdTrans(Array<OneD,NekDouble> &phys, Array<OneD,NekDouble> &coef)
-		//void NekFFTW::FFTFwdTrans(Array<OneD,NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+		void NekFFTW::v_FFTFwdTrans(Array<OneD,NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
 		{
 			for(int i=0;i< m_N; i++)
 			{
@@ -91,8 +87,7 @@ namespace Nektar
 		
 		//=================================================================================
 		// Backward transformation
-		void NekFFTW::v_FFTBwdTrans(Array<OneD,NekDouble> &coef, Array<OneD,NekDouble> &phys)
-		//void NekFFTW::FFTBwdTrans(Array<OneD,NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+		void NekFFTW::v_FFTBwdTrans(Array<OneD,NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
 		{
 			for(int i=0;i< m_N; i++)
 			{

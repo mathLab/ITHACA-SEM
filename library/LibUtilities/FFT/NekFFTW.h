@@ -45,9 +45,7 @@
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 
-#ifdef NEKTAR_USE_FFTW
 #include <fftw3.h>
-#endif
 
 namespace Nektar
 {
@@ -77,12 +75,12 @@ namespace Nektar
 			// Distructor
 			virtual ~NekFFTW();
 			
-			//int m_N;
 			
-			virtual void v_FFTFwdTrans(Array<OneD,NekDouble> &phys, Array<OneD,NekDouble> &coef);
-			//void FFTFwdTrans(Array<OneD,NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
-			virtual void v_FFTBwdTrans(Array<OneD,NekDouble> &coef, Array<OneD,NekDouble> &phys);
-			//void FFTBwdTrans(Array<OneD,NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+			
+			virtual void v_FFTFwdTrans(Array<OneD,NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+			
+			virtual void v_FFTBwdTrans(Array<OneD,NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+			
 			
 			
 		protected:

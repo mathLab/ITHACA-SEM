@@ -43,6 +43,7 @@
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace Nektar
 {
@@ -68,10 +69,10 @@ namespace Nektar
 		public:
 			
 			/// Initialises NektarFFT class members.
-			NektarFFT(int N);
+			LIB_UTILITIES_EXPORT NektarFFT(int N);
 			
 			// Distructor
-			virtual ~NektarFFT();
+			LIB_UTILITIES_EXPORT  ~NektarFFT();
 			
 			/**
 			 * m_N is the dimension of the Fourier transform.
@@ -89,7 +90,7 @@ namespace Nektar
 			 * output:
 			 * outarray  = vector in coefficient space (length N)
 			 */
-			void FFTFwdTrans(Array<OneD,NekDouble> &phy, Array<OneD,NekDouble> &coef);
+			LIB_UTILITIES_EXPORT void FFTFwdTrans(Array<OneD,NekDouble> &phy, Array<OneD,NekDouble> &coef);
 			
 			/**
 			 * Backward transformation to pass from coefficient to physical space using the FFT.
@@ -100,7 +101,7 @@ namespace Nektar
 			 * output:
 			 * outarray   = vector in physical space (length N)
 			 */
-			void FFTBwdTrans(Array<OneD,NekDouble> &coef, Array<OneD,NekDouble> &phys);
+			LIB_UTILITIES_EXPORT void FFTBwdTrans(Array<OneD,NekDouble> &coef, Array<OneD,NekDouble> &phys);
 			
 		protected:
 			
